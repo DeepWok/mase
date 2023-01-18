@@ -1,7 +1,8 @@
-# AIPlayground
+# Machine-Learning Acceleration System Exploration
 
 This repo contains the following directories:
 * `examples` - NN models by PyTorch
+* `scripts` - Installation scripts  
 * `Docker` - Docker container configurations  
 
 ## Getting Started
