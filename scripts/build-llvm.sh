@@ -13,11 +13,6 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
 th=$(($(grep -c ^processor /proc/cpuinfo) / 2))
 echo "Building the tool using $th threads..."
 
-# Make sure llvm submodule is up-to-date.
-git submodule sync
-git submodule update --init --recursive "${DIR}/../llvm"
-git submodule update --init "${DIR}/../torch-mlir"
-
 # --------------------------------------------------------------------
 # Build MLIR and LLVM
 # --------------------------------------------------------------------
