@@ -31,13 +31,10 @@ RUN cd /dkrPkgs \
     && ./bootstrap --prefix=/usr/local \
     && make -j $(grep -c ^processor /proc/cpuinfo) \
     && make install
-# python 3.8
+# python 3.10
 RUN cd /dkrPkgs \
-    # && wget https://www.python.org/ftp/python/3.8.3/Python-3.8.3.tgz \
     && wget https://www.python.org/ftp/python/3.10.2/Python-3.10.2.tgz \
-    # && tar xvf Python-3.8.3.tgz \
     && tar xvf Python-3.10.2.tgz \
-    # && cd Python-3.8*/ \
     && cd Python-3.10*/ \
     && ./configure --enable-optimizations --prefix=/usr/local \
     && make install
@@ -54,7 +51,8 @@ USER dev-user
 
 # Install PyTorch and Torch-MLIR
 RUN pip3 install --user --upgrade pip \
-    && pip3 install --pre torch-mlir torchvision -f https://llvm.github.io/torch-mlir/package-index/ --extra-index-url https://download.pytorch.org/whl/nightly/cpu
+    && pip3 install --pre torch-mlir torchvision -f https://llvm.github.io/torch-mlir/package-index/ --extra-index-url https://download.pytorch.org/whl/nightly/cpu \
+    && pip3 install onnx
 
 # Add environment variables
 # PATH
