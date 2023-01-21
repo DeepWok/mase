@@ -3,6 +3,7 @@ import torch
 import torch_mlir
 import torch.nn as nn
 
+
 # Model specifications
 class MLP(torch.nn.Module):
     # Toy quantized FC model for digit recognition on MNIST
@@ -21,6 +22,8 @@ class MLP(torch.nn.Module):
         x = torch.nn.functional.relu(self.fc2(x))
         x = self.fc3(x)
         return x
+
+
 mlp = MLP()
 
 # Inputs to the model
