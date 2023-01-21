@@ -8,18 +8,192 @@ on:
 
 jobs:
 
-  build:
-    runs-on: ubuntu-latest
+  # build-with-docker:
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #   - uses: actions/checkout@v3
+  #     with:
+  #         submodules: "true"
+  #   - name: Build the Docker image
+  #     run: |
+  #         cd Docker 
+  #         docker build --build-arg UID=$(id -u) --build-arg GID=$(id -g) . --tag mase-centos8
+  #         
+  #   - name: Build the tool
+  #     run: |
+  #         docker run -d -i --name mase-ci -u $(id -u) -v $(pwd):/workspace mase-centos8:latest /bin/bash
+  #         docker exec -i -w /workspace mase-ci make build
+
+  build-with-ubuntu:
+    runs-on: ubuntu-22.04
     steps:
     - uses: actions/checkout@v3
       with:
           submodules: "true"
-    - name: Build the Docker image
+
+    # -----------
+    # Install basic dependencies
+    # -----------
+    
+    - name: Get dependences 
+      run: |
+          sudo apt-get update
+          sudo apt-get install apt-utils -y
+          sudo apt-get upgrade -y
+          sudo apt-get install -y \
+              && sudo apt-get install -y clang cmake graphviz-dev libclang-dev \
+                          pkg-config g++ llvm libxtst6 xdg-utils \
+                          libboost-all-dev llvm gcc ninja-build \
+                          python3 python3-pip build-essential \
+                          libssl-dev git vim wget htop sudo \
+                          lld clang-format clang-tidy
+          pip3 install --user --upgrade pip
+          pip3 install onnx yapf toml GitPython
+
+    # -----------
+    # Sanity check 
+    # -----------
+
+    # Choose the git commit to diff against for the purposes of linting.
+    # Since this workflow is triggered on both pushes and pull requests, we
+    # have to determine if the pull request target branch is set (which it
+    # will only be on the PR triggered flow). If it's not, then compare
+    # against the last commit.
+    - name: choose-commit
+      if: ${{ always() }}
+      env:
+        # Base ref is the target branch, in text form (not hash)
+        PR_BASE: ${{ github.base_ref }}
+      run: |
+        # Run clang-format
+        if [ -z "$PR_BASE" ]; then
+          DIFF_COMMIT_NAME="HEAD^"
+        else
+          DIFF_COMMIT_NAME="$PR_BASE"
+        fi
+        echo "DIFF_COMMIT_NAME=$DIFF_COMMIT_NAME" >> $GITHUB_ENV
+
+    # Since we did a shallow fetch for this repo, we must fetch the commit
+    # upon which we be diff'ing. The last step set the ref name in the
+    # $DIFF_COMMIT_NAME environment variable. When running the fetch, resolve
+    # it to the commit hash and pass that hash along to subsequent steps.
+    - name: git fetch base commit
+      continue-on-error: true
+      run: |
+        if echo "$DIFF_COMMIT_NAME" | grep -q HEAD; then
+          DIFF_COMMIT_SHA=$( git rev-parse $DIFF_COMMIT_NAME )
+        else
+          git fetch --recurse-submodules=no origin $DIFF_COMMIT_NAME
+          DIFF_COMMIT_SHA=$( git rev-parse origin/$DIFF_COMMIT_NAME )
+        fi
+        echo "DIFF_COMMIT=$DIFF_COMMIT_SHA" >> $GITHUB_ENV
+    
+    # Run 'git clang-format', comparing against the target commit hash. If
+    # clang-format fixed anything, fail and output a patch.
+    - name: clang-format
+      if: ${{ always() }}
+      run: |
+        # Run clang-format
+        git clang-format $DIFF_COMMIT
+        git diff --ignore-submodules > clang-format.patch
+        if [ -s clang-format.patch ]; then
+          echo "Clang-format found formatting problems in the following " \
+            "files. See diff in the clang-format.patch artifact."
+          git diff --ignore-submodules --name-only
+          git checkout .
+          exit 1
+        fi
+        echo "Clang-format found no formatting problems"
+        exit 0
+    
+    # Run yapf to check Python formatting.
+    - name: python-format
+      if: ${{ always() }}
+      shell: bash
+      run: |
+        files=$(git diff --name-only $DIFF_COMMIT | grep -e '\.py$' || echo -n)
+        if [[ ! -z $files ]]; then
+          yapf --diff $files
+        fi
+    
+    # Upload the format patches to an artifact (zip'd) associated
+    # with the workflow run. Only run this on a failure.
+    - name: Upload format patches
+      uses: actions/upload-artifact@v2
+      continue-on-error: true
+      if: ${{ failure() }}
+      with:
+        name: clang-format-patches
+        path: clang-*.patch
+
+    # Unfortunately, artifact uploads are always zips so display the diff as
+    # well to provide feedback at a glance.
+    - name: clang format patches display
+      if: ${{ failure() }}
+      continue-on-error: true
+      run: |
+        # Display patches
+        if [ ! -z clang-format.patch ]; then
+          echo "Clang-format patch"
+          echo "================"
+          cat clang-format.patch
+          echo "================"
+        fi         
+     
+    # Run clang-tidy against only the changes. The 'clang-tidy-diff' script
+    # does this if supplied with the diff.
+    - name: clang-tidy
+      if: ${{ always() }}
+      run: |
+        git diff -U0 $DIFF_COMMIT...HEAD | \
+          clang-tidy-diff -path build -p1 -fix -j$(nproc)
+        git clang-format -f $DIFF_COMMIT
+        git diff --ignore-submodules > clang-tidy.patch
+        if [ -s clang-tidy.patch ]; then
+          echo "Clang-tidy problems in the following files. " \
+            "See diff in the clang-tidy.patch artifact."
+          git diff --ignore-submodules --name-only
+          git checkout .
+          exit 1
+        fi
+        echo "Clang-tidy found no problems"
+        exit 0
+   
+    # Upload the tidy patches to an artifact (zip'd) associated
+    # with the workflow run. Only run this on a failure.
+    - name: Upload tidy patches
+      uses: actions/upload-artifact@v2
+      continue-on-error: true
+      if: ${{ failure() }}
+      with:
+        name: clang-tidy-patches
+        path: clang-*.patch
+    
+    # Unfortunately, artifact uploads are always zips so display the diff as
+    # well to provide feedback at a glance.
+    - name: clang tidy patches display
+      if: ${{ failure() }}
+      continue-on-error: true
+      run: |
+        if [ ! -z clang-tidy.patch ]; then
+          echo "Clang-tidy patch"
+          echo "================"
+          cat clang-tidy.patch
+          echo "================"
+        fi
+
+    # -----------
+    # Build the tool 
+    # -----------
+
+    - name: Install PyTorch and Torch-MLIR 
       run: 
-          make sync
-          make build-docker
-          
-    - name: Build the tool
-      run:
-          make shell
+          pip3 install --pre torch-mlir torchvision 
+          -f https://llvm.github.io/torch-mlir/package-index/ 
+          --extra-index-url https://download.pytorch.org/whl/nightly/cpu
+    
+    - name: Build LLVM 
+      run: |
           make build
+
+
