@@ -16,7 +16,8 @@ RUN apt-get update -y \
                           libboost-all-dev llvm gcc ninja-build \
                           python3 python3-pip build-essential \
                           libssl-dev git vim wget htop sudo \
-                          lld parallel clang-format clang-tidy
+                          lld parallel clang-format clang-tidy \
+                          verilator
 
 # Append any packages you need here
 # RUN apt-get ...
