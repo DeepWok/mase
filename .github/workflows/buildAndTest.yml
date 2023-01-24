@@ -46,7 +46,7 @@ jobs:
                           libboost-all-dev llvm gcc ninja-build \
                           python3 python3-pip build-essential \
                           libssl-dev git vim wget htop sudo \
-                          lld clang-format clang-tidy
+                          lld clang-format clang-tidy verilator
           pip3 install --user --upgrade pip
           pip3 install onnx yapf toml GitPython
 
@@ -192,8 +192,8 @@ jobs:
           -f https://llvm.github.io/torch-mlir/package-index/ 
           --extra-index-url https://download.pytorch.org/whl/nightly/cpu
     
-    - name: Build LLVM 
-      run: |
-          make build
+    # - name: Build LLVM 
+    #   run: |
+    #       make build
 
 
