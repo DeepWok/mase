@@ -2,6 +2,7 @@
 
 This repo contains the following directories:
 * `examples` - NN models by PyTorch
+* `hardware` - Internal hardware library 
 * `scripts` - Installation scripts  
 * `Docker` - Docker container configurations  
 

@@ -16,8 +16,30 @@ RUN apt-get update -y \
                           libboost-all-dev llvm gcc ninja-build \
                           python3 python3-pip build-essential \
                           libssl-dev git vim wget htop sudo \
-                          lld parallel clang-format clang-tidy \
-                          verilator
+                          lld parallel clang-format clang-tidy
+
+# Install SystemVerilog formatter
+RUN mkdir -p /srcPkgs \
+    && cd /srcPkgs \
+    && wget https://github.com/chipsalliance/verible/releases/download/v0.0-2776-gbaf0efe9/verible-v0.0-2776-gbaf0efe9-Ubuntu-22.04-jammy-x86_64.tar.gz \
+    && mkdir -p verible \
+    && tar xzvf verible-*-x86_64.tar.gz -C verible --strip-components 1
+# Install verilator from source - version v5.006 
+RUN apt-get update -y \
+    && apt-get install -y git perl make autoconf flex bison \
+                          ccache libgoogle-perftools-dev numactl \
+                          perl-doc libfl2 libfl-dev zlib1g zlib1g-dev \
+                          help2man
+RUN mkdir -p /srcPkgs \
+    && cd /srcPkgs \
+    && git clone https://github.com/verilator/verilator \ 
+    && unset VERILATOR_ROOT \
+    && cd verilator \
+    && git checkout v5.006 \
+    && autoconf \
+    && ./configure \
+    && make -j \
+    && make install
 
 # Append any packages you need here
 # RUN apt-get ...
@@ -36,12 +58,11 @@ RUN pip3 install --user --upgrade pip \
     && pip3 install --pre torch-mlir torchvision \
     -f https://llvm.github.io/torch-mlir/package-index/ \
     --extra-index-url https://download.pytorch.org/whl/nightly/cpu \
-    && pip3 install onnx yapf toml GitPython
-
+    && pip3 install onnx yapf toml GitPython colorlog cocotb[bus]
 # Add environment variables
 RUN printf "\
 \nexport LIBRARY_PATH=/usr/lib/x86_64-linux-gnu:\$LIBRARY_PATH \
-\nexport PATH=/workspace/bin:/home/dev-user/.local/bin:/workspace/llvm/build/bin::\$PATH \
+\nexport PATH=/workspace/bin:/home/dev-user/.local/bin:/workspace/llvm/build/bin:\$PATH:/srcPkgs/verible/bin \
 \n# Thread setup \
 \nexport nproc=\$(grep -c ^processor /proc/cpuinfo) \
 \n# Terminal color... \
@@ -58,6 +79,8 @@ RUN printf "\
 \nautocmd BufWritePost *.hpp silent! !clang-format -i <afile> \
 \nautocmd BufWritePost *.cc  silent! !clang-format -i <afile> \
 \nautocmd BufWritePost *.py  silent! !yapf -i <afile> \
+\nautocmd BufWritePost *.sv  silent! !verible-verilog-format --inplace <afile> \
+\nautocmd BufWritePost *.v  silent! !verible-verilog-format --inplace <afile> \
 \nautocmd BufWritePost * redraw! \
 \n" >> /home/dev-user/.vimrc
 

@@ -41,21 +41,54 @@ jobs:
           sudo apt-get install apt-utils -y
           sudo apt-get upgrade -y
           sudo apt-get install -y \
-              && sudo apt-get install -y clang cmake graphviz-dev libclang-dev \
+                          clang cmake graphviz-dev libclang-dev \
                           pkg-config g++ llvm libxtst6 xdg-utils \
                           libboost-all-dev llvm gcc ninja-build \
                           python3 python3-pip build-essential \
                           libssl-dev git vim wget htop sudo \
-                          lld clang-format clang-tidy verilator
+                          lld clang-format clang-tidy
+          sudo apt-get update -y
+          sudo apt-get install -y \
+                          perl make autoconf flex bison libunwind-dev \
+                          ccache libgoogle-perftools-dev numactl \
+                          perl-doc libfl2 libfl-dev zlib1g zlib1g-dev \
+                          help2man
+
+    - name: Install Verible 
+      run: |
+          # Install SystemVerilog formatter
+          (mkdir -p "${HOME}"/srcPkgs \
+          && cd "${HOME}"/srcPkgs \
+          && wget https://github.com/chipsalliance/verible/releases/download/v0.0-2776-gbaf0efe9/verible-v0.0-2776-gbaf0efe9-Ubuntu-22.04-jammy-x86_64.tar.gz \
+          && mkdir -p verible \
+          && tar xzvf verible-*-x86_64.tar.gz -C verible --strip-components 1)
+          ln -s "${HOME}"/srcPkgs/verible/bin/verible-verilog-format /usr/local/bin/verible-verilog-format
+          ln -s "${HOME}"/srcPkgs/verible/bin/verible-verilog-diff /usr/local/bin/verible-verilog-diff
+          ln -s "${HOME}"/srcPkgs/verible/bin/git-verible-verilog-format.sh /usr/local/bin/git-verible-verilog-format.sh
+
+    - name: Install Verilator 
+      run: |
+          # Install verilator from source - version v5.006
+          (mkdir -p "${HOME}"/srcPkgs \
+          && cd "${HOME}"/srcPkgs \
+          && git clone https://github.com/verilator/verilator \
+          && unset VERILATOR_ROOT \
+          && cd verilator \
+          && git checkout v5.006 \
+          && autoconf \
+          && ./configure \
+          && make \
+          && sudo make install)
+
           pip3 install --user --upgrade pip
-          pip3 install onnx yapf toml GitPython
+          pip3 install onnx yapf toml GitPython colorlog cocotb[bus]
 
     # -----------
     # Sanity check 
     # -----------
 
     # Choose the git commit to diff against for the purposes of linting.
-    # Since this workflow is triggered on both pushes and pull requests, we
+    # Since this workflow is triggered on both pushes and pull requests, w
     # have to determine if the pull request target branch is set (which it
     # will only be on the PR triggered flow). If it's not, then compare
     # against the last commit.
@@ -105,16 +138,6 @@ jobs:
         fi
         echo "Clang-format found no formatting problems"
         exit 0
-    
-    # Run yapf to check Python formatting.
-    - name: python-format
-      if: ${{ always() }}
-      shell: bash
-      run: |
-        files=$(git diff --name-only $DIFF_COMMIT | grep -e '\.py$' || echo -n)
-        if [[ ! -z $files ]]; then
-          yapf --diff $files
-        fi
     
     # Upload the format patches to an artifact (zip'd) associated
     # with the workflow run. Only run this on a failure.
@@ -182,6 +205,36 @@ jobs:
           echo "================"
         fi
 
+    # Run verible-verilog-format to check Verilog/SystemVerilog formatting.
+    - name: verilog-format
+      if: ${{ always() }}
+      shell: bash
+      run: |
+        files=$(git diff --name-only $DIFF_COMMIT | grep -e '\.sv$' || echo -n)
+        if [[ ! -z $files ]]; then
+          for f in $files
+          do
+            verible-verilog-format $f | diff - $f
+          done
+        fi
+        files=$(git diff --name-only $DIFF_COMMIT | grep -e '\.v$' || echo -n)
+        if [[ ! -z $files ]]; then
+          for f in $files
+          do
+            verible-verilog-format $f | diff - $f
+          done
+        fi
+
+    # Run yapf to check Python formatting.
+    - name: python-format
+      if: ${{ always() }}
+      shell: bash
+      run: |
+        files=$(git diff --name-only $DIFF_COMMIT | grep -e '\.py$' || echo -n)
+        if [[ ! -z $files ]]; then
+          yapf --diff $files
+        fi
+    
     # -----------
     # Build the tool 
     # -----------
@@ -196,4 +249,7 @@ jobs:
     #   run: |
     #       make build
 
+    - name: Hardware regression test 
+      run: |
+          python3 bin/test-hardware.py -a || cat test-hardware.log 
 
