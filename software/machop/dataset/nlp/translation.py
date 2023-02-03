@@ -9,7 +9,7 @@ from datasets import load_dataset, load_from_disk
 
 class TranslationDataset(Dataset):
     path = None
-    num_classes = None
+    num_labels = None
     def __init__(self, tokenizer, max_token_count):
         self.tokenizer = tokenizer
         self.max_token_count = max_token_count

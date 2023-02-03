@@ -17,7 +17,11 @@ def plt_model_load(model, checkpoint):
     return model
 
 
-def test(model, test_loader, plt_trainer_args, load_path):
+def test(
+        model, 
+        data_loader, 
+        plt_trainer_args, 
+        load_path):
     plt_model = ModelWrapper(model)
     if load_path is not None:
         if load_path.endswith(".ckpt"):
@@ -32,4 +36,4 @@ def test(model, test_loader, plt_trainer_args, load_path):
         print(f"Loaded model from {checkpoint}")
 
     trainer = pl.Trainer(**plt_trainer_args)
-    trainer.test(plt_model, test_loader)
+    trainer.test(plt_model, test_dataloader=data_loader.test_dataloader)

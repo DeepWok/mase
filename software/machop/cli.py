@@ -116,22 +116,23 @@ class Main:
         # get dataset
         logging.info(f'Loading dataset {a.dataset!r}...')
 
-        loader = get_dataset(
+        loader, info = get_dataset(
             name=a.dataset, 
             batch_size=a.batch_size, 
             workers=a.num_workers)
         logging.info(f'Loaded dataset {a.dataset!r}.')
         # get model
         model_cls = model_map[a.model]
-        model = model_cls(info=dataset_info)
-        return model, train_loader, val_loader, test_loader
+        # WARNING: this is only tested on vision datasets and networks for now
+        model = model_cls(info=info)
+        return model, loader
 
     def cli_train(self):
         a = self.a
         if not a.save_name:
             logging.error('--save-name not specified.')
 
-        model, train_loader, val_loader, test_loader = self.setup_model_and_data(a)
+        model, loader = self.setup_model_and_data(a)
         plt_trainer_args = {
             'max_epochs': a.max_epochs, 'devices': a.num_devices,
             'accelerator': a.accelerator, 'strategy': a.strategy,
@@ -139,9 +140,7 @@ class Main:
         
         train_params = {
             'model': model,
-            'train_loader': train_loader,
-            'val_loader': val_loader,
-            'test_loader': test_loader,
+            'data_loader': loader,
             'optimizer': a.optimizer,
             'learning_rate': a.learning_rate,
             "plt_trainer_args": plt_trainer_args,
@@ -152,13 +151,13 @@ class Main:
     def cli_test(self):
         a = self.a
 
-        model, _, _, test_loader = self.setup_model_and_data(a)
+        model, loader = self.setup_model_and_data(a)
         plt_trainer_args = {
             'devices': a.num_devices,
             'accelerator': a.accelerator, 'strategy': a.strategy,}
         test_params = {
             'model': model,
-            'test_loader': test_loader,
+            'data_loader': loader,
             'plt_trainer_args': plt_trainer_args,
             'load_path': a.load_name,
         }
