@@ -5,3 +5,13 @@ from .translation import (
     TranslationDatasetOPUS_EN_FR,
     TranslationDatasetMulti30k,
     TranslationDatasetWMT16_RO_EN)
+
+dataset_factory = {
+    "sst2": SentAnalDatasetSST2,
+    "mnli": TextEntailDatasetMNLI,
+    "qnli": TextEntailDatasetQNLI,
+    "iwslt2017_en_de": TranslationDatasetIWSLT2017_EN_DE,
+    'opus_en_fr': TranslationDatasetOPUS_EN_FR,
+    'multi30k': TranslationDatasetMulti30k, 
+    'wmt16_ro_en': TranslationDatasetWMT16_RO_EN, 
+}
