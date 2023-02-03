@@ -10,8 +10,33 @@ For more, you can watch this [video](https://www.youtube.com/watch?v=JEUsN_KlDy8
 
 ## Commands
 
+### Example CPU run
+
 ```bash
 ./chop train cifar10 resnet18
- # cli argument for the saving directory
+ # cli argument for the saving directory, you must add this
  \ --save test
+```
+
+### Example debug run
+
+```bash
+./chop train cifar10 resnet18 --save test --debug
+```
+
+### Example GPU run
+
+```bash
+./chop train cifar10 resnet18 
+  \ --save test 
+  # use GPUs and 4 of them
+  \ -a gpu -n 4
+  # set learning rate
+  \ -lr 1e-5
+```
+
+### Training log check
+
+```bash
+tensorboard --logdir your-log-directory
 ```

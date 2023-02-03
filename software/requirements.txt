@@ -2,3 +2,4 @@ pytorch-lightning
 transformers
 toml
 timm
+pytorch-nlp
