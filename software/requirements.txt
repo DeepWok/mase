@@ -1,0 +1,4 @@
+pytorch-lightning
+transformers
+toml
+timm
