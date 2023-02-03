@@ -14,6 +14,4 @@ For more, you can watch this [video](https://www.youtube.com/watch?v=JEUsN_KlDy8
 ./chop train cifar10 resnet18
  # cli argument for the saving directory
  \ --save test
- # A config file that defines how to construct a dataset
- \ -config ./configs/integer/test.toml
 ```
