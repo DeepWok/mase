@@ -1,6 +1,6 @@
 # Machop: the software stack for MASE
 
-![alt text](machop.png)
+![alt text](machop.png | width=100)
 
 [Machop](https://bulbapedia.bulbagarden.net/wiki/Machop_(Pok%C3%A9mon)) is a humanoid, bipedal Pokémon that has blue-gray skin. It has three brown ridges on top of its head, large red eyes, and a relatively flat face. On either side of its chest are three, thin, rib-like stripes. Its feet appear to have no toes, while its hands have five fingers. Machop also has a short, stubby tail.
 
