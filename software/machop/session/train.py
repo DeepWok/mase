@@ -5,7 +5,7 @@ from .wrapper import ModelWrapper
 
 def train(
         model,
-        train_loader, val_loader,
+        data_loader,
         optimizer, 
         learning_rate, 
         plt_trainer_args, 
@@ -25,4 +25,7 @@ def train(
         epochs=plt_trainer_args['max_epochs'],
         optimizer=optimizer)
     trainer = pl.Trainer(**plt_trainer_args)
-    trainer.fit(plt_model, train_loader, val_loader)
+    trainer.fit(
+        plt_model, 
+        train_dataloaders=data_loader.train_dataloader, 
+        val_dataloaders=data_loader.val_dataloader)
