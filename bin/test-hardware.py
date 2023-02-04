@@ -7,7 +7,17 @@ import sys, os, time, logging, colorlog, glob, subprocess, multiprocessing, shut
 import maselogger
 
 # Add more test cases here
-testcases = {'common/int_mult'}
+testcases = {
+    'common/int_mult': [],
+    'common/register_slice': [],
+    'common/adder_tree_layer': [],
+    # 'common/accumulator': [],
+    # 'common/adder_tree': ['common'],
+    # 'common/vector_mult': ['common'],
+    # 'linear/dataflow_linear': ['common'],
+    'activations/int_relu': ['common'],
+    # 'activations/int_relu6': ['common'],
+}
 
 
 # ---------- testhardware class --------------
@@ -23,7 +33,7 @@ class testhardware:
         self.logger = maselogger.getLogger(
             'test-hardware', os.path.join(self.root, 'test-hardware.log'))
         self.testcases = self.args
-        if self.options.runall: self.testcases = testcases
+        if self.options.runall: self.testcases = testcases.keys()
         checkfiles = self.checkfiles()
         if checkfiles:
             sys.exit(checkfiles)
@@ -42,7 +52,7 @@ class testhardware:
                                      testcase, '{}_tb.py'.format(basename))))
                 return 1
             # Check if the design file exists
-            if not os.path.exists(
+            if not os.path.isfile(
                     os.path.join(self.root, 'hardware',
                                  '{}.sv'.format(testcase))):
                 self.logger.error(
@@ -58,10 +68,16 @@ class testhardware:
         self.logger.info('Linting all the design files...')
         for testcase in self.testcases:
             designfile = os.path.join(self.root, 'hardware', testcase)
+            includefiles = [
+                '-I{}'.format(
+                    os.path.join(self.root, 'hardware',
+                                 '{}'.format(includefile)))
+                for includefile in testcases[testcase]
+            ]
             cmd = [
                 'verilator', '--lint-only', '--Wall',
                 '{}.sv'.format(designfile)
-            ]
+            ] + includefiles
             result = self.execute(cmd, logoutput=self.isdebug, cwd=cwd)
             if result:
                 return 1
@@ -95,108 +111,9 @@ class testhardware:
             'Hardware regression test finished. {} errors.'.format(err))
         return err
 
-    def runall(self):
-        self.logger.info('Running hardware regression test...')
-        err = 0
-        for key, testcase in tblibpath.items():
-            self.logger.info('Running test case for {}...'.format(key))
-            result = self.rununittest(key, testcase)
-            if result:
-                self.logger.error('Simulation for {} failed: {}.'.format(
-                    testcase, cmdline))
-                self.logger.info('FAILED')
-                err += 1
-            else:
-                self.logger.info('SUCCESS')
-        return err
-
-    def debugtests(self):
-        for arg in self.args:
-            self.logger.info('Running unit test for {}...'.format(arg))
-            if self.debugunittest(arg, tblibpath[arg]):
-                return 1
-        return 0
-
-    def rununittest(self, key, designfiles):
-        basename = os.path.basename(key)
-        cwd = os.path.join(self.root, 'hardware', 'testbench', key)
-        obj = os.path.join(cwd, 'obj_dir')
-        if os.path.exists(obj):
-            shutil.rmtree(obj)
-        designfileswithpath = [
-            os.path.join(self.root, 'hardware', v) for v in designfiles
-        ]
-        cmd = [
-            'verilator', '-Wall', '-cc', '--trace'
-        ] + designfileswithpath + [
-            '--top-module', basename, '--exe', '{}_tb.cpp'.format(basename)
-        ]
-        cmdline = subprocess.list2cmdline(cmd)
-        result = self.execute(cmd, logoutput=False, cwd=cwd)
-        if result:
-            return 1
-        cmd = [
-            'make', '-j', '-C', 'obj_dir/', '-f', 'V{}.mk'.format(basename),
-            'V{}'.format(basename)
-        ]
-        cmdline = subprocess.list2cmdline(cmd)
-        result = self.execute(cmd, logoutput=False, cwd=cwd)
-        if result:
-            return 1
-        cmd = ['obj_dir/V{}'.format(basename)]
-        cmdline = subprocess.list2cmdline(cmd)
-        result = self.execute(cmd, logoutput=False, cwd=cwd)
-        if result:
-            return 1
-        shutil.rmtree(obj)
-        return 0
-
-    def debugunittest(self, key, designfiles):
-        basename = os.path.basename(key)
-        cwd = os.path.join(self.root, 'hardware', 'testbench', key)
-        obj = os.path.join(cwd, 'obj_dir')
-        if os.path.exists(obj):
-            shutil.rmtree(obj)
-        designfileswithpath = [
-            os.path.join(self.root, 'hardware', v) for v in designfiles
-        ]
-        cmd = [
-            'verilator', '-Wall', '-cc', '--trace'
-        ] + designfileswithpath + [
-            '--top-module', basename, '--exe', '{}_tb.cpp'.format(basename)
-        ]
-        cmdline = subprocess.list2cmdline(cmd)
-        self.logger.debug(cmdline)
-        # Emit results to the console for debugging
-        result = self.execute(cmd, cwd=cwd)
-        if result:
-            self.logger.error('Simulation for {} failed: {}.'.format(
-                key, cmdline))
-            return 1
-        cmd = [
-            'make', '-j', '-C', 'obj_dir/', '-f', 'V{}.mk'.format(basename),
-            'V{}'.format(basename)
-        ]
-        cmdline = subprocess.list2cmdline(cmd)
-        self.logger.debug(cmdline)
-        result = self.execute(cmd, cwd=cwd)
-        if result:
-            self.logger.error('Simulation for {} failed: {}.'.format(
-                key, cmdline))
-            return 1
-        cmd = ['obj_dir/V{}'.format(basename)]
-        cmdline = subprocess.list2cmdline(cmd)
-        self.logger.debug(cmdline)
-        result = self.execute(cmd, cwd=cwd)
-        if result:
-            self.logger.error('Simulation for {} failed: {}.'.format(
-                key, cmdline))
-            return 1
-        shutil.rmtree(obj)
-        return 0
-
     def execute(self, cmd, logoutput: bool = True, logfile=None, cwd='.'):
         if logoutput:
+            self.logger.debug(subprocess.list2cmdline(cmd))
             with subprocess.Popen(cmd,
                                   stdout=subprocess.PIPE,
                                   bufsize=1,
