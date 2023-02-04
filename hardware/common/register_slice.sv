@@ -14,29 +14,33 @@ module register_slice #(
     input  logic  r_ready
 );
 
+  // The buffer stores the intermeidate data being computed in the register slice
   MYDATA buffer;
-  logic  buffer_full;
+  // The shift register stores the validity of the data in the buffer 
+  logic  shift_reg;
 
+  // shift_register 
   always_ff @(posedge clk) begin
-    if (rst) buffer_full <= 1'b0;
+    if (rst) shift_reg <= 1'b0;
     else begin
-      // if r_ready is high, the read transaction is complete and the buffer is empty
-      if (r_ready) buffer_full <= 1'b0;
-      // if w_valid is high, the write transaction is complete and the buffer is full
-      if (w_valid) buffer_full <= 1'b1;
-
-      if (w_valid && w_ready) buffer <= w_data;
+      // no backpressure or buffer empty
+      if (r_ready || !shift_reg) shift_reg <= w_valid;
+      else shift_reg <= shift_reg;
     end
   end
 
-
+  // buffer 
+  always_ff @(posedge clk) begin
+    // backpressure && valid output
+    if (!r_ready && r_valid) buffer <= buffer;
+    else buffer <= w_data;
+  end
 
   always_comb begin
-    // if the buffer is not full, we are ready to accept a write transaction
-    w_ready = ~buffer_full;
-    // if the buffer is full, we are ready to accept a read transaction
-    r_valid = buffer_full;
-    // dummy wiring
+    // empty buffer or no back pressure
+    w_ready = (~shift_reg) | r_ready;
+    // dummy wiring 
+    r_valid = shift_reg;
     r_data  = buffer;
   end
 
