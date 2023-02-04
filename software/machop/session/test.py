@@ -2,7 +2,7 @@ import os
 import torch
 import pytorch_lightning as pl
 
-from .wrapper import ModelWrapper
+from .plt_wrapper import get_model_wrapper
 
 
 def get_checkpoint_file(checkpoint_dir):
@@ -18,11 +18,14 @@ def plt_model_load(model, checkpoint):
 
 
 def test(
+        model_name,
         model, 
+        task,
         data_loader, 
         plt_trainer_args, 
         load_path):
-    plt_model = ModelWrapper(model)
+    wrapper_cls = get_model_wrapper(model_name, task)
+    plt_model = wrapper_cls(model)
     if load_path is not None:
         if load_path.endswith(".ckpt"):
             checkpoint = load_path
@@ -36,4 +39,4 @@ def test(
         print(f"Loaded model from {checkpoint}")
 
     trainer = pl.Trainer(**plt_trainer_args)
-    trainer.test(plt_model, test_dataloader=data_loader.test_dataloader)
+    trainer.test(plt_model, test_dataloaders=data_loader.test_dataloader)

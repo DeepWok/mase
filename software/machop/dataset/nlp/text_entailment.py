@@ -11,9 +11,7 @@ from datasets import load_dataset, load_from_disk
 
 class TextEntailDataset(Dataset):
     path = None
-    def __init__(self, tokenizer, max_token_count):
-        self.tokenizer = tokenizer
-        self.max_token_count = max_token_count
+    def __init__(self):
         self.sent1_col_name = None
         self.sent2_col_name = None
         self.label_col_name = None
@@ -24,6 +22,10 @@ class TextEntailDataset(Dataset):
         else:
             print("Dataset already downloaded and processed")
             self._load_from_path()
+
+    def setup_tokenizer(self, tokenizer, max_token_count):
+        self.tokenizer = tokenizer
+        self.max_token_count = max_token_count
 
     def __len__(self):
         return len(self.data)
@@ -63,14 +65,12 @@ class TextEntailDataset(Dataset):
 class TextEntailDatasetQNLI(TextEntailDataset):
     path = './data/qnli'
     num_labels = 2
-    def __init__(self, tokenizer, max_token_count):
-        super().__init__(
-            tokenizer = tokenizer, 
-            max_token_count = max_token_count
-        )
+    def __init__(self, split='train'):
+        super().__init__()
         self.sent1_col_name = "question"
         self.sent2_col_name = "sentence"
         self.label_col_name = "label"
+        self.data = self.dataset[split]
 
     def _download_and_process(self):
         dataset = load_dataset('glue', 'qnli')
@@ -81,11 +81,8 @@ class TextEntailDatasetQNLI(TextEntailDataset):
 class TextEntailDatasetMNLI(TextEntailDataset):
     path = './data/mnli'
     num_classes = 3
-    def __init__(self, tokenizer, max_token_count, split='train'):
-        super().__init__(
-            tokenizer = tokenizer, 
-            max_token_count = max_token_count
-        )
+    def __init__(self, split='train'):
+        super().__init__()
         self.sent1_col_name = "premise"
         self.sent2_col_name = "hypothesis"
         self.label_col_name = "label"

@@ -10,9 +10,7 @@ from datasets import load_dataset, load_from_disk
 class TranslationDataset(Dataset):
     path = None
     num_labels = None
-    def __init__(self, tokenizer, max_token_count):
-        self.tokenizer = tokenizer
-        self.max_token_count = max_token_count
+    def __init__(self):
         self.src_col_name = None
         self.trg_col_name = None
 
@@ -22,6 +20,10 @@ class TranslationDataset(Dataset):
         else:
             print("Dataset already downloaded and processed")
             self._load_from_path()
+
+    def setup_tokenizer(self, tokenizer, max_token_count):
+        self.tokenizer = tokenizer
+        self.max_token_count = max_token_count
 
     def __len__(self):
         return len(self.data)
@@ -59,11 +61,8 @@ class TranslationDataset(Dataset):
 # It seems like the download link of this is broken ..
 class TranslationDatasetIWSLT2017_EN_DE(TranslationDataset):
     path = './data/iwslt2017-en-de'
-    def __init__(self, tokenizer, max_token_count, split='train'):
-        super().__init__(
-            tokenizer = tokenizer, 
-            max_token_count = max_token_count
-        )
+    def __init__(self, split='train'):
+        super().__init__()
         self.src_col_name = "en"
         self.trg_col_name = "de"
         self.data = self.dataset[split]
@@ -142,6 +141,7 @@ class TranslationDatasetWMT16_RO_EN(TranslationDataset):
             input_ids=input_ids,
             attention_mask=attention_mask,
             labels=labels)
+
 
 class TranslationDatasetMulti30k(TranslationDataset):
     path = './data/multi30k'

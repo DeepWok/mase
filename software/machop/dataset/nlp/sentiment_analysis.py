@@ -9,12 +9,14 @@ from datasets import load_dataset
 
 
 class SentAnalDataset(Dataset):
-    def __init__(self, data, tokenizer, max_token_count):
-        self.tokenizer = tokenizer
-        self.max_token_count = max_token_count
+    def __init__(self, data):
         self.data = data
         self.sent_col_name = None
         self.label_col_name = None
+    
+    def setup_tokenizer(self, tokenizer, max_token_count):
+        self.tokenizer = tokenizer
+        self.max_token_count = max_token_count
 
     def __len__(self):
         return len(self.data)
@@ -46,12 +48,8 @@ class SentAnalDataset(Dataset):
 class SentAnalDatasetSST2(SentAnalDataset):
     path = './data/sst2'
     num_labels = 2
-    def __init__(self, data, tokenizer, max_token_count):
-        super().__init__(
-            data = data, 
-            tokenizer = tokenizer, 
-            max_token_count = max_token_count
-        )
+    def __init__(self, data):
+        super().__init__(data=data)
         self.sent_col_name = "sentence"
         self.label_col_name = "label"
     

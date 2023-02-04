@@ -1,10 +1,12 @@
 from pytorch_lightning.callbacks import ModelCheckpoint
 import pytorch_lightning as pl
-from .wrapper import ModelWrapper
+from .plt_wrapper import get_model_wrapper 
 
 
 def train(
+        model_name,
         model,
+        task,
         data_loader,
         optimizer, 
         learning_rate, 
@@ -19,7 +21,8 @@ def train(
         save_last=True,
     )
     plt_trainer_args['callbacks'] = [checkpoint_callback]
-    plt_model = ModelWrapper(
+    wrapper_cls = get_model_wrapper(model_name, task)
+    plt_model = wrapper_cls(
         model,
         learning_rate=learning_rate,
         epochs=plt_trainer_args['max_epochs'],
