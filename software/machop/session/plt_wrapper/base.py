@@ -5,8 +5,7 @@ from torchmetrics.functional import accuracy
 from torch.optim.lr_scheduler import CosineAnnealingLR
 
 
-class ModelWrapper(pl.LightningModule):
-
+class WrapperBase(pl.LightningModule):
     def __init__(
             self,
             model,
@@ -71,7 +70,10 @@ class ModelWrapper(pl.LightningModule):
         return {"test_loss": loss, "test_acc": acc}
 
     def configure_optimizers(self):
-        if self.optimizer == 'adam':
+        if self.optimizer == 'adamw':
+            opt = torch.optim.AdamW(self.parameters(), lr=self.learning_rate)
+            scheduler = CosineAnnealingLR(opt, T_max=self.epochs, eta_min=1e-6)
+        elif self.optimizer == 'adam':
             opt = torch.optim.Adam(self.parameters(), lr=self.learning_rate)
             scheduler = CosineAnnealingLR(opt, T_max=self.epochs, eta_min=1e-6)
         elif self.optimizer in ['sgd_warmup', 'sgd']:

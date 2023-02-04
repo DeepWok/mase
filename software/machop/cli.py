@@ -9,10 +9,11 @@ import numpy as np
 import toml
 
 from .session import train, test
-from .models import model_map 
-from .dataset import get_dataset
+from .models import model_map, nlp_models, vision_models
+from .dataset import get_dataset, get_dataloader
 
 logging.getLogger().setLevel(logging.INFO)
+
 
 class Main:
     arguments = {
@@ -73,7 +74,19 @@ class Main:
         ('-config', '--config'): {
             'type': str, 'default': None, 'help': 'config.',
         },
+
+        # language model related
+        ('-p', '--pretrained'): {
+            'action': 'store_true', 'help': 'Use pretrained model from HuggingFace.',
+        },
+        ('-t', '--task'): {
+            'type': str, 'default': 'classification', 'help': 'Task to perform.', 
+        },
+        ('-mt', '--max_token_len'): {
+            'type': int, 'default': 512, 'help': 'Maximum number of tokens.', 
+        },
     }
+
 
     def __init__(self):
         super().__init__()
@@ -116,15 +129,28 @@ class Main:
         # get dataset
         logging.info(f'Loading dataset {a.dataset!r}...')
 
-        loader, info = get_dataset(
-            name=a.dataset, 
-            batch_size=a.batch_size, 
-            workers=a.num_workers)
+        train_dataset, val_dataset, test_dataset, info = get_dataset(name=a.dataset)
         logging.info(f'Loaded dataset {a.dataset!r}.')
         # get model
-        model_cls = model_map[a.model]
-        # WARNING: this is only tested on vision datasets and networks for now
-        model = model_cls(info=info)
+        model_inst_fn = model_map[a.model]
+
+        if a.model in nlp_models:
+            model = model_inst_fn(
+                name=a.model,
+                task=a.task, 
+                info=info, 
+                checkpoint=a.load_name,
+                pretrained=a.pretrained)
+        elif a.model in vision_models:
+            model = model_inst_fn(info=info)
+        else:
+            raise NotImplementedError(f'Unknown model {a.model!r}.')
+        # get data loader from the datasets
+        loader = get_dataloader(
+            a.model, model, train_dataset, val_dataset, test_dataset, 
+            batch_size=a.batch_size,
+            workers=a.num_workers,
+            max_token_len=a.max_token_len)
         return model, loader
 
     def cli_train(self):
@@ -139,7 +165,9 @@ class Main:
             'fast_dev_run': a.debug,}
         
         train_params = {
+            'model_name': a.model,
             'model': model,
+            'task': a.task,
             'data_loader': loader,
             'optimizer': a.optimizer,
             'learning_rate': a.learning_rate,
@@ -156,7 +184,9 @@ class Main:
             'devices': a.num_devices,
             'accelerator': a.accelerator, 'strategy': a.strategy,}
         test_params = {
+            'model_name': a.model,
             'model': model,
+            'task': a.task,
             'data_loader': loader,
             'plt_trainer_args': plt_trainer_args,
             'load_path': a.load_name,

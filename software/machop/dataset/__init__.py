@@ -3,11 +3,12 @@ import torch
 from torch.utils.data import DataLoader
 
 from .nlp import dataset_factory as nlp_dataset_factory 
-from .vision import build_dataset, info
+from .vision import build_dataset 
 from .dataloader import MyDataLoader
+from machop.models import nlp_models
 
 
-def get_dataset(name, batch_size, workers, nlp_task_args=None):
+def get_dataset(name, nlp_task_args={}):
     if name in ['cifar10', 'cifar100', 'imagenet']:
         path = f'data/{name}'
         train_dataset, info = build_dataset(dataset_name=name, path=path, train=True)
@@ -46,9 +47,17 @@ def get_dataset(name, batch_size, workers, nlp_task_args=None):
             val_dataset = dataset_cls(split='validation', **args)
             test_dataset = dataset_cls(split='test', **args)
         info = {
-            'num_classes': train_dataset.num_labels}
+            'num_classes': train_dataset.num_classes}
     else:
         raise ValueError(f"Dataset {name} is not supported.")
+    return train_dataset, val_dataset, test_dataset, info
+
+def get_dataloader(name, model, train_dataset, val_dataset, test_dataset, workers=4, batch_size=64, max_token_len=512):
+    if name in nlp_models:
+        tokenizer = model['tokenizer']
+        train_dataset.setup_tokenizer(tokenizer, max_token_len)
+        val_dataset.setup_tokenizer(tokenizer, max_token_len)
+        test_dataset.setup_tokenizer(tokenizer, max_token_len)
 
     dataloader = MyDataLoader(
         dataset_name=name, 
@@ -57,4 +66,5 @@ def get_dataset(name, batch_size, workers, nlp_task_args=None):
         val_dataset=val_dataset, 
         test_dataset=test_dataset, 
         batch_size=batch_size)
-    return dataloader, info
+
+    return dataloader 
