@@ -38,7 +38,7 @@ class Main:
             'type': float, 'default': 1e-5, 'help': 'Initial learning rate.',
         },
         ('-m', '--max-epochs'): {
-            'type': float, 'default': 100,
+            'type': int, 'default': 100,
             'help': 'Maximum number of epochs for training.',
         },
         ('-b', '--batch-size'): {
