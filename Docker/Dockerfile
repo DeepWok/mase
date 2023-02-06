@@ -47,7 +47,7 @@ RUN mkdir -p /srcPkgs \
 CMD ["bash"]
 
 # Add dev-user
-RUN groupadd -g $GID dev-user
+RUN groupadd -o -g $GID dev-user
 RUN useradd -r -g $GID -u $UID -m -d /home/dev-user -s /sbin/nologin -c "User" dev-user
 RUN echo "dev-user     ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
 USER dev-user
@@ -58,7 +58,8 @@ RUN pip3 install --user --upgrade pip \
     && pip3 install --pre torch-mlir torchvision \
     -f https://llvm.github.io/torch-mlir/package-index/ \
     --extra-index-url https://download.pytorch.org/whl/nightly/cpu \
-    && pip3 install onnx yapf toml GitPython colorlog cocotb[bus]
+    && pip3 install onnx yapf toml GitPython colorlog cocotb[bus] \
+                    pytest
 # Add environment variables
 RUN printf "\
 \nexport LIBRARY_PATH=/usr/lib/x86_64-linux-gnu:\$LIBRARY_PATH \

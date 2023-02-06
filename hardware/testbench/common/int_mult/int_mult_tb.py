@@ -12,7 +12,7 @@ def multiplier_sw(a: int, b: int) -> int:
 
 
 @cocotb.test()
-async def int_mult_test(dut):
+async def test_int_mult(dut):
     """Test for adding 2 random numbers multiple times"""
 
     for i in range(30):
