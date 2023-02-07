@@ -19,12 +19,13 @@ def plt_model_load(model, checkpoint):
 
 def test(
         model_name,
+        info,
         model, 
         task,
         data_loader, 
         plt_trainer_args, 
         load_path):
-    wrapper_cls = get_model_wrapper(model_name, task)
+    wrapper_cls = get_model_wrapper(model_name, task, info)
     plt_model = wrapper_cls(model)
     if load_path is not None:
         if load_path.endswith(".ckpt"):

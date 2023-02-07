@@ -11,7 +11,8 @@ class WrapperBase(pl.LightningModule):
             model,
             learning_rate=5e-4,
             epochs=200,
-            optimizer=None):
+            optimizer=None,
+            info=None):
         super().__init__()
         self.model = model
         self.learning_rate = learning_rate
@@ -20,6 +21,7 @@ class WrapperBase(pl.LightningModule):
         self.optimizer = optimizer
         self.train_losses = []
         self.val_losses = []
+        self.num_classes = info['num_classes']
 
     def forward(self, x):
         return self.model(x)
@@ -33,7 +35,7 @@ class WrapperBase(pl.LightningModule):
             {"loss": loss},
             on_step=False, on_epoch=True, prog_bar=False, logger=True)
         # acc
-        acc = accuracy(y_hat, y)
+        acc = accuracy(y_hat, y, task='multiclass', num_classes=self.num_classes)
         self.log_dict(
             {"acc": acc},
             on_step=False, on_epoch=True, prog_bar=True, logger=True)
@@ -46,12 +48,12 @@ class WrapperBase(pl.LightningModule):
         # val_loss
         self.log_dict(
             {"val_loss": loss},
-            on_step=False, on_epoch=True, prog_bar=True, logger=True)
+            on_step=False, on_epoch=True, prog_bar=True, logger=True, sync_dist=True)
         # val acc
-        acc = accuracy(y_hat, y)
+        acc = accuracy(y_hat, y, task='multiclass', num_classes=self.num_classes)
         self.log_dict(
             {"val_acc": acc},
-            on_step=False, on_epoch=True, prog_bar=True, logger=True)
+            on_step=False, on_epoch=True, prog_bar=True, logger=True, sync_dist=True)
         return {"val_loss": loss, "val_acc": acc}
 
     def test_step(self, batch, batch_idx):
@@ -63,7 +65,7 @@ class WrapperBase(pl.LightningModule):
             {"test_loss": loss},
             on_step=False, on_epoch=True, prog_bar=False, logger=True)
         # val acc
-        acc = accuracy(y_hat, y)
+        acc = accuracy(y_hat, y, task='multiclass', num_classes=self.num_classes)
         self.log_dict(
             {"test_acc": acc},
             on_step=False, on_epoch=True, prog_bar=True, logger=True)

@@ -151,14 +151,14 @@ class Main:
             batch_size=a.batch_size,
             workers=a.num_workers,
             max_token_len=a.max_token_len)
-        return model, loader
+        return model, loader, info
 
     def cli_train(self):
         a = self.a
         if not a.save_name:
             logging.error('--save-name not specified.')
 
-        model, loader = self.setup_model_and_data(a)
+        model, loader, info = self.setup_model_and_data(a)
         plt_trainer_args = {
             'max_epochs': a.max_epochs, 'devices': a.num_devices,
             'accelerator': a.accelerator, 'strategy': a.strategy,
@@ -167,6 +167,7 @@ class Main:
         train_params = {
             'model_name': a.model,
             'model': model,
+            'info': info,
             'task': a.task,
             'data_loader': loader,
             'optimizer': a.optimizer,
@@ -179,13 +180,14 @@ class Main:
     def cli_test(self):
         a = self.a
 
-        model, loader = self.setup_model_and_data(a)
+        model, loader, info = self.setup_model_and_data(a)
         plt_trainer_args = {
             'devices': a.num_devices,
             'accelerator': a.accelerator, 'strategy': a.strategy,}
         test_params = {
             'model_name': a.model,
             'model': model,
+            'info': info,
             'task': a.task,
             'data_loader': loader,
             'plt_trainer_args': plt_trainer_args,

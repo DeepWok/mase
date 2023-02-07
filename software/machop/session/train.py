@@ -5,6 +5,7 @@ from .plt_wrapper import get_model_wrapper
 
 def train(
         model_name,
+        info,
         model,
         task,
         data_loader,
@@ -24,6 +25,7 @@ def train(
     wrapper_cls = get_model_wrapper(model_name, task)
     plt_model = wrapper_cls(
         model,
+        info=info,
         learning_rate=learning_rate,
         epochs=plt_trainer_args['max_epochs'],
         optimizer=optimizer)
