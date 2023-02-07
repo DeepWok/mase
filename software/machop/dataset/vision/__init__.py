@@ -23,14 +23,17 @@ info = {
     'cifar10': {
         'num_classes': 10,
         'process': default_preprocess,
+        'image_size': (3, 32, 32),
     },
     'cifar100': {
         'num_classes': 100,
         'process': default_preprocess,
+        'image_size': (3, 32, 32),
     },
     'imagenet': {
         'num_classes': 1000,
         'process': default_preprocess,
+        'image_size': (3, 32, 32),
     },
 }
 
