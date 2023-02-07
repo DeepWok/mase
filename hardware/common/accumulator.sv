@@ -1,7 +1,6 @@
 module accumulator #(
-    parameter NUM = -1,
-    parameter IN_WIDTH = -1,
-
+    parameter NUM = 2,
+    parameter IN_WIDTH = 32,
     parameter OUT_WIDTH = $clog2(NUM) + IN_WIDTH
 ) (
     input  logic                 clk,
