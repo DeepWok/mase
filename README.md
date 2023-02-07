@@ -24,5 +24,8 @@ make build
 ```
 This should also take long time to finish.
 
-### Toy example
+If you would like to contribute, please check the [wiki](https://github.com/JianyiCheng/mase-tools/wiki) for more information.
 
+### Toy example of running a neural network
+
+TODO
