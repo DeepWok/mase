@@ -12,7 +12,7 @@ RUN apt-get update -y && apt-get install apt-utils -y
 RUN apt-get upgrade -y 
 RUN apt-get update -y \
     && apt-get install -y clang cmake graphviz-dev libclang-dev \
-                          pkg-config g++ llvm libxtst6 xdg-utils \
+                          pkg-config g++ libxtst6 xdg-utils \
                           libboost-all-dev llvm gcc ninja-build \
                           python3 python3-pip build-essential \
                           libssl-dev git vim wget htop sudo \
