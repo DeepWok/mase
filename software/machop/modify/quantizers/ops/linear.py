@@ -35,7 +35,7 @@ class LinearInteger(torch.nn.Linear):
         bias = self.b_quantizer(self.bias) if self.bias is not None else None
         return F.linear(x, w, bias)
     
-    def get_quantized_weight(self):
+    def get_quantized_weight(self) -> Tensor:
         return self.w_quantizer(self.weight)
 
     def get_quantized_weights_with_inputs(self, x: Tensor) -> Tensor:

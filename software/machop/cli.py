@@ -200,4 +200,4 @@ class Main:
     def cli_modify(self):
         a = self.a
         model, loader, info = self.setup_model_and_data(a)
-        Modifier(model, config=a.config, save_name=a.save)
+        Modifier(model, config=a.config, save_name=a.save_name)
