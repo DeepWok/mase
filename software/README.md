@@ -57,7 +57,7 @@ Mase also supports training with a modified model, for instance:
 # check again the re-trained accuracy
 ./chop eval cifar10 toy --load checkpoints/modified_test/best.ckpt --modify --config configs/test.toml
 
-# enter modify again to check weights, etc.
+# enter modify again to check weights, etc.; you do not necessarily have to save the model in modify
 ./chop modify cifar10 toy --load checkpoints/modified_test/best.ckpt --config configs/test.toml
 ```
 
