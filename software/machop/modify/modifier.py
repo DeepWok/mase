@@ -42,7 +42,7 @@ def load_model(load_path, plt_model):
 
 class Modifier:
 
-    modifiable_layers = ['linear', 'relu']
+    modifiable_layers = ['linear', 'relu', 'conv2d']
 
     def __init__(self, model=None, config=None, save_name=None, load_name=None, interactive=False, silent=False):
         self.model = model

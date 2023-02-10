@@ -1,6 +1,6 @@
-from .ops import LinearInteger, ReLUInteger
+from .ops import LinearInteger, ReLUInteger, Conv2dInteger
 
-possible_ops = [LinearInteger, ReLUInteger]
+possible_ops = [LinearInteger, ReLUInteger, Conv2dInteger]
 
 ops_map = {
     'linear': {
@@ -8,5 +8,8 @@ ops_map = {
     },
     'relu': {
         'integer': ReLUInteger,
-    }
+    },
+    'conv2d': {
+        'integer': Conv2dInteger,
+    },
 }
