@@ -28,7 +28,8 @@ async def test_int_mult(dut):
         result = multiplier_sw(data_a, data_b)
 
         assert dut.product.value == result, "Randomised test failed with: {} * {} = {}, expect: {}".format(
-            dut.data_a.value, dut.data_b.value, dut.product.value, result)
+            int(dut.data_a.value), int(dut.data_b.value),
+            int(dut.product.value), result)
 
 
 def runner():

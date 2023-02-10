@@ -17,10 +17,12 @@ logger = logging.getLogger('tb_signals')
 # data using handshake interface
 class rand_source:
 
-    def __init__(self, samples=10, maxstalls=100):
+    def __init__(self, samples=10, num=1, maxstalls=100):
+        self.num = num
         self.samples = samples
         self.maxstalls = maxstalls
-        self.data = [random.randint(0, 30) for _ in range(samples)]
+        self.data = [[random.randint(0, 30) for _ in range(num)]
+                     for _ in range(samples)]
         self.stallcount = 0
 
     def compute(self, nextready):
@@ -28,7 +30,7 @@ class rand_source:
         if not tofeed:
             logger.debug(
                 'a source cannot feed any token because of back pressure.')
-            return 0, random.randint(0, 30)
+            return 0, [random.randint(0, 30) for _ in range(self.num)]
         # randomly stops feeding data before reaching the max stalls
         trystall = random.randint(0, 1)
         self.stallcount += trystall
@@ -40,7 +42,7 @@ class rand_source:
                     len(self.data), self.samples))
             return 1, data
         logger.debug('a source skips an iteration.')
-        return 0, random.randint(0, 30)
+        return 0, [random.randint(0, 30) for _ in range(self.num)]
 
     def isempty(self):
         return (len(self.data) == 0)
@@ -50,8 +52,9 @@ class rand_source:
 # data using handshake interface
 class rand_sink:
 
-    def __init__(self, samples=10, maxstalls=100):
+    def __init__(self, samples=10, num=1, maxstalls=100):
         self.data = []
+        self.num = num
         self.samples = samples
         self.maxstalls = maxstalls
         self.stallcount = 0
@@ -81,21 +84,29 @@ class rand_sink:
 class VerificationCase:
 
     def __init__(self, samples=10):
-        self.data_width = 32
-        self.inputs = rand_source(samples=samples, maxstalls=2 * samples)
-        self.outputs = rand_sink(samples=samples, maxstalls=2 * samples)
+        self.in_width = 32
+        self.num = 8  # 13
+        self.out_width = math.ceil(math.log2(self.num)) + 32
+        self.inputs = rand_source(samples=samples,
+                                  num=self.num,
+                                  maxstalls=2 * samples)
+        self.outputs = rand_sink(samples=samples,
+                                 num=self.num,
+                                 maxstalls=2 * samples)
         self.samples = samples
         self.ref = self.sw_compute()
 
     def get_dut_parameters(self):
         return {
-            'DATA_WIDTH': self.data_width,
+            'NUM': self.num,
+            'IN_WIDTH': self.in_width,
+            'OUT_WIDTH': self.out_width,
         }
 
     def sw_compute(self):
         ref = []
         for i in range(self.samples):
-            ref.append(self.inputs.data[i])
+            ref.append(sum(self.inputs.data[i]))
         ref.reverse()
         return ref
 
@@ -114,18 +125,18 @@ def checkresults(hw_out, sw_out):
 
 
 # Check if an impossible state is reached
-def impossiblestate(w_ready, w_valid, r_ready, r_valid):
+def impossiblestate(in_ready, in_valid, out_ready, out_valid):
     # (0, X, 0, 0)
     # (0, X, 1, 0)
     # (0, X, 1, 1)
-    if (not w_ready) and not ((not r_ready) and r_valid):
+    if (not in_ready) and not ((not out_ready) and out_valid):
         return True
 
 
 @cocotb.test()
-async def test_register_slice(dut):
-    """ Test register slice """
-    samples = 30
+async def test_adder_tree(dut):
+    """ Test integer based adder tree """
+    samples = 20
     test_case = VerificationCase(samples=samples)
 
     # Reset cycle
@@ -141,48 +152,48 @@ async def test_register_slice(dut):
     await Timer(500, units="ns")
 
     # Synchronize with the clock
-    dut.w_valid.value = 0
-    dut.r_ready.value = 1
+    dut.in_valid.value = 0
+    dut.out_ready.value = 1
     logger.debug(
-        'Pre-clk  State: (w_ready,w_valid,r_ready,r_valid) = ({},{},{},{})'.
-        format(dut.w_ready.value, dut.w_valid.value, dut.r_ready.value,
-               dut.r_valid.value))
+        'Pre-clk  State: (in_ready,in_valid,out_ready,out_valid) = ({},{},{},{})'
+        .format(dut.in_ready.value, dut.in_valid.value, dut.out_ready.value,
+                dut.out_valid.value))
     await FallingEdge(dut.clk)
     logger.debug(
-        'Post-clk State: (w_ready,w_valid,r_ready,r_valid) = ({},{},{},{})'.
-        format(dut.w_ready.value, dut.w_valid.value, dut.r_ready.value,
-               dut.r_valid.value))
+        'Post-clk State: (in_ready,in_valid,out_ready,out_valid) = ({},{},{},{})'
+        .format(dut.in_ready.value, dut.in_valid.value, dut.out_ready.value,
+                dut.out_valid.value))
     logger.debug(
-        'Pre-clk  State: (w_ready,w_valid,r_ready,r_valid) = ({},{},{},{})'.
-        format(dut.w_ready.value, dut.w_valid.value, dut.r_ready.value,
-               dut.r_valid.value))
+        'Pre-clk  State: (in_ready,in_valid,out_ready,out_valid) = ({},{},{},{})'
+        .format(dut.in_ready.value, dut.in_valid.value, dut.out_ready.value,
+                dut.out_valid.value))
     await FallingEdge(dut.clk)
     logger.debug(
-        'Post-clk State: (w_ready,w_valid,r_ready,r_valid) = ({},{},{},{})'.
-        format(dut.w_ready.value, dut.w_valid.value, dut.r_ready.value,
-               dut.r_valid.value))
+        'Post-clk State: (in_ready,in_valid,out_ready,out_valid) = ({},{},{},{})'
+        .format(dut.in_ready.value, dut.in_valid.value, dut.out_ready.value,
+                dut.out_valid.value))
 
     done = False
     while not done:
         await FallingEdge(dut.clk)
         logger.debug(
-            'Post-clk State: (w_ready,w_valid,r_ready,r_valid) = ({},{},{},{})'
-            .format(dut.w_ready.value, dut.w_valid.value, dut.r_ready.value,
-                    dut.r_valid.value))
+            'Post-clk State: (in_ready,in_valid,out_ready,out_valid) = ({},{},{},{})'
+            .format(dut.in_ready.value, dut.in_valid.value,
+                    dut.out_ready.value, dut.out_valid.value))
         assert not impossiblestate(
-            dut.w_ready.value, dut.w_valid.value, dut.r_ready.value,
-            dut.r_valid.value
-        ), 'Error: invalid state (w_ready,w_valid,r_ready,r_valid) = ({},{},{},{})'.format(
-            dut.w_ready.value, dut.w_valid.value, dut.r_ready.value,
-            dut.r_valid.value)
-        dut.w_valid.value, dut.w_data.value = test_case.inputs.compute(
-            dut.w_ready.value)
-        dut.r_ready.value = test_case.outputs.compute(dut.r_valid.value,
-                                                      dut.r_data.value)
+            dut.in_ready.value, dut.in_valid.value, dut.out_ready.value,
+            dut.out_valid.value
+        ), 'Error: invalid state (in_ready,in_valid,out_ready,out_valid) = ({},{},{},{})'.format(
+            dut.in_ready.value, dut.in_valid.value, dut.out_ready.value,
+            dut.out_valid.value)
+        dut.in_valid.value, dut.ind.value = test_case.inputs.compute(
+            dut.in_ready.value)
+        dut.out_ready.value = test_case.outputs.compute(
+            dut.out_valid.value, dut.outd.value)
         logger.debug(
-            'Pre-clk  State: (w_ready,w_valid,r_ready,r_valid) = ({},{},{},{})'
-            .format(dut.w_ready.value, dut.w_valid.value, dut.r_ready.value,
-                    dut.r_valid.value))
+            'Pre-clk  State: (in_ready,in_valid,out_ready,out_valid) = ({},{},{},{})'
+            .format(dut.in_ready.value, dut.in_valid.value,
+                    dut.out_ready.value, dut.out_valid.value))
         done = test_case.inputs.isempty() and test_case.outputs.isfull()
 
     checkresults(test_case.outputs.data, test_case.ref)
@@ -192,7 +203,9 @@ def runner():
     sim = os.getenv("SIM", "verilator")
 
     verilog_sources = [
+        "../../../../hardware/common/adder_tree.sv",
         "../../../../hardware/common/register_slice.sv",
+        "../../../../hardware/common/adder_tree_layer.sv",
     ]
     test_case = VerificationCase()
 
@@ -203,10 +216,10 @@ def runner():
     print(extra_args)
     runner = get_runner(sim)()
     runner.build(verilog_sources=verilog_sources,
-                 toplevel="register_slice",
+                 toplevel="adder_tree",
                  extra_args=extra_args)
 
-    runner.test(toplevel="register_slice", py_module="register_slice_tb")
+    runner.test(toplevel="adder_tree", py_module="adder_tree_tb")
 
 
 if __name__ == "__main__":

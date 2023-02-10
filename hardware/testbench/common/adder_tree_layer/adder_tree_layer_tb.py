@@ -1,4 +1,4 @@
-# This script tests the register slice
+# This script tests the adder tree layer
 import random, os
 
 import cocotb

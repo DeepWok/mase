@@ -1,48 +1,53 @@
 module accumulator #(
-    parameter NUM = 2,
+    parameter NUM = 4,
     parameter IN_WIDTH = 32,
     parameter OUT_WIDTH = $clog2(NUM) + IN_WIDTH
 ) (
     input  logic                 clk,
     input  logic                 rst,
-    input  logic [ IN_WIDTH-1:0] in,
-    input  logic                 in_valid,
-    output logic                 in_ready,
-    output logic [OUT_WIDTH-1:0] out,
-    output logic                 out_valid,
-    input  logic                 out_ready
+    input  logic [ IN_WIDTH-1:0] ind,
+    input  logic                 ind_valid,
+    output logic                 ind_ready,
+    output logic [OUT_WIDTH-1:0] outd,
+    output logic                 outd_valid,
+    input  logic                 outd_ready
 );
 
+  // 1-bit wider so NUM also fits.
   localparam COUNTER_WIDTH = $clog2(NUM);
+  logic [COUNTER_WIDTH:0] counter;
 
   // Sign extension before feeding into the accumulator
-  logic [OUT_WIDTH-1:0] in_sext;
-  assign in_sext = {{(OUT_WIDTH - IN_WIDTH) {in[IN_WIDTH-1]}}, in};
+  logic [  OUT_WIDTH-1:0] ind_sext;
+  assign ind_sext   = {{(OUT_WIDTH - IN_WIDTH) {ind[IN_WIDTH-1]}}, ind};
 
-  // 1-bit wider so NUM also fits.
-  logic [COUNTER_WIDTH:0] counter;
-  assign in_ready  = counter != NUM || out_ready;
-  assign out_valid = counter == NUM;
+  /* verilator lint_off WIDTH */
+  assign ind_ready  = (counter != NUM) || outd_ready;
+  assign outd_valid = (counter == NUM);
+  /* verilator lint_on WIDTH */
 
+  // counter
   always_ff @(posedge clk)
-    if (rst) begin
-      counter <= 0;
-      out <= '0;
-    end else begin
-      if (out_valid) begin
-        if (out_ready) begin
-          if (in_valid) begin
-            out <= in_sext;
-            counter <= 1;
-          end else begin
-            out <= '0;
-            counter <= 0;
-          end
+    if (rst) counter <= 0;
+    else begin
+      if (outd_valid) begin
+        if (outd_ready) begin
+          if (ind_valid) counter <= 1;
+          else counter <= 0;
         end
-      end else if (in_valid && in_ready) begin
-        out <= out + in_sext;
-        counter <= counter + 1;
-      end
+      end else if (ind_valid && ind_ready) counter <= counter + 1;
+    end
+
+  // outd 
+  always_ff @(posedge clk)
+    if (rst) outd <= '0;
+    else begin
+      if (outd_valid) begin
+        if (outd_ready) begin
+          if (ind_valid) outd <= ind_sext;
+          else outd <= '0;
+        end
+      end else if (ind_valid && ind_ready) outd <= outd + ind_sext;
     end
 
 endmodule
