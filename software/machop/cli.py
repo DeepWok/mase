@@ -27,6 +27,9 @@ class Main:
             'type': str, 'default': None,
             'help': 'Name of the saved model to restore.'
         },
+        ('-modify', '--modify'): {
+            'action': 'store_true', 'help': 'Name of the saved model to restore, from modifier.'
+        },
         ('-save', '--save-name'): {
             'type': str, 'default': None,
             'help': 'Name of the saved model to save.'
@@ -146,6 +149,7 @@ class Main:
             model = model_inst_fn(info=info)
         else:
             raise NotImplementedError(f'Unknown model {a.model!r}.')
+
         # get data loader from the datasets
         loader = get_dataloader(
             a.model, model, train_dataset, val_dataset, test_dataset, 
@@ -160,6 +164,12 @@ class Main:
             logging.error('--save-name not specified.')
 
         model, loader, info = self.setup_model_and_data(a)
+
+        if a.modify:
+            logging.info("Modifying model based on config")
+            m = Modifier(model, config=a.config, silent=True)
+            model = m.model
+
         plt_trainer_args = {
             'max_epochs': a.max_epochs, 'devices': a.num_devices,
             'accelerator': a.accelerator, 'strategy': a.strategy,
@@ -175,6 +185,7 @@ class Main:
             'learning_rate': a.learning_rate,
             "plt_trainer_args": plt_trainer_args,
             "save_path": 'checkpoints/' + a.save_name,
+            'load_path': a.load_name,
         }
         train(**train_params)
 
@@ -182,6 +193,11 @@ class Main:
         a = self.a
 
         model, loader, info = self.setup_model_and_data(a)
+        if a.modify:
+            logging.info("Modifying model based on config")
+            m = Modifier(model, config=a.config, silent=True)
+            model = m.model
+
         plt_trainer_args = {
             'devices': a.num_devices,
             'accelerator': a.accelerator, 'strategy': a.strategy,}
@@ -200,4 +216,4 @@ class Main:
     def cli_modify(self):
         a = self.a
         model, loader, info = self.setup_model_and_data(a)
-        Modifier(model, config=a.config, save_name=a.save_name)
+        Modifier(model, config=a.config, save_name=a.save_name, load_name=a.load_name)

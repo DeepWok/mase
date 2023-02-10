@@ -12,7 +12,7 @@ class MyClamp(InplaceFunction):
     @staticmethod
     def backward(ctx, grad_output):
         grad_input = grad_output.clone()
-        return grad_input
+        return grad_input, None, None
 
 
 class MyRound(InplaceFunction):

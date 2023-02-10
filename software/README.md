@@ -44,6 +44,23 @@ For more, you can watch this [video](https://www.youtube.com/watch?v=JEUsN_KlDy8
 - All modifiable components should be defined in a `toml` file and loaded using `--config`.
 - This example command shows how to apply the command to a toy network.
 
+Mase also supports training with a modified model, for instance:
+
+```bash
+# train a normal model
+./chop train cifar10 toy --save test
+# Check the accuracy of modification, without re-training
+./chop eval cifar10 toy --load checkpoints/test/best.ckpt --modify --config configs/test.toml
+
+# take the trained model, modify it and continue to train, this is known as quantization aware training
+./chop train cifar10 toy --save modified_test --load checkpoints/test/best.ckpt --modify --config configs/test.toml
+# check again the re-trained accuracy
+./chop eval cifar10 toy --load checkpoints/modified_test/best.ckpt --modify --config configs/test.toml
+
+# enter modify again to check weights, etc.
+./chop modify cifar10 toy --load checkpoints/modified_test/best.ckpt --config configs/test.toml
+```
+
 
 ### Training log check
 
