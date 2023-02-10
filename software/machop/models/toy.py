@@ -18,7 +18,7 @@ class ToyNet(nn.Module):
         return self.linear(x.view(x.size(0), -1))
 
 
-def get_ToyNet(info):
+def get_toynet(info):
     image_size = info['image_size']
     num_classes = info['num_classes']
     return ToyNet(image_size, num_classes)

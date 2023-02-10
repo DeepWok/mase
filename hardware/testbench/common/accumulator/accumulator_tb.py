@@ -66,7 +66,7 @@ async def test_accumulator(dut):
 
     # We first test whether the logic for handling back pressure
     # is correctly implemented. We inject a set of valid inputs
-    # to fill the pipeline and disbale the output ready signal
+    # to fill the pipeline and disable the output ready signal
     # to see if the last output is kept and the input is blocked.
 
     # Test forward path without back pressure
@@ -98,7 +98,7 @@ async def test_accumulator(dut):
     assert dut.outd_valid.value, 'Error: Output valid is clear when a sudden back pressure happens'
     assert not dut.ind_ready.value, 'Error: Input ready is set when a sudden back pressure happens'
 
-    # Contine test forward path without back pressure
+    # Test forward path without back pressure
     for i in range(2 * iterations, 4 * iterations):
         dut.ind_valid.value = 1
         dut.ind.value = test_case.get_dut_input(i)

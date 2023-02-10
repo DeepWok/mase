@@ -8,6 +8,7 @@ Why called Machop? Because Machop is the most common pokemon you can find in the
 
 For more, you can watch this [video](https://www.youtube.com/watch?v=JEUsN_KlDy8&ab_channel=Mah-Dry-Bread-Gameplay%26Streams%21).
 
+
 ## Commands
 
 ### Example CPU run
@@ -49,7 +50,9 @@ Mase also supports training with a modified model, for instance:
 ```bash
 # train a normal model
 ./chop train cifar10 toy --save test
-# Check the accuracy of modification, without re-training
+# Check the accuracy, without modification
+./chop eval cifar10 toy --load checkpoints/test/best.ckpt
+# Check the accuracy of modification, without re-training, this is a classic post-training quantization scenario
 ./chop eval cifar10 toy --load checkpoints/test/best.ckpt --modify --config configs/test.toml
 
 # take the trained model, modify it and continue to train, this is known as quantization aware training

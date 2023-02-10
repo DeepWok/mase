@@ -2,7 +2,7 @@ from .resnet import (
     ResNet18, ResNet50, 
     ResNet18ImageNet, ResNet50ImageNet)
 from .nlp_models import get_nlp_model
-from .toy import get_ToyNet
+from .toy import get_toynet
 
 
 model_map = {
@@ -10,7 +10,7 @@ model_map = {
     'resnet50': ResNet50,
     'resnet18-imagenet': ResNet18ImageNet,
     'resnet50-imagenet': ResNet50ImageNet,
-    'toy': get_ToyNet,
+    'toy': get_toynet,
     'roberta-base': get_nlp_model,
     'roberta-large': get_nlp_model,
 }
