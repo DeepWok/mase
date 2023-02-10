@@ -8,12 +8,14 @@ import maselogger
 
 # Add more test cases here
 testcases = {
+    # 'common/join2': [],
     'common/int_mult': [],
     'common/register_slice': [],
     'common/adder_tree_layer': [],
-    # 'common/accumulator': [],
-    # 'common/adder_tree': ['common'],
-    # 'common/vector_mult': ['common'],
+    'common/accumulator': [],
+    'common/adder_tree': ['common'],
+    'common/vector_mult': ['common'],
+    'common/dot_product': ['common'],
     # 'linear/dataflow_linear': ['common'],
     'activations/int_relu': ['common'],
     # 'activations/int_relu6': ['common'],
@@ -107,8 +109,12 @@ class testhardware:
                     os.remove(resultfile)
             err += result
 
-        self.logger.info(
-            'Hardware regression test finished. {} errors.'.format(err))
+        if err:
+            self.logger.error(
+                'Hardware regression test finished. {} errors.'.format(err))
+        else:
+            self.logger.info(
+                'Hardware regression test finished. {} errors.'.format(err))
         return err
 
     def execute(self, cmd, logoutput: bool = True, logfile=None, cwd='.'):
