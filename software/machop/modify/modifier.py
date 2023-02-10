@@ -2,40 +2,76 @@ import torch
 import logging
 import toml
 import pprint
+import pickle
 
 from torch import nn
-from .quantizers import ops_map
+from .quantizers import ops_map, possible_ops
 from collections import OrderedDict
 
 pp = pprint.PrettyPrinter(depth=4)
+
+def plt_model_load(model, checkpoint):
+    state_dict = torch.load(checkpoint)['state_dict']
+    new_state_dict = {}
+    for k, v in state_dict.items():
+        if 'model.' in k:
+            # import pdb; pdb.set_trace()
+            new_state_dict['.'.join(k.split('.')[1:])] = v
+        else:
+            new_state_dict[k] = v
+
+    model.load_state_dict(new_state_dict)
+    return model
+
+def load_model(load_path, plt_model):
+    if load_path is not None:
+        if load_path.endswith(".ckpt"):
+            checkpoint = load_path
+        else:
+            if load_path.endswith("/"):
+                checkpoint = load_path + "best.ckpt"
+            else:
+                raise ValueError(
+                    "if it is a directory, if must end with /; if it is a file, it must end with .ckpt")
+        plt_model = plt_model_load(plt_model, checkpoint)
+        print(f"Loaded model from {checkpoint}")
+    return plt_model
 
 
 class Modifier:
 
     modifiable_layers = ['linear', 'relu']
 
-    def __init__(self, model=None, config=None, save_name=None):
+    def __init__(self, model=None, config=None, save_name=None, load_name=None, silent=False):
         self.model = model
+        if load_name is not None:
+            self.model = load_model(load_path=load_name, plt_model=self.model)
 
         #load config as toml
         if not config.endswith('.toml'):
             raise ValueError('Config file must be a toml file')
         config = toml.load(config)
-        logging.info(f'Config loaded!')
-        pp.pprint(config)
+
+        if not silent:
+            logging.info(f'Config loaded!')
+            pp.pprint(config)
         self.config = config 
 
         self._pre_modify_check()
-        logging.info(f"Model architecture")
-        print(self.model)
+
+        if not silent:
+            logging.info(f"Model architecture")
+            print(self.model)
 
         # The core function that makes the modification
         self.modify()
 
-        logging.info(f"Model architecture, post modification")
-        print(self.model)
-        self._post_modify_check()
-        self._print_out_diff()
+        if not silent:
+            logging.info('Model modified')
+            logging.info(f"Model architecture, post modification")
+            print(self.model)
+            self._post_modify_check()
+            self._print_out_diff()
 
         if save_name is not None:
             self.save(save_name)
@@ -55,9 +91,11 @@ class Modifier:
             else:
                 replace_fn = getattr(self, f'replace_{name}')
                 replace_fn(self.model, default_config)
-        logging.info('Model modified')
     
     def _pre_modify_check(self):
+        modules = self.model.modules()
+        if any([isinstance(m, tuple(possible_ops)) for m in modules]):
+            raise ValueError("The model already contains modified classes, why are we modifying again?")
         self._pre_modify_values = self.model.state_dict()
     
     def _post_modify_check(self):
@@ -123,5 +161,9 @@ class Modifier:
                 self.replace(child, target, replacement_fn)
     
     def save(self, name):
-        torch.save(self.model.state_dict(), name)
-        logging.info(f"Modified model saved as {name}.")
+        save_name = f'modified_ckpts/{name}.ckpt'
+        model_save_name = f'modified_ckpts/{name}.model.pkl'
+        torch.save(self.model.state_dict(), save_name)
+        with open(model_save_name, 'wb') as f:
+            pickle.dump(self.model, model_save_name)
+        logging.info(f"Modified model saved as {save_name}.")

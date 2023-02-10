@@ -1,7 +1,7 @@
 from pytorch_lightning.callbacks import ModelCheckpoint
 import pytorch_lightning as pl
 from .plt_wrapper import get_model_wrapper 
-
+from ..utils import load_model
 
 def train(
         model_name,
@@ -12,7 +12,9 @@ def train(
         optimizer, 
         learning_rate, 
         plt_trainer_args, 
-        save_path):
+        save_path, 
+        load_path):
+
     checkpoint_callback = ModelCheckpoint(
         save_top_k=1,
         monitor="val_loss",
@@ -29,6 +31,7 @@ def train(
         learning_rate=learning_rate,
         epochs=plt_trainer_args['max_epochs'],
         optimizer=optimizer)
+    plt_model = load_model(plt_model=plt_model, load_path=load_path)
     trainer = pl.Trainer(**plt_trainer_args)
     trainer.fit(
         plt_model, 
