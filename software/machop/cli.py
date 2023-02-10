@@ -11,6 +11,7 @@ import toml
 from .session import train, test
 from .models import model_map, nlp_models, vision_models
 from .dataset import get_dataset, get_dataloader
+from .modify import Modifier
 
 logging.getLogger().setLevel(logging.INFO)
 
@@ -195,3 +196,8 @@ class Main:
         }
         test(**test_params)
     cli_eval = cli_test
+
+    def cli_modify(self):
+        a = self.a
+        model, loader, info = self.setup_model_and_data(a)
+        Modifier(model, config=a.config)
