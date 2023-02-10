@@ -4,18 +4,10 @@ module vector_mult #(
     // this is the width for the product
     // parameter PRODUCT_WIDTH = 8,
     // this is the width for the summed product
-    parameter OUTPUT_WIDTH = 50,
+    parameter OUTPUT_WIDTH = ACT_WIDTH + W_WIDTH,
 
     // this defines the number of elements in the vector, this is tunable
     parameter VECTOR_SIZE = 4,
-
-    // add registers to help re-timing
-    // more levels = more registers = higher fmax
-    parameter REGISTER_LEVELS = 1,
-
-    parameter type MY_ACT   = logic [VECTOR_SIZE-1:0][ACT_WIDTH-1:0],
-    parameter type MY_W    = logic [VECTOR_SIZE-1:0][W_WIDTH-1:0],
-    parameter type MY_OUTPUT  = logic [OUTPUT_WIDTH-1:0],
 
     // this is the type of computation to perform
     // "int" for integer, "float" for floating point
@@ -26,22 +18,20 @@ module vector_mult #(
     input rst,
 
     // input port for activations
-    input  MY_ACT act,
-    input         act_valid,
-    output        act_ready,
+    input  logic [ACT_WIDTH-1:0] act      [VECTOR_SIZE-1:0],
+    input                        act_valid,
+    output                       act_ready,
 
     // input port for weights
-    input MY_W weights,
-    input    w_valid,
-    output    w_ready,
+    input  logic [W_WIDTH-1:0] weights[VECTOR_SIZE-1:0],
+    input                      w_valid,
+    output                     w_ready,
 
     // output port
-    output MY_OUTPUT out,
-    output           out_valid,
-    input            out_ready
+    output logic [OUTPUT_WIDTH-1:0] outd     [VECTOR_SIZE-1:0],
+    output                          out_valid,
+    input                           out_ready
 );
-
-  localparam type MY_PRODUCT = logic [VECTOR_SIZE-1:0][PRODUCT_WIDTH-1:0];
 
   // localparam PRODUCT_WIDTH_FLOAT = ACT_WIDTH + W_WIDTH - W_EXP_WIDTH + (1 << W_EXP_WIDTH);
   // WARNING: this is obviously wrong, just a placeholder for now
@@ -49,8 +39,9 @@ module vector_mult #(
   localparam PRODUCT_WIDTH_FIXED = ACT_WIDTH + W_WIDTH;
   localparam PRODUCT_WIDTH = (COMPUTE_TYPE == "int") ? PRODUCT_WIDTH_FLOAT : PRODUCT_WIDTH_FIXED;
 
-  logic [VECTOR_SIZE-1:0][PRODUCT_WIDTH-1:0] product_vector;
 
+  // pv[i] = act[i] * w[i]
+  logic [PRODUCT_WIDTH-1:0] product_vector[VECTOR_SIZE-1:0];
   for (genvar i = 0; i < VECTOR_SIZE; i = i + 1) begin
     if (COMPUTE_TYPE == "int") begin
       int_mult #(
@@ -64,62 +55,45 @@ module vector_mult #(
     end
   end
 
-  logic adder_tree_in_valid = act_valid & w_valid;
-  logic adder_tree_in_ready;
-
-  MY_OUTPUT sum;
-  logic sum_valid, sum_ready;
-
-  // deal with ready
-  assign act_ready = adder_tree_in_ready;
-  assign w_ready   = adder_tree_in_ready;
-
-  // sum the products
-  adder_tree #(
-      .NUM(VECTOR_SIZE),
-      .IN_WIDTH(PRODUCT_WIDTH)
-  ) adder_tree_inst (
-      .clk(clk),
-      .rst(rst),
-      .in(product_vector),
-      .in_valid(adder_tree_in_valid),
-      .in_ready(adder_tree_in_ready),
-
-      .out(sum),
-      .out_valid(sum_valid),
-      .out_ready(sum_ready)
+  join2 #() join_inst (
+      .in_ready ({w_ready, act_ready}),
+      .in_valid ({w_valid, act_valid}),
+      .out_valid(product_buffer_in_valid),
+      .out_ready(product_buffer_in_ready)
   );
 
-  // Declare bufers
-  for (genvar i = 0; i <= REGISTER_LEVELS; i++) begin : buffers
-    logic [REGISTER_LEVELS-1:0][$bits(out)-1:0] data;
-    logic valid;
-    logic ready;
-  end
+  logic product_buffer_in_valid;
+  logic product_buffer_in_ready;
+  logic product_buffer_out_valid;
+  logic product_buffer_out_ready;
 
-  // Connect buffers
-  assign buffers[0].data = sum;
-  assign buffers[0].valid = sum_valid;
-  assign sum_ready = buffers[0].ready;
+  // Cocotb/verilator does not support array flattening, so
+  // we need to manually add some reshaping process.
 
-  for (genvar i = 0; i < REGISTER_LEVELS; i++) begin
-    register_slice #(
-        .DATA_WIDTH($bits(out)),
-    ) register_slice (
-        .clk    (clk),
-        .rst    (rst),
-        .w_valid(buffers[i].valid),
-        .w_ready(buffers[i].ready),
-        .w_data (buffers[i].data),
-        .r_valid(buffers[i+1].valid),
-        .r_ready(buffers[i+1].ready),
-        .r_data (buffers[i+1].data)
-    );
-  end
+  // Casting array for product vector 
+  logic [$bits(product_vector)-1:0] product_vector_in;
+  for (genvar i = 0; i < VECTOR_SIZE; i++)
+    assign product_vector_in[PRODUCT_WIDTH*i+PRODUCT_WIDTH-1:PRODUCT_WIDTH*i] = product_vector[i];
 
-  // picking the end of the buffer, wire them to the output port
-  assign out = buffers[REGISTER_LEVELS].data;
-  assign out_valid = buffers[REGISTER_LEVELS].valid;
-  assign buffers[REGISTER_LEVELS].ready = out_ready;
+  register_slice #(
+      .DATA_WIDTH($bits(product_vector)),
+  ) register_slice (
+      .clk    (clk),
+      .rst    (rst),
+      .w_valid(product_buffer_in_valid),
+      .w_ready(product_buffer_in_ready),
+      .w_data (product_vector_in),
+      .r_valid(product_buffer_out_valid),
+      .r_ready(product_buffer_out_ready),
+      .r_data (product_vector_out)
+  );
+
+  // Casting array for product vector 
+  logic [$bits(product_vector)-1:0] product_vector_out;
+  for (genvar i = 0; i < VECTOR_SIZE; i++)
+    assign outd[i] = product_vector_out[PRODUCT_WIDTH*i+PRODUCT_WIDTH-1:PRODUCT_WIDTH*i];
+
+  assign out_valid = product_buffer_out_valid;
+  assign product_buffer_out_ready = out_ready;
 
 endmodule
