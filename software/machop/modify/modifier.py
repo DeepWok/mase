@@ -10,6 +10,7 @@ from collections import OrderedDict
 
 pp = pprint.PrettyPrinter(depth=4)
 
+
 def plt_model_load(model, checkpoint):
     state_dict = torch.load(checkpoint)['state_dict']
     new_state_dict = {}
@@ -22,6 +23,7 @@ def plt_model_load(model, checkpoint):
 
     model.load_state_dict(new_state_dict)
     return model
+
 
 def load_model(load_path, plt_model):
     if load_path is not None:
@@ -42,11 +44,10 @@ class Modifier:
 
     modifiable_layers = ['linear', 'relu']
 
-    def __init__(self, model=None, config=None, save_name=None, load_name=None, silent=False):
+    def __init__(self, model=None, config=None, save_name=None, load_name=None, interactive=False, silent=False):
         self.model = model
         if load_name is not None:
             self.model = load_model(load_path=load_name, plt_model=self.model)
-
         #load config as toml
         if not config.endswith('.toml'):
             raise ValueError('Config file must be a toml file')
@@ -55,8 +56,8 @@ class Modifier:
         if not silent:
             logging.info(f'Config loaded!')
             pp.pprint(config)
-        self.config = config 
 
+        self.config = config 
         self._pre_modify_check()
 
         if not silent:
@@ -75,12 +76,14 @@ class Modifier:
 
         if save_name is not None:
             self.save(save_name)
+        
+        if interactive:
+            import pdb; pdb.set_trace()
 
     def modify(self):
         default_config = self.config.pop('default', None)
         if default_config is None:
             raise ValueError('Default config is not provided')
-
         for name in self.modifiable_layers:
             # use config setup if we have a config
             if name in self.config:

@@ -27,9 +27,6 @@ class Main:
             'type': str, 'default': None,
             'help': 'Name of the saved model to restore.'
         },
-        ('-modify', '--modify'): {
-            'action': 'store_true', 'help': 'Name of the saved model to restore, from modifier.'
-        },
         ('-save', '--save-name'): {
             'type': str, 'default': None,
             'help': 'Name of the saved model to save.'
@@ -88,6 +85,14 @@ class Main:
         },
         ('-mt', '--max_token_len'): {
             'type': int, 'default': 512, 'help': 'Maximum number of tokens.', 
+        },
+
+        # modify related
+        ('-modify', '--modify'): {
+            'action': 'store_true', 'help': 'Name of the saved model to restore, from modifier.'
+        },
+        ('-i', '--interactive'): {
+            'action': 'store_true', 'help': 'Name of the saved model to restore, from modifier.'
         },
     }
 
@@ -216,4 +221,9 @@ class Main:
     def cli_modify(self):
         a = self.a
         model, loader, info = self.setup_model_and_data(a)
-        Modifier(model, config=a.config, save_name=a.save_name, load_name=a.load_name)
+        Modifier(
+            model, 
+            config=a.config, 
+            save_name=a.save_name, 
+            load_name=a.load_name,
+            interactive=a.interactive)
