@@ -35,6 +35,16 @@ For more, you can watch this [video](https://www.youtube.com/watch?v=JEUsN_KlDy8
   \ -lr 1e-5
 ```
 
+### Example modify run
+
+```bash
+./chop modify cifar10 toy --save test --debug --config configs/test.toml
+```
+
+- All modifiable components should be defined in a `toml` file and loaded using `--config`.
+- This example command shows how to apply the command to a toy network.
+
+
 ### Training log check
 
 ```bash
