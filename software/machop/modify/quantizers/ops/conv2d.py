@@ -14,7 +14,8 @@ class Conv2dBase(torch.nn.Conv2d):
         x = self.x_quantizer(x)
         w = self.w_quantizer(self.weight)
         bias = self.b_quantizer(self.bias) if self.bias is not None else None
-        # This may have been simplified, we are assuming here the accumulation is lossless!
+        # WARNING: this may have been simplified, we are assuming here the accumulation is lossless!
+        # The addition size is in_channels * K * K
         return self._conv_forward(x, w, bias)
     
     def get_quantized_weight(self) -> Tensor:
