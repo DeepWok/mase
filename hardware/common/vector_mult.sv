@@ -39,7 +39,6 @@ module vector_mult #(
   localparam PRODUCT_WIDTH_FIXED = ACT_WIDTH + W_WIDTH;
   localparam PRODUCT_WIDTH = (COMPUTE_TYPE == "int") ? PRODUCT_WIDTH_FLOAT : PRODUCT_WIDTH_FIXED;
 
-
   // pv[i] = act[i] * w[i]
   logic [PRODUCT_WIDTH-1:0] product_vector[VECTOR_SIZE-1:0];
   for (genvar i = 0; i < VECTOR_SIZE; i = i + 1) begin
