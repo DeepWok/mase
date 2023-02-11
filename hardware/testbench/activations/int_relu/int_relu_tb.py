@@ -87,7 +87,7 @@ class VerificationCase:
         return {
             'NUM': self.num,
             'ACT_WIDTH': self.bitwidth,
-            # 'ACT_BIAS': self.bias,
+            'ACT_BIAS': self.bias,
         }
 
     def get_dut_input(self, i):

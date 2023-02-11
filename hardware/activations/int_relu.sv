@@ -1,6 +1,8 @@
 module int_relu #(
     parameter NUM = 8,
-    // parameter ACT_BIAS = 3,
+    /* verilator lint_off UNUSEDPARAM */
+    parameter ACT_BIAS = 3,
+    /* verilator lint_on UNUSEDPARAM */
     parameter ACT_WIDTH = 8
 ) (
     input  logic [ACT_WIDTH-1:0] x  [NUM-1:0],

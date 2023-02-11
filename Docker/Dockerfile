@@ -41,6 +41,13 @@ RUN mkdir -p /srcPkgs \
     && make -j \
     && make install
 
+# Install SystemVerilog formatter
+RUN mkdir -p /srcPkgs \
+    && cd /srcPkgs \
+    && wget https://github.com/chipsalliance/verible/releases/download/v0.0-2776-gbaf0efe9/verible-v0.0-2776-gbaf0efe9-Ubuntu-22.04-jammy-x86_64.tar.gz \
+    && mkdir -p verible \
+    && tar xzvf verible-*-x86_64.tar.gz -C verible --strip-components 1
+
 # Append any packages you need here
 # RUN apt-get ...
 
