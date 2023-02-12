@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 # This script tests the accumulator
 import random, os, math
 
@@ -76,13 +78,13 @@ async def test_accumulator(dut):
         dut.ind.value = test_case.get_dut_input(i)
         dut.outd_ready.value = 1
         await FallingEdge(dut.clk)
-        notvalid = not dut.outd_valid.value
+        is_invalid = not dut.outd_valid.value
         to_output = ((i + 1) % iterations == 0)
         assert dut.ind_ready.value, 'Error: Input ready set at cycle {} without back pressure: {}'.format(
             i, int(dut.ind_ready.value))
-        assert notvalid or to_output, 'Error: Output valid at cycle {} without back pressure: {}'.format(
+        assert is_invalid or to_output, 'Error: Output valid at cycle {} without back pressure: {}'.format(
             i, int(dut.outd_valid.value))
-        assert notvalid or dut.outd.value == test_case.get_dut_output(
+        assert is_invalid or dut.outd.value == test_case.get_dut_output(
             j
         ), 'Error: Output mismatch at cycle {} without back pressure: {}, expected: {}'.format(
             i, int(dut.outd.value), int(test_case.get_dut_output(j)))
@@ -104,13 +106,13 @@ async def test_accumulator(dut):
         dut.ind.value = test_case.get_dut_input(i)
         dut.outd_ready.value = 1
         await FallingEdge(dut.clk)
-        notvalid = not dut.outd_valid.value
+        is_invalid = not dut.outd_valid.value
         to_output = ((i + 1) % iterations == 0)
         assert dut.ind_ready.value, 'Error: Input ready set at cycle {} without back pressure: {}'.format(
             i, int(dut.ind_ready.value))
-        assert notvalid or to_output, 'Error: Output valid at cycle {} without back pressure: {}'.format(
+        assert is_invalid or to_output, 'Error: Output valid at cycle {} without back pressure: {}'.format(
             i, int(dut.outd_valid.value))
-        assert notvalid or dut.outd.value == test_case.get_dut_output(
+        assert is_invalid or dut.outd.value == test_case.get_dut_output(
             j
         ), 'Error: Output mismatch at cycle {} without back pressure: {}, expected: {}'.format(
             i, int(dut.outd.value), int(test_case.get_dut_output(j)))
