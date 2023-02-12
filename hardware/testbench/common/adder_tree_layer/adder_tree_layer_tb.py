@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 # This script tests the adder tree layer
 import random, os
 
@@ -47,7 +49,7 @@ class VerificationCase:
         return self.outputs[i]
 
 
-def checkoutput(hw_out, sw_out):
+def check_outputs(hw_out, sw_out):
     if len(hw_out) != len(sw_out):
         print("Mismatched output size: {} expected = {}".format(
             len(hw_out), len(sw_out)))
@@ -72,7 +74,7 @@ async def test_adder_tree_layer(dut):
 
         dut.ins.value = x
         await Timer(2, units="ns")
-        assert checkoutput(
+        assert check_outputs(
             [int(v) for v in dut.outs.value],
             y), "Output are incorrect on the {}th cycle: {}".format(i, x)
 
