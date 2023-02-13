@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 # This script tests the fixed point multiplier
 import random, os
 
