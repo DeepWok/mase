@@ -9,8 +9,11 @@ from functools import partial
 
 
 class Conv2dBase(torch.nn.Conv2d):
+    bypass = False
 
     def forward(self, x: Tensor) -> Tensor:
+        if self.bypass:
+            return self._conv_forward(x, self.weight, self.bias)
         x = self.x_quantizer(x)
         w = self.w_quantizer(self.weight)
         bias = self.b_quantizer(self.bias) if self.bias is not None else None
@@ -62,6 +65,7 @@ class Conv2dInteger(torch.nn.Conv2d):
             device=device,
             dtype=dtype)
 
+        self.bypass = config.get('bypass', False)
         # establish quantizers
         w_bits, w_bias = config['weight_bits'], config['weight_bias']
         x_bits, x_bias = config['input_bits'], config['input_bias']
