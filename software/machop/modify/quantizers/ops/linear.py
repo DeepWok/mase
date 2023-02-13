@@ -8,8 +8,12 @@ from functools import partial
 
 
 class LinearBase(torch.nn.Linear):
+    bypass = False
 
     def forward(self, x: Tensor) -> Tensor:
+        if self.bypass:
+            # if bypss, there is no quantization
+            return F.linear(x, self.weight, self.bias)
         x = self.x_quantizer(x)
         w = self.w_quantizer(self.weight)
         bias = self.b_quantizer(self.bias) if self.bias is not None else None
@@ -42,6 +46,7 @@ class LinearInteger(LinearBase):
         if config is None:
             raise ValueError('config is None for IntegerLinear')
 
+        self.bypass = config.get('bypass', False)
         # establish quantizers
         w_bits, w_bias = config['weight_bits'], config['weight_bias']
         x_bits, x_bias = config['input_bits'], config['input_bias']
