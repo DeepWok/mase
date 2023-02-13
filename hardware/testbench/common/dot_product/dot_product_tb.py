@@ -22,8 +22,8 @@ class rand_source:
         self.num = num
         self.samples = samples
         self.maxstalls = maxstalls
-        self.data = [[random.randint(0, 30) for _ in range(num)]
-                     for _ in range(samples)]
+        self.data = [
+            [random.randint(0, 30) for _ in range(num)] for _ in range(samples)]
         self.stallcount = 0
         # Buffer the random choice
         self.random_buff = 0
