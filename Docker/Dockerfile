@@ -66,7 +66,8 @@ RUN pip3 install --user --upgrade pip \
     -f https://llvm.github.io/torch-mlir/package-index/ \
     --extra-index-url https://download.pytorch.org/whl/nightly/cpu \
     && pip3 install onnx yapf toml GitPython colorlog cocotb[bus] \
-                    pytest
+                    pytest pytorch-lightning transformers toml \
+                    timm pytorch-nlp datasets
 
 # Add environment variables
 RUN printf "\
