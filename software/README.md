@@ -70,3 +70,7 @@ Mase also supports training with a modified model, for instance:
 ```bash
 tensorboard --logdir your-log-directory
 ```
+
+## Quick coding style guide
+
+- For Python: `docs/python.md`
