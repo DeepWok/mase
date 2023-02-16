@@ -37,7 +37,7 @@ class Conv1dBase(torch.nn.Conv1d):
         }
 
 
-class Conv1dInteger(torch.nn.Conv2d):
+class Conv1dInteger(Conv1dBase):
     def __init__(
             self,
             in_channels: int,

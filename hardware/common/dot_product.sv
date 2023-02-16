@@ -102,6 +102,5 @@ module dot_product #(
     assign out_valid = sum_valid;
     assign sum_ready = out_ready;
   end
-  else if (COMPUTE_TYPE == "block_fp")
 
 endmodule
