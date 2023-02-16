@@ -5,6 +5,7 @@ from ..quantizers import integer_quantizer
 
 
 class AddInteger(torch.nn.Module):
+
     def __init__(self, config):
         super().__init__()
 
@@ -17,4 +18,3 @@ class AddInteger(torch.nn.Module):
         x = self.x_quantizer(x)
         y = self.x_quantizer(y)
         return x + y
-

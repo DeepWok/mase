@@ -20,7 +20,7 @@ class Conv1dBase(torch.nn.Conv1d):
         # WARNING: this may have been simplified, we are assuming here the accumulation is lossless!
         # The addition size is in_channels * K * K
         return self._conv_forward(x, w, bias)
-    
+
     def get_quantized_weight(self) -> Tensor:
         return self.w_quantizer(self.weight)
 
@@ -38,6 +38,7 @@ class Conv1dBase(torch.nn.Conv1d):
 
 
 class Conv1dInteger(Conv1dBase):
+
     def __init__(
             self,
             in_channels: int,
@@ -52,25 +53,25 @@ class Conv1dInteger(Conv1dBase):
             device=None,
             dtype=None,
             config=None) -> None:
-        super().__init__(
-            in_features=in_channels, 
-            out_features=out_channels, 
-            kernel_size=kernel_size,
-            stride=stride,
-            padding=padding,
-            dilation=dilation,
-            groups=groups,
-            bias=bias,
-            padding_mode=padding_mode,
-            device=device,
-            dtype=dtype)
+        super().__init__(in_features=in_channels,
+                         out_features=out_channels,
+                         kernel_size=kernel_size,
+                         stride=stride,
+                         padding=padding,
+                         dilation=dilation,
+                         groups=groups,
+                         bias=bias,
+                         padding_mode=padding_mode,
+                         device=device,
+                         dtype=dtype)
 
         self.bypass = config.get('bypass', False)
         # establish quantizers
         w_bits, w_bias = config['weight_bits'], config['weight_bias']
         x_bits, x_bias = config['input_bits'], config['input_bias']
         # check bias quantizer, if not, use weight quantizer
-        b_bits, b_bias = config.get('bias_bits', None), config.get('bias_bias', None) 
+        b_bits, b_bias = config.get('bias_bits',
+                                    None), config.get('bias_bias', None)
         self.w_quantizer = partial(integer_quantizer, bits=w_bits, bias=w_bias)
         self.x_quantizer = partial(integer_quantizer, bits=x_bits, bias=x_bias)
         if b_bits is None:

@@ -1,10 +1,9 @@
 from .sentiment_analysis import SentAnalDatasetSST2
 from .text_entailment import TextEntailDatasetMNLI, TextEntailDatasetQNLI
-from .translation import (
-    TranslationDatasetIWSLT2017_EN_DE, 
-    TranslationDatasetOPUS_EN_FR,
-    TranslationDatasetMulti30k,
-    TranslationDatasetWMT16_RO_EN)
+from .translation import (TranslationDatasetIWSLT2017_EN_DE,
+                          TranslationDatasetOPUS_EN_FR,
+                          TranslationDatasetMulti30k,
+                          TranslationDatasetWMT16_RO_EN)
 
 dataset_factory = {
     "sst2": SentAnalDatasetSST2,
@@ -12,6 +11,6 @@ dataset_factory = {
     "qnli": TextEntailDatasetQNLI,
     "iwslt2017_en_de": TranslationDatasetIWSLT2017_EN_DE,
     'opus_en_fr': TranslationDatasetOPUS_EN_FR,
-    'multi30k': TranslationDatasetMulti30k, 
-    'wmt16_ro_en': TranslationDatasetWMT16_RO_EN, 
+    'multi30k': TranslationDatasetMulti30k,
+    'wmt16_ro_en': TranslationDatasetWMT16_RO_EN,
 }

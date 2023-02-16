@@ -4,7 +4,6 @@ import functools
 
 import torch
 
-
 use_cuda = torch.cuda.is_available()
 print('Using cuda:{}'.format(use_cuda))
 torch_cuda = torch.cuda if use_cuda else torch
@@ -22,6 +21,7 @@ def plt_model_load(model, checkpoint):
     model.load_state_dict(state_dict)
     return model
 
+
 def load_model(load_path, plt_model):
     if load_path is not None:
         if load_path.endswith(".ckpt"):
@@ -31,8 +31,8 @@ def load_model(load_path, plt_model):
                 checkpoint = load_path + "best.ckpt"
             else:
                 raise ValueError(
-                    "if it is a directory, if must end with /; if it is a file, it must end with .ckpt")
+                    "if it is a directory, if must end with /; if it is a file, it must end with .ckpt"
+                )
         plt_model = plt_model_load(plt_model, checkpoint)
         print(f"Loaded model from {checkpoint}")
     return plt_model
-

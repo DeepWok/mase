@@ -1,10 +1,9 @@
-from .ops import (
-    LinearInteger, ReLUInteger, Conv2dInteger, AddInteger,
-    LinearBlockFP)
+from .ops import (LinearInteger, ReLUInteger, Conv2dInteger, AddInteger,
+                  LinearBlockFP)
 
 possible_ops = [
-    LinearInteger, ReLUInteger, Conv2dInteger, AddInteger, 
-    LinearBlockFP]
+    LinearInteger, ReLUInteger, Conv2dInteger, AddInteger, LinearBlockFP
+]
 
 ops_map = {
     'linear': {

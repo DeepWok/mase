@@ -10,6 +10,7 @@ def get_model_wrapper(name, task):
         if task == 'classification':
             return NLPClassificationModelWrapper
         else:
-            raise NotImplementedError(f"Task {task} not implemented for NLP models")
+            raise NotImplementedError(
+                f"Task {task} not implemented for NLP models")
     else:
         raise ValueError(f"Model {name} not implemented")

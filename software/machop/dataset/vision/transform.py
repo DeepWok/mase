@@ -3,10 +3,8 @@ from timm.data.constants import IMAGENET_DEFAULT_MEAN, IMAGENET_DEFAULT_STD
 from timm.data import create_transform
 
 
-def build_transform(
-        train, input_size, color_jitter, 
-        auto_augment, interpolation, 
-        re_prob, re_mode, re_count):
+def build_transform(train, input_size, color_jitter, auto_augment,
+                    interpolation, re_prob, re_mode, re_count):
     resize_im = input_size > 32
     if train:
         # this should always dispatch to transforms_imagenet_train
@@ -23,15 +21,17 @@ def build_transform(
         if not resize_im:
             # replace RandomResizedCropAndInterpolation with
             # RandomCrop
-            transform.transforms[0] = transforms.RandomCrop(
-                input_size, padding=4)
+            transform.transforms[0] = transforms.RandomCrop(input_size,
+                                                            padding=4)
         return transform
 
     t = []
     if resize_im:
         size = int((256 / 224) * input_size)
         t.append(
-            transforms.Resize(size, interpolation=3),  # to maintain same ratio w.r.t. 224 images
+            transforms.Resize(
+                size,
+                interpolation=3),  # to maintain same ratio w.r.t. 224 images
         )
         t.append(transforms.CenterCrop(input_size))
 

@@ -1,10 +1,7 @@
-from .resnet import (
-    ResNet18, ResNet50, 
-    ResNet18ImageNet, ResNet50ImageNet)
+from .resnet import (ResNet18, ResNet50, ResNet18ImageNet, ResNet50ImageNet)
 from .nlp_models import get_nlp_model
 from .toy import get_toynet
 from .manual.toy_manual import get_toymanualnet
-
 
 model_map = {
     'resnet18': ResNet18,
@@ -24,10 +21,8 @@ model_map = {
 manual_models = ['toy_manual']
 
 vision_models = [
-    'toy', 'toy_manual',
-    'resnet18', 'resnet50', 
-    'resnet18-imagenet', 'resnet50-imagenet']
+    'toy', 'toy_manual', 'resnet18', 'resnet50', 'resnet18-imagenet',
+    'resnet50-imagenet'
+]
 
-
-nlp_models = [
-    'roberta-base', 'roberta-large']
+nlp_models = ['roberta-base', 'roberta-large']
