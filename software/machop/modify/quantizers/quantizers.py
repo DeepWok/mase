@@ -63,28 +63,28 @@ def block_and_padd(
     Pad zeros so that the size of the input is a multiple of the block_size 
     The output now should have an additional dimension of size block_size
     '''
-    if len(input.shape) == 2:
-        batch, size = input.shape
-    if len(input.shape) == 3:
-        batch, pd, size = input.shape
+    if len(x.shape) == 2:
+        batch, size = x.shape
+    if len(x.shape) == 3:
+        batch, pd, size = x.shape
         
     num_buckets = ceil(size / block_size)
     new_size = num_buckets * block_size
     diff = new_size - size
-    padded = F.pad(input, (0, diff))
+    padded = F.pad(x, (0, diff))
 
     # reshape to be a multiple of the bucket size, so that we can quantize it in chunks
-    if len(input.shape) == 2:
+    if len(x.shape) == 2:
         padded = padded.reshape(batch, num_buckets, block_size)     
-    elif len(input.shape) == 3:
+    elif len(x.shape) == 3:
         padded = padded.reshape(batch, pd, num_buckets, block_size)
     
-    if len(input.shape) == 2:
+    if len(x.shape) == 2:
         per_block_max = padded.abs().max(dim=2)[0]
-    elif len(input.shape) == 3:
+    elif len(x.shape) == 3:
         per_block_max = padded.abs().max(dim=3)[0]
     else:
-        raise ValueError(f'{input.shape} size for the input is not supported!')
+        raise ValueError(f'{x.shape} size for the input is not supported!')
 
     return padded, per_block_max
 
@@ -94,15 +94,18 @@ def block_fp_quantizer(
         bits: int,
         block_size: int = 16):
     # WARNING: needs testing
-
+    shape = None
     if len(x.shape) == 2:
         batch, size = x.shape
+        shape = 'dim2'
     if len(x.shape) == 3:
+        import pdb; pdb.set_trace()
         batch, dim_a, size = x.shape
+        shape = 'dim3'
+
     x, per_block_max = block_and_padd(x, block_size=block_size)
     # fill zeros
     per_block_max[per_block_max==0] = per_block_max[per_block_max!=0].min()
-
 
     scale = torch.ceil(torch.log2(per_block_max))
     scale = 2 ** (bits - scale - 1)
@@ -110,9 +113,9 @@ def block_fp_quantizer(
     max_value = (2 ** (scale - 1))
 
     quantized = my_clamp(my_round(x.mul(scale)), -max_value, max_value-1).div(scale)
-    if len(input.shape) == 2:
+    if shape == 'dim2':
         quantized = quantized.reshape(batch, -1)[:, :size]
-    if len(input.shape) == 3:
+    if shape == 'dim3':
         quantized = quantized.reshape(batch, dim_a, -1)[:, :, :size]
     return quantized
 

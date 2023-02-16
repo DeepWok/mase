@@ -1,0 +1,19 @@
+[default] 
+name = "integer"
+weight_bits = 8
+weight_bias = 3
+input_bits = 8
+input_bias = 5
+bias_bits = 8
+bias_bias = 5
+
+[linear]
+name = "integer"
+weight_bits = 8
+weight_bias = 5
+input_bits = 8
+input_bias = 5
+bias_bits = 8
+bias_bias = 5
+
+
