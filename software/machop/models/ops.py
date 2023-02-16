@@ -2,6 +2,7 @@ import torch
 
 
 class Add(torch.nn.Module):
+
     def __init__(self):
         super().__init__()
 
@@ -10,6 +11,7 @@ class Add(torch.nn.Module):
 
 
 class View(torch.nn.Module):
+
     def __init__(self, shape):
         super().__init__()
         self.shape = shape
@@ -19,6 +21,7 @@ class View(torch.nn.Module):
 
 
 class Flatten(torch.nn.Module):
+
     def __init__(self):
         super().__init__()
 

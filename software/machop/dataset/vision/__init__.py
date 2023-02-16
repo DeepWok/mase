@@ -8,7 +8,6 @@ from .imagenet import get_imagenet_dataset
 
 from .transform import build_transform
 
-
 default_preprocess = {
     'input_size': 32,
     'color_jitter': 0.4,
@@ -43,10 +42,7 @@ def build_dataset(dataset_name, path, train):
     transform = build_transform(train, **preprocess_params)
 
     if dataset_name in ['cifar10', 'cifar100']:
-        dataset = get_cifar_dataset(
-            dataset_name, path, train, transform)
+        dataset = get_cifar_dataset(dataset_name, path, train, transform)
     elif dataset_name in ['imagenet']:
-        dataset = get_imagenet_dataset(
-            dataset_name, path, train, transform)
+        dataset = get_imagenet_dataset(dataset_name, path, train, transform)
     return dataset, info[dataset_name]
-

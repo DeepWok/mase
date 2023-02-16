@@ -6,13 +6,13 @@ from torch.optim.lr_scheduler import CosineAnnealingLR
 
 
 class WrapperBase(pl.LightningModule):
-    def __init__(
-            self,
-            model,
-            learning_rate=5e-4,
-            epochs=200,
-            optimizer=None,
-            info=None):
+
+    def __init__(self,
+                 model,
+                 learning_rate=5e-4,
+                 epochs=200,
+                 optimizer=None,
+                 info=None):
         super().__init__()
         self.model = model
         self.learning_rate = learning_rate
@@ -31,14 +31,21 @@ class WrapperBase(pl.LightningModule):
         y_hat = self.forward(x)
         loss = self.loss(y_hat, y)
         # loss
-        self.log_dict(
-            {"loss": loss},
-            on_step=False, on_epoch=True, prog_bar=False, logger=True)
+        self.log_dict({"loss": loss},
+                      on_step=False,
+                      on_epoch=True,
+                      prog_bar=False,
+                      logger=True)
         # acc
-        acc = accuracy(y_hat, y, task='multiclass', num_classes=self.num_classes)
-        self.log_dict(
-            {"acc": acc},
-            on_step=False, on_epoch=True, prog_bar=True, logger=True)
+        acc = accuracy(y_hat,
+                       y,
+                       task='multiclass',
+                       num_classes=self.num_classes)
+        self.log_dict({"acc": acc},
+                      on_step=False,
+                      on_epoch=True,
+                      prog_bar=True,
+                      logger=True)
         return {"loss": loss, "acc": acc}
 
     def validation_step(self, batch, batch_idx):
@@ -46,14 +53,23 @@ class WrapperBase(pl.LightningModule):
         y_hat = self.forward(x)
         loss = self.loss(y_hat, y)
         # val_loss
-        self.log_dict(
-            {"val_loss": loss},
-            on_step=False, on_epoch=True, prog_bar=True, logger=True, sync_dist=True)
+        self.log_dict({"val_loss": loss},
+                      on_step=False,
+                      on_epoch=True,
+                      prog_bar=True,
+                      logger=True,
+                      sync_dist=True)
         # val acc
-        acc = accuracy(y_hat, y, task='multiclass', num_classes=self.num_classes)
-        self.log_dict(
-            {"val_acc": acc},
-            on_step=False, on_epoch=True, prog_bar=True, logger=True, sync_dist=True)
+        acc = accuracy(y_hat,
+                       y,
+                       task='multiclass',
+                       num_classes=self.num_classes)
+        self.log_dict({"val_acc": acc},
+                      on_step=False,
+                      on_epoch=True,
+                      prog_bar=True,
+                      logger=True,
+                      sync_dist=True)
         return {"val_loss": loss, "val_acc": acc}
 
     def test_step(self, batch, batch_idx):
@@ -61,14 +77,21 @@ class WrapperBase(pl.LightningModule):
         y_hat = self.forward(x)
         loss = self.loss(y_hat, y)
         # val_loss
-        self.log_dict(
-            {"test_loss": loss},
-            on_step=False, on_epoch=True, prog_bar=False, logger=True)
+        self.log_dict({"test_loss": loss},
+                      on_step=False,
+                      on_epoch=True,
+                      prog_bar=False,
+                      logger=True)
         # val acc
-        acc = accuracy(y_hat, y, task='multiclass', num_classes=self.num_classes)
-        self.log_dict(
-            {"test_acc": acc},
-            on_step=False, on_epoch=True, prog_bar=True, logger=True)
+        acc = accuracy(y_hat,
+                       y,
+                       task='multiclass',
+                       num_classes=self.num_classes)
+        self.log_dict({"test_acc": acc},
+                      on_step=False,
+                      on_epoch=True,
+                      prog_bar=True,
+                      logger=True)
         return {"test_loss": loss, "test_acc": acc}
 
     def configure_optimizers(self):
@@ -79,15 +102,13 @@ class WrapperBase(pl.LightningModule):
             opt = torch.optim.Adam(self.parameters(), lr=self.learning_rate)
             scheduler = CosineAnnealingLR(opt, T_max=self.epochs, eta_min=1e-6)
         elif self.optimizer in ['sgd_warmup', 'sgd']:
-            opt = torch.optim.SGD(
-                self.parameters(),
-                lr=self.learning_rate,
-                momentum=0.9,
-                weight_decay=0.0005,
-                nesterov=True)
+            opt = torch.optim.SGD(self.parameters(),
+                                  lr=self.learning_rate,
+                                  momentum=0.9,
+                                  weight_decay=0.0005,
+                                  nesterov=True)
             if self.optimizer == 'sgd':
-                scheduler = CosineAnnealingLR(
-                    opt, T_max=self.epochs, eta_min=0.0)
-        return {
-            "optimizer": opt,
-            "lr_scheduler":  scheduler}
+                scheduler = CosineAnnealingLR(opt,
+                                              T_max=self.epochs,
+                                              eta_min=0.0)
+        return {"optimizer": opt, "lr_scheduler": scheduler}

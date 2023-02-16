@@ -11,6 +11,7 @@ from datasets import load_dataset, load_from_disk
 
 class TextEntailDataset(Dataset):
     path = None
+
     def __init__(self):
         self.sent1_col_name = None
         self.sent2_col_name = None
@@ -29,35 +30,32 @@ class TextEntailDataset(Dataset):
 
     def __len__(self):
         return len(self.data)
-    
+
     def __getitem__(self, index):
         data_row = self.data[index]
         question = data_row[self.sent1_col_name]
         answer = data_row[self.sent2_col_name]
         labels = data_row[self.label_col_name]
-        encoding = self.tokenizer.encode_plus(
-            question,
-            answer,
-            add_special_tokens=True,
-            max_length=self.max_token_count,
-            padding="max_length",
-            truncation=True,
-            return_attention_mask=True,
-            return_tensors="pt"
-        )
-        input_ids=encoding["input_ids"].flatten()
-        attention_mask=encoding["attention_mask"].flatten()
-        
-        return dict(
-            question=question,
-            answer=answer,
-            input_ids=input_ids,
-            attention_mask=attention_mask,
-            labels=torch.tensor([labels]))
-        
+        encoding = self.tokenizer.encode_plus(question,
+                                              answer,
+                                              add_special_tokens=True,
+                                              max_length=self.max_token_count,
+                                              padding="max_length",
+                                              truncation=True,
+                                              return_attention_mask=True,
+                                              return_tensors="pt")
+        input_ids = encoding["input_ids"].flatten()
+        attention_mask = encoding["attention_mask"].flatten()
+
+        return dict(question=question,
+                    answer=answer,
+                    input_ids=input_ids,
+                    attention_mask=attention_mask,
+                    labels=torch.tensor([labels]))
+
     def _download_and_process(self):
         raise NotImplementedError
-    
+
     def _load_from_path(self):
         self.dataset = load_from_disk(self.path)
 
@@ -65,6 +63,7 @@ class TextEntailDataset(Dataset):
 class TextEntailDatasetQNLI(TextEntailDataset):
     path = './data/qnli'
     num_labels = 2
+
     def __init__(self, split='train'):
         super().__init__()
         self.sent1_col_name = "question"
@@ -81,6 +80,7 @@ class TextEntailDatasetQNLI(TextEntailDataset):
 class TextEntailDatasetMNLI(TextEntailDataset):
     path = './data/mnli'
     num_classes = 3
+
     def __init__(self, split='train'):
         super().__init__()
         self.sent1_col_name = "premise"

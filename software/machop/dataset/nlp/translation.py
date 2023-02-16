@@ -10,6 +10,7 @@ from datasets import load_dataset, load_from_disk
 class TranslationDataset(Dataset):
     path = None
     num_labels = None
+
     def __init__(self):
         self.src_col_name = None
         self.trg_col_name = None
@@ -27,40 +28,37 @@ class TranslationDataset(Dataset):
 
     def __len__(self):
         return len(self.data)
-    
+
     def __getitem__(self, index):
         data_row = self.data[index]
         source = data_row[self.src_col_name]
         target = data_row[self.trg_col_name]
-        encoding = self.tokenizer.encode_plus(
-            source,
-            add_special_tokens=True,
-            max_length=self.max_token_count,
-            padding="max_length",
-            truncation=True,
-            return_attention_mask=True,
-            return_tensors="pt"
-        )
-        input_ids=encoding["input_ids"].flatten()
-        attention_mask=encoding["attention_mask"].flatten()
-        
-        return dict(
-            source=source,
-            target=target,
-            input_ids=input_ids,
-            attention_mask=attention_mask)
-        
+        encoding = self.tokenizer.encode_plus(source,
+                                              add_special_tokens=True,
+                                              max_length=self.max_token_count,
+                                              padding="max_length",
+                                              truncation=True,
+                                              return_attention_mask=True,
+                                              return_tensors="pt")
+        input_ids = encoding["input_ids"].flatten()
+        attention_mask = encoding["attention_mask"].flatten()
+
+        return dict(source=source,
+                    target=target,
+                    input_ids=input_ids,
+                    attention_mask=attention_mask)
+
     def _download_and_process(self):
         raise NotImplementedError
-    
+
     def _load_from_path(self):
         self.dataset = load_from_disk(self.path)
-
 
 
 # It seems like the download link of this is broken ..
 class TranslationDatasetIWSLT2017_EN_DE(TranslationDataset):
     path = './data/iwslt2017-en-de'
+
     def __init__(self, split='train'):
         super().__init__()
         self.src_col_name = "en"
@@ -68,45 +66,49 @@ class TranslationDatasetIWSLT2017_EN_DE(TranslationDataset):
         self.data = self.dataset[split]
 
     def _download_and_process(self):
-        dataset = load_dataset('iwslt2017', 'iwslt2017-en-de', cache_dir='./datasets_cache_dir')
+        dataset = load_dataset('iwslt2017',
+                               'iwslt2017-en-de',
+                               cache_dir='./datasets_cache_dir')
         dataset.save_to_disk(self.path)
         self.dataset = dataset
-        import pdb; pdb.set_trace()
+        import pdb
+        pdb.set_trace()
 
 
 class TranslationDatasetOPUS_EN_FR(TranslationDataset):
     path = './data/opus-en-fr'
     num_labels = None
+
     def __init__(self, tokenizer, max_token_count, split='train'):
-        super().__init__(
-            tokenizer = tokenizer, 
-            max_token_count = max_token_count
-        )
+        super().__init__(tokenizer=tokenizer, max_token_count=max_token_count)
         self.src_col_name = "en"
         self.trg_col_name = "fr"
         self.data = self.dataset[split]
 
     def _download_and_process(self):
-        dataset = load_dataset('opus_euconst', 'en-fr', cache_dir='./datasets_cache_dir')
+        dataset = load_dataset('opus_euconst',
+                               'en-fr',
+                               cache_dir='./datasets_cache_dir')
         dataset.save_to_disk(self.path)
         self.dataset = dataset
-        import pdb; pdb.set_trace()
+        import pdb
+        pdb.set_trace()
 
 
 class TranslationDatasetWMT16_RO_EN(TranslationDataset):
     path = './data/wmt16-ro-en'
     num_labels = None
+
     def __init__(self, tokenizer, max_token_count, split='train'):
-        super().__init__(
-            tokenizer = tokenizer, 
-            max_token_count = max_token_count
-        )
+        super().__init__(tokenizer=tokenizer, max_token_count=max_token_count)
         self.src_col_name = "ro"
         self.trg_col_name = "en"
         self.data = self.dataset[split]
 
     def _download_and_process(self):
-        dataset = load_dataset('wmt16', 'ro-en', cache_dir='./datasets_cache_dir')
+        dataset = load_dataset('wmt16',
+                               'ro-en',
+                               cache_dir='./datasets_cache_dir')
         dataset.save_to_disk(self.path)
         self.dataset = dataset
 
@@ -114,17 +116,15 @@ class TranslationDatasetWMT16_RO_EN(TranslationDataset):
         data_row = self.data[index]['translation']
         source = data_row[self.src_col_name]
         target = data_row[self.trg_col_name]
-        encoding = self.tokenizer.encode_plus(
-            source,
-            add_special_tokens=True,
-            max_length=self.max_token_count,
-            padding="max_length",
-            truncation=True,
-            return_attention_mask=True,
-            return_tensors="pt"
-        )
-        input_ids=encoding["input_ids"].flatten()
-        attention_mask=encoding["attention_mask"].flatten()
+        encoding = self.tokenizer.encode_plus(source,
+                                              add_special_tokens=True,
+                                              max_length=self.max_token_count,
+                                              padding="max_length",
+                                              truncation=True,
+                                              return_attention_mask=True,
+                                              return_tensors="pt")
+        input_ids = encoding["input_ids"].flatten()
+        attention_mask = encoding["attention_mask"].flatten()
         label_encoding = self.tokenizer.encode_plus(
             source,
             add_special_tokens=True,
@@ -132,19 +132,18 @@ class TranslationDatasetWMT16_RO_EN(TranslationDataset):
             padding="max_length",
             truncation=True,
             return_attention_mask=True,
-            return_tensors="pt"
-        )
+            return_tensors="pt")
         labels = label_encoding["input_ids"].flatten()
-        return dict(
-            source=source,
-            target=target,
-            input_ids=input_ids,
-            attention_mask=attention_mask,
-            labels=labels)
+        return dict(source=source,
+                    target=target,
+                    input_ids=input_ids,
+                    attention_mask=attention_mask,
+                    labels=labels)
 
 
 class TranslationDatasetMulti30k(TranslationDataset):
     path = './data/multi30k'
+
     def __init__(self, tokenizer, max_token_count, split='train'):
         super().__init__(tokenizer, max_token_count)
         self.src_col_name = "en"
@@ -160,22 +159,20 @@ class TranslationDatasetMulti30k(TranslationDataset):
 
     def __len__(self):
         return len(self.data)
-    
+
     def __getitem__(self, index):
         data_row = self.data[index]
         source = data_row[self.src_col_name]
         target = data_row[self.trg_col_name]
-        encoding = self.tokenizer.encode_plus(
-            source,
-            add_special_tokens=True,
-            max_length=self.max_token_count,
-            padding="max_length",
-            truncation=True,
-            return_attention_mask=True,
-            return_tensors="pt"
-        )
-        input_ids=encoding["input_ids"].flatten()
-        attention_mask=encoding["attention_mask"].flatten()
+        encoding = self.tokenizer.encode_plus(source,
+                                              add_special_tokens=True,
+                                              max_length=self.max_token_count,
+                                              padding="max_length",
+                                              truncation=True,
+                                              return_attention_mask=True,
+                                              return_tensors="pt")
+        input_ids = encoding["input_ids"].flatten()
+        attention_mask = encoding["attention_mask"].flatten()
         label_encoding = self.tokenizer.encode_plus(
             source,
             add_special_tokens=True,
@@ -183,16 +180,14 @@ class TranslationDatasetMulti30k(TranslationDataset):
             padding="max_length",
             truncation=True,
             return_attention_mask=True,
-            return_tensors="pt"
-        )
+            return_tensors="pt")
         labels = label_encoding["input_ids"].flatten()
-        return dict(
-            source=source,
-            target=target,
-            input_ids=input_ids,
-            attention_mask=attention_mask,
-            labels=labels)
-        
+        return dict(source=source,
+                    target=target,
+                    input_ids=input_ids,
+                    attention_mask=attention_mask,
+                    labels=labels)
+
     def _download_and_process(self):
         pass
 

@@ -3,21 +3,18 @@ import torch.nn as nn
 from transformers import AutoModel
 from .base import WrapperBase
 
+
 class NLPClassificationModelWrapper(WrapperBase):
-    def __init__(self, 
-                model, 
-                learning_rate, 
-                epochs=200,
-                optimizer=None):
-        super().__init__(
-            model=model,
-            learning_rate=learning_rate,
-            epochs=epochs,
-            optimizer=optimizer)
+
+    def __init__(self, model, learning_rate, epochs=200, optimizer=None):
+        super().__init__(model=model,
+                         learning_rate=learning_rate,
+                         epochs=epochs,
+                         optimizer=optimizer)
         self.model = model['model']
         self.tokenizer = model['tokenizer']
         self.classifier = model['classifier']
-    
+
     def forward(self, input_ids, attention_mask, labels=None):
         """
         output.last_hidden_state (batch_size, token_num, hidden_size): hidden representation for each token in each sequence of the batch. 
@@ -45,17 +42,35 @@ class NLPClassificationModelWrapper(WrapperBase):
         self.train_acc_arr.append(acc)
         self.log("train_loss", loss, prog_bar=True, sync_dist=True)
         self.log("train_accuracy", acc, prog_bar=True, sync_dist=True)
-        return {"loss": loss, "predictions": outputs, "labels": labels, "train_accuracy": acc}
-    
+        return {
+            "loss": loss,
+            "predictions": outputs,
+            "labels": labels,
+            "train_accuracy": acc
+        }
+
     def on_train_epoch_end(self):
-        train_mean_loss = torch.mean(torch.tensor(self.train_loss_arr, dtype=torch.float32))
-        train_mean_acc = torch.mean(torch.tensor(self.train_acc_arr, dtype=torch.float32))
+        train_mean_loss = torch.mean(
+            torch.tensor(self.train_loss_arr, dtype=torch.float32))
+        train_mean_acc = torch.mean(
+            torch.tensor(self.train_acc_arr, dtype=torch.float32))
         self.train_loss_arr = []
         self.train_acc_arr = []
-        self.log("train_mean_loss_per_epoch", train_mean_loss, prog_bar=True, logger=True, sync_dist=True)
-        self.log("train_mean_acc_per_epoch", train_mean_acc, prog_bar=True, logger=True, sync_dist=True)
-        return {"train_mean_loss": train_mean_loss, "train_mean_acc": train_mean_acc}
-    
+        self.log("train_mean_loss_per_epoch",
+                 train_mean_loss,
+                 prog_bar=True,
+                 logger=True,
+                 sync_dist=True)
+        self.log("train_mean_acc_per_epoch",
+                 train_mean_acc,
+                 prog_bar=True,
+                 logger=True,
+                 sync_dist=True)
+        return {
+            "train_mean_loss": train_mean_loss,
+            "train_mean_acc": train_mean_acc
+        }
+
     def validation_step(self, batch, batch_idx):
         input_ids = batch["input_ids"]
         attention_mask = batch["attention_mask"]
@@ -69,14 +84,24 @@ class NLPClassificationModelWrapper(WrapperBase):
         self.log("val_loss", loss, prog_bar=True, sync_dist=True)
         self.log("val_accuracy", acc, prog_bar=True, sync_dist=True)
         return loss
-    
+
     def on_validation_epoch_end(self):
-        mean_loss = torch.mean(torch.tensor(self.val_loss_arr, dtype=torch.float32))
-        mean_acc = torch.mean(torch.tensor(self.val_acc_arr, dtype=torch.float32))
+        mean_loss = torch.mean(
+            torch.tensor(self.val_loss_arr, dtype=torch.float32))
+        mean_acc = torch.mean(
+            torch.tensor(self.val_acc_arr, dtype=torch.float32))
         self.val_loss_arr = []
         self.val_acc_arr = []
-        self.log("val_mean_loss_per_epoch", mean_loss, prog_bar=True, logger=True, sync_dist=True)
-        self.log("val_mean_acc_per_epoch", mean_acc, prog_bar=True, logger=True, sync_dist=True)
+        self.log("val_mean_loss_per_epoch",
+                 mean_loss,
+                 prog_bar=True,
+                 logger=True,
+                 sync_dist=True)
+        self.log("val_mean_acc_per_epoch",
+                 mean_acc,
+                 prog_bar=True,
+                 logger=True,
+                 sync_dist=True)
         return {"val_mean_loss": mean_loss, "val_mean_acc": mean_acc}
 
     def test_step(self, batch, batch_idx):
@@ -90,13 +115,22 @@ class NLPClassificationModelWrapper(WrapperBase):
         self.test_loss_arr.append(loss)
         self.test_acc_arr.append(acc)
         return loss
-    
+
     def on_test_epoch_end(self):
-        mean_loss = torch.mean(torch.tensor(self.test_loss_arr, dtype=torch.float32))
-        mean_acc = torch.mean(torch.tensor(self.test_acc_arr, dtype=torch.float32))
+        mean_loss = torch.mean(
+            torch.tensor(self.test_loss_arr, dtype=torch.float32))
+        mean_acc = torch.mean(
+            torch.tensor(self.test_acc_arr, dtype=torch.float32))
         self.test_loss_arr = []
         self.test_acc_arr = []
-        self.log("test_mean_loss", mean_loss, prog_bar=True, logger=True, sync_dist=True)
-        self.log("test_mean_acc", mean_acc, prog_bar=True, logger=True, sync_dist=True)
+        self.log("test_mean_loss",
+                 mean_loss,
+                 prog_bar=True,
+                 logger=True,
+                 sync_dist=True)
+        self.log("test_mean_acc",
+                 mean_acc,
+                 prog_bar=True,
+                 logger=True,
+                 sync_dist=True)
         return {"test_mean_loss": mean_loss, "test_mean_acc": mean_acc}
-    
