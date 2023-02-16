@@ -53,8 +53,8 @@ class Conv2dInteger(torch.nn.Conv2d):
             dtype=None,
             config=None) -> None:
         super().__init__(
-            in_features=in_channels, 
-            out_features=out_channels, 
+            in_channels=in_channels,
+            out_channels=out_channels,
             kernel_size=kernel_size,
             stride=stride,
             padding=padding,
