@@ -7,12 +7,16 @@ module dot_product #(
     parameter OUTPUT_WIDTH = ACT_WIDTH + W_WIDTH + $clog2(VECTOR_SIZE),
 
     // this defines the number of elements in the vector, this is tunable
+    // when block arithmetics are applied, this is the same as the block size
     parameter VECTOR_SIZE = 4,
 
     // this is the type of computation to perform
     // "int" for integer, "float" for floating point
     // currently only "int" is supported
-    parameter COMPUTE_TYPE = "int"
+    parameter COMPUTE_TYPE = "int",
+
+    // used only for block floating point
+    parameter BLKFLOAT_EXP_WIDTH = 4
 ) (
     input clk,
     input rst,
@@ -31,6 +35,11 @@ module dot_product #(
     output logic [OUTPUT_WIDTH-1:0] outd,
     output                          out_valid,
     input                           out_ready
+
+    // block floating point 
+    input logic [BLKFLOAT_EXP_WIDTH-1:0]    scaling,
+    input                                   scaling_valid,
+    output                                  scaling_ready
 );
 
   // localparam PRODUCT_WIDTH_FLOAT = ACT_WIDTH + W_WIDTH - W_EXP_WIDTH + (1 << W_EXP_WIDTH);
@@ -87,8 +96,12 @@ module dot_product #(
   );
 
   // picking the end of the buffer, wire them to the output port
-  assign outd = sum;
-  assign out_valid = sum_valid;
-  assign sum_ready = out_ready;
+
+  if (COMPUTE_TYPE == "int") begin
+    assign outd = sum;
+    assign out_valid = sum_valid;
+    assign sum_ready = out_ready;
+  end
+  else if (COMPUTE_TYPE == "block_fp")
 
 endmodule
