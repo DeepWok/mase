@@ -220,10 +220,9 @@ def ResNet50ImageNet(info):
     return ResNetImageNet(Bottleneck, [3, 4, 6, 3], num_classes=num_classes)
 
 
-def test():
-    net = ResNet18()
-    y = net(torch.randn(1, 3, 32, 32))
-    print(y.size())
-
+# def test():
+#     net = ResNet18()
+#     y = net(torch.randn(1, 3, 32, 32))
+#     print(y.size())
 
 # test()

@@ -10,10 +10,11 @@ model_map = {
     'toy': get_toynet,
     'roberta-base': get_nlp_model,
     'roberta-large': get_nlp_model,
+    'facebook/opt-350m': get_nlp_model,
 }
 
 vision_models = [
     'toy', 'resnet18', 'resnet50', 'resnet18-imagenet', 'resnet50-imagenet'
 ]
 
-nlp_models = ['roberta-base', 'roberta-large']
+nlp_models = ['roberta-base', 'roberta-large', 'facebook/opt-350m']
