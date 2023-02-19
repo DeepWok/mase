@@ -3,7 +3,7 @@
 ## Why?
 
 Having a good coding style is somehow important, since it makes your code less error-prone, and also makes collaboration a lot easier.
-The general guidance is the [PEP8 standard](https://peps.python.org/pep-0008/).
+The general guidance is the [yapf standard](https://github.com/google/yapf).
 However, the PEP8 is a very long document, this readme serves as a quick 'rule of thumbs' for python coding styles.
 
 ## Naming
@@ -39,4 +39,20 @@ xs = [
 	'very', 'long']
 
 # same thing applies to dicts, strings ....
+```
+
+
+## VSCode settings
+
+The following settings in VScode can ensure auto-linting for Python.
+You can find how to create a `settings.json` for your workspace in [here](https://code.visualstudio.com/docs/getstarted/settings).
+
+The following setup would trigger a automatic formatting when you save your `.py` files.
+
+```json
+ "python.linting.enabled": true,
+ "python.linting.pylintPath": "pylint",
+ "editor.formatOnSave": true,
+ "python.formatting.provider": "yapf",
+ "python.linting.pylintEnabled": true,
 ```

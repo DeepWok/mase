@@ -6,8 +6,9 @@ from .base import WrapperBase
 
 class NLPClassificationModelWrapper(WrapperBase):
 
-    def __init__(self, model, learning_rate, epochs=200, optimizer=None):
+    def __init__(self, model, info, learning_rate, epochs=200, optimizer=None):
         super().__init__(model=model,
+                         info=info,
                          learning_rate=learning_rate,
                          epochs=epochs,
                          optimizer=optimizer)
