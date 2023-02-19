@@ -64,9 +64,24 @@ Mase also supports training with a modified model, for instance:
 ./chop modify cifar10 toy --load checkpoints/modified_test/best.ckpt --config configs/test.toml
 ```
 
-
 ### Training log check
 
 ```bash
 tensorboard --logdir your-log-directory
 ```
+
+## Quick coding style guide
+
+- For Python: `docs/python.md`
+
+## Tested commands and functionalities
+
+- Train from modified toynet with fixed-point quantization
+  ```bash
+  ./chop train cifar10 toy --config configs/tests/integer.toml --save test --modify
+  ```
+
+- Train from custom toynet that has mixed-precision fixed-point quantization
+  ```bash
+  ./chop train cifar10 toy_manual --config configs/toy_manual.toml --save test
+  ```
