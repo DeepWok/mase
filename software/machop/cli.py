@@ -9,7 +9,7 @@ import numpy as np
 import toml
 
 from .session import train, test
-from .models import model_map, nlp_models, vision_models
+from .models import model_map, nlp_models, vision_models, manual_models
 from .dataset import get_dataset, get_dataloader
 from .modify import Modifier
 
@@ -187,7 +187,10 @@ class Main:
                                   checkpoint=a.load_name,
                                   pretrained=a.pretrained)
         elif a.model in vision_models:
-            model = model_inst_fn(info=info)
+            if a.model in manual_models:
+                model = model_inst_fn(info=info, config=a.config)
+            else:
+                model = model_inst_fn(info=info)
         else:
             raise NotImplementedError(f'Unknown model {a.model!r}.')
 
