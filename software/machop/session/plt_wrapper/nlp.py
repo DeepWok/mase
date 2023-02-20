@@ -3,6 +3,14 @@ import torch.nn as nn
 from transformers import AutoModel
 from .base import WrapperBase
 
+name_to_final_module_map = {
+    # TODO: double check on how to extract classifier from last_hidden_state
+    'facebook/opt-350m': 'last_hidden_state',
+    # BERT-ish model makes use a of a pooler
+    'roberta-base': 'pooler_output',
+    'roberta-large': 'pooler_output',
+}
+
 
 class NLPClassificationModelWrapper(WrapperBase):
 
@@ -15,6 +23,7 @@ class NLPClassificationModelWrapper(WrapperBase):
         self.model = model['model']
         self.tokenizer = model['tokenizer']
         self.classifier = model['classifier']
+        self.fn = name_to_final_module_map[self.model.name_or_path]
 
     def forward(self, input_ids, attention_mask, labels=None):
         """
@@ -22,7 +31,8 @@ class NLPClassificationModelWrapper(WrapperBase):
         output.pooler_output (batch_size, hidden_size): take hidden representation of [CLS] token in each sequence, run through BertPooler module (linear layer with Tanh activation)
         """
         output = self.model(input_ids, attention_mask=attention_mask)
-        output = self.classifier(output.pooler_output)
+        hidden = getattr(output, self.fn)
+        output = self.classifier(hidden)
         output = torch.sigmoid(output)
         loss = 0
 
