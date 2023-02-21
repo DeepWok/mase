@@ -7,6 +7,7 @@ import pickle
 from torch import nn
 from .quantizers import ops_map, possible_ops
 from collections import OrderedDict
+from ..models.ops import Add
 
 pp = pprint.PrettyPrinter(depth=4)
 
@@ -43,7 +44,7 @@ def load_model(load_path, plt_model):
 
 class Modifier:
 
-    modifiable_layers = ['linear', 'relu', 'conv2d']
+    modifiable_layers = ['linear', 'relu', 'conv2d', 'add']
 
     def __init__(self,
                  model=None,
@@ -150,8 +151,37 @@ class Modifier:
             # grab pretrained weights
             # WARNING: need to test on the gpu land!
             my_linear.weight = child.weight.cpu()
-            my_linear.bias = child.bias.cpu()
+            if use_bias:
+                my_linear.bias = child.bias.cpu()
             return my_linear
+
+        self.replace(model, target, replacement_fn)
+
+    def replace_conv2d(self, model, config):
+        replace_cls = ops_map['conv2d'][config['name']]
+        target = nn.Conv2d
+
+        # This shows how to use the replace function
+        # First, we have to define a custom replacement_fn
+        # We then call the replace function with the model, target layer, and replacement_fn
+        def replacement_fn(child):
+            use_bias = child.bias is not None
+            my_conv = replace_cls(in_channels=child.in_channels,
+                                  out_channels=child.out_channels,
+                                  kernel_size=child.kernel_size,
+                                  stride=child.stride,
+                                  padding=child.padding,
+                                  dilation=child.dilation,
+                                  groups=child.groups,
+                                  bias=use_bias,
+                                  padding_mode=child.padding_mode,
+                                  config=config)
+            # grab pretrained weights
+            # WARNING: need to test on the gpu land!
+            my_conv.weight = child.weight.cpu()
+            if use_bias:
+                my_conv.bias = child.bias.cpu()
+            return my_conv
 
         self.replace(model, target, replacement_fn)
 
@@ -161,6 +191,15 @@ class Modifier:
 
         def replacement_fn(child):
             return replace_cls(inplace=child.inplace, config=config)
+
+        self.replace(model, target, replacement_fn)
+
+    def replace_add(self, model, config):
+        replace_cls = ops_map['add'][config['name']]
+        target = Add
+
+        def replacement_fn(child):
+            return replace_cls(config=config)
 
         self.replace(model, target, replacement_fn)
 
