@@ -34,12 +34,17 @@ module dot_product #(
     // output port
     output logic [OUTPUT_WIDTH-1:0] outd,
     output                          out_valid,
-    input                           out_ready
+    input                           out_ready,
 
+    /* verilator lint_off UNDRIVEN */
+    /* verilator lint_off UNUSEDSIGNAL */
+    // Jianyi - temporarily disable linting because the signals are unused 
     // block floating point 
-    input logic [BLKFLOAT_EXP_WIDTH-1:0]    scaling,
-    input                                   scaling_valid,
-    output                                  scaling_ready
+    input  logic [BLKFLOAT_EXP_WIDTH-1:0] scaling,
+    input                                 scaling_valid,
+    output                                scaling_ready
+    /* verilator lint_on UNUSEDSIGNAL */
+    /* verilator lint_off UNDRIVEN */
 );
 
   // localparam PRODUCT_WIDTH_FLOAT = ACT_WIDTH + W_WIDTH - W_EXP_WIDTH + (1 << W_EXP_WIDTH);

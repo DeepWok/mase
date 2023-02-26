@@ -253,5 +253,5 @@ jobs:
 
     - name: Hardware regression test 
       run: |
-          python3 bin/test-hardware.py -a || cat test-hardware.log 
+          python3 bin/test-hardware.py -a
 
