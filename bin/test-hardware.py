@@ -3,6 +3,7 @@
 # This script runs the hardware regression test
 # ---------------------------------------
 from optparse import OptionParser
+from argparse import ArgumentParser
 import sys, os, time, logging, colorlog, glob, subprocess, multiprocessing, shutil, functools
 from multiprocessing import Process, Queue
 import maselogger
@@ -26,17 +27,17 @@ test_cases = {
 # ---------- TestHardware class --------------
 class TestHardware:
 
-    def __init__(self, args, options):
+    def __init__(self, args):
         self.args = args
-        self.options = options
-        self.isdebug = self.options.debug
+        self.isdebug = self.args.debug
         # Root path of mase-tools
         self.root = os.path.abspath(
             os.path.join(os.path.dirname(__file__), ".."))
         self.logger = maselogger.getLogger(
             'test-hardware', os.path.join(self.root, 'test-hardware.log'))
         self.test_cases = self.args
-        if self.options.run_all: self.test_cases = test_cases.keys()
+        if self.args.run_all: 
+            self.test_cases = test_cases.keys()
         check_fail = self.check_files()
         if check_fail:
             sys.exit(check_fail)
@@ -169,21 +170,21 @@ def main():
 test-hardware.py common/int_mult ...
 test-hardware.py -a"""
 
-    optparser = OptionParser(usage=USAGE)
-    optparser.add_option('-a',
+    parser = ArgumentParser(usage=USAGE)
+    parser.add_argument('-a',
                          '--all',
                          action='store_true',
                          dest='run_all',
                          default=False,
                          help='Run the whole regression test, Default=False')
-    optparser.add_option('--debug',
+    parser.add_argument('--debug',
                          action='store_true',
                          dest='debug',
                          default=False,
                          help='Run in debug mode, Default=False')
 
-    (options, args) = optparser.parse_args()
-    testrun = TestHardware(args, options)
+    args = parser.parse_args()
+    testrun = TestHardware(args)
     lint = testrun.lint()
     if lint: sys.exit(lint)
     run = testrun.test()
