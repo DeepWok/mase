@@ -25,7 +25,7 @@ jobs:
   #         docker exec -i -w /workspace mase-ci make build
 
   build-with-ubuntu:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
       with:
@@ -83,7 +83,7 @@ jobs:
           pip3 install --user --upgrade pip
           pip3 install onnx yapf toml GitPython colorlog cocotb[bus] \
                        pytest pytorch-lightning transformers toml \
-                       timm pytorch-nlp datasets
+                       timm pytorch-nlp datasets IPython ipdb
 
     # -----------
     # Sanity check 

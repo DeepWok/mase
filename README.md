@@ -5,7 +5,12 @@ This repo contains the following directories:
 * `hardware` - Internal hardware library 
 * `software` - Torch based training library 
 * `scripts` - Installation scripts  
+* `docs` - Documentation  
 * `Docker` - Docker container configurations  
+* `vagrant` - Vagrant box configurations  
+
+## Overview
+![Alt text](./docs/overview.png)
 
 ## Getting Started
 
