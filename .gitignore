@@ -7,6 +7,9 @@
 /tb_summary/
 *.sh
 ./data/*
+software/checkpoints/
+software/data/
+software/lightning_logs/
 
 # macOS
 .DS_Store
@@ -117,3 +120,6 @@ venv.bak/
 # mypy
 .mypy_cache/
 *.png
+
+# vscode
+.vscode
