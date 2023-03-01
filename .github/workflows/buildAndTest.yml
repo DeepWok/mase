@@ -39,7 +39,7 @@ jobs:
       run: |
           sudo apt-get update
           sudo apt-get install apt-utils -y
-          sudo apt-get upgrade -y
+          # sudo apt-get upgrade -y
           sudo apt-get install -y \
                           clang cmake graphviz-dev libclang-dev \
                           pkg-config g++ libxtst6 xdg-utils \
