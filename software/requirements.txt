@@ -4,3 +4,11 @@ toml
 timm
 pytorch-nlp
 datasets
+onnx 
+yapf 
+GitPython 
+colorlog 
+cocotb[bus]
+pytest  
+ipython
+ipdb
