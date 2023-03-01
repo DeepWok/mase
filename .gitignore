@@ -11,6 +11,7 @@ software/checkpoints/
 software/data/
 software/lightning_logs/
 software/test
+software/modified_ckpts
 
 # macOS
 .DS_Store
