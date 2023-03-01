@@ -1,3 +1,5 @@
+import os
+
 import torch
 import logging
 import toml
@@ -214,9 +216,11 @@ class Modifier:
                 self.replace(child, target, replacement_fn)
 
     def save(self, name):
+        if not os.path.isdir('modified_ckpts'):
+            os.mkdir('modified_ckpts')
         save_name = f'modified_ckpts/{name}.ckpt'
         model_save_name = f'modified_ckpts/{name}.model.pkl'
         torch.save(self.model.state_dict(), save_name)
         with open(model_save_name, 'wb') as f:
-            pickle.dump(self.model, model_save_name)
+            pickle.dump(self.model, file=f)
         logging.info(f"Modified model saved as {save_name}.")
