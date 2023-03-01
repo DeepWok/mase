@@ -10,6 +10,7 @@
 software/checkpoints/
 software/data/
 software/lightning_logs/
+software/test
 
 # macOS
 .DS_Store
