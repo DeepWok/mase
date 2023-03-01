@@ -22,6 +22,7 @@ class WrapperBase(pl.LightningModule):
         self.train_losses = []
         self.val_losses = []
         self.num_classes = info['num_classes']
+        # TODO: use torch metrics instead of torch.nn.Metric?
 
     def forward(self, x):
         return self.model(x)
