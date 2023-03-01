@@ -1,5 +1,7 @@
 import torch
 import torch.nn as nn
+
+from torchmetrics import Accuracy
 from transformers import AutoModel
 from .base import WrapperBase
 
@@ -24,6 +26,13 @@ class NLPClassificationModelWrapper(WrapperBase):
         self.tokenizer = model['tokenizer']
         self.classifier = model['classifier']
         self.fn = name_to_final_module_map[self.model.name_or_path]
+        self.criterion = nn.CrossEntropyLoss()
+        self.accuracy = Accuracy(task='multiclass', num_classes=self.num_classes)
+
+        self.train_accs, self.train_losses = [], []
+        self.val_accs, self.val_losses = [], []
+        self.test_accs, self.test_losses = [], []
+
 
     def forward(self, input_ids, attention_mask, labels=None):
         """
@@ -49,10 +58,10 @@ class NLPClassificationModelWrapper(WrapperBase):
         _, pred_ids = torch.max(outputs, dim=1)
         labels = labels[0] if len(labels) == 1 else labels.squeeze()
         acc = self.accuracy(pred_ids, labels)
-        self.train_loss_arr.append(loss)
-        self.train_acc_arr.append(acc)
+        self.train_losses.append(loss)
+        self.train_accs.append(acc)
         self.log("train_loss", loss, prog_bar=True, sync_dist=True)
-        self.log("train_accuracy", acc, prog_bar=True, sync_dist=True)
+        self.log("train_acc", acc, prog_bar=True, sync_dist=True)
         return {
             "loss": loss,
             "predictions": outputs,
@@ -62,11 +71,11 @@ class NLPClassificationModelWrapper(WrapperBase):
 
     def on_train_epoch_end(self):
         train_mean_loss = torch.mean(
-            torch.tensor(self.train_loss_arr, dtype=torch.float32))
+            torch.tensor(self.train_losses, dtype=torch.float32))
         train_mean_acc = torch.mean(
-            torch.tensor(self.train_acc_arr, dtype=torch.float32))
-        self.train_loss_arr = []
-        self.train_acc_arr = []
+            torch.tensor(self.train_accs, dtype=torch.float32))
+        self.train_losses = []
+        self.train_accs = []
         self.log("train_mean_loss_per_epoch",
                  train_mean_loss,
                  prog_bar=True,
@@ -90,19 +99,19 @@ class NLPClassificationModelWrapper(WrapperBase):
         _, pred_ids = torch.max(outputs, dim=1)
         labels = labels[0] if len(labels) == 1 else labels.squeeze()
         acc = self.accuracy(pred_ids, labels)
-        self.val_loss_arr.append(loss)
-        self.val_acc_arr.append(acc)
+        self.val_losses.append(loss)
+        self.val_accs.append(acc)
         self.log("val_loss", loss, prog_bar=True, sync_dist=True)
         self.log("val_accuracy", acc, prog_bar=True, sync_dist=True)
         return loss
 
     def on_validation_epoch_end(self):
         mean_loss = torch.mean(
-            torch.tensor(self.val_loss_arr, dtype=torch.float32))
+            torch.tensor(self.val_losses, dtype=torch.float32))
         mean_acc = torch.mean(
-            torch.tensor(self.val_acc_arr, dtype=torch.float32))
-        self.val_loss_arr = []
-        self.val_acc_arr = []
+            torch.tensor(self.val_accs, dtype=torch.float32))
+        self.val_losses = []
+        self.val_accs = []
         self.log("val_mean_loss_per_epoch",
                  mean_loss,
                  prog_bar=True,
@@ -123,17 +132,17 @@ class NLPClassificationModelWrapper(WrapperBase):
         _, pred_ids = torch.max(outputs, dim=1)
         labels = labels[0] if len(labels) == 1 else labels.squeeze()
         acc = self.accuracy(pred_ids, labels)
-        self.test_loss_arr.append(loss)
-        self.test_acc_arr.append(acc)
+        self.test_losses.append(loss)
+        self.test_accs.append(acc)
         return loss
 
     def on_test_epoch_end(self):
         mean_loss = torch.mean(
-            torch.tensor(self.test_loss_arr, dtype=torch.float32))
+            torch.tensor(self.test_losses, dtype=torch.float32))
         mean_acc = torch.mean(
-            torch.tensor(self.test_acc_arr, dtype=torch.float32))
-        self.test_loss_arr = []
-        self.test_acc_arr = []
+            torch.tensor(self.test_accs, dtype=torch.float32))
+        self.test_losses = []
+        self.test_accs = []
         self.log("test_mean_loss",
                  mean_loss,
                  prog_bar=True,
