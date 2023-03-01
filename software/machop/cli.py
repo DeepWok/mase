@@ -232,7 +232,7 @@ class Machop:
 
     # Main process
     def run(self):
-        if self.args.to_train or self.args.to_test_sw:
+        if self.args.to_train or self.args.to_test_sw or self.args.to_evaluate_sw:
             self.init_model_and_dataset(self.args)
         elif self.args.modify_sw:
             self.modify_sw()
