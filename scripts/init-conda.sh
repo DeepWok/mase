@@ -14,7 +14,4 @@ conda env create -f "${DIR}"/../software/environment.yml
 eval "$(conda shell.bash hook)"
 conda activate mase
 pip3 install --user --upgrade pip
-pip3 install torch torchvision torchaudio \
-             onnx yapf toml GitPython colorlog cocotb[bus] \
-             pytest pytorch-lightning transformers toml \
-             timm pytorch-nlp datasets
+pip3 install -r ../software/requirements.txt
