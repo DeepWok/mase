@@ -188,7 +188,7 @@ class Machop:
                             help='The accelerator type.')
         parser.add_argument('--strategy',
                             dest='strategy',
-                            default='ddp',
+                            default='ddp_find_unused_parameters_false',
                             help='The strategy type. Default=ddp')
 
         # Develop and test only. Should not be used by users, otherwise the
@@ -232,10 +232,14 @@ class Machop:
 
     # Main process
     def run(self):
-        if self.args.to_train or self.args.to_test_sw or self.args.to_evaluate_sw:
-            self.init_model_and_dataset(self.args)
-        elif self.args.modify_sw:
+        self.init_model_and_dataset(self.args)
+        if self.args.modify_sw:
             self.modify_sw()
+
+        # if self.args.to_train or self.args.to_test_sw or self.args.to_evaluate_sw:
+        #     self.init_model_and_dataset(self.args)
+        # elif self.args.modify_sw:
+        #     self.modify_sw()
 
         if self.args.to_train:
             self.train()
@@ -294,14 +298,12 @@ class Machop:
                                 workers=args.num_workers,
                                 max_token_len=args.max_token_len)
         # Modify the model from external configurations
-        if args.modify_sw:
-            logging.info("Modifying model based on config")
-            m = Modifier(model, config=args.modify_sw, silent=True)
-            model = m.model
+        # if args.modify_sw:
+        #     logging.info("Modifying model based on config")
+        #     m = Modifier(model, config=args.modify_sw, silent=True)
+        #     model = m.model
 
         self.model, self.loader, self.info = model, loader, info
-
-        return False
 
     def train(self):
         args = self.args
