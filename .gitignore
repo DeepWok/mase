@@ -5,7 +5,7 @@
 /data/
 /models/
 /tb_summary/
-*.sh
+# *.sh
 ./data/*
 software/checkpoints/
 software/data/
