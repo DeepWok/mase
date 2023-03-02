@@ -2,21 +2,21 @@
 # This script specifies the command line args.
 # ---------------------------------------
 
-import sys
-import os
-import random
 import functools
 import logging
+import os
+import random
+import sys
 from argparse import ArgumentParser
 
-import torch
 import numpy as np
 import toml
+import torch
 
-from .session import train, test
-from .models import model_map, nlp_models, vision_models, manual_models
-from .dataset import get_dataset, get_dataloader
+from .dataset import get_dataloader, get_dataset
+from .models import manual_models, model_map, nlp_models, vision_models
 from .modify import Modifier
+from .session import test, train
 from .synthesize import MaseGraph
 
 logging.getLogger().setLevel(logging.INFO)
@@ -188,7 +188,7 @@ class Machop:
                             help='The accelerator type.')
         parser.add_argument('--strategy',
                             dest='strategy',
-                            default='ddp_find_unused_parameters_false',
+                            default='ddp',
                             help='The strategy type. Default=ddp')
 
         # Develop and test only. Should not be used by users, otherwise the
