@@ -271,7 +271,7 @@ class Machop:
                                   task=args.task,
                                   info=info,
                                   checkpoint=args.load_name,
-                                  pretrained=args.pretrained)
+                                  pretrained=args.is_pretrained)
         elif args.model in vision_models:
             if args.model in manual_models:
                 # Jianyi 26/02/2023: need to fix this config. Is it for quantization?

@@ -14,6 +14,7 @@ model_map = {
     'toy_manual': get_toymanualnet,
     'roberta-base': get_nlp_model,
     'roberta-large': get_nlp_model,
+    'facebook/opt-350m': get_nlp_model,
 }
 
 # this is a list of models that are written purely with custom ops
@@ -25,4 +26,4 @@ vision_models = [
     'resnet50-imagenet'
 ]
 
-nlp_models = ['roberta-base', 'roberta-large']
+nlp_models = ['roberta-base', 'roberta-large', 'facebook/opt-350m']
