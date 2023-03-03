@@ -2,21 +2,21 @@
 # This script specifies the command line args.
 # ---------------------------------------
 
-import sys
-import os
-import random
 import functools
 import logging
+import os
+import random
+import sys
 from argparse import ArgumentParser
 
-import torch
 import numpy as np
 import toml
+import torch
 
-from .session import train, test
-from .models import model_map, nlp_models, vision_models, manual_models
-from .dataset import get_dataset, get_dataloader
+from .dataset import get_dataloader, get_dataset
+from .models import manual_models, model_map, nlp_models, vision_models
 from .modify import Modifier
+from .session import test, train
 from .synthesize import MaseGraph
 
 logging.getLogger().setLevel(logging.INFO)
@@ -232,10 +232,14 @@ class Machop:
 
     # Main process
     def run(self):
-        if self.args.to_train or self.args.to_test_sw:
-            self.init_model_and_dataset(self.args)
-        elif self.args.modify_sw:
+        self.init_model_and_dataset(self.args)
+        if self.args.modify_sw:
             self.modify_sw()
+
+        # if self.args.to_train or self.args.to_test_sw or self.args.to_evaluate_sw:
+        #     self.init_model_and_dataset(self.args)
+        # elif self.args.modify_sw:
+        #     self.modify_sw()
 
         if self.args.to_train:
             self.train()
@@ -275,6 +279,9 @@ class Machop:
         elif args.model in vision_models:
             if args.model in manual_models:
                 # Jianyi 26/02/2023: need to fix this config. Is it for quantization?
+                # Cheng 01/03/2023: No. This is for creating a quantized model
+                #                   using a .toml file for configuring quantisation scheme
+                #                   instead of layer replacement
                 model = model_inst_fn(info=info, config=args.custom_config)
             else:
                 model = model_inst_fn(info=info)
@@ -291,14 +298,12 @@ class Machop:
                                 workers=args.num_workers,
                                 max_token_len=args.max_token_len)
         # Modify the model from external configurations
-        if args.modify_sw:
-            logging.info("Modifying model based on config")
-            m = Modifier(model, config=args.modify_sw, silent=True)
-            model = m.model
+        # if args.modify_sw:
+        #     logging.info("Modifying model based on config")
+        #     m = Modifier(model, config=args.modify_sw, silent=True)
+        #     model = m.model
 
         self.model, self.loader, self.info = model, loader, info
-
-        return False
 
     def train(self):
         args = self.args

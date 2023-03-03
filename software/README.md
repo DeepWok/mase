@@ -8,7 +8,6 @@ Why called Machop? Because Machop is the most common pokemon you can find in the
 
 For more, you can watch this [video](https://www.youtube.com/watch?v=JEUsN_KlDy8&ab_channel=Mah-Dry-Bread-Gameplay%26Streams%21).
 
-
 ## Commands
 
 ### Example CPU run
@@ -87,13 +86,33 @@ tensorboard --logdir your-log-directory
 
 ## Tested commands and functionalities
 
+```bash
+# Cheng
+# [x] 1. train a fp32 resnet18 on cifar10
+./chop --train --dataset=cifar10 --model=resnet18 --save resnet18_fp32 --batch-size 512 --cpu 32 --gpu 3
+
+# [x] 2. evaluate the trained fp32 model
+./chop --evaluate-sw --dataset=cifar10 --model=resnet18 --load checkpoints/resnet18_fp32/best.ckpt --batch-size 512 --cpu 32 --gpu 3
+
+# [x] 3. quantise the trained fp32 model and save the quantized model
+./chop --dataset=cifar10 --model=resnet18 --load checkpoints/resnet18_fp32/best.ckpt --modify-sw configs/tests/integer.toml --cpu 32 --gpu 3 --save resnet18_i8_ptq
+
+# [x] 4. evaluate post-training quantised model
+./chop --evaluate-sw --dataset=cifar10 --model=resnet18 --modify-sw configs/tests/integer.toml --load checkpoints/resnet18_fp32/best.ckpt --batch-size 512 --cpu 32 --gpu 3
+
+# [x] 5. load trained fp32 model, do quantisation-aware training, save the trained quantized model
+./chop --train --dataset=cifar10 --model=resnet18 --modify-sw configs/tests/integer.toml --load checkpoints/resnet18_fp32/best.ckpt --save resnet18_i8_qat --batch-size 512 --cpu 32 --gpu 3
+```
+
 - Train from modified toynet with fixed-point quantization
+
   ```bash
   ./chop --train --dataset=cifar10 --model=toy --modify-sw configs/tests/integer.toml --save test
   # chop --train --dataset=cifar10 --model=toy --modify-sw configs/tests/integer.toml --save test --training-optimizer sgd --seed 666 --learning_rate 1e-4 --max-epochs 2 --batch-size 128
   ```
 
 - Train from custom toynet that has mixed-precision fixed-point quantization
+
   ```bash
   ./chop --train --dataset=cifar10 --model=toy_manual --modify-sw configs/toy_manual.toml --save test
   ```
