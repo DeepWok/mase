@@ -19,8 +19,7 @@ For more, you can watch this [video](https://www.youtube.com/watch?v=JEUsN_KlDy8
         <li><a href="#installation">Installation</a></li>
       </ul>
     </li>
-    <li><a href="#usage">Usage</a></li>
-    <li><a href="#roadmap">Roadmap</a></li>
+    <li><a href="#basic-usage">Usage</a></li>
     <li><a href="#coding-style">Coding Style</a></li>
     <li><a href="#tested-flow">Tested flow</a></li>
     <li><a href="#roadmap">Roadmap</a></li>
@@ -124,25 +123,27 @@ tensorboard --logdir your-log-directory
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 <!-- TESTED FLOW -->
-## Tested flow 
+## Tested flow
 
-```bash
-# Cheng
-# [x] 1. train a fp32 resnet18 on cifar10
-./chop --train --dataset=cifar10 --model=resnet18 --save resnet18_fp32 --batch-size 512 --cpu 32 --gpu 3
+- ResNet flow
 
-# [x] 2. evaluate the trained fp32 model
-./chop --evaluate-sw --dataset=cifar10 --model=resnet18 --load checkpoints/resnet18_fp32/best.ckpt --batch-size 512 --cpu 32 --gpu 3
+  ```bash
+  # Cheng
+  # [x] 1. train a fp32 resnet18 on cifar10
+  ./chop --train --dataset=cifar10 --model=resnet18 --save resnet18_fp32 --batch-size 512 --cpu 32 --gpu 3
 
-# [x] 3. quantise the trained fp32 model and save the quantized model
-./chop --dataset=cifar10 --model=resnet18 --load checkpoints/resnet18_fp32/best.ckpt --modify-sw configs/tests/integer.toml --cpu 32 --gpu 3 --save resnet18_i8_ptq
+  # [x] 2. evaluate the trained fp32 model
+  ./chop --evaluate-sw --dataset=cifar10 --model=resnet18 --load checkpoints/resnet18_fp32/best.ckpt --batch-size 512 --cpu 32 --gpu 3
 
-# [x] 4. evaluate post-training quantised model
-./chop --evaluate-sw --dataset=cifar10 --model=resnet18 --modify-sw configs/tests/integer.toml --load checkpoints/resnet18_fp32/best.ckpt --batch-size 512 --cpu 32 --gpu 3
+  # [x] 3. quantise the trained fp32 model and save the quantized model
+  ./chop --dataset=cifar10 --model=resnet18 --load checkpoints/resnet18_fp32/best.ckpt --modify-sw configs/tests/integer.toml --cpu 32 --gpu 3 --save resnet18_i8_ptq
 
-# [x] 5. load trained fp32 model, do quantisation-aware training, save the trained quantized model
-./chop --train --dataset=cifar10 --model=resnet18 --modify-sw configs/tests/integer.toml --load checkpoints/resnet18_fp32/best.ckpt --save resnet18_i8_qat --batch-size 512 --cpu 32 --gpu 3
-```
+  # [x] 4. evaluate post-training quantised model
+  ./chop --evaluate-sw --dataset=cifar10 --model=resnet18 --modify-sw configs/tests/integer.toml --load checkpoints/resnet18_fp32/best.ckpt --batch-size 512 --cpu 32 --gpu 3
+
+  # [x] 5. load trained fp32 model, do quantisation-aware training, save the trained quantized model
+  ./chop --train --dataset=cifar10 --model=resnet18 --modify-sw configs/tests/integer.toml --load checkpoints/resnet18_fp32/best.ckpt --save resnet18_i8_qat --batch-size 512 --cpu 32 --gpu 3
+  ```
 
 - Train from modified toynet with fixed-point quantization
 
