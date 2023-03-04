@@ -3,7 +3,6 @@ from torch import nn
 from transformers import AutoTokenizer
 from transformers import AutoModel, AutoModelForSeq2SeqLM, AutoConfig
 
-
 model_to_hidden_size = {
     'facebook/opt-350m': 1024,
 }
@@ -15,6 +14,7 @@ model_to_pooler_size = {
 
 # TODO: check the pooler? should we pool at the first token for opt?
 class Pooler(nn.Module):
+
     def __init__(self, in_hidden_size, out_hidden_size):
         super().__init__()
         self.dense = nn.Linear(in_hidden_size, out_hidden_size)
@@ -29,7 +29,10 @@ class Pooler(nn.Module):
 
 def get_nlp_model(name, task, info, checkpoint=None, pretrained=True):
 
-    if task not in ['classification', 'translation']:
+    if task not in [
+            'classification', 'cls', 'translation', 'tran',
+            'language_modeling', 'lm'
+    ]:
         raise ValueError("task must be a valid value for NLP models")
 
     num_classes = info['num_classes']
@@ -57,7 +60,7 @@ def get_nlp_model(name, task, info, checkpoint=None, pretrained=True):
         hidden_size = model_to_hidden_size.get(name, model.config.hidden_size)
         classifier = nn.Linear(hidden_size, num_classes)
         if name in model_to_pooler_size:
-            in_hidden, out_hidden =  model_to_pooler_size[name]
+            in_hidden, out_hidden = model_to_pooler_size[name]
             pooler = Pooler(in_hidden, out_hidden)
             classifier = nn.Sequential(pooler, classifier)
     else:

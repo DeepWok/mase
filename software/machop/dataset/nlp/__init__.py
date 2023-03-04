@@ -4,6 +4,7 @@ from .translation import (TranslationDatasetIWSLT2017_EN_DE,
                           TranslationDatasetOPUS_EN_FR,
                           TranslationDatasetMulti30k,
                           TranslationDatasetWMT16_RO_EN)
+from .language_modeling import LanguageModelingDatasetWikitext2
 
 dataset_factory = {
     "sst2": SentAnalDatasetSST2,
@@ -13,4 +14,5 @@ dataset_factory = {
     'opus_en_fr': TranslationDatasetOPUS_EN_FR,
     'multi30k': TranslationDatasetMulti30k,
     'wmt16_ro_en': TranslationDatasetWMT16_RO_EN,
+    'wikitext2': LanguageModelingDatasetWikitext2,
 }
