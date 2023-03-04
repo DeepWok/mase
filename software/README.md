@@ -181,9 +181,12 @@ tensorboard --logdir your-log-directory
 - [ ] Machine Translation Models (AZ)
   - [ ] T5
   - [ ] Test T5 on existing translation datasets
-- [ ] `--estimate` functionality (CZ)
+- [ ] `--estimate` flag (CZ)
   - [ ] FLOPs calculation
   - [ ] memory ops calculation
+- [ ] New quantizers
+  - [ ] Quantizer testing
+  - [ ] Block-based quantizers
 - [ ] More on README
   - [ ] Prerequisites
   - [ ] Installation
