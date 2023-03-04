@@ -8,7 +8,40 @@ Why called Machop? Because Machop is the most common pokemon you can find in the
 
 For more, you can watch this [video](https://www.youtube.com/watch?v=JEUsN_KlDy8&ab_channel=Mah-Dry-Bread-Gameplay%26Streams%21).
 
-## Commands
+<!-- TABLE OF CONTENTS -->
+<details>
+  <summary>Table of Contents</summary>
+  <ol>
+    <li>
+      <a href="#getting-started">Getting Started</a>
+      <ul>
+        <li><a href="#prerequisites">Prerequisites</a></li>
+        <li><a href="#installation">Installation</a></li>
+      </ul>
+    </li>
+    <li><a href="#usage">Usage</a></li>
+    <li><a href="#roadmap">Roadmap</a></li>
+    <li><a href="#coding-style">Coding Style</a></li>
+    <li><a href="#tested-flow">Tested flow</a></li>
+    <li><a href="#roadmap">Roadmap</a></li>
+  </ol>
+</details>
+
+<!-- GETTING STARTED -->
+## Getting Started
+
+### Prerequisites
+
+TBF
+
+### Installation
+
+TBF
+
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
+
+<!-- BASIC USAGE-->
+## Basic Usage
 
 ### Example CPU run
 
@@ -80,11 +113,18 @@ Mase also supports training with a modified model, for instance:
 tensorboard --logdir your-log-directory
 ```
 
-## Quick coding style guide
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
+
+
+<!-- CODING STYLE -->
+## Coding style
 
 - For Python: `docs/python.md`
 
-## Tested commands and functionalities
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
+
+<!-- TESTED FLOW -->
+## Tested flow 
 
 ```bash
 # Cheng
@@ -116,3 +156,28 @@ tensorboard --logdir your-log-directory
   ```bash
   ./chop --train --dataset=cifar10 --model=toy_manual --modify-sw configs/toy_manual.toml --save test
   ```
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
+
+<!-- ROADMAP -->
+## Roadmap
+
+- [ ] Language Modeling Datasets (AZ)
+  - [ ] Wikitext2
+  - [ ] Wikitext103
+- [ ] Language Modeling Models (AZ)
+  - [ ] BERT
+  - [ ] ROBERT
+  - [ ] GPT-NEO
+- [ ] Machine Translation Models (AZ)
+  - [ ] T5
+  - [ ] Test T5 on existing translation datasets
+- [ ] `--estimate` functionality (CZ)
+  - [ ] FLOPs calculation
+  - [ ] memory ops calculation
+- [ ] More on README
+  - [ ] Prerequisites
+  - [ ] Installation
+
+See the [open issues](https://github.com/othneildrew/Best-README-Template/issues) for a full list of proposed features (and known issues).
+
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
