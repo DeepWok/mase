@@ -1,17 +1,25 @@
 #!/usr/bin/env bash
 # --------------------------------------------------------------------
-#    This script initialise conda for mase  
+#    This script initialise conda for mase
 # --------------------------------------------------------------------
-
 set -o errexit
 set -o pipefail
 set -o nounset
 
 # The absolute path to the directory of this script.
-DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
+DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
 
+# create and activate mase env
 conda env create -f "${DIR}"/../software/environment.yml
 eval "$(conda shell.bash hook)"
 conda activate mase
-pip3 install --user --upgrade pip
-pip3 install -r ../software/requirements.txt
+
+# check which python
+current_python=$(which python)
+if [[ ${current_python} = *"envs/mase/bin/python" ]]; then
+    python -m pip install --user --upgrade pip
+    python -m pip install -r ../software/requirements.txt
+else
+    echo "Failed to find the Python in mase env. Current Python is at ${current_python}"
+    exit 1
+fi
