@@ -3,7 +3,7 @@ import torch.nn as nn
 
 from torchmetrics import Accuracy
 from transformers import AutoModel
-from .base import WrapperBase
+from ..base import WrapperBase
 
 name_to_final_module_map = {
     # TODO: double check on how to extract classifier from last_hidden_state
@@ -27,12 +27,12 @@ class NLPClassificationModelWrapper(WrapperBase):
         self.classifier = model['classifier']
         self.fn = name_to_final_module_map[self.model.name_or_path]
         self.criterion = nn.CrossEntropyLoss()
-        self.accuracy = Accuracy(task='multiclass', num_classes=self.num_classes)
+        self.accuracy = Accuracy(task='multiclass',
+                                 num_classes=self.num_classes)
 
         self.train_accs, self.train_losses = [], []
         self.val_accs, self.val_losses = [], []
         self.test_accs, self.test_losses = [], []
-
 
     def forward(self, input_ids, attention_mask, labels=None):
         """
@@ -108,8 +108,7 @@ class NLPClassificationModelWrapper(WrapperBase):
     def on_validation_epoch_end(self):
         mean_loss = torch.mean(
             torch.tensor(self.val_losses, dtype=torch.float32))
-        mean_acc = torch.mean(
-            torch.tensor(self.val_accs, dtype=torch.float32))
+        mean_acc = torch.mean(torch.tensor(self.val_accs, dtype=torch.float32))
         self.val_losses = []
         self.val_accs = []
         self.log("val_mean_loss_per_epoch",
@@ -139,8 +138,8 @@ class NLPClassificationModelWrapper(WrapperBase):
     def on_test_epoch_end(self):
         mean_loss = torch.mean(
             torch.tensor(self.test_losses, dtype=torch.float32))
-        mean_acc = torch.mean(
-            torch.tensor(self.test_accs, dtype=torch.float32))
+        mean_acc = torch.mean(torch.tensor(self.test_accs,
+                                           dtype=torch.float32))
         self.test_losses = []
         self.test_accs = []
         self.log("test_mean_loss",

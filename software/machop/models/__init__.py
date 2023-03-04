@@ -2,6 +2,7 @@ from .resnet import (ResNet18, ResNet50, ResNet18ImageNet, ResNet50ImageNet)
 from .nlp_models import get_nlp_model
 from .toy import get_toynet
 from .manual.toy_manual import get_toymanualnet
+from functools import partial
 
 model_map = {
     'resnet18': ResNet18,

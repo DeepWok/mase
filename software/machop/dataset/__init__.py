@@ -24,6 +24,7 @@ def get_dataset(name, nlp_task_args={}):
         # get dataset cls
         dataset_cls = nlp_dataset_factory[name]
         args = nlp_task_args
+        # Classification style tasks
         if name in ['sst2', 'SST2']:
             train_dataset = dataset_cls(split='train', **args)
             val_dataset = dataset_cls(split='validation', **args)
@@ -44,11 +45,17 @@ def get_dataset(name, nlp_task_args={}):
             train_dataset = dataset_cls(split='train', **args)
             val_dataset = dataset_cls(split='validation', **args)
             test_dataset = dataset_cls(split='test', **args)
+        # Translation tasks
         elif name in ['multi30k', 'MULTI30K']:
             train_dataset = dataset_cls(split='train', **args)
             val_dataset = dataset_cls(split='validation', **args)
             test_dataset = dataset_cls(split='test', **args)
         elif name in ['wmt16_ro_en', 'WMT16_RO_EN']:
+            train_dataset = dataset_cls(split='train', **args)
+            val_dataset = dataset_cls(split='validation', **args)
+            test_dataset = dataset_cls(split='test', **args)
+        # Language Modeling
+        elif name in ['wikitext2', 'WIKITEXT2']:
             train_dataset = dataset_cls(split='train', **args)
             val_dataset = dataset_cls(split='validation', **args)
             test_dataset = dataset_cls(split='test', **args)
