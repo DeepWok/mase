@@ -19,7 +19,16 @@ For more, you can watch this [video](https://www.youtube.com/watch?v=JEUsN_KlDy8
         <li><a href="#installation">Installation</a></li>
       </ul>
     </li>
-    <li><a href="#basic-usage">Usage</a></li>
+    <li>
+      <a href="#basic-usage">Usage</a>
+      <ul>
+        <li><a href="#example-cpu-run">Example CPU Run</a></li>
+        <li><a href="#example-debug-run">Example Debug Run</a></li>
+        <li><a href="#example-gpu-run">Example GPU Run</a></li>
+        <li><a href="#example-modify-run">Example Modify Run</a></li>
+        <li><a href="#log-reading">Log Reading</a></li>
+      </ul>
+    </li>
     <li><a href="#coding-style">Coding Style</a></li>
     <li><a href="#tested-flow">Tested flow</a></li>
     <li><a href="#roadmap">Roadmap</a></li>
@@ -42,7 +51,7 @@ TBF
 <!-- BASIC USAGE-->
 ## Basic Usage
 
-### Example CPU run
+### Example CPU Run
 
 ```bash
 ./chop --train \
@@ -51,7 +60,7 @@ TBF
 --save=test
 ```
 
-### Example debug run
+### Example Debug Run
 
 ```bash
 ./chop --train \
@@ -61,7 +70,7 @@ TBF
 --debug
 ```
 
-### Example GPU run
+### Example GPU Run
 
 ```bash
 ./chop --train \
@@ -73,7 +82,7 @@ TBF
 --gpu=4
 ```
 
-### Example modify run
+### Example Modify Run
 
 ```bash
 ./chop \
@@ -106,7 +115,7 @@ Mase also supports training with a modified model, for instance:
 ./chop --dataset=cifar --model=toy --load checkpoints/modified_test/best.ckpt --modify-sw configs/test.toml
 ```
 
-### Training log check
+### Log Reading
 
 ```bash
 tensorboard --logdir your-log-directory
@@ -179,6 +188,6 @@ tensorboard --logdir your-log-directory
   - [ ] Prerequisites
   - [ ] Installation
 
-See the [open issues](https://github.com/othneildrew/Best-README-Template/issues) for a full list of proposed features (and known issues).
+See the [open issues](https://github.com/JianyiCheng/mase-tools/issues) for a full list of proposed features (and known issues).
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
