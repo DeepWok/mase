@@ -1,2 +1,2 @@
 from .classification import NLPClassificationModelWrapper
-from .lm import NLP
+from .lm import NLPLanguageModelingModelWrapper

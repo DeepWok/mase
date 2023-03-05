@@ -18,61 +18,55 @@ class NLPLanguageModelingModelWrapper(WrapperBase):
         self.tokenizer = model['tokenizer']
         self.criterion = nn.CrossEntropyLoss()
 
-        self.train_perps, self.train_losses = [], []
-        self.val_perps, self.val_losses = [], []
-        self.test_perps, self.test_losses = [], []
+        self.train_losses, self.train_perplexities = [], []
+        self.val_losses, self.val_perplexities = [], []
+        self.test_losses, self.test_perplexities = [], []
 
-    def forward(self, input_ids, attention_mask, labels=None):
-        output = self.model(input_ids, attention_mask=attention_mask)
-        hidden = getattr(output, self.fn)
-        output = self.classifier(hidden)
-        output = torch.sigmoid(output)
-        loss = 0
-
-        if labels is not None:
-            labels = labels.squeeze()
-            loss = self.criterion(output, labels)
+    def forward(self, input_ids, attention_mask, labels):
+        """
+        output.last_hidden_state (batch_size, token_num, hidden_size): hidden representation for each token in each sequence of the batch. 
+        """
+        output = self.model(input_ids=input_ids,
+                            attention_mask=attention_mask,
+                            labels=labels)
+        # loss = self.criterion(output, labels)
+        loss = output.loss
+        output = output.logits
         return loss, output
 
-    def training_step(self, batch, batch_idx):
+    def training_step(self, batch):
         input_ids = batch["input_ids"]
         attention_mask = batch["attention_mask"]
         labels = batch["labels"]
         loss, outputs = self.forward(input_ids, attention_mask, labels)
-        _, pred_ids = torch.max(outputs, dim=1)
-        labels = labels[0] if len(labels) == 1 else labels.squeeze()
-        acc = self.accuracy(pred_ids, labels)
+
         self.train_losses.append(loss)
-        self.train_accs.append(acc)
+        perplexity = torch.exp(loss)
+        self.train_perplexities.append(perplexity)
         self.log("train_loss", loss, prog_bar=True, sync_dist=True)
-        self.log("train_acc", acc, prog_bar=True, sync_dist=True)
-        return {
-            "loss": loss,
-            "predictions": outputs,
-            "labels": labels,
-            "train_accuracy": acc
-        }
+        # self.log("train_perp", perplexity, prog_bar=True, sync_dist=True)
+        return {"loss": loss, "predictions": outputs, "perplexity": perplexity}
 
     def on_train_epoch_end(self):
         train_mean_loss = torch.mean(
             torch.tensor(self.train_losses, dtype=torch.float32))
-        train_mean_acc = torch.mean(
-            torch.tensor(self.train_accs, dtype=torch.float32))
+        train_mean_perp = torch.exp(train_mean_loss)
+        # torch.mean(torch.tensor(self.train_perplexities, dtype=torch.float32))
         self.train_losses = []
-        self.train_accs = []
-        self.log("train_mean_loss_per_epoch",
+        self.train_perplexities = []
+        self.log("train_mean_loss",
                  train_mean_loss,
                  prog_bar=True,
                  logger=True,
                  sync_dist=True)
-        self.log("train_mean_acc_per_epoch",
-                 train_mean_acc,
+        self.log("train_mean_perp",
+                 train_mean_perp,
                  prog_bar=True,
                  logger=True,
                  sync_dist=True)
         return {
             "train_mean_loss": train_mean_loss,
-            "train_mean_acc": train_mean_acc
+            "train_mean_acc": train_mean_perp
         }
 
     def validation_step(self, batch, batch_idx):
@@ -80,60 +74,61 @@ class NLPLanguageModelingModelWrapper(WrapperBase):
         attention_mask = batch["attention_mask"]
         labels = batch["labels"]
         loss, outputs = self.forward(input_ids, attention_mask, labels)
-        _, pred_ids = torch.max(outputs, dim=1)
-        labels = labels[0] if len(labels) == 1 else labels.squeeze()
-        acc = self.accuracy(pred_ids, labels)
         self.val_losses.append(loss)
-        self.val_accs.append(acc)
+        perplexity = torch.exp(loss)
+        self.val_perplexities.append(perplexity)
         self.log("val_loss", loss, prog_bar=True, sync_dist=True)
-        self.log("val_accuracy", acc, prog_bar=True, sync_dist=True)
+        # self.log("val_perp", perplexity, prog_bar=True, sync_dist=True)
         return loss
 
     def on_validation_epoch_end(self):
         mean_loss = torch.mean(
             torch.tensor(self.val_losses, dtype=torch.float32))
-        mean_acc = torch.mean(torch.tensor(self.val_accs, dtype=torch.float32))
+        mean_perplexity = torch.exp(mean_loss)
+        # torch.mean(torch.tensor(self.val_perplexities, dtype=torch.float32))
         self.val_losses = []
-        self.val_accs = []
-        self.log("val_mean_loss_per_epoch",
+        self.val_perplexities = []
+        self.log("val_mean_loss",
                  mean_loss,
                  prog_bar=True,
                  logger=True,
                  sync_dist=True)
-        self.log("val_mean_acc_per_epoch",
-                 mean_acc,
+        self.log("val_mean_perp",
+                 mean_perplexity,
                  prog_bar=True,
                  logger=True,
                  sync_dist=True)
-        return {"val_mean_loss": mean_loss, "val_mean_acc": mean_acc}
+        return {
+            "val_mean_loss": mean_loss,
+            "val_mean_perplexity": mean_perplexity
+        }
 
     def test_step(self, batch, batch_idx):
         input_ids = batch["input_ids"]
         attention_mask = batch["attention_mask"]
         labels = batch["labels"]
         loss, outputs = self.forward(input_ids, attention_mask, labels)
-        _, pred_ids = torch.max(outputs, dim=1)
-        labels = labels[0] if len(labels) == 1 else labels.squeeze()
-        acc = self.accuracy(pred_ids, labels)
+        perplexity = torch.exp(loss)
         self.test_losses.append(loss)
-        self.test_accs.append(acc)
+        self.test_perplexities.append(perplexity)
         return loss
 
     def on_test_epoch_end(self):
         mean_loss = torch.mean(
             torch.tensor(self.test_losses, dtype=torch.float32))
-        mean_acc = torch.mean(torch.tensor(self.test_accs,
-                                           dtype=torch.float32))
+        mean_perplexity = torch.exp(mean_loss)
+        # mean_perplexity = torch.mean(
+        #     torch.tensor(self.test_perplexities, dtype=torch.float32))
         self.test_losses = []
-        self.test_accs = []
+        self.test_perplexities = []
         self.log("test_mean_loss",
                  mean_loss,
                  prog_bar=True,
                  logger=True,
                  sync_dist=True)
-        self.log("test_mean_acc",
-                 mean_acc,
+        self.log("test_mean_perp",
+                 mean_perplexity,
                  prog_bar=True,
                  logger=True,
                  sync_dist=True)
-        return {"test_mean_loss": mean_loss, "test_mean_acc": mean_acc}
+        return {"test_mean_loss": mean_loss, "test_mean_acc": mean_perplexity}

@@ -1,5 +1,6 @@
 import torch
 import os
+import pickle
 
 from torch.utils.data import Dataset
 from itertools import chain
@@ -93,9 +94,17 @@ class LanguageModelingDatasetWikitext2(LanguageModeling):
         self.tokenizer = tokenizer
         self.max_token_count = max_token_count
         raw_dataset = self._prepare_data()
-        dataset = preprocess_datasets(raw_dataset,
-                                      tokenizer,
-                                      block_size=self.block_size)
+        name = f'./data/wikitext2/block_size{self.block_size}.pkl'
+        if os.path.isfile(name):
+            with open(name, 'rb') as f:
+                dataset = pickle.load(f)
+        else:
+            dataset = preprocess_datasets(raw_dataset,
+                                          tokenizer,
+                                          block_size=self.block_size)
+            with open(name, 'wb') as f:
+                pickle.dump(dataset, f)
+            print(f"Saved preprocessed dataset to disk, at {name}")
         self.dataset = dataset[self.split]
 
     def _prepare_data(self, path='./data/wikitext2'):
