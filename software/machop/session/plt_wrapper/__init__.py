@@ -1,5 +1,5 @@
 from .vision import VisionModelWrapper
-from .nlp import NLPClassificationModelWrapper, NLPLanguageModelingModelWrapper
+from .nlp import NLPClassificationModelWrapper, NLPLanguageModelingModelWrapper, NLPTranslationModelWrapper
 from machop.models import nlp_models, vision_models
 
 
@@ -11,6 +11,8 @@ def get_model_wrapper(name, task):
             return NLPClassificationModelWrapper
         elif task in ['language_modeling', 'lm']:
             return NLPLanguageModelingModelWrapper
+        elif task in ['translation', 'tran']:
+            return NLPTranslationModelWrapper
         else:
             raise NotImplementedError(
                 f"Task {task} not implemented for NLP models")

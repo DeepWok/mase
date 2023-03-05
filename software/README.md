@@ -182,15 +182,16 @@ tensorboard --logdir your-log-directory
 <!-- ROADMAP -->
 ## Roadmap
 
-- [X] Language Modeling Datasets (AZ)
+- [X] Language Modeling Datasets (AZ, pull request #36)
   - [X] Wikitext2
   - [X] Wikitext103
-- [X] Language Modeling Models (AZ)
+- [X] Language Modeling Models (AZ, pull request #36)
   - [X] BERT
   - [X] ROBERT
   - [X] GPT-NEO
   - [X] GPT2
 - [ ] Machine Translation Models (AZ)
+  - [ ] IWSLT and WMT datasets
   - [ ] T5
   - [ ] Test T5 on existing translation datasets
 - [ ] `--estimate` flag (CZ)
@@ -199,6 +200,14 @@ tensorboard --logdir your-log-directory
 - [ ] New quantizers
   - [ ] Quantizer testing
   - [ ] Block-based quantizers
+- [ ] More vision datasets and CNNs
+  - [ ] Test the existing ImageNet
+  - [ ] Efficientnet family
+  - [ ] MobileNet family
+- [ ] Vision transformers
+  - [ ] Pyramid Vision Transformer (v1 and v2)
+  - [ ] DeiT
+  - [ ] Swin
 - [ ] More on README
   - [ ] Prerequisites
   - [ ] Installation

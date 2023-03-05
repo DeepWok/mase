@@ -49,6 +49,9 @@ def get_nlp_model(name, task, info, checkpoint=None, pretrained=True):
             if task in ['language_modeling', 'lm']:
                 model = AutoModelForCausalLM.from_pretrained(
                     name, return_dict=True, cache_dir='./model_cache_dir')
+            elif task in ['translation', 'tran']:
+                model = AutoModelForSeq2SeqLM.from_pretrained(
+                    name, return_dict=True, cache_dir='./model_cache_dir')
             else:
                 model = AutoModel.from_pretrained(
                     name, return_dict=True, cache_dir='./model_cache_dir')
@@ -57,10 +60,12 @@ def get_nlp_model(name, task, info, checkpoint=None, pretrained=True):
         config = AutoConfig.from_pretrained(checkpoint)
         if task in ['classification', 'cls']:
             model = AutoModel.from_config(config=config)
-        elif task == ['translation', 'trans']:
+        elif task in ['language_modeling', 'lm']:
+            raise ValueError('Language modeling task is not supported to train from scratch, please use --pretrained flag')
+        elif task == ['translation', 'tran']:
             model = AutoModelForSeq2SeqLM.from_config(config=config)
 
-    if task == 'classification':
+    if task in ['classification', 'cls']:
         hidden_size = model_to_hidden_size.get(name, model.config.hidden_size)
         classifier = nn.Linear(hidden_size, num_classes)
         if name in model_to_pooler_size:
