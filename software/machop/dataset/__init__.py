@@ -38,7 +38,10 @@ def get_dataset(name, nlp_task_args={}):
             val_dataset = dataset_cls(split='validation', **args)
             test_dataset = dataset_cls(split='test', **args)
         # Translation tasks
-        elif name in ['iwslt2017_en_de', 'IWSLT2017_EN_DE']:
+        elif name in [
+                'iwslt2017_en_de', 'IWSLT2017_EN_DE', 'iwslt2017_de_en', 'IWSLT2017_DE_EN',
+                'iwslt2017_en_fr', 'IWSLT2017_EN_FR', 'iwslt2017_en_ch', 'IWSLT2017_EN_CH',
+                'wmt19_de_en', 'WMT19_DE_EN', 'wmt19_zh_en', 'WMT19_ZH_EN']:
             train_dataset = dataset_cls(split='train', **args)
             val_dataset = dataset_cls(split='validation', **args)
             test_dataset = dataset_cls(split='test', **args)
