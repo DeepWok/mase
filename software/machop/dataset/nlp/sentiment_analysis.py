@@ -52,6 +52,6 @@ class SentAnalDatasetSST2(SentAnalDataset):
         self.label_col_name = "label"
 
     def _download_and_process(self):
-        dataset = load_dataset('glue', 'sst2')
+        dataset = load_dataset('glue', 'sst2', cache_dir='./cache-data')
         dataset.save_to_disk(self.path)
         self.dataset = dataset
