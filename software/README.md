@@ -181,13 +181,14 @@ tensorboard --logdir your-log-directory
 <!-- ROADMAP -->
 ## Roadmap
 
-- [ ] Language Modeling Datasets (AZ)
+- [X] Language Modeling Datasets (AZ)
   - [X] Wikitext2
-  - [ ] Wikitext103
-- [ ] Language Modeling Models (AZ)
-  - [ ] BERT
-  - [ ] ROBERT
-  - [ ] GPT-NEO
+  - [X] Wikitext103
+- [X] Language Modeling Models (AZ)
+  - [X] BERT
+  - [X] ROBERT
+  - [X] GPT-NEO
+  - [X] GPT2
 - [ ] Machine Translation Models (AZ)
   - [ ] T5
   - [ ] Test T5 on existing translation datasets

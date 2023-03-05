@@ -13,9 +13,24 @@ model_map = {
     'toy': get_toynet,
     # this is a toynet with our custom ops
     'toy_manual': get_toymanualnet,
+    # language models
+    'bert-base-uncased': get_nlp_model,
+    'gpt2': get_nlp_model,
     'roberta-base': get_nlp_model,
     'roberta-large': get_nlp_model,
+    # opt models
+    'facebook/opt-125m': get_nlp_model,
     'facebook/opt-350m': get_nlp_model,
+    'facebook/opt-1.3b': get_nlp_model,
+    'facebook/opt-2.7b': get_nlp_model,
+    'facebook/opt-13b': get_nlp_model,
+    'facebook/opt-30b': get_nlp_model,
+    'facebook/opt-66b': get_nlp_model,
+    # gpt neo models
+    'EleutherAI/gpt-neo-125M': get_nlp_model,
+    'EleutherAI/gpt-neo-1.3B': get_nlp_model,
+    'EleutherAI/gpt-neo-2.7B': get_nlp_model,
+    'EleutherAI/gpt-neox-20b': get_nlp_model,
 }
 
 # this is a list of models that are written purely with custom ops
@@ -27,4 +42,20 @@ vision_models = [
     'resnet50-imagenet'
 ]
 
-nlp_models = ['roberta-base', 'roberta-large', 'facebook/opt-350m']
+nlp_models = [
+    'bert-base-uncased',
+    'gpt2',
+    'roberta-base',
+    'roberta-large',
+    'facebook/opt-125m',
+    'facebook/opt-350m',
+    'facebook/opt-1.3b',
+    'facebook/opt-2.7b',
+    'facebook/opt-13b',
+    'facebook/opt-66b',
+    'facebook/opt-30b',
+    'EleutherAI/gpt-neo-125M',
+    'EleutherAI/gpt-neo-1.3B',
+    'EleutherAI/gpt-neo-2.7B',
+    'EleutherAI/gpt-neox-20b',
+]
