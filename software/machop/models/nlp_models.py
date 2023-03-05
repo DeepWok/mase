@@ -1,7 +1,7 @@
 import torch
 from torch import nn
 from transformers import AutoTokenizer
-from transformers import AutoModel, AutoModelForSeq2SeqLM, AutoConfig
+from transformers import AutoModel, AutoModelForSeq2SeqLM, AutoConfig, AutoModelForCausalLM
 
 model_to_hidden_size = {
     'facebook/opt-350m': 1024,
@@ -45,9 +45,12 @@ def get_nlp_model(name, task, info, checkpoint=None, pretrained=True):
             model = AutoModel.from_pretrained(checkpoint)
             print(f"Loaded model from {checkpoint}")
         else:
-            model = AutoModel.from_pretrained(name,
-                                              return_dict=True,
-                                              cache_dir='./model_cache_dir')
+            if task in ['language_modeling', 'lm']:
+                model = AutoModelForCausalLM.from_pretrained(
+                    name, return_dict=True, cache_dir='./model_cache_dir')
+            else:
+                model = AutoModel.from_pretrained(
+                    name, return_dict=True, cache_dir='./model_cache_dir')
             print(f"Loaded model from {name} in HuggingFace")
     else:
         config = AutoConfig.from_pretrained(checkpoint)
