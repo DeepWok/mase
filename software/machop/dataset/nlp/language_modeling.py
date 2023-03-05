@@ -85,7 +85,7 @@ class LanguageModeling(Dataset):
 
 class LanguageModelingDatasetWikitext2(LanguageModeling):
 
-    def __init__(self, split='train', block_size=1024, tokenizer=None):
+    def __init__(self, split='train', block_size=256, tokenizer=None):
         self.block_size = block_size
         self.split = split
         super().__init__(dataset=None, split=split)
