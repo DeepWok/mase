@@ -9,7 +9,8 @@ from datasets import load_dataset, load_from_disk
 
 class TranslationDataset(Dataset):
     path = None
-    num_labels = None
+    num_classes = None
+    split = None
 
     def __init__(self):
         self.src_col_name = None
@@ -25,12 +26,13 @@ class TranslationDataset(Dataset):
     def setup_tokenizer(self, tokenizer, max_token_count):
         self.tokenizer = tokenizer
         self.max_token_count = max_token_count
+        self.dataset = self.dataset[self.split]
 
     def __len__(self):
-        return len(self.data)
+        return len(self.dataset)
 
     def __getitem__(self, index):
-        data_row = self.data[index]
+        data_row = self.dataset[index]['translation']
         source = data_row[self.src_col_name]
         target = data_row[self.trg_col_name]
         encoding = self.tokenizer.encode_plus(source,
@@ -42,11 +44,22 @@ class TranslationDataset(Dataset):
                                               return_tensors="pt")
         input_ids = encoding["input_ids"].flatten()
         attention_mask = encoding["attention_mask"].flatten()
-
+        label_encoding = self.tokenizer.encode_plus(
+            source,
+            add_special_tokens=True,
+            max_length=self.max_token_count,
+            padding="max_length",
+            truncation=True,
+            return_attention_mask=True, 
+            return_tensors="pt")
+        decoder_input_ids = label_encoding["input_ids"].flatten()
+        decoder_attention_mask = label_encoding["attention_mask"].flatten()
         return dict(source=source,
                     target=target,
                     input_ids=input_ids,
-                    attention_mask=attention_mask)
+                    attention_mask=attention_mask,
+                    decoder_input_ids=decoder_input_ids,
+                    decoder_attention_mask=decoder_attention_mask)
 
     def _download_and_process(self):
         raise NotImplementedError
@@ -63,7 +76,8 @@ class TranslationDatasetIWSLT2017_EN_DE(TranslationDataset):
         super().__init__()
         self.src_col_name = "en"
         self.trg_col_name = "de"
-        self.data = self.dataset[split]
+        # self.data = self.dataset[split]
+        self.split = split
 
     def _download_and_process(self):
         dataset = load_dataset('iwslt2017',
@@ -71,28 +85,26 @@ class TranslationDatasetIWSLT2017_EN_DE(TranslationDataset):
                                cache_dir='./datasets_cache_dir')
         dataset.save_to_disk(self.path)
         self.dataset = dataset
-        import pdb
-        pdb.set_trace()
 
 
-class TranslationDatasetOPUS_EN_FR(TranslationDataset):
-    path = './data/opus-en-fr'
-    num_labels = None
+# class TranslationDatasetOPUS_EN_FR(TranslationDataset):
+#     path = './data/opus-en-fr'
+#     num_labels = None
 
-    def __init__(self, tokenizer, max_token_count, split='train'):
-        super().__init__(tokenizer=tokenizer, max_token_count=max_token_count)
-        self.src_col_name = "en"
-        self.trg_col_name = "fr"
-        self.data = self.dataset[split]
+#     def __init__(self, tokenizer, max_token_count, split='train'):
+#         super().__init__(tokenizer=tokenizer, max_token_count=max_token_count)
+#         self.src_col_name = "en"
+#         self.trg_col_name = "fr"
+#         self.data = self.dataset[split]
 
-    def _download_and_process(self):
-        dataset = load_dataset('opus_euconst',
-                               'en-fr',
-                               cache_dir='./datasets_cache_dir')
-        dataset.save_to_disk(self.path)
-        self.dataset = dataset
-        import pdb
-        pdb.set_trace()
+#     def _download_and_process(self):
+#         dataset = load_dataset('opus_euconst',
+#                                'en-fr',
+#                                cache_dir='./datasets_cache_dir')
+#         dataset.save_to_disk(self.path)
+#         self.dataset = dataset
+#         import pdb
+#         pdb.set_trace()
 
 
 class TranslationDatasetWMT16_RO_EN(TranslationDataset):

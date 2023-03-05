@@ -31,6 +31,11 @@ model_map = {
     'EleutherAI/gpt-neo-1.3B': get_nlp_model,
     'EleutherAI/gpt-neo-2.7B': get_nlp_model,
     'EleutherAI/gpt-neox-20b': get_nlp_model,
+    # t5 family
+    't5-small': get_nlp_model,
+    't5-base': get_nlp_model,
+    't5-large': get_nlp_model,
+    'google/t5-v1_1-small': get_nlp_model,
 }
 
 # this is a list of models that are written purely with custom ops
@@ -58,4 +63,8 @@ nlp_models = [
     'EleutherAI/gpt-neo-1.3B',
     'EleutherAI/gpt-neo-2.7B',
     'EleutherAI/gpt-neox-20b',
+    't5-small',
+    't5-base',
+    't5-large',
+    'google/t5-v1_1-small',
 ]
