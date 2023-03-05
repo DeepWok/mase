@@ -13,6 +13,7 @@ model_to_pooler_size = {
 }
 
 
+
 # TODO: check the pooler? should we pool at the first token for opt?
 class Pooler(nn.Module):
     def __init__(self, in_hidden_size, out_hidden_size):
@@ -48,9 +49,9 @@ def get_nlp_model(name, task, info, checkpoint=None, pretrained=True):
             print(f"Loaded model from {name} in HuggingFace")
     else:
         config = AutoConfig.from_pretrained(checkpoint)
-        if task == 'classification':
+        if task in ['classification', 'cls']:
             model = AutoModel.from_config(config=config)
-        elif task == 'translation':
+        elif task == ['translation', 'trans']:
             model = AutoModelForSeq2SeqLM.from_config(config=config)
 
     if task == 'classification':
