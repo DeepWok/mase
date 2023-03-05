@@ -72,7 +72,7 @@ class TextEntailDatasetQNLI(TextEntailDataset):
         self.data = self.dataset[split]
 
     def _download_and_process(self):
-        dataset = load_dataset('glue', 'qnli')
+        dataset = load_dataset('glue', 'qnli', cache_dir='./cache-data')
         dataset.save_to_disk(self.path)
         self.dataset = dataset
 
@@ -89,6 +89,6 @@ class TextEntailDatasetMNLI(TextEntailDataset):
         self.data = self.dataset[split]
 
     def _download_and_process(self):
-        dataset = load_dataset('glue', 'mnli')
+        dataset = load_dataset('glue', 'mnli', cache_dir='./cache-data')
         dataset.save_to_disk(self.path)
         self.dataset = dataset

@@ -110,7 +110,9 @@ class LanguageModelingDatasetWikitext2(LanguageModeling):
     def _prepare_data(self, path='./data/wikitext2'):
         if (path is not None) and (not os.path.isdir(path)):
             print("Downloading and processing dataset...")
-            dataset = load_dataset('wikitext', 'wikitext-2-raw-v1')
+            dataset = load_dataset('wikitext',
+                                   'wikitext-2-raw-v1',
+                                   cache_dir='./cache-data')
             dataset.save_to_disk(path)
         else:
             print("Dataset already downloaded and processed")
