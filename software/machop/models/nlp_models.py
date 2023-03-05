@@ -12,7 +12,6 @@ model_to_pooler_size = {
 }
 
 
-
 # TODO: check the pooler? should we pool at the first token for opt?
 class Pooler(nn.Module):
 
@@ -61,7 +60,9 @@ def get_nlp_model(name, task, info, checkpoint=None, pretrained=True):
         if task in ['classification', 'cls']:
             model = AutoModel.from_config(config=config)
         elif task in ['language_modeling', 'lm']:
-            raise ValueError('Language modeling task is not supported to train from scratch, please use --pretrained flag')
+            raise ValueError(
+                'Language modeling task is not supported to train from scratch, please use --pretrained flag'
+            )
         elif task == ['translation', 'tran']:
             model = AutoModelForSeq2SeqLM.from_config(config=config)
 

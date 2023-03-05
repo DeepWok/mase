@@ -27,7 +27,6 @@ class NLPTranslationModelWrapper(WrapperBase):
         self.tokenizer = model['tokenizer']
         self.classifier = model['classifier']
         self.bleu = BLEUScore(n_gram=4, smooth=False)
-                
 
         self.train_bleus, self.train_losses = [], []
         self.val_bleus, self.val_losses = [], []
@@ -42,21 +41,20 @@ class NLPTranslationModelWrapper(WrapperBase):
         pred_lns = [str.strip(s) for s in pred_str]
         return self.bleu(preds=pred_lns, target=tgt_lns)
 
-    def forward(self, input_ids, attention_mask, decoder_input_ids, decoder_attention_mask):
+    def forward(self, input_ids, attention_mask, decoder_input_ids,
+                decoder_attention_mask):
         """
         output.last_hidden_state (batch_size, token_num, hidden_size): hidden representation for each token in each sequence of the batch. 
         output.pooler_output (batch_size, hidden_size): take hidden representation of [CLS] token in each sequence, run through BertPooler module (linear layer with Tanh activation)
         """
-        output = self.model(
-            input_ids, 
-            attention_mask=attention_mask, 
-            decoder_input_ids=decoder_input_ids,
-            decoder_attention_mask=decoder_attention_mask)
+        output = self.model(input_ids,
+                            attention_mask=attention_mask,
+                            decoder_input_ids=decoder_input_ids,
+                            decoder_attention_mask=decoder_attention_mask)
         if 't5' in self.model.name_or_path:
             logits = output.logits
-            loss = self.criterion(
-                logits.view(-1, logits.size(-1)), 
-                decoder_input_ids.view(-1))
+            loss = self.criterion(logits.view(-1, logits.size(-1)),
+                                  decoder_input_ids.view(-1))
         else:
             loss = output.loss
         return output, loss
@@ -66,8 +64,8 @@ class NLPTranslationModelWrapper(WrapperBase):
         attention_mask = batch["attention_mask"]
         decoder_input_ids = batch["decoder_input_ids"]
         decoder_attention_mask = batch["decoder_attention_mask"]
-        outputs, loss = self.forward(
-            input_ids, attention_mask, decoder_input_ids, decoder_attention_mask)
+        outputs, loss = self.forward(input_ids, attention_mask,
+                                     decoder_input_ids, decoder_attention_mask)
         _, pred_ids = torch.max(outputs['logits'], dim=1)
         labels = decoder_input_ids
         labels = labels[0] if len(labels) == 1 else labels.squeeze()
@@ -87,8 +85,8 @@ class NLPTranslationModelWrapper(WrapperBase):
         attention_mask = batch["attention_mask"]
         decoder_input_ids = batch["decoder_input_ids"]
         decoder_attention_mask = batch["decoder_attention_mask"]
-        outputs, loss = self.forward(
-            input_ids, attention_mask, decoder_input_ids, decoder_attention_mask)
+        outputs, loss = self.forward(input_ids, attention_mask,
+                                     decoder_input_ids, decoder_attention_mask)
         _, pred_ids = torch.max(outputs.logits, dim=1)
         labels = decoder_input_ids
         labels = labels[0] if len(labels) == 1 else labels.squeeze()
@@ -104,8 +102,8 @@ class NLPTranslationModelWrapper(WrapperBase):
         attention_mask = batch["attention_mask"]
         decoder_input_ids = batch["decoder_input_ids"]
         decoder_attention_mask = batch["decoder_attention_mask"]
-        outputs, loss = self.forward(
-            input_ids, attention_mask, decoder_input_ids, decoder_attention_mask)
+        outputs, loss = self.forward(input_ids, attention_mask,
+                                     decoder_input_ids, decoder_attention_mask)
         _, pred_ids = torch.max(outputs.logits, dim=1)
         labels = decoder_input_ids
         labels = labels[0] if len(labels) == 1 else labels.squeeze()
@@ -136,7 +134,6 @@ class NLPTranslationModelWrapper(WrapperBase):
             "train_mean_bleu": train_mean_bleu
         }
 
-
     def on_validation_epoch_end(self):
         mean_loss = torch.mean(
             torch.tensor(self.val_losses, dtype=torch.float32))
@@ -159,8 +156,8 @@ class NLPTranslationModelWrapper(WrapperBase):
     def on_test_epoch_end(self):
         mean_loss = torch.mean(
             torch.tensor(self.test_losses, dtype=torch.float32))
-        mean_acc = torch.mean(
-            torch.tensor(self.test_accs, dtype=torch.float32))
+        mean_acc = torch.mean(torch.tensor(self.test_accs,
+                                           dtype=torch.float32))
         self.test_losses = []
         self.test_accs = []
         self.log("test_mean_loss",
