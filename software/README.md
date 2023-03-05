@@ -8,9 +8,51 @@ Why called Machop? Because Machop is the most common pokemon you can find in the
 
 For more, you can watch this [video](https://www.youtube.com/watch?v=JEUsN_KlDy8&ab_channel=Mah-Dry-Bread-Gameplay%26Streams%21).
 
-## Commands
+<!-- TABLE OF CONTENTS -->
+<details>
+  <summary>Table of Contents</summary>
+  <ol>
+    <li>
+      <a href="#getting-started">Getting Started</a>
+      <ul>
+        <li><a href="#prerequisites">Prerequisites</a></li>
+        <li><a href="#installation">Installation</a></li>
+      </ul>
+    </li>
+    <li>
+      <a href="#basic-usage">Usage</a>
+      <ul>
+        <li><a href="#example-cpu-run">Example CPU Run</a></li>
+        <li><a href="#example-debug-run">Example Debug Run</a></li>
+        <li><a href="#example-gpu-run">Example GPU Run</a></li>
+        <li><a href="#example-modify-run">Example Modify Run</a></li>
+        <li><a href="#log-reading">Log Reading</a></li>
+      </ul>
+    </li>
+    <li><a href="#coding-style">Coding Style</a></li>
+    <li><a href="#tested-flow">Tested flow</a></li>
+    <li><a href="#roadmap">Roadmap</a></li>
+    <li><a href="#models-and-datasets">Models and Datasets</a></li>
+  </ol>
+</details>
 
-### Example CPU run
+<!-- GETTING STARTED -->
+## Getting Started
+
+### Prerequisites
+
+TBF
+
+### Installation
+
+TBF
+
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
+
+<!-- BASIC USAGE-->
+## Basic Usage
+
+### Example CPU Run
 
 ```bash
 ./chop --train \
@@ -19,7 +61,7 @@ For more, you can watch this [video](https://www.youtube.com/watch?v=JEUsN_KlDy8
 --save=test
 ```
 
-### Example debug run
+### Example Debug Run
 
 ```bash
 ./chop --train \
@@ -29,7 +71,7 @@ For more, you can watch this [video](https://www.youtube.com/watch?v=JEUsN_KlDy8
 --debug
 ```
 
-### Example GPU run
+### Example GPU Run
 
 ```bash
 ./chop --train \
@@ -41,7 +83,7 @@ For more, you can watch this [video](https://www.youtube.com/watch?v=JEUsN_KlDy8
 --gpu=4
 ```
 
-### Example modify run
+### Example Modify Run
 
 ```bash
 ./chop \
@@ -74,35 +116,44 @@ Mase also supports training with a modified model, for instance:
 ./chop --dataset=cifar --model=toy --load checkpoints/modified_test/best.ckpt --modify-sw configs/test.toml
 ```
 
-### Training log check
+### Log Reading
 
 ```bash
 tensorboard --logdir your-log-directory
 ```
 
-## Quick coding style guide
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
+
+
+<!-- CODING STYLE -->
+## Coding style
 
 - For Python: `docs/python.md`
 
-## Tested commands and functionalities
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
 
-```bash
-# Cheng
-# [x] 1. train a fp32 resnet18 on cifar10
-./chop --train --dataset=cifar10 --model=resnet18 --save resnet18_fp32 --batch-size 512 --cpu 32 --gpu 3
+<!-- TESTED FLOW -->
+## Tested flow
 
-# [x] 2. evaluate the trained fp32 model
-./chop --evaluate-sw --dataset=cifar10 --model=resnet18 --load checkpoints/resnet18_fp32/best.ckpt --batch-size 512 --cpu 32 --gpu 3
+- ResNet flow
 
-# [x] 3. quantise the trained fp32 model and save the quantized model
-./chop --dataset=cifar10 --model=resnet18 --load checkpoints/resnet18_fp32/best.ckpt --modify-sw configs/tests/integer.toml --cpu 32 --gpu 3 --save resnet18_i8_ptq
+  ```bash
+  # Cheng
+  # [x] 1. train a fp32 resnet18 on cifar10
+  ./chop --train --dataset=cifar10 --model=resnet18 --save resnet18_fp32 --batch-size 512 --cpu 32 --gpu 3
 
-# [x] 4. evaluate post-training quantised model
-./chop --evaluate-sw --dataset=cifar10 --model=resnet18 --modify-sw configs/tests/integer.toml --load checkpoints/resnet18_fp32/best.ckpt --batch-size 512 --cpu 32 --gpu 3
+  # [x] 2. evaluate the trained fp32 model
+  ./chop --evaluate-sw --dataset=cifar10 --model=resnet18 --load checkpoints/resnet18_fp32/best.ckpt --batch-size 512 --cpu 32 --gpu 3
 
-# [x] 5. load trained fp32 model, do quantisation-aware training, save the trained quantized model
-./chop --train --dataset=cifar10 --model=resnet18 --modify-sw configs/tests/integer.toml --load checkpoints/resnet18_fp32/best.ckpt --save resnet18_i8_qat --batch-size 512 --cpu 32 --gpu 3
-```
+  # [x] 3. quantise the trained fp32 model and save the quantized model
+  ./chop --dataset=cifar10 --model=resnet18 --load checkpoints/resnet18_fp32/best.ckpt --modify-sw configs/tests/integer.toml --cpu 32 --gpu 3 --save resnet18_i8_ptq
+
+  # [x] 4. evaluate post-training quantised model
+  ./chop --evaluate-sw --dataset=cifar10 --model=resnet18 --modify-sw configs/tests/integer.toml --load checkpoints/resnet18_fp32/best.ckpt --batch-size 512 --cpu 32 --gpu 3
+
+  # [x] 5. load trained fp32 model, do quantisation-aware training, save the trained quantized model
+  ./chop --train --dataset=cifar10 --model=resnet18 --modify-sw configs/tests/integer.toml --load checkpoints/resnet18_fp32/best.ckpt --save resnet18_i8_qat --batch-size 512 --cpu 32 --gpu 3
+  ```
 
 - Train from modified toynet with fixed-point quantization
 
@@ -116,3 +167,64 @@ tensorboard --logdir your-log-directory
   ```bash
   ./chop --train --dataset=cifar10 --model=toy_manual --modify-sw configs/toy_manual.toml --save test
   ```
+
+- Tune a pre-trained `opt` model on `wikitext2` on GPU
+  ```bash
+  vim machop/dataset/nlp/language_modeling.py
+  ```
+  The original setup `1024` block size (or context width), is really hard to run because of GPU memory limitation, so now this is `256`.
+
+  ```bash
+  ./chop --train --dataset=wikitext2 --model=facebook/opt-350m --pretrained --save test --accelerator gpu --gpu 1 --batch-size 4 --task lm
+  ```
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
+
+<!-- ROADMAP -->
+## Roadmap
+
+- [X] Language Modeling Datasets (AZ)
+  - [X] Wikitext2
+  - [X] Wikitext103
+- [X] Language Modeling Models (AZ)
+  - [X] BERT
+  - [X] ROBERT
+  - [X] GPT-NEO
+  - [X] GPT2
+- [ ] Machine Translation Models (AZ)
+  - [ ] T5
+  - [ ] Test T5 on existing translation datasets
+- [ ] `--estimate` flag (CZ)
+  - [ ] FLOPs calculation
+  - [ ] memory ops calculation
+- [ ] New quantizers
+  - [ ] Quantizer testing
+  - [ ] Block-based quantizers
+- [ ] More on README
+  - [ ] Prerequisites
+  - [ ] Installation
+
+See the [open issues](https://github.com/JianyiCheng/mase-tools/issues) for a full list of proposed features (and known issues).
+
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
+
+## Models and Datasets
+
+- Vision Datasets
+  - CIFAR10
+  - CIFAR100
+- NLP Datasets
+  - MNLI
+  - Wikitext2
+  - Wikitext103
+- Vision Models
+  - ResNet18
+  - ResNet50
+- NLP Models
+  - BERT
+  - GPT2
+  - RoBERTa-base
+  - RoBERTa-large
+  - OPT-125m to OPT-66b (7 models)
+  - gpt-neo-125M to gpt-neo-20B (4 models)
+
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
