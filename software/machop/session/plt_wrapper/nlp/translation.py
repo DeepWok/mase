@@ -35,6 +35,13 @@ class NLPTranslationModelWrapper(WrapperBase):
 
         self.criterion = nn.CrossEntropyLoss()
 
+    def get_bleu(self, output_ids, labels):
+        label_str = self.tokenizer.batch_decode(labels)
+        tgt_lns = [str.strip(s) for s in label_str]
+        pred_str = self.tokenizer.batch_decode(output_ids)
+        pred_lns = [str.strip(s) for s in pred_str]
+        return self.bleu(preds=pred_lns, target=tgt_lns)
+
     def forward(self, input_ids, attention_mask, decoder_input_ids, decoder_attention_mask):
         """
         output.last_hidden_state (batch_size, token_num, hidden_size): hidden representation for each token in each sequence of the batch. 
@@ -64,7 +71,7 @@ class NLPTranslationModelWrapper(WrapperBase):
         _, pred_ids = torch.max(outputs['logits'], dim=1)
         labels = decoder_input_ids
         labels = labels[0] if len(labels) == 1 else labels.squeeze()
-        bleu = self.bleu(pred_ids, labels)
+        bleu = self.get_bleu(pred_ids, labels)
         self.train_losses.append(loss)
         self.log("train_loss", loss, prog_bar=True, sync_dist=True)
         self.log("train_bleu", bleu, prog_bar=True, sync_dist=True)
@@ -85,7 +92,7 @@ class NLPTranslationModelWrapper(WrapperBase):
         _, pred_ids = torch.max(outputs.logits, dim=1)
         labels = decoder_input_ids
         labels = labels[0] if len(labels) == 1 else labels.squeeze()
-        bleu = self.bleu(pred_ids, labels)
+        bleu = self.get_bleu(pred_ids, labels)
         self.val_losses.append(loss)
         self.val_bleus.append(bleu)
         self.log("val_loss", loss, prog_bar=True, sync_dist=True)
@@ -102,7 +109,7 @@ class NLPTranslationModelWrapper(WrapperBase):
         _, pred_ids = torch.max(outputs.logits, dim=1)
         labels = decoder_input_ids
         labels = labels[0] if len(labels) == 1 else labels.squeeze()
-        bleu = self.bleu(pred_ids, labels)
+        bleu = self.get_bleu(pred_ids, labels)
         self.test_losses.append(loss)
         self.test_bleus.append(bleu)
         return loss
