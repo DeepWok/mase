@@ -36,22 +36,26 @@ class TextEntailDataset(Dataset):
         question = data_row[self.sent1_col_name]
         answer = data_row[self.sent2_col_name]
         labels = data_row[self.label_col_name]
-        encoding = self.tokenizer.encode_plus(question,
-                                              answer,
-                                              add_special_tokens=True,
-                                              max_length=self.max_token_count,
-                                              padding="max_length",
-                                              truncation=True,
-                                              return_attention_mask=True,
-                                              return_tensors="pt")
+        encoding = self.tokenizer.encode_plus(
+            question,
+            answer,
+            add_special_tokens=True,
+            max_length=self.max_token_count,
+            padding="max_length",
+            truncation=True,
+            return_attention_mask=True,
+            return_tensors="pt",
+        )
         input_ids = encoding["input_ids"].flatten()
         attention_mask = encoding["attention_mask"].flatten()
 
-        return dict(question=question,
-                    answer=answer,
-                    input_ids=input_ids,
-                    attention_mask=attention_mask,
-                    labels=torch.tensor([labels]))
+        return dict(
+            question=question,
+            answer=answer,
+            input_ids=input_ids,
+            attention_mask=attention_mask,
+            labels=torch.tensor([labels]),
+        )
 
     def _download_and_process(self):
         raise NotImplementedError
@@ -61,10 +65,10 @@ class TextEntailDataset(Dataset):
 
 
 class TextEntailDatasetQNLI(TextEntailDataset):
-    path = './data/qnli'
+    path = "./data/qnli"
     num_labels = 2
 
-    def __init__(self, split='train'):
+    def __init__(self, split="train"):
         super().__init__()
         self.sent1_col_name = "question"
         self.sent2_col_name = "sentence"
@@ -72,16 +76,16 @@ class TextEntailDatasetQNLI(TextEntailDataset):
         self.data = self.dataset[split]
 
     def _download_and_process(self):
-        dataset = load_dataset('glue', 'qnli', cache_dir='./cache-data')
+        dataset = load_dataset("glue", "qnli", cache_dir="./cache-data")
         dataset.save_to_disk(self.path)
         self.dataset = dataset
 
 
 class TextEntailDatasetMNLI(TextEntailDataset):
-    path = './data/mnli'
+    path = "./data/mnli"
     num_classes = 3
 
-    def __init__(self, split='train'):
+    def __init__(self, split="train"):
         super().__init__()
         self.sent1_col_name = "premise"
         self.sent2_col_name = "hypothesis"
@@ -89,6 +93,6 @@ class TextEntailDatasetMNLI(TextEntailDataset):
         self.data = self.dataset[split]
 
     def _download_and_process(self):
-        dataset = load_dataset('glue', 'mnli', cache_dir='./cache-data')
+        dataset = load_dataset("glue", "mnli", cache_dir="./cache-data")
         dataset.save_to_disk(self.path)
         self.dataset = dataset

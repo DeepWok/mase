@@ -9,7 +9,6 @@ from datasets import load_dataset
 
 
 class SentAnalDataset(Dataset):
-
     def __init__(self, data):
         self.data = data
         self.sent_col_name = None
@@ -26,24 +25,28 @@ class SentAnalDataset(Dataset):
         data_row = self.data[index]
         main_text = data_row[self.sent_col_name]
         labels = data_row[self.label_col_name]
-        encoding = self.tokenizer.encode_plus(main_text,
-                                              add_special_tokens=True,
-                                              max_length=self.max_token_count,
-                                              padding="max_length",
-                                              truncation=True,
-                                              return_attention_mask=True,
-                                              return_tensors="pt")
+        encoding = self.tokenizer.encode_plus(
+            main_text,
+            add_special_tokens=True,
+            max_length=self.max_token_count,
+            padding="max_length",
+            truncation=True,
+            return_attention_mask=True,
+            return_tensors="pt",
+        )
         input_ids = encoding["input_ids"].flatten()
         attention_mask = encoding["attention_mask"].flatten()
 
-        return dict(sentence=main_text,
-                    input_ids=input_ids,
-                    attention_mask=attention_mask,
-                    labels=torch.tensor([labels]))
+        return dict(
+            sentence=main_text,
+            input_ids=input_ids,
+            attention_mask=attention_mask,
+            labels=torch.tensor([labels]),
+        )
 
 
 class SentAnalDatasetSST2(SentAnalDataset):
-    path = './data/sst2'
+    path = "./data/sst2"
     num_labels = 2
 
     def __init__(self, data):
@@ -52,6 +55,6 @@ class SentAnalDatasetSST2(SentAnalDataset):
         self.label_col_name = "label"
 
     def _download_and_process(self):
-        dataset = load_dataset('glue', 'sst2', cache_dir='./cache-data')
+        dataset = load_dataset("glue", "sst2", cache_dir="./cache-data")
         dataset.save_to_disk(self.path)
         self.dataset = dataset
