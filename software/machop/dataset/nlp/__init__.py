@@ -1,14 +1,10 @@
 from .sentiment_analysis import SentAnalDatasetSST2
 from .text_entailment import TextEntailDatasetMNLI, TextEntailDatasetQNLI
 from .translation import (
-    TranslationDatasetIWSLT2017_EN_DE,
-    TranslationDatasetIWSLT2017_DE_EN, 
-    TranslationDatasetIWSLT2017_EN_FR,
-    TranslationDatasetIWSLT2017_EN_CH,
-    TranslationDatasetWMT19_DE_EN,
-    TranslationDatasetWMT19_ZH_EN,
-    TranslationDatasetMulti30k,
-    TranslationDatasetWMT16_RO_EN)
+    TranslationDatasetIWSLT2017_EN_DE, TranslationDatasetIWSLT2017_DE_EN,
+    TranslationDatasetIWSLT2017_EN_FR, TranslationDatasetIWSLT2017_EN_CH,
+    TranslationDatasetWMT19_DE_EN, TranslationDatasetWMT19_ZH_EN,
+    TranslationDatasetMulti30k, TranslationDatasetWMT16_RO_EN)
 from .language_modeling import LanguageModelingDatasetWikitext2, LanguageModelingDatasetWikiText103
 
 dataset_factory = {

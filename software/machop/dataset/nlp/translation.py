@@ -50,7 +50,7 @@ class TranslationDataset(Dataset):
             max_length=self.max_token_count,
             padding="max_length",
             truncation=True,
-            return_attention_mask=True, 
+            return_attention_mask=True,
             return_tensors="pt")
         decoder_input_ids = label_encoding["input_ids"].flatten()
         decoder_attention_mask = label_encoding["attention_mask"].flatten()
@@ -140,6 +140,7 @@ class TranslationDatasetIWSLT2017_EN_CH(TranslationDataset):
         dataset.save_to_disk(self.path)
         self.dataset = dataset
 
+
 # class TranslationDatasetOPUS_EN_FR(TranslationDataset):
 #     path = './data/opus-en-fr'
 #     num_labels = None
@@ -177,6 +178,7 @@ class TranslationDatasetWMT19_DE_EN(TranslationDataset):
         dataset.save_to_disk(self.path)
         self.dataset = dataset
 
+
 class TranslationDatasetWMT19_ZH_EN(TranslationDataset):
     path = './data/wmt19-zh-en'
 
@@ -193,6 +195,7 @@ class TranslationDatasetWMT19_ZH_EN(TranslationDataset):
                                cache_dir='./datasets_cache_dir')
         dataset.save_to_disk(self.path)
         self.dataset = dataset
+
 
 class TranslationDatasetWMT16_RO_EN(TranslationDataset):
     path = './data/wmt16-ro-en'
