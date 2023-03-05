@@ -32,6 +32,7 @@ For more, you can watch this [video](https://www.youtube.com/watch?v=JEUsN_KlDy8
     <li><a href="#coding-style">Coding Style</a></li>
     <li><a href="#tested-flow">Tested flow</a></li>
     <li><a href="#roadmap">Roadmap</a></li>
+    <li><a href="#models-and-datasets">Models and Datasets</a></li>
   </ol>
 </details>
 
@@ -203,5 +204,27 @@ tensorboard --logdir your-log-directory
   - [ ] Installation
 
 See the [open issues](https://github.com/JianyiCheng/mase-tools/issues) for a full list of proposed features (and known issues).
+
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
+
+## Models and Datasets
+
+- Vision Datasets
+  - CIFAR10
+  - CIFAR100
+- NLP Datasets
+  - MNLI
+  - Wikitext2
+  - Wikitext103
+- Vision Models
+  - ResNet18
+  - ResNet50
+- NLP Models
+  - BERT
+  - GPT2
+  - RoBERTa-base
+  - RoBERTa-large
+  - OPT-125m to OPT-66b (7 models)
+  - gpt-neo-125M to gpt-neo-20B (4 models)
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
