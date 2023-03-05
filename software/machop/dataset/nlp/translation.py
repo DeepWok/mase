@@ -87,6 +87,59 @@ class TranslationDatasetIWSLT2017_EN_DE(TranslationDataset):
         self.dataset = dataset
 
 
+class TranslationDatasetIWSLT2017_DE_EN(TranslationDataset):
+    path = './data/iwslt2017-de-en'
+
+    def __init__(self, split='train'):
+        super().__init__()
+        self.src_col_name = "de"
+        self.trg_col_name = "en"
+        # self.data = self.dataset[split]
+        self.split = split
+
+    def _download_and_process(self):
+        dataset = load_dataset('iwslt2017',
+                               'iwslt2017-de-en',
+                               cache_dir='./datasets_cache_dir')
+        dataset.save_to_disk(self.path)
+        self.dataset = dataset
+
+
+class TranslationDatasetIWSLT2017_EN_FR(TranslationDataset):
+    path = './data/iwslt2017-en-fr'
+
+    def __init__(self, split='train'):
+        super().__init__()
+        self.src_col_name = "en"
+        self.trg_col_name = "fr"
+        # self.data = self.dataset[split]
+        self.split = split
+
+    def _download_and_process(self):
+        dataset = load_dataset('iwslt2017',
+                               'iwslt2017-en-fr',
+                               cache_dir='./datasets_cache_dir')
+        dataset.save_to_disk(self.path)
+        self.dataset = dataset
+
+
+class TranslationDatasetIWSLT2017_EN_CH(TranslationDataset):
+    path = './data/iwslt2017-en-ch'
+
+    def __init__(self, split='train'):
+        super().__init__()
+        self.src_col_name = "en"
+        self.trg_col_name = "ch"
+        # self.data = self.dataset[split]
+        self.split = split
+
+    def _download_and_process(self):
+        dataset = load_dataset('iwslt2017',
+                               'iwslt2017-en-ch',
+                               cache_dir='./datasets_cache_dir')
+        dataset.save_to_disk(self.path)
+        self.dataset = dataset
+
 # class TranslationDatasetOPUS_EN_FR(TranslationDataset):
 #     path = './data/opus-en-fr'
 #     num_labels = None
@@ -106,6 +159,40 @@ class TranslationDatasetIWSLT2017_EN_DE(TranslationDataset):
 #         import pdb
 #         pdb.set_trace()
 
+
+class TranslationDatasetWMT19_DE_EN(TranslationDataset):
+    path = './data/wmt19-de-en'
+
+    def __init__(self, split='train'):
+        super().__init__()
+        self.src_col_name = "de"
+        self.trg_col_name = "en"
+        # self.data = self.dataset[split]
+        self.split = split
+
+    def _download_and_process(self):
+        dataset = load_dataset('wmt19',
+                               'de-en',
+                               cache_dir='./datasets_cache_dir')
+        dataset.save_to_disk(self.path)
+        self.dataset = dataset
+
+class TranslationDatasetWMT19_ZH_EN(TranslationDataset):
+    path = './data/wmt19-zh-en'
+
+    def __init__(self, split='train'):
+        super().__init__()
+        self.src_col_name = "zh"
+        self.trg_col_name = "en"
+        # self.data = self.dataset[split]
+        self.split = split
+
+    def _download_and_process(self):
+        dataset = load_dataset('wmt19',
+                               'zh-en',
+                               cache_dir='./datasets_cache_dir')
+        dataset.save_to_disk(self.path)
+        self.dataset = dataset
 
 class TranslationDatasetWMT16_RO_EN(TranslationDataset):
     path = './data/wmt16-ro-en'
