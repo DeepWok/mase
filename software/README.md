@@ -166,13 +166,23 @@ tensorboard --logdir your-log-directory
   ```bash
   ./chop --train --dataset=cifar10 --model=toy_manual --modify-sw configs/toy_manual.toml --save test
   ```
+
+- Tune a pre-trained `opt` model on `wikitext2` on GPU
+  ```bash
+  vim machop/dataset/nlp/language_modeling.py
+  ```
+  The original setup `1024` block size (or context width), is really hard to run because of GPU memory limitation, so now this is `256`.
+
+  ```bash
+  ./chop --train --dataset=wikitext2 --model=facebook/opt-350m --pretrained --save test --accelerator gpu --gpu 1 --batch-size 4 --task lm
+  ```
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 <!-- ROADMAP -->
 ## Roadmap
 
 - [ ] Language Modeling Datasets (AZ)
-  - [ ] Wikitext2
+  - [X] Wikitext2
   - [ ] Wikitext103
 - [ ] Language Modeling Models (AZ)
   - [ ] BERT

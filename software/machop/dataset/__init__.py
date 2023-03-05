@@ -37,6 +37,7 @@ def get_dataset(name, nlp_task_args={}):
             train_dataset = dataset_cls(split='train', **args)
             val_dataset = dataset_cls(split='validation', **args)
             test_dataset = dataset_cls(split='test', **args)
+        # Translation tasks
         elif name in ['iwslt2017_en_de', 'IWSLT2017_EN_DE']:
             train_dataset = dataset_cls(split='train', **args)
             val_dataset = dataset_cls(split='validation', **args)
@@ -45,7 +46,6 @@ def get_dataset(name, nlp_task_args={}):
             train_dataset = dataset_cls(split='train', **args)
             val_dataset = dataset_cls(split='validation', **args)
             test_dataset = dataset_cls(split='test', **args)
-        # Translation tasks
         elif name in ['multi30k', 'MULTI30K']:
             train_dataset = dataset_cls(split='train', **args)
             val_dataset = dataset_cls(split='validation', **args)
@@ -55,7 +55,7 @@ def get_dataset(name, nlp_task_args={}):
             val_dataset = dataset_cls(split='validation', **args)
             test_dataset = dataset_cls(split='test', **args)
         # Language Modeling
-        elif name in ['wikitext2', 'WIKITEXT2']:
+        elif name in ['wikitext2', 'WIKITEXT2', 'wikitext103', 'WIKITEXT103']:
             train_dataset = dataset_cls(split='train', **args)
             val_dataset = dataset_cls(split='validation', **args)
             test_dataset = dataset_cls(split='test', **args)

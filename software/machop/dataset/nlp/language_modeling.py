@@ -85,7 +85,7 @@ class LanguageModeling(Dataset):
 
 class LanguageModelingDatasetWikitext2(LanguageModeling):
 
-    def __init__(self, split='train', block_size=256, tokenizer=None):
+    def __init__(self, split='train', block_size=256):
         self.block_size = block_size
         self.split = split
         super().__init__(dataset=None, split=split)
@@ -112,6 +112,43 @@ class LanguageModelingDatasetWikitext2(LanguageModeling):
             print("Downloading and processing dataset...")
             dataset = load_dataset('wikitext',
                                    'wikitext-2-raw-v1',
+                                   cache_dir='./cache-data')
+            dataset.save_to_disk(path)
+        else:
+            print("Dataset already downloaded and processed")
+            dataset = load_from_disk(path)
+        return dataset
+
+
+class LanguageModelingDatasetWikiText103(LanguageModeling):
+
+    def __init__(self, split='train', block_size=256):
+        self.block_size = block_size
+        self.split = split
+        super().__init__(dataset=None, split=split)
+
+    def setup_tokenizer(self, tokenizer, max_token_count):
+        self.tokenizer = tokenizer
+        self.max_token_count = max_token_count
+        raw_dataset = self._prepare_data()
+        name = f'./data/wikitext103/block_size{self.block_size}.pkl'
+        if os.path.isfile(name):
+            with open(name, 'rb') as f:
+                dataset = pickle.load(f)
+        else:
+            dataset = preprocess_datasets(raw_dataset,
+                                          tokenizer,
+                                          block_size=self.block_size)
+            with open(name, 'wb') as f:
+                pickle.dump(dataset, f)
+            print(f"Saved preprocessed dataset to disk, at {name}")
+        self.dataset = dataset[self.split]
+
+    def _prepare_data(self, path='./data/wikitext103'):
+        if (path is not None) and (not os.path.isdir(path)):
+            print("Downloading and processing dataset...")
+            dataset = load_dataset('wikitext',
+                                   'wikitext-103-raw-v1',
                                    cache_dir='./cache-data')
             dataset.save_to_disk(path)
         else:
