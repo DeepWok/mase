@@ -5,9 +5,9 @@ import functools
 import torch
 
 use_cuda = torch.cuda.is_available()
-print('Using cuda:{}'.format(use_cuda))
+print("Using cuda:{}".format(use_cuda))
 torch_cuda = torch.cuda if use_cuda else torch
-device = torch.device('cuda' if use_cuda else 'cpu')
+device = torch.device("cuda" if use_cuda else "cpu")
 
 
 def get_checkpoint_file(checkpoint_dir):
@@ -17,7 +17,7 @@ def get_checkpoint_file(checkpoint_dir):
 
 
 def plt_model_load(model, checkpoint):
-    state_dict = torch.load(checkpoint)['state_dict']
+    state_dict = torch.load(checkpoint)["state_dict"]
     model.load_state_dict(state_dict)
     return model
 

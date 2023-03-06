@@ -28,33 +28,33 @@ class LinearBase(torch.nn.Linear):
         bias = self.b_quantizer(self.bias) if self.bias is not None else None
         y = F.linear(x, w, bias)
         return {
-            'x': x,
-            'w': w,
-            'bias': bias,
-            'y': y,
+            "x": x,
+            "w": w,
+            "bias": bias,
+            "y": y,
         }
 
 
 class LinearInteger(LinearBase):
-
-    def __init__(self,
-                 in_features: int,
-                 out_features: int,
-                 bias: bool = True,
-                 device=None,
-                 dtype=None,
-                 config=None) -> None:
+    def __init__(
+        self,
+        in_features: int,
+        out_features: int,
+        bias: bool = True,
+        device=None,
+        dtype=None,
+        config=None,
+    ) -> None:
         super().__init__(in_features, out_features, bias, device, dtype)
         if config is None:
-            raise ValueError('config is None for IntegerLinear')
+            raise ValueError("config is None for IntegerLinear")
 
-        self.bypass = config.get('bypass', False)
+        self.bypass = config.get("bypass", False)
         # establish quantizers
-        w_bits, w_bias = config['weight_bits'], config['weight_bias']
-        x_bits, x_bias = config['input_bits'], config['input_bias']
+        w_bits, w_bias = config["weight_bits"], config["weight_bias"]
+        x_bits, x_bias = config["input_bits"], config["input_bias"]
         # check bias quantizer, if not, use weight quantizer
-        b_bits, b_bias = config.get('bias_bits',
-                                    None), config.get('bias_bias', None)
+        b_bits, b_bias = config.get("bias_bits", None), config.get("bias_bias", None)
         self.w_quantizer = partial(integer_quantizer, bits=w_bits, bias=w_bias)
         self.x_quantizer = partial(integer_quantizer, bits=x_bits, bias=x_bias)
         if b_bits is None:
@@ -63,32 +63,31 @@ class LinearInteger(LinearBase):
 
 
 class LinearBlockFP(LinearBase):
-
-    def __init__(self,
-                 in_features: int,
-                 out_features: int,
-                 bias: bool = True,
-                 device=None,
-                 dtype=None,
-                 config=None) -> None:
+    def __init__(
+        self,
+        in_features: int,
+        out_features: int,
+        bias: bool = True,
+        device=None,
+        dtype=None,
+        config=None,
+    ) -> None:
         super().__init__(in_features, out_features, bias, device, dtype)
         if config is None:
-            raise ValueError('config is None for IntegerLinear')
+            raise ValueError("config is None for IntegerLinear")
 
-        self.bypass = config.get('bypass', False)
+        self.bypass = config.get("bypass", False)
         # establish quantizers
-        w_bits, w_block_size = config['weight_bits'], config[
-            'weight_block_size']
-        x_bits, x_block_size = config['input_bits'], config['input_block_size']
+        w_bits, w_block_size = config["weight_bits"], config["weight_block_size"]
+        x_bits, x_block_size = config["input_bits"], config["input_block_size"]
         # check bias quantizer, if not, use weight quantizer
-        b_bits, b_bias = config.get('bias_bits',
-                                    None), config.get('bias_bias', None)
-        self.w_quantizer = partial(block_fp_quantizer,
-                                   bits=w_bits,
-                                   block_size=w_block_size)
-        self.x_quantizer = partial(block_fp_quantizer,
-                                   bits=x_bits,
-                                   block_size=x_block_size)
+        b_bits, b_bias = config.get("bias_bits", None), config.get("bias_bias", None)
+        self.w_quantizer = partial(
+            block_fp_quantizer, bits=w_bits, block_size=w_block_size
+        )
+        self.x_quantizer = partial(
+            block_fp_quantizer, bits=x_bits, block_size=x_block_size
+        )
         if b_bits is None:
             self.b_quantizer = self.w_quantizer
         self.b_quantizer = partial(integer_quantizer, bits=b_bits, bias=b_bias)

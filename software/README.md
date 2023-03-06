@@ -177,28 +177,43 @@ tensorboard --logdir your-log-directory
   ```bash
   ./chop --train --dataset=wikitext2 --model=facebook/opt-350m --pretrained --save test --accelerator gpu --gpu 1 --batch-size 4 --task lm
   ```
+
+- Tune a pre-trained `t5` on `iwslt` on GPU
+```bash
+./chop --train --dataset=iwslt2017_en_de --model=t5-small --pretrained --save test --accelerator gpu --gpu 1 --batch-size 4 --task tran
+```
+
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 <!-- ROADMAP -->
 ## Roadmap
 
-- [X] Language Modeling Datasets (AZ)
+- [X] Language Modeling Datasets (AZ, pull request #36)
   - [X] Wikitext2
   - [X] Wikitext103
-- [X] Language Modeling Models (AZ)
+- [X] Language Modeling Models (AZ, pull request #36)
   - [X] BERT
   - [X] ROBERT
   - [X] GPT-NEO
   - [X] GPT2
-- [ ] Machine Translation Models (AZ)
-  - [ ] T5
-  - [ ] Test T5 on existing translation datasets
+- [X] Machine Translation Models (AZ)
+  - [X] IWSLT and WMT datasets
+  - [X] T5
+  - [X] Test T5 on existing translation datasets (partial)
 - [ ] `--estimate` flag (CZ)
   - [ ] FLOPs calculation
   - [ ] memory ops calculation
 - [ ] New quantizers
   - [ ] Quantizer testing
   - [ ] Block-based quantizers
+- [ ] More vision datasets and CNNs
+  - [ ] Test the existing ImageNet
+  - [ ] Efficientnet family
+  - [ ] MobileNet family
+- [ ] Vision transformers
+  - [ ] Pyramid Vision Transformer (v1 and v2)
+  - [ ] DeiT
+  - [ ] Swin
 - [ ] More on README
   - [ ] Prerequisites
   - [ ] Installation
@@ -216,6 +231,13 @@ See the [open issues](https://github.com/JianyiCheng/mase-tools/issues) for a fu
   - MNLI
   - Wikitext2
   - Wikitext103
+  - iwslt2017
+    - en-de
+    - de-en
+    - en-fr
+    - en-ch
+  - wmt19_de_en
+  - wmt19_zh_en
 - Vision Models
   - ResNet18
   - ResNet50
@@ -226,5 +248,9 @@ See the [open issues](https://github.com/JianyiCheng/mase-tools/issues) for a fu
   - RoBERTa-large
   - OPT-125m to OPT-66b (7 models)
   - gpt-neo-125M to gpt-neo-20B (4 models)
+  - t5-small
+  - t5-base
+  - t5-large
+  - google/t5-v1_1-small
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>

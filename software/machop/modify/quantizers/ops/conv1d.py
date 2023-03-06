@@ -30,48 +30,49 @@ class Conv1dBase(torch.nn.Conv1d):
         bias = self.b_quantizer(self.bias) if self.bias is not None else None
         y = self._conv_forward(x, w, bias)
         return {
-            'x': x,
-            'w': w,
-            'bias': bias,
-            'y': y,
+            "x": x,
+            "w": w,
+            "bias": bias,
+            "y": y,
         }
 
 
 class Conv1dInteger(Conv1dBase):
-
     def __init__(
-            self,
-            in_channels: int,
-            out_channels: int,
-            kernel_size: _size_2_t,
-            stride: _size_2_t = 1,
-            padding: Union[str, _size_2_t] = 0,
-            dilation: _size_2_t = 1,
-            groups: int = 1,
-            bias: bool = True,
-            padding_mode: str = 'zeros',  # TODO: refine this type
-            device=None,
-            dtype=None,
-            config=None) -> None:
-        super().__init__(in_features=in_channels,
-                         out_features=out_channels,
-                         kernel_size=kernel_size,
-                         stride=stride,
-                         padding=padding,
-                         dilation=dilation,
-                         groups=groups,
-                         bias=bias,
-                         padding_mode=padding_mode,
-                         device=device,
-                         dtype=dtype)
+        self,
+        in_channels: int,
+        out_channels: int,
+        kernel_size: _size_2_t,
+        stride: _size_2_t = 1,
+        padding: Union[str, _size_2_t] = 0,
+        dilation: _size_2_t = 1,
+        groups: int = 1,
+        bias: bool = True,
+        padding_mode: str = "zeros",  # TODO: refine this type
+        device=None,
+        dtype=None,
+        config=None,
+    ) -> None:
+        super().__init__(
+            in_features=in_channels,
+            out_features=out_channels,
+            kernel_size=kernel_size,
+            stride=stride,
+            padding=padding,
+            dilation=dilation,
+            groups=groups,
+            bias=bias,
+            padding_mode=padding_mode,
+            device=device,
+            dtype=dtype,
+        )
 
-        self.bypass = config.get('bypass', False)
+        self.bypass = config.get("bypass", False)
         # establish quantizers
-        w_bits, w_bias = config['weight_bits'], config['weight_bias']
-        x_bits, x_bias = config['input_bits'], config['input_bias']
+        w_bits, w_bias = config["weight_bits"], config["weight_bias"]
+        x_bits, x_bias = config["input_bits"], config["input_bias"]
         # check bias quantizer, if not, use weight quantizer
-        b_bits, b_bias = config.get('bias_bits',
-                                    None), config.get('bias_bias', None)
+        b_bits, b_bias = config.get("bias_bits", None), config.get("bias_bias", None)
         self.w_quantizer = partial(integer_quantizer, bits=w_bits, bias=w_bias)
         self.x_quantizer = partial(integer_quantizer, bits=x_bits, bias=x_bias)
         if b_bits is None:

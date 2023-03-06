@@ -12,9 +12,9 @@ class ReLUInteger(torch.nn.ReLU):
 
     def __init__(self, inplace: bool = False, config: dict = {}):
         super().__init__(inplace)
-        self.bypass = config.get('bypass', False)
+        self.bypass = config.get("bypass", False)
         # establish quantizers
-        x_bits, x_bias = config['input_bits'], config['input_bias']
+        x_bits, x_bias = config["input_bits"], config["input_bias"]
         self.x_quantizer = partial(integer_quantizer, bits=x_bits, bias=x_bias)
 
     def forward(self, x: Tensor) -> Tensor:

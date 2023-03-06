@@ -5,7 +5,6 @@ from torch.autograd.function import InplaceFunction
 
 # Forced torch gradient overrider
 class MyClamp(InplaceFunction):
-
     @staticmethod
     def forward(ctx, input, min, max):
         return input.clamp(min=min, max=max)
@@ -17,7 +16,6 @@ class MyClamp(InplaceFunction):
 
 
 class MyRound(InplaceFunction):
-
     @staticmethod
     def forward(ctx, input):
         ctx.input = input
