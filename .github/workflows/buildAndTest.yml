@@ -234,7 +234,7 @@ jobs:
       run: |
         files=$(git diff --name-only $DIFF_COMMIT | grep -e '\.py$' || echo -n)
         if [[ ! -z $files ]]; then
-          python3 -m balck $files
+          python3 -m black $files
         fi
     
     # -----------
