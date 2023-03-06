@@ -81,7 +81,7 @@ jobs:
           && sudo make install)
 
           pip3 install --user --upgrade pip
-          pip3 install onnx yapf toml GitPython colorlog cocotb[bus] \
+          pip3 install onnx yapf black toml GitPython colorlog cocotb[bus] \
                        pytest pytorch-lightning transformers toml \
                        timm pytorch-nlp datasets IPython ipdb
 
@@ -227,14 +227,14 @@ jobs:
           done
         fi
 
-    # Run yapf to check Python formatting.
+    # Run yapf/black to check Python formatting.
     - name: python-format
       if: ${{ always() }}
       shell: bash
       run: |
         files=$(git diff --name-only $DIFF_COMMIT | grep -e '\.py$' || echo -n)
         if [[ ! -z $files ]]; then
-          yapf --diff $files
+          python3 -m black $files
         fi
     
     # -----------
