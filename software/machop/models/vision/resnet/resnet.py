@@ -193,37 +193,37 @@ class ResNetImageNet(nn.Module):
         return out
 
 
-def ResNet18(info):
+def get_resnet18(info):
     num_classes = info["num_classes"]
     return ResNet(BasicBlock, [2, 2, 2, 2], num_classes=num_classes)
 
 
-def ResNet34(info):
+def get_resnet34(info):
     num_classes = info["num_classes"]
     return ResNet(BasicBlock, [3, 4, 6, 3], num_classes=num_classes)
 
 
-def ResNet50(info):
+def get_resnet50(info):
     num_classes = info["num_classes"]
     return ResNet(Bottleneck, [3, 4, 6, 3], num_classes=num_classes)
 
 
-def ResNet101(info):
+def get_resnet101(info):
     num_classes = info["num_classes"]
     return ResNet(Bottleneck, [3, 4, 23, 3], num_classes=num_classes)
 
 
-def ResNet152(info):
+def get_resnet152(info):
     num_classes = info["num_classes"]
     return ResNet(Bottleneck, [3, 8, 36, 3], num_classes=num_classes)
 
 
-def ResNet18ImageNet(info):
+def get_resnet18_imagenet(info):
     num_classes = info["num_classes"]
     return ResNetImageNet(BasicBlock, [2, 2, 2, 2], num_classes=num_classes)
 
 
-def ResNet50ImageNet(info):
+def get_resnet50_imagenet(info):
     num_classes = info["num_classes"]
     return ResNetImageNet(Bottleneck, [3, 4, 6, 3], num_classes=num_classes)
 
