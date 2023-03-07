@@ -17,10 +17,10 @@ from .manual.toy_manual import get_toymanualnet
 from functools import partial
 
 model_map = {
-    "resnet18": ResNet18,
-    "resnet50": ResNet50,
-    "resnet18-imagenet": ResNet18ImageNet,
-    "resnet50-imagenet": ResNet50ImageNet,
+    "resnet18": get_resnet18,
+    "resnet50": get_resnet50,
+    "resnet18-imagenet": get_resnet18_imagenet,
+    "resnet50-imagenet": get_resnet50_imagenet,
     "wideresnet28_cifar": wideresnet28_cifar,
     # pvt family, originally designed for imagenet
     "pvt_tiny": pvt_tiny,
