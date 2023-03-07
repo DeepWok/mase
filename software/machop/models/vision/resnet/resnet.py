@@ -11,7 +11,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 # additional ops lib for porting everything to Module
-from ..ops import Add, Flatten
+from ...ops import Add, Flatten
 
 
 class BasicBlock(nn.Module):

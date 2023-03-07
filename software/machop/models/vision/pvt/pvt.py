@@ -366,6 +366,7 @@ def pvt_tiny(pretrained=False, **kwargs):
 
 
 def pvt_small(pretrained=False, **kwargs):
+    kwargs.pop('info')
     model = PyramidVisionTransformer(
         patch_size=4,
         embed_dims=[64, 128, 320, 512],
@@ -383,6 +384,7 @@ def pvt_small(pretrained=False, **kwargs):
 
 
 def pvt_medium(pretrained=False, **kwargs):
+    kwargs.pop('info')
     model = PyramidVisionTransformer(
         patch_size=4,
         embed_dims=[64, 128, 320, 512],
@@ -400,6 +402,7 @@ def pvt_medium(pretrained=False, **kwargs):
 
 
 def pvt_large(pretrained=False, **kwargs):
+    kwargs.pop('info')
     model = PyramidVisionTransformer(
         patch_size=4,
         embed_dims=[64, 128, 320, 512],
@@ -417,6 +420,7 @@ def pvt_large(pretrained=False, **kwargs):
 
 
 def pvt_huge_v2(pretrained=False, **kwargs):
+    kwargs.pop('info')
     model = PyramidVisionTransformer(
         patch_size=4,
         embed_dims=[128, 256, 512, 768],
