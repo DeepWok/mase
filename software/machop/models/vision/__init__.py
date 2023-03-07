@@ -18,5 +18,7 @@ from .pvt import (
     pvt_v2_b5,
 )
 from .wideresnet import wideresnet28_cifar
+from .mobilenet_v3 import mobilenetv3_small, mobilenetv3_large
 from .cswin import cswin_64_tiny, cswin_64_small, cswin_96_base, cswin_144_large
 from .deit import deit_tiny_patch16_224, deit_small_patch16_224, deit_base_patch16_224
+from .efficientnet import efficientnet_v2_s, efficientnet_v2_m, efficientnet_v2_l
