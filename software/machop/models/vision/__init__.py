@@ -1,4 +1,10 @@
-from .resnet import ResNet18, ResNet50, ResNet18ImageNet, ResNet50ImageNet
+from .resnet import (
+    get_resnet18,
+    get_resnet50,
+    get_resnet101,
+    get_resnet18_imagenet,
+    get_resnet50_imagenet,
+)
 from .pvt import (
     pvt_tiny,
     pvt_small,
