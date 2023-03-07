@@ -183,6 +183,11 @@ tensorboard --logdir your-log-directory
 ./chop --train --dataset=iwslt2017_en_de --model=t5-small --pretrained --save test --accelerator gpu --gpu 1 --batch-size 4 --task tran
 ```
 
+- Train a `resnet` on `imagenet`
+```bash
+./chop --train --dataset=imagenet --model=resnet18-imagenet --save test --accelerator gpu --gpu 1 --batch-size 32
+```
+
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 <!-- ROADMAP -->
