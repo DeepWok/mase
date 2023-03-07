@@ -189,20 +189,27 @@ tensorboard --logdir your-log-directory
 ./chop --train --dataset=imagenet --model=pvt_v2_b0 --save test --accelerator gpu --gpu 1 --batch-size 32
 ```
 
+- Train vision transformers on GPUs
+```bash
+./chop --train --dataset=imagenet --model=cswin_64_tiny --save test --accelerator gpu --gpu 1 --batch-size 32
+
+./chop --train --dataset=imagenet --model=deit_tiny_224 --save test --accelerator gpu --gpu 1 --batch-size 32
+```
+
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 <!-- ROADMAP -->
 ## Roadmap
 
-- [X] Language Modeling Datasets (AZ, pull request #36)
+- [X] Language Modeling Datasets (AZ, GH-36)
   - [X] Wikitext2
   - [X] Wikitext103
-- [X] Language Modeling Models (AZ, pull request #36)
+- [X] Language Modeling Models (AZ, GH-36)
   - [X] BERT
   - [X] ROBERT
   - [X] GPT-NEO
   - [X] GPT2
-- [X] Machine Translation Models (AZ)
+- [X] Machine Translation Models (AZ, GH-38)
   - [X] IWSLT and WMT datasets
   - [X] T5
   - [X] Test T5 on existing translation datasets (partial)
@@ -212,14 +219,14 @@ tensorboard --logdir your-log-directory
 - [ ] New quantizers
   - [ ] Quantizer testing
   - [ ] Block-based quantizers
-- [ ] More vision datasets and CNNs
-  - [ ] Test the existing ImageNet
+- [ ] More vision datasets and CNNs (AZ)
+  - [X] Test the existing ImageNet
   - [ ] Efficientnet family
   - [ ] MobileNet family
-- [ ] Vision transformers
-  - [ ] Pyramid Vision Transformer (v1 and v2)
-  - [ ] DeiT
-  - [ ] Swin
+- [X] Vision transformers (AZ, GH-39)
+  - [X] Pyramid Vision Transformer (v1 and v2)
+  - [X] DeiT
+  - [X] Swin
 - [ ] More on README
   - [ ] Prerequisites
   - [ ] Installation
