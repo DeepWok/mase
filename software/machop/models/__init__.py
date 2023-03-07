@@ -1,4 +1,10 @@
-from .vision import ResNet18, ResNet50, ResNet18ImageNet, ResNet50ImageNet
+from .vision import (
+    get_resnet18,
+    get_resnet50,
+    get_resnet101,
+    get_resnet18_imagenet,
+    get_resnet50_imagenet,
+)
 from .vision import pvt_tiny, pvt_small, pvt_medium, pvt_large
 from .vision import pvt_v2_b0, pvt_v2_b1, pvt_v2_b2, pvt_v2_b3, pvt_v2_b4, pvt_v2_b5
 from .vision import wideresnet28_cifar
@@ -19,6 +25,9 @@ model_map = {
     # pvt family, originally designed for imagenet
     "pvt_tiny": pvt_tiny,
     "pvt_small": pvt_small,
+    "pvt_medium": pvt_medium,
+    "pvt_large": pvt_large,
+    # pvt v2
     "pvt_v2_b0": pvt_v2_b0,
     "pvt_v2_b1": pvt_v2_b1,
     "pvt_v2_b2": pvt_v2_b2,
@@ -74,9 +83,10 @@ vision_models = [
     "resnet50",
     "resnet18-imagenet",
     "resnet50-imagenet",
-    "wideresnet28_cifar",
     "pvt_tiny",
     "pvt_small",
+    "pvt_medium",
+    "pvt_large",
     "pvt_v2_b0",
     "pvt_v2_b1",
     "pvt_v2_b2",
