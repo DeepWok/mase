@@ -266,6 +266,15 @@ See the [open issues](https://github.com/JianyiCheng/mase-tools/issues) for a fu
     - pvt_v2_b3
     - pvt_v2_b4
     - pvt_v2_b5
+  - Data Efficient Image Transformers (DeiT)
+    - deit_tiny_224
+    - deit_small_224
+    - deit_base_224
+  - CSWin Transformer
+    - cswin_64_tiny
+    - cswin_64_small
+    - cswin_96_base
+    - cswin_144_large
 
 - NLP Models
   - BERT
