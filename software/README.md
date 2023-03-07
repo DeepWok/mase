@@ -183,9 +183,10 @@ tensorboard --logdir your-log-directory
 ./chop --train --dataset=iwslt2017_en_de --model=t5-small --pretrained --save test --accelerator gpu --gpu 1 --batch-size 4 --task tran
 ```
 
-- Train a `resnet` on `imagenet`
+- Train a `resnet` and a `pvt` on `imagenet`
 ```bash
 ./chop --train --dataset=imagenet --model=resnet18-imagenet --save test --accelerator gpu --gpu 1 --batch-size 32
+./chop --train --dataset=imagenet --model=pvt_v2_b0 --save test --accelerator gpu --gpu 1 --batch-size 32
 ```
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
@@ -229,9 +230,13 @@ See the [open issues](https://github.com/JianyiCheng/mase-tools/issues) for a fu
 
 ## Models and Datasets
 
+### Datasets
+
 - Vision Datasets
   - CIFAR10
   - CIFAR100
+  - ImageNet
+
 - NLP Datasets
   - MNLI
   - Wikitext2
@@ -243,16 +248,43 @@ See the [open issues](https://github.com/JianyiCheng/mase-tools/issues) for a fu
     - en-ch
   - wmt19_de_en
   - wmt19_zh_en
+
+### Models
+
 - Vision Models
   - ResNet18
   - ResNet50
+  - Pyramid Vision Transformers V1
+    - pvt_tiny
+    - pvt_small
+    - pvt_medium
+    - pvt_large
+  - Pyramid Vision Transformers V2
+    - pvt_v2_b0
+    - pvt_v2_b1
+    - pvt_v2_b2
+    - pvt_v2_b3
+    - pvt_v2_b4
+    - pvt_v2_b5
+
 - NLP Models
   - BERT
   - GPT2
   - RoBERTa-base
   - RoBERTa-large
-  - OPT-125m to OPT-66b (7 models)
-  - gpt-neo-125M to gpt-neo-20B (4 models)
+  - OPT
+    - facebook/opt-125m
+    - facebook/opt-350m
+    - facebook/opt-1.3b
+    - facebook/opt-2.7b
+    - facebook/opt-13b
+    - facebook/opt-30b
+    - facebook/opt-66b
+  - gpt-neo
+    - EleutherAI/gpt-neo-125M
+    - EleutherAI/gpt-neo-1.3B
+    - EleutherAI/gpt-neo-2.7B
+    - EleutherAI/gpt-neox-20b
   - t5-small
   - t5-base
   - t5-large
