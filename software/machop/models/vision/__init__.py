@@ -12,3 +12,5 @@ from .pvt import (
     pvt_v2_b5,
 )
 from .wideresnet import wideresnet28_cifar
+from .cswin import cswin_64_tiny, cswin_64_small, cswin_96_base, cswin_144_large
+from .deit import deit_tiny_patch16_224, deit_small_patch16_224, deit_base_patch16_224

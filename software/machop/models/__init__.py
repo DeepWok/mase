@@ -2,6 +2,8 @@ from .vision import ResNet18, ResNet50, ResNet18ImageNet, ResNet50ImageNet
 from .vision import pvt_tiny, pvt_small, pvt_medium, pvt_large
 from .vision import pvt_v2_b0, pvt_v2_b1, pvt_v2_b2, pvt_v2_b3, pvt_v2_b4, pvt_v2_b5
 from .vision import wideresnet28_cifar
+from .vision import cswin_64_tiny, cswin_64_small, cswin_96_base, cswin_144_large
+from .vision import deit_tiny_patch16_224, deit_small_patch16_224, deit_base_patch16_224
 
 from .nlp_models import get_nlp_model
 from .toy import get_toynet
@@ -13,9 +15,25 @@ model_map = {
     "resnet50": ResNet50,
     "resnet18-imagenet": ResNet18ImageNet,
     "resnet50-imagenet": ResNet50ImageNet,
+    "wideresnet28_cifar": wideresnet28_cifar,
+    # pvt family, originally designed for imagenet
     "pvt_tiny": pvt_tiny,
     "pvt_small": pvt_small,
     "pvt_v2_b0": pvt_v2_b0,
+    "pvt_v2_b1": pvt_v2_b1,
+    "pvt_v2_b2": pvt_v2_b2,
+    "pvt_v2_b3": pvt_v2_b3,
+    "pvt_v2_b4": pvt_v2_b4,
+    "pvt_v2_b5": pvt_v2_b5,
+    # deit family
+    "deit_tiny_224": deit_tiny_patch16_224,
+    "deit_small_224": deit_small_patch16_224,
+    "deit_base_224": deit_base_patch16_224,
+    # cswin family
+    "cswin_64_tiny": cswin_64_tiny,
+    "cswin_64_small": cswin_64_small,
+    "cswin_96_base": cswin_96_base,
+    "cswin_144_large": cswin_144_large,
     # this is a normal toynet written purely with pytorch ops
     "toy": get_toynet,
     # this is a toynet with our custom ops
@@ -56,6 +74,24 @@ vision_models = [
     "resnet50",
     "resnet18-imagenet",
     "resnet50-imagenet",
+    "wideresnet28_cifar",
+    "pvt_tiny",
+    "pvt_small",
+    "pvt_v2_b0",
+    "pvt_v2_b1",
+    "pvt_v2_b2",
+    "pvt_v2_b3",
+    "pvt_v2_b4",
+    "pvt_v2_b5",
+    # deit family
+    "deit_tiny_224",
+    "deit_small_224",
+    "deit_base_224",
+    # cswin family
+    "cswin_64_tiny",
+    "cswin_64_small",
+    "cswin_96_base",
+    "cswin_144_large",
 ]
 
 nlp_models = [
