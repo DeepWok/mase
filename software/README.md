@@ -190,10 +190,19 @@ tensorboard --logdir your-log-directory
 ```
 
 - Train vision transformers on GPUs
+
 ```bash
 ./chop --train --dataset=imagenet --model=cswin_64_tiny --save test --accelerator gpu --gpu 1 --batch-size 32
 
 ./chop --train --dataset=imagenet --model=deit_tiny_224 --save test --accelerator gpu --gpu 1 --batch-size 32
+```
+
+- Train mobilenet and efficientnet
+
+```bash
+./chop --train --dataset=imagenet --model=mobilenetv3_small --save test --accelerator gpu --gpu 1 --batch-size 32
+
+./chop --train --dataset=imagenet --model=efficientnet_v2_s --save test --accelerator gpu --gpu 1 --batch-size 32
 ```
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
@@ -219,9 +228,9 @@ tensorboard --logdir your-log-directory
 - [ ] New quantizers
   - [ ] Quantizer testing
   - [ ] Block-based quantizers
-- [ ] More vision datasets and CNNs (AZ)
+- [X] More vision datasets and CNNs (AZ)
   - [X] Test the existing ImageNet
-  - [ ] Efficientnet family
+  - [X] Efficientnet family
   - [ ] MobileNet family
 - [X] Vision transformers (AZ, GH-39)
   - [X] Pyramid Vision Transformer (v1 and v2)
