@@ -8,7 +8,8 @@ from .imagenet import get_imagenet_dataset
 
 from .transform import build_transform
 
-default_preprocess = {
+
+cifar_preprocess = {
     "input_size": 32,
     "color_jitter": 0.4,
     "auto_augment": "rand-m9-mstd0.5-inc1",
@@ -18,21 +19,33 @@ default_preprocess = {
     "re_count": 1,
 }
 
+
+imagenet_preprocess = {
+    "input_size": 224,
+    "color_jitter": 0.4,
+    "auto_augment": "rand-m9-mstd0.5-inc1",
+    "interpolation": "bicubic",
+    "re_prob": 0.25,
+    "re_mode": "pixel",
+    "re_count": 1,
+}
+
+
 info = {
     "cifar10": {
         "num_classes": 10,
-        "process": default_preprocess,
+        "process": cifar_preprocess,
         "image_size": (3, 32, 32),
     },
     "cifar100": {
         "num_classes": 100,
-        "process": default_preprocess,
+        "process": cifar_preprocess,
         "image_size": (3, 32, 32),
     },
     "imagenet": {
         "num_classes": 1000,
-        "process": default_preprocess,
-        "image_size": (3, 32, 32),
+        "process": imagenet_preprocess,
+        "image_size": (3, 224, 224),
     },
 }
 

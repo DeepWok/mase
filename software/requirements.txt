@@ -12,3 +12,5 @@ cocotb[bus]
 pytest  
 ipython
 ipdb
+sentencepiece
+einops
