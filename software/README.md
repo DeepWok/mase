@@ -270,6 +270,13 @@ See the [open issues](https://github.com/JianyiCheng/mase-tools/issues) for a fu
 - Vision Models
   - ResNet18
   - ResNet50
+  - MobileNets
+    - mobilenetv3_small
+    - mobilenetv3_large
+  - EfficientNets
+    - efficientnet_v2_s
+    - efficientnet_v2_m
+    - efficientnet_v2_l
   - Pyramid Vision Transformers V1
     - pvt_tiny
     - pvt_small
