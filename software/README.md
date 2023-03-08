@@ -228,10 +228,10 @@ tensorboard --logdir your-log-directory
 - [ ] New quantizers
   - [ ] Quantizer testing
   - [ ] Block-based quantizers
-- [X] More vision datasets and CNNs (AZ)
+- [X] More vision datasets and CNNs (AZ, GH-39)
   - [X] Test the existing ImageNet
   - [X] Efficientnet family
-  - [ ] MobileNet family
+  - [X] MobileNet family
 - [X] Vision transformers (AZ, GH-39)
   - [X] Pyramid Vision Transformer (v1 and v2)
   - [X] DeiT
