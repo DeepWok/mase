@@ -1,14 +1,55 @@
-from .resnet import ResNet18, ResNet50, ResNet18ImageNet, ResNet50ImageNet
+from .vision import (
+    get_resnet18,
+    get_resnet50,
+    get_resnet101,
+    get_resnet18_imagenet,
+    get_resnet50_imagenet,
+)
+from .vision import pvt_tiny, pvt_small, pvt_medium, pvt_large
+from .vision import pvt_v2_b0, pvt_v2_b1, pvt_v2_b2, pvt_v2_b3, pvt_v2_b4, pvt_v2_b5
+from .vision import wideresnet28_cifar
+from .vision import cswin_64_tiny, cswin_64_small, cswin_96_base, cswin_144_large
+from .vision import deit_tiny_patch16_224, deit_small_patch16_224, deit_base_patch16_224
+from .vision import mobilenetv3_small, mobilenetv3_large
+from .vision import efficientnet_v2_s, efficientnet_v2_m, efficientnet_v2_l
+
 from .nlp_models import get_nlp_model
 from .toy import get_toynet
 from .manual.toy_manual import get_toymanualnet
 from functools import partial
 
 model_map = {
-    "resnet18": ResNet18,
-    "resnet50": ResNet50,
-    "resnet18-imagenet": ResNet18ImageNet,
-    "resnet50-imagenet": ResNet50ImageNet,
+    "resnet18": get_resnet18,
+    "resnet50": get_resnet50,
+    "resnet18-imagenet": get_resnet18_imagenet,
+    "resnet50-imagenet": get_resnet50_imagenet,
+    "wideresnet28_cifar": wideresnet28_cifar,
+    "mobilenetv3_small": mobilenetv3_small,
+    "mobilenetv3_large": mobilenetv3_large,
+    "efficientnet_v2_s": efficientnet_v2_s,
+    "efficientnet_v2_m": efficientnet_v2_m,
+    "efficientnet_v2_l": efficientnet_v2_l,
+    # pvt family, originally designed for imagenet
+    "pvt_tiny": pvt_tiny,
+    "pvt_small": pvt_small,
+    "pvt_medium": pvt_medium,
+    "pvt_large": pvt_large,
+    # pvt v2
+    "pvt_v2_b0": pvt_v2_b0,
+    "pvt_v2_b1": pvt_v2_b1,
+    "pvt_v2_b2": pvt_v2_b2,
+    "pvt_v2_b3": pvt_v2_b3,
+    "pvt_v2_b4": pvt_v2_b4,
+    "pvt_v2_b5": pvt_v2_b5,
+    # deit family
+    "deit_tiny_224": deit_tiny_patch16_224,
+    "deit_small_224": deit_small_patch16_224,
+    "deit_base_224": deit_base_patch16_224,
+    # cswin family
+    "cswin_64_tiny": cswin_64_tiny,
+    "cswin_64_small": cswin_64_small,
+    "cswin_96_base": cswin_96_base,
+    "cswin_144_large": cswin_144_large,
     # this is a normal toynet written purely with pytorch ops
     "toy": get_toynet,
     # this is a toynet with our custom ops
@@ -49,6 +90,30 @@ vision_models = [
     "resnet50",
     "resnet18-imagenet",
     "resnet50-imagenet",
+    "mobilenetv3_small",
+    "mobilenetv3_large",
+    "efficientnet_v2_s",
+    "efficientnet_v2_m",
+    "efficientnet_v2_l",
+    "pvt_tiny",
+    "pvt_small",
+    "pvt_medium",
+    "pvt_large",
+    "pvt_v2_b0",
+    "pvt_v2_b1",
+    "pvt_v2_b2",
+    "pvt_v2_b3",
+    "pvt_v2_b4",
+    "pvt_v2_b5",
+    # deit family
+    "deit_tiny_224",
+    "deit_small_224",
+    "deit_base_224",
+    # cswin family
+    "cswin_64_tiny",
+    "cswin_64_small",
+    "cswin_96_base",
+    "cswin_144_large",
 ]
 
 nlp_models = [

@@ -183,20 +183,42 @@ tensorboard --logdir your-log-directory
 ./chop --train --dataset=iwslt2017_en_de --model=t5-small --pretrained --save test --accelerator gpu --gpu 1 --batch-size 4 --task tran
 ```
 
+- Train a `resnet` and a `pvt` on `imagenet`
+```bash
+./chop --train --dataset=imagenet --model=resnet18-imagenet --save test --accelerator gpu --gpu 1 --batch-size 32
+./chop --train --dataset=imagenet --model=pvt_v2_b0 --save test --accelerator gpu --gpu 1 --batch-size 32
+```
+
+- Train vision transformers on GPUs
+
+```bash
+./chop --train --dataset=imagenet --model=cswin_64_tiny --save test --accelerator gpu --gpu 1 --batch-size 32
+
+./chop --train --dataset=imagenet --model=deit_tiny_224 --save test --accelerator gpu --gpu 1 --batch-size 32
+```
+
+- Train mobilenet and efficientnet
+
+```bash
+./chop --train --dataset=imagenet --model=mobilenetv3_small --save test --accelerator gpu --gpu 1 --batch-size 32
+
+./chop --train --dataset=imagenet --model=efficientnet_v2_s --save test --accelerator gpu --gpu 1 --batch-size 32
+```
+
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 <!-- ROADMAP -->
 ## Roadmap
 
-- [X] Language Modeling Datasets (AZ, pull request #36)
+- [X] Language Modeling Datasets (AZ, GH-36)
   - [X] Wikitext2
   - [X] Wikitext103
-- [X] Language Modeling Models (AZ, pull request #36)
+- [X] Language Modeling Models (AZ, GH-36)
   - [X] BERT
   - [X] ROBERT
   - [X] GPT-NEO
   - [X] GPT2
-- [X] Machine Translation Models (AZ)
+- [X] Machine Translation Models (AZ, GH-38)
   - [X] IWSLT and WMT datasets
   - [X] T5
   - [X] Test T5 on existing translation datasets (partial)
@@ -206,14 +228,14 @@ tensorboard --logdir your-log-directory
 - [ ] New quantizers
   - [ ] Quantizer testing
   - [ ] Block-based quantizers
-- [ ] More vision datasets and CNNs
-  - [ ] Test the existing ImageNet
-  - [ ] Efficientnet family
-  - [ ] MobileNet family
-- [ ] Vision transformers
-  - [ ] Pyramid Vision Transformer (v1 and v2)
-  - [ ] DeiT
-  - [ ] Swin
+- [X] More vision datasets and CNNs (AZ, GH-39)
+  - [X] Test the existing ImageNet
+  - [X] Efficientnet family
+  - [X] MobileNet family
+- [X] Vision transformers (AZ, GH-39)
+  - [X] Pyramid Vision Transformer (v1 and v2)
+  - [X] DeiT
+  - [X] Swin
 - [ ] More on README
   - [ ] Prerequisites
   - [ ] Installation
@@ -224,9 +246,13 @@ See the [open issues](https://github.com/JianyiCheng/mase-tools/issues) for a fu
 
 ## Models and Datasets
 
+### Datasets
+
 - Vision Datasets
   - CIFAR10
   - CIFAR100
+  - ImageNet
+
 - NLP Datasets
   - MNLI
   - Wikitext2
@@ -238,16 +264,59 @@ See the [open issues](https://github.com/JianyiCheng/mase-tools/issues) for a fu
     - en-ch
   - wmt19_de_en
   - wmt19_zh_en
+
+### Models
+
 - Vision Models
   - ResNet18
   - ResNet50
+  - MobileNets
+    - mobilenetv3_small
+    - mobilenetv3_large
+  - EfficientNets
+    - efficientnet_v2_s
+    - efficientnet_v2_m
+    - efficientnet_v2_l
+  - Pyramid Vision Transformers V1
+    - pvt_tiny
+    - pvt_small
+    - pvt_medium
+    - pvt_large
+  - Pyramid Vision Transformers V2
+    - pvt_v2_b0
+    - pvt_v2_b1
+    - pvt_v2_b2
+    - pvt_v2_b3
+    - pvt_v2_b4
+    - pvt_v2_b5
+  - Data Efficient Image Transformers (DeiT)
+    - deit_tiny_224
+    - deit_small_224
+    - deit_base_224
+  - CSWin Transformer
+    - cswin_64_tiny
+    - cswin_64_small
+    - cswin_96_base
+    - cswin_144_large
+
 - NLP Models
   - BERT
   - GPT2
   - RoBERTa-base
   - RoBERTa-large
-  - OPT-125m to OPT-66b (7 models)
-  - gpt-neo-125M to gpt-neo-20B (4 models)
+  - OPT
+    - facebook/opt-125m
+    - facebook/opt-350m
+    - facebook/opt-1.3b
+    - facebook/opt-2.7b
+    - facebook/opt-13b
+    - facebook/opt-30b
+    - facebook/opt-66b
+  - gpt-neo
+    - EleutherAI/gpt-neo-125M
+    - EleutherAI/gpt-neo-1.3B
+    - EleutherAI/gpt-neo-2.7B
+    - EleutherAI/gpt-neox-20b
   - t5-small
   - t5-base
   - t5-large
