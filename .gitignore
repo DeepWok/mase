@@ -12,6 +12,9 @@ software/data/
 software/lightning_logs/
 software/test
 software/modified_ckpts
+software/model_cache_dir
+software/cache-data
+estimate-sw_report*.txt
 
 # macOS
 .DS_Store

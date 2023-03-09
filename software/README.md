@@ -116,6 +116,16 @@ Mase also supports training with a modified model, for instance:
 ./chop --dataset=cifar --model=toy --load checkpoints/modified_test/best.ckpt --modify-sw configs/test.toml
 ```
 
+### Example Software Estimation
+
+```bash
+./chop --task cls --model roberta-base --pretrained --dataset mnli --estimate-sw --estimate-sw-config ./configs/estimate-sw/roberta_no_linear.py
+```
+
+- This example shows how to estimate the FLOPs and parameter size in model roberta-base.
+- Under the hood DeepSpeed's profiler is used and a reported .txt file will be generated.
+- Custom profiling behavior is defined in the .py file specified by `estimate-sw-config` flag. The config dict in .py file supports an `ignore_modules` list to ignore certain nn.Modules. See `./configs/estimate-sw
+
 ### Log Reading
 
 ```bash
@@ -123,7 +133,6 @@ tensorboard --logdir your-log-directory
 ```
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
-
 
 <!-- CODING STYLE -->
 ## Coding style
@@ -169,9 +178,11 @@ tensorboard --logdir your-log-directory
   ```
 
 - Tune a pre-trained `opt` model on `wikitext2` on GPU
+
   ```bash
   vim machop/dataset/nlp/language_modeling.py
   ```
+
   The original setup `1024` block size (or context width), is really hard to run because of GPU memory limitation, so now this is `256`.
 
   ```bash
@@ -179,31 +190,44 @@ tensorboard --logdir your-log-directory
   ```
 
 - Tune a pre-trained `t5` on `iwslt` on GPU
-```bash
-./chop --train --dataset=iwslt2017_en_de --model=t5-small --pretrained --save test --accelerator gpu --gpu 1 --batch-size 4 --task tran
-```
+
+  ```bash
+  ./chop --train --dataset=iwslt2017_en_de --model=t5-small --pretrained --save test --accelerator gpu --gpu 1 --batch-size 4 --task tran
+  ```
 
 - Train a `resnet` and a `pvt` on `imagenet`
-```bash
-./chop --train --dataset=imagenet --model=resnet18-imagenet --save test --accelerator gpu --gpu 1 --batch-size 32
-./chop --train --dataset=imagenet --model=pvt_v2_b0 --save test --accelerator gpu --gpu 1 --batch-size 32
-```
+
+  ```bash
+  ./chop --train --dataset=imagenet --model=resnet18-imagenet --save test --accelerator gpu --gpu 1 --batch-size 32
+  ./chop --train --dataset=imagenet --model=pvt_v2_b0 --save test --accelerator gpu --gpu 1 --batch-size 32
+  ```
 
 - Train vision transformers on GPUs
 
-```bash
-./chop --train --dataset=imagenet --model=cswin_64_tiny --save test --accelerator gpu --gpu 1 --batch-size 32
+  ```bash
+  ./chop --train --dataset=imagenet --model=cswin_64_tiny --save test --accelerator gpu --gpu 1 --batch-size 32
 
-./chop --train --dataset=imagenet --model=deit_tiny_224 --save test --accelerator gpu --gpu 1 --batch-size 32
-```
+  ./chop --train --dataset=imagenet --model=deit_tiny_224 --save test --accelerator gpu --gpu 1 --batch-size 32
+  ```
 
 - Train mobilenet and efficientnet
 
-```bash
-./chop --train --dataset=imagenet --model=mobilenetv3_small --save test --accelerator gpu --gpu 1 --batch-size 32
+  ```bash
+  ./chop --train --dataset=imagenet --model=mobilenetv3_small --save test --accelerator gpu --gpu 1 --batch-size 32
 
-./chop --train --dataset=imagenet --model=efficientnet_v2_s --save test --accelerator gpu --gpu 1 --batch-size 32
-```
+  ./chop --train --dataset=imagenet --model=efficientnet_v2_s --save test --accelerator gpu --gpu 1 --batch-size 32
+  ```
+
+- Estimate-sw on built-in models
+
+  ```bash
+  ./chop --task cls --model resnet18 --dataset cifar10 --estimate-sw
+  ./chop --task cls --model resnet18 --dataset cifar10 --estimate-sw --estimate-sw-config ./configs/estimate-sw/all_included.py
+  ./chop --task cls --model resnet18 --dataset cifar10 --estimate-sw --estimate-sw-config ./configs/estimate-sw/resnet_no_conv2d.py
+  ./chop --task cls --model roberta-base --pretrained --dataset mnli --estimate-sw --estimate-sw-config ./configs/estimate-sw/all_included.py
+  ./chop --task cls --model roberta-base --pretrained --dataset mnli --estimate-sw --estimate-sw-config ./configs/estimate-sw/roberta_no_linear.py
+  ./chop --task tran --model t5-small --pretrained --dataset iwslt2017_en_de --estimate-sw
+  ```
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -222,9 +246,10 @@ tensorboard --logdir your-log-directory
   - [X] IWSLT and WMT datasets
   - [X] T5
   - [X] Test T5 on existing translation datasets (partial)
-- [ ] `--estimate` flag (CZ)
-  - [ ] FLOPs calculation
-  - [ ] memory ops calculation
+- [ ] `--estimate-sw` flag (CZ)
+  - [x] FLOPs calculation (nn.Module ver.)
+  - [ ] FLOPs calculation (graph ver.)
+  - [ ] memory ops calculation (graph ver.)
 - [ ] New quantizers
   - [ ] Quantizer testing
   - [ ] Block-based quantizers

@@ -14,6 +14,7 @@ import toml
 import torch
 
 from .dataset import get_dataloader, get_dataset
+from .estimate_sw.estimate_sw import estimate_sw_single_gpu
 from .models import manual_models, model_map, nlp_models, vision_models
 from .modify import Modifier
 from .session import test, train
@@ -92,6 +93,7 @@ class Machop:
             default=False,
             help="Evaluate the model as software (performance). Default=False",
         )
+
         parser.add_argument(
             "--synthesize",
             action="store_true",
@@ -124,6 +126,20 @@ class Machop:
             dest="modify_hw",
             default=None,
             help="Modify the model in hardware from a configuration file.",
+        )
+
+        parser.add_argument(
+            "--estimate-sw",
+            action="store_true",
+            dest="to_estimate_sw",
+            default=False,
+            help="Estimate the resource consumption of the model in software, such as FLOPs and memory footprints. Default=False",
+        )
+        parser.add_argument(
+            "--estimate-sw-config",
+            dest="estimate_sw_config",
+            default=None,
+            help="The path to software estimation config file if --estimated-sw is specified. Default=None will use default estimation config.",
         )
 
         # args for actions
@@ -284,6 +300,8 @@ class Machop:
             self.test_sw()
         if self.args.to_evaluate_sw:
             self.evaluate_sw()
+        if self.args.to_estimate_sw:
+            self.estimate_sw()
         if self.args.modify_hw:
             self.modify_hw()
         if self.args.to_synthesize:
@@ -306,6 +324,7 @@ class Machop:
         model_inst_fn = model_map[args.model]
 
         if args.model in nlp_models:
+            # here the model is a dict whose keys consist of "model", "tokenizer", "classifier" ?
             model = model_inst_fn(
                 name=args.model,
                 task=args.task,
@@ -319,6 +338,7 @@ class Machop:
                 # Cheng 01/03/2023: No. This is for creating a quantized model
                 #                   using a .toml file for configuring quantisation scheme
                 #                   instead of layer replacement
+                # here model is a nn.Module
                 model = model_inst_fn(info=info, config=args.custom_config)
             else:
                 model = model_inst_fn(info=info)
@@ -404,6 +424,19 @@ class Machop:
             load_name=args.load_name,
             interactive=args.is_interactive,
         )
+
+    def estimate_sw(self):
+        args = self.args
+        logging.info(f"Estimating model {args.model!r}...")
+        estimate_sw_kwargs = {
+            "model_name": args.model,
+            "info": self.info,
+            "model": self.model,
+            "task": args.task,
+            "data_loader": self.loader,
+            "config_path": args.estimate_sw_config,
+        }
+        estimate_sw_single_gpu(**estimate_sw_kwargs)
 
     def synthesize(self):
         # TODO: Generate top-level hardware and all the layer components
