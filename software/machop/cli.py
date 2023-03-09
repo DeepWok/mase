@@ -1,7 +1,6 @@
 # ---------------------------------------
 # This script specifies the command line args.
 # ---------------------------------------
-
 import functools
 import logging
 import os
@@ -18,7 +17,7 @@ from .estimate_sw.estimate_sw import estimate_sw_single_gpu
 from .models import manual_models, model_map, nlp_models, vision_models
 from .modify import Modifier
 from .session import test, train
-from .synthesize import MaseGraph
+from .synthesize.mase_verilog_emitter import MaseVerilogEmitter
 
 logging.getLogger().setLevel(logging.INFO)
 
@@ -62,6 +61,12 @@ class Machop:
             dest="load_name",
             default=None,
             help="The path to load the input model.",
+        )
+        parser.add_argument(
+            "--project",
+            dest="project",
+            default=".",
+            help="The path to the hardware project.",
         )
         ## Intermediate model args
         parser.add_argument(
@@ -302,8 +307,6 @@ class Machop:
             self.evaluate_sw()
         if self.args.to_estimate_sw:
             self.estimate_sw()
-        if self.args.modify_hw:
-            self.modify_hw()
         if self.args.to_synthesize:
             self.synthesize()
         if self.args.to_test_hw:
@@ -387,7 +390,9 @@ class Machop:
             "optimizer": args.training_optimizer,
             "learning_rate": args.learning_rate,
             "plt_trainer_args": plt_trainer_args,
-            "save_path": "checkpoints/" + args.save_name,
+            "save_path": "checkpoints/" + args.save_name
+            if args.save_name is not None
+            else None,
             "load_path": args.load_name,
         }
         train(**train_params)
@@ -439,30 +444,24 @@ class Machop:
         estimate_sw_single_gpu(**estimate_sw_kwargs)
 
     def synthesize(self):
-        # TODO: Generate top-level hardware and all the layer components
         args = self.args
         logging.info(f"Generating hardware for {args.model!r}...")
-        MaseGraph(self.model, save_name=options.save_name, emit=True)
-        raise NotImplementedError(f"Synthesis not implemented yet.")
-        return
-
-    def modify_hw(self):
-        args = self.args
-        logging.info(f"Modifying hardware for {args.model!r}...")
-        # TODO: Modify layer components using external configurations
-        raise NotImplementedError(f"Hardware modification not implemented yet.")
-        return
+        mve = MaseVerilogEmitter(
+            model=self.model,
+            project_path=args.project,
+            project=args.model,
+        )
+        mve.emit_verilog()
+        logging.warning("synthesis is only partially implemented.")
 
     def test_hw(self):
         args = self.args
         logging.info(f"Testing hardware for {args.model!r}...")
         # TODO: Generate cocotb testbench for a given model
         raise NotImplementedError(f"Hardware testing not implemented yet.")
-        return
 
     def evaluate_hw(self):
         args = self.args
         logging.info(f"Evaluating hardware for {args.model!r}...")
         # TODO: Run simulation and implementation for evaluating area and performance
         raise NotImplementedError(f"Hardware evaluation not implemented yet.")
-        return

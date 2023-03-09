@@ -1,0 +1,45 @@
+[seq_blocks_0] 
+name = "linear"
+weight_width = 8
+weight_bias = 3
+in_width = 8
+in_size = 1
+num_vectors = 1
+input_bias = 5
+bias_bits = 8
+bias_bias = 5
+out_width = 8
+out_size = 8
+
+[seq_blocks_1] 
+
+
+[seq_blocks_2] 
+name = "integer"
+weight_bits = 15
+weight_bias = 5
+input_bits = 8
+input_bias = 5
+bias_bits = 12
+bias_bias = 5
+
+[seq_blocks_3] 
+name = "integer"
+weight_bits = 15
+weight_bias = 5
+input_bits = 8
+input_bias = 5
+bias_bits = 12
+bias_bias = 5
+
+[seq_blocks_4] 
+name = "integer"
+weight_bits = 8
+weight_bias = 5
+input_bits = 8
+input_bias = 5
+bias_bits = 8
+bias_bias = 5
+
+
+

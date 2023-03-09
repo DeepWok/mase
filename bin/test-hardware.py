@@ -11,30 +11,29 @@ import maselogger
 # Add more test cases here
 test_cases = {
     # 'common/join2': [],
-    "common/int_mult": [],
+    "common/fixed_mult": [],
     "common/register_slice": [],
-    "common/adder_tree_layer": [],
-    "common/accumulator": [],
-    "common/adder_tree": ["common"],
-    "common/vector_mult": ["common"],
-    "common/dot_product": ["common"],
-    # 'linear/dataflow_linear': ['common'],
-    "activations/int_relu": ["common"],
+    "common/fixed_adder_tree_layer": [],
+    "common/fixed_accumulator": [],
+    "common/fixed_adder_tree": ["common"],
+    "common/fixed_vector_mult": ["common"],
+    "common/fixed_dot_product": ["common"],
+    "linear/fixed_linear": ["common"],
+    "activations/fixed_relu": ["common"],
     # 'activations/int_relu6': ['common'],
 }
 
 
 # ---------- TestHardware class --------------
 class TestHardware:
-
     def __init__(self, args):
         self.args = args
         self.isdebug = self.args.debug
         # Root path of mase-tools
-        self.root = os.path.abspath(
-            os.path.join(os.path.dirname(__file__), ".."))
+        self.root = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
         self.logger = maselogger.getLogger(
-            "test-hardware", os.path.join(self.root, "test-hardware.log"))
+            "test-hardware", os.path.join(self.root, "test-hardware.log")
+        )
         self.test_cases = self.args.test_cases
         if self.args.run_all:
             self.test_cases = test_cases.keys()
@@ -48,13 +47,14 @@ class TestHardware:
             base_name = os.path.basename(test_case)
             # Check if the test bench exists
             if not os.path.exists(
-                    os.path.join(
-                        self.root,
-                        "hardware",
-                        "testbench",
-                        test_case,
-                        "{}_tb.py".format(base_name),
-                    )):
+                os.path.join(
+                    self.root,
+                    "hardware",
+                    "testbench",
+                    test_case,
+                    "{}_tb.py".format(base_name),
+                )
+            ):
                 self.logger.error(
                     "Cannot find the testbench! Expected to be {}".format(
                         os.path.join(
@@ -63,16 +63,19 @@ class TestHardware:
                             "testbench",
                             test_case,
                             "{}_tb.py".format(base_name),
-                        )))
+                        )
+                    )
+                )
                 return 1
             # Check if the design file exists
             if not os.path.isfile(
-                    os.path.join(self.root, "hardware",
-                                 "{}.sv".format(test_case))):
+                os.path.join(self.root, "hardware", "{}.sv".format(test_case))
+            ):
                 self.logger.error(
                     "Cannot find the design file! Expected to be {}".format(
-                        os.path.join(self.root, "hardware",
-                                     "{}.sv".format(test_case))))
+                        os.path.join(self.root, "hardware", "{}.sv".format(test_case))
+                    )
+                )
                 return 1
         return 0
 
@@ -84,8 +87,8 @@ class TestHardware:
             design_file = os.path.join(self.root, "hardware", test_case)
             include_files = [
                 "-I{}".format(
-                    os.path.join(self.root, "hardware",
-                                 "{}".format(include_file)))
+                    os.path.join(self.root, "hardware", "{}".format(include_file))
+                )
                 for include_file in test_cases[test_case]
             ]
             cmd = [
@@ -116,10 +119,12 @@ class TestHardware:
             err += queue.get()
         if err:
             self.logger.error(
-                "Hardware regression test finished. {} errors.".format(err))
+                "Hardware regression test finished. {} errors.".format(err)
+            )
         else:
             self.logger.info(
-                "Hardware regression test finished. {} errors.".format(err))
+                "Hardware regression test finished. {} errors.".format(err)
+            )
 
         cwd = os.path.join(self.root, "hardware", "testbench")
         pycache_files = os.path.join(cwd, "__pycache__")
@@ -134,7 +139,7 @@ class TestHardware:
         cmd = ["python3", "{}_tb.py".format(base_name)]
         result = self.execute(cmd, log_output=self.isdebug, cwd=cwd)
         if result:
-            self.logger.error("FAIL.")
+            self.logger.error(f"FAIL: {test_case}.")
         else:
             # Clean files
             pycache_files = os.path.join(cwd, "__pycache__")
@@ -152,11 +157,9 @@ class TestHardware:
     def execute(self, cmd, log_output: bool = True, log_file=None, cwd="."):
         if log_output:
             self.logger.debug(subprocess.list2cmdline(cmd))
-            with subprocess.Popen(cmd,
-                                  stdout=subprocess.PIPE,
-                                  bufsize=1,
-                                  universal_newlines=True,
-                                  cwd=cwd) as result:
+            with subprocess.Popen(
+                cmd, stdout=subprocess.PIPE, bufsize=1, universal_newlines=True, cwd=cwd
+            ) as result:
                 if log_file:
                     f = open(log_file, "w")
                 if result.stdout or result.stderr:
@@ -202,11 +205,14 @@ test-hardware.py -a"""
         default=False,
         help="Run in debug mode, Default=False",
     )
-    parser.add_argument("--test",
-                        default="",
-                        nargs="+",
-                        dest="test_cases",
-                        help="Test individual cases")
+    parser.add_argument(
+        "-t",
+        "--test",
+        default="",
+        nargs="+",
+        dest="test_cases",
+        help="Test individual cases",
+    )
 
     args = parser.parse_args()
     testrun = TestHardware(args)

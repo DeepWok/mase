@@ -24,7 +24,6 @@ pytestmark = pytest.mark.simulator_required
 
 # snippets
 class MyClamp(InplaceFunction):
-
     @staticmethod
     def forward(ctx, input, min, max):
         return input.clamp(min=min, max=max)
@@ -36,7 +35,6 @@ class MyClamp(InplaceFunction):
 
 
 class MyRound(InplaceFunction):
-
     @staticmethod
     def forward(ctx, input):
         ctx.input = input
@@ -56,7 +54,7 @@ my_round = MyRound.apply
 # fixed-point quantization with a bias
 def quantize(x, bits, bias):  # bits = 32
     """Do linear quantization to input according to a scale and number of bits"""
-    thresh = 2**(bits - 1)
+    thresh = 2 ** (bits - 1)
     scale = 2**bias
     return my_clamp(my_round(x.mul(scale)), -thresh, thresh - 1).div(scale)
 
@@ -85,9 +83,8 @@ class VerificationCase:
 
     def get_dut_parameters(self):
         return {
-            'NUM': self.num,
-            'ACT_WIDTH': self.bitwidth,
-            'ACT_BIAS': self.bias,
+            "IN_SIZE": self.num,
+            "IN_WIDTH": self.bitwidth,
         }
 
     def get_dut_input(self, i):
@@ -102,8 +99,8 @@ class VerificationCase:
 
 
 @cocotb.test()
-async def test_int_relu(dut):
-    """ Test integer based Relu """
+async def test_fixed_relu(dut):
+    """Test integer based Relu"""
     test_case = VerificationCase(samples=100)
 
     # set inputs outputs
@@ -111,29 +108,29 @@ async def test_int_relu(dut):
         x = test_case.get_dut_input(i)
         y = test_case.get_dut_output(i)
 
-        dut.x.value = x
+        dut.data_in.value = x
         await Timer(2, units="ns")
-        assert dut.out.value == y, f"output q was incorrect on the {i}th cycle"
+        assert dut.data_out.value == y, f"output q was incorrect on the {i}th cycle"
 
 
 def runner():
     sim = os.getenv("SIM", "verilator")
     verilog_sources = []
 
-    verilog_sources = ["../../../../hardware/activations/int_relu.sv"]
+    verilog_sources = ["../../../../hardware/activations/fixed_relu.sv"]
     test_case = VerificationCase()
 
     # set parameters
     extra_args = []
     for k, v in test_case.get_dut_parameters().items():
-        extra_args.append(f'-G{k}={v}')
+        extra_args.append(f"-G{k}={v}")
     print(extra_args)
     runner = get_runner(sim)()
-    runner.build(verilog_sources=verilog_sources,
-                 toplevel="int_relu",
-                 extra_args=extra_args)
+    runner.build(
+        verilog_sources=verilog_sources, toplevel="fixed_relu", extra_args=extra_args
+    )
 
-    runner.test(toplevel="int_relu", py_module="int_relu_tb")
+    runner.test(toplevel="fixed_relu", py_module="fixed_relu_tb")
 
 
 if __name__ == "__main__":

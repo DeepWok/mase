@@ -58,9 +58,11 @@ RUN pip3 install --user --upgrade pip \
     && pip3 install --pre torch-mlir torchvision \
     -f https://llvm.github.io/torch-mlir/package-index/ \
     --extra-index-url https://download.pytorch.org/whl/nightly/cpu \
-    && pip3 install onnx yapf toml GitPython colorlog cocotb[bus] \
+    && pip3 install onnx black toml GitPython colorlog cocotb[bus] \
                     pytest pytorch-lightning transformers toml \
-                    timm pytorch-nlp datasets ipython ipdb
+                    timm pytorch-nlp datasets ipython ipdb \
+                    sentencepiece einops deepspeed
+
 
 # Add environment variables
 RUN printf "\
@@ -81,7 +83,7 @@ RUN printf "\
 \nautocmd BufWritePost *.h   silent! !clang-format -i <afile> \
 \nautocmd BufWritePost *.hpp silent! !clang-format -i <afile> \
 \nautocmd BufWritePost *.cc  silent! !clang-format -i <afile> \
-\nautocmd BufWritePost *.py  silent! !yapf -i <afile> \
+\nautocmd BufWritePost *.py  silent! !python3 -m black <afile> \
 \nautocmd BufWritePost *.sv  silent! !verible-verilog-format --inplace <afile> \
 \nautocmd BufWritePost *.v  silent! !verible-verilog-format --inplace <afile> \
 \nautocmd BufWritePost * redraw! \

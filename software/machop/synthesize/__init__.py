@@ -1,1 +1,1 @@
-from .MaseGraph import MaseGraph
+from .mase_verilog_emitter import MaseVerilogEmitter

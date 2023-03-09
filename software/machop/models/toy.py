@@ -6,7 +6,7 @@ class ToyNet(nn.Module):
     def __init__(self, image_size, num_classes):
         super(ToyNet, self).__init__()
         in_planes = image_size[0] * image_size[1] * image_size[2]
-        self.linear = nn.Sequential(
+        self.seq_blocks = nn.Sequential(
             nn.Linear(in_planes, 100),
             nn.ReLU(),
             nn.Linear(100, 100),
@@ -15,7 +15,7 @@ class ToyNet(nn.Module):
         )
 
     def forward(self, x):
-        return self.linear(x.view(x.size(0), -1))
+        return self.seq_blocks(x.view(x.size(0), -1))
 
 
 def get_toynet(info):
