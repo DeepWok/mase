@@ -32,8 +32,10 @@ x = torch.randn((batch_size, 28, 28))
 
 # Emit the model to Linalg MLIR
 # Better to print to the file - the constants are a bit long
-module = torch_mlir.compile(mlp, x, output_type="linalg-on-tensors")
-# print(module)
+#For output_type= argument, expected one of: TORCH, LINALG_ON_TENSORS, TOSA, STABLEHLO, RAW
+module = torch_mlir.compile(mlp, x, output_type="stablehlo")
+# module = torch_mlir.compile(mlp, x, output_type="linalg-on-tensors")
+print(module)
 
 # Outputs from the model
 # logits = mlp(x)

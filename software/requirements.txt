@@ -4,10 +4,10 @@ toml
 timm
 pytorch-nlp
 datasets
-onnx
-yapf
-GitPython
-colorlog
+onnx 
+black
+GitPython 
+colorlog 
 cocotb[bus]
 pytest
 ipython

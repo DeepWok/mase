@@ -14,11 +14,10 @@ def multiplier_sw(a: int, b: int) -> int:
 
 
 @cocotb.test()
-async def test_int_mult(dut):
+async def test_fixed_mult(dut):
     """Test for adding 2 random numbers multiple times"""
 
     for i in range(30):
-
         data_a = random.randint(0, 15)
         data_b = random.randint(0, 15)
 
@@ -29,18 +28,20 @@ async def test_int_mult(dut):
 
         result = multiplier_sw(data_a, data_b)
 
-        assert dut.product.value == result, "Randomised test failed with: {} * {} = {}, expect: {}".format(
-            int(dut.data_a.value), int(dut.data_b.value),
-            int(dut.product.value), result)
+        assert (
+            dut.product.value == result
+        ), "Randomised test failed with: {} * {} = {}, expect: {}".format(
+            int(dut.data_a.value), int(dut.data_b.value), int(dut.product.value), result
+        )
 
 
 def runner():
     sim = os.getenv("SIM", "verilator")
-    verilog_sources = ["../../../common/int_mult.sv"]
+    verilog_sources = ["../../../common/fixed_mult.sv"]
 
     runner = get_runner(sim)()
-    runner.build(verilog_sources=verilog_sources, toplevel="int_mult")
-    runner.test(toplevel="int_mult", py_module="int_mult_tb")
+    runner.build(verilog_sources=verilog_sources, toplevel="fixed_mult")
+    runner.test(toplevel="fixed_mult", py_module="fixed_mult_tb")
 
 
 if __name__ == "__main__":

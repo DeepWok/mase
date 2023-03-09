@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-# This script tests the adder tree layer
+# This script tests the fixed point adder tree layer
 import random, os
 
 import cocotb
@@ -11,7 +11,6 @@ from cocotb.runner import get_runner
 
 
 class VerificationCase:
-
     def __init__(self, samples=2):
         self.in_width = 32
         self.num = 17  # random.randint(2, 33)
@@ -38,8 +37,8 @@ class VerificationCase:
 
     def get_dut_parameters(self):
         return {
-            'NUM': self.num,
-            'IN_WIDTH': self.in_width,
+            "IN_SIZE": self.num,
+            "IN_WIDTH": self.in_width,
         }
 
     def get_dut_input(self, i):
@@ -51,20 +50,24 @@ class VerificationCase:
 
 def check_outputs(hw_out, sw_out):
     if len(hw_out) != len(sw_out):
-        print("Mismatched output size: {} expected = {}".format(
-            len(hw_out), len(sw_out)))
+        print(
+            "Mismatched output size: {} expected = {}".format(len(hw_out), len(sw_out))
+        )
         return False
     for i in range(len(hw_out)):
         if hw_out[i] != sw_out[i]:
-            print("Mismatched output value {}: {} expected = {}".format(
-                i, int(hw_out[i]), sw_out[i]))
+            print(
+                "Mismatched output value {}: {} expected = {}".format(
+                    i, int(hw_out[i]), sw_out[i]
+                )
+            )
             return False
     return True
 
 
 @cocotb.test()
-async def test_adder_tree_layer(dut):
-    """ Test integer based adder tree layer """
+async def test_fixed_adder_tree_layer(dut):
+    """Test integer based adder tree layer"""
     test_case = VerificationCase(samples=100)
 
     # set inputs outputs
@@ -72,30 +75,34 @@ async def test_adder_tree_layer(dut):
         x = test_case.get_dut_input(i)
         y = test_case.get_dut_output(i)
 
-        dut.ins.value = x
+        dut.data_in.value = x
         await Timer(2, units="ns")
         assert check_outputs(
-            [int(v) for v in dut.outs.value],
-            y), "Output are incorrect on the {}th cycle: {}".format(i, x)
+            [int(v) for v in dut.data_out.value], y
+        ), "Output are incorrect on the {}th cycle: {}".format(i, x)
 
 
 def runner():
     sim = os.getenv("SIM", "verilator")
 
-    verilog_sources = ["../../../../hardware/common/adder_tree_layer.sv"]
+    verilog_sources = ["../../../../hardware/common/fixed_adder_tree_layer.sv"]
     test_case = VerificationCase()
 
     # set parameters
     extra_args = []
     for k, v in test_case.get_dut_parameters().items():
-        extra_args.append(f'-G{k}={v}')
+        extra_args.append(f"-G{k}={v}")
     print(extra_args)
     runner = get_runner(sim)()
-    runner.build(verilog_sources=verilog_sources,
-                 toplevel="adder_tree_layer",
-                 extra_args=extra_args)
+    runner.build(
+        verilog_sources=verilog_sources,
+        toplevel="fixed_adder_tree_layer",
+        extra_args=extra_args,
+    )
 
-    runner.test(toplevel="adder_tree_layer", py_module="adder_tree_layer_tb")
+    runner.test(
+        toplevel="fixed_adder_tree_layer", py_module="fixed_adder_tree_layer_tb"
+    )
 
 
 if __name__ == "__main__":

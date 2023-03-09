@@ -126,6 +126,12 @@ Mase also supports training with a modified model, for instance:
 - Under the hood DeepSpeed's profiler is used and a reported .txt file will be generated.
 - Custom profiling behavior is defined in the .py file specified by `estimate-sw-config` flag. The config dict in .py file supports an `ignore_modules` list to ignore certain nn.Modules. See `./configs/estimate-sw
 
+
+### Example Hardware Generation
+```bash
+./chop --train --dataset=cifar10 --model toy --save=test --debug --synthesize
+```
+
 ### Log Reading
 
 ```bash
@@ -174,7 +180,7 @@ tensorboard --logdir your-log-directory
 - Train from custom toynet that has mixed-precision fixed-point quantization
 
   ```bash
-  ./chop --train --dataset=cifar10 --model=toy_manual --modify-sw configs/toy_manual.toml --save test
+  ./chop --train --dataset=cifar10 --model=toy_manual --config configs/tests/toy_manual.toml --debug
   ```
 
 - Tune a pre-trained `opt` model on `wikitext2` on GPU

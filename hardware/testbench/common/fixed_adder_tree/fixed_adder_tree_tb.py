@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-# This script tests the register slice
+# This script tests the fixed point adder tree
 import random, os, math, logging, sys
 
 sys.path.append(
@@ -28,40 +28,46 @@ if debug:
 # DUT test specifications
 class VerificationCase:
     def __init__(self, samples=10):
-        self.data_width = 32
+        self.data_in_width = 32
+        self.num = 9
+        self.data_out_width = math.ceil(math.log2(self.num)) + 32
         self.inputs = RandomSource(
-            samples=samples, max_stalls=2 * samples, is_data_vector=False, debug=debug
+            samples=samples, num=self.num, max_stalls=2 * samples, debug=debug
         )
-        self.outputs = RandomSink(samples=samples, max_stalls=2 * samples, debug=debug)
+        self.outputs = RandomSink(
+            samples=samples, num=self.num, max_stalls=2 * samples, debug=debug
+        )
         self.samples = samples
         self.ref = self.sw_compute()
 
     def get_dut_parameters(self):
         return {
-            "IN_WIDTH": self.data_width,
+            "IN_SIZE": self.num,
+            "IN_WIDTH": self.data_in_width,
         }
 
     def sw_compute(self):
         ref = []
         for i in range(self.samples):
-            ref.append(self.inputs.data[i])
+            ref.append(sum(self.inputs.data[i]))
         ref.reverse()
         return ref
 
 
 # Check if an impossible state is reached
-def impossiblestate(data_in_ready, data_in_valid, data_out_ready, data_out_valid):
+def is_impossible_state(data_in_ready, data_in_valid, data_out_ready, data_out_valid):
     # (0, X, 0, 0)
     # (0, X, 1, 0)
     # (0, X, 1, 1)
     if (not data_in_ready) and not ((not data_out_ready) and data_out_valid):
         return True
+    return False
 
 
 @cocotb.test()
-async def test_register_slice(dut):
-    """Test register slice"""
-    samples = 30
+async def test_fixed_adder_tree(dut):
+    """Test integer based adder tree"""
+    samples = 20
     test_case = VerificationCase(samples=samples)
 
     # Reset cycle
@@ -125,7 +131,7 @@ async def test_register_slice(dut):
                 dut.data_out_valid.value,
             )
         )
-        assert not impossiblestate(
+        assert not is_impossible_state(
             dut.data_in_ready.value,
             dut.data_in_valid.value,
             dut.data_out_ready.value,
@@ -136,11 +142,11 @@ async def test_register_slice(dut):
             dut.data_out_ready.value,
             dut.data_out_valid.value,
         )
-        dut.data_in_valid.value, dut.data_in_data.value = test_case.inputs.compute(
+        dut.data_in_valid.value, dut.data_in.value = test_case.inputs.compute(
             dut.data_in_ready.value
         )
         dut.data_out_ready.value = test_case.outputs.compute(
-            dut.data_out_valid.value, dut.data_out_data.value
+            dut.data_out_valid.value, dut.data_out.value
         )
         logger.debug(
             "Pre-clk  State: (data_in_ready,data_in_valid,data_out_ready,data_out_valid) = ({},{},{},{})".format(
@@ -159,7 +165,9 @@ def runner():
     sim = os.getenv("SIM", "verilator")
 
     verilog_sources = [
+        "../../../../hardware/common/fixed_adder_tree.sv",
         "../../../../hardware/common/register_slice.sv",
+        "../../../../hardware/common/fixed_adder_tree_layer.sv",
     ]
     test_case = VerificationCase()
 
@@ -171,11 +179,11 @@ def runner():
     runner = get_runner(sim)()
     runner.build(
         verilog_sources=verilog_sources,
-        toplevel="register_slice",
+        toplevel="fixed_adder_tree",
         extra_args=extra_args,
     )
 
-    runner.test(toplevel="register_slice", py_module="register_slice_tb")
+    runner.test(toplevel="fixed_adder_tree", py_module="fixed_adder_tree_tb")
 
 
 if __name__ == "__main__":

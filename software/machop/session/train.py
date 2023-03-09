@@ -1,7 +1,8 @@
-from pytorch_lightning.callbacks import ModelCheckpoint
 import pytorch_lightning as pl
-from .plt_wrapper import get_model_wrapper
+from pytorch_lightning.callbacks import ModelCheckpoint
+
 from ..utils import load_model
+from .plt_wrapper import get_model_wrapper
 
 
 def train(
@@ -16,15 +17,17 @@ def train(
     save_path,
     load_path,
 ):
-    checkpoint_callback = ModelCheckpoint(
-        save_top_k=1,
-        monitor="val_loss",
-        mode="min",
-        filename="best",
-        dirpath=save_path,
-        save_last=True,
-    )
-    plt_trainer_args["callbacks"] = [checkpoint_callback]
+    # if save_path is None, the model will not be saved
+    if save_path is not None:
+        checkpoint_callback = ModelCheckpoint(
+            save_top_k=1,
+            monitor="val_loss",
+            mode="min",
+            filename="best",
+            dirpath=save_path,
+            save_last=True,
+        )
+        plt_trainer_args["callbacks"] = [checkpoint_callback]
     wrapper_cls = get_model_wrapper(model_name, task)
     plt_model = wrapper_cls(
         model,
