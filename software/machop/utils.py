@@ -3,6 +3,7 @@ import os
 import functools
 
 import torch
+import pickle
 
 use_cuda = torch.cuda.is_available()
 print("Using cuda:{}".format(use_cuda))
@@ -17,21 +18,25 @@ def get_checkpoint_file(checkpoint_dir):
 
 
 def plt_model_load(model, checkpoint):
-    state_dict = torch.load(checkpoint)["state_dict"]
-    model.load_state_dict(state_dict)
+    if checkpoint.endswith(".pkl"):
+        with open(checkpoint, "rb") as f:
+            model = pickle.load(f)
+    else:
+        state_dict = torch.load(checkpoint)["state_dict"]
+        model.load_state_dict(state_dict)
     return model
 
 
 def load_model(load_path, plt_model):
     if load_path is not None:
-        if load_path.endswith(".ckpt"):
+        if load_path.endswith(".ckpt") or load_path.endswith(".pkl"):
             checkpoint = load_path
         else:
             if load_path.endswith("/"):
                 checkpoint = load_path + "best.ckpt"
             else:
                 raise ValueError(
-                    "if it is a directory, if must end with /; if it is a file, it must end with .ckpt"
+                    "if it is a directory, if must end with /; if it is a file, it must end with .ckpt or .pkl"
                 )
         plt_model = plt_model_load(plt_model, checkpoint)
         print(f"Loaded model from {checkpoint}")

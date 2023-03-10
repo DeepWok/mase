@@ -37,6 +37,17 @@ def train(
         optimizer=optimizer,
     )
     plt_model = load_model(plt_model=plt_model, load_path=load_path)
+    # A hack for modified model...
+    if not isinstance(plt_model, pl.LightningModule):
+        # rewrap
+        plt_model = wrapper_cls(
+            model,
+            info=info,
+            learning_rate=learning_rate,
+            epochs=plt_trainer_args["max_epochs"],
+            optimizer=optimizer,
+        )
+
     trainer = pl.Trainer(**plt_trainer_args)
     trainer.fit(
         plt_model,
