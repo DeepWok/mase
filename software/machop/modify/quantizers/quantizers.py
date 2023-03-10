@@ -8,8 +8,13 @@ from numpy import ndarray
 def integer_quantizer(x: Union[Tensor, ndarray], bits: int, bias: int):
     """Do linear quantization to input according to a scale and number of bits"""
     thresh = 2 ** (bits - 1)
-    scale = 2**bias
-    return my_clamp(my_round(x.mul(scale)), -thresh, thresh - 1).div(scale)
+    scale = 2 ** bias
+    if isinstance(x, (Tensor, ndarray)):
+        return my_clamp(my_round(x.mul(scale)), -thresh, thresh - 1).div(scale)
+    elif isinstance(x, int):
+        return x
+    else:
+        return my_clamp(my_round(x * scale), -thresh, thresh - 1) / scale
 
 
 def minifloat_quantizer(

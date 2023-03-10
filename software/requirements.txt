@@ -15,3 +15,4 @@ ipdb
 sentencepiece
 einops
 deepspeed
+tabulate

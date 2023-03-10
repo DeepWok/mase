@@ -7,45 +7,18 @@ import pprint
 import pickle
 
 from torch import nn
-from .quantizers import ops_map, possible_ops
+from .quantizers import ops_map, possible_ops, functions_map
 from collections import OrderedDict
-from ..models.ops import Add
+from .utils import load_model
+from machop.graph import MaseModifyGraph
+from functools import partial
 
 pp = pprint.PrettyPrinter(depth=4)
 
 
-def plt_model_load(model, checkpoint):
-    state_dict = torch.load(checkpoint)["state_dict"]
-    new_state_dict = {}
-    for k, v in state_dict.items():
-        if "model." in k:
-            # import pdb; pdb.set_trace()
-            new_state_dict[".".join(k.split(".")[1:])] = v
-        else:
-            new_state_dict[k] = v
-
-    model.load_state_dict(new_state_dict)
-    return model
-
-
-def load_model(load_path, plt_model):
-    if load_path is not None:
-        if load_path.endswith(".ckpt"):
-            checkpoint = load_path
-        else:
-            if load_path.endswith("/"):
-                checkpoint = load_path + "best.ckpt"
-            else:
-                raise ValueError(
-                    "if it is a directory, if must end with /; if it is a file, it must end with .ckpt"
-                )
-        plt_model = plt_model_load(plt_model, checkpoint)
-        print(f"Loaded model from {checkpoint}")
-    return plt_model
-
-
 class Modifier:
-    modifiable_layers = ["linear", "relu", "conv2d", "add"]
+    modifiable_layers = ["linear", "relu", "conv2d"]
+    modifiable_functions = ["add"]
 
     def __init__(
         self,
@@ -57,6 +30,9 @@ class Modifier:
         silent=False,
     ):
         self.model = model
+        self.graph = MaseModifyGraph(model)
+
+
         if load_name is not None:
             self.model = load_model(load_path=load_name, plt_model=self.model)
         # load config as toml
@@ -90,13 +66,14 @@ class Modifier:
 
         if interactive:
             import pdb
-
             pdb.set_trace()
 
     def modify(self):
         default_config = self.config.pop("default", None)
         if default_config is None:
             raise ValueError("Default config is not provided")
+
+        # modify modules
         for name in self.modifiable_layers:
             # use config setup if we have a config
             if name in self.config:
@@ -107,6 +84,19 @@ class Modifier:
             else:
                 replace_fn = getattr(self, f"replace_{name}")
                 replace_fn(self.model, default_config)
+        # modify funcitons
+        for name in self.modifiable_functions:
+            # use config setup if we have a config
+            if name in self.config:
+                replace_config = self.config[name]
+                replace_fn = getattr(self, f"replace_{name}")
+                replace_fn(self.model, replace_config)
+            # otherwise all modifiable layers are changed based on default config
+            else:
+                replace_fn = getattr(self, f"replace_{name}")
+                replace_fn(self.model, default_config)
+        self.modified_model = self.graph.modified_model
+
 
     def _pre_modify_check(self):
         modules = self.model.modules()
@@ -136,10 +126,15 @@ class Modifier:
             print(k)
             print(v.flatten()[:5])
 
+    def replace_add(self, model, config):
+        replacement_fn = functions_map["add"][config["name"]]
+        target = torch.add 
+        replacement_fn = replacement_fn
+        self.graph.modify(target, replacement_fn, replacement_fn_kwargs={'config': config})
+
     def replace_linear(self, model, config):
         replace_cls = ops_map["linear"][config["name"]]
         target = nn.Linear
-
         # This shows how to use the replace function
         # First, we have to define a custom replacement_fn
         # We then call the replace function with the model, target layer, and replacement_fn
@@ -154,6 +149,7 @@ class Modifier:
                 bias=use_bias,
                 config=config,
             )
+
             # grab pretrained weights
             # WARNING: need to test on the gpu land!
             my_linear.weight = child.weight.cpu()
@@ -161,15 +157,11 @@ class Modifier:
                 my_linear.bias = child.bias.cpu()
             return my_linear
 
-        self.replace(model, target, replacement_fn)
+        self.graph.modify(target, replacement_fn)
 
     def replace_conv2d(self, model, config):
         replace_cls = ops_map["conv2d"][config["name"]]
         target = nn.Conv2d
-
-        # This shows how to use the replace function
-        # First, we have to define a custom replacement_fn
-        # We then call the replace function with the model, target layer, and replacement_fn
         def replacement_fn(child):
             use_bias = child.bias is not None
             my_conv = replace_cls(
@@ -191,42 +183,44 @@ class Modifier:
                 my_conv.bias = child.bias.cpu()
             return my_conv
 
-        self.replace(model, target, replacement_fn)
+        self.graph.modify(target, replacement_fn)
 
     def replace_relu(self, model, config):
         replace_cls = ops_map["relu"][config["name"]]
         target = nn.ReLU
 
         def replacement_fn(child):
-            return replace_cls(inplace=child.inplace, config=config)
+            return replace_cls(
+                inplace=child.inplace, 
+                config=config)
+        self.graph.modify(target, replacement_fn)
 
-        self.replace(model, target, replacement_fn)
 
-    def replace_add(self, model, config):
-        replace_cls = ops_map["add"][config["name"]]
-        target = Add
 
-        def replacement_fn(child):
-            return replace_cls(config=config)
-
-        self.replace(model, target, replacement_fn)
-
-    # A generic replacement function that works for any layer
-    # This function traverses the modules in a model recursively
-    # And replaces the target layer with the replacement layer
-    def replace(self, model, target, replacement_fn):
-        for child_name, child in model.named_children():
-            if isinstance(child, target):
-                setattr(model, child_name, replacement_fn(child))
-            else:
-                self.replace(child, target, replacement_fn)
+    # # A generic replacement function that works for any layer
+    # # This function traverses the modules in a model recursively
+    # # And replaces the target layer with the replacement layer
+    # def replace(self, model, target, replacement_fn):
+    #     for child_name, child in model.named_children():
+    #         if isinstance(child, target):
+    #             setattr(model, child_name, replacement_fn(child))
+    #         else:
+    #             self.replace(child, target, replacement_fn)
 
     def save(self, name):
         if not os.path.isdir("modified_ckpts"):
             os.mkdir("modified_ckpts")
-        save_name = f"modified_ckpts/{name}.ckpt"
-        model_save_name = f"modified_ckpts/{name}.model.pkl"
+
+        save_name = f"modified_ckpts/{name}.original.ckpt"
+        model_save_name = f"modified_ckpts/{name}.original.pkl"
         torch.save(self.model.state_dict(), save_name)
         with open(model_save_name, "wb") as f:
             pickle.dump(self.model, file=f)
-        logging.info(f"Modified model saved as {save_name}.")
+
+        save_name = f"modified_ckpts/{name}.modified.ckpt"
+        model_save_name = f"modified_ckpts/{name}.modified.pkl"
+        torch.save(self.modified_model.state_dict(), save_name)
+        with open(model_save_name, "wb") as f:
+            pickle.dump(self.modified_model, file=f)
+
+        logging.info(f"Original and modified model are saved as {save_name}.")

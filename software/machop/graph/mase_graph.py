@@ -62,6 +62,7 @@ class MaseGraph:
         # logging.debug(model)
         trace = torch.fx.symbolic_trace(model)
         trace.graph.lint()
+        self.trace = trace
         self.fx_graph = trace.graph
         self.nodes_in = _get_input_nodes(self.fx_graph)
         assert len(self.nodes_in) == 1, "Multiple inputs are not supported."
