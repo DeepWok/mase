@@ -50,6 +50,10 @@ class MaseVerilogEmitter(MaseGraph):
         # os.system(f"verilator --lint-only {files}")
 
     def _emit_parameters(self):
+        """
+        Emit parameters at the top-level for the top-level module
+        """
+
         nodes_in = self.nodes_in
         nodes_out = self.nodes_out
         node_in_name = vf(nodes_in[0].name)
@@ -77,6 +81,10 @@ parameter OUT_SIZE = {node_out_name}_OUT_SIZE,
         return parameters
 
     def _emit_interface(self):
+        """
+        Emit interface signal declarations for the top-level module
+        """
+
         # Assume the model always has a single input and single output
         interface = """
 input  [IN_WIDTH-1:0] data_in [IN_SIZE-1:0],
@@ -89,18 +97,51 @@ input  data_out_ready,
         for node in self.fx_graph.nodes:
             if node.op != "call_module" and node.op != "call_function":
                 continue
-            interface += node.meta.parameters["hardware"]["top_signals"]
+            node_name = vf(node.name)
+            for key, value in node.meta.parameters["common"]["args"].items():
+                if key == "data_in":
+                    continue
+                cap_key = key.upper()
+                interface += f"""
+input  [{node_name}_{cap_key}_WIDTH-1:0] {node_name}_{key} [{node_name}_{cap_key}_SIZE-1:0],
+input  {node_name}_{key}_valid,
+output {node_name}_{key}_ready,
+"""
+            for key, value in node.meta.parameters["common"]["results"].items():
+                if key == "data_out":
+                    continue
+                interface += f"""
+output [{node_name}_{cap_key}_WIDTH-1:0] {node_name}_{key} [{node_name}_{cap_key}_SIZE-1:0],
+output {node_name}_{key}_valid,
+input  {node_name}_{key}_ready,
+"""
         return interface
 
     def _emit_signals(self):
+        """
+        Emit internal signal declarations for the top-level module
+        """
+
         signals = ""
         for node in self.fx_graph.nodes:
             if node.op != "call_module" and node.op != "call_function":
                 continue
-            signals += node.meta.parameters["hardware"]["signals"]
+            node_name = vf(node.name)
+            signals += f"""
+logic [{node_name}_IN_WIDTH-1:0]  {node_name}_data_in        [{node_name}_IN_SIZE-1:0];
+logic                             {node_name}_data_in_valid;
+logic                             {node_name}_data_in_ready;
+logic [{node_name}_OUT_WIDTH-1:0] {node_name}_data_out            [{node_name}_OUT_SIZE-1:0];
+logic                             {node_name}_data_out_valid;
+logic                             {node_name}_data_out_ready;
+"""
         return signals
 
     def _emit_components(self):
+        """
+        Emit component declarations for the top-level module
+        """
+
         components = ""
         for node in self.fx_graph.nodes:
             if node.op != "call_module" and node.op != "call_function":
@@ -115,7 +156,20 @@ input  data_out_ready,
             parameters = _remove_last_comma(parameters)
             node_layer = get_module_by_name(self.model, node.target)
             component_name = node.meta.parameters["hardware"]["module"]
-            signals = node.meta.parameters["hardware"]["port_map"]
+            node_name = vf(node.name)
+            signals = ""
+            for key, value in node.meta.parameters["common"]["args"].items():
+                signals += f"""
+.{key}({node_name}_{key}),
+.{key}_valid({node_name}_{key}_valid),
+.{key}_ready({node_name}_{key}_ready),
+"""
+            for key, value in node.meta.parameters["common"]["results"].items():
+                signals += f"""
+.{key}({node_name}_{key}),
+.{key}_valid({node_name}_{key}_valid),
+.{key}_ready({node_name}_{key}_ready),
+"""
             signals = _remove_last_comma(signals)
             component = """
 {} #(
@@ -132,6 +186,10 @@ input  data_out_ready,
         return components
 
     def _emit_wires(self):
+        """
+        Emit internal signal connections for the top-level module
+        """
+
         nodes_in = self.nodes_in
         nodes_out = self.nodes_out
         node_in_name = vf(nodes_in[0].target)

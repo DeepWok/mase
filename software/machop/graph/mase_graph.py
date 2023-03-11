@@ -73,24 +73,30 @@ class MaseGraph:
             node.meta = MaseMetadata(node=node, model=self.model)
         self.verify()
 
-    def load(self, config):
+    def load(self, load_name):
         """Load external constraints from a toml file"""
         # Load config as toml
-        if not config.endswith(".toml"):
+        if not load_name.endswith(".toml"):
             raise ValueError("Config file must be a toml file")
-        config = toml.load(config)
+        loaded_toml_meta = toml.load(load_name)
+        for node in self.fx_graph.nodes:
+            node.meta.parameters = loaded_toml_meta[node.name]
 
-        print(config)
-        # TODO
-
-    def save(self, config):
+    def save(self, save_name):
         """Save all the constraints to a toml file"""
-        # TODO
+        toml_meta_to_save = {}
+        for node in self.fx_graph.nodes:
+            toml_meta_to_save[node.name] = node.meta.parameters
+        with open(save_name, "w") as f:
+            toml_meta_string = toml.dump(toml_meta_to_save, f)
 
     def verify(self):
+        # Verify each node itself
         for node in self.fx_graph.nodes:
             node.meta.verify()
-        # TODO: verify the bit width of IO matches
+        # Inter-node verification
+        # Each edge between nodes must have the same precision
+        # TODO
 
     def report(self):
         """Print out an overview of the model in a table."""

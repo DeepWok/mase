@@ -1,10 +1,10 @@
 module fixed_vector_mult #(
-    parameter IN_WIDTH  = 32,
-    parameter W_WIDTH   = 16,
+    parameter IN_WIDTH = 32,
+    parameter WEIGHT_WIDTH = 16,
     // this is the width for the product
     // parameter PRODUCT_WIDTH = 8,
     // this is the width for the summed product
-    parameter OUT_WIDTH = IN_WIDTH + W_WIDTH,
+    parameter OUT_WIDTH = IN_WIDTH + WEIGHT_WIDTH,
 
     // this defines the number of elements in the vector, this is tunable
     parameter IN_SIZE = 4
@@ -17,10 +17,10 @@ module fixed_vector_mult #(
     input                       data_in_valid,
     output                      data_in_ready,
 
-    // input port for weights
-    input  logic [W_WIDTH-1:0] weights      [IN_SIZE-1:0],
-    input                      weights_valid,
-    output                     weights_ready,
+    // input port for weight
+    input  logic [WEIGHT_WIDTH-1:0] weight      [IN_SIZE-1:0],
+    input                           weight_valid,
+    output                          weight_ready,
 
     // output port
     output logic [OUT_WIDTH-1:0] data_out      [IN_SIZE-1:0],
@@ -28,24 +28,24 @@ module fixed_vector_mult #(
     input                        data_out_ready
 );
 
-  localparam PRODUCT_WIDTH = IN_WIDTH + W_WIDTH;
+  localparam PRODUCT_WIDTH = IN_WIDTH + WEIGHT_WIDTH;
 
   // pv[i] = data_in[i] * w[i]
   logic [PRODUCT_WIDTH-1:0] product_vector[IN_SIZE-1:0];
   for (genvar i = 0; i < IN_SIZE; i = i + 1) begin
     fixed_mult #(
         .IN_A_WIDTH(IN_WIDTH),
-        .IN_B_WIDTH(W_WIDTH)
+        .IN_B_WIDTH(WEIGHT_WIDTH)
     ) fixed_mult_inst (
         .data_a (data_in[i]),
-        .data_b (weights[i]),
+        .data_b (weight[i]),
         .product(product_vector[i])
     );
   end
 
   join2 #() join_inst (
-      .data_in_ready ({weights_ready, data_in_ready}),
-      .data_in_valid ({weights_valid, data_in_valid}),
+      .data_in_ready ({weight_ready, data_in_ready}),
+      .data_in_valid ({weight_valid, data_in_valid}),
       .data_out_valid(product_data_in_valid),
       .data_out_ready(product_data_in_ready)
   );
