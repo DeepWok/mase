@@ -1,11 +1,11 @@
-import torch
+from functools import partial
+from typing import Union
 
+import torch
 from torch import Tensor
 from torch.nn.common_types import _size_2_t
 
-from typing import Union
 from ..quantizers import integer_quantizer
-from functools import partial
 
 
 class Conv2dBase(torch.nn.Conv2d):
@@ -37,7 +37,7 @@ class Conv2dBase(torch.nn.Conv2d):
         }
 
 
-class Conv2dInteger(torch.nn.Conv2d):
+class Conv2dInteger(Conv2dBase):
     def __init__(
         self,
         in_channels: int,
