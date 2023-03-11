@@ -78,3 +78,4 @@ class Conv1dInteger(Conv1dBase):
         if b_bits is None:
             self.b_quantizer = self.w_quantizer
         self.b_quantizer = partial(integer_quantizer, bits=b_bits, bias=b_bias)
+        self.config = config

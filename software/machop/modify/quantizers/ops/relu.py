@@ -16,6 +16,7 @@ class ReLUInteger(torch.nn.ReLU):
         # establish quantizers
         x_bits, x_bias = config["input_bits"], config["input_bias"]
         self.x_quantizer = partial(integer_quantizer, bits=x_bits, bias=x_bias)
+        self.config = config
 
     def forward(self, x: Tensor) -> Tensor:
         if self.bypass:
