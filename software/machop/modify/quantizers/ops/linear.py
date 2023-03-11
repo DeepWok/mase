@@ -60,6 +60,7 @@ class LinearInteger(LinearBase):
         if b_bits is None:
             self.b_quantizer = self.w_quantizer
         self.b_quantizer = partial(integer_quantizer, bits=b_bits, bias=b_bias)
+        self.config = config
 
 
 class LinearBlockFP(LinearBase):
@@ -91,3 +92,4 @@ class LinearBlockFP(LinearBase):
         if b_bits is None:
             self.b_quantizer = self.w_quantizer
         self.b_quantizer = partial(integer_quantizer, bits=b_bits, bias=b_bias)
+        self.config = config

@@ -3,8 +3,8 @@ import logging
 import copy
 
 from typing import Tuple
-from .mase_graph import MaseGraph
-from .utils import (
+from machop.graph.mase_graph import MaseGraph
+from machop.graph.utils import (
     get_module_by_name, 
     isinstance_but_not_subclass, 
     get_parent_name, check_func_type)
@@ -15,6 +15,7 @@ class MaseModifyGraph(MaseGraph):
     def __init__(self, model=None):
         super().__init__(model)
         self.modified_model = copy.deepcopy(model)
+        self.logs = {}
 
     def modify(
             self, target, replacement_fn, replacement_fn_kwargs={}):
@@ -29,6 +30,7 @@ class MaseModifyGraph(MaseGraph):
                     parent_name, name = get_parent_name(node.target)
                     modules[node.target] = new_layer
                     setattr(modules[parent_name], name, new_layer)
+                    self.logs[node.target] = new_layer.config
             if node.op == 'call_function':
                 if check_func_type(node, target):
                     with self.fx_graph.inserting_after(node):
@@ -37,5 +39,8 @@ class MaseModifyGraph(MaseGraph):
                             replacement_fn, node.args, kwargs)
                         node.replace_all_uses_with(new_node)
                     self.fx_graph.erase_node(node)
+                    # FIXME: this is very hacky, and it seems like names will get replaced ...
+                    self.logs[new_node.name] = replacement_fn_kwargs.get('config', None)
         self.fx_graph.lint()
+        self.modules = modules
         self.modified_model = torch.fx.GraphModule(modules, self.fx_graph)

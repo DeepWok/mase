@@ -12,6 +12,7 @@ class AddInteger(torch.nn.Module):
         # establish quantizers
         x_bits, x_bias = config["input_bits"], config["input_bias"]
         self.x_quantizer = partial(integer_quantizer, bits=x_bits, bias=x_bias)
+        self.config = config
 
     def forward(self, x, y):
         x = self.x_quantizer(x)

@@ -267,6 +267,11 @@ tensorboard --logdir your-log-directory
   - [X] Pyramid Vision Transformer (v1 and v2)
   - [X] DeiT
   - [X] Swin
+- [ ] Enhance `modify`
+  - [ ] Add support for BatchNorm
+  - [ ] Add support for Conv1d
+  - [ ] Add support for ReLU6
+  - [ ] Add support for the multiply functions
 - [ ] More on README
   - [ ] Prerequisites
   - [ ] Installation

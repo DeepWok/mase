@@ -6,11 +6,12 @@ import toml
 import pprint
 import pickle
 
+from tabulate import tabulate
 from torch import nn
 from .quantizers import ops_map, possible_ops, functions_map
 from collections import OrderedDict
 from .utils import load_model
-from machop.graph import MaseModifyGraph
+from .mase_modify_graph import MaseModifyGraph
 from functools import partial
 
 pp = pprint.PrettyPrinter(depth=4)
@@ -53,11 +54,12 @@ class Modifier:
 
         # The core function that makes the modification
         self.modify()
+        self.compare_model()
 
         if not silent:
             logging.info("Model modified")
             logging.info(f"Model architecture, post modification")
-            print(self.model)
+            # print(self.model)
             self._post_modify_check()
             self._print_out_diff()
 
@@ -108,7 +110,7 @@ class Modifier:
 
     def _post_modify_check(self):
         self._post_modify_values = OrderedDict()
-        for name, module in self.model.named_modules():
+        for name, module in self.modified_model.named_modules():
             if hasattr(module, "get_quantized_weight"):
                 value = module.get_quantized_weight()
                 self._post_modify_values[name] = value
@@ -196,6 +198,34 @@ class Modifier:
         self.graph.modify(target, replacement_fn)
 
 
+    def compare_model(self):
+        original_modules = dict(self.model.named_modules())
+        trace = torch.fx.symbolic_trace(self.model)
+        trace.graph.lint()
+        trace = trace
+        orignal_fx_graph = trace.graph
+
+        modified_modules = self.graph.modules
+        modified_fx_graph = self.graph.fx_graph
+        headers = ['Name', 'Op', 'Original', 'Modified', 'Changed?']
+        rows = []
+
+        for node in self.graph.fx_graph.nodes:
+            if node.op == "call_module":
+                original_module = original_modules[node.target]
+                modified_module = modified_modules[node.target]
+                changed = type(original_module) != type(modified_module)
+                row = [
+                    node.target, node.op, 
+                    str(type(original_module)),
+                    str(type(modified_module)),
+                    changed]
+                rows.append(row)
+        print(f"A tabular summary of modified modules")
+        print(tabulate(rows, headers=headers))
+
+        print(f"A tabular summary of the modified graph")
+        modified_fx_graph.print_tabular()
 
     # # A generic replacement function that works for any layer
     # # This function traverses the modules in a model recursively
@@ -224,3 +254,11 @@ class Modifier:
             pickle.dump(self.modified_model, file=f)
 
         logging.info(f"Original and modified model are saved as {save_name}.")
+
+        if not os.path.isdir("modified_tomls"):
+            os.mkdir("modified_tomls")
+        save_name = f"modified_tomls/{name}_modified.toml"
+        with open(save_name, 'w') as f:
+            toml.dump(self.graph.logs, f)
+        logging.info(f"Modified toml log is saved as {save_name}.")
+
