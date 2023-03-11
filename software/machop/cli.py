@@ -451,6 +451,8 @@ class Machop:
             project_path=args.project,
             project=args.model,
         )
+        # Temporary for toml template generation
+        # mve.save("configs/tests/toy_hw.toml")
         mve.emit_verilog()
         logging.warning("synthesis is only partially implemented.")
 

@@ -29,7 +29,7 @@ if debug:
 class VerificationCase:
     def __init__(self, samples=10):
         self.data_in_width = 32
-        self.weights_width = 16
+        self.weight_width = 16
         self.vector_size = 2
         self.data_in = RandomSource(
             name="data_in",
@@ -38,8 +38,8 @@ class VerificationCase:
             max_stalls=2 * samples,
             debug=debug,
         )
-        self.weights = RandomSource(
-            name="weights",
+        self.weight = RandomSource(
+            name="weight",
             samples=samples,
             num=self.vector_size,
             max_stalls=2 * samples,
@@ -52,7 +52,7 @@ class VerificationCase:
     def get_dut_parameters(self):
         return {
             "IN_WIDTH": self.data_in_width,
-            "W_WIDTH": self.weights_width,
+            "WEIGHT_WIDTH": self.weight_width,
             "IN_SIZE": self.vector_size,
         }
 
@@ -60,7 +60,7 @@ class VerificationCase:
         ref = []
         for i in range(self.samples):
             s = [
-                self.data_in.data[i][j] * self.weights.data[i][j]
+                self.data_in.data[i][j] * self.weight.data[i][j]
                 for j in range(self.vector_size)
             ]
             ref.append(sum(s))
@@ -70,8 +70,8 @@ class VerificationCase:
 
 # Check if an is_impossible state is reached
 def is_impossible_state(
-    weights_ready,
-    weights_valid,
+    weight_ready,
+    weight_valid,
     data_in_ready,
     data_in_valid,
     data_out_ready,
@@ -99,13 +99,13 @@ async def test_fixed_dot_product(dut):
     await Timer(500, units="ns")
 
     # Synchronize with the clock
-    dut.weights_valid.value = 0
+    dut.weight_valid.value = 0
     dut.data_in_valid.value = 0
     dut.data_out_ready.value = 1
     logger.debug(
-        "Pre-clk  State: (weights_ready,weights_valid,data_in_ready,data_in_valid,data_out_ready,data_out_valid) = ({},{},{},{},{},{})".format(
-            dut.weights_ready.value,
-            dut.weights_valid.value,
+        "Pre-clk  State: (weight_ready,weight_valid,data_in_ready,data_in_valid,data_out_ready,data_out_valid) = ({},{},{},{},{},{})".format(
+            dut.weight_ready.value,
+            dut.weight_valid.value,
             dut.data_in_ready.value,
             dut.data_in_valid.value,
             dut.data_out_ready.value,
@@ -114,9 +114,9 @@ async def test_fixed_dot_product(dut):
     )
     await FallingEdge(dut.clk)
     logger.debug(
-        "Post-clk State: (weights_ready,weights_valid,data_in_ready,data_in_valid,data_out_ready,data_out_valid) = ({},{},{},{},{},{})".format(
-            dut.weights_ready.value,
-            dut.weights_valid.value,
+        "Post-clk State: (weight_ready,weight_valid,data_in_ready,data_in_valid,data_out_ready,data_out_valid) = ({},{},{},{},{},{})".format(
+            dut.weight_ready.value,
+            dut.weight_valid.value,
             dut.data_in_ready.value,
             dut.data_in_valid.value,
             dut.data_out_ready.value,
@@ -124,9 +124,9 @@ async def test_fixed_dot_product(dut):
         )
     )
     logger.debug(
-        "Pre-clk  State: (weights_ready,weights_valid,data_in_ready,data_in_valid,data_out_ready,data_out_valid) = ({},{},{},{},{},{})".format(
-            dut.weights_ready.value,
-            dut.weights_valid.value,
+        "Pre-clk  State: (weight_ready,weight_valid,data_in_ready,data_in_valid,data_out_ready,data_out_valid) = ({},{},{},{},{},{})".format(
+            dut.weight_ready.value,
+            dut.weight_valid.value,
             dut.data_in_ready.value,
             dut.data_in_valid.value,
             dut.data_out_ready.value,
@@ -135,9 +135,9 @@ async def test_fixed_dot_product(dut):
     )
     await FallingEdge(dut.clk)
     logger.debug(
-        "Post-clk State: (weights_ready,weights_valid,data_in_ready,data_in_valid,data_out_ready,data_out_valid) = ({},{},{},{},{},{})".format(
-            dut.weights_ready.value,
-            dut.weights_valid.value,
+        "Post-clk State: (weight_ready,weight_valid,data_in_ready,data_in_valid,data_out_ready,data_out_valid) = ({},{},{},{},{},{})".format(
+            dut.weight_ready.value,
+            dut.weight_valid.value,
             dut.data_in_ready.value,
             dut.data_in_valid.value,
             dut.data_out_ready.value,
@@ -150,9 +150,9 @@ async def test_fixed_dot_product(dut):
     for i in range(samples * 10):
         await FallingEdge(dut.clk)
         logger.debug(
-            "Post-clk State: (weights_ready,weights_valid,data_in_ready,data_in_valid,data_out_ready,data_out_valid) = ({},{},{},{},{},{})".format(
-                dut.weights_ready.value,
-                dut.weights_valid.value,
+            "Post-clk State: (weight_ready,weight_valid,data_in_ready,data_in_valid,data_out_ready,data_out_valid) = ({},{},{},{},{},{})".format(
+                dut.weight_ready.value,
+                dut.weight_valid.value,
                 dut.data_in_ready.value,
                 dut.data_in_valid.value,
                 dut.data_out_ready.value,
@@ -160,27 +160,27 @@ async def test_fixed_dot_product(dut):
             )
         )
         assert not is_impossible_state(
-            dut.weights_ready.value,
-            dut.weights_valid.value,
+            dut.weight_ready.value,
+            dut.weight_valid.value,
             dut.data_in_ready.value,
             dut.data_in_valid.value,
             dut.data_out_ready.value,
             dut.data_out_valid.value,
-        ), "Error: invalid state (weights_ready,weights_valid,data_in_ready,data_in_valid,data_out_ready,data_out_valid) = ({},{},{},{},{},{})".format(
-            dut.weights_ready.value,
-            dut.weights_valid.value,
+        ), "Error: invalid state (weight_ready,weight_valid,data_in_ready,data_in_valid,data_out_ready,data_out_valid) = ({},{},{},{},{},{})".format(
+            dut.weight_ready.value,
+            dut.weight_valid.value,
             dut.data_in_ready.value,
             dut.data_in_valid.value,
             dut.data_out_ready.value,
             dut.data_out_valid.value,
         )
 
-        dut.weights_valid.value = test_case.weights.pre_compute(dut.weights_ready.value)
+        dut.weight_valid.value = test_case.weight.pre_compute(dut.weight_ready.value)
         dut.data_in_valid.value = test_case.data_in.pre_compute(dut.data_in_ready.value)
         logger.debug(
-            "Pre-clk State0: (weights_ready,weights_valid,data_in_ready,data_in_valid,data_out_ready,data_out_valid) = ({},{},{},{},{},{})".format(
-                dut.weights_ready.value,
-                dut.weights_valid.value,
+            "Pre-clk State0: (weight_ready,weight_valid,data_in_ready,data_in_valid,data_out_ready,data_out_valid) = ({},{},{},{},{},{})".format(
+                dut.weight_ready.value,
+                dut.weight_valid.value,
                 dut.data_in_ready.value,
                 dut.data_in_valid.value,
                 dut.data_out_ready.value,
@@ -189,9 +189,9 @@ async def test_fixed_dot_product(dut):
         )
         await Timer(1, units="ns")
         logger.debug(
-            "Pre-clk State1: (weights_ready,weights_valid,data_in_ready,data_in_valid,data_out_ready,data_out_valid) = ({},{},{},{},{},{})".format(
-                dut.weights_ready.value,
-                dut.weights_valid.value,
+            "Pre-clk State1: (weight_ready,weight_valid,data_in_ready,data_in_valid,data_out_ready,data_out_valid) = ({},{},{},{},{},{})".format(
+                dut.weight_ready.value,
+                dut.weight_valid.value,
                 dut.data_in_ready.value,
                 dut.data_in_valid.value,
                 dut.data_out_ready.value,
@@ -199,8 +199,8 @@ async def test_fixed_dot_product(dut):
             )
         )
 
-        dut.weights_valid.value, dut.weights.value = test_case.weights.compute(
-            dut.weights_ready.value
+        dut.weight_valid.value, dut.weight.value = test_case.weight.compute(
+            dut.weight_ready.value
         )
         dut.data_in_valid.value, dut.data_in.value = test_case.data_in.compute(
             dut.data_in_ready.value
@@ -209,9 +209,9 @@ async def test_fixed_dot_product(dut):
             dut.data_out_valid.value, dut.data_out.value
         )
         logger.debug(
-            "Pre-clk State2: (weights_ready,weights_valid,data_in_ready,data_in_valid,data_out_ready,data_out_valid) = ({},{},{},{},{},{})".format(
-                dut.weights_ready.value,
-                dut.weights_valid.value,
+            "Pre-clk State2: (weight_ready,weight_valid,data_in_ready,data_in_valid,data_out_ready,data_out_valid) = ({},{},{},{},{},{})".format(
+                dut.weight_ready.value,
+                dut.weight_valid.value,
                 dut.data_in_ready.value,
                 dut.data_in_valid.value,
                 dut.data_out_ready.value,
@@ -220,7 +220,7 @@ async def test_fixed_dot_product(dut):
         )
 
         if (
-            test_case.weights.is_empty()
+            test_case.weight.is_empty()
             and test_case.data_in.is_empty()
             and test_case.outputs.is_full()
         ):

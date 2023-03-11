@@ -29,7 +29,7 @@ if debug:
 class VerificationCase:
     def __init__(self, samples=10):
         self.data_in_width = 32
-        self.weights_width = 16
+        self.weight_width = 16
         self.vector_size = 8
         self.iterations = 3
         self.parallelism = 7
@@ -41,8 +41,8 @@ class VerificationCase:
             max_stalls=2 * samples,
             debug=debug,
         )
-        self.weights = RandomSource(
-            name="weights",
+        self.weight = RandomSource(
+            name="weight",
             samples=samples * self.iterations,
             num=self.vector_size * self.parallelism,
             max_stalls=2 * samples,
@@ -62,7 +62,7 @@ class VerificationCase:
     def get_dut_parameters(self):
         return {
             "IN_WIDTH": self.data_in_width,
-            "W_WIDTH": self.weights_width,
+            "WEIGHT_WIDTH": self.weight_width,
             "IN_SIZE": self.vector_size,
             "IN_DEPTH": self.iterations,
             "PARALLELISM": self.parallelism,
@@ -79,7 +79,7 @@ class VerificationCase:
                 for k in range(self.parallelism):
                     s = [
                         self.data_in.data[data_idx][h]
-                        * self.weights.data[data_idx][k * self.vector_size + h]
+                        * self.weight.data[data_idx][k * self.vector_size + h]
                         for h in range(self.vector_size)
                     ]
                     acc[k] += sum(s)
@@ -93,8 +93,8 @@ class VerificationCase:
 
 # Check if an is_impossible state is reached
 def is_impossible_state(
-    weights_ready,
-    weights_valid,
+    weight_ready,
+    weight_valid,
     data_in_ready,
     data_in_valid,
     data_out_ready,
@@ -109,8 +109,8 @@ def debug_state(dut, state):
             state,
             dut.bias_ready.value,
             dut.bias_valid.value,
-            dut.weights_ready.value,
-            dut.weights_valid.value,
+            dut.weight_ready.value,
+            dut.weight_valid.value,
             dut.data_in_ready.value,
             dut.data_in_valid.value,
             dut.data_out_ready.value,
@@ -138,7 +138,7 @@ async def test_fixed_linear(dut):
     await Timer(500, units="ns")
 
     # Synchronize with the clock
-    dut.weights_valid.value = 0
+    dut.weight_valid.value = 0
     dut.bias_valid.value = 0
     dut.data_in_valid.value = 0
     dut.data_out_ready.value = 1
@@ -154,7 +154,7 @@ async def test_fixed_linear(dut):
     for i in range(samples * 100):
         await FallingEdge(dut.clk)
         debug_state(dut, "Post-clk")
-        dut.weights_valid.value = test_case.weights.pre_compute(dut.weights_ready.value)
+        dut.weight_valid.value = test_case.weight.pre_compute(dut.weight_ready.value)
         dut.bias_valid.value = test_case.bias.pre_compute(dut.bias_ready.value)
         dut.data_in_valid.value = test_case.data_in.pre_compute(dut.data_in_ready.value)
         debug_state(dut, "Pre-clk")
@@ -164,8 +164,8 @@ async def test_fixed_linear(dut):
         dut.bias_valid.value, dut.bias.value = test_case.bias.compute(
             dut.bias_ready.value
         )
-        dut.weights_valid.value, dut.weights.value = test_case.weights.compute(
-            dut.weights_ready.value
+        dut.weight_valid.value, dut.weight.value = test_case.weight.compute(
+            dut.weight_ready.value
         )
         dut.data_in_valid.value, dut.data_in.value = test_case.data_in.compute(
             dut.data_in_ready.value
@@ -177,7 +177,7 @@ async def test_fixed_linear(dut):
 
         if (
             (not test_case.has_bias or test_case.bias.is_empty())
-            and test_case.weights.is_empty()
+            and test_case.weight.is_empty()
             and test_case.data_in.is_empty()
             and test_case.outputs.is_full()
         ):

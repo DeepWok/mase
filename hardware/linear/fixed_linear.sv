@@ -3,10 +3,10 @@ module fixed_linear #(
     parameter IN_SIZE  = 4,
     parameter IN_DEPTH = 3,
 
-    parameter W_WIDTH = 16,
-    parameter W_SIZE  = IN_SIZE,
+    parameter WEIGHT_WIDTH = 16,
+    parameter WEIGHT_SIZE  = IN_SIZE,
 
-    parameter B_WIDTH = IN_WIDTH + W_WIDTH + $clog2(IN_SIZE) + $clog2(IN_DEPTH),
+    parameter B_WIDTH = IN_WIDTH + WEIGHT_WIDTH + $clog2(IN_SIZE) + $clog2(IN_DEPTH),
     parameter PARALLELISM = 2,
 
     // This is the width for the summed product
@@ -24,27 +24,27 @@ module fixed_linear #(
     input                 data_in_valid,
     output                data_in_ready,
 
-    // input port for weights
-    input  [  W_WIDTH-1:0] weights       [IN_SIZE*PARALLELISM-1:0],
-    input                  weights_valid,
-    output                 weights_ready,
+    // input port for weight
+    input  [WEIGHT_WIDTH-1:0] weight        [IN_SIZE*PARALLELISM-1:0],
+    input                     weight_valid,
+    output                    weight_ready,
     /* verilator lint_off UNUSEDSIGNAL */
-    input  [  B_WIDTH-1:0] bias          [           OUT_SIZE-1:0],
-    input                  bias_valid,
+    input  [     B_WIDTH-1:0] bias          [           OUT_SIZE-1:0],
+    input                     bias_valid,
     /* verilator lint_on UNUSEDSIGNAL */
-    output                 bias_ready,
-    output [OUT_WIDTH-1:0] data_out      [           OUT_SIZE-1:0],
-    output                 data_out_valid,
-    input                  data_out_ready
+    output                    bias_ready,
+    output [   OUT_WIDTH-1:0] data_out      [           OUT_SIZE-1:0],
+    output                    data_out_valid,
+    input                     data_out_ready
 );
 
-  localparam FDP_WIDTH = IN_WIDTH + W_WIDTH + $clog2(IN_SIZE);
+  localparam FDP_WIDTH = IN_WIDTH + WEIGHT_WIDTH + $clog2(IN_SIZE);
   localparam ACC_WIDTH = FDP_WIDTH + $clog2(IN_DEPTH);
 
   logic fdp_join_valid, fdp_join_ready;
   join2 #() fdp_join_inst (
-      .data_in_ready ({weights_ready, data_in_ready}),
-      .data_in_valid ({weights_valid, data_in_valid}),
+      .data_in_ready ({weight_ready, data_in_ready}),
+      .data_in_valid ({weight_valid, data_in_valid}),
       .data_out_valid(fdp_join_valid),
       .data_out_ready(fdp_join_ready)
   );
@@ -53,7 +53,7 @@ module fixed_linear #(
   // Assume the parallelised hardware above have the same arrival time
   // which means that they always have the same state. So we can just
   // pick one of the valid signal to use.
-  logic [PARALLELISM-1:0] fdp_data_ready, fdp_weights_ready;
+  logic [PARALLELISM-1:0] fdp_data_ready, fdp_weight_ready;
   assign fdp_join_ready = fdp_data_ready[0];
   /* verilator lint_on UNUSEDSIGNAL */
 
@@ -63,9 +63,9 @@ module fixed_linear #(
   // There are PARALLELISM number of dot product instances with IN_SIZE inputs 
   // and each one computes for IN_DEPTH iterations for each inputs.
   for (genvar i = 0; i < PARALLELISM; i = i + 1) begin : linear
-    // Assume the weights are transposed and partitioned 
-    logic [W_WIDTH-1:0] current_weights[W_SIZE-1:0];
-    assign current_weights = weights[W_SIZE*i+W_SIZE-1:W_SIZE*i];
+    // Assume the weight are transposed and partitioned 
+    logic [WEIGHT_WIDTH-1:0] current_weight[WEIGHT_SIZE-1:0];
+    assign current_weight = weight[WEIGHT_SIZE*i+WEIGHT_SIZE-1:WEIGHT_SIZE*i];
 
     logic [FDP_WIDTH-1:0] fdp_data_out;
     logic fdp_data_out_valid, fdp_data_out_ready;
@@ -73,17 +73,17 @@ module fixed_linear #(
     // The inputs are already sync-ed by the previous join
     fixed_dot_product #(
         .IN_WIDTH(IN_WIDTH),
-        .W_WIDTH (W_WIDTH),
-        .IN_SIZE (IN_SIZE)
+        .WEIGHT_WIDTH(WEIGHT_WIDTH),
+        .IN_SIZE(IN_SIZE)
     ) fdp_inst (
         .clk(clk),
         .rst(rst),
         .data_in(data_in),
         .data_in_valid(fdp_join_valid),
         .data_in_ready(fdp_data_ready[i]),
-        .weights(current_weights),
-        .weights_valid(fdp_join_valid),
-        .weights_ready(fdp_weights_ready[i]),
+        .weight(current_weight),
+        .weight_valid(fdp_join_valid),
+        .weight_ready(fdp_weight_ready[i]),
         .data_out(fdp_data_out),
         .data_out_valid(fdp_data_out_valid),
         .data_out_ready(fdp_data_out_ready)
