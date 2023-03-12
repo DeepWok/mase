@@ -20,12 +20,13 @@ sudo apt-get install -y \
                 help2man python3 python3-pip python3-setuptools
 
 pip3 install --user --upgrade pip
-pip3 install onnx yapf toml GitPython colorlog cocotb[bus] pytest setuptools
 
 # Install PyTorch and Torch-MLIR
 pip3 install --pre torch-mlir torchvision \
 -f https://llvm.github.io/torch-mlir/package-index/ \
 --extra-index-url https://download.pytorch.org/whl/nightly/cpu
+
+pip3 install -r /workspace/software/requirements.txt
 
 # Install SystemVerilog formatter
 if [ ! -d "/home/vagrant/srcPkgs/verible" ] 
@@ -68,7 +69,7 @@ if ! grep -q "Mase env" /home/vagrant/.bashrc; then
 printf "\
 \n# Mase env
 \nexport LIBRARY_PATH=/usr/lib/x86_64-linux-gnu:\$LIBRARY_PATH \
-\nexport PATH=/home/vagrant/.local/bin:/workspace/bin:/workspace/llvm/build/bin:\$PATH:/home/vagrant/srcPkgs/verible/bin \
+\nexport PATH=/home/vagrant/.local/bin:/workspace/bin:/workspace/hls/build/bin:/workspace/llvm/build/bin:\$PATH:/home/vagrant/srcPkgs/verible/bin \
 \n# Thread setup \
 \nexport nproc=\$(grep -c ^processor /proc/cpuinfo) \
 \n# Terminal color... \
@@ -84,7 +85,7 @@ printf "\
 \nautocmd BufWritePost *.h   silent! !clang-format -i <afile> \
 \nautocmd BufWritePost *.hpp silent! !clang-format -i <afile> \
 \nautocmd BufWritePost *.cc  silent! !clang-format -i <afile> \
-\nautocmd BufWritePost *.py  silent! !yapf -i <afile> \
+\nautocmd BufWritePost *.py  silent! !python3 -m black <afile> \
 \nautocmd BufWritePost *.sv  silent! !verible-verilog-format --inplace <afile> \
 \nautocmd BufWritePost *.v  silent! !verible-verilog-format --inplace <afile> \
 \nautocmd BufWritePost * redraw! \
@@ -93,7 +94,7 @@ fi
 
 # Mase env
 export LIBRARY_PATH=/usr/lib/x86_64-linux-gnu:$LIBRARY_PATH
-export PATH=/home/vagrant/.local/bin:/workspace/bin:/workspace/llvm/build/bin:$PATH:/home/vagrant/srcPkgs/verible/bin
+export PATH=/home/vagrant/.local/bin:/workspace/bin:/workspace/hls/build/bin:/workspace/llvm/build/bin:$PATH:/home/vagrant/srcPkgs/verible/bin
 # Thread setup
 export nproc=$(grep -c ^processor /proc/cpuinfo)
 # Terminal color...
