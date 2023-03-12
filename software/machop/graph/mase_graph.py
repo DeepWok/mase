@@ -68,9 +68,12 @@ class MaseGraph:
         assert len(self.nodes_in) == 1, "Multiple inputs are not supported."
         self.nodes_out = _get_output_nodes(self.fx_graph)
         assert len(self.nodes_out) == 1, "Multiple outputs are not supported."
-        logging.debug(self.fx_graph)
+        # logging.debug(self.fx_graph)
         for node in self.fx_graph.nodes:
             node.meta = MaseMetadata(node=node, model=self.model)
+        # Initialising parameters requires the objects saved in the metadata of all the nodes
+        for node in self.fx_graph.nodes:
+            node.meta.init_parameters()
         self.verify()
 
     def load(self, load_name):
@@ -96,6 +99,8 @@ class MaseGraph:
             node.meta.verify()
         # Inter-node verification
         # Each edge between nodes must have the same precision
+        # TODO
+        # Each node must have a unique name and a unique verilog name
         # TODO
 
     def report(self):

@@ -84,7 +84,8 @@ jobs:
           pip3 install onnx black toml GitPython colorlog cocotb[bus] \
                        pytest pytorch-lightning transformers toml \
                        timm pytorch-nlp datasets IPython ipdb \
-                       sentencepiece einops deepspeed
+                       sentencepiece einops deepspeed pybind11 \
+                       tabulate
 
     # -----------
     # Sanity check 

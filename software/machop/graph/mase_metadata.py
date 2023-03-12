@@ -47,22 +47,24 @@ class MaseMetadata:
         self.type = type(self.module)
         # The fx node of the module in the fx graph of the model
         self.node = node
-        # All kinds of parameters
+
+    def init_parameters(self):
+        # Initialise ll kinds of parameters
         self.parameters = {
             "common": {},
             "software": {},
             "hardware": {},
         }
-        if node.op == "call_module" or node.op == "call_function":
+        if self.node.op == "call_module" or self.node.op == "call_function":
             if self.type in self.internal_layers:
                 name = self.internal_layers[self.type]
                 replace_fn = getattr(self, f"_init_parameters_{name}")
                 replace_fn()
             else:
-                logging.warning(f"{node} is not found in the internal library.")
+                logging.warning(f"{self.node} is not found in the internal library.")
                 self._init_parameters_other()
         else:
-            logging.warning(f"Not dealing with node for now: {node}")
+            logging.warning(f"Not dealing with node for now: {self.node}")
 
     # ----------------------------------------------------------
     # Initialise parameters
@@ -78,13 +80,29 @@ class MaseMetadata:
                 "precision": (32, 0),
                 "size": parameter.shape,
             }
+        assert hasattr(
+            self.module, "in_features"
+        ), f"Linear layer {self.node.name} does not have in features."
+        assert hasattr(
+            self.module, "out_features"
+        ), f"Linear layer {self.node.name} does not have out features."
         self.parameters["common"]["args"]["data_in"] = {
             "type": "fixed",
             "precision": (32, 0),
-            "size": (2, 3),
+            "size": (
+                1,
+                self.module.in_features,
+            ),
         }
         self.parameters["common"]["results"] = {
-            "data_out": {"type": "fixed", "precision": (32, 0), "size": (2, 3)}
+            "data_out": {
+                "type": "fixed",
+                "precision": (32, 0),
+                "size": (
+                    1,
+                    self.module.out_features,
+                ),
+            }
         }
         # Hardware parameters
         self.parameters["hardware"] = {
@@ -146,13 +164,49 @@ class MaseMetadata:
                 "precision": (32, 0),
                 "size": parameter.shape,
             }
+
+        # Relu does not have in/out features. Try to fetch from the input nodes
+        nodes_in = self.node.args
+        nodes_out = list(self.node.users.keys())
+        assert len(nodes_in) == 1, f"Relu {self.node.name} has {len(nodes_in)} inputs."
+        assert (
+            len(nodes_out) == 1
+        ), f"Relu {self.node.name} has {len(nodes_out)} outputs."
+        node_in = nodes_in[0]
+        node_out = nodes_out[0]
+        in_features = (
+            node_in.meta.module.out_features
+            if hasattr(node_in.meta.module, "out_features")
+            else -1
+        )
+        out_features = (
+            node_out.meta.module.in_features
+            if hasattr(node_out.meta.module, "in_features")
+            else -1
+        )
+        if in_features != -1 and out_features != -1:
+            assert (
+                in_features == out_features
+            ), f"Relu's input ({node_in.name}) and output ({node_out.name}) have different features: {in_features}, {out_features}."
+        features = max(in_features, out_features)
+
         self.parameters["common"]["args"]["data_in"] = {
             "type": "fixed",
             "precision": (32, 0),
-            "size": (2, 3),
+            "size": (
+                1,
+                features,
+            ),
         }
         self.parameters["common"]["results"] = {
-            "data_out": {"type": "fixed", "precision": (32, 0), "size": (2, 3)}
+            "data_out": {
+                "type": "fixed",
+                "precision": (32, 0),
+                "size": (
+                    1,
+                    features,
+                ),
+            }
         }
 
         # Hardware parameters
@@ -169,17 +223,67 @@ class MaseMetadata:
         }
 
     def _init_parameters_other(self):
+        node_name = vf(self.node.name)
+        # Common parameters
+        self.parameters["common"]["args"] = {}
+        for name, parameter in self.module.named_parameters():
+            self.parameters["common"]["args"][name] = {
+                "type": "fixed",
+                "precision": (32, 0),
+                "size": parameter.shape,
+            }
+
+        in_features = 0
+        if hasattr(self.module, "in_features"):
+            in_features = self.module.in_features
+        else:
+            nodes_in = self.node.args
+            assert (
+                len(nodes_in) == 1
+            ), f"Module {self.node.name} has {len(nodes_in)} inputs."
+            node_in = nodes_in[0]
+            if hasattr(node_in.meta.module, "out_features"):
+                in_features = node_in.meta.module.out_features
+        assert in_features, f"Cannot find the in features for module {self.node.name}"
+
+        out_features = 0
+        if hasattr(self.module, "out_features"):
+            out_features = self.module.out_features
+        else:
+            nodes_out = list(self.node.users.keys())
+            assert (
+                len(nodes_out) == 1
+            ), f"Module {self.node.name} has {len(nodes_out)} outputs."
+            node_out = nodes_out[0]
+            if hasattr(node_out.meta.module, "in_features"):
+                out_features = node_out.meta.module.in_features
+        assert out_features, f"Cannot find the out features for module {self.node.name}"
+
         self.parameters["common"]["args"] = {
-            "data_in": {"type": "fixed", "precision": (32, 0), "size": (2, 3)}
+            "data_in": {
+                "type": "fixed",
+                "precision": (32, 0),
+                "size": (
+                    1,
+                    in_features,
+                ),
+            }
         }
         self.parameters["common"]["results"] = {
-            "data_out": {"type": "fixed", "precision": (32, 0), "size": (2, 3)}
+            "data_out": {
+                "type": "fixed",
+                "precision": (32, 0),
+                "size": (
+                    1,
+                    out_features,
+                ),
+            }
         }
+
+        # Hardware parameters
         self.parameters["hardware"]["verilog_parameters"] = {}
         self.parameters["hardware"]["target"] = "HLS"
-        node_name = vf(self.node.name)
         self.parameters["hardware"]["module"] = node_name
-        # TODO
         self.parameters["hardware"]["dependence_files"] = []
 
     # ----------------------------------------------------------

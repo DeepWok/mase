@@ -6,6 +6,8 @@ group=$(if $(shell id -g),$(shell id -g),1000)
 sync:
 	git submodule sync
 	git submodule update --init --recursive
+	bash mlir-air/utils/clone-llvm.sh 
+	bash mlir-air/utils/clone-mlir-aie.sh 
 
 # Build Docker container
 build-docker: 
@@ -16,6 +18,8 @@ shell: build-docker
 
 build:
 	bash scripts/build-llvm.sh
+	bash scripts/build-mase-hls.sh
+	bash scripts/build-air-aie.sh
 
 clean:
 	rm -rf llvm/build

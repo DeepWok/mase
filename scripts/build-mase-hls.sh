@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # --------------------------------------------------------------------
-#    This script builds the LLVM library of the tool  
+#    This script builds the HLS part of the tool  
 # --------------------------------------------------------------------
 
 set -o errexit
@@ -26,4 +26,17 @@ fi
 
 # Go to the llvm directory and carry out installation.
 LLVM_DIR="${MASE}/llvm"
-bash ${MASE}/mlir-air/utils/build-llvm-local.sh ${LLVM_DIR}
+MASE_HLS="${MASE}/hls"
+cd "${MASE_HLS}"
+mkdir -p build
+cd build
+CC=gcc CXX=g++ cmake .. \
+  -DCMAKE_BUILD_TYPE=DEBUG \
+  -DLLVM_ENABLE_ASSERTIONS=ON \
+  -DMLIR_DIR="${LLVM_DIR}/build/lib/cmake/mlir/" \
+  -DLLVM_DIR="${LLVM_DIR}/build/lib/cmake/llvm/" \
+  -DLLVM_EXTERNAL_LIT="${LLVM_DIR}/build/bin/llvm-lit" 
+
+# ------------------------- Build and test ---------------------
+
+cmake --build . --target check-mase
