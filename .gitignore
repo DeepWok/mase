@@ -10,11 +10,12 @@
 software/checkpoints/
 software/data/
 software/lightning_logs/
-software/test
 software/modified_ckpts
+software/modified_tomls
 software/model_cache_dir
-software/cache-data
+software/dataset_cache_dir
 estimate-sw_report*.txt
+software/test_*.py
 
 # macOS
 .DS_Store

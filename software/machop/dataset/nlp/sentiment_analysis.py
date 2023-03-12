@@ -1,11 +1,11 @@
-import re
 import math
+import re
 import string
-import torch
-import pytorch_lightning as pl
 
-from torch.utils.data import Dataset
+import pytorch_lightning as pl
+import torch
 from datasets import load_dataset
+from torch.utils.data import Dataset
 
 
 class SentAnalDataset(Dataset):
@@ -55,6 +55,6 @@ class SentAnalDatasetSST2(SentAnalDataset):
         self.label_col_name = "label"
 
     def _download_and_process(self):
-        dataset = load_dataset("glue", "sst2", cache_dir="./cache-data")
+        dataset = load_dataset("glue", "sst2", cache_dir="./dataset_cache_dir")
         dataset.save_to_disk(self.path)
         self.dataset = dataset

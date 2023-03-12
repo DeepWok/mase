@@ -1,6 +1,7 @@
+from functools import partial
+
 import torch
 
-from functools import partial
 from ..quantizers import integer_quantizer
 
 
@@ -10,8 +11,8 @@ class AddInteger(torch.nn.Module):
 
         self.bypass = config.get("bypass", False)
         # establish quantizers
-        x_bits, x_bias = config["input_bits"], config["input_bias"]
-        self.x_quantizer = partial(integer_quantizer, bits=x_bits, bias=x_bias)
+        x_bits, x_fraction_bits = config["input_bits"], config["input_fraction_bits"]
+        self.x_quantizer = partial(integer_quantizer, bits=x_bits, bias=x_fraction_bits)
         self.config = config
 
     def forward(self, x, y):

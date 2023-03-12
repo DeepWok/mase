@@ -1,14 +1,14 @@
-from .ops import LinearInteger, ReLUInteger, Conv2dInteger, AddInteger, LinearBlockFP
 from .functions import integer_add
+from .ops import AddInteger, Conv2dInteger, LinearInteger, LinearMSFP, ReLUInteger
 
-possible_ops = [LinearInteger, ReLUInteger, Conv2dInteger, AddInteger, LinearBlockFP]
+possible_ops = [LinearInteger, ReLUInteger, Conv2dInteger, AddInteger, LinearMSFP]
 possible_functions = [integer_add]
 
 
 ops_map = {
     "linear": {
         "integer": LinearInteger,
-        "blockfp": LinearBlockFP,
+        "msfp": LinearMSFP,
     },
     "relu": {
         "integer": ReLUInteger,

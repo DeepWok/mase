@@ -1,10 +1,10 @@
-import torch
+from functools import partial
 
+import torch
 from torch import Tensor
 from torch.nn import functional as F
 
-from ..quantizers import integer_quantizer, block_fp_quantizer
-from functools import partial
+from ..quantizers import integer_quantizer, msfp_quantizer
 
 
 class LinearBase(torch.nn.Linear):
@@ -50,20 +50,28 @@ class LinearInteger(LinearBase):
             raise ValueError("config is None for IntegerLinear")
 
         self.bypass = config.get("bypass", False)
-        # establish quantizers
-        w_bits, w_bias = config["weight_bits"], config["weight_bias"]
-        x_bits, x_bias = config["input_bits"], config["input_bias"]
+        # establish quantizer
+        w_bits, w_fraction_bits = config["weight_bits"], config["weight_fraction_bits"]
+        x_bits, x_fraction_bits = config["input_bits"], config["input_fraction_bits"]
         # check bias quantizer, if not, use weight quantizer
-        b_bits, b_bias = config.get("bias_bits", None), config.get("bias_bias", None)
-        self.w_quantizer = partial(integer_quantizer, bits=w_bits, bias=w_bias)
-        self.x_quantizer = partial(integer_quantizer, bits=x_bits, bias=x_bias)
+        b_bits, b_fraction_bits = config.get("bias_bits", None), config.get(
+            "bias_fraction_bits", None
+        )
+        self.w_quantizer = partial(
+            integer_quantizer, bits=w_bits, fraction_bits=w_fraction_bits
+        )
+        self.x_quantizer = partial(
+            integer_quantizer, bits=x_bits, fraction_bits=x_fraction_bits
+        )
         if b_bits is None:
             self.b_quantizer = self.w_quantizer
-        self.b_quantizer = partial(integer_quantizer, bits=b_bits, bias=b_bias)
+        self.b_quantizer = partial(
+            integer_quantizer, bits=b_bits, fraction_bits=b_fraction_bits
+        )
         self.config = config
 
 
-class LinearBlockFP(LinearBase):
+class LinearMSFP(LinearBase):
     def __init__(
         self,
         in_features: int,
@@ -79,17 +87,33 @@ class LinearBlockFP(LinearBase):
 
         self.bypass = config.get("bypass", False)
         # establish quantizers
-        w_bits, w_block_size = config["weight_bits"], config["weight_block_size"]
-        x_bits, x_block_size = config["input_bits"], config["input_block_size"]
+        w_bits, w_block_size, w_exponent_bits = (
+            config["weight_bits"],
+            config["weight_block_size"],
+            config["weight_exponent_bits"],
+        )
+        x_bits, x_block_size, x_exponent_bits = (
+            config["input_bits"],
+            config["input_block_size"],
+            config["input_exponent_bits"],
+        )
         # check bias quantizer, if not, use weight quantizer
-        b_bits, b_bias = config.get("bias_bits", None), config.get("bias_bias", None)
+        b_bits, b_fraction_bits = config.get("bias_bits", None), config.get(
+            "bias_fraction_bits", None
+        )
         self.w_quantizer = partial(
-            block_fp_quantizer, bits=w_bits, block_size=w_block_size
+            msfp_quantizer,
+            bits=w_bits,
+            exponent_bits=w_exponent_bits,
+            block_size=w_block_size,
         )
         self.x_quantizer = partial(
-            block_fp_quantizer, bits=x_bits, block_size=x_block_size
+            msfp_quantizer,
+            bits=x_bits,
+            exponent_bits=x_exponent_bits,
+            block_size=x_block_size,
         )
         if b_bits is None:
             self.b_quantizer = self.w_quantizer
-        self.b_quantizer = partial(integer_quantizer, bits=b_bits, bias=b_bias)
+        self.b_quantizer = partial(integer_quantizer, bits=b_bits, bias=b_fraction_bits)
         self.config = config

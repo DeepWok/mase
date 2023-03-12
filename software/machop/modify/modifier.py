@@ -1,18 +1,18 @@
-import os
-
-import torch
 import logging
-import toml
-import pprint
+import os
 import pickle
+import pprint
+from collections import OrderedDict
+from functools import partial
 
+import toml
+import torch
 from tabulate import tabulate
 from torch import nn
-from .quantizers import ops_map, possible_ops, functions_map
-from collections import OrderedDict
-from .utils import load_model
+
 from .mase_modify_graph import MaseModifyGraph
-from functools import partial
+from .quantizers import functions_map, ops_map, possible_ops
+from .utils import load_model
 
 pp = pprint.PrettyPrinter(depth=4)
 
@@ -32,7 +32,6 @@ class Modifier:
     ):
         self.model = model
         self.graph = MaseModifyGraph(model)
-
 
         if load_name is not None:
             self.model = load_model(load_path=load_name, plt_model=self.model)
@@ -68,6 +67,7 @@ class Modifier:
 
         if interactive:
             import pdb
+
             pdb.set_trace()
 
     def modify(self):
@@ -99,7 +99,6 @@ class Modifier:
                 replace_fn(self.model, default_config)
         self.modified_model = self.graph.modified_model
 
-
     def _pre_modify_check(self):
         modules = self.model.modules()
         if any([isinstance(m, tuple(possible_ops)) for m in modules]):
@@ -130,13 +129,16 @@ class Modifier:
 
     def replace_add(self, model, config):
         replacement_fn = functions_map["add"][config["name"]]
-        target = torch.add 
+        target = torch.add
         replacement_fn = replacement_fn
-        self.graph.modify(target, replacement_fn, replacement_fn_kwargs={'config': config})
+        self.graph.modify(
+            target, replacement_fn, replacement_fn_kwargs={"config": config}
+        )
 
     def replace_linear(self, model, config):
         replace_cls = ops_map["linear"][config["name"]]
         target = nn.Linear
+
         # This shows how to use the replace function
         # First, we have to define a custom replacement_fn
         # We then call the replace function with the model, target layer, and replacement_fn
@@ -164,6 +166,7 @@ class Modifier:
     def replace_conv2d(self, model, config):
         replace_cls = ops_map["conv2d"][config["name"]]
         target = nn.Conv2d
+
         def replacement_fn(child):
             use_bias = child.bias is not None
             my_conv = replace_cls(
@@ -192,11 +195,9 @@ class Modifier:
         target = nn.ReLU
 
         def replacement_fn(child):
-            return replace_cls(
-                inplace=child.inplace, 
-                config=config)
-        self.graph.modify(target, replacement_fn)
+            return replace_cls(inplace=child.inplace, config=config)
 
+        self.graph.modify(target, replacement_fn)
 
     def compare_model(self):
         original_modules = dict(self.model.named_modules())
@@ -207,7 +208,7 @@ class Modifier:
 
         modified_modules = self.graph.modules
         modified_fx_graph = self.graph.fx_graph
-        headers = ['Name', 'Op', 'Original', 'Modified', 'Changed?']
+        headers = ["Name", "Op", "Original", "Modified", "Changed?"]
         rows = []
 
         for node in self.graph.fx_graph.nodes:
@@ -216,10 +217,12 @@ class Modifier:
                 modified_module = modified_modules[node.target]
                 changed = type(original_module) != type(modified_module)
                 row = [
-                    node.target, node.op, 
+                    node.target,
+                    node.op,
                     str(type(original_module)),
                     str(type(modified_module)),
-                    changed]
+                    changed,
+                ]
                 rows.append(row)
         print(f"A tabular summary of modified modules")
         print(tabulate(rows, headers=headers))
@@ -258,7 +261,6 @@ class Modifier:
         if not os.path.isdir("modified_tomls"):
             os.mkdir("modified_tomls")
         save_name = f"modified_tomls/{name}_modified.toml"
-        with open(save_name, 'w') as f:
+        with open(save_name, "w") as f:
             toml.dump(self.graph.logs, f)
         logging.info(f"Modified toml log is saved as {save_name}.")
-
