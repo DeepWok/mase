@@ -15,4 +15,5 @@ ipdb
 sentencepiece
 einops
 deepspeed
+pybind11
 tabulate

@@ -3,9 +3,13 @@ import time
 import glob
 import toml
 import shutil
+import subprocess
+import multiprocessing
+from multiprocessing import Process, Queue
 import logging
 import torch
 import torch.fx
+import torch_mlir
 from ..graph.mase_metadata import MaseMetadata
 from ..graph.mase_graph import MaseGraph
 from ..graph.utils import get_module_by_name
@@ -21,8 +25,37 @@ def _add_dependence_files(files, file_list):
     return file_list
 
 
+def _execute(cmd, log_output: bool = True, log_file=None, cwd="."):
+    if log_output:
+        logging.debug(subprocess.list2cmdline(cmd))
+        with subprocess.Popen(
+            cmd, stdout=subprocess.PIPE, bufsize=1, universal_newlines=True, cwd=cwd
+        ) as result:
+            if log_file:
+                f = open(log_file, "w")
+            if result.stdout or result.stderr:
+                logging.info("")
+            if result.stdout:
+                for line in result.stdout:
+                    if log_file:
+                        f.write(line)
+                    line = line.rstrip("\n")
+                    logging.trace(line)
+            if result.stderr:
+                for line in result.stderr:
+                    if log_file:
+                        f.write(line)
+                    line = line.rstrip("\n")
+                    logging.trace(line)
+            if log_file:
+                f.close()
+    else:
+        result = subprocess.run(cmd, stdout=subprocess.DEVNULL, cwd=cwd)
+    return result.returncode
+
+
 class MaseVerilogEmitter(MaseGraph):
-    def __init__(self, model=None, project_path=".", project="top"):
+    def __init__(self, model=None, project_path=".", project="top", to_debug=False):
         super().__init__(model=model)
         self.project = project
         self.project_path = os.path.join(project_path, project)
@@ -30,6 +63,7 @@ class MaseVerilogEmitter(MaseGraph):
         self.nodes_in = []
         self.nodes_out = []
         self.parse()
+        self.to_debug = to_debug
 
     # ----------------------------------------------------------
     # Emit hardware code
@@ -41,8 +75,8 @@ class MaseVerilogEmitter(MaseGraph):
         rtl_path = os.path.join(project_path, "rtl")
         if not os.path.exists(rtl_path):
             os.mkdir(rtl_path)
-        self.emit_top()
         self.emit_components()
+        self.emit_top()
 
         files = ""
         for file in glob.glob(os.path.join(rtl_path, "*.sv")):
@@ -225,6 +259,10 @@ assign {next_node_name}_data_out_valid = {node_name}_data_out_valid;
         return wires
 
     def emit_top(self):
+        """
+        Emit Verilog code for the top-level model
+        """
+
         project_path = self.project_path
         rtl_path = os.path.join(project_path, "rtl")
 
@@ -269,18 +307,63 @@ endmodule
         top_design.close()
         os.system(f"verible-verilog-format --inplace {top_file}")
 
+    def _emit_components_using_hls(self, node, node_path):
+        """
+        Synthesize the module using HLS
+        """
+
+        x = torch.randn(node.meta.parameters["common"]["args"]["data_in"]["size"])
+        module = torch_mlir.compile(
+            node.meta.module, x, output_type="linalg-on-tensors"
+        )
+        mlir_path = os.path.join(node_path, f"{node.name}.linalg.mlir")
+        with open(mlir_path, "w", encoding="utf-8") as outf:
+            outf.write(str(module))
+        logging.debug(
+            f"MLIR of module {node.name} successfully written into {mlir_path}"
+        )
+
+        lowered_path = os.path.join(node_path, f"{node.name}.affine.mlir")
+        cmd = [
+            "mlir-opt",
+            mlir_path,
+            "--linalg-bufferize",
+            "--convert-linalg-to-affine-loops",
+            # "--lower-affine",
+            "--canonicalize",
+            "-o",
+            lowered_path,
+        ]
+        logging.debug(subprocess.list2cmdline(cmd))
+        result = _execute(cmd, log_output=self.to_debug)
+
     def emit_components(self):
+        """
+        Emit the Verilog code of each module in the top-level model
+        """
+
         project_path = self.project_path
         rtl_path = os.path.join(project_path, "rtl")
         dependence_files = []
         for node in self.fx_graph.nodes:
             if node.op != "call_module" and node.op != "call_function":
                 continue
+            # If it is an internal module, just copy the files to the project
             if node.meta.parameters["hardware"]["target"] == "INTERNAL":
                 dependence_files = _add_dependence_files(
                     node.meta.parameters["hardware"]["dependence_files"],
                     dependence_files,
                 )
+            # If it is an HLS module, go through torch-mlir and mlir-hls flow
+            elif node.meta.parameters["hardware"]["target"] == "HLS":
+                logging.debug(f"Synthesizing {node.name} using HLS")
+                hls_path = os.path.join(project_path, "hls")
+                if not os.path.exists(hls_path):
+                    os.mkdir(hls_path)
+                node_path = os.path.join(hls_path, node.name)
+                if not os.path.exists(node_path):
+                    os.mkdir(node_path)
+                self._emit_components_using_hls(node, node_path)
             else:
                 raise NotImplementedError(f"EXTERNAL or HLS not supported yet.")
         relative_path = os.path.abspath(

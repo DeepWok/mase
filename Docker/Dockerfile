@@ -61,13 +61,14 @@ RUN pip3 install --user --upgrade pip \
     && pip3 install onnx black toml GitPython colorlog cocotb[bus] \
                     pytest pytorch-lightning transformers toml \
                     timm pytorch-nlp datasets ipython ipdb \
-                    sentencepiece einops deepspeed
+                    sentencepiece einops deepspeed pybind11 \
+                    tabulate
 
 
 # Add environment variables
 RUN printf "\
 \nexport LIBRARY_PATH=/usr/lib/x86_64-linux-gnu:\$LIBRARY_PATH \
-\nexport PATH=/workspace/bin:/home/dev-user/.local/bin:/workspace/llvm/build/bin:\$PATH:/srcPkgs/verible/bin \
+\nexport PATH=/workspace/bin:/workspace/hls/build/bin:/home/dev-user/.local/bin:/workspace/llvm/build/bin:\$PATH:/srcPkgs/verible/bin \
 \n# Thread setup \
 \nexport nproc=\$(grep -c ^processor /proc/cpuinfo) \
 \n# Terminal color... \
