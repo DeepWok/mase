@@ -1,10 +1,10 @@
-import torch
 import os
 import pickle
-
-from torch.utils.data import Dataset
 from itertools import chain
+
+import torch
 from datasets import load_dataset, load_from_disk
+from torch.utils.data import Dataset
 
 
 def preprocess_datasets(
@@ -111,7 +111,7 @@ class LanguageModelingDatasetWikitext2(LanguageModeling):
         if (path is not None) and (not os.path.isdir(path)):
             print("Downloading and processing dataset...")
             dataset = load_dataset(
-                "wikitext", "wikitext-2-raw-v1", cache_dir="./cache-data"
+                "wikitext", "wikitext-2-raw-v1", cache_dir="./dataset_cache_dir"
             )
             dataset.save_to_disk(path)
         else:
@@ -147,7 +147,7 @@ class LanguageModelingDatasetWikiText103(LanguageModeling):
         if (path is not None) and (not os.path.isdir(path)):
             print("Downloading and processing dataset...")
             dataset = load_dataset(
-                "wikitext", "wikitext-103-raw-v1", cache_dir="./cache-data"
+                "wikitext", "wikitext-103-raw-v1", cache_dir="./dataset_cache_dir"
             )
             dataset.save_to_disk(path)
         else:

@@ -1,10 +1,9 @@
 import os
+
 import torch
-
-from torchnlp.datasets import multi30k_dataset
-
-from torch.utils.data import Dataset
 from datasets import load_dataset, load_from_disk
+from torch.utils.data import Dataset
+from torchnlp.datasets import multi30k_dataset
 
 
 class TranslationDataset(Dataset):
@@ -86,7 +85,7 @@ class TranslationDatasetIWSLT2017_EN_DE(TranslationDataset):
 
     def _download_and_process(self):
         dataset = load_dataset(
-            "iwslt2017", "iwslt2017-en-de", cache_dir="./datasets_cache_dir"
+            "iwslt2017", "iwslt2017-en-de", cache_dir="./dataset_cache_dir"
         )
         dataset.save_to_disk(self.path)
         self.dataset = dataset
@@ -104,7 +103,7 @@ class TranslationDatasetIWSLT2017_DE_EN(TranslationDataset):
 
     def _download_and_process(self):
         dataset = load_dataset(
-            "iwslt2017", "iwslt2017-de-en", cache_dir="./datasets_cache_dir"
+            "iwslt2017", "iwslt2017-de-en", cache_dir="./dataset_cache_dir"
         )
         dataset.save_to_disk(self.path)
         self.dataset = dataset
@@ -122,7 +121,7 @@ class TranslationDatasetIWSLT2017_EN_FR(TranslationDataset):
 
     def _download_and_process(self):
         dataset = load_dataset(
-            "iwslt2017", "iwslt2017-en-fr", cache_dir="./datasets_cache_dir"
+            "iwslt2017", "iwslt2017-en-fr", cache_dir="./dataset_cache_dir"
         )
         dataset.save_to_disk(self.path)
         self.dataset = dataset
@@ -140,7 +139,7 @@ class TranslationDatasetIWSLT2017_EN_CH(TranslationDataset):
 
     def _download_and_process(self):
         dataset = load_dataset(
-            "iwslt2017", "iwslt2017-en-ch", cache_dir="./datasets_cache_dir"
+            "iwslt2017", "iwslt2017-en-ch", cache_dir="./dataset_cache_dir"
         )
         dataset.save_to_disk(self.path)
         self.dataset = dataset
@@ -159,7 +158,7 @@ class TranslationDatasetIWSLT2017_EN_CH(TranslationDataset):
 #     def _download_and_process(self):
 #         dataset = load_dataset('opus_euconst',
 #                                'en-fr',
-#                                cache_dir='./datasets_cache_dir')
+#                                cache_dir='./dataset_cache_dir')
 #         dataset.save_to_disk(self.path)
 #         self.dataset = dataset
 #         import pdb
@@ -177,7 +176,7 @@ class TranslationDatasetWMT19_DE_EN(TranslationDataset):
         self.split = split
 
     def _download_and_process(self):
-        dataset = load_dataset("wmt19", "de-en", cache_dir="./datasets_cache_dir")
+        dataset = load_dataset("wmt19", "de-en", cache_dir="./dataset_cache_dir")
         dataset.save_to_disk(self.path)
         self.dataset = dataset
 
@@ -193,7 +192,7 @@ class TranslationDatasetWMT19_ZH_EN(TranslationDataset):
         self.split = split
 
     def _download_and_process(self):
-        dataset = load_dataset("wmt19", "zh-en", cache_dir="./datasets_cache_dir")
+        dataset = load_dataset("wmt19", "zh-en", cache_dir="./dataset_cache_dir")
         dataset.save_to_disk(self.path)
         self.dataset = dataset
 
@@ -209,7 +208,7 @@ class TranslationDatasetWMT16_RO_EN(TranslationDataset):
         self.data = self.dataset[split]
 
     def _download_and_process(self):
-        dataset = load_dataset("wmt16", "ro-en", cache_dir="./datasets_cache_dir")
+        dataset = load_dataset("wmt16", "ro-en", cache_dir="./dataset_cache_dir")
         dataset.save_to_disk(self.path)
         self.dataset = dataset
 

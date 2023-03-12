@@ -1,10 +1,10 @@
-import torch
+from functools import partial
 
+import torch
 from torch import Tensor
 from torch.nn import functional as F
 
 from ..quantizers import integer_quantizer
-from functools import partial
 
 
 class ReLUInteger(torch.nn.ReLU):
@@ -14,8 +14,10 @@ class ReLUInteger(torch.nn.ReLU):
         super().__init__(inplace)
         self.bypass = config.get("bypass", False)
         # establish quantizers
-        x_bits, x_bias = config["input_bits"], config["input_bias"]
-        self.x_quantizer = partial(integer_quantizer, bits=x_bits, bias=x_bias)
+        x_bits, x_fraction_bias = config["input_bits"], config["input_fraction_bits"]
+        self.x_quantizer = partial(
+            integer_quantizer, bits=x_bits, fraction_bits=x_fraction_bias
+        )
         self.config = config
 
     def forward(self, x: Tensor) -> Tensor:

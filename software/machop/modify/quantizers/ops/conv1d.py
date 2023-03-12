@@ -1,11 +1,11 @@
-import torch
+from functools import partial
+from typing import Union
 
+import torch
 from torch import Tensor
 from torch.nn.common_types import _size_2_t
 
-from typing import Union
 from ..quantizers import integer_quantizer
-from functools import partial
 
 
 class Conv1dBase(torch.nn.Conv1d):
@@ -69,13 +69,21 @@ class Conv1dInteger(Conv1dBase):
 
         self.bypass = config.get("bypass", False)
         # establish quantizers
-        w_bits, w_bias = config["weight_bits"], config["weight_bias"]
-        x_bits, x_bias = config["input_bits"], config["input_bias"]
+        w_bits, w_fraction_bits = config["weight_bits"], config["weight_fraction_bits"]
+        x_bits, x_fraction_bits = config["input_bits"], config["input_fraction_bits"]
         # check bias quantizer, if not, use weight quantizer
-        b_bits, b_bias = config.get("bias_bits", None), config.get("bias_bias", None)
-        self.w_quantizer = partial(integer_quantizer, bits=w_bits, bias=w_bias)
-        self.x_quantizer = partial(integer_quantizer, bits=x_bits, bias=x_bias)
+        b_bits, b_fraction_bits = config.get("bias_bits", None), config.get(
+            "bias_fraction_bits", None
+        )
+        self.w_quantizer = partial(
+            integer_quantizer, bits=w_bits, fraction_bits=w_fraction_bits
+        )
+        self.x_quantizer = partial(
+            integer_quantizer, bits=x_bits, fraction_bits=x_fraction_bits
+        )
         if b_bits is None:
             self.b_quantizer = self.w_quantizer
-        self.b_quantizer = partial(integer_quantizer, bits=b_bits, bias=b_bias)
+        self.b_quantizer = partial(
+            integer_quantizer, bits=b_bits, fraction_bits=b_fraction_bits
+        )
         self.config = config

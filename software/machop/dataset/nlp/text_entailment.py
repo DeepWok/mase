@@ -1,12 +1,12 @@
-import re
 import math
-import string
 import os
-import torch
-import pytorch_lightning as pl
+import re
+import string
 
-from torch.utils.data import Dataset
+import pytorch_lightning as pl
+import torch
 from datasets import load_dataset, load_from_disk
+from torch.utils.data import Dataset
 
 
 class TextEntailDataset(Dataset):
@@ -76,7 +76,7 @@ class TextEntailDatasetQNLI(TextEntailDataset):
         self.data = self.dataset[split]
 
     def _download_and_process(self):
-        dataset = load_dataset("glue", "qnli", cache_dir="./cache-data")
+        dataset = load_dataset("glue", "qnli", cache_dir="./dataset_cache_dir")
         dataset.save_to_disk(self.path)
         self.dataset = dataset
 
@@ -93,6 +93,6 @@ class TextEntailDatasetMNLI(TextEntailDataset):
         self.data = self.dataset[split]
 
     def _download_and_process(self):
-        dataset = load_dataset("glue", "mnli", cache_dir="./cache-data")
+        dataset = load_dataset("glue", "mnli", cache_dir="./dataset_cache_dir")
         dataset.save_to_disk(self.path)
         self.dataset = dataset

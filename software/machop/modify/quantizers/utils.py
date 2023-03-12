@@ -1,6 +1,9 @@
-from torch.nn import functional as F
 from math import ceil, log2, sqrt
+
+import torch
+from torch import Tensor
 from torch.autograd.function import InplaceFunction
+from torch.nn import functional as F
 
 
 # Forced torch gradient overrider
