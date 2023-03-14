@@ -3,6 +3,9 @@
 FROM ubuntu:22.04
 ARG UID
 ARG GID
+ARG VHLS_PATH
+RUN echo "Group ID: $GID"
+RUN echo "User ID: $UID"
 
 USER root
 RUN apt-get update -y && apt-get install apt-utils -y
@@ -66,9 +69,12 @@ RUN pip3 install --user --upgrade pip \
 
 
 # Add environment variables
+ENV vhls $VHLS_PATH
 RUN printf "\
 \nexport LIBRARY_PATH=/usr/lib/x86_64-linux-gnu:\$LIBRARY_PATH \
 \nexport PATH=/workspace/bin:/workspace/hls/build/bin:/home/dev-user/.local/bin:/workspace/llvm/build/bin:\$PATH:/srcPkgs/verible/bin \
+\n# Vitis HLS setup \
+\nsource ${vhls}/Vitis_HLS/2020.2/settings64.sh \
 \n# Thread setup \
 \nexport nproc=\$(grep -c ^processor /proc/cpuinfo) \
 \n# Terminal color... \
