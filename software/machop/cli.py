@@ -237,13 +237,28 @@ class Machop:
             "--accelerator",
             dest="accelerator",
             default=None,
-            help="The accelerator type.",
+            help="The accelerator type for training.",
         )
         parser.add_argument(
             "--strategy",
             dest="strategy",
             default="ddp",
             help="The strategy type. Default=ddp",
+        )
+
+        ## FPGA setup for hardware generation
+        parser.add_argument(
+            "--target",
+            dest="target",
+            default="xc7z020clg484-1",
+            help="The target FPGA for hardware synthesis. Default=xc7z020clg484-1",
+        )
+        parser.add_argument(
+            "--num-targets",
+            dest="num_targets",
+            default=1,
+            type=int,
+            help="The number of FPGA devices. Default=1",
         )
 
         # Develop and test only. Should not be used by users, otherwise the
@@ -450,6 +465,9 @@ class Machop:
             model=self.model,
             project_path=args.project,
             project=args.model,
+            to_debug=args.to_debug,
+            target=args.target,
+            num_targets=args.num_targets,
         )
         mve.emit_verilog()
         if args.to_debug:
