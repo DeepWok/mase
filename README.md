@@ -5,6 +5,8 @@ This repo contains the following directories:
 * `hardware` - Internal hardware library 
 * `software` - Torch based training library 
 * `scripts` - Installation scripts  
+* `hls` - HLS part of the Mase  
+* `mlir-air` - MLIR air for ACAP devices  
 * `docs` - Documentation  
 * `Docker` - Docker container configurations  
 * `vagrant` - Vagrant box configurations  

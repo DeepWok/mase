@@ -18,5 +18,6 @@ target_link_libraries(mase-opt
   MLIRTransforms
   MLIRSCFDialect
   MLIREmitCDialect
+  MLIRMLProgramDialect
   MaseTransform
 )
