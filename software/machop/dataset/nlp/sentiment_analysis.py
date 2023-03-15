@@ -25,7 +25,7 @@ class SentAnalDataset(Dataset):
         data_row = self.data[index]
         main_text = data_row[self.sent_col_name]
         labels = data_row[self.label_col_name]
-        encoding = self.tokenizer.encode_plus(
+        encoding = self.tokenizer(
             main_text,
             add_special_tokens=True,
             max_length=self.max_token_count,
@@ -55,6 +55,8 @@ class SentAnalDatasetSST2(SentAnalDataset):
         self.label_col_name = "label"
 
     def _download_and_process(self):
-        dataset = load_dataset("glue", "sst2", cache_dir="./dataset_cache_dir")
+        dataset = load_dataset(
+            "glue", "sst2", cache_dir=os.path.abspath("./dataset_cache_dir")
+        )
         dataset.save_to_disk(self.path)
         self.dataset = dataset

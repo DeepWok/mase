@@ -17,7 +17,16 @@ from .estimate_sw.estimate_sw import estimate_sw_single_gpu
 from .models import manual_models, model_map, nlp_models, vision_models
 from .modify import Modifier
 from .session import test, train
-from .synthesize.mase_verilog_emitter import MaseVerilogEmitter
+from .utils import check_conda_env
+
+try:
+    import torch_mlir
+
+    from .synthesize.mase_verilog_emitter import MaseVerilogEmitter
+
+    is_sw_env = False
+except ModuleNotFoundError:
+    is_sw_env = True
 
 logging.getLogger().setLevel(logging.INFO)
 
@@ -308,12 +317,6 @@ class Machop:
         self.init_model_and_dataset(self.args)
         if self.args.modify_sw:
             self.modify_sw()
-
-        # if self.args.to_train or self.args.to_test_sw or self.args.to_evaluate_sw:
-        #     self.init_model_and_dataset(self.args)
-        # elif self.args.modify_sw:
-        #     self.modify_sw()
-
         if self.args.to_train:
             self.train()
         if self.args.to_test_sw:
@@ -323,10 +326,13 @@ class Machop:
         if self.args.to_estimate_sw:
             self.estimate_sw()
         if self.args.to_synthesize:
+            check_conda_env(is_sw_env, False, "synthesize")
             self.synthesize()
         if self.args.to_test_hw:
             self.test_hw()
         if self.args.to_evaluate_hw:
+            # TODO: this check may not be required if the profiler is based on FX
+            check_conda_env(is_sw_env, True, "evaluate-sw")
             self.evaluate_hw()
 
     # Setup model and data for training
@@ -374,12 +380,6 @@ class Machop:
             workers=args.num_workers,
             max_token_len=args.max_token_len,
         )
-        # Modify the model from external configurations
-        # if args.modify_sw:
-        #     logging.info("Modifying model based on config")
-        #     m = Modifier(model, config=args.modify_sw, silent=True)
-        #     model = m.model
-
         self.model, self.loader, self.info = model, loader, info
 
     def train(self):

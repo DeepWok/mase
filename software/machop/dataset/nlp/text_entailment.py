@@ -36,7 +36,7 @@ class TextEntailDataset(Dataset):
         question = data_row[self.sent1_col_name]
         answer = data_row[self.sent2_col_name]
         labels = data_row[self.label_col_name]
-        encoding = self.tokenizer.encode_plus(
+        encoding = self.tokenizer(
             question,
             answer,
             add_special_tokens=True,
@@ -76,7 +76,9 @@ class TextEntailDatasetQNLI(TextEntailDataset):
         self.data = self.dataset[split]
 
     def _download_and_process(self):
-        dataset = load_dataset("glue", "qnli", cache_dir="./dataset_cache_dir")
+        dataset = load_dataset(
+            "glue", "qnli", cache_dir=os.path.abspath("./dataset_cache_dir")
+        )
         dataset.save_to_disk(self.path)
         self.dataset = dataset
 
@@ -93,6 +95,8 @@ class TextEntailDatasetMNLI(TextEntailDataset):
         self.data = self.dataset[split]
 
     def _download_and_process(self):
-        dataset = load_dataset("glue", "mnli", cache_dir="./dataset_cache_dir")
+        dataset = load_dataset(
+            "glue", "mnli", cache_dir=os.path.abspath("./dataset_cache_dir")
+        )
         dataset.save_to_disk(self.path)
         self.dataset = dataset

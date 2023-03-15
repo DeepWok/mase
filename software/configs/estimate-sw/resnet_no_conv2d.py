@@ -12,6 +12,6 @@ config = dict(
     top_modules=1,
     warm_up=10,
     as_string=True,
-    output_file="estimate-sw_report_resnet_no_conv2d.txt",
+    output_file="estimate-sw_reports/resnet_no_conv2d.txt",
     ignore_modules=ignore_modules,
 )

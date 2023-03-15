@@ -1,6 +1,6 @@
-from torchvision import transforms
-from timm.data.constants import IMAGENET_DEFAULT_MEAN, IMAGENET_DEFAULT_STD
 from timm.data import create_transform
+from timm.data.constants import IMAGENET_DEFAULT_MEAN, IMAGENET_DEFAULT_STD
+from torchvision import transforms
 
 
 def build_transform(
@@ -32,16 +32,18 @@ def build_transform(
             transform.transforms[0] = transforms.RandomCrop(input_size, padding=4)
         return transform
 
-    t = []
+    transform_list = []
     if resize_im:
         size = int((256 / 224) * input_size)
-        t.append(
+        transform_list.append(
             transforms.Resize(
                 size, interpolation=3
             ),  # to maintain same ratio w.r.t. 224 images
         )
-        t.append(transforms.CenterCrop(input_size))
+        transform_list.append(transforms.CenterCrop(input_size))
 
-    t.append(transforms.ToTensor())
-    t.append(transforms.Normalize(IMAGENET_DEFAULT_MEAN, IMAGENET_DEFAULT_STD))
-    return transforms.Compose(t)
+    transform_list.append(transforms.ToTensor())
+    transform_list.append(
+        transforms.Normalize(IMAGENET_DEFAULT_MEAN, IMAGENET_DEFAULT_STD)
+    )
+    return transforms.Compose(transform_list)

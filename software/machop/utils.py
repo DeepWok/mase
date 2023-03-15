@@ -1,9 +1,9 @@
-import types
-import os
 import functools
+import os
+import pickle
+import types
 
 import torch
-import pickle
 
 use_cuda = torch.cuda.is_available()
 print("Using cuda:{}".format(use_cuda))
@@ -41,3 +41,17 @@ def load_model(load_path, plt_model):
         plt_model = plt_model_load(plt_model, checkpoint)
         print(f"Loaded model from {checkpoint}")
     return plt_model
+
+
+def check_conda_env(is_sw_env: bool, requires_sw_env: bool, current_action_name: str):
+    if requires_sw_env:
+        if not is_sw_env:
+            raise RuntimeError(
+                f"The torch-mlir env is activated. Please switch to cuda pytorch env for {current_action_name}"
+            )
+    else:
+        # requires hw env
+        if is_sw_env:
+            raise RuntimeError(
+                f"The cuda pytorch env is activated. Please switch to torch-mlir env for {current_action_name}"
+            )

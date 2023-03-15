@@ -13,6 +13,6 @@ config = dict(
     top_modules=3,
     warm_up=10,
     as_string=True,
-    output_file="estimate-sw_report.txt",
+    output_file="estimate-sw_reports/report_name.txt",
     ignore_modules=[],
 )

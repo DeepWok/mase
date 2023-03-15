@@ -1,22 +1,38 @@
-from .vision import (
-    get_resnet18,
-    get_resnet50,
-    get_resnet101,
-    get_resnet18_imagenet,
-    get_resnet50_imagenet,
-)
-from .vision import pvt_tiny, pvt_small, pvt_medium, pvt_large
-from .vision import pvt_v2_b0, pvt_v2_b1, pvt_v2_b2, pvt_v2_b3, pvt_v2_b4, pvt_v2_b5
-from .vision import wideresnet28_cifar
-from .vision import cswin_64_tiny, cswin_64_small, cswin_96_base, cswin_144_large
-from .vision import deit_tiny_patch16_224, deit_small_patch16_224, deit_base_patch16_224
-from .vision import mobilenetv3_small, mobilenetv3_large
-from .vision import efficientnet_v2_s, efficientnet_v2_m, efficientnet_v2_l
+from functools import partial
 
+from .manual.toy_manual import get_toymanualnet
 from .nlp_models import get_nlp_model
 from .toy import get_toynet
-from .manual.toy_manual import get_toymanualnet
-from functools import partial
+from .vision import (
+    cswin_64_small,
+    cswin_64_tiny,
+    cswin_96_base,
+    cswin_144_large,
+    deit_base_patch16_224,
+    deit_small_patch16_224,
+    deit_tiny_patch16_224,
+    efficientnet_v2_l,
+    efficientnet_v2_m,
+    efficientnet_v2_s,
+    get_resnet18,
+    get_resnet18_imagenet,
+    get_resnet50,
+    get_resnet50_imagenet,
+    get_resnet101,
+    mobilenetv3_large,
+    mobilenetv3_small,
+    pvt_large,
+    pvt_medium,
+    pvt_small,
+    pvt_tiny,
+    pvt_v2_b0,
+    pvt_v2_b1,
+    pvt_v2_b2,
+    pvt_v2_b3,
+    pvt_v2_b4,
+    pvt_v2_b5,
+    wideresnet28_cifar,
+)
 
 model_map = {
     "resnet18": get_resnet18,
@@ -84,8 +100,10 @@ model_map = {
 manual_models = ["toy_manual"]
 
 vision_models = [
+    # manual models
     "toy",
     "toy_manual",
+    # built-in models
     "resnet18",
     "resnet50",
     "resnet18-imagenet",

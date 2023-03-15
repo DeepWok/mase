@@ -1,19 +1,16 @@
 # Copyright (c) 2015-present, Facebook, Inc.
 # All rights reserved.
-import os
-import json
+from torchvision.transforms import InterpolationMode
 
 from .cifar import get_cifar_dataset
 from .imagenet import get_imagenet_dataset
-
 from .transform import build_transform
-
 
 cifar_preprocess = {
     "input_size": 32,
     "color_jitter": 0.4,
     "auto_augment": "rand-m9-mstd0.5-inc1",
-    "interpolation": "bicubic",
+    "interpolation": InterpolationMode.BICUBIC,
     "re_prob": 0.25,
     "re_mode": "pixel",
     "re_count": 1,
@@ -24,7 +21,7 @@ imagenet_preprocess = {
     "input_size": 224,
     "color_jitter": 0.4,
     "auto_augment": "rand-m9-mstd0.5-inc1",
-    "interpolation": "bicubic",
+    "interpolation": InterpolationMode.BICUBIC,
     "re_prob": 0.25,
     "re_mode": "pixel",
     "re_count": 1,

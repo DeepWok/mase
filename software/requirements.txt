@@ -4,10 +4,10 @@ toml
 timm
 pytorch-nlp
 datasets
-onnx 
+onnx
 black
-GitPython 
-colorlog 
+GitPython
+colorlog
 cocotb[bus]
 pytest
 ipython
@@ -17,3 +17,4 @@ einops
 deepspeed
 pybind11
 tabulate
+tensorboard

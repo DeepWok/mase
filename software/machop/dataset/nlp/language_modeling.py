@@ -111,7 +111,9 @@ class LanguageModelingDatasetWikitext2(LanguageModeling):
         if (path is not None) and (not os.path.isdir(path)):
             print("Downloading and processing dataset...")
             dataset = load_dataset(
-                "wikitext", "wikitext-2-raw-v1", cache_dir="./dataset_cache_dir"
+                "wikitext",
+                "wikitext-2-raw-v1",
+                cache_dir=os.path.abspath("./dataset_cache_dir"),
             )
             dataset.save_to_disk(path)
         else:
@@ -147,7 +149,9 @@ class LanguageModelingDatasetWikiText103(LanguageModeling):
         if (path is not None) and (not os.path.isdir(path)):
             print("Downloading and processing dataset...")
             dataset = load_dataset(
-                "wikitext", "wikitext-103-raw-v1", cache_dir="./dataset_cache_dir"
+                "wikitext",
+                "wikitext-103-raw-v1",
+                cache_dir=os.path.abspath("./dataset_cache_dir"),
             )
             dataset.save_to_disk(path)
         else:

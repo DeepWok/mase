@@ -126,8 +126,8 @@ Mase also supports training with a modified model, for instance:
 - Under the hood DeepSpeed's profiler is used and a reported .txt file will be generated.
 - Custom profiling behavior is defined in the .py file specified by `estimate-sw-config` flag. The config dict in .py file supports an `ignore_modules` list to ignore certain nn.Modules. See `./configs/estimate-sw
 
-
 ### Example Hardware Generation
+
 ```bash
 ./chop --train --dataset=cifar10 --model toy --save=test --debug --synthesize
 ```
@@ -346,8 +346,8 @@ See the [open issues](https://github.com/JianyiCheng/mase-tools/issues) for a fu
 |   ViT           |   Classification  |   CSwin         | cswin_144_large   |
 |   Transformers  |   LM              |   BERT          | bert-base-uncased |
 |   Transformers  |   LM              |   GPT2          | gpt2              |
-|   Transformers  |   Classification  |   RoBERTa       | roberta_base      |
-|   Transformers  |   Classification  |   RoBERTa       | roberta_large     |
+|   Transformers  |   Classification  |   RoBERTa       | roberta-base      |
+|   Transformers  |   Classification  |   RoBERTa       | roberta-large     |
 |   Transformers  |   LM              |   OPT           | facebook/opt-125m |
 |   Transformers  |   LM              |   OPT           | facebook/opt-350m |
 |   Transformers  |   LM              |   OPT           | facebook/opt-1.3b |

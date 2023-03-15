@@ -1,11 +1,13 @@
+import os
+
 import torch
 from torch import nn
-from transformers import AutoTokenizer
 from transformers import (
-    AutoModel,
-    AutoModelForSeq2SeqLM,
     AutoConfig,
+    AutoModel,
     AutoModelForCausalLM,
+    AutoModelForSeq2SeqLM,
+    AutoTokenizer,
 )
 
 model_to_hidden_size = {
@@ -43,26 +45,35 @@ def get_nlp_model(name, task, info, checkpoint=None, pretrained=True):
         raise ValueError("task must be a valid value for NLP models")
 
     num_classes = info["num_classes"]
+    # breakpoint()
     tokenizer = AutoTokenizer.from_pretrained(
-        name, cache_dir="./model_cache_dir", return_dict=True
+        name, cache_dir=os.path.abspath("./model_cache_dir"), return_dict=True
     )
     if pretrained:
         print(f"Loaded tokenizer from {name}")
         if checkpoint is not None:
+            # Load checkpoint if `--pretrained --load LOAD`
             model = AutoModel.from_pretrained(checkpoint)
             print(f"Loaded model from {checkpoint}")
         else:
             if task in ["language_modeling", "lm"]:
                 model = AutoModelForCausalLM.from_pretrained(
-                    name, return_dict=True, cache_dir="./model_cache_dir"
+                    name,
+                    return_dict=True,
+                    cache_dir=os.path.abspath("./model_cache_dir"),
                 )
             elif task in ["translation", "tran"]:
                 model = AutoModelForSeq2SeqLM.from_pretrained(
-                    name, return_dict=True, cache_dir="./model_cache_dir"
+                    name,
+                    return_dict=True,
+                    cache_dir=os.path.abspath("./model_cache_dir"),
                 )
             else:
+                # cls task
                 model = AutoModel.from_pretrained(
-                    name, return_dict=True, cache_dir="./model_cache_dir"
+                    name,
+                    return_dict=True,
+                    cache_dir=os.path.abspath("./model_cache_dir"),
                 )
             print(f"Loaded model from {name} in HuggingFace")
     else:
