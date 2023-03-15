@@ -256,9 +256,10 @@ tensorboard --logdir your-log-directory
   - [x] FLOPs calculation (nn.Module ver.)
   - [ ] FLOPs calculation (graph ver.)
   - [ ] memory ops calculation (graph ver.)
-- [ ] New quantizers
-  - [ ] Quantizer testing
-  - [ ] Block-based quantizers
+  - [ ] tensor shape recording
+- [x] New quantizers
+  - [x] Quantizer testing
+  - [x] Block-based quantizers
 - [X] More vision datasets and CNNs (AZ, GH-39)
   - [X] Test the existing ImageNet
   - [X] Efficientnet family
