@@ -278,7 +278,12 @@ def block(x: Tensor, block_shape: List[int]):
     return blocked_x, per_block_max, padded_x_shape, block_shape
 
 
-def unblock(blocked_x: Tensor, padded_x_shape: List[int], block_shape: List[int]):
+def unblock(
+    blocked_x: Tensor,
+    x_shape: List[int],
+    padded_x_shape: List[int],
+    block_shape: List[int],
+):
     """
     The reverse of fold. See function `block`
     """
@@ -298,7 +303,11 @@ def unblock(blocked_x: Tensor, padded_x_shape: List[int], block_shape: List[int]
             padding=0,
             stride=block_shape[2:],
         )
-
+    x = x.squeeze(1)
+    indexes = []
+    for i in range(len(x_shape)):
+        indexes.append(slice(None, x_shape[i]))
+    x = x[indexes]
     return x
 
 
@@ -360,13 +369,12 @@ def msfp_quantizer(
 
     per_block_msfp = per_block_sign * (2**per_block_exponent) * per_block_mantissa
     msfp_x = unblock(
-        per_block_msfp, padded_x_shape=padded_x_shape, block_shape=block_shape
+        per_block_msfp,
+        x_shape=x_shape,
+        padded_x_shape=padded_x_shape,
+        block_shape=block_shape,
     )
-    msfp_x = msfp_x.squeeze(1)
-    indexes = []
-    for i in range(len(x_shape)):
-        indexes.append(slice(None, x_shape[i]))
-    msfp_x = msfp_x[indexes]
+
     # fmt: off
     # this `is_close_to_0` helps the grad keeps 1 if input x is 0, or the zero-initialized value will be trapped in 0
     is_close_to_0 = torch.isclose(x, torch.tensor([0.0], dtype=x.dtype, device=x.device))
@@ -414,12 +422,11 @@ def block_minifloat_quantizer(
     )
 
     bm_x = unblock(
-        per_block_bm_x, padded_x_shape=padded_x_shape, block_shape=block_shape
+        per_block_bm_x,
+        x_shape=x_shape,
+        padded_x_shape=padded_x_shape,
+        block_shape=block_shape,
     )
-    indexes = []
-    for i in range(len(x_shape)):
-        indexes.append(slice(None, x_shape[i]))
-    bm_x = bm_x[indexes]
     return bm_x
 
 
@@ -454,11 +461,11 @@ def block_log_quantizer(
     )
 
     per_block_lq_x = log_quantizer(blocked_x, bits=bits, exponent_bias=per_block_bias)
-    lq_x = unblock(per_block_lq_x, padded_x_shape, block_shape)
-
-    indexes = []
-    for i in range(len(x_shape)):
-        indexes.append(slice(None, x_shape[i]))
-    lq_x = lq_x[indexes]
+    lq_x = unblock(
+        per_block_lq_x,
+        x_shape=x_shape,
+        padded_x_shape=padded_x_shape,
+        block_shape=block_shape,
+    )
 
     return lq_x

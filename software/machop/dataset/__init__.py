@@ -1,16 +1,17 @@
-import torch
+import os
 
+import torch
+from machop.models import nlp_models
 from torch.utils.data import DataLoader
 
+from .dataloader import MyDataLoader
 from .nlp import dataset_factory as nlp_dataset_factory
 from .vision import build_dataset
-from .dataloader import MyDataLoader
-from machop.models import nlp_models
 
 
 def get_dataset(name, nlp_task_args={}):
     if name in ["cifar10", "cifar100", "imagenet"]:
-        path = f"data/{name}"
+        path = os.path.abspath(f"./data/{name}")
         train_dataset, info = build_dataset(dataset_name=name, path=path, train=True)
         val_dataset, _ = build_dataset(dataset_name=name, path=path, train=False)
         test_dataset, _ = build_dataset(dataset_name=name, path=path, train=False)

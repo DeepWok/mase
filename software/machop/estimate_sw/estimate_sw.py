@@ -24,7 +24,9 @@ def _import_config_from_py_file(model_name: str, file_path: str):
         "top_modules": 1,
         "warm_up": 10,
         "as_string": True,
-        "output_file": f"estimate-sw_report_{model_name}.txt",
+        "output_file": "estimate-sw_reports/{}.txt".format(
+            model_name.replace("/", "-")
+        ),
         "ignore_modules": [],
     }
     # import the custom config from .py file

@@ -36,6 +36,7 @@ def train(
         epochs=plt_trainer_args["max_epochs"],
         optimizer=optimizer,
     )
+    # Here load_model may load a modified mdoel from a pickle file
     plt_model = load_model(plt_model=plt_model, load_path=load_path)
     # A hack for modified model...
     if not isinstance(plt_model, pl.LightningModule):
