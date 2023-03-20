@@ -1,26 +1,26 @@
 [linear1]
 name = "integer"
-weight_bits = 8
-weight_fraction_bits = 3
-input_bits = 8
-input_fraction_bits = 5
-bias_bits = 8
-bias_fraction_bits = 5
+weight_width = 8
+weight_frac_width = 3
+input_width = 8
+input_frac_width = 5
+bias_width = 8
+bias_frac_width = 5
 
 [linear2]
 name = "integer"
-weight_bits = 15
-weight_fraction_bits = 5
-input_bits = 8
-input_fraction_bits = 5
-bias_bits = 12
-bias_fraction_bits = 5
+weight_width = 15
+weight_frac_width = 5
+input_width = 8
+input_frac_width = 5
+bias_width = 12
+bias_frac_width = 5
 
 [linear3]
 name = "integer"
-weight_bits = 8
-weight_fraction_bits = 5
-input_bits = 8
-input_fraction_bits = 5
-bias_bits = 8
-bias_fraction_bits = 5
+weight_width = 8
+weight_frac_width = 5
+input_width = 8
+input_frac_width = 5
+bias_width = 8
+bias_frac_width = 5

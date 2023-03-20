@@ -1,14 +1,15 @@
 import torch
 import torch.nn as nn
-
 from torchmetrics import Accuracy
 from transformers import AutoModel
+
 from ..base import WrapperBase
 
 name_to_final_module_map = {
     # TODO: double check on how to extract classifier from last_hidden_state
     "facebook/opt-350m": "last_hidden_state",
     # BERT-ish model makes use a of a pooler
+    "bert-base-uncased": "pooler_output",
     "roberta-base": "pooler_output",
     "roberta-large": "pooler_output",
 }
@@ -60,8 +61,8 @@ class NLPClassificationModelWrapper(WrapperBase):
         acc = self.accuracy(pred_ids, labels)
         self.train_losses.append(loss)
         self.train_accs.append(acc)
-        self.log("train_loss", loss, prog_bar=True, sync_dist=True)
-        self.log("train_acc", acc, prog_bar=True, sync_dist=True)
+        self.log("train_loss", loss, prog_bar=True)
+        self.log("train_acc", acc, prog_bar=True)
         return {
             "loss": loss,
             "predictions": outputs,
@@ -102,8 +103,8 @@ class NLPClassificationModelWrapper(WrapperBase):
         acc = self.accuracy(pred_ids, labels)
         self.val_losses.append(loss)
         self.val_accs.append(acc)
-        self.log("val_loss", loss, prog_bar=True, sync_dist=True)
-        self.log("val_accuracy", acc, prog_bar=True, sync_dist=True)
+        self.log("val_loss", loss, prog_bar=True)
+        self.log("val_accuracy", acc, prog_bar=True)
         return loss
 
     def on_validation_epoch_end(self):

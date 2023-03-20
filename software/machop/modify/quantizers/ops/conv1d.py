@@ -5,7 +5,9 @@ import torch
 from torch import Tensor
 from torch.nn.common_types import _size_2_t
 
+from ....graph.mase_tracer import mark_as_leaf_module
 from ..quantizers import integer_quantizer
+from .utils import extract_required_config
 
 
 class Conv1dBase(torch.nn.Conv1d):
@@ -37,7 +39,17 @@ class Conv1dBase(torch.nn.Conv1d):
         }
 
 
+@mark_as_leaf_module
 class Conv1dInteger(Conv1dBase):
+    _required_config_keys = (
+        "name",
+        "weight_width",
+        "weight_frac_width",
+        "input_width",
+        "input_frac_width",
+    )
+    _optional_config_keys = ("bypass", "bias_width", "bias_frac_width")
+
     def __init__(
         self,
         in_channels: int,
@@ -69,21 +81,31 @@ class Conv1dInteger(Conv1dBase):
 
         self.bypass = config.get("bypass", False)
         # establish quantizers
-        w_bits, w_fraction_bits = config["weight_bits"], config["weight_fraction_bits"]
-        x_bits, x_fraction_bits = config["input_bits"], config["input_fraction_bits"]
+        w_width, w_frac_width = config["weight_width"], config["weight_frac_width"]
+        x_width, x_frac_width = config["input_width"], config["input_frac_width"]
         # check bias quantizer, if not, use weight quantizer
-        b_bits, b_fraction_bits = config.get("bias_bits", None), config.get(
-            "bias_fraction_bits", None
+        b_width, b_frac_width = config.get("bias_width", None), config.get(
+            "bias_frac_width", None
         )
         self.w_quantizer = partial(
-            integer_quantizer, bits=w_bits, fraction_bits=w_fraction_bits
+            integer_quantizer, width=w_width, frac_width=w_frac_width
         )
         self.x_quantizer = partial(
-            integer_quantizer, bits=x_bits, fraction_bits=x_fraction_bits
+            integer_quantizer, width=x_width, frac_width=x_frac_width
         )
-        if b_bits is None:
+        if b_width is None:
             self.b_quantizer = self.w_quantizer
         self.b_quantizer = partial(
-            integer_quantizer, bits=b_bits, fraction_bits=b_fraction_bits
+            integer_quantizer, width=b_width, frac_width=b_frac_width
         )
-        self.config = config
+        self.config = self.construct_essential_config(config)
+
+    def construct_essential_config(self, config):
+        r_config = extract_required_config(self, config)
+        o_config = {}
+        o_config["bypass"] = config.get("bypass", False)
+        o_config["bias_width"] = config.get("bias_width", config["weight_width"])
+        o_config["bias_frac_width"] = config.get(
+            "bias_frac_width", config["weight_frac_width"]
+        )
+        return r_config | o_config

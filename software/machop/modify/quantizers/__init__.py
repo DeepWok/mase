@@ -1,3 +1,5 @@
+from typing import Dict, Tuple
+
 from .functions import integer_add
 from .ops import AddInteger, Conv2dInteger, LinearInteger, LinearMSFP, ReLUInteger
 

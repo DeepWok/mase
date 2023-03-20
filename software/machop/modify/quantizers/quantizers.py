@@ -10,7 +10,7 @@ from torch import Tensor
 from .utils import my_clamp, my_round
 
 
-def integer_quantizer(x: Union[Tensor, ndarray], bits: int, fraction_bits: int):
+def integer_quantizer(x: Union[Tensor, ndarray], width: int, frac_width: int):
     """
     - Do linear quantization to input according to a scale and number of bits
     - Note that `bias` can be negative or larger than `bits`
@@ -20,15 +20,15 @@ def integer_quantizer(x: Union[Tensor, ndarray], bits: int, fraction_bits: int):
     - backward: STE
 
     ---
-    bits: the bit width of the fixed-point number
-    decimal_bits: the number of fractional bits. Note that `bias` can be negative or larger than `bits`
+    width: the bit width of the fixed-point number
+    frac_width: the number of fractional bits. Note that `bias` can be negative or larger than `bits`
 
     ---
     For example: 0b101 . 00111, bits = 8, bias = 5
 
     """
-    thresh = 2 ** (bits - 1)
-    scale = 2**fraction_bits
+    thresh = 2 ** (width - 1)
+    scale = 2**frac_width
 
     if isinstance(x, (Tensor, ndarray)):
         return my_clamp(my_round(x.mul(scale)), -thresh, thresh - 1).div(scale)
@@ -39,7 +39,7 @@ def integer_quantizer(x: Union[Tensor, ndarray], bits: int, fraction_bits: int):
 
 
 def minifloat_simple_quantizer(
-    x: Tensor, bits: int, exponent_bits: int, exponent_bias: int = None
+    x: Tensor, width: int, exponent_width: int, exponent_bias: int = None
 ):
     """
     - Converts IEEE FP32/64 to minifloat without the implicit leading bit in mantissas.
@@ -50,8 +50,8 @@ def minifloat_simple_quantizer(
     - backward: STE
 
     ---
-    bits: the bit width of minifloat
-    exponent_bits: the number of exponent bits in the minifloat
+    width: the bit width of minifloat
+    exponent_width: the number of exponent bits in the minifloat
     exponent_bias: the value of the exponent bias. If None, the default bias will be (2**exponent_bits - 1) >> 1.
 
     ---
@@ -62,13 +62,13 @@ def minifloat_simple_quantizer(
     ---
     Tested extreme values: large values to saturate, small values close to zero (precision), and 0
     """
-    mantissa_bits = bits - exponent_bits - 1
+    mantissa_bits = width - exponent_width - 1
 
     # default bias value
     if exponent_bias is None:
-        exponent_bias = 2 ** (exponent_bits - 1) - 1
+        exponent_bias = 2 ** (exponent_width - 1) - 1
 
-    exponent_max = 2**exponent_bits - 1 - exponent_bias
+    exponent_max = 2**exponent_width - 1 - exponent_bias
     exponent_min = -exponent_bias
     # if the mantissa is an integer, the max mantissa value will be (2**mantissa_bits -1)
     shifted_mantissa_max = 2**mantissa_bits - 1
@@ -100,7 +100,7 @@ def minifloat_simple_quantizer(
 
 
 def minifloat_ieee_quantizer(
-    x: Tensor, bits: int, exponent_bits: int, exponent_bias: int = None
+    x: Tensor, width: int, exponent_width: int, exponent_bias: int = None
 ):
     """
     - Converts IEEE FP32/64 to minifloat with the implicit leading bit in mantissas.
@@ -111,8 +111,8 @@ def minifloat_ieee_quantizer(
     - backward: STE
 
     ---
-    bits: the bit width of minifloat
-    exponent_bits: the number of exponent bits in the minifloat
+    width: the bit width of minifloat
+    exponent_width: the number of exponent bits in the minifloat
     exponent_bias: the value of the exponent bias. If None, the default bias will be (2**exponent_bits - 1) >> 1.
 
     ---
@@ -124,13 +124,13 @@ def minifloat_ieee_quantizer(
 
     Tested extreme cases: large values to saturate, small normal values, small subnormal values, normal precision, subnormal precision, and 0
     """
-    mantissa_bits = bits - exponent_bits - 1
+    mantissa_bits = width - exponent_width - 1
 
     # set default bias
     if exponent_bias is None:
-        exponent_bias = 2 ** (exponent_bits - 1) - 1
+        exponent_bias = 2 ** (exponent_width - 1) - 1
     # upper and lower bound of shifted exponent
-    exponent_max = 2**exponent_bits - 1 - exponent_bias
+    exponent_max = 2**exponent_width - 1 - exponent_bias
     exponent_min = -exponent_bias
     # upper and lower bound of shifted minifloat mantissa
     shift = 2**mantissa_bits
@@ -166,7 +166,7 @@ def minifloat_ieee_quantizer(
 
 def log_quantizer(
     x: Union[Tensor, ndarray],
-    bits: int,
+    width: int,
     exponent_bias: Union[int, Tensor, ndarray, None],
 ):
     """
@@ -185,7 +185,7 @@ def log_quantizer(
     Refer to https://arxiv.org/pdf/1603.01025.pdf
     """
 
-    exponent_bits = bits - 1
+    exponent_bits = width - 1
     if exponent_bias is None:
         exponent_bias = 2 ** (exponent_bits - 1) - 1
 
@@ -313,8 +313,8 @@ def unblock(
 
 def msfp_quantizer(
     x: Tensor,
-    bits: int = 12,
-    exponent_bits: int = 8,
+    width: int = 12,
+    exponent_width: int = 8,
     exponent_bias: int = None,
     block_size: List[int] = [16],
 ):
@@ -328,8 +328,8 @@ def msfp_quantizer(
     - backward: STE
 
     ---
-    - `bits`: The number of mantissa bits + 1 (the sign bit)
-    - `exponent_bits`: the number of exponent bits, which is shared over a block
+    - `width`: The number of mantissa bits + 1 (the sign bit)
+    - `exponent_width`: the number of exponent bits, which is shared over a block
     - `exponent_bias`: the exponent bias, if None, `2**(exponent_bits-1)-1` will be used
     - `block_size`: a list of integers where each integer is the block size on that dimension. See function `block`.
 
@@ -345,11 +345,11 @@ def msfp_quantizer(
     per_block_max[per_block_max == 0] = per_block_max[per_block_max != 0].min()
 
     # minifloat_simple_quantizer on each block over which a exponent is shared
-    mantissa_bits = bits - 1
+    mantissa_bits = width - 1
     if exponent_bias is None:
-        exponent_bias = 2 ** (exponent_bits - 1) - 1
+        exponent_bias = 2 ** (exponent_width - 1) - 1
 
-    exponent_max = 2**exponent_bits - 1 - exponent_bias
+    exponent_max = 2**exponent_width - 1 - exponent_bias
     exponent_min = -exponent_bias
 
     mantissa_integer_max = 2**mantissa_bits - 1
@@ -385,9 +385,9 @@ def msfp_quantizer(
 
 def block_minifloat_quantizer(
     x: Tensor,
-    bits: int,
-    exponent_bits: int,
-    bias_bits: int,
+    width: int,
+    exponent_width: int,
+    bias_width: int,
     block_size: List[int] = 16,
 ):
     """
@@ -400,8 +400,8 @@ def block_minifloat_quantizer(
     - backward: STE
 
     ---
-    - `bits`: the number of bits (1 sign bit + exponent_bits + mantissa_bits)
-    - `exponent_bits`: the number of exponent_bits
+    - `width`: the number of bits (1 sign bit + exponent_bits + mantissa_bits)
+    - `exponent_width`: the number of exponent_bits
     - `bias_bits`: the number of bits of the shared exponent bias
     - `block_size`: a list of integers where each integer is the block size on that dimension. See function `block`.
 
@@ -412,12 +412,12 @@ def block_minifloat_quantizer(
     )
 
     per_block_exponent_bias = my_clamp(
-        torch.floor(torch.log2(per_block_max)), 0, 2**bias_bits - 1
+        torch.floor(torch.log2(per_block_max)), 0, 2**bias_width - 1
     )
     per_block_bm_x = minifloat_ieee_quantizer(
         blocked_x,
-        bits=bits,
-        exponent_bits=exponent_bits,
+        width=width,
+        exponent_width=exponent_width,
         exponent_bias=per_block_exponent_bias,
     )
 
@@ -432,8 +432,8 @@ def block_minifloat_quantizer(
 
 def block_log_quantizer(
     x: Union[Tensor, ndarray],
-    bits: int,
-    exponent_bias_bits: int = None,
+    width: int,
+    exponent_bias_width: int = None,
     block_size: int = 16,
 ):
     """
@@ -444,12 +444,12 @@ def block_log_quantizer(
     - backward: This is not STE but close to STE because the derivate of (2**exponent) depends on the rounded exponent
 
     ---
-    - `bits`: the number of bits, including 1 sign bit and (bits-1) exponent bits
-    - `bits`: the number of bits of shared exponent bias
+    - `width`: the number of bits, including 1 sign bit and (bits-1) exponent bits
+    - `exponent_bias_width`: the number of bits of shared exponent bias
     - `block_size`: a list of integers where each integer is the block size along the corresponding dim
 
     """
-    exponent_bits = bits - 1
+    exponent_bits = width - 1
     x_shape = [i for i in x.shape]
     blocked_x, per_block_max, padded_x_shape, block_shape = block(
         x, block_shape=block_size
@@ -457,10 +457,10 @@ def block_log_quantizer(
 
     per_block_max_exponent = torch.ceil(torch.log2(per_block_max))
     per_block_bias = my_clamp(
-        2**exponent_bits - 1 - per_block_max_exponent, 0, 2**exponent_bias_bits - 1
+        2**exponent_bits - 1 - per_block_max_exponent, 0, 2**exponent_bias_width - 1
     )
 
-    per_block_lq_x = log_quantizer(blocked_x, bits=bits, exponent_bias=per_block_bias)
+    per_block_lq_x = log_quantizer(blocked_x, width=width, exponent_bias=per_block_bias)
     lq_x = unblock(
         per_block_lq_x,
         x_shape=x_shape,
