@@ -87,7 +87,7 @@ class TranslationDatasetIWSLT2017_EN_DE(TranslationDataset):
         dataset = load_dataset(
             "iwslt2017",
             "iwslt2017-en-de",
-            cache_dir=os.path.abspath("./dataset_cache_dir"),
+            cache_dir=os.path.abspath("./cache/dataset_cache_dir"),
         )
         dataset.save_to_disk(self.path)
         self.dataset = dataset
@@ -107,7 +107,7 @@ class TranslationDatasetIWSLT2017_DE_EN(TranslationDataset):
         dataset = load_dataset(
             "iwslt2017",
             "iwslt2017-de-en",
-            cache_dir=os.path.abspath("./dataset_cache_dir"),
+            cache_dir=os.path.abspath("./cache/dataset_cache_dir"),
         )
         dataset.save_to_disk(self.path)
         self.dataset = dataset
@@ -127,7 +127,7 @@ class TranslationDatasetIWSLT2017_EN_FR(TranslationDataset):
         dataset = load_dataset(
             "iwslt2017",
             "iwslt2017-en-fr",
-            cache_dir=os.path.abspath("./dataset_cache_dir"),
+            cache_dir=os.path.abspath("./cache/dataset_cache_dir"),
         )
         dataset.save_to_disk(self.path)
         self.dataset = dataset
@@ -147,7 +147,7 @@ class TranslationDatasetIWSLT2017_EN_CH(TranslationDataset):
         dataset = load_dataset(
             "iwslt2017",
             "iwslt2017-en-ch",
-            cache_dir=os.path.abspath("./dataset_cache_dir"),
+            cache_dir=os.path.abspath("./cache/dataset_cache_dir"),
         )
         dataset.save_to_disk(self.path)
         self.dataset = dataset
@@ -185,7 +185,7 @@ class TranslationDatasetWMT19_DE_EN(TranslationDataset):
 
     def _download_and_process(self):
         dataset = load_dataset(
-            "wmt19", "de-en", cache_dir=os.path.abspath("./dataset_cache_dir")
+            "wmt19", "de-en", cache_dir=os.path.abspath("./cache/dataset_cache_dir")
         )
         dataset.save_to_disk(self.path)
         self.dataset = dataset
@@ -203,7 +203,7 @@ class TranslationDatasetWMT19_ZH_EN(TranslationDataset):
 
     def _download_and_process(self):
         dataset = load_dataset(
-            "wmt19", "zh-en", cache_dir=os.path.abspath("./dataset_cache_dir")
+            "wmt19", "zh-en", cache_dir=os.path.abspath("./cache/dataset_cache_dir")
         )
         dataset.save_to_disk(self.path)
         self.dataset = dataset
@@ -222,7 +222,7 @@ class TranslationDatasetWMT16_RO_EN(TranslationDataset):
 
     def _download_and_process(self):
         dataset = load_dataset(
-            "wmt16", "ro-en", cache_dir=os.path.abspath("./dataset_cache_dir")
+            "wmt16", "ro-en", os.path.abspath("./cache/dataset_cache_dir")
         )
         dataset.save_to_disk(self.path)
         self.dataset = dataset

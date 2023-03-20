@@ -2,6 +2,7 @@ from functools import partial
 
 from .manual.toy_manual import get_toymanualnet
 from .nlp_models import get_nlp_model
+from .patched_nlp_models import get_patched_nlp_model
 from .toy import get_toynet
 from .vision import (
     cswin_64_small,
@@ -93,6 +94,16 @@ model_map = {
     "t5-base": get_nlp_model,
     "t5-large": get_nlp_model,
     "google/t5-v1_1-small": get_nlp_model,
+    # ----------------------------------------
+    # Patched NLP models supporting FX.graph 👇
+    # ----------------------------------------
+    "facebook/opt-125m@patched": get_patched_nlp_model,
+    "facebook/opt-350m@patched": get_patched_nlp_model,
+    "facebook/opt-1.3b@patched": get_patched_nlp_model,
+    "facebook/opt-2.7b@patched": get_patched_nlp_model,
+    "facebook/opt-13b@patched": get_patched_nlp_model,
+    "facebook/opt-30b@patched": get_patched_nlp_model,
+    "facebook/opt-66b@patched": get_patched_nlp_model,
 }
 
 # this is a list of models that are written purely with custom ops
@@ -154,4 +165,24 @@ nlp_models = [
     "t5-base",
     "t5-large",
     "google/t5-v1_1-small",
+    # ----------------------------------------
+    # Patched NLP models supporting FX.graph 👇
+    # ----------------------------------------
+    "facebook/opt-125m@patched",
+    "facebook/opt-350m@patched",
+    "facebook/opt-1.3b@patched",
+    "facebook/opt-2.7b@patched",
+    "facebook/opt-13b@patched",
+    "facebook/opt-30b@patched",
+    "facebook/opt-66b@patched",
+]
+
+patched_nlp_models = [
+    "facebook/opt-125m@patched",
+    "facebook/opt-350m@patched",
+    "facebook/opt-1.3b@patched",
+    "facebook/opt-2.7b@patched",
+    "facebook/opt-13b@patched",
+    "facebook/opt-30b@patched",
+    "facebook/opt-66b@patched",
 ]
