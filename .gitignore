@@ -9,11 +9,7 @@
 ./data/*
 software/checkpoints/
 software/data/
-software/lightning_logs/
-software/modified_ckpts
-software/modified_tomls
-software/model_cache_dir
-software/dataset_cache_dir
+software/cache/
 software/estimate-sw_reports/
 software/test_*.py
 

@@ -6,6 +6,7 @@ import logging
 import os
 import random
 import sys
+import time
 from argparse import ArgumentParser
 
 import numpy as np
@@ -73,24 +74,19 @@ class Machop:
             help="The path to load the input model.",
         )
         parser.add_argument(
+            "--project-dir",
+            dest="project_dir",
+            default=None,
+            help="The directory to save the project. Default='../mase_output'",
+        )
+        parser.add_argument(
             "--project",
             dest="project",
-            default=".",
-            help="The path to the hardware project.",
-        )
-        ## Intermediate model args
-        # parser.add_argument(
-        #     "--save",
-        #     dest="save_name",
-        #     default=None,
-        #     help="The path to save the resulting model.",
-        # )
-        parser.add_argument(
-            "--save",
-            dest="save_name",
             default=None,
-            help="Save the generated model. Default=False",
+            help="The name of the project. Default='${mase-tools}/mase_output/${args.model}@${timestamp}'",
         )
+
+        ## Intermediate model args
 
         # Actions for model
         parser.add_argument(
@@ -308,25 +304,6 @@ class Machop:
         self.loader = None
         self.info = None
 
-        """
-        Model-specific save dir
-        the machop output dir will be in the root dir of mase-tools project
-        ${mase-toolsProjectDir}
-            |
-            |--mase_output/
-                |-- $@{args.save_name}@{args.model}@${args.task}@${args.dataset}/
-                    |-- software/
-                    |    |-- modify-sw/
-                    |    |    |-- modified_model.ckpt
-                    |    |    |-- modified_model.pkl
-                    |    |    |-- modify-sw_report.md
-                    |    |-- checkpoints/
-                    |         |-- best.ckpt
-                    |         |-- last.ckpt
-                    |         |-- logs
-                    |              |-- version 0
-                    |-- hardware/
-        """
         self.output_dir = self.output_dir_sw = self.output_dir_hw = None
 
     # Debugging configuration
@@ -416,42 +393,40 @@ class Machop:
 
     def create_output_dir(self):
         args = self.args
-        if args.save_name:
-            self.output_dir = os.path.join(
-                "../",
-                # "mase_output",
-                # "{}@{}@{}@{}".format(
-                #     args.save_name,
-                #     args.model.replace("/", "-"),
-                #     args.task,
-                #     args.dataset,
-                # ),
-                args.save_name,
-            )
-            self.output_dir_sw = os.path.join(self.output_dir, "software")
-            self.output_dir_hw = os.path.join(self.output_dir, "hardware")
-            if not os.path.isdir(self.output_dir_sw):
-                os.makedirs(self.output_dir_sw)
-            if not os.path.isdir(self.output_dir_hw):
-                os.makedirs(self.output_dir_hw)
+        project_dir = (
+            args.project_dir if args.project_dir is not None else "../mase_output"
+        )
+        project = (
+            args.project
+            if args.project is not None
+            else "{}@".format(args.model.replace("/", "-"))
+            + time.strftime("%Y_%m_%d-%H_%M_%S")
+        )
+
+        self.output_dir = os.path.join(project_dir, project)
+        self.output_dir_sw = os.path.join(self.output_dir, "software")
+        self.output_dir_hw = os.path.join(self.output_dir, "hardware")
+        if not os.path.isdir(self.output_dir_sw):
+            os.makedirs(self.output_dir_sw)
+        if not os.path.isdir(self.output_dir_hw):
+            os.makedirs(self.output_dir_hw)
 
     def modify_sw(self):
         args = self.args
         logging.info(f"Modifying model {args.model!r}...")
 
         dummy_inputs = get_dummy_inputs(
-            args.model,
+            model_name=args.model,
+            task=args.task,
             model=self.model["model"] if args.model in nlp_models else self.model,
-            max_token_len=args.max_token_len,
+            data_loader=self.loader,
         )
         # breakpoint()
         modifier_kwargs = {
             "model": self.model["model"] if args.model in nlp_models else self.model,
             "config": args.modify_sw,
             "dummy_inputs": dummy_inputs,
-            "save_dir": os.path.join(self.output_dir_sw, "modify-sw")
-            if args.save_name
-            else None,
+            "save_dir": os.path.join(self.output_dir_sw, "modify-sw"),
             "load_name": args.load_name,
         }
 
@@ -464,8 +439,10 @@ class Machop:
     def train(self):
         args = self.args
         logging.info(f"Training model {args.model!r}...")
-        if args.save_name is None:
-            logging.warning("--save not specified. Your model will not be saved.")
+        if args.project_dir is None:
+            logging.warning(
+                "--project_dir not specified. Your model will be saved in ${mase-tools}/mase_output/${args.model}@${timestamp}."
+            )
 
         plt_trainer_args = {
             "max_epochs": args.max_epochs,
@@ -484,9 +461,7 @@ class Machop:
             "optimizer": args.training_optimizer,
             "learning_rate": args.learning_rate,
             "plt_trainer_args": plt_trainer_args,
-            "save_path": os.path.join(self.output_dir_sw, "checkpoints")
-            if args.save_name
-            else None,
+            "save_path": os.path.join(self.output_dir_sw, "checkpoints"),
             "load_path": args.load_name,
         }
         train(**train_params)

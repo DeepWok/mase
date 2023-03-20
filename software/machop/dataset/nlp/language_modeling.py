@@ -113,7 +113,7 @@ class LanguageModelingDatasetWikitext2(LanguageModeling):
             dataset = load_dataset(
                 "wikitext",
                 "wikitext-2-raw-v1",
-                cache_dir=os.path.abspath("./dataset_cache_dir"),
+                cache_dir=os.path.abspath("./cache/dataset_cache_dir"),
             )
             dataset.save_to_disk(path)
         else:
@@ -151,7 +151,7 @@ class LanguageModelingDatasetWikiText103(LanguageModeling):
             dataset = load_dataset(
                 "wikitext",
                 "wikitext-103-raw-v1",
-                cache_dir=os.path.abspath("./dataset_cache_dir"),
+                cache_dir=os.path.abspath("./cache/dataset_cache_dir"),
             )
             dataset.save_to_disk(path)
         else:

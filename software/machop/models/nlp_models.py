@@ -47,7 +47,7 @@ def get_nlp_model(name, task, info, checkpoint=None, pretrained=True):
     num_classes = info["num_classes"]
     # breakpoint()
     tokenizer = AutoTokenizer.from_pretrained(
-        name, cache_dir=os.path.abspath("./model_cache_dir"), return_dict=True
+        name, cache_dir=os.path.abspath("./cache/tokenizer_cache_dir"), return_dict=True
     )
     if pretrained:
         print(f"Loaded tokenizer from {name}")
@@ -60,20 +60,20 @@ def get_nlp_model(name, task, info, checkpoint=None, pretrained=True):
                 model = AutoModelForCausalLM.from_pretrained(
                     name,
                     return_dict=True,
-                    cache_dir=os.path.abspath("./model_cache_dir"),
+                    cache_dir=os.path.abspath("./cache/model_cache_dir"),
                 )
             elif task in ["translation", "tran"]:
                 model = AutoModelForSeq2SeqLM.from_pretrained(
                     name,
                     return_dict=True,
-                    cache_dir=os.path.abspath("./model_cache_dir"),
+                    cache_dir=os.path.abspath("./cache/model_cache_dir"),
                 )
             else:
                 # cls task
                 model = AutoModel.from_pretrained(
                     name,
                     return_dict=True,
-                    cache_dir=os.path.abspath("./model_cache_dir"),
+                    cache_dir=os.path.abspath("./cache/model_cache_dir"),
                 )
             print(f"Loaded model from {name} in HuggingFace")
     else:

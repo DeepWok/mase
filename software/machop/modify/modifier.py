@@ -3,7 +3,7 @@ import os
 import pickle
 import pprint
 from copy import deepcopy
-from typing import Dict
+from typing import Dict, Tuple
 
 import toml
 import torch
@@ -63,17 +63,6 @@ class Modifier:
             model = load_checkpoint_into_model(load_name, model)
         # create the graph of model
         self.graph: Graph = MaseTracer().trace(model, dummy_inputs)
-        # try:
-        #     self.graph: Graph = MaseTracer().trace(model, dummy_inputs)
-        # except TraceError as e:
-        #     error_info = (
-        #         "Failed to create graph due to TraceError. "
-        #         "Try to fix get_dummy_inputs for this model. "
-        #         "The model.forward is as follows\n"
-        #         + str(_get_default_args(model.forward))
-        #     )
-        #     logging.error(error_info)
-        #     raise TraceError(str(e))
 
         self.graph_module = GraphModule(model, self.graph)
 
@@ -95,17 +84,24 @@ class Modifier:
                 modified_module = modified_named_modules[node.target]
                 changed = type(original_module) != type(modified_module)
                 row = [
-                    node.name,
-                    node.op,
-                    str(type(original_module)),
-                    str(type(modified_module)),
+                    f"`{node.name}`",
+                    f"`{node.op}`",
+                    "`{}`".format(str(type(original_module))),
+                    "`{}`".format(str(type(modified_module))),
                     changed,
                 ]
                 tabular_rows.append(row)
-            elif node.op == "call_functions":
+            elif node.op == "call_function":
                 original_node = get_node_by_name(original_graph, node.name)
                 changed = original_node.target == node.target
-                row = [node.name, node.op, original_node.target, node.target, changed]
+                row = [
+                    f"`{node.name}`",
+                    f"`{node.op}`",
+                    f"`{original_node.target}`",
+                    f"`{node.target}`",
+                    changed,
+                ]
+                tabular_rows.append(row)
 
         report = tabulate(tabular_rows, headers=headers, tablefmt="github")
         print("A tabular summary of modified funcs and modules")
@@ -149,6 +145,7 @@ class Modifier:
             )
             with open(modified_pkl_path, "wb") as f:
                 pickle.dump(self.graph_module, file=f)
+
             logging.info(
                 f"Modified model is saved as {modified_ckpt_path} and {modified_pkl_path}"
             )
