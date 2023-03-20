@@ -1,5 +1,6 @@
 import pytorch_lightning as pl
 from pytorch_lightning.callbacks import ModelCheckpoint
+from pytorch_lightning.loggers import TensorBoardLogger
 
 from ..utils import load_model
 from .plt_wrapper import get_model_wrapper
@@ -27,7 +28,9 @@ def train(
             dirpath=save_path,
             save_last=True,
         )
+        logger = TensorBoardLogger(save_dir=save_path, name="logs")
         plt_trainer_args["callbacks"] = [checkpoint_callback]
+        plt_trainer_args["logger"] = logger
     wrapper_cls = get_model_wrapper(model_name, task)
     plt_model = wrapper_cls(
         model,

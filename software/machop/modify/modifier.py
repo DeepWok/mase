@@ -2,19 +2,34 @@ import logging
 import os
 import pickle
 import pprint
-from collections import OrderedDict
-from functools import partial
+from copy import deepcopy
+from typing import Dict
 
 import toml
 import torch
 from tabulate import tabulate
 from torch import nn
+from torch.fx import Graph, GraphModule
+from torch.fx.proxy import TraceError
 
-from .mase_modify_graph import MaseModifyGraph
+from ..graph.dummy_inputs import _get_default_args
+from ..graph.mase_tracer import MaseTracer
+from ..graph.utils import (
+    check_func_type,
+    get_module_by_name,
+    get_node_by_name,
+    get_parent_name,
+    isinstance_but_not_subclass,
+)
 from .quantizers import functions_map, ops_map, possible_ops
-from .utils import load_model
+from .utils import copy_weights, load_checkpoint_into_model, load_model
 
 pp = pprint.PrettyPrinter(depth=4)
+
+
+def create_dummy_inputs(model: nn.Module):
+    # TODO: Create dummy inputs for different models
+    return {}
 
 
 class Modifier:
@@ -23,119 +38,175 @@ class Modifier:
 
     def __init__(
         self,
-        model=None,
-        config=None,
-        save_name=None,
-        load_name=None,
-        interactive=False,
-        silent=False,
-    ):
-        self.model = model
-        self.graph = MaseModifyGraph(model)
+        model: nn.Module,
+        config: str,
+        dummy_inputs: Dict = {},
+        save_dir: str = None,
+        load_name: str = None,
+    ) -> None:
+        """
+        save_dir is expected to be "${no_hyphen_model_name}/software/modify-sw"
+        """
+        # keep a copy of original model only for comparison
+        self.original_model = deepcopy(model)
+        # load modify config from toml
+        if not config.endswith("toml"):
+            raise ValueError("Config File must be a toml file")
+        self.config = toml.load(config)
+        # create dummy inputs
+        self.dummy_inputs = dummy_inputs
+        # save_dir for comparison report and modified model
+        self.save_dir = save_dir
 
-        if load_name is not None:
-            self.model = load_model(load_path=load_name, plt_model=self.model)
-        # load config as toml
-        if not config.endswith(".toml"):
-            raise ValueError("Config file must be a toml file")
-        config = toml.load(config)
+        # load checkpoint if load_name is given
+        if load_name:
+            model = load_checkpoint_into_model(load_name, model)
+        # create the graph of model
+        self.graph: Graph = MaseTracer().trace(model, dummy_inputs)
+        # try:
+        #     self.graph: Graph = MaseTracer().trace(model, dummy_inputs)
+        # except TraceError as e:
+        #     error_info = (
+        #         "Failed to create graph due to TraceError. "
+        #         "Try to fix get_dummy_inputs for this model. "
+        #         "The model.forward is as follows\n"
+        #         + str(_get_default_args(model.forward))
+        #     )
+        #     logging.error(error_info)
+        #     raise TraceError(str(e))
 
-        if not silent:
-            logging.info(f"Config loaded!")
-            pp.pprint(config)
+        self.graph_module = GraphModule(model, self.graph)
 
-        self.config = config
-        self._pre_modify_check()
-
-        if not silent:
-            logging.info(f"Model architecture")
-            print(self.model)
-
-        # The core function that makes the modification
         self.modify()
         self.compare_model()
+        self.save_modified_model()
 
-        if not silent:
-            logging.info("Model modified")
-            logging.info(f"Model architecture, post modification")
-            # print(self.model)
-            self._post_modify_check()
-            self._print_out_diff()
+    def compare_model(self):
+        headers = ["Name", "Op", "Original", "Modified", "Changed?"]
+        original_named_modules = dict(self.original_model.named_modules())
+        original_graph = MaseTracer().trace(self.original_model, self.dummy_inputs)
 
-        if save_name is not None:
-            self.save(save_name)
+        modified_named_modules = dict(self.graph_module.named_modules())
 
-        if interactive:
-            import pdb
+        tabular_rows = []
+        for node in self.graph_module.graph.nodes:
+            if node.op == "call_module":
+                original_module = original_named_modules[node.target]
+                modified_module = modified_named_modules[node.target]
+                changed = type(original_module) != type(modified_module)
+                row = [
+                    node.name,
+                    node.op,
+                    str(type(original_module)),
+                    str(type(modified_module)),
+                    changed,
+                ]
+                tabular_rows.append(row)
+            elif node.op == "call_functions":
+                original_node = get_node_by_name(original_graph, node.name)
+                changed = original_node.target == node.target
+                row = [node.name, node.op, original_node.target, node.target, changed]
 
-            pdb.set_trace()
+        report = tabulate(tabular_rows, headers=headers, tablefmt="github")
+        print("A tabular summary of modified funcs and modules")
+        print(report)
+
+        if self.save_dir:
+            if not os.path.isdir(self.save_dir):
+                os.makedirs(self.save_dir)
+            report_path = os.path.join(self.save_dir, "modify-sw-report.md")
+
+            with open(report_path, "w+") as f:
+                f.write(report)
+                logging.info(
+                    f"The tabular summary of modify-sw is saved to {report_path}"
+                )
+
+    def load_model(self, model):
+        """
+        The model can be:
+            1. partially modified
+            2. non-modified model
+
+        The checkpoint can be:
+            1. wrapped model saved by pl.Trainer
+            2. user's ckpt
+            3. ckpt saved by modifier
+        """
+        model = load_checkpoint_into_model(self.load_name, model)
+        logging.info("Checkpoint loaded before software modification")
+        return model
+
+    def save_modified_model(self):
+        if self.save_dir:
+            if not os.path.isdir(self.save_dir):
+                os.makedirs(self.save_dir)
+            modified_ckpt_path = os.path.join(self.save_dir, "modified_model.ckpt")
+            modified_pkl_path = os.path.join(self.save_dir, "modified_model.pkl")
+
+            torch.save(
+                {"state_dict": self.graph_module.state_dict()}, modified_ckpt_path
+            )
+            with open(modified_pkl_path, "wb") as f:
+                pickle.dump(self.graph_module, file=f)
+            logging.info(
+                f"Modified model is saved as {modified_ckpt_path} and {modified_pkl_path}"
+            )
 
     def modify(self):
         default_config = self.config.pop("default", None)
         if default_config is None:
             raise ValueError("Default config is not provided")
 
-        # modify modules
         for name in self.modifiable_layers:
-            # use config setup if we have a config
             if name in self.config:
-                replace_config = self.config[name]
-                replace_fn = getattr(self, f"replace_{name}")
-                replace_fn(self.model, replace_config)
-            # otherwise all modifiable layers are changed based on default config
+                layer_config = self.config[name]
+                replace_fn = getattr(self, f"replace_module_{name}")
+                replace_fn(layer_config)
             else:
-                replace_fn = getattr(self, f"replace_{name}")
-                replace_fn(self.model, default_config)
-        # modify funcitons
+                replace_fn = getattr(self, f"replace_module_{name}")
+                replace_fn(default_config)
+
         for name in self.modifiable_functions:
-            # use config setup if we have a config
             if name in self.config:
-                replace_config = self.config[name]
-                replace_fn = getattr(self, f"replace_{name}")
-                replace_fn(self.model, replace_config)
-            # otherwise all modifiable layers are changed based on default config
-            else:
-                replace_fn = getattr(self, f"replace_{name}")
-                replace_fn(self.model, default_config)
-        self.modified_model = self.graph.modified_model
+                fn_config = self.config[name]
+                replace_fn = getattr(self, f"replace_func_{name}")
+                replace_fn(fn_config)
 
-    def _pre_modify_check(self):
-        modules = self.model.modules()
-        if any([isinstance(m, tuple(possible_ops)) for m in modules]):
-            raise ValueError(
-                "The model already contains modified classes, why are we modifying again?"
-            )
-        self._pre_modify_values = self.model.state_dict()
+    def _traverse_graph_to_replace_nodes(
+        self, target: type, replacement_fn, replacement_fn_kwargs={}
+    ):
+        named_modules = dict(self.graph_module.named_modules())
 
-    def _post_modify_check(self):
-        self._post_modify_values = OrderedDict()
-        for name, module in self.modified_model.named_modules():
-            if hasattr(module, "get_quantized_weight"):
-                value = module.get_quantized_weight()
-                self._post_modify_values[name] = value
+        for node in self.graph.nodes:
+            if node.op == "call_module":
+                layer = get_module_by_name(self.graph_module, node.target)
+                if isinstance_but_not_subclass(layer, target):
+                    new_layer = replacement_fn(layer)
+                    parent_name, name = get_parent_name(node.target)
+                    named_modules[node.target] = new_layer
+                    setattr(named_modules[parent_name], name, new_layer)
+            if node.op == "call_function":
+                if check_func_type(node, target):
+                    with self.graph.inserting_after(node):
+                        kwargs = {**replacement_fn_kwargs, **node.kwargs}
+                        new_node = self.graph.call_function(
+                            replacement_fn, node.args, kwargs
+                        )
+                        node.replace_all_uses_with(new_node)
+                    self.graph.erase_node(node)
+        self.graph.lint()
+        self.graph_module.recompile()
+        self.graph_module = GraphModule(self.graph_module, self.graph)
 
-    def _print_out_diff(self):
-        # printout 10 numbers in each tensor
-        logging.info("A pintout, each tensor only outputs 5 values")
-        logging.info("Pre-modification values")
-        for k, v in self._pre_modify_values.items():
-            print(k)
-            print(v.flatten()[:5])
-
-        logging.info("Post-modification values")
-        for k, v in self._post_modify_values.items():
-            print(k)
-            print(v.flatten()[:5])
-
-    def replace_add(self, model, config):
+    def replace_func_add(self, config):
         replacement_fn = functions_map["add"][config["name"]]
         target = torch.add
-        replacement_fn = replacement_fn
-        self.graph.modify(
-            target, replacement_fn, replacement_fn_kwargs={"config": config}
+        self._traverse_graph_to_replace_nodes(
+            target, replacement_fn, replacement_fn_kwargs={"config", config}
         )
 
-    def replace_linear(self, model, config):
+    def replace_module_linear(self, config):
         replace_cls = ops_map["linear"][config["name"]]
         target = nn.Linear
 
@@ -155,15 +226,14 @@ class Modifier:
             )
 
             # grab pretrained weights
-            # WARNING: need to test on the gpu land!
-            my_linear.weight = child.weight.cpu()
+            copy_weights(child.weight, my_linear.weight)
             if use_bias:
-                my_linear.bias = child.bias.cpu()
+                copy_weights(child.bias, my_linear.bias)
             return my_linear
 
-        self.graph.modify(target, replacement_fn)
+        self._traverse_graph_to_replace_nodes(target, replacement_fn)
 
-    def replace_conv2d(self, model, config):
+    def replace_module_conv2d(self, config):
         replace_cls = ops_map["conv2d"][config["name"]]
         target = nn.Conv2d
 
@@ -182,85 +252,18 @@ class Modifier:
                 config=config,
             )
             # grab pretrained weights
-            # WARNING: need to test on the gpu land!
-            my_conv.weight = child.weight.cpu()
+            copy_weights(child.weight, my_conv.weight)
             if use_bias:
-                my_conv.bias = child.bias.cpu()
+                copy_weights(child.weight, my_conv.weight)
             return my_conv
 
-        self.graph.modify(target, replacement_fn)
+        self._traverse_graph_to_replace_nodes(target, replacement_fn)
 
-    def replace_relu(self, model, config):
+    def replace_module_relu(self, config):
         replace_cls = ops_map["relu"][config["name"]]
         target = nn.ReLU
 
         def replacement_fn(child):
             return replace_cls(inplace=child.inplace, config=config)
 
-        self.graph.modify(target, replacement_fn)
-
-    def compare_model(self):
-        original_modules = dict(self.model.named_modules())
-        trace = torch.fx.symbolic_trace(self.model)
-        trace.graph.lint()
-        trace = trace
-        orignal_fx_graph = trace.graph
-
-        modified_modules = self.graph.modules
-        modified_fx_graph = self.graph.fx_graph
-        headers = ["Name", "Op", "Original", "Modified", "Changed?"]
-        rows = []
-
-        for node in self.graph.fx_graph.nodes:
-            if node.op == "call_module":
-                original_module = original_modules[node.target]
-                modified_module = modified_modules[node.target]
-                changed = type(original_module) != type(modified_module)
-                row = [
-                    node.target,
-                    node.op,
-                    str(type(original_module)),
-                    str(type(modified_module)),
-                    changed,
-                ]
-                rows.append(row)
-        print(f"A tabular summary of modified modules")
-        print(tabulate(rows, headers=headers))
-
-        print(f"A tabular summary of the modified graph")
-        modified_fx_graph.print_tabular()
-
-    # # A generic replacement function that works for any layer
-    # # This function traverses the modules in a model recursively
-    # # And replaces the target layer with the replacement layer
-    # def replace(self, model, target, replacement_fn):
-    #     for child_name, child in model.named_children():
-    #         if isinstance(child, target):
-    #             setattr(model, child_name, replacement_fn(child))
-    #         else:
-    #             self.replace(child, target, replacement_fn)
-
-    def save(self, name):
-        if not os.path.isdir("modified_ckpts"):
-            os.mkdir("modified_ckpts")
-
-        save_name = f"modified_ckpts/{name}.original.ckpt"
-        model_save_name = f"modified_ckpts/{name}.original.pkl"
-        torch.save(self.model.state_dict(), save_name)
-        with open(model_save_name, "wb") as f:
-            pickle.dump(self.model, file=f)
-
-        save_name = f"modified_ckpts/{name}.modified.ckpt"
-        model_save_name = f"modified_ckpts/{name}.modified.pkl"
-        torch.save(self.modified_model.state_dict(), save_name)
-        with open(model_save_name, "wb") as f:
-            pickle.dump(self.modified_model, file=f)
-
-        logging.info(f"Original and modified model are saved as {save_name}.")
-
-        if not os.path.isdir("modified_tomls"):
-            os.mkdir("modified_tomls")
-        save_name = f"modified_tomls/{name}_modified.toml"
-        with open(save_name, "w") as f:
-            toml.dump(self.graph.logs, f)
-        logging.info(f"Modified toml log is saved as {save_name}.")
+        self._traverse_graph_to_replace_nodes(target, replacement_fn)

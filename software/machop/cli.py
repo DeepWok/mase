@@ -14,8 +14,9 @@ import torch
 
 from .dataset import get_dataloader, get_dataset
 from .estimate_sw.estimate_sw import estimate_sw_single_gpu
+from .graph.dummy_inputs import get_dummy_inputs
 from .models import manual_models, model_map, nlp_models, vision_models
-from .modify import Modifier
+from .modify.modifier import Modifier
 from .session import test, train
 from .utils import check_conda_env
 
@@ -78,11 +79,17 @@ class Machop:
             help="The path to the hardware project.",
         )
         ## Intermediate model args
+        # parser.add_argument(
+        #     "--save",
+        #     dest="save_name",
+        #     default=None,
+        #     help="The path to save the resulting model.",
+        # )
         parser.add_argument(
             "--save",
             dest="save_name",
             default=None,
-            help="The path to save the resulting model.",
+            help="Save the generated model. Default=False",
         )
 
         # Actions for model
@@ -193,7 +200,7 @@ class Machop:
         parser.add_argument(
             "--max-epochs",
             dest="max_epochs",
-            default=100,
+            default=20,
             type=int,
             help="The maximum number of epochs for training. Default=100",
         )
@@ -245,7 +252,7 @@ class Machop:
         parser.add_argument(
             "--accelerator",
             dest="accelerator",
-            default=None,
+            default="auto",
             help="The accelerator type for training.",
         )
         parser.add_argument(
@@ -284,6 +291,7 @@ class Machop:
     def __init__(self):
         super().__init__()
         args = self._parse()
+        print(f"Arguments:\n{vars(args)}")
         if args.to_debug:
             sys.excepthook = self._excepthook
             logging.getLogger().setLevel(logging.DEBUG)
@@ -300,6 +308,27 @@ class Machop:
         self.loader = None
         self.info = None
 
+        """
+        Model-specific save dir
+        the machop output dir will be in the root dir of mase-tools project
+        ${mase-toolsProjectDir}
+            |
+            |--mase_output/
+                |-- $@{args.save_name}@{args.model}@${args.task}@${args.dataset}/
+                    |-- software/
+                    |    |-- modify-sw/
+                    |    |    |-- modified_model.ckpt
+                    |    |    |-- modified_model.pkl
+                    |    |    |-- modify-sw_report.md
+                    |    |-- checkpoints/
+                    |         |-- best.ckpt
+                    |         |-- last.ckpt
+                    |         |-- logs
+                    |              |-- version 0
+                    |-- hardware/
+        """
+        self.output_dir = self.output_dir_sw = self.output_dir_hw = None
+
     # Debugging configuration
     def _excepthook(self, etype, evalue, etb):
         from IPython.core import ultratb
@@ -314,7 +343,8 @@ class Machop:
 
     # Main process
     def run(self):
-        self.init_model_and_dataset(self.args)
+        self.init_model_and_dataset()
+        self.create_output_dir()
         if self.args.modify_sw:
             self.modify_sw()
         if self.args.to_train:
@@ -336,7 +366,8 @@ class Machop:
             self.evaluate_hw()
 
     # Setup model and data for training
-    def init_model_and_dataset(self, args):
+    def init_model_and_dataset(self):
+        args = self.args
         logging.info(f"Loading dataset {args.dataset!r} for model {args.model!r}...")
         assert args.dataset, f"Dataset not specified: {args.dataset!r}"
         assert args.model, f"Model not specified: {args.model!r}"
@@ -348,7 +379,8 @@ class Machop:
         model_inst_fn = model_map[args.model]
 
         if args.model in nlp_models:
-            # here the model is a dict whose keys consist of "model", "tokenizer", "classifier" ?
+            # *: here the model is a dict whose keys consist of "model", "tokenizer", "classifier"
+            # *: here the load name only works for HuggingFace model load name/ config load name
             model = model_inst_fn(
                 name=args.model,
                 task=args.task,
@@ -382,11 +414,58 @@ class Machop:
         )
         self.model, self.loader, self.info = model, loader, info
 
+    def create_output_dir(self):
+        args = self.args
+        if args.save_name:
+            self.output_dir = os.path.join(
+                "../",
+                # "mase_output",
+                # "{}@{}@{}@{}".format(
+                #     args.save_name,
+                #     args.model.replace("/", "-"),
+                #     args.task,
+                #     args.dataset,
+                # ),
+                args.save_name,
+            )
+            self.output_dir_sw = os.path.join(self.output_dir, "software")
+            self.output_dir_hw = os.path.join(self.output_dir, "hardware")
+            if not os.path.isdir(self.output_dir_sw):
+                os.makedirs(self.output_dir_sw)
+            if not os.path.isdir(self.output_dir_hw):
+                os.makedirs(self.output_dir_hw)
+
+    def modify_sw(self):
+        args = self.args
+        logging.info(f"Modifying model {args.model!r}...")
+
+        dummy_inputs = get_dummy_inputs(
+            args.model,
+            model=self.model["model"] if args.model in nlp_models else self.model,
+            max_token_len=args.max_token_len,
+        )
+        # breakpoint()
+        modifier_kwargs = {
+            "model": self.model["model"] if args.model in nlp_models else self.model,
+            "config": args.modify_sw,
+            "dummy_inputs": dummy_inputs,
+            "save_dir": os.path.join(self.output_dir_sw, "modify-sw")
+            if args.save_name
+            else None,
+            "load_name": args.load_name,
+        }
+
+        m = Modifier(**modifier_kwargs)
+        if args.model in nlp_models:
+            self.model["model"] = m.graph_module
+        else:
+            self.model = m.graph_module
+
     def train(self):
         args = self.args
         logging.info(f"Training model {args.model!r}...")
-        if not args.save_name:
-            logging.warning("--save-name not specified. Your model might not be saved.")
+        if args.save_name is None:
+            logging.warning("--save not specified. Your model will not be saved.")
 
         plt_trainer_args = {
             "max_epochs": args.max_epochs,
@@ -405,8 +484,8 @@ class Machop:
             "optimizer": args.training_optimizer,
             "learning_rate": args.learning_rate,
             "plt_trainer_args": plt_trainer_args,
-            "save_path": "checkpoints/" + args.save_name
-            if args.save_name is not None
+            "save_path": os.path.join(self.output_dir_sw, "checkpoints")
+            if args.save_name
             else None,
             "load_path": args.load_name,
         }
@@ -433,17 +512,6 @@ class Machop:
         test(**test_params)
 
     evaluate_sw = test_sw
-
-    def modify_sw(self):
-        args = self.args
-        logging.info(f"Modifying model {args.model!r}...")
-        Modifier(
-            self.model,
-            config=args.modify_sw,
-            save_name=args.save_name,
-            load_name=args.load_name,
-            interactive=args.is_interactive,
-        )
 
     def estimate_sw(self):
         args = self.args

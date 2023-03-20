@@ -1,8 +1,8 @@
 import torch
 import torch.nn as nn
-
 from torchmetrics import Accuracy
 from transformers import AutoModel
+
 from ..base import WrapperBase
 
 
@@ -44,7 +44,7 @@ class NLPLanguageModelingModelWrapper(WrapperBase):
         self.train_losses.append(loss)
         perplexity = torch.exp(loss)
         self.train_perplexities.append(perplexity)
-        self.log("train_loss", loss, prog_bar=True, sync_dist=True)
+        self.log("train_loss", loss, prog_bar=True)
         # self.log("train_perp", perplexity, prog_bar=True, sync_dist=True)
         return {"loss": loss, "predictions": outputs, "perplexity": perplexity}
 
@@ -80,7 +80,7 @@ class NLPLanguageModelingModelWrapper(WrapperBase):
         self.val_losses.append(loss)
         perplexity = torch.exp(loss)
         self.val_perplexities.append(perplexity)
-        self.log("val_loss", loss, prog_bar=True, sync_dist=True)
+        self.log("val_loss", loss, prog_bar=True)
         # self.log("val_perp", perplexity, prog_bar=True, sync_dist=True)
         return loss
 

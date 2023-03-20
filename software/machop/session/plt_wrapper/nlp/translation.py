@@ -1,9 +1,8 @@
 import torch
 import torch.nn as nn
-
 from torchmetrics.text.bleu import BLEUScore
-
 from transformers import AutoModel
+
 from ..base import WrapperBase
 
 name_to_final_module_map = {
@@ -77,8 +76,8 @@ class NLPTranslationModelWrapper(WrapperBase):
         labels = labels[0] if len(labels) == 1 else labels.squeeze()
         bleu = self.get_bleu(pred_ids, labels)
         self.train_losses.append(loss)
-        self.log("train_loss", loss, prog_bar=True, sync_dist=True)
-        self.log("train_bleu", bleu, prog_bar=True, sync_dist=True)
+        self.log("train_loss", loss, prog_bar=True)
+        self.log("train_bleu", bleu, prog_bar=True)
         return {
             "loss": loss,
             "predictions": outputs,
@@ -100,8 +99,8 @@ class NLPTranslationModelWrapper(WrapperBase):
         bleu = self.get_bleu(pred_ids, labels)
         self.val_losses.append(loss)
         self.val_bleus.append(bleu)
-        self.log("val_loss", loss, prog_bar=True, sync_dist=True)
-        self.log("val_bleu", bleu, prog_bar=True, sync_dist=True)
+        self.log("val_loss", loss, prog_bar=True)
+        self.log("val_bleu", bleu, prog_bar=True)
         return loss
 
     def test_step(self, batch, batch_idx):

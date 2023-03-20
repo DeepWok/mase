@@ -1,8 +1,8 @@
+import numpy as np
 import pytorch_lightning as pl
 import torch
-import numpy as np
-from torchmetrics.functional import accuracy
 from torch.optim.lr_scheduler import CosineAnnealingLR
+from torchmetrics.functional import accuracy
 
 
 class WrapperBase(pl.LightningModule):
@@ -29,12 +29,12 @@ class WrapperBase(pl.LightningModule):
         loss = self.loss(y_hat, y)
         # loss
         self.log_dict(
-            {"loss": loss}, on_step=False, on_epoch=True, prog_bar=False, logger=True
+            {"loss": loss}, on_step=True, on_epoch=False, prog_bar=False, logger=True
         )
         # acc
         acc = accuracy(y_hat, y, task="multiclass", num_classes=self.num_classes)
         self.log_dict(
-            {"acc": acc}, on_step=False, on_epoch=True, prog_bar=True, logger=True
+            {"acc": acc}, on_step=True, on_epoch=False, prog_bar=True, logger=True
         )
         return {"loss": loss, "acc": acc}
 
@@ -74,11 +74,17 @@ class WrapperBase(pl.LightningModule):
             on_epoch=True,
             prog_bar=False,
             logger=True,
+            sync_dist=True,
         )
         # val acc
         acc = accuracy(y_hat, y, task="multiclass", num_classes=self.num_classes)
         self.log_dict(
-            {"test_acc": acc}, on_step=False, on_epoch=True, prog_bar=True, logger=True
+            {"test_acc": acc},
+            on_step=False,
+            on_epoch=True,
+            prog_bar=True,
+            logger=True,
+            sync_dist=True,
         )
         return {"test_loss": loss, "test_acc": acc}
 

@@ -1,12 +1,13 @@
+import logging
 import os
 import time
-import logging
+
 import torch
 import torch.fx
 from torch import nn
 from torch.fx import symbolic_trace
-from .utils import get_module_by_name
-from .utils import vf
+
+from .utils import get_module_by_name, vf
 
 
 class MaseMetadata:
@@ -62,7 +63,7 @@ class MaseMetadata:
                 replace_fn()
             else:
                 logging.warning(f"{self.node} is not found in the internal library.")
-                self._init_parameters_other()
+                # self._init_parameters_other()
         else:
             logging.warning(f"Not dealing with node for now: {self.node}")
 
