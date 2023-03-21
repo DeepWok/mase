@@ -1,14 +1,18 @@
-import torch
-import logging
 import copy
-
+import logging
+from functools import partial
 from typing import Tuple
+
+import torch
 from machop.graph.mase_graph import MaseGraph
 from machop.graph.utils import (
-    get_module_by_name, 
-    isinstance_but_not_subclass, 
-    get_parent_name, check_func_type)
-from functools import partial
+    check_func_type,
+    get_module_by_name,
+    get_parent_name,
+    isinstance_but_not_subclass,
+)
+
+logger = logging.getLogger(__name__)
 
 
 class MaseModifyGraph(MaseGraph):
@@ -17,8 +21,7 @@ class MaseModifyGraph(MaseGraph):
         self.modified_model = copy.deepcopy(model)
         self.logs = {}
 
-    def modify(
-            self, target, replacement_fn, replacement_fn_kwargs={}):
+    def modify(self, target, replacement_fn, replacement_fn_kwargs={}):
         modules = dict(self.modified_model.named_modules())
         for node in self.fx_graph.nodes:
             if node.op == "call_module":
@@ -31,16 +34,17 @@ class MaseModifyGraph(MaseGraph):
                     modules[node.target] = new_layer
                     setattr(modules[parent_name], name, new_layer)
                     self.logs[node.target] = new_layer.config
-            if node.op == 'call_function':
+            if node.op == "call_function":
                 if check_func_type(node, target):
                     with self.fx_graph.inserting_after(node):
                         kwargs = {**replacement_fn_kwargs, **node.kwargs}
                         new_node = self.fx_graph.call_function(
-                            replacement_fn, node.args, kwargs)
+                            replacement_fn, node.args, kwargs
+                        )
                         node.replace_all_uses_with(new_node)
                     self.fx_graph.erase_node(node)
                     # FIXME: this is very hacky, and it seems like names will get replaced ...
-                    self.logs[new_node.name] = replacement_fn_kwargs.get('config', None)
+                    self.logs[new_node.name] = replacement_fn_kwargs.get("config", None)
         self.fx_graph.lint()
         self.modules = modules
         self.modified_model = torch.fx.GraphModule(modules, self.fx_graph)

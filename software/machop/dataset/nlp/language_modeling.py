@@ -1,3 +1,4 @@
+import logging
 import os
 import pickle
 from itertools import chain
@@ -5,6 +6,8 @@ from itertools import chain
 import torch
 from datasets import load_dataset, load_from_disk
 from torch.utils.data import Dataset
+
+logger = logging.getLogger(__name__)
 
 
 def preprocess_datasets(

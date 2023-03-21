@@ -1,19 +1,22 @@
-import os
-import time
 import glob
-import toml
+import logging
+import multiprocessing
+import os
 import shutil
 import subprocess
-import multiprocessing
+import time
 from multiprocessing import Process, Queue
-import logging
+
+import toml
 import torch
 import torch.fx
 import torch_mlir
-from ..graph.mase_metadata import MaseMetadata
+
 from ..graph.mase_graph import MaseGraph
-from ..graph.utils import get_module_by_name
-from ..graph.utils import vf
+from ..graph.mase_metadata import MaseMetadata
+from ..graph.utils import get_module_by_name, vf
+
+logger = logging.getLogger(__name__)
 
 
 def _remove_last_comma(string):
@@ -27,14 +30,14 @@ def _add_dependence_files(files, file_list):
 
 def _execute(cmd, log_output: bool = True, log_file=None, cwd="."):
     if log_output:
-        logging.debug(subprocess.list2cmdline(cmd))
+        logger.debug(subprocess.list2cmdline(cmd))
         with subprocess.Popen(
             cmd, stdout=subprocess.PIPE, bufsize=1, universal_newlines=True, cwd=cwd
         ) as result:
             if log_file:
                 f = open(log_file, "w")
             if result.stdout or result.stderr:
-                logging.info("")
+                logger.info("")
             if result.stdout:
                 for line in result.stdout:
                     if log_file:
@@ -240,10 +243,10 @@ logic                             {node_name}_data_out_ready;
         node_out_name = vf(nodes_out[0].target)
         wires = f"""
 assign data_in_ready  = {node_in_name}_data_in_ready;
-assign {node_in_name}_data_in    = data_out; 
+assign {node_in_name}_data_in    = data_out;
 assign {node_in_name}_data_in_valid = data_in_valid;
 assign {node_out_name}_data_out_ready  = data_out_ready;
-assign data_out    = {node_out_name}_data_out; 
+assign data_out    = {node_out_name}_data_out;
 assign data_out_valid = {node_out_name}_data_out_valid;
 """
         while nodes_in != nodes_out:
@@ -255,7 +258,7 @@ assign data_out_valid = {node_out_name}_data_out_valid;
                     if next_node.op == "call_module" or next_node.op == "call_function":
                         wires += f"""
 assign {node_name}_data_out_ready  = {next_node_name}_data_in_ready;
-assign {next_node_name}_data_in    = {node_name}_data_out; 
+assign {next_node_name}_data_in    = {node_name}_data_out;
 assign {next_node_name}_data_out_valid = {node_name}_data_out_valid;
 """
                     if next_node.op == "output":
@@ -289,7 +292,7 @@ assign {next_node_name}_data_out_valid = {node_name}_data_out_valid;
         module_inst = """
 // =====================================
 //     Mase Hardware
-//     Model: {} 
+//     Model: {}
 //     {}
 // =====================================
 `timescale 1ns/1ps
@@ -336,7 +339,7 @@ endmodule
         mlir_path = os.path.join(node_path, f"{node.name}.linalg.mlir")
         with open(mlir_path, "w", encoding="utf-8") as outf:
             outf.write(str(module))
-        logging.debug(
+        logger.debug(
             f"MLIR of module {node.name} successfully written into {mlir_path}"
         )
         assert os.path.isfile(mlir_path), "Linalg MLIR generation failed."
@@ -355,10 +358,10 @@ endmodule
         ]
         # if self.to_debug:
         #    cmd += ["--debug"]
-        logging.debug(subprocess.list2cmdline(cmd))
+        logger.debug(subprocess.list2cmdline(cmd))
         result = _execute(cmd, log_output=self.to_debug)
         assert os.path.isfile(lowered_path), "Affine MLIR generation failed."
-        logging.debug(
+        logger.debug(
             f"MLIR Affine code of module {node.name} successfully written into {lowered_path}"
         )
 
@@ -378,10 +381,10 @@ endmodule
         ]
         # if self.to_debug:
         #     cmd += ["--debug"]
-        logging.debug(subprocess.list2cmdline(cmd))
+        logger.debug(subprocess.list2cmdline(cmd))
         result = _execute(cmd, log_output=self.to_debug)
         assert os.path.isfile(hls_path), "HLS code generation failed."
-        logging.debug(
+        logger.debug(
             f"HLS code of module {node.name} successfully written into {hls_path}"
         )
 
@@ -401,7 +404,7 @@ csynth_design
         hls_tcl_path = os.path.join(node_path, f"{node_name}.tcl")
         with open(hls_tcl_path, "w", encoding="utf-8") as outf:
             outf.write(hls_tcl)
-        logging.debug(
+        logger.debug(
             f"HLS tcl of module {node.name} successfully written into {hls_tcl_path}"
         )
 
@@ -411,16 +414,16 @@ csynth_design
             "-i",
             hls_path,
         ]
-        logging.debug(subprocess.list2cmdline(cmd))
+        logger.debug(subprocess.list2cmdline(cmd))
         result = _execute(cmd, log_output=self.to_debug)
         # Call Vitis HLS for synthesis
         cmd = [
             "vitis_hls",
             hls_tcl_path,
         ]
-        logging.debug(subprocess.list2cmdline(cmd))
+        logger.debug(subprocess.list2cmdline(cmd))
         result = _execute(cmd, log_output=self.to_debug, cwd=node_path)
-        logging.debug(f"Hardware of module {node.name} successfully generated by HLS")
+        logger.debug(f"Hardware of module {node.name} successfully generated by HLS")
 
     def emit_components(self):
         """
@@ -442,7 +445,7 @@ csynth_design
             # If it is an HLS module, go through torch-mlir and mlir-hls flow
             # TODO: Call HLS synthesis processes in parallel
             elif node.meta.parameters["hardware"]["target"] == "HLS":
-                logging.debug(f"Synthesizing {node.name} using HLS")
+                logger.debug(f"Synthesizing {node.name} using HLS")
                 hls_path = os.path.join(project_path, "hls")
                 if not os.path.exists(hls_path):
                     os.mkdir(hls_path)

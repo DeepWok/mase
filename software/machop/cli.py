@@ -19,7 +19,7 @@ from .graph.dummy_inputs import get_dummy_inputs
 from .models import manual_models, model_map, nlp_models, vision_models
 from .modify.modifier import Modifier
 from .session import test, train
-from .utils import check_conda_env
+from .utils import check_conda_env, check_when_to_load_and_how_to_load, getLogger
 
 try:
     import torch_mlir
@@ -30,6 +30,7 @@ try:
 except ModuleNotFoundError:
     is_sw_env = True
 
+logger = getLogger(__name__)
 logging.getLogger().setLevel(logging.INFO)
 
 
@@ -72,6 +73,20 @@ class Machop:
             dest="load_name",
             default=None,
             help="The path to load the input model.",
+        )
+        parser.add_argument(
+            "--load-type",
+            dest="load_type",
+            default=None,
+            help=(
+                "The checkpoint type to be loaded. "
+                "If --load is not specified, --load-type is a don't-care, "
+                "Else if --load is specified, --load-type must be one of 'pt', 'pl', 'pkl', 'hf', "
+                "referring to pytorch model state dict, "
+                "pytorch lightning's LightningModule saved by Trainer's checkpoint callback, "
+                "pkl file saved by MASE's modify-sw, "
+                "and HuggingFace's checkpoint directory saved by 'save_pretrained'. Default=None"
+            ),
         )
         parser.add_argument(
             "--project-dir",
@@ -246,6 +261,13 @@ class Machop:
             help="The number of GPU devices. Default=1",
         )
         parser.add_argument(
+            "--nodes",
+            dest="num_nodes",
+            default=1,
+            type=int,
+            help="The number of nodes. Default=1",
+        )
+        parser.add_argument(
             "--accelerator",
             dest="accelerator",
             default="auto",
@@ -287,11 +309,15 @@ class Machop:
     def __init__(self):
         super().__init__()
         args = self._parse()
-        print(f"Arguments:\n{vars(args)}")
+
         if args.to_debug:
             sys.excepthook = self._excepthook
-            logging.getLogger().setLevel(logging.DEBUG)
-            logging.debug("Enabled debug mode.")
+            logger.setLevel(logging.DEBUG)
+            logger.debug("Enabled debug mode.")
+        else:
+            logger.setLevel(logging.INFO)
+
+        logger.info(f"Arguments:\n{vars(args)}")
 
         # Initialise seeds
         random.seed(args.seed)
@@ -305,6 +331,18 @@ class Machop:
         self.info = None
 
         self.output_dir = self.output_dir_sw = self.output_dir_hw = None
+        self.when_to_load, self.how_to_load = check_when_to_load_and_how_to_load(
+            modify_sw=args.modify_sw,
+            to_train=args.to_train,
+            to_test_sw=args.to_test_sw,
+            is_pretrained=args.is_pretrained,
+            load_name=args.load_name,
+            load_type=args.load_type,
+        )
+        logger.debug(
+            f"when_to_save={self.when_to_load}, how_to_save={self.how_to_load}"
+        )
+        # breakpoint()
 
     # Debugging configuration
     def _excepthook(self, etype, evalue, etb):
@@ -345,16 +383,18 @@ class Machop:
     # Setup model and data for training
     def init_model_and_dataset(self):
         args = self.args
-        logging.info(f"Loading dataset {args.dataset!r} for model {args.model!r}...")
+        logger.info(f"Loading dataset {args.dataset!r} for model {args.model!r}...")
         assert args.dataset, f"Dataset not specified: {args.dataset!r}"
         assert args.model, f"Model not specified: {args.model!r}"
 
         # Get dataset
         train_dataset, val_dataset, test_dataset, info = get_dataset(name=args.dataset)
-        logging.debug(f"Dataset loaded.")
+        logger.info(f"Dataset loaded.")
+
         # get model
         model_inst_fn = model_map[args.model]
 
+        checkpoint = args.load_name if self.when_to_load == "init" else None
         if args.model in nlp_models:
             # *: here the model is a dict whose keys consist of "model", "tokenizer", "classifier"
             # *: here the load name only works for HuggingFace model load name/ config load name
@@ -362,7 +402,7 @@ class Machop:
                 name=args.model,
                 task=args.task,
                 info=info,
-                checkpoint=args.load_name,
+                checkpoint=checkpoint,
                 pretrained=args.is_pretrained,
             )
         elif args.model in vision_models:
@@ -377,6 +417,7 @@ class Machop:
                 model = model_inst_fn(info=info)
         else:
             raise NotImplementedError(f"Unknown model {args.model!r}.")
+        logger.info("Model loaded")
 
         # Get data loader from the datasets
         loader = get_dataloader(
@@ -410,24 +451,26 @@ class Machop:
             os.makedirs(self.output_dir_sw)
         if not os.path.isdir(self.output_dir_hw):
             os.makedirs(self.output_dir_hw)
+        logger.info(f"Project will be created at {self.output_dir}")
 
     def modify_sw(self):
         args = self.args
-        logging.info(f"Modifying model {args.model!r}...")
+        logger.info(f"Modifying model {args.model!r}...")
 
         dummy_inputs = get_dummy_inputs(
             model_name=args.model,
             task=args.task,
             model=self.model["model"] if args.model in nlp_models else self.model,
-            data_loader=self.loader,
         )
         # breakpoint()
+        load_name = args.load_name if self.when_to_load == "modify-sw" else None
         modifier_kwargs = {
             "model": self.model["model"] if args.model in nlp_models else self.model,
             "config": args.modify_sw,
             "dummy_inputs": dummy_inputs,
             "save_dir": os.path.join(self.output_dir_sw, "modify-sw"),
-            "load_name": args.load_name,
+            "load_name": load_name,
+            "load_type": self.how_to_load,
         }
 
         m = Modifier(**modifier_kwargs)
@@ -435,23 +478,26 @@ class Machop:
             self.model["model"] = m.graph_module
         else:
             self.model = m.graph_module
+        logger.info("Modify-sw is completed")
 
     def train(self):
         args = self.args
-        logging.info(f"Training model {args.model!r}...")
+        logger.info(f"Training model {args.model!r}...")
         if args.project_dir is None:
-            logging.warning(
+            logger.warning(
                 "--project_dir not specified. Your model will be saved in ${mase-tools}/mase_output/${args.model}@${timestamp}."
             )
 
         plt_trainer_args = {
             "max_epochs": args.max_epochs,
             "devices": args.num_devices,
+            "num_nodes": args.num_nodes,
             "accelerator": args.accelerator,
             "strategy": args.strategy,
             "fast_dev_run": args.to_debug,
         }
 
+        load_name = args.load_name if self.when_to_load == "train_or_test" else None
         train_params = {
             "model_name": args.model,
             "model": self.model,
@@ -462,19 +508,23 @@ class Machop:
             "learning_rate": args.learning_rate,
             "plt_trainer_args": plt_trainer_args,
             "save_path": os.path.join(self.output_dir_sw, "checkpoints"),
-            "load_path": args.load_name,
+            "load_name": load_name,
+            "load_type": self.how_to_load,
         }
         train(**train_params)
+        logger.info("Training is completed")
 
     def test_sw(self):
         args = self.args
-        logging.info(f"Testing model {args.model!r}...")
+        logger.info(f"Testing model {args.model!r}...")
 
         plt_trainer_args = {
             "devices": args.num_devices,
             "accelerator": args.accelerator,
             "strategy": args.strategy,
         }
+        load_name = args.load_name if self.when_to_load == "train_or_test" else None
+        assert load_name is not None, "load name must not be None for test-sw."
         test_params = {
             "model_name": args.model,
             "model": self.model,
@@ -482,9 +532,12 @@ class Machop:
             "task": args.task,
             "data_loader": self.loader,
             "plt_trainer_args": plt_trainer_args,
-            "load_path": args.load_name,
+            "load_name": load_name,
+            "load_type": self.how_to_load,
         }
         test(**test_params)
+
+        logger.info("Testing is completed")
 
     evaluate_sw = test_sw
 
@@ -506,10 +559,11 @@ class Machop:
             "config_path": args.estimate_sw_config,
         }
         run_estimator(**estimate_sw_kwargs)
+        logging.info("Estimate-sw is completed")
 
     def synthesize(self):
         args = self.args
-        logging.info(f"Generating hardware for {args.model!r}...")
+        logger.info(f"Generating hardware for {args.model!r}...")
         mve = MaseVerilogEmitter(
             model=self.model,
             project_path=args.project,
@@ -521,16 +575,16 @@ class Machop:
         mve.emit_verilog()
         if args.to_debug:
             mve.save(os.path.join(args.project, args.model, f"{args.model}_hw.toml"))
-        logging.warning("synthesis is only partially implemented.")
+        logger.warning("synthesis is only partially implemented.")
 
     def test_hw(self):
         args = self.args
-        logging.info(f"Testing hardware for {args.model!r}...")
+        logger.info(f"Testing hardware for {args.model!r}...")
         # TODO: Generate cocotb testbench for a given model
         raise NotImplementedError(f"Hardware testing not implemented yet.")
 
     def evaluate_hw(self):
         args = self.args
-        logging.info(f"Evaluating hardware for {args.model!r}...")
+        logger.info(f"Evaluating hardware for {args.model!r}...")
         # TODO: Run simulation and implementation for evaluating area and performance
         raise NotImplementedError(f"Hardware evaluation not implemented yet.")

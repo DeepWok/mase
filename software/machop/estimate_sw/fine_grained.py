@@ -1,20 +1,18 @@
-import torch
 import logging
 import os
-
-import toml
-
-from torch.fx import Graph, GraphModule
-from torch.fx import Interpreter
-from torch.fx.node import Argument, Target
-
-from .utils import get_input_args
-from ..graph.mase_tracer import MaseTracer
-from .calculator import calculate_funcs, calculate_modules
-
+from collections import defaultdict
 from typing import Any, Dict, Iterator, List, Optional, Tuple, Union
 
-from collections import defaultdict
+import toml
+import torch
+from torch.fx import Graph, GraphModule, Interpreter
+from torch.fx.node import Argument, Target
+
+from ..graph.mase_tracer import MaseTracer
+from .calculator import calculate_funcs, calculate_modules
+from .utils import get_input_args
+
+logger = logging.getLogger(__name__)
 
 
 class Stats:
@@ -94,7 +92,7 @@ def estimate_sw_fine_grained(
     assert isinstance(
         config["ignore_modules"], (list, tuple, set)
     ), "ignore_modules should be a list/tuple/set of string nn.Module names"
-    logging.debug(f"estimate-sw config: {config}")
+    logger.debug(f"estimate-sw config: {config}")
 
     _, input_args = get_input_args(model_name, model, task, data_loader, info)
 
@@ -106,7 +104,10 @@ def estimate_sw_fine_grained(
     _ = profiler.run(*input_args)
 
     data = profiler.stats.data
+    logger.info("Estimate-sw result")
+    print(data)
 
     output_file = os.path.join(save_path, output_file)
     with open(output_file, "w") as toml_file:
         toml.dump(data, toml_file)
+    logger.info(f"Estimate-sw report saved to {output_file}")

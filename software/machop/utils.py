@@ -1,46 +1,21 @@
 import functools
+import logging
 import os
 import pickle
-import types
 
+import colorlog
 import torch
 
-use_cuda = torch.cuda.is_available()
-print("Using cuda:{}".format(use_cuda))
-torch_cuda = torch.cuda if use_cuda else torch
-device = torch.device("cuda" if use_cuda else "cpu")
+# use_cuda = torch.cuda.is_available()
+# print("Using cuda:{}".format(use_cuda))
+# torch_cuda = torch.cuda if use_cuda else torch
+# device = torch.device("cuda" if use_cuda else "cpu")
 
 
 def get_checkpoint_file(checkpoint_dir):
     for file in os.listdir(checkpoint_dir):
         if file.endswith(".ckpt"):
             return file
-
-
-def plt_model_load(model, checkpoint):
-    if checkpoint.endswith(".pkl"):
-        with open(checkpoint, "rb") as f:
-            model = pickle.load(f)
-    else:
-        state_dict = torch.load(checkpoint)["state_dict"]
-        model.load_state_dict(state_dict)
-    return model
-
-
-def load_model(load_path, plt_model):
-    if load_path is not None:
-        if load_path.endswith(".ckpt") or load_path.endswith(".pkl"):
-            checkpoint = load_path
-        else:
-            if load_path.endswith("/"):
-                checkpoint = load_path + "best.ckpt"
-            else:
-                raise ValueError(
-                    "if it is a directory, if must end with /; if it is a file, it must end with .ckpt or .pkl"
-                )
-        plt_model = plt_model_load(plt_model, checkpoint)
-        print(f"Loaded model from {checkpoint}")
-    return plt_model
 
 
 def check_conda_env(is_sw_env: bool, requires_sw_env: bool, current_action_name: str):
@@ -55,3 +30,215 @@ def check_conda_env(is_sw_env: bool, requires_sw_env: bool, current_action_name:
             raise RuntimeError(
                 f"The cuda pytorch env is activated. Please switch to torch-mlir env for {current_action_name}"
             )
+
+
+def check_when_to_load_and_how_to_load(
+    modify_sw: bool,
+    to_train: bool,
+    to_test_sw: bool,
+    is_pretrained: bool,
+    load_name: str,
+    load_type: str,
+):
+    to_train_or_to_test = to_train or to_test_sw
+    when_to_load = how_to_load = None
+    assert not (
+        to_train_or_to_test and modify_sw
+    ), "--modify-sw and --train/--test cannot both be True. Please run these two commands sequentially."
+    if load_name is not None:
+        if load_type is None:
+            raise RuntimeError("--load-type must be specified if --load is specified.")
+        else:
+            assert load_type in [
+                "pt",
+                "pl",
+                "hf",
+                "pkl",
+            ], f"if --load is specified, --load-type should be one of ['pt', 'pl', 'hf', 'pkl'], but got {load_type}"
+
+    if is_pretrained:
+        # load in init_model_and_dataset
+        when_to_load = "init"
+        if load_name is None:
+            how_to_load = "hf"
+        else:
+            assert (
+                load_type == "hf"
+            ), "--load-type must be 'hf' to load HuggingFace checkpoint"
+
+            how_to_load = "hf"
+
+    else:
+        if modify_sw:
+            when_to_load = "modify-sw"
+            if load_name is None:
+                when_to_load = how_to_load = None
+            else:
+                if load_type == "pt":
+                    how_to_load = "pt"
+                elif load_type == "pl":
+                    how_to_load = "pl"
+                else:
+                    raise RuntimeError(
+                        f"modify-sw only supports loading 'pt' and 'pl' checkpoint, but got --load-type={load_type}"
+                    )
+        elif to_train_or_to_test:
+            when_to_load = "train_or_test"
+            if load_name is None:
+                when_to_load = how_to_load = None
+            else:
+                when_to_load = "train_or_test"
+                if load_type == "pt":
+                    how_to_load = "pt"
+                elif load_type == "pl":
+                    how_to_load = "pl"
+                elif load_type == "pkl":
+                    how_to_load = "pkl"
+                else:
+                    raise RuntimeError(
+                        f"train/test only supports 'pt', 'pl', and 'pkl' checkpoint, but got --load-type={load_type}"
+                    )
+        else:
+            when_to_load = how_to_load = None
+    # breakpoint()
+    if (not is_pretrained) and how_to_load == "hf":
+        assert os.path.isdir(
+            load_name
+        ), "To load HuggingFace pretrained model, --load-name should be a directory."
+    elif how_to_load == "pt":
+        assert load_name.endswith(".ckpt") or load_name.endswith(
+            "pt"
+        ), f"To load PyTorch checkpoint, --load-name should be a path to a .ckpt file, but got {load_name}"
+    elif how_to_load == "pl":
+        assert load_name.endswith(
+            ".ckpt"
+        ), f"To load PyTorchLightning checkpoint, --load-name should be a path to a .ckpt file, but got {load_name}"
+    elif how_to_load == "pkl":
+        assert load_name.endswith(
+            ".pkl"
+        ), f"To load pickle model, --load-name should a path to a .pkl file, but got {load_name}"
+
+    return when_to_load, how_to_load
+
+
+def load_pl_checkpoint_into_pt_model(checkpoint: str, model: torch.nn.Module):
+    """
+    The checkpoint can come from wrapped model or
+    """
+    src_state_dict = torch.load(checkpoint)["state_dict"]
+    tgt_state_dict = model.state_dict()
+    new_tgt_state_dict = {}
+    for k, v in src_state_dict.items():
+        if "model." in k:
+            possible_tgt_k = ".".join(k.split(".")[1:])
+        else:
+            possible_tgt_k = k
+        if possible_tgt_k in tgt_state_dict:
+            new_tgt_state_dict[k] = v
+    model.load_state_dict(new_tgt_state_dict)
+    return model
+
+
+def load_pt_model_into_pt_model(checkpoint: str, model: torch.nn.Module):
+    state_dict = torch.load(checkpoint)
+    if "state_dict" in state_dict:
+        state_dict = state_dict["state_dict"]
+
+    model.load_state_dict(state_dict=state_dict)
+    return model
+
+
+def load_pkl_model(checkpoint: str):
+    with open(checkpoint, "rb") as f:
+        model = pickle.load(f)
+    return model
+
+
+def load_pt_pl_or_pkl_checkpoint_into_pt_model(
+    load_name: str, load_type: str, model: torch.nn.Module = None
+):
+    assert load_type in [
+        "pt",
+        "pl",
+        "pkl",
+    ], f"load_type should be one of ['pt', 'pl', 'pkl']"
+
+    if load_type == "pkl":
+        model = load_pkl_model(load_name)
+    elif load_type == "pl":
+        model = load_pl_checkpoint_into_pt_model(load_name, model=model)
+    else:
+        model = load_pt_model_into_pt_model(load_name, model=model)
+    return model
+
+
+# -------------------------------
+# MASE Logger
+# -------------------------------
+
+
+def getLogger(name: str, logFile: str = "", console: bool = True) -> logging.Logger:
+    # add a trace level
+    logging.TRACE = logging.DEBUG - 5
+    logging.addLevelName(logging.TRACE, "TRACE")
+    logging.Logger.trace = functools.partialmethod(logging.Logger.log, logging.TRACE)
+    logging.trace = functools.partial(logging.log, logging.TRACE)
+
+    logger = logging.getLogger(name)
+    logger.setLevel(logging.TRACE)
+
+    if logFile:
+        if os.path.isfile(logFile):
+            os.remove(logFile)
+
+        # File handle
+        class customFileFormat(logging.Formatter):
+            format = "[%(asctime)s][%(name)s][%(levelname)s] %(message)s"
+
+            def format(self, record):
+                logformat = (
+                    "%(message)s"
+                    if record.levelno == logging.TRACE
+                    else "[%(asctime)s][%(name)s][%(levelname)s] %(message)s"
+                )
+                formatter = logging.Formatter(logformat, "%Y-%m-%d %H:%M:%S")
+                return formatter.format(record)
+
+        fh = logging.FileHandler(logFile)
+        fh.setFormatter(customFileFormat())
+        fh.setLevel(logging.TRACE)
+        logger.addHandler(fh)
+
+    # Console handler
+    if console:
+        ch = logging.StreamHandler()
+
+        class customConsoleFormat(logging.Formatter):
+            format = "[%(asctime)s][%(name)s][%(levelname)s] %(message)s"
+
+            def format(self, record):
+                traceformat = logging.Formatter("%(message)s", "%Y-%m-%d %H:%M:%S")
+                colorformat = colorlog.ColoredFormatter(
+                    "%(log_color)s[%(asctime)s][%(name)s][%(levelname)s]%(reset)s"
+                    + " %(message_log_color)s%(message)s",
+                    "%Y-%m-%d %H:%M:%S",
+                    log_colors={
+                        "DEBUG": "cyan",
+                        "INFO": "green",
+                        "WARNING": "yellow",
+                        "ERROR": "red",
+                        "CRITICAL": "red,bg_white",
+                    },
+                    secondary_log_colors={
+                        "message": {"ERROR": "red", "CRITICAL": "red"}
+                    },
+                )
+                logformat = (
+                    traceformat if record.levelno == logging.TRACE else colorformat
+                )
+                return logformat.format(record)
+
+        ch.setFormatter(customConsoleFormat())
+        ch.setLevel(logging.TRACE)
+        logger.addHandler(ch)
+    return logger

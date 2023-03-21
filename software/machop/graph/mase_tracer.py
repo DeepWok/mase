@@ -10,10 +10,13 @@ CUSTOM_LEAF_MODULES = [T5LayerNorm]
 CUSTOM_LEAF_FUNCTIONS = []
 
 
+logger = logging.getLogger(__name__)
+
+
 def mark_as_leaf_module(cls: type):
     assert issubclass(cls, torch.nn.Module)
     if cls in CUSTOM_LEAF_MODULES:
-        logging.warning(f"Class {cls} was already marked as leaf module")
+        logger.warning(f"Class {cls} was already marked as leaf module")
     else:
         CUSTOM_LEAF_MODULES.append(cls)
     return cls
@@ -21,7 +24,7 @@ def mark_as_leaf_module(cls: type):
 
 def mark_as_leaf_func(func):
     if func in CUSTOM_LEAF_FUNCTIONS:
-        logging.warning(f"Function {func} was already marked as leaf function")
+        logger.warning(f"Function {func} was already marked as leaf function")
     else:
         CUSTOM_LEAF_FUNCTIONS.append(func)
     return func
@@ -37,7 +40,7 @@ MY_TENSOR_CONSTRUCTORS = []
 
 def mark_as_tensor_constructor(func):
     if func in CUSTOM_LEAF_FUNCTIONS:
-        logging.warning(f"Function {func} was already marked as leaf function")
+        logger.warning(f"Function {func} was already marked as leaf function")
     else:
         MY_TENSOR_CONSTRUCTORS.append(func)
     return func
@@ -65,7 +68,7 @@ class MaseTracer(Tracer):
         autowrap_functions=None,
         param_shapes_constant: bool = True,
     ) -> None:
-        logging.debug(
+        logger.debug(
             f"Current custom leaf functions: {CUSTOM_LEAF_FUNCTIONS+MY_TENSOR_CONSTRUCTORS+CUSTOM_LEAF_MODULES}\n"
             + "Current custom leaf models: {CUSTOM_LEAF_MODULES}"
         )

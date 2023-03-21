@@ -1,8 +1,10 @@
 import torch
 import torch.nn as nn
 from torchmetrics import Accuracy
-from transformers import AutoModel
 
+from ....models.patched_nlp_models import (
+    patched_model_name_to_output_hidden_states_name,
+)
 from ..base import WrapperBase
 
 name_to_final_module_map = {
@@ -12,7 +14,7 @@ name_to_final_module_map = {
     "bert-base-uncased": "pooler_output",
     "roberta-base": "pooler_output",
     "roberta-large": "pooler_output",
-}
+} | patched_model_name_to_output_hidden_states_name
 
 
 class NLPClassificationModelWrapper(WrapperBase):
@@ -27,7 +29,7 @@ class NLPClassificationModelWrapper(WrapperBase):
         self.model = model["model"]
         self.tokenizer = model["tokenizer"]
         self.classifier = model["classifier"]
-        self.fn = name_to_final_module_map[self.model.name_or_path]
+        self.hidden_name = name_to_final_module_map[self.model.name_or_path]
         self.criterion = nn.CrossEntropyLoss()
         self.accuracy = Accuracy(task="multiclass", num_classes=self.num_classes)
 
@@ -41,7 +43,10 @@ class NLPClassificationModelWrapper(WrapperBase):
         output.pooler_output (batch_size, hidden_size): take hidden representation of [CLS] token in each sequence, run through BertPooler module (linear layer with Tanh activation)
         """
         output = self.model(input_ids, attention_mask=attention_mask)
-        hidden = getattr(output, self.fn)
+        # hidden = getattr(output, self.fn)
+        # print(output.keys())
+        # breakpoint()
+        hidden = output[self.hidden_name]
         output = self.classifier(hidden)
         output = torch.sigmoid(output)
         loss = 0

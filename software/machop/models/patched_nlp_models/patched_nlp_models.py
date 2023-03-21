@@ -4,50 +4,36 @@ import torch
 import torch.nn as nn
 from transformers import AutoTokenizer
 
-from .opt import (
-    opt_patched_model_cls_to_dummy_input_fn,
+from .opt_patched import (
     opt_patched_model_cls_to_original_model_cls,
-    opt_patched_task_to_model_cls,
+    opt_patched_model_cls_to_required_input_args,
+    opt_patched_model_name_to_hidden_size,
+    opt_patched_model_name_to_output_hidden_states_name,
+    opt_patched_model_name_to_pooler_size,
+    opt_patched_name_to_patched_model_mapping,
 )
 
-model_name_to_patched_model_mapping = {
-    "facebook/opt-125m@patched": opt_patched_task_to_model_cls,
-    "facebook/opt-350m@patched": opt_patched_task_to_model_cls,
-    "facebook/opt-1.3b@patched": opt_patched_task_to_model_cls,
-    "facebook/opt-2.7b@patched": opt_patched_task_to_model_cls,
-    "facebook/opt-13b@patched": opt_patched_task_to_model_cls,
-    "facebook/opt-30b@patched": opt_patched_task_to_model_cls,
-    "facebook/opt-66b@patched": opt_patched_task_to_model_cls,
-}
+model_name_to_patched_model_mapping = {} | opt_patched_name_to_patched_model_mapping
 
-patched_model_cls_to_get_dummy_input = {} | opt_patched_model_cls_to_dummy_input_fn
+# patched_model_cls_to_get_dummy_input = {} | opt_patched_model_cls_to_dummy_input_fn
+patched_model_cls_to_required_input_args = (
+    {} | opt_patched_model_cls_to_required_input_args
+)
 
 patched_model_cls_to_original_model_cls = (
     {} | opt_patched_model_cls_to_original_model_cls
 )
 
 # pooler: ? -> hidden_size
-model_to_pooler_size = {
-    # for facebook/opt, ? is OPTConfig.word_embed_proj_dim
-    "facebook/opt-125m@patched": (768, 768),
-    "facebook/opt-350m@patched": (512, 1024),
-    "facebook/opt-1.3b@patched": (2048, 2048),
-    "facebook/opt-2.7b@patched": (2560, 2560),
-    "facebook/opt-13b@patched": (5120, 5120),
-    "facebook/opt-30b@patched": (7168, 7168),
-    "facebook/opt-66b@patched": (9126, 9126),
-}
+model_to_pooler_size = {} | opt_patched_model_name_to_pooler_size
 
 # classifier: config.hidden_size -> num_classes
-model_to_hidden_size = {
-    "facebook/opt-125m@patched": 768,
-    "facebook/opt-350m@patched": 1024,
-    "facebook/opt-1.3b@patched": 2048,
-    "facebook/opt-2.7b@patched": 2560,
-    "facebook/opt-13b@patched": 5120,
-    "facebook/opt-30b@patched": 7168,
-    "facebook/opt-66b@patched": 9126,
-}
+model_to_hidden_size = {} | opt_patched_model_name_to_hidden_size
+
+# see 'name_to_final_module_map' in machop.session.plt_wrapper.nlp_classification
+patched_model_name_to_output_hidden_states_name = (
+    {} | opt_patched_model_name_to_output_hidden_states_name
+)
 
 
 def get_modeling_mapping(model_name: str):
@@ -150,8 +136,8 @@ def get_patched_nlp_model(name, task, info, checkpoint=None, pretrained=True):
         name, cache_dir=os.path.abspath("./cache/tokenizer_cache_dir"), return_dict=True
     )
 
+    print(f"Loaded tokenizer from {name}")
     if pretrained:
-        print(f"Loaded tokenizer from {name}")
         if checkpoint is not None:
             model_cls = get_modeling_mapping(name)[task]
             model = model_cls.from_pretrained(checkpoint)
@@ -201,6 +187,9 @@ def get_patched_nlp_model(name, task, info, checkpoint=None, pretrained=True):
             classifier = nn.Sequential(pooler, classifier)
     else:
         classifier = None
+
+    # set name_or_path
+    model.name_or_path = name
     return {
         "model": model,
         "tokenizer": tokenizer,

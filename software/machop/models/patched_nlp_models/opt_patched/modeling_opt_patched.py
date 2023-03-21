@@ -28,8 +28,6 @@ from transformers.activations import ACT2FN
 from transformers.modeling_outputs import (
     BaseModelOutputWithPast,
     CausalLMOutputWithPast,
-    QuestionAnsweringModelOutput,
-    SequenceClassifierOutputWithPast,
 )
 from transformers.modeling_utils import PreTrainedModel
 from transformers.utils import (
@@ -40,16 +38,15 @@ from transformers.utils import (
     replace_return_docstrings,
 )
 
-from ....graph.mase_tracer import torch_arange, torch_ones, torch_zeros
-from .configuration_patched_opt import OPTConfigPatched
-from .utils_patched_opt import (
+from ....graph.mase_tracer import torch_ones
+from .configuration_opt_patched import OPTConfigPatched
+from .utils_opt_patched import (
     OPTAttention_attention_get_dtype_min,
     OPTAttention_attention_mask_shape_check,
     OPTAttention_attn_output_shape_check,
     OPTAttention_attn_weight_dtype_check,
     OPTAttention_attn_weights_shape_check,
     OPTAttention_construct_proj_shape,
-    OPTAttention_infer_mode_from_inputs,
     OPTAttention_layer_head_mask_shape_check,
     OPTAttention_reshape_qkv_back_for_bmm,
     OPTAttention_self_shape,
@@ -64,11 +61,6 @@ _CONFIG_FOR_DOC = "OPTConfig"
 
 # Base model docstring
 _EXPECTED_OUTPUT_SHAPE = [1, 8, 1024]
-
-# SequenceClassification docstring
-_CHECKPOINT_FOR_SEQUENCE_CLASSIFICATION = "ArthurZ/opt-350m-dummy-sc"
-_SEQ_CLASS_EXPECTED_LOSS = 1.71
-_SEQ_CLASS_EXPECTED_OUTPUT = "'LABEL_0'"
 
 OPT_PRETRAINED_MODEL_ARCHIVE_LIST = [
     "facebook/opt-125m",
@@ -125,15 +117,12 @@ class OPTAttentionPatched(nn.Module):
         dropout: float = 0.0,
         is_decoder: bool = False,
         bias: bool = True,
-        mode: int = None,
     ):
         super().__init__()
         self.embed_dim = embed_dim
         self.num_heads = num_heads
         self.dropout = dropout
         self.head_dim = embed_dim // num_heads
-        assert mode in [0, 1, 2, 3, None], "mode must be 0, or 1, or 2, or 3, or None"
-        self.mode = mode
 
         if (self.head_dim * num_heads) != self.embed_dim:
             raise ValueError(
@@ -151,9 +140,9 @@ class OPTAttentionPatched(nn.Module):
     def forward(
         self,
         hidden_states: torch.Tensor,
+        attention_mask: torch.Tensor,
         key_value_states: Optional[torch.Tensor] = None,
         past_key_value: Optional[Tuple[torch.Tensor]] = None,
-        attention_mask: Optional[torch.Tensor] = None,
         layer_head_mask: Optional[torch.Tensor] = None,
         output_attentions: bool = False,
     ) -> Tuple[torch.Tensor, Optional[torch.Tensor], Optional[Tuple[torch.Tensor]]]:
@@ -161,27 +150,26 @@ class OPTAttentionPatched(nn.Module):
 
         # if key_value_states are provided this layer is used as a cross-attention layer
         # for the decoder
-        if self.mode is None:
-            mode: int = OPTAttention_infer_mode_from_inputs(
-                key_value_states, past_key_value
-            )
-        else:
-            mode = self.mode
+        is_cross_attention = key_value_states is not None
 
         bsz, tgt_len, _ = hidden_states.size()
 
         # get query proj
         query_states = self.q_proj(hidden_states) * self.scaling
         # get key, value proj
-        # if is_cross_attention and past_key_value is not None:
-        if mode == 0:
-            # [x] reuse k,v, cross_attentions
+        if is_cross_attention and past_key_value is not None:
+            # reuse k,v, cross_attentions
+            # current OPTAttentionPatched does not support using cache.
+            # because using cache needs changing the graph after the first auto-regressive generation
+            # before the first auto-regressive decoding, past_key_value is None
+            # after the first auto-regressive decoding, past_key_value is Tuple[Tensor]
+            raise RuntimeError(
+                "Traceable OPTAttention does not support using cached past keys and values"
+            )
             key_states = past_key_value[0]
             value_states = past_key_value[1]
-
-        # elif is_cross_attention:
-        elif mode == 1:
-            # [x] cross_attentions
+        elif is_cross_attention:
+            # cross_attentions
             key_states = OPTAttention_self_shape(
                 self.k_proj(key_value_states),
                 seq_len=-1,
@@ -196,9 +184,12 @@ class OPTAttentionPatched(nn.Module):
                 num_heads=self.num_heads,
                 head_dim=self.head_dim,
             )
-        # elif past_key_value is not None:
-        elif mode == 2:
-            # [x] reuse k, v, self_attention
+        elif past_key_value is not None:
+            # reuse k, v, self_attention
+            # current OPTAttentionPatched does not support using cache.
+            raise RuntimeError(
+                "Traceable OPTAttention does not support using cached past keys and values"
+            )
             key_states = OPTAttention_self_shape(
                 self.k_proj(hidden_states),
                 seq_len=-1,
@@ -216,7 +207,9 @@ class OPTAttentionPatched(nn.Module):
             key_states = torch.cat([past_key_value[0], key_states], dim=2)
             value_states = torch.cat([past_key_value[1], value_states], dim=2)
         else:
-            # [x] self_attention
+            # self_attention
+            # key_value_states is None, past_key_value is None
+            # *: only this if branch will be used in OPTModelPatched
             key_states = OPTAttention_self_shape(
                 self.k_proj(hidden_states),
                 seq_len=-1,
@@ -282,7 +275,7 @@ class OPTAttentionPatched(nn.Module):
         # upcast to fp32 if the weights are in fp16. Please see https://github.com/huggingface/transformers/pull/17437
         OPTAttention_attn_weight_dtype_check(attn_weights)
 
-        # FIXME: not fixed. now this model does not support torch.float16
+        # *: Currently this model does not support torch.float16
         # if attn_weights.dtype == torch.float16:
         #     attn_weights = nn.functional.softmax(
         #         attn_weights, dim=-1, dtype=torch.float32
@@ -291,7 +284,6 @@ class OPTAttentionPatched(nn.Module):
         #     attn_weights = nn.functional.softmax(attn_weights, dim=-1)
         attn_weights = nn.functional.softmax(attn_weights, dim=-1)
 
-        # FIXME
         if layer_head_mask is not None:
             OPTAttention_layer_head_mask_shape_check(layer_head_mask, self.num_heads)
             attn_weights = layer_head_mask.view(1, -1, 1, 1) * attn_weights.view(
@@ -336,13 +328,8 @@ class OPTAttentionPatched(nn.Module):
 
 
 class OPTDecoderLayerPatched(nn.Module):
-    """
-    To make OPTDecoderLayer traceable, use mode 3 only for OPTAttention
-    """
-
-    def __init__(self, config: OPTConfigPatched, mode=3):
+    def __init__(self, config: OPTConfigPatched):
         super().__init__()
-        assert mode == 3, "Only mode 3 is both for decoding and traceable"
         self.embed_dim = config.hidden_size
         self.self_attn = OPTAttentionPatched(
             embed_dim=self.embed_dim,
@@ -350,7 +337,6 @@ class OPTDecoderLayerPatched(nn.Module):
             dropout=config.attention_dropout,
             is_decoder=True,
             bias=config.enable_bias,
-            mode=mode,
         )
         self.do_layer_norm_before = config.do_layer_norm_before
         self.dropout = config.dropout
@@ -368,7 +354,7 @@ class OPTDecoderLayerPatched(nn.Module):
     def forward(
         self,
         hidden_states: torch.Tensor,
-        attention_mask: Optional[torch.Tensor] = None,
+        attention_mask: torch.Tensor,
         layer_head_mask: Optional[torch.Tensor] = None,
         output_attentions: Optional[bool] = False,
     ) -> Tuple[
@@ -396,9 +382,11 @@ class OPTDecoderLayerPatched(nn.Module):
         # *: key_value_states is always None
         hidden_states, self_attn_weights, _ = self.self_attn(
             hidden_states=hidden_states,
+            past_key_value=None,
             attention_mask=attention_mask,
             layer_head_mask=layer_head_mask,
             output_attentions=output_attentions,
+            key_value_states=None,
         )
         hidden_states = nn.functional.dropout(
             hidden_states, p=self.dropout, training=self.training
@@ -581,10 +569,7 @@ class OPTDecoderPatched(OPTPatchedPreTrainedModel):
             self.final_layer_norm = None
 
         self.layers = nn.ModuleList(
-            [
-                OPTDecoderLayerPatched(config, mode=3)
-                for _ in range(config.num_hidden_layers)
-            ]
+            [OPTDecoderLayerPatched(config) for _ in range(config.num_hidden_layers)]
         )
 
         self.gradient_checkpointing = False
@@ -600,12 +585,11 @@ class OPTDecoderPatched(OPTPatchedPreTrainedModel):
     def forward(
         self,
         input_ids: torch.LongTensor = None,
-        attention_mask: Optional[torch.Tensor] = None,
+        attention_mask: torch.Tensor = None,
         head_mask: Optional[torch.Tensor] = None,
         inputs_embeds: Optional[torch.FloatTensor] = None,
         output_attentions: Optional[bool] = None,
         output_hidden_states: Optional[bool] = None,
-        return_dict: Optional[bool] = None,
     ) -> Union[Tuple, BaseModelOutputWithPast]:
         r"""
         Args:
@@ -640,24 +624,9 @@ class OPTDecoderPatched(OPTPatchedPreTrainedModel):
             output_hidden_states (`bool`, *optional*):
                 Whether or not to return the hidden states of all layers. See `hidden_states` under returned tensors
                 for more detail.
-            return_dict (`bool`, *optional*):
-                Whether or not to return a [`~utils.ModelOutput`] instead of a plain tuple.
         """
-        output_attentions = (
-            output_attentions
-            if output_attentions is not None
-            else self.config.output_attentions
-        )
-        output_hidden_states = (
-            output_hidden_states
-            if output_hidden_states is not None
-            else self.config.output_hidden_states
-        )
 
-        return_dict = (
-            return_dict if return_dict is not None else self.config.use_return_dict
-        )
-
+        return_dict = self.config.return_dict
         # retrieve input_ids and inputs_embeds
         if input_ids is not None and inputs_embeds is not None:
             raise ValueError(
@@ -777,26 +746,13 @@ class OPTModelPatched(OPTPatchedPreTrainedModel):
     def forward(
         self,
         input_ids: torch.LongTensor = None,
-        attention_mask: Optional[torch.Tensor] = None,
+        attention_mask: torch.Tensor = None,
         head_mask: Optional[torch.Tensor] = None,
         inputs_embeds: Optional[torch.FloatTensor] = None,
-        output_attentions: Optional[bool] = None,
-        output_hidden_states: Optional[bool] = None,
-        return_dict: Optional[bool] = None,
     ) -> Union[Tuple, BaseModelOutputWithPast]:
-        output_attentions = (
-            output_attentions
-            if output_attentions is not None
-            else self.config.output_attentions
-        )
-        output_hidden_states = (
-            output_hidden_states
-            if output_hidden_states is not None
-            else self.config.output_hidden_states
-        )
-        return_dict = (
-            return_dict if return_dict is not None else self.config.use_return_dict
-        )
+        output_attentions = self.config.output_attentions
+        output_hidden_states = self.config.output_hidden_states
+        return_dict = self.config.return_dict
 
         # decoder outputs consists of (dec_features, past_key_value, dec_hidden, dec_attn)
         decoder_outputs = self.decoder(
@@ -806,7 +762,7 @@ class OPTModelPatched(OPTPatchedPreTrainedModel):
             inputs_embeds=inputs_embeds,
             output_attentions=output_attentions,
             output_hidden_states=output_hidden_states,
-            return_dict=return_dict,
+            # return_dict=return_dict,
         )
 
         if not return_dict:
@@ -860,13 +816,13 @@ class OPTForCausalLMPatched(OPTPatchedPreTrainedModel):
     def forward(
         self,
         input_ids: torch.LongTensor = None,
-        attention_mask: Optional[torch.Tensor] = None,
+        attention_mask: torch.Tensor = None,
         head_mask: Optional[torch.Tensor] = None,
         inputs_embeds: Optional[torch.FloatTensor] = None,
-        labels: Optional[torch.LongTensor] = None,
-        output_attentions: Optional[bool] = None,
-        output_hidden_states: Optional[bool] = None,
-        return_dict: Optional[bool] = None,
+        labels: torch.LongTensor = None,
+        # output_attentions: Optional[bool] = None,
+        # output_hidden_states: Optional[bool] = None,
+        # return_dict: Optional[bool] = None,
     ) -> Union[Tuple, CausalLMOutputWithPast]:
         r"""
         Args:
@@ -930,19 +886,7 @@ class OPTForCausalLMPatched(OPTPatchedPreTrainedModel):
         "Hey, are you consciours? Can you talk to me?\nI'm not consciours, but I can talk to you."
         ```"""
 
-        output_attentions = (
-            output_attentions
-            if output_attentions is not None
-            else self.config.output_attentions
-        )
-        output_hidden_states = (
-            output_hidden_states
-            if output_hidden_states is not None
-            else self.config.output_hidden_states
-        )
-        return_dict = (
-            return_dict if return_dict is not None else self.config.use_return_dict
-        )
+        return_dict = self.config.return_dict
 
         # decoder outputs consists of (dec_features, layer_state, dec_hidden, dec_attn)
         outputs = self.model.decoder(
@@ -950,9 +894,6 @@ class OPTForCausalLMPatched(OPTPatchedPreTrainedModel):
             attention_mask=attention_mask,
             head_mask=head_mask,
             inputs_embeds=inputs_embeds,
-            output_attentions=output_attentions,
-            output_hidden_states=output_hidden_states,
-            return_dict=return_dict,
         )
 
         logits = self.lm_head(outputs[0]).contiguous()

@@ -10,16 +10,30 @@ from transformers import (
     AutoTokenizer,
 )
 
-model_to_hidden_size = {
+model_name_to_hidden_size = {
+    "facebook/opt-125m": 768,
     "facebook/opt-350m": 1024,
+    "facebook/opt-1.3b": 2048,
+    "facebook/opt-2.7b": 2560,
+    "facebook/opt-13b": 5120,
+    "facebook/opt-30b": 7168,
+    "facebook/opt-66b": 9126,
 }
 
-model_to_pooler_size = {
+model_name_to_pooler_size = {
+    "facebook/opt-125m": (768, 768),
     "facebook/opt-350m": (512, 1024),
+    "facebook/opt-1.3b": (2048, 2048),
+    "facebook/opt-2.7b": (2560, 2560),
+    "facebook/opt-13b": (5120, 5120),
+    "facebook/opt-30b": (7168, 7168),
+    "facebook/opt-66b": (9126, 9126),
 }
 
 
 # TODO: check the pooler? should we pool at the first token for opt?
+# bert uses the pooler
+# opt does not use the pooler
 class Pooler(nn.Module):
     def __init__(self, in_hidden_size, out_hidden_size):
         super().__init__()
@@ -77,7 +91,7 @@ def get_nlp_model(name, task, info, checkpoint=None, pretrained=True):
                 )
             print(f"Loaded model from {name} in HuggingFace")
     else:
-        config = AutoConfig.from_pretrained(checkpoint)
+        config = AutoConfig.from_pretrained(name)
         if task in ["classification", "cls"]:
             model = AutoModel.from_config(config=config)
         elif task in ["language_modeling", "lm"]:
@@ -88,10 +102,10 @@ def get_nlp_model(name, task, info, checkpoint=None, pretrained=True):
             model = AutoModelForSeq2SeqLM.from_config(config=config)
 
     if task in ["classification", "cls"]:
-        hidden_size = model_to_hidden_size.get(name, model.config.hidden_size)
+        hidden_size = model_name_to_hidden_size.get(name, model.config.hidden_size)
         classifier = nn.Linear(hidden_size, num_classes)
-        if name in model_to_pooler_size:
-            in_hidden, out_hidden = model_to_pooler_size[name]
+        if name in model_name_to_pooler_size:
+            in_hidden, out_hidden = model_name_to_pooler_size[name]
             pooler = Pooler(in_hidden, out_hidden)
             classifier = nn.Sequential(pooler, classifier)
     else:
