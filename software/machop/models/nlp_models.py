@@ -68,7 +68,7 @@ def get_nlp_model(name, task, info, checkpoint=None, pretrained=True):
         if checkpoint is not None:
             # Load checkpoint if `--pretrained --load LOAD`
             model = AutoModel.from_pretrained(checkpoint)
-            print(f"Loaded model from {checkpoint}")
+            print(f"Loaded local pretrained HuggingFace model from {checkpoint}")
         else:
             if task in ["language_modeling", "lm"]:
                 model = AutoModelForCausalLM.from_pretrained(
@@ -89,7 +89,7 @@ def get_nlp_model(name, task, info, checkpoint=None, pretrained=True):
                     return_dict=True,
                     cache_dir=os.path.abspath("./cache/model_cache_dir"),
                 )
-            print(f"Loaded model from {name} in HuggingFace")
+            print(f"Loaded pretrained model using model name '{name}' in HuggingFace")
     else:
         config = AutoConfig.from_pretrained(name)
         if task in ["classification", "cls"]:
@@ -100,6 +100,7 @@ def get_nlp_model(name, task, info, checkpoint=None, pretrained=True):
             )
         elif task == ["translation", "tran"]:
             model = AutoModelForSeq2SeqLM.from_config(config=config)
+        print("HuggingFace model randomly initialized")
 
     if task in ["classification", "cls"]:
         hidden_size = model_name_to_hidden_size.get(name, model.config.hidden_size)

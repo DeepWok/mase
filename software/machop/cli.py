@@ -30,7 +30,7 @@ try:
 except ModuleNotFoundError:
     is_sw_env = True
 
-logger = getLogger(__name__)
+logger = getLogger("machop")
 logging.getLogger().setLevel(logging.INFO)
 
 
@@ -451,7 +451,10 @@ class Machop:
             os.makedirs(self.output_dir_sw)
         if not os.path.isdir(self.output_dir_hw):
             os.makedirs(self.output_dir_hw)
-        logger.info(f"Project will be created at {self.output_dir}")
+        if args.project_dir is None or args.project is None:
+            logger.warning(f"Project will be created at {self.output_dir}")
+        else:
+            logger.info(f"Project will be created at {self.output_dir}")
 
     def modify_sw(self):
         args = self.args
@@ -483,10 +486,6 @@ class Machop:
     def train(self):
         args = self.args
         logger.info(f"Training model {args.model!r}...")
-        if args.project_dir is None:
-            logger.warning(
-                "--project_dir not specified. Your model will be saved in ${mase-tools}/mase_output/${args.model}@${timestamp}."
-            )
 
         plt_trainer_args = {
             "max_epochs": args.max_epochs,
