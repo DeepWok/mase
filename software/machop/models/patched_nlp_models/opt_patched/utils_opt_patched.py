@@ -6,36 +6,6 @@ from torch import Tensor
 from ....graph.mase_tracer import mark_as_leaf_func
 
 
-# this function needn't to be marked as leaf function
-def OPTAttention_infer_mode_from_inputs(
-    key_value_states: Tensor, past_key_value: Tuple[Tensor]
-) -> int:
-    """
-    Only mode 2 and 3 are used in OPT
-    """
-    is_cross_attention = key_value_states is not None
-
-    if is_cross_attention and past_key_value is not None:
-        # key_value_states is not None, past_key_value is not None
-        # reuse k, v, cross attention
-        mode = 0
-    elif is_cross_attention:
-        # key_value_states is not None, past_key_value is None
-        # cross_attention
-        mode = 1
-    elif past_key_value is not None:
-        # use_cache is True, and is not generating the first token
-        # key_value_states is None, past_key_value is not None
-        # reuse k, v, self-attention
-        mode = 2
-    else:
-        # use_cache is None/ False, or is generating the first token
-        # key_value_states is None, past_key_value is None
-        # self_attention
-        mode = 3
-    return mode
-
-
 @mark_as_leaf_func
 def OPTAttention_self_shape(
     tensor: Tensor, seq_len: int, bsz: int, num_heads: int, head_dim: int
@@ -213,33 +183,3 @@ def OPTDecoder_check_head_mask(head_mask, decoder_layers) -> bool:
                     f" {head_mask.size()[0]}."
                 )
     return True
-
-
-# ------------------------------------
-# Dummy inputs
-# ------------------------------------
-def get_dummy_inputs_for_OPTModel():
-    dummy_inputs = {
-        "input_ids": torch.arange(2).long().reshape(1, 2),
-        "attention_mask": None,
-        "head_mask": None,
-        "inputs_embeds": None,
-        "output_attentions": None,
-        "output_hidden_states": None,
-        "return_dict": None,
-    }
-    return dummy_inputs
-
-
-def get_dummy_inputs_for_OPTForCausalLM():
-    dummy_inputs = {
-        "input_ids": torch.arange(2).long().reshape(1, 2),
-        "attention_mask": None,
-        "head_mask": None,
-        "inputs_embeds": None,
-        "labels": torch.arange(2).long().reshape(1, 2),
-        "output_attentions": None,
-        "output_hidden_states": None,
-        "return_dict": None,
-    }
-    return dummy_inputs

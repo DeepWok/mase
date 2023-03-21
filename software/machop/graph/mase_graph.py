@@ -1,14 +1,18 @@
-import os
-import time
 import glob
-import toml
-import shutil
 import logging
+import os
+import shutil
+import time
+
+import toml
 import torch
 import torch.fx
 from torch import nn
 from torch.fx import symbolic_trace
+
 from .mase_metadata import MaseMetadata
+
+logger = logging.getLogger(__name__)
 
 
 def _get_next_call_node(node, nodes_in):
@@ -59,7 +63,7 @@ class MaseGraph:
 
     def parse(self):
         model = self.model
-        # logging.debug(model)
+        # logger.debug(model)
         trace = torch.fx.symbolic_trace(model)
         trace.graph.lint()
         self.trace = trace
@@ -68,7 +72,7 @@ class MaseGraph:
         assert len(self.nodes_in) == 1, "Multiple inputs are not supported."
         self.nodes_out = _get_output_nodes(self.fx_graph)
         assert len(self.nodes_out) == 1, "Multiple outputs are not supported."
-        # logging.debug(self.fx_graph)
+        # logger.debug(self.fx_graph)
         for node in self.fx_graph.nodes:
             node.meta = MaseMetadata(node=node, model=self.model)
         # Initialising parameters requires the objects saved in the metadata of all the nodes
@@ -116,9 +120,9 @@ class MaseGraph:
         layer_types = []
         for node in self.fx_graph.nodes:
             count[node.op] += 1
-        logging.debug(
-            f"""Network overview: 
+        logger.debug(
+            f"""Network overview:
 {count}
-Layer types: 
+Layer types:
 {layer_types}"""
         )

@@ -9,6 +9,8 @@ from torch.fx import symbolic_trace
 
 from .utils import get_module_by_name, vf
 
+logger = logging.getLogger(__name__)
+
 
 class MaseMetadata:
     """
@@ -62,10 +64,10 @@ class MaseMetadata:
                 replace_fn = getattr(self, f"_init_parameters_{name}")
                 replace_fn()
             else:
-                logging.warning(f"{self.node} is not found in the internal library.")
+                logger.warning(f"{self.node} is not found in the internal library.")
                 # self._init_parameters_other()
         else:
-            logging.warning(f"Not dealing with node for now: {self.node}")
+            logger.warning(f"Not dealing with node for now: {self.node}")
 
     # ----------------------------------------------------------
     # Initialise parameters
@@ -298,10 +300,10 @@ class MaseMetadata:
                 replace_fn = getattr(self, f"_verify_parameters_{name}")
                 replace_fn()
             else:
-                logging.warning(f"{self.node} is not found in the internal library.")
+                logger.warning(f"{self.node} is not found in the internal library.")
                 self._verify_parameters_other()
         else:
-            logging.warning(f"Not dealing with node for now: {self.node}")
+            logger.warning(f"Not dealing with node for now: {self.node}")
 
     def _verify_parameters_general(self):
         # Verify common parameters

@@ -3,16 +3,14 @@ import os
 import pickle
 import pprint
 from copy import deepcopy
-from typing import Dict, Tuple
+from typing import Dict
 
 import toml
 import torch
 from tabulate import tabulate
 from torch import nn
 from torch.fx import Graph, GraphModule
-from torch.fx.proxy import TraceError
 
-from ..graph.dummy_inputs import _get_default_args
 from ..graph.mase_tracer import MaseTracer
 from ..graph.utils import (
     check_func_type,
@@ -21,15 +19,13 @@ from ..graph.utils import (
     get_parent_name,
     isinstance_but_not_subclass,
 )
+from ..utils import load_pt_pl_or_pkl_checkpoint_into_pt_model
 from .quantizers import functions_map, ops_map, possible_ops
-from .utils import copy_weights, load_checkpoint_into_model, load_model
+from .utils import copy_weights
 
 pp = pprint.PrettyPrinter(depth=4)
 
-
-def create_dummy_inputs(model: nn.Module):
-    # TODO: Create dummy inputs for different models
-    return {}
+logger = logging.getLogger(__name__)
 
 
 class Modifier:
@@ -43,6 +39,7 @@ class Modifier:
         dummy_inputs: Dict = {},
         save_dir: str = None,
         load_name: str = None,
+        load_type: str = None,
     ) -> None:
         """
         save_dir is expected to be "${no_hyphen_model_name}/software/modify-sw"
@@ -60,7 +57,7 @@ class Modifier:
 
         # load checkpoint if load_name is given
         if load_name:
-            model = load_checkpoint_into_model(load_name, model)
+            model = self.load_model(load_name, load_type=load_type, model=model)
         # create the graph of model
         self.graph: Graph = MaseTracer().trace(model, dummy_inputs)
 
@@ -104,7 +101,7 @@ class Modifier:
                 tabular_rows.append(row)
 
         report = tabulate(tabular_rows, headers=headers, tablefmt="github")
-        print("A tabular summary of modified funcs and modules")
+        logger.info("A tabular summary of modified funcs and modules")
         print(report)
 
         if self.save_dir:
@@ -114,23 +111,19 @@ class Modifier:
 
             with open(report_path, "w+") as f:
                 f.write(report)
-                logging.info(
-                    f"The tabular summary of modify-sw is saved to {report_path}"
-                )
+            logger.info(f"The tabular summary of modify-sw is saved to {report_path}")
 
-    def load_model(self, model):
+    def load_model(self, load_name, load_type, model):
         """
-        The model can be:
-            1. partially modified
-            2. non-modified model
-
         The checkpoint can be:
-            1. wrapped model saved by pl.Trainer
+            1. wrapped model ckpt saved by pl.Trainer
             2. user's ckpt
-            3. ckpt saved by modifier
         """
-        model = load_checkpoint_into_model(self.load_name, model)
-        logging.info("Checkpoint loaded before software modification")
+        # model = load_checkpoint_into_model(self.load_name, model)
+        model = load_pt_pl_or_pkl_checkpoint_into_pt_model(
+            load_name=load_name, load_type=load_type, model=model
+        )
+        logger.info(f"Checkpoint {load_name} loaded before software modification")
         return model
 
     def save_modified_model(self):
@@ -146,7 +139,7 @@ class Modifier:
             with open(modified_pkl_path, "wb") as f:
                 pickle.dump(self.graph_module, file=f)
 
-            logging.info(
+            logger.info(
                 f"Modified model is saved as {modified_ckpt_path} and {modified_pkl_path}"
             )
 
@@ -169,6 +162,18 @@ class Modifier:
                 fn_config = self.config[name]
                 replace_fn = getattr(self, f"replace_func_{name}")
                 replace_fn(fn_config)
+
+        # copy original model attributes to modified model
+        # some of them are useful like HuggingFace `transformers.PretrainedModel.name_or_path`
+        for attr_name in filter(
+            lambda attr_name: not attr_name.startswith("__"), dir(self.original_model)
+        ):
+            if not hasattr(self.graph_module, attr_name):
+                setattr(
+                    self.graph_module,
+                    attr_name,
+                    getattr(self.original_model, attr_name),
+                )
 
     def _traverse_graph_to_replace_nodes(
         self, target: type, replacement_fn, replacement_fn_kwargs={}

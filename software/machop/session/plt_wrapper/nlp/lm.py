@@ -1,7 +1,5 @@
 import torch
 import torch.nn as nn
-from torchmetrics import Accuracy
-from transformers import AutoModel
 
 from ..base import WrapperBase
 
@@ -31,8 +29,9 @@ class NLPLanguageModelingModelWrapper(WrapperBase):
             input_ids=input_ids, attention_mask=attention_mask, labels=labels
         )
         # loss = self.criterion(output, labels)
-        loss = output.loss
-        output = output.logits
+        # breakpoint()
+        loss = output["loss"]
+        output = output["logits"]
         return loss, output
 
     def training_step(self, batch):

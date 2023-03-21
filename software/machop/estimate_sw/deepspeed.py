@@ -4,6 +4,7 @@ import os
 
 import torch
 from deepspeed.profiling.flops_profiler import get_model_profile
+
 from .utils import get_input_args
 
 # from ..session.plt_wrapper import get_model_wrapper
@@ -11,6 +12,8 @@ from .utils import get_input_args
 # from ..session.plt_wrapper.nlp.lm import NLPLanguageModelingModelWrapper
 # from ..session.plt_wrapper.nlp.translation import NLPTranslationModelWrapper
 # from ..session.plt_wrapper.vision import VisionModelWrapper
+
+logger = logging.getLogger(__name__)
 
 
 def estimate_sw_deepspeed(
@@ -43,7 +46,7 @@ def estimate_sw_deepspeed(
     assert isinstance(
         config["ignore_modules"], (list, tuple, set)
     ), "ignore_modules should be a list/tuple/set of string nn.Module names"
-    logging.debug(f"estimate-sw config: {config}")
+    logger.debug(f"Estimate-sw config: {config}")
 
     with torch.cuda.device(0):
         plt_model, input_args = get_input_args(
@@ -52,5 +55,6 @@ def estimate_sw_deepspeed(
         flops, macs, params = get_model_profile(plt_model, args=input_args, **config)
 
         profiled_result = dict(flops=flops, macs=macs, params=params)
-        logging.info(profiled_result)
+        logger.info("Estimate-sw result")
+        print(profiled_result)
         return profiled_result

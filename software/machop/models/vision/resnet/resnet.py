@@ -163,8 +163,8 @@ class ResNetImageNet(nn.Module):
         self.linear = nn.Linear(512 * block.expansion, num_classes)
         self.flatten = Flatten()
 
-        print("number of classes")
-        print(num_classes)
+        # print("number of classes")
+        # print(num_classes)
 
     def _make_layer(self, block, planes, num_blocks, stride):
         strides = [stride] + [1] * (num_blocks - 1)
@@ -226,11 +226,3 @@ def get_resnet18_imagenet(info):
 def get_resnet50_imagenet(info):
     num_classes = info["num_classes"]
     return ResNetImageNet(Bottleneck, [3, 4, 6, 3], num_classes=num_classes)
-
-
-# def test():
-#     net = ResNet18()
-#     y = net(torch.randn(1, 3, 32, 32))
-#     print(y.size())
-
-# test()

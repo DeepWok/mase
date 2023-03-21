@@ -1,13 +1,18 @@
 import torch
 import torch.nn as nn
 from torchmetrics.text.bleu import BLEUScore
-from transformers import AutoModel
 
 from ..base import WrapperBase
 
 name_to_final_module_map = {
     # TODO: double check on how to extract classifier from last_hidden_state
+    "facebook/opt-125m": "last_hidden_state",
     "facebook/opt-350m": "last_hidden_state",
+    "facebook/opt-1.3b": "last_hidden_state",
+    "facebook/opt-2.7b": "last_hidden_state",
+    "facebook/opt-13b": "last_hidden_state",
+    "facebook/opt-30b": "last_hidden_state",
+    "facebook/opt-66b": "last_hidden_state",
     # BERT-ish model makes use a of a pooler
     "roberta-base": "pooler_output",
     "roberta-large": "pooler_output",

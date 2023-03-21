@@ -4,8 +4,7 @@ from typing import Dict
 import torch
 
 from ..models import nlp_models, patched_nlp_models, vision_models
-from ..models.patched_nlp_models import patched_model_cls_to_get_dummy_input
-
+from ..models.patched_nlp_models import patched_model_cls_to_required_input_args
 
 # --------------------
 # Create dummy inputs
@@ -21,41 +20,35 @@ def _get_default_args(func):
     }
 
 
-def get_dummy_inputs(model_name: str, task: str, model, data_loader):
+def get_dummy_inputs(model_name: str, task: str, model):
     default_forward_kwargs = _get_default_args(model.forward)
     dummy_inputs = {}
     if (
         model_name in patched_nlp_models
-        and type(model) in patched_model_cls_to_get_dummy_input
+        and type(model) in patched_model_cls_to_required_input_args
     ):
-        dummy_input_fn = patched_model_cls_to_get_dummy_input[type(model)]
-        dummy_inputs = dummy_input_fn()
-        default_forward_kwargs.update(dummy_inputs)
+        required_input_args = patched_model_cls_to_required_input_args[type(model)]
+        for required_input_arg in required_input_args:
+            default_forward_kwargs.pop(required_input_arg)
         dummy_inputs = default_forward_kwargs
     elif model_name in patched_nlp_models or model_name in nlp_models:
-        batch = next(iter(data_loader.train_dataloader))
-        if task in ["cls", "classification", "lm", "language_modeling"]:
-            dummy_inputs = {
-                "input_ids": batch["input_ids"][[0], ...],
-                "attention_mask": batch["attention_mask"][[0], ...],
-            }
-            default_forward_kwargs.update(dummy_inputs)
-            dummy_inputs = default_forward_kwargs
+        if task in ["cls", "classification"]:
+            required_input_args = ["input_ids", "attention_mask"]
+        elif task in ["lm", "language_modeling"]:
+            required_input_args = ["input_ids", "attention_mask", "labels"]
         else:
             # translation
-            dummy_inputs = {
-                "input_ids": batch["input_ids"][[0], ...],
-                "attention_mask": batch["attention_mask"][[0], ...],
-                "decoder_input_ids": batch["attention_mask"][[0], ...],
-                "decoder_attention_mask": batch["decoder_attention_mask"][[0], ...],
-            }
-            default_forward_kwargs.update(dummy_inputs)
-            dummy_inputs = default_forward_kwargs
+            required_input_args = [
+                "input_ids",
+                "attention_mask",
+                "decoder_input_ids",
+                "decoder_attention_mask",
+            ]
+        for required_input_arg in required_input_args:
+            default_forward_kwargs.pop(required_input_arg)
+        dummy_inputs = default_forward_kwargs
     elif model_name in vision_models:
-        batch, _ = next(iter(data_loader.train_dataloader))
-        assert (
-            len(default_forward_kwargs) == 1
-        ), "This vision module has more than 1 input"
+        # Currently the only input to vision model is a Tensor x
         dummy_inputs = {}
     else:
         raise RuntimeError(f"Unsupported model+task: {model_name}+{task}")
