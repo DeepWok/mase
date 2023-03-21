@@ -6,6 +6,6 @@ config = dict(
     warm_up=10,
     as_string=True,
     ignore_modules=[],
-    style="deepspeed",
+    style="fine-grained",
     output_file="estimate.toml",
 )
