@@ -235,6 +235,12 @@ tensorboard --logdir your-log-directory
   ./chop --task tran --model t5-small --pretrained --dataset iwslt2017_en_de --estimate-sw
   ```
 
+- Fine-grained estimate
+
+  ```bash
+  ./chop --task cls --model resnet18 --dataset cifar10 --estimate-sw --estimate-sw-config ./configs/estimate-sw/all_included_fine_grained.py
+  ```
+
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 <!-- ROADMAP -->

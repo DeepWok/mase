@@ -14,7 +14,7 @@ import toml
 import torch
 
 from .dataset import get_dataloader, get_dataset
-from .estimate_sw.estimate_sw import estimate_sw_single_gpu
+from .estimate_sw import run_estimator
 from .graph.dummy_inputs import get_dummy_inputs
 from .models import manual_models, model_map, nlp_models, vision_models
 from .modify.modifier import Modifier
@@ -491,15 +491,21 @@ class Machop:
     def estimate_sw(self):
         args = self.args
         logging.info(f"Estimating model {args.model!r}...")
+        save_path = os.path.join(self.output_dir_sw, "estimate-sw")
+
+        if not os.path.exists(save_path):
+            os.makedirs(save_path)
+
         estimate_sw_kwargs = {
             "model_name": args.model,
             "info": self.info,
             "model": self.model,
             "task": args.task,
             "data_loader": self.loader,
+            "save_path": save_path,
             "config_path": args.estimate_sw_config,
         }
-        estimate_sw_single_gpu(**estimate_sw_kwargs)
+        run_estimator(**estimate_sw_kwargs)
 
     def synthesize(self):
         args = self.args
