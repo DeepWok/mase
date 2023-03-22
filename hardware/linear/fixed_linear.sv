@@ -25,17 +25,18 @@ module fixed_linear #(
     output                data_in_ready,
 
     // input port for weight
-    input  [WEIGHT_WIDTH-1:0] weight        [IN_SIZE*PARALLELISM-1:0],
+    input  [WEIGHT_WIDTH-1:0] weight      [IN_SIZE*PARALLELISM-1:0],
     input                     weight_valid,
     output                    weight_ready,
+
     /* verilator lint_off UNUSEDSIGNAL */
-    input  [     B_WIDTH-1:0] bias          [           OUT_SIZE-1:0],
-    input                     bias_valid,
+    input  [  B_WIDTH-1:0] bias          [OUT_SIZE-1:0],
+    input                  bias_valid,
     /* verilator lint_on UNUSEDSIGNAL */
-    output                    bias_ready,
-    output [   OUT_WIDTH-1:0] data_out      [           OUT_SIZE-1:0],
-    output                    data_out_valid,
-    input                     data_out_ready
+    output                 bias_ready,
+    output [OUT_WIDTH-1:0] data_out      [OUT_SIZE-1:0],
+    output                 data_out_valid,
+    input                  data_out_ready
 );
 
   localparam FDP_WIDTH = IN_WIDTH + WEIGHT_WIDTH + $clog2(IN_SIZE);
