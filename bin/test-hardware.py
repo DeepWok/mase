@@ -11,6 +11,7 @@ import maselogger
 # Add more test cases here
 test_cases = {
     # 'common/join2': [],
+    "common/fixed_matrix_multiplication":["linear","common"],
     "common/fixed_mult": [],
     "common/register_slice": [],
     "common/fixed_adder_tree_layer": [],
