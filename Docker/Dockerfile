@@ -19,7 +19,8 @@ RUN apt-get update -y \
                           libboost-all-dev llvm gcc ninja-build \
                           python3 python3-pip build-essential \
                           libssl-dev git vim wget htop sudo \
-                          lld parallel clang-format clang-tidy
+                          lld parallel clang-format clang-tidy \
+                          libtinfo5 gcc-multilib libidn11-dev
 
 # Install SystemVerilog formatter
 RUN mkdir -p /srcPkgs \
@@ -72,9 +73,14 @@ RUN pip3 install --user --upgrade pip \
 ENV vhls $VHLS_PATH
 RUN printf "\
 \nexport LIBRARY_PATH=/usr/lib/x86_64-linux-gnu:\$LIBRARY_PATH \
+\n# Basic PATH setup \
 \nexport PATH=/workspace/bin:/workspace/hls/build/bin:/home/dev-user/.local/bin:/workspace/llvm/build/bin:\$PATH:/srcPkgs/verible/bin \
 \n# Vitis HLS setup \
-\nsource ${vhls}/Vitis_HLS/2020.2/settings64.sh \
+\n# source ${vhls}/Vitis_HLS/2020.2/settings64.sh \
+\n# MLIR-AIE PATH setup \
+\nexport PATH=/workspace/mlir-aie/install/bin:/workspace/mlir-air/install/bin:\$PATH \
+\nexport PYTHONPATH=/workspace/mlir-aie/install/python:/workspace/mlir-air/install/python:\$PYTHONPATH \
+\nexport LD_LIBRARY_PATH=/workspace/mlir-aie/lib:/workspace/mlir-air/lib:/opt/xaiengine:\$LD_LIBRARY_PATH \
 \n# Thread setup \
 \nexport nproc=\$(grep -c ^processor /proc/cpuinfo) \
 \n# Terminal color... \
@@ -90,6 +96,7 @@ RUN printf "\
 \nautocmd BufWritePost *.h   silent! !clang-format -i <afile> \
 \nautocmd BufWritePost *.hpp silent! !clang-format -i <afile> \
 \nautocmd BufWritePost *.cc  silent! !clang-format -i <afile> \
+\nautocmd BufWritePost *.py  silent! set tabstop=4 shiftwidth=4 expandtab \
 \nautocmd BufWritePost *.py  silent! !python3 -m black <afile> \
 \nautocmd BufWritePost *.sv  silent! !verible-verilog-format --inplace <afile> \
 \nautocmd BufWritePost *.v  silent! !verible-verilog-format --inplace <afile> \

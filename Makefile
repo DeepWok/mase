@@ -19,7 +19,8 @@ shell: build-docker
 build:
 	bash scripts/build-llvm.sh
 	bash scripts/build-mase-hls.sh
-	bash scripts/build-air-aie.sh
+	bash scripts/build-aie.sh
+	bash scripts/build-air.sh
 
 clean:
 	rm -rf llvm/build

@@ -99,7 +99,6 @@ static LogicalResult preprocessFuncOp(func::FuncOp funcOp, StringRef funcName,
   });
   llvm::DenseMap<bufferization::ToTensorOp, memref::AllocOp> resultMap;
   funcOp.walk([&](bufferization::ToTensorOp op) {
-    llvm::errs() << "Found to_tensor op: " << op << "\n";
     if (std::find(oldResults.begin(), oldResults.end(), op.getResult()) ==
         oldResults.end())
       op.emitError("ToTensorOp must be a returned value.");
