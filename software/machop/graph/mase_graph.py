@@ -91,6 +91,10 @@ class MaseGraph:
             logging.debug(f"Load common parameters from {load_name}")
             if not load_name.endswith(".toml"):
                 raise ValueError("Config file must be a toml file")
+            if not os.path.isfile(load_name):
+                raise ValueError(
+                    f"Config file for quantization not found. Please check if it is provided in the correct path: {load_name}."
+                )
             loaded_toml_meta = toml.load(load_name)
             for node in self.fx_graph.nodes:
                 if node.op == "call_module" or node.op == "call_function":
