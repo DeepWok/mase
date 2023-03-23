@@ -49,15 +49,20 @@ def _get_output_nodes(fx_graph):
     return nodes_out
 
 
-# Mase takes a torch.fx graph representation of a model and translates
-# it into a customised representation (Mase graph IR). The Mase graph
-# IR is a dataflow representation of the model with both software and
-# hardware constraints.
 class MaseGraph:
+    """
+    Mase takes a torch.fx graph representation of a model and translates
+    it into a customised representation (Mase graph IR). The Mase graph
+    IR is a dataflow representation of the model with both software and
+    hardware constraints.
+    """
+
     def __init__(self, model=None, common_param=None):
+        """
+        model = input model
+        common_param = external common parameters from toml (for quantization info)
+        """
         self.model = model
-        self.param = param
-        self.q_param = q_param
         self.fx_graph, self.nodes_in, self.nodes_out = self._init_fx_graph()
         self._init_parameters(common_param=common_param)
 
@@ -76,30 +81,32 @@ class MaseGraph:
         return fx_graph, nodes_in, nodes_out
 
     def _init_parameters(self, common_param=None):
-        self.update_common_parameters(common_param)
-        self.update_software_parameters()
-        self.update_hardware_parameters()
+        self.init_common_parameters(common_param)
+        self.init_software_parameters()
+        self.init_hardware_parameters()
 
-    def update_common_parameters(self, load_name):
+    def init_common_parameters(self, load_name):
         if load_name:
             """Update common parameters from a toml file"""
+            logging.debug(f"Load common parameters from {load_name}")
             if not load_name.endswith(".toml"):
                 raise ValueError("Config file must be a toml file")
             loaded_toml_meta = toml.load(load_name)
             for node in self.fx_graph.nodes:
-                parameters = loaded_toml_meta[node.name]
-                node.meta.update_common_parameters(parameters=parameters)
+                if node.op == "call_module" or node.op == "call_function":
+                    parameters = loaded_toml_meta[node.name]
+                    node.meta.init_common_parameters(parameters=parameters)
         else:
             for node in self.fx_graph.nodes:
-                node.meta.update_common_parameters()
+                node.meta.init_common_parameters()
 
-    def update_software_parameters(self):
+    def init_software_parameters(self):
         for node in self.fx_graph.nodes:
-            node.meta.update_software_parameters()
+            node.meta.init_software_parameters()
 
-    def update_hardware_parameters(self):
+    def init_hardware_parameters(self):
         for node in self.fx_graph.nodes:
-            node.meta.update_hardware_parameters()
+            node.meta.init_hardware_parameters()
 
     def load_parameters(self, load_name):
         """Load complete parameters from a toml file"""

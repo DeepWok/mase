@@ -565,15 +565,16 @@ class Machop:
         logger.info(f"Generating hardware for {args.model!r}...")
         mve = MaseVerilogEmitter(
             model=self.model,
-            project_path=args.project,
-            project=args.model,
+            project_path=args.project_dir,
+            project=args.project,
             to_debug=args.to_debug,
             target=args.target,
             num_targets=args.num_targets,
+            common_param="/workspace/software/toy/software/quantize/hw_quantize.toml",
         )
         mve.emit_verilog()
         if args.to_debug:
-            mve.save(
+            mve.save_parameters(
                 os.path.join(
                     args.project, args.model, "hardware", f"{args.model}_hw.toml"
                 )

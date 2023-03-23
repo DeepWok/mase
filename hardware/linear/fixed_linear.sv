@@ -1,18 +1,22 @@
 module fixed_linear #(
     parameter IN_WIDTH = 32,
-    parameter IN_SIZE  = 4,
+    parameter IN_FRAC_WIDTH = 0,
+    parameter IN_SIZE = 4,
     parameter IN_DEPTH = 3,
 
     parameter WEIGHT_WIDTH = 16,
-    parameter WEIGHT_SIZE  = IN_SIZE,
+    parameter WEIGHT_FRAC_WIDTH = 0,
+    parameter WEIGHT_SIZE = IN_SIZE,
 
-    parameter B_WIDTH = IN_WIDTH + WEIGHT_WIDTH + $clog2(IN_SIZE) + $clog2(IN_DEPTH),
+    parameter BIAS_SIZE = OUT_SIZE,
+    parameter BIAS_WIDTH = 32,
+    parameter BIAS_FRAC_WIDTH = 0,
     parameter PARALLELISM = 2,
 
     // This is the width for the summed product
     // +1 is because of the bias
     parameter HAS_BIAS  = 0,
-    parameter OUT_WIDTH = B_WIDTH + HAS_BIAS,
+    parameter OUT_WIDTH = IN_WIDTH + WEIGHT_WIDTH + $clog2(IN_SIZE) + $clog2(IN_DEPTH) + HAS_BIAS,
     parameter OUT_SIZE  = PARALLELISM
 
 ) (
@@ -30,13 +34,13 @@ module fixed_linear #(
     output                    weight_ready,
 
     /* verilator lint_off UNUSEDSIGNAL */
-    input  [  B_WIDTH-1:0] bias          [OUT_SIZE-1:0],
-    input                  bias_valid,
+    input  [BIAS_WIDTH-1:0] bias          [BIAS_SIZE-1:0],
+    input                   bias_valid,
     /* verilator lint_on UNUSEDSIGNAL */
-    output                 bias_ready,
-    output [OUT_WIDTH-1:0] data_out      [OUT_SIZE-1:0],
-    output                 data_out_valid,
-    input                  data_out_ready
+    output                  bias_ready,
+    output [ OUT_WIDTH-1:0] data_out      [ OUT_SIZE-1:0],
+    output                  data_out_valid,
+    input                   data_out_ready
 );
 
   localparam FDP_WIDTH = IN_WIDTH + WEIGHT_WIDTH + $clog2(IN_SIZE);
@@ -127,12 +131,21 @@ module fixed_linear #(
     logic [PARALLELISM-1:0] reg_ready;
     assign acc_join_ready = &reg_ready;
 
+    logic [ACC_WIDTH-1:0] bias_sext[PARALLELISM-1:0];
+    fixed_cast #(
+        .IN_SIZE(PARALLELISM),
+        .IN_WIDTH(BIAS_WIDTH),
+        .IN_FRAC_WIDTH(BIAS_FRAC_WIDTH),
+        .OUT_WIDTH(ACC_WIDTH),
+        .OUT_FRAC_WIDTH(IN_FRAC_WIDTH + WEIGHT_FRAC_WIDTH)
+    ) bias_cast (
+        .data_in (bias),
+        .data_out(bias_sext)
+    );
+
     for (genvar i = 0; i < PARALLELISM; i = i + 1) begin : add_bias
       logic [OUT_WIDTH-1:0] add;
-      logic [ACC_WIDTH-1:0] bias_sext;
-      // Sign extend
-      assign bias_sext = {{(ACC_WIDTH - B_WIDTH) {bias[i][B_WIDTH-1]}}, bias[i]};
-      assign add = acc_data_out[i] + bias_sext;
+      assign add = acc_data_out[i] + bias_sext[i];
       logic dout_valid;
       register_slice #(
           .IN_WIDTH(OUT_WIDTH),

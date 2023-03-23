@@ -66,16 +66,25 @@ class MaseVerilogEmitter(MaseGraph):
         to_debug=False,
         target="xc7z020clg484-1",
         num_targets=1,
+        common_param=None,
     ):
-        super().__init__(model=model)
+        """
+        MaseVerilogEmitter loads MaseGraph and emit the corresponding
+        hardware design in Verilog.
+        model = input model
+        common_param = external common parameters from toml (for quantization info)
+        project_path = path of the top-level project
+        project = name of the top-level project
+        to_debug = whether emit debugging info
+        target = the FPGA target for hardware generation
+        num_tagrets = number of the FPGA targets
+        """
+
+        super().__init__(model=model, common_param=common_param)
         self.project = project
         self.project_path = os.path.join(project_path, project)
         self.target = target
         self.num_targets = num_targets
-        self.fx_graph = None
-        self.nodes_in = []
-        self.nodes_out = []
-        self.parse()
         self.to_debug = to_debug
         self._init_project()
 
@@ -120,14 +129,14 @@ class MaseVerilogEmitter(MaseGraph):
             if node.op != "call_module" and node.op != "call_function":
                 continue
             node_name = vf(node.name)
-            if node.meta.parameters["hardware"]["target"] == "INTERNAL":
+            if node.meta.parameters["hardware"]["toolchain"] == "INTERNAL":
                 for key, value in node.meta.parameters["hardware"][
                     "verilog_parameters"
                 ].items():
                     if not isinstance(value, (int, float, complex, bool)):
                         value = '"' + value + '"'
                     parameters += f"parameter {node_name}_{key} = {value},\n"
-            elif node.meta.parameters["hardware"]["target"] == "EXTERNAL":
+            elif node.meta.parameters["hardware"]["toolchain"] == "EXTERNAL":
                 raise NotImplementedError(f"EXTERNAL not supported yet.")
         parameters += f"""
 parameter IN_WIDTH = {node_in_name}_IN_WIDTH,
@@ -205,7 +214,7 @@ logic                             {node_name}_data_out_ready;
                 continue
             node_name = vf(node.name)
             parameters = ""
-            if node.meta.parameters["hardware"]["target"] == "INTERNAL":
+            if node.meta.parameters["hardware"]["toolchain"] == "INTERNAL":
                 for key, value in node.meta.parameters["hardware"][
                     "verilog_parameters"
                 ].items():
@@ -443,14 +452,14 @@ csynth_design
             if node.op != "call_module" and node.op != "call_function":
                 continue
             # If it is an internal module, just copy the files to the project
-            if node.meta.parameters["hardware"]["target"] == "INTERNAL":
+            if node.meta.parameters["hardware"]["toolchain"] == "INTERNAL":
                 dependence_files = _add_dependence_files(
                     node.meta.parameters["hardware"]["dependence_files"],
                     dependence_files,
                 )
             # If it is an HLS module, go through torch-mlir and mlir-hls flow
             # TODO: Call HLS synthesis processes in parallel
-            elif node.meta.parameters["hardware"]["target"] == "HLS":
+            elif node.meta.parameters["hardware"]["toolchain"] == "HLS":
                 logger.debug(f"Synthesizing {node.name} using HLS")
                 hls_path = os.path.join(project_path, "hardware", "hls")
                 if not os.path.exists(hls_path):

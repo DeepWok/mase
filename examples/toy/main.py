@@ -1,4 +1,5 @@
 # This example converts a simple MLP model to MLIR, Torch script code and ONNX graph
+import os
 import torch
 import torch_mlir
 import torch.nn as nn
@@ -32,10 +33,14 @@ x = torch.randn((batch_size, 28, 28))
 
 # Emit the model to Linalg MLIR
 # Better to print to the file - the constants are a bit long
-#For output_type= argument, expected one of: TORCH, LINALG_ON_TENSORS, TOSA, STABLEHLO, RAW
-module = torch_mlir.compile(mlp, x, output_type="stablehlo")
-# module = torch_mlir.compile(mlp, x, output_type="linalg-on-tensors")
-print(module)
+# For output_type= argument, expected one of: TORCH, LINALG_ON_TENSORS, TOSA, STABLEHLO, RAW
+# module = torch_mlir.compile(mlp, x, output_type="stablehlo")
+module = torch_mlir.compile(mlp, x, output_type="linalg-on-tensors")
+mlir_path = "toy.linalg.mlir"
+with open(mlir_path, "w", encoding="utf-8") as outf:
+    outf.write(str(module))
+print(f"MLIR of module toy successfully written into {mlir_path}")
+assert os.path.isfile(mlir_path), "Linalg MLIR generation failed."
 
 # Outputs from the model
 # logits = mlp(x)

@@ -137,17 +137,13 @@ class RandomSink:
 
 
 def check_results(hw_out, sw_out):
-    if len(hw_out) != len(sw_out):
-        print(
-            "Mismatched output size: {} expected = {}".format(len(hw_out), len(sw_out))
-        )
-        return False
+    assert len(hw_out) == len(
+        sw_out
+    ), "Mismatched output size: {} expected = {}".format(len(hw_out), len(sw_out))
     for i in range(len(hw_out)):
-        if hw_out[i] != sw_out[i]:
-            print(
-                "Mismatched output value {}: {} expected = {}".format(
-                    i, [int(t) for t in hw_out[i]], [int(t) for t in sw_out[i]]
-                )
-            )
-            return False
+        assert (
+            hw_out[i] == sw_out[i]
+        ), "Mismatched output value {}: {} expected = {}".format(
+            i, [int(t) for t in hw_out[i]], [int(t) for t in sw_out[i]]
+        )
     return True

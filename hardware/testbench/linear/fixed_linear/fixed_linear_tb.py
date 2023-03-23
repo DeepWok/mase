@@ -29,11 +29,15 @@ if debug:
 class VerificationCase:
     def __init__(self, samples=10):
         self.data_in_width = 32
+        self.data_in_frac_width = 16
         self.weight_width = 16
+        self.weight_frac_width = 8
         self.vector_size = 8
         self.iterations = 3
         self.parallelism = 7
         self.has_bias = 1
+        self.bias_width = 8
+        self.bias_frac_width = 5
         self.data_in = RandomSource(
             name="data_in",
             samples=samples * self.iterations,
@@ -62,11 +66,15 @@ class VerificationCase:
     def get_dut_parameters(self):
         return {
             "IN_WIDTH": self.data_in_width,
+            "IN_FRAC_WIDTH": self.data_in_frac_width,
             "WEIGHT_WIDTH": self.weight_width,
+            "WEIGHT_FRAC_WIDTH": self.weight_frac_width,
             "IN_SIZE": self.vector_size,
             "IN_DEPTH": self.iterations,
             "PARALLELISM": self.parallelism,
             "HAS_BIAS": self.has_bias,
+            "BIAS_WIDTH": self.bias_width,
+            "BIAS_FRAC_WIDTH": self.bias_frac_width,
         }
 
     def sw_compute(self):
@@ -85,7 +93,11 @@ class VerificationCase:
                     acc[k] += sum(s)
             if self.has_bias:
                 for k in range(self.parallelism):
-                    acc[k] += self.bias.data[i][k]
+                    acc[k] += self.bias.data[i][k] << (
+                        self.weight_frac_width
+                        + self.data_in_frac_width
+                        - self.bias_frac_width
+                    )
             ref.append(acc)
         ref.reverse()
         return ref
@@ -194,6 +206,7 @@ def runner():
     sim = os.getenv("SIM", "verilator")
 
     verilog_sources = [
+        "../../../../hardware/common/fixed_cast.sv",
         "../../../../hardware/common/fixed_dot_product.sv",
         "../../../../hardware/linear/fixed_linear.sv",
         "../../../../hardware/common/fixed_accumulator.sv",
