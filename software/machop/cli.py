@@ -92,7 +92,7 @@ class Machop:
             "--project-dir",
             dest="project_dir",
             default=None,
-            help="The directory to save the project. Default='../mase_output'",
+            help="The directory to save the project. Default='${mase-tools}/mase_output'",
         )
         parser.add_argument(
             "--project",
@@ -434,8 +434,11 @@ class Machop:
 
     def create_output_dir(self):
         args = self.args
+        root = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
         project_dir = (
-            args.project_dir if args.project_dir is not None else "../mase_output"
+            args.project_dir
+            if args.project_dir is not None
+            else os.path.join(root, "mase_output")
         )
         project = (
             args.project
@@ -570,13 +573,23 @@ class Machop:
             to_debug=args.to_debug,
             target=args.target,
             num_targets=args.num_targets,
-            common_param="/workspace/software/toy/software/quantize/hw_quantize.toml",
+            common_param=os.path.join(
+                args.project_dir,
+                args.project,
+                "software",
+                "modify-sw",
+                "hw_quantize.toml",
+            ),
         )
         mve.emit_verilog()
         if args.to_debug:
             mve.save_parameters(
                 os.path.join(
-                    args.project, args.model, "hardware", f"{args.model}_hw.toml"
+                    args.project_dir,
+                    args.project,
+                    args.model,
+                    "hardware",
+                    f"{args.model}_hw.toml",
                 )
             )
         logger.warning("synthesis is only partially implemented.")
