@@ -10,5 +10,11 @@ set -o nounset
 # The absolute path to the directory of this script.
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
 MASE=$SCRIPT_DIR/..
+LLVM_DIR="${MASE}/llvm"
 
-# TODO
+# Build MLIR-AIE
+bash ${MASE}/mlir-air/utils/build-mlir-aie-local.sh \
+  ${LLVM_DIR} \
+  ${MASE}/cmakeModules/cmakeModulesXilinx \
+  ${MASE}/mlir-aie
+

@@ -52,7 +52,7 @@ jobs:
                           perl make autoconf flex bison libunwind-dev \
                           ccache libgoogle-perftools-dev numactl \
                           perl-doc libfl2 libfl-dev zlib1g zlib1g-dev \
-                          help2man
+                          help2man libidn11-dev
 
     - name: Install Verible 
       run: |

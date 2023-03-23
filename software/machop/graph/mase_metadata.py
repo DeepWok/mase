@@ -32,55 +32,124 @@ class MaseMetadata:
          - ???
     - Hardware
       - verilog_parameters -> {} : parameters need for customise the hardware module
-      - target -> str : approach for code generation, must be internal, external or HLS
+      - toolchain -> str : tool chain for code generation, must be internal, external or HLS
       - module -> str : the name of the used hardware module
       - dependence_files -> [] : the dependent files for the generated module
     ...
     """
 
     # Hardware dict
-    internal_layers = {nn.Linear: "linear", nn.ReLU: "relu"}
+    # internal_layers = {nn.Linear: "linear", nn.ReLU: "relu"}
+    internal_layers = {}
+    known_types = {"fixed", "float"}
+    known_toolchain = {"INTERNAL", "EXTERNAL", "HLS"}
 
     def __init__(self, node=None, model=None):
         # Top-level model
         self.model = model
-        # The target layer/module in the model
-        self.module = get_module_by_name(model, node.target)
+        # The toolchain layer/module in the model
+        self.module = get_module_by_name(model, node.toolchain)
         # The type of the module
         self.type = type(self.module)
         # The fx node of the module in the fx graph of the model
         self.node = node
-
-    def init_parameters(self):
-        # Initialise ll kinds of parameters
         self.parameters = {
             "common": {},
             "software": {},
             "hardware": {},
         }
+
+    def update_common_parameters(self, parameters=None):
+        """
+        Update common parameters
+        """
         if self.node.op == "call_module" or self.node.op == "call_function":
             if self.type in self.internal_layers:
                 name = self.internal_layers[self.type]
-                replace_fn = getattr(self, f"_init_parameters_{name}")
+                replace_fn = getattr(self, f"_update_common_parameters_{name}")
+                replace_fn(parameters)
+            else:
+                logging.warning(f"{self.node} is not found in the internal library.")
+                self._update_common_parameters(parameters)
+        else:
+            logging.warning(f"Not dealing with node for now: {self.node}")
+
+    def update_software_parameters(self, parameters=None):
+        """
+        Update software parameters
+        """
+        if self.node.op == "call_module" or self.node.op == "call_function":
+            if self.type in self.internal_layers:
+                name = self.internal_layers[self.type]
+                replace_fn = getattr(self, f"_update_software_parameters_{name}")
+                replace_fn(parameters)
+            else:
+                logging.warning(f"{self.node} is not found in the internal library.")
+                self._update_software_parameters(parameters)
+        else:
+            logging.warning(f"Not dealing with node for now: {self.node}")
+
+    def update_hardware_parameters(self, parameters=None):
+        """
+        Update hardware parameters
+        """
+        if self.node.op == "call_module" or self.node.op == "call_function":
+            if self.type in self.internal_layers:
+                name = self.internal_layers[self.type]
+                replace_fn = getattr(self, f"_update_hardware_parameters_{name}")
+                replace_fn(parameters)
+            else:
+                logging.warning(f"{self.node} is not found in the internal library.")
+                self._update_hardware_parameters(parameters)
+        else:
+            logging.warning(f"Not dealing with node for now: {self.node}")
+
+    def verify(self):
+        """
+        Verify all the parameters
+        """
+        if self.node.op == "call_module" or self.node.op == "call_function":
+            self._verify_parameters_general()
+            if self.type in self.internal_layers:
+                name = self.internal_layers[self.type]
+                replace_fn = getattr(self, f"_verify_parameters_{name}")
                 replace_fn()
             else:
                 logger.warning(f"{self.node} is not found in the internal library.")
-                # self._init_parameters_other()
+                self._verify_parameters_other()
         else:
             logger.warning(f"Not dealing with node for now: {self.node}")
 
+    def _verify_parameters_general(self):
+        """
+        Verify general parameters for all the nodes
+        """
+        # Verify common parameters
+        assert (
+            "data_in" in self.parameters["common"]["args"].keys()
+        ), f"Cannot find data_in in common.arg parameters. {self.node}"
+        assert (
+            "data_out" in self.parameters["common"]["results"].keys()
+        ), f"Cannot find data_out in common.arg parameters. {self.node}"
+
+        # Verify hardware parameters
+        TARGET = self.parameters["hardware"]["toolchain"]
+        assert (
+            TARGET in self.known_toolchain
+        ), f"Invalid parameter toolchain = {TARGET}. {self.node}"
+
     # ----------------------------------------------------------
-    # Initialise parameters
+    # Linear
     # ----------------------------------------------------------
-    def _init_parameters_linear(self):
+    def _update_common_parameters_linear(self, parameter):
         node_name = vf(self.node.name)
 
         # Common parameters
         self.parameters["common"]["args"] = {}
         for name, parameter in self.module.named_parameters():
             self.parameters["common"]["args"][name] = {
-                "type": "fixed",
-                "precision": (32, 0),
+                "type": "float",
+                "precision": [32],
                 "size": parameter.shape,
             }
         assert hasattr(
@@ -90,8 +159,8 @@ class MaseMetadata:
             self.module, "out_features"
         ), f"Linear layer {self.node.name} does not have out features."
         self.parameters["common"]["args"]["data_in"] = {
-            "type": "fixed",
-            "precision": (32, 0),
+            "type": "float",
+            "precision": [32],
             "size": (
                 1,
                 self.module.in_features,
@@ -99,15 +168,56 @@ class MaseMetadata:
         }
         self.parameters["common"]["results"] = {
             "data_out": {
-                "type": "fixed",
-                "precision": (32, 0),
+                "type": "float",
+                "precision": [32],
                 "size": (
                     1,
                     self.module.out_features,
                 ),
             }
         }
-        # Hardware parameters
+
+        if parameters:
+            """
+            Example toml:
+                ["node.name"]
+                name = "integer"
+                weight_width = 8
+                weight_frac = 3
+                in_width = 8
+                in_frac = 5
+                bias_width = 8
+                bias_frac = 5
+            """
+
+            node_name = vf(self.node.name)
+
+            # Pre-condition check
+            expected_keys = [
+                "weight_width",
+                "weight_frac",
+                "in_width",
+                "in_frac",
+                "in_width",
+                "in_frac",
+                "name",
+            ].sort()
+            input_keys = list(parameters.keys()).sort()
+            if input_keys != expected_keys:
+                assert False, f"""
+{node_name}: Unexpected parameters found for linear, 
+expect: {expected_keys}, 
+actual keys: {input_keys}"""
+
+            # Update common parameters
+            self.parameters["common"]["args"]["data_in"]["type"] = parameters["name"]
+
+    def _update_software_parameters_linear(self, parameter):
+        """
+        TODO
+        """
+
+    def _update_hardware_parameters_linear(self, parameter):
         self.parameters["hardware"] = {
             "verilog_parameters": {
                 "IN_WIDTH": self.parameters["common"]["args"]["data_in"]["precision"][
@@ -121,7 +231,7 @@ class MaseMetadata:
                 "PARALLELISM": 2,
                 "HAS_BIAS": int("bias" in self.parameters["common"]["args"].keys()),
             },
-            "target": "INTERNAL",
+            "toolchain": "INTERNAL",
             "module": "fixed_linear",
             "dependence_files": [
                 "common/fixed_dot_product.sv",
@@ -143,7 +253,7 @@ class MaseMetadata:
                 "PARALLELISM": 2,
                 "HAS_BIAS": 1,
             },
-            "target": "INTERNAL",
+            "toolchain": "INTERNAL",
             "module": "fixed_linear",
             "dependence_files": [
                 "common/fixed_dot_product.sv",
@@ -157,7 +267,32 @@ class MaseMetadata:
             ],
         }
 
-    def _init_parameters_relu(self):
+    def _verify_parameters_linear(self):
+        # Verify hardware parameters
+        IN_WIDTH = self.parameters["hardware"]["verilog_parameters"]["IN_WIDTH"]
+        assert IN_WIDTH > 0, f"Invalid parameter IN_WIDTH = {IN_WIDTH}. {self.node}"
+        IN_SIZE = self.parameters["hardware"]["verilog_parameters"]["IN_SIZE"]
+        assert IN_SIZE > 0, f"Invalid parameter IN_SIZE = {IN_SIZE}. {self.node}"
+        IN_DEPTH = self.parameters["hardware"]["verilog_parameters"]["IN_DEPTH"]
+        assert IN_DEPTH > 0, f"Invalid parameter IN_DEPTH = {IN_DEPTH}. {self.node}"
+        WEIGHT_WIDTH = self.parameters["hardware"]["verilog_parameters"]["WEIGHT_WIDTH"]
+        assert (
+            WEIGHT_WIDTH > 0
+        ), f"Invalid parameter WEIGHT_WIDTH = {WEIGHT_WIDTH}. {self.node}"
+        PARALLELISM = self.parameters["hardware"]["verilog_parameters"]["PARALLELISM"]
+        assert (
+            PARALLELISM > 0
+        ), f"Invalid parameter PARALLELISM = {PARALLELISM}. {self.node}"
+        HAS_BIAS = self.parameters["hardware"]["verilog_parameters"]["HAS_BIAS"]
+        assert HAS_BIAS in [
+            0,
+            1,
+        ], f"Invalid parameter HAS_BIAS = {HAS_BIAS}. {self.node}"
+
+    # ----------------------------------------------------------
+    # ReLU
+    # ----------------------------------------------------------
+    def _update_common_parameters_relu(self, parameters):
         node_name = vf(self.node.name)
         # Common parameters
         self.parameters["common"]["args"] = {}
@@ -193,6 +328,12 @@ class MaseMetadata:
             ), f"Relu's input ({node_in.name}) and output ({node_out.name}) have different features: {in_features}, {out_features}."
         features = max(in_features, out_features)
 
+    def _update_software_parameters_relu(self, parameters):
+        """
+        TODO
+        """
+
+    def _update_hardware_parameters_relu(self, parameters):
         self.parameters["common"]["args"]["data_in"] = {
             "type": "fixed",
             "precision": (32, 0),
@@ -220,12 +361,22 @@ class MaseMetadata:
                     0
                 ],
             },
-            "target": "INTERNAL",
+            "toolchain": "INTERNAL",
             "module": "fixed_relu",
             "dependence_files": ["activations/fixed_relu.sv"],
         }
 
-    def _init_parameters_other(self):
+    def _verify_parameters_relu(self):
+        # Verify hardware parameters
+        IN_WIDTH = self.parameters["hardware"]["verilog_parameters"]["IN_WIDTH"]
+        assert IN_WIDTH > 0, f"Invalid parameter IN_WIDTH = {IN_WIDTH}. {self.node}"
+        IN_SIZE = self.parameters["hardware"]["verilog_parameters"]["IN_SIZE"]
+        assert IN_SIZE > 0, f"Invalid parameter IN_SIZE = {IN_SIZE}. {self.node}"
+
+    # ----------------------------------------------------------
+    # Other
+    # ----------------------------------------------------------
+    def _update_common_parameters_other(self, parameters):
         node_name = vf(self.node.name)
         # Common parameters
         self.parameters["common"]["args"] = {}
@@ -283,73 +434,16 @@ class MaseMetadata:
             }
         }
 
-        # Hardware parameters
+    def _update_software_parameters_other(self, parameters):
+        """
+        TODO
+        """
+
+    def _update_hardware_parameters_other(self, parameters):
         self.parameters["hardware"]["verilog_parameters"] = {}
-        self.parameters["hardware"]["target"] = "HLS"
+        self.parameters["hardware"]["toolchain"] = "HLS"
         self.parameters["hardware"]["module"] = node_name
         self.parameters["hardware"]["dependence_files"] = []
-
-    # ----------------------------------------------------------
-    # Verify parameters
-    # ----------------------------------------------------------
-    def verify(self):
-        if self.node.op == "call_module" or self.node.op == "call_function":
-            self._verify_parameters_general()
-            if self.type in self.internal_layers:
-                name = self.internal_layers[self.type]
-                replace_fn = getattr(self, f"_verify_parameters_{name}")
-                replace_fn()
-            else:
-                logger.warning(f"{self.node} is not found in the internal library.")
-                self._verify_parameters_other()
-        else:
-            logger.warning(f"Not dealing with node for now: {self.node}")
-
-    def _verify_parameters_general(self):
-        # Verify common parameters
-        assert (
-            "data_in" in self.parameters["common"]["args"].keys()
-        ), f"Cannot find data_in in common.arg parameters. {self.node}"
-        assert (
-            "data_out" in self.parameters["common"]["results"].keys()
-        ), f"Cannot find data_out in common.arg parameters. {self.node}"
-
-        # Verify hardware parameters
-        TARGET = self.parameters["hardware"]["target"]
-        assert TARGET in [
-            "HLS",
-            "INTERNAL",
-            "EXTERNAL",
-        ], f"Invalid parameter target = {TARGET}. {self.node}"
-
-    def _verify_parameters_linear(self):
-        # Verify hardware parameters
-        IN_WIDTH = self.parameters["hardware"]["verilog_parameters"]["IN_WIDTH"]
-        assert IN_WIDTH > 0, f"Invalid parameter IN_WIDTH = {IN_WIDTH}. {self.node}"
-        IN_SIZE = self.parameters["hardware"]["verilog_parameters"]["IN_SIZE"]
-        assert IN_SIZE > 0, f"Invalid parameter IN_SIZE = {IN_SIZE}. {self.node}"
-        IN_DEPTH = self.parameters["hardware"]["verilog_parameters"]["IN_DEPTH"]
-        assert IN_DEPTH > 0, f"Invalid parameter IN_DEPTH = {IN_DEPTH}. {self.node}"
-        WEIGHT_WIDTH = self.parameters["hardware"]["verilog_parameters"]["WEIGHT_WIDTH"]
-        assert (
-            WEIGHT_WIDTH > 0
-        ), f"Invalid parameter WEIGHT_WIDTH = {WEIGHT_WIDTH}. {self.node}"
-        PARALLELISM = self.parameters["hardware"]["verilog_parameters"]["PARALLELISM"]
-        assert (
-            PARALLELISM > 0
-        ), f"Invalid parameter PARALLELISM = {PARALLELISM}. {self.node}"
-        HAS_BIAS = self.parameters["hardware"]["verilog_parameters"]["HAS_BIAS"]
-        assert HAS_BIAS in [
-            0,
-            1,
-        ], f"Invalid parameter HAS_BIAS = {HAS_BIAS}. {self.node}"
-
-    def _verify_parameters_relu(self):
-        # Verify hardware parameters
-        IN_WIDTH = self.parameters["hardware"]["verilog_parameters"]["IN_WIDTH"]
-        assert IN_WIDTH > 0, f"Invalid parameter IN_WIDTH = {IN_WIDTH}. {self.node}"
-        IN_SIZE = self.parameters["hardware"]["verilog_parameters"]["IN_SIZE"]
-        assert IN_SIZE > 0, f"Invalid parameter IN_SIZE = {IN_SIZE}. {self.node}"
 
     def _verify_parameters_other(self):
         return
