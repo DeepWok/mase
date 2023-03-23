@@ -66,7 +66,7 @@ RUN pip3 install --user --upgrade pip \
                     pytest pytorch-lightning transformers toml \
                     timm pytorch-nlp datasets ipython ipdb \
                     sentencepiece einops deepspeed pybind11 \
-                    tabulate
+                    tabulate tensorboardx
 
 
 # Add environment variables
