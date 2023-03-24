@@ -125,14 +125,16 @@ class MaseMetadata:
         """
         Verify general parameters for all the nodes
         """
+        if self.node.op != "call_module" and self.node.op != "call_function":
+            return
         # Verify common parameters
         assert (
             "data_in" in self.parameters["common"]["args"].keys()
         ), f"Cannot find data_in in common.arg parameters. {self.node}"
         assert (
             "data_out" in self.parameters["common"]["results"].keys()
-        ), f"Cannot find data_out in common.arg parameters. {self.node}"
-        for arg, param in self.parameters["common"]["args"]:
+        ), f"Cannot find data_out in common.results parameters. {self.node}"
+        for arg, param in self.parameters["common"]["args"].items():
             ## Valid type
             arg_type = param["type"]
             assert arg_type in self.known_types, f"Unknown type for {arg} : {arg_type}"
@@ -153,7 +155,7 @@ class MaseMetadata:
                 assert False, f"Unsupported arg type from toml. {param[type]}"
         assert (
             self.parameters["common"]["args"]["data_in"]["type"]
-            == self.parameters["common"]["results"]["type"]
+            == self.parameters["common"]["results"]["data_out"]["type"]
         ), "Input and out data type must match. "
 
         result_param = self.parameters["common"]["results"]["data_out"]
@@ -326,14 +328,19 @@ actual keys: {input_keys}"""
                     "PARALLELISM": self.parameters["common"]["results"]["data_out"][
                         "size"
                     ][1],
-                    # WEIGHT_SIZE == IN_SIZE
+                    # WEIGHT_SIZE == IN_SIZE * PARALLELISM
                     "WEIGHT_SIZE": self.parameters["common"]["args"]["data_in"]["size"][
                         1
-                    ],
+                    ]
+                    * self.parameters["common"]["results"]["data_out"]["size"][1],
                     # OUT_WIDTH == IN_WIDTH + WEIGHT_WIDTH + $clog2(IN_SIZE) + $clog2(IN_DEPTH) + HAS_BIAS
                     "OUT_WIDTH": self.parameters["common"]["results"]["data_out"][
                         "precision"
                     ][0],
+                    # OUT_FRAC_WIDTH == IN_FRAC_WIDTH + WEIGHT_FRAC_WIDTH
+                    "OUT_FRAC_WIDTH": self.parameters["common"]["results"]["data_out"][
+                        "precision"
+                    ][1],
                     # OUT_SIZE == PARALLELISM
                     "OUT_SIZE": self.parameters["common"]["results"]["data_out"][
                         "size"
@@ -376,15 +383,21 @@ actual keys: {input_keys}"""
         # Verify common parameters
         assert (
             self.parameters["common"]["args"]["data_in"]["size"][1]
-            == self.parameters["common"]["args"]["weight"]["size"][0]
-        ), "Input size does not match with the weight row size."
+            == self.parameters["common"]["args"]["weight"]["size"][1]
+        ), "Input size does not match with the weight row size. in = {}, w = {}".format(
+            self.parameters["common"]["args"]["data_in"]["size"][1],
+            self.parameters["common"]["args"]["weight"]["size"][1],
+        )
         assert (
             self.parameters["common"]["results"]["data_out"]["size"][1]
-            == self.parameters["common"]["args"]["weight"]["size"][1]
-        ), "Output size does not match with the weight column size."
+            == self.parameters["common"]["args"]["weight"]["size"][0]
+        ), "Output size does not match with the weight column size. out = {}, w = {}".format(
+            self.parameters["common"]["results"]["data_out"]["size"][1],
+            self.parameters["common"]["args"]["weight"]["size"][0],
+        )
 
         # Verify hardware parameters
-        data_in_param = self.parameters["common"]["data_in"]
+        data_in_param = self.parameters["common"]["args"]["data_in"]
         if data_in_param["type"] == "fixed":
             assert (
                 self.parameters["hardware"]["verilog_parameters"]["IN_WIDTH"]
@@ -394,16 +407,16 @@ actual keys: {input_keys}"""
                 self.parameters["hardware"]["verilog_parameters"]["IN_FRAC_WIDTH"]
                 == data_in_param["precision"][1]
             )
-            weight_param = self.parameters["common"]["weight"]
+            weight_param = self.parameters["common"]["args"]["weight"]
             assert (
-                self.parameters["hardware"]["verilog_parameters"]["WEIGHTWIDTH"]
+                self.parameters["hardware"]["verilog_parameters"]["WEIGHT_WIDTH"]
                 == weight_param["precision"][0]
             )
             assert (
-                self.parameters["hardware"]["verilog_parameters"]["WEIGHTFRAC_WIDTH"]
+                self.parameters["hardware"]["verilog_parameters"]["WEIGHT_FRAC_WIDTH"]
                 == weight_param["precision"][1]
             )
-            bias_param = self.parameters["common"]["bias"]
+            bias_param = self.parameters["common"]["args"]["bias"]
             assert (
                 self.parameters["hardware"]["verilog_parameters"]["BIAS_WIDTH"]
                 == bias_param["precision"][0]
@@ -424,15 +437,25 @@ actual keys: {input_keys}"""
                 0,
                 1,
             ], f"Invalid parameter HAS_BIAS = {HAS_BIAS}. {self.node}"
-            # WEIGHT_SIZE == IN_SIZE
+            # WEIGHT_SIZE == IN_SIZE * PARALLELISM
             assert (
                 self.parameters["hardware"]["verilog_parameters"]["WEIGHT_SIZE"]
                 == self.parameters["hardware"]["verilog_parameters"]["IN_SIZE"]
+                * self.parameters["hardware"]["verilog_parameters"]["PARALLELISM"]
             )
             # OUT_WIDTH == IN_WIDTH + WEIGHT_WIDTH + $clog2(IN_SIZE) + $clog2(IN_DEPTH) + HAS_BIAS
             assert (
                 self.parameters["common"]["results"]["data_out"]["precision"][0]
                 == self.parameters["hardware"]["verilog_parameters"]["OUT_WIDTH"]
+            ), "Output width missmatch for {}, out = {}, expected = {}".format(
+                self.node.name,
+                self.parameters["hardware"]["verilog_parameters"]["OUT_WIDTH"],
+                self.parameters["common"]["results"]["data_out"]["precision"][0],
+            )
+            # OUT_FRAC_WIDTH == IN_FRAC_WIDTH + WEIGHT_FRAC_WIDTH
+            assert (
+                self.parameters["common"]["results"]["data_out"]["precision"][1]
+                == self.parameters["hardware"]["verilog_parameters"]["OUT_FRAC_WIDTH"]
             )
             # OUT_SIZE == PARALLELISM
             assert (
@@ -566,7 +589,7 @@ actual keys: {input_keys}"""
         if self.parameters["common"]["args"]["data_in"]["type"] == "fixed":
             self.parameters["hardware"] = {
                 "verilog_parameters": {
-                    "IN_SIZE": 1,
+                    "IN_SIZE": self.parameters["common"]["args"]["data_in"]["size"][1],
                     "IN_FRAC_WIDTH": self.parameters["common"]["args"]["data_in"][
                         "precision"
                     ][1],
@@ -574,7 +597,9 @@ actual keys: {input_keys}"""
                         "precision"
                     ][0],
                     # OUT = IN
-                    "OUT_SIZE": 1,
+                    "OUT_SIZE": self.parameters["common"]["results"]["data_out"][
+                        "size"
+                    ][1],
                     "OUT_FRAC_WIDTH": self.parameters["common"]["args"]["data_in"][
                         "precision"
                     ][1],
@@ -601,7 +626,7 @@ actual keys: {input_keys}"""
         # Verify common parameters
 
         # Verify hardware parameters
-        data_in_param = self.parameters["common"]["data_in"]
+        data_in_param = self.parameters["common"]["args"]["data_in"]
         if data_in_param["type"] == "fixed":
             assert (
                 self.parameters["hardware"]["verilog_parameters"]["IN_WIDTH"]

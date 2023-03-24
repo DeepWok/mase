@@ -1,3 +1,4 @@
+`timescale 1ns / 1ps
 module register_slice #(
     parameter IN_WIDTH = 32,
     parameter type MYDATA = logic [IN_WIDTH-1:0]

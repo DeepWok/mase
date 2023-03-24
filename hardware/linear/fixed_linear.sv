@@ -1,3 +1,4 @@
+`timescale 1ns / 1ps
 module fixed_linear #(
     parameter IN_WIDTH = 32,
     parameter IN_FRAC_WIDTH = 0,
@@ -6,7 +7,7 @@ module fixed_linear #(
 
     parameter WEIGHT_WIDTH = 16,
     parameter WEIGHT_FRAC_WIDTH = 0,
-    parameter WEIGHT_SIZE = IN_SIZE,
+    parameter WEIGHT_SIZE = IN_SIZE * PARALLELISM,
 
     parameter BIAS_SIZE = OUT_SIZE,
     parameter BIAS_WIDTH = 32,
@@ -15,9 +16,12 @@ module fixed_linear #(
 
     // This is the width for the summed product
     // +1 is because of the bias
-    parameter HAS_BIAS  = 0,
+    parameter HAS_BIAS = 0,
     parameter OUT_WIDTH = IN_WIDTH + WEIGHT_WIDTH + $clog2(IN_SIZE) + $clog2(IN_DEPTH) + HAS_BIAS,
-    parameter OUT_SIZE  = PARALLELISM
+    /* verilator lint_off UNUSEDPARAM */
+    parameter OUT_FRAC_WIDTH = IN_FRAC_WIDTH + WEIGHT_FRAC_WIDTH,
+    /* verilator lint_on UNUSEDPARAM */
+    parameter OUT_SIZE = PARALLELISM
 
 ) (
     input clk,
@@ -29,7 +33,7 @@ module fixed_linear #(
     output                data_in_ready,
 
     // input port for weight
-    input  [WEIGHT_WIDTH-1:0] weight      [IN_SIZE*PARALLELISM-1:0],
+    input  [WEIGHT_WIDTH-1:0] weight      [WEIGHT_SIZE-1:0],
     input                     weight_valid,
     output                    weight_ready,
 
@@ -69,8 +73,8 @@ module fixed_linear #(
   // and each one computes for IN_DEPTH iterations for each inputs.
   for (genvar i = 0; i < PARALLELISM; i = i + 1) begin : linear
     // Assume the weight are transposed and partitioned 
-    logic [WEIGHT_WIDTH-1:0] current_weight[WEIGHT_SIZE-1:0];
-    assign current_weight = weight[WEIGHT_SIZE*i+WEIGHT_SIZE-1:WEIGHT_SIZE*i];
+    logic [WEIGHT_WIDTH-1:0] current_weight[IN_SIZE-1:0];
+    assign current_weight = weight[IN_SIZE*i+IN_SIZE-1:IN_SIZE*i];
 
     logic [FDP_WIDTH-1:0] fdp_data_out;
     logic fdp_data_out_valid, fdp_data_out_ready;

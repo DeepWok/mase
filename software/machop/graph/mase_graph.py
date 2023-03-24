@@ -11,6 +11,7 @@ from torch import nn
 from torch.fx import symbolic_trace
 
 from .mase_metadata import MaseMetadata
+from .utils import get_module_by_name, vf
 
 logger = logging.getLogger(__name__)
 
@@ -133,11 +134,38 @@ class MaseGraph:
         # Verify each node itself
         for node in self.fx_graph.nodes:
             node.meta.verify()
-        # Inter-node verification
-        # Each edge between nodes must have the same precision
-        # TODO
+
         # Each node must have a unique name and a unique verilog name
-        # TODO
+        node_names = []
+        node_vf_names = []
+        for node in self.fx_graph.nodes:
+            assert node.name not in node_names
+            assert vf(node.name) not in node_vf_names
+            node_names.append(node.name)
+            node_vf_names.append(vf(node.name))
+
+        # Inter-node verification
+        # Each edge between nodes must have the same size
+        nodes_in = self.nodes_in
+        nodes_out = self.nodes_out
+        node_in_name = vf(nodes_in[0].target)
+        node_out_name = vf(nodes_out[0].target)
+        while nodes_in != nodes_out:
+            next_nodes_in = []
+            for node in nodes_in:
+                for next_node, x in node.users.items():
+                    assert (
+                        next_node.meta.parameters["common"]["args"]["data_in"]["size"]
+                        == node.meta.parameters["common"]["results"]["data_out"]["size"]
+                    )
+                    if next_node.op == "output":
+                        next_nodes_in.append(node)
+                    else:
+                        next_nodes_in.append(next_node)
+            assert (
+                nodes_in != next_nodes_in
+            ), f"Parsing error: cannot find the next nodes: {nodes_in}."
+            nodes_in = next_nodes_in
 
     def report(self):
         """Print out an overview of the model in a table."""

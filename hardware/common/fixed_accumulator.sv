@@ -1,3 +1,4 @@
+`timescale 1ns / 1ps
 module fixed_accumulator #(
     parameter IN_DEPTH  = 4,
     parameter IN_WIDTH  = 32,

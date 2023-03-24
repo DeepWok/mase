@@ -1,3 +1,4 @@
+`timescale 1ns / 1ps
 module fixed_vector_mult #(
     parameter IN_WIDTH = 32,
     parameter WEIGHT_WIDTH = 16,
