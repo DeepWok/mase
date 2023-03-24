@@ -1,3 +1,4 @@
+`timescale 1ns / 1ps
 module int_relu6 #(
     parameter NUM = -1,
     parameter ACT_WIDTH = -1,

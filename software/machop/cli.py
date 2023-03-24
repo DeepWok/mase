@@ -568,7 +568,7 @@ class Machop:
         logger.info(f"Generating hardware for {args.model!r}...")
         mve = MaseVerilogEmitter(
             model=self.model,
-            project_path=args.project_dir,
+            project_dir=args.project_dir,
             project=args.project,
             to_debug=args.to_debug,
             target=args.target,

@@ -1,3 +1,4 @@
+`timescale 1ns / 1ps
 module fixed_cast #(
     parameter IN_SIZE = 8,
     parameter IN_WIDTH = 8,

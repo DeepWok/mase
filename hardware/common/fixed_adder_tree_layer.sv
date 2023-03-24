@@ -1,3 +1,4 @@
+`timescale 1ns / 1ps
 module fixed_adder_tree_layer #(
     parameter IN_SIZE  = 2,
     parameter IN_WIDTH = 32

@@ -1,3 +1,4 @@
+`timescale 1ns / 1ps
 // Join2 synchronises two sets of input handshake signals with a set of output handshaked signals 
 module join2 #(
 ) (

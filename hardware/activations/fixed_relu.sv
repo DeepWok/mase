@@ -1,3 +1,4 @@
+`timescale 1ns / 1ps
 module fixed_relu #(
     parameter IN_WIDTH = 8,
     /* verilator lint_off UNUSEDPARAM */

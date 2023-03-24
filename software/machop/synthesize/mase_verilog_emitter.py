@@ -61,7 +61,7 @@ class MaseVerilogEmitter(MaseGraph):
     def __init__(
         self,
         model=None,
-        project_path=".",
+        project_dir=".",
         project="top",
         to_debug=False,
         target="xc7z020clg484-1",
@@ -73,7 +73,7 @@ class MaseVerilogEmitter(MaseGraph):
         hardware design in Verilog.
         model = input model
         common_param = external common parameters from toml (for quantization info)
-        project_path = path of the top-level project
+        project_dir = path of the top-level project
         project = name of the top-level project
         to_debug = whether emit debugging info
         target = the FPGA target for hardware generation
@@ -82,36 +82,38 @@ class MaseVerilogEmitter(MaseGraph):
 
         super().__init__(model=model, common_param=common_param)
         self.project = project
-        self.project_path = os.path.join(project_path, project)
+        self.project_dir = os.path.join(project_dir, project)
         self.target = target
         self.num_targets = num_targets
         self.to_debug = to_debug
         self._init_project()
+        self.verilog_parameters = {}
 
     def _init_project(self):
-        project_path = self.project_path
-        if not os.path.exists(project_path):
-            os.mkdir(project_path)
-        hardware_path = os.path.join(self.project_path, "hardware")
-        if not os.path.exists(hardware_path):
-            os.mkdir(hardware_path)
-        rtl_path = os.path.join(hardware_path, "rtl")
-        if not os.path.exists(rtl_path):
-            os.mkdir(rtl_path)
+        project_dir = self.project_dir
+        if not os.path.exists(project_dir):
+            os.mkdir(project_dir)
+        hardware_dir = os.path.join(self.project_dir, "hardware")
+        if not os.path.exists(hardware_dir):
+            os.mkdir(hardware_dir)
+        rtl_dir = os.path.join(hardware_dir, "rtl")
+        if not os.path.exists(rtl_dir):
+            os.mkdir(rtl_dir)
 
     # ----------------------------------------------------------
     # Emit hardware code
     # ----------------------------------------------------------
     def emit_verilog(self):
-        project_path = self.project_path
-        rtl_path = os.path.join(project_path, "hardware", "rtl")
-        if not os.path.exists(rtl_path):
-            os.mkdir(rtl_path)
+        self.verify()
+        project_dir = self.project_dir
+        rtl_dir = os.path.join(project_dir, "hardware", "rtl")
+        if not os.path.exists(rtl_dir):
+            os.mkdir(rtl_dir)
         self.emit_components()
         self.emit_top()
 
         files = ""
-        for file in glob.glob(os.path.join(rtl_path, "*.sv")):
+        for file in glob.glob(os.path.join(rtl_dir, "*.sv")):
             files += " " + file
         # os.system(f"verilator --lint-only {files}")
 
@@ -136,6 +138,8 @@ class MaseVerilogEmitter(MaseGraph):
                     if not isinstance(value, (int, float, complex, bool)):
                         value = '"' + value + '"'
                     parameters += f"parameter {node_name}_{key} = {value},\n"
+                    assert f"{node_name}_{key}" not in self.verilog_parameters.keys()
+                    self.verilog_parameters[f"{node_name}_{key}"] = value
             elif node.meta.parameters["hardware"]["toolchain"] == "EXTERNAL":
                 raise NotImplementedError(f"EXTERNAL not supported yet.")
         parameters += f"""
@@ -168,15 +172,26 @@ input  data_out_ready,
                 if key == "data_in":
                     continue
                 cap_key = key.upper()
-                interface += f"""
-input  [{node_name}_{cap_key}_WIDTH-1:0] {node_name}_{key} [{node_name}_{cap_key}_SIZE-1:0],
+                width = self.verilog_parameters[f"{node_name}_{cap_key}_WIDTH"]
+                size = self.verilog_parameters[f"{node_name}_{cap_key}_SIZE"]
+                debug_info = ""
+                if self.to_debug:
+                    debug_info = f"// [{width}][{size}]"
+                interface += f"""{debug_info}
+input  [{node_name}_{cap_key}_WIDTH-1:0] {node_name}_{key} [{node_name}_{cap_key}_SIZE-1:0], 
 input  {node_name}_{key}_valid,
 output {node_name}_{key}_ready,
 """
             for key, value in node.meta.parameters["common"]["results"].items():
                 if key == "data_out":
                     continue
-                interface += f"""
+                cap_key = key.upper()
+                width = self.verilog_parameters[f"{node_name}_{cap_key}_WIDTH"]
+                size = self.verilog_parameters[f"{node_name}_{cap_key}_SIZE"]
+                debug_info = ""
+                if self.to_debug:
+                    debug_info = f"// [{width}][{size}]"
+                interface += f"""{debug_info}
 output [{node_name}_{cap_key}_WIDTH-1:0] {node_name}_{key} [{node_name}_{cap_key}_SIZE-1:0],
 output {node_name}_{key}_valid,
 input  {node_name}_{key}_ready,
@@ -193,10 +208,19 @@ input  {node_name}_{key}_ready,
             if node.op != "call_module" and node.op != "call_function":
                 continue
             node_name = vf(node.name)
-            signals += f"""
+            in_width = self.verilog_parameters[f"{node_name}_IN_WIDTH"]
+            in_size = self.verilog_parameters[f"{node_name}_IN_SIZE"]
+            out_width = self.verilog_parameters[f"{node_name}_OUT_WIDTH"]
+            out_size = self.verilog_parameters[f"{node_name}_OUT_SIZE"]
+            debug_info = ""
+            if self.to_debug:
+                debug_info_in = f"// [{in_width}][{in_size}]"
+                debug_info_out = f"// [{out_width}][{out_size}]"
+            signals += f"""{debug_info_in}
 logic [{node_name}_IN_WIDTH-1:0]  {node_name}_data_in        [{node_name}_IN_SIZE-1:0];
 logic                             {node_name}_data_in_valid;
 logic                             {node_name}_data_in_ready;
+{debug_info_out}
 logic [{node_name}_OUT_WIDTH-1:0] {node_name}_data_out            [{node_name}_OUT_SIZE-1:0];
 logic                             {node_name}_data_out_valid;
 logic                             {node_name}_data_out_ready;
@@ -218,21 +242,37 @@ logic                             {node_name}_data_out_ready;
                 for key, value in node.meta.parameters["hardware"][
                     "verilog_parameters"
                 ].items():
-                    parameters += f".{key}({node_name}_{key}),\n"
+                    debug_info = ""
+                    if self.to_debug:
+                        key_value = self.verilog_parameters[f"{node_name}_{key}"]
+                        debug_info = f"// = {key_value}"
+                    parameters += f".{key}({node_name}_{key}), {debug_info}\n"
             parameters = _remove_last_comma(parameters)
             node_layer = get_module_by_name(self.model, node.target)
             component_name = node.meta.parameters["hardware"]["module"]
             node_name = vf(node.name)
             signals = ""
             for key, value in node.meta.parameters["common"]["args"].items():
+                cap_key = key.upper().replace("DATA_", "")
+                width = self.verilog_parameters[f"{node_name}_{cap_key}_WIDTH"]
+                size = self.verilog_parameters[f"{node_name}_{cap_key}_SIZE"]
+                debug_info = ""
+                if self.to_debug:
+                    debug_info = f"// [{width}][{size}]"
                 signals += f"""
-.{key}({node_name}_{key}),
+.{key}({node_name}_{key}), {debug_info}
 .{key}_valid({node_name}_{key}_valid),
 .{key}_ready({node_name}_{key}_ready),
 """
             for key, value in node.meta.parameters["common"]["results"].items():
+                cap_key = key.upper().replace("DATA_", "")
+                width = self.verilog_parameters[f"{node_name}_{cap_key}_WIDTH"]
+                size = self.verilog_parameters[f"{node_name}_{cap_key}_SIZE"]
+                debug_info = ""
+                if self.to_debug:
+                    debug_info = f"// [{width}][{size}]"
                 signals += f"""
-.{key}({node_name}_{key}),
+.{key}({node_name}_{key}), {debug_info}
 .{key}_valid({node_name}_{key}_valid),
 .{key}_ready({node_name}_{key}_ready),
 """
@@ -262,7 +302,7 @@ logic                             {node_name}_data_out_ready;
         node_out_name = vf(nodes_out[0].target)
         wires = f"""
 assign data_in_ready  = {node_in_name}_data_in_ready;
-assign {node_in_name}_data_in    = data_out;
+assign {node_in_name}_data_in    = data_in;
 assign {node_in_name}_data_in_valid = data_in_valid;
 assign {node_out_name}_data_out_ready  = data_out_ready;
 assign data_out    = {node_out_name}_data_out;
@@ -273,12 +313,32 @@ assign data_out_valid = {node_out_name}_data_out_valid;
             for node in nodes_in:
                 node_name = vf(node.target)
                 for next_node, x in node.users.items():
-                    next_node_name = vf(node.target)
+                    next_node_name = vf(next_node.target)
                     if next_node.op == "call_module" or next_node.op == "call_function":
+                        in_width = self.verilog_parameters[f"{next_node_name}_IN_WIDTH"]
+                        in_size = self.verilog_parameters[f"{next_node_name}_IN_SIZE"]
+                        out_width = self.verilog_parameters[f"{node_name}_OUT_WIDTH"]
+                        out_size = self.verilog_parameters[f"{node_name}_OUT_SIZE"]
+                        debug_info_in = ""
+                        debug_info_out = ""
+                        if self.to_debug:
+                            debug_info_in = f"// [{in_width}][{in_size}]"
+                            debug_info_out = f"// [{out_width}][{out_size}]"
+
                         wires += f"""
 assign {node_name}_data_out_ready  = {next_node_name}_data_in_ready;
-assign {next_node_name}_data_in    = {node_name}_data_out;
-assign {next_node_name}_data_out_valid = {node_name}_data_out_valid;
+assign {next_node_name}_data_in_valid = {node_name}_data_out_valid;
+// assign {next_node_name}_data_in = {node_name}_data_out;
+fixed_cast #(
+    .IN_SIZE({node_name}_OUT_SIZE),
+    .IN_WIDTH({node_name}_OUT_WIDTH),
+    .IN_FRAC_WIDTH({node_name}_OUT_FRAC_WIDTH),
+    .OUT_WIDTH({next_node_name}_IN_WIDTH),
+    .OUT_FRAC_WIDTH({next_node_name}_IN_FRAC_WIDTH)
+) {node_name}_data_out_cast (
+    .data_in ({node_name}_data_out), {debug_info_out}
+    .data_out({next_node_name}_data_in) {debug_info_in}
+);
 """
                     if next_node.op == "output":
                         next_nodes_in.append(node)
@@ -295,10 +355,10 @@ assign {next_node_name}_data_out_valid = {node_name}_data_out_valid;
         Emit Verilog code for the top-level model
         """
 
-        project_path = self.project_path
-        rtl_path = os.path.join(project_path, "hardware", "rtl")
+        project_dir = self.project_dir
+        rtl_dir = os.path.join(project_dir, "hardware", "rtl")
 
-        top_file = os.path.join(rtl_path, "{}.sv".format(self.project))
+        top_file = os.path.join(rtl_dir, "{}.sv".format(self.project))
         top_design = open(top_file, "w")
         parameters_to_emit = self._emit_parameters()
         parameters_to_emit = _remove_last_comma(parameters_to_emit)
@@ -318,7 +378,7 @@ assign {next_node_name}_data_out_valid = {node_name}_data_out_valid;
 module {} #({}
 ) (
 input clk,
-input rsk,
+input rst,
 {}
 );
 {}
@@ -339,13 +399,13 @@ endmodule
         top_design.close()
         os.system(f"verible-verilog-format --inplace {top_file}")
 
-    def _emit_components_using_hls(self, node, node_path):
+    def _emit_components_using_hls(self, node, node_dir):
         """
         Synthesize the module using HLS
         """
 
         # Clear the folder
-        for p in glob.glob(os.path.join(node_path, "*")):
+        for p in glob.glob(os.path.join(node_dir, "*")):
             if os.path.isfile(p):
                 os.remove(p)
             else:
@@ -355,54 +415,52 @@ endmodule
         module = torch_mlir.compile(
             node.meta.module, x, output_type="linalg-on-tensors"
         )
-        mlir_path = os.path.join(node_path, f"{node.name}.linalg.mlir")
-        with open(mlir_path, "w", encoding="utf-8") as outf:
+        mlir_dir = os.path.join(node_dir, f"{node.name}.linalg.mlir")
+        with open(mlir_dir, "w", encoding="utf-8") as outf:
             outf.write(str(module))
-        logger.debug(
-            f"MLIR of module {node.name} successfully written into {mlir_path}"
-        )
-        assert os.path.isfile(mlir_path), "Linalg MLIR generation failed."
+        logger.debug(f"MLIR of module {node.name} successfully written into {mlir_dir}")
+        assert os.path.isfile(mlir_dir), "Linalg MLIR generation failed."
 
-        lowered_path = os.path.join(node_path, f"{node.name}.affine.mlir")
+        lowered_dir = os.path.join(node_dir, f"{node.name}.affine.mlir")
         node_name = vf(node.name)
         # Lower Linalg MLIR to Affine MLIR
         cmd = [
             "mlir-opt",
-            mlir_path,
+            mlir_dir,
             "--linalg-bufferize",
             "--convert-linalg-to-affine-loops",
             "--canonicalize",
             "-o",
-            lowered_path,
+            lowered_dir,
         ]
         # if self.to_debug:
         #    cmd += ["--debug"]
         result = _execute(cmd, log_output=self.to_debug)
-        assert os.path.isfile(lowered_path), "Affine MLIR generation failed."
+        assert os.path.isfile(lowered_dir), "Affine MLIR generation failed."
         logger.debug(
-            f"MLIR Affine code of module {node.name} successfully written into {lowered_path}"
+            f"MLIR Affine code of module {node.name} successfully written into {lowered_dir}"
         )
 
-        mlir_path = lowered_path
-        lowered_path = os.path.join(node_path, f"{node_name}.mase.mlir")
-        hls_path = os.path.join(node_path, f"{node_name}.cpp")
+        mlir_dir = lowered_dir
+        lowered_dir = os.path.join(node_dir, f"{node_name}.mase.mlir")
+        hls_dir = os.path.join(node_dir, f"{node_name}.cpp")
 
         # Transform Affine MLIR for hardware generation and emit HLS code
         cmd = [
             "mase-opt",
-            mlir_path,
+            mlir_dir,
             f"--preprocess-func=func-name={node_name}",
             "--canonicalize",
-            f"--emit-hls=file-name={hls_path}",
+            f"--emit-hls=file-name={hls_dir}",
             "-o",
-            lowered_path,
+            lowered_dir,
         ]
         # if self.to_debug:
         #     cmd += ["--debug"]
         result = _execute(cmd, log_output=self.to_debug)
-        assert os.path.isfile(hls_path), "HLS code generation failed."
+        assert os.path.isfile(hls_dir), "HLS code generation failed."
         logger.debug(
-            f"HLS code of module {node.name} successfully written into {hls_path}"
+            f"HLS code of module {node.name} successfully written into {hls_dir}"
         )
 
         # Emit tcl for Vitis HLS
@@ -418,26 +476,26 @@ config_compile -pipeline_loops 1
 csynth_design
 # export_design -flow syn -rtl vhdl -format ip_catalog
 """
-        hls_tcl_path = os.path.join(node_path, f"{node_name}.tcl")
-        with open(hls_tcl_path, "w", encoding="utf-8") as outf:
+        hls_tcl_dir = os.path.join(node_dir, f"{node_name}.tcl")
+        with open(hls_tcl_dir, "w", encoding="utf-8") as outf:
             outf.write(hls_tcl)
         logger.debug(
-            f"HLS tcl of module {node.name} successfully written into {hls_tcl_path}"
+            f"HLS tcl of module {node.name} successfully written into {hls_tcl_dir}"
         )
 
         # Format HLS code so it is more readable
         cmd = [
             "clang-format",
             "-i",
-            hls_path,
+            hls_dir,
         ]
         result = _execute(cmd, log_output=self.to_debug)
         # Call Vitis HLS for synthesis
         cmd = [
             "vitis_hls",
-            hls_tcl_path,
+            hls_tcl_dir,
         ]
-        # result = _execute(cmd, log_output=self.to_debug, cwd=node_path)
+        # result = _execute(cmd, log_output=self.to_debug, cwd=node_dir)
         logger.debug(f"Hardware of module {node.name} successfully generated by HLS")
 
     def emit_components(self):
@@ -445,8 +503,8 @@ csynth_design
         Emit the Verilog code of each module in the top-level model
         """
 
-        project_path = self.project_path
-        rtl_path = os.path.join(project_path, "hardware", "rtl")
+        project_dir = self.project_dir
+        rtl_dir = os.path.join(project_dir, "hardware", "rtl")
         dependence_files = []
         for node in self.fx_graph.nodes:
             if node.op != "call_module" and node.op != "call_function":
@@ -461,17 +519,17 @@ csynth_design
             # TODO: Call HLS synthesis processes in parallel
             elif node.meta.parameters["hardware"]["toolchain"] == "HLS":
                 logger.debug(f"Synthesizing {node.name} using HLS")
-                hls_path = os.path.join(project_path, "hardware", "hls")
-                if not os.path.exists(hls_path):
-                    os.mkdir(hls_path)
-                node_path = os.path.join(hls_path, node.name)
-                if not os.path.exists(node_path):
-                    os.mkdir(node_path)
-                self._emit_components_using_hls(node, node_path)
+                hls_dir = os.path.join(project_dir, "hardware", "hls")
+                if not os.path.exists(hls_dir):
+                    os.mkdir(hls_dir)
+                node_dir = os.path.join(hls_dir, node.name)
+                if not os.path.exists(node_dir):
+                    os.mkdir(node_dir)
+                self._emit_components_using_hls(node, node_dir)
             else:
                 raise NotImplementedError(f"EXTERNAL or HLS not supported yet.")
-        relative_path = os.path.abspath(
+        relative_dir = os.path.abspath(
             os.path.join(os.path.dirname(__file__), "..", "..", "..", "hardware")
         )
         for svfile in dependence_files:
-            shutil.copy(os.path.join(relative_path, svfile), rtl_path)
+            shutil.copy(os.path.join(relative_dir, svfile), rtl_dir)

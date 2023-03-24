@@ -1,3 +1,4 @@
+`timescale 1ns / 1ps
 // fixed-point multiplier
 
 module fixed_mult #(

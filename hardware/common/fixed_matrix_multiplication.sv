@@ -1,3 +1,4 @@
+`timescale 1ns / 1ps
 module fixed_matrix_multiplication #(
     // input 
     parameter IN_WIDTH = 32,

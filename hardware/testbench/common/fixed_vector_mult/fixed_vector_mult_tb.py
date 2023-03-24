@@ -8,9 +8,9 @@ sys.path.append(
 )
 print(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
-from RandomTest import RandomSource
-from RandomTest import RandomSink
-from RandomTest import check_results
+from random_test import RandomSource
+from random_test import RandomSink
+from random_test import check_results
 
 import cocotb
 from cocotb.triggers import Timer
