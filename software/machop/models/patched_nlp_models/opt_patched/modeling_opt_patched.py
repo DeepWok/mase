@@ -657,7 +657,6 @@ class OPTDecoderPatched(OPTPatchedPreTrainedModel):
         attention_mask = OPTDecoder_self_prepare_decoder_attention(
             attention_mask, input_shape, inputs_embeds, past_key_values_length
         )
-
         if self.project_in is not None:
             inputs_embeds = self.project_in(inputs_embeds)
 

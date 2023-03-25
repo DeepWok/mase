@@ -1,24 +1,29 @@
-from .sentiment_analysis import SentAnalDatasetSST2
-from .text_entailment import TextEntailDatasetMNLI, TextEntailDatasetQNLI
-from .translation import (
-    TranslationDatasetIWSLT2017_EN_DE,
-    TranslationDatasetIWSLT2017_DE_EN,
-    TranslationDatasetIWSLT2017_EN_FR,
-    TranslationDatasetIWSLT2017_EN_CH,
-    TranslationDatasetWMT19_DE_EN,
-    TranslationDatasetWMT19_ZH_EN,
-    TranslationDatasetMulti30k,
-    TranslationDatasetWMT16_RO_EN,
-)
 from .language_modeling import (
     LanguageModelingDatasetWikitext2,
     LanguageModelingDatasetWikiText103,
+)
+from .sentiment_analysis import SentAnalDatasetSST2
+from .text_entailment import (
+    TextEntailDatasetBoolQ,
+    TextEntailDatasetMNLI,
+    TextEntailDatasetQNLI,
+)
+from .translation import (
+    TranslationDatasetIWSLT2017_DE_EN,
+    TranslationDatasetIWSLT2017_EN_CH,
+    TranslationDatasetIWSLT2017_EN_DE,
+    TranslationDatasetIWSLT2017_EN_FR,
+    TranslationDatasetMulti30k,
+    TranslationDatasetWMT16_RO_EN,
+    TranslationDatasetWMT19_DE_EN,
+    TranslationDatasetWMT19_ZH_EN,
 )
 
 dataset_factory = {
     "sst2": SentAnalDatasetSST2,
     "mnli": TextEntailDatasetMNLI,
     "qnli": TextEntailDatasetQNLI,
+    "boolq": TextEntailDatasetBoolQ,
     # 'opus_en_fr': TranslationDatasetOPUS_EN_FR,
     "multi30k": TranslationDatasetMulti30k,
     "wmt19_de_en": TranslationDatasetWMT19_DE_EN,

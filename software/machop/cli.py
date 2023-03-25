@@ -1,7 +1,6 @@
 # ---------------------------------------
 # This script specifies the command line args.
 # ---------------------------------------
-import functools
 import logging
 import os
 import random
@@ -10,15 +9,14 @@ import time
 from argparse import ArgumentParser
 
 import numpy as np
-import toml
 import torch
 
-from .dataset import get_dataloader, get_dataset
+from .dataset import MyDataModule, get_dataset_info
 from .estimate_sw import run_estimator
 from .graph.dummy_inputs import get_dummy_inputs
 from .models import manual_models, model_map, nlp_models, vision_models
 from .modify.modifier import Modifier
-from .session import test, train
+from .session import test, train, validate
 from .utils import check_conda_env, check_when_to_load_and_how_to_load, getLogger
 
 try:
@@ -119,9 +117,9 @@ class Machop:
             help="Test the model in software (accuracy). Default=False",
         )
         parser.add_argument(
-            "--evaluate-sw",
+            "--validate-sw",
             action="store_true",
-            dest="to_evaluate_sw",
+            dest="to_validate_sw",
             default=False,
             help="Evaluate the model as software (performance). Default=False",
         )
@@ -147,12 +145,26 @@ class Machop:
             default=False,
             help="Evaluate the hardware design of the model. Default=False",
         )
+
         parser.add_argument(
             "--modify-sw",
             dest="modify_sw",
             default=None,
-            help="Modify the model in software from a configuration file.",
+            help="Modify the model in software from a configuration file",
         )
+        # parser.add_argument(
+        #     "--modify-sw",
+        #     dest="to_modify_sw",
+        #     action="store_true",
+        #     default=False,
+        #     help="Whether to modify the model in software from a configuration file.",
+        # )
+        # parser.add_argument(
+        #     "--modify-sw-config",
+        #     dest="modify_sw_config",
+        #     default=None,
+        #     help="The path to software modification config file if --modify-sw is specified. Default=None",
+        # )
         parser.add_argument(
             "--modify-hw",
             dest="modify_hw",
@@ -202,7 +214,7 @@ class Machop:
             help="The number of steps for model optimisation. Default=0",
         )
         parser.add_argument(
-            "--learning_rate",
+            "--learning-rate",
             dest="learning_rate",
             default=1e-5,
             type=float,
@@ -242,16 +254,16 @@ class Machop:
             dest="max_token_len",
             default=512,
             type=int,
-            help="The maximum number of tokens. Default=512",
+            help="The maximum number of tokens. Default=None will use tokenizer.model_max_length",
         )
 
         ## CPU/GPU setup for lightning
         parser.add_argument(
             "--cpu",
             dest="num_workers",
-            default=0,
+            default=1,
             type=int,
-            help="The number of CPU workers. Default=0",
+            help="The number of CPU workers. Default=1",
         )
         parser.add_argument(
             "--gpu",
@@ -278,6 +290,13 @@ class Machop:
             dest="strategy",
             default="ddp",
             help="The strategy type. Default=ddp",
+        )
+        parser.add_argument(
+            "--auto-requeue",
+            dest="is_to_auto_requeue",
+            default=False,
+            action="store_true",
+            help="Whether automatic job resubmission is enabled or not on SLURM managed cluster",
         )
 
         ## FPGA setup for hardware generation
@@ -327,20 +346,22 @@ class Machop:
 
         # Model specifications
         self.model = None
-        self.loader = None
+        self.data_module = None
         self.info = None
 
         self.output_dir = self.output_dir_sw = self.output_dir_hw = None
         self.when_to_load, self.how_to_load = check_when_to_load_and_how_to_load(
-            modify_sw=args.modify_sw,
+            to_modify_sw=args.modify_sw is not None,
+            # to_modify_sw=args.to_modify_sw,
             to_train=args.to_train,
+            to_validate_sw=args.to_validate_sw,
             to_test_sw=args.to_test_sw,
             is_pretrained=args.is_pretrained,
             load_name=args.load_name,
             load_type=args.load_type,
         )
         logger.debug(
-            f"when_to_save={self.when_to_load}, how_to_save={self.how_to_load}"
+            f"when_to_load={self.when_to_load}, how_to_load={self.how_to_load}"
         )
         # breakpoint()
 
@@ -360,15 +381,19 @@ class Machop:
     def run(self):
         self.init_model_and_dataset()
         self.create_output_dir()
-        if self.args.modify_sw:
+        if self.args.modify_sw is not None:
             self.modify_sw()
+        # if self.args.to_modify_sw:
+        #     self.modify_sw()
         if self.args.to_train:
             self.train()
         if self.args.to_test_sw:
             self.test_sw()
-        if self.args.to_evaluate_sw:
-            self.evaluate_sw()
+        if self.args.to_validate_sw:
+            self.validate_sw()
         if self.args.to_estimate_sw:
+            # TODO: this check may not be required if the profiler is based on FX
+            check_conda_env(is_sw_env, True, "evaluate-sw")
             self.estimate_sw()
         if self.args.to_synthesize:
             check_conda_env(is_sw_env, False, "synthesize")
@@ -376,22 +401,21 @@ class Machop:
         if self.args.to_test_hw:
             self.test_hw()
         if self.args.to_evaluate_hw:
-            # TODO: this check may not be required if the profiler is based on FX
-            check_conda_env(is_sw_env, True, "evaluate-sw")
             self.evaluate_hw()
 
     # Setup model and data for training
     def init_model_and_dataset(self):
         args = self.args
-        logger.info(f"Loading dataset {args.dataset!r} for model {args.model!r}...")
-        assert args.dataset, f"Dataset not specified: {args.dataset!r}"
-        assert args.model, f"Model not specified: {args.model!r}"
+        logger.info(
+            f"Loading DataModule of {args.dataset!r} for model {args.model!r}..."
+        )
+        assert args.dataset, f"Dataset name (--dataset) not specified: {args.dataset!r}"
+        assert args.model, f"Model name (--model) not specified: {args.model!r}"
 
-        # Get dataset
-        train_dataset, val_dataset, test_dataset, info = get_dataset(name=args.dataset)
-        logger.info(f"Dataset loaded.")
+        # Get dataset info
+        dataset_info = get_dataset_info(args.dataset)
 
-        # get model
+        # Get model
         model_inst_fn = model_map[args.model]
 
         checkpoint = args.load_name if self.when_to_load == "init" else None
@@ -401,36 +425,31 @@ class Machop:
             model = model_inst_fn(
                 name=args.model,
                 task=args.task,
-                info=info,
+                info=dataset_info,
                 checkpoint=checkpoint,
                 pretrained=args.is_pretrained,
             )
         elif args.model in vision_models:
             if args.model in manual_models:
-                # Jianyi 26/02/2023: need to fix this config. Is it for quantization?
-                # Cheng 01/03/2023: No. This is for creating a quantized model
-                #                   using a .toml file for configuring quantisation scheme
-                #                   instead of layer replacement
-                # here model is a nn.Module
-                model = model_inst_fn(info=info, config=args.custom_config)
+                # create manual model from custom config
+                model = model_inst_fn(info=dataset_info, config=args.custom_config)
             else:
-                model = model_inst_fn(info=info)
+                model = model_inst_fn(info=dataset_info)
         else:
             raise NotImplementedError(f"Unknown model {args.model!r}.")
-        logger.info("Model loaded")
+        logger.info("Model is created")
 
-        # Get data loader from the datasets
-        loader = get_dataloader(
-            args.model,
-            model,
-            train_dataset,
-            val_dataset,
-            test_dataset,
+        # Get data module
+        data_module = MyDataModule(
+            name=args.dataset,
             batch_size=args.batch_size,
             workers=args.num_workers,
+            tokenizer=model["tokenizer"] if args.model in nlp_models else None,
             max_token_len=args.max_token_len,
         )
-        self.model, self.loader, self.info = model, loader, info
+        logger.info("DataModule is created")
+
+        self.model, self.data_module, self.info = model, data_module, dataset_info
 
     def create_output_dir(self):
         args = self.args
@@ -443,7 +462,7 @@ class Machop:
         project = (
             args.project
             if args.project is not None
-            else "{}@".format(args.model.replace("/", "-"))
+            else "{}-".format(args.model.replace("/", "-"))
             + time.strftime("%Y_%m_%d-%H_%M_%S")
         )
 
@@ -461,6 +480,9 @@ class Machop:
 
     def modify_sw(self):
         args = self.args
+        # assert (
+        #     args.modify_sw_config is not None
+        # ), "--modify-sw-config must be provided if --modify-sw is True"
         logger.info(f"Modifying model {args.model!r}...")
 
         dummy_inputs = get_dummy_inputs(
@@ -472,6 +494,7 @@ class Machop:
         load_name = args.load_name if self.when_to_load == "modify-sw" else None
         modifier_kwargs = {
             "model": self.model["model"] if args.model in nlp_models else self.model,
+            # "config": args.modify_sw_config,
             "config": args.modify_sw,
             "dummy_inputs": dummy_inputs,
             "save_dir": os.path.join(self.output_dir_sw, "modify-sw"),
@@ -499,16 +522,17 @@ class Machop:
             "fast_dev_run": args.to_debug,
         }
 
-        load_name = args.load_name if self.when_to_load == "train_or_test" else None
+        load_name = args.load_name if self.when_to_load == "train_val_or_test" else None
         train_params = {
             "model_name": args.model,
             "model": self.model,
             "info": self.info,
             "task": args.task,
-            "data_loader": self.loader,
+            "data_module": self.data_module,
             "optimizer": args.training_optimizer,
             "learning_rate": args.learning_rate,
             "plt_trainer_args": plt_trainer_args,
+            "auto_requeue": args.is_to_auto_requeue,
             "save_path": os.path.join(self.output_dir_sw, "checkpoints"),
             "load_name": load_name,
             "load_type": self.how_to_load,
@@ -522,18 +546,20 @@ class Machop:
 
         plt_trainer_args = {
             "devices": args.num_devices,
+            "num_nodes": args.num_nodes,
             "accelerator": args.accelerator,
             "strategy": args.strategy,
         }
-        load_name = args.load_name if self.when_to_load == "train_or_test" else None
-        assert load_name is not None, "load name must not be None for test-sw."
+        load_name = args.load_name if self.when_to_load == "train_val_or_test" else None
+        # assert load_name is not None, "load name must not be None for test-sw."
         test_params = {
             "model_name": args.model,
             "model": self.model,
             "info": self.info,
             "task": args.task,
-            "data_loader": self.loader,
+            "data_module": self.data_module,
             "plt_trainer_args": plt_trainer_args,
+            "save_path": os.path.join(self.output_dir_sw, "checkpoints"),
             "load_name": load_name,
             "load_type": self.how_to_load,
         }
@@ -541,7 +567,33 @@ class Machop:
 
         logger.info("Testing is completed")
 
-    evaluate_sw = test_sw
+    def validate_sw(self):
+        args = self.args
+        logger.info(f"Validating model {args.model!r}...")
+
+        plt_trainer_args = {
+            "devices": args.num_devices,
+            "num_nodes": args.num_nodes,
+            "accelerator": args.accelerator,
+            "strategy": args.strategy,
+        }
+        load_name = args.load_name if self.when_to_load == "train_val_or_test" else None
+        # breakpoint()
+        # assert load_name is not None, "load name must not be None for test-sw."
+        test_params = {
+            "model_name": args.model,
+            "model": self.model,
+            "info": self.info,
+            "task": args.task,
+            "data_module": self.data_module,
+            "plt_trainer_args": plt_trainer_args,
+            "save_path": os.path.join(self.output_dir_sw, "checkpoints"),
+            "load_name": load_name,
+            "load_type": self.how_to_load,
+        }
+        validate(**test_params)
+
+        logger.info("Validating is completed")
 
     def estimate_sw(self):
         args = self.args
@@ -556,7 +608,7 @@ class Machop:
             "info": self.info,
             "model": self.model,
             "task": args.task,
-            "data_loader": self.loader,
+            "data_loader": self.data_module,
             "save_path": save_path,
             "config_path": args.estimate_sw_config,
         }

@@ -108,18 +108,19 @@ def check_conda_env(is_sw_env: bool, requires_sw_env: bool, current_action_name:
 
 
 def check_when_to_load_and_how_to_load(
-    modify_sw: bool,
+    to_modify_sw: bool,
     to_train: bool,
+    to_validate_sw: bool,
     to_test_sw: bool,
     is_pretrained: bool,
     load_name: str,
     load_type: str,
 ):
-    to_train_or_to_test = to_train or to_test_sw
+    to_train_to_test_or_to_test = to_train or to_validate_sw or to_test_sw
     when_to_load = how_to_load = None
     assert not (
-        to_train_or_to_test and modify_sw
-    ), "--modify-sw and --train/--test cannot both be True. Please run these two commands sequentially."
+        to_train_to_test_or_to_test and to_modify_sw
+    ), "--modify-sw and --train/--validate-sw/--test-sw cannot both be True. Please run these two commands sequentially."
     if load_name is not None:
         if load_type is None:
             raise RuntimeError("--load-type must be specified if --load is specified.")
@@ -139,7 +140,7 @@ def check_when_to_load_and_how_to_load(
         when_to_load = "init"
         how_to_load = "hf"
     else:
-        if modify_sw:
+        if to_modify_sw:
             when_to_load = "modify-sw"
             if load_name is None:
                 when_to_load = how_to_load = None
@@ -152,12 +153,12 @@ def check_when_to_load_and_how_to_load(
                     raise RuntimeError(
                         f"modify-sw only supports loading 'pt' and 'pl' checkpoint, but got --load-type={load_type}"
                     )
-        elif to_train_or_to_test:
-            when_to_load = "train_or_test"
+        elif to_train_to_test_or_to_test:
+            when_to_load = "train_val_or_test"
             if load_name is None:
                 when_to_load = how_to_load = None
             else:
-                when_to_load = "train_or_test"
+                when_to_load = "train_val_or_test"
                 if load_type == "pt":
                     how_to_load = "pt"
                 elif load_type == "pl":
@@ -172,7 +173,7 @@ def check_when_to_load_and_how_to_load(
             when_to_load = how_to_load = None
             if load_name is not None:
                 logger.warn(
-                    f"load_name {load_name} is provided but machop is not doing the modify-sw, train, or test-sw. The checkpoint will not be loaded"
+                    f"load_name {load_name} is provided but machop is not doing the modify-sw, train, validate-sw, or test-sw. The checkpoint will not be loaded"
                 )
 
     if how_to_load == "hf":
@@ -218,7 +219,7 @@ def load_pl_checkpoint_into_pt_model(checkpoint: str, model: torch.nn.Module):
         else:
             possible_tgt_k = k
         if possible_tgt_k in tgt_state_dict:
-            new_tgt_state_dict[k] = v
+            new_tgt_state_dict[possible_tgt_k] = v
     model.load_state_dict(new_tgt_state_dict)
     return model
 
@@ -249,8 +250,11 @@ def load_pt_pl_or_pkl_checkpoint_into_pt_model(
 
     if load_type == "pkl":
         model = load_pkl_model(load_name)
+        logger.info(f"pkl model is loaded from {load_name}")
     elif load_type == "pl":
         model = load_pl_checkpoint_into_pt_model(load_name, model=model)
+        logger.info(f"pl model is loaded from {load_name}")
     else:
         model = load_pt_model_into_pt_model(load_name, model=model)
+        logger.info(f"pt model is loaded from {load_name}")
     return model

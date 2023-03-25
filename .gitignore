@@ -10,8 +10,10 @@
 software/checkpoints/
 software/data/
 software/cache/
-software/estimate-sw_reports/
 software/test_*.py
+/*.tar.gz # CZ's backup
+/mase_output/
+/sulis_mase_output/
 
 # macOS
 .DS_Store

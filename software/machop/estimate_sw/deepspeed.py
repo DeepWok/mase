@@ -48,6 +48,10 @@ def estimate_sw_deepspeed(
     ), "ignore_modules should be a list/tuple/set of string nn.Module names"
     logger.debug(f"Estimate-sw config: {config}")
 
+    config["output_file"] = os.path.join(
+        save_path, config.get("output_file", "estimate_deepspeed.toml")
+    )
+
     with torch.cuda.device(0):
         plt_model, input_args = get_input_args(
             model_name, model, task, data_loader, info
@@ -57,4 +61,5 @@ def estimate_sw_deepspeed(
         profiled_result = dict(flops=flops, macs=macs, params=params)
         logger.info("Estimate-sw result")
         print(profiled_result)
+        logger.info("Estimate-sw report saved to {}".format(config["output_file"]))
         return profiled_result

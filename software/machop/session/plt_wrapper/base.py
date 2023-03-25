@@ -1,7 +1,9 @@
 import pytorch_lightning as pl
 import torch
 from torch.optim.lr_scheduler import CosineAnnealingLR
-from torchmetrics.functional import accuracy
+
+# from torchmetrics.functional import accuracy
+from torchmetrics import Accuracy, MeanMetric
 
 
 class WrapperBase(pl.LightningModule):
@@ -14,10 +16,12 @@ class WrapperBase(pl.LightningModule):
         self.loss = torch.nn.CrossEntropyLoss()
         self.epochs = epochs
         self.optimizer = optimizer
-        self.train_losses = []
-        self.val_losses = []
+
         self.num_classes = info["num_classes"]
-        # TODO: use torch metrics instead of torch.nn.Metric?
+        if self.num_classes is not None:
+            self.acc_train = Accuracy("multiclass", num_classes=info["num_classes"])
+            self.acc_val = Accuracy("multiclass", num_classes=info["num_classes"])
+            self.acc_test = Accuracy("multiclass", num_classes=info["num_classes"])
 
     def forward(self, x):
         return self.model(x)
@@ -26,39 +30,30 @@ class WrapperBase(pl.LightningModule):
         x, y = batch[0], batch[1]
         y_hat = self.forward(x)
         loss = self.loss(y_hat, y)
-        # loss
-        self.log_dict(
-            {"loss": loss}, on_step=True, on_epoch=False, prog_bar=False, logger=True
+
+        acc = self.acc_train(y_hat, y)
+
+        self.log(
+            "train_acc", self.acc_train, on_step=True, on_epoch=True, prog_bar=True
         )
-        # acc
-        acc = accuracy(y_hat, y, task="multiclass", num_classes=self.num_classes)
-        self.log_dict(
-            {"acc": acc}, on_step=True, on_epoch=False, prog_bar=True, logger=True
-        )
+        self.log("train_loss", loss, on_step=True, on_epoch=True, prog_bar=True)
+
         return {"loss": loss, "acc": acc}
 
     def validation_step(self, batch, batch_idx):
         x, y = batch[0], batch[1]
         y_hat = self.forward(x)
         loss = self.loss(y_hat, y)
-        # val_loss
-        self.log_dict(
-            {"val_loss": loss},
+        acc = self.acc_val(y_hat, y)
+
+        self.log("val_acc", self.acc_val, on_step=False, on_epoch=True, prog_bar=True)
+        self.log(
+            "val_loss",
+            loss,
             on_step=False,
             on_epoch=True,
-            prog_bar=True,
-            logger=True,
             sync_dist=True,
-        )
-        # val acc
-        acc = accuracy(y_hat, y, task="multiclass", num_classes=self.num_classes)
-        self.log_dict(
-            {"val_acc": acc},
-            on_step=False,
-            on_epoch=True,
             prog_bar=True,
-            logger=True,
-            sync_dist=True,
         )
         return {"val_loss": loss, "val_acc": acc}
 
@@ -66,25 +61,19 @@ class WrapperBase(pl.LightningModule):
         x, y = batch[0], batch[1]
         y_hat = self.forward(x)
         loss = self.loss(y_hat, y)
-        # val_loss
-        self.log_dict(
-            {"test_loss": loss},
+
+        acc = self.acc_test(y_hat, y)
+
+        self.log("test_acc", self.acc_test, on_step=False, on_epoch=True, prog_bar=True)
+        self.log(
+            "test_loss",
+            loss,
             on_step=False,
             on_epoch=True,
-            prog_bar=False,
-            logger=True,
             sync_dist=True,
-        )
-        # val acc
-        acc = accuracy(y_hat, y, task="multiclass", num_classes=self.num_classes)
-        self.log_dict(
-            {"test_acc": acc},
-            on_step=False,
-            on_epoch=True,
             prog_bar=True,
-            logger=True,
-            sync_dist=True,
         )
+
         return {"test_loss": loss, "test_acc": acc}
 
     def configure_optimizers(self):

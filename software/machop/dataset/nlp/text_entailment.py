@@ -11,22 +11,44 @@ from torch.utils.data import Dataset
 
 class TextEntailDataset(Dataset):
     path = None
+    num_classes = None
+    sent1_col_name = None
+    sent2_col_name = None
+    label_col_name = None
 
-    def __init__(self):
-        self.sent1_col_name = None
-        self.sent2_col_name = None
-        self.label_col_name = None
-
-        if (self.path is not None) and (not os.path.isdir(self.path)):
-            print("Downloading and processing dataset...")
-            self._download_and_process()
-        else:
-            print("Dataset already downloaded and processed")
-            self._load_from_path()
-
-    def setup_tokenizer(self, tokenizer, max_token_count):
+    def __init__(self, split, tokenizer, max_token_len, num_workers=None) -> None:
+        self.split = split
         self.tokenizer = tokenizer
-        self.max_token_count = max_token_count
+        self.max_token_len = max_token_len
+        self.num_workers = num_workers
+        self.data = None
+        super().__init__()
+
+    def _set_tokenizer(self, tokenizer, max_token_len):
+        if tokenizer is None:
+            tokenizer = self.tokenizer
+        if max_token_len is None:
+            max_token_len = self.max_token_len
+        assert tokenizer is not None
+        assert max_token_len is not None
+        self.tokenizer = tokenizer
+        self.max_token_len = max_token_len
+
+    def prepare_data(self, tokenizer, max_token_len, num_workers=None):
+        self._set_tokenizer(tokenizer, max_token_len)
+        if os.path.isdir(self.path):
+            dataset = load_from_disk(self.path)
+            print(f"Local dataset is found on disk, at {self.path}")
+        else:
+            print("Downloading dataset...")
+            dataset = self._download_or_load_raw_dataset()
+            dataset.save_to_disk(self.path)
+            print("Dataset is downloaded and saved to disk")
+
+    def setup(self, tokenizer, max_token_len):
+        self._set_tokenizer(tokenizer, max_token_len)
+        assert os.path.isdir(self.path), f"The dataset dir {self.path} does not exist"
+        self.data = load_from_disk(self.path)[self.split]
 
     def __len__(self):
         return len(self.data)
@@ -40,7 +62,7 @@ class TextEntailDataset(Dataset):
             question,
             answer,
             add_special_tokens=True,
-            max_length=self.max_token_count,
+            max_length=self.max_token_len,
             padding="max_length",
             truncation=True,
             return_attention_mask=True,
@@ -57,46 +79,118 @@ class TextEntailDataset(Dataset):
             labels=torch.tensor([labels]),
         )
 
-    def _download_and_process(self):
+    def _download_or_load_raw_dataset(self):
         raise NotImplementedError
-
-    def _load_from_path(self):
-        self.dataset = load_from_disk(self.path)
 
 
 class TextEntailDatasetQNLI(TextEntailDataset):
     path = "./data/qnli"
     num_labels = 2
 
-    def __init__(self, split="train"):
-        super().__init__()
-        self.sent1_col_name = "question"
-        self.sent2_col_name = "sentence"
-        self.label_col_name = "label"
-        self.data = self.dataset[split]
+    sent1_col_name = "question"
+    sent2_col_name = "sentence"
+    label_col_name = "label"
 
-    def _download_and_process(self):
-        dataset = load_dataset(
-            "glue", "qnli", cache_dir=os.path.abspath("./cache/dataset_cache_dir")
+    def __init__(self, split, tokenizer=None, max_token_len=None, auto_setup=False):
+        super().__init__(
+            split=split,
+            tokenizer=tokenizer,
+            max_token_len=max_token_len,
+            num_workers=None,
         )
-        dataset.save_to_disk(self.path)
-        self.dataset = dataset
+
+        if auto_setup:
+            assert self.tokenizer is not None
+            self.prepare_data(self.tokenizer, self.max_token_len)
+            self.setup(self.tokenizer, self.max_token_len)
+            print("Dataset is auto-setup")
+
+    def _download_or_load_raw_dataset(self):
+        if not os.path.isdir(self.path):
+            print("Downloading dataset...")
+            dataset = load_dataset(
+                "glue", "qnli", cache_dir=os.path.abspath("./cache/dataset_cache_dir")
+            )
+            dataset.save_to_disk(self.path)
+        else:
+            print("Dataset is already downloaded")
+            dataset = load_from_disk(self.path)
+        print("Dataset loaded")
+        return dataset
 
 
 class TextEntailDatasetMNLI(TextEntailDataset):
     path = "./data/mnli"
     num_classes = 3
+    sent1_col_name = "premise"
+    sent2_col_name = "hypothesis"
+    label_col_name = "label"
 
-    def __init__(self, split="train"):
-        super().__init__()
-        self.sent1_col_name = "premise"
-        self.sent2_col_name = "hypothesis"
-        self.label_col_name = "label"
-        self.data = self.dataset[split]
-
-    def _download_and_process(self):
-        dataset = load_dataset(
-            "glue", "mnli", cache_dir=os.path.abspath("./cache/dataset_cache_dir")
+    def __init__(self, split, tokenizer=None, max_token_len=None, auto_setup=False):
+        super().__init__(
+            split=split,
+            tokenizer=tokenizer,
+            max_token_len=max_token_len,
+            num_workers=None,
         )
-        dataset.save_to_disk(self.path)
-        self.dataset = dataset
+
+        if auto_setup:
+            assert self.tokenizer is not None
+            self.prepare_data(self.tokenizer, self.max_token_len)
+            self.setup(self.tokenizer, self.max_token_len)
+            print("Dataset is auto-setup")
+
+    def _download_or_load_raw_dataset(self):
+        if not os.path.isdir(self.path):
+            print("Downloading dataset...")
+            dataset = load_dataset(
+                "glue", "mnli", cache_dir=os.path.abspath("./cache/dataset_cache_dir")
+            )
+            dataset.save_to_disk(self.path)
+        else:
+            print("Dataset is already downloaded")
+            dataset = load_from_disk(self.path)
+        print("Dataset loaded")
+        return dataset
+
+
+class TextEntailDatasetBoolQ(TextEntailDataset):
+    """
+    Subset of SuperGLUE
+
+    """
+
+    path = "./data/boolq"
+    num_classes = 2
+    sent1_col_name = "passage"
+    sent2_col_name = "question"
+    label_col_name = "label"
+
+    def __init__(self, split, tokenizer=None, max_token_len=None, auto_setup=False):
+        super().__init__(
+            split=split,
+            tokenizer=tokenizer,
+            max_token_len=max_token_len,
+            num_workers=None,
+        )
+
+        if auto_setup:
+            assert self.tokenizer is not None
+            self.prepare_data(self.tokenizer, self.max_token_len)
+            self.setup(self.tokenizer, self.max_token_len)
+            print("Dataset is auto-setup")
+
+    def _download_or_load_raw_dataset(self):
+        if not os.path.isdir(self.path):
+            print("Downloading dataset...")
+            dataset = load_dataset(
+                "super_glue",
+                "boolq",
+                cache_dir=os.path.abspath("./cache/dataset_cache_dir"),
+            )
+            dataset.save_to_disk(self.path)
+        else:
+            print("Dataset is already downloaded")
+            dataset = load_from_disk(self.path)
+        print("Dataset loaded")
+        return dataset
