@@ -1,22 +1,54 @@
 import math
+import os
 import re
 import string
 
 import pytorch_lightning as pl
 import torch
-from datasets import load_dataset
+from datasets import load_dataset, load_from_disk
 from torch.utils.data import Dataset
 
 
 class SentAnalDataset(Dataset):
-    def __init__(self, data):
-        self.data = data
-        self.sent_col_name = None
-        self.label_col_name = None
+    path = None
+    num_classes = None
 
-    def setup_tokenizer(self, tokenizer, max_token_count):
+    sent_col_name = None
+    label_col_name = None
+
+    def __init__(self, split, tokenizer, max_token_len, num_workers):
+        super().__init__()
+        self.split = split
         self.tokenizer = tokenizer
-        self.max_token_count = max_token_count
+        self.max_token_len = max_token_len
+        self.num_workers = num_workers
+        self.data = None
+
+    def _set_tokenizer(self, tokenizer, max_token_len):
+        if tokenizer is None:
+            tokenizer = self.tokenizer
+        if max_token_len is None:
+            max_token_len = self.max_token_len
+        assert tokenizer is not None
+        assert max_token_len is not None
+        self.tokenizer = tokenizer
+        self.max_token_len = max_token_len
+
+    def prepare_data(self, tokenizer, max_token_len, num_workers=None):
+        self._set_tokenizer(tokenizer, max_token_len)
+        if os.path.isdir(self.path):
+            dataset = load_from_disk(self.path)
+            print(f"Local dataset is found on disk, at {self.path}")
+        else:
+            print("Downloading dataset...")
+            dataset = self._download_or_load_raw_dataset()
+            dataset.save_to_disk(self.path)
+            print("Dataset is downloaded and saved to disk")
+
+    def setup(self, tokenizer, max_token_len):
+        self._set_tokenizer(tokenizer, max_token_len)
+        assert os.path.isdir(self.path), f"The dataset dir {self.path} does not exist"
+        self.data = load_from_disk(self.path)[self.split]
 
     def __len__(self):
         return len(self.data)
@@ -28,7 +60,7 @@ class SentAnalDataset(Dataset):
         encoding = self.tokenizer(
             main_text,
             add_special_tokens=True,
-            max_length=self.max_token_count,
+            max_length=self.max_token_len,
             padding="max_length",
             truncation=True,
             return_attention_mask=True,
@@ -44,19 +76,39 @@ class SentAnalDataset(Dataset):
             labels=torch.tensor([labels]),
         )
 
+    def _download_or_load_raw_dataset(self):
+        raise NotImplementedError
+
 
 class SentAnalDatasetSST2(SentAnalDataset):
     path = "./data/sst2"
-    num_labels = 2
+    num_classes = 2
 
-    def __init__(self, data):
-        super().__init__(data=data)
-        self.sent_col_name = "sentence"
-        self.label_col_name = "label"
+    sent_col_name = "sentence"
+    label_col_name = "label"
 
-    def _download_and_process(self):
-        dataset = load_dataset(
-            "glue", "sst2", cache_dir=os.path.abspath("./cache/dataset_cache_dir")
+    def __init__(self, split, tokenizer=None, max_token_len=None, auto_setup=False):
+        super().__init__(
+            split=split,
+            tokenizer=tokenizer,
+            max_token_len=max_token_len,
+            num_workers=None,
         )
-        dataset.save_to_disk(self.path)
-        self.dataset = dataset
+        if auto_setup:
+            assert self.tokenizer is not None
+            self.prepare_data(self.tokenizer, self.max_token_len)
+            self.setup(self.tokenizer, self.max_token_len)
+            print("Dataset is auto-setup")
+
+    def _download_or_load_raw_dataset(self):
+        if not os.path.isdir(self.path):
+            print("Downloading dataset...")
+            dataset = load_dataset(
+                "glue", "sst2", cache_dir=os.path.abspath("./cache/dataset_cache_dir")
+            )
+            dataset.save_to_disk(self.path)
+        else:
+            print("Dataset is already downloaded")
+            dataset = load_from_disk(self.path)
+        print("Dataset loaded")
+        return dataset

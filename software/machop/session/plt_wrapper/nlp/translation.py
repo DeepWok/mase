@@ -1,6 +1,8 @@
 import torch
 import torch.nn as nn
-from torchmetrics.text.bleu import BLEUScore
+
+# from torchmetrics.text.bleu import BLEUScore
+from torchmetrics import BLEUScore, MeanMetric
 
 from ..base import WrapperBase
 
@@ -20,7 +22,7 @@ name_to_final_module_map = {
 
 
 class NLPTranslationModelWrapper(WrapperBase):
-    def __init__(self, model, info, learning_rate, epochs=200, optimizer=None):
+    def __init__(self, model, info, learning_rate=1e-4, epochs=200, optimizer=None):
         super().__init__(
             model=model,
             info=info,
@@ -31,20 +33,19 @@ class NLPTranslationModelWrapper(WrapperBase):
         self.model = model["model"]
         self.tokenizer = model["tokenizer"]
         self.classifier = model["classifier"]
-        self.bleu = BLEUScore(n_gram=4, smooth=False)
 
-        self.train_bleus, self.train_losses = [], []
-        self.val_bleus, self.val_losses = [], []
-        self.test_bleus, self.test_losses = [], []
+        self.bleu_train = BLEUScore(n_gram=4, smooth=False)
+        self.bleu_val = BLEUScore(n_gram=4, smooth=False)
+        self.bleu_test = BLEUScore(n_gram=4, smooth=False)
 
         self.criterion = nn.CrossEntropyLoss()
 
-    def get_bleu(self, output_ids, labels):
+    def get_pred_ids_and_labels(self, output_ids, labels):
         label_str = self.tokenizer.batch_decode(labels)
         tgt_lns = [str.strip(s) for s in label_str]
         pred_str = self.tokenizer.batch_decode(output_ids)
         pred_lns = [str.strip(s) for s in pred_str]
-        return self.bleu(preds=pred_lns, target=tgt_lns)
+        return (pred_lns, tgt_lns)
 
     def forward(
         self, input_ids, attention_mask, decoder_input_ids, decoder_attention_mask
@@ -79,10 +80,14 @@ class NLPTranslationModelWrapper(WrapperBase):
         _, pred_ids = torch.max(outputs["logits"], dim=1)
         labels = decoder_input_ids
         labels = labels[0] if len(labels) == 1 else labels.squeeze()
-        bleu = self.get_bleu(pred_ids, labels)
-        self.train_losses.append(loss)
-        self.log("train_loss", loss, prog_bar=True)
-        self.log("train_bleu", bleu, prog_bar=True)
+        bleu = self.bleu_train(*self.get_pred_ids_and_labels(pred_ids, labels))
+        # self.train_mean_loss(loss)
+
+        self.log(
+            "bleu_train", self.bleu_train, on_step=True, on_epoch=True, prog_bar=True
+        )
+        self.log("loss_train", loss, on_step=True, on_epoch=True, prog_bar=True)
+
         return {
             "loss": loss,
             "predictions": outputs,
@@ -101,11 +106,26 @@ class NLPTranslationModelWrapper(WrapperBase):
         _, pred_ids = torch.max(outputs.logits, dim=1)
         labels = decoder_input_ids
         labels = labels[0] if len(labels) == 1 else labels.squeeze()
-        bleu = self.get_bleu(pred_ids, labels)
-        self.val_losses.append(loss)
-        self.val_bleus.append(bleu)
-        self.log("val_loss", loss, prog_bar=True)
-        self.log("val_bleu", bleu, prog_bar=True)
+
+        self.bleu_val(*self.get_pred_ids_and_labels(pred_ids, labels))
+
+        self.log(
+            "val_bleu",
+            self.bleu_val,
+            on_step=False,
+            on_epoch=True,
+            prog_bar=True,
+            sync_dist=True,
+        )
+        self.log(
+            "val_loss",
+            loss,
+            on_step=False,
+            on_epoch=True,
+            sync_dist=True,
+            prog_bar=True,
+        )
+
         return loss
 
     def test_step(self, batch, batch_idx):
@@ -119,52 +139,23 @@ class NLPTranslationModelWrapper(WrapperBase):
         _, pred_ids = torch.max(outputs.logits, dim=1)
         labels = decoder_input_ids
         labels = labels[0] if len(labels) == 1 else labels.squeeze()
-        bleu = self.get_bleu(pred_ids, labels)
-        self.test_losses.append(loss)
-        self.test_bleus.append(bleu)
+        bleu = self.bleu_test(*self.get_pred_ids_and_labels(pred_ids, labels))
+
+        self.log(
+            "test_loss",
+            loss,
+            on_step=False,
+            on_epoch=True,
+            prog_bar=True,
+            sync_dist=True,
+        )
+        self.log(
+            "test_bleu",
+            bleu,
+            on_step=False,
+            on_epoch=True,
+            pro_bar=True,
+            sync_dist=True,
+        )
+
         return loss
-
-    def on_train_epoch_end(self):
-        train_mean_loss = torch.mean(
-            torch.tensor(self.train_losses, dtype=torch.float32)
-        )
-        train_mean_bleu = torch.mean(
-            torch.tensor(self.train_bleus, dtype=torch.float32)
-        )
-        self.train_losses = []
-        self.train_bleus = []
-        self.log(
-            "train_mean_loss",
-            train_mean_loss,
-            prog_bar=True,
-            logger=True,
-            sync_dist=True,
-        )
-        self.log(
-            "train_mean_bleu",
-            train_mean_bleu,
-            prog_bar=True,
-            logger=True,
-            sync_dist=True,
-        )
-        return {"train_mean_loss": train_mean_loss, "train_mean_bleu": train_mean_bleu}
-
-    def on_validation_epoch_end(self):
-        mean_loss = torch.mean(torch.tensor(self.val_losses, dtype=torch.float32))
-        mean_bleu = torch.mean(torch.tensor(self.val_bleus, dtype=torch.float32))
-        self.val_losses = []
-        self.val_accs = []
-        self.log("val_mean_loss", mean_loss, prog_bar=True, logger=True, sync_dist=True)
-        self.log("val_mean_bleu", mean_bleu, prog_bar=True, logger=True, sync_dist=True)
-        return {"val_mean_loss": mean_loss, "val_mean_bleu": mean_bleu}
-
-    def on_test_epoch_end(self):
-        mean_loss = torch.mean(torch.tensor(self.test_losses, dtype=torch.float32))
-        mean_acc = torch.mean(torch.tensor(self.test_accs, dtype=torch.float32))
-        self.test_losses = []
-        self.test_accs = []
-        self.log(
-            "test_mean_loss", mean_loss, prog_bar=True, logger=True, sync_dist=True
-        )
-        self.log("test_mean_acc", mean_acc, prog_bar=True, logger=True, sync_dist=True)
-        return {"test_mean_loss": mean_loss, "test_mean_acc": mean_acc}

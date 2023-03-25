@@ -104,14 +104,14 @@ Mase also supports training with a modified model, for instance:
 # train a normal model
 ./chop --train --dataset=cifar10 --model=toy --save=test
 # Check the accuracy, without modification
-./chop --evaluate-sw --dataset=cifar --model=toy --load checkpoints/test/best.ckpt
+./chop --validate-sw --dataset=cifar --model=toy --load checkpoints/test/best.ckpt
 # Check the accuracy of modification, without re-training, this is a classic post-training quantization scenario
-./chop --evaluate-sw --dataset=cifar --model=toy --load checkpoints/test/best.ckpt --modify-sw=configs/test.toml
+./chop --validate-sw --dataset=cifar --model=toy --load checkpoints/test/best.ckpt --modify-sw=configs/test.toml
 
 # take the trained model, modify it and continue to train, this is known as quantization aware training
 ./chop --train --dataset=cifar --model=toy --save modified_test --load checkpoints/test/best.ckpt --modify-sw=configs/test.toml
 # check again the re-trained accuracy
-./chop --evaluate-sw --dataset=cifar --model=toy --load checkpoints/modified_test/best.ckpt --modify-sw=configs/test.toml
+./chop --validate-sw --dataset=cifar --model=toy --load checkpoints/modified_test/best.ckpt --modify-sw=configs/test.toml
 
 # enter modify again to check weights, etc.; you do not necessarily have to save the model in modify
 ./chop --dataset=cifar --model=toy --load checkpoints/modified_test/best.ckpt --modify-sw configs/test.toml
@@ -194,13 +194,13 @@ The figure below outlines how Machop determines when and where to load.
   ./chop --train --dataset=cifar10 --model=resnet18 --save resnet18_fp32 --batch-size 512 --cpu 32 --gpu 3
 
   # [x] 2. evaluate the trained fp32 model
-  ./chop --evaluate-sw --dataset=cifar10 --model=resnet18 --load checkpoints/resnet18_fp32/best.ckpt --batch-size 512 --cpu 32 --gpu 3
+  ./chop --validate-sw --dataset=cifar10 --model=resnet18 --load checkpoints/resnet18_fp32/best.ckpt --batch-size 512 --cpu 32 --gpu 3
 
   # [x] 3. quantise the trained fp32 model and save the quantized model
   ./chop --dataset=cifar10 --model=resnet18 --load checkpoints/resnet18_fp32/best.ckpt --modify-sw configs/tests/integer.toml --cpu 32 --gpu 3 --save resnet18_i8_ptq
 
   # [x] 4. evaluate post-training quantised model
-  ./chop --evaluate-sw --dataset=cifar10 --model=resnet18 --modify-sw configs/tests/integer.toml --load checkpoints/resnet18_fp32/best.ckpt --batch-size 512 --cpu 32 --gpu 3
+  ./chop --validate-sw --dataset=cifar10 --model=resnet18 --modify-sw configs/tests/integer.toml --load checkpoints/resnet18_fp32/best.ckpt --batch-size 512 --cpu 32 --gpu 3
 
   # [x] 5. load trained fp32 model, do quantisation-aware training, save the trained quantized model
   ./chop --train --dataset=cifar10 --model=resnet18 --modify-sw configs/tests/integer.toml --load checkpoints/resnet18_fp32/best.ckpt --save resnet18_i8_qat --batch-size 512 --cpu 32 --gpu 3

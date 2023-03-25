@@ -5,7 +5,7 @@ from ..utils import load_pt_pl_or_pkl_checkpoint_into_pt_model
 from .plt_wrapper import get_model_wrapper
 
 
-def test(
+def validate(
     model_name,
     info,
     model,
@@ -17,7 +17,7 @@ def test(
     load_type,
 ):
     if save_path is not None:
-        tb_logger = TensorBoardLogger(save_dir=save_path, name="logs_test-sw")
+        tb_logger = TensorBoardLogger(save_dir=save_path, name="logs_validate-sw")
         plt_trainer_args["logger"] = tb_logger
 
     wrapper_cls = get_model_wrapper(model_name, task)
@@ -37,4 +37,4 @@ def test(
     )
 
     trainer = pl.Trainer(**plt_trainer_args)
-    trainer.test(plt_model, datamodule=data_module)
+    trainer.validate(plt_model, datamodule=data_module)

@@ -3,6 +3,7 @@ import logging
 import pytorch_lightning as pl
 from pytorch_lightning.callbacks import ModelCheckpoint
 from pytorch_lightning.loggers import TensorBoardLogger
+from pytorch_lightning.plugins.environments import SLURMEnvironment
 
 from ..utils import load_pt_pl_or_pkl_checkpoint_into_pt_model
 from .plt_wrapper import get_model_wrapper
@@ -15,10 +16,11 @@ def train(
     info,
     model,
     task,
-    data_loader,
+    data_module,
     optimizer,
     learning_rate,
     plt_trainer_args,
+    auto_requeue,
     save_path,
     load_name,
     load_type,
@@ -36,6 +38,14 @@ def train(
         tb_logger = TensorBoardLogger(save_dir=save_path, name="logs")
         plt_trainer_args["callbacks"] = [checkpoint_callback]
         plt_trainer_args["logger"] = tb_logger
+
+    # plugin
+    if auto_requeue:
+        plugins = [SLURMEnvironment(auto_requeue=auto_requeue)]
+    else:
+        plugins = None
+    plt_trainer_args["plugins"] = plugins
+
     wrapper_cls = get_model_wrapper(model_name, task)
 
     if load_name is not None:
@@ -58,8 +68,8 @@ def train(
         optimizer=optimizer,
     )
     trainer = pl.Trainer(**plt_trainer_args)
+    # breakpoint()
     trainer.fit(
         pl_model,
-        train_dataloaders=data_loader.train_dataloader,
-        val_dataloaders=data_loader.val_dataloader,
+        datamodule=data_module,
     )

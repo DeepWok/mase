@@ -7,5 +7,5 @@ config = dict(
     as_string=True,
     ignore_modules=[],
     style="deepspeed",
-    output_file="estimate.toml",
+    output_file="estimate_deepspeed.toml",
 )

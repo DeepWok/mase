@@ -73,6 +73,7 @@ model_map = {
     "toy_manual": get_toymanualnet,
     # language models
     "bert-base-uncased": get_nlp_model,
+    "bert-base-cased": get_nlp_model,
     "gpt2": get_nlp_model,
     "roberta-base": get_nlp_model,
     "roberta-large": get_nlp_model,
@@ -147,6 +148,7 @@ vision_models = [
 
 nlp_models = [
     "bert-base-uncased",
+    "bert-base-cased",
     "gpt2",
     "roberta-base",
     "roberta-large",
