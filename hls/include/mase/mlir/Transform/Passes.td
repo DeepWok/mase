@@ -32,7 +32,9 @@ def EmitHLSPass : Pass<"emit-hls", "::mlir::ModuleOp"> {
   let constructor = "mase::createEmitHLSPass()";
   let options = [
     Option<"fileName", "file-name", "std::string", /*default=*/"",
-           "The output HLS code">
+           "The output HLS code">,
+    Option<"hlsParam", "hls-param", "std::string", /*default=*/"",
+           "The HLS parameters for quantization">
   ];
 }
 

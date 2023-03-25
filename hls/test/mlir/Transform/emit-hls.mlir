@@ -1,4 +1,4 @@
-// RUN: mase-opt %s --emit-hls | FileCheck %s
+// RUN: mase-opt %s --emit-hls="hls-param=data_in,,in,,fixed,,(1,100),,(8,5);data_out,,out,,fixed,,(1,100),,(8,5);" | FileCheck %s
 
 // CHECK: // =====================================
 // CHECK-NEXT: //     Mase HLS Hardware
@@ -14,14 +14,14 @@
 // CHECK-NEXT: #include <stdint.h>
 // CHECK-NEXT: #include <string.h>
 // CHECK-NEXT: using namespace std;
-// CHECK: void relu(float v0[1][100],float v1[1][100]) {
-// CHECK-NEXT: float v2 = 0.000000;
-// CHECK-NEXT: float v3;
+// CHECK: void relu(ap_fixed<8, 5> v0[1][100],ap_fixed<8, 5> v1[1][100]) {
+// CHECK-NEXT: ap_fixed<8, 5> v2 = 0.000000;
+// CHECK-NEXT: ap_fixed<8, 5> v3;
 // CHECK-NEXT: bool v4;
-// CHECK-NEXT: float v5;
+// CHECK-NEXT: ap_fixed<8, 5> v5;
 // CHECK-NEXT: b0:
-// CHECK-NEXT: for (int v6 = 0; v6 < 1; v6 += 1) {b1:
-// CHECK-NEXT: for (int v7 = 0; v7 < 100; v7 += 1) {b2:
+// CHECK-NEXT: for ( v6 = 0; v6 < 1; v6 += 1) {b1:
+// CHECK-NEXT: for ( v7 = 0; v7 < 100; v7 += 1) {b2:
 // CHECK-NEXT: v3 = v0[0][v7];
 // CHECK-NEXT: v4 = v3 > v2;
 // CHECK-NEXT: v5 = v4 ? v3 : v2;

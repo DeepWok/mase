@@ -71,7 +71,7 @@ class MaseMetadata:
                 replace_fn(parameters)
             else:
                 logger.warning(f"{self.node} is not found in the internal library.")
-                self._init_common_parameters(parameters)
+                self._init_common_parameters_other(parameters)
         else:
             logger.warning(f"Not dealing with node for now: {self.node}")
 
@@ -86,7 +86,7 @@ class MaseMetadata:
                 replace_fn(parameters)
             else:
                 logger.warning(f"{self.node} is not found in the internal library.")
-                self._init_software_parameters(parameters)
+                self._init_software_parameters_other(parameters)
         else:
             logger.warning(f"Not dealing with node for now: {self.node}")
 
@@ -101,7 +101,7 @@ class MaseMetadata:
                 replace_fn(parameters)
             else:
                 logger.warning(f"{self.node} is not found in the internal library.")
-                self._init_hardware_parameters(parameters)
+                self._init_hardware_parameters_other(parameters)
         else:
             logger.warning(f"Not dealing with node for now: {self.node}")
 
@@ -230,6 +230,8 @@ class MaseMetadata:
             data_in_frac_width = 5
             bias_width = 8
             bias_frac_width = 5
+            data_out_width = 29
+            data_out_frac_width = 10
         """
 
         assert parameters
@@ -238,6 +240,8 @@ class MaseMetadata:
             "weight_frac_width",
             "data_in_width",
             "data_in_frac_width",
+            "data_out_width",
+            "data_out_frac_width",
             "bias_width",
             "bias_frac_width",
             "name",
@@ -263,35 +267,19 @@ actual keys: {input_keys}"""
                 )
             else:
                 assert False, "Unsupported arg type from toml. Only fixed is supported."
-        # Assume data_out has the same type as data_in
-        self.parameters["common"]["results"]["data_out"]["type"] = self.parameters[
-            "common"
-        ]["args"]["data_in"]["type"]
-        if arg_type == "fixed":
-            # Update the output precision based on the input precision - assume lossless
-            # Output width = max(bias_width, data_in_width + weight_width + clog2(in_size)) + 1
-            # Output frac width = max(bias_frac_width, data_in_frac_width + weight_frac_width)
-            bias_width = self.parameters["common"]["args"]["bias"]["precision"][0]
-            weight_width = self.parameters["common"]["args"]["weight"]["precision"][0]
-            data_in_width = self.parameters["common"]["args"]["data_in"]["precision"][0]
-            clog2_data_in_size = int(
-                math.ceil(
-                    math.log2(self.parameters["common"]["args"]["data_in"]["size"][1])
+        result_type = arg_type
+        for result, param in self.parameters["common"]["results"].items():
+            # TODO: Do we need a type for each result?
+            self.parameters["common"]["results"][result]["type"] = result_type
+            if result_type == "fixed":
+                self.parameters["common"]["results"][result]["precision"] = (
+                    parameters[f"{result}_width"],
+                    parameters[f"{result}_frac_width"],
                 )
-            )
-            bias_frac_width = self.parameters["common"]["args"]["bias"]["precision"][1]
-            weight_frac_width = self.parameters["common"]["args"]["weight"][
-                "precision"
-            ][1]
-            data_in_frac_width = self.parameters["common"]["args"]["data_in"][
-                "precision"
-            ][1]
-            self.parameters["common"]["results"]["data_out"]["precision"] = (
-                max(bias_width, weight_width + data_in_width + clog2_data_in_size) + 1,
-                max(bias_frac_width, data_in_frac_width + weight_frac_width),
-            )
-        else:
-            assert False, "Unsupported arg type from toml. Only fixed is supported."
+            else:
+                assert (
+                    False
+                ), "Unsupported result type from toml. Only fixed is supported."
 
     def _init_software_parameters_linear(self, parameters):
         """
@@ -323,16 +311,17 @@ actual keys: {input_keys}"""
                         "precision"
                     ][1],
                     # Fully unrolled by default value
-                    "IN_SIZE": self.parameters["common"]["args"]["data_in"]["size"][1],
+                    "IN_SIZE": math.prod(
+                        self.parameters["common"]["args"]["data_in"]["size"]
+                    ),
                     "IN_DEPTH": 1,
                     "PARALLELISM": self.parameters["common"]["results"]["data_out"][
                         "size"
                     ][1],
                     # WEIGHT_SIZE == IN_SIZE * PARALLELISM
-                    "WEIGHT_SIZE": self.parameters["common"]["args"]["data_in"]["size"][
-                        1
-                    ]
-                    * self.parameters["common"]["results"]["data_out"]["size"][1],
+                    "WEIGHT_SIZE": math.prod(
+                        self.parameters["common"]["args"]["weight"]
+                    ),
                     # OUT_WIDTH == IN_WIDTH + WEIGHT_WIDTH + $clog2(IN_SIZE) + $clog2(IN_DEPTH) + HAS_BIAS
                     "OUT_WIDTH": self.parameters["common"]["results"]["data_out"][
                         "precision"
@@ -342,13 +331,13 @@ actual keys: {input_keys}"""
                         "precision"
                     ][1],
                     # OUT_SIZE == PARALLELISM
-                    "OUT_SIZE": self.parameters["common"]["results"]["data_out"][
-                        "size"
-                    ][1],
+                    "OUT_SIZE": math.prod(
+                        self.parameters["common"]["results"]["data_out"]["size"]
+                    ),
                     # BIAS_SIZE == PARALLELISM
-                    "BIAS_SIZE": self.parameters["common"]["results"]["data_out"][
-                        "size"
-                    ][1],
+                    "BIAS_SIZE": math.prod(
+                        self.parameters["common"]["results"]["data_out"]["size"]
+                    ),
                 },
                 "toolchain": "INTERNAL",
                 "module": "fixed_linear",
@@ -395,6 +384,36 @@ actual keys: {input_keys}"""
             self.parameters["common"]["results"]["data_out"]["size"][1],
             self.parameters["common"]["args"]["weight"]["size"][0],
         )
+        if self.parameters["common"]["args"]["data_in"]["type"] == "fixed":
+            # Check the output precision based on the input precision - assume lossless
+            # Output width = max(bias_width, data_in_width + weight_width + clog2(in_size)) + 1
+            # Output frac width = max(bias_frac_width, data_in_frac_width + weight_frac_width)
+            bias_width = self.parameters["common"]["args"]["bias"]["precision"][0]
+            weight_width = self.parameters["common"]["args"]["weight"]["precision"][0]
+            data_in_width = self.parameters["common"]["args"]["data_in"]["precision"][0]
+            clog2_data_in_size = int(
+                math.ceil(
+                    math.log2(self.parameters["common"]["args"]["data_in"]["size"][1])
+                )
+            )
+            bias_frac_width = self.parameters["common"]["args"]["bias"]["precision"][1]
+            weight_frac_width = self.parameters["common"]["args"]["weight"][
+                "precision"
+            ][1]
+            data_in_frac_width = self.parameters["common"]["args"]["data_in"][
+                "precision"
+            ][1]
+            expected_precision = (
+                max(bias_width, weight_width + data_in_width + clog2_data_in_size) + 1,
+                max(bias_frac_width, data_in_frac_width + weight_frac_width),
+            )
+            assert (
+                self.parameters["common"]["results"]["data_out"]["precision"]
+                == expected_precision
+            ), "Output precision does not match with the estimated precision = {}. Expected = {}".format(
+                self.parameters["common"]["results"]["data_out"]["precision"],
+                expected_precision,
+            )
 
         # Verify hardware parameters
         data_in_param = self.parameters["common"]["args"]["data_in"]
@@ -534,12 +553,16 @@ actual keys: {input_keys}"""
             name = "integer"
             data_in_width = 8
             data_in_frac_width = 5
+            data_out_width = 8
+            data_out_frac_width = 5
         """
 
         assert parameters
         expected_keys = [
             "data_in_width",
             "data_in_frac_width",
+            "data_out_width",
+            "data_out_frac_width",
             "name",
         ].sort()
         input_keys = list(parameters.keys()).sort()
@@ -561,24 +584,19 @@ actual keys: {input_keys}"""
                 )
             else:
                 assert False, "Unsupported arg type from toml. Only fixed is supported."
-        # Assume data_out has the same type as data_in
-        self.parameters["common"]["results"]["data_out"]["type"] = self.parameters[
-            "common"
-        ]["args"]["data_in"]["type"]
-        if arg_type == "fixed":
-            # Update the output precision based on the input precision - assume lossless
-            # Output width = data_in_width
-            # Output frac width = data_in_frac_width
-            data_in_width = self.parameters["common"]["args"]["data_in"]["precision"][0]
-            data_in_frac_width = self.parameters["common"]["args"]["data_in"][
-                "precision"
-            ][1]
-            self.parameters["common"]["results"]["data_out"]["precision"] = (
-                data_in_width,
-                data_in_frac_width,
-            )
-        else:
-            assert False, "Unsupported arg type from toml. Only fixed is supported."
+        result_type = arg_type
+        for result, param in self.parameters["common"]["results"].items():
+            # TODO: Do we need a type for each result?
+            self.parameters["common"]["results"][result]["type"] = result_type
+            if result_type == "fixed":
+                self.parameters["common"]["results"][result]["precision"] = (
+                    parameters[f"{result}_width"],
+                    parameters[f"{result}_frac_width"],
+                )
+            else:
+                assert (
+                    False
+                ), "Unsupported result type from toml. Only fixed is supported."
 
     def _init_software_parameters_relu(self, parameters):
         """
@@ -589,7 +607,9 @@ actual keys: {input_keys}"""
         if self.parameters["common"]["args"]["data_in"]["type"] == "fixed":
             self.parameters["hardware"] = {
                 "verilog_parameters": {
-                    "IN_SIZE": self.parameters["common"]["args"]["data_in"]["size"][1],
+                    "IN_SIZE": math.prod(
+                        self.parameters["common"]["args"]["data_in"]["size"]
+                    ),
                     "IN_FRAC_WIDTH": self.parameters["common"]["args"]["data_in"][
                         "precision"
                     ][1],
@@ -597,9 +617,9 @@ actual keys: {input_keys}"""
                         "precision"
                     ][0],
                     # OUT = IN
-                    "OUT_SIZE": self.parameters["common"]["results"]["data_out"][
-                        "size"
-                    ][1],
+                    "OUT_SIZE": math.prod(
+                        self.parameters["common"]["results"]["data_out"]["size"]
+                    ),
                     "OUT_FRAC_WIDTH": self.parameters["common"]["args"]["data_in"][
                         "precision"
                     ][1],
@@ -624,6 +644,10 @@ actual keys: {input_keys}"""
 
     def _verify_parameters_relu(self):
         # Verify common parameters
+        assert (
+            self.parameters["common"]["args"]["data_in"]
+            == self.parameters["common"]["results"]["data_out"]
+        ), "ReLU has a mismatched input and output pair"
 
         # Verify hardware parameters
         data_in_param = self.parameters["common"]["args"]["data_in"]
@@ -657,10 +681,11 @@ actual keys: {input_keys}"""
     # ----------------------------------------------------------
     def _init_common_parameters_other(self, parameters):
         self.parameters["common"]["args"] = {}
+        self.parameters["common"]["results"] = {}
         for name, parameter in self.module.named_parameters():
             self.parameters["common"]["args"][name] = {
-                "type": "fixed",
-                "precision": (32, 0),
+                "type": "float",
+                "precision": (32),
                 "size": parameter.shape,
             }
 
@@ -690,26 +715,55 @@ actual keys: {input_keys}"""
                 out_features = node_out.meta.module.in_features
         assert out_features, f"Cannot find the out features for module {self.node.name}"
 
-        self.parameters["common"]["args"] = {
-            "data_in": {
-                "type": "fixed",
-                "precision": (32, 0),
-                "size": (
-                    1,
-                    in_features,
-                ),
-            }
+        self.parameters["common"]["args"]["data_in"] = {
+            "type": "float",
+            "precision": (32),
+            "size": (
+                1,
+                in_features,
+            ),
         }
-        self.parameters["common"]["results"] = {
-            "data_out": {
-                "type": "fixed",
-                "precision": (32, 0),
-                "size": (
-                    1,
-                    out_features,
-                ),
-            }
+        self.parameters["common"]["results"]["data_out"] = {
+            "type": "float",
+            "precision": (32),
+            "size": (
+                1,
+                out_features,
+            ),
         }
+        if parameters:
+            self._update_common_parameters_other(parameters)
+
+    def _update_common_parameters_other(self, parameters):
+        assert parameters
+
+        # Update common parameters
+        arg_type = parameters["name"]
+        for arg, param in self.parameters["common"]["args"].items():
+            # TODO: Do we need a type for each arg?
+            self.parameters["common"]["args"][arg]["type"] = arg_type
+            if arg_type == "fixed":
+                self.parameters["common"]["args"][arg]["precision"] = (
+                    parameters[f"{arg}_width"],
+                    parameters[f"{arg}_frac_width"],
+                )
+            else:
+                assert False, "Unsupported arg type from toml. Only fixed is supported."
+        result_type = arg_type
+        for result, param in self.parameters["common"]["results"].items():
+            # TODO: Do we need a type for each result?
+            self.parameters["common"]["results"][result]["type"] = result_type
+            if result_type == "fixed":
+                self.parameters["common"]["results"][result]["precision"] = (
+                    parameters[f"{result}_width"],
+                    parameters[f"{result}_frac_width"],
+                )
+            else:
+                assert (
+                    False
+                ), "Unsupported result type from toml. Only fixed is supported."
+
+        return
 
     def _init_software_parameters_other(self, parameters):
         """
@@ -717,10 +771,80 @@ actual keys: {input_keys}"""
         """
 
     def _init_hardware_parameters_other(self, parameters):
-        self.parameters["hardware"]["verilog_parameters"] = {}
+        node_name = vf(self.node.name)
         self.parameters["hardware"]["toolchain"] = "HLS"
         self.parameters["hardware"]["module"] = node_name
         self.parameters["hardware"]["dependence_files"] = []
+
+        args_param = self.parameters["common"]["args"]
+        results_param = self.parameters["common"]["results"]
+        if args_param["data_in"]["type"] == "fixed":
+            self.parameters["hardware"]["verilog_parameters"] = {
+                "IN_WIDTH": self.parameters["common"]["args"]["data_in"]["precision"][
+                    0
+                ],
+                "IN_FRAC_WIDTH": self.parameters["common"]["args"]["data_in"][
+                    "precision"
+                ][1],
+                "IN_SIZE": math.prod(
+                    self.parameters["common"]["args"]["data_in"]["size"]
+                ),
+                "OUT_WIDTH": self.parameters["common"]["results"]["data_out"][
+                    "precision"
+                ][0],
+                "OUT_FRAC_WIDTH": self.parameters["common"]["results"]["data_out"][
+                    "precision"
+                ][1],
+                "OUT_SIZE": math.prod(
+                    self.parameters["common"]["results"]["data_out"]["size"]
+                ),
+            }
+
+            # Add other parameters
+            for arg, param in args_param.items():
+                if arg == "data_in":
+                    continue
+                assert (
+                    args_param[arg]["type"] == "fixed"
+                ), "Unsupported arg type. Only fixed is supported."
+                cap_arg = arg.upper()
+                self.parameters["hardware"]["verilog_parameters"][
+                    f"{cap_arg}_SIZE"
+                ] = math.prod(args_param[arg]["size"])
+                self.parameters["hardware"]["verilog_parameters"][
+                    f"{cap_arg}_WIDTH"
+                ] = args_param[arg]["precision"][0]
+                self.parameters["hardware"]["verilog_parameters"][
+                    f"{cap_arg}_FRAC_WIDTH"
+                ] = args_param[arg]["precision"][1]
+            for result, param in results_param.items():
+                if result == "data_out":
+                    continue
+                assert (
+                    results_param[result]["type"] == "fixed"
+                ), "Unsupported result type. Only fixed is supported."
+                cap_result = result.upper()
+                self.parameters["hardware"]["verilog_parameters"][
+                    f"{cap_result}_SIZE"
+                ] = math.prod(results_param[result]["size"])
+                self.parameters["hardware"]["verilog_parameters"][
+                    f"{cap_result}_WIDTH"
+                ] = results_param[result]["precision"][0]
+                self.parameters["hardware"]["verilog_parameters"][
+                    f"{cap_result}_FRAC_WIDTH"
+                ] = results_param[result]["precision"][1]
+
+        else:
+            assert False, "Floating point type for unknown ops is not supported."
+
+        if parameters:
+            self._update_hardware_parameters_other(parameters)
+
+    def _update_hardware_parameters_other(self, parameters):
+        assert parameters
+        assert (
+            False
+        ), "External toml for updating hardware parameters of unknown op is not supproted."
 
     def _verify_parameters_other(self):
         return

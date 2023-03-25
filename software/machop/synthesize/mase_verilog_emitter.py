@@ -57,6 +57,23 @@ def _execute(cmd, log_output: bool = True, log_file=None, cwd="."):
     return result.returncode
 
 
+def _get_hls_parameters(node):
+    args_param = node.meta.parameters["common"]["args"]
+    results_param = node.meta.parameters["common"]["results"]
+    hls_param = ""
+    for arg, param in args_param.items():
+        precision = args_param[arg]["precision"]
+        size = str(tuple(args_param[arg]["size"])).replace(",)", ")")
+        ty = args_param[arg]["type"]
+        hls_param += f"{arg},,in,,{ty},,{size},,{precision};"
+    for result, param in results_param.items():
+        precision = results_param[result]["precision"]
+        size = str(tuple(results_param[result]["size"])).replace(",)", ")")
+        ty = results_param[result]["type"]
+        hls_param += f"{result},,out,,{ty},,{size},,{precision};"
+    return hls_param.replace(" ", "")
+
+
 class MaseVerilogEmitter(MaseGraph):
     def __init__(
         self,
@@ -131,7 +148,10 @@ class MaseVerilogEmitter(MaseGraph):
             if node.op != "call_module" and node.op != "call_function":
                 continue
             node_name = vf(node.name)
-            if node.meta.parameters["hardware"]["toolchain"] == "INTERNAL":
+            if (
+                node.meta.parameters["hardware"]["toolchain"] == "INTERNAL"
+                or node.meta.parameters["hardware"]["toolchain"] == "HLS"
+            ):
                 for key, value in node.meta.parameters["hardware"][
                     "verilog_parameters"
                 ].items():
@@ -445,13 +465,16 @@ endmodule
         lowered_dir = os.path.join(node_dir, f"{node_name}.mase.mlir")
         hls_dir = os.path.join(node_dir, f"{node_name}.cpp")
 
+        # Get all the parameters needed for HLS
+        hls_param = _get_hls_parameters(node)
+
         # Transform Affine MLIR for hardware generation and emit HLS code
         cmd = [
             "mase-opt",
             mlir_dir,
             f"--preprocess-func=func-name={node_name}",
             "--canonicalize",
-            f"--emit-hls=file-name={hls_dir}",
+            f"--emit-hls=file-name={hls_dir} hls-param={hls_param}",
             "-o",
             lowered_dir,
         ]
