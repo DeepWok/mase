@@ -25,6 +25,7 @@
 
 #include "llvm/ADT/PostOrderIterator.h"
 #include "llvm/ADT/TypeSwitch.h"
+#include "llvm/Support/Debug.h"
 #include "llvm/Support/raw_ostream.h"
 
 using namespace mlir;
@@ -47,6 +48,180 @@ static llvm::DenseMap<Value, std::string> valueMap;
 static llvm::DenseMap<Block *, std::string> blockMap;
 
 // ------------------------------------------------------
+//  Inferring variable types
+//  The trained hardware module contains quantized precisions for all the data
+//  and parameters. In the software mode, these precisions are modelled using
+//  floating points, which are inefficient in hardware. Here we load the
+//  quantized precision information and directly generate types in the correct
+//  formats.
+// ------------------------------------------------------
+
+static std::string globalType;
+// Unit/Element type of a value
+static llvm::DenseMap<Value, std::string> unitTypeMap;
+
+class QArgType {
+public:
+  std::string name;
+  bool isInput;
+  std::string type;
+  std::vector<long int> shape;
+  std::vector<long int> precision;
+};
+
+static bool isNumberString(std::string s) {
+  std::string::const_iterator it = s.begin();
+  while (it != s.end() && std::isdigit(*it))
+    ++it;
+  return !s.empty() && it == s.end();
+}
+
+static std::vector<long int> parseVector(std::string param) {
+  std::vector<long int> vec;
+
+  size_t pos = 0;
+  std::string token;
+  while ((pos = param.find(",")) != std::string::npos) {
+    token = param.substr(0, pos);
+    param.erase(0, pos + 1);
+    LLVM_DEBUG({
+      if (!isNumberString(token))
+        dbgs() << token << "\n";
+    });
+    assert(isNumberString(token) &&
+           "Non digit char is found when parsing vectors");
+    vec.push_back(std::stoi(token));
+  }
+  assert(param.empty() &&
+         "Vector is not completely parsed. Missing the last comma?");
+  return vec;
+}
+
+template <typename OpType>
+static bool areVecSame(std::vector<OpType> &v1, std::vector<OpType> &v2) {
+  if (v1.size() != v2.size())
+    return false;
+  return std::equal(v1.begin(), v1.begin() + v1.size(), v2.begin());
+}
+
+static int countSubstring(std::string pat, std::string txt) {
+  int M = pat.length();
+  int N = txt.length();
+  int res = 0;
+
+  /* A loop to slide pat[] one by one */
+  for (int i = 0; i <= N - M; i++) {
+    /* For current index i, check for
+       pattern match */
+    int j;
+    for (j = 0; j < M; j++)
+      if (txt[i + j] != pat[j])
+        break;
+
+    // if pat[0...M-1] = txt[i, i+1, ...i+M-1]
+    if (j == M) {
+      res++;
+    }
+  }
+  return res;
+}
+
+// Parse the HLS parameters, which is in the format of:
+// "{name},{direction},{ty},{size},{precision};"
+static std::vector<QArgType *> parseHlsParam(std::string param) {
+  std::vector<QArgType *> types;
+
+  size_t pos = 0;
+  std::string token;
+  while ((pos = param.find(";")) != std::string::npos) {
+    token = param.substr(0, pos);
+    param.erase(0, pos + 1);
+
+    // Parse a single arg
+    if (countSubstring(",,", token) != 4)
+      llvm_unreachable(
+          "Invalid HLS paramter format (expected 4 commas), please double "
+          "check: {name},,{direction},,{ty},,{size},,{precision};");
+
+    auto newTy = new QArgType;
+    auto subPos = token.find(",,");
+    newTy->name = token.substr(0, subPos);
+    token.erase(0, subPos + 2);
+    subPos = token.find(",,");
+    newTy->isInput = (token.substr(0, subPos) == "in");
+    token.erase(0, subPos + 2);
+    subPos = token.find(",,");
+    newTy->type = (token.substr(0, subPos) == "fixed") ? "ap_fixed" : "unknown";
+    token.erase(0, subPos + 2);
+    subPos = token.find(",,");
+    // Remove the brackets and double comma
+    newTy->shape = parseVector(token.substr(1, subPos - 2) + ",");
+    token.erase(0, subPos + 2);
+    // Remove the brackets, double comma and semicolon
+    newTy->precision = parseVector(token.substr(1, token.size() - 2) + ",");
+    types.push_back(newTy);
+  }
+  assert(param.empty() &&
+         "Param is not completely parsed. Missing the last semicolon?");
+
+  // Verify: we use types and shapes to find the unnamed arguments. So if there
+  // are two args that have the same shape and type, there may be a bug.
+  // For now we assume that the input parametes must be in order.
+  // for (long unsigned int i = 0; i < types.size(); i++)
+  //  for (long unsigned int j = i + 1; j < types.size(); j++)
+  //    assert(!areVecSame<long int>(types[i]->shape, types[j]->shape) &&
+  //           "Found two args that have the same shape - cannot distinguish "
+  //           "between them for quantization");
+
+  return types;
+}
+
+static void initArgTypeMap(func::FuncOp funcOp, std::string hlsParam) {
+  LLVM_DEBUG(dbgs() << funcOp.getName() << " : " << hlsParam << "\n");
+
+  auto types = parseHlsParam(hlsParam);
+
+  for (auto &arg : funcOp.getArguments()) {
+    auto arrayType = dyn_cast<ShapedType>(arg.getType());
+    if (!arrayType)
+      llvm_unreachable("Function arg has scalar type. This is not supported.");
+    if (!arrayType.hasStaticShape())
+      llvm_unreachable(
+          "Function arg contains dynamic shape. This is not supported.");
+
+    for (auto type : types) {
+      std::vector<long int> arrayShape = arrayType.getShape().vec();
+      if (areVecSame<long int>(type->shape, arrayShape)) {
+        if (type->type == "ap_fixed") {
+          assert(type->precision.size() == 2 &&
+                 "Function arg has ap_fixed type but has more than 2 precision "
+                 "constraints.");
+          assert(
+              type->precision[0] >= type->precision[1] &&
+              "Function arg has ap_fixed type but total width is smaller than "
+              "the fraction width.");
+
+          unitTypeMap[arg] = type->type + "<" +
+                             std::to_string(type->precision[0]) + ", " +
+                             std::to_string(type->precision[1]) + ">";
+        } else
+          llvm_unreachable("Unsupported data type for the function arguments.");
+
+        if (!type->isInput)
+          globalType = unitTypeMap[arg];
+
+        // Assuming that the types are in-order
+        types.erase(std::find(types.begin(), types.end(), type));
+        break;
+      }
+    }
+    assert(unitTypeMap.count(arg) &&
+           "Cannot find arg with the same shape in the input HLS parameters.");
+  }
+  assert(types.empty());
+}
+
+// ------------------------------------------------------
 //   Utils
 // ------------------------------------------------------
 
@@ -65,27 +240,25 @@ static std::string getBlockName(Block *block) {
 }
 
 static std::string getTypeName(Value value) {
+  if (dyn_cast<BlockArgument>(value))
+    return unitTypeMap[value];
+
   auto valueType = value.getType();
   if (auto arrayType = dyn_cast<ShapedType>(valueType))
     valueType = arrayType.getElementType();
 
   if (isa<Float32Type>(valueType))
-    return "float";
+    return globalType;
   if (isa<Float64Type>(valueType))
-    return "double";
+    return globalType;
 
   if (isa<IndexType>(valueType))
     return "int";
   if (auto intType = dyn_cast<IntegerType>(valueType)) {
     if (intType.getWidth() == 1)
       return "bool";
-    else {
-      std::string signedness = "";
-      if (intType.getSignedness() == IntegerType::SignednessSemantics::Unsigned)
-        signedness = "u";
-      return "ap_" + signedness + "int<" + std::to_string(intType.getWidth()) +
-             ">";
-    }
+    else
+      return globalType;
   }
   value.getDefiningOp()->emitError("has unsupported type.");
   return "";
@@ -122,6 +295,10 @@ static std::string getArrayInit(Value array) {
 
   auto arrayType = array.getType().dyn_cast<ShapedType>();
 
+  if (!arrayType.hasStaticShape())
+    llvm_unreachable(
+        "Function arg contains dynamic shape. This is not supported.");
+
   std::string arrayBuff;
   if (arrayType.hasStaticShape()) {
     arrayBuff += getValueName(array);
@@ -133,6 +310,10 @@ static std::string getArrayInit(Value array) {
 
   return arrayBuff;
 }
+
+// ------------------------------------------------------
+//  Emit general ops
+// ------------------------------------------------------
 
 static std::string emitBinaryOp(Operation *op, std::string symbol) {
   return getValueName(op->getResult(0)) + " = " +
@@ -836,6 +1017,8 @@ static std::string emitOp(func::FuncOp funcOp) {
   // Emit input arguments.
   SmallVector<Value, 8> args;
   for (auto &arg : funcOp.getArguments()) {
+    if (!dyn_cast<ShapedType>(arg.getType()))
+      llvm_unreachable("Function arg has scalar type. This is not supported.");
     auto argName = (dyn_cast<ShapedType>(arg.getType())) ? getArrayInit(arg)
                                                          : getValueName(arg);
     funcOpBuff += getTypeName(arg) + " " + argName + ",";
@@ -892,6 +1075,8 @@ public:
     if (i != 1)
       m.emitError("Found more than one function in the module. Please "
                   "check which one for lowering.");
+
+    m.walk([&](func::FuncOp op) { initArgTypeMap(op, hlsParam); });
 
     std::error_code ec;
     llvm::raw_fd_ostream fout(fileName, ec);
