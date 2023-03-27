@@ -38,7 +38,7 @@ from transformers.utils import (
     replace_return_docstrings,
 )
 
-from ....graph.mase_tracer import torch_ones
+from ....graph.mase_tracer import mark_as_leaf_module, torch_ones
 from .configuration_opt_patched import OPTConfigPatched
 from .utils_opt_patched import (
     OPTAttention_attention_get_dtype_min,
@@ -74,6 +74,7 @@ OPT_PRETRAINED_MODEL_ARCHIVE_LIST = [
 ]
 
 
+@mark_as_leaf_module
 class OPTLearnedPositionalEmbedding(nn.Embedding):
     """
     This module learns positional embeddings up to a fixed maximum size.

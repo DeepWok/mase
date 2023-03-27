@@ -17,7 +17,7 @@ class NLPLanguageModelingModelWrapper(WrapperBase):
         self.model = model["model"]
         self.tokenizer = model["tokenizer"]
 
-        self.loss_mean_train = MeanMetric()
+        # self.loss_mean_train = MeanMetric()
         self.loss_mean_val = MeanMetric()
         self.loss_mean_test = MeanMetric()
 
@@ -34,7 +34,7 @@ class NLPLanguageModelingModelWrapper(WrapperBase):
         output = output["logits"]
         return loss, output
 
-    def training_step(self, batch):
+    def training_step(self, batch, batch_idx):
         input_ids = batch["input_ids"]
         attention_mask = batch["attention_mask"]
         labels = batch["labels"]
@@ -43,9 +43,9 @@ class NLPLanguageModelingModelWrapper(WrapperBase):
         perplexity = torch.exp(loss)
         self.loss_mean_train.update(loss)
 
-        self.log("train_loss", loss, on_step=True, on_epoch=True, prog_bar=True)
+        self.log("train_loss", loss, on_step=True, on_epoch=False, prog_bar=True)
         self.log(
-            "train_perplexity_step",
+            "train_perplexity",
             perplexity,
             on_step=True,
             on_epoch=False,
@@ -54,26 +54,26 @@ class NLPLanguageModelingModelWrapper(WrapperBase):
 
         return {"loss": loss, "predictions": outputs, "perplexity": perplexity}
 
-    def on_train_epoch_end(self):
-        mean_loss = self.loss_mean_train.compute()
-        mean_perplexity = torch.exp(mean_loss)
-        self.log(
-            "train_perplexity_epoch",
-            mean_perplexity,
-            on_step=False,
-            on_epoch=True,
-            prog_bar=True,
-            sync_dist=True,
-        )
-        self.loss_mean_train.reset()
+    # def on_train_epoch_end(self):
+    #     mean_loss = self.loss_mean_train.compute()
+    #     mean_perplexity = torch.exp(mean_loss)
+    #     self.log(
+    #         "train_perplexity_epoch",
+    #         mean_perplexity,
+    #         on_step=False,
+    #         on_epoch=True,
+    #         prog_bar=True,
+    #         sync_dist=True,
+    #     )
+    #     self.loss_mean_train.reset()
 
     def validation_step(self, batch, batch_idx):
         input_ids = batch["input_ids"]
         attention_mask = batch["attention_mask"]
         labels = batch["labels"]
-        loss, outputs = self.forward(input_ids, attention_mask, labels)
+        loss, _ = self.forward(input_ids, attention_mask, labels)
 
-        perplexity = torch.exp(loss)
+        # perplexity = torch.exp(loss)
         self.loss_mean_val.update(loss)
 
         self.log(
@@ -133,3 +133,10 @@ class NLPLanguageModelingModelWrapper(WrapperBase):
             sync_dist=True,
         )
         self.loss_mean_test.reset()
+
+    def predict_step(self, batch, batch_idx: int, dataloader_idx: int = 0):
+        input_ids = batch["input_ids"]
+        attention_mask = batch["attention_mask"]
+        _, outputs = self.forward(input_ids, attention_mask, labels=None)
+        outputs["batch_idx"] = batch_idx
+        return outputs

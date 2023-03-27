@@ -84,9 +84,9 @@ class NLPTranslationModelWrapper(WrapperBase):
         # self.train_mean_loss(loss)
 
         self.log(
-            "bleu_train", self.bleu_train, on_step=True, on_epoch=True, prog_bar=True
+            "bleu_train", self.bleu_train, on_step=True, on_epoch=False, prog_bar=True
         )
-        self.log("loss_train", loss, on_step=True, on_epoch=True, prog_bar=True)
+        self.log("loss_train", loss, on_step=True, on_epoch=False, prog_bar=True)
 
         return {
             "loss": loss,
@@ -159,3 +159,17 @@ class NLPTranslationModelWrapper(WrapperBase):
         )
 
         return loss
+
+    def predict_step(self, batch, batch_idx: int, dataloader_idx: int = 0):
+        input_ids = batch["input_ids"]
+        attention_mask = batch["attention_mask"]
+        outputs, _ = self.forward(
+            input_ids,
+            attention_mask,
+            decoder_input_ids=None,
+            decoder_attention_mask=None,
+        )
+        _, pred_ids = torch.max(outputs["logits"], dim=1)
+        outputs["batch_idx"] = batch_idx
+        outputs["pred_ids"] = pred_ids
+        return outputs

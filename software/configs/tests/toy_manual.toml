@@ -2,8 +2,8 @@
 name = "integer"
 weight_width = 8
 weight_frac_width = 3
-input_width = 8
-input_frac_width = 5
+data_in_width = 8
+data_in_frac_width = 5
 bias_width = 8
 bias_frac_width = 5
 
@@ -11,8 +11,8 @@ bias_frac_width = 5
 name = "integer"
 weight_width = 15
 weight_frac_width = 5
-input_width = 8
-input_frac_width = 5
+data_in_width = 8
+data_in_frac_width = 5
 bias_width = 12
 bias_frac_width = 5
 
@@ -20,7 +20,7 @@ bias_frac_width = 5
 name = "integer"
 weight_width = 8
 weight_frac_width = 5
-input_width = 8
-input_frac_width = 5
+data_in_width = 8
+data_in_frac_width = 5
 bias_width = 8
 bias_frac_width = 5

@@ -7,11 +7,12 @@ import random
 import sys
 import time
 from argparse import ArgumentParser
+from pprint import pprint
 
 import numpy as np
 import torch
 
-from .dataset import MyDataModule, get_dataset_info
+from .dataset import MyDataModule, available_datasets, get_dataset_info
 from .estimate_sw import run_estimator
 from .graph.dummy_inputs import get_dummy_inputs
 from .models import manual_models, model_map, nlp_models, vision_models
@@ -57,6 +58,15 @@ class Machop:
             dest="is_interactive",
             default=False,
             help="Run in interactive mode. Default=False",
+        )
+        parser.add_argument(
+            "--ls",
+            dest="ls_target",
+            default=None,
+            help=(
+                "List available models or datasets. Must be one of ['model', 'dataset', 'all']. "
+                "Default=None will not list anything."
+            ),
         )
         parser.add_argument(
             "--load",
@@ -371,6 +381,9 @@ class Machop:
 
     # Main process
     def run(self):
+        if self.args.ls_target is not None:
+            self.list_available()
+            return
         self.init_model_and_dataset()
         self.create_output_dir()
         if self.args.modify_sw is not None:
@@ -393,6 +406,22 @@ class Machop:
             self.test_hw()
         if self.args.to_evaluate_hw:
             self.evaluate_hw()
+
+    def list_available(self):
+        args = self.args
+        tgt = args.ls_target
+        assert tgt in [
+            "model",
+            "dataset",
+            "all",
+        ], "The param of --ls must be one of ['model', 'dataset', 'all']"
+
+        if tgt in ["model", "all"]:
+            logger.info("Available models")
+            pprint(list(model_map.keys()))
+        if tgt in ["dataset", "all"]:
+            logger.info("Available datasets")
+            pprint(available_datasets)
 
     # Setup model and data for training
     def init_model_and_dataset(self):
@@ -444,7 +473,9 @@ class Machop:
 
     def create_output_dir(self):
         args = self.args
+
         root = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
+
         project_dir = (
             args.project_dir
             if args.project_dir is not None
@@ -453,8 +484,10 @@ class Machop:
         project = (
             args.project
             if args.project is not None
-            else "{}-".format(args.model.replace("/", "-"))
-            + time.strftime("%Y_%m_%d-%H_%M_%S")
+            else "{}_{}_{}_".format(
+                args.model.replace("/", "-"), args.task, args.dataset
+            )
+            + time.strftime("%Y-%m-%d")
         )
 
         self.output_dir = os.path.join(project_dir, project)
@@ -549,7 +582,10 @@ class Machop:
             "info": self.info,
             "task": args.task,
             "data_module": self.data_module,
+            "optimizer": args.training_optimizer,
+            "learning_rate": args.learning_rate,
             "plt_trainer_args": plt_trainer_args,
+            "auto_requeue": args.is_to_auto_requeue,
             "save_path": os.path.join(self.output_dir_sw, "checkpoints"),
             "load_name": load_name,
             "load_type": self.how_to_load,
@@ -577,6 +613,9 @@ class Machop:
             "info": self.info,
             "task": args.task,
             "data_module": self.data_module,
+            "optimizer": args.training_optimizer,
+            "learning_rate": args.learning_rate,
+            "auto_requeue": args.is_to_auto_requeue,
             "plt_trainer_args": plt_trainer_args,
             "save_path": os.path.join(self.output_dir_sw, "checkpoints"),
             "load_name": load_name,

@@ -1,5 +1,7 @@
 from functools import partial
 
+import torch.nn.functional as F
+
 from ....graph.mase_tracer import mark_as_leaf_func
 from ..quantizers import (
     integer_quantizer,
@@ -9,24 +11,22 @@ from ..quantizers import (
 
 
 @mark_as_leaf_func
-def add_integer(x, y, config):
+def relu_integer(x, config):
     bypass = config.get("bypass", False)
     if bypass:
-        return x + y
+        return F.relu(x)
     else:
-        # establish quantizers
         x_width, x_frac_width = config["data_in_width"], config["data_in_frac_width"]
         x_quantizer = partial(integer_quantizer, width=x_width, frac_width=x_frac_width)
-        x = x_quantizer(x)
-        y = x_quantizer(y)
-        return x + y
+
+        return F.relu(x_quantizer(x))
 
 
 @mark_as_leaf_func
-def add_minifloat_simple(x, y, config):
+def relu_minifloat_simple(x, config):
     bypass = config.get("bypass", False)
     if bypass:
-        return x + y
+        return F.relu(x)
     else:
         x_width, x_exponent_width, x_exponent_bias = (
             config["data_in_width"],
@@ -41,16 +41,14 @@ def add_minifloat_simple(x, y, config):
             exponent_bias=x_exponent_bias,
         )
 
-        x = x_quantizer(x)
-        y = x_quantizer(y)
-        return x + y
+        return x_quantizer(x)
 
 
 @mark_as_leaf_func
-def add_minifloat_ieee(x, y, config):
+def relu_minifloat_ieee(x, config):
     bypass = config.get("bypass", False)
     if bypass:
-        return x + y
+        return F.relu(x)
     else:
         x_width, x_exponent_width, x_exponent_bias = (
             config["data_in_width"],
@@ -65,6 +63,4 @@ def add_minifloat_ieee(x, y, config):
             exponent_bias=x_exponent_bias,
         )
 
-        x = x_quantizer(x)
-        y = x_quantizer(y)
-        return x + y
+        return x_quantizer(x)

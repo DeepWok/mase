@@ -6,6 +6,10 @@ def check_func_type(node, my_func):
     return type(node.target) == type(my_func)
 
 
+def check_func(node, my_func):
+    return node.target == my_func
+
+
 def isinstance_but_not_subclass(my_object, my_class):
     return my_object.__class__ is my_class
 

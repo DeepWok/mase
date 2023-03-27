@@ -1,4 +1,5 @@
 import logging
+import os
 
 import pytorch_lightning as pl
 from pytorch_lightning.callbacks import ModelCheckpoint
@@ -25,6 +26,8 @@ def train(
     load_name,
     load_type,
 ):
+    if not os.path.isdir(save_path):
+        os.makedirs(save_path)
     # if save_path is None, the model will not be saved
     if save_path is not None:
         checkpoint_callback = ModelCheckpoint(
@@ -46,6 +49,15 @@ def train(
         plugins = None
     plt_trainer_args["plugins"] = plugins
 
+    # Check optimizer
+    if plt_trainer_args["strategy"] in ["deepspeed_stage_3"]:
+        assert optimizer in [
+            "FusedAdam",
+            "fused_adam",
+        ], "optimizer should be 'fused_adam' given --strategy={}".format(
+            plt_trainer_args["strategy"]
+        )
+
     wrapper_cls = get_model_wrapper(model_name, task)
 
     if load_name is not None:
@@ -60,6 +72,7 @@ def train(
             )
         logger.info(f"'{load_type}' checkpoint loaded before training")
     # breakpoint()
+
     pl_model = wrapper_cls(
         model,
         info=info,
@@ -67,6 +80,7 @@ def train(
         epochs=plt_trainer_args["max_epochs"],
         optimizer=optimizer,
     )
+
     trainer = pl.Trainer(**plt_trainer_args)
     # breakpoint()
     trainer.fit(

@@ -72,9 +72,9 @@ class NLPClassificationModelWrapper(WrapperBase):
 
         acc = self.acc_train(pred_ids, labels)
 
-        self.log("train_loss", loss, on_step=True, on_epoch=True, prog_bar=True)
+        self.log("train_loss", loss, on_step=True, on_epoch=False, prog_bar=True)
         self.log(
-            "train_acc", self.acc_train, on_step=True, on_epoch=True, prog_bar=True
+            "train_acc", self.acc_train, on_step=True, on_epoch=False, prog_bar=True
         )
 
         return {
@@ -142,3 +142,10 @@ class NLPClassificationModelWrapper(WrapperBase):
         )
 
         return loss
+
+    def predict_step(self, batch, batch_idx: int, dataloader_idx: int = 0):
+        input_ids = batch["input_ids"]
+        attention_mask = batch["attention_mask"]
+        _, outputs = self.forward(input_ids, attention_mask, labels=None)
+        _, pred_ids = torch.max(outputs, dim=1)
+        return {"batch_idx": batch_idx, "outputs": outputs, "pred_ids": pred_ids}

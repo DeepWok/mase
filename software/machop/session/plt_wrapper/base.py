@@ -1,5 +1,6 @@
 import pytorch_lightning as pl
 import torch
+from deepspeed.ops.adam import FusedAdam
 from torch.optim.lr_scheduler import CosineAnnealingLR
 
 # from torchmetrics.functional import accuracy
@@ -7,9 +8,7 @@ from torchmetrics import Accuracy, MeanMetric
 
 
 class WrapperBase(pl.LightningModule):
-    def __init__(
-        self, model, learning_rate=5e-4, epochs=200, optimizer=None, info=None
-    ):
+    def __init__(self, model, learning_rate=5e-4, epochs=1, optimizer=None, info=None):
         super().__init__()
         self.model = model
         self.learning_rate = learning_rate
@@ -34,9 +33,9 @@ class WrapperBase(pl.LightningModule):
         acc = self.acc_train(y_hat, y)
 
         self.log(
-            "train_acc", self.acc_train, on_step=True, on_epoch=True, prog_bar=True
+            "train_acc", self.acc_train, on_step=True, on_epoch=False, prog_bar=True
         )
-        self.log("train_loss", loss, on_step=True, on_epoch=True, prog_bar=True)
+        self.log("train_loss", loss, on_step=True, on_epoch=False, prog_bar=True)
 
         return {"loss": loss, "acc": acc}
 
@@ -76,16 +75,26 @@ class WrapperBase(pl.LightningModule):
 
         return {"test_loss": loss, "test_acc": acc}
 
+    def predict_step(self, batch, batch_idx: int, dataloader_idx: int = 0):
+        x, y = batch[0], batch[1]
+        pred_y = self.forward(x)
+        return {"batch_idx": batch_idx, "pred_y": pred_y}
+
     def configure_optimizers(self):
+        # Use self.trainer.model.parameters() instead of self.parameters() to support FullyShared (Model paralleled) training
         if self.optimizer == "adamw":
-            opt = torch.optim.AdamW(self.parameters(), lr=self.learning_rate)
+            opt = torch.optim.AdamW(
+                self.trainer.model.parameters(), lr=self.learning_rate
+            )
             scheduler = CosineAnnealingLR(opt, T_max=self.epochs, eta_min=1e-6)
         elif self.optimizer == "adam":
-            opt = torch.optim.Adam(self.parameters(), lr=self.learning_rate)
+            opt = torch.optim.Adam(
+                self.trainer.model.parameters(), lr=self.learning_rate
+            )
             scheduler = CosineAnnealingLR(opt, T_max=self.epochs, eta_min=1e-6)
         elif self.optimizer in ["sgd_warmup", "sgd"]:
             opt = torch.optim.SGD(
-                self.parameters(),
+                self.trainer.model.parameters(),
                 lr=self.learning_rate,
                 momentum=0.9,
                 weight_decay=0.0005,
@@ -93,4 +102,10 @@ class WrapperBase(pl.LightningModule):
             )
             if self.optimizer == "sgd":
                 scheduler = CosineAnnealingLR(opt, T_max=self.epochs, eta_min=0.0)
+        elif self.optimizer in ["fused_adam", "FusedAdam"]:
+            # DeepSpeed strategy="deepspeed_stage_3"
+            opt = FusedAdam(self.parameters(), lr=self.learning_rate)
+            scheduler = CosineAnnealingLR(opt, T_max=self.epochs, eta_min=1e-6)
+        else:
+            raise ValueError(f"Unsupported optimizer name {self.optimizer}")
         return {"optimizer": opt, "lr_scheduler": scheduler}

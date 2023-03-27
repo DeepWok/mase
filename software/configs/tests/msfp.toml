@@ -2,8 +2,8 @@
 name = "integer"
 weight_width = 8
 weight_frac_width = 3
-input_width = 8
-input_frac_width = 5
+data_in_width = 8
+data_in_frac_width = 5
 bias_width = 8
 bias_frac_width = 5
 
@@ -13,7 +13,7 @@ weight_width = 8
 weight_exponent_width = 8
 # a 2D block config
 weight_block_size = [4, 16]
-input_width = 8
+data_in_width = 8
 input_exponent_width = 8
 # here -1 means the block size equals to the penultimate dim of input.
 # this -1 can be omitted, i.e., input_block_size = [16]
