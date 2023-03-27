@@ -1,7 +1,7 @@
 import logging
 import os
-import pickle
 from itertools import chain
+from typing import Dict
 
 import torch
 from datasets import load_dataset, load_from_disk
@@ -67,6 +67,12 @@ class LanguageModeling(Dataset):
     num_classes = None
     raw_path = None
 
+    # The mapping to update tokenizer's special token mapping
+    # Some dataset contains special tokens like <unk> in the text
+    # Keys should be in the list of predefined special attributes: [`bos_token`, `eos_token`, `unk_token`,
+    # `sep_token`, `pad_token`, `cls_token`, `mask_token`, `additional_special_tokens`].
+    special_token_mapping: Dict[str, str] = None
+
     def __init__(self, split, tokenizer, block_size, num_workers):
         self.split = split
         self.tokenizer = tokenizer
@@ -84,6 +90,12 @@ class LanguageModeling(Dataset):
         assert max_token_len is not None
         self.tokenizer = tokenizer
         self.max_token_len = max_token_len
+
+        # some dataset contains special tokens in the text, which may be different from the tokenizer's
+        # for example, HuggingFace ptb_text dataset contains '<unk>' as unknown token,
+        # but bert-base-uncased uses '[UNK]' as unknown token.
+        if self.special_token_mapping is not None:
+            self.tokenizer.add_special_tokens(self.special_token_mapping)
 
     def prepare_data(self, tokenizer, max_token_len, num_workers=None):
         # set tokenizer, download and save raw dataset, preprocess raw dataset and save to disk
@@ -218,6 +230,78 @@ class LanguageModelingDatasetWikiText103(LanguageModeling):
             raw_dataset.save_to_disk(self.raw_path)
         else:
             print("Raw dataset already downloaded")
+            raw_dataset = load_from_disk(self.raw_path)
+        print("Raw dataset loaded")
+        return raw_dataset
+
+
+class LanguageModelingDatasetC4(LanguageModeling):
+    raw_path = "./data/c4"
+
+    def __init__(
+        self, split, tokenizer=None, max_token_len=None, num_workers=4, auto_setup=False
+    ):
+        super().__init__(
+            split=split,
+            tokenizer=tokenizer,
+            block_size=max_token_len,
+            num_workers=num_workers,
+        )
+        self.processed_dataset_dir = None
+        if auto_setup:
+            assert self.tokenizer is not None
+            self.prepare_data(self.tokenizer, self.max_token_len)
+            self.setup(self.tokenizer, self.max_token_len)
+            print("Dataset is auto-setup")
+
+    def _download_or_load_raw_dataset(self):
+        if not os.path.isdir(self.raw_path):
+            print("Downloading and processing raw dataset...")
+            raw_dataset = load_dataset(
+                "c4",
+                "en",
+                cache_dir=os.path.abspath("./cache/dataset_cache_dir"),
+            )
+            raw_dataset.save_to_disk(self.raw_path)
+        else:
+            print("Raw dataset is already downloaded")
+            raw_dataset = load_from_disk(self.raw_path)
+        print("Raw dataset loaded")
+        return raw_dataset
+
+
+class LanguageModelingDatasetPTB(LanguageModeling):
+    raw_path = "./data/ptb"
+
+    special_token_mapping = {"unk_token": "<unk>"}
+
+    def __init__(
+        self, split, tokenizer=None, max_token_len=None, num_workers=4, auto_setup=False
+    ):
+        super().__init__(
+            split=split,
+            tokenizer=tokenizer,
+            block_size=max_token_len,
+            num_workers=num_workers,
+        )
+
+        self.processed_dataset_dir = None
+        if auto_setup:
+            assert self.tokenizer is not None
+            self.prepare_data(self.tokenizer, self.max_token_len)
+            self.setup(self.tokenizer, self.max_token_len)
+            print("Dataset is auto-setup")
+
+    def _download_or_load_raw_dataset(self):
+        if not os.path.isdir(self.raw_path):
+            print("Downloading and processing raw dataset...")
+            raw_dataset = load_dataset(
+                "ptb_text_only",
+                cache_dir=os.path.abspath("./cache/dataset_cache_dir"),
+            )
+            raw_dataset.save_to_disk(self.raw_path)
+        else:
+            print("Raw dataset is already downloaded")
             raw_dataset = load_from_disk(self.raw_path)
         print("Raw dataset loaded")
         return raw_dataset

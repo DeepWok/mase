@@ -6,12 +6,18 @@ from torch import Tensor
 from torch.nn.common_types import _size_2_t
 
 from ....graph.mase_tracer import mark_as_leaf_module
-from ..quantizers import integer_quantizer
+from ..quantizers import (
+    integer_quantizer,
+    minifloat_ieee_quantizer,
+    minifloat_simple_quantizer,
+)
 from .utils import extract_required_config
 
 
 class Conv2dBase(torch.nn.Conv2d):
     bypass = False
+    _required_config_keys = None
+    _optional_config_keys = None
 
     def forward(self, x: Tensor) -> Tensor:
         if self.bypass:
@@ -45,8 +51,8 @@ class Conv2dInteger(Conv2dBase):
         "name",
         "weight_width",
         "weight_frac_width",
-        "input_width",
-        "input_frac_width",
+        "data_in_width",
+        "data_in_frac_width",
     )
     _optional_config_keys = ("bypass", "bias_width", "bias_frac_width")
 
@@ -78,11 +84,11 @@ class Conv2dInteger(Conv2dBase):
             device=device,
             dtype=dtype,
         )
-
+        assert config is not None, "config is None!"
         self.bypass = config.get("bypass", False)
         # establish quantizers
         w_width, w_frac_width = config["weight_width"], config["weight_frac_width"]
-        x_width, x_frac_width = config["input_width"], config["input_frac_width"]
+        x_width, x_frac_width = config["data_in_width"], config["data_in_frac_width"]
         # check bias quantizer, if not, use weight quantizer
         b_width, b_frac_width = config.get("bias_width", None), config.get(
             "bias_frac_width", None
@@ -103,9 +109,209 @@ class Conv2dInteger(Conv2dBase):
     def construct_essential_config(self, config):
         r_config = extract_required_config(self, config)
         o_config = {}
-        o_config["bypass"] = config.get("bypass", None)
+        o_config["bypass"] = config.get("bypass", False)
         o_config["bias_width"] = config.get("bias_width", config["weight_width"])
         o_config["bias_frac_width"] = config.get(
-            "bias_frac_widht", config["weight_frac_width"]
+            "bias_frac_width", config["weight_frac_width"]
         )
+        return r_config | o_config
+
+
+@mark_as_leaf_module
+class Conv2DMinifloatSimple(Conv2dBase):
+    _required_config_keys = (
+        "name",
+        "weight_width",
+        "weight_exponent_width",
+        "weight_exponent_bias",
+        "data_in_width",
+        "data_in_exponent_width",
+        "data_in_exponent_bias",
+    )
+    _optional_config_keys = (
+        "bypass",
+        "bias_width",
+        "bias_exponent_width",
+        "bias_exponent_bias",
+    )
+
+    def __init__(
+        self,
+        in_channels: int,
+        out_channels: int,
+        kernel_size: _size_2_t,
+        stride: _size_2_t = 1,
+        padding: Union[str, _size_2_t] = 0,
+        dilation: _size_2_t = 1,
+        groups: int = 1,
+        bias: bool = True,
+        padding_mode: str = "zeros",
+        device=None,
+        dtype=None,
+        config: dict = None,
+    ) -> None:
+        super().__init__(
+            in_channels,
+            out_channels,
+            kernel_size,
+            stride,
+            padding,
+            dilation,
+            groups,
+            bias,
+            padding_mode,
+            device,
+            dtype,
+        )
+        assert config is not None, "config is None!"
+        self.bypass = config.get("bypass", False)
+
+        w_width, w_exponent_width, w_exponent_bias = (
+            config["weight_width"],
+            config["weight_exponent_width"],
+            config["weight_exponent_bias"],
+        )
+        x_width, x_exponent_width, x_exponent_bias = (
+            config["data_in_width"],
+            config["data_in_exponent_width"],
+            config["data_in_exponent_bias"],
+        )
+        b_width, b_exponent_width, b_exponent_bias = (
+            config.get("bias_width", None),
+            config.get("bias_exponent_width", None),
+            config.get("bias_exponent_bias", None),
+        )
+
+        self.w_quantizer = partial(
+            minifloat_simple_quantizer,
+            width=w_width,
+            exponent_width=w_exponent_width,
+            exponent_bias=w_exponent_bias,
+        )
+
+        self.x_quantizer = partial(
+            minifloat_simple_quantizer,
+            width=x_width,
+            exponent_width=x_exponent_width,
+            exponent_bias=x_exponent_bias,
+        )
+
+        if b_width is None or b_exponent_width is None or b_exponent_bias is None:
+            self.b_quantizer = self.w_quantizer
+        else:
+            self.b_quantizer = partial(
+                minifloat_simple_quantizer,
+                width=b_width,
+                exponent_width=b_exponent_width,
+                exponent_bias=b_exponent_bias,
+            )
+        self.config = self.construct_essential_config(config)
+
+    def construct_essential_config(self, config):
+        r_config = extract_required_config(self, config)
+        o_config = {}
+        o_config["bypass"] = config.get("bypass", False)
+        o_config["bias_width"] = config.get("weight_width")
+        o_config["bias_exponent_width"] = config.get("weight_exponent_width")
+        o_config["bias_exponent_bias"] = config.get("weight_exponent_bias")
+        return r_config | o_config
+
+
+@mark_as_leaf_module
+class Conv2dMinifloatIEEE(Conv2dBase):
+    _required_config_keys = (
+        "name",
+        "weight_width",
+        "weight_exponent_width",
+        "weight_exponent_bias",
+        "data_in_width",
+        "data_in_exponent_width",
+        "data_in_exponent_bias",
+    )
+    _optional_config_keys = (
+        "bypass",
+        "bias_width",
+        "bias_exponent_width",
+        "bias_exponent_bias",
+    )
+
+    def __init__(
+        self,
+        in_channels: int,
+        out_channels: int,
+        kernel_size: _size_2_t,
+        stride: _size_2_t = 1,
+        padding: Union[str, _size_2_t] = 0,
+        dilation: _size_2_t = 1,
+        groups: int = 1,
+        bias: bool = True,
+        padding_mode: str = "zeros",
+        device=None,
+        dtype=None,
+        config: dict = None,
+    ) -> None:
+        super().__init__(
+            in_channels,
+            out_channels,
+            kernel_size,
+            stride,
+            padding,
+            dilation,
+            groups,
+            bias,
+            padding_mode,
+            device,
+            dtype,
+        )
+        assert config is not None, "config is None!"
+        self.bypass = config.get("bypass", False)
+
+        w_width, w_exponent_width, w_exponent_bias = (
+            config["weight_width"],
+            config["weight_exponent_width"],
+            config["weight_exponent_bias"],
+        )
+        x_width, x_exponent_width, x_exponent_bias = (
+            config["data_in_width"],
+            config["data_in_exponent_width"],
+            config["data_in_exponent_bias"],
+        )
+        b_width, b_exponent_width, b_exponent_bias = (
+            config.get("bias_width", None),
+            config.get("bias_exponent_width", None),
+            config.get("bias_exponent_bias", None),
+        )
+
+        self.w_quantizer = partial(
+            minifloat_ieee_quantizer,
+            width=w_width,
+            exponent_width=w_exponent_width,
+            exponent_bias=w_exponent_bias,
+        )
+
+        self.x_quantizer = partial(
+            minifloat_ieee_quantizer,
+            width=x_width,
+            exponent_width=x_exponent_width,
+            exponent_bias=x_exponent_bias,
+        )
+
+        if b_width is None or b_exponent_width is None or b_exponent_bias is None:
+            self.b_quantizer = self.w_quantizer
+        else:
+            self.b_quantizer = partial(
+                minifloat_ieee_quantizer,
+                width=b_width,
+                exponent_width=b_exponent_width,
+                exponent_bias=b_exponent_bias,
+            )
+        self.config = self.construct_essential_config(config)
+
+    def construct_essential_config(self, config):
+        r_config = extract_required_config(self, config)
+        o_config = {}
+        o_config["bypass"] = config.get("bypass", False)
+        o_config["bias_width"] = config.get("weight_width")
+        o_config["bias_exponent_width"] = config.get("weight_exponent_width")
+        o_config["bias_exponent_bias"] = config.get("weight_exponent_bias")
         return r_config | o_config

@@ -5,30 +5,155 @@ from torch import Tensor
 from torch.nn import functional as F
 
 from ....graph.mase_tracer import mark_as_leaf_module
-from ..quantizers import integer_quantizer
+from ..quantizers import (
+    integer_quantizer,
+    minifloat_ieee_quantizer,
+    minifloat_simple_quantizer,
+)
 from .utils import extract_required_config
+
+
+class ReLUBase(torch.nn.ReLU):
+    bypass = None
+    _required_config_keys = None
+    _optional_config_keys = None
+
+    def forward(self, x: Tensor) -> Tensor:
+        if self.bypass:
+            return F.relu(x)
+        else:
+            x = self.x_quantizer(x)
+            return F.relu(x)
+
+    def get_quantized_output(self, x: Tensor) -> Tensor:
+        x = self.x_quantizer(x)
+        return {"x": x}
 
 
 @mark_as_leaf_module
 class ReLUInteger(torch.nn.ReLU):
-    _required_config_keys = ("name", "input_width", "input_frac_width")
+    bypass = None
+    _required_config_keys = ("name", "data_in_width", "data_in_frac_width")
     _optional_config_keys = ("bypass",)
 
-    def __init__(self, inplace: bool = False, config: dict = {}):
+    def __init__(self, inplace: bool = False, config: dict = None):
         super().__init__(inplace)
+        assert config is not None, "config is None!"
         self.bypass = config.get("bypass", False)
         # establish quantizers
-        x_width, x_frac_width = config["input_width"], config["input_frac_width"]
+        x_width, x_frac_width = config["data_in_width"], config["data_in_frac_width"]
         self.x_quantizer = partial(
             integer_quantizer, width=x_width, frac_width=x_frac_width
         )
         self.config = self.construct_essential_config(config)
 
-    def forward(self, x: Tensor) -> Tensor:
-        if self.bypass:
-            return F.relu(x)
-        x = self.x_quantizer(x)
-        return F.relu(x)
+    def construct_essential_config(self, config):
+        r_config = extract_required_config(self, config)
+        o_config = {}
+        o_config["bypass"] = config.get("bypass", False)
+        return r_config | o_config
+
+
+@mark_as_leaf_module
+class ReLUMinifloatSimple(ReLUBase):
+    bypass = None
+    _required_config_keys = (
+        "name",
+        "data_in_width",
+        "data_in_exponent_width",
+        "data_in_exponent_bias",
+    )
+    _optional_config_keys = ("bypass",)
+
+    def __init__(self, inplace: bool = False, config: dict = None):
+        super().__init__(inplace)
+        assert config is not None, "config is None!"
+        self.bypass = config.get("bypass", False)
+
+        x_width, x_exponent_width, x_exponent_bias = (
+            config["data_in_width"],
+            config["data_in_exponent_width"],
+            config["data_in_exponent_bias"],
+        )
+        self.x_quantizer = partial(
+            minifloat_simple_quantizer,
+            width=x_width,
+            exponent_width=x_exponent_width,
+            exponent_bias=x_exponent_bias,
+        )
+        self.config = self.construct_essential_config()
+
+    def construct_essential_config(self, config):
+        r_config = extract_required_config(self, config)
+        o_config = {}
+        o_config["bypass"] = config.get("bypass", False)
+        return r_config | o_config
+
+
+@mark_as_leaf_module
+class ReLUMinifloatSimple(ReLUBase):
+    bypass = None
+    _required_config_keys = (
+        "name",
+        "data_in_width",
+        "data_in_exponent_width",
+        "data_in_exponent_bias",
+    )
+    _optional_config_keys = ("bypass",)
+
+    def __init__(self, inplace: bool = False, config: dict = None):
+        super().__init__(inplace)
+        assert config is not None, "config is None!"
+        self.bypass = config.get("bypass", False)
+
+        x_width, x_exponent_width, x_exponent_bias = (
+            config["data_in_width"],
+            config["data_in_exponent_width"],
+            config["data_in_exponent_bias"],
+        )
+        self.x_quantizer = partial(
+            minifloat_simple_quantizer,
+            width=x_width,
+            exponent_width=x_exponent_width,
+            exponent_bias=x_exponent_bias,
+        )
+        self.config = self.construct_essential_config(config)
+
+    def construct_essential_config(self, config):
+        r_config = extract_required_config(self, config)
+        o_config = {}
+        o_config["bypass"] = config.get("bypass", False)
+        return r_config | o_config
+
+
+@mark_as_leaf_module
+class ReLUMinifloatIEEE(ReLUBase):
+    bypass = None
+    _required_config_keys = (
+        "name",
+        "data_in_width",
+        "data_in_exponent_width",
+        "data_in_exponent_bias",
+    )
+    _optional_config_keys = ("bypass",)
+
+    def __init__(self, inplace: bool = False, config: dict = None):
+        super().__init__(inplace)
+        assert config is not None, "config is None!"
+        self.bypass = config.get("bypass", False)
+
+        x_width, x_exponent_width, x_exponent_bias = (
+            config["data_in_width"],
+            config["data_in_exponent_width"],
+            config["data_in_exponent_bias"],
+        )
+        self.x_quantizer = partial(
+            minifloat_ieee_quantizer,
+            width=x_width,
+            exponent_width=x_exponent_width,
+            exponent_bias=x_exponent_bias,
+        )
+        self.config = self.construct_essential_config(config)
 
     def construct_essential_config(self, config):
         r_config = extract_required_config(self, config)

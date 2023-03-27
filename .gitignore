@@ -7,13 +7,14 @@
 /tb_summary/
 # *.sh
 ./data/*
-software/checkpoints/
 software/data/
 software/cache/
 software/test_*.py
-/*.tar.gz # CZ's backup
 /mase_output/
 /sulis_mase_output/
+/tests/
+*.ckpt
+*.pkl
 
 # macOS
 .DS_Store

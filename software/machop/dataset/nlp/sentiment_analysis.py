@@ -2,6 +2,7 @@ import math
 import os
 import re
 import string
+from typing import Dict
 
 import pytorch_lightning as pl
 import torch
@@ -12,6 +13,12 @@ from torch.utils.data import Dataset
 class SentAnalDataset(Dataset):
     path = None
     num_classes = None
+
+    # The mapping to update tokenizer's special token mapping
+    # Some dataset contains special tokens like <unk> in the text
+    # Keys should be in the list of predefined special attributes: [`bos_token`, `eos_token`, `unk_token`,
+    # `sep_token`, `pad_token`, `cls_token`, `mask_token`, `additional_special_tokens`].
+    special_token_mapping: Dict[str, str] = None
 
     sent_col_name = None
     label_col_name = None
@@ -33,6 +40,12 @@ class SentAnalDataset(Dataset):
         assert max_token_len is not None
         self.tokenizer = tokenizer
         self.max_token_len = max_token_len
+
+        # some dataset contains special tokens in the text, which may be different from the tokenizer's
+        # for example, HuggingFace ptb_text dataset contains '<unk>' as unknown token,
+        # but bert-base-uncased uses '[UNK]' as unknown token.
+        if self.special_token_mapping is not None:
+            self.tokenizer.add_special_tokens(self.special_token_mapping)
 
     def prepare_data(self, tokenizer, max_token_len, num_workers=None):
         self._set_tokenizer(tokenizer, max_token_len)

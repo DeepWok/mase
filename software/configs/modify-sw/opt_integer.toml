@@ -1,16 +1,11 @@
+modifiable_layers = ["linear", "relu", "conv2d"]
+modifiable_functions = ["relu", "matmul", "bmm"] # no "add" here
+
+
 [default]
 name = "integer"
 weight_width = 8
 weight_frac_width = 3
-data_in_width = 8
-data_in_frac_width = 5
-bias_width = 8
-bias_frac_width = 5
-
-[linear]
-name = "integer"
-weight_width = 8
-weight_frac_width = 5
 data_in_width = 8
 data_in_frac_width = 5
 bias_width = 8

@@ -10,7 +10,7 @@ from .utils import extract_required_config
 
 @mark_as_leaf_module
 class AddInteger(torch.nn.Module):
-    _required_config_keys = ("name", "input_width", "input_frac_width")
+    _required_config_keys = ("name", "data_in_width", "data_in_frac_width")
     _optional_config_keys = ("bypass",)
 
     def __init__(self, config):
@@ -18,7 +18,7 @@ class AddInteger(torch.nn.Module):
 
         self.bypass = config.get("bypass", False)
         # establish quantizers
-        x_width, x_frac_width = config["input_width"], config["input_frac_width"]
+        x_width, x_frac_width = config["data_in_width"], config["data_in_frac_width"]
         self.x_quantizer = partial(
             integer_quantizer, width=x_width, frac_width=x_frac_width
         )
