@@ -18,7 +18,7 @@ class MaseMetadata:
     The metadata of a Mase node in a Mase graph describes the constraints of the
     node for any static analysis or possible transformation. The metadata has a
     tree structure, e.g.
-    - Common
+    - common
       - args -> []
          - name : name of the arg
            - type : type of the arg, e.g. fixed point or float
@@ -29,12 +29,16 @@ class MaseMetadata:
            - type : type of the result, e.g. fixed point or float
            - precision : format of the type, e.g. (10, 5)
            - size : size of the result
-    - Software
+    - software
          - ???
-    - Hardware
+    - hardware
       - verilog_parameters -> {} : parameters need for customise the hardware module
-      - toolchain -> str : tool chain for code generation, must be internal, external or HLS
+      - toolchain -> str : tool chain for code generation, must be INTERNAL, EXTERNAL or HLS
       - module -> str : the name of the used hardware module
+      - interface_parameters -> []
+         - name : name of the parameters
+           - storage : the hardware interface implemented, must be BRAM
+           - transpose : whetehr the data needs to be transposed before emitting
       - dependence_files -> [] : the dependent files for the generated module
     ...
     """
@@ -44,6 +48,7 @@ class MaseMetadata:
     # internal_layers = {}
     known_types = {"fixed", "float"}
     known_toolchain = {"INTERNAL", "EXTERNAL", "HLS"}
+    known_storage = {"BRAM"}
 
     def __init__(self, node=None, model=None):
         # Top-level model
@@ -176,6 +181,11 @@ class MaseMetadata:
         assert result_param["size"], "Invalid out data size must match. "
 
         # Verify hardware parameters
+        for name, param in self.parameters["hardware"]["interface_parameters"].items():
+            storage_param = param["storage"]
+            assert (
+                storage_param in self.known_storage
+            ), f"Invalid parameter storage = {storage_param} for {name}. {self.node}"
         toolchain = self.parameters["hardware"]["toolchain"]
         assert (
             toolchain in self.known_toolchain
@@ -288,6 +298,7 @@ actual keys: {input_keys}"""
 
     def _init_hardware_parameters_linear(self, parameters):
         arg_type = self.parameters["common"]["args"]["data_in"]["type"]
+
         if arg_type == "fixed":
             self.parameters["hardware"] = {
                 "verilog_parameters": {
@@ -320,7 +331,7 @@ actual keys: {input_keys}"""
                     ][1],
                     # WEIGHT_SIZE == IN_SIZE * PARALLELISM
                     "WEIGHT_SIZE": math.prod(
-                        self.parameters["common"]["args"]["weight"]
+                        self.parameters["common"]["args"]["weight"]["size"]
                     ),
                     # OUT_WIDTH == IN_WIDTH + WEIGHT_WIDTH + $clog2(IN_SIZE) + $clog2(IN_DEPTH) + HAS_BIAS
                     "OUT_WIDTH": self.parameters["common"]["results"]["data_out"][
@@ -358,6 +369,16 @@ actual keys: {input_keys}"""
             assert (
                 False
             ), f"Unsupported arg type from toml. Only fixed is supported : {arg_type}"
+
+        self.parameters["hardware"]["interface_parameters"] = {}
+        for name, parameter in self.module.named_parameters():
+            self.parameters["hardware"]["interface_parameters"][name] = {
+                "storage": "BRAM",
+                "transpose": False,
+            }
+        self.parameters["hardware"]["interface_parameters"]["weight"][
+            "transpose"
+        ] = True
 
         if parameters:
             self._update_hardware_parameters_linear(parameters)
@@ -633,6 +654,14 @@ actual keys: {input_keys}"""
             }
         else:
             assert False, "Unsupported arg type from toml. Only fixed is supported."
+
+        self.parameters["hardware"]["interface_parameters"] = {}
+        for name, parameter in self.module.named_parameters():
+            self.parameters["hardware"]["interface_parameters"][name] = {
+                "storage": "BRAM",
+                "transpose": False,
+            }
+
         if parameters:
             self._update_hardware_parameters_relu(parameters)
 
@@ -775,6 +804,13 @@ actual keys: {input_keys}"""
         self.parameters["hardware"]["toolchain"] = "HLS"
         self.parameters["hardware"]["module"] = node_name
         self.parameters["hardware"]["dependence_files"] = []
+
+        self.parameters["hardware"]["interface_parameters"] = {}
+        for name, parameter in self.module.named_parameters():
+            self.parameters["hardware"]["interface_parameters"][name] = {
+                "storage": "BRAM",
+                "transpose": False,
+            }
 
         args_param = self.parameters["common"]["args"]
         results_param = self.parameters["common"]["results"]
