@@ -16,17 +16,9 @@ from .estimate_sw import run_estimator
 from .graph.dummy_inputs import get_dummy_inputs
 from .models import manual_models, model_map, nlp_models, vision_models
 from .modify.modifier import Modifier
-from .session import test, train, validate
-from .utils import check_conda_env, check_when_to_load_and_how_to_load, getLogger
-
-try:
-    import torch_mlir
-
-    from .synthesize.mase_verilog_emitter import MaseVerilogEmitter
-
-    is_sw_env = False
-except ModuleNotFoundError:
-    is_sw_env = True
+from .session import test, train
+from .utils import check_when_to_load_and_how_to_load, getLogger
+from .synthesize.mase_verilog_emitter import MaseVerilogEmitter
 
 logger = getLogger("machop")
 logging.getLogger().setLevel(logging.INFO)
@@ -396,7 +388,6 @@ class Machop:
             check_conda_env(is_sw_env, True, "evaluate-sw")
             self.estimate_sw()
         if self.args.to_synthesize:
-            check_conda_env(is_sw_env, False, "synthesize")
             self.synthesize()
         if self.args.to_test_hw:
             self.test_hw()
@@ -639,7 +630,6 @@ class Machop:
                 os.path.join(
                     args.project_dir,
                     args.project,
-                    args.model,
                     "hardware",
                     f"{args.model}_hw.toml",
                 )

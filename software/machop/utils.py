@@ -93,20 +93,6 @@ def get_checkpoint_file(checkpoint_dir):
             return file
 
 
-def check_conda_env(is_sw_env: bool, requires_sw_env: bool, current_action_name: str):
-    if requires_sw_env:
-        if not is_sw_env:
-            raise RuntimeError(
-                f"The torch-mlir env is activated. Please switch to cuda pytorch env for {current_action_name}"
-            )
-    else:
-        # requires hw env
-        if is_sw_env:
-            raise RuntimeError(
-                f"The cuda pytorch env is activated. Please switch to torch-mlir env for {current_action_name}"
-            )
-
-
 def check_when_to_load_and_how_to_load(
     to_modify_sw: bool,
     to_train: bool,
