@@ -44,13 +44,11 @@ class MaseMetadata:
     """
 
     # Hardware dict
-    internal_layers = {nn.Linear: "linear", nn.ReLU: "relu"}
-    # internal_layers = {}
     known_types = {"fixed", "float"}
     known_toolchain = {"INTERNAL", "EXTERNAL", "HLS"}
     known_storage = {"BRAM"}
 
-    def __init__(self, node=None, model=None):
+    def __init__(self, node=None, model=None, synth_mode="auto"):
         # Top-level model
         self.model = model
         # The target layer/module in the model
@@ -59,6 +57,10 @@ class MaseMetadata:
         self.type = type(self.module)
         # The fx node of the module in the fx graph of the model
         self.node = node
+        if synth_mode == "hls":
+            self.internal_layers = {}
+        else:
+            self.internal_layers = {nn.Linear: "linear", nn.ReLU: "relu"}
         self.parameters = {
             "common": {},
             "software": {},

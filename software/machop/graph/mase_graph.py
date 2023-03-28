@@ -58,12 +58,14 @@ class MaseGraph:
     hardware constraints.
     """
 
-    def __init__(self, model=None, common_param=None):
+    def __init__(self, model=None, common_param=None, synth_mode="auto"):
         """
         model = input model
         common_param = external common parameters from toml (for quantization info)
+        synth_mode = synthesis mode, hls or auto
         """
         self.model = model
+        self.synth_mode = synth_mode
         self.fx_graph, self.nodes_in, self.nodes_out = self._init_fx_graph()
         self._init_parameters(common_param=common_param)
 
@@ -78,7 +80,7 @@ class MaseGraph:
         nodes_out = _get_output_nodes(fx_graph)
         assert len(nodes_out) == 1, "Multiple outputs are not supported."
         for node in fx_graph.nodes:
-            node.meta = MaseMetadata(node=node, model=model)
+            node.meta = MaseMetadata(node=node, model=model, synth_mode=self.synth_mode)
         return fx_graph, nodes_in, nodes_out
 
     def _init_parameters(self, common_param=None):
