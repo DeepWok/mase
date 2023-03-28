@@ -2,6 +2,7 @@ import glob
 import logging
 import multiprocessing
 import os
+import sys
 import shutil
 import subprocess
 import time
@@ -78,6 +79,7 @@ class MaseVerilogEmitter(MaseGraph):
     def __init__(
         self,
         model=None,
+        mode="auto",
         project_dir=".",
         project="top",
         to_debug=False,
@@ -89,6 +91,7 @@ class MaseVerilogEmitter(MaseGraph):
         MaseVerilogEmitter loads MaseGraph and emit the corresponding
         hardware design in Verilog.
         model = input model
+        mode = synthesizing approach : hls or auto
         common_param = external common parameters from toml (for quantization info)
         project_dir = path of the top-level project
         project = name of the top-level project
@@ -97,7 +100,7 @@ class MaseVerilogEmitter(MaseGraph):
         num_tagrets = number of the FPGA targets
         """
 
-        super().__init__(model=model, common_param=common_param)
+        super().__init__(model=model, common_param=common_param, synth_mode=mode)
         self.project = project
         self.project_dir = os.path.join(project_dir, project)
         self.target = target
@@ -364,33 +367,14 @@ logic                             {node_name}_{key}_ready;
                     != "BRAM"
                 ):
                     continue
-                cap_key = key.upper()
-                component_name = f"{node_name}_{key}_source"
-                component_name_inst = f"{component_name}_0"
-                depth_debug_info = self.verilog_parameters[f"{node_name}_IN_DEPTH"]
-                width_debug_info = self.verilog_parameters[
-                    f"{node_name}_{cap_key}_WIDTH"
-                ]
-                size_debug_info = self.verilog_parameters[f"{node_name}_{cap_key}_SIZE"]
-                key_debug_info = "[{}][{}]".format(
-                    self.verilog_parameters[f"{node_name}_{cap_key}_WIDTH"],
-                    self.verilog_parameters[f"{node_name}_{cap_key}_SIZE"],
-                )
-
-                component = f"""
-{component_name} #(
-.OUT_DEPTH({node_name}_IN_DEPTH), // = {depth_debug_info}
-.OUT_WIDTH({node_name}_{cap_key}_WIDTH), // = {width_debug_info}
-.OUT_SIZE({node_name}_{cap_key}_SIZE) // = {size_debug_info}
-) {component_name_inst} (
-.clk(clk),
-.rst(rst),
-.data_out({node_name}_{key}), // {key_debug_info}
-.data_out_ready({node_name}_{key}_ready),
-.data_out_valid({node_name}_{key}_valid) 
-);
-"""
-                components += component
+                if node.meta.parameters["hardware"]["toolchain"] == "INTERNAL":
+                    components += self._emit_parameters_internal(key, value, node)
+                elif node.meta.parameters["hardware"]["toolchain"] == "HLS":
+                    components += self._emit_parameters_hls(key, value, node)
+                else:
+                    assert (
+                        False
+                    ), "Emitting external component input parameters is not supported."
 
             for key, value in node.meta.parameters["common"]["results"].items():
                 if key == "data_out":
@@ -403,20 +387,34 @@ logic                             {node_name}_{key}_ready;
                     != "BRAM"
                 ):
                     continue
-                cap_key = key.upper()
-                component_name = f"{node_name}_{key}_source"
-                component_name_inst = f"{component_name}_0"
-                depth_debug_info = self.verilog_parameters[f"{node_name}_IN_DEPTH"]
-                width_debug_info = self.verilog_parameters[
-                    f"{node_name}_{cap_key}_WIDTH"
-                ]
-                size_debug_info = self.verilog_parameters[f"{node_name}_{cap_key}_SIZE"]
-                key_debug_info = "[{}][{}]".format(
-                    self.verilog_parameters[f"{node_name}_{cap_key}_WIDTH"],
-                    self.verilog_parameters[f"{node_name}_{cap_key}_SIZE"],
-                )
+                if node.meta.parameters["hardware"]["toolchain"] == "INTERNAL":
+                    components += self._emit_parameters_internal(key, value, node)
+                elif node.meta.parameters["hardware"]["toolchain"] == "HLS":
+                    components += self._emit_parameters_hls(key, value, node)
+                else:
+                    assert (
+                        False
+                    ), "Emitting external component output parameters is not supported."
 
-                component = f"""
+        return components
+
+    def _emit_parameters_hls(self, key, value, node):
+        return ""
+
+    def _emit_parameters_internal(self, key, value, node):
+        node_name = vf(node.name)
+        cap_key = key.upper()
+        component_name = f"{node_name}_{key}_source"
+        component_name_inst = f"{component_name}_0"
+        depth_debug_info = self.verilog_parameters[f"{node_name}_IN_DEPTH"]
+        width_debug_info = self.verilog_parameters[f"{node_name}_{cap_key}_WIDTH"]
+        size_debug_info = self.verilog_parameters[f"{node_name}_{cap_key}_SIZE"]
+        key_debug_info = "[{}][{}]".format(
+            self.verilog_parameters[f"{node_name}_{cap_key}_WIDTH"],
+            self.verilog_parameters[f"{node_name}_{cap_key}_SIZE"],
+        )
+
+        return f"""
 {component_name} #(
 .OUT_DEPTH({node_name}_IN_DEPTH), // = {depth_debug_info}
 .OUT_WIDTH({node_name}_{cap_key}_WIDTH), // = {width_debug_info}
@@ -429,9 +427,6 @@ logic                             {node_name}_{key}_ready;
 .data_out_valid({node_name}_{key}_valid) 
 );
 """
-                components += component
-
-        return components
 
     def _emit_wires(self):
         """
@@ -550,7 +545,7 @@ endmodule
         except:
             print("TORCH-MLIR is not imported")
 
-        if "torch_mlir" in sys.modules:
+        if "torch_mlir" not in sys.modules:
             raise RuntimeError(f"TORCH_MLIR is required for synthesis.")
 
         # Clear the folder

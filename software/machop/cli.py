@@ -128,9 +128,8 @@ class Machop:
 
         parser.add_argument(
             "--synthesize",
-            action="store_true",
             dest="to_synthesize",
-            default=False,
+            default=None,
             help="Synthesize the model to hardware. Default=False",
         )
         parser.add_argument(
@@ -397,11 +396,13 @@ class Machop:
         if self.args.to_validate_sw:
             self.validate_sw()
         if self.args.to_estimate_sw:
-            # TODO: this check may not be required if the profiler is based on FX
-            check_conda_env(is_sw_env, True, "evaluate-sw")
             self.estimate_sw()
-        if self.args.to_synthesize:
-            self.synthesize()
+        if self.args.to_synthesize is not None:
+            to_synthesize = ["hls", "auto"]
+            assert (
+                self.args.to_synthesize in to_synthesize
+            ), f"Unsupported mode: {self.args.to_synthesize}. Support: {to_synthesize}"
+            self.synthesize(self.args.to_synthesize)
         if self.args.to_test_hw:
             self.test_hw()
         if self.args.to_evaluate_hw:
@@ -645,7 +646,7 @@ class Machop:
         run_estimator(**estimate_sw_kwargs)
         logging.info("Estimate-sw is completed")
 
-    def synthesize(self):
+    def synthesize(self, mode):
         args = self.args
         logger.info(f"Generating hardware for {args.model!r}...")
         mve = MaseVerilogEmitter(
@@ -654,6 +655,7 @@ class Machop:
             project=args.project,
             to_debug=args.to_debug,
             target=args.target,
+            mode=mode,
             num_targets=args.num_targets,
             common_param=os.path.join(
                 args.project_dir,
