@@ -12,7 +12,7 @@ software/cache/
 software/test_*.py
 /mase_output/
 /sulis_mase_output/
-/tests/
+.devcontainer/
 *.ckpt
 *.pkl
 

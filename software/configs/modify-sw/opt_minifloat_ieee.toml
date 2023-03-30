@@ -2,7 +2,7 @@ modifiable_layers = ["linear", "relu", "conv2d"]
 modifiable_functions = ["relu", "matmul", "bmm"] # no "add" here
 
 [default]
-name = "minifloat_simple"
+name = "minifloat_ieee"
 weight_width = 8
 weight_exponent_width = 4
 weight_exponent_bias = 7
