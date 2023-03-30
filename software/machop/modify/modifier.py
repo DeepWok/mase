@@ -64,6 +64,9 @@ class Modifier:
         else:
             self.modifiable_functions = modifiable_functions
             self.config["modifiable_functions"] = modifiable_functions
+        # self.config will be empty after self.modify which pops the dict
+        # here self._config is a backup
+        self._config = self.config.copy()
         # create dummy inputs
         self.dummy_inputs = dummy_inputs
         # save_dir for comparison report and modified model
@@ -160,6 +163,11 @@ class Modifier:
             logger.info(
                 f"Modified model is saved as {modified_ckpt_path} and {modified_pkl_path}"
             )
+
+            config_copy_path = os.path.join(self.save_dir, "config.toml")
+            with open(config_copy_path, "w+") as f:
+                toml.dump(self._config, f)
+            logger.info(f"Modify-sw config is saved to {config_copy_path}")
 
     def modify(self):
         default_config = self.config.pop("default", None)

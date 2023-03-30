@@ -11,22 +11,22 @@ from ..quantizers import (
 
 
 @mark_as_leaf_func
-def relu_integer(x, config):
+def relu_integer(x, inplace=False, config=None):
     bypass = config.get("bypass", False)
     if bypass:
-        return F.relu(x)
+        return F.relu(x, inplace=inplace)
     else:
         x_width, x_frac_width = config["data_in_width"], config["data_in_frac_width"]
         x_quantizer = partial(integer_quantizer, width=x_width, frac_width=x_frac_width)
 
-        return F.relu(x_quantizer(x))
+        return F.relu(x_quantizer(x), inplace=inplace)
 
 
 @mark_as_leaf_func
-def relu_minifloat_simple(x, config):
+def relu_minifloat_simple(x, inplace=False, config=None):
     bypass = config.get("bypass", False)
     if bypass:
-        return F.relu(x)
+        return F.relu(x, inplace=inplace)
     else:
         x_width, x_exponent_width, x_exponent_bias = (
             config["data_in_width"],
@@ -41,14 +41,14 @@ def relu_minifloat_simple(x, config):
             exponent_bias=x_exponent_bias,
         )
 
-        return x_quantizer(x)
+        return F.relu(x_quantizer(x), inplace=inplace)
 
 
 @mark_as_leaf_func
-def relu_minifloat_ieee(x, config):
+def relu_minifloat_ieee(x, inplace=False, config=None):
     bypass = config.get("bypass", False)
     if bypass:
-        return F.relu(x)
+        return F.relu(x, inplace=inplace)
     else:
         x_width, x_exponent_width, x_exponent_bias = (
             config["data_in_width"],
@@ -63,4 +63,4 @@ def relu_minifloat_ieee(x, config):
             exponent_bias=x_exponent_bias,
         )
 
-        return x_quantizer(x)
+        return F.relu(x_quantizer(x), inplace=inplace)
