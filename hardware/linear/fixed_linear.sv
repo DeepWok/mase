@@ -4,15 +4,11 @@ module fixed_linear #(
     parameter IN_FRAC_WIDTH = 0,
     parameter IN_SIZE = 4,
     parameter IN_DEPTH = 3,
+    parameter PARALLELISM = 2,
 
     parameter WEIGHT_WIDTH = 16,
     parameter WEIGHT_FRAC_WIDTH = 0,
     parameter WEIGHT_SIZE = IN_SIZE * PARALLELISM,
-
-    parameter BIAS_SIZE = OUT_SIZE,
-    parameter BIAS_WIDTH = 32,
-    parameter BIAS_FRAC_WIDTH = 0,
-    parameter PARALLELISM = 2,
 
     // This is the width for the summed product
     // +1 is because of the bias
@@ -21,8 +17,13 @@ module fixed_linear #(
     /* verilator lint_off UNUSEDPARAM */
     parameter OUT_FRAC_WIDTH = IN_FRAC_WIDTH + WEIGHT_FRAC_WIDTH,
     /* verilator lint_on UNUSEDPARAM */
-    parameter OUT_SIZE = PARALLELISM
+    parameter OUT_SIZE = PARALLELISM,
 
+    parameter BIAS_SIZE = OUT_SIZE,
+    parameter BIAS_WIDTH = 32,
+    /* verilator lint_off UNUSEDPARAM */
+    parameter BIAS_FRAC_WIDTH = 0
+    /* verilator lint_on UNUSEDPARAM */
 ) (
     input clk,
     input rst,

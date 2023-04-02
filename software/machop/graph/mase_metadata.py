@@ -355,7 +355,7 @@ actual keys: {input_keys}"""
                 "toolchain": "INTERNAL",
                 "module": "fixed_linear",
                 "dependence_files": [
-                    "common/fixed_cast.sv",
+                    "cast/fixed_cast.sv",
                     "common/fixed_dot_product.sv",
                     "common/fixed_vector_mult.sv",
                     "common/register_slice.sv",

@@ -76,6 +76,7 @@ RUN printf "\
 \n# Basic PATH setup \
 \nexport PATH=/workspace/bin:/workspace/hls/build/bin:/home/dev-user/.local/bin:/workspace/llvm/build/bin:\$PATH:/srcPkgs/verible/bin \
 \n# Vitis HLS setup \
+\nexport VHLS=${vhls} \
 \n# source ${vhls}/Vitis_HLS/2020.2/settings64.sh \
 \n# MLIR-AIE PATH setup \
 \nexport PATH=/workspace/mlir-aie/install/bin:/workspace/mlir-air/install/bin:\$PATH \

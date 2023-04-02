@@ -1,0 +1,1 @@
+from .mase_hardware_evaluator import get_synthesis_results

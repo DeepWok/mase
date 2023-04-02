@@ -65,7 +65,7 @@ module fixed_vector_mult #(
     assign product_data_in[PRODUCT_WIDTH*i+PRODUCT_WIDTH-1:PRODUCT_WIDTH*i] = product_vector[i];
 
   register_slice #(
-      .IN_WIDTH($bits(product_vector)),
+      .IN_WIDTH($bits(product_vector))
   ) register_slice (
       .clk           (clk),
       .rst           (rst),

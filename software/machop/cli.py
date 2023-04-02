@@ -20,6 +20,8 @@ from .modify.modifier import Modifier
 from .session import test, train
 from .utils import check_when_to_load_and_how_to_load, getLogger
 from .synthesize.mase_verilog_emitter import MaseVerilogEmitter
+from .evaluate_hw.mase_hardware_evaluator import get_synthesis_results
+from .graph.mase_graph import MaseGraph
 
 logger = getLogger("machop")
 logging.getLogger().setLevel(logging.INFO)
@@ -141,9 +143,8 @@ class Machop:
         )
         parser.add_argument(
             "--evaluate-hw",
-            action="store_true",
             dest="to_evaluate_hw",
-            default=False,
+            default=None,
             help="Evaluate the hardware design of the model. Default=False",
         )
 
@@ -406,7 +407,11 @@ class Machop:
         if self.args.to_test_hw:
             self.test_hw()
         if self.args.to_evaluate_hw:
-            self.evaluate_hw()
+            to_evaluate = ["synth", "impl"]
+            assert (
+                self.args.to_evaluate_hw in to_evaluate
+            ), f"Unsupported mode: {self.args.to_evaluate_hw}. Support: {to_evaluate}"
+            self.evaluate_hw(self.args.to_evaluate_hw)
 
     def list_available(self):
         args = self.args
@@ -476,12 +481,13 @@ class Machop:
         args = self.args
 
         root = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
-
-        project_dir = (
-            args.project_dir
-            if args.project_dir is not None
-            else os.path.join(root, "mase_output")
-        )
+        project_dir = os.path.join(root, "mase_output")
+        if args.project_dir is not None:
+            project_dir = (
+                args.project_dir
+                if os.path.isabs(args.project_dir)
+                else os.path.join(os.getcwd(), args.project_dir)
+            )
         project = (
             args.project
             if args.project is not None
@@ -651,15 +657,13 @@ class Machop:
         logger.info(f"Generating hardware for {args.model!r}...")
         mve = MaseVerilogEmitter(
             model=self.model,
-            project_dir=args.project_dir,
-            project=args.project,
+            project_dir=self.output_dir,
             to_debug=args.to_debug,
             target=args.target,
             mode=mode,
             num_targets=args.num_targets,
             common_param=os.path.join(
-                args.project_dir,
-                args.project,
+                self.output_dir,
                 "software",
                 "modify-sw",
                 "hw_quantize.toml",
@@ -683,8 +687,17 @@ class Machop:
         # TODO: Generate cocotb testbench for a given model
         raise NotImplementedError(f"Hardware testing not implemented yet.")
 
-    def evaluate_hw(self):
-        args = self.args
-        logger.info(f"Evaluating hardware for {args.model!r}...")
-        # TODO: Run simulation and implementation for evaluating area and performance
-        raise NotImplementedError(f"Hardware evaluation not implemented yet.")
+    def evaluate_hw(self, mode):
+        logger.info(f"Evaluating hardware for {self.args.model!r}...")
+        if mode == "synth":
+            mase_graph = MaseGraph(
+                model=self.model,
+                common_param=os.path.join(
+                    self.output_dir, "software", "modify-sw", "hw_quantize.toml"
+                ),
+            )
+            get_synthesis_results(
+                self.args.model, mase_graph, self.args.target, self.output_dir
+            )
+        else:
+            raise NotImplementedError(f"Place and Route script not implemented yet.")

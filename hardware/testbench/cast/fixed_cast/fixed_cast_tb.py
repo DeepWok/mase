@@ -108,7 +108,7 @@ async def test_fixed_adder_tree_layer(dut):
 
 def runner():
     sim = os.getenv("SIM", "verilator")
-    verilog_sources = ["../../../common/fixed_cast.sv"]
+    verilog_sources = ["../../../cast/fixed_cast.sv"]
 
     test_case = VerificationCase()
 
