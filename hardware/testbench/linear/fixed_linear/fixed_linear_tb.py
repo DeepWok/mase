@@ -206,7 +206,7 @@ def runner():
     sim = os.getenv("SIM", "verilator")
 
     verilog_sources = [
-        "../../../../hardware/common/fixed_cast.sv",
+        "../../../../hardware/cast/fixed_cast.sv",
         "../../../../hardware/common/fixed_dot_product.sv",
         "../../../../hardware/linear/fixed_linear.sv",
         "../../../../hardware/common/fixed_accumulator.sv",

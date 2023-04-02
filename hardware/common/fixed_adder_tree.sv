@@ -63,7 +63,7 @@ module fixed_adder_tree #(
       assign cast_sum[(IN_WIDTH+i+1)*j+(IN_WIDTH+i):(IN_WIDTH+i+1)*j] = sum[j];
 
     register_slice #(
-        .IN_WIDTH($bits(sum)),
+        .IN_WIDTH($bits(sum))
     ) register_slice (
         .clk           (clk),
         .rst           (rst),
@@ -82,8 +82,8 @@ module fixed_adder_tree #(
 
   end
 
-  // it will zero-extend automatically
-  assign vars[0].data = data_in;
+  // Vivado does not support zero-extend automatically
+  for (genvar j = 0; j < IN_SIZE; j++) assign vars[0].data[j] = data_in[j];
   assign vars[0].valid = data_in_valid;
   assign data_in_ready = vars[0].ready;
 

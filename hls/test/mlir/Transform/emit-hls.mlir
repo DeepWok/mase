@@ -14,18 +14,18 @@
 // CHECK-NEXT: #include <stdint.h>
 // CHECK-NEXT: #include <string.h>
 // CHECK-NEXT: using namespace std;
-// CHECK: void relu(ap_fixed<8, 5> v0[1][100],ap_fixed<8, 5> v1[1][100]) {
-// CHECK-NEXT: ap_fixed<8, 5> v2 = 0.000000;
+// CHECK: void relu(ap_fixed<8, 5> data_in[1][100],ap_fixed<8, 5> data_out[1][100]) {
+// CHECK-NEXT: ap_fixed<8, 5> v0 = 0.000000;
+// CHECK-NEXT: ap_fixed<8, 5> v1;
+// CHECK-NEXT: bool v2;
 // CHECK-NEXT: ap_fixed<8, 5> v3;
-// CHECK-NEXT: bool v4;
-// CHECK-NEXT: ap_fixed<8, 5> v5;
 // CHECK-NEXT: b0:
-// CHECK-NEXT: for ( v6 = 0; v6 < 1; v6 += 1) {b1:
-// CHECK-NEXT: for ( v7 = 0; v7 < 100; v7 += 1) {b2:
-// CHECK-NEXT: v3 = v0[0][v7];
-// CHECK-NEXT: v4 = v3 > v2;
-// CHECK-NEXT: v5 = v4 ? v3 : v2;
-// CHECK-NEXT: v1[v6][v7] = v5;
+// CHECK-NEXT: for (int v4 = 0; v4 < 1; v4 += 1) {b1:
+// CHECK-NEXT: for (int v5 = 0; v5 < 100; v5 += 1) {b2:
+// CHECK-NEXT: v1 = data_in[0][v5];
+// CHECK-NEXT: v2 = v1 > v0;
+// CHECK-NEXT: v3 = v2 ? v1 : v0;
+// CHECK-NEXT: data_out[v4][v5] = v3;
 // CHECK-NEXT: }
 // CHECK-NEXT: }
 // CHECK-NEXT: }

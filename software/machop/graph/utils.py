@@ -41,3 +41,10 @@ def get_node_by_name(graph, request_name):
 # Format to a compatible verilog name
 def vf(string):
     return string.replace(".", "_").replace(" ", "_")
+
+
+def v2p(string):
+    """
+    Variable to Parameter
+    """
+    return string.upper().replace("DATA_", "")

@@ -10,7 +10,7 @@ import maselogger
 
 # Add more test cases here
 test_cases = {
-    "common/fixed_cast": [],
+    "cast/fixed_cast": [],
     # 'common/join2': [],
     "common/fixed_matrix_multiplication":["linear","common"],
     "common/fixed_mult": [],

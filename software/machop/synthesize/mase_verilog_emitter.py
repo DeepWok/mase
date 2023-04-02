@@ -1,4 +1,5 @@
 import glob
+import math
 import logging
 import multiprocessing
 import os
@@ -14,8 +15,9 @@ import torch.fx
 
 from ..graph.mase_graph import MaseGraph
 from ..graph.mase_metadata import MaseMetadata
-from ..graph.utils import get_module_by_name, vf
-from .mase_rom_emitter import emit_node_parameters_in_rom
+from ..graph.utils import get_module_by_name, vf, v2p
+from .mase_mem_emitter import emit_parameters_in_rom_internal
+from .mase_mem_emitter import emit_parameters_in_rom_hls
 
 logger = logging.getLogger(__name__)
 
@@ -31,7 +33,7 @@ def _add_dependence_files(files, file_list):
 
 def _execute(cmd, log_output: bool = True, log_file=None, cwd="."):
     if log_output:
-        logger.debug(subprocess.list2cmdline(cmd))
+        logger.debug("{} (cwd = {})".format(subprocess.list2cmdline(cmd), cwd))
         with subprocess.Popen(
             cmd, stdout=subprocess.PIPE, bufsize=1, universal_newlines=True, cwd=cwd
         ) as result:
@@ -75,13 +77,47 @@ def _get_hls_parameters(node):
     return hls_param.replace(" ", "")
 
 
+def _get_cast_parameters(from_node, to_node, is_start=False, is_end=False):
+    assert not (
+        is_start and is_end
+    ), "An edge cannot start and end both through external siganls."
+    from_type = from_node.meta.parameters["common"]["results"]["data_out"]["type"]
+    from_prec = from_node.meta.parameters["common"]["results"]["data_out"]["precision"]
+    to_type = to_node.meta.parameters["common"]["args"]["data_in"]["type"]
+    to_prec = to_node.meta.parameters["common"]["args"]["data_in"]["precision"]
+    from_name = f"{from_node}_data_out"
+    to_name = f"{to_node}_data_in"
+    from_param = f"{from_node}_OUT"
+    to_param = f"{to_node}_IN"
+
+    if is_start:
+        to_type = from_type
+        to_prec = from_prec
+        from_name = "data_in"
+        from_param = "IN"
+    if is_end:
+        from_type = to_type
+        from_prec = to_prec
+        to_name = "data_out"
+        to_param = "OUT"
+    return (
+        from_name,
+        from_type,
+        from_prec,
+        from_param,
+        to_name,
+        to_type,
+        to_prec,
+        to_param,
+    )
+
+
 class MaseVerilogEmitter(MaseGraph):
     def __init__(
         self,
         model=None,
         mode="auto",
-        project_dir=".",
-        project="top",
+        project_dir=None,
         to_debug=False,
         target="xc7z020clg484-1",
         num_targets=1,
@@ -101,13 +137,20 @@ class MaseVerilogEmitter(MaseGraph):
         """
 
         super().__init__(model=model, common_param=common_param, synth_mode=mode)
-        self.project = project
-        self.project_dir = os.path.join(project_dir, project)
+        self.root = os.path.join(os.path.dirname(__file__), "..", "..", "..")
+        self.project_dir = project_dir
+        assert self.project_dir is not None, "Cannot find the project directory"
+        if not os.path.isabs(self.project_dir):
+            self.project_dir = os.path.join(os.getcwd(), self.project_dir)
+        self.project = os.path.basename(self.project_dir)
         self.target = target
         self.num_targets = num_targets
         self.to_debug = to_debug
         self._init_project()
+        self.dependence_files = []
         self.verilog_parameters = {}
+        if to_debug:
+            print(self.fx_graph)
 
     def _init_project(self):
         project_dir = self.project_dir
@@ -127,12 +170,17 @@ class MaseVerilogEmitter(MaseGraph):
     # Emit hardware code
     # ----------------------------------------------------------
     def emit_verilog(self):
+        """
+        Emit Verilog for unpartitioned model
+        """
         self.verify()
         project_dir = self.project_dir
         rtl_dir = os.path.join(project_dir, "hardware", "rtl")
         if not os.path.exists(rtl_dir):
             os.mkdir(rtl_dir)
+        # Emit each components in the form of layers
         self.emit_components()
+        # Emit the top-level module
         self.emit_top()
 
         files = ""
@@ -140,7 +188,7 @@ class MaseVerilogEmitter(MaseGraph):
             files += " " + file
         # os.system(f"verilator --lint-only {files}")
 
-    def _emit_parameters(self):
+    def _emit_parameters_top(self):
         """
         Emit parameters at the top-level for the top-level module
         """
@@ -176,7 +224,7 @@ parameter OUT_SIZE = {node_out_name}_OUT_SIZE,
 """
         return parameters
 
-    def _emit_interface(self):
+    def _emit_interface_top(self):
         """
         Emit interface signal declarations for the top-level module
         """
@@ -205,7 +253,7 @@ input  data_out_ready,
                     == "BRAM"
                 ):
                     continue
-                cap_key = key.upper()
+                cap_key = v2p(key)
                 width = self.verilog_parameters[f"{node_name}_{cap_key}_WIDTH"]
                 size = self.verilog_parameters[f"{node_name}_{cap_key}_SIZE"]
                 debug_info = f"// [{width}][{size}]"
@@ -217,7 +265,7 @@ output {node_name}_{key}_ready,
             for key, value in node.meta.parameters["common"]["results"].items():
                 if key == "data_out":
                     continue
-                cap_key = key.upper()
+                cap_key = v2p(key)
                 width = self.verilog_parameters[f"{node_name}_{cap_key}_WIDTH"]
                 size = self.verilog_parameters[f"{node_name}_{cap_key}_SIZE"]
                 debug_info = f"// [{width}][{size}]"
@@ -228,7 +276,110 @@ input  {node_name}_{key}_ready,
 """
         return interface
 
-    def _emit_signals(self):
+    def _emit_siganls_top_internal(self, node):
+        signals = ""
+        node_name = vf(node.name)
+        # Input signals
+        for key, value in node.meta.parameters["common"]["args"].items():
+            # No internal siganls if the memory is stored off chip
+            if (
+                key != "data_in"
+                and node.meta.parameters["hardware"]["interface_parameters"][key][
+                    "storage"
+                ]
+                != "BRAM"
+            ):
+                continue
+            cap_key = v2p(key)
+            width = self.verilog_parameters[f"{node_name}_{cap_key}_WIDTH"]
+            size = self.verilog_parameters[f"{node_name}_{cap_key}_SIZE"]
+            debug_info = f"// [{width}][{size}]"
+            signals += f"""{debug_info}
+logic [{node_name}_{cap_key}_WIDTH-1:0]  {node_name}_{key}        [{node_name}_{cap_key}_SIZE-1:0];
+logic                             {node_name}_{key}_valid;
+logic                             {node_name}_{key}_ready;
+"""
+
+        # Output signals
+        for key, value in node.meta.parameters["common"]["results"].items():
+            # No internal siganls if the memory is stored off chip
+            if (
+                key != "data_out"
+                and node.meta.parameters["hardware"]["interface_parameters"][key][
+                    "storage"
+                ]
+                != "BRAM"
+            ):
+                continue
+            cap_key = v2p(key)
+            width = self.verilog_parameters[f"{node_name}_{cap_key}_WIDTH"]
+            size = self.verilog_parameters[f"{node_name}_{cap_key}_SIZE"]
+            debug_info = f"// [{width}][{size}]"
+            signals += f"""{debug_info}
+logic [{node_name}_{cap_key}_WIDTH-1:0]  {node_name}_{key}        [{node_name}_{cap_key}_SIZE-1:0];
+logic                             {node_name}_{key}_valid;
+logic                             {node_name}_{key}_ready;
+"""
+
+        return signals
+
+    def _emit_siganls_top_hls(self, node):
+        node_name = vf(node.name)
+        # Control signals for HLS component
+        signals = f"""
+logic {node_name}_start;
+logic {node_name}_done;
+logic {node_name}_idle;
+logic {node_name}_ready;
+"""
+
+        # Input signals
+        for key, value in node.meta.parameters["common"]["args"].items():
+            # No internal siganls if the memory is stored off chip
+            if (
+                key != "data_in"
+                and node.meta.parameters["hardware"]["interface_parameters"][key][
+                    "storage"
+                ]
+                != "BRAM"
+            ):
+                continue
+            cap_key = v2p(key)
+            width = self.verilog_parameters[f"{node_name}_{cap_key}_WIDTH"]
+            size = self.verilog_parameters[f"{node_name}_{cap_key}_SIZE"]
+            debug_info = f"// [{width}][{size}]"
+            a_width = math.ceil(math.log2(size))
+            signals += f"""{debug_info}
+logic [{node_name}_{cap_key}_WIDTH-1:0]  {node_name}_{key}_q0;
+logic [{a_width}-1:0]                    {node_name}_{key}_address0;
+logic                                    {node_name}_{key}_ce0;
+"""
+
+        # Output signals
+        for key, value in node.meta.parameters["common"]["results"].items():
+            # No internal siganls if the memory is stored off chip
+            if (
+                key != "data_out"
+                and node.meta.parameters["hardware"]["interface_parameters"][key][
+                    "storage"
+                ]
+                != "BRAM"
+            ):
+                continue
+            cap_key = v2p(key)
+            width = self.verilog_parameters[f"{node_name}_{cap_key}_WIDTH"]
+            size = self.verilog_parameters[f"{node_name}_{cap_key}_SIZE"]
+            debug_info = f"// [{width}][{size}]"
+            a_width = math.ceil(math.log2(size))
+            signals += f"""{debug_info}
+logic [{node_name}_{cap_key}_WIDTH-1:0]  {node_name}_{key}_d0;
+logic [{a_width}-1:0]                    {node_name}_{key}_address0;
+logic                                    {node_name}_{key}_ce0;
+logic                                    {node_name}_{key}_we0;
+"""
+        return signals
+
+    def _emit_siganls_top(self):
         """
         Emit internal signal declarations for the top-level module
         """
@@ -238,172 +389,211 @@ input  {node_name}_{key}_ready,
             if node.op != "call_module" and node.op != "call_function":
                 continue
             node_name = vf(node.name)
-            in_width = self.verilog_parameters[f"{node_name}_IN_WIDTH"]
-            in_size = self.verilog_parameters[f"{node_name}_IN_SIZE"]
-            out_width = self.verilog_parameters[f"{node_name}_OUT_WIDTH"]
-            out_size = self.verilog_parameters[f"{node_name}_OUT_SIZE"]
-            debug_info_in = f"// [{in_width}][{in_size}]"
-            debug_info_out = f"// [{out_width}][{out_size}]"
-            signals += f"""{debug_info_in}
-logic [{node_name}_IN_WIDTH-1:0]  {node_name}_data_in        [{node_name}_IN_SIZE-1:0];
-logic                             {node_name}_data_in_valid;
-logic                             {node_name}_data_in_ready;
-{debug_info_out}
-logic [{node_name}_OUT_WIDTH-1:0] {node_name}_data_out            [{node_name}_OUT_SIZE-1:0];
-logic                             {node_name}_data_out_valid;
-logic                             {node_name}_data_out_ready;
+            signals += f"""
+// --------------------------
+//   {node_name} signals
+// --------------------------
 """
-            for key, value in node.meta.parameters["common"]["args"].items():
-                if key == "data_in":
-                    continue
-                # No top-level interface if the memory is stored on chip
-                if (
-                    node.meta.parameters["hardware"]["interface_parameters"][key][
-                        "storage"
-                    ]
-                    != "BRAM"
-                ):
-                    continue
-                cap_key = key.upper()
-                width = self.verilog_parameters[f"{node_name}_{cap_key}_WIDTH"]
-                size = self.verilog_parameters[f"{node_name}_{cap_key}_SIZE"]
-                debug_info = f"// [{width}][{size}]"
-                signals += f"""{debug_info}
-logic [{node_name}_{cap_key}_WIDTH-1:0]  {node_name}_{key}        [{node_name}_{cap_key}_SIZE-1:0];
-logic                             {node_name}_{key}_valid;
-logic                             {node_name}_{key}_ready;
-{debug_info_out}
-"""
-
-            for key, value in node.meta.parameters["common"]["results"].items():
-                if key == "data_out":
-                    continue
-                # No top-level interface if the memory is stored on chip
-                if (
-                    node.meta.parameters["hardware"]["interface_parameters"][key][
-                        "storage"
-                    ]
-                    != "BRAM"
-                ):
-                    continue
-                cap_key = key.upper()
-                width = self.verilog_parameters[f"{node_name}_{cap_key}_WIDTH"]
-                size = self.verilog_parameters[f"{node_name}_{cap_key}_SIZE"]
-                debug_info = f"// [{width}][{size}]"
-                signals += f"""{debug_info}
-logic [{node_name}_{cap_key}_WIDTH-1:0]  {node_name}_{key}        [{node_name}_{cap_key}_SIZE-1:0];
-logic                             {node_name}_{key}_valid;
-logic                             {node_name}_{key}_ready;
-{debug_info_out}
-"""
+            if node.meta.parameters["hardware"]["toolchain"] == "INTERNAL":
+                signals += self._emit_siganls_top_internal(node)
+            elif node.meta.parameters["hardware"]["toolchain"] == "HLS":
+                signals += self._emit_siganls_top_hls(node)
+            else:
+                assert False, "Unknown node toolchain for signal declarations."
 
         return signals
 
-    def _emit_components(self):
+    def _emit_components_top_internal(self, node):
+        node_name = vf(node.name)
+
+        # Emit kernel instance
+        parameters = ""
+        for key, value in node.meta.parameters["hardware"][
+            "verilog_parameters"
+        ].items():
+            key_value = self.verilog_parameters[f"{node_name}_{key}"]
+            debug_info = f"// = {key_value}"
+            parameters += f".{key}({node_name}_{key}), {debug_info}\n"
+        parameters = _remove_last_comma(parameters)
+        component_name = node.meta.parameters["hardware"]["module"]
+        signals = ""
+        for key, value in node.meta.parameters["common"]["args"].items():
+            cap_key = v2p(key)
+            width = self.verilog_parameters[f"{node_name}_{cap_key}_WIDTH"]
+            size = self.verilog_parameters[f"{node_name}_{cap_key}_SIZE"]
+            debug_info = f"// [{width}][{size}]"
+            signals += f"""
+.{key}({node_name}_{key}), {debug_info}
+.{key}_valid({node_name}_{key}_valid),
+.{key}_ready({node_name}_{key}_ready),
+"""
+
+        for key, value in node.meta.parameters["common"]["results"].items():
+            cap_key = v2p(key)
+            width = self.verilog_parameters[f"{node_name}_{cap_key}_WIDTH"]
+            size = self.verilog_parameters[f"{node_name}_{cap_key}_SIZE"]
+            debug_info = f"// [{width}][{size}]"
+            signals += f"""
+.{key}({node_name}_{key}), {debug_info}
+.{key}_valid({node_name}_{key}_valid),
+.{key}_ready({node_name}_{key}_ready),
+"""
+        signals = _remove_last_comma(signals)
+        components = f"""
+// {node_name}
+{component_name} #(
+{parameters}
+) {node_name}_inst (
+.clk(clk),
+.rst(rst),
+{signals}
+);
+"""
+
+        # Emit parameter instance
+        for key, value in node.meta.parameters["common"]["args"].items():
+            # Skip the parameter instance if the memory is stored off chip
+            if (
+                key == "data_in"
+                or node.meta.parameters["hardware"]["interface_parameters"][key][
+                    "storage"
+                ]
+                != "BRAM"
+            ):
+                continue
+            components += self._emit_parameters_top_internal(key, value, node)
+
+        for key, value in node.meta.parameters["common"]["results"].items():
+            # Skip the parameter instance if the memory is stored off chip
+            if (
+                key == "data_out"
+                or node.meta.parameters["hardware"]["interface_parameters"][key][
+                    "storage"
+                ]
+                != "BRAM"
+            ):
+                continue
+            components += self._emit_parameters_top_internal(key, value, node)
+
+        return components
+
+    def _emit_components_top_hls(self, node):
+        node_name = vf(node.name)
+
+        # Emit kernel instance
+        component_name = node.meta.parameters["hardware"]["module"]
+        signals = ""
+        for key, value in node.meta.parameters["common"]["args"].items():
+            cap_key = v2p(key)
+            width = self.verilog_parameters[f"{node_name}_{cap_key}_WIDTH"]
+            size = self.verilog_parameters[f"{node_name}_{cap_key}_SIZE"]
+            debug_info = f"// [{width}][{size}]"
+            signals += f"""
+.{key}_address0({node_name}_{key}_address0), {debug_info}
+.{key}_ce0({node_name}_{key}_ce0),
+.{key}_q0({node_name}_{key}_q0),
+"""
+
+        for key, value in node.meta.parameters["common"]["results"].items():
+            cap_key = v2p(key)
+            width = self.verilog_parameters[f"{node_name}_{cap_key}_WIDTH"]
+            size = self.verilog_parameters[f"{node_name}_{cap_key}_SIZE"]
+            debug_info = f"// [{width}][{size}]"
+            signals += f"""
+.{key}_address0({node_name}_{key}_address0), {debug_info}
+.{key}_ce0({node_name}_{key}_ce0),
+.{key}_we0({node_name}_{key}_we0),
+.{key}_d0({node_name}_{key}_d0),
+"""
+        signals = _remove_last_comma(signals)
+        components = f"""
+// {node_name}
+{component_name} #(
+) {node_name}_inst (
+.ap_clk(clk),
+.ap_rst(rst),
+.ap_start({node_name}_start),
+.ap_idle({node_name}_idle),
+.ap_ready({node_name}_ready),
+.ap_done({node_name}_done),
+{signals}
+);
+"""
+
+        # Emit parameter instance
+        for key, value in node.meta.parameters["common"]["args"].items():
+            # Skip the parameter instance if the memory is stored off chip
+            if (
+                key == "data_in"
+                or node.meta.parameters["hardware"]["interface_parameters"][key][
+                    "storage"
+                ]
+                != "BRAM"
+            ):
+                continue
+            components += self._emit_parameters_top_hls(key, value, node)
+
+        for key, value in node.meta.parameters["common"]["results"].items():
+            # Skip the parameter instance if the memory is stored off chip
+            if (
+                key == "data_out"
+                or node.meta.parameters["hardware"]["interface_parameters"][key][
+                    "storage"
+                ]
+                != "BRAM"
+            ):
+                continue
+            components += self._emit_parameters_top_hls(key, value, node)
+
+        return components
+
+    def _emit_components_top(self):
         """
         Emit component declarations for the top-level module
         """
 
-        components = ""
+        components = """
+// --------------------------
+//   Kernel instantiation 
+// --------------------------
+"""
         for node in self.fx_graph.nodes:
             if node.op != "call_module" and node.op != "call_function":
                 continue
-            node_name = vf(node.name)
-            parameters = ""
             if node.meta.parameters["hardware"]["toolchain"] == "INTERNAL":
-                for key, value in node.meta.parameters["hardware"][
-                    "verilog_parameters"
-                ].items():
-                    key_value = self.verilog_parameters[f"{node_name}_{key}"]
-                    debug_info = f"// = {key_value}"
-                    parameters += f".{key}({node_name}_{key}), {debug_info}\n"
-            parameters = _remove_last_comma(parameters)
-            node_layer = get_module_by_name(self.model, node.target)
-            component_name = node.meta.parameters["hardware"]["module"]
-            node_name = vf(node.name)
-            signals = ""
-            for key, value in node.meta.parameters["common"]["args"].items():
-                cap_key = key.upper().replace("DATA_", "")
-                width = self.verilog_parameters[f"{node_name}_{cap_key}_WIDTH"]
-                size = self.verilog_parameters[f"{node_name}_{cap_key}_SIZE"]
-                debug_info = f"// [{width}][{size}]"
-                signals += f"""
-.{key}({node_name}_{key}), {debug_info}
-.{key}_valid({node_name}_{key}_valid),
-.{key}_ready({node_name}_{key}_ready),
-"""
-            for key, value in node.meta.parameters["common"]["results"].items():
-                cap_key = key.upper().replace("DATA_", "")
-                width = self.verilog_parameters[f"{node_name}_{cap_key}_WIDTH"]
-                size = self.verilog_parameters[f"{node_name}_{cap_key}_SIZE"]
-                debug_info = f"// [{width}][{size}]"
-                signals += f"""
-.{key}({node_name}_{key}), {debug_info}
-.{key}_valid({node_name}_{key}_valid),
-.{key}_ready({node_name}_{key}_ready),
-"""
-            signals = _remove_last_comma(signals)
-            component = """
-{} #(
-{}
-) {} (
-.clk(clk),
-.rst(rst),
-{}
-);
-""".format(
-                component_name, parameters, node_name, signals
-            )
-            components += component
-
-            for key, value in node.meta.parameters["common"]["args"].items():
-                if key == "data_in":
-                    continue
-                # No top-level interface if the memory is stored on chip
-                if (
-                    node.meta.parameters["hardware"]["interface_parameters"][key][
-                        "storage"
-                    ]
-                    != "BRAM"
-                ):
-                    continue
-                if node.meta.parameters["hardware"]["toolchain"] == "INTERNAL":
-                    components += self._emit_parameters_internal(key, value, node)
-                elif node.meta.parameters["hardware"]["toolchain"] == "HLS":
-                    components += self._emit_parameters_hls(key, value, node)
-                else:
-                    assert (
-                        False
-                    ), "Emitting external component input parameters is not supported."
-
-            for key, value in node.meta.parameters["common"]["results"].items():
-                if key == "data_out":
-                    continue
-                # No top-level interface if the memory is stored on chip
-                if (
-                    node.meta.parameters["hardware"]["interface_parameters"][key][
-                        "storage"
-                    ]
-                    != "BRAM"
-                ):
-                    continue
-                if node.meta.parameters["hardware"]["toolchain"] == "INTERNAL":
-                    components += self._emit_parameters_internal(key, value, node)
-                elif node.meta.parameters["hardware"]["toolchain"] == "HLS":
-                    components += self._emit_parameters_hls(key, value, node)
-                else:
-                    assert (
-                        False
-                    ), "Emitting external component output parameters is not supported."
+                components += self._emit_components_top_internal(node)
+            elif node.meta.parameters["hardware"]["toolchain"] == "HLS":
+                components += self._emit_components_top_hls(node)
+            else:
+                assert False, "Unknown node toolchain for signal declarations."
 
         return components
 
-    def _emit_parameters_hls(self, key, value, node):
-        return ""
-
-    def _emit_parameters_internal(self, key, value, node):
+    def _emit_parameters_top_hls(self, key, value, node):
         node_name = vf(node.name)
-        cap_key = key.upper()
+        cap_key = v2p(key)
+        component_name = f"{node_name}_{key}_source"
+        component_name_inst = f"{node_name}_{key}_0"
+        size_debug_info = self.verilog_parameters[f"{node_name}_{cap_key}_SIZE"]
+        a_width = math.ceil(math.log2(size_debug_info))
+        width_debug_info = self.verilog_parameters[f"{node_name}_{cap_key}_WIDTH"]
+        return f"""
+{component_name} #(
+.DATA_WIDTH({node_name}_{cap_key}_WIDTH), // = {width_debug_info}
+.ADDR_RANGE({node_name}_IN_DEPTH), // = {size_debug_info}
+.ADDR_WIDTH({a_width})
+) {component_name_inst} (
+.clk(clk),
+.reset(rst),
+.address0({node_name}_{key}_address0), 
+.ce0({node_name}_{key}_ce0),
+.q0({node_name}_{key}_q0) 
+);
+"""
+
+    def _emit_parameters_top_internal(self, key, value, node):
+        node_name = vf(node.name)
+        cap_key = v2p(key)
         component_name = f"{node_name}_{key}_source"
         component_name_inst = f"{component_name}_0"
         depth_debug_info = self.verilog_parameters[f"{node_name}_IN_DEPTH"]
@@ -428,55 +618,357 @@ logic                             {node_name}_{key}_ready;
 );
 """
 
-    def _emit_wires(self):
+    def _emit_hs_wires_top(self, from_node, to_node, is_start=False, is_end=False):
+        (
+            from_name,
+            from_type,
+            from_prec,
+            from_param,
+            to_name,
+            to_type,
+            to_prec,
+            to_param,
+        ) = _get_cast_parameters(from_node, to_node, is_start=is_start, is_end=is_end)
+
+        assert (
+            from_type == to_type and from_type == "fixed"
+        ), "Only fixed point is supported."
+        data_cast = f"assign {to_name} = {from_name};"
+        if from_type == "fixed" and to_type == "fixed" and from_prec != to_prec:
+            in_width = self.verilog_parameters[f"{to_param}_WIDTH"]
+            in_size = self.verilog_parameters[f"{to_param}_SIZE"]
+            out_width = self.verilog_parameters[f"{from_param}_WIDTH"]
+            out_size = self.verilog_parameters[f"{from_param}_SIZE"]
+            debug_info_in = f"// [{in_width}][{in_size}]"
+            debug_info_out = f"// [{out_width}][{out_size}]"
+            data_cast = f"""// {data_cast}
+fixed_cast #(
+    .IN_SIZE({from_param}_SIZE),
+    .IN_WIDTH({from_param}_WIDTH),
+    .IN_FRAC_WIDTH({from_param}_FRAC_WIDTH),
+    .OUT_WIDTH({to_param}_WIDTH),
+    .OUT_FRAC_WIDTH({to_param}_FRAC_WIDTH)
+) {from_name}_{to_name}_cast (
+    .data_in ({from_name}), {debug_info_out}
+    .data_out({to_name}) {debug_info_in}
+);
+"""
+
+        cast_file = "cast/fixed_cast.sv"
+        if cast_file not in self.dependence_files:
+            rtl_dir = os.path.join(self.project_dir, "hardware", "rtl")
+            cast_dir = os.path.abspath(
+                os.path.join(
+                    os.path.dirname(__file__), "..", "..", "..", "hardware", cast_file
+                )
+            )
+            shutil.copy(cast_dir, rtl_dir)
+            self.dependence_files.append(cast_file)
+
+        return f"""
+assign {from_name}_ready  = {to_name}_ready;
+assign {to_name}_valid    = {from_name}_valid;
+{data_cast}
+"""
+
+    def _emit_hs2bram_wires_top(self, from_node, to_node, is_start=False, is_end=False):
+        (
+            from_name,
+            from_type,
+            from_prec,
+            from_param,
+            to_name,
+            to_type,
+            to_prec,
+            to_param,
+        ) = _get_cast_parameters(from_node, to_node, is_start=is_start, is_end=is_end)
+        assert (
+            from_type == to_type and from_type == "fixed"
+        ), "Only fixed point is supported."
+        data_cast = f"assign {to_name}_q0 = {from_name};"
+        cast_name = from_name
+        if from_type == "fixed" and to_type == "fixed" and from_prec != to_prec:
+            in_width = self.verilog_parameters[f"{to_param}_WIDTH"]
+            in_size = self.verilog_parameters[f"{to_param}_SIZE"]
+            out_width = self.verilog_parameters[f"{from_param}_WIDTH"]
+            out_size = self.verilog_parameters[f"{from_param}_SIZE"]
+            debug_info_in = f"// [{in_width}][{in_size}]"
+            debug_info_out = f"// [{out_width}][{out_size}]"
+            cast_name = f"{from_name}q0_cast"
+            data_cast = f"""// {data_cast}
+logic [{from_param}_WIDTH-1:0] {cast_name} [{from_param}_SIZE-1:0];
+fixed_cast #(
+    .IN_SIZE({from_param}_SIZE),
+    .IN_WIDTH({from_param}_WIDTH),
+    .IN_FRAC_WIDTH({from_param}_FRAC_WIDTH),
+    .OUT_WIDTH({to_param}_WIDTH),
+    .OUT_FRAC_WIDTH({to_param}_FRAC_WIDTH)
+) {from_name}_{to_name}_cast (
+    .data_in ({from_name}), {debug_info_out}
+    .data_out({cast_name}) {debug_info_in}
+);
+"""
+
+        cast_file = "cast/hs2bram_cast.sv"
+        if cast_file not in self.dependence_files:
+            rtl_dir = os.path.join(self.project_dir, "hardware", "rtl")
+            cast_dir = os.path.abspath(
+                os.path.join(
+                    os.path.dirname(__file__), "..", "..", "..", "hardware", cast_file
+                )
+            )
+            shutil.copy(cast_dir, rtl_dir)
+            self.dependence_files.append(cast_file)
+
+        to_node_name = vf(to_node.name)
+        from_node_name = vf(from_node.name)
+        size = self.verilog_parameters[f"{to_node_name}_IN_SIZE"]
+        width = self.verilog_parameters[f"{to_node_name}_IN_WIDTH"]
+        if is_start:
+            in_size = size
+        else:
+            in_size = self.verilog_parameters[f"{from_node_name}_OUT_SIZE"]
+        a_width = math.ceil(math.log2(size))
+        return f"""
+{data_cast}
+hs2bram_cast #(
+.IN_SIZE({from_param}_SIZE), // = {in_size}
+.IN_WIDTH({to_param}_WIDTH), // = {width}
+.ADDR_RANGE({to_param}_SIZE), // = {size}
+.ADDR_WIDTH({a_width}) 
+) {from_name}_{to_name}_hs2bram_cast (
+.data_in_ready({from_name}_ready),
+.data_in({cast_name}),
+.data_in_valid({from_name}_valid),
+.address_0({to_name}_address0),
+.ce_0({to_name}_ce0),
+.q_0({to_name}_q0),
+.start({to_node_name}_start),
+.ready({to_node_name}_ready),
+.clk(clk),
+.rst(rst)
+);
+"""
+
+    def _emit_bram2hs_wires_top(self, from_node, to_node, is_start=False, is_end=False):
+        (
+            from_name,
+            from_type,
+            from_prec,
+            from_param,
+            to_name,
+            to_type,
+            to_prec,
+            to_param,
+        ) = _get_cast_parameters(from_node, to_node, is_start=is_start, is_end=is_end)
+        assert (
+            from_type == to_type and from_type == "fixed"
+        ), "Only fixed point is supported."
+        data_cast = f"assign {to_name} = {from_name}_d0;"
+        cast_name = f"{from_name}_d0"
+        if from_type == "fixed" and to_type == "fixed" and from_prec != to_prec:
+            in_width = self.verilog_parameters[f"{to_param}_WIDTH"]
+            in_size = self.verilog_parameters[f"{to_param}_SIZE"]
+            out_width = self.verilog_parameters[f"{from_param}_WIDTH"]
+            out_size = self.verilog_parameters[f"{from_param}_SIZE"]
+            debug_info_in = f"// [{in_width}][{in_size}]"
+            debug_info_out = f"// [{out_width}][{out_size}]"
+            cast_name = f"{from_name}_d0_cast"
+            data_cast = f"""// {data_cast}
+logic [{from_param}_WIDTH-1:0] {cast_name} [{from_param}_SIZE-1:0];
+fixed_cast #(
+    .IN_SIZE({from_param}_SIZE),
+    .IN_WIDTH({from_param}_WIDTH),
+    .IN_FRAC_WIDTH({from_param}_FRAC_WIDTH),
+    .OUT_WIDTH({to_param}_WIDTH),
+    .OUT_FRAC_WIDTH({to_param}_FRAC_WIDTH)
+) {from_name}_{to_name}_cast (
+    .data_in ({from_name}_d0), {debug_info_out}
+    .data_out({cast_name}) {debug_info_in}
+);
+"""
+
+        cast_file = "cast/bram2hs_cast.sv"
+        if cast_file not in self.dependence_files:
+            rtl_dir = os.path.join(self.project_dir, "hardware", "rtl")
+            cast_dir = os.path.abspath(
+                os.path.join(
+                    os.path.dirname(__file__), "..", "..", "..", "hardware", cast_file
+                )
+            )
+            shutil.copy(cast_dir, rtl_dir)
+            self.dependence_files.append(cast_file)
+
+        to_node_name = vf(to_node.name)
+        from_node_name = vf(from_node.name)
+        size = self.verilog_parameters[f"{to_node_name}_IN_SIZE"]
+        width = self.verilog_parameters[f"{to_node_name}_IN_WIDTH"]
+        if is_start:
+            in_size = size
+        else:
+            in_size = self.verilog_parameters[f"{from_node_name}_OUT_SIZE"]
+        a_width = math.ceil(math.log2(size))
+        return f"""
+{data_cast}
+bram2hs_cast #(
+.IN_SIZE({from_param}_SIZE), // = {in_size}
+.IN_WIDTH({to_param}_WIDTH), // = {width}
+.ADDR_RANGE({to_param}_SIZE), // = {size}
+.ADDR_WIDTH({a_width}) 
+) {from_name}_{to_name}_hs2bram_cast (
+.address_0({from_name}_address0),
+.ce_0({from_name}_ce0),
+.we_0({from_name}_we0),
+.d_0({from_name}_d0),
+.data_in_ready({to_name}_ready),
+.data_in({cast_name}),
+.data_in_valid({to_name}_valid),
+.done({from_node_name}_done),
+.clk(clk),
+.rst(rst)
+);
+"""
+
+    def _emit_bram_wires_top(self, from_node, to_node, is_start=False, is_end=False):
+        (
+            from_name,
+            from_type,
+            from_prec,
+            from_param,
+            to_name,
+            to_type,
+            to_prec,
+            to_param,
+        ) = _get_cast_parameters(from_node, to_node, is_start=is_start, is_end=is_end)
+        assert (
+            from_type == to_type and from_type == "fixed"
+        ), "Only fixed point is supported."
+        cast_name = f"{from_name}_d0"
+        data_cast = ""
+        if from_type == "fixed" and to_type == "fixed" and from_prec != to_prec:
+            in_width = self.verilog_parameters[f"{to_param}_WIDTH"]
+            in_size = self.verilog_parameters[f"{to_param}_SIZE"]
+            out_width = self.verilog_parameters[f"{from_param}_WIDTH"]
+            out_size = self.verilog_parameters[f"{from_param}_SIZE"]
+            debug_info_in = f"// [{in_width}][{in_size}]"
+            debug_info_out = f"// [{out_width}][{out_size}]"
+            cast_name = f"{from_name}_d0_cast"
+            data_cast = f"""// assign {cast_name}_q0 = {from_name}_d0
+logic [{from_param}_WIDTH-1:0] {cast_name} [{from_param}_SIZE-1:0];
+fixed_cast #(
+    .IN_SIZE({from_param}_SIZE),
+    .IN_WIDTH({from_param}_WIDTH),
+    .IN_FRAC_WIDTH({from_param}_FRAC_WIDTH),
+    .OUT_WIDTH({to_param}_WIDTH),
+    .OUT_FRAC_WIDTH({to_param}_FRAC_WIDTH)
+) {from_name}_{to_name}_cast (
+    .data_in ({from_name}_d0), {debug_info_out}
+    .data_out({cast_name}) {debug_info_in}
+);
+"""
+
+        cast_file = "cast/bram_cast.sv"
+        if cast_file not in self.dependence_files:
+            rtl_dir = os.path.join(self.project_dir, "hardware", "rtl")
+            cast_dir = os.path.abspath(
+                os.path.join(
+                    os.path.dirname(__file__), "..", "..", "..", "hardware", cast_file
+                )
+            )
+            shutil.copy(cast_dir, rtl_dir)
+            self.dependence_files.append(cast_file)
+
+        to_node_name = vf(to_node.name)
+        from_node_name = vf(from_node.name)
+        size = self.verilog_parameters[f"{to_node_name}_IN_SIZE"]
+        width = self.verilog_parameters[f"{to_node_name}_IN_WIDTH"]
+        if is_start:
+            in_size = size
+        else:
+            in_size = self.verilog_parameters[f"{from_node_name}_OUT_SIZE"]
+        a_width = math.ceil(math.log2(size))
+        return f"""
+{data_cast}
+bram_cast #(
+.IN_SIZE({from_param}_SIZE), // = {in_size}
+.IN_WIDTH({to_param}_WIDTH), // = {width}
+.ADDR_RANGE({to_param}_SIZE), // = {size}
+.ADDR_WIDTH({a_width}) 
+) {from_name}_{to_name}_hs2bram_cast (
+.address_1({from_name}_address0),
+.ce_1({from_name}_ce0),
+.we_1({from_name}_we0),
+.d_1({from_name}_d0),
+.done({from_node_name}_done),
+.address_0({to_name}_address0),
+.ce_0({to_name}_ce0),
+.q_0({cast_name}),
+.start({to_node_name}_start),
+.ready({to_node_name}_ready),
+.clk(clk),
+.rst(rst)
+);
+"""
+
+    def _emit_wires_top(self):
         """
         Emit internal signal connections for the top-level module
+        This includes two interconnection types:
+        1. Type casting between inputs and outputs
+        2. Interface casting between inputs and outputs
         """
+
+        wires = """
+// --------------------------
+//   Interconnections 
+// --------------------------
+"""
 
         nodes_in = self.nodes_in
         nodes_out = self.nodes_out
         node_in_name = vf(nodes_in[0].target)
+        in_type = nodes_in[0].meta.parameters["common"]["args"]["data_in"]["type"]
+        in_prec = nodes_in[0].meta.parameters["common"]["args"]["data_in"]["precision"]
+        if nodes_in[0].meta.parameters["hardware"]["toolchain"] == "INTERNAL":
+            wires += self._emit_hs_wires_top(nodes_in[0], nodes_in[0], is_start=True)
+        elif nodes_in[0].meta.parameters["hardware"]["toolchain"] == "HLS":
+            wires += self._emit_hs2bram_wires_top(
+                nodes_in[0], nodes_in[0], is_start=True
+            )
+        else:
+            assert False, "Unknown node toolchain for signal declarations."
         node_out_name = vf(nodes_out[0].target)
-        wires = f"""
-assign data_in_ready  = {node_in_name}_data_in_ready;
-assign {node_in_name}_data_in    = data_in;
-assign {node_in_name}_data_in_valid = data_in_valid;
-assign {node_out_name}_data_out_ready  = data_out_ready;
-assign data_out    = {node_out_name}_data_out;
-assign data_out_valid = {node_out_name}_data_out_valid;
-"""
+        out_type = nodes_out[0].meta.parameters["common"]["results"]["data_out"]["type"]
+        out_prec = nodes_out[0].meta.parameters["common"]["results"]["data_out"][
+            "precision"
+        ]
+        if nodes_out[0].meta.parameters["hardware"]["toolchain"] == "INTERNAL":
+            wires += self._emit_hs_wires_top(nodes_out[0], nodes_out[0], is_end=True)
+        elif nodes_out[0].meta.parameters["hardware"]["toolchain"] == "HLS":
+            wires += self._emit_bram2hs_wires_top(
+                nodes_out[0], nodes_out[0], is_end=True
+            )
+        else:
+            assert False, "Unknown node toolchain for signal declarations."
+
         while nodes_in != nodes_out:
             next_nodes_in = []
             for node in nodes_in:
                 node_name = vf(node.target)
+                node_tc = node.meta.parameters["hardware"]["toolchain"]
                 for next_node, x in node.users.items():
                     next_node_name = vf(next_node.target)
-                    if next_node.op == "call_module" or next_node.op == "call_function":
-                        in_width = self.verilog_parameters[f"{next_node_name}_IN_WIDTH"]
-                        in_size = self.verilog_parameters[f"{next_node_name}_IN_SIZE"]
-                        out_width = self.verilog_parameters[f"{node_name}_OUT_WIDTH"]
-                        out_size = self.verilog_parameters[f"{node_name}_OUT_SIZE"]
-                        debug_info_in = ""
-                        debug_info_out = ""
-                        if self.to_debug:
-                            debug_info_in = f"// [{in_width}][{in_size}]"
-                            debug_info_out = f"// [{out_width}][{out_size}]"
-
-                        wires += f"""
-assign {node_name}_data_out_ready  = {next_node_name}_data_in_ready;
-assign {next_node_name}_data_in_valid = {node_name}_data_out_valid;
-// assign {next_node_name}_data_in = {node_name}_data_out;
-fixed_cast #(
-    .IN_SIZE({node_name}_OUT_SIZE),
-    .IN_WIDTH({node_name}_OUT_WIDTH),
-    .IN_FRAC_WIDTH({node_name}_OUT_FRAC_WIDTH),
-    .OUT_WIDTH({next_node_name}_IN_WIDTH),
-    .OUT_FRAC_WIDTH({next_node_name}_IN_FRAC_WIDTH)
-) {node_name}_data_out_cast (
-    .data_in ({node_name}_data_out), {debug_info_out}
-    .data_out({next_node_name}_data_in) {debug_info_in}
-);
-"""
+                    next_node_tc = next_node.meta.parameters["hardware"]["toolchain"]
+                    if node_tc == "INTERNAL" and next_node_tc == "INTERNAL":
+                        wires += self._emit_hs_wires_top(node, next_node)
+                    elif node_tc == "HLS" and next_node_tc == "INTERNAL":
+                        wires += self._emit_bram2hs_wires_top(node, next_node)
+                    elif node_tc == "INTERNAL" and next_node_tc == "HLS":
+                        wires += self._emit_hs2bram_wires_top(node, next_node)
+                    elif node_tc == "HLS" and next_node_tc == "HLS":
+                        wires += self._emit_bram_wires_top(node, next_node)
+                    else:
+                        assert False, "Unknown node toolchain for signal declarations."
                     if next_node.op == "output":
                         next_nodes_in.append(node)
                     else:
@@ -497,13 +989,13 @@ fixed_cast #(
 
         top_file = os.path.join(rtl_dir, "{}.sv".format(self.project))
         top_design = open(top_file, "w")
-        parameters_to_emit = self._emit_parameters()
+        parameters_to_emit = self._emit_parameters_top()
         parameters_to_emit = _remove_last_comma(parameters_to_emit)
-        interface_to_emit = self._emit_interface()
+        interface_to_emit = self._emit_interface_top()
         interface_to_emit = _remove_last_comma(interface_to_emit)
-        signals_to_emit = self._emit_signals()
-        components_to_emit = self._emit_components()
-        wires_to_emit = self._emit_wires()
+        signals_to_emit = self._emit_siganls_top()
+        components_to_emit = self._emit_components_top()
+        wires_to_emit = self._emit_wires_top()
         time_to_emit = time.strftime("%d/%m/%Y %H:%M:%S")
         module_inst = """
 // =====================================
@@ -638,11 +1130,26 @@ csynth_design
         ]
         result = _execute(cmd, log_output=self.to_debug)
         # Call Vitis HLS for synthesis
+        vitis_hls = os.path.abspath(
+            os.path.join(
+                os.path.dirname(__file__),
+                "..",
+                "..",
+                "..",
+                "scripts",
+                "run-vitis-hls.sh",
+            )
+        )
+        assert os.path.isfile(
+            vitis_hls
+        ), f"Vitis HLS not found. Please make sure if {vitis_hls} exists."
         cmd = [
-            "vitis_hls",
+            "bash",
+            vitis_hls,
             hls_tcl_dir,
         ]
         # result = _execute(cmd, log_output=self.to_debug, cwd=node_dir)
+        assert not result, f"Vitis HLS synthesis failed. {node.name}"
         logger.debug(f"Hardware of module {node.name} successfully generated by HLS")
 
     def emit_components(self):
@@ -652,17 +1159,16 @@ csynth_design
 
         project_dir = self.project_dir
         rtl_dir = os.path.join(project_dir, "hardware", "rtl")
-        dependence_files = []
         for node in self.fx_graph.nodes:
             if node.op != "call_module" and node.op != "call_function":
                 continue
             # If it is an internal module, just copy the files to the project
             if node.meta.parameters["hardware"]["toolchain"] == "INTERNAL":
-                dependence_files = _add_dependence_files(
+                self.dependence_files = _add_dependence_files(
                     node.meta.parameters["hardware"]["dependence_files"],
-                    dependence_files,
+                    self.dependence_files,
                 )
-                emit_node_parameters_in_rom(node, rtl_dir)
+                emit_parameters_in_rom_internal(node, rtl_dir)
             # If it is an HLS module, go through torch-mlir and mlir-hls flow
             # TODO: Call HLS synthesis processes in parallel
             elif node.meta.parameters["hardware"]["toolchain"] == "HLS":
@@ -674,10 +1180,11 @@ csynth_design
                 if not os.path.exists(node_dir):
                     os.mkdir(node_dir)
                 self._emit_components_using_hls(node, node_dir)
+                emit_parameters_in_rom_hls(node, rtl_dir)
             else:
                 raise NotImplementedError(f"EXTERNAL or HLS not supported yet.")
         relative_dir = os.path.abspath(
             os.path.join(os.path.dirname(__file__), "..", "..", "..", "hardware")
         )
-        for svfile in dependence_files:
+        for svfile in self.dependence_files:
             shutil.copy(os.path.join(relative_dir, svfile), rtl_dir)

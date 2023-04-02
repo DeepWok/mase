@@ -56,10 +56,6 @@ static llvm::DenseMap<Block *, std::string> blockMap;
 //  formats.
 // ------------------------------------------------------
 
-static std::string globalType;
-// Unit/Element type of a value
-static llvm::DenseMap<Value, std::string> unitTypeMap;
-
 class QArgType {
 public:
   std::string name;
@@ -67,7 +63,12 @@ public:
   std::string type;
   std::vector<long int> shape;
   std::vector<long int> precision;
+  std::string typeAsString;
 };
+
+static std::string globalType;
+// Unit/Element type of a value
+static llvm::DenseMap<Value, QArgType *> argTypeMap;
 
 static bool isNumberString(std::string s) {
   std::string::const_iterator it = s.begin();
@@ -201,21 +202,23 @@ static void initArgTypeMap(func::FuncOp funcOp, std::string hlsParam) {
               "Function arg has ap_fixed type but total width is smaller than "
               "the fraction width.");
 
-          unitTypeMap[arg] = type->type + "<" +
-                             std::to_string(type->precision[0]) + ", " +
-                             std::to_string(type->precision[1]) + ">";
+          type->typeAsString = type->type + "<" +
+                               std::to_string(type->precision[0]) + ", " +
+                               std::to_string(type->precision[1]) + ">";
+          argTypeMap[arg] = type;
+          valueMap[arg] = type->name;
         } else
           llvm_unreachable("Unsupported data type for the function arguments.");
 
         if (!type->isInput)
-          globalType = unitTypeMap[arg];
+          globalType = argTypeMap[arg]->typeAsString;
 
         // Assuming that the types are in-order
         types.erase(std::find(types.begin(), types.end(), type));
         break;
       }
     }
-    assert(unitTypeMap.count(arg) &&
+    assert(argTypeMap.count(arg) &&
            "Cannot find arg with the same shape in the input HLS parameters.");
   }
   assert(types.empty());
@@ -240,8 +243,8 @@ static std::string getBlockName(Block *block) {
 }
 
 static std::string getTypeName(Value value) {
-  if (dyn_cast<BlockArgument>(value))
-    return unitTypeMap[value];
+  if (dyn_cast<BlockArgument>(value) and argTypeMap.count(value) == 1)
+    return argTypeMap[value]->typeAsString;
 
   auto valueType = value.getType();
   if (auto arrayType = dyn_cast<ShapedType>(valueType))
@@ -1076,16 +1079,18 @@ public:
       m.emitError("Found more than one function in the module. Please "
                   "check which one for lowering.");
 
-    m.walk([&](func::FuncOp op) { initArgTypeMap(op, hlsParam); });
-
     std::error_code ec;
     llvm::raw_fd_ostream fout(fileName, ec);
-    for (auto funcOp : llvm::make_early_inc_range(m.getOps<func::FuncOp>())) {
+    m.walk([&](func::FuncOp funcOp) {
+      initArgTypeMap(funcOp, hlsParam);
+
       auto result = (fileName.empty()) ? emitHLS(funcOp, llvm::outs())
                                        : emitHLS(funcOp, fout);
       if (failed(result))
         return signalPassFailure();
-    }
+    });
+    if (!fileName.empty())
+      fout.close();
   }
 };
 } // namespace
