@@ -670,6 +670,7 @@ class Machop:
             ),
         )
         mve.emit_verilog()
+
         if args.to_debug:
             mve.save_parameters(
                 os.path.join(
@@ -679,7 +680,6 @@ class Machop:
                     f"{args.model}_hw.toml",
                 )
             )
-        logger.warning("synthesis is only partially implemented.")
 
     def test_hw(self):
         args = self.args

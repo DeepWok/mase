@@ -11,8 +11,12 @@ import maselogger
 # Add more test cases here
 test_cases = {
     "cast/fixed_cast": [],
+    # 'cast/bram_cast': [],
+    # 'cast/bram2hs_cast': [],
+    # 'cast/hs2bram_cast': [],
+    # 'common/ram_block': [],
     # 'common/join2': [],
-    "common/fixed_matrix_multiplication":["linear","common"],
+    "common/fixed_matrix_multiplication": ["linear", "common"],
     "common/fixed_mult": [],
     "common/register_slice": [],
     "common/fixed_adder_tree_layer": [],

@@ -188,6 +188,8 @@ class MaseVerilogEmitter(MaseGraph):
             files += " " + file
         # os.system(f"verilator --lint-only {files}")
 
+        logger.info(f"The hardware design has been successfully generated.")
+
     def _emit_parameters_top(self):
         """
         Emit parameters at the top-level for the top-level module
@@ -709,6 +711,16 @@ fixed_cast #(
 );
 """
 
+        cast_file = "common/ram_block.sv"
+        if cast_file not in self.dependence_files:
+            rtl_dir = os.path.join(self.project_dir, "hardware", "rtl")
+            cast_dir = os.path.abspath(
+                os.path.join(
+                    os.path.dirname(__file__), "..", "..", "..", "hardware", cast_file
+                )
+            )
+            shutil.copy(cast_dir, rtl_dir)
+            self.dependence_files.append(cast_file)
         cast_file = "cast/hs2bram_cast.sv"
         if cast_file not in self.dependence_files:
             rtl_dir = os.path.join(self.project_dir, "hardware", "rtl")
@@ -740,11 +752,12 @@ hs2bram_cast #(
 .data_in_ready({from_name}_ready),
 .data_in({cast_name}),
 .data_in_valid({from_name}_valid),
-.address_0({to_name}_address0),
-.ce_0({to_name}_ce0),
-.q_0({to_name}_q0),
-.start({to_node_name}_start),
-.ready({to_node_name}_ready),
+.address0({to_name}_address0),
+.ce0({to_name}_ce0),
+.q0({to_name}_q0),
+.out_start({to_node_name}_start),
+.out_ready({to_node_name}_ready),
+.out_done({to_node_name}_done),
 .clk(clk),
 .rst(rst)
 );
@@ -788,6 +801,16 @@ fixed_cast #(
 );
 """
 
+        cast_file = "common/ram_block.sv"
+        if cast_file not in self.dependence_files:
+            rtl_dir = os.path.join(self.project_dir, "hardware", "rtl")
+            cast_dir = os.path.abspath(
+                os.path.join(
+                    os.path.dirname(__file__), "..", "..", "..", "hardware", cast_file
+                )
+            )
+            shutil.copy(cast_dir, rtl_dir)
+            self.dependence_files.append(cast_file)
         cast_file = "cast/bram2hs_cast.sv"
         if cast_file not in self.dependence_files:
             rtl_dir = os.path.join(self.project_dir, "hardware", "rtl")
@@ -811,19 +834,19 @@ fixed_cast #(
         return f"""
 {data_cast}
 bram2hs_cast #(
-.IN_SIZE({from_param}_SIZE), // = {in_size}
-.IN_WIDTH({to_param}_WIDTH), // = {width}
+.OUT_SIZE({from_param}_SIZE), // = {in_size}
+.OUT_WIDTH({to_param}_WIDTH), // = {width}
 .ADDR_RANGE({to_param}_SIZE), // = {size}
 .ADDR_WIDTH({a_width}) 
 ) {from_name}_{to_name}_hs2bram_cast (
-.address_0({from_name}_address0),
-.ce_0({from_name}_ce0),
-.we_0({from_name}_we0),
-.d_0({from_name}_d0),
+.address0({from_name}_address0),
+.ce0({from_name}_ce0),
+.we0({from_name}_we0),
+.d0({from_name}_d0),
 .data_in_ready({to_name}_ready),
 .data_in({cast_name}),
 .data_in_valid({to_name}_valid),
-.done({from_node_name}_done),
+.in_done({from_node_name}_done),
 .clk(clk),
 .rst(rst)
 );
@@ -867,6 +890,16 @@ fixed_cast #(
 );
 """
 
+        cast_file = "common/ram_block.sv"
+        if cast_file not in self.dependence_files:
+            rtl_dir = os.path.join(self.project_dir, "hardware", "rtl")
+            cast_dir = os.path.abspath(
+                os.path.join(
+                    os.path.dirname(__file__), "..", "..", "..", "hardware", cast_file
+                )
+            )
+            shutil.copy(cast_dir, rtl_dir)
+            self.dependence_files.append(cast_file)
         cast_file = "cast/bram_cast.sv"
         if cast_file not in self.dependence_files:
             rtl_dir = os.path.join(self.project_dir, "hardware", "rtl")
@@ -882,29 +915,25 @@ fixed_cast #(
         from_node_name = vf(from_node.name)
         size = self.verilog_parameters[f"{to_node_name}_IN_SIZE"]
         width = self.verilog_parameters[f"{to_node_name}_IN_WIDTH"]
-        if is_start:
-            in_size = size
-        else:
-            in_size = self.verilog_parameters[f"{from_node_name}_OUT_SIZE"]
         a_width = math.ceil(math.log2(size))
         return f"""
 {data_cast}
 bram_cast #(
-.IN_SIZE({from_param}_SIZE), // = {in_size}
 .IN_WIDTH({to_param}_WIDTH), // = {width}
 .ADDR_RANGE({to_param}_SIZE), // = {size}
 .ADDR_WIDTH({a_width}) 
 ) {from_name}_{to_name}_hs2bram_cast (
-.address_1({from_name}_address0),
-.ce_1({from_name}_ce0),
-.we_1({from_name}_we0),
-.d_1({from_name}_d0),
-.done({from_node_name}_done),
-.address_0({to_name}_address0),
-.ce_0({to_name}_ce0),
-.q_0({cast_name}),
-.start({to_node_name}_start),
-.ready({to_node_name}_ready),
+.address1({from_name}_address0),
+.ce1({from_name}_ce0),
+.we1({from_name}_we0),
+.d1({from_name}_d0),
+.in_done({from_node_name}_done),
+.address0({to_name}_address0),
+.ce0({to_name}_ce0),
+.q0({cast_name}),
+.out_start({to_node_name}_start),
+.out_ready({to_node_name}_ready),
+.out_done({to_node_name}_done),
 .clk(clk),
 .rst(rst)
 );
@@ -1028,7 +1057,7 @@ endmodule
         top_design.close()
         os.system(f"verible-verilog-format --inplace {top_file}")
 
-    def _emit_components_using_hls(self, node, node_dir):
+    def _call_hls_flow(self, node, node_dir):
         """
         Synthesize the module using HLS
         """
@@ -1040,13 +1069,9 @@ endmodule
         if "torch_mlir" not in sys.modules:
             raise RuntimeError(f"TORCH_MLIR is required for synthesis.")
 
-        # Clear the folder
-        for p in glob.glob(os.path.join(node_dir, "*")):
-            if os.path.isfile(p):
-                os.remove(p)
-            else:
-                shutil.rmtree(p)
-
+        # ----------------------------------
+        #   Torch-MLIR
+        # ----------------------------------
         x = torch.randn(node.meta.parameters["common"]["args"]["data_in"]["size"])
         module = torch_mlir.compile(
             node.meta.module, x, output_type="linalg-on-tensors"
@@ -1057,6 +1082,9 @@ endmodule
         logger.debug(f"MLIR of module {node.name} successfully written into {mlir_dir}")
         assert os.path.isfile(mlir_dir), "Linalg MLIR generation failed."
 
+        # ----------------------------------
+        #   MLIR-Lowering
+        # ----------------------------------
         lowered_dir = os.path.join(node_dir, f"{node.name}.affine.mlir")
         node_name = vf(node.name)
         # Lower Linalg MLIR to Affine MLIR
@@ -1081,10 +1109,8 @@ endmodule
         lowered_dir = os.path.join(node_dir, f"{node_name}.mase.mlir")
         hls_dir = os.path.join(node_dir, f"{node_name}.cpp")
 
-        # Get all the parameters needed for HLS
-        hls_param = _get_hls_parameters(node)
-
         # Transform Affine MLIR for hardware generation and emit HLS code
+        hls_param = _get_hls_parameters(node)
         cmd = [
             "mase-opt",
             mlir_dir,
@@ -1129,6 +1155,7 @@ csynth_design
             hls_dir,
         ]
         result = _execute(cmd, log_output=self.to_debug)
+
         # Call Vitis HLS for synthesis
         vitis_hls = os.path.abspath(
             os.path.join(
@@ -1148,17 +1175,71 @@ csynth_design
             vitis_hls,
             hls_tcl_dir,
         ]
-        # result = _execute(cmd, log_output=self.to_debug, cwd=node_dir)
-        assert not result, f"Vitis HLS synthesis failed. {node.name}"
-        logger.debug(f"Hardware of module {node.name} successfully generated by HLS")
+        result = _execute(cmd, log_output=self.to_debug, cwd=node_dir)
+
+        if result:
+            logger.error(f"Vitis HLS synthesis failed. {node.name}")
+        else:
+            logger.debug(
+                f"Hardware of module {node.name} successfully generated by HLS"
+            )
+        return result
+
+    def _emit_hls_component(self, node, queue):
+        """
+        Emit HLS component using MLIR
+        """
+        logger.debug(f"Synthesizing {node.name} using HLS")
+
+        rtl_dir = os.path.join(self.project_dir, "hardware", "rtl")
+        emit_parameters_in_rom_hls(node, rtl_dir)
+
+        # Clean the HLS directory
+        hls_dir = os.path.join(self.project_dir, "hardware", "hls")
+        if not os.path.exists(hls_dir):
+            os.mkdir(hls_dir)
+        node_dir = os.path.join(hls_dir, node.name)
+        if not os.path.exists(node_dir):
+            os.mkdir(node_dir)
+        for p in glob.glob(os.path.join(node_dir, "*")):
+            if os.path.isfile(p):
+                os.remove(p)
+            else:
+                shutil.rmtree(p)
+
+        result = self._call_hls_flow(node, node_dir)
+        queue.put(result)
+
+    def _emit_hls_components(self, nodes):
+        """
+        Run HLS in parallel
+        """
+        hls_count = len(nodes)
+        jobs = [None] * hls_count
+        queue = Queue(hls_count)
+        for i, node in enumerate(nodes):
+            jobs[i] = Process(target=self._emit_hls_component, args=(node, queue))
+            jobs[i].start()
+
+        for job in jobs:
+            job.join()
+
+        err = 0
+        for _ in range(hls_count):
+            err += queue.get()
+        if err:
+            logger.error(f"HLS generation finished. {err} errors.")
+        else:
+            logger.info(f"HLS components generated. {err} errors.")
+        assert not err
 
     def emit_components(self):
         """
         Emit the Verilog code of each module in the top-level model
         """
 
-        project_dir = self.project_dir
-        rtl_dir = os.path.join(project_dir, "hardware", "rtl")
+        rtl_dir = os.path.join(self.project_dir, "hardware", "rtl")
+        hls_nodes = []
         for node in self.fx_graph.nodes:
             if node.op != "call_module" and node.op != "call_function":
                 continue
@@ -1172,17 +1253,12 @@ csynth_design
             # If it is an HLS module, go through torch-mlir and mlir-hls flow
             # TODO: Call HLS synthesis processes in parallel
             elif node.meta.parameters["hardware"]["toolchain"] == "HLS":
-                logger.debug(f"Synthesizing {node.name} using HLS")
-                hls_dir = os.path.join(project_dir, "hardware", "hls")
-                if not os.path.exists(hls_dir):
-                    os.mkdir(hls_dir)
-                node_dir = os.path.join(hls_dir, node.name)
-                if not os.path.exists(node_dir):
-                    os.mkdir(node_dir)
-                self._emit_components_using_hls(node, node_dir)
-                emit_parameters_in_rom_hls(node, rtl_dir)
+                hls_nodes.append(node)
             else:
                 raise NotImplementedError(f"EXTERNAL or HLS not supported yet.")
+
+        self._emit_hls_components(hls_nodes)
+
         relative_dir = os.path.abspath(
             os.path.join(os.path.dirname(__file__), "..", "..", "..", "hardware")
         )
