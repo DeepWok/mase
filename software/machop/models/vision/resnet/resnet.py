@@ -226,3 +226,10 @@ def get_resnet18_imagenet(info):
 def get_resnet50_imagenet(info):
     num_classes = info["num_classes"]
     return ResNetImageNet(Bottleneck, [3, 4, 6, 3], num_classes=num_classes)
+
+
+import torchvision as tv
+
+
+def get_resnet18_tv_imagenet(info):
+    return tv.models.resnet18(tv.models.resnet.ResNet18_Weights.DEFAULT)

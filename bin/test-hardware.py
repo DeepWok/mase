@@ -2,7 +2,6 @@
 # ---------------------------------------
 # This script runs the hardware regression test
 # ---------------------------------------
-from optparse import OptionParser
 from argparse import ArgumentParser
 import sys, os, time, logging, colorlog, glob, subprocess, multiprocessing, shutil, functools
 from multiprocessing import Process, Queue

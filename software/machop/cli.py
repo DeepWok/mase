@@ -14,15 +14,15 @@ import torch
 
 from .dataset import MyDataModule, available_datasets, get_dataset_info
 from .estimate_sw import run_estimator
+from .evaluate_hw.mase_hardware_evaluator import get_synthesis_results
 from .graph.dummy_inputs import get_dummy_inputs
+from .graph.mase_graph import MaseGraph
 from .models import manual_models, model_map, nlp_models, vision_models
 from .modify.interpret_for_hw_gen import create_and_save_common_metadata
 from .modify.modifier import Modifier
 from .session import test, train, validate
 from .synthesize.mase_verilog_emitter import MaseVerilogEmitter
 from .utils import check_when_to_load_and_how_to_load, getLogger
-from .evaluate_hw.mase_hardware_evaluator import get_synthesis_results
-from .graph.mase_graph import MaseGraph
 
 logger = getLogger("machop")
 logging.getLogger().setLevel(logging.INFO)

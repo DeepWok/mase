@@ -17,6 +17,7 @@ from .vision import (
     efficientnet_v2_s,
     get_resnet18,
     get_resnet18_imagenet,
+    get_resnet18_tv_imagenet,
     get_resnet50,
     get_resnet50_imagenet,
     get_resnet101,
@@ -40,6 +41,9 @@ model_map = {
     "resnet50": get_resnet50,
     "resnet18-imagenet": get_resnet18_imagenet,
     "resnet50-imagenet": get_resnet50_imagenet,
+    # !: test
+    "resnet18-tv-imagenet": get_resnet18_tv_imagenet,
+    # !: test
     "wideresnet28_cifar": wideresnet28_cifar,
     "mobilenetv3_small": mobilenetv3_small,
     "mobilenetv3_large": mobilenetv3_large,
@@ -122,6 +126,9 @@ vision_models = [
     "resnet50",
     "resnet18-imagenet",
     "resnet50-imagenet",
+    # !: test
+    "resnet18-tv-imagenet",
+    # !: test
     "mobilenetv3_small",
     "mobilenetv3_large",
     "efficientnet_v2_s",
