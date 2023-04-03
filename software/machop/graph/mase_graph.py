@@ -50,6 +50,19 @@ def _get_output_nodes(fx_graph):
     return nodes_out
 
 
+def _list_to_tuple(d):
+    """
+    Recursively convert list value to tuple value in a nested dict
+    """
+    for k, v in d.items():
+        if isinstance(v, dict):
+            _list_to_tuple(v)
+        elif isinstance(v, list):
+            d[k] = tuple(v)
+        else:
+            d[k] = v
+
+
 class MaseGraph:
     """
     Mase takes a torch.fx graph representation of a model and translates
@@ -64,6 +77,7 @@ class MaseGraph:
         common_param = external common parameters from toml (for quantization info)
         synth_mode = synthesis mode, hls or auto
         """
+
         self.model = model
         self.synth_mode = synth_mode
         self.fx_graph, self.nodes_in, self.nodes_out = self._init_fx_graph()
@@ -102,7 +116,11 @@ class MaseGraph:
             for node in self.fx_graph.nodes:
                 if node.op == "call_module" or node.op == "call_function":
                     parameters = loaded_toml_meta[node.name]
-                    node.meta.init_common_parameters(parameters=parameters)
+                    # !: assign toml to node.meta.parameter
+                    _list_to_tuple(parameters)
+                    node.meta.parameters["common"] = parameters
+                    # !: commented out MaseMetadata.init_common_parameters
+                    # node.meta.init_common_parameters(parameters=parameters)
         else:
             for node in self.fx_graph.nodes:
                 node.meta.init_common_parameters()

@@ -8,76 +8,12 @@ import torch
 from torch.fx import Graph, GraphModule, Interpreter
 from torch.fx.node import Argument, Target
 
+from ..graph.fx_profiler import GraphProfiler
 from ..graph.mase_tracer import MaseTracer
 from .calculator import calculate_funcs, calculate_modules
 from .utils import get_input_args
 
 logger = logging.getLogger(__name__)
-
-
-class Stats:
-    data = defaultdict(dict)
-
-    def add_data(self, key, value):
-        self.data[key] = value
-
-
-class GraphProfiler(Interpreter):
-    stats = Stats()
-
-    def call_function(
-        self, target: "Target", args: Tuple[Argument, ...], kwargs: Dict[str, Any]
-    ) -> Any:
-        """
-        Execute a ``call_function`` node and return the result.
-        Args:
-            target (Target): The call target for this node. See
-                `Node <https://pytorch.org/docs/master/fx.html#torch.fx.Node>`__ for
-                details on semantics
-            args (Tuple): Tuple of positional args for this invocation
-            kwargs (Dict): Dict of keyword arguments for this invocation
-        Return
-            Any: The value returned by the function invocation
-        """
-        assert not isinstance(target, str)
-
-        # Execute the function and return the result
-
-        out_data = target(*args, **kwargs)
-        meta = calculate_funcs(target, args, kwargs, out_data)
-        self.stats.add_data(target.__name__, meta)
-        return out_data
-
-    def call_module(
-        self, target: "Target", args: Tuple[Argument, ...], kwargs: Dict[str, Any]
-    ) -> Any:
-        """
-        Execute a ``call_module`` node and return the result.
-        Args:
-            target (Target): The call target for this node. See
-                `Node <https://pytorch.org/docs/master/fx.html#torch.fx.Node>`__ for
-                details on semantics
-            args (Tuple): Tuple of positional args for this invocation
-            kwargs (Dict): Dict of keyword arguments for this invocation
-        Return
-            Any: The value returned by the module invocation
-        """
-        # Retrieve executed args and kwargs values from the environment
-
-        # Execute the method and return the result
-        assert isinstance(target, str)
-        submod = self.fetch_attr(target)
-
-        in_data = args[0]
-        # if isinstance(submod, torch.nn.ReLU):
-        #     import pdb
-
-        #     pdb.set_trace()
-        out_data = submod(*args, **kwargs)
-        meta = calculate_modules(submod, in_data, out_data)
-        self.stats.add_data(target, meta)
-        return out_data
-        # return submod(*args, **kwargs)
 
 
 def estimate_sw_fine_grained(
@@ -100,6 +36,8 @@ def estimate_sw_fine_grained(
     graph: Graph = MaseTracer().trace(model, input_args)
     graph_module = GraphModule(model, graph)
     profiler = GraphProfiler(graph_module)
+    profiler.set_function_wrapper(calculate_funcs)
+    profiler.set_module_wrapper(calculate_modules)
 
     _ = profiler.run(*input_args)
 

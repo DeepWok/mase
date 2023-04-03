@@ -1,4 +1,6 @@
+import math
 from functools import partial
+from math import ceil, log2
 
 import torch
 from torch import Tensor
@@ -45,6 +47,12 @@ class LinearBase(torch.nn.Linear):
             "y": y,
         }
 
+    def construct_essential_config(self) -> dict:
+        raise NotImplementedError()
+
+    def get_output_bitwidth(self) -> dict:
+        raise NotImplementedError()
+
 
 @mark_as_leaf_module
 class LinearInteger(LinearBase):
@@ -89,6 +97,12 @@ class LinearInteger(LinearBase):
             integer_quantizer, width=b_width, frac_width=b_frac_width
         )
         self.config = self.construct_essential_config(config)
+        # self.w_width, self.x_width, self.b_width = w_width, x_width, b_width
+        # self.w_frac_width, self.x_frac_width, self.b_frac_width = (
+        #     w_frac_width,
+        #     w_frac_width,
+        #     b_frac_width,
+        # )
 
     def construct_essential_config(self, config):
         r_config = extract_required_config(self, config)
@@ -99,6 +113,26 @@ class LinearInteger(LinearBase):
             "bias_frac_width", config["weight_frac_width"]
         )
         return r_config | o_config
+
+    def get_output_bitwidth(self):
+        config = self.config
+        w_width, w_frac = config["weight_width"], config["weight_frac_width"]
+        x_width, x_frac = config["data_in_width"], config["data_in_frac_width"]
+        bias_width = config["bias_width"]
+
+        ops = self.in_features
+        product_width = w_width + x_width
+        product_frac_width = w_frac + x_frac
+        # *: + 1 for bias
+        output_width = max(bias_width, product_width + ceil(log2(ops))) + 1
+        output_frac_width = product_frac_width
+
+        o_bitwidth = {}
+        o_bitwidth["data_out_width"] = output_width
+        o_bitwidth["data_out_frac_width"] = output_frac_width
+        # o_bitwidth["product_width"] = product_width
+        # o_bitwidth["product_frac_width"] = product_frac_width
+        return o_bitwidth
 
 
 @mark_as_leaf_module
@@ -266,6 +300,20 @@ class LinearMinifloatIEEE(LinearBase):
         o_config["bias_exponent_width"] = config.get("weight_exponent_width")
         o_config["bias_exponent_bias"] = config.get("weight_exponent_bias")
         return r_config | o_config
+
+    # def get_output_bitwidth(self) -> dict:
+    #     num_ops = self.in_features
+    #     product_bitwidth = self.w_width + self.x_width
+    #     product_frac = self.w_frac_width + self.x_frac_width
+
+    #     addition_bitwidth = math.ceil(math.log(num_ops))
+    #     output_bitwidth = product_bitwidth + addition_bitwidth
+    #     return {
+    #         "output_width": output_bitwidth,
+    #         "output_frac_width": product_frac,
+    #         "product_width": product_bitwidth,
+    #         "product_frac_width": product_frac,
+    #     }
 
 
 @mark_as_leaf_module

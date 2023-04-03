@@ -1,6 +1,6 @@
 import logging
-import os
 import math
+import os
 import time
 
 import torch
@@ -19,13 +19,15 @@ class MaseMetadata:
     node for any static analysis or possible transformation. The metadata has a
     tree structure, e.g.
     - common
-      - args -> []
-         - name : name of the arg
+      - args -> {}
+         - $name : name of the arg
            - type : type of the arg, e.g. fixed point or float
            - precision : format of the type, e.g. (10, 5)
+           - precision: format
            - size : size of the arg
-      - results -> []
-         - name : name of the result
+           - from : node
+      - results -> {}
+         - $name : name of the result
            - type : type of the result, e.g. fixed point or float
            - precision : format of the type, e.g. (10, 5)
            - size : size of the result
@@ -35,7 +37,7 @@ class MaseMetadata:
       - verilog_parameters -> {} : parameters need for customise the hardware module
       - toolchain -> str : tool chain for code generation, must be INTERNAL, EXTERNAL or HLS
       - module -> str : the name of the used hardware module
-      - interface_parameters -> []
+      - interface_parameters -> {}
          - name : name of the parameters
            - storage : the hardware interface implemented, must be BRAM
            - transpose : whetehr the data needs to be transposed before emitting
@@ -263,8 +265,8 @@ class MaseMetadata:
         input_keys.sort()
         if input_keys != expected_keys:
             assert False, f"""
-{self.node.name}: Unexpected parameters found for linear, 
-expect: {expected_keys}, 
+{self.node.name}: Unexpected parameters found for linear,
+expect: {expected_keys},
 actual keys: {input_keys}"""
 
         # Update common parameters
@@ -591,8 +593,8 @@ actual keys: {input_keys}"""
         input_keys = list(parameters.keys()).sort()
         if input_keys != expected_keys:
             assert False, f"""
-{node_name}: Unexpected parameters found for linear, 
-expect: {expected_keys}, 
+{node_name}: Unexpected parameters found for linear,
+expect: {expected_keys},
 actual keys: {input_keys}"""
 
         # Update common parameters

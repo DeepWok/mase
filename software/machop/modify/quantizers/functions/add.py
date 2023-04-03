@@ -22,6 +22,21 @@ def add_integer(x, y, config):
         return x + y
 
 
+def construct_essential_config_add_integer(config):
+    return {
+        "bypass": config.get("bypass", False),
+        "data_in_width": config["data_in_width"],
+        "data_in_frac_width": config["data_in_frac_width"],
+    }
+
+
+def get_output_bitwidth_add_integer(config):
+    return {
+        "data_out_width": config["data_in_width"] + 1,
+        "data_out_frac_width": config["data_in_frac_width"],
+    }
+
+
 @mark_as_leaf_func
 def add_minifloat_simple(x, y, config):
     bypass = config.get("bypass", False)

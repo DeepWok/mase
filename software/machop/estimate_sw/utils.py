@@ -45,7 +45,9 @@ def get_input_args(model_name, model, task, data_loader, info):
 
     input_args = []
     if isinstance(plt_model, VisionModelWrapper):
-        batch_x, _ = next(iter(data_loader.train_dataloader))
+        data_loader.setup()
+        data_loader.prepare_data()
+        batch_x, _ = next(iter(data_loader.train_dataloader()))
         input_args = [batch_x[[0], ...]]
     elif isinstance(
         plt_model,
