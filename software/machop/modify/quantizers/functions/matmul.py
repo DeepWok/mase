@@ -1,4 +1,5 @@
 from functools import partial
+from math import ceil, log2
 
 import torch
 
@@ -28,6 +29,16 @@ def generic_matmul_integer(x, y, config, style="matmul"):
         y = y_quantizer(y)
 
         return matmul(x, y)
+
+
+def construct_essential_config_generic_matmul_integer(config):
+    return {
+        "bypass": config.get("bypass", False),
+        "data_in_width": config["data_in_width"],
+        "data_in_frac_width": config["data_in_frac_width"],
+        "weight_width": config["weight_width"],
+        "weight_frac_width": config["weight_frac_width"],
+    }
 
 
 def generic_matmul_minifloat_simple(x, y, config, style="matmul"):
@@ -117,6 +128,21 @@ def matmul_minifloat_ieee(x, y, config):
 @mark_as_leaf_func
 def bmm_integer(x, y, config):
     return generic_matmul_integer(x, y, config, "bmm")
+
+
+def get_output_bitwidth_bmm_integer(config, x_shape):
+    w_width, w_frac = config["weight_width"], config["weight_frac_width"]
+    x_width, x_frac = config["data_in_width"], config["data_in_frac_width"]
+    ops = x_shape[-1]
+    product_width = w_width + x_width
+    product_frac_width = w_frac + x_frac
+    output_width = product_width + ceil(log2(ops))
+    output_frac_width = product_frac_width
+
+    o_bitwidth = {}
+    o_bitwidth["data_out_width"] = output_width
+    o_bitwidth["data_out_frac_width"] = output_frac_width
+    return o_bitwidth
 
 
 @mark_as_leaf_func

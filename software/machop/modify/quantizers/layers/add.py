@@ -34,3 +34,10 @@ class AddInteger(torch.nn.Module):
         o_config = {}
         o_config["bypass"] = config.get("bypass", False)
         return r_config | o_config
+
+    def get_output_bitwidth(self):
+        o_bitwidth = {
+            "data_out_width": self.config["data_in_width"] + 1,
+            "data_out_frac_width": self.config["data_in_frac_width"],
+        }
+        return o_bitwidth

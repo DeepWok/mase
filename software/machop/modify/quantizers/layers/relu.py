@@ -31,7 +31,7 @@ class ReLUBase(torch.nn.ReLU):
 
 
 @mark_as_leaf_module
-class ReLUInteger(torch.nn.ReLU):
+class ReLUInteger(ReLUBase):
     bypass = None
     _required_config_keys = ("name", "data_in_width", "data_in_frac_width")
     _optional_config_keys = ("bypass",)
@@ -46,12 +46,21 @@ class ReLUInteger(torch.nn.ReLU):
             integer_quantizer, width=x_width, frac_width=x_frac_width
         )
         self.config = self.construct_essential_config(config)
+        self.x_width = x_width
+        self.x_frac_width = x_frac_width
 
     def construct_essential_config(self, config):
         r_config = extract_required_config(self, config)
         o_config = {}
         o_config["bypass"] = config.get("bypass", False)
+        o_config["data_out_width"] = r_config["data_in_width"]
         return r_config | o_config
+
+    def get_output_bitwidth(self) -> dict:
+        return {
+            "data_out_width": self.config["data_in_width"],
+            "data_out_frac_width": self.config["data_in_frac_width"],
+        }
 
 
 @mark_as_leaf_module

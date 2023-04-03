@@ -22,6 +22,21 @@ def relu_integer(x, inplace=False, config=None):
         return F.relu(x_quantizer(x), inplace=inplace)
 
 
+def construct_essential_config_relu_integer(config):
+    return {
+        "bypass": config.get("bypass", False),
+        "data_in_width": config["data_in_width"],
+        "data_in_frac_width": config["data_in_frac_width"],
+    }
+
+
+def get_output_bitwidth_relu_integer(config):
+    return {
+        "data_out_width": config["data_in_width"],
+        "data_out_frac_width": config["data_in_frac_width"],
+    }
+
+
 @mark_as_leaf_func
 def relu_minifloat_simple(x, inplace=False, config=None):
     bypass = config.get("bypass", False)

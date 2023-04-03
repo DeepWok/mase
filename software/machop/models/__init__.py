@@ -3,7 +3,7 @@ from functools import partial
 from .manual.toy_manual import get_toymanualnet
 from .nlp_models import get_nlp_model
 from .patched_nlp_models import get_patched_nlp_model
-from .toy import get_toynet
+from .toy import get_toy_tiny, get_toynet
 from .vision import (
     cswin_64_small,
     cswin_64_tiny,
@@ -69,6 +69,7 @@ model_map = {
     "cswin_144_large": cswin_144_large,
     # this is a normal toynet written purely with pytorch ops
     "toy": get_toynet,
+    "toy-tiny": get_toy_tiny,
     # this is a toynet with our custom ops
     "toy_manual": get_toymanualnet,
     # language models
@@ -114,6 +115,7 @@ manual_models = ["toy_manual"]
 vision_models = [
     # manual models
     "toy",
+    "toy-tiny",
     "toy_manual",
     # built-in models
     "resnet18",

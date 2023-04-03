@@ -1,9 +1,11 @@
+import math
 from functools import partial
+from math import ceil, log2
 from typing import Union
 
 import torch
 from torch import Tensor
-from torch.nn.common_types import _size_2_t
+from torch.nn.common_types import _size_1_t
 
 from ....graph.mase_tracer import mark_as_leaf_module
 from ..quantizers import (
@@ -14,8 +16,9 @@ from ..quantizers import (
 from .utils import extract_required_config
 
 
-class Conv2dBase(torch.nn.Conv2d):
+class Conv1dBase(torch.nn.Conv1d):
     bypass = False
+
     _required_config_keys = None
     _optional_config_keys = None
 
@@ -44,9 +47,17 @@ class Conv2dBase(torch.nn.Conv2d):
             "y": y,
         }
 
+    def construct_essential_config(self, config):
+        """construct configs for HW gen"""
+        raise NotImplementedError()
+
+    def get_output_bitwidth(self):
+        """output bit width info for HW gen"""
+        raise NotImplementedError()
+
 
 @mark_as_leaf_module
-class Conv2dInteger(Conv2dBase):
+class Conv1dInteger(Conv1dBase):
     _required_config_keys = (
         "name",
         "weight_width",
@@ -60,10 +71,10 @@ class Conv2dInteger(Conv2dBase):
         self,
         in_channels: int,
         out_channels: int,
-        kernel_size: _size_2_t,
-        stride: _size_2_t = 1,
-        padding: Union[str, _size_2_t] = 0,
-        dilation: _size_2_t = 1,
+        kernel_size: _size_1_t,
+        stride: _size_1_t = 1,
+        padding: Union[str, _size_1_t] = 0,
+        dilation: _size_1_t = 1,
         groups: int = 1,
         bias: bool = True,
         padding_mode: str = "zeros",  # TODO: refine this type
@@ -72,8 +83,8 @@ class Conv2dInteger(Conv2dBase):
         config=None,
     ) -> None:
         super().__init__(
-            in_channels=in_channels,
-            out_channels=out_channels,
+            in_features=in_channels,
+            out_features=out_channels,
             kernel_size=kernel_size,
             stride=stride,
             padding=padding,
@@ -85,6 +96,7 @@ class Conv2dInteger(Conv2dBase):
             dtype=dtype,
         )
         assert config is not None, "config is None!"
+
         self.bypass = config.get("bypass", False)
         # establish quantizers
         w_width, w_frac_width = config["weight_width"], config["weight_frac_width"]
@@ -105,6 +117,12 @@ class Conv2dInteger(Conv2dBase):
             integer_quantizer, width=b_width, frac_width=b_frac_width
         )
         self.config = self.construct_essential_config(config)
+        # self.w_width, self.x_width, self.b_width = w_width, x_width, b_width
+        # self.w_frac_width, self.x_frac_width, self.b_frac_width = (
+        #     w_frac_width,
+        #     w_frac_width,
+        #     b_frac_width,
+        # )
 
     def construct_essential_config(self, config):
         r_config = extract_required_config(self, config)
@@ -116,9 +134,29 @@ class Conv2dInteger(Conv2dBase):
         )
         return r_config | o_config
 
+    def get_output_bitwidth(self):
+        config = self.config
+        w_width, w_frac = config["weight_width"], config["weight_frac_width"]
+        x_width, x_frac = config["data_in_width"], config["data_in_frac_width"]
+        bias_width = config["bias_width"]
+
+        ops = self.in_channels * self.kernel_size[0]
+        product_width = w_width + x_width
+        product_frac_width = w_frac + x_frac
+        # *: +1 for bias
+        output_width = max(bias_width, product_width + ceil(log2(ops))) + 1
+        output_frac_width = product_frac_width
+
+        o_bitwidth = {}
+        o_bitwidth["data_out_width"] = output_width
+        o_bitwidth["data_out_frac_width"] = output_frac_width
+        # output_bitwidth_info["product_width"] = product_width
+        # output_bitwidth_info["product_frac_width"] = product_frac_width
+        return o_bitwidth
+
 
 @mark_as_leaf_module
-class Conv2DMinifloatSimple(Conv2dBase):
+class Conv1dMinifloatSimple(Conv1dBase):
     _required_config_keys = (
         "name",
         "weight_width",
@@ -139,10 +177,10 @@ class Conv2DMinifloatSimple(Conv2dBase):
         self,
         in_channels: int,
         out_channels: int,
-        kernel_size: _size_2_t,
-        stride: _size_2_t = 1,
-        padding: Union[str, _size_2_t] = 0,
-        dilation: _size_2_t = 1,
+        kernel_size: _size_1_t,
+        stride: _size_1_t = 1,
+        padding: Union[str, _size_1_t] = 0,
+        dilation: _size_1_t = 1,
         groups: int = 1,
         bias: bool = True,
         padding_mode: str = "zeros",
@@ -218,7 +256,7 @@ class Conv2DMinifloatSimple(Conv2dBase):
 
 
 @mark_as_leaf_module
-class Conv2dMinifloatIEEE(Conv2dBase):
+class Conv1dMinifloatIEEE(Conv1dBase):
     _required_config_keys = (
         "name",
         "weight_width",
@@ -239,10 +277,10 @@ class Conv2dMinifloatIEEE(Conv2dBase):
         self,
         in_channels: int,
         out_channels: int,
-        kernel_size: _size_2_t,
-        stride: _size_2_t = 1,
-        padding: Union[str, _size_2_t] = 0,
-        dilation: _size_2_t = 1,
+        kernel_size: _size_1_t,
+        stride: _size_1_t = 1,
+        padding: Union[str, _size_1_t] = 0,
+        dilation: _size_1_t = 1,
         groups: int = 1,
         bias: bool = True,
         padding_mode: str = "zeros",
@@ -315,3 +353,20 @@ class Conv2dMinifloatIEEE(Conv2dBase):
         o_config["bias_exponent_width"] = config.get("weight_exponent_width")
         o_config["bias_exponent_bias"] = config.get("weight_exponent_bias")
         return r_config | o_config
+
+    # def get_output_bitwidth(self) -> dict:
+    #     k = self.kernel_size
+    #     ic, oc = self.in_channels, self.out_channels
+    #     # number of operations per pixel
+    #     num_ops = k * ic
+    #     product_bitwidth = self.w_width + self.x_width
+    #     product_frac = self.w_frac_width + self.x_frac_width
+
+    #     addition_bitwidth = math.ceil(math.log(num_ops))
+    #     output_bitwidth = product_bitwidth + addition_bitwidth
+    #     return {
+    #         "output_width": output_bitwidth,
+    #         "output_frac_width": product_frac,
+    #         "product_width": product_bitwidth,
+    #         "product_frac_width": product_frac,
+    #     }

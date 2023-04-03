@@ -3,7 +3,8 @@ import operator
 import os
 import pickle
 import pprint
-from copy import deepcopy
+from collections import defaultdict
+from copy import copy, deepcopy
 from typing import Dict, List
 
 import toml
@@ -12,6 +13,7 @@ from tabulate import tabulate
 from torch import nn
 from torch.fx import Graph, GraphModule
 
+from ..graph.mase_interpreter import clear_node_metadata_software
 from ..graph.mase_tracer import MaseTracer
 from ..graph.utils import (
     check_func,
@@ -28,7 +30,9 @@ pp = pprint.PrettyPrinter(depth=4)
 logger = logging.getLogger(__name__)
 
 
-# TODO: try layer-wise replacement instead of current class-wise replacement
+# TODO: try layer-wise replacement instead of current class-wise replacement.
+# TODO: Take care of Batchnorm, Batchnorms are not quantized for now.
+# TODO: model -> graph -> replace nodes -> add shape info to each node -> add quant input/output/weight precision info to each node
 class Modifier:
     def __init__(
         self,
@@ -41,6 +45,7 @@ class Modifier:
         modifiable_layers: List[str] = ["linear", "relu", "conv2d"],
         modifiable_functions: List[str] = ["add", "relu", "matmul", "bmm"],
         do_comparison: bool = True,
+        do_quant_profiling: bool = True,
     ) -> None:
         """
         save_dir is expected to be "${no_hyphen_model_name}/software/modify-sw"
@@ -79,10 +84,20 @@ class Modifier:
         self.graph: Graph = MaseTracer().trace(model, dummy_inputs)
 
         self.graph_module = GraphModule(model, self.graph)
+        clear_node_metadata_software(self.graph_module)
+
+        # FIXME: a mapping to save configs for funcs (as well as modules)
+        # this is far from elegant. I think the whole modifier need rewriting
+        # traversing nodes is better
+        # self.node_to_config = {}
 
         self.modify()
         if do_comparison:
             self.compare_model()
+
+        if do_quant_profiling:
+            self.save_quant_profile()
+        self.do_quant_profiling = do_quant_profiling
         # breakpoint()
         self.save_modified_model()
 
@@ -94,6 +109,7 @@ class Modifier:
         modified_named_modules = dict(self.graph_module.named_modules())
 
         tabular_rows = []
+        # node_info_toml = {}
 
         for node, old_node in zip(self.graph.nodes, original_graph.nodes):
             if node.op == "call_module":
@@ -108,7 +124,25 @@ class Modifier:
                     "`{}`".format(str(type(modified_module))),
                     changed,
                 ]
+                # detailed_toml[node.name] = {
+                #     "op": modified_module._get_name(),
+                #     "config": modified_module.config
+                #     | modified_module.get_output_bitwidth(),
+                # }
                 tabular_rows.append(row)
+
+                # if hasattr(modified_module, "config"):
+                #     q_config = modified_module.config
+                # else:
+                #     q_config = None
+
+                # node_info_toml[node.name] = {
+                #     "op": node.op,
+                #     "original": str(type(original_module)),
+                #     "modified": str(type(modified_module)),
+                #     "changed": changed,
+                #     "quantization": q_config,
+                # }
             elif node.op == "call_function":
                 changed = old_node.target != node.target
                 row = [
@@ -120,6 +154,11 @@ class Modifier:
                     changed,
                 ]
                 tabular_rows.append(row)
+
+                # detailed_toml[node.name] = {
+                #     'op': modified_module._get_name(),
+                #     # 'config': modified_module.config | modified_module.get_output_bitwidth()
+                # }
 
         report = tabulate(tabular_rows, headers=headers, tablefmt="github")
         logger.info("A tabular summary of modified funcs and modules")
@@ -133,6 +172,14 @@ class Modifier:
             with open(report_path, "w+") as f:
                 f.write(report)
             logger.info(f"The tabular summary of modify-sw is saved to {report_path}")
+
+            toml_path = os.path.join(self.save_dir, "modify-sw-report.toml")
+            # with open(toml_path, "w") as f:
+            #     toml.dump(node_info_toml, f)
+            # logger.info(f"The toml of modifiy-sw is saved to {toml_path}")
+
+    def save_quant_profile(self):
+        """"""
 
     def load_model(self, load_name, load_type, model):
         """
@@ -206,6 +253,7 @@ class Modifier:
                     getattr(self.original_model, attr_name),
                 )
 
+    # internal method for replace nodes in MaseGraph
     def _traverse_graph_to_replace_nodes(
         self, target: type, replacement_fn, replacement_fn_kwargs={}
     ):
@@ -219,6 +267,11 @@ class Modifier:
                     parent_name, name = get_parent_name(node.target)
                     named_modules[node.target] = new_layer
                     setattr(named_modules[parent_name], name, new_layer)
+                    # temporary solution
+                    node.meta["software"]["modify-sw"] = {
+                        "config": getattr(new_layer, "config", False)
+                    }
+
             if node.op == "call_function":
                 if check_func(node, target):
                     with self.graph.inserting_after(node):
@@ -228,6 +281,11 @@ class Modifier:
                         )
                         node.replace_all_uses_with(new_node)
                     self.graph.erase_node(node)
+                    # temporary solution
+                    new_node.meta = copy(node.meta)  # copy an empty meta
+                    new_node.meta["software"]["modify-sw"] = {
+                        "config": replacement_fn_kwargs.get("config", False)
+                    }
         self.graph.lint()
         self.graph_module.recompile()
         self.graph_module = GraphModule(self.graph_module, self.graph)
@@ -299,6 +357,7 @@ class Modifier:
 
         self._traverse_graph_to_replace_nodes(target, replacement_fn)
 
+    # module: conv2d
     def replace_module_conv2d(self, config):
         replace_cls = ops_map["conv2d"][config["name"]]
         target = nn.Conv2d

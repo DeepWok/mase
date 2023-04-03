@@ -16,10 +16,11 @@ from .dataset import MyDataModule, available_datasets, get_dataset_info
 from .estimate_sw import run_estimator
 from .graph.dummy_inputs import get_dummy_inputs
 from .models import manual_models, model_map, nlp_models, vision_models
+from .modify.interpret_for_hw_gen import create_and_save_common_metadata
 from .modify.modifier import Modifier
-from .session import test, train
-from .utils import check_when_to_load_and_how_to_load, getLogger
+from .session import test, train, validate
 from .synthesize.mase_verilog_emitter import MaseVerilogEmitter
+from .utils import check_when_to_load_and_how_to_load, getLogger
 from .evaluate_hw.mase_hardware_evaluator import get_synthesis_results
 from .graph.mase_graph import MaseGraph
 
@@ -388,6 +389,7 @@ class Machop:
         self.create_output_dir()
         if self.args.modify_sw is not None:
             self.modify_sw()
+            self.interpret_for_hw_gen()
         # if self.args.to_modify_sw:
         #     self.modify_sw()
         if self.args.to_train:
@@ -540,6 +542,22 @@ class Machop:
             self.model = m.graph_module
         logger.info("Modify-sw is completed")
 
+    def interpret_for_hw_gen(self):
+        logger.info(f"Updating metadata for synthesis...")
+        args = self.args
+        create_and_save_common_metadata(
+            modified_graph_model=self.model,
+            model_name=args.model,
+            task=args.task,
+            data_module=self.data_module,
+            save_dir=os.path.join(self.output_dir_sw, "modify-sw"),
+        )
+        # breakpoint()
+        # for n in self.model.graph.nodes:
+        #     pprint(n.meta)
+        # breakpoint()
+        logger.info(f"Metadata update is completed")
+
     def train(self):
         args = self.args
         logger.info(f"Training model {args.model!r}...")
@@ -634,7 +652,7 @@ class Machop:
 
     def estimate_sw(self):
         args = self.args
-        logging.info(f"Estimating model {args.model!r}...")
+        logger.info(f"Estimating model {args.model!r}...")
         save_path = os.path.join(self.output_dir_sw, "estimate-sw")
 
         if not os.path.exists(save_path):
@@ -650,7 +668,7 @@ class Machop:
             "config_path": args.estimate_sw_config,
         }
         run_estimator(**estimate_sw_kwargs)
-        logging.info("Estimate-sw is completed")
+        logger.info("Estimate-sw is completed")
 
     def synthesize(self, mode):
         args = self.args
@@ -662,11 +680,13 @@ class Machop:
             target=args.target,
             mode=mode,
             num_targets=args.num_targets,
+            # comment out to allow internal pass to provide this info
             common_param=os.path.join(
                 self.output_dir,
                 "software",
                 "modify-sw",
-                "hw_quantize.toml",
+                # "hw_quantize.toml",
+                "common_meta.toml",
             ),
         )
         mve.emit_verilog()

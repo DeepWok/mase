@@ -2,6 +2,7 @@ import logging
 import os
 
 from .nlp import dataset_factory as nlp_dataset_factory
+from .toy_dataset import ToyDataset
 from .vision import build_dataset
 from .vision import info as vision_dataset_info
 
@@ -9,7 +10,12 @@ logger = logging.getLogger(__name__)
 
 
 def get_dataset(name, nlp_task_args={}):
-    if name in ["cifar10", "cifar100", "imagenet"]:
+    if name in ["toy-tiny", "toy_tiny"]:
+        train_dataset = ToyDataset(split="train")
+        val_dataset = ToyDataset(split="validation")
+        test_dataset = ToyDataset(split="test")
+        pred_dataset = None
+    elif name in ["cifar10", "cifar100", "imagenet"]:
         path = os.path.abspath(f"./data/{name}")
         train_dataset, _ = build_dataset(dataset_name=name, path=path, train=True)
         val_dataset, _ = build_dataset(dataset_name=name, path=path, train=False)
@@ -114,7 +120,9 @@ def get_dataset(name, nlp_task_args={}):
 
 
 def get_dataset_info(name):
-    if name in ["cifar10", "cifar100", "imagenet"]:
+    if name in ["toy-tiny", "toy_tiny"]:
+        info = {"num_classes": 2, "image_size": (1, 2, 2)}
+    elif name in ["cifar10", "cifar100", "imagenet"]:
         info = vision_dataset_info[name]
     elif name in nlp_dataset_factory:
         # get dataset cls

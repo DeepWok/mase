@@ -14,7 +14,7 @@ from .functions import (
     relu_minifloat_ieee,
     relu_minifloat_simple,
 )
-from .ops import (
+from .layers import (
     AddInteger,
     Conv1dInteger,
     Conv1dMinifloatIEEE,

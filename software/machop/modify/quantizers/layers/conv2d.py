@@ -1,9 +1,10 @@
 from functools import partial
+from math import ceil, log2
 from typing import Union
 
 import torch
 from torch import Tensor
-from torch.nn.common_types import _size_1_t
+from torch.nn.common_types import _size_2_t
 
 from ....graph.mase_tracer import mark_as_leaf_module
 from ..quantizers import (
@@ -14,9 +15,8 @@ from ..quantizers import (
 from .utils import extract_required_config
 
 
-class Conv1dBase(torch.nn.Conv1d):
+class Conv2dBase(torch.nn.Conv2d):
     bypass = False
-
     _required_config_keys = None
     _optional_config_keys = None
 
@@ -33,7 +33,7 @@ class Conv1dBase(torch.nn.Conv1d):
     def get_quantized_weight(self) -> Tensor:
         return self.w_quantizer(self.weight)
 
-    def get_quantized_weights_with_inputs(self, x: Tensor) -> Tensor:
+    def get_quantized_weights_with_inputs(self, x: Tensor) -> dict:
         x = self.x_quantizer(x)
         w = self.w_quantizer(self.weight)
         bias = self.b_quantizer(self.bias) if self.bias is not None else None
@@ -45,13 +45,15 @@ class Conv1dBase(torch.nn.Conv1d):
             "y": y,
         }
 
-    def construct_essential_config(self, config):
-        "construct configs for HW gen"
+    def construct_essential_config(self) -> dict:
+        raise NotImplementedError()
+
+    def get_output_bitwidth(self) -> dict:
         raise NotImplementedError()
 
 
 @mark_as_leaf_module
-class Conv1dInteger(Conv1dBase):
+class Conv2dInteger(Conv2dBase):
     _required_config_keys = (
         "name",
         "weight_width",
@@ -65,10 +67,10 @@ class Conv1dInteger(Conv1dBase):
         self,
         in_channels: int,
         out_channels: int,
-        kernel_size: _size_1_t,
-        stride: _size_1_t = 1,
-        padding: Union[str, _size_1_t] = 0,
-        dilation: _size_1_t = 1,
+        kernel_size: _size_2_t,
+        stride: _size_2_t = 1,
+        padding: Union[str, _size_2_t] = 0,
+        dilation: _size_2_t = 1,
         groups: int = 1,
         bias: bool = True,
         padding_mode: str = "zeros",  # TODO: refine this type
@@ -77,8 +79,8 @@ class Conv1dInteger(Conv1dBase):
         config=None,
     ) -> None:
         super().__init__(
-            in_features=in_channels,
-            out_features=out_channels,
+            in_channels=in_channels,
+            out_channels=out_channels,
             kernel_size=kernel_size,
             stride=stride,
             padding=padding,
@@ -90,7 +92,6 @@ class Conv1dInteger(Conv1dBase):
             dtype=dtype,
         )
         assert config is not None, "config is None!"
-
         self.bypass = config.get("bypass", False)
         # establish quantizers
         w_width, w_frac_width = config["weight_width"], config["weight_frac_width"]
@@ -112,7 +113,7 @@ class Conv1dInteger(Conv1dBase):
         )
         self.config = self.construct_essential_config(config)
 
-    def construct_essential_config(self, config):
+    def construct_essential_config(self, config) -> dict:
         r_config = extract_required_config(self, config)
         o_config = {}
         o_config["bypass"] = config.get("bypass", False)
@@ -120,11 +121,33 @@ class Conv1dInteger(Conv1dBase):
         o_config["bias_frac_width"] = config.get(
             "bias_frac_width", config["weight_frac_width"]
         )
+
         return r_config | o_config
+
+    def get_output_bitwidth(self) -> dict:
+        config = self.config
+
+        w_width, w_frac = config["weight_width"], config["weight_frac_width"]
+        x_width, x_frac = config["data_in_width"], config["data_in_frac_width"]
+        bias_width = config["bias_width"]
+
+        ops = self.in_channels * self.kernel_size[0] * self.kernel_size[1]
+        product_width = w_width + x_width
+        product_frac_width = w_frac + x_frac
+        # *: +1 for bias
+        output_width = max(bias_width, product_width + ceil(log2(ops))) + 1
+        output_frac_width = product_frac_width
+
+        o_bitwidth = {}
+        o_bitwidth["data_out_width"] = output_width
+        o_bitwidth["data_out_frac_width"] = output_frac_width
+        # o_bitwidth["product_width"] = product_width
+        # o_bitwidth["product_frac_width"] = product_frac_width
+        return o_bitwidth
 
 
 @mark_as_leaf_module
-class Conv1dMinifloatSimple(Conv1dBase):
+class Conv2DMinifloatSimple(Conv2dBase):
     _required_config_keys = (
         "name",
         "weight_width",
@@ -145,10 +168,10 @@ class Conv1dMinifloatSimple(Conv1dBase):
         self,
         in_channels: int,
         out_channels: int,
-        kernel_size: _size_1_t,
-        stride: _size_1_t = 1,
-        padding: Union[str, _size_1_t] = 0,
-        dilation: _size_1_t = 1,
+        kernel_size: _size_2_t,
+        stride: _size_2_t = 1,
+        padding: Union[str, _size_2_t] = 0,
+        dilation: _size_2_t = 1,
         groups: int = 1,
         bias: bool = True,
         padding_mode: str = "zeros",
@@ -220,11 +243,13 @@ class Conv1dMinifloatSimple(Conv1dBase):
         o_config["bias_width"] = config.get("weight_width")
         o_config["bias_exponent_width"] = config.get("weight_exponent_width")
         o_config["bias_exponent_bias"] = config.get("weight_exponent_bias")
+
+        # ops_per_pixel = self.out_channels * self.kernel_size[0] * self.kernel_size[1]
         return r_config | o_config
 
 
 @mark_as_leaf_module
-class Conv1dMinifloatIEEE(Conv1dBase):
+class Conv2dMinifloatIEEE(Conv2dBase):
     _required_config_keys = (
         "name",
         "weight_width",
@@ -245,10 +270,10 @@ class Conv1dMinifloatIEEE(Conv1dBase):
         self,
         in_channels: int,
         out_channels: int,
-        kernel_size: _size_1_t,
-        stride: _size_1_t = 1,
-        padding: Union[str, _size_1_t] = 0,
-        dilation: _size_1_t = 1,
+        kernel_size: _size_2_t,
+        stride: _size_2_t = 1,
+        padding: Union[str, _size_2_t] = 0,
+        dilation: _size_2_t = 1,
         groups: int = 1,
         bias: bool = True,
         padding_mode: str = "zeros",
