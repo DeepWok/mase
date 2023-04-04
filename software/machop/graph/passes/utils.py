@@ -6,8 +6,8 @@ from ...session.plt_wrapper.vision import VisionModelWrapper
 
 
 def get_input_args(model_name, task, data_module):
-    data_module.setup()
     data_module.prepare_data()
+    data_module.setup()
 
     wrapper_cls = get_model_wrapper(model_name, task)
 
@@ -18,7 +18,7 @@ def get_input_args(model_name, task, data_module):
         NLPClassificationModelWrapper,
         NLPLanguageModelingModelWrapper,
     ]:
-        batch = next(iter(data_module.train_dataloader))
+        batch = next(iter(data_module.train_dataloader()))
         input_args = [
             batch["input_ids"][[0], ...],
             batch["attention_mask"][[0], ...],

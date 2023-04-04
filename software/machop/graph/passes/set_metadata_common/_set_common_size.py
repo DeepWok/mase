@@ -38,9 +38,17 @@ def _set_arg_size_before_call_function(node: Node, function, args, kwargs):
         # meta_common_args["data_in"]["from"] = node.all_input_nodes[0]
     elif function in (operator.add, torch.add, add_integer):
         meta_common_args["data_in_0"]["size"] = _tuple_shape(args[0].shape)
+        # meta_common_args["data_in_0"]["size"] = _tuple_shape(
+        #     getattr(args[0], "shape", 1)
+        # )
         meta_common_args["data_in_0"]["from"] = node.all_input_nodes[0]
-        meta_common_args["data_in_1"]["size"] = _tuple_shape(args[1].shape)
-        meta_common_args["data_in_1"]["from"] = node.all_input_nodes[1]
+        # meta_common_args["data_in_1"]["size"] = _tuple_shape(args[1].shape)
+        if not isinstance(args[1], torch.Tensor):
+            meta_common_args["data_in_1"]["size"] = 1
+            meta_common_args["data_in_1"]["from"] = False
+        else:
+            meta_common_args["data_in_1"]["size"] = _tuple_shape(args[1].shape)
+            meta_common_args["data_in_1"]["from"] = node.all_input_nodes[1]
     elif function in (torch.matmul, torch.bmm, matmul_integer, bmm_integer):
         meta_common_args["data_in_0"]["size"] = _tuple_shape(args[0].shape)
         meta_common_args["data_in_0"]["from"] = node.all_input_nodes[0]
@@ -76,15 +84,18 @@ def _set_arg_size_before_call_module(node: Node, module, args, kwargs):
     elif isinstance(module, (nn.Linear,)):
         meta_common_args["data_in"]["size"] = _tuple_shape(args[0].shape)
         meta_common_args["weight"]["size"] = _tuple_shape(module.weight.shape)
-        meta_common_args["bias"]["size"] = _tuple_shape(module.bias.shape)
+        if module.bias is not None:
+            meta_common_args["bias"]["size"] = _tuple_shape(module.bias.shape)
     elif isinstance(module, (nn.Conv1d,)):
         meta_common_args["data_in"]["size"] = _tuple_shape(args[0].shape)
         meta_common_args["weight"]["size"] = _tuple_shape(module.weight.shape)
-        meta_common_args["bias"]["size"] = _tuple_shape(module.bias.shape)
+        if module.bias is not None:
+            meta_common_args["bias"]["size"] = _tuple_shape(module.bias.shape)
     elif isinstance(module, (nn.Conv2d,)):
         meta_common_args["data_in"]["size"] = _tuple_shape(args[0].shape)
         meta_common_args["weight"]["size"] = _tuple_shape(module.weight.shape)
-        meta_common_args["bias"]["size"] = _tuple_shape(module.bias.shape)
+        if module.bias is not None:
+            meta_common_args["bias"]["size"] = _tuple_shape(module.bias.shape)
     else:
         logger.warning(
             f"Unrecognized module `{type(module).__name__}` when setting size"

@@ -34,6 +34,7 @@ def generic_matmul_integer(x, y, config, style="matmul"):
 def construct_essential_config_generic_matmul_integer(config):
     return {
         "bypass": config.get("bypass", False),
+        "name": config["name"],
         "data_in_width": config["data_in_width"],
         "data_in_frac_width": config["data_in_frac_width"],
         "weight_width": config["weight_width"],

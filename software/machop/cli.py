@@ -546,7 +546,9 @@ class Machop:
         logger.info(f"Updating metadata for synthesis...")
         args = self.args
         create_and_save_common_metadata(
-            modified_graph_model=self.model,
+            modified_graph_model=self.model["model"]
+            if args.model in nlp_models
+            else self.model,
             model_name=args.model,
             task=args.task,
             data_module=self.data_module,

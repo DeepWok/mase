@@ -1,3 +1,5 @@
+modifiable_layers = ["linear", "relu", "conv2d"]
+modifiable_functions = ["relu", "matmul", "bmm", "add"]
 [default]
 name = "integer"
 weight_width = 8
