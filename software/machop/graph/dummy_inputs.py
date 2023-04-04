@@ -22,6 +22,7 @@ def _get_default_args(func):
 
 def get_dummy_inputs(model_name: str, task: str, model):
     default_forward_kwargs = _get_default_args(model.forward)
+    # breakpoint()
     dummy_inputs = {}
     if (
         model_name in patched_nlp_models
@@ -36,6 +37,7 @@ def get_dummy_inputs(model_name: str, task: str, model):
             required_input_args = ["input_ids", "attention_mask"]
         elif task in ["lm", "language_modeling"]:
             required_input_args = ["input_ids", "attention_mask", "labels"]
+            # required_input_args = ["input_ids", "attention_mask"]
         else:
             # translation
             required_input_args = [

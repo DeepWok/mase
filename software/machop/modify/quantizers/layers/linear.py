@@ -326,14 +326,11 @@ class LinearMSFP(LinearBase):
         "data_in_width",
         "data_in_block_size",
         "data_in_exponent_width",
-    )
-    # _optional_config_keys = ("bypass", "bias_width", "bias_frac_width")
-    _optional_config_keys = (
-        "bypass",
         "bias_width",
         "bias_block_size",
         "bias_exponent_width",
     )
+    _optional_config_keys = ("bypass", "data_in_skip_first_dim")
 
     def __init__(
         self,
@@ -350,55 +347,58 @@ class LinearMSFP(LinearBase):
 
         self.bypass = config.get("bypass", False)
         # establish quantizers
-        w_width, w_block_size, w_exponent_width = (
+        w_width, w_exponent_width, w_exponent_bias, w_block_size = (
             config["weight_width"],
-            config["weight_block_size"],
             config["weight_exponent_width"],
+            config["weight_exponent_bias"],
+            config["weight_block_size"],
         )
-        x_width, x_block_size, x_exponent_width = (
+        x_width, x_exponent_width, x_exponent_bias, x_block_size = (
             config["data_in_width"],
-            config["data_in_block_size"],
             config["data_in_exponent_width"],
+            config["data_in_exponent_bias"],
+            config["data_in_block_size"],
         )
-        # check bias quantizer, if not, use weight quantizer
+        x_skip_first_dim = config.get("data_in_skip_first_dim", True)
 
-        b_width, b_block_size, b_exponent_width = (
-            config.get("bias_width", None),
-            config.get("bias_block_size", None),
-            config.get("bias_exponent_width", None),
+        b_width, b_exponent_width, b_exponent_bias, b_block_size = (
+            config["bias_width"],
+            config["bias_exponent_width"],
+            config["bias_exponent_bias"],
+            config["bias_block_size"],
         )
+
+        # blocking/unblocking 4D kernel/feature map is not supported
         self.w_quantizer = partial(
             msfp_quantizer,
             width=w_width,
             exponent_width=w_exponent_width,
+            exponent_bias=w_exponent_bias,
             block_size=w_block_size,
+            skip_first_dim=False,
         )
         self.x_quantizer = partial(
             msfp_quantizer,
             width=x_width,
             exponent_width=x_exponent_width,
+            exponent_bias=x_exponent_bias,
             block_size=x_block_size,
+            skip_first_dim=x_skip_first_dim,
         )
-        if b_width is None or b_block_size is None or b_exponent_width is None:
-            self.b_quantizer = self.w_quantizer
-        else:
-            self.b_quantizer = partial(
-                msfp_quantizer,
-                width=b_width,
-                exponent_width=b_exponent_width,
-                block_size=b_block_size,
-            )
+        self.b_quantizer = partial(
+            msfp_quantizer,
+            width=b_width,
+            exponent_width=b_exponent_width,
+            exponent_bias=b_exponent_bias,
+            block_size=b_block_size,
+            skip_first_dim=False,
+        )
+
         self.config = self.construct_essential_config(config)
 
     def construct_essential_config(self, config):
         r_config = extract_required_config(self, config)
         o_config = {}
         o_config["bypass"] = config.get("bypass", False)
-        o_config["bias_width"] = config.get("bias_width", config["weight_width"])
-        o_config["bias_block_size"] = config.get(
-            "bias_block_size", config["weight_block_size"]
-        )
-        o_config["bias_exponent_width"] = config.get(
-            "bias_exponent_width", config["weight_exponent_width"]
-        )
+        o_config["data_in_skip_first_dim"] = config.get("data_in_skip_first_dim", True)
         return r_config | o_config

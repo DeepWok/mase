@@ -7,6 +7,7 @@ import random
 import sys
 import time
 from argparse import ArgumentParser
+from copy import deepcopy
 from pprint import pprint
 
 import numpy as np
@@ -149,25 +150,25 @@ class Machop:
             help="Evaluate the hardware design of the model. Default=False",
         )
 
-        parser.add_argument(
-            "--modify-sw",
-            dest="modify_sw",
-            default=None,
-            help="Modify the model in software from a configuration file",
-        )
         # parser.add_argument(
         #     "--modify-sw",
-        #     dest="to_modify_sw",
-        #     action="store_true",
-        #     default=False,
-        #     help="Whether to modify the model in software from a configuration file.",
-        # )
-        # parser.add_argument(
-        #     "--modify-sw-config",
-        #     dest="modify_sw_config",
+        #     dest="modify_sw",
         #     default=None,
-        #     help="The path to software modification config file if --modify-sw is specified. Default=None",
+        #     help="Modify the model in software from a configuration file",
         # )
+        parser.add_argument(
+            "--modify-sw",
+            dest="to_modify_sw",
+            action="store_true",
+            default=False,
+            help="Whether to modify the model in software from a configuration file.",
+        )
+        parser.add_argument(
+            "--modify-sw-config",
+            dest="modify_sw_config",
+            default=None,
+            help="The path to software modification config file if --modify-sw or --synthesis is specified. Default=None",
+        )
         parser.add_argument(
             "--modify-hw",
             dest="modify_hw",
@@ -208,6 +209,13 @@ class Machop:
             dest="training_optimizer",
             default="adam",
             help="The name of the existing training optimizer for training. Default=Adam",
+        )
+        parser.add_argument(
+            "--trainer-precision",
+            dest="trainer_precision",
+            default=32,
+            type=int,
+            help="PyTorchLightning Trainer precision, 16 or 32. Default=32",
         )
         parser.add_argument(
             "--seed",
@@ -349,12 +357,13 @@ class Machop:
 
         # Model specifications
         self.model = None
+        self.modified_model_for_hw_gen = None
         self.data_module = None
         self.info = None
 
         self.output_dir = self.output_dir_sw = self.output_dir_hw = None
         self.when_to_load, self.how_to_load = check_when_to_load_and_how_to_load(
-            to_modify_sw=args.modify_sw is not None,
+            to_modify_sw=args.to_modify_sw,
             # to_modify_sw=args.to_modify_sw,
             to_train=args.to_train,
             to_validate_sw=args.to_validate_sw,
@@ -385,13 +394,13 @@ class Machop:
         if self.args.ls_target is not None:
             self.list_available()
             return
+        assert not (
+            (self.args.to_modify_sw) and (self.args.to_synthesize is not None)
+        ), "--modify-sw and --synthesize cannot both be specified"
         self.init_model_and_dataset()
         self.create_output_dir()
-        if self.args.modify_sw is not None:
+        if self.args.to_modify_sw:
             self.modify_sw()
-            self.interpret_for_hw_gen()
-        # if self.args.to_modify_sw:
-        #     self.modify_sw()
         if self.args.to_train:
             self.train()
         if self.args.to_test_sw:
@@ -401,11 +410,9 @@ class Machop:
         if self.args.to_estimate_sw:
             self.estimate_sw()
         if self.args.to_synthesize is not None:
-            to_synthesize = ["hls", "auto"]
-            assert (
-                self.args.to_synthesize in to_synthesize
-            ), f"Unsupported mode: {self.args.to_synthesize}. Support: {to_synthesize}"
-            self.synthesize(self.args.to_synthesize)
+            self.modify_sw_for_synthesis()
+            self.interpret_for_synthesis()
+            self.synthesize()
         if self.args.to_test_hw:
             self.test_hw()
         if self.args.to_evaluate_hw:
@@ -513,9 +520,9 @@ class Machop:
 
     def modify_sw(self):
         args = self.args
-        # assert (
-        #     args.modify_sw_config is not None
-        # ), "--modify-sw-config must be provided if --modify-sw is True"
+        assert (
+            args.modify_sw_config is not None
+        ), "--modify-sw-config must be provided if --modify-sw is True"
         logger.info(f"Modifying model {args.model!r}...")
 
         dummy_inputs = get_dummy_inputs(
@@ -527,8 +534,8 @@ class Machop:
         load_name = args.load_name if self.when_to_load == "modify-sw" else None
         modifier_kwargs = {
             "model": self.model["model"] if args.model in nlp_models else self.model,
-            # "config": args.modify_sw_config,
-            "config": args.modify_sw,
+            "config": args.modify_sw_config,
+            # "config": args.modify_sw,
             "dummy_inputs": dummy_inputs,
             "save_dir": os.path.join(self.output_dir_sw, "modify-sw"),
             "load_name": load_name,
@@ -536,29 +543,12 @@ class Machop:
         }
 
         m = Modifier(**modifier_kwargs)
+        m.run()
         if args.model in nlp_models:
             self.model["model"] = m.graph_module
         else:
             self.model = m.graph_module
         logger.info("Modify-sw is completed")
-
-    def interpret_for_hw_gen(self):
-        logger.info(f"Updating metadata for synthesis...")
-        args = self.args
-        create_and_save_common_metadata(
-            modified_graph_model=self.model["model"]
-            if args.model in nlp_models
-            else self.model,
-            model_name=args.model,
-            task=args.task,
-            data_module=self.data_module,
-            save_dir=os.path.join(self.output_dir_sw, "modify-sw"),
-        )
-        # breakpoint()
-        # for n in self.model.graph.nodes:
-        #     pprint(n.meta)
-        # breakpoint()
-        logger.info(f"Metadata update is completed")
 
     def train(self):
         args = self.args
@@ -571,6 +561,7 @@ class Machop:
             "accelerator": args.accelerator,
             "strategy": args.strategy,
             "fast_dev_run": args.to_debug,
+            "precision": args.trainer_precision,
         }
 
         load_name = args.load_name if self.when_to_load == "train_val_or_test" else None
@@ -600,6 +591,7 @@ class Machop:
             "num_nodes": args.num_nodes,
             "accelerator": args.accelerator,
             "strategy": args.strategy,
+            "precision": args.trainer_precision,
         }
         load_name = args.load_name if self.when_to_load == "train_val_or_test" else None
         # assert load_name is not None, "load name must not be None for test-sw."
@@ -630,6 +622,7 @@ class Machop:
             "num_nodes": args.num_nodes,
             "accelerator": args.accelerator,
             "strategy": args.strategy,
+            "precision": args.trainer_precision,
         }
         load_name = args.load_name if self.when_to_load == "train_val_or_test" else None
         # breakpoint()
@@ -672,8 +665,66 @@ class Machop:
         run_estimator(**estimate_sw_kwargs)
         logger.info("Estimate-sw is completed")
 
-    def synthesize(self, mode):
+    # ------------------------------------------------------
+    # HW actions
+    # ------------------------------------------------------
+    def modify_sw_for_synthesis(self):
         args = self.args
+        to_synthesize = ["hls", "auto"]
+        assert (
+            args.to_synthesize in to_synthesize
+        ), f"Unsupported mode: {args.to_synthesize}. Support: {to_synthesize}"
+        assert (
+            args.modify_sw_config
+        ) is not None, "--modify-sw-config must be provided if --synthesize"
+
+        # Modify self.modified_model_for_hw_gen to get common meta toml
+        self.modified_model_for_hw_gen = deepcopy(self.model)
+        logger.info(f"Modifying model {args.model!r} for hw-gen...")
+
+        dummy_inputs = get_dummy_inputs(
+            model_name=args.model,
+            task=args.task,
+            model=self.modified_model_for_hw_gen["model"]
+            if args.model in nlp_models
+            else self.modified_model_for_hw_gen,
+        )
+        # breakpoint()
+        modifier_kwargs = {
+            "model": self.modified_model_for_hw_gen["model"]
+            if args.model in nlp_models
+            else self.modified_model_for_hw_gen,
+            "config": args.modify_sw_config,
+            "dummy_inputs": dummy_inputs,
+            "do_comparison": False,
+        }
+
+        m = Modifier(**modifier_kwargs)
+        m.run()
+        if args.model in nlp_models:
+            self.modified_model_for_hw_gen["model"] = m.graph_module
+        else:
+            self.modified_model_for_hw_gen = m.graph_module
+        logger.info("Modify-sw-for-hw-gen is completed")
+
+    def interpret_for_synthesis(self):
+        logger.info(f"Updating metadata for synthesis...")
+        args = self.args
+        create_and_save_common_metadata(
+            modified_graph_model=self.modified_model_for_hw_gen["model"]
+            if args.model in nlp_models
+            else self.modified_model_for_hw_gen,
+            model_name=args.model,
+            task=args.task,
+            data_module=self.data_module,
+            save_dir=os.path.join(self.output_dir_sw, "modify-sw"),
+        )
+
+        logger.info(f"Metadata update is completed")
+
+    def synthesize(self):
+        args = self.args
+        mode = args.to_synthesize
         logger.info(f"Generating hardware for {args.model!r}...")
         mve = MaseVerilogEmitter(
             model=self.model,

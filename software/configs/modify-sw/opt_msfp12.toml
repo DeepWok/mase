@@ -1,0 +1,73 @@
+modifiable_layers = ["linear", "relu", "conv2d"]
+modifiable_functions = ["relu", "matmul", "bmm"] # no add
+
+[default]
+name = "msfp"
+# *: MSFP12 weight: 8-bit exponent, 1-bit sign, 3 bit mantissa
+# weight shape = [in_features, out_features]
+weight_width = 4
+weight_exponent_width = 8
+weight_exponent_bias = 127
+# *： MSFP12 activation
+# weight shape = [in_features, out_features]
+weight_block_size = [1, 16]
+data_in_width = 4
+data_in_exponent_width = 8
+data_in_exponent_bias = 127
+# data_in shape = [bz, in_features]
+data_in_block_size = [1, 16]
+# *: MSFP12 bias
+bias_width = 4
+bias_exponent_width = 8
+bias_exponent_bias = 127
+# bias shape = [1, output_features]
+bias_block_size = [16]
+
+[bmm]
+# Attention mechanism
+name = "msfp"
+data_in_width = 4
+data_in_exponent_width = 8
+data_in_exponent_bias = 127
+data_in_block_size = [1, 16]
+weight_width = 4
+weight_exponent_width = 8
+weight_exponent_bias = 127
+weight_block_size = [16, 1]
+
+[linear]
+name = "msfp"
+weight_width = 4
+weight_exponent_width = 8
+weight_exponent_bias = 127
+weight_block_size = [1, 16]
+data_in_width = 4
+data_in_exponent_width = 8
+data_in_exponent_bias = 127
+data_in_block_size = [1, 16]
+bias_width = 4
+bias_exponent_width = 8
+bias_exponent_bias = 127
+bias_block_size = [16]
+
+[weight]
+name = "msfp"
+weight_width = 4
+weight_exponent_width = 8
+weight_exponent_bias = 127
+weight_block_size = [1, 16]
+data_in_width = 4
+data_in_exponent_width = 8
+data_in_exponent_bias = 127
+data_in_block_size = [1, 16]
+bias_width = 4
+bias_exponent_width = 8
+bias_exponent_bias = 127
+bias_block_size = [16]
+
+[relu]
+name = "msfp"
+data_in_width = 4
+data_in_exponent_width = 8
+data_in_exponent_bias = 127
+data_in_block_size = [1, 16]

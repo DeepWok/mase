@@ -22,7 +22,7 @@ from ..graph.utils import (
     isinstance_but_not_subclass,
 )
 from ..utils import load_pt_pl_or_pkl_checkpoint_into_pt_model
-from .quantizers import functions_map, ops_map
+from .quantizers import functions_map, layers_map
 from .utils import copy_weights
 
 pp = pprint.PrettyPrinter(depth=4)
@@ -45,7 +45,6 @@ class Modifier:
         modifiable_layers: List[str] = ["linear", "relu", "conv2d"],
         modifiable_functions: List[str] = ["add", "relu", "matmul", "bmm"],
         do_comparison: bool = True,
-        do_quant_profiling: bool = True,
     ) -> None:
         """
         save_dir is expected to be "${no_hyphen_model_name}/software/modify-sw"
@@ -76,6 +75,7 @@ class Modifier:
         self.dummy_inputs = dummy_inputs
         # save_dir for comparison report and modified model
         self.save_dir = save_dir
+        self.do_comparison = do_comparison
 
         # load checkpoint if load_name is given
         if load_name:
@@ -84,6 +84,8 @@ class Modifier:
         self.graph: Graph = MaseTracer().trace(model, dummy_inputs)
 
         self.graph_module = GraphModule(model, self.graph)
+
+    def run(self):
         clear_node_metadata_software(self.graph_module)
 
         # FIXME: a mapping to save configs for funcs (as well as modules)
@@ -92,24 +94,25 @@ class Modifier:
         # self.node_to_config = {}
 
         self.modify()
-        if do_comparison:
+        if self.do_comparison:
             self.compare_model()
 
-        if do_quant_profiling:
-            self.save_quant_profile()
-        self.do_quant_profiling = do_quant_profiling
         # breakpoint()
         self.save_modified_model()
+        self.save_original_config()
+        return self.graph_module
 
     def compare_model(self):
-        headers = ["Old Name", "Name", "Op", "Original", "Modified", "Changed?"]
         original_named_modules = dict(self.original_model.named_modules())
         original_graph = MaseTracer().trace(self.original_model, self.dummy_inputs)
 
         modified_named_modules = dict(self.graph_module.named_modules())
 
-        tabular_rows = []
-        # node_info_toml = {}
+        report_tabular_rows = []
+        modify_hits_and_misses = {}
+        total_modules = 0
+        total_functions = 0
+        total_methods = 0
 
         for node, old_node in zip(self.graph.nodes, original_graph.nodes):
             if node.op == "call_module":
@@ -124,25 +127,18 @@ class Modifier:
                     "`{}`".format(str(type(modified_module))),
                     changed,
                 ]
-                # detailed_toml[node.name] = {
-                #     "op": modified_module._get_name(),
-                #     "config": modified_module.config
-                #     | modified_module.get_output_bitwidth(),
-                # }
-                tabular_rows.append(row)
+                report_tabular_rows.append(row)
 
-                # if hasattr(modified_module, "config"):
-                #     q_config = modified_module.config
-                # else:
-                #     q_config = None
+                if str(type(original_module)) in modify_hits_and_misses:
+                    modify_hits_and_misses[str(type(original_module))]["count"] += 1
+                else:
+                    modify_hits_and_misses[str(type(original_module))] = {
+                        "count": 1,
+                        "changed": changed,
+                        "op": old_node.op,
+                    }
+                total_modules += 1
 
-                # node_info_toml[node.name] = {
-                #     "op": node.op,
-                #     "original": str(type(original_module)),
-                #     "modified": str(type(modified_module)),
-                #     "changed": changed,
-                #     "quantization": q_config,
-                # }
             elif node.op == "call_function":
                 changed = old_node.target != node.target
                 row = [
@@ -153,16 +149,55 @@ class Modifier:
                     f"`{node.target}`",
                     changed,
                 ]
-                tabular_rows.append(row)
+                report_tabular_rows.append(row)
 
-                # detailed_toml[node.name] = {
-                #     'op': modified_module._get_name(),
-                #     # 'config': modified_module.config | modified_module.get_output_bitwidth()
-                # }
+                if old_node.target in modify_hits_and_misses:
+                    modify_hits_and_misses[str(old_node.target)]["count"] += 1
+                else:
+                    modify_hits_and_misses[str(old_node.target)] = {
+                        "count": 1,
+                        "changed": changed,
+                        "op": old_node.op,
+                    }
+                total_functions += 1
 
-        report = tabulate(tabular_rows, headers=headers, tablefmt="github")
-        logger.info("A tabular summary of modified funcs and modules")
-        print(report)
+            elif node.op == "call_method":
+                changed = old_node.target != node.target
+                row = [
+                    f"`{old_node.name}`",
+                    f"`{node.name}`",
+                    f"`{node.op}`",
+                    f"`{old_node.target}`",
+                    f"`{node.target}`",
+                    changed,
+                ]
+                report_tabular_rows.append(row)
+
+                if old_node.target in modify_hits_and_misses:
+                    modify_hits_and_misses[str(old_node.target)]["count"] += 1
+                else:
+                    modify_hits_and_misses[str(old_node.target)] = {
+                        "count": 1,
+                        "changed": changed,
+                        "op": old_node.op,
+                    }
+                total_methods += 1
+
+        headers = ["Old Name", "Name", "Op", "Original", "Modified", "Changed?"]
+        report = tabulate(report_tabular_rows, headers=headers, tablefmt="github")
+        self.original_model = None
+
+        logger.info("Histogram of modified model")
+        headers = ["Original OP", "Num", "Changed?"]
+        histogram_rows = []
+        for op_name, d in modify_hits_and_misses.items():
+            row = [op_name, d["count"], d["changed"]]
+            histogram_rows.append(row)
+        histogram_rows = sorted(histogram_rows, key=lambda x: x[1], reverse=True)
+        histogram_rows.append(["All 'call_module'", total_modules, "-"])
+        histogram_rows.append(["All 'call function'", total_functions, "-"])
+        histogram_rows.append(["All 'call method'", total_methods, "-"])
+        print(tabulate(histogram_rows, headers=headers, tablefmt="github"))
 
         if self.save_dir:
             if not os.path.isdir(self.save_dir):
@@ -173,13 +208,12 @@ class Modifier:
                 f.write(report)
             logger.info(f"The tabular summary of modify-sw is saved to {report_path}")
 
-            toml_path = os.path.join(self.save_dir, "modify-sw-report.toml")
-            # with open(toml_path, "w") as f:
-            #     toml.dump(node_info_toml, f)
-            # logger.info(f"The toml of modifiy-sw is saved to {toml_path}")
-
-    def save_quant_profile(self):
-        """"""
+            profile_path = os.path.join(self.save_dir, "modify-sw-profile.toml")
+            with open(profile_path, "w+") as f:
+                toml.dump(modify_hits_and_misses, f)
+            logger.info(
+                f"The histogram summary of modify-sw is saved to {profile_path}"
+            )
 
     def load_model(self, load_name, load_type, model):
         """
@@ -211,10 +245,12 @@ class Modifier:
                 f"Modified model is saved as {modified_ckpt_path} and {modified_pkl_path}"
             )
 
+    def save_original_config(self):
+        if self.save_dir:
             config_copy_path = os.path.join(self.save_dir, "config.toml")
             with open(config_copy_path, "w+") as f:
                 toml.dump(self._config, f)
-            logger.info(f"Modify-sw config is saved to {config_copy_path}")
+            logger.info(f"Original modify-sw config is saved to {config_copy_path}")
 
     def modify(self):
         default_config = self.config.pop("default", None)
@@ -331,7 +367,7 @@ class Modifier:
     # Replace nn.Module
     # -------------------------------------------------------------------------
     def replace_module_linear(self, config):
-        replace_cls = ops_map["linear"][config["name"]]
+        replace_cls = layers_map["linear"][config["name"]]
         target = nn.Linear
 
         # This shows how to use the replace function
@@ -359,7 +395,7 @@ class Modifier:
 
     # module: conv2d
     def replace_module_conv2d(self, config):
-        replace_cls = ops_map["conv2d"][config["name"]]
+        replace_cls = layers_map["conv2d"][config["name"]]
         target = nn.Conv2d
 
         def replacement_fn(child):
@@ -385,7 +421,7 @@ class Modifier:
         self._traverse_graph_to_replace_nodes(target, replacement_fn)
 
     def replace_module_relu(self, config):
-        replace_cls = ops_map["relu"][config["name"]]
+        replace_cls = layers_map["relu"][config["name"]]
         target = nn.ReLU
 
         def replacement_fn(child):

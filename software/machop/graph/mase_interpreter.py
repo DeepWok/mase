@@ -155,6 +155,7 @@ class MaseInterpreter(Interpreter):
                     node=n, function=function, args=args, kwargs=kwargs
                 )
                 output = self.call_function(n.target, args, kwargs)
+
                 self.hook_after_call_function(
                     node=n,
                     function=function,
@@ -167,10 +168,7 @@ class MaseInterpreter(Interpreter):
                 self.hook_before_call_module(
                     node=n, module=module, args=args, kwargs=kwargs
                 )
-                # import torch
 
-                # if isinstance(module, torch.nn.BatchNorm2d):
-                #     breakpoint()
                 output = self.call_module(n.target, args=args, kwargs=kwargs)
                 self.hook_after_call_module(node=n, module=module, output=output)
                 return output
