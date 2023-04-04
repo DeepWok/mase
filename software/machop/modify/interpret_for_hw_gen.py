@@ -43,6 +43,8 @@ def create_and_save_common_metadata(
         mase_interpreter.forward_and_interpret(*input_args)
 
     common_dict_to_save = {}
+    if not os.path.isdir(save_dir):
+        os.makedirs(save_dir)
     save_path = os.path.join(save_dir, "common_meta.toml")
     for n in gm.graph.nodes:
         common_dict_to_save[n.name] = n.meta["common"]

@@ -12,6 +12,7 @@ name_to_final_module_map = {
     "facebook/opt-350m": "last_hidden_state",
     "facebook/opt-1.3b": "last_hidden_state",
     "facebook/opt-2.7b": "last_hidden_state",
+    "facebook/opt-6.7b": "last_hidden_state",
     "facebook/opt-13b": "last_hidden_state",
     "facebook/opt-30b": "last_hidden_state",
     "facebook/opt-66b": "last_hidden_state",

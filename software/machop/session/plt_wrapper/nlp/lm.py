@@ -41,7 +41,6 @@ class NLPLanguageModelingModelWrapper(WrapperBase):
         loss, outputs = self.forward(input_ids, attention_mask, labels)
 
         perplexity = torch.exp(loss)
-        self.loss_mean_train.update(loss)
 
         self.log("train_loss", loss, on_step=True, on_epoch=False, prog_bar=True)
         self.log(

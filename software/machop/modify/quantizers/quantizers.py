@@ -7,7 +7,7 @@ import torch.nn.functional as F
 from numpy import ndarray
 from torch import Tensor
 
-from .utils import my_clamp, my_round
+from .utils import block, my_clamp, my_round, unblock
 
 
 def integer_quantizer(x: Union[Tensor, ndarray], width: int, frac_width: int):
@@ -39,7 +39,10 @@ def integer_quantizer(x: Union[Tensor, ndarray], width: int, frac_width: int):
 
 
 def minifloat_simple_quantizer(
-    x: Tensor, width: int, exponent_width: int, exponent_bias: int = None
+    x: Tensor,
+    width: int,
+    exponent_width: int,
+    exponent_bias: int = None,
 ):
     """
     - Converts IEEE FP32/64 to minifloat without the implicit leading bit in mantissas.
@@ -201,122 +204,13 @@ def log_quantizer(
     return sign * (2**exponent)
 
 
-def _infer_block_shape(x_shape: List[int], block_shape: List[int]):
-    x_ndim = len(x_shape)
-    block_ndim = len(block_shape)
-
-    if block_ndim >= x_ndim:
-        inferred_block_shape = block_shape[-x_ndim:]
-    else:
-        inferred_block_shape = [-1] * (x_ndim - block_ndim) + block_shape
-    for dim_i in range(x_ndim):
-        if (
-            inferred_block_shape[dim_i] == -1
-            or inferred_block_shape[dim_i] > x_shape[dim_i]
-        ):
-            inferred_block_shape[dim_i] = x_shape[dim_i]
-        else:
-            inferred_block_shape[dim_i] = inferred_block_shape[dim_i]
-    return inferred_block_shape
-
-
-def _infer_padded_shape(x_shape: List[int], block_shape: List[int]):
-    pad_diff = []
-    for x_shape_dim_i, block_shape_dim_i in zip(x_shape, block_shape):
-        if block_shape_dim_i == -1 or x_shape_dim_i < block_shape_dim_i:
-            pad_diff += [0, 0]
-        else:
-            num_brackets_dim_i = ceil(x_shape_dim_i / block_shape_dim_i)
-            new_x_dim_i = num_brackets_dim_i * block_shape_dim_i
-            pad_diff += [new_x_dim_i - x_shape_dim_i, 0]
-    pad_diff = pad_diff[::-1]
-    return pad_diff
-
-
-def block(x: Tensor, block_shape: List[int]):
-    """
-    - Separate input of shape `[B, d1, d2, ..., dn-1]` into blocks using block_shape `[B, b1, b2, ..., bn-1]`, n>=2
-    - The output shape will be `[B, b1 x b2 x ... x bn-1, L]`, where the number of blocks `L = ceil(d1/b1) x ceil(d2/b2) x ... x ceil(dn-1/bn-1)`
-    - `block_shape` should be a list of integers. The given `block_shape` is aligned to the rightmost element of `x.shape`.
-    If `(bi > di)` or `(bi == -1)` or `(bi is not specified because len(block_shape) < len(x.shape))`, then update the value of `bi` using `bi = di`.
-
-    ---
-    Return: blocked_x, per_block_max, padded_x_shape, block_shape
-    """
-    x = x.unsqueeze(1)  # a hack to use F.unfold
-
-    x_shape = [i for i in x.shape]
-    block_shape = _infer_block_shape(x_shape, block_shape)
-
-    pad_diff = _infer_padded_shape(x_shape, block_shape)
-    padded_x = F.pad(x, pad_diff)
-    padded_x_shape = torch.tensor(padded_x.shape, dtype=torch.int)
-
-    if x.ndim == 3:
-        # 2D input
-        blocked_x = padded_x.reshape(
-            x_shape[0], x_shape[1], padded_x.shape[2] // block_shape[2], block_shape[2]
-        )
-        # (B, 1, num_buckets, bucket_size)
-    elif x.ndim >= 4:
-        # 3D or higher dimension
-        # 3D: (B, N, hidden_size) in Transformer, N is seq len
-        # 4D: (B, C, H, W) in Conv2D
-        blocked_x = F.unfold(
-            padded_x,
-            kernel_size=block_shape[2:],
-            dilation=1,
-            padding=0,
-            stride=block_shape[2:],
-        )
-
-    else:
-        raise RuntimeError(f"Unsupported input x.ndim {x.ndim-1}")
-
-    per_block_max = torch.abs(blocked_x).max(dim=1, keepdim=True)[0]
-
-    return blocked_x, per_block_max, padded_x_shape, block_shape
-
-
-def unblock(
-    blocked_x: Tensor,
-    x_shape: List[int],
-    padded_x_shape: List[int],
-    block_shape: List[int],
-):
-    """
-    The reverse of fold. See function `block`
-    """
-    blocked_x_shape = [i for i in blocked_x.shape]
-    if len(padded_x_shape) == 3:
-        x = blocked_x.reshape(
-            blocked_x_shape[0],
-            blocked_x_shape[1],
-            blocked_x_shape[2] * blocked_x_shape[3],
-        )
-    else:
-        x = F.fold(
-            blocked_x,
-            output_size=padded_x_shape[2:],
-            kernel_size=block_shape[2:],
-            dilation=1,
-            padding=0,
-            stride=block_shape[2:],
-        )
-    x = x.squeeze(1)
-    indexes = []
-    for i in range(len(x_shape)):
-        indexes.append(slice(None, x_shape[i]))
-    x = x[indexes]
-    return x
-
-
 def msfp_quantizer(
     x: Tensor,
     width: int = 12,
     exponent_width: int = 8,
     exponent_bias: int = None,
     block_size: List[int] = [16],
+    skip_first_dim: bool = True,
 ):
     """
     - Convert IEEE FP32/64 to Microsoft floating point (MSFP), where an exponent is shared over all elements in a block.
@@ -337,13 +231,19 @@ def msfp_quantizer(
     if isinstance(block_size, int):
         block_size = [int]
     # separate x into blocks
-    x_shape = [i for i in x.shape]
+    x_shape_before_blocking = [i for i in x.shape]
     blocked_x, per_block_max, padded_x_shape, block_shape = block(
-        x, block_shape=block_size
+        x, block_shape=block_size, skip_first_dim=skip_first_dim
     )
-    # fill zeros to avoid log2(0) = -inf
-    per_block_max[per_block_max == 0] = per_block_max[per_block_max != 0].min()
-
+    # TODO: Why we have all zero bias
+    try:
+        # fill zeros to avoid log2(0) = -inf
+        if torch.all(per_block_max == 0):
+            per_block_max = torch.ones_like(per_block_max)
+        else:
+            per_block_max[per_block_max == 0] = per_block_max[per_block_max != 0].min()
+    except RuntimeError:
+        breakpoint()
     # minifloat_simple_quantizer on each block over which a exponent is shared
     mantissa_bits = width - 1
     if exponent_bias is None:
@@ -370,9 +270,10 @@ def msfp_quantizer(
     per_block_msfp = per_block_sign * (2**per_block_exponent) * per_block_mantissa
     msfp_x = unblock(
         per_block_msfp,
-        x_shape=x_shape,
+        x_shape_before_blocking=x_shape_before_blocking,
         padded_x_shape=padded_x_shape,
         block_shape=block_shape,
+        skipped_first_dim_when_blocking=skip_first_dim,
     )
 
     # fmt: off
@@ -389,6 +290,7 @@ def block_minifloat_quantizer(
     exponent_width: int,
     bias_width: int,
     block_size: List[int] = 16,
+    skip_first_dim: bool = False,
 ):
     """
     - Convert IEEE FP32/64 to Block Minifloat (BM), where an exponent bias is shared over all elements in a block
@@ -406,10 +308,13 @@ def block_minifloat_quantizer(
     - `block_size`: a list of integers where each integer is the block size on that dimension. See function `block`.
 
     """
-    x_shape = [i for i in x.shape]
+    x_shape_before_blocking = [i for i in x.shape]
     blocked_x, per_block_max, padded_x_shape, block_shape = block(
-        x, block_shape=block_size
+        x, block_shape=block_size, skip_first_dim=skip_first_dim
     )
+
+    # fill zeros to avoid log2(0) = -inf
+    per_block_max[per_block_max == 0] = per_block_max[per_block_max != 0].min()
 
     per_block_exponent_bias = my_clamp(
         torch.floor(torch.log2(per_block_max)), 0, 2**bias_width - 1
@@ -423,9 +328,10 @@ def block_minifloat_quantizer(
 
     bm_x = unblock(
         per_block_bm_x,
-        x_shape=x_shape,
+        x_shape_before_blocking=x_shape_before_blocking,
         padded_x_shape=padded_x_shape,
         block_shape=block_shape,
+        skipped_first_dim_when_blocking=skip_first_dim,
     )
     return bm_x
 
@@ -435,6 +341,7 @@ def block_log_quantizer(
     width: int,
     exponent_bias_width: int = None,
     block_size: int = 16,
+    skip_first_dim: bool = False,
 ):
     """
     Convert IEEE FP32/64 to block base-2 log quantized values. A bias is shared over each block
@@ -450,10 +357,13 @@ def block_log_quantizer(
 
     """
     exponent_bits = width - 1
-    x_shape = [i for i in x.shape]
+    x_shape_before_blocking = [i for i in x.shape]
     blocked_x, per_block_max, padded_x_shape, block_shape = block(
-        x, block_shape=block_size
+        x, block_shape=block_size, skip_first_dim=skip_first_dim
     )
+
+    # fill zeros to avoid log2(0) = -inf
+    per_block_max[per_block_max == 0] = per_block_max[per_block_max != 0].min()
 
     per_block_max_exponent = torch.ceil(torch.log2(per_block_max))
     per_block_bias = my_clamp(
@@ -463,9 +373,10 @@ def block_log_quantizer(
     per_block_lq_x = log_quantizer(blocked_x, width=width, exponent_bias=per_block_bias)
     lq_x = unblock(
         per_block_lq_x,
-        x_shape=x_shape,
+        x_shape_before_blocking=x_shape_before_blocking,
         padded_x_shape=padded_x_shape,
         block_shape=block_shape,
+        skipped_first_dim_when_blocking=skip_first_dim,
     )
 
     return lq_x

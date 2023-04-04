@@ -8,6 +8,7 @@ Patched nlp models are modified to be compatible with Torch.fx. Here is a list o
 | `facebook/opt-350m@patched` |
 | `facebook/opt-1.3b@patched` |
 | `facebook/opt-2.7b@patched` |
+| `facebook/opt-6.7b@patched` |
 | `facebook/opt-13b@patched`  |
 | `facebook/opt-30b@patched`  |
 | `facebook/opt-66b@patched`  |
