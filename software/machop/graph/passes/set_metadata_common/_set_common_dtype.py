@@ -52,6 +52,12 @@ def _set_torch_type_precision_and_format(item: Dict, dtype):
     item["precision_format"] = "(width,)"
 
 
+def _set_non_torch_type_precision_and_format(item: Dict, dtype):
+    item["type"] = str(dtype)
+    item["precision"] = (32,)  # 32-bit floating-point by default
+    item["precision_format"] = "(width,)"
+
+
 def _set_quant_dtype_precision_and_format(item: Dict, config: Dict, config_index: str):
     config_name = config["name"]
     if config_name == "integer":
@@ -74,52 +80,63 @@ def _set_dtype_before_call_function(node, function, args, kwargs):
     assert (
         "modify-sw" in node.meta["software"]
     ), "Failed to find 'modify-sw' in metadata['software']. Make sure after run this pass after modifier which record quant_config for each call_function node"
-    config = node.meta["software"]["modify-sw"]["config"]
+    config = node.meta["software"]["modify-sw"].get("config", None)
     mc_args = node.meta["common"]["args"]
     mc_results = node.meta["common"]["results"]
     if function in (F.relu,):
         _set_torch_type_precision_and_format(mc_args["data_in"], args[0].dtype)
         _set_torch_type_precision_and_format(mc_results["data_out"], args[0].dtype)
-    elif function(operator.add, torch.add, torch.matmul, torch.bmm):
+    elif function in (operator.add, torch.add, torch.matmul, torch.bmm):
         _set_torch_type_precision_and_format(mc_args["data_in_0"], args[0].dtype)
-        _set_torch_type_precision_and_format(mc_args["data_in_1"], args[1].dtype)
+        if not isinstance(args[1], torch.Tensor):
+            _set_non_torch_type_precision_and_format(
+                mc_args["data_in_1"], type(args[1])
+            )
+        else:
+            _set_torch_type_precision_and_format(mc_args["data_in_1"], args[1].dtype)
         _set_torch_type_precision_and_format(mc_results["data_out"], args[0].dtype)
     # ------------------------------------------
     # Quantized format
     # ------------------------------------------
     elif function in (relu_integer,):
-        config = construct_essential_config_relu_integer(config)
-        output_config = get_output_bitwidth_relu_integer(config)
+        config = construct_essential_config_relu_integer(
+            config
+        ) | get_output_bitwidth_relu_integer(config)
         _set_quant_dtype_precision_and_format(mc_args["data_in"], config, "data_in")
         _set_quant_dtype_precision_and_format(
-            mc_results["data_out"], output_config, "data_out"
+            mc_results["data_out"], config, "data_out"
         )
     elif function in (add_integer,):
-        config = construct_essential_config_add_integer(config)
-        output_config = get_output_bitwidth_add_integer(config)
+        config = construct_essential_config_add_integer(
+            config
+        ) | get_output_bitwidth_add_integer(config)
         _set_quant_dtype_precision_and_format(mc_args["data_in_0"], config, "data_in")
         _set_quant_dtype_precision_and_format(mc_args["data_in_1"], config, "data_in")
         _set_quant_dtype_precision_and_format(
-            mc_results["data_out"], output_config, "data_out"
+            mc_results["data_out"], config, "data_out"
         )
     elif function in (bmm_integer,):
         config = construct_essential_config_generic_matmul_integer(config)
         x_shape = args[0].shape
-        output_config = get_output_bitwidth_bmm_integer(config=config, x_shape=x_shape)
+        config = config | get_output_bitwidth_bmm_integer(
+            config=config, x_shape=x_shape
+        )
         _set_quant_dtype_precision_and_format(mc_args["data_in_0"], config, "data_in")
         _set_quant_dtype_precision_and_format(mc_args["data_in_1"], config, "data_in")
         _set_quant_dtype_precision_and_format(
-            mc_results["data_out"], output_config, "data_out"
+            mc_results["data_out"], config, "data_out"
         )
     elif function in (matmul_integer,):
         # matmul supports broadcasting, but we temporarily treat it as bmm
         config = construct_essential_config_generic_matmul_integer(config)
         x_shape = args[0].shape
-        output_config = get_output_bitwidth_bmm_integer(config=config, x_shape=x_shape)
+        config = config | get_output_bitwidth_bmm_integer(
+            config=config, x_shape=x_shape
+        )
         _set_quant_dtype_precision_and_format(mc_args["data_in_0"], config, "data_in")
         _set_quant_dtype_precision_and_format(mc_args["data_in_1"], config, "data_in")
         _set_quant_dtype_precision_and_format(
-            mc_results["data_out"], output_config, "data_out"
+            mc_results["data_out"], config, "data_out"
         )
         logger.warning(
             "A quantized `matmul_integer`'s quant_config is constructed as a `bmm_integer`'s quant_config"

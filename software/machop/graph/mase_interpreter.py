@@ -7,7 +7,7 @@
 
 from collections import defaultdict
 from logging import getLogger
-from typing import Any
+from typing import Any, Optional
 
 from torch.fx import Interpreter
 from torch.fx.graph_module import GraphModule
@@ -167,6 +167,10 @@ class MaseInterpreter(Interpreter):
                 self.hook_before_call_module(
                     node=n, module=module, args=args, kwargs=kwargs
                 )
+                # import torch
+
+                # if isinstance(module, torch.nn.BatchNorm2d):
+                #     breakpoint()
                 output = self.call_module(n.target, args=args, kwargs=kwargs)
                 self.hook_after_call_module(node=n, module=module, output=output)
                 return output

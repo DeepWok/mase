@@ -25,6 +25,7 @@ def relu_integer(x, inplace=False, config=None):
 def construct_essential_config_relu_integer(config):
     return {
         "bypass": config.get("bypass", False),
+        "name": config["name"],
         "data_in_width": config["data_in_width"],
         "data_in_frac_width": config["data_in_frac_width"],
     }
