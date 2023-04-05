@@ -202,9 +202,11 @@ static void initArgTypeMap(func::FuncOp funcOp, std::string hlsParam) {
               "Function arg has ap_fixed type but total width is smaller than "
               "the fraction width.");
 
-          type->typeAsString = type->type + "<" +
-                               std::to_string(type->precision[0]) + ", " +
-                               std::to_string(type->precision[1]) + ">";
+          // The input precision format is (total_width, frac_width)
+          // The HLS precision format is (total_width, int_width)
+          type->typeAsString =
+              type->type + "<" + std::to_string(type->precision[0]) + ", " +
+              std::to_string(type->precision[0] - type->precision[1]) + ">";
           argTypeMap[arg] = type;
           valueMap[arg] = type->name;
         } else

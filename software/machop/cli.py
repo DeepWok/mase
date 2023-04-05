@@ -757,8 +757,24 @@ class Machop:
     def test_hw(self):
         args = self.args
         logger.info(f"Testing hardware for {args.model!r}...")
-        # TODO: Generate cocotb testbench for a given model
-        raise NotImplementedError(f"Hardware testing not implemented yet.")
+        mve = MaseVerilogEmitter(
+            model=self.model,
+            project_dir=self.output_dir,
+            to_debug=args.to_debug,
+            target=args.target,
+            mode=mode,
+            num_targets=args.num_targets,
+            # comment out to allow internal pass to provide this info
+            common_param=os.path.join(
+                self.output_dir,
+                "software",
+                "modify-sw",
+                # "hw_quantize.toml",
+                "common_meta.toml",
+            ),
+        )
+        mve.emit_tb()
+        # mve.run_cosim()
 
     def evaluate_hw(self, mode):
         logger.info(f"Evaluating hardware for {self.args.model!r}...")
