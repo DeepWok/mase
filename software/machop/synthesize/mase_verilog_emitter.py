@@ -167,6 +167,26 @@ class MaseVerilogEmitter(MaseGraph):
                 os.remove(p)
 
     # ----------------------------------------------------------
+    # Emit testbench code
+    # ----------------------------------------------------------
+    def emit_tb(self):
+        """
+        Emit Verilog test bench 
+        """
+        self.verify()
+
+        sim_dir = os.path.join(self.project_dir, "hardware", "sim")
+        if not os.path.exists(sim_dir):
+            os.mkdir(sim_dir)
+        for p in glob.glob(os.path.join(sim_dir, "*")):
+            if os.path.isfile(p):
+                os.remove(p)
+            else:
+                shutil.rmtree(p)
+
+
+
+    # ----------------------------------------------------------
     # Emit hardware code
     # ----------------------------------------------------------
     def emit_verilog(self):
@@ -174,10 +194,16 @@ class MaseVerilogEmitter(MaseGraph):
         Emit Verilog for unpartitioned model
         """
         self.verify()
-        project_dir = self.project_dir
-        rtl_dir = os.path.join(project_dir, "hardware", "rtl")
+
+        rtl_dir = os.path.join(self.project_dir, "hardware", "rtl")
         if not os.path.exists(rtl_dir):
             os.mkdir(rtl_dir)
+        for p in glob.glob(os.path.join(rtl_dir, "*")):
+            if os.path.isfile(p):
+                os.remove(p)
+            else:
+                shutil.rmtree(p)
+
         # Emit each components in the form of layers
         self.emit_components()
         # Emit the top-level module
