@@ -26,7 +26,7 @@ from .models import (
     vision_models,
 )
 from .modify.interpret_for_hw_gen import create_and_save_common_metadata
-from .modify.modifier_neo import NeoModifier
+from .modify.modifier import Modifier
 from .session import test, train, validate
 from .synthesize.mase_verilog_emitter import MaseVerilogEmitter
 from .utils import (
@@ -577,14 +577,14 @@ class Machop:
             "dummy_inputs_for_fx": dummy_inputs,
             "save_dir": os.path.join(self.output_dir_sw, "modify-sw"),
         }
-        NeoModifier.create_empty_config_template(
+        Modifier.create_empty_config_template(
             model=self.model["model"] if args.model in nlp_models else self.model,
             dummy_inputs=dummy_inputs,
             save_path=os.path.join(
                 self.output_dir_sw, "modify-sw", "modify-sw_template.toml"
             ),
         )
-        m = NeoModifier(**modifier_kwargs)
+        m = Modifier(**modifier_kwargs)
         m.modify()
         if args.model in nlp_models:
             self.model["model"] = m.graph_module
@@ -740,14 +740,14 @@ class Machop:
             "dummy_inputs_for_fx": dummy_inputs,
             "save_dir": os.path.join(self.output_dir_sw, "modify-sw"),
         }
-        NeoModifier.create_empty_config_template(
+        Modifier.create_empty_config_template(
             self.modified_model_for_hw_gen,
             dummy_inputs=dummy_inputs,
             save_path=os.path.join(
                 self.output_dir_sw, "modify-sw", "./modify-sw_template.toml"
             ),
         )
-        m = NeoModifier(**modifier_kwargs)
+        m = Modifier(**modifier_kwargs)
         m.modify()
         if args.model in nlp_models:
             self.modified_model_for_hw_gen["model"] = m.graph_module
