@@ -24,7 +24,7 @@ resnet18_int8.eval()
 
 # 3. Load corresponding dataset, note that this dataset should be the same as the one in "1. modify-sw"
 data_module = MyDataModule(
-    name="cifar10", batch_size=4, workers=8, tokenizer=None, max_token_len=None
+    name="cifar10", batch_size=1, workers=8, tokenizer=None, max_token_len=None
 )
 # input_args generator
 input_args_generator = get_input_args_generator(
