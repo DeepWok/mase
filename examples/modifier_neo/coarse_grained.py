@@ -15,7 +15,7 @@ config_path = "./coarse_grained.toml"
 
 config = toml.load(config_path)
 print("=" * 40)
-print("How does a coarse grained toml look like?")
+print("How does a coarse grained toml look?")
 pp(config)
 
 resnet = get_resnet18({"num_classes": 10})
@@ -27,6 +27,6 @@ m = Modifier(
 graph = m.modify()
 
 print("=" * 40)
-print("How does a model look like after coarse-grained replacement?")
+print("How does a model look after coarse-grained replacement?")
 print(dict(graph.named_modules()))
 # pp(template)

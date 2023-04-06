@@ -74,7 +74,7 @@ m = Modifier(
     create_new_custom_module_fn=create_custom_module,
 )
 
-graph = m.modify()
+graph_module = m.modify()
 print("=" * 40)
 print("The net model after block replacement")
-print(dict(graph.named_modules()))
+print(dict(graph_module.named_modules()))
