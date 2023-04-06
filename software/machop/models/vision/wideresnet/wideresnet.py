@@ -1,9 +1,12 @@
+from logging import getLogger
+
+import numpy as np
 import torch
 import torch.nn as nn
-import torch.nn.init as init
 import torch.nn.functional as F
-import numpy as np
+import torch.nn.init as init
 
+logger = getLogger(__name__)
 _bn_momentum = 0.1
 CpG = 8
 
@@ -283,8 +286,8 @@ class WideResNet(nn.Module):
         return out
 
 
-def wideresnet28_cifar(pretrained=False, num_classes=10, **kwargs):
-    num_classes = kwargs.get("num_classes", num_classes)
+def wideresnet28_cifar(info, pretrained=False, **kwargs):
+    num_classes = info["num_classes"]
     model = WideResNet(
         28,
         10,
@@ -296,4 +299,6 @@ def wideresnet28_cifar(pretrained=False, num_classes=10, **kwargs):
         examplewise_bn=False,
         virtual_bn=False,
     )
+    if pretrained:
+        logger.warning(f"Pretrained weights are not available for wideresnet28_cifar")
     return model

@@ -1,4 +1,5 @@
 from functools import partial
+from logging import getLogger
 
 import torch
 import torch.nn as nn
@@ -6,7 +7,9 @@ import torch.nn.functional as F
 from timm.models.layers import DropPath, to_2tuple, trunc_normal_
 from timm.models.vision_transformer import _cfg
 
-__all__ = ["pvt_tiny", "pvt_small", "pvt_medium", "pvt_large"]
+__all__ = ["get_pvt_tiny", "get_pvt_small", "get_pvt_medium", "get_pvt_large"]
+
+logger = getLogger(__name__)
 
 
 class Mlp(nn.Module):
@@ -348,9 +351,10 @@ def _conv_filter(state_dict, patch_size=16):
     return out_dict
 
 
-def pvt_tiny(pretrained=False, **kwargs):
-    kwargs.pop("info")
+def get_pvt_tiny(info, pretrained=False, **kwargs):
+    num_classes = info["num_classes"]
     model = PyramidVisionTransformer(
+        num_classes=num_classes,
         patch_size=4,
         embed_dims=[64, 128, 320, 512],
         num_heads=[1, 2, 5, 8],
@@ -363,12 +367,30 @@ def pvt_tiny(pretrained=False, **kwargs):
     )
     model.default_cfg = _cfg()
 
+    if pretrained:
+        checkpoint = torch.hub.load_state_dict_from_url(
+            url="https://github.com/whai362/PVT/releases/download/v2/pvt_tiny.pth",
+            map_location="cpu",
+            check_hash=True,
+        )
+        if num_classes != 1000:
+            _ = checkpoint.pop("head.weight")
+            _ = checkpoint.pop("head.bias")
+            logger.warning(
+                f"num_classes (={num_classes}) != 1000. The last classifier layer (head) is randomly initialized"
+            )
+        model.load_state_dict(checkpoint, strict=False)
+        logger.info("Pretrained weights loaded into pvt_tiny")
+    else:
+        logger.info("pvt_tiny randomly initialized")
+
     return model
 
 
-def pvt_small(pretrained=False, **kwargs):
-    kwargs.pop("info")
+def get_pvt_small(info, pretrained=False, **kwargs):
+    num_classes = info["num_classes"]
     model = PyramidVisionTransformer(
+        num_classes=num_classes,
         patch_size=4,
         embed_dims=[64, 128, 320, 512],
         num_heads=[1, 2, 5, 8],
@@ -380,13 +402,29 @@ def pvt_small(pretrained=False, **kwargs):
         **kwargs,
     )
     model.default_cfg = _cfg()
-
+    if pretrained:
+        checkpoint = torch.hub.load_state_dict_from_url(
+            url="https://github.com/whai362/PVT/releases/download/v2/pvt_small.pth",
+            map_location="cpu",
+            check_hash=True,
+        )
+        if num_classes != 1000:
+            _ = checkpoint.pop("head.weight")
+            _ = checkpoint.pop("head.bias")
+            logger.warning(
+                f"num_classes (={num_classes}) != 1000. The last classifier layer (head) is randomly initialized"
+            )
+        model.load_state_dict(checkpoint, strict=False)
+        logger.info("Pretrained weights loaded into pvt_small")
+    else:
+        logger.info("pvt_small randomly initialized")
     return model
 
 
-def pvt_medium(pretrained=False, **kwargs):
-    kwargs.pop("info")
+def get_pvt_medium(info, pretrained=False, **kwargs):
+    num_classes = info["num_classes"]
     model = PyramidVisionTransformer(
+        num_classes=num_classes,
         patch_size=4,
         embed_dims=[64, 128, 320, 512],
         num_heads=[1, 2, 5, 8],
@@ -398,13 +436,29 @@ def pvt_medium(pretrained=False, **kwargs):
         **kwargs,
     )
     model.default_cfg = _cfg()
-
+    if pretrained:
+        checkpoint = torch.hub.load_state_dict_from_url(
+            url="https://github.com/whai362/PVT/releases/download/v2/pvt_medium.pth",
+            map_location="cpu",
+            check_hash=True,
+        )
+        if num_classes != 1000:
+            _ = checkpoint.pop("head.weight")
+            _ = checkpoint.pop("head.bias")
+            logger.warning(
+                f"num_classes (={num_classes}) != 1000. The last classifier layer (head) is randomly initialized"
+            )
+        model.load_state_dict(checkpoint, strict=False)
+        logger.info("Pretrained weights loaded into pvt_medium")
+    else:
+        logger.info("pvt_medium randomly initialized")
     return model
 
 
-def pvt_large(pretrained=False, **kwargs):
-    kwargs.pop("info")
+def get_pvt_large(info, pretrained=False, **kwargs):
+    num_classes = info["num_classes"]
     model = PyramidVisionTransformer(
+        num_classes=num_classes,
         patch_size=4,
         embed_dims=[64, 128, 320, 512],
         num_heads=[1, 2, 5, 8],
@@ -416,24 +470,39 @@ def pvt_large(pretrained=False, **kwargs):
         **kwargs,
     )
     model.default_cfg = _cfg()
-
+    if pretrained:
+        checkpoint = torch.hub.load_state_dict_from_url(
+            url="https://github.com/whai362/PVT/releases/download/v2/pvt_large.pth",
+            map_location="cpu",
+            check_hash=True,
+        )
+        if num_classes != 1000:
+            _ = checkpoint.pop("head.weight")
+            _ = checkpoint.pop("head.bias")
+            logger.warning(
+                f"num_classes (={num_classes}) != 1000. The last classifier layer (head) is randomly initialized"
+            )
+        model.load_state_dict(checkpoint, strict=False)
+        logger.info("Pretrained weights loaded into pvt_large")
+    else:
+        logger.info("pvt_large randomly initialized")
     return model
 
 
-def pvt_huge_v2(pretrained=False, **kwargs):
-    kwargs.pop("info")
-    model = PyramidVisionTransformer(
-        patch_size=4,
-        embed_dims=[128, 256, 512, 768],
-        num_heads=[2, 4, 8, 12],
-        mlp_ratios=[8, 8, 4, 4],
-        qkv_bias=True,
-        norm_layer=partial(nn.LayerNorm, eps=1e-6),
-        depths=[3, 10, 60, 3],
-        sr_ratios=[8, 4, 2, 1],
-        # drop_rate=0.0, drop_path_rate=0.02)
-        **kwargs,
-    )
-    model.default_cfg = _cfg()
+# def pvt_huge_v2(pretrained=False, **kwargs):
+#     kwargs.pop("info")
+#     model = PyramidVisionTransformer(
+#         patch_size=4,
+#         embed_dims=[128, 256, 512, 768],
+#         num_heads=[2, 4, 8, 12],
+#         mlp_ratios=[8, 8, 4, 4],
+#         qkv_bias=True,
+#         norm_layer=partial(nn.LayerNorm, eps=1e-6),
+#         depths=[3, 10, 60, 3],
+#         sr_ratios=[8, 4, 2, 1],
+#         # drop_rate=0.0, drop_path_rate=0.02)
+#         **kwargs,
+#     )
+#     model.default_cfg = _cfg()
 
-    return model
+#     return model

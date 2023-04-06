@@ -348,6 +348,7 @@ class Modifier:
             modified_pkl_path = os.path.join(self.save_dir, "modified_model.pkl")
             with open(modified_pkl_path, "wb") as f:
                 pickle.dump(self.graph_module, file=f)
+            logger.info(f"Modified model is saved at {modified_pkl_path}")
 
     def _modify(self):
         assert "default" in self.config, "Please provide `default` config."

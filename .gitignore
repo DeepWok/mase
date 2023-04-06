@@ -2,11 +2,11 @@
 *.py~
 *.swp
 /history/
-/data/
+*/data/
 /models/
 /tb_summary/
 # *.sh
-./data/*
+data
 software/data/
 software/cache/
 software/test_*.py

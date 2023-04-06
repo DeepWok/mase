@@ -14,11 +14,13 @@ import torch
 import torch.nn as nn
 from torch import Tensor
 from torchvision.models._api import WeightsEnum
+from torchvision.models._utils import _ovewrite_named_param
 from torchvision.models.resnet import (
     ResNet18_Weights,
     ResNet34_Weights,
     ResNet50_Weights,
     ResNet101_Weights,
+    Wide_ResNet50_2_Weights,
 )
 
 logger = getLogger(__name__)
@@ -394,6 +396,31 @@ def get_resnet101(
     return _resnet(
         BasicBlock,
         [2, 2, 2, 2],
+        num_classes=num_classes,
+        pretrained_weight_cls=pretrained_weight_cls,
+        **kwargs,
+    )
+
+
+def get_wide_resnet50_2(info: Dict, pretrained: bool = False, **kwargs):
+    """
+    `Wide Residual Networks <https://arxiv.org/abs/1605.07146>`_.
+
+    The model is the same as ResNet except for the bottleneck number of channels
+    which is twice larger in every block. The number of channels in outer 1x1
+    convolutions is the same, e.g. last block in ResNet-50 has 2048-512-2048
+    channels, and in Wide ResNet-50-2 has 2048-1024-2048.
+    """
+    num_classes = info["num_classes"]
+    if pretrained:
+        pretrained_weight_cls = Wide_ResNet50_2_Weights.IMAGENET1K_V1
+    else:
+        pretrained_weight_cls = None
+
+    _ovewrite_named_param(kwargs, "width_per_group", 64 * 2)
+    return _resnet(
+        Bottleneck,
+        [3, 4, 6, 3],
         num_classes=num_classes,
         pretrained_weight_cls=pretrained_weight_cls,
         **kwargs,

@@ -1,1 +1,1 @@
-from .mobilenetv3 import mobilenetv3_small, mobilenetv3_large
+from .mobilenetv3 import get_mobilenetv3_large, get_mobilenetv3_small

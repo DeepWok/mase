@@ -2,7 +2,11 @@ import logging
 import os
 
 import pytorch_lightning as pl
-from pytorch_lightning.callbacks import DeviceStatsMonitor, ModelCheckpoint
+from pytorch_lightning.callbacks import (
+    DeviceStatsMonitor,
+    LearningRateMonitor,
+    ModelCheckpoint,
+)
 from pytorch_lightning.loggers import TensorBoardLogger
 from pytorch_lightning.plugins.environments import SLURMEnvironment
 
@@ -40,7 +44,12 @@ def train(
         )
         tb_logger = TensorBoardLogger(save_dir=save_path, name="logs")
         gpu_usage_callback = DeviceStatsMonitor()
-        plt_trainer_args["callbacks"] = [checkpoint_callback, gpu_usage_callback]
+        lr_monitor_callback = LearningRateMonitor(logging_interval="step")
+        plt_trainer_args["callbacks"] = [
+            checkpoint_callback,
+            gpu_usage_callback,
+            lr_monitor_callback,
+        ]
         plt_trainer_args["logger"] = tb_logger
 
     # plugin

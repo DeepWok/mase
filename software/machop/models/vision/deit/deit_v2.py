@@ -1,13 +1,17 @@
 # Copyright (c) Meta Platforms, Inc. and affiliates.
 # All rights reserved.
 
+# TODO: These models have not been added to supported model list due to unfinished code
+from functools import partial
+from logging import getLogger
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from functools import partial
-
-from timm.models.vision_transformer import Mlp, PatchEmbed, _cfg
 from timm.models.layers import DropPath, to_2tuple, trunc_normal_
+from timm.models.vision_transformer import Mlp, PatchEmbed, _cfg
+
+logger = getLogger(__name__)
 
 
 class Attention(nn.Module):
@@ -484,8 +488,12 @@ def deit_tiny_patch16_LS(
         qkv_bias=True,
         norm_layer=partial(nn.LayerNorm, eps=1e-6),
         block_layers=Layer_scale_init_Block,
-        **kwargs
+        **kwargs,
     )
+    if pretrained:
+        logger.warning(
+            f"The pretrained weight for deit_tiny_patch16_LS is not available. Model randomly initialized."
+        )
 
     return model
 
@@ -503,7 +511,7 @@ def deit_small_patch16_LS(
         qkv_bias=True,
         norm_layer=partial(nn.LayerNorm, eps=1e-6),
         block_layers=Layer_scale_init_Block,
-        **kwargs
+        **kwargs,
     )
     model.default_cfg = _cfg()
     if pretrained:
@@ -533,7 +541,7 @@ def deit_medium_patch16_LS(
         qkv_bias=True,
         norm_layer=partial(nn.LayerNorm, eps=1e-6),
         block_layers=Layer_scale_init_Block,
-        **kwargs
+        **kwargs,
     )
     model.default_cfg = _cfg()
     if pretrained:
@@ -565,7 +573,7 @@ def deit_base_patch16_LS(
         qkv_bias=True,
         norm_layer=partial(nn.LayerNorm, eps=1e-6),
         block_layers=Layer_scale_init_Block,
-        **kwargs
+        **kwargs,
     )
     if pretrained:
         name = "https://dl.fbaipublicfiles.com/deit/deit_3_base_" + str(img_size) + "_"
@@ -594,7 +602,7 @@ def deit_large_patch16_LS(
         qkv_bias=True,
         norm_layer=partial(nn.LayerNorm, eps=1e-6),
         block_layers=Layer_scale_init_Block,
-        **kwargs
+        **kwargs,
     )
     if pretrained:
         name = "https://dl.fbaipublicfiles.com/deit/deit_3_large_" + str(img_size) + "_"
@@ -623,7 +631,7 @@ def deit_huge_patch14_LS(
         qkv_bias=True,
         norm_layer=partial(nn.LayerNorm, eps=1e-6),
         block_layers=Layer_scale_init_Block,
-        **kwargs
+        **kwargs,
     )
     if pretrained:
         name = "https://dl.fbaipublicfiles.com/deit/deit_3_huge_" + str(img_size) + "_"
@@ -652,9 +660,12 @@ def deit_huge_patch14_52_LS(
         qkv_bias=True,
         norm_layer=partial(nn.LayerNorm, eps=1e-6),
         block_layers=Layer_scale_init_Block,
-        **kwargs
+        **kwargs,
     )
-
+    if pretrained:
+        logger.warning(
+            f"The pretrained weight is not available. Model randomly initialized."
+        )
     return model
 
 
@@ -671,47 +682,50 @@ def deit_huge_patch14_26x2_LS(
         qkv_bias=True,
         norm_layer=partial(nn.LayerNorm, eps=1e-6),
         block_layers=Layer_scale_init_Block_paralx2,
-        **kwargs
+        **kwargs,
     )
-
+    if pretrained:
+        logger.warning(
+            f"The pretrained weight is not available. Model randomly initialized."
+        )
     return model
 
 
-def deit_Giant_48x2_patch14_LS(
-    pretrained=False, img_size=224, pretrained_21k=False, **kwargs
-):
-    model = vit_models(
-        img_size=img_size,
-        patch_size=14,
-        embed_dim=1664,
-        depth=48,
-        num_heads=16,
-        mlp_ratio=4,
-        qkv_bias=True,
-        norm_layer=partial(nn.LayerNorm, eps=1e-6),
-        block_layers=Block_paral_LS,
-        **kwargs
-    )
+# def deit_Giant_48x2_patch14_LS(
+#     pretrained=False, img_size=224, pretrained_21k=False, **kwargs
+# ):
+#     model = vit_models(
+#         img_size=img_size,
+#         patch_size=14,
+#         embed_dim=1664,
+#         depth=48,
+#         num_heads=16,
+#         mlp_ratio=4,
+#         qkv_bias=True,
+#         norm_layer=partial(nn.LayerNorm, eps=1e-6),
+#         block_layers=Block_paral_LS,
+#         **kwargs,
+#     )
 
-    return model
+#     return model
 
 
-def deit_giant_40x2_patch14_LS(
-    pretrained=False, img_size=224, pretrained_21k=False, **kwargs
-):
-    model = vit_models(
-        img_size=img_size,
-        patch_size=14,
-        embed_dim=1408,
-        depth=40,
-        num_heads=16,
-        mlp_ratio=4,
-        qkv_bias=True,
-        norm_layer=partial(nn.LayerNorm, eps=1e-6),
-        block_layers=Block_paral_LS,
-        **kwargs
-    )
-    return model
+# def deit_giant_40x2_patch14_LS(
+#     pretrained=False, img_size=224, pretrained_21k=False, **kwargs
+# ):
+#     model = vit_models(
+#         img_size=img_size,
+#         patch_size=14,
+#         embed_dim=1408,
+#         depth=40,
+#         num_heads=16,
+#         mlp_ratio=4,
+#         qkv_bias=True,
+#         norm_layer=partial(nn.LayerNorm, eps=1e-6),
+#         block_layers=Block_paral_LS,
+#         **kwargs,
+#     )
+#     return model
 
 
 def deit_Giant_48_patch14_LS(
@@ -727,8 +741,12 @@ def deit_Giant_48_patch14_LS(
         qkv_bias=True,
         norm_layer=partial(nn.LayerNorm, eps=1e-6),
         block_layers=Layer_scale_init_Block,
-        **kwargs
+        **kwargs,
     )
+    if pretrained:
+        logger.warning(
+            f"The pretrained weight is not available. Model randomly initialized."
+        )
     return model
 
 
@@ -745,10 +763,13 @@ def deit_giant_40_patch14_LS(
         qkv_bias=True,
         norm_layer=partial(nn.LayerNorm, eps=1e-6),
         block_layers=Layer_scale_init_Block,
-        **kwargs
+        **kwargs,
     )
     # model.default_cfg = _cfg()
-
+    if pretrained:
+        logger.warning(
+            f"The pretrained weight is not available. Model randomly initialized."
+        )
     return model
 
 
@@ -768,9 +789,12 @@ def deit_small_patch16_36_LS(
         qkv_bias=True,
         norm_layer=partial(nn.LayerNorm, eps=1e-6),
         block_layers=Layer_scale_init_Block,
-        **kwargs
+        **kwargs,
     )
-
+    if pretrained:
+        logger.warning(
+            f"The pretrained weight is not available. Model randomly initialized."
+        )
     return model
 
 
@@ -786,9 +810,12 @@ def deit_small_patch16_36(
         mlp_ratio=4,
         qkv_bias=True,
         norm_layer=partial(nn.LayerNorm, eps=1e-6),
-        **kwargs
+        **kwargs,
     )
-
+    if pretrained:
+        logger.warning(
+            f"The pretrained weight is not available. Model randomly initialized."
+        )
     return model
 
 
@@ -805,9 +832,12 @@ def deit_small_patch16_18x2_LS(
         qkv_bias=True,
         norm_layer=partial(nn.LayerNorm, eps=1e-6),
         block_layers=Layer_scale_init_Block_paralx2,
-        **kwargs
+        **kwargs,
     )
-
+    if pretrained:
+        logger.warning(
+            f"The pretrained weight is not available. Model randomly initialized."
+        )
     return model
 
 
@@ -824,9 +854,12 @@ def deit_small_patch16_18x2(
         qkv_bias=True,
         norm_layer=partial(nn.LayerNorm, eps=1e-6),
         block_layers=Block_paralx2,
-        **kwargs
+        **kwargs,
     )
-
+    if pretrained:
+        logger.warning(
+            f"The pretrained weight is not available. Model randomly initialized."
+        )
     return model
 
 
@@ -843,9 +876,12 @@ def deit_base_patch16_18x2_LS(
         qkv_bias=True,
         norm_layer=partial(nn.LayerNorm, eps=1e-6),
         block_layers=Layer_scale_init_Block_paralx2,
-        **kwargs
+        **kwargs,
     )
-
+    if pretrained:
+        logger.warning(
+            f"The pretrained weight is not available. Model randomly initialized."
+        )
     return model
 
 
@@ -862,9 +898,12 @@ def deit_base_patch16_18x2(
         qkv_bias=True,
         norm_layer=partial(nn.LayerNorm, eps=1e-6),
         block_layers=Block_paralx2,
-        **kwargs
+        **kwargs,
     )
-
+    if pretrained:
+        logger.warning(
+            f"The pretrained weight is not available. Model randomly initialized."
+        )
     return model
 
 
@@ -881,9 +920,12 @@ def deit_base_patch16_36x1_LS(
         qkv_bias=True,
         norm_layer=partial(nn.LayerNorm, eps=1e-6),
         block_layers=Layer_scale_init_Block,
-        **kwargs
+        **kwargs,
     )
-
+    if pretrained:
+        logger.warning(
+            f"The pretrained weight is not available. Model randomly initialized."
+        )
     return model
 
 
@@ -899,7 +941,10 @@ def deit_base_patch16_36x1(
         mlp_ratio=4,
         qkv_bias=True,
         norm_layer=partial(nn.LayerNorm, eps=1e-6),
-        **kwargs
+        **kwargs,
     )
-
+    if pretrained:
+        logger.warning(
+            f"The pretrained weight is not available. Model randomly initialized."
+        )
     return model

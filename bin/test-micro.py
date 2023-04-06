@@ -22,7 +22,7 @@ software_dir = os.path.abspath(
 )
 
 # {model}, {task}, {dataset}, {toml}
-# ./chop --modify-sw={sw_modify_toml} --model={model} --task={task} --dataset={dataset} --debug  --project={model}_{task}_{dataset} --project-dir=.
+# ./chop --modify-sw --modify-sw-config {sw_modify_toml} --model={model} --task={task} --dataset={dataset} --debug  --project={model}_{task}_{dataset} --project-dir=.
 # ./chop --model={model} --task={task} --dataset={dataset} --debug --synthesize auto --project={model}_{task}_{dataset} --project-dir=.
 
 simple_cases = [
@@ -238,8 +238,8 @@ class TestMicro:
 
     def single_test(self, test_case, queue):
         self.logger.info("Running unit test for {}...".format(test_case))
-        # ./chop --modify-sw={sw_modify_toml} --model={model} --task={task} --dataset={dataset} --debug  --project={model}_{task}_{dataset} --project-dir=.
-        # ./chop --model={model} --task={task} --dataset={dataset} --debug --synthesize auto --project={model}_{task}_{dataset} --project-dir=.
+        # ./chop --modify-sw --modify-sw-config {sw_modify_toml} --model={model} --task={task} --dataset={dataset} --debug  --project={model}_{task}_{dataset} --project-dir=.
+        # ./chop --model={model} --task={task} --dataset={dataset} --debug --synthesize auto --modify-sw-config {sw_modify_toml} --project={model}_{task}_{dataset} --project-dir=.
 
         model = test_case[0]
         task = test_case[1]
@@ -250,6 +250,7 @@ class TestMicro:
         cmd = [
             f"./chop",
             f"--modify-sw",
+            f"--modify-sw-config",
             f"{sw_modify_toml}",
             f"--model",
             f"{model}",
@@ -280,6 +281,8 @@ class TestMicro:
                 f"--debug",
                 f"--synthesize",
                 f"{self.mode}",
+                f"--modify-sw-config",
+                f"{sw_modify_toml}",
                 f"--project",
                 f"{model}_{task}_{dataset}",
                 f"--project-dir",
