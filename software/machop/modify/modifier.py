@@ -341,8 +341,6 @@ class Modifier:
                 f"The histogram summary of modify-sw is saved to {profile_path}"
             )
 
-        pass
-
     def _save_modified_model_to_pkl(self):
         if self.save_dir:
             modified_pkl_path = os.path.join(self.save_dir, "modified_model.pkl")
@@ -383,7 +381,7 @@ class Modifier:
                         config=sub_config,
                     )
                 except NotImplementedError:
-                    print(f"Custom module {module}, {type(module)}")
+                    # print(f"Custom module {module}, {type(module)}")
                     # create new layer using user provided module
                     new_module = self.create_new_custom_module(
                         original_module=module, config=sub_config
