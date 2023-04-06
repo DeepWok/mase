@@ -71,7 +71,7 @@ def dummy_create_new_module_fn(original_model: nn.Module, config: Dict):
     )
 
 
-class NeoModifier:
+class Modifier:
     def __init__(
         self,
         model: nn.Module,
@@ -453,7 +453,7 @@ class NeoModifier:
         dummy_inputs={},
         custom_leaf_module_classes: List[type] = [],
         save_path: str = None,
-    ):
+    ) -> Dict:
         config = {
             "module_classes_to_modify": {},
             "functions_to_modify": {},

@@ -6,7 +6,7 @@ import torch
 
 sys.path.append("../../software")
 from machop.models.vision.resnet import get_resnet18
-from machop.modify.modifier_neo import NeoModifier
+from machop.modify.modifier import Modifier
 from pytorch_lightning import seed_everything
 
 seed_everything(0)
@@ -20,7 +20,7 @@ pp(config)
 
 resnet = get_resnet18({"num_classes": 10})
 
-m = NeoModifier(
+m = Modifier(
     resnet,
     config_path=config_path,
 )

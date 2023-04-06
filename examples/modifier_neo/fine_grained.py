@@ -9,7 +9,7 @@ import torch
 sys.path.append("../../software")
 import torch.fx as fx
 from machop.models.vision.resnet import get_resnet18
-from machop.modify.modifier_neo import NeoModifier
+from machop.modify.modifier import Modifier
 from pytorch_lightning import seed_everything
 
 seed_everything(0)
@@ -22,7 +22,7 @@ print("How does a fine grained toml look like?")
 pp(config)
 
 resnet18 = get_resnet18({"num_classes": 10})
-modifier = NeoModifier(model=resnet18, config_path=config_path)
+modifier = Modifier(model=resnet18, config_path=config_path)
 graph_module = modifier.modify()
 
 print("=" * 40)

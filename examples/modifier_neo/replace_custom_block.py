@@ -3,7 +3,7 @@ import sys
 import torch
 
 sys.path.append("../../software")
-from machop.modify.modifier_neo import NeoModifier
+from machop.modify.modifier import Modifier
 from pytorch_lightning import seed_everything
 
 seed_everything(0)
@@ -61,15 +61,15 @@ print("The net model before modify-sw")
 print(net)
 
 # Create and save an empty template for this model
-template = NeoModifier.create_empty_config_template(
+template = Modifier.create_empty_config_template(
     net,
     custom_leaf_module_classes=[CustomBlock, AnotherCustomBlock],
-    save_path="./template.toml",
+    save_path="./generated_template.toml",
 )
 
-m = NeoModifier(
+m = Modifier(
     net,
-    config_path="./generated_template.toml",
+    config_path="./replace_custom_block.toml",
     custom_leaf_module_classes=[CustomBlock, AnotherCustomBlock],
     create_new_custom_module_fn=create_custom_module,
 )
