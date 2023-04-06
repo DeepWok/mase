@@ -18,12 +18,22 @@ from .estimate_sw import run_estimator
 from .evaluate_hw.mase_hardware_evaluator import get_synthesis_results
 from .graph.dummy_inputs import get_dummy_inputs
 from .graph.mase_graph import MaseGraph
-from .models import manual_models, model_map, nlp_models, vision_models
+from .models import (
+    manual_nlp_models,
+    manual_vision_models,
+    model_map,
+    nlp_models,
+    vision_models,
+)
 from .modify.interpret_for_hw_gen import create_and_save_common_metadata
-from .modify.modifier import Modifier
+from .modify.modifier_neo import NeoModifier
 from .session import test, train, validate
 from .synthesize.mase_verilog_emitter import MaseVerilogEmitter
-from .utils import check_when_to_load_and_how_to_load, getLogger
+from .utils import (
+    check_when_to_load_and_how_to_load,
+    getLogger,
+    load_pt_pl_or_pkl_checkpoint_into_pt_model,
+)
 
 logger = getLogger("machop")
 logging.getLogger().setLevel(logging.INFO)
@@ -237,6 +247,13 @@ class Machop:
             default=20,
             type=int,
             help="The maximum number of epochs for training. Default=100",
+        )
+        parser.add_argument(
+            "--max-steps",
+            dest="max_steps",
+            default=-1,
+            type=int,
+            help="The maximum number of steps for training. Default=-1 disable this option",
         )
         parser.add_argument(
             "--batch-size",
@@ -457,19 +474,29 @@ class Machop:
         if args.model in nlp_models:
             # *: here the model is a dict whose keys consist of "model", "tokenizer", "classifier"
             # *: here the load name only works for HuggingFace model load name/ config load name
-            model = model_inst_fn(
-                name=args.model,
-                task=args.task,
-                info=dataset_info,
-                checkpoint=checkpoint,
-                pretrained=args.is_pretrained,
-            )
+            if args.model in manual_nlp_models:
+                model = model_inst_fn(
+                    name=args.model,
+                    task=args.task,
+                    info=dataset_info,
+                    checkpoint=checkpoint,
+                    pretrained=args.is_pretrained,
+                    config=args.custom_config,
+                )
+            else:
+                model = model_inst_fn(
+                    name=args.model,
+                    task=args.task,
+                    info=dataset_info,
+                    checkpoint=checkpoint,
+                    pretrained=args.is_pretrained,
+                )
         elif args.model in vision_models:
-            if args.model in manual_models:
+            if args.model in manual_vision_models:
                 # create manual model from custom config
                 model = model_inst_fn(info=dataset_info, config=args.custom_config)
             else:
-                model = model_inst_fn(info=dataset_info)
+                model = model_inst_fn(info=dataset_info, pretrained=args.is_pretrained)
         else:
             raise NotImplementedError(f"Unknown model {args.model!r}.")
         logger.info("Model is created")
@@ -525,25 +552,40 @@ class Machop:
         ), "--modify-sw-config must be provided if --modify-sw is True"
         logger.info(f"Modifying model {args.model!r}...")
 
+        if self.when_to_load == "modify-sw":
+            if args.model in nlp_models:
+                self.model["model"] = load_pt_pl_or_pkl_checkpoint_into_pt_model(
+                    load_name=args.load,
+                    load_type=args.load_type,
+                    model=self.model["model"],
+                )
+            else:
+                self.model = load_pt_pl_or_pkl_checkpoint_into_pt_model(
+                    load_name=args.load,
+                    load_type=args.load_type,
+                    model=self.model,
+                )
+
         dummy_inputs = get_dummy_inputs(
             model_name=args.model,
             task=args.task,
             model=self.model["model"] if args.model in nlp_models else self.model,
         )
-        # breakpoint()
-        load_name = args.load_name if self.when_to_load == "modify-sw" else None
         modifier_kwargs = {
             "model": self.model["model"] if args.model in nlp_models else self.model,
-            "config": args.modify_sw_config,
-            # "config": args.modify_sw,
-            "dummy_inputs": dummy_inputs,
+            "config_path": args.modify_sw_config,
+            "dummy_inputs_for_fx": dummy_inputs,
             "save_dir": os.path.join(self.output_dir_sw, "modify-sw"),
-            "load_name": load_name,
-            "load_type": self.how_to_load,
         }
-
-        m = Modifier(**modifier_kwargs)
-        m.run()
+        NeoModifier.create_empty_config_template(
+            model=self.model["model"] if args.model in nlp_models else self.model,
+            dummy_inputs=dummy_inputs,
+            save_path=os.path.join(
+                self.output_dir_sw, "modify-sw", "modify-sw_template.toml"
+            ),
+        )
+        m = NeoModifier(**modifier_kwargs)
+        m.modify()
         if args.model in nlp_models:
             self.model["model"] = m.graph_module
         else:
@@ -556,6 +598,7 @@ class Machop:
 
         plt_trainer_args = {
             "max_epochs": args.max_epochs,
+            "max_steps": args.max_steps,
             "devices": args.num_devices,
             "num_nodes": args.num_nodes,
             "accelerator": args.accelerator,
@@ -689,18 +732,23 @@ class Machop:
             if args.model in nlp_models
             else self.modified_model_for_hw_gen,
         )
-        # breakpoint()
         modifier_kwargs = {
             "model": self.modified_model_for_hw_gen["model"]
             if args.model in nlp_models
             else self.modified_model_for_hw_gen,
-            "config": args.modify_sw_config,
-            "dummy_inputs": dummy_inputs,
-            "do_comparison": False,
+            "config_path": args.modify_sw_config,
+            "dummy_inputs_for_fx": dummy_inputs,
+            "save_dir": os.path.join(self.output_dir_sw, "modify-sw"),
         }
-
-        m = Modifier(**modifier_kwargs)
-        m.run()
+        NeoModifier.create_empty_config_template(
+            self.modified_model_for_hw_gen,
+            dummy_inputs=dummy_inputs,
+            save_path=os.path.join(
+                self.output_dir_sw, "modify-sw", "./modify-sw_template.toml"
+            ),
+        )
+        m = NeoModifier(**modifier_kwargs)
+        m.modify()
         if args.model in nlp_models:
             self.modified_model_for_hw_gen["model"] = m.graph_module
         else:
@@ -719,7 +767,7 @@ class Machop:
             data_module=self.data_module,
             save_dir=os.path.join(self.output_dir_sw, "modify-sw"),
         )
-
+        del self.modified_model_for_hw_gen
         logger.info(f"Metadata update is completed")
 
     def synthesize(self):

@@ -8,6 +8,8 @@ from transformers.models.t5.modeling_t5 import T5Attention, T5LayerNorm
 
 CUSTOM_LEAF_MODULES = [T5LayerNorm]
 CUSTOM_LEAF_FUNCTIONS = []
+USER_CUSTOM_LEAF_MODULES = []
+USER_CUSTOM_LEAF_FUNCTIONS = []
 
 
 logger = logging.getLogger(__name__)
@@ -28,6 +30,31 @@ def mark_as_leaf_func(func):
     else:
         CUSTOM_LEAF_FUNCTIONS.append(func)
     return func
+
+
+def mark_as_user_custom_leaf_module(cls: type):
+    assert issubclass(cls, torch.nn.Module)
+    if cls in USER_CUSTOM_LEAF_MODULES:
+        logger.warning(f"Class {cls} was already marked as leaf module")
+    else:
+        USER_CUSTOM_LEAF_MODULES.append(cls)
+    return cls
+
+
+def clear_user_custom_leaf_modules():
+    USER_CUSTOM_LEAF_MODULES = []
+
+
+def mark_as_user_custom_leaf_function(func):
+    if func in USER_CUSTOM_LEAF_FUNCTIONS:
+        logger.warning(f"Function {func} was already marked as leaf function")
+    else:
+        USER_CUSTOM_LEAF_FUNCTIONS.append(func)
+    return func
+
+
+def clear_user_custom_leaf_functions():
+    USER_CUSTOM_LEAF_FUNCTIONS = []
 
 
 # ----------------------------------------
@@ -69,23 +96,39 @@ class MaseTracer(Tracer):
         param_shapes_constant: bool = True,
     ) -> None:
         logger.debug(
-            f"Current custom leaf functions: {CUSTOM_LEAF_FUNCTIONS+MY_TENSOR_CONSTRUCTORS+CUSTOM_LEAF_MODULES}\n"
-            + "Current custom leaf models: {CUSTOM_LEAF_MODULES}"
+            f"Current custom leaf functions: {CUSTOM_LEAF_FUNCTIONS+MY_TENSOR_CONSTRUCTORS+USER_CUSTOM_LEAF_FUNCTIONS}\n"
+            + f"Current custom leaf modules: {CUSTOM_LEAF_MODULES+USER_CUSTOM_LEAF_MODULES}"
         )
         if autowrap_modules is None:
             autowrap_modules = (math,)
         if autowrap_functions is None:
-            autowrap_functions = tuple(CUSTOM_LEAF_FUNCTIONS + MY_TENSOR_CONSTRUCTORS)
+            autowrap_functions = tuple(
+                CUSTOM_LEAF_FUNCTIONS
+                + MY_TENSOR_CONSTRUCTORS
+                + USER_CUSTOM_LEAF_FUNCTIONS
+            )
         super().__init__(autowrap_modules, autowrap_functions, param_shapes_constant)
 
     def is_leaf_module(self, m: torch.nn.Module, module_qualified_name: str) -> bool:
-        is_tensor_constructor = is_custom_module = is_fx_built_in_module = False
+        is_tensor_constructor = False
+        is_custom_module = False
+        is_fx_built_in_module = False
+        is_user_leaf_module = False
         is_fx_built_in_module = super().is_leaf_module(m, module_qualified_name)
         if isinstance(m, tuple(CUSTOM_LEAF_MODULES)):
             is_custom_module = True
         if isinstance(m, type(MY_TENSOR_CONSTRUCTORS)):
             is_tensor_constructor = True
-        return any((is_tensor_constructor, is_custom_module, is_fx_built_in_module))
+        if isinstance(m, tuple(USER_CUSTOM_LEAF_MODULES)):
+            is_user_leaf_module = True
+        return any(
+            (
+                is_tensor_constructor,
+                is_custom_module,
+                is_fx_built_in_module,
+                is_user_leaf_module,
+            )
+        )
 
 
 def mase_symbolic_trace(root, concrete_args=None):

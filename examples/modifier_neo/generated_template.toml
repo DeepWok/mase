@@ -1,4 +1,3 @@
-# no add
 [default]
 bias_frac_width = 5
 bias_width = 8
@@ -20,6 +19,9 @@ name = "default"
 [module_classes_to_modify.relu]
 name = "default"
 
+[functions_to_modify.add]
+name = "default"
+
 [functions_to_modify.bmm]
 name = "default"
 
@@ -27,6 +29,9 @@ name = "default"
 name = "default"
 
 [functions_to_modify.relu]
+name = "default"
+
+[methods_to_modify.add]
 name = "default"
 
 [methods_to_modify.bmm]
@@ -37,3 +42,6 @@ name = "default"
 
 [methods_to_modify.relu]
 name = "default"
+
+[modules_to_modify.cb]
+name = "xxx"

@@ -119,12 +119,12 @@ def check_when_to_load_and_how_to_load(
             ], f"if --load is specified, --load-type should be one of ['pt', 'pl', 'hf', 'pkl'], but got {load_type}"
 
     if load_type == "hf" or is_pretrained:
-        if is_pretrained and load_type != "hf":
-            logger.warning(
-                f"--pretrained is specified, thus --load-type=hf is expected, but got --load-type={load_type}"
-            )
+        # if is_pretrained and load_type != "hf":
+        #     logger.warning(
+        #         f"--pretrained is specified, thus --load-type=hf is expected, but got --load-type={load_type}"
+        #     )
         when_to_load = "init"
-        how_to_load = "hf"
+        how_to_load = "model_dependent"
     else:
         if to_modify_sw:
             when_to_load = "modify-sw"
