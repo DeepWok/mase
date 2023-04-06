@@ -1,13 +1,14 @@
 # Copyright (c) 2015-present, Facebook, Inc.
 # All rights reserved.
+from functools import partial
+from logging import getLogger
+
 import torch
 import torch.nn as nn
-from functools import partial
-
-from timm.models.vision_transformer import VisionTransformer, _cfg
 from timm.models.layers import trunc_normal_
+from timm.models.vision_transformer import VisionTransformer, _cfg
 
-
+logger = getLogger(__name__)
 # __all__ = [
 #     "deit_tiny_patch16_224",
 #     "deit_small_patch16_224",
@@ -68,9 +69,10 @@ class DistilledVisionTransformer(VisionTransformer):
             return (x + x_dist) / 2
 
 
-def deit_tiny_patch16_224(pretrained=False, **kwargs):
-    kwargs.pop("info")
+def get_deit_tiny_patch16_224(info, pretrained=False, **kwargs):
+    num_classes = info["num_classes"]
     model = VisionTransformer(
+        num_classes=num_classes,
         patch_size=16,
         embed_dim=192,
         depth=12,
@@ -78,7 +80,7 @@ def deit_tiny_patch16_224(pretrained=False, **kwargs):
         mlp_ratio=4,
         qkv_bias=True,
         norm_layer=partial(nn.LayerNorm, eps=1e-6),
-        **kwargs
+        **kwargs,
     )
     model.default_cfg = _cfg()
     if pretrained:
@@ -87,13 +89,24 @@ def deit_tiny_patch16_224(pretrained=False, **kwargs):
             map_location="cpu",
             check_hash=True,
         )
-        model.load_state_dict(checkpoint["model"])
+        checkpoint = checkpoint["model"]
+        if num_classes != 1000:
+            _ = checkpoint.pop("head.weight")
+            _ = checkpoint.pop("head.bias")
+            logger.warning(
+                f"num_classes (={num_classes}) != 1000. The last classifier layer (head) is randomly initialized"
+            )
+        model.load_state_dict(checkpoint, strict=False)
+        logger.info("Pretrained weights loaded into deit_tiny_patch16_224")
+    else:
+        logger.info("deit_tiny_patch16_224 randomly initialized")
     return model
 
 
-def deit_small_patch16_224(pretrained=False, **kwargs):
-    kwargs.pop("info")
+def get_deit_small_patch16_224(info, pretrained=False, **kwargs):
+    num_classes = info["num_classes"]
     model = VisionTransformer(
+        num_classes=num_classes,
         patch_size=16,
         embed_dim=384,
         depth=12,
@@ -101,7 +114,7 @@ def deit_small_patch16_224(pretrained=False, **kwargs):
         mlp_ratio=4,
         qkv_bias=True,
         norm_layer=partial(nn.LayerNorm, eps=1e-6),
-        **kwargs
+        **kwargs,
     )
     model.default_cfg = _cfg()
     if pretrained:
@@ -110,13 +123,25 @@ def deit_small_patch16_224(pretrained=False, **kwargs):
             map_location="cpu",
             check_hash=True,
         )
-        model.load_state_dict(checkpoint["model"])
+        checkpoint = checkpoint["model"]
+        if num_classes != 1000:
+            _ = checkpoint.pop("head.weight")
+            _ = checkpoint.pop("head.bias")
+            logger.warning(
+                f"num_classes (={num_classes}) != 1000. The last classifier layer (head) is randomly initialized"
+            )
+        model.load_state_dict(checkpoint, strict=False)
+        logger.info("Pretrained weights loaded into deit_small_patch16_224")
+    else:
+        logger.info("deit_small_patch16_224 randomly initialized")
     return model
 
 
-def deit_base_patch16_224(pretrained=False, **kwargs):
+def get_deit_base_patch16_224(info, pretrained=False, **kwargs):
     kwargs.pop("info")
+    num_classes = info["num_classes"]
     model = VisionTransformer(
+        num_classes=num_classes,
         patch_size=16,
         embed_dim=768,
         depth=12,
@@ -124,7 +149,7 @@ def deit_base_patch16_224(pretrained=False, **kwargs):
         mlp_ratio=4,
         qkv_bias=True,
         norm_layer=partial(nn.LayerNorm, eps=1e-6),
-        **kwargs
+        **kwargs,
     )
     model.default_cfg = _cfg()
     if pretrained:
@@ -133,13 +158,24 @@ def deit_base_patch16_224(pretrained=False, **kwargs):
             map_location="cpu",
             check_hash=True,
         )
-        model.load_state_dict(checkpoint["model"])
+        checkpoint = checkpoint["model"]
+        if num_classes != 1000:
+            _ = checkpoint.pop("head.weight")
+            _ = checkpoint.pop("head.bias")
+            logger.warning(
+                f"num_classes (={num_classes}) != 1000. The last classifier layer (head) is randomly initialized"
+            )
+        model.load_state_dict(checkpoint, strict=False)
+        logger.info("Pretrained weights loaded into deit_base_patch16_224")
+    else:
+        logger.info("deit_base_patch16_224 randomly initialized")
     return model
 
 
-def deit_tiny_distilled_patch16_224(pretrained=False, **kwargs):
-    kwargs.pop("info")
+def get_deit_tiny_distilled_patch16_224(info, pretrained=False, **kwargs):
+    num_classes = info["num_classes"]
     model = DistilledVisionTransformer(
+        num_classes=num_classes,
         patch_size=16,
         embed_dim=192,
         depth=12,
@@ -147,7 +183,7 @@ def deit_tiny_distilled_patch16_224(pretrained=False, **kwargs):
         mlp_ratio=4,
         qkv_bias=True,
         norm_layer=partial(nn.LayerNorm, eps=1e-6),
-        **kwargs
+        **kwargs,
     )
     model.default_cfg = _cfg()
     if pretrained:
@@ -156,13 +192,24 @@ def deit_tiny_distilled_patch16_224(pretrained=False, **kwargs):
             map_location="cpu",
             check_hash=True,
         )
-        model.load_state_dict(checkpoint["model"])
+        checkpoint = checkpoint["model"]
+        if num_classes != 1000:
+            _ = checkpoint.pop("head.weight")
+            _ = checkpoint.pop("head.bias")
+            logger.warning(
+                f"num_classes (={num_classes}) != 1000. The last classifier layer (head) is randomly initialized"
+            )
+        model.load_state_dict(checkpoint, strict=False)
+        logger.info("Pretrained weights loaded into deit_tiny_patch16_224")
+    else:
+        logger.info("deit_base_patch16_224 randomly initialized")
     return model
 
 
-def deit_small_distilled_patch16_224(pretrained=False, **kwargs):
-    kwargs.pop("info")
+def get_deit_small_distilled_patch16_224(info, pretrained=False, **kwargs):
+    num_classes = info["num_classes"]
     model = DistilledVisionTransformer(
+        num_classes=num_classes,
         patch_size=16,
         embed_dim=384,
         depth=12,
@@ -170,7 +217,7 @@ def deit_small_distilled_patch16_224(pretrained=False, **kwargs):
         mlp_ratio=4,
         qkv_bias=True,
         norm_layer=partial(nn.LayerNorm, eps=1e-6),
-        **kwargs
+        **kwargs,
     )
     model.default_cfg = _cfg()
     if pretrained:
@@ -179,13 +226,24 @@ def deit_small_distilled_patch16_224(pretrained=False, **kwargs):
             map_location="cpu",
             check_hash=True,
         )
-        model.load_state_dict(checkpoint["model"])
+        checkpoint = checkpoint["model"]
+        if num_classes != 1000:
+            _ = checkpoint.pop("head.weight")
+            _ = checkpoint.pop("head.bias")
+            logger.warning(
+                f"num_classes (={num_classes}) != 1000. The last classifier layer (head) is randomly initialized"
+            )
+        model.load_state_dict(checkpoint, strict=False)
+        logger.info("Pretrained weights loaded into deit_small_distilled_patch16_224")
+    else:
+        logger.info("deit_small_distilled_patch16_224 randomly initialized")
     return model
 
 
-def deit_base_distilled_patch16_224(pretrained=False, **kwargs):
-    kwargs.pop("info")
+def get_deit_base_distilled_patch16_224(info, pretrained=False, **kwargs):
+    num_classes = info["num_classes"]
     model = DistilledVisionTransformer(
+        num_classes=num_classes,
         patch_size=16,
         embed_dim=768,
         depth=12,
@@ -193,7 +251,7 @@ def deit_base_distilled_patch16_224(pretrained=False, **kwargs):
         mlp_ratio=4,
         qkv_bias=True,
         norm_layer=partial(nn.LayerNorm, eps=1e-6),
-        **kwargs
+        **kwargs,
     )
     model.default_cfg = _cfg()
     if pretrained:
@@ -202,13 +260,24 @@ def deit_base_distilled_patch16_224(pretrained=False, **kwargs):
             map_location="cpu",
             check_hash=True,
         )
-        model.load_state_dict(checkpoint["model"])
+        checkpoint = checkpoint["model"]
+        if num_classes != 1000:
+            _ = checkpoint.pop("head.weight")
+            _ = checkpoint.pop("head.bias")
+            logger.warning(
+                f"num_classes (={num_classes}) != 1000. The last classifier layer (head) is randomly initialized"
+            )
+        model.load_state_dict(checkpoint, strict=False)
+        logger.info("Pretrained weights loaded into deit_base_distilled_patch16_224")
+    else:
+        logger.info("deit_base_distilled_patch16_224 randomly initialized")
     return model
 
 
-def deit_base_patch16_384(pretrained=False, **kwargs):
-    kwargs.pop("info")
+def get_deit_base_patch16_384(info, pretrained=False, **kwargs):
+    num_classes = info["num_classes"]
     model = VisionTransformer(
+        num_classes=num_classes,
         img_size=384,
         patch_size=16,
         embed_dim=768,
@@ -217,7 +286,7 @@ def deit_base_patch16_384(pretrained=False, **kwargs):
         mlp_ratio=4,
         qkv_bias=True,
         norm_layer=partial(nn.LayerNorm, eps=1e-6),
-        **kwargs
+        **kwargs,
     )
     model.default_cfg = _cfg()
     if pretrained:
@@ -226,13 +295,25 @@ def deit_base_patch16_384(pretrained=False, **kwargs):
             map_location="cpu",
             check_hash=True,
         )
-        model.load_state_dict(checkpoint["model"])
+        checkpoint = checkpoint["model"]
+        if num_classes != 1000:
+            _ = checkpoint.pop("head.weight")
+            _ = checkpoint.pop("head.bias")
+            logger.warning(
+                f"num_classes (={num_classes}) != 1000. The last classifier layer (head) is randomly initialized"
+            )
+
+        model.load_state_dict(checkpoint, strict=False)
+        logger.info("Pretrained weights loaded into deit_base_patch16_384")
+    else:
+        logger.info("deit_base_patch16_384 randomly initialized")
     return model
 
 
-def deit_base_distilled_patch16_384(pretrained=False, **kwargs):
-    kwargs.pop("info")
+def get_deit_base_distilled_patch16_384(info, pretrained=False, **kwargs):
+    num_classes = info["num_classes"]
     model = DistilledVisionTransformer(
+        num_classes=num_classes,
         img_size=384,
         patch_size=16,
         embed_dim=768,
@@ -241,7 +322,7 @@ def deit_base_distilled_patch16_384(pretrained=False, **kwargs):
         mlp_ratio=4,
         qkv_bias=True,
         norm_layer=partial(nn.LayerNorm, eps=1e-6),
-        **kwargs
+        **kwargs,
     )
     model.default_cfg = _cfg()
     if pretrained:
@@ -250,5 +331,15 @@ def deit_base_distilled_patch16_384(pretrained=False, **kwargs):
             map_location="cpu",
             check_hash=True,
         )
-        model.load_state_dict(checkpoint["model"])
+        checkpoint = checkpoint["model"]
+        if num_classes != 1000:
+            _ = checkpoint.pop("head.weight")
+            _ = checkpoint.pop("head.bias")
+            logger.warning(
+                f"num_classes (={num_classes}) != 1000. The last classifier layer (head) is randomly initialized"
+            )
+        model.load_state_dict(checkpoint, strict=False)
+        logger.info("Pretrained weights loaded into deit_base_distilled_patch16_384")
+    else:
+        logger.info("deit_base_distilled_patch16_384 randomly initialized")
     return model

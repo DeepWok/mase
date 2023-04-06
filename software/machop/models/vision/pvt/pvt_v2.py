@@ -1,11 +1,14 @@
+import math
+from functools import partial
+from logging import getLogger
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from functools import partial
-
 from timm.models.layers import DropPath, to_2tuple, trunc_normal_
 from timm.models.vision_transformer import _cfg
-import math
+
+logger = getLogger(__name__)
 
 
 class Mlp(nn.Module):
@@ -433,9 +436,10 @@ def _conv_filter(state_dict, patch_size=16):
     return out_dict
 
 
-def pvt_v2_b0(pretrained=False, **kwargs):
-    kwargs.pop('info')
+def get_pvt_v2_b0(info, pretrained=False, **kwargs):
+    num_classes = info["num_classes"]
     model = PyramidVisionTransformerV2(
+        num_classes=num_classes,
         patch_size=4,
         embed_dims=[32, 64, 160, 256],
         num_heads=[1, 2, 5, 8],
@@ -447,13 +451,29 @@ def pvt_v2_b0(pretrained=False, **kwargs):
         **kwargs,
     )
     model.default_cfg = _cfg()
-
+    if pretrained:
+        checkpoint = torch.hub.load_state_dict_from_url(
+            url="https://github.com/whai362/PVT/releases/download/v2/pvt_v2_b0.pth",
+            map_location="cpu",
+            check_hash=True,
+        )
+        if num_classes != 1000:
+            _ = checkpoint.pop("head.weight")
+            _ = checkpoint.pop("head.bias")
+            logger.warning(
+                f"num_classes (={num_classes}) != 1000. The last classifier layer (head) is randomly initialized"
+            )
+        model.load_state_dict(checkpoint, strict=False)
+        logger.info("Pretrained weights loaded into pvt_v2_b0")
+    else:
+        logger.info("pvt_v2_b0 randomly initialized")
     return model
 
 
-def pvt_v2_b1(pretrained=False, **kwargs):
-    kwargs.pop('info')
+def get_pvt_v2_b1(info, pretrained=False, **kwargs):
+    num_classes = info["num_classes"]
     model = PyramidVisionTransformerV2(
+        num_classes=num_classes,
         patch_size=4,
         embed_dims=[64, 128, 320, 512],
         num_heads=[1, 2, 5, 8],
@@ -465,13 +485,30 @@ def pvt_v2_b1(pretrained=False, **kwargs):
         **kwargs,
     )
     model.default_cfg = _cfg()
+    if pretrained:
+        checkpoint = torch.hub.load_state_dict_from_url(
+            url="https://github.com/whai362/PVT/releases/download/v2/pvt_v2_b1.pth",
+            map_location="cpu",
+            check_hash=True,
+        )
+        if num_classes != 1000:
+            _ = checkpoint.pop("head.weight")
+            _ = checkpoint.pop("head.bias")
+            logger.warning(
+                f"num_classes (={num_classes}) != 1000. The last classifier layer (head) is randomly initialized"
+            )
+        model.load_state_dict(checkpoint, strict=False)
+        logger.info("Pretrained weights loaded into pvt_v2_b1")
+    else:
+        logger.info("pvt_v2_b1 randomly initialized")
 
     return model
 
 
-def pvt_v2_b2(pretrained=False, **kwargs):
-    kwargs.pop('info')
+def get_pvt_v2_b2(info, pretrained=False, **kwargs):
+    num_classes = info["num_classes"]
     model = PyramidVisionTransformerV2(
+        num_classes=num_classes,
         patch_size=4,
         embed_dims=[64, 128, 320, 512],
         num_heads=[1, 2, 5, 8],
@@ -483,13 +520,29 @@ def pvt_v2_b2(pretrained=False, **kwargs):
         **kwargs,
     )
     model.default_cfg = _cfg()
-
+    if pretrained:
+        checkpoint = torch.hub.load_state_dict_from_url(
+            url="https://github.com/whai362/PVT/releases/download/v2/pvt_v2_b2.pth",
+            map_location="cpu",
+            check_hash=True,
+        )
+        if num_classes != 1000:
+            _ = checkpoint.pop("head.weight")
+            _ = checkpoint.pop("head.bias")
+            logger.warning(
+                f"num_classes (={num_classes}) != 1000. The last classifier layer (head) is randomly initialized"
+            )
+        model.load_state_dict(checkpoint, strict=False)
+        logger.info("Pretrained weights loaded into pvt_v2_b2")
+    else:
+        logger.info("pvt_v2_b2 randomly initialized")
     return model
 
 
-def pvt_v2_b3(pretrained=False, **kwargs):
-    kwargs.pop('info')
+def get_pvt_v2_b3(info, pretrained=False, **kwargs):
+    num_classes = info["num_classes"]
     model = PyramidVisionTransformerV2(
+        num_classes=num_classes,
         patch_size=4,
         embed_dims=[64, 128, 320, 512],
         num_heads=[1, 2, 5, 8],
@@ -501,13 +554,29 @@ def pvt_v2_b3(pretrained=False, **kwargs):
         **kwargs,
     )
     model.default_cfg = _cfg()
-
+    if pretrained:
+        checkpoint = torch.hub.load_state_dict_from_url(
+            url="https://github.com/whai362/PVT/releases/download/v2/pvt_v2_b3.pth",
+            map_location="cpu",
+            check_hash=True,
+        )
+        if num_classes != 1000:
+            _ = checkpoint.pop("head.weight")
+            _ = checkpoint.pop("head.bias")
+            logger.warning(
+                f"num_classes (={num_classes}) != 1000. The last classifier layer (head) is randomly initialized"
+            )
+        model.load_state_dict(checkpoint, strict=False)
+        logger.info("Pretrained weights loaded into pvt_v2_b3")
+    else:
+        logger.info("pvt_v2_b3 randomly initialized")
     return model
 
 
-def pvt_v2_b4(pretrained=False, **kwargs):
-    kwargs.pop('info')
+def get_pvt_v2_b4(info, pretrained=False, **kwargs):
+    num_classes = info["num_classes"]
     model = PyramidVisionTransformerV2(
+        num_classes=num_classes,
         patch_size=4,
         embed_dims=[64, 128, 320, 512],
         num_heads=[1, 2, 5, 8],
@@ -519,13 +588,43 @@ def pvt_v2_b4(pretrained=False, **kwargs):
         **kwargs,
     )
     model.default_cfg = _cfg()
-
+    num_classes = info["num_classes"]
+    model = PyramidVisionTransformerV2(
+        num_classes=num_classes,
+        patch_size=4,
+        embed_dims=[64, 128, 320, 512],
+        num_heads=[1, 2, 5, 8],
+        mlp_ratios=[8, 8, 4, 4],
+        qkv_bias=True,
+        norm_layer=partial(nn.LayerNorm, eps=1e-6),
+        depths=[3, 4, 18, 3],
+        sr_ratios=[8, 4, 2, 1],
+        **kwargs,
+    )
+    model.default_cfg = _cfg()
+    if pretrained:
+        checkpoint = torch.hub.load_state_dict_from_url(
+            url="https://github.com/whai362/PVT/releases/download/v2/pvt_v2_b4.pth",
+            map_location="cpu",
+            check_hash=True,
+        )
+        if num_classes != 1000:
+            _ = checkpoint.pop("head.weight")
+            _ = checkpoint.pop("head.bias")
+            logger.warning(
+                f"num_classes (={num_classes}) != 1000. The last classifier layer (head) is randomly initialized"
+            )
+        model.load_state_dict(checkpoint, strict=False)
+        logger.info("Pretrained weights loaded into pvt_v2_b4")
+    else:
+        logger.info("pvt_v2_b4 randomly initialized")
     return model
 
 
-def pvt_v2_b5(pretrained=False, **kwargs):
-    kwargs.pop('info')
+def get_pvt_v2_b5(info, pretrained=False, **kwargs):
+    num_classes = info["num_classes"]
     model = PyramidVisionTransformerV2(
+        num_classes=num_classes,
         patch_size=4,
         embed_dims=[64, 128, 320, 512],
         num_heads=[1, 2, 5, 8],
@@ -537,13 +636,29 @@ def pvt_v2_b5(pretrained=False, **kwargs):
         **kwargs,
     )
     model.default_cfg = _cfg()
-
+    if pretrained:
+        checkpoint = torch.hub.load_state_dict_from_url(
+            url="https://github.com/whai362/PVT/releases/download/v2/pvt_v2_b5.pth",
+            map_location="cpu",
+            check_hash=True,
+        )
+        if num_classes != 1000:
+            _ = checkpoint.pop("head.weight")
+            _ = checkpoint.pop("head.bias")
+            logger.warning(
+                f"num_classes (={num_classes}) != 1000. The last classifier layer (head) is randomly initialized"
+            )
+        model.load_state_dict(checkpoint, strict=False)
+        logger.info("Pretrained weights loaded into pvt_v2_b5")
+    else:
+        logger.info("pvt_v2_b5 randomly initialized")
     return model
 
 
-def pvt_v2_b2_li(pretrained=False, **kwargs):
-    kwargs.pop('info')
+def get_pvt_v2_b2_li(info, pretrained=False, **kwargs):
+    num_classes = info["num_classes"]
     model = PyramidVisionTransformerV2(
+        num_classes=num_classes,
         patch_size=4,
         embed_dims=[64, 128, 320, 512],
         num_heads=[1, 2, 5, 8],
@@ -556,5 +671,20 @@ def pvt_v2_b2_li(pretrained=False, **kwargs):
         **kwargs,
     )
     model.default_cfg = _cfg()
-
+    if pretrained:
+        checkpoint = torch.hub.load_state_dict_from_url(
+            url="https://github.com/whai362/PVT/releases/download/v2/pvt_v2_b2_li.pth",
+            map_location="cpu",
+            check_hash=True,
+        )
+        if num_classes != 1000:
+            _ = checkpoint.pop("head.weight")
+            _ = checkpoint.pop("head.bias")
+            logger.warning(
+                f"num_classes (={num_classes}) != 1000. The last classifier layer (head) is randomly initialized"
+            )
+        model.load_state_dict(checkpoint, strict=False)
+        logger.info("Pretrained weights loaded into pvt_v2_b2_li")
+    else:
+        logger.info("pvt_v2_b2_li randomly initialized")
     return model

@@ -23,9 +23,9 @@ class MyDataModule(pl.LightningDataModule):
         self.batch_size = batch_size
         self.num_workers = workers
         self.tokenizer = tokenizer
-        if max_token_len is None:
+        if max_token_len is None and tokenizer is not None:
             self.max_token_len = tokenizer.model_max_length
-        else:
+        elif max_token_len is not None:
             self.max_token_len = max_token_len
 
         self.train_dataset = (

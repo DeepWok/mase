@@ -1,6 +1,6 @@
 import os
+
 import torchvision as tv
-from torchvision import datasets
 
 
 def get_imagenet_dataset(name, path, train, transform):
