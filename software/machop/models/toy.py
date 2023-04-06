@@ -18,7 +18,7 @@ class ToyNet(nn.Module):
         return self.seq_blocks(x.view(x.size(0), -1))
 
 
-def get_toynet(info):
+def get_toynet(info, pretrained=False):
     image_size = info["image_size"]
     num_classes = info["num_classes"]
     return ToyNet(image_size, num_classes)
@@ -42,7 +42,7 @@ class ToyTiny(nn.Module):
         return x
 
 
-def get_toy_tiny(info):
+def get_toy_tiny(info, pretrained=False):
     image_size = info["image_size"]
     num_classes = info["num_classes"]
     return ToyTiny(image_size, num_classes)
