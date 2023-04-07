@@ -150,10 +150,10 @@ module fixed_linear #(
 
     for (genvar i = 0; i < PARALLELISM; i = i + 1) begin : add_bias
       logic [OUT_WIDTH-1:0] add;
-      assign add = acc_data_out[i] + bias_sext[i];
+      assign add = $signed(acc_data_out[i]) + $signed(bias_sext[i]);
       logic dout_valid;
       register_slice #(
-          .IN_WIDTH(OUT_WIDTH),
+          .IN_WIDTH(OUT_WIDTH)
       ) register_slice (
           .clk           (clk),
           .rst           (rst),

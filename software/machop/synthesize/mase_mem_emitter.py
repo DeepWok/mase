@@ -1,6 +1,7 @@
 import math, time, os, logging, torch
 
 from ..graph.utils import get_module_by_name, vf
+from ..modify.quantizers.quantizers import integer_quantizer
 
 logger = logging.getLogger(__name__)
 
@@ -152,7 +153,7 @@ def emit_parameters_in_dat(node, param_name, file_name):
     Emit initialised data for the ROM block. Each element must be in 8 HEX digits.
     """
     total_size = math.prod(node.meta.parameters["common"]["args"][param_name]["size"])
-    # The depth of parameters matches with the input depth
+    # The depth of parameters matches with the input depth of data
     out_depth = (
         node.meta.parameters["hardware"]["verilog_parameters"]["IN_DEPTH"]
         if "IN_DEPTH" in node.meta.parameters["hardware"]["verilog_parameters"].keys()
@@ -172,6 +173,14 @@ def emit_parameters_in_dat(node, param_name, file_name):
     if node.meta.parameters["hardware"]["interface_parameters"][param_name][
         "transpose"
     ]:
+        param_data = torch.reshape(
+            param_data,
+            (
+                node.meta.parameters["hardware"]["verilog_parameters"]["OUT_SIZE"],
+                node.meta.parameters["hardware"]["verilog_parameters"]["IN_DEPTH"],
+                node.meta.parameters["hardware"]["verilog_parameters"]["IN_SIZE"],
+            ),
+        )
         param_data = torch.transpose(param_data, 0, 1)
     param_data = torch.flatten(param_data).tolist()
 
@@ -185,20 +194,17 @@ def emit_parameters_in_dat(node, param_name, file_name):
             line_buff = ""
             for j in range(0, out_size):
                 value = param_data[i * out_size + out_size - 1 - j]
-                value = int(value * scale) % thresh
-                value = -12
-                sign = int(not (value >= 0))
-                value = str(bin(value))
-                value = value[value.find("0b") + 2 :]
-                value = "0" * (width - 1 - len(value)) + value
-                value_bits = str(sign) + value
+                value = integer_quantizer(torch.tensor(value), width, frac_width).item()
+                value = str(bin(int(value * scale) % thresh))
+                value_bits = value[value.find("0b") + 2 :]
+                value_bits = "0" * (width - len(value_bits)) + value_bits
+                assert len(value_bits) == width
                 line_buff += value_bits
 
             hex_buff = hex(int(line_buff, 2))
-            hex_buff = hex_buff[hex_buff.find("0x") + 2 :]
-            data_buff += hex_buff + "\n"
+            data_buff += hex_buff[hex_buff.find("0x") + 2 :] + "\n"
     else:
-        assert Faulse, "Emitting non-fixed parameters is not supported."
+        assert False, "Emitting non-fixed parameters is not supported."
 
     with open(file_name, "w", encoding="utf-8") as outf:
         outf.write(data_buff)

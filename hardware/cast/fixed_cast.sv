@@ -15,42 +15,51 @@ module fixed_cast #(
   localparam IN_INT_WIDTH = IN_WIDTH - IN_FRAC_WIDTH;
   localparam OUT_INT_WIDTH = OUT_WIDTH - OUT_FRAC_WIDTH;
 
-  // Split variable
-  for (genvar i = 0; i < IN_SIZE; i++) begin : cast_vars
-    assign data_out[i][OUT_WIDTH-1] = data_in[i][IN_WIDTH-1];
+  // Sign
+  for (genvar i = 0; i < IN_SIZE; i++) begin : out_sign
+    logic data;
+    assign data = data_in[i][IN_WIDTH-1];
   end
 
-  // Saturation check
-  if (IN_INT_WIDTH > OUT_INT_WIDTH) begin
-    for (genvar i = 0; i < IN_SIZE; i++) begin : int_trunc
+  // Fraction part
+  for (genvar i = 0; i < IN_SIZE; i++) begin : out_frac
+    logic [OUT_FRAC_WIDTH-1:0] data;
+    /* verilator lint_off WIDTH */
+    if (IN_FRAC_WIDTH > OUT_FRAC_WIDTH)
+      assign data = data_in[i][IN_FRAC_WIDTH-1:IN_FRAC_WIDTH-OUT_FRAC_WIDTH];
+    else assign data = data_in[i][IN_FRAC_WIDTH-1:0] << (OUT_FRAC_WIDTH - IN_FRAC_WIDTH);
+    /* verilator lint_on WIDTH */
+  end
+
+  // Integer part
+  for (genvar i = 0; i < IN_SIZE; i++) begin : out_int
+    logic [OUT_INT_WIDTH-2:0] data;
+    if (IN_INT_WIDTH > OUT_INT_WIDTH)
+      assign data = data_in[i][OUT_INT_WIDTH-2+IN_FRAC_WIDTH:IN_FRAC_WIDTH];
+    else
+      assign data = {
+        {(OUT_INT_WIDTH - IN_INT_WIDTH) {data_in[i][IN_WIDTH-1]}},
+        data_in[i][IN_WIDTH-2:IN_FRAC_WIDTH]
+      };
+  end
+
+  for (genvar i = 0; i < IN_SIZE; i++) begin
+
+    if (IN_INT_WIDTH > OUT_INT_WIDTH) begin
       always_comb begin
-        if (|data_in[i][IN_WIDTH-2:OUT_INT_WIDTH-2+IN_FRAC_WIDTH]) data_out[i][OUT_WIDTH-2:0] = '1;
-        else begin
-          data_out[i][OUT_WIDTH-2:OUT_FRAC_WIDTH] = data_in[i][OUT_INT_WIDTH-2+IN_FRAC_WIDTH:IN_FRAC_WIDTH];
-          /* verilator lint_off WIDTH */
-          if (IN_FRAC_WIDTH > OUT_FRAC_WIDTH)
-            data_out[i][OUT_FRAC_WIDTH-1:0] = data_in[i][IN_FRAC_WIDTH-1:IN_FRAC_WIDTH-OUT_FRAC_WIDTH];
-          else
-            data_out[i][OUT_FRAC_WIDTH-1:0]  = data_in[i][IN_FRAC_WIDTH-1:0] << (OUT_FRAC_WIDTH-IN_FRAC_WIDTH);
-          /* verilator lint_on WIDTH */
+        // Saturation check
+        if (|({(IN_WIDTH-OUT_INT_WIDTH-IN_FRAC_WIDTH){data_in[i][IN_WIDTH-1]}} ^ data_in[i][IN_WIDTH-2:OUT_INT_WIDTH-1+IN_FRAC_WIDTH])) begin
+          /* saturate to b'100...001 or b' 011..111*/
+          data_out[i] = {out_sign[i].data, {(OUT_WIDTH - 2) {~data_in[i][IN_WIDTH-1]}}, 1'b1};
+        end else begin
+          data_out[i] = {out_sign[i].data, out_int[i].data, out_frac[i].data};
         end
       end
-    end
-  end else begin
-    for (genvar i = 0; i < IN_SIZE; i++) begin : int_trunc
-      always_comb begin
-        /* verilator lint_off SELRANGE */
-        /* verilator lint_off WIDTH */
-        data_out[i][OUT_WIDTH-2:OUT_FRAC_WIDTH] = data_in[i][IN_WIDTH-2:IN_FRAC_WIDTH];
-        if (IN_FRAC_WIDTH > OUT_FRAC_WIDTH)
-          data_out[i][OUT_FRAC_WIDTH-1:0] = data_in[i][IN_FRAC_WIDTH-1:IN_FRAC_WIDTH-OUT_FRAC_WIDTH];
-        else
-          data_out[i][OUT_FRAC_WIDTH-1:0]  = data_in[i][IN_FRAC_WIDTH-1:0] << (OUT_FRAC_WIDTH-IN_FRAC_WIDTH);
-        /* verilator lint_on WIDTH */
-        /* verilator lint_on SELRANGE */
-      end
+    end else begin
+      assign data_out[i] = {out_sign[i].data, out_int[i].data, out_frac[i].data};
     end
   end
+
 
 endmodule
 
