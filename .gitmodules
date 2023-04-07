@@ -1,3 +1,6 @@
 [submodule "mlir-air"]
 	path = mlir-air
 	url = git@github.com:JianyiCheng/mlir-air.git
+[submodule "verilog-ethernet"]
+	path = verilog-ethernet
+	url = git@github.com:Yu-Zhewen/verilog-ethernet.git
