@@ -14,11 +14,11 @@
 // CHECK-NEXT: #include <stdint.h>
 // CHECK-NEXT: #include <string.h>
 // CHECK-NEXT: using namespace std;
-// CHECK: void relu(ap_fixed<8, 5> data_in[1][100],ap_fixed<8, 5> data_out[1][100]) {
-// CHECK-NEXT: ap_fixed<8, 5> v0 = 0.000000;
-// CHECK-NEXT: ap_fixed<8, 5> v1;
+// CHECK: void relu(ap_fixed<8, 3> data_in[1][100],ap_fixed<8, 3> data_out[1][100]) {
+// CHECK-NEXT: ap_fixed<8, 3> v0 = 0.000000;
+// CHECK-NEXT: ap_fixed<8, 3> v1;
 // CHECK-NEXT: bool v2;
-// CHECK-NEXT: ap_fixed<8, 5> v3;
+// CHECK-NEXT: ap_fixed<8, 3> v3;
 // CHECK-NEXT: b0:
 // CHECK-NEXT: for (int v4 = 0; v4 < 1; v4 += 1) {b1:
 // CHECK-NEXT: for (int v5 = 0; v5 < 100; v5 += 1) {b2:
