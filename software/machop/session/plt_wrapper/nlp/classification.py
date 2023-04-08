@@ -2,11 +2,12 @@ import torch
 import torch.nn as nn
 from torchmetrics import Accuracy, MeanMetric
 
-from ....models.patched_nlp_models import (
-    patched_model_name_to_output_hidden_states_name,
-)
+from ....models.patched_nlp_models import patched_model_name_to_output_name
 from ..base import WrapperBase
 
+# This map is used to fetch the output of the last layer.
+# Some model has pooler so the pooler output can be used directly (like Bert)
+# Other may not have pooler, thus the output hidden states will be fetched and fed to a pooler+linear classifier (like OPT)
 name_to_final_module_map = {
     # TODO: double check on how to extract classifier from last_hidden_state
     "facebook/opt-125m": "last_hidden_state",
@@ -22,7 +23,7 @@ name_to_final_module_map = {
     "bert-base-uncased": "pooler_output",
     "roberta-base": "pooler_output",
     "roberta-large": "pooler_output",
-} | patched_model_name_to_output_hidden_states_name
+} | patched_model_name_to_output_name
 
 
 class NLPClassificationModelWrapper(WrapperBase):
@@ -43,12 +44,20 @@ class NLPClassificationModelWrapper(WrapperBase):
         self.acc_val = Accuracy(task="multiclass", num_classes=self.num_classes)
         self.acc_test = Accuracy(task="multiclass", num_classes=self.num_classes)
 
-    def forward(self, input_ids, attention_mask, labels=None):
+    def forward(self, input_ids, attention_mask, token_type_ids, labels=None):
         """
         output.last_hidden_state (batch_size, token_num, hidden_size): hidden representation for each token in each sequence of the batch.
         output.pooler_output (batch_size, hidden_size): take hidden representation of [CLS] token in each sequence, run through BertPooler module (linear layer with Tanh activation)
         """
-        output = self.model(input_ids, attention_mask=attention_mask)
+        if token_type_ids is not None:
+            output = self.model(
+                input_ids, attention_mask=attention_mask, token_type_ids=token_type_ids
+            )
+        else:
+            output = self.model(
+                input_ids,
+                attention_mask=attention_mask,
+            )
 
         hidden = output[self.hidden_name]
         output = self.classifier(hidden)
@@ -67,7 +76,9 @@ class NLPClassificationModelWrapper(WrapperBase):
         input_ids = batch["input_ids"]
         attention_mask = batch["attention_mask"]
         labels = batch["labels"]
-        loss, outputs = self.forward(input_ids, attention_mask, labels)
+        token_type_ids = batch.get("token_type_ids", None)
+
+        loss, outputs = self.forward(input_ids, attention_mask, token_type_ids, labels)
         _, pred_ids = torch.max(outputs, dim=1)
         labels = labels[0] if len(labels) == 1 else labels.squeeze()
 
@@ -89,7 +100,8 @@ class NLPClassificationModelWrapper(WrapperBase):
         input_ids = batch["input_ids"]
         attention_mask = batch["attention_mask"]
         labels = batch["labels"]
-        loss, outputs = self.forward(input_ids, attention_mask, labels)
+        token_type_ids = batch.get("token_type_ids", None)
+        loss, outputs = self.forward(input_ids, attention_mask, token_type_ids, labels)
         _, pred_ids = torch.max(outputs, dim=1)
         labels = labels[0] if len(labels) == 1 else labels.squeeze()
 
@@ -119,7 +131,8 @@ class NLPClassificationModelWrapper(WrapperBase):
         input_ids = batch["input_ids"]
         attention_mask = batch["attention_mask"]
         labels = batch["labels"]
-        loss, outputs = self.forward(input_ids, attention_mask, labels)
+        token_type_ids = batch.get("token_type_ids", None)
+        loss, outputs = self.forward(input_ids, attention_mask, token_type_ids, labels)
         _, pred_ids = torch.max(outputs, dim=1)
         labels = labels[0] if len(labels) == 1 else labels.squeeze()
 

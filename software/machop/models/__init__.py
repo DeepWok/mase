@@ -128,6 +128,10 @@ _patched_nlp_model_map = {
     "facebook/opt-13b@patched": get_patched_nlp_model,
     "facebook/opt-30b@patched": get_patched_nlp_model,
     "facebook/opt-66b@patched": get_patched_nlp_model,
+    "bert-base-uncased@patched": get_patched_nlp_model,
+    "bert-large-uncased@patched": get_patched_nlp_model,
+    "bert-base-cased@patched": get_patched_nlp_model,
+    "bert-large-cased@patched": get_patched_nlp_model,
 }
 
 _manual_nlp_module_map = {}

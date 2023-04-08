@@ -18,25 +18,19 @@
 # limitations under the License.
 """ PyTorch OPT model."""
 import random
-from typing import List, Optional, Tuple, Union
+from typing import Optional, Tuple, Union
 
 import torch
 import torch.utils.checkpoint
 from torch import nn
-from torch.nn import BCEWithLogitsLoss, CrossEntropyLoss, MSELoss
+from torch.nn import CrossEntropyLoss
 from transformers.activations import ACT2FN
 from transformers.modeling_outputs import (
     BaseModelOutputWithPast,
     CausalLMOutputWithPast,
 )
 from transformers.modeling_utils import PreTrainedModel
-from transformers.utils import (
-    add_code_sample_docstrings,
-    add_start_docstrings,
-    add_start_docstrings_to_model_forward,
-    logging,
-    replace_return_docstrings,
-)
+from transformers.utils import logging, replace_return_docstrings
 
 from ....graph.mase_tracer import mark_as_leaf_module, torch_ones
 from .configuration_opt_patched import OPTConfigPatched
@@ -52,6 +46,8 @@ from .utils_opt_patched import (
     OPTAttention_self_shape,
     OPTDecoder_check_head_mask,
     OPTDecoder_self_prepare_decoder_attention,
+    OPTDecoder_view_input_ids,
+    OPTForCasualLM_compute_loss,
 )
 
 logger = logging.get_logger(__name__)
@@ -142,99 +138,35 @@ class OPTAttentionPatched(nn.Module):
         self,
         hidden_states: torch.Tensor,
         attention_mask: torch.Tensor,
-        key_value_states: Optional[torch.Tensor] = None,
-        past_key_value: Optional[Tuple[torch.Tensor]] = None,
+        # key_value_states: Optional[torch.Tensor] = None,
+        # past_key_value: Optional[Tuple[torch.Tensor]] = None,
         layer_head_mask: Optional[torch.Tensor] = None,
         output_attentions: bool = False,
     ) -> Tuple[torch.Tensor, Optional[torch.Tensor], Optional[Tuple[torch.Tensor]]]:
         """Input shape: Batch x Time x Channel"""
 
-        # if key_value_states are provided this layer is used as a cross-attention layer
-        # for the decoder
-        is_cross_attention = key_value_states is not None
-
         bsz, tgt_len, _ = hidden_states.size()
 
         # get query proj
         query_states = self.q_proj(hidden_states) * self.scaling
-        # get key, value proj
-        if is_cross_attention and past_key_value is not None:
-            # reuse k,v, cross_attentions
-            # current OPTAttentionPatched does not support using cache.
-            # because using cache needs changing the graph after the first auto-regressive generation
-            # before the first auto-regressive decoding, past_key_value is None
-            # after the first auto-regressive decoding, past_key_value is Tuple[Tensor]
-            raise RuntimeError(
-                "Traceable OPTAttention does not support using cached past keys and values"
-            )
-            key_states = past_key_value[0]
-            value_states = past_key_value[1]
-        elif is_cross_attention:
-            # cross_attentions
-            key_states = OPTAttention_self_shape(
-                self.k_proj(key_value_states),
-                seq_len=-1,
-                bsz=bsz,
-                num_heads=self.num_heads,
-                head_dim=self.head_dim,
-            )
-            value_states = OPTAttention_self_shape(
-                self.v_proj(key_value_states),
-                seq_len=-1,
-                bsz=bsz,
-                num_heads=self.num_heads,
-                head_dim=self.head_dim,
-            )
-        elif past_key_value is not None:
-            # reuse k, v, self_attention
-            # current OPTAttentionPatched does not support using cache.
-            raise RuntimeError(
-                "Traceable OPTAttention does not support using cached past keys and values"
-            )
-            key_states = OPTAttention_self_shape(
-                self.k_proj(hidden_states),
-                seq_len=-1,
-                bsz=bsz,
-                num_heads=self.num_heads,
-                head_dim=self.head_dim,
-            )
-            value_states = OPTAttention_self_shape(
-                self.v_proj(hidden_states),
-                seq_len=-1,
-                bsz=bsz,
-                num_heads=self.num_heads,
-                head_dim=self.head_dim,
-            )
-            key_states = torch.cat([past_key_value[0], key_states], dim=2)
-            value_states = torch.cat([past_key_value[1], value_states], dim=2)
-        else:
-            # self_attention
-            # key_value_states is None, past_key_value is None
-            # *: only this if branch will be used in OPTModelPatched
-            key_states = OPTAttention_self_shape(
-                self.k_proj(hidden_states),
-                seq_len=-1,
-                bsz=bsz,
-                num_heads=self.num_heads,
-                head_dim=self.head_dim,
-            )
-            value_states = OPTAttention_self_shape(
-                self.v_proj(hidden_states),
-                seq_len=-1,
-                bsz=bsz,
-                num_heads=self.num_heads,
-                head_dim=self.head_dim,
-            )
 
-        if self.is_decoder:
-            # if cross_attention save Tuple(torch.Tensor, torch.Tensor) of all cross attention key/value_states.
-            # Further calls to cross_attention layer can then reuse all cross-attention
-            # key/value_states (first "if" case)
-            # if uni-directional self-attention (decoder) save Tuple(torch.Tensor, torch.Tensor) of
-            # all previous decoder key/value_states. Further calls to uni-directional self-attention
-            # can concat previous decoder key/value_states to current projected key/value_states (third "elif" case)
-            # if encoder bi-directional self-attention `past_key_value` is always `None`
-            past_key_value = (key_states, value_states)
+        # self_attention
+        # key_value_states is None, past_key_value is None
+        # *: only this if branch will be used in OPTModelPatched
+        key_states = OPTAttention_self_shape(
+            self.k_proj(hidden_states),
+            seq_len=-1,
+            bsz=bsz,
+            num_heads=self.num_heads,
+            head_dim=self.head_dim,
+        )
+        value_states = OPTAttention_self_shape(
+            self.v_proj(hidden_states),
+            seq_len=-1,
+            bsz=bsz,
+            num_heads=self.num_heads,
+            head_dim=self.head_dim,
+        )
 
         proj_shape = OPTAttention_construct_proj_shape(
             bsz, self.num_heads, self.head_dim
@@ -325,7 +257,7 @@ class OPTAttentionPatched(nn.Module):
 
         attn_output = self.out_proj(attn_output)
 
-        return attn_output, attn_weights_reshaped, past_key_value
+        return attn_output, attn_weights_reshaped
 
 
 class OPTDecoderLayerPatched(nn.Module):
@@ -381,13 +313,13 @@ class OPTDecoderLayerPatched(nn.Module):
 
         # Self Attention
         # *: key_value_states is always None
-        hidden_states, self_attn_weights, _ = self.self_attn(
+        hidden_states, self_attn_weights = self.self_attn(
             hidden_states=hidden_states,
-            past_key_value=None,
+            # past_key_value=None,
             attention_mask=attention_mask,
             layer_head_mask=layer_head_mask,
             output_attentions=output_attentions,
-            key_value_states=None,
+            # key_value_states=None,
         )
         hidden_states = nn.functional.dropout(
             hidden_states, p=self.dropout, training=self.training
@@ -429,27 +361,6 @@ class OPTDecoderLayerPatched(nn.Module):
         return outputs
 
 
-OPT_START_DOCSTRING = r"""
-    This model inherits from [`PreTrainedModel`]. Check the superclass documentation for the generic methods the
-    library implements for all its model (such as downloading or saving, resizing the input embeddings, pruning heads
-    etc.)
-
-    This model is also a PyTorch [torch.nn.Module](https://pytorch.org/docs/stable/nn.html#torch.nn.Module) subclass.
-    Use it as a regular PyTorch Module and refer to the PyTorch documentation for all matter related to general usage
-    and behavior.
-
-    Parameters:
-        config ([`OPTConfig`]):
-            Model configuration class with all the parameters of the model. Initializing with a config file does not
-            load the weights associated with the model, only the configuration. Check out the
-            [`~PreTrainedModel.from_pretrained`] method to load the model weights.
-"""
-
-
-@add_start_docstrings(
-    "The bare OPT Model outputting raw hidden-states without any specific head on top.",
-    OPT_START_DOCSTRING,
-)
 class OPTPatchedPreTrainedModel(PreTrainedModel):
     config_class = OPTConfigPatched
     base_model_prefix = "model"
@@ -471,54 +382,6 @@ class OPTPatchedPreTrainedModel(PreTrainedModel):
     def _set_gradient_checkpointing(self, module, value=False):
         if isinstance(module, OPTDecoderPatched):
             module.gradient_checkpointing = value
-
-
-OPT_INPUTS_DOCSTRING = r"""
-    Args:
-        input_ids (`torch.LongTensor` of shape `(batch_size, sequence_length)`):
-            Indices of input sequence tokens in the vocabulary. Padding will be ignored by default should you provide
-            it.
-
-            Indices can be obtained using [`AutoTokenizer`]. See [`PreTrainedTokenizer.encode`] and
-            [`PreTrainedTokenizer.__call__`] for details.
-
-            [What are input IDs?](../glossary#input-ids)
-        attention_mask (`torch.Tensor` of shape `(batch_size, sequence_length)`, *optional*):
-            Mask to avoid performing attention on padding token indices. Mask values selected in `[0, 1]`:
-
-            - 1 for tokens that are **not masked**,
-            - 0 for tokens that are **masked**.
-
-            [What are attention masks?](../glossary#attention-mask)
-
-            Indices can be obtained using [`AutoTokenizer`]. See [`PreTrainedTokenizer.encode`] and
-            [`PreTrainedTokenizer.__call__`] for details.
-
-            If `past_key_values` is used, optionally only the last `decoder_input_ids` have to be input (see
-            `past_key_values`).
-
-            If you want to change padding behavior, you should read [`modeling_opt._prepare_decoder_attention_mask`]
-            and modify to your needs. See diagram 1 in [the paper](https://arxiv.org/abs/1910.13461) for more
-            information on the default strategy.
-        head_mask (`torch.Tensor` of shape `(encoder_layers, encoder_attention_heads)`, *optional*):
-            Mask to nullify selected heads of the attention modules in the encoder. Mask values selected in `[0, 1]`:
-
-            - 1 indicates the head is **not masked**,
-            - 0 indicates the head is **masked**.
-
-        inputs_embeds (`torch.FloatTensor` of shape `(batch_size, sequence_length, hidden_size)`, *optional*):
-            Optionally, instead of passing `input_ids` you can choose to directly pass an embedded representation. This
-            is useful if you want more control over how to convert `input_ids` indices into associated vectors than the
-            model's internal embedding lookup matrix.
-        output_attentions (`bool`, *optional*):
-            Whether or not to return the attentions tensors of all attention layers. See `attentions` under returned
-            tensors for more detail.
-        output_hidden_states (`bool`, *optional*):
-            Whether or not to return the hidden states of all layers. See `hidden_states` under returned tensors for
-            more detail.
-        return_dict (`bool`, *optional*):
-            Whether or not to return a [`~utils.ModelOutput`] instead of a plain tuple.
-"""
 
 
 class OPTDecoderPatched(OPTPatchedPreTrainedModel):
@@ -585,12 +448,13 @@ class OPTDecoderPatched(OPTPatchedPreTrainedModel):
 
     def forward(
         self,
-        input_ids: torch.LongTensor = None,
+        input_ids: torch.LongTensor,
         attention_mask: torch.Tensor = None,
         head_mask: Optional[torch.Tensor] = None,
-        inputs_embeds: Optional[torch.FloatTensor] = None,
-        output_attentions: Optional[bool] = None,
-        output_hidden_states: Optional[bool] = None,
+        # inputs_embeds: Optional[torch.FloatTensor] = None,
+        return_dict: Optional[bool] = True,
+        output_attentions: Optional[bool] = False,
+        output_hidden_states: Optional[bool] = False,
     ) -> Union[Tuple, BaseModelOutputWithPast]:
         r"""
         Args:
@@ -615,10 +479,6 @@ class OPTDecoderPatched(OPTPatchedPreTrainedModel):
                 - 1 indicates the head is **not masked**,
                 - 0 indicates the head is **masked**.
 
-            inputs_embeds (`torch.FloatTensor` of shape `(batch_size, sequence_length, hidden_size)`, *optional*):
-                Optionally, instead of passing `input_ids` you can choose to directly pass an embedded representation.
-                This is useful if you want more control over how to convert `input_ids` indices into associated vectors
-                than the model's internal embedding lookup matrix.
             output_attentions (`bool`, *optional*):
                 Whether or not to return the attentions tensors of all attention layers. See `attentions` under
                 returned tensors for more detail.
@@ -627,26 +487,25 @@ class OPTDecoderPatched(OPTPatchedPreTrainedModel):
                 for more detail.
         """
 
-        return_dict = self.config.return_dict
-        # retrieve input_ids and inputs_embeds
-        if input_ids is not None and inputs_embeds is not None:
-            raise ValueError(
-                "You cannot specify both decoder_input_ids and decoder_inputs_embeds at the same time"
-            )
-        elif input_ids is not None:
-            input_shape = input_ids.size()
-            input_ids = input_ids.view(-1, input_shape[-1])
-        elif inputs_embeds is not None:
-            input_shape = inputs_embeds.size()[:-1]
-        else:
-            raise ValueError(
-                "You have to specify either decoder_input_ids or decoder_inputs_embeds"
-            )
+        return_dict = self.config.return_dict if return_dict is None else return_dict
+        output_attentions = (
+            self.config.output_attentions
+            if output_attentions is None
+            else output_attentions
+        )
+        output_hidden_states = (
+            self.config.output_hidden_states
+            if output_hidden_states is None
+            else output_hidden_states
+        )
 
+        input_shape = input_ids.size()
+        # input_ids = input_ids.view(-1, input_shape[-1])
+        input_ids = OPTDecoder_view_input_ids(
+            input_ids=input_ids, input_shape=input_shape
+        )
         past_key_values_length = 0
-
-        if inputs_embeds is None:
-            inputs_embeds = self.embed_tokens(input_ids)
+        inputs_embeds = self.embed_tokens(input_ids)
 
         # embed positions
         if attention_mask is None:
@@ -716,10 +575,6 @@ class OPTDecoderPatched(OPTPatchedPreTrainedModel):
         )
 
 
-@add_start_docstrings(
-    "The bare OPT Model outputting raw hidden-states without any specific head on top.",
-    OPT_START_DOCSTRING,
-)
 class OPTModelPatched(OPTPatchedPreTrainedModel):
     def __init__(self, config: OPTConfigPatched):
         super().__init__(config)
@@ -736,33 +591,35 @@ class OPTModelPatched(OPTPatchedPreTrainedModel):
     def get_decoder(self):
         return self.decoder
 
-    @add_start_docstrings_to_model_forward(OPT_INPUTS_DOCSTRING)
-    @add_code_sample_docstrings(
-        checkpoint=_CHECKPOINT_FOR_DOC,
-        output_type=BaseModelOutputWithPast,
-        config_class=_CONFIG_FOR_DOC,
-        expected_output=_EXPECTED_OUTPUT_SHAPE,
-    )
     def forward(
         self,
         input_ids: torch.LongTensor = None,
         attention_mask: torch.Tensor = None,
         head_mask: Optional[torch.Tensor] = None,
-        inputs_embeds: Optional[torch.FloatTensor] = None,
+        return_dict: Optional[bool] = True,
+        output_attentions: Optional[bool] = False,
+        output_hidden_states: Optional[bool] = False,
     ) -> Union[Tuple, BaseModelOutputWithPast]:
-        output_attentions = self.config.output_attentions
-        output_hidden_states = self.config.output_hidden_states
-        return_dict = self.config.return_dict
+        output_attentions = (
+            self.config.output_attentions
+            if output_attentions is None
+            else output_attentions
+        )
+        output_hidden_states = (
+            self.config.output_hidden_states
+            if output_hidden_states is None
+            else output_hidden_states
+        )
+        return_dict = self.config.return_dict if return_dict is None else return_dict
 
         # decoder outputs consists of (dec_features, past_key_value, dec_hidden, dec_attn)
         decoder_outputs = self.decoder(
             input_ids=input_ids,
             attention_mask=attention_mask,
             head_mask=head_mask,
-            inputs_embeds=inputs_embeds,
             output_attentions=output_attentions,
             output_hidden_states=output_hidden_states,
-            # return_dict=return_dict,
+            return_dict=return_dict,
         )
 
         if not return_dict:
@@ -815,14 +672,14 @@ class OPTForCausalLMPatched(OPTPatchedPreTrainedModel):
     )
     def forward(
         self,
-        input_ids: torch.LongTensor = None,
+        input_ids: torch.LongTensor,
         attention_mask: torch.Tensor = None,
         labels: torch.LongTensor = None,
         head_mask: Optional[torch.Tensor] = None,
-        inputs_embeds: Optional[torch.FloatTensor] = None,
-        # output_attentions: Optional[bool] = None,
-        # output_hidden_states: Optional[bool] = None,
-        # return_dict: Optional[bool] = None,
+        # inputs_embeds: Optional[torch.FloatTensor] = None,
+        output_attentions: Optional[bool] = False,
+        output_hidden_states: Optional[bool] = False,
+        return_dict: Optional[bool] = True,
     ) -> Union[Tuple, CausalLMOutputWithPast]:
         r"""
         Args:
@@ -847,17 +704,10 @@ class OPTForCausalLMPatched(OPTPatchedPreTrainedModel):
                 - 1 indicates the head is **not masked**,
                 - 0 indicates the head is **masked**.
 
-            inputs_embeds (`torch.FloatTensor` of shape `(batch_size, sequence_length, hidden_size)`, *optional*):
-                Optionally, instead of passing `input_ids` you can choose to directly pass an embedded representation.
-                This is useful if you want more control over how to convert `input_ids` indices into associated vectors
-                than the model's internal embedding lookup matrix.
             labels (`torch.LongTensor` of shape `(batch_size, sequence_length)`, *optional*):
                 Labels for computing the masked language modeling loss. Indices should either be in `[0, ...,
                 config.vocab_size]` or -100 (see `input_ids` docstring). Tokens with indices set to `-100` are ignored
                 (masked), the loss is only computed for the tokens with labels in `[0, ..., config.vocab_size]`.
-            use_cache (`bool`, *optional*):
-                If set to `True`, `past_key_values` key value states are returned and can be used to speed up decoding
-                (see `past_key_values`).
             output_attentions (`bool`, *optional*):
                 Whether or not to return the attentions tensors of all attention layers. See `attentions` under
                 returned tensors for more detail.
@@ -886,26 +736,36 @@ class OPTForCausalLMPatched(OPTPatchedPreTrainedModel):
         "Hey, are you consciours? Can you talk to me?\nI'm not consciours, but I can talk to you."
         ```"""
 
-        return_dict = self.config.return_dict
+        return_dict = self.config.return_dict if return_dict is None else return_dict
+        output_attentions = (
+            self.config.output_attentions
+            if output_attentions is None
+            else output_attentions
+        )
+        output_hidden_states = (
+            self.config.output_hidden_states
+            if output_hidden_states is None
+            else output_hidden_states
+        )
 
         # decoder outputs consists of (dec_features, layer_state, dec_hidden, dec_attn)
         outputs = self.model.decoder(
             input_ids=input_ids,
             attention_mask=attention_mask,
             head_mask=head_mask,
-            inputs_embeds=inputs_embeds,
+            # inputs_embeds=inputs_embeds,
         )
 
         logits = self.lm_head(outputs[0]).contiguous()
 
         loss = None
         if labels is not None:
-            # Shift so that tokens < n predict n
-            shift_logits = logits[..., :-1, :].contiguous()
-            shift_labels = labels[..., 1:].contiguous()
-            # Flatten the tokens
-            loss = self.loss_fct(
-                shift_logits.view(-1, self.config.vocab_size), shift_labels.view(-1)
+            # # Shift so that tokens < n predict n
+            loss = OPTForCasualLM_compute_loss(
+                logits=logits,
+                labels=labels,
+                self_loss_fct=self.loss_fct,
+                self_config_vocab_size=self.config.vocab_size,
             )
 
         if not return_dict:

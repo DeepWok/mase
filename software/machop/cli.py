@@ -500,7 +500,6 @@ class Machop:
         else:
             raise NotImplementedError(f"Unknown model {args.model!r}.")
         logger.info("Model is created")
-
         # Get data module
         data_module = MyDataModule(
             name=args.dataset,
@@ -510,7 +509,9 @@ class Machop:
             max_token_len=args.max_token_len,
         )
         logger.info("DataModule is created")
+        # import ipdb
 
+        # ipdb.set_trace()
         self.model, self.data_module, self.info = model, data_module, dataset_info
 
     def create_output_dir(self):
