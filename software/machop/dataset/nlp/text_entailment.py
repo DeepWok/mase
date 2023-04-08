@@ -84,14 +84,17 @@ class TextEntailDataset(Dataset):
         )
         input_ids = encoding["input_ids"].flatten()
         attention_mask = encoding["attention_mask"].flatten()
-
-        return dict(
+        input_dict = dict(
             question=question,
             answer=answer,
             input_ids=input_ids,
             attention_mask=attention_mask,
             labels=torch.tensor([labels]),
         )
+        if "token_type_ids" in self.tokenizer.model_input_names:
+            input_dict["token_type_ids"] = encoding["token_type_ids"].flatten()
+
+        return input_dict
 
     def _download_or_load_raw_dataset(self):
         raise NotImplementedError

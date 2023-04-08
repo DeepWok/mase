@@ -4,9 +4,8 @@ import math
 import torch
 from torch.fx import GraphModule, Tracer
 from torch.fx import wrap as fx_wrap
-from transformers.models.t5.modeling_t5 import T5Attention, T5LayerNorm
 
-CUSTOM_LEAF_MODULES = [T5LayerNorm]
+CUSTOM_LEAF_MODULES = []
 CUSTOM_LEAF_FUNCTIONS = []
 USER_CUSTOM_LEAF_MODULES = []
 USER_CUSTOM_LEAF_FUNCTIONS = []

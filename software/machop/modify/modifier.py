@@ -222,8 +222,13 @@ class Modifier:
         self.graph_module = GraphModule(model, graph)
 
     def modify(self) -> GraphModule:
+        is_training_mode = self.graph_module.training
+        self.graph_module.eval()
         clear_node_metadata_software(self.graph_module)
         self._modify()
+        self._copy_attributes()
+        if is_training_mode:
+            self.graph_module.train()
         self.compare_model()
         self._save_modified_model_to_pkl()
         return self.graph_module
@@ -445,10 +450,21 @@ class Modifier:
             granularity = "Coarse-grained"
         logger.info(f"{granularity} software modification done")
 
+    def _copy_attributes(self):
+        for attr_name in filter(
+            lambda attr_name: not attr_name.startswith("__"), dir(self.original_model)
+        ):
+            if not hasattr(self.graph_module, attr_name):
+                setattr(
+                    self.graph_module,
+                    attr_name,
+                    getattr(self.original_model, attr_name),
+                )
+
     @classmethod
     def create_empty_config_template(
         cls,
-        model,
+        model: nn.Module,
         dummy_inputs={},
         custom_leaf_module_classes: List[type] = [],
         save_path: str = None,
@@ -481,6 +497,9 @@ class Modifier:
             config["methods_to_modify"][method_name] = {"name": "default"}
 
         config["modules_to_modify"] = {}
+
+        is_training_mode = model.training
+        model.eval()
         clear_user_custom_leaf_modules()
         for custom_cls in custom_leaf_module_classes:
             mark_as_user_custom_leaf_module(custom_cls)
@@ -496,6 +515,8 @@ class Modifier:
             with open(save_path, "w+") as f:
                 toml.dump(config, f)
             logger.info(f"Modify-sw-config template saved at {save_path}")
+        if is_training_mode:
+            model.train()
         return config
 
 

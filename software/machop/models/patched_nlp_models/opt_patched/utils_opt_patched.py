@@ -143,6 +143,12 @@ def _expand_mask(mask: torch.Tensor, dtype: torch.dtype, tgt_len: Optional[int] 
 
 
 @mark_as_leaf_func
+def OPTDecoder_view_input_ids(input_ids, input_shape):
+    input_ids = input_ids.view(-1, input_shape[-1])
+    return input_ids
+
+
+@mark_as_leaf_func
 def OPTDecoder_self_prepare_decoder_attention(
     attention_mask: Tensor,
     input_shape,
@@ -183,3 +189,14 @@ def OPTDecoder_check_head_mask(head_mask, decoder_layers) -> bool:
                     f" {head_mask.size()[0]}."
                 )
     return True
+
+
+@mark_as_leaf_func
+def OPTForCasualLM_compute_loss(logits, labels, self_loss_fct, self_config_vocab_size):
+    shift_logits = logits[..., :-1, :].contiguous()
+    shift_labels = labels[..., 1:].contiguous()
+    # Flatten the tokens
+    loss = self_loss_fct(
+        shift_logits.view(-1, self_config_vocab_size), shift_labels.view(-1)
+    )
+    return loss
