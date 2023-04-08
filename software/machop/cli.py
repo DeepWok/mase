@@ -810,7 +810,6 @@ class Machop:
             project_dir=self.output_dir,
             to_debug=args.to_debug,
             target=args.target,
-            mode=mode,
             num_targets=args.num_targets,
             # comment out to allow internal pass to provide this info
             common_param=os.path.join(

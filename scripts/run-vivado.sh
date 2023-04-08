@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # --------------------------------------------------------------------
-#    This script searches for Vitis HLS and calls Vitis HLS  
+#    This script searches for Vivado and calls Vivado  
 # --------------------------------------------------------------------
 
 set -o errexit

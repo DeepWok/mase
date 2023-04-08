@@ -19,6 +19,11 @@ from ..graph.utils import get_module_by_name, vf, v2p
 from .mase_mem_emitter import emit_parameters_in_rom_internal
 from .mase_mem_emitter import emit_parameters_in_rom_hls
 
+from .sim.emit_data_in_tb import emit_data_in_tb
+from .sim.emit_data_out_tb import emit_data_out_tb
+from .sim.emit_top_tb import emit_top_tb
+
+
 logger = logging.getLogger(__name__)
 
 
@@ -112,6 +117,16 @@ def _get_cast_parameters(from_node, to_node, is_start=False, is_end=False):
     )
 
 
+def _create_new_dir(new_dir):
+    if not os.path.exists(new_dir):
+        os.mkdir(new_dir)
+    for p in glob.glob(os.path.join(new_dir, "*")):
+        if os.path.isfile(p):
+            os.remove(p)
+        else:
+            shutil.rmtree(p)
+
+
 class MaseVerilogEmitter(MaseGraph):
     def __init__(
         self,
@@ -162,29 +177,138 @@ class MaseVerilogEmitter(MaseGraph):
         rtl_dir = os.path.join(hardware_dir, "rtl")
         if not os.path.exists(rtl_dir):
             os.mkdir(rtl_dir)
-        else:
-            for p in glob.glob(os.path.join(rtl_dir, "*")):
-                os.remove(p)
 
     # ----------------------------------------------------------
     # Emit testbench code
     # ----------------------------------------------------------
     def emit_tb(self):
         """
-        Emit Verilog test bench 
+        Emit test bench for simulation
         """
         self.verify()
 
         sim_dir = os.path.join(self.project_dir, "hardware", "sim")
-        if not os.path.exists(sim_dir):
-            os.mkdir(sim_dir)
-        for p in glob.glob(os.path.join(sim_dir, "*")):
-            if os.path.isfile(p):
-                os.remove(p)
-            else:
-                shutil.rmtree(p)
+        tv_dir = os.path.join(sim_dir, "tv")
+        v_dir = os.path.join(sim_dir, "verilog")
+        prj_dir = os.path.join(sim_dir, "prj")
+        for new_dir in [sim_dir, tv_dir, v_dir, prj_dir]:
+            _create_new_dir(new_dir)
 
+        self._emit_tb_verilog(tv_dir, v_dir)
+        self._emit_tb_dat(tv_dir)
+        self._emit_tb_tcl(prj_dir)
 
+    def _emit_tb_verilog(self, tv_dir, v_dir):
+        """
+        Emit the Verilog test bench for simulation
+        """
+        data_in_param = self.nodes_in[0].meta.parameters["hardware"][
+            "verilog_parameters"
+        ]
+        data_width = data_in_param["IN_WIDTH"] * data_in_param["IN_SIZE"]
+        # TODO : need to check
+        addr_width = 1
+        depth = 1
+        load_path = os.path.join(tv_dir, f"sw_data_in.dat")
+        out_file = os.path.join(v_dir, f"{self.project}_data_in_fifo.sv")
+        emit_data_in_tb(data_width, addr_width, depth, load_path, out_file)
+
+        data_out_param = self.nodes_out[0].meta.parameters["hardware"][
+            "verilog_parameters"
+        ]
+        data_width = data_out_param["OUT_WIDTH"] * data_out_param["OUT_SIZE"]
+        # TODO : need to check
+        addr_width = 1
+        depth = 1
+        load_path = os.path.join(tv_dir, f"sw_data_out.dat")
+        store_path = os.path.join(tv_dir, f"hw_data_out.dat")
+        out_file = os.path.join(v_dir, f"{self.project}_data_out_fifo.sv")
+        emit_data_out_tb(data_width, addr_width, depth, load_path, store_path, out_file)
+        out_file = os.path.join(v_dir, f"{self.project}_tb.sv")
+        emit_top_tb(tv_dir, self.project, out_file)
+
+    def _emit_tb_dat(self, tv_dir):
+        """
+        Emit the test vectors in dat files for simulation
+        """
+
+    def _emit_tb_tcl(self, prj_dir):
+        """
+        Emit Vivado tcl files for simulation
+        """
+        out_file = os.path.join(prj_dir, "proj.tcl")
+        buff = f"""
+#log_wave -r /
+run all 
+quit
+"""
+        with open(out_file, "w", encoding="utf-8") as outf:
+            outf.write(buff)
+
+        rtl_dir = os.path.join(prj_dir, "..", "..", "rtl")
+        v_dir = os.path.join(prj_dir, "..", "verilog")
+
+        buff = ""
+        for file_dir in [rtl_dir, v_dir]:
+            for file in glob.glob(os.path.join(file_dir, "*.sv")) + glob.glob(
+                os.path.join(file_dir, "*.v")
+            ):
+                buff += f"""sv work "{file}" 
+"""
+            for file in glob.glob(os.path.join(file_dir, "*.vhd")):
+                buff += f"""vhdl work "{file}" 
+"""
+
+        # Add HLS tcls
+        hls_dir = os.path.join(prj_dir, "..", "..", "hls")
+        for node in self.fx_graph.nodes:
+            if node.op != "call_module" and node.op != "call_function":
+                continue
+            if node.meta.parameters["hardware"]["toolchain"] != "HLS":
+                continue
+            node_name = vf(node.name)
+            syn_dir = os.path.join(
+                hls_dir, node_name, node_name, "solution1", "syn", "verilog"
+            )
+            for file in glob.glob(os.path.join(syn_dir, "*.v")):
+                buff += f"""sv work "{file}" 
+"""
+            for file in glob.glob(os.path.join(syn_dir, "*.tcl")):
+                buff += f"""source "{file}"
+"""
+
+        out_file = os.path.join(prj_dir, "proj.prj")
+        with open(out_file, "w", encoding="utf-8") as outf:
+            outf.write(buff)
+
+    def run_cosim(self):
+        """
+        Call XSIM for simulation
+        """
+
+        xsim = os.path.abspath(
+            os.path.join(
+                os.path.dirname(__file__),
+                "..",
+                "..",
+                "..",
+                "scripts",
+                "run-xsim.sh",
+            )
+        )
+        cmd = [
+            "bash",
+            xsim,
+            f"{self.project}_tb",
+        ]
+        sim_dir = os.path.join(self.project_dir, "hardware", "sim", "prj")
+        result = _execute(cmd, log_output=self.to_debug, cwd=sim_dir)
+
+        if result:
+            logger.error(f"Co-simulation failed. {self.project}")
+        else:
+            logger.debug(f"Co-simulation succeeded. {self.project}")
+        return result
 
     # ----------------------------------------------------------
     # Emit hardware code
@@ -196,13 +320,7 @@ class MaseVerilogEmitter(MaseGraph):
         self.verify()
 
         rtl_dir = os.path.join(self.project_dir, "hardware", "rtl")
-        if not os.path.exists(rtl_dir):
-            os.mkdir(rtl_dir)
-        for p in glob.glob(os.path.join(rtl_dir, "*")):
-            if os.path.isfile(p):
-                os.remove(p)
-            else:
-                shutil.rmtree(p)
+        _create_new_dir(rtl_dir)
 
         # Emit each components in the form of layers
         self.emit_components()
@@ -1225,13 +1343,7 @@ csynth_design
         if not os.path.exists(hls_dir):
             os.mkdir(hls_dir)
         node_dir = os.path.join(hls_dir, node.name)
-        if not os.path.exists(node_dir):
-            os.mkdir(node_dir)
-        for p in glob.glob(os.path.join(node_dir, "*")):
-            if os.path.isfile(p):
-                os.remove(p)
-            else:
-                shutil.rmtree(p)
+        _create_new_dir(node_dir)
 
         result = self._call_hls_flow(node, node_dir)
         queue.put(result)
