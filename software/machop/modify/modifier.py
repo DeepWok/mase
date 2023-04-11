@@ -3,7 +3,7 @@ import operator
 import os
 import pickle
 from copy import copy, deepcopy
-from typing import Callable, Dict, List
+from typing import Callable, Dict, List, Union
 
 import toml
 import torch
@@ -27,7 +27,7 @@ from .quantizers import (
     MODULE_CLS_MAP_NEO,
     QUANTIZED_MODULE_CLASSES,
 )
-from .utils import copy_weights
+from machop.utils import copy_weights
 
 logger = logging.getLogger(__name__)
 
@@ -75,7 +75,7 @@ class Modifier:
     def __init__(
         self,
         model: nn.Module,
-        config_path: str,
+        config_path: Union[str, dict],
         dummy_inputs_for_fx: Dict = {},
         module_classes_to_modify: Dict[str, Dict] = None,
         functions_to_modify: Dict[str, Dict] = None,
@@ -84,6 +84,7 @@ class Modifier:
         custom_leaf_module_classes: List[type] = [],
         create_new_custom_module_fn: Callable = None,
         save_dir: str = None,
+        silent: bool = False,
     ) -> None:
         """
         Note that modules_to_modify will overwrites module_classes_to_modify
@@ -129,31 +130,41 @@ class Modifier:
         self.graph = None
         self.graph_module = None
 
+        self.silent = silent
+
         # load, parse, and save config
-        self._load_config(config_path)
-        self._overwrite_config(
+        self.load_config(config_path)
+        self.overwrite_config(
             module_classes_to_modify,
             functions_to_modify,
             methods_to_modify,
             modules_to_modify,
         )
-        self._check_modifiable(model)
+        self.check_modifiable(model)
         self._save_config()
         # build fx.Graph
-        self._build_graph(model, dummy_inputs_for_fx, custom_leaf_module_classes)
+        self.build_graph(model, dummy_inputs_for_fx, custom_leaf_module_classes)
 
-    def _load_config(self, config_path: str):
+    def load_config(self, config_path: Union[str, dict]):
+        if config_path is None:
+            self.config = None
+            return
+        if type(config_path) == dict:
+            self.config = config_path
+            return
         if not config_path.endswith("toml"):
             raise ValueError("Config File must be a toml file")
         self.config = toml.load(config_path)
 
-    def _overwrite_config(
+    def overwrite_config(
         self,
         module_classes_to_modify: Dict[str, Dict],
         functions_to_modify: Dict[str, Dict],
         methods_to_modify: Dict[str, Dict],
         modules_to_modify: Dict[str, Dict],
     ):
+        if self.config is None:
+            return
         assert (
             "module_classes_to_modify" in self.config
         ), "Cannot find `module_classes_to_modify` in config"
@@ -183,11 +194,13 @@ class Modifier:
                 toml.dump(self.config, f)
             logger.info(f"Modify-sw config is saved to {config_path}")
 
-    def _check_modifiable(self, model):
+    def check_modifiable(self, model):
         """
         Check if model class names, function names, and method names are supported
         Check if module names exist in model
         """
+        if self.config is None:
+            return
         for module_cls_name, module_cls_config in self.config[
             "module_classes_to_modify"
         ].items():
@@ -213,7 +226,7 @@ class Modifier:
             assert name in module_names, f"Name {name} not found in model"
         self.modules_to_modify = self.config["modules_to_modify"]
 
-    def _build_graph(self, model, dummy_inputs, custom_leaf_module_classes):
+    def build_graph(self, model, dummy_inputs, custom_leaf_module_classes):
         clear_user_custom_leaf_modules()
         for custom_cls in custom_leaf_module_classes:
             mark_as_user_custom_leaf_module(custom_cls)
@@ -318,7 +331,8 @@ class Modifier:
         report = tabulate(complete_comparison, headers=headers, tablefmt="github")
         self.original_model = None
 
-        logger.info("Histogram of modified model")
+        if not self.silent:
+            logger.info("Histogram of modified model")
         headers = ["Original OP", "Num", "Changed?"]
         histogram_rows = []
         for op_name, d in modify_hits_and_misses.items():
@@ -328,7 +342,8 @@ class Modifier:
         histogram_rows.append(["All 'call_module'", total_modules, "-"])
         histogram_rows.append(["All 'call function'", total_functions, "-"])
         histogram_rows.append(["All 'call method'", total_methods, "-"])
-        print(tabulate(histogram_rows, headers=headers, tablefmt="github"))
+        if not self.silent:
+            print(tabulate(histogram_rows, headers=headers, tablefmt="github"))
 
         if self.save_dir:
             if not os.path.isdir(self.save_dir):
@@ -388,6 +403,7 @@ class Modifier:
                 except NotImplementedError:
                     # print(f"Custom module {module}, {type(module)}")
                     # create new layer using user provided module
+                    breakpoint()
                     new_module = self.create_new_custom_module(
                         original_module=module, config=sub_config
                     )
@@ -448,7 +464,8 @@ class Modifier:
             granularity = "Coarse-grained and fine-grained"
         else:
             granularity = "Coarse-grained"
-        logger.info(f"{granularity} software modification done")
+        if not self.silent:
+            logger.info(f"{granularity} software modification done")
 
     def _copy_attributes(self):
         for attr_name in filter(
