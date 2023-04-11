@@ -22,7 +22,11 @@ from .mase_mem_emitter import (
 )
 from .optimise.balance_rate import balance_rate
 from .optimise.partition_target import partition_target
-from .sim.emit_data_in_tb import emit_data_in_tb_dat, emit_data_in_tb_sv
+from .sim.emit_data_in_tb import (
+    emit_data_in_stream_size_tb_dat,
+    emit_data_in_tb_dat,
+    emit_data_in_tb_sv,
+)
 from .sim.emit_data_out_tb import emit_data_out_tb_dat, emit_data_out_tb_sv
 from .sim.emit_top_tb import emit_top_tb
 from ..utils import execute_cli
@@ -295,6 +299,8 @@ class MaseVerilogEmitter(MaseGraph):
 
         load_path = os.path.join(tv_dir, "sw_data_in.dat")
         emit_data_in_tb_dat(self.nodes_in[0], hw_data_in, load_path)
+        load_path = os.path.join(tv_dir, "data_in_stream_size.dat")
+        emit_data_in_stream_size_tb_dat(self.nodes_in[0], hw_data_in, load_path)
 
         load_path = os.path.join(tv_dir, "sw_data_out.dat")
         emit_data_out_tb_dat(self.nodes_out[0], hw_data_out, load_path)
