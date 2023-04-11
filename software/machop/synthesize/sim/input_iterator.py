@@ -1,10 +1,10 @@
 from functools import partial
 
-from ..dataset import MyDataModule
-from ..session.plt_wrapper import get_model_wrapper
-from ..session.plt_wrapper.nlp.classification import NLPClassificationModelWrapper
-from ..session.plt_wrapper.nlp.lm import NLPLanguageModelingModelWrapper
-from ..session.plt_wrapper.vision import VisionModelWrapper
+from ...dataset import MyDataModule
+from ...session.plt_wrapper import get_model_wrapper
+from ...session.plt_wrapper.nlp.classification import NLPClassificationModelWrapper
+from ...session.plt_wrapper.nlp.lm import NLPLanguageModelingModelWrapper
+from ...session.plt_wrapper.vision import VisionModelWrapper
 
 
 class InputIterator:
