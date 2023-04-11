@@ -29,7 +29,7 @@ from .models import (
 )
 from .modify.interpret_for_hw_gen import create_and_save_common_metadata
 from .modify.modifier import Modifier
-from .session import test, train, validate
+from .session import test, train, validate, search
 from .synthesize.mase_verilog_emitter import MaseVerilogEmitter
 from .utils import (
     check_when_to_load_and_how_to_load,
@@ -200,6 +200,19 @@ class Machop:
             dest="estimate_sw_config",
             default=None,
             help="The path to software estimation config file if --estimated-sw is specified. Default=None will use default estimation config.",
+        )
+        parser.add_argument(
+            "--search-sw",
+            dest="to_search_sw",
+            action="store_true",
+            default=False,
+            help="Whether to search configurations.",
+        )
+        parser.add_argument(
+            "--search-sw-config",
+            dest="search_sw_config",
+            default=None,
+            help="The path to load software search config file if --search-sw is specified. Default=None",
         )
 
         # args for actions
@@ -431,6 +444,8 @@ class Machop:
             self.validate_sw()
         if self.args.to_estimate_sw:
             self.estimate_sw()
+        if self.args.to_search_sw:
+            self.search_sw()
         if self.args.to_synthesize is not None or self.args.to_test_hw:
             self.modify_sw_for_synthesis()
             self.interpret_for_synthesis()
@@ -714,6 +729,19 @@ class Machop:
         }
         run_estimator(**estimate_sw_kwargs)
         logger.info("Estimate-sw is completed")
+
+    def search_sw(self):
+        args = self.args
+        logger.info(f"Searching model {args.model!r}...")
+        save_dir = os.path.join(self.output_dir_sw, "search-sw")
+        search_args = {
+            "model_name": args.model,
+            "model": self.model,
+            "data_module": self.data_module,
+            "search_config": args.search_sw_config,
+            "save_dir": save_dir,
+        }
+        search(**search_args)
 
     # ------------------------------------------------------
     # HW actions
