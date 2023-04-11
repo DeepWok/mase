@@ -3,6 +3,8 @@
 # ---------------------------------------
 import logging
 import os
+
+os.environ["PYTHONBREAKPOINT"] = "ipdb.set_trace"
 import random
 import sys
 import time
@@ -35,7 +37,7 @@ from .utils import (
     load_pt_pl_or_pkl_checkpoint_into_pt_model,
 )
 
-logger = getLogger("machop")
+logger = getLogger("machop", log_file="machop.log")
 logging.getLogger().setLevel(logging.INFO)
 
 
@@ -331,13 +333,13 @@ class Machop:
         parser.add_argument(
             "--target",
             dest="target",
-            default="xc7z020clg484-1",
-            help="The target FPGA for hardware synthesis. Default=xc7z020clg484-1",
+            default="xcu250-figd2104-2L-e",
+            help="The target FPGA for hardware synthesis. Default=xcu250-figd2104-2L-e",
         )
         parser.add_argument(
             "--num-targets",
             dest="num_targets",
-            default=1,
+            default=100,
             type=int,
             help="The number of FPGA devices. Default=1",
         )
@@ -412,7 +414,10 @@ class Machop:
             self.list_available()
             return
         assert not (
-            (self.args.to_modify_sw) and (self.args.to_synthesize is not None)
+            (self.args.to_modify_sw)
+            and (
+                self.args.to_synthesize is not None or self.args.to_test_hw is not None
+            )
         ), "--modify-sw and --synthesize cannot both be specified"
         self.init_model_and_dataset()
         self.create_output_dir()
@@ -426,9 +431,10 @@ class Machop:
             self.validate_sw()
         if self.args.to_estimate_sw:
             self.estimate_sw()
-        if self.args.to_synthesize is not None:
+        if self.args.to_synthesize is not None or self.args.to_test_hw:
             self.modify_sw_for_synthesis()
             self.interpret_for_synthesis()
+        if self.args.to_synthesize is not None:
             self.synthesize()
         if self.args.to_test_hw:
             self.test_hw()
@@ -714,10 +720,6 @@ class Machop:
     # ------------------------------------------------------
     def modify_sw_for_synthesis(self):
         args = self.args
-        to_synthesize = ["hls", "auto"]
-        assert (
-            args.to_synthesize in to_synthesize
-        ), f"Unsupported mode: {args.to_synthesize}. Support: {to_synthesize}"
         assert (
             args.modify_sw_config
         ) is not None, "--modify-sw-config must be provided if --synthesize"
@@ -741,13 +743,13 @@ class Machop:
             "dummy_inputs_for_fx": dummy_inputs,
             "save_dir": os.path.join(self.output_dir_sw, "modify-sw"),
         }
-        Modifier.create_empty_config_template(
-            self.modified_model_for_hw_gen,
-            dummy_inputs=dummy_inputs,
-            save_path=os.path.join(
-                self.output_dir_sw, "modify-sw", "./modify-sw_template.toml"
-            ),
-        )
+        # Modifier.create_empty_config_template(
+        #     self.modified_model_for_hw_gen,
+        #     dummy_inputs=dummy_inputs,
+        #     save_path=os.path.join(
+        #         self.output_dir_sw, "modify-sw", "./modify-sw_template.toml"
+        #     ),
+        # )
         m = Modifier(**modifier_kwargs)
         m.modify()
         if args.model in nlp_models:
@@ -768,21 +770,35 @@ class Machop:
             data_module=self.data_module,
             save_dir=os.path.join(self.output_dir_sw, "modify-sw"),
         )
-        del self.modified_model_for_hw_gen
+        # del self.modified_model_for_hw_gen
         logger.info(f"Metadata update is completed")
 
     def synthesize(self):
         args = self.args
+        to_synthesize = ["hls", "auto"]
+        assert (
+            args.to_synthesize in to_synthesize
+        ), f"Unsupported mode: {args.to_synthesize}. Support: {to_synthesize}"
         mode = args.to_synthesize
         logger.info(f"Generating hardware for {args.model!r}...")
+
+        model = self.model["model"] if args.model in nlp_models else self.model
+        quantized_model = (
+            self.modified_model_for_hw_gen["model"]
+            if args.model in nlp_models
+            else self.modified_model_for_hw_gen
+        )
+
         mve = MaseVerilogEmitter(
-            model=self.model,
+            model=model,
+            quantized_model=quantized_model,
             project_dir=self.output_dir,
             to_debug=args.to_debug,
             target=args.target,
             mode=mode,
             num_targets=args.num_targets,
             # comment out to allow internal pass to provide this info
+            args=args,
             common_param=os.path.join(
                 self.output_dir,
                 "software",
@@ -791,6 +807,7 @@ class Machop:
                 "common_meta.toml",
             ),
         )
+        mve.optimise()
         mve.emit_verilog()
 
         if args.to_debug:
@@ -799,20 +816,30 @@ class Machop:
                     args.project_dir,
                     args.project,
                     "hardware",
-                    f"{args.model}_hw.toml",
+                    f"{args.project}_hw.toml",
                 )
             )
 
     def test_hw(self):
         args = self.args
         logger.info(f"Testing hardware for {args.model!r}...")
+
+        model = self.model["model"] if args.model in nlp_models else self.model
+        quantized_model = (
+            self.modified_model_for_hw_gen["model"]
+            if args.model in nlp_models
+            else self.modified_model_for_hw_gen
+        )
+
         mve = MaseVerilogEmitter(
-            model=self.model,
+            model=model,
+            quantized_model=quantized_model,
             project_dir=self.output_dir,
             to_debug=args.to_debug,
             target=args.target,
             num_targets=args.num_targets,
             # comment out to allow internal pass to provide this info
+            args=args,
             common_param=os.path.join(
                 self.output_dir,
                 "software",
@@ -822,15 +849,20 @@ class Machop:
             ),
         )
         mve.emit_tb()
-        # mve.run_cosim()
+        mve.run_cosim()
 
     def evaluate_hw(self, mode):
         logger.info(f"Evaluating hardware for {self.args.model!r}...")
         if mode == "synth":
             mase_graph = MaseGraph(
                 model=self.model,
+                args=args,
                 common_param=os.path.join(
-                    self.output_dir, "software", "modify-sw", "hw_quantize.toml"
+                    self.output_dir,
+                    "software",
+                    "modify-sw",
+                    # "hw_quantize.toml",
+                    "common_meta.toml",
                 ),
             )
             get_synthesis_results(

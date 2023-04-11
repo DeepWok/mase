@@ -22,8 +22,7 @@ software_dir = os.path.abspath(
 )
 
 # {model}, {task}, {dataset}, {toml}
-# ./chop --modify-sw --modify-sw-config {sw_modify_toml} --model={model} --task={task} --dataset={dataset} --debug  --project={model}_{task}_{dataset} --project-dir=.
-# ./chop --model={model} --task={task} --dataset={dataset} --debug --synthesize auto --project={model}_{task}_{dataset} --project-dir=.
+# ./chop --modify-sw-config {toml} --dataset {dataset} --model {model} --task {task} --debug  --project={model} --synthesize auto
 
 simple_cases = [
     [
@@ -200,12 +199,12 @@ class TestMicro:
         self.mode = args.mode
         assert self.mode in ["auto", "hls"], f"Invalid synthesizing mode: {self.mode}"
 
-        self.test_cases = args.test_cases
+        self.test_cases = []
         if self.args.run_all:
             self.test_cases = full_cases
         elif self.args.run_simple:
             self.test_cases = simple_cases
-        for test in self.args.test_cases:
+        for test in args.test_cases:
             assert test in [
                 f"{x[0]}_{x[1]}_{x[2]}" for x in full_cases
             ], f"Cannot find test case: {test}"
@@ -215,21 +214,29 @@ class TestMicro:
                 ]:
                     self.test_cases.append(x)
 
-    def test(self):
+    def test(self, parallel=False):
         """Test the given test cases"""
-        test_count = len(self.test_cases)
-        jobs = [None] * test_count
-        queue = Queue(test_count)
-        for i, test_case in enumerate(self.test_cases):
-            jobs[i] = Process(target=self.single_test, args=(test_case, queue))
-            jobs[i].start()
+        if parallel:
+            test_count = len(self.test_cases)
+            jobs = [None] * test_count
+            queue = Queue(test_count)
+            for i, test_case in enumerate(self.test_cases):
+                jobs[i] = Process(target=self.single_test, args=(test_case, queue))
+                jobs[i].start()
 
-        for job in jobs:
-            job.join()
+            for job in jobs:
+                job.join()
 
-        err = 0
-        for _ in range(test_count):
-            err += queue.get()
+            err = 0
+            for _ in range(test_count):
+                err += queue.get()
+        else:
+            test_count = len(self.test_cases)
+            err = 0
+            queue = Queue(test_count)
+            for i, test_case in enumerate(self.test_cases):
+                err += self.single_test(test_case, queue)
+
         if err:
             self.logger.error("Regression test finished. {} errors.".format(err))
         else:
@@ -238,8 +245,6 @@ class TestMicro:
 
     def single_test(self, test_case, queue):
         self.logger.info("Running unit test for {}...".format(test_case))
-        # ./chop --modify-sw --modify-sw-config {sw_modify_toml} --model={model} --task={task} --dataset={dataset} --debug  --project={model}_{task}_{dataset} --project-dir=.
-        # ./chop --model={model} --task={task} --dataset={dataset} --debug --synthesize auto --modify-sw-config {sw_modify_toml} --project={model}_{task}_{dataset} --project-dir=.
 
         model = test_case[0]
         task = test_case[1]
@@ -249,7 +254,6 @@ class TestMicro:
         result = 0
         cmd = [
             f"./chop",
-            f"--modify-sw",
             f"--modify-sw-config",
             f"{sw_modify_toml}",
             f"--model",
@@ -259,41 +263,16 @@ class TestMicro:
             f"--dataset",
             f"{dataset}",
             f"--debug",
+            f"--synthesize",
+            f"{self.args.mode}",
             f"--project",
             f"{model}_{task}_{dataset}",
             f"--project-dir",
             f"{self.project_dir}",
         ]
-        self.logger.debug(subprocess.list2cmdline(cmd))
         result = self.execute(
             cmd, log_output=self.to_debug, cwd=os.path.join(self.root, "software")
         )
-
-        if not result:
-            cmd = [
-                f"./chop",
-                f"--model",
-                f"{model}",
-                f"--task",
-                f"{task}",
-                f"--dataset",
-                f"{dataset}",
-                f"--debug",
-                f"--synthesize",
-                f"{self.mode}",
-                f"--modify-sw-config",
-                f"{sw_modify_toml}",
-                f"--project",
-                f"{model}_{task}_{dataset}",
-                f"--project-dir",
-                f"{self.project_dir}",
-            ]
-            self.logger.debug(subprocess.list2cmdline(cmd))
-            result = self.execute(
-                cmd, log_output=self.to_debug, cwd=os.path.join(self.root, "software")
-            )
-        else:
-            self.logger.error(f"Software modify for {model}_{task}_{dataset} failed.")
 
         queue.put(result)
         return result
@@ -387,10 +366,17 @@ test-hardware.py -a"""
         dest="test_cases",
         help="Test individual cases. Format = {model}_{task}_{dataset}",
     )
+    parser.add_argument(
+        "-j",
+        default=False,
+        action="store_true",
+        dest="parallel",
+        help="Enable parallel testing. Default = False",
+    )
 
     args = parser.parse_args()
     testrun = TestMicro(args)
-    run = testrun.test()
+    run = testrun.test(parallel=args.parallel)
     if run:
         sys.exit(run)
     sys.exit(0)

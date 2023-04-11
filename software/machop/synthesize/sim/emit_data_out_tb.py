@@ -5,7 +5,7 @@ from ...graph.utils import get_module_by_name, vf
 logger = logging.getLogger(__name__)
 
 
-def emit_data_out_tb(data_width, addr_width, depth, load_path, store_path, out_file):
+def emit_data_out_tb_sv(data_width, load_path, store_path, out_file):
     buff = f"""
 `timescale 1 ns / 1 ps
 
@@ -29,8 +29,8 @@ module AESL_autofifo_data_out_V (
 
   //------------------------Local signal-------------------
   parameter DATA_WIDTH = 32'd{data_width};
-  parameter ADDR_WIDTH = 32'd{addr_width};
-  parameter DEPTH = 32'd{depth};
+  parameter ADDR_WIDTH = 32'd1;
+  parameter DEPTH = 32'd1;
 
   // Input and Output
   input clk;
@@ -117,7 +117,7 @@ module AESL_autofifo_data_out_V (
       end
       fp = $fopen(TV_OUT, "a");
       if (fp == 0) begin  // Failed to open file
-        $display("Failed to open file \"%s\"!", TV_OUT);
+        $display("Failed to open file \\\"%s\\\"!", TV_OUT);
         $finish;
       end
       $fdisplay(fp, "[[transaction]] %d", transaction_idx);
@@ -137,3 +137,41 @@ endmodule
         outf.write(buff)
     logger.debug(f"Output data fifo emitted to {out_file}")
     assert os.path.isfile(out_file), "Emitting output data fifo failed."
+    os.system(f"verible-verilog-format --inplace {out_file}")
+
+
+def emit_data_out_tb_dat(node, data_out, out_file):
+    out_size = node.meta.parameters["hardware"]["verilog_parameters"]["OUT_SIZE"]
+    out_width = node.meta.parameters["hardware"]["verilog_parameters"]["OUT_WIDTH"]
+    assert (
+        len(data_out[0]) % out_size == 0
+    ), f"Cannot perfectly partition: {len(data_out[0])}/{out_size}"
+
+    trans = """[[transaction]] {}
+{}
+[[/transaction]]
+"""
+
+    data = [x for trans in data_out for x in trans]
+    data_buff = ""
+    trans_count = 0
+    value = 0
+    for i, d in enumerate(data):
+        if out_size == 1 or i % out_size == out_size - 1:
+            data_buff += trans.format(trans_count, hex(value))
+            trans_count += 1
+            value = 0
+        else:
+            for _ in range(0, i % out_size):
+                d = d << out_width
+            value = value + d
+
+    buff = f"""[[[runtime]]]
+{data_buff}
+[[[runtime]]]
+"""
+
+    with open(out_file, "w", encoding="utf-8") as outf:
+        outf.write(buff)
+    logger.debug(f"Input data fifo emitted to {out_file}")
+    assert os.path.isfile(out_file), "Emitting input data fifo failed."

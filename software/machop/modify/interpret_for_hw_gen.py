@@ -41,17 +41,19 @@ def create_and_save_common_metadata(
 
         input_args = get_input_args(model_name, task, data_module)
         mase_interpreter.forward_and_interpret(*input_args)
-
+    # breakpoint()
+    # for n in gm.graph.nodes:
+    #     print(n.name, n.meta)
     common_dict_to_save = {}
     if not os.path.isdir(save_dir):
         os.makedirs(save_dir)
     save_path = os.path.join(save_dir, "common_meta.toml")
+    # breakpoint()
     for n in gm.graph.nodes:
-        common_dict_to_save[n.name] = n.meta["common"]
+        if n.op in ("call_function", "call_module", "call_method"):
+            common_dict_to_save[n.name] = n.meta["common"]
     # breakpoint()
     with open(save_path, "w+") as f:
         toml.dump(common_dict_to_save, f)
-    logger.info(f"hw-gen.toml is saved at {save_path}")
-
-    gm.train()
+    logger.info(f"common metadata toml is saved at {save_path}")
     return gm

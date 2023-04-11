@@ -1,28 +1,32 @@
 import glob
-import math
 import logging
+import math
 import multiprocessing
 import os
-import sys
 import shutil
 import subprocess
+import sys
 import time
 from multiprocessing import Process, Queue
 
-import toml
 import torch
 import torch.fx
 
 from ..graph.mase_graph import MaseGraph
 from ..graph.mase_metadata import MaseMetadata
-from ..graph.utils import get_module_by_name, vf, v2p
-from .mase_mem_emitter import emit_parameters_in_rom_internal
-from .mase_mem_emitter import emit_parameters_in_rom_hls
-
-from .sim.emit_data_in_tb import emit_data_in_tb
-from .sim.emit_data_out_tb import emit_data_out_tb
+from ..graph.utils import get_module_by_name, v2p, vf
+from ..modify.quantizers.quantizers_for_hw import integer_quantizer_for_hw
+from .mase_mem_emitter import (
+    emit_parameters_in_rom_hls,
+    emit_parameters_in_rom_internal,
+)
+from .optimise.balance_rate import balance_rate
+from .optimise.partition_target import partition_target
+from .sim.emit_data_in_tb import emit_data_in_tb_dat, emit_data_in_tb_sv
+from .sim.emit_data_out_tb import emit_data_out_tb_dat, emit_data_out_tb_sv
 from .sim.emit_top_tb import emit_top_tb
-
+from ..utils import execute_cli
+from .sim.input_generator import InputGenerator
 
 logger = logging.getLogger(__name__)
 
@@ -34,35 +38,6 @@ def _remove_last_comma(string):
 def _add_dependence_files(files, file_list):
     file_list.extend(f for f in files if f not in file_list)
     return file_list
-
-
-def _execute(cmd, log_output: bool = True, log_file=None, cwd="."):
-    if log_output:
-        logger.debug("{} (cwd = {})".format(subprocess.list2cmdline(cmd), cwd))
-        with subprocess.Popen(
-            cmd, stdout=subprocess.PIPE, bufsize=1, universal_newlines=True, cwd=cwd
-        ) as result:
-            if log_file:
-                f = open(log_file, "w")
-            if result.stdout or result.stderr:
-                logger.info("")
-            if result.stdout:
-                for line in result.stdout:
-                    if log_file:
-                        f.write(line)
-                    line = line.rstrip("\n")
-                    logging.trace(line)
-            if result.stderr:
-                for line in result.stderr:
-                    if log_file:
-                        f.write(line)
-                    line = line.rstrip("\n")
-                    logging.trace(line)
-            if log_file:
-                f.close()
-    else:
-        result = subprocess.run(cmd, stdout=subprocess.DEVNULL, cwd=cwd)
-    return result.returncode
 
 
 def _get_hls_parameters(node):
@@ -131,12 +106,14 @@ class MaseVerilogEmitter(MaseGraph):
     def __init__(
         self,
         model=None,
+        quantized_model=None,
         mode="auto",
         project_dir=None,
         to_debug=False,
         target="xc7z020clg484-1",
         num_targets=1,
         common_param=None,
+        args=None,
     ):
         """
         MaseVerilogEmitter loads MaseGraph and emit the corresponding
@@ -151,7 +128,13 @@ class MaseVerilogEmitter(MaseGraph):
         num_tagrets = number of the FPGA targets
         """
 
-        super().__init__(model=model, common_param=common_param, synth_mode=mode)
+        super().__init__(
+            model=model,
+            quantized_model=quantized_model,
+            common_param=common_param,
+            synth_mode=mode,
+            args=args,
+        )
         self.root = os.path.join(os.path.dirname(__file__), "..", "..", "..")
         self.project_dir = project_dir
         assert self.project_dir is not None, "Cannot find the project directory"
@@ -164,6 +147,7 @@ class MaseVerilogEmitter(MaseGraph):
         self._init_project()
         self.dependence_files = []
         self.verilog_parameters = {}
+        self = balance_rate(self)
         if to_debug:
             print(self.fx_graph)
 
@@ -181,9 +165,10 @@ class MaseVerilogEmitter(MaseGraph):
     # ----------------------------------------------------------
     # Emit testbench code
     # ----------------------------------------------------------
-    def emit_tb(self):
+    def emit_tb(self, trans_num=1):
         """
         Emit test bench for simulation
+        trans_num : the number of transactions
         """
         self.verify()
 
@@ -194,43 +179,125 @@ class MaseVerilogEmitter(MaseGraph):
         for new_dir in [sim_dir, tv_dir, v_dir, prj_dir]:
             _create_new_dir(new_dir)
 
-        self._emit_tb_verilog(tv_dir, v_dir)
-        self._emit_tb_dat(tv_dir)
+        self._emit_tb_verilog(tv_dir, v_dir, trans_num=trans_num)
+        self._emit_tb_dat(tv_dir, trans_num=trans_num)
         self._emit_tb_tcl(prj_dir)
 
-    def _emit_tb_verilog(self, tv_dir, v_dir):
+    def _emit_tb_verilog(self, tv_dir, v_dir, trans_num=1):
         """
         Emit the Verilog test bench for simulation
         """
-        data_in_param = self.nodes_in[0].meta.parameters["hardware"][
-            "verilog_parameters"
-        ]
-        data_width = data_in_param["IN_WIDTH"] * data_in_param["IN_SIZE"]
+
+        v_in_param = self.nodes_in[0].meta.parameters["hardware"]["verilog_parameters"]
+        in_width = v_in_param["IN_WIDTH"]
+        in_size = v_in_param["IN_SIZE"]
+        data_width = in_width * in_size
         # TODO : need to check
         addr_width = 1
         depth = 1
         load_path = os.path.join(tv_dir, f"sw_data_in.dat")
         out_file = os.path.join(v_dir, f"{self.project}_data_in_fifo.sv")
-        emit_data_in_tb(data_width, addr_width, depth, load_path, out_file)
+        emit_data_in_tb_sv(data_width, load_path, out_file)
 
-        data_out_param = self.nodes_out[0].meta.parameters["hardware"][
+        v_out_param = self.nodes_out[0].meta.parameters["hardware"][
             "verilog_parameters"
         ]
-        data_width = data_out_param["OUT_WIDTH"] * data_out_param["OUT_SIZE"]
+        out_width = v_out_param["OUT_WIDTH"]
+        out_size = v_out_param["OUT_SIZE"]
+        data_width = out_width * out_size
         # TODO : need to check
         addr_width = 1
         depth = 1
         load_path = os.path.join(tv_dir, f"sw_data_out.dat")
         store_path = os.path.join(tv_dir, f"hw_data_out.dat")
         out_file = os.path.join(v_dir, f"{self.project}_data_out_fifo.sv")
-        emit_data_out_tb(data_width, addr_width, depth, load_path, store_path, out_file)
-        out_file = os.path.join(v_dir, f"{self.project}_tb.sv")
-        emit_top_tb(tv_dir, self.project, out_file)
+        emit_data_out_tb_sv(data_width, load_path, store_path, out_file)
 
-    def _emit_tb_dat(self, tv_dir):
+        out_file = os.path.join(v_dir, f"{self.project}_tb.sv")
+        trans_num = v_in_param["IN_DEPTH"] * trans_num
+        emit_top_tb(
+            tv_dir,
+            self.project,
+            out_file,
+            in_width,
+            in_size,
+            out_width,
+            out_size,
+            trans_num,
+        )
+
+        out_file = os.path.join(v_dir, f"fifo_para.vh")
+        with open(out_file, "w", encoding="utf-8") as outf:
+            outf.write("// initial a empty file")
+
+        # Copy testbench components
+        sv_dir = os.path.join(
+            os.path.dirname(__file__), "..", "..", "..", "hardware", "sim"
+        )
+        for svfile in glob.glob(os.path.join(sv_dir, "*.sv")):
+            shutil.copy(svfile, v_dir)
+
+    def _emit_tb_dat(self, tv_dir, trans_num=1):
         """
         Emit the test vectors in dat files for simulation
         """
+
+        in_type = self.nodes_in[0].meta.parameters["common"]["args"]["data_in"]["type"]
+        in_width = self.nodes_in[0].meta.parameters["common"]["args"]["data_in"][
+            "precision"
+        ][0]
+        in_frac_width = self.nodes_in[0].meta.parameters["common"]["args"]["data_in"][
+            "precision"
+        ][1]
+
+        input_gen = InputGenerator(
+            model_name=self.args.model,
+            task=self.args.task,
+            dataset_name=self.args.dataset,
+            quant_name=in_type,
+            # TODO precision format needs to synchronised
+            quant_config_kwargs={"width": in_width, "frac_width": in_frac_width},
+            trans_num=trans_num,
+        )
+        sw_data_in, hw_data_in = input_gen()
+        sw_data_out = [self.quantized_model(trans) for trans in sw_data_in]
+
+        out_type = self.nodes_in[0].meta.parameters["common"]["results"]["data_out"][
+            "type"
+        ]
+        out_width = self.nodes_in[0].meta.parameters["common"]["results"]["data_out"][
+            "precision"
+        ][0]
+        out_frac_width = self.nodes_in[0].meta.parameters["common"]["results"][
+            "data_out"
+        ]["precision"][1]
+
+        # TODO: Make out_type as input to support casting to any type
+        hw_data_out = [
+            integer_quantizer_for_hw(trans, width=out_width, frac_width=out_frac_width)
+            .squeeze(0)
+            .to(torch.int)
+            for trans in sw_data_out
+        ]
+
+        # TODO: for now
+        for i, trans in enumerate(hw_data_in):
+            hw_data_in[i] = torch.flatten(trans).tolist()
+        for i, trans in enumerate(hw_data_out):
+            hw_data_out[i] = torch.flatten(trans).tolist()
+
+        assert (
+            len(hw_data_in) == trans_num
+        ), f"Mismatched transaction number, expect = {trans_num}, but got {len(hw_data_in)}"
+        assert (
+            len(hw_data_out) == trans_num
+        ), f"Mismatched transaction number, expect = {trans_num}, but got {len(hw_data_out)}"
+
+        load_path = os.path.join(tv_dir, "sw_data_in.dat")
+        emit_data_in_tb_dat(self.nodes_in[0], hw_data_in, load_path)
+
+        load_path = os.path.join(tv_dir, "sw_data_out.dat")
+        emit_data_out_tb_dat(self.nodes_out[0], hw_data_out, load_path)
 
     def _emit_tb_tcl(self, prj_dir):
         """
@@ -239,7 +306,7 @@ class MaseVerilogEmitter(MaseGraph):
         out_file = os.path.join(prj_dir, "proj.tcl")
         buff = f"""
 #log_wave -r /
-run all 
+run all
 quit
 """
         with open(out_file, "w", encoding="utf-8") as outf:
@@ -253,10 +320,10 @@ quit
             for file in glob.glob(os.path.join(file_dir, "*.sv")) + glob.glob(
                 os.path.join(file_dir, "*.v")
             ):
-                buff += f"""sv work "{file}" 
+                buff += f"""sv work "{file}"
 """
             for file in glob.glob(os.path.join(file_dir, "*.vhd")):
-                buff += f"""vhdl work "{file}" 
+                buff += f"""vhdl work "{file}"
 """
 
         # Add HLS tcls
@@ -271,7 +338,7 @@ quit
                 hls_dir, node_name, node_name, "solution1", "syn", "verilog"
             )
             for file in glob.glob(os.path.join(syn_dir, "*.v")):
-                buff += f"""sv work "{file}" 
+                buff += f"""sv work "{file}"
 """
             for file in glob.glob(os.path.join(syn_dir, "*.tcl")):
                 buff += f"""source "{file}"
@@ -302,13 +369,24 @@ quit
             f"{self.project}_tb",
         ]
         sim_dir = os.path.join(self.project_dir, "hardware", "sim", "prj")
-        result = _execute(cmd, log_output=self.to_debug, cwd=sim_dir)
+        result = execute_cli(cmd, log_output=self.to_debug, cwd=sim_dir)
 
+        # TODO: seems xsim always returns 0 - needs to check
         if result:
             logger.error(f"Co-simulation failed. {self.project}")
         else:
             logger.debug(f"Co-simulation succeeded. {self.project}")
         return result
+
+    # ----------------------------------------------------------
+    # Optimisation
+    # ----------------------------------------------------------
+
+    def optimise(self):
+        self = balance_rate(self)
+        # Run init synthesis for evaluate area
+        self.emit_verilog()
+        self = partition_target(self)
 
     # ----------------------------------------------------------
     # Emit hardware code
@@ -358,7 +436,6 @@ quit
                     if not isinstance(value, (int, float, complex, bool)):
                         value = '"' + value + '"'
                     parameters += f"parameter {node_name}_{key} = {value},\n"
-                    assert f"{node_name}_{key}" not in self.verilog_parameters.keys()
                     self.verilog_parameters[f"{node_name}_{key}"] = value
             elif node.meta.parameters["hardware"]["toolchain"] == "EXTERNAL":
                 raise NotImplementedError(f"EXTERNAL not supported yet.")
@@ -404,7 +481,7 @@ input  data_out_ready,
                 size = self.verilog_parameters[f"{node_name}_{cap_key}_SIZE"]
                 debug_info = f"// [{width}][{size}]"
                 interface += f"""{debug_info}
-input  [{node_name}_{cap_key}_WIDTH-1:0] {node_name}_{key} [{node_name}_{cap_key}_SIZE-1:0], 
+input  [{node_name}_{cap_key}_WIDTH-1:0] {node_name}_{key} [{node_name}_{cap_key}_SIZE-1:0],
 input  {node_name}_{key}_valid,
 output {node_name}_{key}_ready,
 """
@@ -700,7 +777,7 @@ logic                                    {node_name}_{key}_we0;
 
         components = """
 // --------------------------
-//   Kernel instantiation 
+//   Kernel instantiation
 // --------------------------
 """
         for node in self.fx_graph.nodes:
@@ -731,9 +808,9 @@ logic                                    {node_name}_{key}_we0;
 ) {component_name_inst} (
 .clk(clk),
 .reset(rst),
-.address0({node_name}_{key}_address0), 
+.address0({node_name}_{key}_address0),
 .ce0({node_name}_{key}_ce0),
-.q0({node_name}_{key}_q0) 
+.q0({node_name}_{key}_q0)
 );
 """
 
@@ -742,17 +819,22 @@ logic                                    {node_name}_{key}_we0;
         cap_key = v2p(key)
         component_name = f"{node_name}_{key}_source"
         component_name_inst = f"{component_name}_0"
-        depth_debug_info = self.verilog_parameters[f"{node_name}_IN_DEPTH"]
         width_debug_info = self.verilog_parameters[f"{node_name}_{cap_key}_WIDTH"]
         size_debug_info = self.verilog_parameters[f"{node_name}_{cap_key}_SIZE"]
         key_debug_info = "[{}][{}]".format(
             self.verilog_parameters[f"{node_name}_{cap_key}_WIDTH"],
             self.verilog_parameters[f"{node_name}_{cap_key}_SIZE"],
         )
+        if key == "bias":
+            depth = 1
+            depth_debug_info = 1
+        else:
+            depth = f"{node_name}_IN_DEPTH"
+            depth_debug_info = self.verilog_parameters[f"{node_name}_IN_DEPTH"]
 
         return f"""
 {component_name} #(
-.OUT_DEPTH({node_name}_IN_DEPTH), // = {depth_debug_info}
+.OUT_DEPTH({depth}), // = {depth_debug_info}
 .OUT_WIDTH({node_name}_{cap_key}_WIDTH), // = {width_debug_info}
 .OUT_SIZE({node_name}_{cap_key}_SIZE) // = {size_debug_info}
 ) {component_name_inst} (
@@ -760,7 +842,7 @@ logic                                    {node_name}_{key}_we0;
 .rst(rst),
 .data_out({node_name}_{key}), // {key_debug_info}
 .data_out_ready({node_name}_{key}_ready),
-.data_out_valid({node_name}_{key}_valid) 
+.data_out_valid({node_name}_{key}_valid)
 );
 """
 
@@ -891,7 +973,7 @@ hs2bram_cast #(
 .IN_SIZE({from_param}_SIZE), // = {in_size}
 .IN_WIDTH({to_param}_WIDTH), // = {width}
 .ADDR_RANGE({to_param}_SIZE), // = {size}
-.ADDR_WIDTH({a_width}) 
+.ADDR_WIDTH({a_width})
 ) {from_name}_{to_name}_hs2bram_cast (
 .data_in_ready({from_name}_ready),
 .data_in({cast_name}),
@@ -981,7 +1063,7 @@ bram2hs_cast #(
 .OUT_SIZE({from_param}_SIZE), // = {in_size}
 .OUT_WIDTH({to_param}_WIDTH), // = {width}
 .ADDR_RANGE({to_param}_SIZE), // = {size}
-.ADDR_WIDTH({a_width}) 
+.ADDR_WIDTH({a_width})
 ) {from_name}_{to_name}_hs2bram_cast (
 .address0({from_name}_address0),
 .ce0({from_name}_ce0),
@@ -1065,7 +1147,7 @@ fixed_cast #(
 bram_cast #(
 .IN_WIDTH({to_param}_WIDTH), // = {width}
 .ADDR_RANGE({to_param}_SIZE), // = {size}
-.ADDR_WIDTH({a_width}) 
+.ADDR_WIDTH({a_width})
 ) {from_name}_{to_name}_hs2bram_cast (
 .address1({from_name}_address0),
 .ce1({from_name}_ce0),
@@ -1093,7 +1175,7 @@ bram_cast #(
 
         wires = """
 // --------------------------
-//   Interconnections 
+//   Interconnections
 // --------------------------
 """
 
@@ -1243,7 +1325,7 @@ endmodule
         ]
         # if self.to_debug:
         #    cmd += ["--debug"]
-        result = _execute(cmd, log_output=self.to_debug)
+        result = execute_cli(cmd, log_output=self.to_debug)
         assert os.path.isfile(lowered_dir), "Affine MLIR generation failed."
         logger.debug(
             f"MLIR Affine code of module {node.name} successfully written into {lowered_dir}"
@@ -1266,7 +1348,7 @@ endmodule
         ]
         # if self.to_debug:
         #     cmd += ["--debug"]
-        result = _execute(cmd, log_output=self.to_debug)
+        result = execute_cli(cmd, log_output=self.to_debug)
         assert os.path.isfile(hls_dir), "HLS code generation failed."
         logger.debug(
             f"HLS code of module {node.name} successfully written into {hls_dir}"
@@ -1298,7 +1380,8 @@ csynth_design
             "-i",
             hls_dir,
         ]
-        result = _execute(cmd, log_output=self.to_debug)
+        result = execute_cli(cmd, log_output=self.to_debug)
+        assert not result, f"HLS code is invalid: {node_name}"
 
         # Call Vitis HLS for synthesis
         vitis_hls = os.path.abspath(
@@ -1319,7 +1402,7 @@ csynth_design
             vitis_hls,
             hls_tcl_dir,
         ]
-        result = _execute(cmd, log_output=self.to_debug, cwd=node_dir)
+        result = execute_cli(cmd, log_output=self.to_debug, cwd=node_dir)
 
         if result:
             logger.error(f"Vitis HLS synthesis failed. {node.name}")
@@ -1347,24 +1430,32 @@ csynth_design
 
         result = self._call_hls_flow(node, node_dir)
         queue.put(result)
+        return result
 
-    def _emit_hls_components(self, nodes):
+    def _emit_hls_components(self, nodes, parallel=False):
         """
         Run HLS in parallel
         """
         hls_count = len(nodes)
         jobs = [None] * hls_count
         queue = Queue(hls_count)
-        for i, node in enumerate(nodes):
-            jobs[i] = Process(target=self._emit_hls_component, args=(node, queue))
-            jobs[i].start()
 
-        for job in jobs:
-            job.join()
+        if parallel:
+            for i, node in enumerate(nodes):
+                jobs[i] = Process(target=self._emit_hls_component, args=(node, queue))
+                jobs[i].start()
 
-        err = 0
-        for _ in range(hls_count):
-            err += queue.get()
+            for job in jobs:
+                job.join()
+
+            err = 0
+            for _ in range(hls_count):
+                err += queue.get()
+        else:
+            err = 0
+            for i, node in enumerate(nodes):
+                err += self._emit_hls_component(node, queue)
+
         if err:
             logger.error(f"HLS generation finished. {err} errors.")
         else:

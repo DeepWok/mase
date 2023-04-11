@@ -4,7 +4,8 @@ import glob
 import logging
 
 from ..graph.utils import vf
-from ..synthesize.mase_verilog_emitter import _execute
+from ..utils import execute_cli
+from ..board_config import fpga_board_info
 
 logger = logging.getLogger(__name__)
 
@@ -12,8 +13,9 @@ logger = logging.getLogger(__name__)
 def get_synthesis_results(model, mase_graph, target, output_dir):
     # TODO : may synthesize different partitions for seperate targets
     project_name = "synth_project"
-    project_dir = os.path.join(output_dir, "hardware", project_name)
-    tcl_dir = os.path.join(output_dir, "hardware", "syn.tcl")
+    hw_dir = os.path.join(output_dir, "hardware")
+    project_dir = os.path.join(hw_dir, project_name)
+    tcl_dir = os.path.join(hw_dir, "syn.tcl")
 
     tcl_buff = f"""
 create_project -force {project_name} {project_dir} -part {target}
@@ -60,7 +62,9 @@ create_project -force {project_name} {project_dir} -part {target}
                 tcl_buff += "source -norecurse {" + file + "}\n"
     resource_report = os.path.join(project_dir, "utils.rpt")
     timing_report = os.path.join(project_dir, "timing.rpt")
+    clk_dir = os.path.join(hw_dir, "clock.xdc")
     tcl_buff += f"""
+add_files -fileset constrs_1 -norecurse {clk_dir} 
 set_property top {model} [current_fileset]
 update_compile_order -fileset sources_1
 launch_runs synth_1 -jobs 20 
@@ -75,6 +79,17 @@ report_timing_summary -delay_type min_max -report_unconstrained -check_timing_ve
     assert os.path.isfile(
         tcl_dir
     ), f"Vivado tcl not found. Please make sure if {tcl_dir} exists."
+
+    clk_buff = (
+        "create_clock -add -name clk -period "
+        + str(fpga_board_info[target]["CLK"])
+        + " [get_ports {clk}];"
+    )
+    with open(clk_dir, "w", encoding="utf-8") as outf:
+        outf.write(clk_buff)
+    assert os.path.isfile(
+        clk_dir
+    ), f"Vivado clk constraint not found. Please make sure if {clk_dir} exists."
 
     # Call Vivado for synthesis
     vivado = os.path.abspath(
@@ -95,7 +110,8 @@ report_timing_summary -delay_type min_max -report_unconstrained -check_timing_ve
         vivado,
         tcl_dir,
     ]
-    logger.debug(cmd)
-    result = _execute(cmd, log_output=True)
-    assert not result, f"Vivado synthesis failed. {model}"
-    logger.info(f"Hardware of module {model} successfully synthesized.")
+    result = execute_cli(cmd, log_output=True, cwd=hw_dir)
+    if result:
+        assert False, f"Vivado synthesis failed. {model}"
+    else:
+        logger.info(f"Hardware of module {model} successfully synthesized.")

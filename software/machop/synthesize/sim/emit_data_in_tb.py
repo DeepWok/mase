@@ -5,7 +5,7 @@ from ...graph.utils import get_module_by_name, vf
 logger = logging.getLogger(__name__)
 
 
-def emit_data_in_tb(data_width, addr_width, depth, load_path, out_file):
+def emit_data_in_tb_sv(data_width, load_path, out_file):
     buff = f"""
 `timescale 1 ns / 1 ps
 
@@ -27,8 +27,8 @@ module AESL_autofifo_data_in_V (
 
   //------------------------Local signal-------------------
   parameter DATA_WIDTH = 32'd{data_width};
-  parameter ADDR_WIDTH = 32'd{addr_width};
-  parameter DEPTH = 32'd{depth};
+  parameter ADDR_WIDTH = 32'd1;
+  parameter DEPTH = 32'd1;
 
   // Input and Output
   input clk;
@@ -86,7 +86,7 @@ module AESL_autofifo_data_in_V (
     transaction_idx = 0;
     fp = $fopen(TV_IN, "r");
     if (fp == 0) begin  // Failed to open file
-      $display("Failed to open file \"%s\"!", TV_IN);
+      $display("Failed to open file \\\"%s\\\"!", TV_IN);
       $finish;
     end
     read_token(fp, token);
@@ -162,6 +162,42 @@ module AESL_autofifo_data_in_V (
 
 endmodule
 """
+    with open(out_file, "w", encoding="utf-8") as outf:
+        outf.write(buff)
+    logger.debug(f"Input data fifo emitted to {out_file}")
+    assert os.path.isfile(out_file), "Emitting input data fifo failed."
+    os.system(f"verible-verilog-format --inplace {out_file}")
+
+
+def emit_data_in_tb_dat(node, data_in, out_file):
+    in_size = node.meta.parameters["hardware"]["verilog_parameters"]["IN_SIZE"]
+    in_width = node.meta.parameters["hardware"]["verilog_parameters"]["IN_WIDTH"]
+    assert len(data_in[0]) % in_size == 0
+
+    trans = """[[transaction]] {}
+{}
+[[/transaction]]
+"""
+
+    data = [x for trans in data_in for x in trans]
+    data_buff = ""
+    trans_count = 0
+    value = 0
+    for i, d in enumerate(data):
+        if in_size == 1 or i % in_size == in_size - 1:
+            data_buff += trans.format(trans_count, hex(value))
+            trans_count += 1
+            value = 0
+        else:
+            for _ in range(0, i % out_size):
+                d = d << out_width
+            value = value + d
+
+    buff = f"""[[[runtime]]]
+{data_buff}
+[[[runtime]]]
+"""
+
     with open(out_file, "w", encoding="utf-8") as outf:
         outf.write(buff)
     logger.debug(f"Input data fifo emitted to {out_file}")

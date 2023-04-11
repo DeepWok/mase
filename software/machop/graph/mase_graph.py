@@ -71,7 +71,14 @@ class MaseGraph:
     hardware constraints.
     """
 
-    def __init__(self, model=None, common_param=None, synth_mode="auto"):
+    def __init__(
+        self,
+        model=None,
+        quantized_model=None,
+        common_param=None,
+        synth_mode="auto",
+        args=None,
+    ):
         """
         model = input model
         common_param = external common parameters from toml (for quantization info)
@@ -79,9 +86,11 @@ class MaseGraph:
         """
 
         self.model = model
+        self.quantized_model = quantized_model
         self.synth_mode = synth_mode
         self.fx_graph, self.nodes_in, self.nodes_out = self._init_fx_graph()
         self._init_parameters(common_param=common_param)
+        self.args = args
 
     def _init_fx_graph(self):
         model = self.model
@@ -94,7 +103,12 @@ class MaseGraph:
         nodes_out = _get_output_nodes(fx_graph)
         assert len(nodes_out) == 1, "Multiple outputs are not supported."
         for node in fx_graph.nodes:
-            node.meta = MaseMetadata(node=node, model=model, synth_mode=self.synth_mode)
+            node.meta = MaseMetadata(
+                node=node,
+                model=model,
+                quantized_model=self.quantized_model,
+                synth_mode=self.synth_mode,
+            )
         return fx_graph, nodes_in, nodes_out
 
     def _init_parameters(self, common_param=None):
@@ -168,8 +182,8 @@ class MaseGraph:
         # Each edge between nodes must have the same size
         nodes_in = self.nodes_in
         nodes_out = self.nodes_out
-        node_in_name = vf(nodes_in[0].target)
-        node_out_name = vf(nodes_out[0].target)
+        node_in_name = vf(nodes_in[0].name)
+        node_out_name = vf(nodes_out[0].name)
         while nodes_in != nodes_out:
             next_nodes_in = []
             for node in nodes_in:
@@ -177,6 +191,23 @@ class MaseGraph:
                     assert (
                         next_node.meta.parameters["common"]["args"]["data_in"]["size"]
                         == node.meta.parameters["common"]["results"]["data_out"]["size"]
+                    )
+                    assert (
+                        next_node.meta.parameters["hardware"]["verilog_parameters"][
+                            "IN_SIZE"
+                        ]
+                        == node.meta.parameters["hardware"]["verilog_parameters"][
+                            "OUT_SIZE"
+                        ]
+                    ), "Verilog input and output sizes mismatch: {} = {} and {} = {}".format(
+                        node.name,
+                        node.meta.parameters["hardware"]["verilog_parameters"][
+                            "OUT_SIZE"
+                        ],
+                        next_node.name,
+                        next_node.meta.parameters["hardware"]["verilog_parameters"][
+                            "IN_SIZE"
+                        ],
                     )
                     if next_node.op == "output":
                         next_nodes_in.append(node)
