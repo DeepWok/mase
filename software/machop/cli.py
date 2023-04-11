@@ -429,7 +429,7 @@ class Machop:
         assert not (
             (self.args.to_modify_sw)
             and (
-                self.args.to_synthesize is not None or self.args.to_test_hw is not None
+                self.args.to_synthesize is not None or self.args.to_test_hw
             )
         ), "--modify-sw and --synthesize cannot both be specified"
         self.init_model_and_dataset()
