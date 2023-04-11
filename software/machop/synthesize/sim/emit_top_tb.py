@@ -5,7 +5,9 @@ from ...graph.utils import get_module_by_name, vf
 logger = logging.getLogger(__name__)
 
 
-def emit_top_tb(tv_dir, top_name, out_file):
+def emit_top_tb(
+    tv_dir, top_name, out_file, in_width, in_size, out_width, out_size, trans_num
+):
     sw_data_in = os.path.join(tv_dir, "sw_data_in.dat")
     sw_data_out = os.path.join(tv_dir, "sw_data_out.dat")
     hw_data_out = os.path.join(tv_dir, "hw_data_out.dat")
@@ -17,7 +19,7 @@ def emit_top_tb(tv_dir, top_name, out_file):
 
 `define AUTOTB_DUT {top_name}
 `define AUTOTB_DUT_INST AESL_inst_{top_name}
-`define AUTOTB_TOP apatb_{top_name}_top
+`define AUTOTB_TOP {top_name}_tb
 `define AUTOTB_LAT_RESULT_FILE "{top_name}.result.lat.rb"
 `define AUTOTB_PER_RESULT_TRANS_FILE "{top_name}.performance.result.transaction.xml"
 `define AUTOTB_TOP_INST AESL_inst_apatb_{top_name}_top
@@ -33,15 +35,20 @@ def emit_top_tb(tv_dir, top_name, out_file):
 `define HW_DATA_OUT_DAT "{hw_data_out}"
 module `AUTOTB_TOP;
 
-  parameter AUTOTB_TRANSACTION_NUM = 10;
+  parameter AUTOTB_TRANSACTION_NUM = {trans_num};
   parameter PROGRESS_TIMEOUT = 10000000;
   parameter LATENCY_ESTIMATION = 0;
   parameter LENGTH_data_in_V = 1;
   parameter LENGTH_data_out_V = 1;
+  parameter TOKEN_WIDTH = {max(128, out_width*out_size)+10};
+  parameter IN_WIDTH = {in_width};
+  parameter IN_SIZE = {in_size};
+  parameter OUT_WIDTH = {out_width};
+  parameter OUT_SIZE = {out_size};
 
   task read_token;
     input integer fp;
-    output reg [159 : 0] token;
+    output reg [TOKEN_WIDTH-1 : 0] token;
     integer ret;
     begin
       token = "";
@@ -53,10 +60,10 @@ module `AUTOTB_TOP;
   task post_check;
     input integer fp1;
     input integer fp2;
-    reg [159 : 0] token1;
-    reg [159 : 0] token2;
-    reg [159 : 0] golden;
-    reg [159 : 0] result;
+    reg [TOKEN_WIDTH-1 : 0] token1;
+    reg [TOKEN_WIDTH-1 : 0] token2;
+    reg [TOKEN_WIDTH-1 : 0] golden;
+    reg [TOKEN_WIDTH-1 : 0] result;
     integer ret;
     begin
       read_token(fp1, token1);
@@ -125,10 +132,10 @@ module `AUTOTB_TOP;
   wire ap_done;
   wire ap_idle;
   wire ap_ready;
-  wire [7 : 0] data_in_V_dout;
+  wire [IN_WIDTH*IN_SIZE-1 : 0] data_in_V_dout;
   wire data_in_V_empty_n;
   wire data_in_V_read;
-  wire [7 : 0] data_out_V_din;
+  wire [OUT_WIDTH*OUT_SIZE-1 : 0] data_out_V_din;
   wire data_out_V_full_n;
   wire data_out_V_write;
   integer done_cnt = 0;
@@ -145,23 +152,17 @@ module `AUTOTB_TOP;
   wire ap_rst;
   wire ap_rst_n;
 
-
-  wire [3:0] data_in[1:0];
-  assign data_in[1] = data_in_V_dout[7:4];
-  assign data_in[0] = data_in_V_dout[3:0];
-
-  wire [3:0] data_out[1:0];
-  assign data_out_V_din = {{data_out[1], data_out[0]}};
-
-
+  wire [IN_WIDTH-1:0] data_in[IN_SIZE-1:0];
+  wire [OUT_WIDTH-1:0] data_out[OUT_SIZE-1:0];
+  for (genvar i = 0; i < IN_SIZE; i++)
+    assign data_in[i] = data_in_V_dout[i*IN_WIDTH+IN_WIDTH-1:i*IN_WIDTH];
+  for (genvar i = 0; i < OUT_SIZE; i++)
+    assign data_out_V_din[i*OUT_WIDTH+OUT_WIDTH-1:i*OUT_WIDTH] = data_out[i];
+ 
   `AUTOTB_DUT `AUTOTB_DUT_INST(
       .clk(ap_clk),
       .rst(ap_rst),
-      //.ap_start(ap_start),
-    //.ap_done(ap_done),
-    //.ap_idle(ap_idle),
-    //.ap_ready(ap_ready),
-    .data_in(data_in),
+      .data_in(data_in),
       .data_in_valid(data_in_V_empty_n),
       .data_in_ready(data_in_V_read),
       .data_out(data_out),
@@ -205,7 +206,7 @@ module `AUTOTB_TOP;
   // Fifo Instantiation data_in_V
 
   wire fifodata_in_V_rd;
-  wire [7 : 0] fifodata_in_V_dout;
+  wire [IN_WIDTH*IN_SIZE-1 : 0] fifodata_in_V_dout;
   wire fifodata_in_V_empty_n;
   wire fifodata_in_V_ready;
   wire fifodata_in_V_done;
@@ -249,7 +250,7 @@ module `AUTOTB_TOP;
 
   // The input and output of fifodata_out_V
   wire fifodata_out_V_wr;
-  wire [7 : 0] fifodata_out_V_din;
+  wire [OUT_SIZE*OUT_WIDTH-1 : 0] fifodata_out_V_din;
   wire fifodata_out_V_full_n;
   wire fifodata_out_V_ready;
   wire fifodata_out_V_done;
@@ -342,14 +343,14 @@ module `AUTOTB_TOP;
     @(posedge AESL_clock);
     @(posedge AESL_clock);
     @(posedge AESL_clock);
-    fp1 = $fopen(SW_DATA_OUT_DAT, "r");
-    fp2 = $fopen(HW_DATA_OUT_DAT, "r");
+    fp1 = $fopen(`SW_DATA_OUT_DAT, "r");
+    fp2 = $fopen(`HW_DATA_OUT_DAT, "r");
     if (fp1 == 0)  // Failed to open file
-      $display("Failed to open file \"%s\"", `SW_DATA_OUT_DAT!);
-    else if (fp2 == 0) $display("Failed to open file \"%s\"", `HW_DATA_OUT_DAT!);
+      $display("Failed to open file \\\"%s\\\"", `SW_DATA_OUT_DAT);
+    else if (fp2 == 0) $display("Failed to open file \\\"%s\\\"", `HW_DATA_OUT_DAT);
     else begin
       $display(
-          "Comparing \"%s\" with \"%s\"", `SW_DATA_OUT_DAT, `HW_DATA_OUT_DAT);
+          "Comparing \\\"%s\\\" with \\\"%s\\\"", `SW_DATA_OUT_DAT, `HW_DATA_OUT_DAT);
       post_check(fp1, fp2);
     end
     $fclose(fp1);
@@ -483,7 +484,7 @@ module `AUTOTB_TOP;
 
   initial begin : gen_ap_c_n_tvin_trans_num_data_in_V
     integer fp_data_in_V;
-    reg [127:0] token_data_in_V;
+    reg [TOKEN_WIDTH-1:0] token_data_in_V;
     integer ret;
 
     ap_c_n_tvin_trans_num_data_in_V = 0;
@@ -492,12 +493,12 @@ module `AUTOTB_TOP;
 
     fp_data_in_V = $fopen(`STREAM_SIZE_IN_data_in_V, "r");
     if (fp_data_in_V == 0) begin
-      $display("Failed to open file \"%s\"!", `STREAM_SIZE_IN_data_in_V);
+      $display("Failed to open file \\\"%s\\\"!", `STREAM_SIZE_IN_data_in_V);
       $finish;
     end
     read_token(fp_data_in_V, token_data_in_V);  // should be [[[runtime]]]
     if (token_data_in_V != "[[[runtime]]]") begin
-      $display("ERROR: token_data_in_V != \"[[[runtime]]]\"");
+      $display("ERROR: token_data_in_V != \\\"[[[runtime]]]\\\"");
       $finish;
     end
     size_data_in_V = 0;
@@ -572,7 +573,7 @@ module `AUTOTB_TOP;
     dump_tvout_finish_data_out_V = 0;
     fp = $fopen(`HW_DATA_OUT_DAT, "w");
     if (fp == 0) begin
-      $display("Failed to open file \"%s\"!", `HW_DATA_OUT_DAT);
+      $display("Failed to open file \\\"%s\\\"!", `HW_DATA_OUT_DAT);
       $display("ERROR: Simulation using HLS TB failed.");
       $finish;
     end
@@ -585,7 +586,7 @@ module `AUTOTB_TOP;
     @(posedge AESL_clock);
     fp = $fopen(`HW_DATA_OUT_DAT, "a");
     if (fp == 0) begin
-      $display("Failed to open file \"%s\"!", `HW_DATA_OUT_DAT);
+      $display("Failed to open file \\\"%s\\\"!", `HW_DATA_OUT_DAT);
       $display("ERROR: Simulation using HLS TB failed.");
       $finish;
     end
@@ -684,7 +685,7 @@ module `AUTOTB_TOP;
     $display("// Intra-Transaction Progress: Measured Latency / Latency Estimation * 100%%");
     $display("//");
     $display(
-        "// RTL Simulation : \"Inter-Transaction Progress\" [\"Intra-Transaction Progress\"] @ \"Simulation Time\"");
+        "// RTL Simulation : \\\"Inter-Transaction Progress\\\" [\\\"Intra-Transaction Progress\\\"] @ \\\"Simulation Time\\\"");
     $display(
         "////////////////////////////////////////////////////////////////////////////////////");
     print_progress();
@@ -728,10 +729,10 @@ module `AUTOTB_TOP;
     begin
       if (LATENCY_ESTIMATION > 0) begin
         get_intra_progress(intra_progress);
-        $display("// RTL Simulation : %0d / %0d [%2.2f%%] @ \"%0t\"", finish_cnt,
+        $display("// RTL Simulation : %0d / %0d [%2.2f%%] @ \\\"%0t\\\"", finish_cnt,
                  AUTOTB_TRANSACTION_NUM, intra_progress * 100, $time);
       end else begin
-        $display("// RTL Simulation : %0d / %0d [n/a] @ \"%0t\"", finish_cnt,
+        $display("// RTL Simulation : %0d / %0d [n/a] @ \\\"%0t\\\"", finish_cnt,
                  AUTOTB_TRANSACTION_NUM, $time);
       end
     end
@@ -789,13 +790,13 @@ module `AUTOTB_TOP;
 
       fp = $fopen(`AUTOTB_LAT_RESULT_FILE, "w");
 
-      $fdisplay(fp, "$MAX_LATENCY = \"%0d\"", latency_max);
-      $fdisplay(fp, "$MIN_LATENCY = \"%0d\"", latency_min);
-      $fdisplay(fp, "$AVER_LATENCY = \"%0d\"", latency_average);
-      $fdisplay(fp, "$MAX_THROUGHPUT = \"%0d\"", interval_max);
-      $fdisplay(fp, "$MIN_THROUGHPUT = \"%0d\"", interval_min);
-      $fdisplay(fp, "$AVER_THROUGHPUT = \"%0d\"", interval_average);
-      $fdisplay(fp, "$TOTAL_EXECUTE_TIME = \"%0d\"", total_execute_time);
+      $fdisplay(fp, "$MAX_LATENCY = \\\"%0d\\\"", latency_max);
+      $fdisplay(fp, "$MIN_LATENCY = \\\"%0d\\\"", latency_min);
+      $fdisplay(fp, "$AVER_LATENCY = \\\"%0d\\\"", latency_average);
+      $fdisplay(fp, "$MAX_THROUGHPUT = \\\"%0d\\\"", interval_max);
+      $fdisplay(fp, "$MIN_THROUGHPUT = \\\"%0d\\\"", interval_min);
+      $fdisplay(fp, "$AVER_THROUGHPUT = \\\"%0d\\\"", interval_average);
+      $fdisplay(fp, "$TOTAL_EXECUTE_TIME = \\\"%0d\\\"", total_execute_time);
 
       $fclose(fp);
 
@@ -845,3 +846,4 @@ endmodule
         outf.write(buff)
     logger.debug(f"Top-level test bench emitted to {out_file}")
     assert os.path.isfile(out_file), "Emitting top-level test bench failed."
+    os.system(f"verible-verilog-format --inplace {out_file}")

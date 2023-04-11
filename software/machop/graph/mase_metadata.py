@@ -13,6 +13,14 @@ from .utils import get_module_by_name, vf
 logger = logging.getLogger(__name__)
 
 
+def iceil(x):
+    return int(math.ceil(x))
+
+
+def clog2(x):
+    return iceil(math.log2(x))
+
+
 class MaseMetadata:
     """
     The metadata of a Mase node in a Mase graph describes the constraints of the
@@ -23,7 +31,6 @@ class MaseMetadata:
          - $name : name of the arg
            - type : type of the arg, e.g. fixed point or float
            - precision : format of the type, e.g. (10, 5)
-           - precision: format
            - size : size of the arg
            - from : node
       - results -> {}
@@ -50,9 +57,10 @@ class MaseMetadata:
     known_toolchain = {"INTERNAL", "EXTERNAL", "HLS"}
     known_storage = {"BRAM"}
 
-    def __init__(self, node=None, model=None, synth_mode="auto"):
+    def __init__(self, node=None, model=None, quantized_model=None, synth_mode="auto"):
         # Top-level model
         self.model = model
+        self.quantized_model = quantized_model
         # The target layer/module in the model
         self.module = get_module_by_name(model, node.target)
         # The type of the module
@@ -111,6 +119,21 @@ class MaseMetadata:
             else:
                 logger.warning(f"{self.node} is not found in the internal library.")
                 self._init_hardware_parameters_other(parameters)
+        else:
+            logger.warning(f"Not dealing with node for now: {self.node}")
+
+    def update_hardware_parameters(self, parameters=None):
+        """
+        Update hardware parameters
+        """
+        if self.node.op == "call_module" or self.node.op == "call_function":
+            if self.type in self.internal_layers:
+                name = self.internal_layers[self.type]
+                replace_fn = getattr(self, f"_update_hardware_parameters_{name}")
+                replace_fn(parameters)
+            else:
+                logger.warning(f"{self.node} is not found in the internal library.")
+                self._update_hardware_parameters_other(parameters)
         else:
             logger.warning(f"Not dealing with node for now: {self.node}")
 
@@ -325,34 +348,14 @@ actual keys: {input_keys}"""
                     "BIAS_FRAC_WIDTH": self.parameters["common"]["args"]["bias"][
                         "precision"
                     ][1],
-                    # Fully unrolled by default value
-                    "IN_SIZE": math.prod(
+                    # Sequential by default
+                    "IN_SIZE": 1,
+                    "IN_DEPTH": math.prod(
                         self.parameters["common"]["args"]["data_in"]["size"]
                     ),
-                    "IN_DEPTH": 1,
                     "PARALLELISM": self.parameters["common"]["results"]["data_out"][
                         "size"
                     ][1],
-                    # WEIGHT_SIZE == IN_SIZE * PARALLELISM
-                    "WEIGHT_SIZE": math.prod(
-                        self.parameters["common"]["args"]["weight"]["size"]
-                    ),
-                    # OUT_WIDTH == IN_WIDTH + WEIGHT_WIDTH + $clog2(IN_SIZE) + $clog2(IN_DEPTH) + HAS_BIAS
-                    "OUT_WIDTH": self.parameters["common"]["results"]["data_out"][
-                        "precision"
-                    ][0],
-                    # OUT_FRAC_WIDTH == IN_FRAC_WIDTH + WEIGHT_FRAC_WIDTH
-                    "OUT_FRAC_WIDTH": self.parameters["common"]["results"]["data_out"][
-                        "precision"
-                    ][1],
-                    # OUT_SIZE == PARALLELISM
-                    "OUT_SIZE": math.prod(
-                        self.parameters["common"]["results"]["data_out"]["size"]
-                    ),
-                    # BIAS_SIZE == PARALLELISM
-                    "BIAS_SIZE": math.prod(
-                        self.parameters["common"]["results"]["data_out"]["size"]
-                    ),
                 },
                 "toolchain": "INTERNAL",
                 "module": "fixed_linear",
@@ -369,6 +372,43 @@ actual keys: {input_keys}"""
                     "linear/fixed_linear.sv",
                 ],
             }
+
+            # WEIGHT_SIZE == IN_SIZE * PARALLELISM
+            in_size = self.parameters["hardware"]["verilog_parameters"]["IN_SIZE"]
+            parallelism = self.parameters["hardware"]["verilog_parameters"][
+                "PARALLELISM"
+            ]
+            self.parameters["hardware"]["verilog_parameters"]["WEIGHT_SIZE"] = (
+                in_size * parallelism
+            )
+
+            # OUT_WIDTH == IN_WIDTH + WEIGHT_WIDTH + $clog2(IN_SIZE) + $clog2(IN_DEPTH) + HAS_BIAS
+            in_width = self.parameters["hardware"]["verilog_parameters"]["IN_WIDTH"]
+            in_depth = self.parameters["hardware"]["verilog_parameters"]["IN_DEPTH"]
+            has_bias = self.parameters["hardware"]["verilog_parameters"]["HAS_BIAS"]
+            weight_width = self.parameters["hardware"]["verilog_parameters"][
+                "WEIGHT_WIDTH"
+            ]
+            self.parameters["hardware"]["verilog_parameters"]["OUT_WIDTH"] = (
+                in_width + weight_width + clog2(in_size) + clog2(in_depth) + has_bias
+            )
+
+            # OUT_FRAC_WIDTH == IN_FRAC_WIDTH + WEIGHT_FRAC_WIDTH
+            in_frac_width = self.parameters["hardware"]["verilog_parameters"][
+                "IN_FRAC_WIDTH"
+            ]
+            weight_frac_width = self.parameters["hardware"]["verilog_parameters"][
+                "WEIGHT_FRAC_WIDTH"
+            ]
+            self.parameters["hardware"]["verilog_parameters"]["OUT_FRAC_WIDTH"] = (
+                in_frac_width + weight_frac_width
+            )
+
+            # OUT_SIZE == PARALLELISM
+            self.parameters["hardware"]["verilog_parameters"]["OUT_SIZE"] = parallelism
+            # BIAS_SIZE == PARALLELISM
+            self.parameters["hardware"]["verilog_parameters"]["BIAS_SIZE"] = parallelism
+
         else:
             assert (
                 False
@@ -388,10 +428,47 @@ actual keys: {input_keys}"""
             self._update_hardware_parameters_linear(parameters)
 
     def _update_hardware_parameters_linear(self, parameters):
-        assert parameters
-        assert (
-            False
-        ), "External toml for updating hardware parameters of linear op is not supproted."
+        if parameters is None:
+            for pre_node in self.node.all_input_nodes:
+                if pre_node.op != "call_module" and pre_node.op != "call_function":
+                    continue
+                in_size = pre_node.meta.parameters["hardware"]["verilog_parameters"][
+                    "OUT_SIZE"
+                ]
+                self.parameters["hardware"]["verilog_parameters"]["IN_SIZE"] = in_size
+                total_size = math.prod(
+                    self.parameters["common"]["args"]["data_in"]["size"]
+                )
+                assert total_size % in_size == 0
+                self.parameters["hardware"]["verilog_parameters"]["IN_DEPTH"] = int(
+                    total_size / in_size
+                )
+        else:
+            for param, value in parameters.items():
+                self.parameters["hardware"]["verilog_parameters"][param] = value
+                if param == "IN_SIZE":
+                    in_size = math.prod(
+                        self.parameters["common"]["args"]["data_in"]["size"]
+                    )
+                    assert in_size % value == 0
+                    self.parameters["hardware"]["verilog_parameters"]["IN_DEPTH"] = int(
+                        in_size / value
+                    )
+                if param == "IN_DEPTH":
+                    in_size = math.prod(
+                        self.parameters["common"]["args"]["data_in"]["size"]
+                    )
+                    assert in_size % value == 0
+                    self.parameters["hardware"]["verilog_parameters"]["IN_SIZE"] = int(
+                        in_size / value
+                    )
+
+        # WEIGHT_SIZE == IN_SIZE * PARALLELISM
+        in_size = self.parameters["hardware"]["verilog_parameters"]["IN_SIZE"]
+        parallelism = self.parameters["hardware"]["verilog_parameters"]["PARALLELISM"]
+        self.parameters["hardware"]["verilog_parameters"]["WEIGHT_SIZE"] = (
+            in_size * parallelism
+        )
 
     def _verify_parameters_linear(self):
         # Verify common parameters
@@ -416,10 +493,8 @@ actual keys: {input_keys}"""
             bias_width = self.parameters["common"]["args"]["bias"]["precision"][0]
             weight_width = self.parameters["common"]["args"]["weight"]["precision"][0]
             data_in_width = self.parameters["common"]["args"]["data_in"]["precision"][0]
-            clog2_data_in_size = int(
-                math.ceil(
-                    math.log2(self.parameters["common"]["args"]["data_in"]["size"][1])
-                )
+            clog2_data_in_size = clog2(
+                self.parameters["common"]["args"]["data_in"]["size"][1]
             )
             bias_frac_width = self.parameters["common"]["args"]["bias"]["precision"][1]
             weight_frac_width = self.parameters["common"]["args"]["weight"][
@@ -632,23 +707,11 @@ actual keys: {input_keys}"""
         if self.parameters["common"]["args"]["data_in"]["type"] == "fixed":
             self.parameters["hardware"] = {
                 "verilog_parameters": {
-                    "IN_SIZE": math.prod(
-                        self.parameters["common"]["args"]["data_in"]["size"]
-                    ),
+                    "IN_SIZE": 1,
                     "IN_FRAC_WIDTH": self.parameters["common"]["args"]["data_in"][
                         "precision"
                     ][1],
                     "IN_WIDTH": self.parameters["common"]["args"]["data_in"][
-                        "precision"
-                    ][0],
-                    # OUT = IN
-                    "OUT_SIZE": math.prod(
-                        self.parameters["common"]["results"]["data_out"]["size"]
-                    ),
-                    "OUT_FRAC_WIDTH": self.parameters["common"]["args"]["data_in"][
-                        "precision"
-                    ][1],
-                    "OUT_WIDTH": self.parameters["common"]["args"]["data_in"][
                         "precision"
                     ][0],
                 },
@@ -658,6 +721,17 @@ actual keys: {input_keys}"""
             }
         else:
             assert False, "Unsupported arg type from toml. Only fixed is supported."
+
+        # OUT = IN
+        self.parameters["hardware"]["verilog_parameters"]["OUT_SIZE"] = self.parameters[
+            "hardware"
+        ]["verilog_parameters"]["IN_SIZE"]
+        self.parameters["hardware"]["verilog_parameters"][
+            "OUT_WIDTH"
+        ] = self.parameters["hardware"]["verilog_parameters"]["IN_WIDTH"]
+        self.parameters["hardware"]["verilog_parameters"][
+            "OUT_FRAC_WIDTH"
+        ] = self.parameters["hardware"]["verilog_parameters"]["IN_FRAC_WIDTH"]
 
         self.parameters["hardware"]["interface_parameters"] = {}
         for name, parameter in self.module.named_parameters():
@@ -670,10 +744,27 @@ actual keys: {input_keys}"""
             self._update_hardware_parameters_relu(parameters)
 
     def _update_hardware_parameters_relu(self, parameters):
-        assert parameters
-        assert (
-            False
-        ), "External toml for updating hardware parameters of relu op is not supproted."
+        if parameters is None:
+            for pre_node in self.node.all_input_nodes:
+                if pre_node.op != "call_module" and pre_node.op != "call_function":
+                    continue
+                in_size = pre_node.meta.parameters["hardware"]["verilog_parameters"][
+                    "OUT_SIZE"
+                ]
+                self.parameters["hardware"]["verilog_parameters"]["IN_SIZE"] = in_size
+                logger.debug(f"updated {in_size}")
+                total_size = math.prod(
+                    self.parameters["common"]["args"]["data_in"]["size"]
+                )
+                assert total_size % in_size == 0
+        else:
+            for param, value in parameters.items():
+                self.parameters["hardware"]["verilog_parameters"][param] = value
+
+        # OUT = IN
+        self.parameters["hardware"]["verilog_parameters"]["OUT_SIZE"] = self.parameters[
+            "hardware"
+        ]["verilog_parameters"]["IN_SIZE"]
 
     def _verify_parameters_relu(self):
         # Verify common parameters
@@ -881,10 +972,24 @@ actual keys: {input_keys}"""
             self._update_hardware_parameters_other(parameters)
 
     def _update_hardware_parameters_other(self, parameters):
-        assert parameters
-        assert (
-            False
-        ), "External toml for updating hardware parameters of unknown op is not supproted."
+        if parameters is None:
+            for pre_node in self.node.all_input_nodes:
+                if pre_node.op != "call_module" and pre_node.op != "call_function":
+                    continue
+                in_size = pre_node.meta.parameters["hardware"]["verilog_parameters"][
+                    "OUT_SIZE"
+                ]
+                self.parameters["hardware"]["verilog_parameters"]["IN_SIZE"] = in_size
+                total_size = math.prod(
+                    self.parameters["common"]["args"]["data_in"]["size"]
+                )
+                assert total_size % in_size == 0
+                self.parameters["hardware"]["verilog_parameters"]["IN_DEPTH"] = (
+                    total_size / in_size
+                )
+        else:
+            for param, value in parameters.items():
+                self.parameters["hardware"]["verilog_parameters"][param] = value
 
     def _verify_parameters_other(self):
         return

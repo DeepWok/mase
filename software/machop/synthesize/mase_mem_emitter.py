@@ -6,6 +6,19 @@ from ..modify.quantizers.quantizers import integer_quantizer
 logger = logging.getLogger(__name__)
 
 
+def iceil(x):
+    return int(math.ceil(x))
+
+
+def clog2(x):
+    return iceil(math.log2(x))
+
+
+def to_int(x):
+    assert isinstance(x, int), f"Value is not int: {x}"
+    return int(x)
+
+
 def emit_parameters_in_mem_internal(node, param_name, file_name, data_name):
     """
     Emit single-port ROM hardware components for each parameter
@@ -16,14 +29,18 @@ def emit_parameters_in_mem_internal(node, param_name, file_name, data_name):
         file_name
     ), "ROM Verilog file already exists before emitting. Please check if there are files with the same name."
 
-    # The depth of parameters matches with the input depth
-    out_depth = node.meta.parameters["hardware"]["verilog_parameters"]["IN_DEPTH"]
-    addr_width = int(math.ceil(math.log2(out_depth))) + 1
+    # TODO: Force bias to have a depth of 1 for now
+    if param_name != "bias":
+        out_depth = node.meta.parameters["hardware"]["verilog_parameters"]["IN_DEPTH"]
+    else:
+        out_depth = 1
+    addr_width = clog2(out_depth) + 1
     total_size = math.prod(node.meta.parameters["common"]["args"][param_name]["size"])
-    out_size = int(math.ceil(total_size) / out_depth)
+    # The depth of parameters must match with the input depth
     assert (
         total_size % out_depth == 0
-    ), f"Cannot partition imperfect size for now = {total_size} / {out_depth}."
+    ), f"Cannot partition imperfect size for now {node.name}.{param_name} = {total_size} / {out_depth}."
+    out_size = iceil(total_size / out_depth)
     # Assume the first index is the total width
     out_width = node.meta.parameters["hardware"]["verilog_parameters"][
         "{}_WIDTH".format(param_name.upper())
@@ -119,6 +136,7 @@ module {node_param_name}_source #(
   logic ce0;
   assign ce0 = 1;
 
+  logic [OUT_WIDTH*OUT_SIZE-1:0] data_vector;
   {node_param_name} #(
       .DATA_WIDTH(OUT_WIDTH * OUT_SIZE),
       .ADDR_RANGE(OUT_DEPTH)
@@ -132,7 +150,6 @@ module {node_param_name}_source #(
 
   // Cocotb/verilator does not support array flattening, so
   // we need to manually add some reshaping process.
-  logic [OUT_WIDTH*OUT_SIZE-1:0] data_vector;
   for (genvar j = 0; j < OUT_SIZE; j++)
     assign data_out[j] = data_vector[OUT_WIDTH*j+OUT_WIDTH-1:OUT_WIDTH*j];
 
@@ -153,16 +170,22 @@ def emit_parameters_in_dat(node, param_name, file_name):
     Emit initialised data for the ROM block. Each element must be in 8 HEX digits.
     """
     total_size = math.prod(node.meta.parameters["common"]["args"][param_name]["size"])
-    # The depth of parameters matches with the input depth of data
-    out_depth = (
-        node.meta.parameters["hardware"]["verilog_parameters"]["IN_DEPTH"]
-        if "IN_DEPTH" in node.meta.parameters["hardware"]["verilog_parameters"].keys()
-        else total_size
-    )
-    out_size = int(math.ceil(total_size) / out_depth)
+
+    if "IN_DEPTH" in node.meta.parameters["hardware"]["verilog_parameters"].keys():
+        if param_name == "bias":
+            out_depth = 1
+        else:
+            out_depth = node.meta.parameters["hardware"]["verilog_parameters"][
+                "IN_DEPTH"
+            ]
+    else:
+        out_depth = total_size
+
+    out_size = iceil(total_size / out_depth)
+    # The depth of parameters must match with the input depth of data
     assert (
         total_size % out_depth == 0
-    ), f"Cannot partition imperfect size for now = {total_size} / {out_depth}."
+    ), f"Cannot partition imperfect size for now {node.name}.{param_name} = {total_size} / {out_depth}."
     # Assume the first index is the total width
     out_width = node.meta.parameters["hardware"]["verilog_parameters"][
         "{}_WIDTH".format(param_name.upper())
@@ -190,6 +213,7 @@ def emit_parameters_in_dat(node, param_name, file_name):
 
         scale = 2**frac_width
         thresh = 2**width
+        to_depth = to_int(out_depth)
         for i in range(0, out_depth):
             line_buff = ""
             for j in range(0, out_size):
@@ -246,9 +270,9 @@ def emit_parameters_in_mem_hls(node, param_name, file_name, data_name):
     # The depth of parameters matches with the input depth
     total_size = math.prod(node.meta.parameters["common"]["args"][param_name]["size"])
     out_depth = total_size
-    addr_width = int(math.ceil(math.log2(out_depth))) + 1
+    addr_width = clog2(out_depth) + 1
     total_size = math.prod(node.meta.parameters["common"]["args"][param_name]["size"])
-    out_size = int(math.ceil(total_size) / out_depth)
+    out_size = iceil(total_size / out_depth)
     assert (
         total_size % out_depth == 0
     ), f"Cannot partition imperfect size for now = {total_size} / {out_depth}."

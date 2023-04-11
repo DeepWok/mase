@@ -1,10 +1,12 @@
 import functools
 import logging
+import numpy as np
 import os
 import pickle
 
 import colorlog
 import torch
+import subprocess
 
 # use_cuda = torch.cuda.is_available()
 # print("Using cuda:{}".format(use_cuda))
@@ -17,7 +19,7 @@ import torch
 # -------------------------------
 
 
-def getLogger(name: str, logFile: str = "", console: bool = True) -> logging.Logger:
+def getLogger(name: str, log_file: str = "", console: bool = True) -> logging.Logger:
     # add a trace level
     logging.TRACE = logging.DEBUG - 5
     logging.addLevelName(logging.TRACE, "TRACE")
@@ -27,9 +29,9 @@ def getLogger(name: str, logFile: str = "", console: bool = True) -> logging.Log
     logger = logging.getLogger(name)
     logger.setLevel(logging.TRACE)
 
-    if logFile:
-        if os.path.isfile(logFile):
-            os.remove(logFile)
+    if log_file:
+        if os.path.isfile(log_file):
+            os.remove(log_file)
 
         # File handle
         class customFileFormat(logging.Formatter):
@@ -44,7 +46,7 @@ def getLogger(name: str, logFile: str = "", console: bool = True) -> logging.Log
                 formatter = logging.Formatter(logformat, "%Y-%m-%d %H:%M:%S")
                 return formatter.format(record)
 
-        fh = logging.FileHandler(logFile)
+        fh = logging.FileHandler(log_file)
         fh.setFormatter(customFileFormat())
         fh.setLevel(logging.TRACE)
         logger.addHandler(fh)
@@ -244,3 +246,47 @@ def load_pt_pl_or_pkl_checkpoint_into_pt_model(
         model = load_pt_model_into_pt_model(load_name, model=model)
         logger.info(f"pt model is loaded from {load_name}")
     return model
+
+
+def execute_cli(cmd, log_output: bool = True, log_file=None, cwd="."):
+    if log_output:
+        logger.debug("{} (cwd = {})".format(subprocess.list2cmdline(cmd), cwd))
+        with subprocess.Popen(
+            cmd, stdout=subprocess.PIPE, bufsize=1, universal_newlines=True, cwd=cwd
+        ) as result:
+            if log_file:
+                f = open(log_file, "w")
+            if result.stdout or result.stderr:
+                logger.info("")
+            if result.stdout:
+                for line in result.stdout:
+                    if log_file:
+                        f.write(line)
+                    line = line.rstrip("\n")
+                    logging.trace(line)
+            if result.stderr:
+                for line in result.stderr:
+                    if log_file:
+                        f.write(line)
+                    line = line.rstrip("\n")
+                    logging.trace(line)
+            if log_file:
+                f.close()
+    else:
+        result = subprocess.run(cmd, stdout=subprocess.DEVNULL, cwd=cwd)
+    return result.returncode
+
+
+def get_factors(n):
+    factors = np.sort(
+        list(
+            set(
+                functools.reduce(
+                    list.__add__,
+                    ([i, n // i] for i in range(1, int(n**0.5) + 1) if n % i == 0),
+                )
+            )
+        )
+    )
+    factors = [int(x) for x in factors]
+    return factors

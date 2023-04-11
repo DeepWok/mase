@@ -1,16 +1,14 @@
 `timescale 1ns / 1ps
 module fixed_dot_product #(
     parameter IN_WIDTH = 32,
+    // this defines the number of elements in the vector, this is tunable
+    // when block arithmetics are applied, this is the same as the block size
+    parameter IN_SIZE = 4,
     parameter WEIGHT_WIDTH = 16,
     // this is the width for the product
     // parameter PRODUCT_WIDTH = 8,
     // this is the width for the summed product
-    parameter OUT_WIDTH = IN_WIDTH + WEIGHT_WIDTH + $clog2(IN_SIZE),
-
-    // this defines the number of elements in the vector, this is tunable
-    // when block arithmetics are applied, this is the same as the block size
-    parameter IN_SIZE = 4
-
+    parameter OUT_WIDTH = IN_WIDTH + WEIGHT_WIDTH + $clog2(IN_SIZE)
 ) (
     input clk,
     input rst,

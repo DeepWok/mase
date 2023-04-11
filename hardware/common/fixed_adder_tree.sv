@@ -59,6 +59,7 @@ module fixed_adder_tree #(
 
     // Casting array for sum
     logic [$bits(sum)-1:0] cast_sum;
+    logic [$bits(sum)-1:0] cast_data;
     for (genvar j = 0; j < NEXT_LEVEL_IN_SIZE; j++)
       assign cast_sum[(IN_WIDTH+i+1)*j+(IN_WIDTH+i):(IN_WIDTH+i+1)*j] = sum[j];
 
@@ -76,13 +77,12 @@ module fixed_adder_tree #(
     );
 
     // Casting array for vars[i+1].data 
-    logic [$bits(sum)-1:0] cast_data;
     for (genvar j = 0; j < NEXT_LEVEL_IN_SIZE; j++)
       assign vars[i+1].data[j] = cast_data[(IN_WIDTH+i+1)*j+(IN_WIDTH+i):(IN_WIDTH+i+1)*j];
 
   end
 
-  // Vivado does not support zero-extend automatically
+  // it will zero-extend automatically
   for (genvar j = 0; j < IN_SIZE; j++) assign vars[0].data[j] = data_in[j];
   assign vars[0].valid = data_in_valid;
   assign data_in_ready = vars[0].ready;

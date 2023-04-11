@@ -24,10 +24,11 @@ module fixed_cast #(
   // Fraction part
   for (genvar i = 0; i < IN_SIZE; i++) begin : out_frac
     logic [OUT_FRAC_WIDTH-1:0] data;
-    /* verilator lint_off WIDTH */
     if (IN_FRAC_WIDTH > OUT_FRAC_WIDTH)
       assign data = data_in[i][IN_FRAC_WIDTH-1:IN_FRAC_WIDTH-OUT_FRAC_WIDTH];
-    else assign data = data_in[i][IN_FRAC_WIDTH-1:0] << (OUT_FRAC_WIDTH - IN_FRAC_WIDTH);
+    /* verilator lint_off WIDTH */
+    else
+      assign data = data_in[i][IN_FRAC_WIDTH-1:0] << (OUT_FRAC_WIDTH - IN_FRAC_WIDTH);
     /* verilator lint_on WIDTH */
   end
 

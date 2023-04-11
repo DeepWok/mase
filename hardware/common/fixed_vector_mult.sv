@@ -44,6 +44,13 @@ module fixed_vector_mult #(
     );
   end
 
+  logic product_data_in_valid;
+  logic product_data_in_ready;
+  logic product_data_out_valid;
+  logic product_data_out_ready;
+  logic [$bits(product_vector)-1:0] product_data_in;
+  logic [$bits(product_vector)-1:0] product_data_out;
+
   join2 #() join_inst (
       .data_in_ready ({weight_ready, data_in_ready}),
       .data_in_valid ({weight_valid, data_in_valid}),
@@ -51,16 +58,10 @@ module fixed_vector_mult #(
       .data_out_ready(product_data_in_ready)
   );
 
-  logic product_data_in_valid;
-  logic product_data_in_ready;
-  logic product_data_out_valid;
-  logic product_data_out_ready;
-
   // Cocotb/verilator does not support array flattening, so
   // we need to manually add some reshaping process.
 
   // Casting array for product vector 
-  logic [$bits(product_vector)-1:0] product_data_in;
   for (genvar i = 0; i < IN_SIZE; i++)
     assign product_data_in[PRODUCT_WIDTH*i+PRODUCT_WIDTH-1:PRODUCT_WIDTH*i] = product_vector[i];
 
@@ -78,7 +79,6 @@ module fixed_vector_mult #(
   );
 
   // Casting array for product vector 
-  logic [$bits(product_vector)-1:0] product_data_out;
   for (genvar i = 0; i < IN_SIZE; i++)
     assign data_out[i] = product_data_out[PRODUCT_WIDTH*i+PRODUCT_WIDTH-1:PRODUCT_WIDTH*i];
 
