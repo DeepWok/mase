@@ -295,7 +295,7 @@ class Modifier:
                 ]
                 complete_comparison.append(row)
 
-                if old_node.target in modify_hits_and_misses:
+                if str(old_node.target) in modify_hits_and_misses:
                     modify_hits_and_misses[str(old_node.target)]["count"] += 1
                 else:
                     modify_hits_and_misses[str(old_node.target)] = {
@@ -317,7 +317,7 @@ class Modifier:
                 ]
                 complete_comparison.append(row)
 
-                if old_node.target in modify_hits_and_misses:
+                if str(old_node.target) in modify_hits_and_misses:
                     modify_hits_and_misses[str(old_node.target)]["count"] += 1
                 else:
                     modify_hits_and_misses[str(old_node.target)] = {
@@ -403,7 +403,6 @@ class Modifier:
                 except NotImplementedError:
                     # print(f"Custom module {module}, {type(module)}")
                     # create new layer using user provided module
-                    breakpoint()
                     new_module = self.create_new_custom_module(
                         original_module=module, config=sub_config
                     )
