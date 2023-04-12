@@ -218,7 +218,8 @@ class MaseVerilogEmitter(MaseGraph):
         emit_data_out_tb_sv(data_width, load_path, store_path, out_file)
 
         out_file = os.path.join(v_dir, f"{self.project}_tb.sv")
-        trans_num = v_in_param["IN_DEPTH"] * trans_num
+        in_trans_num = v_in_param["IN_DEPTH"] * trans_num
+        out_trans_num = trans_num
         emit_top_tb(
             tv_dir,
             self.project,
@@ -227,7 +228,8 @@ class MaseVerilogEmitter(MaseGraph):
             in_size,
             out_width,
             out_size,
-            trans_num,
+            in_trans_num,
+            out_trans_num,
         )
 
         out_file = os.path.join(v_dir, f"fifo_para.vh")
@@ -266,13 +268,13 @@ class MaseVerilogEmitter(MaseGraph):
         sw_data_in, hw_data_in = input_gen()
         sw_data_out = [self.quantized_model(trans) for trans in sw_data_in]
 
-        out_type = self.nodes_in[0].meta.parameters["common"]["results"]["data_out"][
+        out_type = self.nodes_out[0].meta.parameters["common"]["results"]["data_out"][
             "type"
         ]
-        out_width = self.nodes_in[0].meta.parameters["common"]["results"]["data_out"][
+        out_width = self.nodes_out[0].meta.parameters["common"]["results"]["data_out"][
             "precision"
         ][0]
-        out_frac_width = self.nodes_in[0].meta.parameters["common"]["results"][
+        out_frac_width = self.nodes_out[0].meta.parameters["common"]["results"][
             "data_out"
         ]["precision"][1]
 

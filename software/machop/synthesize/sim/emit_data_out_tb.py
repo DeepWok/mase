@@ -167,8 +167,7 @@ def emit_data_out_tb_dat(node, data_out, out_file):
             value = value + d
 
     buff = f"""[[[runtime]]]
-{data_buff}
-[[[runtime]]]
+{data_buff}[[[/runtime]]]
 """
 
     with open(out_file, "w", encoding="utf-8") as outf:
