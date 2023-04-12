@@ -3,6 +3,7 @@
 # ---------------------------------------
 import logging
 import os
+import pdb
 
 os.environ["PYTHONBREAKPOINT"] = "ipdb.set_trace"
 import random
@@ -417,9 +418,7 @@ class Machop:
         for exc in [KeyboardInterrupt, FileNotFoundError]:
             if issubclass(etype, exc):
                 sys.exit(-1)
-        import ipdb
-
-        ipdb.post_mortem(etb)
+        pdb.post_mortem(etb)
 
     # Main process
     def run(self):
