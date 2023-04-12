@@ -8,6 +8,7 @@ from typing import Callable, Dict, List, Union
 import toml
 import torch
 import torch.nn.functional as F
+from machop.utils import copy_weights
 from tabulate import tabulate
 from torch import nn
 from torch.fx import GraphModule
@@ -27,7 +28,6 @@ from .quantizers import (
     MODULE_CLS_MAP_NEO,
     QUANTIZED_MODULE_CLASSES,
 )
-from machop.utils import copy_weights
 
 logger = logging.getLogger(__name__)
 
@@ -543,15 +543,12 @@ def _create_new_module(original_module: nn.Module, config: Dict):
     if original_module_cls is nn.Linear:
         new_module_cls = MODULE_CLS_MAP_NEO[original_module_cls][config["name"]]
         use_bias = original_module.bias is not None
-        try:
-            new_module = new_module_cls(
-                in_features=original_module.in_features,
-                out_features=original_module.out_features,
-                bias=use_bias,
-                config=config,
-            )
-        except KeyError:
-            print("fk")
+        new_module = new_module_cls(
+            in_features=original_module.in_features,
+            out_features=original_module.out_features,
+            bias=use_bias,
+            config=config,
+        )
 
         copy_weights(original_module.weight, new_module.weight)
         if use_bias:

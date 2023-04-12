@@ -10,7 +10,9 @@ import torch.fx
 from torch import nn
 from torch.fx import symbolic_trace
 
+from .dummy_inputs import get_dummy_inputs
 from .mase_metadata import MaseMetadata
+from .mase_tracer import mase_symbolic_trace
 from .utils import get_module_by_name, vf
 
 logger = logging.getLogger(__name__)
@@ -88,16 +90,21 @@ class MaseGraph:
         self.model = model
         self.quantized_model = quantized_model
         self.synth_mode = synth_mode
+        self.args = args
         self.fx_graph, self.nodes_in, self.nodes_out = self._init_fx_graph()
         self._init_parameters(common_param=common_param)
-        self.args = args
 
     def _init_fx_graph(self):
         model = self.model
-        trace = torch.fx.symbolic_trace(model)
-        trace.graph.lint()
-        trace = trace
-        fx_graph = trace.graph
+        # trace = torch.fx.symbolic_trace(model)
+        # trace.graph.lint()
+        # trace = trace
+        # fx_graph = trace.graph
+        dummy_inputs = get_dummy_inputs(
+            model_name=self.args.model, task=self.args.task, model=self.model
+        )
+        graph_module = mase_symbolic_trace(model, dummy_inputs)
+        fx_graph = graph_module.graph
         nodes_in = _get_input_nodes(fx_graph)
         assert len(nodes_in) == 1, "Multiple inputs are not supported."
         nodes_out = _get_output_nodes(fx_graph)
