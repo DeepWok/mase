@@ -3,7 +3,6 @@ import random
 import os
 import logging
 
-from machop.search import search_quantization
 from machop.models import vision_models
 from machop.modify.modifier import Modifier
 from machop.utils import to_numpy
@@ -141,16 +140,25 @@ class SearchQuantization(SearchBase):
 
     def convert_best_to_config(self, best):
         config = {
+            "default": self.default_config,
+            "module_classes_to_modify": {},
             "functions_to_modify": {},
             "modules_to_modify": {},
             "methods_to_modify": {},
         }
+
         for entry, value in best.items():
             meta_name, node, key = entry.split("/")
             if node not in config[meta_name]:
-                config[meta_name][node] = {key: int(value)}
+                if key == "name":
+                    config[meta_name][node] = {key: 'integer'}
+                else:
+                    config[meta_name][node] = {key: int(value)}
             else:
-                config[meta_name][node][key] = int(value)
+                if key == "name":
+                    config[meta_name][node][key] = 'integer'
+                else:
+                    config[meta_name][node][key] = int(value)
         return config
 
     def hyper_opt_strategy(self):
