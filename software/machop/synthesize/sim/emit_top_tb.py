@@ -6,7 +6,15 @@ logger = logging.getLogger(__name__)
 
 
 def emit_top_tb(
-    tv_dir, top_name, out_file, in_width, in_size, out_width, out_size, trans_num
+    tv_dir,
+    top_name,
+    out_file,
+    in_width,
+    in_size,
+    out_width,
+    out_size,
+    in_trans_num,
+    out_trans_num,
 ):
     sw_data_in = os.path.join(tv_dir, "sw_data_in.dat")
     sw_data_out = os.path.join(tv_dir, "sw_data_out.dat")
@@ -35,12 +43,13 @@ def emit_top_tb(
 `define HW_DATA_OUT_DAT "{hw_data_out}"
 module `AUTOTB_TOP;
 
-  parameter AUTOTB_TRANSACTION_NUM = {trans_num};
+  parameter IN_TRANSACTION_NUM = {in_trans_num};
+  parameter OUT_TRANSACTION_NUM = {out_trans_num};
   parameter PROGRESS_TIMEOUT = 10000000;
   parameter LATENCY_ESTIMATION = 0;
   parameter LENGTH_data_in_V = 1;
   parameter LENGTH_data_out_V = 1;
-  parameter TOKEN_WIDTH = {max(128, out_width*out_size)+10};
+  parameter TOKEN_WIDTH = {max(128, 2*out_width*out_size)+16};
   parameter IN_WIDTH = {in_width};
   parameter IN_SIZE = {in_size};
   parameter OUT_WIDTH = {out_width};
@@ -291,7 +300,7 @@ module `AUTOTB_TOP;
   initial begin : generate_AESL_ready_cnt_proc
     AESL_ready_cnt = 0;
     wait (AESL_reset === 0);
-    while (AESL_ready_cnt != AUTOTB_TRANSACTION_NUM) begin
+    while (AESL_ready_cnt != OUT_TRANSACTION_NUM) begin
       while (AESL_ready !== 1) begin
         @(posedge AESL_clock);
         #0.4;
@@ -311,7 +320,7 @@ module `AUTOTB_TOP;
     forever begin
       @(posedge AESL_clock);
       if (ready == 1) begin
-        if (ready_cnt < AUTOTB_TRANSACTION_NUM) begin
+        if (ready_cnt < OUT_TRANSACTION_NUM) begin
           ready_cnt = ready_cnt + 1;
         end
       end
@@ -319,7 +328,7 @@ module `AUTOTB_TOP;
     end
   end
 
-  wire all_finish = (done_cnt == AUTOTB_TRANSACTION_NUM);
+  wire all_finish = (done_cnt == OUT_TRANSACTION_NUM);
 
   // done_cnt
   always @(posedge AESL_clock) begin
@@ -327,7 +336,7 @@ module `AUTOTB_TOP;
       done_cnt <= 0;
     end else begin
       if (AESL_done == 1) begin
-        if (done_cnt < AUTOTB_TRANSACTION_NUM) begin
+        if (done_cnt < OUT_TRANSACTION_NUM) begin
           done_cnt <= done_cnt + 1;
         end
       end
@@ -397,7 +406,7 @@ module `AUTOTB_TOP;
     #0 start = 1;
     start_cnt = start_cnt + 1;
     forever begin
-      if (start_cnt >= AUTOTB_TRANSACTION_NUM + 1) begin
+      if (start_cnt >= OUT_TRANSACTION_NUM + 1) begin
         #0 start = 0;
       end
       @(posedge AESL_clock);
@@ -425,7 +434,7 @@ module `AUTOTB_TOP;
   end
   initial begin : ready_last_n_process
     ready_last_n = 1;
-    wait (ready_cnt == AUTOTB_TRANSACTION_NUM) @(posedge AESL_clock);
+    wait (ready_cnt == OUT_TRANSACTION_NUM) @(posedge AESL_clock);
     ready_last_n <= 0;
   end
 
@@ -437,7 +446,7 @@ module `AUTOTB_TOP;
   assign ready_wire = ready_initial | AESL_ready_delay;
   initial begin : done_delay_last_n_process
     done_delay_last_n = 1;
-    while (done_cnt < AUTOTB_TRANSACTION_NUM) @(posedge AESL_clock);
+    while (done_cnt < OUT_TRANSACTION_NUM) @(posedge AESL_clock);
     #0.1;
     done_delay_last_n = 0;
   end
@@ -455,8 +464,8 @@ module `AUTOTB_TOP;
     if (AESL_reset) interface_done = 0;
     else begin
       #0.01;
-      if (ready === 1 && ready_cnt > 0 && ready_cnt < AUTOTB_TRANSACTION_NUM) interface_done = 1;
-      else if (AESL_done_delay === 1 && done_cnt == AUTOTB_TRANSACTION_NUM) interface_done = 1;
+      if (ready === 1 && ready_cnt > 0 && ready_cnt < OUT_TRANSACTION_NUM) interface_done = 1;
+      else if (AESL_done_delay === 1 && done_cnt == OUT_TRANSACTION_NUM) interface_done = 1;
       else interface_done = 0;
     end
   end
@@ -467,7 +476,7 @@ module `AUTOTB_TOP;
     data_in_V_ready_reg <= 0;
     @(posedge AESL_clock);
     internal_trans_num = 1;
-    while (internal_trans_num != AUTOTB_TRANSACTION_NUM + 1) begin
+    while (internal_trans_num != IN_TRANSACTION_NUM + 1) begin
       if (ap_c_n_tvin_trans_num_data_in_V > internal_trans_num) begin
         data_in_V_ready_reg <= 1;
         @(posedge AESL_clock);
@@ -579,7 +588,7 @@ module `AUTOTB_TOP;
     end
     $fdisplay(fp, "[[[runtime]]]");
     $fclose(fp);
-    wait (done_cnt == AUTOTB_TRANSACTION_NUM);
+    wait (done_cnt == OUT_TRANSACTION_NUM);
     // last transaction is saved at negedge right after last done
     @(posedge AESL_clock);
     @(posedge AESL_clock);
@@ -622,17 +631,17 @@ module `AUTOTB_TOP;
     end
   end
 
-  reg [31:0] start_timestamp[0:AUTOTB_TRANSACTION_NUM - 1];
+  reg [31:0] start_timestamp[0:OUT_TRANSACTION_NUM - 1];
   reg [31:0] start_cnt;
-  reg [31:0] ready_timestamp[0:AUTOTB_TRANSACTION_NUM - 1];
+  reg [31:0] ready_timestamp[0:OUT_TRANSACTION_NUM - 1];
   reg [31:0] ap_ready_cnt;
-  reg [31:0] finish_timestamp[0:AUTOTB_TRANSACTION_NUM - 1];
+  reg [31:0] finish_timestamp[0:OUT_TRANSACTION_NUM - 1];
   reg [31:0] finish_cnt;
   reg [31:0] lat_total;
   event report_progress;
 
   always @(posedge AESL_clock) begin
-    if (finish_cnt == AUTOTB_TRANSACTION_NUM - 1 && AESL_done == 1'b1)
+    if (finish_cnt == OUT_TRANSACTION_NUM - 1 && AESL_done == 1'b1)
       lat_total = clk_cnt - start_timestamp[0];
   end
 
@@ -651,19 +660,19 @@ module `AUTOTB_TOP;
     ->report_progress;
     forever begin
       @(posedge AESL_clock);
-      if (start_cnt < AUTOTB_TRANSACTION_NUM) begin
+      if (start_cnt < OUT_TRANSACTION_NUM) begin
         if ((AESL_start && AESL_ready_p1) || (AESL_start && ~AESL_start_p1)) begin
           start_timestamp[start_cnt] = clk_cnt;
           start_cnt = start_cnt + 1;
         end
       end
-      if (ap_ready_cnt < AUTOTB_TRANSACTION_NUM) begin
+      if (ap_ready_cnt < OUT_TRANSACTION_NUM) begin
         if (AESL_start_p1 && AESL_ready_p1) begin
           ready_timestamp[ap_ready_cnt] = clk_cnt;
           ap_ready_cnt = ap_ready_cnt + 1;
         end
       end
-      if (finish_cnt < AUTOTB_TRANSACTION_NUM) begin
+      if (finish_cnt < OUT_TRANSACTION_NUM) begin
         if (AESL_done) begin
           finish_timestamp[finish_cnt] = clk_cnt;
           finish_cnt = finish_cnt + 1;
@@ -689,9 +698,9 @@ module `AUTOTB_TOP;
     $display(
         "////////////////////////////////////////////////////////////////////////////////////");
     print_progress();
-    while (finish_cnt < AUTOTB_TRANSACTION_NUM) begin
+    while (finish_cnt < OUT_TRANSACTION_NUM) begin
       @(report_progress);
-      if (finish_cnt < AUTOTB_TRANSACTION_NUM) begin
+      if (finish_cnt < OUT_TRANSACTION_NUM) begin
         if (AESL_done) begin
           print_progress();
           progress_timeout = PROGRESS_TIMEOUT;
@@ -730,10 +739,10 @@ module `AUTOTB_TOP;
       if (LATENCY_ESTIMATION > 0) begin
         get_intra_progress(intra_progress);
         $display("// RTL Simulation : %0d / %0d [%2.2f%%] @ \\\"%0t\\\"", finish_cnt,
-                 AUTOTB_TRANSACTION_NUM, intra_progress * 100, $time);
+                 OUT_TRANSACTION_NUM, intra_progress * 100, $time);
       end else begin
         $display("// RTL Simulation : %0d / %0d [n/a] @ \\\"%0t\\\"", finish_cnt,
-                 AUTOTB_TRANSACTION_NUM, $time);
+                 OUT_TRANSACTION_NUM, $time);
       end
     end
   endtask
@@ -741,12 +750,12 @@ module `AUTOTB_TOP;
   task calculate_performance();
     integer i;
     integer fp;
-    reg [31:0] latency[0:AUTOTB_TRANSACTION_NUM - 1];
+    reg [31:0] latency[0:OUT_TRANSACTION_NUM - 1];
     reg [31:0] latency_min;
     reg [31:0] latency_max;
     reg [31:0] latency_total;
     reg [31:0] latency_average;
-    reg [31:0] interval[0:AUTOTB_TRANSACTION_NUM - 2];
+    reg [31:0] interval[0:OUT_TRANSACTION_NUM - 2];
     reg [31:0] interval_min;
     reg [31:0] interval_max;
     reg [31:0] interval_total;
@@ -761,19 +770,19 @@ module `AUTOTB_TOP;
       interval_total = 0;
       total_execute_time = lat_total;
 
-      for (i = 0; i < AUTOTB_TRANSACTION_NUM; i = i + 1) begin
+      for (i = 0; i < OUT_TRANSACTION_NUM; i = i + 1) begin
         // calculate latency
         latency[i] = finish_timestamp[i] - start_timestamp[i];
         if (latency[i] > latency_max) latency_max = latency[i];
         if (latency[i] < latency_min) latency_min = latency[i];
         latency_total = latency_total + latency[i];
         // calculate interval
-        if (AUTOTB_TRANSACTION_NUM == 1) begin
+        if (OUT_TRANSACTION_NUM == 1) begin
           interval[i] = 0;
           interval_max = 0;
           interval_min = 0;
           interval_total = 0;
-        end else if (i < AUTOTB_TRANSACTION_NUM - 1) begin
+        end else if (i < OUT_TRANSACTION_NUM - 1) begin
           interval[i] = start_timestamp[i+1] - start_timestamp[i];
           if (interval[i] > interval_max) interval_max = interval[i];
           if (interval[i] < interval_min) interval_min = interval[i];
@@ -781,11 +790,11 @@ module `AUTOTB_TOP;
         end
       end
 
-      latency_average = latency_total / AUTOTB_TRANSACTION_NUM;
-      if (AUTOTB_TRANSACTION_NUM == 1) begin
+      latency_average = latency_total / OUT_TRANSACTION_NUM;
+      if (OUT_TRANSACTION_NUM == 1) begin
         interval_average = 0;
       end else begin
-        interval_average = interval_total / (AUTOTB_TRANSACTION_NUM - 1);
+        interval_average = interval_total / (OUT_TRANSACTION_NUM - 1);
       end
 
       fp = $fopen(`AUTOTB_LAT_RESULT_FILE, "w");
@@ -803,12 +812,12 @@ module `AUTOTB_TOP;
       fp = $fopen(`AUTOTB_PER_RESULT_TRANS_FILE, "w");
 
       $fdisplay(fp, "%20s%16s%16s", "", "latency", "interval");
-      if (AUTOTB_TRANSACTION_NUM == 1) begin
+      if (OUT_TRANSACTION_NUM == 1) begin
         i = 0;
         $fdisplay(fp, "transaction%8d:%16d%16d", i, latency[i], interval[i]);
       end else begin
-        for (i = 0; i < AUTOTB_TRANSACTION_NUM; i = i + 1) begin
-          if (i < AUTOTB_TRANSACTION_NUM - 1) begin
+        for (i = 0; i < OUT_TRANSACTION_NUM; i = i + 1) begin
+          if (i < OUT_TRANSACTION_NUM - 1) begin
             $fdisplay(fp, "transaction%8d:%16d%16d", i, latency[i], interval[i]);
           end else begin
             $fdisplay(fp, "transaction%8d:%16d               x", i, latency[i]);

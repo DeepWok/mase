@@ -194,8 +194,7 @@ def emit_data_in_tb_dat(node, data_in, out_file):
             value = value + d
 
     buff = f"""[[[runtime]]]
-{data_buff}
-[[[runtime]]]
+{data_buff}[[[/runtime]]]
 """
 
     with open(out_file, "w", encoding="utf-8") as outf:
@@ -223,8 +222,7 @@ def emit_data_in_stream_size_tb_dat(node, data_in, out_file):
             trans_count += 1
 
     buff = f"""[[[runtime]]]
-{data_buff}
-[[[runtime]]]
+{data_buff}[[[/runtime]]]
 """
 
     with open(out_file, "w", encoding="utf-8") as outf:
