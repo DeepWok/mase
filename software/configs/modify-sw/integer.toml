@@ -7,6 +7,12 @@ name = "integer"
 weight_frac_width = 3
 weight_width = 8
 
+[module_classes_to_modify.avgpool2d]
+name = "default"
+
+[module_classes_to_modify.adaptiveavgpool2d]
+name = "default"
+
 [module_classes_to_modify.conv1d]
 name = "default"
 

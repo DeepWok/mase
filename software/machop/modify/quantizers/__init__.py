@@ -24,7 +24,9 @@ from .functions import (
     relu_msfp,
 )
 from .layers import (
+    AdaptiveAvgPool2dInteger,
     AddInteger,
+    AvgPool2dInteger,
     Conv1dInteger,
     Conv1dMinifloatIEEE,
     Conv1dMinifloatSimple,
@@ -68,6 +70,10 @@ MODULE_CLS_MAP_NEO = {
         "minifloat_ieee": Conv2dMinifloatIEEE,
         "msfp": Conv2dMSFP,
     },
+    nn.AvgPool2d: {
+        "integer": AvgPool2dInteger,
+    },
+    nn.AdaptiveAvgPool2d: {"integer": AdaptiveAvgPool2dInteger},
 }
 
 QUANTIZED_MODULE_CLASSES = []

@@ -34,7 +34,7 @@ def _set_arg_size_before_call_function(node: Node, function, args, kwargs):
     meta_common_args = node.meta["common"]["args"]
     if function in (F.relu, relu_integer):
         meta_common_args["data_in"]["size"] = _tuple_shape(args[0].shape)
-        meta_common_args["data_in"].pop("from")
+        # meta_common_args["data_in"].pop("from")
         # meta_common_args["data_in"]["from"] = node.all_input_nodes[0]
     elif function in (operator.add, torch.add, add_integer):
         meta_common_args["data_in_0"]["size"] = _tuple_shape(args[0].shape)
@@ -45,7 +45,7 @@ def _set_arg_size_before_call_function(node: Node, function, args, kwargs):
         # meta_common_args["data_in_1"]["size"] = _tuple_shape(args[1].shape)
         if not isinstance(args[1], torch.Tensor):
             meta_common_args["data_in_1"]["size"] = 1
-            meta_common_args["data_in_1"]["from"] = False
+            meta_common_args["data_in_1"]["from"] = "NA"
         else:
             meta_common_args["data_in_1"]["size"] = _tuple_shape(args[1].shape)
             meta_common_args["data_in_1"]["from"] = node.all_input_nodes[1]
@@ -54,6 +54,8 @@ def _set_arg_size_before_call_function(node: Node, function, args, kwargs):
         meta_common_args["data_in_0"]["from"] = node.all_input_nodes[0]
         meta_common_args["data_in_1"]["size"] = _tuple_shape(args[1].shape)
         meta_common_args["data_in_1"]["from"] = node.all_input_nodes[1]
+    elif function in (torch.reshape, torch.flatten, torch.transpose, torch.permute):
+        meta_common_args["data_in"]["size"] = _tuple_shape(args[0].shape)
     else:
         logger.warning(f"Unrecognized function `{function}` when setting size")
 
@@ -65,6 +67,8 @@ def _set_result_size_after_call_function(node: Node, function, output):
     elif function in (operator.add, torch.add, add_integer):
         meta_common_results["data_out"]["size"] = _tuple_shape(output.shape)
     elif function in (torch.matmul, torch.bmm, matmul_integer, bmm_integer):
+        meta_common_results["data_out"]["size"] = _tuple_shape(output.shape)
+    elif function in (torch.reshape, torch.flatten, torch.transpose, torch.permute):
         meta_common_results["data_out"]["size"] = _tuple_shape(output.shape)
     else:
         logger.warning(f"Unrecognized function `{function}` when setting size")
@@ -96,6 +100,32 @@ def _set_arg_size_before_call_module(node: Node, module, args, kwargs):
         meta_common_args["weight"]["size"] = _tuple_shape(module.weight.shape)
         if module.bias is not None:
             meta_common_args["bias"]["size"] = _tuple_shape(module.bias.shape)
+    elif isinstance(module, (nn.BatchNorm2d,)):
+        meta_common_args["data_in"]["size"] = _tuple_shape(args[0].shape)
+        meta_common_args["weight"]["size"] = _tuple_shape(module.weight.shape)
+        meta_common_args["bias"]["size"] = _tuple_shape(module.bias.shape)
+        meta_common_args["running_mean"]["size"] = _tuple_shape(
+            module.running_mean.shape
+        )
+        meta_common_args["running_var"]["size"] = _tuple_shape(module.running_var.shape)
+    elif isinstance(
+        module,
+        (
+            nn.MaxPool1d,
+            nn.MaxPool2d,
+            nn.MaxPool3d,
+            nn.AdaptiveMaxPool1d,
+            nn.AdaptiveMaxPool2d,
+            nn.AdaptiveMaxPool3d,
+            nn.AvgPool1d,
+            nn.AvgPool2d,
+            nn.AvgPool3d,
+            nn.AdaptiveAvgPool1d,
+            nn.AdaptiveAvgPool2d,
+            nn.AdaptiveAvgPool3d,
+        ),
+    ):
+        meta_common_args["data_in"]["size"] = _tuple_shape(args[0].shape)
     else:
         logger.warning(
             f"Unrecognized module `{type(module).__name__}` when setting size"
@@ -113,6 +143,26 @@ def _set_result_size_after_call_module(node: Node, module, output):
     elif isinstance(module, (nn.Conv1d,)):
         meta_common_results["data_out"]["size"] = _tuple_shape(output.shape)
     elif isinstance(module, (nn.Conv2d,)):
+        meta_common_results["data_out"]["size"] = _tuple_shape(output.shape)
+    elif isinstance(module, (nn.BatchNorm2d,)):
+        meta_common_results["data_out"]["size"] = _tuple_shape(output.shape)
+    elif isinstance(
+        module,
+        (
+            nn.MaxPool1d,
+            nn.MaxPool2d,
+            nn.MaxPool3d,
+            nn.AdaptiveMaxPool1d,
+            nn.AdaptiveMaxPool2d,
+            nn.AdaptiveMaxPool3d,
+            nn.AvgPool1d,
+            nn.AvgPool2d,
+            nn.AvgPool3d,
+            nn.AdaptiveAvgPool1d,
+            nn.AdaptiveAvgPool2d,
+            nn.AdaptiveAvgPool3d,
+        ),
+    ):
         meta_common_results["data_out"]["size"] = _tuple_shape(output.shape)
     else:
         logger.warning(
@@ -137,6 +187,8 @@ def _set_arg_size_before_call_method(node: Node, method_name: str, args, kwargs)
         meta_common_args["data_in_0"]["from"] = "self"
         meta_common_args["data_in_1"]["size"] = _tuple_shape(args[1].shape)
         meta_common_args["data_in_1"]["from"] = node._input_nodes[0]
+    elif method_name in ("view", "reshape", "transpose", "permute", "flatten"):
+        meta_common_args["data_in"]["size"] = _tuple_shape(args[0].shape)
     else:
         logger.warning(f"Unrecognized method name `{method_name}` when setting size")
 
@@ -148,6 +200,8 @@ def _set_result_size_after_call_method(node: None, method_name: str, output):
     elif method_name in ("add",):
         meta_common_results["data_out"]["size"] = _tuple_shape(output.shape)
     elif method_name in ("matmul", "bmm"):
+        meta_common_results["data_out"]["size"] = _tuple_shape(output.shape)
+    elif method_name in ("view", "reshape", "transpose", "permute", "flatten"):
         meta_common_results["data_out"]["size"] = _tuple_shape(output.shape)
     else:
         logger.warning(f"Unrecognized method name `{method_name}` when setting size")

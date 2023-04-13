@@ -37,6 +37,8 @@ MODULE_CLASS_NAME_TO_MODULE_CLASS = {
     "relu": nn.ReLU,
     "conv1d": nn.Conv1d,
     "conv2d": nn.Conv2d,
+    "avgpool2d": nn.AvgPool2d,
+    "adaptiveavgpool2d": nn.AdaptiveAvgPool2d,
 }
 
 MODULE_CLASS_TO_MODULE_CLASS_NAME = {
@@ -44,6 +46,8 @@ MODULE_CLASS_TO_MODULE_CLASS_NAME = {
     nn.ReLU: "relu",
     nn.Conv1d: "conv1d",
     nn.Conv2d: "conv2d",
+    nn.AvgPool2d: "avgpool2d",
+    nn.AdaptiveAvgPool2d: "adaptiveavgpool2d",
 }
 
 FUNCTION_NAME_TO_FUNCTIONS = {
@@ -574,6 +578,22 @@ def _create_new_module(original_module: nn.Module, config: Dict):
     elif original_module_cls is nn.ReLU:
         new_module_cls = MODULE_CLS_MAP_NEO[original_module_cls][config["name"]]
         new_module = new_module_cls(inplace=original_module.inplace, config=config)
+    elif original_module_cls is nn.AvgPool2d:
+        new_module_cls = MODULE_CLS_MAP_NEO[original_module_cls][config["name"]]
+        new_module = new_module_cls(
+            kernel_size=original_module.kernel_size,
+            stride=original_module.stride,
+            padding=original_module.padding,
+            ceil_mode=original_module.ceil_mode,
+            count_include_pad=original_module.count_include_pad,
+            divisor_override=original_module.divisor_override,
+            config=config,
+        )
+    elif original_module_cls is nn.AdaptiveAvgPool2d:
+        new_module_cls = MODULE_CLS_MAP_NEO[original_module_cls][config["name"]]
+        new_module = new_module_cls(
+            output_size=original_module.output_size, config=config
+        )
     else:
         raise NotImplementedError(
             f"Unsupported module class {original_module_cls} to modify"

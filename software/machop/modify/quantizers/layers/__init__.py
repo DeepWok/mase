@@ -17,4 +17,5 @@ from .linear import (
     LinearMinifloatSimple,
     LinearMSFP,
 )
+from .pool2d import AdaptiveAvgPool2dInteger, AvgPool2dInteger
 from .relu import ReLUInteger, ReLUMinifloatIEEE, ReLUMinifloatSimple, ReLUMSFP
