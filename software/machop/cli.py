@@ -28,9 +28,9 @@ from .models import (
     nlp_models,
     vision_models,
 )
-from .modify.interpret_for_hw_gen import create_and_save_common_metadata
+from .modify.interpret_for_synthesis import create_and_save_common_metadata
 from .modify.modifier import Modifier
-from .session import test, train, validate, search
+from .session import search, test, train, validate
 from .synthesize.mase_verilog_emitter import MaseVerilogEmitter
 from .utils import (
     check_when_to_load_and_how_to_load,
@@ -427,9 +427,7 @@ class Machop:
             return
         assert not (
             (self.args.to_modify_sw)
-            and (
-                self.args.to_synthesize is not None or self.args.to_test_hw
-            )
+            and (self.args.to_synthesize is not None or self.args.to_test_hw)
         ), "--modify-sw and --synthesize cannot both be specified"
         self.init_model_and_dataset()
         self.create_output_dir()
@@ -448,6 +446,7 @@ class Machop:
         if self.args.to_synthesize is not None or self.args.to_test_hw:
             self.modify_sw_for_synthesis()
             self.interpret_for_synthesis()
+            breakpoint()
         if self.args.to_synthesize is not None:
             self.synthesize()
         if self.args.to_test_hw:

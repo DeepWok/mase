@@ -1,6 +1,6 @@
 # ----------------------------
 # MaseInterpreter
-# - MaseInterpreter.forward_and_interpret triggers hook functions before/after run each node
+# - MaseInterpreter.forward_to_interpret triggers hook functions before/after run each node
 # - Hook functions should only update node.meta, rather than replace nodes
 # ----------------------------
 # Cheng Zhang
@@ -85,6 +85,10 @@ def dummy_hook_after_call_method(node, method_name, output):
     )
 
 
+def dummy_hook_after_forward(graph_module: GraphModule, fetch_module_by_target):
+    logger.debug(f"Dummy hook after interpretation")
+
+
 def clear_node_metadata_software(graph_module: GraphModule):
     for node in graph_module.graph.nodes:
         meta = node.meta
@@ -125,6 +129,7 @@ class MaseInterpreter(Interpreter):
         hook_after_call_module=dummy_hook_after_call_module,
         hook_before_call_method=dummy_hook_before_call_method,
         hook_after_call_method=dummy_hook_after_call_method,
+        hook_after_forward=dummy_hook_after_forward,
         garbage_collect_values: bool = True,
     ):
         """
@@ -143,6 +148,8 @@ class MaseInterpreter(Interpreter):
 
         self.hook_before_call_method = hook_before_call_method
         self.hook_after_call_method = hook_after_call_method
+
+        self.hook_after_forward = hook_after_forward
 
     def run_node(self, n: Node) -> Any:
         with self._set_current_node(n):
@@ -182,9 +189,13 @@ class MaseInterpreter(Interpreter):
             else:
                 return getattr(self, n.op)(n.target, args, kwargs)
 
-    def forward_and_interpret(self, *args):
+    def forward_to_interpret(self, *args):
         """
         Takes a model input, run forward and trigger hook functions to update Node.meta
         """
-        assert len(args) > 0, "Input must be provided for this interpretation"
-        return self.run(*args)
+        assert len(args) > 0, "Input must be provided for forward_to_interpretation"
+        outputs = self.run(*args)  # forward
+        self.hook_after_forward(
+            graph_module=self.module, fetch_module_by_target=self.fetch_attr
+        )  # hook after forward
+        return outputs

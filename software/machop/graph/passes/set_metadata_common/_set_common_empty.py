@@ -38,11 +38,11 @@ def _add_empty_common_args(meta, *arg_names):
     for arg_name in arg_names:
         # Here `False`` is used as default since TOML does not support `None`
         meta["common"]["args"][arg_name] = {
-            "type": False,
-            "precision": False,
-            "precision_format": False,
-            "size": False,
-            "from": False,
+            "type": "NA",
+            "precision": "NA",
+            "precision_format": "NA",
+            "size": "NA",
+            "from": "NA",
         }
 
 
@@ -52,10 +52,10 @@ def _add_empty_common_results(meta, *result_names):
     ), f"Duplicated result_name in {result_names}"
     for result_name in result_names:
         meta["common"]["results"][result_name] = {
-            "type": False,
-            "precision": False,
-            "precision_format": False,
-            "size": False,
+            "type": "NA",
+            "precision": "NA",
+            "precision_format": "NA",
+            "size": "NA",
         }
 
 
@@ -70,6 +70,9 @@ def _set_empty_metadata_before_call_function(node, function, args, kwargs):
         _add_empty_common_results(meta, "data_out")
     elif function in (torch.matmul, torch.bmm, matmul_integer, bmm_integer):
         _add_empty_common_args(meta, "data_in_0", "data_in_1")
+        _add_empty_common_results(meta, "data_out")
+    elif function in (torch.flatten, torch.reshape, torch.transpose, torch.permute):
+        _add_empty_common_args(meta, "data_in")
         _add_empty_common_results(meta, "data_out")
     else:
         logger.warning(
@@ -95,6 +98,37 @@ def _set_empty_metadata_before_call_module(node, module, args, kwargs):
     elif isinstance(module, (nn.Conv2d,)):
         _add_empty_common_args(meta, "data_in", "weight", "bias")
         _add_empty_common_results(meta, "data_out")
+    # fmt: off
+    elif isinstance(module, (nn.BatchNorm1d, nn.BatchNorm2d,)):
+        # fmt: on
+        _add_empty_common_args(
+            meta,
+            "data_in",
+            "weight",
+            "bias",
+            "running_mean",
+            "running_var",
+        )
+        _add_empty_common_results(meta, "data_out")
+    elif isinstance(
+        module,
+        (
+            nn.MaxPool1d,
+            nn.MaxPool2d,
+            nn.MaxPool3d,
+            nn.AdaptiveMaxPool1d,
+            nn.AdaptiveMaxPool2d,
+            nn.AdaptiveMaxPool3d,
+            nn.AvgPool1d,
+            nn.AvgPool2d,
+            nn.AvgPool3d,
+            nn.AdaptiveAvgPool1d,
+            nn.AdaptiveAvgPool2d,
+            nn.AdaptiveAvgPool3d,
+        ),
+    ):
+        _add_empty_common_args(meta, "data_in")
+        _add_empty_common_results(meta, "data_out")
     else:
         logger.warning(
             f"Unrecognized module `{type(module).__name__}` when setting empty metadata"
@@ -112,6 +146,9 @@ def _set_empty_metadata_before_call_method(node, method_name: str, args, kwargs)
         _add_empty_common_results(meta, "data_out")
     elif method_name in ("matmul", "bmm"):
         _add_empty_common_args(meta, "data_in_0", "data_in_1")
+        _add_empty_common_results(meta, "data_out")
+    elif method_name in ("view", "reshape", "flatten", "transpose", "permute"):
+        _add_empty_common_args(meta, "data_in")
         _add_empty_common_results(meta, "data_out")
     else:
         logger.warning(
