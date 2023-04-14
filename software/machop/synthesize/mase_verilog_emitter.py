@@ -64,7 +64,7 @@ def _get_hls_parameters(node):
 def _get_cast_parameters(from_node, to_node, is_start=False, is_end=False):
     assert not (
         is_start and is_end
-    ), "An edge cannot start and end both through external siganls."
+    ), "An edge cannot start and end both through external signals."
     from_type = from_node.meta.parameters["common"]["results"]["data_out"]["type"]
     from_prec = from_node.meta.parameters["common"]["results"]["data_out"]["precision"]
     to_type = to_node.meta.parameters["common"]["args"]["data_in"]["type"]
@@ -152,8 +152,6 @@ class MaseVerilogEmitter(MaseGraph):
         self.dependence_files = []
         self.verilog_parameters = {}
         self = balance_rate(self)
-        if to_debug:
-            print(self.fx_graph)
 
     def _init_project(self):
         project_dir = self.project_dir
@@ -301,6 +299,63 @@ class MaseVerilogEmitter(MaseGraph):
 
         load_path = os.path.join(tv_dir, "sw_data_in.dat")
         emit_data_in_tb_dat(self.nodes_in[0], hw_data_in, load_path)
+
+        load_path = os.path.join(tv_dir, "sw_data_out.dat")
+        emit_data_out_tb_dat(self.nodes_out[0], hw_data_out, load_path)
+
+        in_type = self.nodes_in[0].meta.parameters["common"]["args"]["data_in"]["type"]
+        in_width = self.nodes_in[0].meta.parameters["common"]["args"]["data_in"][
+            "precision"
+        ][0]
+        in_frac_width = self.nodes_in[0].meta.parameters["common"]["args"]["data_in"][
+            "precision"
+        ][1]
+
+        input_gen = InputGenerator(
+            model_name=self.args.model,
+            task=self.args.task,
+            dataset_name=self.args.dataset,
+            quant_name=in_type,
+            # TODO precision format needs to synchronised
+            quant_config_kwargs={"width": in_width, "frac_width": in_frac_width},
+            trans_num=trans_num,
+        )
+        sw_data_in, hw_data_in = input_gen()
+        sw_data_out = [self.quantized_model(trans) for trans in sw_data_in]
+
+        out_type = self.nodes_out[0].meta.parameters["common"]["results"]["data_out"][
+            "type"
+        ]
+        out_width = self.nodes_out[0].meta.parameters["common"]["results"]["data_out"][
+            "precision"
+        ][0]
+        out_frac_width = self.nodes_out[0].meta.parameters["common"]["results"][
+            "data_out"
+        ]["precision"][1]
+
+        # TODO: Make out_type as input to support casting to any type
+        hw_data_out = [
+            integer_quantizer_for_hw(trans, width=out_width, frac_width=out_frac_width)
+            .squeeze(0)
+            .to(torch.int)
+            for trans in sw_data_out
+        ]
+
+        # TODO: for now
+        for i, trans in enumerate(hw_data_in):
+            hw_data_in[i] = torch.flatten(trans).tolist()
+        for i, trans in enumerate(hw_data_out):
+            hw_data_out[i] = torch.flatten(trans).tolist()
+
+        assert (
+            len(hw_data_in) == trans_num
+        ), f"Mismatched transaction number, expect = {trans_num}, but got {len(hw_data_in)}"
+        assert (
+            len(hw_data_out) == trans_num
+        ), f"Mismatched transaction number, expect = {trans_num}, but got {len(hw_data_out)}"
+
+        load_path = os.path.join(tv_dir, "sw_data_in.dat")
+        emit_data_in_tb_dat(self.nodes_in[0], hw_data_in, load_path)
         load_path = os.path.join(tv_dir, "data_in_stream_size.dat")
         emit_data_in_stream_size_tb_dat(self.nodes_in[0], hw_data_in, load_path)
 
@@ -345,6 +400,7 @@ quit
             syn_dir = os.path.join(
                 hls_dir, node_name, node_name, "solution1", "syn", "verilog"
             )
+            assert os.path.exists(syn_dir), f"Cannot find path: {syn_dir}"
             for file in glob.glob(os.path.join(syn_dir, "*.v")):
                 buff += f"""sv work "{file}"
 """
@@ -507,12 +563,12 @@ input  {node_name}_{key}_ready,
 """
         return interface
 
-    def _emit_siganls_top_internal(self, node):
+    def _emit_signals_top_internal(self, node):
         signals = ""
         node_name = vf(node.name)
         # Input signals
         for key, value in node.meta.parameters["common"]["args"].items():
-            # No internal siganls if the memory is stored off chip
+            # No internal signals if the memory is stored off chip
             if (
                 key != "data_in"
                 and node.meta.parameters["hardware"]["interface_parameters"][key][
@@ -533,7 +589,7 @@ logic                             {node_name}_{key}_ready;
 
         # Output signals
         for key, value in node.meta.parameters["common"]["results"].items():
-            # No internal siganls if the memory is stored off chip
+            # No internal signals if the memory is stored off chip
             if (
                 key != "data_out"
                 and node.meta.parameters["hardware"]["interface_parameters"][key][
@@ -554,7 +610,7 @@ logic                             {node_name}_{key}_ready;
 
         return signals
 
-    def _emit_siganls_top_hls(self, node):
+    def _emit_signals_top_hls(self, node):
         node_name = vf(node.name)
         # Control signals for HLS component
         signals = f"""
@@ -566,7 +622,7 @@ logic {node_name}_ready;
 
         # Input signals
         for key, value in node.meta.parameters["common"]["args"].items():
-            # No internal siganls if the memory is stored off chip
+            # No internal signals if the memory is stored off chip
             if (
                 key != "data_in"
                 and node.meta.parameters["hardware"]["interface_parameters"][key][
@@ -588,7 +644,7 @@ logic                                    {node_name}_{key}_ce0;
 
         # Output signals
         for key, value in node.meta.parameters["common"]["results"].items():
-            # No internal siganls if the memory is stored off chip
+            # No internal signals if the memory is stored off chip
             if (
                 key != "data_out"
                 and node.meta.parameters["hardware"]["interface_parameters"][key][
@@ -610,7 +666,7 @@ logic                                    {node_name}_{key}_we0;
 """
         return signals
 
-    def _emit_siganls_top(self):
+    def _emit_signals_top(self):
         """
         Emit internal signal declarations for the top-level module
         """
@@ -626,9 +682,9 @@ logic                                    {node_name}_{key}_we0;
 // --------------------------
 """
             if node.meta.parameters["hardware"]["toolchain"] == "INTERNAL":
-                signals += self._emit_siganls_top_internal(node)
+                signals += self._emit_signals_top_internal(node)
             elif node.meta.parameters["hardware"]["toolchain"] == "HLS":
-                signals += self._emit_siganls_top_hls(node)
+                signals += self._emit_signals_top_hls(node)
             else:
                 assert False, "Unknown node toolchain for signal declarations."
 
@@ -811,7 +867,7 @@ logic                                    {node_name}_{key}_we0;
         return f"""
 {component_name} #(
 .DATA_WIDTH({node_name}_{cap_key}_WIDTH), // = {width_debug_info}
-.ADDR_RANGE({node_name}_IN_DEPTH), // = {size_debug_info}
+.ADDR_RANGE({node_name}_{cap_key}_SIZE), // = {size_debug_info}
 .ADDR_WIDTH({a_width})
 ) {component_name_inst} (
 .clk(clk),
@@ -908,43 +964,7 @@ assign {to_name}_valid    = {from_name}_valid;
 """
 
     def _emit_hs2bram_wires_top(self, from_node, to_node, is_start=False, is_end=False):
-        (
-            from_name,
-            from_type,
-            from_prec,
-            from_param,
-            to_name,
-            to_type,
-            to_prec,
-            to_param,
-        ) = _get_cast_parameters(from_node, to_node, is_start=is_start, is_end=is_end)
-        assert (
-            from_type == to_type and from_type == "fixed"
-        ), "Only fixed point is supported."
-        data_cast = f"assign {to_name}_q0 = {from_name};"
-        cast_name = from_name
-        if from_type == "fixed" and to_type == "fixed" and from_prec != to_prec:
-            in_width = self.verilog_parameters[f"{to_param}_WIDTH"]
-            in_size = self.verilog_parameters[f"{to_param}_SIZE"]
-            out_width = self.verilog_parameters[f"{from_param}_WIDTH"]
-            out_size = self.verilog_parameters[f"{from_param}_SIZE"]
-            debug_info_in = f"// [{in_width}][{in_size}]"
-            debug_info_out = f"// [{out_width}][{out_size}]"
-            cast_name = f"{from_name}q0_cast"
-            data_cast = f"""// {data_cast}
-logic [{from_param}_WIDTH-1:0] {cast_name} [{from_param}_SIZE-1:0];
-fixed_cast #(
-    .IN_SIZE({from_param}_SIZE),
-    .IN_WIDTH({from_param}_WIDTH),
-    .IN_FRAC_WIDTH({from_param}_FRAC_WIDTH),
-    .OUT_WIDTH({to_param}_WIDTH),
-    .OUT_FRAC_WIDTH({to_param}_FRAC_WIDTH)
-) {from_name}_{to_name}_cast (
-    .data_in ({from_name}), {debug_info_out}
-    .data_out({cast_name}) {debug_info_in}
-);
-"""
-
+        # Add IP files
         cast_file = "common/ram_block.sv"
         if cast_file not in self.dependence_files:
             rtl_dir = os.path.join(self.project_dir, "hardware", "rtl")
@@ -965,6 +985,61 @@ fixed_cast #(
             )
             shutil.copy(cast_dir, rtl_dir)
             self.dependence_files.append(cast_file)
+
+        # Get cast info
+        (
+            from_name,
+            from_type,
+            from_prec,
+            from_param,
+            to_name,
+            to_type,
+            to_prec,
+            to_param,
+        ) = _get_cast_parameters(from_node, to_node, is_start=is_start, is_end=is_end)
+        assert (
+            from_type == to_type and from_type == "fixed"
+        ), "Only fixed point is supported."
+
+        # If precisions mismatch, need to cast
+        cast_name = from_name
+        data_cast = ""
+        if from_type == "fixed" and to_type == "fixed" and from_prec != to_prec:
+            in_width = self.verilog_parameters[f"{to_param}_WIDTH"]
+            in_size = self.verilog_parameters[f"{to_param}_SIZE"]
+            out_width = self.verilog_parameters[f"{from_param}_WIDTH"]
+            out_size = self.verilog_parameters[f"{from_param}_SIZE"]
+            debug_info_in = f"// [{in_width}][{in_size}]"
+            debug_info_out = f"// [{out_width}][{out_size}]"
+            cast_name = f"{from_name}_q0_cast"
+            data_cast = f"""
+logic [{from_param}_WIDTH-1:0] {cast_name} [{from_param}_SIZE-1:0];
+fixed_cast #(
+    .IN_SIZE({from_param}_SIZE),
+    .IN_WIDTH({from_param}_WIDTH),
+    .IN_FRAC_WIDTH({from_param}_FRAC_WIDTH),
+    .OUT_WIDTH({to_param}_WIDTH),
+    .OUT_FRAC_WIDTH({to_param}_FRAC_WIDTH)
+) {from_name}_{to_name}_cast (
+    .data_in ({from_name}), {debug_info_out}
+    .data_out({cast_name}) {debug_info_in}
+);
+"""
+            cast_file = "cast/fixed_cast.sv"
+            if cast_file not in self.dependence_files:
+                rtl_dir = os.path.join(self.project_dir, "hardware", "rtl")
+                cast_dir = os.path.abspath(
+                    os.path.join(
+                        os.path.dirname(__file__),
+                        "..",
+                        "..",
+                        "..",
+                        "hardware",
+                        cast_file,
+                    )
+                )
+                shutil.copy(cast_dir, rtl_dir)
+                self.dependence_files.append(cast_file)
 
         to_node_name = vf(to_node.name)
         from_node_name = vf(from_node.name)
@@ -998,43 +1073,6 @@ hs2bram_cast #(
 """
 
     def _emit_bram2hs_wires_top(self, from_node, to_node, is_start=False, is_end=False):
-        (
-            from_name,
-            from_type,
-            from_prec,
-            from_param,
-            to_name,
-            to_type,
-            to_prec,
-            to_param,
-        ) = _get_cast_parameters(from_node, to_node, is_start=is_start, is_end=is_end)
-        assert (
-            from_type == to_type and from_type == "fixed"
-        ), "Only fixed point is supported."
-        data_cast = f"assign {to_name} = {from_name}_d0;"
-        cast_name = f"{from_name}_d0"
-        if from_type == "fixed" and to_type == "fixed" and from_prec != to_prec:
-            in_width = self.verilog_parameters[f"{to_param}_WIDTH"]
-            in_size = self.verilog_parameters[f"{to_param}_SIZE"]
-            out_width = self.verilog_parameters[f"{from_param}_WIDTH"]
-            out_size = self.verilog_parameters[f"{from_param}_SIZE"]
-            debug_info_in = f"// [{in_width}][{in_size}]"
-            debug_info_out = f"// [{out_width}][{out_size}]"
-            cast_name = f"{from_name}_d0_cast"
-            data_cast = f"""// {data_cast}
-logic [{from_param}_WIDTH-1:0] {cast_name} [{from_param}_SIZE-1:0];
-fixed_cast #(
-    .IN_SIZE({from_param}_SIZE),
-    .IN_WIDTH({from_param}_WIDTH),
-    .IN_FRAC_WIDTH({from_param}_FRAC_WIDTH),
-    .OUT_WIDTH({to_param}_WIDTH),
-    .OUT_FRAC_WIDTH({to_param}_FRAC_WIDTH)
-) {from_name}_{to_name}_cast (
-    .data_in ({from_name}_d0), {debug_info_out}
-    .data_out({cast_name}) {debug_info_in}
-);
-"""
-
         cast_file = "common/ram_block.sv"
         if cast_file not in self.dependence_files:
             rtl_dir = os.path.join(self.project_dir, "hardware", "rtl")
@@ -1056,19 +1094,73 @@ fixed_cast #(
             shutil.copy(cast_dir, rtl_dir)
             self.dependence_files.append(cast_file)
 
+        (
+            from_name,
+            from_type,
+            from_prec,
+            from_param,
+            to_name,
+            to_type,
+            to_prec,
+            to_param,
+        ) = _get_cast_parameters(from_node, to_node, is_start=is_start, is_end=is_end)
+        assert (
+            from_type == to_type and from_type == "fixed"
+        ), "Only fixed point is supported."
+
+        data_cast = ""
+        cast_name = f"{from_name}_d0"
+        if from_type == "fixed" and to_type == "fixed" and from_prec != to_prec:
+            in_width = self.verilog_parameters[f"{to_param}_WIDTH"]
+            in_size = self.verilog_parameters[f"{to_param}_SIZE"]
+            out_width = self.verilog_parameters[f"{from_param}_WIDTH"]
+            out_size = self.verilog_parameters[f"{from_param}_SIZE"]
+            debug_info_in = f"// [{in_width}][{in_size}]"
+            debug_info_out = f"// [{out_width}][{out_size}]"
+            cast_name = f"{from_name}_d0_cast"
+            data_cast = f"""
+logic [{from_param}_WIDTH-1:0] {cast_name} [{from_param}_SIZE-1:0];
+fixed_cast #(
+    .IN_SIZE({from_param}_SIZE),
+    .IN_WIDTH({from_param}_WIDTH),
+    .IN_FRAC_WIDTH({from_param}_FRAC_WIDTH),
+    .OUT_WIDTH({to_param}_WIDTH),
+    .OUT_FRAC_WIDTH({to_param}_FRAC_WIDTH)
+) {from_name}_{to_name}_cast (
+    .data_in ({from_name}_d0), {debug_info_out}
+    .data_out({cast_name}) {debug_info_in}
+);
+"""
+
+            cast_file = "cast/fixed_cast.sv"
+            if cast_file not in self.dependence_files:
+                rtl_dir = os.path.join(self.project_dir, "hardware", "rtl")
+                cast_dir = os.path.abspath(
+                    os.path.join(
+                        os.path.dirname(__file__),
+                        "..",
+                        "..",
+                        "..",
+                        "hardware",
+                        cast_file,
+                    )
+                )
+                shutil.copy(cast_dir, rtl_dir)
+                self.dependence_files.append(cast_file)
+
         to_node_name = vf(to_node.name)
         from_node_name = vf(from_node.name)
-        size = self.verilog_parameters[f"{to_node_name}_IN_SIZE"]
-        width = self.verilog_parameters[f"{to_node_name}_IN_WIDTH"]
-        if is_start:
-            in_size = size
+        size = self.verilog_parameters[f"{to_node_name}_OUT_SIZE"]
+        width = self.verilog_parameters[f"{to_node_name}_OUT_WIDTH"]
+        if is_end:
+            out_size = size
         else:
-            in_size = self.verilog_parameters[f"{from_node_name}_OUT_SIZE"]
+            out_size = self.verilog_parameters[f"{to_node_name}_IN_SIZE"]
         a_width = math.ceil(math.log2(size))
         return f"""
 {data_cast}
 bram2hs_cast #(
-.OUT_SIZE({from_param}_SIZE), // = {in_size}
+.OUT_SIZE({from_param}_SIZE), // = {out_size}
 .OUT_WIDTH({to_param}_WIDTH), // = {width}
 .ADDR_RANGE({to_param}_SIZE), // = {size}
 .ADDR_WIDTH({a_width})
@@ -1076,10 +1168,10 @@ bram2hs_cast #(
 .address0({from_name}_address0),
 .ce0({from_name}_ce0),
 .we0({from_name}_we0),
-.d0({from_name}_d0),
-.data_in_ready({to_name}_ready),
-.data_in({cast_name}),
-.data_in_valid({to_name}_valid),
+.d0({cast_name}),
+.data_out_ready({to_name}_ready),
+.data_out({to_name}),
+.data_out_valid({to_name}_valid),
 .in_done({from_node_name}_done),
 .clk(clk),
 .rst(rst)
@@ -1124,6 +1216,16 @@ fixed_cast #(
 );
 """
 
+        cast_file = "cast/fixed_cast.sv"
+        if cast_file not in self.dependence_files:
+            rtl_dir = os.path.join(self.project_dir, "hardware", "rtl")
+            cast_dir = os.path.abspath(
+                os.path.join(
+                    os.path.dirname(__file__), "..", "..", "..", "hardware", cast_file
+                )
+            )
+            shutil.copy(cast_dir, rtl_dir)
+            self.dependence_files.append(cast_file)
         cast_file = "common/ram_block.sv"
         if cast_file not in self.dependence_files:
             rtl_dir = os.path.join(self.project_dir, "hardware", "rtl")
@@ -1256,7 +1358,7 @@ bram_cast #(
         parameters_to_emit = _remove_last_comma(parameters_to_emit)
         interface_to_emit = self._emit_interface_top()
         interface_to_emit = _remove_last_comma(interface_to_emit)
-        signals_to_emit = self._emit_siganls_top()
+        signals_to_emit = self._emit_signals_top()
         components_to_emit = self._emit_components_top()
         wires_to_emit = self._emit_wires_top()
         time_to_emit = time.strftime("%d/%m/%Y %H:%M:%S")
@@ -1410,7 +1512,8 @@ csynth_design
             vitis_hls,
             hls_tcl_dir,
         ]
-        result = execute_cli(cmd, log_output=self.to_debug, cwd=node_dir)
+        # JC
+        # result = execute_cli(cmd, log_output=self.to_debug, cwd=node_dir)
 
         if result:
             logger.error(f"Vitis HLS synthesis failed. {node.name}")

@@ -6,6 +6,7 @@ import torch.nn.functional as F
 from ....graph.mase_tracer import mark_as_leaf_func
 from ..quantizers import (
     integer_quantizer,
+    log_quantizer,
     minifloat_ieee_quantizer,
     minifloat_simple_quantizer,
     msfp_quantizer,
@@ -78,6 +79,26 @@ def relu_minifloat_ieee(x, inplace=False, config=None):
             minifloat_ieee_quantizer,
             width=x_width,
             exponent_width=x_exponent_width,
+            exponent_bias=x_exponent_bias,
+        )
+
+        return F.relu(x_quantizer(x), inplace=inplace)
+
+
+@mark_as_leaf_func
+def relu_log(x, inplace=False, config=None):
+    bypass = config.get("bypass", False)
+    if bypass:
+        return F.relu(x, inplace=inplace)
+    else:
+        x_width, x_exponent_bias = (
+            config["data_in_width"],
+            config["data_in_exponent_bias"],
+        )
+
+        x_quantizer = partial(
+            log_quantizer,
+            width=x_width,
             exponent_bias=x_exponent_bias,
         )
 

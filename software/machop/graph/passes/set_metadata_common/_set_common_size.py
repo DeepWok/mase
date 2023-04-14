@@ -56,6 +56,8 @@ def _set_arg_size_before_call_function(node: Node, function, args, kwargs):
         meta_common_args["data_in_1"]["from"] = node.all_input_nodes[1]
     elif function in (torch.reshape, torch.flatten, torch.transpose, torch.permute):
         meta_common_args["data_in"]["size"] = _tuple_shape(args[0].shape)
+    elif function in (F.dropout, F.dropout1d, F.dropout2d, F.dropout3d):
+        meta_common_args["data_in"]["size"] = _tuple_shape(args[0].shape)
     else:
         logger.warning(f"Unrecognized function `{function}` when setting size")
 
@@ -69,6 +71,8 @@ def _set_result_size_after_call_function(node: Node, function, output):
     elif function in (torch.matmul, torch.bmm, matmul_integer, bmm_integer):
         meta_common_results["data_out"]["size"] = _tuple_shape(output.shape)
     elif function in (torch.reshape, torch.flatten, torch.transpose, torch.permute):
+        meta_common_results["data_out"]["size"] = _tuple_shape(output.shape)
+    elif function in (F.dropout, F.dropout1d, F.dropout2d, F.dropout3d):
         meta_common_results["data_out"]["size"] = _tuple_shape(output.shape)
     else:
         logger.warning(f"Unrecognized function `{function}` when setting size")
@@ -108,6 +112,10 @@ def _set_arg_size_before_call_module(node: Node, module, args, kwargs):
             module.running_mean.shape
         )
         meta_common_args["running_var"]["size"] = _tuple_shape(module.running_var.shape)
+    elif isinstance(module, (nn.LayerNorm,)):
+        meta_common_args["data_in"]["size"] = _tuple_shape(args[0].shape)
+        meta_common_args["weight"]["size"] = _tuple_shape(module.weight.shape)
+        meta_common_args["bias"]["size"] = _tuple_shape(module.bias.shape)
     elif isinstance(
         module,
         (
@@ -125,6 +133,8 @@ def _set_arg_size_before_call_module(node: Node, module, args, kwargs):
             nn.AdaptiveAvgPool3d,
         ),
     ):
+        meta_common_args["data_in"]["size"] = _tuple_shape(args[0].shape)
+    elif isinstance(module, (nn.Dropout, nn.Dropout1d, nn.Dropout2d, nn.Dropout3d)):
         meta_common_args["data_in"]["size"] = _tuple_shape(args[0].shape)
     else:
         logger.warning(
@@ -145,6 +155,10 @@ def _set_result_size_after_call_module(node: Node, module, output):
     elif isinstance(module, (nn.Conv2d,)):
         meta_common_results["data_out"]["size"] = _tuple_shape(output.shape)
     elif isinstance(module, (nn.BatchNorm2d,)):
+        meta_common_results["data_out"]["size"] = _tuple_shape(output.shape)
+    elif isinstance(module, (nn.LayerNorm,)):
+        meta_common_results["data_out"]["size"] = _tuple_shape(output.shape)
+    elif isinstance(module, (nn.Dropout, nn.Dropout1d, nn.Dropout2d, nn.Dropout3d)):
         meta_common_results["data_out"]["size"] = _tuple_shape(output.shape)
     elif isinstance(
         module,
@@ -189,6 +203,10 @@ def _set_arg_size_before_call_method(node: Node, method_name: str, args, kwargs)
         meta_common_args["data_in_1"]["from"] = node._input_nodes[0]
     elif method_name in ("view", "reshape", "transpose", "permute", "flatten"):
         meta_common_args["data_in"]["size"] = _tuple_shape(args[0].shape)
+    elif method_name in ("contiguous",):
+        meta_common_args["data_in"]["size"] = _tuple_shape(args[0].shape)
+    elif method_name in ("size"):
+        pass
     else:
         logger.warning(f"Unrecognized method name `{method_name}` when setting size")
 
@@ -203,5 +221,9 @@ def _set_result_size_after_call_method(node: None, method_name: str, output):
         meta_common_results["data_out"]["size"] = _tuple_shape(output.shape)
     elif method_name in ("view", "reshape", "transpose", "permute", "flatten"):
         meta_common_results["data_out"]["size"] = _tuple_shape(output.shape)
+    elif method_name in ("contiguous",):
+        meta_common_results["data_out"]["size"] = _tuple_shape(output.shape)
+    elif method_name in ("size",):
+        pass
     else:
         logger.warning(f"Unrecognized method name `{method_name}` when setting size")

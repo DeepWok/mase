@@ -49,7 +49,6 @@ from .utils_bert_patched import (
     BertModel_get_extended_encoder_attention_mask,
     BertModel_get_input_shape_batch_size_seq_length_and_device,
     BertSelfAttention_add_relative_position_embedding,
-    BertSelfAttention_get_new_context_layer_shape,
     BertSelfAttention_transpose_for_scores,
 )
 
@@ -279,8 +278,13 @@ class BertSelfAttentionPatched(nn.Module):
         context_layer = torch.matmul(attention_probs, value_layer)
 
         context_layer = context_layer.permute(0, 2, 1, 3).contiguous()
-        new_context_layer_shape = BertSelfAttention_get_new_context_layer_shape(
-            context_layer=context_layer, self_all_head_size=self.all_head_size
+        # new_context_layer_shape = BertSelfAttention_get_new_context_layer_shape(
+        #     context_layer=context_layer, self_all_head_size=self.all_head_size
+        # )
+        new_context_layer_shape = (
+            context_layer.size(0),
+            context_layer.size(1),
+            self.all_head_size,
         )
         context_layer = context_layer.view(new_context_layer_shape)
 

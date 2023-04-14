@@ -20,8 +20,10 @@ logger = logging.getLogger(__name__)
 
 def _get_next_call_node(node, nodes_in):
     for next_node, x in node.users.items():
-        if next_node.op != "call_module" and next_node.op != "call_function":
+        # No need to synthsize into hardware
+        if next_node.target in MaseGraph.implicit_nodes:
             nodes_in = _get_next_call_node(next_node, nodes_in)
+            next_node.meta.parameters["hardware"]["is_implicit"] = True
         elif next_node not in nodes_in:
             nodes_in.append(next_node)
     return nodes_in
@@ -29,8 +31,10 @@ def _get_next_call_node(node, nodes_in):
 
 def _get_prev_call_node(node, nodes_out):
     for prev_node in node.all_input_nodes:
-        if prev_node.op != "call_module" and prev_node.op != "call_function":
+        # No need to synthsize into hardware
+        if prev_node.target in MaseGraph.implicit_nodes:
             nodes_out = _get_prev_call_node(prev_node, nodes_out)
+            prev_node.meta.parameters["hardware"]["is_implicit"] = True
         elif prev_node not in nodes_out:
             nodes_out.append(prev_node)
     return nodes_out
@@ -41,6 +45,7 @@ def _get_input_nodes(fx_graph):
     for node in fx_graph.nodes:
         if node.op == "placeholder":
             nodes_in = _get_next_call_node(node, nodes_in)
+            node.meta.parameters["hardware"]["is_implicit"] = True
     return nodes_in
 
 
@@ -49,6 +54,7 @@ def _get_output_nodes(fx_graph):
     for node in fx_graph.nodes:
         if node.op == "output":
             nodes_out = _get_prev_call_node(node, nodes_out)
+            node.meta.parameters["hardware"]["is_implicit"] = True
     return nodes_out
 
 
@@ -73,6 +79,8 @@ class MaseGraph:
     hardware constraints.
     """
 
+    implicit_nodes = {"size", "view"}
+
     def __init__(
         self,
         model=None,
@@ -86,37 +94,41 @@ class MaseGraph:
         common_param = external common parameters from toml (for quantization info)
         synth_mode = synthesis mode, hls or auto
         """
-
         self.model = model
         self.quantized_model = quantized_model
         self.synth_mode = synth_mode
         self.args = args
-        self.fx_graph, self.nodes_in, self.nodes_out = self._init_fx_graph()
+        self.fx_graph = self._init_fx_graph()
+        print(self.fx_graph)
+        # This has to be before init parameters
+        self.nodes_in = _get_input_nodes(self.fx_graph)
+        self.nodes_out = _get_output_nodes(self.fx_graph)
+        for node in self.fx_graph.nodes:
+            print(
+                "{} : {}".format(
+                    node.name, node.meta.parameters["hardware"]["is_implicit"]
+                )
+            )
         self._init_parameters(common_param=common_param)
+        for node in self.fx_graph.nodes:
+            print(node.meta.type)
+        breakpoint()
 
     def _init_fx_graph(self):
         model = self.model
-        # trace = torch.fx.symbolic_trace(model)
-        # trace.graph.lint()
-        # trace = trace
-        # fx_graph = trace.graph
         dummy_inputs = get_dummy_inputs(
             model_name=self.args.model, task=self.args.task, model=self.model
         )
         graph_module = mase_symbolic_trace(model, dummy_inputs)
         fx_graph = graph_module.graph
-        nodes_in = _get_input_nodes(fx_graph)
-        assert len(nodes_in) == 1, "Multiple inputs are not supported."
-        nodes_out = _get_output_nodes(fx_graph)
-        assert len(nodes_out) == 1, "Multiple outputs are not supported."
         for node in fx_graph.nodes:
             node.meta = MaseMetadata(
                 node=node,
-                model=model,
+                model=self.model,
                 quantized_model=self.quantized_model,
                 synth_mode=self.synth_mode,
             )
-        return fx_graph, nodes_in, nodes_out
+        return fx_graph
 
     def _init_parameters(self, common_param=None):
         self.init_common_parameters(common_param)

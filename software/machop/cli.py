@@ -151,9 +151,8 @@ class Machop:
         )
         parser.add_argument(
             "--test-hw",
-            action="store_true",
             dest="to_test_hw",
-            default=False,
+            default=None,
             help="Test the hardware design of the model. Default=False",
         )
         parser.add_argument(
@@ -427,8 +426,10 @@ class Machop:
             return
         assert not (
             (self.args.to_modify_sw)
-            and (self.args.to_synthesize is not None or self.args.to_test_hw)
-        ), "--modify-sw and --synthesize cannot both be specified"
+            and (
+                self.args.to_synthesize is not None or self.args.to_test_hw is not None
+            )
+        ), "--modify-sw and --synthesize/--test-hw cannot both be specified"
         self.init_model_and_dataset()
         self.create_output_dir()
         if self.args.to_modify_sw:
@@ -443,13 +444,12 @@ class Machop:
             self.estimate_sw()
         if self.args.to_search_sw:
             self.search_sw()
-        if self.args.to_synthesize is not None or self.args.to_test_hw:
+        if self.args.to_synthesize is not None or self.args.to_test_hw is not None:
             self.modify_sw_for_synthesis()
             self.interpret_for_synthesis()
-            breakpoint()
         if self.args.to_synthesize is not None:
             self.synthesize()
-        if self.args.to_test_hw:
+        if self.args.to_test_hw is not None:
             self.test_hw()
         if self.args.to_evaluate_hw:
             to_evaluate = ["synth", "impl"]
@@ -833,7 +833,7 @@ class Machop:
                 "common_meta.toml",
             ),
         )
-        mve.optimise()
+        # mve.optimise()
         mve.emit_verilog()
 
         if args.to_debug:
@@ -848,6 +848,11 @@ class Machop:
 
     def test_hw(self):
         args = self.args
+        to_test_hw = ["hls", "auto"]
+        assert (
+            args.to_test_hw in to_test_hw
+        ), f"Unsupported mode: {args.to_test_hw}. Support: {to_test_hw}"
+        mode = args.to_test_hw
         logger.info(f"Testing hardware for {args.model!r}...")
 
         model = self.model["model"] if args.model in nlp_models else self.model
@@ -863,6 +868,7 @@ class Machop:
             project_dir=self.output_dir,
             to_debug=args.to_debug,
             target=args.target,
+            mode=mode,
             num_targets=args.num_targets,
             # comment out to allow internal pass to provide this info
             args=args,

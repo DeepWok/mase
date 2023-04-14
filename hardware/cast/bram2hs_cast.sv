@@ -11,7 +11,7 @@ module bram2hs_cast #(
     input logic [ADDR_WIDTH - 1:0] address0,
     input ce0,
     input we0,
-    output logic [OUT_WIDTH - 1:0] d0,
+    input logic [OUT_WIDTH - 1:0] d0,
 
     output logic [OUT_WIDTH-1:0] data_out      [OUT_SIZE-1:0],
     output                       data_out_valid,
@@ -28,6 +28,13 @@ module bram2hs_cast #(
   logic [OUT_WIDTH - 1:0] d1;
   logic [OUT_WIDTH - 1:0] q1;
 
+  // 1-bit wider so OUT_DEPTH also fits.
+  logic [ADDR_WIDTH-1:0] address_counter;
+  // 1-bit wider so OUT_DEPTH also fits.
+  localparam COUNTER_WIDTH = $clog2(OUT_SIZE);
+  logic [COUNTER_WIDTH-1:0] data_counter;
+  logic [1:0] state;
+
   // Port 1 is for read only
   assign we1 = 0;
   assign ce1 = 1;
@@ -38,8 +45,6 @@ module bram2hs_cast #(
   assign data_out = data_buff;
 
   // address_counter
-  // 1-bit wider so OUT_DEPTH also fits.
-  logic [ADDR_WIDTH-1:0] address_counter;
   always_ff @(posedge clk)
     if (rst) address_counter <= 0;
     else begin
@@ -49,9 +54,6 @@ module bram2hs_cast #(
     end
 
   // data_counter
-  // 1-bit wider so OUT_DEPTH also fits.
-  localparam COUNTER_WIDTH = $clog2(OUT_SIZE);
-  logic [COUNTER_WIDTH-1:0] data_counter;
   always_ff @(posedge clk)
     if (rst) data_counter <= 0;
     else begin
@@ -66,7 +68,6 @@ module bram2hs_cast #(
   // 0: waiting for the next input 
   // 1: preparing the output batch - which might take multiple cycles
   // 2: hold valid data and wait for the consumer to be ready
-  logic [1:0] state;
   always_ff @(posedge clk) begin
     if (rst) state <= 0;
     else begin

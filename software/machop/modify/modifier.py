@@ -432,7 +432,7 @@ class Modifier:
                         new_node = self.graph.call_function(
                             new_function, args=args, kwargs=kwargs
                         )
-                        new_node.name = node.name  # use old node name 👁️
+                        new_node.name = node.name
                         new_node.meta = copy(node.meta)
                         new_node.meta["software"]["modify-sw"] = {"config": sub_config}
                         node.replace_all_uses_with(new_node)
@@ -457,7 +457,7 @@ class Modifier:
                         new_node = self.graph.call_function(
                             substitute_func, args=args, kwargs=kwargs
                         )
-                        new_node.name = node.name  # 👁️ use old node name
+                        new_node.name = node.name
                         new_node.meta = copy(node.meta)
                         new_node.meta["software"]["modify-sw"] = {"config": sub_config}
                         node.replace_all_uses_with(new_node)

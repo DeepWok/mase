@@ -38,7 +38,7 @@ def create_and_save_common_metadata(
             hook_after_call_method=set_metadata_common_after_call_method,
             hook_before_call_module=set_metadata_common_before_call_module,
             hook_after_call_module=set_metadata_common_after_call_module,
-            hook_after_forward=set_metadata_common_without_forward,
+            # hook_after_forward=set_metadata_common_without_forward,
         )
 
         input_args = get_input_args(model_name, task, data_module)

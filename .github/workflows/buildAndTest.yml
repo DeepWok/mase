@@ -85,7 +85,7 @@ jobs:
                        pytest pytorch-lightning transformers toml \
                        timm pytorch-nlp datasets IPython ipdb \
                        sentencepiece einops deepspeed pybind11 \
-                       tabulate tensorboard
+                       tabulate tensorboard hyperopt
 
     # -----------
     # Sanity check 

@@ -6,7 +6,6 @@ from torch import Tensor
 from ....graph.mase_tracer import mark_as_leaf_func
 
 
-@mark_as_leaf_func
 def OPTAttention_self_shape(
     tensor: Tensor, seq_len: int, bsz: int, num_heads: int, head_dim: int
 ) -> Tensor:
@@ -19,6 +18,24 @@ def OPTAttention_self_shape(
     return tensor.view(bsz, seq_len, num_heads, head_dim).transpose(1, 2).contiguous()
 
 
+def OPTAttention_reshape_qkv_back_for_bmm(
+    query_states: Tensor,
+    key_states: Tensor,
+    value_states: Tensor,
+    proj_shape: int,
+    tgt_len: int,
+    bsz: int,
+    num_heads: int,
+    head_dim: int,
+) -> Tuple[Tensor]:
+    query_states = OPTAttention_self_shape(
+        query_states, tgt_len, bsz, num_heads, head_dim
+    ).view(*proj_shape)
+    key_states = key_states.view(*proj_shape)
+    value_states = value_states.view(*proj_shape)
+    return query_states, key_states, value_states
+
+
 @mark_as_leaf_func
 def OPTAttention_attn_weights_shape_check(
     attn_weights: Tensor, bsz: int, num_heads: int, tgt_len: int, src_len: int
@@ -28,7 +45,6 @@ def OPTAttention_attn_weights_shape_check(
             f"Attention weights should be of size {(bsz * num_heads, tgt_len, src_len)}, but is"
             f" {attn_weights.size()}"
         )
-    return True
 
 
 @mark_as_leaf_func
@@ -39,7 +55,6 @@ def OPTAttention_attention_mask_shape_check(
         raise ValueError(
             f"Attention mask should be of size {(bsz, 1, tgt_len, src_len)}, but is {attention_mask.size()}"
         )
-    return True
 
 
 @mark_as_leaf_func
@@ -63,7 +78,6 @@ def OPTAttention_layer_head_mask_shape_check(
             f"Head mask for a single layer should be of size {(num_heads,)}, but is"
             f" {layer_head_mask.size()}"
         )
-    return True
 
 
 @mark_as_leaf_func
@@ -75,34 +89,14 @@ def OPTAttention_attn_output_shape_check(
             f"`attn_output` should be of size {(bsz, num_heads, tgt_len, head_dim)}, but is"
             f" {attn_output.size()}"
         )
-    return True
 
 
-@mark_as_leaf_func
-def OPTAttention_construct_proj_shape(
-    bsz: int, num_heads: int, head_dim: int
-) -> Tuple[int]:
-    proj_shape = (bsz * num_heads, -1, head_dim)
-    return proj_shape
-
-
-@mark_as_leaf_func
-def OPTAttention_reshape_qkv_back_for_bmm(
-    query_states: Tensor,
-    key_states: Tensor,
-    value_states: Tensor,
-    proj_shape: int,
-    tgt_len: int,
-    bsz: int,
-    num_heads: int,
-    head_dim: int,
-) -> Tuple[Tensor]:
-    query_states = OPTAttention_self_shape(
-        query_states, tgt_len, bsz, num_heads, head_dim
-    ).view(*proj_shape)
-    key_states = key_states.view(*proj_shape)
-    value_states = value_states.view(*proj_shape)
-    return query_states, key_states, value_states
+# @mark_as_leaf_func
+# def OPTAttention_construct_proj_shape(
+#     bsz: int, num_heads: int, head_dim: int
+# ) -> Tuple[int]:
+#     proj_shape = (bsz * num_heads, -1, head_dim)
+#     return proj_shape
 
 
 def _make_causal_mask(
@@ -142,10 +136,10 @@ def _expand_mask(mask: torch.Tensor, dtype: torch.dtype, tgt_len: Optional[int] 
     )
 
 
-@mark_as_leaf_func
-def OPTDecoder_view_input_ids(input_ids, input_shape):
-    input_ids = input_ids.view(-1, input_shape[-1])
-    return input_ids
+# @mark_as_leaf_func
+# def OPTDecoder_view_input_ids(input_ids, input_shape):
+#     input_ids = input_ids.view(-1, input_shape[-1])
+#     return input_ids
 
 
 @mark_as_leaf_func
@@ -188,7 +182,6 @@ def OPTDecoder_check_head_mask(head_mask, decoder_layers) -> bool:
                     f"The `{mask_name}` should be specified for {len(decoder_layers)} layers, but it is for"
                     f" {head_mask.size()[0]}."
                 )
-    return True
 
 
 @mark_as_leaf_func

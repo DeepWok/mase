@@ -14,11 +14,6 @@ def clog2(x):
     return iceil(math.log2(x))
 
 
-def to_int(x):
-    assert isinstance(x, int), f"Value is not int: {x}"
-    return int(x)
-
-
 def emit_parameters_in_mem_internal(node, param_name, file_name, data_name):
     """
     Emit single-port ROM hardware components for each parameter
@@ -213,7 +208,6 @@ def emit_parameters_in_dat(node, param_name, file_name):
 
         scale = 2**frac_width
         thresh = 2**width
-        to_depth = to_int(out_depth)
         for i in range(0, out_depth):
             line_buff = ""
             for j in range(0, out_size):
