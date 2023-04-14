@@ -41,6 +41,7 @@ class MaseMetadata:
     - software
          - ???
     - hardware
+      - is_implicit -> bool : whether the node is mapped on hardware or software annotation only
       - verilog_parameters -> {} : parameters need for customise the hardware module
       - toolchain -> str : tool chain for code generation, must be INTERNAL, EXTERNAL or HLS
       - module -> str : the name of the used hardware module
@@ -53,9 +54,9 @@ class MaseMetadata:
     """
 
     # Hardware dict
-    known_types = {"fixed", "float"}
-    known_toolchain = {"INTERNAL", "EXTERNAL", "HLS"}
-    known_storage = {"BRAM"}
+    known_types = ["fixed", "float", "NA"]
+    known_toolchain = ["INTERNAL", "EXTERNAL", "HLS"]
+    known_storage = ["BRAM"]
 
     def __init__(self, node=None, model=None, quantized_model=None, synth_mode="auto"):
         # Top-level model
@@ -74,7 +75,7 @@ class MaseMetadata:
         self.parameters = {
             "common": {},
             "software": {},
-            "hardware": {},
+            "hardware": {"is_implicit": False},
         }
 
     def init_common_parameters(self, parameters=None):
@@ -111,31 +112,31 @@ class MaseMetadata:
         """
         Init hardware parameters
         """
-        if self.node.op == "call_module" or self.node.op == "call_function":
-            if self.type in self.internal_layers:
-                name = self.internal_layers[self.type]
-                replace_fn = getattr(self, f"_init_hardware_parameters_{name}")
-                replace_fn(parameters)
-            else:
-                logger.warning(f"{self.node} is not found in the internal library.")
-                self._init_hardware_parameters_other(parameters)
+        # Ignore implicit nodes
+        if self.parameters["hardware"]["is_implicit"]:
+            return
+        if self.type in self.internal_layers:
+            name = self.internal_layers[self.type]
+            replace_fn = getattr(self, f"_init_hardware_parameters_{name}")
+            replace_fn(parameters)
         else:
-            logger.warning(f"Not dealing with node for now: {self.node}")
+            logger.warning(f"{self.node} is not found in the internal library.")
+            self._init_hardware_parameters_other(parameters)
 
     def update_hardware_parameters(self, parameters=None):
         """
         Update hardware parameters
         """
-        if self.node.op == "call_module" or self.node.op == "call_function":
-            if self.type in self.internal_layers:
-                name = self.internal_layers[self.type]
-                replace_fn = getattr(self, f"_update_hardware_parameters_{name}")
-                replace_fn(parameters)
-            else:
-                logger.warning(f"{self.node} is not found in the internal library.")
-                self._update_hardware_parameters_other(parameters)
+        # Ignore implicit nodes
+        if self.parameters["hardware"]["is_implicit"]:
+            return
+        if self.type in self.internal_layers:
+            name = self.internal_layers[self.type]
+            replace_fn = getattr(self, f"_update_hardware_parameters_{name}")
+            replace_fn(parameters)
         else:
-            logger.warning(f"Not dealing with node for now: {self.node}")
+            logger.warning(f"{self.node} is not found in the internal library.")
+            self._update_hardware_parameters_other(parameters)
 
     def verify(self):
         """
@@ -159,6 +160,7 @@ class MaseMetadata:
         """
         if self.node.op != "call_module" and self.node.op != "call_function":
             return
+
         # Verify common parameters
         assert (
             "data_in" in self.parameters["common"]["args"].keys()
@@ -166,6 +168,7 @@ class MaseMetadata:
         assert (
             "data_out" in self.parameters["common"]["results"].keys()
         ), f"Cannot find data_out in common.results parameters. {self.node}"
+
         for arg, param in self.parameters["common"]["args"].items():
             ## Valid type
             arg_type = param["type"]
@@ -175,7 +178,14 @@ class MaseMetadata:
             assert arg_size, f"Unknown size for {arg} : {arg_size}"
             ## Data width must be greater than frac width
             if arg_type == "fixed":
+                for s in param["size"]:
+                    assert isinstance(s, int)
+                assert isinstance(param["precision"][0], int)
+                assert isinstance(param["precision"][1], int)
                 assert param["precision"][0] > 0, f"{arg} must have a positive width."
+                assert (
+                    param["precision"][1] >= 0
+                ), f"{arg} cannot have a negative frac width."
                 assert (
                     param["precision"][0] >= param["precision"][1]
                 ), f"{arg} must have a width greater than the frac width."
@@ -190,22 +200,41 @@ class MaseMetadata:
             == self.parameters["common"]["results"]["data_out"]["type"]
         ), "Input and out data type must match. "
 
-        result_param = self.parameters["common"]["results"]["data_out"]
-        result_type = result_param["type"]
-        if result_type == "fixed":
+        for result, param in self.parameters["common"]["results"].items():
+            ## Valid type
+            result_type = param["type"]
             assert (
-                result_param["precision"][0] > 0
-            ), f"data_out must have a positive width."
-            assert (
-                result_param["precision"][0] >= result_param["precision"][1]
-            ), f"data_out must have a width greater than the frac width."
-        elif result_type == "float":
-            assert (
-                result_param["precision"][0] == 32 or result_param["precision"][0] == 64
-            ), f"data_out must have a width of 32 or 64 as float."
-        else:
-            assert False, f"Unsupported arg type from toml. {param[type]}"
-        assert result_param["size"], "Invalid out data size must match. "
+                result_type in self.known_types
+            ), f"Unknown type for {result} : {result_type}"
+            ## Valid size
+            result_size = param["size"]
+            assert result_size, f"Unknown size for {result} : {result_size}"
+            ## Data width must be greater than frac width
+            if result_type == "fixed":
+                for s in param["size"]:
+                    assert isinstance(s, int)
+                assert isinstance(param["precision"][0], int)
+                assert isinstance(param["precision"][1], int)
+                assert (
+                    param["precision"][0] > 0
+                ), f"{result} must have a positive width."
+                assert (
+                    param["precision"][1] >= 0
+                ), f"{result} cannot have a negative frac width."
+                assert (
+                    param["precision"][0] >= param["precision"][1]
+                ), f"{result} must have a width greater than the frac width."
+            elif result_type == "float":
+                assert (
+                    param["precision"][0] == 32 or param["precision"][0] == 64
+                ), f"{result} must have a width of 32 or 64 as float."
+            else:
+                assert False, f"Unsupported result type from toml. {param[type]}"
+
+        assert (
+            self.parameters["common"]["args"]["data_in"]["type"]
+            == self.parameters["common"]["results"]["data_out"]["type"]
+        ), "Input and out data type must match. "
 
         # Verify hardware parameters
         for name, param in self.parameters["hardware"]["interface_parameters"].items():
@@ -217,6 +246,9 @@ class MaseMetadata:
         assert (
             toolchain in self.known_toolchain
         ), f"Invalid parameter toolchain = {TARGET}. {self.node}"
+
+        for name, param in self.parameters["hardware"]["verilog_parameters"].items():
+            assert isinstance(param, int), f"{name} must be int type. {self.node}"
 
     # ----------------------------------------------------------
     # Linear
@@ -327,7 +359,7 @@ actual keys: {input_keys}"""
         arg_type = self.parameters["common"]["args"]["data_in"]["type"]
 
         if arg_type == "fixed":
-            self.parameters["hardware"] = {
+            self.parameters["hardware"] |= {
                 "verilog_parameters": {
                     "IN_WIDTH": self.parameters["common"]["args"]["data_in"][
                         "precision"
@@ -522,6 +554,10 @@ actual keys: {input_keys}"""
                 self.parameters["hardware"]["verilog_parameters"]["IN_WIDTH"]
                 == data_in_param["precision"][0]
             )
+            assert isinstance(data_in_param["precision"][0], int)
+            assert isinstance(
+                self.parameters["hardware"]["verilog_parameters"]["IN_WIDTH"], int
+            )
             assert (
                 self.parameters["hardware"]["verilog_parameters"]["IN_FRAC_WIDTH"]
                 == data_in_param["precision"][1]
@@ -705,7 +741,7 @@ actual keys: {input_keys}"""
 
     def _init_hardware_parameters_relu(self, parameters):
         if self.parameters["common"]["args"]["data_in"]["type"] == "fixed":
-            self.parameters["hardware"] = {
+            self.parameters["hardware"] |= {
                 "verilog_parameters": {
                     "IN_SIZE": 1,
                     "IN_FRAC_WIDTH": self.parameters["common"]["args"]["data_in"][
@@ -901,12 +937,15 @@ actual keys: {input_keys}"""
         self.parameters["hardware"]["dependence_files"] = []
 
         self.parameters["hardware"]["interface_parameters"] = {}
-        for name, parameter in self.module.named_parameters():
-            self.parameters["hardware"]["interface_parameters"][name] = {
-                "storage": "BRAM",
-                "transpose": False,
-            }
+        # Functions and methods do not have named parameters
+        if self.module is not None:
+            for name, parameter in self.module.named_parameters():
+                self.parameters["hardware"]["interface_parameters"][name] = {
+                    "storage": "BRAM",
+                    "transpose": False,
+                }
 
+        print(self.node)
         args_param = self.parameters["common"]["args"]
         results_param = self.parameters["common"]["results"]
         if args_param["data_in"]["type"] == "fixed":
@@ -917,7 +956,8 @@ actual keys: {input_keys}"""
                 "IN_FRAC_WIDTH": self.parameters["common"]["args"]["data_in"][
                     "precision"
                 ][1],
-                "IN_SIZE": math.prod(
+                "IN_SIZE": 1,
+                "IN_DEPTH": math.prod(
                     self.parameters["common"]["args"]["data_in"]["size"]
                 ),
                 "OUT_WIDTH": self.parameters["common"]["results"]["data_out"][
@@ -935,9 +975,12 @@ actual keys: {input_keys}"""
             for arg, param in args_param.items():
                 if arg == "data_in":
                     continue
+                # NA means not used
+                if args_param[arg]["type"] == "NA":
+                    continue
                 assert (
                     args_param[arg]["type"] == "fixed"
-                ), "Unsupported arg type. Only fixed is supported."
+                ), f"Unsupported {arg} type. Only fixed is supported. {self.node}"
                 cap_arg = arg.upper()
                 self.parameters["hardware"]["verilog_parameters"][
                     f"{cap_arg}_SIZE"
@@ -984,12 +1027,28 @@ actual keys: {input_keys}"""
                     self.parameters["common"]["args"]["data_in"]["size"]
                 )
                 assert total_size % in_size == 0
-                self.parameters["hardware"]["verilog_parameters"]["IN_DEPTH"] = (
+                self.parameters["hardware"]["verilog_parameters"]["IN_DEPTH"] = int(
                     total_size / in_size
                 )
         else:
             for param, value in parameters.items():
                 self.parameters["hardware"]["verilog_parameters"][param] = value
+                if param == "IN_SIZE":
+                    in_size = math.prod(
+                        self.parameters["common"]["args"]["data_in"]["size"]
+                    )
+                    assert in_size % value == 0
+                    self.parameters["hardware"]["verilog_parameters"]["IN_DEPTH"] = int(
+                        in_size / value
+                    )
+                if param == "IN_DEPTH":
+                    in_size = math.prod(
+                        self.parameters["common"]["args"]["data_in"]["size"]
+                    )
+                    assert in_size % value == 0
+                    self.parameters["hardware"]["verilog_parameters"]["IN_SIZE"] = int(
+                        in_size / value
+                    )
 
     def _verify_parameters_other(self):
         return

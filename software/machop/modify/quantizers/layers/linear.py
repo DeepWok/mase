@@ -9,6 +9,7 @@ from torch.nn import functional as F
 from ....graph.mase_tracer import mark_as_leaf_module
 from ..quantizers import (
     integer_quantizer,
+    log_quantizer,
     minifloat_ieee_quantizer,
     minifloat_simple_quantizer,
     msfp_quantizer,
@@ -314,6 +315,79 @@ class LinearMinifloatIEEE(LinearBase):
     #         "product_width": product_bitwidth,
     #         "product_frac_width": product_frac,
     #     }
+
+
+@mark_as_leaf_module
+class LinearLog(LinearBase):
+    _required_config_keys = (
+        "name",
+        "weight_width",
+        "weight_exponent_bias",
+        "data_in_width",
+        "data_in_exponent_bias",
+    )
+    _optional_config_keys = (
+        "bypass",
+        "bias_width",
+        "bias_exponent_bias",
+    )
+
+    def __init__(
+        self,
+        in_features: int,
+        out_features: int,
+        bias: bool = True,
+        device=None,
+        dtype=None,
+        config=None,
+    ) -> None:
+        super().__init__(in_features, out_features, bias, device, dtype)
+        assert config is not None, "config is None!"
+
+        self.bypass = config.get("bypass", False)
+
+        w_width, w_exponent_bias = (
+            config["weight_width"],
+            config["weight_exponent_bias"],
+        )
+        x_width, x_exponent_bias = (
+            config["data_in_width"],
+            config["data_in_exponent_bias"],
+        )
+        b_width, b_exponent_bias = (
+            config.get("bias_width", None),
+            config.get("bias_exponent_bias", None),
+        )
+
+        self.w_quantizer = partial(
+            log_quantizer,
+            width=w_width,
+            exponent_bias=w_exponent_bias,
+        )
+
+        self.x_quantizer = partial(
+            log_quantizer,
+            width=x_width,
+            exponent_bias=x_exponent_bias,
+        )
+
+        if b_width is None or b_exponent_bias is None:
+            self.b_quantizer = self.w_quantizer
+        else:
+            self.b_quantizer = partial(
+                log_quantizer,
+                width=b_width,
+                exponent_bias=b_exponent_bias,
+            )
+        self.config = self.construct_essential_config(config)
+
+    def construct_essential_config(self, config):
+        r_config = extract_required_config(self, config)
+        o_config = {}
+        o_config["bypass"] = config.get("bypass", False)
+        o_config["bias_width"] = config.get("weight_width")
+        o_config["bias_exponent_bias"] = config.get("weight_exponent_bias")
+        return r_config | o_config
 
 
 @mark_as_leaf_module

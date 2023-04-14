@@ -40,13 +40,11 @@ from .utils_opt_patched import (
     OPTAttention_attn_output_shape_check,
     OPTAttention_attn_weight_dtype_check,
     OPTAttention_attn_weights_shape_check,
-    OPTAttention_construct_proj_shape,
     OPTAttention_layer_head_mask_shape_check,
     OPTAttention_reshape_qkv_back_for_bmm,
     OPTAttention_self_shape,
     OPTDecoder_check_head_mask,
     OPTDecoder_self_prepare_decoder_attention,
-    OPTDecoder_view_input_ids,
     OPTForCasualLM_compute_loss,
 )
 
@@ -145,7 +143,7 @@ class OPTAttentionPatched(nn.Module):
     ) -> Tuple[torch.Tensor, Optional[torch.Tensor], Optional[Tuple[torch.Tensor]]]:
         """Input shape: Batch x Time x Channel"""
 
-        bsz, tgt_len, _ = hidden_states.size()
+        bsz, tgt_len, _ = hidden_states.shape
 
         # get query proj
         query_states = self.q_proj(hidden_states) * self.scaling
@@ -168,9 +166,10 @@ class OPTAttentionPatched(nn.Module):
             head_dim=self.head_dim,
         )
 
-        proj_shape = OPTAttention_construct_proj_shape(
-            bsz, self.num_heads, self.head_dim
-        )
+        # proj_shape = OPTAttention_construct_proj_shape(
+        #     bsz, self.num_heads, self.head_dim
+        # )
+        proj_shape = (bsz * self.num_heads, -1, self.head_dim)
 
         query_states, key_states, value_states = OPTAttention_reshape_qkv_back_for_bmm(
             query_states,
@@ -183,7 +182,7 @@ class OPTAttentionPatched(nn.Module):
             head_dim=self.head_dim,
         )
 
-        src_len = key_states.size(1)
+        src_len = key_states.shape[1]
         attn_weights = torch.bmm(query_states, key_states.transpose(1, 2))
 
         OPTAttention_attn_weights_shape_check(
@@ -332,7 +331,7 @@ class OPTDecoderLayerPatched(nn.Module):
 
         # Fully Connected
         hidden_states_shape = hidden_states.shape
-        hidden_states = hidden_states.reshape(-1, hidden_states.size(-1))
+        hidden_states = hidden_states.reshape(-1, hidden_states.shape[-1])
         residual = hidden_states
 
         # 125m, 1.7B, ..., 175B applies layer norm BEFORE attention
@@ -499,11 +498,11 @@ class OPTDecoderPatched(OPTPatchedPreTrainedModel):
             else output_hidden_states
         )
 
-        input_shape = input_ids.size()
-        # input_ids = input_ids.view(-1, input_shape[-1])
-        input_ids = OPTDecoder_view_input_ids(
-            input_ids=input_ids, input_shape=input_shape
-        )
+        input_shape = input_ids.shape
+        input_ids = input_ids.view(-1, input_shape[-1])
+        # input_ids = OPTDecoder_view_input_ids(
+        #     input_ids=input_ids, input_shape=input_shape
+        # )
         past_key_values_length = 0
         inputs_embeds = self.embed_tokens(input_ids)
 
@@ -767,6 +766,11 @@ class OPTForCausalLMPatched(OPTPatchedPreTrainedModel):
                 self_loss_fct=self.loss_fct,
                 self_config_vocab_size=self.config.vocab_size,
             )
+            # shifted_logits = logits[..., :-1, :].contiguous()
+            # shifted_labels = labels[..., 1:].contiguous()
+            # loss = self.loss_fct(
+            #     shifted_logits.view(-1, self.config.vocab_size), shifted_labels.view(-1)
+            # )
 
         if not return_dict:
             output = (logits,) + outputs[1:]

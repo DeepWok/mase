@@ -5,12 +5,12 @@ from transformers.modeling_utils import ModuleUtilsMixin
 from ....graph.mase_tracer import mark_as_leaf_func
 
 
-@mark_as_leaf_func
 def BertSelfAttention_transpose_for_scores(
     x, self_num_attention_heads: int, self_attention_head_size: int
 ) -> Tensor:
-    # (B, N, hidden_size) -> (B, num_heads, N, head_hidden_size)
-    new_x_shape = x.size()[:-1] + (
+    new_x_shape = (
+        x.size(0),
+        x.size(1),
         self_num_attention_heads,
         self_attention_head_size,
     )
@@ -68,7 +68,11 @@ def BertSelfAttention_get_new_context_layer_shape(
     context_layer: Tensor,
     self_all_head_size: int,
 ):
-    new_context_layer_shape = context_layer.size()[:-2] + (self_all_head_size,)
+    new_context_layer_shape = (
+        context_layer.size(0),
+        context_layer.size(1),
+        self_all_head_size,
+    )
     return new_context_layer_shape
 
 

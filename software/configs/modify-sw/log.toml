@@ -1,0 +1,44 @@
+[default]
+bias_exponent_bias = 63
+bias_width = 8
+data_in_exponent_bias = 63
+data_in_width = 8
+name = "log"
+weight_exponent_bias = 63
+weight_width = 8
+
+[module_classes_to_modify.conv1d]
+name = "default"
+
+[module_classes_to_modify.conv2d]
+name = "default"
+
+[module_classes_to_modify.linear]
+name = "default"
+
+[module_classes_to_modify.relu]
+name = "default"
+
+# [functions_to_modify.add]
+# name = "default"
+
+[functions_to_modify.bmm]
+name = "default"
+
+[functions_to_modify.matmul]
+name = "default"
+
+[functions_to_modify.relu]
+name = "default"
+
+# [methods_to_modify.add]
+# name = "default"
+
+[methods_to_modify.bmm]
+name = "default"
+
+[methods_to_modify.matmul]
+name = "default"
+
+[methods_to_modify.relu]
+name = "default"

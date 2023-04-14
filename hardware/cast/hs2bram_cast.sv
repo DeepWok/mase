@@ -30,6 +30,13 @@ module hs2bram_cast #(
   logic [IN_WIDTH - 1:0] d1;
   logic [IN_WIDTH - 1:0] q1;
 
+  // 1-bit wider so IN_DEPTH also fits.
+  logic [ADDR_WIDTH-1:0] address_counter;
+  // 1-bit wider so IN_DEPTH also fits.
+  localparam COUNTER_WIDTH = $clog2(IN_SIZE);
+  logic [COUNTER_WIDTH-1:0] data_counter;
+  logic [1:0] state;
+
   // Port 0 is for read only
   assign we0 = 0;
 
@@ -38,8 +45,6 @@ module hs2bram_cast #(
   always_ff @(posedge clk) if (state == 0 && data_in_valid) data_buff <= data_in;
 
   // address_counter
-  // 1-bit wider so IN_DEPTH also fits.
-  logic [ADDR_WIDTH-1:0] address_counter;
   always_ff @(posedge clk)
     if (rst) address_counter <= 0;
     else begin
@@ -49,9 +54,6 @@ module hs2bram_cast #(
     end
 
   // data_counter
-  // 1-bit wider so IN_DEPTH also fits.
-  localparam COUNTER_WIDTH = $clog2(IN_SIZE);
-  logic [COUNTER_WIDTH-1:0] data_counter;
   always_ff @(posedge clk)
     if (rst) data_counter <= 0;
     else begin
@@ -70,7 +72,6 @@ module hs2bram_cast #(
   // 1: processing the current input - which might take multiple cycles
   // 2: hold valid data and wait for the consumer to be ready
   // 3: serve as source for the consumer 
-  logic [1:0] state;
   always_ff @(posedge clk) begin
     if (rst) state <= 0;
     else begin

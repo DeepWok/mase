@@ -68,7 +68,7 @@ def minifloat_simple_quantizer(
     mantissa_bits = width - exponent_width - 1
 
     # default bias value
-    if exponent_bias is None:
+    if exponent_bias in (None, "none", "None"):
         exponent_bias = 2 ** (exponent_width - 1) - 1
 
     exponent_max = 2**exponent_width - 1 - exponent_bias
@@ -130,7 +130,7 @@ def minifloat_ieee_quantizer(
     mantissa_bits = width - exponent_width - 1
 
     # set default bias
-    if exponent_bias is None:
+    if exponent_bias in (None, "none", "None"):
         exponent_bias = 2 ** (exponent_width - 1) - 1
     # upper and lower bound of shifted exponent
     exponent_max = 2**exponent_width - 1 - exponent_bias
@@ -189,7 +189,7 @@ def log_quantizer(
     """
 
     exponent_bits = width - 1
-    if exponent_bias is None:
+    if exponent_bias in (None, "none", "None"):
         exponent_bias = 2 ** (exponent_bits - 1) - 1
 
     exponent_max = 2**exponent_bits - 1 - exponent_bias
@@ -246,7 +246,7 @@ def msfp_quantizer(
         breakpoint()
     # minifloat_simple_quantizer on each block over which a exponent is shared
     mantissa_bits = width - 1
-    if exponent_bias is None:
+    if exponent_bias in (None, "none", "None"):
         exponent_bias = 2 ** (exponent_width - 1) - 1
 
     exponent_max = 2**exponent_width - 1 - exponent_bias

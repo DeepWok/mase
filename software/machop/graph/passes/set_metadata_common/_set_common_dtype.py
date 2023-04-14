@@ -188,6 +188,11 @@ def _set_dtype_before_call_module(node, module, args, kwargs):
             mc_args["running_var"], module.running_var.dtype
         )
         _set_torch_type_precision_and_format(mc_results["data_out"], args[0].dtype)
+    elif type(module) in (nn.LayerNorm,):
+        _set_torch_type_precision_and_format(mc_args["data_in"], args[0].dtype)
+        _set_torch_type_precision_and_format(mc_args["weight"], module.weight.dtype)
+        _set_torch_type_precision_and_format(mc_args["bias"], module.bias.dtype)
+        _set_torch_type_precision_and_format(mc_results["data_out"], args[0].dtype)
     elif type(module) in (
         nn.AvgPool1d,
         nn.AvgPool2d,
@@ -206,6 +211,10 @@ def _set_dtype_before_call_module(node, module, args, kwargs):
         nn.AdaptiveMaxPool2d,
         nn.AdaptiveMaxPool3d,
     ):
+        logger.debug(
+            f"module `{type(module)}`'s precision depends on the previous and the next nodes"
+        )
+    elif type(module) in (nn.Dropout, nn.Dropout1d, nn.Dropout2d, nn.Dropout3d):
         logger.debug(
             f"module `{type(module)}`'s precision depends on the previous and the next nodes"
         )
@@ -260,7 +269,11 @@ def _set_dtype_before_call_method(node, method_name, args, kwargs):
         _set_quant_dtype_precision_and_format(mc_args["data_in_1"], args[1].dtype)
         _set_quant_dtype_precision_and_format(mc_results["data_out"], args[0].dtype)
     elif method_name in ("view", "reshape", "flatten", "transpose", "permute"):
-        logger.info(
+        logger.debug(
+            f"Method {method_name}'s precision depends on the previous and the next nodes"
+        )
+    elif method_name in ("contiguous",):
+        logger.debug(
             f"Method {method_name}'s precision depends on the previous and the next nodes"
         )
     else:
@@ -279,6 +292,10 @@ def _set_dtype_of_nodes_depending_on_neighbors(
             torch.flatten,
             torch.permute,
             torch.transpose,
+            F.dropout,
+            F.dropout1d,
+            F.dropout2d,
+            F.dropout3d,
         ):
             _set_smaller_width_in_neighbors(node, real_target=real_target)
     elif node.op == "call_module":
@@ -290,11 +307,23 @@ def _set_dtype_of_nodes_depending_on_neighbors(
             nn.AdaptiveMaxPool1d,
             nn.AdaptiveMaxPool2d,
             nn.AdaptiveMaxPool3d,
+            nn.Dropout,
+            nn.Dropout1d,
+            nn.Dropout2d,
+            nn.Dropout3d,
         ):
             _set_smaller_width_in_neighbors(node, real_target=real_target)
     elif node.op == "call_method":
-        if real_target in ("view", "reshape", "flatten", "transpose", "permute"):
-            _set_smaller_width_in_neighbors(node, real_target=real_target)
+        if real_target in (
+            "view",
+            "reshape",
+            "flatten",
+            "transpose",
+            "permute",
+            "contiguous",
+        ):
+            # _set_smaller_width_in_neighbors(node, real_target=real_target)
+            pass
     else:
         pass
 
@@ -311,30 +340,53 @@ def _set_smaller_width_in_neighbors(node, real_target):
         nn.AdaptiveMaxPool1d,
         nn.AdaptiveMaxPool2d,
         nn.AdaptiveMaxPool3d,
+        nn.Dropout,
+        nn.Dropout1d,
+        nn.Dropout2d,
+        nn.Dropout3d,
     ) or real_target in (
         torch.reshape,
         torch.flatten,
         torch.transpose,
         torch.permute,
+        F.dropout,
+        F.dropout1d,
+        F.dropout2d,
+        F.dropout3d,
         "view",
         "flatten",
         "reshape",
         "transpose",
         "permute",
+        "contiguous",
     ):
         # these OPs have only one input node
         prev_node = node.all_input_nodes[0]
-        prev_node_data_out_cm = prev_node.meta["common"]["results"]["data_out"]
-        prev_node_data_out_precision = prev_node_data_out_cm.get("precision", "NA")
+        if prev_node.op in ("call_function", "call_module", "call_method"):
+            prev_node_data_out_cm = prev_node.meta["common"]["results"]["data_out"]
+            prev_node_data_out_precision = prev_node_data_out_cm.get("precision", "NA")
+        else:
+            prev_node_data_out_precision = "NA"
 
         next_node = node.next
-        next_node_args_cm = next_node.meta["common"]["args"]
-        index = next_node.all_input_nodes.index(node)
-        for arg_name in INDEX_TO_POSSIBLE_ARG_NAMES[index]:
-            if arg_name in next_node_args_cm:
-                break
-        next_node_data_in_cm = next_node_args_cm[arg_name]
-        next_node_data_in_precision = next_node_data_in_cm.get("precision", "NA")
+        if next_node.op in ("call_function", "call_module", "call_method"):
+            next_node_args_cm = next_node.meta["common"]["args"]
+
+            if node in next_node.all_input_nodes:
+                index = next_node.all_input_nodes.index(node)
+                arg_name = None
+                for arg_name_i in INDEX_TO_POSSIBLE_ARG_NAMES[index]:
+                    if arg_name_i in next_node_args_cm:
+                        arg_name = arg_name_i
+                        break
+                next_node_data_in_cm = next_node_args_cm[arg_name]
+                next_node_data_in_precision = next_node_data_in_cm.get(
+                    "precision", "NA"
+                )
+            else:
+                next_node_data_in_precision = "NA"
+        else:
+            next_node_data_in_precision = "NA"
 
         if prev_node_data_out_precision != "NA" or next_node_data_in_precision != "NA":
             if (
@@ -358,7 +410,7 @@ def _set_smaller_width_in_neighbors(node, real_target):
             # fmt: on
         else:
             logger.error(
-                f"Both the prev and next nodes' precision are 'NA' for node {node} ({real_target})"
+                f"Both the prev and next nodes' precision of Node {node} ({real_target}) are 'NA'"
             )
     else:
         logger.warning(f"Node {node}'s dtype & precision is not set.")

@@ -18,3 +18,4 @@ deepspeed
 pybind11
 tabulate
 tensorboard
+hyperopt

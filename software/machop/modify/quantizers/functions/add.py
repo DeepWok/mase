@@ -4,7 +4,10 @@ import torch
 
 from ....graph.mase_tracer import mark_as_leaf_func
 from ..quantizers import (
+    block_log_quantizer,
+    block_minifloat_quantizer,
     integer_quantizer,
+    log_quantizer,
     minifloat_ieee_quantizer,
     minifloat_simple_quantizer,
     msfp_quantizer,
@@ -84,6 +87,24 @@ def add_minifloat_ieee(x, y, config):
             exponent_bias=x_exponent_bias,
         )
 
+        x = x_quantizer(x)
+        y = x_quantizer(y)
+        return x + y
+
+
+@mark_as_leaf_func
+def add_log(x, y, config):
+    bypass = config.get("bypass", False)
+    if bypass:
+        return x + y
+    else:
+        x_width, x_exponent_bias = (
+            config["data_in_exponent_width"],
+            config["data_in_exponent_bias"],
+        )
+        x_quantizer = partial(
+            log_quantizer, width=x_width, exponent_bias=x_exponent_bias
+        )
         x = x_quantizer(x)
         y = x_quantizer(y)
         return x + y

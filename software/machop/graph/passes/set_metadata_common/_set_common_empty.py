@@ -36,7 +36,7 @@ def _empty_common(old_meta):
 def _add_empty_common_args(meta, *arg_names):
     assert len(set(arg_names)) == len(arg_names), f"Duplicated arg_name in {arg_names}"
     for arg_name in arg_names:
-        # Here `False`` is used as default since TOML does not support `None`
+        # Here "NA" is used as default since TOML does not support `None`
         meta["common"]["args"][arg_name] = {
             "type": "NA",
             "precision": "NA",
@@ -74,7 +74,12 @@ def _set_empty_metadata_before_call_function(node, function, args, kwargs):
     elif function in (torch.flatten, torch.reshape, torch.transpose, torch.permute):
         _add_empty_common_args(meta, "data_in")
         _add_empty_common_results(meta, "data_out")
+    elif function in (F.dropout, F.dropout1d, F.dropout2d, F.dropout3d):
+        _add_empty_common_args(meta, "data_in")
+        _add_empty_common_results(meta, "data_out")
     else:
+        _add_empty_common_args(meta, "data_in")
+        _add_empty_common_results(meta, "data_out")
         logger.warning(
             f"Unrecognized function `{function}` when setting empty metadata"
         )
@@ -110,6 +115,9 @@ def _set_empty_metadata_before_call_module(node, module, args, kwargs):
             "running_var",
         )
         _add_empty_common_results(meta, "data_out")
+    elif isinstance(module, (nn.LayerNorm,)):
+        _add_empty_common_args(meta, "data_in", "weight", "bias")
+        _add_empty_common_results(meta, "data_out")
     elif isinstance(
         module,
         (
@@ -129,7 +137,12 @@ def _set_empty_metadata_before_call_module(node, module, args, kwargs):
     ):
         _add_empty_common_args(meta, "data_in")
         _add_empty_common_results(meta, "data_out")
+    elif isinstance(module, (nn.Dropout, nn.Dropout1d, nn.Dropout2d, nn.Dropout3d)):
+        _add_empty_common_args(meta, "data_in")
+        _add_empty_common_results(meta, "data_out")
     else:
+        _add_empty_common_args(meta, "data_in")
+        _add_empty_common_results(meta, "data_out")
         logger.warning(
             f"Unrecognized module `{type(module).__name__}` when setting empty metadata"
         )
@@ -150,7 +163,14 @@ def _set_empty_metadata_before_call_method(node, method_name: str, args, kwargs)
     elif method_name in ("view", "reshape", "flatten", "transpose", "permute"):
         _add_empty_common_args(meta, "data_in")
         _add_empty_common_results(meta, "data_out")
+    elif method_name in ("contiguous",):
+        _add_empty_common_args(meta, "data_in")
+        _add_empty_common_results(meta, "data_out")
+    elif method_name in ("size",):
+        pass
     else:
+        _add_empty_common_args(meta, "data_in")
+        _add_empty_common_results(meta, "data_out")
         logger.warning(
             f"Unrecognized method name `{method_name}` when setting empty metadata"
         )
