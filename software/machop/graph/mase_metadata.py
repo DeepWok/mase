@@ -945,7 +945,6 @@ actual keys: {input_keys}"""
                     "transpose": False,
                 }
 
-        print(self.node)
         args_param = self.parameters["common"]["args"]
         results_param = self.parameters["common"]["results"]
         if args_param["data_in"]["type"] == "fixed":
