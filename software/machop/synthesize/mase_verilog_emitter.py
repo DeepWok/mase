@@ -459,6 +459,7 @@ quit
         """
         Emit Verilog for unpartitioned model
         """
+        logger.info("Emitting Verilog...")
         self.verify()
 
         rtl_dir = os.path.join(self.project_dir, "hardware", "rtl")

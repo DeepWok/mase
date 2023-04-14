@@ -14,7 +14,7 @@ build-docker:
 	(cd Docker; docker build --build-arg UID=$(user) --build-arg GID=$(group) --build-arg VHLS_PATH=$(vhls) . --tag mase-ubuntu2204)
 
 shell: build-docker
-	docker run -it --hostname mase-ubuntu2204 -u $(user) -v $(vhls):$(vhls) -v $(shell pwd):/workspace mase-ubuntu2204:latest /bin/bash 
+	docker run -it --shm-size 256m --hostname mase-ubuntu2204 -u $(user) -v $(vhls):$(vhls) -v $(shell pwd):/workspace mase-ubuntu2204:latest /bin/bash 
 
 build:
 	bash scripts/build-llvm.sh

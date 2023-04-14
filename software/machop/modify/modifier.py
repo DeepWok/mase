@@ -11,7 +11,7 @@ import torch.nn.functional as F
 from machop.utils import copy_weights
 from tabulate import tabulate
 from torch import nn
-from torch.fx import GraphModule
+from torch.fx import GraphModule, Node
 
 from ..graph.mase_interpreter import clear_node_metadata_software
 from ..graph.mase_tracer import (
@@ -604,11 +604,15 @@ def _create_new_module(original_module: nn.Module, config: Dict):
     return new_module
 
 
-def _get_new_func_args_and_kwargs(original_node, config: Dict):
+def _get_new_func_args_and_kwargs(original_node: Node, config: Dict):
     original_func = original_node.target
     new_func = FUNC_MAP_NEO[original_func][config["name"]]
     if original_func in (operator.add, torch.add):
-        additional_kwargs = {"config": config}
+        if len(original_node.all_input_nodes) >= 1:
+            additional_kwargs = {"config": config}
+        else:
+            additional_kwargs = {}
+            new_func = operator.add if original_func == operator.add else torch.add
     elif original_func in (F.relu,):
         additional_kwargs = {"config": config}
     elif original_func in (torch.matmul, operator.matmul):

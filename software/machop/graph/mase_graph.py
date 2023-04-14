@@ -71,6 +71,41 @@ def _list_to_tuple(d):
             d[k] = v
 
 
+def get_node_by_name(node_name, fx_graph):
+    for node in fx_graph.nodes:
+        if vf(node.name) == node_name:
+            return node
+
+    assert False, f"Cannot find node {node_name} in fx graph"
+    return None
+
+
+def _add_edge_info(node, fx_graph):
+    """
+    Set the from metadata to node instead a string
+    """
+    # TODO: Remove this restriction in the future
+    # if node.meta.parameters["hardware"]["is_implicit"]:
+    #     return
+    arg_count = len(node.all_input_nodes)
+    if arg_count != 1:
+        for i in range(0, arg_count):
+            node_name = node.meta.parameters["common"]["args"][f"data_in_{i}"]["from"]
+            node.meta.parameters["common"]["args"][f"data_in_{i}"][
+                "from"
+            ] = get_node_by_name(node_name, fx_graph)
+
+
+def get_input_index(node, next_node):
+    """
+    Get the arg index of the next_node for node
+    """
+    arg_count = len(next_node.all_input_nodes)
+    for i in range(0, arg_count):
+        if next_node.meta.parameters["common"]["args"][f"data_in_{i}"]["from"] == node:
+            return i
+
+
 class MaseGraph:
     """
     Mase takes a torch.fx graph representation of a model and translates
@@ -115,6 +150,7 @@ class MaseGraph:
             node.meta = MaseMetadata(
                 node=node,
                 model=self.model,
+                fx_graph=fx_graph,
                 quantized_model=self.quantized_model,
                 synth_mode=self.synth_mode,
             )
@@ -142,6 +178,9 @@ class MaseGraph:
                     # !: assign toml to node.meta.parameter
                     _list_to_tuple(parameters)
                     node.meta.parameters["common"] = parameters
+                    _add_edge_info(node, self.fx_graph)
+                    # TODO: inline the code above into the following API so
+                    # verification can be triggered
                     # !: commented out MaseMetadata.init_common_parameters
                     # node.meta.init_common_parameters(parameters=parameters)
         else:
@@ -197,27 +236,70 @@ class MaseGraph:
             next_nodes_in = []
             for node in nodes_in:
                 for next_node, x in node.users.items():
-                    assert (
-                        next_node.meta.parameters["common"]["args"]["data_in"]["size"]
-                        == node.meta.parameters["common"]["results"]["data_out"]["size"]
-                    )
-                    assert (
-                        next_node.meta.parameters["hardware"]["verilog_parameters"][
-                            "IN_SIZE"
-                        ]
-                        == node.meta.parameters["hardware"]["verilog_parameters"][
-                            "OUT_SIZE"
-                        ]
-                    ), "Verilog input and output sizes mismatch: {} = {} and {} = {}".format(
-                        node.name,
-                        node.meta.parameters["hardware"]["verilog_parameters"][
-                            "OUT_SIZE"
-                        ],
-                        next_node.name,
-                        next_node.meta.parameters["hardware"]["verilog_parameters"][
-                            "IN_SIZE"
-                        ],
-                    )
+                    arg_count = len(next_node.all_input_nodes)
+                    if arg_count == 1:
+                        assert (
+                            next_node.meta.parameters["common"]["args"]["data_in"][
+                                "size"
+                            ]
+                            == node.meta.parameters["common"]["results"]["data_out"][
+                                "size"
+                            ]
+                        ), "Common input and output sizes mismatch: {} = {} and {} = {}".format(
+                            node.name,
+                            node.meta.parameters["common"]["results"]["data_out"][
+                                "size"
+                            ],
+                            next_node.name,
+                            next_node.meta.parameters["common"]["args"]["data_in"][
+                                "size"
+                            ],
+                        )
+
+                        assert (
+                            next_node.meta.parameters["hardware"]["verilog_parameters"][
+                                "IN_SIZE"
+                            ]
+                            == node.meta.parameters["hardware"]["verilog_parameters"][
+                                "OUT_SIZE"
+                            ]
+                        ), "Verilog input and output sizes mismatch: {} = {} and {} = {}".format(
+                            node.name,
+                            node.meta.parameters["hardware"]["verilog_parameters"][
+                                "OUT_SIZE"
+                            ],
+                            next_node.name,
+                            next_node.meta.parameters["hardware"]["verilog_parameters"][
+                                "IN_SIZE"
+                            ],
+                        )
+                    else:
+                        i = get_input_index(node, next_node)
+                        assert (
+                            next_node.meta.parameters["common"]["args"][f"data_in_{i}"][
+                                "size"
+                            ]
+                            == node.meta.parameters["common"]["results"]["data_out"][
+                                "size"
+                            ]
+                        )
+                        assert (
+                            next_node.meta.parameters["hardware"]["verilog_parameters"][
+                                f"IN_{i}_SIZE"
+                            ]
+                            == node.meta.parameters["hardware"]["verilog_parameters"][
+                                "OUT_SIZE"
+                            ]
+                        ), "Verilog input and output sizes mismatch: {} = {} and {} = {}".format(
+                            node.name,
+                            node.meta.parameters["hardware"]["verilog_parameters"][
+                                "OUT_SIZE"
+                            ],
+                            next_node.name,
+                            next_node.meta.parameters["hardware"]["verilog_parameters"][
+                                f"IN_{i}_SIZE"
+                            ],
+                        )
                     if next_node.op == "output":
                         next_nodes_in.append(node)
                     else:

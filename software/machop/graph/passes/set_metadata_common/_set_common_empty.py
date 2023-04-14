@@ -12,6 +12,7 @@ import torch.fx
 import torch.nn as nn
 import torch.nn.functional as F
 from torch.fx.node import Node, map_aggregate
+from torchvision.ops.stochastic_depth import stochastic_depth
 
 from ....modify.quantizers.functions import (
     add_integer,
@@ -62,10 +63,23 @@ def _add_empty_common_results(meta, *result_names):
 def _set_empty_metadata_before_call_function(node, function, args, kwargs):
     node.meta = _empty_common(node.meta)
     meta = node.meta
-    if function in (F.relu, relu_integer):
+    if function in (
+        F.relu,
+        relu_integer,
+        F.hardswish,
+        F.hardsigmoid,
+        F.silu,
+        F.sigmoid,
+    ):
+        _add_empty_common_args(meta, "data_in")
+        _add_empty_common_results(meta, "data_out")
+    elif function in (F.softmax,):
         _add_empty_common_args(meta, "data_in")
         _add_empty_common_results(meta, "data_out")
     elif function in (operator.add, torch.add, add_integer):
+        _add_empty_common_args(meta, "data_in_0", "data_in_1")
+        _add_empty_common_results(meta, "data_out")
+    elif function in (operator.mul, torch.mul):
         _add_empty_common_args(meta, "data_in_0", "data_in_1")
         _add_empty_common_results(meta, "data_out")
     elif function in (torch.matmul, torch.bmm, matmul_integer, bmm_integer):
@@ -77,6 +91,21 @@ def _set_empty_metadata_before_call_function(node, function, args, kwargs):
     elif function in (F.dropout, F.dropout1d, F.dropout2d, F.dropout3d):
         _add_empty_common_args(meta, "data_in")
         _add_empty_common_results(meta, "data_out")
+    # -----------------------------------------
+    elif function in (getattr,):
+        _add_empty_common_args(meta, "data_in")
+        if args[1] == "shape":
+            _add_empty_common_results(meta, "data_out")
+        else:
+            raise RuntimeError(f"call function getattr requires {args[1]}")
+    elif str(function) in ("<built-in function getitem>",):
+        _add_empty_common_args(meta, "data_in")
+        _add_empty_common_results(meta, "data_out")
+    # -----------------------------------------
+    elif function in (stochastic_depth,):
+        _add_empty_common_args(meta, "data_in")
+        _add_empty_common_results(meta, "data_out")
+
     else:
         _add_empty_common_args(meta, "data_in")
         _add_empty_common_results(meta, "data_out")
@@ -88,8 +117,14 @@ def _set_empty_metadata_before_call_function(node, function, args, kwargs):
 def _set_empty_metadata_before_call_module(node, module, args, kwargs):
     node.meta = _empty_common(node.meta)
     meta = node.meta
-    if isinstance(module, (nn.ReLU)):
+    if isinstance(module, (nn.ReLU, nn.Hardsigmoid, nn.Hardswish, nn.SiLU, nn.Sigmoid)):
         _add_empty_common_args(meta, "data_in")
+        _add_empty_common_results(meta, "data_out")
+    elif isinstance(module, (nn.Softmax,)):
+        _add_empty_common_args(meta, "data_in")
+        _add_empty_common_results(meta, "data_out")
+    elif isinstance(module, (nn.Embedding,)):
+        _add_empty_common_args(meta, "data_in", "weight")
         _add_empty_common_results(meta, "data_out")
     elif isinstance(module, (AddInteger,)):
         _add_empty_common_args(meta, "data_in_0", "data_in_1")
@@ -151,10 +186,13 @@ def _set_empty_metadata_before_call_module(node, module, args, kwargs):
 def _set_empty_metadata_before_call_method(node, method_name: str, args, kwargs):
     node.meta = _empty_common(node.meta)
     meta = node.meta
-    if method_name in ("relu",):
+    if method_name in ("relu", "softmax"):
         _add_empty_common_args(meta, "data_in")
         _add_empty_common_results(meta, "data_out")
-    elif method_name in ("add"):
+    elif method_name in ("add",):
+        _add_empty_common_args(meta, "data_in_0", "data_in_1")
+        _add_empty_common_results(meta, "data_out")
+    elif method_name in ("mul",):
         _add_empty_common_args(meta, "data_in_0", "data_in_1")
         _add_empty_common_results(meta, "data_out")
     elif method_name in ("matmul", "bmm"):

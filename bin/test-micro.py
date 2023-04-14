@@ -235,7 +235,7 @@ class TestMicro:
             err = 0
             queue = Queue(test_count)
             for i, test_case in enumerate(self.test_cases):
-                err += self.single_test(test_case, queue)
+                err += self.single_test(test_case, queue) > 0
 
         if err:
             self.logger.error("Regression test finished. {} errors.".format(err))
