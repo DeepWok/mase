@@ -39,7 +39,6 @@ from .utils import (
 )
 
 logger = getLogger("machop", log_file="machop.log")
-logging.getLogger().setLevel(logging.INFO)
 
 
 class Machop:

@@ -58,7 +58,14 @@ class MaseMetadata:
     known_toolchain = ["INTERNAL", "EXTERNAL", "HLS"]
     known_storage = ["BRAM"]
 
-    def __init__(self, node=None, model=None, quantized_model=None, synth_mode="auto"):
+    def __init__(
+        self,
+        node=None,
+        model=None,
+        fx_graph=None,
+        quantized_model=None,
+        synth_mode="auto",
+    ):
         # Top-level model
         self.model = model
         self.quantized_model = quantized_model
@@ -68,6 +75,7 @@ class MaseMetadata:
         self.type = type(self.module)
         # The fx node of the module in the fx graph of the model
         self.node = node
+        self.graph = fx_graph
         if synth_mode == "hls":
             self.internal_layers = {}
         else:
@@ -82,31 +90,23 @@ class MaseMetadata:
         """
         Init common parameters
         """
-        if self.node.op == "call_module" or self.node.op == "call_function":
-            if self.type in self.internal_layers:
-                name = self.internal_layers[self.type]
-                replace_fn = getattr(self, f"_init_common_parameters_{name}")
-                replace_fn(parameters)
-            else:
-                logger.warning(f"{self.node} is not found in the internal library.")
-                self._init_common_parameters_other(parameters)
+        if self.type in self.internal_layers:
+            name = self.internal_layers[self.type]
+            replace_fn = getattr(self, f"_init_common_parameters_{name}")
+            replace_fn(parameters)
         else:
-            logger.warning(f"Not dealing with node for now: {self.node}")
+            self._init_common_parameters_other(parameters)
 
     def init_software_parameters(self, parameters=None):
         """
         Init software parameters
         """
-        if self.node.op == "call_module" or self.node.op == "call_function":
-            if self.type in self.internal_layers:
-                name = self.internal_layers[self.type]
-                replace_fn = getattr(self, f"_init_software_parameters_{name}")
-                replace_fn(parameters)
-            else:
-                logger.warning(f"{self.node} is not found in the internal library.")
-                self._init_software_parameters_other(parameters)
+        if self.type in self.internal_layers:
+            name = self.internal_layers[self.type]
+            replace_fn = getattr(self, f"_init_software_parameters_{name}")
+            replace_fn(parameters)
         else:
-            logger.warning(f"Not dealing with node for now: {self.node}")
+            self._init_software_parameters_other(parameters)
 
     def init_hardware_parameters(self, parameters=None):
         """
@@ -120,7 +120,6 @@ class MaseMetadata:
             replace_fn = getattr(self, f"_init_hardware_parameters_{name}")
             replace_fn(parameters)
         else:
-            logger.warning(f"{self.node} is not found in the internal library.")
             self._init_hardware_parameters_other(parameters)
 
     def update_hardware_parameters(self, parameters=None):
@@ -135,36 +134,34 @@ class MaseMetadata:
             replace_fn = getattr(self, f"_update_hardware_parameters_{name}")
             replace_fn(parameters)
         else:
-            logger.warning(f"{self.node} is not found in the internal library.")
             self._update_hardware_parameters_other(parameters)
 
     def verify(self):
         """
         Verify all the parameters
         """
-        if self.node.op == "call_module" or self.node.op == "call_function":
-            self._verify_parameters_general()
-            if self.type in self.internal_layers:
-                name = self.internal_layers[self.type]
-                replace_fn = getattr(self, f"_verify_parameters_{name}")
-                replace_fn()
-            else:
-                logger.warning(f"{self.node} is not found in the internal library.")
-                self._verify_parameters_other()
+        self._verify_parameters_general()
+        if self.type in self.internal_layers:
+            name = self.internal_layers[self.type]
+            replace_fn = getattr(self, f"_verify_parameters_{name}")
+            replace_fn()
         else:
-            logger.warning(f"Not dealing with node for now: {self.node}")
+            self._verify_parameters_other()
 
     def _verify_parameters_general(self):
         """
         Verify general parameters for all the nodes
         """
-        if self.node.op != "call_module" and self.node.op != "call_function":
+        # TODO to remove the following:
+        if self.parameters["hardware"]["is_implicit"]:
             return
-
         # Verify common parameters
-        assert (
-            "data_in" in self.parameters["common"]["args"].keys()
-        ), f"Cannot find data_in in common.arg parameters. {self.node}"
+        arg_count = len(self.node.all_input_nodes)
+        for i in range(0, arg_count):
+            arg_name = "data_in" if arg_count == 1 else f"data_in_{i}"
+            assert (
+                arg_name in self.parameters["common"]["args"].keys()
+            ), f"Cannot find data_in in common.arg parameters. {self.node}"
         assert (
             "data_out" in self.parameters["common"]["results"].keys()
         ), f"Cannot find data_out in common.results parameters. {self.node}"
@@ -193,10 +190,10 @@ class MaseMetadata:
                 assert (
                     param["precision"][0] == 32 or param["precision"][0] == 64
                 ), f"{arg} must have a width of 32 or 64 as float."
-            else:
+            elif arg_type != "NA":
                 assert False, f"Unsupported arg type from toml. {param[type]}"
         assert (
-            self.parameters["common"]["args"]["data_in"]["type"]
+            self.parameters["common"]["args"][arg_name]["type"]
             == self.parameters["common"]["results"]["data_out"]["type"]
         ), "Input and out data type must match. "
 
@@ -232,7 +229,7 @@ class MaseMetadata:
                 assert False, f"Unsupported result type from toml. {param[type]}"
 
         assert (
-            self.parameters["common"]["args"]["data_in"]["type"]
+            self.parameters["common"]["args"][arg_name]["type"]
             == self.parameters["common"]["results"]["data_out"]["type"]
         ), "Input and out data type must match. "
 
@@ -462,8 +459,6 @@ actual keys: {input_keys}"""
     def _update_hardware_parameters_linear(self, parameters):
         if parameters is None:
             for pre_node in self.node.all_input_nodes:
-                if pre_node.op != "call_module" and pre_node.op != "call_function":
-                    continue
                 in_size = pre_node.meta.parameters["hardware"]["verilog_parameters"][
                     "OUT_SIZE"
                 ]
@@ -788,7 +783,6 @@ actual keys: {input_keys}"""
                     "OUT_SIZE"
                 ]
                 self.parameters["hardware"]["verilog_parameters"]["IN_SIZE"] = in_size
-                logger.debug(f"updated {in_size}")
                 total_size = math.prod(
                     self.parameters["common"]["args"]["data_in"]["size"]
                 )
@@ -875,14 +869,27 @@ actual keys: {input_keys}"""
                 out_features = node_out.meta.module.in_features
         assert out_features, f"Cannot find the out features for module {self.node.name}"
 
-        self.parameters["common"]["args"]["data_in"] = {
-            "type": "float",
-            "precision": (32),
-            "size": (
-                1,
-                in_features,
-            ),
-        }
+        arg_count = len(self.node.all_input_nodes)
+        if arg_count == 1:
+            self.parameters["common"]["args"]["data_in"] = {
+                "type": "float",
+                "precision": (32),
+                "size": (
+                    1,
+                    in_features,
+                ),
+            }
+        else:
+            for i in range(0, arg_count):
+                self.parameters["common"]["args"][f"data_in_{i}"] = {
+                    "type": "float",
+                    "precision": (32),
+                    "size": (
+                        1,
+                        in_features,
+                    ),
+                }
+
         self.parameters["common"]["results"]["data_out"] = {
             "type": "float",
             "precision": (32),
@@ -947,89 +954,169 @@ actual keys: {input_keys}"""
 
         args_param = self.parameters["common"]["args"]
         results_param = self.parameters["common"]["results"]
-        if args_param["data_in"]["type"] == "fixed":
-            self.parameters["hardware"]["verilog_parameters"] = {
-                "IN_WIDTH": self.parameters["common"]["args"]["data_in"]["precision"][
-                    0
-                ],
-                "IN_FRAC_WIDTH": self.parameters["common"]["args"]["data_in"][
-                    "precision"
-                ][1],
-                "IN_SIZE": 1,
-                "IN_DEPTH": math.prod(
-                    self.parameters["common"]["args"]["data_in"]["size"]
-                ),
-                "OUT_WIDTH": self.parameters["common"]["results"]["data_out"][
-                    "precision"
-                ][0],
-                "OUT_FRAC_WIDTH": self.parameters["common"]["results"]["data_out"][
-                    "precision"
-                ][1],
-                "OUT_SIZE": math.prod(
-                    self.parameters["common"]["results"]["data_out"]["size"]
-                ),
-            }
 
-            # Add other parameters
-            for arg, param in args_param.items():
-                if arg == "data_in":
-                    continue
-                # NA means not used
-                if args_param[arg]["type"] == "NA":
-                    continue
-                assert (
-                    args_param[arg]["type"] == "fixed"
-                ), f"Unsupported {arg} type. Only fixed is supported. {self.node}"
-                cap_arg = arg.upper()
-                self.parameters["hardware"]["verilog_parameters"][
-                    f"{cap_arg}_SIZE"
-                ] = math.prod(args_param[arg]["size"])
-                self.parameters["hardware"]["verilog_parameters"][
-                    f"{cap_arg}_WIDTH"
-                ] = args_param[arg]["precision"][0]
-                self.parameters["hardware"]["verilog_parameters"][
-                    f"{cap_arg}_FRAC_WIDTH"
-                ] = args_param[arg]["precision"][1]
-            for result, param in results_param.items():
-                if result == "data_out":
-                    continue
-                assert (
-                    results_param[result]["type"] == "fixed"
-                ), "Unsupported result type. Only fixed is supported."
-                cap_result = result.upper()
-                self.parameters["hardware"]["verilog_parameters"][
-                    f"{cap_result}_SIZE"
-                ] = math.prod(results_param[result]["size"])
-                self.parameters["hardware"]["verilog_parameters"][
-                    f"{cap_result}_WIDTH"
-                ] = results_param[result]["precision"][0]
-                self.parameters["hardware"]["verilog_parameters"][
-                    f"{cap_result}_FRAC_WIDTH"
-                ] = results_param[result]["precision"][1]
+        arg_count = len(self.node.all_input_nodes)
+        for i in range(0, arg_count):
+            arg_name = "data_in" if arg_count == 1 else f"data_in_{i}"
 
-        else:
-            assert False, "Floating point type for unknown ops is not supported."
+            if args_param[arg_name]["type"] == "fixed":
+                self.parameters["hardware"]["verilog_parameters"] = {
+                    "IN_WIDTH": self.parameters["common"]["args"][arg_name][
+                        "precision"
+                    ][0],
+                    "IN_FRAC_WIDTH": self.parameters["common"]["args"][arg_name][
+                        "precision"
+                    ][1],
+                    "IN_SIZE": 1,
+                    "IN_DEPTH": math.prod(
+                        self.parameters["common"]["args"][arg_name]["size"]
+                    ),
+                    "OUT_WIDTH": self.parameters["common"]["results"]["data_out"][
+                        "precision"
+                    ][0],
+                    "OUT_FRAC_WIDTH": self.parameters["common"]["results"]["data_out"][
+                        "precision"
+                    ][1],
+                    "OUT_SIZE": 1,
+                }
+
+                # Add other parameters
+                for arg, param in args_param.items():
+                    if arg == arg_name:
+                        continue
+                    # NA means not used
+                    if args_param[arg]["type"] == "NA":
+                        continue
+                    assert (
+                        args_param[arg]["type"] == "fixed"
+                    ), f"Unsupported {arg} type. Only fixed is supported. {self.node}"
+                    cap_arg = arg.upper()
+                    self.parameters["hardware"]["verilog_parameters"][
+                        f"{cap_arg}_SIZE"
+                    ] = math.prod(args_param[arg]["size"])
+                    self.parameters["hardware"]["verilog_parameters"][
+                        f"{cap_arg}_WIDTH"
+                    ] = args_param[arg]["precision"][0]
+                    self.parameters["hardware"]["verilog_parameters"][
+                        f"{cap_arg}_FRAC_WIDTH"
+                    ] = args_param[arg]["precision"][1]
+                for result, param in results_param.items():
+                    if result == "data_out":
+                        continue
+                    assert (
+                        results_param[result]["type"] == "fixed"
+                    ), "Unsupported result type. Only fixed is supported."
+                    cap_result = result.upper()
+                    self.parameters["hardware"]["verilog_parameters"][
+                        f"{cap_result}_SIZE"
+                    ] = math.prod(results_param[result]["size"])
+                    self.parameters["hardware"]["verilog_parameters"][
+                        f"{cap_result}_WIDTH"
+                    ] = results_param[result]["precision"][0]
+                    self.parameters["hardware"]["verilog_parameters"][
+                        f"{cap_result}_FRAC_WIDTH"
+                    ] = results_param[result]["precision"][1]
+            elif args_param[arg_name]["type"] == "float":
+                self.parameters["hardware"]["verilog_parameters"] = {
+                    "IN_WIDTH": self.parameters["common"]["args"][arg_name][
+                        "precision"
+                    ][0],
+                    "IN_SIZE": 1,
+                    "IN_DEPTH": math.prod(
+                        self.parameters["common"]["args"][arg_name]["size"]
+                    ),
+                    "OUT_WIDTH": self.parameters["common"]["results"]["data_out"][
+                        "precision"
+                    ][0],
+                    "OUT_SIZE": 1,
+                }
+
+                # Add other parameters
+                for arg, param in args_param.items():
+                    if arg == arg_name:
+                        continue
+                    # NA means not used
+                    if args_param[arg]["type"] == "NA":
+                        continue
+                    assert (
+                        args_param[arg]["type"] == "float"
+                    ), f"Unsupported {arg} type. Only float is supported. {self.node}"
+                    cap_arg = arg.upper()
+                    self.parameters["hardware"]["verilog_parameters"][
+                        f"{cap_arg}_SIZE"
+                    ] = math.prod(args_param[arg]["size"])
+                    self.parameters["hardware"]["verilog_parameters"][
+                        f"{cap_arg}_WIDTH"
+                    ] = args_param[arg]["precision"][0]
+                for result, param in results_param.items():
+                    if result == "data_out":
+                        continue
+                    assert (
+                        results_param[result]["type"] == "float"
+                    ), "Unsupported result type. Only float is supported."
+                    cap_result = result.upper()
+                    self.parameters["hardware"]["verilog_parameters"][
+                        f"{cap_result}_SIZE"
+                    ] = math.prod(results_param[result]["size"])
+                    self.parameters["hardware"]["verilog_parameters"][
+                        f"{cap_result}_WIDTH"
+                    ] = results_param[result]["precision"][0]
+            else:
+                assert False, "Unsupported types. {} of {} for {}".format(
+                    args_param[arg_name]["type"], arg_name, self.node
+                )
 
         if parameters:
             self._update_hardware_parameters_other(parameters)
 
     def _update_hardware_parameters_other(self, parameters):
         if parameters is None:
-            for pre_node in self.node.all_input_nodes:
-                if pre_node.op != "call_module" and pre_node.op != "call_function":
-                    continue
-                in_size = pre_node.meta.parameters["hardware"]["verilog_parameters"][
-                    "OUT_SIZE"
-                ]
-                self.parameters["hardware"]["verilog_parameters"]["IN_SIZE"] = in_size
-                total_size = math.prod(
-                    self.parameters["common"]["args"]["data_in"]["size"]
-                )
-                assert total_size % in_size == 0
-                self.parameters["hardware"]["verilog_parameters"]["IN_DEPTH"] = int(
-                    total_size / in_size
-                )
+            arg_count = len(self.node.all_input_nodes)
+            print(self.node)
+            if arg_count == 1:
+                for pre_node in self.node.all_input_nodes:
+                    in_size = pre_node.meta.parameters["hardware"][
+                        "verilog_parameters"
+                    ]["OUT_SIZE"]
+                    # logger.debug(f"Setting in_size = {in_size} for {self.node}")
+                    self.parameters["hardware"]["verilog_parameters"][
+                        "IN_SIZE"
+                    ] = in_size
+                    total_size = math.prod(
+                        self.parameters["common"]["args"]["data_in"]["size"]
+                    )
+                    assert (
+                        total_size % in_size == 0
+                    ), "Size mismatch: {} % {} != 0 {}".format(
+                        total_size, in_size, self.node
+                    )
+                    self.parameters["hardware"]["verilog_parameters"]["IN_DEPTH"] = int(
+                        total_size / in_size
+                    )
+            else:
+                for i in range(0, arg_count):
+                    arg_name = f"data_in_{i}"
+                    pre_node = self.parameters["common"]["args"][arg_name]["from"]
+                    in_size = pre_node.meta.parameters["hardware"][
+                        "verilog_parameters"
+                    ]["OUT_SIZE"]
+                    # logger.debug(f"Setting in_size = {in_size} for {self.node}")
+                    self.parameters["hardware"]["verilog_parameters"][
+                        f"IN_0_SIZE"
+                    ] = in_size
+                    total_size = math.prod(
+                        self.parameters["common"]["args"][arg_name]["size"]
+                    )
+                    assert (
+                        total_size % in_size == 0
+                    ), "Size mismatch: {} % {} != 0 {}".format(
+                        total_size, in_size, self.node
+                    )
+                    self.parameters["hardware"]["verilog_parameters"][
+                        "IN_0_DEPTH"
+                    ] = int(total_size / in_size)
         else:
+            # TODO: multi-inputs?
             for param, value in parameters.items():
                 self.parameters["hardware"]["verilog_parameters"][param] = value
                 if param == "IN_SIZE":
@@ -1040,6 +1127,7 @@ actual keys: {input_keys}"""
                     self.parameters["hardware"]["verilog_parameters"]["IN_DEPTH"] = int(
                         in_size / value
                     )
+                    # logger.debug(f"Setting in_size = {in_size} for {self.node}")
                 if param == "IN_DEPTH":
                     in_size = math.prod(
                         self.parameters["common"]["args"]["data_in"]["size"]
@@ -1048,6 +1136,9 @@ actual keys: {input_keys}"""
                     self.parameters["hardware"]["verilog_parameters"]["IN_SIZE"] = int(
                         in_size / value
                     )
+                    # logger.debug(
+                    #     f"Setting in_size = {int(in_size/value)} for {self.node}"
+                    # )
 
     def _verify_parameters_other(self):
         return

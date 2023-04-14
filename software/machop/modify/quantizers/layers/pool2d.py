@@ -113,6 +113,11 @@ class _AdaptiveAvgPool2dBase(torch.nn.AdaptiveAvgPool2d):
     _required_config_keys = None
     _optional_config_keys = None
 
+    def __init__(self, output_size) -> None:
+        if isinstance(output_size, int):
+            output_size = (output_size, output_size)
+        super().__init__(output_size)
+
     def forward(self, x: Tensor) -> Tensor:
         if self.bypass:
             return F.adaptive_avg_pool2d(input=x, output_size=self.output_size)
@@ -124,6 +129,7 @@ class _AdaptiveAvgPool2dBase(torch.nn.AdaptiveAvgPool2d):
             return F.avg_pool2d(x, **pool2d_kwargs)
 
     def _get_pool2d_kwargs(self, x_shape):
+
         h_in_new = ceil(x_shape[-2] / self.output_size[0]) * self.output_size[0]
         w_in_new = ceil(x_shape[-1] / self.output_size[1]) * self.output_size[1]
         f_padding = (0, h_in_new - x_shape[-2], 0, w_in_new - x_shape[-1])

@@ -50,12 +50,12 @@ def balance_rate(verilog_emitter):
     assert len(nodes_in) == 1
     assert len(nodes_out) == 1
 
-    input_size = {"IN_SIZE": get_in_size(verilog_emitter.target, nodes_in[0])}
+    # input_size = {"IN_SIZE": get_in_size(verilog_emitter.target, nodes_in[0])}
+    input_size = {"IN_SIZE": 1}
 
     while True:
         next_nodes_in = []
         for node in nodes_in:
-            logger.debug(node.name + str(input_size))
             node.meta.update_hardware_parameters(parameters=input_size)
             for next_node, x in node.users.items():
                 if next_node.op != "output":
