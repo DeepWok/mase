@@ -18,8 +18,7 @@ module hs2bram_cast #(
 
     // Consumer state
     output out_start,
-    input  out_ready,
-    input  out_done
+    input  out_ready
 );
 
   logic we0;
@@ -48,9 +47,8 @@ module hs2bram_cast #(
   always_ff @(posedge clk)
     if (rst) address_counter <= 0;
     else begin
+      if (state == 2) address_counter <= 0;
       if (state == 1) address_counter <= address_counter + 1;
-      // Ready for the next iteration 
-      if (state == 3) address_counter <= 0;
     end
 
   // data_counter
@@ -71,7 +69,6 @@ module hs2bram_cast #(
   // 0: waiting for the next input 
   // 1: processing the current input - which might take multiple cycles
   // 2: hold valid data and wait for the consumer to be ready
-  // 3: serve as source for the consumer 
   always_ff @(posedge clk) begin
     if (rst) state <= 0;
     else begin
@@ -84,10 +81,8 @@ module hs2bram_cast #(
         else if (data_counter == IN_SIZE - 1) state <= 0;
         /* verilator lint_on WIDTH */
       end
-      // Wait until the consummer is ready 
-      if (state == 2 && out_ready) state <= 3;
-      // Ready for the next iteration 
-      if (state == 3 && out_done) state <= 0;
+      // Wait until the consummer is ready for the next iteration 
+      if (state == 2 && out_ready) state <= 0;
     end
   end
 

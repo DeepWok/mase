@@ -18,7 +18,8 @@ module bram2hs_cast #(
     output                       data_out_ready,
 
     // Producer state
-    input in_done
+    input in_done,
+    output in_ce
 );
 
   logic [OUT_WIDTH - 1:0] q0;
@@ -63,6 +64,7 @@ module bram2hs_cast #(
 
   assign address1 = address_counter;
   assign data_out_valid = (state == 2);
+  assign in_ce = (state == 0);
 
   // The state indicates the state of the bram.
   // 0: waiting for the next input 

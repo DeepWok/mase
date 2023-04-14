@@ -356,6 +356,63 @@ class MaseVerilogEmitter(MaseGraph):
 
         load_path = os.path.join(tv_dir, "sw_data_in.dat")
         emit_data_in_tb_dat(self.nodes_in[0], hw_data_in, load_path)
+
+        load_path = os.path.join(tv_dir, "sw_data_out.dat")
+        emit_data_out_tb_dat(self.nodes_out[0], hw_data_out, load_path)
+
+        in_type = self.nodes_in[0].meta.parameters["common"]["args"]["data_in"]["type"]
+        in_width = self.nodes_in[0].meta.parameters["common"]["args"]["data_in"][
+            "precision"
+        ][0]
+        in_frac_width = self.nodes_in[0].meta.parameters["common"]["args"]["data_in"][
+            "precision"
+        ][1]
+
+        input_gen = InputGenerator(
+            model_name=self.args.model,
+            task=self.args.task,
+            dataset_name=self.args.dataset,
+            quant_name=in_type,
+            # TODO precision format needs to synchronised
+            quant_config_kwargs={"width": in_width, "frac_width": in_frac_width},
+            trans_num=trans_num,
+        )
+        sw_data_in, hw_data_in = input_gen()
+        sw_data_out = [self.quantized_model(trans) for trans in sw_data_in]
+
+        out_type = self.nodes_out[0].meta.parameters["common"]["results"]["data_out"][
+            "type"
+        ]
+        out_width = self.nodes_out[0].meta.parameters["common"]["results"]["data_out"][
+            "precision"
+        ][0]
+        out_frac_width = self.nodes_out[0].meta.parameters["common"]["results"][
+            "data_out"
+        ]["precision"][1]
+
+        # TODO: Make out_type as input to support casting to any type
+        hw_data_out = [
+            integer_quantizer_for_hw(trans, width=out_width, frac_width=out_frac_width)
+            .squeeze(0)
+            .to(torch.int)
+            for trans in sw_data_out
+        ]
+
+        # TODO: for now
+        for i, trans in enumerate(hw_data_in):
+            hw_data_in[i] = torch.flatten(trans).tolist()
+        for i, trans in enumerate(hw_data_out):
+            hw_data_out[i] = torch.flatten(trans).tolist()
+
+        assert (
+            len(hw_data_in) == trans_num
+        ), f"Mismatched transaction number, expect = {trans_num}, but got {len(hw_data_in)}"
+        assert (
+            len(hw_data_out) == trans_num
+        ), f"Mismatched transaction number, expect = {trans_num}, but got {len(hw_data_out)}"
+
+        load_path = os.path.join(tv_dir, "sw_data_in.dat")
+        emit_data_in_tb_dat(self.nodes_in[0], hw_data_in, load_path)
         load_path = os.path.join(tv_dir, "data_in_stream_size.dat")
         emit_data_in_stream_size_tb_dat(self.nodes_in[0], hw_data_in, load_path)
 
@@ -619,6 +676,7 @@ logic {node_name}_start;
 logic {node_name}_done;
 logic {node_name}_idle;
 logic {node_name}_ready;
+logic {node_name}_ce;
 """
 
         # Input signals
@@ -635,8 +693,13 @@ logic {node_name}_ready;
             cap_key = v2p(key)
             width = self.verilog_parameters[f"{node_name}_{cap_key}_WIDTH"]
             size = self.verilog_parameters[f"{node_name}_{cap_key}_SIZE"]
-            debug_info = f"// [{width}][{size}]"
-            a_width = math.ceil(math.log2(size))
+            if key != "data_in":
+                debug_info = f"// [{width}][{size}]"
+                a_width = math.ceil(math.log2(size))
+            else:
+                depth = self.verilog_parameters[f"{node_name}_{cap_key}_DEPTH"]
+                debug_info = f"// [{width}][{depth*size}]"
+                a_width = math.ceil(math.log2(depth * size))
             signals += f"""{debug_info}
 logic [{node_name}_{cap_key}_WIDTH-1:0]  {node_name}_{key}_q0;
 logic [{a_width}-1:0]                    {node_name}_{key}_address0;
@@ -775,7 +838,11 @@ logic                                    {node_name}_{key}_we0;
             cap_key = v2p(key)
             width = self.verilog_parameters[f"{node_name}_{cap_key}_WIDTH"]
             size = self.verilog_parameters[f"{node_name}_{cap_key}_SIZE"]
-            debug_info = f"// [{width}][{size}]"
+            if key != "data_in":
+                debug_info = f"// [{width}][{size}]"
+            else:
+                depth = self.verilog_parameters[f"{node_name}_{cap_key}_DEPTH"]
+                debug_info = f"// [{width}][{depth*size}]"
             signals += f"""
 .{key}_address0({node_name}_{key}_address0), {debug_info}
 .{key}_ce0({node_name}_{key}_ce0),
@@ -804,6 +871,7 @@ logic                                    {node_name}_{key}_we0;
 .ap_idle({node_name}_idle),
 .ap_ready({node_name}_ready),
 .ap_done({node_name}_done),
+.ap_ce({node_name}_ce),
 {signals}
 );
 """
@@ -1044,19 +1112,20 @@ fixed_cast #(
 
         to_node_name = vf(to_node.name)
         from_node_name = vf(from_node.name)
+        depth = self.verilog_parameters[f"{to_node_name}_IN_DEPTH"]
         size = self.verilog_parameters[f"{to_node_name}_IN_SIZE"]
         width = self.verilog_parameters[f"{to_node_name}_IN_WIDTH"]
         if is_start:
             in_size = size
         else:
             in_size = self.verilog_parameters[f"{from_node_name}_OUT_SIZE"]
-        a_width = math.ceil(math.log2(size))
+        a_width = math.ceil(math.log2(depth * size))
         return f"""
 {data_cast}
 hs2bram_cast #(
 .IN_SIZE({from_param}_SIZE), // = {in_size}
 .IN_WIDTH({to_param}_WIDTH), // = {width}
-.ADDR_RANGE({to_param}_SIZE), // = {size}
+.ADDR_RANGE({to_param}_DEPTH*{to_param}_SIZE), // = {depth*size}
 .ADDR_WIDTH({a_width})
 ) {from_name}_{to_name}_hs2bram_cast (
 .data_in_ready({from_name}_ready),
@@ -1067,7 +1136,6 @@ hs2bram_cast #(
 .q0({to_name}_q0),
 .out_start({to_node_name}_start),
 .out_ready({to_node_name}_ready),
-.out_done({to_node_name}_done),
 .clk(clk),
 .rst(rst)
 );
@@ -1165,7 +1233,7 @@ bram2hs_cast #(
 .OUT_WIDTH({to_param}_WIDTH), // = {width}
 .ADDR_RANGE({to_param}_SIZE), // = {size}
 .ADDR_WIDTH({a_width})
-) {from_name}_{to_name}_hs2bram_cast (
+) {from_name}_{to_name}_bram2hs_cast (
 .address0({from_name}_address0),
 .ce0({from_name}_ce0),
 .we0({from_name}_we0),
@@ -1174,6 +1242,7 @@ bram2hs_cast #(
 .data_out({to_name}),
 .data_out_valid({to_name}_valid),
 .in_done({from_node_name}_done),
+.in_ce({from_node_name}_ce),
 .clk(clk),
 .rst(rst)
 );
@@ -1194,26 +1263,28 @@ bram2hs_cast #(
             from_type == to_type and from_type == "fixed"
         ), "Only fixed point is supported."
         cast_name = f"{from_name}_d0"
+        packed_cast_name = cast_name
         data_cast = ""
         if from_type == "fixed" and to_type == "fixed" and from_prec != to_prec:
-            in_width = self.verilog_parameters[f"{to_param}_WIDTH"]
-            in_size = self.verilog_parameters[f"{to_param}_SIZE"]
-            out_width = self.verilog_parameters[f"{from_param}_WIDTH"]
-            out_size = self.verilog_parameters[f"{from_param}_SIZE"]
+            in_width = self.verilog_parameters[f"{from_param}_WIDTH"]
+            in_size = 1  # casting before bram, all in serial
+            out_width = self.verilog_parameters[f"{to_param}_WIDTH"]
+            out_size = 1  # casting before bram, all in serial
             debug_info_in = f"// [{in_width}][{in_size}]"
             debug_info_out = f"// [{out_width}][{out_size}]"
             cast_name = f"{from_name}_d0_cast"
+            packed_cast_name = f"{cast_name}[0]"
             data_cast = f"""// assign {cast_name}_q0 = {from_name}_d0
-logic [{from_param}_WIDTH-1:0] {cast_name} [{from_param}_SIZE-1:0];
+logic [{to_param}_WIDTH-1:0] {cast_name} [{in_size}-1:0];
 fixed_cast #(
-    .IN_SIZE({from_param}_SIZE),
+    .IN_SIZE(1),
     .IN_WIDTH({from_param}_WIDTH),
     .IN_FRAC_WIDTH({from_param}_FRAC_WIDTH),
     .OUT_WIDTH({to_param}_WIDTH),
     .OUT_FRAC_WIDTH({to_param}_FRAC_WIDTH)
 ) {from_name}_{to_name}_cast (
-    .data_in ({from_name}_d0), {debug_info_out}
-    .data_out({cast_name}) {debug_info_in}
+    .data_in ({{{from_name}_d0}}), {debug_info_in}
+    .data_out({cast_name}) {debug_info_out}
 );
 """
 
@@ -1250,27 +1321,28 @@ fixed_cast #(
 
         to_node_name = vf(to_node.name)
         from_node_name = vf(from_node.name)
+        depth = self.verilog_parameters[f"{to_node_name}_IN_DEPTH"]
         size = self.verilog_parameters[f"{to_node_name}_IN_SIZE"]
         width = self.verilog_parameters[f"{to_node_name}_IN_WIDTH"]
-        a_width = math.ceil(math.log2(size))
+        a_width = math.ceil(math.log2(depth * size))
         return f"""
 {data_cast}
 bram_cast #(
 .IN_WIDTH({to_param}_WIDTH), // = {width}
-.ADDR_RANGE({to_param}_SIZE), // = {size}
+.ADDR_RANGE({to_param}_DEPTH*{to_param}_SIZE), // = {depth*size}
 .ADDR_WIDTH({a_width})
-) {from_name}_{to_name}_hs2bram_cast (
+) {cast_name}_{to_name}_bram_cast (
 .address1({from_name}_address0),
 .ce1({from_name}_ce0),
 .we1({from_name}_we0),
-.d1({from_name}_d0),
+.d1({packed_cast_name}),
 .in_done({from_node_name}_done),
+.in_ce({from_node_name}_ce),
 .address0({to_name}_address0),
 .ce0({to_name}_ce0),
-.q0({cast_name}),
+.q0({to_name}_q0),
 .out_start({to_node_name}_start),
 .out_ready({to_node_name}_ready),
-.out_done({to_node_name}_done),
 .clk(clk),
 .rst(rst)
 );
@@ -1475,6 +1547,7 @@ set_part {self.target}
 create_clock -period 4 -name default
 config_bind -effort high
 config_compile -pipeline_loops 1
+config_interface -clock_enable
 csynth_design
 # export_design -flow syn -rtl vhdl -format ip_catalog
 """
@@ -1538,7 +1611,8 @@ csynth_design
         if not os.path.exists(hls_dir):
             os.mkdir(hls_dir)
         node_dir = os.path.join(hls_dir, node.name)
-        _create_new_dir(node_dir)
+        # JC
+        # _create_new_dir(node_dir)
 
         result = self._call_hls_flow(node, node_dir)
         queue.put(result)
