@@ -16,9 +16,9 @@ module bram_cast #(
     // Consumer state
     output out_start,
     input out_ready,
-    input out_done,
     // Producer state
-    input in_done
+    input in_done,
+    output in_ce
 );
 
   logic we0;
@@ -30,21 +30,17 @@ module bram_cast #(
   // The state indicates the state of the bram.
   // 0: serve as sink for the producer
   // 1: hold valid data and wait for the consumer to be ready
-  // 2: serve as source for the consumer 
   logic [1:0] state;
   always_ff @(posedge clk) begin
     if (rst) state <= 0;
     else begin
-      if (in_done) begin
-        if (out_ready) state <= 2;
-        else state <= 1;
-      end
-      if (state == 1 && out_ready) state <= 2;
-      if (out_done) state <= 0;
+      if (in_done && state == 0) state <= 1;
+      if (state == 1 && out_ready) state <= 0;
     end
   end
 
-  assign out_start = (state == 2);
+  assign in_ce = (state == 0);
+  assign out_start = (state == 1);
 
   ram_block #(
       .DWIDTH  (IN_WIDTH),

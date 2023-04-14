@@ -155,6 +155,7 @@ class MaseMetadata:
         # TODO to remove the following:
         if self.parameters["hardware"]["is_implicit"]:
             return
+
         # Verify common parameters
         arg_count = len(self.node.all_input_nodes)
         for i in range(0, arg_count):
@@ -1078,7 +1079,6 @@ actual keys: {input_keys}"""
                     in_size = pre_node.meta.parameters["hardware"][
                         "verilog_parameters"
                     ]["OUT_SIZE"]
-                    # logger.debug(f"Setting in_size = {in_size} for {self.node}")
                     self.parameters["hardware"]["verilog_parameters"][
                         "IN_SIZE"
                     ] = in_size
@@ -1100,7 +1100,6 @@ actual keys: {input_keys}"""
                     in_size = pre_node.meta.parameters["hardware"][
                         "verilog_parameters"
                     ]["OUT_SIZE"]
-                    # logger.debug(f"Setting in_size = {in_size} for {self.node}")
                     self.parameters["hardware"]["verilog_parameters"][
                         f"IN_0_SIZE"
                     ] = in_size
@@ -1127,7 +1126,7 @@ actual keys: {input_keys}"""
                     self.parameters["hardware"]["verilog_parameters"]["IN_DEPTH"] = int(
                         in_size / value
                     )
-                    # logger.debug(f"Setting in_size = {in_size} for {self.node}")
+                    
                 if param == "IN_DEPTH":
                     in_size = math.prod(
                         self.parameters["common"]["args"]["data_in"]["size"]
@@ -1136,9 +1135,7 @@ actual keys: {input_keys}"""
                     self.parameters["hardware"]["verilog_parameters"]["IN_SIZE"] = int(
                         in_size / value
                     )
-                    # logger.debug(
-                    #     f"Setting in_size = {int(in_size/value)} for {self.node}"
-                    # )
+
 
     def _verify_parameters_other(self):
         return
