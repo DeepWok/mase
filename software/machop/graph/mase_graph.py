@@ -99,20 +99,10 @@ class MaseGraph:
         self.synth_mode = synth_mode
         self.args = args
         self.fx_graph = self._init_fx_graph()
-        print(self.fx_graph)
         # This has to be before init parameters
         self.nodes_in = _get_input_nodes(self.fx_graph)
         self.nodes_out = _get_output_nodes(self.fx_graph)
-        for node in self.fx_graph.nodes:
-            print(
-                "{} : {}".format(
-                    node.name, node.meta.parameters["hardware"]["is_implicit"]
-                )
-            )
         self._init_parameters(common_param=common_param)
-        for node in self.fx_graph.nodes:
-            print(node.meta.type)
-        breakpoint()
 
     def _init_fx_graph(self):
         model = self.model
