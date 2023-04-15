@@ -115,6 +115,7 @@ class MaseGraph:
     """
 
     implicit_nodes = {"size", "view"}
+    nonsynthesizable_nodes = {"assert"}
 
     def __init__(
         self,
