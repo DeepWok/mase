@@ -13,12 +13,19 @@ def _get_next_available_dtype_info(node: Node):
         else:
             # breakpoint()
             if "data_in" in next_node.meta["common"]["args"]:
-                if next_node.meta["common"]["args"]["data_in"]["type"] != "NA":
+                if (
+                    next_node.meta["common"]["args"]["data_in"]["type"] != "NA"
+                    and next_node.meta["common"]["args"]["data_in"]["precision"] != "NA"
+                ):
                     return next_node.meta["common"]["args"]["data_in"]
                 else:
                     return _get_next_available_dtype_info(next_node)
             elif "data_in_0" in next_node.meta["common"]["args"]:
-                if next_node.meta["common"]["args"]["data_in_0"]["type"] != "NA":
+                if (
+                    next_node.meta["common"]["args"]["data_in_0"]["type"] != "NA"
+                    and next_node.meta["common"]["args"]["data_in_0"]["precision"]
+                    != "NA"
+                ):
                     return next_node.meta["common"]["args"]["data_in_0"]
                 else:
                     return _get_next_available_dtype_info(next_node)
@@ -38,7 +45,10 @@ def _get_prev_available_dtype_info(node: Node):
         if prev_node.op in ("placeholder", "get_attr", "output"):
             return _get_next_available_dtype_info(prev_node)
         else:
-            if prev_node.meta["common"]["results"]["data_out"]["type"] != "NA":
+            if (
+                prev_node.meta["common"]["results"]["data_out"]["type"] != "NA"
+                and prev_node.meta["common"]["results"]["data_out"]["precision"] != "NA"
+            ):
                 return prev_node.meta["common"]["results"]["data_out"]
             else:
                 return _get_prev_available_dtype_info(prev_node)

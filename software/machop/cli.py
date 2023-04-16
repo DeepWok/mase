@@ -13,6 +13,7 @@ from argparse import ArgumentParser
 from copy import deepcopy
 from pprint import pprint
 
+import ipdb
 import numpy as np
 import torch
 
@@ -20,6 +21,10 @@ from .dataset import MyDataModule, available_datasets, get_dataset_info
 from .estimate_sw import run_estimator
 from .evaluate_hw.mase_hardware_evaluator import get_synthesis_results
 from .graph.dummy_inputs import get_dummy_inputs
+from .graph.interpreter_for_synthesis import (
+    create_and_save_common_metadata,
+    optimize_sw_model_for_synthesis,
+)
 from .graph.mase_graph import MaseGraph
 from .models import (
     manual_nlp_models,
@@ -28,7 +33,6 @@ from .models import (
     nlp_models,
     vision_models,
 )
-from .modify.interpret_for_synthesis import create_and_save_common_metadata
 from .modify.modifier import Modifier
 from .session import search, test, train, validate
 from .synthesize.mase_verilog_emitter import MaseVerilogEmitter
@@ -416,7 +420,8 @@ class Machop:
         for exc in [KeyboardInterrupt, FileNotFoundError]:
             if issubclass(etype, exc):
                 sys.exit(-1)
-        pdb.post_mortem(etb)
+        # pdb.post_mortem(etb)
+        ipdb.post_mortem(etb)
 
     # Main process
     def run(self):
@@ -753,34 +758,34 @@ class Machop:
         self.modified_model_for_hw_gen = deepcopy(self.model)
         logger.info(f"Modifying model {args.model!r} for hw-gen...")
 
-        dummy_inputs = get_dummy_inputs(
-            model_name=args.model,
-            task=args.task,
-            model=self.modified_model_for_hw_gen["model"]
+        model_to_be_modified = (
+            self.modified_model_for_hw_gen["model"]
             if args.model in nlp_models
-            else self.modified_model_for_hw_gen,
+            else self.modified_model_for_hw_gen
         )
+
+        dummy_inputs = get_dummy_inputs(
+            model_name=args.model, task=args.task, model=model_to_be_modified
+        )
+
+        model_to_be_modified = optimize_sw_model_for_synthesis(
+            model=model_to_be_modified, dummy_inputs=dummy_inputs
+        )
+
         modifier_kwargs = {
-            "model": self.modified_model_for_hw_gen["model"]
-            if args.model in nlp_models
-            else self.modified_model_for_hw_gen,
+            "model": model_to_be_modified,
             "config_path": args.modify_sw_config,
             "dummy_inputs_for_fx": dummy_inputs,
             "save_dir": os.path.join(self.output_dir_sw, "modify-sw"),
         }
-        # Modifier.create_empty_config_template(
-        #     self.modified_model_for_hw_gen,
-        #     dummy_inputs=dummy_inputs,
-        #     save_path=os.path.join(
-        #         self.output_dir_sw, "modify-sw", "./modify-sw_template.toml"
-        #     ),
-        # )
+
         m = Modifier(**modifier_kwargs)
-        m.modify()
+        graph_module = m.modify()
+        # remove_nonsynthesizable_nodes(m.graph)
         if args.model in nlp_models:
-            self.modified_model_for_hw_gen["model"] = m.graph_module
+            self.modified_model_for_hw_gen["model"] = graph_module
         else:
-            self.modified_model_for_hw_gen = m.graph_module
+            self.modified_model_for_hw_gen = graph_module
         logger.info("Modify-sw-for-hw-gen is completed")
 
     def interpret_for_synthesis(self):

@@ -1,19 +1,14 @@
-import glob
 import logging
 import os
-import shutil
-import time
 
 import toml
 import torch
 import torch.fx
-from torch import nn
-from torch.fx import symbolic_trace
 
 from .dummy_inputs import get_dummy_inputs
+from .interpreter_for_synthesis import optimize_sw_model_for_synthesis
 from .mase_metadata import MaseMetadata
-from .mase_tracer import mase_symbolic_trace
-from .utils import get_module_by_name, vf
+from .utils import vf
 
 logger = logging.getLogger(__name__)
 
@@ -115,7 +110,7 @@ class MaseGraph:
     """
 
     implicit_nodes = {"size", "view"}
-    nonsynthesizable_nodes = {"assert"}
+    nonsynthesizable_nodes = {torch._assert}
 
     def __init__(
         self,
@@ -143,9 +138,12 @@ class MaseGraph:
     def _init_fx_graph(self):
         model = self.model
         dummy_inputs = get_dummy_inputs(
-            model_name=self.args.model, task=self.args.task, model=self.model
+            model_name=self.args.model, task=self.args.task, model=model
         )
-        graph_module = mase_symbolic_trace(model, dummy_inputs)
+        # graph_module = mase_symbolic_trace(model, dummy_inputs)
+        graph_module = optimize_sw_model_for_synthesis(
+            model=model, dummy_inputs=dummy_inputs
+        )
         fx_graph = graph_module.graph
         for node in fx_graph.nodes:
             node.meta = MaseMetadata(
@@ -174,7 +172,13 @@ class MaseGraph:
                 )
             loaded_toml_meta = toml.load(load_name)
             for node in self.fx_graph.nodes:
-                if node.op == "call_module" or node.op == "call_function":
+                if (
+                    node.op == "call_module"
+                    or node.op == "call_function"
+                    or node.op == "call_method"
+                ):
+                    if node.target in self.nonsynthesizable_nodes:
+                        continue
                     parameters = loaded_toml_meta[node.name]
                     # !: assign toml to node.meta.parameter
                     _list_to_tuple(parameters)
