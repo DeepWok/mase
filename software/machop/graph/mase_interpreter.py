@@ -7,8 +7,9 @@
 
 from collections import defaultdict
 from logging import getLogger
-from typing import Any, Optional
+from typing import Any, Callable, Optional, Tuple
 
+import torch
 from torch.fx import Interpreter
 from torch.fx.graph_module import GraphModule
 from torch.fx.node import Node
@@ -16,77 +17,45 @@ from torch.fx.node import Node
 logger = getLogger(__name__)
 
 
-def dummy_hook_before_call_function(node, function, args, kwargs):
-    logger.debug(
-        f"""
-    node: {node},
-    meta: {node.meta}
-    function: {function},
-    args: {args},
-    kwargs: {kwargs}
+def _dummy_hook_before_forward(
+    graph_module: GraphModule,
+    fetch_module_by_target: Optional[Callable] = None,
+):
     """
-    )
-
-
-def dummy_hook_before_call_module(node, module, args, kwargs):
-    logger.debug(
-        f"""
-    node: {node}
-    meta: {node.meta},
-    module: {module},
-    args: {args},
-    kwargs: {kwargs}
+    `fetch_module_by_target` is provided by MaseInterpreter
     """
-    )
+    return graph_module
 
 
-def dummy_hook_before_call_method(node, method_name, args, kwargs):
-    logger.debug(
-        f"""
-    node: {node}
-    meta: {node.meta},
-    method_name: {method_name},
-    args: {args},
-    kwargs: {kwargs}
-    """
-    )
+def _dummy_hook_before_call_function(node: Node, function: Callable, args, kwargs):
+    """ """
 
 
-def dummy_hook_after_call_function(node, function, output):
-    logger.debug(
-        f"""
-    node: {node},
-    meta: {node.meta},
-    function: {function},
-    output: {output}
-    """
-    )
+def _dummy_hook_before_call_module(node: Node, module: torch.nn.Module, args, kwargs):
+    """ """
 
 
-def dummy_hook_after_call_module(node, module, output):
-    logger.debug(
-        f"""
-    node: {node},
-    meta: {node.meta},
-    module: {module},
-    output: {output}
-    """
-    )
+def _dummy_hook_before_call_method(node: Node, method_name: str, args, kwargs):
+    """ """
 
 
-def dummy_hook_after_call_method(node, method_name, output):
-    logger.debug(
-        f"""
-    node: {node},
-    meta: {node.meta},
-    method_name: {method_name},
-    output: {output}
-    """
-    )
+def _dummy_hook_after_call_function(node: Node, function: Callable, output):
+    """ """
 
 
-def dummy_hook_after_forward(graph_module: GraphModule, fetch_module_by_target):
-    logger.debug(f"Dummy hook after interpretation")
+def _dummy_hook_after_call_module(node: Node, module: torch.nn.Module, output):
+    """ """
+
+
+def _dummy_hook_after_call_method(node: Node, method_name: str, output):
+    """ """
+
+
+def _dummy_hook_after_forward(
+    graph_module: GraphModule, fetch_module_by_target: Optional[Callable] = None
+):
+    """ """
+    return graph_module
 
 
 def clear_node_metadata_software(graph_module: GraphModule):
@@ -120,25 +89,37 @@ def clear_node_metadata_common(graph_module: GraphModule):
 
 
 class MaseInterpreter(Interpreter):
+    """
+    ---
+    Hook function signature requirement:
+    - hooks_before/after_forward should be a list of function receiving (graph_module, fetch_module_by_target), where `fetch_module_by_target` returns module instances given "call_function" node's node.target
+    - hook_before_call_function/module/method should receive params (node, function/module/method_name, args, kwargs)
+    - hook_after_call_function/module/method should receive params (node, function/module/method_name, output)
+    """
+
     def __init__(
         self,
         graph_module: GraphModule,
-        hook_before_call_function=dummy_hook_before_call_function,
-        hook_after_call_function=dummy_hook_after_call_function,
-        hook_before_call_module=dummy_hook_before_call_module,
-        hook_after_call_module=dummy_hook_after_call_module,
-        hook_before_call_method=dummy_hook_before_call_method,
-        hook_after_call_method=dummy_hook_after_call_method,
-        hook_after_forward=dummy_hook_after_forward,
+        hooks_before_forward: Tuple[Callable] = (_dummy_hook_before_forward,),
+        hook_before_call_function: Callable = _dummy_hook_before_call_function,
+        hook_after_call_function: Callable = _dummy_hook_after_call_function,
+        hook_before_call_module: Callable = _dummy_hook_before_call_module,
+        hook_after_call_module: Callable = _dummy_hook_after_call_module,
+        hook_before_call_method: Callable = _dummy_hook_before_call_method,
+        hook_after_call_method: Callable = _dummy_hook_after_call_method,
+        hooks_after_forward: Tuple[Callable] = (_dummy_hook_after_forward,),
         garbage_collect_values: bool = True,
     ):
         """
         ---
         Hook function signature requirement:
-        - hook_before_call_function/module/method should accept params (meta, function/module, args, kwargs)
-        - hook_before_call_function/module/method should accept params (meta, function/module, output)
+        - hooks_before/after_forward should be a list of function receiving (graph_module, fetch_module_by_target), where `fetch_module_by_target` returns module instances given "call_function" node's node.target
+        - hook_before_call_function/module/method should receive params (node, function/module/method_name, args, kwargs)
+        - hook_after_call_function/module/method should receive params (node, function/module/method_name, output)
         """
         super().__init__(graph_module, garbage_collect_values)
+
+        self.hooks_before_forward = hooks_before_forward
 
         self.hook_before_call_function = hook_before_call_function
         self.hook_after_call_function = hook_after_call_function
@@ -149,7 +130,7 @@ class MaseInterpreter(Interpreter):
         self.hook_before_call_method = hook_before_call_method
         self.hook_after_call_method = hook_after_call_method
 
-        self.hook_after_forward = hook_after_forward
+        self.hooks_after_forward = hooks_after_forward
 
     def run_node(self, n: Node) -> Any:
         with self._set_current_node(n):
@@ -189,13 +170,38 @@ class MaseInterpreter(Interpreter):
             else:
                 return getattr(self, n.op)(n.target, args, kwargs)
 
-    def forward_to_interpret(self, *args):
+    def interpret_before_forward(self) -> GraphModule:
+        for hook in self.hooks_before_forward:
+            self.module = hook(
+                graph_module=self.module, fetch_module_by_target=self.fetch_attr
+            )
+            assert isinstance(
+                self.module, GraphModule
+            ), f"hook {hook} didn't return a graph module"
+        return self.module
+
+    def interpret_after_forward(self) -> GraphModule:
+        for hook in self.hooks_after_forward:
+            hook(graph_module=self.module, fetch_module_by_target=self.fetch_attr)
+            assert isinstance(
+                self.module, GraphModule
+            ), f"hook {hook} didn't return a graph module"
+        return self.module
+
+    def interpret_without_forward(self) -> GraphModule:
         """
-        Takes a model input, run forward and trigger hook functions to update Node.meta
+        Traverse graph to run pass assigned both before and after forward propagation. No input args and this no forward propagation
+        """
+        self.module = self.interpret_before_forward()
+        self.module = self.interpret_after_forward()
+        return self.module
+
+    def interpret_with_forward(self, *args) -> GraphModule:
+        """
+        Takes a model input, run pass before forward, during forward, and after forward
         """
         assert len(args) > 0, "Input must be provided for forward_to_interpretation"
+        self.module = self.interpret_before_forward()
         outputs = self.run(*args)  # forward
-        self.hook_after_forward(
-            graph_module=self.module, fetch_module_by_target=self.fetch_attr
-        )  # hook after forward
-        return outputs
+        self.module = self.interpret_after_forward()
+        return self.module

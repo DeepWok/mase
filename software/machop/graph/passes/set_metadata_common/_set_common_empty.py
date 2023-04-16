@@ -44,6 +44,7 @@ def _add_empty_common_args(meta, *arg_names):
             "precision_format": "NA",
             "size": "NA",
             "from": "NA",
+            "is_packed": False,
         }
 
 
@@ -57,10 +58,11 @@ def _add_empty_common_results(meta, *result_names):
             "precision": "NA",
             "precision_format": "NA",
             "size": "NA",
+            "is_packed": False,
         }
 
 
-def _set_empty_metadata_before_call_function(node, function, args, kwargs):
+def _set_empty_metadata_before_call_function(node: Node, function, args, kwargs):
     node.meta = _empty_common(node.meta)
     meta = node.meta
     if function in (
@@ -70,42 +72,46 @@ def _set_empty_metadata_before_call_function(node, function, args, kwargs):
         F.hardsigmoid,
         F.silu,
         F.sigmoid,
+        F.gelu,
+        F.softmax,
+        operator.add,
+        torch.add,
+        add_integer,
+        operator.mul,
+        torch.mul,
+        operator.eq,
+        torch.eq,
+        operator.floordiv,
+        torch.floor_divide,
+        torch.cat,
+        torch.concat,
+        torch.unbind,
+        torch.mean,
+        torch.matmul,
+        torch.bmm,
+        matmul_integer,
+        bmm_integer,
+        torch.flatten,
+        torch.reshape,
+        torch.transpose,
+        torch.permute,
+        F.dropout,
+        F.dropout1d,
+        F.dropout2d,
+        F.dropout3d,
+        getattr,
+        operator.getitem,
+        stochastic_depth,
+        torch._assert,
     ):
-        _add_empty_common_args(meta, "data_in")
-        _add_empty_common_results(meta, "data_out")
-    elif function in (F.softmax,):
-        _add_empty_common_args(meta, "data_in")
-        _add_empty_common_results(meta, "data_out")
-    elif function in (operator.add, torch.add, add_integer):
-        _add_empty_common_args(meta, "data_in_0", "data_in_1")
-        _add_empty_common_results(meta, "data_out")
-    elif function in (operator.mul, torch.mul):
-        _add_empty_common_args(meta, "data_in_0", "data_in_1")
-        _add_empty_common_results(meta, "data_out")
-    elif function in (torch.matmul, torch.bmm, matmul_integer, bmm_integer):
-        _add_empty_common_args(meta, "data_in_0", "data_in_1")
-        _add_empty_common_results(meta, "data_out")
-    elif function in (torch.flatten, torch.reshape, torch.transpose, torch.permute):
-        _add_empty_common_args(meta, "data_in")
-        _add_empty_common_results(meta, "data_out")
-    elif function in (F.dropout, F.dropout1d, F.dropout2d, F.dropout3d):
-        _add_empty_common_args(meta, "data_in")
-        _add_empty_common_results(meta, "data_out")
-    # -----------------------------------------
-    elif function in (getattr,):
-        _add_empty_common_args(meta, "data_in")
-        if args[1] == "shape":
-            _add_empty_common_results(meta, "data_out")
+        data_in_names = []
+        if len(node.all_input_nodes) == 1:
+            data_in_names.append("data_in")
         else:
-            raise RuntimeError(f"call function getattr requires {args[1]}")
-    elif str(function) in ("<built-in function getitem>",):
-        _add_empty_common_args(meta, "data_in")
+            for i in range(len(node.all_input_nodes)):
+                data_in_names.append(f"data_in_{i}")
+        _add_empty_common_args(meta, *data_in_names)
         _add_empty_common_results(meta, "data_out")
-    # -----------------------------------------
-    elif function in (stochastic_depth,):
-        _add_empty_common_args(meta, "data_in")
-        _add_empty_common_results(meta, "data_out")
-
     else:
         _add_empty_common_args(meta, "data_in")
         _add_empty_common_results(meta, "data_out")
@@ -117,11 +123,16 @@ def _set_empty_metadata_before_call_function(node, function, args, kwargs):
 def _set_empty_metadata_before_call_module(node, module, args, kwargs):
     node.meta = _empty_common(node.meta)
     meta = node.meta
-    if isinstance(module, (nn.ReLU, nn.Hardsigmoid, nn.Hardswish, nn.SiLU, nn.Sigmoid)):
+    if isinstance(
+        module, (nn.ReLU, nn.Hardsigmoid, nn.Hardswish, nn.SiLU, nn.Sigmoid, nn.GELU)
+    ):
         _add_empty_common_args(meta, "data_in")
         _add_empty_common_results(meta, "data_out")
     elif isinstance(module, (nn.Softmax,)):
         _add_empty_common_args(meta, "data_in")
+        _add_empty_common_results(meta, "data_out")
+    elif isinstance(module, (nn.Embedding,)):
+        _add_empty_common_args(meta, "data_in", "weight")
         _add_empty_common_results(meta, "data_out")
     elif isinstance(module, (nn.Embedding,)):
         _add_empty_common_args(meta, "data_in", "weight")
@@ -172,7 +183,9 @@ def _set_empty_metadata_before_call_module(node, module, args, kwargs):
     ):
         _add_empty_common_args(meta, "data_in")
         _add_empty_common_results(meta, "data_out")
-    elif isinstance(module, (nn.Dropout, nn.Dropout1d, nn.Dropout2d, nn.Dropout3d)):
+    elif isinstance(
+        module, (nn.Dropout, nn.Dropout1d, nn.Dropout2d, nn.Dropout3d, nn.Identity)
+    ):
         _add_empty_common_args(meta, "data_in")
         _add_empty_common_results(meta, "data_out")
     else:
@@ -186,26 +199,32 @@ def _set_empty_metadata_before_call_module(node, module, args, kwargs):
 def _set_empty_metadata_before_call_method(node, method_name: str, args, kwargs):
     node.meta = _empty_common(node.meta)
     meta = node.meta
-    if method_name in ("relu", "softmax"):
-        _add_empty_common_args(meta, "data_in")
+    if method_name in (
+        "relu",
+        "softmax",
+        "add",
+        "mul",
+        "matmul",
+        "bmm",
+        "unbind",
+        "mean",
+        "view",
+        "reshape",
+        "flatten",
+        "transpose",
+        "permute",
+        "expand",
+        "contiguous",
+        "size",
+    ):
+        data_in_names = []
+        if len(node.all_input_nodes) == 1:
+            data_in_names.append("data_in")
+        else:
+            for i in range(len(node.all_input_nodes)):
+                data_in_names.append(f"data_in_{i}")
+        _add_empty_common_args(meta, *data_in_names)
         _add_empty_common_results(meta, "data_out")
-    elif method_name in ("add",):
-        _add_empty_common_args(meta, "data_in_0", "data_in_1")
-        _add_empty_common_results(meta, "data_out")
-    elif method_name in ("mul",):
-        _add_empty_common_args(meta, "data_in_0", "data_in_1")
-        _add_empty_common_results(meta, "data_out")
-    elif method_name in ("matmul", "bmm"):
-        _add_empty_common_args(meta, "data_in_0", "data_in_1")
-        _add_empty_common_results(meta, "data_out")
-    elif method_name in ("view", "reshape", "flatten", "transpose", "permute"):
-        _add_empty_common_args(meta, "data_in")
-        _add_empty_common_results(meta, "data_out")
-    elif method_name in ("contiguous",):
-        _add_empty_common_args(meta, "data_in")
-        _add_empty_common_results(meta, "data_out")
-    elif method_name in ("size",):
-        pass
     else:
         _add_empty_common_args(meta, "data_in")
         _add_empty_common_results(meta, "data_out")

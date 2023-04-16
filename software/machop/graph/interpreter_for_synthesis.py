@@ -5,8 +5,10 @@ import toml
 import torch
 from torch.fx import GraphModule
 
-from ..graph.mase_interpreter import MaseInterpreter
-from ..graph.passes.set_metadata_common import (
+from .mase_interpreter import MaseInterpreter
+from .mase_tracer import mase_symbolic_trace
+from .passes.optimize import fuse_conv_bn, remove_assert, remove_dropout
+from .passes.set_metadata_common import (
     set_and_check_metadata_common_without_forward,
     set_metadata_common_after_call_function,
     set_metadata_common_after_call_method,
@@ -15,9 +17,25 @@ from ..graph.passes.set_metadata_common import (
     set_metadata_common_before_call_method,
     set_metadata_common_before_call_module,
 )
-from ..graph.passes.utils import get_input_args
+from .passes.utils import get_input_args
 
 logger = getLogger(__name__)
+
+
+def optimize_sw_model_for_synthesis(
+    model,
+    dummy_inputs,
+):
+    model.eval()
+    graph_module = mase_symbolic_trace(model, concrete_args=dummy_inputs)
+
+    with torch.no_grad():
+        mase_interpreter = MaseInterpreter(
+            graph_module=graph_module,
+            hooks_before_forward=(remove_dropout, fuse_conv_bn, remove_assert),
+        )
+        graph_module = mase_interpreter.interpret_before_forward()
+    return graph_module
 
 
 def create_and_save_common_metadata(
@@ -32,17 +50,19 @@ def create_and_save_common_metadata(
     with torch.no_grad():
         mase_interpreter = MaseInterpreter(
             gm,
+            # hooks_before_forward=(remove_assert, remove_dropout, fuse_conv_bn),
+            # hooks_before_forward=(remove_assert,),
             hook_before_call_function=set_metadata_common_before_call_function,
             hook_after_call_function=set_metadata_common_after_call_function,
             hook_before_call_method=set_metadata_common_before_call_method,
             hook_after_call_method=set_metadata_common_after_call_method,
             hook_before_call_module=set_metadata_common_before_call_module,
             hook_after_call_module=set_metadata_common_after_call_module,
-            hook_after_forward=set_and_check_metadata_common_without_forward,
+            hooks_after_forward=(set_and_check_metadata_common_without_forward,),
         )
 
         input_args = get_input_args(model_name, task, data_module)
-        mase_interpreter.forward_to_interpret(*input_args)
+        mase_interpreter.interpret_with_forward(*input_args)
     # breakpoint()
     # for n in gm.graph.nodes:
     #     print(n.name, n.meta)
