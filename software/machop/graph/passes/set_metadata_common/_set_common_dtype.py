@@ -1,7 +1,7 @@
 """
 hook function for analyzing dtype & quantization info
 
-add metadata["common"]["args"/"results"]["data_in"/"weight"/"bias"/"data_out"]["type"&"precision"&"precision format"]
+add metadata["common"]["args"/"results"]["data_in"/"weight"/"bias"/"data_out"]["type"&"precision"]
 """
 import operator
 from copy import deepcopy
@@ -71,16 +71,6 @@ TORCH_DTYPE_TO_HW_PRECISION = {
     torch.Size: (32, 0),
 }
 
-TORCH_DTYPE_TO_PRECISION_FORMAT = {
-    torch.float32: "(width,)",
-    torch.float: "(width,)",
-    torch.float64: "(width,)",
-    torch.int: "(width, frac_width)",
-    torch.long: "(width, frac_width)",
-    torch.bool: "(width, frac_width)",
-    torch.Size: "(width, frac_width)",
-}
-
 NON_TORCH_DTYPE_TO_HW_DTYPE = {
     float: "float",
     int: "fixed",
@@ -95,41 +85,33 @@ NON_TORCH_DTYPE_TO_PRECISION = {
     slice: "NA",
 }
 
-NON_TORCH_DTYPE_TO_PRECISION_FORMAT = {
-    float: "(width,)",
-    int: "(width, frac_width)",
-    bool: "(width, frac_width)",
-    slice: "NA",
-}
 
-
-def _set_torch_dtype_precision_and_format(item: Dict, dtype):
+def _set_torch_dtype_precision(item: Dict, dtype):
     item["type"] = TORCH_DTYPE_TO_HW_DTYPE[dtype]
     item["precision"] = TORCH_DTYPE_TO_HW_PRECISION[dtype]
-    item["precision_format"] = TORCH_DTYPE_TO_PRECISION_FORMAT[dtype]
 
 
-def _get_torch_dtype_precision_and_format(torch_dtype):
+def _get_torch_dtype_precision(torch_dtype):
     dtype = TORCH_DTYPE_TO_HW_DTYPE[torch_dtype]
     precision = TORCH_DTYPE_TO_HW_PRECISION[torch_dtype]
-    precision_format = TORCH_DTYPE_TO_PRECISION_FORMAT[torch_dtype]
-    return dtype, precision, precision_format
+    return dtype, precision
 
+
+def _set_non_torch_dtype_precision(item: Dict, dtype):
+    item["type"] = NON_TORCH_DTYPE_TO_HW_DTYPE[dtype]
+    item["precision"] = NON_TORCH_DTYPE_TO_PRECISION[dtype]
 
 def _set_non_torch_dtype_precision_and_format(item: Dict, dtype):
     item["type"] = NON_TORCH_DTYPE_TO_HW_DTYPE[dtype]
     item["precision"] = NON_TORCH_DTYPE_TO_PRECISION[dtype]
     item["precision_format"] = NON_TORCH_DTYPE_TO_PRECISION_FORMAT[dtype]
 
-
-def _get_non_torch_dtype_precision_and_format(non_torch_dtype):
+def _get_non_torch_dtype_precision(non_torch_dtype):
     dtype = NON_TORCH_DTYPE_TO_HW_DTYPE[non_torch_dtype]
     precision = NON_TORCH_DTYPE_TO_PRECISION[non_torch_dtype]
-    precision_format = NON_TORCH_DTYPE_TO_PRECISION_FORMAT[non_torch_dtype]
-    return dtype, precision, precision_format
+    return dtype, precision
 
-
-def _set_quant_dtype_precision_and_format(item: Dict, config: Dict, config_index: str):
+def _set_quant_dtype_precision(item: Dict, config: Dict, config_index: str):
     config_name = config["name"]
     if config_name == "integer":
         item["type"] = "fixed"
@@ -158,40 +140,36 @@ def _get_seq_dtype(l: Union[Tuple, List]):
         return element_0_type
 
 
-def _get_dtype_precision_and_format(x):
+def _get_dtype_precision(x):
     if isinstance(x, torch.Tensor):
-        return _get_torch_dtype_precision_and_format(x.dtype)
+        return _get_torch_dtype_precision(x.dtype)
     elif isinstance(x, tuple(NON_TORCH_DTYPE_TO_HW_DTYPE.keys())):
-        return _get_non_torch_dtype_precision_and_format(type(x))
+        return _get_non_torch_dtype_precision(type(x))
     elif isinstance(x, (list, tuple)):
         seq_dtype = _get_seq_dtype(x)
         if seq_dtype in TORCH_DTYPE_TO_HW_DTYPE:
             return (
                 TORCH_DTYPE_TO_HW_DTYPE[seq_dtype],
                 TORCH_DTYPE_TO_HW_PRECISION[seq_dtype],
-                TORCH_DTYPE_TO_PRECISION_FORMAT[seq_dtype],
             )
         elif seq_dtype in NON_TORCH_DTYPE_TO_HW_DTYPE:
             return (
                 NON_TORCH_DTYPE_TO_HW_DTYPE[seq_dtype],
                 NON_TORCH_DTYPE_TO_PRECISION[seq_dtype],
-                NON_TORCH_DTYPE_TO_PRECISION_FORMAT[seq_dtype],
             )
     else:
         raise RuntimeError
 
 
-def _set_type_precision_and_format(item: Dict, dtype, precision, format):
+def _set_type_precision(item: Dict, dtype, precision):
     item["type"] = dtype
     item["precision"] = precision
-    item["precision_format"] = format
 
 
 def _set_dtype_before_call_function(node: Node, function, args, kwargs):
     """
     - type
     - precision
-    - precision_format
     """
     assert (
         "modify-sw" in node.meta["software"]
@@ -221,13 +199,11 @@ def _set_dtype_before_call_function(node: Node, function, args, kwargs):
         torch._assert,
     ):
         if len(node.all_input_nodes) == 1:
-            _set_type_precision_and_format(
-                mc_args["data_in"], *_get_dtype_precision_and_format(args[0])
-            )
+            _set_type_precision(mc_args["data_in"], *_get_dtype_precision(args[0]))
         else:
             for i in range(len(node.all_input_nodes)):
-                _set_type_precision_and_format(
-                    mc_args[f"data_in_{i}"], *_get_dtype_precision_and_format(args[i])
+                _set_type_precision(
+                    mc_args[f"data_in_{i}"], *_get_dtype_precision(args[i])
                 )
     elif function in (
         torch.reshape,
@@ -243,18 +219,18 @@ def _set_dtype_before_call_function(node: Node, function, args, kwargs):
                 if isinstance(args[i], torch.Tensor):
                     continue
                 else:
-                    _set_type_precision_and_format(
+                    _set_type_precision(
                         mc_args[f"data_in_{i}"],
-                        *_get_dtype_precision_and_format(args[i]),
+                        *_get_dtype_precision(args[i]),
                     )
     elif function in (torch.cat, torch.concat):
         for i in range(len(node.all_input_nodes)):
             if isinstance(args[0][i], torch.Tensor):
                 continue
             else:
-                _set_type_precision_and_format(
+                _set_type_precision(
                     mc_args[f"data_in_{i}"],
-                    *_get_dtype_precision_and_format(args[0][i]),
+                    *_get_dtype_precision(args[0][i]),
                 )
     elif function in (operator.getitem, getattr):
         if len(node.all_input_nodes) == 1:
@@ -264,9 +240,9 @@ def _set_dtype_before_call_function(node: Node, function, args, kwargs):
                 if isinstance(args[i], torch.Tensor):
                     continue
                 else:
-                    _set_type_precision_and_format(
+                    _set_type_precision(
                         mc_args[f"data_in_{i}"],
-                        *_get_dtype_precision_and_format(args[i]),
+                        *_get_dtype_precision(args[i]),
                     )
 
     # ------------------------------------------
@@ -276,30 +252,24 @@ def _set_dtype_before_call_function(node: Node, function, args, kwargs):
         config = construct_essential_config_relu_integer(
             config
         ) | get_output_bitwidth_relu_integer(config)
-        _set_quant_dtype_precision_and_format(mc_args["data_in"], config, "data_in")
-        _set_quant_dtype_precision_and_format(
-            mc_results["data_out"], config, "data_out"
-        )
+        _set_quant_dtype_precision(mc_args["data_in"], config, "data_in")
+        _set_quant_dtype_precision(mc_results["data_out"], config, "data_out")
     elif function in (add_integer,):
         config = construct_essential_config_add_integer(
             config
         ) | get_output_bitwidth_add_integer(config)
-        _set_quant_dtype_precision_and_format(mc_args["data_in_0"], config, "data_in")
-        _set_quant_dtype_precision_and_format(mc_args["data_in_1"], config, "data_in")
-        _set_quant_dtype_precision_and_format(
-            mc_results["data_out"], config, "data_out"
-        )
+        _set_quant_dtype_precision(mc_args["data_in_0"], config, "data_in")
+        _set_quant_dtype_precision(mc_args["data_in_1"], config, "data_in")
+        _set_quant_dtype_precision(mc_results["data_out"], config, "data_out")
     elif function in (bmm_integer,):
         config = construct_essential_config_generic_matmul_integer(config)
         x_shape = args[0].shape
         config = config | get_output_bitwidth_bmm_integer(
             config=config, x_shape=x_shape
         )
-        _set_quant_dtype_precision_and_format(mc_args["data_in_0"], config, "data_in")
-        _set_quant_dtype_precision_and_format(mc_args["data_in_1"], config, "data_in")
-        _set_quant_dtype_precision_and_format(
-            mc_results["data_out"], config, "data_out"
-        )
+        _set_quant_dtype_precision(mc_args["data_in_0"], config, "data_in")
+        _set_quant_dtype_precision(mc_args["data_in_1"], config, "data_in")
+        _set_quant_dtype_precision(mc_results["data_out"], config, "data_out")
     elif function in (matmul_integer,):
         # matmul supports broadcasting, but we temporarily treat it as bmm
         config = construct_essential_config_generic_matmul_integer(config)
@@ -307,11 +277,9 @@ def _set_dtype_before_call_function(node: Node, function, args, kwargs):
         config = config | get_output_bitwidth_bmm_integer(
             config=config, x_shape=x_shape
         )
-        _set_quant_dtype_precision_and_format(mc_args["data_in_0"], config, "data_in")
-        _set_quant_dtype_precision_and_format(mc_args["data_in_1"], config, "data_in")
-        _set_quant_dtype_precision_and_format(
-            mc_results["data_out"], config, "data_out"
-        )
+        _set_quant_dtype_precision(mc_args["data_in_0"], config, "data_in")
+        _set_quant_dtype_precision(mc_args["data_in_1"], config, "data_in")
+        _set_quant_dtype_precision(mc_results["data_out"], config, "data_out")
         logger.warning("A quantized `matmul_integer` is treated as a `bmm_integer`")
     # -----------------------------------------
     else:
@@ -348,9 +316,7 @@ def _set_dtype_after_call_function(node, function, output):
         if output is None:
             pass
         else:
-            _set_type_precision_and_format(
-                mc_results["data_out"], *_get_dtype_precision_and_format(output)
-            )
+            _set_type_precision(mc_results["data_out"], *_get_dtype_precision(output))
     elif function in (add_integer, matmul_integer, bmm_integer, relu_integer):
         pass
     else:
@@ -361,7 +327,6 @@ def _set_dtype_before_call_module(node, module, args, kwargs):
     """
     - type
     - precision
-    - precision_format
     """
     # config = node.meta["software"]["modify-sw"]["config"]
     mc_args = node.meta["common"]["args"]
@@ -370,9 +335,9 @@ def _set_dtype_before_call_module(node, module, args, kwargs):
     module_cls = type(module)
 
     if module_cls in (nn.Embedding,) or isinstance(module_cls, (nn.Embedding,)):
-        _set_torch_dtype_precision_and_format(mc_args["data_in"], args[0].dtype)
-        _set_torch_dtype_precision_and_format(mc_args["weight"], module.weight.dtype)
-        _set_torch_dtype_precision_and_format(mc_results["data_out"], args[0].dtype)
+        _set_torch_dtype_precision(mc_args["data_in"], args[0].dtype)
+        _set_torch_dtype_precision(mc_args["weight"], module.weight.dtype)
+        _set_torch_dtype_precision(mc_results["data_out"], args[0].dtype)
     elif module_cls in (
         nn.ReLU,
         nn.Hardsigmoid,
@@ -381,33 +346,29 @@ def _set_dtype_before_call_module(node, module, args, kwargs):
         nn.SiLU,
         nn.GELU,
     ):
-        _set_torch_dtype_precision_and_format(mc_args["data_in"], args[0].dtype)
-        _set_torch_dtype_precision_and_format(mc_results["data_out"], args[0].dtype)
+        _set_torch_dtype_precision(mc_args["data_in"], args[0].dtype)
+        _set_torch_dtype_precision(mc_results["data_out"], args[0].dtype)
     elif module_cls in (nn.Softmax,):
-        _set_torch_dtype_precision_and_format(mc_args["data_in"], args[0].dtype)
-        _set_torch_dtype_precision_and_format(mc_results["data_out"], args[0].dtype)
+        _set_torch_dtype_precision(mc_args["data_in"], args[0].dtype)
+        _set_torch_dtype_precision(mc_results["data_out"], args[0].dtype)
     elif module_cls in (nn.Linear, nn.Conv1d, nn.Conv2d):
-        _set_torch_dtype_precision_and_format(mc_args["data_in"], args[0].dtype)
-        _set_torch_dtype_precision_and_format(mc_args["weight"], module.weight.dtype)
+        _set_torch_dtype_precision(mc_args["data_in"], args[0].dtype)
+        _set_torch_dtype_precision(mc_args["weight"], module.weight.dtype)
         if module.bias is not None:
-            _set_torch_dtype_precision_and_format(mc_args["weight"], module.bias.dtype)
-        _set_torch_dtype_precision_and_format(mc_results["data_out"], args[0].dtype)
+            _set_torch_dtype_precision(mc_args["weight"], module.bias.dtype)
+        _set_torch_dtype_precision(mc_results["data_out"], args[0].dtype)
     elif module_cls in (nn.BatchNorm2d,):
-        _set_torch_dtype_precision_and_format(mc_args["data_in"], args[0].dtype)
-        _set_torch_dtype_precision_and_format(mc_args["weight"], module.weight.dtype)
-        _set_torch_dtype_precision_and_format(mc_args["bias"], module.bias.dtype)
-        _set_torch_dtype_precision_and_format(
-            mc_args["running_mean"], module.running_mean.dtype
-        )
-        _set_torch_dtype_precision_and_format(
-            mc_args["running_var"], module.running_var.dtype
-        )
-        _set_torch_dtype_precision_and_format(mc_results["data_out"], args[0].dtype)
+        _set_torch_dtype_precision(mc_args["data_in"], args[0].dtype)
+        _set_torch_dtype_precision(mc_args["weight"], module.weight.dtype)
+        _set_torch_dtype_precision(mc_args["bias"], module.bias.dtype)
+        _set_torch_dtype_precision(mc_args["running_mean"], module.running_mean.dtype)
+        _set_torch_dtype_precision(mc_args["running_var"], module.running_var.dtype)
+        _set_torch_dtype_precision(mc_results["data_out"], args[0].dtype)
     elif module_cls in (nn.LayerNorm,):
-        _set_torch_dtype_precision_and_format(mc_args["data_in"], args[0].dtype)
-        _set_torch_dtype_precision_and_format(mc_args["weight"], module.weight.dtype)
-        _set_torch_dtype_precision_and_format(mc_args["bias"], module.bias.dtype)
-        _set_torch_dtype_precision_and_format(mc_results["data_out"], args[0].dtype)
+        _set_torch_dtype_precision(mc_args["data_in"], args[0].dtype)
+        _set_torch_dtype_precision(mc_args["weight"], module.weight.dtype)
+        _set_torch_dtype_precision(mc_args["bias"], module.bias.dtype)
+        _set_torch_dtype_precision(mc_results["data_out"], args[0].dtype)
     elif module_cls in (
         nn.AvgPool1d,
         nn.AvgPool2d,
@@ -416,8 +377,8 @@ def _set_dtype_before_call_module(node, module, args, kwargs):
         nn.AdaptiveAvgPool2d,
         nn.AdaptiveAvgPool3d,
     ):
-        _set_torch_dtype_precision_and_format(mc_args["data_in"], args[0].dtype)
-        _set_torch_dtype_precision_and_format(mc_results["data_out"], args[0].dtype)
+        _set_torch_dtype_precision(mc_args["data_in"], args[0].dtype)
+        _set_torch_dtype_precision(mc_results["data_out"], args[0].dtype)
     elif module_cls in (
         nn.MaxPool1d,
         nn.MaxPool2d,
@@ -443,38 +404,28 @@ def _set_dtype_before_call_module(node, module, args, kwargs):
         # )
     elif module_cls in (ReLUInteger,):
         config = module.config | module.get_output_bitwidth()
-        _set_quant_dtype_precision_and_format(mc_args["data_in"], config, "data_in")
-        _set_quant_dtype_precision_and_format(
-            mc_results["data_out"], config, "data_out"
-        )
+        _set_quant_dtype_precision(mc_args["data_in"], config, "data_in")
+        _set_quant_dtype_precision(mc_results["data_out"], config, "data_out")
     elif module_cls in (AddInteger,):
         config = module.config | module.get_output_bitwidth()
-        _set_quant_dtype_precision_and_format(mc_args["data_in_0"], config, "data_in")
-        _set_quant_dtype_precision_and_format(mc_args["data_in_1"], config, "data_in")
-        _set_quant_dtype_precision_and_format(
-            mc_results["data_out"], config, "data_out"
-        )
+        _set_quant_dtype_precision(mc_args["data_in_0"], config, "data_in")
+        _set_quant_dtype_precision(mc_args["data_in_1"], config, "data_in")
+        _set_quant_dtype_precision(mc_results["data_out"], config, "data_out")
     elif module_cls in (LinearInteger, Conv1dInteger, Conv2dInteger):
         config = module.config | module.get_output_bitwidth()
-        _set_quant_dtype_precision_and_format(mc_args["data_in"], config, "data_in")
-        _set_quant_dtype_precision_and_format(mc_args["weight"], config, "weight")
+        _set_quant_dtype_precision(mc_args["data_in"], config, "data_in")
+        _set_quant_dtype_precision(mc_args["weight"], config, "weight")
         if module.bias is not None:
-            _set_quant_dtype_precision_and_format(mc_args["bias"], config, "bias")
-        _set_quant_dtype_precision_and_format(
-            mc_results["data_out"], config, "data_out"
-        )
+            _set_quant_dtype_precision(mc_args["bias"], config, "bias")
+        _set_quant_dtype_precision(mc_results["data_out"], config, "data_out")
     elif module_cls in (AvgPool2dInteger,):
         config = module.config | module.get_output_bitwidth()
-        _set_quant_dtype_precision_and_format(mc_args["data_in"], config, "data_in")
-        _set_quant_dtype_precision_and_format(
-            mc_results["data_out"], config, "data_out"
-        )
+        _set_quant_dtype_precision(mc_args["data_in"], config, "data_in")
+        _set_quant_dtype_precision(mc_results["data_out"], config, "data_out")
     elif module_cls in (AdaptiveAvgPool2dInteger,):
         config = module.config | module.get_output_bitwidth(x_shape=args[0].shape)
-        _set_quant_dtype_precision_and_format(mc_args["data_in"], config, "data_in")
-        _set_quant_dtype_precision_and_format(
-            mc_results["data_out"], config, "data_out"
-        )
+        _set_quant_dtype_precision(mc_args["data_in"], config, "data_in")
+        _set_quant_dtype_precision(mc_results["data_out"], config, "data_out")
     else:
         logger.warning(
             f"Unrecognized module `{type(module).__name__}` when setting dtype"
@@ -495,13 +446,11 @@ def _set_dtype_before_call_method(node, method_name, args, kwargs):
         "size",
     ):
         if len(node.all_input_nodes) == 1:
-            _set_type_precision_and_format(
-                mc_args["data_in"], *_get_dtype_precision_and_format(args[0])
-            )
+            _set_type_precision(mc_args["data_in"], *_get_dtype_precision(args[0]))
         else:
             for i in range(len(node.all_input_nodes)):
-                _set_type_precision_and_format(
-                    mc_args[f"data_in_{i}"], *_get_dtype_precision_and_format(args[i])
+                _set_type_precision(
+                    mc_args[f"data_in_{i}"], *_get_dtype_precision(args[i])
                 )
     elif method_name in (
         "view",
@@ -514,13 +463,11 @@ def _set_dtype_before_call_method(node, method_name, args, kwargs):
         "contiguous",
     ):
         if len(node.all_input_nodes) == 1:
-            _set_type_precision_and_format(
-                mc_args["data_in"], *_get_dtype_precision_and_format(args[0])
-            )
+            _set_type_precision(mc_args["data_in"], *_get_dtype_precision(args[0]))
         else:
             for i in range(len(node.all_input_nodes)):
-                _set_type_precision_and_format(
-                    mc_args[f"data_in_{i}"], *_get_dtype_precision_and_format(args[i])
+                _set_type_precision(
+                    mc_args[f"data_in_{i}"], *_get_dtype_precision(args[i])
                 )
     else:
         logger.warning(f"Unrecognized method name `{method_name}` when setting dtype")
@@ -537,9 +484,7 @@ def _set_dtype_after_call_method(node, method_name, output):
         "mean",
         "size",
     ):
-        _set_type_precision_and_format(
-            mc_results["data_out"], *_get_dtype_precision_and_format(output)
-        )
+        _set_type_precision(mc_results["data_out"], *_get_dtype_precision(output))
     elif method_name in (
         "view",
         "flatten",
@@ -626,17 +571,12 @@ def _set_smaller_width_in_neighbors(node, real_target):
         available_info = prev_available_info
     else:
         logger.warning(f"Cannot find available dtype & precision info from neighbor nodes for Node {node}")
-    # if real_target in ("view", "transpose", torch.transpose):
-    #     breakpoint()
-    # breakpoint()
     # !: This is probably not correct
     for data_in_i, item in node.meta["common"]["args"].items():
         if item["type"] == "NA":
             item["type"]=available_info["type"]
             item["precision"]=available_info["precision"]
-            item["precision_format"]=available_info["precision_format"]
 
     node.meta["common"]["results"]["data_out"]["type"] = available_info["type"]
     node.meta["common"]["results"]["data_out"]["precision"] = available_info["precision"]
-    node.meta["common"]["results"]["data_out"]["precision_format"] = available_info["precision_format"]
     # fmt: on

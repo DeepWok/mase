@@ -6,9 +6,10 @@ import torch
 import torch.fx
 
 from .dummy_inputs import get_dummy_inputs
-from .interpreter_for_synthesis import optimize_sw_model_for_synthesis
 from .mase_metadata import MaseMetadata
-from .utils import vf
+from .mase_tracer import mase_symbolic_trace
+from .passes import remove_nonsynthesizable_nodes_pass
+from .utils import get_module_by_name, vf, get_input_index
 
 logger = logging.getLogger(__name__)
 
@@ -91,16 +92,6 @@ def _add_edge_info(node, fx_graph):
             ] = get_node_by_name(node_name, fx_graph)
 
 
-def get_input_index(node, next_node):
-    """
-    Get the arg index of the next_node for node
-    """
-    arg_count = len(next_node.all_input_nodes)
-    for i in range(0, arg_count):
-        if next_node.meta.parameters["common"]["args"][f"data_in_{i}"]["from"] == node:
-            return i
-
-
 class MaseGraph:
     """
     Mase takes a torch.fx graph representation of a model and translates
@@ -110,12 +101,12 @@ class MaseGraph:
     """
 
     implicit_nodes = {"size", "view"}
-    nonsynthesizable_nodes = {torch._assert}
 
     def __init__(
         self,
         model=None,
         quantized_model=None,
+        fx_graph=None,
         common_param=None,
         synth_mode="auto",
         args=None,
@@ -129,7 +120,18 @@ class MaseGraph:
         self.quantized_model = quantized_model
         self.synth_mode = synth_mode
         self.args = args
-        self.fx_graph = self._init_fx_graph()
+        if fx_graph is not None:
+            self.fx_graph = fx_graph
+        else:
+            self.fx_graph = self._init_fx_graph()
+        for node in self.fx_graph.nodes:
+            node.meta = MaseMetadata(
+                node=node,
+                model=self.model,
+                fx_graph=self.fx_graph,
+                quantized_model=self.quantized_model,
+                synth_mode=self.synth_mode,
+            )
         # This has to be before init parameters
         self.nodes_in = _get_input_nodes(self.fx_graph)
         self.nodes_out = _get_output_nodes(self.fx_graph)
@@ -140,19 +142,8 @@ class MaseGraph:
         dummy_inputs = get_dummy_inputs(
             model_name=self.args.model, task=self.args.task, model=model
         )
-        # graph_module = mase_symbolic_trace(model, dummy_inputs)
-        graph_module = optimize_sw_model_for_synthesis(
-            model=model, dummy_inputs=dummy_inputs
-        )
+        graph_module = mase_symbolic_trace(model, dummy_inputs)
         fx_graph = graph_module.graph
-        for node in fx_graph.nodes:
-            node.meta = MaseMetadata(
-                node=node,
-                model=self.model,
-                fx_graph=fx_graph,
-                quantized_model=self.quantized_model,
-                synth_mode=self.synth_mode,
-            )
         return fx_graph
 
     def _init_parameters(self, common_param=None):
@@ -172,13 +163,7 @@ class MaseGraph:
                 )
             loaded_toml_meta = toml.load(load_name)
             for node in self.fx_graph.nodes:
-                if (
-                    node.op == "call_module"
-                    or node.op == "call_function"
-                    or node.op == "call_method"
-                ):
-                    if node.target in self.nonsynthesizable_nodes:
-                        continue
+                if not node.meta.parameters["hardware"]["is_implicit"]:
                     parameters = loaded_toml_meta[node.name]
                     # !: assign toml to node.meta.parameter
                     _list_to_tuple(parameters)
@@ -190,7 +175,12 @@ class MaseGraph:
                     # node.meta.init_common_parameters(parameters=parameters)
         else:
             for node in self.fx_graph.nodes:
-                node.meta.init_common_parameters()
+                if not node.meta.parameters["hardware"]["is_implicit"]:
+                    node.meta.init_common_parameters()
+
+    def export(self, file_name):
+        with open(file_name, "w", encoding="utf-8") as outf:
+            outf.write(str(self.fx_graph))
 
     def init_software_parameters(self):
         for node in self.fx_graph.nodes:
@@ -235,12 +225,12 @@ class MaseGraph:
         # Each edge between nodes must have the same size
         nodes_in = self.nodes_in
         nodes_out = self.nodes_out
-        node_in_name = vf(nodes_in[0].name)
-        node_out_name = vf(nodes_out[0].name)
         while nodes_in != nodes_out:
             next_nodes_in = []
             for node in nodes_in:
                 for next_node, x in node.users.items():
+                    if next_node.meta.parameters["hardware"]["is_implicit"]:
+                        continue
                     arg_count = len(next_node.all_input_nodes)
                     if arg_count == 1:
                         assert (

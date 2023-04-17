@@ -41,7 +41,6 @@ def _add_empty_common_args(meta, *arg_names):
         meta["common"]["args"][arg_name] = {
             "type": "NA",
             "precision": "NA",
-            "precision_format": "NA",
             "size": "NA",
             "from": "NA",
             "is_packed": False,
@@ -56,7 +55,6 @@ def _add_empty_common_results(meta, *result_names):
         meta["common"]["results"][result_name] = {
             "type": "NA",
             "precision": "NA",
-            "precision_format": "NA",
             "size": "NA",
             "is_packed": False,
         }

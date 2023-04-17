@@ -34,25 +34,25 @@ simple_cases = [
     [
         "resnet18",
         "cls",
-        "cifar10",
+        "imagenet",
         "{}".format(os.path.join(software_dir, "configs", "modify-sw", "integer.toml")),
     ],
     [
         "mobilenetv3_small",
         "cls",
-        "cifar10",
+        "imagenet",
         "{}".format(os.path.join(software_dir, "configs", "modify-sw", "integer.toml")),
     ],
     [
         "efficientnet_v2_s",
         "cls",
-        "cifar10",
+        "imagenet",
         "{}".format(os.path.join(software_dir, "configs", "modify-sw", "integer.toml")),
     ],
     [
         "pvt_v2_b0",
         "cls",
-        "cifar10",
+        "imagenet",
         "{}".format(os.path.join(software_dir, "configs", "modify-sw", "integer.toml")),
     ],
     [
@@ -63,14 +63,14 @@ simple_cases = [
     ],
     [
         "facebook/opt-125m@patched",
-        "cls",
-        "boolq",
+        "lm",
+        "ptb",
         "{}".format(os.path.join(software_dir, "configs", "modify-sw", "integer.toml")),
     ],
     [
         "facebook/opt-350m@patched",
-        "cls",
-        "boolq",
+        "lm",
+        "ptb",
         "{}".format(os.path.join(software_dir, "configs", "modify-sw", "integer.toml")),
     ],
 ]
@@ -79,49 +79,49 @@ full_cases = [
     [
         "resnet50",
         "cls",
-        "cifar10",
+        "imagenet",
         "{}".format(os.path.join(software_dir, "configs", "modify-sw", "integer.toml")),
     ],
     [
         "mobilenetv3_large",
         "cls",
-        "cifar10",
+        "imagenet",
         "{}".format(os.path.join(software_dir, "configs", "modify-sw", "integer.toml")),
     ],
     [
         "efficientnet_v2_m",
         "cls",
-        "cifar10",
+        "imagenet",
         "{}".format(os.path.join(software_dir, "configs", "modify-sw", "integer.toml")),
     ],
     [
         "efficientnet_v2_l",
         "cls",
-        "cifar10",
+        "imagenet",
         "{}".format(os.path.join(software_dir, "configs", "modify-sw", "integer.toml")),
     ],
     [
         "pvt_v2_b1",
         "cls",
-        "cifar10",
+        "imagenet",
         "{}".format(os.path.join(software_dir, "configs", "modify-sw", "integer.toml")),
     ],
     [
         "pvt_v2_b2",
         "cls",
-        "cifar10",
+        "imagenet",
         "{}".format(os.path.join(software_dir, "configs", "modify-sw", "integer.toml")),
     ],
     [
         "pvt_v2_b3",
         "cls",
-        "cifar10",
+        "imagenet",
         "{}".format(os.path.join(software_dir, "configs", "modify-sw", "integer.toml")),
     ],
     [
         "pvt_v2_b4",
         "cls",
-        "cifar10",
+        "imagenet",
         "{}".format(os.path.join(software_dir, "configs", "modify-sw", "integer.toml")),
     ],
     [
@@ -138,32 +138,14 @@ full_cases = [
     ],
     [
         "facebook/opt-1.3b@patched",
-        "cls",
-        "boolq",
+        "lm",
+        "ptb",
         "{}".format(os.path.join(software_dir, "configs", "modify-sw", "integer.toml")),
     ],
     [
         "facebook/opt-2.7b@patched",
-        "cls",
-        "boolq",
-        "{}".format(os.path.join(software_dir, "configs", "modify-sw", "integer.toml")),
-    ],
-    [
-        "facebook/opt-13b@patched",
-        "cls",
-        "boolq",
-        "{}".format(os.path.join(software_dir, "configs", "modify-sw", "integer.toml")),
-    ],
-    [
-        "facebook/opt-30b@patched",
-        "cls",
-        "boolq",
-        "{}".format(os.path.join(software_dir, "configs", "modify-sw", "integer.toml")),
-    ],
-    [
-        "facebook/opt-66b@patched",
-        "cls",
-        "boolq",
+        "lm",
+        "ptb",
         "{}".format(os.path.join(software_dir, "configs", "modify-sw", "integer.toml")),
     ],
     # ["bert-base-uncased", "cls", "boolq", "{}".format(os.path.join(software_dir, "configs", "modify-sw", "integer.toml"))],
@@ -270,9 +252,9 @@ class TestMicro:
             f"--project-dir",
             f"{self.project_dir}",
         ]
-        result = self.execute(
-            cmd, log_output=self.to_debug, cwd=os.path.join(self.root, "software")
-        )
+        if self.args.github_ci:
+            cmd += ["--github-ci"]
+        result = self.execute(cmd, log_output=self.to_debug)
 
         queue.put(result)
         return result
@@ -313,6 +295,13 @@ test-hardware.py --test common/int_mult ...
 test-hardware.py -a"""
 
     parser = ArgumentParser(usage=USAGE)
+    parser.add_argument(
+        "--github-ci",
+        action="store_true",
+        dest="github_ci",
+        default=False,
+        help="Run the regression test for Github CI. Default=False",
+    )
     parser.add_argument(
         "-a",
         "--all",

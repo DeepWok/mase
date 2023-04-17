@@ -21,9 +21,11 @@ from .dataset import MyDataModule, available_datasets, get_dataset_info
 from .estimate_sw import run_estimator
 from .evaluate_hw.mase_hardware_evaluator import get_synthesis_results
 from .graph.dummy_inputs import get_dummy_inputs
-from .graph.interpreter_for_synthesis import (
+from .graph.mase_tracer import mase_symbolic_trace
+from .graph.passes import (
+    remove_nonsynthesizable_nodes_pass,
+    fuse_conv_bn_pass,
     create_and_save_common_metadata,
-    optimize_sw_model_for_synthesis,
 )
 from .graph.mase_graph import MaseGraph
 from .models import (
@@ -65,6 +67,13 @@ class Machop:
         #     dest='to_run_all',
         #     default=False,
         #     help='Run the whole end-to-end process, Default=False')
+        parser.add_argument(
+            "--github-ci",
+            action="store_true",
+            dest="github_ci",
+            default=False,
+            help="Run in GitHub CI. Default=False",
+        )
         parser.add_argument(
             "--debug",
             action="store_true",
@@ -392,7 +401,7 @@ class Machop:
 
         # Model specifications
         self.model = None
-        self.modified_model_for_hw_gen = None
+        self.modified_model = None
         self.data_module = None
         self.info = None
 
@@ -410,7 +419,6 @@ class Machop:
         logger.debug(
             f"when_to_load={self.when_to_load}, how_to_load={self.how_to_load}"
         )
-        # breakpoint()
 
     # Debugging configuration
     def _excepthook(self, etype, evalue, etb):
@@ -449,8 +457,7 @@ class Machop:
         if self.args.to_search_sw:
             self.search_sw()
         if self.args.to_synthesize is not None or self.args.to_test_hw is not None:
-            self.modify_sw_for_synthesis()
-            self.interpret_for_synthesis()
+            self.pre_synthesis()
         if self.args.to_synthesize is not None:
             self.synthesize()
         if self.args.to_test_hw is not None:
@@ -692,7 +699,6 @@ class Machop:
             "precision": args.trainer_precision,
         }
         load_name = args.load_name if self.when_to_load == "train_val_or_test" else None
-        # breakpoint()
         # assert load_name is not None, "load name must not be None for test-sw."
         test_params = {
             "model_name": args.model,
@@ -748,59 +754,60 @@ class Machop:
     # ------------------------------------------------------
     # HW actions
     # ------------------------------------------------------
-    def modify_sw_for_synthesis(self):
+    def pre_synthesis(self):
         args = self.args
         assert (
             args.modify_sw_config
-        ) is not None, "--modify-sw-config must be provided if --synthesize"
+        ) is not None, "--modify-sw-config must be provided for hardware passes"
+        assert (
+            os.path.isfile(args.modify_sw_config)
+        ) is not None, "Invalid modify-sw-config. Cannot find the file."
 
-        # Modify self.modified_model_for_hw_gen to get common meta toml
-        self.modified_model_for_hw_gen = deepcopy(self.model)
+        # In softwatre, the model might be modified by external module components.
+        # These components need to be sync-ed in the hardware model. In this case,
+        # a modified model is created from the original model where the original model
+        # is also kept, which provides a mapping between the orignal model and modified model.
         logger.info(f"Modifying model {args.model!r} for hw-gen...")
+        model = self.model["model"] if args.model in nlp_models else self.model
 
-        model_to_be_modified = (
-            self.modified_model_for_hw_gen["model"]
-            if args.model in nlp_models
-            else self.modified_model_for_hw_gen
-        )
-
+        # Create a graph module
         dummy_inputs = get_dummy_inputs(
-            model_name=args.model, task=args.task, model=model_to_be_modified
+            model_name=args.model, task=args.task, model=model
         )
+        model.eval()
+        graph_module = mase_symbolic_trace(model, concrete_args=dummy_inputs)
 
-        model_to_be_modified = optimize_sw_model_for_synthesis(
-            model=model_to_be_modified, dummy_inputs=dummy_inputs
-        )
+        # Preprocess graph module for both models
+        graph_module = fuse_conv_bn_pass(graph_module)
+
+        # Create a modified graph module for interpreting
+        model_to_modify = deepcopy(graph_module)
 
         modifier_kwargs = {
-            "model": model_to_be_modified,
+            "model": model_to_modify,
             "config_path": args.modify_sw_config,
             "dummy_inputs_for_fx": dummy_inputs,
             "save_dir": os.path.join(self.output_dir_sw, "modify-sw"),
         }
 
         m = Modifier(**modifier_kwargs)
-        graph_module = m.modify()
-        # remove_nonsynthesizable_nodes(m.graph)
+        modified_graph_module = m.modify()
         if args.model in nlp_models:
-            self.modified_model_for_hw_gen["model"] = graph_module
+            self.model["model"] = graph_module
+            self.modified_model["model"] = modified_graph_module
         else:
-            self.modified_model_for_hw_gen = graph_module
+            self.model = graph_module
+            self.modified_model = modified_graph_module
         logger.info("Modify-sw-for-hw-gen is completed")
 
-    def interpret_for_synthesis(self):
         logger.info(f"Updating metadata for synthesis...")
-        args = self.args
         create_and_save_common_metadata(
-            modified_graph_model=self.modified_model_for_hw_gen["model"]
-            if args.model in nlp_models
-            else self.modified_model_for_hw_gen,
+            modified_graph_model=modified_graph_module,
             model_name=args.model,
             task=args.task,
             data_module=self.data_module,
             save_dir=os.path.join(self.output_dir_sw, "modify-sw"),
         )
-        # del self.modified_model_for_hw_gen
         logger.info(f"Metadata update is completed")
 
     def synthesize(self):
@@ -814,12 +821,12 @@ class Machop:
 
         model = self.model["model"] if args.model in nlp_models else self.model
         quantized_model = (
-            self.modified_model_for_hw_gen["model"]
+            self.modified_model["model"]
             if args.model in nlp_models
-            else self.modified_model_for_hw_gen
+            else self.modified_model
         )
-
         mve = MaseVerilogEmitter(
+            github_ci=args.github_ci,
             model=model,
             quantized_model=quantized_model,
             project_dir=self.output_dir,
@@ -827,16 +834,16 @@ class Machop:
             target=args.target,
             mode=mode,
             num_targets=args.num_targets,
-            # comment out to allow internal pass to provide this info
             args=args,
             common_param=os.path.join(
                 self.output_dir,
                 "software",
                 "modify-sw",
-                # "hw_quantize.toml",
                 "common_meta.toml",
             ),
         )
+        mve = remove_nonsynthesizable_nodes_pass(mve)
+        mve.export("./graph.ir")
         # mve.optimise()
         mve.emit_verilog()
 
@@ -861,20 +868,19 @@ class Machop:
 
         model = self.model["model"] if args.model in nlp_models else self.model
         quantized_model = (
-            self.modified_model_for_hw_gen["model"]
+            self.modified_model["model"]
             if args.model in nlp_models
-            else self.modified_model_for_hw_gen
+            else self.modified_model
         )
 
         mve = MaseVerilogEmitter(
-            model=model,
-            quantized_model=quantized_model,
+            github_ci=args.github_ci,
+            mase_graph=self.mase_graph,
             project_dir=self.output_dir,
             to_debug=args.to_debug,
             target=args.target,
             mode=mode,
             num_targets=args.num_targets,
-            # comment out to allow internal pass to provide this info
             args=args,
             common_param=os.path.join(
                 self.output_dir,
@@ -897,7 +903,6 @@ class Machop:
                     self.output_dir,
                     "software",
                     "modify-sw",
-                    # "hw_quantize.toml",
                     "common_meta.toml",
                 ),
             )

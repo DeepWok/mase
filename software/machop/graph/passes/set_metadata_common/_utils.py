@@ -11,7 +11,6 @@ def _get_next_available_dtype_info(node: Node):
         if next_node.op in ("placeholder", "get_attr", "output"):
             return _get_next_available_dtype_info(next_node)
         else:
-            # breakpoint()
             if "data_in" in next_node.meta["common"]["args"]:
                 if (
                     next_node.meta["common"]["args"]["data_in"]["type"] != "NA"
@@ -30,12 +29,11 @@ def _get_next_available_dtype_info(node: Node):
                 else:
                     return _get_next_available_dtype_info(next_node)
             else:
-                # breakpoint()
                 raise RuntimeError(
                     f"No data_in/data_in_0 keys in Node {next_node}({next_node.op}: {next_node.target})"
                 )
     logger.debug(
-        f"Node {node} is a dead node, and no available dtype & precision info can be fetched from this node."
+        f"Node {node} has no user ({len(node.users.keys())}), and no available dtype & precision info can be fetched from this node."
     )
     return None
 

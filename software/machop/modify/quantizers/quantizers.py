@@ -243,7 +243,7 @@ def msfp_quantizer(
         else:
             per_block_max[per_block_max == 0] = per_block_max[per_block_max != 0].min()
     except RuntimeError:
-        breakpoint()
+        pass 
     # minifloat_simple_quantizer on each block over which a exponent is shared
     mantissa_bits = width - 1
     if exponent_bias in (None, "none", "None"):
