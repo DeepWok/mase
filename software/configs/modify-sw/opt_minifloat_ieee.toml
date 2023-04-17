@@ -23,20 +23,20 @@ name = "default"
 [module_classes_to_modify.relu]
 name = "default"
 
-[functions_to_modify.bmm]
+[function_classes_to_modify.bmm]
 name = "default"
 
-[functions_to_modify.matmul]
+[function_classes_to_modify.matmul]
 name = "default"
 
-[functions_to_modify.relu]
+[function_classes_to_modify.relu]
 name = "default"
 
-[methods_to_modify.bmm]
+[method_classes_to_modify.bmm]
 name = "default"
 
-[methods_to_modify.matmul]
+[method_classes_to_modify.matmul]
 name = "default"
 
-[methods_to_modify.relu]
+[method_classes_to_modify.relu]
 name = "default"

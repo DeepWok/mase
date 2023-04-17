@@ -742,12 +742,23 @@ class Machop:
         args = self.args
         logger.info(f"Searching model {args.model!r}...")
         save_dir = os.path.join(self.output_dir_sw, "search-sw")
+
+        dummy_inputs = get_dummy_inputs(
+            model_name=args.model,
+            task=args.task,
+            model=self.model["model"] if args.model in nlp_models else self.model,
+        )
+
         search_args = {
             "model_name": args.model,
+            "info": self.info,
             "model": self.model,
+            "task": args.task,
+            "dummy_inputs": dummy_inputs,
             "data_module": self.data_module,
             "search_config": args.search_sw_config,
             "save_dir": save_dir,
+            "accelerator": args.accelerator,
         }
         search(**search_args)
 
