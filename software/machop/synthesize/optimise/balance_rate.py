@@ -53,15 +53,17 @@ def balance_rate(verilog_emitter):
     # input_size = {"IN_SIZE": get_in_size(verilog_emitter.target, nodes_in[0])}
     input_size = {"IN_SIZE": 1}
 
-    while True:
+    while nodes_in != nodes_out:
         next_nodes_in = []
         for node in nodes_in:
             node.meta.update_hardware_parameters(parameters=input_size)
             for next_node, x in node.users.items():
-                if next_node.op != "output":
-                    next_nodes_in.append(next_node)
-        if len(next_nodes_in) == 0:
-            break
+                # This might have a bug - for now assume there is only one result
+                if next_node.meta.parameters["hardware"]["is_implicit"]:
+                    if node not in next_nodes_in:
+                        next_nodes_in.append(node)
+                    continue
+                next_nodes_in.append(next_node)
         input_size = None
         assert (
             nodes_in != next_nodes_in
