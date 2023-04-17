@@ -32,27 +32,38 @@ jobs:
           submodules: "true"
 
     # -----------
-    # Install basic dependencies
+    # Format check 
     # -----------
-    
-    - name: Get dependences 
+
+    - name: Check missing breakpoint 
       run: |
-          sudo apt-get update
-          sudo apt-get install apt-utils -y
-          # sudo apt-get upgrade -y
+          if [[ $(grep -rnw ./software/machop -e "breakpoint()") -eq 1 ]]; then
+              echo "Found undeleted breakpoint:"
+              grep -rnw ./software/machop -e "breakpoint()"
+              exit 1
+          fi
+
+    - name: Install black and clang 
+      run: |
           sudo apt-get install -y \
-                          clang cmake graphviz-dev libclang-dev \
-                          pkg-config g++ libxtst6 xdg-utils \
-                          libboost-all-dev llvm gcc ninja-build \
-                          python3 python3-pip build-essential \
-                          libssl-dev git vim wget htop sudo \
-                          lld clang-format clang-tidy
-          sudo apt-get update -y
-          sudo apt-get install -y \
-                          perl make autoconf flex bison libunwind-dev \
-                          ccache libgoogle-perftools-dev numactl \
-                          perl-doc libfl2 libfl-dev zlib1g zlib1g-dev \
-                          help2man libidn11-dev
+                          python3 python3-pip clang-format clang-tidy
+          pip3 install --user --upgrade pip
+          pip3 install black
+
+    # Run black to check Python formatting.
+    - name: python-format
+      if: ${{ always() }}
+      shell: bash
+      run: |
+        files=$(git diff --name-only $DIFF_COMMIT | grep -e '\.py$' || echo -n)
+        if [[ ! -z $files ]]; then
+          for f in $files
+          do
+            if [[ -f $f ]]; then
+              python3 -m black $f
+            fi
+          done
+        fi
 
     - name: Install Verible 
       run: |
@@ -66,30 +77,29 @@ jobs:
           ln -s "${HOME}"/srcPkgs/verible/bin/verible-verilog-diff /usr/local/bin/verible-verilog-diff
           ln -s "${HOME}"/srcPkgs/verible/bin/git-verible-verilog-format.sh /usr/local/bin/git-verible-verilog-format.sh
 
-    - name: Install Verilator 
+    # Run verible-verilog-format to check Verilog/SystemVerilog formatting.
+    - name: verilog-format
+      if: ${{ always() }}
+      shell: bash
       run: |
-          # Install verilator from source - version v5.006
-          (mkdir -p "${HOME}"/srcPkgs \
-          && cd "${HOME}"/srcPkgs \
-          && git clone https://github.com/verilator/verilator \
-          && unset VERILATOR_ROOT \
-          && cd verilator \
-          && git checkout v5.006 \
-          && autoconf \
-          && ./configure \
-          && make \
-          && sudo make install)
-
-          pip3 install --user --upgrade pip
-          pip3 install onnx black toml GitPython colorlog cocotb[bus] \
-                       pytest pytorch-lightning transformers toml \
-                       timm pytorch-nlp datasets IPython ipdb \
-                       sentencepiece einops deepspeed pybind11 \
-                       tabulate tensorboard hyperopt
-
-    # -----------
-    # Sanity check 
-    # -----------
+        files=$(git diff --name-only $DIFF_COMMIT | grep -e '\.sv$' || echo -n)
+        if [[ ! -z $files ]]; then
+          for f in $files
+          do
+            if [[ -f $f ]]; then
+              verible-verilog-format $f | diff - $f
+            fi
+          done
+        fi
+        files=$(git diff --name-only $DIFF_COMMIT | grep -e '\.v$' || echo -n)
+        if [[ ! -z $files ]]; then
+          for f in $files
+          do
+            if [[ -f $f ]]; then
+              verible-verilog-format $f | diff - $f
+            fi
+          done
+        fi
 
     # Choose the git commit to diff against for the purposes of linting.
     # Since this workflow is triggered on both pushes and pull requests, w
@@ -209,60 +219,66 @@ jobs:
           echo "================"
         fi
 
-    # Run verible-verilog-format to check Verilog/SystemVerilog formatting.
-    - name: verilog-format
-      if: ${{ always() }}
-      shell: bash
-      run: |
-        files=$(git diff --name-only $DIFF_COMMIT | grep -e '\.sv$' || echo -n)
-        if [[ ! -z $files ]]; then
-          for f in $files
-          do
-            if [[ -f $f ]]; then
-              verible-verilog-format $f | diff - $f
-            fi
-          done
-        fi
-        files=$(git diff --name-only $DIFF_COMMIT | grep -e '\.v$' || echo -n)
-        if [[ ! -z $files ]]; then
-          for f in $files
-          do
-            if [[ -f $f ]]; then
-              verible-verilog-format $f | diff - $f
-            fi
-          done
-        fi
-
-    # Run black to check Python formatting.
-    - name: python-format
-      if: ${{ always() }}
-      shell: bash
-      run: |
-        files=$(git diff --name-only $DIFF_COMMIT | grep -e '\.py$' || echo -n)
-        if [[ ! -z $files ]]; then
-          for f in $files
-          do
-            if [[ -f $f ]]; then
-              python3 -m black $f
-            fi
-          done
-        fi
+    # -----------
+    # Hardware regression test 
+    # -----------
     
+    - name: Get dependences 
+      run: |
+          sudo apt-get update
+          sudo apt-get install apt-utils -y
+          # sudo apt-get upgrade -y
+          sudo apt-get install -y \
+                          clang cmake graphviz-dev libclang-dev \
+                          pkg-config g++ libxtst6 xdg-utils \
+                          libboost-all-dev llvm gcc ninja-build \
+                          python3 python3-pip build-essential \
+                          libssl-dev git vim wget htop sudo \
+                          lld 
+          sudo apt-get update -y
+          sudo apt-get install -y \
+                          perl make autoconf flex bison libunwind-dev \
+                          ccache libgoogle-perftools-dev numactl \
+                          perl-doc libfl2 libfl-dev zlib1g zlib1g-dev \
+                          help2man libidn11-dev
+
+    - name: Install Verilator 
+      run: |
+          # Install verilator from source - version v5.006
+          (mkdir -p "${HOME}"/srcPkgs \
+          && cd "${HOME}"/srcPkgs \
+          && git clone https://github.com/verilator/verilator \
+          && unset VERILATOR_ROOT \
+          && cd verilator \
+          && git checkout v5.006 \
+          && autoconf \
+          && ./configure \
+          && make \
+          && sudo make install)
+
+          pip3 install --user --upgrade pip
+          pip3 install onnx toml GitPython colorlog cocotb[bus] \
+                       pytest pytorch-lightning transformers toml \
+                       timm pytorch-nlp datasets IPython ipdb \
+                       sentencepiece einops deepspeed pybind11 \
+                       tabulate tensorboard hyperopt
+
+    - name: Hardware regression test 
+      run: |
+          python3 bin/test-hardware.py -a
+
     # -----------
-    # Build the tool 
+    # Mase regression test 
     # -----------
 
-    - name: Install PyTorch and Torch-MLIR 
-      run: 
-          pip3 install --pre torch-mlir torchvision 
-          -f https://llvm.github.io/torch-mlir/package-index/ 
-          --extra-index-url https://download.pytorch.org/whl/nightly/cpu
+    # - name: Install PyTorch and Torch-MLIR 
+    #   run: 
+    #       pip3 install --pre torch-mlir torchvision 
+    #       -f https://llvm.github.io/torch-mlir/package-index/ 
+    #       --extra-index-url https://download.pytorch.org/whl/nightly/cpu
     
     # - name: Build LLVM 
     #   run: |
     #       make build
 
-    - name: Hardware regression test 
-      run: |
-          python3 bin/test-hardware.py -a
 

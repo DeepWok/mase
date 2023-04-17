@@ -81,7 +81,6 @@ def train(
                 load_name=load_name, load_type=load_type, model=model
             )
         logger.info(f"'{load_type}' checkpoint loaded before training")
-    # breakpoint()
 
     pl_model = wrapper_cls(
         model,
@@ -92,7 +91,6 @@ def train(
     )
 
     trainer = pl.Trainer(**plt_trainer_args)
-    # breakpoint()
     trainer.fit(
         pl_model,
         datamodule=data_module,

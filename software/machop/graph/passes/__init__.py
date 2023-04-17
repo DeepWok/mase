@@ -1,4 +1,3 @@
-"""
-MaseGraph passes will not modify/change any nodes in a graph
-These passes are mainly used for adding or editing meta-data on each node.
-"""
+from .remove_nonsynthesizable_nodes_pass import remove_nonsynthesizable_nodes_pass
+from .fuse_conv_bn_pass import fuse_conv_bn_pass
+from .update_common_metadata_pass import create_and_save_common_metadata 

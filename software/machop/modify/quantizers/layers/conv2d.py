@@ -545,7 +545,6 @@ class Conv2dMSFP(Conv2dBase):
         x = self.x_quantizer(x)
         x = torch.reshape(x, x_shape)
         w = torch.flatten(self.weight, 0, 1)
-        # breakpoint()
         w = self.w_quantizer(w)
         w = torch.reshape(w, w_shape)
         bias = self.b_quantizer(self.bias) if self.bias is not None else None

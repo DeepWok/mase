@@ -1,4 +1,4 @@
-import math, time, os, logging, torch
+import math, time, os, logging, torch, struct
 
 from ..graph.utils import get_module_by_name, vf
 from ..modify.quantizers.quantizers import integer_quantizer
@@ -160,7 +160,7 @@ endmodule
     os.system(f"verible-verilog-format --inplace {file_name}")
 
 
-def emit_parameters_in_dat(node, param_name, file_name):
+def emit_parameters_in_dat_internal(node, param_name, file_name):
     """
     Emit initialised data for the ROM block. Each element must be in 8 HEX digits.
     """
@@ -230,6 +230,60 @@ def emit_parameters_in_dat(node, param_name, file_name):
     assert os.path.isfile(file_name), "ROM data generation failed."
 
 
+def emit_parameters_in_dat_hls(node, param_name, file_name):
+    """
+    Emit initialised data for the ROM block. Each element must be in 8 HEX digits.
+    """
+    total_size = math.prod(node.meta.parameters["common"]["args"][param_name]["size"])
+    out_depth = total_size
+    out_size = 1
+    out_width = node.meta.parameters["hardware"]["verilog_parameters"][
+        "{}_WIDTH".format(param_name.upper())
+    ]
+
+    data_buff = ""
+    param_data = node.meta.module.get_parameter(param_name).data
+    param_data = torch.flatten(param_data).tolist()
+
+    if node.meta.parameters["common"]["args"][param_name]["type"] == "fixed":
+        width = node.meta.parameters["common"]["args"][param_name]["precision"][0]
+        frac_width = node.meta.parameters["common"]["args"][param_name]["precision"][1]
+
+        scale = 2**frac_width
+        thresh = 2**width
+        for i in range(0, out_depth):
+            line_buff = ""
+            for j in range(0, out_size):
+                value = param_data[i * out_size + out_size - 1 - j]
+                value = integer_quantizer(torch.tensor(value), width, frac_width).item()
+                value = str(bin(int(value * scale) % thresh))
+                value_bits = value[value.find("0b") + 2 :]
+                value_bits = "0" * (width - len(value_bits)) + value_bits
+                assert len(value_bits) == width
+                line_buff += value_bits
+
+            hex_buff = hex(int(line_buff, 2))
+            data_buff += hex_buff[hex_buff.find("0x") + 2 :] + "\n"
+    elif node.meta.parameters["common"]["args"][param_name]["type"] == "float":
+        width = node.meta.parameters["common"]["args"][param_name]["precision"][0]
+        assert width == 32, "Only float32 is supported for now."
+
+        for i in range(0, out_depth):
+            line_buff = ""
+            value = param_data[i]
+            hex_buff = hex(struct.unpack("<I", struct.pack("<f", value))[0])
+            # Double will then be:
+            # hex(struct.unpack('<Q', struct.pack('<d', value))[0])
+            data_buff += hex_buff[hex_buff.find("0x") + 2 :] + "\n"
+    else:
+        assert False, "Emitting unknown type of parameters is not supported."
+
+    with open(file_name, "w", encoding="utf-8") as outf:
+        outf.write(data_buff)
+    logger.debug(f"Init data {param_name} successfully written into {file_name}")
+    assert os.path.isfile(file_name), "ROM data generation failed."
+
+
 def emit_parameters_in_rom_internal(node, rtl_dir):
     """
     Enumerate input parameters of the internal node and emit a ROM block with handshake interface
@@ -246,7 +300,7 @@ def emit_parameters_in_rom_internal(node, rtl_dir):
             verilog_name = os.path.join(rtl_dir, f"{node_name}_{param_name}.sv")
             data_name = os.path.join(rtl_dir, f"{node_name}_{param_name}_rom.dat")
             emit_parameters_in_mem_internal(node, param_name, verilog_name, data_name)
-            emit_parameters_in_dat(node, param_name, data_name)
+            emit_parameters_in_dat_internal(node, param_name, data_name)
         else:
             assert False, "Emtting parameters in non-BRAM hardware is not supported."
 
@@ -349,6 +403,8 @@ def emit_parameters_in_rom_hls(node, rtl_dir):
     for each parameter
     """
     node_name = vf(node.name)
+    if not node.meta.module:
+        return
     for param_name, parameter in node.meta.module.named_parameters():
         if (
             node.meta.parameters["hardware"]["interface_parameters"][param_name][
@@ -360,6 +416,7 @@ def emit_parameters_in_rom_hls(node, rtl_dir):
             verilog_name = os.path.join(rtl_dir, f"{node_name}_{param_name}.sv")
             data_name = os.path.join(rtl_dir, f"{node_name}_{param_name}_rom.dat")
             emit_parameters_in_mem_hls(node, param_name, verilog_name, data_name)
-            emit_parameters_in_dat(node, param_name, data_name)
+            # JC
+            # emit_parameters_in_dat_hls(node, param_name, data_name)
         else:
             assert False, "Emtting parameters in non-BRAM hardware is not supported."

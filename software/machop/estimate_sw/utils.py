@@ -63,7 +63,6 @@ def get_input_args(model_name, model, task, data_loader, info):
         ),
     ):
         batch = next(iter(data_loader.train_dataloader))
-        # breakpoint()
         input_args = [
             batch["input_ids"][[0], ...],
             batch["attention_mask"][[0], ...],

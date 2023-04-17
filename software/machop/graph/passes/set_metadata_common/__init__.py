@@ -78,8 +78,6 @@ def set_and_check_metadata_common_without_forward(graph_module, fetch_module_by_
     #         zero_user_nodes.append(node)
     # logger.info("zero_user_nodes:")
     # print(zero_user_nodes)
-    # breakpoint()
-
     # rows = []
     # meta_data_profile = {}
     # for node in node_list:

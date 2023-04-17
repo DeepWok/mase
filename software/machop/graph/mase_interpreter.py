@@ -3,7 +3,6 @@
 # - MaseInterpreter.forward_to_interpret triggers hook functions before/after run each node
 # - Hook functions should only update node.meta, rather than replace nodes
 # ----------------------------
-# Cheng Zhang
 
 from collections import defaultdict
 from logging import getLogger
@@ -151,7 +150,6 @@ class MaseInterpreter(Interpreter):
                 )
                 return output
             elif n.op == "call_module":
-                # breakpoint()
                 module = self.fetch_attr(n.target)
                 self.hook_before_call_module(
                     node=n, module=module, args=args, kwargs=kwargs

@@ -1,4 +1,5 @@
 import inspect
+import torch
 from typing import Tuple
 
 
@@ -48,3 +49,13 @@ def v2p(string):
     Variable to Parameter
     """
     return string.upper().replace("DATA_", "")
+
+
+def get_input_index(node, next_node):
+    """
+    Get the arg index of the next_node for node
+    """
+    arg_count = len(next_node.all_input_nodes)
+    for i in range(0, arg_count):
+        if next_node.meta.parameters["common"]["args"][f"data_in_{i}"]["from"] == node:
+            return i

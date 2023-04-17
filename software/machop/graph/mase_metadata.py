@@ -8,7 +8,7 @@ import torch.fx
 from torch import nn
 from torch.fx import symbolic_trace
 
-from .utils import get_module_by_name, vf
+from .utils import get_module_by_name, vf, v2p
 
 logger = logging.getLogger(__name__)
 
@@ -69,7 +69,7 @@ class MaseMetadata:
         # Top-level model
         self.model = model
         self.quantized_model = quantized_model
-        # The target layer/module in the model
+        # The target module in the model
         self.module = get_module_by_name(model, node.target)
         # The type of the module
         self.type = type(self.module)
@@ -628,13 +628,6 @@ actual keys: {input_keys}"""
         node_name = vf(self.node.name)
         # Common parameters
         self.parameters["common"]["args"] = {}
-        for name, parameter in self.module.named_parameters():
-            self.parameters["common"]["args"][name] = {
-                "type": "float",
-                "precision": (32),
-                "size": parameter.shape,
-            }
-
         # TEMP: Relu does not have in/out features. Try to fetch from the input nodes
         nodes_in = self.node.args
         nodes_out = list(self.node.users.keys())
@@ -766,12 +759,6 @@ actual keys: {input_keys}"""
         ] = self.parameters["hardware"]["verilog_parameters"]["IN_FRAC_WIDTH"]
 
         self.parameters["hardware"]["interface_parameters"] = {}
-        for name, parameter in self.module.named_parameters():
-            self.parameters["hardware"]["interface_parameters"][name] = {
-                "storage": "BRAM",
-                "transpose": False,
-            }
-
         if parameters:
             self._update_hardware_parameters_relu(parameters)
 
@@ -837,12 +824,19 @@ actual keys: {input_keys}"""
     def _init_common_parameters_other(self, parameters):
         self.parameters["common"]["args"] = {}
         self.parameters["common"]["results"] = {}
-        for name, parameter in self.module.named_parameters():
-            self.parameters["common"]["args"][name] = {
-                "type": "float",
-                "precision": (32),
-                "size": parameter.shape,
-            }
+        if self.module:
+            for name, parameter in self.module.named_parameters():
+                self.parameters["common"]["args"][name] = {
+                    "type": "float",
+                    "precision": (32,),
+                    "size": parameter.shape,
+                }
+            for name, parameter in self.module.named_buffers():
+                self.parameters["common"]["args"][name] = {
+                    "type": "float",
+                    "precision": (32,),
+                    "size": parameter.shape,
+                }
 
         in_features = 0
         if hasattr(self.module, "in_features"):
@@ -874,7 +868,7 @@ actual keys: {input_keys}"""
         if arg_count == 1:
             self.parameters["common"]["args"]["data_in"] = {
                 "type": "float",
-                "precision": (32),
+                "precision": (32,),
                 "size": (
                     1,
                     in_features,
@@ -884,7 +878,7 @@ actual keys: {input_keys}"""
             for i in range(0, arg_count):
                 self.parameters["common"]["args"][f"data_in_{i}"] = {
                     "type": "float",
-                    "precision": (32),
+                    "precision": (32,),
                     "size": (
                         1,
                         in_features,
@@ -893,7 +887,7 @@ actual keys: {input_keys}"""
 
         self.parameters["common"]["results"]["data_out"] = {
             "type": "float",
-            "precision": (32),
+            "precision": (32,),
             "size": (
                 1,
                 out_features,
@@ -952,120 +946,59 @@ actual keys: {input_keys}"""
                     "storage": "BRAM",
                     "transpose": False,
                 }
+            for name, parameter in self.module.named_buffers():
+                self.parameters["hardware"]["interface_parameters"][name] = {
+                    "storage": "BRAM",
+                    "transpose": False,
+                }
 
         args_param = self.parameters["common"]["args"]
         results_param = self.parameters["common"]["results"]
 
         arg_count = len(self.node.all_input_nodes)
-        for i in range(0, arg_count):
-            arg_name = "data_in" if arg_count == 1 else f"data_in_{i}"
-
-            if args_param[arg_name]["type"] == "fixed":
-                self.parameters["hardware"]["verilog_parameters"] = {
-                    "IN_WIDTH": self.parameters["common"]["args"][arg_name][
-                        "precision"
-                    ][0],
-                    "IN_FRAC_WIDTH": self.parameters["common"]["args"][arg_name][
-                        "precision"
-                    ][1],
-                    "IN_SIZE": 1,
-                    "IN_DEPTH": math.prod(
-                        self.parameters["common"]["args"][arg_name]["size"]
-                    ),
-                    "OUT_WIDTH": self.parameters["common"]["results"]["data_out"][
-                        "precision"
-                    ][0],
-                    "OUT_FRAC_WIDTH": self.parameters["common"]["results"]["data_out"][
-                        "precision"
-                    ][1],
-                    "OUT_SIZE": 1,
-                }
-
-                # Add other parameters
-                for arg, param in args_param.items():
-                    if arg == arg_name:
-                        continue
-                    # NA means not used
-                    if args_param[arg]["type"] == "NA":
-                        continue
-                    assert (
-                        args_param[arg]["type"] == "fixed"
-                    ), f"Unsupported {arg} type. Only fixed is supported. {self.node}"
-                    cap_arg = arg.upper()
-                    self.parameters["hardware"]["verilog_parameters"][
-                        f"{cap_arg}_SIZE"
-                    ] = math.prod(args_param[arg]["size"])
-                    self.parameters["hardware"]["verilog_parameters"][
-                        f"{cap_arg}_WIDTH"
-                    ] = args_param[arg]["precision"][0]
-                    self.parameters["hardware"]["verilog_parameters"][
-                        f"{cap_arg}_FRAC_WIDTH"
-                    ] = args_param[arg]["precision"][1]
-                for result, param in results_param.items():
-                    if result == "data_out":
-                        continue
-                    assert (
-                        results_param[result]["type"] == "fixed"
-                    ), "Unsupported result type. Only fixed is supported."
-                    cap_result = result.upper()
-                    self.parameters["hardware"]["verilog_parameters"][
-                        f"{cap_result}_SIZE"
-                    ] = math.prod(results_param[result]["size"])
-                    self.parameters["hardware"]["verilog_parameters"][
-                        f"{cap_result}_WIDTH"
-                    ] = results_param[result]["precision"][0]
-                    self.parameters["hardware"]["verilog_parameters"][
-                        f"{cap_result}_FRAC_WIDTH"
-                    ] = results_param[result]["precision"][1]
-            elif args_param[arg_name]["type"] == "float":
-                self.parameters["hardware"]["verilog_parameters"] = {
-                    "IN_WIDTH": self.parameters["common"]["args"][arg_name][
-                        "precision"
-                    ][0],
-                    "IN_SIZE": 1,
-                    "IN_DEPTH": math.prod(
-                        self.parameters["common"]["args"][arg_name]["size"]
-                    ),
-                    "OUT_WIDTH": self.parameters["common"]["results"]["data_out"][
-                        "precision"
-                    ][0],
-                    "OUT_SIZE": 1,
-                }
-
-                # Add other parameters
-                for arg, param in args_param.items():
-                    if arg == arg_name:
-                        continue
-                    # NA means not used
-                    if args_param[arg]["type"] == "NA":
-                        continue
-                    assert (
-                        args_param[arg]["type"] == "float"
-                    ), f"Unsupported {arg} type. Only float is supported. {self.node}"
-                    cap_arg = arg.upper()
-                    self.parameters["hardware"]["verilog_parameters"][
-                        f"{cap_arg}_SIZE"
-                    ] = math.prod(args_param[arg]["size"])
-                    self.parameters["hardware"]["verilog_parameters"][
-                        f"{cap_arg}_WIDTH"
-                    ] = args_param[arg]["precision"][0]
-                for result, param in results_param.items():
-                    if result == "data_out":
-                        continue
-                    assert (
-                        results_param[result]["type"] == "float"
-                    ), "Unsupported result type. Only float is supported."
-                    cap_result = result.upper()
-                    self.parameters["hardware"]["verilog_parameters"][
-                        f"{cap_result}_SIZE"
-                    ] = math.prod(results_param[result]["size"])
-                    self.parameters["hardware"]["verilog_parameters"][
-                        f"{cap_result}_WIDTH"
-                    ] = results_param[result]["precision"][0]
+        # Add other parameters
+        self.parameters["hardware"]["verilog_parameters"] = {}
+        for arg, param in args_param.items():
+            # NA means not used
+            if param["type"] == "NA":
+                continue
+            cap_arg = v2p(arg)
+            if param["type"] == "fixed":
+                self.parameters["hardware"]["verilog_parameters"][f"{cap_arg}_SIZE"] = 1
+                self.parameters["hardware"]["verilog_parameters"][
+                    f"{cap_arg}_WIDTH"
+                ] = param["precision"][0]
+                self.parameters["hardware"]["verilog_parameters"][
+                    f"{cap_arg}_FRAC_WIDTH"
+                ] = param["precision"][1]
+            elif param["type"] == "float":
+                self.parameters["hardware"]["verilog_parameters"][f"{cap_arg}_SIZE"] = 1
+                self.parameters["hardware"]["verilog_parameters"][
+                    f"{cap_arg}_WIDTH"
+                ] = param["precision"][0]
             else:
-                assert False, "Unsupported types. {} of {} for {}".format(
-                    args_param[arg_name]["type"], arg_name, self.node
-                )
+                assert False, "Unknown type"
+        for result, param in results_param.items():
+            cap_result = v2p(result)
+            if param["type"] == "fixed":
+                self.parameters["hardware"]["verilog_parameters"][
+                    f"{cap_result}_SIZE"
+                ] = 1
+                self.parameters["hardware"]["verilog_parameters"][
+                    f"{cap_result}_WIDTH"
+                ] = param["precision"][0]
+                self.parameters["hardware"]["verilog_parameters"][
+                    f"{cap_result}_FRAC_WIDTH"
+                ] = param["precision"][1]
+            elif param["type"] == "float":
+                self.parameters["hardware"]["verilog_parameters"][
+                    f"{cap_result}_SIZE"
+                ] = 1
+                self.parameters["hardware"]["verilog_parameters"][
+                    f"{cap_result}_WIDTH"
+                ] = param["precision"][0]
+            else:
+                assert False, "Unknown type"
 
         if parameters:
             self._update_hardware_parameters_other(parameters)
@@ -1073,7 +1006,6 @@ actual keys: {input_keys}"""
     def _update_hardware_parameters_other(self, parameters):
         if parameters is None:
             arg_count = len(self.node.all_input_nodes)
-            print(self.node)
             if arg_count == 1:
                 for pre_node in self.node.all_input_nodes:
                     in_size = pre_node.meta.parameters["hardware"][
@@ -1101,7 +1033,7 @@ actual keys: {input_keys}"""
                         "verilog_parameters"
                     ]["OUT_SIZE"]
                     self.parameters["hardware"]["verilog_parameters"][
-                        f"IN_0_SIZE"
+                        f"IN_{i}_SIZE"
                     ] = in_size
                     total_size = math.prod(
                         self.parameters["common"]["args"][arg_name]["size"]
@@ -1112,7 +1044,7 @@ actual keys: {input_keys}"""
                         total_size, in_size, self.node
                     )
                     self.parameters["hardware"]["verilog_parameters"][
-                        "IN_0_DEPTH"
+                        f"IN_{i}_DEPTH"
                     ] = int(total_size / in_size)
         else:
             # TODO: multi-inputs?
@@ -1120,13 +1052,22 @@ actual keys: {input_keys}"""
                 self.parameters["hardware"]["verilog_parameters"][param] = value
                 if param == "IN_SIZE":
                     in_size = math.prod(
-                        self.parameters["common"]["args"]["data_in"]["size"]
+                        self.parameters["common"]["args"][f"data_in"]["size"]
                     )
                     assert in_size % value == 0
                     self.parameters["hardware"]["verilog_parameters"]["IN_DEPTH"] = int(
                         in_size / value
                     )
-                    
+                elif param.startswith("IN_") and param.endswidth("_SIZE"):
+                    index = int(param[param.find("IN_") + 3 : param.find("_SIZE")])
+                    in_size = math.prod(
+                        self.parameters["common"]["args"][f"data_in_{index}"]["size"]
+                    )
+                    assert in_size % value == 0
+                    self.parameters["hardware"]["verilog_parameters"]["IN_DEPTH"] = int(
+                        in_size / value
+                    )
+
                 if param == "IN_DEPTH":
                     in_size = math.prod(
                         self.parameters["common"]["args"]["data_in"]["size"]
@@ -1135,7 +1076,6 @@ actual keys: {input_keys}"""
                     self.parameters["hardware"]["verilog_parameters"]["IN_SIZE"] = int(
                         in_size / value
                     )
-
 
     def _verify_parameters_other(self):
         return
