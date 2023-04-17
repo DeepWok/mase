@@ -373,8 +373,8 @@ def get_resnet50(
         pretrained_weight_cls = None
 
     return _resnet(
-        BasicBlock,
-        [2, 2, 2, 2],
+        Bottleneck,
+        [3, 4, 6, 3],
         num_classes=num_classes,
         pretrained_weight_cls=pretrained_weight_cls,
         **kwargs,

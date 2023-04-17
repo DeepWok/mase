@@ -1,6 +1,8 @@
 import logging
+
 import torch
 import torch.nn as nn
+from torch.fx._symbolic_trace import _assert_is_none
 
 logger = logging.getLogger(__name__)
 
@@ -12,7 +14,7 @@ def remove_nonsynthesizable_nodes_pass(mase_graph):
     """
     nodes_to_remove = []
     # nonsynthesizable_nodes = {torch._assert, nn.Dropout, nn.functional.dropout}
-    nonsynthesizable_nodes = {torch._assert}
+    nonsynthesizable_nodes = {torch._assert, _assert_is_none}
     for node in mase_graph.fx_graph.nodes:
         if (
             node.meta.type in nonsynthesizable_nodes
