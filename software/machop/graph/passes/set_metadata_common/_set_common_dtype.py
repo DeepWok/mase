@@ -101,15 +101,18 @@ def _set_non_torch_dtype_precision(item: Dict, dtype):
     item["type"] = NON_TORCH_DTYPE_TO_HW_DTYPE[dtype]
     item["precision"] = NON_TORCH_DTYPE_TO_PRECISION[dtype]
 
+
 def _set_non_torch_dtype_precision_and_format(item: Dict, dtype):
     item["type"] = NON_TORCH_DTYPE_TO_HW_DTYPE[dtype]
     item["precision"] = NON_TORCH_DTYPE_TO_PRECISION[dtype]
     item["precision_format"] = NON_TORCH_DTYPE_TO_PRECISION_FORMAT[dtype]
 
+
 def _get_non_torch_dtype_precision(non_torch_dtype):
     dtype = NON_TORCH_DTYPE_TO_HW_DTYPE[non_torch_dtype]
     precision = NON_TORCH_DTYPE_TO_PRECISION[non_torch_dtype]
     return dtype, precision
+
 
 def _set_quant_dtype_precision(item: Dict, config: Dict, config_index: str):
     config_name = config["name"]
@@ -211,6 +214,10 @@ def _set_dtype_before_call_function(node: Node, function, args, kwargs):
         torch.transpose,
         torch.permute,
         torch.unbind,
+        F.dropout,
+        F.dropout1d,
+        F.dropout2d,
+        F.dropout3d,
     ):
         if len(node.all_input_nodes) == 1:
             pass
@@ -232,6 +239,8 @@ def _set_dtype_before_call_function(node: Node, function, args, kwargs):
                     mc_args[f"data_in_{i}"],
                     *_get_dtype_precision(args[0][i]),
                 )
+    # elif function in (torch.max, torch.maximum, torch.min, torch.minimum):
+    #     pass
     elif function in (operator.getitem, getattr):
         if len(node.all_input_nodes) == 1:
             pass
@@ -283,12 +292,20 @@ def _set_dtype_before_call_function(node: Node, function, args, kwargs):
         logger.warning("A quantized `matmul_integer` is treated as a `bmm_integer`")
     # -----------------------------------------
     else:
-        logger.warning(f"Unrecognized function `{function}` when setting dtype")
+        logger.warning(f"Unrecognized function `{function}` when setting input dtype")
 
 
 def _set_dtype_after_call_function(node, function, output):
     mc_results = node.meta["common"]["results"]
     if function in (
+        F.relu,
+        F.hardswish,
+        F.hardsigmoid,
+        F.sigmoid,
+        F.silu,
+        F.softmax,
+        torch.matmul,
+        torch.bmm,
         operator.add,
         torch.add,
         operator.mul,
@@ -302,12 +319,6 @@ def _set_dtype_after_call_function(node, function, output):
         torch.unbind,
         torch.mean,
         torch._assert,
-        torch.reshape,
-        torch.flatten,
-        torch.transpose,
-        torch.permute,
-        torch.concat,
-        torch.cat,
         torch.unbind,
         operator.getitem,
         stochastic_depth,
@@ -319,8 +330,21 @@ def _set_dtype_after_call_function(node, function, output):
             _set_type_precision(mc_results["data_out"], *_get_dtype_precision(output))
     elif function in (add_integer, matmul_integer, bmm_integer, relu_integer):
         pass
+    elif function in (
+        F.dropout,
+        F.dropout1d,
+        F.dropout2d,
+        F.dropout3d,
+        torch.reshape,
+        torch.flatten,
+        torch.transpose,
+        torch.permute,
+        torch.concat,
+        torch.cat,
+    ):
+        pass
     else:
-        logger.warning(f"Unrecognized function `{function}` when setting dtype")
+        logger.warning(f"Unrecognized function `{function}` when setting output dtype")
 
 
 def _set_dtype_before_call_module(node, module, args, kwargs):
@@ -519,6 +543,10 @@ def _set_dtype_of_nodes_depending_on_neighbors(
             F.dropout3d,
             operator.getitem,
             getattr,
+            # torch.max,
+            # torch.maximum,
+            # torch.min,
+            # torch.minimum,
         ):
             _set_smaller_width_in_neighbors(node, real_target=real_target)
     elif node.op == "call_module":

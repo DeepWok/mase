@@ -97,6 +97,7 @@ class OPTLearnedPositionalEmbedding(nn.Embedding):
         return super().forward(positions + self.offset)
 
 
+# TODO: mark_as_leaf_module
 class OPTAttentionPatched(nn.Module):
     """
     - FX-traceable Multi-headed attention from 'Attention Is All You Need' paper
@@ -263,6 +264,7 @@ class OPTDecoderLayerPatched(nn.Module):
     def __init__(self, config: OPTConfigPatched):
         super().__init__()
         self.embed_dim = config.hidden_size
+        # TODO: mark_as_leaf_module
         self.self_attn = OPTAttentionPatched(
             embed_dim=self.embed_dim,
             num_heads=config.num_attention_heads,

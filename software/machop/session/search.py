@@ -1,12 +1,12 @@
-import toml
-import random
-import os
 import logging
+import os
+import random
 
+import toml
+from hyperopt import fmin, hp, rand, tpe
 from machop.models import vision_models
 from machop.modify.modifier import Modifier
 from machop.utils import to_numpy
-from hyperopt import fmin, tpe, hp, rand
 
 logger = logging.getLogger(__name__)
 
@@ -69,6 +69,7 @@ class SearchQuantization(SearchBase):
                     tmp_name = "add"
                 elif "relu" in n.name:
                     tmp_name = "relu"
+                    # FIXME: tmp_name is not always assigned
                 functions_to_modify[tmp_name] = dict(search_space)
             elif n.op == "call_module":
                 # TODO: batchnorm is skipped in modify?
@@ -151,12 +152,12 @@ class SearchQuantization(SearchBase):
             meta_name, node, key = entry.split("/")
             if node not in config[meta_name]:
                 if key == "name":
-                    config[meta_name][node] = {key: 'integer'}
+                    config[meta_name][node] = {key: "integer"}
                 else:
                     config[meta_name][node] = {key: int(value)}
             else:
                 if key == "name":
-                    config[meta_name][node][key] = 'integer'
+                    config[meta_name][node][key] = "integer"
                 else:
                     config[meta_name][node][key] = int(value)
         return config

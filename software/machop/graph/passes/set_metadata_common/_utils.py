@@ -32,16 +32,14 @@ def _get_next_available_dtype_info(node: Node):
                 raise RuntimeError(
                     f"No data_in/data_in_0 keys in Node {next_node}({next_node.op}: {next_node.target})"
                 )
-    logger.debug(
-        f"Node {node} has no user ({len(node.users.keys())}), and no available dtype & precision info can be fetched from this node."
-    )
+    logger.debug(f"Node {node} has no users.")
     return None
 
 
 def _get_prev_available_dtype_info(node: Node):
     for prev_node in node.all_input_nodes:
         if prev_node.op in ("placeholder", "get_attr", "output"):
-            return _get_next_available_dtype_info(prev_node)
+            return _get_prev_available_dtype_info(prev_node)
         else:
             if (
                 prev_node.meta["common"]["results"]["data_out"]["type"] != "NA"
@@ -50,5 +48,5 @@ def _get_prev_available_dtype_info(node: Node):
                 return prev_node.meta["common"]["results"]["data_out"]
             else:
                 return _get_prev_available_dtype_info(prev_node)
-    logger.debug(f"Node {node} has no input nodes!!!")
+    logger.debug(f"Node {node} has no input nodes")
     return None

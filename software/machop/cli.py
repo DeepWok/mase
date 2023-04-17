@@ -21,13 +21,13 @@ from .dataset import MyDataModule, available_datasets, get_dataset_info
 from .estimate_sw import run_estimator
 from .evaluate_hw.mase_hardware_evaluator import get_synthesis_results
 from .graph.dummy_inputs import get_dummy_inputs
+from .graph.mase_graph import MaseGraph
 from .graph.mase_tracer import mase_symbolic_trace
 from .graph.passes import (
-    remove_nonsynthesizable_nodes_pass,
-    fuse_conv_bn_pass,
     create_and_save_common_metadata,
+    fuse_conv_bn_pass,
+    remove_nonsynthesizable_nodes_pass,
 )
-from .graph.mase_graph import MaseGraph
 from .models import (
     manual_nlp_models,
     manual_vision_models,
@@ -775,10 +775,14 @@ class Machop:
             model_name=args.model, task=args.task, model=model
         )
         model.eval()
-        graph_module = mase_symbolic_trace(model, concrete_args=dummy_inputs)
+        # graph_module = mase_symbolic_trace(model, concrete_args=dummy_inputs)
 
         # Preprocess graph module for both models
-        graph_module = fuse_conv_bn_pass(graph_module)
+        if args.model in vision_models:
+            graph_module = mase_symbolic_trace(model, concrete_args=dummy_inputs)
+            graph_module = fuse_conv_bn_pass(graph_module)
+        else:
+            graph_module = model  # !: dirty but works
 
         # Create a modified graph module for interpreting
         model_to_modify = deepcopy(graph_module)
@@ -794,6 +798,7 @@ class Machop:
         modified_graph_module = m.modify()
         if args.model in nlp_models:
             self.model["model"] = graph_module
+            self.modified_model = deepcopy(self.model)
             self.modified_model["model"] = modified_graph_module
         else:
             self.model = graph_module

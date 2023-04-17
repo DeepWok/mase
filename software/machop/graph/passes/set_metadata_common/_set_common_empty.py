@@ -101,6 +101,10 @@ def _set_empty_metadata_before_call_function(node: Node, function, args, kwargs)
         operator.getitem,
         stochastic_depth,
         torch._assert,
+        # torch.max,
+        # torch.maximum,
+        # torch.min,
+        # torch.minimum,
     ):
         data_in_names = []
         if len(node.all_input_nodes) == 1:
