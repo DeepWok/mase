@@ -229,8 +229,12 @@ class MaseGraph:
             next_nodes_in = []
             for node in nodes_in:
                 for next_node, x in node.users.items():
+                    # This might have a bug - for now assume there is only one result
                     if next_node.meta.parameters["hardware"]["is_implicit"]:
+                        if node not in next_nodes_in:
+                            next_nodes_in.append(node)
                         continue
+                    next_nodes_in.append(next_node)
                     arg_count = len(next_node.all_input_nodes)
                     if arg_count == 1:
                         assert (
@@ -295,10 +299,6 @@ class MaseGraph:
                                 f"IN_{i}_SIZE"
                             ],
                         )
-                    if next_node.op == "output":
-                        next_nodes_in.append(node)
-                    else:
-                        next_nodes_in.append(next_node)
             assert (
                 nodes_in != next_nodes_in
             ), f"Parsing error: cannot find the next nodes: {nodes_in}."
