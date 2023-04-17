@@ -1,0 +1,11 @@
+{
+  "name": "Add code owner for triage",
+  "includes": [
+    "*"
+  ],
+  "action": "review",
+  "users": [
+    "JianyiCheng",
+    "Aaron-Zhao123"
+  ]
+}

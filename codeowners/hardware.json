@@ -1,0 +1,15 @@
+{
+  "name": "Software flow",
+  "includes": [
+    "*/hardware/*",
+    "*/hls/*",
+    "*/machop/graph/*",
+    "*/machop/synthesize/*",
+    "*/machop/evaluate_hw/*",
+    "*/docs/*"
+  ],
+  "action": "review",
+  "users": [
+    "JianyiCheng"
+  ]
+}
