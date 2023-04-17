@@ -26,6 +26,7 @@ from .quantizers import (
     FUNC_MAP_NEO,
     METHOD_MAP_NEO,
     MODULE_CLS_MAP_NEO,
+    QUANTIZED_FUNC_CLASSES,
     QUANTIZED_MODULE_CLASSES,
 )
 
@@ -82,11 +83,13 @@ class Modifier:
         config_path: Union[str, dict],
         dummy_inputs_for_fx: Dict = {},
         module_classes_to_modify: Dict[str, Dict] = None,
-        functions_to_modify: Dict[str, Dict] = None,
-        methods_to_modify: Dict[str, Dict] = None,
-        modules_to_modify: Dict[str, Dict] = None,
+        function_classes_to_modify: Dict[str, Dict] = None,
+        method_classes_to_modify: Dict[str, Dict] = None,
+        module_nodes_to_modify: Dict[str, Dict] = None,
+        function_nodes_to_modify: Dict[str, Dict] = None,
+        method_nodes_to_modify: Dict[str, Dict] = None,
         custom_leaf_module_classes: List[type] = [],
-        create_new_custom_module_fn: Callable = None,
+        create_new_custom_module_fn: Callable = dummy_create_new_module_fn,
         save_dir: str = None,
         silent: bool = False,
     ) -> None:
@@ -94,10 +97,12 @@ class Modifier:
         Note that modules_to_modify will overwrites module_classes_to_modify
 
         A config file includes:
-        - `module_classes_to_modify` (required): a mapping of "module_class_name -> module_class_config"
-        - `functions_to_modify` (required): a mapping of "function_name -> function_config"
-        - `methods_to_modify (required): a mapping of "method_name -> substitute_function_config"
-        - `modules_to_modify` (optional): a mapping of "module_name -> module_config"
+        - `module_cls_to_modify` (required): a mapping of "module class name -> new module class config"
+        - `function_cls_to_modify` (required): a mapping of "function class name -> new function config"
+        - `method_cls_to_modify (required): a mapping of "method class name -> substitute function_config"
+        - `module_nodes_to_modify` (optional): a mapping of "module node.target -> new module config"
+        - `function_nodes_to_modify` (optional): a mapping of "function node.name -> new function config"
+        - `method_nodes_to_modify` (optional): a mapping of "function node.name -> substitute function config"
 
         A `create_new_custom_module` follows the interface:
 
@@ -113,22 +118,28 @@ class Modifier:
         Args:
         - config_path (str): path to toml config file
         - dummy_inputs_for_fx: inputs provided for model.forward to freeze some dynamic control flows
-        - module_classes_to_modify (Dict[str, Dict]): overwrites `model_classes_to_modify` in config
-        - functions_to_modify (Dict[str, Dict]): overwrites `functions_to_modify` in config
-        - methods_to_modify (Dict[str, Dict]): overwrites `methods_to_modify` in config
-        - modules_to_modify (Dict[str, Dict]): overwrites `modules_to_modify` in config.
+        - module_cls_to_modify (Dict[str, Dict]): overwrites `model_classes_to_modify` in config
+        - function_cls_to_modify (Dict[str, Dict]): overwrites `functions_to_modify` in config
+        - method_cls_to_modify (Dict[str, Dict]): overwrites `methods_to_modify` in config
+        - module_nodes_to_modify (Dict[str, Dict]): overwrites `modules_to_modify` in config.
+        - function_nodes_to_modify
+        - method_nodes_to_modify
         - create_new_custom_module (Callable): call this function to create new layers if a module name in modules_to_modify corresponds to non-built-in module class
         - save_dir is expected to be "${no_hyphen_model_name}/software/modify-sw"
         """
 
+        assert isinstance(model, torch.nn.Module)
         # keep a copy of original model only for comparison
         self.original_model = deepcopy(model)
 
         self.config = None
         self.dummy_inputs = dummy_inputs_for_fx
         self.module_classes_to_modify = {}
-        self.functions_to_modify = {}
-        self.methods_to_modify = {}
+        self.function_classes_to_modify = {}
+        self.method_classes_to_modify = {}
+        self.module_nodes_to_modify = {}
+        self.function_nodes_to_modify = {}
+        self.method_nodes_to_modify = {}
         self.create_new_custom_module = create_new_custom_module_fn
         self.save_dir = save_dir
         self.graph = None
@@ -140,14 +151,18 @@ class Modifier:
         self.load_config(config_path)
         self.overwrite_config(
             module_classes_to_modify,
-            functions_to_modify,
-            methods_to_modify,
-            modules_to_modify,
+            function_classes_to_modify,
+            method_classes_to_modify,
+            module_nodes_to_modify,
+            function_nodes_to_modify,
+            method_nodes_to_modify,
         )
-        self.check_modifiable(model)
-        self._save_config()
+
         # build fx.Graph
         self.build_graph(model, dummy_inputs_for_fx, custom_leaf_module_classes)
+        # check if target to modify exists in the graph
+        self.check_modifiable()
+        self._save_config()
 
     def load_config(self, config_path: Union[str, dict]):
         if config_path is None:
@@ -163,31 +178,123 @@ class Modifier:
     def overwrite_config(
         self,
         module_classes_to_modify: Dict[str, Dict],
-        functions_to_modify: Dict[str, Dict],
-        methods_to_modify: Dict[str, Dict],
-        modules_to_modify: Dict[str, Dict],
+        function_classes_to_modify: Dict[str, Dict],
+        method_classes_to_modify: Dict[str, Dict],
+        module_nodes_to_modify: Dict[str, Dict],
+        function_nodes_to_modify: Dict[str, Dict],
+        method_nodes_to_modify: Dict[str, Dict],
     ):
         if self.config is None:
             return
-        assert (
-            "module_classes_to_modify" in self.config
-        ), "Cannot find `module_classes_to_modify` in config"
-        assert (
-            "functions_to_modify" in self.config
-        ), "Cannot find `functions_to_modify` in config"
-        assert (
-            "methods_to_modify" in self.config
-        ), "Cannot find `methods_to_modify` in config"
+        # assert (
+        #     "module_classes_to_modify" in self.config
+        # ), "Cannot find `module_classes_to_modify` in config"
+        # assert (
+        #     "functions_to_modify" in self.config
+        # ), "Cannot find `functions_to_modify` in config"
+        # assert (
+        #     "methods_to_modify" in self.config
+        # ), "Cannot find `methods_to_modify` in config"
         if module_classes_to_modify is not None:
-            self.config["module_classes_to_modify"] = module_classes_to_modify
-        if functions_to_modify is not None:
-            self.config["functions_to_modify"] = functions_to_modify
-        if methods_to_modify is not None:
-            self.config["methods_to_modify"] = methods_to_modify
-        if "modules_to_modify" not in self.config:
-            self.config["modules_to_modify"] = {}
-        if modules_to_modify is not None:
-            self.config["modules_to_modify"] = modules_to_modify
+            self.config["module_classes_to_modify"] |= module_classes_to_modify
+        if function_classes_to_modify is not None:
+            self.config["function_classes_to_modify"] |= function_classes_to_modify
+        if method_classes_to_modify is not None:
+            self.config["method_classes_to_modify"] |= method_classes_to_modify
+        if module_nodes_to_modify is not None:
+            self.config["module_nodes_to_modify"] |= module_nodes_to_modify
+        if function_nodes_to_modify is not None:
+            self.config["function_nodes_to_modify"] |= function_nodes_to_modify
+        if method_nodes_to_modify is not None:
+            self.config["method_nodes_to_modify"] |= method_nodes_to_modify
+        if (
+            len(self.config.get("module_classes_to_modify", [])) == 0
+            and len(self.config.get("function_classes_to_modify", [])) == 0
+            and len(self.config.get("method_classes_to_modify", [])) == 0
+            and len(self.config.get("module_nodes_to_modify", [])) == 0
+            and len(self.config.get("function_node_to_modify", [])) == 0
+            and len(self.config.get("method_node_to_modify", [])) == 0
+        ):
+            logger.warning("No modify config found!")
+
+    def build_graph(self, model, dummy_inputs, custom_leaf_module_classes):
+        clear_user_custom_leaf_modules()
+        for custom_cls in custom_leaf_module_classes:
+            mark_as_user_custom_leaf_module(custom_cls)
+        graph = MaseTracer().trace(model, dummy_inputs)
+        self.graph = graph
+        self.graph_module = GraphModule(model, graph)
+
+    def check_modifiable(self):
+        """
+        Check if model class, function class, and method class are supported to modify
+        Check if module node name, function node name, and method node name exists in model's graph
+
+        update corresponding class list
+        """
+        if self.config is None:
+            return
+
+        # check module cls
+        if "module_classes_to_modify" in self.config:
+            for module_cls_name, module_cls_config in self.config[
+                "module_classes_to_modify"
+            ].items():
+                assert (
+                    module_cls_name in MODULE_CLASS_NAME_TO_MODULE_CLASS
+                ), f"Unsupported module class: {module_cls_name}"
+                module_cls = MODULE_CLASS_NAME_TO_MODULE_CLASS[module_cls_name]
+                self.module_classes_to_modify |= {module_cls: module_cls_config}
+        # check func cls
+        if "function_classes_to_modify" in self.config:
+            for func_name, func_config in self.config[
+                "function_classes_to_modify"
+            ].items():
+                assert (
+                    func_name in FUNCTION_NAME_TO_FUNCTIONS
+                ), f"Unsupported function {func_name}"
+                for func in FUNCTION_NAME_TO_FUNCTIONS[func_name]:
+                    self.function_classes_to_modify |= {func: func_config}
+        # check method cls
+        if "method_classes_to_modify" in self.config:
+            for method_name, method_config in self.config[
+                "method_classes_to_modify"
+            ].items():
+                assert method_name in METHOD_NAMES, f"Unsupported method {method_name}"
+                self.method_classes_to_modify |= {method_name: method_config}
+        # check module node.target
+        if "module_nodes_to_modify" in self.config:
+            module_names = list(
+                map(
+                    lambda x: x.target,
+                    filter(lambda x: x.op == "call_module", self.graph.nodes),
+                )
+            )
+            for name in self.config["module_nodes_to_modify"]:
+                assert name in module_names
+            self.module_nodes_to_modify = self.config["module_nodes_to_modify"]
+        # check func node.name
+        if "function_nodes_to_modify" in self.config:
+            function_names = list(
+                map(
+                    lambda x: x.name,
+                    filter(lambda x: x.op == "call_function", self.graph.nodes),
+                )
+            )
+            for name in self.config["function_nodes_to_modify"]:
+                assert name in function_names
+            self.function_nodes_to_modify = self.config["function_nodes_to_modify"]
+        # check method node.name
+        if "method_nodes_to_modify" in self.config:
+            method_names = list(
+                map(
+                    lambda x: x.name,
+                    filter(lambda x: x.op == "call_method", self.graph.nodes),
+                )
+            )
+            for name in self.config["method_nodes_to_modify"]:
+                assert name in method_names
+            self.method_nodes_to_modify = self.config["method_nodes_to_modify"]
 
     def _save_config(self):
         if self.save_dir:
@@ -197,46 +304,6 @@ class Modifier:
             with open(config_path, "w+") as f:
                 toml.dump(self.config, f)
             logger.info(f"Modify-sw config is saved to {config_path}")
-
-    def check_modifiable(self, model):
-        """
-        Check if model class names, function names, and method names are supported
-        Check if module names exist in model
-        """
-        if self.config is None:
-            return
-        for module_cls_name, module_cls_config in self.config[
-            "module_classes_to_modify"
-        ].items():
-            assert (
-                module_cls_name in MODULE_CLASS_NAME_TO_MODULE_CLASS
-            ), f"Unsupported module class: {module_cls_name}"
-            module_cls = MODULE_CLASS_NAME_TO_MODULE_CLASS[module_cls_name]
-            self.module_classes_to_modify |= {module_cls: module_cls_config}
-
-        for func_name, func_config in self.config["functions_to_modify"].items():
-            assert (
-                func_name in FUNCTION_NAME_TO_FUNCTIONS
-            ), f"Unsupported function {func_name}"
-            for func in FUNCTION_NAME_TO_FUNCTIONS[func_name]:
-                self.functions_to_modify |= {func: func_config}
-
-        for method_name, method_config in self.config["methods_to_modify"].items():
-            assert method_name in METHOD_NAMES, f"Unsupported method {method_name}"
-            self.methods_to_modify |= {method_name: method_config}
-
-        module_names = list(dict(model.named_modules()).keys())
-        for name in self.config["modules_to_modify"]:
-            assert name in module_names, f"Name {name} not found in model"
-        self.modules_to_modify = self.config["modules_to_modify"]
-
-    def build_graph(self, model, dummy_inputs, custom_leaf_module_classes):
-        clear_user_custom_leaf_modules()
-        for custom_cls in custom_leaf_module_classes:
-            mark_as_user_custom_leaf_module(custom_cls)
-        graph = MaseTracer().trace(model, dummy_inputs)
-        self.graph = graph
-        self.graph_module = GraphModule(model, graph)
 
     def modify(self) -> GraphModule:
         is_training_mode = self.graph_module.training
@@ -385,10 +452,11 @@ class Modifier:
                 module = get_module_by_name(self.graph_module, module_name)
                 module_cls = type(module)
 
-                if module_name in self.modules_to_modify:
+                if module_name in self.module_nodes_to_modify:
                     # fetch config for module class
-                    sub_config = self.modules_to_modify[module_name]
-                    # .named_modules() may include repeated nodes
+                    sub_config = self.module_nodes_to_modify[module_name]
+                    # .named_modules() may include repeated nodes,
+                    # if this node has been modified, just skip it
                     if module_cls in QUANTIZED_MODULE_CLASSES:
                         continue
                 elif module_cls in self.module_classes_to_modify:
@@ -396,7 +464,10 @@ class Modifier:
                     sub_config = self.module_classes_to_modify[module_cls]
                 else:
                     continue
-                if sub_config["name"] == "default":
+
+                if sub_config["name"] == "NA":
+                    continue
+                elif sub_config["name"] == "default":
                     sub_config = default_config
 
                 try:
@@ -416,59 +487,79 @@ class Modifier:
                 node.meta["software"]["modify-sw"] = {
                     "config": getattr(new_module, "config", sub_config)
                 }
-            # Coarse-grained function replacement
+            # Coarse-grained + fine-grained function replacement
             elif node.op == "call_function":
-                function = node.target
-                if function in self.functions_to_modify:
-                    # function_name = FUNCTION_TO_FUNCTION_NAME[function]
-                    # sub_config = self.functions_to_modify[function_name, default_config)
-                    sub_config = self.functions_to_modify[function]
-                    if sub_config["name"] == "default":
-                        sub_config = default_config
-                    new_function, args, kwargs = _get_new_func_args_and_kwargs(
-                        original_node=node, config=sub_config
+                function_node = node.name
+                function_cls = node.target
+
+                if function_node in self.function_nodes_to_modify:
+                    sub_config = self.function_nodes_to_modify[function_node]
+                    if function_cls in QUANTIZED_FUNC_CLASSES:
+                        continue
+                elif function_cls in self.function_classes_to_modify:
+                    sub_config = self.function_classes_to_modify[function_cls]
+                else:
+                    continue
+
+                if sub_config["name"] == "NA":
+                    continue
+                elif sub_config["name"] == "default":
+                    sub_config = default_config
+                new_function, args, kwargs = _get_new_func_args_and_kwargs(
+                    original_node=node, config=sub_config
+                )
+                with self.graph.inserting_after(node):
+                    new_node = self.graph.call_function(
+                        new_function, args=args, kwargs=kwargs
                     )
-                    with self.graph.inserting_after(node):
-                        new_node = self.graph.call_function(
-                            new_function, args=args, kwargs=kwargs
-                        )
-                        new_node.name = node.name
-                        new_node.meta = copy(node.meta)
-                        new_node.meta["software"]["modify-sw"] = {"config": sub_config}
-                        node.replace_all_uses_with(new_node)
-                    self.graph.erase_node(node)
-            # Coarse-grained Tensor method replacement
+                    new_node.name = node.name
+                    new_node.meta = copy(node.meta)
+                    new_node.meta["software"]["modify-sw"] = {"config": sub_config}
+                    node.replace_all_uses_with(new_node)
+                self.graph.erase_node(node)
+            # Coarse-grained + fine-grained Tensor method replacement
             # Note that Modifier replace methods with functions
             elif node.op == "call_method":
                 # Replace method with function
+                method_node = node.name
                 method_name = node.target
-                if method_name in self.methods_to_modify:
-                    sub_config = self.methods_to_modify[method_name]
-                    if sub_config["name"] == "default":
-                        sub_config = default_config
-                    (
-                        substitute_func,
-                        args,
-                        kwargs,
-                    ) = _get_substitute_function_args_and_kwargs(
-                        original_node=node, config=sub_config
+
+                if method_node in self.method_nodes_to_modify:
+                    sub_config = self.method_nodes_to_modify[method_node]
+                elif method_name in self.method_classes_to_modify:
+                    sub_config = self.method_classes_to_modify[method_name]
+                else:
+                    continue
+
+                if sub_config["name"] == "NA":
+                    continue
+                elif sub_config["name"] == "default":
+                    sub_config = default_config
+                (
+                    substitute_func,
+                    args,
+                    kwargs,
+                ) = _get_substitute_function_args_and_kwargs(
+                    original_node=node, config=sub_config
+                )
+                with self.graph.inserting_after(node):
+                    new_node = self.graph.call_function(
+                        substitute_func, args=args, kwargs=kwargs
                     )
-                    with self.graph.inserting_after(node):
-                        new_node = self.graph.call_function(
-                            substitute_func, args=args, kwargs=kwargs
-                        )
-                        new_node.name = node.name
-                        new_node.meta = copy(node.meta)
-                        new_node.meta["software"]["modify-sw"] = {"config": sub_config}
-                        node.replace_all_uses_with(new_node)
-                    self.graph.erase_node(node)
+                    new_node.name = node.name
+                    new_node.meta = copy(node.meta)
+                    new_node.meta["software"]["modify-sw"] = {"config": sub_config}
+                    node.replace_all_uses_with(new_node)
+                self.graph.erase_node(node)
         self.graph.lint()
         self.graph_module.recompile()
         self.graph_module = GraphModule(self.graph_module, self.graph)
-        if len(self.modules_to_modify) > 0:
-            granularity = "Coarse-grained and fine-grained"
+        # fmt: off
+        if len(self.module_nodes_to_modify) + len(self.function_nodes_to_modify) + len(self.method_nodes_to_modify)> 0:
+            granularity = "fine-grained"
         else:
             granularity = "Coarse-grained"
+        # fmt: on
         if not self.silent:
             logger.info(f"{granularity} software modification done")
 
@@ -493,8 +584,11 @@ class Modifier:
     ) -> Dict:
         config = {
             "module_classes_to_modify": {},
-            "functions_to_modify": {},
-            "methods_to_modify": {},
+            "function_classes_to_modify": {},
+            "method_classes_to_modify": {},
+            "module_nodes_to_modify": {},
+            "function_nodes_to_modify": {},
+            "method_nodes_to_modify": {},
         }
         config["default"] = {
             "name": "integer",
@@ -506,19 +600,14 @@ class Modifier:
             "bias_frac_width": 5,
         }
 
-        for cls_name in sorted(MODULE_CLASS_NAME_TO_MODULE_CLASS.keys()):
-            config["module_classes_to_modify"][cls_name] = {"name": "default"}
+        for module_cls in sorted(MODULE_CLASS_NAME_TO_MODULE_CLASS.keys()):
+            config["module_classes_to_modify"][module_cls] = {"name": "default"}
 
-        for func_name in sorted(FUNCTION_NAME_TO_FUNCTIONS.keys()):
-            config["functions_to_modify"][func_name] = {"name": "default"}
-        config["methods_to_modify"] = {
-            method_name: "default" for method_name in sorted(METHOD_NAMES)
-        }
+        for func_cls in sorted(FUNCTION_NAME_TO_FUNCTIONS.keys()):
+            config["function_classes_to_modify"][func_cls] = {"name": "default"}
 
-        for method_name in sorted(METHOD_NAMES):
-            config["methods_to_modify"][method_name] = {"name": "default"}
-
-        config["modules_to_modify"] = {}
+        for method_cls in sorted(METHOD_NAMES):
+            config["method_classes_to_modify"][method_cls] = {"name": "default"}
 
         is_training_mode = model.training
         model.eval()
@@ -528,7 +617,19 @@ class Modifier:
         graph = MaseTracer().trace(model, dummy_inputs)
         for node in graph.nodes:
             if node.op == "call_module":
-                config["modules_to_modify"][node.target] = {"name": "default"}
+                model_cls = type(get_module_by_name(model, node.target))
+                name = (
+                    "default"
+                    if model_cls in MODULE_CLASS_TO_MODULE_CLASS_NAME
+                    else "NA"
+                )
+                config["module_nodes_to_modify"][node.target] = {"name": name}
+            elif node.op == "call_function":
+                name = "default" if node.target in FUNCTION_TO_FUNCTION_NAME else "NA"
+                config["function_nodes_to_modify"][node.name] = {"name": name}
+            elif node.op == "call_method":
+                name = "default" if node.target in METHOD_NAMES else "NA"
+                config["method_nodes_to_modify"][node.name] = {"name": name}
 
         save_dir = os.path.dirname(save_path)
         if not os.path.exists(save_dir):
@@ -648,3 +749,15 @@ def _get_substitute_function_args_and_kwargs(original_node, config: Dict):
     kwargs = original_node.kwargs | additional_kwargs
 
     return substitute_func, args, kwargs
+
+
+def is_modifiable(node: Node, model: nn.Module) -> bool:
+    if node.op == "call_module":
+        module_cls = type(get_module_by_name(model, node.target))
+        return module_cls in MODULE_CLASS_TO_MODULE_CLASS_NAME
+    elif node.op == "call_function":
+        return node.target in FUNCTION_TO_FUNCTION_NAME
+    elif node.op == "call_method":
+        return node.target in METHOD_NAMES
+    else:
+        return False

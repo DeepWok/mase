@@ -16,5 +16,5 @@ weight_frac_width = [1, 2, 4, 8, 16, 32]
 weight_width = [1, 2, 4, 8, 16, 32]
 
 [search_data]
-dataloader = 'train_dataloader'
+# dataloader = 'train_dataloader'
 num_batches = 8

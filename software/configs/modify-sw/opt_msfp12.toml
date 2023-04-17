@@ -50,7 +50,7 @@ data_in_width = 4
 name = "msfp"
 
 # Attention mechanism
-[functions_to_modify.bmm]
+[function_classes_to_modify.bmm]
 data_in_block_size = [1, 16]
 data_in_exponent_bias = 127
 data_in_exponent_width = 8
@@ -61,7 +61,7 @@ weight_exponent_bias = 127
 weight_exponent_width = 8
 weight_width = 4
 
-[functions_to_modify.matmul]
+[function_classes_to_modify.matmul]
 data_in_block_size = [1, 16]
 data_in_exponent_bias = 127
 data_in_exponent_width = 8
@@ -72,25 +72,14 @@ weight_exponent_bias = 127
 weight_exponent_width = 8
 weight_width = 4
 
-[functions_to_modify.relu]
+[function_classes_to_modify.relu]
 data_in_block_size = [1, 16]
 data_in_exponent_bias = 127
 data_in_exponent_width = 8
 data_in_width = 4
 name = "msfp"
 
-[methods_to_modify.bmm]
-data_in_block_size = [1, 16]
-data_in_exponent_bias = 127
-data_in_exponent_width = 8
-data_in_width = 4
-name = "msfp"
-weight_block_size = [16, 1]
-weight_exponent_bias = 127
-weight_exponent_width = 8
-weight_width = 4
-
-[methods_to_modify.matmul]
+[method_classes_to_modify.bmm]
 data_in_block_size = [1, 16]
 data_in_exponent_bias = 127
 data_in_exponent_width = 8
@@ -101,7 +90,18 @@ weight_exponent_bias = 127
 weight_exponent_width = 8
 weight_width = 4
 
-[methods_to_modify.relu]
+[method_classes_to_modify.matmul]
+data_in_block_size = [1, 16]
+data_in_exponent_bias = 127
+data_in_exponent_width = 8
+data_in_width = 4
+name = "msfp"
+weight_block_size = [16, 1]
+weight_exponent_bias = 127
+weight_exponent_width = 8
+weight_width = 4
+
+[method_classes_to_modify.relu]
 data_in_block_size = [1, 16]
 data_in_exponent_bias = 127
 data_in_exponent_width = 8

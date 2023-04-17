@@ -1,24 +1,62 @@
+import copy
 import logging
 import os
 import random
 
 import toml
+import torch
 from hyperopt import fmin, hp, rand, tpe
-from machop.models import vision_models
-from machop.modify.modifier import Modifier
+from machop.graph.mase_graph import _get_prev_call_node, get_module_by_name
+from machop.models import nlp_models
+from machop.modify.modifier import Modifier, is_modifiable
+from machop.modify.quantizers.quantizers import integer_fraction
 from machop.utils import to_numpy
+from torchvision.models.feature_extraction import (
+    NodePathTracer,
+    create_feature_extractor,
+    get_graph_node_names,
+)
+
+from .plt_wrapper import get_model_wrapper
 
 logger = logging.getLogger(__name__)
 
 
 class SearchBase:
-    def __init__(self, model_name, model, data_module, search_config, save_dir) -> None:
+    def __init__(
+        self,
+        model_name,
+        info,
+        model,
+        task,
+        dummy_inputs,
+        data_module,
+        search_config,
+        save_dir,
+        accelerator="auto",
+    ) -> None:
         self.model_name = model_name
+        self.info = info
         self.model = model
+        self.task = task
+        self.dummy_inputs = dummy_inputs
         self._parse_config(search_config)
         self._prepare_loader(data_module)
-        self.modifier = Modifier(model=self.model, config_path=None, silent=True)
+        self.modifier = Modifier(
+            model=self.model["model"] if self._is_nlp_model(model_name) else self.model,
+            dummy_inputs_for_fx=dummy_inputs,
+            config_path=None,
+            silent=True,
+        )
         self.save_dir = save_dir
+        if accelerator == "auto":
+            self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+        elif accelerator == "gpu":
+            self.device = torch.device("cuda:0")
+        elif accelerator == "cpu":
+            self.device = torch.device("cpu")
+        else:
+            raise RuntimeError(f"Unsupported accelerator {accelerator}")
 
     def _parse_config(self, search_config):
         with open(search_config, "r") as f:
@@ -29,20 +67,30 @@ class SearchBase:
         self.search_strategy = search_args["strategy"]["name"]
         self.search_strategy_config = search_args["strategy_config"]
 
-    def _is_vision_model(self, model_name) -> bool:
-        return model_name in vision_models
+    def _is_nlp_model(self, model_name) -> bool:
+        return model_name in nlp_models
 
     def _prepare_loader(self, data_module):
-        if self._is_vision_model(self.model_name):
+        if not self._is_nlp_model(self.model_name):
             data_module.setup()
             data_module.prepare_data()
         else:
-            raise NotImplementedError(f"Model {self.model_name} is not supported yet.")
-        self.data_loader = getattr(data_module, self.search_data["dataloader"])()
+            data_module.setup()
+            data_module.prepare_data()
+            # raise NotImplementedError(f"Model {self.model_name} is not supported yet.")
+        # self.data_loader = getattr(data_module, self.search_data["dataloader"])()
+        self.data_loader = data_module.train_dataloader()
         self.num_batches = self.search_data["num_batches"]
 
     def rebuild_modifier(self):
-        self.modifier = Modifier(model=self.model, config_path=None, silent=True)
+        self.modifier = Modifier(
+            model=self.model["model"]
+            if self._is_nlp_model(self.model_name)
+            else self.model,
+            dummy_inputs_for_fx=self.dummy_inputs,
+            config_path=None,
+            silent=True,
+        )
 
     def search(self):
         raise NotImplementedError
@@ -60,32 +108,46 @@ class SearchQuantization(SearchBase):
     }
 
     def build_search_space(self):
-        functions_to_modify, modules_to_modify, methods_to_modify = {}, {}, {}
+        function_nodes_to_modify = {}
+        module_nodes_to_modify = {}
+        method_nodes_to_modify = {}
+
         search_space = self.search_space
         for n in self.modifier.graph.nodes:
             if n.op == "call_function":
-                # TODO: support node-wise function?
-                if "add" in n.name:
-                    tmp_name = "add"
-                elif "relu" in n.name:
-                    tmp_name = "relu"
-                    # FIXME: tmp_name is not always assigned
-                functions_to_modify[tmp_name] = dict(search_space)
+                if is_modifiable(
+                    n,
+                    self.model["model"]
+                    if self._is_nlp_model(self.model_name)
+                    else self.model,
+                ):
+                    function_nodes_to_modify[n.name] = dict(search_space)
+                else:
+                    continue
             elif n.op == "call_module":
-                # TODO: batchnorm is skipped in modify?
-                if "bn" in n.target:
+                if is_modifiable(
+                    n,
+                    self.model["model"]
+                    if self._is_nlp_model(self.model_name)
+                    else self.model,
+                ):
+                    module_nodes_to_modify[n.target] = dict(search_space)
+                else:
                     continue
-                elif "pool" in n.target:
-                    continue
-                elif "downsample" in n.target:
-                    continue
-                modules_to_modify[n.target] = dict(search_space)
             elif n.op == "call_method":
-                methods_to_modify = dict(search_space)
+                if is_modifiable(
+                    n,
+                    self.model["model"]
+                    if self._is_nlp_model(self.model_name)
+                    else self.model,
+                ):
+                    method_nodes_to_modify[n.name] = dict(search_space)
+                else:
+                    continue
         self.full_search_space = {
-            "functions_to_modify": functions_to_modify,
-            "modules_to_modify": modules_to_modify,
-            "methods_to_modify": methods_to_modify,
+            "function_nodes_to_modify": function_nodes_to_modify,
+            "module_nodes_to_modify": module_nodes_to_modify,
+            "method_nodes_to_modify": method_nodes_to_modify,
         }
 
     # this is maybe useful if one wants to try different search strategies
@@ -108,20 +170,53 @@ class SearchQuantization(SearchBase):
     def get_config_instance_and_evaluate(self, sampled_search_space):
         self.modifier.load_config(None)
         sampled_search_space["default"] = self.default_config
-        sampled_search_space["module_classes_to_modify"] = {}
+        # sampled_search_space["module_classes_to_modify"] = {}
         self.modifier.load_config(sampled_search_space)
-        self.modifier.check_modifiable(self.model)
+        self.modifier.check_modifiable()
         graph_module = self.modifier.modify()
-        accs = []
-        for i, data in enumerate(self.data_loader):
-            input_data, label = data
-            if i >= self.num_batches:
+
+        if self._is_nlp_model(self.model_name):
+            model = copy.deepcopy(self.model)
+            model.update(model=graph_module)
+        else:
+            model = graph_module
+
+        wrapper_cls = get_model_wrapper(name=self.model_name, task=self.task)
+        pl_model = wrapper_cls(model, info=self.info).to(self.device)
+        losses = []
+        for batch_idx, batch in enumerate(self.data_loader):
+            if batch_idx >= self.num_batches:
                 break
-            logits = graph_module(input_data)
-            acc = sum(logits.argmax(dim=1) == label) / label.numel()
-            accs.append(acc)
-        # average accs
-        return sum(accs) / len(accs)
+
+            batch = self._move_batch_to_device(batch)
+            outputs = pl_model.training_step(batch, batch_idx)
+            losses.append(torch.mean(outputs["loss"]).item())
+        return sum(losses) / len(losses)
+        # accs = []
+        # for i, data in enumerate(self.data_loader):
+        #     input_data, label = data
+        #     if i >= self.num_batches:
+        #         break
+        #     logits = graph_module(input_data)
+        #     acc = sum(logits.argmax(dim=1) == label) / label.numel()
+        #     accs.append(acc)
+        # # average accs
+        # return sum(accs) / len(accs)
+
+    def _move_batch_to_device(self, batch):
+        if isinstance(batch, torch.Tensor):
+            return batch.to(self.device)
+        elif isinstance(batch, dict):
+            return {
+                k: v.to(self.device) if isinstance(v, torch.Tensor) else v
+                for k, v in batch.items()
+            }
+        elif isinstance(batch, (list, tuple)):
+            return [
+                x.to(self.device) if isinstance(x, torch.Tensor) else x for x in batch
+            ]
+        else:
+            raise RuntimeError
 
     def rebuild_hyper_opt_search_space(self):
         sampled_search_space = {}
@@ -142,10 +237,9 @@ class SearchQuantization(SearchBase):
     def convert_best_to_config(self, best):
         config = {
             "default": self.default_config,
-            "module_classes_to_modify": {},
-            "functions_to_modify": {},
-            "modules_to_modify": {},
-            "methods_to_modify": {},
+            "function_nodes_to_modify": {},
+            "module_nodes_to_modify": {},
+            "method_nodes_to_modify": {},
         }
 
         for entry, value in best.items():
@@ -167,10 +261,11 @@ class SearchQuantization(SearchBase):
 
         def objective(my_instance):
             self.rebuild_modifier()
-            avg_acc = self.get_config_instance_and_evaluate(my_instance)
-            error_rate = 1 - avg_acc
-            error_rate = to_numpy(error_rate)
-            return float(error_rate)
+            # avg_acc = self.get_config_instance_and_evaluate(my_instance)
+            # error_rate = 1 - avg_acc
+            # error_rate = to_numpy(error_rate)
+            # return float(error_rate)
+            return self.get_config_instance_and_evaluate(my_instance)
 
         if self.search_strategy_config["algorithm"] == "tpe":
             algo = tpe.suggest
@@ -185,15 +280,136 @@ class SearchQuantization(SearchBase):
         best = self.convert_best_to_config(best)
         return best
 
+    def analytical_quantize(self):
+        """
+        Get frac width from non-clipping width given a constant bitwidth
+        """
+        self.model.eval()
+        nodes = get_graph_node_names(self.model)[1]
+        graph_module = create_feature_extractor(self.model, nodes)
+        tracer = NodePathTracer()
+        tracer.trace(self.model)
+        name_mapping = {v: str(k) for k, v in tracer.node_to_qualname.items()}
+
+        # gather dynamic range
+        out_stats = {}
+        graph_module.to(self.device)
+        for i, data in enumerate(self.data_loader):
+            input_data, label = data
+            input_data, label = self._move_batch_to_device([input_data, label])
+            if i >= self.num_batches:
+                break
+            outputs = graph_module(input_data)
+            for node_name, out_feature in outputs.items():
+                node_name = name_mapping[node_name]
+                min_value = torch.min(out_feature).item()
+                max_value = torch.max(out_feature).item()
+                if node_name not in out_stats.keys():
+                    out_stats[node_name] = {"min": min_value, "max": max_value}
+                else:
+                    out_stats[node_name]["min"] = min(
+                        out_stats[node_name]["min"], min_value
+                    )
+
+                    out_stats[node_name]["max"] = max(
+                        out_stats[node_name]["max"], max_value
+                    )
+
+        # check all producers
+        in_stats = {}
+        for n in graph_module.graph.nodes:
+            for prev_node in _get_prev_call_node(n, []):
+                assert prev_node.name in out_stats.keys(), f"{prev_node.name} not found"
+                if n not in in_stats.keys():
+                    in_stats[n] = out_stats[prev_node.name]
+                else:
+                    in_stats[n]["min"] = min(
+                        in_stats[n]["min"], out_stats[prev_node.name]["min"]
+                    )
+                    in_stats[n]["max"] = max(
+                        in_stats[n]["max"], out_stats[prev_node.name]["max"]
+                    )
+
+        # analytical decision on fraction width
+        config = {
+            "default": self.default_config,
+            "module_nodes_to_modify": {},
+            "function_nodes_to_modify": {},
+            "method_nodes_to_modify": {},
+        }
+        assert (
+            len(self.search_space["data_in_width"]) == 1
+            and self.search_space["data_in_width"][0]
+            == self.default_config["data_in_width"]
+        )
+        assert (
+            len(self.search_space["weight_width"]) == 1
+            and self.search_space["weight_width"][0]
+            == self.default_config["weight_width"]
+        )
+        assert (
+            len(self.search_space["bias_width"]) == 1
+            and self.search_space["bias_width"][0] == self.default_config["bias_width"]
+        )
+
+        for n in graph_module.graph.nodes:
+            if not is_modifiable(node=n, model=self.model):
+                # not all nodes support sw-modification
+                continue
+            if n.op in ["call_function", "call_module", "call_method"]:
+                node_config = copy.deepcopy(self.default_config)
+                assert (
+                    node_config["name"] == "integer"
+                ), "currently analytical search only supports fixed point quantization"
+                data_min = in_stats[n]["min"]
+                data_max = in_stats[n]["max"]
+                node_config["data_in_frac_width"] = integer_fraction(
+                    self.search_space["data_in_width"][0],
+                    self.search_space["data_in_frac_width"],
+                    data_min,
+                    data_max,
+                )
+                m = get_module_by_name(self.model, n.target)
+                if m:
+                    for param_name, parameter in m.named_parameters():
+                        if "weight" in param_name:
+                            weight_min = torch.min(parameter).item()
+                            weight_max = torch.max(parameter).item()
+                            node_config["weight_frac_width"] = integer_fraction(
+                                self.search_space["weight_width"][0],
+                                self.search_space["weight_frac_width"],
+                                weight_min,
+                                weight_max,
+                            )
+                        if "bias" in param_name:
+                            bias_min = torch.min(parameter).item()
+                            bias_max = torch.max(parameter).item()
+                            node_config["bias_frac_width"] = integer_fraction(
+                                self.search_space["bias_width"][0],
+                                self.search_space["bias_frac_width"],
+                                bias_min,
+                                bias_max,
+                            )
+                if n.op == "call_function":
+                    config["function_nodes_to_modify"][n.name] = node_config
+                elif n.op == "call_method":
+                    config["method_nodes_to_modify"][n.name] = node_config
+                else:
+                    config["module_nodes_to_modify"][n.target] = node_config
+
+        return config
+
     def strategies(self):
         if self.search_strategy == "hyperopt":
-            self.hyper_opt_strategy()
+            return self.hyper_opt_strategy()
+        elif self.search_strategy == "analytical":
+            return self.analytical_quantize()
         else:
             raise NotImplementedError
 
     def search(self):
         self.build_search_space()
-        best = self.hyper_opt_strategy()
+        best = self.strategies()
         output_file = self.search_strategy_config["output_file"]
         if self.save_dir:
             if not os.path.exists(self.save_dir):
@@ -204,9 +420,28 @@ class SearchQuantization(SearchBase):
             logger.info("Search result saved to {}".format(output_file))
 
 
-def search(model_name, model, data_module, search_config, save_dir):
+def search(
+    model_name,
+    info,
+    model,
+    task,
+    dummy_inputs,
+    data_module,
+    search_config,
+    save_dir,
+    accelerator,
+):
+    # model_name, info, model, task, data_module, search_config, save_dir
     logger.info("Search started ... ")
     searcher = SearchQuantization(
-        model_name, model, data_module, search_config, save_dir
+        model_name=model_name,
+        info=info,
+        model=model,
+        task=task,
+        dummy_inputs=dummy_inputs,
+        data_module=data_module,
+        search_config=search_config,
+        save_dir=save_dir,
+        accelerator=accelerator,
     )
     searcher.search()

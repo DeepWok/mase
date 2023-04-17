@@ -138,6 +138,11 @@ FUNC_MAP_NEO = {
     },
 }
 
+QUANTIZED_FUNC_CLASSES = []
+for k, v in FUNC_MAP_NEO.items():
+    for kk, vv in v.items():
+        QUANTIZED_FUNC_CLASSES.append(vv)
+
 METHOD_MAP_NEO = {
     "add": {
         "integer": add_integer,

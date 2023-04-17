@@ -1,4 +1,4 @@
-from math import ceil
+from math import ceil, log2
 from typing import List, Tuple, Union
 
 import numpy as np
@@ -36,6 +36,16 @@ def integer_quantizer(x: Union[Tensor, ndarray], width: int, frac_width: int):
         return x
     else:
         return my_clamp(my_round(x * scale), -thresh, thresh - 1) / scale
+
+
+def integer_fraction(
+    width: int, frac_choices: list, min_value: float, max_value: float
+):
+    max_half_range = max(abs(min_value), abs(max_value))
+    int_width = int(log2(max(0.5, max_half_range))) + 2
+    frac_width = max(0, width - int_width)
+    frac_width = max(filter(lambda x: x <= frac_width, frac_choices))
+    return frac_width
 
 
 def minifloat_simple_quantizer(
