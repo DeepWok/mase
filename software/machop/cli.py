@@ -606,6 +606,8 @@ class Machop:
             custom_modify_sw_kwargs = get_custom_modify_sw_kwargs(
                 model_name=args.model, config_path=args.modify_sw_config
             )
+        else:
+            custom_modify_sw_kwargs = {}
         modifier_kwargs = {
             "model": self.model["model"] if args.model in nlp_models else self.model,
             "config_path": args.modify_sw_config,
@@ -800,6 +802,8 @@ class Machop:
             custom_modify_sw_kwargs = get_custom_modify_sw_kwargs(
                 model_name=args.model, config_path=args.modify_sw_config
             )
+        else:
+            custom_modify_sw_kwargs = {}
 
         model.eval()
         # graph_module = mase_symbolic_trace(model, concrete_args=dummy_inputs)

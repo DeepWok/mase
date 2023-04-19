@@ -8,6 +8,7 @@ from torch.nn.common_types import _size_2_t
 
 from ....graph.mase_tracer import mark_as_leaf_module
 from ..quantizers import (
+    block_minifloat_quantizer,
     integer_quantizer,
     log_quantizer,
     minifloat_ieee_quantizer,
@@ -17,7 +18,7 @@ from ..quantizers import (
 from .utils import extract_required_config
 
 
-class Conv2dBase(torch.nn.Conv2d):
+class _Conv2dBase(torch.nn.Conv2d):
     bypass = False
     _required_config_keys = None
     _optional_config_keys = None
@@ -55,7 +56,7 @@ class Conv2dBase(torch.nn.Conv2d):
 
 
 @mark_as_leaf_module
-class Conv2dInteger(Conv2dBase):
+class Conv2dInteger(_Conv2dBase):
     _required_config_keys = (
         "name",
         "weight_width",
@@ -149,7 +150,7 @@ class Conv2dInteger(Conv2dBase):
 
 
 @mark_as_leaf_module
-class Conv2DMinifloatSimple(Conv2dBase):
+class Conv2DMinifloatSimple(_Conv2dBase):
     _required_config_keys = (
         "name",
         "weight_width",
@@ -251,7 +252,7 @@ class Conv2DMinifloatSimple(Conv2dBase):
 
 
 @mark_as_leaf_module
-class Conv2dMinifloatIEEE(Conv2dBase):
+class Conv2dMinifloatIEEE(_Conv2dBase):
     _required_config_keys = (
         "name",
         "weight_width",
@@ -351,7 +352,7 @@ class Conv2dMinifloatIEEE(Conv2dBase):
 
 
 @mark_as_leaf_module
-class Conv2dLog(Conv2dBase):
+class Conv2dLog(_Conv2dBase):
     _required_config_keys = (
         "name",
         "weight_width",
@@ -441,7 +442,7 @@ class Conv2dLog(Conv2dBase):
 
 
 @mark_as_leaf_module
-class Conv2dMSFP(Conv2dBase):
+class Conv2dMSFP(_Conv2dBase):
     _required_config_keys = (
         "name",
         "weight_width",
@@ -531,6 +532,126 @@ class Conv2dMSFP(Conv2dBase):
             width=b_width,
             exponent_width=b_exponent_width,
             exponent_bias=b_exponent_bias,
+            block_size=b_block_size,
+            skip_first_dim=False,
+        )
+        self.config = self.construct_essential_config(config)
+
+    def forward(self, x: Tensor) -> Tensor:
+        if self.bypass:
+            return self._conv_forward(x, self.weight, self.bias)
+        x_shape = [i for i in x.shape]
+        w_shape = [i for i in self.weight.shape]
+        # a hack for handling 4D block/unblock
+        x = torch.flatten(x, 0, 1)
+        x = self.x_quantizer(x)
+        x = torch.reshape(x, x_shape)
+        w = torch.flatten(self.weight, 0, 1)
+        w = self.w_quantizer(w)
+        w = torch.reshape(w, w_shape)
+        bias = self.b_quantizer(self.bias) if self.bias is not None else None
+        # WARNING: this may have been simplified, we are assuming here the accumulation is lossless!
+        # The addition size is in_channels * K * K
+        return self._conv_forward(x, w, bias)
+
+    def construct_essential_config(self, config):
+        r_config = extract_required_config(self, config)
+        o_config = {}
+        o_config["bypass"] = config.get("bypass", False)
+        return r_config | o_config
+
+
+@mark_as_leaf_module
+class Conv2dBlockMinifloat(_Conv2dBase):
+    _required_config_keys = (
+        "name",
+        "weight_width",
+        "weight_exponent_width",
+        "weight_exponent_bias_width",
+        "weight_block_size",
+        "data_in_width",
+        "data_in_exponent_width",
+        "data_in_exponent_bias_width",
+        "data_in_block_size",
+        "bias_width",
+        "bias_exponent_width",
+        "bias_exponent_bias_width",
+        "bias_block_size",
+    )
+    _optional_config_keys = ("bypass",)
+
+    def __init__(
+        self,
+        in_channels: int,
+        out_channels: int,
+        kernel_size: _size_2_t,
+        stride: _size_2_t = 1,
+        padding: Union[str, _size_2_t] = 0,
+        dilation: _size_2_t = 1,
+        groups: int = 1,
+        bias: bool = True,
+        padding_mode: str = "zeros",
+        device=None,
+        dtype=None,
+        config: dict = None,
+    ) -> None:
+        super().__init__(
+            in_channels,
+            out_channels,
+            kernel_size,
+            stride,
+            padding,
+            dilation,
+            groups,
+            bias,
+            padding_mode,
+            device,
+            dtype,
+        )
+        assert config is not None, "config is None!"
+        self.bypass = config.get("bypass", False)
+
+        w_width, w_exponent_width, w_exponent_bias_width, w_block_size = (
+            config["weight_width"],
+            config["weight_exponent_width"],
+            config["weight_exponent_bias_width"],
+            config["weight_block_size"],
+        )
+        x_width, x_exponent_width, x_exponent_bias_width, x_block_size = (
+            config["data_in_width"],
+            config["data_in_exponent_width"],
+            config["data_in_exponent_bias_width"],
+            config["data_in_block_size"],
+        )
+        b_width, b_exponent_width, b_exponent_bias_width, b_block_size = (
+            config["bias_width"],
+            config["bias_exponent_width"],
+            config["bias_exponent_bias_width"],
+            config["bias_block_size"],
+        )
+
+        # blocking/unblocking 4D kernel/feature map is not supported
+        self.w_quantizer = partial(
+            block_minifloat_quantizer,
+            width=w_width,
+            exponent_width=w_exponent_width,
+            exponent_bias_width=w_exponent_bias_width,
+            block_size=w_block_size,
+            skip_first_dim=True,
+        )
+        self.x_quantizer = partial(
+            block_minifloat_quantizer,
+            width=x_width,
+            exponent_width=x_exponent_width,
+            exponent_bias_width=x_exponent_bias_width,
+            block_size=x_block_size,
+            skip_first_dim=True,
+        )
+        self.b_quantizer = partial(
+            block_minifloat_quantizer,
+            width=b_width,
+            exponent_width=b_exponent_width,
+            exponent_bias_width=b_exponent_bias_width,
             block_size=b_block_size,
             skip_first_dim=False,
         )

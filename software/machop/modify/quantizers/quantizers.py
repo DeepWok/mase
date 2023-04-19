@@ -246,14 +246,11 @@ def msfp_quantizer(
         x, block_shape=block_size, skip_first_dim=skip_first_dim
     )
     # TODO: Why we have all zero bias
-    try:
-        # fill zeros to avoid log2(0) = -inf
-        if torch.all(per_block_max == 0):
-            per_block_max = torch.ones_like(per_block_max)
-        else:
-            per_block_max[per_block_max == 0] = per_block_max[per_block_max != 0].min()
-    except RuntimeError:
-        pass 
+    # fill zeros to avoid log2(0) = -inf
+    if torch.all(per_block_max == 0):
+        per_block_max = torch.ones_like(per_block_max)
+    else:
+        per_block_max[per_block_max == 0] = per_block_max[per_block_max != 0].min()
     # minifloat_simple_quantizer on each block over which a exponent is shared
     mantissa_bits = width - 1
     if exponent_bias in (None, "none", "None"):
@@ -298,7 +295,7 @@ def block_minifloat_quantizer(
     x: Tensor,
     width: int,
     exponent_width: int,
-    bias_width: int,
+    exponent_bias_width: int,
     block_size: List[int] = 16,
     skip_first_dim: bool = False,
 ):
@@ -314,7 +311,7 @@ def block_minifloat_quantizer(
     ---
     - `width`: the number of bits (1 sign bit + exponent_bits + mantissa_bits)
     - `exponent_width`: the number of exponent_bits
-    - `bias_bits`: the number of bits of the shared exponent bias
+    - `exponent_bias_width`: the number of bits of the shared exponent bias
     - `block_size`: a list of integers where each integer is the block size on that dimension. See function `block`.
 
     """
@@ -324,10 +321,13 @@ def block_minifloat_quantizer(
     )
 
     # fill zeros to avoid log2(0) = -inf
-    per_block_max[per_block_max == 0] = per_block_max[per_block_max != 0].min()
+    if torch.all(per_block_max == 0):
+        per_block_max = torch.ones_like(per_block_max)
+    else:
+        per_block_max[per_block_max == 0] = per_block_max[per_block_max != 0].min()
 
     per_block_exponent_bias = my_clamp(
-        torch.floor(torch.log2(per_block_max)), 0, 2**bias_width - 1
+        torch.floor(torch.log2(per_block_max)), 0, 2**exponent_bias_width - 1
     )
     per_block_bm_x = minifloat_ieee_quantizer(
         blocked_x,
@@ -373,7 +373,10 @@ def block_log_quantizer(
     )
 
     # fill zeros to avoid log2(0) = -inf
-    per_block_max[per_block_max == 0] = per_block_max[per_block_max != 0].min()
+    if torch.all(per_block_max == 0):
+        per_block_max = torch.ones_like(per_block_max)
+    else:
+        per_block_max[per_block_max == 0] = per_block_max[per_block_max != 0].min()
 
     per_block_max_exponent = torch.ceil(torch.log2(per_block_max))
     per_block_bias = my_clamp(

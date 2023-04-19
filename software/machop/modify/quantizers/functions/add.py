@@ -133,7 +133,46 @@ def add_msfp(x, y, config):
             skip_first_dim=x_more_than_2_dims,
         )
         # a hack to use 2d blocking
-        assert x.shape == y.shape
+        if x.shape != y.shape:
+            x, y = torch.broadcast_tensors(x, y)
+        # assert x.shape == y.shape
+        x_shape = [i for i in x.shape]
+        if x_more_than_2_dims:
+            x = torch.flatten(x, 0, -3)
+            y = torch.flatten(y, 0, -3)
+        x = x_quantizer(x)
+        y = x_quantizer(y)
+        x = torch.reshape(x, x_shape)
+        y = torch.reshape(y, x_shape)
+        return x + y
+
+
+@mark_as_leaf_func
+def add_block_minifloat(x, y, config):
+    bypass = config.get("bypass", False)
+    if bypass:
+        return x + y
+    else:
+        x_width, x_exponent_width, x_exponent_bias_width, x_block_size = (
+            config["data_in_width"],
+            config["data_in_exponent_width"],
+            config["data_in_exponent_bias_width"],
+            config["data_in_block_size"],
+        )
+
+        x_more_than_2_dims = x.ndim > 2
+        x_quantizer = partial(
+            block_minifloat_quantizer,
+            width=x_width,
+            exponent_width=x_exponent_width,
+            exponent_bias_width=x_exponent_bias_width,
+            block_size=x_block_size,
+            skip_first_dim=x_more_than_2_dims,
+        )
+        # a hack to use 2d blocking
+        if x.shape != y.shape:
+            x, y = torch.broadcast_tensors(x, y)
+        # assert x.shape == y.shape
         x_shape = [i for i in x.shape]
         if x_more_than_2_dims:
             x = torch.flatten(x, 0, -3)

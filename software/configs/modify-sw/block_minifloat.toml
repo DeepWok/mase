@@ -1,0 +1,66 @@
+[default]
+name = "block_minifloat"
+# block_minifloat
+# - Original paper recommends BM8 (2,5): 2-bit exponent, 1-bit sign, 5 bit mantissa
+#   To make it comparable to MSFP, use BM5 (2,2) in the paper: 2-bit exponent, 1-bit sign, 2-bit mantissa
+# - In the original papper, the shared bias is 8-bit.
+# - Original paper recommends block_size = [48, 48],
+#   A square block is necessary for quantized training
+# - To make it comparable to MSFP, use block_size = [1, 16] for inference
+#
+# weight shape = [in_features, out_features]
+weight_exponent_bias_width = 8
+weight_exponent_width = 2
+weight_width = 5
+
+# *： activation
+# *: activation shape [bsz, seq_len, hidden_size]/[bsz, in_features]
+data_in_exponent_bias_width = 8
+data_in_exponent_width = 2
+data_in_width = 5
+
+weight_block_size = [1, 16]
+# data_in shape = [bz, in_features]
+data_in_block_size = [1, 16]
+# *: bias
+bias_exponent_bias_width = 8
+bias_exponent_width = 2
+bias_width = 5
+# bias shape = [1, output_features]
+bias_block_size = [16]
+
+[module_classes_to_modify.conv1d]
+name = "default"
+
+[module_classes_to_modify.conv2d]
+name = "default"
+
+[module_classes_to_modify.linear]
+name = "default"
+
+[module_classes_to_modify.relu]
+name = "default"
+
+[function_classes_to_modify.add]
+name = "default"
+
+[function_classes_to_modify.bmm]
+name = "default"
+
+[function_classes_to_modify.matmul]
+name = "default"
+
+[function_classes_to_modify.relu]
+name = "default"
+
+[method_classes_to_modify.add]
+name = "default"
+
+[method_classes_to_modify.bmm]
+name = "default"
+
+[method_classes_to_modify.matmul]
+name = "default"
+
+[method_classes_to_modify.relu]
+name = "default"

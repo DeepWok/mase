@@ -6,46 +6,53 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 from .functions import (
+    add_block_minifloat,
     add_integer,
     add_log,
     add_minifloat_ieee,
     add_minifloat_simple,
     add_msfp,
+    bmm_block_minifloat,
     bmm_integer,
     bmm_log,
     bmm_minifloat_ieee,
     bmm_minifloat_simple,
     bmm_msfp,
+    matmul_block_minifloat,
     matmul_integer,
     matmul_log,
     matmul_minifloat_ieee,
     matmul_minifloat_simple,
     matmul_msfp,
+    relu_block_minifloat,
     relu_integer,
     relu_log,
     relu_minifloat_ieee,
     relu_minifloat_simple,
     relu_msfp,
 )
+from .layers import AvgPool2dInteger  # AddInteger,
 from .layers import (
     AdaptiveAvgPool2dInteger,
-    AddInteger,
-    AvgPool2dInteger,
+    Conv1dBlockMinifloat,
     Conv1dInteger,
     Conv1dLog,
     Conv1dMinifloatIEEE,
     Conv1dMinifloatSimple,
     Conv1dMSFP,
+    Conv2dBlockMinifloat,
     Conv2dInteger,
     Conv2dLog,
     Conv2dMinifloatIEEE,
     Conv2DMinifloatSimple,
     Conv2dMSFP,
+    LinearBlockMinifloat,
     LinearInteger,
     LinearLog,
     LinearMinifloatIEEE,
     LinearMinifloatSimple,
     LinearMSFP,
+    ReLUBlockMinifloat,
     ReLUInteger,
     ReLULog,
     ReLUMinifloatIEEE,
@@ -60,6 +67,7 @@ MODULE_CLS_MAP = {
         "minifloat_ieee": LinearMinifloatIEEE,
         "log": LinearLog,
         "msfp": LinearMSFP,
+        "block_minifloat": LinearBlockMinifloat,
     },
     nn.ReLU: {
         "integer": ReLUInteger,
@@ -67,6 +75,7 @@ MODULE_CLS_MAP = {
         "minifloat_ieee": ReLUMinifloatIEEE,
         "log": ReLULog,
         "msfp": ReLUMSFP,
+        "block_minifloat": ReLUBlockMinifloat,
     },
     nn.Conv1d: {
         "integer": Conv1dInteger,
@@ -74,6 +83,7 @@ MODULE_CLS_MAP = {
         "minifloat_ieee": Conv1dMinifloatIEEE,
         "log": Conv1dLog,
         "msfp": Conv1dMSFP,
+        "block_minifloat": Conv1dBlockMinifloat,
     },
     nn.Conv2d: {
         "integer": Conv2dInteger,
@@ -81,6 +91,7 @@ MODULE_CLS_MAP = {
         "minifloat_ieee": Conv2dMinifloatIEEE,
         "log": Conv2dLog,
         "msfp": Conv2dMSFP,
+        "block_minifloat": Conv2dBlockMinifloat,
     },
     nn.AvgPool2d: {
         "integer": AvgPool2dInteger,
@@ -100,6 +111,7 @@ FUNC_MAP = {
         "minifloat_ieee": add_minifloat_ieee,
         "log": add_log,
         "msfp": add_msfp,
+        "block_minifloat": add_block_minifloat,
     },
     torch.add: {
         "integer": add_integer,
@@ -107,6 +119,7 @@ FUNC_MAP = {
         "minifloat_ieee": add_minifloat_ieee,
         "log": add_log,
         "msfp": add_msfp,
+        "block_minifloat": add_block_minifloat,
     },
     F.relu: {
         "integer": relu_integer,
@@ -114,6 +127,7 @@ FUNC_MAP = {
         "minifloat_ieee": relu_minifloat_ieee,
         "log": relu_log,
         "msfp": relu_msfp,
+        "block_minifloat": relu_block_minifloat,
     },
     operator.matmul: {
         "integer": matmul_integer,
@@ -121,6 +135,7 @@ FUNC_MAP = {
         "minifloat_ieee": matmul_minifloat_ieee,
         "log": matmul_log,
         "msfp": matmul_msfp,
+        "block_minifloat": matmul_block_minifloat,
     },
     torch.matmul: {
         "integer": matmul_integer,
@@ -128,6 +143,7 @@ FUNC_MAP = {
         "minifloat_ieee": matmul_minifloat_ieee,
         "log": matmul_log,
         "msfp": matmul_msfp,
+        "block_minifloat": matmul_block_minifloat,
     },
     torch.bmm: {
         "integer": bmm_integer,
@@ -135,6 +151,7 @@ FUNC_MAP = {
         "minifloat_ieee": bmm_minifloat_ieee,
         "log": bmm_log,
         "msfp": bmm_msfp,
+        "block_minifloat": bmm_block_minifloat,
     },
 }
 
@@ -150,6 +167,7 @@ METHOD_MAP = {
         "minifloat_ieee": add_minifloat_ieee,
         "log": add_log,
         "msfp": add_msfp,
+        "block_minifloat": add_block_minifloat,
     },
     "relu": {
         "integer": relu_integer,
@@ -157,6 +175,7 @@ METHOD_MAP = {
         "minifloat_ieee": relu_minifloat_ieee,
         "log": relu_log,
         "msfp": relu_msfp,
+        "block_minifloat": relu_block_minifloat,
     },
     "matmul": {
         "integer": matmul_integer,
@@ -164,6 +183,7 @@ METHOD_MAP = {
         "minifloat_ieee": matmul_minifloat_ieee,
         "log": matmul_log,
         "msfp": matmul_msfp,
+        "block_minifloat": matmul_block_minifloat,
     },
     "bmm": {
         "integer": bmm_integer,
@@ -171,5 +191,6 @@ METHOD_MAP = {
         "minifloat_ieee": bmm_minifloat_ieee,
         "log": bmm_log,
         "msfp": bmm_msfp,
+        "block_minifloat": bmm_block_minifloat,
     },
 }

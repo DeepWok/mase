@@ -8,6 +8,7 @@ from torch.nn import functional as F
 
 from ....graph.mase_tracer import mark_as_leaf_module
 from ..quantizers import (
+    block_minifloat_quantizer,
     integer_quantizer,
     log_quantizer,
     minifloat_ieee_quantizer,
@@ -18,7 +19,7 @@ from .utils import extract_required_config
 
 
 @mark_as_leaf_module
-class LinearBase(torch.nn.Linear):
+class _LinearBase(torch.nn.Linear):
     bypass = False
     _required_config_keys = None
     _optional_config_keys = None
@@ -56,7 +57,7 @@ class LinearBase(torch.nn.Linear):
 
 
 @mark_as_leaf_module
-class LinearInteger(LinearBase):
+class LinearInteger(_LinearBase):
     _required_config_keys = (
         "name",
         "weight_width",
@@ -137,7 +138,7 @@ class LinearInteger(LinearBase):
 
 
 @mark_as_leaf_module
-class LinearMinifloatSimple(LinearBase):
+class LinearMinifloatSimple(_LinearBase):
     _required_config_keys = (
         "name",
         "weight_width",
@@ -221,7 +222,7 @@ class LinearMinifloatSimple(LinearBase):
 
 
 @mark_as_leaf_module
-class LinearMinifloatIEEE(LinearBase):
+class LinearMinifloatIEEE(_LinearBase):
     _required_config_keys = (
         "name",
         "weight_width",
@@ -318,7 +319,7 @@ class LinearMinifloatIEEE(LinearBase):
 
 
 @mark_as_leaf_module
-class LinearLog(LinearBase):
+class LinearLog(_LinearBase):
     _required_config_keys = (
         "name",
         "weight_width",
@@ -391,18 +392,21 @@ class LinearLog(LinearBase):
 
 
 @mark_as_leaf_module
-class LinearMSFP(LinearBase):
+class LinearMSFP(_LinearBase):
     _required_config_keys = (
         "name",
         "weight_width",
         "weight_block_size",
         "weight_exponent_width",
+        "weight_exponent_bias",
         "data_in_width",
         "data_in_block_size",
         "data_in_exponent_width",
+        "data_in_exponent_bias",
         "bias_width",
         "bias_block_size",
         "bias_exponent_width",
+        "bias_exponent_bias",
     )
     _optional_config_keys = ("bypass", "data_in_skip_first_dim")
 
@@ -464,6 +468,97 @@ class LinearMSFP(LinearBase):
             width=b_width,
             exponent_width=b_exponent_width,
             exponent_bias=b_exponent_bias,
+            block_size=b_block_size,
+            skip_first_dim=False,
+        )
+
+        self.config = self.construct_essential_config(config)
+
+    def construct_essential_config(self, config):
+        r_config = extract_required_config(self, config)
+        o_config = {}
+        o_config["bypass"] = config.get("bypass", False)
+        o_config["data_in_skip_first_dim"] = config.get("data_in_skip_first_dim", True)
+        return r_config | o_config
+
+
+@mark_as_leaf_module
+class LinearBlockMinifloat(_LinearBase):
+    _required_config_keys = (
+        "name",
+        "weight_width",
+        "weight_block_size",
+        "weight_exponent_width",
+        "weight_exponent_bias_width",
+        "data_in_width",
+        "data_in_block_size",
+        "data_in_exponent_width",
+        "data_in_exponent_bias_width",
+        "bias_width",
+        "bias_block_size",
+        "bias_exponent_width",
+        "bias_exponent_bias_width",
+    )
+    _optional_config_keys = ("bypass", "data_in_skip_first_dim")
+
+    def __init__(
+        self,
+        in_features: int,
+        out_features: int,
+        bias: bool = True,
+        device=None,
+        dtype=None,
+        config=None,
+    ) -> None:
+        super().__init__(in_features, out_features, bias, device, dtype)
+        if config is None:
+            raise ValueError("config is None for IntegerLinear")
+
+        self.bypass = config.get("bypass", False)
+        # establish quantizers
+        w_width, w_exponent_width, w_exponent_bias_width, w_block_size = (
+            config["weight_width"],
+            config["weight_exponent_width"],
+            config["weight_exponent_bias_width"],
+            config["weight_block_size"],
+        )
+        x_width, x_exponent_width, x_exponent_bias_width, x_block_size = (
+            config["data_in_width"],
+            config["data_in_exponent_width"],
+            config["data_in_exponent_bias_width"],
+            config["data_in_block_size"],
+        )
+        x_skip_first_dim = config.get("data_in_skip_first_dim", True)
+
+        b_width, b_exponent_width, b_exponent_bias_width, b_block_size = (
+            config["bias_width"],
+            config["bias_exponent_width"],
+            config["bias_exponent_bias_width"],
+            config["bias_block_size"],
+        )
+
+        # blocking/unblocking 4D kernel/feature map is not supported
+        self.w_quantizer = partial(
+            block_minifloat_quantizer,
+            width=w_width,
+            exponent_width=w_exponent_width,
+            exponent_bias_width=w_exponent_bias_width,
+            block_size=w_block_size,
+            skip_first_dim=False,
+        )
+        self.x_quantizer = partial(
+            block_minifloat_quantizer,
+            width=x_width,
+            exponent_width=x_exponent_width,
+            exponent_bias_width=x_exponent_bias_width,
+            block_size=x_block_size,
+            skip_first_dim=x_skip_first_dim,
+        )
+        self.b_quantizer = partial(
+            block_minifloat_quantizer,
+            width=b_width,
+            exponent_width=b_exponent_width,
+            exponent_bias_width=b_exponent_bias_width,
             block_size=b_block_size,
             skip_first_dim=False,
         )
