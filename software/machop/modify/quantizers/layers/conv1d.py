@@ -9,6 +9,7 @@ from torch.nn.common_types import _size_1_t
 
 from ....graph.mase_tracer import mark_as_leaf_module
 from ..quantizers import (
+    block_minifloat_quantizer,
     integer_quantizer,
     log_quantizer,
     minifloat_ieee_quantizer,
@@ -18,7 +19,7 @@ from ..quantizers import (
 from .utils import extract_required_config
 
 
-class Conv1dBase(torch.nn.Conv1d):
+class _Conv1dBase(torch.nn.Conv1d):
     bypass = False
 
     _required_config_keys = None
@@ -59,7 +60,7 @@ class Conv1dBase(torch.nn.Conv1d):
 
 
 @mark_as_leaf_module
-class Conv1dInteger(Conv1dBase):
+class Conv1dInteger(_Conv1dBase):
     _required_config_keys = (
         "name",
         "weight_width",
@@ -152,7 +153,7 @@ class Conv1dInteger(Conv1dBase):
 
 
 @mark_as_leaf_module
-class Conv1dMinifloatSimple(Conv1dBase):
+class Conv1dMinifloatSimple(_Conv1dBase):
     _required_config_keys = (
         "name",
         "weight_width",
@@ -256,7 +257,7 @@ class Conv1dMinifloatSimple(Conv1dBase):
 
 
 @mark_as_leaf_module
-class Conv1dLog(Conv1dBase):
+class Conv1dLog(_Conv1dBase):
     _required_config_keys = (
         "name",
         "weight_width",
@@ -348,7 +349,7 @@ class Conv1dLog(Conv1dBase):
 
 
 @mark_as_leaf_module
-class Conv1dMinifloatIEEE(Conv1dBase):
+class Conv1dMinifloatIEEE(_Conv1dBase):
     _required_config_keys = (
         "name",
         "weight_width",
@@ -452,7 +453,7 @@ class Conv1dMinifloatIEEE(Conv1dBase):
 
 
 @mark_as_leaf_module
-class Conv1dMSFP(Conv1dBase):
+class Conv1dMSFP(_Conv1dBase):
     _required_config_keys = (
         "name",
         "weight_width",
@@ -554,19 +555,106 @@ class Conv1dMSFP(Conv1dBase):
         o_config["bypass"] = config.get("bypass", False)
         return r_config | o_config
 
-    # def get_output_bitwidth(self) -> dict:
-    #     k = self.kernel_size
-    #     ic, oc = self.in_channels, self.out_channels
-    #     # number of operations per pixel
-    #     num_ops = k * ic
-    #     product_bitwidth = self.w_width + self.x_width
-    #     product_frac = self.w_frac_width + self.x_frac_width
 
-    #     addition_bitwidth = math.ceil(math.log(num_ops))
-    #     output_bitwidth = product_bitwidth + addition_bitwidth
-    #     return {
-    #         "output_width": output_bitwidth,
-    #         "output_frac_width": product_frac,
-    #         "product_width": product_bitwidth,
-    #         "product_frac_width": product_frac,
-    #     }
+@mark_as_leaf_module
+class Conv1dBlockMinifloat(_Conv1dBase):
+    _required_config_keys = (
+        "name",
+        "weight_width",
+        "weight_exponent_width",
+        "weight_exponent_bias_width",
+        "weight_block_size",
+        "data_in_width",
+        "data_in_exponent_width",
+        "data_in_exponent_bias_width",
+        "data_in_block_size",
+        "bias_width",
+        "bias_exponent_width",
+        "bias_exponent_bias_width",
+        "bias_block_size",
+    )
+    _optional_config_keys = ("bypass",)
+
+    def __init__(
+        self,
+        in_channels: int,
+        out_channels: int,
+        kernel_size: _size_1_t,
+        stride: _size_1_t = 1,
+        padding: Union[str, _size_1_t] = 0,
+        dilation: _size_1_t = 1,
+        groups: int = 1,
+        bias: bool = True,
+        padding_mode: str = "zeros",
+        device=None,
+        dtype=None,
+        config: dict = None,
+    ) -> None:
+        super().__init__(
+            in_channels,
+            out_channels,
+            kernel_size,
+            stride,
+            padding,
+            dilation,
+            groups,
+            bias,
+            padding_mode,
+            device,
+            dtype,
+        )
+        assert config is not None, "config is None!"
+        self.bypass = config.get("bypass", False)
+
+        w_width, w_exponent_width, w_exponent_bias_width, w_block_size = (
+            config["weight_width"],
+            config["weight_exponent_width"],
+            config["weight_exponent_bias_width"],
+            config["weight_block_size"],
+        )
+        x_width, x_exponent_width, x_exponent_bias_width, x_block_size = (
+            config["data_in_width"],
+            config["data_in_exponent_width"],
+            config["data_in_exponent_bias_width"],
+            config["data_in_block_size"],
+        )
+        b_width, b_exponent_width, b_exponent_bias_width, b_block_size = (
+            config["bias_width"],
+            config["bias_exponent_width"],
+            config["bias_exponent_bias_width"],
+            config["bias_block_size"],
+        )
+
+        self.w_quantizer = partial(
+            block_minifloat_quantizer,
+            width=w_width,
+            exponent_width=w_exponent_width,
+            exponent_bias_width=w_exponent_bias_width,
+            block_size=w_block_size,
+            skip_first_dim=True,
+        )
+
+        self.x_quantizer = partial(
+            block_minifloat_quantizer,
+            width=x_width,
+            exponent_width=x_exponent_width,
+            exponent_bias_width=x_exponent_bias_width,
+            block_size=x_block_size,
+            skip_first_dim=True,
+        )
+
+        self.b_quantizer = partial(
+            block_minifloat_quantizer,
+            width=b_width,
+            exponent_width=b_exponent_width,
+            exponent_bias_width=b_exponent_bias_width,
+            block_size=b_block_size,
+            skip_first_dim=False,
+        )
+        self.config = self.construct_essential_config(config)
+
+    def construct_essential_config(self, config):
+        r_config = extract_required_config(self, config)
+        o_config = {}
+        o_config["bypass"] = config.get("bypass", False)
+        return r_config | o_config

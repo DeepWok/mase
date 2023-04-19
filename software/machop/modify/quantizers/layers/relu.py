@@ -6,6 +6,7 @@ from torch.nn import functional as F
 
 from ....graph.mase_tracer import mark_as_leaf_module
 from ..quantizers import (
+    block_minifloat_quantizer,
     integer_quantizer,
     log_quantizer,
     minifloat_ieee_quantizer,
@@ -15,7 +16,7 @@ from ..quantizers import (
 from .utils import extract_required_config
 
 
-class ReLUBase(torch.nn.ReLU):
+class _ReLUBase(torch.nn.ReLU):
     bypass = None
     _required_config_keys = None
     _optional_config_keys = None
@@ -33,7 +34,7 @@ class ReLUBase(torch.nn.ReLU):
 
 
 @mark_as_leaf_module
-class ReLUInteger(ReLUBase):
+class ReLUInteger(_ReLUBase):
     bypass = None
     _required_config_keys = ("name", "data_in_width", "data_in_frac_width")
     _optional_config_keys = ("bypass",)
@@ -66,7 +67,7 @@ class ReLUInteger(ReLUBase):
 
 
 @mark_as_leaf_module
-class ReLUMinifloatSimple(ReLUBase):
+class ReLUMinifloatSimple(_ReLUBase):
     bypass = None
     _required_config_keys = (
         "name",
@@ -102,7 +103,7 @@ class ReLUMinifloatSimple(ReLUBase):
 
 
 @mark_as_leaf_module
-class ReLUMinifloatSimple(ReLUBase):
+class ReLUMinifloatSimple(_ReLUBase):
     bypass = None
     _required_config_keys = (
         "name",
@@ -138,7 +139,7 @@ class ReLUMinifloatSimple(ReLUBase):
 
 
 @mark_as_leaf_module
-class ReLUMinifloatIEEE(ReLUBase):
+class ReLUMinifloatIEEE(_ReLUBase):
     bypass = None
     _required_config_keys = (
         "name",
@@ -174,7 +175,7 @@ class ReLUMinifloatIEEE(ReLUBase):
 
 
 @mark_as_leaf_module
-class ReLULog(ReLUBase):
+class ReLULog(_ReLUBase):
     bypass = None
     _required_config_keys = (
         "name",
@@ -207,7 +208,7 @@ class ReLULog(ReLUBase):
 
 
 @mark_as_leaf_module
-class ReLUMSFP(ReLUBase):
+class ReLUMSFP(_ReLUBase):
     bypass = None
     _required_config_keys = (
         "data_in_width",
@@ -234,6 +235,57 @@ class ReLUMSFP(ReLUBase):
             width=x_width,
             exponent_width=x_exponent_width,
             exponent_bias=x_exponent_bias,
+            block_size=x_block_size,
+            skip_first_dim=True,
+        )
+        self.config = self.construct_essential_config(config)
+
+    def forward(self, x: Tensor) -> Tensor:
+        if self.bypass:
+            return F.relu(x)
+        else:
+            x_shape = [i for i in x.shape]
+            if x.ndim > 2:
+                x = torch.flatten(x, 0, -3)
+            x = self.x_quantizer(x)
+            x = torch.reshape(x, x_shape)
+            return F.relu(x, self.inplace)
+
+    def construct_essential_config(self, config):
+        r_config = extract_required_config(self, config)
+        o_config = {}
+        o_config["bypass"] = config.get("bypass", False)
+        return r_config | o_config
+
+
+@mark_as_leaf_module
+class ReLUBlockMinifloat(_ReLUBase):
+    bypass = None
+    _required_config_keys = (
+        "data_in_width",
+        "data_in_exponent_width",
+        "data_in_exponent_bias_width",
+        "data_in_block_size",
+    )
+
+    _optional_config_keys = ("bypass",)
+
+    def __init__(self, inplace: bool = False, config: dict = None):
+        super().__init__(inplace)
+        assert config is not None, "config is None!"
+        self.bypass = config.get("bypass", False)
+
+        x_width, x_exponent_width, x_exponent_bias_width, x_block_size = (
+            config["data_in_width"],
+            config["data_in_exponent_width"],
+            config["data_in_exponent_bias_width"],
+            config["data_in_block_size"],
+        )
+        self.x_quantizer = partial(
+            block_minifloat_quantizer,
+            width=x_width,
+            exponent_width=x_exponent_width,
+            exponent_bias_width=x_exponent_bias_width,
             block_size=x_block_size,
             skip_first_dim=True,
         )

@@ -1,5 +1,6 @@
-from .add import AddInteger
+# from .add import AddInteger
 from .conv1d import (
+    Conv1dBlockMinifloat,
     Conv1dInteger,
     Conv1dLog,
     Conv1dMinifloatIEEE,
@@ -7,6 +8,7 @@ from .conv1d import (
     Conv1dMSFP,
 )
 from .conv2d import (
+    Conv2dBlockMinifloat,
     Conv2dInteger,
     Conv2dLog,
     Conv2dMinifloatIEEE,
@@ -14,6 +16,7 @@ from .conv2d import (
     Conv2dMSFP,
 )
 from .linear import (
+    LinearBlockMinifloat,
     LinearInteger,
     LinearLog,
     LinearMinifloatIEEE,
@@ -21,4 +24,11 @@ from .linear import (
     LinearMSFP,
 )
 from .pool2d import AdaptiveAvgPool2dInteger, AvgPool2dInteger
-from .relu import ReLUInteger, ReLULog, ReLUMinifloatIEEE, ReLUMinifloatSimple, ReLUMSFP
+from .relu import (
+    ReLUBlockMinifloat,
+    ReLUInteger,
+    ReLULog,
+    ReLUMinifloatIEEE,
+    ReLUMinifloatSimple,
+    ReLUMSFP,
+)

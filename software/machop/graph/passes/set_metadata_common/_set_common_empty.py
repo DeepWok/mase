@@ -26,7 +26,8 @@ from ....modify.quantizers.functions import (
     matmul_integer,
     relu_integer,
 )
-from ....modify.quantizers.layers import AddInteger
+
+# from ....modify.quantizers.layers import AddInteger
 
 logger = getLogger(__name__)
 
@@ -151,9 +152,9 @@ def _set_empty_metadata_before_call_module(node, module, args, kwargs):
     elif isinstance(module, (nn.Embedding,)):
         _add_empty_common_args(meta, "data_in", "weight")
         _add_empty_common_results(meta, "data_out")
-    elif isinstance(module, (AddInteger,)):
-        _add_empty_common_args(meta, "data_in_0", "data_in_1")
-        _add_empty_common_results(meta, "data_out")
+    # elif isinstance(module, (AddInteger,)):
+    #     _add_empty_common_args(meta, "data_in_0", "data_in_1")
+    #     _add_empty_common_results(meta, "data_out")
     elif isinstance(module, (nn.Linear,)):
         _add_empty_common_args(meta, "data_in", "weight", "bias")
         _add_empty_common_results(meta, "data_out")

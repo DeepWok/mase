@@ -37,9 +37,8 @@ from ....modify.quantizers.functions.relu import (
     get_output_bitwidth_relu_integer,
     relu_integer,
 )
-from ....modify.quantizers.layers import (
+from ....modify.quantizers.layers import (  # AddInteger,
     AdaptiveAvgPool2dInteger,
-    AddInteger,
     AvgPool2dInteger,
     Conv1dInteger,
     Conv2dInteger,
@@ -454,11 +453,11 @@ def _set_dtype_before_call_module(node, module, args, kwargs):
         config = module.config | module.get_output_bitwidth()
         _set_quant_dtype_precision(mc_args["data_in"], config, "data_in")
         _set_quant_dtype_precision(mc_results["data_out"], config, "data_out")
-    elif module_cls in (AddInteger,):
-        config = module.config | module.get_output_bitwidth()
-        _set_quant_dtype_precision(mc_args["data_in_0"], config, "data_in")
-        _set_quant_dtype_precision(mc_args["data_in_1"], config, "data_in")
-        _set_quant_dtype_precision(mc_results["data_out"], config, "data_out")
+    # elif module_cls in (AddInteger,):
+    #     config = module.config | module.get_output_bitwidth()
+    #     _set_quant_dtype_precision(mc_args["data_in_0"], config, "data_in")
+    #     _set_quant_dtype_precision(mc_args["data_in_1"], config, "data_in")
+    #     _set_quant_dtype_precision(mc_results["data_out"], config, "data_out")
     elif module_cls in (LinearInteger, Conv1dInteger, Conv2dInteger):
         config = module.config | module.get_output_bitwidth()
         _set_quant_dtype_precision(mc_args["data_in"], config, "data_in")
