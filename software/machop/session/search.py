@@ -29,7 +29,7 @@ class SearchBase:
         info,
         model,
         task,
-        dummy_inputs,
+        modifier_kwargs,
         data_module,
         search_config,
         save_dir,
@@ -39,14 +39,14 @@ class SearchBase:
         self.info = info
         self.model = model
         self.task = task
-        self.dummy_inputs = dummy_inputs
+        self.modifier_kwargs = modifier_kwargs
         self._parse_config(search_config)
         self._prepare_loader(data_module)
         self.modifier = Modifier(
             model=self.model["model"] if self._is_nlp_model(model_name) else self.model,
-            dummy_inputs_for_fx=dummy_inputs,
             config_path=None,
             silent=True,
+            **modifier_kwargs,
         )
         self.save_dir = save_dir
         if accelerator == "auto":
@@ -77,8 +77,6 @@ class SearchBase:
         else:
             data_module.setup()
             data_module.prepare_data()
-            # raise NotImplementedError(f"Model {self.model_name} is not supported yet.")
-        # self.data_loader = getattr(data_module, self.search_data["dataloader"])()
         self.data_loader = data_module.train_dataloader()
         self.num_batches = self.search_data["num_batches"]
 
@@ -87,9 +85,9 @@ class SearchBase:
             model=self.model["model"]
             if self._is_nlp_model(self.model_name)
             else self.model,
-            dummy_inputs_for_fx=self.dummy_inputs,
             config_path=None,
             silent=True,
+            **self.modifier_kwargs,
         )
 
     def search(self):
@@ -113,6 +111,9 @@ class SearchQuantization(SearchBase):
         method_nodes_to_modify = {}
 
         search_space = self.search_space
+
+        self.modifier.build_graph()
+        self.modifier.check_modifiable()
         for n in self.modifier.graph.nodes:
             if n.op == "call_function":
                 if is_modifiable(
@@ -170,9 +171,7 @@ class SearchQuantization(SearchBase):
     def get_config_instance_and_evaluate(self, sampled_search_space):
         self.modifier.load_config(None)
         sampled_search_space["default"] = self.default_config
-        # sampled_search_space["module_classes_to_modify"] = {}
         self.modifier.load_config(sampled_search_space)
-        self.modifier.check_modifiable()
         graph_module = self.modifier.modify()
 
         if self._is_nlp_model(self.model_name):
@@ -192,16 +191,6 @@ class SearchQuantization(SearchBase):
             outputs = pl_model.training_step(batch, batch_idx)
             losses.append(torch.mean(outputs["loss"]).item())
         return sum(losses) / len(losses)
-        # accs = []
-        # for i, data in enumerate(self.data_loader):
-        #     input_data, label = data
-        #     if i >= self.num_batches:
-        #         break
-        #     logits = graph_module(input_data)
-        #     acc = sum(logits.argmax(dim=1) == label) / label.numel()
-        #     accs.append(acc)
-        # # average accs
-        # return sum(accs) / len(accs)
 
     def _move_batch_to_device(self, batch):
         if isinstance(batch, torch.Tensor):
@@ -261,11 +250,8 @@ class SearchQuantization(SearchBase):
 
         def objective(my_instance):
             self.rebuild_modifier()
-            # avg_acc = self.get_config_instance_and_evaluate(my_instance)
-            # error_rate = 1 - avg_acc
-            # error_rate = to_numpy(error_rate)
-            # return float(error_rate)
-            return self.get_config_instance_and_evaluate(my_instance)
+            loss = self.get_config_instance_and_evaluate(my_instance)
+            return loss
 
         if self.search_strategy_config["algorithm"] == "tpe":
             algo = tpe.suggest
@@ -425,7 +411,7 @@ def search(
     info,
     model,
     task,
-    dummy_inputs,
+    modifier_kwargs,
     data_module,
     search_config,
     save_dir,
@@ -438,7 +424,7 @@ def search(
         info=info,
         model=model,
         task=task,
-        dummy_inputs=dummy_inputs,
+        modifier_kwargs=modifier_kwargs,
         data_module=data_module,
         search_config=search_config,
         save_dir=save_dir,

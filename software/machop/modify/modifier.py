@@ -1,3 +1,4 @@
+import json
 import logging
 import operator
 import os
@@ -5,6 +6,8 @@ import pickle
 from copy import copy, deepcopy
 from typing import Callable, Dict, List, Union
 
+import numpy as np
+import pandas as pd
 import toml
 import torch
 import torch.nn.functional as F
@@ -17,23 +20,30 @@ from ..graph.mase_interpreter import clear_node_metadata_software
 from ..graph.mase_tracer import (
     MaseTracer,
     clear_user_custom_leaf_modules,
+    is_leaf_module_to_trace,
     mark_as_user_custom_leaf_module,
 )
 from ..graph.utils import get_module_by_name, get_parent_name
 
 # from .quantizers import functions_map, layers_map
-from .quantizers import (
-    FUNC_MAP_NEO,
-    METHOD_MAP_NEO,
-    MODULE_CLS_MAP_NEO,
-    QUANTIZED_FUNC_CLASSES,
-    QUANTIZED_MODULE_CLASSES,
-)
+from .quantizers import FUNC_MAP, METHOD_MAP
+from .quantizers import MODULE_CLS_MAP as _MODULE_CLS_MAP
+from .quantizers import QUANTIZED_FUNC_CLASSES, QUANTIZED_MODULE_CLASSES
 
 logger = logging.getLogger(__name__)
 
+# -----------------------------------------
+# (1). MODULE_CLS_MAP: original module class -> name -> modified module class
+# For example: nn.Linear -> "integer" -> LinearInteger
+# -----------------------------------------
+MODULE_CLS_MAP = deepcopy(_MODULE_CLS_MAP)
 
-MODULE_CLASS_NAME_TO_MODULE_CLASS = {
+# -----------------------------------------
+# (2.1) MODULE_CLS_NAME_TO_MODULE_CLS: name -> original class
+# For example, "linear" -> nn.Linear
+# this "linear" is used in modify-sw-config to specify coarse-grained module class to modify
+# -----------------------------------------
+_MODULE_CLS_NAME_TO_MODULE_CLS = {
     "linear": nn.Linear,
     "relu": nn.ReLU,
     "conv1d": nn.Conv1d,
@@ -41,8 +51,9 @@ MODULE_CLASS_NAME_TO_MODULE_CLASS = {
     "avgpool2d": nn.AvgPool2d,
     "adaptiveavgpool2d": nn.AdaptiveAvgPool2d,
 }
-
-MODULE_CLASS_TO_MODULE_CLASS_NAME = {
+MODULE_CLS_NAME_TO_MODULE_CLS = deepcopy(_MODULE_CLS_NAME_TO_MODULE_CLS)
+# (2.2) This reversed mapping is used to check the modify-sw-config before modify-sw
+_MODULE_CLS_TO_MODULE_CLS_NAME = {
     nn.Linear: "linear",
     nn.ReLU: "relu",
     nn.Conv1d: "conv1d",
@@ -50,6 +61,16 @@ MODULE_CLASS_TO_MODULE_CLASS_NAME = {
     nn.AvgPool2d: "avgpool2d",
     nn.AdaptiveAvgPool2d: "adaptiveavgpool2d",
 }
+
+MODULE_CLS_TO_MODULE_CLS_NAME = deepcopy(_MODULE_CLS_TO_MODULE_CLS_NAME)
+
+# -----------------------------------------
+# (3) MODIFIED_MODULE_CLASSES: a list of modified class
+# For example, [LinearInteger, Conv2dInteger]
+# This list is used in modify-sw to avoid modifying the same module multiple times
+# -----------------------------------------
+_MODIFIED_MODULE_CLASSES = [] + QUANTIZED_MODULE_CLASSES
+MODIFIED_MODULE_CLASSES = deepcopy(_MODIFIED_MODULE_CLASSES)
 
 FUNCTION_NAME_TO_FUNCTIONS = {
     "add": (operator.add, torch.add),
@@ -67,12 +88,76 @@ FUNCTION_TO_FUNCTION_NAME = {
     torch.bmm: "bmm",
 }
 
+MODIFIED_FUNC_CLASSES = [] + QUANTIZED_FUNC_CLASSES
+
 METHOD_NAMES = ["add", "relu", "matmul", "bmm"]
 
 
-def dummy_create_new_module_fn(original_model: nn.Module, config: Dict):
+def register_original_to_name_to_modified_for_modify_sw(
+    original_cls_to_name_to_modified_cls: Dict[type, Dict[str, type]],
+):
+    """
+    update (1) MODULE_CLS_MAP: original module class -> name -> modified module class
+
+    - `original_cls_to_name_to_modified_cls` example: nn.Linear -> "integer" -> LinearInteger
+    """
+    global MODULE_CLS_MAP
+    MODULE_CLS_MAP.update(original_cls_to_name_to_modified_cls)
+
+
+def reset_original_to_name_to_modified_for_modify_sw():
+    """
+    reset (1) MODULE_CLS_MAP to built-in MODULE_CLS_MAP
+    """
+    global MODULE_CLS_MAP
+    MODULE_CLS_MAP = deepcopy(_MODULE_CLS_MAP)
+
+
+def register_cls_name_to_cls_for_modify_sw(cls_name_to_cls: Dict[str, type]):
+    """
+    update (2.1) and (2.2)
+    - (2.1) MODULE_CLS_NAME_TO_MODULE_CLS: maps string cls_name in modify-sw-config to cls,
+    (2.1) maps module_class name in modify-sw-config toml to real module class
+    - (2.2) MODULE_CLS_TO_MODULE_CLS_NAME: does the reverse. This is used to check if module_class names in modify-sw-config toml are supported.
+    """
+    global MODULE_CLS_NAME_TO_MODULE_CLS
+    global MODULE_CLS_TO_MODULE_CLS_NAME
+    cls_to_cls_name = {c: n for n, c in cls_name_to_cls.items()}
+    MODULE_CLS_NAME_TO_MODULE_CLS.update(cls_name_to_cls)
+    MODULE_CLS_TO_MODULE_CLS_NAME.update(cls_to_cls_name)
+
+
+def reset_cls_name_to_cls_for_modify_sw():
+    """
+    reset (2.1) and (2.2) to built-in mapping
+    """
+    global MODULE_CLS_TO_MODULE_CLS_NAME
+    global MODULE_CLS_NAME_TO_MODULE_CLS
+    MODULE_CLS_TO_MODULE_CLS_NAME = deepcopy(_MODULE_CLS_TO_MODULE_CLS_NAME)
+    MODULE_CLS_NAME_TO_MODULE_CLS = deepcopy(_MODULE_CLS_NAME_TO_MODULE_CLS)
+
+
+def register_modified_cls_for_modify_sw(classes: List[type]):
+    """
+    (3) MODIFIED_MODULE_CLASSES: a list of modified class.
+    - For example, [LinearInteger, Conv2dInteger]
+    - This list is used in modify-sw to avoid modifying the same module multiple times
+    """
+    global MODIFIED_MODULE_CLASSES
+    MODIFIED_MODULE_CLASSES = MODIFIED_MODULE_CLASSES + classes
+
+
+def reset_modified_cls_for_modify_sw():
+    """
+    resnet (3) to built-in modified module classes
+    """
+    global MODIFIED_MODULE_CLASSES
+    MODIFIED_MODULE_CLASSES = deepcopy(_MODIFIED_MODULE_CLASSES)
+
+
+def dummy_create_new_module_fn(original_module: nn.Module, config: Dict):
     raise NotImplementedError(
-        f"Module {original_model} is not a built-in supported module class to modify"
+        f"Module {original_module} is not a built-in supported module class to modify"
     )
 
 
@@ -82,20 +167,26 @@ class Modifier:
         model: nn.Module,
         config_path: Union[str, dict],
         dummy_inputs_for_fx: Dict = {},
-        module_classes_to_modify: Dict[str, Dict] = None,
-        function_classes_to_modify: Dict[str, Dict] = None,
-        method_classes_to_modify: Dict[str, Dict] = None,
-        module_nodes_to_modify: Dict[str, Dict] = None,
-        function_nodes_to_modify: Dict[str, Dict] = None,
-        method_nodes_to_modify: Dict[str, Dict] = None,
-        custom_leaf_module_classes: List[type] = [],
-        create_new_custom_module_fn: Callable = dummy_create_new_module_fn,
+        custom_module_cls_to_trace=[],
+        custom_module_cls_map={},
+        custom_module_cls_name_to_cls={},
+        custom_modified_module_cls=[],
+        custom_module_create_fn: Callable = dummy_create_new_module_fn,
         save_dir: str = None,
         silent: bool = False,
     ) -> None:
         """
+        ---
+        Args:
+        - config_path (str): path to toml config file
+        - dummy_inputs_for_fx: inputs provided for model.forward to freeze some dynamic control flows
+        - create_new_custom_module_fn (Callable): call this function to create new layers if a module name in modules_to_modify corresponds to non-built-in module class
+        - save_dir is expected to be "${no_hyphen_model_name}/software/modify-sw"
+
+        ---
         Note that modules_to_modify will overwrites module_classes_to_modify
 
+        ---
         A config file includes:
         - `module_cls_to_modify` (required): a mapping of "module class name -> new module class config"
         - `function_cls_to_modify` (required): a mapping of "function class name -> new function config"
@@ -104,7 +195,8 @@ class Modifier:
         - `function_nodes_to_modify` (optional): a mapping of "function node.name -> new function config"
         - `method_nodes_to_modify` (optional): a mapping of "function node.name -> substitute function config"
 
-        A `create_new_custom_module` follows the interface:
+        ---
+        A `create_new_custom_module_fn` follows the interface:
 
             ```
             def self.create_new_custom_module(
@@ -115,17 +207,6 @@ class Modifier:
                 return new_module
             ```
 
-        Args:
-        - config_path (str): path to toml config file
-        - dummy_inputs_for_fx: inputs provided for model.forward to freeze some dynamic control flows
-        - module_cls_to_modify (Dict[str, Dict]): overwrites `model_classes_to_modify` in config
-        - function_cls_to_modify (Dict[str, Dict]): overwrites `functions_to_modify` in config
-        - method_cls_to_modify (Dict[str, Dict]): overwrites `methods_to_modify` in config
-        - module_nodes_to_modify (Dict[str, Dict]): overwrites `modules_to_modify` in config.
-        - function_nodes_to_modify
-        - method_nodes_to_modify
-        - create_new_custom_module (Callable): call this function to create new layers if a module name in modules_to_modify corresponds to non-built-in module class
-        - save_dir is expected to be "${no_hyphen_model_name}/software/modify-sw"
         """
 
         assert isinstance(model, torch.nn.Module)
@@ -134,35 +215,26 @@ class Modifier:
 
         self.config = None
         self.dummy_inputs = dummy_inputs_for_fx
+
         self.module_classes_to_modify = {}
         self.function_classes_to_modify = {}
         self.method_classes_to_modify = {}
         self.module_nodes_to_modify = {}
         self.function_nodes_to_modify = {}
         self.method_nodes_to_modify = {}
-        self.create_new_custom_module = create_new_custom_module_fn
+
+        self.custom_module_cls_to_trace = deepcopy(custom_module_cls_to_trace)
+        self.custom_module_cls_map = deepcopy(custom_module_cls_map)
+        self.custom_module_cls_name_to_cls = deepcopy(custom_module_cls_name_to_cls)
+        self.custom_modified_module_cls = deepcopy(custom_modified_module_cls)
+        self.custom_module_create_fn = custom_module_create_fn
         self.save_dir = save_dir
         self.graph = None
-        self.graph_module = None
+        self.graph_module = model
 
         self.silent = silent
 
-        # load, parse, and save config
         self.load_config(config_path)
-        self.overwrite_config(
-            module_classes_to_modify,
-            function_classes_to_modify,
-            method_classes_to_modify,
-            module_nodes_to_modify,
-            function_nodes_to_modify,
-            method_nodes_to_modify,
-        )
-
-        # build fx.Graph
-        self.build_graph(model, dummy_inputs_for_fx, custom_leaf_module_classes)
-        # check if target to modify exists in the graph
-        self.check_modifiable()
-        self._save_config()
 
     def load_config(self, config_path: Union[str, dict]):
         if config_path is None:
@@ -175,55 +247,37 @@ class Modifier:
             raise ValueError("Config File must be a toml file")
         self.config = toml.load(config_path)
 
-    def overwrite_config(
-        self,
-        module_classes_to_modify: Dict[str, Dict],
-        function_classes_to_modify: Dict[str, Dict],
-        method_classes_to_modify: Dict[str, Dict],
-        module_nodes_to_modify: Dict[str, Dict],
-        function_nodes_to_modify: Dict[str, Dict],
-        method_nodes_to_modify: Dict[str, Dict],
-    ):
-        if self.config is None:
-            return
-        # assert (
-        #     "module_classes_to_modify" in self.config
-        # ), "Cannot find `module_classes_to_modify` in config"
-        # assert (
-        #     "functions_to_modify" in self.config
-        # ), "Cannot find `functions_to_modify` in config"
-        # assert (
-        #     "methods_to_modify" in self.config
-        # ), "Cannot find `methods_to_modify` in config"
-        if module_classes_to_modify is not None:
-            self.config["module_classes_to_modify"] |= module_classes_to_modify
-        if function_classes_to_modify is not None:
-            self.config["function_classes_to_modify"] |= function_classes_to_modify
-        if method_classes_to_modify is not None:
-            self.config["method_classes_to_modify"] |= method_classes_to_modify
-        if module_nodes_to_modify is not None:
-            self.config["module_nodes_to_modify"] |= module_nodes_to_modify
-        if function_nodes_to_modify is not None:
-            self.config["function_nodes_to_modify"] |= function_nodes_to_modify
-        if method_nodes_to_modify is not None:
-            self.config["method_nodes_to_modify"] |= method_nodes_to_modify
-        if (
-            len(self.config.get("module_classes_to_modify", [])) == 0
-            and len(self.config.get("function_classes_to_modify", [])) == 0
-            and len(self.config.get("method_classes_to_modify", [])) == 0
-            and len(self.config.get("module_nodes_to_modify", [])) == 0
-            and len(self.config.get("function_node_to_modify", [])) == 0
-            and len(self.config.get("method_node_to_modify", [])) == 0
-        ):
-            logger.warning("No modify config found!")
-
-    def build_graph(self, model, dummy_inputs, custom_leaf_module_classes):
+    def _reset_custom_leaf_module_mapping(self):
         clear_user_custom_leaf_modules()
-        for custom_cls in custom_leaf_module_classes:
-            mark_as_user_custom_leaf_module(custom_cls)
-        graph = MaseTracer().trace(model, dummy_inputs)
+        reset_original_to_name_to_modified_for_modify_sw()
+        reset_cls_name_to_cls_for_modify_sw()
+        reset_modified_cls_for_modify_sw()
+
+    def _register_custom_leaf_module_mapping(self):
+        for cls in self.custom_module_cls_to_trace:
+            if not is_leaf_module_to_trace(cls):
+                mark_as_user_custom_leaf_module(cls)
+        register_original_to_name_to_modified_for_modify_sw(self.custom_module_cls_map)
+        register_cls_name_to_cls_for_modify_sw(self.custom_module_cls_name_to_cls)
+        register_modified_cls_for_modify_sw(self.custom_modified_module_cls)
+        if not self.silent:
+            if len(self.custom_module_cls_to_trace) == 0:
+                logger.info("No custom leaf module class is additionally registered")
+            else:
+                logger.info(
+                    "{} custom leaf module classes are registered".format(
+                        len(self.custom_module_cls_to_trace)
+                    )
+                )
+
+    def build_graph(
+        self,
+    ):
+        self._reset_custom_leaf_module_mapping()
+        self._register_custom_leaf_module_mapping()
+        graph = MaseTracer().trace(self.graph_module, self.dummy_inputs)
         self.graph = graph
-        self.graph_module = GraphModule(model, graph)
+        self.graph_module = GraphModule(self.graph_module, graph)
 
     def check_modifiable(self):
         """
@@ -241,9 +295,9 @@ class Modifier:
                 "module_classes_to_modify"
             ].items():
                 assert (
-                    module_cls_name in MODULE_CLASS_NAME_TO_MODULE_CLASS
+                    module_cls_name in MODULE_CLS_NAME_TO_MODULE_CLS
                 ), f"Unsupported module class: {module_cls_name}"
-                module_cls = MODULE_CLASS_NAME_TO_MODULE_CLASS[module_cls_name]
+                module_cls = MODULE_CLS_NAME_TO_MODULE_CLS[module_cls_name]
                 self.module_classes_to_modify |= {module_cls: module_cls_config}
         # check func cls
         if "function_classes_to_modify" in self.config:
@@ -270,8 +324,12 @@ class Modifier:
                     filter(lambda x: x.op == "call_module", self.graph.nodes),
                 )
             )
-            for name in self.config["module_nodes_to_modify"]:
-                assert name in module_names
+            for module_target, sub_config in self.config[
+                "module_nodes_to_modify"
+            ].items():
+                assert (
+                    module_target in module_names
+                ), f"`{module_target}` is not a valid module node name"
             self.module_nodes_to_modify = self.config["module_nodes_to_modify"]
         # check func node.name
         if "function_nodes_to_modify" in self.config:
@@ -281,8 +339,8 @@ class Modifier:
                     filter(lambda x: x.op == "call_function", self.graph.nodes),
                 )
             )
-            for name in self.config["function_nodes_to_modify"]:
-                assert name in function_names
+            for module_target in self.config["function_nodes_to_modify"]:
+                assert module_target in function_names
             self.function_nodes_to_modify = self.config["function_nodes_to_modify"]
         # check method node.name
         if "method_nodes_to_modify" in self.config:
@@ -292,8 +350,8 @@ class Modifier:
                     filter(lambda x: x.op == "call_method", self.graph.nodes),
                 )
             )
-            for name in self.config["method_nodes_to_modify"]:
-                assert name in method_names
+            for module_target in self.config["method_nodes_to_modify"]:
+                assert module_target in method_names
             self.method_nodes_to_modify = self.config["method_nodes_to_modify"]
 
     def _save_config(self):
@@ -303,17 +361,25 @@ class Modifier:
             config_path = os.path.join(self.save_dir, "modify-sw-config.toml")
             with open(config_path, "w+") as f:
                 toml.dump(self.config, f)
-            logger.info(f"Modify-sw config is saved to {config_path}")
+            if not self.silent:
+                logger.info(f"Modify-sw config is saved to {config_path}")
 
     def modify(self) -> GraphModule:
+        assert self.config is not None
         is_training_mode = self.graph_module.training
+
+        self.build_graph()
+        self.check_modifiable()
+
         self.graph_module.eval()
         clear_node_metadata_software(self.graph_module)
         self._modify()
         self._copy_attributes()
         if is_training_mode:
             self.graph_module.train()
-        self.compare_model()
+        if not self.silent:
+            self.compare_model()
+        self._save_config()
         self._save_modified_model_to_pkl()
         return self.graph_module
 
@@ -323,121 +389,112 @@ class Modifier:
 
         modified_named_modules = dict(self.graph_module.named_modules())
 
-        complete_comparison = []
-        modify_hits_and_misses = {}
-        total_modules = 0
-        total_functions = 0
-        total_methods = 0
+        df = pd.DataFrame(
+            columns=[
+                "Original name",
+                "New name",
+                "OP",
+                "Original type",
+                "New type",
+                "Changed",
+            ]
+        )
 
-        for node, old_node in zip(self.graph.nodes, original_graph.nodes):
+        for i, (node, old_node) in enumerate(
+            zip(self.graph.nodes, original_graph.nodes)
+        ):
             if node.op == "call_module":
                 original_module = original_named_modules[node.target]
                 modified_module = modified_named_modules[node.target]
+
+                original_name = "`{}`".format(old_node.target)
+                new_name = "`{}`".format(node.target)
+                op = "`call_module`"
+                original_type = "`{}`".format(str(type(original_module)))
+                new_type = "`{}`".format(str(type(modified_module)))
                 changed = type(original_module) != type(modified_module)
-                row = [
-                    f"`{old_node.name}`",
-                    f"`{node.name}`",
-                    f"`{node.op}`",
-                    "`{}`".format(str(type(original_module))),
-                    "`{}`".format(str(type(modified_module))),
-                    changed,
-                ]
-                complete_comparison.append(row)
-
-                if str(type(original_module)) in modify_hits_and_misses:
-                    modify_hits_and_misses[str(type(original_module))]["count"] += 1
-                else:
-                    modify_hits_and_misses[str(type(original_module))] = {
-                        "count": 1,
-                        "changed": changed,
-                        "op": old_node.op,
-                    }
-                total_modules += 1
-
             elif node.op == "call_function":
+                original_name = "`{}`".format(old_node.name)
+                new_name = "`{}`".format(node.name)
+                op = "`call_function`"
+                original_type = "`{}`".format(old_node.target)
+                new_type = "`{}`".format(node.target)
                 changed = old_node.target != node.target
-                row = [
-                    f"`{old_node.name}`",
-                    f"`{node.name}`",
-                    f"`{node.op}`",
-                    f"`{old_node.target}`",
-                    f"`{node.target}`",
-                    changed,
-                ]
-                complete_comparison.append(row)
-
-                if str(old_node.target) in modify_hits_and_misses:
-                    modify_hits_and_misses[str(old_node.target)]["count"] += 1
-                else:
-                    modify_hits_and_misses[str(old_node.target)] = {
-                        "count": 1,
-                        "changed": changed,
-                        "op": old_node.op,
-                    }
-                total_functions += 1
-
             elif node.op == "call_method":
+                original_name = "`{}`".format(old_node.name)
+                new_name = "`{}`".format(node.name)
+                op = "`call_method`"
+                original_type = "`{}`".format(old_node.target)
+                new_type = "`{}`".format(node.target)
                 changed = old_node.target != node.target
-                row = [
-                    f"`{old_node.name}`",
-                    f"`{node.name}`",
-                    f"`{node.op}`",
-                    f"`{old_node.target}`",
-                    f"`{node.target}`",
-                    changed,
-                ]
-                complete_comparison.append(row)
+            else:
+                continue
+            df.loc[i] = [original_name, new_name, op, original_type, new_type, changed]
 
-                if str(old_node.target) in modify_hits_and_misses:
-                    modify_hits_and_misses[str(old_node.target)]["count"] += 1
-                else:
-                    modify_hits_and_misses[str(old_node.target)] = {
-                        "count": 1,
-                        "changed": changed,
-                        "op": old_node.op,
-                    }
-                total_methods += 1
+        df = df.reset_index(drop=True)
 
-        headers = ["Old Name", "Name", "Op", "Original", "Modified", "Changed?"]
-        report = tabulate(complete_comparison, headers=headers, tablefmt="github")
-        self.original_model = None
-
-        if not self.silent:
-            logger.info("Histogram of modified model")
-        headers = ["Original OP", "Num", "Changed?"]
-        histogram_rows = []
-        for op_name, d in modify_hits_and_misses.items():
-            row = [op_name, d["count"], d["changed"]]
-            histogram_rows.append(row)
-        histogram_rows = sorted(histogram_rows, key=lambda x: x[1], reverse=True)
-        histogram_rows.append(["All 'call_module'", total_modules, "-"])
-        histogram_rows.append(["All 'call function'", total_functions, "-"])
-        histogram_rows.append(["All 'call method'", total_methods, "-"])
-        if not self.silent:
-            print(tabulate(histogram_rows, headers=headers, tablefmt="github"))
-
+        report = tabulate(df, headers="keys", tablefmt="github")
         if self.save_dir:
             if not os.path.isdir(self.save_dir):
                 os.makedirs(self.save_dir)
-            report_path = os.path.join(self.save_dir, "modify-sw-report.md")
-
-            with open(report_path, "w+") as f:
+            report_md_path = os.path.join(self.save_dir, "modify-sw-report.md")
+            with open(report_md_path, "w+") as f:
                 f.write(report)
-            logger.info(f"The tabular summary of modify-sw is saved to {report_path}")
 
-            profile_path = os.path.join(self.save_dir, "modify-sw-histogram.toml")
-            with open(profile_path, "w+") as f:
-                toml.dump(modify_hits_and_misses, f)
             logger.info(
-                f"The histogram summary of modify-sw is saved to {profile_path}"
+                f"The tabular summary of modify-sw is saved to {report_md_path}"
             )
+
+        histogram_df = df.groupby(["Original type"]).agg(
+            OP=pd.NamedAgg(column="OP", aggfunc="first"),
+            Total=pd.NamedAgg(column="Changed", aggfunc="count"),
+            Changed=pd.NamedAgg(column="Changed", aggfunc=lambda x: np.sum(x)),
+            Unchanged=pd.NamedAgg(
+                column="Changed", aggfunc=lambda x: np.sum(1 - np.array(x))
+            ),
+        )
+        histogram_df = histogram_df.sort_values("Total", ascending=False)
+        tmp_df = histogram_df.groupby("OP").agg("sum")
+        if "`call_method`" in tmp_df.index:
+            histogram_df.loc["call_module"] = [
+                "-",
+                tmp_df.loc["`call_module`", :]["Total"],
+                tmp_df.loc["`call_module`", :]["Changed"],
+                tmp_df.loc["`call_module`", :]["Unchanged"],
+            ]
+        if "`call_function`" in tmp_df.index:
+            histogram_df.loc["call_function"] = [
+                "-",
+                tmp_df.loc["`call_function`", :]["Total"],
+                tmp_df.loc["`call_function`", :]["Changed"],
+                tmp_df.loc["`call_function`", :]["Unchanged"],
+            ]
+        if "`call_method`" in tmp_df.index:
+            histogram_df.loc["call_method"] = [
+                "-",
+                tmp_df.loc["`call_method`", :]["Total"],
+                tmp_df.loc["`call_method`", :]["Changed"],
+                tmp_df.loc["`call_method`", :]["Unchanged"],
+            ]
+
+        if self.save_dir:
+            histogram_path = os.path.join(self.save_dir, "modify-sw-histogram.md")
+            histogram = tabulate(histogram_df, headers="keys", tablefmt="github")
+            with open(histogram_path, "w+") as f:
+                f.write(histogram)
+            logger.info(
+                f"The histogram summary of modify-sw is saved to {histogram_path}"
+            )
+        if not self.silent:
+            print(histogram)
 
     def _save_modified_model_to_pkl(self):
         if self.save_dir:
             modified_pkl_path = os.path.join(self.save_dir, "modified_model.pkl")
             with open(modified_pkl_path, "wb") as f:
                 pickle.dump(self.graph_module, file=f)
-            logger.info(f"Modified model is saved at {modified_pkl_path}")
+            if not self.silent:
+                logger.info(f"Modified model is saved at {modified_pkl_path}")
 
     def _modify(self):
         assert "default" in self.config, "Please provide `default` config."
@@ -457,7 +514,11 @@ class Modifier:
                     sub_config = self.module_nodes_to_modify[module_name]
                     # .named_modules() may include repeated nodes,
                     # if this node has been modified, just skip it
-                    if module_cls in QUANTIZED_MODULE_CLASSES:
+                    if (
+                        module_cls
+                        in MODIFIED_MODULE_CLASSES
+                        # or module_cls in self.new_custom_leaf_module_classes
+                    ):
                         continue
                 elif module_cls in self.module_classes_to_modify:
                     # fetch config for this layer
@@ -471,16 +532,14 @@ class Modifier:
                     sub_config = default_config
 
                 try:
-                    new_module = _create_new_module(
-                        original_module=module,
-                        config=sub_config,
-                    )
-                except NotImplementedError:
-                    # print(f"Custom module {module}, {type(module)}")
-                    # create new layer using user provided module
-                    new_module = self.create_new_custom_module(
+                    new_module = self.custom_module_create_fn(
                         original_module=module, config=sub_config
                     )
+                except NotImplementedError:
+                    new_module = _create_new_module(
+                        original_module=module, config=sub_config
+                    )
+
                 # replace the old module with the new one
                 parent_name, name = get_parent_name(module_name)
                 setattr(named_modules[parent_name], name, new_module)
@@ -494,7 +553,7 @@ class Modifier:
 
                 if function_node in self.function_nodes_to_modify:
                     sub_config = self.function_nodes_to_modify[function_node]
-                    if function_cls in QUANTIZED_FUNC_CLASSES:
+                    if function_cls in MODIFIED_FUNC_CLASSES:
                         continue
                 elif function_cls in self.function_classes_to_modify:
                     sub_config = self.function_classes_to_modify[function_cls]
@@ -579,7 +638,7 @@ class Modifier:
         cls,
         model: nn.Module,
         dummy_inputs={},
-        custom_leaf_module_classes: List[type] = [],
+        # original_custom_leaf_module_classes: List[type] = [],
         save_path: str = None,
     ) -> Dict:
         config = {
@@ -600,7 +659,7 @@ class Modifier:
             "bias_frac_width": 5,
         }
 
-        for module_cls in sorted(MODULE_CLASS_NAME_TO_MODULE_CLASS.keys()):
+        for module_cls in sorted(MODULE_CLS_NAME_TO_MODULE_CLS.keys()):
             config["module_classes_to_modify"][module_cls] = {"name": "default"}
 
         for func_cls in sorted(FUNCTION_NAME_TO_FUNCTIONS.keys()):
@@ -611,19 +670,22 @@ class Modifier:
 
         is_training_mode = model.training
         model.eval()
-        clear_user_custom_leaf_modules()
-        for custom_cls in custom_leaf_module_classes:
-            mark_as_user_custom_leaf_module(custom_cls)
         graph = MaseTracer().trace(model, dummy_inputs)
         for node in graph.nodes:
             if node.op == "call_module":
                 model_cls = type(get_module_by_name(model, node.target))
-                name = (
-                    "default"
-                    if model_cls in MODULE_CLASS_TO_MODULE_CLASS_NAME
-                    else "NA"
-                )
-                config["module_nodes_to_modify"][node.target] = {"name": name}
+                assert model_cls is not None
+                if model_cls in MODULE_CLS_TO_MODULE_CLS_NAME:
+                    name = "default"
+                    original_module_cls = MODULE_CLS_TO_MODULE_CLS_NAME[model_cls]
+                else:
+                    name = "NA"
+                    original_module_cls = "NA"
+
+                config["module_nodes_to_modify"][node.target] = {
+                    "name": name,
+                    "original_module_cls": original_module_cls,
+                }
             elif node.op == "call_function":
                 name = "default" if node.target in FUNCTION_TO_FUNCTION_NAME else "NA"
                 config["function_nodes_to_modify"][node.name] = {"name": name}
@@ -631,10 +693,10 @@ class Modifier:
                 name = "default" if node.target in METHOD_NAMES else "NA"
                 config["method_nodes_to_modify"][node.name] = {"name": name}
 
-        save_dir = os.path.dirname(save_path)
-        if not os.path.exists(save_dir):
-            os.makedirs(save_dir)
         if save_path is not None:
+            save_dir = os.path.dirname(save_path)
+            if save_dir != "" and not os.path.exists(save_dir):
+                os.makedirs(save_dir)
             with open(save_path, "w+") as f:
                 toml.dump(config, f)
             logger.info(f"Modify-sw-config template saved at {save_path}")
@@ -647,7 +709,7 @@ def _create_new_module(original_module: nn.Module, config: Dict):
     original_module_cls = type(original_module)
 
     if original_module_cls is nn.Linear:
-        new_module_cls = MODULE_CLS_MAP_NEO[original_module_cls][config["name"]]
+        new_module_cls = MODULE_CLS_MAP[original_module_cls][config["name"]]
         use_bias = original_module.bias is not None
         new_module = new_module_cls(
             in_features=original_module.in_features,
@@ -660,7 +722,7 @@ def _create_new_module(original_module: nn.Module, config: Dict):
         if use_bias:
             copy_weights(original_module.bias, new_module.bias)
     elif original_module_cls in (nn.Conv1d, nn.Conv2d):
-        new_module_cls = MODULE_CLS_MAP_NEO[original_module_cls][config["name"]]
+        new_module_cls = MODULE_CLS_MAP[original_module_cls][config["name"]]
         use_bias = original_module.bias is not None
         new_module = new_module_cls(
             in_channels=original_module.in_channels,
@@ -679,10 +741,10 @@ def _create_new_module(original_module: nn.Module, config: Dict):
             copy_weights(original_module.weight, new_module.weight)
 
     elif original_module_cls is nn.ReLU:
-        new_module_cls = MODULE_CLS_MAP_NEO[original_module_cls][config["name"]]
+        new_module_cls = MODULE_CLS_MAP[original_module_cls][config["name"]]
         new_module = new_module_cls(inplace=original_module.inplace, config=config)
     elif original_module_cls is nn.AvgPool2d:
-        new_module_cls = MODULE_CLS_MAP_NEO[original_module_cls][config["name"]]
+        new_module_cls = MODULE_CLS_MAP[original_module_cls][config["name"]]
         new_module = new_module_cls(
             kernel_size=original_module.kernel_size,
             stride=original_module.stride,
@@ -693,7 +755,7 @@ def _create_new_module(original_module: nn.Module, config: Dict):
             config=config,
         )
     elif original_module_cls is nn.AdaptiveAvgPool2d:
-        new_module_cls = MODULE_CLS_MAP_NEO[original_module_cls][config["name"]]
+        new_module_cls = MODULE_CLS_MAP[original_module_cls][config["name"]]
         new_module = new_module_cls(
             output_size=original_module.output_size, config=config
         )
@@ -707,7 +769,7 @@ def _create_new_module(original_module: nn.Module, config: Dict):
 
 def _get_new_func_args_and_kwargs(original_node: Node, config: Dict):
     original_func = original_node.target
-    new_func = FUNC_MAP_NEO[original_func][config["name"]]
+    new_func = FUNC_MAP[original_func][config["name"]]
     if original_func in (operator.add, torch.add):
         if len(original_node.all_input_nodes) >= 1:
             additional_kwargs = {"config": config}
@@ -731,7 +793,7 @@ def _get_new_func_args_and_kwargs(original_node: Node, config: Dict):
 
 def _get_substitute_function_args_and_kwargs(original_node, config: Dict):
     original_method_name = original_node.target
-    substitute_func = METHOD_MAP_NEO[original_method_name][config["name"]]
+    substitute_func = METHOD_MAP[original_method_name][config["name"]]
     if original_method_name in ("add",):
         additional_kwargs = {"config": config}
     elif original_method_name in ("relu",):
@@ -754,7 +816,7 @@ def _get_substitute_function_args_and_kwargs(original_node, config: Dict):
 def is_modifiable(node: Node, model: nn.Module) -> bool:
     if node.op == "call_module":
         module_cls = type(get_module_by_name(model, node.target))
-        return module_cls in MODULE_CLASS_TO_MODULE_CLASS_NAME
+        return module_cls in MODULE_CLS_TO_MODULE_CLS_NAME
     elif node.op == "call_function":
         return node.target in FUNCTION_TO_FUNCTION_NAME
     elif node.op == "call_method":

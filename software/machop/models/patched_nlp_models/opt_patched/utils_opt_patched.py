@@ -185,11 +185,14 @@ def OPTDecoder_check_head_mask(head_mask, decoder_layers) -> bool:
 
 
 @mark_as_leaf_func
-def OPTForCasualLM_compute_loss(logits, labels, self_loss_fct, self_config_vocab_size):
+def OPTForCasualLM_compute_loss(logits, labels, self_config_vocab_size):
     shift_logits = logits[..., :-1, :].contiguous()
     shift_labels = labels[..., 1:].contiguous()
     # Flatten the tokens
-    loss = self_loss_fct(
+    loss = torch.nn.functional.cross_entropy(
         shift_logits.view(-1, self_config_vocab_size), shift_labels.view(-1)
     )
+    # loss = self_loss_fct(
+    #     shift_logits.view(-1, self_config_vocab_size), shift_labels.view(-1)
+    # )
     return loss

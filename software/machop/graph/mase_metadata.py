@@ -8,7 +8,7 @@ import torch.fx
 from torch import nn
 from torch.fx import symbolic_trace
 
-from .utils import get_module_by_name, vf, v2p
+from .utils import get_module_by_name, v2p, vf
 
 logger = logging.getLogger(__name__)
 

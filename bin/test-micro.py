@@ -65,13 +65,21 @@ simple_cases = [
         "facebook/opt-125m@patched",
         "lm",
         "ptb",
-        "{}".format(os.path.join(software_dir, "configs", "modify-sw", "integer.toml")),
+        "{}".format(
+            os.path.join(
+                software_dir, "configs", "modify-sw", "integer_opt_wrapped.toml"
+            )
+        ),
     ],
     [
         "facebook/opt-350m@patched",
         "lm",
         "ptb",
-        "{}".format(os.path.join(software_dir, "configs", "modify-sw", "integer.toml")),
+        "{}".format(
+            os.path.join(
+                software_dir, "configs", "modify-sw", "integer_opt_wrapped.toml"
+            )
+        ),
     ],
 ]
 
@@ -140,13 +148,21 @@ full_cases = [
         "facebook/opt-1.3b@patched",
         "lm",
         "ptb",
-        "{}".format(os.path.join(software_dir, "configs", "modify-sw", "integer.toml")),
+        "{}".format(
+            os.path.join(
+                software_dir, "configs", "modify-sw", "integer_opt_wrapped.toml"
+            )
+        ),
     ],
     [
         "facebook/opt-2.7b@patched",
         "lm",
         "ptb",
-        "{}".format(os.path.join(software_dir, "configs", "modify-sw", "integer.toml")),
+        "{}".format(
+            os.path.join(
+                software_dir, "configs", "modify-sw", "integer_opt_wrapped.toml"
+            )
+        ),
     ],
     # ["bert-base-uncased", "cls", "boolq", "{}".format(os.path.join(software_dir, "configs", "modify-sw", "integer.toml"))],
     # ["bert-base-cased", "cls", "boolq", "{}".format(os.path.join(software_dir, "configs", "modify-sw", "integer.toml"))],
@@ -229,6 +245,7 @@ class TestMicro:
         self.logger.info("Running unit test for {}...".format(test_case))
 
         model = test_case[0]
+        model_name = model.replace("/", "_")
         task = test_case[1]
         dataset = test_case[2]
         sw_modify_toml = test_case[3]
@@ -248,7 +265,7 @@ class TestMicro:
             f"--synthesize",
             f"{self.args.mode}",
             f"--project",
-            f"{model}_{task}_{dataset}",
+            f"{model_name}_{task}_{dataset}",
             f"--project-dir",
             f"{self.project_dir}",
         ]

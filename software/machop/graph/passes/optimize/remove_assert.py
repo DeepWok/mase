@@ -1,7 +1,8 @@
 import torch
 import torch.fx as fx
+from torch.fx._symbolic_trace import _assert_is_none
 
-NODE_TARGETS_TO_REMOVE = (torch._assert,)
+NODE_TARGETS_TO_REMOVE = (torch._assert, _assert_is_none)
 
 
 def remove_assert(

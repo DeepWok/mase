@@ -11,9 +11,15 @@ import torch
 import torch.fx
 import torch.nn as nn
 import torch.nn.functional as F
+from torch.fx._symbolic_trace import _assert_is_none
 from torch.fx.node import Node, map_aggregate
 from torchvision.ops.stochastic_depth import stochastic_depth
 
+from ....models.patched_nlp_models.opt_patched.custom_modules import OPTAttentionInteger
+from ....models.patched_nlp_models.opt_patched.utils_opt_patched import (
+    OPTDecoder_self_prepare_decoder_attention,
+    OPTForCasualLM_compute_loss,
+)
 from ....modify.quantizers.functions import (
     add_integer,
     bmm_integer,
@@ -101,6 +107,9 @@ def _set_empty_metadata_before_call_function(node: Node, function, args, kwargs)
         operator.getitem,
         stochastic_depth,
         torch._assert,
+        _assert_is_none,
+        OPTDecoder_self_prepare_decoder_attention,
+        OPTForCasualLM_compute_loss
         # torch.max,
         # torch.maximum,
         # torch.min,
@@ -113,7 +122,10 @@ def _set_empty_metadata_before_call_function(node: Node, function, args, kwargs)
             for i in range(len(node.all_input_nodes)):
                 data_in_names.append(f"data_in_{i}")
         _add_empty_common_args(meta, *data_in_names)
-        _add_empty_common_results(meta, "data_out")
+        if function in (torch._assert, _assert_is_none):
+            pass
+        else:
+            _add_empty_common_results(meta, "data_out")
     else:
         _add_empty_common_args(meta, "data_in")
         _add_empty_common_results(meta, "data_out")
@@ -190,6 +202,21 @@ def _set_empty_metadata_before_call_module(node, module, args, kwargs):
     ):
         _add_empty_common_args(meta, "data_in")
         _add_empty_common_results(meta, "data_out")
+    elif isinstance(module, OPTAttentionInteger):
+        _add_empty_common_args(
+            meta,
+            "data_in_0",  # "hidden_states",
+            "data_in_1",  # "attention_mask",
+            "weight_k_proj",
+            "bias_k_proj",
+            "weight_v_proj",
+            "bias_v_proj",
+            "weight_q_proj",
+            "bias_q_proj",
+            "weight_out_proj",
+            "bias_out_proj",
+        )
+        _add_empty_common_results(meta, "data_out")  # "output_attention"
     else:
         _add_empty_common_args(meta, "data_in")
         _add_empty_common_results(meta, "data_out")
