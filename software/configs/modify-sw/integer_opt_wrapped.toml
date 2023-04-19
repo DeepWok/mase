@@ -1,0 +1,84 @@
+[default]
+bias_frac_width = 5
+bias_width = 8
+data_in_frac_width = 5
+data_in_width = 8
+name = "integer"
+weight_frac_width = 3
+weight_width = 8
+
+[default.default]
+bias_frac_width = 5
+bias_width = 8
+data_in_frac_width = 5
+data_in_width = 8
+name = "integer"
+weight_frac_width = 3
+weight_width = 8
+
+[module_classes_to_modify."opt::attention"]
+name = "integer"
+
+[module_classes_to_modify."opt::attention".default]
+bias_frac_width = 5
+bias_width = 8
+data_in_frac_width = 5
+data_in_width = 8
+name = "integer"
+weight_frac_width = 3
+weight_width = 8
+
+[module_classes_to_modify.avgpool2d]
+name = "default"
+
+[module_classes_to_modify.adaptiveavgpool2d]
+name = "default"
+
+[module_classes_to_modify.conv1d]
+name = "default"
+
+[module_classes_to_modify.conv2d]
+name = "default"
+
+[module_classes_to_modify.linear]
+name = "default"
+
+[module_classes_to_modify.relu]
+name = "default"
+
+[function_classes_to_modify.add]
+name = "default"
+
+[function_classes_to_modify.bmm]
+name = "default"
+
+[function_classes_to_modify.matmul]
+name = "default"
+
+[function_classes_to_modify.relu]
+name = "default"
+
+[method_classes_to_modify.add]
+name = "default"
+
+[method_classes_to_modify.bmm]
+name = "default"
+
+[method_classes_to_modify.matmul]
+name = "default"
+
+[method_classes_to_modify.relu]
+name = "default"
+
+# [module_nodes_to_modify."model.decoder.layers.0.self_attn"]
+# name = "integer"
+# original_module_cls = "opt::attention"
+
+# [module_nodes_to_modify."model.decoder.layers.0.self_attn".default]
+# bias_frac_width = 5
+# bias_width = 8
+# data_in_frac_width = 5
+# data_in_width = 8
+# name = "integer"
+# weight_frac_width = 3
+# weight_width = 8

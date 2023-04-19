@@ -264,7 +264,6 @@ class OPTDecoderLayerPatched(nn.Module):
     def __init__(self, config: OPTConfigPatched):
         super().__init__()
         self.embed_dim = config.hidden_size
-        # TODO: mark_as_leaf_module
         self.self_attn = OPTAttentionPatched(
             embed_dim=self.embed_dim,
             num_heads=config.num_attention_heads,
@@ -645,7 +644,7 @@ class OPTForCausalLMPatched(OPTPatchedPreTrainedModel):
         self.lm_head = nn.Linear(
             config.word_embed_proj_dim, config.vocab_size, bias=False
         )
-        self.loss_fct = CrossEntropyLoss()
+        # self.loss_fct = CrossEntropyLoss()
 
         # Initialize weights and apply final processing
         self.post_init()
@@ -765,7 +764,7 @@ class OPTForCausalLMPatched(OPTPatchedPreTrainedModel):
             loss = OPTForCasualLM_compute_loss(
                 logits=logits,
                 labels=labels,
-                self_loss_fct=self.loss_fct,
+                # self_loss_fct=self.loss_fct,
                 self_config_vocab_size=self.config.vocab_size,
             )
             # shifted_logits = logits[..., :-1, :].contiguous()

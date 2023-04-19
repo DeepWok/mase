@@ -4,7 +4,6 @@ hook function for analyzing dtype & quantization info
 add metadata["common"]["args"/"results"]["data_in"/"weight"/"bias"/"data_out"]["type"&"precision"]
 """
 import operator
-from copy import deepcopy
 from logging import getLogger
 from typing import Callable, Dict, List, Tuple, Union
 
@@ -12,8 +11,16 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from torch.fx import Node
+from torch.fx._symbolic_trace import _assert_is_none
 from torchvision.ops.stochastic_depth import stochastic_depth
 
+from ....models.patched_nlp_models.opt_patched.custom_modules.integer import (
+    OPTAttentionInteger,
+)
+from ....models.patched_nlp_models.opt_patched.utils_opt_patched import (
+    OPTDecoder_self_prepare_decoder_attention,
+    OPTForCasualLM_compute_loss,
+)
 from ....modify.quantizers.functions.add import (
     add_integer,
     construct_essential_config_add_integer,
@@ -74,7 +81,7 @@ TORCH_DTYPE_TO_HW_PRECISION = {
 NON_TORCH_DTYPE_TO_HW_DTYPE = {
     float: "float",
     int: "fixed",
-    bool: "bool",
+    bool: "fixed",
     slice: "slice",
 }
 
@@ -105,7 +112,6 @@ def _set_non_torch_dtype_precision(item: Dict, dtype):
 def _set_non_torch_dtype_precision_and_format(item: Dict, dtype):
     item["type"] = NON_TORCH_DTYPE_TO_HW_DTYPE[dtype]
     item["precision"] = NON_TORCH_DTYPE_TO_PRECISION[dtype]
-    item["precision_format"] = NON_TORCH_DTYPE_TO_PRECISION_FORMAT[dtype]
 
 
 def _get_non_torch_dtype_precision(non_torch_dtype):
@@ -160,6 +166,8 @@ def _get_dtype_precision(x):
                 NON_TORCH_DTYPE_TO_HW_DTYPE[seq_dtype],
                 NON_TORCH_DTYPE_TO_PRECISION[seq_dtype],
             )
+    elif x is None:
+        return ("NA", "NA")
     else:
         raise RuntimeError
 
@@ -200,6 +208,7 @@ def _set_dtype_before_call_function(node: Node, function, args, kwargs):
         torch.mean,
         stochastic_depth,
         torch._assert,
+        _assert_is_none,
     ):
         if len(node.all_input_nodes) == 1:
             _set_type_precision(mc_args["data_in"], *_get_dtype_precision(args[0]))
@@ -239,6 +248,17 @@ def _set_dtype_before_call_function(node: Node, function, args, kwargs):
                     mc_args[f"data_in_{i}"],
                     *_get_dtype_precision(args[0][i]),
                 )
+    elif function in (OPTDecoder_self_prepare_decoder_attention,):
+        # args[0]: attention mask, depending on neighbor nodes
+        # args[1]: torch Size
+        # args[2]: decoder_embed_tokens, depending on neighbor nodes
+        _set_type_precision(mc_args[f"data_in_{1}"], *_get_dtype_precision(args[1]))
+    elif function in (OPTForCasualLM_compute_loss,):
+        args = list(kwargs.values())
+        # args[0]: logits
+        # args[1]: labels
+        for i in range(len(node.all_input_nodes)):
+            _set_type_precision(mc_args[f"data_in_{i}"], *_get_dtype_precision(args[i]))
     # elif function in (torch.max, torch.maximum, torch.min, torch.minimum):
     #     pass
     elif function in (operator.getitem, getattr):
@@ -319,6 +339,7 @@ def _set_dtype_after_call_function(node, function, output):
         torch.unbind,
         torch.mean,
         torch._assert,
+        _assert_is_none,
         torch.unbind,
         operator.getitem,
         stochastic_depth,
@@ -341,8 +362,11 @@ def _set_dtype_after_call_function(node, function, output):
         torch.permute,
         torch.concat,
         torch.cat,
+        OPTDecoder_self_prepare_decoder_attention,
     ):
         pass
+    elif function in (OPTForCasualLM_compute_loss,):
+        _set_type_precision(mc_results["data_out"], *_get_dtype_precision(output))
     else:
         logger.warning(f"Unrecognized function `{function}` when setting output dtype")
 
@@ -358,7 +382,7 @@ def _set_dtype_before_call_module(node, module, args, kwargs):
     module_cls = type(module)
     module_cls = type(module)
 
-    if module_cls in (nn.Embedding,) or isinstance(module_cls, (nn.Embedding,)):
+    if module_cls in (nn.Embedding,) or isinstance(module, (nn.Embedding,)):
         _set_torch_dtype_precision(mc_args["data_in"], args[0].dtype)
         _set_torch_dtype_precision(mc_args["weight"], module.weight.dtype)
         _set_torch_dtype_precision(mc_results["data_out"], args[0].dtype)
@@ -450,6 +474,34 @@ def _set_dtype_before_call_module(node, module, args, kwargs):
         config = module.config | module.get_output_bitwidth(x_shape=args[0].shape)
         _set_quant_dtype_precision(mc_args["data_in"], config, "data_in")
         _set_quant_dtype_precision(mc_results["data_out"], config, "data_out")
+    elif module_cls == OPTAttentionInteger:
+        k_proj_config = module.k_proj.config | module.k_proj.get_output_bitwidth()
+        q_proj_config = module.q_proj.config | module.q_proj.get_output_bitwidth()
+        v_proj_config = module.v_proj.config | module.v_proj.get_output_bitwidth()
+        out_proj_config = module.out_proj.config | module.out_proj.get_output_bitwidth()
+
+        # fmt: off
+        _set_quant_dtype_precision(mc_args["data_in_0"], k_proj_config, "data_in")
+        _set_quant_dtype_precision(mc_args["data_in_1"], k_proj_config, "data_in")
+
+        _set_quant_dtype_precision(mc_args["weight_k_proj"], k_proj_config, "weight")
+        if module.k_proj.bias is not None:
+            _set_quant_dtype_precision(mc_args["bias_k_proj"], k_proj_config, "bias")
+
+        _set_quant_dtype_precision(mc_args["weight_q_proj"], q_proj_config, "weight")
+        if module.q_proj.bias is not None:
+            _set_quant_dtype_precision(mc_args["bias_q_proj"], q_proj_config, "bias")
+
+        _set_quant_dtype_precision(mc_args["weight_v_proj"], v_proj_config, "weight")
+        if module.v_proj.bias is not None:
+            _set_quant_dtype_precision(mc_args["bias_v_proj"], v_proj_config, "bias")
+
+        _set_quant_dtype_precision(mc_args["weight_out_proj"], out_proj_config, "weight")
+        if module.out_proj.bias is not None:
+            _set_quant_dtype_precision(mc_args["bias_out_proj"], out_proj_config, "bias")
+
+        _set_quant_dtype_precision(mc_results["data_out"], out_proj_config, "data_out")
+        # fmt: on
     else:
         logger.warning(
             f"Unrecognized module `{type(module).__name__}` when setting dtype"
@@ -543,6 +595,7 @@ def _set_dtype_of_nodes_depending_on_neighbors(
             F.dropout3d,
             operator.getitem,
             getattr,
+            OPTDecoder_self_prepare_decoder_attention,
             # torch.max,
             # torch.maximum,
             # torch.min,

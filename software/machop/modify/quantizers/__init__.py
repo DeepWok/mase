@@ -53,7 +53,7 @@ from .layers import (
     ReLUMSFP,
 )
 
-MODULE_CLS_MAP_NEO = {
+MODULE_CLS_MAP = {
     nn.Linear: {
         "integer": LinearInteger,
         "minifloat_simple": LinearMinifloatSimple,
@@ -89,11 +89,11 @@ MODULE_CLS_MAP_NEO = {
 }
 
 QUANTIZED_MODULE_CLASSES = []
-for k, v in MODULE_CLS_MAP_NEO.items():
+for k, v in MODULE_CLS_MAP.items():
     for kk, vv in v.items():
         QUANTIZED_MODULE_CLASSES.append(vv)
 
-FUNC_MAP_NEO = {
+FUNC_MAP = {
     operator.add: {
         "integer": add_integer,
         "minifloat_simple": add_minifloat_simple,
@@ -139,11 +139,11 @@ FUNC_MAP_NEO = {
 }
 
 QUANTIZED_FUNC_CLASSES = []
-for k, v in FUNC_MAP_NEO.items():
+for k, v in FUNC_MAP.items():
     for kk, vv in v.items():
         QUANTIZED_FUNC_CLASSES.append(vv)
 
-METHOD_MAP_NEO = {
+METHOD_MAP = {
     "add": {
         "integer": add_integer,
         "minifloat_simple": add_minifloat_simple,

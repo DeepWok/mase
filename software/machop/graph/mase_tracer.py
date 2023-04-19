@@ -16,6 +16,7 @@ logger = logging.getLogger(__name__)
 
 def mark_as_leaf_module(cls: type):
     assert issubclass(cls, torch.nn.Module)
+    global CUSTOM_LEAF_MODULES
     if cls in CUSTOM_LEAF_MODULES:
         logger.warning(f"Class {cls} was already marked as leaf module")
     else:
@@ -23,7 +24,13 @@ def mark_as_leaf_module(cls: type):
     return cls
 
 
+def is_leaf_module_to_trace(cls: type) -> bool:
+    global CUSTOM_LEAF_MODULES
+    return cls in CUSTOM_LEAF_MODULES
+
+
 def mark_as_leaf_func(func):
+    global CUSTOM_LEAF_FUNCTIONS
     if func in CUSTOM_LEAF_FUNCTIONS:
         logger.warning(f"Function {func} was already marked as leaf function")
     else:
@@ -32,6 +39,7 @@ def mark_as_leaf_func(func):
 
 
 def mark_as_user_custom_leaf_module(cls: type):
+    global USER_CUSTOM_LEAF_MODULES
     assert issubclass(cls, torch.nn.Module)
     if cls in USER_CUSTOM_LEAF_MODULES:
         logger.warning(f"Class {cls} was already marked as leaf module")
@@ -41,10 +49,12 @@ def mark_as_user_custom_leaf_module(cls: type):
 
 
 def clear_user_custom_leaf_modules():
-    USER_CUSTOM_LEAF_MODULES = []
+    global USER_CUSTOM_LEAF_MODULES
+    USER_CUSTOM_LEAF_MODULES.clear()
 
 
 def mark_as_user_custom_leaf_function(func):
+    global USER_CUSTOM_LEAF_FUNCTIONS
     if func in USER_CUSTOM_LEAF_FUNCTIONS:
         logger.warning(f"Function {func} was already marked as leaf function")
     else:
@@ -53,7 +63,8 @@ def mark_as_user_custom_leaf_function(func):
 
 
 def clear_user_custom_leaf_functions():
-    USER_CUSTOM_LEAF_FUNCTIONS = []
+    global USER_CUSTOM_LEAF_FUNCTIONS
+    USER_CUSTOM_LEAF_FUNCTIONS.clear()
 
 
 # ----------------------------------------
@@ -65,6 +76,8 @@ MY_TENSOR_CONSTRUCTORS = []
 
 
 def mark_as_tensor_constructor(func):
+    global CUSTOM_LEAF_FUNCTIONS
+    global MY_TENSOR_CONSTRUCTORS
     if func in CUSTOM_LEAF_FUNCTIONS:
         logger.warning(f"Function {func} was already marked as leaf function")
     else:

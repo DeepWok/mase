@@ -21,8 +21,8 @@ from .utils import get_input_args
 
 logger = getLogger(__name__)
 
-# TODO: There is a serious issue that the node metadata structure of modifier 
-# is not different from the masegraph node. So here temporarily use a model-level 
+# TODO: There is a serious issue that the node metadata structure of modifier
+# is not different from the masegraph node. So here temporarily use a model-level
 # pass to emit toml, which will be loaded by a masegraph
 
 # def update_common_metadata_pass(
@@ -42,7 +42,7 @@ logger = getLogger(__name__)
 #             hook_after_call_module=set_metadata_common_after_call_module,
 #             hooks_after_forward=(set_and_check_metadata_common_without_forward,),
 #         )
-# 
+#
 #         mase_interpreter.interpret_with_forward(*input_args)
 #     # for n in gm.graph.nodes:
 #     #     print(n.name, n.meta)
@@ -57,6 +57,7 @@ logger = getLogger(__name__)
 #         toml.dump(common_dict_to_save, f)
 #     logger.info(f"common metadata toml is saved at {save_path}")
 #     return mase_graph
+
 
 def create_and_save_common_metadata(
     modified_graph_model: GraphModule,
@@ -87,11 +88,14 @@ def create_and_save_common_metadata(
     if not os.path.isdir(save_dir):
         os.makedirs(save_dir)
     save_path = os.path.join(save_dir, "common_meta.toml")
+
     for n in gm.graph.nodes:
         if n.op in ("call_function", "call_module", "call_method"):
+            # if not "assert" in str(n.target):
+            #     common_dict_to_save[n.name] = deepcopy(n.meta["common"])
             common_dict_to_save[n.name] = deepcopy(n.meta["common"])
             for arg_i, type_precision_i in n.meta["common"]["args"].items():
-                if type_precision_i["type"] == "NA":
+                if "bias" in arg_i and type_precision_i["type"] == "NA":
                     common_dict_to_save[n.name]["args"].pop(arg_i)
     with open(save_path, "w+") as f:
         toml.dump(common_dict_to_save, f)

@@ -3,7 +3,6 @@
 # ---------------------------------------
 import logging
 import os
-import pdb
 
 os.environ["PYTHONBREAKPOINT"] = "ipdb.set_trace"
 import random
@@ -35,6 +34,7 @@ from .models import (
     nlp_models,
     vision_models,
 )
+from .models.patched_nlp_models.custom_nlp_modules import get_custom_modify_sw_kwargs
 from .modify.modifier import Modifier
 from .session import search, test, train, validate
 from .synthesize.mase_verilog_emitter import MaseVerilogEmitter
@@ -602,12 +602,17 @@ class Machop:
             task=args.task,
             model=self.model["model"] if args.model in nlp_models else self.model,
         )
+        if args.model in nlp_models:
+            custom_modify_sw_kwargs = get_custom_modify_sw_kwargs(
+                model_name=args.model, config_path=args.modify_sw_config
+            )
         modifier_kwargs = {
             "model": self.model["model"] if args.model in nlp_models else self.model,
             "config_path": args.modify_sw_config,
             "dummy_inputs_for_fx": dummy_inputs,
             "save_dir": os.path.join(self.output_dir_sw, "modify-sw"),
         }
+        modifier_kwargs |= custom_modify_sw_kwargs
         Modifier.create_empty_config_template(
             model=self.model["model"] if args.model in nlp_models else self.model,
             dummy_inputs=dummy_inputs,
@@ -748,13 +753,19 @@ class Machop:
             task=args.task,
             model=self.model["model"] if args.model in nlp_models else self.model,
         )
+        modifier_kwargs = {}
+        modifier_kwargs["dummy_inputs_for_fx"] = dummy_inputs
+        # if args.model in nlp_models:
+        #     modifier_kwargs |= get_custom_modify_sw_kwargs(
+        #         model_name=args.model, config_path=args.modify_sw_config
+        #     )
 
         search_args = {
             "model_name": args.model,
             "info": self.info,
             "model": self.model,
             "task": args.task,
-            "dummy_inputs": dummy_inputs,
+            "modifier_kwargs": modifier_kwargs,
             "data_module": self.data_module,
             "search_config": args.search_sw_config,
             "save_dir": save_dir,
@@ -785,6 +796,11 @@ class Machop:
         dummy_inputs = get_dummy_inputs(
             model_name=args.model, task=args.task, model=model
         )
+        if args.model in nlp_models:
+            custom_modify_sw_kwargs = get_custom_modify_sw_kwargs(
+                model_name=args.model, config_path=args.modify_sw_config
+            )
+
         model.eval()
         # graph_module = mase_symbolic_trace(model, concrete_args=dummy_inputs)
 
@@ -804,6 +820,7 @@ class Machop:
             "dummy_inputs_for_fx": dummy_inputs,
             "save_dir": os.path.join(self.output_dir_sw, "modify-sw"),
         }
+        modifier_kwargs |= custom_modify_sw_kwargs
 
         m = Modifier(**modifier_kwargs)
         modified_graph_module = m.modify()
