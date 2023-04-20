@@ -51,8 +51,8 @@ def get_input_args(model_name, model, task, data_loader, info):
 
     input_args = []
     if isinstance(plt_model, VisionModelWrapper):
-        data_loader.setup()
         data_loader.prepare_data()
+        data_loader.setup()
         batch_x, _ = next(iter(data_loader.train_dataloader()))
         input_args = [batch_x[[0], ...]]
     elif isinstance(
@@ -62,14 +62,14 @@ def get_input_args(model_name, model, task, data_loader, info):
             NLPLanguageModelingModelWrapper,
         ),
     ):
-        batch = next(iter(data_loader.train_dataloader))
+        batch = next(iter(data_loader.train_dataloader()))
         input_args = [
             batch["input_ids"][[0], ...],
             batch["attention_mask"][[0], ...],
             None,
         ]
     elif isinstance(plt_model, NLPTranslationModelWrapper):
-        batch = next(iter(data_loader.train_dataloader))
+        batch = next(iter(data_loader.train_dataloader()))
         input_args = [
             batch["input_ids"][[0], ...],
             batch["attention_mask"][[0], ...],
@@ -79,3 +79,44 @@ def get_input_args(model_name, model, task, data_loader, info):
     else:
         raise RuntimeError("Unsupported model class")
     return plt_model, input_args
+
+
+class InputArgsGenerator:
+    def __init__(self, model_name, task, data_module) -> None:
+        self.wrapper_cls = get_model_wrapper(model_name, task)
+        data_module.prepare_data()
+        data_module.setup()
+        self.dataloader_iter = iter(data_module.train_dataloader())
+
+    def __iter__(self):
+        return self
+
+    def __next__(self):
+        input_args = []
+        if self.wrapper_cls is VisionModelWrapper:
+            batch_x, _ = next(self.dataloader_iter)
+            input_args = batch_x
+        elif self.wrapper_cls is NLPClassificationModelWrapper:
+            batch = next(self.dataloader_iter)
+            input_args = [
+                batch["input_ids"],
+                batch["attention_mask"],
+            ]
+        elif self.wrapper_cls is NLPLanguageModelingModelWrapper:
+            batch = next(self.dataloader_iter)
+            input_args = [
+                batch["input_ids"],
+                batch["attention_mask"],
+                batch["labels"],
+            ]
+        elif self.wrapper_cls is NLPTranslationModelWrapper:
+            batch = next(self.dataloader_iter)
+            input_args = [
+                batch["input_ids"],
+                batch["attention_mask"],
+                batch["decoder_input_ids"],
+                batch["decoder_attention_mask"],
+            ]
+        else:
+            raise RuntimeError("Unsupported model class")
+        return input_args
