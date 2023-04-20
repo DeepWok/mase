@@ -1,3 +1,4 @@
+import numpy as np
 import torch
 
 STAT_NAME_TO_CLS = {}
@@ -71,22 +72,40 @@ class Variance(_StatBase):
 
     stat_name = "variance"
 
-    def __init__(self, existing_count=0, existing_mean=0.0, existing_m2=0.0) -> None:
+    def __init__(
+        self,
+        offload_to_cpu=True,
+        existing_count=0,
+        existing_mean=0.0,
+        existing_m2=0.0,
+    ) -> None:
         super().__init__()
         assert isinstance(existing_count, int)
         assert isinstance(existing_mean, (float, torch.Tensor))
         assert isinstance(existing_m2, (float, torch.Tensor))
+        self.offload_to_cpu = offload_to_cpu
         self.count: int = existing_count
-        self.mean: torch.Tensor = existing_mean
-        self.m2: torch.Tensor = existing_m2
+        self.mean: np.ndarray = existing_mean
+        self.m2: np.ndarray = existing_m2
 
     def update_a_sample(self, new_s: torch.Tensor):
         new_s = new_s.clone()
+
+        if self.offload_to_cpu:
+            if not isinstance(self.mean, float):
+                self.mean = self.mean.to(new_s.device)
+            if not isinstance(self.m2, float):
+                self.m2 = self.m2.to(new_s.device)
+
         self.count += 1
         delta = new_s - self.mean
         self.mean += delta / self.count
         delta2 = new_s - self.mean
         self.m2 += delta * delta2
+
+        if self.offload_to_cpu:
+            self.mean = self.mean.cpu()
+            self.m2 = self.m2.cpu()
 
     def finalize(self) -> dict:
         if self.count < 2:

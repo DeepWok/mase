@@ -188,9 +188,12 @@ def run_activation_profiler(
 
     gm.eval()
     logger.info("Feeding inputs to model...")
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    gm.to(device)
     with torch.no_grad():
         for i in tqdm(range(num_batches_to_profile)):
             input_args = next(input_generator)
+            input_args = [arg.to(device) for arg in input_args]
             _ = profiler.profile_a_batch(*input_args)
     if is_training:
         gm.train()
