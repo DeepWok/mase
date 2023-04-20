@@ -17,7 +17,9 @@ import numpy as np
 import torch
 
 from .dataset import MyDataModule, available_datasets, get_dataset_info
-from .estimate_sw import run_estimator
+
+# from .estimate_sw.flop_estimator import run_flop_estimator
+from .estimate_sw import run_sw_estimator
 from .evaluate_hw.mase_hardware_evaluator import get_synthesis_results
 from .graph.dummy_inputs import get_dummy_inputs
 from .graph.mase_graph import MaseGraph
@@ -200,12 +202,19 @@ class Machop:
             help="Modify the model in hardware from a configuration file.",
         )
 
+        # parser.add_argument(
+        #     "--estimate-sw",
+        #     action="store_true",
+        #     dest="to_estimate_sw",
+        #     default=False,
+        #     help="Estimate the resource consumption of the model in software, such as FLOPs and memory footprints. Default=False",
+        # )
         parser.add_argument(
             "--estimate-sw",
-            action="store_true",
-            dest="to_estimate_sw",
-            default=False,
-            help="Estimate the resource consumption of the model in software, such as FLOPs and memory footprints. Default=False",
+            dest="estimate_sw",
+            default=None,
+            choices=["stat", "flop"],
+            help="Estimate the model in software, such as FLOPs, memory consumption, and statistical profile",
         )
         parser.add_argument(
             "--estimate-sw-config",
@@ -452,7 +461,7 @@ class Machop:
             self.test_sw()
         if self.args.to_validate_sw:
             self.validate_sw()
-        if self.args.to_estimate_sw:
+        if self.args.estimate_sw is not None:
             self.estimate_sw()
         if self.args.to_search_sw:
             self.search_sw()
@@ -728,21 +737,30 @@ class Machop:
     def estimate_sw(self):
         args = self.args
         logger.info(f"Estimating model {args.model!r}...")
-        save_path = os.path.join(self.output_dir_sw, "estimate-sw")
+        save_dir = os.path.join(self.output_dir_sw, "estimate-sw")
 
-        if not os.path.exists(save_path):
-            os.makedirs(save_path)
+        if not os.path.exists(save_dir):
+            os.makedirs(save_dir)
+
+        dummy_inputs = get_dummy_inputs(
+            model_name=args.model,
+            task=args.task,
+            model=self.model["model"] if args.model in nlp_models else self.model,
+        )
 
         estimate_sw_kwargs = {
+            "estimate_sw": args.estimate_sw,
             "model_name": args.model,
-            "info": self.info,
-            "model": self.model,
             "task": args.task,
-            "data_loader": self.data_module,
-            "save_path": save_path,
+            "info": self.info,
+            "model": self.model["model"] if args.model in nlp_models else self.model,
+            "data_module": self.data_module,
             "config_path": args.estimate_sw_config,
+            "dummy_inputs_for_fx": dummy_inputs,
+            "save_dir": save_dir,
         }
-        run_estimator(**estimate_sw_kwargs)
+        # run_flop_estimator(**estimate_sw_kwargs)
+        run_sw_estimator(**estimate_sw_kwargs)
         logger.info("Estimate-sw is completed")
 
     def search_sw(self):

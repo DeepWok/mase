@@ -5,7 +5,7 @@ import os
 import torch
 from deepspeed.profiling.flops_profiler import get_model_profile
 
-from .utils import get_input_args
+from ..utils import get_input_args
 
 # from ..session.plt_wrapper import get_model_wrapper
 # from ..session.plt_wrapper.nlp.classification import NLPClassificationModelWrapper
@@ -18,12 +18,12 @@ logger = logging.getLogger(__name__)
 
 def estimate_sw_deepspeed(
     model_name: int,
+    task: str,
     info: dict,
     model: torch.nn.Module,
-    task: str,
-    data_loader,
-    save_path: str,
-    config: dict = {},
+    data_module,
+    config: dict,
+    save_dir: str,
 ):
     """
     estimate the FLOPs and latency on torch.cuda.device(0)
@@ -49,12 +49,12 @@ def estimate_sw_deepspeed(
     logger.debug(f"Estimate-sw config: {config}")
 
     config["output_file"] = os.path.join(
-        save_path, config.get("output_file", "estimate_deepspeed.toml")
+        save_dir, config.get("output_file", "estimate_deepspeed.toml")
     )
 
     with torch.cuda.device(0):
         plt_model, input_args = get_input_args(
-            model_name, model, task, data_loader, info
+            model_name, model, task, data_module, info
         )
         flops, macs, params = get_model_profile(plt_model, args=input_args, **config)
 

@@ -1,0 +1,4 @@
+act_node_patterns = []
+act_nodes = ["model.decoder.layers.0.self_attn.q_proj", "model.decoder.layers.7.fc1"]
+act_num_batches_to_profile = 4
+act_stats = ["variance"]

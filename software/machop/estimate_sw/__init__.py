@@ -1,33 +1,39 @@
 import torch
 
-from .deepspeed import estimate_sw_deepspeed
-from .fine_grained import estimate_sw_fine_grained
-from .utils import _import_config_from_py_file
-
-estimator_style_map = {
-    "deepspeed": estimate_sw_deepspeed,
-    # FIXME
-    "fine-grained": estimate_sw_fine_grained,
-}
+from .flop_estimator import run_flop_estimator
+from .statistical_profiler import run_statistical_profiler
 
 
-def run_estimator(
+def run_sw_estimator(
+    estimate_sw: str,
     model_name: int,
+    task: str,
     info: dict,
     model: torch.nn.Module,
-    task: str,
-    data_loader,
-    save_path: str = None,
-    config_path: str = None,
+    data_module,
+    config_path: str,
+    dummy_inputs_for_fx: dict,
+    save_dir: str,
 ):
-    config = _import_config_from_py_file(model_name, config_path)
-
-    # set default to deepspeed
-    if "style" in config:
-        estimator_style = config.pop("style")
+    if estimate_sw in ["stat", "statistical"]:
+        run_statistical_profiler(
+            model_name=model_name,
+            task=task,
+            model=model,
+            data_module=data_module,
+            dummy_inputs_for_fx=dummy_inputs_for_fx,
+            config_path=config_path,
+            save_dir=save_dir,
+        )
+    elif estimate_sw in ["flop"]:
+        run_flop_estimator(
+            model_name=model_name,
+            task=task,
+            info=info,
+            model=model,
+            data_module=data_module,
+            config_path=config_path,
+            save_dir=save_dir,
+        )
     else:
-        estimator_style = config.get("style", "deepspeed")
-
-    estimator_style_map[estimator_style](
-        model_name, info, model, task, data_loader, save_path, config
-    )
+        raise RuntimeError(f"Unsupported `--estimate-sw` ({estimate_sw})")
