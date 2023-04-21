@@ -12,14 +12,16 @@ logger = logging.getLogger(__name__)
 class MyDataModule(pl.LightningDataModule):
     def __init__(
         self,
-        name: str,
+        model_name: str,
+        dataset_name: str,
         batch_size: int,
         workers: int,
         tokenizer,
         max_token_len,
     ):
         super().__init__()
-        self.dataset_name = name
+        self.model_name = model_name
+        self.dataset_name = dataset_name
         self.batch_size = batch_size
         self.num_workers = workers
         self.tokenizer = tokenizer
@@ -34,7 +36,7 @@ class MyDataModule(pl.LightningDataModule):
 
     def prepare_data(self) -> None:
         train_dataset, val_dataset, test_dataset, pred_dataset = get_dataset(
-            self.dataset_name
+            model_name=self.model_name, dataset_name=self.dataset_name
         )
 
         if self.dataset_name in nlp_dataset_factory:
@@ -59,7 +61,7 @@ class MyDataModule(pl.LightningDataModule):
             self.val_dataset,
             self.test_dataset,
             self.pred_dataset,
-        ) = get_dataset(self.dataset_name)
+        ) = get_dataset(model_name=self.model_name, dataset_name=self.dataset_name)
 
         if self.dataset_name in nlp_dataset_factory:
             self.train_dataset.setup(self.tokenizer, self.max_token_len)

@@ -326,7 +326,7 @@ def get_resnet18(
     """ResNet-18 from `Deep Residual Learning for Image Recognition <https://arxiv.org/pdf/1512.03385.pdf>`__."""
     num_classes = info["num_classes"]
     if pretrained:
-        pretrained_weight_cls = ResNet18_Weights.DEFAULT
+        pretrained_weight_cls = ResNet18_Weights.IMAGENET1K_V1
     else:
         pretrained_weight_cls = None
 
@@ -347,7 +347,7 @@ def get_resnet34(
     """ResNet-34 from `Deep Residual Learning for Image Recognition <https://arxiv.org/pdf/1512.03385.pdf>`__."""
     num_classes = info["num_classes"]
     if pretrained:
-        pretrained_weight_cls = ResNet34_Weights.DEFAULT
+        pretrained_weight_cls = ResNet34_Weights.IMAGENET1K_V1
     else:
         pretrained_weight_cls = None
 
@@ -368,7 +368,7 @@ def get_resnet50(
     """ResNet-50 from `Deep Residual Learning for Image Recognition <https://arxiv.org/pdf/1512.03385.pdf>`__."""
     num_classes = info["num_classes"]
     if pretrained:
-        pretrained_weight_cls = ResNet50_Weights.DEFAULT
+        pretrained_weight_cls = ResNet50_Weights.IMAGENET1K_V2
     else:
         pretrained_weight_cls = None
 
@@ -389,7 +389,7 @@ def get_resnet101(
     """ResNet-101 from `Deep Residual Learning for Image Recognition <https://arxiv.org/pdf/1512.03385.pdf>`__."""
     num_classes = info["num_classes"]
     if pretrained:
-        pretrained_weight_cls = ResNet101_Weights.DEFAULT
+        pretrained_weight_cls = ResNet101_Weights.IMAGENET1K_V2
     else:
         pretrained_weight_cls = None
 
@@ -413,7 +413,7 @@ def get_wide_resnet50_2(info: Dict, pretrained: bool = False, **kwargs):
     """
     num_classes = info["num_classes"]
     if pretrained:
-        pretrained_weight_cls = Wide_ResNet50_2_Weights.IMAGENET1K_V1
+        pretrained_weight_cls = Wide_ResNet50_2_Weights.IMAGENET1K_V2
     else:
         pretrained_weight_cls = None
 

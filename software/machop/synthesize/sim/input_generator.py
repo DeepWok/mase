@@ -48,7 +48,7 @@ class InputGenerator:
 
     def _init_train_dataset(self, dataset_name, trans_num, workers, tokenizer):
         data_module = MyDataModule(
-            name=dataset_name,
+            dataset_name=dataset_name,
             batch_size=trans_num,
             workers=workers,
             tokenizer=tokenizer,

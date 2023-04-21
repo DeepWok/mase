@@ -498,7 +498,7 @@ def get_mobilenetv3_small(
 ) -> MobileNetV3:
     num_classes = info["num_classes"]
     if pretrained:
-        pretrained_weight_cls = MobileNet_V3_Small_Weights.DEFAULT
+        pretrained_weight_cls = MobileNet_V3_Small_Weights.IMAGENET1K_V1
     else:
         pretrained_weight_cls = None
     inverted_residual_setting, last_channel = _mobilenet_v3_conf(
@@ -518,7 +518,7 @@ def get_mobilenetv3_large(
 ) -> MobileNetV3:
     num_classes = info["num_classes"]
     if pretrained:
-        pretrained_weight_cls = MobileNet_V3_Large_Weights.IMAGENET1K_V1
+        pretrained_weight_cls = MobileNet_V3_Large_Weights.IMAGENET1K_V2
     else:
         pretrained_weight_cls = None
     inverted_residual_setting, last_channel = _mobilenet_v3_conf(
