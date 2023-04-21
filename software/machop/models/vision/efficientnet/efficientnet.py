@@ -568,7 +568,7 @@ def get_efficientnet_v2_s(
 ):
     num_classes = info["num_classes"]
     if pretrained:
-        pretrained_weight_cls = EfficientNet_V2_S_Weights.DEFAULT
+        pretrained_weight_cls = EfficientNet_V2_S_Weights.IMAGENET1K_V1
     else:
         pretrained_weight_cls = None
     inverted_residual_setting, last_channel = _efficientnet_conf("efficientnet_v2_s")
@@ -589,7 +589,7 @@ def get_efficientnet_v2_m(
 ):
     num_classes = info["num_classes"]
     if pretrained:
-        pretrained_weight_cls = EfficientNet_V2_M_Weights.DEFAULT
+        pretrained_weight_cls = EfficientNet_V2_M_Weights.IMAGENET1K_V1
     else:
         pretrained_weight_cls = None
     inverted_residual_setting, last_channel = _efficientnet_conf("efficientnet_v2_m")
@@ -610,7 +610,7 @@ def get_efficientnet_v2_l(
 ):
     num_classes = info["num_classes"]
     if pretrained:
-        pretrained_weight_cls = EfficientNet_V2_L_Weights.DEFAULT
+        pretrained_weight_cls = EfficientNet_V2_L_Weights.IMAGENET1K_V1
     else:
         pretrained_weight_cls = None
     inverted_residual_setting, last_channel = _efficientnet_conf("efficientnet_v2_l")

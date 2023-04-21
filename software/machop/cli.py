@@ -541,7 +541,8 @@ class Machop:
         logger.info("Model is created")
         # Get data module
         data_module = MyDataModule(
-            name=args.dataset,
+            model_name=args.model,
+            dataset_name=args.dataset,
             batch_size=args.batch_size,
             workers=args.num_workers,
             tokenizer=model["tokenizer"] if args.model in nlp_models else None,

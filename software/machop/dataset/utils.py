@@ -9,45 +9,50 @@ from .vision import info as vision_dataset_info
 logger = logging.getLogger(__name__)
 
 
-def get_dataset(name, nlp_task_args={}):
-    if name in ["toy-tiny", "toy_tiny"]:
+def get_dataset(model_name, dataset_name, **kwargs):
+    if dataset_name in ["toy-tiny", "toy_tiny"]:
         train_dataset = ToyDataset(split="train")
         val_dataset = ToyDataset(split="validation")
         test_dataset = ToyDataset(split="test")
         pred_dataset = None
-    elif name in ["cifar10", "cifar100", "imagenet"]:
-        path = os.path.abspath(f"./data/{name}")
-        train_dataset, _ = build_dataset(dataset_name=name, path=path, train=True)
-        val_dataset, _ = build_dataset(dataset_name=name, path=path, train=False)
-        test_dataset, _ = build_dataset(dataset_name=name, path=path, train=False)
+    elif dataset_name in ["cifar10", "cifar100", "imagenet"]:
+        path = os.path.abspath(f"./data/{dataset_name}")
+        train_dataset, _ = build_dataset(
+            dataset_name=dataset_name, model_name=model_name, path=path, train=True
+        )
+        val_dataset, _ = build_dataset(
+            dataset_name=dataset_name, model_name=model_name, path=path, train=False
+        )
+        test_dataset, _ = build_dataset(
+            dataset_name=dataset_name, model_name=model_name, path=path, train=False
+        )
         pred_dataset = None
-    elif name in nlp_dataset_factory:
+    elif dataset_name in nlp_dataset_factory:
         # get dataset cls
-        dataset_cls = nlp_dataset_factory[name]
-        args = nlp_task_args
+        dataset_cls = nlp_dataset_factory[dataset_name]
         # Classification style tasks
-        if name in ["sst2", "SST2"]:
-            train_dataset = dataset_cls(split="train", **args)
-            val_dataset = dataset_cls(split="validation", **args)
+        if dataset_name in ["sst2", "SST2"]:
+            train_dataset = dataset_cls(split="train", **kwargs)
+            val_dataset = dataset_cls(split="validation", **kwargs)
             test_dataset = None
-            pred_dataset = dataset_cls(split="test", **args)
-        elif name in ["mnli", "MNLI"]:
-            train_dataset = dataset_cls(split="train", **args)
-            val_dataset = dataset_cls(split="validation_matched", **args)
+            pred_dataset = dataset_cls(split="test", **kwargs)
+        elif dataset_name in ["mnli", "MNLI"]:
+            train_dataset = dataset_cls(split="train", **kwargs)
+            val_dataset = dataset_cls(split="validation_matched", **kwargs)
             test_dataset = None
-            pred_dataset = dataset_cls(split="test_matched", **args)
-        elif name in ["qnli", "QNLI"]:
-            train_dataset = dataset_cls(split="train", **args)
-            val_dataset = dataset_cls(split="validation", **args)
+            pred_dataset = dataset_cls(split="test_matched", **kwargs)
+        elif dataset_name in ["qnli", "QNLI"]:
+            train_dataset = dataset_cls(split="train", **kwargs)
+            val_dataset = dataset_cls(split="validation", **kwargs)
             test_dataset = None
-            pred_dataset = dataset_cls(split="test", **args)
-        elif name in ["boolq", "BoolQ"]:
-            train_dataset = dataset_cls(split="train", **args)
-            val_dataset = dataset_cls(split="validation", **args)
+            pred_dataset = dataset_cls(split="test", **kwargs)
+        elif dataset_name in ["boolq", "BoolQ"]:
+            train_dataset = dataset_cls(split="train", **kwargs)
+            val_dataset = dataset_cls(split="validation", **kwargs)
             test_dataset = None
-            pred_dataset = dataset_cls(split="test", **args)
+            pred_dataset = dataset_cls(split="test", **kwargs)
         # Translation tasks
-        elif name in [
+        elif dataset_name in [
             "iwslt2017_en_de",
             "IWSLT2017_EN_DE",
             "iwslt2017_de_en",
@@ -63,19 +68,19 @@ def get_dataset(name, nlp_task_args={}):
             "wmt19_zh_en",
             "WMT19_ZH_EN",
         ]:
-            train_dataset = dataset_cls(split="train", **args)
-            val_dataset = dataset_cls(split="validation", **args)
-            test_dataset = dataset_cls(split="test", **args)
+            train_dataset = dataset_cls(split="train", **kwargs)
+            val_dataset = dataset_cls(split="validation", **kwargs)
+            test_dataset = dataset_cls(split="test", **kwargs)
             pred_dataset = None
         # elif name in ["opus_en_fr", "OPUS_EN_FR"]:
         #     train_dataset = dataset_cls(split="train", **args)
         #     val_dataset = dataset_cls(split="validation", **args)
         #     test_dataset = dataset_cls(split="test", **args)
 
-        elif name in ["multi30k", "MULTI30K"]:
-            train_dataset = dataset_cls(split="train", **args)
-            val_dataset = dataset_cls(split="validation", **args)
-            test_dataset = dataset_cls(split="test", **args)
+        elif dataset_name in ["multi30k", "MULTI30K"]:
+            train_dataset = dataset_cls(split="train", **kwargs)
+            val_dataset = dataset_cls(split="validation", **kwargs)
+            test_dataset = dataset_cls(split="test", **kwargs)
             pred_dataset = None
         # elif name in ["wmt16_ro_en", "WMT16_RO_EN"]:
         #     train_dataset = dataset_cls(split="train", **args)
@@ -83,27 +88,27 @@ def get_dataset(name, nlp_task_args={}):
         #     test_dataset = dataset_cls(split="test", **args)
         #     pred_dataset = None
         # Language Modeling
-        elif name in ["wikitext2", "WIKITEXT2", "wikitext103", "WIKITEXT103"]:
-            train_dataset = dataset_cls(split="train", **args)
-            val_dataset = dataset_cls(split="validation", **args)
-            test_dataset = dataset_cls(split="test", **args)
+        elif dataset_name in ["wikitext2", "WIKITEXT2", "wikitext103", "WIKITEXT103"]:
+            train_dataset = dataset_cls(split="train", **kwargs)
+            val_dataset = dataset_cls(split="validation", **kwargs)
+            test_dataset = dataset_cls(split="test", **kwargs)
             pred_dataset = None
-        elif name in ["c4", "C4"]:
+        elif dataset_name in ["c4", "C4"]:
             logger.warning(
                 "C4 dataset is realative large. The downloading and preproccesing may take a long time"
             )
-            train_dataset = dataset_cls(split="train", **args)
-            val_dataset = dataset_cls(split="validation", **args)
+            train_dataset = dataset_cls(split="train", **kwargs)
+            val_dataset = dataset_cls(split="validation", **kwargs)
             test_dataset = None
-            pred_dataset = dataset_cls(split="test", **args)
-        elif name in ["ptb", "PTB"]:
-            train_dataset = dataset_cls(split="train", **args)
-            val_dataset = dataset_cls(split="validation", **args)
-            test_dataset = dataset_cls(split="test", **args)
+            pred_dataset = dataset_cls(split="test", **kwargs)
+        elif dataset_name in ["ptb", "PTB"]:
+            train_dataset = dataset_cls(split="train", **kwargs)
+            val_dataset = dataset_cls(split="validation", **kwargs)
+            test_dataset = dataset_cls(split="test", **kwargs)
             pred_dataset = None
         # info = {"num_classes": train_dataset.num_classes}
     else:
-        raise ValueError(f"Dataset {name} is not supported.")
+        raise ValueError(f"Dataset {dataset_name} is not supported.")
 
     if test_dataset is None and pred_dataset is None:
         logger.info("Both the test dataset and pred dataset are not available")
