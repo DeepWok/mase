@@ -16,6 +16,7 @@ from torchvision.models.feature_extraction import (
     create_feature_extractor,
     get_graph_node_names,
 )
+from tqdm import tqdm
 
 from .plt_wrapper import get_model_wrapper
 
@@ -62,22 +63,28 @@ class SearchBase:
         with open(search_config, "r") as f:
             search_args = toml.load(f)
         # building search space
-        self.search_space = search_args["search_space"]
-        self.search_data = search_args["search_data"]
         self.search_strategy = search_args["strategy"]["name"]
+        self.search_data = search_args["search_data"]
         self.search_strategy_config = search_args["strategy_config"]
+        self.search_space = search_args["search_space"]
+        self.which_dataloader = search_args["search_data"].get(
+            "dataloader", "train_dataloader"
+        )
+        assert self.which_dataloader in [
+            "train_dataloader",
+            "val_dataloader",
+            "test_dataloader",
+        ]
 
     def _is_nlp_model(self, model_name) -> bool:
         return model_name in nlp_models
 
     def _prepare_loader(self, data_module):
-        if not self._is_nlp_model(self.model_name):
-            data_module.setup()
-            data_module.prepare_data()
-        else:
-            data_module.setup()
-            data_module.prepare_data()
-        self.data_loader = data_module.train_dataloader()
+        data_module.setup()
+        data_module.prepare_data()
+
+        self.data_loader = getattr(data_module, self.which_dataloader)()
+        # self.data_loader = data_module.train_dataloader()
         self.num_batches = self.search_data["num_batches"]
 
     def rebuild_modifier(self):
@@ -280,7 +287,8 @@ class SearchQuantization(SearchBase):
         # gather dynamic range
         out_stats = {}
         graph_module.to(self.device)
-        for i, data in enumerate(self.data_loader):
+        for i, data in tqdm(enumerate(self.data_loader), total=self.num_batches):
+            # for i, data in enumerate(self.data_loader):
             input_data, label = data
             input_data, label = self._move_batch_to_device([input_data, label])
             if i >= self.num_batches:
@@ -394,7 +402,8 @@ class SearchQuantization(SearchBase):
             raise NotImplementedError
 
     def search(self):
-        self.build_search_space()
+        if self.search_strategy != "analytical":
+            self.build_search_space()
         best = self.strategies()
         output_file = self.search_strategy_config["output_file"]
         if self.save_dir:
