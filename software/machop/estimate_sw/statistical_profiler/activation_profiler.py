@@ -1,6 +1,6 @@
 import os
 from logging import getLogger
-from typing import List, Union
+from typing import Dict, List, Union
 
 import regex as re
 import toml
@@ -9,33 +9,47 @@ from torch.fx import Graph, GraphModule, Interpreter, Node
 from tqdm import tqdm
 
 from ...graph.mase_graph import mase_symbolic_trace
+from ...modify.modifier import is_modifiable
 from ..utils import InputArgsGenerator
-from .stat import STAT_NAME_TO_CLS, _StatBase
+from .stat import _StatBase, new_stat
 
 logger = getLogger(__name__)
 
 
-class _StatNodeMeta:
-    def __init__(self, node_name: str, stats: List[str]) -> None:
+class _ActStatMeta:
+    def __init__(
+        self, node_name: str, real_target, stat_configs: Dict[str, Dict]
+    ) -> None:
         self.name = node_name
-        if "record" in stats:
+        self.real_target = real_target
+        if "record" in stat_configs:
             logger.warning(
                 f"`record` (concat to record tensor) is enabled in activation profiler, which wil consumes lots of memory as the num of batch increases"
             )
         self.stats = []
-        for stat in stats:
-            assert stat in STAT_NAME_TO_CLS
-            self.stats.append(STAT_NAME_TO_CLS[stat]())
+        for stat_name, stat_config in stat_configs.items():
+            self.stats.append(new_stat(stat_name=stat_name, **stat_config))
 
     def update(self, batch: torch.Tensor):
         assert isinstance(batch, torch.Tensor)
 
-        batch = torch.flatten(batch, start_dim=0, end_dim=-2)  # 2D x
+        batch = self._preprocess_batch(batch)
         for i in range(batch.shape[0]):
             sample_i = batch[[i], ...]
             for stat in self.stats:
+                sample_i_tmp = sample_i.clone()
                 stat: _StatBase
-                stat.update_a_sample(sample_i)
+                stat.update_a_sample(sample_i_tmp)
+
+    def _preprocess_batch(self, batch: torch.Tensor):
+        assert isinstance(batch, torch.Tensor)
+        if isinstance(self.real_target, torch.nn.Linear):
+            # 2D x
+            batch = batch.flatten(start_dim=0, end_dim=-2)
+        else:
+            # 1D x
+            batch = batch.flatten()
+        return batch
 
     def export_to_list(self):
         results = {}
@@ -61,7 +75,7 @@ class ActivationProfiler(Interpreter):
     ):
         assert isinstance(graph_module, GraphModule)
         super().__init__(graph_module, garbage_collect_values)
-        self.stat_names = []
+        self.stat_configs = {}
         self.tgt_nodes = []
         self.tgt_node_patterns = []
         self.num_profiled_batches = 0
@@ -72,13 +86,13 @@ class ActivationProfiler(Interpreter):
     def _parse_config(self, config: dict):
         assert isinstance(config, dict)
         assert "act_stats" in config
-        assert isinstance(config["act_stats"], (tuple, list))
-        self.stat_names = list(config["act_stats"])
+        assert isinstance(config["act_stats"], dict)
+        self.stat_configs = config["act_stats"]
         if "act_nodes" in config:
             self.tgt_nodes = config["act_nodes"]
         if "act_node_patterns" in config:
             self.tgt_node_patterns = config["act_node_patterns"]
-        assert len(self.stat_names) > 0
+        assert len(self.stat_configs) > 0
         assert (
             len(self.tgt_node_patterns) + len(self.tgt_nodes) > 0
         ), f"No available `act_nodes` or `act_node_patterns` in {config}"
@@ -99,12 +113,19 @@ class ActivationProfiler(Interpreter):
                 if node.name in self.tgt_nodes or self._match_a_node_name_pattern(
                     node.name
                 ):
-                    node.meta = _StatNodeMeta(node.name, self.stat_names)
+                    node.meta = _ActStatMeta(
+                        node.name,
+                        real_target=node.target,
+                        stat_configs=self.stat_configs,
+                    )
             elif node.op == "call_module":
                 if node.target in self.tgt_nodes or self._match_a_node_name_pattern(
                     node.target
                 ):
-                    node.meta = _StatNodeMeta(node.target, self.stat_names)
+                    module = self.fetch_attr(node.target)
+                    node.meta = _ActStatMeta(
+                        node.target, real_target=module, stat_configs=self.stat_configs
+                    )
 
     def run_node(self, n: Node):
         with self._set_current_node(n):
@@ -113,7 +134,7 @@ class ActivationProfiler(Interpreter):
             assert isinstance(kwargs, dict)
             output = getattr(self, n.op)(n.target, args, kwargs)
 
-            if isinstance(n.meta, _StatNodeMeta):
+            if isinstance(n.meta, _ActStatMeta):
                 n.meta.update(output)
             return output
 
@@ -125,7 +146,7 @@ class ActivationProfiler(Interpreter):
     def export_profile_to_list(self, save_path: str = None):
         stat_dict = {}
         for node in self.module.graph.nodes:
-            if isinstance(node.meta, _StatNodeMeta):
+            if isinstance(node.meta, _ActStatMeta):
                 stat_dict |= node.meta.export_to_list()
         if save_path is not None:
             with open(save_path, "w+") as f:
@@ -135,7 +156,7 @@ class ActivationProfiler(Interpreter):
     def export_profile(self, save_path: str = None):
         stat_dict = {}
         for node in self.module.graph.nodes:
-            if isinstance(node.meta, _StatNodeMeta):
+            if isinstance(node.meta, _ActStatMeta):
                 stat_dict |= node.meta.export()
         if save_path is not None:
             with open(save_path, "w+") as f:
@@ -146,9 +167,14 @@ class ActivationProfiler(Interpreter):
         template = {
             "act_nodes": [],
             "act_num_batches_to_profile": 4,
-            "act_stats": ["variance"],
+            "act_stats": {
+                "variance": {"offload_to_cpu": True},
+                "soft_range": {"num_sigma": 2},
+            },
         }
         for node in self.module.graph.nodes:
+            if not is_modifiable(node, self.module):
+                continue
             if node.op in ["call_function", "call_method"]:
                 template["act_nodes"].append(node.name)
             elif node.op == "call_module":

@@ -1,16 +1,21 @@
 act_node_patterns = []
 act_nodes = ["model.decoder.layers.0.self_attn.q_proj", "model.decoder.layers.7.fc1"]
 act_num_batches_to_profile = 4
-act_stats = ["variance"]
 
-act_node_patterns = [
-  '(model\.decoder\.layers\.)[0-9]+(\.self_attn\.)[q|k|v](_proj)', # attention k, q, v proj
-  '(bmm)[0-9]?', # even -> A=Q@K^T, sigular -> B=A_hat@V
-  '(model\.decoder\.layers\.)[0-9]+(\.self_attn\.)(out_proj)', # attention output_proj
-  '(model\.decoder\.layers\.)[0-9]+(\.fc1)', # FFN.fc1
-  '(model\.decoder\.layers\.)[0-9]+(\.fc2)', # FFN.fc2
-]
-# act_nodes = ["model.decoder.layers.0.self_attn.q_proj", "model.decoder.layers.7.fc1"]
-act_nodes = []
-act_num_batches_to_profile = 4
-act_stats = ["variance"]
+[act_stats.variance]
+offload_to_cpu = true
+
+[act_stats.soft_range]
+num_sigmas = 2
+offload_to_cpu = true
+
+[act_stats.hard_range]
+offload_to_cpu = true
+
+# act_node_patterns = [
+#   '(model\.decoder\.layers\.)[0-9]+(\.self_attn\.)[q|k|v](_proj)', # attention k, q, v proj
+#   '(bmm)[0-9]?', # even -> A=Q@K^T, sigular -> B=A_hat@V
+#   '(model\.decoder\.layers\.)[0-9]+(\.self_attn\.)(out_proj)', # attention output_proj
+#   '(model\.decoder\.layers\.)[0-9]+(\.fc1)', # FFN.fc1
+#   '(model\.decoder\.layers\.)[0-9]+(\.fc2)', # FFN.fc2
+# ]

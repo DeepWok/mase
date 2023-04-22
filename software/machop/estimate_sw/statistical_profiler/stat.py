@@ -1,5 +1,6 @@
 import numpy as np
 import torch
+import torch.nn as nn
 
 STAT_NAME_TO_CLS = {}
 
@@ -8,6 +9,7 @@ def _add_to_stat_mapping(cls):
     global STAT_NAME_TO_CLS
     assert issubclass(cls, _StatBase)
     STAT_NAME_TO_CLS[cls.stat_name] = cls
+    return cls
 
 
 class _StatBase:
@@ -36,7 +38,7 @@ class _StatBase:
 class Record(_StatBase):
     stat_name = "record"
 
-    def __init__(self, add_new_dim_before_concat) -> None:
+    def __init__(self, add_new_dim_before_concat=False) -> None:
         super().__init__()
         self.add_new_dim = add_new_dim_before_concat
         self.data = None
@@ -89,8 +91,6 @@ class Variance(_StatBase):
         self.m2: np.ndarray = existing_m2
 
     def update_a_sample(self, new_s: torch.Tensor):
-        new_s = new_s.clone()
-
         if self.offload_to_cpu:
             if not isinstance(self.mean, float):
                 self.mean = self.mean.to(new_s.device)
@@ -131,10 +131,69 @@ class Variance(_StatBase):
             }
         return result
 
-    def end_aggregate(self):
-        assert self.count >= 2
-        return {
-            "existing_count": self.count,
-            "existing_mean": self.mean,
-            "existing_m2": self.m2,
-        }
+
+@_add_to_stat_mapping
+class SoftRange(Variance):
+    stat_name = "soft_range"
+
+    def __init__(self, num_sigma=3, offload_to_cpu=True) -> None:
+        super().__init__(offload_to_cpu=offload_to_cpu)
+        self.num_sigma = num_sigma
+        self.min = None
+        self.max = None
+
+    def finalize(self) -> dict:
+        if self.count < 2:
+            return {"min": "NA", "max": "NA"}
+        sigma = torch.sqrt(self.m2 / self.count)
+        self.min = self.mean - self.num_sigma * sigma
+        self.max = self.mean + self.num_sigma * sigma
+        return {"min": self.min, "max": self.max}
+
+    def finalize_to_list(self) -> dict:
+        if self.count < 2:
+            return {"min": "NA", "max": "NA"}
+        sigma = torch.sqrt(self.m2 / self.count)
+        self.min = self.mean - self.num_sigma * sigma
+        self.max = self.mean + self.num_sigma * sigma
+        return {"min": self.min.tolist(), "max": self.max.tolist()}
+
+
+@_add_to_stat_mapping
+class HardRange(_StatBase):
+    stat_name = "hard_range"
+
+    def __init__(self, offload_to_cpu=True) -> None:
+        super().__init__()
+        self.offload_to_cpu = offload_to_cpu
+        self.min = None
+        self.max = None
+
+    def update_a_sample(self, new_s: torch.Tensor):
+        if self.offload_to_cpu and self.min is not None and self.max is not None:
+            self.min = self.min.to(new_s.device)
+            self.max = self.max.to(new_s.device)
+
+        if self.min is None:
+            self.min = new_s
+            self.max = new_s
+        else:
+            self.min = torch.min(self.min, new_s)
+            self.max = torch.max(self.max, new_s)
+
+        if self.offload_to_cpu:
+            self.min = self.min.cpu()
+            self.max = self.max.cpu()
+
+    def finalize(self) -> dict:
+        return {"min": self.min, "max": self.max}
+
+    def finalize_to_list(self) -> dict:
+        return {"min": self.min.tolist(), "max": self.max.tolist()}
+
+
+def new_stat(stat_name: str, **kwargs):
+    global STAT_NAME_TO_CLS
+    assert stat_name in STAT_NAME_TO_CLS
+    stat_cls = STAT_NAME_TO_CLS[stat_name]
+    return stat_cls(**kwargs)
