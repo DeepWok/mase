@@ -46,7 +46,7 @@ class ReLUInteger(_ReLUBase):
         # establish quantizers
         x_width, x_frac_width = config["data_in_width"], config["data_in_frac_width"]
         self.x_quantizer = partial(
-            integer_quantizer, width=x_width, frac_width=x_frac_width
+            integer_quantizer, width=x_width, frac_width=x_frac_width, is_signed=False
         )
         self.config = self.construct_essential_config(config)
         self.x_width = x_width

@@ -21,7 +21,9 @@ def relu_integer(x, inplace=False, config=None):
         return F.relu(x, inplace=inplace)
     else:
         x_width, x_frac_width = config["data_in_width"], config["data_in_frac_width"]
-        x_quantizer = partial(integer_quantizer, width=x_width, frac_width=x_frac_width)
+        x_quantizer = partial(
+            integer_quantizer, width=x_width, frac_width=x_frac_width, is_signed=False
+        )
 
         return F.relu(x_quantizer(x), inplace=inplace)
 
