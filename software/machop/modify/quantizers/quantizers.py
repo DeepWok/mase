@@ -247,7 +247,7 @@ def msfp_quantizer(
 
     """
     if isinstance(block_size, int):
-        block_size = [int]
+        block_size = [block_size]
     # separate x into blocks
     x_shape_before_blocking = [i for i in x.shape]
     blocked_x, per_block_max, padded_x_shape, block_shape = block(

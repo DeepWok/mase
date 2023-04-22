@@ -95,7 +95,7 @@ class InputArgsGenerator:
         input_args = []
         if self.wrapper_cls is VisionModelWrapper:
             batch_x, _ = next(self.dataloader_iter)
-            input_args = batch_x
+            input_args = [batch_x]
         elif self.wrapper_cls is NLPClassificationModelWrapper:
             batch = next(self.dataloader_iter)
             input_args = [
