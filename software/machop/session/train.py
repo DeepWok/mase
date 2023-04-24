@@ -43,11 +43,11 @@ def train(
             save_last=True,
         )
         tb_logger = TensorBoardLogger(save_dir=save_path, name="logs")
-        gpu_usage_callback = DeviceStatsMonitor()
+        # gpu_usage_callback = DeviceStatsMonitor()
         lr_monitor_callback = LearningRateMonitor(logging_interval="step")
         plt_trainer_args["callbacks"] = [
             checkpoint_callback,
-            gpu_usage_callback,
+            # gpu_usage_callback,
             lr_monitor_callback,
         ]
         plt_trainer_args["logger"] = tb_logger

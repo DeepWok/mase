@@ -1,6 +1,7 @@
 import torch
 
 from .activation_profiler import run_activation_profiler
+from .weight_profiler import run_weight_profiler
 
 
 def run_statistical_profiler(
@@ -20,4 +21,10 @@ def run_statistical_profiler(
         dummy_inputs_for_fx,
         config_path,
         save_dir,
+    )
+    run_weight_profiler(
+        model=model,
+        dummy_inputs_for_fx=dummy_inputs_for_fx,
+        config_path=config_path,
+        save_dir=save_dir,
     )
