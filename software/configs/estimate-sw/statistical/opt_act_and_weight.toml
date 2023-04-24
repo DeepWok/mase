@@ -1,0 +1,27 @@
+act_node_patterns = []
+act_nodes = [
+    "model.decoder.layers.0.self_attn.q_proj",
+    "model.decoder.layers.7.fc1",
+]
+act_num_batches_to_profile = 4
+
+weight_node_patterns = []
+weight_nodes = [
+    "model.decoder.layers.0.self_attn.q_proj",
+    "model.decoder.layers.7.fc1",
+]
+
+[act_stats.reduced_variance]
+
+[act_stats.reduced_soft_range]
+num_sigmas = 2
+
+[act_stats.reduced_hard_range]
+
+
+[weight_stats.reduced_variance]
+
+[weight_stats.reduced_soft_range]
+num_sigmas = 2
+
+[weight_stats.reduced_hard_range]

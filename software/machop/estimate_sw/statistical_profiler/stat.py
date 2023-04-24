@@ -1,3 +1,5 @@
+import math
+
 import numpy as np
 import torch
 import torch.nn as nn
@@ -32,6 +34,9 @@ class _StatBase:
 
     def export_to_list(self):
         return {self.stat_name: self.finalize_to_list()}
+
+    def __str__(self) -> str:
+        return "{}".format(self.stat_name)
 
 
 @_add_to_stat_mapping
@@ -81,6 +86,10 @@ class Variance(_StatBase):
         existing_mean=0.0,
         existing_m2=0.0,
     ) -> None:
+        """
+        Use Welford's online algorithm to calculate running variance and mean
+        https://en.wikipedia.org/wiki/Algorithms_for_calculating_variance#Welford's_online_algorithm
+        """
         super().__init__()
         assert isinstance(existing_count, int)
         assert isinstance(existing_mean, (float, torch.Tensor))
@@ -136,9 +145,9 @@ class Variance(_StatBase):
 class SoftRange(Variance):
     stat_name = "soft_range"
 
-    def __init__(self, num_sigma=3, offload_to_cpu=True) -> None:
+    def __init__(self, num_sigmas=3, offload_to_cpu=True) -> None:
         super().__init__(offload_to_cpu=offload_to_cpu)
-        self.num_sigma = num_sigma
+        self.num_sigmas = num_sigmas
         self.min = None
         self.max = None
 
@@ -146,16 +155,16 @@ class SoftRange(Variance):
         if self.count < 2:
             return {"min": "NA", "max": "NA"}
         sigma = torch.sqrt(self.m2 / self.count)
-        self.min = self.mean - self.num_sigma * sigma
-        self.max = self.mean + self.num_sigma * sigma
+        self.min = self.mean - self.num_sigmas * sigma
+        self.max = self.mean + self.num_sigmas * sigma
         return {"min": self.min, "max": self.max}
 
     def finalize_to_list(self) -> dict:
         if self.count < 2:
             return {"min": "NA", "max": "NA"}
         sigma = torch.sqrt(self.m2 / self.count)
-        self.min = self.mean - self.num_sigma * sigma
-        self.max = self.mean + self.num_sigma * sigma
+        self.min = self.mean - self.num_sigmas * sigma
+        self.max = self.mean + self.num_sigmas * sigma
         return {"min": self.min.tolist(), "max": self.max.tolist()}
 
 
@@ -190,6 +199,104 @@ class HardRange(_StatBase):
 
     def finalize_to_list(self) -> dict:
         return {"min": self.min.tolist(), "max": self.max.tolist()}
+
+
+@_add_to_stat_mapping
+class ReducedVariance(_StatBase):
+    stat_name = "reduced_variance"
+
+    def __init__(self, existing_count=0, existing_mean=0.0, existing_m2=0.0) -> None:
+        """
+        Use Chen's algorithm to calculate reduced running mean and variance in parallel.
+        https://en.wikipedia.org/wiki/Algorithms_for_calculating_variance#Parallel_algorithm
+        """
+        super().__init__()
+        assert isinstance(existing_count, int)
+        assert isinstance(existing_mean, (float))
+        assert isinstance(existing_m2, (float))
+        self.count: int = existing_count
+        self.mean: float = existing_mean
+        self.m2: float = existing_m2
+
+    def update_a_sample(self, new_s: torch.Tensor):
+        new_s = new_s.flatten()
+
+        n_b = new_s.nelement()
+        mean_b = new_s.mean().item()
+
+        delta = mean_b - self.mean
+        self.mean += delta * n_b / (self.count + n_b)
+        self.m2 += new_s.var().item() * n_b + delta**2 * self.count * n_b / (
+            self.count + n_b
+        )
+        self.count += n_b
+
+    def finalize(self) -> dict:
+        if self.count < 2:
+            result = {"mean": "NA", "variance": "NA", "sample_variance": "NA"}
+        else:
+            result = {
+                "count": self.count,
+                "mean": self.mean,
+                "variance": self.m2 / self.count,
+                "sample_variance": self.m2 / (self.count - 1),
+            }
+        return result
+
+    def finalize_to_list(self) -> dict:
+        return self.finalize()
+
+
+@_add_to_stat_mapping
+class ReducedSoftRange(ReducedVariance):
+    stat_name = "reduced_soft_range"
+
+    def __init__(
+        self,
+        num_sigmas=3,
+    ) -> None:
+        super().__init__()
+        self.num_sigmas = num_sigmas
+
+        self.min = None
+        self.max = None
+
+    def finalize(self) -> dict:
+        if self.count < 2:
+            return {"min": "NA", "max": "NA"}
+        sigma = math.sqrt(self.m2 / self.count)
+        self.min = self.mean - self.num_sigmas * sigma
+        self.max = self.mean + self.num_sigmas * sigma
+        return {"min": self.min, "max": self.max}
+
+    def finalize_to_list(self) -> dict:
+        return self.finalize()
+
+
+@_add_to_stat_mapping
+class ReducedHardRange(_StatBase):
+    stat_name = "reduced_hard_range"
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.min = None
+        self.max = None
+
+    def update_a_sample(self, new_s: torch.Tensor):
+        new_s = new_s.flatten()
+
+        if self.min is None:
+            self.min = new_s.min().item()
+            self.max = new_s.max().item()
+        else:
+            self.min = min(self.min, new_s.max().item())
+            self.max = max(self.max, new_s.min().item())
+
+    def finalize(self) -> dict:
+        return {"min": self.min, "max": self.max}
+
+    def finalize_to_list(self) -> dict:
+        return self.finalize()
 
 
 def new_stat(stat_name: str, **kwargs):

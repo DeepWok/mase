@@ -28,8 +28,9 @@ def validate(
         os.makedirs(save_path)
     if save_path is not None:
         tb_logger = TensorBoardLogger(save_dir=save_path, name="logs_validate-sw")
-        gpu_usage_callback = DeviceStatsMonitor()
-        plt_trainer_args["callbacks"] = [gpu_usage_callback]
+        # gpu_usage_callback = DeviceStatsMonitor()
+        # plt_trainer_args["callbacks"] = [gpu_usage_callback]
+        plt_trainer_args["callbacks"] = []
         plt_trainer_args["logger"] = tb_logger
 
     # plugin
