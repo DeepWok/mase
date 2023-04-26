@@ -544,6 +544,7 @@ def _efficientnet(
     last_channel: Optional[int],
     num_classes: int,
     pretrained_weight_cls: Optional[WeightsEnum],
+    norm_layer=None,
     **kwargs: Any,
 ) -> EfficientNet:
     model = EfficientNet(
@@ -551,6 +552,7 @@ def _efficientnet(
         dropout,
         num_classes=num_classes,
         last_channel=last_channel,
+        norm_layer=norm_layer,
         **kwargs,
     )
     if pretrained_weight_cls is not None:
@@ -611,6 +613,7 @@ def get_efficientnet_v2_s(
         last_channel,
         num_classes=num_classes,
         pretrained_weight_cls=pretrained_weight_cls,
+        norm_layer=partial(nn.BatchNorm2d, eps=0.001),
         **kwargs,
     )
 
@@ -628,10 +631,11 @@ def get_efficientnet_v2_m(
     inverted_residual_setting, last_channel = _efficientnet_conf("efficientnet_v2_m")
     return _efficientnet(
         inverted_residual_setting,
-        kwargs.pop("dropout", 0.2),
+        kwargs.pop("dropout", 0.3),
         last_channel,
         num_classes=num_classes,
         pretrained_weight_cls=pretrained_weight_cls,
+        norm_layer=partial(nn.BatchNorm2d, eps=1e-03),
         **kwargs,
     )
 
@@ -649,9 +653,10 @@ def get_efficientnet_v2_l(
     inverted_residual_setting, last_channel = _efficientnet_conf("efficientnet_v2_l")
     return _efficientnet(
         inverted_residual_setting,
-        kwargs.pop("dropout", 0.2),
+        kwargs.pop("dropout", 0.4),
         last_channel,
         num_classes=num_classes,
         pretrained_weight_cls=pretrained_weight_cls,
+        norm_layer=partial(nn.BatchNorm2d, eps=1e-03),
         **kwargs,
     )
