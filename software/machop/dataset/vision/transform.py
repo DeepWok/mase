@@ -7,8 +7,10 @@ from timm.data import create_transform
 from timm.data.constants import IMAGENET_DEFAULT_MEAN, IMAGENET_DEFAULT_STD
 from torch import Tensor
 from torchvision import transforms
-from torchvision.transforms import InterpolationMode
+from torchvision.transforms import InterpolationMode, autoaugment
 from torchvision.transforms import functional as tv_F
+from torchvision.transforms import transforms
+from torchvision.transforms._presets import ImageClassification
 
 # -----------------------------------------
 # CIFAR10 and CIFAR100
@@ -93,7 +95,7 @@ build_default_imagenet_transform = partial(
 # -----------------------------------------
 # IMAGENET's transform depends on the model if pretrained weights are used
 
-imagenet_tv_preprocess_cls_mapping = {
+val_imagenet_tv_preprocess_cls_mapping = {
     "resnet18": tv.models.resnet.ResNet18_Weights.IMAGENET1K_V1.transforms,
     "resnet34": tv.models.resnet.ResNet34_Weights.IMAGENET1K_V1.transforms,
     "resnet50": tv.models.resnet.ResNet50_Weights.IMAGENET1K_V2.transforms,
@@ -109,6 +111,85 @@ imagenet_tv_preprocess_cls_mapping = {
 }
 
 
+class ClassificationPresetTrain:
+    def __init__(
+        self,
+        *,
+        crop_size,
+        mean=(0.485, 0.456, 0.406),
+        std=(0.229, 0.224, 0.225),
+        interpolation=InterpolationMode.BILINEAR,
+        hflip_prob=0.5,
+        auto_augment_policy=None,
+        ra_magnitude=9,
+        augmix_severity=3,
+        random_erase_prob=0.0,
+    ):
+        trans = [transforms.RandomResizedCrop(crop_size, interpolation=interpolation)]
+        if hflip_prob > 0:
+            trans.append(transforms.RandomHorizontalFlip(hflip_prob))
+        if auto_augment_policy is not None:
+            if auto_augment_policy == "ra":
+                trans.append(
+                    autoaugment.RandAugment(
+                        interpolation=interpolation, magnitude=ra_magnitude
+                    )
+                )
+            elif auto_augment_policy == "ta_wide":
+                trans.append(
+                    autoaugment.TrivialAugmentWide(interpolation=interpolation)
+                )
+            elif auto_augment_policy == "augmix":
+                trans.append(
+                    autoaugment.AugMix(
+                        interpolation=interpolation, severity=augmix_severity
+                    )
+                )
+            else:
+                aa_policy = autoaugment.AutoAugmentPolicy(auto_augment_policy)
+                trans.append(
+                    autoaugment.AutoAugment(
+                        policy=aa_policy, interpolation=interpolation
+                    )
+                )
+        trans.extend(
+            [
+                transforms.PILToTensor(),
+                transforms.ConvertImageDtype(torch.float),
+                transforms.Normalize(mean=mean, std=std),
+            ]
+        )
+        if random_erase_prob > 0:
+            trans.append(transforms.RandomErasing(p=random_erase_prob))
+
+        self.transforms = transforms.Compose(trans)
+
+    def __call__(self, img):
+        return self.transforms(img)
+
+
+train_imagenet_tv_preprocess_cls_mapping = {
+    "efficientnet_v2_s": partial(
+        ClassificationPresetTrain,
+        crop_size=300,
+        auto_augment_policy="ta_wide",
+        random_erase_prob=0.1,
+    ),
+    "efficientnet_v2_m": partial(
+        ClassificationPresetTrain,
+        crop_size=300,
+        auto_augment_policy="ta_wide",
+        random_erase_prob=0.1,
+    ),
+    "efficientnet_v2_l": partial(
+        ClassificationPresetTrain,
+        crop_size=300,
+        auto_augment_policy="ta_wide",
+        random_erase_prob=0.1,
+    ),
+}
+
+
 class PreprocessorForTVPretrainedModel:
     def __init__(self, tv_preprocess: torch.nn.Module) -> None:
         self.tv_preprocess = tv_preprocess()
@@ -119,11 +200,14 @@ class PreprocessorForTVPretrainedModel:
 
 def build_imagenet_transform(model_name, train):
     if train:
-        return build_default_imagenet_transform(train)
+        if model_name in train_imagenet_tv_preprocess_cls_mapping:
+            return train_imagenet_tv_preprocess_cls_mapping[model_name]()
+        else:
+            return build_default_imagenet_transform(train)
     else:
-        if model_name in imagenet_tv_preprocess_cls_mapping:
+        if model_name in val_imagenet_tv_preprocess_cls_mapping:
             return PreprocessorForTVPretrainedModel(
-                imagenet_tv_preprocess_cls_mapping[model_name]
+                val_imagenet_tv_preprocess_cls_mapping[model_name]
             )
         else:
             # return PreprocessorForTVPretrainedModel(

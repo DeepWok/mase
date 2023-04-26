@@ -269,7 +269,13 @@ class SearchQuantization(SearchBase):
 
         max_evals = self.search_strategy_config["max_evals"]
 
-        best = fmin(objective, space=space, algo=algo, max_evals=max_evals)
+        best = fmin(
+            objective,
+            space=space,
+            algo=algo,
+            max_evals=max_evals,
+            trials_save_file=self.search_strategy_config["output_file"],
+        )
         best = self.convert_best_to_config(best)
         return best
 
