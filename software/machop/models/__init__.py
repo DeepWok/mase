@@ -12,9 +12,11 @@ from .vision import (
     get_deit_base_patch16_224,
     get_deit_small_patch16_224,
     get_deit_tiny_patch16_224,
+    get_efficientnet_b0,
     get_efficientnet_v2_l,
     get_efficientnet_v2_m,
     get_efficientnet_v2_s,
+    get_mobilenet_v2,
     get_mobilenetv3_large,
     get_mobilenetv3_small,
     get_pvt_large,
@@ -44,10 +46,13 @@ _built_in_vision_model_map = {
     # wide resnet
     "wideresnet50_2": get_wide_resnet50_2,
     "wideresnet28_cifar": wideresnet28_cifar,
+    # mobilenet v2
+    "mobilenetv2": get_mobilenet_v2,
     # mobilenet v3
     "mobilenetv3_small": get_mobilenetv3_small,
     "mobilenetv3_large": get_mobilenetv3_large,
     # efficient net
+    "efficientnet_b0": get_efficientnet_b0,
     "efficientnet_v2_s": get_efficientnet_v2_s,
     "efficientnet_v2_m": get_efficientnet_v2_m,
     "efficientnet_v2_l": get_efficientnet_v2_l,
