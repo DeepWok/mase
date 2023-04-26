@@ -20,7 +20,11 @@ from torchvision.models.efficientnet import (
 from torchvision.ops import SqueezeExcitation, StochasticDepth
 from torchvision.utils import _make_ntuple
 
+from ....graph.mase_tracer import mark_as_leaf_module
+
 logger = getLogger(__name__)
+
+StochasticDepth = mark_as_leaf_module(StochasticDepth)
 
 
 class ConvNormActivation(torch.nn.Sequential):

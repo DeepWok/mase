@@ -11,10 +11,25 @@ weight_nodes = [
     "model.decoder.layers.7.fc1",
 ]
 
+# act_node_patterns = [
+#   '(model\.decoder\.layers\.)[0-9]+(\.self_attn\.)[q|k|v](_proj)', # attention k, q, v proj
+#   '(bmm)[0-9]?', # even -> A=Q@K^T, sigular -> B=A_hat@V
+#   '(model\.decoder\.layers\.)[0-9]+(\.self_attn\.)(out_proj)', # attention output_proj
+#   '(model\.decoder\.layers\.)[0-9]+(\.fc1)', # FFN.fc1
+#   '(model\.decoder\.layers\.)[0-9]+(\.fc2)', # FFN.fc2
+# ]
+
+# weight_node_patterns = [
+#     '(model\.decoder\.layers\.)[0-9]+(\.self_attn\.)[q|k|v](_proj)', # attention k, q, v proj
+#     '(model\.decoder\.layers\.)[0-9]+(\.self_attn\.)(out_proj)', # attention output_proj
+#     '(model\.decoder\.layers\.)[0-9]+(\.fc1)', # FFN.fc1
+#     '(model\.decoder\.layers\.)[0-9]+(\.fc2)', # FFN.fc2
+# ]
+
 [act_stats.reduced_variance]
 
 [act_stats.reduced_soft_range]
-num_sigmas = 2
+num_sigmas = 3
 
 [act_stats.reduced_hard_range]
 
@@ -22,6 +37,6 @@ num_sigmas = 2
 [weight_stats.reduced_variance]
 
 [weight_stats.reduced_soft_range]
-num_sigmas = 2
+num_sigmas = 3
 
 [weight_stats.reduced_hard_range]

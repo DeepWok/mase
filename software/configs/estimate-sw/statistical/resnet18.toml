@@ -2,15 +2,17 @@ act_node_patterns = []
 act_nodes = ["fc"]
 act_num_batches_to_profile = 4
 
-[act_stats.variance]
-offload_to_cpu = true
+# [act_stats.variance]
+# offload_to_cpu = true
 
-[act_stats.soft_range]
-num_sigmas = 2
-offload_to_cpu = true
+# [act_stats.soft_range]
+# num_sigmas = 2
+# offload_to_cpu = true
 
-[act_stats.hard_range]
-offload_to_cpu = true
+# [act_stats.hard_range]
+# offload_to_cpu = true
+
+[act_stats.reduced_soft_range]
 
 # act_node_patterns = [
 #   '(model\.decoder\.layers\.)[0-9]+(\.self_attn\.)[q|k|v](_proj)', # attention k, q, v proj

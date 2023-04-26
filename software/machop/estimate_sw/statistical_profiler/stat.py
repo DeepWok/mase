@@ -231,6 +231,19 @@ class ReducedVariance(_StatBase):
         )
         self.count += n_b
 
+    def update_a_batch(self, new_batch: torch.Tensor):
+        new_batch = new_batch.flatten()
+
+        n_b = new_batch.nelement()
+        mean_b = new_batch.mean().item()
+
+        delta = mean_b - self.mean
+        self.mean += delta * n_b / (self.count + n_b)
+        self.m2 += new_batch.var().item() * n_b + delta**2 * self.count * n_b / (
+            self.count + n_b
+        )
+        self.count += n_b
+
     def finalize(self) -> dict:
         if self.count < 2:
             result = {"mean": "NA", "variance": "NA", "sample_variance": "NA"}
@@ -286,17 +299,17 @@ class ReducedHardRange(_StatBase):
         new_s = new_s.flatten()
 
         if self.min is None:
-            self.min = new_s.min().item()
-            self.max = new_s.max().item()
+            self.min = new_s.min()
+            self.max = new_s.max()
         else:
-            self.min = min(self.min, new_s.max().item())
-            self.max = max(self.max, new_s.min().item())
+            self.min = min(self.min, new_s.max())
+            self.max = max(self.max, new_s.min())
 
     def finalize(self) -> dict:
         return {"min": self.min, "max": self.max}
 
     def finalize_to_list(self) -> dict:
-        return self.finalize()
+        return {"min": self.min.item(), "max": self.max.item()}
 
 
 def new_stat(stat_name: str, **kwargs):

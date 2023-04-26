@@ -1,0 +1,23 @@
+act_node_patterns = [
+    'encoder\.layer\.[0-9]+\.attention\.self\.(value|query|key)', # k q v in attn
+    '(matmul)(_*)([0-9]*)', # attn matmul, context matmul
+    # '(add)(_*)([0-9]*)', # two residuals
+]
+act_nodes = []
+act_num_batches_to_profile = 4
+
+weight_node_patterns = [
+    'encoder\.layer\.[0-9]+\.attention\.self\.(value|query|key)', # qkv in attn
+    'encoder\.layer\.[0-9]+\.attention\.output\.dense', # w0 in attn
+    'encoder\.layer\.[0-9]+\.intermediate\.dense', # w1
+    'encoder\.layer\.[0-9]+\.output\.dense', # w2
+]
+weight_nodes = []
+
+
+[act_stats.reduced_soft_range]
+num_sigmas = 3
+
+
+[weight_stats.reduced_soft_range]
+num_sigmas = 3

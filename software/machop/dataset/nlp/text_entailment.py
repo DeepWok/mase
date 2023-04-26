@@ -102,7 +102,7 @@ class TextEntailDataset(Dataset):
 
 class TextEntailDatasetQNLI(TextEntailDataset):
     path = "./data/qnli"
-    num_labels = 2
+    num_classes = 2
 
     sent1_col_name = "question"
     sent2_col_name = "sentence"

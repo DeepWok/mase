@@ -20,6 +20,12 @@ class ActStatMeta:
     def __init__(self, name: str, real_target, stat_configs: Dict[str, Dict]) -> None:
         self.name = name
         self.real_target = real_target
+        if isinstance(real_target, torch.nn.Module):
+            self.node_op = "call_module"
+        elif isinstance(real_target, str):
+            self.node_op = "call_method"
+        else:
+            self.node_op = "call_function"
         if "record" in stat_configs:
             logger.warning(
                 f"`record` (concat to record tensor) is enabled in activation profiler, which wil consumes lots of memory as the num of batch increases"
@@ -32,12 +38,14 @@ class ActStatMeta:
         assert isinstance(batch, torch.Tensor)
 
         batch = self._preprocess_batch(batch)
-        for i in range(batch.shape[0]):
-            sample_i = batch[[i], ...]
-            for stat in self.stats:
-                sample_i_tmp = sample_i.clone()
-                stat: _StatBase
-                stat.update_a_sample(sample_i_tmp)
+        for stat in self.stats:
+            stat: _StatBase
+            if hasattr(stat, "update_a_batch"):
+                stat.update_a_batch(batch)
+            else:
+                for i in range(batch.shape[0]):
+                    sample_i = batch[[i], ...].clone()
+                    stat.update_a_sample(sample_i)
 
     def _preprocess_batch(self, batch: torch.Tensor):
         assert isinstance(batch, torch.Tensor)
@@ -45,19 +53,19 @@ class ActStatMeta:
             # 2D x
             batch = batch.flatten(start_dim=0, end_dim=-2)
         else:
-            # 1D x
-            batch = batch.flatten()
+            # 2D x
+            batch = batch.flatten(start_dim=1)
         return batch
 
     def export_to_list(self):
-        results = {}
+        results = {"op": self.node_op}
         for stat in self.stats:
             stat: _StatBase
             results |= stat.export_to_list()
         return {self.name: results}
 
     def export(self):
-        results = {}
+        results = {"op": self.node_op}
         for stat in self.stats:
             stat: _StatBase
             results |= stat.export()
@@ -203,18 +211,19 @@ class ActivationProfiler(Interpreter):
                 toml.dump(stat_dict, f)
         return stat_dict
 
-    def create_config_template(self, save_path: str = None):
+    def create_config_template(self, modifiable_only=True, save_path: str = None):
         template = {
             "act_nodes": [],
             "act_num_batches_to_profile": 4,
             "act_stats": {
-                "variance": {"offload_to_cpu": True},
-                "soft_range": {"num_sigmas": 2},
+                # "variance": {"offload_to_cpu": True},
+                "reduced_soft_range": {"num_sigmas": 3},
             },
         }
         for node in self.module.graph.nodes:
-            if not is_modifiable(node, self.module):
-                continue
+            if modifiable_only:
+                if not is_modifiable(node, self.module):
+                    continue
             if node.op in ["call_function", "call_method"]:
                 template["act_nodes"].append(node.name)
             elif node.op == "call_module":
@@ -236,22 +245,28 @@ def run_activation_profiler(
 ):
     is_training = model.training
     input_generator = InputArgsGenerator(
-        model_name=model_name, task=task, data_module=data_module
+        model_name=model_name,
+        task=task,
+        data_module=data_module,
+        which_dataloader="val_dataloader",
     )
     gm = mase_symbolic_trace(root=model, concrete_args=dummy_inputs_for_fx)
     assert os.path.isfile(config_path) and config_path.endswith(".toml")
 
     config = toml.load(config_path)
     profiler = ActivationProfiler(graph_module=gm, config=config)
-    if profiler.no_act_to_profile:
-        logger.info("No activation to profile")
-        return
 
     config_template_save_path = os.path.join(save_dir, "profile_act_template.toml")
-    profiler.create_config_template(save_path=config_template_save_path)
+    profiler.create_config_template(
+        modifiable_only=True, save_path=config_template_save_path
+    )
     logger.info(
         f"activation profiler config template is saved at {config_template_save_path}"
     )
+
+    if profiler.no_act_to_profile:
+        logger.info("No activation to profile")
+        return {}
 
     num_batches_to_profile = config["act_num_batches_to_profile"]
 
@@ -267,5 +282,6 @@ def run_activation_profiler(
     if is_training:
         gm.train()
     profile_save_path = os.path.join(save_dir, "act_profile.toml")
-    profiler.export_profile_to_list(save_path=profile_save_path)
+    act_profile = profiler.export_profile_to_list(save_path=profile_save_path)
     logger.info(f"activation profile is saved at {profile_save_path}")
+    return act_profile

@@ -48,8 +48,8 @@ bert_patched_name_to_patched_model_mapping = {
 # create classifier (Linear) in get_patched_nlp_model
 bert_patched_model_name_to_hidden_size = {
     "bert-base-uncased@patched": 768,
-    "bert-large-uncased@patched": 768,
-    "bert-base-cased@patched": 1024,
+    "bert-base-cased@patched": 768,
+    "bert-large-uncased@patched": 1024,
     "bert-large-cased@patched": 1024,
 }
 

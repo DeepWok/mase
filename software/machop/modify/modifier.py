@@ -23,7 +23,7 @@ from ..graph.mase_tracer import (
     is_leaf_module_to_trace,
     mark_as_user_custom_leaf_module,
 )
-from ..graph.utils import get_module_by_name, get_parent_name
+from ..graph.utils import get_module_by_name, get_module_by_target, get_parent_name
 
 # from .quantizers import functions_map, layers_map
 from .quantizers import FUNC_MAP, METHOD_MAP
@@ -384,10 +384,10 @@ class Modifier:
         return self.graph_module
 
     def compare_model(self):
-        original_named_modules = dict(self.original_model.named_modules())
+        # original_named_modules = dict(self.original_model.named_modules())
         original_graph = MaseTracer().trace(self.original_model, self.dummy_inputs)
 
-        modified_named_modules = dict(self.graph_module.named_modules())
+        # modified_named_modules = dict(self.graph_module.named_modules())
 
         df = pd.DataFrame(
             columns=[
@@ -404,8 +404,12 @@ class Modifier:
             zip(self.graph.nodes, original_graph.nodes)
         ):
             if node.op == "call_module":
-                original_module = original_named_modules[node.target]
-                modified_module = modified_named_modules[node.target]
+                # original_module = original_named_modules[node.target]
+                # modified_module = modified_named_modules[node.target]
+                original_module = get_module_by_target(
+                    self.original_model, old_node.target
+                )
+                modified_module = get_module_by_target(self.graph_module, node.target)
 
                 original_name = "`{}`".format(old_node.target)
                 new_name = "`{}`".format(node.target)
@@ -536,9 +540,19 @@ class Modifier:
                         original_module=module, config=sub_config
                     )
                 except NotImplementedError:
-                    new_module = _create_new_module(
-                        original_module=module, config=sub_config
-                    )
+                    if is_modifiable(node, self.graph_module):
+                        new_module = _create_new_module(
+                            original_module=module, config=sub_config
+                        )
+                    else:
+                        logger.warning(
+                            "Module {}: {} is not modifiable.".format(
+                                node.target, type(module)
+                            )
+                        )
+                    # new_module = _create_new_module(
+                    #     original_module=module, config=sub_config
+                    # )
 
                 # replace the old module with the new one
                 parent_name, name = get_parent_name(module_name)
