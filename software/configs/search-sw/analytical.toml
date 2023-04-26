@@ -5,12 +5,12 @@ name = 'analytical'
 output_file = 'analytical_results.toml'
 
 [search_space]
-bias_frac_width = [0, 1, 2, 3, 4, 5, 6, 7]
+bias_frac_width = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
 bias_width = [8]
-data_in_frac_width = [0, 1, 2, 3, 4, 5, 6, 7]
+data_in_frac_width = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
 data_in_width = [8]
 name = ['integer']
-weight_frac_width = [0, 1, 2, 3, 4, 5, 6, 7]
+weight_frac_width = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
 weight_width = [8]
 
 [search_data]

@@ -1,6 +1,7 @@
 import inspect
-import torch
 from typing import Tuple
+
+import torch
 
 
 def check_func_type(node, my_func):
@@ -29,6 +30,18 @@ def get_module_by_name(model, request_name):
         if name == request_name:
             return layer
     return None
+
+
+def get_module_by_target(model, target):
+    target_atoms = target.split(".")
+    attr_itr = model
+    for i, atom in enumerate(target_atoms):
+        if not hasattr(attr_itr, atom):
+            raise RuntimeError(
+                f"Node referenced nonexistent target {'.'.join(target_atoms[:i])}"
+            )
+        attr_itr = getattr(attr_itr, atom)
+    return attr_itr
 
 
 def get_node_by_name(graph, request_name):

@@ -8,7 +8,8 @@ import torch
 from torch.fx import Graph, GraphModule, Interpreter, Node
 from tqdm import tqdm
 
-from ...graph.mase_graph import get_module_by_name, mase_symbolic_trace
+from ...graph.mase_graph import mase_symbolic_trace
+from ...graph.utils import get_module_by_target
 from ...modify.modifier import is_modifiable
 from ..utils import InputArgsGenerator
 from .stat import _StatBase, new_stat
@@ -20,6 +21,12 @@ class WeightStatMeta:
     def __init__(self, name: str, real_target, stat_config: Dict[str, Dict]) -> None:
         self.name = name
         self.real_target = real_target
+        if isinstance(real_target, torch.nn.Module):
+            self.node_op = "call_module"
+        elif isinstance(real_target, str):
+            self.node_op = "call_method"
+        else:
+            self.node_op = "call_function"
         if "record" in stat_config:
             logger.warning(
                 f"`record` (concat to record tensor) is enabled in weight profiler, which wil consumes lots of memory if the model is large"
@@ -40,14 +47,14 @@ class WeightStatMeta:
         return weight
 
     def export_to_list(self):
-        results = {}
+        results = {"op": self.node_op}
         for stat in self.stats:
             stat: _StatBase
             results |= stat.export_to_list()
         return {self.name: results}
 
     def export(self):
-        results = {}
+        results = {"op": self.node_op}
         for stat in self.stats:
             stat: _StatBase
             results |= stat.export()
@@ -119,7 +126,7 @@ class WeightProfiler:
             ):
                 continue
 
-            real_target = get_module_by_name(self.module, node.target)
+            real_target = get_module_by_target(self.module, node.target)
             for name, weight in real_target.named_parameters():
                 node.meta[name] = WeightStatMeta(
                     name=node.target + "::" + name,
@@ -142,7 +149,8 @@ class WeightProfiler:
             ):
                 continue
 
-            real_target = get_module_by_name(self.module, node.target)
+            real_target = get_module_by_target(self.module, node.target)
+
             for name, weight in real_target.named_parameters():
                 node.meta[name].update(weight)
 
@@ -180,19 +188,23 @@ class WeightProfiler:
                 toml.dump(stat_dict, f)
         return stat_dict
 
-    def create_config_template(self, save_path: str = None):
+    def create_config_template(self, modifiable_only=True, save_path: str = None):
         template = {
             "weight_nodes": [],
             "weight_node_patterns": [],
             "weight_stats": {
-                "hard_range": {},
-                "soft_range": {"num_sigmas": 3},
+                "reduced_soft_range": {"num_sigmas": 3},
             },
         }
         for node in self.module.graph.nodes:
-            if not is_modifiable(node, self.module):
-                continue
+            if modifiable_only:
+                if not is_modifiable(node, self.module):
+                    continue
             if node.op != "call_module":
+                continue
+            real_target = get_module_by_target(self.module, node.target)
+
+            if len(dict(real_target.named_parameters())) == 0:
                 continue
             template["weight_nodes"].append(node.target)
         if save_path is not None:
@@ -214,14 +226,17 @@ def run_weight_profiler(
     config = toml.load(config_path)
     profiler = WeightProfiler(gm, config)
 
-    if profiler.no_weight_to_profile:
-        logger.info("No weight to profile, skip weight profiling")
-        return
     config_template_save_path = os.path.join(save_dir, "profile_weight_template.toml")
-    profiler.create_config_template(config_template_save_path)
+    profiler.create_config_template(
+        modifiable_only=True, save_path=config_template_save_path
+    )
     logger.info(
         f"Weight profiler config template is saved to {config_template_save_path}"
     )
+
+    if profiler.no_weight_to_profile:
+        logger.info("No weight to profile, skip weight profiling")
+        return {}
 
     gm.eval()
     logger.info("Traversing model to collect weight statistics...")
@@ -234,5 +249,6 @@ def run_weight_profiler(
         gm.train()
     profile_save_path = os.path.join(save_dir, "weight_profile.toml")
 
-    profiler.export_profile_to_list(save_path=profile_save_path)
+    weight_profile = profiler.export_profile_to_list(save_path=profile_save_path)
     logger.info(f"Weight profile is saved to {profile_save_path}")
+    return weight_profile

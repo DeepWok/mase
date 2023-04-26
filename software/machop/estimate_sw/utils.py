@@ -82,11 +82,18 @@ def get_input_args(model_name, model, task, data_loader, info):
 
 
 class InputArgsGenerator:
-    def __init__(self, model_name, task, data_module) -> None:
+    def __init__(
+        self, model_name, task, data_module, which_dataloader="train_dataloader"
+    ) -> None:
         self.wrapper_cls = get_model_wrapper(model_name, task)
         data_module.prepare_data()
         data_module.setup()
-        self.dataloader_iter = iter(data_module.train_dataloader())
+        assert which_dataloader in [
+            "train_dataloader",
+            "val_dataloader",
+            "test_dataloader",
+        ]
+        self.dataloader_iter = iter(getattr(data_module, which_dataloader)())
 
     def __iter__(self):
         return self

@@ -596,13 +596,13 @@ class Machop:
         if self.when_to_load == "modify-sw":
             if args.model in nlp_models:
                 self.model["model"] = load_pt_pl_or_pkl_checkpoint_into_pt_model(
-                    load_name=args.load,
+                    load_name=args.load_name,
                     load_type=args.load_type,
                     model=self.model["model"],
                 )
             else:
                 self.model = load_pt_pl_or_pkl_checkpoint_into_pt_model(
-                    load_name=args.load,
+                    load_name=args.load_name,
                     load_type=args.load_type,
                     model=self.model,
                 )

@@ -87,7 +87,8 @@ def get_custom_modify_sw_kwargs(model_name, config_path: str):
         custom_module_create_fn = opt_create_new_custom_module
     else:
         logger.debug(f"No custom leaf module registered")
-        return dummy_create_new_module_fn
+        # return dummy_create_new_module_fn
+        return {}
 
     # for cls in module_classes_to_trace:
     #     mark_as_user_custom_leaf_module(cls)
