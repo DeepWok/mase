@@ -13,6 +13,7 @@ from torch import Tensor, nn
 from torchvision.models._api import WeightsEnum
 from torchvision.models._utils import _make_divisible
 from torchvision.models.efficientnet import (
+    EfficientNet_B0_Weights,
     EfficientNet_V2_L_Weights,
     EfficientNet_V2_M_Weights,
     EfficientNet_V2_S_Weights,
@@ -546,7 +547,11 @@ def _efficientnet(
     **kwargs: Any,
 ) -> EfficientNet:
     model = EfficientNet(
-        inverted_residual_setting, dropout, last_channel=last_channel, **kwargs
+        inverted_residual_setting,
+        dropout,
+        num_classes=num_classes,
+        last_channel=last_channel,
+        **kwargs,
     )
     if pretrained_weight_cls is not None:
         pretrained_weight = pretrained_weight_cls.get_state_dict(progress=True)
@@ -563,6 +568,30 @@ def _efficientnet(
     else:
         logger.info(f"MobileNet randomly initialized")
     return model
+
+
+def get_efficientnet_b0(
+    info: Dict,
+    pretrained: bool = False,
+    **kwargs: Any,
+):
+    num_classes = info["num_classes"]
+    if pretrained:
+        pretrained_weight_cls = EfficientNet_B0_Weights.IMAGENET1K_V1
+    else:
+        pretrained_weight_cls = None
+
+    inverted_residual_setting, last_channel = _efficientnet_conf(
+        "efficientnet_b0", width_mult=1.0, depth_mult=1.0
+    )
+    return _efficientnet(
+        inverted_residual_setting,
+        kwargs.pop("dropout", 0.2),
+        last_channel,
+        num_classes=num_classes,
+        pretrained_weight_cls=pretrained_weight_cls,
+        **kwargs,
+    )
 
 
 def get_efficientnet_v2_s(

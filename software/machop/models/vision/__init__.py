@@ -5,10 +5,12 @@ from .deit import (
     get_deit_tiny_patch16_224,
 )
 from .efficientnet import (
+    get_efficientnet_b0,
     get_efficientnet_v2_l,
     get_efficientnet_v2_m,
     get_efficientnet_v2_s,
 )
+from .mobilenet_v2 import get_mobilenet_v2
 from .mobilenet_v3 import get_mobilenetv3_large, get_mobilenetv3_small
 from .pvt import (
     get_pvt_large,
