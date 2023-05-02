@@ -1,0 +1,23 @@
+nodes_to_ignore = ["fc"]
+
+[strategy]
+name = "optuna"
+n_trials = 4
+n_jobs = 1
+
+[data]
+data_loader = "val_dataloader"
+num_batches = 4
+
+[seed_search_space]
+bias_frac_width = [1, 2, 4, 8, 16, 32]
+bias_width = [1, 2, 4, 8, 16, 32]
+data_in_frac_width = [1, 2, 4, 8, 16, 32]
+data_in_width = [1, 2, 4, 8, 16, 32]
+name = ['integer']
+weight_frac_width = [1, 2, 4, 8, 16, 32]
+weight_width = [1, 2, 4, 8, 16, 32]
+
+[bitwidth_constraint]
+enable = true
+weight = 1
