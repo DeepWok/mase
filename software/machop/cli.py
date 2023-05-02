@@ -39,6 +39,7 @@ from .models import (
 from .models.patched_nlp_models.custom_nlp_modules import get_custom_modify_sw_kwargs
 from .modify.modifier import Modifier
 from .session import search, test, train, validate
+from .session.search import search
 from .synthesize.mase_verilog_emitter import MaseVerilogEmitter
 from .utils import (
     check_when_to_load_and_how_to_load,
@@ -768,6 +769,8 @@ class Machop:
         args = self.args
         logger.info(f"Searching model {args.model!r}...")
         save_dir = os.path.join(self.output_dir_sw, "search-sw")
+        if not os.path.isdir(save_dir):
+            os.makedirs(save_dir)
 
         dummy_inputs = get_dummy_inputs(
             model_name=args.model,
@@ -781,11 +784,24 @@ class Machop:
         #         model_name=args.model, config_path=args.modify_sw_config
         #     )
 
+        # search_args = {
+        #     "model_name": args.model,
+        #     "info": self.info,
+        #     "model": self.model,
+        #     "task": args.task,
+        #     "modifier_kwargs": modifier_kwargs,
+        #     "data_module": self.data_module,
+        #     "search_config": args.search_sw_config,
+        #     "save_dir": save_dir,
+        #     "accelerator": args.accelerator,
+        # }
+        # search(**search_args)
         search_args = {
             "model_name": args.model,
-            "info": self.info,
             "model": self.model,
+            "is_nlp_model": args.model in nlp_models,
             "task": args.task,
+            "info": self.info,
             "modifier_kwargs": modifier_kwargs,
             "data_module": self.data_module,
             "search_config": args.search_sw_config,

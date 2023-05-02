@@ -54,7 +54,8 @@ class WrapperBase(pl.LightningModule):
             sync_dist=True,
             prog_bar=True,
         )
-        return {"val_loss": loss, "val_acc": acc}
+        # return {"val_loss": loss, "val_acc": acc}
+        return loss
 
     def test_step(self, batch, batch_idx):
         x, y = batch[0], batch[1]
