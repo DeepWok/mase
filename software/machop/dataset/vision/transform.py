@@ -105,6 +105,7 @@ val_imagenet_tv_preprocess_cls_mapping = {
     "mobilenetv3_small": tv.models.mobilenet.MobileNet_V3_Small_Weights.IMAGENET1K_V1.transforms,
     "mobilenetv3_large": tv.models.mobilenet.MobileNet_V3_Large_Weights.IMAGENET1K_V2.transforms,
     "efficientnet_b0": tv.models.efficientnet.EfficientNet_B0_Weights.IMAGENET1K_V1.transforms,
+    "efficientnet_b3": tv.models.efficientnet.EfficientNet_B3_Weights.IMAGENET1K_V1.transforms,
     "efficientnet_v2_s": tv.models.efficientnet.EfficientNet_V2_S_Weights.IMAGENET1K_V1.transforms,
     "efficientnet_v2_m": tv.models.efficientnet.EfficientNet_V2_M_Weights.IMAGENET1K_V1.transforms,
     "efficientnet_v2_l": tv.models.efficientnet.EfficientNet_V2_L_Weights.IMAGENET1K_V1.transforms,
