@@ -102,7 +102,9 @@ class LanguageModeling(Dataset):
         self._set_tokenizer(tokenizer, max_token_len)
         processed_dataset_dir = os.path.join(
             self.raw_path,
-            "processed_{}".format(self.tokenizer.name_or_path.replace("/", "_")),
+            "processed_{}_token-len-{}".format(
+                self.tokenizer.name_or_path.replace("/", "_"), self.max_token_len
+            ),
         )
         if os.path.isdir(processed_dataset_dir):
             processed_dataset = load_from_disk(processed_dataset_dir)
@@ -132,7 +134,10 @@ class LanguageModeling(Dataset):
         # this will happen on every process in DataModule
         self.processed_dataset_dir = os.path.join(
             self.raw_path,
-            "processed_{}".format(self.tokenizer.name_or_path.replace("/", "_")),
+            "processed_{}_token-len-{}".format(
+                self.tokenizer.name_or_path.replace("/", "_"),
+                self.max_token_len,
+            ),
         )
         assert os.path.isdir(
             self.processed_dataset_dir
