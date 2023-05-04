@@ -279,6 +279,7 @@ def matmul_msfp(x, y, config):
     return generic_matmul_msfp(x, y, config, "matmul")
 
 
+# -----------------------------------------
 @mark_as_leaf_func
 def matmul_block_minifloat(x, y, config):
     return generic_matmul_block_minifloat(x, y, config, "matmul")
