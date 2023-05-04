@@ -175,6 +175,72 @@ class ReLUMinifloatIEEE(_ReLUBase):
 
 
 @mark_as_leaf_module
+class ReLULog(ReLUBase):
+    bypass = None
+    _required_config_keys = (
+        "name",
+        "data_in_width",
+        "data_in_exponent_bias",
+    )
+    _optional_config_keys = ("bypass",)
+
+    def __init__(self, inplace: bool = False, config: dict = None):
+        super().__init__(inplace)
+        assert config is not None, "config is None!"
+        self.bypass = config.get("bypass", False)
+
+        x_width, x_exponent_bias = (
+            config["data_in_width"],
+            config["data_in_exponent_bias"],
+        )
+        self.x_quantizer = partial(
+            log_quantizer,
+            width=x_width,
+            exponent_bias=x_exponent_bias,
+        )
+        self.config = self.construct_essential_config(config)
+
+    def construct_essential_config(self, config):
+        r_config = extract_required_config(self, config)
+        o_config = {}
+        o_config["bypass"] = config.get("bypass", False)
+        return r_config | o_config
+
+
+@mark_as_leaf_module
+class ReLULog(_ReLUBase):
+    bypass = None
+    _required_config_keys = (
+        "name",
+        "data_in_width",
+        "data_in_exponent_bias",
+    )
+    _optional_config_keys = ("bypass",)
+
+    def __init__(self, inplace: bool = False, config: dict = None):
+        super().__init__(inplace)
+        assert config is not None, "config is None!"
+        self.bypass = config.get("bypass", False)
+
+        x_width, x_exponent_bias = (
+            config["data_in_width"],
+            config["data_in_exponent_bias"],
+        )
+        self.x_quantizer = partial(
+            log_quantizer,
+            width=x_width,
+            exponent_bias=x_exponent_bias,
+        )
+        self.config = self.construct_essential_config(config)
+
+    def construct_essential_config(self, config):
+        r_config = extract_required_config(self, config)
+        o_config = {}
+        o_config["bypass"] = config.get("bypass", False)
+        return r_config | o_config
+
+
+@mark_as_leaf_module
 class ReLULog(_ReLUBase):
     bypass = None
     _required_config_keys = (

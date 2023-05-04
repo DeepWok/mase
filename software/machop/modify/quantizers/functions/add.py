@@ -182,3 +182,10 @@ def add_block_minifloat(x, y, config):
         x = torch.reshape(x, x_shape)
         y = torch.reshape(y, x_shape)
         return x + y
+
+
+@mark_as_leaf_func
+def add_block_minifloat(x, y, config):
+    bypass = config.get("bypass", False)
+    if bypass:
+        return x + y

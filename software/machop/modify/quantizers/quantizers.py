@@ -253,9 +253,10 @@ def msfp_quantizer(
     blocked_x, per_block_max, padded_x_shape, block_shape = block(
         x, block_shape=block_size, skip_first_dim=skip_first_dim
     )
-    # TODO: Why we have all zero bias
+
     # fill zeros to avoid log2(0) = -inf
     if torch.all(per_block_max == 0):
+        # all elements in zero-initialized bias can be 0 thus per_block_max is 0
         per_block_max = torch.ones_like(per_block_max)
     else:
         per_block_max[per_block_max == 0] = per_block_max[per_block_max != 0].min()
