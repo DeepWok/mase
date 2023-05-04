@@ -14,6 +14,7 @@ from torchvision.models._api import WeightsEnum
 from torchvision.models._utils import _make_divisible
 from torchvision.models.efficientnet import (
     EfficientNet_B0_Weights,
+    EfficientNet_B3_Weights,
     EfficientNet_V2_L_Weights,
     EfficientNet_V2_M_Weights,
     EfficientNet_V2_S_Weights,
@@ -589,6 +590,31 @@ def get_efficientnet_b0(
     return _efficientnet(
         inverted_residual_setting,
         kwargs.pop("dropout", 0.2),
+        last_channel,
+        num_classes=num_classes,
+        pretrained_weight_cls=pretrained_weight_cls,
+        **kwargs,
+    )
+
+
+def get_efficientnet_b3(
+    info: Dict,
+    pretrained: bool = False,
+    **kwargs: Any,
+):
+    num_classes = info["num_classes"]
+    if pretrained:
+        pretrained_weight_cls = EfficientNet_B3_Weights.IMAGENET1K_V1
+    else:
+        pretrained_weight_cls = None
+
+    inverted_residual_setting, last_channel = _efficientnet_conf(
+        "efficientnet_b3", width_mult=1.2, depth_mult=1.4
+    )
+
+    return _efficientnet(
+        inverted_residual_setting,
+        kwargs.pop("dropout", 0.3),
         last_channel,
         num_classes=num_classes,
         pretrained_weight_cls=pretrained_weight_cls,

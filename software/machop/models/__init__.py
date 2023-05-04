@@ -13,6 +13,7 @@ from .vision import (
     get_deit_small_patch16_224,
     get_deit_tiny_patch16_224,
     get_efficientnet_b0,
+    get_efficientnet_b3,
     get_efficientnet_v2_l,
     get_efficientnet_v2_m,
     get_efficientnet_v2_s,
@@ -53,6 +54,7 @@ _built_in_vision_model_map = {
     "mobilenetv3_large": get_mobilenetv3_large,
     # efficient net
     "efficientnet_b0": get_efficientnet_b0,
+    "efficientnet_b3": get_efficientnet_b3,
     "efficientnet_v2_s": get_efficientnet_v2_s,
     "efficientnet_v2_m": get_efficientnet_v2_m,
     "efficientnet_v2_l": get_efficientnet_v2_l,
