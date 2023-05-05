@@ -299,6 +299,13 @@ class Machop:
             type=int,
             help="The batch size for training and evaluation. Default=128",
         )
+        parser.add_argument(
+            "--accumulate-grad-batches",
+            dest="accumulate_grad_batches",
+            default=1,
+            type=int,
+            help="The number of batches to accumulate gradients. Default=1",
+        )
 
         ## Language model related
         parser.add_argument(
@@ -654,6 +661,7 @@ class Machop:
             "strategy": args.strategy,
             "fast_dev_run": args.to_debug,
             "precision": args.trainer_precision,
+            "accumulate_grad_batches": args.accumulate_grad_batches,
         }
 
         load_name = args.load_name if self.when_to_load == "train_val_or_test" else None
