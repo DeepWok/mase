@@ -47,7 +47,8 @@ from .utils import (
     load_pt_pl_or_pkl_checkpoint_into_pt_model,
 )
 
-logger = getLogger("machop", log_file="machop.log")
+# logger = getLogger("machop", log_file="machop.log")
+logger = getLogger("machop")
 
 
 class Machop:
