@@ -165,9 +165,9 @@ def runner():
     sim = os.getenv("SIM", "verilator")
 
     verilog_sources = [
-        "../../../../hardware/common/fixed_adder_tree.sv",
+        "../../../../hardware/fixed_arith/fixed_adder_tree.sv",
+        "../../../../hardware/fixed_arith/fixed_adder_tree_layer.sv",
         "../../../../hardware/common/register_slice.sv",
-        "../../../../hardware/common/fixed_adder_tree_layer.sv",
     ]
     test_case = VerificationCase()
 

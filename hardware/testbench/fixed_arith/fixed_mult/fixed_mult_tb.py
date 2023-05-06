@@ -37,7 +37,7 @@ async def test_fixed_mult(dut):
 
 def runner():
     sim = os.getenv("SIM", "verilator")
-    verilog_sources = ["../../../common/fixed_mult.sv"]
+    verilog_sources = ["../../../fixed_arith/fixed_mult.sv"]
 
     runner = get_runner(sim)()
     runner.build(verilog_sources=verilog_sources, toplevel="fixed_mult")

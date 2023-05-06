@@ -170,7 +170,7 @@ async def test_fixed_accumulator(dut):
 def runner():
     sim = os.getenv("SIM", "verilator")
 
-    verilog_sources = ["../../../../hardware/common/fixed_accumulator.sv"]
+    verilog_sources = ["../../../../hardware/fixed_arith/fixed_accumulator.sv"]
     test_case = VerificationCase()
 
     # set parameters

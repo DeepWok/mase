@@ -179,15 +179,15 @@ def runner():
     sim = os.getenv("SIM", "verilator")
 
     verilog_sources = [
-        "../../../../hardware/common/fixed_matrix_multiplication.sv",
-        "../../../../hardware/common/fixed_dot_product.sv",
+        "../../../../hardware/fixed_arith/fixed_matrix_multiplication.sv",
+        "../../../../hardware/fixed_arith/fixed_dot_product.sv",
         "../../../../hardware/linear/fixed_linear.sv",
-        "../../../../hardware/common/fixed_accumulator.sv",
-        "../../../../hardware/common/fixed_vector_mult.sv",
+        "../../../../hardware/fixed_arith/fixed_accumulator.sv",
+        "../../../../hardware/fixed_arith/fixed_vector_mult.sv",
+        "../../../../hardware/fixed_arith/fixed_adder_tree.sv",
+        "../../../../hardware/fixed_arith/fixed_adder_tree_layer.sv",
+        "../../../../hardware/fixed_arith/fixed_mult.sv",
         "../../../../hardware/common/register_slice.sv",
-        "../../../../hardware/common/fixed_adder_tree.sv",
-        "../../../../hardware/common/fixed_adder_tree_layer.sv",
-        "../../../../hardware/common/fixed_mult.sv",
         "../../../../hardware/common/join2.sv",
     ]
     test_case = VerificationCase()
