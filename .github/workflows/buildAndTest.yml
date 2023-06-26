@@ -257,15 +257,16 @@ jobs:
           && sudo make install)
 
           pip3 install --user --upgrade pip
-          pip3 install onnx toml GitPython colorlog cocotb[bus] \
+          pip3 install onnx toml GitPython colorlog \
                        pytest pytorch-lightning transformers toml \
                        timm pytorch-nlp datasets IPython ipdb \
                        sentencepiece einops deepspeed pybind11 \
                        tabulate tensorboard hyperopt
+          pip3 install cocotb[bus]==1.8.0 
 
     - name: Hardware regression test 
       run: |
-          python3 bin/test-hardware.py -a
+          python3 scripts/test-hardware.py -a
 
     # -----------
     # Mase regression test 
