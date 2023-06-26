@@ -12,7 +12,7 @@ This repo contains the following directories:
 * `vagrant` - Vagrant box configurations  
 
 ## Overview
-![Alt text](./docs/overview.png)
+![Alt text](./docs/imgs/overview.png)
 
 ## Getting Started
 
