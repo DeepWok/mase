@@ -1,5 +1,6 @@
-pytorch-lightning
+lightning
 transformers
+accelerate
 toml
 timm
 pytorch-nlp
@@ -18,4 +19,4 @@ deepspeed
 pybind11
 tabulate
 tensorboard
-hyperopt
+optuna

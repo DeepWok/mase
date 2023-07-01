@@ -5,12 +5,12 @@ import torch.nn.functional as F
 
 # from ....graph.mase_tracer import mark_as_leaf_func
 from ..quantizers import (
+    block_fp_quantizer,
     block_minifloat_quantizer,
     integer_quantizer,
     log_quantizer,
+    minifloat_denorm_quantizer,
     minifloat_ieee_quantizer,
-    minifloat_simple_quantizer,
-    block_fp_quantizer,
 )
 
 
@@ -43,7 +43,7 @@ def get_output_bitwidth_relu_integer(config):
     }
 
 
-def relu_minifloat_simple(x, inplace=False, config=None):
+def relu_minifloat_denorm(x, inplace=False, config=None):
     bypass = config.get("bypass", False)
     if bypass:
         return F.relu(x, inplace=inplace)
@@ -55,7 +55,7 @@ def relu_minifloat_simple(x, inplace=False, config=None):
         )
 
         x_quantizer = partial(
-            minifloat_simple_quantizer,
+            minifloat_denorm_quantizer,
             width=x_width,
             exponent_width=x_exponent_width,
             exponent_bias=x_exponent_bias,

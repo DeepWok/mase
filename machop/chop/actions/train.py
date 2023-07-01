@@ -2,6 +2,8 @@ import logging
 import os
 
 import pytorch_lightning as pl
+from chop.plt_wrapper import get_model_wrapper
+from chop.tools.checkpoint_load import load_model
 from pytorch_lightning.callbacks import (
     DeviceStatsMonitor,
     LearningRateMonitor,
@@ -9,9 +11,6 @@ from pytorch_lightning.callbacks import (
 )
 from pytorch_lightning.loggers import TensorBoardLogger
 from pytorch_lightning.plugins.environments import SLURMEnvironment
-
-from chop.tools.checkpoint_load import load_model 
-from chop.plt_wrapper import get_model_wrapper
 
 logger = logging.getLogger(__name__)
 
@@ -43,11 +42,9 @@ def train(
             save_last=True,
         )
         tb_logger = TensorBoardLogger(save_dir=save_path, name="logs")
-        # gpu_usage_callback = DeviceStatsMonitor()
         lr_monitor_callback = LearningRateMonitor(logging_interval="step")
         plt_trainer_args["callbacks"] = [
             checkpoint_callback,
-            # gpu_usage_callback,
             lr_monitor_callback,
         ]
         plt_trainer_args["logger"] = tb_logger
@@ -73,13 +70,10 @@ def train(
     if load_name is not None:
         if isinstance(model, dict):
             model["model"] = load_model(
-                load_name=load_name, load_type=load_type, model=model["model"]
+                load_name, load_type=load_type, model=model["model"]
             )
-
         else:
-            model = load_model(
-                load_name=load_name, load_type=load_type, model=model
-            )
+            model = load_model(ckpt=load_name, load_type=load_type, model=model)
         logger.info(f"'{load_type}' checkpoint loaded before training")
 
     pl_model = wrapper_cls(

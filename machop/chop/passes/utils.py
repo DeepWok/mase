@@ -1,4 +1,5 @@
 import inspect
+import re
 from typing import Tuple
 
 import torch
@@ -14,6 +15,14 @@ def check_func(node, my_func):
 
 def isinstance_but_not_subclass(my_object, my_class):
     return my_object.__class__ is my_class
+
+
+def match_a_pattern(name: str, patterns: list[str]) -> str | None:
+    for pattern in patterns:
+        match = re.fullmatch(pattern, name)
+        if match:
+            return pattern
+    return None
 
 
 def get_parent_name(target: str) -> Tuple[str, str]:
@@ -72,4 +81,3 @@ def get_input_index(node, next_node):
     for i in range(0, arg_count):
         if next_node.meta.parameters["common"]["args"][f"data_in_{i}"]["from"] == node:
             return i
-

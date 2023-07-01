@@ -1,5 +1,5 @@
 # basics
-model = "toy"
+model = "toy-fn"
 dataset = "toy-tiny"
 
 # training
@@ -13,6 +13,10 @@ num_workers = 0
 num_devices = 1
 accelerator = "cpu"
 
+project = "toy-fn"
+# load_type = "mz"
+# load_name = "../mase_output/toy-fn/software/transformed_ckpts"
+
 [passes]
 
 [passes.quantize]
@@ -21,7 +25,7 @@ accelerator = "cpu"
 name = "block_fp"
 weight_width = 7
 weight_exponent_width = 8
-weight_exponent_bias = 255 
+weight_exponent_bias = 255
 weight_block_size = 8
 data_in_width = 7
 data_in_exponent_width = 8
@@ -38,7 +42,7 @@ bias_block_size = 8
 # name = "block_fp"
 # weight_width = 7
 # weight_exponent_width = 8
-# weight_exponent_bias = 255 
+# weight_exponent_bias = 255
 # weight_block_size = 8
 # data_in_width = 7
 # data_in_exponent_width = 8
@@ -58,10 +62,10 @@ block_size = 8
 [passes.quantize.seq_blocks_0]
 [passes.quantize.seq_blocks_0.config]
 name = "integer"
-weight_width = 12 
-weight_frac_width =10
-bias_width = 12 
-bias_frac_width =10
+weight_width = 12
+weight_frac_width = 10
+bias_width = 12
+bias_frac_width = 10
 data_in_width = 12
-data_in_frac_width =10
+data_in_frac_width = 10
 block_size = 8

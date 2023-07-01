@@ -18,6 +18,8 @@ class MaseMetadata:
     node for any static analysis or possible transformation. The metadata has a
     tree structure, e.g.
     - common
+      - mase_op -> str : the mase op of the node, e.g. placeholder, linear, relu
+      - mase_type -> str : the mase type of the node, e.g. module, builtin_func, module_related_func
       - args -> {}
          - $name : name of the arg
            - type : type of the arg, e.g. fixed point or float
@@ -30,7 +32,6 @@ class MaseMetadata:
            - precision : format of the type, e.g. (10, 5)
            - size : size of the result
     - software
-         - ???
     - hardware
       - is_implicit -> bool : whether the node is mapped on hardware or software annotation only
       - verilog_parameters -> {} : parameters need for customise the hardware module
@@ -39,7 +40,7 @@ class MaseMetadata:
       - interface_parameters -> {}
          - name : name of the parameters
            - storage : the hardware interface implemented, must be BRAM
-           - transpose : whetehr the data needs to be transposed before emitting
+           - transpose : whether the data needs to be transposed before emitting
       - dependence_files -> [] : the dependent files for the generated module
     ...
     """

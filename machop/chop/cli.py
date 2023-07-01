@@ -16,24 +16,25 @@ import ipdb
 import numpy as np
 import torch
 
+# TODO: Refactor Search
+# from chop.actions import train, test, validate, search, transform
+from chop.actions import test, train, transform, validate
+from chop.dataset import MyDataModule, available_datasets, get_dataset, get_dataset_info
+from chop.models import (
+    manual_nlp_models,
+    manual_vision_models,
+    model_map,
+    nlp_models,
+    vision_models,
+)
 
 # MASE imports
-from chop.tools import (
-    getLogger, post_parse_load_config, 
-    check_when_to_load_and_how_to_load,
-    load_model)
-
-from chop.dataset import get_dataset, get_dataset_info, MyDataModule, available_datasets
-from chop.models import (
-    model_map, nlp_models, manual_nlp_models, vision_models, manual_vision_models)
+from chop.tools import getLogger, load_model, post_parse_load_config
+from chop.tools.get_input import get_cf_args
 
 # TODO: This whole file needs refactoring
 # from chop.models.patched_nlp_models.custom_nlp_modules import get_custom_modify_sw_kwargs
 
-# TODO: Refactor Search
-# from chop.actions import train, test, validate, search, transform
-from chop.actions import train, test, validate, transform
-from chop.tools.get_input import get_dummy_inputs
 
 logger = getLogger("Chop")
 
@@ -70,6 +71,13 @@ class ChopCLI:
             help="Run in debug mode. Default=False",
         )
         parser.add_argument(
+            "--log-level",
+            dest="log_level",
+            default="info",
+            choices=["debug", "info", "warning", "error", "critical"],
+            help="The logging level. Default='info'. Note that this option is only effective when --debug is disabled.",
+        )
+        parser.add_argument(
             "--interactive",
             action="store_true",
             dest="is_interactive",
@@ -87,6 +95,7 @@ class ChopCLI:
         )
         parser.add_argument(
             "--load",
+            "--load-name",
             dest="load_name",
             default=None,
             help="The path to load the input model.",
@@ -94,15 +103,16 @@ class ChopCLI:
         parser.add_argument(
             "--load-type",
             dest="load_type",
-            default=None,
+            default="mz",
+            choices=["pt", "pl", "mz", "hf"],
             help=(
                 "The checkpoint type to be loaded. "
                 "If --load is not specified, --load-type is a don't-care, "
-                "Else if --load is specified, --load-type must be one of 'pt', 'pl', 'pkl', 'hf', "
-                "referring to pytorch model state dict, "
-                "pytorch lightning's LightningModule saved by Trainer's checkpoint callback, "
-                "pkl file saved by MASE's modify-sw, "
-                "and HuggingFace's checkpoint directory saved by 'save_pretrained'. Default=None"
+                "Else if --load is specified, --load-type must be one of 'pt', 'pl', 'mz', 'hf', "
+                "respectively representing pytorch model state dict, "
+                "pytorch lightning checkpoint ,"
+                "fx.GraphModule saved by Mase, "
+                "and HuggingFace's checkpoint directory saved by 'save_pretrained'. Default='mz'"
             ),
         )
         parser.add_argument(
@@ -117,7 +127,6 @@ class ChopCLI:
             default=None,
             help="The name of the project. Default='${mase-tools}/mase_output/${args.model}@${timestamp}'",
         )
-
 
         # args for actions
         ## Training
@@ -137,14 +146,15 @@ class ChopCLI:
             "--training-optimizer",
             dest="training_optimizer",
             default="adam",
+            choices=["adam", "sgd", "adamw"],  # TODO: add adafactor which saves gpu mem
             help="The name of the existing training optimizer for training. Default=Adam",
         )
         parser.add_argument(
             "--trainer-precision",
             dest="trainer_precision",
-            default=32,
-            type=int,
-            help="PyTorchLightning Trainer precision, 16 or 32. Default=32",
+            default="32",
+            choices=["16", "32", "64", "bf16"],
+            help="Trainer precision. Default='32'",
         )
         parser.add_argument(
             "--seed",
@@ -195,12 +205,20 @@ class ChopCLI:
             action="store_true",
             dest="is_pretrained",
             default=False,
-            help="Use pretrained model from HuggingFace. Default=False",
+            help="load pretrained checkpoint from HuggingFace/Torchvision when initialising models. Default=False",
         )
         parser.add_argument(
             "--task",
             dest="task",
             default="classification",
+            choices=[
+                "classification",
+                "cls",
+                "translation",
+                "tran",
+                "language_modeling",
+                "lm",
+            ],
             help="The task to perform. Default=classification",
         )
         parser.add_argument(
@@ -211,7 +229,7 @@ class ChopCLI:
             help="The maximum number of tokens. Default=None will use tokenizer.model_max_length",
         )
 
-        ## CPU/GPU setup for lightning
+        ## CPU/GPU setup
         parser.add_argument(
             "--cpu",
             dest="num_workers",
@@ -243,6 +261,9 @@ class ChopCLI:
             "--strategy",
             dest="strategy",
             default="ddp",
+            choices=[
+                "ddp",
+            ],
             help="The strategy type. Default=ddp",
         )
         parser.add_argument(
@@ -268,11 +289,12 @@ class ChopCLI:
             help="The number of FPGA devices. Default=1",
         )
 
+        ## Config from toml
         parser.add_argument(
             "--config",
             dest="config",
             default=None,
-            help="Args for quick development and testing.",
+            help="toml config file. Note that by default CLI args will override config file if additionally specified.",
         )
         parser.add_argument(
             "--force-config",
@@ -281,7 +303,6 @@ class ChopCLI:
             action="store_true",
             help="Force to use everything from config, not cli.",
         )
-
 
         return parser.parse_args()
 
@@ -293,9 +314,17 @@ class ChopCLI:
             logger.setLevel(logging.DEBUG)
             logger.debug("Enabled debug mode.")
         else:
-            logger.setLevel(logging.INFO)
-
-        logger.info(f"Arguments:\n{vars(args)}")
+            match args.log_level:
+                case "debug":
+                    logger.setLevel(logging.DEBUG)
+                case "info":
+                    logger.setLevel(logging.INFO)
+                case "warning":
+                    logger.setLevel(logging.WARNING)
+                case "error":
+                    logger.setLevel(logging.ERROR)
+                case "critical":
+                    logger.setLevel(logging.CRITICAL)
 
         # Initialise seeds
         random.seed(args.seed)
@@ -306,20 +335,10 @@ class ChopCLI:
 
         # Model specifications
         self.model = None
-        self.modified_model = None
         self.data_module = None
         self.info = None
 
         self.output_dir = self.output_dir_sw = self.output_dir_hw = None
-        self.when_to_load, self.how_to_load = check_when_to_load_and_how_to_load(
-            action=args.action,
-            is_pretrained=args.is_pretrained,
-            load_name=args.load_name,
-            load_type=args.load_type,
-        )
-        logger.debug(
-            f"when_to_load={self.when_to_load}, how_to_load={self.how_to_load}"
-        )
 
     # Debugging configuration
     def _excepthook(self, etype, evalue, etb):
@@ -329,7 +348,6 @@ class ChopCLI:
         for exc in [KeyboardInterrupt, FileNotFoundError]:
             if issubclass(etype, exc):
                 sys.exit(-1)
-        # pdb.post_mortem(etb)
         ipdb.post_mortem(etb)
 
     # Main process
@@ -337,7 +355,7 @@ class ChopCLI:
         if self.args.ls_target is not None:
             self.list_available()
             return
-        
+
         self.init_model_and_dataset()
         self.create_output_dir()
 
@@ -369,24 +387,23 @@ class ChopCLI:
     # Setup model and data for training
     def init_model_and_dataset(self):
         args = self.args
-        logger.info(
-            f"Loading DataModule of {args.dataset!r} for model {args.model!r}..."
-        )
         assert args.dataset, f"Dataset name (--dataset) not specified: {args.dataset!r}"
         assert args.model, f"Model name (--model) not specified: {args.model!r}"
 
+        logger.info(f"Initialising model {args.model!r}...")
         # Get dataset info
         dataset_info = get_dataset_info(args.dataset)
 
         # Get model
         model_inst_fn = model_map[args.model]
 
-        checkpoint = args.load_name if self.when_to_load == "init" else None
+        checkpoint = None
+        if args.load_name is not None and args.load_type == "hf":
+            checkpoint = args.load_name
+
         if args.model in nlp_models:
-            # *: here the model is a dict whose keys consist of "model", "tokenizer", "classifier"
-            # *: here the load name only works for HuggingFace model load name/ config load name
             if args.model in manual_nlp_models:
-                model = model_inst_fn(
+                model_dict = model_inst_fn(
                     name=args.model,
                     task=args.task,
                     info=dataset_info,
@@ -395,7 +412,7 @@ class ChopCLI:
                     config=args.custom_config,
                 )
             else:
-                model = model_inst_fn(
+                model_dict = model_inst_fn(
                     name=args.model,
                     task=args.task,
                     info=dataset_info,
@@ -405,23 +422,29 @@ class ChopCLI:
         elif args.model in vision_models:
             if args.model in manual_vision_models:
                 # create manual model from custom config
-                model = model_inst_fn(info=dataset_info, config=args.custom_config)
+                model_dict = model_inst_fn(info=dataset_info, config=args.custom_config)
             else:
-                model = model_inst_fn(info=dataset_info, pretrained=args.is_pretrained)
+                model_dict = model_inst_fn(
+                    info=dataset_info, pretrained=args.is_pretrained
+                )
         else:
             raise NotImplementedError(f"Unknown model {args.model!r}.")
-        logger.info("Model is created")
+
         # Get data module
+        logger.info(f"Initialising dataset {args.dataset!r}...")
         data_module = MyDataModule(
             model_name=args.model,
             dataset_name=args.dataset,
             batch_size=args.batch_size,
             workers=args.num_workers,
-            tokenizer=model["tokenizer"] if args.model in nlp_models else None,
+            tokenizer=model_dict["tokenizer"] if args.model in nlp_models else None,
             max_token_len=args.max_token_len,
         )
-        logger.info("DataModule is created")
-        self.model, self.data_module, self.info = model, data_module, dataset_info
+        self.model, self.data_module, self.info = (
+            model_dict,
+            data_module,
+            dataset_info,
+        )
 
     def create_output_dir(self):
         args = self.args
@@ -446,10 +469,8 @@ class ChopCLI:
         self.output_dir = os.path.join(project_dir, project)
         self.output_dir_sw = os.path.join(self.output_dir, "software")
         self.output_dir_hw = os.path.join(self.output_dir, "hardware")
-        if not os.path.isdir(self.output_dir_sw):
-            os.makedirs(self.output_dir_sw)
-        if not os.path.isdir(self.output_dir_hw):
-            os.makedirs(self.output_dir_hw)
+        os.makedirs(self.output_dir_sw, exist_ok=True)
+        os.makedirs(self.output_dir_hw, exist_ok=True)
         if args.project_dir is None or args.project is None:
             logger.warning(f"Project will be created at {self.output_dir}")
         else:
@@ -464,31 +485,18 @@ class ChopCLI:
 
         transform_params = {
             "model_name": args.model,
-            "model": self.model,
+            "model": self.model["model"]
+            if isinstance(self.model, dict)
+            else self.model,
             "info": self.info,
             "task": args.task,
             "data_module": self.data_module,
             "config": args.config,
-            "save_path": os.path.join(self.output_dir_sw, "transformed_checkpoints"),
+            "save_dir": os.path.join(self.output_dir_sw, "transformed_ckpts"),
             "load_name": args.load_name,
-            "load_type": self.how_to_load,
+            "load_type": args.load_type,
         }
         transform(**transform_params)
-
-        # Modifier.create_empty_config_template(
-        #     model=self.model["model"] if args.model in nlp_models else self.model,
-        #     dummy_inputs=dummy_inputs,
-        #     save_path=os.path.join(
-        #         self.output_dir_sw, "modify-sw", "modify-sw_template.toml"
-        #     ),
-        # )
-        # m = Modifier(**kwargs)
-        # m.modify()
-        # if args.model in nlp_models:
-        #     self.model["model"] = m.graph_module
-        # else:
-        #     self.model = m.graph_module
-        # logger.info("Modify-sw is completed")
 
     def train(self):
         args = self.args
@@ -506,7 +514,9 @@ class ChopCLI:
             "accumulate_grad_batches": args.accumulate_grad_batches,
         }
 
-        load_name = args.load_name if self.when_to_load == "train_val_or_test" else None
+        load_name = None
+        if args.load_name is not None and args.load_type in ["pt", "pl", "mz"]:
+            load_name = args.load_name
         train_params = {
             "model_name": args.model,
             "model": self.model,
@@ -517,9 +527,9 @@ class ChopCLI:
             "learning_rate": args.learning_rate,
             "plt_trainer_args": plt_trainer_args,
             "auto_requeue": args.is_to_auto_requeue,
-            "save_path": os.path.join(self.output_dir_sw, "checkpoints"),
+            "save_path": os.path.join(self.output_dir_sw, "training_ckpts"),
             "load_name": load_name,
-            "load_type": self.how_to_load,
+            "load_type": args.load_type,
         }
         train(**train_params)
         logger.info("Training is completed")

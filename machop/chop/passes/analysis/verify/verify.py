@@ -1,24 +1,20 @@
 import logging
+
 from chop.passes.utils import vf
 
-
 from .common_metadata_layers import (
+    verify_common_metadata_flatten,
     verify_common_metadata_general,
     verify_common_metadata_linear,
-    verify_common_metadata_relu,
-    verify_common_metadata_placeholder,
     verify_common_metadata_output,
-    verify_common_metadata_flatten,
+    verify_common_metadata_placeholder,
+    verify_common_metadata_relu,
 )
-from .hardware_metadata_layers import (
+from .hardware_metadata_layers import (  # verify_hardware_metadata_placeholder,; verify_hardware_metadata_output,; verify_hardware_metadata_flatten,
     verify_hardware_metadata_general,
     verify_hardware_metadata_linear,
     verify_hardware_metadata_relu,
-    # verify_hardware_metadata_placeholder,
-    # verify_hardware_metadata_output,
-    # verify_hardware_metadata_flatten,
 )
-
 
 logger = logging.getLogger(__name__)
 
@@ -31,18 +27,20 @@ def verify_node_common_metadata(node):
     * TODO
     """
     verify_common_metadata_general(node.meta)
-    if node.mase_op == "placeholder":
+    if node.meta.parameters["common"]["mase_op"] == "placeholder":
         verify_common_metadata_placeholder(node.meta)
-    elif node.mase_op == "output":
+    elif node.meta.parameters["common"]["mase_op"] == "output":
         verify_common_metadata_output(node.meta)
-    elif node.mase_op == "linear":
+    elif node.meta.parameters["common"]["mase_op"] == "linear":
         verify_common_metadata_linear(node.meta)
-    elif node.mase_op == "relu":
+    elif node.meta.parameters["common"]["mase_op"] == "relu":
         verify_common_metadata_relu(node.meta)
-    elif node.mase_op == "flatten":
+    elif node.meta.parameters["common"]["mase_op"] == "flatten":
         verify_common_metadata_flatten(node.meta)
     else:
-        raise ValueError(f"Unknown mase op: {node.mase_op}")
+        raise ValueError(
+            "Unknown mase op: {}".format(node.meta.parameters["common"]["mase_op"])
+        )
 
 
 def verify_common_metadata_analysis_pass(graph):
@@ -103,9 +101,9 @@ def verify_node_hardware_metadata(node):
     * TODO
     """
     verify_hardware_metadata_general(node.meta)
-    if node.mase_op == "linear":
+    if node.meta.parameters["common"]["mase_op"] == "linear":
         verify_hardware_metadata_linear(node.meta)
-    elif node.mase_op == "relu":
+    elif node.meta.parameters["common"]["mase_op"] == "relu":
         verify_hardware_metadata_relu(node.meta)
     else:
         raise ValueError(f"Unknown mase op: {node.op}")

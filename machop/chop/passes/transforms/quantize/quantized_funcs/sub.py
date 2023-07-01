@@ -2,20 +2,20 @@ from functools import partial
 
 import torch
 
-# TODO: Previoulsy we use tracer to mark custom ops, 
-# which are now already defined in MaseGraph. 
-# This process should be decrepated in quantizer
-# from ....graph.mase_tracer import mark_as_leaf_func
-
 from ..quantizers import (
+    block_fp_quantizer,
     block_log_quantizer,
     block_minifloat_quantizer,
     integer_quantizer,
     log_quantizer,
+    minifloat_denorm_quantizer,
     minifloat_ieee_quantizer,
-    minifloat_simple_quantizer,
-    block_fp_quantizer,
 )
+
+# TODO: Previoulsy we use tracer to mark custom ops,
+# which are now already defined in MaseGraph.
+# This process should be decrepated in quantizer
+# from ....graph.mase_tracer import mark_as_leaf_func
 
 
 # @mark_as_leaf_func
@@ -49,7 +49,7 @@ def get_output_bitwidth_sub_integer(config):
 
 
 # @mark_as_leaf_func
-def sub_minifloat_simple(x, y, config):
+def sub_minifloat_denorm(x, y, config):
     bypass = config.get("bypass", False)
     if bypass:
         return x - y
@@ -61,7 +61,7 @@ def sub_minifloat_simple(x, y, config):
         )
 
         x_quantizer = partial(
-            minifloat_simple_quantizer,
+            minifloat_denorm_quantizer,
             width=x_width,
             exponent_width=x_exponent_width,
             exponent_bias=x_exponent_bias,

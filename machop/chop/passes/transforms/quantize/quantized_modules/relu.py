@@ -5,12 +5,12 @@ from torch import Tensor
 from torch.nn import functional as F
 
 from ..quantizers import (
+    block_fp_quantizer,
     block_minifloat_quantizer,
     integer_quantizer,
     log_quantizer,
+    minifloat_denorm_quantizer,
     minifloat_ieee_quantizer,
-    minifloat_simple_quantizer,
-    block_fp_quantizer,
 )
 from .utils import extract_required_config
 
@@ -64,7 +64,7 @@ class ReLUInteger(_ReLUBase):
         }
 
 
-class ReLUMinifloatSimple(_ReLUBase):
+class ReLUMinifloatDenorm(_ReLUBase):
     bypass = None
     _required_config_keys = (
         "name",
@@ -85,7 +85,7 @@ class ReLUMinifloatSimple(_ReLUBase):
             config["data_in_exponent_bias"],
         )
         self.x_quantizer = partial(
-            minifloat_simple_quantizer,
+            minifloat_denorm_quantizer,
             width=x_width,
             exponent_width=x_exponent_width,
             exponent_bias=x_exponent_bias,

@@ -1,111 +1,126 @@
 import logging
+
 import toml
 import torch
-
-from torch import nn
-from tabulate import tabulate
-
-
-from chop.passes.metadata.mase_metadata import MaseMetadata
+import torch.fx as fx
 from chop.passes.analysis.utils import (
     get_input_nodes,
     get_output_nodes,
     match_and_filter,
 )
+from chop.passes.common import MASE_BUILTIN_FUNCS, MASE_MODULE_RELATED_FUNCS
+from chop.passes.metadata.mase_metadata import MaseMetadata
+from tabulate import tabulate
+from torch import nn
+
 from .common_metadata_layers import (
-    analyse_common_parameters_placeholder,
-    analyse_common_parameters_output,
-    analyse_common_parameters_linear,
     analyse_common_parameters_flatten,
+    analyse_common_parameters_linear,
+    analyse_common_parameters_output,
+    analyse_common_parameters_placeholder,
     analyse_common_parameters_relu,
 )
-from chop.passes.common import MASE_BUILDIN_FUNCS, MASE_MODULE_RELATED_FUNCS
 
 logger = logging.getLogger(__name__)
 
 
 def graph_iterator_for_mase_ops(graph):
     for node in graph.fx_graph.nodes:
+        node: fx.Node
         if node.op == "call_module":
             module_name = node.target
             module = graph.modules[module_name]
-            node.mase_type = "module"
-            if isinstance(module, nn.Linear):
-                node.mase_op = "linear"
+            node.meta.parameters["common"]["mase_type"] = "module"
+            if isinstance(module, nn.AdaptiveAvgPool1d):
+                node.meta.parameters["common"]["mase_op"] = "adaptiveavgpool1d"
+            elif isinstance(module, nn.AdaptiveAvgPool2d):
+                node.meta.parameters["common"]["mase_op"] = "adaptiveavgpool2d"
+            elif isinstance(module, nn.AdaptiveMaxPool1d):
+                node.meta.parameters["common"]["mase_op"] = "adaptivemaxpool1d"
+            elif isinstance(module, nn.AdaptiveMaxPool2d):
+                node.meta.parameters["common"]["mase_op"] = "adaptivemaxpool2d"
+            elif isinstance(module, nn.AvgPool1d):
+                node.meta.parameters["common"]["mase_op"] = "avgpool1d"
+            elif isinstance(module, nn.AvgPool2d):
+                node.meta.parameters["common"]["mase_op"] = "avgpool2d"
+            elif isinstance(module, nn.BatchNorm1d):
+                node.meta.parameters["common"]["mase_op"] = "batchnorm1d"
+            elif isinstance(module, nn.BatchNorm2d):
+                node.meta.parameters["common"]["mase_op"] = "batchnorm2d"
             elif isinstance(module, nn.Conv2d):
-                node.mase_op = "conv2d"
+                node.meta.parameters["common"]["mase_op"] = "conv2d"
             elif isinstance(module, nn.Conv1d):
-                node.mase_op = "conv1d"
+                node.meta.parameters["common"]["mase_op"] = "conv1d"
+            elif isinstance(module, nn.LayerNorm):
+                node.meta.parameters["common"]["mase_op"] = "layernorm"
+            elif isinstance(module, nn.Linear):
+                node.meta.parameters["common"]["mase_op"] = "linear"
+            elif isinstance(module, nn.MaxPool1d):
+                node.meta.parameters["common"]["mase_op"] = "maxpool1d"
+            elif isinstance(module, nn.MaxPool2d):
+                node.meta.parameters["common"]["mase_op"] = "maxpool2d"
             elif isinstance(module, nn.ReLU):
-                node.mase_op = "relu"
+                node.meta.parameters["common"]["mase_op"] = "relu"
             else:
                 raise ValueError(f"Unknown node type: {node.target}")
 
         elif node.op == "call_function":
             # we might have things like mult_1, add_2, so we need to match the pattern
             matching, matched_name = match_and_filter(
-                node.name, MASE_BUILDIN_FUNCS + MASE_MODULE_RELATED_FUNCS
+                node.name, MASE_BUILTIN_FUNCS + MASE_MODULE_RELATED_FUNCS
             )
             if not matching:
                 raise ValueError(f"Unknown call_function node: {node.target}")
-            if matched_name in MASE_BUILDIN_FUNCS:
+            if matched_name in MASE_BUILTIN_FUNCS:
                 # if node.target in ["mul", "sub", "add", torch.flatten]:
-                node.mase_type = "builtin_funcs"
-                node.mase_op = matched_name
+                node.meta.parameters["common"]["mase_type"] = "builtin_func"
+                node.meta.parameters["common"]["mase_op"] = matched_name
             # TODO: we might need to add more functions here
             elif matched_name in MASE_MODULE_RELATED_FUNCS:
-                node.mase_type = "module_related_funcs"
-                node.mase_op = matched_name
+                node.meta.parameters["common"]["mase_type"] = "module_related_func"
+                node.meta.parameters["common"]["mase_op"] = matched_name
             else:
                 raise ValueError(f"Unknown node type: {node.target}")
 
         elif node.op == "call_method":
             if node.name in ["size", "view"]:
-                node.mase_type = "implicit_funcs"
-                node.mase_op = node.target
+                node.meta.parameters["common"]["mase_type"] = "implicit_func"
+                node.meta.parameters["common"]["mase_op"] = node.target
             else:
                 raise ValueError(f"Unknown node type: {node.name}")
 
         elif node.op == "placeholder":
-            node.mase_type = "placeholder"
-            node.mase_op = "placeholder"
+            node.meta.parameters["common"]["mase_type"] = "placeholder"
+            node.meta.parameters["common"]["mase_op"] = "placeholder"
 
         elif node.op == "get_attr":
-            node.mase_type = "get_attr"
+            node.meta.parameters["common"]["mase_type"] = "get_attr"
             raise NotImplementedError(f"Unknown node type: {node.target}")
 
         elif node.op == "output":
-            node.mase_type = "output"
-            node.mase_op = "output"
+            node.meta.parameters["common"]["mase_type"] = "output"
+            node.meta.parameters["common"]["mase_op"] = "output"
 
         else:
             raise ValueError(f"Unknown node type: {node.op}")
     return graph
 
 
-def graph_iterator_inspect_node(graph):
-    headers = ["Node name", "Fx Node op", "Mase type", "Mase op"]
-    rows = []
-    for node in graph.fx_graph.nodes:
-        rows.append([node.name, node.op, node.mase_type, node.mase_op])
-    logger.debug("Inspecting graph [add_common_metadata_analysis_pass]")
-    logger.debug(tabulate(rows, headers=headers))
-    return graph
-
-
 def analysis_common_parameters(node, dummy_in):
-    if node.mase_op == "placeholder":
+    if node.meta.parameters["common"]["mase_op"] == "placeholder":
         node.meta = analyse_common_parameters_placeholder(node.meta, dummy_in)
-    elif node.mase_op == "output":
+    elif node.meta.parameters["common"]["mase_op"] == "output":
         node.meta = analyse_common_parameters_output(node.meta)
-    elif node.mase_op == "linear":
+    elif node.meta.parameters["common"]["mase_op"] == "linear":
         node.meta = analyse_common_parameters_linear(node.meta)
-    elif node.mase_op == "relu":
+    elif node.meta.parameters["common"]["mase_op"] == "relu":
         node.meta = analyse_common_parameters_relu(node.meta)
-    elif node.mase_op == "flatten":
+    elif node.meta.parameters["common"]["mase_op"] == "flatten":
         node.meta = analyse_common_parameters_flatten(node.meta)
     else:
-        raise ValueError(f"Unknown mase op: {node.mase_op}")
+        raise ValueError(
+            "Unknown mase op: {}".format(node.meta.parameters["common"]["mase_op"])
+        )
 
     # Pass the output shape to the inputs of the next node
     for next_node, _ in node.users.items():
@@ -190,6 +205,5 @@ def add_common_metadata_analysis_pass(graph, pass_args=None):
     graph.nodes_in = get_input_nodes(graph.fx_graph)
     graph.nodes_out = get_output_nodes(graph.fx_graph)
     graph = graph_iterator_for_mase_ops(graph)
-    graph = graph_iterator_for_metadata(graph, pass_args)
-    graph = graph_iterator_inspect_node(graph)
+    # graph = graph_iterator_for_metadata(graph, pass_args)
     return graph

@@ -4,14 +4,17 @@ from math import ceil, log2
 from typing import Union
 
 import torch
+from chop.passes.transforms.quantize.quantizers import (
+    block_fp_quantizer,
+    block_log_quantizer,
+    block_minifloat_quantizer,
+    integer_quantizer,
+    log_quantizer,
+    minifloat_denorm_quantizer,
+    minifloat_ieee_quantizer,
+)
 from torch import Tensor
 from torch.nn.common_types import _size_1_t
-
-from chop.passes.transforms.quantize.quantizers import (
-    log_quantizer, block_log_quantizer, 
-    minifloat_simple_quantizer, minifloat_ieee_quantizer, block_minifloat_quantizer, 
-    block_fp_quantizer, integer_quantizer
-)
 
 from .utils import extract_required_config
 
@@ -148,7 +151,7 @@ class Conv1dInteger(_Conv1dBase):
         return o_bitwidth
 
 
-class Conv1dMinifloatSimple(_Conv1dBase):
+class Conv1dMinifloatDenorm(_Conv1dBase):
     _required_config_keys = (
         "name",
         "weight_width",
@@ -213,14 +216,14 @@ class Conv1dMinifloatSimple(_Conv1dBase):
         )
 
         self.w_quantizer = partial(
-            minifloat_simple_quantizer,
+            minifloat_denorm_quantizer,
             width=w_width,
             exponent_width=w_exponent_width,
             exponent_bias=w_exponent_bias,
         )
 
         self.x_quantizer = partial(
-            minifloat_simple_quantizer,
+            minifloat_denorm_quantizer,
             width=x_width,
             exponent_width=x_exponent_width,
             exponent_bias=x_exponent_bias,
@@ -230,7 +233,7 @@ class Conv1dMinifloatSimple(_Conv1dBase):
             self.b_quantizer = self.w_quantizer
         else:
             self.b_quantizer = partial(
-                minifloat_simple_quantizer,
+                minifloat_denorm_quantizer,
                 width=b_width,
                 exponent_width=b_exponent_width,
                 exponent_bias=b_exponent_bias,

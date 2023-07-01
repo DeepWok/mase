@@ -5,7 +5,7 @@
 | name | paper | model@dataset | blocking dimension | representation | extra |
 | --- | --- | --- | --- | --- | --- |
 | `integer_quantizer(x, width, frac_width)` | - | - | - | $(i/2^{f})$, <br> signed int $i$, the number of fractional bits $f$ | signed fixed-point number |
-| `minifloat_simple_quantizer(x, width, exponent_width, exponent_bias)` | - | - | - | $(-1)^s 2^e m$, <br> exponent $e$, mantissa $m$ | no implicit leading bit in mantissa|
+| `minifloat_denorm_quantizer(x, width, exponent_width, exponent_bias)` | - | - | - | $(-1)^s 2^e m$, <br> exponent $e$, mantissa $m$ | no implicit leading bit in mantissa|
 | `minifloat_ieee_quantizer(x, width, exponent_width, exponent_bias)` | - | - | - | $(-1)^s 2^e m'$, <br> normal: $m'=1.0+m$, subnormal: $m'=m$ | an implicit leading bit in mantissa |
 | `log_quantizer(x, width, exponent_bias)` | [CNNs using Logarithmic Data Representation](http://arxiv.org/abs/1603.01025) | VGG16@CIFAR10, ALEXNET@CIFAR10 | - | $(-1)^s 2^e$ | - |
 | `msfp_quatizer(x, width, exponent_width, exponent_bias, block_size)`| [Microsoft MSFP](https://proceedings.neurips.cc/paper/2020/hash/747e32ab0fea7fbd2ad9ec03daa3f840-Abstract.html) | CNNs, RNNs, <br> Transformers (BERT@MRPC, BERT@SQuAD1.1, BERT@SQuADv2) | Linear matrix: tiles along matrix row, <br> Conv2D: tiles along channel depth | $2^{e_{shared}}[(-1)^{s_1} m_1, (-1)^{s_2} m_2, \dots]$ |
