@@ -60,7 +60,8 @@ def get_nlp_model(name, task, info, checkpoint=None, pretrained=True):
     ]:
         raise ValueError("task must be a valid value for NLP models")
 
-    num_classes = info["num_classes"]
+    if task in ["classification", "cls"]:
+        num_classes = info["num_classes"]
     tokenizer = AutoTokenizer.from_pretrained(
         name, cache_dir=os.path.abspath("./cache/tokenizer_cache_dir"), return_dict=True
     )

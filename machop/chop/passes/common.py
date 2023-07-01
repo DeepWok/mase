@@ -1,8 +1,8 @@
 MASE_TYPES = [
     "module",
-    "module_related_funcs",
-    "builtin_funcs",
-    "implicit_funcs",
+    "module_related_func",
+    "builtin_func",
+    "implicit_func",
     "placeholder",
     "get_attr",
     "output",
@@ -11,8 +11,31 @@ MASE_TYPES = [
 
 MASE_IMPLICIT_FUNCS = ["size", "view"]
 MASE_MODULE_RELATED_FUNCS = ["relu"]
-MASE_MODULE = ["linear", "conv2d", "conv1d"]
-MASE_BUILDIN_FUNCS = ["mul", "sub", "add", "flatten"]
+MASE_MODULES = [
+    "adaptiveavgpool1d",
+    "adaptiveavgpool2d",
+    "adaptivemaxpool1d",
+    "adaptivemaxpool2d",
+    "avgpool1d",
+    "avgpool2d",
+    "batchnorm1d",
+    "batchnorm2d",
+    "conv1d",
+    "conv2d",
+    "layernorm",
+    "linear",
+    "maxpool1d",
+    "maxpool2d",
+    "relu",
+]
+MASE_BUILTIN_FUNCS = [
+    "mul",
+    "sub",
+    "add",
+    "flatten",
+    "matmul",
+    "bmm",
+]
 
 
 MASE_TYPE_MAP = {
@@ -23,22 +46,22 @@ MASE_TYPE_MAP = {
         "type": "module",
     },
     "relu": {
-        "type": ("module", "module_related_funcs"),
+        "type": ("module", "module_related_func"),
     },
     "mul": {
-        "type": "builtin_funcs",
+        "type": "builtin_func",
     },
     "sub": {
-        "type": "builtin_funcs",
+        "type": "builtin_func",
     },
     "add": {
-        "type": "builtin_funcs",
+        "type": "builtin_func",
     },
     "size": {
-        "type": "implicit_funcs",
+        "type": "implicit_func",
     },
     "view": {
-        "type": "implicit_funcs",
+        "type": "implicit_func",
     },
     "placeholder": {
         "type": "placeholder",

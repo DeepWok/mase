@@ -1,5 +1,11 @@
 import inspect
-from chop.models import nlp_models, patched_nlp_models, patched_model_cls_to_required_input_args, vision_models
+
+from chop.models import (
+    nlp_models,
+    patched_model_cls_to_required_input_args,
+    patched_nlp_models,
+    vision_models,
+)
 
 
 def _get_default_args(func):
@@ -11,9 +17,9 @@ def _get_default_args(func):
     }
 
 
-def get_dummy_inputs(model_name: str, task: str, model):
+def get_cf_args(model_name: str, task: str, model):
     default_forward_kwargs = _get_default_args(model.forward)
-    dummy_inputs = {}
+    cf_args = {}
     if (
         model_name in patched_nlp_models
         and type(model) in patched_model_cls_to_required_input_args
@@ -21,7 +27,7 @@ def get_dummy_inputs(model_name: str, task: str, model):
         required_input_args = patched_model_cls_to_required_input_args[type(model)]
         for required_input_arg in required_input_args:
             default_forward_kwargs.pop(required_input_arg)
-        dummy_inputs = default_forward_kwargs
+        cf_args = default_forward_kwargs
     elif model_name in patched_nlp_models or model_name in nlp_models:
         if task in ["cls", "classification"]:
             required_input_args = ["input_ids", "attention_mask"]
@@ -38,11 +44,10 @@ def get_dummy_inputs(model_name: str, task: str, model):
             ]
         for required_input_arg in required_input_args:
             default_forward_kwargs.pop(required_input_arg)
-        dummy_inputs = default_forward_kwargs
+        cf_args = default_forward_kwargs
     elif model_name in vision_models:
         # Currently the only input to vision model is a Tensor x
-        dummy_inputs = {}
+        cf_args = {}
     else:
-        import pdb; pdb.set_trace()
         raise RuntimeError(f"Unsupported model+task: {model_name}+{task}")
-    return dummy_inputs
+    return cf_args

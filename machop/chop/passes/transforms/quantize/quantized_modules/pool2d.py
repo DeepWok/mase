@@ -8,10 +8,10 @@ from torch import Tensor
 from torch.nn.common_types import _size_2_t
 
 from ..quantizers import (
-    integer_quantizer,
-    minifloat_ieee_quantizer,
-    minifloat_simple_quantizer,
     block_fp_quantizer,
+    integer_quantizer,
+    minifloat_denorm_quantizer,
+    minifloat_ieee_quantizer,
 )
 from .utils import extract_required_config
 
@@ -127,7 +127,6 @@ class _AdaptiveAvgPool2dBase(torch.nn.AdaptiveAvgPool2d):
             return F.avg_pool2d(x, **pool2d_kwargs)
 
     def _get_pool2d_kwargs(self, x_shape):
-
         h_in_new = ceil(x_shape[-2] / self.output_size[0]) * self.output_size[0]
         w_in_new = ceil(x_shape[-1] / self.output_size[1]) * self.output_size[1]
         f_padding = (0, h_in_new - x_shape[-2], 0, w_in_new - x_shape[-1])

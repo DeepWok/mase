@@ -5,12 +5,12 @@ import torch
 
 # from ....graph.mase_tracer import mark_as_leaf_func
 from ..quantizers import (
+    block_fp_quantizer,
     block_minifloat_quantizer,
     integer_quantizer,
     log_quantizer,
+    minifloat_denorm_quantizer,
     minifloat_ieee_quantizer,
-    minifloat_simple_quantizer,
-    block_fp_quantizer,
 )
 
 # PyTorch has torch.matmul and torch.bmm for matrix multiplication
@@ -46,7 +46,7 @@ def construct_essential_config_generic_matmul_integer(config):
     }
 
 
-def generic_matmul_minifloat_simple(x, y, config, style="matmul"):
+def generic_matmul_minifloat_denorm(x, y, config, style="matmul"):
     bypass = config.get("bypass", False)
     matmul = matmul_mapping[style]
     if bypass:
@@ -64,13 +64,13 @@ def generic_matmul_minifloat_simple(x, y, config, style="matmul"):
         )
 
         x_quantizer = partial(
-            minifloat_simple_quantizer,
+            minifloat_denorm_quantizer,
             width=x_width,
             exponent_width=x_exponent_width,
             exponent_bias=x_exponent_bias,
         )
         y_quantizer = partial(
-            minifloat_simple_quantizer,
+            minifloat_denorm_quantizer,
             width=y_width,
             exponent_width=y_exponent_width,
             exponent_bias=y_exponent_bias,
@@ -257,8 +257,8 @@ def matmul_integer(x, y, config):
     return generic_matmul_integer(x, y, config, "matmul")
 
 
-def matmul_minifloat_simple(x, y, config):
-    return generic_matmul_minifloat_simple(x, y, config, "matmul")
+def matmul_minifloat_denorm(x, y, config):
+    return generic_matmul_minifloat_denorm(x, y, config, "matmul")
 
 
 def matmul_minifloat_ieee(x, y, config):
@@ -296,8 +296,8 @@ def get_output_bitwidth_bmm_integer(config, x_shape):
     return o_bitwidth
 
 
-def bmm_minifloat_simple(x, y, config):
-    return generic_matmul_minifloat_simple(x, y, config, "bmm")
+def bmm_minifloat_denorm(x, y, config):
+    return generic_matmul_minifloat_denorm(x, y, config, "bmm")
 
 
 def bmm_minifloat_ieee(x, y, config):

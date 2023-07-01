@@ -1,14 +1,11 @@
 import torch
-
 from numpy import ndarray
 from torch import Tensor
 
-from .utils import my_clamp, my_round 
+from .utils import my_clamp, my_round
 
 
-
-
-def minifloat_simple_quantizer(
+def minifloat_denorm_quantizer(
     x: Tensor,
     width: int,
     exponent_width: int,
@@ -67,9 +64,9 @@ def minifloat_simple_quantizer(
     # fmt: off
     # this `is_close_to_0` helps the grad keeps 1 if input x is 0, or the zero-initialized value will be trapped in 0
     is_close_to_0 = torch.isclose(value, torch.tensor([0.0], dtype=value.dtype, device=value.device))
-    minifloat_simple_x = (~is_close_to_0)*(sign*(2**exponent)*mantissa) + is_close_to_0*x
+    minifloat_denorm_x = (~is_close_to_0)*(sign*(2**exponent)*mantissa) + is_close_to_0*x
     # fmt: on
-    return minifloat_simple_x
+    return minifloat_denorm_x
 
 
 def minifloat_ieee_quantizer(

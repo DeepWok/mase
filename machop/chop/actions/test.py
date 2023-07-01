@@ -3,13 +3,12 @@ import os
 import pickle
 
 import pytorch_lightning as pl
+from chop.plt_wrapper import get_model_wrapper
+from chop.tools.checkpoint_load import load_model
 from pytorch_lightning.callbacks import DeviceStatsMonitor
 from pytorch_lightning.loggers import TensorBoardLogger
 from pytorch_lightning.plugins.environments import SLURMEnvironment
 from pytorch_lightning.strategies.deepspeed import DeepSpeedStrategy
-
-from chop.tools.checkpoint_load import load_model 
-from chop.plt_wrapper import get_model_wrapper
 
 logger = logging.getLogger(__name__)
 
@@ -44,33 +43,15 @@ def test(
         plugins = None
     plt_trainer_args["plugins"] = plugins
 
-    # Check optimizer
-    if plt_trainer_args["strategy"] in [
-        "deepspeed_stage_3",
-        "deepspeed_stage_3_offload",
-    ]:
-        assert optimizer in [
-            "FusedAdam",
-            "fused_adam",
-        ], "optimizer should be 'fused_adam' given --strategy={}".format(
-            plt_trainer_args["strategy"]
-        )
-    if plt_trainer_args["strategy"] == "deepspeed_stage_3_offload":
-        plt_trainer_args["strategy"] = DeepSpeedStrategy(
-            stage=3, offload_optimizer=True, offload_parameters=True
-        )
-
     wrapper_cls = get_model_wrapper(model_name, task)
 
     if load_name is not None:
         if isinstance(model, dict):
             model["model"] = load_model(
-                load_name=load_name, load_type=load_type, model=model["model"]
+                load_name, load_type=load_type, model=model["model"]
             )
         else:
-            model = load_model(
-                load_name=load_name, load_type=load_type, model=model
-            )
+            model = load_model(load_name, load_type=load_type, model=model)
     plt_model = wrapper_cls(
         model, info=info, learning_rate=learning_rate, optimizer=optimizer
     )
@@ -90,7 +71,3 @@ def test(
         raise RuntimeError(
             "Cannot run --test-sw because both the test dataset and pred dataset are None."
         )
-
-
-def test_deepspeed():
-    pass

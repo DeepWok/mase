@@ -1,0 +1,52 @@
+# basics
+model = "resnet18"
+dataset = "cifar10"
+
+# training
+training_optimizer = "adamw"
+learning_rate = 1e-5
+max_epochs = 10
+batch_size = 32
+# torch lightning
+task = "classification"
+num_workers = 0
+num_devices = 1
+accelerator = "cpu"
+# logging
+project_dir = "../mase_output"
+project = "resnet18_cifar10"
+
+# load
+load_name = "../mase_output/resnet18_cifar10/software/transformed_ckpts"
+load_type = "mz"
+
+[cf_args]
+
+[passes]
+
+[passes.quantize]
+by = "type"
+
+[passes.quantize.default.config]
+name = "NA"
+
+[passes.quantize.conv2d.config]
+name = "integer"
+data_in_width = 8
+data_in_frac_width = 4
+weight_width = 8
+weight_frac_width = 9
+bias_width = 8
+bias_frac_width = 9
+
+[passes.quantize.linear.config]
+name = "minifloat_ieee"
+weight_width = 8
+weight_exponent_width = 4
+weight_exponent_bias = "NA"
+data_in_width = 8
+data_in_exponent_width = 4
+data_in_exponent_bias = "NA"
+bias_width = 8
+bias_exponent_width = 4
+bias_exponent_bias = "NA"

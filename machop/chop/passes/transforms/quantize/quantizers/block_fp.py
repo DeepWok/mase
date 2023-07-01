@@ -1,8 +1,8 @@
+from typing import List, Tuple, Union
 
 import torch
 from torch import Tensor
 
-from typing import List, Tuple, Union
 from .utils import block, my_clamp, my_round, unblock
 
 
@@ -44,7 +44,7 @@ def block_fp_quantizer(
         per_block_max = torch.ones_like(per_block_max)
     else:
         per_block_max[per_block_max == 0] = per_block_max[per_block_max != 0].min()
-    # minifloat_simple_quantizer on each block over which a exponent is shared
+    # minifloat_denorm_quantizer on each block over which a exponent is shared
     mantissa_bits = width - 1
     if exponent_bias in (None, "none", "None"):
         exponent_bias = 2 ** (exponent_width - 1) - 1

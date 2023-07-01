@@ -7,12 +7,12 @@ from torch import Tensor
 from torch.nn import functional as F
 
 from ..quantizers import (
+    block_fp_quantizer,
     block_minifloat_quantizer,
     integer_quantizer,
     log_quantizer,
+    minifloat_denorm_quantizer,
     minifloat_ieee_quantizer,
-    minifloat_simple_quantizer,
-    block_fp_quantizer,
 )
 from .utils import extract_required_config
 
@@ -134,7 +134,7 @@ class LinearInteger(_LinearBase):
         return o_bitwidth
 
 
-class LinearMinifloatSimple(_LinearBase):
+class LinearMinifloatDenorm(_LinearBase):
     _required_config_keys = (
         "name",
         "weight_width",
@@ -182,14 +182,14 @@ class LinearMinifloatSimple(_LinearBase):
         )
 
         self.w_quantizer = partial(
-            minifloat_simple_quantizer,
+            minifloat_denorm_quantizer,
             width=w_width,
             exponent_width=w_exponent_width,
             exponent_bias=w_exponent_bias,
         )
 
         self.x_quantizer = partial(
-            minifloat_simple_quantizer,
+            minifloat_denorm_quantizer,
             width=x_width,
             exponent_width=x_exponent_width,
             exponent_bias=x_exponent_bias,
@@ -199,7 +199,7 @@ class LinearMinifloatSimple(_LinearBase):
             self.b_quantizer = self.w_quantizer
         else:
             self.b_quantizer = partial(
-                minifloat_simple_quantizer,
+                minifloat_denorm_quantizer,
                 width=b_width,
                 exponent_width=b_exponent_width,
                 exponent_bias=b_exponent_bias,

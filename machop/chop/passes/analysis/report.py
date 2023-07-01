@@ -1,6 +1,25 @@
 import logging
 
+from tabulate import tabulate
+
 logger = logging.getLogger(__name__)
+
+
+def inspect_node_analysis_pass(graph):
+    headers = ["Node name", "Fx Node op", "Mase type", "Mase op"]
+    rows = []
+    for node in graph.fx_graph.nodes:
+        rows.append(
+            [
+                node.name,
+                node.op,
+                node.meta.parameters["common"]["mase_type"],
+                node.meta.parameters["common"]["mase_op"],
+            ]
+        )
+    logger.debug("Inspecting graph [add_common_metadata_analysis_pass]")
+    logger.debug("\n" + tabulate(rows, headers=headers))
+    return graph
 
 
 def report(graph, file_name=None):
