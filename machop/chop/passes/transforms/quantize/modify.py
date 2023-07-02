@@ -81,7 +81,7 @@ def create_new_module(mase_op: str, original_module: nn.Module, config: Dict):
 
 
 def create_new_fn(node, config: Dict):
-    mase_op = node.meta.parameters["common"]["mase_op"]
+    mase_op = node.meta["mase"].parameters["common"]["mase_op"]
     quant_name = config.get("name")
     func_name = f"{mase_op}_{quant_name}"
     new_func = quantized_func_map[func_name]

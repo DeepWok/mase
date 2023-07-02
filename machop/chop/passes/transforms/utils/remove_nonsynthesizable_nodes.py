@@ -17,7 +17,7 @@ def remove_nonsynthesizable_nodes_pass(mase_graph):
     nonsynthesizable_nodes = {torch._assert, _assert_is_none}
     for node in mase_graph.fx_graph.nodes:
         if (
-            node.meta.type in nonsynthesizable_nodes
+            node.meta["mase"].type in nonsynthesizable_nodes
             or node.target in nonsynthesizable_nodes
         ):
             assert len(node.users.keys()) == 0

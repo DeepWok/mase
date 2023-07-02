@@ -13,8 +13,8 @@ def inspect_node_analysis_pass(graph):
             [
                 node.name,
                 node.op,
-                node.meta.parameters["common"]["mase_type"],
-                node.meta.parameters["common"]["mase_op"],
+                node.meta["mase"].parameters["common"]["mase_type"],
+                node.meta["mase"].parameters["common"]["mase_op"],
             ]
         )
     logger.debug("Inspecting graph [add_common_metadata_analysis_pass]")

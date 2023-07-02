@@ -20,9 +20,10 @@ project = "toy-fn"
 [passes]
 
 [passes.quantize]
+by = "name"
 
 [passes.quantize.default.config]
-name = "block_fp"
+name = "NA"
 weight_width = 7
 weight_exponent_width = 8
 weight_exponent_bias = 255

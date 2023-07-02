@@ -9,8 +9,8 @@ from torch.fx import Graph, GraphModule, Interpreter, Node
 from tqdm import tqdm
 
 from ...graph.mase_graph import mase_symbolic_trace
-from ...utils import get_module_by_target
 from ...modify.modifier import is_modifiable
+from ...utils import get_module_by_target
 from ..utils import InputArgsGenerator
 from .stat import _StatBase, new_stat
 
@@ -116,7 +116,7 @@ class WeightProfiler:
         if self.no_weight_to_profile:
             return
         for node in self.module.graph.nodes:
-            node.meta = {}
+            node.meta["mase"] = {}
             if node.op != "call_module":
                 continue
 
@@ -128,7 +128,7 @@ class WeightProfiler:
 
             real_target = get_module_by_target(self.module, node.target)
             for name, weight in real_target.named_parameters():
-                node.meta[name] = WeightStatMeta(
+                node.meta["mase"][name] = WeightStatMeta(
                     name=node.target + "::" + name,
                     real_target=real_target,
                     stat_config=self.stat_configs,
@@ -152,7 +152,7 @@ class WeightProfiler:
             real_target = get_module_by_target(self.module, node.target)
 
             for name, weight in real_target.named_parameters():
-                node.meta[name].update(weight)
+                node.meta["mase"][name].update(weight)
 
     def export_profile(self, save_path: str = None):
         if self.no_weight_to_profile:
@@ -161,8 +161,8 @@ class WeightProfiler:
 
         stat_dict = {}
         for node in self.module.graph.nodes:
-            if len(node.meta) > 0:
-                for k, v in node.meta.items():
+            if len(node.meta["mase"]) > 0:
+                for k, v in node.meta["mase"].items():
                     if isinstance(v, WeightStatMeta):
                         stat_dict |= v.export()
 
@@ -178,8 +178,8 @@ class WeightProfiler:
 
         stat_dict = {}
         for node in self.module.graph.nodes:
-            if len(node.meta) > 0:
-                for k, v in node.meta.items():
+            if len(node.meta["mase"]) > 0:
+                for k, v in node.meta["mase"].items():
                     if isinstance(v, WeightStatMeta):
                         stat_dict |= v.export_to_list()
 

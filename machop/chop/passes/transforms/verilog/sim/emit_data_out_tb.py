@@ -1,4 +1,9 @@
-import math, time, os, logging, torch
+import logging
+import math
+import os
+import time
+
+import torch
 
 from ...graph.utils import get_module_by_name, vf
 
@@ -141,8 +146,12 @@ endmodule
 
 
 def emit_data_out_tb_dat(node, data_out, out_file):
-    out_size = node.meta.parameters["hardware"]["verilog_parameters"]["OUT_SIZE"]
-    out_width = node.meta.parameters["hardware"]["verilog_parameters"]["OUT_WIDTH"]
+    out_size = node.meta["mase"].parameters["hardware"]["verilog_parameters"][
+        "OUT_SIZE"
+    ]
+    out_width = node.meta["mase"].parameters["hardware"]["verilog_parameters"][
+        "OUT_WIDTH"
+    ]
     assert (
         len(data_out[0]) % out_size == 0
     ), f"Cannot perfectly partition: {len(data_out[0])}/{out_size}"

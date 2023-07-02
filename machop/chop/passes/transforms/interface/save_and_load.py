@@ -30,7 +30,7 @@ def graph_iterator_remove_metadata(graph):
     """
     for node in graph.fx_graph.nodes:
         if hasattr(node, "meta"):
-            node.meta = {}
+            node.meta["mase"] = {}
     return graph
 
 
@@ -40,7 +40,7 @@ def collect_n_meta_param(graph) -> dict:
     """
     node_n_meta_param = {}
     for node in graph.fx_graph.nodes:
-        node_n_meta_param[node.name] = node.meta.parameters
+        node_n_meta_param[node.name] = node.meta["mase"].parameters
     return node_n_meta_param
 
 
@@ -66,7 +66,7 @@ def graph_iterator_add_n_meta_param(graph, node_n_meta_param: dict):
     Add metadata to the graph.
     """
     for node in graph.fx_graph.nodes:
-        node.meta.parameters = node_n_meta_param[node.name]
+        node.meta["mase"].parameters = node_n_meta_param[node.name]
     return graph
 
 
@@ -83,7 +83,7 @@ def graph_iterator_add_n_meta_param(graph, node_n_meta_param: dict):
     Add metadata to the graph.
     """
     for node in graph.fx_graph.nodes:
-        node.meta.parameters = node_n_meta_param[node.name]
+        node.meta["mase"].parameters = node_n_meta_param[node.name]
     return graph
 
 

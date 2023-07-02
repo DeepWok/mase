@@ -30,37 +30,37 @@ def graph_iterator_for_mase_ops(graph):
         if node.op == "call_module":
             module_name = node.target
             module = graph.modules[module_name]
-            node.meta.parameters["common"]["mase_type"] = "module"
+            node.meta["mase"].parameters["common"]["mase_type"] = "module"
             if isinstance(module, nn.AdaptiveAvgPool1d):
-                node.meta.parameters["common"]["mase_op"] = "adaptiveavgpool1d"
+                node.meta["mase"].parameters["common"]["mase_op"] = "adaptiveavgpool1d"
             elif isinstance(module, nn.AdaptiveAvgPool2d):
-                node.meta.parameters["common"]["mase_op"] = "adaptiveavgpool2d"
+                node.meta["mase"].parameters["common"]["mase_op"] = "adaptiveavgpool2d"
             elif isinstance(module, nn.AdaptiveMaxPool1d):
-                node.meta.parameters["common"]["mase_op"] = "adaptivemaxpool1d"
+                node.meta["mase"].parameters["common"]["mase_op"] = "adaptivemaxpool1d"
             elif isinstance(module, nn.AdaptiveMaxPool2d):
-                node.meta.parameters["common"]["mase_op"] = "adaptivemaxpool2d"
+                node.meta["mase"].parameters["common"]["mase_op"] = "adaptivemaxpool2d"
             elif isinstance(module, nn.AvgPool1d):
-                node.meta.parameters["common"]["mase_op"] = "avgpool1d"
+                node.meta["mase"].parameters["common"]["mase_op"] = "avgpool1d"
             elif isinstance(module, nn.AvgPool2d):
-                node.meta.parameters["common"]["mase_op"] = "avgpool2d"
+                node.meta["mase"].parameters["common"]["mase_op"] = "avgpool2d"
             elif isinstance(module, nn.BatchNorm1d):
-                node.meta.parameters["common"]["mase_op"] = "batchnorm1d"
+                node.meta["mase"].parameters["common"]["mase_op"] = "batchnorm1d"
             elif isinstance(module, nn.BatchNorm2d):
-                node.meta.parameters["common"]["mase_op"] = "batchnorm2d"
+                node.meta["mase"].parameters["common"]["mase_op"] = "batchnorm2d"
             elif isinstance(module, nn.Conv2d):
-                node.meta.parameters["common"]["mase_op"] = "conv2d"
+                node.meta["mase"].parameters["common"]["mase_op"] = "conv2d"
             elif isinstance(module, nn.Conv1d):
-                node.meta.parameters["common"]["mase_op"] = "conv1d"
+                node.meta["mase"].parameters["common"]["mase_op"] = "conv1d"
             elif isinstance(module, nn.LayerNorm):
-                node.meta.parameters["common"]["mase_op"] = "layernorm"
+                node.meta["mase"].parameters["common"]["mase_op"] = "layernorm"
             elif isinstance(module, nn.Linear):
-                node.meta.parameters["common"]["mase_op"] = "linear"
+                node.meta["mase"].parameters["common"]["mase_op"] = "linear"
             elif isinstance(module, nn.MaxPool1d):
-                node.meta.parameters["common"]["mase_op"] = "maxpool1d"
+                node.meta["mase"].parameters["common"]["mase_op"] = "maxpool1d"
             elif isinstance(module, nn.MaxPool2d):
-                node.meta.parameters["common"]["mase_op"] = "maxpool2d"
+                node.meta["mase"].parameters["common"]["mase_op"] = "maxpool2d"
             elif isinstance(module, nn.ReLU):
-                node.meta.parameters["common"]["mase_op"] = "relu"
+                node.meta["mase"].parameters["common"]["mase_op"] = "relu"
             else:
                 raise ValueError(f"Unknown node type: {node.target}")
 
@@ -73,33 +73,35 @@ def graph_iterator_for_mase_ops(graph):
                 raise ValueError(f"Unknown call_function node: {node.target}")
             if matched_name in MASE_BUILTIN_FUNCS:
                 # if node.target in ["mul", "sub", "add", torch.flatten]:
-                node.meta.parameters["common"]["mase_type"] = "builtin_func"
-                node.meta.parameters["common"]["mase_op"] = matched_name
+                node.meta["mase"].parameters["common"]["mase_type"] = "builtin_func"
+                node.meta["mase"].parameters["common"]["mase_op"] = matched_name
             # TODO: we might need to add more functions here
             elif matched_name in MASE_MODULE_RELATED_FUNCS:
-                node.meta.parameters["common"]["mase_type"] = "module_related_func"
-                node.meta.parameters["common"]["mase_op"] = matched_name
+                node.meta["mase"].parameters["common"][
+                    "mase_type"
+                ] = "module_related_func"
+                node.meta["mase"].parameters["common"]["mase_op"] = matched_name
             else:
                 raise ValueError(f"Unknown node type: {node.target}")
 
         elif node.op == "call_method":
             if node.name in ["size", "view"]:
-                node.meta.parameters["common"]["mase_type"] = "implicit_func"
-                node.meta.parameters["common"]["mase_op"] = node.target
+                node.meta["mase"].parameters["common"]["mase_type"] = "implicit_func"
+                node.meta["mase"].parameters["common"]["mase_op"] = node.target
             else:
                 raise ValueError(f"Unknown node type: {node.name}")
 
         elif node.op == "placeholder":
-            node.meta.parameters["common"]["mase_type"] = "placeholder"
-            node.meta.parameters["common"]["mase_op"] = "placeholder"
+            node.meta["mase"].parameters["common"]["mase_type"] = "placeholder"
+            node.meta["mase"].parameters["common"]["mase_op"] = "placeholder"
 
         elif node.op == "get_attr":
-            node.meta.parameters["common"]["mase_type"] = "get_attr"
+            node.meta["mase"].parameters["common"]["mase_type"] = "get_attr"
             raise NotImplementedError(f"Unknown node type: {node.target}")
 
         elif node.op == "output":
-            node.meta.parameters["common"]["mase_type"] = "output"
-            node.meta.parameters["common"]["mase_op"] = "output"
+            node.meta["mase"].parameters["common"]["mase_type"] = "output"
+            node.meta["mase"].parameters["common"]["mase_op"] = "output"
 
         else:
             raise ValueError(f"Unknown node type: {node.op}")
@@ -107,35 +109,39 @@ def graph_iterator_for_mase_ops(graph):
 
 
 def analysis_common_parameters(node, dummy_in):
-    if node.meta.parameters["common"]["mase_op"] == "placeholder":
-        node.meta = analyse_common_parameters_placeholder(node.meta, dummy_in)
-    elif node.meta.parameters["common"]["mase_op"] == "output":
-        node.meta = analyse_common_parameters_output(node.meta)
-    elif node.meta.parameters["common"]["mase_op"] == "linear":
-        node.meta = analyse_common_parameters_linear(node.meta)
-    elif node.meta.parameters["common"]["mase_op"] == "relu":
-        node.meta = analyse_common_parameters_relu(node.meta)
-    elif node.meta.parameters["common"]["mase_op"] == "flatten":
-        node.meta = analyse_common_parameters_flatten(node.meta)
+    if node.meta["mase"].parameters["common"]["mase_op"] == "placeholder":
+        node.meta["mase"] = analyse_common_parameters_placeholder(
+            node.meta["mase"], dummy_in
+        )
+    elif node.meta["mase"].parameters["common"]["mase_op"] == "output":
+        node.meta["mase"] = analyse_common_parameters_output(node.meta["mase"])
+    elif node.meta["mase"].parameters["common"]["mase_op"] == "linear":
+        node.meta["mase"] = analyse_common_parameters_linear(node.meta["mase"])
+    elif node.meta["mase"].parameters["common"]["mase_op"] == "relu":
+        node.meta["mase"] = analyse_common_parameters_relu(node.meta["mase"])
+    elif node.meta["mase"].parameters["common"]["mase_op"] == "flatten":
+        node.meta["mase"] = analyse_common_parameters_flatten(node.meta["mase"])
     else:
         raise ValueError(
-            "Unknown mase op: {}".format(node.meta.parameters["common"]["mase_op"])
+            "Unknown mase op: {}".format(
+                node.meta["mase"].parameters["common"]["mase_op"]
+            )
         )
 
     # Pass the output shape to the inputs of the next node
     for next_node, _ in node.users.items():
-        if "args" not in next_node.meta.parameters["common"]:
-            next_node.meta.parameters["common"]["args"] = {}
+        if "args" not in next_node.meta["mase"].parameters["common"]:
+            next_node.meta["mase"].parameters["common"]["args"] = {}
         for index, arg_in in enumerate(next_node.args):
             if str(arg_in) == str(node.name):
                 assert (
                     f"data_in_{index}"
-                    not in next_node.meta.parameters["common"]["args"]
+                    not in next_node.meta["mase"].parameters["common"]["args"]
                 ), f"Adding meta to an existing input: {next_node.name} at input {index}"
-                next_node.meta.parameters["common"]["args"][
+                next_node.meta["mase"].parameters["common"]["args"][
                     f"data_in_{index}"
-                ] = node.meta.parameters["common"]["results"]["data_out_0"]
-                next_node.meta.parameters["common"]["args"][f"data_in_{index}"][
+                ] = node.meta["mase"].parameters["common"]["results"]["data_out_0"]
+                next_node.meta["mase"].parameters["common"]["args"][f"data_in_{index}"][
                     "from"
                 ] = node
 
@@ -196,7 +202,7 @@ def add_common_metadata_analysis_pass(graph, pass_args=None):
     Pass args : initial dummy inputs for inferencing all the shapes for each node
     """
     for node in graph.fx_graph.nodes:
-        node.meta = MaseMetadata(
+        node.meta["mase"] = MaseMetadata(
             node=node,
             model=graph.model,
             fx_graph=graph.fx_graph,

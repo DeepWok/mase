@@ -557,7 +557,7 @@ class Modifier:
                 # replace the old module with the new one
                 parent_name, name = get_parent_name(module_name)
                 setattr(named_modules[parent_name], name, new_module)
-                node.meta["software"]["modify-sw"] = {
+                node.meta["mase"]["software"]["modify-sw"] = {
                     "config": getattr(new_module, "config", sub_config)
                 }
             # Coarse-grained + fine-grained function replacement
@@ -586,8 +586,10 @@ class Modifier:
                         new_function, args=args, kwargs=kwargs
                     )
                     new_node.name = node.name
-                    new_node.meta = copy(node.meta)
-                    new_node.meta["software"]["modify-sw"] = {"config": sub_config}
+                    new_node.meta["mase"] = copy(node.meta["mase"])
+                    new_node.meta["mase"]["software"]["modify-sw"] = {
+                        "config": sub_config
+                    }
                     node.replace_all_uses_with(new_node)
                 self.graph.erase_node(node)
             # Coarse-grained + fine-grained Tensor method replacement
@@ -620,8 +622,10 @@ class Modifier:
                         substitute_func, args=args, kwargs=kwargs
                     )
                     new_node.name = node.name
-                    new_node.meta = copy(node.meta)
-                    new_node.meta["software"]["modify-sw"] = {"config": sub_config}
+                    new_node.meta["mase"] = copy(node.meta["mase"])
+                    new_node.meta["mase"]["software"]["modify-sw"] = {
+                        "config": sub_config
+                    }
                     node.replace_all_uses_with(new_node)
                 self.graph.erase_node(node)
         self.graph.lint()

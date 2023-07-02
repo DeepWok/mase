@@ -26,20 +26,22 @@ def verify_node_common_metadata(node):
     each mase node locally, particularly for the following:
     * TODO
     """
-    verify_common_metadata_general(node.meta)
-    if node.meta.parameters["common"]["mase_op"] == "placeholder":
-        verify_common_metadata_placeholder(node.meta)
-    elif node.meta.parameters["common"]["mase_op"] == "output":
-        verify_common_metadata_output(node.meta)
-    elif node.meta.parameters["common"]["mase_op"] == "linear":
-        verify_common_metadata_linear(node.meta)
-    elif node.meta.parameters["common"]["mase_op"] == "relu":
-        verify_common_metadata_relu(node.meta)
-    elif node.meta.parameters["common"]["mase_op"] == "flatten":
-        verify_common_metadata_flatten(node.meta)
+    verify_common_metadata_general(node.meta["mase"])
+    if node.meta["mase"].parameters["common"]["mase_op"] == "placeholder":
+        verify_common_metadata_placeholder(node.meta["mase"])
+    elif node.meta["mase"].parameters["common"]["mase_op"] == "output":
+        verify_common_metadata_output(node.meta["mase"])
+    elif node.meta["mase"].parameters["common"]["mase_op"] == "linear":
+        verify_common_metadata_linear(node.meta["mase"])
+    elif node.meta["mase"].parameters["common"]["mase_op"] == "relu":
+        verify_common_metadata_relu(node.meta["mase"])
+    elif node.meta["mase"].parameters["common"]["mase_op"] == "flatten":
+        verify_common_metadata_flatten(node.meta["mase"])
     else:
         raise ValueError(
-            "Unknown mase op: {}".format(node.meta.parameters["common"]["mase_op"])
+            "Unknown mase op: {}".format(
+                node.meta["mase"].parameters["common"]["mase_op"]
+            )
         )
 
 
@@ -66,7 +68,7 @@ def verify_common_metadata_analysis_pass(graph):
 
     # Each node must have at most one result
     for node in graph.fx_graph.nodes:
-        assert len(node.meta.parameters["common"]["results"]) <= 1
+        assert len(node.meta["mase"].parameters["common"]["results"]) <= 1
 
     # Inter-node verification
     # Each edge between nodes must have the same size
@@ -75,10 +77,12 @@ def verify_common_metadata_analysis_pass(graph):
         if len(node.all_input_nodes) > 0:
             for i, args in enumerate(node.args):
                 assert (
-                    node.meta.parameters["common"]["args"][f"data_in_{i}"][
-                        "from"
-                    ].meta.parameters["common"]["results"][f"data_out_0"]["size"]
-                    == node.meta.parameters["common"]["args"][f"data_in_{i}"]["size"]
+                    node.meta["mase"]
+                    .parameters["common"]["args"][f"data_in_{i}"]["from"]
+                    .meta.parameters["common"]["results"][f"data_out_0"]["size"]
+                    == node.meta["mase"].parameters["common"]["args"][f"data_in_{i}"][
+                        "size"
+                    ]
                 )
     return graph
 
@@ -100,11 +104,11 @@ def verify_node_hardware_metadata(node):
     each mase node locally, particularly for the following:
     * TODO
     """
-    verify_hardware_metadata_general(node.meta)
-    if node.meta.parameters["common"]["mase_op"] == "linear":
-        verify_hardware_metadata_linear(node.meta)
-    elif node.meta.parameters["common"]["mase_op"] == "relu":
-        verify_hardware_metadata_relu(node.meta)
+    verify_hardware_metadata_general(node.meta["mase"])
+    if node.meta["mase"].parameters["common"]["mase_op"] == "linear":
+        verify_hardware_metadata_linear(node.meta["mase"])
+    elif node.meta["mase"].parameters["common"]["mase_op"] == "relu":
+        verify_hardware_metadata_relu(node.meta["mase"])
     else:
         raise ValueError(f"Unknown mase op: {node.op}")
 
@@ -129,7 +133,7 @@ def verify_hardware_metadata_analysis_pass(graph):
         for node in nodes_in:
             for next_node, x in node.users.items():
                 # This might have a bug - for now assume there is only one result
-                if next_node.meta.parameters["hardware"]["is_implicit"]:
+                if next_node.meta["mase"].parameters["hardware"]["is_implicit"]:
                     if node not in next_nodes_in:
                         next_nodes_in.append(node)
                     continue
@@ -137,40 +141,40 @@ def verify_hardware_metadata_analysis_pass(graph):
                 arg_count = len(next_node.all_input_nodes)
                 if arg_count == 1:
                     assert (
-                        next_node.meta.parameters["hardware"]["verilog_parameters"][
-                            "IN_SIZE"
-                        ]
-                        == node.meta.parameters["hardware"]["verilog_parameters"][
-                            "OUT_SIZE"
-                        ]
+                        next_node.meta["mase"].parameters["hardware"][
+                            "verilog_parameters"
+                        ]["IN_SIZE"]
+                        == node.meta["mase"].parameters["hardware"][
+                            "verilog_parameters"
+                        ]["OUT_SIZE"]
                     ), "Verilog input and output sizes mismatch: {} = {} and {} = {}".format(
                         node.name,
-                        node.meta.parameters["hardware"]["verilog_parameters"][
+                        node.meta["mase"].parameters["hardware"]["verilog_parameters"][
                             "OUT_SIZE"
                         ],
                         next_node.name,
-                        next_node.meta.parameters["hardware"]["verilog_parameters"][
-                            "IN_SIZE"
-                        ],
+                        next_node.meta["mase"].parameters["hardware"][
+                            "verilog_parameters"
+                        ]["IN_SIZE"],
                     )
                 else:
                     i = get_input_index(node, next_node)
                     assert (
-                        next_node.meta.parameters["hardware"]["verilog_parameters"][
-                            f"IN_{i}_SIZE"
-                        ]
-                        == node.meta.parameters["hardware"]["verilog_parameters"][
-                            "OUT_SIZE"
-                        ]
+                        next_node.meta["mase"].parameters["hardware"][
+                            "verilog_parameters"
+                        ][f"IN_{i}_SIZE"]
+                        == node.meta["mase"].parameters["hardware"][
+                            "verilog_parameters"
+                        ]["OUT_SIZE"]
                     ), "Verilog input and output sizes mismatch: {} = {} and {} = {}".format(
                         node.name,
-                        node.meta.parameters["hardware"]["verilog_parameters"][
+                        node.meta["mase"].parameters["hardware"]["verilog_parameters"][
                             "OUT_SIZE"
                         ],
                         next_node.name,
-                        next_node.meta.parameters["hardware"]["verilog_parameters"][
-                            f"IN_{i}_SIZE"
-                        ],
+                        next_node.meta["mase"].parameters["hardware"][
+                            "verilog_parameters"
+                        ][f"IN_{i}_SIZE"],
                     )
         assert (
             nodes_in != next_nodes_in

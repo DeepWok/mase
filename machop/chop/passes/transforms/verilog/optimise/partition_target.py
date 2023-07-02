@@ -1,9 +1,14 @@
-import math, time, os, logging, torch
+import logging
+import math
+import os
+import time
 
-from ...graph.utils import get_module_by_name, vf
-from ...evaluate_hw.parse_synth_rpt import evaluate_node_area
-from ...evaluate_hw.mase_hardware_evaluator import get_synthesis_results
+import torch
+
 from ...board_config import fpga_board_info
+from ...evaluate_hw.mase_hardware_evaluator import get_synthesis_results
+from ...evaluate_hw.parse_synth_rpt import evaluate_node_area
+from ...graph.utils import get_module_by_name, vf
 
 logger = logging.getLogger(__name__)
 
@@ -49,7 +54,7 @@ def partition_target(verilog_emitter):
             partition_lut += node_lut
             partition = (verilog_emitter.target, current_partition)
             logger.debug(node.name + str(partition))
-            node.meta.parameters["hardware"]["PARTITION"] = partition
+            node.meta["mase"].parameters["hardware"]["PARTITION"] = partition
             modified.append(node)
             for next_node, _ in node.users.items():
                 all_inputs_modified = True

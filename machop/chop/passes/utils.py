@@ -79,5 +79,8 @@ def get_input_index(node, next_node):
     """
     arg_count = len(next_node.all_input_nodes)
     for i in range(0, arg_count):
-        if next_node.meta.parameters["common"]["args"][f"data_in_{i}"]["from"] == node:
+        if (
+            next_node.meta["mase"].parameters["common"]["args"][f"data_in_{i}"]["from"]
+            == node
+        ):
             return i

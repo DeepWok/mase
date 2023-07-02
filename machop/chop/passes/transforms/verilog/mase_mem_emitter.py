@@ -1,4 +1,10 @@
-import math, time, os, logging, torch, struct
+import logging
+import math
+import os
+import struct
+import time
+
+import torch
 
 from ..graph.utils import get_module_by_name, vf
 from ..modify.quantizers.quantizers import integer_quantizer
@@ -26,18 +32,22 @@ def emit_parameters_in_mem_internal(node, param_name, file_name, data_name):
 
     # TODO: Force bias to have a depth of 1 for now
     if param_name != "bias":
-        out_depth = node.meta.parameters["hardware"]["verilog_parameters"]["IN_DEPTH"]
+        out_depth = node.meta["mase"].parameters["hardware"]["verilog_parameters"][
+            "IN_DEPTH"
+        ]
     else:
         out_depth = 1
     addr_width = clog2(out_depth) + 1
-    total_size = math.prod(node.meta.parameters["common"]["args"][param_name]["size"])
+    total_size = math.prod(
+        node.meta["mase"].parameters["common"]["args"][param_name]["size"]
+    )
     # The depth of parameters must match with the input depth
     assert (
         total_size % out_depth == 0
     ), f"Cannot partition imperfect size for now {node.name}.{param_name} = {total_size} / {out_depth}."
     out_size = iceil(total_size / out_depth)
     # Assume the first index is the total width
-    out_width = node.meta.parameters["hardware"]["verilog_parameters"][
+    out_width = node.meta["mase"].parameters["hardware"]["verilog_parameters"][
         "{}_WIDTH".format(param_name.upper())
     ]
 
@@ -164,13 +174,18 @@ def emit_parameters_in_dat_internal(node, param_name, file_name):
     """
     Emit initialised data for the ROM block. Each element must be in 8 HEX digits.
     """
-    total_size = math.prod(node.meta.parameters["common"]["args"][param_name]["size"])
+    total_size = math.prod(
+        node.meta["mase"].parameters["common"]["args"][param_name]["size"]
+    )
 
-    if "IN_DEPTH" in node.meta.parameters["hardware"]["verilog_parameters"].keys():
+    if (
+        "IN_DEPTH"
+        in node.meta["mase"].parameters["hardware"]["verilog_parameters"].keys()
+    ):
         if param_name == "bias":
             out_depth = 1
         else:
-            out_depth = node.meta.parameters["hardware"]["verilog_parameters"][
+            out_depth = node.meta["mase"].parameters["hardware"]["verilog_parameters"][
                 "IN_DEPTH"
             ]
     else:
@@ -182,29 +197,39 @@ def emit_parameters_in_dat_internal(node, param_name, file_name):
         total_size % out_depth == 0
     ), f"Cannot partition imperfect size for now {node.name}.{param_name} = {total_size} / {out_depth}."
     # Assume the first index is the total width
-    out_width = node.meta.parameters["hardware"]["verilog_parameters"][
+    out_width = node.meta["mase"].parameters["hardware"]["verilog_parameters"][
         "{}_WIDTH".format(param_name.upper())
     ]
 
     data_buff = ""
-    param_data = node.meta.module.get_parameter(param_name).data
-    if node.meta.parameters["hardware"]["interface_parameters"][param_name][
+    param_data = node.meta["mase"].module.get_parameter(param_name).data
+    if node.meta["mase"].parameters["hardware"]["interface_parameters"][param_name][
         "transpose"
     ]:
         param_data = torch.reshape(
             param_data,
             (
-                node.meta.parameters["hardware"]["verilog_parameters"]["OUT_SIZE"],
-                node.meta.parameters["hardware"]["verilog_parameters"]["IN_DEPTH"],
-                node.meta.parameters["hardware"]["verilog_parameters"]["IN_SIZE"],
+                node.meta["mase"].parameters["hardware"]["verilog_parameters"][
+                    "OUT_SIZE"
+                ],
+                node.meta["mase"].parameters["hardware"]["verilog_parameters"][
+                    "IN_DEPTH"
+                ],
+                node.meta["mase"].parameters["hardware"]["verilog_parameters"][
+                    "IN_SIZE"
+                ],
             ),
         )
         param_data = torch.transpose(param_data, 0, 1)
     param_data = torch.flatten(param_data).tolist()
 
-    if node.meta.parameters["common"]["args"][param_name]["type"] == "fixed":
-        width = node.meta.parameters["common"]["args"][param_name]["precision"][0]
-        frac_width = node.meta.parameters["common"]["args"][param_name]["precision"][1]
+    if node.meta["mase"].parameters["common"]["args"][param_name]["type"] == "fixed":
+        width = node.meta["mase"].parameters["common"]["args"][param_name]["precision"][
+            0
+        ]
+        frac_width = node.meta["mase"].parameters["common"]["args"][param_name][
+            "precision"
+        ][1]
 
         scale = 2**frac_width
         thresh = 2**width
@@ -234,20 +259,26 @@ def emit_parameters_in_dat_hls(node, param_name, file_name):
     """
     Emit initialised data for the ROM block. Each element must be in 8 HEX digits.
     """
-    total_size = math.prod(node.meta.parameters["common"]["args"][param_name]["size"])
+    total_size = math.prod(
+        node.meta["mase"].parameters["common"]["args"][param_name]["size"]
+    )
     out_depth = total_size
     out_size = 1
-    out_width = node.meta.parameters["hardware"]["verilog_parameters"][
+    out_width = node.meta["mase"].parameters["hardware"]["verilog_parameters"][
         "{}_WIDTH".format(param_name.upper())
     ]
 
     data_buff = ""
-    param_data = node.meta.module.get_parameter(param_name).data
+    param_data = node.meta["mase"].module.get_parameter(param_name).data
     param_data = torch.flatten(param_data).tolist()
 
-    if node.meta.parameters["common"]["args"][param_name]["type"] == "fixed":
-        width = node.meta.parameters["common"]["args"][param_name]["precision"][0]
-        frac_width = node.meta.parameters["common"]["args"][param_name]["precision"][1]
+    if node.meta["mase"].parameters["common"]["args"][param_name]["type"] == "fixed":
+        width = node.meta["mase"].parameters["common"]["args"][param_name]["precision"][
+            0
+        ]
+        frac_width = node.meta["mase"].parameters["common"]["args"][param_name][
+            "precision"
+        ][1]
 
         scale = 2**frac_width
         thresh = 2**width
@@ -264,8 +295,10 @@ def emit_parameters_in_dat_hls(node, param_name, file_name):
 
             hex_buff = hex(int(line_buff, 2))
             data_buff += hex_buff[hex_buff.find("0x") + 2 :] + "\n"
-    elif node.meta.parameters["common"]["args"][param_name]["type"] == "float":
-        width = node.meta.parameters["common"]["args"][param_name]["precision"][0]
+    elif node.meta["mase"].parameters["common"]["args"][param_name]["type"] == "float":
+        width = node.meta["mase"].parameters["common"]["args"][param_name]["precision"][
+            0
+        ]
         assert width == 32, "Only float32 is supported for now."
 
         for i in range(0, out_depth):
@@ -290,11 +323,11 @@ def emit_parameters_in_rom_internal(node, rtl_dir):
     for each parameter
     """
     node_name = vf(node.name)
-    for param_name, parameter in node.meta.module.named_parameters():
+    for param_name, parameter in node.meta["mase"].module.named_parameters():
         if (
-            node.meta.parameters["hardware"]["interface_parameters"][param_name][
-                "storage"
-            ]
+            node.meta["mase"].parameters["hardware"]["interface_parameters"][
+                param_name
+            ]["storage"]
             == "BRAM"
         ):
             verilog_name = os.path.join(rtl_dir, f"{node_name}_{param_name}.sv")
@@ -316,16 +349,20 @@ def emit_parameters_in_mem_hls(node, param_name, file_name, data_name):
     ), "ROM Verilog file already exists before emitting. Please check if there are files with the same name."
 
     # The depth of parameters matches with the input depth
-    total_size = math.prod(node.meta.parameters["common"]["args"][param_name]["size"])
+    total_size = math.prod(
+        node.meta["mase"].parameters["common"]["args"][param_name]["size"]
+    )
     out_depth = total_size
     addr_width = clog2(out_depth) + 1
-    total_size = math.prod(node.meta.parameters["common"]["args"][param_name]["size"])
+    total_size = math.prod(
+        node.meta["mase"].parameters["common"]["args"][param_name]["size"]
+    )
     out_size = iceil(total_size / out_depth)
     assert (
         total_size % out_depth == 0
     ), f"Cannot partition imperfect size for now = {total_size} / {out_depth}."
     # Assume the first index is the total width
-    out_width = node.meta.parameters["hardware"]["verilog_parameters"][
+    out_width = node.meta["mase"].parameters["hardware"]["verilog_parameters"][
         "{}_WIDTH".format(param_name.upper())
     ]
 
@@ -403,13 +440,13 @@ def emit_parameters_in_rom_hls(node, rtl_dir):
     for each parameter
     """
     node_name = vf(node.name)
-    if not node.meta.module:
+    if not node.meta["mase"].module:
         return
-    for param_name, parameter in node.meta.module.named_parameters():
+    for param_name, parameter in node.meta["mase"].module.named_parameters():
         if (
-            node.meta.parameters["hardware"]["interface_parameters"][param_name][
-                "storage"
-            ]
+            node.meta["mase"].parameters["hardware"]["interface_parameters"][
+                param_name
+            ]["storage"]
             == "BRAM"
         ):
             # Verilog code of the ROM has been emitted using mlir passes
