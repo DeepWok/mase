@@ -1,11 +1,11 @@
-import os
-import sys
 import glob
 import logging
+import os
+import sys
 
+from ..board_config import fpga_board_info
 from ..graph.utils import vf
 from ..utils import execute_cli
-from ..board_config import fpga_board_info
 
 logger = logging.getLogger(__name__)
 
@@ -30,7 +30,7 @@ create_project -force {project_name} {project_dir} -part {target}
     for node in mase_graph.fx_graph.nodes:
         if node.op != "call_module" and node.op != "call_function":
             continue
-        if node.meta.parameters["hardware"]["toolchain"] == "HLS":
+        if node.meta["mase"].parameters["hardware"]["toolchain"] == "HLS":
             node_name = vf(node.name)
             for file in glob.glob(
                 os.path.join(
@@ -65,10 +65,10 @@ create_project -force {project_name} {project_dir} -part {target}
     power_report = os.path.join(project_dir, "power.rpt")
     clk_dir = os.path.join(hw_dir, "clock.xdc")
     tcl_buff += f"""
-add_files -fileset constrs_1 -norecurse {clk_dir} 
+add_files -fileset constrs_1 -norecurse {clk_dir}
 set_property top {model} [current_fileset]
 update_compile_order -fileset sources_1
-launch_runs synth_1 -jobs 20 
+launch_runs synth_1 -jobs 20
 wait_on_run synth_1
 open_run synth_1 -name synth_1
 report_utilization -hierarchical -file {resource_report}

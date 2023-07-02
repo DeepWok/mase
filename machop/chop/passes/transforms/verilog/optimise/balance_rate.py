@@ -20,8 +20,10 @@ def get_in_size(target, node):
     max_packet_size -= udp_head
 
     clk = fpga_board_info[target]["CLK"]  # ns
-    in_width = node.meta.parameters["common"]["args"]["data_in"]["precision"][0]
-    total_size = math.prod(node.meta.parameters["common"]["args"]["data_in"]["size"])
+    in_width = node.meta["mase"].parameters["common"]["args"]["data_in"]["precision"][0]
+    total_size = math.prod(
+        node.meta["mase"].parameters["common"]["args"]["data_in"]["size"]
+    )
     in_size_candidates = get_factors(total_size)
 
     packets_num = math.ceil(total_size * in_width / (max_packet_size * 8))
@@ -56,10 +58,10 @@ def balance_rate(verilog_emitter):
     while nodes_in != nodes_out:
         next_nodes_in = []
         for node in nodes_in:
-            node.meta.update_hardware_parameters(parameters=input_size)
+            node.meta["mase"].update_hardware_parameters(parameters=input_size)
             for next_node, x in node.users.items():
                 # This might have a bug - for now assume there is only one result
-                if next_node.meta.parameters["hardware"]["is_implicit"]:
+                if next_node.meta["mase"].parameters["hardware"]["is_implicit"]:
                     if node not in next_nodes_in:
                         next_nodes_in.append(node)
                     continue

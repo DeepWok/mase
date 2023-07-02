@@ -1,7 +1,8 @@
 import importlib
 import os
-import regex as re
 
+import regex as re
+from chop.passes.common import MASE_IMPLICIT_FUNCS
 from chop.plt_wrapper import (
     NLPClassificationModelWrapper,
     NLPLanguageModelingModelWrapper,
@@ -9,8 +10,6 @@ from chop.plt_wrapper import (
     VisionModelWrapper,
     get_model_wrapper,
 )
-
-from chop.passes.common import MASE_IMPLICIT_FUNCS 
 
 # from ..session.plt_wrapper.nlp.classification import NLPClassificationModelWrapper
 # from ..session.plt_wrapper.nlp.lm import NLPLanguageModelingModelWrapper
@@ -131,12 +130,13 @@ class InputArgsGenerator:
             raise RuntimeError("Unsupported model class")
         return input_args
 
+
 def _get_next_call_node(node, nodes_in):
     for next_node, x in node.users.items():
         # No need to synthsize into hardware
         if next_node.target in MASE_IMPLICIT_FUNCS:
             nodes_in = _get_next_call_node(next_node, nodes_in)
-            next_node.meta.parameters["hardware"]["is_implicit"] = True
+            next_node.meta["mase"].parameters["hardware"]["is_implicit"] = True
         elif next_node not in nodes_in:
             nodes_in.append(next_node)
     return nodes_in
@@ -147,7 +147,7 @@ def _get_prev_call_node(node, nodes_out):
         # No need to synthsize into hardware
         if prev_node.target in MASE_IMPLICIT_FUNCS:
             nodes_out = _get_prev_call_node(prev_node, nodes_out)
-            prev_node.meta.parameters["hardware"]["is_implicit"] = True
+            prev_node.meta["mase"].parameters["hardware"]["is_implicit"] = True
         elif prev_node not in nodes_out:
             nodes_out.append(prev_node)
     return nodes_out
@@ -158,7 +158,7 @@ def get_input_nodes(fx_graph):
     for node in fx_graph.nodes:
         if node.op == "placeholder":
             nodes_in = _get_next_call_node(node, nodes_in)
-            node.meta.parameters["hardware"]["is_implicit"] = True
+            node.meta["mase"].parameters["hardware"]["is_implicit"] = True
     return nodes_in
 
 
@@ -167,15 +167,17 @@ def get_output_nodes(fx_graph):
     for node in fx_graph.nodes:
         if node.op == "output":
             nodes_out = _get_prev_call_node(node, nodes_out)
-            node.meta.parameters["hardware"]["is_implicit"] = True
+            node.meta["mase"].parameters["hardware"]["is_implicit"] = True
     return nodes_out
+
 
 def pattern_name_match(pattern, name):
     return bool(re.fullmatch(pattern, name))
 
+
 # names are likely to be func_name_[0-9]+
 def match_and_filter(name, funcs):
     for pattern in funcs:
-        if (pattern == name) or (pattern + '_' in name):
+        if (pattern == name) or (pattern + "_" in name):
             return True, pattern
-    return False, None 
+    return False, None

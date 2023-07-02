@@ -14,8 +14,9 @@ import torch.fx
 
 from ..graph.mase_graph import MaseGraph
 from ..graph.mase_metadata import MaseMetadata
-from ..graph.utils import get_module_by_name, v2p, vf, get_input_index
+from ..graph.utils import get_input_index, get_module_by_name, v2p, vf
 from ..modify.quantizers.quantizers_for_hw import integer_quantizer_for_hw
+from ..utils import execute_cli
 from .mase_mem_emitter import (
     emit_parameters_in_rom_hls,
     emit_parameters_in_rom_internal,
@@ -29,7 +30,6 @@ from .sim.emit_data_in_tb import (
 )
 from .sim.emit_data_out_tb import emit_data_out_tb_dat, emit_data_out_tb_sv
 from .sim.emit_top_tb import emit_top_tb
-from ..utils import execute_cli
 from .sim.input_generator import InputGenerator
 
 logger = logging.getLogger(__name__)
@@ -45,8 +45,8 @@ def _add_dependence_files(files, file_list):
 
 
 def _get_hls_parameters(node):
-    args_param = node.meta.parameters["common"]["args"]
-    results_param = node.meta.parameters["common"]["results"]
+    args_param = node.meta["mase"].parameters["common"]["args"]
+    results_param = node.meta["mase"].parameters["common"]["results"]
     hls_param = ""
     for arg, param in args_param.items():
         precision = args_param[arg]["precision"]
@@ -65,16 +65,20 @@ def _get_cast_parameters(from_node, to_node, is_start=False, is_end=False):
     assert not (
         is_start and is_end
     ), "An edge cannot start and end both through external signals."
-    from_type = from_node.meta.parameters["common"]["results"]["data_out"]["type"]
-    from_prec = from_node.meta.parameters["common"]["results"]["data_out"]["precision"]
+    from_type = from_node.meta["mase"].parameters["common"]["results"]["data_out"][
+        "type"
+    ]
+    from_prec = from_node.meta["mase"].parameters["common"]["results"]["data_out"][
+        "precision"
+    ]
     if len(to_node.all_input_nodes) == 1:
         arg_name = "data_in"
     else:
         index = get_input_index(from_node, to_node)
         arg_name = f"data_in_{index}"
 
-    to_type = to_node.meta.parameters["common"]["args"][arg_name]["type"]
-    to_prec = to_node.meta.parameters["common"]["args"][arg_name]["precision"]
+    to_type = to_node.meta["mase"].parameters["common"]["args"][arg_name]["type"]
+    to_prec = to_node.meta["mase"].parameters["common"]["args"][arg_name]["precision"]
     from_name = f"{from_node}_data_out"
     to_name = f"{to_node}_{arg_name}"
     from_param = f"{from_node}_OUT"
@@ -453,9 +457,9 @@ quit
         # Add HLS tcls
         hls_dir = os.path.join(prj_dir, "..", "..", "hls")
         for node in self.fx_graph.nodes:
-            if node.meta.parameters["hardware"]["is_implicit"]:
+            if node.meta["mase"].parameters["hardware"]["is_implicit"]:
                 continue
-            if node.meta.parameters["hardware"]["toolchain"] != "HLS":
+            if node.meta["mase"].parameters["hardware"]["toolchain"] != "HLS":
                 continue
             node_name = vf(node.name)
             syn_dir = os.path.join(
@@ -551,21 +555,23 @@ quit
         node_out_name = vf(nodes_out[0].name)
         parameters = ""
         for node in self.fx_graph.nodes:
-            if node.meta.parameters["hardware"]["is_implicit"]:
+            if node.meta["mase"].parameters["hardware"]["is_implicit"]:
                 continue
             node_name = vf(node.name)
             if (
-                node.meta.parameters["hardware"]["toolchain"] == "INTERNAL"
-                or node.meta.parameters["hardware"]["toolchain"] == "HLS"
+                node.meta["mase"].parameters["hardware"]["toolchain"] == "INTERNAL"
+                or node.meta["mase"].parameters["hardware"]["toolchain"] == "HLS"
             ):
-                for key, value in node.meta.parameters["hardware"][
-                    "verilog_parameters"
-                ].items():
+                for key, value in (
+                    node.meta["mase"]
+                    .parameters["hardware"]["verilog_parameters"]
+                    .items()
+                ):
                     if not isinstance(value, (int, float, complex, bool)):
                         value = '"' + value + '"'
                     parameters += f"parameter {node_name}_{key} = {value},\n"
                     self.verilog_parameters[f"{node_name}_{key}"] = value
-            elif node.meta.parameters["hardware"]["toolchain"] == "EXTERNAL":
+            elif node.meta["mase"].parameters["hardware"]["toolchain"] == "EXTERNAL":
                 raise NotImplementedError(f"EXTERNAL not supported yet.")
         parameters += f"""
 parameter IN_WIDTH = {node_in_name}_IN_WIDTH,
@@ -590,17 +596,17 @@ output data_out_valid,
 input  data_out_ready,
 """
         for node in self.fx_graph.nodes:
-            if node.meta.parameters["hardware"]["is_implicit"]:
+            if node.meta["mase"].parameters["hardware"]["is_implicit"]:
                 continue
             node_name = vf(node.name)
-            for key, value in node.meta.parameters["common"]["args"].items():
+            for key, value in node.meta["mase"].parameters["common"]["args"].items():
                 if "data_in" in key:
                     continue
                 # No top-level interface if the memory is stored on chip
                 if (
-                    node.meta.parameters["hardware"]["interface_parameters"][key][
-                        "storage"
-                    ]
+                    node.meta["mase"].parameters["hardware"]["interface_parameters"][
+                        key
+                    ]["storage"]
                     == "BRAM"
                 ):
                     continue
@@ -613,7 +619,7 @@ input  [{node_name}_{cap_key}_WIDTH-1:0] {node_name}_{key} [{node_name}_{cap_key
 input  {node_name}_{key}_valid,
 output {node_name}_{key}_ready,
 """
-            for key, value in node.meta.parameters["common"]["results"].items():
+            for key, value in node.meta["mase"].parameters["common"]["results"].items():
                 if key == "data_out":
                     continue
                 cap_key = v2p(key)
@@ -631,13 +637,13 @@ input  {node_name}_{key}_ready,
         signals = ""
         node_name = vf(node.name)
         # Input signals
-        for key, value in node.meta.parameters["common"]["args"].items():
+        for key, value in node.meta["mase"].parameters["common"]["args"].items():
             # No internal signals if the memory is stored off chip
             if (
                 "data_in" not in key
-                and node.meta.parameters["hardware"]["interface_parameters"][key][
-                    "storage"
-                ]
+                and node.meta["mase"].parameters["hardware"]["interface_parameters"][
+                    key
+                ]["storage"]
                 != "BRAM"
             ):
                 continue
@@ -652,13 +658,13 @@ logic                             {node_name}_{key}_ready;
 """
 
         # Output signals
-        for key, value in node.meta.parameters["common"]["results"].items():
+        for key, value in node.meta["mase"].parameters["common"]["results"].items():
             # No internal signals if the memory is stored off chip
             if (
                 key != "data_out"
-                and node.meta.parameters["hardware"]["interface_parameters"][key][
-                    "storage"
-                ]
+                and node.meta["mase"].parameters["hardware"]["interface_parameters"][
+                    key
+                ]["storage"]
                 != "BRAM"
             ):
                 continue
@@ -686,13 +692,13 @@ logic {node_name}_ce;
 """
 
         # Input signals
-        for key, value in node.meta.parameters["common"]["args"].items():
+        for key, value in node.meta["mase"].parameters["common"]["args"].items():
             # No internal signals if the memory is stored off chip
             if (
                 "data_in" not in key
-                and node.meta.parameters["hardware"]["interface_parameters"][key][
-                    "storage"
-                ]
+                and node.meta["mase"].parameters["hardware"]["interface_parameters"][
+                    key
+                ]["storage"]
                 != "BRAM"
             ):
                 continue
@@ -713,13 +719,13 @@ logic                                    {node_name}_{key}_ce0;
 """
 
         # Output signals
-        for key, value in node.meta.parameters["common"]["results"].items():
+        for key, value in node.meta["mase"].parameters["common"]["results"].items():
             # No internal signals if the memory is stored off chip
             if (
                 key != "data_out"
-                and node.meta.parameters["hardware"]["interface_parameters"][key][
-                    "storage"
-                ]
+                and node.meta["mase"].parameters["hardware"]["interface_parameters"][
+                    key
+                ]["storage"]
                 != "BRAM"
             ):
                 continue
@@ -743,7 +749,7 @@ logic                                    {node_name}_{key}_we0;
 
         signals = ""
         for node in self.fx_graph.nodes:
-            if node.meta.parameters["hardware"]["is_implicit"]:
+            if node.meta["mase"].parameters["hardware"]["is_implicit"]:
                 continue
             node_name = vf(node.name)
             signals += f"""
@@ -751,9 +757,9 @@ logic                                    {node_name}_{key}_we0;
 //   {node_name} signals
 // --------------------------
 """
-            if node.meta.parameters["hardware"]["toolchain"] == "INTERNAL":
+            if node.meta["mase"].parameters["hardware"]["toolchain"] == "INTERNAL":
                 signals += self._emit_signals_top_internal(node)
-            elif node.meta.parameters["hardware"]["toolchain"] == "HLS":
+            elif node.meta["mase"].parameters["hardware"]["toolchain"] == "HLS":
                 signals += self._emit_signals_top_hls(node)
             else:
                 assert False, "Unknown node toolchain for signal declarations."
@@ -765,16 +771,16 @@ logic                                    {node_name}_{key}_we0;
 
         # Emit kernel instance
         parameters = ""
-        for key, value in node.meta.parameters["hardware"][
-            "verilog_parameters"
-        ].items():
+        for key, value in (
+            node.meta["mase"].parameters["hardware"]["verilog_parameters"].items()
+        ):
             key_value = self.verilog_parameters[f"{node_name}_{key}"]
             debug_info = f"// = {key_value}"
             parameters += f".{key}({node_name}_{key}), {debug_info}\n"
         parameters = _remove_last_comma(parameters)
-        component_name = node.meta.parameters["hardware"]["module"]
+        component_name = node.meta["mase"].parameters["hardware"]["module"]
         signals = ""
-        for key, value in node.meta.parameters["common"]["args"].items():
+        for key, value in node.meta["mase"].parameters["common"]["args"].items():
             cap_key = v2p(key)
             width = self.verilog_parameters[f"{node_name}_{cap_key}_WIDTH"]
             size = self.verilog_parameters[f"{node_name}_{cap_key}_SIZE"]
@@ -785,7 +791,7 @@ logic                                    {node_name}_{key}_we0;
 .{key}_ready({node_name}_{key}_ready),
 """
 
-        for key, value in node.meta.parameters["common"]["results"].items():
+        for key, value in node.meta["mase"].parameters["common"]["results"].items():
             cap_key = v2p(key)
             width = self.verilog_parameters[f"{node_name}_{cap_key}_WIDTH"]
             size = self.verilog_parameters[f"{node_name}_{cap_key}_SIZE"]
@@ -808,25 +814,25 @@ logic                                    {node_name}_{key}_we0;
 """
 
         # Emit parameter instance
-        for key, value in node.meta.parameters["common"]["args"].items():
+        for key, value in node.meta["mase"].parameters["common"]["args"].items():
             # Skip the parameter instance if the memory is stored off chip
             if (
                 key == "data_in"
-                or node.meta.parameters["hardware"]["interface_parameters"][key][
-                    "storage"
-                ]
+                or node.meta["mase"].parameters["hardware"]["interface_parameters"][
+                    key
+                ]["storage"]
                 != "BRAM"
             ):
                 continue
             components += self._emit_parameters_top_internal(key, value, node)
 
-        for key, value in node.meta.parameters["common"]["results"].items():
+        for key, value in node.meta["mase"].parameters["common"]["results"].items():
             # Skip the parameter instance if the memory is stored off chip
             if (
                 key == "data_out"
-                or node.meta.parameters["hardware"]["interface_parameters"][key][
-                    "storage"
-                ]
+                or node.meta["mase"].parameters["hardware"]["interface_parameters"][
+                    key
+                ]["storage"]
                 != "BRAM"
             ):
                 continue
@@ -838,9 +844,9 @@ logic                                    {node_name}_{key}_we0;
         node_name = vf(node.name)
 
         # Emit kernel instance
-        component_name = node.meta.parameters["hardware"]["module"]
+        component_name = node.meta["mase"].parameters["hardware"]["module"]
         signals = ""
-        for key, value in node.meta.parameters["common"]["args"].items():
+        for key, value in node.meta["mase"].parameters["common"]["args"].items():
             cap_key = v2p(key)
             width = self.verilog_parameters[f"{node_name}_{cap_key}_WIDTH"]
             size = self.verilog_parameters[f"{node_name}_{cap_key}_SIZE"]
@@ -855,7 +861,7 @@ logic                                    {node_name}_{key}_we0;
 .{key}_q0({node_name}_{key}_q0),
 """
 
-        for key, value in node.meta.parameters["common"]["results"].items():
+        for key, value in node.meta["mase"].parameters["common"]["results"].items():
             cap_key = v2p(key)
             width = self.verilog_parameters[f"{node_name}_{cap_key}_WIDTH"]
             size = self.verilog_parameters[f"{node_name}_{cap_key}_SIZE"]
@@ -883,25 +889,25 @@ logic                                    {node_name}_{key}_we0;
 """
 
         # Emit parameter instance
-        for key, value in node.meta.parameters["common"]["args"].items():
+        for key, value in node.meta["mase"].parameters["common"]["args"].items():
             # Skip the parameter instance if the memory is stored off chip
             if (
                 "data_in" in key
-                or node.meta.parameters["hardware"]["interface_parameters"][key][
-                    "storage"
-                ]
+                or node.meta["mase"].parameters["hardware"]["interface_parameters"][
+                    key
+                ]["storage"]
                 != "BRAM"
             ):
                 continue
             components += self._emit_parameters_top_hls(key, value, node)
 
-        for key, value in node.meta.parameters["common"]["results"].items():
+        for key, value in node.meta["mase"].parameters["common"]["results"].items():
             # Skip the parameter instance if the memory is stored off chip
             if (
                 key == "data_out"
-                or node.meta.parameters["hardware"]["interface_parameters"][key][
-                    "storage"
-                ]
+                or node.meta["mase"].parameters["hardware"]["interface_parameters"][
+                    key
+                ]["storage"]
                 != "BRAM"
             ):
                 continue
@@ -920,11 +926,11 @@ logic                                    {node_name}_{key}_we0;
 // --------------------------
 """
         for node in self.fx_graph.nodes:
-            if node.meta.parameters["hardware"]["is_implicit"]:
+            if node.meta["mase"].parameters["hardware"]["is_implicit"]:
                 continue
-            if node.meta.parameters["hardware"]["toolchain"] == "INTERNAL":
+            if node.meta["mase"].parameters["hardware"]["toolchain"] == "INTERNAL":
                 components += self._emit_components_top_internal(node)
-            elif node.meta.parameters["hardware"]["toolchain"] == "HLS":
+            elif node.meta["mase"].parameters["hardware"]["toolchain"] == "HLS":
                 components += self._emit_components_top_hls(node)
             else:
                 assert False, "Unknown node toolchain for signal declarations."
@@ -1344,11 +1350,11 @@ bram_cast #(
             next_nodes_in = []
             for node in nodes_in:
                 node_name = vf(node.name)
-                node_tc = node.meta.parameters["hardware"]["toolchain"]
+                node_tc = node.meta["mase"].parameters["hardware"]["toolchain"]
                 if node not in searched:
                     searched.append(node)
                 for next_node, x in node.users.items():
-                    if next_node.meta.parameters["hardware"]["is_implicit"]:
+                    if next_node.meta["mase"].parameters["hardware"]["is_implicit"]:
                         if next_node not in next_nodes_in:
                             next_nodes_in.append(node)
                         continue
@@ -1356,7 +1362,9 @@ bram_cast #(
                         if next_node not in next_nodes_in and next_node not in searched:
                             next_nodes_in.append(next_node)
                     next_node_name = vf(next_node.name)
-                    next_node_tc = next_node.meta.parameters["hardware"]["toolchain"]
+                    next_node_tc = next_node.meta["mase"].parameters["hardware"][
+                        "toolchain"
+                    ]
                     if node_tc == "INTERNAL" and next_node_tc == "INTERNAL":
                         wires += self._emit_hs_wires_top(node, next_node)
                     elif node_tc == "HLS" and next_node_tc == "INTERNAL":
@@ -1441,19 +1449,23 @@ endmodule
         # ----------------------------------
         arg_count = len(node.all_input_nodes)
         if arg_count == 1:
-            x = torch.randn(node.meta.parameters["common"]["args"]["data_in"]["size"])
+            x = torch.randn(
+                node.meta["mase"].parameters["common"]["args"]["data_in"]["size"]
+            )
         else:
             x = []
             for i in range(0, arg_count):
                 x.append(
                     torch.randn(
-                        node.meta.parameters["common"]["args"][f"data_in_{i}"]["size"]
+                        node.meta["mase"].parameters["common"]["args"][f"data_in_{i}"][
+                            "size"
+                        ]
                     )
                 )
             x = tuple(x)
         try:
             module = torch_mlir.compile(
-                node.meta.module, x, output_type="linalg-on-tensors"
+                node.meta["mase"].module, x, output_type="linalg-on-tensors"
             )
         except:
             logger.error(node)
@@ -1628,18 +1640,18 @@ csynth_design
         rtl_dir = os.path.join(self.project_dir, "hardware", "rtl")
         hls_nodes = []
         for node in self.fx_graph.nodes:
-            if node.meta.parameters["hardware"]["is_implicit"]:
+            if node.meta["mase"].parameters["hardware"]["is_implicit"]:
                 continue
             # If it is an internal module, just copy the files to the project
-            if node.meta.parameters["hardware"]["toolchain"] == "INTERNAL":
+            if node.meta["mase"].parameters["hardware"]["toolchain"] == "INTERNAL":
                 self.dependence_files = _add_dependence_files(
-                    node.meta.parameters["hardware"]["dependence_files"],
+                    node.meta["mase"].parameters["hardware"]["dependence_files"],
                     self.dependence_files,
                 )
                 emit_parameters_in_rom_internal(node, rtl_dir)
             # If it is an HLS module, go through torch-mlir and mlir-hls flow
             # TODO: Call HLS synthesis processes in parallel
-            elif node.meta.parameters["hardware"]["toolchain"] == "HLS":
+            elif node.meta["mase"].parameters["hardware"]["toolchain"] == "HLS":
                 hls_nodes.append(node)
             else:
                 raise NotImplementedError(f"EXTERNAL or HLS not supported yet.")

@@ -1,4 +1,9 @@
-import math, time, os, logging, torch
+import logging
+import math
+import os
+import time
+
+import torch
 
 from ...graph.utils import get_module_by_name, vf
 
@@ -170,8 +175,10 @@ endmodule
 
 
 def emit_data_in_tb_dat(node, data_in, out_file):
-    in_size = node.meta.parameters["hardware"]["verilog_parameters"]["IN_SIZE"]
-    in_width = node.meta.parameters["hardware"]["verilog_parameters"]["IN_WIDTH"]
+    in_size = node.meta["mase"].parameters["hardware"]["verilog_parameters"]["IN_SIZE"]
+    in_width = node.meta["mase"].parameters["hardware"]["verilog_parameters"][
+        "IN_WIDTH"
+    ]
     assert len(data_in[0]) % in_size == 0
 
     trans = """[[transaction]] {}
@@ -204,8 +211,10 @@ def emit_data_in_tb_dat(node, data_in, out_file):
 
 
 def emit_data_in_stream_size_tb_dat(node, data_in, out_file):
-    in_size = node.meta.parameters["hardware"]["verilog_parameters"]["IN_SIZE"]
-    in_width = node.meta.parameters["hardware"]["verilog_parameters"]["IN_WIDTH"]
+    in_size = node.meta["mase"].parameters["hardware"]["verilog_parameters"]["IN_SIZE"]
+    in_width = node.meta["mase"].parameters["hardware"]["verilog_parameters"][
+        "IN_WIDTH"
+    ]
     assert len(data_in[0]) % in_size == 0
 
     trans = """[[transaction]] {}

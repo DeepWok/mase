@@ -5,11 +5,12 @@ from typing import Dict, List, Union
 import regex as re
 import toml
 import torch
+
+# from chop.passes.transforms.quantizer.modifier import mase_symbolic_trace
+from chop.passes.transforms.quantizer.modifier import is_modifiable
 from torch.fx import Graph, GraphModule, Interpreter, Node
 from tqdm import tqdm
 
-# from chop.passes.transforms.quantizer.modifier import mase_symbolic_trace
-from chop.passes.transforms.quantizer.modifier import is_modifiable 
 from ..utils import InputArgsGenerator
 from .stat import _StatBase, new_stat
 
@@ -132,7 +133,7 @@ class ActivationProfiler(Interpreter):
         if self.no_act_to_profile:
             return
         for node in self.module.graph.nodes:
-            node.meta = {}
+            node.meta["mase"] = {}
             if node.op not in ["call_function", "call_method", "call_module"]:
                 continue
 
@@ -158,7 +159,7 @@ class ActivationProfiler(Interpreter):
 
             num_input_nodes = len(node.all_input_nodes)
             for i in range(num_input_nodes):
-                node.meta[f"data_in_{i}"] = ActStatMeta(
+                node.meta["mase"][f"data_in_{i}"] = ActStatMeta(
                     f"{node_name}::data_in_{i}",
                     real_target=real_target,
                     stat_configs=self.stat_configs,
@@ -189,8 +190,8 @@ class ActivationProfiler(Interpreter):
     def export_profile_to_list(self, save_path: str = None):
         stat_dict = {}
         for node in self.module.graph.nodes:
-            if len(node.meta) > 0:
-                for k, v in node.meta.items():
+            if len(node.meta["mase"]) > 0:
+                for k, v in node.meta["mase"].items():
                     if isinstance(v, ActStatMeta):
                         stat_dict |= v.export_to_list()
 
@@ -202,8 +203,8 @@ class ActivationProfiler(Interpreter):
     def export_profile(self, save_path: str = None):
         stat_dict = {}
         for node in self.module.graph.nodes:
-            if len(node.meta) > 0:
-                for k, v in node.meta.items():
+            if len(node.meta["mase"]) > 0:
+                for k, v in node.meta["mase"].items():
                     if isinstance(v, ActStatMeta):
                         stat_dict |= v.export()
         if save_path is not None:

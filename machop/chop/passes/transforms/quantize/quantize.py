@@ -29,20 +29,24 @@ def get_config(config: dict, name: str):
 
 def graph_iterator_quantize_by_type(graph, config: dict):
     for node in graph.fx_graph.nodes:
-        if node.meta.parameters["common"]["mase_op"] not in QUANTIZEABLE_OP:
+        if node.meta["mase"].parameters["common"]["mase_op"] not in QUANTIZEABLE_OP:
             continue
-        node_config = get_config(config, node.meta.parameters["common"]["mase_op"])
+        node_config = get_config(
+            config, node.meta["mase"].parameters["common"]["mase_op"]
+        )
         if node_config["name"] is None:
             continue
-        if node.meta.parameters["common"]["mase_type"] == "module":
-            ori_module = node.meta.module
+        if node.meta["mase"].parameters["common"]["mase_type"] == "module":
+            ori_module = node.meta["mase"].module
             new_module = create_new_module(
-                node.meta.parameters["common"]["mase_op"], ori_module, node_config
+                node.meta["mase"].parameters["common"]["mase_op"],
+                ori_module,
+                node_config,
             )
             parent_name, name = get_parent_name(node.target)
             setattr(graph.modules[parent_name], name, new_module)
             # TODO: update meta_data
-        elif node.meta.parameters["common"]["mase_type"] in [
+        elif node.meta["mase"].parameters["common"]["mase_type"] in [
             "builtin_func",
             "module_related_func",
         ]:
@@ -50,7 +54,7 @@ def graph_iterator_quantize_by_type(graph, config: dict):
             with graph.fx_graph.inserting_before(node):
                 new_node = graph.fx_graph.call_function(new_f, args, kwargs)
                 new_node.name = node.name
-                new_node.meta = copy(node.meta)
+                new_node.meta["mase"] = copy(node.meta["mase"])
                 # TODO: update meta_data
                 node.replace_all_uses_with(new_node)
             graph.fx_graph.erase_node(node)
@@ -59,20 +63,22 @@ def graph_iterator_quantize_by_type(graph, config: dict):
 
 def graph_iterator_quantize_by_name(graph, config: dict):
     for node in graph.fx_graph.nodes:
-        if node.meta.parameters["common"]["mase_op"] not in QUANTIZEABLE_OP:
+        if node.meta["mase"].parameters["common"]["mase_op"] not in QUANTIZEABLE_OP:
             continue
         node_config = get_config(config, node.name)
         if node_config["name"] is None:
             continue
-        if node.meta.parameters["common"]["mase_type"] == "module":
-            ori_module = node.meta.module
+        if node.meta["mase"].parameters["common"]["mase_type"] == "module":
+            ori_module = node.meta["mase"].module
             new_module = create_new_module(
-                node.meta.parameters["common"]["mase_op"], ori_module, node_config
+                node.meta["mase"].parameters["common"]["mase_op"],
+                ori_module,
+                node_config,
             )
             parent_name, name = get_parent_name(node.target)
             setattr(graph.modules[parent_name], name, new_module)
             # TODO: update meta_data
-        elif node.meta.parameters["common"]["mase_type"] in [
+        elif node.meta["mase"].parameters["common"]["mase_type"] in [
             "builtin_func",
             "module_related_func",
         ]:
@@ -80,14 +86,14 @@ def graph_iterator_quantize_by_name(graph, config: dict):
             with graph.fx_graph.inserting_before(node):
                 new_node = graph.fx_graph.call_function(new_f, args, kwargs)
                 new_node.name = node.name
-                new_node.meta = copy(node.meta)
+                new_node.meta["mase"] = copy(node.meta["mase"])
                 # TODO: update meta_data
                 node.replace_all_uses_with(new_node)
             graph.fx_graph.erase_node(node)
         else:
             raise ValueError(
                 "Unsupported node type for quantisation: {}".format(
-                    node.meta.parameters["common"]["mase_type"]
+                    node.meta["mase"].parameters["common"]["mase_type"]
                 )
             )
     return graph
@@ -96,7 +102,7 @@ def graph_iterator_quantize_by_name(graph, config: dict):
 def graph_iterator_quantize_by_regex_name(graph, config: dict):
     patterns = list(config.keys())
     for node in graph.fx_graph.nodes:
-        if node.meta.parameters["common"]["mase_op"] not in QUANTIZEABLE_OP:
+        if node.meta["mase"].parameters["common"]["mase_op"] not in QUANTIZEABLE_OP:
             continue
         matched_pattern = match_a_pattern(node.name, patterns)
         if not matched_pattern:
@@ -105,15 +111,17 @@ def graph_iterator_quantize_by_regex_name(graph, config: dict):
             node_config = get_config(config, matched_pattern)
         if node_config["name"] in [None, "Python None", "NA"]:
             continue
-        if node.meta.parameters["common"]["mase_type"] == "module":
+        if node.meta["mase"].parameters["common"]["mase_type"] == "module":
             ori_module = graph.modules[node.target]
             new_module = create_new_module(
-                node.meta.parameters["common"]["mase_op"], ori_module, node_config
+                node.meta["mase"].parameters["common"]["mase_op"],
+                ori_module,
+                node_config,
             )
             parent_name, name = get_parent_name(node.target)
             setattr(graph.modules[parent_name], name, new_module)
             # TODO: update meta_data
-        elif node.meta.parameters["common"]["mase_type"] in [
+        elif node.meta["mase"].parameters["common"]["mase_type"] in [
             "builtin_func",
             "module_related_func",
         ]:
@@ -121,14 +129,14 @@ def graph_iterator_quantize_by_regex_name(graph, config: dict):
             with graph.fx_graph.inserting_before(node):
                 new_node = graph.fx_graph.call_function(new_f, args, kwargs)
                 new_node.name = node.name
-                new_node.meta = deepcopy(node.meta)
+                new_node.meta["mase"] = deepcopy(node.meta["mase"])
                 # TODO: update meta_data
                 node.replace_all_uses_with(new_node)
             graph.fx_graph.erase_node(node)
         else:
             raise ValueError(
                 "Unsupported node type for quantisation:{}".format(
-                    node.meta.parameters["common"]["mase_type"]
+                    node.meta["mase"].parameters["common"]["mase_type"]
                 )
             )
     return graph
