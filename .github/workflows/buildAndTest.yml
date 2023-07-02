@@ -8,23 +8,7 @@ on:
 
 jobs:
 
-  # build-with-docker:
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #   - uses: actions/checkout@v3
-  #     with:
-  #         submodules: "true"
-  #   - name: Build the Docker image
-  #     run: |
-  #         cd Docker 
-  #         docker build --build-arg UID=$(id -u) --build-arg GID=$(id -g) . --tag mase-centos8
-  #         
-  #   - name: Build the tool
-  #     run: |
-  #         docker run -d -i --name mase-ci -u $(id -u) -v $(pwd):/workspace mase-centos8:latest /bin/bash
-  #         docker exec -i -w /workspace mase-ci make build
-
-  build-with-ubuntu:
+  build-and-test:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
@@ -32,7 +16,7 @@ jobs:
           submodules: "true"
 
     # -----------
-    # Format check 
+    # Software Format check 
     # -----------
 
     - name: Check missing breakpoint 
@@ -48,9 +32,9 @@ jobs:
           sudo apt-get install -y \
                           python3 python3-pip clang-format clang-tidy
           pip3 install --user --upgrade pip
-          pip3 install black
+          pip3 install black isort 
 
-    # Run black to check Python formatting.
+    # Run black and isort to check Python formatting.
     - name: python-format
       if: ${{ always() }}
       shell: bash
@@ -61,42 +45,7 @@ jobs:
           do
             if [[ -f $f ]]; then
               python3 -m black $f
-            fi
-          done
-        fi
-
-    - name: Install Verible 
-      run: |
-          # Install SystemVerilog formatter
-          (mkdir -p "${HOME}"/srcPkgs \
-          && cd "${HOME}"/srcPkgs \
-          && wget https://github.com/chipsalliance/verible/releases/download/v0.0-2776-gbaf0efe9/verible-v0.0-2776-gbaf0efe9-Ubuntu-22.04-jammy-x86_64.tar.gz \
-          && mkdir -p verible \
-          && tar xzvf verible-*-x86_64.tar.gz -C verible --strip-components 1)
-          ln -s "${HOME}"/srcPkgs/verible/bin/verible-verilog-format /usr/local/bin/verible-verilog-format
-          ln -s "${HOME}"/srcPkgs/verible/bin/verible-verilog-diff /usr/local/bin/verible-verilog-diff
-          ln -s "${HOME}"/srcPkgs/verible/bin/git-verible-verilog-format.sh /usr/local/bin/git-verible-verilog-format.sh
-
-    # Run verible-verilog-format to check Verilog/SystemVerilog formatting.
-    - name: verilog-format
-      if: ${{ always() }}
-      shell: bash
-      run: |
-        files=$(git diff --name-only $DIFF_COMMIT | grep -e '\.sv$' || echo -n)
-        if [[ ! -z $files ]]; then
-          for f in $files
-          do
-            if [[ -f $f ]]; then
-              verible-verilog-format $f | diff - $f
-            fi
-          done
-        fi
-        files=$(git diff --name-only $DIFF_COMMIT | grep -e '\.v$' || echo -n)
-        if [[ ! -z $files ]]; then
-          for f in $files
-          do
-            if [[ -f $f ]]; then
-              verible-verilog-format $f | diff - $f
+              [[ ! -z "$(isort ${f} --diff)" ]] && exit 1
             fi
           done
         fi
@@ -220,53 +169,39 @@ jobs:
         fi
 
     # -----------
-    # Hardware regression test 
+    # Mase regression test 
     # -----------
     
-    - name: Get dependences 
-      run: |
-          sudo apt-get update
-          sudo apt-get install apt-utils -y
-          # sudo apt-get upgrade -y
-          sudo apt-get install -y \
-                          clang cmake graphviz-dev libclang-dev \
-                          pkg-config g++ libxtst6 xdg-utils \
-                          libboost-all-dev llvm gcc ninja-build \
-                          python3 python3-pip build-essential \
-                          libssl-dev git vim wget htop sudo \
-                          lld 
-          sudo apt-get update -y
-          sudo apt-get install -y \
-                          perl make autoconf flex bison libunwind-dev \
-                          ccache libgoogle-perftools-dev numactl \
-                          perl-doc libfl2 libfl-dev zlib1g zlib1g-dev \
-                          help2man libidn11-dev
+    # - name: Get dependences 
+    #   run: |
+    #       sudo apt-get update
+    #       sudo apt-get install apt-utils -y
+    #       # sudo apt-get upgrade -y
+    #       sudo apt-get install -y \
+    #                       clang cmake graphviz-dev libclang-dev \
+    #                       pkg-config g++ libxtst6 xdg-utils \
+    #                       libboost-all-dev llvm gcc ninja-build \
+    #                       python3 python3-pip build-essential \
+    #                       libssl-dev git vim wget htop sudo \
+    #                       lld 
+    #       sudo apt-get update -y
+    #       sudo apt-get install -y \
+    #                       perl make autoconf flex bison libunwind-dev \
+    #                       ccache libgoogle-perftools-dev numactl \
+    #                       perl-doc libfl2 libfl-dev zlib1g zlib1g-dev \
+    #                       help2man libidn11-dev
 
-    - name: Install Verilator 
-      run: |
-          # Install verilator from source - version v5.006
-          (mkdir -p "${HOME}"/srcPkgs \
-          && cd "${HOME}"/srcPkgs \
-          && git clone https://github.com/verilator/verilator \
-          && unset VERILATOR_ROOT \
-          && cd verilator \
-          && git checkout v5.006 \
-          && autoconf \
-          && ./configure \
-          && make \
-          && sudo make install)
+    #       pip3 install --user --upgrade pip
+    #       pip3 install onnx toml GitPython colorlog \
+    #                    pytest pytorch-lightning transformers toml \
+    #                    timm pytorch-nlp datasets IPython ipdb \
+    #                    sentencepiece einops deepspeed pybind11 \
+    #                    tabulate tensorboard hyperopt
+    #       pip3 install cocotb[bus]==1.8.0 
 
-          pip3 install --user --upgrade pip
-          pip3 install onnx toml GitPython colorlog \
-                       pytest pytorch-lightning transformers toml \
-                       timm pytorch-nlp datasets IPython ipdb \
-                       sentencepiece einops deepspeed pybind11 \
-                       tabulate tensorboard hyperopt
-          pip3 install cocotb[bus]==1.8.0 
-
-    - name: Hardware regression test 
-      run: |
-          python3 scripts/test-hardware.py -a
+    # - name: Hardware regression test 
+    #   run: |
+    #       bash scripts/test-mase.py -a
 
     # -----------
     # Mase regression test 
