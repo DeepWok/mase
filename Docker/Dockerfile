@@ -17,7 +17,7 @@ RUN apt-get update -y \
     && apt-get install -y clang cmake graphviz-dev libclang-dev \
                           pkg-config g++ libxtst6 xdg-utils \
                           libboost-all-dev llvm gcc ninja-build \
-                          python3.11 python3-pip build-essential \
+                          python3 python3-pip build-essential \
                           libssl-dev git vim wget htop sudo \
                           lld parallel clang-format clang-tidy \
                           libtinfo5 gcc-multilib libidn11-dev
@@ -45,10 +45,6 @@ RUN mkdir -p /srcPkgs \
     && make -j \
     && make install
 
-RUN update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.10 100 \
-    && update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.11 110 \
-    && update-alternatives --config python3
-
 # Append any packages you need here
 # RUN apt-get ...
 
@@ -64,7 +60,7 @@ USER dev-user
 ENV PATH="${PATH}:/home/dev-user/.local/bin"
 RUN pip3 install --user --upgrade pip 
 RUN pip3 install -f https://download.pytorch.org/whl/nightly/cpu/torch_nightly.html \
-    --pre torchvision==0.16.0.dev20230702
+    --pre torchvision==0.16.0.dev20230512
 RUN pip3 install onnx black toml GitPython colorlog cocotb[bus]==1.8.0 \
                     pytest pytorch-lightning transformers toml \
                     timm pytorch-nlp datasets ipython ipdb \
@@ -73,8 +69,8 @@ RUN pip3 install onnx black toml GitPython colorlog cocotb[bus]==1.8.0 \
 # Install Torch-MLIR and Pytorch
 RUN mkdir -p /home/dev-user/srcPkgs \
     && cd /home/dev-user/srcPkgs \
-    && wget https://github.com/llvm/torch-mlir/releases/download/snapshot-20230702.887/torch-2.1.0.dev20230701+cpu-cp311-cp311-linux_x86_64.whl \
-    && wget https://github.com/llvm/torch-mlir/releases/download/snapshot-20230702.887/torch_mlir-20230702.887-cp311-cp311-linux_x86_64.whl \
+    && wget https://github.com/llvm/torch-mlir/releases/download/snapshot-20230513.837/torch-2.1.0.dev20230512+cpu-cp310-cp310-linux_x86_64.whl \
+    && wget https://github.com/llvm/torch-mlir/releases/download/snapshot-20230513.837/torch_mlir-20230513.837-cp310-cp310-linux_x86_64.whl \
     && pip3 install torch-*.whl torch_mlir-*.whl
 # The standard build is not stable as the torch
 # RUN pip3 install --pre torch-mlir torchvision \

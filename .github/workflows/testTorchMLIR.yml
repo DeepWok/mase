@@ -1,4 +1,4 @@
-name: Build and Test
+name: Torch-MLIR Test
 
 on:
   push:
@@ -23,7 +23,7 @@ jobs:
                           clang cmake graphviz-dev libclang-dev \
                           pkg-config g++ libxtst6 xdg-utils \
                           libboost-all-dev llvm gcc ninja-build \
-                          python3.11 python3-pip build-essential \
+                          python3 python3-pip build-essential \
                           libssl-dev git vim wget htop sudo \
                           lld 
           sudo apt-get update -y
@@ -33,23 +33,18 @@ jobs:
                           perl-doc libfl2 libfl-dev zlib1g zlib1g-dev \
                           help2man libidn11-dev
 
-          sudo update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.10 100 
-          sudo update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.11 110 
-          sudo update-alternatives --config python3
-
-
     - name: Install Torch-MLIR 
       run: |
           pip3 install --user --upgrade pip
           pip3 install -f https://download.pytorch.org/whl/nightly/cpu/torch_nightly.html \
-          --pre torchvision==0.16.0.dev20230702
+          --pre torchvision==0.16.0.dev20230512
           pip3 install onnx toml GitPython  \
                               pytorch-lightning transformers toml \
                               timm pytorch-nlp datasets ipython ipdb \
                               sentencepiece einops pybind11
-          wget https://github.com/llvm/torch-mlir/releases/download/snapshot-20230702.887/torch-2.1.0.dev20230701+cpu-cp311-cp311-linux_x86_64.whl \
-          && wget https://github.com/llvm/torch-mlir/releases/download/snapshot-20230702.887/torch_mlir-20230702.887-cp311-cp311-linux_x86_64.whl \
-          && pip3 install torch-*.whl torch_mlir-*.whl
+          wget https://github.com/llvm/torch-mlir/releases/download/snapshot-20230513.837/torch-2.1.0.dev20230512+cpu-cp310-cp310-linux_x86_64.whl
+          wget https://github.com/llvm/torch-mlir/releases/download/snapshot-20230513.837/torch_mlir-20230513.837-cp310-cp310-linux_x86_64.whl
+          pip3 install torch-*.whl torch_mlir-*.whl
 
     - name: Torch-MLIR regression test 
       run: |
