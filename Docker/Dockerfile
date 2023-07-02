@@ -17,7 +17,7 @@ RUN apt-get update -y \
     && apt-get install -y clang cmake graphviz-dev libclang-dev \
                           pkg-config g++ libxtst6 xdg-utils \
                           libboost-all-dev llvm gcc ninja-build \
-                          python3 python3-pip build-essential \
+                          python3.11 python3-pip build-essential \
                           libssl-dev git vim wget htop sudo \
                           lld parallel clang-format clang-tidy \
                           libtinfo5 gcc-multilib libidn11-dev
@@ -45,6 +45,10 @@ RUN mkdir -p /srcPkgs \
     && make -j \
     && make install
 
+RUN update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.10 100 \
+    && update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.11 110 \
+    && update-alternatives --config python3
+
 # Append any packages you need here
 # RUN apt-get ...
 
@@ -58,16 +62,24 @@ USER dev-user
 
 # Install PyTorch and Torch-MLIR
 ENV PATH="${PATH}:/home/dev-user/.local/bin"
-RUN pip3 install --user --upgrade pip \
-    && pip3 install --pre torch-mlir torchvision \
-    -f https://llvm.github.io/torch-mlir/package-index/ \
-    --extra-index-url https://download.pytorch.org/whl/nightly/cpu \
-    && pip3 install onnx black toml GitPython colorlog cocotb[bus] \
+RUN pip3 install --user --upgrade pip 
+RUN pip3 install -f https://download.pytorch.org/whl/nightly/cpu/torch_nightly.html \
+    --pre torchvision==0.16.0.dev20230702
+RUN pip3 install onnx black toml GitPython colorlog cocotb[bus]==1.8.0 \
                     pytest pytorch-lightning transformers toml \
                     timm pytorch-nlp datasets ipython ipdb \
                     sentencepiece einops deepspeed pybind11 \
-                    tabulate tensorboardx hyperopt
-
+                    tabulate tensorboardx hyperopt isort
+# Install Torch-MLIR and Pytorch
+RUN mkdir -p /home/dev-user/srcPkgs \
+    && cd /home/dev-user/srcPkgs \
+    && wget https://github.com/llvm/torch-mlir/releases/download/snapshot-20230702.887/torch-2.1.0.dev20230701+cpu-cp311-cp311-linux_x86_64.whl \
+    && wget https://github.com/llvm/torch-mlir/releases/download/snapshot-20230702.887/torch_mlir-20230702.887-cp311-cp311-linux_x86_64.whl \
+    && pip3 install torch-*.whl torch_mlir-*.whl
+# The standard build is not stable as the torch
+# RUN pip3 install --pre torch-mlir torchvision \
+#                  -f https://llvm.github.io/torch-mlir/package-index/ \
+#                  --extra-index-url https://download.pytorch.org/whl/nightly/cpu
 
 # Add environment variables
 ENV vhls $VHLS_PATH
@@ -99,6 +111,7 @@ RUN printf "\
 \nautocmd BufWritePost *.cc  silent! !clang-format -i <afile> \
 \nautocmd BufWritePost *.py  silent! set tabstop=4 shiftwidth=4 expandtab \
 \nautocmd BufWritePost *.py  silent! !python3 -m black <afile> \
+\nautocmd BufWritePost *.py  silent! !isort <afile> \
 \nautocmd BufWritePost *.sv  silent! !verible-verilog-format --inplace <afile> \
 \nautocmd BufWritePost *.v  silent! !verible-verilog-format --inplace <afile> \
 \nautocmd BufWritePost * redraw! \

@@ -1,0 +1,57 @@
+name: Build and Test
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+
+  build-with-ubuntu:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+      with:
+          submodules: "true"
+
+    - name: Get dependences 
+      run: |
+          sudo apt-get update
+          sudo apt-get install apt-utils -y
+          sudo apt-get install -y \
+                          clang cmake graphviz-dev libclang-dev \
+                          pkg-config g++ libxtst6 xdg-utils \
+                          libboost-all-dev llvm gcc ninja-build \
+                          python3.11 python3-pip build-essential \
+                          libssl-dev git vim wget htop sudo \
+                          lld 
+          sudo apt-get update -y
+          sudo apt-get install -y \
+                          perl make autoconf flex bison libunwind-dev \
+                          ccache libgoogle-perftools-dev numactl \
+                          perl-doc libfl2 libfl-dev zlib1g zlib1g-dev \
+                          help2man libidn11-dev
+
+          sudo update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.10 100 
+          sudo update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.11 110 
+          sudo update-alternatives --config python3
+
+
+    - name: Install Torch-MLIR 
+      run: |
+          pip3 install --user --upgrade pip
+          pip3 install -f https://download.pytorch.org/whl/nightly/cpu/torch_nightly.html \
+          --pre torchvision==0.16.0.dev20230702
+          pip3 install onnx toml GitPython  \
+                              pytorch-lightning transformers toml \
+                              timm pytorch-nlp datasets ipython ipdb \
+                              sentencepiece einops pybind11
+          wget https://github.com/llvm/torch-mlir/releases/download/snapshot-20230702.887/torch-2.1.0.dev20230701+cpu-cp311-cp311-linux_x86_64.whl \
+          && wget https://github.com/llvm/torch-mlir/releases/download/snapshot-20230702.887/torch_mlir-20230702.887-cp311-cp311-linux_x86_64.whl \
+          && pip3 install torch-*.whl torch_mlir-*.whl
+
+    - name: Torch-MLIR regression test 
+      run: |
+          python3 scripts/test-torch-mlir.py
+
