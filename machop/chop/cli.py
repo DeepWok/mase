@@ -36,7 +36,7 @@ from chop.tools.get_input import get_cf_args
 # from chop.models.patched_nlp_models.custom_nlp_modules import get_custom_modify_sw_kwargs
 
 
-logger = getLogger("Chop")
+logger = getLogger("chop")
 
 
 class ChopCLI:

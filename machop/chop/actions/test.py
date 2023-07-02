@@ -5,10 +5,21 @@ import pickle
 import pytorch_lightning as pl
 from chop.plt_wrapper import get_model_wrapper
 from chop.tools.checkpoint_load import load_model
-from pytorch_lightning.callbacks import DeviceStatsMonitor
 from pytorch_lightning.loggers import TensorBoardLogger
 from pytorch_lightning.plugins.environments import SLURMEnvironment
-from pytorch_lightning.strategies.deepspeed import DeepSpeedStrategy
+
+logger = logging.getLogger(__name__)
+
+
+import logging
+import os
+import pickle
+
+import pytorch_lightning as pl
+from chop.plt_wrapper import get_model_wrapper
+from chop.tools.checkpoint_load import load_model
+from pytorch_lightning.loggers import TensorBoardLogger
+from pytorch_lightning.plugins.environments import SLURMEnvironment
 
 logger = logging.getLogger(__name__)
 
@@ -31,8 +42,6 @@ def test(
         os.makedirs(save_path)
     if save_path is not None:
         tb_logger = TensorBoardLogger(save_dir=save_path, name="logs_test-sw")
-        # gpu_usage_callback = DeviceStatsMonitor()
-        # plt_trainer_args["callbacks"] = [gpu_usage_callback]
         plt_trainer_args["callbacks"] = []
         plt_trainer_args["logger"] = tb_logger
 
