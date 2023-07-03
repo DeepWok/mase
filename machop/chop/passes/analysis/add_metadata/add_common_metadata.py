@@ -207,13 +207,6 @@ def add_common_metadata_analysis_pass(graph, pass_args=None):
     """
     Pass args : initial dummy inputs for inferencing all the shapes for each node
     """
-    for node in graph.fx_graph.nodes:
-        node.meta["mase"] = MaseMetadata(
-            node=node,
-            model=graph.model,
-            fx_graph=graph.fx_graph,
-        )
-    # This has to be before init parameters
     graph.nodes_in = get_input_nodes(graph.fx_graph)
     graph.nodes_out = get_output_nodes(graph.fx_graph)
     graph = graph_iterator_for_mase_ops(graph)
