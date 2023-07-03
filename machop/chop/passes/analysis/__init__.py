@@ -4,14 +4,13 @@ import torch
 # from .statistical_profiler import run_statistical_profiler
 from .add_metadata import add_common_metadata_analysis_pass
 from .init_metadata import init_metadata_analysis_pass
+from .report import report_metadata_analysis_pass
 from .verify import (
-    verify_metadata_analysis_pass,
     verify_common_metadata_analysis_pass,
-    verify_software_metadata_analysis_pass,
     verify_hardware_metadata_analysis_pass,
+    verify_metadata_analysis_pass,
+    verify_software_metadata_analysis_pass,
 )
-from .report import report
-
 
 analysis_passes = {
     "init_metadata": init_metadata_analysis_pass,

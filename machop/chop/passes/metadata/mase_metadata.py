@@ -1,10 +1,5 @@
 import logging
-import math
-import os
-import time
 
-import torch
-import torch.fx
 from torch import nn
 
 from ..utils import get_module_by_name
@@ -54,17 +49,11 @@ class MaseMetadata:
         self,
         node=None,
         model=None,
-        fx_graph=None,
     ):
         # Top-level model
         self.model = model
-        # The target module in the model
-        self.module = get_module_by_name(model, node.target)
-        # The type of the module
-        self.type = type(self.module)
         # The fx node of the module in the fx graph of the model
         self.node = node
-        self.graph = fx_graph
         # layers that we have in RTL
         self.internal_layers = {nn.Linear: "linear", nn.ReLU: "relu"}
 
@@ -73,3 +62,17 @@ class MaseMetadata:
             "software": {},
             "hardware": {},
         }
+
+    @property
+    def module(self):
+        # The target module in the model
+        # if it is not a "call_module" node, return None
+        if self.node.op == "call_module":
+            return get_module_by_name(self.model, self.node.target)
+        else:
+            return None
+
+    @property
+    def graph(self):
+        # The fx graph of the model
+        return self.model.graph

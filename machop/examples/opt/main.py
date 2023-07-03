@@ -9,7 +9,7 @@ import torch.nn as nn
 sys.path.append(os.path.join("..", "..", "..", "machop"))
 from chop.dataset import get_dataset_info
 from chop.models import model_map
-from chop.passes.analysis.report import report
+from chop.passes.analysis.report import report_graph_analysis_pass
 from chop.passes.analysis.verify import verify
 from chop.passes.graph.mase_graph import MaseGraph
 
