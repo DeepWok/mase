@@ -2,19 +2,15 @@ import logging
 
 from chop.passes.utils import vf
 
-from .common_metadata_layers import (
-    verify_common_metadata_flatten,
-    verify_common_metadata_general,
-    verify_common_metadata_linear,
-    verify_common_metadata_output,
-    verify_common_metadata_placeholder,
-    verify_common_metadata_relu,
-)
-from .hardware_metadata_layers import (  # verify_hardware_metadata_placeholder,; verify_hardware_metadata_output,; verify_hardware_metadata_flatten,
-    verify_hardware_metadata_general,
-    verify_hardware_metadata_linear,
-    verify_hardware_metadata_relu,
-)
+from .common_metadata_layers import (verify_common_metadata_flatten,
+                                     verify_common_metadata_general,
+                                     verify_common_metadata_input,
+                                     verify_common_metadata_linear,
+                                     verify_common_metadata_output,
+                                     verify_common_metadata_relu)
+from .hardware_metadata_layers import (verify_hardware_metadata_general,
+                                       verify_hardware_metadata_linear,
+                                       verify_hardware_metadata_relu)
 
 logger = logging.getLogger(__name__)
 
@@ -28,7 +24,7 @@ def verify_node_common_metadata(node):
     """
     verify_common_metadata_general(node.meta["mase"])
     if node.meta["mase"].parameters["common"]["mase_op"] == "placeholder":
-        verify_common_metadata_placeholder(node.meta["mase"])
+        verify_common_metadata_input(node.meta["mase"])
     elif node.meta["mase"].parameters["common"]["mase_op"] == "output":
         verify_common_metadata_output(node.meta["mase"])
     elif node.meta["mase"].parameters["common"]["mase_op"] == "linear":
@@ -37,6 +33,8 @@ def verify_node_common_metadata(node):
         verify_common_metadata_relu(node.meta["mase"])
     elif node.meta["mase"].parameters["common"]["mase_op"] == "flatten":
         verify_common_metadata_flatten(node.meta["mase"])
+    elif node.meta["mase"].parameters["common"]["mase_op"] == "constant":
+        verify_common_metadata_input(node.meta["mase"])
     else:
         raise ValueError(
             "Unknown mase op: {}".format(

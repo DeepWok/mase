@@ -1,20 +1,17 @@
 #!/usr/bin/env python3
 # This example converts a simple MLP model to Verilog
-import os, sys, logging
+import logging
+import os
+import sys
+
 import torch
 import torch.nn as nn
 
 sys.path.append(os.path.join("..", "..", "..", "machop"))
+from chop.passes.analysis import (add_common_metadata_analysis_pass,
+                                  init_metadata_analysis_pass, report,
+                                  verify_common_metadata_analysis_pass)
 from chop.passes.graph.mase_graph import MaseGraph
-
-
-from chop.passes.analysis import (
-    add_common_metadata_analysis_pass,
-    init_metadata_analysis_pass,
-    verify_common_metadata_analysis_pass,
-    report,
-)
-
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
@@ -38,6 +35,8 @@ class MLP(torch.nn.Module):
     def forward(self, x):
         x = torch.flatten(x, start_dim=1, end_dim=-1)
         x = torch.nn.functional.relu(self.fc1(x))
+        # w = torch.randn((4, 28 * 28))
+        # x = torch.nn.functional.relu(nn.functional.linear(x, w))
         x = torch.nn.functional.relu(self.fc2(x))
         x = self.fc3(x)
         return x
