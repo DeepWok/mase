@@ -10,7 +10,7 @@ MASE_TYPES = [
 
 
 MASE_IMPLICIT_FUNCS = ["size", "view"]
-MASE_MODULE_RELATED_FUNCS = ["relu"]
+MASE_MODULE_RELATED_FUNCS = ["relu", "linear"]
 MASE_MODULES = [
     "adaptiveavgpool1d",
     "adaptiveavgpool2d",

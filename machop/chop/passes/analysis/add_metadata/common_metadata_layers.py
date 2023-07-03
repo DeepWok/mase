@@ -1,6 +1,8 @@
-import inspect, torch, math
-from chop.passes.utils import vf
+import inspect
+import math
 
+import torch
+from chop.passes.utils import vf
 
 # ----------------------------------------------------------
 # Placeholder
@@ -73,31 +75,24 @@ def analyse_common_parameters_output(meta):
 
 
 def analyse_common_parameters_linear(meta):
-    for name, parameter in meta.module.named_parameters():
-        meta.parameters["common"]["args"][name] = {
-            "type": "float",
-            "precision": [32],
-            "size": parameter.shape,
-        }
-
-    assert hasattr(
-        meta.module, "in_features"
-    ), f"Linear layer {meta.node.name} does not have in features."
-    assert hasattr(
-        meta.module, "out_features"
-    ), f"Linear layer {meta.node.name} does not have out features."
-
-    assert meta.module.in_features == math.prod(
-        meta.parameters["common"]["args"]["data_in_0"]["size"]
-    )
+    if meta.module is not None:
+        for name, parameter in meta.module.named_parameters():
+            meta.parameters["common"]["args"][name] = {
+                "type": "float",
+                "precision": [32],
+                "size": parameter.shape,
+            }
+        weight_name = "weight"
+    else:
+        weight_name = "data_in_1"
 
     meta.parameters["common"]["results"] = {
         "data_out_0": {
             "type": "float",
             "precision": [32],
             "size": (
-                1,
-                meta.module.out_features,
+                meta.parameters["common"]["args"]["data_in_0"]["size"][0],
+                meta.parameters["common"]["args"][weight_name]["size"][1],
             ),
         }
     }
@@ -107,9 +102,49 @@ def analyse_common_parameters_linear(meta):
 # ----------------------------------------------------------
 # ReLU
 # ----------------------------------------------------------
+
+
 def analyse_common_parameters_relu(meta):
     meta.parameters["common"]["results"] = {}
     meta.parameters["common"]["results"]["data_out_0"] = meta.parameters["common"][
         "args"
     ]["data_in_0"]
+    return meta
+
+
+# ----------------------------------------------------------
+# Constant
+# ----------------------------------------------------------
+
+
+def _fetch_attr(target: str, meta):
+    """
+    Get attr return tensor
+    """
+
+    target_atoms = target.split(".")
+    attr_itr = meta.model
+    for i, atom in enumerate(target_atoms):
+        if not hasattr(attr_itr, atom):
+            raise RuntimeError(
+                f"Node referenced nonexistant target {'.'.join(target_atoms[:i])}"
+            )
+        attr_itr = getattr(attr_itr, atom)
+    return attr_itr
+
+
+def analyse_common_parameters_constant(meta):
+    """
+    A constant is an op that provides constant.
+    """
+
+    result = _fetch_attr(meta.node.target, meta)
+
+    meta.parameters["common"]["args"] = {}
+    meta.parameters["common"]["results"] = {}
+    meta.parameters["common"]["results"]["data_out_0"] = {
+        "type": "float",
+        "precision": [32],
+        "size": list(result.size()),
+    }
     return meta

@@ -3,23 +3,19 @@ import logging
 import toml
 import torch
 import torch.fx as fx
-from chop.passes.analysis.utils import (
-    get_input_nodes,
-    get_output_nodes,
-    match_and_filter,
-)
+from chop.passes.analysis.utils import (get_input_nodes, get_output_nodes,
+                                        match_and_filter)
 from chop.passes.common import MASE_BUILTIN_FUNCS, MASE_MODULE_RELATED_FUNCS
 from chop.passes.metadata.mase_metadata import MaseMetadata
 from tabulate import tabulate
 from torch import nn
 
-from .common_metadata_layers import (
-    analyse_common_parameters_flatten,
-    analyse_common_parameters_linear,
-    analyse_common_parameters_output,
-    analyse_common_parameters_placeholder,
-    analyse_common_parameters_relu,
-)
+from .common_metadata_layers import (analyse_common_parameters_constant,
+                                     analyse_common_parameters_flatten,
+                                     analyse_common_parameters_linear,
+                                     analyse_common_parameters_output,
+                                     analyse_common_parameters_placeholder,
+                                     analyse_common_parameters_relu)
 
 logger = logging.getLogger(__name__)
 
@@ -96,8 +92,12 @@ def graph_iterator_for_mase_ops(graph):
             node.meta["mase"].parameters["common"]["mase_op"] = "placeholder"
 
         elif node.op == "get_attr":
-            node.meta["mase"].parameters["common"]["mase_type"] = "get_attr"
-            raise NotImplementedError(f"Unknown node type: {node.target}")
+            if node.name in ["_tensor_constant0"]:
+                node.meta["mase"].parameters["common"]["mase_type"] = "implicit_func"
+                node.meta["mase"].parameters["common"]["mase_op"] = "constant"
+            else:
+                node.meta["mase"].parameters["common"]["mase_type"] = "get_attr"
+                raise NotImplementedError(f"Unknown node type: {node.target}")
 
         elif node.op == "output":
             node.meta["mase"].parameters["common"]["mase_type"] = "output"
@@ -121,6 +121,8 @@ def analysis_common_parameters(node, dummy_in):
         node.meta["mase"] = analyse_common_parameters_relu(node.meta["mase"])
     elif node.meta["mase"].parameters["common"]["mase_op"] == "flatten":
         node.meta["mase"] = analyse_common_parameters_flatten(node.meta["mase"])
+    elif node.meta["mase"].parameters["common"]["mase_op"] == "constant":
+        node.meta["mase"] = analyse_common_parameters_constant(node.meta["mase"])
     else:
         raise ValueError(
             "Unknown mase op: {}".format(
@@ -169,14 +171,18 @@ def graph_iterator_for_metadata(graph, dummy_in=None):
 
             count = 0
             for input_node in node.all_input_nodes:
-                count = input_node in updated_map
+                count += input_node in updated_map
             if count == len(node.all_input_nodes):
                 analysis_common_parameters(node, dummy_in)
                 updated_map[node] = True
                 for next_node, x in node.users.items():
-                    next_nodes_in.append(next_node)
-            else:
+                    if next_node not in next_nodes_in:
+                        next_nodes_in.append(next_node)
+            elif next_node not in next_nodes_in:
                 next_nodes_in.append(node)
+        if nodes_in == next_nodes_in:
+            raise ValueError("Deadlock detected.")
+
         nodes_in = next_nodes_in
 
     assert len(updated_map.keys()) == len(graph.fx_graph.nodes)
@@ -211,5 +217,5 @@ def add_common_metadata_analysis_pass(graph, pass_args=None):
     graph.nodes_in = get_input_nodes(graph.fx_graph)
     graph.nodes_out = get_output_nodes(graph.fx_graph)
     graph = graph_iterator_for_mase_ops(graph)
-    # graph = graph_iterator_for_metadata(graph, pass_args)
+    graph = graph_iterator_for_metadata(graph, pass_args)
     return graph
