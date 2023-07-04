@@ -1,4 +1,5 @@
 import os
+from copy import deepcopy
 
 import torch
 from chop.passes import passes
@@ -14,7 +15,7 @@ from chop.passes.transforms.interface import (
 )
 from chop.tools.checkpoint_load import load_model
 from chop.tools.config_load import load_config
-from chop.tools.get_input import get_cf_args
+from chop.tools.get_input import get_cf_args, get_dummy_input
 
 
 def pre_transform_load(load_name: str, load_type: str, model: torch.nn.Module):
@@ -26,7 +27,7 @@ def pre_transform_load(load_name: str, load_type: str, model: torch.nn.Module):
 def transform(
     model_name: str,
     model: torch.nn.Module,
-    info: dict,
+    is_nlp_model: bool,
     task: str,
     data_module,
     config: str,
@@ -51,14 +52,26 @@ def transform(
     if load_name is not None and load_type == "mz":
         graph = load_mase_graph_transform_pass(graph, pass_args=load_name)
     else:
-        graph = add_common_metadata_analysis_pass(graph, pass_args=None)
+        dummy_in = get_dummy_input(
+            datamodule=data_module,
+            task=task,
+            is_nlp_model=is_nlp_model,
+        )
+        graph = add_common_metadata_analysis_pass(graph, pass_args=dummy_in)
+
     graph = report_metadata_analysis_pass(graph, pass_args=None)
 
     # passes
     pass_config = config["passes"]
     for pass_name, pass_config in pass_config.items():
-        my_pass = passes[pass_name]
-        graph = my_pass(graph, pass_args=pass_config)
+        if pass_name == "quantize":
+            # Jianyi suggest to separate quantize and quantize_summary, and put them inline in transform.py
+            ori_graph = deepcopy(graph)
+            graph = passes["quantize"](graph, pass_args=pass_config)
+            passes["quantize_summary"](ori_graph, graph, save_dir=save_dir)
+        else:
+            my_pass = passes[pass_name]
+            graph = my_pass(graph, pass_args=pass_config)
 
     # save transformed model
     if save_dir is not None:

@@ -1,1 +1,1 @@
-from .quantize import quantize_transform_pass
+from .quantize import quantize_summary_analysis_pass, quantize_transform_pass

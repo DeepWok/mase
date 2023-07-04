@@ -84,3 +84,26 @@ def get_input_index(node, next_node):
             == node
         ):
             return i
+
+
+def get_mase_op(node):
+    return node.meta["mase"].parameters["common"]["mase_op"]
+
+
+def get_mase_type(node):
+    return node.meta["mase"].parameters["common"]["mase_type"]
+
+
+def node_actual_target(node):
+    """
+    return the actual target of the node
+    - for "call_module": return the torch.nn.Module instance
+    - for "call_function": return the function
+    - for others: return the node.target
+    """
+    if node.op == "call_module":
+        return node.meta["mase"].module
+    elif node.op == "call_function":
+        return node.target
+    else:
+        return node.target

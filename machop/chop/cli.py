@@ -483,12 +483,14 @@ class ChopCLI:
         ), "--config must be provided if using action=transform"
         logger.info(f"Transforming model {args.model!r}...")
 
+        self.data_module.prepare_data()
+        self.data_module.setup()
         transform_params = {
             "model_name": args.model,
             "model": self.model["model"]
             if isinstance(self.model, dict)
             else self.model,
-            "info": self.info,
+            "is_nlp_model": args.model in nlp_models,
             "task": args.task,
             "data_module": self.data_module,
             "config": args.config,
