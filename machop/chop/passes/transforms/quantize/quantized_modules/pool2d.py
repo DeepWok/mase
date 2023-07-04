@@ -13,13 +13,10 @@ from ..quantizers import (
     minifloat_denorm_quantizer,
     minifloat_ieee_quantizer,
 )
-from .utils import extract_required_config
 
 
 class _AvgPool2dBase(torch.nn.AvgPool2d):
     bypass = False
-    _required_config_keys = None
-    _optional_config_keys = None
 
     def forward(self, x: Tensor) -> Tensor:
         if self.bypass:
@@ -45,11 +42,8 @@ class _AvgPool2dBase(torch.nn.AvgPool2d):
             self.divisor_override,
         )
 
-    def construct_essential_config(self, config) -> dict:
-        raise NotImplementedError
-
-    def get_output_bitwidth(self) -> dict:
-        raise NotImplementedError
+    # def get_output_bitwidth(self) -> dict:
+    #     raise NotImplementedError
 
 
 class AvgPool2dInteger(_AvgPool2dBase):
@@ -80,26 +74,20 @@ class AvgPool2dInteger(_AvgPool2dBase):
         self.x_quantizer = partial(
             integer_quantizer, width=x_width, frac_width=x_frac_width
         )
-        self.config = self.construct_essential_config(config)
+        self.config = config
 
-    def construct_essential_config(self, config) -> dict:
-        r_config = extract_required_config(self, config)
-        o_config = {}
-        o_config["bypass"] = config.get("bypass", False)
-        return r_config | o_config
+    # def get_output_bitwidth(self) -> dict:
+    #     config = self.config
 
-    def get_output_bitwidth(self) -> dict:
-        config = self.config
+    #     x_width, x_frac = config["data_in_width"], config["data_in_frac_width"]
+    #     num_add_operands = self.kernel_size[0] * self.kernel_size[1]
+    #     output_width = x_width + ceil(log2(num_add_operands))
+    #     output_frac_width = x_frac
 
-        x_width, x_frac = config["data_in_width"], config["data_in_frac_width"]
-        num_add_operands = self.kernel_size[0] * self.kernel_size[1]
-        output_width = x_width + ceil(log2(num_add_operands))
-        output_frac_width = x_frac
-
-        o_bitwidth = {}
-        o_bitwidth["data_out_width"] = output_width
-        o_bitwidth["data_out_frac_width"] = output_frac_width
-        return o_bitwidth
+    #     o_bitwidth = {}
+    #     o_bitwidth["data_out_width"] = output_width
+    #     o_bitwidth["data_out_frac_width"] = output_frac_width
+    #     return o_bitwidth
 
 
 class _AdaptiveAvgPool2dBase(torch.nn.AdaptiveAvgPool2d):
@@ -108,8 +96,6 @@ class _AdaptiveAvgPool2dBase(torch.nn.AdaptiveAvgPool2d):
     """
 
     bypass = False
-    _required_config_keys = None
-    _optional_config_keys = None
 
     def __init__(self, output_size) -> None:
         if isinstance(output_size, int):
@@ -142,15 +128,11 @@ class _AdaptiveAvgPool2dBase(torch.nn.AdaptiveAvgPool2d):
             "f_padding": f_padding,
         }
 
-    def construct_essential_config(self, config) -> dict:
-        raise NotImplementedError
-
-    def get_output_bitwidth(self) -> dict:
-        raise NotImplementedError
+    # def get_output_bitwidth(self) -> dict:
+    #     raise NotImplementedError
 
 
 class AdaptiveAvgPool2dInteger(_AdaptiveAvgPool2dBase):
-    _required_config_keys = ("name", "data_in_width", "data_in_frac_width")
     _optional_config_keys = ("bypass",)
 
     def __init__(self, output_size, config) -> None:
@@ -163,27 +145,21 @@ class AdaptiveAvgPool2dInteger(_AdaptiveAvgPool2dBase):
         self.x_quantizer = partial(
             integer_quantizer, width=x_width, frac_width=x_frac_width
         )
-        self.config = self.construct_essential_config(config)
+        self.config = config
 
-    def construct_essential_config(self, config) -> dict:
-        r_config = extract_required_config(self, config)
-        o_config = {}
-        o_config["bypass"] = config.get("bypass", False)
-        return r_config | o_config
+    # def get_output_bitwidth(self, x_shape) -> dict:
+    #     config = self.config
 
-    def get_output_bitwidth(self, x_shape) -> dict:
-        config = self.config
+    #     pool2d_kwargs = self._get_pool2d_kwargs(x_shape=x_shape)
+    #     kernel_size = pool2d_kwargs["kernel_size"]
 
-        pool2d_kwargs = self._get_pool2d_kwargs(x_shape=x_shape)
-        kernel_size = pool2d_kwargs["kernel_size"]
+    #     x_width, x_frac = config["data_in_width"], config["data_in_frac_width"]
+    #     num_add_operands = kernel_size[0] * kernel_size[1]
+    #     output_width = x_width + ceil(log2(num_add_operands))
+    #     output_frac_width = x_frac
 
-        x_width, x_frac = config["data_in_width"], config["data_in_frac_width"]
-        num_add_operands = kernel_size[0] * kernel_size[1]
-        output_width = x_width + ceil(log2(num_add_operands))
-        output_frac_width = x_frac
+    #     o_bitwidth = {}
+    #     o_bitwidth["data_out_width"] = output_width
+    #     o_bitwidth["data_out_frac_width"] = output_frac_width
 
-        o_bitwidth = {}
-        o_bitwidth["data_out_width"] = output_width
-        o_bitwidth["data_out_frac_width"] = output_frac_width
-
-        return o_bitwidth
+    #     return o_bitwidth

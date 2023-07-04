@@ -20,12 +20,15 @@ project = "resnet18_cifar10"
 load_name = "../mase_output/resnet18_cifar10/software/transformed_ckpts"
 load_type = "mz"
 
+log_level = "info"
+
 [cf_args]
 
 [passes]
 
 [passes.quantize]
 by = "type"
+report = true
 
 [passes.quantize.default.config]
 name = "NA"
@@ -41,6 +44,18 @@ bias_frac_width = 9
 
 [passes.quantize.linear.config]
 name = "minifloat_ieee"
+weight_width = 8
+weight_exponent_width = 4
+weight_exponent_bias = "NA"
+data_in_width = 8
+data_in_exponent_width = 4
+data_in_exponent_bias = "NA"
+bias_width = 8
+bias_exponent_width = 4
+bias_exponent_bias = "NA"
+
+[passes.quantize.relu.config]
+name = "minifloat_denorm"
 weight_width = 8
 weight_exponent_width = 4
 weight_exponent_bias = "NA"
