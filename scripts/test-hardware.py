@@ -10,12 +10,19 @@ import maselogger
 # Add more test cases here
 test_cases = {
     "cast/fixed_cast": [],
+    "attention/fixed_self_att": ["cast", "matmul", "linear", "attention", "common", "fixed_arith"],
+    "attention/fixed_att": ["cast", "matmul", "linear", "attention", "common", "fixed_arith"],
+    "conv/convolution": ["cast", "conv", "linear", "common", "fixed_arith"],
+    "conv/sliding_window": ["cast", "conv", "linear", "common", "fixed_arith"],
+    "conv/padding": ["cast", "conv", "linear", "common", "fixed_arith"],
+    "conv/convolution": ["cast", "conv", "linear", "common", "fixed_arith"],
+    "matmul/fixed_matmul": ["cast","linear", "matmul", "common", "fixed_arith"],
     # 'cast/bram_cast': [],
     # 'cast/bram2hs_cast': [],
     # 'cast/hs2bram_cast': [],
     # 'common/ram_block': [],
     # 'common/join2': [],
-    "fixed_arith/fixed_matrix_multiplication": ["linear", "fixed_arith", "common"],
+    "fixed_arith/fixed_matmul_core": ["cast", "linear", "fixed_arith", "common"],
     "fixed_arith/fixed_mult": [],
     "fixed_arith/fixed_adder_tree_layer": [],
     "fixed_arith/fixed_accumulator": [],
@@ -24,6 +31,7 @@ test_cases = {
     "fixed_arith/fixed_dot_product": ["fixed_arith", "common"],
     "linear/fixed_linear": ["common", "fixed_arith"],
     "common/register_slice": [],
+    "common/input_buffer": ["common"],
     "activations/fixed_relu": ["common"],
     # 'activations/int_relu6': ['common'],
 }

@@ -18,7 +18,7 @@ from cocotb.triggers import FallingEdge
 from cocotb.clock import Clock
 from cocotb.runner import get_runner
 
-debug = False
+debug = True
 
 logger = logging.getLogger("tb_signals")
 if debug:
@@ -103,18 +103,6 @@ class VerificationCase:
         return ref
 
 
-# Check if an is_impossible state is reached
-def is_impossible_state(
-    weight_ready,
-    weight_valid,
-    data_in_ready,
-    data_in_valid,
-    data_out_ready,
-    data_out_valid,
-):
-    return False
-
-
 def debug_state(dut, state):
     logger.debug(
         "{} State: (bias_ready,bias_valid,bias_ready,bias_valid,data_in_ready,data_in_valid,data_out_ready,data_out_valid) = ({},{},{},{},{},{})".format(
@@ -166,10 +154,13 @@ async def test_fixed_linear(dut):
     for i in range(samples * 100):
         await FallingEdge(dut.clk)
         debug_state(dut, "Post-clk")
-        dut.weight_valid.value = test_case.weight.pre_compute(dut.weight_ready.value)
-        dut.bias_valid.value = test_case.bias.pre_compute(dut.bias_ready.value)
-        dut.data_in_valid.value = test_case.data_in.pre_compute(dut.data_in_ready.value)
-        debug_state(dut, "Pre-clk")
+        dut.weight_valid.value = test_case.weight.pre_compute()
+        dut.bias_valid.value = test_case.bias.pre_compute()
+        dut.data_in_valid.value = test_case.data_in.pre_compute()
+        await Timer(1, units="ns")
+        dut.data_out_ready.value = test_case.outputs.pre_compute(
+            dut.data_out_valid.value
+        )
         await Timer(1, units="ns")
         debug_state(dut, "Post-clk")
 
@@ -182,6 +173,7 @@ async def test_fixed_linear(dut):
         dut.data_in_valid.value, dut.data_in.value = test_case.data_in.compute(
             dut.data_in_ready.value
         )
+        await Timer(1, units="ns")
         dut.data_out_ready.value = test_case.outputs.compute(
             dut.data_out_valid.value, dut.data_out.value
         )

@@ -46,3 +46,39 @@ module register_slice #(
   end
 
 endmodule
+/* verilator lint_off DECLFILENAME */
+module unpacked_register_slice #(
+    parameter IN_WIDTH = 32,
+    parameter IN_SIZE = 16,
+    parameter type MYDATA = logic [IN_WIDTH-1:0]
+) (
+    input logic clk,
+    input logic rst,
+
+    input  MYDATA data_in_data [IN_SIZE-1:0],
+    input  logic  data_in_valid,
+    output logic  data_in_ready,
+
+    output MYDATA data_out_data [IN_SIZE-1:0],
+    output logic  data_out_valid,
+    input  logic  data_out_ready
+);
+  logic [IN_WIDTH * IN_SIZE - 1 : 0] data_in_flatten;
+  logic [IN_WIDTH * IN_SIZE - 1 : 0] data_out_flatten;
+  for (genvar i = 0; i < IN_SIZE; i++) begin
+    assign data_in_flatten[i*IN_WIDTH+IN_WIDTH-1:i*IN_WIDTH] = data_in_data[i];
+    assign data_out_data[i] = data_out_flatten[i*IN_WIDTH+IN_WIDTH-1:i*IN_WIDTH];
+  end
+  register_slice #(
+      .IN_WIDTH(IN_WIDTH * IN_SIZE)
+  ) register_slice (
+      .clk           (clk),
+      .rst           (rst),
+      .data_in_valid (data_in_valid),
+      .data_in_ready (data_in_ready),
+      .data_in_data  (data_in_flatten),
+      .data_out_valid(data_out_valid),
+      .data_out_ready(data_out_ready),
+      .data_out_data (data_out_flatten)
+  );
+endmodule

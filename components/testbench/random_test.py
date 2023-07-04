@@ -15,6 +15,7 @@ class RandomSource:
         max_stalls=100,
         is_data_vector=True,
         name="",
+        data_specify = [],
         debug=False,
     ):
         assert num > 0, "Invalid num for source {}".format(name)
@@ -29,28 +30,25 @@ class RandomSource:
         self.samples = samples
         self.max_stalls = max_stalls
         self.is_data_vector = is_data_vector
-        if is_data_vector:
-            self.data = [
-                [random.randint(0, 30) for _ in range(num)] for _ in range(samples)
-            ]
+        if(len(data_specify) == 0):
+            if is_data_vector:
+                self.data = [
+                    [random.randint(0, 30) for _ in range(num)] for _ in range(samples)
+                ]
+            else:
+                self.data = [
+                    random.randint(0, 30) for _ in range(num) for _ in range(samples)
+                ]
         else:
-            self.data = [
-                random.randint(0, 30) for _ in range(num) for _ in range(samples)
-            ]
+            self.data = data_specify
+
+        self.dummy = [random.randint(0, 30) for _ in range(num)] if is_data_vector else random.randint(0, 30)
+
         self.stall_count = 0
         # Buffer the random choice
         self.random_buff = 0
 
-    def pre_compute(self, next_ready):
-        """The pre-compute simulates the combinational computation in handshake logic"""
-        to_feed = (not self.is_empty()) and next_ready
-        if not to_feed:
-            self.logger.debug(
-                "pre_compute: source {} cannot feed any token because of back pressure.".format(
-                    self.name
-                )
-            )
-            return 0
+    def pre_compute(self):
         # randomly stops feeding data before reaching the max stalls
         self.random_buff = random.randint(0, 1)
         self.stall_count += self.random_buff
@@ -64,19 +62,19 @@ class RandomSource:
     def compute(self, next_ready):
         """The compute simulates the synchronous computation for data"""
         to_feed = (not self.is_empty()) and next_ready
-        if self.is_data_vector:
-            dummy_out = [random.randint(0, 30) for _ in range(self.num)]
+        if(self.is_empty()):
+            data = self.dummy
         else:
-            dummy_out = random.randint(0, 30)
+            data = self.data[-1]
         if not to_feed:
             self.logger.debug(
                 "source {} cannot feed any token because of back pressure.".format(
                     self.name
                 )
             )
-            return 0, dummy_out
+            return (not self.is_empty()), data
         if (not self.random_buff) or self.stall_count > self.max_stalls:
-            data = self.data[-1]
+            data
             self.data.pop()
             self.logger.debug(
                 "source {} feeds a token. Current depth = {}/{}".format(
@@ -84,8 +82,7 @@ class RandomSource:
                 )
             )
             return 1, data
-        self.logger.debug("source {} skips an iteration.".format(self.name))
-        return 0, dummy_out
+        return 0, data
 
     def is_empty(self):
         return len(self.data) == 0
@@ -108,20 +105,29 @@ class RandomSink:
         self.samples = samples
         self.max_stalls = max_stalls
         self.stall_count = 0
-
-    def compute(self, prevalid, datain):
+        self.trystall = 0
+    def pre_compute(self, prevalid):
         to_absorb = (not self.is_full()) and prevalid
         if not to_absorb:
             self.logger.debug(
-                "a sink {} cannot absorb any token because of no valid data.".format(
+                "pre_compute: a sink {} cannot absorb any token because of no valid data.".format(
                     self.name
                 )
             )
-            return 0
+            return not self.is_full()
         # randomly stops absorbing data before reaching the max stalls
-        trystall = random.randint(0, 1)
-        self.stall_count += trystall
-        if (not trystall) or self.stall_count > self.max_stalls:
+        self.trystall = random.randint(0, 1)
+        self.stall_count += self.trystall
+        if (not self.trystall) or self.stall_count > self.max_stalls:
+            return 1
+        self.logger.debug("pre_compute: sink {} skips an iteration.".format(self.name))
+        return 0
+        
+    def compute(self, prevalid, datain):
+        to_absorb = (not self.is_full()) and prevalid
+        if not to_absorb:
+            return 0
+        if (not self.trystall) or self.stall_count > self.max_stalls:
             self.data.append(datain)
             self.logger.debug(
                 "sink {} absorbs a token. Current depth = {}/{}".format(
@@ -129,7 +135,6 @@ class RandomSink:
                 )
             )
             return 1
-        self.logger.debug("sink {} skips an iteration.".format(self.name))
         return 0
 
     def is_full(self):
