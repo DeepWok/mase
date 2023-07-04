@@ -36,4 +36,3 @@ cd /home/${USERNAME}/mase-tools
 bash scripts/init-conda.sh
 ```
 
-
