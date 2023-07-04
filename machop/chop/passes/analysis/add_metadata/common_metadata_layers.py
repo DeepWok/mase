@@ -2,6 +2,7 @@ import inspect
 import math
 
 import torch
+
 from chop.passes.utils import vf
 
 # ----------------------------------------------------------
@@ -30,13 +31,59 @@ def analyse_common_parameters_placeholder(meta, dummy_in):
 
 
 # ----------------------------------------------------------
+# View
+# ----------------------------------------------------------
+
+
+def analyse_common_parameters_view(meta):
+    """
+    Memory transformation.
+    """
+    meta.parameters["common"]["results"] = {}
+    if meta.node.args[2] != -1:
+        raise NotImplementedError(f"Only size dimension = 0 is implemented.")
+
+    meta.parameters["common"]["results"]["data_out_0"] = meta.parameters["common"][
+        "args"
+    ]["data_in_0"]
+    meta.parameters["common"]["results"]["data_out_0"]["size"] = [
+        math.prod(meta.parameters["common"]["results"]["data_out_0"]["size"]),
+    ]
+
+    return meta
+
+
+# ----------------------------------------------------------
+# Size
+# ----------------------------------------------------------
+
+
+def analyse_common_parameters_size(meta):
+    """
+    Memory transformation.
+    """
+    meta.parameters["common"]["results"] = {}
+    if meta.node.args[1] != 0:
+        raise NotImplementedError(f"Only size dimension = 0 is implemented.")
+
+    meta.parameters["common"]["results"]["data_out_0"] = meta.parameters["common"][
+        "args"
+    ]["data_in_0"]
+    meta.parameters["common"]["results"]["data_out_0"]["size"] = [
+        math.prod(meta.parameters["common"]["results"]["data_out_0"]["size"]),
+    ]
+
+    return meta
+
+
+# ----------------------------------------------------------
 # Flatten
 # ----------------------------------------------------------
 
 
 def analyse_common_parameters_flatten(meta):
     """
-    The placeholder itself does not contain any information, but can be provided from users.
+    Memory transformation.
     """
     meta.parameters["common"]["results"] = {}
     start_dim = meta.node.kwargs["start_dim"]

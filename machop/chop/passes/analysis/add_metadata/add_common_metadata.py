@@ -3,24 +3,22 @@ import logging
 import toml
 import torch
 import torch.fx as fx
-from chop.passes.analysis.utils import (
-    get_input_nodes,
-    get_output_nodes,
-    match_and_filter,
-)
-from chop.passes.common import MASE_BUILTIN_FUNCS, MASE_MODULE_RELATED_FUNCS
-from chop.passes.metadata.mase_metadata import MaseMetadata
 from tabulate import tabulate
 from torch import nn
 
-from .common_metadata_layers import (
-    analyse_common_parameters_constant,
-    analyse_common_parameters_flatten,
-    analyse_common_parameters_linear,
-    analyse_common_parameters_output,
-    analyse_common_parameters_placeholder,
-    analyse_common_parameters_relu,
-)
+from chop.passes.analysis.utils import (get_input_nodes, get_output_nodes,
+                                        match_and_filter)
+from chop.passes.common import MASE_BUILTIN_FUNCS, MASE_MODULE_RELATED_FUNCS
+from chop.passes.metadata.mase_metadata import MaseMetadata
+
+from .common_metadata_layers import (analyse_common_parameters_constant,
+                                     analyse_common_parameters_flatten,
+                                     analyse_common_parameters_linear,
+                                     analyse_common_parameters_output,
+                                     analyse_common_parameters_placeholder,
+                                     analyse_common_parameters_relu,
+                                     analyse_common_parameters_size,
+                                     analyse_common_parameters_view)
 
 logger = logging.getLogger(__name__)
 
@@ -126,6 +124,10 @@ def analysis_common_parameters(node, dummy_in):
         node.meta["mase"] = analyse_common_parameters_relu(node.meta["mase"])
     elif node.meta["mase"].parameters["common"]["mase_op"] == "flatten":
         node.meta["mase"] = analyse_common_parameters_flatten(node.meta["mase"])
+    elif node.meta["mase"].parameters["common"]["mase_op"] == "view":
+        node.meta["mase"] = analyse_common_parameters_view(node.meta["mase"])
+    elif node.meta["mase"].parameters["common"]["mase_op"] == "size":
+        node.meta["mase"] = analyse_common_parameters_size(node.meta["mase"])
     elif node.meta["mase"].parameters["common"]["mase_op"] == "constant":
         node.meta["mase"] = analyse_common_parameters_constant(node.meta["mase"])
     else:
