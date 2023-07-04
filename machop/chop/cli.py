@@ -547,7 +547,7 @@ class ChopCLI:
             "strategy": args.strategy,
             "precision": args.trainer_precision,
         }
-        load_name = args.load_name if self.when_to_load == "train_val_or_test" else None
+        load_name = args.load_name 
         # assert load_name is not None, "load name must not be None for test-sw."
         test_params = {
             "model_name": args.model,
@@ -561,7 +561,7 @@ class ChopCLI:
             "auto_requeue": args.is_to_auto_requeue,
             "save_path": os.path.join(self.output_dir_sw, "checkpoints"),
             "load_name": load_name,
-            "load_type": self.how_to_load,
+            "load_type": args.load_type,
         }
         test(**test_params)
 
