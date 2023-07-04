@@ -70,3 +70,8 @@ bias_frac_width = 10
 data_in_width = 12
 data_in_frac_width = 10
 block_size = 8
+
+[passes.prune]
+name = "both"
+weight_sparsity = 0.8
+activation_sparsity = 0.8
