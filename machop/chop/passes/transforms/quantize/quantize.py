@@ -41,16 +41,6 @@ def update_quant_meta_param(*args, **kwargs):
     pass
 
 
-def graph_iterator_compare_nodes(*args, **kwargs):
-    # TODO: remove this function when the add_common_metadata is fixed
-    pass
-
-
-def graph_iterator_node_histogram(*args, **kwargs):
-    # TODO: remove this function when the add_common_metadata is fixed
-    pass
-
-
 def graph_iterator_quantize_by_type(graph, config: dict):
     for node in graph.fx_graph.nodes:
         if get_mase_op(node) not in QUANTIZEABLE_OP:
@@ -207,12 +197,3 @@ def quantize_transform_pass(graph, pass_args=None):
         case _:
             raise ValueError(f'Unsupported quantize "by": {by}')
     return graph
-
-
-def quantize_summary_analysis_pass(ori_graph, graph, save_dir: str = None) -> None:
-    table_path = os.path.join(save_dir, "quantize_table.csv") if save_dir else None
-    histogram_path = (
-        os.path.join(save_dir, "quantize_histogram.csv") if save_dir else None
-    )
-    graph_iterator_compare_nodes(ori_graph, graph, save_path=table_path, silent=False)
-    graph_iterator_node_histogram(ori_graph, graph, save_path=histogram_path)
