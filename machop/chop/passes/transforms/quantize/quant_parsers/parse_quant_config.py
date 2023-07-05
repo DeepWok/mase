@@ -66,6 +66,18 @@ QUANT_ARITH_ENTRIES = {
             "weight_exponent_bias_width",
             "weight_block_size",
         ),
+        "data_in_entries": (
+            "data_in_width",
+            "data_in_exponent_width",
+            "data_in_exponent_bias_width",
+            "data_in_block_size",
+        ),
+        "bias_entries": (
+            "bias_width",
+            "bias_exponent_width",
+            "bias_exponent_bias_width",
+            "bias_block_size",
+        ),
     },
     "block_log": {
         "weight_entries": (
@@ -87,28 +99,28 @@ QUANT_ARITH_ENTRIES = {
 }
 
 
-def cp_name(config: dict, p_config: dict, entires=None):
+def cp_name(config: dict, p_config: dict, entries=None):
     cp_multi_values(config, p_config, ("name",))
 
 
-def cp_weight_entries(config: dict, p_config: dict, entires: dict):
-    cp_multi_values(config, p_config, entires["weight_entries"])
+def cp_weight_entries(config: dict, p_config: dict, entries: dict):
+    cp_multi_values(config, p_config, entries["weight_entries"])
 
 
-def cp_data_in_entries(config: dict, p_config: dict, entires: dict):
-    cp_multi_values(config, p_config, entires["data_in_entries"])
+def cp_data_in_entries(config: dict, p_config: dict, entries: dict):
+    cp_multi_values(config, p_config, entries["data_in_entries"])
 
 
-def cp_bias_entries(config: dict, p_config: dict, entires: dict):
-    cp_multi_values(config, p_config, entires["bias_entries"])
+def cp_bias_entries(config: dict, p_config: dict, entries: dict):
+    cp_multi_values(config, p_config, entries["bias_entries"])
 
 
-def cp_weight_entries_to_bias(config: dict, p_config: dict, entires: dict):
-    if has_multi_keys(config, entires["bias_entries"]):
-        cp_multi_values(config, p_config, entires["bias_entries"])
+def cp_weight_entries_to_bias(config: dict, p_config: dict, entries: dict):
+    if has_multi_keys(config, entries["bias_entries"]):
+        cp_multi_values(config, p_config, entries["bias_entries"])
     else:
         cp_multi_values(
-            config, p_config, entires["weight_entries"], entires["bias_entries"]
+            config, p_config, entries["weight_entries"], entries["bias_entries"]
         )
 
 
@@ -127,11 +139,11 @@ quant_arith_to_cp_fn = {}
 
 for quant_arith, entries in QUANT_ARITH_ENTRIES.items():
     quant_arith_to_cp_fn[quant_arith] = {
-        "name": partial(cp_name, entires=entries),
-        "weight_entries": partial(cp_weight_entries, entires=entries),
-        "data_in_entries": partial(cp_data_in_entries, entires=entries),
-        "bias_entries": partial(cp_bias_entries, entires=entries),
-        "weight_entries_to_bias": partial(cp_weight_entries_to_bias, entires=entries),
+        "name": partial(cp_name, entries=entries),
+        "weight_entries": partial(cp_weight_entries, entries=entries),
+        "data_in_entries": partial(cp_data_in_entries, entries=entries),
+        "bias_entries": partial(cp_bias_entries, entries=entries),
+        "weight_entries_to_bias": partial(cp_weight_entries_to_bias, entries=entries),
     }
 
 MASE_OP_TO_ENTRIES = {
@@ -149,6 +161,8 @@ MASE_OP_TO_ENTRIES = {
 
 def parse_node_config(config: dict, mase_op: str) -> dict:
     assert mase_op in MASE_OP_TO_ENTRIES, f"Unknown mase op: {mase_op}"
+    if config.get("bypass", False):
+        return config
     op_entries = MASE_OP_TO_ENTRIES[mase_op]
     p_config = {}
     for entry in op_entries:

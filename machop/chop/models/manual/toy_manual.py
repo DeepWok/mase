@@ -1,7 +1,8 @@
 import torch
 import torch.nn as nn
+from chop.passes.transforms.quantize.quantized_modules import LinearInteger
+
 from .base import ManualBase
-from chop.passes.transforms.quantizer.layers import LinearInteger
 
 # An example to implement Lienar Integer Quantization using purely CUSTOM OPs
 # This is a toy example to show you how to use these customs ops to compose a neural network

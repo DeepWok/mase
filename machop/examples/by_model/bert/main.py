@@ -6,7 +6,7 @@ import sys
 import torch
 import torch.nn as nn
 
-sys.path.append(os.path.join("..", "..", "..", "machop"))
+sys.path.append(os.path.join("..", "..", "..", "..", "machop"))
 
 from chop.dataset import get_dataset_info
 from chop.models import model_map
@@ -20,9 +20,14 @@ from chop.passes.graph.mase_graph import MaseGraph
 # --------------------------------------------------
 def main():
     load_pretrained = True
-    cifar10_info = get_dataset_info("cifar10")
-    resnet18 = model_map["resnet18"](info=cifar10_info, pretrained=load_pretrained)
-    mg = MaseGraph(model=resnet18)
+
+    # BERT-small
+    # !: not traceable
+    sst2_info = get_dataset_info("sst2")
+    bert = model_map["bert-base-uncased"](
+        name="bert-base-uncased", task="lm", info=sst2_info, pretrained=load_pretrained
+    )
+    mg = MaseGraph(model=bert)
     print(mg.fx_graph)
 
     # Sanity check and report
