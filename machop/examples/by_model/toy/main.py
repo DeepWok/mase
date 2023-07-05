@@ -7,10 +7,14 @@ import sys
 import torch
 import torch.nn as nn
 
-sys.path.append(os.path.join("..", "..", "..", "machop"))
-from chop.passes.analysis import (add_common_metadata_analysis_pass,
-                                  init_metadata_analysis_pass, report,
-                                  verify_common_metadata_analysis_pass)
+sys.path.append(os.path.join("..", "..", "..", "..", "machop"))
+
+from chop.passes.analysis import (
+    add_common_metadata_analysis_pass,
+    init_metadata_analysis_pass,
+    report,
+    verify_common_metadata_analysis_pass,
+)
 from chop.passes.graph.mase_graph import MaseGraph
 
 logger = logging.getLogger(__name__)

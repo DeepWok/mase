@@ -1,0 +1,119 @@
+# decoder layer 0 is minifloat_denorm, other layers are block_fp
+by = "name"
+[default]
+bypass = false
+name = "block_fp"
+bias_block_size = [16]
+bias_exponent_bias = 127
+bias_exponent_width = 8
+bias_width = 7
+data_in_block_size = [1, 16]
+data_in_exponent_bias = 127
+data_in_exponent_width = 8
+data_in_width = 7
+weight_block_size = [1, 16]
+weight_exponent_bias = 127
+weight_exponent_width = 8
+weight_width = 7
+
+[model_layer_0.self_attn.q_proj]
+name = "minifloat_denorm"
+bias_exponent_bias = 7
+bias_exponent_width = 4
+bias_width = 8
+data_in_exponent_bias = 7
+data_in_exponent_width = 4
+data_in_width = 8
+weight_exponent_bias = 7
+weight_exponent_width = 4
+weight_width = 8
+
+[model_layer_0.self_attn.k_proj]
+name = "minifloat_denorm"
+bias_exponent_bias = 7
+bias_exponent_width = 4
+bias_width = 8
+data_in_exponent_bias = 7
+data_in_exponent_width = 4
+data_in_width = 8
+weight_exponent_bias = 7
+weight_exponent_width = 4
+weight_width = 8
+
+[model_layer_0.self_attn.v_proj]
+name = "minifloat_denorm"
+bias_exponent_bias = 7
+bias_exponent_width = 4
+bias_width = 8
+data_in_exponent_bias = 7
+data_in_exponent_width = 4
+data_in_width = 8
+weight_exponent_bias = 7
+weight_exponent_width = 4
+weight_width = 8
+
+[model_layer_0.self_attn.o_proj]
+name = "minifloat_denorm"
+bias_exponent_bias = 7
+bias_exponent_width = 4
+bias_width = 8
+data_in_exponent_bias = 7
+data_in_exponent_width = 4
+data_in_width = 8
+weight_exponent_bias = 7
+weight_exponent_width = 4
+weight_width = 8
+
+[model_layer_0.self_attn.matmul_0]
+name = "minifloat_denorm"
+data_in_exponent_bias = 7
+data_in_exponent_width = 4
+data_in_width = 8
+weight_exponent_bias = 7
+weight_exponent_width = 4
+weight_width = 8
+
+[model_layer_0.self_attn.matmul_1]
+name = "minifloat_denorm"
+data_in_exponent_bias = 7
+data_in_exponent_width = 4
+data_in_width = 8
+weight_exponent_bias = 7
+weight_exponent_width = 4
+weight_width = 8
+
+[model_layer_0.mlp.gate_proj]
+name = "minifloat_denorm"
+bias_exponent_bias = 7
+bias_exponent_width = 4
+bias_width = 8
+data_in_exponent_bias = 7
+data_in_exponent_width = 4
+data_in_width = 8
+weight_exponent_bias = 7
+weight_exponent_width = 4
+weight_width = 8
+
+[model_layer_0.mlp.down_proj]
+name = "minifloat_denorm"
+bias_exponent_bias = 7
+bias_exponent_width = 4
+bias_width = 8
+data_in_exponent_bias = 7
+data_in_exponent_width = 4
+data_in_width = 8
+weight_exponent_bias = 7
+weight_exponent_width = 4
+weight_width = 8
+
+[model_layer_0.mlp.up_proj]
+name = "minifloat_denorm"
+bias_exponent_bias = 7
+bias_exponent_width = 4
+bias_width = 8
+data_in_exponent_bias = 7
+data_in_exponent_width = 4
+data_in_width = 8
+weight_exponent_bias = 7
+weight_exponent_width = 4
+weight_width = 8
