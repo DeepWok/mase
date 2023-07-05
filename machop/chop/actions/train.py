@@ -69,7 +69,7 @@ def train(
                 load_name, load_type=load_type, model=model["model"]
             )
         else:
-            model = load_model(ckpt=load_name, load_type=load_type, model=model)
+            model = load_model(load_name, load_type=load_type, model=model)
         logger.info(f"'{load_type}' checkpoint loaded before training")
 
     pl_model = wrapper_cls(

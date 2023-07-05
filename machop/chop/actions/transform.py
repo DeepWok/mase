@@ -13,6 +13,7 @@ from chop.passes.transforms.interface import (
     load_mase_graph_transform_pass,
     save_mase_graph_transform_pass,
 )
+from chop.passes.utils import deepcopy_mase_graph
 from chop.tools.checkpoint_load import load_model
 from chop.tools.config_load import load_config
 from chop.tools.get_input import get_cf_args, get_dummy_input
@@ -20,7 +21,7 @@ from chop.tools.get_input import get_cf_args, get_dummy_input
 
 def pre_transform_load(load_name: str, load_type: str, model: torch.nn.Module):
     if load_name is not None and load_type in ["pt", "pl"]:
-        model = load_model(load_name=load_name, laod_type=load_type, model=model)
+        model = load_model(load_name=load_name, load_type=load_type, model=model)
     return model
 
 
@@ -66,7 +67,7 @@ def transform(
     for pass_name, pass_config in pass_config.items():
         if pass_name == "quantize":
             # Jianyi suggest to separate quantize and quantize_summary, and put them inline in transform.py
-            ori_graph = deepcopy(graph)
+            ori_graph = deepcopy_mase_graph(graph)
             graph = passes["quantize"](graph, pass_args=pass_config)
             passes["quantize_summary"](ori_graph, graph, save_dir=save_dir)
         else:

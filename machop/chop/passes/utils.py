@@ -1,5 +1,6 @@
 import inspect
 import re
+from copy import deepcopy
 from typing import Tuple
 
 import torch
@@ -107,3 +108,10 @@ def node_actual_target(node):
         return node.target
     else:
         return node.target
+
+
+def deepcopy_mase_graph(mase_graph):
+    new_graph = deepcopy(mase_graph)
+    for new_n, n in zip(new_graph.fx_graph.nodes, mase_graph.fx_graph.nodes):
+        new_n.meta = deepcopy(n.meta)
+    return new_graph

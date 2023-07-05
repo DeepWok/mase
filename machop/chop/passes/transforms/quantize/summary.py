@@ -72,22 +72,24 @@ def graph_iterator_node_histogram(ori_graph, graph, save_path: str = None):
         ),
     )
     logger.info("Quantized graph histogram:")
-    logger.info("\n" + tabulate(histogram_df, headers="keys"))
+    logger.info("\n" + tabulate(histogram_df, headers="keys", tablefmt="orgtbl"))
     if save_path is not None:
         histogram_df.to_csv(save_path)
 
 
-def graph_iterator_compare_nodes(*args, **kwargs):
-    # TODO: remove this function when the add_common_metadata is fixed
-    pass
+# def graph_iterator_compare_nodes(*args, **kwargs):
+#     # TODO: remove this function when the add_common_metadata is fixed
+#     pass
 
 
-def graph_iterator_node_histogram(*args, **kwargs):
-    # TODO: remove this function when the add_common_metadata is fixed
-    pass
+# def graph_iterator_node_histogram(*args, **kwargs):
+#     # TODO: remove this function when the add_common_metadata is fixed
+#     pass
 
 
 def quantize_summary_analysis_pass(ori_graph, graph, save_dir: str = None) -> None:
+    if save_dir is not None:
+        os.makedirs(save_dir, exist_ok=True)
     table_path = os.path.join(save_dir, "quantize_table.csv") if save_dir else None
     histogram_path = (
         os.path.join(save_dir, "quantize_histogram.csv") if save_dir else None

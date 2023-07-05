@@ -48,6 +48,9 @@ class ReLUInteger(_ReLUBase):
         self.x_quantizer = partial(
             integer_quantizer, width=x_width, frac_width=x_frac_width, is_signed=False
         )
+        self.config = config
+        self.x_width = x_width
+        self.x_frac_width = x_frac_width
 
     # def get_output_bitwidth(self) -> dict:
     #     return {
