@@ -17,7 +17,37 @@ from torch.nn.common_types import _size_2_t
 
 
 class _Conv2dBase(torch.nn.Conv2d):
-    bypass = False
+    def __init__(
+        self,
+        in_channels: int,
+        out_channels: int,
+        kernel_size: _size_2_t,
+        stride: _size_2_t = 1,
+        padding: _size_2_t | str = 0,
+        dilation: _size_2_t = 1,
+        groups: int = 1,
+        bias: bool = True,
+        padding_mode: str = "zeros",
+        device=None,
+        dtype=None,
+    ) -> None:
+        super().__init__(
+            in_channels,
+            out_channels,
+            kernel_size,
+            stride,
+            padding,
+            dilation,
+            groups,
+            bias,
+            padding_mode,
+            device,
+            dtype,
+        )
+        self.bypass = False
+        self.x_quantizer = None
+        self.w_quantizer = None
+        self.b_quantizer = None
 
     def forward(self, x: Tensor) -> Tensor:
         if self.bypass:
@@ -78,7 +108,11 @@ class Conv2dInteger(_Conv2dBase):
             dtype=dtype,
         )
         assert config is not None, "config is None!"
+        self.config = config
         self.bypass = config.get("bypass", False)
+        if self.bypass:
+            return
+
         # establish quantizers
         w_width, w_frac_width = config["weight_width"], config["weight_frac_width"]
         x_width, x_frac_width = config["data_in_width"], config["data_in_frac_width"]
@@ -97,7 +131,6 @@ class Conv2dInteger(_Conv2dBase):
         self.b_quantizer = partial(
             integer_quantizer, width=b_width, frac_width=b_frac_width
         )
-        self.config = config
 
     # def get_output_bitwidth(self) -> dict:
     #     config = self.config
@@ -151,7 +184,10 @@ class Conv2dMinifloatDenorm(_Conv2dBase):
             dtype,
         )
         assert config is not None, "config is None!"
+        self.config = config
         self.bypass = config.get("bypass", False)
+        if self.bypass:
+            return
 
         w_width, w_exponent_width, w_exponent_bias = (
             config["weight_width"],
@@ -192,7 +228,6 @@ class Conv2dMinifloatDenorm(_Conv2dBase):
                 exponent_width=b_exponent_width,
                 exponent_bias=b_exponent_bias,
             )
-        self.config = config
 
 
 class Conv2dMinifloatIEEE(_Conv2dBase):
@@ -225,7 +260,10 @@ class Conv2dMinifloatIEEE(_Conv2dBase):
             dtype,
         )
         assert config is not None, "config is None!"
+        self.config = config
         self.bypass = config.get("bypass", False)
+        if self.bypass:
+            return
 
         w_width, w_exponent_width, w_exponent_bias = (
             config["weight_width"],
@@ -266,7 +304,6 @@ class Conv2dMinifloatIEEE(_Conv2dBase):
                 exponent_width=b_exponent_width,
                 exponent_bias=b_exponent_bias,
             )
-        self.config = config
 
 
 class Conv2dLog(_Conv2dBase):
@@ -299,7 +336,10 @@ class Conv2dLog(_Conv2dBase):
             dtype,
         )
         assert config is not None, "config is None!"
+        self.config = config
         self.bypass = config.get("bypass", False)
+        if self.bypass:
+            return
 
         w_width, w_exponent_bias = (
             config["weight_width"],
@@ -334,7 +374,6 @@ class Conv2dLog(_Conv2dBase):
                 width=b_width,
                 exponent_bias=b_exponent_bias,
             )
-        self.config = config
 
 
 class Conv2dLog(_Conv2dBase):
@@ -367,7 +406,10 @@ class Conv2dLog(_Conv2dBase):
             dtype,
         )
         assert config is not None, "config is None!"
+        self.config = config
         self.bypass = config.get("bypass", False)
+        if self.bypass:
+            return
 
         w_width, w_exponent_bias = (
             config["weight_width"],
@@ -402,7 +444,6 @@ class Conv2dLog(_Conv2dBase):
                 width=b_width,
                 exponent_bias=b_exponent_bias,
             )
-        self.config = config
 
 
 class Conv2dBlockFP(_Conv2dBase):
@@ -435,7 +476,10 @@ class Conv2dBlockFP(_Conv2dBase):
             dtype,
         )
         assert config is not None, "config is None!"
+        self.config = config
         self.bypass = config.get("bypass", False)
+        if self.bypass:
+            return
 
         w_width, w_exponent_width, w_exponent_bias, w_block_size = (
             config["weight_width"],
@@ -481,7 +525,6 @@ class Conv2dBlockFP(_Conv2dBase):
             block_size=b_block_size,
             skip_first_dim=False,
         )
-        self.config = config
 
     def forward(self, x: Tensor) -> Tensor:
         if self.bypass:
@@ -531,7 +574,10 @@ class Conv2dBlockMinifloat(_Conv2dBase):
             dtype,
         )
         assert config is not None, "config is None!"
+        self.config = config
         self.bypass = config.get("bypass", False)
+        if self.bypass:
+            return
 
         w_width, w_exponent_width, w_exponent_bias_width, w_block_size = (
             config["weight_width"],
@@ -577,7 +623,6 @@ class Conv2dBlockMinifloat(_Conv2dBase):
             block_size=b_block_size,
             skip_first_dim=False,
         )
-        self.config = config
 
     def forward(self, x: Tensor) -> Tensor:
         if self.bypass:
@@ -626,7 +671,10 @@ class Conv2dBlockLog(_Conv2dBase):
             dtype,
         )
         assert config is not None, "config is None!"
+        self.config = config
         self.bypass = config.get("bypass", False)
+        if self.bypass:
+            return
 
         w_width, w_exponent_bias_width, block_size = (
             config["weight_width"],
@@ -666,7 +714,6 @@ class Conv2dBlockLog(_Conv2dBase):
             block_size=block_size,
             skip_first_dim=False,
         )
-        self.config = config
 
     def forward(self, x: Tensor) -> Tensor:
         if self.bypass:

@@ -111,13 +111,13 @@ def get_dataset(model_name, dataset_name, **kwargs):
         raise ValueError(f"Dataset {dataset_name} is not supported.")
 
     if test_dataset is None and pred_dataset is None:
-        logger.info("Both the test dataset and pred dataset are not available")
+        logger.debug("Both the test dataset and pred dataset are not available")
     elif test_dataset is None:
-        logger.info(
+        logger.debug(
             "The test dataset is not available, but the pred dataset is available"
         )
     else:
-        logger.info(
+        logger.debug(
             "Ground truth labels are available in the test dataset. No pred dataset."
         )
 

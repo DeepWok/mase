@@ -16,7 +16,20 @@ from ..quantizers import (
 
 
 class _AvgPool2dBase(torch.nn.AvgPool2d):
-    bypass = False
+    def __init__(
+        self,
+        kernel_size: _size_2_t,
+        stride: _size_2_t | None = None,
+        padding: _size_2_t = 0,
+        ceil_mode: bool = False,
+        count_include_pad: bool = True,
+        divisor_override: int | None = None,
+    ) -> None:
+        super().__init__(
+            kernel_size, stride, padding, ceil_mode, count_include_pad, divisor_override
+        )
+        self.bypass = False
+        self.x_quantizer = None
 
     def forward(self, x: Tensor) -> Tensor:
         if self.bypass:
@@ -47,13 +60,6 @@ class _AvgPool2dBase(torch.nn.AvgPool2d):
 
 
 class AvgPool2dInteger(_AvgPool2dBase):
-    _required_config_keys = (
-        "name",
-        "data_in_width",
-        "data_in_frac_width",
-    )
-    _optional_config_keys = ("bypass",)
-
     def __init__(
         self,
         kernel_size: _size_2_t,
@@ -68,13 +74,15 @@ class AvgPool2dInteger(_AvgPool2dBase):
             kernel_size, stride, padding, ceil_mode, count_include_pad, divisor_override
         )
         assert config is not None, "config is None!"
+        self.config = config
         self.bypass = config.get("bypass", False)
-        x_width, x_frac_width = config["data_in_width"], config["data_in_frac_width"]
+        if self.bypass:
+            return
 
+        x_width, x_frac_width = config["data_in_width"], config["data_in_frac_width"]
         self.x_quantizer = partial(
             integer_quantizer, width=x_width, frac_width=x_frac_width
         )
-        self.config = config
 
     # def get_output_bitwidth(self) -> dict:
     #     config = self.config
@@ -101,6 +109,8 @@ class _AdaptiveAvgPool2dBase(torch.nn.AdaptiveAvgPool2d):
         if isinstance(output_size, int):
             output_size = (output_size, output_size)
         super().__init__(output_size)
+        self.bypass = False
+        self.x_quantizer = None
 
     def forward(self, x: Tensor) -> Tensor:
         if self.bypass:
@@ -133,19 +143,18 @@ class _AdaptiveAvgPool2dBase(torch.nn.AdaptiveAvgPool2d):
 
 
 class AdaptiveAvgPool2dInteger(_AdaptiveAvgPool2dBase):
-    _optional_config_keys = ("bypass",)
-
     def __init__(self, output_size, config) -> None:
         super().__init__(output_size)
-
         assert config is not None, "config is None!"
+        self.config = config
         self.bypass = config.get("bypass", False)
+        if self.bypass:
+            return
         x_width, x_frac_width = config["data_in_width"], config["data_in_frac_width"]
 
         self.x_quantizer = partial(
             integer_quantizer, width=x_width, frac_width=x_frac_width
         )
-        self.config = config
 
     # def get_output_bitwidth(self, x_shape) -> dict:
     #     config = self.config

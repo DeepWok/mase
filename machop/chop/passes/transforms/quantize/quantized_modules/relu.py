@@ -16,7 +16,10 @@ from ..quantizers import (
 
 
 class _ReLUBase(torch.nn.ReLU):
-    bypass = None
+    def __init__(self, inplace: bool = False):
+        super().__init__(inplace)
+        self.bypass = False
+        self.x_quantizer = None
 
     def forward(self, x: Tensor) -> Tensor:
         if self.bypass:
@@ -36,15 +39,15 @@ class ReLUInteger(_ReLUBase):
     def __init__(self, inplace: bool = False, config: dict = None):
         super().__init__(inplace)
         assert config is not None, "config is None!"
+        self.config = config
         self.bypass = config.get("bypass", False)
+        if self.bypass:
+            return
         # establish quantizers
         x_width, x_frac_width = config["data_in_width"], config["data_in_frac_width"]
         self.x_quantizer = partial(
             integer_quantizer, width=x_width, frac_width=x_frac_width, is_signed=False
         )
-        self.config = self.construct_essential_config(config)
-        self.x_width = x_width
-        self.x_frac_width = x_frac_width
 
     # def get_output_bitwidth(self) -> dict:
     #     return {
@@ -54,12 +57,13 @@ class ReLUInteger(_ReLUBase):
 
 
 class ReLUMinifloatDenorm(_ReLUBase):
-    bypass = None
-
     def __init__(self, inplace: bool = False, config: dict = None):
         super().__init__(inplace)
         assert config is not None, "config is None!"
+        self.config = config
         self.bypass = config.get("bypass", False)
+        if self.bypass:
+            return
 
         x_width, x_exponent_width, x_exponent_bias = (
             config["data_in_width"],
@@ -73,16 +77,15 @@ class ReLUMinifloatDenorm(_ReLUBase):
             exponent_bias=x_exponent_bias,
         )
 
-        self.config = config
-
 
 class ReLUMinifloatIEEE(_ReLUBase):
-    bypass = None
-
     def __init__(self, inplace: bool = False, config: dict = None):
         super().__init__(inplace)
         assert config is not None, "config is None!"
+        self.config = config
         self.bypass = config.get("bypass", False)
+        if self.bypass:
+            return
 
         x_width, x_exponent_width, x_exponent_bias = (
             config["data_in_width"],
@@ -95,16 +98,16 @@ class ReLUMinifloatIEEE(_ReLUBase):
             exponent_width=x_exponent_width,
             exponent_bias=x_exponent_bias,
         )
-        self.config = config
 
 
 class ReLULog(_ReLUBase):
-    bypass = None
-
     def __init__(self, inplace: bool = False, config: dict = None):
         super().__init__(inplace)
         assert config is not None, "config is None!"
+        self.config = config
         self.bypass = config.get("bypass", False)
+        if self.bypass:
+            return
 
         x_width, x_exponent_bias = (
             config["data_in_width"],
@@ -115,16 +118,16 @@ class ReLULog(_ReLUBase):
             width=x_width,
             exponent_bias=x_exponent_bias,
         )
-        self.config = config
 
 
 class ReLULog(_ReLUBase):
-    bypass = None
-
     def __init__(self, inplace: bool = False, config: dict = None):
         super().__init__(inplace)
         assert config is not None, "config is None!"
+        self.config = config
         self.bypass = config.get("bypass", False)
+        if self.bypass:
+            return
 
         x_width, x_exponent_bias = (
             config["data_in_width"],
@@ -135,16 +138,16 @@ class ReLULog(_ReLUBase):
             width=x_width,
             exponent_bias=x_exponent_bias,
         )
-        self.config = config
 
 
 class ReLUBlockFP(_ReLUBase):
-    bypass = None
-
     def __init__(self, inplace: bool = False, config: dict = None):
         super().__init__(inplace)
         assert config is not None, "config is None!"
+        self.config = config
         self.bypass = config.get("bypass", False)
+        if self.bypass:
+            return
 
         x_width, x_exponent_width, x_exponent_bias, x_block_size = (
             config["data_in_width"],
@@ -160,7 +163,6 @@ class ReLUBlockFP(_ReLUBase):
             block_size=x_block_size,
             skip_first_dim=True,
         )
-        self.config = config
 
     def forward(self, x: Tensor) -> Tensor:
         if self.bypass:
@@ -175,12 +177,13 @@ class ReLUBlockFP(_ReLUBase):
 
 
 class ReLUBlockMinifloat(_ReLUBase):
-    bypass = None
-
     def __init__(self, inplace: bool = False, config: dict = None):
         super().__init__(inplace)
         assert config is not None, "config is None!"
+        self.config = config
         self.bypass = config.get("bypass", False)
+        if self.bypass:
+            return
 
         x_width, x_exponent_width, x_exponent_bias_width, x_block_size = (
             config["data_in_width"],
@@ -196,7 +199,6 @@ class ReLUBlockMinifloat(_ReLUBase):
             block_size=x_block_size,
             skip_first_dim=True,
         )
-        self.config = config
 
     def forward(self, x: Tensor) -> Tensor:
         if self.bypass:
@@ -211,13 +213,14 @@ class ReLUBlockMinifloat(_ReLUBase):
 
 
 class ReLUBlockLog(_ReLUBase):
-    bypass = None
-
     def __init__(self, inplace: bool = False, config: dict = None):
         super().__init__(inplace)
 
         assert config is not None, "config is None!"
+        self.config = config
         self.bypass = config.get("bypass", False)
+        if self.bypass:
+            return
 
         x_width, x_exponent_bias_width, x_block_size = (
             config["data_in_width"],
@@ -231,7 +234,6 @@ class ReLUBlockLog(_ReLUBase):
             block_size=x_block_size,
             skip_first_dim=True,
         )
-        self.config = config
 
     def forward(self, x: Tensor) -> Tensor:
         if self.bypass:
