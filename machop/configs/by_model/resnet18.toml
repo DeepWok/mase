@@ -17,8 +17,8 @@ project_dir = "../mase_output"
 project = "resnet18_cifar10"
 
 # load
-load_name = "../mase_output/resnet18_cifar10/software/transformed_ckpts"
-load_type = "mz"
+# load_name = "../mase_output/resnet18_cifar10/software/transformed_ckpts"
+# load_type = "mz"
 
 log_level = "info"
 

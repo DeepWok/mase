@@ -18,10 +18,37 @@ from torch.nn.common_types import _size_1_t
 
 
 class _Conv1dBase(torch.nn.Conv1d):
-    bypass = False
-
-    _required_config_keys = None
-    _optional_config_keys = None
+    def __init__(
+        self,
+        in_channels: int,
+        out_channels: int,
+        kernel_size: _size_1_t,
+        stride: _size_1_t = 1,
+        padding: _size_1_t | str = 0,
+        dilation: _size_1_t = 1,
+        groups: int = 1,
+        bias: bool = True,
+        padding_mode: str = "zeros",
+        device=None,
+        dtype=None,
+    ) -> None:
+        super().__init__(
+            in_channels,
+            out_channels,
+            kernel_size,
+            stride,
+            padding,
+            dilation,
+            groups,
+            bias,
+            padding_mode,
+            device,
+            dtype,
+        )
+        self.bypass = False
+        self.w_quantizer = None
+        self.x_quantizer = None
+        self.b_quantizer = None
 
     def forward(self, x: Tensor) -> Tensor:
         if self.bypass:
@@ -33,20 +60,20 @@ class _Conv1dBase(torch.nn.Conv1d):
         # The addition size is in_channels * K * K
         return self._conv_forward(x, w, bias)
 
-    def get_quantized_weight(self) -> Tensor:
-        return self.w_quantizer(self.weight)
+    # def get_quantized_weight(self) -> Tensor:
+    #     return self.w_quantizer(self.weight)
 
-    def get_quantized_weights_with_inputs(self, x: Tensor) -> Tensor:
-        x = self.x_quantizer(x)
-        w = self.w_quantizer(self.weight)
-        bias = self.b_quantizer(self.bias) if self.bias is not None else None
-        y = self._conv_forward(x, w, bias)
-        return {
-            "x": x,
-            "w": w,
-            "bias": bias,
-            "y": y,
-        }
+    # def get_quantized_weights_with_inputs(self, x: Tensor) -> Tensor:
+    #     x = self.x_quantizer(x)
+    #     w = self.w_quantizer(self.weight)
+    #     bias = self.b_quantizer(self.bias) if self.bias is not None else None
+    #     y = self._conv_forward(x, w, bias)
+    #     return {
+    #         "x": x,
+    #         "w": w,
+    #         "bias": bias,
+    #         "y": y,
+    #     }
 
     # def get_output_bitwidth(self):
     #     """output bit width info for HW gen"""
@@ -83,8 +110,10 @@ class Conv1dInteger(_Conv1dBase):
             dtype=dtype,
         )
         assert config is not None, "config is None!"
-
+        self.config = config
         self.bypass = config.get("bypass", False)
+        if self.bypass:
+            return
         # establish quantizers
         w_width, w_frac_width = config["weight_width"], config["weight_frac_width"]
         x_width, x_frac_width = config["data_in_width"], config["data_in_frac_width"]
@@ -98,7 +127,6 @@ class Conv1dInteger(_Conv1dBase):
         self.b_quantizer = partial(
             integer_quantizer, width=b_width, frac_width=b_frac_width
         )
-        self.config = config
 
     # def get_output_bitwidth(self):
     #     config = self.config
@@ -151,7 +179,10 @@ class Conv1dMinifloatDenorm(_Conv1dBase):
             dtype,
         )
         assert config is not None, "config is None!"
+        self.config = config
         self.bypass = config.get("bypass", False)
+        if self.bypass:
+            return
 
         w_width, w_exponent_width, w_exponent_bias = (
             config["weight_width"],
@@ -189,7 +220,6 @@ class Conv1dMinifloatDenorm(_Conv1dBase):
             exponent_width=b_exponent_width,
             exponent_bias=b_exponent_bias,
         )
-        self.config = config
 
 
 class Conv1dLog(_Conv1dBase):
@@ -222,7 +252,10 @@ class Conv1dLog(_Conv1dBase):
             dtype,
         )
         assert config is not None, "config is None!"
+        self.config = config
         self.bypass = config.get("bypass", False)
+        if self.bypass:
+            return
 
         w_width, w_exponent_bias = (
             config["weight_width"],
@@ -254,7 +287,6 @@ class Conv1dLog(_Conv1dBase):
             width=b_width,
             exponent_bias=b_exponent_bias,
         )
-        self.config = config
 
 
 class Conv1dMinifloatIEEE(_Conv1dBase):
@@ -287,7 +319,10 @@ class Conv1dMinifloatIEEE(_Conv1dBase):
             dtype,
         )
         assert config is not None, "config is None!"
+        self.config = config
         self.bypass = config.get("bypass", False)
+        if self.bypass:
+            return
 
         w_width, w_exponent_width, w_exponent_bias = (
             config["weight_width"],
@@ -325,7 +360,6 @@ class Conv1dMinifloatIEEE(_Conv1dBase):
             exponent_width=b_exponent_width,
             exponent_bias=b_exponent_bias,
         )
-        self.config = config
 
 
 class Conv1dBlockFP(_Conv1dBase):
@@ -358,7 +392,10 @@ class Conv1dBlockFP(_Conv1dBase):
             dtype,
         )
         assert config is not None, "config is None!"
+        self.config = config
         self.bypass = config.get("bypass", False)
+        if self.bypass:
+            return
 
         w_width, w_exponent_width, w_exponent_bias, w_block_size = (
             config["weight_width"],
@@ -405,7 +442,6 @@ class Conv1dBlockFP(_Conv1dBase):
             block_size=b_block_size,
             skip_first_dim=False,
         )
-        self.config = config
 
 
 class Conv1dBlockMinifloat(_Conv1dBase):
@@ -438,7 +474,10 @@ class Conv1dBlockMinifloat(_Conv1dBase):
             dtype,
         )
         assert config is not None, "config is None!"
+        self.config = config
         self.bypass = config.get("bypass", False)
+        if self.bypass:
+            return
 
         w_width, w_exponent_width, w_exponent_bias_width, w_block_size = (
             config["weight_width"],
@@ -485,7 +524,6 @@ class Conv1dBlockMinifloat(_Conv1dBase):
             block_size=b_block_size,
             skip_first_dim=False,
         )
-        self.config = config
 
 
 class Conv1dBlockLog(_Conv1dBase):
@@ -518,7 +556,10 @@ class Conv1dBlockLog(_Conv1dBase):
             dtype,
         )
         assert config is not None, "config is None!"
+        self.config = config
         self.bypass = config.get("bypass", False)
+        if self.bypass:
+            return
 
         width, exponent_bias_width, block_size = (
             config["weight_width"],
@@ -556,4 +597,3 @@ class Conv1dBlockLog(_Conv1dBase):
             block_size=b_block_size,
             skip_first_dim=False,
         )
-        self.config = config

@@ -18,9 +18,19 @@ from ..quantizers import (
 
 
 class _LinearBase(torch.nn.Linear):
-    bypass = False
-    _required_config_keys = None
-    _optional_config_keys = None
+    def __init__(
+        self,
+        in_features: int,
+        out_features: int,
+        bias: bool = True,
+        device=None,
+        dtype=None,
+    ) -> None:
+        super().__init__(in_features, out_features, bias, device, dtype)
+        self.bypass = False
+        self.x_quantizer = None
+        self.w_quantizer = None
+        self.b_quantizer = None
 
     def forward(self, x: Tensor) -> Tensor:
         if self.bypass:
@@ -32,23 +42,24 @@ class _LinearBase(torch.nn.Linear):
             bias = self.b_quantizer(self.bias) if self.bias is not None else None
             return F.linear(x, w, bias)
 
-    def get_quantized_weight(self) -> Tensor:
-        return self.w_quantizer(self.weight)
+    # TODO: implement these as passes
+    # def get_quantized_weight(self) -> Tensor:
+    #     return self.w_quantizer(self.weight)
 
-    def get_quantized_weights_with_inputs(self, x: Tensor) -> Tensor:
-        x = self.x_quantizer(x)
-        w = self.w_quantizer(self.weight)
-        bias = self.b_quantizer(self.bias) if self.bias is not None else None
-        y = F.linear(x, w, bias)
-        return {
-            "x": x,
-            "w": w,
-            "bias": bias,
-            "y": y,
-        }
+    # def get_quantized_weights_with_inputs(self, x: Tensor) -> Tensor:
+    #     x = self.x_quantizer(x)
+    #     w = self.w_quantizer(self.weight)
+    #     bias = self.b_quantizer(self.bias) if self.bias is not None else None
+    #     y = F.linear(x, w, bias)
+    #     return {
+    #         "x": x,
+    #         "w": w,
+    #         "bias": bias,
+    #         "y": y,
+    #     }
 
-    def get_output_bitwidth(self) -> dict:
-        raise NotImplementedError()
+    # def get_output_bitwidth(self) -> dict:
+    #     raise NotImplementedError()
 
 
 class LinearInteger(_LinearBase):
@@ -63,8 +74,10 @@ class LinearInteger(_LinearBase):
     ) -> None:
         super().__init__(in_features, out_features, bias, device, dtype)
         assert config is not None, "config is None!"
-
+        self.config = config
         self.bypass = config.get("bypass", False)
+        if self.bypass:
+            return
         # establish quantizer
         w_width, w_frac_width = config["weight_width"], config["weight_frac_width"]
         x_width, x_frac_width = config["data_in_width"], config["data_in_frac_width"]
@@ -79,7 +92,6 @@ class LinearInteger(_LinearBase):
         self.b_quantizer = partial(
             integer_quantizer, width=b_width, frac_width=b_frac_width
         )
-        self.config = config
 
     # def get_output_bitwidth(self):
     #     config = self.config
@@ -114,8 +126,10 @@ class LinearMinifloatDenorm(_LinearBase):
     ) -> None:
         super().__init__(in_features, out_features, bias, device, dtype)
         assert config is not None, "config is None!"
-
+        self.config = config
         self.bypass = config.get("bypass", False)
+        if self.bypass:
+            return
 
         w_width, w_exponent_width, w_exponent_bias = (
             config["weight_width"],
@@ -153,8 +167,6 @@ class LinearMinifloatDenorm(_LinearBase):
             exponent_width=b_exponent_width,
             exponent_bias=b_exponent_bias,
         )
-
-        self.config = config
 
 
 class LinearMinifloatIEEE(_LinearBase):
@@ -168,9 +180,12 @@ class LinearMinifloatIEEE(_LinearBase):
         config=None,
     ) -> None:
         super().__init__(in_features, out_features, bias, device, dtype)
-        assert config is not None, "config is None!"
 
+        assert config is not None, "config is None!"
+        self.config = config
         self.bypass = config.get("bypass", False)
+        if self.bypass:
+            return
 
         w_width, w_exponent_width, w_exponent_bias = (
             config["weight_width"],
@@ -208,7 +223,6 @@ class LinearMinifloatIEEE(_LinearBase):
             exponent_width=b_exponent_width,
             exponent_bias=b_exponent_bias,
         )
-        self.config = config
 
     # def get_output_bitwidth(self) -> dict:
     #     num_ops = self.in_features
@@ -237,8 +251,10 @@ class LinearLog(_LinearBase):
     ) -> None:
         super().__init__(in_features, out_features, bias, device, dtype)
         assert config is not None, "config is None!"
-
+        self.config = config
         self.bypass = config.get("bypass", False)
+        if self.bypass:
+            return
 
         w_width, w_exponent_bias = (
             config["weight_width"],
@@ -270,7 +286,6 @@ class LinearLog(_LinearBase):
             width=b_width,
             exponent_bias=b_exponent_bias,
         )
-        self.config = config
 
 
 class LinearBlockFP(_LinearBase):
@@ -284,10 +299,11 @@ class LinearBlockFP(_LinearBase):
         config=None,
     ) -> None:
         super().__init__(in_features, out_features, bias, device, dtype)
-        if config is None:
-            raise ValueError("config is None for IntegerLinear")
-
+        assert config is not None, "config is None!"
+        self.config = config
         self.bypass = config.get("bypass", False)
+        if self.bypass:
+            return
         # establish quantizers
         w_width, w_exponent_width, w_exponent_bias, w_block_size = (
             config["weight_width"],
@@ -336,8 +352,6 @@ class LinearBlockFP(_LinearBase):
             skip_first_dim=False,
         )
 
-        self.config = config
-
 
 class LinearBlockMinifloat(_LinearBase):
     def __init__(
@@ -350,10 +364,12 @@ class LinearBlockMinifloat(_LinearBase):
         config=None,
     ) -> None:
         super().__init__(in_features, out_features, bias, device, dtype)
-        if config is None:
-            raise ValueError("config is None for IntegerLinear")
 
+        assert config is not None, "config is None!"
+        self.config = config
         self.bypass = config.get("bypass", False)
+        if self.bypass:
+            return
         # establish quantizers
         w_width, w_exponent_width, w_exponent_bias_width, w_block_size = (
             config["weight_width"],
@@ -402,8 +418,6 @@ class LinearBlockMinifloat(_LinearBase):
             skip_first_dim=False,
         )
 
-        self.config = config
-
 
 class LinearBlockLog(_LinearBase):
     def __init__(
@@ -418,8 +432,10 @@ class LinearBlockLog(_LinearBase):
         super().__init__(in_features, out_features, bias, device, dtype)
 
         assert config is not None, "config is None!"
-
+        self.config = config
         self.bypass = config.get("bypass", False)
+        if self.bypass:
+            return
         # establish quantizers
         w_width, w_exponent_bias_width, w_block_size = (
             config["weight_width"],
@@ -461,4 +477,3 @@ class LinearBlockLog(_LinearBase):
             block_size=b_block_size,
             skip_first_dim=False,
         )
-        self.config = config
