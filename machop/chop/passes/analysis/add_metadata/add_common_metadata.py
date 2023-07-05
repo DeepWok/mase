@@ -3,22 +3,26 @@ import logging
 import toml
 import torch
 import torch.fx as fx
+from chop.passes.analysis.utils import (
+    get_input_nodes,
+    get_output_nodes,
+    match_and_filter,
+)
+from chop.passes.common import MASE_BUILTIN_FUNCS, MASE_MODULE_RELATED_FUNCS
+from chop.passes.metadata.mase_metadata import MaseMetadata
 from tabulate import tabulate
 from torch import nn
 
-from chop.passes.analysis.utils import (get_input_nodes, get_output_nodes,
-                                        match_and_filter)
-from chop.passes.common import MASE_BUILTIN_FUNCS, MASE_MODULE_RELATED_FUNCS
-from chop.passes.metadata.mase_metadata import MaseMetadata
-
-from .common_metadata_layers import (analyse_common_parameters_constant,
-                                     analyse_common_parameters_flatten,
-                                     analyse_common_parameters_linear,
-                                     analyse_common_parameters_output,
-                                     analyse_common_parameters_placeholder,
-                                     analyse_common_parameters_relu,
-                                     analyse_common_parameters_size,
-                                     analyse_common_parameters_view)
+from .common_metadata_layers import (
+    analyse_common_parameters_constant,
+    analyse_common_parameters_flatten,
+    analyse_common_parameters_linear,
+    analyse_common_parameters_output,
+    analyse_common_parameters_placeholder,
+    analyse_common_parameters_relu,
+    analyse_common_parameters_size,
+    analyse_common_parameters_view,
+)
 
 logger = logging.getLogger(__name__)
 
