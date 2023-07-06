@@ -117,17 +117,13 @@ class Conv2dInteger(_Conv2dBase):
         w_width, w_frac_width = config["weight_width"], config["weight_frac_width"]
         x_width, x_frac_width = config["data_in_width"], config["data_in_frac_width"]
         # check bias quantizer, if not, use weight quantizer
-        b_width, b_frac_width = config.get("bias_width", None), config.get(
-            "bias_frac_width", None
-        )
+        b_width, b_frac_width = config["bias_width"], config["bias_frac_width"]
         self.w_quantizer = partial(
             integer_quantizer, width=w_width, frac_width=w_frac_width
         )
         self.x_quantizer = partial(
             integer_quantizer, width=x_width, frac_width=x_frac_width
         )
-        if b_width is None:
-            self.b_quantizer = self.w_quantizer
         self.b_quantizer = partial(
             integer_quantizer, width=b_width, frac_width=b_frac_width
         )
@@ -200,9 +196,9 @@ class Conv2dMinifloatDenorm(_Conv2dBase):
             config["data_in_exponent_bias"],
         )
         b_width, b_exponent_width, b_exponent_bias = (
-            config.get("bias_width", None),
-            config.get("bias_exponent_width", None),
-            config.get("bias_exponent_bias", None),
+            config["bias_width"],
+            config["bias_exponent_width"],
+            config["bias_exponent_bias"],
         )
 
         self.w_quantizer = partial(
@@ -219,15 +215,12 @@ class Conv2dMinifloatDenorm(_Conv2dBase):
             exponent_bias=x_exponent_bias,
         )
 
-        if b_width is None or b_exponent_width is None or b_exponent_bias is None:
-            self.b_quantizer = self.w_quantizer
-        else:
-            self.b_quantizer = partial(
-                minifloat_denorm_quantizer,
-                width=b_width,
-                exponent_width=b_exponent_width,
-                exponent_bias=b_exponent_bias,
-            )
+        self.b_quantizer = partial(
+            minifloat_denorm_quantizer,
+            width=b_width,
+            exponent_width=b_exponent_width,
+            exponent_bias=b_exponent_bias,
+        )
 
 
 class Conv2dMinifloatIEEE(_Conv2dBase):
@@ -276,9 +269,9 @@ class Conv2dMinifloatIEEE(_Conv2dBase):
             config["data_in_exponent_bias"],
         )
         b_width, b_exponent_width, b_exponent_bias = (
-            config.get("bias_width", None),
-            config.get("bias_exponent_width", None),
-            config.get("bias_exponent_bias", None),
+            config["bias_width"],
+            config["bias_exponent_width"],
+            config["bias_exponent_bias"],
         )
 
         self.w_quantizer = partial(
@@ -295,15 +288,12 @@ class Conv2dMinifloatIEEE(_Conv2dBase):
             exponent_bias=x_exponent_bias,
         )
 
-        if b_width is None or b_exponent_width is None or b_exponent_bias is None:
-            self.b_quantizer = self.w_quantizer
-        else:
-            self.b_quantizer = partial(
-                minifloat_ieee_quantizer,
-                width=b_width,
-                exponent_width=b_exponent_width,
-                exponent_bias=b_exponent_bias,
-            )
+        self.b_quantizer = partial(
+            minifloat_ieee_quantizer,
+            width=b_width,
+            exponent_width=b_exponent_width,
+            exponent_bias=b_exponent_bias,
+        )
 
 
 class Conv2dLog(_Conv2dBase):
@@ -350,8 +340,8 @@ class Conv2dLog(_Conv2dBase):
             config["data_in_exponent_bias"],
         )
         b_width, b_exponent_bias = (
-            config.get("bias_width", None),
-            config.get("bias_exponent_bias", None),
+            config["bias_width"],
+            config["bias_exponent_bias"],
         )
 
         self.w_quantizer = partial(
@@ -366,14 +356,11 @@ class Conv2dLog(_Conv2dBase):
             exponent_bias=x_exponent_bias,
         )
 
-        if b_width is None or b_exponent_bias is None:
-            self.b_quantizer = self.w_quantizer
-        else:
-            self.b_quantizer = partial(
-                log_quantizer,
-                width=b_width,
-                exponent_bias=b_exponent_bias,
-            )
+        self.b_quantizer = partial(
+            log_quantizer,
+            width=b_width,
+            exponent_bias=b_exponent_bias,
+        )
 
 
 class Conv2dLog(_Conv2dBase):
@@ -420,8 +407,8 @@ class Conv2dLog(_Conv2dBase):
             config["data_in_exponent_bias"],
         )
         b_width, b_exponent_bias = (
-            config.get("bias_width", None),
-            config.get("bias_exponent_bias", None),
+            config["bias_width"],
+            config["bias_exponent_bias"],
         )
 
         self.w_quantizer = partial(
@@ -436,14 +423,11 @@ class Conv2dLog(_Conv2dBase):
             exponent_bias=x_exponent_bias,
         )
 
-        if b_width is None or b_exponent_bias is None:
-            self.b_quantizer = self.w_quantizer
-        else:
-            self.b_quantizer = partial(
-                log_quantizer,
-                width=b_width,
-                exponent_bias=b_exponent_bias,
-            )
+        self.b_quantizer = partial(
+            log_quantizer,
+            width=b_width,
+            exponent_bias=b_exponent_bias,
+        )
 
 
 class Conv2dBlockFP(_Conv2dBase):
