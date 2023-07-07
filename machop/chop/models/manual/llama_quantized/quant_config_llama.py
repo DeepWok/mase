@@ -102,6 +102,7 @@ def by_class_parser(config: dict, num_hidden_layers: int) -> dict:
     for i in range(num_hidden_layers):
         layer_entry = f"model_layer_{i}"
         p_config[layer_entry] = create_a_layer_config(linear_qc, matmul_qc, layer_qc)
+    p_config["default"] = default_qc
     return p_config
 
 
@@ -121,6 +122,7 @@ def by_name_parser(config: dict, num_hidden_layers: int) -> dict:
         layer_entry = f"model_layer_{i}"
         layer_qc = config.get(layer_entry, None)
         p_config[layer_entry] = create_a_layer_config(linear_qc, matmul_qc, layer_qc)
+    p_config["default"] = default_qc
     return p_config
 
 
@@ -130,7 +132,7 @@ def parse_llama_quant_config(config: str | dict, num_hidden_layers: int) -> dict
     ), "config must be a str path to config toml or dict"
     if isinstance(config, str):
         config = toml.load(config)
-    by = config.pop("by", "class")
+    by = config.pop("by", "type")
     match by:
         case "type":
             return by_class_parser(config, num_hidden_layers)
