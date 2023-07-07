@@ -222,5 +222,5 @@ def add_common_metadata_analysis_pass(graph, pass_args=None):
     graph.nodes_out = get_output_nodes(graph.fx_graph)
     graph = graph_iterator_for_mase_ops(graph)
     # TODO: FIXEME, this is temporary
-    # graph = graph_iterator_for_metadata(graph, pass_args)
+    graph = graph_iterator_for_metadata(graph, pass_args)
     return graph

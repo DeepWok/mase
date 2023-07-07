@@ -31,6 +31,40 @@ jobs:
           ln -s "${HOME}"/srcPkgs/verible/bin/verible-verilog-diff /usr/local/bin/verible-verilog-diff
           ln -s "${HOME}"/srcPkgs/verible/bin/git-verible-verilog-format.sh /usr/local/bin/git-verible-verilog-format.sh
 
+    # Choose the git commit to diff against for the purposes of linting.
+    # Since this workflow is triggered on both pushes and pull requests, w
+    # have to determine if the pull request target branch is set (which it
+    # will only be on the PR triggered flow). If it's not, then compare
+    # against the last commit.
+    - name: choose-commit
+      if: ${{ always() }}
+      env:
+        # Base ref is the target branch, in text form (not hash)
+        PR_BASE: ${{ github.base_ref }}
+      run: |
+        # Run clang-format
+        if [ -z "$PR_BASE" ]; then
+          DIFF_COMMIT_NAME="HEAD^"
+        else
+          DIFF_COMMIT_NAME="$PR_BASE"
+        fi
+        echo "DIFF_COMMIT_NAME=$DIFF_COMMIT_NAME" >> $GITHUB_ENV
+
+    # Since we did a shallow fetch for this repo, we must fetch the commit
+    # upon which we be diff'ing. The last step set the ref name in the
+    # $DIFF_COMMIT_NAME environment variable. When running the fetch, resolve
+    # it to the commit hash and pass that hash along to subsequent steps.
+    - name: git fetch base commit
+      continue-on-error: true
+      run: |
+        if echo "$DIFF_COMMIT_NAME" | grep -q HEAD; then
+          DIFF_COMMIT_SHA=$( git rev-parse $DIFF_COMMIT_NAME )
+        else
+          git fetch --recurse-submodules=no origin $DIFF_COMMIT_NAME
+          DIFF_COMMIT_SHA=$( git rev-parse origin/$DIFF_COMMIT_NAME )
+        fi
+        echo "DIFF_COMMIT=$DIFF_COMMIT_SHA" >> $GITHUB_ENV
+    
     # Run verible-verilog-format to check Verilog/SystemVerilog formatting.
     - name: verilog-format
       if: ${{ always() }}
