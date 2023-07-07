@@ -1,4 +1,4 @@
-by = "class"
+by = "type"
 [default]
 bypass = true
 name = "integer"
