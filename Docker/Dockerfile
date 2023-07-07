@@ -65,7 +65,7 @@ RUN pip3 install onnx black toml GitPython colorlog cocotb[bus]==1.8.0 \
                     pytest pytorch-lightning transformers toml \
                     timm pytorch-nlp datasets ipython ipdb \
                     sentencepiece einops deepspeed pybind11 \
-                    tabulate tensorboardx hyperopt isort
+                    tabulate tensorboardx hyperopt
 # Install Torch-MLIR and Pytorch
 RUN mkdir -p /home/dev-user/srcPkgs \
     && cd /home/dev-user/srcPkgs \
@@ -107,7 +107,6 @@ RUN printf "\
 \nautocmd BufWritePost *.cc  silent! !clang-format -i <afile> \
 \nautocmd BufWritePost *.py  silent! set tabstop=4 shiftwidth=4 expandtab \
 \nautocmd BufWritePost *.py  silent! !python3 -m black <afile> \
-\nautocmd BufWritePost *.py  silent! !isort <afile> \
 \nautocmd BufWritePost *.sv  silent! !verible-verilog-format --inplace <afile> \
 \nautocmd BufWritePost *.v  silent! !verible-verilog-format --inplace <afile> \
 \nautocmd BufWritePost * redraw! \

@@ -21,34 +21,11 @@ jobs:
 
     - name: Check missing breakpoint 
       run: |
-          if [[ $(grep -rnw ./software/machop -e "breakpoint()") -eq 1 ]]; then
+          if [[ $(grep -rnw ./machop/chop -e "breakpoint()") -eq 1 ]]; then
               echo "Found undeleted breakpoint:"
-              grep -rnw ./software/machop -e "breakpoint()"
+              grep -rnw ./machop/chop -e "breakpoint()"
               exit 1
           fi
-
-    - name: Install black and clang 
-      run: |
-          sudo apt-get install -y \
-                          python3 python3-pip clang-format clang-tidy
-          pip3 install --user --upgrade pip
-          pip3 install black isort 
-
-    # Run black and isort to check Python formatting.
-    - name: python-format
-      if: ${{ always() }}
-      shell: bash
-      run: |
-        files=$(git diff --name-only $DIFF_COMMIT | grep -e '\.py$' || echo -n)
-        if [[ ! -z $files ]]; then
-          for f in $files
-          do
-            if [[ -f $f ]]; then
-              python3 -m black $f
-              [[ ! -z "$(isort ${f} --diff)" ]] && exit 1
-            fi
-          done
-        fi
 
     # Choose the git commit to diff against for the purposes of linting.
     # Since this workflow is triggered on both pushes and pull requests, w
@@ -84,6 +61,28 @@ jobs:
         fi
         echo "DIFF_COMMIT=$DIFF_COMMIT_SHA" >> $GITHUB_ENV
     
+    - name: Install black and clang 
+      run: |
+          sudo apt-get install -y \
+                          python3 python3-pip clang-format clang-tidy
+          pip3 install --user --upgrade pip
+          pip3 install black
+
+    # Run black to check Python formatting.
+    - name: python-format
+      if: ${{ always() }}
+      shell: bash
+      run: |
+        files=$(git diff --name-only $DIFF_COMMIT | grep -e '\.py$' || echo -n)
+        if [[ ! -z $files ]]; then
+          for f in $files
+          do
+            if [[ -f $f ]]; then
+              python3 -m black $f
+            fi
+          done
+        fi
+
     # Run 'git clang-format', comparing against the target commit hash. If
     # clang-format fixed anything, fail and output a patch.
     - name: clang-format
@@ -95,6 +94,7 @@ jobs:
         if [ -s clang-format.patch ]; then
           echo "Clang-format found formatting problems in the following " \
             "files. See diff in the clang-format.patch artifact."
+          cat clang-format.patch
           git diff --ignore-submodules --name-only
           git checkout .
           exit 1
@@ -172,49 +172,34 @@ jobs:
     # Mase regression test 
     # -----------
     
-    # - name: Get dependences 
-    #   run: |
-    #       sudo apt-get update
-    #       sudo apt-get install apt-utils -y
-    #       # sudo apt-get upgrade -y
-    #       sudo apt-get install -y \
-    #                       clang cmake graphviz-dev libclang-dev \
-    #                       pkg-config g++ libxtst6 xdg-utils \
-    #                       libboost-all-dev llvm gcc ninja-build \
-    #                       python3 python3-pip build-essential \
-    #                       libssl-dev git vim wget htop sudo \
-    #                       lld 
-    #       sudo apt-get update -y
-    #       sudo apt-get install -y \
-    #                       perl make autoconf flex bison libunwind-dev \
-    #                       ccache libgoogle-perftools-dev numactl \
-    #                       perl-doc libfl2 libfl-dev zlib1g zlib1g-dev \
-    #                       help2man libidn11-dev
+    - name: Get dependences 
+      run: |
+          sudo apt-get update
+          sudo apt-get install apt-utils -y
+          # sudo apt-get upgrade -y
+          sudo apt-get install -y \
+                          clang cmake graphviz-dev libclang-dev \
+                          pkg-config g++ libxtst6 xdg-utils \
+                          libboost-all-dev llvm gcc ninja-build \
+                          python3 python3-pip build-essential \
+                          libssl-dev git vim wget htop sudo \
+                          lld 
+          sudo apt-get update -y
+          sudo apt-get install -y \
+                          perl make autoconf flex bison libunwind-dev \
+                          ccache libgoogle-perftools-dev numactl \
+                          perl-doc libfl2 libfl-dev zlib1g zlib1g-dev \
+                          help2man libidn11-dev
 
-    #       pip3 install --user --upgrade pip
-    #       pip3 install onnx toml GitPython colorlog \
-    #                    pytest pytorch-lightning transformers toml \
-    #                    timm pytorch-nlp datasets IPython ipdb \
-    #                    sentencepiece einops deepspeed pybind11 \
-    #                    tabulate tensorboard hyperopt
-    #       pip3 install cocotb[bus]==1.8.0 
+          pip3 install --user --upgrade pip
+          pip3 install onnx toml GitPython colorlog \
+                       pytest pytorch-lightning transformers toml \
+                       timm pytorch-nlp datasets IPython ipdb \
+                       sentencepiece einops deepspeed pybind11 \
+                       tabulate tensorboard hyperopt
+          pip3 install cocotb[bus]==1.8.0 
 
-    # - name: Hardware regression test 
-    #   run: |
-    #       bash scripts/test-mase.py -a
-
-    # -----------
-    # Mase regression test 
-    # -----------
-
-    # - name: Install PyTorch and Torch-MLIR 
-    #   run: 
-    #       pip3 install --pre torch-mlir torchvision 
-    #       -f https://llvm.github.io/torch-mlir/package-index/ 
-    #       --extra-index-url https://download.pytorch.org/whl/nightly/cpu
-    
-    # - name: Build LLVM 
-    #   run: |
-    #       make build
-
+    - name: Mase regression test 
+      run: |
+          bash scripts/test-machop.sh
 
