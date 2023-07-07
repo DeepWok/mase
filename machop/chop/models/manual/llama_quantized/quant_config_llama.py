@@ -1,12 +1,11 @@
+import os
+import re
 from copy import deepcopy
 from dataclasses import dataclass
-import re
-import os
 
 import toml
 
 from ..quant_utils import parse_node_config
-
 
 """
 An example of quant_config for llama
@@ -26,9 +25,10 @@ An example of quant_config for llama
             "down_proj": {},
             "up_proj": {},
         },
-        "linear_default": {},
-        "matmul_default": {},
     }
+    "linear_default": {},
+    "matmul_default": {},
+
 }
 """
 
@@ -132,7 +132,7 @@ def parse_llama_quant_config(config: str | dict, num_hidden_layers: int) -> dict
         config = toml.load(config)
     by = config.pop("by", "class")
     match by:
-        case "class":
+        case "type":
             return by_class_parser(config, num_hidden_layers)
         case "name":
             return by_name_parser(config, num_hidden_layers)

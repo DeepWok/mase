@@ -11,8 +11,10 @@ os.environ["PYTHONBREAKPOINT"] = "ipdb.set_trace"
 sys.path.append(os.path.join("..", "..", "..", "..", "machop"))
 
 
-from chop.models.manual.llama_quantized import (LlamaQuantizedConfig,
-                                                LlamaQuantizedForCausalLM)
+from chop.models.manual.llama_quantized import (
+    LlamaQuantizedConfig,
+    LlamaQuantizedForCausalLM,
+)
 from transformers import AutoTokenizer
 
 config = LlamaQuantizedConfig.from_pretrained(
