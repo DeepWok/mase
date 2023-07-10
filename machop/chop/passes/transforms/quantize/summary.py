@@ -1,11 +1,10 @@
 import logging
 import os
-from collections import namedtuple
 from copy import deepcopy
 
 import numpy as np
 import pandas as pd
-from chop.passes.utils import get_mase_op, get_mase_type, node_actual_target
+from chop.passes.utils import get_mase_op, get_mase_type, get_node_actual_target
 from tabulate import tabulate
 
 logger = logging.getLogger(__name__)
@@ -18,9 +17,9 @@ def graph_iterator_compare_nodes(
 
     def get_type_str(node):
         if get_mase_type(node) == "module":
-            return type(node_actual_target(node)).__name__
+            return type(get_node_actual_target(node)).__name__
         elif get_mase_type(node) in ["builtin_func", "module_related_func"]:
-            return node_actual_target(node).__name__
+            return get_node_actual_target(node).__name__
         else:
             return node.target
 
@@ -43,7 +42,7 @@ def graph_iterator_compare_nodes(
                 get_mase_op(n),
                 get_type_str(ori_n),
                 get_type_str(n),
-                node_actual_target(n) != node_actual_target(ori_n),
+                type(get_node_actual_target(n)) != type(get_node_actual_target(ori_n)),
             ]
         )
     if not silent:

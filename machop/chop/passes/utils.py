@@ -95,7 +95,7 @@ def get_mase_type(node):
     return node.meta["mase"].parameters["common"]["mase_type"]
 
 
-def node_actual_target(node):
+def get_node_actual_target(node):
     """
     return the actual target of the node
     - for "call_module": return the torch.nn.Module instance
