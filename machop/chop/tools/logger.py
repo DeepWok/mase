@@ -76,4 +76,3 @@ def getLogger(name: str, log_file: str = "", console: bool = True) -> logging.Lo
 
 
 logger = getLogger(__name__)
-

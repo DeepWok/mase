@@ -20,3 +20,4 @@ pybind11
 tabulate
 tensorboard
 optuna
+stable-baselines3

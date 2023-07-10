@@ -217,6 +217,11 @@ passname : {args}
 """
 
 
+def add_mase_ops_analysis_pass(graph, pass_args=None):
+    graph = graph_iterator_for_mase_ops(graph)
+    return graph
+
+
 def add_common_metadata_analysis_pass(graph, pass_args=None):
     """
     Pass args : initial dummy inputs for inferencing all the shapes for each node

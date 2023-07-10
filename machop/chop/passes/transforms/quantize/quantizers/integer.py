@@ -4,7 +4,8 @@ from numpy import ndarray
 from torch import Tensor
 
 
-from .utils import my_clamp, my_round 
+from .utils import my_clamp, my_round
+
 
 def integer_quantizer(
     x: Union[Tensor, ndarray], width: int, frac_width: int, is_signed: bool = True

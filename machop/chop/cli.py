@@ -18,7 +18,7 @@ import torch
 
 # TODO: Refactor Search
 # from chop.actions import train, test, validate, search, transform
-from chop.actions import test, train, transform, validate
+from chop.actions import test, train, transform, validate, search
 from chop.dataset import MyDataModule, available_datasets, get_dataset, get_dataset_info
 from chop.models import (
     manual_nlp_models,
@@ -263,6 +263,10 @@ class ChopCLI:
             default="ddp",
             choices=[
                 "ddp",
+                "fsdp",
+                "fsdp_native",
+                "fsdp_custom",
+                "deepspeed_stage_3_offload",
             ],
             help="The strategy type. Default=ddp",
         )
@@ -365,6 +369,8 @@ class ChopCLI:
             self.train()
         elif self.args.action == "test":
             self.test()
+        elif self.args.action == "search":
+            self.search()
         else:
             raise ValueError(f"{self.args.action} is not supported!")
 
@@ -397,7 +403,7 @@ class ChopCLI:
         # Get model
         model_inst_fn = model_map[args.model]
 
-        checkpoint = None
+        checkpoint, tokenizer = None, None
         if args.load_name is not None and args.load_type == "hf":
             checkpoint = args.load_name
 
@@ -407,10 +413,15 @@ class ChopCLI:
                     name=args.model,
                     task=args.task,
                     info=dataset_info,
-                    checkpoint=checkpoint,
-                    pretrained=args.is_pretrained,
-                    config=args.custom_config,
+                    # checkpoint=checkpoint,
+                    # pretrained=args.is_pretrained,
+                    # config=args.config,
                 )
+                tokenizer = model_dict.get_tokenizer(args.model)
+                model_dict = {
+                    "model": model_dict,
+                    "tokenizer": tokenizer,
+                }
             else:
                 model_dict = model_inst_fn(
                     name=args.model,
@@ -419,10 +430,11 @@ class ChopCLI:
                     checkpoint=checkpoint,
                     pretrained=args.is_pretrained,
                 )
+                tokenizer = model_dict["tokenizer"]
         elif args.model in vision_models:
             if args.model in manual_vision_models:
                 # create manual model from custom config
-                model_dict = model_inst_fn(info=dataset_info, config=args.custom_config)
+                model_dict = model_inst_fn(info=dataset_info, config=args.config)
             else:
                 model_dict = model_inst_fn(
                     info=dataset_info, pretrained=args.is_pretrained
@@ -437,7 +449,7 @@ class ChopCLI:
             dataset_name=args.dataset,
             batch_size=args.batch_size,
             workers=args.num_workers,
-            tokenizer=model_dict["tokenizer"] if args.model in nlp_models else None,
+            tokenizer=tokenizer,
             max_token_len=args.max_token_len,
         )
         self.model, self.data_module, self.info = (
@@ -547,7 +559,7 @@ class ChopCLI:
             "strategy": args.strategy,
             "precision": args.trainer_precision,
         }
-        load_name = args.load_name 
+        load_name = args.load_name
         # assert load_name is not None, "load name must not be None for test-sw."
         test_params = {
             "model_name": args.model,
@@ -566,3 +578,23 @@ class ChopCLI:
         test(**test_params)
 
         logger.info("Testing is completed")
+
+    def search(self):
+        args = self.args
+        load_name = None
+        if args.load_name is not None and args.load_type in ["pt", "pl", "mz"]:
+            load_name = args.load_name
+        search_params = {
+            "model_name": args.model,
+            "model": self.model,
+            "task": args.task,
+            "info": self.info,
+            "data_module": self.data_module,
+            "accelerator": args.accelerator,
+            "search_config": args.config,
+            "save_path": os.path.join(self.output_dir_sw, "training_ckpts"),
+            "load_name": load_name,
+            "load_type": args.load_type,
+        }
+        search(**search_params)
+        logger.info("Training is completed")

@@ -3,8 +3,6 @@ from torch import Tensor
 from transformers.modeling_utils import ModuleUtilsMixin
 
 
-
-
 def BertSelfAttention_transpose_for_scores(
     x, self_num_attention_heads: int, self_attention_head_size: int
 ) -> Tensor:
@@ -212,13 +210,30 @@ def BertLMHeadModel_compute_loss(
 
 
 bert_leaf_funcs = [
-    ("BertSelfAttention_add_relative_position_embedding", BertSelfAttention_add_relative_position_embedding),
-    ("BertSelfAttention_get_new_context_layer_shape", BertSelfAttention_get_new_context_layer_shape),
-    ("BertModel_get_input_shape_batch_size_seq_length_and_device", BertModel_get_input_shape_batch_size_seq_length_and_device),
-    ("BertModel_create_default_attention_mask", BertModel_create_default_attention_mask),
-    ("BertModel_create_default_token_type_ids", BertModel_create_default_token_type_ids),
+    (
+        "BertSelfAttention_add_relative_position_embedding",
+        BertSelfAttention_add_relative_position_embedding,
+    ),
+    (
+        "BertSelfAttention_get_new_context_layer_shape",
+        BertSelfAttention_get_new_context_layer_shape,
+    ),
+    (
+        "BertModel_get_input_shape_batch_size_seq_length_and_device",
+        BertModel_get_input_shape_batch_size_seq_length_and_device,
+    ),
+    (
+        "BertModel_create_default_attention_mask",
+        BertModel_create_default_attention_mask,
+    ),
+    (
+        "BertModel_create_default_token_type_ids",
+        BertModel_create_default_token_type_ids,
+    ),
     ("BertModel_get_extended_attention_mask", BertModel_get_extended_attention_mask),
-    ("BertModel_get_extended_encoder_attention_mask",
-     BertModel_get_extended_encoder_attention_mask),
-    ("BertLMHeadModel_compute_loss", BertLMHeadModel_compute_loss)
+    (
+        "BertModel_get_extended_encoder_attention_mask",
+        BertModel_get_extended_encoder_attention_mask,
+    ),
+    ("BertLMHeadModel_compute_loss", BertLMHeadModel_compute_loss),
 ]

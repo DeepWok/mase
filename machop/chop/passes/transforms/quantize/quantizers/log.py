@@ -6,6 +6,7 @@ from torch import Tensor
 
 from .utils import my_clamp, my_round
 
+
 def log_quantizer(
     x: Union[Tensor, ndarray],
     width: int,

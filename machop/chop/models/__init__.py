@@ -4,6 +4,7 @@ from functools import partial
 # from .manual.toy_manual import get_toymanualnet
 # from .patched_nlp_models import get_patched_nlp_model
 from .patched_nlp_models import patched_model_cls_to_required_input_args
+from .manual import get_llama_plain
 
 from .nlp_models import get_nlp_model
 from .toy import get_toy_tiny, get_toynet
@@ -146,7 +147,9 @@ _patched_nlp_model_map = {
     # "bert-large-cased@patched": get_patched_nlp_model,
 }
 
-_manual_nlp_module_map = {}
+_manual_nlp_module_map = {
+    "Cheng98/llama-160m": get_llama_plain,
+}
 
 model_map = (
     _built_in_vision_model_map

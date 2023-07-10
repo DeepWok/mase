@@ -35,5 +35,3 @@ def torch_ones(*args, **kwargs):
 # @mark_as_tensor_constructor
 def torch_arange(*args, **kwargs):
     return torch.arange(*args, **kwargs)
-
-
