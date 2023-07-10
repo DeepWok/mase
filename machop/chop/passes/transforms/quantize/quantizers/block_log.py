@@ -8,8 +8,6 @@ from .log import log_quantizer
 from .utils import block, my_clamp, unblock
 
 
-
-
 def block_log_quantizer(
     x: Union[Tensor, ndarray],
     width: int,

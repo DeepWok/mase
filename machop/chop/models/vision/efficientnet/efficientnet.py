@@ -26,9 +26,9 @@ from torchvision.utils import _make_ntuple
 
 logger = getLogger(__name__)
 
-'''
+"""
 TODO: maybe uncomment this?
-'''
+"""
 # StochasticDepth = mark_as_leaf_module(StochasticDepth)
 
 

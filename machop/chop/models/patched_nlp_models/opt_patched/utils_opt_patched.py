@@ -4,7 +4,6 @@ import torch
 from torch import Tensor
 
 
-
 def OPTAttention_self_shape(
     tensor: Tensor, seq_len: int, bsz: int, num_heads: int, head_dim: int
 ) -> Tensor:
@@ -190,12 +189,21 @@ def OPTForCasualLM_compute_loss(logits, labels, self_config_vocab_size):
 
 opt_leaf_funcs = [
     ("OPTAttention_attn_weights_shape_check", OPTAttention_attn_weights_shape_check),
-    ("OPTAttention_attention_mask_shape_check", OPTAttention_attention_mask_shape_check),
+    (
+        "OPTAttention_attention_mask_shape_check",
+        OPTAttention_attention_mask_shape_check,
+    ),
     ("OPTAttention_attention_get_dtype_min", OPTAttention_attention_get_dtype_min),
     ("OPTAttention_attn_weight_dtype_check", OPTAttention_attn_weight_dtype_check),
-    ("OPTAttention_layer_head_mask_shape_check", OPTAttention_layer_head_mask_shape_check),
+    (
+        "OPTAttention_layer_head_mask_shape_check",
+        OPTAttention_layer_head_mask_shape_check,
+    ),
     ("OPTAttention_attn_output_shape_check", OPTAttention_attn_output_shape_check),
-    ("OPTDecoder_self_prepare_decoder_attention", OPTDecoder_self_prepare_decoder_attention),
+    (
+        "OPTDecoder_self_prepare_decoder_attention",
+        OPTDecoder_self_prepare_decoder_attention,
+    ),
     ("OPTDecoder_check_head_mask", OPTDecoder_check_head_mask),
-    ("OPTForCasualLM_compute_loss", OPTForCasualLM_compute_loss)
+    ("OPTForCasualLM_compute_loss", OPTForCasualLM_compute_loss),
 ]

@@ -8,7 +8,22 @@ from pytorch_lightning.callbacks import LearningRateMonitor, ModelCheckpoint
 from pytorch_lightning.loggers import TensorBoardLogger
 from pytorch_lightning.plugins.environments import SLURMEnvironment
 
+from torch.distributed.fsdp import FullyShardedDataParallel
+from pytorch_lightning.strategies import DDPStrategy
+
+
 logger = logging.getLogger(__name__)
+
+
+class CustomFSDPStrategy(DDPStrategy):
+    def configure_ddp(self):
+        # model = DistributedDataParallel(model)
+        fsdp_model = FullyShardedDataParallel(
+            self.model,
+            # fsdp_auto_wrap_policy=default_auto_wrap_policy,
+            # cpu_offload=CPUOffload(offload_params=True),
+        )
+        self.model = fsdp_model
 
 
 def train(
@@ -60,6 +75,8 @@ def train(
         ], "optimizer should be 'fused_adam' given --strategy={}".format(
             plt_trainer_args["strategy"]
         )
+    elif plt_trainer_args["strategy"] in ["fsdp_custom"]:
+        plt_trainer_args["strategy"] = CustomFSDPStrategy()
 
     wrapper_cls = get_model_wrapper(model_name, task)
 

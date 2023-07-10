@@ -3,13 +3,6 @@ import os
 
 import regex as re
 from chop.passes.common import MASE_IMPLICIT_FUNCS
-from chop.plt_wrapper import (
-    NLPClassificationModelWrapper,
-    NLPLanguageModelingModelWrapper,
-    NLPTranslationModelWrapper,
-    VisionModelWrapper,
-    get_model_wrapper,
-)
 
 # from ..session.plt_wrapper.nlp.classification import NLPClassificationModelWrapper
 # from ..session.plt_wrapper.nlp.lm import NLPLanguageModelingModelWrapper
@@ -48,6 +41,14 @@ def _import_config_from_py_file(model_name: str, file_path: str):
 
 
 def get_input_args(model_name, model, task, data_loader, info):
+    from chop.plt_wrapper import (
+        NLPClassificationModelWrapper,
+        NLPLanguageModelingModelWrapper,
+        NLPTranslationModelWrapper,
+        VisionModelWrapper,
+        get_model_wrapper,
+    )
+
     wrapper_cls = get_model_wrapper(model_name, task)
     plt_model = wrapper_cls(model, info=info, learning_rate=1e-4)
 
@@ -87,6 +88,19 @@ class InputArgsGenerator:
     def __init__(
         self, model_name, task, data_module, which_dataloader="train_dataloader"
     ) -> None:
+        from chop.plt_wrapper import (
+            NLPClassificationModelWrapper,
+            NLPLanguageModelingModelWrapper,
+            NLPTranslationModelWrapper,
+            VisionModelWrapper,
+            get_model_wrapper,
+        )
+
+        self.nlpclassificationmodelwrapper = NLPClassificationModelWrapper
+        self.nlplanguagemodelwrapper = NLPLanguageModelingModelWrapper
+        self.nlptranslationmodelwrapper = NLPTranslationModelWrapper
+        self.visionmodelwrapper = VisionModelWrapper
+
         self.wrapper_cls = get_model_wrapper(model_name, task)
         data_module.prepare_data()
         data_module.setup()
@@ -102,23 +116,23 @@ class InputArgsGenerator:
 
     def __next__(self):
         input_args = []
-        if self.wrapper_cls is VisionModelWrapper:
+        if self.wrapper_cls is self.visionmodelwrapper:
             batch_x, _ = next(self.dataloader_iter)
             input_args = [batch_x]
-        elif self.wrapper_cls is NLPClassificationModelWrapper:
+        elif self.wrapper_cls is self.nlpclassificationmodelwrapper:
             batch = next(self.dataloader_iter)
             input_args = [
                 batch["input_ids"],
                 batch["attention_mask"],
             ]
-        elif self.wrapper_cls is NLPLanguageModelingModelWrapper:
+        elif self.wrapper_cls is self.nlplanguagemodelwrapper:
             batch = next(self.dataloader_iter)
             input_args = [
                 batch["input_ids"],
                 batch["attention_mask"],
                 batch["labels"],
             ]
-        elif self.wrapper_cls is NLPTranslationModelWrapper:
+        elif self.wrapper_cls is self.nlptranslationmodelwrapper:
             batch = next(self.dataloader_iter)
             input_args = [
                 batch["input_ids"],

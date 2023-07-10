@@ -622,7 +622,9 @@ class BertModelPatched(BertPreTrainedModelPatched):
     `add_cross_attention` set to `True`; an `encoder_hidden_states` is then expected as an input to the forward pass.
     """
 
-    custom_node_leaf_patch = [("embeddings", "BertEmbeddingsPatched", BertEmbeddingsPatched)]
+    custom_node_leaf_patch = [
+        ("embeddings", "BertEmbeddingsPatched", BertEmbeddingsPatched)
+    ]
 
     def __init__(self, config, add_pooling_layer=True):
         """

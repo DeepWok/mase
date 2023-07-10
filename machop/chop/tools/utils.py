@@ -28,12 +28,10 @@ def copy_weights(src_weight: Tensor, tgt_weight: Tensor):
         tgt_weight.copy_(src_weight)
 
 
-
 def get_checkpoint_file(checkpoint_dir):
     for file in os.listdir(checkpoint_dir):
         if file.endswith(".ckpt"):
             return file
-
 
 
 def execute_cli(cmd, log_output: bool = True, log_file=None, cwd="."):

@@ -3,21 +3,21 @@ import torch.nn as nn
 
 
 class CustomActivation(torch.autograd.Function):
-
     # WARNING: this dynamic flow can break symbolic trace
     # @staticmethod
     # def forward(ctx, x):
     #     if x > 0:
-    #         return x 
+    #         return x
     #     else:
     #         return -0.001
     @staticmethod
     def forward(ctx, x):
-        return x*x*x-0.001
+        return x * x * x - 0.001
 
 
 # direct alias
 custom_activation = CustomActivation.apply
+
 
 class ToyCustomFnNet(nn.Module):
     def __init__(self, image_size, num_classes):
@@ -43,4 +43,3 @@ def get_toyfnnet(info, pretrained=False):
     image_size = info["image_size"]
     num_classes = info["num_classes"]
     return ToyCustomFnNet(image_size, num_classes)
-

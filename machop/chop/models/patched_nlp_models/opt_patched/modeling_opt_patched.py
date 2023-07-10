@@ -32,7 +32,7 @@ from transformers.modeling_outputs import (
 from transformers.modeling_utils import PreTrainedModel
 from transformers.utils import logging, replace_return_docstrings
 
-# from chop.passes.patching.mase_op_wrapper import torch_ones 
+# from chop.passes.patching.mase_op_wrapper import torch_ones
 
 from .configuration_opt_patched import OPTConfigPatched
 from .utils_opt_patched import (
@@ -105,7 +105,9 @@ class OPTAttentionPatched(nn.Module):
     - The default mode `None` (un-traceable mode) can be used for training (testing), but not for modify-sw.
     """
 
-    custom_node_leaf_patch = [("embeddings", "BertEmbeddingsPatched", OPTLearnedPositionalEmbedding)]
+    custom_node_leaf_patch = [
+        ("embeddings", "BertEmbeddingsPatched", OPTLearnedPositionalEmbedding)
+    ]
 
     def __init__(
         self,
@@ -394,7 +396,12 @@ class OPTDecoderPatched(OPTPatchedPreTrainedModel):
     """
 
     custom_node_leaf_patch = [
-        ("embed_positions", "OPTLearnedPositionalEmbedding", OPTLearnedPositionalEmbedding)]
+        (
+            "embed_positions",
+            "OPTLearnedPositionalEmbedding",
+            OPTLearnedPositionalEmbedding,
+        )
+    ]
 
     def __init__(self, config: OPTConfigPatched):
         super().__init__(config)

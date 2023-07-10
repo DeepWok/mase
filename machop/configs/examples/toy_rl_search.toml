@@ -1,0 +1,29 @@
+# basics
+model = "toy"
+dataset = "toy-tiny"
+
+[search_space]
+name = "mixed_precision"
+quan_name = "integer"
+data_in_width = [2, 4, 8, 10]
+data_in_frac_width = [2, 4, 6]
+weight_width = [2, 4, 8, 10]
+weight_frac_width = [2, 4, 6]
+bias_width = [2, 4, 8, 10]
+bias_frac_width = [2, 4, 6]
+
+[strategy]
+name = "rl"
+algorithm = 'ppo'
+env = 'mixed_precision'
+num_episodes = 100
+device = 'cpu'
+total_timesteps = 20000
+save_name = 'tmp'
+
+[runner]
+name = 'mg'
+training = false
+data_loader = 'val_dataloader'
+num_batches = 2
+
