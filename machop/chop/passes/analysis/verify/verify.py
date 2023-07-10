@@ -2,15 +2,19 @@ import logging
 
 from chop.passes.utils import vf
 
-from .common_metadata_layers import (verify_common_metadata_flatten,
-                                     verify_common_metadata_general,
-                                     verify_common_metadata_input,
-                                     verify_common_metadata_linear,
-                                     verify_common_metadata_output,
-                                     verify_common_metadata_relu)
-from .hardware_metadata_layers import (verify_hardware_metadata_general,
-                                       verify_hardware_metadata_linear,
-                                       verify_hardware_metadata_relu)
+from .common_metadata_layers import (
+    verify_common_metadata_flatten,
+    verify_common_metadata_general,
+    verify_common_metadata_input,
+    verify_common_metadata_linear,
+    verify_common_metadata_output,
+    verify_common_metadata_relu,
+)
+from .hardware_metadata_layers import (
+    verify_hardware_metadata_general,
+    verify_hardware_metadata_linear,
+    verify_hardware_metadata_relu,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -70,18 +74,17 @@ def verify_common_metadata_analysis_pass(graph):
 
     # Inter-node verification
     # Each edge between nodes must have the same size
-
     for node in graph.fx_graph.nodes:
         if len(node.all_input_nodes) > 0:
             for i, args in enumerate(node.args):
-                assert (
-                    node.meta["mase"]
-                    .parameters["common"]["args"][f"data_in_{i}"]["from"]
-                    .meta.parameters["common"]["results"][f"data_out_0"]["size"]
-                    == node.meta["mase"].parameters["common"]["args"][f"data_in_{i}"][
-                        "size"
-                    ]
+                data_in = node.meta["mase"].parameters["common"]["args"][f"data_in_{i}"]
+                dst_size = data_in["size"]
+                src_size = (
+                    data_in["from"]
+                    .meta["mase"]
+                    .parameters["common"]["results"][f"data_out_0"]["size"]
                 )
+                assert dst_size == src_size
     return graph
 
 

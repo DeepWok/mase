@@ -6,7 +6,7 @@ from chop.passes import passes
 from chop.passes.analysis import (
     add_common_metadata_analysis_pass,
     init_metadata_analysis_pass,
-    report_metadata_analysis_pass,
+    report_node_type_analysis_pass,
 )
 from chop.passes.graph.mase_graph import MaseGraph
 from chop.passes.transforms.interface import (
@@ -60,7 +60,7 @@ def transform(
         )
         graph = add_common_metadata_analysis_pass(graph, pass_args=dummy_in)
 
-    graph = report_metadata_analysis_pass(graph, pass_args=None)
+    graph = report_node_type_analysis_pass(graph, pass_args=None)
 
     # passes
     pass_config = config["passes"]
