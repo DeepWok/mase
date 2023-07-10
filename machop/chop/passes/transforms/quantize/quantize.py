@@ -6,7 +6,7 @@ from chop.passes.utils import (
     get_mase_type,
     get_parent_name,
     match_a_pattern,
-    node_actual_target,
+    get_node_actual_target,
 )
 from chop.tools.logger import getLogger
 
@@ -50,7 +50,7 @@ def graph_iterator_quantize_by_type(graph, config: dict):
             continue
         node_config = parse_node_config(node_config, get_mase_op(node))
         if get_mase_type(node) == "module":
-            ori_module = node_actual_target(node)
+            ori_module = get_node_actual_target(node)
             new_module = create_new_module(get_mase_op(node), ori_module, node_config)
             parent_name, name = get_parent_name(node.target)
             setattr(graph.modules[parent_name], name, new_module)
@@ -82,7 +82,7 @@ def graph_iterator_quantize_by_name(graph, config: dict):
             continue
         node_config = parse_node_config(node_config, get_mase_op(node))
         if get_mase_type(node) == "module":
-            ori_module = node_actual_target(node)
+            ori_module = get_node_actual_target(node)
             new_module = create_new_module(get_mase_op(node), ori_module, node_config)
             parent_name, name = get_parent_name(node.target)
             setattr(graph.modules[parent_name], name, new_module)

@@ -1,7 +1,6 @@
 import torch
 
-from chop.passes.utils import (
-    get_mase_op, get_mase_type, node_actual_target)
+from chop.passes.utils import get_mase_op, get_mase_type, get_node_actual_target
 
 
 def get_config(config: dict, name: str):
@@ -9,14 +8,13 @@ def get_config(config: dict, name: str):
         return config[name]["config"]
 
 
-
 def apply_parameter_pruning(module, param_name, mask):
     original_weight = getattr(module, param_name)
 
-    module.register_parameter(f'{param_name}_original', original_weight)
+    module.register_parameter(f"{param_name}_original", original_weight)
     del module._parameters[param_name]
 
-    module.register_buffer(f'{param_name}_mask', mask)
+    module.register_buffer(f"{param_name}_mask", mask)
     setattr(module, param_name, original_weight * mask)
 
 
@@ -26,31 +24,38 @@ def apply_input_pruning(module, hook_fn):
 
 
 def hook_fn(module, inputs, outputs):
-    threshold = torch.quantile(outputs.abs().flatten(), (1-module.activation_sparsity))
+    threshold = torch.quantile(
+        outputs.abs().flatten(), (1 - module.activation_sparsity)
+    )
     activation_mask = outputs.abs() > threshold
     activation_mask = activation_mask.to(dtype=outputs.dtype)
     return outputs * activation_mask
 
 
-def simple_unstructured_fixed_pruning(module: torch.nn.Module, name: str, weight_sparsity: float, activation_sparsity: float):
-    if name not in ['weight', 'both', 'activation']:
-        raise ValueError(f'Invalid name {name} for simple unstructured fixed pruning.')
+def simple_unstructured_fixed_pruning(
+    module: torch.nn.Module,
+    name: str,
+    weight_sparsity: float,
+    activation_sparsity: float,
+):
+    if name not in ["weight", "both", "activation"]:
+        raise ValueError(f"Invalid name {name} for simple unstructured fixed pruning.")
 
     if isinstance(module, (torch.nn.Conv2d, torch.nn.Linear, torch.nn.Conv1d)):
-        if name in ['weight', 'both']:
+        if name in ["weight", "both"]:
             weight = module.weight.data
-            threshold = torch.quantile(weight.abs().flatten(), (1-weight_sparsity))
-            weight_mask = weight.abs() > threshold 
+            threshold = torch.quantile(weight.abs().flatten(), (1 - weight_sparsity))
+            weight_mask = weight.abs() > threshold
             weight_mask = weight_mask.to(dtype=weight.dtype)
-            apply_parameter_pruning(module, 'weight', weight_mask)
-        if name in ['activation', 'both']:
-            setattr(module, 'activation_sparsity', activation_sparsity)
+            apply_parameter_pruning(module, "weight", weight_mask)
+        if name in ["activation", "both"]:
+            setattr(module, "activation_sparsity", activation_sparsity)
             apply_input_pruning(module, hook_fn)
     else:
-        raise NotImplementedError(f'Pruning for {type(module)} is not implemented yet.')
+        raise NotImplementedError(f"Pruning for {type(module)} is not implemented yet.")
 
 
-PRUNEABLE_OP = ['conv1d', 'conv2d', 'linear']
+PRUNEABLE_OP = ["conv1d", "conv2d", "linear"]
 
 
 def graph_iterator_prune(graph, config: dict):
@@ -59,10 +64,11 @@ def graph_iterator_prune(graph, config: dict):
             continue
         if get_mase_type(node) == "module":
             simple_unstructured_fixed_pruning(
-                node_actual_target(node), 
-                config['name'], 
-                config['weight_sparsity'], 
-                config['activation_sparsity'])
+                get_node_actual_target(node),
+                config["name"],
+                config["weight_sparsity"],
+                config["activation_sparsity"],
+            )
     return graph
 
 
