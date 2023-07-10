@@ -153,7 +153,9 @@ def analysis_common_parameters(node, dummy_in):
                 ), f"Adding meta to an existing input: {next_node.name} at input {index}"
                 next_node.meta["mase"].parameters["common"]["args"][
                     f"data_in_{index}"
-                ] = node.meta["mase"].parameters["common"]["results"]["data_out_0"]
+                ] = dict(
+                    node.meta["mase"].parameters["common"]["results"]["data_out_0"]
+                )
                 next_node.meta["mase"].parameters["common"]["args"][f"data_in_{index}"][
                     "from"
                 ] = node
@@ -197,6 +199,7 @@ def graph_iterator_for_metadata(graph, dummy_in=None):
         nodes_in = next_nodes_in
 
     assert len(updated_map.keys()) == len(graph.fx_graph.nodes)
+
     return graph
 
 

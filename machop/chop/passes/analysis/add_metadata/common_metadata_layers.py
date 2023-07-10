@@ -90,13 +90,16 @@ def analyse_common_parameters_flatten(meta):
     # TODO: Implement a flattening function for the shape
     if start_dim != 1 or end_dim != -1:
         raise NotImplementedError(f"Complex flatten function is not implemented yet...")
-    meta.parameters["common"]["results"]["data_out_0"] = meta.parameters["common"][
-        "args"
-    ]["data_in_0"]
-    meta.parameters["common"]["results"]["data_out_0"]["size"] = [
-        1,
-        math.prod(meta.parameters["common"]["results"]["data_out_0"]["size"]),
-    ]
+    meta.parameters["common"]["results"] = {
+        "data_out_0": {
+            "type": "float",
+            "precision": [32],
+            "size": [
+                math.prod(meta.parameters["common"]["args"]["data_in_0"]["size"]),
+                1,
+            ],
+        }
+    }
 
     return meta
 
@@ -127,6 +130,7 @@ def analyse_common_parameters_linear(meta):
                 "type": "float",
                 "precision": [32],
                 "size": parameter.shape,
+                "from": None,
             }
         weight_name = "weight"
     else:
@@ -137,8 +141,8 @@ def analyse_common_parameters_linear(meta):
             "type": "float",
             "precision": [32],
             "size": (
-                meta.parameters["common"]["args"]["data_in_0"]["size"][0],
-                meta.parameters["common"]["args"][weight_name]["size"][1],
+                meta.parameters["common"]["args"][weight_name]["size"][0],
+                meta.parameters["common"]["args"]["data_in_0"]["size"][1],
             ),
         }
     }
@@ -152,9 +156,13 @@ def analyse_common_parameters_linear(meta):
 
 def analyse_common_parameters_relu(meta):
     meta.parameters["common"]["results"] = {}
-    meta.parameters["common"]["results"]["data_out_0"] = meta.parameters["common"][
-        "args"
-    ]["data_in_0"]
+    meta.parameters["common"]["results"] = {
+        "data_out_0": {
+            "type": "float",
+            "precision": [32],
+            "size": meta.parameters["common"]["args"]["data_in_0"]["size"],
+        }
+    }
     return meta
 
 

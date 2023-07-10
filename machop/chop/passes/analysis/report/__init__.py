@@ -1,2 +1,5 @@
-from .graph_inspect import report_metadata_analysis_pass
-from .report_to_file import report_graph_analysis_pass
+from .report_node import (
+    report_node_type_analysis_pass,
+    report_node_shape_analysis_pass,
+)
+from .report_graph import report_graph_analysis_pass

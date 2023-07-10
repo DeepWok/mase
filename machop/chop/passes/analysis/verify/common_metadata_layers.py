@@ -98,18 +98,20 @@ def verify_common_metadata_linear(meta):
 
     # Verify common parameters
     assert (
-        meta.parameters["common"]["args"]["data_in_0"]["size"][1]
+        meta.parameters["common"]["args"]["data_in_0"]["size"][0]
         == meta.parameters["common"]["args"][weight_name]["size"][1]
-    ), "Input size does not match with the weight row size. in = {}, w = {}".format(
-        meta.parameters["common"]["args"]["data_in_0"]["size"][1],
-        meta.parameters["common"]["args"][weight_name]["size"][1],
+    ), "Input row size does not match with the weight col size. {}: in = {}, w = {}".format(
+        meta.node.name,
+        meta.parameters["common"]["args"]["data_in_0"]["size"],
+        meta.parameters["common"]["args"][weight_name]["size"],
     )
     assert (
-        meta.parameters["common"]["results"]["data_out_0"]["size"][1]
+        meta.parameters["common"]["results"]["data_out_0"]["size"][0]
         == meta.parameters["common"]["args"][weight_name]["size"][0]
-    ), "Output size does not match with the weight column size. out = {}, w = {}".format(
-        meta.parameters["common"]["results"]["data_out_0"]["size"][1],
-        meta.parameters["common"]["args"][weight_name]["size"][0],
+    ), "Output row size does not match with the weight row size. {}: out = {}, w = {}".format(
+        meta.node.name,
+        meta.parameters["common"]["results"]["data_out_0"]["size"],
+        meta.parameters["common"]["args"][weight_name]["size"],
     )
     if meta.parameters["common"]["args"]["data_in_0"]["type"] == "fixed":
         # Check the output precision based on the input precision - assume lossless
@@ -155,8 +157,16 @@ def verify_common_metadata_linear(meta):
 def verify_common_metadata_relu(meta):
     # Verify common parameters
     assert (
-        meta.parameters["common"]["args"]["data_in_0"]
-        == meta.parameters["common"]["results"]["data_out_0"]
+        meta.parameters["common"]["args"]["data_in_0"]["precision"]
+        == meta.parameters["common"]["results"]["data_out_0"]["precision"]
+    ), "ReLU has a mismatched input and output pair"
+    assert (
+        meta.parameters["common"]["args"]["data_in_0"]["type"]
+        == meta.parameters["common"]["results"]["data_out_0"]["type"]
+    ), "ReLU has a mismatched input and output pair"
+    assert (
+        meta.parameters["common"]["args"]["data_in_0"]["size"]
+        == meta.parameters["common"]["results"]["data_out_0"]["size"]
     ), "ReLU has a mismatched input and output pair"
 
 
