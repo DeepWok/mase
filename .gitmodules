@@ -4,3 +4,6 @@
 [submodule "verilog-ethernet"]
 	path = verilog-ethernet
 	url = git@github.com:Yu-Zhewen/verilog-ethernet.git
+[submodule "machop/third-party/peft"]
+	path = machop/third-party/peft
+	url = git@github.com:huggingface/peft.git
