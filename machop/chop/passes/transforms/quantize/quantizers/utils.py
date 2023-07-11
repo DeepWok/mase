@@ -34,6 +34,140 @@ class MyRound(InplaceFunction):
         return grad_input
 
 
+class BinaryBipolar(InplaceFunction):
+    """A PyTorch function for binarizing input values.
+
+    This function takes an input tensor and a threshold value and binarizes the input values,
+    setting values greater than or equal to the threshold to 1 and values below the threshold to -1.
+
+    Args:
+        ctx (torch.autograd.function._ContextMethodMixin): The context object to store intermediate results.
+        input (torch.Tensor): The input tensor to be binarized.
+        threshold (float or torch.Tensor): The threshold value for binarization.
+
+    Returns:
+        torch.Tensor: The binarized output tensor, where values are either -1 or 1.
+    """
+
+    @staticmethod
+    def forward(ctx, input, threshold):
+        return torch.where(input >= threshold, torch.tensor(1.0), torch.tensor(-1.0))
+
+    @staticmethod
+    def backward(ctx, grad_output):
+        grad_input = grad_output.clone()
+        return grad_input, None
+
+
+class BinaryZeroOne(InplaceFunction):
+    """A PyTorch function for binarizing input values.
+
+    This function takes an input tensor and a threshold value and binarizes the input values,
+    setting values greater than or equal to the threshold to 1 and values below the threshold to 0.
+
+    Args:
+        ctx (torch.autograd.function._ContextMethodMixin): The context object to store intermediate results.
+        input (torch.Tensor): The input tensor to be binarized.
+        threshold (float or torch.Tensor): The threshold value for binarization.
+
+    Returns:
+        torch.Tensor: The binarized output tensor, where values are either 0 or 1.
+    """
+
+    @staticmethod
+    def forward(ctx, input, threshold):
+        return torch.where(input >= threshold, torch.tensor(1.0), torch.tensor(0.0))
+
+    @staticmethod
+    def backward(ctx, grad_output):
+        grad_input = grad_output.clone()
+        return grad_input, None
+
+
+class TernaryScaled(InplaceFunction):
+    """A PyTorch function for ternary scaling of input values.
+
+    This function takes an input tensor and a threshold value and performs ternary scaling,
+    where values greater than the threshold are scaled to the mean of the input tensor, values less than or equal to
+    the negative threshold are scaled to negative mean of the input tensor, and values within the range (-threshold, threshold]
+    are scaled to 0. The scaling factor is determined by the mean of the input tensor.
+
+    Args:
+        ctx (torch.autograd.function._ContextMethodMixin): The context object to store intermediate results.
+        input (torch.Tensor): The input tensor to be ternary scaled.
+        threshold (float or torch.Tensor): The threshold value for ternary scaling.
+
+    Returns:
+        torch.Tensor: The ternary scaled output tensor, where values are either -mean, 0, or mean.
+    """
+
+    @staticmethod
+    def forward(ctx, input, threshold):
+        return torch.mean(input) * torch.where(
+            input > threshold,
+            torch.tensor(1.0),
+            torch.where(input <= -threshold, torch.tensor(-1.0), torch.tensor(0.0)),
+        )
+
+    @staticmethod
+    def backward(ctx, grad_output):
+        grad_input = grad_output.clone()
+        return grad_input, None
+
+
+class Ternary(InplaceFunction):
+    """A PyTorch function for ternary scaling of input values.
+
+    This function takes an input tensor and a threshold value and performs ternary scaling,
+    where values greater than the threshold are 1, values less than or equal to
+    the -1, and values within the range (-threshold, threshold]
+    are scaled to 0. The scaling factor is determined by the mean of the input tensor.
+
+    Args:
+        ctx (torch.autograd.function._ContextMethodMixin): The context object to store intermediate results.
+        input (torch.Tensor): The input tensor to be ternary scaled.
+        threshold (float or torch.Tensor): The threshold value for ternary scaling.
+
+    Returns:
+        torch.Tensor: The ternary scaled output tensor, where values are either -1, 0, or 1.
+    """
+
+    @staticmethod
+    def forward(ctx, input, threshold):
+        return torch.where(
+            input > threshold,
+            torch.tensor(1.0),
+            torch.where(input <= -threshold, torch.tensor(-1.0), torch.tensor(0.0)),
+        )
+
+    @staticmethod
+    def backward(ctx, grad_output):
+        grad_input = grad_output.clone()
+        return grad_input, None
+
+
+class MySign(InplaceFunction):
+    """A PyTorch function for obtaining a ternary tensor value according to sign.
+
+    Returns:
+        torch.Tensor: The ternary scaled output tensor, where values are either -1, 0, or 1.
+    """
+
+    @staticmethod
+    def forward(ctx, input):
+        return input.sign()  # result [-1,0,1]
+
+    @staticmethod
+    def backward(ctx, grad_output):
+        grad_input = grad_output.clone()
+        return grad_input
+
+
+mu_sign = MySign.apply
+binarised_bipolar_op = BinaryBipolar.apply
+binarised_zeroOne_op = BinaryZeroOne.apply
+ternarised_scaled_op = TernaryScaled.apply
+ternarised_op = Ternary.apply
 my_clamp = MyClamp.apply
 my_round = MyRound.apply
 

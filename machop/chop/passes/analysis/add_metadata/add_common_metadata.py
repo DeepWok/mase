@@ -92,11 +92,14 @@ def graph_iterator_for_mase_ops(graph):
                 raise ValueError(f"Unknown node type: {node.target}")
 
         elif node.op == "call_method":
+            # we might have things like size_1, size_2, so we need to match the pattern
+            # TODO: might need to add this for others as well.
+            matching, matched_name = match_and_filter(node.name, MASE_IMPLICIT_FUNCS)
+            if not matching:
+                raise ValueError(f"Unknown node type: {node.name}")
             if node.name in MASE_IMPLICIT_FUNCS:
                 node.meta["mase"].parameters["common"]["mase_type"] = "implicit_func"
                 node.meta["mase"].parameters["common"]["mase_op"] = node.target
-            else:
-                raise ValueError(f"Unknown node type: {node.name}")
 
         elif node.op == "placeholder":
             node.meta["mase"].parameters["common"]["mase_type"] = "placeholder"

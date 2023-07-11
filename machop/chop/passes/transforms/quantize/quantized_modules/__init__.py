@@ -6,6 +6,7 @@ from .conv1d import (
     Conv1dLog,
     Conv1dMinifloatDenorm,
     Conv1dMinifloatIEEE,
+    Conv1dBinary,
 )
 from .conv2d import (
     Conv2dBlockFP,
@@ -14,6 +15,7 @@ from .conv2d import (
     Conv2dLog,
     Conv2dMinifloatDenorm,
     Conv2dMinifloatIEEE,
+    Conv2dBinary,
 )
 from .linear import (
     LinearBlockFP,
@@ -22,8 +24,9 @@ from .linear import (
     LinearLog,
     LinearMinifloatDenorm,
     LinearMinifloatIEEE,
+    LinearBinary,
 )
-from .pool2d import AdaptiveAvgPool2dInteger, AvgPool2dInteger
+from .pool2d import AdaptiveAvgPool2dInteger, AvgPool2dInteger, AvgPool2dBinary
 from .relu import (
     ReLUBlockFP,
     ReLUBlockMinifloat,
@@ -31,17 +34,20 @@ from .relu import (
     ReLULog,
     ReLUMinifloatDenorm,
     ReLUMinifloatIEEE,
+    ReLUBinary,
 )
 
 quantized_module_map = {
     "conv1d_block_minifloat": Conv1dBlockMinifloat,
     "conv1d_integer": Conv1dInteger,
+    "conv1d_binary": Conv1dBinary,
     "conv1d_log": Conv1dLog,
     "conv1d_minifloat_ieee": Conv1dMinifloatIEEE,
     "conv1d_minifloat_denorm": Conv1dMinifloatDenorm,
     "conv1d_block_fp": Conv1dBlockFP,
     "conv2d_block_minifloat": Conv2dBlockMinifloat,
     "conv2d_integer": Conv2dInteger,
+    "conv2d_binary": Conv2dBinary,
     "conv2d_log": Conv2dLog,
     "conv2d_minifloat_ieee": Conv2dMinifloatIEEE,
     "conv2d_minifloat_denorm": Conv2dMinifloatDenorm,
@@ -52,12 +58,15 @@ quantized_module_map = {
     "linear_minifloat_ieee": LinearMinifloatIEEE,
     "linear_minifloat_denorm": LinearMinifloatDenorm,
     "linear_block_fp": LinearBlockFP,
+    "linear_binary": LinearBinary,
     "adaptive_avg_pool2d_integer": AdaptiveAvgPool2dInteger,
     "avg_pool2d_integer": AvgPool2dInteger,
+    "avg_pool2d_binary": AvgPool2dBinary,
     "relu_block_minifloat": ReLUBlockMinifloat,
     "relu_integer": ReLUInteger,
     "relu_log": ReLULog,
     "relu_minifloat_ieee": ReLUMinifloatIEEE,
     "relu_minifloat_denorm": ReLUMinifloatDenorm,
     "relu_block_fp": ReLUBlockFP,
+    "relu_binary": ReLUBinary,
 }

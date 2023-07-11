@@ -12,6 +12,7 @@ from ..quantizers import (
     log_quantizer,
     minifloat_denorm_quantizer,
     minifloat_ieee_quantizer,
+    binary_quantizer,
 )
 
 # PyTorch has torch.matmul and torch.bmm for matrix multiplication
@@ -31,6 +32,24 @@ def generic_matmul_integer(x, y, config, style="matmul"):
 
         x = x_quantizer(x)
         y = y_quantizer(y)
+        # y = x_quantizer(y)
+
+        return matmul(x, y)
+
+
+def generic_matmul_binary(x, y, config, style="matmul"):
+    bypass = config.get("bypass", False)
+    matmul = matmul_mapping[style]
+    if bypass:
+        return matmul(x, y)
+    else:
+        x_stochastic = config["stochastic"]
+        x_bipolar = config["bipolar"]
+        x_quantizer = partial(
+            binary_quantizer, stochastic=x_stochastic, bipolar=x_bipolar
+        )
+        x = x_quantizer(x)
+        y = x_quantizer(y)
         # y = x_quantizer(y)
 
         return matmul(x, y)
@@ -305,6 +324,10 @@ def matmul_integer(x, y, config):
     return generic_matmul_integer(x, y, config, "matmul")
 
 
+def matmul_binary(x, y, config):
+    return generic_matmul_binary(x, y, config, "matmul")
+
+
 def matmul_minifloat_denorm(x, y, config):
     return generic_matmul_minifloat_denorm(x, y, config, "matmul")
 
@@ -331,6 +354,10 @@ def matmul_block_log(x, y, config):
 
 def bmm_integer(x, y, config):
     return generic_matmul_integer(x, y, config, "bmm")
+
+
+def bmm_binary(x, y, config):
+    return generic_matmul_binary(x, y, config, "bmm")
 
 
 # def get_output_bitwidth_bmm_integer(config, x_shape):

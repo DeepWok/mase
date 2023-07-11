@@ -14,6 +14,8 @@ from ..quantizers import (
     log_quantizer,
     minifloat_denorm_quantizer,
     minifloat_ieee_quantizer,
+    binary_quantizer,
+    ternary_quantizer,
 )
 
 
@@ -476,4 +478,33 @@ class LinearBlockLog(_LinearBase):
             exponent_bias_width=b_exponent_bias_width,
             block_size=b_block_size,
             skip_first_dim=False,
+        )
+
+
+class LinearBinary(_LinearBase):
+    def __init__(
+        self,
+        in_features: int,
+        out_features: int,
+        bias: bool = True,
+        device=None,
+        dtype=None,
+        config=None,
+    ) -> None:
+        super().__init__(in_features, out_features, bias, device, dtype)
+        assert config is not None, "config is None!"
+        self.config = config
+        self.bypass = config.get("bypass", False)
+        if self.bypass:
+            return
+        x_stochastic = config["stochastic"]
+        x_bipolar = config["bipolar"]
+        self.w_quantizer = partial(
+            binary_quantizer, stochastic=x_stochastic, bipolar=x_bipolar
+        )
+        self.x_quantizer = partial(
+            binary_quantizer, stochastic=x_stochastic, bipolar=x_bipolar
+        )
+        self.b_quantizer = partial(
+            binary_quantizer, stochastic=x_stochastic, bipolar=x_bipolar
         )

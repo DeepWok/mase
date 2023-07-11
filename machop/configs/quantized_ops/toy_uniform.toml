@@ -1,0 +1,18 @@
+# basics
+model = "toy"
+dataset = "toy-tiny"
+
+[passes.quantize]
+by = "type"
+report = true
+
+[passes.quantize.default.config]
+name = "binary"
+stochastic = false
+bipolar = false
+data_in_width = 1
+data_in_frac_width = 0
+weight_width = 1
+weight_frac_width = 0
+bias_width = 1
+bias_frac_width = 0

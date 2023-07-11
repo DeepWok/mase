@@ -7,7 +7,7 @@ from .patched_nlp_models import patched_model_cls_to_required_input_args
 from .manual import get_llama_plain
 
 from .nlp_models import get_nlp_model
-from .toy import get_toy_tiny, get_toynet
+from .toy import get_toy_tiny, get_toynet, get_testmodel
 from .toy_custom_fn import get_toyfnnet
 from .vision import (
     cswin_64_small,
@@ -86,6 +86,7 @@ _built_in_vision_model_map = {
     "cswin_144_large": cswin_144_large,
     # this is a normal toynet written purely with pytorch ops
     "toy": get_toynet,
+    "test": get_testmodel,
     "toy-fn": get_toyfnnet,
     "toy-tiny": get_toy_tiny,
 }
