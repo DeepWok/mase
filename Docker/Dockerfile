@@ -60,29 +60,17 @@ USER dev-user
 ENV PATH="${PATH}:/home/dev-user/.local/bin"
 RUN pip3 install --user --upgrade pip 
 RUN pip3 install --pre torchvision --extra-index-url https://download.pytorch.org/whl/nightly/cpu \
-    && pip3 install onnx toml GitPython  \
-                    pytorch-lightning transformers toml \
-                    timm pytorch-nlp datasets ipython ipdb \
-                    sentencepiece einops pybind11
-RUN wget https://github.com/llvm/torch-mlir/releases/download/snapshot-20230525.849/torch-2.1.0.dev20230523+cpu-cp310-cp310-linux_x86_64.whl \
-    && wget https://github.com/llvm/torch-mlir/releases/download/snapshot-20230525.849/torch_mlir-20230525.849-cp310-cp310-linux_x86_64.whl \
-    && pip3 install torch-*.whl torch_mlir-*.whl
-RUN pip3 install onnx black toml GitPython colorlog cocotb[bus]==1.8.0 \
+    && pip3 install onnx black toml GitPython colorlog cocotb[bus]==1.8.0 \
                     pytest pytorch-lightning transformers toml \
                     timm pytorch-nlp datasets ipython ipdb \
                     sentencepiece einops deepspeed pybind11 \
                     tabulate tensorboardx hyperopt
 
 # Install Torch-MLIR and Pytorch
-RUN mkdir -p /home/dev-user/srcPkgs \
-    && cd /home/dev-user/srcPkgs \
-    && wget https://github.com/llvm/torch-mlir/releases/download/snapshot-20230513.837/torch-2.1.0.dev20230512+cpu-cp310-cp310-linux_x86_64.whl \
-    && wget https://github.com/llvm/torch-mlir/releases/download/snapshot-20230513.837/torch_mlir-20230513.837-cp310-cp310-linux_x86_64.whl \
+RUN cd /home/dev-user \
+    && wget https://github.com/llvm/torch-mlir/releases/download/snapshot-20230525.849/torch-2.1.0.dev20230523+cpu-cp310-cp310-linux_x86_64.whl \
+    && wget https://github.com/llvm/torch-mlir/releases/download/snapshot-20230525.849/torch_mlir-20230525.849-cp310-cp310-linux_x86_64.whl \
     && pip3 install torch-*.whl torch_mlir-*.whl
-# The standard build is not stable as the torch
-# RUN pip3 install --pre torch-mlir torchvision \
-#                  -f https://llvm.github.io/torch-mlir/package-index/ \
-#                  --extra-index-url https://download.pytorch.org/whl/nightly/cpu
 
 # Add environment variables
 ENV vhls $VHLS_PATH
