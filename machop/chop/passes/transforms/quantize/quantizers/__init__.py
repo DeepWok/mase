@@ -2,6 +2,7 @@ from .block_fp import block_fp_quantizer
 from .block_log import block_log_quantizer
 from .block_minifloat import block_minifloat_quantizer
 from .integer import integer_quantizer
+from .binary import binary_quantizer, ternary_quantizer
 from .log import log_quantizer
 from .minifloat import minifloat_denorm_quantizer, minifloat_ieee_quantizer
 
@@ -13,6 +14,8 @@ quantizer_map = {
     "block_minifloat": block_minifloat_quantizer,
     "block_fp": block_fp_quantizer,
     "integer": integer_quantizer,
+    "binary": binary_quantizer,
+    "ternary": ternary_quantizer,
 }
 
 # import operator

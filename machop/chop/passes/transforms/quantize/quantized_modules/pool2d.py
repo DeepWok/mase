@@ -12,6 +12,7 @@ from ..quantizers import (
     integer_quantizer,
     minifloat_denorm_quantizer,
     minifloat_ieee_quantizer,
+    binary_quantizer,
 )
 
 
@@ -172,3 +173,30 @@ class AdaptiveAvgPool2dInteger(_AdaptiveAvgPool2dBase):
     #     o_bitwidth["data_out_frac_width"] = output_frac_width
 
     #     return o_bitwidth
+
+
+class AvgPool2dBinary(_AvgPool2dBase):
+    def __init__(
+        self,
+        kernel_size: _size_2_t,
+        stride: Optional[_size_2_t] = None,
+        padding: _size_2_t = 0,
+        ceil_mode: bool = False,
+        count_include_pad: bool = True,
+        divisor_override: Optional[int] = None,
+        config=None,
+    ) -> None:
+        super().__init__(
+            kernel_size, stride, padding, ceil_mode, count_include_pad, divisor_override
+        )
+        assert config is not None, "config is None!"
+        self.config = config
+        self.bypass = config.get("bypass", False)
+        if self.bypass:
+            return
+
+        x_stochastic = config["stochastic"]
+        x_bipolar = config["bipolar"]
+        self.x_quantizer = partial(
+            binary_quantizer, stochastic=x_stochastic, bipolar=x_bipolar
+        )

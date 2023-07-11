@@ -12,6 +12,7 @@ from ..quantizers import (
     log_quantizer,
     minifloat_denorm_quantizer,
     minifloat_ieee_quantizer,
+    binary_quantizer,
 )
 
 
@@ -25,6 +26,19 @@ def relu_integer(x, inplace=False, config=None):
             integer_quantizer, width=x_width, frac_width=x_frac_width, is_signed=False
         )
 
+        return F.relu(x_quantizer(x), inplace=inplace)
+
+
+def relu_binary(x, inplace=False, config=None):
+    bypass = config.get("bypass", False)
+    if bypass:
+        return F.relu(x, inplace=inplace)
+    else:
+        x_stochastic = config["stochastic"]
+        x_bipolar = config["bipolar"]
+        x_quantizer = partial(
+            binary_quantizer, stochastic=x_stochastic, bipolar=x_bipolar
+        )
         return F.relu(x_quantizer(x), inplace=inplace)
 
 

@@ -12,6 +12,7 @@ from chop.passes.transforms.quantize.quantizers import (
     log_quantizer,
     minifloat_denorm_quantizer,
     minifloat_ieee_quantizer,
+    binary_quantizer,
 )
 from torch import Tensor
 from torch.nn.common_types import _size_1_t
@@ -97,8 +98,8 @@ class Conv1dInteger(_Conv1dBase):
         config=None,
     ) -> None:
         super().__init__(
-            in_features=in_channels,
-            out_features=out_channels,
+            in_channels=in_channels,
+            out_channels=out_channels,
             kernel_size=kernel_size,
             stride=stride,
             padding=padding,
@@ -596,4 +597,51 @@ class Conv1dBlockLog(_Conv1dBase):
             exponent_bias_width=b_exponent_bias_width,
             block_size=b_block_size,
             skip_first_dim=False,
+        )
+
+
+class Conv1dBinary(_Conv1dBase):
+    def __init__(
+        self,
+        in_channels: int,
+        out_channels: int,
+        kernel_size: _size_1_t,
+        stride: _size_1_t = 1,
+        padding: Union[str, _size_1_t] = 0,
+        dilation: _size_1_t = 1,
+        groups: int = 1,
+        bias: bool = True,
+        padding_mode: str = "zeros",  # TODO: refine this type
+        device=None,
+        dtype=None,
+        config=None,
+    ) -> None:
+        super().__init__(
+            in_channels=in_channels,
+            out_channels=out_channels,
+            kernel_size=kernel_size,
+            stride=stride,
+            padding=padding,
+            dilation=dilation,
+            groups=groups,
+            bias=bias,
+            padding_mode=padding_mode,
+            device=device,
+            dtype=dtype,
+        )
+        assert config is not None, "config is None!"
+        self.config = config
+        self.bypass = config.get("bypass", False)
+        if self.bypass:
+            return
+        x_stochastic = config["stochastic"]
+        x_bipolar = config["bipolar"]
+        self.w_quantizer = partial(
+            binary_quantizer, stochastic=x_stochastic, bipolar=x_bipolar
+        )
+        self.x_quantizer = partial(
+            binary_quantizer, stochastic=x_stochastic, bipolar=x_bipolar
+        )
+        self.b_quantizer = partial(
+            binary_quantizer, stochastic=x_stochastic, bipolar=x_bipolar
         )

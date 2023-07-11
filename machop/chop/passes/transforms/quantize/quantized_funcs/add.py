@@ -10,6 +10,7 @@ from ..quantizers import (
     log_quantizer,
     minifloat_denorm_quantizer,
     minifloat_ieee_quantizer,
+    binary_quantizer,
 )
 
 
@@ -21,6 +22,22 @@ def add_integer(x, y, config):
         # establish quantizers
         x_width, x_frac_width = config["data_in_width"], config["data_in_frac_width"]
         x_quantizer = partial(integer_quantizer, width=x_width, frac_width=x_frac_width)
+        x = x_quantizer(x)
+        y = x_quantizer(y)
+        return x + y
+
+
+def add_binary(x, y, config):
+    bypass = config.get("bypass", False)
+    if bypass:
+        return x + y
+    else:
+        # establish quantizers
+        x_stochastic = config["stochastic"]
+        x_bipolar = config["bipolar"]
+        x_quantizer = partial(
+            binary_quantizer, stochastic=x_stochastic, bipolar=x_bipolar
+        )
         x = x_quantizer(x)
         y = x_quantizer(y)
         return x + y

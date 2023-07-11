@@ -12,6 +12,8 @@ from ..quantizers import (
     log_quantizer,
     minifloat_denorm_quantizer,
     minifloat_ieee_quantizer,
+    binary_quantizer,
+    ternary_quantizer,
 )
 
 
@@ -248,3 +250,24 @@ class ReLUBlockLog(_ReLUBase):
             x = self.x_quantizer(x)
             x = torch.reshape(x, x_shape)
             return F.relu(x, self.inplace)
+
+
+class ReLUBinary(_ReLUBase):
+    bypass = None
+
+    def __init__(self, inplace: bool = False, config: dict = None):
+        super().__init__(inplace)
+        assert config is not None, "config is None!"
+        self.config = config
+        self.bypass = config.get("bypass", False)
+        if self.bypass:
+            return
+        # establish quantizers
+        x_stochastic = config["stochastic"]
+        x_bipolar = config["bipolar"]
+        self.x_quantizer = partial(
+            binary_quantizer, stochastic=x_stochastic, bipolar=x_bipolar
+        )
+        self.config = config
+        # self.x_width = x_width
+        # self.x_frac_width = x_frac_width
