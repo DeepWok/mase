@@ -57,8 +57,8 @@ def create_new_module(mase_op: str, original_module: nn.Module, config: Dict):
         new_module_cls = quantized_module_map[f"relu_{quant_name}"]
         new_module = new_module_cls(inplace=original_module.inplace, config=config)
 
-    elif mase_op == "avgpool2d":
-        new_module_cls = quantized_module_map[f"avgpool2d_{quant_name}"]
+    elif mase_op == "avg_pool2d":
+        new_module_cls = quantized_module_map[f"avg_pool2d_{quant_name}"]
         new_module = new_module_cls(
             kernel_size=original_module.kernel_size,
             stride=original_module.stride,
@@ -68,8 +68,8 @@ def create_new_module(mase_op: str, original_module: nn.Module, config: Dict):
             divisor_override=original_module.divisor_override,
             config=config,
         )
-    elif mase_op == "adaptiveavgpool2d":
-        new_module_cls = quantized_module_map[f"adaptiveavgpool2d_{quant_name}"]
+    elif mase_op == "adaptive_avg_pool2d":
+        new_module_cls = quantized_module_map[f"adaptive_avg_pool2d_{quant_name}"]
         new_module = new_module_cls(
             output_size=original_module.output_size, config=config
         )
