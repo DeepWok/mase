@@ -30,10 +30,10 @@ Passes take a format of `Analysis`, `Transform` or a composition between the two
 `./transforms/*.py` contains several existing transform passes:
 
 1. `quantize_transform_pass`: this aims to add quantisation to nodes in the graph.
-	* [ ] deal with module_related_func
-	* [ ] quantise funcs
-	* [ ] add quantisation meta data
-	* [ ] add another graph iterator to report quantisation
+	* [x] deal with module_related_func
+	* [x] quantise funcs
+	* [x] add quantisation meta data
+	* [x] add another graph iterator to report quantisation
 2. `retrace_transform_pass`: this aims to ask tracer to reproduce a graph with custom leaf nodes.
 
 

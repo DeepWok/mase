@@ -1,3 +1,5 @@
+import torch.nn.functional as F
+
 MASE_TYPES = [
     "module",
     "module_related_func",
@@ -10,23 +12,46 @@ MASE_TYPES = [
 
 
 MASE_IMPLICIT_FUNCS = ["size", "view", "flatten"]
-MASE_MODULE_RELATED_FUNCS = ["relu", "linear"]
-MASE_MODULES = [
-    "adaptiveavgpool1d",
-    "adaptiveavgpool2d",
-    "adaptivemaxpool1d",
-    "adaptivemaxpool2d",
-    "avgpool1d",
-    "avgpool2d",
-    "batchnorm1d",
-    "batchnorm2d",
+
+# use this list to print out MASE_MODULE_RELATED_FUNCS when new functions are added
+# module_related_funcs = [
+#     F.adaptive_avg_pool1d,
+#     F.adaptive_avg_pool2d,
+#     F.adaptive_max_pool1d,
+#     F.adaptive_max_pool2d,
+#     F.avg_pool1d,
+#     F.avg_pool2d,
+#     F.batch_norm,
+#     F.conv1d,
+#     F.conv2d,
+#     F.layer_norm,
+#     F.linear,
+#     F.max_pool1d,
+#     F.max_pool2d,
+#     F.relu,
+# ]
+# print(sorted([f.__name__ for f in module_related_funcs]))
+
+MASE_MODULE_RELATED_FUNCS = [
+    "adaptive_avg_pool1d",
+    "adaptive_avg_pool2d",
+    "adaptive_max_pool1d",
+    "adaptive_max_pool2d",
+    "avg_pool1d",
+    "avg_pool2d",
+    "batch_norm",
     "conv1d",
     "conv2d",
-    "layernorm",
+    "layer_norm",
     "linear",
-    "maxpool1d",
-    "maxpool2d",
+    "max_pool1d",
+    "max_pool2d",
     "relu",
+]
+
+MASE_MODULES = [
+    "batch_norm1d",
+    "batch_norm2d",
 ]
 MASE_BUILTIN_FUNCS = [
     "mul",
@@ -38,39 +63,27 @@ MASE_BUILTIN_FUNCS = [
 
 
 MASE_TYPE_MAP = {
-    "linear": {
-        "type": "module",
-    },
-    "conv2d": {
-        "type": "module",
-    },
-    "relu": {
-        "type": ("module", "module_related_func"),
-    },
-    "mul": {
-        "type": "builtin_func",
-    },
-    "sub": {
-        "type": "builtin_func",
-    },
-    "add": {
-        "type": "builtin_func",
-    },
-    "size": {
-        "type": "implicit_func",
-    },
-    "view": {
-        "type": "implicit_func",
-    },
-    "placeholder": {
-        "type": "placeholder",
-    },
-    "get_attr": {
-        "type": "get_attr",
-    },
-    "output": {
-        "type": "output",
-    },
+    "adaptive_avg_pool1d": {"type": "module_related_func"},
+    "adaptive_avg_pool2d": {"type": "module_related_func"},
+    "adaptive_max_pool1d": {"type": "module_related_func"},
+    "adaptive_max_pool2d": {"type": "module_related_func"},
+    "avg_pool1d": {"type": "module_related_func"},
+    "avg_pool2d": {"type": "module_related_func"},
+    "batch_norm": {"type": "module_related_func"},
+    "conv1d": {"type": "module_related_func"},
+    "conv2d": {"type": "module_related_func"},
+    "layer_norm": {"type": "module_related_func"},
+    "linear": {"type": "module_related_func"},
+    "max_pool1d": {"type": "module_related_func"},
+    "max_pool2d": {"type": "module_related_func"},
+    "relu": {"type": "module_related_func"},
+    "sub": {"type": "builtin_func"},
+    "add": {"type": "builtin_func"},
+    "size": {"type": "implicit_func"},
+    "view": {"type": "implicit_func"},
+    "placeholder": {"type": "placeholder"},
+    "get_attr": {"type": "get_attr"},
+    "output": {"type": "output"},
 }
 
 MASE_HARDWARE_TOOLCHAIN = [

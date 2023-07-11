@@ -35,33 +35,33 @@ def graph_iterator_for_mase_ops(graph):
             module = graph.modules[module_name]
             node.meta["mase"].parameters["common"]["mase_type"] = "module"
             if isinstance(module, nn.AdaptiveAvgPool1d):
-                mase_op = "adaptiveavgpool1d"
+                mase_op = "adaptive_avg_pool1d"
             elif isinstance(module, nn.AdaptiveAvgPool2d):
-                mase_op = "adaptiveavgpool2d"
+                mase_op = "adaptive_avg_pool2d"
             elif isinstance(module, nn.AdaptiveMaxPool1d):
-                mase_op = "adaptivemaxpool1d"
+                mase_op = "adaptive_max_pool1d"
             elif isinstance(module, nn.AdaptiveMaxPool2d):
-                mase_op = "adaptivemaxpool2d"
+                mase_op = "adaptive_max_pool2d"
             elif isinstance(module, nn.AvgPool1d):
-                mase_op = "avgpool1d"
+                mase_op = "avg_pool1d"
             elif isinstance(module, nn.AvgPool2d):
-                mase_op = "avgpool2d"
+                mase_op = "avg_pool2d"
             elif isinstance(module, nn.BatchNorm1d):
-                mase_op = "batchnorm1d"
+                mase_op = "batch_norm1d"
             elif isinstance(module, nn.BatchNorm2d):
-                mase_op = "batchnorm2d"
+                mase_op = "batch_norm2d"
             elif isinstance(module, nn.Conv2d):
                 mase_op = "conv2d"
             elif isinstance(module, nn.Conv1d):
                 mase_op = "conv1d"
             elif isinstance(module, nn.LayerNorm):
-                mase_op = "layernorm"
+                mase_op = "layer_norm"
             elif isinstance(module, nn.Linear):
                 mase_op = "linear"
             elif isinstance(module, nn.MaxPool1d):
-                mase_op = "maxpool1d"
+                mase_op = "max_pool1d"
             elif isinstance(module, nn.MaxPool2d):
-                mase_op = "maxpool2d"
+                mase_op = "max_pool2d"
             elif isinstance(module, nn.ReLU):
                 mase_op = "relu"
             else:
