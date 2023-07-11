@@ -3,12 +3,12 @@ import logging
 import toml
 import torch
 import torch.fx as fx
-from chop.passes.analysis.utils import (
-    get_input_nodes,
-    get_output_nodes,
-    match_and_filter,
+from chop.passes.analysis.utils import match_and_filter
+from chop.passes.common import (
+    MASE_BUILTIN_FUNCS,
+    MASE_MODULE_RELATED_FUNCS,
+    MASE_IMPLICIT_FUNCS,
 )
-from chop.passes.common import MASE_BUILTIN_FUNCS, MASE_MODULE_RELATED_FUNCS
 from chop.passes.metadata.mase_metadata import MaseMetadata
 from tabulate import tabulate
 from torch import nn
@@ -35,47 +35,48 @@ def graph_iterator_for_mase_ops(graph):
             module = graph.modules[module_name]
             node.meta["mase"].parameters["common"]["mase_type"] = "module"
             if isinstance(module, nn.AdaptiveAvgPool1d):
-                node.meta["mase"].parameters["common"]["mase_op"] = "adaptiveavgpool1d"
+                mase_op = "adaptiveavgpool1d"
             elif isinstance(module, nn.AdaptiveAvgPool2d):
-                node.meta["mase"].parameters["common"]["mase_op"] = "adaptiveavgpool2d"
+                mase_op = "adaptiveavgpool2d"
             elif isinstance(module, nn.AdaptiveMaxPool1d):
-                node.meta["mase"].parameters["common"]["mase_op"] = "adaptivemaxpool1d"
+                mase_op = "adaptivemaxpool1d"
             elif isinstance(module, nn.AdaptiveMaxPool2d):
-                node.meta["mase"].parameters["common"]["mase_op"] = "adaptivemaxpool2d"
+                mase_op = "adaptivemaxpool2d"
             elif isinstance(module, nn.AvgPool1d):
-                node.meta["mase"].parameters["common"]["mase_op"] = "avgpool1d"
+                mase_op = "avgpool1d"
             elif isinstance(module, nn.AvgPool2d):
-                node.meta["mase"].parameters["common"]["mase_op"] = "avgpool2d"
+                mase_op = "avgpool2d"
             elif isinstance(module, nn.BatchNorm1d):
-                node.meta["mase"].parameters["common"]["mase_op"] = "batchnorm1d"
+                mase_op = "batchnorm1d"
             elif isinstance(module, nn.BatchNorm2d):
-                node.meta["mase"].parameters["common"]["mase_op"] = "batchnorm2d"
+                mase_op = "batchnorm2d"
             elif isinstance(module, nn.Conv2d):
-                node.meta["mase"].parameters["common"]["mase_op"] = "conv2d"
+                mase_op = "conv2d"
             elif isinstance(module, nn.Conv1d):
-                node.meta["mase"].parameters["common"]["mase_op"] = "conv1d"
+                mase_op = "conv1d"
             elif isinstance(module, nn.LayerNorm):
-                node.meta["mase"].parameters["common"]["mase_op"] = "layernorm"
+                mase_op = "layernorm"
             elif isinstance(module, nn.Linear):
-                node.meta["mase"].parameters["common"]["mase_op"] = "linear"
+                mase_op = "linear"
             elif isinstance(module, nn.MaxPool1d):
-                node.meta["mase"].parameters["common"]["mase_op"] = "maxpool1d"
+                mase_op = "maxpool1d"
             elif isinstance(module, nn.MaxPool2d):
-                node.meta["mase"].parameters["common"]["mase_op"] = "maxpool2d"
+                mase_op = "maxpool2d"
             elif isinstance(module, nn.ReLU):
-                node.meta["mase"].parameters["common"]["mase_op"] = "relu"
+                mase_op = "relu"
             else:
                 raise ValueError(f"Unknown node type: {node.target}")
+            node.meta["mase"].parameters["common"]["mase_op"] = mase_op
 
         elif node.op == "call_function":
             # we might have things like mult_1, add_2, so we need to match the pattern
             matching, matched_name = match_and_filter(
-                node.name, MASE_BUILTIN_FUNCS + MASE_MODULE_RELATED_FUNCS
+                node.name,
+                MASE_BUILTIN_FUNCS + MASE_MODULE_RELATED_FUNCS + MASE_IMPLICIT_FUNCS,
             )
             if not matching:
                 raise ValueError(f"Unknown call_function node: {node.target}")
             if matched_name in MASE_BUILTIN_FUNCS:
-                # if node.target in ["mul", "sub", "add", torch.flatten]:
                 node.meta["mase"].parameters["common"]["mase_type"] = "builtin_func"
                 node.meta["mase"].parameters["common"]["mase_op"] = matched_name
             # TODO: we might need to add more functions here
@@ -84,11 +85,14 @@ def graph_iterator_for_mase_ops(graph):
                     "mase_type"
                 ] = "module_related_func"
                 node.meta["mase"].parameters["common"]["mase_op"] = matched_name
+            elif node.name in MASE_IMPLICIT_FUNCS:
+                node.meta["mase"].parameters["common"]["mase_type"] = "implicit_func"
+                node.meta["mase"].parameters["common"]["mase_op"] = matched_name
             else:
                 raise ValueError(f"Unknown node type: {node.target}")
 
         elif node.op == "call_method":
-            if node.name in ["size", "view"]:
+            if node.name in MASE_IMPLICIT_FUNCS:
                 node.meta["mase"].parameters["common"]["mase_type"] = "implicit_func"
                 node.meta["mase"].parameters["common"]["mase_op"] = node.target
             else:
@@ -226,8 +230,6 @@ def add_common_metadata_analysis_pass(graph, pass_args=None):
     """
     Pass args : initial dummy inputs for inferencing all the shapes for each node
     """
-    graph.nodes_in = get_input_nodes(graph.fx_graph)
-    graph.nodes_out = get_output_nodes(graph.fx_graph)
     graph = graph_iterator_for_mase_ops(graph)
     # TODO: FIXEME, this is temporary
     graph = graph_iterator_for_metadata(graph, pass_args)
