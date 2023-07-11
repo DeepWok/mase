@@ -132,16 +132,17 @@ def analyse_common_parameters_linear(meta):
                 "size": parameter.shape,
                 "from": None,
             }
-        weight_name = "weight"
     else:
-        weight_name = "data_in_1"
+        meta.parameters["common"]["args"]["weight"] = meta.parameters["common"][
+            "args"
+        ].pop("data_in_1")
 
     meta.parameters["common"]["results"] = {
         "data_out_0": {
             "type": "float",
             "precision": [32],
             "size": (
-                meta.parameters["common"]["args"][weight_name]["size"][0],
+                meta.parameters["common"]["args"]["weight"]["size"][0],
                 meta.parameters["common"]["args"]["data_in_0"]["size"][1],
             ),
         }

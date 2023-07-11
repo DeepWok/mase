@@ -48,24 +48,7 @@ def analyse_hardware_parameters_linear(meta):
     if arg_type == "fixed":
         meta.parameters["hardware"] |= {
             "verilog_parameters": {
-                "IN_WIDTH": meta.parameters["common"]["args"]["data_in"]["precision"][
-                    0
-                ],
-                "IN_FRAC_WIDTH": meta.parameters["common"]["args"]["data_in"][
-                    "precision"
-                ][1],
-                "WEIGHT_WIDTH": meta.parameters["common"]["args"]["weight"][
-                    "precision"
-                ][0],
-                "WEIGHT_FRAC_WIDTH": meta.parameters["common"]["args"]["weight"][
-                    "precision"
-                ][1],
                 "HAS_BIAS": int("bias" in meta.parameters["common"]["args"].keys()),
-                "BIAS_WIDTH": meta.parameters["common"]["args"]["bias"]["precision"][0],
-                "BIAS_FRAC_WIDTH": meta.parameters["common"]["args"]["bias"][
-                    "precision"
-                ][1],
-                # Sequential by default
                 "IN_SIZE": 1,
                 "IN_DEPTH": math.prod(
                     meta.parameters["common"]["args"]["data_in"]["size"]
@@ -95,26 +78,6 @@ def analyse_hardware_parameters_linear(meta):
         parallelism = meta.parameters["hardware"]["verilog_parameters"]["PARALLELISM"]
         meta.parameters["hardware"]["verilog_parameters"]["WEIGHT_SIZE"] = (
             in_size * parallelism
-        )
-
-        # OUT_WIDTH == IN_WIDTH + WEIGHT_WIDTH + $clog2(IN_SIZE) + $clog2(IN_DEPTH) + HAS_BIAS
-        in_width = meta.parameters["hardware"]["verilog_parameters"]["IN_WIDTH"]
-        in_depth = meta.parameters["hardware"]["verilog_parameters"]["IN_DEPTH"]
-        has_bias = meta.parameters["hardware"]["verilog_parameters"]["HAS_BIAS"]
-        weight_width = meta.parameters["hardware"]["verilog_parameters"]["WEIGHT_WIDTH"]
-        meta.parameters["hardware"]["verilog_parameters"]["OUT_WIDTH"] = (
-            in_width + weight_width + clog2(in_size) + clog2(in_depth) + has_bias
-        )
-
-        # OUT_FRAC_WIDTH == IN_FRAC_WIDTH + WEIGHT_FRAC_WIDTH
-        in_frac_width = meta.parameters["hardware"]["verilog_parameters"][
-            "IN_FRAC_WIDTH"
-        ]
-        weight_frac_width = meta.parameters["hardware"]["verilog_parameters"][
-            "WEIGHT_FRAC_WIDTH"
-        ]
-        meta.parameters["hardware"]["verilog_parameters"]["OUT_FRAC_WIDTH"] = (
-            in_frac_width + weight_frac_width
         )
 
         # OUT_SIZE == PARALLELISM
@@ -150,12 +113,6 @@ def analyse_hardware_parameters_relu(meta):
         meta.parameters["hardware"] |= {
             "verilog_parameters": {
                 "IN_SIZE": 1,
-                "IN_FRAC_WIDTH": meta.parameters["common"]["args"]["data_in"][
-                    "precision"
-                ][1],
-                "IN_WIDTH": meta.parameters["common"]["args"]["data_in_0"]["precision"][
-                    0
-                ],
             },
             "toolchain": "INTERNAL",
             "module": "fixed_relu",
@@ -165,12 +122,6 @@ def analyse_hardware_parameters_relu(meta):
         meta.parameters["hardware"]["verilog_parameters"]["OUT_SIZE"] = meta.parameters[
             "hardware"
         ]["verilog_parameters"]["IN_SIZE"]
-        meta.parameters["hardware"]["verilog_parameters"][
-            "OUT_WIDTH"
-        ] = meta.parameters["hardware"]["verilog_parameters"]["IN_WIDTH"]
-        meta.parameters["hardware"]["verilog_parameters"][
-            "OUT_FRAC_WIDTH"
-        ] = meta.parameters["hardware"]["verilog_parameters"]["IN_FRAC_WIDTH"]
     else:
         meta.parameters["hardware"] |= {
             "verilog_parameters": {},
@@ -180,3 +131,4 @@ def analyse_hardware_parameters_relu(meta):
         }
 
     meta.parameters["hardware"]["interface_parameters"] = {}
+    return meta

@@ -1,1 +1,1 @@
-from .mase_verilog_emitter import MaseVerilogEmitter
+from .emit_top import emit_verilog_top_transform_pass

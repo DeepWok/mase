@@ -61,9 +61,11 @@ def get_node_by_name(graph, request_name):
     raise RuntimeError(f"No node named {request_name} found in graph")
 
 
-# Verilog format
-# Format to a compatible verilog name
 def vf(string):
+    """
+    Verilog format
+    Format to a compatible verilog name
+    """
     return string.replace(".", "_").replace(" ", "_")
 
 
