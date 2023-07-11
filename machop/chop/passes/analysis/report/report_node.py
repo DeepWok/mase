@@ -56,3 +56,32 @@ def report_node_shape_analysis_pass(graph, pass_args=None):
     """
     graph = graph_iterator_inspect_node_shape(graph)
     return graph
+
+
+def graph_iterator_inspect_node_hardware_type(graph):
+    headers = ["Node name", "Fx Node op", "Type", "Tool Chain"]
+    rows = []
+    for node in graph.fx_graph.nodes:
+        if node.meta["mase"].parameters["hardware"]["is_implicit"]:
+            continue
+        rows.append(
+            [
+                node.name,
+                node.op,
+                node.meta["mase"].parameters["common"]["results"]["data_out_0"]["type"],
+                node.meta["mase"].parameters["hardware"]["toolchain"],
+            ]
+        )
+    logger.info("Inspecting graph [add_common_node_hardware_type_analysis_pass]")
+    logger.info("\n" + tabulate(rows, headers=headers))
+    return graph
+
+
+def report_node_hardware_type_analysis_pass(graph, pass_args=None):
+    """
+    Inspect mase graph after initialization/loading, including
+
+    - node inspection on hardware types
+    """
+    graph = graph_iterator_inspect_node_hardware_type(graph)
+    return graph

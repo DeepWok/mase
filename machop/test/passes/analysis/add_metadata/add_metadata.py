@@ -4,6 +4,7 @@ import os, sys, logging
 import torch
 import torch.nn as nn
 
+
 sys.path.append(
     os.path.join(
         os.path.dirname(os.path.realpath(__file__)),
@@ -23,8 +24,9 @@ from chop.passes.analysis import (
     init_metadata_analysis_pass,
     verify_common_metadata_analysis_pass,
     report_node_shape_analysis_pass,
+    report_node_hardware_type_analysis_pass,
 )
-
+from chop.passes.transforms import emit_verilog_top_transform_pass
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
@@ -77,6 +79,10 @@ def main():
     mg = verify_common_metadata_analysis_pass(mg)
 
     mg = add_hardware_metadata_analysis_pass(mg)
+    # mg = report_node_hardware_type_analysis_pass(mg)
+    # mg = verify_hardware_metadata_analysis_pass(mg)
+
+    mg = emit_verilog_top_transform_pass(mg)
 
 
 # --------------------------------------------------
