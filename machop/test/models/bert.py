@@ -6,7 +6,12 @@ import sys
 import torch
 import torch.nn as nn
 
-sys.path.append(os.path.join("..", "..", "..", "..", "machop"))
+
+sys.path.append(
+    os.path.join(
+        os.path.dirname(os.path.realpath(__file__)), "..", "..", "..", "machop"
+    )
+)
 
 from chop.dataset import get_dataset_info
 from chop.models import model_map
@@ -27,8 +32,9 @@ def main():
     bert = model_map["bert-base-uncased"](
         name="bert-base-uncased", task="lm", info=sst2_info, pretrained=load_pretrained
     )
-    mg = MaseGraph(model=bert)
-    print(mg.fx_graph)
+    # TODO
+    # mg = MaseGraph(model=bert)
+    # print(mg.fx_graph)
 
     # Sanity check and report
     # mg = quantize(mg)

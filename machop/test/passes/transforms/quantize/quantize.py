@@ -7,8 +7,17 @@ import sys
 import torch
 import torch.nn as nn
 
-sys.path.append(os.path.join("..", "..", "..", "..", "machop"))
-
+sys.path.append(
+    os.path.join(
+        os.path.dirname(os.path.realpath(__file__)),
+        "..",
+        "..",
+        "..",
+        "..",
+        "..",
+        "machop",
+    )
+)
 from chop.passes.analysis import (
     add_common_metadata_analysis_pass,
     init_metadata_analysis_pass,
@@ -16,8 +25,14 @@ from chop.passes.analysis import (
     verify_common_metadata_analysis_pass,
 )
 from chop.passes.graph.mase_graph import MaseGraph
+from chop.passes.transforms import (
+    quantize_summary_analysis_pass,
+    quantize_transform_pass,
+)
+from chop.passes.utils import deepcopy_mase_graph
+from chop.tools.logger import getLogger
 
-logger = logging.getLogger(__name__)
+logger = getLogger("chop")
 logger.setLevel(logging.DEBUG)
 
 
@@ -52,7 +67,6 @@ class MLP(torch.nn.Module):
 def main():
     mlp = MLP()
     mg = MaseGraph(model=mlp)
-    print(mg.fx_graph)
 
     # Provide a dummy input for the graph so it can use for tracing
     batch_size = 1
@@ -63,7 +77,27 @@ def main():
     mg = add_common_metadata_analysis_pass(mg, dummy_in)
 
     # Sanity check and report
-    mg = verify_common_metadata_analysis_pass(mg)
+    # mg = verify_common_metadata_analysis_pass(mg)
+    quan_args = {
+        "by": "type",
+        "default": {"config": {"name": None}},
+        "linear": {
+            "config": {
+                "name": "integer",
+                "data_in_width": 8,
+                "data_in_frac_width": 4,
+                "weight_width": 8,
+                "weight_frac_width": 4,
+                "bias_width": 8,
+                "bias_frac_width": 4,
+            }
+        },
+    }
+
+    ori_mg = deepcopy_mase_graph(mg)
+    mg = quantize_transform_pass(mg, quan_args)
+
+    quantize_summary_analysis_pass(ori_mg, mg, save_dir="quantize_summary")
     # mg = report(mg)
     # mg = emit_verilog(mg)
 

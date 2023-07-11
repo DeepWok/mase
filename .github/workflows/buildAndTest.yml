@@ -196,7 +196,8 @@ jobs:
                        pytest pytorch-lightning transformers toml \
                        timm pytorch-nlp datasets IPython ipdb \
                        sentencepiece einops deepspeed pybind11 \
-                       tabulate tensorboard hyperopt
+                       tabulate tensorboard hyperopt accelerate \
+                       optuna stable-baselines3
           pip3 install cocotb[bus]==1.8.0 
 
     - name: Mase regression test 
