@@ -64,8 +64,8 @@ RUN pip3 install --pre torchvision --extra-index-url https://download.pytorch.or
                     pytest pytorch-lightning transformers toml \
                     timm pytorch-nlp datasets ipython ipdb \
                     sentencepiece einops deepspeed pybind11 \
-                    tabulate tensorboardx hyperopt
-
+                    tabulate tensorboardx hyperopt accelerate \
+                    optuna stable-baselines3 
 # Install Torch-MLIR and Pytorch
 RUN cd /home/dev-user \
     && wget https://github.com/llvm/torch-mlir/releases/download/snapshot-20230525.849/torch-2.1.0.dev20230523+cpu-cp310-cp310-linux_x86_64.whl \

@@ -6,7 +6,12 @@ import sys
 import torch
 import torch.nn as nn
 
-sys.path.append(os.path.join("..", "..", "..", "..", "machop"))
+sys.path.append(
+    os.path.join(
+        os.path.dirname(os.path.realpath(__file__)), "..", "..", "..", "machop"
+    )
+)
+
 
 from chop.dataset import get_dataset_info
 from chop.models import model_map
@@ -21,20 +26,11 @@ from chop.passes.graph.mase_graph import MaseGraph
 def main():
     load_pretrained = True
 
+    # PVT-small
     cifar10_info = get_dataset_info("cifar10")
-
-    # MobileNetV2
-    mobilenetv2 = model_map["mobilenetv2"](
-        info=cifar10_info, pretrained=load_pretrained
-    )
-
-    mg = MaseGraph(model=mobilenetv2)
-    print(mg.fx_graph)
-
-    # You can compute the mase graph like nn.module:
-    # batch_size = 1
-    # x = torch.randn((batch_size, 28, 28))
-    # print(mg.model(x))
+    pvt = model_map["pvt_v2_b0"](info=cifar10_info, pretrained=load_pretrained)
+    mg = MaseGraph(model=pvt)
+    # print(mg.fx_graph)
 
     # Sanity check and report
     # mg = quantize(mg)

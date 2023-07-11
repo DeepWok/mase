@@ -3,18 +3,16 @@
 *.swp
 /history/
 */data/
-/models/
 /tb_summary/
 # *.sh
-data
-software/data/
-software/cache/
-software/test_*.py
 /mase_output/
-/sulis_mase_output/
 .devcontainer/
 *.ckpt
 *.pkl
+/machop/examples/**/cache/
+/machop/examples/**/ckpts/
+/machop/examples/**/data/
+/machop/cache/
 
 # macOS
 .DS_Store

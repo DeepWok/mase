@@ -6,7 +6,11 @@ import sys
 import torch
 import torch.nn as nn
 
-sys.path.append(os.path.join("..", "..", "..", "..", "machop"))
+sys.path.append(
+    os.path.join(
+        os.path.dirname(os.path.realpath(__file__)), "..", "..", "..", "machop"
+    )
+)
 
 from chop.dataset import get_dataset_info
 from chop.models import model_map
@@ -31,8 +35,9 @@ def main():
     )
     opt = opt_dict["model"]
     opt_tokenizer = opt_dict["tokenizer"]
-    mg = MaseGraph(model=opt)
-    print(mg.fx_graph)
+    # TODO
+    # mg = MaseGraph(model=opt)
+    # print(mg.fx_graph)
 
     # You can compute the mase graph like nn.module:
     # batch_size = 1
