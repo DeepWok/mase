@@ -14,8 +14,12 @@ jobs:
     - uses: actions/checkout@v3
       with:
           submodules: "true"
-
-    - name: Get dependences 
+    - uses: actions/setup-python@v4
+      with:
+          python-version: '3.10' 
+    - name: Display Python version
+      run: python -c "import sys; print(sys.version)"
+    - name: Get dependencies 
       run: |
           sudo apt-get update
           sudo apt-get install apt-utils -y
@@ -23,9 +27,7 @@ jobs:
                           clang cmake graphviz-dev libclang-dev \
                           pkg-config g++ libxtst6 xdg-utils \
                           libboost-all-dev llvm gcc ninja-build \
-                          python3 python3-pip build-essential \
-                          libssl-dev git vim wget htop sudo \
-                          lld 
+                          build-essential libssl-dev git vim wget htop sudo lld 
           sudo apt-get update -y
           sudo apt-get install -y \
                           perl make autoconf flex bison libunwind-dev \
@@ -35,18 +37,17 @@ jobs:
 
     - name: Install Torch-MLIR 
       run: |
-          pip3 install --user --upgrade pip
-          pip3 install -f https://download.pytorch.org/whl/nightly/cpu/torch_nightly.html \
-          --pre torchvision==0.16.0.dev20230512
-          pip3 install onnx toml GitPython  \
+          pip install --user --upgrade pip
+          pip install --pre torchvision --extra-index-url https://download.pytorch.org/whl/nightly/cpu
+          pip install onnx toml GitPython  \
                               pytorch-lightning transformers toml \
                               timm pytorch-nlp datasets ipython ipdb \
                               sentencepiece einops pybind11
-          wget https://github.com/llvm/torch-mlir/releases/download/snapshot-20230513.837/torch-2.1.0.dev20230512+cpu-cp310-cp310-linux_x86_64.whl
-          wget https://github.com/llvm/torch-mlir/releases/download/snapshot-20230513.837/torch_mlir-20230513.837-cp310-cp310-linux_x86_64.whl
-          pip3 install torch-*.whl torch_mlir-*.whl
+          wget https://github.com/llvm/torch-mlir/releases/download/snapshot-20230525.849/torch-2.1.0.dev20230523+cpu-cp310-cp310-linux_x86_64.whl
+          wget https://github.com/llvm/torch-mlir/releases/download/snapshot-20230525.849/torch_mlir-20230525.849-cp310-cp310-linux_x86_64.whl
+          pip install torch-*.whl torch_mlir-*.whl
 
     - name: Torch-MLIR regression test 
       run: |
-          python3 scripts/test-torch-mlir.py
+          python scripts/test-torch-mlir.py
 
