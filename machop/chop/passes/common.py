@@ -9,7 +9,7 @@ MASE_TYPES = [
 ]
 
 
-MASE_IMPLICIT_FUNCS = ["size", "view"]
+MASE_IMPLICIT_FUNCS = ["size", "view", "flatten"]
 MASE_MODULE_RELATED_FUNCS = ["relu", "linear"]
 MASE_MODULES = [
     "adaptiveavgpool1d",
@@ -32,7 +32,6 @@ MASE_BUILTIN_FUNCS = [
     "mul",
     "sub",
     "add",
-    "flatten",
     "matmul",
     "bmm",
 ]
@@ -73,3 +72,11 @@ MASE_TYPE_MAP = {
         "type": "output",
     },
 }
+
+MASE_HARDWARE_TOOLCHAIN = [
+    "INTERNAL_RTL",
+    "EXTERNAL_RTL",
+    "INTERNAL_HLS",
+    "EXTERNAL_HLS",
+    "MLIR_HLS",
+]

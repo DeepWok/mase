@@ -147,8 +147,13 @@ class InputArgsGenerator:
 
 def _get_next_call_node(node, nodes_in):
     for next_node, x in node.users.items():
+        name = (
+            next_node.name[0 : next_node.name.find("_")]
+            if "_" in next_node.name
+            else next_node.name
+        )
         # No need to synthsize into hardware
-        if next_node.target in MASE_IMPLICIT_FUNCS:
+        if name in MASE_IMPLICIT_FUNCS:
             nodes_in = _get_next_call_node(next_node, nodes_in)
             next_node.meta["mase"].parameters["hardware"]["is_implicit"] = True
         elif next_node not in nodes_in:
@@ -159,7 +164,12 @@ def _get_next_call_node(node, nodes_in):
 def _get_prev_call_node(node, nodes_out):
     for prev_node in node.all_input_nodes:
         # No need to synthsize into hardware
-        if prev_node.target in MASE_IMPLICIT_FUNCS:
+        name = (
+            prev_node.name[0 : prev_node.name.find("_")]
+            if "_" in prev_node.name
+            else prev_node.name
+        )
+        if name in MASE_IMPLICIT_FUNCS:
             nodes_out = _get_prev_call_node(prev_node, nodes_out)
             prev_node.meta["mase"].parameters["hardware"]["is_implicit"] = True
         elif prev_node not in nodes_out:
