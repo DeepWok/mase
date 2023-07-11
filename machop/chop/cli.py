@@ -1,350 +1,739 @@
-# ---------------------------------------
-# This script specifies the command line args.
-# ---------------------------------------
+"""
+Chop (ch): Machop's command line interface
+
+The brains behind the chop interface that allows users to train, test and transform (i.e
+prune or quantise) a supported model. You'll find a list of the available models and
+datasets in Machop README.md file. 
+
+Feel free to browse this file and please flag any issues or feature requests here:
+https://github.com/JianyiCheng/mase-tools/issues
+
+NOTE: There are three types of arguments - default ones in the parser, manual overrides
+via the CLI, and those specified in the configuration file. We establish precedence as
+follows: default < configuration < manual overrides.
+
+----------------------------------------------------------------------------------------
+Internal Backlog:
+1. Refactor search functionality
+2. Add 'adafactor' as a training optimiser, which saves GPU memory
+3. Push constants into a separate file
+4. Add package configuration file (incl. versioning)
+5. Better file validation (i.e. checking extension) and possibly schema validation for 
+   certain filetypes using Cerberus. 
+6. Move the primitive validation routines and custom actions to a separate file.
+7. Merge the valid file and directory types into a common path type; implement support
+   for checking extensions. The function would return a pre-configured callable.
+"""
+
 import logging
 import os
-
-os.environ["PYTHONBREAKPOINT"] = "ipdb.set_trace"
-import random
 import sys
 import time
-from argparse import ArgumentParser
-from copy import deepcopy
-from pprint import pprint
+import argparse
+from argparse import SUPPRESS
+from typing import Sequence
+from pathlib import Path
 
 import ipdb
-import numpy as np
-import torch
+import pytorch_lightning as pl
+from tabulate import tabulate
 
-# TODO: Refactor Search
-# from chop.actions import train, test, validate, search, transform
-from chop.actions import test, train, transform, validate, search
-from chop.dataset import MyDataModule, available_datasets, get_dataset, get_dataset_info
-from chop.models import (
-    manual_nlp_models,
-    manual_vision_models,
-    model_map,
-    nlp_models,
-    vision_models,
-)
-
-# MASE imports
-from chop.tools import getLogger, load_model, post_parse_load_config
-from chop.tools.get_input import get_cf_args
-
-# TODO: This whole file needs refactoring
-# from chop.models.patched_nlp_models.custom_nlp_modules import get_custom_modify_sw_kwargs
+import chop.models as models
+from chop.actions import test, train, transform, search
+from chop.dataset import MyDataModule, available_datasets, get_dataset_info
+from chop.tools import getLogger, post_parse_load_config
 
 
-logger = getLogger("chop")
+# Housekeeping -------------------------------------------------------------------------
+# Use the third-party IPython debugger to handle breakpoints; this debugger features
+# several improvements over the built-in pdb, including syntax highlighting and better
+# tracebacks.
+os.environ["PYTHONBREAKPOINT"] = "ipdb.set_trace"
+
+# This file's in root/machop/chop; there's three levels of parents to get to the root.
+ROOT = Path(__file__).parent.parent.parent.absolute()
+VERSION = "23.07.0"
+
+# Constants ----------------------------------------------------------------------------
+LOGO = f"""
+                        ,."--.
+                   _.../     _""-.
+                 //  ,'    ,"      :
+                .'  /   .:'      __|
+                || ||  /,    _."   '.
+                || ||  ||  ,'        `.
+               /|| ||  ||,'            .
+              /.`| /` /`,'  __          '
+             j /. " `"  ' ,' /`.        |
+             ||.|        .  | . .       |
+             ||#|        |  | #'|       '
+            /'.||        |  \." |      -.    
+           /    '        `.----"      ".        
+           \  `.    ,'                .         
+            `._____           _,-'  '/ 
+              `".  `'-..__..-'   _,."
+                 ^-._      _,..-'      
+                     '""'""             
+       
+    Chop (ch): Machop's Command Line Interface
+                VERSION {VERSION}
+          
+          Maintained by the DeepWok Lab
+
+     For comprehensive information on usage, 
+            please refer to the wiki: 
+   https://github.com/JianyiCheng/mase-tools/wiki
+"""
+TASKS = ["classification", "cls", "translation", "tran", "language_modeling", "lm"]
+ACTIONS = ["train", "test", "transform", "search"]
+INFO_TYPE = ["all", "model", "dataset"]
+LOAD_TYPE = [
+    "pt",  # PyTorch module state dictionary
+    "pl",  # PyTorch Lightning checkpoint
+    "mz",  # fx.GraphModule saved by MASE
+    "hf",  # HuggingFace's checkpoint directory saved by 'save_pretrained'
+]
+OPTIMIZERS = ["adam", "sgd", "adamw"]
+LOG_LEVELS = ["debug", "info", "warning", "error", "critical"]
+ISSUES_URL = "https://github.com/JianyiCheng/mase-tools/issues"
+STRATEGIES = [
+    "ddp",
+    "fsdp",
+    "fsdp_native",
+    "fsdp_custom",
+    "deepspeed_stage_3_offload",
+]
+ACCELERATORS = ["auto", "cpu", "gpu"]
+TRAINER_PRECISION = ["16", "32", "64", "bf16"]
+
+# NOTE: Any new argument (either required or optional) must have their default values
+# listed in this dictionary; this is critical in establishing argument precedence. :)
+CLI_DEFAULTS = {
+    # Main program arguments
+    # NOTE: The following two are required if a configuration file isn't specified.
+    "model": None,
+    "dataset": None,
+    # General options
+    "config": None,
+    "task": TASKS[0],
+    "load_name": None,
+    "load_type": LOAD_TYPE[2],
+    "batch_size": 128,
+    "to_debug": False,
+    "log_level": LOG_LEVELS[1],
+    "seed": 0,
+    # Trainer options
+    "training_optimizer": OPTIMIZERS[0],
+    "trainer_precision": TRAINER_PRECISION[1],
+    "learning_rate": 1e-5,
+    "max_epochs": 20,
+    "max_steps": -1,
+    "accumulate_grad_batches": 1,
+    # Runtime environment options
+    "num_workers": os.cpu_count(),
+    "num_devices": 1,
+    "num_nodes": 1,
+    "accelerator": ACCELERATORS[0],
+    "strategy": STRATEGIES[0],
+    "is_to_auto_requeue": False,
+    "github_ci": False,
+    # Hardware generation options
+    "target": "xcu250-figd2104-2L-e",
+    "num_targets": 100,
+    # Language model options
+    "is_pretrained": False,
+    "max_token_len": 512,
+    # Project options,
+    "project_dir": os.path.join(ROOT, "mase_output"),
+    "project": None,
+}
 
 
+# Main ---------------------------------------------------------------------------------
 class ChopCLI:
-    def _parse(self):
-        parser = ArgumentParser("Chop CLI")
-
-        # Option naming rules:
-        # 1. Action: arg = "--action", dest = "to_action"
-        # 2. Boolean option: arg = "--condition", dest = "is_condition"
-        # 3. General option: arg = "--option", dest = "option"
-
-        # Chop action
-        parser.add_argument(
-            "action",
-            type=str,
-            help="The action to be performed. Must be one of ['train', 'eval', 'transform', 'search']",
-        )
-
-        # Housekeeping functionalities
-        parser.add_argument(
-            "--github-ci",
-            action="store_true",
-            dest="github_ci",
-            default=False,
-            help="Run in GitHub CI. Default=False",
-        )
-        parser.add_argument(
-            "--debug",
-            action="store_true",
-            dest="to_debug",
-            default=False,
-            help="Run in debug mode. Default=False",
-        )
-        parser.add_argument(
-            "--log-level",
-            dest="log_level",
-            default="info",
-            choices=["debug", "info", "warning", "error", "critical"],
-            help="The logging level. Default='info'. Note that this option is only effective when --debug is disabled.",
-        )
-        parser.add_argument(
-            "--interactive",
-            action="store_true",
-            dest="is_interactive",
-            default=False,
-            help="Run in interactive mode. Default=False",
-        )
-        parser.add_argument(
-            "--ls",
-            dest="ls_target",
-            default=None,
-            help=(
-                "List available models or datasets. Must be one of ['model', 'dataset', 'all']. "
-                "Default=None will not list anything."
-            ),
-        )
-        parser.add_argument(
-            "--load",
-            "--load-name",
-            dest="load_name",
-            default=None,
-            help="The path to load the input model.",
-        )
-        parser.add_argument(
-            "--load-type",
-            dest="load_type",
-            default="mz",
-            choices=["pt", "pl", "mz", "hf"],
-            help=(
-                "The checkpoint type to be loaded. "
-                "If --load is not specified, --load-type is a don't-care, "
-                "Else if --load is specified, --load-type must be one of 'pt', 'pl', 'mz', 'hf', "
-                "respectively representing pytorch model state dict, "
-                "pytorch lightning checkpoint ,"
-                "fx.GraphModule saved by Mase, "
-                "and HuggingFace's checkpoint directory saved by 'save_pretrained'. Default='mz'"
-            ),
-        )
-        parser.add_argument(
-            "--project-dir",
-            dest="project_dir",
-            default=None,
-            help="The directory to save the project. Default='${mase-tools}/mase_output'",
-        )
-        parser.add_argument(
-            "--project",
-            dest="project",
-            default=None,
-            help="The name of the project. Default='${mase-tools}/mase_output/${args.model}@${timestamp}'",
-        )
-
-        # args for actions
-        ## Training
-        parser.add_argument(
-            "--model",
-            dest="model",
-            default=None,
-            help="The name of the existing model for training.",
-        )
-        parser.add_argument(
-            "--dataset",
-            dest="dataset",
-            default=None,
-            help="The name of the existing dataset for training.",
-        )
-        parser.add_argument(
-            "--training-optimizer",
-            dest="training_optimizer",
-            default="adam",
-            choices=["adam", "sgd", "adamw"],  # TODO: add adafactor which saves gpu mem
-            help="The name of the existing training optimizer for training. Default=Adam",
-        )
-        parser.add_argument(
-            "--trainer-precision",
-            dest="trainer_precision",
-            default="32",
-            choices=["16", "32", "64", "bf16"],
-            help="Trainer precision. Default='32'",
-        )
-        parser.add_argument(
-            "--seed",
-            dest="seed",
-            default=0,
-            type=int,
-            help="The number of steps for model optimisation. Default=0",
-        )
-        parser.add_argument(
-            "--learning-rate",
-            dest="learning_rate",
-            default=1e-5,
-            type=float,
-            help="The initial learning rate for training. Default=1e-5",
-        )
-        parser.add_argument(
-            "--max-epochs",
-            dest="max_epochs",
-            default=20,
-            type=int,
-            help="The maximum number of epochs for training. Default=100",
-        )
-        parser.add_argument(
-            "--max-steps",
-            dest="max_steps",
-            default=-1,
-            type=int,
-            help="The maximum number of steps for training. Default=-1 disable this option",
-        )
-        parser.add_argument(
-            "--batch-size",
-            dest="batch_size",
-            default=128,
-            type=int,
-            help="The batch size for training and evaluation. Default=128",
-        )
-        parser.add_argument(
-            "--accumulate-grad-batches",
-            dest="accumulate_grad_batches",
-            default=1,
-            type=int,
-            help="The number of batches to accumulate gradients. Default=1",
-        )
-
-        ## Language model related
-        parser.add_argument(
-            "--pretrained",
-            action="store_true",
-            dest="is_pretrained",
-            default=False,
-            help="load pretrained checkpoint from HuggingFace/Torchvision when initialising models. Default=False",
-        )
-        parser.add_argument(
-            "--task",
-            dest="task",
-            default="classification",
-            choices=[
-                "classification",
-                "cls",
-                "translation",
-                "tran",
-                "language_modeling",
-                "lm",
-            ],
-            help="The task to perform. Default=classification",
-        )
-        parser.add_argument(
-            "--max-token-len",
-            dest="max_token_len",
-            default=512,
-            type=int,
-            help="The maximum number of tokens. Default=None will use tokenizer.model_max_length",
-        )
-
-        ## CPU/GPU setup
-        parser.add_argument(
-            "--cpu",
-            dest="num_workers",
-            default=0,
-            type=int,
-            help="The number of CPU workers. Default=1",
-        )
-        parser.add_argument(
-            "--gpu",
-            dest="num_devices",
-            default=1,
-            type=int,
-            help="The number of GPU devices. Default=1",
-        )
-        parser.add_argument(
-            "--nodes",
-            dest="num_nodes",
-            default=1,
-            type=int,
-            help="The number of nodes. Default=1",
-        )
-        parser.add_argument(
-            "--accelerator",
-            dest="accelerator",
-            default="auto",
-            help="The accelerator type for training.",
-        )
-        parser.add_argument(
-            "--strategy",
-            dest="strategy",
-            default="ddp",
-            choices=[
-                "ddp",
-                "fsdp",
-                "fsdp_native",
-                "fsdp_custom",
-                "deepspeed_stage_3_offload",
-            ],
-            help="The strategy type. Default=ddp",
-        )
-        parser.add_argument(
-            "--auto-requeue",
-            dest="is_to_auto_requeue",
-            default=False,
-            action="store_true",
-            help="Whether automatic job resubmission is enabled or not on SLURM managed cluster",
-        )
-
-        ## FPGA setup for hardware generation
-        parser.add_argument(
-            "--target",
-            dest="target",
-            default="xcu250-figd2104-2L-e",
-            help="The target FPGA for hardware synthesis. Default=xcu250-figd2104-2L-e",
-        )
-        parser.add_argument(
-            "--num-targets",
-            dest="num_targets",
-            default=100,
-            type=int,
-            help="The number of FPGA devices. Default=1",
-        )
-
-        ## Config from toml
-        parser.add_argument(
-            "--config",
-            dest="config",
-            default=None,
-            help="toml config file. Note that by default CLI args will override config file if additionally specified.",
-        )
-        parser.add_argument(
-            "--force-config",
-            dest="is_force_config",
-            default=False,
-            action="store_true",
-            help="Force to use everything from config, not cli.",
-        )
-
-        return parser.parse_args()
-
-    def __init__(self):
+    def __init__(self, argv: Sequence[str] | None = None):
         super().__init__()
-        args = self._parse()
+
+        self.logger = getLogger("chop")
+        parser = self._setup_parser()
+        args = parser.parse_intermixed_args(argv)
+
+        # Housekeeping
+        pl.seed_everything(args.seed)
         if args.to_debug:
             sys.excepthook = self._excepthook
-            logger.setLevel(logging.DEBUG)
-            logger.debug("Enabled debug mode.")
+            self.logger.setLevel(logging.DEBUG)
+            self.logger.debug("Enabled debug mode.")
         else:
             match args.log_level:
                 case "debug":
-                    logger.setLevel(logging.DEBUG)
+                    self.logger.setLevel(logging.DEBUG)
                 case "info":
-                    logger.setLevel(logging.INFO)
+                    self.logger.setLevel(logging.INFO)
                 case "warning":
-                    logger.setLevel(logging.WARNING)
+                    self.logger.setLevel(logging.WARNING)
                 case "error":
-                    logger.setLevel(logging.ERROR)
+                    self.logger.setLevel(logging.ERROR)
                 case "critical":
-                    logger.setLevel(logging.CRITICAL)
+                    self.logger.setLevel(logging.CRITICAL)
 
-        # Initialise seeds
-        random.seed(args.seed)
-        torch.manual_seed(args.seed)
-        np.random.seed(args.seed)
-        args = post_parse_load_config(args)
-        self.args = args
+        # Merge arguments from the configuration file (if one exists) and print
+        # NOTE: The project name is set later on (if no configuration is provided), so
+        # the merged argument table may show None, but this is not the case.
+        self.args = post_parse_load_config(args, CLI_DEFAULTS)
 
-        # Model specifications
-        self.model = None
-        self.data_module = None
-        self.info = None
+        # Sanity check
+        if not self.args.model or not self.args.dataset:
+            raise ValueError("No model and/or dataset provided! These are required.")
 
-        self.output_dir = self.output_dir_sw = self.output_dir_hw = None
+        self.model, self.data_module, self.info = self._setup_model_and_dataset()
+        self.output_dir, self.output_dir_sw, self.output_dir_hw = self._setup_folders()
 
-    # Debugging configuration
+    def run(self):
+        match self.args.action:
+            case "transform":
+                self._run_transform()
+            case "train":
+                self._run_train()
+            case "test":
+                self._run_test()
+            case "search":
+                self._run_search()
+
+    # Actions --------------------------------------------------------------------------
+    def _run_train(self):
+        self.logger.info(f"Training model {self.args.model!r}...")
+
+        plt_trainer_args = {
+            "max_epochs": self.args.max_epochs,
+            "max_steps": self.args.max_steps,
+            "devices": self.args.num_devices,
+            "num_nodes": self.args.num_nodes,
+            "accelerator": self.args.accelerator,
+            "strategy": self.args.strategy,
+            "fast_dev_run": self.args.to_debug,
+            "precision": self.args.trainer_precision,
+            "accumulate_grad_batches": self.args.accumulate_grad_batches,
+        }
+
+        # Load from a checkpoint!
+        load_name = None
+        load_types = ["pt", "pl", "mz"]
+        if self.args.load_name is not None and self.args.load_type in load_types:
+            load_name = self.args.load_name
+
+        train_params = {
+            "model_name": self.args.model,
+            "model": self.model,
+            "info": self.info,
+            "task": self.args.task,
+            "data_module": self.data_module,
+            "optimizer": self.args.training_optimizer,
+            "learning_rate": self.args.learning_rate,
+            "plt_trainer_args": plt_trainer_args,
+            "auto_requeue": self.args.is_to_auto_requeue,
+            "save_path": os.path.join(self.output_dir_sw, "training_ckpts"),
+            "load_name": load_name,
+            "load_type": self.args.load_type,
+        }
+
+        train(**train_params)
+        self.logger.info("Training is completed")
+
+    def _run_test(self):
+        self.logger.info(f"Testing model {self.args.model!r}...")
+
+        plt_trainer_args = {
+            "devices": self.args.num_devices,
+            "num_nodes": self.args.num_nodes,
+            "accelerator": self.args.accelerator,
+            "strategy": self.args.strategy,
+            "precision": self.args.trainer_precision,
+        }
+
+        # The checkpoint must be present for the test phase!
+        if self.args.load_name is None:
+            raise ValueError("expected checkpoint via --load, got None")
+
+        test_params = {
+            "model_name": self.args.model,
+            "model": self.model,
+            "info": self.info,
+            "task": self.args.task,
+            "data_module": self.data_module,
+            "optimizer": self.args.training_optimizer,
+            "learning_rate": self.args.learning_rate,
+            "plt_trainer_args": plt_trainer_args,
+            "auto_requeue": self.args.is_to_auto_requeue,
+            "save_path": os.path.join(self.output_dir_sw, "checkpoints"),
+            "load_name": self.args.load_name,
+            "load_type": self.args.load_type,
+        }
+
+        test(**test_params)
+        self.logger.info("Testing is completed")
+
+    def _run_transform(self):
+        # A configuration is compulsory for transformation passes
+        if self.args.config is None:
+            raise ValueError("expected configuration via --config, got None")
+
+        self.logger.info(f"Transforming model {self.args.model!r}...")
+        self.data_module.prepare_data()
+        self.data_module.setup()
+
+        # Resolve the quirk with NLP models where the actual model is embedded in a dict
+        model = self.model
+        if isinstance(self.model, dict):
+            model = self.model["model"]
+
+        transform_params = {
+            "model_name": self.args.model,
+            "model": model,
+            "is_nlp_model": self.args.model in models.nlp_models,
+            "task": self.args.task,
+            "data_module": self.data_module,
+            "config": self.args.config,
+            "save_dir": os.path.join(self.output_dir_sw, "transformed_ckpts"),
+            "load_name": self.args.load_name,
+            "load_type": self.args.load_type,
+        }
+
+        transform(**transform_params)
+        self.logger.info("Transformation is completed")
+
+    def _run_search(self):
+        load_name = None
+        load_types = ["pt", "pl", "mz"]
+        if self.args.load_name is not None and self.args.load_type in load_types:
+            load_name = self.args.load_name
+
+        search_params = {
+            "model_name": self.args.model,
+            "model": self.model,
+            "task": self.args.task,
+            "info": self.info,
+            "data_module": self.data_module,
+            "accelerator": self.args.accelerator,
+            "search_config": self.args.config,
+            "save_path": os.path.join(self.output_dir_sw, "training_ckpts"),
+            "load_name": load_name,
+            "load_type": self.args.load_type,
+        }
+
+        search(**search_params)
+        self.logger.info("Searching is completed")
+
+    # Helpers --------------------------------------------------------------------------
+    def _setup_parser(self):
+        # NOTE: For a better developer experience, it's helpful to collapse all function
+        # calls by shift clicking the collapse button in the gutter on IDEs. ;) Also,
+        # when creating a new argument, DO NOT use default in the function call; instead
+        # add it to the CLI_DEFAULTS constant with the key set to the argument's dest.
+        parser = argparse.ArgumentParser(
+            description="""
+                Chop is a simple utility, part of the MASE tookit, to train, test and
+                transform (i.e. prune or quantise) a supported model.
+            """,
+            epilog=f"Maintained by the DeepWok Lab. Raise issues at {ISSUES_URL}",
+            add_help=False,
+        )
+
+        # Main program arguments -------------------------------------------------------
+        main_group = parser.add_argument_group("main arguments")
+        main_group.add_argument(
+            "action",
+            choices=ACTIONS,
+            help=f"action to perform. One of {'(' + '|'.join(ACTIONS) + ')'}",
+            metavar="action",
+        )
+        main_group.add_argument(
+            "model",
+            nargs="?",
+            default=None,
+            help="name of a supported model. Required if configuration NOT provided.",
+        )
+        main_group.add_argument(
+            "dataset",
+            nargs="?",
+            default=None,
+            help="name of a supported dataset. Required if configuration NOT provided.",
+        )
+
+        # General options --------------------------------------------------------------
+        general_group = parser.add_argument_group("general options")
+        general_group.add_argument(
+            "--config",
+            dest="config",
+            type=_valid_filepath,
+            help="""
+                path to a configuration file in the TOML format. Manual CLI overrides
+                for arguments have a higher precedence. Required if the action is 
+                transform. (default: %(default)s)
+            """,
+            metavar="PATH",
+        )
+        general_group.add_argument(
+            "--task",
+            dest="task",
+            choices=TASKS,
+            help=f"""
+                task to perform. One of {'(' + '|'.join(TASKS) + ')'} 
+                (default: %(default)s)
+            """,
+            metavar="TASK",
+        )
+        general_group.add_argument(
+            "--load",
+            dest="load_name",
+            type=_valid_filepath,
+            help="path to load the model from. (default: %(default)s)",
+            metavar="PATH",
+        )
+        general_group.add_argument(
+            "--load-type",
+            dest="load_type",
+            choices=LOAD_TYPE,
+            help=f"""
+                the type of checkpoint to be loaded; it's disregarded if --load is NOT 
+                specified. It is designed to and must be used in tandem with --load. 
+                One of {'(' + '|'.join(LOAD_TYPE) + ')'} (default: %(default)s)
+            """,
+            metavar="",
+        )
+        general_group.add_argument(
+            "--batch-size",
+            dest="batch_size",
+            type=int,
+            help="batch size for training and evaluation. (default: %(default)s)",
+            metavar="NUM",
+        )
+        general_group.add_argument(
+            "--debug",
+            action="store_true",
+            dest="to_debug",
+            help="""
+                run the action in debug mode, which enables verbose logging, custom
+                exception hook that uses ipdb, and sets the PL trainer to run in
+                "fast_dev_run" mode. (default: %(default)s)
+            """,
+        )
+        general_group.add_argument(
+            "--log-level",
+            dest="log_level",
+            choices=LOG_LEVELS,
+            help=f"""
+                verbosity level of the logger; it's only effective when --debug flag is
+                NOT passed in. One of {'(' + '|'.join(LOG_LEVELS) + ')'} 
+                (default: %(default)s)
+            """,
+            metavar="",
+        )
+        general_group.add_argument(
+            "--seed",
+            dest="seed",
+            type=int,
+            help="""
+                seed for random number generators set via Pytorch Lightning's 
+                seed_everything function. (default: %(default)s)
+            """,
+            metavar="NUM",
+        )
+
+        # Trainer options --------------------------------------------------------------
+        trainer_group = parser.add_argument_group("trainer options")
+        trainer_group.add_argument(
+            "--training-optimizer",
+            dest="training_optimizer",
+            choices=OPTIMIZERS,
+            help=f"""
+                name of supported optimiser for training. One of 
+                {'(' + '|'.join(OPTIMIZERS) + ')'} (default: %(default)s)
+            """,
+            metavar="TYPE",
+        )
+        trainer_group.add_argument(
+            "--trainer-precision",
+            dest="trainer_precision",
+            choices=TRAINER_PRECISION,
+            help=f"""
+                numeric precision for training. One of 
+                {'(' + '|'.join(TRAINER_PRECISION) + ')'} (default: %(default)s)
+            """,
+            metavar="TYPE",
+        )
+        trainer_group.add_argument(
+            "--learning-rate",
+            dest="learning_rate",
+            type=float,
+            help="initial learning rate for training. (default: %(default)s)",
+            metavar="NUM",
+        )
+        trainer_group.add_argument(
+            "--max-epochs",
+            dest="max_epochs",
+            type=int,
+            help="maximum number of epochs for training. (default: %(default)s)",
+            metavar="NUM",
+        )
+        trainer_group.add_argument(
+            "--max-steps",
+            dest="max_steps",
+            type=_maybe_positive_int,
+            help="""
+                maximum number of steps for training. A negative value disables this
+                option. (default: %(default)s)
+            """,
+            metavar="NUM",
+        )
+        trainer_group.add_argument(
+            "--accumulate-grad-batches",
+            dest="accumulate_grad_batches",
+            type=int,
+            help="number of batches to accumulate gradients. (default: %(default)s)",
+            metavar="NUM",
+        )
+
+        # Runtime environment options --------------------------------------------------
+        runtime_group = parser.add_argument_group("runtime environment options")
+        runtime_group.add_argument(
+            "--cpu",
+            dest="num_workers",
+            type=int,
+            help="""
+                number of CPU workers; the default varies across systems and is set to
+                os.cpu_count(). (default: %(default)s)
+            """,
+            metavar="NUM",
+        )
+        runtime_group.add_argument(
+            "--gpu",
+            dest="num_devices",
+            type=int,
+            help="number of GPU devices. (default: %(default)s)",
+            metavar="NUM",
+        )
+        runtime_group.add_argument(
+            "--nodes",
+            dest="num_nodes",
+            type=int,
+            help="number of nodes. (default: %(default)s)",
+            metavar="NUM",
+        )
+        runtime_group.add_argument(
+            "--accelerator",
+            dest="accelerator",
+            choices=ACCELERATORS,
+            help=f"""
+                type of accelerator for training. One of
+                {'(' + '|'.join(LOG_LEVELS) + ')'} (default: %(default)s)
+            """,
+            metavar="TYPE",
+        )
+        runtime_group.add_argument(
+            "--strategy",
+            dest="strategy",
+            choices=STRATEGIES,
+            help=f"""
+                type of strategy for training. One of 
+                {'(' + '|'.join(STRATEGIES) + ')'} (default: %(default)s)
+            """,
+            metavar="TYPE",
+        )
+        runtime_group.add_argument(
+            "--auto-requeue",
+            dest="is_to_auto_requeue",
+            action="store_true",
+            help="""
+                enable automatic job resubmission on SLURM managed cluster. (default:
+                %(default)s)
+            """,
+        )
+        runtime_group.add_argument(
+            "--github-ci",
+            action="store_true",
+            dest="github_ci",
+            help="""
+                set the execution environment to GitHub's CI pipeline; it's used in the
+                MASE verilog emitter transform pass to skip simulations. 
+                (default: %(default)s)
+                """,
+        )
+
+        # Hardware generation options --------------------------------------------------
+        hardware_group = parser.add_argument_group("hardware generation options")
+        hardware_group.add_argument(
+            "--target",
+            dest="target",
+            help="target FPGA for hardware synthesis. (default: %(default)s)",
+            metavar="STR",
+        )
+        hardware_group.add_argument(
+            "--num-targets",
+            dest="num_targets",
+            type=int,
+            help="number of FPGA devices. (default: %(default)s)",
+            metavar="NUM",
+        )
+
+        # Language model options -------------------------------------------------------
+        lm_group = parser.add_argument_group(title="language model options")
+        lm_group.add_argument(
+            "--pretrained",
+            action="store_true",
+            dest="is_pretrained",
+            help="""
+                load pretrained checkpoint from HuggingFace/Torchvision when 
+                initialising models. (default: %(default)s)
+            """,
+        )
+        lm_group.add_argument(
+            "--max-token-len",
+            dest="max_token_len",
+            type=_maybe_positive_int,
+            help="""
+                maximum number of tokens. A negative value will use 
+                tokenizer.model_max_length. (default: %(default)s)
+            """,
+            metavar="NUM",
+        )
+
+        # Project-level options --------------------------------------------------------
+        project_group = parser.add_argument_group(title="project options")
+        project_group.add_argument(
+            "--project-dir",
+            dest="project_dir",
+            type=_valid_directorypath,
+            help="directory to save the project to. (default: %(default)s)",
+            metavar="DIR",
+        )
+        project_group.add_argument(
+            "--project",
+            dest="project",
+            help="""
+                name of the project. 
+                (default: {MODEL-NAME}_{TASK-TYPE}_{DATASET-NAME}_{TIMESTAMP})
+            """,
+            metavar="NAME",
+        )
+
+        # Information flags ------------------------------------------------------------
+        information_group = parser.add_argument_group("information")
+        information_group.add_argument(
+            "-h", "--help", action="help", help="show this help message and exit"
+        )
+        information_group.add_argument(
+            "-V", "--version", action=ShowVersionAction, help="show version and exit"
+        )
+        information_group.add_argument(
+            "--info",
+            action=ShowInfoAction,
+            const=INFO_TYPE[0],
+            choices=INFO_TYPE,
+            help=f"""
+                list information about supported models or/and datasets and exit. One of 
+                {'(' + '|'.join(INFO_TYPE) + ')'} (default: %(const)s)
+            """,
+            metavar="TYPE",
+        )
+
+        parser.set_defaults(**CLI_DEFAULTS)
+        return parser
+
+    def _setup_model_and_dataset(self):
+        self.logger.info(f"Initialising model {self.args.model!r}...")
+
+        # Grab the dataset information and model instance functions; as evident in its
+        # name, when called, the model instance function creates and returns an instance
+        # of a specified model.
+        # NOTE: See machop/chop/models/__init__.py for more information
+        dataset_info = get_dataset_info(self.args.dataset)
+        model_inst_fn = models.model_map[self.args.model]
+
+        checkpoint, tokenizer = None, None
+        if self.args.load_name is not None and self.args.load_type == "hf":
+            checkpoint = self.args.load_name
+
+        # NOTE: In the case of NLP models, the "model" here is actually a dictionary
+        # that contains the actual model, a tokenizer and classifier.
+        # See machop/chop/models/nlp_models.py for more information
+        model = None
+        if self.args.model in models.nlp_models:
+            if self.args.model in models.manual_nlp_models:
+                # For more infomration, see the following files:
+                # 1. machop/chop/models/manual/llama_plain/__init__.py
+                # 2. machop/chop/models/__init__.py
+                model = model_inst_fn(
+                    name=self.args.model,
+                    task=self.args.task,
+                    info=dataset_info,
+                )
+                tokenizer = model_dict.get_tokenizer(self.args.model)
+                model = {
+                    "model": model,
+                    "tokenizer": tokenizer,
+                }
+            else:
+                model = model_inst_fn(
+                    name=self.args.model,
+                    task=self.args.task,
+                    info=dataset_info,
+                    checkpoint=checkpoint,
+                    pretrained=self.args.is_pretrained,
+                )
+                tokenizer = model["tokenizer"]
+        elif self.args.model in models.vision_models:
+            if self.args.model in models.manual_vision_models:
+                model = model_inst_fn(info=dataset_info, config=self.args.config)
+            else:
+                model = model_inst_fn(
+                    info=dataset_info, pretrained=self.args.is_pretrained
+                )
+        else:
+            raise NotImplementedError(
+                f"expected supported model, got {self.args.model!r}"
+            )
+
+        self.logger.info(f"Initialising dataset {self.args.dataset!r}...")
+        data_module = MyDataModule(
+            model_name=self.args.model,
+            dataset_name=self.args.dataset,
+            batch_size=self.args.batch_size,
+            workers=self.args.num_workers,
+            tokenizer=tokenizer,
+            max_token_len=self.args.max_token_len,
+        )
+
+        return model, data_module, dataset_info
+
+    def _setup_folders(self):
+        project = None
+        if self.args.project is not None:
+            project = self.args.project
+        else:
+            # No project name is given; so we construct one structured as follows:
+            # {MODEL-NAME}_{TASK-TYPE}_{DATASET-NAME}_{TIMESTAMP}
+            # NOTE: We set the attribute in args so that any subsequent routine has
+            # access to the name of the project. :)
+            project = "{}_{}_{}_{}".format(
+                self.args.model.replace("/", "-"),
+                self.args.task,
+                self.args.dataset,
+                time.strftime("%Y-%m-%d"),
+            )
+            setattr(self.args, "project", project)
+
+        output_dir = os.path.join(self.args.project_dir, project)
+        output_dir_sw = os.path.join(output_dir, "software")
+        output_dir_hw = os.path.join(output_dir, "hardware")
+
+        os.makedirs(output_dir_hw, exist_ok=True)
+        os.makedirs(output_dir_sw, exist_ok=True)
+
+        self.logger.info(f"Project will be created at {output_dir}")
+
+        return output_dir, output_dir_sw, output_dir_hw
+
     def _excepthook(self, etype, evalue, etb):
         from IPython.core import ultratb
 
@@ -354,247 +743,81 @@ class ChopCLI:
                 sys.exit(-1)
         ipdb.post_mortem(etb)
 
-    # Main process
-    def run(self):
-        if self.args.ls_target is not None:
-            self.list_available()
-            return
 
-        self.init_model_and_dataset()
-        self.create_output_dir()
+# Custom types ---------------------------------------------------------------------
+# Returns the absolute path to a file if it is indeed a valid path and not a folder
+def _valid_filepath(path: str):
+    if not os.path.exists(path):
+        raise argparse.ArgumentTypeError(f"file not found")
+    if not os.path.isfile(path):
+        raise argparse.ArgumentTypeError(f"expected path to file, got {path!r}")
+    return os.path.abspath(path)
 
-        if self.args.action == "transform":
-            self.transform()
-        elif self.args.action == "train":
-            self.train()
-        elif self.args.action == "test":
-            self.test()
-        elif self.args.action == "search":
-            self.search()
-        else:
-            raise ValueError(f"{self.args.action} is not supported!")
 
-    def list_available(self):
-        args = self.args
-        tgt = args.ls_target
-        assert tgt in [
-            "model",
-            "dataset",
-            "all",
-        ], "The param of --ls must be one of ['model', 'dataset', 'all']"
+# Returns the absolute path to a directory if it is indeed a valid path
+def _valid_directorypath(path: str):
+    if not os.path.exists(path):
+        raise argparse.ArgumentTypeError(f"directory not found")
+    if os.path.isfile(path):
+        raise argparse.ArgumentTypeError(f"expected path to directory, got {path!r}")
+    return os.path.abspath(path)
 
-        if tgt in ["model", "all"]:
-            logger.info("Available models")
-            pprint(list(model_map.keys()))
-        if tgt in ["dataset", "all"]:
-            logger.info("Available datasets")
-            pprint(available_datasets)
 
-    # Setup model and data for training
-    def init_model_and_dataset(self):
-        args = self.args
-        assert args.dataset, f"Dataset name (--dataset) not specified: {args.dataset!r}"
-        assert args.model, f"Model name (--model) not specified: {args.model!r}"
+# Returns None for values less than or equal to 0
+def _maybe_positive_int(s: str) -> int | None:
+    try:
+        v = int(s)
+    except ValueError:
+        raise argparse.ArgumentError(f"expected integer, got {s!r}")
 
-        logger.info(f"Initialising model {args.model!r}...")
-        # Get dataset info
-        dataset_info = get_dataset_info(args.dataset)
+    if v <= 0:
+        return None
+    return v
 
-        # Get model
-        model_inst_fn = model_map[args.model]
 
-        checkpoint, tokenizer = None, None
-        if args.load_name is not None and args.load_type == "hf":
-            checkpoint = args.load_name
+# Custom actions -------------------------------------------------------------------
+class ShowVersionAction(argparse.Action):
+    def __init__(self, option_strings, dest, help):
+        """
+        Pretty print the version number with the Machop logo and exit.
+        For more details: https://docs.python.org/3/library/argparse.html#action
+        """
+        super().__init__(option_strings, dest, nargs=0, help=help)
 
-        if args.model in nlp_models:
-            if args.model in manual_nlp_models:
-                model_dict = model_inst_fn(
-                    name=args.model,
-                    task=args.task,
-                    info=dataset_info,
-                    # checkpoint=checkpoint,
-                    # pretrained=args.is_pretrained,
-                    # config=args.config,
-                )
-                tokenizer = model_dict.get_tokenizer(args.model)
-                model_dict = {
-                    "model": model_dict,
-                    "tokenizer": tokenizer,
-                }
-            else:
-                model_dict = model_inst_fn(
-                    name=args.model,
-                    task=args.task,
-                    info=dataset_info,
-                    checkpoint=checkpoint,
-                    pretrained=args.is_pretrained,
-                )
-                tokenizer = model_dict["tokenizer"]
-        elif args.model in vision_models:
-            if args.model in manual_vision_models:
-                # create manual model from custom config
-                model_dict = model_inst_fn(info=dataset_info, config=args.config)
-            else:
-                model_dict = model_inst_fn(
-                    info=dataset_info, pretrained=args.is_pretrained
-                )
-        else:
-            raise NotImplementedError(f"Unknown model {args.model!r}.")
+    def __call__(self, parser, *_):
+        print(LOGO)
+        parser.exit()
 
-        # Get data module
-        logger.info(f"Initialising dataset {args.dataset!r}...")
-        data_module = MyDataModule(
-            model_name=args.model,
-            dataset_name=args.dataset,
-            batch_size=args.batch_size,
-            workers=args.num_workers,
-            tokenizer=tokenizer,
-            max_token_len=args.max_token_len,
-        )
-        self.model, self.data_module, self.info = (
-            model_dict,
-            data_module,
-            dataset_info,
-        )
 
-    def create_output_dir(self):
-        args = self.args
+class ShowInfoAction(argparse.Action):
+    def __init__(self, option_strings, dest=SUPPRESS, const=None, **kwargs):
+        """
+        Pretty print the version number with the Machop logo and exit.
+        For more details: https://docs.python.org/3/library/argparse.html#action
+        """
+        super().__init__(option_strings, dest, nargs="?", const=const, **kwargs)
 
-        root = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
-        project_dir = os.path.join(root, "mase_output")
-        if args.project_dir is not None:
-            project_dir = (
-                args.project_dir
-                if os.path.isabs(args.project_dir)
-                else os.path.join(os.getcwd(), args.project_dir)
-            )
-        project = (
-            args.project
-            if args.project is not None
-            else "{}_{}_{}_".format(
-                args.model.replace("/", "-"), args.task, args.dataset
-            )
-            + time.strftime("%Y-%m-%d")
-        )
+    def __call__(self, parser, _, values, *__):
+        choice = values if values is not None else self.default
 
-        self.output_dir = os.path.join(project_dir, project)
-        self.output_dir_sw = os.path.join(self.output_dir, "software")
-        self.output_dir_hw = os.path.join(self.output_dir, "hardware")
-        os.makedirs(self.output_dir_sw, exist_ok=True)
-        os.makedirs(self.output_dir_hw, exist_ok=True)
-        if args.project_dir is None or args.project is None:
-            logger.warning(f"Project will be created at {self.output_dir}")
-        else:
-            logger.info(f"Project will be created at {self.output_dir}")
+        if choice in ["model", "all"]:
+            self._generate_table(list(models.model_map.keys()), "Supported Models")
+        if choice in ["dataset", "all"]:
+            self._generate_table(available_datasets, "Supported Datasets", cols=2)
 
-    def transform(self):
-        args = self.args
-        assert (
-            args.config is not None
-        ), "--config must be provided if using action=transform"
-        logger.info(f"Transforming model {args.model!r}...")
+        parser.exit()
 
-        self.data_module.prepare_data()
-        self.data_module.setup()
-        transform_params = {
-            "model_name": args.model,
-            "model": self.model["model"]
-            if isinstance(self.model, dict)
-            else self.model,
-            "is_nlp_model": args.model in nlp_models,
-            "task": args.task,
-            "data_module": self.data_module,
-            "config": args.config,
-            "save_dir": os.path.join(self.output_dir_sw, "transformed_ckpts"),
-            "load_name": args.load_name,
-            "load_type": args.load_type,
-        }
-        transform(**transform_params)
+    def _generate_table(self, data, title, cols=3):
+        table = []
 
-    def train(self):
-        args = self.args
-        logger.info(f"Training model {args.model!r}...")
+        rows = (len(data) + cols - 1) // cols
+        for col in range(cols):
+            split = data[col * rows : (col + 1) * rows]
+            if len(split) < rows:
+                # Pad split with empty rows to make up for the difference
+                split.extend([""] * (rows - len(split)))
+            table.append(split)
 
-        plt_trainer_args = {
-            "max_epochs": args.max_epochs,
-            "max_steps": args.max_steps,
-            "devices": args.num_devices,
-            "num_nodes": args.num_nodes,
-            "accelerator": args.accelerator,
-            "strategy": args.strategy,
-            "fast_dev_run": args.to_debug,
-            "precision": args.trainer_precision,
-            "accumulate_grad_batches": args.accumulate_grad_batches,
-        }
-
-        load_name = None
-        if args.load_name is not None and args.load_type in ["pt", "pl", "mz"]:
-            load_name = args.load_name
-        train_params = {
-            "model_name": args.model,
-            "model": self.model,
-            "info": self.info,
-            "task": args.task,
-            "data_module": self.data_module,
-            "optimizer": args.training_optimizer,
-            "learning_rate": args.learning_rate,
-            "plt_trainer_args": plt_trainer_args,
-            "auto_requeue": args.is_to_auto_requeue,
-            "save_path": os.path.join(self.output_dir_sw, "training_ckpts"),
-            "load_name": load_name,
-            "load_type": args.load_type,
-        }
-        train(**train_params)
-        logger.info("Training is completed")
-
-    def test(self):
-        args = self.args
-        logger.info(f"Testing model {args.model!r}...")
-
-        plt_trainer_args = {
-            "devices": args.num_devices,
-            "num_nodes": args.num_nodes,
-            "accelerator": args.accelerator,
-            "strategy": args.strategy,
-            "precision": args.trainer_precision,
-        }
-        load_name = args.load_name
-        # assert load_name is not None, "load name must not be None for test-sw."
-        test_params = {
-            "model_name": args.model,
-            "model": self.model,
-            "info": self.info,
-            "task": args.task,
-            "data_module": self.data_module,
-            "optimizer": args.training_optimizer,
-            "learning_rate": args.learning_rate,
-            "plt_trainer_args": plt_trainer_args,
-            "auto_requeue": args.is_to_auto_requeue,
-            "save_path": os.path.join(self.output_dir_sw, "checkpoints"),
-            "load_name": load_name,
-            "load_type": args.load_type,
-        }
-        test(**test_params)
-
-        logger.info("Testing is completed")
-
-    def search(self):
-        args = self.args
-        load_name = None
-        if args.load_name is not None and args.load_type in ["pt", "pl", "mz"]:
-            load_name = args.load_name
-        search_params = {
-            "model_name": args.model,
-            "model": self.model,
-            "task": args.task,
-            "info": self.info,
-            "data_module": self.data_module,
-            "accelerator": args.accelerator,
-            "search_config": args.config,
-            "save_path": os.path.join(self.output_dir_sw, "training_ckpts"),
-            "load_name": load_name,
-            "load_type": args.load_type,
-        }
-        search(**search_params)
-        logger.info("Training is completed")
+        table = list(zip(*table))
+        print(title)
+        print(tabulate(table, tablefmt="pretty"))

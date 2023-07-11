@@ -1,5 +1,6 @@
 import toml
 from tabulate import tabulate
+from textwrap import wrap
 
 
 def convert_str_na_to_none(d):
@@ -56,42 +57,65 @@ def save_config(config, config_path):
         toml.dump(config, f)
 
 
-def post_parse_load_config(parsed_args):
+def post_parse_load_config(args, defaults):
     """
-    Load from a toml config file
-
-    If a config key is also a CLI argument, the CLI argument will override the config value.
-
-    If is_force_config is set, the CLI argument will not override the config value.
+    Load and merge arguments from a toml configuration file. If the configuration key
+    matches the "dest" value of an existing CLI argument, we use precedence to determine
+    which argument value to choose (i.e. default < configuration < manual overrides).
+    These arguments are then visualised in a table. :)
     """
-    if parsed_args.config is not None:
-        if not parsed_args.config.endswith(".toml"):
-            raise ValueError("Dataset config must be a Toml file.")
-        config = load_config(parsed_args.config)
+    if args.config and not args.config.endswith(".toml"):
+        raise ValueError(f"expected .toml configuration file, got {args.config}")
 
-        cli_override_flag = False
-        swapped = []
-        for k, v in config.items():
-            if k in parsed_args:
-                cli_v = getattr(parsed_args, k)
-                if cli_v is not None and not parsed_args.is_force_config:
-                    swapped.append([k, cli_v, v, False])
-                    cli_override_flag = True
-                else:
-                    setattr(parsed_args, k, v)
-                    swapped.append([k, cli_v, v, True])
+    # Helper function to colour the output gray
+    fmt_gray = lambda x: f"\033[38;5;8m{x}\033[0m"
+
+    fields = ["Name", "Default", "Config. File", "Manual Override", "Effective"]
+    table = []
+
+    config = load_config(args.config) if args.config else None
+    for k in list(vars(args).keys()):
+        if k not in defaults or k == "config":
+            continue
+
+        default_gray = fmt_gray(defaults[k])
+        if config and k in config.keys():
+            # Only merge the values from the configuration if there are no manual
+            # overrides (i.e. the argument value doesn't deviate from its default).
+            v = config[k]
+            if getattr(args, k) == defaults[k]:
+                setattr(args, k, v)
+                table.append([k, default_gray, v, "", v])
             else:
-                print(f"Unknown config key name [{k}] against command line.")
-        if cli_override_flag:
-            print("[Config swaps]")
-            print(
-                tabulate(
-                    swapped,
-                    headers=["Name", "CLI", "Config", "Swapped?"],
-                    tablefmt="orgtbl",
+                table.append(
+                    [k, default_gray, fmt_gray(v), getattr(args, k), getattr(args, k)]
                 )
-            )
-            print(
-                "[Config swaps] Swapped False means the CLI value is used. CLI values have higher priority. You can force swap by setting adding flag --force-config."
-            )
-    return parsed_args
+        else:
+            if getattr(args, k) == defaults[k]:
+                table.append([k, defaults[k], "", "", defaults[k]])
+            else:
+                table.append([k, default_gray, "", getattr(args, k), getattr(args, k)])
+
+    if not config:
+        fields.remove("Config. File")
+        table = [
+            [k, default, override, effective]
+            for k, default, _, override, effective in table
+        ]
+
+    # NOTE: We need to replace NoneType with a string 'None' for text wrapping to work
+    # properly via maxcolwidths.
+    table = [["None" if item is None else item for item in row] for row in table]
+
+    print(
+        tabulate(
+            table,
+            headers=fields,
+            colalign=["left"] + ["center"] * (len(fields) - 1),
+            tablefmt="pretty",
+            maxheadercolwidths=24,
+            maxcolwidths=24,
+            disable_numparse=True,
+        )
+    )
+    return args
