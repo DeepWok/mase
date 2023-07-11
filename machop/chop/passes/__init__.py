@@ -9,6 +9,9 @@ from .transforms import (
     prune_transform_pass,
 )
 
+from .transforms.quantize import quantized_func_map, quantized_module_map
+from .transforms.quantize.quant_parsers import parse_node_config
+
 analysis_passes = ["init_metadata", "add_common_metadata"]
 transform_passes = ["quantize"]
 
