@@ -19,7 +19,7 @@ Accelerate's fully shard plugin is a wrapper around PyTorch's [FullyShardedDataP
 Here is an example of training a model with accelerate's fully shard plugin.
 
 ```bash
-cd mase-tools/machop/examples/by_feature/fully_shard
+cd mase-tools/machop/test/actions/accelerate_train
 # launch training script using accelerate
 accelerate launch --use_fsdp accelerate_fsdp.py
 ```
