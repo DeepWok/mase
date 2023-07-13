@@ -1,0 +1,15 @@
+[default]
+bypass = false
+name = "block_fp"
+bias_block_size = [16]
+bias_exponent_bias = 127
+bias_exponent_width = 8
+bias_width = 7
+data_in_block_size = [1, 16]
+data_in_exponent_bias = 127
+data_in_exponent_width = 8
+data_in_width = 7
+weight_block_size = [1, 16]
+weight_exponent_bias = 127
+weight_exponent_width = 8
+weight_width = 7
