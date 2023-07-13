@@ -4,7 +4,7 @@ from functools import partial
 # from .manual.toy_manual import get_toymanualnet
 # from .patched_nlp_models import get_patched_nlp_model
 from .patched_nlp_models import patched_model_cls_to_required_input_args
-from .manual import get_llama_plain
+from .manual import get_llama_plain, get_opt_plain
 
 from .nlp_models import get_nlp_model
 from .toy import get_toy_tiny, get_toynet, get_testmodel
