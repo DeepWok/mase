@@ -30,7 +30,7 @@ def get_llama_plain(
 ):
     # TODO: support cls tasks
     if task not in ["language_modeling", "lm"]:
-        raise ValueError(f"Task {task} is not supported for Quantized Llama")
+        raise ValueError(f"Task {task} is not supported for plain Llama")
 
     match task:
         case "language_modeling" | "lm":
