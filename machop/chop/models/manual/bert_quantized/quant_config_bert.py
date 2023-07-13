@@ -1,7 +1,6 @@
 import os
 import re
 from copy import deepcopy
-from dataclasses import dataclass
 
 import toml
 from chop.tools.config_load import convert_str_na_to_none
@@ -9,27 +8,46 @@ from chop.tools.config_load import convert_str_na_to_none
 from ..quant_utils import parse_node_config
 
 """
-An example of quant_config for llama
+An example of quant_config for bert
 
 {
+    "default": {}
     "model_layer": {
-        "self_attn": {
-            "q_proj": {},
-            "k_proj": {},
-            "v_proj": {},
-            "o_proj": {},
+        "attention": {
+            "query": {},
+            "key": {},
+            "value": {},
+            "output": {
+                "dense": {},
+            },
             "matmul_0": {},
             "matmul_1": {},
         },
-        "mlp": {
-            "gate_proj": {},
-            "down_proj": {},
-            "up_proj": {},
+        "crossattntion": { # if config.add_cross_attention is True
+            "query": {},
+            "key": {},
+            "value": {},
+            "output": {
+                "dense": {},
+            },
+            "matmul_0": {},
+            "matmul_1": {},
+        }
+        "intermediate": {
+            "dense": {},
+        },
+        "output": {
+            "dense": {},
         },
     }
     "linear_default": {},
     "matmul_default": {},
-
+    "model_layer_0": {
+        "attention": {
+            ...
+        },
+        ...
+    }
 }
 """
 
@@ -65,22 +83,27 @@ def create_a_layer_config(
 ) -> dict:
     if (layer_qc is None and matmul_qc is None) and layer_qc is None:
         raise ValueError("Must provide either (linear_qc & matmul_qc) or layer_qc")
+
     if layer_qc is None:
         layer_qc = {}
+
     # fmt: off
     qc = {
-        "self_attn": {
-            "q_proj": parse_node_config(layer_qc.get("self_attn", {}).get("q_proj", linear_qc), "linear"),
-            "k_proj": parse_node_config(layer_qc.get("self_attn", {}).get("k_proj", linear_qc), "linear"),
-            "v_proj": parse_node_config(layer_qc.get("self_attn", {}).get("v_proj", linear_qc), "linear"),
-            "o_proj": parse_node_config(layer_qc.get("self_attn", {}).get("o_proj", linear_qc), "linear"),
-            "matmul_0": parse_node_config(layer_qc.get("self_attn", {}).get("matmul_0", matmul_qc), "matmul"),
-            "matmul_1": parse_node_config(layer_qc.get("self_attn", {}).get("matmul_1", matmul_qc), "matmul"),
+        "attention": {
+            "query": parse_node_config(layer_qc.get("attention", {}).get("query", linear_qc), "linear"),
+            "key": parse_node_config(layer_qc.get("attention", {}).get("key", linear_qc), "linear"),
+            "value": parse_node_config(layer_qc.get("attention", {}).get("value", linear_qc), "linear"),
+            "matmul_0": parse_node_config(layer_qc.get("attention", {}).get("matmul_0", matmul_qc), "matmul"),
+            "matmul_1": parse_node_config(layer_qc.get("attention", {}).get("matmul_1", matmul_qc), "matmul"),
+            "output": {
+                "dense": parse_node_config(layer_qc.get("attention", {}).get("output", {}).get("dense", linear_qc), "linear"),
+            },
         },
-        "mlp": {
-            "gate_proj": parse_node_config(layer_qc.get("mlp", {}).get("gate_proj", linear_qc), "linear"),
-            "down_proj": parse_node_config(layer_qc.get("mlp", {}).get("down_proj", linear_qc), "linear"),
-            "up_proj": parse_node_config(layer_qc.get("mlp", {}).get("up_proj", linear_qc), "linear")
+        "intermediate": {
+            "dense": parse_node_config(layer_qc.get("intermediate", {}).get("dense", linear_qc), "linear"),
+        },
+        "output": {
+            "dense": parse_node_config(layer_qc.get("output", {}).get("dense", linear_qc), "linear"),
         },
     }
     # fmt: on
@@ -88,7 +111,7 @@ def create_a_layer_config(
 
 
 def by_type_parser(config: dict, num_hidden_layers: int) -> dict:
-    assert "default" in config, "Must provide default config for by_class_parser"
+    assert "default" in config, "Must provide a default config"
     default_qc: dict = config["default"]
     linear_qc: dict = parse_node_config(
         config.get("linear", default_qc), mase_op="linear"
@@ -98,7 +121,6 @@ def by_type_parser(config: dict, num_hidden_layers: int) -> dict:
     )
     layer_qc: dict = config.get("model_layer", None)
 
-    # parsed config
     p_config = {}
     for i in range(num_hidden_layers):
         layer_entry = f"model_layer_{i}"
@@ -108,7 +130,7 @@ def by_type_parser(config: dict, num_hidden_layers: int) -> dict:
 
 
 def by_name_parser(config: dict, num_hidden_layers: int) -> dict:
-    assert "default" in config, "Must provide default config for by_name_parser"
+    assert "default" in config, "Must provide a default config"
     default_qc: dict = config["default"]
     linear_qc: dict = parse_node_config(
         config.get("linear", default_qc), mase_op="linear"
@@ -117,7 +139,6 @@ def by_name_parser(config: dict, num_hidden_layers: int) -> dict:
         config.get("matmul", default_qc), mase_op="matmul"
     )
 
-    # parsed config
     p_config = {}
     for i in range(num_hidden_layers):
         layer_entry = f"model_layer_{i}"
@@ -127,10 +148,8 @@ def by_name_parser(config: dict, num_hidden_layers: int) -> dict:
     return p_config
 
 
-def parse_llama_quantized_config(config: str | dict, num_hidden_layers: int) -> dict:
-    assert isinstance(
-        config, (str, dict)
-    ), "config must be a str path to config toml or dict"
+def parse_bert_quantized_config(config: str | dict, num_hidden_layers: int) -> dict:
+    assert isinstance(config, (str, dict)), "Must provide either a path or a dict"
     if isinstance(config, str):
         config = toml.load(config)
     config = convert_str_na_to_none(config)
@@ -141,4 +160,4 @@ def parse_llama_quantized_config(config: str | dict, num_hidden_layers: int) -> 
         case "name":
             return by_name_parser(config, num_hidden_layers)
         case _:
-            raise ValueError(f"Unknown by: {by}")
+            raise ValueError(f"Unknown quantized config type: {by}")

@@ -22,7 +22,7 @@
 from transformers.configuration_utils import PretrainedConfig
 from transformers.utils import logging
 
-from .quant_config_llama import parse_llama_quant_config
+from .quant_config_llama import parse_llama_quantized_config
 
 logger = logging.get_logger(__name__)
 
@@ -139,7 +139,7 @@ class LlamaQuantizedConfig(PretrainedConfig):
         self.rms_norm_eps = rms_norm_eps
         self.use_cache = use_cache
         if quant_config is not None:
-            quant_config = parse_llama_quant_config(quant_config, num_hidden_layers)
+            quant_config = parse_llama_quantized_config(quant_config, num_hidden_layers)
         self.quant_config = quant_config
 
         super().__init__(
@@ -152,7 +152,7 @@ class LlamaQuantizedConfig(PretrainedConfig):
 
     def __setattr__(self, key, value):
         if key == "quant_config" and value is not None:
-            value = parse_llama_quant_config(
+            value = parse_llama_quantized_config(
                 config=value, num_hidden_layers=self.num_hidden_layers
             )
         return super().__setattr__(key, value)

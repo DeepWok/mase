@@ -1,0 +1,109 @@
+by = "type"
+[default]
+bypass = true
+name = "integer"
+data_in_width = 8
+data_in_frac_width = 5
+weight_width = 8
+weight_frac_width = 9
+bias_width = 8
+bias_frac_width = 9
+
+[model_layer.self_attn.q_proj]
+name = "minifloat_ieee"
+bias_exponent_bias = 7
+bias_exponent_width = 4
+bias_width = 8
+data_in_exponent_bias = 7
+data_in_exponent_width = 4
+data_in_width = 8
+weight_exponent_bias = 7
+weight_exponent_width = 4
+weight_width = 8
+
+[model_layer.self_attn.k_proj]
+name = "minifloat_denorm"
+bias_exponent_bias = 7
+bias_exponent_width = 4
+bias_width = 8
+data_in_exponent_bias = 7
+data_in_exponent_width = 4
+data_in_width = 8
+weight_exponent_bias = 7
+weight_exponent_width = 4
+weight_width = 8
+
+[model_layer.self_attn.v_proj]
+name = "block_fp"
+bias_block_size = [16]
+bias_exponent_bias = 127
+bias_exponent_width = 8
+bias_width = 7
+data_in_block_size = [1, 16]
+data_in_exponent_bias = 127
+data_in_exponent_width = 8
+data_in_width = 7
+weight_block_size = [1, 16]
+weight_exponent_bias = 127
+weight_exponent_width = 8
+weight_width = 7
+
+[model_layer.self_attn.o_proj]
+name = "block_minifloat"
+weight_exponent_bias_width = 8
+weight_exponent_width = 2
+weight_width = 5
+data_in_exponent_bias_width = 8
+data_in_exponent_width = 2
+data_in_width = 5
+weight_block_size = [1, 16]
+data_in_block_size = [1, 16]
+bias_exponent_bias_width = 8
+bias_exponent_width = 2
+bias_width = 5
+bias_block_size = [16]
+
+[model_layer.self_attn.matmul_0]
+name = "minifloat_ieee"
+data_in_exponent_bias = 7
+data_in_exponent_width = 4
+data_in_width = 8
+weight_exponent_bias = 7
+weight_exponent_width = 4
+weight_width = 8
+
+[model_layer.self_attn.matmul_1]
+name = "minifloat_denorm"
+data_in_exponent_bias = 7
+data_in_exponent_width = 4
+data_in_width = 8
+weight_exponent_bias = 7
+weight_exponent_width = 4
+weight_width = 8
+
+[model_layer.mlp.gate_proj]
+name = "integer"
+data_in_width = 8
+data_in_frac_width = 5
+weight_width = 8
+weight_frac_width = 5
+bias_width = 8
+bias_frac_width = 9
+
+[model_layer.mlp.down_proj]
+name = "integer"
+data_in_width = 8
+data_in_frac_width = 5
+weight_width = 8
+weight_frac_width = 5
+bias_width = 8
+bias_frac_width = 9
+
+[model_layer.mlp.up_proj]
+name = "integer"
+data_in_width = 8
+data_in_frac_width = 5
+weight_width = 8
+weight_frac_width = 5
+bias_width = 8
+bias_frac_width = 9
