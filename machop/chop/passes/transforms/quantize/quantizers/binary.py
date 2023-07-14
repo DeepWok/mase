@@ -1,7 +1,7 @@
 from math import ceil, log2
 from typing import List, Tuple, Union
-from numpy import ndarray
-from torch import Tensor
+import numpy
+import torch
 
 
 from .utils import (
@@ -16,7 +16,7 @@ from .utils import (
 
 
 def binary_quantizer(
-    x: Union[Tensor, ndarray], stochastic: bool = False, bipolar=False
+    x: Union[torch.Tensor, numpy.ndarray], stochastic: bool = False, bipolar=False
 ):
     """
     - Do binary quantization to input
@@ -38,8 +38,8 @@ def binary_quantizer(
     if stochastic:
         x_sig = my_clamp((x + 1) / 2, 0, 1)
         x_rand = (
-            torch.rand_like(x_rand)
-            if isinstance(Tensor)
+            torch.rand_like(x)
+            if isinstance(x, torch.Tensor)
             else numpy.random.rand(*x.shape)
         )
 
@@ -55,7 +55,7 @@ def binary_quantizer(
 
 
 def ternary_quantizer(
-    x: Union[Tensor, ndarray], threshold: float, scaling_fac: bool = False
+    x: Union[torch.Tensor, numpy.ndarray], threshold: float, scaling_fac: bool = False
 ):
     """
     - Do ternary quantization to input
