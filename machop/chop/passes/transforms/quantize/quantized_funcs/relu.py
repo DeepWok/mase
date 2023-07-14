@@ -30,6 +30,7 @@ def relu_integer(x, inplace=False, config=None):
 
 
 def relu_binary(x, inplace=False, config=None):
+    # Notice that this software does not mathemetically make sense. We added it for the completion of the path for now.
     bypass = config.get("bypass", False)
     if bypass:
         return F.relu(x, inplace=inplace)
