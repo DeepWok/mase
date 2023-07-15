@@ -49,13 +49,13 @@ def analyse_hardware_parameters_linear(meta):
         meta.parameters["hardware"] |= {
             "verilog_parameters": {
                 "HAS_BIAS": int("bias" in meta.parameters["common"]["args"].keys()),
-                "IN_SIZE": 1,
-                "IN_DEPTH": math.prod(
-                    meta.parameters["common"]["args"]["data_in"]["size"]
+                "IN_0_SIZE": 1,
+                "IN_0_DEPTH": math.prod(
+                    meta.parameters["common"]["args"]["data_in_0"]["size"]
                 ),
-                "PARALLELISM": meta.parameters["common"]["results"]["data_out"]["size"][
-                    1
-                ],
+                "PARALLELISM": meta.parameters["common"]["results"]["data_out_0"][
+                    "size"
+                ][1],
             },
             "toolchain": "INTERNAL_RTL",
             "module": "fixed_linear",
@@ -74,14 +74,14 @@ def analyse_hardware_parameters_linear(meta):
         }
 
         # WEIGHT_SIZE == IN_SIZE * PARALLELISM
-        in_size = meta.parameters["hardware"]["verilog_parameters"]["IN_SIZE"]
+        in_size = meta.parameters["hardware"]["verilog_parameters"]["IN_0_SIZE"]
         parallelism = meta.parameters["hardware"]["verilog_parameters"]["PARALLELISM"]
         meta.parameters["hardware"]["verilog_parameters"]["WEIGHT_SIZE"] = (
             in_size * parallelism
         )
 
         # OUT_SIZE == PARALLELISM
-        meta.parameters["hardware"]["verilog_parameters"]["OUT_SIZE"] = parallelism
+        meta.parameters["hardware"]["verilog_parameters"]["OUT_0_SIZE"] = parallelism
         # BIAS_SIZE == PARALLELISM
         meta.parameters["hardware"]["verilog_parameters"]["BIAS_SIZE"] = parallelism
 
@@ -112,16 +112,16 @@ def analyse_hardware_parameters_relu(meta):
     if meta.parameters["common"]["args"]["data_in_0"]["type"] == "fixed":
         meta.parameters["hardware"] |= {
             "verilog_parameters": {
-                "IN_SIZE": 1,
+                "IN_0_SIZE": 1,
             },
-            "toolchain": "INTERNAL",
+            "toolchain": "INTERNAL_RTL",
             "module": "fixed_relu",
             "dependence_files": ["activations/fixed_relu.sv"],
         }
         # OUT = IN
-        meta.parameters["hardware"]["verilog_parameters"]["OUT_SIZE"] = meta.parameters[
-            "hardware"
-        ]["verilog_parameters"]["IN_SIZE"]
+        meta.parameters["hardware"]["verilog_parameters"][
+            "OUT_0_SIZE"
+        ] = meta.parameters["hardware"]["verilog_parameters"]["IN_0_SIZE"]
     else:
         meta.parameters["hardware"] |= {
             "verilog_parameters": {},

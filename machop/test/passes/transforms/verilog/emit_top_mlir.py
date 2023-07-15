@@ -78,6 +78,12 @@ def main():
     # Sanity check and report - verify or compare with expected results here
     mg = verify_common_metadata_analysis_pass(mg)
 
+    mg = add_hardware_metadata_analysis_pass(mg)
+    # mg = report_node_hardware_type_analysis_pass(mg)
+    # mg = verify_hardware_metadata_analysis_pass(mg)
+
+    mg = emit_verilog_top_transform_pass(mg)
+
 
 # --------------------------------------------------
 #   Execution

@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 # This example converts a simple MLP model to Verilog
 import os, sys, logging
+import toml
+
 import torch
 import torch.nn as nn
 
@@ -23,10 +25,14 @@ from chop.passes.analysis import (
     add_common_metadata_analysis_pass,
     init_metadata_analysis_pass,
     verify_common_metadata_analysis_pass,
+    report_node_type_analysis_pass,
     report_node_shape_analysis_pass,
     report_node_hardware_type_analysis_pass,
 )
-from chop.passes.transforms import emit_verilog_top_transform_pass
+from chop.passes.transforms import (
+    quantize_transform_pass,
+    emit_verilog_top_transform_pass,
+)
 from chop.tools.logger import getLogger
 
 logger = getLogger("chop")
@@ -77,6 +83,43 @@ def main():
 
     # Sanity check and report - verify or compare with expected results here
     mg = verify_common_metadata_analysis_pass(mg)
+
+    # Quantize to int
+    config_file = os.path.join(
+        os.path.dirname(os.path.realpath(__file__)),
+        "..",
+        "..",
+        "..",
+        "..",
+        "configs",
+        "quantized_ops",
+        "integer.toml",
+    )
+    mg = report_node_type_analysis_pass(mg)
+
+    # load toml config file
+    with open(config_file, "r") as f:
+        quan_args = toml.load(f)["passes"]["quantize"]
+    mg = quantize_transform_pass(mg, quan_args)
+
+    # There is a bug in the current quantization pass, where the metadata is not uppdated with the precision.
+    # Here we temporarily update the metadata here so we can test the hardware back end.
+    for node in mg.fx_graph.nodes:
+        for arg, _ in node.meta["mase"].parameters["common"]["args"].items():
+            node.meta["mase"].parameters["common"]["args"][arg]["type"] = "fixed"
+            node.meta["mase"].parameters["common"]["args"][arg]["precision"] = [8, 3]
+        for result, _ in node.meta["mase"].parameters["common"]["results"].items():
+            node.meta["mase"].parameters["common"]["results"][result]["type"] = "fixed"
+            node.meta["mase"].parameters["common"]["results"][result]["precision"] = [
+                8,
+                3,
+            ]
+    mg = report_node_type_analysis_pass(mg)
+    mg = add_hardware_metadata_analysis_pass(mg)
+    mg = report_node_hardware_type_analysis_pass(mg)
+    # mg = verify_hardware_metadata_analysis_pass(mg)
+
+    mg = emit_verilog_top_transform_pass(mg)
 
 
 # --------------------------------------------------

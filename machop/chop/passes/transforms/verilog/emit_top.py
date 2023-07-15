@@ -25,9 +25,9 @@ def get_input_name(from_node, to_node):
     if from_node == to_node:
         return "data_in_0"
     for key, val in to_node.meta["mase"].parameters["common"]["args"].items():
-        if val["from"] == from_node:
+        if val["from"].name == from_node.name:
             return key
-    return None
+    assert False, f"Cannot find edge from {from_node.name} to {to_node.name}"
 
 
 def _get_cast_parameters(from_node, to_node, is_start=False, is_end=False):
@@ -229,7 +229,7 @@ logic                             {node_name}_{key}_ready;
     for key, value in node.meta["mase"].parameters["common"]["results"].items():
         # No internal signals if the memory is stored off chip
         if (
-            key != "data_out"
+            key != "data_out_0"
             and node.meta["mase"].parameters["hardware"]["interface_parameters"][key][
                 "storage"
             ]
@@ -328,7 +328,7 @@ def _emit_signals_top(graph, parameter_map):
 // --------------------------
 """
         if "INTERNAL" in node.meta["mase"].parameters["hardware"]["toolchain"]:
-            signals += _emit_signals_top_internal(node)
+            signals += _emit_signals_top_internal(node, parameter_map)
         elif node.meta["mase"].parameters["hardware"]["toolchain"] == "MLIR_HLS":
             signals += _emit_signals_top_hls(node, parameter_map)
         else:
@@ -388,7 +388,7 @@ def _emit_components_top_internal(node, parameter_map):
     for key, value in node.meta["mase"].parameters["common"]["args"].items():
         # Skip the parameter instance if the memory is stored off chip
         if (
-            key == "data_in"
+            "data_in" in key
             or node.meta["mase"].parameters["hardware"]["interface_parameters"][key][
                 "storage"
             ]
@@ -400,7 +400,7 @@ def _emit_components_top_internal(node, parameter_map):
     for key, value in node.meta["mase"].parameters["common"]["results"].items():
         # Skip the parameter instance if the memory is stored off chip
         if (
-            key == "data_out"
+            key == "data_out_0"
             or node.meta["mase"].parameters["hardware"]["interface_parameters"][key][
                 "storage"
             ]
@@ -534,7 +534,7 @@ def _emit_parameters_top_hls(key, value, node, parameter_map):
 """
 
 
-def _emit_parameters_top_internal(key, value, node):
+def _emit_parameters_top_internal(key, value, node, parameter_map):
     node_name = vf(node.name)
     cap_key = v2p(key)
     component_name = f"{node_name}_{key}_source"
@@ -549,8 +549,8 @@ def _emit_parameters_top_internal(key, value, node):
         depth = 1
         depth_debug_info = 1
     else:
-        depth = f"{node_name}_IN_DEPTH"
-        depth_debug_info = parameter_map[f"{node_name}_IN_DEPTH"]
+        depth = f"{node_name}_IN_0_DEPTH"
+        depth_debug_info = parameter_map[f"{node_name}_IN_0_DEPTH"]
 
     return f"""
 {component_name} #(
@@ -575,7 +575,7 @@ def _emit_hs_wires_top(from_node, to_node, parameter_map, is_start=False, is_end
         to_param,
         cast_name,
         data_cast,
-    ) = graph._cast_data(
+    ) = _cast_data(
         "", from_node, to_node, parameter_map, is_start=is_start, is_end=is_end
     )
 
@@ -913,6 +913,7 @@ def _emit_wires_top(graph, parameter_map):
 
 def emit_top(graph, top_name):
     parameters_to_emit, parameter_map = _emit_parameters_top(graph)
+    logger.debug(parameter_map)
     parameters_to_emit = _remove_last_comma(parameters_to_emit)
     interface_to_emit = _emit_interface_top(graph, parameter_map)
     interface_to_emit = _remove_last_comma(interface_to_emit)
