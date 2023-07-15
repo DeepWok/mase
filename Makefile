@@ -16,6 +16,15 @@ build-docker:
 shell: build-docker
 	docker run -it --shm-size 256m --hostname mase-ubuntu2204 -u $(user) -v $(vhls):$(vhls) -v $(shell pwd):/workspace mase-ubuntu2204:latest /bin/bash 
 
+test-hw:
+	python3 scripts/test-hardware.py -a || exit 1
+
+test-sw:
+	bash scripts/test-machop.sh || exit 1
+
+test-all: test-hw test-sw
+	python3 scripts/test-torch-mlir.py || exit 1
+
 build:
 	bash scripts/build-llvm.sh
 	bash scripts/build-mase-hls.sh
