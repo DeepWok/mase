@@ -21,9 +21,10 @@ def graph_iterator_compare_nodes(
         elif get_mase_type(node) in [
             "builtin_func",
             "module_related_func",
-            "implicit_func",
         ]:
             return get_node_actual_target(node).__name__
+        elif get_mase_type(node) in ["implicit_func"]:
+            return get_node_actual_target(node)
         else:
             return node.target
 

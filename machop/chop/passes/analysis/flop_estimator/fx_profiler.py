@@ -73,10 +73,7 @@ class GraphProfiler(Interpreter):
         submod = self.fetch_attr(target)
 
         in_data = args[0]
-        # if isinstance(submod, torch.nn.ReLU):
-        #     import pdb
 
-        #     pdb.set_trace()
         out_data = submod(*args, **kwargs)
         # meta = calculate_modules(submod, in_data, out_data)
         meta = self.call_module_wrap(submod, in_data, out_data)

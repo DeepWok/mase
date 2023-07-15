@@ -3,16 +3,9 @@ import torch.nn as nn
 
 
 class CustomActivation(torch.autograd.Function):
-    # WARNING: this dynamic flow can break symbolic trace
-    # @staticmethod
-    # def forward(ctx, x):
-    #     if x > 0:
-    #         return x
-    #     else:
-    #         return -0.001
     @staticmethod
     def forward(ctx, x):
-        return x * x * x - 0.001
+        return x + 0.001
 
 
 # direct alias
@@ -24,19 +17,54 @@ class ToyCustomFnNet(nn.Module):
         super(ToyCustomFnNet, self).__init__()
         in_planes = image_size[0] * image_size[1] * image_size[2]
         self.seq_blocks = nn.Sequential(
+            # linear
             nn.Linear(in_planes, 100),
+            # relu
             nn.ReLU(),
-            nn.Linear(100, 100),
-            nn.ReLU(),
-            nn.Linear(100, 100),
         )
-        self.final = nn.Linear(100, num_classes)
+        # conv2d
+        self.conv2d = nn.Conv2d(1, 100, 3, padding="same")
+        # conv1d
+        self.conv1d = nn.Conv1d(1, 100, 1)
+
+        self.adaptive_pool = nn.AdaptiveAvgPool2d((1, 1))
 
     def forward(self, x):
-        x = self.seq_blocks(x.view(x.size(0), -1))
-        x = custom_activation(x)
+        x = self.seq_blocks(x)
+        # x = custom_activation(x)
         x = torch.nn.functional.relu(x)
-        return self.final(x)
+        # testing funcs
+        # add
+        # This is missing in add_common_metadata.py
+        x = x + x
+
+        # mult
+        # This is missing in add_common_metadata.py
+        x = x * x
+
+        # sub
+        # This is missing in add_common_metadata.py
+        x = x - x
+
+        # This is partially supported in add_common_metadata.py
+        x = x.view(x.size(0), 1, 10, 10)
+
+        # conv2d
+        y = self.conv2d(x)
+        # pool
+        x = self.adaptive_pool(x)
+        x = x.view(x.size(0), x.size(1), -1)
+        # conv1d
+        x = self.conv1d(x)
+        x = x.view(x.size(0), -1)
+        # matmul
+        # TODO: this fails in add_common_metadata.py
+        # x = torch.matmul(x.t, x)
+        x = torch.matmul(torch.ones(100, 8), x)
+        # bmm
+        x = x.view(1, x.size(0), x.size(1))
+        x = torch.bmm(x, x)
+        return x
 
 
 def get_toyfnnet(info, pretrained=False):

@@ -21,7 +21,6 @@ class MLP(torch.nn.Module):
         self.fc3 = nn.Linear(28 * 28 * 4, 10)
 
     def forward(self, x):
-        # import pdb; pdb.set_trace()
         x = torch.flatten(x, start_dim=1, end_dim=-1)
         x = torch.nn.functional.relu(self.fc1(x))
         x = torch.nn.functional.relu(self.fc2(x))

@@ -27,8 +27,9 @@ from chop.passes.analysis import (
     report_node_hardware_type_analysis_pass,
 )
 from chop.passes.transforms import emit_verilog_top_transform_pass
+from chop.tools.logger import getLogger
 
-logger = logging.getLogger(__name__)
+logger = getLogger("chop")
 logger.setLevel(logging.DEBUG)
 
 
@@ -63,7 +64,7 @@ def main():
     mlp = MLP()
     mg = MaseGraph(model=mlp)
     # print(mlp)
-    # print(mg.fx_graph)
+    print(mg.fx_graph)
 
     # Provide a dummy input for the graph so it can use for tracing
     batch_size = 1

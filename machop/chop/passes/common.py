@@ -11,7 +11,7 @@ MASE_TYPES = [
 ]
 
 
-MASE_IMPLICIT_FUNCS = ["size", "view", "flatten"]
+MASE_IMPLICIT_FUNCS = ["size", "view", "flatten", "t"]
 
 # use this list to print out MASE_MODULE_RELATED_FUNCS when new functions are added
 # module_related_funcs = [
