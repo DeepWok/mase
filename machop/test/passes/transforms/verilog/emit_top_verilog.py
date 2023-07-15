@@ -92,7 +92,8 @@ def main():
         "..",
         "..",
         "configs",
-        "quantized_ops",
+        "tests",
+        "quantize",
         "integer.toml",
     )
     mg = report_node_type_analysis_pass(mg)

@@ -15,7 +15,7 @@ class RandomSource:
         max_stalls=100,
         is_data_vector=True,
         name="",
-        data_specify = [],
+        data_specify=[],
         debug=False,
     ):
         assert num > 0, "Invalid num for source {}".format(name)
@@ -30,7 +30,7 @@ class RandomSource:
         self.samples = samples
         self.max_stalls = max_stalls
         self.is_data_vector = is_data_vector
-        if(len(data_specify) == 0):
+        if len(data_specify) == 0:
             if is_data_vector:
                 self.data = [
                     [random.randint(0, 30) for _ in range(num)] for _ in range(samples)
@@ -42,7 +42,11 @@ class RandomSource:
         else:
             self.data = data_specify
 
-        self.dummy = [random.randint(0, 30) for _ in range(num)] if is_data_vector else random.randint(0, 30)
+        self.dummy = (
+            [random.randint(0, 30) for _ in range(num)]
+            if is_data_vector
+            else random.randint(0, 30)
+        )
 
         self.stall_count = 0
         # Buffer the random choice
@@ -62,7 +66,7 @@ class RandomSource:
     def compute(self, next_ready):
         """The compute simulates the synchronous computation for data"""
         to_feed = (not self.is_empty()) and next_ready
-        if(self.is_empty()):
+        if self.is_empty():
             data = self.dummy
         else:
             data = self.data[-1]
@@ -106,6 +110,7 @@ class RandomSink:
         self.max_stalls = max_stalls
         self.stall_count = 0
         self.trystall = 0
+
     def pre_compute(self, prevalid):
         to_absorb = (not self.is_full()) and prevalid
         if not to_absorb:
@@ -122,7 +127,7 @@ class RandomSink:
             return 1
         self.logger.debug("pre_compute: sink {} skips an iteration.".format(self.name))
         return 0
-        
+
     def compute(self, prevalid, datain):
         to_absorb = (not self.is_full()) and prevalid
         if not to_absorb:

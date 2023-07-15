@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import random, os, math, logging, sys
+
 sys.path.append(
     os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 )
@@ -33,6 +34,7 @@ debug = True
 logger = logging.getLogger("tb_signals")
 if debug:
     logger.setLevel(logging.DEBUG)
+
 
 # DUT test specifications
 class VerificationCase:
@@ -180,13 +182,14 @@ class VerificationCase:
             self.w_parallelism,
             self.in_size,
         )
-        logger.debug("input data: \n\
+        logger.debug(
+            "input data: \n\
         wq_tensor = \n{}\n wk_tensor = \n{}\n wv_tensor = \n{}\n\
         dq_tensor = \n{}\n dk_tensor = \n{}\n dv_tensor = \n{}\n\
         ".format(
-            wq_tensor,wk_tensor,wv_tensor,
-            dq_tensor,dk_tensor,dv_tensor
-        ))
+                wq_tensor, wk_tensor, wv_tensor, dq_tensor, dk_tensor, dv_tensor
+            )
+        )
         # calculate the output
         # cut the output to smaller sets
         ref = []
@@ -211,7 +214,9 @@ class VerificationCase:
             input_q = rearrange(input_q, "(b r) c ->b r c", b=1)
             input_k = rearrange(input_k, "(b r) c ->b r c", b=1)
             input_v = rearrange(input_v, "(b r) c ->b r c", b=1)
-            out_temp = rearrange(qatt(input_q,input_k,input_v), "b r c->(b r) c ", b=1)
+            out_temp = rearrange(
+                qatt(input_q, input_k, input_v), "b r c->(b r) c ", b=1
+            )
 
             # out pack
             output_tensor = self.output_pack(
@@ -350,7 +355,9 @@ async def test_att(dut):
         dut.data_in_k_valid.value = test_case.data_in_k.pre_compute()
         dut.data_in_v_valid.value = test_case.data_in_v.pre_compute()
         await Timer(1, units="ns")
-        dut.data_out_ready.value = test_case.outputs.pre_compute(dut.data_out_valid.value)
+        dut.data_out_ready.value = test_case.outputs.pre_compute(
+            dut.data_out_valid.value
+        )
         await Timer(1, units="ns")
         dut.weight_q_valid.value, dut.weight_q.value = test_case.weight_q.compute(
             dut.weight_q_ready.value

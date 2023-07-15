@@ -43,17 +43,17 @@ logger.setLevel(logging.DEBUG)
 
 
 def main():
-    mlp = ToyCustomFnNet(image_size=(1, 28, 28), num_classes=10)
-    mg = MaseGraph(model=mlp)
+    batch_size = 8
+    mlp = ToyCustomFnNet(image_size=(1, 28, 28), num_classes=10, batch_size=batch_size)
 
     # Provide a dummy input for the graph so it can use for tracing
-    batch_size = 8
     x = torch.randn((batch_size, 28 * 28))
     mlp(x)
-    logger.debug(mg.fx_graph)
 
     dummy_in = {"x": x}
 
+    mg = MaseGraph(model=mlp)
+    logger.debug(mg.fx_graph)
     mg = init_metadata_analysis_pass(mg, None)
     # mg = add_mase_ops_analysis_pass(mg, dummy_in)
     mg = add_common_metadata_analysis_pass(mg, dummy_in)
@@ -61,6 +61,9 @@ def main():
     config_files = [
         "integer.toml",
         "block_fp.toml",
+        "log.toml",
+        "block_log.toml",
+        "block_minifloat.toml",
         "binary.toml",
         "minifloat_denorm.toml",
         "minifloat_ieee.toml",
@@ -73,9 +76,9 @@ def main():
         "..",
         "..",
         "configs",
-        "quantized_ops",
+        "tests",
+        "quantize",
     )
-
     ori_mg = deepcopy_mase_graph(mg)
 
     for config_file in config_files:

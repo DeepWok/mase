@@ -48,7 +48,7 @@ class VerificationCase:
             samples=samples,
             num=self.num,
             max_stalls=2 * samples,
-            is_data_vector = True,
+            is_data_vector=True,
             debug=debug,
         )
 
@@ -61,7 +61,7 @@ class VerificationCase:
         #     max_stalls=2 * samples,
         #     debug=debug,
         # )
-        ### padding 
+        ### padding
         self.outputs = RandomSink(
             samples=samples * self.num / self.roll_num,
             max_stalls=2 * samples,
@@ -99,9 +99,9 @@ async def test_roller(dut):
     """Test integer based vector mult"""
     samples = 3
     test_case = VerificationCase(samples=samples)
-    
+
     ## rearrange input to display
-    
+
     logger.debug(
         "initial data:\n\
     data_in = {}\n".format(
@@ -144,9 +144,7 @@ async def test_roller(dut):
         await Timer(1, units="ns")
         wave_check(dut)
         breakpoint()
-        if (test_case.data_in.is_empty()
-            and test_case.outputs.is_full()
-        ):
+        if test_case.data_in.is_empty() and test_case.outputs.is_full():
             done = True
             break
     assert (
@@ -169,7 +167,7 @@ def wave_check(dut):
             dut.data_in_ready.value,
             [int(i) for i in dut.data_out.value],
             dut.data_out_valid.value,
-            dut.data_out_ready.value
+            dut.data_out_ready.value,
         )
     )
     logger.debug(
@@ -179,7 +177,6 @@ def wave_check(dut):
             [int(i) for i in dut.shift_reg.value]
         )
     )
-
 
 
 def runner():

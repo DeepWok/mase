@@ -2,6 +2,7 @@ import torch
 import torch.nn as nn
 import math
 
+
 def tensor_cast(tensor_in, in_width, in_frac_width, out_width, out_frac_width):
     size = torch.tensor(tensor_in.shape)
     tensor_temp = tensor_in.reshape(torch.prod(size))
@@ -115,7 +116,7 @@ class QAttention(nn.Module):
             WFWidth=WFWidth,
         )
 
-    def forward(self, q_in,k_in,v_in):
+    def forward(self, q_in, k_in, v_in):
         B, N, C = q_in.shape
         # breakpoint()
         q = (
