@@ -15,13 +15,17 @@ from torch import nn
 
 from .common_metadata_layers import (
     analyse_common_parameters_constant,
-    analyse_common_parameters_flatten,
     analyse_common_parameters_linear,
     analyse_common_parameters_output,
     analyse_common_parameters_placeholder,
-    analyse_common_parameters_relu,
+    analyse_common_parameters_pass,
+    analyse_common_parameters_t,
     analyse_common_parameters_size,
     analyse_common_parameters_view,
+    analyse_common_parameters_conv2d,
+    analyse_common_parameters_conv1d,
+    analyse_common_parameters_function,
+    analyse_common_parameters_module,
 )
 
 logger = logging.getLogger(__name__)
@@ -85,7 +89,7 @@ def graph_iterator_for_mase_ops(graph):
                     "mase_type"
                 ] = "module_related_func"
                 node.meta["mase"].parameters["common"]["mase_op"] = matched_name
-            elif node.name in MASE_IMPLICIT_FUNCS:
+            elif matched_name in MASE_IMPLICIT_FUNCS:
                 node.meta["mase"].parameters["common"]["mase_type"] = "implicit_func"
                 node.meta["mase"].parameters["common"]["mase_op"] = matched_name
             else:
@@ -97,7 +101,7 @@ def graph_iterator_for_mase_ops(graph):
             matching, matched_name = match_and_filter(node.name, MASE_IMPLICIT_FUNCS)
             if not matching:
                 raise ValueError(f"Unknown node type: {node.name}")
-            if node.name in MASE_IMPLICIT_FUNCS:
+            if matched_name in MASE_IMPLICIT_FUNCS:
                 node.meta["mase"].parameters["common"]["mase_type"] = "implicit_func"
                 node.meta["mase"].parameters["common"]["mase_op"] = node.target
 
@@ -123,28 +127,46 @@ def graph_iterator_for_mase_ops(graph):
 
 
 def analysis_common_parameters(node, dummy_in):
-    if node.meta["mase"].parameters["common"]["mase_op"] == "placeholder":
+    mase_op = node.meta["mase"].parameters["common"]["mase_op"]
+    if mase_op == "placeholder":
         node.meta["mase"] = analyse_common_parameters_placeholder(
             node.meta["mase"], dummy_in
         )
-    elif node.meta["mase"].parameters["common"]["mase_op"] == "output":
+    elif mase_op == "output":
         node.meta["mase"] = analyse_common_parameters_output(node.meta["mase"])
-    elif node.meta["mase"].parameters["common"]["mase_op"] == "linear":
+    elif mase_op == "linear":
         node.meta["mase"] = analyse_common_parameters_linear(node.meta["mase"])
-    elif node.meta["mase"].parameters["common"]["mase_op"] == "relu":
-        node.meta["mase"] = analyse_common_parameters_relu(node.meta["mase"])
-    elif node.meta["mase"].parameters["common"]["mase_op"] == "flatten":
-        node.meta["mase"] = analyse_common_parameters_flatten(node.meta["mase"])
-    elif node.meta["mase"].parameters["common"]["mase_op"] == "view":
+    elif mase_op in ["relu", "add", "sub", "mul"]:
+        node.meta["mase"] = analyse_common_parameters_pass(node.meta["mase"])
+    elif mase_op == "t":
+        node.meta["mase"] = analyse_common_parameters_t(node.meta["mase"])
+    elif mase_op == "view":
         node.meta["mase"] = analyse_common_parameters_view(node.meta["mase"])
-    elif node.meta["mase"].parameters["common"]["mase_op"] == "size":
+    elif mase_op == "size":
         node.meta["mase"] = analyse_common_parameters_size(node.meta["mase"])
-    elif node.meta["mase"].parameters["common"]["mase_op"] == "constant":
+    elif mase_op == "constant":
         node.meta["mase"] = analyse_common_parameters_constant(node.meta["mase"])
+    elif mase_op == "conv1d":
+        node.meta["mase"] = analyse_common_parameters_conv1d(node.meta["mase"])
+    elif mase_op == "conv2d":
+        node.meta["mase"] = analyse_common_parameters_conv2d(node.meta["mase"])
+    # General modules, inferring sizes from simulation
+    elif node.op == "call_module":
+        node.meta["mase"] = analyse_common_parameters_module(node.meta["mase"])
+    elif node.op == "call_function":
+        node.meta["mase"] = analyse_common_parameters_function(node.meta["mase"])
     else:
         raise ValueError(
             "Unknown mase op: {}".format(
                 node.meta["mase"].parameters["common"]["mase_op"]
+            )
+        )
+
+    if "data_out_0" in node.meta["mase"].parameters["common"]["results"]:
+        logger.debug(
+            "{} : {}".format(
+                node.name,
+                node.meta["mase"].parameters["common"]["results"]["data_out_0"]["size"],
             )
         )
 

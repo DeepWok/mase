@@ -26,6 +26,7 @@ class MaseMetadata:
            - type : type of the result, e.g. fixed point or float
            - precision : format of the type, e.g. (10, 5)
            - size : size of the result
+           - value : if the result is a constant scalar value, store it and use as parameters instead of runtime variable
     - software
     - hardware
       - is_implicit -> bool : whether the node is mapped on hardware or software annotation only

@@ -87,52 +87,41 @@ def verify_common_metadata_general(meta):
 
 
 def verify_common_metadata_linear(meta):
-    if meta.module is not None:
-        weight_name = "weight"
-        bias_name = "bias"
-    else:
-        weight_name = "data_in_1"
-        bias_name = "data_in_2"
-
     has_bias = len(meta.node.all_input_nodes) > 2
 
     # Verify common parameters
     assert (
-        meta.parameters["common"]["args"]["data_in_0"]["size"][0]
-        == meta.parameters["common"]["args"][weight_name]["size"][1]
+        meta.parameters["common"]["args"]["data_in_0"]["size"][1]
+        == meta.parameters["common"]["args"]["weight"]["size"][1]
     ), "Input row size does not match with the weight col size. {}: in = {}, w = {}".format(
         meta.node.name,
         meta.parameters["common"]["args"]["data_in_0"]["size"],
-        meta.parameters["common"]["args"][weight_name]["size"],
+        meta.parameters["common"]["args"]["weight"]["size"],
     )
     assert (
-        meta.parameters["common"]["results"]["data_out_0"]["size"][0]
-        == meta.parameters["common"]["args"][weight_name]["size"][0]
+        meta.parameters["common"]["results"]["data_out_0"]["size"][1]
+        == meta.parameters["common"]["args"]["weight"]["size"][0]
     ), "Output row size does not match with the weight row size. {}: out = {}, w = {}".format(
         meta.node.name,
         meta.parameters["common"]["results"]["data_out_0"]["size"],
-        meta.parameters["common"]["args"][weight_name]["size"],
+        meta.parameters["common"]["args"]["weight"]["size"],
     )
     if meta.parameters["common"]["args"]["data_in_0"]["type"] == "fixed":
         # Check the output precision based on the input precision - assume lossless
         # Output width = max(bias_width, data_in_0_width + weight_width + clog2(in_size)) + 1
         # Output frac width = max(bias_frac_width, data_in_0_frac_width + weight_frac_width)
         if has_bias:
-            bias_width = meta.parameters["common"]["args"][bias_name]["precision"][0]
-            bias_frac_width = meta.parameters["common"]["args"][bias_name]["precision"][
-                1
-            ]
+            bias_width = meta.parameters["common"]["args"]["bias"]["precision"][0]
+            bias_frac_width = meta.parameters["common"]["args"]["bias"]["precision"][1]
         else:
             bias_width = 0
             bias_frac_width = 0
-        weight_width = meta.parameters["common"]["args"][weight_name]["precision"][0]
+        weight_width = meta.parameters["common"]["args"]["weight"]["precision"][0]
         data_in_0_width = meta.parameters["common"]["args"]["data_in_0"]["precision"][0]
         clog2_data_in_0_size = clog2(
             meta.parameters["common"]["args"]["data_in_0"]["size"][1]
         )
-        weight_frac_width = meta.parameters["common"]["args"][weight_name]["precision"][
-            1
-        ]
+        weight_frac_width = meta.parameters["common"]["args"]["weight"]["precision"][1]
         data_in_0_frac_width = meta.parameters["common"]["args"]["data_in_0"][
             "precision"
         ][1]

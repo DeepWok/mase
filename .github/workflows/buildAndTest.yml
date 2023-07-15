@@ -26,6 +26,16 @@ jobs:
               grep -rnw ./machop/chop -e "breakpoint()"
               exit 1
           fi
+          if [[ $(grep -rn ./machop/test -e "set_trace(") -eq 1 ]]; then
+              echo "Found undeleted breakpoint:"
+              grep -rn ./machop/test -e "set_trace("
+              exit 1
+          fi
+          if [[ $(grep -rn ./machop/chop -e "set_trace(") -eq 1 ]]; then
+              echo "Found undeleted breakpoint:"
+              grep -rn ./machop/chop -e "set_trace("
+              exit 1
+          fi
 
     # Choose the git commit to diff against for the purposes of linting.
     # Since this workflow is triggered on both pushes and pull requests, w
