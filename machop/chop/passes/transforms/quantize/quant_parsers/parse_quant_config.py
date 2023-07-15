@@ -55,9 +55,9 @@ QUANT_ARITH_ENTRIES = {
         "bias_entries": ("bias_width", "bias_exponent_width", "bias_exponent_bias"),
     },
     "log": {
-        "weight_entries": ("weight_width", "weight_exponent_width"),
-        "data_in_entries": ("data_in_width", "data_in_exponent_width"),
-        "bias_entries": ("bias_width", "bias_exponent_width"),
+        "weight_entries": ("weight_width", "weight_exponent_bias"),
+        "data_in_entries": ("data_in_width", "data_in_exponent_bias"),
+        "bias_entries": ("bias_width", "bias_exponent_bias"),
     },
     "block_fp": {
         "weight_entries": (

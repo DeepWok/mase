@@ -1,0 +1,8 @@
+# basics
+model = "toy"
+dataset = "toy-tiny"
+
+[passes.prune]
+name = "both"
+weight_sparsity = 0.9
+activation_sparsity = 0.9

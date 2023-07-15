@@ -79,6 +79,34 @@ def analyse_common_parameters_t(meta):
 
 
 # ----------------------------------------------------------
+# t
+# ----------------------------------------------------------
+
+
+def analyse_common_parameters_t(meta):
+    """
+    Memory transformation.
+    """
+    meta.parameters["common"]["results"] = {}
+    meta.parameters["common"]["results"] = {
+        "data_out_0": {
+            "type": "float",
+            "precision": [32],
+            "size": meta.parameters["common"]["args"]["data_in_0"]["size"],
+        }
+    }
+    (
+        meta.parameters["common"]["results"]["data_out_0"]["size"][0],
+        meta.parameters["common"]["results"]["data_out_0"]["size"][1],
+    ) = (
+        meta.parameters["common"]["results"]["data_out_0"]["size"][1],
+        meta.parameters["common"]["results"]["data_out_0"]["size"][0],
+    )
+
+    return meta
+
+
+# ----------------------------------------------------------
 # Output
 # ----------------------------------------------------------
 

@@ -13,7 +13,7 @@ custom_activation = CustomActivation.apply
 
 
 class ToyCustomFnNet(nn.Module):
-    def __init__(self, image_size, num_classes):
+    def __init__(self, image_size, num_classes, batch_size=1):
         super(ToyCustomFnNet, self).__init__()
         in_planes = image_size[0] * image_size[1] * image_size[2]
         self.seq_blocks = nn.Sequential(
@@ -28,6 +28,7 @@ class ToyCustomFnNet(nn.Module):
         self.conv1d = nn.Conv1d(1, 100, 1)
 
         self.adaptive_pool = nn.AdaptiveAvgPool2d((1, 1))
+        self.batch_size = batch_size
 
     def forward(self, x):
         x = self.seq_blocks(x)
@@ -59,8 +60,11 @@ class ToyCustomFnNet(nn.Module):
         x = x.view(x.size(0), -1)
         # matmul
         # TODO: this fails in add_common_metadata.py
-        # x = torch.matmul(x.t, x)
-        x = torch.matmul(torch.ones(100, 8), x)
+        # x2 = torch.matmul(x.t(), x)
+
+        # WARNING: torch fx graph does not handle this type of run-time definition with data-dependent shapes
+        # x = torch.matmul(torch.ones(100, x.size(0)), x)
+        x = torch.matmul(torch.ones(100, self.batch_size), x)
         # bmm
         x = x.view(1, x.size(0), x.size(1))
         x = torch.bmm(x, x)
