@@ -1,13 +1,14 @@
 from math import ceil, log2
 from typing import List, Tuple, Union
+
 from numpy import ndarray
 from torch import Tensor
-
+import torch
 
 from .utils import my_clamp, my_round
 
 
-def integer_quantizer(
+def _integer_quantize(
     x: Union[Tensor, ndarray], width: int, frac_width: int, is_signed: bool = True
 ):
     """
@@ -41,6 +42,41 @@ def integer_quantizer(
         return x
     else:
         return my_clamp(my_round(x * scale), int_min, int_max) / scale
+
+
+class IntegerQuantize(torch.autograd.Function):
+    @staticmethod
+    def forward(ctx, x: Tensor, width: int, frac_width: int, is_signed: bool = True):
+        return _integer_quantize(
+            x, width=width, frac_width=frac_width, is_signed=is_signed
+        )
+
+    @staticmethod
+    def backward(ctx, grad_output):
+        grad_input = grad_output.clone()
+        return grad_input, None, None, None
+
+
+def integer_quantizer(
+    x: Union[Tensor, ndarray], width: int, frac_width: int, is_signed: bool = True
+):
+    """
+    - Do linear quantization to input according to a scale and number of bits
+    - Note that `bias` can be negative or larger than `bits`
+
+    ---
+    - forward: convert IEEE FP32/64 to fixed-point
+    - backward: STE
+
+    ---
+    width: the bit width of the fixed-point number
+    frac_width: the number of fractional bits. Note that `bias` can be negative or larger than `bits`
+
+    ---
+    For example: 0b101 . 00111, bits = 8, bias = 5
+
+    """
+    return IntegerQuantize.apply(x, width, frac_width, is_signed)
 
 
 def integer_fraction(

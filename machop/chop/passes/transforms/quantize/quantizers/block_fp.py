@@ -6,7 +6,7 @@ from torch import Tensor
 from .utils import block, my_clamp, my_round, unblock
 
 
-def block_fp_quantizer(
+def _block_fp_quantize(
     x: Tensor,
     width: int = 12,
     exponent_width: int = 8,
@@ -82,3 +82,63 @@ def block_fp_quantizer(
     msfp_x = (~is_close_to_0) * msfp_x + (is_close_to_0) * x
     # fmt: on
     return msfp_x
+
+
+class BlockFPQuantize(torch.autograd.Function):
+    @staticmethod
+    def forward(
+        ctx,
+        x,
+        width: int = 12,
+        exponent_width: int = 8,
+        exponent_bias: int = None,
+        block_size: List[int] = [16],
+        skip_first_dim: bool = True,
+    ):
+        return _block_fp_quantize(
+            x,
+            width=width,
+            exponent_width=exponent_width,
+            exponent_bias=exponent_bias,
+            block_size=block_size,
+            skip_first_dim=skip_first_dim,
+        )
+
+    @staticmethod
+    def backward(ctx, grad_output):
+        grad_input = grad_output.clone()
+        return grad_input, None, None, None, None, None
+
+
+def block_fp_quantizer(
+    x: Tensor,
+    width: int = 12,
+    exponent_width: int = 8,
+    exponent_bias: int = None,
+    block_size: List[int] = [16],
+    skip_first_dim: bool = True,
+):
+    """
+    - Convert IEEE FP32/64 to Microsoft floating point (MSFP), where an exponent is shared over all elements in a block.
+    - `e_shared x [(-1)^s1 x mantissa1, (-1)^s2 x mantissa2, ...]`
+    - See https://proceedings.neurips.cc/paper/2020/file/747e32ab0fea7fbd2ad9ec03daa3f840-Paper.pdf
+
+    ---
+    - forward: convert IEEE FP32/64 to MSFP
+    - backward: STE
+
+    ---
+    - `width`: The number of mantissa bits + 1 (the sign bit)
+    - `exponent_width`: the number of exponent bits, which is shared over a block
+    - `exponent_bias`: the exponent bias, if None, `2**(exponent_bits-1)-1` will be used
+    - `block_size`: a list of integers where each integer is the block size on that dimension. See function `block`.
+
+    """
+    return BlockFPQuantize.apply(
+        x,
+        width,
+        exponent_width,
+        exponent_bias,
+        block_size,
+        skip_first_dim,
+    )
