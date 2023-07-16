@@ -150,10 +150,18 @@ def check_results(hw_out, sw_out):
     assert len(hw_out) == len(
         sw_out
     ), "Mismatched output size: {} expected = {}".format(len(hw_out), len(sw_out))
-    for i in range(len(hw_out)):
-        assert (
-            hw_out[i] == sw_out[i]
-        ), "Mismatched output value {}: {} expected = {}".format(
-            i, [int(t) for t in hw_out[i]], [int(t) for t in sw_out[i]]
-        )
-    return True
+    if type(hw_out[0]) == list:
+        for i in range(len(hw_out)):
+            assert (
+                hw_out[i] == sw_out[i]
+            ), "Mismatched output value {}: {} expected = {}".format(
+                i, [int(t) for t in hw_out[i]], [int(t) for t in sw_out[i]]
+            )
+        return True
+    else:
+        for i in range(len(hw_out)):
+            assert int(hw_out[i]) == int(
+                sw_out[i]
+            ), "Mismatched output value {}: {} expected = {}".format(
+                i, int(hw_out[i]), int(sw_out[i])
+            )

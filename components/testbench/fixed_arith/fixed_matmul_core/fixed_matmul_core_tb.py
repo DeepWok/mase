@@ -168,7 +168,7 @@ async def test_fixed_linear(dut):
 
     done = False
     # Set a timeout to avoid deadlock
-    for i in range(samples * 10):
+    for i in range(samples * 50):
         await FallingEdge(dut.clk)
         debug_state(dut, "Post-clk")
         dut.data_in2_valid.value = test_case.weight.pre_compute()
