@@ -175,8 +175,8 @@ async def test_fixed_vector_mult(dut):
             dut.data_out_valid.value,
         )
 
-        dut.weight_valid.value = test_case.weight.pre_compute(dut.weight_ready.value)
-        dut.data_in_valid.value = test_case.data_in.pre_compute(dut.data_in_ready.value)
+        dut.weight_valid.value = test_case.weight.pre_compute()
+        dut.data_in_valid.value = test_case.data_in.pre_compute()
         logger.debug(
             "Pre-clk State0: (weight_ready,weight_valid,data_in_ready,data_in_valid,data_out_ready,data_out_valid) = ({},{},{},{},{},{})".format(
                 dut.weight_ready.value,
@@ -198,6 +198,11 @@ async def test_fixed_vector_mult(dut):
                 dut.data_out_valid.value,
             )
         )
+        await Timer(1, units="ns")
+        dut.data_out_ready.value = test_case.outputs.pre_compute(
+            dut.data_out_valid.value
+        )
+        await Timer(1, units="ns")
 
         dut.weight_valid.value, dut.weight.value = test_case.weight.compute(
             dut.weight_ready.value

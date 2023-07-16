@@ -142,9 +142,16 @@ async def test_fixed_adder_tree(dut):
             dut.data_out_ready.value,
             dut.data_out_valid.value,
         )
+        dut.data_in_valid.value = test_case.inputs.pre_compute()
+        await Timer(1, units="ns")
+        dut.data_out_ready.value = test_case.outputs.pre_compute(
+            dut.data_out_valid.value
+        )
+        await Timer(1, units="ns")
         dut.data_in_valid.value, dut.data_in.value = test_case.inputs.compute(
             dut.data_in_ready.value
         )
+        await Timer(1, units="ns")
         dut.data_out_ready.value = test_case.outputs.compute(
             dut.data_out_valid.value, dut.data_out.value
         )

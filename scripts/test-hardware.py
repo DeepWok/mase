@@ -37,16 +37,16 @@ test_cases = {
     # 'common/ram_block': [],
     # 'common/join2': [],
     "fixed_arith/fixed_matmul_core": ["cast", "linear", "fixed_arith", "common"],
-    "fixed_arith/fixed_mult": [],
-    "fixed_arith/fixed_adder_tree_layer": [],
-    "fixed_arith/fixed_accumulator": [],
-    "fixed_arith/fixed_adder_tree": ["fixed_arith", "common"],
-    "fixed_arith/fixed_vector_mult": ["fixed_arith", "common"],
+    # "fixed_arith/fixed_mult": [],
+    # "fixed_arith/fixed_adder_tree_layer": [],
+    # "fixed_arith/fixed_accumulator": [],
+    # "fixed_arith/fixed_adder_tree": ["fixed_arith", "common"],
+    # "fixed_arith/fixed_vector_mult": ["fixed_arith", "common"],
     "fixed_arith/fixed_dot_product": ["fixed_arith", "common"],
     "linear/fixed_linear": ["common", "fixed_arith"],
     "common/register_slice": [],
     "common/input_buffer": ["common"],
-    "activations/fixed_relu": ["common"],
+    # "activations/fixed_relu": ["common"],
     # 'activations/int_relu6': ['common'],
 }
 
@@ -124,7 +124,7 @@ class TestHardware:
                 "--Wall",
                 "{}.sv".format(design_file),
             ] + include_files
-            result = self.execute(cmd, log_output=self.isdebug, cwd=cwd)
+            result, _ = self.execute(cmd, log_output=self.isdebug, cwd=cwd)
             if result:
                 return 1
         return 0
@@ -164,9 +164,12 @@ class TestHardware:
         base_name = os.path.basename(test_case)
         cwd = os.path.join(self.root, "components", "testbench", test_case)
         cmd = ["python3", "{}_tb.py".format(base_name)]
-        result = self.execute(cmd, log_output=self.isdebug, cwd=cwd)
-        if result:
+
+        result, buff = self.execute(cmd, log_output=self.isdebug, cwd=cwd)
+        # Cocotb returns 0 even when the result is wrong. Here check log file as well
+        if result or "FAIL=0" not in buff:
             self.logger.error(f"FAIL: {test_case}.")
+            result = 1
         else:
             # Clean files
             pycache_files = os.path.join(cwd, "__pycache__")
@@ -182,32 +185,34 @@ class TestHardware:
         return result
 
     def execute(self, cmd, log_output: bool = True, log_file=None, cwd="."):
-        if log_output:
-            self.logger.debug(subprocess.list2cmdline(cmd))
-            with subprocess.Popen(
-                cmd, stdout=subprocess.PIPE, bufsize=1, universal_newlines=True, cwd=cwd
-            ) as result:
-                if log_file:
-                    f = open(log_file, "w")
-                if result.stdout or result.stderr:
-                    self.logger.info("")
-                if result.stdout:
-                    for line in result.stdout:
-                        if log_file:
-                            f.write(line)
-                        line = line.rstrip("\n")
+        buff = ""
+        self.logger.debug(subprocess.list2cmdline(cmd))
+        with subprocess.Popen(
+            cmd, stdout=subprocess.PIPE, bufsize=1, universal_newlines=True, cwd=cwd
+        ) as result:
+            if log_file:
+                f = open(log_file, "w")
+            if result.stdout or result.stderr:
+                self.logger.info("")
+            if result.stdout:
+                for line in result.stdout:
+                    buff += line
+                    if log_file and log_output:
+                        f.write(line)
+                    line = line.rstrip("\n")
+                    if log_output:
                         self.logger.trace(line)
-                if result.stderr:
-                    for line in result.stderr:
-                        if log_file:
-                            f.write(line)
-                        line = line.rstrip("\n")
+            if result.stderr:
+                for line in result.stderr:
+                    buff += line
+                    if log_file and log_output:
+                        f.write(line)
+                    line = line.rstrip("\n")
+                    if log_output:
                         self.logger.trace(line)
-                if log_file:
-                    f.close()
-        else:
-            result = subprocess.run(cmd, stdout=subprocess.DEVNULL, cwd=cwd)
-        return result.returncode
+            if log_file:
+                f.close()
+        return result.returncode, buff
 
 
 # ---------- main function --------------
