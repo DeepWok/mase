@@ -3,11 +3,12 @@ import torch
 from typing import Union
 from numpy import ndarray
 from torch import Tensor
+import torch
 
 from .utils import my_clamp, my_round
 
 
-def log_quantizer(
+def _log_quantize(
     x: Union[Tensor, ndarray],
     width: int,
     exponent_bias: Union[int, Tensor, ndarray, None],
@@ -42,3 +43,35 @@ def log_quantizer(
     exponent = my_clamp(my_round(torch.log2(value)), exponent_min, exponent_max)
 
     return sign * (2**exponent)
+
+
+class LogQuantize(torch.autograd.Function):
+    @staticmethod
+    def forward(
+        ctx, x: Tensor, width: int, exponent_bias: Union[int, Tensor, ndarray, None]
+    ):
+        return _log_quantize(x, width=width, exponent_bias=exponent_bias)
+
+    @staticmethod
+    def backward(ctx, grad_output):
+        grad_input = grad_output.clone()
+        return grad_input, None, None
+
+
+def log_quantizer(
+    x: Union[Tensor, ndarray],
+    width: int,
+    exponent_bias: Union[int, Tensor, ndarray, None],
+):
+    """
+    Convert IEEE FP32/64 to base-2 log quantized values
+
+    ---
+    - forward: convert IEEE FP32/64 to base-2 log quantized values
+    - backward: This is not STE but close to STE because the derivate of (2**exponent) depends on the rounded exponent
+
+    ---
+    - `width`: the number of bits, including 1 sign bit and (bits-1) exponent bits
+    - `exponent_bias`: the exponent bias
+    """
+    return LogQuantize.apply(x, width, exponent_bias)
