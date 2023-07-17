@@ -20,7 +20,8 @@ class MaseMetadata:
            - type : type of the arg, e.g. fixed point or float
            - precision : format of the type, e.g. (10, 5)
            - size : size of the arg
-           - from : node
+           - from : source node (for reconstructing the edge)
+           - key : key of the arg (for kwargs)
       - results -> {}
          - $name : name of the result
            - type : type of the result, e.g. fixed point or float
