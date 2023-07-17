@@ -169,6 +169,88 @@ def analysis_common_parameters(node, dummy_in):
                 next_node.meta["mase"].parameters["common"]["args"][f"data_in_{index}"][
                     "from"
                 ] = node
+            else:
+                # If an arg of the next node is a constant, add to the metadata,
+                # because this has no edge and cannot be udpated from traversing.
+                if "data_in_{index}" in next_node.meta["mase"].parameters["common"][
+                    "args"
+                ] or isinstance(arg_in, torch.fx.Node):
+                    continue
+
+                if isinstance(arg_in, float):
+                    next_node.meta["mase"].parameters["common"]["args"][
+                        f"data_in_{index}"
+                    ] = {
+                        "size": [1],
+                        "type": "float",
+                        "precision": [32],
+                        "from": "NA",
+                        "value": arg_in,
+                    }
+                elif isinstance(arg_in, int):
+                    next_node.meta["mase"].parameters["common"]["args"][
+                        f"data_in_{index}"
+                    ] = {
+                        "size": [1],
+                        "type": "fixed",
+                        "precision": [int(math.ceil(math.log2(x))), 0],
+                        "from": "NA",
+                        "value": arg_in,
+                    }
+                else:
+                    assert False, "Unknown constant arg type."
+        offset = len(next_node.args)
+        keys = list(next_node.kwargs.keys())
+        for _index, arg_in in enumerate(next_node.kwargs.values()):
+            index = _index + offset
+            if str(arg_in) == str(node.name):
+                assert (
+                    f"data_in_{index}"
+                    not in next_node.meta["mase"].parameters["common"]["args"]
+                ), f"Adding meta to an existing input: {next_node.name} at input {index}"
+                next_node.meta["mase"].parameters["common"]["args"][
+                    f"data_in_{index}"
+                ] = dict(
+                    node.meta["mase"].parameters["common"]["results"]["data_out_0"]
+                )
+                next_node.meta["mase"].parameters["common"]["args"][f"data_in_{index}"][
+                    "from"
+                ] = node
+                next_node.meta["mase"].parameters["common"]["args"][f"data_in_{index}"][
+                    "key"
+                ] = keys[_index]
+            else:
+                # If an arg of the next node is a constant, add to the metadata,
+                # because this has no edge and cannot be udpated from traversing.
+                if "data_in_{index}" in next_node.meta["mase"].parameters["common"][
+                    "args"
+                ] or isinstance(arg_in, torch.fx.Node):
+                    continue
+
+                if isinstance(arg_in, float):
+                    next_node.meta["mase"].parameters["common"]["args"][
+                        f"data_in_{index}"
+                    ] = {
+                        "size": [1],
+                        "type": "float",
+                        "precision": [32],
+                        "from": "NA",
+                        "key": keys[_index],
+                        "value": arg_in,
+                    }
+                elif isinstance(arg_in, int):
+                    next_node.meta["mase"].parameters["common"]["args"][
+                        f"data_in_{index}"
+                    ] = {
+                        "size": [1],
+                        "type": "fixed",
+                        "precision": [int(math.ceil(math.log2(x))), 0],
+                        "from": "NA",
+                        "key": keys[_index],
+                        "value": arg_in,
+                    }
+                else:
+                    assert False, "Unknown constant arg type."
 
 
 def graph_iterator_for_metadata(graph, dummy_in=None):

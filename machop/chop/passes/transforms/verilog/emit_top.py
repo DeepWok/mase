@@ -91,6 +91,7 @@ def _init_project(project_dir):
 
 def _iterator_load_width_parameters_to_map(node_name, val_list, parameter_map):
     for val, param in val_list.items():
+        # TODO: Ignore constant for now - To be encoded into parameters or scalar inputs
         val = v2p(val)
         if param["type"] == "float":
             parameter_map[f"{node_name}_{val}_WIDTH"] = param["precision"][0]
@@ -214,6 +215,9 @@ def _emit_signals_top_internal(node, parameter_map):
             ]
             != "BRAM"
         ):
+            continue
+        # TODO: Ignore constant arg
+        if "value" in value.keys():
             continue
         cap_key = v2p(key)
         width = parameter_map[f"{node_name}_{cap_key}_WIDTH"]
@@ -354,7 +358,11 @@ def _emit_components_top_internal(node, parameter_map):
     for key, value in node.meta["mase"].parameters["common"]["args"].items():
         cap_key = v2p(key)
         width = parameter_map[f"{node_name}_{cap_key}_WIDTH"]
-        size = parameter_map[f"{node_name}_{cap_key}_SIZE"]
+        size = (
+            parameter_map[f"{node_name}_{cap_key}_SIZE"]
+            if "value" not in value.keys()
+            else 1
+        )
         debug_info = f"// [{width}][{size}]"
         signals += f"""
 .{key}({node_name}_{key}), {debug_info}
