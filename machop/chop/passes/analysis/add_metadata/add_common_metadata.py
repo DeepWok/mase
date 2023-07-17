@@ -194,7 +194,10 @@ def analysis_common_parameters(node, dummy_in):
                     ] = {
                         "size": [1],
                         "type": "fixed",
-                        "precision": [int(math.ceil(math.log2(x))), 0],
+                        "precision": [
+                            int(math.ceil(math.log2(max(abs(arg_in), 1)))) + 1,
+                            0,
+                        ],
                         "from": "NA",
                         "value": arg_in,
                     }
@@ -245,7 +248,10 @@ def analysis_common_parameters(node, dummy_in):
                     ] = {
                         "size": [1],
                         "type": "fixed",
-                        "precision": [int(math.ceil(math.log2(x))), 0],
+                        "precision": [
+                            int(math.ceil(math.log2(max(abs(arg_in), 1)))) + 1,
+                            0,
+                        ],
                         "from": "NA",
                         "key": keys[_index],
                         "value": arg_in,
