@@ -30,83 +30,6 @@ def analyse_common_parameters_placeholder(meta, dummy_in):
 
 
 # ----------------------------------------------------------
-# Size
-# ----------------------------------------------------------
-
-
-def analyse_common_parameters_size(meta):
-    """
-    Size is an attribute which provides a constrant value in a static graph.
-    """
-    meta.parameters["common"]["results"] = {}
-    meta.parameters["common"]["results"]["data_out_0"] = {
-        "type": "float",
-        "precision": [32],
-        "size": [1],
-        "value": meta.parameters["common"]["args"]["data_in_0"]["size"][
-            meta.node.args[1]
-        ],
-    }
-    return meta
-
-
-# ----------------------------------------------------------
-# t
-# ----------------------------------------------------------
-
-
-def analyse_common_parameters_t(meta):
-    """
-    Memory transformation.
-    """
-    meta.parameters["common"]["results"] = {}
-    meta.parameters["common"]["results"] = {
-        "data_out_0": {
-            "type": "float",
-            "precision": [32],
-            "size": meta.parameters["common"]["args"]["data_in_0"]["size"],
-        }
-    }
-    (
-        meta.parameters["common"]["results"]["data_out_0"]["size"][0],
-        meta.parameters["common"]["results"]["data_out_0"]["size"][1],
-    ) = (
-        meta.parameters["common"]["results"]["data_out_0"]["size"][1],
-        meta.parameters["common"]["results"]["data_out_0"]["size"][0],
-    )
-
-    return meta
-
-
-# ----------------------------------------------------------
-# t
-# ----------------------------------------------------------
-
-
-def analyse_common_parameters_t(meta):
-    """
-    Memory transformation.
-    """
-    meta.parameters["common"]["results"] = {}
-    meta.parameters["common"]["results"] = {
-        "data_out_0": {
-            "type": "float",
-            "precision": [32],
-            "size": meta.parameters["common"]["args"]["data_in_0"]["size"],
-        }
-    }
-    (
-        meta.parameters["common"]["results"]["data_out_0"]["size"][0],
-        meta.parameters["common"]["results"]["data_out_0"]["size"][1],
-    ) = (
-        meta.parameters["common"]["results"]["data_out_0"]["size"][1],
-        meta.parameters["common"]["results"]["data_out_0"]["size"][0],
-    )
-
-    return meta
-
-
-# ----------------------------------------------------------
 # Output
 # ----------------------------------------------------------
 
@@ -173,7 +96,7 @@ def analyse_common_parameters_pass(meta):
 
 
 # ----------------------------------------------------------
-# Constant
+# Attr
 # ----------------------------------------------------------
 
 
@@ -193,7 +116,7 @@ def _fetch_attr(target: str, meta):
     return attr_itr
 
 
-def analyse_common_parameters_constant(meta):
+def analyse_common_parameters_attr(meta):
     """
     A constant is an op that provides constant.
     """
@@ -211,7 +134,7 @@ def analyse_common_parameters_constant(meta):
 
 
 # ----------------------------------------------------------
-# View
+# Method
 # ----------------------------------------------------------
 
 
@@ -227,7 +150,41 @@ def _load_kwarg(meta):
     )
 
 
-def analyse_common_parameters_view(meta):
+def _arg_shape_to_val(args):
+    args_val = []
+    for a in args:
+        if isinstance(a, torch.fx.Node):
+            if "value" in a.meta["mase"].parameters["common"]["results"]["data_out_0"]:
+                val = a.meta["mase"].parameters["common"]["results"]["data_out_0"][
+                    "value"
+                ]
+            else:
+                val = torch.full(
+                    a.meta["mase"].parameters["common"]["results"]["data_out_0"][
+                        "size"
+                    ],
+                    1.0,
+                )
+        else:
+            val = a
+        args_val.append(val)
+    return args_val
+
+
+def _kwarg_shape_to_val(kwargs):
+    kwargs_val = {}
+    for key, val in kwargs.items():
+        if isinstance(val, torch.fx.Node):
+            kwargs_val[key] = torch.full(
+                val.meta["mase"].parameters["common"]["results"]["data_out_0"]["size"],
+                1.0,
+            )
+        else:
+            kwargs_val[key] = val
+    return kwargs_val
+
+
+def analyse_common_parameters_method(meta):
     """
     Memory transformation.
     The current approach is just to run inference and directly fetch the result size.
@@ -235,31 +192,88 @@ def analyse_common_parameters_view(meta):
     """
 
     self_obj, *args = _load_arg(meta)
+    kwargs = _load_kwarg(meta)
+
     dummy_data = torch.full(
         self_obj.meta["mase"].parameters["common"]["results"]["data_out_0"]["size"], 1
     )
+    args_val = _arg_shape_to_val(args)
+    kwargs_val = _kwarg_shape_to_val(kwargs)
 
-    shape = []
-    for arg in args:
-        if isinstance(arg, torch.fx.Node):
-            assert (
-                "value"
-                in arg.meta["mase"].parameters["common"]["results"]["data_out_0"].keys()
-            ), "Try to interpret a non-constant node. This is not expected"
-            shape.append(
-                arg.meta["mase"].parameters["common"]["results"]["data_out_0"]["value"]
-            )
-        else:
-            shape.append(arg)
-    size = list(dummy_data.view(shape).size())
+    result = getattr(dummy_data, meta.node.target)(*args_val, **kwargs_val)
+    if isinstance(result, int):
+        meta.parameters["common"]["results"] = {}
+        arg = meta.parameters["common"]["args"]["data_in_0"]
+        meta.parameters["common"]["results"]["data_out_0"] = {
+            "type": arg["type"],
+            "precision": arg["precision"],
+            "size": [1],
+            "value": result,
+        }
+    else:
+        size = list(result.size())
 
-    meta.parameters["common"]["results"] = {}
-    arg = meta.parameters["common"]["args"]["data_in_0"]
-    meta.parameters["common"]["results"]["data_out_0"] = {
-        "type": arg["type"],
-        "precision": arg["precision"],
-        "size": size,
+        meta.parameters["common"]["results"] = {}
+        arg = meta.parameters["common"]["args"]["data_in_0"]
+        meta.parameters["common"]["results"]["data_out_0"] = {
+            "type": arg["type"],
+            "precision": arg["precision"],
+            "size": size,
+        }
+
+    return meta
+
+
+# ----------------------------------------------------------
+# General Functions
+# ----------------------------------------------------------
+
+
+def _get_size_by_function_simulation(meta):
+    """
+    Otain the size of the output by executing the function
+    """
+    self_obj, *args = _load_arg(meta)
+    kwargs = _load_kwarg(meta)
+
+    dummy_data = torch.full(
+        self_obj.meta["mase"].parameters["common"]["results"]["data_out_0"]["size"], 1.0
+    )
+    args_val = _arg_shape_to_val(args)
+    kwargs_val = _kwarg_shape_to_val(kwargs)
+
+    result = meta.node.target(dummy_data, *args_val, **kwargs_val)
+    size = list(result.size())
+    return size
+
+
+def analyse_common_parameters_function(meta):
+    size = _get_size_by_function_simulation(meta)
+    meta.parameters["common"]["results"] = {
+        "data_out_0": {
+            "type": "float",
+            "precision": [32],
+            "size": size,
+        }
     }
+
+    mase_type = meta.parameters["common"]["mase_type"]
+    if mase_type != "module_related_func":
+        return meta
+
+    # Correct the arg names to macth module ops
+    mase_op = meta.parameters["common"]["mase_op"]
+    if mase_op == "linear":
+        meta.parameters["common"]["args"]["weight"] = meta.parameters["common"][
+            "args"
+        ].pop("data_in_1")
+        meta.parameters["common"]["args"]["bias"] = meta.parameters["common"][
+            "args"
+        ].pop("data_in_2")
+    elif mase_op == "relu":
+        pass
+    else:
+        assert False, "Unknown module related function - arg names not corrected."
 
     return meta
 
@@ -294,56 +308,6 @@ def analyse_common_parameters_module(meta):
         }
     size = _get_size_by_module_simulation(meta)
 
-    meta.parameters["common"]["results"] = {
-        "data_out_0": {
-            "type": "float",
-            "precision": [32],
-            "size": size,
-        }
-    }
-    return meta
-
-
-# ----------------------------------------------------------
-# General Functions
-# ----------------------------------------------------------
-
-
-def _get_size_by_function_simulation(meta):
-    """
-    Otain the size of the output by executing the function
-    """
-    self_obj, *args = _load_arg(meta)
-    kwargs = _load_kwarg(meta)
-
-    dummy_data = torch.full(
-        self_obj.meta["mase"].parameters["common"]["results"]["data_out_0"]["size"], 1.0
-    )
-    args_val = [
-        torch.full(
-            a.meta["mase"].parameters["common"]["results"]["data_out_0"]["size"], 1.0
-        )
-        if isinstance(a, torch.fx.Node)
-        else a
-        for a in args
-    ]
-    kwargs_val = {}
-    for key, val in kwargs.items():
-        if isinstance(val, torch.fx.Node):
-            kwargs_val[key] = torch.full(
-                val.meta["mase"].parameters["common"]["results"]["data_out_0"]["size"],
-                1.0,
-            )
-        else:
-            kwargs_val[key] = val
-
-    result = meta.node.target(dummy_data, *args_val, **kwargs_val)
-    size = list(result.size())
-    return size
-
-
-def analyse_common_parameters_function(meta):
-    size = _get_size_by_function_simulation(meta)
     meta.parameters["common"]["results"] = {
         "data_out_0": {
             "type": "float",
