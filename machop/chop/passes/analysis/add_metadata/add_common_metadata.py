@@ -14,18 +14,12 @@ from tabulate import tabulate
 from torch import nn
 
 from .common_metadata_layers import (
-    analyse_common_parameters_constant,
-    analyse_common_parameters_linear,
     analyse_common_parameters_output,
     analyse_common_parameters_placeholder,
-    analyse_common_parameters_pass,
-    analyse_common_parameters_t,
-    analyse_common_parameters_size,
-    analyse_common_parameters_view,
-    analyse_common_parameters_conv2d,
-    analyse_common_parameters_conv1d,
+    analyse_common_parameters_attr,
     analyse_common_parameters_function,
     analyse_common_parameters_module,
+    analyse_common_parameters_method,
 )
 
 logger = logging.getLogger(__name__)
@@ -128,33 +122,20 @@ def graph_iterator_for_mase_ops(graph):
 
 def analysis_common_parameters(node, dummy_in):
     mase_op = node.meta["mase"].parameters["common"]["mase_op"]
-    if mase_op == "placeholder":
+    if node.op == "placeholder":
         node.meta["mase"] = analyse_common_parameters_placeholder(
             node.meta["mase"], dummy_in
         )
-    elif mase_op == "output":
+    elif node.op == "output":
         node.meta["mase"] = analyse_common_parameters_output(node.meta["mase"])
-    elif mase_op == "linear":
-        node.meta["mase"] = analyse_common_parameters_linear(node.meta["mase"])
-    elif mase_op in ["relu", "add", "sub", "mul"]:
-        node.meta["mase"] = analyse_common_parameters_pass(node.meta["mase"])
-    elif mase_op == "t":
-        node.meta["mase"] = analyse_common_parameters_t(node.meta["mase"])
-    elif mase_op == "view":
-        node.meta["mase"] = analyse_common_parameters_view(node.meta["mase"])
-    elif mase_op == "size":
-        node.meta["mase"] = analyse_common_parameters_size(node.meta["mase"])
-    elif mase_op == "constant":
-        node.meta["mase"] = analyse_common_parameters_constant(node.meta["mase"])
-    elif mase_op == "conv1d":
-        node.meta["mase"] = analyse_common_parameters_conv1d(node.meta["mase"])
-    elif mase_op == "conv2d":
-        node.meta["mase"] = analyse_common_parameters_conv2d(node.meta["mase"])
-    # General modules, inferring sizes from simulation
     elif node.op == "call_module":
         node.meta["mase"] = analyse_common_parameters_module(node.meta["mase"])
     elif node.op == "call_function":
         node.meta["mase"] = analyse_common_parameters_function(node.meta["mase"])
+    elif node.op == "call_method":
+        node.meta["mase"] = analyse_common_parameters_method(node.meta["mase"])
+    elif node.op == "get_attr":
+        node.meta["mase"] = analyse_common_parameters_attr(node.meta["mase"])
     else:
         raise ValueError(
             "Unknown mase op: {}".format(
