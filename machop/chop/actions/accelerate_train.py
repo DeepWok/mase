@@ -162,6 +162,9 @@ def train(
     load_name: str = None,
     load_type: str = "",
 ):
+    assert (
+        gradient_accumulation_steps >= 1
+    ), f"Invalid gradient_accumulation_steps: {gradient_accumulation_steps}, should be >= 1"
     fsdp_plugin = FullyShardedDataParallelPlugin(
         cpu_offload=CPUOffload(offload_params=False),
         auto_wrap_policy=partial(
@@ -272,7 +275,7 @@ def train(
             lr_scheduler.step()
             optimizer.zero_grad()
 
-        accelerator.log({"train_loss": loss.detach()}, step=step)
+        accelerator.log({"train_loss": loss.item()}, step=step)
 
         # complete an epoch
 
