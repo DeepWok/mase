@@ -32,7 +32,7 @@ def graph_iterator_for_mase_ops(graph):
         if node.op == "call_module":
             module_name = node.target
             module = graph.modules[module_name]
-            node.meta["mase"].parameters["common"]["mase_type"] = "module"
+            mase_type = "module_related_func"
             if isinstance(module, nn.AdaptiveAvgPool1d):
                 mase_op = "adaptive_avg_pool1d"
             elif isinstance(module, nn.AdaptiveAvgPool2d):
@@ -46,8 +46,10 @@ def graph_iterator_for_mase_ops(graph):
             elif isinstance(module, nn.AvgPool2d):
                 mase_op = "avg_pool2d"
             elif isinstance(module, nn.BatchNorm1d):
+                mase_type = "module"
                 mase_op = "batch_norm1d"
             elif isinstance(module, nn.BatchNorm2d):
+                mase_type = "module"
                 mase_op = "batch_norm2d"
             elif isinstance(module, nn.Conv2d):
                 mase_op = "conv2d"
@@ -65,6 +67,7 @@ def graph_iterator_for_mase_ops(graph):
                 mase_op = "relu"
             else:
                 raise ValueError(f"Unknown node type: {node.target}")
+            node.meta["mase"].parameters["common"]["mase_type"] = mase_type
             node.meta["mase"].parameters["common"]["mase_op"] = mase_op
 
         elif node.op == "call_function":

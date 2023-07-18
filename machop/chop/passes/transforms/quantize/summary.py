@@ -16,7 +16,7 @@ def graph_iterator_compare_nodes(
     """List all nodes in the graph and compare the original and quantized nodes."""
 
     def get_type_str(node):
-        if get_mase_type(node) == "module":
+        if node.op == "call_module":
             return type(get_node_actual_target(node)).__name__
         elif get_mase_type(node) in [
             "builtin_func",
