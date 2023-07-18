@@ -49,7 +49,8 @@ def graph_iterator_quantize_by_type(graph, config: dict):
         if node_config["name"] is None:
             continue
         node_config = parse_node_config(node_config, get_mase_op(node))
-        if get_mase_type(node) == "module":
+        # if get_mase_type(node) == "module":
+        if node.op == "call_module":
             ori_module = get_node_actual_target(node)
             new_module = create_new_module(get_mase_op(node), ori_module, node_config)
             parent_name, name = get_parent_name(node.target)
@@ -81,7 +82,8 @@ def graph_iterator_quantize_by_name(graph, config: dict):
         if node_config["name"] is None:
             continue
         node_config = parse_node_config(node_config, get_mase_op(node))
-        if get_mase_type(node) == "module":
+        # if get_mase_type(node) == "module":
+        if node.op == "call_module":
             ori_module = get_node_actual_target(node)
             new_module = create_new_module(get_mase_op(node), ori_module, node_config)
             parent_name, name = get_parent_name(node.target)
@@ -120,7 +122,8 @@ def graph_iterator_quantize_by_regex_name(graph, config: dict):
         if node_config["name"] is None:
             continue
         node_config = parse_node_config(node_config, get_mase_op(node))
-        if get_mase_type(node) == "module":
+        # if get_mase_type(node) == "module":
+        if node.op == "call_module":
             ori_module = graph.modules[node.target]
             new_module = create_new_module(get_mase_op(node), ori_module, node_config)
             parent_name, name = get_parent_name(node.target)
