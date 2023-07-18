@@ -87,9 +87,9 @@ class TestModel(nn.Module):
         x = self.fc(x)
 
         # Add and Subtract operations
-        x = x + 10
-        x = x - 5
-        x = x * 2
+        x = x + x
+        x = x - x
+        x = x * x
 
         x = self.relu(x)
         x = self.fc2(x)

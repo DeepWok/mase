@@ -38,14 +38,17 @@ class ToyCustomFnNet(nn.Module):
         # add
         # This is missing in add_common_metadata.py
         x = x + x
+        x = x + 2
 
         # mult
         # This is missing in add_common_metadata.py
         x = x * x
+        x = x * 2
 
         # sub
         # This is missing in add_common_metadata.py
         x = x - x
+        x = x - 2
 
         # This is partially supported in add_common_metadata.py
         x = x.view(x.size(0), 1, 10, 10)

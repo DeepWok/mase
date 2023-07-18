@@ -12,16 +12,21 @@ QUANT_ARITH_ENTRIES = {
         "weight_entries": (
             "weight_width",
             "weight_frac_width",
-            "stochastic",
-            "bipolar",
+            "weight_stochastic",
+            "weight_bipolar",
         ),
         "data_in_entries": (
             "data_in_width",
             "data_in_frac_width",
-            "stochastic",
-            "bipolar",
+            "data_in_stochastic",
+            "data_in_bipolar",
         ),
-        "bias_entries": ("bias_width", "bias_frac_width", "stochastic"),
+        "bias_entries": (
+            "bias_width",
+            "bias_frac_width",
+            "bias_stochastic",
+            "bias_bipolar",
+        ),
     },
     "ternary": {
         "weight_entries": ("weight_width", "weight_frac_width"),
