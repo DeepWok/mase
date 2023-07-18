@@ -43,13 +43,18 @@ def generic_matmul_binary(x, y, config, style="matmul"):
     if bypass:
         return matmul(x, y)
     else:
-        x_stochastic = config["stochastic"]
-        x_bipolar = config["bipolar"]
+        x_stochastic = config["data_in_stochastic"]
+        x_bipolar = config["data_in_bipolar"]
         x_quantizer = partial(
             binary_quantizer, stochastic=x_stochastic, bipolar=x_bipolar
         )
+        y_stochastic = config["weight_stochastic"]
+        y_bipolar = config["weight_bipolar"]
+        y_quantizer = partial(
+            binary_quantizer, stochastic=y_stochastic, bipolar=y_bipolar
+        )
         x = x_quantizer(x)
-        y = x_quantizer(y)
+        y = y_quantizer(y)
         # y = x_quantizer(y)
 
         return matmul(x, y)

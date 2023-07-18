@@ -634,8 +634,8 @@ class Conv1dBinary(_Conv1dBase):
         self.bypass = config.get("bypass", False)
         if self.bypass:
             return
-        x_stochastic = config["stochastic"]
-        x_bipolar = config["bipolar"]
+        x_stochastic = config["data_in_stochastic"]
+        x_bipolar = config["data_in_bipolar"]
         self.w_quantizer = partial(
             binary_quantizer, stochastic=x_stochastic, bipolar=x_bipolar
         )

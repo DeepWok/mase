@@ -34,8 +34,8 @@ def sub_binary(x, y, config):
         return x - y
     else:
         # establish quantizers
-        x_stochastic = config["stochastic"]
-        x_bipolar = config["bipolar"]
+        x_stochastic = config["data_in_stochastic"]
+        x_bipolar = config["data_in_bipolar"]
         x_quantizer = partial(
             binary_quantizer, stochastic=x_stochastic, bipolar=x_bipolar
         )

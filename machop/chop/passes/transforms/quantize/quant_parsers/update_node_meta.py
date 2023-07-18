@@ -2,11 +2,18 @@ from functools import partial
 
 
 def entry_to_list(config: dict, entry: str, suffixes: tuple[str]):
+    """e.g. [data_in_frac_width, data_in_width]"""
     return list(config[f"{entry}_{suffix}"] for suffix in suffixes)
 
 
 QUANT_ARITH_TO_SUFFIXES = {
     "integer": ("width", "frac_width"),
+    "binary": (
+        "width",
+        "frac_width",
+        "stochastic",
+        "bipolar",
+    ),  # TODO: stochastic, bipolar flags are operational flag instead of precision.
     "minifloat_ieee": ("width", "exponent_width", "exponent_bias"),
     "minifloat_denorm": ("width", "exponent_width", "exponent_bias"),
     "log": ("width", "exponent_bias"),
@@ -44,7 +51,7 @@ MASE_OP_TO_INPUT_ENTRIES_AND_ARGS = {
     "matmul": (("data_in", "weight"), ("data_in_0", "data_in_1")),
     "mul": (("data_in", "data_in"), ("data_in_0", "data_in_1")),
     "linear": (("data_in", "weight", "bias"), ("data_in_0", "weight", "bias")),
-    "relu": (("data_in"), ("data_in_0",)),
+    "relu": (("data_in",), ("data_in_0",)),
     "sub": (("data_in", "data_in"), ("data_in_0", "data_in_1")),
 }
 

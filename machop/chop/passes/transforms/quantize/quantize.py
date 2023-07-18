@@ -4,9 +4,9 @@ from copy import copy, deepcopy
 from chop.passes.utils import (
     get_mase_op,
     get_mase_type,
+    get_node_actual_target,
     get_parent_name,
     match_a_pattern,
-    get_node_actual_target,
 )
 from chop.tools.logger import getLogger
 
@@ -36,9 +36,9 @@ def get_config(config: dict, name: str):
         return config["default"]["config"]
 
 
-def update_quant_meta_param(*args, **kwargs):
-    # TODO: remove this function when the add_common_metadata is fixed
-    pass
+# def update_quant_meta_param(*args, **kwargs):
+#     # TODO: remove this function when the add_common_metadata is fixed
+#     pass
 
 
 def graph_iterator_quantize_by_type(graph, config: dict):

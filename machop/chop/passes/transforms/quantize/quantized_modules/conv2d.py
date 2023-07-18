@@ -757,14 +757,23 @@ class Conv2dBinary(_Conv2dBase):
         self.bypass = config.get("bypass", False)
         if self.bypass:
             return
-        x_stochastic = config["stochastic"]
-        x_bipolar = config["bipolar"]
+        x_stochastic, b_stochastic, w_stochastic = (
+            config["data_in_stochastic"],
+            config["bias_stochastic"],
+            config["weight_stochastic"],
+        )
+        x_bipolar, b_bipolar, w_bipolar = (
+            config["data_in_bipolar"],
+            config["bias_bipolar"],
+            config["weight_bipolar"],
+        )
+
         self.w_quantizer = partial(
-            binary_quantizer, stochastic=x_stochastic, bipolar=x_bipolar
+            binary_quantizer, stochastic=w_stochastic, bipolar=w_bipolar
         )
         self.x_quantizer = partial(
             binary_quantizer, stochastic=x_stochastic, bipolar=x_bipolar
         )
         self.b_quantizer = partial(
-            binary_quantizer, stochastic=x_stochastic, bipolar=x_bipolar
+            binary_quantizer, stochastic=b_stochastic, bipolar=b_bipolar
         )
