@@ -10,7 +10,7 @@ import maselogger
 # Add more test cases here
 test_cases = {
     "cast/fixed_cast": [],
-    "attention/fixed_self_att": [
+    "attention/fixed_msa": [
         "cast",
         "matmul",
         "linear",
@@ -18,7 +18,7 @@ test_cases = {
         "common",
         "fixed_arith",
     ],
-    "attention/fixed_att": [
+    "attention/fixed_self_att": [
         "cast",
         "matmul",
         "linear",

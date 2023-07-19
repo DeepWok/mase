@@ -5,6 +5,10 @@ module fixed_matmul #(
     parameter IN1_FRAC_WIDTH = 8,
     parameter IN2_WIDTH = 16,
     parameter IN2_FRAC_WIDTH = 8,
+
+    parameter HAS_BIAS = 0,
+    parameter BIAS_WIDTH = 16,
+    parameter BIAS_FRAC_WIDTH = 4,
     //output 
     parameter OUT_WIDTH = 32,
     parameter OUT_FRAC_WIDTH = 8,
@@ -34,6 +38,10 @@ module fixed_matmul #(
     input [IN2_WIDTH-1:0] data_in2[IN2_PARALLELISM * IN_SIZE - 1:0],
     input data_in2_valid,
     output data_in2_ready,
+    //input bias
+    input [BIAS_WIDTH-1:0] bias[IN1_PARALLELISM * IN2_PARALLELISM - 1:0],
+    input bias_valid,
+    output bias_ready,
     //output data
     output [OUT_WIDTH-1:0] data_out[IN1_PARALLELISM * IN2_PARALLELISM - 1:0],
     output data_out_valid,
@@ -84,12 +92,15 @@ module fixed_matmul #(
       .IN1_FRAC_WIDTH(IN1_FRAC_WIDTH),
       .IN2_WIDTH(IN2_WIDTH),
       .IN2_FRAC_WIDTH(IN2_FRAC_WIDTH),
+      .BIAS_WIDTH(BIAS_WIDTH),
+      .BIAS_FRAC_WIDTH(BIAS_FRAC_WIDTH),
       .OUT_WIDTH(OUT_WIDTH),
       .OUT_FRAC_WIDTH(OUT_FRAC_WIDTH),
       .IN1_PARALLELISM(IN1_PARALLELISM),
       .IN_SIZE(IN_SIZE),
       .IN2_PARALLELISM(IN2_PARALLELISM),
-      .IN_DEPTH(IN_DEPTH)
+      .IN_DEPTH(IN_DEPTH),
+      .HAS_BIAS(HAS_BIAS)
   ) inst_fmmc (
       .clk(clk),
       .rst(rst),
@@ -99,6 +110,9 @@ module fixed_matmul #(
       .data_in2(ib_weight),
       .data_in2_valid(ib_weight_valid),
       .data_in2_ready(ib_weight_ready),
+      .bias(bias),
+      .bias_valid(bias_valid),
+      .bias_ready(bias_ready),
       .data_out(data_out),
       .data_out_valid(data_out_valid),
       .data_out_ready(data_out_ready)

@@ -151,7 +151,7 @@ module fixed_linear #(
     for (genvar i = 0; i < PARALLELISM; i = i + 1) begin : add_bias
       logic [OUT_WIDTH-1:0] add;
       assign add = $signed(acc_data_out[i]) + $signed(bias_sext[i]);
-    /* verilator lint_off UNUSEDSIGNAL */
+      /* verilator lint_off UNUSEDSIGNAL */
       logic dout_valid;
       register_slice #(
           .IN_WIDTH(OUT_WIDTH)

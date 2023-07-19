@@ -19,6 +19,11 @@ from cocotb.triggers import FallingEdge
 from cocotb.clock import Clock
 from cocotb.runner import get_runner
 
+from einops import rearrange, reduce, repeat
+import torch
+import torch.nn as nn
+from QLinear import QuantizedMatmulBias
+
 debug = True
 
 logger = logging.getLogger("tb_signals")
@@ -34,6 +39,10 @@ class VerificationCase:
         self.data_in_frac_width = 1
         self.weight_width = 16
         self.weight_frac_width = 1
+        self.has_bias = 0
+        self.bias_width = 16
+        self.bias_frac_width = 1
+
         self.data_out_width = 32
         self.data_out_frac_width = 1
 
@@ -44,21 +53,36 @@ class VerificationCase:
         self.weight_size = self.in_size
 
         self.w_parallelism = 5
-        self.w_num_parallelism = 3
+        self.w_num_parallelism = 4
         self.weight_columns = self.w_parallelism * self.w_num_parallelism
-        self.iterations = 4
+        self.in_depth = 4
+
+        self.b_size = self.w_parallelism
+        self.b_depth = self.w_num_parallelism
+
+        _, _, _, d, w, b = self.data_generate()
+        self.bias = RandomSource(
+            name="data_in",
+            samples=samples * self.in_num_parallelism * self.b_depth,
+            num=self.in_parallelism * self.b_size,
+            max_stalls=2 * samples,
+            data_specify=b,
+            debug=debug,
+        )
         self.data_in = RandomSource(
             name="data_in",
-            samples=samples * self.iterations * self.in_num_parallelism,
+            samples=samples * self.in_depth * self.in_num_parallelism,
             num=self.in_parallelism * self.in_size,
             max_stalls=2 * samples,
+            data_specify=d,
             debug=debug,
         )
         self.weight = RandomSource(
             name="weight",
-            samples=samples * self.iterations * self.w_num_parallelism,
+            samples=samples * self.in_depth * self.w_num_parallelism,
             num=self.w_parallelism * self.weight_size,
             max_stalls=2 * samples,
+            data_specify=w,
             debug=debug,
         )
 
@@ -69,13 +93,6 @@ class VerificationCase:
         )
         self.samples = samples
         self.ref = self.sw_compute()
-        self.ref = self.sw_cast(
-            inputs=self.ref,
-            in_width=self.data_in_width + self.weight_width,
-            in_frac_width=self.data_in_frac_width + self.weight_frac_width,
-            out_width=self.data_out_width,
-            out_frac_width=self.data_out_frac_width,
-        )
 
     def get_dut_parameters(self):
         return {
@@ -83,6 +100,9 @@ class VerificationCase:
             "IN1_FRAC_WIDTH": self.data_in_frac_width,
             "IN2_WIDTH": self.weight_width,
             "IN2_FRAC_WIDTH": self.weight_frac_width,
+            "HAS_BIAS": self.has_bias,
+            "BIAS_WIDTH": self.bias_width,
+            "BIAS_FRAC_WIDTH": self.bias_frac_width,
             "OUT_WIDTH": self.data_out_width,
             "OUT_FRAC_WIDTH": self.data_out_frac_width,
             "IN1_PARALLELISM": self.in_parallelism,
@@ -90,98 +110,106 @@ class VerificationCase:
             "IN2_PARALLELISM": self.w_parallelism,
             "IN2_NUM_PARALLELISM": self.w_num_parallelism,
             "IN_SIZE": self.in_size,
-            "IN_DEPTH": self.iterations,
+            "IN_DEPTH": self.in_depth,
         }
 
-    def sw_compute(self):
-        all_in_matrix = self.data_in.data
-        all_weight_matrix = self.weight.data
+    def data_generate(self):
+        torch.manual_seed(0)
+        in_features = self.in_size * self.in_depth
+        out_features = self.w_parallelism * self.w_num_parallelism
+        in_dim = self.in_parallelism * self.in_num_parallelism
+        bias_tensor = torch.randint(
+            30, (self.samples, in_dim, out_features), dtype=torch.float32
+        )
+        weight_tensor = torch.randint(
+            30, (self.samples, out_features, in_features), dtype=torch.float32
+        )
+        data_tensor = torch.randint(
+            30, (self.samples, in_dim, in_features), dtype=torch.float32
+        )
 
+        data_in = self.data_pack(
+            data_tensor,
+            np=self.in_num_parallelism,
+            d=self.in_depth,
+            p=self.in_parallelism,
+            s=self.in_size,
+        )
+
+        weight_in = self.data_pack(
+            weight_tensor,
+            np=self.w_num_parallelism,
+            d=self.in_depth,
+            p=self.w_parallelism,
+            s=self.in_size,
+        )
+
+        bias_in = self.data_pack(
+            bias_tensor,
+            np=self.in_num_parallelism,
+            d=self.w_num_parallelism,
+            p=self.in_parallelism,
+            s=self.w_parallelism,
+        )
+        data_in.reverse()
+        weight_in.reverse()
+        bias_in.reverse()
+        return (data_tensor, weight_tensor, bias_tensor, data_in, weight_in, bias_in)
+
+    def data_pack(self, in_temp, np, d, p, s):
+        ## just what to make a matrix with [np*p][s*d] to tile [np*d][p*s]
+        ## assume the in_temp as torch.float
+        in_temp = in_temp.to(torch.int).reshape(self.samples, np * p, d * s)
         ref = []
         for i in range(self.samples):
-            for j in range(self.in_num_parallelism):
-                for k in range(self.w_num_parallelism):
-                    list_attach = []
-                    for t in range(self.iterations):
-                        # get each in
-                        _in = all_in_matrix[
-                            (i * self.in_num_parallelism + j) * self.iterations + t
-                        ]
-                        # let(_in = [in_parallelism * in_size -1 : 0]  to list_in = [in_parallelism -1 :0][in_size - 1:0])
-                        list_in = []
-                        for s in range(self.in_parallelism):
-                            list_in.append(
-                                [_in[s * self.in_size + m] for m in range(self.in_size)]
-                            )
-                        # concat list_in to list_attach = [in_parallelism -1 :0][in_size * iterations - 1:0]
-                        list_attach = list_attach + list_in
-                    rlist_in = []
-                    for t in range(self.in_parallelism):
-                        iteration_add = []
-                        for m in range(self.iterations):
-                            iteration_add = (
-                                iteration_add + list_attach[m * self.in_parallelism + t]
-                            )
-                        rlist_in.append(iteration_add)
-
-                    array_in = np.array(rlist_in).reshape(
-                        self.in_parallelism,
-                        self.iterations * self.in_size,
-                    )
-                    w_attach = []
-                    for t in range(self.iterations):
-                        _w = all_weight_matrix[
-                            (i * self.w_num_parallelism + k) * self.iterations + t
-                        ]
-                        list_w = []
-                        for s in range(self.w_parallelism):
-                            list_w.append(
-                                [_w[s * self.in_size + m] for m in range(self.in_size)]
-                            )
-                        w_attach = w_attach + list_w
-                    rlist_w = []
-                    for t in range(self.w_parallelism):
-                        iteration_add = []
-                        for m in range(self.iterations):
-                            iteration_add = (
-                                iteration_add + w_attach[m * self.w_parallelism + t]
-                            )
-                            # breakpoint()
-                        rlist_w.append(iteration_add)
-
-                    array_w = np.array(rlist_w).reshape(
-                        self.w_parallelism,
-                        self.iterations * self.weight_size,
-                    )
-
-                    result = np.matmul(array_in, array_w.T).reshape(-1)
-                    ref.append(result.tolist())
-        ref.reverse()
+            re_tensor = rearrange(
+                in_temp[i], "(np p) (d s) -> np (p d) s", np=np, d=d, p=p, s=s
+            )
+            ex_tensor = torch.zeros(np, d * p, s, dtype=int)
+            for b in range(np):
+                for i in range(d):
+                    for j in range(p):
+                        ex_tensor[b][i * p + j] = re_tensor[b][j * d + i]
+            output_tensor = rearrange(
+                ex_tensor, "np (d p) s -> (np d) (p s)", np=np, d=d, p=p, s=s
+            )
+            output = output_tensor.tolist()
+            ref = ref + output
         return ref
 
-    def sw_cast(self, inputs, in_width, in_frac_width, out_width, out_frac_width):
-        outputs = []
-        for j in range(len(inputs)):
-            in_list = inputs[j]
-            out_list = []
-            for i in range(0, len(in_list)):
-                in_value = in_list[i]
-                if in_frac_width > out_frac_width:
-                    in_value = in_value >> (in_frac_width - out_frac_width)
-                else:
-                    in_value = in_value << (out_frac_width - in_frac_width)
-                in_int_width = in_width - in_frac_width
-                out_int_width = out_width - out_frac_width
-                if in_int_width > out_int_width:
-                    if in_value >> (in_frac_width + out_int_width) > 0:
-                        in_value = 1 << out_width - 1
-                    elif in_value >> (in_frac_width + out_int_width) < 0:
-                        in_value = -(1 << out_width - 1)
-                    else:
-                        in_value = int(in_value % (1 << out_width))
-                out_list.append(in_value)
-            outputs.append(out_list)
-        return outputs
+    def sw_compute(self):
+        data_in, weight_in, bias_in, _, _, _ = self.data_generate()
+        in_features = self.in_size * self.in_depth
+        out_features = self.w_parallelism * self.w_num_parallelism
+        in_dim = data_in.shape[1]
+        bias = True if (self.has_bias == 1) else False
+        data_out = torch.zeros(
+            (self.samples, in_dim, out_features), dtype=torch.float32
+        )
+        for i in range(self.samples):
+            QL = QuantizedMatmulBias(
+                in_features,
+                out_features,
+                weight_in[i],
+                bias=bias,
+                bias_in=bias_in[i],
+                DWidth=self.data_in_width,
+                DFWidth=self.data_in_frac_width,
+                WWidth=self.weight_width,
+                WFWidth=self.weight_frac_width,
+                BWidth=self.bias_width,
+                BFWidth=self.bias_frac_width,
+            )
+            data_out[i] = QL(data_in[i])
+
+        output = self.data_pack(
+            data_out,
+            np=self.in_num_parallelism,
+            d=self.w_num_parallelism,
+            p=self.in_parallelism,
+            s=self.w_parallelism,
+        )
+        return output
 
 
 # Check if an is_impossible state is reached
@@ -255,6 +283,7 @@ async def test_fixed_linear(dut):
         debug_state(dut, "Post-clk")
         dut.data_in2_valid.value = test_case.weight.pre_compute()
         dut.data_in1_valid.value = test_case.data_in.pre_compute()
+        dut.bias_valid.value = test_case.bias.pre_compute()
         await Timer(1, units="ns")
         dut.data_out_ready.value = test_case.outputs.pre_compute(dut.data_out_valid)
         await Timer(1, units="ns")
@@ -263,7 +292,9 @@ async def test_fixed_linear(dut):
         dut.data_in2_valid.value, dut.data_in2.value = test_case.weight.compute(
             dut.data_in2_ready.value
         )
-        await Timer(1, units="ns")
+        dut.bias_valid.value, dut.bias.value = test_case.bias.compute(
+            dut.bias_ready.value
+        )
         dut.data_in1_valid.value, dut.data_in1.value = test_case.data_in.compute(
             dut.data_in1_ready.value
         )
@@ -277,19 +308,20 @@ async def test_fixed_linear(dut):
         await Timer(1, units="ns")
         debug_state(dut, "Pre-clk")
         logger.debug(
-            "ib_data_in = {}\n\
-            ib_data_in_valid = {}\n\
-            ib_data_in_ready = {}\n\
-            ib_weight = {}\n\
-            ib_weight_valid = {}\n\
-            ib_weight_ready = {}\n\
+            "wave_check:\n\
+            {},{} ib_data_in = {}\n\
+            {},{} ib_weight = {}\n\
+            {},{} data_out = {}\n\
             ".format(
-                [int(i) for i in dut.ib_data_in.value],
                 dut.ib_data_in_valid.value,
                 dut.ib_data_in_ready.value,
-                [int(i) for i in dut.ib_weight.value],
+                [int(i) for i in dut.ib_data_in.value],
                 dut.ib_weight_valid.value,
                 dut.ib_weight_ready.value,
+                [int(i) for i in dut.ib_weight.value],
+                dut.data_out_valid.value,
+                dut.data_out_ready.value,
+                [int(i) for i in dut.data_out.value],
             )
         )
         # breakpoint()

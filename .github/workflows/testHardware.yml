@@ -75,6 +75,7 @@ jobs:
           for f in $files
           do
             if [[ -f $f ]]; then
+              echo $f
               verible-verilog-format $f | diff - $f
             fi
           done
@@ -84,6 +85,7 @@ jobs:
           for f in $files
           do
             if [[ -f $f ]]; then
+              echo $f
               verible-verilog-format $f | diff - $f
             fi
           done
