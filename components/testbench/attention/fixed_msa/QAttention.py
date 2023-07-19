@@ -150,3 +150,73 @@ class QPartAttention(nn.Module):
         )
         print("qatt = {} \n".format(qatt))
         return qatt
+
+
+class QHAttention(nn.Module):
+    def __init__(
+        self,
+        dim,
+        num_heads,
+        wqkv,
+        wp,
+        bqkv,
+        bp,
+        DWidth=32,
+        DFWidth=1,
+        WWidth=16,
+        WFWidth=1,
+        BWidth=16,
+        BFWidth=1,
+    ):
+        super().__init__()
+        assert (
+            dim % num_heads == 0
+        ), f"dim {dim} should be divided by num_heads {num_heads}."
+        self.dim = dim
+        self.num_heads = num_heads
+        self.DWidth = DWidth
+        self.DFWidth = DFWidth
+        self.WWidth = WWidth
+        self.WFWidth = WFWidth
+        dim_out = int(dim / num_heads)
+        wqkv = wqkv.reshape(num_heads, int(dim * 3 / num_heads), dim)
+        bqkv = bqkv.reshape(num_heads, int(dim * 3 / num_heads))
+        self.att_list = []
+        for i in range(num_heads):
+            self.qatt = QPartAttention(
+                dim,
+                dim_out,
+                wqkv=wqkv[i],
+                bqkv=bqkv[i],
+                DWidth=DWidth,
+                DFWidth=DFWidth,
+                WWidth=WWidth,
+                WFWidth=WFWidth,
+                BWidth=BWidth,
+                BFWidth=BFWidth,
+            )
+            self.att_list.append(self.qatt)
+
+        self.projection = QuantizedLinear(
+            dim,
+            dim,
+            wp,
+            DWidth=DWidth,
+            DFWidth=DFWidth,
+            WWidth=WWidth,
+            WFWidth=WFWidth,
+            bias_in=bp,
+            BWidth=BWidth,
+            BFWidth=BFWidth,
+        )
+
+    def forward(self, q_in):
+        result = self.att_list[0](q_in)
+        for i in range(1, self.num_heads):
+            other = self.att_list[i](q_in)
+            result = torch.cat((result, other), 2)
+        print("result = \n{}".format(result))
+
+        out = self.projection(result)
+        print("out = \n{}".format(out))
+        return out

@@ -27,7 +27,7 @@ from cocotb.triggers import FallingEdge
 from cocotb.clock import Clock
 from cocotb.runner import get_runner
 
-from QAttention import QPartAttention
+from QAttention import QHAttention
 
 debug = True
 
@@ -47,15 +47,36 @@ class VerificationCase:
         self.bias_width = 16
         self.bias_frac_width = 2
 
-        self.in_parallelism = 1
-        self.in_num_parallelism = 2
+        self.in_parallelism = 2
+        self.in_num_parallelism = 1
 
-        self.in_size = 4
+        self.in_size = 3
         self.in_depth = 2
 
-        self.w_parallelism = 2
-        self.w_num_parallelism = 3
+        # noted num_heads * wqkv_p * wqkv_np should be = in_s * in_d
+        self.num_heads = 2
+        self.wqkv_parallelism = 1
+        self.wqkv_num_parallelism = 3
+
+        assert (
+            self.num_heads * self.wqkv_parallelism * self.wqkv_num_parallelism
+            == self.in_size * self.in_depth
+        ), "should have num_heads * wqkv_p * wqkv_np == in_s * in_d"
+
+        self.wp_parallelism = 3
+        self.wp_num_parallelism = 2
+
+        assert (
+            self.wp_parallelism * self.wp_num_parallelism
+            == self.in_size * self.in_depth
+        ), "should have wp_p * wp_np == in_s * in_d"
+
+        self.wp_size = self.num_heads * self.wqkv_parallelism
+        self.wp_depth = self.wqkv_num_parallelism
+        # data_generate
         (
+            _,
+            _,
             _,
             _,
             _,
@@ -63,9 +84,11 @@ class VerificationCase:
             test_wq,
             test_wk,
             test_wv,
+            test_wp,
             test_bq,
             test_bk,
             test_bv,
+            test_bp,
         ) = self.data_generate()
         self.data_in = RandomSource(
             name="data_in",
@@ -77,57 +100,72 @@ class VerificationCase:
         )
         self.weight_q = RandomSource(
             name="weight_q",
-            samples=samples * self.in_depth * self.w_num_parallelism,
-            num=self.w_parallelism * self.in_size,
-            max_stalls=2 * samples * self.in_depth * self.w_num_parallelism,
+            samples=samples * self.in_depth * self.wqkv_num_parallelism,
+            num=self.num_heads * self.wqkv_parallelism * self.in_size,
+            max_stalls=2 * samples * self.in_depth * self.wqkv_num_parallelism,
             data_specify=test_wq,
             debug=debug,
         )
         self.weight_k = RandomSource(
             name="weight_k",
-            samples=samples * self.in_depth * self.w_num_parallelism,
-            num=self.w_parallelism * self.in_size,
-            max_stalls=2 * samples * self.in_depth * self.w_num_parallelism,
+            samples=samples * self.in_depth * self.wqkv_num_parallelism,
+            num=self.num_heads * self.wqkv_parallelism * self.in_size,
+            max_stalls=2 * samples * self.in_depth * self.wqkv_num_parallelism,
             data_specify=test_wk,
             debug=debug,
         )
         self.weight_v = RandomSource(
             name="weight_v",
-            samples=samples * self.in_depth * self.w_num_parallelism,
-            num=self.w_parallelism * self.in_size,
-            max_stalls=2 * samples * self.in_depth * self.w_num_parallelism,
+            samples=samples * self.in_depth * self.wqkv_num_parallelism,
+            num=self.num_heads * self.wqkv_parallelism * self.in_size,
+            max_stalls=2 * samples * self.in_depth * self.wqkv_num_parallelism,
             data_specify=test_wv,
+            debug=debug,
+        )
+        self.weight_p = RandomSource(
+            name="weight_p",
+            samples=samples * self.wp_depth * self.wp_num_parallelism,
+            num=self.wp_parallelism * self.wp_size,
+            max_stalls=2 * samples * self.wp_depth * self.wp_num_parallelism,
+            data_specify=test_wp,
             debug=debug,
         )
         self.bias_q = RandomSource(
             name="bias_q",
-            samples=samples * self.w_num_parallelism,
-            num=self.w_parallelism,
+            samples=samples * self.wqkv_num_parallelism,
+            num=self.num_heads * self.wqkv_parallelism,
             max_stalls=2 * samples,
             data_specify=test_bq,
             debug=debug,
         )
         self.bias_k = RandomSource(
             name="bias_k",
-            samples=samples * self.w_num_parallelism,
-            num=self.w_parallelism,
+            samples=samples * self.wqkv_num_parallelism,
+            num=self.num_heads * self.wqkv_parallelism,
             max_stalls=2 * samples,
             data_specify=test_bk,
             debug=debug,
         )
         self.bias_v = RandomSource(
             name="bias_v",
-            samples=samples * self.w_num_parallelism,
-            num=self.w_parallelism,
+            samples=samples * self.wqkv_num_parallelism,
+            num=self.num_heads * self.wqkv_parallelism,
             max_stalls=2 * samples,
             data_specify=test_bv,
             debug=debug,
         )
-
+        self.bias_p = RandomSource(
+            name="bias_p",
+            samples=samples * self.wp_num_parallelism,
+            num=self.wp_parallelism,
+            max_stalls=2 * samples,
+            data_specify=test_bp,
+            debug=debug,
+        )
         ## remain modification
         self.outputs = RandomSink(
-            samples=samples * self.in_num_parallelism * self.w_num_parallelism,
-            max_stalls=2 * samples * self.in_num_parallelism * self.w_num_parallelism,
+            samples=samples * self.in_num_parallelism * self.wp_num_parallelism,
+            max_stalls=2 * samples * self.in_num_parallelism * self.wp_parallelism,
             debug=debug,
         )
         self.samples = samples
@@ -143,10 +181,13 @@ class VerificationCase:
             "BIAS_FRAC_WIDTH": self.bias_frac_width,
             "IN_PARALLELISM": self.in_parallelism,
             "IN_NUM_PARALLELISM": self.in_num_parallelism,
-            "W_PARALLELISM": self.w_parallelism,
-            "W_NUM_PARALLELISM": self.w_num_parallelism,
             "IN_SIZE": self.in_size,
             "IN_DEPTH": self.in_depth,
+            "NUM_HEADS": self.num_heads,
+            "WQKV_PARALLELISM": self.wqkv_parallelism,
+            "WQKV_NUM_PARALLELISM": self.wqkv_num_parallelism,
+            "WP_PARALLELISM": self.wp_parallelism,
+            "WP_NUM_PARALLELISM": self.wp_num_parallelism,
         }
 
     def sw_compute(self):
@@ -158,14 +199,31 @@ class VerificationCase:
 
         # collect all the input
         # breakpoint()
-        d_tensor, wqkv_tensor, bqkv_tensor, _, _, _, _, _, _, _ = self.data_generate()
+        (
+            d_tensor,
+            wqkv_tensor,
+            bqkv_tensor,
+            wp_tensor,
+            bp_tensor,
+            _,
+            _,
+            _,
+            _,
+            _,
+            _,
+            _,
+            _,
+            _,
+        ) = self.data_generate()
         logger.debug(
             "input data: \n\
-        wqkv_tensor = \n{}\n\
         d_tensor = \n{}\n\
+        wqkv_tensor = \n{}\n\
         bqkv_tensor = \n{}\n\
+        wp_tensor = \n{}\n\
+        bp_tensor = \n{}\n\
         ".format(
-                wqkv_tensor, d_tensor, bqkv_tensor
+                d_tensor, wqkv_tensor, bqkv_tensor, wp_tensor, bp_tensor
             )
         )
         # calculate the output
@@ -175,15 +233,17 @@ class VerificationCase:
             (
                 self.samples,
                 self.in_num_parallelism * self.in_parallelism,
-                self.w_num_parallelism * self.w_parallelism,
+                self.wp_num_parallelism * self.wp_parallelism,
             )
         )
         for i in range(self.samples):
-            qatt = QPartAttention(
-                d_tensor[i].shape[1],
-                int(wqkv_tensor[i].shape[0] / 3),
+            qatt = QHAttention(
+                d_tensor[i].shape[2],
+                self.num_heads,
                 wqkv_tensor[i],
+                wp_tensor[i],
                 bqkv_tensor[i],
+                bp_tensor[i],
                 self.data_in_width,
                 self.data_in_frac_width,
                 self.weight_width,
@@ -198,9 +258,9 @@ class VerificationCase:
         out_data = self.data_pack(
             output,
             self.in_num_parallelism,
-            self.w_num_parallelism,
+            self.wp_num_parallelism,
             self.in_parallelism,
-            self.w_parallelism,
+            self.wp_parallelism,
         )
         return out_data
 
@@ -210,19 +270,34 @@ class VerificationCase:
         in_depth = self.in_depth
         in_parallelism = self.in_parallelism
         in_size = self.in_size
-        w_parallelism = self.w_parallelism
-        w_num_parallelism = self.w_num_parallelism
+        wqkv_parallelism = self.wqkv_parallelism
+        wqkv_num_parallelism = self.wqkv_num_parallelism
+        num_heads = self.num_heads
+        wp_parallelism = self.wp_parallelism
+        wp_num_parallelism = self.wp_num_parallelism
 
         B = 1
         N = in_parallelism * in_num_parallelism
         dim = in_size * in_depth
-        dim_out = w_parallelism * w_num_parallelism
 
         torch.manual_seed(0)
-        wqkv_tensor = torch.randint(5, (samples, dim_out * 3, dim), dtype=float)
-        wqkv = wqkv_tensor.reshape(samples, 3, dim_out, dim).transpose(0, 1)
-        bqkv_tensor = torch.randint(5, (samples, dim_out * 3), dtype=float)
-        bqkv = bqkv_tensor.reshape(samples, 3, dim_out).transpose(0, 1)
+        wqkv_tensor = torch.randint(5, (samples, dim * 3, dim), dtype=float)
+        wqkv = wqkv_tensor.reshape(
+            samples, num_heads, 3, wqkv_num_parallelism, wqkv_parallelism, dim
+        ).permute(2, 0, 3, 1, 4, 5)
+        wqkv = wqkv.reshape(3, samples, dim, dim)
+        bqkv_tensor = torch.randint(5, (samples, dim * 3), dtype=float)
+        bqkv = bqkv_tensor.reshape(
+            samples, num_heads, 3, wqkv_num_parallelism, wqkv_parallelism
+        ).permute(2, 0, 3, 1, 4)
+        bqkv = bqkv.reshape(3, samples, dim)
+
+        wp_tensor = torch.randint(5, (samples, dim, dim), dtype=float)
+        wp = wp_tensor.reshape(
+            samples * dim, num_heads, wqkv_num_parallelism, wqkv_parallelism
+        )
+        wp = wp.permute(0, 2, 1, 3).reshape(samples, dim, dim)
+        bp_tensor = torch.randint(5, (samples, dim), dtype=float)
 
         input_tensor = torch.randint(5, (samples, B, N, dim), dtype=float)
         wq = wqkv[0]
@@ -235,31 +310,58 @@ class VerificationCase:
         data_in = self.data_pack(
             input_tensor, in_num_parallelism, in_depth, in_parallelism, in_size
         )
-        wq_in = self.data_pack(wq, w_num_parallelism, in_depth, w_parallelism, in_size)
-        wk_in = self.data_pack(wk, w_num_parallelism, in_depth, w_parallelism, in_size)
-        wv_in = self.data_pack(wv, w_num_parallelism, in_depth, w_parallelism, in_size)
+        wq_in = self.data_pack(
+            wq, wqkv_num_parallelism, in_depth, num_heads * wqkv_parallelism, in_size
+        )
+        wk_in = self.data_pack(
+            wk, wqkv_num_parallelism, in_depth, num_heads * wqkv_parallelism, in_size
+        )
+        wv_in = self.data_pack(
+            wv, wqkv_num_parallelism, in_depth, num_heads * wqkv_parallelism, in_size
+        )
+        wp_in = self.data_pack(
+            wp,
+            wp_num_parallelism,
+            wqkv_num_parallelism,
+            wp_parallelism,
+            num_heads * wqkv_parallelism,
+        )
 
-        bq_in = self.data_pack(bq, 1, w_num_parallelism, 1, w_parallelism)
-        bk_in = self.data_pack(bk, 1, w_num_parallelism, 1, w_parallelism)
-        bv_in = self.data_pack(bv, 1, w_num_parallelism, 1, w_parallelism)
+        bq_in = self.data_pack(
+            bq, 1, wqkv_num_parallelism, 1, num_heads * wqkv_parallelism
+        )
+        bk_in = self.data_pack(
+            bk, 1, wqkv_num_parallelism, 1, num_heads * wqkv_parallelism
+        )
+        bv_in = self.data_pack(
+            bv, 1, wqkv_num_parallelism, 1, num_heads * wqkv_parallelism
+        )
+        bp_in = self.data_pack(bp_tensor, 1, wp_num_parallelism, 1, wp_parallelism)
+
         data_in.reverse()
         wq_in.reverse()
         wk_in.reverse()
         wv_in.reverse()
+        wp_in.reverse()
         bq_in.reverse()
         bk_in.reverse()
         bv_in.reverse()
+        bp_in.reverse()
         return (
             input_tensor,
             wqkv_tensor,
             bqkv_tensor,
+            wp_tensor,
+            bp_tensor,
             data_in,
             wq_in,
             wk_in,
             wv_in,
+            wp_in,
             bq_in,
             bk_in,
             bv_in,
+            bp_in,
         )
 
     def data_pack(self, in_temp, np, d, p, s):
@@ -322,9 +424,11 @@ async def test_att(dut):
     dut.weight_q_valid.value = 0
     dut.weight_k_valid.value = 0
     dut.weight_v_valid.value = 0
+    dut.weight_p_valid.value = 0
     dut.bias_q_valid.value = 0
     dut.bias_k_valid.value = 0
     dut.bias_v_valid.value = 0
+    dut.bias_p_valid.value = 0
     dut.data_in_valid.value = 0
     dut.data_out_ready.value = 1
     debug_state(dut, "Pre-clk")
@@ -335,15 +439,17 @@ async def test_att(dut):
     debug_state(dut, "Post-clk")
     done = False
     # Set a timeout to avoid deadlock
-    for i in range(samples * 100):
+    for i in range(samples * 150):
         await FallingEdge(dut.clk)
         # breakpoint()
         dut.weight_q_valid.value = test_case.weight_q.pre_compute()
         dut.weight_k_valid.value = test_case.weight_k.pre_compute()
         dut.weight_v_valid.value = test_case.weight_v.pre_compute()
+        dut.weight_p_valid.value = test_case.weight_p.pre_compute()
         dut.bias_q_valid.value = test_case.bias_q.pre_compute()
         dut.bias_k_valid.value = test_case.bias_k.pre_compute()
         dut.bias_v_valid.value = test_case.bias_v.pre_compute()
+        dut.bias_p_valid.value = test_case.bias_p.pre_compute()
         dut.data_in_valid.value = test_case.data_in.pre_compute()
         await Timer(1, units="ns")
         dut.data_out_ready.value = test_case.outputs.pre_compute(
@@ -360,6 +466,9 @@ async def test_att(dut):
         dut.weight_v_valid.value, dut.weight_v.value = test_case.weight_v.compute(
             dut.weight_v_ready.value
         )
+        dut.weight_p_valid.value, dut.weight_p.value = test_case.weight_p.compute(
+            dut.weight_p_ready.value
+        )
 
         dut.bias_q_valid.value, dut.bias_q.value = test_case.bias_q.compute(
             dut.bias_q_ready.value
@@ -369,6 +478,9 @@ async def test_att(dut):
         )
         dut.bias_v_valid.value, dut.bias_v.value = test_case.bias_v.compute(
             dut.bias_v_ready.value
+        )
+        dut.bias_p_valid.value, dut.bias_p.value = test_case.bias_p.compute(
+            dut.bias_p_ready.value
         )
 
         dut.data_in_valid.value, dut.data_in.value = test_case.data_in.compute(
@@ -384,9 +496,11 @@ async def test_att(dut):
             test_case.weight_q.is_empty()
             and test_case.weight_k.is_empty()
             and test_case.weight_v.is_empty()
+            and test_case.weight_p.is_empty()
             and test_case.bias_q.is_empty()
             and test_case.bias_k.is_empty()
             and test_case.bias_v.is_empty()
+            and test_case.bias_p.is_empty()
             and test_case.data_in.is_empty()
             and test_case.outputs.is_full()
         ):
@@ -403,74 +517,56 @@ def wave_check(dut):
     logger.debug(
         "wave of in_out:\n\
             {},{},data_in = {} \n\
+            {},{},weight_q = {} \n\
+            {},{},weight_k = {} \n\
+            {},{},weight_v = {} \n\
+            {},{},weight_p = {} \n\
+            {},{},bias_q = {} \n\
+            {},{},bias_k = {} \n\
+            {},{},bias_v = {} \n\
+            {},{},bias_p = {} \n\
             {},{},data_out = {}\n\
             ".format(
             dut.data_in_valid.value,
-            dut.data_in_valid.value,
+            dut.data_in_ready.value,
             [int(i) for i in dut.data_in.value],
+            dut.weight_q_valid.value,
+            dut.weight_q_ready.value,
+            [int(i) for i in dut.weight_q.value],
+            dut.weight_k_valid.value,
+            dut.weight_k_ready.value,
+            [int(i) for i in dut.weight_k.value],
+            dut.weight_v_valid.value,
+            dut.weight_v_ready.value,
+            [int(i) for i in dut.weight_v.value],
+            dut.weight_p_valid.value,
+            dut.weight_p_ready.value,
+            [int(i) for i in dut.weight_p.value],
+            dut.bias_q_valid.value,
+            dut.bias_q_ready.value,
+            [int(i) for i in dut.bias_q.value],
+            dut.bias_k_valid.value,
+            dut.bias_k_ready.value,
+            [int(i) for i in dut.bias_k.value],
+            dut.bias_v_valid.value,
+            dut.bias_v_ready.value,
+            [int(i) for i in dut.bias_v.value],
+            dut.bias_p_valid.value,
+            dut.bias_p_ready.value,
+            [int(i) for i in dut.bias_p.value],
             dut.data_out_valid.value,
-            dut.data_out_valid.value,
+            dut.data_out_ready.value,
             [int(i) for i in dut.data_out.value],
         )
     )
 
     logger.debug(
-        "wave of att:\n\
-            {},{},data_in_q = {} \n\
-            {},{},data_in_k = {} \n\
-            {},{},data_in_v = {} \n\
-            {},{},bias_v = {} \n\
+        "wave of sa_out:\n\
+            {},{},sa_out = {} \n\
             ".format(
-            dut.att_inst.data_in_q_valid.value,
-            dut.att_inst.data_in_q_ready.value,
-            [int(i) for i in dut.att_inst.data_in_q.value],
-            dut.att_inst.data_in_k_valid.value,
-            dut.att_inst.data_in_k_ready.value,
-            [int(i) for i in dut.att_inst.data_in_k.value],
-            dut.att_inst.data_in_v_valid.value,
-            dut.att_inst.data_in_v_ready.value,
-            [int(i) for i in dut.att_inst.data_in_v.value],
-            dut.att_inst.bias_v_valid.value,
-            dut.att_inst.bias_v_ready.value,
-            [int(i) for i in dut.att_inst.bias_v.value],
-        )
-    )
-    # logger.debug(
-    #     "wave of matmul_z:\n\
-    #         {},{} ib_data_in = {}\n\
-    #         {},{} ib_weight = {}\n\
-    #         {},{} data_out = {}\n\
-    #         ".format(
-    #         dut.att_inst.inst_fmmc_z.ib_data_in_valid.value,
-    #         dut.att_inst.inst_fmmc_z.ib_data_in_ready.value,
-    #         [int(i) for i in dut.att_inst.inst_fmmc_z.ib_data_in.value],
-    #         dut.att_inst.inst_fmmc_z.ib_weight_valid.value,
-    #         dut.att_inst.inst_fmmc_z.ib_weight_ready.value,
-    #         [int(i) for i in dut.att_inst.inst_fmmc_z.ib_weight.value],
-    #         dut.att_inst.inst_fmmc_z.data_out_valid.value,
-    #         dut.att_inst.inst_fmmc_z.data_out_ready.value,
-    #         [int(i) for i in dut.att_inst.inst_fmmc_z.data_out.value],
-    #     )
-    # )
-    logger.debug(
-        "wave of matmul_v:\n\
-            {},{} ib_data_in = {}\n\
-            {},{} ib_weight = {}\n\
-            {},{} bias = {}\n\
-            {},{} data_out = {}\n\
-            ".format(
-            dut.att_inst.inst_fmmc_v.ib_data_in_valid.value,
-            dut.att_inst.inst_fmmc_v.ib_data_in_ready.value,
-            [int(i) for i in dut.att_inst.inst_fmmc_v.ib_data_in.value],
-            dut.att_inst.inst_fmmc_v.ib_weight_valid.value,
-            dut.att_inst.inst_fmmc_v.ib_weight_ready.value,
-            [int(i) for i in dut.att_inst.inst_fmmc_v.ib_weight.value],
-            dut.att_inst.inst_fmmc_v.bias_valid.value,
-            dut.att_inst.inst_fmmc_v.bias_ready.value,
-            [int(i) for i in dut.att_inst.inst_fmmc_v.bias.value],
-            dut.att_inst.inst_fmmc_v.data_out_valid.value,
-            dut.att_inst.inst_fmmc_v.data_out_ready.value,
-            [int(i) for i in dut.att_inst.inst_fmmc_v.data_out.value],
+            dut.sa_out_valid.value,
+            dut.sa_out_ready.value,
+            [int(i) for i in dut.sa_out.value],
         )
     )
 
@@ -479,6 +575,7 @@ def runner():
     sim = os.getenv("SIM", "verilator")
 
     verilog_sources = [
+        "../../../../components/attention/fixed_msa.sv",
         "../../../../components/attention/fixed_self_att.sv",
         "../../../../components/attention/fixed_att.sv",
         "../../../../components/common/fifo.sv",
@@ -508,11 +605,11 @@ def runner():
     runner = get_runner(sim)
     runner.build(
         verilog_sources=verilog_sources,
-        hdl_toplevel="fixed_self_att",
+        hdl_toplevel="fixed_msa",
         build_args=extra_args,
     )
 
-    runner.test(hdl_toplevel="fixed_self_att", test_module="fixed_self_att_tb")
+    runner.test(hdl_toplevel="fixed_msa", test_module="fixed_msa_tb")
 
 
 if __name__ == "__main__":

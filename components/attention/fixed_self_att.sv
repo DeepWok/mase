@@ -4,6 +4,8 @@ module fixed_self_att #(
     parameter DATA_FRAC_WIDTH = 1,
     parameter WEIGHT_WIDTH = 8,
     parameter W_FRAC_WIDTH = 1,
+    parameter BIAS_WIDTH = 8,
+    parameter BIAS_FRAC_WIDTH = 1,
 
 
     parameter IN_PARALLELISM = 3,
@@ -13,8 +15,8 @@ module fixed_self_att #(
     //define for matrix multilication
     parameter IN_DEPTH = 3,
 
-    parameter W_PARALLELISM = IN_SIZE,
-    parameter W_NUM_PARALLELISM = IN_DEPTH,
+    parameter W_PARALLELISM = 3,
+    parameter W_NUM_PARALLELISM = 2,
     parameter W_SIZE = IN_SIZE,
 
 
@@ -36,6 +38,18 @@ module fixed_self_att #(
     input weight_v_valid,
     output weight_v_ready,
 
+    input [BIAS_WIDTH - 1:0] bias_q[W_PARALLELISM -1 : 0],
+    input bias_q_valid,
+    output bias_q_ready,
+
+    input [BIAS_WIDTH - 1:0] bias_k[W_PARALLELISM -1 : 0],
+    input bias_k_valid,
+    output bias_k_ready,
+
+    input [BIAS_WIDTH - 1:0] bias_v[W_PARALLELISM -1 : 0],
+    input bias_v_valid,
+    output bias_v_ready,
+
     input [DATA_WIDTH -1:0] data_in[IN_PARALLELISM * IN_SIZE - 1 : 0],
     input data_in_valid,
     output data_in_ready,
@@ -56,6 +70,8 @@ module fixed_self_att #(
       .DATA_FRAC_WIDTH(DATA_FRAC_WIDTH),
       .WEIGHT_WIDTH(WEIGHT_WIDTH),
       .W_FRAC_WIDTH(W_FRAC_WIDTH),
+      .BIAS_WIDTH(BIAS_WIDTH),
+      .BIAS_FRAC_WIDTH(BIAS_FRAC_WIDTH),
       .IN_PARALLELISM(IN_PARALLELISM),
       .IN_NUM_PARALLELISM(IN_NUM_PARALLELISM),
       .IN_SIZE(IN_SIZE),

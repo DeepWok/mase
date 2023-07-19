@@ -29,11 +29,14 @@ if debug:
 class VerificationCase:
     def __init__(self, samples=10):
         self.data_in_width = 32
-        self.data_in_frac_width = 8
+        self.data_in_frac_width = 1
         self.weight_width = 16
-        self.weight_frac_width = 8
+        self.weight_frac_width = 1
+        self.bias_width = 16
+        self.bias_frac_width = 1
         self.data_out_width = 32
-        self.data_out_frac_width = 8
+        self.data_out_frac_width = 1
+        self.has_bias = 1
 
         self.in_rows = 3
         self.in_columns = 4
@@ -54,12 +57,22 @@ class VerificationCase:
             max_stalls=2 * samples * self.iterations,
             debug=debug,
         )
+        self.bias = RandomSource(
+            name="bias",
+            samples=samples,
+            num=self.in_rows * self.weight_columns,
+            max_stalls=2 * samples,
+            debug=debug,
+        )
         self.outputs = RandomSink(samples=samples, max_stalls=2 * samples, debug=debug)
         self.samples = samples
         self.ref = self.sw_compute()
         self.ref = self.sw_cast(
             inputs=self.ref,
-            in_width=self.data_in_width + self.weight_width,
+            in_width=self.data_in_width
+            + self.weight_width
+            + math.ceil(math.log2(self.iterations * self.in_columns))
+            + self.has_bias,
             in_frac_width=self.data_in_frac_width + self.weight_frac_width,
             out_width=self.data_out_width,
             out_frac_width=self.data_out_frac_width,
@@ -71,6 +84,9 @@ class VerificationCase:
             "IN1_FRAC_WIDTH": self.data_in_frac_width,
             "IN2_WIDTH": self.weight_width,
             "IN2_FRAC_WIDTH": self.weight_frac_width,
+            "BIAS_WIDTH": self.bias_width,
+            "BIAS_FRAC_WIDTH": self.bias_frac_width,
+            "HAS_BIAS": self.has_bias,
             "OUT_WIDTH": self.data_out_width,
             "OUT_FRAC_WIDTH": self.data_out_frac_width,
             "IN1_PARALLELISM": self.in_rows,
@@ -82,6 +98,15 @@ class VerificationCase:
     def sw_compute(self):
         final = []
         ref = []
+        print(
+            "\n\
+        data = \n{}\n\
+        weight = \n{}\n\
+        bias = \n{}\n\
+        ".format(
+                self.data_in.data, self.weight.data, self.bias.data
+            )
+        )
         for i in range(self.samples):
             acc = [0 for _ in range(self.in_rows * self.weight_columns)]
             for w in range(self.in_rows):
@@ -94,6 +119,13 @@ class VerificationCase:
                             for h in range(self.weight_rows)
                         ]
                         acc[w * self.weight_columns + k] += sum(s)
+            if self.has_bias:
+                for j in range(self.in_rows * self.weight_columns):
+                    acc[j] += self.bias.data[i][j] << (
+                        self.weight_frac_width
+                        + self.data_in_frac_width
+                        - self.bias_frac_width
+                    )
             ref.append(acc)
         ref.reverse()
         return ref
@@ -140,7 +172,7 @@ def debug_state(dut, state):
 @cocotb.test()
 async def test_fixed_linear(dut):
     """Test integer based vector mult"""
-    samples = 30
+    samples = 20
     test_case = VerificationCase(samples=samples)
 
     # Reset cycle
@@ -171,6 +203,7 @@ async def test_fixed_linear(dut):
     for i in range(samples * 50):
         await FallingEdge(dut.clk)
         debug_state(dut, "Post-clk")
+        dut.bias_valid.value = test_case.bias.pre_compute()
         dut.data_in2_valid.value = test_case.weight.pre_compute()
         dut.data_in1_valid.value = test_case.data_in.pre_compute()
         await Timer(1, units="ns")
@@ -180,6 +213,9 @@ async def test_fixed_linear(dut):
         debug_state(dut, "Pre-clk")
         await Timer(1, units="ns")
         debug_state(dut, "Post-clk")
+        dut.bias_valid.value, dut.bias.value = test_case.bias.compute(
+            dut.bias_ready.value
+        )
         dut.data_in2_valid.value, dut.data_in2.value = test_case.weight.compute(
             dut.data_in2_ready.value
         )
@@ -190,9 +226,11 @@ async def test_fixed_linear(dut):
         dut.data_out_ready.value = test_case.outputs.compute(
             dut.data_out_valid.value, dut.data_out.value
         )
+        # breakpoint()
         debug_state(dut, "Pre-clk")
         if (
-            test_case.weight.is_empty()
+            test_case.bias.is_empty()
+            and test_case.weight.is_empty()
             and test_case.data_in.is_empty()
             and test_case.outputs.is_full()
         ):
