@@ -25,6 +25,7 @@ from chop.passes.analysis import (
     verify_common_metadata_analysis_pass,
     report_node_shape_analysis_pass,
     report_node_hardware_type_analysis_pass,
+    add_software_metadata_analysis_pass,
 )
 from chop.passes.transforms import emit_verilog_top_transform_pass
 from chop.tools.logger import getLogger
@@ -73,6 +74,7 @@ def main():
 
     mg = init_metadata_analysis_pass(mg, None)
     mg = add_common_metadata_analysis_pass(mg, dummy_in)
+    mg = add_software_metadata_analysis_pass(mg, None)
     # mg = report_node_shape_analysis_pass(mg)
 
     # Sanity check and report - verify or compare with expected results here

@@ -1,6 +1,7 @@
 import logging
-
+from pprint import pformat
 from tabulate import tabulate
+from pathlib import Path
 
 logger = logging.getLogger(__name__)
 
@@ -89,4 +90,35 @@ def report_node_hardware_type_analysis_pass(graph, pass_args=None):
     - node inspection on hardware types
     """
     graph = graph_iterator_inspect_node_hardware_type(graph)
+    return graph
+
+
+def report_node_meta_param_analysis_pass(graph, pass_args=None):
+    headers = [
+        "Node name",
+        "Fx Node op",
+        "Mase type",
+        "Mase op",
+        "Common Param",
+        "Hardware Param",
+        "Software Param",
+    ]
+
+    row = []
+    for node in graph.fx_graph.nodes:
+        row.append(
+            [
+                node.name,
+                node.op,
+                node.meta["mase"].parameters["common"]["mase_type"],
+                node.meta["mase"].parameters["common"]["mase_op"],
+                pformat(node.meta["mase"].parameters["common"]),
+                pformat(node.meta["mase"].parameters["hardware"]),
+                pformat(node.meta["mase"].parameters["software"]),
+            ]
+        )
+
+    table_txt = tabulate(row, headers=headers, tablefmt="grid")
+    logger.info("Inspecting graph [add_common_meta_param_analysis_pass]")
+    logger.info("\n" + table_txt)
     return graph

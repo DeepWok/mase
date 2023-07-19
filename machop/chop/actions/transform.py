@@ -2,9 +2,10 @@ import os
 from copy import deepcopy
 
 import torch
-from chop.passes import passes
+from chop.passes import PASSES
 from chop.passes.analysis import (
     add_common_metadata_analysis_pass,
+    add_software_metadata_analysis_pass,
     init_metadata_analysis_pass,
     report_node_type_analysis_pass,
 )
@@ -59,6 +60,7 @@ def transform(
             is_nlp_model=is_nlp_model,
         )
         graph = add_common_metadata_analysis_pass(graph, pass_args=dummy_in)
+        graph = add_software_metadata_analysis_pass(graph, pass_args=None)
 
     graph = report_node_type_analysis_pass(graph, pass_args=None)
 
@@ -68,10 +70,10 @@ def transform(
         if pass_name == "quantize":
             # Jianyi suggest to separate quantize and quantize_summary, and put them inline in transform.py
             ori_graph = deepcopy_mase_graph(graph)
-            graph = passes["quantize"](graph, pass_args=pass_config)
-            passes["quantize_summary"](ori_graph, graph, save_dir=save_dir)
+            graph = PASSES["quantize"](graph, pass_args=pass_config)
+            PASSES["quantize_summary"](ori_graph, graph, save_dir=save_dir)
         else:
-            my_pass = passes[pass_name]
+            my_pass = PASSES[pass_name]
             graph = my_pass(graph, pass_args=pass_config)
 
     # save transformed model
