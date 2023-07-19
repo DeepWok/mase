@@ -28,7 +28,13 @@ class MaseMetadata:
            - precision : format of the type, e.g. (10, 5)
            - size : size of the result
            - value : if the result is a constant scalar value, store it and use as parameters instead of runtime variable
-    - software
+    - software: dict
+      - args: dict
+        - $name: dict
+          - "stat": dict[stat_name, stat_value_dict]
+      - results: dict
+        - $name: dict
+          - "stat": dict[stat_name, stat_value_dict]
     - hardware
       - is_implicit -> bool : whether the node is mapped on hardware or software annotation only
       - verilog_parameters -> {} : parameters need for customise the hardware module
