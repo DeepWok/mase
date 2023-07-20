@@ -114,6 +114,11 @@ def analyze_software_meta_param_module_related_func_default(meta):
         analyze_software_meta_param_nn_functional_default(meta)
 
 
+def analyze_software_meta_param_nn_module_batch_norm(meta):
+    analyze_software_meta_param_nn_module_default(meta)
+    meta.parameters["software"]["args"].pop("num_batches_tracked")
+
+
 def analyze_software_meta_param_builtin_func_default(meta):
     """
     *: builtin func
@@ -139,7 +144,8 @@ def analyze_software_meta_param_implicit_func_default(meta):
         for i in range(len(node.all_input_nodes)):
             _set_arg_param(meta, f"data_in_{i}", pass_name, default_value)
 
-        _set_result_param(meta, "data_out_0", pass_name, default_value)
+        if get_mase_op(node) not in ["size"]:
+            _set_result_param(meta, "data_out_0", pass_name, default_value)
 
 
 def analyze_software_meta_param_placeholder(meta):
@@ -170,8 +176,8 @@ def analyze_software_meta_param_output(meta):
 
 SOFTWARE_PARAM_ANALYSIS_LAYERS = {
     "module": {
-        "batch_norm1d": analyze_software_meta_param_nn_module_default,
-        "batch_norm2d": analyze_software_meta_param_nn_module_default,
+        "batch_norm1d": analyze_software_meta_param_nn_module_batch_norm,
+        "batch_norm2d": analyze_software_meta_param_nn_module_batch_norm,
         # default:
         "default": analyze_software_meta_param_nn_module_default,
     },

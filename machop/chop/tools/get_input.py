@@ -1,4 +1,5 @@
 import inspect
+from typing import Literal
 
 from chop.models import (
     nlp_models,
@@ -59,7 +60,7 @@ def get_dummy_input(
     task: str,
     is_nlp_model: bool = False,
 ) -> dict:
-    """Create a dummy input for a model. The dummy input is a single sample from the training set.
+    """Create a single dummy input for a model. The dummy input is a single sample from the training set.
 
     Args:
         datamodule (MyDataModule): a MyDataModule instance (see machop/chop/dataset/data_module.py). Make sure the datamodule is prepared and setup.
@@ -128,3 +129,72 @@ def get_dummy_input(
     else:
         raise NotImplementedError(f"Unsupported task: {task}")
     return dummy_inputs
+
+
+class InputGenerator:
+    def __init__(
+        self,
+        datamodule,
+        task: Literal[
+            "cls", "classification", "lm", "language_modeling", "tran", "translation"
+        ],
+        is_nlp_model: bool,
+        which_dataloader: Literal["train", "val", "test"],
+        max_batches: int = None,
+    ) -> None:
+        """
+        Input generator for feeding batches to models. This is used for software passes.
+
+        Args:
+            datamodule (MyDataModule): a MyDataModule instance (see machop/chop/dataset/data_module.py). Make sure the datamodule is prepared and setup.
+            max_batches (int, optional): Maximum number of batches to generate. Defaults to None will stop when reaching the last batch in dataloader.
+        """
+        self.task = task
+        self.is_nlp_model = is_nlp_model
+
+        self.batch_size = datamodule.batch_size
+        self.dataloader = getattr(datamodule, f"{which_dataloader}_dataloader")()
+        self.dataloader_iter = iter(self.dataloader)
+
+        self.max_batches = max_batches
+        self.current_batch = 0
+
+    def __iter__(self):
+        return self
+
+    def __next__(self):
+        if self.max_batches is not None and self.current_batch >= self.max_batches:
+            raise StopIteration
+
+        if self.task in ["cls", "classification"] and not self.is_nlp_model:
+            x, y = next(self.dataloader_iter)
+            inputs = {"x": x}
+
+        elif self.task in ["cls", "classification"] and self.is_nlp_model:
+            input_dict = next(self.dataloader_iter)
+            inputs = {
+                "input_ids": input_dict["input_ids"],
+                "attention_mask": input_dict["attention_mask"],
+                "token_type_ids": input_dict["token_type_ids"],
+                "labels": input_dict["labels"],
+            }
+        elif self.task in ["lm", "language_modeling"]:
+            input_dict = next(self.dataloader_iter)
+            inputs = {
+                "input_ids": input_dict["input_ids"],
+                "attention_mask": input_dict["attention_mask"],
+                "labels": input_dict["labels"],
+            }
+        elif self.task in ["translation", "tran"]:
+            input_dict = next(self.dataloader_iter)
+            inputs = {
+                "input_ids": input_dict["input_ids"],
+                "attention_mask": input_dict["attention_mask"],
+                "decoder_input_ids": input_dict["decoder_input_ids"],
+                "decoder_attention_mask": input_dict["decoder_attention_mask"],
+            }
+        else:
+            raise NotImplementedError(f"Unsupported task: {self.task}")
+
+        self.current_batch += 1
+        return inputs
