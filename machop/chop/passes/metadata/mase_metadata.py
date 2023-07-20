@@ -30,11 +30,17 @@ class MaseMetadata:
            - value : if the result is a constant scalar value, store it and use as parameters instead of runtime variable
     - software: dict
       - args: dict
-        - $name: dict
-          - "stat": dict[stat_name, stat_value_dict]
+        - $name (dict): name of the arg, e.g. data_in_0
+          - "stat": {"record": {"data": ..., "count": ...},
+                     "variance_online": {"variance": ..., "mean": ..., "count": ...}},
+                     "variance_precise": {"variance": ..., "mean": ..., "count": ...},
+                     "range_n_sigma": {"min": ..., "max": ..., "count": ...},
+                     "range_quantile": {"min": ..., "max": ..., "count": ...},
+                     "range_min_max": {"min": ..., "max": ..., "count": ...},
+                    }.
       - results: dict
-        - $name: dict
-          - "stat": dict[stat_name, stat_value_dict]
+        - $name (dict): name of the result, e.g. data_out_0
+          - "stat": {"stat_name": { # stat_values } }
     - hardware
       - is_implicit -> bool : whether the node is mapped on hardware or software annotation only
       - verilog_parameters -> {} : parameters need for customise the hardware module

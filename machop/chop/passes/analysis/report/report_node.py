@@ -93,32 +93,65 @@ def report_node_hardware_type_analysis_pass(graph, pass_args=None):
     return graph
 
 
-def report_node_meta_param_analysis_pass(graph, pass_args=None):
+def report_node_meta_param_analysis_pass(graph, pass_args: dict = None):
+    """
+    Inspect mse metadata.parameter
+
+    pass_args: a dict of arguments for this pass, including
+    - "which": a list of options in ["all", "common", "hardware", "software"], default ["all"]
+    - "save_path": a str of path to save the table, default None
+    """
+    which_param = pass_args.get("which", ("all",))
+    assert isinstance(which_param, (list, tuple))
+    for param in which_param:
+        assert param in [
+            "all",
+            "common",
+            "hardware",
+            "software",
+        ], f"Invalid which_param {param}, must be a list of options in ['all', 'common', 'hardware', 'software'], got {param}"
+    save_path = pass_args.get("save_path", None)
+
     headers = [
         "Node name",
         "Fx Node op",
         "Mase type",
         "Mase op",
-        "Common Param",
-        "Hardware Param",
-        "Software Param",
     ]
 
-    row = []
-    for node in graph.fx_graph.nodes:
-        row.append(
-            [
-                node.name,
-                node.op,
-                node.meta["mase"].parameters["common"]["mase_type"],
-                node.meta["mase"].parameters["common"]["mase_op"],
-                pformat(node.meta["mase"].parameters["common"]),
-                pformat(node.meta["mase"].parameters["hardware"]),
-                pformat(node.meta["mase"].parameters["software"]),
-            ]
-        )
+    if "common" in which_param or "all" in which_param:
+        headers.append("Common Param")
+    if "hardware" in which_param or "all" in which_param:
+        headers.append("Hardware Param")
+    if "software" in which_param or "all" in which_param:
+        headers.append("Software Param")
 
-    table_txt = tabulate(row, headers=headers, tablefmt="grid")
+    rows = []
+    for node in graph.fx_graph.nodes:
+        new_row = [
+            node.name,
+            node.op,
+            node.meta["mase"].parameters["common"]["mase_type"],
+            node.meta["mase"].parameters["common"]["mase_op"],
+        ]
+
+        if "common" in which_param or "all" in which_param:
+            new_row.append(pformat(node.meta["mase"].parameters["common"]))
+        if "hardware" in which_param or "all" in which_param:
+            new_row.append(pformat(node.meta["mase"].parameters["hardware"]))
+        if "software" in which_param or "all" in which_param:
+            new_row.append(pformat(node.meta["mase"].parameters["software"]))
+
+        rows.append(new_row)
+
+    table_txt = tabulate(rows, headers=headers, tablefmt="grid")
     logger.info("Inspecting graph [add_common_meta_param_analysis_pass]")
     logger.info("\n" + table_txt)
+
+    if save_path is not None:
+        save_path = Path(save_path)
+        save_path.parent.mkdir(parents=True, exist_ok=True)
+        with open(Path(save_path), "w") as f:
+            f.write(table_txt)
+            logger.info(f"Node meta param table is saved to {save_path}")
     return graph

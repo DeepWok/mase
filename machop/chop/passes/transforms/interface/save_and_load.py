@@ -38,6 +38,7 @@ def collect_n_meta_param(graph) -> dict:
     """
     Collect all metadata from the graph.
     """
+
     node_n_meta_param = {}
     for node in graph.fx_graph.nodes:
         node_n_meta_param[node.name] = node.meta["mase"].parameters
@@ -84,6 +85,23 @@ def graph_iterator_add_n_meta_param(graph, node_n_meta_param: dict):
     """
     for node in graph.fx_graph.nodes:
         node.meta["mase"].parameters = node_n_meta_param[node.name]
+    return graph
+
+
+def save_node_meta_param_transform_pass(graph, save_path: str):
+    """
+    Save a mase graph metadata.parameters to a toml file.
+    """
+    node_n_meta_param = collect_n_meta_param(graph)
+    save_n_meta_param(node_n_meta_param, save_path)
+
+
+def load_node_meta_param_transform_pass(graph, load_path: str):
+    """
+    Load a mase graph metadata.parameters from a toml file.
+    """
+    node_n_meta_param = load_n_meta_param(load_path)
+    graph = graph_iterator_add_n_meta_param(graph, node_n_meta_param)
     return graph
 
 

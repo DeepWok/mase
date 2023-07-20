@@ -21,3 +21,4 @@ from .verify import (
     verify_metadata_analysis_pass,
     verify_software_metadata_analysis_pass,
 )
+from .statistical_profiler import profile_statistics_analysis_pass
