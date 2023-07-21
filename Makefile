@@ -11,10 +11,16 @@ sync:
 
 # Build Docker container
 build-docker: 
-	(cd Docker; docker build --build-arg UID=$(user) --build-arg GID=$(group) --build-arg VHLS_PATH=$(vhls) . --tag mase-ubuntu2204)
+	docker build --build-arg UID=$(user) --build-arg GID=$(group) --build-arg VHLS_PATH=$(vhls) -f Docker/Dockerfile --tag mase-ubuntu2204 Docker
 
 shell: build-docker
 	docker run -it --shm-size 256m --hostname mase-ubuntu2204 -u $(user) -v $(vhls):$(vhls) -v $(shell pwd):/workspace mase-ubuntu2204:latest /bin/bash 
+
+build-vagrant: 
+	(cd vagrant; vagrant up)
+
+shell-vagrant: 
+	(cd vagrant; vagrant ssh)
 
 test-hw:
 	python3 scripts/test-hardware.py -a || exit 1

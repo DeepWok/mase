@@ -7,7 +7,7 @@ Vagrant.configure("2") do |config|
   config.ssh.forward_agent = true
   config.ssh.forward_x11 = true
   config.vm.synced_folder "..", "/workspace"
-  config.vm.synced_folder "/scratch/jc9016/tools/Xilinx/2020.2", "/scratch/jc9016/tools/Xilinx/2020.2"
+  config.vm.synced_folder "/scratch/shared/Xilinx", "/scratch/shared/Xilinx"
   config.vm.provider "virtualbox" do |vb|
     vb.cpus = 16 
     vb.memory = "32768"
