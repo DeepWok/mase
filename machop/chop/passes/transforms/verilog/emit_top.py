@@ -12,7 +12,7 @@ from multiprocessing import Process, Queue
 import torch
 import torch.fx
 
-from chop.passes.utils import vf, v2p
+from chop.passes.utils import vf, v2p, init_project
 
 logger = logging.getLogger(__name__)
 
@@ -66,27 +66,6 @@ def _get_cast_parameters(from_node, to_node, is_start=False, is_end=False):
         to_prec,
         to_param,
     )
-
-
-def _create_new_dir(new_dir):
-    if not os.path.exists(new_dir):
-        os.mkdir(new_dir)
-    for p in glob.glob(os.path.join(new_dir, "*")):
-        if os.path.isfile(p):
-            os.remove(p)
-        else:
-            shutil.rmtree(p)
-
-
-def _init_project(project_dir):
-    if not os.path.exists(project_dir):
-        os.mkdir(project_dir)
-    hardware_dir = os.path.join(project_dir, "hardware")
-    if not os.path.exists(hardware_dir):
-        os.mkdir(hardware_dir)
-    rtl_dir = os.path.join(hardware_dir, "rtl")
-    if not os.path.exists(rtl_dir):
-        os.mkdir(rtl_dir)
 
 
 def _iterator_load_width_parameters_to_map(node_name, val_list, parameter_map):
@@ -970,9 +949,8 @@ def emit_verilog_top_transform_pass(graph, pass_args={}):
     )
     top_name = pass_args["top_name"] if "top_name" in pass_args.keys() else "top"
 
-    _init_project(project_dir)
+    init_project(project_dir)
     rtl_dir = os.path.join(project_dir, "hardware", "rtl")
-    _create_new_dir(rtl_dir)
 
     top = emit_top(graph, top_name)
 
@@ -980,3 +958,4 @@ def emit_verilog_top_transform_pass(graph, pass_args={}):
     top_design = open(top_file, "w")
     top_design.write(top)
     top_design.close()
+    return graph

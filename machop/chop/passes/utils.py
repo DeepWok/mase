@@ -1,5 +1,6 @@
 import inspect
 import re
+import os
 from copy import deepcopy
 from typing import Tuple
 
@@ -117,3 +118,26 @@ def deepcopy_mase_graph(mase_graph):
     for new_n, n in zip(new_graph.fx_graph.nodes, mase_graph.fx_graph.nodes):
         new_n.meta = deepcopy(n.meta)
     return new_graph
+
+
+def init_project(project_dir):
+    """
+    Create project dir tree
+    """
+    if not os.path.exists(project_dir):
+        os.mkdir(project_dir)
+    software_dir = os.path.join(project_dir, "software")
+    if not os.path.exists(software_dir):
+        os.mkdir(software_dir)
+    hardware_dir = os.path.join(project_dir, "hardware")
+    if not os.path.exists(hardware_dir):
+        os.mkdir(hardware_dir)
+    rtl_dir = os.path.join(hardware_dir, "rtl")
+    if not os.path.exists(rtl_dir):
+        os.mkdir(rtl_dir)
+    sim_dir = os.path.join(hardware_dir, "sim")
+    if not os.path.exists(sim_dir):
+        os.mkdir(sim_dir)
+    hls_dir = os.path.join(hardware_dir, "hls")
+    if not os.path.exists(hls_dir):
+        os.mkdir(hls_dir)
