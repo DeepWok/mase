@@ -30,8 +30,12 @@ from chop.passes.analysis import (
     report_node_hardware_type_analysis_pass,
 )
 from chop.passes.transforms import (
-    quantize_transform_pass,
     emit_verilog_top_transform_pass,
+    emit_mlir_hls_transform_pass,
+    emit_internal_rtl_transform_pass,
+    emit_bram_transform_pass,
+    emit_verilog_tb_transform_pass,
+    quantize_transform_pass,
 )
 from chop.tools.logger import getLogger
 
@@ -121,6 +125,12 @@ def main():
     # mg = verify_hardware_metadata_analysis_pass(mg)
 
     mg = emit_verilog_top_transform_pass(mg)
+    mg = emit_bram_transform_pass(mg)
+    mg = emit_internal_rtl_transform_pass(mg)
+    # For internal models, the test inputs can be directly fetched from the dataset
+    # using InputGenerator from chop.tools.get_input
+    cosim_config = {"test_inputs": [x], "trans_num": 1}
+    mg = emit_verilog_tb_transform_pass(mg, pass_args=cosim_config)
 
 
 # --------------------------------------------------
