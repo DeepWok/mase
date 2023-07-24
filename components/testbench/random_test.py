@@ -3,6 +3,7 @@
 # This script inlcudes the input and output components that have random behaviours.
 # They are used for capturing all the possible dataflow computation behaviours.
 import random, os, math, logging, sys
+import utils
 
 
 # A source node that randomly sends out a finite number of
@@ -17,6 +18,7 @@ class RandomSource:
         name="",
         data_specify=[],
         debug=False,
+        arithmetic=None,
     ):
         assert num > 0, "Invalid num for source {}".format(name)
         self.logger = logging.getLogger(name)
@@ -30,22 +32,27 @@ class RandomSource:
         self.samples = samples
         self.max_stalls = max_stalls
         self.is_data_vector = is_data_vector
+        if arithmetic in ["binary"]:
+            self.rand_gen = lambda: utils.binary_encode(random.choice([-1, 1]))
+        elif arithmetic in ["ternary"]:
+            self.rand_gen = lambda: utils.binary_encode(random.randint(-1, 1))
+        else:
+            self.rand_gen = lambda: random.randint(0, 30)
+
         if len(data_specify) == 0:
             if is_data_vector:
                 self.data = [
-                    [random.randint(0, 30) for _ in range(num)] for _ in range(samples)
+                    [self.rand_gen() for _ in range(num)] for _ in range(samples)
                 ]
             else:
                 self.data = [
-                    random.randint(0, 30) for _ in range(num) for _ in range(samples)
+                    self.rand_gen() for _ in range(num) for _ in range(samples)
                 ]
         else:
             self.data = data_specify
 
         self.dummy = (
-            [random.randint(0, 30) for _ in range(num)]
-            if is_data_vector
-            else random.randint(0, 30)
+            [self.rand_gen() for _ in range(num)] if is_data_vector else self.rand_gen()
         )
 
         self.stall_count = 0
@@ -161,6 +168,27 @@ def check_results(hw_out, sw_out):
     else:
         for i in range(len(hw_out)):
             assert int(hw_out[i]) == int(
+                sw_out[i]
+            ), "Mismatched output value {}: {} expected = {}".format(
+                i, int(hw_out[i]), int(sw_out[i])
+            )
+
+
+def check_results_signed(hw_out, sw_out):
+    assert len(hw_out) == len(
+        sw_out
+    ), "Mismatched output size: {} expected = {}".format(len(hw_out), len(sw_out))
+    if type(hw_out[0]) == list:
+        for i in range(len(hw_out)):
+            assert [i.signed_integer for i in hw_out[i]] == sw_out[
+                i
+            ], "Mismatched output value {}: {} expected = {}".format(
+                i, [int(t) for t in hw_out[i]], [int(t) for t in sw_out[i]]
+            )
+        return True
+    else:
+        for i in range(len(hw_out)):
+            assert hw_out[i].signed_integer == int(
                 sw_out[i]
             ), "Mismatched output value {}: {} expected = {}".format(
                 i, int(hw_out[i]), int(sw_out[i])

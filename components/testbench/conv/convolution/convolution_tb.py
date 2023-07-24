@@ -75,6 +75,14 @@ class VerificationCase:
         # test_weight.reverse()
         self.samples = samples
         test_data_in, test_weight, test_bias, _, _, _ = self.data_generate()
+        print(
+            "data_in",
+            test_data_in,
+            "test_weight",
+            test_weight,
+            "test_bias",
+            test_bias,
+        )
         self.data_in = RandomSource(
             name="data_in",
             samples=int(
@@ -153,12 +161,7 @@ class VerificationCase:
         w_size = self.weight_size
         # data_pack
         re_data_tensor = torch.randint(30, (samples, in_channels, in_height, in_width))
-        data_tensor = torch.zeros(samples, in_height, in_width, in_channels)
-        for i in range(samples):
-            for j in range(in_channels):
-                for k in range(in_height):
-                    for s in range(in_width):
-                        data_tensor[i][k][s][j] = re_data_tensor[i][j][k][s]
+        data_tensor = re_data_tensor.permute(0, 2, 3, 1)
         data_tensor = data_tensor.reshape(
             samples * in_height * in_width * int(in_channels / in_size), in_size
         )
@@ -167,39 +170,23 @@ class VerificationCase:
         re_w_tensor = torch.randint(
             30, (samples, out_channels, in_channels, kernel_height, kernel_width)
         )
-        reorder_w_tensor = torch.zeros(
+
+        reorder_w_tensor = re_w_tensor.reshape(
             samples,
+            out_channels,
             int(in_channels / in_size),
-            kernel_height * kernel_width,
             in_size,
-            out_channels,
-        )
-        for i in range(samples):
-            for j in range(int(in_channels / in_size)):
-                for k in range(kernel_height):
-                    for t in range(kernel_width):
-                        for s in range(in_size):
-                            for m in range(out_channels):
-                                reorder_w_tensor[i][j][k * kernel_width + t][s][
-                                    m
-                                ] = re_w_tensor[i][m][j * in_size + s][k][t]
-        reorder_w_tensor = reorder_w_tensor.reshape(
+            kernel_height * kernel_width,
+        ).permute(0, 2, 4, 3, 1)
+
+        # reverse the final 2 dimension
+        w_tensor = reorder_w_tensor.reshape(
             samples,
             int(kernel_height * kernel_width * in_channels / w_size),
             w_size,
             out_channels,
-        )
-        w_tensor = torch.zeros(
-            samples,
-            int(kernel_height * kernel_width * in_channels / w_size),
-            out_channels,
-            w_size,
-        )
-        for i in range(samples):
-            for j in range(int(kernel_height * kernel_width * in_channels / w_size)):
-                for k in range(out_channels):
-                    for t in range(w_size):
-                        w_tensor[i][j][k][t] = reorder_w_tensor[i][j][t][k]
+        ).permute(0, 1, 3, 2)
+
         w_tensor = w_tensor.reshape(
             int(samples * kernel_height * kernel_width * in_channels / w_size),
             out_channels * w_size,

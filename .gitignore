@@ -67,6 +67,9 @@ coverage.xml
 .hypothesis/
 .pytest_cache/
 
+# Hardware tests
+components/testbench/**/sim_build/
+
 # Translations
 *.mo
 *.pot
