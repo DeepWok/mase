@@ -63,14 +63,15 @@ module fifo #(
         w_ptr <= 0;
     end
   end
-  
+
 
   // To read data from FIFO
   always @(posedge clk)
     if (rst) data_out_flatten <= 0;
     /* verilator lint_off WIDTH */
-    else data_out_flatten <= fifo_ram[r_ptr];
-    /* verilator lint_on WIDTH */
+    else
+      data_out_flatten <= fifo_ram[r_ptr];
+  /* verilator lint_on WIDTH */
 
   always @(posedge clk) begin
     if (rst) begin

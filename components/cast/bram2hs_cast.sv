@@ -18,7 +18,7 @@ module bram2hs_cast #(
     output                       data_out_ready,
 
     // Producer state
-    input in_done,
+    input  in_done,
     output in_ce
 );
 
