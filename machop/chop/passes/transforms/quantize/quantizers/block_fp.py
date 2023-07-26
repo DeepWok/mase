@@ -1,5 +1,3 @@
-from typing import List, Tuple, Union
-
 import torch
 from torch import Tensor
 
@@ -11,7 +9,7 @@ def _block_fp_quantize(
     width: int = 12,
     exponent_width: int = 8,
     exponent_bias: int = None,
-    block_size: List[int] = [16],
+    block_size: list[int] = [16],
     skip_first_dim: bool = True,
 ):
     """
@@ -92,7 +90,7 @@ class BlockFPQuantize(torch.autograd.Function):
         width: int = 12,
         exponent_width: int = 8,
         exponent_bias: int = None,
-        block_size: List[int] = [16],
+        block_size: list[int] = [16],
         skip_first_dim: bool = True,
     ):
         return _block_fp_quantize(
@@ -115,7 +113,7 @@ def block_fp_quantizer(
     width: int = 12,
     exponent_width: int = 8,
     exponent_bias: int = None,
-    block_size: List[int] = [16],
+    block_size: list[int] = [16],
     skip_first_dim: bool = True,
 ):
     """

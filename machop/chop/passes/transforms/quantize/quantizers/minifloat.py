@@ -118,7 +118,7 @@ def minifloat_denorm_quantizer(
     return MinifloatDenormQuantize.apply(x, width, exponent_width, exponent_bias)
 
 
-def _minifloat_ieee_quantizer(
+def _minifloat_ieee_quantize(
     x: Tensor, width: int, exponent_width: int, exponent_bias: int = None
 ):
     """
@@ -188,7 +188,7 @@ class MinifloatIEEEQuantize(torch.autograd.Function):
     def forward(
         ctx, x: Tensor, width: int, exponent_width: int, exponent_bias: int = None
     ):
-        return _minifloat_ieee_quantizer(
+        return _minifloat_ieee_quantize(
             x, width=width, exponent_width=exponent_width, exponent_bias=exponent_bias
         )
 

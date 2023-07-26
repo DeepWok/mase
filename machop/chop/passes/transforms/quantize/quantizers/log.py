@@ -1,6 +1,5 @@
 import torch
 
-from typing import Union
 from numpy import ndarray
 from torch import Tensor
 import torch
@@ -9,9 +8,9 @@ from .utils import my_clamp, my_round
 
 
 def _log_quantize(
-    x: Union[Tensor, ndarray],
+    x: Tensor | ndarray,
     width: int,
-    exponent_bias: Union[int, Tensor, ndarray, None],
+    exponent_bias: int | Tensor | ndarray | None,
 ):
     """
     - Use non-uniform, base-2 logarithmic representation to encode IEEE FP32/64
@@ -48,7 +47,7 @@ def _log_quantize(
 class LogQuantize(torch.autograd.Function):
     @staticmethod
     def forward(
-        ctx, x: Tensor, width: int, exponent_bias: Union[int, Tensor, ndarray, None]
+        ctx, x: Tensor, width: int, exponent_bias: int | Tensor | ndarray | None
     ):
         return _log_quantize(x, width=width, exponent_bias=exponent_bias)
 
@@ -59,9 +58,9 @@ class LogQuantize(torch.autograd.Function):
 
 
 def log_quantizer(
-    x: Union[Tensor, ndarray],
+    x: Tensor | ndarray,
     width: int,
-    exponent_bias: Union[int, Tensor, ndarray, None],
+    exponent_bias: int | Tensor | ndarray | None,
 ):
     """
     Convert IEEE FP32/64 to base-2 log quantized values

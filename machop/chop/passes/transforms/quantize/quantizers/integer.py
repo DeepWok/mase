@@ -1,5 +1,4 @@
 from math import ceil, log2
-from typing import List, Tuple, Union
 
 from numpy import ndarray
 from torch import Tensor
@@ -9,7 +8,7 @@ from .utils import my_clamp, my_round
 
 
 def _integer_quantize(
-    x: Union[Tensor, ndarray], width: int, frac_width: int, is_signed: bool = True
+    x: Tensor | ndarray, width: int, frac_width: int, is_signed: bool = True
 ):
     """
     - Do linear quantization to input according to a scale and number of bits
@@ -58,7 +57,7 @@ class IntegerQuantize(torch.autograd.Function):
 
 
 def integer_quantizer(
-    x: Union[Tensor, ndarray], width: int, frac_width: int, is_signed: bool = True
+    x: Tensor | ndarray, width: int, frac_width: int, is_signed: bool = True
 ):
     """
     - Do linear quantization to input according to a scale and number of bits
