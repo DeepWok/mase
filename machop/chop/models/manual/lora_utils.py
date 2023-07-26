@@ -1,5 +1,8 @@
 import torch
 import torch.nn as nn
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 def transpose(weight, fan_in_fan_out):
@@ -31,6 +34,6 @@ def print_trainable_parameters(model: nn.Module):
         all_param += param.numel()
         if param.requires_grad:
             trainable_params += param.numel()
-    print(
-        f"trainable params: {trainable_params} || all params: {all_param} || trainable%: {100 * trainable_params / all_param:.2f}"
+    logger.info(
+        f"Trainable params: {trainable_params} || All params: {all_param} || Trainable %: {100 * trainable_params / all_param:.2f}"
     )
