@@ -1,18 +1,16 @@
-from typing import Any, Union
-
 import torch
 from numpy import ndarray
 from torch import Tensor
-from .log import log_quantizer
+from .log import _log_quantize
 
 from .utils import block, my_clamp, unblock
 
 
 def _block_log_quantize(
-    x: Union[Tensor, ndarray],
+    x: Tensor | ndarray,
     width: int,
     exponent_bias_width: int = None,
-    block_size: int = 16,
+    block_size: list[int] | int = [16],
     skip_first_dim: bool = False,
 ):
     """
@@ -45,7 +43,7 @@ def _block_log_quantize(
         2**exponent_bits - 1 - per_block_max_exponent, 0, 2**exponent_bias_width - 1
     )
 
-    per_block_lq_x = log_quantizer(blocked_x, width=width, exponent_bias=per_block_bias)
+    per_block_lq_x = _log_quantize(blocked_x, width=width, exponent_bias=per_block_bias)
     lq_x = unblock(
         per_block_lq_x,
         x_shape_before_blocking=x_shape_before_blocking,
@@ -64,7 +62,7 @@ class BlockLogQuantize(torch.autograd.Function):
         x,
         width: int,
         exponent_bias_width: int = None,
-        block_size: int = 16,
+        block_size: list[int] | int = [16],
         skip_first_dim: bool = False,
     ):
         return _block_log_quantize(
@@ -84,7 +82,7 @@ def block_log_quantizer(
     x: Tensor,
     width: int,
     exponent_bias_width: int = None,
-    block_size: int = 16,
+    block_size: list[int] | int = [16],
     skip_first_dim: bool = False,
 ):
     """

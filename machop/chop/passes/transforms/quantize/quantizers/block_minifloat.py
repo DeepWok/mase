@@ -1,10 +1,8 @@
-from typing import List
-
 import torch
 from torch import Tensor
 
 from .utils import block, my_clamp, unblock
-from .minifloat import minifloat_ieee_quantizer
+from .minifloat import _minifloat_ieee_quantize
 
 
 def _block_minifloat_quantize(
@@ -12,7 +10,7 @@ def _block_minifloat_quantize(
     width: int,
     exponent_width: int,
     exponent_bias_width: int,
-    block_size: List[int] = 16,
+    block_size: list[int] | int = [16],
     skip_first_dim: bool = False,
 ):
     """
@@ -45,7 +43,7 @@ def _block_minifloat_quantize(
     per_block_exponent_bias = my_clamp(
         torch.floor(torch.log2(per_block_max)), 0, 2**exponent_bias_width - 1
     )
-    per_block_bm_x = minifloat_ieee_quantizer(
+    per_block_bm_x = _minifloat_ieee_quantize(
         blocked_x,
         width=width,
         exponent_width=exponent_width,
@@ -70,7 +68,7 @@ class BlockMinifloatQuantize(torch.autograd.Function):
         width: int,
         exponent_width: int,
         exponent_bias_width: int,
-        block_size: List[int] = 16,
+        block_size: list[int] | int = [16],
         skip_first_dim: bool = False,
     ):
         return _block_minifloat_quantize(
@@ -89,7 +87,7 @@ class BlockMinifloatQuantize(torch.autograd.Function):
         width: int,
         exponent_width: int,
         exponent_bias_width: int,
-        block_size: List[int] = 16,
+        block_size: list[int] | int = [16],
         skip_first_dim: bool = False,
     ):
         return grad_output, None, None, None, None, None
@@ -100,7 +98,7 @@ def block_minifloat_quantizer(
     width: int,
     exponent_width: int,
     exponent_bias_width: int,
-    block_size: List[int] = 16,
+    block_size: list[int] | int = [16],
     skip_first_dim: bool = False,
 ):
     """

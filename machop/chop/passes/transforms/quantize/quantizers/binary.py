@@ -16,7 +16,7 @@ from .utils import (
 
 
 def binary_quantizer(
-    x: Union[torch.Tensor, numpy.ndarray], stochastic: bool = False, bipolar=False
+    x: torch.Tensor | numpy.ndarray, stochastic: bool = False, bipolar: bool = False
 ):
     """
     - Do binary quantization to input
@@ -55,7 +55,7 @@ def binary_quantizer(
 
 
 def ternary_quantizer(
-    x: Union[torch.Tensor, numpy.ndarray], threshold: float, scaling_fac: bool = False
+    x: torch.Tensor | numpy.ndarray, threshold: float, scaling_fac: bool = False
 ):
     """
     - Do ternary quantization to input
