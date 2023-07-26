@@ -16,6 +16,10 @@ def parse_node_config(config: dict, layer_type: str):
                 "lora_alpha": config["lora_alpha"],
                 "lora_dropout": config["lora_dropout"],
             }
+        case _:
+            raise ValueError(
+                f"Invalid layer_type: {layer_type}. Supported layer types are 'linear'."
+            )
 
 
 def create_a_layer_config(linear_lc: dict = None, layer_lc=None) -> dict:
