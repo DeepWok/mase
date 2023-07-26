@@ -11,9 +11,13 @@ sys.path.append(
         os.path.dirname(os.path.realpath(__file__)), "..", "..", "..", "..", "machop"
     )
 )
-
-from chop.actions.accelerate_train import train
+import torch.nn as nn
+from chop.actions.accelerate_peft import train
 from chop.dataset import MyDataModule
+from chop.models.manual.lora_utils import (
+    mark_only_lora_as_trainable,
+    print_trainable_parameters,
+)
 from chop.models.manual.llama_llora.modeling_llama_llora import LlamaForCausalLM
 from transformers.models.llama import LlamaTokenizer
 
@@ -43,6 +47,8 @@ def main():
     load_type: str = ""
 
     model = LlamaForCausalLM.from_pretrained(model_name)
+    model = mark_only_lora_as_trainable(model)
+    print_trainable_parameters(model)
     tokenizer = LlamaTokenizer.from_pretrained(model_name)
 
     data_module = MyDataModule(
