@@ -88,19 +88,20 @@ def graph_iterator_add_n_meta_param(graph, node_n_meta_param: dict):
     return graph
 
 
-def save_node_meta_param_transform_pass(graph, save_path: str):
+def save_node_meta_param_transform_pass(graph, pass_args: str):
     """
     Save a mase graph metadata.parameters to a toml file.
     """
     node_n_meta_param = collect_n_meta_param(graph)
-    save_n_meta_param(node_n_meta_param, save_path)
+    save_n_meta_param(node_n_meta_param, pass_args)
+    return graph
 
 
-def load_node_meta_param_transform_pass(graph, load_path: str):
+def load_node_meta_param_transform_pass(graph, pass_args: str):
     """
     Load a mase graph metadata.parameters from a toml file.
     """
-    node_n_meta_param = load_n_meta_param(load_path)
+    node_n_meta_param = load_n_meta_param(pass_args)
     graph = graph_iterator_add_n_meta_param(graph, node_n_meta_param)
     return graph
 

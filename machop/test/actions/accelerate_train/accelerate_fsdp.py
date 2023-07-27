@@ -14,7 +14,7 @@ sys.path.append(
 
 from chop.actions.accelerate_train import train
 from chop.dataset import MyDataModule
-from chop.models.manual.llama_llora.modeling_llama_llora import LlamaForCausalLM
+from chop.models.manual.llama_quantized.modeling_llama import LlamaQuantizedForCausalLM
 from transformers.models.llama import LlamaTokenizer
 
 
@@ -42,7 +42,7 @@ def main():
     load_name: str = None
     load_type: str = ""
 
-    model = LlamaForCausalLM.from_pretrained(model_name)
+    model = LlamaQuantizedForCausalLM.from_pretrained(model_name)
     tokenizer = LlamaTokenizer.from_pretrained(model_name)
 
     data_module = MyDataModule(

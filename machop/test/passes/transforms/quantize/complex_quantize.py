@@ -4,10 +4,9 @@ import logging
 import os
 import sys
 
+import toml
 import torch
 import torch.nn as nn
-
-import toml
 
 sys.path.append(
     os.path.join(
@@ -20,6 +19,7 @@ sys.path.append(
         "machop",
     )
 )
+from chop.models.toy_custom_fn import ToyCustomFnNet
 from chop.passes.analysis import (
     add_common_metadata_analysis_pass,
     add_mase_ops_analysis_pass,
@@ -27,13 +27,10 @@ from chop.passes.analysis import (
     report,
     verify_common_metadata_analysis_pass,
 )
-from chop.models.toy_custom_fn import ToyCustomFnNet
-
-
 from chop.passes.graph.mase_graph import MaseGraph
 from chop.passes.transforms import (
-    quantize_summary_analysis_pass,
     quantize_transform_pass,
+    summarize_quantization_analysis_pass,
 )
 from chop.passes.utils import deepcopy_mase_graph
 from chop.tools.logger import getLogger
@@ -86,7 +83,7 @@ def main():
         with open(os.path.join(path, config_file), "r") as f:
             quan_args = toml.load(f)["passes"]["quantize"]
         mg = quantize_transform_pass(mg, quan_args)
-        quantize_summary_analysis_pass(ori_mg, mg, save_dir="quantize_summary")
+        summarize_quantization_analysis_pass(ori_mg, mg, save_dir="quantize_summary")
         print(f"Quantize with {config_file} config file successfully!")
 
 
