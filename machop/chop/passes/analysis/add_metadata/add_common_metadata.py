@@ -7,20 +7,20 @@ import torch.fx as fx
 from chop.passes.analysis.utils import match_and_filter
 from chop.passes.common import (
     MASE_BUILTIN_FUNCS,
-    MASE_MODULE_RELATED_FUNCS,
     MASE_IMPLICIT_FUNCS,
+    MASE_MODULE_RELATED_FUNCS,
 )
 from chop.passes.metadata.mase_metadata import MaseMetadata
 from tabulate import tabulate
 from torch import nn
 
 from .common_metadata_layers import (
-    analyse_common_parameters_output,
-    analyse_common_parameters_placeholder,
     analyse_common_parameters_attr,
     analyse_common_parameters_function,
-    analyse_common_parameters_module,
     analyse_common_parameters_method,
+    analyse_common_parameters_module,
+    analyse_common_parameters_output,
+    analyse_common_parameters_placeholder,
 )
 
 logger = logging.getLogger(__name__)

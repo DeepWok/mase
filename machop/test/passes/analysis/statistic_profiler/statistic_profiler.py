@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 # This example add metadata to the toy custom function model for testing ops
-import sys
 import logging
 import os
+import sys
 
 os.environ["PYTHONBREAKPOINT"] = "ipdb.set_trace"
 
@@ -18,21 +18,21 @@ sys.path.append(
     )
 )
 
+from chop.dataset import MyDataModule, get_dataset_info
 from chop.models import get_resnet18
-from chop.passes.graph.mase_graph import MaseGraph
-from chop.tools.get_input import InputGenerator
 from chop.passes import (
     add_common_metadata_analysis_pass,
     add_mase_ops_analysis_pass,
-    init_metadata_analysis_pass,
     add_software_metadata_analysis_pass,
+    init_metadata_analysis_pass,
 )
 from chop.passes.analysis import (
-    report_node_meta_param_analysis_pass,
     profile_statistics_analysis_pass,
+    report_node_meta_param_analysis_pass,
 )
+from chop.passes.graph.mase_graph import MaseGraph
+from chop.tools.get_input import InputGenerator
 from chop.tools.logger import getLogger
-from chop.dataset import MyDataModule, get_dataset_info
 
 logger = getLogger("chop")
 logger.setLevel(logging.DEBUG)
@@ -77,13 +77,13 @@ def main():
         "target_weight_nodes": [
             "conv2d",
         ],
-        "target_act_nodes": [
+        "target_activation_nodes": [
             "relu",
         ],
-        "weight_stats": {
+        "weight_statistics": {
             "variance_precise": {"device": "cpu", "dims": "all"},
         },
-        "act_stats": {
+        "activation_statistics": {
             "variance_precise": {"device": "cpu", "dims": "all"},
         },
         "input_generator": input_generator,

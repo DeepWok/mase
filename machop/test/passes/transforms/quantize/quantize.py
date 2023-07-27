@@ -26,8 +26,8 @@ from chop.passes.analysis import (
 )
 from chop.passes.graph.mase_graph import MaseGraph
 from chop.passes.transforms import (
-    quantize_summary_analysis_pass,
     quantize_transform_pass,
+    summarize_quantization_analysis_pass,
 )
 from chop.passes.utils import deepcopy_mase_graph
 from chop.tools.logger import getLogger
@@ -97,7 +97,7 @@ def main():
     ori_mg = deepcopy_mase_graph(mg)
     mg = quantize_transform_pass(mg, quan_args)
 
-    quantize_summary_analysis_pass(ori_mg, mg, save_dir="quantize_summary")
+    summarize_quantization_analysis_pass(ori_mg, mg, save_dir="quantize_summary")
     # mg = report(mg)
     # mg = emit_verilog(mg)
 

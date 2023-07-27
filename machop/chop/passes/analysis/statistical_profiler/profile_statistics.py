@@ -1,16 +1,18 @@
-from typing import Any
-import torch
+import logging
 import math
+from typing import Any
+
 import numpy as np
 import toml
-import logging
+import torch
 from torch.fx import Interpreter
 from torch.fx.graph_module import GraphModule
 from torch.fx.node import Node
 from tqdm import tqdm
-from .stat import create_new_stat, _StatBase
+
 from ...utils import get_mase_op, get_mase_type, get_module_by_target
-from .utils import set_meta_arg_stat, get_meta_arg_stat
+from .stat import _StatBase, create_new_stat
+from .utils import get_meta_arg_stat, set_meta_arg_stat
 
 logger = logging.getLogger(__name__)
 
@@ -275,27 +277,27 @@ def graph_iterator_compute_and_unregister_stats(graph):
     return graph
 
 
-def profile_statistics_analysis_pass(graph, pass_arg: dict):
+def profile_statistics_analysis_pass(graph, pass_args: dict):
     """
     Profile statistics analysis pass
     """
 
     graph = graph_iterator_register_stat_collections(
         graph,
-        by=pass_arg["by"],
-        target_weight_nodes=pass_arg["target_weight_nodes"],
-        target_act_nodes=pass_arg["target_act_nodes"],
-        weight_stats=pass_arg["weight_stats"],
-        act_stats=pass_arg["act_stats"],
-        profile_output_act=pass_arg.get("profile_output_act", False),
+        by=pass_args["by"],
+        target_weight_nodes=pass_args["target_weight_nodes"],
+        target_act_nodes=pass_args["target_activation_nodes"],
+        weight_stats=pass_args["weight_statistics"],
+        act_stats=pass_args["activation_statistics"],
+        profile_output_act=pass_args.get("profile_output_activation", False),
     )
 
     graph = graph_iterator_profile_weight(graph)
 
     graph = graph_iterator_profile_act(
         graph,
-        input_generator=pass_arg["input_generator"],
-        num_samples=pass_arg["num_samples"],
+        input_generator=pass_args["input_generator"],
+        num_samples=pass_args["num_samples"],
     )
 
     graph = graph_iterator_compute_and_unregister_stats(graph)
