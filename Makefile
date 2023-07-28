@@ -1,4 +1,4 @@
-vhls=/scratch/jc9016/tools/Xilinx/2020.2
+vhls=/mnt/applications/Xilinx/23.1
 user=$(if $(shell id -u),$(shell id -u),9001)
 group=$(if $(shell id -g),$(shell id -g),1000)
 

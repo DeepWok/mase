@@ -87,7 +87,7 @@ printf "\
 \nexport PATH=/workspace/scripts:/workspace/hls/build/bin:/home/vagrant/.local/bin:/workspace/llvm/build/bin:\$PATH:/workspace/srcPkgs/verible/bin \
 \n# Vitis HLS setup \
 \nexport VHLS=${VHLS} \
-\n# source ${VHLS}/Vitis_HLS/2020.2/settings64.sh \
+\n# source ${VHLS}/Vitis_HLS/2023.1/settings64.sh \
 \n# MLIR-AIE PATH setup \
 \nexport PATH=/workspace/mlir-aie/install/bin:/workspace/mlir-air/install/bin:\$PATH \
 \nexport PYTHONPATH=/workspace/mlir-aie/install/python:/workspace/mlir-air/install/python:\$PYTHONPATH \
