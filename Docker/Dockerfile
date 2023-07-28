@@ -20,7 +20,10 @@ RUN apt-get update -y \
                           python3 python3-pip build-essential \
                           libssl-dev git vim wget htop sudo \
                           lld parallel clang-format clang-tidy \
-                          libtinfo5 gcc-multilib libidn11-dev
+                          libtinfo5 gcc-multilib libidn11-dev \
+                          locales
+
+RUN locale-gen en_US.UTF-8
 
 # Install SystemVerilog formatter
 RUN mkdir -p /srcPkgs \
