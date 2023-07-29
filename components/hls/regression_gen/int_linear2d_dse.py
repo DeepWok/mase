@@ -100,7 +100,7 @@ def int_linear2d_dse(mode=None, top=None, threads=16):
                                     tcl_buff = f"""
 open_project -reset {file_name} 
 set_top {top_name}
-add_files {{ {file_path} }}
+add_files {{ {file_name}.cpp }}
 open_solution -reset "solution1"
 set_part {{xcu250-figd2104-2L-e}}
 create_clock -period 4 -name default
@@ -111,11 +111,11 @@ csynth_design
                                     with open(tcl_path, "w", encoding="utf-8") as outf:
                                         outf.write(tcl_buff)
                                     commands[i % threads].append(
-                                        f'echo "{i}/{size}"; (cd {top}; vitis_hls {tcl_path})'
+                                        f'echo "{i}/{size}"; vitis_hls {file_name}.tcl'
                                     )
 
                                 if mode in ["synth", "all"]:
-                                    os.system(f"cd {top}; vitis_hls {tcl_path}")
+                                    os.system(f"cd {top}; vitis_hls {file_name}.tcl")
 
                                 i += 1
 
@@ -129,5 +129,5 @@ csynth_design
         f = open(os.path.join(top, f"run.sh"), "w")
         f.write(f'echo "int_linear2d" ')
         for i in range(0, len(commands)):
-            f.write(f"& bash threads_{i}.sh ")
+            f.write(f"& bash thread_{i}.sh ")
         f.close()

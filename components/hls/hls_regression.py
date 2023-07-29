@@ -6,7 +6,7 @@
 from argparse import ArgumentParser
 import os
 
-from regression_gen import int_linear2d_dse
+from regression_gen import int_linear2d_dse, int_softmax_dse, int_layernorm_dse
 
 
 def run(args):
@@ -18,6 +18,10 @@ def run(args):
     top = args.dir
     if op == "int_linear2d":
         int_linear2d_dse(mode=mode, top=top)
+    elif op == "int_softmax":
+        int_softmax_dse(mode=mode, top=top)
+    elif op == "int_layernorm":
+        int_layernorm_dse(mode=mode, top=top)
     else:
         assert False, f"Unsupported op = {op}"
 
