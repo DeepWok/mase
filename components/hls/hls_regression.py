@@ -6,7 +6,19 @@
 from argparse import ArgumentParser
 import os
 
-from regression_gen import int_linear2d_dse, int_softmax_dse, int_layernorm_dse
+from regression_gen import (
+    int_linear2d_dse,
+    int_softmax_dse,
+    int_layernorm_dse,
+    int_mult_dse,
+    int_add_dse,
+    int_relu_dse,
+    int_silu_dse,
+    int_transpose_dse,
+    int_matmul_dse,
+    fork_dse,
+    buffer_dse,
+)
 
 
 def run(args):
@@ -22,6 +34,22 @@ def run(args):
         int_softmax_dse(mode=mode, top=top)
     elif op == "int_layernorm":
         int_layernorm_dse(mode=mode, top=top)
+    elif op == "int_mult":
+        int_mult_dse(mode=mode, top=top)
+    elif op == "int_add":
+        int_add_dse(mode=mode, top=top)
+    elif op == "int_relu":
+        int_relu_dse(mode=mode, top=top)
+    elif op == "int_silu":
+        int_silu_dse(mode=mode, top=top)
+    elif op == "int_transpose":
+        int_transpose_dse(mode=mode, top=top)
+    elif op == "int_matmul":
+        int_matmul_dse(mode=mode, top=top)
+    elif op == "fork":
+        fork_dse(mode=mode, top=top)
+    elif op == "buffer":
+        buffer_dse(mode=mode, top=top)
     else:
         assert False, f"Unsupported op = {op}"
 

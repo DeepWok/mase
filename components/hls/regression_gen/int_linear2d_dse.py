@@ -9,7 +9,13 @@ sys.path.append(
     )
 )
 
-from hls.regression_gen.utils import DSE_MODES
+from hls.regression_gen.utils import (
+    DSE_MODES,
+    get_tcl_buff,
+    get_hls_results,
+    bash_gen,
+    csv_gen,
+)
 from hls.int_arith import int_linear2d_gen
 from hls import HLSWriter
 
@@ -51,10 +57,43 @@ def int_linear2d_dse(mode=None, top=None, threads=16):
         * len(w_frac_widths)
         * len(w_rows)
     )
+
+    # Ignored to reduce complexity
     print("Exploring linear2d. Design points = {}".format(size))
+    w_row_depth = 8
+    w_col_depth = 8
+    x_row_depth = 8
+    x_col_depth = 8
+    b_width = 0
+    b_frac_width = 0
 
     i = 0
     commands = [[] for i in range(0, threads)]
+    data_points = []
+    data_points.append(
+        [
+            "x_width",
+            "x_frac_width",
+            "x_row",
+            "x_col",
+            "x_row_depth",
+            "x_col_depth",
+            "w_width",
+            "w_frac_width",
+            "w_row",
+            "w_col",
+            "w_row_depth",
+            "w_col_depth",
+            "latency_min",
+            "latency_max",
+            "clock_period",
+            "bram",
+            "dsp",
+            "ff",
+            "lut",
+            "uram",
+        ]
+    )
     for x_row in x_rows:
         w_col = x_row
         for x_col in x_cols:
@@ -64,13 +103,6 @@ def int_linear2d_dse(mode=None, top=None, threads=16):
                         for w_width in w_widths:
                             for w_frac_width in w_frac_widths:
                                 print(f"Running design {i}/{size}")
-                                # Ignored to reduce complexity
-                                w_row_depth = 8
-                                w_col_depth = 8
-                                x_row_depth = 8
-                                x_col_depth = 8
-                                b_width = 0
-                                b_frac_width = 0
 
                                 file_name = f"x{i}_int_linear2d_{x_row}_{x_col}_{x_width}_{x_frac_width}_{w_row}_{w_col}_{w_width}_{w_frac_width}"
                                 tcl_path = os.path.join(top, f"{file_name}.tcl")
@@ -97,17 +129,11 @@ def int_linear2d_dse(mode=None, top=None, threads=16):
                                     writer.emit(file_path)
                                     os.system("clang-format -i {}".format(file_path))
                                     top_name = f"int_linear2d_{writer.op_id-1}"
-                                    tcl_buff = f"""
-open_project -reset {file_name} 
-set_top {top_name}
-add_files {{ {file_name}.cpp }}
-open_solution -reset "solution1"
-set_part {{xcu250-figd2104-2L-e}}
-create_clock -period 4 -name default
-config_bind -effort high
-config_compile -pipeline_loops 1
-csynth_design
-"""
+                                    tcl_buff = get_tcl_buff(
+                                        project=file_name,
+                                        top=top_name,
+                                        cpp=f"{file_name}.cpp",
+                                    )
                                     with open(tcl_path, "w", encoding="utf-8") as outf:
                                         outf.write(tcl_buff)
                                     commands[i % threads].append(
@@ -117,17 +143,43 @@ csynth_design
                                 if mode in ["synth", "all"]:
                                     os.system(f"cd {top}; vitis_hls {file_name}.tcl")
 
+                                if mode in ["report", "all"]:
+                                    top_name = "int_linear2d_0"
+                                    hr = get_hls_results(
+                                        project=os.path.join(top, file_name),
+                                        top=top_name,
+                                    )
+                                    data_points.append(
+                                        [
+                                            x_width,
+                                            x_frac_width,
+                                            x_row,
+                                            x_col,
+                                            x_row_depth,
+                                            x_col_depth,
+                                            w_width,
+                                            w_frac_width,
+                                            w_row,
+                                            w_col,
+                                            w_row_depth,
+                                            w_col_depth,
+                                            hr.latency_min,
+                                            hr.latency_max,
+                                            hr.clock_period,
+                                            hr.bram,
+                                            hr.dsp,
+                                            hr.ff,
+                                            hr.lut,
+                                            hr.uram,
+                                        ]
+                                    )
+
                                 i += 1
 
     if mode in ["codegen", "all"]:
-        for i, thread in enumerate(commands):
-            f = open(os.path.join(top, f"thread_{i}.sh"), "w")
-            for command in thread:
-                f.write(command + "\n")
-            f.close()
+        # Generate bash script for running HLS in parallel
+        bash_gen(commands, top, "int_linear2d")
 
-        f = open(os.path.join(top, f"run.sh"), "w")
-        f.write(f'echo "int_linear2d" ')
-        for i in range(0, len(commands)):
-            f.write(f"& bash thread_{i}.sh ")
-        f.close()
+    if mode in ["report", "all"]:
+        # Export regression model data points to csv
+        csv_gen(data_points, top, "int_linear2d")

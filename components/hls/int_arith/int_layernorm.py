@@ -47,7 +47,7 @@ def int_layernorm_gen(
 
     type_mean = get_fixed_ty(1, y_col, y_width, y_frac_width)
     if type_mean not in writer.types:
-        writer.type_buff += new_fixed_ty(y_row, y_col, y_width, y_frac_width)
+        writer.type_buff += new_fixed_ty(1, y_col, y_width, y_frac_width)
         writer.types.append(type_mean)
 
     body_mean = ""
@@ -114,7 +114,7 @@ mean = data_mean.read();
     body_var += f"data_out.write(data); if (i == {x_row_depth-1}) {{"
     body_var += f"{type_mean} var;"
     for i in range(0, x_col):
-        body_var += f"var.data_0_{i} = hls::sqrt(var_{i});\n"
+        body_var += f"var.data_0_{i} = hls::sqrt((ap_fixed<16, 8>)var_{i});\n"
     body_var += f"data_mean_out.write(mean); data_var.write(var);}}}}}}"
 
     body_ln = f"{type_mean} mean;"
@@ -184,9 +184,9 @@ void int_layernorm_{op_id}(hls::stream<{type_in}> &data_in, hls::stream<{type_ou
 #pragma HLS DATAFLOW 
 hls::stream<{type_mean}> data_mean, data_mean_out, data_var; 
 hls::stream<{type_out}> data_buff_0, data_buff_1;
-hlayernorm_mean_{op_id}(data_in, data_buff_0, data_mean);
-layernorm_var_{op_id}(data_buff_0, data_buff_1, data_mean, data_var, data_mean_out);
-layernorm_ln_{op_id}(data_buff_1, data_out, data_mean_out, data_var);
+int_layernorm_mean_{op_id}(data_in, data_buff_0, data_mean);
+int_layernorm_var_{op_id}(data_buff_0, data_buff_1, data_mean, data_var, data_mean_out);
+int_layernorm_ln_{op_id}(data_buff_1, data_out, data_mean_out, data_var);
 }}
 """
     writer.code_buff += buff
