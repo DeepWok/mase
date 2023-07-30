@@ -16,11 +16,11 @@ from hls.regression_gen.utils import (
     bash_gen,
     csv_gen,
 )
-from hls.int_arith import int_layernorm_gen
+from hls.int_arith import int_transpose_gen
 from hls import HLSWriter
 
 
-def int_layernorm_dse(mode=None, top=None, threads=16):
+def int_transpose_dse(mode=None, top=None, threads=16):
     assert mode in DSE_MODES, f"Unknown mode {mode}"
 
     # Small size for debugging only
@@ -33,12 +33,13 @@ def int_layernorm_dse(mode=None, top=None, threads=16):
     x_frac_widths = [1]
     x_rows = [1, 2, 3, 4, 5, 6, 7, 8]
     x_cols = [1, 2, 3, 4, 5, 6, 7, 8]
+
+    size = len(x_widths) * len(x_frac_widths) * len(x_rows) * len(x_cols)
+    print("Exploring transpose. Design points = {}".format(size))
+
     # Ignored to reduce complexity
     x_row_depth = 8
     x_col_depth = 8
-
-    size = len(x_widths) * len(x_frac_widths) * len(x_rows) * len(x_cols)
-    print("Exploring layernorm. Design points = {}".format(size))
 
     data_points = []
     data_points.append(
@@ -69,13 +70,13 @@ def int_layernorm_dse(mode=None, top=None, threads=16):
                     print(f"Running design {i}/{size}")
 
                     file_name = (
-                        f"x{i}_int_layernorm_{x_row}_{x_col}_{x_width}_{x_frac_width}"
+                        f"x{i}_int_transpose_{x_row}_{x_col}_{x_width}_{x_frac_width}"
                     )
                     tcl_path = os.path.join(top, f"{file_name}.tcl")
                     file_path = os.path.join(top, f"{file_name}.cpp")
                     if mode in ["codegen", "all"]:
                         writer = HLSWriter()
-                        writer = int_layernorm_gen(
+                        writer = int_transpose_gen(
                             writer,
                             x_width=x_width,
                             x_frac_width=x_frac_width,
@@ -86,7 +87,7 @@ def int_layernorm_dse(mode=None, top=None, threads=16):
                         )
                         writer.emit(file_path)
                         os.system("clang-format -i {}".format(file_path))
-                        top_name = f"int_layernorm_{writer.op_id-1}"
+                        top_name = f"int_transpose_{writer.op_id-1}"
                         tcl_buff = get_tcl_buff(
                             project=file_name, top=top_name, cpp=f"{file_name}.cpp"
                         )
@@ -100,7 +101,7 @@ def int_layernorm_dse(mode=None, top=None, threads=16):
                         os.system(f"cd {top}; vitis_hls {file_name}.tcl")
 
                     if mode in ["report", "all"]:
-                        top_name = "int_layernorm_1"
+                        top_name = "int_transpose_0"
                         hr = get_hls_results(
                             project=os.path.join(top, file_name),
                             top=top_name,
@@ -128,8 +129,8 @@ def int_layernorm_dse(mode=None, top=None, threads=16):
 
     if mode in ["codegen", "all"]:
         # Generate bash script for running HLS in parallel
-        bash_gen(commands, top, "int_layernorm")
+        bash_gen(commands, top, "int_transpose")
 
     if mode in ["report", "all"]:
         # Export regression model data points to csv
-        csv_gen(data_points, top, "int_layernorm")
+        csv_gen(data_points, top, "int_transpose")

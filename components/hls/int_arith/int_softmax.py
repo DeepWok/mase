@@ -39,7 +39,7 @@ def int_softmax_gen(
 
     type_expsum = get_fixed_ty(1, y_col, y_width, y_frac_width)
     if type_expsum not in writer.types:
-        writer.type_buff += new_fixed_ty(y_row, y_col, y_width, y_frac_width)
+        writer.type_buff += new_fixed_ty(1, y_col, y_width, y_frac_width)
         writer.types.append(type_expsum)
 
     body_exp = ""
@@ -104,7 +104,7 @@ void int_softmax_expsum_{op_id}(hls::stream<{type_in}> &data_in, hls::stream<{ty
 {body_exp}
 }}
 
-void softmax_sm_{op_id}(hls::stream<{type_out}> &data_in, hls::stream<{type_expsum}> &data_expsum, hls::stream<{type_out}> &data_out) {{
+void int_softmax_sm_{op_id}(hls::stream<{type_out}> &data_in, hls::stream<{type_expsum}> &data_expsum, hls::stream<{type_out}> &data_out) {{
 #pragma HLS INLINE OFF
 {body_sm}
 }}
@@ -114,8 +114,8 @@ void int_softmax_{op_id}(hls::stream<{type_in}> &data_in, hls::stream<{type_out}
 #pragma HLS DATAFLOW 
 hls::stream<{type_expsum}> data_expsum;
 hls::stream<{type_out}> data_exp;
-softmax_expsum_{op_id}(data_in, data_exp, data_expsum);
-softmax_sm_{op_id}(data_exp, data_expsum, data_out);
+int_softmax_expsum_{op_id}(data_in, data_exp, data_expsum);
+int_softmax_sm_{op_id}(data_exp, data_expsum, data_out);
 }}
 """
 
