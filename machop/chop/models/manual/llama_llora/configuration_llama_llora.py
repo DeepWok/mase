@@ -105,6 +105,7 @@ class LlamaLoraConfig(PretrainedConfig):
 
     def __init__(
         self,
+        lora_config: dict = None,
         vocab_size=32000,
         hidden_size=4096,
         intermediate_size=11008,
@@ -119,7 +120,6 @@ class LlamaLoraConfig(PretrainedConfig):
         bos_token_id=1,
         eos_token_id=2,
         tie_word_embeddings=False,
-        lora_config=toml.load(r"machop/configs/by_model/llama_lora/lora_by_type.toml"),
         **kwargs,
     ):
         self.vocab_size = vocab_size
