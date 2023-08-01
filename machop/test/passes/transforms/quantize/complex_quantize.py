@@ -62,6 +62,7 @@ def main():
         "block_log.toml",
         "block_minifloat.toml",
         "binary.toml",
+        "ternary.toml",
         "minifloat_denorm.toml",
         "minifloat_ieee.toml",
     ]

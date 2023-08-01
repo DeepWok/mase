@@ -13,6 +13,7 @@ from chop.passes.transforms.quantize.quantizers import (
     minifloat_denorm_quantizer,
     minifloat_ieee_quantizer,
     binary_quantizer,
+    ternary_quantizer,
 )
 from torch import Tensor
 from torch.nn.common_types import _size_1_t
@@ -644,4 +645,73 @@ class Conv1dBinary(_Conv1dBase):
         )
         self.b_quantizer = partial(
             binary_quantizer, stochastic=x_stochastic, bipolar=x_bipolar
+        )
+
+
+class Conv1dTernary(_Conv1dBase):
+    def __init__(
+        self,
+        in_channels: int,
+        out_channels: int,
+        kernel_size: _size_1_t,
+        stride: _size_1_t = 1,
+        padding: _size_1_t | str = 0,
+        dilation: _size_1_t = 1,
+        groups: int = 1,
+        bias: bool = True,
+        padding_mode: str = "zeros",
+        device=None,
+        dtype=None,
+        config=None,
+    ) -> None:
+        super().__init__(
+            in_channels=in_channels,
+            out_channels=out_channels,
+            kernel_size=kernel_size,
+            stride=stride,
+            padding=padding,
+            dilation=dilation,
+            groups=groups,
+            bias=bias,
+            padding_mode=padding_mode,
+            device=device,
+            dtype=dtype,
+        )
+        assert config is not None, "config is None!"
+        self.config = config
+        self.bypass = config.get("bypass", False)
+        if self.bypass:
+            return
+        w_scaling_factor = config["weight_scaling_factor"]
+        w_mean = config["weight_mean"]
+        w_median = config["weight_median"]
+        w_max = config["weight_max"]
+        x_scaling_factor = config["data_in_scaling_factor"]
+        x_mean = config["data_in_mean"]
+        x_median = config["data_in_median"]
+        x_max = config["data_in_max"]
+        b_scaling_factor = config["bias_scaling_factor"]
+        b_mean = config["bias_mean"]
+        b_median = config["bias_median"]
+        b_max = config["bias_max"]
+        self.w_quantizer = partial(
+            ternary_quantizer,
+            scaling_factor=w_scaling_factor,
+            maximum=w_max,
+            median=w_median,
+            mean=w_mean,
+        )
+        self.x_quantizer = partial(
+            ternary_quantizer,
+            scaling_factor=x_scaling_factor,
+            maximum=x_max,
+            median=x_median,
+            mean=x_mean,
+        )
+        self.b_quantizer = partial(
+            ternary_quantizer,
+            scaling_factor=b_scaling_factor,
+            maximum=b_max,
+            median=b_median,
+            mean=b_mean,
         )

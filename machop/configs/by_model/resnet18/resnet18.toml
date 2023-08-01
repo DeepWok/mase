@@ -9,7 +9,7 @@ max_epochs = 10
 batch_size = 32
 # torch lightning
 task = "classification"
-num_workers = 0
+num_workers = 16
 num_devices = 1
 accelerator = "cpu"
 # logging

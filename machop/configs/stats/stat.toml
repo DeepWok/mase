@@ -1,0 +1,33 @@
+# basics
+model = "toy"
+dataset = "toy-tiny"
+
+[passes.profile_statistics]
+by = "type"
+target_weight_nodes = ["linear"]
+target_activation_nodes = ["relu", "linear"]
+num_samples = 32
+
+[passes.profile_statistics.weight_statistics.range_min_max]
+dims = "all"
+abs = false
+
+[passes.profile_statistics.weight_statistics.range_quantile]
+dims = "all"
+abs = false
+quantile = 0.5
+
+[passes.profile_statistics.activation_statistics.range_min_max]
+dims = "all"
+abs = false
+
+[passes.profile_statistics.activation_statistics.range_quantile]
+dims = "all"
+abs = false
+quantile = 0.5
+
+[passes.report_node_meta_param]
+which = ["software"]
+
+[passes.save_node_meta_param]
+save_path = "node_software_meta_param_cli.toml"
