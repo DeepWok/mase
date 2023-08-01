@@ -8,6 +8,7 @@ from .conv1d import (
     Conv1dMinifloatDenorm,
     Conv1dMinifloatIEEE,
     Conv1dBinary,
+    Conv1dTernary,
 )
 from .conv2d import (
     Conv2dBlockFP,
@@ -18,6 +19,7 @@ from .conv2d import (
     Conv2dMinifloatDenorm,
     Conv2dMinifloatIEEE,
     Conv2dBinary,
+    Conv2dTernary,
 )
 from .linear import (
     LinearBlockFP,
@@ -28,8 +30,14 @@ from .linear import (
     LinearMinifloatDenorm,
     LinearMinifloatIEEE,
     LinearBinary,
+    LinearTernary,
 )
-from .pool2d import AdaptiveAvgPool2dInteger, AvgPool2dInteger, AvgPool2dBinary
+from .pool2d import (
+    AdaptiveAvgPool2dInteger,
+    AvgPool2dInteger,
+    AvgPool2dBinary,
+    AvgPool2dTernary,
+)
 from .relu import (
     ReLUBlockFP,
     ReLUBlockMinifloat,
@@ -39,12 +47,14 @@ from .relu import (
     ReLUMinifloatDenorm,
     ReLUMinifloatIEEE,
     ReLUBinary,
+    ReLUTernary,
 )
 
 quantized_module_map = {
     "conv1d_block_minifloat": Conv1dBlockMinifloat,
     "conv1d_integer": Conv1dInteger,
     "conv1d_binary": Conv1dBinary,
+    "conv1d_ternary": Conv1dTernary,
     "conv1d_log": Conv1dLog,
     "conv1d_block_log": Conv1dBlockLog,
     "conv1d_minifloat_ieee": Conv1dMinifloatIEEE,
@@ -53,6 +63,7 @@ quantized_module_map = {
     "conv2d_block_minifloat": Conv2dBlockMinifloat,
     "conv2d_integer": Conv2dInteger,
     "conv2d_binary": Conv2dBinary,
+    "conv2d_ternary": Conv2dTernary,
     "conv2d_log": Conv2dLog,
     "conv2d_block_log": Conv2dBlockLog,
     "conv2d_minifloat_ieee": Conv2dMinifloatIEEE,
@@ -66,9 +77,11 @@ quantized_module_map = {
     "linear_minifloat_denorm": LinearMinifloatDenorm,
     "linear_block_fp": LinearBlockFP,
     "linear_binary": LinearBinary,
+    "linear_ternary": LinearTernary,
     "adaptive_avg_pool2d_integer": AdaptiveAvgPool2dInteger,
     "avg_pool2d_integer": AvgPool2dInteger,
     "avg_pool2d_binary": AvgPool2dBinary,
+    "avg_pool2d_ternary": AvgPool2dTernary,
     "relu_block_minifloat": ReLUBlockMinifloat,
     "relu_integer": ReLUInteger,
     "relu_log": ReLULog,
@@ -77,4 +90,5 @@ quantized_module_map = {
     "relu_minifloat_denorm": ReLUMinifloatDenorm,
     "relu_block_fp": ReLUBlockFP,
     "relu_binary": ReLUBinary,
+    "relu_ternary": ReLUTernary,
 }

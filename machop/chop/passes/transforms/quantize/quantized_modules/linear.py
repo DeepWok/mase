@@ -6,6 +6,7 @@ import torch
 from torch import Tensor
 from torch.nn import functional as F
 
+from ....analysis.statistical_profiler.utils import get_meta_arg_stat
 from ..quantizers import (
     block_fp_quantizer,
     block_log_quantizer,
@@ -516,4 +517,55 @@ class LinearBinary(_LinearBase):
         )
         self.b_quantizer = partial(
             binary_quantizer, stochastic=b_stochastic, bipolar=b_bipolar
+        )
+
+
+class LinearTernary(_LinearBase):
+    def __init__(
+        self,
+        in_features: int,
+        out_features: int,
+        bias: bool = True,
+        device=None,
+        dtype=None,
+        config=None,
+    ) -> None:
+        super().__init__(in_features, out_features, bias, device, dtype)
+        assert config is not None, "config is None!"
+        self.config = config
+        self.bypass = config.get("bypass", False)
+        if self.bypass:
+            return
+        w_scaling_factor = config["weight_scaling_factor"]
+        w_mean = config["weight_mean"]
+        w_median = config["weight_median"]
+        w_max = config["weight_max"]
+        x_scaling_factor = config["data_in_scaling_factor"]
+        x_mean = config["data_in_mean"]
+        x_median = config["data_in_median"]
+        x_max = config["data_in_max"]
+        b_scaling_factor = config["bias_scaling_factor"]
+        b_mean = config["bias_mean"]
+        b_median = config["bias_median"]
+        b_max = config["bias_max"]
+        self.w_quantizer = partial(
+            ternary_quantizer,
+            scaling_factor=w_scaling_factor,
+            maximum=w_max,
+            median=w_median,
+            mean=w_mean,
+        )
+        self.x_quantizer = partial(
+            ternary_quantizer,
+            scaling_factor=x_scaling_factor,
+            maximum=x_max,
+            median=x_median,
+            mean=x_mean,
+        )
+        self.b_quantizer = partial(
+            ternary_quantizer,
+            scaling_factor=b_scaling_factor,
+            maximum=b_max,
+            median=b_median,
+            mean=b_mean,
         )

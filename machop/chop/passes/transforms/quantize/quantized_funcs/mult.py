@@ -11,6 +11,7 @@ from ..quantizers import (
     minifloat_denorm_quantizer,
     minifloat_ieee_quantizer,
     binary_quantizer,
+    ternary_quantizer,
 )
 
 
@@ -43,20 +44,17 @@ def mult_binary(x, y, config):
         return x * y
 
 
-# def construct_essential_config_mult_integer(config):
-#     return {
-#         "bypass": config.get("bypass", False),
-#         "name": config["name"],
-#         "data_in_width": config["data_in_width"],
-#         "data_in_frac_width": config["data_in_frac_width"],
-#     }
-
-
-# def get_output_bitwidth_mult_integer(config):
-#     return {
-#         "data_out_width": config["data_in_width"] + 1,
-#         "data_out_frac_width": config["data_in_frac_width"],
-#     }
+def mult_ternary(x, y, config):
+    bypass = config.get("bypass", False)
+    if bypass:
+        return x * y
+    else:
+        # quantiser
+        x_scaling_factor = config["data_in_scaling_factor"]
+        x_quantizer = partial(ternary_quantizer, scaling_factor=x_scaling_factor)
+        x = x_quantizer(x)
+        y = x_quantizer(y)
+        return x * y
 
 
 def mult_minifloat_denorm(x, y, config):

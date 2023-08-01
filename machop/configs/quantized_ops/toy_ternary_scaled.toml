@@ -1,0 +1,228 @@
+# basics
+model = "toy"
+dataset = "toy-tiny"
+
+[passes.profile_statistics]
+by = "type"
+target_weight_nodes = ["conv1d", "conv2d", "linear"]
+target_activation_nodes = ["relu"]
+num_samples = 32
+
+[passes.profile_statistics.weight_statistics.range_min_max]
+dims = "all"
+abs = false
+
+[passes.profile_statistics.weight_statistics.range_quantile]
+dims = "all"
+abs = false
+quantile = 0.5
+
+[passes.profile_statistics.activation_statistics.range_min_max]
+dims = "all"
+abs = false
+
+[passes.profile_statistics.activation_statistics.range_quantile]
+dims = "all"
+abs = false
+quantile = 0.5
+
+[passes.report_node_meta_param]
+which = ["software"]
+
+[passes.save_node_meta_param]
+save_path = "stats_for_quantisation.toml"
+
+[passes.quantize]
+by = "name"
+report = true
+
+# [passes.quantize.default.config]
+# name = "ternary"
+# data_in_scaling_factor = true
+# data_in_width = 2
+# data_in_frac_width = 0
+# weight_scaling_factor = true
+# weight_width = 2
+# weight_frac_width = 0
+# bias_scaling_factor = true
+# bias_width = 2
+# bias_frac_width = 0
+
+[passes.quantize.seq_blocks_0.config] # Linear
+name = "ternary"
+data_in_scaling_factor = true
+data_in_width = 2
+data_in_frac_width = 0
+data_in_mean = "NA"
+data_in_median = "NA"
+data_in_max = "NA"
+weight_scaling_factor = true
+weight_width = 2
+weight_frac_width = 0
+weight_mean = "NA"
+weight_median = -0.003547451924532652
+weight_max = 0.5006683468818665
+bias_scaling_factor = true
+bias_width = 2
+bias_frac_width = 0
+bias_mean = "NA"
+bias_median = 0.020987853407859802
+bias_max = 0.4975373148918152
+
+[passes.quantize.seq_blocks_1.config] # ReLU
+name = "ternary"
+data_in_scaling_factor = true
+data_in_width = 2
+data_in_frac_width = 0
+data_in_mean = "NA"
+data_in_median = -0.009714938700199127
+data_in_max = 6.568027019500732
+
+[passes.quantize.seq_blocks_2.config] # Linear
+name = "ternary"
+data_in_scaling_factor = true
+data_in_width = 2
+data_in_frac_width = 0
+data_in_mean = "NA"
+data_in_median = "NA"
+data_in_max = "NA"
+weight_scaling_factor = true
+weight_width = 2
+weight_frac_width = 0
+weight_mean = "NA"
+weight_median = 0.0002879784442484379
+weight_max = 0.10081316530704498
+bias_scaling_factor = true
+bias_width = 2
+bias_frac_width = 0
+bias_mean = "NA"
+bias_median = -0.01050510909408331
+bias_max = 0.09985458105802536
+
+[passes.quantize.seq_blocks_3.config] # ReLU
+name = "ternary"
+data_in_scaling_factor = true
+data_in_width = 2
+data_in_frac_width = 0
+data_in_mean = "NA"
+data_in_median = 0.04034885764122009
+data_in_max = 2.9700541496276855
+
+[passes.quantize.seq_blocks_4.config] # Linear
+name = "ternary"
+data_in_scaling_factor = true
+data_in_width = 2
+data_in_frac_width = 0
+data_in_mean = "NA"
+data_in_median = "NA"
+data_in_max = "NA"
+weight_scaling_factor = true
+weight_width = 2
+weight_frac_width = 0
+weight_mean = "NA"
+weight_median = 0.0035230852663517
+weight_max = 0.09948183596134186
+bias_scaling_factor = true
+bias_width = 2
+bias_frac_width = 0
+bias_mean = "NA"
+bias_median = 0.006421931087970734
+bias_max = 0.08463221043348312
+
+# Stats
+
+[seq_blocks_0.software.args.weight.stat.range_min_max]
+min = -0.4995238780975342
+max = 0.5006683468818665
+range = 1.0001921653747559
+count = 400
+
+[seq_blocks_0.software.args.weight.stat.range_quantile]
+min = -0.003547451924532652
+max = -0.003547451924532652
+range = 0.0
+count = 400
+
+[seq_blocks_0.software.args.bias.stat.range_min_max]
+min = -0.49153661727905273
+max = 0.4975373148918152
+range = 0.9890739321708679
+count = 100
+
+[seq_blocks_0.software.args.bias.stat.range_quantile]
+min = 0.020987853407859802
+max = 0.020987853407859802
+range = 0.0
+count = 100
+
+[seq_blocks_1.software.args.data_in_0.stat.range_min_max]
+min = -6.8810224533081055
+max = 6.568027019500732
+range = 13.44904899597168
+count = 12800
+
+[seq_blocks_1.software.args.data_in_0.stat.range_quantile]
+min = -0.009714938700199127
+max = -0.009714938700199127
+range = 0.0
+count = 12800
+
+[seq_blocks_2.software.args.weight.stat.range_min_max]
+min = -0.10072962194681168
+max = 0.10081316530704498
+range = 0.20154279470443726
+count = 10000
+
+[seq_blocks_2.software.args.weight.stat.range_quantile]
+min = 0.0002879784442484379
+max = 0.0002879784442484379
+range = 0.0
+count = 10000
+
+[seq_blocks_2.software.args.bias.stat.range_min_max]
+min = -0.09801792353391647
+max = 0.09985458105802536
+range = 0.19787250459194183
+count = 100
+
+[seq_blocks_2.software.args.bias.stat.range_quantile]
+min = -0.01050510909408331
+max = -0.01050510909408331
+range = 0.0
+count = 100
+
+[seq_blocks_3.software.args.data_in_0.stat.range_min_max]
+min = -3.033205509185791
+max = 2.9700541496276855
+range = 6.003259658813477
+count = 12800
+
+[seq_blocks_3.software.args.data_in_0.stat.range_quantile]
+min = 0.04034885764122009
+max = 0.04034885764122009
+range = 0.0
+count = 12800
+
+[seq_blocks_4.software.args.weight.stat.range_min_max]
+min = -0.09926900267601013
+max = 0.09948183596134186
+range = 0.198750838637352
+count = 200
+
+[seq_blocks_4.software.args.weight.stat.range_quantile]
+min = 0.0035230852663517
+max = 0.0035230852663517
+range = 0.0
+count = 200
+
+[seq_blocks_4.software.args.bias.stat.range_min_max]
+min = -0.07178834825754166
+max = 0.08463221043348312
+range = 0.15642055869102478
+count = 2
+
+[seq_blocks_4.software.args.bias.stat.range_quantile]
+min = 0.006421931087970734
+max = 0.006421931087970734
+range = 0.0
+count = 2

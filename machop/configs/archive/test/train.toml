@@ -11,3 +11,4 @@ task = "classification"
 num_workers = 0
 num_devices = 1
 accelerator = "cpu"
+project_dir = "../mase_output"

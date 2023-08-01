@@ -13,6 +13,7 @@ from ..quantizers import (
     minifloat_denorm_quantizer,
     minifloat_ieee_quantizer,
     binary_quantizer,
+    ternary_quantizer,
 )
 
 # PyTorch has torch.matmul and torch.bmm for matrix multiplication
@@ -60,15 +61,18 @@ def generic_matmul_binary(x, y, config, style="matmul"):
         return matmul(x, y)
 
 
-# def construct_essential_config_generic_matmul_integer(config):
-#     return {
-#         "bypass": config.get("bypass", False),
-#         "name": config["name"],
-#         "data_in_width": config["data_in_width"],
-#         "data_in_frac_width": config["data_in_frac_width"],
-#         "weight_width": config["weight_width"],
-#         "weight_frac_width": config["weight_frac_width"],
-#     }
+def generic_matmul_ternary(x, y, config, style="matmul"):
+    bypass = config.get("bypass", False)
+    matmul = matmul_mapping[style]
+    if bypass:
+        return matmul(x, y)
+    else:
+        x_scaling_factor = config["data_in_scaling_factor"]
+        x_quantizer = partial(binary_quantizer, scaling_factor=x_scaling_factor)
+        x = x_quantizer(x)
+        y = x_quantizer(y)
+
+        return matmul(x, y)
 
 
 def generic_matmul_minifloat_denorm(x, y, config, style="matmul"):
@@ -333,6 +337,10 @@ def matmul_binary(x, y, config):
     return generic_matmul_binary(x, y, config, "matmul")
 
 
+def matmul_ternary(x, y, config):
+    return generic_matmul_ternary(x, y, config, "matmul")
+
+
 def matmul_minifloat_denorm(x, y, config):
     return generic_matmul_minifloat_denorm(x, y, config, "matmul")
 
@@ -363,6 +371,10 @@ def bmm_integer(x, y, config):
 
 def bmm_binary(x, y, config):
     return generic_matmul_binary(x, y, config, "bmm")
+
+
+def bmm_ternary(x, y, config):
+    return generic_matmul_ternary(x, y, config, "bmm")
 
 
 # def get_output_bitwidth_bmm_integer(config, x_shape):

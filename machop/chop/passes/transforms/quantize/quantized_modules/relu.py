@@ -271,3 +271,28 @@ class ReLUBinary(_ReLUBase):
         self.config = config
         # self.x_width = x_width
         # self.x_frac_width = x_frac_width
+
+
+class ReLUTernary(_ReLUBase):
+    bypass = None
+
+    def __init__(self, inplace: bool = False, config: dict = None):
+        super().__init__(inplace)
+        assert config is not None, "config is None!"
+        self.config = config
+        self.bypass = config.get("bypass", False)
+        if self.bypass:
+            return
+        # establish quantisers
+        x_scaling_factor = config["data_in_scaling_factor"]
+        x_mean = config["data_in_mean"]
+        x_median = config["data_in_median"]
+        x_max = config["data_in_max"]
+        self.x_quantizer = partial(
+            ternary_quantizer,
+            scaling_factor=x_scaling_factor,
+            median=x_median,
+            max=x_max,
+            mean=x_mean,
+        )
+        self.config = config

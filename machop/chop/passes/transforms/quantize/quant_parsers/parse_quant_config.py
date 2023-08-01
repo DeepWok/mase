@@ -11,27 +11,42 @@ QUANT_ARITH_ENTRIES = {
     "binary": {
         "weight_entries": (
             "weight_width",
-            "weight_frac_width",
             "weight_stochastic",
             "weight_bipolar",
         ),
         "data_in_entries": (
             "data_in_width",
-            "data_in_frac_width",
             "data_in_stochastic",
             "data_in_bipolar",
         ),
         "bias_entries": (
             "bias_width",
-            "bias_frac_width",
             "bias_stochastic",
             "bias_bipolar",
         ),
     },
     "ternary": {
-        "weight_entries": ("weight_width", "weight_frac_width"),
-        "data_in_entries": ("data_in_width", "data_in_frac_width"),
-        "bias_entries": ("bias_width", "bias_frac_width"),
+        "weight_entries": (
+            "weight_width",
+            "weight_scaling_factor",
+            "weight_mean",
+            "weight_median",
+            "weight_max",
+        ),
+        "data_in_entries": (
+            "data_in_width",
+            "data_in_scaling_factor",
+            "data_in_mean",
+            "data_in_median",
+            "data_in_max",
+        ),
+        "bias_entries": (
+            "bias_width",
+            "bias_scaling_factor",
+            "bias_mean",
+            "bias_max",
+            "bias_median",
+        ),
     },
     "minifloat_ieee": {
         "weight_entries": (

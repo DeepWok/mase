@@ -13,6 +13,7 @@ from ..quantizers import (
     minifloat_denorm_quantizer,
     minifloat_ieee_quantizer,
     binary_quantizer,
+    ternary_quantizer,
 )
 
 
@@ -43,20 +44,14 @@ def relu_binary(x, inplace=False, config=None):
         return F.relu(x_quantizer(x), inplace=inplace)
 
 
-# def construct_essential_config_relu_integer(config):
-#     return {
-#         "bypass": config.get("bypass", False),
-#         "name": config["name"],
-#         "data_in_width": config["data_in_width"],
-#         "data_in_frac_width": config["data_in_frac_width"],
-#     }
-
-
-# def get_output_bitwidth_relu_integer(config):
-#     return {
-#         "data_out_width": config["data_in_width"],
-#         "data_out_frac_width": config["data_in_frac_width"],
-#     }
+def relu_ternary(x, inplace=False, config=None):
+    bypass = config.get("bypass", False)
+    if bypass:
+        return F.relu(x, inplace=inplace)
+    else:
+        x_scaling_factor = config["data_in_scaling_factor"]
+        x_quantizer = partial(ternary_quantizer, scaling_factor=x_scaling_factor)
+        return F.relu(x_quantizer(x), inplace=inplace)
 
 
 def relu_minifloat_denorm(x, inplace=False, config=None):

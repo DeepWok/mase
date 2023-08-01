@@ -2,7 +2,8 @@ from .block_fp import block_fp_quantizer
 from .block_log import block_log_quantizer
 from .block_minifloat import block_minifloat_quantizer
 from .integer import integer_quantizer
-from .binary import binary_quantizer, ternary_quantizer
+from .binary import binary_quantizer
+from .ternary import ternary_quantizer
 from .log import log_quantizer
 from .minifloat import minifloat_denorm_quantizer, minifloat_ieee_quantizer
 from .quantizers_for_hw import integer_quantizer_for_hw

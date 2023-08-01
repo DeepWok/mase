@@ -7,6 +7,18 @@ from .add import (
     add_minifloat_denorm,
     add_minifloat_ieee,
     add_binary,
+    add_ternary,
+)
+from .sub import (
+    sub_block_fp,
+    sub_block_log,
+    sub_block_minifloat,
+    sub_integer,
+    sub_log,
+    sub_minifloat_denorm,
+    sub_minifloat_ieee,
+    sub_binary,
+    sub_ternary,
 )
 from .sub import (
     sub_block_fp,
@@ -27,6 +39,7 @@ from .matmul import (
     bmm_minifloat_denorm,
     bmm_minifloat_ieee,
     bmm_binary,
+    bmm_ternary,
     matmul_block_fp,
     matmul_block_log,
     matmul_block_minifloat,
@@ -35,6 +48,7 @@ from .matmul import (
     matmul_minifloat_denorm,
     matmul_minifloat_ieee,
     matmul_binary,
+    matmul_ternary,
 )
 from .mult import (
     mult_block_fp,
@@ -45,6 +59,7 @@ from .mult import (
     mult_minifloat_denorm,
     mult_minifloat_ieee,
     mult_binary,
+    mult_ternary,
 )
 from .relu import (
     relu_block_fp,
@@ -55,6 +70,7 @@ from .relu import (
     relu_minifloat_denorm,
     relu_minifloat_ieee,
     relu_binary,
+    relu_ternary,
 )
 
 quantized_func_map = {
@@ -66,6 +82,7 @@ quantized_func_map = {
     "add_block_fp": add_block_fp,
     "add_block_log": add_block_log,
     "add_binary": add_binary,
+    "add_ternary": add_ternary,
     "sub_block_minifloat": sub_block_minifloat,
     "sub_integer": sub_integer,
     "sub_log": sub_log,
@@ -74,6 +91,7 @@ quantized_func_map = {
     "sub_block_fp": sub_block_fp,
     "sub_block_log": sub_block_log,
     "sub_binary": sub_binary,
+    "sub_ternary": sub_ternary,
     "mul_block_minifloat": mult_block_minifloat,
     "mul_integer": mult_integer,
     "mul_log": mult_log,
@@ -82,6 +100,7 @@ quantized_func_map = {
     "mul_block_fp": mult_block_fp,
     "mul_block_log": mult_block_log,
     "mul_binary": mult_binary,
+    "mul_ternary": mult_ternary,
     "bmm_block_minifloat": bmm_block_minifloat,
     "bmm_integer": bmm_integer,
     "bmm_log": bmm_log,
@@ -90,6 +109,7 @@ quantized_func_map = {
     "bmm_block_fp": bmm_block_fp,
     "bmm_block_log": bmm_block_log,
     "bmm_binary": bmm_binary,
+    "bmm_ternary": bmm_ternary,
     "matmul_block_minifloat": matmul_block_minifloat,
     "matmul_integer": matmul_integer,
     "matmul_log": matmul_log,
@@ -98,6 +118,7 @@ quantized_func_map = {
     "matmul_block_fp": matmul_block_fp,
     "matmul_block_log": matmul_block_log,
     "matmul_binary": matmul_binary,
+    "matmul_ternary": matmul_ternary,
     "relu_block_minifloat": relu_block_minifloat,
     "relu_integer": relu_integer,
     "relu_log": relu_log,
@@ -106,4 +127,5 @@ quantized_func_map = {
     "relu_block_fp": relu_block_fp,
     "relu_block_log": relu_block_log,
     "relu_binary": relu_binary,
+    "relu_ternary": relu_ternary,
 }

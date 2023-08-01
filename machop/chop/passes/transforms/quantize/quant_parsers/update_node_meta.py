@@ -10,10 +10,10 @@ QUANT_ARITH_TO_SUFFIXES = {
     "integer": ("width", "frac_width"),
     "binary": (
         "width",
-        "frac_width",
         "stochastic",
         "bipolar",
     ),  # TODO: stochastic, bipolar flags are operational flag instead of precision.
+    "ternary": ("width", "scaling_factor", "mean", "median", "max"),
     "minifloat_ieee": ("width", "exponent_width", "exponent_bias"),
     "minifloat_denorm": ("width", "exponent_width", "exponent_bias"),
     "log": ("width", "exponent_bias"),
