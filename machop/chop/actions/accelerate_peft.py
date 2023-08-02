@@ -17,11 +17,23 @@ from torch.distributed.fsdp.fully_sharded_data_parallel import (
 from torch.distributed.fsdp.wrap import transformer_auto_wrap_policy
 from tqdm.auto import tqdm
 from transformers import get_scheduler
+import argparse
+import toml
 
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
 
 logger = getLogger(__name__)
+
+
+def parse_arguments():
+    parser = argparse.ArgumentParser(description="Train the model.")
+    parser.add_argument(
+        "--lora-config-path", type=str, help="Path to a config TOML file"
+    )
+    config_path = parser.parse_args().lora_config_path
+    config_dict = toml.load(config_path)
+    return config_dict
 
 
 def checkpoint_model(accelerator: Accelerator, model: torch.nn.Module, save_dir):
