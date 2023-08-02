@@ -150,7 +150,7 @@ class LoraLayer:
             nn.init.normal_(self.lora_embedding_B[adapter_name])
 
 
-class Linear(nn.Linear, LoraLayer):
+class LinearLora(nn.Linear, LoraLayer):
     # Lora implemented in a dense layer
     def __init__(
         self,

@@ -44,7 +44,7 @@ from transformers.utils import (
 )
 
 from .configuration_llama_llora import LlamaLoraConfig
-from ..lora_modules import LoraLayer, Linear
+from ..lora_modules import LoraLayer, LinearLora
 
 logger = logging.get_logger(__name__)
 
@@ -230,19 +230,19 @@ class LlamaAttention(nn.Module):
             )
         # fmt: off
         lora_config = config.lora_config[f"model_layer_{layer_id}"]["self_attn"]
-        self.q_proj = Linear(adapter_name ="eng_alpaca", in_features = self.hidden_size, 
+        self.q_proj = LinearLora(adapter_name ="eng_alpaca", in_features = self.hidden_size, 
                              out_features= self.num_heads * self.head_dim, 
                              bias=False, config=lora_config["q_proj"])
         
-        self.k_proj = Linear(adapter_name ="eng_alpaca",in_features = self.hidden_size, 
+        self.k_proj = LinearLora(adapter_name ="eng_alpaca",in_features = self.hidden_size, 
                              out_features= self.num_heads * self.head_dim,
                               bias=False, config=lora_config["k_proj"])
         
-        self.v_proj = Linear(adapter_name ="eng_alpaca",in_features = self.hidden_size, 
+        self.v_proj = LinearLora(adapter_name ="eng_alpaca",in_features = self.hidden_size, 
                              out_features= self.num_heads * self.head_dim,
                               bias=False, config=lora_config["v_proj"])
         
-        self.o_proj = Linear(adapter_name ="eng_alpaca",in_features = self.hidden_size, 
+        self.o_proj = LinearLora(adapter_name ="eng_alpaca",in_features = self.hidden_size, 
                              out_features= self.num_heads * self.head_dim, 
                              bias=False, config=lora_config["o_proj"])
 
