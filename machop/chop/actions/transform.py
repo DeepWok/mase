@@ -136,5 +136,7 @@ def transform(
         ), f"Return type of {pass_name} must be MaseGraph, got {type(graph)}"
 
     if save_dir is not None:
-        save_mase_graph_transform_pass(graph, pass_args=save_dir)
+        transformed_ckpt = save_dir / "transformed_ckpt"
+        transformed_ckpt.mkdir(parents=True, exist_ok=True)
+        save_mase_graph_transform_pass(graph, pass_args=transformed_ckpt)
     return graph

@@ -1,0 +1,17 @@
+model = "toy"
+dataset = "toy-tiny"
+project_dir = "../mase_output"
+project = "test_save_and_load"
+
+[passes.quantize]
+by = "type"
+report = true
+
+[passes.quantize.default.config]
+name = "log"
+bias_exponent_bias = 128
+bias_width = 8
+data_in_exponent_bias = 128
+data_in_width = 8
+weight_exponent_bias = 128
+weight_width = 8

@@ -3,7 +3,7 @@ Chop (ch): Machop's command line interface
 
 The brains behind the chop interface that allows users to train, test and transform (i.e
 prune or quantise) a supported model. You'll find a list of the available models and
-datasets in Machop README.md file. 
+datasets in Machop README.md file.
 
 Feel free to browse this file and please flag any issues or feature requests here:
 https://github.com/JianyiCheng/mase-tools/issues
@@ -18,8 +18,8 @@ Internal Backlog:
 2. Add 'adafactor' as a training optimiser, which saves GPU memory
 3. Push constants into a separate file
 4. Add package configuration file (incl. versioning)
-5. Better file validation (i.e. checking extension) and possibly schema validation for 
-   certain filetypes using Cerberus. 
+5. Better file validation (i.e. checking extension) and possibly schema validation for
+   certain filetypes using Cerberus.
 6. Move the primitive validation routines and custom actions to a separate file.
 7. Merge the valid file and directory types into a common path type; implement support
    for checking extensions. The function would return a pre-configured callable.
@@ -33,6 +33,7 @@ import argparse
 from argparse import SUPPRESS
 from typing import Sequence
 from pathlib import Path
+from functools import partial
 
 import ipdb
 import pytorch_lightning as pl
@@ -67,21 +68,21 @@ LOGO = f"""
              j /. " `"  ' ,' /`.        |
              ||.|        .  | . .       |
              ||#|        |  | #'|       '
-            /'.||        |  \." |      -.    
-           /    '        `.----"      ".        
-           \  `.    ,'                .         
-            `._____           _,-'  '/ 
+            /'.||        |  \." |      -.
+           /    '        `.----"      ".
+           \  `.    ,'                .
+            `._____           _,-'  '/
               `".  `'-..__..-'   _,."
-                 ^-._      _,..-'      
-                     '""'""             
-       
+                 ^-._      _,..-'
+                     '""'""
+
     Chop (ch): Machop's Command Line Interface
                 VERSION {VERSION}
-          
+
           Maintained by the DeepWok Lab
 
-     For comprehensive information on usage, 
-            please refer to the wiki: 
+     For comprehensive information on usage,
+            please refer to the wiki:
    https://github.com/JianyiCheng/mase-tools/wiki
 """
 TASKS = ["classification", "cls", "translation", "tran", "language_modeling", "lm"]
@@ -294,7 +295,7 @@ class ChopCLI:
             "task": self.args.task,
             "data_module": self.data_module,
             "config": self.args.config,
-            "save_dir": os.path.join(self.output_dir_sw, "transformed_ckpts"),
+            "save_dir": os.path.join(self.output_dir_sw, "transform"),
             "load_name": self.args.load_name,
             "load_type": self.args.load_type,
         }
@@ -368,7 +369,7 @@ class ChopCLI:
             type=_valid_filepath,
             help="""
                 path to a configuration file in the TOML format. Manual CLI overrides
-                for arguments have a higher precedence. Required if the action is 
+                for arguments have a higher precedence. Required if the action is
                 transform. (default: %(default)s)
             """,
             metavar="PATH",
@@ -378,7 +379,7 @@ class ChopCLI:
             dest="task",
             choices=TASKS,
             help=f"""
-                task to perform. One of {'(' + '|'.join(TASKS) + ')'} 
+                task to perform. One of {'(' + '|'.join(TASKS) + ')'}
                 (default: %(default)s)
             """,
             metavar="TASK",
@@ -386,7 +387,7 @@ class ChopCLI:
         general_group.add_argument(
             "--load",
             dest="load_name",
-            type=_valid_filepath,
+            type=_valid_file_or_directory_path,
             help="path to load the model from. (default: %(default)s)",
             metavar="PATH",
         )
@@ -395,8 +396,8 @@ class ChopCLI:
             dest="load_type",
             choices=LOAD_TYPE,
             help=f"""
-                the type of checkpoint to be loaded; it's disregarded if --load is NOT 
-                specified. It is designed to and must be used in tandem with --load. 
+                the type of checkpoint to be loaded; it's disregarded if --load is NOT
+                specified. It is designed to and must be used in tandem with --load.
                 One of {'(' + '|'.join(LOAD_TYPE) + ')'} (default: %(default)s)
             """,
             metavar="",
@@ -424,7 +425,7 @@ class ChopCLI:
             choices=LOG_LEVELS,
             help=f"""
                 verbosity level of the logger; it's only effective when --debug flag is
-                NOT passed in. One of {'(' + '|'.join(LOG_LEVELS) + ')'} 
+                NOT passed in. One of {'(' + '|'.join(LOG_LEVELS) + ')'}
                 (default: %(default)s)
             """,
             metavar="",
@@ -434,7 +435,7 @@ class ChopCLI:
             dest="seed",
             type=int,
             help="""
-                seed for random number generators set via Pytorch Lightning's 
+                seed for random number generators set via Pytorch Lightning's
                 seed_everything function. (default: %(default)s)
             """,
             metavar="NUM",
@@ -447,7 +448,7 @@ class ChopCLI:
             dest="training_optimizer",
             choices=OPTIMIZERS,
             help=f"""
-                name of supported optimiser for training. One of 
+                name of supported optimiser for training. One of
                 {'(' + '|'.join(OPTIMIZERS) + ')'} (default: %(default)s)
             """,
             metavar="TYPE",
@@ -457,7 +458,7 @@ class ChopCLI:
             dest="trainer_precision",
             choices=TRAINER_PRECISION,
             help=f"""
-                numeric precision for training. One of 
+                numeric precision for training. One of
                 {'(' + '|'.join(TRAINER_PRECISION) + ')'} (default: %(default)s)
             """,
             metavar="TYPE",
@@ -535,7 +536,7 @@ class ChopCLI:
             dest="strategy",
             choices=STRATEGIES,
             help=f"""
-                type of strategy for training. One of 
+                type of strategy for training. One of
                 {'(' + '|'.join(STRATEGIES) + ')'} (default: %(default)s)
             """,
             metavar="TYPE",
@@ -555,7 +556,7 @@ class ChopCLI:
             dest="github_ci",
             help="""
                 set the execution environment to GitHub's CI pipeline; it's used in the
-                MASE verilog emitter transform pass to skip simulations. 
+                MASE verilog emitter transform pass to skip simulations.
                 (default: %(default)s)
                 """,
         )
@@ -583,7 +584,7 @@ class ChopCLI:
             action="store_true",
             dest="is_pretrained",
             help="""
-                load pretrained checkpoint from HuggingFace/Torchvision when 
+                load pretrained checkpoint from HuggingFace/Torchvision when
                 initialising models. (default: %(default)s)
             """,
         )
@@ -592,7 +593,7 @@ class ChopCLI:
             dest="max_token_len",
             type=_maybe_positive_int,
             help="""
-                maximum number of tokens. A negative value will use 
+                maximum number of tokens. A negative value will use
                 tokenizer.model_max_length. (default: %(default)s)
             """,
             metavar="NUM",
@@ -603,7 +604,7 @@ class ChopCLI:
         project_group.add_argument(
             "--project-dir",
             dest="project_dir",
-            type=_valid_directorypath,
+            type=partial(_valid_directory_path, create_dir=True),
             help="directory to save the project to. (default: %(default)s)",
             metavar="DIR",
         )
@@ -611,7 +612,7 @@ class ChopCLI:
             "--project",
             dest="project",
             help="""
-                name of the project. 
+                name of the project.
                 (default: {MODEL-NAME}_{TASK-TYPE}_{DATASET-NAME}_{TIMESTAMP})
             """,
             metavar="NAME",
@@ -631,7 +632,7 @@ class ChopCLI:
             const=INFO_TYPE[0],
             choices=INFO_TYPE,
             help=f"""
-                list information about supported models or/and datasets and exit. One of 
+                list information about supported models or/and datasets and exit. One of
                 {'(' + '|'.join(INFO_TYPE) + ')'} (default: %(const)s)
             """,
             metavar="TYPE",
@@ -667,12 +668,14 @@ class ChopCLI:
                     name=self.args.model,
                     task=self.args.task,
                     info=dataset_info,
+                    return_tokenizer=True,
                 )
-                tokenizer = model_dict.get_tokenizer(self.args.model)
-                model = {
-                    "model": model,
-                    "tokenizer": tokenizer,
-                }
+                tokenizer = model["tokenizer"]
+                # tokenizer = model_dict.get_tokenizer(self.args.model)
+                # model = {
+                #     "model": model,
+                #     "tokenizer": tokenizer,
+                # }
             else:
                 model = model_inst_fn(
                     name=self.args.model,
@@ -745,7 +748,7 @@ class ChopCLI:
 
 
 # Custom types ---------------------------------------------------------------------
-# Returns the absolute path to a file if it is indeed a valid path and not a folder
+# check if the path is a valid file path
 def _valid_filepath(path: str):
     if not os.path.exists(path):
         raise argparse.ArgumentTypeError(f"file not found")
@@ -755,11 +758,22 @@ def _valid_filepath(path: str):
 
 
 # Returns the absolute path to a directory if it is indeed a valid path
-def _valid_directorypath(path: str):
-    if not os.path.exists(path):
-        raise argparse.ArgumentTypeError(f"directory not found")
+def _valid_directory_path(path: str, create_dir: bool = False):
     if os.path.isfile(path):
-        raise argparse.ArgumentTypeError(f"expected path to directory, got {path!r}")
+        raise argparse.ArgumentTypeError(
+            f"expected path to directory, got file {path!r}"
+        )
+    if (not os.path.exists(path)) and (not create_dir):
+        raise argparse.ArgumentTypeError(f"directory not found")
+    elif (not os.path.exists(path)) and create_dir:
+        os.makedirs(path, exist_ok=True)
+    return os.path.abspath(path)
+
+
+# Returns the absolute path to a file or directory if it is indeed a valid path
+def _valid_file_or_directory_path(path: str):
+    if not os.path.exists(path):
+        raise argparse.ArgumentTypeError(f"file or directory not found")
     return os.path.abspath(path)
 
 
