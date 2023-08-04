@@ -8,6 +8,8 @@ import os
 
 from regression_gen import (
     int_linear2d_dse,
+    int_rmsnorm_dse,
+    int_rope_dse,
     int_softmax_dse,
     int_layernorm_dse,
     int_mult_dse,
@@ -18,6 +20,9 @@ from regression_gen import (
     int_matmul_dse,
     fork_dse,
     buffer_dse,
+    bfp_add_dse,
+    bfp_mult_dse,
+    bfp_linear2d_dse,
 )
 
 
@@ -32,6 +37,10 @@ def run(args):
         int_linear2d_dse(mode=mode, top=top)
     elif op == "int_softmax":
         int_softmax_dse(mode=mode, top=top)
+    elif op == "int_rmsnorm":
+        int_rmsnorm_dse(mode=mode, top=top)
+    elif op == "int_rope":
+        int_rope_dse(mode=mode, top=top)
     elif op == "int_layernorm":
         int_layernorm_dse(mode=mode, top=top)
     elif op == "int_mult":
@@ -50,6 +59,12 @@ def run(args):
         fork_dse(mode=mode, top=top)
     elif op == "buffer":
         buffer_dse(mode=mode, top=top)
+    elif op == "bfp_add":
+        bfp_add_dse(mode=mode, top=top)
+    elif op == "bfp_mult":
+        bfp_mult_dse(mode=mode, top=top)
+    if op == "bfp_linear2d":
+        bfp_linear2d_dse(mode=mode, top=top)
     else:
         assert False, f"Unsupported op = {op}"
 
