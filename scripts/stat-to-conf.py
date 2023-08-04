@@ -43,9 +43,9 @@ default_base = {
 
 def set_stat(
     entry_name: str,
-    mean: float | None | str = None,
-    median: float | None | str = None,
-    max: float | None | str = None,
+    mean=None,
+    median=None,
+    max=None,
 ) -> dict[str, Any]:
     """Return a dictionary containing the format of the stats required to use
     ternary quantiser. If statistics are not specified, "NA" will be set as the value,
@@ -72,44 +72,47 @@ class Translator:
         """Read stats data and generate appropriate Mase config"""
         if self.args.base:
             config = toml.load(self.args.base)
+            config["passes"]["quantize"].update(
+                {"by": "name"}
+            )  # force quantisation by name rather than by type
         else:
             config = default_base
         source = toml.load(self.args.source)
         for block_name, block in source.items():
             if "seq_blocks_" in block_name:
-                config["passes"]["quantize"][block_name] = (
-                    {
-                        "config": {
-                            "name": "ternary",
-                            "data_in_scaling_factor": True,
-                            "data_in_width": 2,
-                            "weight_scaling_factor": True,
-                            "weight_width": 2,
-                            "bias_scaling_factor": True,
-                            "bias_width": 2,
+                if block_name not in config["passes"]["quantize"]:
+                    # if block entry exists in base, do not overwrite
+                    config["passes"]["quantize"][block_name] = (
+                        config["passes"]["quantize"]["default"]
+                        if source[block_name]["common"]["mase_op"]
+                        in ["linear", "conv1d", "conv2d"]  # compatability list
+                        else {
+                            "config": {
+                                key: config["passes"]["quantize"]["default"]["config"][
+                                    key
+                                ]
+                                for key in [
+                                    "name",
+                                    "data_in_scaling_factor",
+                                    "data_in_width",
+                                ]
+                            }
                         }
-                    }
-                    if source[block_name]["common"]["mase_op"] in ["linear"]
-                    else {  # compatability list
-                        "config": {
-                            "name": "ternary",
-                            "data_in_scaling_factor": True,
-                            "data_in_width": 2,
-                        }
-                    }
-                )
+                    )
                 for data_type, stat in block["software"]["args"].items():
                     # should be data_in, weight or bias
                     if data_type == "data_in_0":
                         data_type = "data_in"
                     stat = stat["stat"]
-                    config["passes"]["quantize"][block_name]["config"].update(
-                        set_stat(
-                            data_type,
-                            median=stat["range_quantile"]["max"],
-                            max=stat["range_min_max"]["max"],
-                        )
-                    )
+                    for k, v in set_stat(
+                        data_type,
+                        median=stat["range_quantile"]["max"],
+                        max=stat["range_min_max"]["max"],
+                    ).items():
+                        if k not in config["passes"]["quantize"][block_name]["config"]:
+                            config["passes"]["quantize"][block_name]["config"].update(
+                                {k: v}
+                            )
         dest = open(self.args.destination, "w")
         toml.dump(config, dest)
         dest.close()
@@ -145,7 +148,7 @@ stat-to-conf.py <stat.toml> <dest.toml> [--base base.toml]"""
     args = parser.parse_args()
     translate = Translator(args)
     run = translate.emit_config()
-    if run:
+    if run or run == 0:
         sys.exit(run)
     sys.exit(-1)
 
