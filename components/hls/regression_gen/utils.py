@@ -44,7 +44,9 @@ def get_hls_results(project=None, top=None):
 
     report = os.path.join(project, "solution1", "syn", "report", f"{top}_csynth.rpt")
 
-    assert os.path.isfile, f"Cannot find synthesis report for {project}"
+    if not os.path.isfile(report):
+        print(f"Cannot find synthesis report for {project}")
+        return None
 
     timing_done = False
     area_done = False

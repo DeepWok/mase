@@ -1,5 +1,7 @@
 from .int_linear2d import int_linear2d_gen
 from .int_softmax import int_softmax_gen
+from .int_rmsnorm import int_rmsnorm_gen
+from .int_rope import int_rope_gen
 from .int_layernorm import int_layernorm_gen
 from .int_mult import int_mult_gen
 from .int_add import int_add_gen
