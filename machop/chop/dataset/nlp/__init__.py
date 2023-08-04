@@ -3,6 +3,7 @@ from .language_modeling import (
     LanguageModelingDatasetPTB,
     LanguageModelingDatasetWikitext2,
     LanguageModelingDatasetWikiText103,
+    LanguageModelingDatasetScienceQA,
 )
 from .sentiment_analysis import SentAnalDatasetSST2
 from .text_entailment import (
@@ -42,4 +43,5 @@ dataset_factory = {
     "wikitext103": LanguageModelingDatasetWikiText103,
     "c4": LanguageModelingDatasetC4,
     "ptb": LanguageModelingDatasetPTB,
+    "scienceqa": LanguageModelingDatasetScienceQA,
 }

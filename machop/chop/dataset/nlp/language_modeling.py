@@ -311,6 +311,41 @@ class LanguageModelingDatasetPTB(LanguageModeling):
         return raw_dataset
 
 
+class LanguageModelingDatasetScienceQA(LanguageModeling):
+    raw_path = "./data/scienceqa"
+
+    def __init__(
+        self, split, tokenizer=None, max_token_len=None, num_workers=4, auto_setup=False
+    ):
+        super().__init__(
+            split=split,
+            tokenizer=tokenizer,
+            block_size=max_token_len,
+            num_workers=num_workers,
+        )
+
+        self.processed_dataset_dir = None
+        if auto_setup:
+            assert self.tokenizer is not None
+            self.prepare_data(self.tokenizer, self.max_token_len)
+            self.setup(self.tokenizer, self.max_token_len)
+            print("Dataset is auto-setup")
+
+    def _download_or_load_raw_dataset(self):
+        if not os.path.isdir(self.raw_path):
+            print("Downloading and processing raw dataset...")
+            raw_dataset = load_dataset(
+                "metaeval/ScienceQA_text_only",
+                cache_dir=os.path.abspath("./cache/dataset_cache_dir"),
+            )
+            raw_dataset.save_to_disk(self.raw_path)
+        else:
+            print("Raw dataset is already downloaded")
+            raw_dataset = load_from_disk(self.raw_path)
+        print("Raw dataset loaded")
+        return raw_dataset
+
+
 # class LanuguageModelingDatasetBookCorpus(LanguageModeling):
 #     def __init__(self, split="train", block_size=256):
 #         self.block_size = block_size
