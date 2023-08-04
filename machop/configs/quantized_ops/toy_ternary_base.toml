@@ -1,0 +1,25 @@
+# basics
+model = "toy"
+dataset = "toy-tiny"
+
+[passes.quantize]
+by = "type"
+report = true
+
+[passes.quantize.default.config]
+name = "ternary"
+data_in_scaling_factor = true
+data_in_width = 2
+weight_scaling_factor = true
+weight_width = 2
+bias_scaling_factor = true
+bias_width = 2
+
+[passes.quantize.seq_blocks_1.config] # ReLU override
+name = "ternary"
+data_in_scaling_factor = true
+data_in_width = 2
+data_in_frac_width = 0
+data_in_mean = "NA"
+data_in_median = -0.009714938700199127
+data_in_max = 6.568027019500732

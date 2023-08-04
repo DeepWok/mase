@@ -8,12 +8,18 @@ report = true
 
 [passes.quantize.default.config]
 name = "ternary"
-data_in_scaling_factor = false
 data_in_width = 2
-data_in_frac_width = 0
-weight_scaling_factor = false
+data_in_scaling_factor = false
 weight_width = 2
-weight_frac_width = 0
-bias_scaling_factor = false
+weight_scaling_factor = false
 bias_width = 2
-bias_frac_width = 0
+bias_scaling_factor = false
+data_in_mean = "NA"
+data_in_median = "NA"
+data_in_max = "NA"
+weight_mean = "NA"
+weight_median = "NA"
+weight_max = "NA"
+bias_mean = "NA"
+bias_median = "NA"
+bias_max = "NA"
