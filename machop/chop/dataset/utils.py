@@ -106,6 +106,11 @@ def get_dataset(model_name, dataset_name, **kwargs):
             val_dataset = dataset_cls(split="validation", **kwargs)
             test_dataset = dataset_cls(split="test", **kwargs)
             pred_dataset = None
+        elif dataset_name in ["scienceqa"]:
+            train_dataset = dataset_cls(split="train", **kwargs)
+            val_dataset = dataset_cls(split="validation", **kwargs)
+            test_dataset = dataset_cls(split="test", **kwargs)
+            pred_dataset = None
         # info = {"num_classes": train_dataset.num_classes}
     else:
         raise ValueError(f"Dataset {dataset_name} is not supported.")
