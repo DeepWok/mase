@@ -1,0 +1,13 @@
+# basics
+model = "mobilenetv3_small"
+dataset = "imagenet"
+
+[passes.prune]
+save = true
+save_dir = "."
+mode = "random-unstructured"
+sparsity = 0.5
+threshold = 0.5
+adaptive = false
+input_shape = [3, 224, 224]
+batch_size = 4

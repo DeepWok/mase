@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
-# This example converts a simple MLP model to Verilog
-
+# NOTE: This is not really a test, but a script to just informally validate
+# functionality via trail and error. Feel free to modify this file as needed.
 
 import logging
 import os
@@ -18,8 +18,8 @@ from chop.passes import (
     init_metadata_analysis_pass,
     prune_transform_pass,
 )
-from chop.models.toy import ToyConvNet
 from chop.passes.graph.mase_graph import MaseGraph
+from chop.models.vision import get_mobilenetv3_small
 from chop.tools.logger import getLogger
 
 
@@ -28,7 +28,7 @@ logger.setLevel(logging.DEBUG)
 
 
 def main():
-    model = ToyConvNet(num_classes=10)
+    model = get_mobilenetv3_small({"num_classes": 1000}, pretrained=True)
     graph = MaseGraph(model=model)
 
     # NOTE: Both functions have pass arguments that are not used in this example
@@ -37,8 +37,8 @@ def main():
     logger.debug(graph.fx_graph)
 
     root = Path(__file__).resolve().parents[4]
-    config_path = root / "configs/tests/prune/simple_unstructured.toml"
-    with open(config_path, "r") as f:
+    config_path = root / "configs/tests/prune/random_unstructured.toml"
+    with open(config_path) as f:
         config = toml.load(f)
         config = config["passes"]["prune"]
 

@@ -65,6 +65,16 @@ def graph_iterator_for_mase_ops(graph):
                 mase_op = "max_pool2d"
             elif isinstance(module, nn.ReLU):
                 mase_op = "relu"
+            # NOTE: The ones below were added to support MobileNetV2 and MobileNetV3.
+            # These don't show up when printing the fx.graph.
+            elif isinstance(module, nn.ReLU6):
+                mase_op = "relu6"
+            elif isinstance(module, nn.Dropout):
+                mase_op = "dropout"
+            elif isinstance(module, nn.Hardswish):
+                mase_op = "hardswish"
+            elif isinstance(module, nn.Hardsigmoid):
+                mase_op = "hardsigmoid"
             else:
                 raise ValueError(f"Unknown node type: {node.target}")
             node.meta["mase"].parameters["common"]["mase_type"] = mase_type

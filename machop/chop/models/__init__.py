@@ -7,7 +7,7 @@ from .patched_nlp_models import patched_model_cls_to_required_input_args
 from .manual import get_llama_plain, get_opt_plain
 
 from .nlp_models import get_nlp_model
-from .toy import get_toy_tiny, get_toynet, get_testmodel
+from .toy import get_toy_tiny, get_toynet, get_testmodel, get_toy_convnet
 from .toy_custom_fn import get_toyfnnet
 from .vision import (
     cswin_64_small,
@@ -89,6 +89,7 @@ _built_in_vision_model_map = {
     "test": get_testmodel,
     "toy-fn": get_toyfnnet,
     "toy-tiny": get_toy_tiny,
+    "toy-conv": get_toy_convnet,
 }
 
 _patched_vision_model_map = {}
