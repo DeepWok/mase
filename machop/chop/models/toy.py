@@ -1,4 +1,7 @@
-import torch
+"""
+A collection of toy models for testing and development runs.
+"""
+
 import torch.nn as nn
 
 
@@ -18,12 +21,6 @@ class ToyNet(nn.Module):
         return self.seq_blocks(x.view(x.size(0), -1))
 
 
-def get_toynet(info, pretrained=False):
-    image_size = info["image_size"]
-    num_classes = info["num_classes"]
-    return ToyNet(image_size, num_classes)
-
-
 class ToyTiny(nn.Module):
     def __init__(self, image_size, num_classes=1) -> None:
         super().__init__()
@@ -40,12 +37,6 @@ class ToyTiny(nn.Module):
         x = self.l2(x)
         x = self.relu_2(x)
         return x
-
-
-def get_toy_tiny(info, pretrained=False):
-    image_size = info["image_size"]
-    num_classes = info["num_classes"]
-    return ToyTiny(image_size, num_classes)
 
 
 class TestModel(nn.Module):
@@ -82,7 +73,11 @@ class TestModel(nn.Module):
         x = self.seq_blocks(x)
         x = x.view(x.size(0), 32, -1)  # Reshape to [batch_size, 32, height * width]
         x = self.conv1d(x)
-        # x = torch.matmul(x, torch.transpose(x, 1, 2))  # Matrix multiplication TODO: add transpose operation to mase
+
+        # Matrix multiplication
+        # TODO: Add transpose operation to mase
+        # x = torch.matmul(x, torch.transpose(x, 1, 2))
+
         x = x.view(x.size(0), -1)
         x = self.fc(x)
 
@@ -96,8 +91,58 @@ class TestModel(nn.Module):
         return x
 
 
+# A simple convolutional toy net that uses Conv2d, Conv1d and Linear layers.  This
+# network is primarily used to test the pruning transformation.
+class ToyConvNet(nn.Module):
+    def __init__(self, num_classes, channels=[3, 8, 16, 32, 64]):
+        super(ToyConvNet, self).__init__()
+        self.channels = channels
+        self.block_1 = self._conv_block(nn.Conv2d, channels[0], channels[1], 3, 1, 1)
+        self.block_2 = self._conv_block(nn.Conv2d, channels[1], channels[2], 3, 1, 1)
+        self.block_3 = self._conv_block(nn.Conv1d, channels[2], channels[3], 3, 1, 1)
+        self.block_4 = self._conv_block(nn.Conv1d, channels[3], channels[4], 3, 1, 1)
+        self.maxpool = nn.MaxPool2d(2, 2)
+        self.avgpool = nn.AdaptiveAvgPool1d(1)
+        self.linear = nn.Linear(channels[4], num_classes)
+
+    def forward(self, x):
+        x = self.block_1(x)
+        x = self.maxpool(x)
+        x = self.block_2(x)
+        x = x.view(x.size(0), self.channels[2], -1)
+        x = self.block_3(x)
+        x = self.block_4(x)
+        x = self.avgpool(x)
+        x = x.view(x.size(0), -1)
+        x = self.linear(x)
+        return x
+
+    # Helper functions -----------------------------------------------------------------
+    def _conv_block(self, conv_class, *args):
+        return nn.Sequential(conv_class(*args), nn.ReLU())
+
+
+# Getters ------------------------------------------------------------------------------
+def get_toynet(info, pretrained=False):
+    image_size = info["image_size"]
+    num_classes = info["num_classes"]
+    return ToyNet(image_size, num_classes)
+
+
+def get_toy_tiny(info, pretrained=False):
+    image_size = info["image_size"]
+    num_classes = info["num_classes"]
+    return ToyTiny(image_size, num_classes)
+
+
 def get_testmodel(info, pretrained=False):
     image_size = info["image_size"]
     num_classes = info["num_classes"]
     print(num_classes)
     return TestModel(image_size, num_classes)
+
+
+def get_toy_convnet(info, pretrained=False):
+    # NOTE: The model isn't configurable through the CLI or a configuration file yet.
+    num_classes = info["num_classes"]
+    return ToyConvNet(num_classes)
