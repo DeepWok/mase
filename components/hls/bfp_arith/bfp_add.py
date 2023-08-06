@@ -20,15 +20,6 @@ def bfp_add_gen(
     assert x_man_width > 0
     assert x_exp_width > 0
 
-    if x_exp_width > 5 or w_exp_width > 5:
-        # Use fp32
-        ew = 8
-        mw = 23
-    else:
-        # Use fp16
-        ew = 5
-        mw = 10
-
     writer = bfp_block_adder_gen(
         writer,
         x_exp_width=x_exp_width,
@@ -55,10 +46,14 @@ def bfp_add_gen(
         writer.type_buff += new_bfp_ty(x_row, x_col, w_exp_width, w_man_width)
         writer.types.append(type_in1)
 
-    type_out = get_bfp_ty(y_row, y_col, ew, mw)
-    if type_out not in writer.types:
-        writer.type_buff += new_bfp_ty(y_row, y_col, ew, mw)
-        writer.types.append(type_out)
+    if x_exp_width > w_exp_width:
+        ew = x_exp_width
+        mw = x_man_width
+        type_out = type_in0
+    else:
+        ew = w_exp_width
+        mw = w_man_width
+        type_out = type_in1
 
     op_id = writer.op_id
     buff = f"""

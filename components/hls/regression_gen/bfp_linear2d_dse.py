@@ -24,21 +24,23 @@ def bfp_linear2d_dse(mode=None, top=None, threads=32):
     assert mode in DSE_MODES, f"Unknown mode {mode}"
 
     # Small size for debugging only
-    # x_exp_widths = [4]
-    # x_man_widths = [4]
-    # x_rows = [2]
-    # x_cols = [3]
-    # w_exp_widths = [2]
-    # w_man_widths = [2]
-    # w_rows = [4]
+    # x_exp_widths = [8]
+    # x_man_widths = [3]
+    # x_rows = [16]
+    # x_cols = [1]
+    # w_exp_widths = [8]
+    # w_man_widths = [3]
+    # w_rows = [2]
 
-    x_exp_widths = [2, 4, 6, 8]
-    x_man_widths = [2, 4, 6]
-    x_rows = [1, 2, 3, 4]
-    x_cols = [1, 2, 3, 4]
-    w_exp_widths = [2, 4, 6, 8]
-    w_man_widths = [2, 4, 6]
-    w_rows = [1, 2, 3, 4]
+    x_exp_widths = [8]
+    # x_exp_widths = [2, 4, 6, 8]
+    x_man_widths = [1, 2, 3, 4, 5, 6, 7, 8]
+    x_rows = [16]
+    x_cols = [1]
+    w_exp_widths = [8]
+    # w_exp_widths = [2, 4, 6, 8]
+    w_man_widths = [1, 2, 3, 4, 5, 6, 7, 8]
+    w_rows = [1, 2, 3, 4, 5, 6, 7, 8]
 
     # Ignored to reduce complexity
     w_row_depths = [2]
@@ -144,7 +146,7 @@ def bfp_linear2d_dse(mode=None, top=None, threads=32):
                                     os.system(f"cd {top}; vitis_hls {file_name}.tcl")
 
                                 if mode in ["report", "all"]:
-                                    top_name = "bfp_linear2d_1"
+                                    top_name = "bfp_linear2d_0"
                                     hr = get_hls_results(
                                         project=os.path.join(top, file_name),
                                         top=top_name,

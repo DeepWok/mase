@@ -1,3 +1,6 @@
+import math
+
+
 def clog2(x):
     return int(math.ceil(math.log2(x)))
 

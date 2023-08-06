@@ -92,11 +92,11 @@ for (int k = 0; k < {w_row_depth}; k++) {{
     # End of the complicated part
     body += f"{type_out} d;"
     for i in range(0, y_row):
-        for k in range(0, y_col):
+        for j in range(0, y_col):
             if b_width == 0:
-                body += f"d.data_{i}_{k} = data_{i}_{k}[k] + "
+                body += f"d.data_{i}_{j} = data_{i}_{j}[k] + "
             else:
-                body += f"d.data_{i}_{k} = data_{i}_{k}[k]+ bias_{i}[k] + "
+                body += f"d.data_{i}_{j} = data_{i}_{j}[k]+ bias_{i}[k] + "
             for k in range(0, x_row):
                 body += f"weight_{i}_{k}[j][k] * data_in_{k}_{j} + "
             body = body[: body.rfind("+")] + ";"

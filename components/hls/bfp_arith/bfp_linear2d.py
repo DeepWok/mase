@@ -1,4 +1,4 @@
-from .bfp_multiplier_float import bfp_multiplier_float_gen
+# Temporary solution
 from .utils import clog2, get_bfp_ty, new_bfp_ty
 
 
@@ -20,7 +20,8 @@ def bfp_linear2d_gen(
     b_man_width=8,
 ):
     """
-    This script generates a fixed-point linear2d in HLS
+    This script generates a fixed-point linear2d in HLS.
+    Assume each column of x and each row of w is a block
     """
     assert writer is not None
     assert x_exp_width > 0
@@ -33,45 +34,28 @@ def bfp_linear2d_gen(
     y_row_depth = w_row_depth
     y_col_depth = x_col_depth
 
-    writer = bfp_multiplier_float_gen(
-        writer,
-        x_exp_width=x_exp_width,
-        x_man_width=x_man_width,
-        w_exp_width=w_exp_width,
-        w_man_width=w_man_width,
-    )
-    mult_id = writer.op_id - 1
+    bits = clog2(x_row)
+    y_exp_width = max(max(x_exp_width, w_man_width) + 1, b_exp_width)
+    y_man_width = x_man_width + bits
 
-    if x_exp_width > 5 or w_exp_width > 5:
-        # Use fp32
-        ew = 8
-        mw = 23
-        fpt = "float"
-        union_ty = """union
-{
-  unsigned int intval;
-  float fpval;
-}
-"""
-    else:
-        # Use fp16
-        ew = 5
-        mw = 10
-        fpt = "half"
-        union_ty = """union
-{
-  unsigned int intval;
-  half fpval;
-}
-"""
+    min_shift = min(x_man_width, w_man_width)
 
-    y_exp_width = ew
-    y_man_width = mw
+    assert x_col == 1, "Current version only support x_col = 1"
 
     type_in = get_bfp_ty(x_row, x_col, x_exp_width, x_man_width)
     if type_in not in writer.types:
         writer.type_buff += new_bfp_ty(x_row, x_col, x_exp_width, x_man_width)
         writer.types.append(type_in)
+
+    type_x = get_bfp_ty(x_row, 1, x_exp_width, x_man_width)
+    if type_x not in writer.types:
+        writer.type_buff += new_bfp_ty(x_row, 1, x_exp_width, x_man_width)
+        writer.types.append(type_x)
+
+    type_w = get_bfp_ty(1, w_col, w_exp_width, w_man_width)
+    if type_w not in writer.types:
+        writer.type_buff += new_bfp_ty(1, w_col, w_exp_width, w_man_width)
+        writer.types.append(type_w)
 
     type_out = get_bfp_ty(y_row, y_col, y_exp_width, y_man_width)
     if type_out not in writer.types:
@@ -79,19 +63,12 @@ def bfp_linear2d_gen(
         writer.types.append(type_out)
 
     body = ""
-    body += f"ap_int<{w_exp_width}> weight_exp [{w_col_depth}][{w_row_depth}];\n"
     for i in range(0, w_row):
-        for j in range(0, w_col):
-            body += f"ap_int<{w_man_width+1}> weight_man_{i}_{j} [{w_col_depth}][{w_row_depth}];\n"
-    body += f"ap_uint<{x_exp_width}> data_in_exp;\n"
-    for i in range(0, x_row):
-        for j in range(0, x_col):
-            body += f"ap_int<{x_man_width+1}> data_in_man_{i}_{j};\n"
-    for i in range(0, y_row):
-        for k in range(0, y_col):
-            body += f"{fpt} data_{i}_{k} [{y_row_depth}];\n"
-    for i in range(0, y_row):
-        body += f"{fpt} bias_{i}[{y_row_depth}];\n"
+        body += f"{type_w} weight_{i} [{w_col_depth}][{w_row_depth}];\n"
+    body += f"{type_in} d;\n"
+    body += f"{type_out} dout_buff [{y_row_depth}];\n"
+    # if b_exp_width > 0:
+    #     body += f"{type_out} data_in_bias[{y_row_depth}];\n"
     body += f"""
 for (int i = 0; i < {x_col_depth}; i++) {{
 for (int j = 0; j < {x_row_depth}; j++) {{
@@ -100,59 +77,114 @@ for (int k = 0; k < {w_row_depth}; k++) {{
 #pragma HLS LOOP_MERGE
 #pragma HLS PIPELINE II=1
 """
-    body += f"if (k == 0) {{ {type_in} d = data_in.read();"
-    body += f"data_in_exp = d.exponent;"
-    for i in range(0, x_row):
-        for j in range(0, x_col):
-            body += f"data_in_man_{i}_{j} = d.data_{i}_{j};"
-    body += "}"
+    body += f"if (k == 0) {{ d = data_in.read();"
     # Begin of the complicated part
     body += f"if (j != {x_row_depth-1}) {{"
     for i in range(0, y_row):
         for j in range(0, y_col):
-            body += f"data_{i}_{j}[k] += "
+            # Single row of w and single column x - mult
+            body += f"ap_uint<{max(x_exp_width, w_exp_width)+1}> wx_exp_{i}_{j} = d.exponent + weight_{i}[j][k].exponent;"
+            body += f"ap_uint<{x_man_width+w_man_width+bits}> wx_man_{i}_{j} = "
             for k in range(0, x_row):
-                body += f"bfp_multiplier_float_{mult_id}(data_in_exp, data_in_man_{k}_{j}, weight_exp[j][k], weight_man_{i}_{k}[j][k]) + "
+                body += f"weight_{i}[j][k].data_0_{k} * d.data_{k}_{j} + "
             body = body[: body.rfind("+")] + ";"
-    body += "} else {"
-    # End of the complicated part
-    body += f"{type_out} d;"
-    for i in range(0, y_row):
-        for k in range(0, y_col):
-            if b_exp_width == 0:
-                body += f"{fpt} d_data_{i}_{k} = data_{i}_{k}[k] + "
-            else:
-                body += f"{fpt} d_data_{i}_{k} = data_{i}_{k}[k]+ bias_{i}[k] + "
-            for k in range(0, x_row):
-                body += f"bfp_multiplier_float_{mult_id}(data_in_exp, data_in_man_{k}_{j}, weight_exp[j][k], weight_man_{i}_{k}[j][k]) + "
-            body = body[: body.rfind("+")] + ";"
-    for i in range(0, y_row):
-        for j in range(0, y_col):
-            body += f"data_{i}_{j}[k] = 0;"
+            for k in range(0, bits):
+                body += f"if (wx_man_{i}_{j}[{x_man_width+w_man_width+bits-1-k}]) wx_exp_{i}_{j} += {bits-k};"
+                if k != bits - 1:
+                    body += " else "
+            # TODO: Signess?
+            body += f"ap_uint<{y_man_width}> wx_cast_man_{i}_{j} = wx_man_{i}_{j}.range({x_man_width+w_man_width-1}, {x_man_width+w_man_width-y_man_width});"
 
-    # Casting back to bfp
-    body += f"ap_uint<{ew}> exp_max = 0;"
-    for i in range(0, y_row):
-        for j in range(0, y_col):
-            body += f"""
-ap_uint<1> d_sign_{i}_{j};
-ap_uint<{ew}> d_exp_{i}_{j};
-ap_uint<{mw}> d_man_{i}_{j};
-ap_uint<{1+ew+mw}> val_{i}_{j};
-
-{union_ty} u_{i}_{j}; 
-u_{i}_{j}.fpval = d_data_{i}_{j};
-val_{i}_{j} = u_{i}_{j}.intval;
-(d_sign_{i}_{j}, d_exp_{i}_{j}, d_man_{i}_{j}) = val_{i}_{j};
-exp_max = (exp_max > d_exp_{i}_{j}) ? exp_max :  d_exp_{i}_{j};
+            true_body = ""
+            false_body = ""
+            for s in range(1, min_shift):
+                true_body += f"""
+if (diff == {s}) {{
+dout_buff[k].data_{i}_{j} += (wx_cast_man_{i}_{j} >> {s});
+}}
+"""
+                false_body += f"""
+if (diff == {s}) {{
+dout_buff[k].data_{i}_{j} = (dout_buff[k].data_{i}_{j}  >> {s}) + wx_cast_man_{i}_{j};
+}}
 """
 
-    body += f"d.exponent = exp_max;"
+            body += f"""
+{{
+auto exp_0 = wx_exp_{i}_{j};
+auto exp_1 = dout_buff[k].exponent;
+
+if (exp_0 == exp_1) {{
+dout_buff[k].data_{i}_{j} += wx_cast_man_{i}_{j};
+}}
+else if (exp_0 > exp_1 && exp_0 - exp_1 < {min_shift}) {{
+ap_uint<{y_exp_width}> diff = exp_0 - exp_1;
+{true_body}
+}} 
+else if (exp_1 > exp_0 && exp_1 - exp_0 < {min_shift}) {{
+ap_uint<{y_exp_width}> diff = exp_1 - exp_0;
+{false_body}
+}}
+}}
+"""
+    body += "} else {"
+    # End of the complicated part
+    body += f"{type_out} dout;"
     for i in range(0, y_row):
         for j in range(0, y_col):
-            body += f"d.data_{i}_{j} = (d_sign_{i}_{j}, d_man_{i}_{j}) >> (exp_max - d_exp_{i}_{j});"
-    body += "data_out.write(d);"
-    body += "}}}}"
+            # Single row of w and single column x - mult
+            body += f"ap_uint<{max(x_exp_width, w_exp_width)+1}> wx_exp_{i}_{j} = d.exponent + weight_{i}[j][k].exponent;"
+            body += f"ap_uint<{x_man_width+w_man_width+bits}> wx_man_{i}_{j} = "
+            for k in range(0, x_row):
+                body += f"weight_{i}[j][k].data_0_{k} * d.data_{k}_{j} + "
+            body = body[: body.rfind("+")] + ";"
+            for k in range(0, bits):
+                body += f"if (wx_man_{i}_{j}[{x_man_width+w_man_width+bits-1-k}]) wx_exp_{i}_{j} += {bits-k};"
+                if k != bits - 1:
+                    body += " else "
+            # TODO: Signess?
+            body += f"ap_uint<{y_man_width}> wx_cast_man_{i}_{j} = wx_man_{i}_{j}.range({x_man_width+w_man_width-1}, {x_man_width+w_man_width-y_man_width});"
+
+            true_body = ""
+            false_body = ""
+            for s in range(1, min_shift):
+                true_body += f"""
+if (diff == {s}) {{
+dout.data_{i}_{j} += dout_buff[k].data_{i}_{j}+ (wx_cast_man_{i}_{j} >> {s});
+}}
+"""
+                false_body += f"""
+if (diff == {s}) {{
+dout.data_{i}_{j} = (dout_buff[k].data_{i}_{j} >> {s}) + wx_cast_man_{i}_{j};
+}}
+"""
+
+            body += f"""
+{{
+auto exp_0 = wx_exp_{i}_{j};
+auto exp_1 = dout_buff[k].exponent;
+
+if (exp_0 == exp_1) {{
+dout.data_{i}_{j} = dout_buff[k].data_{i}_{j} + wx_cast_man_{i}_{j};
+}}
+else if (exp_0 > exp_1 && exp_0 - exp_1 < {min_shift}) {{
+ap_uint<{y_exp_width}> diff = exp_0 - exp_1;
+{true_body}
+}} 
+else if (exp_1 > exp_0 && exp_1 - exp_0 < {min_shift}) {{
+ap_uint<{y_exp_width}> diff = exp_1 - exp_0;
+{false_body}
+}}
+}}
+dout_buff[k].exponent = 0;
+"""
+    for i in range(0, y_row):
+        for j in range(0, y_col):
+            body += f"dout_buff[k].data_{i}_{j} = 0;"
+
+    # TODO: Skipping normalization...
+    body += "data_out.write(dout);"
+    body += "}}}}}"
 
     linear_buff = """
 // Linear 2D:

@@ -17,25 +17,8 @@ def bfp_block_adder_gen(
     assert writer is not None
     assert x_man_width > 0
     assert x_exp_width > 0
-
-    if x_exp_width > 5 or w_exp_width > 5:
-        # Use fp32
-        ew = 8
-        mw = 23
-    else:
-        # Use fp16
-        ew = 5
-        mw = 10
-
-    adder_id = writer.op_id
-    writer = bfp_adder_gen(writer, exp_width=ew, man_width=mw)
-
-    y_frac_width = max(x_man_width, w_man_width)
-    y_width = (
-        max(x_exp_width - x_man_width, w_exp_width - w_man_width) + 1 + y_frac_width
-    )
-    y_row = x_row
-    y_col = x_col
+    assert w_man_width > 0
+    assert w_exp_width > 0
 
     type_in0 = get_bfp_ty(x_row, x_col, x_exp_width, x_man_width)
     if type_in0 not in writer.types:
@@ -47,31 +30,44 @@ def bfp_block_adder_gen(
         writer.type_buff += new_bfp_ty(x_row, x_col, w_exp_width, w_man_width)
         writer.types.append(type_in1)
 
-    type_out = get_bfp_ty(y_row, y_col, ew, mw)
-    if type_out not in writer.types:
-        writer.type_buff += new_bfp_ty(y_row, y_col, ew, mw)
-        writer.types.append(type_out)
+    if x_exp_width > w_exp_width:
+        y_exp_width = x_exp_width
+        y_man_width = x_man_width
+        type_out = type_in0
+    else:
+        y_exp_width = w_exp_width
+        y_man_width = w_man_width
+        type_out = type_in1
+
+    adder_id = writer.op_id
+    writer = bfp_adder_gen(
+        writer,
+        x_exp_width=x_exp_width,
+        x_man_width=x_man_width,
+        w_exp_width=w_exp_width,
+        w_man_width=w_man_width,
+    )
 
     body = f"""
-ap_uint<{ew}> max_exp = 0;
+ap_uint<{y_exp_width}> max_exp = 0;
 """
 
     for i in range(0, x_row):
         for j in range(0, x_col):
             body += f"""
 ap_uint<1> sign_{i}_{j}_0 = d0.data_{i}_{j}[{x_man_width}];
-ap_uint<{ew}> exp_{i}_{j}_0 = d0.exponent;
-ap_uint<{mw}> man_{i}_{j}_0 = d0.data_{i}_{j}.range({x_man_width}, 0);
+ap_uint<{x_exp_width}> exp_{i}_{j}_0 = d0.exponent;
+ap_uint<{x_man_width}> man_{i}_{j}_0 = d0.data_{i}_{j}.range({x_man_width}, 0);
 ap_uint<1> sign_{i}_{j}_1 = d0.data_{i}_{j}[{x_man_width}];
-ap_uint<{ew}> exp_{i}_{j}_1 = d0.exponent;
-ap_uint<{mw}> man_{i}_{j}_1 = d0.data_{i}_{j}.range({x_man_width}, 0);
+ap_uint<{w_exp_width}> exp_{i}_{j}_1 = d0.exponent;
+ap_uint<{w_man_width}> man_{i}_{j}_1 = d0.data_{i}_{j}.range({x_man_width}, 0);
 ap_uint<1> sign_{i}_{j}_2;
-ap_uint<{ew}> exp_{i}_{j}_2;
-ap_uint<{mw}> man_{i}_{j}_2;
+ap_uint<{y_exp_width}> exp_{i}_{j}_2;
+ap_uint<{y_man_width}> man_{i}_{j}_2;
 bfp_adder_{adder_id}(sign_{i}_{j}_0, exp_{i}_{j}_0, man_{i}_{j}_0, sign_{i}_{j}_1, exp_{i}_{j}_1, man_{i}_{j}_1, &sign_{i}_{j}_2, &exp_{i}_{j}_2, &man_{i}_{j}_2);
 
-ap_uint<{ew}> res_{i}_{j}_exp = exp_{i}_{j}_2;
-ap_int<{mw+1}> res_{i}_{j}_man = (sign_{i}_{j}_2, man_{i}_{j}_2);
+ap_uint<{y_exp_width}> res_{i}_{j}_exp = exp_{i}_{j}_2;
+ap_int<{y_man_width+1}> res_{i}_{j}_man = (sign_{i}_{j}_2, man_{i}_{j}_2);
 max_exp = (max_exp > exp_{i}_{j}_2) ? max_exp : exp_{i}_{j}_2; 
 """
     body += "data->exponent = max_exp;"

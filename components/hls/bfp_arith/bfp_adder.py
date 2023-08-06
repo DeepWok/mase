@@ -1,62 +1,76 @@
+from .utils import clog2, get_bfp_ty, new_bfp_ty
+
+
 def bfp_adder_gen(
     writer,
-    exp_width=16,
-    man_width=8,
+    x_exp_width=16,
+    x_man_width=8,
+    w_exp_width=16,
+    w_man_width=8,
 ):
     """
     This script generates a element-level bfp add in HLS
     """
     assert writer is not None
-    ew = exp_width
-    mw = man_width
-    assert (ew == 8 and mw == 23) or (ew == 5 and mw == 10)
 
-    # Add union
-    if ew == 8:
-        # Use fp32
-        fpt = "float"
-        union_ty = """union
-{
-  unsigned int intval;
-  float fpval;
-}
-"""
+    if x_exp_width > w_exp_width:
+        y_exp_width = x_exp_width
+        y_man_width = x_man_width
     else:
-        # Use fp16
-        fpt = "half"
-        union_ty = """union
-{
-  unsigned int intval;
-  half fpval;
-}
+        y_exp_width = w_exp_width
+        y_man_width = w_man_width
+
+    min_shift = min(x_man_width, w_man_width)
+
+    true_body = ""
+    false_body = ""
+    for i in range(1, min_shift):
+        true_body += f"""
+if (diff == {i}) {{
+(sign_2_temp, carry, man_2_temp) = (sign_0, zero, man_0) + (sign_1, zero, (man_1 >> {i}));
+exp_2_temp = exp_0 + carry;
+}}
+"""
+        false_body += f"""
+if (diff == {i}) {{
+(sign_2_temp, carry, man_2_temp) = (sign_0, zero, (man_0 >> {i})) + (sign_1, zero, man_1);
+exp_2_temp = exp_1 + carry;
+}}
 """
 
     op_id = writer.op_id
     buff = f"""
 // BFP Single Adder:
-void bfp_adder_{op_id}(ap_uint<1> sign_0, ap_uint<{ew}> exp_0, ap_uint<{mw}> man_0, ap_uint<1> sign_1, ap_uint<{ew}> exp_1, ap_uint<{mw}> man_1, ap_uint<1> *sign_2, ap_uint<{ew}> *exp_2, ap_uint<{mw}> *man_2) {{
+void bfp_adder_{op_id}(ap_uint<1> sign_0, ap_uint<{x_exp_width}> exp_0, ap_uint<{x_man_width}> man_0, ap_uint<1> sign_1, ap_uint<{w_exp_width}> exp_1, ap_uint<{w_man_width}> man_1, ap_uint<1> *sign_2, ap_uint<{y_exp_width}> *exp_2, ap_uint<{y_man_width}> *man_2) {{
 #pragma HLS INLINE 
-{union_ty} union_0;
-{union_ty} union_1;
 
-ap_uint<{ew+mw+1}> bits_0 = (sign_0, exp_0, man_0);
-union_0.intval = bits_0;
-{fpt} fp_data_0 = union_0.fpval;
-
-ap_uint<{ew+mw+1}> bits_1 = (sign_1, exp_1, man_1);
-union_1.intval = bits_1;
-{fpt} fp_data_1 = union_1.fpval;
-
-{fpt} fp_data_2 = fp_data_0 + fp_data_1;
-
-union
-{{
-  unsigned int intval;
-  half fpval;
-}} union_2;
-union_2.fpval = fp_data_2;
-ap_uint<{ew+mw+1}> bits_2 = union_2.intval;
-(*sign_2, *exp_2, *man_2) = bits_2;
+ap_uint<{y_exp_width}> exp_2_temp;
+ap_uint<1> sign_2_temp;
+ap_uint<1> carry;
+ap_uint<1> zero = 0;
+ap_uint<{y_man_width}> man_2_temp;
+if (exp_0 == exp_1) {{
+exp_2_temp = exp_0;
+(sign_2_temp, man_2_temp) = (sign_0, man_0) + (sign_1, man_1);
+}}
+else if (exp_0 - exp_1 >= {min_shift}) {{
+exp_2_temp = exp_0;
+(sign_2_temp, man_2_temp) = (sign_0, man_0);
+}}
+else if (exp_1 - exp_0 >= {min_shift}) {{
+exp_2_temp = exp_1;
+(sign_2_temp, man_2_temp) = (sign_1, man_1);
+}}
+else if (exp_0 > exp_1) {{
+ap_uint<{y_exp_width}> diff = exp_0 - exp_1;
+{true_body}
+}} else {{
+ap_uint<{y_exp_width}> diff = exp_1 - exp_0;
+{false_body}
+}}
+*exp_2 = exp_2_temp;
+*sign_2 = sign_2_temp;
+*man_2 = man_2_temp;
 }}
 """
     writer.code_buff += buff

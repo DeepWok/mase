@@ -63,7 +63,7 @@ def run(args):
         bfp_add_dse(mode=mode, top=top)
     elif op == "bfp_mult":
         bfp_mult_dse(mode=mode, top=top)
-    if op == "bfp_linear2d":
+    elif op == "bfp_linear2d":
         bfp_linear2d_dse(mode=mode, top=top)
     else:
         assert False, f"Unsupported op = {op}"
