@@ -31,6 +31,7 @@ class ToyCustomFnNet(nn.Module):
         self.batch_size = batch_size
 
     def forward(self, x):
+        x = torch.flatten(x, start_dim=1)
         x = self.seq_blocks(x)
         # x = custom_activation(x)
         x = torch.nn.functional.relu(x)
@@ -67,7 +68,9 @@ class ToyCustomFnNet(nn.Module):
 
         # WARNING: torch fx graph does not handle this type of run-time definition with data-dependent shapes
         # x = torch.matmul(torch.ones(100, x.size(0)), x)
-        x = torch.matmul(torch.ones(100, self.batch_size), x)
+        x = torch.matmul(
+            torch.ones(100, 8), x
+        )  # RuntimeError: mat1 and mat2 shapes cannot be multiplied (4x3072 and 784x100)
         # bmm
         x = x.view(1, x.size(0), x.size(1))
         x = torch.bmm(x, x)
