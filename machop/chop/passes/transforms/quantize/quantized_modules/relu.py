@@ -4,6 +4,8 @@ import torch
 from torch import Tensor
 from torch.nn import functional as F
 
+from .utils import get_stats
+
 from ..quantizers import (
     block_fp_quantizer,
     block_log_quantizer,
@@ -285,9 +287,9 @@ class ReLUTernary(_ReLUBase):
             return
         # establish quantisers
         x_scaling_factor = config["data_in_scaling_factor"]
-        x_mean = config["data_in_mean"]
-        x_median = config["data_in_median"]
-        x_max = config["data_in_max"]
+        x_mean = get_stats(config, "data_in_mean")
+        x_median = get_stats(config, "data_in_median")
+        x_max = get_stats(config, "data_in_max")
         self.x_quantizer = partial(
             ternary_quantizer,
             scaling_factor=x_scaling_factor,

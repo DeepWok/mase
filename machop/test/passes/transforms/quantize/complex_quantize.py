@@ -26,7 +26,9 @@ from chop.passes.analysis import (
     init_metadata_analysis_pass,
     report,
     verify_common_metadata_analysis_pass,
+    add_software_metadata_analysis_pass,
 )
+from chop.passes.analysis.statistical_profiler import profile_statistics_analysis_pass
 from chop.passes.graph.mase_graph import MaseGraph
 from chop.passes.transforms import (
     quantize_transform_pass,
@@ -34,6 +36,8 @@ from chop.passes.transforms import (
 )
 from chop.passes.utils import deepcopy_mase_graph
 from chop.tools.logger import getLogger
+from chop.tools.get_input import InputGenerator
+from chop.dataset import MyDataModule
 
 logger = getLogger("chop")
 logger.setLevel(logging.DEBUG)
@@ -41,19 +45,53 @@ logger.setLevel(logging.DEBUG)
 
 def main():
     batch_size = 8
-    mlp = ToyCustomFnNet(image_size=(1, 28, 28), num_classes=10, batch_size=batch_size)
+    mlp = ToyCustomFnNet(image_size=(3, 32, 32), num_classes=10, batch_size=batch_size)
 
     # Provide a dummy input for the graph so it can use for tracing
-    x = torch.randn((batch_size, 28 * 28))
+    x = torch.randn((batch_size, 3 * 32 * 32))
     mlp(x)
 
     dummy_in = {"x": x}
+
+    data_module = MyDataModule(
+        model_name="toy-fn",
+        dataset_name="cifar10",
+        batch_size=8,
+        workers=4,
+        tokenizer=None,
+        max_token_len=128,
+    )
+    data_module.prepare_data()
+    data_module.setup()
+
+    input_generator = InputGenerator(
+        datamodule=data_module, task="cls", is_nlp_model=False, which_dataloader="train"
+    )
+
+    stat_args = {
+        "by": "type",
+        "target_weight_nodes": ["linear"],
+        "target_activation_nodes": ["relu", "linear"],
+        "activation_statistics": {
+            "range_min_max": {"abs": False, "dims": "all"},
+            "range_quantile": {"abs": False, "dims": "all", "quantile": 0.5},
+        },
+        "weight_statistics": {
+            "range_min_max": {"abs": False, "dims": "all"},
+            "range_quantile": {"abs": False, "dims": "all", "quantile": 0.5},
+        },
+        "input_generator": input_generator,
+        "num_samples": 32,
+    }
 
     mg = MaseGraph(model=mlp)
     logger.debug(mg.fx_graph)
     mg = init_metadata_analysis_pass(mg, None)
     # mg = add_mase_ops_analysis_pass(mg, dummy_in)
     mg = add_common_metadata_analysis_pass(mg, dummy_in)
+    mg = add_software_metadata_analysis_pass(mg, pass_args=None)
+
+    mg = profile_statistics_analysis_pass(mg, stat_args)
 
     config_files = [
         "integer.toml",
@@ -63,6 +101,7 @@ def main():
         "block_minifloat.toml",
         "binary.toml",
         "ternary.toml",
+        "ternary_scaled.toml",  # stats collected with profile_statistics_analysis_pass(...)
         "minifloat_denorm.toml",
         "minifloat_ieee.toml",
     ]

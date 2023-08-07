@@ -52,7 +52,9 @@ def graph_iterator_quantize_by_type(graph, config: dict):
         # if get_mase_type(node) == "module":
         if node.op == "call_module":
             ori_module = get_node_actual_target(node)
-            new_module = create_new_module(get_mase_op(node), ori_module, node_config)
+            new_module = create_new_module(
+                get_mase_op(node), ori_module, node_config, node.meta
+            )
             parent_name, name = get_parent_name(node.target)
             setattr(graph.modules[parent_name], name, new_module)
             # update precision and type in meta.parameters["common"]
@@ -85,7 +87,9 @@ def graph_iterator_quantize_by_name(graph, config: dict):
         # if get_mase_type(node) == "module":
         if node.op == "call_module":
             ori_module = get_node_actual_target(node)
-            new_module = create_new_module(get_mase_op(node), ori_module, node_config)
+            new_module = create_new_module(
+                get_mase_op(node), ori_module, node_config, node.meta
+            )
             parent_name, name = get_parent_name(node.target)
             setattr(graph.modules[parent_name], name, new_module)
             update_quant_meta_param(node, node_config, get_mase_op(node))
@@ -125,7 +129,9 @@ def graph_iterator_quantize_by_regex_name(graph, config: dict):
         # if get_mase_type(node) == "module":
         if node.op == "call_module":
             ori_module = graph.modules[node.target]
-            new_module = create_new_module(get_mase_op(node), ori_module, node_config)
+            new_module = create_new_module(
+                get_mase_op(node), ori_module, node_config, node.meta
+            )
             parent_name, name = get_parent_name(node.target)
             setattr(graph.modules[parent_name], name, new_module)
             update_quant_meta_param(node, node_config, get_mase_op(node))

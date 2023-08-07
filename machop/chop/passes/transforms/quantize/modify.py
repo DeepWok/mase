@@ -17,9 +17,14 @@ type_to_name_map = {
 }
 
 
-def create_new_module(mase_op: str, original_module: nn.Module, config: Dict):
+def create_new_module(
+    mase_op: str, original_module: nn.Module, config: dict, node_meta: dict
+):
     original_module_cls = type(original_module)
     quant_name = config.get("name")
+
+    if quant_name == "ternary":
+        config.update({"node_meta": node_meta["mase"]})
 
     if mase_op == "linear":
         new_module_cls = quantized_module_map[f"linear_{quant_name}"]

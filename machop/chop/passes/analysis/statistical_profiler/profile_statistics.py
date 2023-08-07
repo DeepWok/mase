@@ -200,7 +200,8 @@ class ActProfiler(Interpreter):
             if len(act_stats) > 0:
                 numeric_args = tuple(
                     filter(
-                        lambda x: isinstance(x, (torch.Tensor, int, float)),
+                        lambda x: isinstance(x, (torch.Tensor, int, float))
+                        and not isinstance(x, bool),
                         args + tuple(kwargs.values()),
                     )
                 )

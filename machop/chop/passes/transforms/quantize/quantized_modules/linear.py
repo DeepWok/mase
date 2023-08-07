@@ -5,6 +5,7 @@ from math import ceil, log2
 import torch
 from torch import Tensor
 from torch.nn import functional as F
+from .utils import get_stats
 
 from ....analysis.statistical_profiler.utils import get_meta_arg_stat
 from ..quantizers import (
@@ -536,31 +537,31 @@ class LinearTernary(_LinearBase):
         self.bypass = config.get("bypass", False)
         if self.bypass:
             return
-        w_scaling_factor = config["weight_scaling_factor"]
-        w_mean = config["weight_mean"]
-        w_median = config["weight_median"]
-        w_max = config["weight_max"]
         x_scaling_factor = config["data_in_scaling_factor"]
-        x_mean = config["data_in_mean"]
-        x_median = config["data_in_median"]
-        x_max = config["data_in_max"]
+        w_scaling_factor = config["weight_scaling_factor"]
         b_scaling_factor = config["bias_scaling_factor"]
-        b_mean = config["bias_mean"]
-        b_median = config["bias_median"]
-        b_max = config["bias_max"]
-        self.w_quantizer = partial(
-            ternary_quantizer,
-            scaling_factor=w_scaling_factor,
-            maximum=w_max,
-            median=w_median,
-            mean=w_mean,
-        )
+        x_mean = get_stats(config, "data_in_mean")
+        x_median = get_stats(config, "data_in_median")
+        x_max = get_stats(config, "data_in_max")
+        w_mean = get_stats(config, "weight_mean")
+        w_median = get_stats(config, "weight_median")
+        w_max = get_stats(config, "weight_max")
+        b_mean = get_stats(config, "bias_mean")
+        b_median = get_stats(config, "bias_median")
+        b_max = get_stats(config, "bias_max")
         self.x_quantizer = partial(
             ternary_quantizer,
             scaling_factor=x_scaling_factor,
             maximum=x_max,
             median=x_median,
             mean=x_mean,
+        )
+        self.w_quantizer = partial(
+            ternary_quantizer,
+            scaling_factor=w_scaling_factor,
+            maximum=w_max,
+            median=w_median,
+            mean=w_mean,
         )
         self.b_quantizer = partial(
             ternary_quantizer,
