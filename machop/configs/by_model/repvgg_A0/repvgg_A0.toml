@@ -1,0 +1,27 @@
+# basics
+model = "repvgg_A0"
+dataset = "cifar10"
+
+# training
+training_optimizer = "adamw"
+learning_rate = 1e-3
+max_epochs = 10
+batch_size = 128
+# torch lightning
+task = "classification"
+num_workers = 0
+num_devices = 1
+accelerator = "cpu"
+# logging
+project_dir = "../mase_output"
+project = "repvgg_a0_cifar10"
+
+# load
+# load_name = "../mase_output/repvgg_A0_cifar10/software/transformed_ckpts"
+# load_type = "mz"
+
+log_level = "info"
+
+[cf_args]
+
+[passes]
