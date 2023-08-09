@@ -33,3 +33,20 @@ from .resnet import (
     get_wide_resnet50_2,
 )
 from .wideresnet import wideresnet28_cifar
+
+from .repvgg import (
+    get_repvgg_a0,
+    get_repvgg_a1,
+    get_repvgg_a2,
+    get_repvgg_b0,
+    get_repvgg_b1,
+    get_repvgg_b1g2,
+    get_repvgg_b1g4,
+    get_repvgg_b2,
+    get_repvgg_b2g2,
+    get_repvgg_b2g4,
+    get_repvgg_b3,
+    get_repvgg_b3g2,
+    get_repvgg_b3g4,
+    get_repvgg_d2se,
+)

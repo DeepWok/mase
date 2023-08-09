@@ -41,6 +41,20 @@ from .vision import (
     get_resnet101,
     get_wide_resnet50_2,
     wideresnet28_cifar,
+    get_repvgg_a0,
+    get_repvgg_a1,
+    get_repvgg_a2,
+    get_repvgg_b0,
+    get_repvgg_b1,
+    get_repvgg_b1g2,
+    get_repvgg_b1g4,
+    get_repvgg_b2,
+    get_repvgg_b2g2,
+    get_repvgg_b2g4,
+    get_repvgg_b3,
+    get_repvgg_b3g2,
+    get_repvgg_b3g4,
+    get_repvgg_d2se,
 )
 
 _built_in_vision_model_map = {
@@ -90,6 +104,21 @@ _built_in_vision_model_map = {
     "toy-fn": get_toyfnnet,
     "toy-tiny": get_toy_tiny,
     "toy-conv": get_toy_convnet,
+    # RepVGG family
+    "repvgg_a0": get_repvgg_a0,
+    "repvgg_a1": get_repvgg_a1,
+    "repvgg_a2": get_repvgg_a2,
+    "repvgg_b0": get_repvgg_b0,
+    "repvgg_b1": get_repvgg_b1,
+    "repvgg_b1g2": get_repvgg_b1g2,
+    "repvgg_b1g4": get_repvgg_b1g4,
+    "repvgg_b2": get_repvgg_b2,
+    "repvgg_b2g2": get_repvgg_b2g2,
+    "repvgg_b2g4": get_repvgg_b2g4,
+    "repvgg_b3": get_repvgg_b3,
+    "repvgg_b3g2": get_repvgg_b3g2,
+    "repvgg_b3g4": get_repvgg_b3g4,
+    "repvgg_d2se": get_repvgg_d2se,
 }
 
 _patched_vision_model_map = {}
