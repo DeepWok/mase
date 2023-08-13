@@ -12,24 +12,22 @@ sys.path.append(
     )
 )
 
-from chop.actions.accelerate_train import train
+from chop.actions.accelerate_peft import train
 from chop.dataset import MyDataModule
-
-# from chop.models.manual.llama_plain.modeling_llama import LlamaForCausalLM
-from chop.models.manual.llama_quantized.modeling_llama import LlamaQuantizedForCausalLM
-from transformers.models.llama import LlamaTokenizer
+from chop.models.manual.opt_plain.modeling_opt import OPTForCausalLM
+from transformers import AutoTokenizer
+import toml
 
 
 def main():
-    model_name = "Cheng98/llama-160m"
-    # model_name = "lmsys/vicuna-7b-v1.3"
+    model_name = "facebook/opt-350m"
     task = "lm"
     dataset_name = "wikitext2"
     max_token_len = 128
     batch_size = 1
     num_workers = os.cpu_count()
     optimizer = "adamw"
-    max_epochs: int = 0
+    max_epochs: int = 1
     max_steps: int = 0
     gradient_accumulation_steps: int = 1
     # Reduced for unit test
@@ -43,9 +41,8 @@ def main():
     save_path: str = "./ckpts"
     load_name: str = None
     load_type: str = ""
-
-    model = LlamaQuantizedForCausalLM.from_pretrained(model_name)
-    tokenizer = LlamaTokenizer.from_pretrained(model_name)
+    model = OPTForCausalLM.from_pretrained(pretrained_model_name_or_path=model_name)
+    tokenizer = AutoTokenizer.from_pretrained(model_name)
 
     data_module = MyDataModule(
         model_name=None,
