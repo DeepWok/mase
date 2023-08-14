@@ -1,0 +1,12 @@
+# A basic toy example that demonstrates weight and activation pruning
+model = "toy-conv"
+dataset = "cifar10"
+
+[passes.prune.weight]
+method = "level-pruner"
+criterion = "random"
+sparsity = 0.2
+
+[passes.prune.activation]
+strategy = "fixed-global"
+target = 0.1

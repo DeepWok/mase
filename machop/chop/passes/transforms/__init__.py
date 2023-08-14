@@ -4,7 +4,7 @@ from .interface import (
     save_mase_graph_transform_pass,
     save_node_meta_param_transform_pass,
 )
-from .pruning import prune_transform_pass
+from .pruning import prune_transform_pass, prune_unwrap_transform_pass
 from .quantize import quantize_transform_pass, summarize_quantization_analysis_pass
 from .verilog import (
     emit_bram_transform_pass,

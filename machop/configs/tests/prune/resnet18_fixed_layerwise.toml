@@ -1,0 +1,23 @@
+# NOTE: Take a look at pruning/methods.py and pruning/criteria.py for available values
+# This config shows an example weight pruning pass (L1 norm - 10% sparsity) with the
+# activation pruning add-on (fixed-layerwise strategy). The layerwise targets are
+# specific to ResNet18.
+# --------------------------------------------------------------------------------------
+# Use this configuration with machop/test/passes/transforms/prune/prune.py
+model = "resnet18"  
+dataset = "imagenet"
+
+[passes.prune.weight]
+method = "level-pruner"
+criterion = "l1"
+sparsity = 0.1
+
+[passes.prune.activation]
+strategy = "fixed-layerwise"
+
+[passes.prune.activation.target]
+"conv1" = 0.1
+"layer1.0.conv1" = 0.3
+"layer2.0.conv1" = 0.4
+"layer3.0.conv1" = 0.1
+

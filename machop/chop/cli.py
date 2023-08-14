@@ -252,8 +252,8 @@ class ChopCLI:
             "precision": self.args.trainer_precision,
         }
 
-        # The checkpoint must be present for the test phase!
-        if self.args.load_name is None:
+        # The checkpoint must be present, except when the model is pretrained.
+        if self.args.load_name is None and not self.args.is_pretrained:
             raise ValueError("expected checkpoint via --load, got None")
 
         test_params = {

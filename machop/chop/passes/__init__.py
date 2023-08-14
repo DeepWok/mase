@@ -15,6 +15,7 @@ from .transforms import (
     load_mase_graph_transform_pass,
     load_node_meta_param_transform_pass,
     prune_transform_pass,
+    prune_unwrap_transform_pass,
     quantize_transform_pass,
     save_mase_graph_transform_pass,
     save_node_meta_param_transform_pass,
@@ -67,4 +68,5 @@ PASSES = {
     "quantize": quantize_transform_pass,
     "summarize_quantization": summarize_quantization_analysis_pass,
     "prune": prune_transform_pass,
+    "remove_prune_wrappers": prune_unwrap_transform_pass,
 }
