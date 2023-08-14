@@ -30,12 +30,8 @@ from chop.passes.analysis import (
     report_node_hardware_type_analysis_pass,
 )
 from chop.passes.transforms import (
-    emit_verilog_top_transform_pass,
-    emit_mlir_hls_transform_pass,
-    emit_internal_rtl_transform_pass,
-    emit_bram_transform_pass,
-    emit_verilog_tb_transform_pass,
     quantize_transform_pass,
+    emit_verilog_top_transform_pass,
 )
 from chop.tools.logger import getLogger
 
@@ -57,13 +53,13 @@ class MLP(torch.nn.Module):
 
         self.fc1 = nn.Linear(28 * 28, 28 * 28)
         self.fc2 = nn.Linear(28 * 28, 28 * 28 * 4)
-        self.fc3 = nn.Linear(28 * 28 * 4, 10)
+        # self.fc3 = nn.Linear(28 * 28 * 4, 10)
 
     def forward(self, x):
         x = torch.flatten(x, start_dim=1, end_dim=-1)
         x = torch.nn.functional.relu(self.fc1(x))
-        x = torch.nn.functional.relu(self.fc2(x))
-        x = self.fc3(x)
+        # x = torch.nn.functional.relu(self.fc2(x))
+        x = self.fc2(x)
         return x
 
 
@@ -98,7 +94,7 @@ def main():
         "configs",
         "tests",
         "quantize",
-        "integer.toml",
+        "fixed_activation_binary.toml",
     )
     mg = report_node_type_analysis_pass(mg)
 
@@ -109,16 +105,17 @@ def main():
 
     # There is a bug in the current quantization pass, where the metadata is not uppdated with the precision.
     # Here we temporarily update the metadata here so we can test the hardware back end.
-    for node in mg.fx_graph.nodes:
-        for arg, _ in node.meta["mase"].parameters["common"]["args"].items():
-            node.meta["mase"].parameters["common"]["args"][arg]["type"] = "fixed"
-            node.meta["mase"].parameters["common"]["args"][arg]["precision"] = [8, 3]
-        for result, _ in node.meta["mase"].parameters["common"]["results"].items():
-            node.meta["mase"].parameters["common"]["results"][result]["type"] = "fixed"
-            node.meta["mase"].parameters["common"]["results"][result]["precision"] = [
-                8,
-                3,
-            ]
+
+    # for node in mg.fx_graph.nodes:
+    #     for arg, _ in node.meta["mase"].parameters["common"]["args"].items():
+    #         node.meta["mase"].parameters["common"]["args"][arg]["type"] = "fixed"
+    #         node.meta["mase"].parameters["common"]["args"][arg]["precision"] = [8, 3]
+    #     for result, _ in node.meta["mase"].parameters["common"]["results"].items():
+    #         node.meta["mase"].parameters["common"]["results"][result]["type"] = "fixed"
+    #         node.meta["mase"].parameters["common"]["results"][result]["precision"] = [
+    #             8,
+    #             3,
+    #         ]
 
     mg = report_node_type_analysis_pass(mg)
     mg = add_hardware_metadata_analysis_pass(mg)
@@ -126,12 +123,6 @@ def main():
     # mg = verify_hardware_metadata_analysis_pass(mg)
 
     mg = emit_verilog_top_transform_pass(mg)
-    mg = emit_bram_transform_pass(mg)
-    mg = emit_internal_rtl_transform_pass(mg)
-    # For internal models, the test inputs can be directly fetched from the dataset
-    # using InputGenerator from chop.tools.get_input
-    cosim_config = {"test_inputs": [x], "trans_num": 1}
-    mg = emit_verilog_tb_transform_pass(mg, pass_args=cosim_config)
 
 
 # --------------------------------------------------

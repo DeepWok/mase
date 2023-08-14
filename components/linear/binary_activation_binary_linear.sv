@@ -11,9 +11,9 @@ module binary_activation_binary_linear #(
     parameter WEIGHT_SIZE = IN_SIZE * PARALLELISM,
 
     // This is the width for the summed product
-    // +1 is because of the bias
+    // +1 is because of the sign bit
     parameter HAS_BIAS = 0,
-    parameter OUT_WIDTH = IN_WIDTH + WEIGHT_WIDTH + $clog2(IN_SIZE) + $clog2(IN_DEPTH) + HAS_BIAS,
+    parameter OUT_WIDTH = IN_WIDTH + 1 + $clog2(IN_SIZE) + $clog2(IN_DEPTH) + HAS_BIAS,
     /* verilator lint_off UNUSEDPARAM */
     parameter OUT_FRAC_WIDTH = IN_FRAC_WIDTH + WEIGHT_FRAC_WIDTH,
     /* verilator lint_on UNUSEDPARAM */

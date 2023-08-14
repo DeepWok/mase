@@ -8,13 +8,15 @@ report = true
 
 [passes.quantize.default.config]
 name = "binary"
-data_in_width = 1
+data_in_width = 32
 data_in_frac_width = 0
 data_in_stochastic = true
 data_in_bipolar = true
 weight_width = 1
+weight_frac_width = 0
 weight_stochastic = true
 weight_bipolar = true
 bias_width = 1
+bias_frac_width = 0
 bias_stochastic = true
 bias_bipolar = true
