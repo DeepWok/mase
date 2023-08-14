@@ -1,0 +1,12 @@
+# NOTE: Take a look at pruning/methods.py and pruning/criteria.py for available values
+# This config shows an example weight pruning pass (L1 norm - 20% sparsity).
+# --------------------------------------------------------------------------------------
+# Feel free to swap the model and dataset out to experiment :)
+# Use this configuration with machop/test/passes/transforms/prune/prune.py
+model = "resnet18"
+dataset = "imagenet"
+
+[passes.prune.weight]
+method = "level-pruner"
+criterion = "l1"
+sparsity = 0.2

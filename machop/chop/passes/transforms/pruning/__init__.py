@@ -1,4 +1,5 @@
-from .simple_unstructured_fixed import prune_transform_pass
+# from .simple_unstructured_fixed import prune_transform_pass
+from .prune import prune_transform_pass, prune_unwrap_transform_pass
 
 # Only expose the following functions as importable from this package
-__all_ = [prune_transform_pass]
+__all_ = [prune_transform_pass, prune_unwrap_transform_pass]

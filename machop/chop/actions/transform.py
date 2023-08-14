@@ -126,7 +126,25 @@ def transform(
                 )
                 graph = PASSES[pass_name](graph, pass_args=pass_save_path)
             case "prune":
-                graph = PASSES[pass_name](graph, pass_args=pass_config)
+                # NOTE: The input generator is only used for when the user wants to
+                # enforce or observe activation sparsity. Otherwise, it's ignored.
+                input_generator = InputGenerator(
+                    datamodule=data_module,
+                    task=task,
+                    is_nlp_model=is_nlp_model,
+                    which_dataloader="train",
+                )
+                pass_config["input_generator"] = input_generator
+                prune_save_dir = save_dir / "prune"
+                prune_save_dir.mkdir(parents=True, exist_ok=True)
+                graph = PASSES[pass_name](
+                    graph,
+                    save_dir=prune_save_dir,
+                    config=pass_config,
+                )
+            case "remove_prune_wrappers":
+                # Removes the pruning-related hooks and makes pruning permanent
+                graph = PASSES[pass_name](graph, pass_args=None)
             case _:
                 my_pass = PASSES[pass_name]
                 graph = my_pass(graph, pass_args=pass_config)

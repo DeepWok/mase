@@ -1,0 +1,18 @@
+# NOTE: Take a look at pruning/methods.py and pruning/criteria.py for available values
+# This config shows an example weight pruning pass (L1 norm - 10% sparsity) with the
+# activation pruning add-on (adaptive strategy). This strategy computes thresholds on
+# the fly and the target specified is the desired sparsity in the activations.
+# --------------------------------------------------------------------------------------
+# Feel free to swap the model and dataset out to experiment :)
+# Use this configuration with machop/test/passes/transforms/prune/prune.py
+model = "resnet18"
+dataset = "imagenet"
+
+[passes.prune.weight]
+method = "level-pruner"
+criterion = "l1"
+sparsity = 0.1
+
+[passes.prune.activation]
+strategy = "adaptive"
+target = 0.2

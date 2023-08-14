@@ -295,7 +295,11 @@ def _get_size_by_module_simulation(meta):
     dummy_data = torch.full(
         self_obj.meta["mase"].parameters["common"]["results"]["data_out_0"]["size"], 1.0
     )
-    result = meta.module(dummy_data, *args, **kwargs)
+    previous_state = meta.module.training
+    meta.module.train(False)
+    with torch.no_grad():
+        result = meta.module(dummy_data, *args, **kwargs)
+    meta.module.train(previous_state)
     size = list(result.size())
     return size
 

@@ -108,7 +108,7 @@ class MaseGraph:
         else:
             self.tracer = None
             self.cf_args = None
-            self.model = torch.load(model)
+            self.model = torch.load(load_name)
 
     @property
     def fx_graph(self):
