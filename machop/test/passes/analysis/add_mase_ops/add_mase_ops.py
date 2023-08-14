@@ -6,9 +6,6 @@ import os
 import sys
 
 import torch
-import torch.nn as nn
-
-import toml
 
 sys.path.append(
     os.path.join(
@@ -24,7 +21,10 @@ sys.path.append(
 from chop.tools.logger import getLogger
 from chop.passes.graph.mase_graph import MaseGraph
 from chop.models.toy_custom_fn import ToyCustomFnNet
-from chop.passes.analysis import add_mase_ops_analysis_pass, init_metadata_analysis_pass
+from chop.passes.analysis import (
+    add_common_metadata_analysis_pass,
+    init_metadata_analysis_pass,
+)
 
 logger = getLogger("chop")
 logger.setLevel(logging.DEBUG)
@@ -42,7 +42,7 @@ def main():
     dummy_in = {"x": x}
 
     mg = init_metadata_analysis_pass(mg, None)
-    mg = add_mase_ops_analysis_pass(mg, dummy_in)
+    mg = add_common_metadata_analysis_pass(mg, dummy_in)
 
 
 # --------------------------------------------------

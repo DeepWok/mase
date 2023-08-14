@@ -22,7 +22,6 @@ from chop.dataset import MyDataModule, get_dataset_info
 from chop.models import get_resnet18
 from chop.passes import (
     add_common_metadata_analysis_pass,
-    add_mase_ops_analysis_pass,
     add_software_metadata_analysis_pass,
     init_metadata_analysis_pass,
 )
@@ -68,7 +67,6 @@ def main():
 
     mg = MaseGraph(model=model)
     mg = init_metadata_analysis_pass(mg, None)
-    mg = add_mase_ops_analysis_pass(mg, None)
     mg = add_common_metadata_analysis_pass(mg, dummy_in)
     mg = add_software_metadata_analysis_pass(mg, None)
 
