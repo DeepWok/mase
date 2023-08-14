@@ -40,9 +40,9 @@ def _get_cast_parameters(from_node, to_node, is_start=False, is_end=False):
     arg_name = get_input_name(from_node, to_node)
     to_type = to_node.meta["mase"].parameters["common"]["args"][arg_name]["type"]
     to_prec = to_node.meta["mase"].parameters["common"]["args"][arg_name]["precision"]
-    from_name = f"{from_node}_data_out"
+    from_name = f"{from_node}_data_out_0"  # TODO: This will need to fix in the future. I put _0 here as it seems to that it only considers data_out_0
     to_name = f"{to_node}_{arg_name}"
-    from_param = f"{from_node}_OUT"
+    from_param = f"{from_node}_OUT_0"  # TODO: This will need to fix in the future. I put _0 here as it seems to that it only considers data_out_0
     to_param = f"{to_node}_{v2p(arg_name)}"
 
     if is_start:
@@ -75,6 +75,13 @@ def _iterator_load_width_parameters_to_map(node_name, val_list, parameter_map):
         if param["type"] == "float":
             parameter_map[f"{node_name}_{val}_WIDTH"] = param["precision"][0]
         elif param["type"] == "fixed":
+            # Unverified...
+            parameter_map[f"{node_name}_{val}_WIDTH"] = param["precision"][0]
+            parameter_map[f"{node_name}_{val}_FRAC_WIDTH"] = param["precision"][1]
+        elif param["type"] == "binary":
+            # TODO: Binary quant
+            # For binary we will need to contract the precision for weight to 1. e.g "fc1_WEIGHT_WIDTH"
+            # For now we assume this would be set by config file
             # Unverified...
             parameter_map[f"{node_name}_{val}_WIDTH"] = param["precision"][0]
             parameter_map[f"{node_name}_{val}_FRAC_WIDTH"] = param["precision"][1]
@@ -154,10 +161,10 @@ def _emit_interface_top(graph, parameter_map):
 
     # Assume the model always has a single input and single output
     interface = """
-input  [in_width-1:0] data_in [in_size-1:0],
+input  [IN_WIDTH-1:0] data_in [IN_SIZE-1:0],
 input  data_in_valid,
 output data_in_ready,
-output [out_width-1:0] data_out [out_size-1:0],
+output [OUT_WIDTH-1:0] data_out [OUT_SIZE-1:0],
 output data_out_valid,
 input  data_out_ready,
 """
@@ -709,7 +716,7 @@ fixed_cast #(
 );
 """
 
-    elif from_type == "fixed" and to_type == "float":
+    elif (from_type == "fixed" or from_type == "binary") and to_type == "float":
         in_width = parameter_map[f"{from_param}_WIDTH"]
         in_size = parameter_map[f"{from_param}_SIZE"]
         out_width = parameter_map[f"{to_param}_WIDTH"]
@@ -733,7 +740,7 @@ fixed_to_float_cast #(
 """
         # TODO: Added bitcast_op
 
-    elif from_type == "float" and to_type == "fixed":
+    elif from_type == "float" and (to_type == "fixed" or to_type == "binary"):
         in_width = parameter_map[f"{from_param}_WIDTH"]
         in_size = parameter_map[f"{from_param}_SIZE"]
         out_width = parameter_map[f"{to_param}_WIDTH"]
@@ -760,7 +767,9 @@ float_to_fixed_cast #(
     elif from_type == to_type and from_prec == to_prec:
         pass
     else:
-        assert False, "Unsupported type conversion."
+        assert (
+            False
+        ), f"Unsupported type conversion. Maybe {from_type} != {to_type} or {from_prec} != {to_prec}"
 
     return from_name, to_name, from_param, to_param, cast_name, data_cast
 

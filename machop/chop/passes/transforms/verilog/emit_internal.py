@@ -9,7 +9,7 @@ logger = logging.getLogger(__name__)
 
 
 def _append(list1, list2):
-    return list1 + list(set(list1) - set(list2))
+    return list1 + list(set(list2) - set(list1))
 
 
 def include_ip_to_project(node, rtl_dir):

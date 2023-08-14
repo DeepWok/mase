@@ -271,6 +271,8 @@ def analyse_common_parameters_function(meta):
             "args"
         ].pop("data_in_2")
     elif mase_op == "relu":
+        # data_in_1 is added wrongly because of the inplace functionality of relu {'inplace': False} which counts as an extra Kwargs
+        meta.parameters["common"]["args"].pop("data_in_1")
         pass
     else:
         assert False, "Unknown module related function - arg names not corrected."

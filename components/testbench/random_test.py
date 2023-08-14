@@ -19,7 +19,11 @@ class RandomSource:
         data_specify=[],
         debug=False,
         arithmetic=None,
+        fix_seed=False,
     ):
+        # Use in debug
+        if fix_seed:
+            random.seed(0)
         assert num > 0, "Invalid num for source {}".format(name)
         self.logger = logging.getLogger(name)
         if debug:
