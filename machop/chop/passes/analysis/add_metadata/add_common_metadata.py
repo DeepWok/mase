@@ -214,6 +214,15 @@ def analysis_common_parameters(node, dummy_in):
                         "from": "NA",
                         "value": arg_in,
                     }
+                elif isinstance(arg_in, tuple):
+                    # NOTE: Tuples are generally used to convey shape information
+                    # (e.g. AdaptiveAvgPool2d's output_size). We don't associate them
+                    # with metadata as we assume they're pretty much constant and can
+                    # be considered as a local attribute of the model.
+                    # Check if all elements of the tuple are fixed constants
+                    if all(isinstance(x, int) for x in arg_in):
+                        continue
+                    logger.warning("Tuple contains unsupported types!")
                 else:
                     assert False, "Unknown constant arg type."
         offset = len(next_node.args)
@@ -269,6 +278,15 @@ def analysis_common_parameters(node, dummy_in):
                         "key": keys[_index],
                         "value": arg_in,
                     }
+                elif isinstance(arg_in, tuple):
+                    # NOTE: Tuples are generally used to convey shape information
+                    # (e.g. AdaptiveAvgPool2d's output_size). We don't associate them
+                    # with metadata as we assume they're pretty much constant and can
+                    # be considered as a local attribute of the model.
+                    # Check if all elements of the tuple are fixed constants
+                    if all(isinstance(x, int) for x in arg_in):
+                        continue
+                    logger.warning("Tuple contains unsupported types!")
                 else:
                     assert False, "Unknown constant arg type."
 
@@ -327,11 +345,6 @@ add_common_metadata(name)_analysis(style)_pass
 passname : {args}
 
 """
-
-
-def add_mase_ops_analysis_pass(graph, pass_args=None):
-    graph = graph_iterator_for_mase_ops(graph)
-    return graph
 
 
 def add_common_metadata_analysis_pass(graph, pass_args=None):

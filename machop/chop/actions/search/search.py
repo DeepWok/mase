@@ -1,22 +1,14 @@
-import copy
 import logging
-import operator
-import os
-import random
-from functools import partial
 
-import optuna
 import toml
-import torch
-import torch.nn as nn
-import torch.nn.functional as F
 
 from .search_space import search_space_map
 from .strategies import strategy_map
 from .runner import runner_map
 
 from chop.passes.graph.mase_graph import MaseGraph
-from chop.passes import init_metadata_analysis_pass, add_mase_ops_analysis_pass
+from chop.passes import init_metadata_analysis_pass, add_common_metadata_analysis_pass
+from chop.tools.get_input import get_dummy_input
 
 
 logger = logging.getLogger(__name__)
@@ -61,10 +53,12 @@ def search(
         possible_names = list(search_space_map.keys())
         raise ValueError(f"{name} must be defined in {possible_names}.")
 
+    # FIXME: is_nlp_model isn't defined, so I've temporarily set it to False
+    dummy_input = get_dummy_input(data_module, task, is_nlp_model=False)
     # construct a minimal mase graph
     mg = MaseGraph(model)
     mg = init_metadata_analysis_pass(mg, None)
-    mg = add_mase_ops_analysis_pass(mg)
+    mg = add_common_metadata_analysis_pass(mg, dummy_input)
 
     # construct a search space
     search_space_cls = search_space_map[name]

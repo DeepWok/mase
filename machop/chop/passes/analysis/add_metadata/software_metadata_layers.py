@@ -196,6 +196,11 @@ SOFTWARE_PARAM_ANALYSIS_LAYERS = {
         "max_pool1d": analyze_software_meta_param_module_related_func_default,
         "max_pool2d": analyze_software_meta_param_module_related_func_default,
         "relu": analyze_software_meta_param_module_related_func_default,
+        # NOTE: These ops were added to support MobileNetV2 and MobileNetV3
+        "relu6": analyze_software_meta_param_module_related_func_default,
+        "hardswish": analyze_software_meta_param_module_related_func_default,
+        "hardsigmoid": analyze_software_meta_param_module_related_func_default,
+        "dropout": analyze_software_meta_param_module_related_func_default,
         # default:
         "default": analyze_software_meta_param_module_related_func_default,
     },

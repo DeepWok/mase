@@ -1,0 +1,8 @@
+# This configuration is required for the unwrap pass as we use the dataset information
+# to generate a dummy input for the analyse_common_parameters_placeholder function, 
+# part of add_common_metadata_analysis_pass. The function uses the shape of the input
+# (arg) to populate the 'size' key of meta.parameters["common"]["results"]["data_out_0"]
+# See here for more information:
+# machop/chop/passes/analysis/add_metadata/common_metadata_layers.py
+model = "resnet18"
+dataset = "imagenet"

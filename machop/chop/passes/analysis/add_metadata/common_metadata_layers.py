@@ -261,7 +261,7 @@ def analyse_common_parameters_function(meta):
     if mase_type != "module_related_func":
         return meta
 
-    # Correct the arg names to macth module ops
+    # Correct the arg names to match module ops
     mase_op = meta.parameters["common"]["mase_op"]
     if mase_op == "linear":
         meta.parameters["common"]["args"]["weight"] = meta.parameters["common"][
@@ -273,6 +273,12 @@ def analyse_common_parameters_function(meta):
     elif mase_op == "relu":
         # data_in_1 is added wrongly because of the inplace functionality of relu {'inplace': False} which counts as an extra Kwargs
         meta.parameters["common"]["args"].pop("data_in_1")
+        pass
+    # NOTE: We may possibly need to add more cases here...
+    elif mase_op == "adaptive_avg_pool2d":
+        # Don't do anything as we have no args apart from the actual input
+        # See line 218 of chop/passes/analysis/add_metadata/add_common_metadata.py
+        # for more information.
         pass
     else:
         assert False, "Unknown module related function - arg names not corrected."
