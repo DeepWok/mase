@@ -126,7 +126,8 @@ class LevelPruner(BasePruner):
         with open(save_path, "w") as f:
             f.write(",".join(self.FIELDS) + "\n")
             for row in self.summary:
-                f.write(",".join(map(str, row)) + "\n")
+                # Wrap everything in quotes to avoid issues with commas in the data
+                f.write(",".join(map(str, [f'"{x}"' for x in row])) + "\n")
         logger.info(f"Saved weight pruning summary to {save_path}")
 
     # "Private" helper methods ---------------------------------------------------------
@@ -278,7 +279,8 @@ class ActivationPruneHandler:
         with open(save_path, "w") as f:
             f.write(",".join(self.FIELDS) + "\n")
             for row in self.summary:
-                f.write(",".join(map(str, row)) + "\n")
+                # Wrap everything in quotes to avoid issues with commas in the data
+                f.write(",".join(map(str, [f'"{x}"' for x in row])) + "\n")
         logger.info(f"Saved activation pruning summary to {save_path}")
 
     # Save the channel-wise activation sparsity report to a TOML file
