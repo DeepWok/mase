@@ -35,10 +35,9 @@ Internal Backlog:
    workflows (incl. globally unstructured ones).
 """
 
-import tqdm
 import torch
 import torch.nn as nn
-from pathlib import Path
+from tqdm.contrib.logging import tqdm_logging_redirect
 
 from chop.passes.graph.mase_graph import MaseGraph
 from chop.passes.utils import get_mase_op, get_mase_type, get_node_actual_target
@@ -114,8 +113,15 @@ def prune_graph_iterator(graph: MaseGraph, save_dir: str, config: dict):
     pruner = method(sparsity, criterion, handler)
 
     # Iterate over the graph and prune the compatible nodes
-    with tqdm.tqdm(total=len(graph.fx_graph.nodes)) as pbar:
+    total = len(graph.fx_graph.nodes)
+    with tqdm_logging_redirect(total=total, loggers=[logger]) as pbar:
         for node in graph.fx_graph.nodes:
+            if get_mase_op(node) in ["batch_norm1d", "batch_norm2d"]:
+                logger.warning(
+                    f"Batchnorm layer detected ({node.target}). This could corrupt "
+                    "sparsity in the weights when fused later."
+                )
+
             if get_mase_op(node) not in PRUNEABLE_OPS.keys():
                 # Skip if the operator is not supported for pruning
                 pbar.update(1)
@@ -145,8 +151,12 @@ def prune_graph_iterator(graph: MaseGraph, save_dir: str, config: dict):
     # Also, as mentioned earlier,
     if handler:
         logger.info("Running inference to generate an activation sparsity report")
+        previous_state = graph.model.training
+        graph.model.train(False)
         with torch.inference_mode():
-            graph.model(next(input_generator)["x"])
+            batch = next(input_generator)["x"]
+            graph.model(batch)
+        graph.model.train(previous_state)
 
     # Summary
     logger.info("Weight Pruning Summary:")

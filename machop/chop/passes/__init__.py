@@ -19,13 +19,13 @@ from .transforms import (
     save_mase_graph_transform_pass,
     save_node_meta_param_transform_pass,
     summarize_quantization_analysis_pass,
+    conv_bn_fusion_transform_pass,
 )
 from .transforms.quantize import quantized_func_map, quantized_module_map
 from .transforms.quantize.quant_parsers import parse_node_config
 
 ANALYSIS_PASSES = [
     "init_metadata",
-    "add_mase_ops",
     "add_common_metadata",
     "add_hardware_metadata",
     "add_software_metadata",
@@ -37,13 +37,15 @@ ANALYSIS_PASSES = [
     "report_node_type",
 ]
 TRANSFORM_PASSES = [
-    "quantize",
-    "summarize_quantization",
-    "prune",
     "load_mase_graph",
     "load_node_meta_param",
     "save_mase_graph",
     "save_node_meta_param",
+    "quantize",
+    "summarize_quantization",
+    "prune",
+    "remove_prune_wrappers",
+    "conv_bn_fusion",
 ]
 
 PASSES = {
@@ -67,4 +69,5 @@ PASSES = {
     "summarize_quantization": summarize_quantization_analysis_pass,
     "prune": prune_transform_pass,
     "remove_prune_wrappers": prune_unwrap_transform_pass,
+    "conv_bn_fusion": conv_bn_fusion_transform_pass,
 }

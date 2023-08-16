@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # NOTE: This is not really a test, but a script to just informally validate
-# functionality via trail and error. Feel free to modify this file as needed.
+# functionality via trial and error. Feel free to modify this file as needed.
 
 import logging
 import os

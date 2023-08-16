@@ -8,7 +8,6 @@ from chop.passes.analysis import (
     add_common_metadata_analysis_pass,
     add_software_metadata_analysis_pass,
     init_metadata_analysis_pass,
-    report_node_type_analysis_pass,
 )
 from chop.passes.graph.mase_graph import MaseGraph
 from chop.passes.transforms.interface import (
@@ -128,11 +127,14 @@ def transform(
             case "prune":
                 # NOTE: The input generator is only used for when the user wants to
                 # enforce or observe activation sparsity. Otherwise, it's ignored.
+                # We use the validation dataloader as that doesn't shuffle the input
+                # data. This determinism helps establish a fair ground in draw
+                # layer-wise comparisons between activation pruning strategies.
                 input_generator = InputGenerator(
                     datamodule=data_module,
                     task=task,
                     is_nlp_model=is_nlp_model,
-                    which_dataloader="train",
+                    which_dataloader="val",
                 )
                 pass_config["input_generator"] = input_generator
                 prune_save_dir = save_dir / "prune"
@@ -144,6 +146,8 @@ def transform(
                 )
             case "remove_prune_wrappers":
                 # Removes the pruning-related hooks and makes pruning permanent
+                graph = PASSES[pass_name](graph, pass_args=None)
+            case "conv_bn_fusion":
                 graph = PASSES[pass_name](graph, pass_args=None)
             case _:
                 my_pass = PASSES[pass_name]
