@@ -171,6 +171,12 @@ def prune_graph_iterator(graph: MaseGraph, save_dir: str, config: dict):
         handler.save_report(save_dir)
         handler.save_summary(save_dir)
 
+    # Set the handler logging attributes to False for better performance
+    if handler:
+        handler.log_report = False
+        handler.log_summary = False
+        handler.log_thresholds = False
+
     return graph
 
 

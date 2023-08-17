@@ -234,17 +234,16 @@ class ActivationPruneHandler:
         # NOTE: For the observe strategy, this mask captures the sparsity in the input.
         mask = (input.abs() > threshold).to(input.dtype)
 
-        # Compute the channel-wise sparsity of the mask and take the mean and variance
-        # along the batch dimension.
-        tot_elements = mask.size(2) * mask.size(3)
-        nnz_elements = torch.sum(mask, dim=(2, 3))
-        channel_sparsity = 1 - nnz_elements / tot_elements
-        sparsity_avg = torch.mean(channel_sparsity, dim=0).tolist()
-        sparsity_var = torch.var(channel_sparsity, dim=0).tolist()
-
         if handler.log_thresholds:
             handler.thresholds[name] = threshold
         if handler.log_report:
+            # Compute the channel-wise sparsity of the mask and take the mean and
+            # variance along the batch dimension.
+            tot_elements = mask.size(2) * mask.size(3)
+            nnz_elements = torch.sum(mask, dim=(2, 3))
+            channel_sparsity = 1 - nnz_elements / tot_elements
+            sparsity_avg = torch.mean(channel_sparsity, dim=0).tolist()
+            sparsity_var = torch.var(channel_sparsity, dim=0).tolist()
             handler.report[name] = {"avg": sparsity_avg, "var": sparsity_var}
         if handler.log_summary:
             handler._update_summary(name, threshold, input, mask)
