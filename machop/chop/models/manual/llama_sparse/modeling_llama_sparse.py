@@ -43,12 +43,12 @@ from transformers.utils import (
     replace_return_docstrings,
 )
 
-from .configuration_llama_llora import LlamaLoraConfig
-from ..lora_modules import LoraLayer, LinearLora
+from .configuration_llama_sparse import LlamaSparseConfig
+from ..sparse_modules import SparseLayer, LinearSparse
 
 logger = logging.get_logger(__name__)
 
-_CONFIG_FOR_DOC = "LlamaLoraConfig"
+_CONFIG_FOR_DOC = "LlamaSparseConfig"
 
 
 # Copied from transformers.models.bart.modeling_bart._make_causal_mask
@@ -215,7 +215,7 @@ class LlamaMLP(nn.Module):
 class LlamaAttention(nn.Module):
     """Multi-headed attention from 'Attention Is All You Need' paper"""
 
-    def __init__(self, config: LlamaLoraConfig, layer_id: int = 0):
+    def __init__(self, config: LlamaSparseConfig, layer_id: int = 0):
         super().__init__()
         self.config = config
         self.hidden_size = config.hidden_size
@@ -229,28 +229,28 @@ class LlamaAttention(nn.Module):
                 f" and `num_heads`: {self.num_heads})."
             )
         # fmt: off
-        lora_config = config.lora_config[f"model_layer_{layer_id}"]["self_attn"]
-        self.q_proj = LinearLora(in_features = self.hidden_size, 
+        sparse_config = config.sparse_config[f"model_layer_{layer_id}"]["self_attn"]
+        self.q_proj = LinearSparse(in_features = self.hidden_size, 
                              out_features= self.num_heads * self.head_dim, 
-                             bias=False, config=lora_config["q_proj"])
+                             bias=False, config=sparse_config["q_proj"])
         
-        self.k_proj = LinearLora(in_features = self.hidden_size, 
+        self.k_proj = LinearSparse(in_features = self.hidden_size, 
                              out_features= self.num_heads * self.head_dim,
-                              bias=False, config=lora_config["k_proj"])
+                              bias=False, config=sparse_config["k_proj"])
         
-        self.v_proj = LinearLora(in_features = self.hidden_size, 
+        self.v_proj = LinearSparse(in_features = self.hidden_size, 
                              out_features= self.num_heads * self.head_dim,
-                              bias=False, config=lora_config["v_proj"])
+                              bias=False, config=sparse_config["v_proj"])
         
-        self.o_proj = LinearLora(in_features = self.hidden_size, 
+        self.o_proj = LinearSparse(in_features = self.hidden_size, 
                              out_features= self.num_heads * self.head_dim, 
-                             bias=False, config=lora_config["o_proj"])
+                             bias=False, config=sparse_config["o_proj"])
 
         # fmt: on
         self.rotary_emb = LlamaRotaryEmbedding(
             self.head_dim, max_position_embeddings=self.max_position_embeddings
         )
-        self.lora_config = lora_config
+        self.sparse_config = sparse_config
 
     def _shape(self, tensor: torch.Tensor, seq_len: int, bsz: int):
         return (
@@ -351,7 +351,7 @@ class LlamaAttention(nn.Module):
 
 
 class LlamaDecoderLayer(nn.Module):
-    def __init__(self, config: LlamaLoraConfig, layer_id: int = 0):
+    def __init__(self, config: LlamaSparseConfig, layer_id: int = 0):
         super().__init__()
         self.hidden_size = config.hidden_size
         self.self_attn = LlamaAttention(config=config, layer_id=layer_id)
@@ -444,7 +444,7 @@ LLAMA_START_DOCSTRING = r"""
     LLAMA_START_DOCSTRING,
 )
 class LlamaPreTrainedModel(PreTrainedModel):
-    config_class = LlamaLoraConfig
+    config_class = LlamaSparseConfig
     base_model_prefix = "model"
     supports_gradient_checkpointing = True
     _no_split_modules = ["LlamaDecoderLayer"]
@@ -542,7 +542,7 @@ class LlamaModel(LlamaPreTrainedModel):
         config: LlamaConfig
     """
 
-    def __init__(self, config: LlamaLoraConfig):
+    def __init__(self, config: LlamaSparseConfig):
         super().__init__(config)
         self.padding_idx = config.pad_token_id
         self.vocab_size = config.vocab_size

@@ -12,7 +12,7 @@ sys.path.append(
     )
 )
 
-from chop.actions.accelerate_train import train
+from chop.actions.accelerate_peft import train
 from chop.dataset import MyDataModule
 
 # from chop.models.manual.llama_plain.modeling_llama import LlamaForCausalLM
@@ -29,20 +29,21 @@ def main():
     batch_size = 1
     num_workers = os.cpu_count()
     optimizer = "adamw"
-    max_epochs: int = 0
+    max_epochs: int = 1
     max_steps: int = 0
     gradient_accumulation_steps: int = 1
     # Reduced for unit test
     # max_epochs: int = 2
     # max_steps: int = -1
     # gradient_accumulation_steps: int = 4
-    learning_rate: float = 5e-5
+    learning_rate: float = 5e-4
     weight_decay: float = 0.0
     lr_scheduler_type: str = "linear"
     num_warmup_steps: int = 0
-    save_path: str = "./ckpts"
+    save_path: str = "./ckpts/wiki/llama"
     load_name: str = None
     load_type: str = ""
+    evaluate_before_training: bool = False
 
     model = LlamaQuantizedForCausalLM.from_pretrained(model_name)
     tokenizer = LlamaTokenizer.from_pretrained(model_name)
@@ -71,6 +72,7 @@ def main():
         save_path=save_path,
         load_name=load_name,
         load_type=load_type,
+        evaluate_before_training=evaluate_before_training,
     )
 
 

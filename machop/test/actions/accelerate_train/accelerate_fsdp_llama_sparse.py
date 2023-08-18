@@ -11,28 +11,27 @@ sys.path.append(
         os.path.dirname(os.path.realpath(__file__)), "..", "..", "..", "..", "machop"
     )
 )
-
+import torch.nn as nn
 from chop.actions.accelerate_peft import train, parse_arguments
 from chop.dataset import MyDataModule
-from chop.models.manual.lora_utils import (
-    mark_only_lora_as_trainable,
+from chop.models.manual.sparse_utils import (
     print_trainable_parameters,
 )
-
-# from chop.models.manual.llama_plain.modeling_llama import LlamaForCausalLM
-# from transformers.models.llama import LlamaTokenizer
-
-from chop.models.manual.opt_lora.configuration_opt_lora import OPTLoraConfig
-from chop.models.manual.opt_lora.modeling_opt_lora import OPTForCausalLM
-from transformers import AutoTokenizer
+from chop.models.manual.sparse_modules import (
+    mark_only_sparse_as_trainable,
+)
+from chop.models.manual.llama_sparse.configuration_llama_sparse import LlamaSparseConfig
+from chop.models.manual.llama_sparse.modeling_llama_sparse import LlamaForCausalLM
+from transformers.models.llama import LlamaTokenizer
 import toml
 
 
 def main():
-    model_name = "facebook/opt-350m"
-    # lora_config_path = parse_arguments() --> The following is used to pass a .toml file throught the CLI e.g --lora-config-path machop/configs/by_model/opt_lora/lora_by_type.toml
+    model_name = "Cheng98/llama-160m"
+    # model_name = "lmsys/vicuna-7b-v1.3"
+    # lora_config_path = parse_arguments() --> The following is used to pass a .toml file throught the CLI e.g --lora-config-path machop/configs/by_model/llama_lora/lora_by_type.toml
     config_files = [
-        "lora_by_type.toml",
+        "sparse_by_type.toml",
     ]
     task = "lm"
     dataset_name = "wikitext2"
@@ -47,13 +46,14 @@ def main():
     # max_epochs: int = 2
     # max_steps: int = -1
     # gradient_accumulation_steps: int = 4
-    learning_rate: float = 5e-5
+    learning_rate: float = 5e-4
     weight_decay: float = 0.0
     lr_scheduler_type: str = "linear"
     num_warmup_steps: int = 0
-    save_path: str = "./ckpts"
+    save_path: str = "./ckpts/wiki/llama_sparse"
     load_name: str = None
     load_type: str = ""
+    evaluate_before_training: bool = False
 
     path = os.path.join(
         os.path.dirname(os.path.realpath(__file__)),
@@ -62,26 +62,24 @@ def main():
         "..",
         "configs",
         "by_model",
-        "opt_lora",
+        "llama_sparse",
     )
 
     for config_file in config_files:
         # load toml config file
         with open(os.path.join(path, config_file), "r") as f:
-            lora_config_path = toml.load(f)
-        print(f"LoRA PEFT with {config_file} config file successfully loaded!")
+            sparse_config_path = toml.load(f)
+        print(f"Sparse PEFT with {config_file} config file successfully loaded!")
 
-    peft_config = OPTLoraConfig.from_pretrained(
-        pretrained_model_name_or_path=model_name, lora_config=lora_config_path
+    peft_config = LlamaSparseConfig.from_pretrained(
+        pretrained_model_name_or_path=model_name, sparse_config=sparse_config_path
     )
-    model = OPTForCausalLM.from_pretrained(
+    model = LlamaForCausalLM.from_pretrained(
         pretrained_model_name_or_path=model_name, config=peft_config
     )
-    model = mark_only_lora_as_trainable(model)
+    model = mark_only_sparse_as_trainable(model)
     print_trainable_parameters(model)
-
-    tokenizer = AutoTokenizer.from_pretrained(model_name)
-
+    tokenizer = LlamaTokenizer.from_pretrained(model_name)
     data_module = MyDataModule(
         model_name=None,
         dataset_name=dataset_name,
@@ -106,6 +104,7 @@ def main():
         save_path=save_path,
         load_name=load_name,
         load_type=load_type,
+        evaluate_before_training=evaluate_before_training,
     )
 
 

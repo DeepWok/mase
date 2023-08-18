@@ -21,3 +21,4 @@ tabulate
 tensorboard
 optuna
 stable-baselines3
+scikit-learn

@@ -154,7 +154,6 @@ class LinearLora(nn.Linear, LoraLayer):
     # Lora implemented in a dense layer
     def __init__(
         self,
-        adapter_name: str,
         in_features: int,
         out_features: int,
         config: dict = None,
@@ -163,10 +162,11 @@ class LinearLora(nn.Linear, LoraLayer):
         init_lora_weights = kwargs.pop("init_lora_weights", True)
         self.config = config
 
-        r, lora_alpha, lora_dropout = (
+        r, lora_alpha, lora_dropout, adapter_name = (
             config["r"],
             config["lora_alpha"],
             config["lora_dropout"],
+            config["adapter_name"],
         )
         lora_dropout = float(
             lora_dropout
@@ -263,3 +263,24 @@ class LinearLora(nn.Linear, LoraLayer):
         }
 
         return lora_params
+
+    # Helper function to bias the training towards either the target module or the entire model
+
+
+def mark_only_lora_as_trainable(model: nn.Module, bias: str = "none") -> None:
+    # Paramter: bias -> Which modules should be marked as trainable based on the given options
+    for n, p in model.named_parameters():
+        if "lora_" not in n:
+            p.requires_grad = False
+    if bias == "none":
+        return model
+    elif bias == "all":
+        for n, p in model.named_parameters():
+            if "bias" in n:
+                p.requires_grad = True
+    elif bias == "lora_only":
+        for m in model.modules():
+            if isinstance(m, LoraLayer) and hasattr(m, "bias") and m.bias is not None:
+                m.bias.requires_grad = True
+    else:
+        raise NotImplementedError
