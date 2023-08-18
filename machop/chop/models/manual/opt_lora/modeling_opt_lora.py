@@ -135,28 +135,24 @@ class OPTAttention(nn.Module):
 
         lora_config = config.lora_config[f"model_layer_{layer_id}"]["self_attn"]
         self.k_proj = LinearLora(
-            adapter_name="eng_alpaca",
             in_features=embed_dim,
             out_features=embed_dim,
             bias=bias,
             config=lora_config["k_proj"],
         )
         self.v_proj = LinearLora(
-            adapter_name="eng_alpaca",
             in_features=embed_dim,
             out_features=embed_dim,
             bias=bias,
             config=lora_config["v_proj"],
         )
         self.q_proj = LinearLora(
-            adapter_name="eng_alpaca",
             in_features=embed_dim,
             out_features=embed_dim,
             bias=bias,
             config=lora_config["q_proj"],
         )
         self.o_proj = LinearLora(
-            adapter_name="eng_alpaca",
             in_features=embed_dim,
             out_features=embed_dim,
             bias=bias,

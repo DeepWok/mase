@@ -12,9 +12,10 @@ def parse_node_config(config: dict, layer_type: str):
     match layer_type:
         case "linear":
             return {
-                "r": config["r"],
-                "lora_alpha": config["lora_alpha"],
-                "lora_dropout": config["lora_dropout"],
+                "k": config["k"],
+                "sparse_alpha": config["sparse_alpha"],
+                "sparse_dropout": config["sparse_dropout"],
+                "idx_method": config["idx_method"],
                 "adapter_name": config["adapter_name"],
             }
         case _:
@@ -28,6 +29,7 @@ def create_a_layer_config(linear_lc: dict = None, layer_lc=None) -> dict:
         raise ValueError("Must provide either linear_lc or layer_qc")
     if layer_lc is None:
         layer_lc = {}
+
     lc = {
         "self_attn": {
             "q_proj": parse_node_config(
@@ -83,7 +85,7 @@ def by_name_parser(config: dict, num_hidden_layers: int) -> dict:
     return p_config
 
 
-def parse_opt_lora_config(config: str | dict, num_hidden_layers: int) -> dict:
+def parse_llama_sparse_config(config: str | dict, num_hidden_layers: int) -> dict:
     assert isinstance(
         config, (str, dict)
     ), "config must be a str path to config toml or dict"

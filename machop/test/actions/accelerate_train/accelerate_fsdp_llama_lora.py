@@ -15,8 +15,10 @@ import torch.nn as nn
 from chop.actions.accelerate_peft import train, parse_arguments
 from chop.dataset import MyDataModule
 from chop.models.manual.lora_utils import (
-    mark_only_lora_as_trainable,
     print_trainable_parameters,
+)
+from chop.models.manual.lora_modules import (
+    mark_only_lora_as_trainable,
 )
 from chop.models.manual.llama_llora.configuration_llama_llora import LlamaLoraConfig
 from chop.models.manual.llama_llora.modeling_llama_llora import LlamaForCausalLM
@@ -44,13 +46,14 @@ def main():
     # max_epochs: int = 2
     # max_steps: int = -1
     # gradient_accumulation_steps: int = 4
-    learning_rate: float = 5e-5
+    learning_rate: float = 5e-4
     weight_decay: float = 0.0
     lr_scheduler_type: str = "linear"
     num_warmup_steps: int = 0
-    save_path: str = "./ckpts"
+    save_path: str = "./ckpts/wiki/llama_lora"
     load_name: str = None
     load_type: str = ""
+    evaluate_before_training: bool = False
 
     path = os.path.join(
         os.path.dirname(os.path.realpath(__file__)),
@@ -102,6 +105,7 @@ def main():
         save_path=save_path,
         load_name=load_name,
         load_type=load_type,
+        evaluate_before_training=evaluate_before_training,
     )
 
 

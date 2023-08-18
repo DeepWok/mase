@@ -207,7 +207,7 @@ jobs:
                        timm pytorch-nlp datasets IPython ipdb \
                        sentencepiece einops deepspeed pybind11 \
                        tabulate tensorboard hyperopt accelerate \
-                       optuna stable-baselines3
+                       optuna stable-baselines3 scikit-learn
           pip3 install cocotb[bus]==1.8.0 
 
     - name: Mase regression test 

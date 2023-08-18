@@ -2,7 +2,6 @@ import math
 import os
 from functools import partial
 from pathlib import Path
-
 import numpy as np
 import torch
 from accelerate import Accelerator, FullyShardedDataParallelPlugin
@@ -17,8 +16,11 @@ from torch.distributed.fsdp.fully_sharded_data_parallel import (
 from torch.distributed.fsdp.wrap import transformer_auto_wrap_policy
 from tqdm.auto import tqdm
 from transformers import get_scheduler
+import sklearn
+from sklearn.metrics import accuracy_score
 import argparse
 import toml
+from deepspeed.profiling.flops_profiler import FlopsProfiler
 
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
@@ -83,24 +85,34 @@ def evaluate_lm_step(accelerator: Accelerator, model: torch.nn.Module, batch):
         ).sum(1)
         / shift_attention_mask.sum(1)
     )
-    return ppl_step
+
+    # HF's evaluate accuracy: https://huggingface.co/spaces/evaluate-metric/accuracy/blob/main/accuracy.py
+    predictions = shift_logits.argmax(dim=-1)
+    acc_step = float(
+        accuracy_score(shift_labels.cpu().view(-1), predictions.cpu().view(-1))
+    )
+
+    return ppl_step, acc_step
 
 
 def evaluate(accelerator, model, task, eval_dataloader, num_eval_samples):
     model.eval()
-    step_results = []
+    ppl_step_results = []
+    acc_step_results = []
     for step, batch in enumerate(eval_dataloader):
         match task:
             case "lm" | "language_modeling":
-                ppl_step = evaluate_lm_step(accelerator, model, batch)
-                step_results += ppl_step.tolist()
+                ppl_step, acc_step = evaluate_lm_step(accelerator, model, batch)
+                ppl_step_results += ppl_step.tolist()
+                acc_step_results.append(acc_step)
             case _:
                 raise ValueError(f"Unsupported task: {task}")
 
     match task:
         case "lm" | "language_modeling":
-            ppl = np.mean(step_results)
-            eval_results = {"eval_ppl": ppl}
+            ppl = np.mean(ppl_step_results)
+            acc = np.mean(acc_step_results)
+            eval_results = {"eval_ppl": ppl, "eval_acc": acc}
         case _:
             raise ValueError(f"Unsupported task: {task}")
 
@@ -129,7 +141,7 @@ def get_optimizer(accelerator, model, optimizer: str, learning_rate, weight_deca
             "params": [
                 p
                 for n, p in model.named_parameters()
-                if not any(nd in n for nd in no_decay)
+                if p.requires_grad and not any(nd in n for nd in no_decay)
             ],
             "weight_decay": weight_decay,
         },
@@ -137,7 +149,7 @@ def get_optimizer(accelerator, model, optimizer: str, learning_rate, weight_deca
             "params": [
                 p
                 for n, p in model.named_parameters()
-                if any(nd in n for nd in no_decay)
+                if p.requires_grad and any(nd in n for nd in no_decay)
             ],
             "weight_decay": 0.0,
         },
@@ -173,6 +185,7 @@ def train(
     save_path: str = ".",
     load_name: str = None,
     load_type: str = "",
+    evaluate_before_training: bool = False,
 ):
     fsdp_plugin = FullyShardedDataParallelPlugin(
         cpu_offload=CPUOffload(offload_params=False),
@@ -193,10 +206,11 @@ def train(
     if accelerator.is_main_process:
         logger.info(f"Using accelerator: {accelerator.state}")
 
-    # model
+    # Prepare model and FlopsProfiler
     if load_name is not None:
         model = type(model).from_pretrained(load_name)
     model = accelerator.prepare(model)
+    prof = FlopsProfiler(model)
 
     # dataset
     if accelerator.is_local_main_process:
@@ -265,7 +279,22 @@ def train(
     progress_bar.set_description(f"Training steps")
 
     train_iterator = iter(train_dataloader)
-    eval_results = {"eval_ppl": "NA"}
+    eval_results = {
+        "eval_ppl": "NA",
+        "eval_acc": "NA",
+    }
+    # calc perplexity and accuracy before training dependant on flag
+    if evaluate_before_training:
+        eval_results = evaluate(
+            accelerator, model, task, eval_dataloader, len(eval_dataloader.dataset)
+        )
+    accelerator.log(
+        eval_results,
+        step=0,
+    )
+
+    performance_metrics = {"macs": "NA", "flops": "NA", "params": "NA"}
+
     for step in range(max_steps):
         epoch = step // num_update_steps_per_epoch
         model = model.train()
@@ -276,8 +305,30 @@ def train(
             train_iterator = iter(train_dataloader)
             batch = next(train_iterator)
 
+        # Starts deepseed FLOPs profiler
+
+        if step == max_steps - 1:
+            prof.start_profile()
+
         loss = train_step(accelerator, model, batch, task)
         loss = loss / gradient_accumulation_steps
+
+        if (
+            step == max_steps - 1
+        ):  # if using multi nodes, check global_rank == 0 as well
+            prof.stop_profile()
+            macs, flops, params = (
+                prof.get_total_macs(),
+                prof.get_total_flops(),
+                prof.get_total_params(),
+            )
+            prof.print_model_profile(
+                profile_step=max_steps - 1
+            )  # prints in detail information regarding each of the models submodules
+            prof.end_profile()
+            print(flops)
+            performance_metrics = {"macs": macs, "flops": flops, "params": params}
+
         accelerator.backward(loss)
         if (step + 1) % gradient_accumulation_steps == 0 or step == max_steps - 1:
             optimizer.step()
@@ -285,6 +336,7 @@ def train(
             optimizer.zero_grad()
 
         accelerator.log({"train_loss": loss.detach()}, step=step)
+        accelerator.log(performance_metrics, step=step)
 
         # complete an epoch
 
@@ -295,19 +347,20 @@ def train(
             )
             accelerator.log(
                 eval_results,
-                step=epoch,
+                step=epoch + 1,
             )
 
             # checkpoint
-            save_dir = os.path.join(save_path, f"{epoch}")
+            save_dir = os.path.join(save_path, f"{epoch + 1}")
             checkpoint_model(accelerator, model, save_dir)
             if accelerator.is_local_main_process:
                 logger.info(f"Saving checkpoint to {save_dir}")
         progress_bar.set_postfix(
             {
-                "epoch": epoch,
+                "epoch": epoch + 1,
                 "train_loss": loss.item(),
                 "eval_ppl": eval_results["eval_ppl"],
+                "eval_acc": eval_results["eval_acc"],
             }
         )
         progress_bar.update(1)
