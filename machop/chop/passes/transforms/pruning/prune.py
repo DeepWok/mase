@@ -33,6 +33,8 @@ Internal Backlog:
 4. Consider extending PyTorch's built-in pruning module to support activation sparsity;
    this is an attractive option as it would allow us to leverage the existing pruning
    workflows (incl. globally unstructured ones).
+5. Provide user control over exactly what is logged via the handler. That is, config.
+   params. for log_input, log_values, log_statistics, log_summary, log_thresholds, etc.
 """
 
 import torch
@@ -103,11 +105,16 @@ def prune_graph_iterator(graph: MaseGraph, save_dir: str, config: dict):
         else (None, None)
     )
 
-    handler = ActivationPruneHandler(strategy, target) if prune_activations else None
-    if handler:
-        # Register the handler as an attribute of the model; since we're using a partial
-        # function for the pre-forward hook and the handler is passed in as an argument,
-        # we'd lose the reference when saving the graph if we didn't do this.
+    # Create and register the handler as an attribute of the model; since we're using
+    # partial functions for the hooks and the handler is passed in as an argument, we'd
+    # lose the reference when saving the graph if we didn't do this.
+    handler = None
+    if prune_activations:
+        handler = ActivationPruneHandler(target, strategy, save_dir)
+        # NOTE: DO NOT enable this unless you have a LOT of disk space. This will log
+        # the sparsity of nearly every single patch processed; handler.samples can help
+        # but it'll still hog memory. See handler._conv_forward method for more details.
+        handler.log_values = False
         setattr(graph.model, "activation_prune_handler", handler)
         logger.debug("Added the activation prune handler as a model attribute")
     pruner = method(sparsity, criterion, handler)
@@ -147,8 +154,6 @@ def prune_graph_iterator(graph: MaseGraph, save_dir: str, config: dict):
     # NOTE: Currently, we only do this on one batch sample. As in line 230 of
     # machop/chop/passes/analysis/statistical_profiler/profile_statistics.py,
     # we may want to aggregate statistics over multiple batches.
-    # ----------------------------------------------------------------------------------
-    # Also, as mentioned earlier,
     if handler:
         logger.info("Running inference to generate an activation sparsity report")
         previous_state = graph.model.training
@@ -168,13 +173,22 @@ def prune_graph_iterator(graph: MaseGraph, save_dir: str, config: dict):
     # Save the pruning report and summary
     pruner.save_summary(save_dir)
     if handler:
-        handler.save_report(save_dir)
+        handler.save_statistics(save_dir)
         handler.save_summary(save_dir)
 
-    # Set the handler logging attributes to False for better performance
+    # Set the handler logging attributes to False for better performance. Also, we
+    # remove the handler's forward hook that's responsible for collecting statistics.
     if handler:
-        handler.log_report = False
+        handler.unwrap(keep_pre=True)
+        handler.clear_statistics()  # Helps make the saved graph smaller
+
+        # NOTE: The verify, log_input, log_values, and log_statistics toggles have no
+        # purpose after unwrapping; they're associated with the removed forward hook.
+        handler.verify = False
+        handler.log_input = False
+        handler.log_values = False
         handler.log_summary = False
+        handler.log_statistics = False
         handler.log_thresholds = False
 
     return graph
