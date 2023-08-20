@@ -14,12 +14,17 @@ from collections import OrderedDict
 from functools import partial
 from tabulate import tabulate
 from abc import ABC, abstractmethod
+from pathlib import Path
 import toml
+import copy
 
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
+import numpy as np
 
 from chop.tools.logger import getLogger
+from chop.passes.transforms.pruning.utilities import StatisticsCollector
 
 # Housekeeping -------------------------------------------------------------------------
 logger = getLogger(__name__)
@@ -192,37 +197,53 @@ class ActivationPruneHandler:
         "Min / Median / Max",
     )
 
-    def __init__(self, strategy, target):
-        self.strategy = strategy
+    def __init__(self, target, strategy, save_dir):
         self.target = target
-        # A dictionary of tuples where the key is the name of the node and the value is
-        # a tuple of two lists: the average and variance of the activation sparsity
-        # across all channels. That is, (assuming three channels)
-        # { ..., "feature.0.conv1": ([0.1, 0.2, 0.3], [0.01, 0.02, 0.03]), ... }
-        self.report = OrderedDict()
-        # Misc. information on layerwise activation sparsity
+        self.strategy = strategy
+        self.save_dir = Path(save_dir)
+        self.save_dir.mkdir(parents=True, exist_ok=True)
+
+        # Internal Attributes ----------------------------------------------------------
+        # Verify that the custom conv implementation is indeed correct (within 1e-5)
+        self.verify = True
+        # The number of samples to randomly sample for the statistics collector. Set it
+        # to None to collect all samples.
+        self.samples = 1000
+        # Misc. information for the console summary (activation pruning)
         self.summary = []
-        # Node-specific thresholds that are logged when the hook is called.
+        # Handles for hooks. This is actually nested dictionary handles for each node.
+        # We have one pre-forward ("pre") and forward ("fwd") hook for each node.
+        self.handles = OrderedDict()
+        # A dict. of StatisticCollector objects, with the key being the node's name.
+        # The object logs the statistics of window-wise sparsities of post-product
+        # feature maps (before accumulation) across all input channels.
+        self.statistics = OrderedDict()
+        # Node-specific thresholds that are logged when the prune hook is called.
         # NOTE: Everytime a forward pass is invoked, the dictionary is rewritten. It's
         # only for the adaptive strategy that the values stored will actually change.
         self.thresholds = {}
-        # Handles for pre-forward hooks; added by the pruner when the hook is registered
-        self.handles = OrderedDict()
-        # Toggle logging metadata
-        self.log_report = True
+
+        # Logging ----------------------------------------------------------------------
+        # NOTE: log_input, log_values and verify are linked with log_statistics. See
+        # the collect hook and _conv_forward function for more details.
+        self.log_input = True
+        self.log_values = True
         self.log_summary = True
+        self.log_statistics = True
         self.log_thresholds = True
 
+    # Hooks ----------------------------------------------------------------------------
     # When calling, use partial to bind the name of the module and the activation prune
-    # handler object to the hook function. Also, when saving, make sure to add the
-    # handler object as an attribute of the model so that it doesn't become a dangling
-    # reference. :)
+    # handler object to the hook functions. When saving, add the handler object as an
+    # attribute of the model so that it doesn't become a dangling reference. :)
     @staticmethod
-    def hook(name, handler, _, args):
-        # NOTE: We only expect one input to the module! Also, the threshold is
-        # None if the strategy is "observe".
+    def prune(name, handler, _, args):
+        # NOTE: We only expect one input to the module!
         input = args[0]
-        threshold = 0
+        if handler.strategy == ACTIVATION_PRUNE_STRATEGIES[0]:  # observe
+            return input
+
+        threshold = 0.0
         if handler.strategy == ACTIVATION_PRUNE_STRATEGIES[1]:  # adaptive
             threshold = torch.quantile(input.abs().flatten(), handler.target)
         if handler.strategy == ACTIVATION_PRUNE_STRATEGIES[2]:  # fixed-global
@@ -231,46 +252,60 @@ class ActivationPruneHandler:
             threshold = handler.target[name]
 
         # Generate the mask
-        # NOTE: For the observe strategy, this mask captures the sparsity in the input.
         mask = (input.abs() > threshold).to(input.dtype)
 
+        # Log the threshold if necessary; for the observe strategy, we don't do this.
+        # The summary, on the other hand, only captures sparsity enforced by pruning.
         if handler.log_thresholds:
             handler.thresholds[name] = threshold
-        if handler.log_report:
-            # Compute the channel-wise sparsity of the mask and take the mean and
-            # variance along the batch dimension.
-            tot_elements = mask.size(2) * mask.size(3)
-            nnz_elements = torch.sum(mask, dim=(2, 3))
-            channel_sparsity = 1 - nnz_elements / tot_elements
-            sparsity_avg = torch.mean(channel_sparsity, dim=0).tolist()
-            sparsity_var = torch.var(channel_sparsity, dim=0).tolist()
-            handler.report[name] = {"avg": sparsity_avg, "var": sparsity_var}
         if handler.log_summary:
             handler._update_summary(name, threshold, input, mask)
 
-        # Apply the mask to the input (magic happens here)
+        # Apply the mask! This is where the magic happens :)
         return input * mask
 
+    @staticmethod
+    def collect(name, handler: "ActivationPruneHandler", module, args, output):
+        # Deepcopy the module, detach the input and feed it through the custom forward
+        if handler.log_statistics:
+            ref = output
+            out = handler._conv_forward(copy.deepcopy(module), name, args[0].detach())
+            if handler.verify:
+                e = torch.abs(ref - out)
+                avg = f"{torch.mean(e):.4e}"
+                max = f"{torch.max(e):.4e}"
+                logger.debug(f"(Avg Error: {avg}, Max Error: {max}) for {name}")
+                assert torch.allclose(ref, out, atol=1e-4), "Forward pass mismatch!"
+
+    # Main Methods ---------------------------------------------------------------------
     def wrap(self, module: nn.Module, name: str):
-        # We only care about enforcing or observing activation sparsity in conv2d layers
+        # We only care about enforcing or observing activation sparsity in nn.Conv2d
+        # layers and we don't want to register the hooks if the node isn't a key
         if not isinstance(module, nn.Conv2d):
             return
-        # Skip registering the hook if the node isn't a key
         if self.strategy == ACTIVATION_PRUNE_STRATEGIES[3] and name not in self.target:
             return
-        self.handles[name] = module.register_forward_pre_hook(
-            partial(self.hook, name, self)
-        )
 
-    def unwrap(self):
-        for handle in self.handles.values():
-            handle.remove()
+        # Register the hooks!
+        self.handles[name] = {
+            "pre": module.register_forward_pre_hook(partial(self.prune, name, self)),
+            "fwd": module.register_forward_hook(partial(self.collect, name, self)),
+        }
 
+    def unwrap(self, keep_pre=False):
+        for handles in self.handles.values():
+            if not keep_pre:
+                handles["pre"].remove()
+            handles["fwd"].remove()
+
+    # Logging --------------------------------------------------------------------------
     def show_summary(self):
-        colalign = ("left", "center")
-        logger.info(
-            f"\n{tabulate(self.summary, self.FIELDS, 'pretty', colalign=colalign)}"
-        )
+        if self.summary == []:
+            logger.info("No records! Observe strategy doesn't enforce sparsity.")
+        else:
+            colalign = ("left", "center")
+            table = tabulate(self.summary, self.FIELDS, "pretty", colalign=colalign)
+            logger.info(f"\n{table}")
 
     # Save the activation pruning summary to a CSV file
     def save_summary(self, save_dir):
@@ -282,17 +317,37 @@ class ActivationPruneHandler:
                 f.write(",".join(map(str, [f'"{x}"' for x in row])) + "\n")
         logger.info(f"Saved activation pruning summary to {save_path}")
 
-    # Save the channel-wise activation sparsity report to a TOML file
-    def save_report(self, save_dir):
+    # Save the logged statistics to a few files
+    def save_statistics(self, save_dir):
         save_path = save_dir / "activation_report.toml"
+        stats_dir = save_dir / "statistics"  # This is where the pickled objects go
+        stats_dir.mkdir(parents=True, exist_ok=True)
+
+        report = {}
+        for name, statistics in self.statistics.items():
+            report[name] = {
+                "avg": statistics.avg.cpu().tolist(),
+                "var": statistics.var.cpu().tolist(),
+            }
+            torch.save(
+                {
+                    "avg": statistics.avg.cpu(),
+                    "var": statistics.var.cpu(),
+                    "cov": statistics.cov.cpu(),
+                    "cor": statistics.cor.cpu(),
+                },
+                stats_dir / f"{name}.pt",
+            )
+
         with open(save_path, "w") as f:
-            toml.dump(self.report, f)
+            toml.dump(report, f)
+
         logger.info(f"Saved activation pruning report to {save_path}")
 
     # Cleanup --------------------------------------------------------------------------
     # NOTE: This is useful for a fresh start. Please use it before running inference.
-    def clear_report(self):
-        self.report = OrderedDict()
+    def clear_statistics(self):
+        self.statistics = OrderedDict()
 
     def clear_summary(self):
         self.summary = []
@@ -301,6 +356,96 @@ class ActivationPruneHandler:
         self.thresholds = {}
 
     # "Private" helper methods ---------------------------------------------------------
+    # This is the Python implementation of a convolutional layer's forward pass that the
+    # collect hook calls to, well, collect statistics of window-wise patches along
+    # each channel of the post-product feature maps. This will be slow, as expected.
+    def _conv_forward(self, module: nn.Module, name: str, x: torch.Tensor):
+        assert x.size()[2] == x.size()[3], "Only square feature maps are supported!"
+
+        # The saved input is used for validating the forward pass in hardware
+        if self.log_input:
+            input_dir = self.save_dir / "inputs"
+            input_dir.mkdir(parents=True, exist_ok=True)
+            torch.save(x.detach(), input_dir / f"{name}.pt")
+
+        # Parameters of a convolutional layer
+        # NOTE: ic in the weights is the number of input channels per group
+        oc, ic, kh, kw = module.weight.shape
+        gs = module.groups  # No. of groups
+        ic *= gs
+        bs = x.shape[0]
+
+        # Each patch from an input channel is processed by oc // gs kernels, so we
+        # expand (i.e repeat) the patches accordingly.
+        # NOTE: The shape after the permute is (bs, hs, ws, oc, ic, kh, kw), where the
+        # oc is the number of output channels per group. However, ic is the total
+        # number of input channels; this will be dealt with later.
+        p, s, d = module.padding, module.stride, module.dilation
+        hs = ws = (x.size(2) + 2 * p[0] - d[0] * (kh - 1) - 1) // s[0] + 1
+        patches = (
+            F.unfold(x, (kh, kw), d, p, s)
+            .transpose(1, 2)
+            .reshape(bs, hs, ws, ic, kh, kw)
+            .expand(oc // gs, *(bs, hs, ws, ic, kh, kw))
+            .permute(1, 2, 3, 0, 4, 5, 6)
+            .contiguous()
+        )
+
+        # Create the output tensor on the same device as the module
+        out = torch.zeros((bs, hs, ws, oc), device=module.weight.device)
+
+        # We only roll part of the patches tensor to reduce memory usage, and rf (i.e
+        # the roll factor) is the number of times we roll the tensor.
+        rf = 2 if hs % 2 == 0 else self._get_smallest_factor(hs)
+        assert hs % rf == 0, "Roll factor not compatible!"
+        for hi, wi in np.ndindex(rf, rf):
+            # s is the shfit size; s * s would be the number of patches we process in
+            # one loop iteration. It's easy to think of this as a sliding window.
+            s = hs // rf
+            patch = (
+                patches[:, hi * s : (hi + 1) * s, wi * s : (wi + 1) * s]
+                # This is where we deal with the ic issue mentioned above; we then
+                # tranpose the tensor to push the gs dim. before the oc dim.
+                .reshape(bs, s, s, oc // gs, gs, ic // gs, kh, kw)
+                .transpose(3, 4)
+                .mul(module.weight.reshape(gs, oc // gs, ic // gs, kh, kw))
+            )
+
+            # Log statistics about the post-product patches
+            # NOTE: Since there are a large number of patches, computing the statistics
+            # across all of them will be expensive. To reduce the cost, we can compute
+            # the statistics for a random subset.
+            if self.samples is not None and self.samples < bs * s * s * oc:
+                size = bs * s * s * oc
+                idxs = torch.randint(0, size, (self.samples,), device=patch.device)
+                temp = patch.detach().view(-1, ic // gs, kh * kw)[idxs]
+            else:
+                temp = patch.detach().view(-1, ic // gs, kh * kw)
+
+            sparsity = 1 - temp.count_nonzero(dim=2) / (kh * kw)
+            if name not in self.statistics:
+                device = module.weight.device
+                sc = StatisticsCollector(name, ic // gs, device, self.log_values)
+                self.statistics[name] = sc
+            self.statistics[name].update(sparsity, f"{hi}_{wi}", self.save_dir)
+
+            # Sum over the last three dimensions to get the processed segment of patches
+            patch = patch.sum(dim=(5, 6, 7)).reshape(bs, s, s, oc)
+            out[:, hi * s : (hi + 1) * s, wi * s : (wi + 1) * s].copy_(patch)
+
+        if module.bias is not None:
+            out.add_(module.bias.view(1, 1, 1, -1))
+
+        return out.permute(0, 3, 1, 2)
+
+    # Returns the smallest non-trivial factor of n (i.e factor > 1)
+    def _get_smallest_factor(self, n):
+        limit = int(n**0.5) + 1
+        for i in range(2, limit):
+            if n % i == 0:
+                return i
+        return n
+
     def _update_summary(self, name, threshold, input, mask):
         # Compute the sparsity of the feature maps in the input and take the average
         # along both the channel and batch dimensions.
