@@ -60,6 +60,9 @@ PRUNE_METHODS = {
     # Add more here...
 }
 
+# A list of supported scopes for distributing the sparsity budget
+PRUNE_SCOPES = ["local", "global-naive"]
+
 # Housekeeping -------------------------------------------------------------------------
 logger = getLogger(__file__)
 logger.propagate = False  # Avoid duplicate logs
@@ -97,7 +100,13 @@ def prune_graph_iterator(graph: MaseGraph, save_dir: str, config: dict):
     input_generator = config.get("input_generator", None)
 
     # Setup all pruning-related parameters (incl. basic validation)
-    method, criterion, sparsity = get_weight_prune_params(config["weight"])
+    weight_prune_params = get_weight_prune_params(config["weight"], graph)
+    method, criterion, sparsity, scope = weight_prune_params
+
+    # Convert the sparsity to a dictionary if the scope is global
+    if scope == PRUNE_SCOPES[1]:  # global-naive
+        sparsity = _distribute_sparsity_globally(sparsity, graph)
+
     prune_activations = "activation" in config
     strategy, target = (
         get_activation_prune_params(config["activation"], graph)
@@ -117,7 +126,7 @@ def prune_graph_iterator(graph: MaseGraph, save_dir: str, config: dict):
         handler.log_values = False
         setattr(graph.model, "activation_prune_handler", handler)
         logger.debug("Added the activation prune handler as a model attribute")
-    pruner = method(sparsity, criterion, handler)
+    pruner = method(sparsity, criterion)
 
     # Iterate over the graph and prune the compatible nodes
     total = len(graph.fx_graph.nodes)
@@ -196,10 +205,11 @@ def prune_graph_iterator(graph: MaseGraph, save_dir: str, config: dict):
 
 # Helper functions ---------------------------------------------------------------------
 # TODO: We need to add tests for these functions with a variety of configurations.
-def get_weight_prune_params(config: dict):
+def get_weight_prune_params(config: dict, graph: MaseGraph):
     method = config.get("method", "level-pruner")
     criterion = config.get("criterion", "random")
     sparsity = config.get("sparsity", 0.0)
+    scope = config.get("scope", "local")
 
     # Validate the parameters
     if method not in PRUNE_METHODS.keys():
@@ -214,15 +224,30 @@ def get_weight_prune_params(config: dict):
                 criterion, list(RANK_CRITERIA.keys())
             )
         )
-    if not isinstance(sparsity, float):
-        raise ValueError("Sparsity must be a float. Got {}".format(type(sparsity)))
-    if sparsity < 0 or sparsity > 1:
-        raise ValueError("Sparsity must be between 0 and 1. Got {}".format(sparsity))
+    if scope not in PRUNE_SCOPES:
+        raise ValueError(
+            "Unsupported pruning scope {}. Please choose from {}".format(
+                scope, PRUNE_SCOPES
+            )
+        )
+    if isinstance(sparsity, dict):
+        # Make sure that the scope is local
+        if scope != PRUNE_SCOPES[0]:  # not local
+            raise ValueError("Layer-wise budgets only possible with a local scope!")
+
+        # Verify that the keys are valid node names and that the values are valid
+        names = [node.target for node in graph.fx_graph.nodes]
+        for name in sparsity.keys():
+            if name not in names:
+                raise ValueError(f"Node {name} not found in the graph!")
+            _verify_sparsity(sparsity[name])
+    else:
+        _verify_sparsity(sparsity)
 
     method = PRUNE_METHODS[method]
     criterion = RANK_CRITERIA[criterion]
 
-    return method, criterion, sparsity
+    return method, criterion, sparsity, scope
 
 
 def get_activation_prune_params(config: dict, graph: MaseGraph):
@@ -261,3 +286,30 @@ def get_activation_prune_params(config: dict, graph: MaseGraph):
             raise ValueError("Target must be between 0 and 1. Got {}".format(target))
 
     return strategy, target
+
+
+def _verify_sparsity(sparsity):
+    if not isinstance(sparsity, float):
+        raise ValueError("Sparsity must be a float. Got {}".format(type(sparsity)))
+    if sparsity < 0 or sparsity > 1:
+        raise ValueError("Sparsity must be between 0 and 1. Got {}".format(sparsity))
+
+
+def _distribute_sparsity_globally(budget, graph: MaseGraph):
+    # We distribute the sparsity budget unevenly across the layers, using the layer's
+    # relative size as a weight.
+    sparsities = {}
+    tot_elements = 0
+    for node in graph.fx_graph.nodes:
+        if get_mase_op(node) not in PRUNEABLE_OPS.keys():
+            continue
+        if get_mase_type(node) == "module_related_func":
+            # We only consider the weights
+            module = get_node_actual_target(node)
+            tot_elements += module.weight.numel()
+            sparsities[node.target] = budget * module.weight.numel()
+
+    for name, sparsity in sparsities.items():
+        sparsities[name] = sparsity / tot_elements
+
+    return sparsities

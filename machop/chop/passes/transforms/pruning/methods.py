@@ -34,19 +34,14 @@ logger.propagate = False  # Avoids duplicate logging messages
 # Pruning routines ---------------------------------------------------------------------
 # The base pruner class that all pruners should inherit from.
 # NOTE: When creating a new pruner, please make sure to follow this short checklist:
-# 1. Add the activation handler as a class attribute.
-# 2. Always check if the handler is None because it's not guaranteed to be passed in.
-# 3. Make sure to store the handle for this hook in the handler's handles dictionary.
-# --------------------------------------------------------------------------------------
-# If you're not supporting activation pruning, then make it explicit to the user. The
-# graph iterator will always pass it in if the user requests it. If the handles aren't
-# stored, then unwrapping (i.e. remvoing the hooks) wouldn't work via the handler's
-# unwrap method and would require manual intervention to clear the hooks.
+# 1. The sparsity attribute may be a float or a dictionary. If it's a dictionary, then
+#    the key would be the layer name and the value would be the sparsity for that layer.
+# 2. If you register any additional parameters or buffers, please make sure to remove
+#    them in the unwrap method.
 class BasePruner(ABC):
-    def __init__(self, sparsity, criterion, handler: "ActivationPruneHandler" = None):
+    def __init__(self, sparsity, criterion):
         self.sparsity = sparsity
         self.criterion = criterion
-        self.handler = handler
         self.summary = []
 
     # Abstract methods -----------------------------------------------------------------
@@ -94,12 +89,21 @@ class LevelPruner(BasePruner):
         pass
 
     def apply(self, module: nn.Module, name: str, **kwargs):
+        # We skip pruning the layer if it's not in the sparsity dictionary. This check
+        # would actually go in the wrap method to avoid registering buffers or hooks,
+        # similar to how we do it for the activation handler.
+        if isinstance(self.sparsity, dict) and name not in self.sparsity:
+            return
+
         # NOTE: Since we're not fine-tuning the model, we don't need to store the
         # original weights and weight mask as registered parameters or buffers. :)
         weight = module.weight.data.clone()
+        sparsity = (
+            self.sparsity[name] if isinstance(self.sparsity, dict) else self.sparsity
+        )
         mask = (
-            self.criterion(weight, self.sparsity, **kwargs)
-            if self.sparsity > 0.0
+            self.criterion(weight, sparsity, **kwargs)
+            if sparsity > 0.0
             else torch.ones_like(weight, dtype=torch.bool)
         )
         module.weight.data.mul_(mask)
