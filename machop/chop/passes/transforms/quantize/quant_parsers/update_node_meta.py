@@ -13,6 +13,7 @@ QUANT_ARITH_TO_SUFFIXES = {
         "stochastic",
         "bipolar",
     ),  # TODO: stochastic, bipolar flags are operational flag instead of precision.
+    "lutnet": ("width", "input_expanded", "k", "binarization_level"),
     "ternary": ("width", "scaling_factor", "mean", "median", "max"),
     "minifloat_ieee": ("width", "exponent_width", "exponent_bias"),
     "minifloat_denorm": ("width", "exponent_width", "exponent_bias"),
@@ -111,7 +112,7 @@ def update_quant_meta_param(node, config: dict, mase_op: str) -> None:
                 node,
                 output_name=arg,
                 dtype="binary",
-                precision=[32, True, True],
+                precision=[32, 0, 1],  # [bitwidth, stochastic, bipolar]
             )
 
 

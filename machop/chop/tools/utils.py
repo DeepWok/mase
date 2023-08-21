@@ -8,6 +8,9 @@ import subprocess
 
 from torch import Tensor
 
+# LUTNet
+import itertools
+
 use_cuda = torch.cuda.is_available()
 torch_cuda = torch.cuda if use_cuda else torch
 device = torch.device("cuda:0" if use_cuda else "cpu")
@@ -76,3 +79,125 @@ def get_factors(n):
     )
     factors = [int(x) for x in factors]
     return factors
+
+
+# ---------------------------------------------
+# LUTNet helpers
+# ---------------------------------------------
+def generate_truth_table(k: int, tables_count: int, device: None) -> torch.Tensor:
+    """This function generate truth tables with size of k * (2**k) * tables_count
+
+    Args:
+        k (int): truth table power
+        tables_count (int): number of truth table repetition
+        device (str): target device of the result
+
+    Returns:
+        torch.Tensor: 2d torch tensor with k*tables_count rows and (2**k) columns
+    """
+
+    table = torch.from_numpy(np.array(list(itertools.product([-1, 1], repeat=k)))).T
+    return torch.vstack([table] * tables_count).to(device)
+
+
+def init_LinearLUT_weight(
+    k,
+    original_weight,
+    baseline_weight,
+    in_features,
+    out_features,
+    new_module,
+):
+    # Initialize the weight based on the trained binaried network
+    # weight shape of the lagrange trainer [tables_count, self.kk]
+    input_mask = new_module.input_mask.reshape(
+        -1, k * in_features
+    )  # (out_feature, k * in_feature)
+
+    bl_expanded_weight = baseline_weight[
+        np.arange(out_features)[:, np.newaxis], input_mask
+    ].reshape(-1, k, 1)
+    index_weight, reconnected_weight = (
+        bl_expanded_weight[:, 0, :],
+        bl_expanded_weight[:, 1:, :],
+    )  # [input_feature * output_feature, 1]
+
+    # Establish pruning mask
+    expanded_pruned_weight = original_weight[
+        np.arange(out_features)[:, np.newaxis], input_mask
+    ].reshape(
+        -1, k, 1
+    )  # (out_feature * in_feature, k, 1)
+    retain_structure_weight = expanded_pruned_weight[
+        :, 0, :
+    ]  # [input_feature * output_feature, 1]
+    rows_with_zeros = retain_structure_weight[:, 0] == 0
+
+    # Apply pruning mask (set the pruned connection's LUT to 0)
+    reconnected_weight[rows_with_zeros, 0] = 0
+
+    d = generate_truth_table(k=k, tables_count=1, device=None) * -1
+    sign_correction = d.prod(dim=-2)
+
+    initialized_weight = (
+        (retain_structure_weight + (reconnected_weight * d[1:, :]).sum(dim=-2))
+    ) * sign_correction
+
+    return initialized_weight
+
+
+def init_Conv2dLUT_weight(
+    k,
+    original_weight,
+    baseline_weight,
+    out_channels,
+    in_channels,
+    kernel_size,
+    new_module,
+):
+    # Initialize the weight based on the trained binaried network
+    # weight shape of the lagrange trainer [tables_count, self.kk]
+    input_mask = new_module.input_mask.reshape(
+        -1,
+        in_channels * kernel_size[0] * kernel_size[1] * k,
+        3,
+    )  # [oc, k * kh * kw * ic ,3[ic,kh,kw]]
+
+    bl_expanded_weight = baseline_weight[
+        np.arange(out_channels)[:, np.newaxis],
+        input_mask[:, :, 0],
+        input_mask[:, :, 1],
+        input_mask[:, :, 2],
+    ].reshape(
+        -1, k, 1
+    )  # [oc * ic * kw * kh , k, 1]
+    index_weight, reconnected_weight = (
+        bl_expanded_weight[:, 0, :],
+        bl_expanded_weight[:, 1:, :],
+    )
+
+    # Establish pruning mask
+    expanded_pruned_weight = original_weight[
+        np.arange(out_channels)[:, np.newaxis],
+        input_mask[:, :, 0],
+        input_mask[:, :, 1],
+        input_mask[:, :, 2],
+    ].reshape(
+        -1, k, 1
+    )  # (out_feature * in_feature, k, 1)
+    retain_structure_weight = expanded_pruned_weight[
+        :, 0, :
+    ]  # [input_feature * output_feature, 1]
+    rows_with_zeros = retain_structure_weight[:, 0] == 0
+
+    # Apply pruning mask (set the pruned connection's LUT to 0)
+    reconnected_weight[rows_with_zeros, 0] = 0
+
+    d = generate_truth_table(k=k, tables_count=1, device=None) * -1
+    sign_correction = d.prod(dim=-2)
+
+    initialized_weight = (
+        (retain_structure_weight + (reconnected_weight * d[1:, :]).sum(dim=-2))
+    ) * sign_correction
+
+    return initialized_weight

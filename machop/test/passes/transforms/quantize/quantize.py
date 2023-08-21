@@ -84,10 +84,13 @@ def main():
         "linear": {
             "config": {
                 "name": "integer",
+                # data
                 "data_in_width": 8,
                 "data_in_frac_width": 4,
+                # weight
                 "weight_width": 8,
                 "weight_frac_width": 4,
+                # bias
                 "bias_width": 8,
                 "bias_frac_width": 4,
             }

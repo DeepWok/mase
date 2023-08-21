@@ -152,8 +152,13 @@ def load_mase_graph_transform_pass(graph, pass_args: str):
         MaseGraph: mase_graph
     """
     load_dir = pass_args
-    graph_module_ckpt = os.path.join(load_dir, "graph_module.mz")
-    n_meta_param_ckpt = os.path.join(load_dir, "node_meta_param.toml")
+    if os.path.isdir(load_dir):
+        graph_module_ckpt = os.path.join(load_dir, "graph_module.mz")
+        n_meta_param_ckpt = os.path.join(load_dir, "node_meta_param.toml")
+    else:
+        load_dir = os.path.dirname(load_dir)
+        graph_module_ckpt = os.path.join(load_dir, "graph_module.mz")
+        n_meta_param_ckpt = os.path.join(load_dir, "node_meta_param.toml")
     # load metadata.parameters from toml
     node_n_meta_param = load_n_meta_param(n_meta_param_ckpt)
     # load graph module

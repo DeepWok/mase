@@ -4,8 +4,9 @@ Some of the functions here are taken from the Modifier class we had before
 from typing import Dict
 
 import torch
-from chop.tools.utils import copy_weights
+from chop.tools.utils import copy_weights, init_LinearLUT_weight, init_Conv2dLUT_weight
 from torch import nn
+import numpy as np
 
 from .quantized_funcs import quantized_func_map
 from .quantized_modules import quantized_module_map
@@ -18,7 +19,11 @@ type_to_name_map = {
 
 
 def create_new_module(
-    mase_op: str, original_module: nn.Module, config: dict, node_meta: dict
+    mase_op: str,
+    original_module: nn.Module,
+    config: dict,
+    node_meta: dict,
+    baseline_module: nn.Module = None,
 ):
     original_module_cls = type(original_module)
     quant_name = config.get("name")
@@ -35,7 +40,21 @@ def create_new_module(
             bias=use_bias,
             config=config,
         )
-        copy_weights(original_module.weight, new_module.weight)
+        if quant_name == "lutnet":
+            initialized_weight = init_LinearLUT_weight(
+                k=new_module.k,
+                baseline_weight=baseline_module.weight,
+                original_weight=original_module.weight,
+                in_features=original_module.in_features,
+                out_features=original_module.out_features,
+                new_module=new_module,
+            )
+            copy_weights(
+                new_module.trainer.gamma, baseline_module.gamma
+            )  # TODO: Not sure about this. The paper doesn't specify this part.
+            copy_weights(new_module.trainer.weight, initialized_weight)
+        else:
+            copy_weights(original_module.weight, new_module.weight)
         if use_bias:
             copy_weights(original_module.bias, new_module.bias)
     elif mase_op in ("conv1d", "conv2d"):
@@ -54,9 +73,23 @@ def create_new_module(
             padding_mode=original_module.padding_mode,
             config=config,
         )
-        copy_weights(original_module.weight, new_module.weight)
-        if use_bias:
+        if quant_name == "lutnet":
+            # TODO: Initialize the weight based on the trained binaried network
+            initialized_weight = init_Conv2dLUT_weight(
+                k=new_module.k,
+                baseline_weight=baseline_module.weight,
+                original_weight=original_module.weight,
+                out_channels=original_module.out_channels,
+                in_channels=original_module.in_channels,
+                kernel_size=original_module.kernel_size,
+                new_module=new_module,
+            )
+            copy_weights(new_module.trainer.weight, initialized_weight)
+        else:
+            # TODO: LUTNet convolution does not support bias at the moment
             copy_weights(original_module.weight, new_module.weight)
+            if use_bias:
+                copy_weights(original_module.weight, new_module.weight)
 
     elif mase_op == "relu":
         new_module_cls = quantized_module_map[f"relu_{quant_name}"]

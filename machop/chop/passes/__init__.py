@@ -9,6 +9,7 @@ from .analysis import (
     report_node_meta_param_analysis_pass,
     report_node_shape_analysis_pass,
     report_node_type_analysis_pass,
+    verify_common_metadata_analysis_pass,
 )
 from .transforms import (
     load_mase_graph_transform_pass,
