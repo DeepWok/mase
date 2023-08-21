@@ -1,11 +1,17 @@
 import os
 from copy import copy, deepcopy
 
+from chop.passes.transforms.interface.save_and_load import (
+    load_mase_graph_transform_pass,
+)
+
 from chop.passes.utils import (
+    deepcopy_mase_graph,
     get_mase_op,
     get_mase_type,
     get_node_actual_target,
     get_parent_name,
+    get_similar_node_actual_target,
     match_a_pattern,
 )
 from chop.tools.logger import getLogger
@@ -42,6 +48,17 @@ def get_config(config: dict, name: str):
 
 
 def graph_iterator_quantize_by_type(graph, config: dict):
+    # Some modules might need information from two graphs to be initilized
+    if (
+        config.get("baseline_weight_path") is not None
+        and config.get("load_type") == "mz"
+    ):
+        bl_graph = deepcopy_mase_graph(graph)
+        bl_graph = load_mase_graph_transform_pass(
+            bl_graph, pass_args=config.get("baseline_weight_path")
+        )
+    else:
+        bl_graph = None
     for node in graph.fx_graph.nodes:
         if get_mase_op(node) not in QUANTIZEABLE_OP:
             continue
@@ -52,8 +69,9 @@ def graph_iterator_quantize_by_type(graph, config: dict):
         # if get_mase_type(node) == "module":
         if node.op == "call_module":
             ori_module = get_node_actual_target(node)
+            bl_module = get_similar_node_actual_target(bl_graph, node)
             new_module = create_new_module(
-                get_mase_op(node), ori_module, node_config, node.meta
+                get_mase_op(node), ori_module, node_config, node.meta, bl_module
             )
             parent_name, name = get_parent_name(node.target)
             setattr(graph.modules[parent_name], name, new_module)

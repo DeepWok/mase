@@ -8,15 +8,16 @@ report = true
 
 [passes.quantize.default.config]
 name = "binary"
+binary_training = 1
 data_in_width = 32
 data_in_frac_width = 0
-data_in_stochastic = true
-data_in_bipolar = true
+data_in_stochastic = 0  # 0 represent 'false' to make sure generate toml file array is homogeneous
+data_in_bipolar = 1     # 1 represent 'false' to make sure generate toml file array is homogeneous
 weight_width = 1
 weight_frac_width = 0
-weight_stochastic = true
-weight_bipolar = true
+weight_stochastic = 0
+weight_bipolar = 1
 bias_width = 1
 bias_frac_width = 0
-bias_stochastic = true
-bias_bipolar = true
+bias_stochastic = 0
+bias_bipolar = 1

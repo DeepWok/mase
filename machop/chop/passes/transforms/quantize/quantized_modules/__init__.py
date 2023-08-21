@@ -20,6 +20,7 @@ from .conv2d import (
     Conv2dMinifloatIEEE,
     Conv2dBinary,
     Conv2dTernary,
+    Conv2dLUT,
 )
 from .linear import (
     LinearBlockFP,
@@ -30,7 +31,9 @@ from .linear import (
     LinearMinifloatDenorm,
     LinearMinifloatIEEE,
     LinearBinary,
+    LinearBinaryScaling,
     LinearTernary,
+    LinearLUT,
 )
 from .pool2d import (
     AdaptiveAvgPool2dInteger,
@@ -69,6 +72,7 @@ quantized_module_map = {
     "conv2d_minifloat_ieee": Conv2dMinifloatIEEE,
     "conv2d_minifloat_denorm": Conv2dMinifloatDenorm,
     "conv2d_block_fp": Conv2dBlockFP,
+    "conv2d_lutnet": Conv2dLUT,
     "linear_block_minifloat": LinearBlockMinifloat,
     "linear_integer": LinearInteger,
     "linear_log": LinearLog,
@@ -76,8 +80,9 @@ quantized_module_map = {
     "linear_minifloat_ieee": LinearMinifloatIEEE,
     "linear_minifloat_denorm": LinearMinifloatDenorm,
     "linear_block_fp": LinearBlockFP,
-    "linear_binary": LinearBinary,
+    "linear_binary": LinearBinaryScaling,
     "linear_ternary": LinearTernary,
+    "linear_lutnet": LinearLUT,
     "adaptive_avg_pool2d_integer": AdaptiveAvgPool2dInteger,
     "avg_pool2d_integer": AvgPool2dInteger,
     "avg_pool2d_binary": AvgPool2dBinary,

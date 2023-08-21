@@ -113,6 +113,17 @@ def get_node_actual_target(node):
         return node.target
 
 
+def get_similar_node_actual_target(graph, node):
+    """
+    return the actual target of the node from the given graph by matching the given node name
+    """
+    if graph is None:
+        return None
+    for bl_node in graph.fx_graph.nodes:
+        if bl_node.name == node.name:
+            return get_node_actual_target(bl_node)
+
+
 def deepcopy_mase_graph(mase_graph):
     new_graph = deepcopy(mase_graph)
     for new_n, n in zip(new_graph.fx_graph.nodes, mase_graph.fx_graph.nodes):
