@@ -1,0 +1,15 @@
+# NOTE: Take a look at pruning/methods.py and pruning/criteria.py for available values
+# This config shows an example weight pruning pass with a globally scoped strategy.
+# --------------------------------------------------------------------------------------
+# Feel free to swap the model and dataset out to experiment :)
+# Use this configuration with machop/test/passes/transforms/prune/prune.py
+model = "resnet18"
+dataset = "imagenet"
+
+[passes.prune.weight]
+method = "level-pruner"
+criterion = "l1"
+sparsity = 0.5
+# It distributes that 20% sparsity unevenly across the model by using the number of 
+# parameters in each layer as a weight. 
+scope = "global-naive"
