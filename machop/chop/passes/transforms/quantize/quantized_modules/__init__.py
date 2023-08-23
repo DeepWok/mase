@@ -11,6 +11,7 @@ from .conv1d import (
     Conv1dTernary,
 )
 from .conv2d import (
+    Conv2dBinaryScaling,
     Conv2dBlockFP,
     Conv2dBlockMinifloat,
     Conv2dInteger,
@@ -65,7 +66,7 @@ quantized_module_map = {
     "conv1d_block_fp": Conv1dBlockFP,
     "conv2d_block_minifloat": Conv2dBlockMinifloat,
     "conv2d_integer": Conv2dInteger,
-    "conv2d_binary": Conv2dBinary,
+    "conv2d_binary": Conv2dBinaryScaling,
     "conv2d_ternary": Conv2dTernary,
     "conv2d_log": Conv2dLog,
     "conv2d_block_log": Conv2dBlockLog,

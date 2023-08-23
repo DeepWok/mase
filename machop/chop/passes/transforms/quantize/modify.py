@@ -84,6 +84,9 @@ def create_new_module(
                 kernel_size=original_module.kernel_size,
                 new_module=new_module,
             )
+            copy_weights(
+                new_module.trainer.gamma, baseline_module.gamma
+            )  # TODO: Not sure about this. The paper doesn't specify this part.
             copy_weights(new_module.trainer.weight, initialized_weight)
         else:
             # TODO: LUTNet convolution does not support bias at the moment

@@ -763,10 +763,6 @@ class Conv2dBinary(_Conv2dBase):
             return
 
         # establish quantizers
-        self.config = config
-        self.bypass = config.get("bypass", False)
-        if self.bypass:
-            return
         x_stochastic, b_stochastic, w_stochastic = (
             config["data_in_stochastic"],
             config["bias_stochastic"],
@@ -787,6 +783,105 @@ class Conv2dBinary(_Conv2dBase):
         self.b_quantizer = partial(
             binary_quantizer, stochastic=b_stochastic, bipolar=b_bipolar
         )
+
+
+class Conv2dBinaryScaling(_Conv2dBase):
+    """
+    Binary scaling variant of the conv2d transformation layer.
+
+        - "bypass": Bypass quantization for standard linear transformation.
+        - "data_in_stochastic", "bias_stochastic", "weight_stochastic": Stochastic settings.
+        - "data_in_bipolar", "bias_bipolar", "weight_bipolar": Bipolar settings.
+        - "binary_training": Apply binary scaling during training.
+    """
+
+    def __init__(
+        self,
+        in_channels: int,
+        out_channels: int,
+        kernel_size: _size_2_t,
+        stride: _size_2_t = 1,
+        padding: Union[str, _size_2_t] = 0,
+        dilation: _size_2_t = 1,
+        groups: int = 1,
+        bias: bool = True,
+        padding_mode: str = "zeros",  # TODO: refine this type
+        device=None,
+        dtype=None,
+        config=None,
+    ):
+        super(Conv2dBinaryScaling, self).__init__(
+            in_channels=in_channels,
+            out_channels=out_channels,
+            kernel_size=kernel_size,
+            stride=stride,
+            padding=padding,
+            dilation=dilation,
+            groups=groups,
+            bias=bias,
+            padding_mode=padding_mode,
+            device=device,
+            dtype=dtype,
+        )
+        assert config is not None, "config is None!"
+        self.config = config
+        self.bypass = config.get("bypass", False)
+        if self.bypass:
+            return
+
+        # stdv = 1 / np.sqrt(
+        #     self.kernel_size[0] * self.kernel_size[1] * self.in_channels
+        # )
+        # w = np.random.normal(
+        #     loc=0.0,
+        #     scale=stdv,
+        #     size=[
+        #         self.out_channels,
+        #         self.in_channels,
+        #         self.kernel_size[0],
+        #         self.kernel_size[1],
+        #     ],
+        # ).astype(np.float32)
+        # self.weight = nn.Parameter(torch.tensor(w, requires_grad=True))
+
+        self.gamma = torch.nn.Parameter(torch.tensor(1.0, requires_grad=True))
+        self.binary_training = True
+
+        x_stochastic, b_stochastic, w_stochastic = (
+            config["data_in_stochastic"],
+            config["bias_stochastic"],
+            config["weight_stochastic"],
+        )
+        x_bipolar, b_bipolar, w_bipolar = (
+            config["data_in_bipolar"],
+            config["bias_bipolar"],
+            config["weight_bipolar"],
+        )
+
+        self.w_quantizer = partial(
+            binary_quantizer, stochastic=w_stochastic, bipolar=w_bipolar
+        )
+        self.x_quantizer = partial(
+            binary_quantizer, stochastic=x_stochastic, bipolar=x_bipolar
+        )
+        self.b_quantizer = partial(
+            binary_quantizer, stochastic=b_stochastic, bipolar=b_bipolar
+        )
+
+    def forward(self, x: Tensor) -> Tensor:
+        if self.bypass:
+            return self._conv_forward(x, self.weight, self.bias)
+
+        if self.binary_training:
+            x = self.x_quantizer(x)
+            w = self.w_quantizer(self.weight)
+            bias = self.b_quantizer(self.bias) if self.bias is not None else None
+            # WARNING: this may have been simplified, we are assuming here the accumulation is lossless!
+            # The addition size is in_channels * K * K
+            return self._conv_forward(x, w * self.gamma.abs(), bias)
+        else:
+            self.weight.data.clamp_(-1, 1)
+            return self._conv_forward(x, self.weight * self.gamma.abs(), self.bias)
 
 
 class Conv2dTernary(_Conv2dBase):
