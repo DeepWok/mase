@@ -1,5 +1,5 @@
 # basics
-model = "toy"
+model = "toy-conv"
 dataset = "cifar10"
 # training
 training_optimizer = "adamw"
