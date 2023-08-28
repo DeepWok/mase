@@ -18,13 +18,20 @@ class SearchSpaceBase:
         model,
         mg,
         config,
+        accelerator,
     ) -> None:
         self.model_name = model_name
         self.model = model
 
+        self._set_accelerator(accelerator)
+        # if we are handling mase graph, lets add some info
+        # and perform a simple traverse as a test
         self.mg = mg
-        self.graph_search_space()
+        if self.mg is not None:
+            self.graph_search_space()
+
         self.config = config
+        self.use_mg = mg is not None
 
     def build_search_space(self):
         raise NotImplementedError()
@@ -38,3 +45,13 @@ class SearchSpaceBase:
                 "mase_op": get_mase_op(node),
             }
         self.graph_info = node_info
+
+    def _set_accelerator(self, accelerator):
+        if accelerator == "auto":
+            self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+        elif accelerator == "gpu":
+            self.device = torch.device("cuda:0")
+        elif accelerator == "cpu":
+            self.device = torch.device("cpu")
+        else:
+            raise RuntimeError(f"Unsupported accelerator {accelerator}")

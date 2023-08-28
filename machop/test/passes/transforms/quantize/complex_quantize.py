@@ -92,6 +92,7 @@ def main():
 
     config_files = [
         "integer.toml",
+        "toy_integer_by_name.toml",
         "block_fp.toml",
         "log.toml",
         "block_log.toml",

@@ -13,17 +13,14 @@ bias_width = [2, 4, 8, 10]
 bias_frac_width = [2, 4, 6]
 
 [strategy]
-name = "rl"
-algorithm = 'ppo'
-env = 'mixed_precision'
-num_episodes = 100
-device = 'cpu'
-total_timesteps = 10000000
-save_name = 'tmp'
-
-[runner]
-name = 'mg'
+name = "ea"
+pool = 20
+iterations = 100
+fitness = 'num_params'
+accuracy_constraint = 0.9
 training = false
 data_loader = 'train_dataloader'
 num_batches = 10
 
+[runner]
+type = "graph"

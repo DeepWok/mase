@@ -22,3 +22,8 @@ from .verify import (
     verify_metadata_analysis_pass,
     verify_software_metadata_analysis_pass,
 )
+
+from .total_bits_estimator import (
+    total_bits_mg_analysis_pass,
+    total_bits_module_analysis_pass,
+)

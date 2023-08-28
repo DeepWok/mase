@@ -186,33 +186,47 @@ A collection of functions to copy values from a src config to a parsed config.
 """
 
 
-def cp_name(config: dict, p_config: dict, entries=None):
-    cp_multi_values(config, p_config, ("name",))
+def cp_name(config: dict, p_config: dict, entries=None, strict: bool = True):
+    cp_multi_values(config, p_config, ("name",), strict=strict)
 
 
-def cp_bypass(config: dict, p_config: dict, entries=None):
-    cp_multi_values(config, p_config, ("bypass",))
+def cp_bypass(config: dict, p_config: dict, entries=None, strict: bool = True):
+    cp_multi_values(config, p_config, ("bypass",), strict=strict)
 
 
-def cp_weight_entries(config: dict, p_config: dict, entries: dict):
-    cp_multi_values(config, p_config, entries["weight_entries"])
+def cp_weight_entries(config: dict, p_config: dict, entries: dict, strict: bool = True):
+    cp_multi_values(config, p_config, entries["weight_entries"], strict=strict)
 
 
-def cp_data_in_entries(config: dict, p_config: dict, entries: dict):
-    cp_multi_values(config, p_config, entries["data_in_entries"])
+def cp_data_in_entries(
+    config: dict, p_config: dict, entries: dict, strict: bool = True
+):
+    cp_multi_values(config, p_config, entries["data_in_entries"], strict=strict)
 
 
-def cp_bias_entries(config: dict, p_config: dict, entries: dict):
-    cp_multi_values(config, p_config, entries["bias_entries"])
+def cp_bias_entries(config: dict, p_config: dict, entries: dict, strict: bool = True):
+    cp_multi_values(config, p_config, entries["bias_entries"], strict=strict)
 
 
-def cp_weight_entries_to_bias(config: dict, p_config: dict, entries: dict):
+def cp_weight_entries_to_bias(
+    config: dict, p_config: dict, entries: dict, strict: bool = True
+):
     if has_multi_keys(config, entries["bias_entries"]):
-        cp_multi_values(config, p_config, entries["bias_entries"])
+        cp_multi_values(config, p_config, entries["bias_entries"], strict=strict)
     else:
         cp_multi_values(
-            config, p_config, entries["weight_entries"], entries["bias_entries"]
+            config,
+            p_config,
+            entries["weight_entries"],
+            entries["bias_entries"],
+            strict=strict,
         )
+
+
+def cp_data_out_entries(
+    config: dict, p_config: dict, entries: dict, strict: bool = True
+):
+    cp_multi_values(config, p_config, entries["data_out_entries"], strict=strict)
 
 
 """QUANT_ARITH_TO_CP_FN
@@ -273,7 +287,14 @@ def optional_operand_entry_exists(config: dict, entry_name: str) -> bool:
     return False
 
 
-def parse_node_config(config: dict, mase_op: str) -> dict:
+def parse_node_config(config: dict, mase_op: str, strict: bool = True) -> dict:
+    """
+    Parse a node config from a MASE op config.
+
+    Args:
+        - `strict` (bool) allows missing node config entries if False, e.g.,
+        a missing `bias_frac_width` in linear node config
+    """
     assert mase_op in MASE_OP_TO_ENTRIES, f"Unknown mase op: {mase_op}"
     if config.get("bypass", False):
         return config
@@ -285,9 +306,9 @@ def parse_node_config(config: dict, mase_op: str) -> dict:
     p_config = {}
     for entry in op_entries:
         entry_cp_fn = QUANT_ARITH_TO_CP_FN[config["name"]][entry]
-        entry_cp_fn(config, p_config)
+        entry_cp_fn(config, p_config, strict=strict)
     for entry in op_optional_entries:
         if optional_operand_entry_exists(config, entry):
             entry_cp_fn = QUANT_ARITH_TO_CP_FN[config["name"]][entry]
-            entry_cp_fn(config, p_config)
+            entry_cp_fn(config, p_config, strict=strict)
     return p_config
