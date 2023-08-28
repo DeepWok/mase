@@ -1,0 +1,32 @@
+# basics
+model = "opt-125m-quantized"
+dataset = "wikitext2"
+
+[search_space]
+style = "llm_mixed_precision"
+runner = "module"
+
+[search_space.quantization]
+by = "name"
+name = ["integer"]
+data_in_width = [2, 4, 8, 10]
+data_in_frac_width = [2, 4, 6]
+weight_width = [2, 4, 8, 10]
+weight_frac_width = [2, 4, 6]
+bias_width = [2, 4, 8, 10]
+bias_frac_width = [2, 4, 6]
+
+[strategy]
+name = "rl"
+data_loader = 'train_dataloader'
+num_batches = 1
+runner = "module"
+
+[strategy.setup]
+algorithm = 'ppo'
+env = 'llm_mixed_precision'
+total_timesteps = 100000
+save_name = 'test'
+
+model_parallel = false
+runner_style = "lm"

@@ -1,8 +1,8 @@
-from .random import StrategyRandom
 from .rl import StrategyRL
+from .optuna import StrategyOptunaAlgorithm
 
 
 strategy_map = {
-    "random": StrategyRandom,
     "rl": StrategyRL,
+    "optuna": StrategyOptunaAlgorithm,
 }

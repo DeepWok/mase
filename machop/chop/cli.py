@@ -660,7 +660,10 @@ class ChopCLI:
         # See machop/chop/models/nlp_models.py for more information
         model = None
         if self.args.model in models.nlp_models:
-            if self.args.model in models.manual_nlp_models:
+            if (
+                self.args.model
+                in models.manual_nlp_models + models.manual_quantized_nlp_models
+            ):
                 # For more infomration, see the following files:
                 # 1. machop/chop/models/manual/llama_plain/__init__.py
                 # 2. machop/chop/models/__init__.py

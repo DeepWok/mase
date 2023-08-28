@@ -4,7 +4,7 @@ from functools import partial
 # from .manual.toy_manual import get_toymanualnet
 # from .patched_nlp_models import get_patched_nlp_model
 from .patched_nlp_models import patched_model_cls_to_required_input_args
-from .manual import get_llama_plain, get_opt_plain
+from .manual import get_llama_plain, get_opt_plain, get_opt_quantized
 
 from .nlp_models import get_nlp_model
 from .toy import get_toy_tiny, get_toynet, get_testmodel, get_toy_convnet
@@ -182,6 +182,13 @@ _manual_nlp_module_map = {
     "Cheng98/llama-160m": get_llama_plain,
 }
 
+
+_manual_quantized_nlp_model_map = {
+    "opt-125m-quantized": get_opt_quantized,
+    "opt-350m-quantized": get_opt_quantized,
+}
+manual_quantized_nlp_model_map = _manual_quantized_nlp_model_map
+
 model_map = (
     _built_in_vision_model_map
     | _built_in_nlp_model_map
@@ -189,6 +196,7 @@ model_map = (
     | _manual_vision_model_map
     | _patched_nlp_model_map
     | _patched_vision_model_map
+    | _manual_quantized_nlp_model_map
 )
 
 built_in_vision_models = list(_built_in_vision_model_map.keys())
@@ -199,4 +207,12 @@ vision_models = built_in_vision_models + patched_vision_models + built_in_vision
 built_in_nlp_models = list(_built_in_nlp_model_map)
 patched_nlp_models = list(_patched_nlp_model_map.keys())
 manual_nlp_models = list(_manual_nlp_module_map.keys())
-nlp_models = built_in_nlp_models + patched_nlp_models + manual_nlp_models
+
+manual_quantized_nlp_models = list(_manual_quantized_nlp_model_map.keys())
+
+nlp_models = (
+    built_in_nlp_models
+    + patched_nlp_models
+    + manual_nlp_models
+    + manual_quantized_nlp_models
+)
