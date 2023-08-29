@@ -23,7 +23,7 @@ from chop.passes import (
 from chop.passes.graph.mase_graph import MaseGraph
 from chop.tools.logger import getLogger
 from chop.tools.get_input import get_dummy_input
-from chop.dataset import MyDataModule, get_dataset_info
+from chop.dataset import MaseDataModule, get_dataset_info
 
 logger = getLogger("chop")
 logger.setLevel(logging.DEBUG)
@@ -35,11 +35,11 @@ def main():
 
     # NOTE: We're only concerned with pre-trained vision models
     dataset_info = get_dataset_info(DATASET)
-    datamodule = MyDataModule(
+    datamodule = MaseDataModule(
         model_name=MODEL,
-        dataset_name=DATASET,
+        name=DATASET,
         batch_size=32,
-        workers=os.cpu_count(),
+        num_workers=os.cpu_count(),
         tokenizer=None,
         max_token_len=None,
     )

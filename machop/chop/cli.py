@@ -41,7 +41,7 @@ from tabulate import tabulate
 
 import chop.models as models
 from chop.actions import test, train, transform, search
-from chop.dataset import MyDataModule, available_datasets, get_dataset_info
+from chop.dataset import MaseDataModule, AVAILABLE_DATASETS, get_dataset_info
 from chop.tools import getLogger, post_parse_load_config
 
 
@@ -138,6 +138,7 @@ CLI_DEFAULTS = {
     "strategy": STRATEGIES[0],
     "is_to_auto_requeue": False,
     "github_ci": False,
+    "disable_dataset_cache": False,
     # Hardware generation options
     "target": "xcu250-figd2104-2L-e",
     "num_targets": 100,
@@ -480,7 +481,7 @@ class ChopCLI:
         trainer_group.add_argument(
             "--max-steps",
             dest="max_steps",
-            type=_maybe_positive_int,
+            type=_positive_int,
             help="""
                 maximum number of steps for training. A negative value disables this
                 option. (default: %(default)s)
@@ -499,8 +500,9 @@ class ChopCLI:
         runtime_group = parser.add_argument_group("runtime environment options")
         runtime_group.add_argument(
             "--cpu",
+            "--num-workers",
             dest="num_workers",
-            type=int,
+            type=_positive_int,
             help="""
                 number of CPU workers; the default varies across systems and is set to
                 os.cpu_count(). (default: %(default)s)
@@ -509,8 +511,9 @@ class ChopCLI:
         )
         runtime_group.add_argument(
             "--gpu",
+            "--num-devices",
             dest="num_devices",
-            type=int,
+            type=_positive_int,
             help="number of GPU devices. (default: %(default)s)",
             metavar="NUM",
         )
@@ -560,6 +563,14 @@ class ChopCLI:
                 (default: %(default)s)
                 """,
         )
+        runtime_group.add_argument(
+            "--disable-dataset-cache",
+            dest="disable_dataset_cache",
+            action="store_true",
+            help="""
+                disable caching of datasets. (default: %(default)s)
+            """,
+        )
 
         # Hardware generation options --------------------------------------------------
         hardware_group = parser.add_argument_group("hardware generation options")
@@ -591,7 +602,7 @@ class ChopCLI:
         lm_group.add_argument(
             "--max-token-len",
             dest="max_token_len",
-            type=_maybe_positive_int,
+            type=_positive_int,
             help="""
                 maximum number of tokens. A negative value will use
                 tokenizer.model_max_length. (default: %(default)s)
@@ -701,13 +712,14 @@ class ChopCLI:
             )
 
         self.logger.info(f"Initialising dataset {self.args.dataset!r}...")
-        data_module = MyDataModule(
-            model_name=self.args.model,
-            dataset_name=self.args.dataset,
+        data_module = MaseDataModule(
+            name=self.args.dataset,
             batch_size=self.args.batch_size,
-            workers=self.args.num_workers,
+            num_workers=self.args.num_workers,
             tokenizer=tokenizer,
             max_token_len=self.args.max_token_len,
+            load_from_cache_file=not self.args.disable_dataset_cache,
+            model_name=self.args.model,
         )
 
         return model, data_module, dataset_info
@@ -781,7 +793,7 @@ def _valid_file_or_directory_path(path: str):
 
 
 # Returns None for values less than or equal to 0
-def _maybe_positive_int(s: str) -> int | None:
+def _positive_int(s: str) -> int | None:
     try:
         v = int(s)
     except ValueError:
@@ -820,7 +832,7 @@ class ShowInfoAction(argparse.Action):
         if choice in ["model", "all"]:
             self._generate_table(list(models.model_map.keys()), "Supported Models")
         if choice in ["dataset", "all"]:
-            self._generate_table(available_datasets, "Supported Datasets", cols=2)
+            self._generate_table(AVAILABLE_DATASETS, "Supported Datasets", cols=2)
 
         parser.exit()
 

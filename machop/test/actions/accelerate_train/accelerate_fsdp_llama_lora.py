@@ -13,7 +13,7 @@ sys.path.append(
 )
 import torch.nn as nn
 from chop.actions.accelerate_peft import train, parse_arguments
-from chop.dataset import MyDataModule
+from chop.dataset import MaseDataModule
 from chop.models.manual.lora_utils import (
     print_trainable_parameters,
 )
@@ -81,11 +81,11 @@ def main():
     print_trainable_parameters(model)
     tokenizer = LlamaTokenizer.from_pretrained(model_name)
 
-    data_module = MyDataModule(
+    data_module = MaseDataModule(
         model_name=None,
-        dataset_name=dataset_name,
+        name=dataset_name,
         batch_size=batch_size,
-        workers=num_workers,
+        num_workers=num_workers,
         tokenizer=tokenizer,
         max_token_len=max_token_len,
     )

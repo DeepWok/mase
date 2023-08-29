@@ -63,7 +63,7 @@ def get_dummy_input(
     """Create a single dummy input for a model. The dummy input is a single sample from the training set.
 
     Args:
-        datamodule (MyDataModule): a MyDataModule instance (see machop/chop/dataset/data_module.py). Make sure the datamodule is prepared and setup.
+        datamodule (MaseDataModule): a LightningDataModule instance (see machop/chop/dataset/__init__.py). Make sure the datamodule is prepared and setup.
 
         task (str): task name, one of ["cls", "classification", "lm", "language_modeling", "translation", "tran"]
 

@@ -16,7 +16,7 @@ from torchvision.transforms._presets import ImageClassification
 # CIFAR10 and CIFAR100
 # -----------------------------------------
 
-cifar_preprocess = {
+CIFAR_PREPROCESS_ARGS = {
     "input_size": 32,
     "color_jitter": 0.4,
     "auto_augment": "rand-m9-mstd0.5-inc1",
@@ -27,7 +27,7 @@ cifar_preprocess = {
 }
 
 
-imagenet_preprocess = {
+IMAGENET_PREPROCESS_ARGS = {
     "input_size": 224,
     "color_jitter": 0.4,
     "auto_augment": "rand-m9-mstd0.5-inc1",
@@ -84,12 +84,12 @@ def _generic_build_transform(
     return transforms.Compose(transform_list)
 
 
-build_cifar10_transform = partial(_generic_build_transform, **cifar_preprocess)
+build_cifar10_transform = partial(_generic_build_transform, **CIFAR_PREPROCESS_ARGS)
 
-build_cifar100_transform = partial(_generic_build_transform, **cifar_preprocess)
+build_cifar100_transform = partial(_generic_build_transform, **CIFAR_PREPROCESS_ARGS)
 
 build_default_imagenet_transform = partial(
-    _generic_build_transform, **imagenet_preprocess
+    _generic_build_transform, **IMAGENET_PREPROCESS_ARGS
 )
 
 # -----------------------------------------

@@ -32,7 +32,7 @@ from chop.tools.logger import getLogger
 
 # pruning
 from chop.tools.logger import getLogger
-from chop.dataset.data_module import MyDataModule
+from chop.dataset import MaseDataModule
 from chop.tools.get_input import InputGenerator, get_dummy_input
 
 
@@ -70,11 +70,11 @@ def main():
     with open(pruning_config_path, "r") as f:
         config = toml.load(f)
 
-        datamodule = MyDataModule(
+        datamodule = MaseDataModule(
             model_name="toy-tiny",  # This doesn't really matter
-            dataset_name="cifar10",
+            name="cifar10",
             batch_size=BATCH_SIZE,
-            workers=os.cpu_count(),
+            num_workers=os.cpu_count(),
             tokenizer=None,
             max_token_len=None,
         )
