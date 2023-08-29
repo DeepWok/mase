@@ -18,7 +18,7 @@ from chop.passes import (
     prune_unwrap_transform_pass,
     add_software_metadata_analysis_pass,
 )
-from chop.dataset import MyDataModule
+from chop.dataset import MaseDataModule
 from chop.passes.graph.mase_graph import MaseGraph
 from chop.tools.logger import getLogger
 from chop.tools.get_input import get_dummy_input
@@ -39,11 +39,11 @@ def main():
         config = toml.load(f)
 
         # NOTE: We're only concerned with pre-trained vision models
-        datamodule = MyDataModule(
+        datamodule = MaseDataModule(
             model_name=config["model"],
-            dataset_name=config["dataset"],
+            name=config["dataset"],
             batch_size=BATCH_SIZE,
-            workers=os.cpu_count(),
+            num_workers=os.cpu_count(),
             tokenizer=None,
             max_token_len=None,
         )

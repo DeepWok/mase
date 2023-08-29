@@ -1,43 +1,49 @@
+import os
+
 # Copyright (c) 2015-present, Facebook, Inc.
 # All rights reserved.
-from torchvision.transforms import InterpolationMode
 
-from .cifar import get_cifar_dataset
-from .imagenet import get_imagenet_dataset
-from .transform import (
-    build_cifar10_transform,
-    build_cifar100_transform,
-    build_imagenet_transform,
-)
+from .cifar import get_cifar_dataset, Cifar10Mase, Cifar100Mase
+from .imagenet import get_imagenet_dataset, ImageNetMase
+from .transforms import get_vision_dataset_transform
 
-info = {
-    "cifar10": {
-        "num_classes": 10,
-        "image_size": (3, 32, 32),
-    },
-    "cifar100": {
-        "num_classes": 100,
-        "image_size": (3, 32, 32),
-    },
-    "imagenet": {
-        "num_classes": 1000,
-        "image_size": (3, 224, 224),
-    },
+
+def get_vision_dataset(name: str, path: os.PathLike, split: str, model_name: str):
+    """
+    Args:
+        name (str): name of the dataset
+        path (str): path to the dataset
+        train (bool): whether the dataset is used for training
+        model_name (Optional[str, None]): name of the model. Some pretrained models have model-dependent transforms for training and evaluation.
+    Returns:
+        dataset (torch.utils.data.Dataset): dataset (with transforms)
+    """
+    assert split in [
+        "train",
+        "validation",
+        "test",
+        "pred",
+    ], f"Unknown split {split}, should be one of train, validation, test, pred"
+
+    train = split == "train"
+    transform = get_vision_dataset_transform(name, train, model_name)
+
+    match name:
+        case "cifar10" | "cifar100":
+            dataset = get_cifar_dataset(name, path, train, transform)
+        case "imagenet":
+            dataset = get_imagenet_dataset(name, path, train, transform)
+
+    return dataset
+
+
+VISION_DATASET_MAPPING = {
+    "cifar10": Cifar10Mase,
+    "cifar100": Cifar100Mase,
+    "imagenet": ImageNetMase,
 }
 
 
-def build_dataset(dataset_name, model_name, path, train):
-    if dataset_name == "cifar10":
-        transform = build_cifar10_transform(train)
-    elif dataset_name == "cifar100":
-        transform = build_cifar100_transform(train)
-    elif dataset_name in ["imagenet"]:
-        transform = build_imagenet_transform(model_name, train)
-    else:
-        raise RuntimeError(f"Unsupported dataset_name {dataset_name}")
-
-    if dataset_name in ["cifar10", "cifar100"]:
-        dataset = get_cifar_dataset(dataset_name, path, train, transform)
-    elif dataset_name in ["imagenet"]:
-        dataset = get_imagenet_dataset(dataset_name, path, train, transform)
-    return dataset, info[dataset_name]
+def get_vision_dataset_cls(name: str):
+    assert name in VISION_DATASET_MAPPING, f"Unknown dataset {name}"
+    return VISION_DATASET_MAPPING[name.lower()]

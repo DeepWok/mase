@@ -34,7 +34,7 @@ from chop.passes.transforms import (
 from chop.passes.utils import deepcopy_mase_graph
 from chop.tools.logger import getLogger
 from chop.tools.get_input import InputGenerator
-from chop.dataset import MyDataModule
+from chop.dataset import MaseDataModule
 
 logger = getLogger("chop")
 logger.setLevel(logging.DEBUG)
@@ -50,11 +50,11 @@ def main():
 
     dummy_in = {"x": x}
 
-    data_module = MyDataModule(
+    data_module = MaseDataModule(
         model_name="toy-fn",
-        dataset_name="cifar10",
+        name="cifar10",
         batch_size=8,
-        workers=4,
+        num_workers=4,
         tokenizer=None,
         max_token_len=128,
     )

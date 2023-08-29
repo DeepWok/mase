@@ -13,7 +13,7 @@ sys.path.append(
 )
 
 from chop.actions.accelerate_peft import train
-from chop.dataset import MyDataModule
+from chop.dataset import MaseDataModule
 
 # from chop.models.manual.llama_plain.modeling_llama import LlamaForCausalLM
 from chop.models.manual.llama_quantized.modeling_llama import LlamaQuantizedForCausalLM
@@ -48,11 +48,11 @@ def main():
     model = LlamaQuantizedForCausalLM.from_pretrained(model_name)
     tokenizer = LlamaTokenizer.from_pretrained(model_name)
 
-    data_module = MyDataModule(
+    data_module = MaseDataModule(
         model_name=None,
-        dataset_name=dataset_name,
+        name=dataset_name,
         batch_size=batch_size,
-        workers=num_workers,
+        num_workers=num_workers,
         tokenizer=tokenizer,
         max_token_len=max_token_len,
     )

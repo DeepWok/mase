@@ -13,6 +13,7 @@
 /machop/examples/**/ckpts/
 /machop/examples/**/data/
 /machop/cache/
+/machop/.machop_cache/
 
 # macOS
 .DS_Store

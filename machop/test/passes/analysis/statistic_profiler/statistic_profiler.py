@@ -18,7 +18,7 @@ sys.path.append(
     )
 )
 
-from chop.dataset import MyDataModule, get_dataset_info
+from chop.dataset import MaseDataModule, get_dataset_info
 from chop.models import get_resnet18
 from chop.passes import (
     add_common_metadata_analysis_pass,
@@ -42,11 +42,11 @@ def main():
     # batch-size = 1 will trigger the bug in add_common_metadata_analysis_pass
     batch_size = 2
 
-    datamodule = MyDataModule(
+    datamodule = MaseDataModule(
         model_name="toy_custom_fn",
         batch_size=batch_size,
-        dataset_name="cifar10",
-        workers=os.cpu_count(),
+        name="cifar10",
+        num_workers=os.cpu_count(),
         tokenizer=None,
         max_token_len=None,
     )
