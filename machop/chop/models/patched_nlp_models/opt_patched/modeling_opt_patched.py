@@ -34,7 +34,7 @@ from transformers.utils import logging, replace_return_docstrings
 
 # from chop.passes.patching.mase_op_wrapper import torch_ones
 
-from .configuration_opt_patched import OPTConfigPatched
+from .configuration_opt_patched import OPTPatchedConfig
 from .utils_opt_patched import (
     OPTAttention_attention_get_dtype_min,
     OPTAttention_attention_mask_shape_check,
@@ -97,17 +97,13 @@ class OPTLearnedPositionalEmbedding(nn.Embedding):
         return super().forward(positions + self.offset)
 
 
-class OPTAttentionPatched(nn.Module):
+class OPTPatchedAttention(nn.Module):
     """
     - FX-traceable Multi-headed attention from 'Attention Is All You Need' paper
     - This module includes multi-head (k, q, v linear, attention), concat, and attention output linear
     - To make this module traceable, `mode` must be one of integer 0, 1, 2, or 3.
     - The default mode `None` (un-traceable mode) can be used for training (testing), but not for modify-sw.
     """
-
-    custom_node_leaf_patch = [
-        ("embeddings", "BertEmbeddingsPatched", OPTLearnedPositionalEmbedding)
-    ]
 
     def __init__(
         self,
@@ -263,11 +259,11 @@ class OPTAttentionPatched(nn.Module):
         return attn_output, attn_weights_reshaped
 
 
-class OPTDecoderLayerPatched(nn.Module):
-    def __init__(self, config: OPTConfigPatched):
+class OPTPatchedDecoderLayer(nn.Module):
+    def __init__(self, config: OPTPatchedConfig):
         super().__init__()
         self.embed_dim = config.hidden_size
-        self.self_attn = OPTAttentionPatched(
+        self.self_attn = OPTPatchedAttention(
             embed_dim=self.embed_dim,
             num_heads=config.num_attention_heads,
             dropout=config.attention_dropout,
@@ -365,10 +361,11 @@ class OPTDecoderLayerPatched(nn.Module):
 
 
 class OPTPatchedPreTrainedModel(PreTrainedModel):
-    config_class = OPTConfigPatched
+    patched = True
+    config_class = OPTPatchedConfig
     base_model_prefix = "model"
     supports_gradient_checkpointing = True
-    _no_split_modules = ["OPTDecoderLayer"]
+    _no_split_modules = ["OPTPatchedDecoderLayer"]
     _keys_to_ignore_on_load_unexpected = [r"decoder\.version"]
 
     def _init_weights(self, module):
@@ -383,11 +380,11 @@ class OPTPatchedPreTrainedModel(PreTrainedModel):
                 module.weight.data[module.padding_idx].zero_()
 
     def _set_gradient_checkpointing(self, module, value=False):
-        if isinstance(module, OPTDecoderPatched):
+        if isinstance(module, OPTPatchedDecoder):
             module.gradient_checkpointing = value
 
 
-class OPTDecoderPatched(OPTPatchedPreTrainedModel):
+class OPTPatchedDecoder(OPTPatchedPreTrainedModel):
     """
     Transformer decoder consisting of *config.num_hidden_layers* layers. Each layer is a [`OPTDecoderLayer`]
 
@@ -395,15 +392,7 @@ class OPTDecoderPatched(OPTPatchedPreTrainedModel):
         config: OPTConfig
     """
 
-    custom_node_leaf_patch = [
-        (
-            "embed_positions",
-            "OPTLearnedPositionalEmbedding",
-            OPTLearnedPositionalEmbedding,
-        )
-    ]
-
-    def __init__(self, config: OPTConfigPatched):
+    def __init__(self, config: OPTPatchedConfig):
         super().__init__(config)
         self.dropout = config.dropout
         self.layerdrop = config.layerdrop
@@ -444,7 +433,7 @@ class OPTDecoderPatched(OPTPatchedPreTrainedModel):
             self.final_layer_norm = None
 
         self.layers = nn.ModuleList(
-            [OPTDecoderLayerPatched(config) for _ in range(config.num_hidden_layers)]
+            [OPTPatchedDecoderLayer(config) for _ in range(config.num_hidden_layers)]
         )
 
         self.gradient_checkpointing = False
@@ -587,10 +576,10 @@ class OPTDecoderPatched(OPTPatchedPreTrainedModel):
         )
 
 
-class OPTModelPatched(OPTPatchedPreTrainedModel):
-    def __init__(self, config: OPTConfigPatched):
+class OPTPatchedModel(OPTPatchedPreTrainedModel):
+    def __init__(self, config: OPTPatchedConfig):
         super().__init__(config)
-        self.decoder = OPTDecoderPatched(config)
+        self.decoder = OPTPatchedDecoder(config)
         # Initialize weights and apply final processing
         self.post_init()
 
@@ -645,12 +634,51 @@ class OPTModelPatched(OPTPatchedPreTrainedModel):
         )
 
 
-class OPTForCausalLMPatched(OPTPatchedPreTrainedModel):
+class OPTPatchedForCausalLM(OPTPatchedPreTrainedModel):
+    # patching code
+    patched_nodes = {
+        "modules": [],
+        "layers": [OPTLearnedPositionalEmbedding, OPTPatchedDecoderLayer],
+        "functions": [
+            OPTAttention_attention_get_dtype_min,
+            OPTAttention_attention_mask_shape_check,
+            OPTAttention_attn_output_shape_check,
+            OPTAttention_attn_weight_dtype_check,
+            OPTAttention_attn_weights_shape_check,
+            OPTAttention_layer_head_mask_shape_check,
+            OPTAttention_reshape_qkv_back_for_bmm,
+            OPTAttention_self_shape,
+            OPTDecoder_check_head_mask,
+            OPTDecoder_self_prepare_decoder_attention,
+            OPTForCasualLM_compute_loss,
+        ],
+        "names": [
+            "optattention_attention_get_dtype_min",
+            "optattention_attention_mask_shape_check",
+            "optattention_attn_output_shape_check",
+            "optattention_attn_weight_dtype_check",
+            "optattention_attn_weights_shape_check",
+            "optattention_layer_head_mask_shape_check",
+            "optattention_reshape_qkv_back_for_bmm",
+            "optattention_self_shape",
+            "optdecoder_check_head_mask",
+            "optdecoder_self_prepare_decoder_attention",
+            "optfor_casual_lm_compute_loss",
+        ],
+        "additional_inputs": {
+            "head_mask_1": None,
+            "output_attentions_1": False,
+            "output_hidden_states_1": False,
+            "return_dict_1": True,
+        },
+    }
+
     _keys_to_ignore_on_load_missing = [r"lm_head.weight"]
+    patched = True
 
     def __init__(self, config):
         super().__init__(config)
-        self.model = OPTModelPatched(config)
+        self.model = OPTPatchedModel(config)
 
         # the lm_head weight is automatically tied to the embed tokens weight
         self.lm_head = nn.Linear(

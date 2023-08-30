@@ -65,6 +65,10 @@ def graph_iterator_for_mase_ops(graph):
                 mase_op = "max_pool2d"
             elif isinstance(module, nn.ReLU):
                 mase_op = "relu"
+            elif isinstance(module, nn.Embedding):
+                mase_op = "embedding"
+            elif isinstance(module, tuple(graph.model.patched_custom_layers)):
+                mase_op = "patched_custom_layers"
             # NOTE: The ones below were added to support MobileNetV2 and MobileNetV3.
             # These don't show up when printing the fx.graph.
             elif isinstance(module, nn.ReLU6):
@@ -84,10 +88,15 @@ def graph_iterator_for_mase_ops(graph):
             # we might have things like mult_1, add_2, so we need to match the pattern
             matching, matched_name = match_and_filter(
                 node.name,
-                MASE_BUILTIN_FUNCS + MASE_MODULE_RELATED_FUNCS + MASE_IMPLICIT_FUNCS,
+                MASE_BUILTIN_FUNCS
+                + MASE_MODULE_RELATED_FUNCS
+                + MASE_IMPLICIT_FUNCS
+                + graph.model.patched_op_names,
             )
             if not matching:
-                raise ValueError(f"Unknown call_function node: {node.target}")
+                raise ValueError(
+                    f"Unknown call_function node: {node.target} with name {node.name}"
+                )
             if matched_name in MASE_BUILTIN_FUNCS:
                 node.meta["mase"].parameters["common"]["mase_type"] = "builtin_func"
                 node.meta["mase"].parameters["common"]["mase_op"] = matched_name
@@ -99,6 +108,9 @@ def graph_iterator_for_mase_ops(graph):
                 node.meta["mase"].parameters["common"]["mase_op"] = matched_name
             elif matched_name in MASE_IMPLICIT_FUNCS:
                 node.meta["mase"].parameters["common"]["mase_type"] = "implicit_func"
+                node.meta["mase"].parameters["common"]["mase_op"] = matched_name
+            elif matched_name in graph.model.patched_op_names:
+                node.meta["mase"].parameters["common"]["mase_type"] = "patched_func"
                 node.meta["mase"].parameters["common"]["mase_op"] = matched_name
             else:
                 raise ValueError(f"Unknown node type: {node.target}")
@@ -134,8 +146,88 @@ def graph_iterator_for_mase_ops(graph):
     return graph
 
 
+def _update_arg_in_next_node(offset, index, arg_in, next_node, node, keys=None):
+    if str(arg_in) == str(node.name):
+        assert (
+            f"data_in_{index}"
+            not in next_node.meta["mase"].parameters["common"]["args"]
+        ), f"Adding meta to an existing input: {next_node.name} at input {index}"
+        next_node.meta["mase"].parameters["common"]["args"][f"data_in_{index}"] = dict(
+            node.meta["mase"].parameters["common"]["results"]["data_out_0"]
+        )
+        next_node.meta["mase"].parameters["common"]["args"][f"data_in_{index}"][
+            "from"
+        ] = node
+        if keys is not None:
+            next_node.meta["mase"].parameters["common"]["args"][f"data_in_{index}"][
+                "key"
+            ] = keys[index - offset]
+    else:
+        # If an arg of the next node is a constant, add to the metadata,
+        # because this has no edge and cannot be udpated from traversing.
+        if (
+            "data_in_{index}"
+            in next_node.meta["mase"].parameters["common"][
+                "args"
+                # we also ignore arg_in as a string
+            ]
+            or isinstance(arg_in, torch.fx.Node)
+            or isinstance(arg_in, str)
+        ):
+            return
+
+        if isinstance(arg_in, float):
+            next_node.meta["mase"].parameters["common"]["args"][f"data_in_{index}"] = {
+                "size": [1],
+                "type": "float",
+                "precision": [32],
+                "from": "NA",
+                "value": arg_in,
+            }
+            if keys is not None:
+                next_node.meta["mase"].parameters["common"]["args"][f"data_in_{index}"][
+                    "key"
+                ] = keys[index - offset]
+
+        elif isinstance(arg_in, int):
+            next_node.meta["mase"].parameters["common"]["args"][f"data_in_{index}"] = {
+                "size": [1],
+                "type": "fixed",
+                "precision": [
+                    int(math.ceil(math.log2(max(abs(arg_in), 1)))) + 1,
+                    0,
+                ],
+                "from": "NA",
+                "value": arg_in,
+            }
+            if keys is not None:
+                next_node.meta["mase"].parameters["common"]["args"][f"data_in_{index}"][
+                    "key"
+                ] = keys[index - offset]
+        elif isinstance(arg_in, tuple):
+            # NOTE: Tuples are generally used to convey shape information
+            # (e.g. AdaptiveAvgPool2d's output_size). We don't associate them
+            # with metadata as we assume they're pretty much constant and can
+            # be considered as a local attribute of the model.
+            # Check if all elements of the tuple are fixed constants
+            if all(isinstance(x, int) for x in arg_in):
+                return
+            logger.warning("Tuple contains unsupported types!")
+        elif arg_in is None:
+            pass
+        elif isinstance(arg_in, dict):
+            # TODO: This might overwrite the existing args!! Discuss when observed
+            arg_keys = list(arg_in.keys())
+            for i, a in enumerate(arg_in.values()):
+                _update_arg_in_next_node(index, i, a, next_node, node, keys=arg_keys)
+
+        else:
+            assert False, "Unknown constant arg type."
+
+
 def analysis_common_parameters(node, dummy_in):
     mase_op = node.meta["mase"].parameters["common"]["mase_op"]
+    print(node)
     if node.op == "placeholder":
         node.meta["mase"] = analyse_common_parameters_placeholder(
             node.meta["mase"], dummy_in
@@ -157,7 +249,7 @@ def analysis_common_parameters(node, dummy_in):
             )
         )
 
-    if "data_out_0" in node.meta["mase"].parameters["common"]["results"]:
+    if len(node.users) > 0:
         logger.debug(
             "{} : {}".format(
                 node.name,
@@ -169,126 +261,15 @@ def analysis_common_parameters(node, dummy_in):
     for next_node, _ in node.users.items():
         if "args" not in next_node.meta["mase"].parameters["common"]:
             next_node.meta["mase"].parameters["common"]["args"] = {}
-        for index, arg_in in enumerate(next_node.args):
-            if str(arg_in) == str(node.name):
-                assert (
-                    f"data_in_{index}"
-                    not in next_node.meta["mase"].parameters["common"]["args"]
-                ), f"Adding meta to an existing input: {next_node.name} at input {index}"
-                next_node.meta["mase"].parameters["common"]["args"][
-                    f"data_in_{index}"
-                ] = dict(
-                    node.meta["mase"].parameters["common"]["results"]["data_out_0"]
-                )
-                next_node.meta["mase"].parameters["common"]["args"][f"data_in_{index}"][
-                    "from"
-                ] = node
-            else:
-                # If an arg of the next node is a constant, add to the metadata,
-                # because this has no edge and cannot be udpated from traversing.
-                if "data_in_{index}" in next_node.meta["mase"].parameters["common"][
-                    "args"
-                ] or isinstance(arg_in, torch.fx.Node):
-                    continue
 
-                if isinstance(arg_in, float):
-                    next_node.meta["mase"].parameters["common"]["args"][
-                        f"data_in_{index}"
-                    ] = {
-                        "size": [1],
-                        "type": "float",
-                        "precision": [32],
-                        "from": "NA",
-                        "value": arg_in,
-                    }
-                elif isinstance(arg_in, int):
-                    next_node.meta["mase"].parameters["common"]["args"][
-                        f"data_in_{index}"
-                    ] = {
-                        "size": [1],
-                        "type": "fixed",
-                        "precision": [
-                            int(math.ceil(math.log2(max(abs(arg_in), 1)))) + 1,
-                            0,
-                        ],
-                        "from": "NA",
-                        "value": arg_in,
-                    }
-                elif isinstance(arg_in, tuple):
-                    # NOTE: Tuples are generally used to convey shape information
-                    # (e.g. AdaptiveAvgPool2d's output_size). We don't associate them
-                    # with metadata as we assume they're pretty much constant and can
-                    # be considered as a local attribute of the model.
-                    # Check if all elements of the tuple are fixed constants
-                    if all(isinstance(x, int) for x in arg_in):
-                        continue
-                    logger.warning("Tuple contains unsupported types!")
-                else:
-                    assert False, "Unknown constant arg type."
+        for index, arg_in in enumerate(next_node.args):
+            _update_arg_in_next_node(0, index, arg_in, next_node, node)
+
         offset = len(next_node.args)
         keys = list(next_node.kwargs.keys())
         for _index, arg_in in enumerate(next_node.kwargs.values()):
             index = _index + offset
-            if str(arg_in) == str(node.name):
-                assert (
-                    f"data_in_{index}"
-                    not in next_node.meta["mase"].parameters["common"]["args"]
-                ), f"Adding meta to an existing input: {next_node.name} at input {index}"
-                next_node.meta["mase"].parameters["common"]["args"][
-                    f"data_in_{index}"
-                ] = dict(
-                    node.meta["mase"].parameters["common"]["results"]["data_out_0"]
-                )
-                next_node.meta["mase"].parameters["common"]["args"][f"data_in_{index}"][
-                    "from"
-                ] = node
-                next_node.meta["mase"].parameters["common"]["args"][f"data_in_{index}"][
-                    "key"
-                ] = keys[_index]
-            else:
-                # If an arg of the next node is a constant, add to the metadata,
-                # because this has no edge and cannot be udpated from traversing.
-                if "data_in_{index}" in next_node.meta["mase"].parameters["common"][
-                    "args"
-                ] or isinstance(arg_in, torch.fx.Node):
-                    continue
-
-                if isinstance(arg_in, float):
-                    next_node.meta["mase"].parameters["common"]["args"][
-                        f"data_in_{index}"
-                    ] = {
-                        "size": [1],
-                        "type": "float",
-                        "precision": [32],
-                        "from": "NA",
-                        "key": keys[_index],
-                        "value": arg_in,
-                    }
-                elif isinstance(arg_in, int):
-                    next_node.meta["mase"].parameters["common"]["args"][
-                        f"data_in_{index}"
-                    ] = {
-                        "size": [1],
-                        "type": "fixed",
-                        "precision": [
-                            int(math.ceil(math.log2(max(abs(arg_in), 1)))) + 1,
-                            0,
-                        ],
-                        "from": "NA",
-                        "key": keys[_index],
-                        "value": arg_in,
-                    }
-                elif isinstance(arg_in, tuple):
-                    # NOTE: Tuples are generally used to convey shape information
-                    # (e.g. AdaptiveAvgPool2d's output_size). We don't associate them
-                    # with metadata as we assume they're pretty much constant and can
-                    # be considered as a local attribute of the model.
-                    # Check if all elements of the tuple are fixed constants
-                    if all(isinstance(x, int) for x in arg_in):
-                        continue
-                    logger.warning("Tuple contains unsupported types!")
-                else:
-                    assert False, "Unknown constant arg type."
+            _update_arg_in_next_node(offset, index, arg_in, next_node, node, keys=keys)
 
 
 def graph_iterator_for_metadata(graph, dummy_in=None):
@@ -351,6 +332,7 @@ def add_common_metadata_analysis_pass(graph, pass_args=None):
     """
     Pass args : initial dummy inputs for inferencing all the shapes for each node
     """
+    logger.debug(graph.fx_graph)
     graph = graph_iterator_for_mase_ops(graph)
     # TODO: FIXEME, this is temporary
     graph = graph_iterator_for_metadata(graph, pass_args)

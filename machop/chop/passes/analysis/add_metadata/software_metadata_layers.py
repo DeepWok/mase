@@ -172,6 +172,19 @@ def analyze_software_meta_param_output(meta):
         _set_arg_param(meta, "data_in_0", pass_name, default_value)
 
 
+def analyze_software_meta_param_patched_func_default(meta):
+    """
+    *: patched func
+    """
+    node = meta.node
+
+    for pass_name, default_value in PASS_DEFAULTS.items():
+        for i in range(len(node.all_input_nodes)):
+            _set_arg_param(meta, f"data_in_{i}", pass_name, default_value)
+
+        _set_result_param(meta, "data_out_0", pass_name, default_value)
+
+
 # ------------------------------------------------------------------------------
 
 SOFTWARE_PARAM_ANALYSIS_LAYERS = {
@@ -220,6 +233,7 @@ SOFTWARE_PARAM_ANALYSIS_LAYERS = {
         "flatten": analyze_software_meta_param_implicit_func_default,
         "t": analyze_software_meta_param_implicit_func_default,
         "constant": analyze_software_meta_param_implicit_func_default,
+        "default": analyze_software_meta_param_implicit_func_default,
     },
     "placeholder": {
         "placeholder": analyze_software_meta_param_placeholder,
@@ -229,5 +243,8 @@ SOFTWARE_PARAM_ANALYSIS_LAYERS = {
     },
     "output": {
         "output": analyze_software_meta_param_output,
+    },
+    "patched_func": {
+        "default": analyze_software_meta_param_patched_func_default,
     },
 }

@@ -17,6 +17,17 @@ def analyse_common_parameters_placeholder(meta, dummy_in):
     if var_name not in dummy_in.keys():
         raise ValueError(f"Cannot find model input {var_name} in the given module")
     arg = dummy_in[var_name]
+    # deal with model specific inputs, normally these are not numerical values/tensors
+    if var_name in meta.model.additional_inputs:
+        meta.parameters["common"]["args"] = {}
+        meta.parameters["common"]["results"] = {}
+        meta.parameters["common"]["results"]["data_out_0"] = {
+            "type": "model_specific_input",
+            "value": meta.model.additional_inputs[var_name],
+            "size": [1],
+            "value": arg,
+        }
+        return meta
 
     meta.parameters["common"]["args"] = {}
     meta.parameters["common"]["results"] = {}
@@ -165,6 +176,26 @@ def _arg_shape_to_val(args):
                     ],
                     1.0,
                 )
+        elif isinstance(a, dict):
+            val = {}
+            for _k, _a in a.items():
+                if isinstance(_a, torch.fx.Node):
+                    if (
+                        "value"
+                        in _a.meta["mase"].parameters["common"]["results"]["data_out_0"]
+                    ):
+                        val[_k] = _a.meta["mase"].parameters["common"]["results"][
+                            "data_out_0"
+                        ]["value"]
+                    else:
+                        val[_k] = torch.full(
+                            _a.meta["mase"].parameters["common"]["results"][
+                                "data_out_0"
+                            ]["size"],
+                            1.0,
+                        )
+                else:
+                    val[_k] = _a
         else:
             val = a
         args_val.append(val)
@@ -172,13 +203,27 @@ def _arg_shape_to_val(args):
 
 
 def _kwarg_shape_to_val(kwargs):
+    # Some values must be int types but the typing system in MASE is not ready
+    # Here we record the variable names that must be int types
+    KNOWN_INT_KEYS = ["labels"]
+
     kwargs_val = {}
     for key, val in kwargs.items():
         if isinstance(val, torch.fx.Node):
-            kwargs_val[key] = torch.full(
-                val.meta["mase"].parameters["common"]["results"]["data_out_0"]["size"],
-                1.0,
-            )
+            if key in KNOWN_INT_KEYS:
+                kwargs_val[key] = torch.full(
+                    val.meta["mase"].parameters["common"]["results"]["data_out_0"][
+                        "size"
+                    ],
+                    1,
+                )
+            else:
+                kwargs_val[key] = torch.full(
+                    val.meta["mase"].parameters["common"]["results"]["data_out_0"][
+                        "size"
+                    ],
+                    1.0,
+                )
         else:
             kwargs_val[key] = val
     return kwargs_val
@@ -201,6 +246,7 @@ def analyse_common_parameters_method(meta):
     kwargs_val = _kwarg_shape_to_val(kwargs)
 
     result = getattr(dummy_data, meta.node.target)(*args_val, **kwargs_val)
+
     if isinstance(result, int):
         meta.parameters["common"]["results"] = {}
         arg = meta.parameters["common"]["args"]["data_in_0"]
@@ -229,26 +275,194 @@ def analyse_common_parameters_method(meta):
 # ----------------------------------------------------------
 
 
-def _get_size_by_function_simulation(meta):
+def _get_result_by_function_simulation(meta):
     """
-    Otain the size of the output by executing the function
+    Obtain the result of the output by executing the function
     """
-    self_obj, *args = _load_arg(meta)
+    if len(meta.node.args) == 0:
+        self_obj = None
+        args = []
+    else:
+        self_obj, *args = _load_arg(meta)
+
     kwargs = _load_kwarg(meta)
 
-    dummy_data = torch.full(
-        self_obj.meta["mase"].parameters["common"]["results"]["data_out_0"]["size"], 1.0
-    )
+    # special handle if no size information
+    if (
+        self_obj is not None
+        and self_obj.meta["mase"].parameters["common"]["results"]["data_out_0"]["size"]
+        is None
+    ):
+        return None
+
     args_val = _arg_shape_to_val(args)
     kwargs_val = _kwarg_shape_to_val(kwargs)
 
-    result = meta.node.target(dummy_data, *args_val, **kwargs_val)
+    is_int = True
+    is_float = True
+
+    list_depth = lambda L: isinstance(L, list) and max(map(list_depth, L)) + 1
+
+    # This is an annoying bit - Python does not do type casting automatically
+    # Here we try both float and int, and pick whatever works
+    # TODO: A proper way is to get dummy inputs with the correct type and propagate all along with this pass
+
+    if self_obj is None:
+        result = meta.node.target(*args_val, **kwargs_val)
+    else:
+        try:
+            if (
+                "value"
+                in self_obj.meta["mase"]
+                .parameters["common"]["results"]["data_out_0"]
+                .keys()
+            ):
+                dummy_data = self_obj.meta["mase"].parameters["common"]["results"][
+                    "data_out_0"
+                ]["value"]
+            else:
+                size = self_obj.meta["mase"].parameters["common"]["results"][
+                    "data_out_0"
+                ]["size"]
+                # Special tuple input - check relavant comments for single-element tuple result
+                if list_depth(size) > 1:
+                    k = size
+                    for i in range(0, list_depth(size) - 1):
+                        assert len(k) == 1
+                        k = k[0]
+                    dummy_data = (
+                        torch.full(
+                            tuple(k),
+                            0,
+                        ),
+                    )
+                else:
+                    dummy_data = torch.full(
+                        tuple(size),
+                        0,
+                    )
+            result = meta.node.target(dummy_data, *args_val, **kwargs_val)
+        # except RuntimeError:
+        except:
+            is_int = False
+
+    if not is_int:
+        try:
+            if (
+                "value"
+                in self_obj.meta["mase"]
+                .parameters["common"]["results"]["data_out_0"]
+                .keys()
+            ):
+                dummy_data = self_obj.meta["mase"].parameters["common"]["results"][
+                    "data_out_0"
+                ]["value"]
+            else:
+                size = self_obj.meta["mase"].parameters["common"]["results"][
+                    "data_out_0"
+                ]["size"]
+                # Special tuple input - check relavant comments for single-element tuple result
+                if list_depth(size) == 2 and len(size) == 1:
+                    dummy_data = (
+                        torch.full(
+                            size,
+                            1.0,
+                        ),
+                    )
+                else:
+                    dummy_data = torch.full(
+                        size,
+                        1.0,
+                    )
+            result = meta.node.target(dummy_data, *args_val, **kwargs_val)
+        except:
+            is_float = False
+
+    assert (
+        is_int or is_float
+    ), f"Both float and int are not correct for module {meta.node}"
+
+    return result
+
+
+def _get_size_by_function_simulation(meta):
+    """
+    Obtain the size of the output by executing the function
+    """
+    result = _get_result_by_function_simulation(meta)
+
+    # special handle for .size()
+    if isinstance(result, torch.Size):
+        return result
+        # return list([i for i in result])
+    if isinstance(result, bool) or isinstance(result, int) or isinstance(result, float):
+        return [1]
+
     size = list(result.size())
     return size
 
 
+# ----------------------------------------------------------
+# Size
+# ----------------------------------------------------------
+
+
+def add_meta_for_size(meta, size):
+    """
+    Size is an attribute which provides a constrant value in a static graph.
+    """
+    meta.parameters["common"]["results"] = {}
+    meta.parameters["common"]["results"]["data_out_0"] = {
+        "type": "float",
+        "precision": [32],
+        "size": [len([i for i in size])],
+        "value": list([i for i in size]),
+    }
+    return meta
+
+
+def _analyse_common_parameters_function_const(meta):
+    op = meta.parameters["common"]["mase_op"]
+    if op == "x":
+        pass
+    else:
+        assert False, f"Unknown function that returns constant: {op}"
+
+    return meta
+
+
 def analyse_common_parameters_function(meta):
+    if len(meta.node.users) == 0:
+        return meta
+
     size = _get_size_by_function_simulation(meta)
+
+    # special handle for size
+    if isinstance(size, torch.Size):
+        meta = add_meta_for_size(meta, size)
+        return meta
+    # special handle for constant
+    if size == [1]:
+        meta.parameters["common"]["results"] = {
+            "data_out_0": {
+                "type": "float",
+                "precision": [32],
+                "size": [1],
+                "value": _get_result_by_function_simulation(meta),
+            }
+        }
+        return meta
+
+    # Some functions returns constant values,
+    # so special procedures are required here
+    # FUNC_RETURN_CONST = ["eq", "getattr", "getitem"]
+    # if meta.parameters["common"]["mase_op"] in FUNC_RETURN_CONST:
+    #     print(size)
+    #     return _analyse_common_parameters_function_const(meta)
+    # else:
+    #     print(meta.node.target)
+    #     print(meta.parameters["common"]["mase_op"])
+
     meta.parameters["common"]["results"] = {
         "data_out_0": {
             "type": "float",
@@ -297,15 +511,80 @@ def _get_size_by_module_simulation(meta):
     """
     self_obj, *args = _load_arg(meta)
     kwargs = _load_kwarg(meta)
+    args_val = _arg_shape_to_val(args)
+    kwargs_val = _kwarg_shape_to_val(kwargs)
 
-    dummy_data = torch.full(
-        self_obj.meta["mase"].parameters["common"]["results"]["data_out_0"]["size"], 1.0
-    )
-    previous_state = meta.module.training
-    meta.module.train(False)
-    with torch.no_grad():
-        result = meta.module(dummy_data, *args, **kwargs)
+    is_int = True
+    is_float = True
+
+    # This is an annoying bit - Python does not do type casting automatically
+    # Here we try both float and int, and pick whatever works
+    # TODO: A proper way is to get dummy inputs with the correct type and propagate all along with this pass
+    try:
+        if (
+            "value"
+            in self_obj.meta["mase"]
+            .parameters["common"]["results"]["data_out_0"]
+            .keys()
+        ):
+            dummy_data = self_obj.meta["mase"].parameters["common"]["results"][
+                "data_out_0"
+            ]["value"]
+        else:
+            dummy_data = torch.full(
+                self_obj.meta["mase"].parameters["common"]["results"]["data_out_0"][
+                    "size"
+                ],
+                0,
+            )
+        previous_state = meta.module.training
+        meta.module.train(False)
+
+        with torch.no_grad():
+            result = meta.module(dummy_data, *args_val, **kwargs_val)
+    except:
+        is_int = False
+
+    if not is_int:
+        try:
+            if (
+                "value"
+                in self_obj.meta["mase"]
+                .parameters["common"]["results"]["data_out_0"]
+                .keys()
+            ):
+                dummy_data = self_obj.meta["mase"].parameters["common"]["results"][
+                    "data_out_0"
+                ]["value"]
+            else:
+                dummy_data = torch.full(
+                    self_obj.meta["mase"].parameters["common"]["results"]["data_out_0"][
+                        "size"
+                    ],
+                    1.0,
+                )
+            previous_state = meta.module.training
+            meta.module.train(False)
+
+            with torch.no_grad():
+                result = meta.module(dummy_data, *args_val, **kwargs_val)
+        # except RuntimeError:
+        except:
+            is_float = False
+
+    assert (
+        is_int or is_float
+    ), f"Both float and int are not correct for module {meta.node}"
+
     meta.module.train(previous_state)
+
+    if isinstance(result, tuple):
+        if len(result) != 1:
+            assert (
+                False
+            ), "We have a real tuple output... need to discuss how to deal with it"
+        return [[list(result[0].size())]]
+
     size = list(result.size())
     return size
 

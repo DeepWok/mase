@@ -83,6 +83,10 @@ MASE_OP_TO_OUTPUT_ENTRIES = {
 }
 
 
+def arg_exists(node, arg_name) -> bool:
+    return arg_name in node.meta["mase"].parameters["common"]["args"]
+
+
 def update_quant_meta_param(node, config: dict, mase_op: str) -> None:
     quant_arith = config["name"]
     assert quant_arith in quant_arith_to_list_fn, f"Unknown quant_arith: {quant_arith}"
@@ -90,14 +94,16 @@ def update_quant_meta_param(node, config: dict, mase_op: str) -> None:
     MASE_OP_TO_INPUT_ENTRIES_AND_ARGS: Give a mapping between config file and mase model
     How it works:
         We find the precision of a certain paramter "e.g data_in" using the precision partial function.
-        
+
         The precision partial function take a config file and entry "e.g data_in",
         and it will search through all the attributes under this entry based on the quantisation scheme,
-        returning a list of precision with the order same as attributes defined in QUANT_ARITH_TO_SUFFIXES  
+        returning a list of precision with the order same as attributes defined in QUANT_ARITH_TO_SUFFIXES
 
-        This precision list is then being mapped to mase data using 'arg' 
+        This precision list is then being mapped to mase data using 'arg'
     """
     for entry, arg in zip(*MASE_OP_TO_INPUT_ENTRIES_AND_ARGS[mase_op]):
+        if not arg_exists(node, arg):
+            continue
         update_arg(
             node,
             arg_name=arg,

@@ -185,25 +185,3 @@ def OPTForCasualLM_compute_loss(logits, labels, self_config_vocab_size):
     #     shift_logits.view(-1, self_config_vocab_size), shift_labels.view(-1)
     # )
     return loss
-
-
-opt_leaf_funcs = [
-    ("OPTAttention_attn_weights_shape_check", OPTAttention_attn_weights_shape_check),
-    (
-        "OPTAttention_attention_mask_shape_check",
-        OPTAttention_attention_mask_shape_check,
-    ),
-    ("OPTAttention_attention_get_dtype_min", OPTAttention_attention_get_dtype_min),
-    ("OPTAttention_attn_weight_dtype_check", OPTAttention_attn_weight_dtype_check),
-    (
-        "OPTAttention_layer_head_mask_shape_check",
-        OPTAttention_layer_head_mask_shape_check,
-    ),
-    ("OPTAttention_attn_output_shape_check", OPTAttention_attn_output_shape_check),
-    (
-        "OPTDecoder_self_prepare_decoder_attention",
-        OPTDecoder_self_prepare_decoder_attention,
-    ),
-    ("OPTDecoder_check_head_mask", OPTDecoder_check_head_mask),
-    ("OPTForCasualLM_compute_loss", OPTForCasualLM_compute_loss),
-]

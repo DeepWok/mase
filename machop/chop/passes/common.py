@@ -11,7 +11,29 @@ MASE_TYPES = [
 ]
 
 
-MASE_IMPLICIT_FUNCS = ["size", "view", "flatten", "t"]
+MASE_IMPLICIT_FUNCS = [
+    # possibly are just constants
+    "size",
+    "view",
+    # possibly are just memory ops or tensor reshapes
+    "flatten",
+    "t",
+    "transpose",
+    "reshape",
+    "contiguous",
+    # possibly should be built-in funcs
+    "max",
+    "softmax",
+    "cumsum",
+    # possibly can just safely ignore?
+    "dropout",
+    "eq",
+    "_assert",
+    "getattr",
+    "getitem",
+    "long",
+    "type_as",
+]
 
 # use this list to print out MASE_MODULE_RELATED_FUNCS when new functions are added
 # module_related_funcs = [
