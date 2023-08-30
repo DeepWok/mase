@@ -3,7 +3,10 @@ from functools import partial
 # TODO: fix patched models
 # from .manual.toy_manual import get_toymanualnet
 # from .patched_nlp_models import get_patched_nlp_model
-from .patched_nlp_models import patched_model_cls_to_required_input_args
+from .patched_nlp_models import (
+    patched_model_cls_to_required_input_args,
+    get_patched_nlp_model,
+)
 from .manual import get_llama_plain, get_opt_plain, get_opt_quantized
 
 from .nlp_models import get_nlp_model
@@ -160,18 +163,19 @@ _built_in_nlp_model_map = {
     "google/t5-v1_1-small": get_nlp_model,
 }
 
+
 # ----------------------------------------
 # Patched NLP models supporting FX.graph 👇
 # ----------------------------------------
 _patched_nlp_model_map = {
-    # "facebook/opt-125m@patched": get_patched_nlp_model,
-    # "facebook/opt-350m@patched": get_patched_nlp_model,
-    # "facebook/opt-1.3b@patched": get_patched_nlp_model,
-    # "facebook/opt-2.7b@patched": get_patched_nlp_model,
-    # "facebook/opt-6.7b@patched": get_patched_nlp_model,
-    # "facebook/opt-13b@patched": get_patched_nlp_model,
-    # "facebook/opt-30b@patched": get_patched_nlp_model,
-    # "facebook/opt-66b@patched": get_patched_nlp_model,
+    "facebook/opt-125m@patched": get_patched_nlp_model,
+    "facebook/opt-350m@patched": get_patched_nlp_model,
+    "facebook/opt-1.3b@patched": get_patched_nlp_model,
+    "facebook/opt-2.7b@patched": get_patched_nlp_model,
+    "facebook/opt-6.7b@patched": get_patched_nlp_model,
+    "facebook/opt-13b@patched": get_patched_nlp_model,
+    "facebook/opt-30b@patched": get_patched_nlp_model,
+    "facebook/opt-66b@patched": get_patched_nlp_model,
     # "bert-base-uncased@patched": get_patched_nlp_model,
     # "bert-large-uncased@patched": get_patched_nlp_model,
     # "bert-base-cased@patched": get_patched_nlp_model,

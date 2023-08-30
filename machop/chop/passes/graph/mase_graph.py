@@ -9,6 +9,7 @@ import torch
 import torch.fx as fx
 from chop.passes.common import MASE_IMPLICIT_FUNCS
 from chop.passes.transforms import utils as utils_passes
+from chop.passes.patching import MASE_LEAF_FUNCTIONS, MASE_LEAF_LAYERS
 from torch.fx import wrap as fx_wrap
 
 logger = logging.getLogger(__name__)
@@ -26,6 +27,7 @@ class MaseTracer(fx.Tracer):
     def __init__(
         self,
         custom_leaf_modules: tuple[ModuleType] = (),
+        custom_leaf_layers: tuple[torch.nn.Module] = (),
         custom_leaf_functions: tuple[Callable] = (),
         param_shapes_constant: bool = False,
     ) -> None:
@@ -49,24 +51,25 @@ class MaseTracer(fx.Tracer):
             for an attribute access. Backward compatibility for this parameter
             is guaranteed.
         """
+        self.custom_leaf_layers = tuple(set(custom_leaf_layers))
         self.custom_leaf_modules = tuple(set(custom_leaf_modules))
         self.custom_leaf_functions = tuple(set(custom_leaf_functions))
         self.param_shapes_constant = param_shapes_constant
         super().__init__(
             self.custom_leaf_modules + (math,),
-            self.custom_leaf_functions,
+            self.custom_leaf_functions + MASE_LEAF_FUNCTIONS,
             self.param_shapes_constant,
         )
 
     def is_leaf_module(self, m: torch.nn.Module, module_qualified_name: str) -> bool:
-        is_custom_module = False
-        is_fx_built_in_module = super().is_leaf_module(m, module_qualified_name)
-        if isinstance(m, self.custom_leaf_modules):
-            is_custom_module = True
+        is_fx_built_in_leaf_module = super().is_leaf_module(m, module_qualified_name)
+        is_mase_leaf_layers = isinstance(m, MASE_LEAF_LAYERS)
+        is_custom_layer = isinstance(m, self.custom_leaf_layers)
         return any(
             (
-                is_custom_module,
-                is_fx_built_in_module,
+                is_fx_built_in_leaf_module,
+                is_mase_leaf_layers,
+                is_custom_layer,
             )
         )
 
@@ -102,9 +105,26 @@ class MaseGraph:
 
         # create graph module
         if model is not None:
-            self.tracer = MaseTracer()
+            patched = getattr(model, "patched", None)
+            if patched is None:
+                self.tracer = MaseTracer()
+            else:
+                self.tracer = MaseTracer(
+                    custom_leaf_modules=tuple(model.patched_nodes["modules"]),
+                    custom_leaf_layers=tuple(model.patched_nodes["layers"]),
+                    custom_leaf_functions=tuple(model.patched_nodes["functions"]),
+                )
             self.cf_args = cf_args
             self.model = fx.GraphModule(model, self.tracer.trace(model, cf_args))
+            if patched:
+                self.model.patched_op_names = model.patched_nodes["names"]
+                # these are layers we believe the user will provide system verilog for
+                self.model.patched_custom_layers = model.patched_nodes["layers"]
+                self.model.additional_inputs = model.patched_nodes["additional_inputs"]
+            else:
+                self.model.patched_op_names = []
+                self.model.patched_custom_layers = []
+                self.model.additional_inputs = {}
         else:
             self.tracer = None
             self.cf_args = None

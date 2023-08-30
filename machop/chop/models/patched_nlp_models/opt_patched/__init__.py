@@ -1,20 +1,19 @@
 from transformers.models.opt import OPTConfig, OPTForCausalLM, OPTModel
 
-from .configuration_opt_patched import OPTConfigPatched
-from .modeling_opt_patched import OPTForCausalLMPatched, OPTModelPatched
+from .configuration_opt_patched import OPTPatchedConfig
+from .modeling_opt_patched import OPTPatchedForCausalLM, OPTPatchedModel
 
 # required input args will not be provided in dummy inputs before mase_symbolic_trace
 opt_patched_model_cls_to_required_input_args = {
-    OPTModelPatched: ["input_ids", "attention_mask"],
-    OPTForCausalLMPatched: ["input_ids", "attention_mask", "labels"],
-    # OPTForCausalLMPatched: ["input_ids", "attention_mask"],
+    OPTPatchedModel: ["input_ids", "attention_mask"],
+    OPTPatchedForCausalLM: ["input_ids", "attention_mask", "labels"],
 }
 
 # a mapping used to load pretrained original (un-patched) model
 opt_patched_cls_to_original_cls = {
-    OPTConfigPatched: OPTConfig,
-    OPTModelPatched: OPTModel,
-    OPTForCausalLMPatched: OPTForCausalLM,
+    OPTPatchedConfig: OPTConfig,
+    OPTPatchedModel: OPTModel,
+    OPTPatchedForCausalLM: OPTForCausalLM,
 }
 
 # see 'name_to_final_module_map' in machop.session.plt_wrapper.nlp_classification
@@ -32,10 +31,10 @@ opt_patched_model_name_to_output_hidden_states_name = {
 # a mapping used in get_patched_nlp_model
 _opt_patched_task_to_model_cls = {
     "tokenizer": None,
-    "config": OPTConfigPatched,
-    "base": OPTModelPatched,
-    "lm": OPTForCausalLMPatched,
-    "cls": OPTModelPatched,
+    "config": OPTPatchedConfig,
+    "base": OPTPatchedModel,
+    "lm": OPTPatchedForCausalLM,
+    "cls": OPTPatchedModel,
 }
 # opt_patched model create fn
 opt_patched_name_to_patched_model_mapping = {

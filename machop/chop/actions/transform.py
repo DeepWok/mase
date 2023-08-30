@@ -1,6 +1,7 @@
 import os
 from copy import deepcopy
 from pathlib import Path
+import logging
 
 import torch
 from chop.passes import PASSES
@@ -18,6 +19,8 @@ from chop.passes.utils import deepcopy_mase_graph
 from chop.tools.checkpoint_load import load_model
 from chop.tools.config_load import load_config
 from chop.tools.get_input import InputGenerator, get_cf_args, get_dummy_input
+
+logger = logging.getLogger(__name__)
 
 
 def pre_transform_load(load_name: str, load_type: str, model: torch.nn.Module):
@@ -51,6 +54,7 @@ def transform(
     graph = MaseGraph(model=model, cf_args=cf_args)
     # graph_metadata = Mase
     graph = init_metadata_analysis_pass(graph, pass_args=None)
+    # logger.debug(f"graph: {graph.fx_graph}")
 
     # create or load metadata.parameters and mase_graph.model
     if load_name is not None and load_type == "mz":
@@ -61,6 +65,8 @@ def transform(
             task=task,
             is_nlp_model=is_nlp_model,
         )
+        if len(graph.model.additional_inputs) > 0:
+            dummy_in = dummy_in | graph.model.additional_inputs
         graph = add_common_metadata_analysis_pass(graph, pass_args=dummy_in)
         graph = add_software_metadata_analysis_pass(graph, pass_args=None)
 
