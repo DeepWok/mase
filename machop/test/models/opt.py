@@ -15,7 +15,7 @@ import torch.nn as nn
 
 sys.path.append(Path(__file__).resolve().parents[3].joinpath("machop").as_posix())
 
-from chop.dataset import get_dataset_info, MyDataModule
+from chop.dataset import get_dataset_info, MaseDataModule
 from chop.models import model_map
 from chop.passes import PASSES
 from chop.passes.graph.mase_graph import MaseGraph
@@ -33,6 +33,7 @@ def main():
     config = load_config(config_toml)
 
     load_pretrained = True
+
     # OPT
     wikitext_info = get_dataset_info("wikitext2")
     opt_dict = model_map["facebook/opt-125m@patched"](
@@ -52,13 +53,14 @@ def main():
         cf_args = config["cf_args"]
     print(f"cf_args: {cf_args}")
 
-    data_module = MyDataModule(
-        model_name="facebook/opt-125m@patched",
-        dataset_name="wikitext2",
+    data_module = MaseDataModule(
+        name="wikitext2",
         batch_size=1,
-        workers=os.cpu_count(),
-        tokenizer=opt_tokenizer,
+        num_workers=os.cpu_count(),
         max_token_len=128,
+        tokenizer=opt_tokenizer,
+        load_from_cache_file=True,
+        model_name="facebook/opt-125m@patched",
     )
     data_module.prepare_data()
     data_module.setup()
