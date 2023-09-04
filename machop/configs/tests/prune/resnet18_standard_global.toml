@@ -10,6 +10,4 @@ dataset = "imagenet"
 method = "level-pruner"
 criterion = "l1"
 sparsity = 0.5
-# It distributes that 20% sparsity unevenly across the model by using the number of 
-# parameters in each layer as a weight. 
-scope = "global-naive"
+scope = "global"

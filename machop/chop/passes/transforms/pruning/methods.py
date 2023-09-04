@@ -26,6 +26,10 @@ import numpy as np
 from chop.tools.logger import getLogger
 from chop.passes.transforms.pruning.utilities import StatisticsCollector
 
+# Constants ----------------------------------------------------------------------------
+# A list of supported scopes for distributing the sparsity budget
+PRUNE_SCOPES = ["local", "global"]
+
 # Housekeeping -------------------------------------------------------------------------
 logger = getLogger(__name__)
 logger.propagate = False  # Avoids duplicate logging messages
@@ -39,9 +43,19 @@ logger.propagate = False  # Avoids duplicate logging messages
 # 2. If you register any additional parameters or buffers, please make sure to remove
 #    them in the unwrap method.
 class BasePruner(ABC):
-    def __init__(self, sparsity, criterion):
+    # Fields to show in the summary
+    FIELDS = (
+        "Layer",
+        "Shape",
+        "Sparsity",
+        "Total",
+        "NNZ",
+    )
+
+    def __init__(self, sparsity, criterion, scope):
         self.sparsity = sparsity
         self.criterion = criterion
+        self.scope = scope
         self.summary = []
 
     # Abstract methods -----------------------------------------------------------------
@@ -50,7 +64,6 @@ class BasePruner(ABC):
     # expects the methods to have them.
     @abstractmethod
     def wrap(self, module: nn.Module, name: str):
-        # Register the pre-forward hook for activation pruning here. :)
         pass
 
     @abstractmethod
@@ -74,38 +87,57 @@ class BasePruner(ABC):
 # NOTE: For now, we restrict pruning to the local scope (i.e. layer-wise) and only
 # support a one-shot schedule. The level pruner is arguably the simplest pruner.
 class LevelPruner(BasePruner):
-    # Fields to show in the summary
-    FIELDS = (
-        "Layer",
-        "Shape",
-        "Sparsity",
-        "Total",
-        "NNZ",
-    )
+    tensors = {}
+    masks = {}
 
-    def wrap(self, *_):
+    def wrap(self, module: nn.Module, name: str):
         # NOTE: This is where you'd register the initial weight mask but our use case
         # doesn't require addtional parameters or buffers.
-        pass
+        if self.scope == PRUNE_SCOPES[1]:  # global
+            # Collect all the weight tensors in the model
+            self.tensors[name] = {
+                "tensor": module.weight.data.clone().flatten(),
+                "shape": module.weight.shape,
+            }
 
     def apply(self, module: nn.Module, name: str, **kwargs):
-        # We skip pruning the layer if it's not in the sparsity dictionary. This check
-        # would actually go in the wrap method to avoid registering buffers or hooks,
-        # similar to how we do it for the activation handler.
-        if isinstance(self.sparsity, dict) and name not in self.sparsity:
-            return
+        if self.scope == PRUNE_SCOPES[0]:  # local
+            # We skip pruning the layer if it's not in the sparsity dictionary. This
+            # check would actually go in the wrap method to avoid registering buffers or
+            # hooks, similar to how we do it for the activation handler.
+            if isinstance(self.sparsity, dict) and name not in self.sparsity:
+                return
 
-        # NOTE: Since we're not fine-tuning the model, we don't need to store the
-        # original weights and weight mask as registered parameters or buffers. :)
-        weight = module.weight.data.clone()
-        sparsity = (
-            self.sparsity[name] if isinstance(self.sparsity, dict) else self.sparsity
-        )
-        mask = (
-            self.criterion(weight, sparsity, **kwargs)
-            if sparsity > 0.0
-            else torch.ones_like(weight, dtype=torch.bool)
-        )
+            # NOTE: Since we're not fine-tuning the model, we don't need to store the
+            # original weights and weight mask as registered parameters or buffers. :)
+            weight = module.weight.data.clone()
+            sparsity = (
+                self.sparsity[name]
+                if isinstance(self.sparsity, dict)
+                else self.sparsity
+            )
+            mask = (
+                self.criterion(weight, sparsity, **kwargs)
+                if sparsity > 0.0
+                else torch.ones_like(weight, dtype=torch.bool)
+            )
+        else:
+            # If masks is empty, this is the first invocation, so we concatenate all the
+            # collected tensors and generate the mask accordingly.
+            if not self.masks:
+                concatenated = torch.cat([t["tensor"] for t in self.tensors.values()])
+                mask = (
+                    self.criterion(concatenated, self.sparsity, **kwargs)
+                    if self.sparsity > 0.0
+                    else torch.ones_like(concatenated, dtype=torch.bool)
+                )
+                # NOTE: The mask is a 1D tensor, so we need to split it into chunks
+                # corresponding to the weight tensors in the model.
+                sizes = [t["tensor"].numel() for t in self.tensors.values()]
+                self.masks = dict(zip(self.tensors.keys(), torch.split(mask, sizes)))
+            mask = self.masks[name]
+            mask = mask.reshape(self.tensors[name]["shape"])
+
         module.weight.data.mul_(mask)
         self._update_summary(module, name)
 

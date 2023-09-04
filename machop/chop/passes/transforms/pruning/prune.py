@@ -37,6 +37,8 @@ Internal Backlog:
    params. for log_input, log_values, log_statistics, log_summary, log_thresholds, etc.
 """
 
+from functools import partial
+
 import torch
 import torch.nn as nn
 from tqdm.contrib.logging import tqdm_logging_redirect
@@ -46,7 +48,12 @@ from chop.passes.utils import get_mase_op, get_mase_type, get_node_actual_target
 from chop.tools.logger import getLogger
 
 from .criteria import RANK_CRITERIA
-from .methods import LevelPruner, ACTIVATION_PRUNE_STRATEGIES, ActivationPruneHandler
+from .methods import (
+    LevelPruner,
+    ACTIVATION_PRUNE_STRATEGIES,
+    PRUNE_SCOPES,
+    ActivationPruneHandler,
+)
 
 # Constants ----------------------------------------------------------------------------
 # Pruneable MASE operators
@@ -59,9 +66,6 @@ PRUNE_METHODS = {
     "level-pruner": LevelPruner,
     # Add more here...
 }
-
-# A list of supported scopes for distributing the sparsity budget
-PRUNE_SCOPES = ["local", "global-naive"]
 
 # Housekeeping -------------------------------------------------------------------------
 logger = getLogger(__file__)
@@ -103,10 +107,6 @@ def prune_graph_iterator(graph: MaseGraph, save_dir: str, config: dict):
     weight_prune_params = get_weight_prune_params(config["weight"], graph)
     method, criterion, sparsity, scope = weight_prune_params
 
-    # Convert the sparsity to a dictionary if the scope is global
-    if scope == PRUNE_SCOPES[1]:  # global-naive
-        sparsity = _distribute_sparsity_globally(sparsity, graph)
-
     prune_activations = "activation" in config
     strategy, target = (
         get_activation_prune_params(config["activation"], graph)
@@ -126,38 +126,11 @@ def prune_graph_iterator(graph: MaseGraph, save_dir: str, config: dict):
         handler.log_values = False
         setattr(graph.model, "activation_prune_handler", handler)
         logger.debug("Added the activation prune handler as a model attribute")
-    pruner = method(sparsity, criterion)
+    pruner = method(sparsity, criterion, scope)
 
-    # Iterate over the graph and prune the compatible nodes
-    total = len(graph.fx_graph.nodes)
-    with tqdm_logging_redirect(total=total, loggers=[logger]) as pbar:
-        for node in graph.fx_graph.nodes:
-            if get_mase_op(node) in ["batch_norm1d", "batch_norm2d"]:
-                logger.warning(
-                    f"Batchnorm layer detected ({node.target}). This could corrupt "
-                    "sparsity in the weights when fused later."
-                )
-
-            if get_mase_op(node) not in PRUNEABLE_OPS.keys():
-                # Skip if the operator is not supported for pruning
-                pbar.update(1)
-                continue
-
-            if get_mase_type(node) == "module_related_func":
-                module = get_node_actual_target(node)
-
-                # NOTE: This is where you'd prepare keyword args for a custom criterion
-                kwargs = {}
-
-                # Wrap and prune the module :)
-                pbar.set_description(f"Pruning candidate node {node.target}")
-                pruner.wrap(module, node.target)
-                if handler:
-                    handler.wrap(module, node.target)
-                pruner.apply(module, node.target, **kwargs)
-
-            pbar.update(1)
-        pbar.set_description("Done")
+    # Iterate over the graph and prune the compatible nodes; note that we do two passes.
+    _graph_iterator(graph, partial(_wrap_callback, pruner, handler))
+    _graph_iterator(graph, partial(_apply_callback, pruner))
 
     # A sample forward pass to log activation sparsity statistics :)
     # NOTE: Currently, we only do this on one batch sample. As in line 230 of
@@ -204,6 +177,48 @@ def prune_graph_iterator(graph: MaseGraph, save_dir: str, config: dict):
 
 
 # Helper functions ---------------------------------------------------------------------
+def _graph_iterator(graph: MaseGraph, callback: callable):
+    total = len(graph.fx_graph.nodes)
+    with tqdm_logging_redirect(total=total, loggers=[logger]) as pbar:
+        for node in graph.fx_graph.nodes:
+            if get_mase_op(node) in ["batch_norm1d", "batch_norm2d"]:
+                logger.warning(
+                    f"Batchnorm layer detected ({node.target}). This could corrupt "
+                    "sparsity in the weights when fused later."
+                )
+
+            if get_mase_op(node) not in PRUNEABLE_OPS.keys():
+                # Skip if the operator is not supported for pruning
+                pbar.update(1)
+                continue
+
+            if get_mase_type(node) == "module_related_func":
+                callback(node, pbar)
+
+            pbar.update(1)
+        pbar.set_description("Done")
+
+
+def _wrap_callback(pruner, handler, node, pbar):
+    module = get_node_actual_target(node)
+
+    # Wrap and prune the module :)
+    pbar.set_description(f"Wrapping candidate node {node.target}")
+    pruner.wrap(module, node.target)
+    if handler:
+        handler.wrap(module, node.target)
+
+
+def _apply_callback(pruner, node, pbar):
+    module = get_node_actual_target(node)
+
+    # NOTE: This is where you'd prepare keyword args for a custom criterion
+    kwargs = {}
+
+    pbar.set_description(f"Pruning candidate node {node.target}")
+    pruner.apply(module, node.target, **kwargs)
+
+
 # TODO: We need to add tests for these functions with a variety of configurations.
 def get_weight_prune_params(config: dict, graph: MaseGraph):
     method = config.get("method", "level-pruner")
@@ -293,23 +308,3 @@ def _verify_sparsity(sparsity):
         raise ValueError("Sparsity must be a float. Got {}".format(type(sparsity)))
     if sparsity < 0 or sparsity > 1:
         raise ValueError("Sparsity must be between 0 and 1. Got {}".format(sparsity))
-
-
-def _distribute_sparsity_globally(budget, graph: MaseGraph):
-    # We distribute the sparsity budget unevenly across the layers, using the layer's
-    # relative size as a weight.
-    sparsities = {}
-    tot_elements = 0
-    for node in graph.fx_graph.nodes:
-        if get_mase_op(node) not in PRUNEABLE_OPS.keys():
-            continue
-        if get_mase_type(node) == "module_related_func":
-            # We only consider the weights
-            module = get_node_actual_target(node)
-            tot_elements += module.weight.numel()
-            sparsities[node.target] = budget * module.weight.numel()
-
-    for name, sparsity in sparsities.items():
-        sparsities[name] = sparsity / tot_elements
-
-    return sparsities
