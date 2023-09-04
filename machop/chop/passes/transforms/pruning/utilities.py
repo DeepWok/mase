@@ -13,6 +13,45 @@ logger = getLogger(__file__)
 logger.propagate = False
 
 
+# Model Structure Inspection & Analysis ------------------------------------------------
+# Measure the sparsity of the given model
+# sparsity = #zeros / #elements = 1 - #nonzeros / #elements
+def measure_sparsity(model: nn.Module) -> float:
+    num_nonzeros, num_elements = 0, 0
+    for param in model.parameters():
+        num_nonzeros += param.count_nonzero()
+        num_elements += param.numel()
+    return 1 - float(num_nonzeros) / num_elements
+
+
+# Count the number of parameters; by default, all parameters are counted. The entry
+# function controls what parameters make it into the list. :)
+def count_parameters(model: nn.Module, nonzero_only=False, trainable_only=False) -> int:
+    def count_fn(p):
+        return p.count_nonzero() if nonzero_only else p.numel()
+
+    def entry_fn(p):
+        return (not trainable_only) or (trainable_only and p.requires_grad)
+
+    return sum(count_fn(param) for param in model.parameters() if entry_fn(param))
+
+
+# Buffers are similar to model parameters in that they're registered but are neither
+# included in computing gradients nor optimised. Ex: batch norm's running_mean. These
+# values are stored as a part of the model's state_dict.
+def count_buffers(model: nn.Module) -> int:
+    return sum(buffer.numel() for buffer in model.buffers())
+
+
+# Returns the size of a model in MB; the memory required to store the model's parameters
+# (trainable) and registered buffers (i.e. everything that's a part of the state_dict).
+# NOTE: This code doesn't take mixed-precision networks into account.
+def estimate_model_size(model: nn.Module, precision: int = 32) -> float:
+    paramters = count_parameters(model)
+    buffers = count_buffers(model)
+    return (paramters + buffers) * precision / (8 * 1000**2)
+
+
 # Classes ------------------------------------------------------------------------------
 # NOTE: Streams are just the number of input channels in our use case. :)
 class StatisticsCollector:
