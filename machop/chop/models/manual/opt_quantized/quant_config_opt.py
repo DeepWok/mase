@@ -4,8 +4,8 @@ from copy import deepcopy
 
 import toml
 
-from chop.tools.config_load import convert_str_na_to_none
-from ..quant_utils import parse_node_config
+from ....tools.config_load import convert_str_na_to_none
+from ....passes import parse_node_config
 
 
 """

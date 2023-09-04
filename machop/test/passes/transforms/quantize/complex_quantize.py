@@ -19,7 +19,8 @@ sys.path.append(
         "machop",
     )
 )
-from chop.models.toy_custom_fn import ToyCustomFnNet
+from chop.models import get_model_info
+from chop.models.toys.toy_custom_fn import ToyCustomFnNet
 from chop.passes.analysis import (
     add_common_metadata_analysis_pass,
     init_metadata_analysis_pass,
@@ -61,8 +62,12 @@ def main():
     data_module.prepare_data()
     data_module.setup()
 
+    model_info = get_model_info("toy_custom_fn")
     input_generator = InputGenerator(
-        datamodule=data_module, task="cls", is_nlp_model=False, which_dataloader="train"
+        model_info=model_info,
+        data_module=data_module,
+        task="cls",
+        which_dataloader="train",
     )
 
     stat_args = {

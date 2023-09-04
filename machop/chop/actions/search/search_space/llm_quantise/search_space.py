@@ -7,8 +7,8 @@ from accelerate import (
 )
 from collections.abc import MutableMapping
 
-from chop.passes.transforms.quantize import QUANTIZEABLE_OP, quantize_transform_pass
-from chop.models.manual.opt_quantized import name_hash as opt_name_hash
+# from chop.passes.transforms.quantize import QUANTIZEABLE_OP, quantize_transform_pass
+# from chop.models.manual.opt_quantized import name_hash as opt_name_hash
 
 # get llm specific funcs
 from .quan_config_opt import parse_opt_quantized_config

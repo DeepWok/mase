@@ -38,6 +38,7 @@ from functools import partial
 import ipdb
 import pytorch_lightning as pl
 from tabulate import tabulate
+import torch
 
 import chop.models as models
 from chop.actions import test, train, transform, search
@@ -50,6 +51,7 @@ from chop.tools import getLogger, post_parse_load_config
 # several improvements over the built-in pdb, including syntax highlighting and better
 # tracebacks.
 os.environ["PYTHONBREAKPOINT"] = "ipdb.set_trace"
+torch.set_float32_matmul_precision("medium")
 
 # This file's in root/machop/chop; there's three levels of parents to get to the root.
 ROOT = Path(__file__).parent.parent.parent.absolute()
@@ -188,7 +190,13 @@ class ChopCLI:
         if not self.args.model or not self.args.dataset:
             raise ValueError("No model and/or dataset provided! These are required.")
 
-        self.model, self.data_module, self.info = self._setup_model_and_dataset()
+        (
+            self.model,
+            self.tokenizer,
+            self.data_module,
+            self.dataset_info,
+            self.model_info,
+        ) = self._setup_model_and_dataset()
         self.output_dir, self.output_dir_sw, self.output_dir_hw = self._setup_folders()
 
     def run(self):
@@ -225,11 +233,12 @@ class ChopCLI:
             load_name = self.args.load_name
 
         train_params = {
-            "model_name": self.args.model,
             "model": self.model,
-            "info": self.info,
-            "task": self.args.task,
+            "tokenizer": self.tokenizer,
+            "model_info": self.model_info,
             "data_module": self.data_module,
+            "dataset_info": self.dataset_info,
+            "task": self.args.task,
             "optimizer": self.args.training_optimizer,
             "learning_rate": self.args.learning_rate,
             "plt_trainer_args": plt_trainer_args,
@@ -258,11 +267,12 @@ class ChopCLI:
             raise ValueError("expected checkpoint via --load, got None")
 
         test_params = {
-            "model_name": self.args.model,
             "model": self.model,
-            "info": self.info,
-            "task": self.args.task,
+            "tokenizer": self.tokenizer,
+            "model_info": self.model_info,
             "data_module": self.data_module,
+            "dataset_info": self.dataset_info,
+            "task": self.args.task,
             "optimizer": self.args.training_optimizer,
             "learning_rate": self.args.learning_rate,
             "plt_trainer_args": plt_trainer_args,
@@ -285,16 +295,12 @@ class ChopCLI:
         self.data_module.setup()
 
         # Resolve the quirk with NLP models where the actual model is embedded in a dict
-        model = self.model
-        if isinstance(self.model, dict):
-            model = self.model["model"]
 
         transform_params = {
-            "model_name": self.args.model,
-            "model": model,
-            "is_nlp_model": self.args.model in models.nlp_models,
-            "task": self.args.task,
+            "model": self.model,
+            "model_info": self.model_info,
             "data_module": self.data_module,
+            "task": self.args.task,
             "config": self.args.config,
             "save_dir": os.path.join(self.output_dir_sw, "transform"),
             "load_name": self.args.load_name,
@@ -314,7 +320,7 @@ class ChopCLI:
             "model_name": self.args.model,
             "model": self.model,
             "task": self.args.task,
-            "info": self.info,
+            "info": self.dataset_info,
             "data_module": self.data_module,
             "accelerator": self.args.accelerator,
             "search_config": self.args.config,
@@ -660,56 +666,22 @@ class ChopCLI:
         # of a specified model.
         # NOTE: See machop/chop/models/__init__.py for more information
         dataset_info = get_dataset_info(self.args.dataset)
-        model_inst_fn = models.model_map[self.args.model]
 
         checkpoint, tokenizer = None, None
         if self.args.load_name is not None and self.args.load_type == "hf":
             checkpoint = self.args.load_name
 
-        # NOTE: In the case of NLP models, the "model" here is actually a dictionary
-        # that contains the actual model, a tokenizer and classifier.
-        # See machop/chop/models/nlp_models.py for more information
-        model = None
-        if self.args.model in models.nlp_models:
-            if (
-                self.args.model
-                in models.manual_nlp_models + models.manual_quantized_nlp_models
-            ):
-                # For more infomration, see the following files:
-                # 1. machop/chop/models/manual/llama_plain/__init__.py
-                # 2. machop/chop/models/__init__.py
-                model = model_inst_fn(
-                    name=self.args.model,
-                    task=self.args.task,
-                    info=dataset_info,
-                    return_tokenizer=True,
-                )
-                tokenizer = model["tokenizer"]
-                # tokenizer = model_dict.get_tokenizer(self.args.model)
-                # model = {
-                #     "model": model,
-                #     "tokenizer": tokenizer,
-                # }
-            else:
-                model = model_inst_fn(
-                    name=self.args.model,
-                    task=self.args.task,
-                    info=dataset_info,
-                    checkpoint=checkpoint,
-                    pretrained=self.args.is_pretrained,
-                )
-                tokenizer = model["tokenizer"]
-        elif self.args.model in models.vision_models:
-            if self.args.model in models.manual_vision_models:
-                model = model_inst_fn(info=dataset_info, config=self.args.config)
-            else:
-                model = model_inst_fn(
-                    info=dataset_info, pretrained=self.args.is_pretrained
-                )
-        else:
-            raise NotImplementedError(
-                f"expected supported model, got {self.args.model!r}"
-            )
+        model_info = models.get_model_info(self.args.model)
+        model = models.get_model(
+            name=self.args.model,
+            task=self.args.task,
+            dataset_info=dataset_info,
+            checkpoint=checkpoint,
+            pretrained=self.args.is_pretrained,
+        )
+
+        if model_info.is_nlp_model:
+            tokenizer = models.get_tokenizer(self.args.model, checkpoint=checkpoint)
 
         self.logger.info(f"Initialising dataset {self.args.dataset!r}...")
         data_module = MaseDataModule(
@@ -722,7 +694,7 @@ class ChopCLI:
             model_name=self.args.model,
         )
 
-        return model, data_module, dataset_info
+        return model, tokenizer, data_module, dataset_info, model_info
 
     def _setup_folders(self):
         project = None
@@ -741,12 +713,11 @@ class ChopCLI:
             )
             setattr(self.args, "project", project)
 
-        output_dir = os.path.join(self.args.project_dir, project)
-        output_dir_sw = os.path.join(output_dir, "software")
-        output_dir_hw = os.path.join(output_dir, "hardware")
-
-        os.makedirs(output_dir_hw, exist_ok=True)
-        os.makedirs(output_dir_sw, exist_ok=True)
+        output_dir = Path(self.args.project_dir) / project
+        output_dir_sw = Path(output_dir) / "software"
+        output_dir_hw = Path(output_dir) / "hardware"
+        output_dir_hw.mkdir(parents=True, exist_ok=True)
+        output_dir_sw.mkdir(parents=True, exist_ok=True)
 
         self.logger.info(f"Project will be created at {output_dir}")
 

@@ -14,7 +14,7 @@ sys.path.append(
 )
 
 from chop.dataset import get_dataset_info
-from chop.models import model_map
+from chop.models import get_model
 from chop.passes.analysis.report import report_graph_analysis_pass
 from chop.passes.analysis.verify import verify
 from chop.passes.graph.mase_graph import MaseGraph
@@ -29,8 +29,8 @@ def main():
     # BERT-small
     # !: not traceable
     sst2_info = get_dataset_info("sst2")
-    bert = model_map["bert-base-uncased"](
-        name="bert-base-uncased", task="lm", info=sst2_info, pretrained=load_pretrained
+    bert = get_model(
+        "bert-base-uncased", task="cls", dataset_info=sst2_info, pretrained=True
     )
     # TODO
     # mg = MaseGraph(model=bert)

@@ -4,20 +4,18 @@ from .nlp import (
     NLPLanguageModelingModelWrapper,
     NLPTranslationModelWrapper,
 )
-from chop.models import nlp_models, vision_models
 
 
-def get_model_wrapper(name, task):
-    if name in vision_models:
+def get_model_wrapper(model_info, task: str):
+    if model_info.is_vision_model:
         return VisionModelWrapper
-    elif name in nlp_models:
-        if task in ["classification", "cls"]:
-            return NLPClassificationModelWrapper
-        elif task in ["language_modeling", "lm"]:
-            return NLPLanguageModelingModelWrapper
-        elif task in ["translation", "tran"]:
-            return NLPTranslationModelWrapper
-        else:
-            raise NotImplementedError(f"Task {task} not implemented for NLP models")
-    else:
-        raise ValueError(f"Model {name} not implemented")
+    elif model_info.is_nlp_model:
+        match task:
+            case "classification" | "cls":
+                return NLPClassificationModelWrapper
+            case "language_modeling" | "lm":
+                return NLPLanguageModelingModelWrapper
+            case "translation" | "tran":
+                return NLPTranslationModelWrapper
+            case _:
+                raise ValueError(f"Task {task} is not supported for {model_info.name}")

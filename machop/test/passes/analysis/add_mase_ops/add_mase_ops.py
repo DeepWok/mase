@@ -20,7 +20,7 @@ sys.path.append(
 )
 from chop.tools.logger import getLogger
 from chop.passes.graph.mase_graph import MaseGraph
-from chop.models.toy_custom_fn import ToyCustomFnNet
+from chop.models.toys.toy_custom_fn import ToyCustomFnNet
 from chop.passes.analysis import (
     add_common_metadata_analysis_pass,
     init_metadata_analysis_pass,

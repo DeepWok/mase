@@ -14,7 +14,7 @@ sys.path.append(
 
 
 from chop.dataset import get_dataset_info
-from chop.models import model_map
+from chop.models import get_model
 from chop.passes.analysis.report import report_graph_analysis_pass
 from chop.passes.analysis.verify import verify
 from chop.passes.graph.mase_graph import MaseGraph
@@ -28,7 +28,7 @@ def main():
 
     # PVT-small
     cifar10_info = get_dataset_info("cifar10")
-    pvt = model_map["pvt_v2_b0"](info=cifar10_info, pretrained=load_pretrained)
+    pvt = get_model("pvt_v2_b0", task="cls", dataset_info=cifar10_info, pretrained=True)
     mg = MaseGraph(model=pvt)
     # print(mg.fx_graph)
 

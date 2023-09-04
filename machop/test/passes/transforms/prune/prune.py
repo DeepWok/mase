@@ -44,7 +44,8 @@ def main():
 
         # NOTE: We're only concerned with pre-trained vision models
         dataset_info = get_dataset_info(config["dataset"])
-        datamodule = MaseDataModule(
+        model_info = models.get_model_info(config["model"])
+        data_module = MaseDataModule(
             model_name=config["model"],
             name=config["dataset"],
             batch_size=BATCH_SIZE,
@@ -52,21 +53,21 @@ def main():
             tokenizer=None,
             max_token_len=None,
         )
-        datamodule.prepare_data()
-        datamodule.setup()
+        data_module.prepare_data()
+        data_module.setup()
         # NOTE: We only support vision classification models for now.
-        dummy_input = get_dummy_input(datamodule, "cls", is_nlp_model=False)
+        dummy_input = get_dummy_input(data_module, "cls", is_nlp_model=False)
 
         # We need the input generator to do a sample forward pass to log information on
         # the channel-wise activation sparsity.
         input_generator = InputGenerator(
-            datamodule=datamodule,
+            model_info=model_info,
+            data_module=data_module,
             task="cls",
-            is_nlp_model=False,
             which_dataloader="train",
         )
 
-        model_inst_fn = models.model_map[config["model"]]
+        model_inst_fn = models.get_model(config["model"], task="cls")
         model = model_inst_fn(dataset_info, pretrained=True)
 
         graph = MaseGraph(model=model)

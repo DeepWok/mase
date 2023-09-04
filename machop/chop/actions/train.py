@@ -27,11 +27,12 @@ class CustomFSDPStrategy(DDPStrategy):
 
 
 def train(
-    model_name,
-    info,
     model,
-    task,
+    tokenizer,
+    model_info,
     data_module,
+    dataset_info,
+    task,
     optimizer,
     learning_rate,
     plt_trainer_args,
@@ -78,7 +79,7 @@ def train(
     elif plt_trainer_args["strategy"] in ["fsdp_custom"]:
         plt_trainer_args["strategy"] = CustomFSDPStrategy()
 
-    wrapper_cls = get_model_wrapper(model_name, task)
+    wrapper_cls = get_model_wrapper(model_info, task)
 
     if load_name is not None:
         if isinstance(model, dict):
@@ -91,7 +92,8 @@ def train(
 
     pl_model = wrapper_cls(
         model,
-        info=info,
+        tokenizer=tokenizer,
+        dataset_info=dataset_info,
         learning_rate=learning_rate,
         epochs=plt_trainer_args["max_epochs"],
         optimizer=optimizer,

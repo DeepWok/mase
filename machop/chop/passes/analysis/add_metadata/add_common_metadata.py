@@ -226,8 +226,8 @@ def _update_arg_in_next_node(offset, index, arg_in, next_node, node, keys=None):
 
 
 def analysis_common_parameters(node, dummy_in):
-    mase_op = node.meta["mase"].parameters["common"]["mase_op"]
-    print(node)
+    # mase_op = node.meta["mase"].parameters["common"]["mase_op"]
+    # print(node)
     if node.op == "placeholder":
         node.meta["mase"] = analyse_common_parameters_placeholder(
             node.meta["mase"], dummy_in

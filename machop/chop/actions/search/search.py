@@ -8,7 +8,8 @@ from .strategies import strategy_map
 from chop.passes.graph.mase_graph import MaseGraph
 from chop.passes import init_metadata_analysis_pass, add_common_metadata_analysis_pass
 from chop.tools.get_input import get_dummy_input
-from chop.models import nlp_models
+
+# from chop.models import nlp_models
 
 from chop.models.manual.opt_quantized.configuration_opt import OPTQuantizedConfig
 

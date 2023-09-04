@@ -25,11 +25,12 @@ logger = logging.getLogger(__name__)
 
 
 def test(
-    model_name,
-    info,
     model,
-    task,
+    tokenizer,
+    model_info,
     data_module,
+    dataset_info,
+    task,
     optimizer,
     learning_rate,
     plt_trainer_args,
@@ -52,17 +53,16 @@ def test(
         plugins = None
     plt_trainer_args["plugins"] = plugins
 
-    wrapper_cls = get_model_wrapper(model_name, task)
+    wrapper_cls = get_model_wrapper(model_info, task)
 
     if load_name is not None:
-        if isinstance(model, dict):
-            model["model"] = load_model(
-                load_name, load_type=load_type, model=model["model"]
-            )
-        else:
-            model = load_model(load_name, load_type=load_type, model=model)
+        model = load_model(load_name, load_type=load_type, model=model)
     plt_model = wrapper_cls(
-        model, info=info, learning_rate=learning_rate, optimizer=optimizer
+        model,
+        tokenizer=tokenizer,
+        info=dataset_info,
+        learning_rate=learning_rate,
+        optimizer=optimizer,
     )
 
     trainer = pl.Trainer(**plt_trainer_args)
@@ -75,7 +75,7 @@ def test(
         pred_save_name = os.path.join(save_path, "predicted_result.pkl")
         with open(pred_save_name, "wb") as f:
             pickle.dump(predicted_results, f)
-        logging.info(f"Predicted results is saved to {pred_save_name}")
+        logger.info(f"Predicted results is saved to {pred_save_name}")
     else:
         raise RuntimeError(
             "Cannot run --test-sw because both the test dataset and pred dataset are None."

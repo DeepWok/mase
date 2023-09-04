@@ -13,7 +13,7 @@ sys.path.append(
 )
 
 from chop.dataset import get_dataset_info
-from chop.models import model_map
+from chop.models import get_model
 from chop.passes.analysis.report import report_graph_analysis_pass
 from chop.passes.analysis.verify import verify
 from chop.passes.graph.mase_graph import MaseGraph
@@ -28,8 +28,8 @@ def main():
     cifar10_info = get_dataset_info("cifar10")
 
     # MobileNetV2
-    mobilenetv2 = model_map["mobilenetv2"](
-        info=cifar10_info, pretrained=load_pretrained
+    mobilenetv2 = get_model(
+        "mobilenetv2", task="cls", dataset_info=cifar10_info, pretrained=True
     )
 
     mg = MaseGraph(model=mobilenetv2)

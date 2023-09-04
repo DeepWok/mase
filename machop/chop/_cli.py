@@ -36,7 +36,7 @@ from .models import (
     nlp_models,
     vision_models,
 )
-from .models.patched_nlp_models.custom_nlp_modules import get_custom_modify_sw_kwargs
+from .models.patched.custom_nlp_modules import get_custom_modify_sw_kwargs
 from .modify.modifier import Modifier
 from .session import search, test, train, validate
 from .session.search import search

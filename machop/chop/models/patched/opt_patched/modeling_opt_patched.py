@@ -1,6 +1,3 @@
-# -----------------------------------------------------
-# This file is a copy of transformers.models.opt.modeling_opt.py
-# -----------------------------------------------------
 # coding=utf-8
 # Copyright 2022 The Fairseq Authors and The HuggingFace Inc. team. All rights reserved.
 #
@@ -22,6 +19,7 @@ import torch
 import torch.utils.checkpoint
 from torch import nn
 from torch.nn import BCEWithLogitsLoss, CrossEntropyLoss, MSELoss
+import torch.nn.functional as F
 
 from transformers.activations import ACT2FN
 from transformers.modeling_outputs import (
@@ -38,8 +36,21 @@ from transformers.utils import (
     logging,
     replace_return_docstrings,
 )
-from .configuration_opt import OPTConfig
 
+from .configuration_opt_patched import OPTPatchedConfig
+from .utils_opt_patched import (
+    opt_patched_fn_get_max_float_tensor,
+    opt_patched_fn_get_tensor_dtype,
+    opt_patched_fn_prepare_decoder_attention_mask,
+    opt_patched_shape_assertion_0,
+    opt_patched_shape_assertion_1,
+    opt_patched_shape_assertion_2,
+    opt_patched_shape_assertion_3,
+    opt_patched_shape_assertion_4,
+    opt_patched_shape_assertion_5,
+    opt_patched_fn_calculate_causal_lm_loss,
+)
+from ....passes.patching.mase_op_wrapper import torch_arange, torch_ones, torch_zeros
 
 logger = logging.get_logger(__name__)
 
@@ -64,53 +75,6 @@ OPT_PRETRAINED_MODEL_ARCHIVE_LIST = [
     "facebook/opt-30b",
     # See all OPT models at https://huggingface.co/models?filter=opt
 ]
-
-
-# Copied from transformers.models.bart.modeling_bart._make_causal_mask
-def _make_causal_mask(
-    input_ids_shape: torch.Size,
-    dtype: torch.dtype,
-    device: torch.device,
-    past_key_values_length: int = 0,
-):
-    """
-    Make causal mask used for bi-directional self-attention.
-    """
-    bsz, tgt_len = input_ids_shape
-    mask = torch.full((tgt_len, tgt_len), torch.finfo(dtype).min, device=device)
-    mask_cond = torch.arange(mask.size(-1), device=device)
-    mask.masked_fill_(mask_cond < (mask_cond + 1).view(mask.size(-1), 1), 0)
-    mask = mask.to(dtype)
-
-    if past_key_values_length > 0:
-        mask = torch.cat(
-            [
-                torch.zeros(
-                    tgt_len, past_key_values_length, dtype=dtype, device=device
-                ),
-                mask,
-            ],
-            dim=-1,
-        )
-    return mask[None, None, :, :].expand(
-        bsz, 1, tgt_len, tgt_len + past_key_values_length
-    )
-
-
-def _expand_mask(mask: torch.Tensor, dtype: torch.dtype, tgt_len: Optional[int] = None):
-    """
-    Expands attention_mask from `[bsz, seq_len]` to `[bsz, 1, tgt_seq_len, src_seq_len]`.
-    """
-    bsz, src_len = mask.size()
-    tgt_len = tgt_len if tgt_len is not None else src_len
-
-    expanded_mask = mask[:, None, None, :].expand(bsz, 1, tgt_len, src_len).to(dtype)
-
-    inverted_mask = 1.0 - expanded_mask
-
-    return inverted_mask.masked_fill(
-        inverted_mask.to(torch.bool), torch.finfo(dtype).min
-    )
 
 
 class OPTLearnedPositionalEmbedding(nn.Embedding):
@@ -141,7 +105,7 @@ class OPTLearnedPositionalEmbedding(nn.Embedding):
         return super().forward(positions + self.offset)
 
 
-class OPTAttention(nn.Module):
+class OPTPatchedAttention(nn.Module):
     """Multi-headed attention from 'Attention Is All You Need' paper"""
 
     def __init__(
@@ -171,7 +135,7 @@ class OPTAttention(nn.Module):
         self.q_proj = nn.Linear(embed_dim, embed_dim, bias=bias)
         self.out_proj = nn.Linear(embed_dim, embed_dim, bias=bias)
 
-    def _reshape(self, tensor: torch.Tensor, seq_len: int, bsz: int):
+    def _shape(self, tensor: torch.Tensor, seq_len: int, bsz: int):
         return (
             tensor.view(bsz, seq_len, self.num_heads, self.head_dim)
             .transpose(1, 2)
@@ -204,18 +168,18 @@ class OPTAttention(nn.Module):
             value_states = past_key_value[1]
         elif is_cross_attention:
             # cross_attentions
-            key_states = self._reshape(self.k_proj(key_value_states), -1, bsz)
-            value_states = self._reshape(self.v_proj(key_value_states), -1, bsz)
+            key_states = self._shape(self.k_proj(key_value_states), -1, bsz)
+            value_states = self._shape(self.v_proj(key_value_states), -1, bsz)
         elif past_key_value is not None:
             # reuse k, v, self_attention
-            key_states = self._reshape(self.k_proj(hidden_states), -1, bsz)
-            value_states = self._reshape(self.v_proj(hidden_states), -1, bsz)
+            key_states = self._shape(self.k_proj(hidden_states), -1, bsz)
+            value_states = self._shape(self.v_proj(hidden_states), -1, bsz)
             key_states = torch.cat([past_key_value[0], key_states], dim=2)
             value_states = torch.cat([past_key_value[1], value_states], dim=2)
         else:
             # self_attention
-            key_states = self._reshape(self.k_proj(hidden_states), -1, bsz)
-            value_states = self._reshape(self.v_proj(hidden_states), -1, bsz)
+            key_states = self._shape(self.k_proj(hidden_states), -1, bsz)
+            value_states = self._shape(self.v_proj(hidden_states), -1, bsz)
 
         if self.is_decoder:
             # if cross_attention save Tuple(torch.Tensor, torch.Tensor) of all cross attention key/value_states.
@@ -228,50 +192,41 @@ class OPTAttention(nn.Module):
             past_key_value = (key_states, value_states)
 
         proj_shape = (bsz * self.num_heads, -1, self.head_dim)
-        query_states = self._reshape(query_states, tgt_len, bsz).view(*proj_shape)
+        query_states = self._shape(query_states, tgt_len, bsz).view(*proj_shape)
         key_states = key_states.view(*proj_shape)
         value_states = value_states.view(*proj_shape)
 
         src_len = key_states.size(1)
         attn_weights = torch.bmm(query_states, key_states.transpose(1, 2))
 
-        if attn_weights.size() != (bsz * self.num_heads, tgt_len, src_len):
-            raise ValueError(
-                f"Attention weights should be of size {(bsz * self.num_heads, tgt_len, src_len)}, but is"
-                f" {attn_weights.size()}"
-            )
+        # PATCH FIX: shape check
+        opt_patched_shape_assertion_0(
+            attn_weights, bsz, self.num_heads, tgt_len, src_len
+        )
 
         if attention_mask is not None:
-            if attention_mask.size() != (bsz, 1, tgt_len, src_len):
-                raise ValueError(
-                    f"Attention mask should be of size {(bsz, 1, tgt_len, src_len)}, but is {attention_mask.size()}"
-                )
+            # PATCH FIX: shape check
+            opt_patched_shape_assertion_1(attention_mask, bsz, tgt_len, src_len)
             attn_weights = (
                 attn_weights.view(bsz, self.num_heads, tgt_len, src_len)
                 + attention_mask
             )
+            # PATCH FIX: device must match
             attn_weights = torch.max(
-                attn_weights,
-                torch.tensor(
-                    torch.finfo(attn_weights.dtype).min, device=attn_weights.device
-                ),
+                attn_weights, opt_patched_fn_get_max_float_tensor(attn_weights)
             )
             attn_weights = attn_weights.view(bsz * self.num_heads, tgt_len, src_len)
 
         # upcast to fp32 if the weights are in fp16. Please see https://github.com/huggingface/transformers/pull/17437
-        if attn_weights.dtype == torch.float16:
-            attn_weights = nn.functional.softmax(
-                attn_weights, dim=-1, dtype=torch.float32
-            ).to(torch.float16)
-        else:
-            attn_weights = nn.functional.softmax(attn_weights, dim=-1)
+        # PATCH FIX: float32 for softmax
+        attn_weights_dtype = opt_patched_fn_get_tensor_dtype(attn_weights)
+        attn_weights = nn.functional.softmax(
+            attn_weights, dim=-1, dtype=torch.float32
+        ).to(attn_weights_dtype)
 
         if layer_head_mask is not None:
-            if layer_head_mask.size() != (self.num_heads,):
-                raise ValueError(
-                    f"Head mask for a single layer should be of size {(self.num_heads,)}, but is"
-                    f" {layer_head_mask.size()}"
-                )
+            # PATCH FIX: shape check
+            opt_patched_shape_assertion_2(layer_head_mask, self.num_heads)
             attn_weights = layer_head_mask.view(1, -1, 1, 1) * attn_weights.view(
                 bsz, self.num_heads, tgt_len, src_len
             )
@@ -297,11 +252,10 @@ class OPTAttention(nn.Module):
 
         attn_output = torch.bmm(attn_probs, value_states)
 
-        if attn_output.size() != (bsz * self.num_heads, tgt_len, self.head_dim):
-            raise ValueError(
-                f"`attn_output` should be of size {(bsz, self.num_heads, tgt_len, self.head_dim)}, but is"
-                f" {attn_output.size()}"
-            )
+        # PATCH FIX: shape check
+        opt_patched_shape_assertion_3(
+            attn_output, bsz, self.num_heads, tgt_len, self.head_dim
+        )
 
         attn_output = attn_output.view(bsz, self.num_heads, tgt_len, self.head_dim)
         attn_output = attn_output.transpose(1, 2)
@@ -315,11 +269,11 @@ class OPTAttention(nn.Module):
         return attn_output, attn_weights_reshaped, past_key_value
 
 
-class OPTDecoderLayer(nn.Module):
-    def __init__(self, config: OPTConfig):
+class OPTPatchedDecoderLayer(nn.Module):
+    def __init__(self, config: OPTPatchedConfig):
         super().__init__()
         self.embed_dim = config.hidden_size
-        self.self_attn = OPTAttention(
+        self.self_attn = OPTPatchedAttention(
             embed_dim=self.embed_dim,
             num_heads=config.num_attention_heads,
             dropout=config.attention_dropout,
@@ -444,11 +398,11 @@ OPT_START_DOCSTRING = r"""
     "The bare OPT Model outputting raw hidden-states without any specific head on top.",
     OPT_START_DOCSTRING,
 )
-class OPTPreTrainedModel(PreTrainedModel):
-    config_class = OPTConfig
+class OPTPatchedPreTrainedModel(PreTrainedModel):
+    config_class = OPTPatchedConfig
     base_model_prefix = "model"
     supports_gradient_checkpointing = True
-    _no_split_modules = ["OPTDecoderLayer"]
+    _no_split_modules = ["OPTPatchedDecoderLayer"]
 
     def _init_weights(self, module):
         std = self.config.init_std
@@ -462,7 +416,7 @@ class OPTPreTrainedModel(PreTrainedModel):
                 module.weight.data[module.padding_idx].zero_()
 
     def _set_gradient_checkpointing(self, module, value=False):
-        if isinstance(module, (OPTDecoder)):
+        if isinstance(module, OPTPatchedDecoder):
             module.gradient_checkpointing = value
 
 
@@ -528,7 +482,7 @@ OPT_INPUTS_DOCSTRING = r"""
 """
 
 
-class OPTDecoder(OPTPreTrainedModel):
+class OPTPatchedDecoder(OPTPatchedPreTrainedModel):
     """
     Transformer decoder consisting of *config.num_hidden_layers* layers. Each layer is a [`OPTDecoderLayer`]
 
@@ -536,7 +490,7 @@ class OPTDecoder(OPTPreTrainedModel):
         config: OPTConfig
     """
 
-    def __init__(self, config: OPTConfig):
+    def __init__(self, config: OPTPatchedConfig):
         super().__init__(config)
         self.dropout = config.dropout
         self.layerdrop = config.layerdrop
@@ -577,7 +531,7 @@ class OPTDecoder(OPTPreTrainedModel):
             self.final_layer_norm = None
 
         self.layers = nn.ModuleList(
-            [OPTDecoderLayer(config) for _ in range(config.num_hidden_layers)]
+            [OPTPatchedDecoderLayer(config) for _ in range(config.num_hidden_layers)]
         )
 
         self.gradient_checkpointing = False
@@ -591,32 +545,32 @@ class OPTDecoder(OPTPreTrainedModel):
         self.embed_tokens = value
 
     # Copied from transformers.models.bart.modeling_bart.BartDecoder._prepare_decoder_attention_mask
-    def _prepare_decoder_attention_mask(
-        self, attention_mask, input_shape, inputs_embeds, past_key_values_length
-    ):
-        # create causal mask
-        # [bsz, seq_len] -> [bsz, 1, tgt_seq_len, src_seq_len]
-        combined_attention_mask = None
-        if input_shape[-1] > 1:
-            combined_attention_mask = _make_causal_mask(
-                input_shape,
-                inputs_embeds.dtype,
-                device=inputs_embeds.device,
-                past_key_values_length=past_key_values_length,
-            )
+    # def _prepare_decoder_attention_mask(
+    #     self, attention_mask, input_shape, inputs_embeds, past_key_values_length
+    # ):
+    #     # create causal mask
+    #     # [bsz, seq_len] -> [bsz, 1, tgt_seq_len, src_seq_len]
+    #     combined_attention_mask = None
+    #     if input_shape[-1] > 1:
+    #         combined_attention_mask = _make_causal_mask(
+    #             input_shape,
+    #             inputs_embeds.dtype,
+    #             device=inputs_embeds.device,
+    #             past_key_values_length=past_key_values_length,
+    #         )
 
-        if attention_mask is not None:
-            # [bsz, seq_len] -> [bsz, 1, tgt_seq_len, src_seq_len]
-            expanded_attn_mask = _expand_mask(
-                attention_mask, inputs_embeds.dtype, tgt_len=input_shape[-1]
-            ).to(inputs_embeds.device)
-            combined_attention_mask = (
-                expanded_attn_mask
-                if combined_attention_mask is None
-                else expanded_attn_mask + combined_attention_mask
-            )
+    #     if attention_mask is not None:
+    #         # [bsz, seq_len] -> [bsz, 1, tgt_seq_len, src_seq_len]
+    #         expanded_attn_mask = _expand_mask(
+    #             attention_mask, inputs_embeds.dtype, tgt_len=input_shape[-1]
+    #         ).to(inputs_embeds.device)
+    #         combined_attention_mask = (
+    #             expanded_attn_mask
+    #             if combined_attention_mask is None
+    #             else expanded_attn_mask + combined_attention_mask
+    #         )
 
-        return combined_attention_mask
+    #     return combined_attention_mask
 
     def forward(
         self,
@@ -699,7 +653,9 @@ class OPTDecoder(OPTPreTrainedModel):
                 "You cannot specify both decoder_input_ids and decoder_inputs_embeds at the same time"
             )
         elif input_ids is not None:
-            input_shape = input_ids.size()
+            input_shape = (
+                input_ids.shape
+            )  # FIXME: input_ids.size() will lead to errors in common meta data layers
             input_ids = input_ids.view(-1, input_shape[-1])
         elif inputs_embeds is not None:
             input_shape = inputs_embeds.size()[:-1]
@@ -720,15 +676,14 @@ class OPTDecoder(OPTPreTrainedModel):
 
         # embed positions
         if attention_mask is None:
-            attention_mask = torch.ones(
+            attention_mask = torch_ones(
                 batch_size, mask_seq_length, device=inputs_embeds.device
             )
-        elif attention_mask.shape[1] != mask_seq_length:
-            raise ValueError(
-                f"The provided attention mask has length {attention_mask.shape[1]}, but its length should be "
-                f"{mask_seq_length} (sum of the lengths of current and past inputs)"
-            )
-        causal_attention_mask = self._prepare_decoder_attention_mask(
+        # PATCH FIX: shape check
+        opt_patched_shape_assertion_4(attention_mask, mask_seq_length)
+
+        # PATCH FIX: prepare decoder attention mask (create one if mask is None)
+        causal_attention_mask = opt_patched_fn_prepare_decoder_attention_mask(
             attention_mask, input_shape, inputs_embeds, past_key_values_length
         )
         pos_embeds = self.embed_positions(attention_mask, past_key_values_length)
@@ -751,13 +706,8 @@ class OPTDecoder(OPTPreTrainedModel):
         next_decoder_cache = () if use_cache else None
 
         # check if head_mask has a correct number of layers specified if desired
-        for attn_mask, mask_name in zip([head_mask], ["head_mask"]):
-            if attn_mask is not None:
-                if attn_mask.size()[0] != (len(self.layers)):
-                    raise ValueError(
-                        f"The `{mask_name}` should be specified for {len(self.layers)} layers, but it is for"
-                        f" {head_mask.size()[0]}."
-                    )
+        # PATCH FIX: shape check
+        opt_patched_shape_assertion_5(head_mask, self.config.num_hidden_layers)
 
         for idx, decoder_layer in enumerate(self.layers):
             # add LayerDrop (see https://arxiv.org/abs/1909.11556 for description)
@@ -836,10 +786,10 @@ class OPTDecoder(OPTPreTrainedModel):
     "The bare OPT Model outputting raw hidden-states without any specific head on top.",
     OPT_START_DOCSTRING,
 )
-class OPTModel(OPTPreTrainedModel):
-    def __init__(self, config: OPTConfig):
+class OPTPatchedModel(OPTPatchedPreTrainedModel):
+    def __init__(self, config: OPTPatchedConfig):
         super().__init__(config)
-        self.decoder = OPTDecoder(config)
+        self.decoder = OPTPatchedDecoder(config)
         # Initialize weights and apply final processing
         self.post_init()
 
@@ -910,12 +860,49 @@ class OPTModel(OPTPreTrainedModel):
         )
 
 
-class OPTForCausalLM(OPTPreTrainedModel):
+class OPTPatchedForCausalLM(OPTPatchedPreTrainedModel):
+    patched_nodes = {
+        "concrete_forward_args": {
+            "head_mask": None,
+            "past_key_values": None,
+            "inputs_embeds": None,
+            "use_cache": False,
+            "output_attentions": False,
+            "output_hidden_states": False,
+            "return_dict": True,
+        },
+        "modules": [],
+        "layers": [OPTLearnedPositionalEmbedding, OPTPatchedDecoderLayer],
+        "functions": [
+            torch_zeros,
+            torch_ones,
+            torch_arange,
+            opt_patched_fn_get_max_float_tensor,
+            opt_patched_fn_prepare_decoder_attention_mask,
+            opt_patched_fn_get_tensor_dtype,
+            opt_patched_shape_assertion_0,
+            opt_patched_shape_assertion_1,
+            opt_patched_shape_assertion_2,
+            opt_patched_shape_assertion_3,
+            opt_patched_shape_assertion_4,
+            opt_patched_fn_calculate_causal_lm_loss,
+        ],
+        "additional_inputs": {
+            "head_mask_1": None,
+            "past_key_values_1": None,
+            "inputs_embeds_1": None,
+            "use_cache_1": False,
+            "output_attentions_1": False,
+            "output_hidden_states_1": False,
+            "return_dict_1": True,
+        },
+    }
+
     _tied_weights_keys = ["lm_head.weight"]
 
     def __init__(self, config):
         super().__init__(config)
-        self.model = OPTModel(config)
+        self.model = OPTPatchedModel(config)
 
         # the lm_head weight is automatically tied to the embed tokens weight
         self.lm_head = nn.Linear(
@@ -1062,18 +1049,23 @@ class OPTForCausalLM(OPTPreTrainedModel):
 
         logits = self.lm_head(outputs[0]).contiguous()
 
-        loss = None
-        if labels is not None:
-            # move labels to correct device to enable model parallelism
-            labels = labels.to(logits.device)
-            # Shift so that tokens < n predict n
-            shift_logits = logits[..., :-1, :].contiguous()
-            shift_labels = labels[..., 1:].contiguous()
-            # Flatten the tokens
-            loss_fct = CrossEntropyLoss()
-            loss = loss_fct(
-                shift_logits.view(-1, self.config.vocab_size), shift_labels.view(-1)
-            )
+        # PATCH FIX: calculate loss
+        loss = opt_patched_fn_calculate_causal_lm_loss(
+            logits, labels, self.config.vocab_size
+        )
+        # loss = None
+        # if labels is not None:
+        #     # move labels to correct device to enable model parallelism
+        #     labels = labels.to(logits.device)
+        #     # Shift so that tokens < n predict n
+        #     shift_logits = logits[..., :-1, :].contiguous()
+        #     shift_labels = labels[..., 1:].contiguous()
+        #     # Flatten the tokens
+        #     # PATCH FIX: use F.cross_entropy instead of nn.CrossEntropyLoss
+        #     loss = F.cross_entropy(
+        #         shift_logits.view(-1, self.config.vocab_size),
+        #         shift_labels.view(-1),
+        #     )
 
         if not return_dict:
             output = (logits,) + outputs[1:]
@@ -1140,11 +1132,47 @@ class OPTForCausalLM(OPTPreTrainedModel):
     """,
     OPT_START_DOCSTRING,
 )
-class OPTForSequenceClassification(OPTPreTrainedModel):
-    def __init__(self, config: OPTConfig):
+class OPTPatchedForSequenceClassification(OPTPatchedPreTrainedModel):
+    patched_nodes = {
+        "concrete_forward_args": {
+            "head_mask": None,
+            "past_key_values": None,
+            "inputs_embeds": None,
+            "use_cache": False,
+            "output_attentions": False,
+            "output_hidden_states": False,
+            "return_dict": True,
+        },
+        "modules": [],
+        "layers": [OPTLearnedPositionalEmbedding, OPTPatchedDecoderLayer],
+        "functions": [
+            torch_zeros,
+            torch_ones,
+            torch_arange,
+            opt_patched_fn_get_max_float_tensor,
+            opt_patched_fn_prepare_decoder_attention_mask,
+            opt_patched_fn_get_tensor_dtype,
+            opt_patched_shape_assertion_0,
+            opt_patched_shape_assertion_1,
+            opt_patched_shape_assertion_2,
+            opt_patched_shape_assertion_3,
+            opt_patched_shape_assertion_4,
+        ],
+        "additional_inputs": {
+            "head_mask_1": None,
+            "past_key_values_1": None,
+            "inputs_embeds_1": None,
+            "use_cache_1": False,
+            "output_attentions_1": False,
+            "output_hidden_states_1": False,
+            "return_dict_1": True,
+        },
+    }
+
+    def __init__(self, config: OPTPatchedConfig):
         super().__init__(config)
         self.num_labels = config.num_labels
-        self.model = OPTModel(config)
+        self.model = OPTPatchedModel(config)
         self.score = nn.Linear(config.word_embed_proj_dim, self.num_labels, bias=False)
 
         # Initialize weights and apply final processing
@@ -1205,7 +1233,7 @@ class OPTForSequenceClassification(OPTPreTrainedModel):
         else:
             if input_ids is not None:
                 sequence_lengths = (
-                    torch.eq(input_ids, self.config.pad_token_id).long().argmax(-1) - 1
+                    torch.ne(input_ids, self.config.pad_token_id).sum(-1) - 1
                 ).to(logits.device)
             else:
                 sequence_lengths = -1
@@ -1215,7 +1243,7 @@ class OPTForSequenceClassification(OPTPreTrainedModel):
                 )
 
         pooled_logits = logits[
-            torch.arange(batch_size, device=logits.device), sequence_lengths
+            torch_arange(batch_size, device=logits.device), sequence_lengths
         ]
 
         loss = None
@@ -1231,18 +1259,18 @@ class OPTForSequenceClassification(OPTPreTrainedModel):
                     self.config.problem_type = "multi_label_classification"
 
             if self.config.problem_type == "regression":
-                loss_fct = MSELoss()
+                loss_fct = F.mse_loss
                 if self.num_labels == 1:
                     loss = loss_fct(pooled_logits.squeeze(), labels.squeeze())
                 else:
                     loss = loss_fct(pooled_logits, labels)
             elif self.config.problem_type == "single_label_classification":
-                loss_fct = CrossEntropyLoss()
+                loss_fct = F.cross_entropy
                 loss = loss_fct(
                     pooled_logits.view(-1, self.num_labels), labels.view(-1)
                 )
             elif self.config.problem_type == "multi_label_classification":
-                loss_fct = BCEWithLogitsLoss()
+                loss_fct = F.binary_cross_entropy_with_logits
                 loss = loss_fct(pooled_logits, labels)
         if not return_dict:
             output = (pooled_logits,) + transformer_outputs[1:]
@@ -1252,141 +1280,6 @@ class OPTForSequenceClassification(OPTPreTrainedModel):
             loss=loss,
             logits=pooled_logits,
             past_key_values=transformer_outputs.past_key_values,
-            hidden_states=transformer_outputs.hidden_states,
-            attentions=transformer_outputs.attentions,
-        )
-
-    def get_input_embeddings(self):
-        return self.model.decoder.embed_tokens
-
-    def set_input_embeddings(self, value):
-        self.model.decoder.embed_tokens = value
-
-
-@add_start_docstrings(
-    """
-    The OPT Model transformer with a span classification head on top for extractive question-answering tasks like SQuAD
-    (a linear layers on top of the hidden-states output to compute `span start logits` and `span end logits`).
-    """,
-    OPT_START_DOCSTRING,
-)
-class OPTForQuestionAnswering(OPTPreTrainedModel):
-    def __init__(self, config: OPTConfig):
-        super().__init__(config)
-        self.model = OPTModel(config)
-        self.qa_outputs = nn.Linear(config.word_embed_proj_dim, 2)
-
-        # Initialize weights and apply final processing
-        self.post_init()
-
-    @add_start_docstrings_to_model_forward(OPT_INPUTS_DOCSTRING)
-    @replace_return_docstrings(
-        output_type=QuestionAnsweringModelOutput, config_class=_CONFIG_FOR_DOC
-    )
-    def forward(
-        self,
-        input_ids: Optional[torch.LongTensor] = None,
-        attention_mask: Optional[torch.FloatTensor] = None,
-        head_mask: Optional[torch.FloatTensor] = None,
-        past_key_values: Optional[Tuple[Tuple[torch.Tensor]]] = None,
-        inputs_embeds: Optional[torch.FloatTensor] = None,
-        start_positions: Optional[torch.LongTensor] = None,
-        end_positions: Optional[torch.LongTensor] = None,
-        use_cache: Optional[bool] = None,
-        output_attentions: Optional[bool] = None,
-        output_hidden_states: Optional[bool] = None,
-        return_dict: Optional[bool] = None,
-    ) -> Union[Tuple, QuestionAnsweringModelOutput]:
-        r"""
-        start_positions (`torch.LongTensor` of shape `(batch_size,)`, *optional*):
-            Labels for position (index) of the start of the labelled span for computing the token classification loss.
-            Positions are clamped to the length of the sequence (`sequence_length`). Position outside of the sequence
-            are not taken into account for computing the loss.
-        end_positions (`torch.LongTensor` of shape `(batch_size,)`, *optional*):
-            Labels for position (index) of the end of the labelled span for computing the token classification loss.
-            Positions are clamped to the length of the sequence (`sequence_length`). Position outside of the sequence
-            are not taken into account for computing the loss.
-
-        Returns:
-
-        Example:
-
-        ```python
-        >>> from transformers import AutoTokenizer, OPTForQuestionAnswering
-        >>> import torch
-
-        >>> torch.manual_seed(4)  # doctest: +IGNORE_RESULT
-        >>> tokenizer = AutoTokenizer.from_pretrained("facebook/opt-350m")
-
-        >>> # note: we are loading a OPTForQuestionAnswering from the hub here,
-        >>> # so the head will be randomly initialized, hence the predictions will be random
-        >>> model = OPTForQuestionAnswering.from_pretrained("facebook/opt-350m")
-
-        >>> question, text = "Who was Jim Henson?", "Jim Henson was a nice puppet"
-
-        >>> inputs = tokenizer(question, text, return_tensors="pt")
-        >>> with torch.no_grad():
-        ...     outputs = model(**inputs)
-
-        >>> answer_start_index = outputs.start_logits.argmax()
-        >>> answer_end_index = outputs.end_logits.argmax()
-
-        >>> answer_offset = len(tokenizer(question)[0])
-
-        >>> predict_answer_tokens = inputs.input_ids[
-        ...     0, answer_offset + answer_start_index : answer_offset + answer_end_index + 1
-        ... ]
-        >>> predicted = tokenizer.decode(predict_answer_tokens)
-        >>> predicted
-        ' a nice puppet'
-        ```"""
-        return_dict = (
-            return_dict if return_dict is not None else self.config.use_return_dict
-        )
-
-        transformer_outputs = self.model(
-            input_ids,
-            past_key_values=past_key_values,
-            attention_mask=attention_mask,
-            head_mask=head_mask,
-            inputs_embeds=inputs_embeds,
-            use_cache=use_cache,
-            output_attentions=output_attentions,
-            output_hidden_states=output_hidden_states,
-            return_dict=return_dict,
-        )
-        hidden_states = transformer_outputs[0]
-
-        logits = self.qa_outputs(hidden_states)
-        start_logits, end_logits = logits.split(1, dim=-1)
-        start_logits = start_logits.squeeze(-1).contiguous()
-        end_logits = end_logits.squeeze(-1).contiguous()
-
-        total_loss = None
-        if start_positions is not None and end_positions is not None:
-            # If we are on multi-GPU, split add a dimension
-            if len(start_positions.size()) > 1:
-                start_positions = start_positions.squeeze(-1)
-            if len(end_positions.size()) > 1:
-                end_positions = end_positions.squeeze(-1)
-            # sometimes the start/end positions are outside our model inputs, we ignore these terms
-            ignored_index = start_logits.size(1)
-            start_positions = start_positions.clamp(0, ignored_index)
-            end_positions = end_positions.clamp(0, ignored_index)
-
-            loss_fct = CrossEntropyLoss(ignore_index=ignored_index)
-            start_loss = loss_fct(start_logits, start_positions)
-            end_loss = loss_fct(end_logits, end_positions)
-            total_loss = (start_loss + end_loss) / 2
-
-        if not return_dict:
-            output = (start_logits, end_logits) + transformer_outputs[2:]
-            return ((total_loss,) + output) if total_loss is not None else output
-
-        return QuestionAnsweringModelOutput(
-            loss=total_loss,
-            start_logits=start_logits,
-            end_logits=end_logits,
             hidden_states=transformer_outputs.hidden_states,
             attentions=transformer_outputs.attentions,
         )

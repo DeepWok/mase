@@ -30,11 +30,10 @@ def pre_transform_load(load_name: str, load_type: str, model: torch.nn.Module):
 
 
 def transform(
-    model_name: str,
     model: torch.nn.Module,
-    is_nlp_model: bool,
-    task: str,
+    model_info,
     data_module,
+    task: str,
     config: str,
     save_dir: str = None,
     load_name: str = None,
@@ -46,7 +45,7 @@ def transform(
     save_dir.mkdir(parents=True, exist_ok=True)
     # concrete forward args for freezing dynamic control flow in forward pass
     if "cf_args" not in config:
-        cf_args = get_cf_args(model_name=model_name, task=task, model=model)
+        cf_args = get_cf_args(model_info=model_info, task=task, model=model)
     else:
         cf_args = config["cf_args"]
 
@@ -61,9 +60,9 @@ def transform(
         graph = load_mase_graph_transform_pass(graph, pass_args=load_name)
     else:
         dummy_in = get_dummy_input(
-            datamodule=data_module,
+            model_info=model_info,
+            data_module=data_module,
             task=task,
-            is_nlp_model=is_nlp_model,
         )
         if len(graph.model.additional_inputs) > 0:
             dummy_in = dummy_in | graph.model.additional_inputs
@@ -85,9 +84,9 @@ def transform(
                 )
             case "profile_statistics":
                 input_generator = InputGenerator(
-                    datamodule=data_module,
+                    model_info=model_info,
+                    data_module=data_module,
                     task=task,
-                    is_nlp_model=is_nlp_model,
                     which_dataloader="train",
                 )
                 pass_config["input_generator"] = input_generator
@@ -137,9 +136,9 @@ def transform(
                 # data. This determinism helps establish a fair ground in draw
                 # layer-wise comparisons between activation pruning strategies.
                 input_generator = InputGenerator(
-                    datamodule=data_module,
+                    model_info=model_info,
+                    data_module=data_module,
                     task=task,
-                    is_nlp_model=is_nlp_model,
                     which_dataloader="val",
                 )
                 pass_config["input_generator"] = input_generator

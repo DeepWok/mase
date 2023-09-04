@@ -7,16 +7,11 @@ from pathlib import Path
 import torch
 import torch.nn as nn
 
-# sys.path.append(
-#     os.path.join(
-#         os.path.dirname(os.path.realpath(__file__)), "..", "..", "..", "machop"
-#     )
-# )
-
+os.environ["PYTHONBREAKPOINT"] = "ipdb.set_trace"
 sys.path.append(Path(__file__).resolve().parents[3].joinpath("machop").as_posix())
 
 from chop.dataset import get_dataset_info, MaseDataModule
-from chop.models import model_map
+from chop.models import get_model, get_model_info, get_tokenizer
 from chop.passes import PASSES
 from chop.passes.graph.mase_graph import MaseGraph
 from chop.tools import load_config
@@ -36,19 +31,17 @@ def main():
 
     # OPT
     wikitext_info = get_dataset_info("wikitext2")
-    opt_dict = model_map["facebook/opt-125m@patched"](
-        name="facebook/opt-125m@patched",
+    model_info = get_model_info("facebook/opt-125m:patched")
+    opt = get_model(
+        "facebook/opt-125m:patched",
         task="lm",
-        info=wikitext_info,
-        pretrained=load_pretrained,
+        dataset_info=wikitext_info,
+        pretrained=True,
     )
-    opt = opt_dict["model"]
-    opt_tokenizer = opt_dict["tokenizer"]
+    opt_tokenizer = get_tokenizer("facebook/opt-125m:patched")
 
     if "cf_args" not in config:
-        cf_args = get_cf_args(
-            model_name="facebook/opt-125m@patched", task="lm", model=opt
-        )
+        cf_args = get_cf_args(model_info=model_info, task="lm", model=opt)
     else:
         cf_args = config["cf_args"]
     print(f"cf_args: {cf_args}")
@@ -68,14 +61,13 @@ def main():
     graph = MaseGraph(model=opt, cf_args=cf_args)
     graph = PASSES["init_metadata"](graph, pass_args=None)
 
-    dummy_in = get_dummy_input(datamodule=data_module, task="lm", is_nlp_model=True)
-    if len(graph.model.additional_inputs) > 0:
-        dummy_in = dummy_in | graph.model.additional_inputs
-    graph = PASSES["add_common_metadata"](graph, pass_args=dummy_in)
-    # graph = PASSES["add_hardware_metadata"](graph, pass_args=None)
-    graph = PASSES["add_software_metadata"](graph, pass_args=None)
-
-    graph = PASSES["quantize"](graph, pass_args=config["passes"]["quantize"])
+    # FIXME: Error raised in common_metadata_analysis_pass
+    # dummy_in = get_dummy_input(model_info, data_module=data_module, task="lm")
+    # if len(graph.model.additional_inputs) > 0:
+    #     dummy_in = dummy_in | graph.model.additional_inputs
+    # graph = PASSES["add_common_metadata"](graph, pass_args=dummy_in)
+    # # graph = PASSES["add_hardware_metadata"](graph, pass_args=None)
+    # graph = PASSES["add_software_metadata"](graph, pass_args=None)
 
 
 # --------------------------------------------------
