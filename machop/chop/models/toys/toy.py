@@ -39,14 +39,14 @@ class ToyTiny(nn.Module):
         return x
 
 
-class TestModel(nn.Module):
+class ToyTestModel(nn.Module):
     """Test model with all layors and operations with binarization operation
 
     A model to test if the quantization for different operations/modules works
     """
 
     def __init__(self, image_size, num_classes):
-        super(TestModel, self).__init__()
+        super(ToyTestModel, self).__init__()
         self.seq_blocks = nn.Sequential(
             nn.Conv2d(
                 in_channels=image_size[0],
@@ -135,11 +135,11 @@ def get_toy_tiny(info, pretrained=False):
     return ToyTiny(image_size, num_classes)
 
 
-def get_testmodel(info, pretrained=False):
+def get_toy_testmodel(info, pretrained=False):
     image_size = info["image_size"]
     num_classes = info["num_classes"]
     print(num_classes)
-    return TestModel(image_size, num_classes)
+    return ToyTestModel(image_size, num_classes)
 
 
 def get_toy_convnet(info, pretrained=False):

@@ -19,7 +19,7 @@ sys.path.append(
 )
 
 from chop.dataset import MaseDataModule, get_dataset_info
-from chop.models import get_resnet18
+from chop.models import get_model, get_model_info
 from chop.passes import (
     add_common_metadata_analysis_pass,
     add_software_metadata_analysis_pass,
@@ -42,6 +42,8 @@ def main():
     # batch-size = 1 will trigger the bug in add_common_metadata_analysis_pass
     batch_size = 2
 
+    model_info = get_model_info("toy_custom_fn")
+
     datamodule = MaseDataModule(
         model_name="toy_custom_fn",
         batch_size=batch_size,
@@ -54,14 +56,16 @@ def main():
     datamodule.setup()
 
     input_generator = InputGenerator(
-        datamodule=datamodule,
+        model_info=model_info,
+        data_module=datamodule,
         task="cls",
-        is_nlp_model=False,
         which_dataloader="train",
     )
 
-    info = get_dataset_info("cifar10")
-    model = get_resnet18(info, pretrained=False)
+    dataset_info = get_dataset_info("cifar10")
+    model = get_model(
+        "resnet18", task="cls", dataset_info=dataset_info, pretrained=False
+    )
 
     dummy_in = {"x": next(iter(datamodule.train_dataloader()))[0]}
 

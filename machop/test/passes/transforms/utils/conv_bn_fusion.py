@@ -35,7 +35,7 @@ def main():
 
     # NOTE: We're only concerned with pre-trained vision models
     dataset_info = get_dataset_info(DATASET)
-    datamodule = MaseDataModule(
+    data_module = MaseDataModule(
         model_name=MODEL,
         name=DATASET,
         batch_size=32,
@@ -43,13 +43,15 @@ def main():
         tokenizer=None,
         max_token_len=None,
     )
-    datamodule.prepare_data()
-    datamodule.setup()
+    data_module.prepare_data()
+    data_module.setup()
     # NOTE: We only support vision classification models for now.
-    dummy_input = get_dummy_input(datamodule, "cls", is_nlp_model=False)
+    model_info = models.get_model_info(MODEL)
+    dummy_input = get_dummy_input(model_info, data_module, "cls")
 
-    model_inst_fn = models.model_map[MODEL]
-    model = model_inst_fn(dataset_info, pretrained=True)
+    model = models.get_model(
+        MODEL, task="cls", dataset_info=dataset_info, pretrained=True
+    )
     model.eval()  # NOTE: This is a requirement for fusion to work
 
     graph = MaseGraph(model=model)

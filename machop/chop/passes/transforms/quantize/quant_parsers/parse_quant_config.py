@@ -276,6 +276,10 @@ MASE_OP_TO_ENTRIES = {
     ),
     "relu": (("name", "data_in_entries"), ("bypass",)),
     "sub": (("name", "data_in_entries"), ("bypass",)),
+    "rotary_positional_encoding": (
+        ("name", "data_in_entries"),
+        ("bypass",),
+    ),  # RoPE of Llama
 }
 
 

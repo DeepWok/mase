@@ -29,6 +29,7 @@ from chop.passes.transforms import (
 )
 from chop.passes.utils import deepcopy_mase_graph
 from chop.tools.logger import getLogger
+from chop.models import get_model_info
 
 # pruning
 from chop.tools.logger import getLogger
@@ -70,27 +71,28 @@ def main():
     with open(pruning_config_path, "r") as f:
         config = toml.load(f)
 
-        datamodule = MaseDataModule(
-            model_name="toy-tiny",  # This doesn't really matter
+        data_module = MaseDataModule(
+            model_name="toy_tiny",  # This doesn't really matter
             name="cifar10",
             batch_size=BATCH_SIZE,
             num_workers=os.cpu_count(),
             tokenizer=None,
             max_token_len=None,
         )
-        datamodule.prepare_data()
-        datamodule.setup()
+        data_module.prepare_data()
+        data_module.setup()
 
         # NOTE: We only support vision classification models for now.
 
-        dummy_input = get_dummy_input(datamodule, "cls", is_nlp_model=False)
+        model_info = get_model_info("toy_tiny")
+        dummy_input = get_dummy_input(model_info, data_module, "cls")
 
         # We need the input generator to do a sample forward pass to log information on
         # the channel-wise activation sparsity.
         input_generator = InputGenerator(
-            datamodule=datamodule,
+            model_info=model_info,
+            data_module=data_module,
             task="cls",
-            is_nlp_model=False,
             which_dataloader="train",
         )
 

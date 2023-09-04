@@ -105,19 +105,23 @@ class MaseGraph:
 
         # create graph module
         if model is not None:
-            patched = getattr(model, "patched", None)
-            if patched is None:
+            patched_nodes = getattr(model, "patched_nodes", None)
+            if patched_nodes is None:
                 self.tracer = MaseTracer()
             else:
                 self.tracer = MaseTracer(
-                    custom_leaf_modules=tuple(model.patched_nodes["modules"]),
-                    custom_leaf_layers=tuple(model.patched_nodes["layers"]),
-                    custom_leaf_functions=tuple(model.patched_nodes["functions"]),
+                    custom_leaf_modules=tuple(patched_nodes["modules"]),
+                    custom_leaf_layers=tuple(patched_nodes["layers"]),
+                    custom_leaf_functions=tuple(patched_nodes["functions"]),
                 )
             self.cf_args = cf_args
             self.model = fx.GraphModule(model, self.tracer.trace(model, cf_args))
-            if patched:
-                self.model.patched_op_names = model.patched_nodes["names"]
+            if patched_nodes:
+                self.model.patched_op_names = [
+                    obj.__name__.lower()
+                    for obj in model.patched_nodes["layers"]
+                    + model.patched_nodes["functions"]
+                ]
                 # these are layers we believe the user will provide system verilog for
                 self.model.patched_custom_layers = model.patched_nodes["layers"]
                 self.model.additional_inputs = model.patched_nodes["additional_inputs"]

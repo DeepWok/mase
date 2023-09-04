@@ -14,7 +14,7 @@ sys.path.append(
 
 
 from chop.dataset import get_dataset_info
-from chop.models import model_map
+from chop.models import get_model
 from chop.passes.analysis.report import report_graph_analysis_pass
 from chop.passes.analysis.verify import verify
 from chop.passes.graph.mase_graph import MaseGraph
@@ -26,7 +26,9 @@ from chop.passes.graph.mase_graph import MaseGraph
 def main():
     load_pretrained = True
     cifar10_info = get_dataset_info("cifar10")
-    resnet18 = model_map["resnet18"](info=cifar10_info, pretrained=load_pretrained)
+    resnet18 = get_model(
+        "resnet18", task="cls", dataset_info=cifar10_info, pretrained=load_pretrained
+    )
     mg = MaseGraph(model=resnet18)
     # print(mg.fx_graph)
 

@@ -151,7 +151,7 @@ class TranslationDatasetIWSLT2017_EN_CH(TranslationDatasetBase):
 
 
 class TranslationDatasetWMT19_DE_EN(TranslationDatasetBase):
-    test_dataset_available = True
+    test_dataset_available = False
     pred_dataset_available = False
 
     src_col_name = "de"
@@ -163,7 +163,7 @@ class TranslationDatasetWMT19_DE_EN(TranslationDatasetBase):
 
 
 class TranslationDatasetWMT19_ZH_EN(TranslationDatasetBase):
-    test_dataset_available = True
+    test_dataset_available = False
     pred_dataset_available = False
 
     src_col_name = "zh"
@@ -175,7 +175,7 @@ class TranslationDatasetWMT19_ZH_EN(TranslationDatasetBase):
 
 
 class TranslationDatasetWMT16_RO_EN(TranslationDatasetBase):
-    test_dataset_available = True
+    test_dataset_available = False
     pred_dataset_available = False
 
     src_col_name = "ro"

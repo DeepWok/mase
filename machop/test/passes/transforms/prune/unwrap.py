@@ -22,6 +22,7 @@ from chop.dataset import MaseDataModule
 from chop.passes.graph.mase_graph import MaseGraph
 from chop.tools.logger import getLogger
 from chop.tools.get_input import get_dummy_input
+from chop.models import get_model_info
 
 logger = getLogger("chop")
 logger.setLevel(logging.DEBUG)
@@ -39,7 +40,7 @@ def main():
         config = toml.load(f)
 
         # NOTE: We're only concerned with pre-trained vision models
-        datamodule = MaseDataModule(
+        data_module = MaseDataModule(
             model_name=config["model"],
             name=config["dataset"],
             batch_size=BATCH_SIZE,
@@ -47,10 +48,11 @@ def main():
             tokenizer=None,
             max_token_len=None,
         )
-        datamodule.prepare_data()
-        datamodule.setup()
+        data_module.prepare_data()
+        data_module.setup()
         # NOTE: We only support vision classification models for now.
-        dummy_input = get_dummy_input(datamodule, "cls", is_nlp_model=False)
+        model_info = get_model_info(config["model"])
+        dummy_input = get_dummy_input(model_info, data_module, "cls")
 
         # This path should point to a mase checkpoint!
         model_path = Path(sys.argv[1]).resolve().absolute()

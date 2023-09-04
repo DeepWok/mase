@@ -1,39 +1,30 @@
 import torch
 import torch.nn as nn
 
-# from torchmetrics.text.bleu import BLEUScore
-from torchmetrics import BLEUScore, MeanMetric
+from torchmetrics.text import BLEUScore
 
 from ..base import WrapperBase
 
-name_to_final_module_map = {
-    # TODO: double check on how to extract classifier from last_hidden_state
-    "facebook/opt-125m": "last_hidden_state",
-    "facebook/opt-350m": "last_hidden_state",
-    "facebook/opt-1.3b": "last_hidden_state",
-    "facebook/opt-2.7b": "last_hidden_state",
-    "facebook/opt-6.7b": "last_hidden_state",
-    "facebook/opt-13b": "last_hidden_state",
-    "facebook/opt-30b": "last_hidden_state",
-    "facebook/opt-66b": "last_hidden_state",
-    # BERT-ish model makes use a of a pooler
-    "roberta-base": "pooler_output",
-    "roberta-large": "pooler_output",
-}
-
 
 class NLPTranslationModelWrapper(WrapperBase):
-    def __init__(self, model, info, learning_rate=1e-4, epochs=200, optimizer=None):
+    def __init__(
+        self,
+        model,
+        tokenizer,
+        dataset_info,
+        learning_rate=1e-4,
+        epochs=200,
+        optimizer=None,
+    ):
         super().__init__(
             model=model,
-            info=info,
+            dataset_info=dataset_info,
             learning_rate=learning_rate,
             epochs=epochs,
             optimizer=optimizer,
         )
-        self.model = model["model"]
-        self.tokenizer = model["tokenizer"]
-        self.classifier = model["classifier"]
+        self.model = model
+        self.tokenizer = tokenizer
 
         self.bleu_train = BLEUScore(n_gram=4, smooth=False)
         self.bleu_val = BLEUScore(n_gram=4, smooth=False)
@@ -49,40 +40,51 @@ class NLPTranslationModelWrapper(WrapperBase):
         return (pred_lns, tgt_lns)
 
     def forward(
-        self, input_ids, attention_mask, decoder_input_ids, decoder_attention_mask
+        self,
+        input_ids,
+        attention_mask,
+        decoder_input_ids,
+        decoder_attention_mask,
+        labels,
     ):
         """
         output.last_hidden_state (batch_size, token_num, hidden_size): hidden representation for each token in each sequence of the batch.
         output.pooler_output (batch_size, hidden_size): take hidden representation of [CLS] token in each sequence, run through BertPooler module (linear layer with Tanh activation)
         """
-        output = self.model(
+        outputs = self.model(
             input_ids,
             attention_mask=attention_mask,
             decoder_input_ids=decoder_input_ids,
             decoder_attention_mask=decoder_attention_mask,
+            labels=labels,
         )
-        if "t5" in self.model.name_or_path:
-            logits = output.logits
-            loss = self.criterion(
-                logits.view(-1, logits.size(-1)), decoder_input_ids.view(-1)
-            )
-        else:
-            loss = output.loss
-        return output, loss
+        # if "t5" in self.model.name_or_path:
+        #     logits = output.logits
+        #     loss = self.criterion(
+        #         logits.view(-1, logits.size(-1)), decoder_input_ids.view(-1)
+        #     )
+        # else:
+        #     loss = output.loss
+        return outputs
 
     def training_step(self, batch, batch_idx):
         input_ids = batch["input_ids"]
         attention_mask = batch["attention_mask"]
         decoder_input_ids = batch["decoder_input_ids"]
         decoder_attention_mask = batch["decoder_attention_mask"]
-        outputs, loss = self.forward(
-            input_ids, attention_mask, decoder_input_ids, decoder_attention_mask
-        )
-        _, pred_ids = torch.max(outputs["logits"], dim=1)
         labels = decoder_input_ids
+        outputs = self.forward(
+            input_ids=input_ids,
+            attention_mask=attention_mask,
+            decoder_input_ids=decoder_input_ids,
+            decoder_attention_mask=decoder_attention_mask,
+            labels=labels,
+        )
+        loss = outputs["loss"]
+        logits = outputs["logits"]
+        _, pred_ids = torch.max(logits, dim=1)
         labels = labels[0] if len(labels) == 1 else labels.squeeze()
         bleu = self.bleu_train(*self.get_pred_ids_and_labels(pred_ids, labels))
-        # self.train_mean_loss(loss)
 
         self.log(
             "bleu_train", self.bleu_train, on_step=True, on_epoch=False, prog_bar=True
@@ -101,11 +103,19 @@ class NLPTranslationModelWrapper(WrapperBase):
         attention_mask = batch["attention_mask"]
         decoder_input_ids = batch["decoder_input_ids"]
         decoder_attention_mask = batch["decoder_attention_mask"]
-        outputs, loss = self.forward(
-            input_ids, attention_mask, decoder_input_ids, decoder_attention_mask
-        )
-        _, pred_ids = torch.max(outputs.logits, dim=1)
         labels = decoder_input_ids
+        outputs = self.forward(
+            input_ids=input_ids,
+            attention_mask=attention_mask,
+            decoder_input_ids=decoder_input_ids,
+            decoder_attention_mask=decoder_attention_mask,
+            labels=labels,
+        )
+        logits = outputs["logits"]
+        loss = outputs["loss"]
+
+        _, pred_ids = torch.max(logits, dim=1)
+
         labels = labels[0] if len(labels) == 1 else labels.squeeze()
 
         self.bleu_val(*self.get_pred_ids_and_labels(pred_ids, labels))
@@ -134,11 +144,18 @@ class NLPTranslationModelWrapper(WrapperBase):
         attention_mask = batch["attention_mask"]
         decoder_input_ids = batch["decoder_input_ids"]
         decoder_attention_mask = batch["decoder_attention_mask"]
-        outputs, loss = self.forward(
-            input_ids, attention_mask, decoder_input_ids, decoder_attention_mask
-        )
-        _, pred_ids = torch.max(outputs.logits, dim=1)
         labels = decoder_input_ids
+        outputs = self.forward(
+            input_ids=input_ids,
+            attention_mask=attention_mask,
+            decoder_input_ids=decoder_input_ids,
+            decoder_attention_mask=decoder_attention_mask,
+            labels=labels,
+        )
+        logits = outputs["logits"]
+        loss = outputs["loss"]
+        _, pred_ids = torch.max(logits, dim=1)
+
         labels = labels[0] if len(labels) == 1 else labels.squeeze()
         bleu = self.bleu_test(*self.get_pred_ids_and_labels(pred_ids, labels))
 
@@ -164,7 +181,7 @@ class NLPTranslationModelWrapper(WrapperBase):
     def predict_step(self, batch, batch_idx: int, dataloader_idx: int = 0):
         input_ids = batch["input_ids"]
         attention_mask = batch["attention_mask"]
-        outputs, _ = self.forward(
+        outputs = self.forward(
             input_ids,
             attention_mask,
             decoder_input_ids=None,

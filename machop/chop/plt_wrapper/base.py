@@ -8,19 +8,27 @@ from torchmetrics import Accuracy, MeanMetric
 
 
 class WrapperBase(pl.LightningModule):
-    def __init__(self, model, learning_rate=5e-4, epochs=1, optimizer=None, info=None):
+    def __init__(
+        self, model, learning_rate=5e-4, epochs=1, optimizer=None, dataset_info=None
+    ):
         super().__init__()
         self.model = model
         self.learning_rate = learning_rate
-        self.loss = torch.nn.CrossEntropyLoss()
+        self.loss_fn = torch.nn.CrossEntropyLoss()
         self.epochs = epochs
         self.optimizer = optimizer
 
-        self.num_classes = info["num_classes"]
+        self.num_classes = dataset_info["num_classes"]
         if self.num_classes is not None:
-            self.acc_train = Accuracy("multiclass", num_classes=info["num_classes"])
-            self.acc_val = Accuracy("multiclass", num_classes=info["num_classes"])
-            self.acc_test = Accuracy("multiclass", num_classes=info["num_classes"])
+            self.acc_train = Accuracy(
+                "multiclass", num_classes=dataset_info["num_classes"]
+            )
+            self.acc_val = Accuracy(
+                "multiclass", num_classes=dataset_info["num_classes"]
+            )
+            self.acc_test = Accuracy(
+                "multiclass", num_classes=dataset_info["num_classes"]
+            )
 
     def forward(self, x):
         return self.model(x)
@@ -28,7 +36,7 @@ class WrapperBase(pl.LightningModule):
     def training_step(self, batch, batch_idx):
         x, y = batch[0], batch[1]
         y_hat = self.forward(x)
-        loss = self.loss(y_hat, y)
+        loss = self.loss_fn(y_hat, y)
 
         acc = self.acc_train(y_hat, y)
 
@@ -42,7 +50,7 @@ class WrapperBase(pl.LightningModule):
     def validation_step(self, batch, batch_idx):
         x, y = batch[0], batch[1]
         y_hat = self.forward(x)
-        loss = self.loss(y_hat, y)
+        loss = self.loss_fn(y_hat, y)
         acc = self.acc_val(y_hat, y)
 
         self.log("val_acc", self.acc_val, on_step=False, on_epoch=True, prog_bar=True)
@@ -60,7 +68,7 @@ class WrapperBase(pl.LightningModule):
     def test_step(self, batch, batch_idx):
         x, y = batch[0], batch[1]
         y_hat = self.forward(x)
-        loss = self.loss(y_hat, y)
+        loss = self.loss_fn(y_hat, y)
 
         acc = self.acc_test(y_hat, y)
 
