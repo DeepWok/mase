@@ -54,6 +54,12 @@ from .methods import (
     PRUNE_SCOPES,
     ActivationPruneHandler,
 )
+from .utilities import (
+    measure_sparsity,
+    count_parameters,
+    estimate_model_size,
+    count_buffers,
+)
 
 # Constants ----------------------------------------------------------------------------
 # Pruneable MASE operators
@@ -128,6 +134,9 @@ def prune_graph_iterator(graph: MaseGraph, save_dir: str, config: dict):
         logger.debug("Added the activation prune handler as a model attribute")
     pruner = method(sparsity, criterion, scope)
 
+    # Log metadata about the graph before pruning
+    _log_metadata(graph)
+
     # Iterate over the graph and prune the compatible nodes; note that we do two passes.
     _graph_iterator(graph, partial(_wrap_callback, pruner, handler))
     _graph_iterator(graph, partial(_apply_callback, pruner))
@@ -151,6 +160,9 @@ def prune_graph_iterator(graph: MaseGraph, save_dir: str, config: dict):
     if prune_activations:
         logger.info("Activation Pruning Summary:")
         handler.show_summary()
+
+    # Log metadata about the graph before pruning
+    _log_metadata(graph)
 
     # Save the pruning report and summary
     pruner.save_summary(save_dir)
@@ -308,3 +320,14 @@ def _verify_sparsity(sparsity):
         raise ValueError("Sparsity must be a float. Got {}".format(type(sparsity)))
     if sparsity < 0 or sparsity > 1:
         raise ValueError("Sparsity must be between 0 and 1. Got {}".format(sparsity))
+
+
+def _log_metadata(graph: MaseGraph):
+    logger.info(
+        "\n"
+        f"Sparsity    : {measure_sparsity(graph.model):>14.3f}\n"
+        f"Params (TOT): {count_parameters(graph.model):>14,}\n"
+        f"Params (NNZ): {count_parameters(graph.model, nonzero_only=True):>14,}\n"
+        f"Buffers     : {count_buffers(graph.model):>14,}\n"
+        f"Size        : {estimate_model_size(graph.model):>14.3f} MB"
+    )
