@@ -47,10 +47,12 @@ def get_toy_model_info(name: str) -> MaseModelInfo:
     return TOY_MODELS[name]["info"]
 
 
-def get_toy_model(name: str, **kwargs) -> nn.Module:
+def get_toy_model(
+    name: str, dataset_info: dict, pretrained: bool, **kwargs
+) -> nn.Module:
     if name not in TOY_MODELS:
         raise KeyError(f"Model {name} not found in toy models")
-    return TOY_MODELS[name]["model"](**kwargs)
+    return TOY_MODELS[name]["model"](info=dataset_info, pretrained=pretrained, **kwargs)
 
 
 def get_toy_model_cls(name: str) -> nn.Module:

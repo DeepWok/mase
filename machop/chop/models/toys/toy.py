@@ -3,6 +3,7 @@ A collection of toy models for testing and development runs.
 """
 
 import torch.nn as nn
+from typing import Any
 
 
 class ToyNet(nn.Module):
@@ -123,26 +124,42 @@ class ToyConvNet(nn.Module):
 
 
 # Getters ------------------------------------------------------------------------------
-def get_toynet(info, pretrained=False):
+def get_toynet(
+    info,
+    pretrained=False,
+    **kwargs: Any,
+):
     image_size = info["image_size"]
     num_classes = info["num_classes"]
     return ToyNet(image_size, num_classes)
 
 
-def get_toy_tiny(info, pretrained=False):
+def get_toy_tiny(
+    info,
+    pretrained=False,
+    **kwargs: Any,
+):
     image_size = info["image_size"]
     num_classes = info["num_classes"]
     return ToyTiny(image_size, num_classes)
 
 
-def get_toy_testmodel(info, pretrained=False):
+def get_toy_testmodel(
+    info,
+    pretrained=False,
+    **kwargs: Any,
+):
     image_size = info["image_size"]
     num_classes = info["num_classes"]
     print(num_classes)
     return ToyTestModel(image_size, num_classes)
 
 
-def get_toy_convnet(info, pretrained=False):
+def get_toy_convnet(
+    info,
+    pretrained=False,
+    **kwargs: Any,
+):
     # NOTE: The model isn't configurable through the CLI or a configuration file yet.
     num_classes = info["num_classes"]
     return ToyConvNet(num_classes)
