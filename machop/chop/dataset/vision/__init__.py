@@ -1,4 +1,5 @@
 import os
+from pathlib import Path
 
 # Copyright (c) 2015-present, Facebook, Inc.
 # All rights reserved.
@@ -14,7 +15,8 @@ def get_vision_dataset(name: str, path: os.PathLike, split: str, model_name: str
         name (str): name of the dataset
         path (str): path to the dataset
         train (bool): whether the dataset is used for training
-        model_name (Optional[str, None]): name of the model. Some pretrained models have model-dependent transforms for training and evaluation.
+        model_name (Optional[str, None]): name of the model. Some pretrained models have
+        model-dependent transforms for training and evaluation.
     Returns:
         dataset (torch.utils.data.Dataset): dataset (with transforms)
     """
@@ -33,6 +35,12 @@ def get_vision_dataset(name: str, path: os.PathLike, split: str, model_name: str
             dataset = get_cifar_dataset(name, path, train, transform)
         case "imagenet":
             dataset = get_imagenet_dataset(name, path, train, transform)
+        case "imagenet_subset":
+            # NOTE: We just repurpose the routine for ImageNet. You'll find that the
+            # subset dataset is created in the ImageNetMase class constructor. :)
+            name = name.replace("_subset", "")
+            path = Path(str(path).replace("_subset", ""))
+            dataset = get_imagenet_dataset(name, path, train, transform, subset=True)
 
     return dataset
 
@@ -41,6 +49,8 @@ VISION_DATASET_MAPPING = {
     "cifar10": Cifar10Mase,
     "cifar100": Cifar100Mase,
     "imagenet": ImageNetMase,
+    # A subset of ImageNet w/ 100 train and 20 val images per class (1000 classes)
+    "imagenet_subset": ImageNetMase,
 }
 
 
