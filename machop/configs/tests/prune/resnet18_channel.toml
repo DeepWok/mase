@@ -1,0 +1,16 @@
+# NOTE: Take a look at pruning/methods.py and pruning/criteria.py for available values
+# This config shows an example channel pruning pass via Microsoft's NNI (10% sparsity)
+# It's important that you don't prune FC layers or ignore the last one as that'll change
+# the shape of the predidction. :)
+# --------------------------------------------------------------------------------------
+# Feel free to swap the model and dataset out to experiment :)
+# Use this configuration with machop/test/passes/transforms/prune/prune.py
+model = "resnet18"
+dataset = "imagenet"
+
+[passes.prune.weight]
+method = "channel-pruner"
+
+[[passes.prune.weight.config_list]]
+sparsity_per_layer = 0.1
+op_types = ["Conv2d"]

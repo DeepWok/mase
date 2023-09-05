@@ -208,7 +208,7 @@ jobs:
                        sentencepiece einops deepspeed pybind11 \
                        tabulate tensorboard hyperopt accelerate \
                        optuna stable-baselines3 scikit-learn
-          pip3 install cocotb[bus]==1.8.0 
+          pip3 install cocotb[bus]==1.8.0 nni==2.10.1
 
     - name: Mase regression test 
       run: |
