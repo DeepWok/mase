@@ -50,6 +50,7 @@ from chop.tools.logger import getLogger
 from .criteria import RANK_CRITERIA
 from .methods import (
     LevelPruner,
+    ChannelPruner,
     ACTIVATION_PRUNE_STRATEGIES,
     PRUNE_SCOPES,
     ActivationPruneHandler,
@@ -70,6 +71,7 @@ PRUNEABLE_OPS = {"conv1d": nn.Conv1d, "conv2d": nn.Conv2d, "linear": nn.Linear}
 PRUNE_METHODS = {
     # A basic one-shot pruner that prunes to a given sparsity level
     "level-pruner": LevelPruner,
+    "channel-pruner": ChannelPruner,
     # Add more here...
 }
 
@@ -110,8 +112,7 @@ def prune_graph_iterator(graph: MaseGraph, save_dir: str, config: dict):
     input_generator = config.get("input_generator", None)
 
     # Setup all pruning-related parameters (incl. basic validation)
-    weight_prune_params = get_weight_prune_params(config["weight"], graph)
-    method, criterion, sparsity, scope = weight_prune_params
+    method, iterate, kwargs = get_weight_prune_params(config["weight"], graph)
 
     prune_activations = "activation" in config
     strategy, target = (
@@ -132,14 +133,19 @@ def prune_graph_iterator(graph: MaseGraph, save_dir: str, config: dict):
         handler.log_values = False
         setattr(graph.model, "activation_prune_handler", handler)
         logger.debug("Added the activation prune handler as a model attribute")
-    pruner = method(sparsity, criterion, scope)
+    pruner = method(**kwargs)
 
     # Log metadata about the graph before pruning
     _log_metadata(graph)
 
     # Iterate over the graph and prune the compatible nodes; note that we do two passes.
-    _graph_iterator(graph, partial(_wrap_callback, pruner, handler))
-    _graph_iterator(graph, partial(_apply_callback, pruner))
+    if iterate:
+        _graph_iterator(graph, partial(_wrap_callback, pruner, handler))
+        _graph_iterator(graph, partial(_apply_callback, pruner))
+    else:
+        # This is a special case for the channel pruner. We just pass the graph model
+        # to the pruner and it takes care of the rest.
+        graph = pruner.prune(graph.model, input_generator)
 
     # A sample forward pass to log activation sparsity statistics :)
     # NOTE: Currently, we only do this on one batch sample. As in line 230 of
@@ -271,10 +277,17 @@ def get_weight_prune_params(config: dict, graph: MaseGraph):
     else:
         _verify_sparsity(sparsity)
 
-    method = PRUNE_METHODS[method]
+    iterate = not (method == "channel-pruner")
     criterion = RANK_CRITERIA[criterion]
+    kwargs = {"criterion": criterion, "sparsity": sparsity, "scope": scope}
+    if method == "channel-pruner":
+        # NOTE: In this case, the criterion, sparsity and scope are all ignored. We
+        # only use Microsoft NNI's L1NormPruner for now.
+        kwargs.clear()
+        kwargs["config_list"] = config.get("config_list", [{"sparsity_per_layer": 0.5}])
 
-    return method, criterion, sparsity, scope
+    method = PRUNE_METHODS[method]
+    return method, iterate, kwargs
 
 
 def get_activation_prune_params(config: dict, graph: MaseGraph):

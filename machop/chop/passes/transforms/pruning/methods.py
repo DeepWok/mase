@@ -22,9 +22,18 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import numpy as np
+from nni.compression.pytorch.pruning import L1NormPruner
+from nni.compression.pytorch.speedup import ModelSpeedup
 
 from chop.tools.logger import getLogger
+from chop.passes.graph import MaseGraph
 from chop.passes.transforms.pruning.utilities import StatisticsCollector
+from chop.passes import (
+    add_common_metadata_analysis_pass,
+    init_metadata_analysis_pass,
+    add_software_metadata_analysis_pass,
+)
+from .utilities import get_module_by_name
 
 # Constants ----------------------------------------------------------------------------
 # A list of supported scopes for distributing the sparsity budget
@@ -185,6 +194,63 @@ class LevelPruner(BasePruner):
                 f"{nnz_elements:,}",
             ]
         )
+
+
+# NOTE: We use Microsoft's NNI library to perform channel pruning for the full network.
+# As the flow for this differs from that designed for custom pruners, we have a
+# separate class. Also, we recompute the graph after pruning.
+class ChannelPruner:
+    FIELDS = ["Layer", "In (Old -> New)", "Out (Old -> New)", "Sparsity"]
+
+    def __init__(self, config_list):
+        self.config_list = config_list
+        self.summary = []
+
+    def prune(self, model: nn.Module, input_generator):
+        batch = next(input_generator)
+        pruner = L1NormPruner(model, self.config_list, dummy_input=batch["x"])
+        _, masks = pruner.compress()
+        pruner._unwrap_model()
+        original = copy.deepcopy(model)
+        ModelSpeedup(model, batch["x"], masks).speedup_model()
+
+        # Recompute the graph as the architecture would've changed
+        graph = MaseGraph(model)
+        graph = init_metadata_analysis_pass(graph, None)
+        graph = add_common_metadata_analysis_pass(graph, batch)
+        graph = add_software_metadata_analysis_pass(graph, None)
+
+        # Compute the difference between the original and pruned model (channel count)
+        for name, module in original.named_modules():
+            if not isinstance(module, (nn.Conv2d, nn.Linear)):
+                continue
+
+            new_module = get_module_by_name(model, name)
+            self.summary.append(
+                [
+                    name,
+                    f"{module.weight.shape[1]} -> {new_module.weight.shape[1]}",
+                    f"{module.weight.shape[0]} -> {new_module.weight.shape[0]}",
+                    f"{1 - new_module.weight.numel() / module.weight.numel():.4f}",
+                ]
+            )
+
+        return graph
+
+    def show_summary(self):
+        colalign = ("left", "center")
+        logger.info(
+            f"\n{tabulate(self.summary, self.FIELDS, 'pretty', colalign=colalign)}"
+        )
+
+    def save_summary(self, save_dir):
+        save_path = save_dir / "weight_summary.csv"
+        with open(save_path, "w") as f:
+            f.write(",".join(self.FIELDS) + "\n")
+            for row in self.summary:
+                # Wrap everything in quotes to avoid issues with commas in the data
+                f.write(",".join(map(str, [f'"{x}"' for x in row])) + "\n")
+        logger.info(f"Saved weight pruning summary to {save_path}")
 
 
 # Activation pruner routine ------------------------------------------------------------

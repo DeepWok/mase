@@ -1,9 +1,9 @@
 # Utilities (helper classes, functions, etc.) for the pruning transform
 
-import numpy as np
+from functools import reduce
+
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
 from pathlib import Path
 
 from chop.tools.logger import getLogger
@@ -50,6 +50,14 @@ def estimate_model_size(model: nn.Module, precision: int = 32) -> float:
     paramters = count_parameters(model)
     buffers = count_buffers(model)
     return (paramters + buffers) * precision / (8 * 1000**2)
+
+
+# Retrieve a module nested in another by its access string. Note that this works even
+# when there is a Sequential in the module. Refer to this link for more information:
+# https://discuss.pytorch.org/t/how-to-access-to-a-layer-by-module-name/83797/8
+def get_module_by_name(module, access_string: str):
+    names = access_string.split(sep=".")
+    return reduce(getattr, names, module)
 
 
 # Classes ------------------------------------------------------------------------------
