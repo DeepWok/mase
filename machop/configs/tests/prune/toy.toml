@@ -1,5 +1,5 @@
 # A basic toy example that demonstrates weight and activation pruning
-model = "toy-conv"
+model = "toy_convnet"
 dataset = "cifar10"
 
 [passes.prune.weight]

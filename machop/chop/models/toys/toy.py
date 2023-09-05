@@ -151,7 +151,7 @@ def get_toy_testmodel(
 ):
     image_size = info["image_size"]
     num_classes = info["num_classes"]
-    print(num_classes)
+    # print(num_classes)
     return ToyTestModel(image_size, num_classes)
 
 

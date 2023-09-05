@@ -56,7 +56,7 @@ def main():
         data_module.prepare_data()
         data_module.setup()
         # NOTE: We only support vision classification models for now.
-        dummy_input = get_dummy_input(data_module, "cls", is_nlp_model=False)
+        dummy_input = get_dummy_input(model_info, data_module, "cls")
 
         # We need the input generator to do a sample forward pass to log information on
         # the channel-wise activation sparsity.
@@ -67,10 +67,9 @@ def main():
             which_dataloader="train",
         )
 
-        model_inst_fn = models.get_model(config["model"], task="cls")
-        model = model_inst_fn(dataset_info, pretrained=True)
-
+        model = models.get_model(config["model"], "cls", dataset_info, pretrained=True)
         graph = MaseGraph(model=model)
+
         # NOTE: Both functions have pass arguments that are not used in this example
         graph = init_metadata_analysis_pass(graph, None)
         graph = add_common_metadata_analysis_pass(graph, dummy_input)
