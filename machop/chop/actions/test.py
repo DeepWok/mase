@@ -11,19 +11,6 @@ from pytorch_lightning.plugins.environments import SLURMEnvironment
 logger = logging.getLogger(__name__)
 
 
-import logging
-import os
-import pickle
-
-import pytorch_lightning as pl
-from chop.plt_wrapper import get_model_wrapper
-from chop.tools.checkpoint_load import load_model
-from pytorch_lightning.loggers import TensorBoardLogger
-from pytorch_lightning.plugins.environments import SLURMEnvironment
-
-logger = logging.getLogger(__name__)
-
-
 def test(
     model,
     tokenizer,
@@ -60,7 +47,7 @@ def test(
     plt_model = wrapper_cls(
         model,
         tokenizer=tokenizer,
-        info=dataset_info,
+        dataset_info=dataset_info,
         learning_rate=learning_rate,
         optimizer=optimizer,
     )

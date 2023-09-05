@@ -1,6 +1,6 @@
 # basics
 model = "toy"
-dataset = "toy-tiny"
+dataset = "toy_tiny"
 # training
 training_optimizer = "adamw"
 learning_rate = 1e-5
