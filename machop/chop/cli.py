@@ -536,7 +536,7 @@ class ChopCLI:
             choices=ACCELERATORS,
             help=f"""
                 type of accelerator for training. One of
-                {'(' + '|'.join(LOG_LEVELS) + ')'} (default: %(default)s)
+                {'(' + '|'.join(ACCELERATORS) + ')'} (default: %(default)s)
             """,
             metavar="TYPE",
         )

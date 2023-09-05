@@ -1,9 +1,18 @@
 import logging
 import os
+from pathlib import Path
 
 import pytorch_lightning as pl
 from chop.plt_wrapper import get_model_wrapper
 from chop.tools.checkpoint_load import load_model
+from chop.tools.get_input import get_dummy_input
+from chop.passes import (
+    add_common_metadata_analysis_pass,
+    init_metadata_analysis_pass,
+    add_software_metadata_analysis_pass,
+)
+from chop.passes.transforms.interface import save_mase_graph_transform_pass
+from chop.passes.graph import MaseGraph
 from pytorch_lightning.callbacks import LearningRateMonitor, ModelCheckpoint
 from pytorch_lightning.loggers import TensorBoardLogger
 from pytorch_lightning.plugins.environments import SLURMEnvironment
@@ -104,3 +113,16 @@ def train(
         pl_model,
         datamodule=data_module,
     )
+
+    # Save the trained model along with relevant metadata in the training_ckpts folder.
+    # NOTE: This is important if the model was previously transformed with architectural
+    # changes. The state dictionary that's saved by PyTorch Lightning wouldn't work.
+    if load_name is not None and load_type == "mz":
+        graph = MaseGraph(model)
+        dummy_input = get_dummy_input(model_info, data_module, task)
+        graph = init_metadata_analysis_pass(graph, None)
+        graph = add_common_metadata_analysis_pass(graph, dummy_input)
+        graph = add_software_metadata_analysis_pass(graph, None)
+        transformed_ckpt = Path(save_path) / "transformed_ckpt"
+        transformed_ckpt.mkdir(parents=True, exist_ok=True)
+        save_mase_graph_transform_pass(graph, pass_args=transformed_ckpt)
