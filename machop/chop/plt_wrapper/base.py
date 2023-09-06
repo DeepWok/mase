@@ -9,11 +9,18 @@ from torchmetrics import Accuracy, MeanMetric
 
 class WrapperBase(pl.LightningModule):
     def __init__(
-        self, model, learning_rate=5e-4, epochs=1, optimizer=None, dataset_info=None
+        self,
+        model,
+        learning_rate=5e-4,
+        weight_decay=0,
+        epochs=1,
+        optimizer=None,
+        dataset_info=None,
     ):
         super().__init__()
         self.model = model
         self.learning_rate = learning_rate
+        self.weight_decay = weight_decay
         self.loss_fn = torch.nn.CrossEntropyLoss()
         self.epochs = epochs
         self.optimizer = optimizer
@@ -93,12 +100,16 @@ class WrapperBase(pl.LightningModule):
         # Use self.trainer.model.parameters() instead of self.parameters() to support FullyShared (Model paralleled) training
         if self.optimizer == "adamw":
             opt = torch.optim.AdamW(
-                self.trainer.model.parameters(), lr=self.learning_rate
+                self.trainer.model.parameters(),
+                lr=self.learning_rate,
+                weight_decay=self.weight_decay,
             )
             scheduler = CosineAnnealingLR(opt, T_max=self.epochs, eta_min=1e-6)
         elif self.optimizer == "adam":
             opt = torch.optim.Adam(
-                self.trainer.model.parameters(), lr=self.learning_rate
+                self.trainer.model.parameters(),
+                lr=self.learning_rate,
+                weight_decay=self.weight_decay,
             )
             scheduler = CosineAnnealingLR(opt, T_max=self.epochs, eta_min=1e-6)
         elif self.optimizer in ["sgd_warmup", "sgd"]:

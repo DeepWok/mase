@@ -20,6 +20,7 @@ def test(
     task,
     optimizer,
     learning_rate,
+    weight_decay,
     plt_trainer_args,
     auto_requeue,
     save_path,
@@ -49,6 +50,7 @@ def test(
         tokenizer=tokenizer,
         dataset_info=dataset_info,
         learning_rate=learning_rate,
+        weight_decay=weight_decay,
         optimizer=optimizer,
     )
 
