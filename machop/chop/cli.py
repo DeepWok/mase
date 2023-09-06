@@ -129,6 +129,7 @@ CLI_DEFAULTS = {
     "training_optimizer": OPTIMIZERS[0],
     "trainer_precision": TRAINER_PRECISION[1],
     "learning_rate": 1e-5,
+    "weight_decay": 0,
     "max_epochs": 20,
     "max_steps": -1,
     "accumulate_grad_batches": 1,
@@ -241,6 +242,7 @@ class ChopCLI:
             "task": self.args.task,
             "optimizer": self.args.training_optimizer,
             "learning_rate": self.args.learning_rate,
+            "weight_decay": self.args.weight_decay,
             "plt_trainer_args": plt_trainer_args,
             "auto_requeue": self.args.is_to_auto_requeue,
             "save_path": os.path.join(self.output_dir_sw, "training_ckpts"),
@@ -275,6 +277,7 @@ class ChopCLI:
             "task": self.args.task,
             "optimizer": self.args.training_optimizer,
             "learning_rate": self.args.learning_rate,
+            "weight_decay": self.args.weight_decay,
             "plt_trainer_args": plt_trainer_args,
             "auto_requeue": self.args.is_to_auto_requeue,
             "save_path": os.path.join(self.output_dir_sw, "checkpoints"),
@@ -475,6 +478,13 @@ class ChopCLI:
             dest="learning_rate",
             type=float,
             help="initial learning rate for training. (default: %(default)s)",
+            metavar="NUM",
+        )
+        trainer_group.add_argument(
+            "--weight-decay",
+            dest="weight_decay",
+            type=float,
+            help="weight decay for training. (default: %(default)s)",
             metavar="NUM",
         )
         trainer_group.add_argument(
