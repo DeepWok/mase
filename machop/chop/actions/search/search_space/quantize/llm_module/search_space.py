@@ -13,7 +13,7 @@ from collections.abc import MutableMapping
 # get llm specific funcs
 from .quan_config_opt import parse_opt_quantized_config
 from .sampler_opt import sample_opt_quant_config
-from ..base import SearchSpaceBase
+from ...base import SearchSpaceBase
 
 
 def flatten_dict(nested_dict, parent_key=None, flattened={}, separator="/"):

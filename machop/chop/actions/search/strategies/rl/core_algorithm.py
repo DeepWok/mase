@@ -1,4 +1,4 @@
-from ..base import StrategyBase
+from ..base import SearchStrategyBase
 from .env import env_map
 from stable_baselines3 import A2C, PPO
 from stable_baselines3.common.callbacks import (
@@ -15,10 +15,10 @@ algorithm_map = {
 }
 
 
-class StrategyRL(StrategyBase):
+class StrategyRL(SearchStrategyBase):
     iterative = True
 
-    def read_setup(self):
+    def _setup(self):
         setup = self.config["setup"]
         self.model_parallel = setup["model_parallel"]
         self.runner_style = setup["runner_style"]
