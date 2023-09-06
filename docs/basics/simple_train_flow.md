@@ -14,7 +14,7 @@ In this case, we can try a toymodel, the command looks like the following
 
 ```bash
 cd mase-tools/machop
-./ch train --config configs/archive/test/train.toml --model toy
+./ch train toy toy-tiny --config configs/archive/test/train.toml
 ```
 
 You can fetch all command-line arguments:
@@ -22,7 +22,16 @@ You can fetch all command-line arguments:
 ```bash
 ./ch -v
 [2023-07-04 13:43:10,177] [INFO] [real_accelerator.py:110:get_accelerator] Setting ds_accelerator to cuda (auto detect)
-usage: Chop CLI [-h] [--github-ci] [--debug] [--log-level {debug,info,warning,error,critical}] [--interactive] [--ls LS_TARGET] [--load LOAD_NAME] ...
+usage: ch [--config PATH] [--task TASK] [--load PATH] [--load-type]
+          [--batch-size NUM] [--debug] [--log-level] [--seed NUM]
+          [--training-optimizer TYPE] [--trainer-precision TYPE]
+          [--learning-rate NUM] [--max-epochs NUM] [--max-steps NUM]
+          [--accumulate-grad-batches NUM] [--cpu NUM] [--gpu NUM]
+          [--nodes NUM] [--accelerator TYPE] [--strategy TYPE]
+          [--auto-requeue] [--github-ci] [--target STR] [--num-targets NUM]
+          [--pretrained] [--max-token-len NUM] [--project-dir DIR]
+          [--project NAME] [-h] [-V] [--info [TYPE]]
+          action [model] [dataset]
 
 positional arguments:
   action                The action to be performed. Must be one of ['train', 'eval', 'transform', 'search']
@@ -127,5 +136,5 @@ To test the model trained above you can use:
 ```bash
 # After training, you will have your checkpoint under mase-tools/mase_output
 # For example, the checkpoint is under mase-tools/mase_output/toy_classification_toy-tiny_2023-07-03/software/training_ckpts/best.ckpt 
-./ch test --config configs/archive/test/train.toml --model toy --load ../mase_output/toy_classification_toy-tiny_2023-07-03/software/training_ckpts/best.ckpt --load-type pl
+./ch test --config configs/archive/test/train.toml --load ../mase_output/toy_classification_toy-tiny_2023-07-03/software/training_ckpts/best.ckpt --load-type pl
 ```
