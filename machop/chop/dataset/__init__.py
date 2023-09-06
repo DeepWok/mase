@@ -116,6 +116,8 @@ class MaseDataModule(pl.LightningDataModule):
         self.load_from_cache_file = load_from_cache_file
         self.model_name = model_name
 
+        self._is_setup = False
+
         self.train_dataset = None
         self.val_dataset = None
         self.test_dataset = None
@@ -218,6 +220,8 @@ class MaseDataModule(pl.LightningDataModule):
         if self.pred_dataset is not None:
             self.pred_dataset.setup()
 
+        self._is_setup = True
+
     def train_dataloader(self) -> DataLoader:
         return DataLoader(
             self.train_dataset,
@@ -257,3 +261,7 @@ class MaseDataModule(pl.LightningDataModule):
             shuffle=False,
             num_workers=self.num_workers,
         )
+
+    @property
+    def is_setup(self):
+        return self._is_setup

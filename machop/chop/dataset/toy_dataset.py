@@ -11,7 +11,7 @@ class ToyTinyDataset(Dataset):
         "image_size": (1, 2, 2),
     }
 
-    def __init__(self, split="train", num_samples: int = 512) -> None:
+    def __init__(self, split="train", num_samples: int = 10240) -> None:
         super().__init__()
         self.num_samples = num_samples
 
@@ -29,15 +29,13 @@ class ToyTinyDataset(Dataset):
             )
 
         self.data = (rng.rand(num_samples, 4) - 0.5) * 2
-        self.labels = np.zeros((num_samples, 1))
-        for i in range(num_samples):
-            self.labels[i, :] = np.sum(self.data[i, ...]) > 0
+        self.labels = (np.sum(self.data, axis=1) > 0).astype(np.int64)
+
+        self.data = self.data.reshape(num_samples, 1, 2, 2)
 
     def __getitem__(self, index):
-        data_i = torch.tensor(self.data[index, ...], dtype=torch.float32).reshape(
-            1, 2, 2
-        )
-        label_i = torch.tensor(self.labels[index, ...], dtype=torch.long).squeeze()
+        data_i = torch.tensor(self.data[index, ...], dtype=torch.float32)
+        label_i = torch.tensor(self.labels[index, ...], dtype=torch.long)
         return data_i, label_i
 
     def __len__(self):
@@ -50,7 +48,7 @@ class ToyTinyDataset(Dataset):
         pass
 
 
-def get_toy_dataset(name: str, split: str, num_samples: int = 512):
+def get_toy_dataset(name: str, split: str, num_samples: int = 10240):
     assert split in ["train", "validation", "test", "pred"]
 
     match name:

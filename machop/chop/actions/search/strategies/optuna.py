@@ -1,28 +1,29 @@
 import optuna
+import torch
+import pandas as pd
+import logging
+from tabulate import tabulate
 
 from functools import partial
-from .base import StrategyBase
+from .base import SearchStrategyBase
 
-from accelerate import (
-    infer_auto_device_map,
-    init_empty_weights,
-    load_checkpoint_and_dispatch,
-)
-from chop.passes.analysis.total_bits_estimator import total_bits_module_analysis_pass
+from ....passes.analysis.total_bits_estimator import total_bits_module_analysis_pass
+
+logger = logging.getLogger(__name__)
 
 
-class StrategyOptunaAlgorithm(StrategyBase):
-    iterative = False
+class SearchStrategyOptuna(SearchStrategyBase):
+    is_iterative = False
 
-    def read_setup(self):
-        setup = self.config["setup"]
-        self.n_jobs = setup["n_jobs"]
-        self.n_trials = setup["n_trials"]
-        self.timeout = setup["timeout"]
-        self.sampler = setup["sampler"]
-        self.model_parallel = setup["model_parallel"]
-        self.runner_style = setup["runner_style"]
-        self.runner = self.get_runner(self.runner_style)
+    def _post_init_setup(self):
+        self.sum_scaled_metrics = self.config["setup"]["sum_scaled_metrics"]
+        self.metric_names = list(sorted(self.config["metrics"].keys()))
+        if not self.sum_scaled_metrics:
+            self.directions = [
+                self.config["metrics"][k]["direction"] for k in self.metric_names
+            ]
+        else:
+            self.direction = self.config["setup"]["direction"]
 
     def sampler_map(self, name):
         match name.lower():
@@ -40,45 +41,155 @@ class StrategyOptunaAlgorithm(StrategyBase):
                 raise ValueError(f"Unknown sampler name: {name}")
         return sampler
 
-    def compute_software_metric(self, model):
-        # loss and a simple cost, this is a toy for testing
-        loss, _ = self.runner(model)
-        # TODO: add input associated cost?
-        cost = total_bits_module_analysis_pass(model, {})
-        return loss + cost["avg_bit"]
+    def compute_software_metrics(self, model, sampled_config: dict, is_eval_mode: bool):
+        # note that model can be mase_graph or nn.Module
+        if is_eval_mode:
+            with torch.no_grad():
+                metrics = self.sw_runner(
+                    self.data_loader, model, sampled_config, self.num_batches
+                )
+        else:
+            metrics = self.sw_runner(
+                self.data_loader, model, sampled_config, self.num_batches
+            )
+        return metrics
 
-    def sample(self, indexes, quant_config_seed, search_space):
-        sampled_config = search_space.config_sampler(
-            indexes=indexes, config_seed=quant_config_seed
+    def compute_hardware_metrics(self, model, sampled_config, is_eval_mode: bool):
+        if is_eval_mode:
+            with torch.no_grad():
+                metrics = self.hw_runner(
+                    self.data_loader, model, sampled_config, self.num_batches
+                )
+        else:
+            metrics = self.hw_runner(
+                self.data_loader, model, sampled_config, self.num_batches
+            )
+        return metrics
+
+    def objective(self, trial: optuna.trial.Trial, search_space):
+        sampled_indexes = {}
+        for name, length in search_space.choice_lengths_flattened.items():
+            sampled_indexes[name] = trial.suggest_int(name, 0, length - 1)
+        sampled_config = search_space.flattened_indexes_to_config(sampled_indexes)
+
+        is_eval_mode = self.config.get("eval_mode", True)
+        model = search_space.rebuild_model(sampled_config, is_eval_mode)
+        software_metrics = self.compute_software_metrics(
+            model, sampled_config, is_eval_mode
         )
-        sampled_config = search_space.config_parser(
-            sampled_config, search_space.get_num_layers()
+        hardware_metrics = self.compute_hardware_metrics(
+            model, sampled_config, is_eval_mode
         )
-        model = search_space.rebuild_model(sampled_config)
-        return self.compute_software_metric(model)
+        metrics = software_metrics | hardware_metrics
+        scaled_metrics = {}
+        for metric_name in self.metric_names:
+            scaled_metrics[metric_name] = (
+                self.config["metrics"][metric_name]["scale"] * metrics[metric_name]
+            )
 
-    def objective(self, trial, quant_config_seed, search_space):
-        # wrapper for optuna Tiral
-        sampled = {}
-        for k, v in search_space.index_ranges.items():
-            sampled[k] = trial.suggest_int(k, 0, v - 1)
-        indexes = search_space.transform_flat_dict_to_nested_dict(sampled)
-        return self.sample(indexes, quant_config_seed, search_space)
+        trial.set_user_attr("software_metrics", software_metrics)
+        trial.set_user_attr("hardware_metrics", hardware_metrics)
+        trial.set_user_attr("scaled_metrics", scaled_metrics)
+        trial.set_user_attr("sampled_config", sampled_config)
 
-    def search(self, search_space):
-        indexes, config_seed = search_space.build_opt_seed_and_indexes()
-        study = optuna.create_study(sampler=self.sampler_map(self.sampler))
+        if not self.sum_scaled_metrics:
+            return list(scaled_metrics.values())
+        else:
+            return sum(scaled_metrics.values())
+
+    def search(self, search_space) -> optuna.study.Study:
+        study_kwargs = {
+            "sampler": self.sampler_map(self.config["setup"]["sampler"]),
+        }
+        if not self.sum_scaled_metrics:
+            study_kwargs["directions"] = self.directions
+        else:
+            study_kwargs["direction"] = self.direction
+
+        study = optuna.create_study(**study_kwargs)
+
         study.optimize(
-            func=partial(
-                self.objective, quant_config_seed=config_seed, search_space=search_space
-            ),
-            n_trials=1,
+            func=partial(self.objective, search_space=search_space),
+            n_jobs=self.config["setup"]["n_jobs"],
+            n_trials=self.config["setup"]["n_trials"],
+            timeout=self.config["setup"]["timeout"],
+            show_progress_bar=True,
         )
-        best_config = study.best_params
-        indexes = search_space.transform_flat_dict_to_nested_dict(best_config)
-        sampled_config = search_space.config_sampler(indexes, config_seed=config_seed)
-        sampled_config = search_space.config_parser(
-            sampled_config, search_space.get_num_layers()
+        self._save_study(study, self.save_dir / "study.pkl")
+        self._save_search_dataframe(study, search_space, self.save_dir / "log.json")
+        self._save_best(study, self.save_dir / "best.json")
+
+        return study
+
+    @staticmethod
+    def _save_search_dataframe(study: optuna.study.Study, search_space, save_path):
+        df = study.trials_dataframe(
+            attrs=(
+                "number",
+                "value",
+                "user_attrs",
+                "system_attrs",
+                "state",
+                "datetime_start",
+                "datetime_complete",
+                "duration",
+            )
         )
-        model = search_space.rebuild_model(sampled_config)
-        return study.best_value, sampled_config, model
+        df.to_json(save_path, orient="index", indent=4)
+        return df
+
+    @staticmethod
+    def _save_best(study: optuna.study.Study, save_path):
+        df = pd.DataFrame(
+            columns=[
+                "number",
+                "value",
+                "software_metrics",
+                "hardware_metrics",
+                "scaled_metrics",
+                "sampled_config",
+            ]
+        )
+        if study._is_multi_objective:
+            best_trials = study.best_trials
+            for trial in best_trials:
+                row = [
+                    trial.number,
+                    trial.values,
+                    trial.user_attrs["software_metrics"],
+                    trial.user_attrs["hardware_metrics"],
+                    trial.user_attrs["scaled_metrics"],
+                    trial.user_attrs["sampled_config"],
+                ]
+                df.loc[len(df)] = row
+        else:
+            best_trial = study.best_trial
+            row = [
+                best_trial.number,
+                best_trial.value,
+                best_trial.user_attrs["software_metrics"],
+                best_trial.user_attrs["hardware_metrics"],
+                best_trial.user_attrs["scaled_metrics"],
+                best_trial.user_attrs["sampled_config"],
+            ]
+            df.loc[len(df)] = row
+        df.to_json(save_path, orient="index", indent=4)
+
+        txt = "Best trial(s):\n"
+        df_truncated = df.loc[
+            :, ["number", "software_metrics", "hardware_metrics", "scaled_metrics"]
+        ]
+        df_truncated.loc[
+            :, ["software_metrics", "hardware_metrics", "scaled_metrics"]
+        ] = df_truncated.loc[
+            :, ["software_metrics", "hardware_metrics", "scaled_metrics"]
+        ].applymap(
+            lambda x: {k: round(v, 3) for k, v in x.items()}
+        )
+        txt += tabulate(
+            df_truncated,
+            headers="keys",
+            tablefmt="orgtbl",
+        )
+        logger.info(f"Best trial(s):\n{txt}")
+        return df

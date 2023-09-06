@@ -37,13 +37,16 @@ from functools import partial
 
 import ipdb
 import pytorch_lightning as pl
+import transformers
+import datasets as hf_datasets
+import optuna
 from tabulate import tabulate
 import torch
 
-import chop.models as models
-from chop.actions import test, train, transform, search
-from chop.dataset import MaseDataModule, AVAILABLE_DATASETS, get_dataset_info
-from chop.tools import getLogger, post_parse_load_config
+from . import models
+from .actions import test, train, transform, search
+from .dataset import MaseDataModule, AVAILABLE_DATASETS, get_dataset_info
+from .tools import getLogger, post_parse_load_config
 
 
 # Housekeeping -------------------------------------------------------------------------
@@ -133,6 +136,7 @@ CLI_DEFAULTS = {
     "max_epochs": 20,
     "max_steps": -1,
     "accumulate_grad_batches": 1,
+    "log_every_n_steps": 50,
     # Runtime environment options
     "num_workers": os.cpu_count(),
     "num_devices": 1,
@@ -172,14 +176,30 @@ class ChopCLI:
         else:
             match args.log_level:
                 case "debug":
+                    transformers.logging.set_verbosity_debug()
+                    hf_datasets.logging.set_verbosity_debug()
+                    optuna.logging.set_verbosity(optuna.logging.DEBUG)
                     self.logger.setLevel(logging.DEBUG)
                 case "info":
+                    transformers.logging.set_verbosity_info()
+                    hf_datasets.logging.set_verbosity_info()
+                    # mute optuna's logger by default since it's too verbose
+                    optuna.logging.set_verbosity(optuna.logging.WARNING)
                     self.logger.setLevel(logging.INFO)
                 case "warning":
+                    transformers.logging.set_verbosity_warning()
+                    hf_datasets.logging.set_verbosity_warning()
+                    optuna.logging.set_verbosity(optuna.logging.WARNING)
                     self.logger.setLevel(logging.WARNING)
                 case "error":
+                    transformers.logging.set_verbosity_error()
+                    hf_datasets.logging.set_verbosity_error()
+                    optuna.logging.set_verbosity(optuna.logging.ERROR)
                     self.logger.setLevel(logging.ERROR)
                 case "critical":
+                    transformers.logging.set_verbosity_critical()
+                    hf_datasets.logging.set_verbosity_critical()
+                    optuna.logging.set_verbosity(optuna.logging.CRITICAL)
                     self.logger.setLevel(logging.CRITICAL)
 
         # Merge arguments from the configuration file (if one exists) and print
@@ -225,6 +245,7 @@ class ChopCLI:
             "fast_dev_run": self.args.to_debug,
             "precision": self.args.trainer_precision,
             "accumulate_grad_batches": self.args.accumulate_grad_batches,
+            "log_every_n_steps": self.args.log_every_n_steps,
         }
 
         # Load from a checkpoint!
@@ -297,8 +318,6 @@ class ChopCLI:
         self.data_module.prepare_data()
         self.data_module.setup()
 
-        # Resolve the quirk with NLP models where the actual model is embedded in a dict
-
         transform_params = {
             "model": self.model,
             "model_info": self.model_info,
@@ -320,14 +339,14 @@ class ChopCLI:
             load_name = self.args.load_name
 
         search_params = {
-            "model_name": self.args.model,
             "model": self.model,
+            "model_info": self.model_info,
             "task": self.args.task,
-            "info": self.dataset_info,
+            "dataset_info": self.dataset_info,
             "data_module": self.data_module,
             "accelerator": self.args.accelerator,
             "search_config": self.args.config,
-            "save_path": os.path.join(self.output_dir_sw, "training_ckpts"),
+            "save_path": self.output_dir_sw.joinpath("search_ckpts"),
             "load_name": load_name,
             "load_type": self.args.load_type,
         }
@@ -509,6 +528,13 @@ class ChopCLI:
             dest="accumulate_grad_batches",
             type=int,
             help="number of batches to accumulate gradients. (default: %(default)s)",
+            metavar="NUM",
+        )
+        trainer_group.add_argument(
+            "--log-every-n-steps",
+            dest="log_every_n_steps",
+            type=_positive_int,
+            help="log every n steps. No logs if num_batches < log_every_n_steps. (default: %(default)s))",
             metavar="NUM",
         )
 

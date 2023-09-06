@@ -1,7 +1,30 @@
-from .search_space_quantise import MixedPrecisionSearchSpace
-from .llm_quantise import LLMMixedPrecisionSearchSpace
+from .quantize.graph import GraphSearchSpaceMixedPrecisionPTQ
+from .base import SearchSpaceBase
 
-search_space_map = {
-    "mixed_precision": MixedPrecisionSearchSpace,
-    "llm_mixed_precision": LLMMixedPrecisionSearchSpace,
+# from .quantize.llm_quantise import LLMMixedPrecisionSearchSpace
+
+SEARCH_SPACE_MAP = {
+    "graph/quantize/mixed_precision_ptq": GraphSearchSpaceMixedPrecisionPTQ,
+    # "module/quantize/llm_mixed_precision_ptq": LLMMixedPrecisionSearchSpace,
 }
+
+
+def get_search_space_cls(name: str) -> SearchSpaceBase:
+    """
+    Get the search space class by name.
+
+    Args:
+        name: the name of the search space class
+
+    Returns:
+        the search space class
+
+    ---
+
+    Available search space classes:
+    - "graph/quantize/mixed_precision_ptq" -> `GraphSearchSpaceMixedPrecisionPTQ`:
+    the search space for mixed-precision post-training-quantization quantization search on mase graph
+    """
+    if name not in SEARCH_SPACE_MAP:
+        raise ValueError(f"{name} must be defined in {list(SEARCH_SPACE_MAP.keys())}.")
+    return SEARCH_SPACE_MAP[name]

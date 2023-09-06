@@ -1,0 +1,51 @@
+# basics
+model = "resnet18"
+dataset = "cifar10"
+task = "cls"
+
+max_epochs = 5
+batch_size = 128
+learning_rate = 1e-2
+accelerator = "gpu"
+project = "resnet18_cifar10"
+seed = 42
+
+[search.search_space]
+name = "graph/quantize/mixed_precision_ptq"
+
+[search.search_space.setup]
+by = "name"
+
+[search.search_space.seed.default.config]
+name = ["integer"]
+data_in_width = [4, 8]
+data_in_frac_width = [3, 4, 5, 6, 7, 8, 9]
+weight_width = [2, 4, 8]
+weight_frac_width = [3, 4, 5, 6, 7, 8, 9]
+bias_width = [2, 4, 8]
+bias_frac_width = [3, 4, 5, 6, 7, 8, 9]
+
+[search.strategy]
+name = "optuna"
+sw_runner = "basic_evaluation"
+hw_runner = "average_bitwidth"
+eval_mode = true
+data_loader = 'val_dataloader'
+num_samples = 256
+
+[search.strategy.setup]
+n_jobs = 1
+n_trials = 10
+timeout = 20000
+sampler = "tpe"
+# sum_scaled_metrics = true # single objective
+# direction = "maximize"
+sum_scaled_metrics = false # multi objective
+
+[search.strategy.metrics]
+# loss.scale = 0.0
+# loss.direction = "minimize"
+accuracy.scale = 1.0
+accuracy.direction = "maximize"
+average_bitwidth.scale = 0.2
+average_bitwidth.direction = "minimize"
