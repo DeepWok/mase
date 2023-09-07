@@ -74,12 +74,8 @@ class GraphSearchSpaceMixedPrecisionPTQ(SearchSpaceBase):
         self._build_node_info()
 
         choices = {}
-        choice_lengths = defaultdict(dict)
         seed = self.config["seed"]
 
-        default_length = {
-            "config": {k: len(v) for k, v in seed["default"]["config"].items()}
-        }
         match self.config["setup"]["by"]:
             case "name":
                 # iterate through all the quantizeable nodes in the graph
@@ -89,13 +85,8 @@ class GraphSearchSpaceMixedPrecisionPTQ(SearchSpaceBase):
                     if n_info["mase_op"] in QUANTIZEABLE_OP:
                         if n_name in seed:
                             choices[n_name] = deepcopy(seed[n_name])
-                            for k, v in seed[n_name]["config"].items():
-                                if "config" not in choice_lengths[n_name]:
-                                    choice_lengths[n_name] = {"config": {}}
-                                choice_lengths[n_name]["config"][k] = len(v)
                         else:
                             choices[n_name] = deepcopy(seed["default"])
-                            choice_lengths[n_name] = deepcopy(default_length)
             case "type":
                 # iterate through all the quantizeable nodes in the graph
                 # if the node mase_op is in the seed, use the node seed search space
@@ -105,13 +96,8 @@ class GraphSearchSpaceMixedPrecisionPTQ(SearchSpaceBase):
                     if n_op in QUANTIZEABLE_OP:
                         if n_op in seed:
                             choices[n_name] = deepcopy(seed[n_op])
-                            for k, v in seed[n_op]["config"].items():
-                                if "config" not in choice_lengths[n_name]:
-                                    choice_lengths[n_name] = {"config": {}}
-                                choice_lengths[n_name]["config"][k] = len(v)
                         else:
                             choices[n_name] = {"config": deepcopy(seed["default"])}
-                            choice_lengths[n_name] = deepcopy(default_length)
             case _:
                 raise ValueError(
                     f"Unknown quantization by: {self.config['setup']['by']}"
@@ -119,7 +105,9 @@ class GraphSearchSpaceMixedPrecisionPTQ(SearchSpaceBase):
 
         # flatten the choices and choice_lengths
         flatten_dict(choices, flattened=self.choices_flattened)
-        flatten_dict(choice_lengths, flattened=self.choice_lengths_flattened)
+        self.choice_lengths_flattened = {
+            k: len(v) for k, v in self.choices_flattened.items()
+        }
 
     def flattened_indexes_to_config(self, indexes: dict[str, int]):
         """
