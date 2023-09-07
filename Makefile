@@ -9,6 +9,10 @@ sync:
 	bash mlir-air/utils/clone-llvm.sh 
 	bash mlir-air/utils/clone-mlir-aie.sh 
 
+sync-fpgaconvnet:
+	git submodule sync
+	git submodule update --init --recursive "machop/third-party/fpgaconvnet-optimiser"
+
 # Build Docker container
 build-docker: 
 	docker build --build-arg UID=$(user) --build-arg GID=$(group) --build-arg VHLS_PATH=$(vhls) -f Docker/Dockerfile --tag mase-ubuntu2204 Docker

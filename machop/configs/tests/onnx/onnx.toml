@@ -1,0 +1,10 @@
+# NOTE: This configuration file showcases an example of how to use the ONNX annotation
+# pass, which converts a PyTorch model to ONNX and annotates the nodes with sparsity
+# information. This pass is designed to be used after model pruning passes, specifically
+# ones that generate activation sparsity reports.
+model = "resnet18"
+dataset = "imagenet"
+
+[passes.onnx_annotate]
+# This data path only works on Tarrasque.
+data_path = "/data/shared/date_2024/A1/25/resnet18/software/transform/prune/activation_report.toml"

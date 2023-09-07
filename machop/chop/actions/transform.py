@@ -154,6 +154,17 @@ def transform(
                 graph = PASSES[pass_name](graph, pass_args=None)
             case "conv_bn_fusion":
                 graph = PASSES[pass_name](graph, pass_args=None)
+            case "onnx_annotate":
+                onnx_dir = save_dir / "onnx"
+                onnx_dir.mkdir(parents=True, exist_ok=True)
+                kwargs = {
+                    "save_path": onnx_dir,
+                    "data_path": pass_config["data_path"],
+                }
+                graph = PASSES[pass_name](graph, **kwargs)
+            case "fpgaconvnet_optimiser":
+                pass_config["save_dir"] = save_dir
+                graph = PASSES[pass_name](graph, pass_args=pass_config)
             case _:
                 my_pass = PASSES[pass_name]
                 graph = my_pass(graph, pass_args=pass_config)
