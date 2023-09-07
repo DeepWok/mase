@@ -10,6 +10,7 @@ from .analysis import (
     report_node_shape_analysis_pass,
     report_node_type_analysis_pass,
     verify_common_metadata_analysis_pass,
+    fpgaconvnet_optimiser_analysis_pass,
 )
 from .transforms import (
     load_mase_graph_transform_pass,
@@ -21,6 +22,7 @@ from .transforms import (
     save_node_meta_param_transform_pass,
     summarize_quantization_analysis_pass,
     conv_bn_fusion_transform_pass,
+    onnx_annotate_transform_pass,
 )
 from .transforms.quantize import quantized_func_map, quantized_module_map
 from .transforms.quantize.quant_parsers import parse_node_config
@@ -36,6 +38,7 @@ ANALYSIS_PASSES = [
     "report_node_meta_param",
     "report_node_shape",
     "report_node_type",
+    "fpgaconvnet_optimiser",
 ]
 TRANSFORM_PASSES = [
     "load_mase_graph",
@@ -61,6 +64,7 @@ PASSES = {
     "report_node_meta_param": report_node_meta_param_analysis_pass,
     "report_node_shape": report_node_shape_analysis_pass,
     "report_node_type": report_node_type_analysis_pass,
+    "fpgaconvnet_optimiser": fpgaconvnet_optimiser_analysis_pass,
     # transform
     "load_mase_graph": load_mase_graph_transform_pass,
     "load_node_meta_param": load_node_meta_param_transform_pass,
@@ -71,4 +75,5 @@ PASSES = {
     "prune": prune_transform_pass,
     "remove_prune_wrappers": prune_unwrap_transform_pass,
     "conv_bn_fusion": conv_bn_fusion_transform_pass,
+    "onnx_annotate": onnx_annotate_transform_pass,
 }

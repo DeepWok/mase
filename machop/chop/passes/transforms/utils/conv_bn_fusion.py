@@ -2,7 +2,6 @@
 # NOTE: This implementation is a derivative of the following:
 # https://github.com/pytorch/pytorch/blob/main/torch/fx/experimental/optimization.py
 
-import tqdm
 import torch.nn as nn
 import torch.fx as fx
 from tqdm.contrib.logging import tqdm_logging_redirect

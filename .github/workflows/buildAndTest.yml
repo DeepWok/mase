@@ -209,6 +209,17 @@ jobs:
                        tabulate tensorboard hyperopt accelerate \
                        optuna stable-baselines3 scikit-learn
           pip3 install cocotb[bus]==1.8.0 nni==2.10.1
+          pip3 install wandb==0.15.10 graphviz==0.20.1 onnxsim==0.4.33 \
+                       onnxruntime==1.15.1 onnxoptimizer==0.3.13 pydot==1.4.2 \
+                       protobuf==3.20.3 fpbinary==1.5.5
+          pip3 install xgboost==1.7.2 --extra-index-url https://download.pytorch.org/whl/cpu
+    
+    # TODO: This is a hack to get around a failing CI. The FPGAConvNet analysis pass
+    # imports from this third-party submodule which causes a failing CI as the submodule
+    # isn't setup.
+    - name: Setup the FPGAConvNet submodule
+      run: |
+        make sync-fpgaconvnet
 
     - name: Mase regression test 
       run: |
