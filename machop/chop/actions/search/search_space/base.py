@@ -81,7 +81,7 @@ class SearchSpaceBase:
         """
         raise NotImplementedError()
 
-    def rebuild_model(self, config, mode="eval") -> nn.Module | MaseGraph:
+    def rebuild_model(self, config, is_eval_mode: bool) -> nn.Module | MaseGraph:
         """
         Rebuild the model with the given config
         """

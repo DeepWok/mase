@@ -118,6 +118,8 @@ class RunnerBasicEval(SWRunnerBase):
     ) -> dict[str, float]:
         if not isinstance(model, torch.nn.Module):
             forward_model = model.model
+        else:
+            forward_model = model
         for i, batch in enumerate(data_loader):
             outputs = self.forward(batch, forward_model)
             self.loss(outputs["loss"])

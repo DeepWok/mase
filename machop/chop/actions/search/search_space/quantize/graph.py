@@ -1,3 +1,4 @@
+# This is the search space for mixed-precision post-training-quantization quantization search on mase graph.
 from copy import deepcopy
 from torch import nn
 from ..base import SearchSpaceBase
@@ -144,7 +145,7 @@ class GraphSearchSpaceMixedPrecisionPTQ(SearchSpaceBase):
         for k, v in indexes.items():
             flattened_config[k] = self.choices_flattened[k][v]
 
-        config = unflatten_dict(flattened_config, separator="/")
+        config = unflatten_dict(flattened_config)
         config["default"] = self.default_config
         config["by"] = self.config["setup"]["by"]
         return config
