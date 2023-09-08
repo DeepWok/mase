@@ -1,11 +1,14 @@
-from .quantize.graph import GraphSearchSpaceMixedPrecisionPTQ
+from .quantize import (
+    ManualHFModuleSearchSpaceMixedPrecisionPTQ,
+    GraphSearchSpaceMixedPrecisionPTQ,
+)
 from .base import SearchSpaceBase
 
 # from .quantize.llm_quantise import LLMMixedPrecisionSearchSpace
 
 SEARCH_SPACE_MAP = {
     "graph/quantize/mixed_precision_ptq": GraphSearchSpaceMixedPrecisionPTQ,
-    # "module/quantize/llm_mixed_precision_ptq": LLMMixedPrecisionSearchSpace,
+    "module/manual_hf/quantize/llm_mixed_precision_ptq": ManualHFModuleSearchSpaceMixedPrecisionPTQ,
 }
 
 
@@ -24,6 +27,8 @@ def get_search_space_cls(name: str) -> SearchSpaceBase:
     Available search space classes:
     - "graph/quantize/mixed_precision_ptq" -> `GraphSearchSpaceMixedPrecisionPTQ`:
     the search space for mixed-precision post-training-quantization quantization search on mase graph
+    - "module/manual_hf/quantize/llm_mixed_precision_ptq" -> `ManualHFModuleSearchSpaceMixedPrecisionPTQ`:
+    the search space for mixed-precision post-training-quantization quantization search on HuggingFace's PreTrainedModel
     """
     if name not in SEARCH_SPACE_MAP:
         raise ValueError(f"{name} must be defined in {list(SEARCH_SPACE_MAP.keys())}.")

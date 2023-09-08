@@ -9,3 +9,4 @@ from .modeling_bert import (
     BertQuantizedForSequenceClassification,
     BertQuantizedForTokenClassification,
 )
+from .quant_config_bert import parse_bert_quantized_config

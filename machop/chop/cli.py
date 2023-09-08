@@ -181,8 +181,8 @@ class ChopCLI:
                     optuna.logging.set_verbosity(optuna.logging.DEBUG)
                     self.logger.setLevel(logging.DEBUG)
                 case "info":
-                    transformers.logging.set_verbosity_info()
-                    hf_datasets.logging.set_verbosity_info()
+                    transformers.logging.set_verbosity_warning()
+                    hf_datasets.logging.set_verbosity_warning()
                     # mute optuna's logger by default since it's too verbose
                     optuna.logging.set_verbosity(optuna.logging.WARNING)
                     self.logger.setLevel(logging.INFO)

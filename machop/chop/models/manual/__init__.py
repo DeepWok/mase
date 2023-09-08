@@ -5,6 +5,7 @@ from .bert_quantized import (
     BertQuantizedConfig,
     BertQuantizedForSequenceClassification,
     BertTokenizer,
+    parse_bert_quantized_config,
 )
 from .llama_plain import (
     LlamaConfig,
@@ -16,6 +17,7 @@ from .llama_quantized import (
     LlamaQuantizedConfig,
     LlamaQuantizedForCausalLM,
     LlamaQuantizedForSequenceClassification,
+    parse_llama_quantized_config,
 )
 from .opt_plain import (
     OPTConfig,
@@ -27,6 +29,7 @@ from .opt_quantized import (
     OPTQuantizedConfig,
     OPTQuantizedForCausalLM,
     OPTQuantizedForSequenceClassification,
+    parse_opt_quantized_config,
 )
 
 logger = logging.getLogger(__name__)
@@ -36,8 +39,9 @@ MANUAL_MODELS = {
     "bert_quantized": {
         "config_cls": BertQuantizedConfig,
         "tokenizer_cls": BertTokenizer,
-        "info": MaseModelInfo(model_source="manual", task_type="nlp", sequence_classification=True),
+        "info": MaseModelInfo(model_source="manual", task_type="nlp", sequence_classification=True, is_quantized=True),
         "sequence_classification": BertQuantizedForSequenceClassification,
+        "quant_config_parser": parse_bert_quantized_config,
     },
     "llama_plain": {
         "config_cls": LlamaConfig,
@@ -49,9 +53,10 @@ MANUAL_MODELS = {
     "llama_quantized": {
         "config_cls": LlamaQuantizedConfig,
         "tokenizer_cls": LlamaTokenizer,
-        "info": MaseModelInfo(model_source="manual", task_type="nlp", sequence_classification=True, causal_LM=True),
+        "info": MaseModelInfo(model_source="manual", task_type="nlp", sequence_classification=True, causal_LM=True, is_quantized=True),
         "sequence_classification": LlamaQuantizedForSequenceClassification,
         "causal_LM": LlamaQuantizedForCausalLM,
+        "quant_config_parser": parse_llama_quantized_config,
     },
     "opt_plain": {
         "config_cls": OPTConfig,
@@ -63,9 +68,10 @@ MANUAL_MODELS = {
     "opt_quantized": {
         "config_cls": OPTQuantizedConfig,
         "tokenizer_cls": GPT2Tokenizer,
-        "info": MaseModelInfo(model_source="manual", task_type="nlp", sequence_classification=True, causal_LM=True),
+        "info": MaseModelInfo(model_source="manual", task_type="nlp", sequence_classification=True, causal_LM=True, is_quantized=True),
         "sequence_classification": OPTQuantizedForSequenceClassification,
         "causal_LM": OPTQuantizedForCausalLM,
+        "quant_config_parser": parse_opt_quantized_config,
     },
 }
 # fmt: on
@@ -108,8 +114,8 @@ def get_manual_model(
         raise ValueError(f"Manual model {name} is not supported")
     model_info: MaseModelInfo = MANUAL_MODELS[name]["info"]
     if model_info.is_quantized and quant_config is None:
-        logger.warning(
-            f"Model {name} is quantized but no quantization config is provided. Make sure you know what you are doing."
+        logger.info(
+            f"Model {name} is quantized but no quantization config is provided."
         )
 
     if task in ["cls", "classification"]:
@@ -134,6 +140,7 @@ def get_manual_model(
             config = MANUAL_MODELS[name]["config_cls"].from_pretrained(
                 checkpoint, quant_config=quant_config
             )
+
         else:
             config = MANUAL_MODELS[name]["config_cls"].from_pretrained(checkpoint)
         model_cls = MANUAL_MODELS[name]["causal_LM"]
@@ -149,9 +156,9 @@ def get_manual_model(
         model_cls = MANUAL_MODELS[name]["seq2seqLM"]
     else:
         raise ValueError(f"Task {task} is not supported for {name}")
-
     if pretrained:
         model = model_cls.from_pretrained(checkpoint, config=config)
+        logger.info(f"Manual model's state_dict is loaded from {checkpoint}")
     else:
         model = model_cls(config)
 
@@ -192,3 +199,29 @@ def get_manual_model_tokenizer_cls(name: str) -> type:
     if name not in MANUAL_MODELS:
         raise ValueError(f"Manual model {name} is not supported")
     return MANUAL_MODELS[name]["tokenizer_cls"]
+
+
+def get_manual_model_quant_config_parser(
+    name: str = None, config_cls: type = None
+) -> callable:
+    if name is None and config_cls is None:
+        raise ValueError("Must provide either name or config_cls")
+
+    if name is not None:
+        if name not in MANUAL_MODELS:
+            raise ValueError(f"Manual model {name} is not supported")
+        model_info = MANUAL_MODELS[name]["info"]
+        if not model_info.is_quantized:
+            raise ValueError(f"Model {name} is not quantized")
+
+        return MANUAL_MODELS[name]["quant_config_parser"]
+    elif config_cls is not None:
+        for model_name, model_meta in MANUAL_MODELS.items():
+            if model_meta["config_cls"] == config_cls:
+                model_info = model_meta["info"]
+                if not model_info.is_quantized:
+                    raise ValueError(f"Model {model_name} is not quantized")
+                return model_meta["quant_config_parser"]
+        raise ValueError(f"Model {config_cls} is not supported")
+    else:
+        raise ValueError("Must provide either name or config_cls")

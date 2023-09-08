@@ -5,3 +5,4 @@ from .modeling_opt import (
     OPTQuantizedForSequenceClassification,
     OPTQuantizedModel,
 )
+from .quant_config_opt import parse_opt_quantized_config

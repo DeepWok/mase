@@ -28,15 +28,6 @@ weight_frac_width = [3, 4, 5, 6, 7, 8, 9]
 bias_width = [2, 4, 8]
 bias_frac_width = [3, 4, 5, 6, 7, 8, 9]
 
-[search.strategy.setup]
-n_jobs = 1
-n_trials = 20
-timeout = 20000
-sampler = "tpe"
-# sum_scaled_metrics = true # single objective
-# direction = "maximize"
-sum_scaled_metrics = false # multi objective
-
 [search.strategy]
 name = "optuna"
 sw_runner = "basic_evaluation"
@@ -45,6 +36,14 @@ eval_mode = true
 data_loader = 'val_dataloader'
 num_samples = 512
 
+[search.strategy.setup]
+n_jobs = 1
+n_trials = 20
+timeout = 20000
+sampler = "tpe"
+# sum_scaled_metrics = true # single objective
+# direction = "maximize"
+sum_scaled_metrics = false # multi objective
 
 [search.strategy.metrics]
 # loss.scale = 1.0

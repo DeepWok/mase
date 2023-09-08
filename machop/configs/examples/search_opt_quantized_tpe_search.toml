@@ -1,0 +1,51 @@
+# basics
+model = "opt_quantized"
+dataset = "wikitext2"
+task = "lm"
+
+is_pretrained = true
+load_name = "facebook/opt-125m"
+load_type = "hf"
+accelerator = "gpu"
+batch_size = 2
+max_token_len = 512
+
+project = "opt_quantized_wikitext2"
+
+[search.search_space]
+name = "module/manual_hf/quantize/llm_mixed_precision_ptq"
+
+[search.search_space.setup]
+model_parallel = false
+
+[search.search_space.seed.default]
+name = ["integer"]
+data_in_width = [2, 4, 8, 10]
+data_in_frac_width = [2, 4, 6]
+weight_width = [2, 4, 8, 10]
+weight_frac_width = [2, 4, 6]
+bias_width = [2, 4, 8, 10]
+bias_frac_width = [2, 4, 6]
+
+[search.strategy]
+name = "optuna"
+sw_runner = "basic_evaluation"
+hw_runner = "average_bitwidth"
+eval_mode = true
+data_loader = "val_dataloader"
+num_samples = 16
+
+[search.strategy.setup]
+n_jobs = 1
+n_trials = 10
+timeout = 20000
+sampler = "TPE"
+model_parallel = false
+runner_style = "lm"
+sum_scaled_metrics = false
+
+[search.strategy.metrics]
+perplexity.scale = 1.0
+perplexity.direction = "minimize"
+average_bitwidth.scale = 0.0
+average_bitwidth.direction = "minimize"

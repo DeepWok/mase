@@ -40,3 +40,5 @@ from .modeling_llama import (
     LlamaQuantizedForCausalLM,
     LlamaQuantizedForSequenceClassification,
 )
+
+from .quant_config_llama import parse_llama_quantized_config

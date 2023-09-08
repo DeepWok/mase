@@ -1,4 +1,4 @@
-# Example: Mixed-precision search
+# Example: Mixed-precision search on MASE Graph
 
 This tutorial shows how to search for mixed-precision quantization strategy for Toy model on ToyTiny dataset.
 
@@ -92,4 +92,116 @@ Best trial(s):
 |  3 |       10 | {'loss': 0.542, 'accuracy': 0.691} | {'average_bitwidth': 2.189} | {'accuracy': 0.691, 'average_bitwidth': 0.438} |
 |  4 |       13 | {'loss': 0.556, 'accuracy': 0.681} | {'average_bitwidth': 2.075} | {'accuracy': 0.681, 'average_bitwidth': 0.415} |
 |  5 |       19 | {'loss': 0.563, 'accuracy': 0.663} | {'average_bitwidth': 2.0}   | {'accuracy': 0.663, 'average_bitwidth': 0.4}   |
+```
+
+The entire searching log is saved in `mase_tools/mase_output/toy_toy_tiny/software/search_ckpts/log.json`.
+
+Here is part of the `log.json`
+
+```json
+{
+    "0":{
+        "number":0,
+        "values_0":0.5,
+        "values_1":0.7849056604,
+        "user_attrs_hardware_metrics":{
+            "average_bitwidth":3.9245283019
+        },
+        "user_attrs_sampled_config":{
+            "seq_blocks_0":{
+                "config":{
+                    "name":"integer",
+                    "data_in_width":4,
+                    "data_in_frac_width":4,
+                    "weight_width":2,
+                    "weight_frac_width":8,
+                    "bias_width":2,
+                    "bias_frac_width":8
+                }
+            },
+            ...
+        },
+        "user_attrs_scaled_metrics":{
+            "accuracy":0.5,
+            "average_bitwidth":0.7849056604
+        },
+        "user_attrs_software_metrics":{
+            "loss":0.6922941208,
+            "accuracy":0.5
+        },
+        "state":"COMPLETE",
+        "datetime_start":1694095030315,
+        "datetime_complete":1694095031289,
+        "duration":974
+    },
+    "1":{
+        "number":1,
+        "values_0":0.5747232437,
+        "values_1":0.8150943396,
+        "user_attrs_hardware_metrics":{
+            "average_bitwidth":4.0754716981
+        },
+        "user_attrs_sampled_config":{
+            "seq_blocks_0":{
+                "config":{
+                    "name":"integer",
+                    "data_in_width":8,
+                    "data_in_frac_width":3,
+                    "weight_width":4,
+                    "weight_frac_width":7,
+                    "bias_width":4,
+                    "bias_frac_width":3
+                }
+            },
+            ...
+        },
+        "user_attrs_scaled_metrics":{
+            "accuracy":0.5747232437,
+            "average_bitwidth":0.8150943396
+        },
+        "user_attrs_software_metrics":{
+            "loss":0.6845972538,
+            "accuracy":0.5747232437
+        },
+        "state":"COMPLETE",
+        "datetime_start":1694095031290,
+        "datetime_complete":1694095032462,
+        "duration":1172
+    },
+    "2":{
+        "number":2,
+        "values_0":0.5498154759,
+        "values_1":0.8,
+        "user_attrs_hardware_metrics":{
+            "average_bitwidth":4.0
+        },
+        "user_attrs_sampled_config":{
+            "seq_blocks_0":{
+                "config":{
+                    "name":"integer",
+                    "data_in_width":4,
+                    "data_in_frac_width":3,
+                    "weight_width":2,
+                    "weight_frac_width":4,
+                    "bias_width":8,
+                    "bias_frac_width":4
+                }
+            },
+            ...
+        },
+        "user_attrs_scaled_metrics":{
+            "accuracy":0.5498154759,
+            "average_bitwidth":0.8
+        },
+        "user_attrs_software_metrics":{
+            "loss":0.6868978143,
+            "accuracy":0.5498154759
+        },
+        "state":"COMPLETE",
+        "datetime_start":1694095032463,
+        "datetime_complete":1694095033622,
+        "duration":1159
+    },
+    ...
+}
 ```
