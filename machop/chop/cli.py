@@ -321,6 +321,7 @@ class ChopCLI:
         transform_params = {
             "model": self.model,
             "model_info": self.model_info,
+            "model_name": self.args.model,
             "data_module": self.data_module,
             "task": self.args.task,
             "config": self.args.config,
