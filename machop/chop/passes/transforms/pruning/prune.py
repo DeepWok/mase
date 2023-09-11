@@ -76,7 +76,7 @@ PRUNE_METHODS = {
 }
 
 # Housekeeping -------------------------------------------------------------------------
-logger = getLogger(__file__)
+logger = getLogger(__name__)
 logger.propagate = False  # Avoid duplicate logs
 
 
@@ -243,6 +243,7 @@ def get_weight_prune_params(config: dict, graph: MaseGraph):
     criterion = config.get("criterion", "random")
     sparsity = config.get("sparsity", 0.0)
     scope = config.get("scope", "local")
+    fused = config.get("fused", False)
 
     # Validate the parameters
     if method not in PRUNE_METHODS.keys():
@@ -280,6 +281,20 @@ def get_weight_prune_params(config: dict, graph: MaseGraph):
     iterate = not (method == "channel-pruner")
     criterion = RANK_CRITERIA[criterion]
     kwargs = {"criterion": criterion, "sparsity": sparsity, "scope": scope}
+
+    # A fused model has a special case for globally scoped pruning
+    if method == "level-pruner" and fused and scope == PRUNE_SCOPES[1]:
+        logger.info("Fused model detected. Using layerwise budgets of unfused model.")
+        kwargs["scope"] = PRUNE_SCOPES[0]
+        # We compute the layer-wise distribution of the unfused model and applying that
+        # to the fused one. For more information, refer to #432.
+        # NOTE: This method only works for pre-trained models from Torchvision. Locally
+        # pre-trained models will need to be handled separately (future work).
+        name = config.get("model_name", None)
+        kwargs["sparsity"] = get_unfused_distribution(
+            kwargs["sparsity"], kwargs["criterion"], name
+        )
+
     if method == "channel-pruner":
         # NOTE: In this case, the criterion, sparsity and scope are all ignored. We
         # only use Microsoft NNI's L1NormPruner for now.
@@ -326,6 +341,50 @@ def get_activation_prune_params(config: dict, graph: MaseGraph):
             raise ValueError("Target must be between 0 and 1. Got {}".format(target))
 
     return strategy, target
+
+
+# Get a pre-trained vision model from Torchvision and return the layer-wise sparsity
+# distribution that a globally scoped pruner would compute for it.
+# NOTE: Here, we assume the dataset is ImageNet, as indicated by the number of classes
+# in the dataset info.  This will need fixing later to support any dataset the user
+# wants to use. Also, this code is really similar to the one in the level pruner, except
+# that here we do it for the full model. We should probably refactor this later.
+def get_unfused_distribution(sparsity: float, criterion: callable, name: str):
+    # We import here to avoid a failing test via a circular import in the CI.
+    from chop.models.vision import VISION_MODELS, get_vision_model
+
+    if name is None or name not in VISION_MODELS:
+        raise ValueError(f"Expected valid model name. Got {name}")
+
+    model = get_vision_model(name, "cls", {"num_classes": 1000}, pretrained=True)
+    tensors = {}
+    sparsities = {}
+
+    for name, module in model.named_modules():
+        if not isinstance(module, tuple(PRUNEABLE_OPS.values())):
+            continue
+
+        # Collect all the weight tensors in the model
+        tensors[name] = {
+            "tensor": module.weight.data.clone().flatten(),
+            "shape": module.weight.shape,
+        }
+
+    # Compute the layer-wise sparsities!
+    concatenated = torch.cat([t["tensor"] for t in tensors.values()])
+    mask = (
+        # Currently, there's no criterion with custom kwargs, so we don't pass it in
+        criterion(concatenated, sparsity)
+        if sparsity > 0.0
+        else torch.ones_like(concatenated, dtype=torch.bool)
+    )
+    # Split the masks into chunks and compute the sparsity of each chunk
+    sizes = [t["tensor"].numel() for t in tensors.values()]
+    masks = torch.split(mask, sizes)
+    sparsities = [1 - m.count_nonzero() / m.numel() for m in masks]
+    sparsities = dict(zip(tensors.keys(), sparsities))
+
+    return sparsities
 
 
 def _verify_sparsity(sparsity):

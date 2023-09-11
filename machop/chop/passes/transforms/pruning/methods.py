@@ -310,7 +310,7 @@ class ActivationPruneHandler:
         self.verify = True
         # The number of samples to randomly sample for the statistics collector. Set it
         # to None to collect all samples.
-        self.samples = 1000
+        self.samples = 10000
         # Misc. information for the console summary (activation pruning)
         self.summary = []
         # Handles for hooks. This is actually nested dictionary handles for each node.

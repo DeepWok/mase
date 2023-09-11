@@ -1,0 +1,18 @@
+# NOTE: This configuration only works on Tarrasque as it uses the fused models in the
+# /data/shared/date_2024/fused directory. The rest of the configuration is similar to
+# the resnet18_standard_global.toml configuration.
+# --------------------------------------------------------------------------------------
+# Feel free to swap the model and dataset out to experiment :)
+# Use this configuration with machop/test/passes/transforms/prune/prune.py
+model = "resnet18"
+dataset = "imagenet"
+load_name = "/data/shared/date_2024/fused/resnet18/software/transform/transformed_ckpt"
+
+[passes.prune.weight]
+method = "level-pruner"
+criterion = "l1"
+sparsity = 0.5
+scope = "global"
+fused = true
+
+

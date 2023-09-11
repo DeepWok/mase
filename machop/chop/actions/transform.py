@@ -32,6 +32,7 @@ def pre_transform_load(load_name: str, load_type: str, model: torch.nn.Module):
 def transform(
     model: torch.nn.Module,
     model_info,
+    model_name,
     data_module,
     task: str,
     config: str,
@@ -141,6 +142,7 @@ def transform(
                     task=task,
                     which_dataloader="val",
                 )
+                pass_config["model_name"] = model_name
                 pass_config["input_generator"] = input_generator
                 prune_save_dir = save_dir / "prune"
                 prune_save_dir.mkdir(parents=True, exist_ok=True)
