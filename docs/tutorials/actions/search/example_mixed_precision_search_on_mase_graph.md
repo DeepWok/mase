@@ -9,7 +9,7 @@ First we train a Toy model on ToyTiny dataset. After training for 20 epochs, we 
 
 ```bash
 cd machop
-./ch search --config configs/examples/search_toy_tpe.toml
+./ch train --config configs/examples/search_toy_tpe.toml
 ```
 
 ## Search for mixed-precision quantization strategy
@@ -76,7 +76,7 @@ average_bitwidth.direction = "minimize"
 Run the following command to start the search. We search for 20 trials and save the results in `mase_tools/toy_toy_tiny/software/search_results`.
 
 ```bash
-./ch search --config configs/examples/search_toy_tpe.toml
+./ch search --config configs/examples/search_toy_tpe.toml --load "../mase_output/toy_toy_tiny/software/training_ckpts/best.ckpt" --load-type pl
 ```
 
 When the search is completed, we will see the Pareto frontier trials (`sum_scaled_metrics = false`) or the best trials (`sum_scaled_metrics = true`) printed in the terminal.

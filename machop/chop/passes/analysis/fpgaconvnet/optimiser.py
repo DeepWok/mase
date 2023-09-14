@@ -1,6 +1,7 @@
 import os
 import sys
 from pathlib import Path
+import logging
 
 # Housekeeping -------------------------------------------------------------------------
 os.environ["PYTHONBREAKPOINT"] = "ipdb.set_trace"
@@ -11,7 +12,16 @@ assert (path / "fpgaconvnet-model").exists(), "fpgaconvnet-model not found!"
 sys.path.append((root / path).as_posix())
 sys.path.append((root / path / "fpgaconvnet-model").as_posix())
 
-import fpgaconvnet.optimiser.cli as cli
+logger = logging.getLogger(__name__)
+
+try:
+    import fpgaconvnet.optimiser.cli as cli
+except ImportError:
+    logger.warning(
+        "Third-party package fpgaconvnet-optimiser is not installed properly. "
+        "The pass `fpgaconvnet_optimiser_analysis_pass` will not work. "
+        "Run `make sync-fpgaconvnet && ./scripts/init-conda-fpgaconvnet.sh` under mase-tools/ to it setup."
+    )
 
 
 def fpgaconvnet_optimiser_analysis_pass(graph, pass_args: dict):
