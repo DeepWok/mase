@@ -6,8 +6,13 @@ group=$(if $(shell id -g),$(shell id -g),1000)
 sync:
 	git submodule sync
 	git submodule update --init --recursive
+	bash mlir-air/utils/github-clone-build-libxaie.sh
 	bash mlir-air/utils/clone-llvm.sh 
 	bash mlir-air/utils/clone-mlir-aie.sh 
+
+sync-fpgaconvnet:
+	git submodule sync
+	git submodule update --init --recursive "machop/third-party/fpgaconvnet-optimiser"
 
 # Build Docker container
 build-docker: 
@@ -37,12 +42,14 @@ test-all: test-hw test-sw
 
 build:
 	bash scripts/build-llvm.sh
-	bash scripts/build-mase-hls.sh
+	# bash scripts/build-mase-hls.sh
 	bash scripts/build-aie.sh
 	bash scripts/build-air.sh
 
 clean:
-	rm -rf llvm/build
+	rm -rf llvm
+	rm -rf aienginev2 
 	rm -rf mlir-air/build
-	rm -rf mlir-aie/build
+	rm -rf mlir-aie
 	rm -rf hls/build
+	rm -rf vck190_air_sysroot
