@@ -49,7 +49,8 @@ RUN mkdir -p /srcPkgs \
     && make install
 
 # Append any packages you need here
-# RUN apt-get ...
+RUN apt-get update -y \
+    && apt-get install -y clang-12
 
 CMD ["bash"]
 
