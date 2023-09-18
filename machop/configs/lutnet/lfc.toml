@@ -1,0 +1,14 @@
+# basics
+model = "lfc"
+dataset = "mnist"
+# training
+training_optimizer = "adamw"
+learning_rate = 1e-5
+max_epochs = 10
+batch_size = 32
+# torch lightning
+task = "classification"
+num_workers = 0
+num_devices = 1
+accelerator = "cpu"
+project_dir = "../mase_output"
