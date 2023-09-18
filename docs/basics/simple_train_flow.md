@@ -129,6 +129,24 @@ class ToyManualNet(ManualBase):
 
 In this case, a custom model is instantiated using the `LinearInteger` MASE-enhanced custom module.
 
+## Output
+
+MASE produces an output directory after running the training flow. The output directory is found at `../mase_output/<model>_<task>_<dataset>_<current_date>`.
+This directory includes
+* `hardware` - a directory for Verilog hardware generated for the trained model
+* `software` - a directory for any software generated for the trained model (PyTorch checkpoints or MASE models) as well as any generated logs
+
+## Training Logs
+MASE creates [Tensorboard](https://pytorch.org/tutorials/recipes/recipes/tensorboard_with_pytorch.html) logs for the training flow - allowing tracking and visualizing metrics such as loss and accuracy. The log files are in `<output_dir>/software/training_ckpts/logs/version_<n>`. 
+
+Run Tensorboard to visualise the logs using:
+
+```bash
+tensorboard --logdir <path_to_log_files>
+```
+
+If you are using VSCode, this will show up popup asking if you want to open Tensorboard in your browser. Select yes.
+
 # Test command
 
 To test the model trained above you can use:
@@ -138,3 +156,4 @@ To test the model trained above you can use:
 # For example, the checkpoint is under mase-tools/mase_output/toy_classification_toy-tiny_2023-07-03/software/training_ckpts/best.ckpt 
 ./ch test --config configs/archive/test/train.toml --load ../mase_output/toy_classification_toy-tiny_2023-07-03/software/training_ckpts/best.ckpt --load-type pl
 ```
+

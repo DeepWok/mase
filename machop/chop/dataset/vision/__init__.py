@@ -4,6 +4,7 @@ from pathlib import Path
 # Copyright (c) 2015-present, Facebook, Inc.
 # All rights reserved.
 
+from .mnist import get_mnist_dataset, MNISTMase
 from .cifar import get_cifar_dataset, Cifar10Mase, Cifar100Mase
 from .imagenet import get_imagenet_dataset, ImageNetMase
 from .transforms import get_vision_dataset_transform
@@ -31,6 +32,8 @@ def get_vision_dataset(name: str, path: os.PathLike, split: str, model_name: str
     transform = get_vision_dataset_transform(name, train, model_name)
 
     match name:
+        case "mnist":
+            dataset = get_mnist_dataset(name, path, train, transform)
         case "cifar10" | "cifar100":
             dataset = get_cifar_dataset(name, path, train, transform)
         case "imagenet":
@@ -46,6 +49,7 @@ def get_vision_dataset(name: str, path: os.PathLike, split: str, model_name: str
 
 
 VISION_DATASET_MAPPING = {
+    "mnist": MNISTMase,
     "cifar10": Cifar10Mase,
     "cifar100": Cifar100Mase,
     "imagenet": ImageNetMase,

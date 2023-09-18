@@ -61,6 +61,8 @@ from .repvgg import (
     get_repvgg_d2se,
 )
 
+from .lfc import get_lfc
+
 logger = logging.getLogger(__name__)
 
 # fmt: off
@@ -344,6 +346,12 @@ VISION_MODELS = {
             model_source="vision_others", task_type="vision", image_classification=True
         ),
     },
+    "lfc": {
+        "get_model_fn_image_classification": get_lfc,
+        "info": MaseModelInfo(
+            model_source="vision_others", task_type="vision", image_classification=True, fx_traceable=True
+        ),
+    }
 }
 # fmt: on
 
