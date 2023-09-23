@@ -1,8 +1,17 @@
 import os
 from pathlib import Path
 import torchvision as tv
+from ..utils import add_dataset_info
 
 
+@add_dataset_info(
+    name="imagenet",
+    dataset_source="others",
+    available_splits=("train", "validation"),
+    image_classification=True,
+    num_classes=1000,
+    image_size=(3, 224, 224),
+)
 class ImageNetMase(tv.datasets.ImageFolder):
     info = {
         "num_classes": 1000,

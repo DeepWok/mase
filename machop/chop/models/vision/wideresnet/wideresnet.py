@@ -287,7 +287,7 @@ class WideResNet(nn.Module):
 
 
 def wideresnet28_cifar(info, pretrained=False, **kwargs):
-    num_classes = info["num_classes"]
+    num_classes = info.num_classes
     model = WideResNet(
         28,
         10,

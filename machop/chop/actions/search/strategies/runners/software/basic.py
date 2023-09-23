@@ -38,7 +38,7 @@ class RunnerBasicEval(SWRunnerBase):
             match self.task:
                 case "classification" | "cls":
                     self.metric = MulticlassAccuracy(
-                        num_classes=self.dataset_info["num_classes"]
+                        num_classes=self.dataset_info.num_classes
                     ).to(self.accelerator)
                 case _:
                     raise ValueError(f"task {self.task} is not supported.")
@@ -46,7 +46,7 @@ class RunnerBasicEval(SWRunnerBase):
             match self.task:
                 case "classification" | "cls":
                     self.metric = MulticlassAccuracy(
-                        num_classes=self.dataset_info["num_classes"]
+                        num_classes=self.dataset_info.num_classes
                     ).to(self.accelerator)
                 case "language_modeling" | "lm":
                     self.metric = Perplexity().to(self.accelerator)

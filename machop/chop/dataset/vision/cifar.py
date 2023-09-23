@@ -1,16 +1,18 @@
 from torch.utils.data import Dataset
 from torchvision import datasets
 import os
+from ..utils import add_dataset_info
 
 
+@add_dataset_info(
+    name="cifar10",
+    dataset_source="torchvision",
+    available_splits=("train", "test"),
+    image_classification=True,
+    num_classes=10,
+    image_size=(3, 32, 32),
+)
 class Cifar10Mase(datasets.CIFAR10):
-    test_dataset_available: bool = True
-    pred_dataset_available: bool = False
-    info = {
-        "num_classes": 10,
-        "image_size": (3, 32, 32),
-    }
-
     def __init__(
         self, root: os.PathLike, train: bool, transform: callable, download: bool
     ) -> None:
@@ -23,6 +25,14 @@ class Cifar10Mase(datasets.CIFAR10):
         pass
 
 
+@add_dataset_info(
+    name="cifar100",
+    dataset_source="torchvision",
+    available_splits=("train", "test"),
+    image_classification=True,
+    num_classes=100,
+    image_size=(3, 32, 32),
+)
 class Cifar100Mase(datasets.CIFAR100):
     test_dataset_available: bool = True
     pred_dataset_available: bool = False

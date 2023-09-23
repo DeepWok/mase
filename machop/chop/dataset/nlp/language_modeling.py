@@ -6,6 +6,8 @@ import torch
 import datasets as hf_datasets
 from torch.utils.data import Dataset
 
+from ..utils import add_dataset_info
+
 logger = logging.getLogger(__name__)
 
 
@@ -63,13 +65,7 @@ def preprocess_datasets_causal_lm(
 
 
 class LanguageModelingBase(Dataset):
-    info = {
-        "num_classes": None,
-    }
-
-    test_dataset_available: bool = True
-    pred_dataset_available: bool = False
-
+    info = None  # MaseDatasetInfo
     # The mapping to update tokenizer's special token mapping
     # Some dataset contains special tokens like <unk> in the text
     # Keys should be in the list of predefined special attributes: [`bos_token`, `eos_token`, `unk_token`,
@@ -144,24 +140,36 @@ class LanguageModelingBase(Dataset):
         )
 
 
+@add_dataset_info(
+    name="wikitext2",
+    dataset_source="hf_datasets",
+    available_splits=("train", "validation", "test"),
+    causal_LM=True,
+)
 class LanguageModelingDatasetWikitext2(LanguageModelingBase):
-    test_dataset_available = True
-    pred_dataset_available = False
-
     def _download_dataset(self) -> hf_datasets.DatasetDict:
         dataset_dict = hf_datasets.load_dataset("wikitext", "wikitext-2-raw-v1")
         return dataset_dict
 
 
+@add_dataset_info(
+    name="wikitext103",
+    dataset_source="hf_datasets",
+    available_splits=("train", "validation", "test"),
+    causal_LM=True,
+)
 class LanguageModelingDatasetWikitext103(LanguageModelingBase):
-    test_dataset_available = True
-    pred_dataset_available = False
-
     def _download_dataset(self) -> hf_datasets.DatasetDict:
         dataset_dict = hf_datasets.load_dataset("wikitext", "wikitext-103-raw-v1")
         return dataset_dict
 
 
+@add_dataset_info(
+    name="c4",
+    dataset_source="hf_datasets",
+    available_splits=("train", "validation"),
+    causal_LM=True,
+)
 class LanguageModelingDatasetC4(LanguageModelingBase):
     test_dataset_available = False
     pred_dataset_available = False
@@ -189,15 +197,24 @@ class LanguageModelingDatasetC4(LanguageModelingBase):
         return dataset_dict
 
 
+@add_dataset_info(
+    name="ptb",
+    dataset_source="hf_datasets",
+    available_splits=("train", "validation", "test"),
+    causal_LM=True,
+)
 class LanguageModelingDatasetPTB(LanguageModelingBase):
-    test_dataset_available = True
-    pred_dataset_available = False
-
     def _download_dataset(self) -> hf_datasets.DatasetDict:
         dataset_dict = hf_datasets.load_dataset("ptb_text_only")
         return dataset_dict
 
 
+@add_dataset_info(
+    name="scienceqa",
+    dataset_source="hf_datasets",
+    available_splits=("train", "validation", "test"),
+    causal_LM=True,
+)
 class LanguageModelingDatasetScienceQA(LanguageModelingBase):
     test_dataset_available = True
     pred_dataset_available = False

@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
 
 try:
     import fpgaconvnet.optimiser.cli as cli
-except ImportError:
+except Exception:
     logger.warning(
         "Third-party package fpgaconvnet-optimiser is not installed properly. "
         "The pass `fpgaconvnet_optimiser_analysis_pass` will not work. "

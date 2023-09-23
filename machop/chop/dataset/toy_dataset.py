@@ -1,16 +1,18 @@
 import numpy as np
 import torch
 from torch.utils.data import Dataset
+from .utils import MaseDatasetInfo, add_dataset_info
 
 
+@add_dataset_info(
+    name="toy_tiny",
+    dataset_source="manual",
+    available_splits=("train", "validation", "test", "pred"),
+    image_classification=True,
+    num_classes=2,
+    image_size=(1, 2, 2),
+)
 class ToyTinyDataset(Dataset):
-    test_dataset_available: bool = True
-    pred_dataset_available: bool = True
-    info = {
-        "num_classes": 2,
-        "image_size": (1, 2, 2),
-    }
-
     def __init__(self, split="train", num_samples: int = 10240) -> None:
         super().__init__()
         self.num_samples = num_samples

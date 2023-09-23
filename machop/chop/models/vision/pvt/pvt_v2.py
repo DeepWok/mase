@@ -437,7 +437,7 @@ def _conv_filter(state_dict, patch_size=16):
 
 
 def get_pvt_v2_b0(info, pretrained=False, **kwargs):
-    num_classes = info["num_classes"]
+    num_classes = info.num_classes
     model = PyramidVisionTransformerV2(
         num_classes=num_classes,
         patch_size=4,
@@ -471,7 +471,7 @@ def get_pvt_v2_b0(info, pretrained=False, **kwargs):
 
 
 def get_pvt_v2_b1(info, pretrained=False, **kwargs):
-    num_classes = info["num_classes"]
+    num_classes = info.num_classes
     model = PyramidVisionTransformerV2(
         num_classes=num_classes,
         patch_size=4,
@@ -506,7 +506,7 @@ def get_pvt_v2_b1(info, pretrained=False, **kwargs):
 
 
 def get_pvt_v2_b2(info, pretrained=False, **kwargs):
-    num_classes = info["num_classes"]
+    num_classes = info.num_classes
     model = PyramidVisionTransformerV2(
         num_classes=num_classes,
         patch_size=4,
@@ -540,7 +540,7 @@ def get_pvt_v2_b2(info, pretrained=False, **kwargs):
 
 
 def get_pvt_v2_b3(info, pretrained=False, **kwargs):
-    num_classes = info["num_classes"]
+    num_classes = info.num_classes
     model = PyramidVisionTransformerV2(
         num_classes=num_classes,
         patch_size=4,
@@ -574,7 +574,7 @@ def get_pvt_v2_b3(info, pretrained=False, **kwargs):
 
 
 def get_pvt_v2_b4(info, pretrained=False, **kwargs):
-    num_classes = info["num_classes"]
+    num_classes = info.num_classes
     model = PyramidVisionTransformerV2(
         num_classes=num_classes,
         patch_size=4,
@@ -588,7 +588,7 @@ def get_pvt_v2_b4(info, pretrained=False, **kwargs):
         **kwargs,
     )
     model.default_cfg = _cfg()
-    num_classes = info["num_classes"]
+    num_classes = info.num_classes
     model = PyramidVisionTransformerV2(
         num_classes=num_classes,
         patch_size=4,
@@ -622,7 +622,7 @@ def get_pvt_v2_b4(info, pretrained=False, **kwargs):
 
 
 def get_pvt_v2_b5(info, pretrained=False, **kwargs):
-    num_classes = info["num_classes"]
+    num_classes = info.num_classes
     model = PyramidVisionTransformerV2(
         num_classes=num_classes,
         patch_size=4,
@@ -656,7 +656,7 @@ def get_pvt_v2_b5(info, pretrained=False, **kwargs):
 
 
 def get_pvt_v2_b2_li(info, pretrained=False, **kwargs):
-    num_classes = info["num_classes"]
+    num_classes = info.num_classes
     model = PyramidVisionTransformerV2(
         num_classes=num_classes,
         patch_size=4,

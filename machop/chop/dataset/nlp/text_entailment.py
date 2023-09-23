@@ -11,12 +11,11 @@ import torch
 import datasets as hf_datasets
 from torch.utils.data import Dataset
 
+from ..utils import add_dataset_info
+
 
 class TextEntailmentDatasetBase(Dataset):
     info = None
-
-    test_dataset_available: bool = False
-    pred_dataset_available: bool = False
 
     # The mapping to update tokenizer's special token mapping
     # Some dataset contains special tokens like <unk> in the text
@@ -102,12 +101,14 @@ class TextEntailmentDatasetBase(Dataset):
         return input_dict
 
 
+@add_dataset_info(
+    name="qnli",
+    dataset_source="hf_datasets",
+    available_splits=("train", "validation", "pred"),
+    sequence_classification=True,
+    num_classes=2,
+)
 class TextEntailmentDatasetQNLI(TextEntailmentDatasetBase):
-    info = {"num_classes": 2}
-
-    test_dataset_available = False
-    pred_dataset_available = True
-
     sent1_col_name = "question"
     sent2_col_name = "sentence"
     label_col_name = "label"
@@ -135,6 +136,13 @@ class TextEntailmentDatasetQNLI(TextEntailmentDatasetBase):
         return dataset_dict
 
 
+@add_dataset_info(
+    name="mnli",
+    dataset_source="hf_datasets",
+    available_splits=("train", "validation", "pred"),
+    sequence_classification=True,
+    num_classes=3,
+)
 class TextEntailmentDatasetMNLI(TextEntailmentDatasetBase):
     info = {"num_classes": 3}
 
@@ -168,15 +176,17 @@ class TextEntailmentDatasetMNLI(TextEntailmentDatasetBase):
         return dataset_dict
 
 
+@add_dataset_info(
+    name="rte",
+    dataset_source="hf_datasets",
+    available_splits=("train", "validation", "pred"),
+    sequence_classification=True,
+    num_classes=2,
+)
 class TextEntailmentDatasetBoolQ(TextEntailmentDatasetBase):
     """
     Subset of SuperGLUE
     """
-
-    info = {"num_classes": 2}
-
-    test_dataset_available = True
-    pred_dataset_available = False
 
     sent1_col_name = "passage"
     sent2_col_name = "question"

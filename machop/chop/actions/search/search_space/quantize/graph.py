@@ -45,7 +45,7 @@ class GraphSearchSpaceMixedPrecisionPTQ(SearchSpaceBase):
             self.model.train()
 
         if self.mg is None:
-            assert self.model_info.fx_traceable, "Model must be fx traceable"
+            assert self.model_info.is_fx_traceable, "Model must be fx traceable"
             mg = MaseGraph(self.model)
             mg = init_metadata_analysis_pass(mg, None)
             mg = add_common_metadata_analysis_pass(mg, self.dummy_input)

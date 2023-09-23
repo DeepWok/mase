@@ -79,5 +79,5 @@ class ToyCustomFnNet(nn.Module):
 
 def get_toyfnnet(info, pretrained=False):
     image_size = info["image_size"]
-    num_classes = info["num_classes"]
+    num_classes = info.num_classes
     return ToyCustomFnNet(image_size, num_classes)

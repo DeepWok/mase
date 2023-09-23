@@ -70,7 +70,7 @@ class DistilledVisionTransformer(VisionTransformer):
 
 
 def get_deit_tiny_patch16_224(info, pretrained=False, **kwargs):
-    num_classes = info["num_classes"]
+    num_classes = info.num_classes
     model = VisionTransformer(
         num_classes=num_classes,
         patch_size=16,
@@ -104,7 +104,7 @@ def get_deit_tiny_patch16_224(info, pretrained=False, **kwargs):
 
 
 def get_deit_small_patch16_224(info, pretrained=False, **kwargs):
-    num_classes = info["num_classes"]
+    num_classes = info.num_classes
     model = VisionTransformer(
         num_classes=num_classes,
         patch_size=16,
@@ -139,7 +139,7 @@ def get_deit_small_patch16_224(info, pretrained=False, **kwargs):
 
 def get_deit_base_patch16_224(info, pretrained=False, **kwargs):
     kwargs.pop("info")
-    num_classes = info["num_classes"]
+    num_classes = info.num_classes
     model = VisionTransformer(
         num_classes=num_classes,
         patch_size=16,
@@ -173,7 +173,7 @@ def get_deit_base_patch16_224(info, pretrained=False, **kwargs):
 
 
 def get_deit_tiny_distilled_patch16_224(info, pretrained=False, **kwargs):
-    num_classes = info["num_classes"]
+    num_classes = info.num_classes
     model = DistilledVisionTransformer(
         num_classes=num_classes,
         patch_size=16,
@@ -207,7 +207,7 @@ def get_deit_tiny_distilled_patch16_224(info, pretrained=False, **kwargs):
 
 
 def get_deit_small_distilled_patch16_224(info, pretrained=False, **kwargs):
-    num_classes = info["num_classes"]
+    num_classes = info.num_classes
     model = DistilledVisionTransformer(
         num_classes=num_classes,
         patch_size=16,
@@ -241,7 +241,7 @@ def get_deit_small_distilled_patch16_224(info, pretrained=False, **kwargs):
 
 
 def get_deit_base_distilled_patch16_224(info, pretrained=False, **kwargs):
-    num_classes = info["num_classes"]
+    num_classes = info.num_classes
     model = DistilledVisionTransformer(
         num_classes=num_classes,
         patch_size=16,
@@ -275,7 +275,7 @@ def get_deit_base_distilled_patch16_224(info, pretrained=False, **kwargs):
 
 
 def get_deit_base_patch16_384(info, pretrained=False, **kwargs):
-    num_classes = info["num_classes"]
+    num_classes = info.num_classes
     model = VisionTransformer(
         num_classes=num_classes,
         img_size=384,
@@ -311,7 +311,7 @@ def get_deit_base_patch16_384(info, pretrained=False, **kwargs):
 
 
 def get_deit_base_distilled_patch16_384(info, pretrained=False, **kwargs):
-    num_classes = info["num_classes"]
+    num_classes = info.num_classes
     model = DistilledVisionTransformer(
         num_classes=num_classes,
         img_size=384,

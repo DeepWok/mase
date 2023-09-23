@@ -10,14 +10,13 @@ import torch
 import datasets as hf_datasets
 from torch.utils.data import Dataset
 
+from ..utils import add_dataset_info
+
 logger = logging.getLogger(__name__)
 
 
 class SentimentAnalysisDatasetBase(Dataset):
-    info = None  # {"num_classes": ...}
-
-    test_dataset_available: bool = False
-    pred_dataset_available: bool = False
+    info = None  # MaseDatasetInfo
 
     # The mapping to update tokenizer's special token mapping
     # Some dataset contains special tokens like <unk> in the text
@@ -95,12 +94,14 @@ class SentimentAnalysisDatasetBase(Dataset):
         )
 
 
+@add_dataset_info(
+    name="sst2",
+    dataset_source="hf_datasets",
+    available_splits=("train", "validation", "pred"),
+    sequence_classification=True,
+    num_classes=2,
+)
 class SentimentalAnalysisDatasetSST2(SentimentAnalysisDatasetBase):
-    info = {"num_classes": 2}
-
-    test_dataset_available = False
-    pred_dataset_available = True
-
     sent_col_name = "sentence"
     label_col_name = "label"
 

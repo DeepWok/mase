@@ -2,7 +2,7 @@
 This document includes steps to add a new model into Machop
 ## Overall Structure
 ### Model
-All models that Machop support are defined inside **mase-tools/machop/chop/models**. Each model has a unique get model function, which can be called to create the model. Those get model function will be exported into a dictionary in [\_\_init\_\_](%2E%2E%5Cmachop%5Cchop%5Cmodels%5C%5F%5Finit%5F%5F.py) file. 
+All models that Machop support are defined inside **mase-tools/machop/chop/models**. Each model has a unique get model function, which can be called to create the model. Those get model function will be exported into a dictionary in [\_\_init\_\_](%2E%2E%5Cmachop%5Cchop%5Cmodels%5C%5F%5Finit%5F%5F.py) file.
 
 ### Command Line Interface
 [Command Line Interface (cli)](..\machop\chop\cli.py) will take the input config, and perform the task defined inside the config. When training, cli will look into the dictionary contains the get funtions, use the get-function to create a model, and do training then.
@@ -24,12 +24,12 @@ All models that Machop support are defined inside **mase-tools/machop/chop/model
 - function name of get-function should be in smaller case
 - keys of the dictionary should also be in smaller case
 
-#### 
+####
 
 There's an example:
 ```python
 def get_mobilenet_v2(info: Dict, pretrained: bool = False, **kwargs: Any):
-    num_classes = info["num_classes"]
+    num_classes = info.num_classes
     model = MobileNetV2(num_classes=num_classes, **kwargs)
     # do something about the model
     # ......

@@ -61,7 +61,7 @@ def get_dummy_input(
         dict: a dummy input dict which can be passed to the wrapped lightning model's forward method, like model(**dummy_input)
     """
     assert (
-        data_module.is_setup
+        data_module.train_dataset is not None
     ), "DataModule is not setup. Please call data_module.prepare_data() and .setup()."
     index: int = 0
     device = "meta"
@@ -158,7 +158,7 @@ class InputGenerator:
             (dict): a dummy input dict which can be passed to the wrapped lightning model's forward method, like model(**dummy_input)
         """
         assert (
-            data_module.is_setup
+            getattr(data_module, f"{which_dataloader}_dataset") is not None
         ), "DataModule is not setup. Please call data_module.prepare_data() and .setup()."
         self.model_info = model_info
         self.task = task
