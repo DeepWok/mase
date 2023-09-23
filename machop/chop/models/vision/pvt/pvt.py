@@ -352,7 +352,7 @@ def _conv_filter(state_dict, patch_size=16):
 
 
 def get_pvt_tiny(info, pretrained=False, **kwargs):
-    num_classes = info["num_classes"]
+    num_classes = info.num_classes
     model = PyramidVisionTransformer(
         num_classes=num_classes,
         patch_size=4,
@@ -388,7 +388,7 @@ def get_pvt_tiny(info, pretrained=False, **kwargs):
 
 
 def get_pvt_small(info, pretrained=False, **kwargs):
-    num_classes = info["num_classes"]
+    num_classes = info.num_classes
     model = PyramidVisionTransformer(
         num_classes=num_classes,
         patch_size=4,
@@ -422,7 +422,7 @@ def get_pvt_small(info, pretrained=False, **kwargs):
 
 
 def get_pvt_medium(info, pretrained=False, **kwargs):
-    num_classes = info["num_classes"]
+    num_classes = info.num_classes
     model = PyramidVisionTransformer(
         num_classes=num_classes,
         patch_size=4,
@@ -456,7 +456,7 @@ def get_pvt_medium(info, pretrained=False, **kwargs):
 
 
 def get_pvt_large(info, pretrained=False, **kwargs):
-    num_classes = info["num_classes"]
+    num_classes = info.num_classes
     model = PyramidVisionTransformer(
         num_classes=num_classes,
         patch_size=4,

@@ -5,12 +5,11 @@ import datasets as hf_datasets
 from torch.utils.data import Dataset
 from torchnlp.datasets import multi30k_dataset
 
+from ..utils import add_dataset_info
+
 
 class TranslationDatasetBase(Dataset):
-    info = {"num_classes": None}
-
-    test_dataset_available: bool = False
-    pred_dataset_available: bool = False
+    info = None
 
     # The mapping to update tokenizer's special token mapping
     # Some dataset contains special tokens like <unk> in the text
@@ -102,10 +101,13 @@ class TranslationDatasetBase(Dataset):
 
 
 # It seems like the download link of this is broken ..
+@add_dataset_info(
+    name="iwslt2016_en_de",
+    dataset_source="hf_datasets",
+    available_splits=("train", "validation", "test"),
+    seq2seqLM=True,
+)
 class TranslationDatasetIWSLT2017_EN_DE(TranslationDatasetBase):
-    test_dataset_available = True
-    pred_dataset_available = False
-
     src_col_name = "en"
     trg_col_name = "de"
 
@@ -114,10 +116,13 @@ class TranslationDatasetIWSLT2017_EN_DE(TranslationDatasetBase):
         return dataset_dict
 
 
+@add_dataset_info(
+    name="iwslt2017_de_en",
+    dataset_source="hf_datasets",
+    available_splits=("train", "validation", "test"),
+    seq2seqLM=True,
+)
 class TranslationDatasetIWSLT2017_DE_EN(TranslationDatasetBase):
-    test_dataset_available = True
-    pred_dataset_available = False
-
     src_col_name = "de"
     trg_col_name = "en"
 
@@ -126,10 +131,13 @@ class TranslationDatasetIWSLT2017_DE_EN(TranslationDatasetBase):
         return dataset_dict
 
 
+@add_dataset_info(
+    name="iwslt2017_en_fr",
+    dataset_source="hf_datasets",
+    available_splits=("train", "validation", "test"),
+    seq2seqLM=True,
+)
 class TranslationDatasetIWSLT2017_EN_FR(TranslationDatasetBase):
-    test_dataset_available = True
-    pred_dataset_available = False
-
     src_col_name = "en"
     trg_col_name = "fr"
 
@@ -138,6 +146,12 @@ class TranslationDatasetIWSLT2017_EN_FR(TranslationDatasetBase):
         return dataset_dict
 
 
+@add_dataset_info(
+    name="iwslt2017_en_ch",
+    dataset_source="hf_datasets",
+    available_splits=("train", "validation", "test"),
+    seq2seqLM=True,
+)
 class TranslationDatasetIWSLT2017_EN_CH(TranslationDatasetBase):
     test_dataset_available = True
     pred_dataset_available = False
@@ -150,10 +164,13 @@ class TranslationDatasetIWSLT2017_EN_CH(TranslationDatasetBase):
         return dataset_dict
 
 
+@add_dataset_info(
+    name="wmt19_de_en",
+    dataset_source="hf_datasets",
+    available_splits=("train", "validation"),
+    seq2seqLM=True,
+)
 class TranslationDatasetWMT19_DE_EN(TranslationDatasetBase):
-    test_dataset_available = False
-    pred_dataset_available = False
-
     src_col_name = "de"
     trg_col_name = "en"
 
@@ -162,10 +179,13 @@ class TranslationDatasetWMT19_DE_EN(TranslationDatasetBase):
         return dataset_dict
 
 
+@add_dataset_info(
+    name="wmt19_zh_en",
+    dataset_source="hf_datasets",
+    available_splits=("train", "validation"),
+    seq2seqLM=True,
+)
 class TranslationDatasetWMT19_ZH_EN(TranslationDatasetBase):
-    test_dataset_available = False
-    pred_dataset_available = False
-
     src_col_name = "zh"
     trg_col_name = "en"
 
@@ -174,10 +194,13 @@ class TranslationDatasetWMT19_ZH_EN(TranslationDatasetBase):
         return dataset_dict
 
 
+@add_dataset_info(
+    name="wmt16_ro_en",
+    dataset_source="hf_datasets",
+    available_splits=("train", "validation"),
+    seq2seqLM=True,
+)
 class TranslationDatasetWMT16_RO_EN(TranslationDatasetBase):
-    test_dataset_available = False
-    pred_dataset_available = False
-
     src_col_name = "ro"
     trg_col_name = "en"
 

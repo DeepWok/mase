@@ -1,16 +1,18 @@
 from torch.utils.data import Dataset
 from torchvision import datasets
 import os
+from ..utils import add_dataset_info
 
 
+@add_dataset_info(
+    name="mnist",
+    dataset_source="torchvision",
+    available_splits=("train", "test"),
+    image_classification=True,
+    num_classes=10,
+    image_size=(1, 28, 28),
+)
 class MNISTMase(datasets.MNIST):
-    test_dataset_available: bool = True
-    pred_dataset_available: bool = False
-    info = {
-        "num_classes": 10,
-        "image_size": (1, 28, 28),
-    }
-
     def __init__(
         self, root: os.PathLike, train: bool, transform: callable, download: bool
     ) -> None:

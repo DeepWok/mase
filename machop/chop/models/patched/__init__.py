@@ -15,7 +15,7 @@ PATCHED_MODELS = {
         "sequence_classification": OPTPatchedForSequenceClassification,
         "causal_LM": OPTPatchedForCausalLM,
         "info": MaseModelInfo(
-            model_source="patched", task_type="nlp", sequence_classification=True, causal_LM=True, fx_traceable=True
+            "facebook/opt-125m:patched", model_source="patched", task_type="nlp", sequence_classification=True, causal_LM=True, is_fx_traceable=True
         ),
     },
     "facebook/opt-350m:patched": {
@@ -24,7 +24,7 @@ PATCHED_MODELS = {
         "sequence_classification": OPTPatchedForSequenceClassification,
         "causal_LM": OPTPatchedForCausalLM,
         "info": MaseModelInfo(
-            model_source="patched", task_type="nlp", sequence_classification=True, causal_LM=True, fx_traceable=True
+            "facebook/opt-350m:patched", model_source="patched", task_type="nlp", sequence_classification=True, causal_LM=True, is_fx_traceable=True
         ),
     },
     "facebook/opt-1.3b:patched": {
@@ -33,7 +33,7 @@ PATCHED_MODELS = {
         "sequence_classification": OPTPatchedForSequenceClassification,
         "causal_LM": OPTPatchedForCausalLM,
         "info": MaseModelInfo(
-            model_source="patched", task_type="nlp", sequence_classification=True, causal_LM=True, fx_traceable=True
+            "facebook/opt-1.3b:patched", model_source="patched", task_type="nlp", sequence_classification=True, causal_LM=True, is_fx_traceable=True
         ),
     },
     "facebook/opt-2.7b:patched": {
@@ -42,7 +42,7 @@ PATCHED_MODELS = {
         "sequence_classification": OPTPatchedForSequenceClassification,
         "causal_LM": OPTPatchedForCausalLM,
         "info": MaseModelInfo(
-            model_source="patched", task_type="nlp", sequence_classification=True, causal_LM=True, fx_traceable=True
+            "facebook/opt-2.7b:patched", model_source="patched", task_type="nlp", sequence_classification=True, causal_LM=True, is_fx_traceable=True
         ),
     },
     "facebook/opt-6.7b:patched": {
@@ -51,7 +51,7 @@ PATCHED_MODELS = {
         "sequence_classification": OPTPatchedForSequenceClassification,
         "causal_LM": OPTPatchedForCausalLM,
         "info": MaseModelInfo(
-            model_source="patched", task_type="nlp", sequence_classification=True, causal_LM=True, fx_traceable=True
+            "facebook/opt-6.7b:patched", model_source="patched", task_type="nlp", sequence_classification=True, causal_LM=True, is_fx_traceable=True
         ),
     },
 }
@@ -86,7 +86,7 @@ def get_patched_model(
                 model_info.sequence_classification
             ), f"Model {name} does not support sequence classification"
             config = PATCHED_MODELS[name]["config_cls"].from_pretrained(
-                hf_name, num_labels=dataset_info["num_classes"]
+                hf_name, num_labels=dataset_info.num_classes
             )
             model_cls = PATCHED_MODELS[name]["sequence_classification"]
         case "lm" | "language_modeling":

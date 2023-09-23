@@ -41,122 +41,122 @@ HF_NLP_MODELS = {
     "bert-base-uncased": {
         "config_cls": BertConfig,
         "tokenizer_cls": BertTokenizer,
-        "info": MaseModelInfo(model_source="hf_transformers", task_type="nlp", sequence_classification=True),
+        "info": MaseModelInfo("bert-base-uncased", model_source="hf_transformers", task_type="nlp", sequence_classification=True),
     },
     "bert-base-cased": {
         "config_cls": BertConfig,
         "tokenizer_cls": BertTokenizer,
-        "info": MaseModelInfo(model_source="hf_transformers", task_type="nlp", sequence_classification=True)
+        "info": MaseModelInfo("bert-base-cased", model_source="hf_transformers", task_type="nlp", sequence_classification=True)
     },
     "bert-large-uncased": {
         "config_cls": BertConfig,
         "tokenizer_cls": BertTokenizer,
-        "info": MaseModelInfo(model_source="hf_transformers", task_type="nlp", sequence_classification=True)
+        "info": MaseModelInfo("bert-large-uncased", model_source="hf_transformers", task_type="nlp", sequence_classification=True)
     },
     "bert-large-cased": {
         "config_cls": BertConfig,
         "tokenizer_cls": BertTokenizer,
-        "info": MaseModelInfo(model_source="hf_transformers", task_type="nlp", sequence_classification=True)
+        "info": MaseModelInfo("bert-large-cased", model_source="hf_transformers", task_type="nlp", sequence_classification=True)
     },
     "roberta-base": {
         "config_cls": RobertaConfig,
         "tokenizer_cls": RobertaTokenizer,
-        "info": MaseModelInfo(model_source="hf_transformers", task_type="nlp", sequence_classification=True)
+        "info": MaseModelInfo("roberta-base", model_source="hf_transformers", task_type="nlp", sequence_classification=True)
     },
     "roberta-large": {
         "config_cls": RobertaConfig,
         "tokenizer_cls": RobertaTokenizer,
-        "info": MaseModelInfo(model_source="hf_transformers", task_type="nlp", sequence_classification=True)
+        "info": MaseModelInfo("roberta-large", model_source="hf_transformers", task_type="nlp", sequence_classification=True)
     },
     "facebook/opt-125m": {
         "config_cls": OPTConfig,
         "tokenizer_cls": GPT2Tokenizer,
-        "info": MaseModelInfo(model_source="hf_transformers", task_type="nlp", sequence_classification=True, causal_LM=True),
+        "info": MaseModelInfo("facebook/opt-125m", model_source="hf_transformers", task_type="nlp", sequence_classification=True, causal_LM=True),
     },
     "facebook/opt-350m": {
         "config_cls": OPTConfig,
         "tokenizer_cls": GPT2Tokenizer,
-        "info": MaseModelInfo(model_source="hf_transformers", task_type="nlp", sequence_classification=True, causal_LM=True),
+        "info": MaseModelInfo("facebook/opt-350m", model_source="hf_transformers", task_type="nlp", sequence_classification=True, causal_LM=True),
     },
     "facebook/opt-1.3b": {
         "config_cls": OPTConfig,
         "tokenizer_cls": GPT2Tokenizer,
-        "info": MaseModelInfo(model_source="hf_transformers", task_type="nlp", sequence_classification=True, causal_LM=True),
+        "info": MaseModelInfo("facebook/opt-1.3b", model_source="hf_transformers", task_type="nlp", sequence_classification=True, causal_LM=True),
     },
     "facebook/opt-2.7b": {
         "config_cls": OPTConfig,
         "tokenizer_cls": GPT2Tokenizer,
-        "info": MaseModelInfo(model_source="hf_transformers", task_type="nlp", sequence_classification=True, causal_LM=True),
+        "info": MaseModelInfo("facebook/opt-2.7b", model_source="hf_transformers", task_type="nlp", sequence_classification=True, causal_LM=True),
     },
     "facebook/opt-6.7b": {
         "config_cls": OPTConfig,
         "tokenizer_cls": GPT2Tokenizer,
-        "info": MaseModelInfo(model_source="hf_transformers", task_type="nlp", sequence_classification=True, causal_LM=True),
+        "info": MaseModelInfo("facebook/opt-6.7b", model_source="hf_transformers", task_type="nlp", sequence_classification=True, causal_LM=True),
     },
     "facebook/opt-13b": {
         "config_cls": OPTConfig,
         "tokenizer_cls": GPT2Tokenizer,
-        "info": MaseModelInfo(model_source="hf_transformers", task_type="nlp", sequence_classification=True, causal_LM=True),
+        "info": MaseModelInfo("facebook/opt-13b", model_source="hf_transformers", task_type="nlp", sequence_classification=True, causal_LM=True),
     },
     "facebook/opt-30b": {
         "config_cls": OPTConfig,
         "tokenizer_cls": GPT2Tokenizer,
-        "info": MaseModelInfo(model_source="hf_transformers", task_type="nlp", sequence_classification=True, causal_LM=True),
+        "info": MaseModelInfo("facebook/opt-30b", model_source="hf_transformers", task_type="nlp", sequence_classification=True, causal_LM=True),
     },
     "facebook/opt-66b": {
         "config_cls": OPTConfig,
         "tokenizer_cls": GPT2Tokenizer,
-        "info": MaseModelInfo(model_source="hf_transformers", task_type="nlp", sequence_classification=True, causal_LM=True),
+        "info": MaseModelInfo("facebook/opt-66b", model_source="hf_transformers", task_type="nlp", sequence_classification=True, causal_LM=True),
     },
     "EleutherAI/gpt-neo-125M": {
         "config_cls": GPTNeoConfig,
         "tokenizer_cls": GPT2Tokenizer,
-        "info": MaseModelInfo(model_source="hf_transformers", task_type="nlp", sequence_classification=True, causal_LM=True),
+        "info": MaseModelInfo("EleutherAI/gpt-neo-125M", model_source="hf_transformers", task_type="nlp", sequence_classification=True, causal_LM=True),
     },
     "EleutherAI/gpt-neo-1.3B": {
         "config_cls": GPTNeoConfig,
         "tokenizer_cls": GPT2Tokenizer,
-        "info": MaseModelInfo(model_source="hf_transformers", task_type="nlp", sequence_classification=True, causal_LM=True),
+        "info": MaseModelInfo("EleutherAI/gpt-neo-1.3B", model_source="hf_transformers", task_type="nlp", sequence_classification=True, causal_LM=True),
     },
     "EleutherAI/gpt-neo-2.7B": {
         "config_cls": GPTNeoConfig,
         "tokenizer_cls": GPT2Tokenizer,
-        "info": MaseModelInfo(model_source="hf_transformers", task_type="nlp", sequence_classification=True, causal_LM=True),
+        "info": MaseModelInfo("EleutherAI/gpt-neo-2.7B", model_source="hf_transformers", task_type="nlp", sequence_classification=True, causal_LM=True),
     },
     "EleutherAI/gpt-neox-20b": {
         "config_cls": GPTNeoConfig,
         "tokenizer_cls": GPT2Tokenizer,
-        "info": MaseModelInfo(model_source="hf_transformers", task_type="nlp", sequence_classification=True, causal_LM=True),
+        "info": MaseModelInfo("EleutherAI/gpt-neox-20b", model_source="hf_transformers", task_type="nlp", sequence_classification=True, causal_LM=True),
     },
     "t5-small": {
         "config_cls": T5Config,
         "tokenizer_cls": T5Tokenizer,
-        "info": MaseModelInfo(model_source="hf_transformers", task_type="nlp", seq2seqLM=True),
+        "info": MaseModelInfo("t5-small", model_source="hf_transformers", task_type="nlp", seq2seqLM=True),
     },
     "t5-base": {
         "config_cls": T5Config,
         "tokenizer_cls": T5Tokenizer,
-        "info": MaseModelInfo(model_source="hf_transformers", task_type="nlp", seq2seqLM=True),
+        "info": MaseModelInfo("t5-base", model_source="hf_transformers", task_type="nlp", seq2seqLM=True),
     },
     "t5-large": {
         "config_cls": T5Config,
         "tokenizer_cls": T5Tokenizer,
-        "info": MaseModelInfo(model_source="hf_transformers", task_type="nlp", seq2seqLM=True),
+        "info": MaseModelInfo("t5-large", model_source="hf_transformers", task_type="nlp", seq2seqLM=True),
     },
     "google/flan-t5-small": {
         "config_cls": T5Config,
         "tokenizer_cls": T5Tokenizer,
-        "info": MaseModelInfo(model_source="hf_transformers", task_type="nlp", seq2seqLM=True),
+        "info": MaseModelInfo("google/flan-t5-small", model_source="hf_transformers", task_type="nlp", seq2seqLM=True),
     },
     "google/flan-t5-base": {
         "config_cls": T5Config,
         "tokenizer_cls": T5Tokenizer,
-        "info": MaseModelInfo(model_source="hf_transformers", task_type="nlp", seq2seqLM=True),
+        "info": MaseModelInfo("google/flan-t5-base", model_source="hf_transformers", task_type="nlp", seq2seqLM=True),
     },
     "google/flan-t5-large": {
         "config_cls": T5Config,
         "tokenizer_cls": T5Tokenizer,
-        "info": MaseModelInfo(model_source="hf_transformers", task_type="nlp", seq2seqLM=True),
+        "info": MaseModelInfo("google/flan-t5-large", model_source="hf_transformers", task_type="nlp", seq2seqLM=True),
     },
 }
 # fmt: on
@@ -215,7 +215,7 @@ def get_hf_nlp_model(
                 raise ValueError(f"Task {task} is not supported for {name}")
             config = AutoConfig.from_pretrained(
                 name if checkpoint is None else checkpoint,
-                num_labels=dataset_info["num_classes"],
+                num_labels=dataset_info.num_classes,
             )
             if pretrained:
                 model = AutoModelForSequenceClassification.from_pretrained(

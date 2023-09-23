@@ -311,7 +311,7 @@ class MobileNetV2(nn.Module):
 
 
 def get_mobilenet_v2(info: Dict, pretrained: bool = False, **kwargs: Any):
-    num_classes = info["num_classes"]
+    num_classes = info.num_classes
     model = MobileNetV2(num_classes=num_classes, **kwargs)
     if pretrained:
         pretrained_weight_cls = MobileNet_V2_Weights.IMAGENET1K_V2

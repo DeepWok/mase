@@ -1,4 +1,4 @@
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from enum import Enum
 
 
@@ -36,6 +36,9 @@ class MaseModelInfo:
     The model info for MASE.
     """
 
+    # model name
+    name: str
+
     model_source: ModelSource
     task_type: ModelTaskType
 
@@ -53,7 +56,7 @@ class MaseModelInfo:
     is_sparse: bool = False
 
     # Torch FX
-    fx_traceable: bool = False
+    is_fx_traceable: bool = False
 
     def __post_init__(self):
         self.model_source = (

@@ -62,7 +62,6 @@ class SearchStrategyBase:
         """
         Set the data loader and the number of batches.
         """
-        assert data_module.is_setup, "Data module is not setup yet."
         self.data_loader = getattr(data_module, self.config["data_loader"])()
         self.num_batches = math.ceil(
             self.config["num_samples"] / data_module.batch_size

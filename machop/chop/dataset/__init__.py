@@ -116,12 +116,11 @@ class MaseDataModule(pl.LightningDataModule):
         self.load_from_cache_file = load_from_cache_file
         self.model_name = model_name
 
-        self._is_setup = False
-
         self.train_dataset = None
         self.val_dataset = None
         self.test_dataset = None
         self.pred_dataset = None
+        self.dataset_info = get_dataset_info(name)
 
     def prepare_data(self) -> None:
         train_dataset = get_dataset(
@@ -134,7 +133,7 @@ class MaseDataModule(pl.LightningDataModule):
             auto_setup=False,
             model_name=self.model_name,
         )
-        _ = get_dataset(
+        val_dataset = get_dataset(
             self.name,
             split="validation",
             tokenizer=self.tokenizer,
@@ -144,7 +143,7 @@ class MaseDataModule(pl.LightningDataModule):
             auto_setup=False,
             model_name=self.model_name,
         )
-        _ = get_dataset(
+        test_dataset = get_dataset(
             self.name,
             split="test",
             tokenizer=self.tokenizer,
@@ -154,7 +153,7 @@ class MaseDataModule(pl.LightningDataModule):
             auto_setup=False,
             model_name=self.model_name,
         )
-        _ = get_dataset(
+        pred_dataset = get_dataset(
             self.name,
             split="pred",
             tokenizer=self.tokenizer,
@@ -164,63 +163,67 @@ class MaseDataModule(pl.LightningDataModule):
             auto_setup=False,
             model_name=self.model_name,
         )
-        if self.name in NLP_DATASET_MAPPING:
-            # since current NLP dataset classes prepare the whole data_dict in prepare_data,
-            # we only need to call prepare_data once
+
+        if self.dataset_info.requires_preprocessing:
             train_dataset.prepare_data()
+            if not self.dataset_info.preprocess_one_split_for_all:
+                val_dataset.prepare_data()
+                if test_dataset is not None:
+                    test_dataset.prepare_data()
+                if pred_dataset is not None:
+                    pred_dataset.prepare_data()
 
     def setup(self, stage: str = None) -> None:
-        # WARNING: Currently load a train/val/test/pred dataset will preprocess the whole dataset and load the corresponding split.
-        # Thus we only need `load_from_cache_file` once for training dataset if self.load_from_cache_file is True.
-        self.train_dataset = get_dataset(
-            self.name,
-            split="train",
-            tokenizer=self.tokenizer,
-            max_token_len=self.max_token_len,
-            num_workers=self.num_workers,
-            load_from_cache_file=self.load_from_cache_file,
-            auto_setup=True,
-            model_name=self.model_name,
-        )
-        self.val_dataset = get_dataset(
-            self.name,
-            split="validation",
-            tokenizer=self.tokenizer,
-            max_token_len=self.max_token_len,
-            num_workers=self.num_workers,
-            load_from_cache_file=True,
-            auto_setup=True,
-            model_name=self.model_name,
-        )
-        self.test_dataset = get_dataset(
-            self.name,
-            split="test",
-            tokenizer=self.tokenizer,
-            max_token_len=self.max_token_len,
-            num_workers=self.num_workers,
-            load_from_cache_file=True,
-            auto_setup=True,
-            model_name=self.model_name,
-        )
-        self.pred_dataset = get_dataset(
-            self.name,
-            split="pred",
-            tokenizer=self.tokenizer,
-            max_token_len=self.max_token_len,
-            num_workers=self.num_workers,
-            load_from_cache_file=True,
-            auto_setup=True,
-            model_name=self.model_name,
-        )
-
-        self.train_dataset.setup()
-        self.val_dataset.setup()
-        if self.test_dataset is not None:
-            self.test_dataset.setup()
-        if self.pred_dataset is not None:
-            self.pred_dataset.setup()
-
-        self._is_setup = True
+        if stage in ["fit", None]:
+            self.train_dataset = get_dataset(
+                self.name,
+                split="train",
+                tokenizer=self.tokenizer,
+                max_token_len=self.max_token_len,
+                num_workers=self.num_workers,
+                load_from_cache_file=self.load_from_cache_file,
+                auto_setup=True,
+                model_name=self.model_name,
+            )
+            self.train_dataset.setup()
+        if stage in ["fit", "validate", None]:
+            self.val_dataset = get_dataset(
+                self.name,
+                split="validation",
+                tokenizer=self.tokenizer,
+                max_token_len=self.max_token_len,
+                num_workers=self.num_workers,
+                load_from_cache_file=True,
+                auto_setup=True,
+                model_name=self.model_name,
+            )
+            self.val_dataset.setup()
+        if stage in ["test", None]:
+            self.test_dataset = get_dataset(
+                self.name,
+                split="test",
+                tokenizer=self.tokenizer,
+                max_token_len=self.max_token_len,
+                num_workers=self.num_workers,
+                load_from_cache_file=True,
+                auto_setup=True,
+                model_name=self.model_name,
+            )
+            if self.test_dataset is not None:
+                self.test_dataset.setup()
+        if stage in ["predict", None]:
+            self.pred_dataset = get_dataset(
+                self.name,
+                split="pred",
+                tokenizer=self.tokenizer,
+                max_token_len=self.max_token_len,
+                num_workers=self.num_workers,
+                load_from_cache_file=True,
+                auto_setup=True,
+                model_name=self.model_name,
+            )
+            if self.pred_dataset is not None:
+                self.pred_dataset.setup()
 
     def train_dataloader(self) -> DataLoader:
         return DataLoader(
@@ -261,7 +264,3 @@ class MaseDataModule(pl.LightningDataModule):
             shuffle=False,
             num_workers=self.num_workers,
         )
-
-    @property
-    def is_setup(self):
-        return self._is_setup

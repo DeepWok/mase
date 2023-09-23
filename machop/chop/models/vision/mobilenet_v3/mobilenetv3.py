@@ -496,7 +496,7 @@ def _mobilenet_v3(
 def get_mobilenetv3_small(
     info: Dict, pretrained: bool = False, **kwargs: Any
 ) -> MobileNetV3:
-    num_classes = info["num_classes"]
+    num_classes = info.num_classes
     if pretrained:
         pretrained_weight_cls = MobileNet_V3_Small_Weights.IMAGENET1K_V1
     else:
@@ -516,7 +516,7 @@ def get_mobilenetv3_small(
 def get_mobilenetv3_large(
     info: Dict, pretrained: bool = False, **kwargs: Any
 ) -> MobileNetV3:
-    num_classes = info["num_classes"]
+    num_classes = info.num_classes
     if pretrained:
         pretrained_weight_cls = MobileNet_V3_Large_Weights.IMAGENET1K_V2
     else:

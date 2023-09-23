@@ -7,46 +7,51 @@ TOY_MODELS = {
     "toy_tiny": {
         "model": get_toy_tiny,
         "info": MaseModelInfo(
+            "toy_tiny",
             model_source="toy",
             task_type="vision",
             image_classification=True,
-            fx_traceable=True,
+            is_fx_traceable=True,
         ),
     },
     "toy": {
         "model": get_toynet,
         "info": MaseModelInfo(
+            "toy",
             model_source="toy",
             task_type="vision",
             image_classification=True,
-            fx_traceable=True,
+            is_fx_traceable=True,
         ),
     },
     "toy_convnet": {
         "model": get_toy_convnet,
         "info": MaseModelInfo(
+            "toy_convnet",
             model_source="toy",
             task_type="vision",
             image_classification=True,
-            fx_traceable=True,
+            is_fx_traceable=True,
         ),
     },
     "toy_custom_fn": {
         "model": get_toyfnnet,
         "info": MaseModelInfo(
+            "toy_custom_fn",
             model_source="toy",
             task_type="vision",
             image_classification=True,
-            fx_traceable=True,
+            is_fx_traceable=True,
         ),
     },
     "toy_testmodel": {
         "model": get_toy_testmodel,
         "info": MaseModelInfo(
+            "toy_testmodel",
             model_source="toy",
             task_type="vision",
             image_classification=True,
-            fx_traceable=True,
+            is_fx_traceable=True,
         ),
     },
 }

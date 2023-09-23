@@ -334,7 +334,7 @@ def get_repvgg_a0(
     use_act_checkpoint: bool = False,
     **kwargs: Any,
 ) -> RepVGG:
-    num_classes = info["num_classes"]
+    num_classes = info.num_classes
 
     if pretrained:
         raise ValueError("Pretrained is currently not supported for RepVGG")
@@ -356,7 +356,7 @@ def get_repvgg_a1(
     use_act_checkpoint: bool = False,
     **kwargs: Any,
 ) -> RepVGG:
-    num_classes = info["num_classes"]
+    num_classes = info.num_classes
 
     if pretrained:
         raise ValueError("Pretrained is currently not supported for RepVGG")
@@ -378,7 +378,7 @@ def get_repvgg_a2(
     use_act_checkpoint: bool = False,
     **kwargs: Any,
 ) -> RepVGG:
-    num_classes = info["num_classes"]
+    num_classes = info.num_classes
 
     if pretrained:
         raise ValueError("Pretrained is currently not supported for RepVGG")
@@ -400,7 +400,7 @@ def get_repvgg_b0(
     use_act_checkpoint: bool = False,
     **kwargs: Any,
 ) -> RepVGG:
-    num_classes = info["num_classes"]
+    num_classes = info.num_classes
     if pretrained:
         raise ValueError("Pretrained is currently not supported for RepVGG")
 
@@ -421,7 +421,7 @@ def get_repvgg_b1(
     use_act_checkpoint: bool = False,
     **kwargs: Any,
 ) -> RepVGG:
-    num_classes = info["num_classes"]
+    num_classes = info.num_classes
     if pretrained:
         raise ValueError("Pretrained is currently not supported for RepVGG")
 
@@ -442,7 +442,7 @@ def get_repvgg_b1g2(
     use_act_checkpoint: bool = False,
     **kwargs: Any,
 ) -> RepVGG:
-    num_classes = info["num_classes"]
+    num_classes = info.num_classes
     if pretrained:
         raise ValueError("Pretrained is currently not supported for RepVGG")
 
@@ -463,7 +463,7 @@ def get_repvgg_b1g4(
     use_act_checkpoint: bool = False,
     **kwargs: Any,
 ) -> RepVGG:
-    num_classes = info["num_classes"]
+    num_classes = info.num_classes
     if pretrained:
         raise ValueError("Pretrained is currently not supported for RepVGG")
 
@@ -484,7 +484,7 @@ def get_repvgg_b2(
     use_act_checkpoint: bool = False,
     **kwargs: Any,
 ) -> RepVGG:
-    num_classes = info["num_classes"]
+    num_classes = info.num_classes
     if pretrained:
         raise ValueError("Pretrained is currently not supported for RepVGG")
 
@@ -505,7 +505,7 @@ def get_repvgg_b2g2(
     use_act_checkpoint: bool = False,
     **kwargs: Any,
 ) -> RepVGG:
-    num_classes = info["num_classes"]
+    num_classes = info.num_classes
     if pretrained:
         raise ValueError("Pretrained is currently not supported for RepVGG")
 
@@ -526,7 +526,7 @@ def get_repvgg_b2g4(
     use_act_checkpoint: bool = False,
     **kwargs: Any,
 ) -> RepVGG:
-    num_classes = info["num_classes"]
+    num_classes = info.num_classes
     if pretrained:
         raise ValueError("Pretrained is currently not supported for RepVGG")
 
@@ -547,7 +547,7 @@ def get_repvgg_b3(
     use_act_checkpoint: bool = False,
     **kwargs: Any,
 ) -> RepVGG:
-    num_classes = info["num_classes"]
+    num_classes = info.num_classes
     if pretrained:
         raise ValueError("Pretrained is currently not supported for RepVGG")
 
@@ -568,7 +568,7 @@ def get_repvgg_b3g2(
     use_act_checkpoint: bool = False,
     **kwargs: Any,
 ) -> RepVGG:
-    num_classes = info["num_classes"]
+    num_classes = info.num_classes
     if pretrained:
         raise ValueError("Pretrained is currently not supported for RepVGG")
 
@@ -589,7 +589,7 @@ def get_repvgg_b3g4(
     use_act_checkpoint: bool = False,
     **kwargs: Any,
 ) -> RepVGG:
-    num_classes = info["num_classes"]
+    num_classes = info.num_classes
     if pretrained:
         raise ValueError("Pretrained is currently not supported for RepVGG")
 
@@ -610,7 +610,7 @@ def get_repvgg_d2se(
     use_act_checkpoint: bool = False,
     **kwargs: Any,
 ) -> RepVGG:
-    num_classes = info["num_classes"]
+    num_classes = info.num_classes
     if pretrained:
         raise ValueError("Pretrained is currently not supported for RepVGG")
 

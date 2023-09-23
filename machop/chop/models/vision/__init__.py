@@ -71,193 +71,193 @@ VISION_MODELS = {
     "resnet18": {
         "get_model_fn_image_classification": get_resnet18,
         "info": MaseModelInfo(
-            model_source="torchvision", task_type="vision", image_classification=True, fx_traceable=True
+            "resnet18", model_source="torchvision", task_type="vision", image_classification=True, is_fx_traceable=True
         ),
     },
     "resnet34": {
         "get_model_fn_image_classification": get_resnet34,
         "info": MaseModelInfo(
-            model_source="torchvision", task_type="vision", image_classification=True, fx_traceable=True
+            "resnet34", model_source="torchvision", task_type="vision", image_classification=True, is_fx_traceable=True
         ),
     },
     "resnet50": {
         "get_model_fn_image_classification": get_resnet50,
         "info": MaseModelInfo(
-            model_source="torchvision", task_type="vision", image_classification=True, fx_traceable=True
+            "resnet50", model_source="torchvision", task_type="vision", image_classification=True, is_fx_traceable=True
         ),
     },
     "resnet101": {
         "get_model_fn_image_classification": get_resnet101,
         "info": MaseModelInfo(
-            model_source="torchvision", task_type="vision", image_classification=True, fx_traceable=True
+            "resnet101", model_source="torchvision", task_type="vision", image_classification=True, is_fx_traceable=True
         ),
     },
     # wide resnet
     "wideresnet50_2": {
         "get_model_fn_image_classification": get_wide_resnet50_2,
         "info": MaseModelInfo(
-            model_source="torchvision", task_type="vision", image_classification=True, fx_traceable=True
+            "wideresnet50_2", model_source="torchvision", task_type="vision", image_classification=True, is_fx_traceable=True
         ),
     },
     "wideresnet28_cifar": {
         "get_model_fn_image_classification": wideresnet28_cifar,
         "info": MaseModelInfo(
-            model_source="torchvision", task_type="vision", image_classification=True, fx_traceable=True
+            "wideresnet28_cifar", model_source="torchvision", task_type="vision", image_classification=True, is_fx_traceable=True
         ),
     },
     # mobilenet v2
     "mobilenetv2": {
         "get_model_fn_image_classification": get_mobilenet_v2,
         "info": MaseModelInfo(
-            model_source="torchvision", task_type="vision", image_classification=True, fx_traceable=True
+            "mobilenetv2", model_source="torchvision", task_type="vision", image_classification=True, is_fx_traceable=True
         ),
     },
     # mobilenet v3
     "mobilenetv3_small": {
         "get_model_fn_image_classification": get_mobilenetv3_small,
         "info": MaseModelInfo(
-            model_source="torchvision", task_type="vision", image_classification=True, fx_traceable=True
+            "mobilenetv3_small", model_source="torchvision", task_type="vision", image_classification=True, is_fx_traceable=True
         ),
     },
     "mobilenetv3_large": {
         "get_model_fn_image_classification": get_mobilenetv3_large,
         "info": MaseModelInfo(
-            model_source="torchvision", task_type="vision", image_classification=True, fx_traceable=True
+            "mobilenetv3_large", model_source="torchvision", task_type="vision", image_classification=True, is_fx_traceable=True
         ),
     },
     # efficient net
     "efficientnet_b0": {
         "get_model_fn_image_classification": get_efficientnet_b0,
         "info": MaseModelInfo(
-            model_source="torchvision", task_type="vision", image_classification=True, fx_traceable=True
+            "efficientnet_b0", model_source="torchvision", task_type="vision", image_classification=True, is_fx_traceable=True
         ),
     },
     "efficientnet_b3": {
         "get_model_fn_image_classification": get_efficientnet_b3,
         "info": MaseModelInfo(
-            model_source="torchvision", task_type="vision", image_classification=True, fx_traceable=True
+            "efficientnet_b3", model_source="torchvision", task_type="vision", image_classification=True, is_fx_traceable=True
         ),
     },
     "efficientnet_v2_s": {
         "get_model_fn_image_classification": get_efficientnet_v2_s,
         "info": MaseModelInfo(
-            model_source="torchvision", task_type="vision", image_classification=True, fx_traceable=True
+            "efficientnet_v2_s", model_source="torchvision", task_type="vision", image_classification=True, is_fx_traceable=True
         ),
     },
     "efficientnet_v2_m": {
         "get_model_fn_image_classification": get_efficientnet_v2_m,
         "info": MaseModelInfo(
-            model_source="torchvision", task_type="vision", image_classification=True, fx_traceable=True
+            "efficientnet_v2_m", model_source="torchvision", task_type="vision", image_classification=True, is_fx_traceable=True
         ),
     },
     "efficientnet_v2_l": {
         "get_model_fn_image_classification": get_efficientnet_v2_l,
         "info": MaseModelInfo(
-            model_source="torchvision", task_type="vision", image_classification=True, fx_traceable=True
+            "efficientnet_v2_l", model_source="torchvision", task_type="vision", image_classification=True, is_fx_traceable=True
         ),
     },
     "pvt_tiny": {
         "get_model_fn_image_classification": get_pvt_tiny,
         "info": MaseModelInfo(
-            model_source="vision_others", task_type="vision", image_classification=True
+            "pvt_tiny", model_source="vision_others", task_type="vision", image_classification=True
         ), # TODO: Check if traceable
     },
     "pvt_small": {
         "get_model_fn_image_classification": get_pvt_small,
         "info": MaseModelInfo(
-            model_source="vision_others", task_type="vision", image_classification=True
+            "pvt_small", model_source="vision_others", task_type="vision", image_classification=True
         ), # TODO: Check if traceable
     },
     "pvt_medium": {
         "get_model_fn_image_classification": get_pvt_medium,
         "info": MaseModelInfo(
-            model_source="vision_others", task_type="vision", image_classification=True
+            "pvt_medium", model_source="vision_others", task_type="vision", image_classification=True
         ), # TODO: Check if traceable
     },
     "pvt_large": {
         "get_model_fn_image_classification": get_pvt_large,
         "info": MaseModelInfo(
-            model_source="vision_others", task_type="vision", image_classification=True
+            "pvt_large", model_source="vision_others", task_type="vision", image_classification=True
         ), # TODO: Check if traceable
     },
     "pvt_v2_b0": {
         "get_model_fn_image_classification": get_pvt_v2_b0,
         "info": MaseModelInfo(
-            model_source="vision_others", task_type="vision", image_classification=True
+            "pvt_v2_b0", model_source="vision_others", task_type="vision", image_classification=True
         ),
     },
     "pvt_v2_b1": {
         "get_model_fn_image_classification": get_pvt_v2_b1,
         "info": MaseModelInfo(
-            model_source="vision_others", task_type="vision", image_classification=True, fx_traceable=True
+            "pvt_v2_b1", model_source="vision_others", task_type="vision", image_classification=True, is_fx_traceable=True
         ),
     },
     "pvt_v2_b2": {
         "get_model_fn_image_classification": get_pvt_v2_b2,
         "info": MaseModelInfo(
-            model_source="vision_others", task_type="vision", image_classification=True, fx_traceable=True
+            "pvt_v2_b2", model_source="vision_others", task_type="vision", image_classification=True, is_fx_traceable=True
         ),
     },
     "pvt_v2_b3": {
         "get_model_fn_image_classification": get_pvt_v2_b3,
         "info": MaseModelInfo(
-            model_source="vision_others", task_type="vision", image_classification=True, fx_traceable=True
+            "pvt_v2_b3", model_source="vision_others", task_type="vision", image_classification=True, is_fx_traceable=True
         ),
     },
     "pvt_v2_b4": {
         "get_model_fn_image_classification": get_pvt_v2_b4,
         "info": MaseModelInfo(
-            model_source="vision_others", task_type="vision", image_classification=True, fx_traceable=True
+            "pvt_v2_b4", model_source="vision_others", task_type="vision", image_classification=True, is_fx_traceable=True
         ),
     },
     "pvt_v2_b5": {
         "get_model_fn_image_classification": get_pvt_v2_b5,
         "info": MaseModelInfo(
-            model_source="vision_others", task_type="vision", image_classification=True, fx_traceable=True
+            "pvt_v2_b5", model_source="vision_others", task_type="vision", image_classification=True, is_fx_traceable=True
         ),
     },
     # CSWin
     "cswin_64_tiny": {
         "get_model_fn_image_classification": get_cswin_64_tiny,
         "info": MaseModelInfo(
-            model_source="vision_others", task_type="vision", image_classification=True
+            "cswin_64_tiny", model_source="vision_others", task_type="vision", image_classification=True
         ),
     },
     "cswin_64_small": {
         "get_model_fn_image_classification": get_cswin_64_small,
         "info": MaseModelInfo(
-            model_source="vision_others", task_type="vision", image_classification=True
+            "cswin_64_small", model_source="vision_others", task_type="vision", image_classification=True
         ),
     },
     "cswin_96_base": {
         "get_model_fn_image_classification": get_cswin_96_base,
         "info": MaseModelInfo(
-            model_source="vision_others", task_type="vision", image_classification=True
+            "cswin_96_base", model_source="vision_others", task_type="vision", image_classification=True
         ),
     },
     "cswin_144_large": {
         "get_model_fn_image_classification": get_cswin_144_large,
         "info": MaseModelInfo(
-            model_source="vision_others", task_type="vision", image_classification=True
+            "cswin_144_large", model_source="vision_others", task_type="vision", image_classification=True
         ),
     },
     # DeiT
     "deit_tiny_patch16_224": {
         "get_model_fn_image_classification": get_deit_tiny_patch16_224,
         "info": MaseModelInfo(
-            model_source="vision_others", task_type="vision", image_classification=True, fx_traceable=True
+            "deit_tiny_patch16_224", model_source="vision_others", task_type="vision", image_classification=True, is_fx_traceable=True
         ),
     },
     "deit_small_patch16_224": {
         "get_model_fn_image_classification": get_deit_small_patch16_224,
         "info": MaseModelInfo(
-            model_source="vision_others", task_type="vision", image_classification=True, fx_traceable=True
+            "deit_small_patch16_224", model_source="vision_others", task_type="vision", image_classification=True, is_fx_traceable=True
         ),
     },
     "deit_base_patch16_224": {
         "get_model_fn_image_classification": get_deit_base_patch16_224,
         "info": MaseModelInfo(
-            model_source="vision_others", task_type="vision", image_classification=True, fx_traceable=True
+            "deit_base_patch16_224", model_source="vision_others", task_type="vision", image_classification=True, is_fx_traceable=True
         ),
     },
     # repvgg
@@ -265,91 +265,91 @@ VISION_MODELS = {
     "repvgg_a0": {
         "get_model_fn_image_classification": get_repvgg_a0,
         "info": MaseModelInfo(
-            model_source="vision_others", task_type="vision", image_classification=True
+            "repvgg_a0", model_source="vision_others", task_type="vision", image_classification=True
         ),
     },
     "repvgg_a1": {
         "get_model_fn_image_classification": get_repvgg_a1,
         "info": MaseModelInfo(
-            model_source="vision_others", task_type="vision", image_classification=True
+            "repvgg_a1", model_source="vision_others", task_type="vision", image_classification=True
         ),
     },
     "repvgg_a2": {
         "get_model_fn_image_classification": get_repvgg_a2,
         "info": MaseModelInfo(
-            model_source="vision_others", task_type="vision", image_classification=True
+            "repvgg_a2", model_source="vision_others", task_type="vision", image_classification=True
         ),
     },
     "repvgg_b0": {
         "get_model_fn_image_classification": get_repvgg_b0,
         "info": MaseModelInfo(
-            model_source="vision_others", task_type="vision", image_classification=True
+            "repvgg_b0", model_source="vision_others", task_type="vision", image_classification=True
         ),
     },
     "repvgg_b1": {
         "get_model_fn_image_classification": get_repvgg_b1,
         "info": MaseModelInfo(
-            model_source="vision_others", task_type="vision", image_classification=True
+            "repvgg_b1", model_source="vision_others", task_type="vision", image_classification=True
         ),
     },
     "repvgg_b1g2": {
         "get_model_fn_image_classification": get_repvgg_b1g2,
         "info": MaseModelInfo(
-            model_source="vision_others", task_type="vision", image_classification=True
+            "repvgg_b1g2", model_source="vision_others", task_type="vision", image_classification=True
         ),
     },
     "repvgg_b1g4": {
         "get_model_fn_image_classification": get_repvgg_b1g4,
         "info": MaseModelInfo(
-            model_source="vision_others", task_type="vision", image_classification=True
+            "repvgg_b1g4", model_source="vision_others", task_type="vision", image_classification=True
         ),
     },
     "repvgg_b2": {
         "get_model_fn_image_classification": get_repvgg_b2,
         "info": MaseModelInfo(
-            model_source="vision_others", task_type="vision", image_classification=True
+            "repvgg_b2", model_source="vision_others", task_type="vision", image_classification=True
         ),
     },
     "repvgg_b2g2": {
         "get_model_fn_image_classification": get_repvgg_b2g2,
         "info": MaseModelInfo(
-            model_source="vision_others", task_type="vision", image_classification=True
+            "repvgg_b2g2", model_source="vision_others", task_type="vision", image_classification=True
         ),
     },
     "repvgg_b2g4": {
         "get_model_fn_image_classification": get_repvgg_b2g4,
         "info": MaseModelInfo(
-            model_source="vision_others", task_type="vision", image_classification=True
+            "repvgg_b2g4", model_source="vision_others", task_type="vision", image_classification=True
         ),
     },
     "repvgg_b3": {
         "get_model_fn_image_classification": get_repvgg_b3,
         "info": MaseModelInfo(
-            model_source="vision_others", task_type="vision", image_classification=True
+            "repvgg_b3", model_source="vision_others", task_type="vision", image_classification=True
         ),
     },
     "repvgg_b3g2": {
         "get_model_fn_image_classification": get_repvgg_b3g2,
         "info": MaseModelInfo(
-            model_source="vision_others", task_type="vision", image_classification=True
+            "repvgg_b3g2", model_source="vision_others", task_type="vision", image_classification=True
         ),
     },
     "repvgg_b3g4": {
         "get_model_fn_image_classification": get_repvgg_b3g4,
         "info": MaseModelInfo(
-            model_source="vision_others", task_type="vision", image_classification=True
+            "repvgg_b3g4", model_source="vision_others", task_type="vision", image_classification=True
         ),
     },
     "repvgg_d2se": {
         "get_model_fn_image_classification": get_repvgg_d2se,
         "info": MaseModelInfo(
-            model_source="vision_others", task_type="vision", image_classification=True
+            "repvgg_d2se", model_source="vision_others", task_type="vision", image_classification=True
         ),
     },
     "lfc": {
         "get_model_fn_image_classification": get_lfc,
         "info": MaseModelInfo(
-            model_source="vision_others", task_type="vision", image_classification=True, fx_traceable=True
+            "lfc", model_source="vision_others", task_type="vision", image_classification=True, is_fx_traceable=True
         ),
     }
 }

@@ -177,7 +177,7 @@ def get_patched_nlp_model(
     ]:
         raise ValueError("task must be a valid value for NLP models")
 
-    num_classes = info["num_classes"]
+    num_classes = info.num_classes
 
     tokenizer = tokenizer_from_pretrained(
         name,

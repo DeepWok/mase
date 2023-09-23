@@ -4,7 +4,7 @@ from typing import Any
 """
 This is the LFC model from the LUTNet Paper
 
-Reference:    
+Reference:
 https://arxiv.org/pdf/1904.00938.pdf
 """
 
@@ -38,5 +38,5 @@ def get_lfc(
     **kwargs: Any,
 ):
     image_size = info["image_size"]
-    num_classes = info["num_classes"]
+    num_classes = info.num_classes
     return LFC(image_size, num_classes)

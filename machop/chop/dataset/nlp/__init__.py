@@ -77,13 +77,13 @@ def get_nlp_dataset(
         case _:
             raise ValueError(f"Unknown dataset {name}")
 
-    if ori_split == "test" and not dataset_cls.test_dataset_available:
+    if ori_split == "test" and not dataset_cls.info.test_split_available:
         return None
 
-    if ori_split == "pred" and not dataset_cls.pred_dataset_available:
+    if ori_split == "pred" and not dataset_cls.info.pred_split_available:
         return None
 
-    if ori_split == "pred" and dataset_cls.pred_dataset_available:
+    if ori_split == "pred" and dataset_cls.info.pred_split_available:
         split = "test"
 
     dataset = dataset_cls(

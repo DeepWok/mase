@@ -53,17 +53,10 @@ def validate(
     )
 
     trainer = pl.Trainer(**plt_trainer_args)
-    data_module.prepare_data()
-    data_module.setup()
-    if data_module.test_dataset is not None:
-        trainer.test(plt_model, datamodule=data_module)
-    elif data_module.pred_dataset is not None:
-        predicted_results = trainer.predict(plt_model, datamodule=data_module)
-        pred_save_name = os.path.join(save_path, "predicted_result.pkl")
-        with open(pred_save_name, "wb") as f:
-            pickle.dump(predicted_results, f)
-        logger.info(f"Predicted results is saved to {pred_save_name}")
+
+    if data_module.dataset_info.validation_split_available:
+        trainer.validate(plt_model, datamodule=data_module)
     else:
-        raise RuntimeError(
-            "Cannot run --test-sw because both the test dataset and pred dataset are None."
+        logger.warning(
+            f"Validation split not available for dataset {data_module.info.name}"
         )

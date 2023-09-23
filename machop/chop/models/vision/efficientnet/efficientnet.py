@@ -581,7 +581,7 @@ def get_efficientnet_b0(
     pretrained: bool = False,
     **kwargs: Any,
 ):
-    num_classes = info["num_classes"]
+    num_classes = info.num_classes
     if pretrained:
         pretrained_weight_cls = EfficientNet_B0_Weights.IMAGENET1K_V1
     else:
@@ -605,7 +605,7 @@ def get_efficientnet_b3(
     pretrained: bool = False,
     **kwargs: Any,
 ):
-    num_classes = info["num_classes"]
+    num_classes = info.num_classes
     if pretrained:
         pretrained_weight_cls = EfficientNet_B3_Weights.IMAGENET1K_V1
     else:
@@ -630,7 +630,7 @@ def get_efficientnet_v2_s(
     pretrained: bool = False,
     **kwargs: Any,
 ):
-    num_classes = info["num_classes"]
+    num_classes = info.num_classes
     if pretrained:
         pretrained_weight_cls = EfficientNet_V2_S_Weights.IMAGENET1K_V1
     else:
@@ -652,7 +652,7 @@ def get_efficientnet_v2_m(
     pretrained: bool = False,
     **kwargs: Any,
 ):
-    num_classes = info["num_classes"]
+    num_classes = info.num_classes
     if pretrained:
         pretrained_weight_cls = EfficientNet_V2_M_Weights.IMAGENET1K_V1
     else:
@@ -674,7 +674,7 @@ def get_efficientnet_v2_l(
     pretrained: bool = False,
     **kwargs: Any,
 ):
-    num_classes = info["num_classes"]
+    num_classes = info.num_classes
     if pretrained:
         pretrained_weight_cls = EfficientNet_V2_L_Weights.IMAGENET1K_V1
     else:

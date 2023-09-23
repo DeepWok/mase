@@ -25,17 +25,13 @@ class WrapperBase(pl.LightningModule):
         self.epochs = epochs
         self.optimizer = optimizer
 
-        self.num_classes = dataset_info["num_classes"]
+        self.num_classes = dataset_info.num_classes
         if self.num_classes is not None:
             self.acc_train = Accuracy(
-                "multiclass", num_classes=dataset_info["num_classes"]
+                "multiclass", num_classes=dataset_info.num_classes
             )
-            self.acc_val = Accuracy(
-                "multiclass", num_classes=dataset_info["num_classes"]
-            )
-            self.acc_test = Accuracy(
-                "multiclass", num_classes=dataset_info["num_classes"]
-            )
+            self.acc_val = Accuracy("multiclass", num_classes=dataset_info.num_classes)
+            self.acc_test = Accuracy("multiclass", num_classes=dataset_info.num_classes)
 
     def forward(self, x):
         return self.model(x)

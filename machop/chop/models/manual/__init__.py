@@ -39,21 +39,21 @@ MANUAL_MODELS = {
     "bert_quantized": {
         "config_cls": BertQuantizedConfig,
         "tokenizer_cls": BertTokenizer,
-        "info": MaseModelInfo(model_source="manual", task_type="nlp", sequence_classification=True, is_quantized=True),
+        "info": MaseModelInfo("bert_quantized", model_source="manual", task_type="nlp", sequence_classification=True, is_quantized=True),
         "sequence_classification": BertQuantizedForSequenceClassification,
         "quant_config_parser": parse_bert_quantized_config,
     },
     "llama_plain": {
         "config_cls": LlamaConfig,
         "tokenizer_cls": LlamaTokenizer,
-        "info": MaseModelInfo(model_source="manual", task_type="nlp", sequence_classification=True, causal_LM=True),
+        "info": MaseModelInfo("llama_plain", model_source="manual", task_type="nlp", sequence_classification=True, causal_LM=True),
         "sequence_classification": LlamaForSequenceClassification,
         "causal_LM": LlamaForCausalLM,
     },
     "llama_quantized": {
         "config_cls": LlamaQuantizedConfig,
         "tokenizer_cls": LlamaTokenizer,
-        "info": MaseModelInfo(model_source="manual", task_type="nlp", sequence_classification=True, causal_LM=True, is_quantized=True),
+        "info": MaseModelInfo("llama_quantized", model_source="manual", task_type="nlp", sequence_classification=True, causal_LM=True, is_quantized=True),
         "sequence_classification": LlamaQuantizedForSequenceClassification,
         "causal_LM": LlamaQuantizedForCausalLM,
         "quant_config_parser": parse_llama_quantized_config,
@@ -61,14 +61,14 @@ MANUAL_MODELS = {
     "opt_plain": {
         "config_cls": OPTConfig,
         "tokenizer_cls": GPT2Tokenizer,
-        "info": MaseModelInfo(model_source="manual", task_type="nlp", sequence_classification=True, causal_LM=True),
+        "info": MaseModelInfo("opt_plain", model_source="manual", task_type="nlp", sequence_classification=True, causal_LM=True),
         "sequence_classification": OPTForSequenceClassification,
         "causal_LM": OPTForCausalLM,
     },
     "opt_quantized": {
         "config_cls": OPTQuantizedConfig,
         "tokenizer_cls": GPT2Tokenizer,
-        "info": MaseModelInfo(model_source="manual", task_type="nlp", sequence_classification=True, causal_LM=True, is_quantized=True),
+        "info": MaseModelInfo("opt_quantized", model_source="manual", task_type="nlp", sequence_classification=True, causal_LM=True, is_quantized=True),
         "sequence_classification": OPTQuantizedForSequenceClassification,
         "causal_LM": OPTQuantizedForCausalLM,
         "quant_config_parser": parse_opt_quantized_config,
@@ -126,12 +126,12 @@ def get_manual_model(
             config = MANUAL_MODELS[name]["config_cls"].from_pretrained(
                 checkpoint,
                 quant_config=quant_config,
-                num_labels=dataset_info["num_classes"],
+                num_labels=dataset_info.num_classes,
             )
         else:
             config = MANUAL_MODELS[name]["config_cls"].from_pretrained(
                 checkpoint,
-                num_labels=dataset_info["num_classes"],
+                num_labels=dataset_info.num_classes,
             )
         model_cls = MANUAL_MODELS[name]["sequence_classification"]
     elif task in ["lm", "language_modeling"]:

@@ -130,7 +130,7 @@ def get_toynet(
     **kwargs: Any,
 ):
     image_size = info["image_size"]
-    num_classes = info["num_classes"]
+    num_classes = info.num_classes
     return ToyNet(image_size, num_classes)
 
 
@@ -140,7 +140,7 @@ def get_toy_tiny(
     **kwargs: Any,
 ):
     image_size = info["image_size"]
-    num_classes = info["num_classes"]
+    num_classes = info.num_classes
     return ToyTiny(image_size, num_classes)
 
 
@@ -150,7 +150,7 @@ def get_toy_testmodel(
     **kwargs: Any,
 ):
     image_size = info["image_size"]
-    num_classes = info["num_classes"]
+    num_classes = info.num_classes
     # print(num_classes)
     return ToyTestModel(image_size, num_classes)
 
@@ -161,5 +161,5 @@ def get_toy_convnet(
     **kwargs: Any,
 ):
     # NOTE: The model isn't configurable through the CLI or a configuration file yet.
-    num_classes = info["num_classes"]
+    num_classes = info.num_classes
     return ToyConvNet(num_classes)
