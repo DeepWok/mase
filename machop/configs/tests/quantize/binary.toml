@@ -1,7 +1,7 @@
 # basics
 model = "toy"
 dataset = "toy-tiny"
-
+max_epochs = 10
 [passes.quantize]
 by = "type"
 report = true

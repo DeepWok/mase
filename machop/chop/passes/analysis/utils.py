@@ -100,3 +100,25 @@ def match_and_filter(name, funcs):
         if (pattern == name) or (pattern + "_" in name):
             return True, pattern
     return False, None
+
+
+def is_tensor_constant(s):
+    # Define the regular expression pattern to match "_tensor_constant" followed by one or more digits
+    pattern = r"_tensor_constant\d+"
+
+    # Use re.match to check if the string matches the pattern at the beginning
+    match = re.match(pattern, s)
+
+    # If there's a match, return True; otherwise, return False
+    return bool(match)
+
+
+def is_seq_blocks_parameter(s):
+    # Define the regular expression pattern to match "seq_blocks_" followed by a digit, an underscore, and a parameter name
+    pattern = r"seq_blocks_\d+_(weight|bias|gamma)"
+
+    # Use re.match to check if the string matches the pattern
+    match = re.match(pattern, s)
+
+    # If there's a match, return True; otherwise, return False
+    return bool(match)

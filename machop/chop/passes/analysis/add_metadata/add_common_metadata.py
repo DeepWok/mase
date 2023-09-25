@@ -4,7 +4,11 @@ import math
 import toml
 import torch
 import torch.fx as fx
-from chop.passes.analysis.utils import match_and_filter
+from chop.passes.analysis.utils import (
+    is_tensor_constant,
+    match_and_filter,
+    is_seq_blocks_parameter,
+)
 from chop.passes.common import (
     MASE_BUILTIN_FUNCS,
     MASE_IMPLICIT_FUNCS,
@@ -130,9 +134,14 @@ def graph_iterator_for_mase_ops(graph):
             node.meta["mase"].parameters["common"]["mase_op"] = "placeholder"
 
         elif node.op == "get_attr":
-            if node.name in ["_tensor_constant0"]:
+            if node.name in ["_tensor_constant0"] or is_tensor_constant(node.name):
                 node.meta["mase"].parameters["common"]["mase_type"] = "implicit_func"
                 node.meta["mase"].parameters["common"]["mase_op"] = "constant"
+            elif is_seq_blocks_parameter(node.name):
+                node.meta["mase"].parameters["common"]["mase_type"] = "implicit_func"
+                node.meta["mase"].parameters["common"][
+                    "mase_op"
+                ] = "constant"  # TODO: ??? what to assign here
             else:
                 node.meta["mase"].parameters["common"]["mase_type"] = "get_attr"
                 raise NotImplementedError(f"Unknown node type: {node.target}")
