@@ -28,6 +28,8 @@ MASE_IMPLICIT_FUNCS = [
     # possibly can just safely ignore?
     "dropout",
     "eq",
+    "ge",
+    "where",
     "_assert",
     "getattr",
     "getitem",

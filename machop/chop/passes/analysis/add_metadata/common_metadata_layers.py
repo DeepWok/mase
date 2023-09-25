@@ -300,6 +300,7 @@ def _get_result_by_function_simulation(meta):
 
     is_int = True
     is_float = True
+    is_bool = True
 
     list_depth = lambda L: isinstance(L, list) and max(map(list_depth, L)) + 1
 
@@ -377,10 +378,34 @@ def _get_result_by_function_simulation(meta):
             result = meta.node.target(dummy_data, *args_val, **kwargs_val)
         except:
             is_float = False
+    # special handle for torch.where (accept a list of boolean)
+    if not is_float:
+        try:
+            if (
+                "value"
+                in self_obj.meta["mase"]
+                .parameters["common"]["results"]["data_out_0"]
+                .keys()
+            ):
+                dummy_data = self_obj.meta["mase"].parameters["common"]["results"][
+                    "data_out_0"
+                ]["value"]
+            else:
+                size = self_obj.meta["mase"].parameters["common"]["results"][
+                    "data_out_0"
+                ]["size"]
+                # Special tuple input - check relavant comments for single-element tuple result
+                if list_depth(size) == 2 and len(size) == 1:
+                    dummy_data = torch.full(size, True, dtype=torch.bool)
+                else:
+                    dummy_data = torch.full(size, True, dtype=torch.bool)
+            result = meta.node.target(dummy_data, *args_val, **kwargs_val)
+        except:
+            is_bool = False
 
     assert (
-        is_int or is_float
-    ), f"Both float and int are not correct for module {meta.node}"
+        is_int or is_float or is_bool
+    ), f"Both float and int and bool are not correct for module {meta.node}"
 
     return result
 
