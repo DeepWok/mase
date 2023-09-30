@@ -62,6 +62,7 @@ from .repvgg import (
 )
 
 from .lfc import get_lfc
+from .cnv import get_cnv
 
 logger = logging.getLogger(__name__)
 
@@ -350,6 +351,12 @@ VISION_MODELS = {
         "get_model_fn_image_classification": get_lfc,
         "info": MaseModelInfo(
             "lfc", model_source="vision_others", task_type="vision", image_classification=True, is_fx_traceable=True
+        ),
+    },
+    "cnv": {
+        "get_model_fn_image_classification": get_cnv,
+        "info": MaseModelInfo(
+            "cnv", model_source="vision_others", task_type="vision", image_classification=True, is_fx_traceable=True
         ),
     }
 }
