@@ -23,3 +23,8 @@ optuna
 stable-baselines3
 scikit-learn
 nni==2.10.1
+# LogicNets
+h5py
+pyyaml<6.0
+numpy
+pandas

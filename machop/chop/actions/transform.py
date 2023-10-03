@@ -156,6 +156,8 @@ def transform(
                 graph = PASSES[pass_name](graph, pass_args=None)
             case "conv_bn_fusion":
                 graph = PASSES[pass_name](graph, pass_args=None)
+            case "logicnets_fusion":
+                graph = PASSES[pass_name](graph, pass_args=None)
             case "onnx_annotate":
                 onnx_dir = save_dir / "onnx"
                 onnx_dir.mkdir(parents=True, exist_ok=True)

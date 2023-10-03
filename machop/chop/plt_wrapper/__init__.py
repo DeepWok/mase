@@ -1,4 +1,5 @@
 from .vision import VisionModelWrapper
+from .physical import JetSubstructureModelWrapper
 from .nlp import (
     NLPClassificationModelWrapper,
     NLPLanguageModelingModelWrapper,
@@ -7,7 +8,9 @@ from .nlp import (
 
 
 def get_model_wrapper(model_info, task: str):
-    if model_info.is_vision_model:
+    if model_info.is_physical_model:
+        return JetSubstructureModelWrapper
+    elif model_info.is_vision_model:
         return VisionModelWrapper
     elif model_info.is_nlp_model:
         match task:

@@ -31,6 +31,11 @@ from .huggingface_nlp_models import (
     get_hf_nlp_model_config_cls,
 )
 from .vision import get_vision_model, get_vision_model_info, is_vision_model
+from .physical import (
+    get_physical_model,
+    get_physical_model_info,
+    is_physical_model,
+)
 from .toys import get_toy_model, get_toy_model_info, is_toy_model
 from .utils import MaseModelInfo, ModelSource, ModelTaskType
 
@@ -42,6 +47,8 @@ def get_model_info(name: str) -> MaseModelInfo:
         info = get_hf_nlp_model_info(name)
     elif is_vision_model(name):
         info = get_vision_model_info(name)
+    elif is_physical_model(name):
+        info = get_physical_model_info(name)
     elif is_toy_model(name):
         info = get_toy_model_info(name)
     elif is_patched_model(name):
@@ -82,6 +89,8 @@ def get_model(
             model = get_patched_model(**model_kwargs)
         case ModelSource.TORCHVISION | ModelSource.VISION_OTHERS:
             model = get_vision_model(**model_kwargs)
+        case ModelSource.PHYSICAL:
+            model = get_physical_model(**model_kwargs)
         case ModelSource.TOY:
             model = get_toy_model(**model_kwargs)
         case _:

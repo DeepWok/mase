@@ -11,11 +11,11 @@ class ToyNet(nn.Module):
         super(ToyNet, self).__init__()
         in_planes = image_size[0] * image_size[1] * image_size[2]
         self.seq_blocks = nn.Sequential(
-            nn.Linear(in_planes, 100),
+            nn.Linear(in_planes, 8),
             nn.ReLU(),
-            nn.Linear(100, 100),
+            nn.Linear(8, 8),
             nn.ReLU(),
-            nn.Linear(100, num_classes),
+            nn.Linear(8, num_classes),
         )
 
     def forward(self, x):

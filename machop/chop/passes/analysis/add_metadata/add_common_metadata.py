@@ -36,6 +36,7 @@ def graph_iterator_for_mase_ops(graph):
         if node.op == "call_module":
             module_name = node.target
             module = graph.modules[module_name]
+            print(module, isinstance(module, nn.BatchNorm1d))
             mase_type = "module_related_func"
             if isinstance(module, nn.AdaptiveAvgPool1d):
                 mase_op = "adaptive_avg_pool1d"
@@ -69,6 +70,8 @@ def graph_iterator_for_mase_ops(graph):
                 mase_op = "max_pool2d"
             elif isinstance(module, nn.ReLU):
                 mase_op = "relu"
+            elif isinstance(module, nn.Hardtanh):  # TODO: This is not implemented yet
+                mase_op = "hardtanh"
             elif isinstance(module, nn.Embedding):
                 mase_op = "embedding"
             elif isinstance(module, tuple(graph.model.patched_custom_layers)):

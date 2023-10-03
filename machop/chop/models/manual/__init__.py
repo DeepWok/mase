@@ -72,7 +72,7 @@ MANUAL_MODELS = {
         "sequence_classification": OPTQuantizedForSequenceClassification,
         "causal_LM": OPTQuantizedForCausalLM,
         "quant_config_parser": parse_opt_quantized_config,
-    },
+    }
 }
 # fmt: on
 

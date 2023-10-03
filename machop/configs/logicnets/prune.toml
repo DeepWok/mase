@@ -1,0 +1,14 @@
+# Perform the pruning step for logicnets
+
+#model = "toy"
+#dataset = "cifar10"
+
+[passes.prune.weight]
+method = "level-pruner"
+criterion = "neuron_wise_fan_in_random"
+sparsity = 0.5 # This does not matter under neuron_wise_fan_in_random
+fan_in = 3
+
+#[passes.prune.activation]
+#strategy = "fixed-global"
+#target = 0.1

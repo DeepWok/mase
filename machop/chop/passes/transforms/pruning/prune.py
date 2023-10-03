@@ -140,8 +140,8 @@ def prune_graph_iterator(graph: MaseGraph, save_dir: str, config: dict):
 
     # Iterate over the graph and prune the compatible nodes; note that we do two passes.
     if iterate:
-        _graph_iterator(graph, partial(_wrap_callback, pruner, handler))
-        _graph_iterator(graph, partial(_apply_callback, pruner))
+        _graph_iterator(graph, partial(_wrap_callback, pruner, handler, config))
+        _graph_iterator(graph, partial(_apply_callback, pruner, config))
     else:
         # This is a special case for the channel pruner. We just pass the graph model
         # to the pruner and it takes care of the rest.
@@ -217,7 +217,7 @@ def _graph_iterator(graph: MaseGraph, callback: callable):
         pbar.set_description("Done")
 
 
-def _wrap_callback(pruner, handler, node, pbar):
+def _wrap_callback(pruner, handler, config, node, pbar):
     module = get_node_actual_target(node)
 
     # Wrap and prune the module :)
@@ -227,11 +227,19 @@ def _wrap_callback(pruner, handler, node, pbar):
         handler.wrap(module, node.target)
 
 
-def _apply_callback(pruner, node, pbar):
+def _apply_callback(pruner, config, node, pbar):
     module = get_node_actual_target(node)
 
     # NOTE: This is where you'd prepare keyword args for a custom criterion
-    kwargs = {}
+    if config["weight"].get("criterion") == "neuron_wise_random":
+        kwargs = {"layer_type": module._get_name()}
+    elif config["weight"].get("criterion") == "neuron_wise_fan_in_random":
+        kwargs = {
+            "layer_type": module._get_name(),
+            "fan_in": config["weight"].get("fan_in"),
+        }
+    else:
+        kwargs = {}
 
     pbar.set_description(f"Pruning candidate node {node.target}")
     pruner.apply(module, node.target, **kwargs)

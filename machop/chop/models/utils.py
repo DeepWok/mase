@@ -9,6 +9,7 @@ class ModelSource(Enum):
     - MANUAL: manually implemented
     - PATCHED: patched HuggingFace
     - TOY: toy model for testing and debugging
+    - PHYSICAL: model that perform classification using physical data point vectors
     """
 
     HF_TRANSFORMERS = "hf_transformers"
@@ -17,6 +18,7 @@ class ModelSource(Enum):
     TOY = "toy"
     TORCHVISION = "torchvision"
     VISION_OTHERS = "vision_others"
+    PHYSICAL = "physical"
 
 
 class ModelTaskType(Enum):
@@ -24,10 +26,12 @@ class ModelTaskType(Enum):
     The task type of the model, must be one of the following:
     - NLP: natural language processing
     - VISION: computer vision
+    - PHYSICAL: categorize data points into predefined classes based on their features or attributes
     """
 
     NLP = "nlp"
     VISION = "vision"
+    PHYSICAL = "physical"
 
 
 @dataclass
@@ -44,6 +48,9 @@ class MaseModelInfo:
 
     # Vision models
     image_classification: bool = False
+
+    # Physical models
+    physical_data_point_classification: bool = False
 
     # NLP models
     sequence_classification: bool = False
@@ -78,6 +85,12 @@ class MaseModelInfo:
         if self.task_type == ModelTaskType.VISION:
             assert self.image_classification, "Must be an image classification model"
 
+        # Classigication models
+        if self.task_type == ModelTaskType.PHYSICAL:
+            assert (
+                self.physical_data_point_classification
+            ), "Must be an physical data point classification model"
+
         # manual models
         assert self.is_quantized + self.is_lora + self.is_sparse <= 1
         if self.is_quantized or self.is_lora or self.is_sparse:
@@ -90,3 +103,7 @@ class MaseModelInfo:
     @property
     def is_vision_model(self):
         return self.task_type == ModelTaskType.VISION
+
+    @property
+    def is_physical_model(self):
+        return self.task_type == ModelTaskType.PHYSICAL

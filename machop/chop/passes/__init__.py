@@ -22,6 +22,7 @@ from .transforms import (
     save_node_meta_param_transform_pass,
     summarize_quantization_analysis_pass,
     conv_bn_fusion_transform_pass,
+    logicnets_fusion_transform_pass,
     onnx_annotate_transform_pass,
 )
 from .transforms.quantize import quantized_func_map, quantized_module_map
@@ -50,6 +51,7 @@ TRANSFORM_PASSES = [
     "prune",
     "remove_prune_wrappers",
     "conv_bn_fusion",
+    "logicnets_fusion",
 ]
 
 PASSES = {
@@ -75,5 +77,6 @@ PASSES = {
     "prune": prune_transform_pass,
     "remove_prune_wrappers": prune_unwrap_transform_pass,
     "conv_bn_fusion": conv_bn_fusion_transform_pass,
+    "logicnets_fusion": logicnets_fusion_transform_pass,
     "onnx_annotate": onnx_annotate_transform_pass,
 }
