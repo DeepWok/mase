@@ -221,6 +221,14 @@ def _update_arg_in_next_node(offset, index, arg_in, next_node, node, keys=None):
             # Check if all elements of the tuple are fixed constants
             if all(isinstance(x, int) for x in arg_in):
                 return
+            # TODO: Not really sure how to handle this. It seems to me that slicing a tensor would result to this.
+            # Adding a case to skip it first.
+            # out_bin[:, :, self.input_mask] evals to getitem(stack, (0, slice(None, None, None), slice(None, None, None)))
+            if node.name == "stack":
+                logger.warning(
+                    "Tuple contains unsupported types! For torch.stack involved"
+                )
+                return
             logger.warning("Tuple contains unsupported types!")
         elif arg_in is None:
             pass
@@ -229,6 +237,12 @@ def _update_arg_in_next_node(offset, index, arg_in, next_node, node, keys=None):
             arg_keys = list(arg_in.keys())
             for i, a in enumerate(arg_in.values()):
                 _update_arg_in_next_node(index, i, a, next_node, node, keys=arg_keys)
+        elif isinstance(arg_in, list):
+            # TODO: A risk is that now the input count is a variable but it is fine for now
+            # We are recording the element within the list seperately here. (e.g. torch.stack)
+            for i, a in enumerate(arg_in):
+                if str(a) == str(node):
+                    _update_arg_in_next_node(index, i, a, next_node, node)
 
         else:
             assert False, "Unknown constant arg type."
@@ -274,11 +288,25 @@ def analysis_common_parameters(node, dummy_in):
         for index, arg_in in enumerate(next_node.args):
             _update_arg_in_next_node(0, index, arg_in, next_node, node)
 
-        offset = len(next_node.args)
-        keys = list(next_node.kwargs.keys())
-        for _index, arg_in in enumerate(next_node.kwargs.values()):
-            index = _index + offset
-            _update_arg_in_next_node(offset, index, arg_in, next_node, node, keys=keys)
+        if "stack" in next_node.name:
+            if node == next_node.args[0][-1]:
+                # We check if the current node is the last node of the list argument of torch.stack
+                # We treat all the element within the list seperately here. Hence, offset for keyarg is the len of the list + 1
+                offset = len(next_node.args[0]) + 1
+                for _index, arg_in in enumerate(next_node.kwargs.values()):
+                    index = _index + offset
+                    keys = list(next_node.kwargs.keys())
+                    _update_arg_in_next_node(
+                        offset, index, arg_in, next_node, node, keys=keys
+                    )
+        else:
+            offset = len(next_node.args)
+            keys = list(next_node.kwargs.keys())
+            for _index, arg_in in enumerate(next_node.kwargs.values()):
+                index = _index + offset
+                _update_arg_in_next_node(
+                    offset, index, arg_in, next_node, node, keys=keys
+                )
 
 
 def graph_iterator_for_metadata(graph, dummy_in=None):

@@ -273,46 +273,76 @@ def analyse_common_parameters_method(meta):
 # ----------------------------------------------------------
 # General Functions
 # ----------------------------------------------------------
-
-
-def _get_result_by_function_simulation(meta):
+def _type_check(self_obj, meta, args_val, kwargs_val):
     """
     Obtain the result of the output by executing the function
     """
-    if len(meta.node.args) == 0:
-        self_obj = None
-        args = []
-    else:
-        self_obj, *args = _load_arg(meta)
-
-    kwargs = _load_kwarg(meta)
-
-    # special handle if no size information
-    if (
-        self_obj is not None
-        and self_obj.meta["mase"].parameters["common"]["results"]["data_out_0"]["size"]
-        is None
-    ):
-        return None
-
-    args_val = _arg_shape_to_val(args)
-    kwargs_val = _kwarg_shape_to_val(kwargs)
 
     is_int = True
     is_float = True
     is_bool = True
 
     list_depth = lambda L: isinstance(L, list) and max(map(list_depth, L)) + 1
+    # Handle case when self_obj is a list of node. E.g. next_node torch.stack
+    dummy_data_list = []
+    dummy_data_size_list = []
 
     # This is an annoying bit - Python does not do type casting automatically
     # Here we try both float and int, and pick whatever works
     # TODO: A proper way is to get dummy inputs with the correct type and propagate all along with this pass
+    if isinstance(self_obj, list):
+        for node in self_obj:
+            if (
+                "value"
+                in node.meta["mase"]
+                .parameters["common"]["results"]["data_out_0"]
+                .keys()
+            ):
+                dummy_data = node.meta["mase"].parameters["common"]["results"][
+                    "data_out_0"
+                ]["value"]
+                dummy_data_list.append(dummy_data)
+            else:
+                dummy_data_size = node.meta["mase"].parameters["common"]["results"][
+                    "data_out_0"
+                ]["size"]
+                dummy_data_size_list.append(dummy_data_size)
+        assert not (
+            not dummy_data_list and not dummy_data_size_list
+        ), "Both dummy_data_size_list and dummy_data_list contains data. This is not supported"
+
+    # handle special case where self_obj is a constant ( e.g. 0 + x ) in this case 0 is the self_obj
+    if isinstance(self_obj, int):
+        dummy_data_list = self_obj
 
     if self_obj is None:
         result = meta.node.target(*args_val, **kwargs_val)
     else:
         try:
-            if (
+            if dummy_data_list != []:
+                dummy_data = dummy_data_list
+            elif dummy_data_size_list:
+                dummy_data = []
+                for size in dummy_data_size_list:
+                    if list_depth(size) > 1:
+                        k = size
+                        for i in range(0, list_depth(size) - 1):
+                            assert len(k) == 1
+                            k = k[0]
+                        dummy_data.append(
+                            torch.full(
+                                tuple(k),
+                                0,
+                            ),
+                        )
+                    else:
+                        dummy_data.append(
+                            torch.full(
+                                tuple(size),
+                                0,
+                            )
+                        )
+            elif (
                 "value"
                 in self_obj.meta["mase"]
                 .parameters["common"]["results"]["data_out_0"]
@@ -349,7 +379,18 @@ def _get_result_by_function_simulation(meta):
 
     if not is_int:
         try:
-            if (
+            if dummy_data_list != []:
+                dummy_data = dummy_data_list
+            elif dummy_data_size_list:
+                dummy_data = [
+                    (
+                        (torch.full(size, 1.0)),
+                    )  # Special tuple input - check relavant comments for single-element tuple result
+                    if list_depth(size) == 2 and len(size) == 1
+                    else torch.full(size, 1.0)
+                    for size in dummy_data_size_list
+                ]
+            elif (
                 "value"
                 in self_obj.meta["mase"]
                 .parameters["common"]["results"]["data_out_0"]
@@ -362,26 +403,31 @@ def _get_result_by_function_simulation(meta):
                 size = self_obj.meta["mase"].parameters["common"]["results"][
                     "data_out_0"
                 ]["size"]
-                # Special tuple input - check relavant comments for single-element tuple result
-                if list_depth(size) == 2 and len(size) == 1:
-                    dummy_data = (
-                        torch.full(
-                            size,
-                            1.0,
-                        ),
-                    )
-                else:
-                    dummy_data = torch.full(
-                        size,
-                        1.0,
-                    )
+                dummy_data = (
+                    (
+                        (torch.full(size, 1.0)),
+                    )  # Special tuple input - check relavant comments for single-element tuple result
+                    if list_depth(size) == 2 and len(size) == 1
+                    else torch.full(size, 1.0)
+                )
             result = meta.node.target(dummy_data, *args_val, **kwargs_val)
         except:
             is_float = False
     # special handle for torch.where (accept a list of boolean)
     if not is_float:
         try:
-            if (
+            if dummy_data_list != []:
+                dummy_data = dummy_data_list
+            elif dummy_data_size_list:
+                dummy_data = [
+                    (
+                        torch.full(size, True, dtype=torch.bool),
+                    )  # Special tuple input - check relavant comments for single-element tuple result
+                    if list_depth(size) == 2 and len(size) == 1
+                    else torch.full(size, True, dtype=torch.bool)
+                    for size in dummy_data_size_list
+                ]
+            elif (
                 "value"
                 in self_obj.meta["mase"]
                 .parameters["common"]["results"]["data_out_0"]
@@ -395,10 +441,13 @@ def _get_result_by_function_simulation(meta):
                     "data_out_0"
                 ]["size"]
                 # Special tuple input - check relavant comments for single-element tuple result
-                if list_depth(size) == 2 and len(size) == 1:
-                    dummy_data = torch.full(size, True, dtype=torch.bool)
-                else:
-                    dummy_data = torch.full(size, True, dtype=torch.bool)
+                dummy_data = (
+                    (
+                        torch.full(size, True, dtype=torch.bool),
+                    )  # Special tuple input - check relavant comments for single-element tuple result
+                    if list_depth(size) == 2 and len(size) == 1
+                    else torch.full(size, True, dtype=torch.bool)
+                )
             result = meta.node.target(dummy_data, *args_val, **kwargs_val)
         except:
             is_bool = False
@@ -410,11 +459,47 @@ def _get_result_by_function_simulation(meta):
     return result
 
 
+def _get_result_by_function_simulation(meta):
+    """
+    Obtain the result of the output by executing the function
+    """
+    if len(meta.node.args) == 0:
+        self_obj = None
+        args = []
+    else:
+        self_obj, *args = _load_arg(meta)
+
+    kwargs = _load_kwarg(meta)
+    if isinstance(self_obj, list) or isinstance(self_obj, int):
+        pass
+    elif (
+        self_obj is not None
+        and self_obj.meta["mase"].parameters["common"]["results"]["data_out_0"]["size"]
+        is None
+    ):
+        return None
+
+    args_val = _arg_shape_to_val(args)
+    kwargs_val = _kwarg_shape_to_val(kwargs)
+
+    result = _type_check(
+        self_obj=self_obj, meta=meta, args_val=args_val, kwargs_val=kwargs_val
+    )
+    return result
+
+
 def _get_size_by_function_simulation(meta):
     """
     Obtain the size of the output by executing the function
     """
     result = _get_result_by_function_simulation(meta)
+
+    # special handle for function that returns a tensor with size [], 0 or 1 dimension.
+    # They should not be considered as a constant.
+    if isinstance(result, torch.Tensor) and (
+        list(result.size()) == [] or list(result.size()) == [1]
+    ):
+        return "tensor_with_size_1"
 
     # special handle for .size()
     if isinstance(result, torch.Size):
@@ -487,6 +572,10 @@ def analyse_common_parameters_function(meta):
     # else:
     #     print(meta.node.target)
     #     print(meta.parameters["common"]["mase_op"])
+
+    # special handle for function that returns a tensor with size [1].
+    if size == "tensor_with_size_1":
+        size = [1]
 
     meta.parameters["common"]["results"] = {
         "data_out_0": {

@@ -236,6 +236,10 @@ SOFTWARE_PARAM_ANALYSIS_LAYERS = {
         "default": analyze_software_meta_param_implicit_func_default,
         "ge": analyze_software_meta_param_implicit_func_default,
         "where": analyze_software_meta_param_implicit_func_default,
+        "clamp_": analyze_software_meta_param_implicit_func_default,
+        "abs": analyze_software_meta_param_implicit_func_default,
+        "stack": analyze_software_meta_param_implicit_func_default,
+        "getitem": analyze_software_meta_param_implicit_func_default,
     },
     "placeholder": {
         "placeholder": analyze_software_meta_param_placeholder,
