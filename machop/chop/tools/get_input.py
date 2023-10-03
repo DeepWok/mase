@@ -18,7 +18,7 @@ def get_cf_args(model_info, task: str, model):
     cf_args = {}
     if model_info.model_source == ModelSource.PATCHED:
         cf_args = model.patched_nodes["concrete_forward_args"]
-    elif model_info.is_vision_model:
+    elif model_info.is_vision_model or model_info.is_physical_model:
         cf_args = {}
     elif model_info.is_nlp_model:
         match task:
@@ -74,7 +74,7 @@ def get_dummy_input(
     for _ in range(batch_index):
         next(train_iter)
 
-    if model_info.is_vision_model:
+    if model_info.is_vision_model or model_info.is_physical_model:
         match task:
             case "classification" | "cls":
                 x, y = next(train_iter)

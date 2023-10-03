@@ -1,0 +1,3 @@
+# Perform the fusion step for logicnets. Fusion the activation with the logicnets itself.
+
+[passes.logicnets_fusion]

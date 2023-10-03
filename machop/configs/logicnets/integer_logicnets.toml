@@ -1,0 +1,34 @@
+# model = "toy"
+# dataset = "toy-tiny"
+accelerator = "gpu"
+[passes.quantize]
+by = "type"
+report = true
+baseline_weight_path = "../mase_output/jsc-s_classification_jsc_2023-09-25/software/transform/transformed_ckpt_bl/transformed_ckpt/graph_module.mz" # This is the baseline model which we use to find out if there is any activation functions followed by targeted layer
+# baseline_weight_path = "/workspace/mase_output/jsc-s_classification_jsc_2023-09-25/software/transform/transformed_ckpt_bl/transformed_ckpt/graph_module.mz" # This is the baseline model which we use to find out if there is any activation functions followed by targeted layer
+load_type = "mz"
+
+[passes.quantize.default.config]
+name = "NA"
+
+[passes.quantize.linear.config]
+name = "logicnets"
+data_in_width = 2
+data_in_frac_width = 1 # This will be the output bit of the followed activation function
+data_out_width = 2 # This will be the output bit of the followed activation function
+data_out_frac_width = 1
+weight_width = "NA"
+weight_frac_width = "NA"
+bias_width = "NA"
+bias_frac_width = "NA"
+
+[passes.quantize.conv2d.config]
+name = "logicnets"
+data_in_width = 2
+data_in_frac_width = 1
+data_out_width = 2
+data_out_frac_width = 1
+weight_width = "NA"
+weight_frac_width = "NA"
+bias_width = "NA"
+bias_frac_width = "NA"

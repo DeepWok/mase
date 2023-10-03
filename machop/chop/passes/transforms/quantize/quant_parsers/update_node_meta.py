@@ -14,6 +14,7 @@ QUANT_ARITH_TO_SUFFIXES = {
         "bipolar",
     ),  # TODO: stochastic, bipolar flags are operational flag instead of precision.
     "lutnet": ("width", "input_expanded", "k", "binarization_level"),
+    "logicnets": ("width", "frac_width"),
     "ternary": ("width", "scaling_factor", "mean", "median", "max"),
     "minifloat_ieee": ("width", "exponent_width", "exponent_bias"),
     "minifloat_denorm": ("width", "exponent_width", "exponent_bias"),

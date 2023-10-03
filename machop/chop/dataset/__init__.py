@@ -7,6 +7,11 @@ from ..tools.registry import MACHOP_CACHE_DIR
 from .nlp import NLP_DATASET_MAPPING, get_nlp_dataset, get_nlp_dataset_cls
 from .toy_dataset import TOY_DATASET_MAPPING, get_toy_dataset, get_toy_dataset_cls
 from .vision import VISION_DATASET_MAPPING, get_vision_dataset, get_vision_dataset_cls
+from .physical import (
+    PHYSICAL_DATASET_MAPPING,
+    get_physical_dataset,
+    get_physical_dataset_cls,
+)
 
 DATASET_CACHE_DIR = MACHOP_CACHE_DIR / "dataset"
 
@@ -27,6 +32,8 @@ def get_dataset_info(name: str):
         return get_vision_dataset_cls(name).info
     elif name in NLP_DATASET_MAPPING:
         return get_nlp_dataset_cls(name).info
+    elif name in PHYSICAL_DATASET_MAPPING:
+        return get_physical_dataset_cls(name).info
     else:
         raise ValueError(f"Dataset {name} is not supported")
 
@@ -62,6 +69,9 @@ def get_dataset(
     name = name.lower()
     if name in TOY_DATASET_MAPPING:
         dataset = get_toy_dataset(name, split)
+    elif name in PHYSICAL_DATASET_MAPPING:
+        path = DATASET_CACHE_DIR / name
+        dataset = get_physical_dataset(name, path, split)
     elif name in VISION_DATASET_MAPPING:
         path = DATASET_CACHE_DIR / name
         dataset = get_vision_dataset(name, path, split, model_name)
@@ -85,6 +95,7 @@ AVAILABLE_DATASETS = (
     list(VISION_DATASET_MAPPING.keys())
     + list(NLP_DATASET_MAPPING.keys())
     + list(TOY_DATASET_MAPPING.keys())
+    + list(PHYSICAL_DATASET_MAPPING.keys())
 )
 
 

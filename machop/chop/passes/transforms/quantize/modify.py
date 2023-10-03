@@ -24,13 +24,13 @@ def create_new_module(
     config: dict,
     node_meta: dict,
     baseline_module: nn.Module = None,
+    successor_module: nn.Module = None,
 ):
     original_module_cls = type(original_module)
     quant_name = config.get("name")
 
     if quant_name == "ternary":
         config.update({"node_meta": node_meta["mase"]})
-
     if mase_op == "linear":
         new_module_cls = quantized_module_map[f"linear_{quant_name}"]
         use_bias = original_module.bias is not None
@@ -53,6 +53,18 @@ def create_new_module(
                 new_module.trainer.gamma, baseline_module.gamma
             )  # TODO: Not sure about this. The paper doesn't specify this part.
             copy_weights(new_module.trainer.weight, initialized_weight)
+        elif quant_name == "logicnets":
+            # LogicNets will require the node itself along with the subsequent activation for the initialization of the associated LUT.
+            # Therefore, the activation layer, referred to as successor_module, needs to be passed for the module's initialization.
+            new_module = new_module_cls(
+                in_features=original_module.in_features,
+                out_features=original_module.out_features,
+                bias=use_bias,
+                config=config,
+                activation_module=successor_module,
+            )
+            copy_weights(original_module.weight, new_module.weight)
+            new_module.calculate_truth_tables()
         else:
             copy_weights(original_module.weight, new_module.weight)
         if use_bias:
@@ -88,6 +100,9 @@ def create_new_module(
                 new_module.trainer.gamma, baseline_module.gamma
             )  # TODO: Not sure about this. The paper doesn't specify this part.
             copy_weights(new_module.trainer.weight, initialized_weight)
+        elif quant_name == "logicnets":
+            copy_weights(original_module.weight, new_module.weight)
+            new_module.calculate_truth_tables()
         else:
             # TODO: LUTNet convolution does not support bias at the moment
             copy_weights(original_module.weight, new_module.weight)

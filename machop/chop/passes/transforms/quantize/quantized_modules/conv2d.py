@@ -26,6 +26,13 @@ from ..quantizers.LUTNet.BaseTrainer import BaseTrainer, LagrangeTrainer
 from ..quantizers.LUTNet.MaskBase import MaskBase, MaskExpanded
 import math
 
+# LogicNets
+from ..quantizers.LogicNets.utils import (
+    generate_permutation_matrix,
+    get_int_state_space,
+    fetch_mask_indices,
+)
+
 
 class _Conv2dBase(torch.nn.Conv2d):
     def __init__(
@@ -1133,3 +1140,175 @@ class Conv2dLUT(torch.nn.Module):
 
     def update_initialized_weights(self):
         self.trainer.update_initialized_weights()
+
+
+class Conv2DLogicNets(_Conv2dBase):
+    def __init__(
+        self,
+        in_channels: int,
+        out_channels: int,
+        kernel_size: _size_2_t,
+        stride: _size_2_t = 1,
+        padding: Union[str, _size_2_t] = 0,
+        dilation: _size_2_t = 1,
+        groups: int = 1,
+        bias: bool = True,
+        padding_mode: str = "zeros",  # TODO: refine this type
+        device=None,
+        dtype=None,
+        config=None,
+    ) -> None:
+        super().__init__(
+            in_channels=in_channels,
+            out_channels=out_channels,
+            kernel_size=kernel_size,
+            stride=stride,
+            padding=padding,
+            dilation=dilation,
+            groups=groups,
+            bias=bias,
+            padding_mode=padding_mode,
+            device=device,
+            dtype=dtype,
+        )
+        assert config is not None, "config is None!"
+        self.config = config
+        self.bypass = config.get("bypass", False)
+        if self.bypass:
+            return
+
+        self.in_features = in_channels * kernel_size[0] * kernel_size[1]
+        self.out_features = out_channels * kernel_size[0] * kernel_size[1]
+
+        # establish quantizers
+        self.x_width, self.x_frac_width = (
+            config["data_in_width"],
+            config["data_in_frac_width"],
+        )
+        self.y_width, self.y_frac_width = (
+            config["data_out_width"],
+            config["data_out_frac_width"],
+        )
+
+        self.x_quantizer = partial(
+            integer_quantizer, width=self.x_width, frac_width=self.x_frac_width
+        )
+        self.y_quantizer = partial(
+            integer_quantizer, width=self.y_width, frac_width=self.y_frac_width
+        )
+
+        self.is_lut_inference = True
+        self.neuron_truth_tables = None
+        # self.calculate_truth_tables() # We will call this explicitly during the transform
+
+    def table_lookup(
+        self,
+        connected_input: Tensor,
+        input_perm_matrix: Tensor,
+        bin_output_states: Tensor,
+    ) -> Tensor:
+        fan_in_size = connected_input.shape[1]
+        ci_bcast = connected_input.unsqueeze(2)  # Reshape to B x Fan-in x 1
+        pm_bcast = input_perm_matrix.t().unsqueeze(
+            0
+        )  # Reshape to 1 x Fan-in x InputStates
+        eq = (ci_bcast == pm_bcast).sum(
+            dim=1
+        ) == fan_in_size  # Create a boolean matrix which matches input vectors to possible input states
+        matches = eq.sum(dim=1)  # Count the number of perfect matches per input vector
+        if not (matches == torch.ones_like(matches, dtype=matches.dtype)).all():
+            raise Exception(
+                f"One or more vectors in the input is not in the possible input state space"
+            )
+        indices = torch.argmax(eq.type(torch.int64), dim=1)
+        return bin_output_states[indices]
+
+    def lut_forward(self, x: Tensor) -> Tensor:
+        x = torch.flatten(
+            x, 1
+        )  # N - added this; is 1 needed to flatten all dims except batch?
+        # if self.apply_input_quant:
+        #     x = self.input_quant(x) # Use this to fetch the bin output of the input, if the input isn't already in binary format
+        x = self.encode(self.x_quantizer(x))
+        y = torch.zeros((x.shape[0], self.out_features))
+        # Perform table lookup for each neuron output
+        for i in range(self.out_features):
+            indices, input_perm_matrix, bin_output_states = self.neuron_truth_tables[i]
+            connected_input = x[:, indices]
+            y[:, i] = self.table_lookup(
+                connected_input, input_perm_matrix, bin_output_states
+            )
+        return y
+
+    def construct_mask_index(self):
+        # contract a mask have the same shape as self.weight but with zero element being assign to zero and other assign to 1
+        self.mask = torch.where(
+            self.weight != 0, torch.tensor(1), torch.tensor(0)
+        ).reshape(
+            self.weight.shape[0], -1
+        )  # pay attention to dimension (out_feature, in_feature)
+
+    # Consider using masked_select instead of fetching the indices
+    def calculate_truth_tables(self):
+        with torch.no_grad():
+            # Precalculate all of the input value permutations
+            input_state_space = list()  # TODO: is a list the right data-structure here?
+            bin_state_space = list()
+            # get a neuron_state
+            for m in range(self.in_features):
+                neuron_state_space = self.decode(
+                    get_int_state_space(self.x_width)
+                )  # TODO: this call should include the index of the element of interest
+                bin_space = get_int_state_space(
+                    self.x_width
+                )  # TODO: this call should include the index of the element of interest
+                input_state_space.append(neuron_state_space)
+                bin_state_space.append(bin_space)
+
+            neuron_truth_tables = list()
+            self.construct_mask_index()  # construct prunning mask
+            for n in range(self.out_features):
+                input_mask = self.mask[
+                    n, :
+                ]  # N: select row of mask tensor that corresponds to the output feature on this iteration
+                fan_in = torch.sum(input_mask)
+                indices = fetch_mask_indices(input_mask)
+                # Generate a matrix containing all possible input states
+                input_permutation_matrix = generate_permutation_matrix(
+                    [input_state_space[i] for i in indices]
+                )
+                bin_input_permutation_matrix = generate_permutation_matrix(
+                    [bin_state_space[i] for i in indices]
+                )
+                # print("in_feature={}, out_feature={}, kernel={}".format(self.in_features, self.out_features, self.kernel_size))
+                # print("fan_in", fan_in, "indices", indices, "input_permutation_matrix", input_permutation_matrix.shape, [input_state_space[i] for i in indices], "bin_input_permutation_matrix", bin_input_permutation_matrix.shape, [bin_state_space[i] for i in indices])
+                num_permutations = input_permutation_matrix.shape[0]
+                padded_perm_matrix = torch.zeros((num_permutations, self.in_features))
+                padded_perm_matrix[:, indices] = input_permutation_matrix
+                # print("input", padded_perm_matrix.shape)
+
+                # TODO: Update this block to just run inference on the fc layer, once BN has been moved to output_quant
+                bin_output_states = self.encode(self.math_forward(padded_perm_matrix))[
+                    :, n
+                ]  # Calculate bin for the current input
+
+                # Append the connectivity, input permutations and output permutations to the neuron truth tables
+                neuron_truth_tables.append(
+                    (indices, bin_input_permutation_matrix, bin_output_states)
+                )  # Change this to be the binary output states
+        self.neuron_truth_tables = neuron_truth_tables
+
+    def forward(self, x: Tensor) -> Tensor:
+        if self.is_lut_inference:
+            return self.decode(self.lut_forward(x))
+
+    def encode(self, input: Tensor) -> Tensor:
+        return input * 2**self.x_frac_width
+
+    def decode(self, input: Tensor) -> Tensor:
+        return input / 2**self.x_frac_width
+
+    def math_forward(self, input: Tensor) -> Tensor:
+        return self.y_quantizer(
+            self._conv_forward(self.x_quantizer(input), self.weight, self.bias)
+        )

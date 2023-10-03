@@ -13,4 +13,8 @@ from .verilog import (
     emit_verilog_tb_transform_pass,
     emit_verilog_top_transform_pass,
 )
-from .utils import conv_bn_fusion_transform_pass, onnx_annotate_transform_pass
+from .utils import (
+    conv_bn_fusion_transform_pass,
+    logicnets_fusion_transform_pass,
+    onnx_annotate_transform_pass,
+)

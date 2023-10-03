@@ -49,6 +49,24 @@ QUANT_ARITH_ENTRIES = {
             "bias_in_dim",
         ),
     },
+    "logicnets": {
+        "weight_entries": (  # TODO: change update_node_meta.py to take optional argument so this can be removed
+            "weight_width",
+            "weight_frac_width",
+        ),
+        "bias_entries": (
+            "bias_width",
+            "bias_frac_width",
+        ),
+        "data_in_entries": (
+            "data_in_width",
+            "data_in_frac_width",
+        ),
+        "data_out_entries": (
+            "data_out_width",
+            "data_out_frac_width",
+        ),
+    },
     "binary": {
         "weight_entries": (
             "weight_width",
@@ -204,6 +222,10 @@ def cp_data_in_entries(
     cp_multi_values(config, p_config, entries["data_in_entries"], strict=strict)
 
 
+def cp_data_out_entries(config: dict, p_config: dict, entries: dict):
+    cp_multi_values(config, p_config, entries["data_out_entries"])
+
+
 def cp_bias_entries(config: dict, p_config: dict, entries: dict, strict: bool = True):
     cp_multi_values(config, p_config, entries["bias_entries"], strict=strict)
 
@@ -250,6 +272,7 @@ for quant_arith, entries in QUANT_ARITH_ENTRIES.items():
         "weight_entries": partial(cp_weight_entries, entries=entries),
         "data_in_entries": partial(cp_data_in_entries, entries=entries),
         "bias_entries": partial(cp_bias_entries, entries=entries),
+        "data_out_entries": partial(cp_data_out_entries, entries=entries),
         "weight_entries_to_bias": partial(cp_weight_entries_to_bias, entries=entries),
     }
 
@@ -266,13 +289,13 @@ MASE_OP_TO_ENTRIES = {
     ),
     "conv2d": (
         ("name", "data_in_entries", "weight_entries"),
-        ("bias_entries", "bypass"),
+        ("bias_entries", "bypass", "data_out_entries"),
     ),
     "matmul": (("name", "data_in_entries", "weight_entries"), ("bypass",)),
     "mul": (("name", "data_in_entries"), ("bypass",)),
     "linear": (
         ("name", "data_in_entries", "weight_entries"),
-        ("bias_entries", "bypass"),
+        ("bias_entries", "bypass", "data_out_entries"),
     ),
     "relu": (("name", "data_in_entries"), ("bypass",)),
     "sub": (("name", "data_in_entries"), ("bypass",)),
