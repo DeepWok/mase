@@ -776,6 +776,8 @@ class LinearLogicNets(_LinearBase):
         dtype=None,
         config=None,
         activation_module=None,  # To initialize a LogicNets, activation functions are needed
+        input_layers=None,  # A LogicNets layer may be merged with one or more inputs layers such as activations and batchnorm
+        output_layers=None,  # A LogicNets layer may be merged with one or more output layers such as activations and batchnorm
     ) -> None:
         super().__init__(in_features, out_features, bias, device, dtype)
         assert config is not None, "config is None!"
@@ -808,6 +810,9 @@ class LinearLogicNets(_LinearBase):
         # self.calculate_truth_tables()
         # self.apply_input_quant = apply_input_quant
         # self.apply_output_quant = apply_output_quant
+        self.input_layers = input_layers
+        self.output_layers = output_layers
+        self.apply_layers = False
 
     # TODO: This function might be a useful utility outside of this class..
     def table_lookup(
@@ -881,7 +886,7 @@ class LinearLogicNets(_LinearBase):
                 bin_state_space.append(bin_space)
 
             neuron_truth_tables = list()
-            self.construct_mask_index()  # construct prunning mask
+            self.construct_mask_index()  # construct pruning mask
             for n in range(self.out_features):
                 input_mask = self.mask[
                     n, :
@@ -916,29 +921,46 @@ class LinearLogicNets(_LinearBase):
             return self.y_quantizer(
                 F.linear(self.x_quantizer(input), self.weight, self.bias)
             )
-        activation_name = self.activation.__class__.__name__
-        SUPPORT_ACTIVATION = {
-            "ReLU": 1,
-            "Tanh": 1,
-            "str": 0,
-        }  # "str" type is short the "output". Hence this logicnets will be a pure linear without activation.
-        if activation_name not in SUPPORT_ACTIVATION.keys():
-            raise ValueError(
-                "Unsupported activation {}. Please choose from {}".format(
-                    activation_name, list(SUPPORT_ACTIVATION.keys())
-                )
-            )
-        if SUPPORT_ACTIVATION[activation_name]:
-            return self.y_quantizer(
-                self.activation(
-                    F.linear(self.x_quantizer(input), self.weight, self.bias)
-                )
-            )
 
-        # This is the case where the linear layer is the last layer of the module.
+        if self.apply_layers:
+            x = input
+            if self.input_layers:
+                x = self.run_layers(x, self.input_layers)
+
+            y = self.y_quantizer(F.linear(self.x_quantizer(x), self.weight, self.bias))
+
+            if self.output_layers:
+                y = self.run_layers(y, self.output_layers)
+            return y
+
+        # This is the case where the linear layer is the only module in the LogicNets module
         return self.y_quantizer(
             F.linear(self.x_quantizer(input), self.weight, self.bias)
         )
+
+    def set_fused(self, fused: bool):
+        self.apply_layers = fused
+
+    def run_layers(self, input: Tensor, layers) -> Tensor:
+        assert isinstance(layers, list)
+        y = input
+        for layer in layers:
+            layer_name = layer.__class__.__name__
+            SUPPORTED_LAYERS = {
+                "ReLU": 1,
+                "Tanh": 1,
+                "BatchNorm1d": 1,
+                "str": 0,
+            }  # "str" type is short the "output". Hence this logicnets will be a pure linear without activation.
+            if layer_name not in SUPPORTED_LAYERS:
+                raise ValueError(
+                    "Unsupported output layer {}. Please choose from {}".format(
+                        layer_name, list(SUPPORTED_LAYERS.keys())
+                    )
+                )
+            if SUPPORTED_LAYERS[layer_name]:
+                y = layer(y)
+        return y
 
     def encode(self, input: Tensor) -> Tensor:
         return input * 2**self.x_frac_width
@@ -950,10 +972,4 @@ class LinearLogicNets(_LinearBase):
         if self.is_lut_inference:
             return self.decode(self.lut_forward(x))
         else:
-            return self.y_quantizer(
-                F.linear(self.x_quantizer(x), self.weight, self.bias)
-            )
-
-
-if __name__ == "main":
-    print("hello")
+            return self.math_forward(x)

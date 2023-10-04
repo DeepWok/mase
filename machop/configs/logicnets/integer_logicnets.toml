@@ -1,6 +1,6 @@
 # model = "toy"
 # dataset = "toy-tiny"
-accelerator = "gpu"
+accelerator = "cpu"
 [passes.quantize]
 by = "type"
 report = true

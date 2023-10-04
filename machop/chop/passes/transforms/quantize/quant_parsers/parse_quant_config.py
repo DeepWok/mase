@@ -66,6 +66,10 @@ QUANT_ARITH_ENTRIES = {
             "data_out_width",
             "data_out_frac_width",
         ),
+        "additional_layers_entries": {
+            "additional_layers_inputs",
+            "additional_layers_outputs",
+        },
     },
     "binary": {
         "weight_entries": (
@@ -245,6 +249,10 @@ def cp_weight_entries_to_bias(
         )
 
 
+def cp_layer_entries(config: dict, p_config: dict, entries: dict, strict: bool = True):
+    cp_multi_values(config, p_config, entries["additional_layers_entries"])
+
+
 def cp_data_out_entries(
     config: dict, p_config: dict, entries: dict, strict: bool = True
 ):
@@ -274,6 +282,7 @@ for quant_arith, entries in QUANT_ARITH_ENTRIES.items():
         "bias_entries": partial(cp_bias_entries, entries=entries),
         "data_out_entries": partial(cp_data_out_entries, entries=entries),
         "weight_entries_to_bias": partial(cp_weight_entries_to_bias, entries=entries),
+        "additional_layers_entries": partial(cp_layer_entries, entries=entries),
     }
 
 """ MASE_OP_TO_ENTRIES
@@ -295,7 +304,7 @@ MASE_OP_TO_ENTRIES = {
     "mul": (("name", "data_in_entries"), ("bypass",)),
     "linear": (
         ("name", "data_in_entries", "weight_entries"),
-        ("bias_entries", "bypass", "data_out_entries"),
+        ("bias_entries", "bypass", "data_out_entries", "additional_layers_entries"),
     ),
     "relu": (("name", "data_in_entries"), ("bypass",)),
     "sub": (("name", "data_in_entries"), ("bypass",)),
