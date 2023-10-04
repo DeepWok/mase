@@ -1,3 +1,16 @@
 # Perform the fusion step for logicnets. Fusion the activation with the logicnets itself.
-
+accelerator = "cpu"
 [passes.logicnets_fusion]
+
+[passes.logicnets_fusion.seq_blocks_2.config]
+name = "logicnets"
+data_in_width = 2
+data_in_frac_width = 1 # This will be the output bit of the followed activation function
+data_out_width = 2 # This will be the output bit of the followed activation function
+data_out_frac_width = 1
+weight_width = "NA"
+weight_frac_width = "NA"
+bias_width = "NA"
+bias_frac_width = "NA"
+additional_layers_inputs = ["seq_blocks_0", "seq_blocks_1"] # merge these preceding layers into the same LogicNets layer
+additional_layers_outputs = ["seq_blocks_3", "seq_blocks_4"] # merge these succeeding layers into the same LogicNets layer

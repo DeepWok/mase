@@ -13,6 +13,8 @@ from chop.passes.utils import (
     get_parent_name,
     get_similar_node_actual_target,
     match_a_pattern,
+    get_node_by_name,
+    get_node_target_by_name,
 )
 from chop.tools.logger import getLogger
 
@@ -110,11 +112,23 @@ def graph_iterator_quantize_by_name(graph, config: dict):
         if node_config["name"] is None:
             continue
         node_config = parse_node_config(node_config, get_mase_op(node))
-        # if get_mase_type(node) == "module":
+        output_layers_names = node_config.get("additional_layers_outputs", [])
+        output_layers = [
+            get_node_target_by_name(graph, name) for name in output_layers_names
+        ]
+        input_layers_names = node_config.get("additional_layers_inputs", [])
+        input_layers = [
+            get_node_target_by_name(graph, name) for name in input_layers_names
+        ]
         if node.op == "call_module":
             ori_module = get_node_actual_target(node)
             new_module = create_new_module(
-                get_mase_op(node), ori_module, node_config, node.meta
+                get_mase_op(node),
+                ori_module,
+                node_config,
+                node.meta,
+                input_layers=input_layers,
+                output_layers=output_layers,
             )
             parent_name, name = get_parent_name(node.target)
             setattr(graph.modules[parent_name], name, new_module)

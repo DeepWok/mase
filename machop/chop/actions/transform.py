@@ -54,7 +54,7 @@ def transform(
     graph = MaseGraph(model=model, cf_args=cf_args)
     # graph_metadata = Mase
     graph = init_metadata_analysis_pass(graph, pass_args=None)
-    # logger.debug(f"graph: {graph.fx_graph}")
+    logger.info(f"graph: {graph.fx_graph}")
 
     # create or load metadata.parameters and mase_graph.model
     if load_name is not None and load_type == "mz":
@@ -96,7 +96,7 @@ def transform(
                 pass_file_name = pass_config.get(
                     "file_name", save_dir / "report_graph.txt"
                 )
-                graph = PASSES[pass_name](graph, pass_args=pass_file_name)
+                graph = PASSES[pass_name](graph, file_name=pass_file_name)
             case "report_node_type":
                 graph = PASSES[pass_name](graph, pass_args=None)
             case "report_node_meta_param":
@@ -157,7 +157,7 @@ def transform(
             case "conv_bn_fusion":
                 graph = PASSES[pass_name](graph, pass_args=None)
             case "logicnets_fusion":
-                graph = PASSES[pass_name](graph, pass_args=None)
+                graph = PASSES[pass_name](graph, pass_args=pass_config)
             case "onnx_annotate":
                 onnx_dir = save_dir / "onnx"
                 onnx_dir.mkdir(parents=True, exist_ok=True)

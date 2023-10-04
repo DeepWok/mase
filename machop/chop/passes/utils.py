@@ -124,6 +124,15 @@ def get_similar_node_actual_target(graph, node):
             return get_node_actual_target(bl_node)
 
 
+def get_node_target_by_name(graph, request_name):
+    if graph is None:
+        return None
+    for node in graph.fx_graph.nodes:
+        if node.name == request_name:
+            return get_node_actual_target(node)
+    raise RuntimeError(f"No node named {request_name} found in graph")
+
+
 def deepcopy_mase_graph(mase_graph):
     new_graph = deepcopy(mase_graph)
     for new_n, n in zip(new_graph.fx_graph.nodes, mase_graph.fx_graph.nodes):

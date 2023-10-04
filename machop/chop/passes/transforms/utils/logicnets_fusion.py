@@ -20,54 +20,54 @@ logger = getLogger(__file__)
 logger.propagate = False  # Avoid duplicate logs
 
 
-def logicnets_fusion_transform_pass(graph, **_):
-    # If this pattern is matched, remove the activation function.
-    PATTERNS = [
-        (LinearLogicNets, nn.ReLU),
-        (LinearLogicNets, nn.Tanh),
-        (LinearLogicNets, nn.BatchNorm1d),
-        # (Conv2DLogicNets, nn.ReLU),
-        # (Conv2DLogicNets, nn.Tanh),
-        # (Conv2DLogicNets, nn.BatchNorm2d),
-    ]
+def logicnets_fusion_transform_pass(graph, pass_args, **_):
+    print(pass_args)
 
     modules = dict(graph.model.named_modules())
     logger.debug(f"Found {len(modules)} modules in the model:\n{list(modules.keys())}")
 
+    # store the logicnets nodes
+    logicnets_nodes = list(pass_args.keys())
+
+    # store the nodes which have been merged
+    nodes_to_erase = []
+    for node, config in pass_args.items():
+        layer_inputs = config["config"]["additional_layers_inputs"]
+        layer_outputs = config["config"]["additional_layers_outputs"]
+        nodes_to_erase = nodes_to_erase + layer_inputs + layer_outputs
+
     # Modify the graph in place.
-    total = len(graph.fx_graph.nodes) * len(PATTERNS)
+    total = len(graph.fx_graph.nodes)
     with tqdm_logging_redirect(total=total, loggers=[logger]) as pbar:
-        for pattern in PATTERNS:
-            fst, snd = pattern[0].__name__, pattern[1].__name__
-            pbar.set_description(f"Looking for pattern {fst} -> {snd}")
+        pbar.set_description(
+            f"Fusing these nodes into LogicNets layers {nodes_to_erase}"
+        )
 
-            # Iterate over the graph and fuse the nodes that match the patterns
-            for node in graph.fx_graph.nodes:
-                if matches_module_pattern(pattern, node, modules):
-                    # There may be architectures where such a pattern exits. In these
-                    # cases, fusion isn't trivial. For now, we'll just skip these cases.
-                    if len(node.args[0].users) > 1:
-                        logger.warning("Logicnets output used by other nodes. Skipped!")
-                        continue
+        # Iterate over the graph and erase the nodes which have been merged into a LogicNets layer
+        for node in graph.fx_graph.nodes:
+            if node.name in logicnets_nodes:
+                # set the LogicNets nodes to 'fused' so they will apply the merged modules internally in the forward pass
+                assert isinstance(
+                    modules[node.target], LinearLogicNets
+                ), f"{node} is not a LinearLogicNets module. Double check your model and the config file."
+                modules[node.target].set_fused(True)
+                # recalculate truth tables after
+                modules[node.target].calculate_truth_tables()
 
-                    logicnets = modules[node.args[0].target]
-                    activation = modules[node.target]
+            elif node.name in nodes_to_erase:
+                # erase the nodes which have been merged into a LogicNets layer
 
-                    # TODO: special case for batchnorm. Currently unclear.
-                    if activation == nn.BatchNorm1d:
-                        if not activation.track_running_stats:
-                            # When track_running_stats is False, the batch norm module's
-                            # running mean and variance buffers are set to None.
-                            logger.warning("Batchnorm not tracking stats. Skipped!")
-                            continue
+                # There may be architectures where such a pattern exits. In these
+                # cases, fusion isn't trivial. For now, we'll just skip these cases.
+                if len(node.args[0].users) > 1:
+                    logger.warning("Logicnets output used by other nodes. Skipped!")
+                    continue
 
-                    # NOTE: We may need to update metadata here. Currently unclear.
-                    # Replace conv with the fused module and erase the batchnorm node
-                    replace_node_module(node.args[0], modules, logicnets)
-                    node.replace_all_uses_with(node.args[0])
-                    graph.fx_graph.erase_node(node)
-                    pbar.update(1)  # Account for removed node :)
-                pbar.update(1)
+                # this is the make sure the node to erase no longer exists in the graph
+                node.replace_all_uses_with(node.args[0])
+                graph.fx_graph.erase_node(node)
+                pbar.update(1)  # Account for removed node :)
+            pbar.update(1)
 
         # Update the model to reflect the changes in the graph
         graph.model = fx.GraphModule(graph.model, graph.fx_graph)

@@ -32,15 +32,21 @@ def generate_input_tensor(batch_size, input_features, min_val, max_val):
 #   Test LogicNets Linear
 # --------------------------------------------------
 def main():
+    # x = Tensor([0.0000, 0.2152, 3.4068, -3.7986, -0.7431])
+
     config = {
-        "data_in_width": 3,
+        "data_in_width": 2,
         "data_in_frac_width": 1,
-        "data_out_width": 4,
-        "data_out_frac_width": 2,
+        "data_out_width": 2,
+        "data_out_frac_width": 1,
     }
     logicnets_linear = LinearLogicNets(
         in_features=4, out_features=4, config=config, activation_module="unittest"
     )
+
+    print(logicnets_linear.weight)
+    print(logicnets_linear.weight.shape)
+
     logicnets_linear.calculate_truth_tables()
 
     # Define the dimensions and range
@@ -55,12 +61,14 @@ def main():
     print(input_tensor)
     print(input_tensor.shape)
 
-    out = logicnets_linear(input_tensor)
-    print(out)
+    lut_out = logicnets_linear(input_tensor)
+    print(lut_out)
 
     logicnets_linear.is_lut_inference = False
-    out = logicnets_linear(input_tensor)
-    print(out)
+    math_out = logicnets_linear(input_tensor)
+    print(math_out)
+
+    print(lut_out == math_out)
 
 
 main()

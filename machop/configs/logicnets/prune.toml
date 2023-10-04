@@ -2,6 +2,7 @@
 
 #model = "toy"
 #dataset = "cifar10"
+accelerator = "cpu"
 
 [passes.prune.weight]
 method = "level-pruner"

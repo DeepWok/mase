@@ -25,6 +25,8 @@ def create_new_module(
     node_meta: dict,
     baseline_module: nn.Module = None,
     successor_module: nn.Module = None,
+    input_layers=None,
+    output_layers=None,
 ):
     original_module_cls = type(original_module)
     quant_name = config.get("name")
@@ -62,8 +64,14 @@ def create_new_module(
                 bias=use_bias,
                 config=config,
                 activation_module=successor_module,
+                input_layers=input_layers,
+                output_layers=output_layers,
             )
             copy_weights(original_module.weight, new_module.weight)
+
+            # for LogicNets, bias must be copied before the truth tables are calculated
+            if use_bias:
+                copy_weights(original_module.bias, new_module.bias)
             new_module.calculate_truth_tables()
         else:
             copy_weights(original_module.weight, new_module.weight)
