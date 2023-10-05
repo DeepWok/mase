@@ -21,8 +21,6 @@ logger.propagate = False  # Avoid duplicate logs
 
 
 def logicnets_fusion_transform_pass(graph, pass_args, **_):
-    print(pass_args)
-
     modules = dict(graph.model.named_modules())
     logger.debug(f"Found {len(modules)} modules in the model:\n{list(modules.keys())}")
 
