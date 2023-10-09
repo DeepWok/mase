@@ -34,7 +34,7 @@ class MyRound(InplaceFunction):
         return grad_input
 
 
-class BinaryBipolar(InplaceFunction):
+class BinaryBipolarScaled(InplaceFunction):
     """A PyTorch function for binarizing input values.
 
     This function takes an input tensor and a threshold value and binarizes the input values,
@@ -50,8 +50,24 @@ class BinaryBipolar(InplaceFunction):
     """
 
     @staticmethod
-    def forward(ctx, input, threshold):
-        return torch.where(input >= threshold, torch.tensor(1.0), torch.tensor(-1.0))
+    def alpha(tensor):  # determine batch means
+        absvalue = tensor.abs()
+        alpha = absvalue.mean(dim=(1, 2, 3), keepdims=True)
+        return alpha.view(-1, 1)
+
+    @staticmethod
+    def forward(ctx, input, _threshold):
+        alpha = BinaryBipolarScaled.alpha(input)  # contains all averages per batch item
+
+        output = torch.zeros_like(input)  # tracer compatability vs torch.zeros()
+        pos_one = torch.where(input > 0, 1.0, 0.0)
+        neg_one = pos_one - 1
+        out = torch.add(pos_one, neg_one)
+        output = out * alpha.view(-1, 1, 1, 1).expand(
+            -1, input.size()[1], input.size()[2], input.size()[3]
+        )
+
+        return output
 
     @staticmethod
     def backward(ctx, grad_output):
@@ -84,6 +100,43 @@ class BinaryZeroOne(InplaceFunction):
         return grad_input, None
 
 
+class BinaryZeroScaled(InplaceFunction):
+    """A PyTorch function for binarizing input values.
+
+    This function takes an input tensor and a threshold value and binarizes the input values,
+    setting values greater than or equal to the threshold to 1 and values below the threshold to 0.
+
+    Args:
+        ctx (torch.autograd.function._ContextMethodMixin): The context object to store intermediate results.
+        input (torch.Tensor): The input tensor to be binarized.
+        threshold (float or torch.Tensor): The threshold value for binarization.
+
+    Returns:
+        torch.Tensor: The binarized output tensor
+    """
+
+    @staticmethod
+    def alpha(tensor):  # determine batch means
+        absvalue = tensor.abs()
+        alpha = absvalue.mean(dim=(1, 2, 3), keepdims=True)
+        return alpha.view(-1, 1)
+
+    @staticmethod
+    def forward(ctx, input, _threshold):
+        alpha = BinaryZeroScaled.alpha(input)
+
+        pos_one = torch.where(input > 0, 1.0, 0.0)
+        output = pos_one * alpha.view(-1, 1, 1, 1).expand(
+            -1, input.size()[1], input.size()[2], input.size()[3]
+        )
+        return output
+
+    @staticmethod
+    def backward(ctx, grad_output):
+        grad_input = grad_output.clone()
+        return grad_input, None
+
+
 class TernaryScaled(InplaceFunction):
     """A PyTorch function for ternary scaling of input values.
 
@@ -102,12 +155,52 @@ class TernaryScaled(InplaceFunction):
     """
 
     @staticmethod
-    def forward(ctx, input, threshold):
-        return torch.mean(input) * torch.where(
-            input > threshold,
-            torch.tensor(1.0),
-            torch.where(input <= -threshold, torch.tensor(-1.0), torch.tensor(0.0)),
+    def delta(tensor):
+        n = tensor[0].nelement()  # total feature map elements
+
+        flat = tensor.flatten(1)
+
+        delta = 0.75 * torch.sum(flat.abs(), dim=(1,)) / n
+
+        delta = (
+            delta.unsqueeze(1)
+            .unsqueeze(1)
+            .unsqueeze(1)
+            .expand(-1, tensor.size()[1], tensor.size()[2], tensor.size()[3])
+        )  # expand to match input dims
+
+        return delta
+
+    @staticmethod
+    def alpha(tensor, delta):
+        absvalue = tensor.abs()
+        truth_value = (absvalue > delta).to(torch.float32)
+        truth_num = truth_value.sum(dim=(1, 2, 3))
+        alpha = (truth_value.view(1, -1) * absvalue.view(1, -1)).view(
+            tensor.size()
+        ).sum(dim=(1, 2, 3)) / truth_num
+        return alpha.view(-1, 1)
+
+    @staticmethod
+    def forward(ctx, input, _threshold):
+        delta = TernaryScaled.delta(input)
+        alpha = TernaryScaled.alpha(input, delta)
+
+        output = torch.zeros_like(input)
+        pos_one = torch.where(
+            input > delta,
+            1.0,
+            0.0,
         )
+        neg_one = torch.where(
+            input < -delta,
+            -1.0,
+            0.0,
+        )
+        output = (pos_one + neg_one) * alpha.view(-1, 1, 1, 1).expand(
+            -1, input.size()[1], input.size()[2], input.size()[3]
+        )
+        return output
 
     @staticmethod
     def backward(ctx, grad_output):
@@ -133,12 +226,50 @@ class Ternary(InplaceFunction):
     """
 
     @staticmethod
-    def forward(ctx, input, threshold):
-        return torch.where(
-            input > threshold,
-            torch.tensor(1.0),
-            torch.where(input <= -threshold, torch.tensor(-1.0), torch.tensor(0.0)),
+    def delta(tensor):
+        n = tensor[0].nelement()  # total feature map elements
+
+        flat = tensor.flatten(1)
+
+        delta = 0.75 * torch.sum(flat.abs(), dim=(1,)) / n
+
+        delta = (
+            delta.unsqueeze(1)
+            .unsqueeze(1)
+            .unsqueeze(1)
+            .expand(-1, tensor.size()[1], tensor.size()[2], tensor.size()[3])
+        )  # expand to match input dims
+
+        return delta
+
+    @staticmethod
+    def alpha(tensor, delta):
+        absvalue = tensor.abs()
+        truth_value = (absvalue > delta).to(torch.float32)
+        truth_num = truth_value.sum(dim=(1, 2, 3))
+        alpha = (truth_value.view(1, -1) * absvalue.view(1, -1)).view(
+            tensor.size()
+        ).sum(dim=(1, 2, 3)) / truth_num
+        return alpha.view(-1, 1)
+
+    @staticmethod
+    def forward(ctx, input, _threshold):
+        delta = TernaryScaled.delta(input)
+        alpha = TernaryScaled.alpha(input, delta)
+
+        output = torch.zeros_like(input)
+        pos_one = torch.where(
+            input > delta,
+            1.0,
+            0.0,
         )
+        neg_one = torch.where(
+            input < -delta,
+            -1.0,
+            0.0,
+        )
+        output = pos_one + neg_one
+        return output
 
     @staticmethod
     def backward(ctx, grad_output):
@@ -164,8 +295,9 @@ class MySign(InplaceFunction):
 
 
 mu_sign = MySign.apply
-binarised_bipolar_op = BinaryBipolar.apply
+binarised_bipolar_op = BinaryBipolarScaled.apply
 binarised_zeroOne_op = BinaryZeroOne.apply
+binarised_zeroScaled_op = BinaryZeroScaled.apply
 ternarised_scaled_op = TernaryScaled.apply
 ternarised_op = Ternary.apply
 my_clamp = MyClamp.apply

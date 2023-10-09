@@ -10,10 +10,9 @@ class NLPClassificationModelWrapper(WrapperBase):
     def __init__(
         self,
         model,
-        tokenizer,
         dataset_info,
         learning_rate=1e-4,
-        weight_decay=0,
+        weight_decay=0.0,
         epochs=200,
         optimizer=None,
     ):
@@ -21,14 +20,10 @@ class NLPClassificationModelWrapper(WrapperBase):
             model=model,
             dataset_info=dataset_info,
             learning_rate=learning_rate,
-            weight_decay=0,
+            weight_decay=weight_decay,
             epochs=epochs,
             optimizer=optimizer,
         )
-        self.model = model
-        self.acc_train = Accuracy(task="multiclass", num_classes=self.num_classes)
-        self.acc_val = Accuracy(task="multiclass", num_classes=self.num_classes)
-        self.acc_test = Accuracy(task="multiclass", num_classes=self.num_classes)
 
     def forward(self, input_ids, attention_mask, token_type_ids=None, labels=None):
         """
@@ -63,19 +58,12 @@ class NLPClassificationModelWrapper(WrapperBase):
         _, pred_ids = torch.max(logits, dim=1)
         labels = labels[0] if len(labels) == 1 else labels.squeeze()
 
-        acc = self.acc_train(pred_ids, labels)
+        self.acc_train(pred_ids, labels)
 
-        self.log("train_loss", loss, on_step=True, on_epoch=False, prog_bar=True)
-        self.log(
-            "train_acc", self.acc_train, on_step=True, on_epoch=False, prog_bar=True
-        )
+        self.log("train_loss_step", loss, prog_bar=True)
+        self.log("train_acc_step", self.acc_train, prog_bar=True)
 
-        return {
-            "loss": loss,
-            "predictions": pred_ids,
-            "labels": labels,
-            "train_accuracy": acc,
-        }
+        return loss
 
     def validation_step(self, batch, batch_idx):
         input_ids = batch["input_ids"]
@@ -89,25 +77,13 @@ class NLPClassificationModelWrapper(WrapperBase):
         labels = labels[0] if len(labels) == 1 else labels.squeeze()
 
         self.acc_val(pred_ids, labels)
-
-        self.log(
-            "val_loss",
-            loss,
-            on_step=False,
-            on_epoch=True,
-            sync_dist=True,
-            prog_bar=True,
-        )
-        self.log(
-            "val_acc",
-            self.acc_val,
-            on_step=False,
-            on_epoch=True,
-            sync_dist=True,
-            prog_bar=True,
-        )
+        self.loss_val(loss)
 
         return loss
+
+    def on_validation_epoch_end(self):
+        self.log("val_acc_epoch", self.acc_val, prog_bar=True)
+        self.log("val_loss_epoch", self.loss_val, prog_bar=True)
 
     def test_step(self, batch, batch_idx):
         input_ids = batch["input_ids"]
@@ -122,24 +98,11 @@ class NLPClassificationModelWrapper(WrapperBase):
 
         self.acc_test(pred_ids, labels)
 
-        self.log(
-            "test_acc",
-            self.acc_test,
-            on_step=False,
-            on_epoch=True,
-            sync_dist=True,
-            prog_bar=True,
-        )
-        self.log(
-            "test_loss",
-            loss,
-            on_step=False,
-            on_epoch=True,
-            sync_dist=True,
-            prog_bar=True,
-        )
-
         return loss
+
+    def on_test_epoch_end(self):
+        self.log("test_acc_epoch", self.acc_test, prog_bar=True)
+        self.log("test_loss_epoch", self.loss_test, prog_bar=True)
 
     def predict_step(self, batch, batch_idx: int, dataloader_idx: int = 0):
         input_ids = batch["input_ids"]

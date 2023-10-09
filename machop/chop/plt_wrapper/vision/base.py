@@ -5,7 +5,6 @@ class VisionModelWrapper(WrapperBase):
     def __init__(
         self,
         model,
-        tokenizer,
         dataset_info=None,
         learning_rate=5e-4,
         weight_decay=0,

@@ -12,7 +12,7 @@ class WrapperBase(pl.LightningModule):
         self,
         model,
         learning_rate=5e-4,
-        weight_decay=0,
+        weight_decay=0.0,
         epochs=1,
         optimizer=None,
         dataset_info=None,
@@ -27,11 +27,12 @@ class WrapperBase(pl.LightningModule):
 
         self.num_classes = dataset_info.num_classes
         if self.num_classes is not None:
-            self.acc_train = Accuracy(
-                "multiclass", num_classes=dataset_info.num_classes
-            )
-            self.acc_val = Accuracy("multiclass", num_classes=dataset_info.num_classes)
-            self.acc_test = Accuracy("multiclass", num_classes=dataset_info.num_classes)
+            self.acc_train = Accuracy("multiclass", num_classes=self.num_classes)
+            self.acc_val = Accuracy("multiclass", num_classes=self.num_classes)
+            self.acc_test = Accuracy("multiclass", num_classes=self.num_classes)
+
+        self.loss_val = MeanMetric()
+        self.loss_test = MeanMetric()
 
     def forward(self, x):
         return self.model(x)
@@ -41,51 +42,38 @@ class WrapperBase(pl.LightningModule):
         y_hat = self.forward(x)
         loss = self.loss_fn(y_hat, y)
 
-        acc = self.acc_train(y_hat, y)
+        self.acc_train(y_hat, y)
+        self.log("train_acc_step", self.acc_train, prog_bar=True)
+        self.log("train_loss_step", loss)
 
-        self.log(
-            "train_acc", self.acc_train, on_step=True, on_epoch=False, prog_bar=True
-        )
-        self.log("train_loss", loss, on_step=True, on_epoch=False, prog_bar=True)
-
-        return {"loss": loss, "acc": acc}
+        return loss
 
     def validation_step(self, batch, batch_idx):
         x, y = batch[0], batch[1]
         y_hat = self.forward(x)
         loss = self.loss_fn(y_hat, y)
-        acc = self.acc_val(y_hat, y)
 
-        self.log("val_acc", self.acc_val, on_step=False, on_epoch=True, prog_bar=True)
-        self.log(
-            "val_loss",
-            loss,
-            on_step=False,
-            on_epoch=True,
-            sync_dist=True,
-            prog_bar=True,
-        )
-        # return {"val_loss": loss, "val_acc": acc}
+        self.acc_val(y_hat, y)
+        self.loss_val(loss)
         return loss
+
+    def on_validation_epoch_end(self):
+        self.log("val_acc_epoch", self.acc_val, prog_bar=True)
+        self.log("val_loss_epoch", self.loss_val, prog_bar=True)
 
     def test_step(self, batch, batch_idx):
         x, y = batch[0], batch[1]
         y_hat = self.forward(x)
         loss = self.loss_fn(y_hat, y)
 
-        acc = self.acc_test(y_hat, y)
+        self.acc_test(y_hat, y)
+        self.loss_test(loss)
 
-        self.log("test_acc", self.acc_test, on_step=False, on_epoch=True, prog_bar=True)
-        self.log(
-            "test_loss",
-            loss,
-            on_step=False,
-            on_epoch=True,
-            sync_dist=True,
-            prog_bar=True,
-        )
+        return loss
 
-        return {"test_loss": loss, "test_acc": acc}
+    def on_test_epoch_end(self):
+        self.log("test_acc_epoch", self.acc_test, prog_bar=True)
+        self.log("test_loss_epoch", self.loss_test, prog_bar=True)
 
     def predict_step(self, batch, batch_idx: int, dataloader_idx: int = 0):
         x, y = batch[0], batch[1]

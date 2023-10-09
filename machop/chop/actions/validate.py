@@ -26,9 +26,9 @@ def validate(
     load_name,
     load_type,
 ):
-    if not os.path.isdir(save_path):
-        os.makedirs(save_path)
     if save_path is not None:
+        if not os.path.isdir(save_path):
+            os.makedirs(save_path)
         tb_logger = TensorBoardLogger(save_dir=save_path, name="logs_test-sw")
         plt_trainer_args["callbacks"] = []
         plt_trainer_args["logger"] = tb_logger
@@ -46,7 +46,6 @@ def validate(
         model = load_model(load_name, load_type=load_type, model=model)
     plt_model = wrapper_cls(
         model,
-        tokenizer=tokenizer,
         info=dataset_info,
         learning_rate=learning_rate,
         optimizer=optimizer,

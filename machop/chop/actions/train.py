@@ -24,15 +24,15 @@ from pytorch_lightning.strategies import DDPStrategy
 logger = logging.getLogger(__name__)
 
 
-class CustomFSDPStrategy(DDPStrategy):
-    def configure_ddp(self):
-        # model = DistributedDataParallel(model)
-        fsdp_model = FullyShardedDataParallel(
-            self.model,
-            # fsdp_auto_wrap_policy=default_auto_wrap_policy,
-            # cpu_offload=CPUOffload(offload_params=True),
-        )
-        self.model = fsdp_model
+# class CustomFSDPStrategy(DDPStrategy):
+#     def configure_ddp(self):
+#         # model = DistributedDataParallel(model)
+#         fsdp_model = FullyShardedDataParallel(
+#             self.model,
+#             # fsdp_auto_wrap_policy=default_auto_wrap_policy,
+#             # cpu_offload=CPUOffload(offload_params=True),
+#         )
+#         self.model = fsdp_model
 
 
 def train(
@@ -51,13 +51,13 @@ def train(
     load_name,
     load_type,
 ):
-    if not os.path.isdir(save_path):
-        os.makedirs(save_path)
-    # if save_path is None, the model will not be saved
     if save_path is not None:
+        # if save_path is None, the model will not be saved
+        if not os.path.isdir(save_path):
+            os.makedirs(save_path)
         checkpoint_callback = ModelCheckpoint(
             save_top_k=1,
-            monitor="val_loss",
+            monitor="val_loss_epoch",
             mode="min",
             filename="best",
             dirpath=save_path,
@@ -79,15 +79,15 @@ def train(
     plt_trainer_args["plugins"] = plugins
 
     # Check optimizer
-    if plt_trainer_args["strategy"] in ["deepspeed_stage_3"]:
-        assert optimizer in [
-            "FusedAdam",
-            "fused_adam",
-        ], "optimizer should be 'fused_adam' given --strategy={}".format(
-            plt_trainer_args["strategy"]
-        )
-    elif plt_trainer_args["strategy"] in ["fsdp_custom"]:
-        plt_trainer_args["strategy"] = CustomFSDPStrategy()
+    # if plt_trainer_args["strategy"] in ["deepspeed_stage_3"]:
+    #     assert optimizer in [
+    #         "FusedAdam",
+    #         "fused_adam",
+    #     ], "optimizer should be 'fused_adam' given --strategy={}".format(
+    #         plt_trainer_args["strategy"]
+    #     )
+    # elif plt_trainer_args["strategy"] in ["fsdp_custom"]:
+    #     plt_trainer_args["strategy"] = CustomFSDPStrategy()
 
     wrapper_cls = get_model_wrapper(model_info, task)
 
@@ -97,7 +97,6 @@ def train(
 
     pl_model = wrapper_cls(
         model,
-        tokenizer=tokenizer,
         dataset_info=dataset_info,
         learning_rate=learning_rate,
         weight_decay=weight_decay,
@@ -114,7 +113,7 @@ def train(
     # Save the trained model along with relevant metadata in the training_ckpts folder.
     # NOTE: This is important if the model was previously transformed with architectural
     # changes. The state dictionary that's saved by PyTorch Lightning wouldn't work.
-    if load_name is not None and load_type == "mz":
+    if save_path is not None and load_name is not None and load_type == "mz":
         graph = MaseGraph(model)
         dummy_input = get_dummy_input(model_info, data_module, task)
         graph = init_metadata_analysis_pass(graph, None)

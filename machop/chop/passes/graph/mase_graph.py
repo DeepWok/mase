@@ -10,6 +10,7 @@ import torch.fx as fx
 from chop.passes.common import MASE_IMPLICIT_FUNCS
 from chop.passes.transforms import utils as utils_passes
 from chop.passes.patching import MASE_LEAF_FUNCTIONS, MASE_LEAF_LAYERS
+from chop.passes.transforms.quantize import quantized_func_map, quantized_module_map
 from torch.fx import wrap as fx_wrap
 
 logger = logging.getLogger(__name__)
@@ -92,47 +93,48 @@ class MaseGraph:
 
     def __init__(
         self,
-        model: torch.nn.Module = None,
+        model: torch.nn.Module,
         cf_args: Optional[Dict[str, Any]] = None,
-        load_name: Optional[str] = None,
     ) -> None:
-        if model is not None and load_name is not None:
-            raise ValueError("model and load_name cannot be set at the same time.")
-        elif model is not None:
-            assert isinstance(model, torch.nn.Module), "model must be a torch.nn.Module"
-        else:
-            assert isinstance(load_name, str), "load_name must be a mase checkpoint"
+        assert isinstance(
+            model, torch.nn.Module
+        ), f"model must be a torch.nn.Module, got {type(model)}"
 
         # create graph module
-        if model is not None:
-            patched_nodes = getattr(model, "patched_nodes", None)
-            if patched_nodes is None:
-                self.tracer = MaseTracer()
-            else:
-                self.tracer = MaseTracer(
-                    custom_leaf_modules=tuple(patched_nodes["modules"]),
-                    custom_leaf_layers=tuple(patched_nodes["layers"]),
-                    custom_leaf_functions=tuple(patched_nodes["functions"]),
-                )
-            self.cf_args = cf_args
-            self.model = fx.GraphModule(model, self.tracer.trace(model, cf_args))
-            if patched_nodes:
-                self.model.patched_op_names = [
-                    obj.__name__.lower()
-                    for obj in model.patched_nodes["layers"]
-                    + model.patched_nodes["functions"]
-                ]
-                # these are layers we believe the user will provide system verilog for
-                self.model.patched_custom_layers = model.patched_nodes["layers"]
-                self.model.additional_inputs = model.patched_nodes["additional_inputs"]
-            else:
-                self.model.patched_op_names = []
-                self.model.patched_custom_layers = []
-                self.model.additional_inputs = {}
+        # MASE internal auto-wrapped functions/layers
+        custom_leaf_modules = ()
+        custom_leaf_functions = ()
+        custom_leaf_layers = ()
+        # quantized functions/layers
+        custom_leaf_functions += tuple(quantized_func_map.values())
+        custom_leaf_layers += tuple(quantized_module_map.values())
+        # patched functions/layers
+        patched_nodes = getattr(model, "patched_nodes", None)
+        if patched_nodes is not None:
+            custom_leaf_modules += tuple(patched_nodes["modules"])
+            custom_leaf_layers += tuple(patched_nodes["layers"])
+            custom_leaf_functions += tuple(patched_nodes["functions"])
+
+        self.tracer = MaseTracer(
+            custom_leaf_modules=custom_leaf_modules,
+            custom_leaf_functions=custom_leaf_functions,
+            custom_leaf_layers=custom_leaf_layers,
+        )
+        self.cf_args = cf_args
+        self.model = fx.GraphModule(model, self.tracer.trace(model, cf_args))
+        if patched_nodes:
+            self.model.patched_op_names = [
+                obj.__name__.lower()
+                for obj in model.patched_nodes["layers"]
+                + model.patched_nodes["functions"]
+            ]
+            # these are layers we believe the user will provide system verilog for
+            self.model.patched_custom_layers = model.patched_nodes["layers"]
+            self.model.additional_inputs = model.patched_nodes["additional_inputs"]
         else:
-            self.tracer = None
-            self.cf_args = None
-            self.model = torch.load(load_name)
+            self.model.patched_op_names = []
+            self.model.patched_custom_layers = []
+            self.model.additional_inputs = {}
 
     @property
     def fx_graph(self):

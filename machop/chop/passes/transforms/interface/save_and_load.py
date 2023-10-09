@@ -5,6 +5,7 @@ import toml
 import torch
 import torch.fx as fx
 from chop.passes.analysis.init_metadata import init_metadata_analysis_pass
+from chop.tools.config_load import convert_none_to_str_na, convert_str_na_to_none
 
 logger = logging.getLogger(__name__)
 
@@ -49,6 +50,7 @@ def save_n_meta_param(node_meta: dict, save_path: str) -> None:
     """
     Save a mase graph metadata to a toml file.
     """
+    node_meta = convert_none_to_str_na(node_meta)
     with open(save_path, "w") as f:
         toml.dump(node_meta, f)
 
@@ -58,8 +60,9 @@ def load_n_meta_param(load_path: str) -> dict:
     Load a mase graph metadata from a toml file.
     """
     with open(load_path, "r") as f:
-        node_n_meta_param = toml.load(f)
-    return node_n_meta_param
+        node_meta = toml.load(f)
+    node_meta = convert_str_na_to_none(node_meta)
+    return node_meta
 
 
 def graph_iterator_add_n_meta_param(graph, node_n_meta_param: dict):

@@ -1,0 +1,51 @@
+model = "vgg7"
+dataset = "cifar10"
+max_epochs = 80
+learning_rate = 1e-1
+training_optimizer = "sgd"
+
+[passes.quantize]
+# by = "name"
+by = "type"
+report = true
+
+# [passes.quantize.feature_layers_0.config]
+# name = "binary"
+# data_in_width = 32
+# data_in_stochastic = false
+# data_in_bipolar = true
+# weight_width = 1
+# weight_stochastic = false
+# weight_bipolar = true
+# bias_width = 32
+# bias_stochastic = false
+# bias_bipolar = true
+
+# [passes.quantize.default.config]
+# name = "NA"
+
+[passes.quantize.default.config]
+name = "binary"
+data_in_width = 32
+data_in_stochastic = false
+data_in_bipolar = false
+weight_width = 1
+weight_stochastic = false
+weight_bipolar = true
+binary_training = "NA"
+bias_width = 32
+bias_stochastic = false
+bias_bipolar = false
+
+[passes.quantize.linear.config]
+name = "binary"
+bypass = true              # just needed for bypass, other settings are ignored
+data_in_width = 32
+data_in_stochastic = false
+data_in_bipolar = true
+weight_width = 1
+weight_stochastic = false
+weight_bipolar = true
+bias_width = 32
+bias_stochastic = false
+bias_bipolar = true

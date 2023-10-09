@@ -10,6 +10,7 @@ from .utils import (
     my_clamp,
     binarised_bipolar_op,
     binarised_zeroOne_op,
+    binarised_zeroScaled_op,
     ternarised_scaled_op,
     ternarised_op,
 )
@@ -46,34 +47,9 @@ def binary_quantizer(
         x = (
             binarised_bipolar_op(x_sig, x_rand)
             if bipolar
-            else binarised_zeroOne_op(x_sig, x_rand)
+            else binarised_zeroScaled_op(x_sig, x_rand)
         )
     else:
-        x = binarised_bipolar_op(x, 0) if bipolar else binarised_zeroOne_op(x, 0)
+        x = binarised_bipolar_op(x, 0) if bipolar else binarised_zeroScaled_op(x, 0)
 
-    return x
-
-
-def ternary_quantizer(
-    x: torch.Tensor | numpy.ndarray, threshold: float, scaling_fac: bool = False
-):
-    """
-    - Do ternary quantization to input
-    - Optionally do equal_distance quantization
-
-    ---
-    - forward:
-    - backward: STE
-
-    ---
-    scaling_fac: use ternarization with scaling
-
-    ---
-    Refer to https://arxiv.org/pdf/1807.07948.pdf
-
-    """
-    if scaling_fac:
-        x = ternarised_scaled_op(x, threshold)  # [mean, 0 ,-mean]
-    else:
-        x = ternarised_op(x, threshold)  # [1, 0 ,-1]
     return x

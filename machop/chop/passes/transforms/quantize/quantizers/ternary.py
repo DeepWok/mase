@@ -37,17 +37,18 @@ def ternary_quantizer(
     if threshold is None:
         if mean:
             threshold = 0.75 * mean  # https://arxiv.org/pdf/1605.04711.pdf
-        elif median:
-            threshold = 0.75 * median  # fallback if mean not available
         elif maximum:
             threshold = 0.05 * maximum  # https://arxiv.org/pdf/1807.07948.pdf
-        else:
-            raise RuntimeError(
-                "No appropriate ternary quantisation threshold is determinable! Did you run statistical analysis pass?"
-            )
+        elif median:
+            threshold = 0.75 * median  # fallback if mean not available
+        # else:
+        # raise RuntimeError(
+        #     "No appropriate ternary quantisation threshold is determinable! Did you run statistical analysis pass?"
+        # )
     if scaling_factor:
         x = ternarised_scaled_op(
-            x, threshold
+            x,
+            threshold,  # abs_mean=mean
         )  # [mean, 0 ,-mean] # this function determines the mean on the fly, maybe we could make an alternative which uses the metadata?
     else:
         x = ternarised_op(x, threshold)  # [1, 0 ,-1]

@@ -5,7 +5,7 @@ from math import ceil, log2
 import torch
 from torch import Tensor
 from torch.nn import functional as F
-from .utils import get_stats
+from .utils import get_stats, quantiser_passthrough
 
 from ....analysis.statistical_profiler.utils import get_meta_arg_stat
 from ..quantizers import (
@@ -46,7 +46,7 @@ class _LinearBase(torch.nn.Linear):
         self,
         in_features: int,
         out_features: int,
-        bias: bool = True,
+        bias: bool = False,
         device=None,
         dtype=None,
     ) -> None:
@@ -519,26 +519,14 @@ class LinearBinary(_LinearBase):
         self.bypass = config.get("bypass", False)
         if self.bypass:
             return
-        x_stochastic, b_stochastic, w_stochastic = (
-            config["data_in_stochastic"],
-            config["bias_stochastic"],
-            config["weight_stochastic"],
-        )
-        x_bipolar, b_bipolar, w_bipolar = (
-            config["data_in_bipolar"],
-            config["bias_bipolar"],
-            config["weight_bipolar"],
-        )
 
+        w_stochastic = config["weight_stochastic"]
+        w_bipolar = config["weight_bipolar"]
         self.w_quantizer = partial(
             binary_quantizer, stochastic=w_stochastic, bipolar=w_bipolar
         )
-        self.x_quantizer = partial(
-            binary_quantizer, stochastic=x_stochastic, bipolar=x_bipolar
-        )
-        self.b_quantizer = partial(
-            binary_quantizer, stochastic=b_stochastic, bipolar=b_bipolar
-        )
+        self.b_quantizer = quantiser_passthrough
+        self.x_quantizer = quantiser_passthrough
 
 
 class LinearBinaryScaling(_LinearBase):
@@ -564,7 +552,7 @@ class LinearBinaryScaling(_LinearBase):
         assert config is not None, "config is None!"
         self.config = config
         self.bypass = config.get("bypass", False)
-        self.gamma = torch.nn.Parameter(torch.tensor(1.0, requires_grad=True))
+        # self.gamma = torch.nn.Parameter(torch.tensor(1.0, requires_grad=True))
 
         if self.bypass:
             return
@@ -593,7 +581,7 @@ class LinearBinaryScaling(_LinearBase):
 
     def forward(self, x: Tensor) -> Tensor:
         if self.bypass:
-            # if bypss, there is no quantization
+            # if bypass, there is no quantization
             return F.linear(x, self.weight, self.bias)
 
         if self.binary_training:
@@ -602,12 +590,18 @@ class LinearBinaryScaling(_LinearBase):
             bias = self.b_quantizer(self.bias) if self.bias is not None else None
             return F.linear(
                 x,
-                w * self.gamma.abs(),
+                # w * self.gamma.abs(),
+                w,
                 bias,
             )
         else:
             self.weight.data.clamp_(-1, 1)
-            return F.linear(x, self.weight * self.gamma.abs(), self.bias)
+            return F.linear(
+                x,
+                # self.weight * self.gamma.abs(),
+                self.weight,
+                self.bias,
+            )
 
 
 class LinearTernary(_LinearBase):
@@ -626,25 +620,11 @@ class LinearTernary(_LinearBase):
         self.bypass = config.get("bypass", False)
         if self.bypass:
             return
-        x_scaling_factor = config["data_in_scaling_factor"]
+
         w_scaling_factor = config["weight_scaling_factor"]
-        b_scaling_factor = config["bias_scaling_factor"]
-        x_mean = get_stats(config, "data_in_mean")
-        x_median = get_stats(config, "data_in_median")
-        x_max = get_stats(config, "data_in_max")
         w_mean = get_stats(config, "weight_mean")
         w_median = get_stats(config, "weight_median")
         w_max = get_stats(config, "weight_max")
-        b_mean = get_stats(config, "bias_mean")
-        b_median = get_stats(config, "bias_median")
-        b_max = get_stats(config, "bias_max")
-        self.x_quantizer = partial(
-            ternary_quantizer,
-            scaling_factor=x_scaling_factor,
-            maximum=x_max,
-            median=x_median,
-            mean=x_mean,
-        )
         self.w_quantizer = partial(
             ternary_quantizer,
             scaling_factor=w_scaling_factor,
@@ -652,13 +632,15 @@ class LinearTernary(_LinearBase):
             median=w_median,
             mean=w_mean,
         )
-        self.b_quantizer = partial(
-            ternary_quantizer,
-            scaling_factor=b_scaling_factor,
-            maximum=b_max,
-            median=b_median,
-            mean=b_mean,
-        )
+        self.x_quantizer = quantiser_passthrough
+        self.b_quantizer = quantiser_passthrough
+        # self.b_quantizer = partial(
+        #     ternary_quantizer,
+        #     scaling_factor=b_scaling_factor,
+        #     maximum=b_max,
+        #     median=b_median,
+        #     mean=b_mean,
+        # )
 
 
 # LUT

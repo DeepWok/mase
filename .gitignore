@@ -2,7 +2,7 @@
 *.py~
 *.swp
 /history/
-*/data/
+*data/
 /tb_summary/
 # *.sh
 /mase_output/
