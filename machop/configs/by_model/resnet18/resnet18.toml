@@ -17,7 +17,7 @@ project_dir = "../mase_output"
 project = "resnet18_cifar10"
 
 # load
-# load_name = "../mase_output/resnet18_cifar10/software/transformed_ckpts"
+# load_name = "../mase_output/resnet18_cifar10/software/transform/transformed_ckpt"
 # load_type = "mz"
 
 log_level = "info"
@@ -46,22 +46,22 @@ bias_frac_width = 9
 name = "minifloat_ieee"
 weight_width = 8
 weight_exponent_width = 4
-weight_exponent_bias = "NA"
+weight_exponent_bias = 7
 data_in_width = 8
 data_in_exponent_width = 4
-data_in_exponent_bias = "NA"
+data_in_exponent_bias = 7
 bias_width = 8
 bias_exponent_width = 4
-bias_exponent_bias = "NA"
+bias_exponent_bias = 7
 
 [passes.quantize.relu.config]
 name = "minifloat_denorm"
 weight_width = 8
 weight_exponent_width = 4
-weight_exponent_bias = "NA"
+weight_exponent_bias = 7
 data_in_width = 8
 data_in_exponent_width = 4
-data_in_exponent_bias = "NA"
+data_in_exponent_bias = 7
 bias_width = 8
 bias_exponent_width = 4
-bias_exponent_bias = "NA"
+bias_exponent_bias = 7

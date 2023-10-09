@@ -510,6 +510,112 @@ class RangeQuantile(Record):
         return {"min": minimum, "max": maximum, "range": d_range, "count": count}
 
 
+@_add_to_stat_mapping
+class AbsMean(_StatBase):
+    """
+    Online algorithm to compute the mean, taking absolute value first i.e. E(|x|)
+
+    ---
+    Args:
+        device (str|None): the device to move the samples to. If None, the samples will not be moved.
+        dims (str|list|None): the dimensions to reduce. If "all", reduce all dimensions. If None, do not reduce any dimension. If a list, reduce the specified dimensions.
+        abs (bool): if True, take the absolute value of the samples before calculating the min and max.
+    """
+
+    # TODO Dimension reduction, device?
+
+    name = "abs_mean"
+
+    def __init__(
+        self,
+        device=None,
+        dims: Literal["all"] | None | list = "all",
+    ) -> None:
+        super().__init__()
+        self.device = device
+        if isinstance(dims, (list, tuple)):
+            # assert sorted(dims) == list(
+            #     range(min(dims), max(dims) + 1)
+            # ), "dims must be consecutive"
+            self.dims_to_reduce = sorted(dims)
+        else:
+            assert dims in ["all", None]
+            self.dims_to_reduce = dims
+
+        self.count: int = 0
+        self.mean: Tensor = 0
+
+    @staticmethod
+    def _update(
+        new_s: Tensor,
+        count: int,
+        mean: Tensor,
+    ):
+        count += 1
+        mean = (1 / count) * ((count - 1) * mean + abs(new_s))
+
+        return count, mean
+
+    @staticmethod
+    def _reshape_a_sample(new_s: Tensor, dims_to_reduce: list[int]):
+        dims_to_keep = [i for i in range(new_s.ndim) if i not in dims_to_reduce]
+        transpose_dims = dims_to_keep + dims_to_reduce
+        new_s = new_s.permute(*transpose_dims)
+        new_s = torch.flatten(new_s, start_dim=len(dims_to_keep), end_dim=-1)
+        return new_s
+
+    @torch.no_grad()
+    def update_a_sample(self, new_s: Tensor):
+        if isinstance(new_s, (list, tuple, int, float)):
+            new_s = torch.tensor(new_s)
+        assert isinstance(new_s, Tensor)
+        new_s = new_s.clone().detach().float()
+
+        if self.device is not None:
+            new_s = new_s.to(self.device)
+
+        match self.dims_to_reduce:
+            case "all":
+                new_s = torch.flatten(new_s)
+                n_b = new_s.nelement()
+                mean_b = new_s.abs().mean()
+
+                self.mean = (
+                    1 / (self.count + n_b) * (self.count * self.mean + n_b * mean_b)
+                )
+                self.count += n_b
+            case None:
+                self.count, self.mean = self._update(
+                    new_s=new_s,
+                    count=self.count,
+                    mean=self.mean,
+                )
+            case _:  # TODO other dims
+                new_s = self._reshape_a_sample(
+                    new_s, dims_to_reduce=self.dims_to_reduce
+                )
+                for i in range(new_s.size(-1)):
+                    self.count, self.mean = self._update(
+                        new_s=new_s[..., i],
+                        count=self.count,
+                        mean=self.mean,
+                    )
+
+    @torch.no_grad()
+    def compute(self) -> dict:
+        if self.count < 2:
+            logger.warning(
+                f"AbsMean: count is {self.count}, which is less than 2. "
+                "Returning NA for mean."
+            )
+            return {"abs_mean": "NA"}
+
+        return {
+            "abs_mean": self.mean,
+            "count": self.count,
+        }
+
+
 def create_new_stat(stat_name: str, **stat_kwargs):
     global STAT_NAME_TO_CLS
     assert (

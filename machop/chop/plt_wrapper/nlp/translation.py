@@ -21,7 +21,7 @@ class NLPTranslationModelWrapper(WrapperBase):
             model=model,
             dataset_info=dataset_info,
             learning_rate=learning_rate,
-            weight_decay=0,
+            weight_decay=weight_decay,
             epochs=epochs,
             optimizer=optimizer,
         )
@@ -86,19 +86,12 @@ class NLPTranslationModelWrapper(WrapperBase):
         logits = outputs["logits"]
         _, pred_ids = torch.max(logits, dim=1)
         labels = labels[0] if len(labels) == 1 else labels.squeeze()
-        bleu = self.bleu_train(*self.get_pred_ids_and_labels(pred_ids, labels))
 
-        self.log(
-            "bleu_train", self.bleu_train, on_step=True, on_epoch=False, prog_bar=True
-        )
-        self.log("loss_train", loss, on_step=True, on_epoch=False, prog_bar=True)
+        self.bleu_train(*self.get_pred_ids_and_labels(pred_ids, labels))
+        self.log("train_bleu_step", self.bleu_train, rog_bar=True)
+        self.log("train_loss_step", loss, prog_bar=True)
 
-        return {
-            "loss": loss,
-            "predictions": outputs,
-            "labels": labels,
-            "train_bleu": bleu,
-        }
+        return loss
 
     def validation_step(self, batch, batch_idx):
         input_ids = batch["input_ids"]
@@ -121,25 +114,13 @@ class NLPTranslationModelWrapper(WrapperBase):
         labels = labels[0] if len(labels) == 1 else labels.squeeze()
 
         self.bleu_val(*self.get_pred_ids_and_labels(pred_ids, labels))
-
-        self.log(
-            "val_bleu",
-            self.bleu_val,
-            on_step=False,
-            on_epoch=True,
-            prog_bar=True,
-            sync_dist=True,
-        )
-        self.log(
-            "val_loss",
-            loss,
-            on_step=False,
-            on_epoch=True,
-            sync_dist=True,
-            prog_bar=True,
-        )
+        self.loss_val(loss)
 
         return loss
+
+    def on_validation_epoch_end(self):
+        self.log("val_bleu_epoch", self.bleu_val, prog_bar=True)
+        self.log("val_loss_epoch", self.loss_val, prog_bar=True)
 
     def test_step(self, batch, batch_idx):
         input_ids = batch["input_ids"]
@@ -159,26 +140,15 @@ class NLPTranslationModelWrapper(WrapperBase):
         _, pred_ids = torch.max(logits, dim=1)
 
         labels = labels[0] if len(labels) == 1 else labels.squeeze()
-        bleu = self.bleu_test(*self.get_pred_ids_and_labels(pred_ids, labels))
 
-        self.log(
-            "test_loss",
-            loss,
-            on_step=False,
-            on_epoch=True,
-            prog_bar=True,
-            sync_dist=True,
-        )
-        self.log(
-            "test_bleu",
-            bleu,
-            on_step=False,
-            on_epoch=True,
-            pro_bar=True,
-            sync_dist=True,
-        )
+        self.bleu_test(*self.get_pred_ids_and_labels(pred_ids, labels))
+        self.loss_test(loss)
 
         return loss
+
+    def on_test_epoch_end(self):
+        self.log("test_bleu_epoch", self.bleu_test, prog_bar=True)
+        self.log("test_loss_epoch", self.loss_test, prog_bar=True)
 
     def predict_step(self, batch, batch_idx: int, dataloader_idx: int = 0):
         input_ids = batch["input_ids"]

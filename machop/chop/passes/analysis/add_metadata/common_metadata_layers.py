@@ -699,6 +699,18 @@ def _get_size_by_module_simulation(meta):
             ), "We have a real tuple output... need to discuss how to deal with it"
         return [[list(result[0].size())]]
 
+    size = self_obj.meta["mase"].parameters["common"]["results"]["data_out_0"]["size"]
+    dummy_data = torch.full(size, 1.0)
+    size_prods = size[0]
+    for i in range(len(size) - 2):
+        size_prods *= size[i + 2]
+    if "batch_norm" in meta.parameters["common"]["mase_op"] and size_prods == 1:
+        return size
+        # There is a bug in mase, where batch norms transforms fail because of the fact that
+        # size is determined by using a dummy input. When batch size is effectively 1 such as
+        # in the case of a dummy input, and the size of the feature layer is 1x1 then BatchNorm fails.
+        # This hack bypasses this because batchnorm does not change the shape of its input.
+    result = meta.module(dummy_data, *args, **kwargs)
     size = list(result.size())
     return size
 

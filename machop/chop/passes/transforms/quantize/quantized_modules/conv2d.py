@@ -2,7 +2,7 @@ from functools import partial
 from math import ceil, log2
 from typing import Union, Optional
 
-from .utils import get_stats
+from .utils import get_stats, quantiser_passthrough
 
 import torch
 from chop.passes.transforms.quantize.quantizers import (
@@ -44,7 +44,7 @@ class _Conv2dBase(torch.nn.Conv2d):
         padding: _size_2_t | str = 0,
         dilation: _size_2_t = 1,
         groups: int = 1,
-        bias: bool = True,
+        bias: bool = False,
         padding_mode: str = "zeros",
         device=None,
         dtype=None,
@@ -758,7 +758,7 @@ class Conv2dBinary(_Conv2dBase):
             padding=padding,
             dilation=dilation,
             groups=groups,
-            bias=bias,
+            bias=False,
             padding_mode=padding_mode,
             device=device,
             dtype=dtype,
@@ -868,12 +868,8 @@ class Conv2dBinaryScaling(_Conv2dBase):
         self.w_quantizer = partial(
             binary_quantizer, stochastic=w_stochastic, bipolar=w_bipolar
         )
-        self.x_quantizer = partial(
-            binary_quantizer, stochastic=x_stochastic, bipolar=x_bipolar
-        )
-        self.b_quantizer = partial(
-            binary_quantizer, stochastic=b_stochastic, bipolar=b_bipolar
-        )
+        self.b_quantizer = quantiser_passthrough
+        self.x_quantizer = quantiser_passthrough
 
     def forward(self, x: Tensor) -> Tensor:
         if self.bypass:
@@ -931,25 +927,11 @@ class Conv2dTernary(_Conv2dBase):
         self.bypass = config.get("bypass", False)
         if self.bypass:
             return
-        x_scaling_factor = config["data_in_scaling_factor"]
+
         w_scaling_factor = config["weight_scaling_factor"]
-        b_scaling_factor = config["bias_scaling_factor"]
-        x_mean = get_stats(config, "data_in_mean")
-        x_median = get_stats(config, "data_in_median")
-        x_max = get_stats(config, "data_in_max")
         w_mean = get_stats(config, "weight_mean")
         w_median = get_stats(config, "weight_median")
         w_max = get_stats(config, "weight_max")
-        b_mean = get_stats(config, "bias_mean")
-        b_median = get_stats(config, "bias_median")
-        b_max = get_stats(config, "bias_max")
-        self.x_quantizer = partial(
-            ternary_quantizer,
-            scaling_factor=x_scaling_factor,
-            maximum=x_max,
-            median=x_median,
-            mean=x_mean,
-        )
         self.w_quantizer = partial(
             ternary_quantizer,
             scaling_factor=w_scaling_factor,
@@ -957,13 +939,15 @@ class Conv2dTernary(_Conv2dBase):
             median=w_median,
             mean=w_mean,
         )
-        self.b_quantizer = partial(
-            ternary_quantizer,
-            scaling_factor=b_scaling_factor,
-            maximum=b_max,
-            median=b_median,
-            mean=b_mean,
-        )
+        self.x_quantizer = quantiser_passthrough
+        self.b_quantizer = quantiser_passthrough
+        # self.b_quantizer = partial(
+        #     ternary_quantizer,
+        #     scaling_factor=b_scaling_factor,
+        #     maximum=b_max,
+        #     median=b_median,
+        #     mean=b_mean,
+        # )
 
 
 class Conv2dLUT(torch.nn.Module):

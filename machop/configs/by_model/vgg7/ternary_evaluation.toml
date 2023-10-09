@@ -1,0 +1,114 @@
+model = "vgg7"
+dataset = "cifar10"
+max_epochs = 80
+learning_rate = 1e-1
+training_optimizer = "sgd"
+# accelerator = "cpu"
+
+# [passes.profile_statistics]
+# by = "type"
+# target_weight_nodes = ["linear", "conv2d", "maxpool2d"]
+# target_activation_nodes = ["relu", "linear", "conv2d", "maxpool2d"]
+# num_samples = 32
+
+# [passes.profile_statistics.weight_statistics.abs_mean]
+# dims = [1, 2, 3]
+
+# [passes.profile_statistics.weight_statistics.range_min_max]
+# dims = "all"
+# abs = false
+
+# [passes.profile_statistics.weight_statistics.range_quantile]
+# dims = "all"
+# abs = false
+# quantile = 0.5
+
+# [passse.profile_statistics.activation_statistics.abs_mean]
+# dims = [1, 2, 3]
+
+# [passes.profile_statistics.activation_statistics.range_min_max]
+# dims = "all"
+# abs = false
+
+# [passes.profile_statistics.activation_statistics.range_quantile]
+# dims = "all"
+# abs = false
+# quantile = 0.5
+
+# [passes.report_node_meta_param]
+# which = ["software"]
+
+[passes.quantize]
+# by = "name"
+by = "type"
+report = true
+
+# [passes.quantize.feature_layers_0.config]
+# name = "ternary"
+# data_in_scaling_factor = true
+# data_in_width = 2
+# data_in_mean = "NA"
+# data_in_median = "NA"
+# data_in_max = "NA"
+# weight_scaling_factor = true
+# weight_width = 2
+# weight_mean = "NA"
+# weight_median = "NA"
+# weight_max = "NA"
+# bias_scaling_factor = true
+# bias_width = 2
+# bias_mean = "NA"
+# bias_median = "NA"
+# bias_max = "NA"
+
+# [passes.quantize.default.config]
+# name = "NA"
+
+[passes.quantize.default.config]
+name = "ternary"
+data_in_scaling_factor = false
+data_in_width = 32
+data_in_mean = "NA"
+data_in_median = "NA"
+data_in_max = "NA"
+weight_scaling_factor = true
+weight_width = 2
+weight_mean = "NA"
+weight_median = "NA"
+weight_max = "NA"
+bias_scaling_factor = false
+bias_width = 32
+bias_mean = "NA"
+bias_median = "NA"
+bias_max = "NA"
+
+[passes.quantize.linear.config]
+name = "ternary"
+bypass = true
+data_in_scaling_factor = false
+data_in_width = 32
+data_in_mean = "NA"
+data_in_median = "NA"
+data_in_max = "NA"
+weight_scaling_factor = false
+weight_width = 2
+weight_mean = "NA"
+weight_median = "NA"
+weight_max = "NA"
+bias_scaling_factor = false
+bias_width = 32
+bias_mean = "NA"
+bias_median = "NA"
+bias_max = "NA"
+
+# [passes.quantize.default.config]
+# name = "binary"
+# data_in_width = 1
+# data_in_stochastic = true
+# data_in_bipolar = true
+# weight_width = 1
+# weight_stochastic = true
+# weight_bipolar = true
+# bias_width = 1
+# bias_stochastic = true
+# bias_bipolar = true

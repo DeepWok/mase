@@ -9,7 +9,6 @@ class NLPLanguageModelingModelWrapper(WrapperBase):
     def __init__(
         self,
         model,
-        tokenizer,
         dataset_info,
         learning_rate=1e-4,
         weight_decay=0,
@@ -20,14 +19,10 @@ class NLPLanguageModelingModelWrapper(WrapperBase):
             model=model,
             dataset_info=dataset_info,
             learning_rate=learning_rate,
-            weight_decay=0,
+            weight_decay=weight_decay,
             epochs=epochs,
             optimizer=optimizer,
         )
-        self.model = model
-
-        self.loss_mean_val = MeanMetric()
-        self.loss_mean_test = MeanMetric()
 
     def forward(self, input_ids, attention_mask, labels):
         """
@@ -44,20 +39,17 @@ class NLPLanguageModelingModelWrapper(WrapperBase):
         labels = batch["labels"]
         outputs = self.forward(input_ids, attention_mask, labels)
         loss = outputs["loss"]
-        logits = outputs["logits"]
 
         perplexity = torch.exp(loss)
 
-        self.log("train_loss", loss, on_step=True, on_epoch=False, prog_bar=True)
+        self.log("train_loss_step", loss, prog_bar=True)
         self.log(
-            "train_perplexity",
+            "train_perplexity_step",
             perplexity,
-            on_step=True,
-            on_epoch=False,
             prog_bar=True,
         )
 
-        return {"loss": loss, "predictions": logits, "perplexity": perplexity}
+        return loss
 
     def validation_step(self, batch, batch_idx):
         input_ids = batch["input_ids"]
@@ -66,35 +58,19 @@ class NLPLanguageModelingModelWrapper(WrapperBase):
         outputs = self.forward(input_ids, attention_mask, labels)
         loss = outputs["loss"]
 
-        # perplexity = torch.exp(loss)
-        self.loss_mean_val.update(loss)
+        self.loss_val.update(loss)
 
-        self.log(
-            "val_loss",
-            loss,
-            on_step=False,
-            on_epoch=True,
-            sync_dist=True,
-            prog_bar=True,
-        )
         return loss
 
     def on_validation_epoch_end(self):
-        mean_loss = self.loss_mean_val.compute()
-        mean_perplexity = torch.exp(mean_loss)
+        loss_epoch = self.loss_val.compute()
+        perplexity_epoch = torch.exp(loss_epoch)
+        self.log("val_loss_epoch", loss_epoch, prog_bar=True)
+        self.log("val_perplexity_epoch", perplexity_epoch, prog_bar=True)
 
-        self.log(
-            "val_perplexity",
-            mean_perplexity,
-            on_step=False,
-            on_epoch=True,
-            prog_bar=True,
-            sync_dist=True,
-        )
+        self.loss_val.reset()
 
-        self.loss_mean_val.reset()
-
-        return {"val_mean_loss": mean_loss, "val_mean_perplexity": mean_perplexity}
+        return loss_epoch
 
     def test_step(self, batch, batch_idx):
         input_ids = batch["input_ids"]
@@ -102,31 +78,17 @@ class NLPLanguageModelingModelWrapper(WrapperBase):
         labels = batch["labels"]
         outputs = self.forward(input_ids, attention_mask, labels)
         loss = outputs["loss"]
-        self.loss_mean_test.update(loss)
+        self.loss_test.update(loss)
 
-        self.log(
-            "test_loss",
-            loss,
-            on_step=False,
-            on_epoch=True,
-            prog_bar=True,
-            sync_dist=True,
-        )
         return loss
 
     def on_test_epoch_end(self):
-        mean_loss = self.loss_mean_test.compute()
-        mean_perplexity = torch.exp(mean_loss)
+        loss_epoch = self.loss_test.compute()
+        perplexity_epoch = torch.exp(loss_epoch)
 
-        self.log(
-            "test_perplexity",
-            mean_perplexity,
-            on_step=False,
-            on_epoch=True,
-            prog_bar=True,
-            sync_dist=True,
-        )
-        self.loss_mean_test.reset()
+        self.log("test_loss_epoch", loss_epoch, prog_bar=True)
+        self.log("test_perplexity_epoch", perplexity_epoch, prog_bar=True)
+        self.loss_test.reset()
 
     def predict_step(self, batch, batch_idx: int, dataloader_idx: int = 0):
         input_ids = batch["input_ids"]

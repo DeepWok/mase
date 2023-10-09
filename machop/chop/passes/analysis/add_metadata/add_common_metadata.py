@@ -36,7 +36,6 @@ def graph_iterator_for_mase_ops(graph):
         if node.op == "call_module":
             module_name = node.target
             module = graph.modules[module_name]
-            print(module, isinstance(module, nn.BatchNorm1d))
             mase_type = "module_related_func"
             if isinstance(module, nn.AdaptiveAvgPool1d):
                 mase_op = "adaptive_avg_pool1d"
@@ -147,7 +146,7 @@ def graph_iterator_for_mase_ops(graph):
                 ] = "constant"  # TODO: ??? what to assign here
             else:
                 node.meta["mase"].parameters["common"]["mase_type"] = "get_attr"
-                raise NotImplementedError(f"Unknown node type: {node.target}")
+                # raise NotImplementedError(f"Unknown node type: {node.target}")
 
         elif node.op == "output":
             node.meta["mase"].parameters["common"]["mase_type"] = "output"

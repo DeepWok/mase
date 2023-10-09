@@ -32,7 +32,10 @@ def create_new_module(
     quant_name = config.get("name")
 
     if quant_name == "ternary":
-        config.update({"node_meta": node_meta["mase"]})
+        config.update(
+            {"node_meta_stat": node_meta["mase"].parameters["software"]["args"]}
+        )
+
     if mase_op == "linear":
         new_module_cls = quantized_module_map[f"linear_{quant_name}"]
         use_bias = original_module.bias is not None

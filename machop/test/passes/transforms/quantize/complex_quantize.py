@@ -123,11 +123,18 @@ def main():
 
     for config_file in config_files:
         # load toml config file
-        with open(os.path.join(path, config_file), "r") as f:
-            quan_args = toml.load(f)["passes"]["quantize"]
-        mg = quantize_transform_pass(mg, quan_args)
-        summarize_quantization_analysis_pass(ori_mg, mg, save_dir="quantize_summary")
-        print(f"Quantize with {config_file} config file successfully!")
+        try:
+            with open(os.path.join(path, config_file), "r") as f:
+                quan_args = toml.load(f)["passes"]["quantize"]
+            mg = quantize_transform_pass(mg, quan_args)
+            summarize_quantization_analysis_pass(
+                ori_mg, mg, save_dir="quantize_summary"
+            )
+        except Exception:
+            print(f"Quantisation with {config_file} config file failed!")
+            raise Exception
+        else:
+            print(f"Quantisation with {config_file} config file successful")
 
 
 # --------------------------------------------------

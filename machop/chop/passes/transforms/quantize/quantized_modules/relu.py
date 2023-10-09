@@ -4,7 +4,7 @@ import torch
 from torch import Tensor
 from torch.nn import functional as F
 
-from .utils import get_stats
+from .utils import get_stats, quantiser_passthrough
 
 from ..quantizers import (
     block_fp_quantizer,
@@ -267,9 +267,10 @@ class ReLUBinary(_ReLUBase):
         # establish quantizers
         x_stochastic = config["data_in_stochastic"]
         x_bipolar = config["data_in_bipolar"]
-        self.x_quantizer = partial(
-            binary_quantizer, stochastic=x_stochastic, bipolar=x_bipolar
-        )
+        self.x_quantizer = quantiser_passthrough
+        # self.x_quantizer = partial(
+        #     binary_quantizer, stochastic=x_stochastic, bipolar=x_bipolar
+        # )
         self.config = config
         # self.x_width = x_width
         # self.x_frac_width = x_frac_width
@@ -290,11 +291,12 @@ class ReLUTernary(_ReLUBase):
         x_mean = get_stats(config, "data_in_mean")
         x_median = get_stats(config, "data_in_median")
         x_max = get_stats(config, "data_in_max")
-        self.x_quantizer = partial(
-            ternary_quantizer,
-            scaling_factor=x_scaling_factor,
-            median=x_median,
-            max=x_max,
-            mean=x_mean,
-        )
+        self.x_quantizer = quantiser_passthrough
+        # self.x_quantizer = partial(
+        #     ternary_quantizer,
+        #     scaling_factor=x_scaling_factor,
+        #     median=x_median,
+        #     maximum=x_max,
+        #     mean=x_mean,
+        # )
         self.config = config

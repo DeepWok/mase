@@ -104,10 +104,11 @@ LOG_LEVELS = ["debug", "info", "warning", "error", "critical"]
 ISSUES_URL = "https://github.com/JianyiCheng/mase-tools/issues"
 STRATEGIES = [
     "ddp",
-    "fsdp",
-    "fsdp_native",
-    "fsdp_custom",
-    "deepspeed_stage_3_offload",
+    "ddp_find_unused_parameters_true",
+    # "fsdp",
+    # "fsdp_native",
+    # "fsdp_custom",
+    # "deepspeed_stage_3_offload",
 ]
 ACCELERATORS = ["auto", "cpu", "gpu"]
 TRAINER_PRECISION = ["16", "32", "64", "bf16"]
