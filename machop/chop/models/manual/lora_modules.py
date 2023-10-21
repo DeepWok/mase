@@ -27,7 +27,7 @@ class LoraLayer:
         self.lora_embedding_B = nn.ParameterDict({})
         # Mark the weight as unmerged
         self.merged = False
-        self.disable_adapters = False
+        self.disable_adapter = False
         self.in_features = in_features
         self.out_features = out_features
         self.kwargs = kwargs
@@ -45,96 +45,22 @@ class LoraLayer:
 
         self.lora_dropout.update(nn.ModuleDict({adapter_name: lora_dropout_layer}))
         # Actual trainable parameters
-        if r > 0:
-            self.lora_A.update(
-                nn.ModuleDict(
-                    {adapter_name: nn.Linear(self.in_features, r, bias=False)}
+        if self.disable_adapter == False:
+            if r > 0:
+                self.lora_A.update(
+                    nn.ModuleDict(
+                        {adapter_name: nn.Linear(self.in_features, r, bias=False)}
+                    )
                 )
-            )
-            self.lora_B.update(
-                nn.ModuleDict(
-                    {adapter_name: nn.Linear(r, self.out_features, bias=False)}
+                self.lora_B.update(
+                    nn.ModuleDict(
+                        {adapter_name: nn.Linear(r, self.out_features, bias=False)}
+                    )
                 )
-            )
-            self.scaling[adapter_name] = lora_alpha / r
-        if init_lora_weights:
-            self.reset_lora_parameters(adapter_name)
-        self.to(self.weight.device)
-
-    def update_layer_conv2d(
-        self, adapter_name, r, lora_alpha, lora_dropout, init_lora_weights
-    ):
-        self.r[adapter_name] = r
-        self.lora_alpha[adapter_name] = lora_alpha
-        if lora_dropout > 0.0:
-            lora_dropout_layer = nn.Dropout(p=lora_dropout)
+                self.scaling[adapter_name] = lora_alpha / r
         else:
-            lora_dropout_layer = nn.Identity()
+            pass
 
-        self.lora_dropout.update(nn.ModuleDict({adapter_name: lora_dropout_layer}))
-        # Actual trainable parameters
-        if r > 0:
-            kernel_size = self.kwargs["kernel_size"]
-            stride = self.kwargs["stride"]
-            padding = self.kwargs["padding"]
-            self.lora_A.update(
-                nn.ModuleDict(
-                    {
-                        adapter_name: nn.Conv2d(
-                            self.in_features,
-                            r,
-                            kernel_size,
-                            stride,
-                            padding,
-                            bias=False,
-                        )
-                    }
-                )
-            )
-            self.lora_B.update(
-                nn.ModuleDict(
-                    {
-                        adapter_name: nn.Conv2d(
-                            r, self.out_features, (1, 1), (1, 1), bias=False
-                        )
-                    }
-                )
-            )
-            self.scaling[adapter_name] = lora_alpha / r
-        if init_lora_weights:
-            self.reset_lora_parameters(adapter_name)
-        self.to(self.weight.device)
-
-    def update_layer_embedding(
-        self, adapter_name, r, lora_alpha, lora_dropout, init_lora_weights
-    ):
-        self.r[adapter_name] = r
-        self.lora_alpha[adapter_name] = lora_alpha
-        if lora_dropout > 0.0:
-            lora_dropout_layer = nn.Dropout(p=lora_dropout)
-        else:
-            lora_dropout_layer = nn.Identity()
-
-        self.lora_dropout.update(nn.ModuleDict({adapter_name: lora_dropout_layer}))
-        # Actual trainable parameters
-        if r > 0:
-            weight_A = torch.randn(
-                (r, self.in_features),
-                dtype=self.weight.dtype,
-                device=self.weight.device,
-            )
-            weight_B = torch.randn(
-                (self.out_features, r),
-                dtype=self.weight.dtype,
-                device=self.weight.device,
-            )
-            self.lora_embedding_A.update(
-                nn.ParameterDict({adapter_name: nn.Parameter(weight_A)})
-            )
-            self.lora_embedding_B.update(
-                nn.ParameterDict({adapter_name: nn.Parameter(weight_B)})
-            )
-            self.scaling[adapter_name] = lora_alpha / r
         if init_lora_weights:
             self.reset_lora_parameters(adapter_name)
         self.to(self.weight.device)
@@ -159,27 +85,23 @@ class LinearLora(nn.Linear, LoraLayer):
         config: dict = None,
         **kwargs,
     ):
-        init_lora_weights = kwargs.pop("init_lora_weights", True)
         self.config = config
+        init_lora_weights = self.config.get("init_lora_weights", True)
 
-        r, lora_alpha, lora_dropout, adapter_name = (
+        r, lora_alpha, lora_dropout, adapter_name, disable_adapter = (
             config["r"],
             config["lora_alpha"],
             config["lora_dropout"],
             config["adapter_name"],
+            config["disable_adapter"],
         )
-        lora_dropout = float(
-            lora_dropout
-        )  # original huggingface implementation requires float
-        # self.r = r
-        # self.lora_alpha = lora_alpha
-        # self.lora_dropout = lora_dropout
+        lora_dropout = float(lora_dropout)
 
         nn.Linear.__init__(self, in_features, out_features, **kwargs)
         LoraLayer.__init__(self, in_features=in_features, out_features=out_features)
         # Freezing the pre-trained weight matrix
         self.weight.requires_grad = False
-
+        self.disable_adapter = disable_adapter
         self.fan_in_fan_out = config.get("fan_in_fan_out", False)
         self.is_target_conv_1d_layer = config.get("is_target_conv_1d_layer", False)
 
@@ -220,37 +142,34 @@ class LinearLora(nn.Linear, LoraLayer):
             * self.scaling[adapter]
         )
 
+    def _linear(self, input: torch.Tensor) -> torch.Tensor:
+        return F.linear(
+            input, transpose(self.weight, self.fan_in_fan_out), bias=self.bias
+        )
+
     def forward(self, x: torch.Tensor):
         previous_dtype = x.dtype
+
         if self.active_adapter not in self.lora_A.keys():
-            return F.linear(
-                x, transpose(self.weight, self.fan_in_fan_out), bias=self.bias
-            )
-        if self.disable_adapters:
+            return self._linear(x)
+
+        if self.disable_adapter:
             if self.r[self.active_adapter] > 0 and self.merged:
                 self.unmerge()
-            result = F.linear(
-                x, transpose(self.weight, self.fan_in_fan_out), bias=self.bias
-            )
-        elif self.r[self.active_adapter] > 0 and not self.merged:
-            result = F.linear(
-                x, transpose(self.weight, self.fan_in_fan_out), bias=self.bias
-            )
+            result = self._linear(x)
 
-            x = x.to(self.lora_A[self.active_adapter].weight.dtype)
+        elif self.r[self.active_adapter] == 0 or self.merged:
+            result = self._linear(x)
 
-            result += (
-                self.lora_B[self.active_adapter](
-                    self.lora_A[self.active_adapter](
-                        self.lora_dropout[self.active_adapter](x)
-                    )
-                )
-                * self.scaling[self.active_adapter]
-            )
         else:
-            result = F.linear(
-                x, transpose(self.weight, self.fan_in_fan_out), bias=self.bias
-            )
+            lora_A = self.lora_A[self.active_adapter]
+            lora_B = self.lora_B[self.active_adapter]
+            dropout = self.lora_dropout[self.active_adapter]
+            scaling = self.scaling[self.active_adapter]
+
+            result = self._linear(x)
+            x = x.to(lora_A.weight.dtype)
+            result += lora_B(lora_A(dropout(x))) * scaling
 
         result = result.to(previous_dtype)
 

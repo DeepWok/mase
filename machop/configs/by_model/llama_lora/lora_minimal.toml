@@ -1,7 +1,9 @@
 [default]
-bypass = false
 r = 8
 lora_alpha = 1
-lora_dropout = 0 
-fan_in_fan_out = false
+lora_dropout = 0.0
+fan_in_fan_out = false # Set this to True if the layer to replace stores weight like (fan_in, fan_out)
 is_target_conv_1d_layer = false
+init_lora_weghts = true
+adapter_name = "eng_alpaca"
+disable_adapter = false

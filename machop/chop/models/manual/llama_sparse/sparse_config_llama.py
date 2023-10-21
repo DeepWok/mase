@@ -17,6 +17,7 @@ def parse_node_config(config: dict, layer_type: str):
                 "sparse_dropout": config["sparse_dropout"],
                 "idx_method": config["idx_method"],
                 "adapter_name": config["adapter_name"],
+                "disable_adapter": config["disable_adapter"],
             }
         case _:
             raise ValueError(

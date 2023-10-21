@@ -5,29 +5,34 @@ lora_alpha = 1
 lora_dropout = 0.0
 fan_in_fan_out = false # Set this to True if the layer to replace stores weight like (fan_in, fan_out)
 is_target_conv_1d_layer = false
-init_lora_weghts = false
+init_lora_weghts = true
 adapter_name = "alpaca"
+disable_adapter = false
 
 [model_layer.self_attn.q_proj]
 r = 8
 lora_alpha = 1
 lora_dropout = 0.0
 adapter_name = "alpaca"
+disable_adapter = false
 
 [model_layer.self_attn.k_proj]
 r = 8
 lora_alpha = 1
 lora_dropout = 0.0
 adapter_name = "alpaca"
+disable_adapter = false
 
 [model_layer.self_attn.v_proj]
 r = 8
 lora_alpha = 1
 lora_dropout = 0.0
 adapter_name = "alpaca"
+disable_adapter = false
 
 [model_layer.self_attn.o_proj]
 r = 8
 lora_alpha = 1
 lora_dropout = 0.0
 adapter_name = "alpaca"
+disable_adapter = false
