@@ -5,11 +5,19 @@ from .language_modeling import (
     LanguageModelingDatasetWikitext103,
     LanguageModelingDatasetScienceQA,
 )
-from .sentiment_analysis import SentimentalAnalysisDatasetSST2
+from .sentiment_analysis import (
+    SentimentalAnalysisDatasetSST2,
+    SentimentalAnalysisDatasetCoLa,
+)
+
 from .text_entailment import (
     TextEntailmentDatasetBoolQ,
     TextEntailmentDatasetMNLI,
     TextEntailmentDatasetQNLI,
+    TextEntailmentDatasetRTE,
+    TextEntailmentDatasetQQP,
+    TextEntailmentDatasetMRPC,
+    TextEntailmentDatasetSTSB,
 )
 from .translation import (
     TranslationDatasetIWSLT2017_DE_EN,
@@ -42,12 +50,22 @@ def get_nlp_dataset(
     match name:
         case "sst2":
             dataset_cls = SentimentalAnalysisDatasetSST2
+        case "cola":
+            dataset_cls = SentimentalAnalysisDatasetCoLa
         case "mnli":
             if split == "validation":
                 split = "validation_matched"
             dataset_cls = TextEntailmentDatasetMNLI
         case "qnli":
             dataset_cls = TextEntailmentDatasetQNLI
+        case "rte":
+            dataset_cls = TextEntailmentDatasetRTE
+        case "stsb":
+            dataset_cls = TextEntailmentDatasetSTSB
+        case "qqp":
+            dataset_cls = TextEntailmentDatasetQQP
+        case "mrpc":
+            dataset_cls = TextEntailmentDatasetMRPC
         case "boolq":
             dataset_cls = TextEntailmentDatasetBoolQ
         case "wikitext2":
@@ -100,8 +118,13 @@ def get_nlp_dataset(
 NLP_DATASET_MAPPING = {
     # CLS dataset
     "sst2": SentimentalAnalysisDatasetSST2,
+    "cola": SentimentalAnalysisDatasetCoLa,
     "mnli": TextEntailmentDatasetMNLI,
     "qnli": TextEntailmentDatasetQNLI,
+    "rte": TextEntailmentDatasetRTE,
+    "qqp": TextEntailmentDatasetQQP,
+    "mrpc": TextEntailmentDatasetMRPC,
+    "stsb": TextEntailmentDatasetSTSB,
     "boolq": TextEntailmentDatasetBoolQ,
     # Translation dataset
     "wmt19_de_en": TranslationDatasetWMT19_DE_EN,

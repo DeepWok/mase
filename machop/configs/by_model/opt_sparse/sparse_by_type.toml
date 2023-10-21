@@ -4,9 +4,11 @@ k = 111
 sparse_alpha = 1
 sparse_dropout = 0.0
 fan_in_fan_out = false # Set this to True if the layer to replace stores weight like (fan_in, fan_out)
-init_sparse_weghts = false
+init_sparse_weghts = true
 idx_method = "magnitude"
 adapter_name = "eng_alpaca"
+disable_adapter = false
+refresh = 5
 
 [model_layer.self_attn.q_proj]
 k = 111
@@ -14,6 +16,8 @@ sparse_alpha = 1
 sparse_dropout = 0.0
 idx_method = "magnitude"
 adapter_name = "eng_alpaca"
+disable_adapter = false
+refresh = 5
 
 [model_layer.self_attn.k_proj]
 k = 111
@@ -21,6 +25,8 @@ sparse_alpha = 1
 sparse_dropout = 0.0
 idx_method = "magnitude"
 adapter_name = "eng_alpaca"
+disable_adapter = false
+refresh = 5
 
 [model_layer.self_attn.v_proj]
 k = 111
@@ -28,6 +34,8 @@ sparse_alpha = 1
 sparse_dropout = 0.0
 idx_method = "magnitude"
 adapter_name = "eng_alpaca"
+disable_adapter = false
+refresh = 5
 
 [model_layer.self_attn.o_proj]
 k = 111
@@ -35,3 +43,5 @@ sparse_alpha = 1
 sparse_dropout = 0.0
 idx_method = "magnitude"
 adapter_name = "eng_alpaca"
+disable_adapter = false
+refresh = 5

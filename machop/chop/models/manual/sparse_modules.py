@@ -17,9 +17,15 @@ class SparseLayer:
         self.scaling = {}
         self.sparse_dropout = nn.ModuleDict({})
         self.sparse_train = nn.ModuleDict({})
+        self.gradient = torch.ones_like(self.weight).flatten().to(self.weight.device)
         self.index_map = {
             "magnitude": torch.abs,
+            "gradient": lambda input: torch.abs(input) * self.gradient,
         }
+
+        self.disable_adapter = False
+        self.disable_sparse = False
+
         self.kwargs = kwargs
         init_sparse_weights = bool(field(default=True))
 
@@ -43,6 +49,7 @@ class SparseLayer:
         self.sparse_dropout.update(nn.ModuleDict({adapter_name: sparse_dropout_layer}))
 
         # Actual trainable parameters
+
         if k > 0:
             self.sparse_train.update(
                 nn.ModuleDict(
@@ -54,16 +61,17 @@ class SparseLayer:
                 )
             )
             self.scaling[adapter_name] = sparse_alpha
+        else:
+            pass
 
         if init_sparse_weights:
             self.reset_sparse_parameters(adapter_name)
+
         self.to(self.weight.device)
 
     def reset_sparse_parameters(self, adapter_name):
         if adapter_name in self.sparse_train.keys():
-            nn.init.kaiming_uniform_(
-                self.sparse_train[adapter_name].weight, a=math.sqrt(5)
-            )
+            nn.init.eye_(self.sparse_train[adapter_name].weight)
 
 
 class LinearSparse(nn.Linear, SparseLayer):
@@ -74,28 +82,39 @@ class LinearSparse(nn.Linear, SparseLayer):
         config: dict = None,
         **kwargs,
     ):
-        init_sparse_weights = kwargs.pop("init_sparse_weights", False)
         self.config = config
+        init_sparse_weights = self.config.get("init_sparse_weights", True)
 
-        (k, sparse_alpha, sparse_dropout, idx_method, adapter_name) = (
+        (
+            k,
+            sparse_alpha,
+            sparse_dropout,
+            idx_method,
+            adapter_name,
+            disable_adapter,
+        ) = (
             config["k"],
             config["sparse_alpha"],
             config["sparse_dropout"],
             config["idx_method"],
             config["adapter_name"],
+            config["disable_adapter"],
         )
         sparse_dropout = float(sparse_dropout)
-
         self.idx_method = idx_method
+
+        # determining indexing
+        self.step = 0
+        self.idx = 0
+        self.selected_weights = 0
 
         nn.Linear.__init__(self, in_features, out_features, **kwargs)
         SparseLayer.__init__(self)
 
-        # Freezing the pre-trained weight matrix
+        self.disable_adapter = disable_adapter
         self.weight.requires_grad = False
-        self.zero_tensor = torch.zeros(size=self.weight.shape)
+        self.zero_tensor = torch.zeros(size=self.weight.shape).flatten()
         self.unflattened_size = tuple(self.weight.shape)
-
         self.fan_in_fan_out = config.get("fan_in_fan_out", False)
 
         if self.fan_in_fan_out:
@@ -110,57 +129,73 @@ class LinearSparse(nn.Linear, SparseLayer):
     def index_method(self, tensor, idx_key):
         # Retrieve the method based on the user input
         selected_method = self.index_map.get(idx_key, None)
+
         if selected_method is None:
             raise ValueError(f"Unknown method_key: {idx_key}")
 
         return selected_method(tensor)
 
+    def _linear(self, input: torch.Tensor) -> torch.Tensor:
+        return F.linear(
+            input, transpose(self.weight, self.fan_in_fan_out), bias=self.bias
+        )
+
+    def update_weight_selection(self, k):
+        w_flat = self.weight.flatten()
+        _, self.idx = torch.topk(
+            self.index_method(w_flat, self.idx_method),
+            k,
+            sorted=True,
+        )
+        self.selected_weights = torch.gather(w_flat, dim=0, index=self.idx)
+
+        return self.selected_weights, self.idx
+
     def forward(self, x: torch.Tensor):
         previous_dtype = x.dtype
 
         if self.active_adapter not in self.sparse_train.keys():
-            return F.linear(
-                x, transpose(self.weight, self.fan_in_fan_out), bias=self.bias
-            )
+            return self._linear(x)
+
+        if self.disable_adapter or self.disable_sparse:
+            return self._linear(x)
 
         elif self.k[self.active_adapter] > 0:
-            x = x.to(self.sparse_train[self.active_adapter].weight.dtype)
-
+            sparse = self.sparse_train[self.active_adapter]
+            dropout = self.sparse_dropout[self.active_adapter]
+            k = self.k[self.active_adapter]
+            scaling = self.scaling[self.active_adapter]
             # Top-k selection
-            w_flat = self.weight.flatten()
-            val, idx = torch.topk(
-                self.index_method(w_flat, self.idx_method),
-                self.k[self.active_adapter],
-                sorted=True,
-            )
-            selected_weights = torch.gather(w_flat, dim=0, index=idx)
+
+            if self.step == 0:
+                self.selected_weights, self.idx = self.update_weight_selection(k)
 
             # Apply sparse adapter
-            adapted_output = self.sparse_train[self.active_adapter](selected_weights)
-            scaled_output = adapted_output * self.scaling[self.active_adapter]
+            output = sparse(self.selected_weights)
+            scaled_output = output * scaling
 
             # Scatter adapted values into weight tensor
             adapted_weights = torch.scatter(
-                self.zero_tensor.flatten().to(x.device),
+                self.zero_tensor.to(x.device),
                 dim=0,
-                index=idx,
+                index=self.idx,
                 src=scaled_output,
             ).view(self.unflattened_size)
+
+            self.step += 1
             new_weight = torch.add(self.weight, adapted_weights)
+            x = x.to(sparse.weight.dtype)
 
             result = F.linear(
-                self.sparse_dropout[self.active_adapter](x),
+                dropout(x),
                 transpose(new_weight, self.fan_in_fan_out),
                 bias=self.bias,
             )
 
         else:
-            result = F.linear(
-                x, transpose(self.weight, self.fan_in_fan_out), bias=self.bias
-            )
+            result = self._linear(x)
 
         result = result.to(previous_dtype)
-
         return result
 
     def extract_sparse_params(self):

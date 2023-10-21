@@ -44,6 +44,7 @@ def main():
     load_name: str = None
     load_type: str = ""
     evaluate_before_training: bool = False
+    profile: bool = True
 
     model = LlamaQuantizedForCausalLM.from_pretrained(model_name)
     tokenizer = LlamaTokenizer.from_pretrained(model_name)
@@ -73,6 +74,7 @@ def main():
         load_name=load_name,
         load_type=load_type,
         evaluate_before_training=evaluate_before_training,
+        profile=profile,
     )
 
 

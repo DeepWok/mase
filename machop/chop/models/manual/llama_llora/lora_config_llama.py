@@ -16,6 +16,7 @@ def parse_node_config(config: dict, layer_type: str):
                 "lora_alpha": config["lora_alpha"],
                 "lora_dropout": config["lora_dropout"],
                 "adapter_name": config["adapter_name"],
+                "disable_adapter": config["disable_adapter"],
             }
         case _:
             raise ValueError(

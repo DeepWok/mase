@@ -5,3 +5,4 @@ lora_alpha = 1
 lora_dropout = 0 
 fan_in_fan_out = false
 is_target_conv_1d_layer = false
+disable_adapter = false

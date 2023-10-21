@@ -53,7 +53,8 @@ def main():
     save_path: str = "./ckpts/wiki/llama_lora"
     load_name: str = None
     load_type: str = ""
-    evaluate_before_training: bool = False
+    evaluate_before_training: bool = (False,)
+    profile: bool = True
 
     path = os.path.join(
         os.path.dirname(os.path.realpath(__file__)),
@@ -106,6 +107,7 @@ def main():
         load_name=load_name,
         load_type=load_type,
         evaluate_before_training=evaluate_before_training,
+        profile=profile,
     )
 
 

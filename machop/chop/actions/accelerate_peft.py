@@ -1,9 +1,12 @@
 import math
 import os
+import copy
 from functools import partial
+import types
 from pathlib import Path
 import numpy as np
 import torch
+import torch.nn as nn
 from accelerate import Accelerator, FullyShardedDataParallelPlugin
 from chop.tools.logger import getLogger
 from torch.distributed.fsdp import FullStateDictConfig
@@ -17,54 +20,25 @@ from torch.distributed.fsdp.wrap import transformer_auto_wrap_policy
 from tqdm.auto import tqdm
 from transformers import get_scheduler
 import sklearn
-from sklearn.metrics import accuracy_score
+from scipy.stats import spearmanr, pearsonr
+from sklearn.metrics import f1_score, matthews_corrcoef, accuracy_score
 import argparse
 import toml
 from deepspeed.profiling.flops_profiler import FlopsProfiler
+import sys
+import torch.nn.functional as F
+
+sys.path.append(
+    os.path.join(
+        os.path.dirname(os.path.realpath(__file__)), "..", "..", "..", "..", "machop"
+    )
+)
+from chop.models.manual.sparse_modules import LinearSparse
 
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
 
 logger = getLogger(__name__)
-
-
-def parse_arguments():
-    parser = argparse.ArgumentParser(description="Train the model.")
-    parser.add_argument(
-        "--lora-config-path", type=str, help="Path to a config TOML file"
-    )
-    config_path = parser.parse_args().lora_config_path
-    config_dict = toml.load(config_path)
-    return config_dict
-
-
-def checkpoint_model(accelerator: Accelerator, model: torch.nn.Module, save_dir):
-    # gather the checkpoint to rank 0's CPU memory to avoid GPU OOM
-    # this requires enough CPU memory
-    accelerator.wait_for_everyone()
-    unwrapped_model = accelerator.unwrap_model(model)
-    if accelerator.num_processes > 1:
-        full_state_dict_config = FullStateDictConfig(
-            offload_to_cpu=True, rank0_only=True
-        )
-        with FSDP.state_dict_type(
-            unwrapped_model, StateDictType.FULL_STATE_DICT, full_state_dict_config
-        ):
-            state = accelerator.get_state_dict(unwrapped_model)
-            # unwrapped_model is HuggingFace AutoPretrainedModel, so we can use save_pretrained() to save the checkpoint
-            unwrapped_model.save_pretrained(
-                save_dir,
-                is_main_process=accelerator.is_main_process,
-                save_function=accelerator.save,
-                state_dict=state,
-            )
-    else:
-        unwrapped_model.save_pretrained(
-            save_dir,
-            is_main_process=accelerator.is_main_process,
-            save_function=accelerator.save,
-            state_dict=accelerator.get_state_dict(model),
-        )
 
 
 def evaluate_lm_step(accelerator: Accelerator, model: torch.nn.Module, batch):
@@ -119,6 +93,45 @@ def evaluate(accelerator, model, task, eval_dataloader, num_eval_samples):
     return eval_results
 
 
+def parse_arguments():
+    parser = argparse.ArgumentParser(description="Train the model.")
+    parser.add_argument(
+        "--peft-config-path", type=str, help="Path to a config TOML file"
+    )
+    config_path = parser.parse_args().peft_config_path
+    config_dict = toml.load(config_path)
+    return config_dict
+
+
+def checkpoint_model(accelerator: Accelerator, model: torch.nn.Module, save_dir):
+    # gather the checkpoint to rank 0's CPU memory to avoid GPU OOM
+    # this requires enough CPU memory
+    accelerator.wait_for_everyone()
+    unwrapped_model = accelerator.unwrap_model(model)
+    if accelerator.num_processes > 1:
+        full_state_dict_config = FullStateDictConfig(
+            offload_to_cpu=True, rank0_only=True
+        )
+        with FSDP.state_dict_type(
+            unwrapped_model, StateDictType.FULL_STATE_DICT, full_state_dict_config
+        ):
+            state = accelerator.get_state_dict(unwrapped_model)
+            # unwrapped_model is HuggingFace AutoPretrainedModel, so we can use save_pretrained() to save the checkpoint
+            unwrapped_model.save_pretrained(
+                save_dir,
+                is_main_process=accelerator.is_main_process,
+                save_function=accelerator.save,
+                state_dict=state,
+            )
+    else:
+        unwrapped_model.save_pretrained(
+            save_dir,
+            is_main_process=accelerator.is_main_process,
+            save_function=accelerator.save,
+            state_dict=accelerator.get_state_dict(model),
+        )
+
+
 def train_step(accelerator: Accelerator, model: torch.nn.Module, batch, task):
     match task:
         case "lm" | "language_modeling":
@@ -170,6 +183,65 @@ def get_optimizer(accelerator, model, optimizer: str, learning_rate, weight_deca
     return optimizer
 
 
+def compute_gradient_mask(
+    accelerator: Accelerator,
+    model: torch.nn.Module,
+    train_dataloader,
+    task,
+    gradient_accumulation_steps,
+    batch_number,
+):
+    # Create a fresh copy of the network so that we're not worried about
+    # affecting the actual training-phase
+    model = copy.deepcopy(model)
+    linear_sparse_layers = [
+        layer for layer in model.modules() if isinstance(layer, LinearSparse)
+    ]
+
+    train_dataloader = accelerator.prepare(train_dataloader)
+    train_iterator = iter(train_dataloader)
+
+    # Monkey-patch the Linear forward
+    def temp_forward(self, input: torch.Tensor) -> torch.Tensor:
+        return F.linear(input, self.weight, self.bias)
+
+    batches = 0
+    for step in range(batch_number):
+        try:
+            batch = next(train_iterator)
+        except StopIteration:
+            train_iterator = iter(train_dataloader)
+            batch = next(train_iterator)
+
+        for layer in model.modules():
+            if isinstance(layer, LinearSparse):
+                layer.weight.requires_grad = True
+                layer.forward = types.MethodType(temp_forward, layer)
+
+        model.zero_grad()
+        loss = train_step(accelerator, model, batch, task)
+        loss = loss / gradient_accumulation_steps
+        accelerator.backward(loss)
+        batches += 1
+
+        grads_abs = [torch.zeros_like(layer.weight) for layer in linear_sparse_layers]
+        for layer_idx, layer in enumerate(linear_sparse_layers):
+            if isinstance(layer, LinearSparse):
+                grads_abs[layer_idx] += torch.abs(layer.weight.grad)
+
+    avg_grads_abs = [grad / batches for grad in grads_abs]
+
+    # Gather all scores in a single vector and normalise
+    all_scores = torch.cat([torch.flatten(x) for x in avg_grads_abs])
+    norm_factor = torch.sum(all_scores)
+
+    grads_abs_normalised = [
+        avg_grads_abs[i] / norm_factor for i in range(len(avg_grads_abs))
+    ]
+
+    return grads_abs_normalised
+
+
 def train(
     model,
     task,
@@ -186,6 +258,7 @@ def train(
     load_name: str = None,
     load_type: str = "",
     evaluate_before_training: bool = False,
+    profile: bool = False,
 ):
     fsdp_plugin = FullyShardedDataParallelPlugin(
         cpu_offload=CPUOffload(offload_params=False),
@@ -279,6 +352,24 @@ def train(
     progress_bar.set_description(f"Training steps")
 
     train_iterator = iter(train_dataloader)
+
+    # append gradients to LinearSparse Layers
+    if any(isinstance(layer, LinearSparse) for layer in model.modules()):
+        gradients = compute_gradient_mask(
+            accelerator,
+            model,
+            train_dataloader,
+            task,
+            gradient_accumulation_steps,
+            batch_number=64,
+        )
+        linear_sparse_layers = [
+            layer for layer in model.modules() if isinstance(layer, LinearSparse)
+        ]
+
+        for layer, gradient in zip(linear_sparse_layers, gradients):
+            layer.gradient = gradient.flatten()
+
     eval_results = {
         "eval_ppl": "NA",
         "eval_acc": "NA",
@@ -295,6 +386,7 @@ def train(
 
     performance_metrics = {"macs": "NA", "flops": "NA", "params": "NA"}
 
+    # begin training
     for step in range(max_steps):
         epoch = step // num_update_steps_per_epoch
         model = model.train()
@@ -306,30 +398,35 @@ def train(
             batch = next(train_iterator)
 
         # Starts deepseed FLOPs profiler
-
         if step == max_steps - 1:
             prof.start_profile()
 
         loss = train_step(accelerator, model, batch, task)
         loss = loss / gradient_accumulation_steps
 
-        if (
-            step == max_steps - 1
-        ):  # if using multi nodes, check global_rank == 0 as well
+        def get_profile(print=profile):
             prof.stop_profile()
             macs, flops, params = (
                 prof.get_total_macs(),
                 prof.get_total_flops(),
                 prof.get_total_params(),
             )
-            prof.print_model_profile(
-                profile_step=max_steps - 1
-            )  # prints in detail information regarding each of the models submodules
+            if print == True:
+                prof.print_model_profile(
+                    profile_step=max_steps - 1
+                )  # prints in detail information regarding each of the models submodules
+            else:
+                pass
+
             prof.end_profile()
-            print(flops)
+            return macs, flops, params
+
+        if step == max_steps - 1:
+            macs, flops, params = get_profile()
             performance_metrics = {"macs": macs, "flops": flops, "params": params}
 
         accelerator.backward(loss)
+
         if (step + 1) % gradient_accumulation_steps == 0 or step == max_steps - 1:
             optimizer.step()
             lr_scheduler.step()
@@ -337,7 +434,6 @@ def train(
 
         accelerator.log({"train_loss": loss.detach()}, step=step)
         accelerator.log(performance_metrics, step=step)
-
         # complete an epoch
 
         if (step + 1) % num_update_steps_per_epoch == 0 or step == max_steps - 1:
@@ -355,6 +451,7 @@ def train(
             checkpoint_model(accelerator, model, save_dir)
             if accelerator.is_local_main_process:
                 logger.info(f"Saving checkpoint to {save_dir}")
+
         progress_bar.set_postfix(
             {
                 "epoch": epoch + 1,
@@ -363,6 +460,7 @@ def train(
                 "eval_acc": eval_results["eval_acc"],
             }
         )
+
         progress_bar.update(1)
     accelerator.wait_for_everyone()
     accelerator.end_training()

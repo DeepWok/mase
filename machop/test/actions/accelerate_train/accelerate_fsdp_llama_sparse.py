@@ -19,6 +19,7 @@ from chop.models.manual.sparse_utils import (
 )
 from chop.models.manual.sparse_modules import (
     mark_only_sparse_as_trainable,
+    LinearSparse,
 )
 from chop.models.manual.llama_sparse.configuration_llama_sparse import LlamaSparseConfig
 from chop.models.manual.llama_sparse.modeling_llama_sparse import LlamaForCausalLM
@@ -46,14 +47,15 @@ def main():
     # max_epochs: int = 2
     # max_steps: int = -1
     # gradient_accumulation_steps: int = 4
-    learning_rate: float = 5e-4
+    learning_rate: float = 5e-5
     weight_decay: float = 0.0
     lr_scheduler_type: str = "linear"
     num_warmup_steps: int = 0
-    save_path: str = "./ckpts/wiki/llama_sparse"
+    save_path: str = "./ckpts/wiki/llama_sparse_testz"
     load_name: str = None
     load_type: str = ""
     evaluate_before_training: bool = False
+    profile: bool = True
 
     path = os.path.join(
         os.path.dirname(os.path.realpath(__file__)),
@@ -79,6 +81,7 @@ def main():
     )
     model = mark_only_sparse_as_trainable(model)
     print_trainable_parameters(model)
+
     tokenizer = LlamaTokenizer.from_pretrained(model_name)
     data_module = MaseDataModule(
         model_name=None,
@@ -105,6 +108,7 @@ def main():
         load_name=load_name,
         load_type=load_type,
         evaluate_before_training=evaluate_before_training,
+        profile=profile,
     )
 
 

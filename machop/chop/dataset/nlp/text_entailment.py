@@ -113,24 +113,6 @@ class TextEntailmentDatasetQNLI(TextEntailmentDatasetBase):
     sent2_col_name = "sentence"
     label_col_name = "label"
 
-    def __init__(
-        self,
-        split: str,
-        tokenizer,
-        max_token_len: int,
-        num_workers: int,
-        load_from_cache_file: bool = True,
-        auto_setup: bool = True,
-    ) -> None:
-        super().__init__(
-            split,
-            tokenizer,
-            max_token_len,
-            num_workers,
-            load_from_cache_file,
-            auto_setup,
-        )
-
     def _download_dataset(self) -> hf_datasets.DatasetDict:
         dataset_dict = hf_datasets.load_dataset("glue", "qnli")
         return dataset_dict
@@ -144,32 +126,9 @@ class TextEntailmentDatasetQNLI(TextEntailmentDatasetBase):
     num_classes=3,
 )
 class TextEntailmentDatasetMNLI(TextEntailmentDatasetBase):
-    info = {"num_classes": 3}
-
-    test_dataset_available = False
-    pred_dataset_available = True
-
     sent1_col_name = "premise"
     sent2_col_name = "hypothesis"
     label_col_name = "label"
-
-    def __init__(
-        self,
-        split: str,
-        tokenizer,
-        max_token_len: int,
-        num_workers: int,
-        load_from_cache_file: bool = True,
-        auto_setup: bool = True,
-    ) -> None:
-        super().__init__(
-            split,
-            tokenizer,
-            max_token_len,
-            num_workers,
-            load_from_cache_file,
-            auto_setup,
-        )
 
     def _download_dataset(self) -> hf_datasets.DatasetDict:
         dataset_dict = hf_datasets.load_dataset("glue", "mnli")
@@ -178,6 +137,74 @@ class TextEntailmentDatasetMNLI(TextEntailmentDatasetBase):
 
 @add_dataset_info(
     name="rte",
+    dataset_source="hf_datasets",
+    available_splits=("train", "validation", "pred"),
+    sequence_classification=True,
+    num_classes=2,
+)
+class TextEntailmentDatasetRTE(TextEntailmentDatasetBase):
+    sent1_col_name = "sentence1"
+    sent2_col_name = "sentence2"
+    label_col_name = "label"
+
+    def _download_dataset(self) -> hf_datasets.DatasetDict:
+        dataset_dict = hf_datasets.load_dataset("glue", "rte")
+        return dataset_dict
+
+
+@add_dataset_info(
+    name="qqp",
+    dataset_source="hf_datasets",
+    available_splits=("train", "validation", "pred"),
+    sequence_classification=True,
+    num_classes=2,
+)
+class TextEntailmentDatasetQQP(TextEntailmentDatasetBase):
+    sent1_col_name = "question1"
+    sent2_col_name = "question2"
+    label_col_name = "label"
+
+    def _download_dataset(self) -> hf_datasets.DatasetDict:
+        dataset_dict = hf_datasets.load_dataset("glue", "qqp")
+        return dataset_dict
+
+
+@add_dataset_info(
+    name="mrpc",
+    dataset_source="hf_datasets",
+    available_splits=("train", "validation", "pred"),
+    sequence_classification=True,
+    num_classes=2,
+)
+class TextEntailmentDatasetMRPC(TextEntailmentDatasetBase):
+    sent1_col_name = "sentence1"
+    sent2_col_name = "sentence2"
+    label_col_name = "label"
+
+    def _download_dataset(self) -> hf_datasets.DatasetDict:
+        dataset_dict = hf_datasets.load_dataset("glue", "mrpc")
+        return dataset_dict
+
+
+@add_dataset_info(
+    name="stsb",
+    dataset_source="hf_datasets",
+    available_splits=("train", "validation", "pred"),
+    sequence_classification=True,
+    num_classes=2,
+)
+class TextEntailmentDatasetSTSB(TextEntailmentDatasetBase):
+    sent1_col_name = "sentence1"
+    sent2_col_name = "sentence2"
+    label_col_name = "label"
+
+    def _download_dataset(self) -> hf_datasets.DatasetDict:
+        dataset_dict = hf_datasets.load_dataset("glue", "stsb")
+        return dataset_dict
+
+
+@add_dataset_info(
+    name="boolq",
     dataset_source="hf_datasets",
     available_splits=("train", "validation", "pred"),
     sequence_classification=True,

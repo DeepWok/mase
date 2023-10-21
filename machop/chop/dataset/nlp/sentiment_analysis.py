@@ -108,3 +108,23 @@ class SentimentalAnalysisDatasetSST2(SentimentAnalysisDatasetBase):
     def _download_dataset(self) -> hf_datasets.DatasetDict:
         dataset_dict = hf_datasets.load_dataset("glue", "sst2")
         return dataset_dict
+
+
+@add_dataset_info(
+    name="cola",
+    dataset_source="hf_datasets",
+    available_splits=("train", "validation", "pred"),
+    sequence_classification=True,
+    num_classes=2,
+)
+class SentimentalAnalysisDatasetCoLa(SentimentAnalysisDatasetBase):
+    """
+    Accepatablity task
+    """
+
+    sent_col_name = "sentence"
+    label_col_name = "label"
+
+    def _download_dataset(self) -> hf_datasets.DatasetDict:
+        dataset_dict = hf_datasets.load_dataset("glue", "cola")
+        return dataset_dict
