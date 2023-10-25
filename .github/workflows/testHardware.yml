@@ -2,9 +2,13 @@ name: Hardware Test
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [ "main", "extended-tests" ]
+    paths:
+      - 'components/**'
   pull_request:
-    branches: [ "main" ]
+    branches: [ "main", "extended-tests" ]
+    paths:
+      - 'components/**'
   workflow_dispatch:
     logLevel:
           description: 'Log level'
@@ -17,7 +21,6 @@ on:
             - debug
 
 jobs:
-
   hardware-regression-test:
     runs-on: ubuntu-latest
     steps:
