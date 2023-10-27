@@ -273,18 +273,29 @@ class BertEmbeddings(nn.Module):
 
 
 class BertQuantizedSelfAttention(nn.Module):
-    def __init__(self, config, position_embedding_type=None, quant_config: dict = None):
+    def __init__(
+        self,
+        config,
+        position_embedding_type=None,
+        quant_config: dict = None,
+        layer_id: int = None,
+    ):
         super().__init__()
-        if config.hidden_size % config.num_attention_heads != 0 and not hasattr(
+
+        self.num_attention_heads = (
+            config.num_attention_heads
+            if isinstance(config.num_attention_heads, int)
+            else config.num_attention_heads[layer_id]
+        )
+
+        if config.hidden_size % self.num_attention_heads != 0 and not hasattr(
             config, "embedding_size"
         ):
             raise ValueError(
                 f"The hidden size ({config.hidden_size}) is not a multiple of the number of attention "
                 f"heads ({config.num_attention_heads})"
             )
-
-        self.num_attention_heads = config.num_attention_heads
-        self.attention_head_size = int(config.hidden_size / config.num_attention_heads)
+        self.attention_head_size = int(config.hidden_size / self.num_attention_heads)
         self.all_head_size = self.num_attention_heads * self.attention_head_size
         self.query = get_quantized_cls("linear", quant_config["query"])(
             config.hidden_size, self.all_head_size, config=quant_config["query"]
@@ -476,12 +487,19 @@ class BertQuantizedSelfOutput(nn.Module):
 
 
 class BertQuantizedAttention(nn.Module):
-    def __init__(self, config, position_embedding_type=None, quant_config: dict = None):
+    def __init__(
+        self,
+        config,
+        position_embedding_type=None,
+        quant_config: dict = None,
+        layer_id: int = None,
+    ):
         super().__init__()
         self.self = BertQuantizedSelfAttention(
             config,
             position_embedding_type=position_embedding_type,
             quant_config=quant_config,
+            layer_id=layer_id,
         )
         self.output = BertQuantizedSelfOutput(
             config, quant_config=quant_config["output"]
@@ -588,7 +606,9 @@ class BertQuantizedLayer(nn.Module):
         self.attention = BertQuantizedAttention(
             config,
             quant_config=config.quant_config[f"model_layer_{layer_num}"]["attention"],
+            layer_id=layer_num,
         )
+        self.layer_id = layer_num
         self.is_decoder = config.is_decoder
         self.add_cross_attention = config.add_cross_attention
         if self.add_cross_attention:

@@ -30,11 +30,14 @@ bias_frac_width = [3, 4, 5, 6, 7, 8, 9]
 
 [search.strategy]
 name = "optuna"
-sw_runner = "basic_evaluation"
-hw_runner = "average_bitwidth"
 eval_mode = true
-data_loader = 'val_dataloader'
+
+[search.strategy.sw_runner.basic_evaluation]
+data_loader = "val_dataloader"
 num_samples = 512
+
+[search.strategy.hw_runner.average_bitwidth]
+compare_to = 32 # compare to FP32
 
 [search.strategy.setup]
 n_jobs = 1

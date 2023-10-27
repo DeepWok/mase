@@ -75,7 +75,7 @@ class MaseDatasetInfo:
             if isinstance(self.dataset_source, str)
             else self.dataset_source
         )
-        self.available_splits = (
+        self.available_splits = tuple(
             DatasetSplit(split) if isinstance(split, str) else split
             for split in self.available_splits
         )

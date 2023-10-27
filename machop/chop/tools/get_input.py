@@ -90,16 +90,18 @@ def get_dummy_input(
                 attention_mask = input_dict["attention_mask"][[sample_index], ...].to(
                     device
                 )
-                token_type_ids = input_dict["token_type_ids"][[sample_index], ...].to(
-                    device
-                )
+
                 labels = input_dict["labels"][[sample_index], ...].to(device)
                 dummy_inputs = {
                     "input_ids": input_ids,
                     "attention_mask": attention_mask,
-                    "token_type_ids": token_type_ids,
                     "labels": labels,
                 }
+                if "token_type_ids" in input_dict:
+                    dummy_inputs["token_type_ids"] = input_dict["token_type_ids"][
+                        [sample_index], ...
+                    ].to(device)
+
             case "language_modeling" | "lm":
                 input_dict = next(train_iter)
                 input_ids = input_dict["input_ids"][[sample_index], ...].to(device)

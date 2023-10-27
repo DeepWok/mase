@@ -219,7 +219,7 @@ jobs:
                        sentencepiece einops deepspeed pybind11 \
                        tabulate tensorboard hyperopt accelerate \
                        optuna stable-baselines3 scikit-learn
-          pip3 install cocotb[bus]==1.8.0 nni==2.10.1
+          pip3 install cocotb[bus]==1.8.0 nni
           pip3 install h5py
           pip3 install wandb==0.15.10 graphviz==0.20.1 onnxsim==0.4.33 \
                        onnxruntime==1.15.1 onnxoptimizer==0.3.13 pydot==1.4.2 \

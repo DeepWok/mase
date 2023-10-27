@@ -69,6 +69,9 @@ BERT_PRETRAINED_CONFIG_ARCHIVE_MAP = {
 }
 
 
+DEFAULT_QAUNT_CONFIG = {"default": {"name": "integer", "bypass": True}}
+
+
 class BertQuantizedConfig(PretrainedConfig):
     r"""
     This is the configuration class to store the configuration of a [`BertModel`] or a [`TFBertModel`]. It is used to
@@ -178,6 +181,10 @@ class BertQuantizedConfig(PretrainedConfig):
         self.classifier_dropout = classifier_dropout
         if quant_config is not None:
             quant_config = parse_bert_quantized_config(quant_config, num_hidden_layers)
+        else:
+            quant_config = parse_bert_quantized_config(
+                DEFAULT_QAUNT_CONFIG, num_hidden_layers
+            )
         self.quant_config = quant_config
 
     def __setattr__(self, key, value):

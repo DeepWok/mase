@@ -22,9 +22,10 @@ tensorboard
 optuna
 stable-baselines3
 scikit-learn
-nni==2.10.1
+nni
 # LogicNets
 h5py
-pyyaml<6.0
+pyyaml
 numpy
 pandas
+wandb

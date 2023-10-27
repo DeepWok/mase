@@ -4,7 +4,7 @@ This tutorial shows how to search for mixed-precision quantization strategy for 
 
 ## Train a Toy model on ToyTiny dataset
 
-First we train a Toy model on ToyTiny dataset. After training for 20 epochs, we get a Toy model with around 0.997 validation accuracy. The checkpoint is saved at `mase_tools/toy_on_toy_tiny/software/training_ckpts/best.ckpt`
+First we train a Toy model on ToyTiny dataset. After training for 5 epochs, we get a Toy model with around 0.997 validation accuracy. The checkpoint is saved at `mase_tools/toy_on_toy_tiny/software/training_ckpts/best.ckpt`
 
 
 ```bash
@@ -44,11 +44,7 @@ bias_frac_width = [3, 4, 5, 6, 7, 8, 9]
 [search.strategy]
 # the search strategy name "optuna" specifies the search algorithm
 name = "optuna"
-sw_runner = "basic_evaluation" # sw_runner specifies the estimator for sw metrics
-hw_runner = "average_bitwidth" # hw_runner specifies the estimator for hw metrics
 eval_mode = true # set the model in eval mode since we are doing post-training quantization
-data_loader = "val_dataloader"
-num_samples = 256
 
 [search.strategy.setup]
 # the config for SearchStrategyOptuna
@@ -59,6 +55,15 @@ sampler = "tpe"
 # sum_scaled_metrics = true # single objective
 # direction = "maximize"
 sum_scaled_metrics = false # multi objective
+
+# hw_runner specifies the estimator for hw metrics
+[search.strategy.sw_runner.basic_evaluation]
+data_loader = "val_dataloader"
+num_samples = 512
+
+# hw_runner specifies the estimator for hw metrics
+[search.strategy.hw_runner.average_bitwidth]
+compare_to = 32 # compare to FP32
 
 [search.strategy.metrics]
 # the sw + hw metrics to be evaluated
@@ -92,6 +97,7 @@ Best trial(s):
 |  3 |       10 | {'loss': 0.542, 'accuracy': 0.691} | {'average_bitwidth': 2.189} | {'accuracy': 0.691, 'average_bitwidth': 0.438} |
 |  4 |       13 | {'loss': 0.556, 'accuracy': 0.681} | {'average_bitwidth': 2.075} | {'accuracy': 0.681, 'average_bitwidth': 0.415} |
 |  5 |       19 | {'loss': 0.563, 'accuracy': 0.663} | {'average_bitwidth': 2.0}   | {'accuracy': 0.663, 'average_bitwidth': 0.4}   |
+
 ```
 
 The entire searching log is saved in `mase_tools/mase_output/toy_toy_tiny/software/search_ckpts/log.json`.

@@ -37,7 +37,7 @@ class GraphSearchSpaceMixedPrecisionPTQ(SearchSpaceBase):
             "by" in self.config["setup"]
         ), "Must specify entry `by` (config['setup']['by] = 'name' or 'type')"
 
-    def rebuild_model(self, config, is_eval_mode: bool = True):
+    def rebuild_model(self, sampled_config, is_eval_mode: bool = True):
         # set train/eval mode before creating mase graph
         if is_eval_mode:
             self.model.eval()
@@ -50,8 +50,8 @@ class GraphSearchSpaceMixedPrecisionPTQ(SearchSpaceBase):
             mg = init_metadata_analysis_pass(mg, None)
             mg = add_common_metadata_analysis_pass(mg, self.dummy_input)
             self.mg = mg
-        if config is not None:
-            mg = quantize_transform_pass(self.mg, config)
+        if sampled_config is not None:
+            mg = quantize_transform_pass(self.mg, sampled_config)
         mg.model.to(self.accelerator)
         return mg
 
@@ -59,7 +59,7 @@ class GraphSearchSpaceMixedPrecisionPTQ(SearchSpaceBase):
         """
         Build a mapping from node name to mase_type and mase_op.
         """
-        mase_graph = self.rebuild_model(config=None, is_eval_mode=True)
+        mase_graph = self.rebuild_model(sampled_config=None, is_eval_mode=True)
         node_info = {}
         for node in mase_graph.fx_graph.nodes:
             node_info[node.name] = {

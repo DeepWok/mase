@@ -169,10 +169,6 @@ class OPTQauntizedAttention(nn.Module):
         self.scaling = self.head_dim**-0.5
         self.is_decoder = is_decoder
 
-        # self.k_proj = nn.Linear(embed_dim, embed_dim, bias=bias)
-        # self.v_proj = nn.Linear(embed_dim, embed_dim, bias=bias)
-        # self.q_proj = nn.Linear(embed_dim, embed_dim, bias=bias)
-        # self.out_proj = nn.Linear(embed_dim, embed_dim, bias=bias)
         # fmt:off
         self.k_proj = get_quantized_cls("linear", quant_config["k_proj"])(embed_dim, embed_dim, bias=bias, config=quant_config["k_proj"])
         self.q_proj = get_quantized_cls("linear", quant_config["q_proj"])(embed_dim, embed_dim, bias=bias, config=quant_config["q_proj"])
@@ -366,9 +362,14 @@ class OPTQuantizedDecoderLayer(nn.Module):
             fc1_quant_config = config.quant_config[f"model_layer_{layer_id}"]["fc1"]
             fc2_quant_config = config.quant_config[f"model_layer_{layer_id}"]["fc2"]
 
+        num_heads = (
+            config.num_attention_heads[layer_id]
+            if isinstance(config.num_attention_heads, (list, tuple))
+            else config.num_attention_heads
+        )
         self.self_attn = OPTQauntizedAttention(
             embed_dim=self.embed_dim,
-            num_heads=config.num_attention_heads,
+            num_heads=num_heads,
             dropout=config.attention_dropout,
             is_decoder=True,
             bias=config.enable_bias,
@@ -383,14 +384,14 @@ class OPTQuantizedDecoderLayer(nn.Module):
         )
         # fmt:off
         self.fc1 = get_quantized_cls("linear", fc1_quant_config)(
-            self.embed_dim, 
-            config.ffn_dim, 
-            bias=config.enable_bias, 
+            self.embed_dim,
+            config.ffn_dim,
+            bias=config.enable_bias,
             config=fc1_quant_config)
         self.fc2 = get_quantized_cls("linear", fc2_quant_config)(
-            config.ffn_dim, 
-            self.embed_dim, 
-            bias=config.enable_bias, 
+            config.ffn_dim,
+            self.embed_dim,
+            bias=config.enable_bias,
             config=fc2_quant_config)
         # fmt:on
         self.final_layer_norm = nn.LayerNorm(
