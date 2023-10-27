@@ -1,10 +1,9 @@
-from .quantize import (
+from .quantization import (
     ManualHFModuleSearchSpaceMixedPrecisionPTQ,
     GraphSearchSpaceMixedPrecisionPTQ,
 )
 from .base import SearchSpaceBase
 
-# from .quantize.llm_quantise import LLMMixedPrecisionSearchSpace
 
 SEARCH_SPACE_MAP = {
     "graph/quantize/mixed_precision_ptq": GraphSearchSpaceMixedPrecisionPTQ,

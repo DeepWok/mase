@@ -162,6 +162,8 @@ def get_manual_model(
     else:
         model = model_cls(config)
 
+    model.config.name_or_path = checkpoint
+
     return model
 
 

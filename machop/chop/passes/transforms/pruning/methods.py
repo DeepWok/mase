@@ -22,9 +22,8 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import numpy as np
-
-from nni.compression.pytorch.pruning import L1NormPruner
-from nni.compression.pytorch.speedup import ModelSpeedup
+from nni.compression.pruning import L1NormPruner
+from nni.compression.speedup import ModelSpeedup
 
 from chop.tools.logger import getLogger
 from chop.passes.graph import MaseGraph

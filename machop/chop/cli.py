@@ -36,7 +36,11 @@ from pathlib import Path
 from functools import partial
 
 import ipdb
-import pytorch_lightning as pl
+
+# import pytorch_lightning as pl
+import lightning as pl
+from lightning.pytorch.loggers.wandb import WandbLogger
+from lightning.pytorch.loggers.tensorboard import TensorBoardLogger
 import transformers
 import datasets as hf_datasets
 import optuna
@@ -46,7 +50,7 @@ import torch
 from . import models
 from .actions import test, train, transform, search
 from .dataset import MaseDataModule, AVAILABLE_DATASETS, get_dataset_info
-from .tools import getLogger, post_parse_load_config
+from .tools import getLogger, post_parse_load_config, load_config
 
 
 # Housekeeping -------------------------------------------------------------------------
@@ -101,6 +105,7 @@ LOAD_TYPE = [
 ]
 OPTIMIZERS = ["adam", "sgd", "adamw"]
 LOG_LEVELS = ["debug", "info", "warning", "error", "critical"]
+REPORT_TO = ["wandb", "tensorboard"]
 ISSUES_URL = "https://github.com/JianyiCheng/mase-tools/issues"
 STRATEGIES = [
     "ddp",
@@ -111,7 +116,7 @@ STRATEGIES = [
     # "deepspeed_stage_3_offload",
 ]
 ACCELERATORS = ["auto", "cpu", "gpu"]
-TRAINER_PRECISION = ["16", "32", "64", "bf16"]
+TRAINER_PRECISION = ["16-mixed", "32", "64", "bf16"]
 
 # NOTE: Any new argument (either required or optional) must have their default values
 # listed in this dictionary; this is critical in establishing argument precedence. :)
@@ -128,10 +133,12 @@ CLI_DEFAULTS = {
     "batch_size": 128,
     "to_debug": False,
     "log_level": LOG_LEVELS[1],
+    "report_to": REPORT_TO[1],
     "seed": 0,
+    "quant_config": None,
     # Trainer options
     "training_optimizer": OPTIMIZERS[0],
-    "trainer_precision": TRAINER_PRECISION[1],
+    "trainer_precision": TRAINER_PRECISION[0],
     "learning_rate": 1e-5,
     "weight_decay": 0,
     "max_epochs": 20,
@@ -180,28 +187,35 @@ class ChopCLI:
                     transformers.logging.set_verbosity_debug()
                     hf_datasets.logging.set_verbosity_debug()
                     optuna.logging.set_verbosity(optuna.logging.DEBUG)
+                    # deepspeed.logger.setLevel(logging.DEBUG)
                     self.logger.setLevel(logging.DEBUG)
                 case "info":
                     transformers.logging.set_verbosity_warning()
                     hf_datasets.logging.set_verbosity_warning()
                     # mute optuna's logger by default since it's too verbose
                     optuna.logging.set_verbosity(optuna.logging.WARNING)
+                    # deepspeed.logger.setLevel(logging.INFO)
                     self.logger.setLevel(logging.INFO)
                 case "warning":
                     transformers.logging.set_verbosity_warning()
                     hf_datasets.logging.set_verbosity_warning()
                     optuna.logging.set_verbosity(optuna.logging.WARNING)
+                    # deepspeed.logger.setLevel(logging.WARNING)
                     self.logger.setLevel(logging.WARNING)
                 case "error":
                     transformers.logging.set_verbosity_error()
                     hf_datasets.logging.set_verbosity_error()
                     optuna.logging.set_verbosity(optuna.logging.ERROR)
+                    # deepspeed.logger.setLevel(logging.ERROR)
                     self.logger.setLevel(logging.ERROR)
                 case "critical":
                     transformers.logging.set_verbosity_critical()
                     hf_datasets.logging.set_verbosity_critical()
                     optuna.logging.set_verbosity(optuna.logging.CRITICAL)
+                    # deepspeed.logger.setLevel(logging.CRITICAL)
                     self.logger.setLevel(logging.CRITICAL)
+                case _:
+                    raise ValueError(f"invalid log level {args.log_level!r}")
 
         # Merge arguments from the configuration file (if one exists) and print
         # NOTE: The project name is set later on (if no configuration is provided), so
@@ -220,6 +234,7 @@ class ChopCLI:
             self.model_info,
         ) = self._setup_model_and_dataset()
         self.output_dir, self.output_dir_sw, self.output_dir_hw = self._setup_folders()
+        self.visualizer = self._setup_visualizer()
 
     def run(self):
         match self.args.action:
@@ -257,7 +272,6 @@ class ChopCLI:
 
         train_params = {
             "model": self.model,
-            "tokenizer": self.tokenizer,
             "model_info": self.model_info,
             "data_module": self.data_module,
             "dataset_info": self.dataset_info,
@@ -268,11 +282,12 @@ class ChopCLI:
             "plt_trainer_args": plt_trainer_args,
             "auto_requeue": self.args.is_to_auto_requeue,
             "save_path": os.path.join(self.output_dir_sw, "training_ckpts"),
+            "visualizer": self.visualizer,
             "load_name": load_name,
             "load_type": self.args.load_type,
         }
 
-        self.logger.info(f"##### WEIGHT DECAY ##### {self.args.weight_decay}")
+        # self.logger.info(f"##### WEIGHT DECAY ##### {self.args.weight_decay}")
 
         train(**train_params)
         self.logger.info("Training is completed")
@@ -294,7 +309,6 @@ class ChopCLI:
 
         test_params = {
             "model": self.model,
-            "tokenizer": self.tokenizer,
             "model_info": self.model_info,
             "data_module": self.data_module,
             "dataset_info": self.dataset_info,
@@ -305,6 +319,7 @@ class ChopCLI:
             "plt_trainer_args": plt_trainer_args,
             "auto_requeue": self.args.is_to_auto_requeue,
             "save_path": os.path.join(self.output_dir_sw, "checkpoints"),
+            "visualizer": self.visualizer,
             "load_name": self.args.load_name,
             "load_type": self.args.load_type,
         }
@@ -353,6 +368,7 @@ class ChopCLI:
             "save_path": self.output_dir_sw.joinpath("search_ckpts"),
             "load_name": load_name,
             "load_type": self.args.load_type,
+            "visualizer": self.visualizer,
         }
 
         search(**search_params)
@@ -464,6 +480,15 @@ class ChopCLI:
             metavar="",
         )
         general_group.add_argument(
+            "--report-to",
+            dest="report_to",
+            choices=REPORT_TO,
+            help=f"""
+                reporting tool for logging metrics. One of
+                {'(' + '|'.join(REPORT_TO) + ')'} (default: %(default)s)
+            """,
+        )
+        general_group.add_argument(
             "--seed",
             dest="seed",
             type=int,
@@ -472,6 +497,16 @@ class ChopCLI:
                 seed_everything function. (default: %(default)s)
             """,
             metavar="NUM",
+        )
+        general_group.add_argument(
+            "--quant-config",
+            dest="quant_config",
+            type=_valid_filepath,
+            help="""
+                path to a configuration file in the TOML format. Manual CLI overrides
+                for arguments have a higher precedence. (default: %(default)s)
+            """,
+            metavar="TOML",
         )
 
         # Trainer options --------------------------------------------------------------
@@ -712,12 +747,16 @@ class ChopCLI:
             checkpoint = self.args.load_name
 
         model_info = models.get_model_info(self.args.model)
+        quant_config = None
+        if self.args.quant_config is not None:
+            quant_config = load_config(self.args.quant_config)
         model = models.get_model(
             name=self.args.model,
             task=self.args.task,
             dataset_info=dataset_info,
             checkpoint=checkpoint,
             pretrained=self.args.is_pretrained,
+            quant_config=quant_config,
         )
 
         if model_info.is_nlp_model:
@@ -770,7 +809,34 @@ class ChopCLI:
         for exc in [KeyboardInterrupt, FileNotFoundError]:
             if issubclass(etype, exc):
                 sys.exit(-1)
-        ipdb.post_mortem(etb)
+        # ipdb.post_mortem(etb)
+        import pudb
+
+        pudb.post_mortem(etb)
+
+    def _setup_visualizer(self):
+        visualizer = None
+        match self.args.report_to:
+            case "wandb":
+                visualizer = WandbLogger(
+                    project=self.args.project, save_dir=self.output_dir
+                )
+                visualizer.experiment.config.update(vars(self.args))
+                if self.args.config is not None:
+                    visualizer.experiment.config.update(
+                        {"config_toml": load_config(self.args.config)}
+                    )
+            case "tensorboard":
+                visualizer = TensorBoardLogger(
+                    save_dir=self.output_dir.joinpath("tensorboard")
+                )
+                visualizer.log_hyperparams(vars(self.args))
+                visualizer.log_hyperparams(
+                    {"config_toml": load_config(self.args.config)}
+                )
+            case _:
+                raise ValueError(f"unsupported reporting tool {self.args.report_to!r}")
+        return visualizer
 
 
 # Custom types ---------------------------------------------------------------------

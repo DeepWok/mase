@@ -37,7 +37,6 @@ logger = logging.getLogger(__name__)
 
 def train(
     model,
-    tokenizer,
     model_info,
     data_module,
     dataset_info,
@@ -48,6 +47,7 @@ def train(
     plt_trainer_args,
     auto_requeue,
     save_path,
+    visualizer,
     load_name,
     load_type,
 ):
@@ -63,13 +63,13 @@ def train(
             dirpath=save_path,
             save_last=True,
         )
-        tb_logger = TensorBoardLogger(save_dir=save_path, name="logs")
+        # tb_logger = TensorBoardLogger(save_dir=save_path, name="logs")
         lr_monitor_callback = LearningRateMonitor(logging_interval="step")
         plt_trainer_args["callbacks"] = [
             checkpoint_callback,
             lr_monitor_callback,
         ]
-        plt_trainer_args["logger"] = tb_logger
+        plt_trainer_args["logger"] = visualizer
 
     # plugin
     if auto_requeue:
@@ -105,6 +105,7 @@ def train(
     )
 
     trainer = pl.Trainer(**plt_trainer_args)
+
     trainer.fit(
         pl_model,
         datamodule=data_module,

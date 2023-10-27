@@ -1,4 +1,4 @@
-from typing import Any
+import math
 import torch
 from torchmetrics.classification import MulticlassAccuracy
 from torchmetrics.text import Perplexity
@@ -27,11 +27,11 @@ class RunnerBasicEval(SWRunnerBase):
 
     available_metrics = ("loss", "accuracy", "perplexity")
 
-    def __init__(self, model_info, task: str, dataset_info, accelerator):
-        super().__init__(model_info, task, dataset_info, accelerator)
-
+    def _post_init_setup(self) -> None:
         self.loss = MeanMetric().to(self.accelerator)
         self._setup_metric()
+
+        assert "num_samples" in self.config, "num_samples is not set in the config."
 
     def _setup_metric(self):
         if self.model_info.is_vision_model:
@@ -113,13 +113,17 @@ class RunnerBasicEval(SWRunnerBase):
             raise ValueError(f"metric {self.metric} is not supported.")
         return reduced
 
-    def __call__(
-        self, data_loader, model, sampled_config: dict, num_batches: int
-    ) -> dict[str, float]:
+    def __call__(self, data_module, model, sampled_config: dict) -> dict[str, float]:
         if not isinstance(model, torch.nn.Module):
             forward_model = model.model
         else:
             forward_model = model
+
+        num_batches = math.ceil(self.config["num_samples"] / data_module.batch_size)
+        data_loader = getattr(
+            data_module, self.config.get("dataloader", "val_dataloader")
+        )()
+
         for i, batch in enumerate(data_loader):
             outputs = self.forward(batch, forward_model)
             self.loss(outputs["loss"])

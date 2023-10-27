@@ -13,7 +13,6 @@ logger = logging.getLogger(__name__)
 
 def validate(
     model,
-    tokenizer,
     model_info,
     data_module,
     dataset_info,
@@ -23,15 +22,15 @@ def validate(
     plt_trainer_args,
     auto_requeue,
     save_path,
+    visualizer,
     load_name,
     load_type,
 ):
     if save_path is not None:
         if not os.path.isdir(save_path):
             os.makedirs(save_path)
-        tb_logger = TensorBoardLogger(save_dir=save_path, name="logs_test-sw")
         plt_trainer_args["callbacks"] = []
-        plt_trainer_args["logger"] = tb_logger
+        plt_trainer_args["logger"] = visualizer
 
     # plugin
     if auto_requeue:

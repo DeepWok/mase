@@ -1,4 +1,5 @@
 import os
+import logging
 from os import PathLike
 from dataclasses import dataclass
 
@@ -35,6 +36,9 @@ from transformers.models.gpt_neo import (
 from transformers.models.t5 import T5Config, T5Tokenizer, T5ForConditionalGeneration
 
 from .utils import MaseModelInfo
+
+
+logger = logging.getLogger(__name__)
 
 # fmt: off
 HF_NLP_MODELS = {
@@ -196,6 +200,7 @@ def get_hf_nlp_model(
         raise ValueError(f"HuggingFace model {name} is not supported")
 
     model_info: MaseModelInfo = HF_NLP_MODELS[name]["info"]
+
     match task:
         case "lm" | "language_modeling":
             if not model_info.causal_LM:
@@ -237,6 +242,14 @@ def get_hf_nlp_model(
                 model = AutoModelForSeq2SeqLM.from_config(config)
         case _:
             raise ValueError(f"Task {task} is not supported for {name}")
+
+    if pretrained:
+        if checkpoint is None:
+            logger.info(f"Loading pretrained model {name} from HuggingFace")
+        else:
+            logger.info(f"Loading pretrained model from {checkpoint}")
+    else:
+        logger.info(f"Initializing model {name} randomly")
     return model
 
 

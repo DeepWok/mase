@@ -40,32 +40,45 @@ class SearchStrategyBase:
         config: dict,
         accelerator,
         save_dir,
+        visualizer,
     ):
         self.dataset_info = dataset_info
         self.task = task
         self.config = config
         self.accelerator = accelerator
         self.save_dir = save_dir
-        # the software runner's __call__ will use the rebuilt model to calculate the software metrics like accuracy, loss, ...
-        self.sw_runner = get_sw_runner(
-            config["sw_runner"], model_info, task, dataset_info, accelerator
-        )
-        # the hardware runner's __call__ will use the rebuilt model to calculate the hardware metrics like average bitwidth, latency, ...
-        self.hw_runner = get_hw_runner(
-            config["hw_runner"], model_info, task, dataset_info, accelerator
-        )
+        self.data_module = data_module
+        self.visualizer = visualizer
 
-        self._set_loader(data_module)
+        self.sw_runner = []
+        self.hw_runner = []
+        # the software runner's __call__ will use the rebuilt model to calculate the software metrics like accuracy, loss, ...
+
+        for runner_name, runner_cfg in config["sw_runner"].items():
+            self.sw_runner.append(
+                get_sw_runner(
+                    runner_name, model_info, task, dataset_info, accelerator, runner_cfg
+                )
+            )
+        # the hardware runner's __call__ will use the rebuilt model to calculate the hardware metrics like average bitwidth, latency, ...
+        for runner_name, runner_cfg in config["hw_runner"].items():
+            self.hw_runner.append(
+                get_hw_runner(
+                    runner_name, model_info, task, dataset_info, accelerator, runner_cfg
+                )
+            )
+
+        # self._set_loader(data_module)
         self._post_init_setup()
 
-    def _set_loader(self, data_module):
-        """
-        Set the data loader and the number of batches.
-        """
-        self.data_loader = getattr(data_module, self.config["data_loader"])()
-        self.num_batches = math.ceil(
-            self.config["num_samples"] / data_module.batch_size
-        )
+    # def _set_loader(self, data_module):
+    #     """
+    #     Set the data loader and the number of batches.
+    #     """
+    #     self.data_loader = getattr(data_module, self.config["data_loader"])()
+    #     self.num_batches = math.ceil(
+    #         self.config["num_samples"] / data_module.batch_size
+    #     )
 
     @staticmethod
     def _save_study(study, save_path):

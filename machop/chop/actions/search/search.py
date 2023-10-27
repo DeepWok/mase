@@ -39,14 +39,14 @@ def parse_search_config(search_config):
     search_space_config = search_config["search_space"]
 
     # config sanity check
-    if strategy_config["data_loader"] not in [
-        "train_dataloader",
-        "val_dataloader",
-        "test_dataloader",
-    ]:
-        raise ValueError(
-            "data_loader must be one of train_dataloader, val_dataloader, test_dataloader."
-        )
+    # if strategy_config["data_loader"] not in [
+    #     "train_dataloader",
+    #     "val_dataloader",
+    #     "test_dataloader",
+    # ]:
+    #     raise ValueError(
+    #         "data_loader must be one of train_dataloader, val_dataloader, test_dataloader."
+    #     )
     return strategy_config, search_space_config
 
 
@@ -61,6 +61,7 @@ def search(
     accelerator: str,
     load_name: PathLike = None,
     load_type: str = None,
+    visualizer=None,
 ):
     """
     Args:
@@ -102,6 +103,7 @@ def search(
         config=strategy_config,
         accelerator=accelerator,
         save_dir=save_path,
+        visualizer=visualizer,
     )
 
     logger.info("Search started...")

@@ -220,9 +220,14 @@ class LlamaQuantizedAttention(nn.Module):
         super().__init__()
         self.config = config
         self.hidden_size = config.hidden_size
-        self.num_heads = config.num_attention_heads
+        self.num_heads = (
+            config.num_attention_heads
+            if isinstance(config.num_attention_heads, int)
+            else config.num_attention_heads[layer_id]
+        )
         self.head_dim = self.hidden_size // self.num_heads
         self.max_position_embeddings = config.max_position_embeddings
+        self.layer_id = layer_id
 
         if (self.head_dim * self.num_heads) != self.hidden_size:
             raise ValueError(

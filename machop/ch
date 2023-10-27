@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
 from chop.cli import ChopCLI
 
-ChopCLI().run()
+if __name__ == "__main__":
+    # this if statement is necessary to spawn new processes for ddp
+    ChopCLI().run()

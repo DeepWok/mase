@@ -29,11 +29,14 @@ bias_frac_width = [2, 4, 6]
 
 [search.strategy]
 name = "optuna"
-sw_runner = "basic_evaluation"
-hw_runner = "average_bitwidth"
 eval_mode = true
+
+[search.strategy.sw_runner.basic_evaluation]
 data_loader = "val_dataloader"
-num_samples = 16
+num_samples = 512
+
+[search.strategy.hw_runner.average_bitwidth]
+compare_to = 32 # compare to FP32
 
 [search.strategy.setup]
 n_jobs = 1
@@ -47,5 +50,5 @@ sum_scaled_metrics = false
 [search.strategy.metrics]
 perplexity.scale = 1.0
 perplexity.direction = "minimize"
-average_bitwidth.scale = 0.0
+average_bitwidth.scale = 1.0
 average_bitwidth.direction = "minimize"

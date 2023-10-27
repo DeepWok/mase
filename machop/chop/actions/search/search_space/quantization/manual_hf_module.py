@@ -53,8 +53,8 @@ class ManualHFModuleSearchSpaceMixedPrecisionPTQ(SearchSpaceBase):
     def _num_hidden_layers(self):
         return self.model_config.num_hidden_layers
 
-    def rebuild_model(self, quant_config: dict, is_eval_mode: bool):
-        config = self._rebuild_config(quant_config)
+    def rebuild_model(self, sampled_config: dict, is_eval_mode: bool):
+        config = self._rebuild_config(sampled_config)
         if "cuda" in self.accelerator.type:
             if self.config["setup"]["model_parallel"]:
                 with init_empty_weights():
@@ -79,7 +79,8 @@ class ManualHFModuleSearchSpaceMixedPrecisionPTQ(SearchSpaceBase):
             model.eval()
         return model
 
-    def _strip_quant_name_entry(self, config):
+    @staticmethod
+    def _strip_quant_name_entry(config):
         """
         strip the quantization name entry from the config or the quantization config parser cannot parse it
         ```text
@@ -105,7 +106,8 @@ class ManualHFModuleSearchSpaceMixedPrecisionPTQ(SearchSpaceBase):
                 stripped_config[k] = v[0]
         return unflatten_dict(stripped_config)
 
-    def _unstrip_quant_name_entry(self, config):
+    @staticmethod
+    def _unstrip_quant_name_entry(config):
         unstripped_config = {}
         flatten_dict(config, unstripped_config)
         for k, v in unstripped_config.items():
