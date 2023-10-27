@@ -13,26 +13,36 @@ module fixed_accumulator #(
     output logic                 data_out_valid,
     input  logic                 data_out_ready
 );
+  logic [OUT_WIDTH-1:0] reg_in;
+  logic reg_in_valid, reg_in_ready;
 
+  skid_buffer #(
+      .DATA_WIDTH(OUT_WIDTH)
+  ) register_slice (
+      .data_in(reg_in),
+      .data_in_valid(reg_in_valid),
+      .data_in_ready(reg_in_ready),
+      .*
+  );
   // 1-bit wider so IN_DEPTH also fits.
   localparam COUNTER_WIDTH = $clog2(IN_DEPTH);
   logic [COUNTER_WIDTH:0] counter;
 
   // Sign extension before feeding into the accumulator
   logic [  OUT_WIDTH-1:0] data_in_sext;
-  assign data_in_sext   = {{(OUT_WIDTH - IN_WIDTH) {data_in[IN_WIDTH-1]}}, data_in};
+  assign data_in_sext  = {{(OUT_WIDTH - IN_WIDTH) {data_in[IN_WIDTH-1]}}, data_in};
 
   /* verilator lint_off WIDTH */
-  assign data_in_ready  = (counter != IN_DEPTH) || data_out_ready;
-  assign data_out_valid = (counter == IN_DEPTH);
+  assign data_in_ready = (counter != IN_DEPTH) || reg_in_ready;
+  assign reg_in_valid  = (counter == IN_DEPTH);
   /* verilator lint_on WIDTH */
 
   // counter
   always_ff @(posedge clk)
     if (rst) counter <= 0;
     else begin
-      if (data_out_valid) begin
-        if (data_out_ready) begin
+      if (reg_in_valid) begin
+        if (reg_in_ready) begin
           if (data_in_valid) counter <= 1;
           else counter <= 0;
         end
@@ -41,14 +51,15 @@ module fixed_accumulator #(
 
   // data_out 
   always_ff @(posedge clk)
-    if (rst) data_out <= '0;
+    if (rst) reg_in <= '0;
     else begin
-      if (data_out_valid) begin
-        if (data_out_ready) begin
-          if (data_in_valid) data_out <= data_in_sext;
-          else data_out <= '0;
+      if (reg_in_valid) begin
+        if (reg_in_ready) begin
+          if (data_in_valid) reg_in <= data_in_sext;
+          else reg_in <= '0;
         end
-      end else if (data_in_valid && data_in_ready) data_out <= data_out + data_in_sext;
+      end else if (data_in_valid && data_in_ready) reg_in <= reg_in + data_in_sext;
     end
+
 
 endmodule

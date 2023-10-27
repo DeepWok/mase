@@ -87,16 +87,14 @@ module sliding_window_buffer #(
     end
   end
   logic [DATA_WIDTH-1:0] next_shift[BUF_SIZE-1:0];
-  logic [DATA_WIDTH-1:0] shift_initialize[BUF_SIZE-1:0];
+  logic [DATA_WIDTH-1:0] shift_initialize[BUF_SIZE-1:0] = '{default: 0};
 
   assign next_shift[BUF_SIZE-1] = data_in;
   for (genvar k = 0; k < BUF_SIZE - 1; k++) assign next_shift[k] = shift_reg[k+1];
-
-  for (genvar k = 0; k < BUF_SIZE; k++) assign shift_initialize[k] = 0;
   always_ff @(posedge clk)
-    if (rst) shift_reg[BUF_SIZE-1:0] <= shift_initialize;
+    if (rst) shift_reg <= shift_initialize;
     else if ((data_in_valid && data_in_ready) || (data_in_valid && data_in_ready))
-      shift_reg[BUF_SIZE-1:0] <= next_shift;
+      shift_reg <= next_shift;
 
   // always_ff @(posedge clk)
   always_ff @(posedge clk)

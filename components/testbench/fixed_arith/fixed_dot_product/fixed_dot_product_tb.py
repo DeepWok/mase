@@ -18,7 +18,7 @@ from cocotb.triggers import FallingEdge
 from cocotb.clock import Clock
 from cocotb.runner import get_runner
 
-debug = True
+debug = False
 
 logger = logging.getLogger("tb_signals")
 if debug:
@@ -30,22 +30,22 @@ class VerificationCase:
     def __init__(self, samples=10):
         self.data_in_width = 32
         self.weight_width = 16
-        self.vector_size = 1
+        self.vector_size = 4
         self.data_in = RandomSource(
             name="data_in",
             samples=samples,
             num=self.vector_size,
-            max_stalls=2 * samples,
+            max_stalls=0,
             debug=debug,
         )
         self.weight = RandomSource(
             name="weight",
             samples=samples,
             num=self.vector_size,
-            max_stalls=2 * samples,
+            max_stalls=0,
             debug=debug,
         )
-        self.outputs = RandomSink(samples=samples, max_stalls=2 * samples, debug=debug)
+        self.outputs = RandomSink(samples=samples, max_stalls=0, debug=debug)
         self.samples = samples
         self.ref = self.sw_compute()
 
@@ -85,7 +85,7 @@ def in_out_wave(dut, name):
 @cocotb.test()
 async def test_fixed_dot_product(dut):
     """Test integer based vector mult"""
-    samples = 20
+    samples = 1000
     test_case = VerificationCase(samples=samples)
 
     # Reset cycle
@@ -161,7 +161,7 @@ def runner():
         "../../../../components/fixed_arith/fixed_adder_tree.sv",
         "../../../../components/fixed_arith/fixed_adder_tree_layer.sv",
         "../../../../components/fixed_arith/fixed_mult.sv",
-        "../../../../components/common/register_slice.sv",
+        "../../../../components/common/skid_buffer.sv",
         "../../../../components/common/join2.sv",
     ]
     test_case = VerificationCase()

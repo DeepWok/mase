@@ -13,46 +13,48 @@ module fixed_2d_linear #(
     parameter OUT_WIDTH = 32,
     parameter OUT_FRAC_WIDTH = 8,
     // define as nm * mk
-    parameter IN_PARALLELISM = 4,
-    parameter IN_NUM_PARALLELISM = 2,
-    parameter IN_SIZE = 4,
-    parameter IN_DEPTH = 3,
+    parameter IN_Y = 8,
+    parameter UNROLL_IN_Y = 4,
+    parameter ITER_IN_Y = IN_Y / UNROLL_IN_Y,
+    parameter IN_X = 12,
+    parameter UNROLL_IN_X = 4,
 
-    parameter W_PARALLELISM = 4,
-    parameter W_NUM_PARALLELISM = 2
+    parameter W_Y = 8,
+    parameter UNROLL_W_Y = 4,
+    parameter ITER_W_Y = W_Y / UNROLL_W_Y
 ) (
     input clk,
     input rst,
     //input data
-    input [IN_WIDTH-1:0] data_in[IN_PARALLELISM * IN_SIZE - 1:0],
+    input [IN_WIDTH-1:0] data_in[UNROLL_IN_Y * UNROLL_IN_X - 1:0],
     input data_in_valid,
     output data_in_ready,
     //input weight
-    input [WEIGHT_WIDTH-1:0] weight[W_PARALLELISM * IN_SIZE - 1:0],
+    input [WEIGHT_WIDTH-1:0] weight[UNROLL_W_Y * UNROLL_IN_X - 1:0],
     input weight_valid,
     output weight_ready,
     //input bias
-    input [BIAS_WIDTH-1:0] bias[W_PARALLELISM - 1:0],
+    input [BIAS_WIDTH-1:0] bias[UNROLL_W_Y - 1:0],
     input bias_valid,
     output bias_ready,
     //output data
-    output [OUT_WIDTH-1:0] data_out[IN_PARALLELISM * W_PARALLELISM - 1:0],
+    output [OUT_WIDTH-1:0] data_out[UNROLL_IN_Y * UNROLL_W_Y - 1:0],
     output data_out_valid,
     input data_out_ready
 
 );
-  logic [BIAS_WIDTH-1:0] bias_extend[IN_PARALLELISM * W_PARALLELISM - 1:0];
-  logic [BIAS_WIDTH-1:0] ib_bias[IN_PARALLELISM * W_PARALLELISM - 1:0];
+  logic [BIAS_WIDTH-1:0] bias_extend[UNROLL_IN_Y * UNROLL_W_Y - 1:0];
+  logic [BIAS_WIDTH-1:0] ib_bias[UNROLL_IN_Y * UNROLL_W_Y - 1:0];
   logic ib_bias_valid, ib_bias_ready;
-  for (genvar i = 0; i < IN_PARALLELISM; i++)
-    assign bias_extend[i*W_PARALLELISM+W_PARALLELISM-1 : i*W_PARALLELISM] = bias;
+  for (genvar i = 0; i < UNROLL_IN_Y; i++)
+    assign bias_extend[i*UNROLL_W_Y+UNROLL_W_Y-1 : i*UNROLL_W_Y] = bias;
 
   input_buffer #(
       .IN_WIDTH(BIAS_WIDTH),
-      .IN_PARALLELISM(IN_PARALLELISM),
-      .IN_SIZE(W_PARALLELISM),
-      .BUFFER_SIZE(W_NUM_PARALLELISM),
-      .REPEAT(IN_NUM_PARALLELISM)
+      .IN_PARALLELISM(UNROLL_IN_Y),
+      .IN_SIZE(UNROLL_W_Y),
+      .BUFFER_SIZE(ITER_W_Y),
+      .REPEAT(ITER_IN_Y)
   ) bias_buffer (
       .clk(clk),
       .rst(rst),
@@ -73,12 +75,12 @@ module fixed_2d_linear #(
       .BIAS_FRAC_WIDTH(BIAS_FRAC_WIDTH),
       .OUT_WIDTH(OUT_WIDTH),
       .OUT_FRAC_WIDTH(OUT_FRAC_WIDTH),
-      .IN1_PARALLELISM(IN_PARALLELISM),
-      .IN1_NUM_PARALLELISM(IN_NUM_PARALLELISM),
-      .IN_SIZE(IN_SIZE),
-      .IN2_PARALLELISM(W_PARALLELISM),
-      .IN2_NUM_PARALLELISM(W_NUM_PARALLELISM),
-      .IN_DEPTH(IN_DEPTH)
+      .IN1_Y(IN_Y),
+      .UNROLL_IN1_Y(UNROLL_IN_Y),
+      .IN1_X(IN_X),
+      .UNROLL_IN1_X(UNROLL_IN_X),
+      .IN2_Y(W_Y),
+      .UNROLL_IN2_Y(UNROLL_W_Y)
   ) inst_fmmc (
       .data_in1(data_in),
       .data_in1_valid(data_in_valid),

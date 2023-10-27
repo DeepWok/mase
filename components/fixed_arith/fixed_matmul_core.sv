@@ -1,20 +1,20 @@
 `timescale 1ns / 1ps
 module fixed_matmul_core #(
     // input 
-    parameter IN1_WIDTH = 32,
-    parameter IN1_FRAC_WIDTH = 8,
-    parameter IN2_WIDTH = 16,
-    parameter IN2_FRAC_WIDTH = 8,
-    parameter BIAS_WIDTH = 32,
-    parameter BIAS_FRAC_WIDTH = 1,
+    parameter IN1_WIDTH = 8,
+    parameter IN1_FRAC_WIDTH = 4,
+    parameter IN2_WIDTH = 8,
+    parameter IN2_FRAC_WIDTH = 4,
+    parameter BIAS_WIDTH = 6,
+    parameter BIAS_FRAC_WIDTH = 3,
     //output 
-    parameter OUT_WIDTH = 32,
-    parameter OUT_FRAC_WIDTH = 8,
+    parameter OUT_WIDTH = 8,
+    parameter OUT_FRAC_WIDTH = 4,
     // define as nm * mk
-    // rows refers to n, columns refers to m
+    // rows refers to n, columns refers to mz
     parameter IN1_PARALLELISM = 4,
-    parameter IN_SIZE = 3,
-    parameter IN2_PARALLELISM = 5,
+    parameter IN_SIZE = 1,
+    parameter IN2_PARALLELISM = 3,
     //defines the dataflow parameter, used for linear layer
     parameter IN_DEPTH = 3,
 
@@ -48,6 +48,7 @@ module fixed_matmul_core #(
   // which means that they always have the same state. So we can just
   // pick one of the valid signal to use.
   /* verilator lint_off UNUSEDSIGNAL */
+
   logic fmm_join_ready, fmm_join_valid;
   logic [IN1_PARALLELISM - 1:0] fmm_data_in_ready, fmm_weight_in_ready;
   assign fmm_join_ready = fmm_data_in_ready[0];
@@ -108,14 +109,15 @@ module fixed_matmul_core #(
   assign bias_ready = multi_linear[0].partition_bias_ready;
   assign data_out_valid = fmm_data_out_valid[0];
 
-  fixed_cast #(
+  fixed_rounding #(
       .IN_SIZE(OUT_ROWS * OUT_COLUMNS),
       .IN_WIDTH(CAST_WIDTH),
       .IN_FRAC_WIDTH(CAST_FRAC_WIDTH),
       .OUT_WIDTH(OUT_WIDTH),
       .OUT_FRAC_WIDTH(OUT_FRAC_WIDTH)
-  ) inst_cast (
+  ) bias_cast (
       .data_in (cast_data),
       .data_out(data_out)
   );
+
 endmodule

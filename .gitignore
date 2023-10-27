@@ -1,3 +1,10 @@
+# New environment
+aienginev2/
+llvm/
+mlir-aie/
+vagrant/.vagrant/
+# init file
+*.mem
 # Project
 *.py~
 *.swp

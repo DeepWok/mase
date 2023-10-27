@@ -27,7 +27,10 @@ from cocotb.triggers import FallingEdge
 from cocotb.clock import Clock
 from cocotb.runner import get_runner
 
-from QAttention import QPartAttention
+sys.path.append("/workspace/components/testbench/ViT/")
+from ha_softmax import generate_table_hardware, generate_table_div_hardware
+from pvt_quant import QuantizedAttention
+from z_qlayers import quantize_to_int as q2i
 
 debug = True
 
@@ -39,13 +42,82 @@ if debug:
 # DUT test specifications
 class VerificationCase:
     def __init__(self, samples=1):
+        # width config
         self.samples = samples
-        self.data_in_width = 32
-        self.data_in_frac_width = 1
-        self.weight_width = 16
-        self.weight_frac_width = 2
-        self.bias_width = 16
-        self.bias_frac_width = 2
+        self.data_in_width = 8
+        self.data_in_frac_width = 5
+        self.weight_q_width = 6
+        self.weight_q_frac_width = 6
+        self.weight_k_width = 6
+        self.weight_k_frac_width = 6
+        self.weight_v_width = 6
+        self.weight_v_frac_width = 6
+
+        self.bias_q_width = 6
+        self.bias_q_frac_width = 6
+        self.bias_k_width = 6
+        self.bias_k_frac_width = 6
+        self.bias_v_width = 6
+        self.bias_v_frac_width = 6
+
+        self.data_q_width = 8
+        self.data_q_frac_width = 6
+        self.data_k_width = 8
+        self.data_k_frac_width = 6
+        self.data_v_width = 8
+        self.data_v_frac_width = 6
+        self.data_s_width = 8
+        self.data_s_frac_width = 6
+        self.exp_width = 8
+        self.exp_frac_width = 5
+        self.div_width = 10
+        self.data_s_softmax_width = 8
+        self.data_s_softmax_width = 7
+        self.data_z_width = 8
+        self.data_z_frac_width = 6
+        self.w_config = {
+            "q_proj": {
+                "name": "integer",
+                "weight_width": self.weight_q_width,
+                "weight_frac_width": self.weight_q_frac_width,
+                "data_in_width": self.data_in_width,
+                "data_in_frac_width": self.data_in_frac_width,
+                "bias_width": self.bias_q_width,
+                "bias_frac_width": self.bias_q_frac_width,
+            },
+            "kv_proj": {
+                "name": "integer",
+                "weight_width": self.weight_k_width,
+                "weight_frac_width": self.weight_k_frac_width,
+                "data_in_width": self.data_in_width,
+                "data_in_frac_width": self.data_in_frac_width,
+                "bias_width": self.bias_k_width,
+                "bias_frac_width": self.bias_k_frac_width,
+            },
+            "attn_matmul": {
+                "name": "integer",
+                "data_in_width": self.data_q_width,
+                "data_in_frac_width": self.data_q_frac_width,
+                "weight_width": self.data_k_width,
+                "weight_frac_width": self.data_k_frac_width,
+            },
+            "z_matmul": {
+                "name": "integer",
+                "data_in_width": self.data_s_softmax_width,
+                "data_in_frac_width": self.data_s_softmax_width,
+                "weight_width": self.data_v_width,
+                "weight_frac_width": self.data_v_frac_width,
+            },
+            "softmax": {
+                "exp_width": self.exp_width,
+                "exp_frac_width": self.exp_frac_width,
+                "div_width": self.div_width,
+                "data_in_width": self.data_s_width,
+                "data_in_frac_width": self.data_s_frac_width,
+                "data_out_width": self.data_s_softmax_width,
+                "data_out_frac_width": self.data_s_softmax_width,
+            },
+        }
 
         self.in_parallelism = 1
         self.in_num_parallelism = 2
@@ -53,12 +125,9 @@ class VerificationCase:
         self.in_size = 4
         self.in_depth = 2
 
-        self.w_parallelism = 2
-        self.w_num_parallelism = 3
+        self.w_parallelism = 4
+        self.w_num_parallelism = 2
         (
-            _,
-            _,
-            _,
             test_in,
             test_wq,
             test_wk,
@@ -66,7 +135,8 @@ class VerificationCase:
             test_bq,
             test_bk,
             test_bv,
-        ) = self.data_generate()
+        ) = self.att_data_generate()
+        self.soft_max_data_generate(self.att.scale)
         self.data_in = RandomSource(
             name="data_in",
             samples=samples * self.in_depth * self.in_num_parallelism,
@@ -137,10 +207,33 @@ class VerificationCase:
         return {
             "DATA_WIDTH": self.data_in_width,
             "DATA_FRAC_WIDTH": self.data_in_frac_width,
-            "WEIGHT_WIDTH": self.weight_width,
-            "W_FRAC_WIDTH": self.weight_frac_width,
-            "BIAS_WIDTH": self.bias_width,
-            "BIAS_FRAC_WIDTH": self.bias_frac_width,
+            "WQ_WIDTH": self.weight_q_width,
+            "WQ_FRAC_WIDTH": self.weight_q_frac_width,
+            "WK_WIDTH": self.weight_k_width,
+            "WK_FRAC_WIDTH": self.weight_k_frac_width,
+            "WV_WIDTH": self.weight_v_width,
+            "WV_FRAC_WIDTH": self.weight_v_frac_width,
+            "BQ_WIDTH": self.bias_q_width,
+            "BQ_FRAC_WIDTH": self.bias_q_frac_width,
+            "BK_WIDTH": self.bias_k_width,
+            "BK_FRAC_WIDTH": self.bias_k_frac_width,
+            "BV_WIDTH": self.bias_v_width,
+            "BV_FRAC_WIDTH": self.bias_v_frac_width,
+            "DQ_WIDTH": self.data_q_width,
+            "DQ_FRAC_WIDTH": self.data_q_frac_width,
+            "DK_WIDTH": self.data_k_width,
+            "DK_FRAC_WIDTH": self.data_k_frac_width,
+            "DV_WIDTH": self.data_v_width,
+            "DV_FRAC_WIDTH": self.data_v_frac_width,
+            "DS_WIDTH": self.w_config["softmax"]["data_in_width"],
+            "DS_FRAC_WIDTH": self.w_config["softmax"]["data_in_frac_width"],
+            "EXP_WIDTH": self.w_config["softmax"]["exp_width"],
+            "EXP_FRAC_WIDTH": self.w_config["softmax"]["exp_frac_width"],
+            "DIV_WIDTH": self.w_config["softmax"]["div_width"],
+            "DS_SOFTMAX_WIDTH": self.w_config["softmax"]["data_out_width"],
+            "DS_SOFTMAX_FRAC_WIDTH": self.w_config["softmax"]["data_out_frac_width"],
+            "DZ_WIDTH": self.data_z_width,
+            "DZ_FRAC_WIDTH": self.data_z_frac_width,
             "IN_PARALLELISM": self.in_parallelism,
             "IN_NUM_PARALLELISM": self.in_num_parallelism,
             "W_PARALLELISM": self.w_parallelism,
@@ -158,54 +251,53 @@ class VerificationCase:
 
         # collect all the input
         # breakpoint()
-        d_tensor, wqkv_tensor, bqkv_tensor, _, _, _, _, _, _, _ = self.data_generate()
-        logger.debug(
-            "input data: \n\
-        wqkv_tensor = \n{}\n\
-        d_tensor = \n{}\n\
-        bqkv_tensor = \n{}\n\
-        ".format(
-                wqkv_tensor, d_tensor, bqkv_tensor
-            )
-        )
-        # calculate the output
-        # cut the output to smaller sets
-        ref = []
-        output = torch.zeros(
-            (
-                self.samples,
-                self.in_num_parallelism * self.in_parallelism,
-                self.w_num_parallelism * self.w_parallelism,
-            )
-        )
-        for i in range(self.samples):
-            qatt = QPartAttention(
-                d_tensor[i].shape[1],
-                int(wqkv_tensor[i].shape[0] / 3),
-                wqkv_tensor[i],
-                bqkv_tensor[i],
-                self.data_in_width,
-                self.data_in_frac_width,
-                self.weight_width,
-                self.weight_frac_width,
-                self.bias_width,
-                self.bias_frac_width,
-            )
-            # calculate
-            out_temp = rearrange(qatt(d_tensor[i]), "b r c->(b r) c ", b=1)
-            output[i] = out_temp
-
-        out_data = self.data_pack(
-            output,
+        data_out = self.att(self.x)
+        output = self.data_pack(
+            q2i(data_out, self.data_z_width, self.data_z_frac_width),
             self.in_num_parallelism,
             self.w_num_parallelism,
             self.in_parallelism,
             self.w_parallelism,
         )
-        return out_data
+        return output
 
-    def data_generate(self):
+    def att_data_generate(self):
         samples = self.samples
+        # torch.manual_seed(0)
+        in_y = self.in_num_parallelism * self.in_parallelism
+        in_x = self.in_size * self.in_depth
+        w_y = self.w_num_parallelism * self.w_parallelism
+        self.x = torch.randn((samples, in_y, in_x))
+        self.att = QuantizedAttention(
+            dim=in_x,
+            num_heads=1,
+            qkv_bias=True,
+            attn_drop=0.0,
+            proj_drop=0.0,
+            config=self.w_config,
+        )
+
+        input_tensor = q2i(self.x, self.data_in_width, self.data_in_frac_width)
+        wq = q2i(
+            self.att.q.weight, self.weight_q_width, self.weight_q_frac_width
+        ).repeat(samples, 1, 1)
+        wkv = self.att.kv.weight.reshape(2, w_y, w_y)
+        wk, wv = wkv[0], wkv[1]
+        wk = q2i(wk, self.weight_k_width, self.weight_k_frac_width).repeat(
+            samples, 1, 1
+        )
+        wv = q2i(wv, self.weight_v_width, self.weight_v_frac_width).repeat(
+            samples, 1, 1
+        )
+
+        bq = q2i(self.att.q.bias, self.weight_q_width, self.weight_q_frac_width).repeat(
+            samples, 1
+        )
+        bkv = self.att.kv.bias.reshape(2, w_y)
+        bk, bv = bkv[0], bkv[1]
+        bk = q2i(bk, self.bias_k_width, self.bias_k_frac_width).repeat(samples, 1)
+        bv = q2i(bv, self.bias_v_width, self.bias_v_frac_width).repeat(samples, 1)
+
         in_num_parallelism = self.in_num_parallelism
         in_depth = self.in_depth
         in_parallelism = self.in_parallelism
@@ -213,25 +305,6 @@ class VerificationCase:
         w_parallelism = self.w_parallelism
         w_num_parallelism = self.w_num_parallelism
 
-        B = 1
-        N = in_parallelism * in_num_parallelism
-        dim = in_size * in_depth
-        dim_out = w_parallelism * w_num_parallelism
-
-        torch.manual_seed(0)
-        wqkv_tensor = torch.randint(5, (samples, dim_out * 3, dim), dtype=float)
-        wqkv = wqkv_tensor.reshape(samples, 3, dim_out, dim).transpose(0, 1)
-        bqkv_tensor = torch.randint(5, (samples, dim_out * 3), dtype=float)
-        bqkv = bqkv_tensor.reshape(samples, 3, dim_out).transpose(0, 1)
-
-        input_tensor = torch.randint(5, (samples, B, N, dim), dtype=float)
-        wq = wqkv[0]
-        wk = wqkv[1]
-        wv = wqkv[2]
-
-        bq = bqkv[0]
-        bk = bqkv[1]
-        bv = bqkv[2]
         data_in = self.data_pack(
             input_tensor, in_num_parallelism, in_depth, in_parallelism, in_size
         )
@@ -250,9 +323,6 @@ class VerificationCase:
         bk_in.reverse()
         bv_in.reverse()
         return (
-            input_tensor,
-            wqkv_tensor,
-            bqkv_tensor,
             data_in,
             wq_in,
             wk_in,
@@ -261,6 +331,35 @@ class VerificationCase:
             bk_in,
             bv_in,
         )
+
+    def soft_max_data_generate(self, scale):
+        # generate mem_init
+        exp_table = generate_table_hardware(
+            scale,
+            self.w_config["softmax"]["data_in_width"],
+            self.w_config["softmax"]["data_in_frac_width"],
+            self.w_config["softmax"]["exp_width"],
+            self.w_config["softmax"]["exp_frac_width"],
+        ).tolist()
+        div_table = generate_table_div_hardware(
+            self.w_config["softmax"]["div_width"],
+            self.w_config["softmax"]["data_out_width"],
+            self.w_config["softmax"]["data_out_frac_width"],
+        ).tolist()
+        with open(r"exp_init.mem", "w") as fp:
+            for item in exp_table:
+                # write each item on a new lineformat(addr[i] ,f'0{width}b'
+                fp.write(
+                    "%s\n"
+                    % format(item, f'0{self.w_config["softmax"]["exp_width"]//4}x')
+                )
+        with open(r"div_init.mem", "w") as fp:
+            for item in div_table:
+                # write each item on a new line
+                fp.write(
+                    "%s\n"
+                    % format(item, f'0{self.w_config["softmax"]["data_out_width"]//4}x')
+                )
 
     def data_pack(self, in_temp, np, d, p, s):
         # assum in_temp.shape = (samples, batch = 1, N,dim)
@@ -275,6 +374,7 @@ class VerificationCase:
                 for i in range(d):
                     for j in range(p):
                         ex_tensor[b][i * p + j] = re_tensor[b][j * d + i]
+
             output_tensor = rearrange(
                 ex_tensor, "np (d p) s -> (np d) (p s)", np=np, d=d, p=p, s=s
             )
@@ -304,7 +404,7 @@ def debug_state(dut, state):
 @cocotb.test()
 async def test_att(dut):
     """Test integer based vector mult"""
-    samples = 20
+    samples = 30
     test_case = VerificationCase(samples=samples)
     # Reset cycle
     await Timer(20, units="ns")
@@ -379,7 +479,7 @@ async def test_att(dut):
             dut.data_out_valid.value, dut.data_out.value
         )
         await Timer(1, units="ns")
-        wave_check(dut)
+        # wave_check(dut)
         if (
             test_case.weight_q.is_empty()
             and test_case.weight_k.is_empty()
@@ -414,66 +514,6 @@ def wave_check(dut):
         )
     )
 
-    logger.debug(
-        "wave of att:\n\
-            {},{},data_in_q = {} \n\
-            {},{},data_in_k = {} \n\
-            {},{},data_in_v = {} \n\
-            {},{},bias_v = {} \n\
-            ".format(
-            dut.att_inst.data_in_q_valid.value,
-            dut.att_inst.data_in_q_ready.value,
-            [int(i) for i in dut.att_inst.data_in_q.value],
-            dut.att_inst.data_in_k_valid.value,
-            dut.att_inst.data_in_k_ready.value,
-            [int(i) for i in dut.att_inst.data_in_k.value],
-            dut.att_inst.data_in_v_valid.value,
-            dut.att_inst.data_in_v_ready.value,
-            [int(i) for i in dut.att_inst.data_in_v.value],
-            dut.att_inst.bias_v_valid.value,
-            dut.att_inst.bias_v_ready.value,
-            [int(i) for i in dut.att_inst.bias_v.value],
-        )
-    )
-    # logger.debug(
-    #     "wave of matmul_z:\n\
-    #         {},{} ib_data_in = {}\n\
-    #         {},{} ib_weight = {}\n\
-    #         {},{} data_out = {}\n\
-    #         ".format(
-    #         dut.att_inst.inst_fmmc_z.ib_data_in_valid.value,
-    #         dut.att_inst.inst_fmmc_z.ib_data_in_ready.value,
-    #         [int(i) for i in dut.att_inst.inst_fmmc_z.ib_data_in.value],
-    #         dut.att_inst.inst_fmmc_z.ib_weight_valid.value,
-    #         dut.att_inst.inst_fmmc_z.ib_weight_ready.value,
-    #         [int(i) for i in dut.att_inst.inst_fmmc_z.ib_weight.value],
-    #         dut.att_inst.inst_fmmc_z.data_out_valid.value,
-    #         dut.att_inst.inst_fmmc_z.data_out_ready.value,
-    #         [int(i) for i in dut.att_inst.inst_fmmc_z.data_out.value],
-    #     )
-    # )
-    logger.debug(
-        "wave of matmul_v:\n\
-            {},{} ib_data_in = {}\n\
-            {},{} ib_weight = {}\n\
-            {},{} bias = {}\n\
-            {},{} data_out = {}\n\
-            ".format(
-            dut.att_inst.inst_fmmc_v.ib_data_in_valid.value,
-            dut.att_inst.inst_fmmc_v.ib_data_in_ready.value,
-            [int(i) for i in dut.att_inst.inst_fmmc_v.ib_data_in.value],
-            dut.att_inst.inst_fmmc_v.ib_weight_valid.value,
-            dut.att_inst.inst_fmmc_v.ib_weight_ready.value,
-            [int(i) for i in dut.att_inst.inst_fmmc_v.ib_weight.value],
-            dut.att_inst.inst_fmmc_v.bias_valid.value,
-            dut.att_inst.inst_fmmc_v.bias_ready.value,
-            [int(i) for i in dut.att_inst.inst_fmmc_v.bias.value],
-            dut.att_inst.inst_fmmc_v.data_out_valid.value,
-            dut.att_inst.inst_fmmc_v.data_out_ready.value,
-            [int(i) for i in dut.att_inst.inst_fmmc_v.data_out.value],
-        )
-    )
-
 
 def runner():
     sim = os.getenv("SIM", "verilator")
@@ -481,15 +521,19 @@ def runner():
     verilog_sources = [
         "../../../../components/attention/fixed_self_att.sv",
         "../../../../components/attention/fixed_att.sv",
+        "../../../../components/ViT/hash_softmax.sv",
+        "../../../../components/conv/roller.sv",
         "../../../../components/common/fifo.sv",
+        "../../../../components/common/unpacked_fifo.sv",
         "../../../../components/common/input_buffer.sv",
-        "../../../../components/common/ram_block.sv",
-        "../../../../components/common/register_slice.sv",
+        "../../../../components/common/blk_mem_gen_0.sv",
+        "../../../../components/common/skid_buffer.sv",
+        "../../../../components/common/unpacked_skid_buffer.sv",
         "../../../../components/common/join2.sv",
         "../../../../components/matmul/fixed_matmul.sv",
         "../../../../components/linear/fixed_linear.sv",
         "../../../../components/linear/fixed_2d_linear.sv",
-        "../../../../components/cast/fixed_cast.sv",
+        "../../../../components/cast/fixed_rounding.sv",
         "../../../../components/fixed_arith/fixed_matmul_core.sv",
         "../../../../components/fixed_arith/fixed_dot_product.sv",
         "../../../../components/fixed_arith/fixed_accumulator.sv",

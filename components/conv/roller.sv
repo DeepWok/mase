@@ -10,7 +10,7 @@ module roller #(
 
     input logic [DATA_WIDTH -1:0] data_in[NUM - 1:0],
     input data_in_valid,
-    output data_in_ready,
+    output logic data_in_ready,
 
     output [DATA_WIDTH - 1:0] data_out[ROLL_NUM - 1:0],
     output data_out_valid,

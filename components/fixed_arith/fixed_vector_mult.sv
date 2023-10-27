@@ -65,17 +65,17 @@ module fixed_vector_mult #(
   for (genvar i = 0; i < IN_SIZE; i++)
     assign product_data_in[PRODUCT_WIDTH*i+PRODUCT_WIDTH-1:PRODUCT_WIDTH*i] = product_vector[i];
 
-  register_slice #(
-      .IN_WIDTH($bits(product_vector))
+  skid_buffer #(
+      .DATA_WIDTH($bits(product_vector))
   ) register_slice (
       .clk           (clk),
       .rst           (rst),
       .data_in_valid (product_data_in_valid),
       .data_in_ready (product_data_in_ready),
-      .data_in_data  (product_data_in),
+      .data_in       (product_data_in),
       .data_out_valid(product_data_out_valid),
       .data_out_ready(product_data_out_ready),
-      .data_out_data (product_data_out)
+      .data_out      (product_data_out)
   );
 
   // Casting array for product vector 

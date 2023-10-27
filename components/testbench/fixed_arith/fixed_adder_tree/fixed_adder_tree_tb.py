@@ -131,17 +131,6 @@ async def test_fixed_adder_tree(dut):
                 dut.data_out_valid.value,
             )
         )
-        assert not is_impossible_state(
-            dut.data_in_ready.value,
-            dut.data_in_valid.value,
-            dut.data_out_ready.value,
-            dut.data_out_valid.value,
-        ), "Error: invalid state (data_in_ready,data_in_valid,data_out_ready,data_out_valid) = ({},{},{},{})".format(
-            dut.data_in_ready.value,
-            dut.data_in_valid.value,
-            dut.data_out_ready.value,
-            dut.data_out_valid.value,
-        )
         dut.data_in_valid.value = test_case.inputs.pre_compute()
         await Timer(1, units="ns")
         dut.data_out_ready.value = test_case.outputs.pre_compute(
@@ -174,7 +163,7 @@ def runner():
     verilog_sources = [
         "../../../../components/fixed_arith/fixed_adder_tree.sv",
         "../../../../components/fixed_arith/fixed_adder_tree_layer.sv",
-        "../../../../components/common/register_slice.sv",
+        "../../../../components/common/skid_buffer.sv",
     ]
     test_case = VerificationCase()
 

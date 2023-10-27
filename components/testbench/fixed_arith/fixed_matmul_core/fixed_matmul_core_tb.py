@@ -38,7 +38,7 @@ class VerificationCase:
         self.data_out_frac_width = 1
         self.has_bias = 1
 
-        self.in_rows = 3
+        self.in_rows = 2000
         self.in_columns = 4
         self.weight_rows = self.in_columns
         self.weight_columns = 2
@@ -47,24 +47,24 @@ class VerificationCase:
             name="data_in",
             samples=samples * self.iterations,
             num=self.in_rows * self.in_columns,
-            max_stalls=2 * samples * self.iterations,
+            max_stalls=0,
             debug=debug,
         )
         self.weight = RandomSource(
             name="weight",
             samples=samples * self.iterations,
             num=self.weight_rows * self.weight_columns,
-            max_stalls=2 * samples * self.iterations,
+            max_stalls=0,
             debug=debug,
         )
         self.bias = RandomSource(
             name="bias",
             samples=samples,
             num=self.in_rows * self.weight_columns,
-            max_stalls=2 * samples,
+            max_stalls=0,
             debug=debug,
         )
-        self.outputs = RandomSink(samples=samples, max_stalls=2 * samples, debug=debug)
+        self.outputs = RandomSink(samples=samples, max_stalls=0, debug=debug)
         self.samples = samples
         self.ref = self.sw_compute()
         self.ref = self.sw_cast(
@@ -98,15 +98,6 @@ class VerificationCase:
     def sw_compute(self):
         final = []
         ref = []
-        print(
-            "\n\
-        data = \n{}\n\
-        weight = \n{}\n\
-        bias = \n{}\n\
-        ".format(
-                self.data_in.data, self.weight.data, self.bias.data
-            )
-        )
         for i in range(self.samples):
             acc = [0 for _ in range(self.in_rows * self.weight_columns)]
             for w in range(self.in_rows):
@@ -172,7 +163,7 @@ def debug_state(dut, state):
 @cocotb.test()
 async def test_fixed_linear(dut):
     """Test integer based vector mult"""
-    samples = 20
+    samples = 1000
     test_case = VerificationCase(samples=samples)
 
     # Reset cycle
@@ -248,10 +239,10 @@ def runner():
 
     verilog_sources = [
         "../../../../components/fixed_arith/fixed_matmul_core.sv",
-        "../../../../components/common/register_slice.sv",
+        "../../../../components/common/skid_buffer.sv",
         "../../../../components/common/join2.sv",
         "../../../../components/linear/fixed_linear.sv",
-        "../../../../components/cast/fixed_cast.sv",
+        "../../../../components/cast/fixed_rounding.sv",
         "../../../../components/fixed_arith/fixed_dot_product.sv",
         "../../../../components/fixed_arith/fixed_accumulator.sv",
         "../../../../components/fixed_arith/fixed_vector_mult.sv",
@@ -263,6 +254,8 @@ def runner():
 
     # set parameters
     extra_args = []
+    extra_args.append(f"--unroll-count")
+    extra_args.append(f"3000")
     for k, v in test_case.get_dut_parameters().items():
         extra_args.append(f"-G{k}={v}")
     print(extra_args)

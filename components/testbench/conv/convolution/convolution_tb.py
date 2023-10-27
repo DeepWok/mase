@@ -12,7 +12,7 @@ from random_test import RandomSource
 from random_test import RandomSink
 from random_test import check_results
 
-from Qconv import QuantizedConvolution
+from z_qlayers import QuantizedConvolution
 import torch
 import torch.nn as nn
 
@@ -40,19 +40,22 @@ class VerificationCase:
         self.weight_frac_width = 1
         self.bias_width = 16
         self.bias_frac_width = 1
+        self.out_data_width = 32
+        self.out_data_frac_width = 1
 
         self.in_height = 2
         self.in_width = 4
 
         self.in_channels = 2
-        self.in_size = 2
-        self.weight_size = 4
+        self.unroll_in_c = 2
+        self.unroll_kernel_out = 4
 
         self.kernel_height = 2
         self.kernel_width = 3
-        self.out_channels = 3
+        self.out_channels = 4
+        self.unroll_out_c = 2
 
-        self.stride = 2
+        self.stride = 3
         self.padding_height = 1
         self.padding_width = 2
 
@@ -67,12 +70,6 @@ class VerificationCase:
 
         self.sliding_depth = self.out_width * self.out_height
 
-        # test_data_in = [[0,0],[1,1],[2,2],[3,3],[4,4],[5,5],[6,6],[7,7],[8,8],[9,9],[10,10],[11,11],[12,12],[13,13],[14,14],[15,15]]
-        # test_data_in = [[0,0],[1,1],[2,2],[3,3],[4,4],[5,5],[6,6],[7,7]]
-        # test_weight = [[0,0,4,4],[1,1,5,5],[2,2,6,6],[3,3,7,7],[0,0,4,4],[1,1,5,5],[2,2,6,6],[3,3,7,7]]
-        # test_bias = [[1,1]]
-        # test_data_in.reverse()
-        # test_weight.reverse()
         self.samples = samples
         test_data_in, test_weight, test_bias, _, _, _ = self.data_generate()
         print(
@@ -90,37 +87,43 @@ class VerificationCase:
                 * self.in_width
                 * self.in_height
                 * self.in_channels
-                / self.in_size
+                / self.unroll_in_c
             ),
-            num=self.in_size,
+            num=self.unroll_in_c,
             max_stalls=2 * samples,
             debug=debug,
             data_specify=test_data_in,
         )
+        self.weight_partition_depth = int(
+            self.kernel_height
+            * self.kernel_width
+            * self.in_channels
+            * self.out_channels
+            / self.unroll_kernel_out
+            / self.unroll_out_c
+        )
         self.weight = RandomSource(
             name="weight",
-            samples=int(
-                samples
-                * self.kernel_height
-                * self.kernel_width
-                * self.in_channels
-                / self.weight_size
-            ),
-            num=self.weight_size * self.out_channels,
-            max_stalls=2 * samples,
+            samples=samples * self.weight_partition_depth,
+            num=self.unroll_kernel_out * self.unroll_out_c,
+            max_stalls=2 * samples * self.weight_partition_depth,
             data_specify=test_weight,
             debug=debug,
         )
         self.bias = RandomSource(
             name="bias",
-            samples=samples,
-            num=self.out_channels,
-            max_stalls=2 * samples,
+            samples=samples * int(self.out_channels / self.unroll_out_c),
+            num=self.unroll_out_c,
+            max_stalls=2 * samples * int(self.out_channels / self.unroll_out_c),
             data_specify=test_bias,
             debug=debug,
         )
         self.outputs = RandomSink(
-            samples=samples * self.sliding_depth, max_stalls=2 * samples, debug=debug
+            samples=samples
+            * int(self.out_channels / self.unroll_out_c)
+            * self.sliding_depth,
+            max_stalls=2 * samples,
+            debug=debug,
         )
         self.ref = self.sw_compute()
 
@@ -132,18 +135,21 @@ class VerificationCase:
             "W_FRAC_WIDTH": self.weight_frac_width,
             "BIAS_WIDTH": self.bias_width,
             "BIAS_FRAC_WIDTH": self.bias_frac_width,
-            "IN_WIDTH": self.in_width,
-            "IN_HEIGHT": self.in_height,
-            "IN_CHANNELS": self.in_channels,
-            "KERNEL_WIDTH": self.kernel_width,
-            "KERNEL_HEIGHT": self.kernel_height,
-            "OUT_CHANNELS": self.out_channels,
-            "IN_SIZE": self.in_size,
-            "W_SIZE": self.weight_size,
-            "SLIDING_SIZE": self.sliding_depth,
+            "OUT_WIDTH": self.out_data_width,
+            "OUT_FRAC_WIDTH": self.out_data_frac_width,
+            "IN_X": self.in_width,
+            "IN_Y": self.in_height,
+            "IN_C": self.in_channels,
+            "KERNEL_X": self.kernel_width,
+            "KERNEL_Y": self.kernel_height,
+            "OUT_C": self.out_channels,
+            "UNROLL_OUT_C": self.unroll_out_c,
+            "UNROLL_IN_C": self.unroll_in_c,
+            "UNROLL_KERNEL_OUT": self.unroll_kernel_out,
+            "SLIDING_NUM": self.sliding_depth,
             "STRIDE": self.stride,
-            "PADDING_HEIGHT": self.padding_height,
-            "PADDING_WIDTH": self.padding_width,
+            "PADDING_Y": self.padding_height,
+            "PADDING_X": self.padding_width,
         }
 
     def data_generate(self):
@@ -153,65 +159,52 @@ class VerificationCase:
         in_width = self.in_width
         in_height = self.in_height
         in_channels = self.in_channels
-        in_size = self.in_size
+        unroll_in_c = self.unroll_in_c
         # weight dimension
         kernel_width = self.kernel_width
         kernel_height = self.kernel_height
         out_channels = self.out_channels
-        w_size = self.weight_size
+        unroll_out_c = self.unroll_out_c
+        unroll_kernel_out = self.unroll_kernel_out
         # data_pack
         re_data_tensor = torch.randint(30, (samples, in_channels, in_height, in_width))
-        data_tensor = re_data_tensor.permute(0, 2, 3, 1)
-        data_tensor = data_tensor.reshape(
-            samples * in_height * in_width * int(in_channels / in_size), in_size
-        )
+        # from (samples, c, h, w) to (samples*h*w*c/unroll_in_c, unroll_in_c)
+        data_tensor = re_data_tensor.permute(0, 2, 3, 1).reshape(-1, unroll_in_c)
         data_in = data_tensor.type(torch.int).flip(0).tolist()
         # weight_pack
         re_w_tensor = torch.randint(
             30, (samples, out_channels, in_channels, kernel_height, kernel_width)
         )
 
+        # from (oc,ic/unroll_in_c,unroll_in_c,h,w) to (ic/unroll_in_c,h*w,unroll_in_c,oc)
         reorder_w_tensor = re_w_tensor.reshape(
             samples,
             out_channels,
-            int(in_channels / in_size),
-            in_size,
+            int(in_channels / unroll_in_c),
+            unroll_in_c,
             kernel_height * kernel_width,
         ).permute(0, 2, 4, 3, 1)
-        """
-        (
-            samples, 
-            int(in_channels / in_size), 
-            kernel_height * kernel_width, 
-            in_size, 
-            out_channels
-        )
-        """
 
         # reverse the final 2 dimension
+        # from(samples, int(kernel_height * kernel_width * in_channels / unroll_kernel_out), unroll_kernel_out, int(out_channels/unroll_out_c ), unroll_out_c )
+        # to  (samples, int(out_channels/unroll_out_c ), int(kernel_height * kernel_width * in_channels / unroll_kernel_out), unroll_out_c , unroll_kernel_out)
         w_tensor = reorder_w_tensor.reshape(
             samples,
-            int(kernel_height * kernel_width * in_channels / w_size),
-            w_size,
-            out_channels,
-        ).permute(0, 1, 3, 2)
-        """
-        (
-            samples, 
-            int(kernel_height * kernel_width * in_channels / w_size), 
-            out_channels, 
-            w_size
-        )
-        """
+            int(kernel_height * kernel_width * in_channels / unroll_kernel_out),
+            unroll_kernel_out,
+            int(out_channels / unroll_out_c),
+            unroll_out_c,
+        ).permute(0, 3, 1, 4, 2)
 
         w_tensor = w_tensor.reshape(
-            int(samples * kernel_height * kernel_width * in_channels / w_size),
-            out_channels * w_size,
+            -1,
+            unroll_out_c * unroll_kernel_out,
         )
         w_in = w_tensor.type(torch.int).flip(0).tolist()
         # bias_pack
         re_bias_tensor = torch.randint(30, (samples, out_channels))
-        bias_in = re_bias_tensor.type(torch.int).flip(0).tolist()
+        bias_tensor = re_bias_tensor.reshape(-1, unroll_out_c)
+        bias_in = bias_tensor.type(torch.int).flip(0).tolist()
         return (
             data_in,
             w_in,
@@ -257,17 +250,19 @@ class VerificationCase:
                 bias[i],
                 stride=self.stride,
                 padding=(self.padding_height, self.padding_width),
-                DWidth=self.data_width,
-                DFWidth=self.data_frac_width,
-                WWidth=self.weight_width,
-                WFWidth=self.weight_frac_width,
-                BWidth=self.bias_width,
-                BFWidth=self.bias_frac_width,
+                data_width=self.data_width,
+                data_frac_width=self.data_frac_width,
+                weight_width=self.weight_width,
+                weight_frac_width=self.weight_frac_width,
+                bias_width=self.bias_width,
+                bias_frac_width=self.bias_frac_width,
+                out_width=self.out_data_width,
+                out_frac_width=self.out_data_frac_width,
             )
             # Turn an input to a single batch input
             data_out = Qconv(data[i].unsqueeze(0))
             data_out = self.out_unpack(data_out)
-            output = data_out.tolist()
+            output = data_out.reshape(-1, self.unroll_out_c).tolist()
             ref = ref + output
         # ref.reverse()
         return ref
@@ -437,7 +432,8 @@ def runner():
         "../../../../components/fixed_arith/fixed_adder_tree.sv",
         "../../../../components/fixed_arith/fixed_adder_tree_layer.sv",
         "../../../../components/fixed_arith/fixed_mult.sv",
-        "../../../../components/common/register_slice.sv",
+        "../../../../components/common/skid_buffer.sv",
+        "../../../../components/common/unpaced_skid_buffer.sv",
         "../../../../components/common/join2.sv",
         "../../../../components/common/input_buffer.sv",
         "../../../../components/common/ram_block.sv",

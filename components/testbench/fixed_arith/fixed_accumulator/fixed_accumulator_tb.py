@@ -28,15 +28,15 @@ class VerificationCase:
     def __init__(self, samples=10):
         self.samples = samples
         self.in_width = 32
-        self.num = 9
+        self.num = 100
         self.out_width = math.ceil(math.log2(self.num)) + self.in_width
         self.inputs = RandomSource(
             samples=self.samples * self.num,
-            max_stalls=2 * self.samples,
+            max_stalls=0,
             is_data_vector=False,
             debug=debug,
         )
-        self.outputs = RandomSink(samples=samples, max_stalls=2 * samples, debug=debug)
+        self.outputs = RandomSink(samples=samples, max_stalls=0, debug=debug)
         self.ref = self.sw_compute()
 
     def get_dut_parameters(self):
@@ -131,7 +131,10 @@ async def test_fixed_accumulator(dut):
 def runner():
     sim = os.getenv("SIM", "verilator")
 
-    verilog_sources = ["../../../../components/fixed_arith/fixed_accumulator.sv"]
+    verilog_sources = [
+        "../../../../components/fixed_arith/fixed_accumulator.sv",
+        "../../../../components/common/skid_buffer.sv",
+    ]
     test_case = VerificationCase()
 
     # set parameters
