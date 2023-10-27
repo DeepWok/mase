@@ -126,7 +126,7 @@ module fixed_linear #(
 
   if (HAS_BIAS == 1) begin
 
-    logic acc_join_valid, acc_join_ready;
+    logic [ACC_WIDTH-1:0] bias_sext[PARALLELISM-1:0];
     join2 #() acc_join_inst (
         .data_in_ready ({bias_ready, acc_ready}),
         .data_in_valid ({bias_valid, linear[0].acc_data_out_valid}),
@@ -136,8 +136,8 @@ module fixed_linear #(
     logic [PARALLELISM-1:0] reg_ready;
     assign acc_join_ready = &reg_ready;
 
-    logic [ACC_WIDTH-1:0] bias_sext[PARALLELISM-1:0];
-    fixed_cast #(
+    logic acc_join_valid, acc_join_ready;
+    fixed_rounding #(
         .IN_SIZE(PARALLELISM),
         .IN_WIDTH(BIAS_WIDTH),
         .IN_FRAC_WIDTH(BIAS_FRAC_WIDTH),
@@ -153,17 +153,17 @@ module fixed_linear #(
       assign add = $signed(acc_data_out[i]) + $signed(bias_sext[i]);
       /* verilator lint_off UNUSEDSIGNAL */
       logic dout_valid;
-      register_slice #(
-          .IN_WIDTH(OUT_WIDTH)
+      skid_buffer #(
+          .DATA_WIDTH(OUT_WIDTH)
       ) register_slice (
           .clk           (clk),
           .rst           (rst),
           .data_in_valid (acc_join_valid),
           .data_in_ready (reg_ready[i]),
-          .data_in_data  (add),
+          .data_in       (add),
           .data_out_valid(dout_valid),
           .data_out_ready(data_out_ready),
-          .data_out_data (data_out[i])
+          .data_out      (data_out[i])
       );
     end
     assign data_out_valid = add_bias[0].dout_valid;

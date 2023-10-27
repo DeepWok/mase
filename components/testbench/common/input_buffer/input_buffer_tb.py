@@ -18,7 +18,7 @@ from cocotb.triggers import RisingEdge
 from cocotb.clock import Clock
 from cocotb.runner import get_runner
 
-debug = True
+debug = False
 
 logger = logging.getLogger("tb_signals")
 if debug:
@@ -31,19 +31,19 @@ class VerificationCase:
         self.in_width = 32
         self.in_parallelism = 4
         self.in_size = 2
-        self.buffer_size = 2
-        self.repeat = 3
+        self.buffer_size = 32
+        self.repeat = 4
         self.data_in = RandomSource(
             name="data_in",
             samples=samples * self.buffer_size,
             num=self.in_parallelism * self.in_size,
-            max_stalls=2 * samples * self.buffer_size,
+            max_stalls=0,
             debug=debug,
         )
         self.outputs = RandomSink(
             name="output",
             samples=samples * self.repeat * self.buffer_size,
-            max_stalls=2 * samples * self.repeat * self.buffer_size,
+            max_stalls=0,
             debug=debug,
         )
         self.samples = samples
@@ -86,7 +86,7 @@ def debug_state(dut, state):
 @cocotb.test()
 async def test_fixed_dot_product(dut):
     """Test integer based vector mult"""
-    samples = 20
+    samples = 100
     test_case = VerificationCase(samples=samples)
 
     # Reset cycles
@@ -113,7 +113,7 @@ async def test_fixed_dot_product(dut):
 
     done = False
     # Set a timeout to avoid deadlock
-    for i in range(samples * 20):
+    for i in range(samples * test_case.buffer_size * test_case.repeat * 10):
         await FallingEdge(dut.clk)
         debug_state(dut, "Post-clk")
         dut.data_in_valid.value = test_case.data_in.pre_compute()
@@ -170,8 +170,9 @@ def runner():
 
     verilog_sources = [
         "../../../../components/common/input_buffer.sv",
-        "../../../../components/common/ram_block.sv",
-        "../../../../components/common/register_slice.sv",
+        "../../../../components/common/blk_mem_gen_0.sv",
+        "../../../../components/common/skid_buffer.sv",
+        "../../../../components/common/unpacked_skid_buffer.sv",
     ]
     test_case = VerificationCase()
 

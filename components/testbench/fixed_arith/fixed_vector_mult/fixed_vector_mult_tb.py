@@ -243,7 +243,7 @@ def runner():
 
     verilog_sources = [
         "../../../../components/fixed_arith/fixed_vector_mult.sv",
-        "../../../../components/common/register_slice.sv",
+        "../../../../components/common/skid_buffer.sv",
         "../../../../components/fixed_arith/fixed_mult.sv",
         "../../../../components/common/join2.sv",
     ]

@@ -16,9 +16,9 @@ module register_slice #(
 );
 
   // The buffer stores the intermeidate data being computed in the register slice
-  MYDATA buffer;
+  logic [IN_WIDTH-1:0] buffer;
   // The shift register stores the validity of the data in the buffer 
-  logic  shift_reg;
+  logic shift_reg;
 
   // shift_register 
   always_ff @(posedge clk) begin
@@ -32,13 +32,14 @@ module register_slice #(
 
   // buffer 
   always_ff @(posedge clk) begin
+    if (rst) buffer <= 0;
     // backpressure && valid output
     if (!data_out_ready && data_out_valid) buffer <= buffer;
     else buffer <= data_in_data;
   end
 
   always_comb begin
-    // empty buffer or no back pressure
+    // empty buffer or no back pressure 
     data_in_ready  = (~shift_reg) | data_out_ready;
     // dummy data_iniring 
     data_out_valid = shift_reg;

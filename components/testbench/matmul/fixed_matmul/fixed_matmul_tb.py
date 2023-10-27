@@ -1,13 +1,12 @@
 #!/usr/bin/env python3
 
 # This script tests the fixed point linear
-import random, os, math, logging, sys
-import numpy as np
+import os, logging, sys
 
 sys.path.append(
     os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 )
-print(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+sys.path.append("/workspace/machop/")
 
 from random_test import RandomSource
 from random_test import RandomSink
@@ -19,10 +18,10 @@ from cocotb.triggers import FallingEdge
 from cocotb.clock import Clock
 from cocotb.runner import get_runner
 
-from einops import rearrange, reduce, repeat
+from einops import rearrange
 import torch
-import torch.nn as nn
-from QLinear import QuantizedMatmulBias
+from z_qlayers import quantize_to_int as q2i
+from chop.models.manual.quant_utils import get_quantized_func
 
 debug = True
 
@@ -35,27 +34,27 @@ if debug:
 class VerificationCase:
     def __init__(self, samples=1):
         self.samples = samples
-        self.data_in_width = 32
-        self.data_in_frac_width = 1
-        self.weight_width = 16
-        self.weight_frac_width = 1
+        self.data_in_width = 8
+        self.data_in_frac_width = 7
+        self.weight_width = 8
+        self.weight_frac_width = 5
+        self.data_out_width = 8
+        self.data_out_frac_width = 5
+
         self.has_bias = 0
-        self.bias_width = 16
+        self.bias_width = 6
         self.bias_frac_width = 1
 
-        self.data_out_width = 32
-        self.data_out_frac_width = 1
+        self.in_parallelism = 1
+        self.in_num_parallelism = 2
 
-        self.in_parallelism = 4
-        self.in_num_parallelism = 3
-
-        self.in_size = 2
+        self.in_size = 1
         self.weight_size = self.in_size
 
-        self.w_parallelism = 5
-        self.w_num_parallelism = 4
+        self.w_parallelism = 2
+        self.w_num_parallelism = 2
         self.weight_columns = self.w_parallelism * self.w_num_parallelism
-        self.in_depth = 4
+        self.in_depth = 2
 
         self.b_size = self.w_parallelism
         self.b_depth = self.w_num_parallelism
@@ -105,31 +104,28 @@ class VerificationCase:
             "BIAS_FRAC_WIDTH": self.bias_frac_width,
             "OUT_WIDTH": self.data_out_width,
             "OUT_FRAC_WIDTH": self.data_out_frac_width,
-            "IN1_PARALLELISM": self.in_parallelism,
-            "IN1_NUM_PARALLELISM": self.in_num_parallelism,
-            "IN2_PARALLELISM": self.w_parallelism,
-            "IN2_NUM_PARALLELISM": self.w_num_parallelism,
-            "IN_SIZE": self.in_size,
-            "IN_DEPTH": self.in_depth,
+            "IN1_Y": self.in_parallelism * self.in_num_parallelism,
+            "UNROLL_IN1_Y": self.in_parallelism,
+            "IN1_X": self.in_size * self.in_depth,
+            "UNROLL_IN1_X": self.in_size,
+            "IN2_Y": self.w_parallelism * self.w_num_parallelism,
+            "UNROLL_IN2_Y": self.w_parallelism,
         }
 
     def data_generate(self):
-        torch.manual_seed(0)
+        torch.manual_seed(6798317339854970458)
+        # print("seed = ", torch.seed(6798317339854970458))
+        # breakpoint()
         in_features = self.in_size * self.in_depth
         out_features = self.w_parallelism * self.w_num_parallelism
         in_dim = self.in_parallelism * self.in_num_parallelism
-        bias_tensor = torch.randint(
-            30, (self.samples, in_dim, out_features), dtype=torch.float32
-        )
-        weight_tensor = torch.randint(
-            30, (self.samples, out_features, in_features), dtype=torch.float32
-        )
-        data_tensor = torch.randint(
-            30, (self.samples, in_dim, in_features), dtype=torch.float32
-        )
+
+        bias_tensor = 5 * torch.randn((self.samples, in_dim, out_features))
+        weight_tensor = 5 * torch.randn((self.samples, out_features, in_features))
+        data_tensor = 5 * torch.randn((self.samples, in_dim, in_features))
 
         data_in = self.data_pack(
-            data_tensor,
+            q2i(data_tensor, self.data_in_width, self.data_in_frac_width),
             np=self.in_num_parallelism,
             d=self.in_depth,
             p=self.in_parallelism,
@@ -137,7 +133,7 @@ class VerificationCase:
         )
 
         weight_in = self.data_pack(
-            weight_tensor,
+            q2i(weight_tensor, self.weight_width, self.weight_frac_width),
             np=self.w_num_parallelism,
             d=self.in_depth,
             p=self.w_parallelism,
@@ -145,16 +141,36 @@ class VerificationCase:
         )
 
         bias_in = self.data_pack(
-            bias_tensor,
+            q2i(bias_tensor, self.bias_width, self.bias_frac_width),
             np=self.in_num_parallelism,
             d=self.w_num_parallelism,
             p=self.in_parallelism,
             s=self.w_parallelism,
         )
+        logger.debug(
+            "\n\
+        data_tensor = {} \n\
+        weight_tensor = {} \n\
+        data_in = {} \n\
+        weight_in = {} ".format(
+                data_tensor,
+                weight_tensor,
+                data_in,
+                weight_in,
+            )
+        )
         data_in.reverse()
         weight_in.reverse()
         bias_in.reverse()
-        return (data_tensor, weight_tensor, bias_tensor, data_in, weight_in, bias_in)
+        # NOTE: weight in should transpose here
+        return (
+            data_tensor,
+            weight_tensor.transpose(-2, -1),
+            bias_tensor,
+            data_in,
+            weight_in,
+            bias_in,
+        )
 
     def data_pack(self, in_temp, np, d, p, s):
         ## just what to make a matrix with [np*p][s*d] to tile [np*d][p*s]
@@ -178,30 +194,23 @@ class VerificationCase:
         return ref
 
     def sw_compute(self):
-        data_in, weight_in, bias_in, _, _, _ = self.data_generate()
+        data_in, weight_in, _, _, _, _ = self.data_generate()
         in_features = self.in_size * self.in_depth
         out_features = self.w_parallelism * self.w_num_parallelism
         in_dim = data_in.shape[1]
-        bias = True if (self.has_bias == 1) else False
-        data_out = torch.zeros(
-            (self.samples, in_dim, out_features), dtype=torch.float32
-        )
-        for i in range(self.samples):
-            QL = QuantizedMatmulBias(
-                in_features,
-                out_features,
-                weight_in[i],
-                bias=bias,
-                bias_in=bias_in[i],
-                DWidth=self.data_in_width,
-                DFWidth=self.data_in_frac_width,
-                WWidth=self.weight_width,
-                WFWidth=self.weight_frac_width,
-                BWidth=self.bias_width,
-                BFWidth=self.bias_frac_width,
-            )
-            data_out[i] = QL(data_in[i])
-
+        config = {
+            "name": "integer",
+            "weight_width": self.weight_width,
+            "weight_frac_width": self.weight_frac_width,
+            "data_in_width": self.data_in_width,
+            "data_in_frac_width": self.data_in_frac_width,
+            "bias_width": self.bias_width,
+            "bias_frac_width": self.bias_frac_width,
+        }
+        matmul = get_quantized_func("matmul", config)
+        data_out = matmul(data_in, weight_in, config)
+        print(data_out)
+        data_out = q2i(data_out, self.data_out_width, self.data_out_frac_width)
         output = self.data_pack(
             data_out,
             np=self.in_num_parallelism,
@@ -241,7 +250,7 @@ def debug_state(dut, state):
 @cocotb.test()
 async def test_fixed_linear(dut):
     """Test integer based vector mult"""
-    samples = 30
+    samples = 100
     test_case = VerificationCase(samples=samples)
 
     # Reset cycle
@@ -278,7 +287,7 @@ async def test_fixed_linear(dut):
             [int(i[0]) for i in test_case.weight.data],
         )
     )
-    for i in range(samples * 80):
+    for i in range(samples * 200):
         await FallingEdge(dut.clk)
         debug_state(dut, "Post-clk")
         dut.data_in2_valid.value = test_case.weight.pre_compute()
@@ -312,6 +321,7 @@ async def test_fixed_linear(dut):
             {},{} ib_data_in = {}\n\
             {},{} ib_weight = {}\n\
             {},{} data_out = {}\n\
+            {},{} cast_data = {}\n\
             ".format(
                 dut.ib_data_in_valid.value,
                 dut.ib_data_in_ready.value,
@@ -322,9 +332,11 @@ async def test_fixed_linear(dut):
                 dut.data_out_valid.value,
                 dut.data_out_ready.value,
                 [int(i) for i in dut.data_out.value],
+                dut.inst_fmmc.data_out_valid.value,
+                dut.inst_fmmc.data_out_ready.value,
+                [int(i) for i in dut.inst_fmmc.cast_data.value],
             )
         )
-        # breakpoint()
         if (
             test_case.weight.is_empty()
             and test_case.data_in.is_empty()
@@ -345,10 +357,12 @@ def runner():
     verilog_sources = [
         "../../../../components/matmul/fixed_matmul.sv",
         "../../../../components/common/input_buffer.sv",
-        "../../../../components/common/ram_block.sv",
-        "../../../../components/common/register_slice.sv",
+        "../../../../components/common/blk_mem_gen_0.sv",
+        "../../../../components/common/skid_buffer.sv",
+        "../../../../components/common/unpacked_skid_buffer.sv",
         "../../../../components/common/join2.sv",
         "../../../../components/linear/fixed_linear.sv",
+        "../../../../components/cast/fixed_rounding.sv",
         "../../../../components/cast/fixed_cast.sv",
         "../../../../components/fixed_arith/fixed_matmul_core.sv",
         "../../../../components/fixed_arith/fixed_dot_product.sv",
@@ -371,11 +385,10 @@ def runner():
         hdl_toplevel="fixed_matmul",
         build_args=extra_args,
     )
-    for _ in range(1):
-        runner.test(
-            hdl_toplevel="fixed_matmul",
-            test_module="fixed_matmul_tb",
-        )
+    runner.test(
+        hdl_toplevel="fixed_matmul",
+        test_module="fixed_matmul_tb",
+    )
 
 
 if __name__ == "__main__":

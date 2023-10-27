@@ -63,17 +63,17 @@ module fixed_adder_tree #(
     for (genvar j = 0; j < NEXT_LEVEL_IN_SIZE; j++)
       assign cast_sum[(IN_WIDTH+i+1)*j+(IN_WIDTH+i):(IN_WIDTH+i+1)*j] = sum[j];
 
-    register_slice #(
-        .IN_WIDTH($bits(sum))
+    skid_buffer #(
+        .DATA_WIDTH($bits(sum))
     ) register_slice (
         .clk           (clk),
         .rst           (rst),
         .data_in_valid (vars[i].valid),
         .data_in_ready (vars[i].ready),
-        .data_in_data  (cast_sum),
+        .data_in       (cast_sum),
         .data_out_valid(vars[i+1].valid),
         .data_out_ready(vars[i+1].ready),
-        .data_out_data (cast_data)
+        .data_out      (cast_data)
     );
 
     // Casting array for vars[i+1].data 

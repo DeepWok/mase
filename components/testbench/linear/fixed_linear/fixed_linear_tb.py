@@ -18,7 +18,7 @@ from cocotb.triggers import FallingEdge
 from cocotb.clock import Clock
 from cocotb.runner import get_runner
 
-debug = True
+debug = False
 
 logger = logging.getLogger("tb_signals")
 if debug:
@@ -32,8 +32,8 @@ class VerificationCase:
         self.data_in_frac_width = 16
         self.weight_width = 16
         self.weight_frac_width = 8
-        self.vector_size = 8
-        self.iterations = 3
+        self.vector_size = 4
+        self.iterations = 5
         self.parallelism = 7
         self.has_bias = 1
         self.bias_width = 8
@@ -42,24 +42,24 @@ class VerificationCase:
             name="data_in",
             samples=samples * self.iterations,
             num=self.vector_size,
-            max_stalls=2 * samples,
+            max_stalls=0,
             debug=debug,
         )
         self.weight = RandomSource(
             name="weight",
             samples=samples * self.iterations,
             num=self.vector_size * self.parallelism,
-            max_stalls=2 * samples,
+            max_stalls=0,
             debug=debug,
         )
         self.bias = RandomSource(
             name="bias",
             samples=samples,
             num=self.parallelism,
-            max_stalls=2 * samples,
+            max_stalls=0,
             debug=debug,
         )
-        self.outputs = RandomSink(samples=samples, max_stalls=2 * samples, debug=debug)
+        self.outputs = RandomSink(samples=samples, max_stalls=0, debug=debug)
         self.samples = samples
         self.ref = self.sw_compute()
 
@@ -122,7 +122,7 @@ def debug_state(dut, state):
 @cocotb.test()
 async def test_fixed_linear(dut):
     """Test integer based vector mult"""
-    samples = 20
+    samples = 1000
     test_case = VerificationCase(samples=samples)
 
     # Reset cycle
@@ -198,7 +198,6 @@ def runner():
     sim = os.getenv("SIM", "verilator")
 
     verilog_sources = [
-        "../../../../components/cast/fixed_cast.sv",
         "../../../../components/linear/fixed_linear.sv",
         "../../../../components/fixed_arith/fixed_dot_product.sv",
         "../../../../components/fixed_arith/fixed_accumulator.sv",
@@ -206,8 +205,9 @@ def runner():
         "../../../../components/fixed_arith/fixed_adder_tree.sv",
         "../../../../components/fixed_arith/fixed_adder_tree_layer.sv",
         "../../../../components/fixed_arith/fixed_mult.sv",
-        "../../../../components/common/register_slice.sv",
+        "../../../../components/common/skid_buffer.sv",
         "../../../../components/common/join2.sv",
+        "../../../../components/cast/fixed_rounding.sv",
     ]
     test_case = VerificationCase()
 

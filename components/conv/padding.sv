@@ -26,18 +26,6 @@ module padding #(
   logic [Y_WIDTH -1:0] count_y;
   // count position
   /* verilator lint_off WIDTH */
-
-  logic [DATA_WIDTH - 1:0] register_out;
-  logic register_out_valid, register_out_ready;
-  register_slice #(
-      .IN_WIDTH(DATA_WIDTH)
-  ) rs_inst (
-      .data_out_valid(register_out_valid),
-      .data_out_ready(register_out_ready),
-      .data_out_data (register_out),
-      .data_in_data  (data_in),
-      .*
-  );
   // The start signal is used to determine whether padding output has started or ended.
   logic start;
   logic end_signal = count_c == CHANNELS - 1 
@@ -87,9 +75,9 @@ module padding #(
   /* verilator lint_on UNSIGNED */
   /* verilator lint_on WIDTH */
 
-  assign data_out = (padding_condition) ? 0 : register_out;
-  assign data_out_valid = (padding_condition) ? start : register_out_valid;
-  assign register_out_ready = (padding_condition) ? 0 : data_out_ready;
+  assign data_out = (padding_condition) ? 0 : data_in;
+  assign data_out_valid = (padding_condition) ? start : data_in_valid;
+  assign data_in_ready = (padding_condition) ? 0 : data_out_ready;
 
 
 
