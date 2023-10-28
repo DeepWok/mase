@@ -19,26 +19,21 @@ build-docker:
 	docker build --build-arg UID=$(user) --build-arg GID=$(group) --build-arg VHLS_PATH=$(vhls) -f Docker/Dockerfile --tag mase-ubuntu2204 Docker
 
 shell: build-docker
-	docker run -it --shm-size 256m --hostname mase-ubuntu2204 -u $(user) -v $(vhls):$(vhls) -v $(shell pwd):/workspace mase-ubuntu2204:latest /bin/bash 
-
-shell-kraken: 
-	docker build --build-arg UID=$(user) --build-arg GID=$(group) --build-arg VHLS_PATH=$(vhls) -f Docker/Dockerfile-kraken --tag mase-ubuntu2204 Docker
 	docker run -it --shm-size 256m --hostname mase-ubuntu2204 -w /workspace -v $(shell pwd):/workspace:z mase-ubuntu2204:latest /bin/bash 
 
-build-vagrant: 
-	(cd vagrant; vagrant up)
-
-shell-vagrant: 
-	(cd vagrant; vagrant ssh)
-
+# There is a historical reason that test files are stored under the current directory
+# Short-term solution: call scripts under /tmp so we can clean it properly
 test-hw:
-	python3 scripts/test-hardware.py -a || exit 1
+	mkdir -p ./tmp
+	(cd tmp; python3 ../scripts/test-hardware.py -a || exit 1)
 
 test-sw:
-	bash scripts/test-machop.sh || exit 1
+	mkdir -p ./tmp
+	(cd tmp; bash ../scripts/test-machop.sh || exit 1)
 
 test-all: test-hw test-sw
-	python3 scripts/test-torch-mlir.py || exit 1
+	mkdir -p ./tmp
+	(cd tmp; python3 ../scripts/test-torch-mlir.py || exit 1)
 
 build:
 	bash scripts/build-llvm.sh
@@ -48,8 +43,7 @@ build:
 
 clean:
 	rm -rf llvm
-	rm -rf aienginev2 
-	rm -rf mlir-air/build
-	rm -rf mlir-aie
+	rm -rf aienginev2 mlir-air/build mlir-aie
 	rm -rf hls/build
 	rm -rf vck190_air_sysroot
+	rm -rf tmp mase_output
