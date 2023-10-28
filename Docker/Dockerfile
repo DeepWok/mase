@@ -49,39 +49,35 @@ RUN mkdir -p /srcPkgs \
     && make install
 
 # Append any packages you need here
+# RUN apt-get ...
 RUN apt-get update -y \
     && apt-get install -y clang-12
 
 CMD ["bash"]
 
-# Add dev-user
-RUN groupadd -o -g $GID dev-user
-RUN useradd -r -g $GID -u $UID -m -d /home/dev-user -s /sbin/nologin -c "User" dev-user
-RUN echo "dev-user     ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
-USER dev-user
-
 # Install PyTorch and Torch-MLIR
-ENV PATH="${PATH}:/home/dev-user/.local/bin"
-RUN pip3 install --user --upgrade pip 
+RUN pip3 install --upgrade pip 
 RUN pip3 install --pre torchvision --extra-index-url https://download.pytorch.org/whl/nightly/cpu \
     && pip3 install onnx black toml GitPython colorlog cocotb[bus]==1.8.0 \
                     pytest pytorch-lightning transformers toml \
                     timm pytorch-nlp datasets ipython ipdb \
                     sentencepiece einops deepspeed pybind11 \
                     tabulate tensorboardx hyperopt accelerate \
-                    optuna stable-baselines3 
+                    optuna stable-baselines3 h5py scikit-learn \
+                    scipy matplotlib nni
 # Install Torch-MLIR and Pytorch
-RUN cd /home/dev-user \
+RUN cd /root \
     && wget https://github.com/llvm/torch-mlir/releases/download/snapshot-20230525.849/torch-2.1.0.dev20230523+cpu-cp310-cp310-linux_x86_64.whl \
     && wget https://github.com/llvm/torch-mlir/releases/download/snapshot-20230525.849/torch_mlir-20230525.849-cp310-cp310-linux_x86_64.whl \
-    && pip3 install torch-*.whl torch_mlir-*.whl
+    && pip3 install torch-*.whl torch_mlir-*.whl \
+    && rm torch-*.whl torch_mlir-*.whl
 
 # Add environment variables
 ENV vhls $VHLS_PATH
 RUN printf "\
 \nexport LIBRARY_PATH=/usr/lib/x86_64-linux-gnu:\$LIBRARY_PATH \
 \n# Basic PATH setup \
-\nexport PATH=/workspace/scripts:/workspace/hls/build/bin:/home/dev-user/.local/bin:/workspace/llvm/build/bin:\$PATH:/srcPkgs/verible/bin \
+\nexport PATH=/workspace/scripts:/workspace/hls/build/bin:/workspace/llvm/build/bin:\$PATH:/srcPkgs/verible/bin \
 \n# Vitis HLS setup \
 \nexport VHLS=${vhls} \
 \nexport XLNX_VERSION=2023.1 \
@@ -96,7 +92,7 @@ RUN printf "\
 \nexport PS1=\"[\\\\\\[\$(tput setaf 3)\\\\\\]\\\t\\\\\\[\$(tput setaf 2)\\\\\\] \\\u\\\\\\[\$(tput sgr0)\\\\\\]@\\\\\\[\$(tput setaf 2)\\\\\\]\\\h \\\\\\[\$(tput setaf 7)\\\\\\]\\\w \\\\\\[\$(tput sgr0)\\\\\\]] \\\\\\[\$(tput setaf 6)\\\\\\]$ \\\\\\[\$(tput sgr0)\\\\\\]\" \
 \nexport LS_COLORS='rs=0:di=01;96:ln=01;36:mh=00:pi=40;33:so=01;35:do=01;35:bd=40;33;01' \
 \nalias ls='ls --color' \
-\nalias grep='grep --color'\n" >> /home/dev-user/.bashrc
+\nalias grep='grep --color'\n" >> /root/.bashrc
 #Add vim environment
 RUN printf "\
 \nset autoread \
@@ -110,8 +106,5 @@ RUN printf "\
 \nautocmd BufWritePost *.sv  silent! !verible-verilog-format --inplace <afile> \
 \nautocmd BufWritePost *.v  silent! !verible-verilog-format --inplace <afile> \
 \nautocmd BufWritePost * redraw! \
-\n" >> /home/dev-user/.vimrc
-
-# Entrypoint set up
-WORKDIR workspace
+\n" >> /root/.vimrc
 

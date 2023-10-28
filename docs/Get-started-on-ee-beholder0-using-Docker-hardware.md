@@ -1,4 +1,4 @@
-# For hardware project students: Get started on ee beholder0 (using Vagrant)
+# For hardware project students: Get started on ee beholder0 (using Docker)
 
 Mase can be directly installed and used on local machines. This document includes the steps to install Mase on the ee-server (`ee-beholder0` for this example).
 
@@ -36,33 +36,20 @@ cd /home/${USERNAME}/mase-tools/
 git checkout -b your_branch_name
 ```
 
-4. Start a vagrant box as a virtual environment:
+4. Start a Docker container as a virtual environment:
 ```shell
-cd /home/${USERNAME}/mase-tools/vagrant
-vagrant up
+cd /home/${USERNAME}/mase-tools/
+make shell
 ```
-
-5. Enter the vagrant box and install Mase:
-```shell
-# Enter the vagrant box
-cd /home/${USERNAME}/mase-tools/vagrant
-vagrant ssh
-# For the first time - install Mase
-# This also might take a long time (2 hours tested on beholder0).
-bash /workspace/vagrant/vagrant.sh
-source /home/vagrant/.bashrc
-```
- If you are working with an unstable connection, you can try [tmux](https://www.hamvocke.com/blog/a-quick-and-easy-guide-to-tmux/).
-
+This may take a long time for the first time. If you are working with an unstable connection, you can try [tmux](https://www.hamvocke.com/blog/a-quick-and-easy-guide-to-tmux/).
 The directory named `/workspace` is the main directory of the `mase-tools`. You can build your work from there.
 
 ## Use Mase
 
 If you are running a new terminal after installation:
 ```shell
-cd /home/${USERNAME}/mase-tools/vagrant
-# run `vagrant up` if `vagrant ssh` fails and then try `vagrant ssh` again.
-vagrant ssh
+cd /home/${USERNAME}/mase-tools/
+make shell
 ```
 
 ### Quick Test
@@ -71,5 +58,7 @@ Now let's test with a small example `common/int_mult`. The RTL code is named `ha
 ```shell
 cd /workspace
 test-hardware.py common/int_mult
+# Full hardware test
+make test-hw
 ```
 
