@@ -6,6 +6,9 @@ group=$(if $(shell id -g),$(shell id -g),1000)
 sync:
 	git submodule sync
 	git submodule update --init --recursive
+
+# Only needed if you are using the MLIR flow - it will be slow!
+sync-mlir:
 	bash mlir-air/utils/github-clone-build-libxaie.sh
 	bash mlir-air/utils/clone-llvm.sh 
 	bash mlir-air/utils/clone-mlir-aie.sh 
@@ -36,10 +39,12 @@ test-all: test-hw test-sw
 	(cd tmp; python3 ../scripts/test-torch-mlir.py || exit 1)
 
 build:
-	bash scripts/build-llvm.sh
-	# bash scripts/build-mase-hls.sh
-	bash scripts/build-aie.sh
-	bash scripts/build-air.sh
+	bash scripts/build-llvm.sh || exit 1
+	bash scripts/build-mase-hls.sh || exit 1
+
+build-aie:
+	bash scripts/build-aie.sh || exit 1
+	bash scripts/build-air.sh || exit 1
 
 clean:
 	rm -rf llvm
