@@ -13,6 +13,11 @@ QUANT_ARITH_TO_SUFFIXES = {
         "stochastic",
         "bipolar",
     ),  # TODO: stochastic, bipolar flags are operational flag instead of precision.
+    "binary_residual": (
+        "width",
+        "stochastic",
+        "bipolar",
+    ),  # TODO: stochastic, bipolar flags are operational flag instead of precision.
     "lutnet": ("width", "input_expanded", "k", "binarization_level"),
     "logicnets": ("width", "frac_width"),
     "ternary": ("width", "scaling_factor", "mean", "median", "max"),
@@ -113,8 +118,8 @@ def update_quant_meta_param(node, config: dict, mase_op: str) -> None:
         )
 
     for entry, arg in zip(*MASE_OP_TO_OUTPUT_ENTRIES[mase_op]):
-        # Quantise all the output to fixed point. TODO: Make this automatic
-        if quant_arith == "binary":
+        # Quantise all the output to fixed point. TODO: Make this automatic. Hardware will need change too
+        if quant_arith == "binary" or quant_arith == "binary_residual":
             update_result(
                 node,
                 output_name=arg,

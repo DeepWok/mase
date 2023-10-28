@@ -22,6 +22,7 @@ class BaseTrainer(torch.nn.Linear):
         self,
         tables_count: int,
         k: int,
+        levels: int,
         binarization_level: int,
         input_expanded: bool,
         device: Optional[str],
@@ -34,6 +35,7 @@ class BaseTrainer(torch.nn.Linear):
             binarization_level (int): which level of binarization is applied, 0 no binarization , 1 only weights binarized , 2 input also, and 3 output also binarized
             input_expanded (bool): If set to True, means all LUT's inputs are considered during calculations , else only the first input will considered and the remaining will be masked.
             device (str): device of the output tensor.
+            levels (int): Number of residual level to use.
         """
         self.k = k
         self.kk = 2**k
@@ -43,11 +45,14 @@ class BaseTrainer(torch.nn.Linear):
 
         super(BaseTrainer, self).__init__(
             in_features=self.kk,
-            out_features=tables_count,
+            out_features=tables_count * levels,
             bias=False,
             device=device,
         )
         self.set_input_expanded(input_expanded)
+        self.pruning_masks = torch.torch.nn.Parameter(
+            torch.ones_like(self.weight), requires_grad=False
+        )
 
     def set_binarization_level(self, binarization_level: int) -> None:
         """binary calculations
@@ -103,6 +108,7 @@ class LagrangeTrainer(BaseTrainer):
         binarization_level: int,
         input_expanded: bool,
         device: Optional[str],
+        levels: int,
     ):
         """Lagrange Approximation is using Lagrange interpolation to represent differentiable look-up tables.
 
@@ -112,10 +118,13 @@ class LagrangeTrainer(BaseTrainer):
             binarization_level (int): which level of binarization is applied, 0 no binarization , 1 only weights binarized , 2 input also, and 3 output also binarized
             input_expanded (bool): If set to True, means all LUT's inputs are considered during calculations , else only the first input will considered and the remaining will be masked.
             device (str): device of the output tensor.
+            levels: number of residual level to use in rebnet.
         """
         self.device = device
+        self.levels = levels
         self.truth_table = truth_table.generate_truth_table(k, 1, device)
         super(LagrangeTrainer, self).__init__(
+            levels=levels,
             tables_count=tables_count,
             k=k,
             binarization_level=binarization_level,
@@ -142,7 +151,7 @@ class LagrangeTrainer(BaseTrainer):
 
     def forward(
         self,
-        input: torch.tensor,  # [samples, table entries (table count * k)]
+        input: torch.tensor,  # [batch_size, table entries (table count * k)]
         targets: torch.tensor = None,
         initalize: bool = False,
     ) -> torch.Tensor:
@@ -151,31 +160,51 @@ class LagrangeTrainer(BaseTrainer):
 
         self._validate_input(input)
         input_truth_table = (
-            input.view(-1, self.k, 1) * self.truth_table
-        )  # [table_count * samples, k, 4]
+            input.view(self.levels, -1, self.k, 1) * self.truth_table
+        )  # [levels, table_count * batch_size, k, self.kk]
 
         if self.binarization_level > 0:
+            residual_means = torch.abs(
+                input_truth_table[:, 0, 0, 0]
+            )  # [levels, table * batch_size, the first connection, (these kk elements should be the same) select the first 1]
             input_truth_table.data = input_truth_table.data.sign()
 
         if not self.input_expanded:
             input_truth_table *= -1
             reduced_table = input_truth_table[:, 0, :]
         else:
-            input_truth_table = 1 + input_truth_table
+            input_truth_table = (
+                1 + input_truth_table
+            ) / 2  # I add divide by 2 here so that the later result of the lagrand function is [1, 0, 0, 0] instead of [4, 0, 0, 0]
             reduced_table = input_truth_table.prod(
                 dim=-2
-            )  # [tables_count*samples, self.kk]
+            )  # [levels, tables_count*batch_size, self.kk]
         reduced_table = reduced_table.view(
-            -1, self.tables_count, self.kk
-        )  # [samples, tables_count, self.kk]
+            self.levels, -1, self.tables_count, self.kk
+        )  # [levels, batch_size, tables_count, self.kk]
+
+        level_weight = self.weight.view(self.levels, -1, self.kk)
+        level_mask = self.pruning_masks.view(self.levels, -1, self.kk)
         if self.binarization_level > 0:
-            _weight = BinarizeSign.apply(self.weight)  # [tables_count, self.kk]
+            _weight = BinarizeSign.apply(
+                level_weight
+            )  # [levels, tables_count, self.kk]
         else:
-            _weight = self.weight
+            _weight = level_weight
         if not self.input_expanded:
             _weight = _weight * self.weight_mask
 
-        out = reduced_table * _weight * self.gamma.abs()
+        out = (
+            (
+                reduced_table[0] * _weight[0] * residual_means[0]
+                + reduced_table[1] * _weight[1] * residual_means[1]
+            )
+            * level_mask[
+                0
+            ]  # level_mask[0] and level_mask[1] are the same. However, _weight[0] and _weight[1] are not the same
+            * self.gamma.abs()
+        )
+        # reduced_table[0] * _weight[0] * self.gamma.abs()
         return out.sum(-1)
 
     # if we have more intitalizers , may be better we introduce builders for each base module , where we all the object creation logic should live.

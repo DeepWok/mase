@@ -101,9 +101,10 @@ def generate_truth_table(k: int, tables_count: int, device: None) -> torch.Tenso
 
 
 def init_LinearLUT_weight(
+    levels,
     k,
+    original_pruning_mask,
     original_weight,
-    baseline_weight,
     in_features,
     out_features,
     new_module,
@@ -114,42 +115,47 @@ def init_LinearLUT_weight(
         -1, k * in_features
     )  # (out_feature, k * in_feature)
 
-    bl_expanded_weight = baseline_weight[
+    expanded_original_weight = original_weight[
         np.arange(out_features)[:, np.newaxis], input_mask
     ].reshape(-1, k, 1)
     index_weight, reconnected_weight = (
-        bl_expanded_weight[:, 0, :],
-        bl_expanded_weight[:, 1:, :],
+        expanded_original_weight[:, 0, :],
+        expanded_original_weight[:, 1:, :],
     )  # [input_feature * output_feature, 1]
 
     # Establish pruning mask
-    expanded_pruned_weight = original_weight[
+    expanded_pruning_masks = original_pruning_mask[
         np.arange(out_features)[:, np.newaxis], input_mask
     ].reshape(
         -1, k, 1
     )  # (out_feature * in_feature, k, 1)
-    retain_structure_weight = expanded_pruned_weight[
-        :, 0, :
-    ]  # [input_feature * output_feature, 1]
-    rows_with_zeros = retain_structure_weight[:, 0] == 0
 
-    # Apply pruning mask (set the pruned connection's LUT to 0)
-    reconnected_weight[rows_with_zeros, 0] = 0
+    pruned_connection = expanded_pruning_masks[:, 0, :]
 
-    d = generate_truth_table(k=k, tables_count=1, device=None) * -1
-    sign_correction = d.prod(dim=-2)
+    d = generate_truth_table(k=k, tables_count=1, device=None)
+    initialized_weight = index_weight * d[0, :]
+    for extra_input_index in range(1, k):
+        pruned_extra_input = ~(
+            expanded_pruning_masks[:, extra_input_index, :].squeeze().bool()
+        )
 
-    initialized_weight = (
-        (retain_structure_weight + (reconnected_weight * d[1:, :]).sum(dim=-2))
-    ) * sign_correction
+        initialized_weight[pruned_extra_input, :] = (
+            initialized_weight[pruned_extra_input, :]
+            + (reconnected_weight * d[extra_input_index, :]).squeeze()[
+                pruned_extra_input, :
+            ]
+        )
 
-    return initialized_weight
+    initialized_weight = torch.cat([initialized_weight] * levels, dim=0)
+    pruned_connection = torch.cat([pruned_connection] * levels, dim=0)
+    return initialized_weight, pruned_connection
 
 
 def init_Conv2dLUT_weight(
+    levels,
     k,
+    original_pruning_mask,
     original_weight,
-    baseline_weight,
     out_channels,
     in_channels,
     kernel_size,
@@ -162,8 +168,7 @@ def init_Conv2dLUT_weight(
         in_channels * kernel_size[0] * kernel_size[1] * k,
         3,
     )  # [oc, k * kh * kw * ic ,3[ic,kh,kw]]
-
-    bl_expanded_weight = baseline_weight[
+    expanded_original_weight = original_weight[
         np.arange(out_channels)[:, np.newaxis],
         input_mask[:, :, 0],
         input_mask[:, :, 1],
@@ -172,12 +177,12 @@ def init_Conv2dLUT_weight(
         -1, k, 1
     )  # [oc * ic * kw * kh , k, 1]
     index_weight, reconnected_weight = (
-        bl_expanded_weight[:, 0, :],
-        bl_expanded_weight[:, 1:, :],
+        expanded_original_weight[:, 0, :],
+        expanded_original_weight[:, 1:, :],
     )
 
     # Establish pruning mask
-    expanded_pruned_weight = original_weight[
+    expanded_pruning_masks = original_pruning_mask[
         np.arange(out_channels)[:, np.newaxis],
         input_mask[:, :, 0],
         input_mask[:, :, 1],
@@ -185,19 +190,24 @@ def init_Conv2dLUT_weight(
     ].reshape(
         -1, k, 1
     )  # (out_feature * in_feature, k, 1)
-    retain_structure_weight = expanded_pruned_weight[
+    pruned_connection = expanded_pruning_masks[
         :, 0, :
     ]  # [input_feature * output_feature, 1]
-    rows_with_zeros = retain_structure_weight[:, 0] == 0
 
-    # Apply pruning mask (set the pruned connection's LUT to 0)
-    reconnected_weight[rows_with_zeros, 0] = 0
+    d = generate_truth_table(k=k, tables_count=1, device=None)
+    initialized_weight = index_weight * d[0, :]
+    for extra_input_index in range(1, k):
+        pruned_extra_input = ~(
+            expanded_pruning_masks[:, extra_input_index, :].squeeze().bool()
+        )
 
-    d = generate_truth_table(k=k, tables_count=1, device=None) * -1
-    sign_correction = d.prod(dim=-2)
+        initialized_weight[pruned_extra_input, :] = (
+            initialized_weight[pruned_extra_input, :]
+            + (reconnected_weight * d[extra_input_index, :]).squeeze()[
+                pruned_extra_input, :
+            ]
+        )
 
-    initialized_weight = (
-        (retain_structure_weight + (reconnected_weight * d[1:, :]).sum(dim=-2))
-    ) * sign_correction
-
-    return initialized_weight
+    initialized_weight = torch.cat([initialized_weight] * levels, dim=0)
+    pruned_connection = torch.cat([pruned_connection] * levels, dim=0)
+    return initialized_weight, pruned_connection

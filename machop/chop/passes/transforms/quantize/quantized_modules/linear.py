@@ -9,6 +9,7 @@ from .utils import get_stats, quantiser_passthrough
 
 from ....analysis.statistical_profiler.utils import get_meta_arg_stat
 from ..quantizers import (
+    residual_sign_quantizer,
     block_fp_quantizer,
     block_log_quantizer,
     block_minifloat_quantizer,
@@ -55,6 +56,7 @@ class _LinearBase(torch.nn.Linear):
         self.x_quantizer = None
         self.w_quantizer = None
         self.b_quantizer = None
+        self.pruning_masks = None
 
     def forward(self, x: Tensor) -> Tensor:
         if self.bypass:
@@ -604,6 +606,101 @@ class LinearBinaryScaling(_LinearBase):
             )
 
 
+class LinearBinaryResidualSign(_LinearBase):
+    """
+    Binary Linear layer with redisual sign variant of the linear transformation layer.
+
+        - "bypass": Bypass quantization for standard linear transformation.
+        - "data_in_stochastic", "bias_stochastic", "weight_stochastic": Stochastic settings.
+        - "data_in_bipolar", "bias_bipolar", "weight_bipolar": Bipolar settings.
+        - "binary_training": Apply binary scaling during training.
+        - "data_in_levels": The num of residual layers to use.
+        - "data_in_residual_sign" : Apply residual sign on input
+    """
+
+    def __init__(
+        self,
+        in_features: int,
+        out_features: int,
+        bias: bool = True,
+        device=None,
+        dtype=None,
+        config=None,
+    ) -> None:
+        super().__init__(in_features, out_features, bias, device, dtype)
+        assert config is not None, "config is None!"
+        self.levels = config.get("data_in_levels", 2)  # NOTE: Hardcode 2 for now
+        self.config = config
+        self.bypass = config.get("bypass", False)
+        self.gamma = torch.nn.Parameter(torch.tensor(1.0, requires_grad=True))
+        # Initialized parameter
+        ars = np.arange(self.levels) + 1.0
+        ars = ars[::-1]
+        means = ars / np.sum(ars)
+        # Create a torch.nn.Parameter from the means tensor
+        self.means = (
+            torch.nn.Parameter(
+                torch.tensor(means, dtype=torch.float32, requires_grad=True)
+            )
+            if self.config.get("data_in_residual_sign", True)
+            else None
+        )
+        # prunning masks
+        self.pruning_masks = torch.nn.Parameter(
+            torch.ones_like(self.weight), requires_grad=False
+        )
+
+        if self.bypass:
+            return
+        x_stochastic, w_stochastic = (
+            config["data_in_stochastic"],
+            config["weight_stochastic"],
+        )
+        x_bipolar, w_bipolar = (
+            config["data_in_bipolar"],
+            config["weight_bipolar"],
+        )
+
+        self.binary_training = config["binary_training"]
+
+        self.w_quantizer = partial(
+            binary_quantizer, stochastic=w_stochastic, bipolar=w_bipolar
+        )
+        self.x_quantizer = partial(
+            binary_quantizer, stochastic=x_stochastic, bipolar=x_bipolar
+        )
+
+    def forward(self, x: Tensor) -> Tensor:
+        if self.bypass:
+            # if bypss, there is no quantization
+            return F.linear(x, self.weight, self.bias)
+
+        x_expanded = 0
+        if self.means is not None:
+            out_bin = residual_sign_quantizer(
+                levels=self.levels, x_quantizer=self.x_quantizer, means=self.means, x=x
+            )
+            for l in range(self.levels):
+                x_expanded = x_expanded + out_bin[l, :, :]
+        else:
+            x_expanded = x
+
+        if self.binary_training:
+            w = self.w_quantizer(self.weight)
+            return F.linear(
+                x_expanded,
+                w * self.gamma.abs() * self.pruning_masks,
+                self.bias,
+            )
+        else:
+            self.weigh = self.weight.data.clamp_(-1, 1)
+            return F.linear(
+                x_expanded,
+                self.weight * self.gamma.abs() * self.pruning_masks,
+                self.bias,
+            )
+
+
 class LinearTernary(_LinearBase):
     def __init__(
         self,
@@ -666,11 +763,7 @@ class LinearLUT(torch.nn.Module):
         super(LinearLUT, self).__init__()
         self.in_features = in_features
         self.out_features = out_features
-        binarization_level = (
-            (  # binarization_level 1 is binarized weight, 0 is not binarized
-                1 if config["data_in_binarization_level"] == 1 else 0
-            ),
-        )
+        self.levels = config.get("data_in_levels", 2)
         self.input_expanded = config["data_in_input_expanded"]
         self.k = config["data_in_k"]
         self.kk = 2 ** config["data_in_k"]
@@ -680,6 +773,7 @@ class LinearLUT(torch.nn.Module):
         # TODO: table * output feature map
         self.tables_count = self.mask_builder.get_tables_count() * self.out_features
         self.trainer = trainer_type(
+            levels=self.levels,
             tables_count=self.tables_count,
             k=config["data_in_k"],
             binarization_level=(1 if config["data_in_binarization_level"] == 1 else 0),
@@ -687,6 +781,7 @@ class LinearLUT(torch.nn.Module):
             device=device,
         )
         self.weight = self.trainer.weight
+        self.pruning_masks = self.trainer.pruning_masks
         # TODO: we might need to this later on
         # stdv = 1 / np.sqrt(self.in_features)
         # w = np.random.normal(loc=0.0, scale=stdv, size=list(self.trainer.weight.shape)).astype(np.float32)
@@ -695,6 +790,15 @@ class LinearLUT(torch.nn.Module):
 
         self.bias = (
             torch.nn.Linear(1, out_features, device=device).bias if bias else None
+        )
+
+        # Residual sign code
+        self.x_quantizer = partial(binary_quantizer, stochastic=False, bipolar=True)
+        ars = np.arange(self.levels) + 1.0
+        ars = ars[::-1]
+        means = ars / np.sum(ars)
+        self.means = torch.nn.Parameter(
+            torch.tensor(means, dtype=torch.float32, requires_grad=True)
         )
 
     def _table_input_selections_builder(self) -> np.array:
@@ -727,7 +831,11 @@ class LinearLUT(torch.nn.Module):
     ):
         assert len(input.shape) == 2
         batch_size = input.shape[0]
-        expanded_input = input[:, self.input_mask]
+        out_bin = residual_sign_quantizer(
+            levels=self.levels, x_quantizer=self.x_quantizer, means=self.means, x=input
+        )
+        expanded_input = out_bin[:, :, self.input_mask]  # [levels, batch_size, mask]
+
         output = self.trainer(expanded_input, targets, initalize).squeeze()
         output = output.view(batch_size, -1)
         assert output.shape[-1] == self.tables_count

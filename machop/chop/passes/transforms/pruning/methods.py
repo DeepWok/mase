@@ -148,6 +148,12 @@ class LevelPruner(BasePruner):
             mask = mask.reshape(self.tensors[name]["shape"])
 
         module.weight.data.mul_(mask)
+        try:
+            module.pruning_masks.data.mul_(mask)
+        except AttributeError as e:
+            logger.warning(
+                f"No pruning_masks found in {name}. The pruning mask is not saved anywhere"
+            )
         self._update_summary(module, name)
 
     # NOTE: Currently, this method is unused.

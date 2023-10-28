@@ -35,6 +35,9 @@ MASE_IMPLICIT_FUNCS = [
     "getitem",
     "long",
     "type_as",
+    "clamp",
+    "abs",
+    "stack",
 ]
 
 # use this list to print out MASE_MODULE_RELATED_FUNCS when new functions are added

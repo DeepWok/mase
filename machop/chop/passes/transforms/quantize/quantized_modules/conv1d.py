@@ -53,6 +53,7 @@ class _Conv1dBase(torch.nn.Conv1d):
         self.w_quantizer = None
         self.x_quantizer = None
         self.b_quantizer = None
+        self.pruning_masks = None
 
     def forward(self, x: Tensor) -> Tensor:
         if self.bypass:

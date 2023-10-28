@@ -39,6 +39,11 @@ def create_new_module(
     if mase_op == "linear":
         new_module_cls = quantized_module_map[f"linear_{quant_name}"]
         use_bias = original_module.bias is not None
+        # NOTE: We don't support training with pruning on base module. Only quantized modules for now.
+        use_pruning = any(
+            isinstance(original_module, quantized_module)
+            for quantized_module in quantized_module_map.values()
+        ) and (original_module.pruning_masks is not None)
         new_module = new_module_cls(
             in_features=original_module.in_features,
             out_features=original_module.out_features,
@@ -46,18 +51,26 @@ def create_new_module(
             config=config,
         )
         if quant_name == "lutnet":
-            initialized_weight = init_LinearLUT_weight(
+            initialized_weight, pruning_masks = init_LinearLUT_weight(
+                levels=new_module.levels,
                 k=new_module.k,
-                baseline_weight=baseline_module.weight,
+                original_pruning_mask=original_module.pruning_masks,
                 original_weight=original_module.weight,
                 in_features=original_module.in_features,
                 out_features=original_module.out_features,
                 new_module=new_module,
             )
-            copy_weights(
-                new_module.trainer.gamma, baseline_module.gamma
-            )  # TODO: Not sure about this. The paper doesn't specify this part.
-            copy_weights(new_module.trainer.weight, initialized_weight)
+            copy_weights(original_module.gamma, new_module.trainer.gamma)
+            copy_weights(original_module.means, new_module.means)
+            copy_weights(initialized_weight, new_module.trainer.weight)
+            copy_weights(pruning_masks, new_module.trainer.pruning_masks)
+        elif quant_name == "binary_residual":
+            copy_weights(original_module.gamma, new_module.gamma)
+            copy_weights(original_module.means, new_module.means)
+            if original_module.means is not None:
+                copy_weights(original_module.means, new_module.means)
+            if use_pruning:
+                copy_weights(original_module.pruning_masks, new_module.pruning_masks)
         elif quant_name == "logicnets":
             # LogicNets will require the node itself along with the subsequent activation for the initialization of the associated LUT.
             # Therefore, the activation layer, referred to as successor_module, needs to be passed for the module's initialization.
@@ -78,12 +91,19 @@ def create_new_module(
             new_module.calculate_truth_tables()
         else:
             copy_weights(original_module.weight, new_module.weight)
-        if use_bias:
-            copy_weights(original_module.bias, new_module.bias)
+            if use_pruning:
+                copy_weights(original_module.pruning_masks, new_module.pruning_masks)
+            if use_bias:
+                copy_weights(original_module.bias, new_module.bias)
     elif mase_op in ("conv1d", "conv2d"):
         name = f"{mase_op}_{quant_name}"
         new_module_cls = quantized_module_map[name]
         use_bias = original_module.bias is not None
+        # NOTE: We don't support training with pruning on base module. Only quantized modules for now.
+        use_pruning = any(
+            isinstance(original_module, quantized_module)
+            for quantized_module in quantized_module_map.values()
+        ) and (original_module.pruning_masks is not None)
         new_module = new_module_cls(
             in_channels=original_module.in_channels,
             out_channels=original_module.out_channels,
@@ -98,9 +118,10 @@ def create_new_module(
         )
         if quant_name == "lutnet":
             # TODO: Initialize the weight based on the trained binaried network
-            initialized_weight = init_Conv2dLUT_weight(
+            initialized_weight, pruning_masks = init_Conv2dLUT_weight(
+                levels=new_module.levels,
                 k=new_module.k,
-                baseline_weight=baseline_module.weight,
+                original_pruning_mask=original_module.pruning_masks,
                 original_weight=original_module.weight,
                 out_channels=original_module.out_channels,
                 in_channels=original_module.in_channels,
@@ -108,15 +129,26 @@ def create_new_module(
                 new_module=new_module,
             )
             copy_weights(
-                new_module.trainer.gamma, baseline_module.gamma
+                original_module.gamma, new_module.trainer.gamma
             )  # TODO: Not sure about this. The paper doesn't specify this part.
-            copy_weights(new_module.trainer.weight, initialized_weight)
+            copy_weights(initialized_weight, new_module.trainer.weight)
+            copy_weights(pruning_masks, new_module.trainer.pruning_masks)
+            copy_weights(original_module.means, new_module.means)
+        elif quant_name == "binary_residual":
+            copy_weights(original_module.gamma, new_module.gamma)
+            copy_weights(original_module.weight, new_module.weight)
+            if original_module.means is not None:
+                copy_weights(original_module.means, new_module.means)
+            if use_pruning:
+                copy_weights(original_module.pruning_masks, new_module.pruning_masks)
         elif quant_name == "logicnets":
             copy_weights(original_module.weight, new_module.weight)
             new_module.calculate_truth_tables()
         else:
             # TODO: LUTNet convolution does not support bias at the moment
             copy_weights(original_module.weight, new_module.weight)
+            if use_pruning:
+                copy_weights(original_module.pruning_masks, new_module.pruning_masks)
             if use_bias:
                 copy_weights(original_module.weight, new_module.weight)
 
