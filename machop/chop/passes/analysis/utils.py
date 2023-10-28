@@ -115,8 +115,8 @@ def is_tensor_constant(s):
 
 def is_seq_blocks_parameter(s):
     # Define the regular expression pattern to match "seq_blocks_" followed by a digit, an underscore, and a parameter name
-    pattern = r"seq_blocks_\d+_(weight|bias|gamma)"
-
+    # TODO: need to make this more general
+    pattern = r"(block|seq_blocks|linear|conv2d)(_\d+)?(_\d+)?_(weight|bias|gamma|means|pruning_masks)"
     # Use re.match to check if the string matches the pattern
     match = re.match(pattern, s)
 

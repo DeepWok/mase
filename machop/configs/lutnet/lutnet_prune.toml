@@ -1,35 +1,7 @@
 # Perform the pruning step for LUTNet
-
-model = "toy-conv"
-dataset = "cifar10"
-
 [passes.prune.weight]
 method = "level-pruner"
-criterion = "random"
-sparsity = 0.2
+criterion = "l1"
 
-#[passes.prune.activation]
-#strategy = "fixed-global"
-#target = 0.1
-
-[passes.quantize]
-by = "type"
-report = true
-
-[passes.quantize.default.config]
-name = "binary"
-binary_training = "NA"
-data_in_width = 32
-data_in_frac_width = 16
-data_in_stochastic = 0
-data_in_bipolar = 1
-
-weight_width = 1 # does not matter
-weight_stochastic = 0
-weight_bipolar = 1
-
-bias_width = 32
-bias_stochastic = 0
-bias_bipolar = 1
-
-
+[passes.prune.weight.sparsity]
+"seq_blocks.12" = 0.06

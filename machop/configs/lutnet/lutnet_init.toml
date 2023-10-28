@@ -3,25 +3,27 @@
 # k (int): Number of inputs for each table.
 # binarization_level (int): which level of binarization is applied, "binarized_weight" is only weights binarized others is no binarization
 # input_expanded (bool): If set to True, means all LUT's inputs are considered during calculations , else only the first input will considered and the remaining will be masked.
-
-model = "toy-conv"
-dataset = "cifar10"
+accelerator = "cpu"
 
 [passes.quantize]
 by = "type"
 report = true
-baseline_weight_path = "/workspace/mase_output/toy-conv_classification_cifar10_2023-08-22/software/transform/transformed_ckpt_bl/transformed_ckpt/graph_module.mz"
-load_type = "mz"
+# baseline_weight_path = "/workspace/mase_output/toy-conv_classification_cifar10_2023-08-22/software/transform/transformed_ckpt_bl/transformed_ckpt/graph_module.mz"
+# baseline_weight_path = "../mase_output/toy_classification_toy_tiny_2023-09-28/software/transform/transformed_ckpt_bl/transformed_ckpt/graph_module.mz"
+# baseline_weight_path = "../mase_output/toy_convnet_classification_cifar10_2023-09-28/software/transform/transformed_ckpt_bl/transformed_ckpt/graph_module.mz"
+# load_type = "mz"
 
 [passes.quantize.default.config]
 name = "NA"
 
 [passes.quantize.linear.config]
 name = "lutnet"
-# data
+# lutnet_config
 data_in_k = 2
+data_in_levels = 2
 data_in_input_expanded = 1 # 1 is used to represent True, as it  will be stored in the precision array later. The array need to be a homogeneous array
 data_in_binarization_level = 1 # binarization_level 1 is binarized weight, 0 is not binarized
+# data
 data_in_width = 8
 data_in_frac_width = 4
 data_in_dim = "NA" # This should be different in each convolution layer and NA for linear
@@ -42,10 +44,12 @@ bias_in_dim = "NA"
 
 [passes.quantize.conv2d.config]
 name = "lutnet"
-# data
+# lutnet_config
 data_in_k = 2
+data_in_levels = 2
 data_in_input_expanded = 1 # 1 is used to represent True, as it  will be stored in the precision array later. The array need to be a homogeneous array
 data_in_binarization_level = 1 # binarization_level 1 is binarized weight, 0 is not binarized
+# data
 data_in_width = 8
 data_in_frac_width = 4
 data_in_dim = 32 # This should be different in each convolution layer and NA for linear

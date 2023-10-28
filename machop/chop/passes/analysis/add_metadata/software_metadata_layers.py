@@ -240,6 +240,7 @@ SOFTWARE_PARAM_ANALYSIS_LAYERS = {
         "abs": analyze_software_meta_param_implicit_func_default,
         "stack": analyze_software_meta_param_implicit_func_default,
         "getitem": analyze_software_meta_param_implicit_func_default,
+        "getattr": analyze_software_meta_param_implicit_func_default,
     },
     "placeholder": {
         "placeholder": analyze_software_meta_param_placeholder,

@@ -34,11 +34,36 @@ class MyRound(InplaceFunction):
         return grad_input
 
 
-class BinaryBipolarScaled(InplaceFunction):
+class BinaryBipolar(InplaceFunction):
     """A PyTorch function for binarizing input values.
 
     This function takes an input tensor and a threshold value and binarizes the input values,
     setting values greater than or equal to the threshold to 1 and values below the threshold to -1.
+
+    Args:
+        ctx (torch.autograd.function._ContextMethodMixin): The context object to store intermediate results.
+        input (torch.Tensor): The input tensor to be binarized.
+        threshold (float or torch.Tensor): The threshold value for binarization.
+
+    Returns:
+        torch.Tensor: The binarized output tensor, where values are either -1 or 1.
+    """
+
+    @staticmethod
+    def forward(ctx, input, threshold):
+        return torch.where(input >= threshold, torch.tensor(1.0), torch.tensor(-1.0))
+
+    @staticmethod
+    def backward(ctx, grad_output):
+        grad_input = grad_output.clone()
+        return grad_input, None
+
+
+class BinaryBipolarScaled(InplaceFunction):
+    """A PyTorch function for binarizing input values.
+
+    This function takes an input tensor and a threshold value and binarizes the input values,
+    setting values greater than or equal to the threshold to mean and values below the threshold to -mean
 
     Args:
         ctx (torch.autograd.function._ContextMethodMixin): The context object to store intermediate results.
@@ -104,7 +129,7 @@ class BinaryZeroScaled(InplaceFunction):
     """A PyTorch function for binarizing input values.
 
     This function takes an input tensor and a threshold value and binarizes the input values,
-    setting values greater than or equal to the threshold to 1 and values below the threshold to 0.
+    setting values greater than or equal to the threshold to 1 and values below the threshold to 0 but scaled with tensor means.
 
     Args:
         ctx (torch.autograd.function._ContextMethodMixin): The context object to store intermediate results.
@@ -295,7 +320,8 @@ class MySign(InplaceFunction):
 
 
 mu_sign = MySign.apply
-binarised_bipolar_op = BinaryBipolarScaled.apply
+binarised_bipolarScaled_op = BinaryBipolarScaled.apply
+binarised_bipolar_op = BinaryBipolar.apply
 binarised_zeroOne_op = BinaryZeroOne.apply
 binarised_zeroScaled_op = BinaryZeroScaled.apply
 ternarised_scaled_op = TernaryScaled.apply

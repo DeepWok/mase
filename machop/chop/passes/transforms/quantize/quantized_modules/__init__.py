@@ -11,6 +11,7 @@ from .conv1d import (
     Conv1dTernary,
 )
 from .conv2d import (
+    Conv2dBinaryResidualSign,
     Conv2dBinaryScaling,
     Conv2dBlockFP,
     Conv2dBlockMinifloat,
@@ -33,6 +34,7 @@ from .linear import (
     LinearMinifloatDenorm,
     LinearMinifloatIEEE,
     LinearBinary,
+    LinearBinaryResidualSign,
     LinearBinaryScaling,
     LinearTernary,
     LinearLUT,
@@ -68,6 +70,7 @@ quantized_module_map = {
     "conv1d_block_fp": Conv1dBlockFP,
     "conv2d_block_minifloat": Conv2dBlockMinifloat,
     "conv2d_integer": Conv2dInteger,
+    "conv2d_binary_residual": Conv2dBinaryResidualSign,
     "conv2d_binary": Conv2dBinaryScaling,
     "conv2d_ternary": Conv2dTernary,
     "conv2d_log": Conv2dLog,
@@ -84,7 +87,8 @@ quantized_module_map = {
     "linear_minifloat_ieee": LinearMinifloatIEEE,
     "linear_minifloat_denorm": LinearMinifloatDenorm,
     "linear_block_fp": LinearBlockFP,
-    "linear_binary": LinearBinaryScaling,
+    "linear_binary": LinearBinary,
+    "linear_binary_residual": LinearBinaryResidualSign,
     "linear_ternary": LinearTernary,
     "linear_lutnet": LinearLUT,
     "linear_logicnets": LinearLogicNets,

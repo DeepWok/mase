@@ -1,0 +1,12 @@
+# training
+training_optimizer = "adamw"
+weight_decay=5e-7
+learning_rate = 0.01
+max_epochs = 200
+batch_size = 100
+# torch lightning
+task = "classification"
+num_workers = 0
+num_devices = 1
+accelerator = "gpu"
+project_dir = "../mase_output"

@@ -38,6 +38,7 @@ QUANT_ARITH_ENTRIES = {
             "data_in_binarization_level",  # binarization_level (int): which level of binarization is applied, "binarized_weight" is only weights binarized others is no binarization
             "data_in_input_expanded",  # input_expanded (bool): If set to True, means all LUT's inputs are considered during calculations , else only the first input will considered and the remaining will be masked.
             "data_in_k",  # k entries of a LUT
+            "data_in_levels",  # data_in_levels (int): number of residual levels to use in lutnet
             "data_in_dim",  # data input dimension (this is needed by convolution)
         ),
         "bias_entries": (
@@ -76,12 +77,31 @@ QUANT_ARITH_ENTRIES = {
             "weight_width",
             "weight_stochastic",
             "weight_bipolar",
+        ),
+        "data_in_entries": (
+            "data_in_width",
+            "data_in_stochastic",
+            "data_in_bipolar",
+        ),
+        "bias_entries": (
+            "bias_width",
+            "bias_stochastic",
+            "bias_bipolar",
+        ),
+    },
+    "binary_residual": {
+        "weight_entries": (
+            "weight_width",
+            "weight_stochastic",
+            "weight_bipolar",
             "binary_training",
         ),
         "data_in_entries": (
             "data_in_width",
             "data_in_stochastic",
             "data_in_bipolar",
+            "data_in_residual_sign",
+            "data_in_levels",  # data_in_levels (int): number of residual levels to use in lutnet
         ),
         "bias_entries": (
             "bias_width",

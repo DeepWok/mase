@@ -355,6 +355,7 @@ def _type_check(self_obj, meta, args_val, kwargs_val):
                 size = self_obj.meta["mase"].parameters["common"]["results"][
                     "data_out_0"
                 ]["size"]
+
                 # Special tuple input - check relavant comments for single-element tuple result
                 if list_depth(size) > 1:
                     k = size
@@ -440,6 +441,7 @@ def _type_check(self_obj, meta, args_val, kwargs_val):
                 size = self_obj.meta["mase"].parameters["common"]["results"][
                     "data_out_0"
                 ]["size"]
+
                 # Special tuple input - check relavant comments for single-element tuple result
                 dummy_data = (
                     (
@@ -507,7 +509,6 @@ def _get_size_by_function_simulation(meta):
         # return list([i for i in result])
     if isinstance(result, bool) or isinstance(result, int) or isinstance(result, float):
         return [1]
-
     size = list(result.size())
     return size
 
@@ -608,6 +609,13 @@ def analyse_common_parameters_function(meta):
         # See line 218 of chop/passes/analysis/add_metadata/add_common_metadata.py
         # for more information.
         pass
+    elif mase_op == "conv2d":
+        meta.parameters["common"]["args"]["weight"] = meta.parameters["common"][
+            "args"
+        ].pop("data_in_1")
+        meta.parameters["common"]["args"]["bias"] = meta.parameters["common"][
+            "args"
+        ].pop("data_in_2")
     else:
         assert False, "Unknown module related function - arg names not corrected."
 

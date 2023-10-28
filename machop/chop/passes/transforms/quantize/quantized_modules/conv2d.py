@@ -6,6 +6,7 @@ from .utils import get_stats, quantiser_passthrough
 
 import torch
 from chop.passes.transforms.quantize.quantizers import (
+    residual_sign_quantizer,
     block_fp_quantizer,
     block_log_quantizer,
     block_minifloat_quantizer,
@@ -66,6 +67,7 @@ class _Conv2dBase(torch.nn.Conv2d):
         self.x_quantizer = None
         self.w_quantizer = None
         self.b_quantizer = None
+        self.pruning_masks = None
 
     def forward(self, x: Tensor) -> Tensor:
         if self.bypass:
@@ -817,7 +819,7 @@ class Conv2dBinaryScaling(_Conv2dBase):
         dtype=None,
         config=None,
     ):
-        super(Conv2dBinaryScaling, self).__init__(
+        super().__init__(
             in_channels=in_channels,
             out_channels=out_channels,
             kernel_size=kernel_size,
@@ -885,6 +887,122 @@ class Conv2dBinaryScaling(_Conv2dBase):
         else:
             self.weight.data.clamp_(-1, 1)
             return self._conv_forward(x, self.weight * self.gamma.abs(), self.bias)
+
+
+class Conv2dBinaryResidualSign(_Conv2dBase):
+    """
+    Binary conv2d layer with redisual sign variant of the linear transformation layer.
+
+        - "bypass": Bypass quantization for standard linear transformation.
+        - "data_in_stochastic", "bias_stochastic", "weight_stochastic": Stochastic settings.
+        - "data_in_bipolar", "bias_bipolar", "weight_bipolar": Bipolar settings.
+        - "binary_training": Apply binary scaling during training.
+        - "data_in_levels": The num of residual layers to use.
+        - "data_in_residual_sign" : Apply residual sign on input
+    """
+
+    def __init__(
+        self,
+        in_channels: int,
+        out_channels: int,
+        kernel_size: _size_2_t,
+        stride: _size_2_t = 1,
+        padding: Union[str, _size_2_t] = 0,
+        dilation: _size_2_t = 1,
+        groups: int = 1,
+        bias: bool = True,
+        padding_mode: str = "zeros",  # TODO: refine this type
+        device=None,
+        dtype=None,
+        config=None,
+    ):
+        super().__init__(
+            in_channels=in_channels,
+            out_channels=out_channels,
+            kernel_size=kernel_size,
+            stride=stride,
+            padding=padding,
+            dilation=dilation,
+            groups=groups,
+            bias=bias,
+            padding_mode=padding_mode,
+            device=device,
+            dtype=dtype,
+        )
+        assert config is not None, "config is None!"
+        self.config = config
+        self.bypass = config.get("bypass", False)
+        if self.bypass:
+            return
+
+        # residual_config
+        self.levels, self.binary_training = (
+            config.get("data_in_levels", 2),
+            config["binary_training"],
+        )
+
+        self.gamma = torch.nn.Parameter(torch.tensor(1.0, requires_grad=True))
+        # Create a torch.nn.Parameter from the means tensor
+        ars = np.arange(self.levels) + 1.0
+        ars = ars[::-1]
+        means = ars / np.sum(ars)
+        self.means = (
+            torch.nn.Parameter(
+                torch.tensor(means, dtype=torch.float32, requires_grad=True)
+            )
+            if self.config.get("data_in_residual_sign", True)
+            else None
+        )
+        # pruning masks
+        self.pruning_masks = torch.nn.Parameter(
+            torch.ones_like(self.weight), requires_grad=False
+        )
+        x_stochastic, w_stochastic = (
+            config["data_in_stochastic"],
+            config["weight_stochastic"],
+        )
+        x_bipolar, w_bipolar = (
+            config["data_in_bipolar"],
+            config["weight_bipolar"],
+        )
+
+        self.w_quantizer = partial(
+            binary_quantizer, stochastic=w_stochastic, bipolar=w_bipolar
+        )
+        self.x_quantizer = partial(
+            binary_quantizer, stochastic=x_stochastic, bipolar=x_bipolar
+        )
+
+    def forward(self, x: Tensor) -> Tensor:
+        if self.bypass:
+            return self._conv_forward(x, self.weight, self.bias)
+
+        x_expanded = 0
+        if self.means is not None:
+            out_bin = residual_sign_quantizer(
+                levels=self.levels, x_quantizer=self.x_quantizer, means=self.means, x=x
+            )
+            for l in range(self.levels):
+                x_expanded = x_expanded + out_bin[l, :, :]
+        else:
+            x_expanded = x
+
+        if self.binary_training:
+            w = self.w_quantizer(self.weight)
+            bias = self.b_quantizer(self.bias) if self.bias is not None else None
+            # WARNING: this may have been simplified, we are assuming here the accumulation is lossless!
+            # The addition size is in_channels * K * K
+            return self._conv_forward(
+                x_expanded, w * self.gamma.abs() * self.pruning_masks, bias
+            )
+        else:
+            # print(self.gamma.abs(), self.pruning_masks)
+            self.weigh = self.weight.data.clamp_(-1, 1)
+            return self._conv_forward(
+                x_expanded,
+                self.weight * self.gamma.abs() * self.pruning_masks,
+                self.bias,
+            )
 
 
 class Conv2dTernary(_Conv2dBase):
@@ -1003,12 +1121,17 @@ class Conv2dLUT(torch.nn.Module):
         self.groups = torch.nn.modules.utils._pair(groups)
         self.bias = None
         self.padding_mode = padding_mode
+        # LUT attributes
         self.k = config["data_in_k"]
+        self.kk = 2 ** config["data_in_k"]
+        self.levels = config.get("data_in_levels", 2)
+        self.input_expanded = config["data_in_input_expanded"]
         self.input_dim = torch.nn.modules.utils._pair(config["data_in_dim"])
         self.device = device
         self.input_mask = self._input_mask_builder()
         self.tables_count = self.mask_builder.get_tables_count()
         self.trainer = trainer_type(
+            levels=self.levels,
             tables_count=self.tables_count,
             k=config["data_in_k"],
             binarization_level=(  # binarization_level 1 is binarized weight, 0 is not binarized
@@ -1031,6 +1154,20 @@ class Conv2dLUT(torch.nn.Module):
             dilation=dilation,
             padding=padding,
             stride=stride,
+        )
+        self.weight = self.trainer.weight  # TODO: Does this work?
+        self.pruning_masks = self.trainer.pruning_masks
+        # Residual sign code
+        self.x_quantizer = partial(binary_quantizer, stochastic=False, bipolar=True)
+        ars = np.arange(self.levels) + 1.0
+        ars = ars[::-1]
+        means = ars / np.sum(ars)
+        self.means = torch.nn.Parameter(
+            torch.tensor(means, dtype=torch.float32, requires_grad=True)
+        )
+        # pruning masks
+        self.pruning_masks = torch.nn.Parameter(
+            torch.ones_like(self.weight), requires_grad=False
         )
 
     def _get_kernel_selections(self, channel_id):
@@ -1081,21 +1218,29 @@ class Conv2dLUT(torch.nn.Module):
         assert len(input.shape) == 4
         batch_size = input.shape[0]
         folded_input = self.unfold(input).transpose(1, 2)  # [10, 1, 2304]
+        folded_input = residual_sign_quantizer(
+            levels=self.levels,
+            x_quantizer=self.x_quantizer,
+            means=self.means,
+            x=folded_input,
+        )
         folded_input = folded_input.view(
+            self.levels,
             batch_size,
             -1,
             self.in_channels,
             self.kernel_size[0],
             self.kernel_size[1],
-        )  # [10, 1, 256, 3, 3]
+        )  # [levels, batch_size, 1, in_channels, kernel_size[0], kernel_size[1]]
         # print(self.input_mask.shape) # [1179648, 3] 256*256*9*2 NOTE: each element in the kernal corespond a table
         expanded_input = folded_input[
+            :,
             :,
             :,
             self.input_mask[:, 0],
             self.input_mask[:, 1],
             self.input_mask[:, 2],
-        ]  # [10, 1, 1179648]
+        ]  # [levels, batch_size, 1, in_channels * kernel_size[0] * kernel_size[1] * k] # [10, 1, 1179648]
         output = self.trainer(
             expanded_input, targets, initalize
         ).squeeze()  # [10, 589824]
