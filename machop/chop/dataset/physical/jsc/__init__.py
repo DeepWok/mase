@@ -81,10 +81,15 @@ class JetSubstructureDataset(Dataset):
         # The LogicNets repo uses the training set as the validation set also - citing lack of data
         if self.split == "train" or self.split == "validation":
             self.X = torch.from_numpy(X_train_val)
-            self.y = torch.from_numpy(y_train_val).to(torch.float32)
+            y_train_val_tensor = torch.from_numpy(y_train_val).to(torch.float32)
+
+            # Output labels are onehot encoded; this converts labels to be index encoded
+            self.y = torch.max(y_train_val_tensor.detach(), 1)[1]
+
         elif self.split == "test":
             self.X = torch.from_numpy(X_test)
-            self.y = torch.from_numpy(y_test).to(torch.float32)
+            y_test_tensor = torch.from_numpy(y_test).to(torch.float32)
+            self.y = torch.max(y_test_tensor.detach(), 1)[1]
 
     def __len__(self):
         return len(self.X)

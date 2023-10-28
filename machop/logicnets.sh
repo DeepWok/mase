@@ -14,7 +14,7 @@ model_arg="$2"
 data_set_arg="$3"
 
 # Train the model using high precision and specified configuration.
-# ./ch train  ${model_arg} ${data_set_arg} --config configs/logicnets/train_jsc.toml
+./ch train  ${model_arg} ${data_set_arg} --config configs/logicnets/train_jsc.toml
 
 # Test the trained model using high precision and specified configuration. Load the best checkpoint. (PL)
 # ./ch test ${model_arg} ${data_set_arg} --config configs/logicnets/train_jsc.toml --load "../mase_output/${model_arg}_classification_${data_set_arg}_$date_arg/software/training_ckpts/best.ckpt" --load-type pl
@@ -62,4 +62,4 @@ data_set_arg="$3"
 # ./ch transform ${model_arg} ${data_set_arg} --config configs/logicnets/fusion.toml --load "../mase_output/${model_arg}_classification_${data_set_arg}_$date_arg/software/transform/transformed_ckpt_unfused_logicnets_lut/graph_module.mz" --load-type mz    
 
 # Test the quantized model.
-./ch test ${model_arg} ${data_set_arg} --config configs/logicnets/integer_logicnets_fuse.toml --load "../mase_output/${model_arg}_classification_${data_set_arg}_${date_arg}/software/transform/transformed_ckpt/graph_module.mz" --load-type mz
+# ./ch test ${model_arg} ${data_set_arg} --config configs/logicnets/integer_logicnets_fuse.toml --load "../mase_output/${model_arg}_classification_${data_set_arg}_${date_arg}/software/transform/transformed_ckpt/graph_module.mz" --load-type mz
