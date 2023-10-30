@@ -807,31 +807,21 @@ class ChopCLI:
         for exc in [KeyboardInterrupt, FileNotFoundError]:
             if issubclass(etype, exc):
                 sys.exit(-1)
-        # ipdb.post_mortem(etb)
-        import pudb
-
-        pudb.post_mortem(etb)
+        ipdb.post_mortem(etb)
 
     def _setup_visualizer(self):
         visualizer = None
         match self.args.report_to:
             case "wandb":
                 visualizer = WandbLogger(
-                    project=self.args.project, save_dir=self.output_dir
+                    project=self.args.project, save_dir=self.output_dir_sw
                 )
                 visualizer.experiment.config.update(vars(self.args))
-                if self.args.config is not None:
-                    visualizer.experiment.config.update(
-                        {"config_toml": load_config(self.args.config)}
-                    )
             case "tensorboard":
                 visualizer = TensorBoardLogger(
-                    save_dir=self.output_dir.joinpath("tensorboard")
+                    save_dir=self.output_dir_sw.joinpath("tensorboard")
                 )
                 visualizer.log_hyperparams(vars(self.args))
-                visualizer.log_hyperparams(
-                    {"config_toml": load_config(self.args.config)}
-                )
             case _:
                 raise ValueError(f"unsupported reporting tool {self.args.report_to!r}")
         return visualizer
