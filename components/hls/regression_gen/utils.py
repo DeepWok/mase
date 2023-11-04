@@ -1,6 +1,6 @@
 import os
 
-DSE_MODES = ["codegen", "synth", "report", "all"]
+DSE_MODES = ["codegen", "synth", "report", "all", "count_loc"]
 
 
 def get_tcl_buff(project=None, top=None, cpp=None):

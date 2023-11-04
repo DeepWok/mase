@@ -40,6 +40,19 @@ def int_layernorm_dse(mode=None, top=None, threads=16):
     size = len(x_widths) * len(x_frac_widths) * len(x_rows) * len(x_cols)
     print("Exploring layernorm. Design points = {}".format(size))
 
+    loc_points = []
+    loc_points.append(
+        [
+            "x_width",
+            "x_frac_width",
+            "x_row",
+            "x_col",
+            "x_row_depth",
+            "x_col_depth",
+            "loc",
+        ]
+    )
+
     data_points = []
     data_points.append(
         [
@@ -96,6 +109,21 @@ def int_layernorm_dse(mode=None, top=None, threads=16):
                             f'echo "{i}/{size}"; vitis_hls {file_name}.tcl'
                         )
 
+                    if mode in ["count_loc", "all"]:
+                        with open(file_path, "r") as f:
+                            loc = len(f.readlines())
+                        loc_points.append(
+                            [
+                                x_width,
+                                x_frac_width,
+                                x_row,
+                                x_col,
+                                x_row_depth,
+                                x_col_depth,
+                                loc,
+                            ]
+                        )
+
                     if mode in ["synth", "all"]:
                         os.system(f"cd {top}; vitis_hls {file_name}.tcl")
 
@@ -132,4 +160,8 @@ def int_layernorm_dse(mode=None, top=None, threads=16):
 
     if mode in ["report", "all"]:
         # Export regression model data points to csv
-        csv_gen(data_points, top, "int_layernorm")
+        csv_gen(data_points, top, "int_layernorm_hw")
+
+    if mode in ["count_loc", "all"]:
+        # Export regression model data points to csv
+        csv_gen(loc_points, top, "int_layernorm_loc")

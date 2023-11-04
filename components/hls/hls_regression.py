@@ -25,9 +25,27 @@ from regression_gen import (
     bfp_linear2d_dse,
 )
 
+ALL_OPS = [
+    "int_linear2d",
+    "int_rmsnorm",
+    "int_rope",
+    "int_softmax",
+    "int_layernorm",
+    "int_mult",
+    "int_add",
+    "int_relu",
+    "int_silu",
+    "int_transpose",
+    "int_matmul",
+    "fork",
+    "buffer",
+    "bfp_add",
+    "bfp_mult",
+    "bfp_linear2d",
+]
 
-def run(args):
-    op = args.op
+
+def single_run(op, args):
     if not os.path.exists(args.dir):
         os.mkdir(args.dir)
 
@@ -69,6 +87,17 @@ def run(args):
         assert False, f"Unsupported op = {op}"
 
 
+def run(args):
+    op = args.op
+    if op == "all":
+        dse_dir = str(args.dir)
+        for p in ALL_OPS:
+            args.dir = f"{dse_dir}_{p}"
+            single_run(p, args)
+    else:
+        single_run(op, args)
+
+
 # ---------- main function --------------
 def main():
     USAGE = """Usage:
@@ -92,7 +121,7 @@ mase_hls  ...
         "--mode",
         dest="mode",
         default=None,
-        help="Mode to run: codegen, synth, report, all",
+        help="Mode to run: codegen, synth, report, all, count_loc",
     )
     args = parser.parse_args()
     run(args)
