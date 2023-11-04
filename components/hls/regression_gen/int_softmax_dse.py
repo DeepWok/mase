@@ -37,6 +37,19 @@ def int_softmax_dse(mode=None, top=None, threads=16):
     x_row_depth = 8
     x_col_depth = 8
 
+    loc_points = []
+    loc_points.append(
+        [
+            "x_width",
+            "x_frac_width",
+            "x_row",
+            "x_col",
+            "x_row_depth",
+            "x_col_depth",
+            "loc",
+        ]
+    )
+
     data_points = []
     data_points.append(
         [
@@ -73,6 +86,7 @@ def int_softmax_dse(mode=None, top=None, threads=16):
                     )
                     tcl_path = os.path.join(top, f"{file_name}.tcl")
                     file_path = os.path.join(top, f"{file_name}.cpp")
+
                     if mode in ["codegen", "all"]:
                         writer = HLSWriter()
                         writer = int_softmax_gen(
@@ -94,6 +108,21 @@ def int_softmax_dse(mode=None, top=None, threads=16):
                             outf.write(tcl_buff)
                         commands[i % threads].append(
                             f'echo "{i}/{size}"; vitis_hls {file_name}.tcl'
+                        )
+
+                    if mode in ["count_loc", "all"]:
+                        with open(file_path, "r") as f:
+                            loc = len(f.readlines())
+                        loc_points.append(
+                            [
+                                x_width,
+                                x_frac_width,
+                                x_row,
+                                x_col,
+                                x_row_depth,
+                                x_col_depth,
+                                loc,
+                            ]
                         )
 
                     if mode in ["synth", "all"]:
@@ -132,4 +161,8 @@ def int_softmax_dse(mode=None, top=None, threads=16):
 
     if mode in ["report", "all"]:
         # Export regression model data points to csv
-        csv_gen(data_points, top, "int_softmax")
+        csv_gen(data_points, top, "int_softmax_hw")
+
+    if mode in ["count_loc", "all"]:
+        # Export regression model data points to csv
+        csv_gen(loc_points, top, "int_softmax_loc")

@@ -38,6 +38,19 @@ def buffer_dse(mode=None, top=None, threads=16):
     x_row_depth = 8
     x_col_depth = 8
 
+    loc_points = []
+    loc_points.append(
+        [
+            "x_width",
+            "x_frac_width",
+            "x_row",
+            "x_col",
+            "x_row_depth",
+            "x_col_depth",
+            "loc",
+        ]
+    )
+
     data_points = []
     data_points.append(
         [
@@ -95,6 +108,21 @@ def buffer_dse(mode=None, top=None, threads=16):
                             f'echo "{i}/{size}"; vitis_hls {file_name}.tcl'
                         )
 
+                    if mode in ["count_loc", "all"]:
+                        with open(file_path, "r") as f:
+                            loc = len(f.readlines())
+                        loc_points.append(
+                            [
+                                x_width,
+                                x_frac_width,
+                                x_row,
+                                x_col,
+                                x_row_depth,
+                                x_col_depth,
+                                loc,
+                            ]
+                        )
+
                     if mode in ["synth", "all"]:
                         os.system(f"cd {top}; vitis_hls {file_name}.tcl")
 
@@ -131,4 +159,8 @@ def buffer_dse(mode=None, top=None, threads=16):
 
     if mode in ["report", "all"]:
         # Export regression model data points to csv
-        csv_gen(data_points, top, "buffer")
+        csv_gen(data_points, top, "buffer_hw")
+
+    if mode in ["count_loc", "all"]:
+        # Export regression model data points to csv
+        csv_gen(loc_points, top, "buffer_loc")

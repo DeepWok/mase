@@ -44,8 +44,23 @@ def bfp_add_dse(mode=None, top=None, threads=16):
     x_row_depths = [8]
     x_col_depths = [8]
 
-    data_pobfps = []
-    data_pobfps.append(
+    loc_points = []
+    loc_points.append(
+        [
+            "x_exp_width",
+            "x_man_width",
+            "x_row",
+            "x_col",
+            "x_row_depth",
+            "x_col_depth",
+            "w_exp_width",
+            "w_man_width",
+            "loc",
+        ]
+    )
+
+    data_points = []
+    data_points.append(
         [
             "x_exp_width",
             "x_man_width",
@@ -119,6 +134,23 @@ def bfp_add_dse(mode=None, top=None, threads=16):
                                     f'echo "{i}/{size}"; vitis_hls {file_name}.tcl'
                                 )
 
+                            if mode in ["count_loc", "all"]:
+                                with open(file_path, "r") as f:
+                                    loc = len(f.readlines())
+                                loc_points.append(
+                                    [
+                                        x_exp_width,
+                                        x_man_width,
+                                        x_row,
+                                        x_col,
+                                        x_row_depth,
+                                        x_col_depth,
+                                        w_exp_width,
+                                        w_man_width,
+                                        loc,
+                                    ]
+                                )
+
                             if mode in ["synth", "all"]:
                                 os.system(f"cd {top}; vitis_hls {file_name}.tcl")
 
@@ -128,7 +160,7 @@ def bfp_add_dse(mode=None, top=None, threads=16):
                                     project=os.path.join(top, file_name),
                                     top=top_name,
                                 )
-                                data_pobfps.append(
+                                data_points.append(
                                     [
                                         x_exp_width,
                                         x_man_width,
@@ -156,5 +188,9 @@ def bfp_add_dse(mode=None, top=None, threads=16):
         bash_gen(commands, top, "bfp_add")
 
     if mode in ["report", "all"]:
-        # Export regression model data pobfps to csv
-        csv_gen(data_pobfps, top, "bfp_add")
+        # Export regression model data points to csv
+        csv_gen(data_points, top, "bfp_add_hw")
+
+    if mode in ["count_loc", "all"]:
+        # Export regression model data points to csv
+        csv_gen(loc_points, top, "bfp_add_loc")

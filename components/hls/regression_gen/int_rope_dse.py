@@ -63,6 +63,21 @@ def int_rope_dse(mode=None, top=None, threads=16):
         ]
     )
 
+    loc_points = []
+    loc_points.append(
+        [
+            "x_width",
+            "x_frac_width",
+            "x_row",
+            "x_col",
+            "x_row_depth",
+            "x_col_depth",
+            "w_width",
+            "w_frac_width",
+            "loc",
+        ]
+    )
+
     size = (
         len(w_widths)
         * len(w_frac_widths)
@@ -86,6 +101,7 @@ def int_rope_dse(mode=None, top=None, threads=16):
                             file_name = f"x{i}_int_rope_{x_row}_{x_col}_{x_width}_{x_frac_width}_{w_width}_{w_frac_width}"
                             tcl_path = os.path.join(top, f"{file_name}.tcl")
                             file_path = os.path.join(top, f"{file_name}.cpp")
+
                             if mode in ["codegen", "all"]:
                                 writer = HLSWriter()
                                 writer = int_rope_gen(
@@ -111,6 +127,23 @@ def int_rope_dse(mode=None, top=None, threads=16):
                                     outf.write(tcl_buff)
                                 commands[i % threads].append(
                                     f'echo "{i}/{size}"; vitis_hls {file_name}.tcl'
+                                )
+
+                            if mode in ["count_loc", "all"]:
+                                with open(file_path, "r") as f:
+                                    loc = len(f.readlines())
+                                loc_points.append(
+                                    [
+                                        x_width,
+                                        x_frac_width,
+                                        x_row,
+                                        x_col,
+                                        x_row_depth,
+                                        x_col_depth,
+                                        w_width,
+                                        w_frac_width,
+                                        loc,
+                                    ]
                                 )
 
                             if mode in ["synth", "all"]:
@@ -151,4 +184,8 @@ def int_rope_dse(mode=None, top=None, threads=16):
 
     if mode in ["report", "all"]:
         # Export regression model data points to csv
-        csv_gen(data_points, top, "int_rope")
+        csv_gen(data_points, top, "int_rope_hw")
+
+    if mode in ["count_loc", "all"]:
+        # Export regression model data points to csv
+        csv_gen(loc_points, top, "int_rope_loc")
