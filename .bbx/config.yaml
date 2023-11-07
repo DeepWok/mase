@@ -15,7 +15,7 @@ jobs:
   # Define one or more steps to execute commands as part of the job
   steps:
    - run:
-      name: Install black and clang
+      name: Install mase dependencies
       command: |
         echo "Installing dependencies..."
         apt-get update
@@ -30,6 +30,7 @@ jobs:
                           lld 
 
         apt-get update -y
+        apt-get install protobuf
           
         apt-get install -y \
                           perl make autoconf flex bison libunwind-dev \
@@ -38,6 +39,7 @@ jobs:
                           help2man libidn11-dev
 
         pip3 install --user --upgrade pip
+        pip3 install protobuf==3.20.3
         pip3 install onnx toml GitPython colorlog \
                        pytest pytorch-lightning transformers toml \
                        timm pytorch-nlp datasets IPython ipdb \
@@ -53,8 +55,28 @@ jobs:
         
         echo "Done."
 
+ sync-fpgaconvnet:
+  runner: ubuntu-runner
+  steps:
+   - run:
+      # TODO: This is a hack to get around a failing CI. The FPGAConvNet analysis pass
+      # imports from this third-party submodule which causes a failing CI as the submodule
+      # isn't setup.
+      name: Setup the FPGAConvNet submodule
+      command: |
+        make sync-fpgaconvnet
+
+  chop-regression:
+    runner: ubuntu-runner
+    steps:
+      - run:
+        bash scripts/test-machop.sh
+      
+
 # Define a workflow to orchestrate a job
 workflows:
  mase-chop-regression:
   jobs:
    - chop-dependencies
+   - sync-fpgaconvnet
+   - chop-regression
