@@ -17,10 +17,41 @@ jobs:
    - run:
       name: Install black and clang
       command: |
+        echo "Installing dependencies..."
+        apt-get update
+        apt-get install apt-utils -y
+
         apt-get install -y \
-          python3 python3-pip clang-format clang-tidy
+                          clang cmake graphviz-dev libclang-dev \
+                          pkg-config g++ libxtst6 xdg-utils \
+                          libboost-all-dev llvm gcc ninja-build \
+                          python3 python3-pip build-essential \
+                          libssl-dev git vim wget htop \
+                          lld 
+
+        apt-get update -y
+          
+        apt-get install -y \
+                          perl make autoconf flex bison libunwind-dev \
+                          ccache libgoogle-perftools-dev numactl \
+                          perl-doc libfl2 libfl-dev zlib1g zlib1g-dev \
+                          help2man libidn11-dev
+
         pip3 install --user --upgrade pip
-        pip3 install black
+        pip3 install onnx toml GitPython colorlog \
+                       pytest pytorch-lightning transformers toml \
+                       timm pytorch-nlp datasets IPython ipdb \
+                       sentencepiece einops deepspeed pybind11 \
+                       tabulate tensorboard hyperopt accelerate \
+                       optuna stable-baselines3 scikit-learn
+        pip3 install cocotb[bus]==1.8.0 nni
+        pip3 install h5py
+        pip3 install wandb==0.15.10 graphviz==0.20.1 onnxsim==0.4.33 \
+                       onnxruntime==1.15.1 onnxoptimizer==0.3.13 pydot==1.4.2 \
+                       protobuf==3.20.3 fpbinary==1.5.5
+        pip3 install xgboost==1.7.2 --extra-index-url https://download.pytorch.org/whl/cpu
+        
+        echo "Done."
 
 # Define a workflow to orchestrate a job
 workflows:
