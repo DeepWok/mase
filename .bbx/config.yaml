@@ -70,7 +70,9 @@ jobs:
     runner: ubuntu-runner
     steps:
       - run:
-        bash scripts/test-machop.sh
+        name: Run software regression
+        command: |
+          bash scripts/test-machop.sh
       
 
 # Define a workflow to orchestrate a job
