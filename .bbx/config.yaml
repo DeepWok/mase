@@ -55,24 +55,24 @@ jobs:
         
         echo "Done."
 
+ # TODO: This is a hack to get around a failing CI. The FPGAConvNet analysis pass
+ # imports from this third-party submodule which causes a failing CI as the submodule
+ # isn't setup.
  sync-fpgaconvnet:
   runner: ubuntu-runner
   steps:
    - run:
-      # TODO: This is a hack to get around a failing CI. The FPGAConvNet analysis pass
-      # imports from this third-party submodule which causes a failing CI as the submodule
-      # isn't setup.
-      name: Setup the FPGAConvNet submodule
-      command: |
-        make sync-fpgaconvnet
+    name: Setup the FPGAConvNet submodule
+    command: |
+      make sync-fpgaconvnet
 
-  chop-regression:
-    runner: ubuntu-runner
-    steps:
-      - run:
-        name: Run software regression
-        command: |
-          bash scripts/test-machop.sh
+ chop-regression:
+  runner: ubuntu-runner
+  steps:
+   - run:
+    name: Run software regression
+    command: |
+      bash scripts/test-machop.sh
       
 
 # Define a workflow to orchestrate a job
