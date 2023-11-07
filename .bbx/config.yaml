@@ -62,17 +62,17 @@ jobs:
   runner: ubuntu-runner
   steps:
    - run:
-    name: Setup the FPGAConvNet submodule
-    command: |
-      make sync-fpgaconvnet
+      name: Setup the FPGAConvNet submodule
+      command: |
+        make sync-fpgaconvnet
 
  chop-regression:
   runner: ubuntu-runner
   steps:
    - run:
-    name: Run software regression
-    command: |
-      bash scripts/test-machop.sh
+      name: Run software regression
+      command: |
+        bash scripts/test-machop.sh
       
 
 # Define a workflow to orchestrate a job
