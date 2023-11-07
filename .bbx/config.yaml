@@ -38,7 +38,7 @@ jobs:
                           help2man libidn11-dev
 
         pip3 install --user --upgrade pip
-        pip3 install protobuf==3.20.3
+        pip3 install protobuf
         pip3 install onnx toml GitPython colorlog \
                        pytest pytorch-lightning transformers toml \
                        timm pytorch-nlp datasets IPython ipdb \
@@ -49,7 +49,7 @@ jobs:
         pip3 install h5py
         pip3 install wandb==0.15.10 graphviz==0.20.1 onnxsim==0.4.33 \
                        onnxruntime==1.15.1 onnxoptimizer==0.3.13 pydot==1.4.2 \
-                       protobuf==3.20.3 fpbinary==1.5.5
+                       fpbinary==1.5.5
         pip3 install xgboost==1.7.2 --extra-index-url https://download.pytorch.org/whl/cpu
         
         echo "Done."
@@ -59,6 +59,8 @@ jobs:
  # isn't setup.
  sync-fpgaconvnet:
   runner: ubuntu-runner
+  depends:
+   - chop-dependencies
   steps:
    - run:
       name: Setup the FPGAConvNet submodule
@@ -67,6 +69,9 @@ jobs:
 
  chop-regression:
   runner: ubuntu-runner
+  depends:
+   - chop-dependencies
+   - sync-fpgaconvnet
   steps:
    - run:
       name: Run software regression
