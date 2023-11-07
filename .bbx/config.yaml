@@ -30,7 +30,6 @@ jobs:
                           lld 
 
         apt-get update -y
-        apt-get install protobuf
           
         apt-get install -y \
                           perl make autoconf flex bison libunwind-dev \
