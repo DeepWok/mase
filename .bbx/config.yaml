@@ -8,18 +8,22 @@ runners:
 
 # Define a job to be performed during a workflow
 jobs:   
- hello-world:
+ chop-dependencies:
   # Specify the runner used to perform this job
   runner: ubuntu-runner
 
   # Define one or more steps to execute commands as part of the job
   steps:
    - run:
-      name: Say Hello World
-      command: echo "Hello World" 
+      name: Install black and clang
+      command: |
+        apt-get install -y \
+          python3 python3-pip clang-format clang-tidy
+        pip3 install --user --upgrade pip
+        pip3 install black
 
 # Define a workflow to orchestrate a job
 workflows:
- hello-world-workflow:
+ mase-chop-regression:
   jobs:
-   - hello-world
+   - chop-dependencies
