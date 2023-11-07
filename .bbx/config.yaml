@@ -1,0 +1,25 @@
+# Example config file to use as a starting point.
+# Please visit https://docs.beetleboxci.com/docs/config/configuration-yaml for guidance on setting up your configuration file.
+
+# Define a runner that will be used to run a job
+runners:
+ ubuntu-runner:
+  image: public.ecr.aws/y2s4f3y9/ubuntu-generic
+
+# Define a job to be performed during a workflow
+jobs:   
+ hello-world:
+  # Specify the runner used to perform this job
+  runner: ubuntu-runner
+
+  # Define one or more steps to execute commands as part of the job
+  steps:
+   - run:
+      name: Say Hello World
+      command: echo "Hello World" 
+
+# Define a workflow to orchestrate a job
+workflows:
+ hello-world-workflow:
+  jobs:
+   - hello-world
