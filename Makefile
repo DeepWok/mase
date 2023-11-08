@@ -18,6 +18,8 @@ sync-fpgaconvnet:
 	git submodule update --init --recursive "machop/third-party/fpgaconvnet-optimiser"
 
 # Build Docker container
+build-docker-nocache: 
+	docker build --no-cache --build-arg UID=$(user) --build-arg GID=$(group) --build-arg VHLS_PATH=$(vhls) -f Docker/Dockerfile --tag mase-ubuntu2204 Docker
 build-docker: 
 	docker build --build-arg UID=$(user) --build-arg GID=$(group) --build-arg VHLS_PATH=$(vhls) -f Docker/Dockerfile --tag mase-ubuntu2204 Docker
 
