@@ -26,7 +26,7 @@ jobs:
           submodules: "true"
     - uses: actions/setup-python@v4
       with:
-          python-version: '3.10' 
+          python-version: '3.11' 
     - name: Display Python version
       run: python -c "import sys; print(sys.version)"
     - name: Get dependencies 
@@ -44,20 +44,15 @@ jobs:
                           ccache libgoogle-perftools-dev numactl \
                           perl-doc libfl2 libfl-dev zlib1g zlib1g-dev \
                           help2man libidn11-dev
-
     - name: Install Torch-MLIR 
       run: |
           pip install --user --upgrade pip
-          pip install --pre torchvision --extra-index-url https://download.pytorch.org/whl/nightly/cpu
-          pip install onnx toml GitPython  \
-                              pytorch-lightning transformers toml \
-                              timm pytorch-nlp datasets ipython ipdb \
-                              sentencepiece einops pybind11
-          wget https://github.com/llvm/torch-mlir/releases/download/snapshot-20230525.849/torch-2.1.0.dev20230523+cpu-cp310-cp310-linux_x86_64.whl
-          wget https://github.com/llvm/torch-mlir/releases/download/snapshot-20230525.849/torch_mlir-20230525.849-cp310-cp310-linux_x86_64.whl
-          pip install torch-*.whl torch_mlir-*.whl
+          pip3 install --upgrade pip 
+          pip3 install --pre torch-mlir torchvision \
+              -f https://llvm.github.io/torch-mlir/package-index/ \
+              --extra-index-url https://download.pytorch.org/whl/nightly/cpu
 
     - name: Torch-MLIR regression test 
       run: |
-          python scripts/test-torch-mlir.py
+          python3 scripts/test-torch-mlir.py
 

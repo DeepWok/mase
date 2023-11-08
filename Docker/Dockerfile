@@ -53,10 +53,22 @@ RUN mkdir -p /srcPkgs \
 RUN apt-get update -y \
     && apt-get install -y clang-12
 
+RUN export DEBIAN_FRONTEND=noninteractive \
+    && apt-get install -y software-properties-common \
+    && add-apt-repository ppa:deadsnakes/ppa \
+    && apt update -y \
+    && apt install -y python3.11 \
+    && update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.10 100 \
+    && update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.11 200 \
+    && update-alternatives --config python3
+
 CMD ["bash"]
 
 # Install PyTorch and Torch-MLIR
 RUN pip3 install --upgrade pip 
+RUN pip3 install --pre torch-mlir torchvision \
+    -f https://llvm.github.io/torch-mlir/package-index/ \
+    --extra-index-url https://download.pytorch.org/whl/nightly/cpu
 RUN pip3 install --pre torchvision --extra-index-url https://download.pytorch.org/whl/nightly/cpu \
     && pip3 install onnx black toml GitPython colorlog cocotb[bus]==1.8.0 \
                     pytest pytorch-lightning transformers toml \
@@ -65,12 +77,6 @@ RUN pip3 install --pre torchvision --extra-index-url https://download.pytorch.or
                     tabulate tensorboardx hyperopt accelerate \
                     optuna stable-baselines3 h5py scikit-learn \
                     scipy matplotlib nni
-# Install Torch-MLIR and Pytorch
-RUN cd /root \
-    && wget https://github.com/llvm/torch-mlir/releases/download/snapshot-20230525.849/torch-2.1.0.dev20230523+cpu-cp310-cp310-linux_x86_64.whl \
-    && wget https://github.com/llvm/torch-mlir/releases/download/snapshot-20230525.849/torch_mlir-20230525.849-cp310-cp310-linux_x86_64.whl \
-    && pip3 install torch-*.whl torch_mlir-*.whl \
-    && rm torch-*.whl torch_mlir-*.whl
 
 # Add environment variables
 ENV vhls $VHLS_PATH
