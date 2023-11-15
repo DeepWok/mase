@@ -17,6 +17,8 @@ jobs:
    - run:
       name: Setup the FPGAConvNet submodule
       command: |
+        echo $(pwd)
+        ls
         make sync-fpgaconvnet
 
  chop-regression:
