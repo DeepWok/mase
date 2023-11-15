@@ -21,6 +21,13 @@ jobs:
         ls -a
         make sync-fpgaconvnet
 
+ choose-commit:
+  runner: ubuntu-runner
+  steps:
+   - run: |
+      DIFF_COMMIT_NAME="HEAD^"
+      echo "DIFF_COMMIT_NAME=$DIFF_COMMIT_NAME" >> $GITHUB_ENV
+
  chop-regression:
   runner: ubuntu-runner
   depends:
@@ -42,10 +49,18 @@ jobs:
 # Define a workflow to orchestrate a job
 workflows:
  mase-chop-regression:
+  triggers:
+   - push
+   - schedule:
+      cron: "0 2 * * *"  
   jobs:
    - sync-fpgaconvnet
    - chop-regression
 
  mase-hw-regression:
+  triggers:
+   - push
+   - schedule:
+      cron: "0 2 * * *"  
   jobs:
    - hw-regression
