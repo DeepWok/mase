@@ -48,19 +48,19 @@ jobs:
 
 # Define a workflow to orchestrate a job
 workflows:
- mase-chop-regression:
-  triggers:
-   - push
-   - schedule:
-      cron: "0 2 * * *"  
-  jobs:
-   - sync-fpgaconvnet
-   - chop-regression
+  mase-chop-regression:
+    triggers:
+      - push
+      - schedule:
+          cron: "0 2 * * *"
+    jobs:
+      - sync-fpgaconvnet
+      - chop-regression
 
- mase-hw-regression:
-  triggers:
-   - push
-   - schedule:
-      cron: "0 2 * * *"  
-  jobs:
-   - hw-regression
+  mase-hw-regression:
+    triggers:
+      - push
+      - schedule:
+          cron: "0 2 * * *"
+    jobs:
+      - hw-regression
