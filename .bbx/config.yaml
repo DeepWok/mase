@@ -17,8 +17,8 @@ jobs:
       - run:
           name: Setup the FPGAConvNet submodule
           command: |
-            echo $(pwd)
-            ls -a
+            tar -xzvf /tmp/workflow*.tar.gz -C /tmp
+            ls /tmp
             make sync-fpgaconvnet
 
   choose-commit:
