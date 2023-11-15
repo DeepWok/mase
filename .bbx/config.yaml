@@ -4,63 +4,15 @@
 # Define a runner that will be used to run a job
 runners:
  ubuntu-runner:
-  image: public.ecr.aws/y2s4f3y9/ubuntu-generic
+  image: ee-kraken:5000/ubuntu-mase-pipeline
 
 # Define a job to be performed during a workflow
 jobs:   
- chop-dependencies:
-  # Specify the runner used to perform this job
-  runner: ubuntu-runner
-
-  # Define one or more steps to execute commands as part of the job
-  steps:
-   - run:
-      name: Install mase dependencies
-      command: |
-        echo "Installing dependencies..."
-        apt-get update
-        apt-get install apt-utils -y
-
-        apt-get install -y \
-                          clang cmake graphviz-dev libclang-dev \
-                          pkg-config g++ libxtst6 xdg-utils \
-                          libboost-all-dev llvm gcc ninja-build \
-                          python3 python3-pip build-essential \
-                          libssl-dev git vim wget htop \
-                          lld 
-
-        apt-get update -y
-          
-        apt-get install -y \
-                          perl make autoconf flex bison libunwind-dev \
-                          ccache libgoogle-perftools-dev numactl \
-                          perl-doc libfl2 libfl-dev zlib1g zlib1g-dev \
-                          help2man libidn11-dev
-
-        pip3 install --user --upgrade pip
-        pip3 install protobuf
-        pip3 install onnx toml GitPython colorlog \
-                       pytest pytorch-lightning transformers toml \
-                       timm pytorch-nlp datasets IPython ipdb \
-                       sentencepiece einops deepspeed pybind11 \
-                       tabulate tensorboard hyperopt accelerate \
-                       optuna stable-baselines3 scikit-learn
-        pip3 install cocotb[bus]==1.8.0 nni
-        pip3 install h5py
-        pip3 install wandb==0.15.10 graphviz==0.20.1 onnxsim==0.4.33 \
-                       onnxruntime==1.15.1 onnxoptimizer==0.3.13 pydot==1.4.2 \
-                       fpbinary==1.5.5
-        pip3 install xgboost==1.7.2 --extra-index-url https://download.pytorch.org/whl/cpu
-        
-        echo "Done."
-
  # TODO: This is a hack to get around a failing CI. The FPGAConvNet analysis pass
  # imports from this third-party submodule which causes a failing CI as the submodule
  # isn't setup.
  sync-fpgaconvnet:
   runner: ubuntu-runner
-  depends:
-   - chop-dependencies
   steps:
    - run:
       name: Setup the FPGAConvNet submodule
@@ -70,19 +22,28 @@ jobs:
  chop-regression:
   runner: ubuntu-runner
   depends:
-   - chop-dependencies
    - sync-fpgaconvnet
   steps:
    - run:
       name: Run software regression
       command: |
         bash scripts/test-machop.sh
-      
+
+ hw-regression:
+  runner: ubuntu-runner
+  steps:
+   - run:
+      name: Run hardware regression
+      command: |
+        python3 scripts/test-hardware.py -a
 
 # Define a workflow to orchestrate a job
 workflows:
  mase-chop-regression:
   jobs:
-   - chop-dependencies
    - sync-fpgaconvnet
    - chop-regression
+
+ mase-hw-regression:
+  jobs:
+   - hw-regression
