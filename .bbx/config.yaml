@@ -20,7 +20,9 @@ jobs:
             # This is a temporary fix until the beetlebox bug is fixed and .git directory is correctly copied
             # into the working directory
             tar -xzvf /tmp/workflow*.tar.gz -C /tmp
-            cp -r /tmp/mnt/efs-mount-point/configworkers/*/git_repos_*/*/.git .
+            cp -r /tmp/mnt/efs-mount-point/configworkers/*/git_repos_*/*/.* .
+            echo "/root contents:"
+            ls -a
             make sync-fpgaconvnet
 
   choose-commit:

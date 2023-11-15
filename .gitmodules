@@ -9,5 +9,5 @@
 	url = git@github.com:huggingface/peft.git
 [submodule "machop/third-party/fpgaconvnet-optimiser"]
 	path = machop/third-party/fpgaconvnet-optimiser
-	url = git@github.com:AlexMontgomerie/fpgaconvnet-optimiser.git
+	url = https://github.com/AlexMontgomerie/fpgaconvnet-optimiser.git
 	branch = dev
