@@ -3,48 +3,48 @@
 
 # Define a runner that will be used to run a job
 runners:
- ubuntu-runner:
-  image: ee-kraken:5000/ubuntu-mase-pipeline
+  ubuntu-runner:
+    image: ee-kraken:5000/ubuntu-mase-pipeline
 
 # Define a job to be performed during a workflow
-jobs:   
- # TODO: This is a hack to get around a failing CI. The FPGAConvNet analysis pass
- # imports from this third-party submodule which causes a failing CI as the submodule
- # isn't setup.
- sync-fpgaconvnet:
-  runner: ubuntu-runner
-  steps:
-   - run:
-      name: Setup the FPGAConvNet submodule
-      command: |
-        echo $(pwd)
-        ls -a
-        make sync-fpgaconvnet
+jobs:
+  # TODO: This is a hack to get around a failing CI. The FPGAConvNet analysis pass
+  # imports from this third-party submodule which causes a failing CI as the submodule
+  # isn't setup.
+  sync-fpgaconvnet:
+    runner: ubuntu-runner
+    steps:
+      - run:
+          name: Setup the FPGAConvNet submodule
+          command: |
+            echo $(pwd)
+            ls -a
+            make sync-fpgaconvnet
 
- choose-commit:
-  runner: ubuntu-runner
-  steps:
-   - run: |
-      DIFF_COMMIT_NAME="HEAD^"
-      echo "DIFF_COMMIT_NAME=$DIFF_COMMIT_NAME" >> $GITHUB_ENV
+  choose-commit:
+    runner: ubuntu-runner
+    steps:
+      - run: |
+          DIFF_COMMIT_NAME="HEAD^"
 
- chop-regression:
-  runner: ubuntu-runner
-  depends:
-   - sync-fpgaconvnet
-  steps:
-   - run:
-      name: Run software regression
-      command: |
-        bash scripts/test-machop.sh
+  chop-regression:
+    runner: ubuntu-runner
+    depends:
+      - sync-fpgaconvnet
+    steps:
+      - run:
+          name: Run software regression
+          command: |
+            bash scripts/test-machop.sh
 
- hw-regression:
-  runner: ubuntu-runner
-  steps:
-   - run:
-      name: Run hardware regression
-      command: |
-        python3 scripts/test-hardware.py -a
+  hw-regression:
+    runner: ubuntu-runner
+    steps:
+      - run:
+          name: Run hardware regression
+          command: |
+            python3 scripts/test-hardware.py -a
+
 
 # Define a workflow to orchestrate a job
 workflows:
