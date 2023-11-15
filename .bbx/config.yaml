@@ -24,8 +24,10 @@ jobs:
   choose-commit:
     runner: ubuntu-runner
     steps:
-      - run: |
-          DIFF_COMMIT_NAME="HEAD^"
+      - run:
+          name: Define diff commit
+          command: | 
+            DIFF_COMMIT_NAME="HEAD^"
 
   chop-regression:
     runner: ubuntu-runner
