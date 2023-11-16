@@ -1,0 +1,70 @@
+# Define a runner that will be used to run a job
+runners:
+  ubuntu-runner:
+    image: ee-kraken:5000/ubuntu-mase-pipeline
+
+# Define a job to be performed during a workflow
+jobs:
+  # TODO: This is a hack to get around a failing CI. The FPGAConvNet analysis pass
+  # imports from this third-party submodule which causes a failing CI as the submodule
+  # isn't setup.
+  sync-fpgaconvnet:
+    runner: ubuntu-runner
+    steps:
+      - run:
+          name: Setup the FPGAConvNet submodule
+          command: |
+            # This is a temporary fix until the beetlebox bug is fixed and .git directory is correctly copied
+            # into the working directory
+            tar -xzvf /tmp/workflow*.tar.gz -C /tmp
+            cp -r /tmp/mnt/efs-mount-point/configworkers/*/git_repos_*/*/.git .
+            cp -r /tmp/mnt/efs-mount-point/configworkers/*/git_repos_*/*/.gitignore .
+            cp -r /tmp/mnt/efs-mount-point/configworkers/*/git_repos_*/*/.gitmodules .
+            make sync-fpgaconvnet
+
+  choose-commit:
+    runner: ubuntu-runner
+    steps:
+      - run:
+          name: Define diff commit
+          command: | 
+            DIFF_COMMIT_NAME="HEAD^"
+
+  chop-regression:
+    runner: ubuntu-runner
+    resource_spec: large
+    depends:
+      - sync-fpgaconvnet
+    steps:
+      - run:
+          name: Run software regression
+          command: |
+            bash scripts/test-machop.sh
+
+  hw-regression:
+    runner: ubuntu-runner
+    steps:
+      - run:
+          name: Run hardware regression
+          command: |
+            python3 scripts/test-hardware.py -a
+
+
+# Define a workflow to orchestrate a job
+workflows:
+  mase-chop-regression:
+    triggers:
+      - push
+      - schedule:
+          cron: "0 2 * * *"
+    jobs:
+      - sync-fpgaconvnet
+      - chop-regression
+
+  mase-hw-regression:
+    triggers:
+      - push
+      - schedule:
+          cron: "0 2 * * *"
+    jobs:
+      - hw-regression
