@@ -29,3 +29,6 @@ pyyaml
 numpy
 pandas
 wandb
+# doc
+sphinx
+sphinx-rtd-theme

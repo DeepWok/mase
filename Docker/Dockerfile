@@ -9,7 +9,7 @@ RUN echo "User ID: $UID"
 
 USER root
 RUN apt-get update -y && apt-get install apt-utils -y
-# RUN DEBIAN_FRONTEND="noninteractive" apt-get -y install tzdata
+RUN DEBIAN_FRONTEND="noninteractive" apt-get -y install tzdata
 
 # Install basic packages 
 RUN apt-get upgrade -y 
@@ -21,7 +21,7 @@ RUN apt-get update -y \
                           libssl-dev git vim wget htop sudo \
                           lld parallel clang-format clang-tidy \
                           libtinfo5 gcc-multilib libidn11-dev \
-                          locales
+                          locales python3-sphinx
 
 RUN locale-gen en_US.UTF-8
 
@@ -76,7 +76,8 @@ RUN pip3 install --pre torchvision --extra-index-url https://download.pytorch.or
                     sentencepiece einops deepspeed pybind11 \
                     tabulate tensorboardx hyperopt accelerate \
                     optuna stable-baselines3 h5py scikit-learn \
-                    scipy matplotlib nni
+                    scipy matplotlib nni sphinx-rtd-theme \
+                    ghp-import
 
 # Add environment variables
 ENV vhls $VHLS_PATH
