@@ -43,6 +43,18 @@ jobs:
                           lld python3-sphinx
 
           pip3 install --user --upgrade pip
+          pip3 install onnx toml GitPython colorlog \
+                       pytest pytorch-lightning transformers toml \
+                       timm pytorch-nlp datasets IPython ipdb \
+                       sentencepiece einops deepspeed pybind11 \
+                       tabulate tensorboard hyperopt accelerate \
+                       optuna stable-baselines3 scikit-learn
+          pip3 install cocotb[bus]==1.8.0 nni
+          pip3 install h5py
+          pip3 install wandb==0.15.10 graphviz==0.20.1 onnxsim==0.4.33 \
+                       onnxruntime==1.15.1 onnxoptimizer==0.3.13 pydot==1.4.2 \
+                       protobuf==3.20.3 fpbinary==1.5.5
+          pip3 install xgboost==1.7.2 --extra-index-url https://download.pytorch.org/whl/cpu
           pip3 install sphinx-rtd-theme ghp-import
     
     - name: Build sphinx html
