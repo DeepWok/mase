@@ -42,6 +42,16 @@ logger = getLogger(__name__)
 
 
 def evaluate_lm_step(accelerator: Accelerator, model: torch.nn.Module, batch):
+    """This function makes a single step evaluation for language models
+
+    Args:
+        accelerator (Accelerator): hardware choice
+        model (torch.nn.Module): model under test
+        batch (int, float): which data bach
+
+    Returns:
+        tuple: perplexity and accuracy
+    """
     input_ids = batch["input_ids"]
     attention_mask = batch["attention_mask"]
     with torch.no_grad():

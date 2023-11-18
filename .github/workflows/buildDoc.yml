@@ -1,0 +1,56 @@
+name: Build Doc for the MASE website 
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+  workflow_dispatch:
+    logLevel:
+          description: 'Log level'
+          required: true
+          default: 'warning'
+          type: choice
+          options:
+            - info
+            - warning
+            - debug
+  
+
+jobs:
+
+  software-regression-test:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+      with:
+          submodules: "true"
+
+    # -----------
+    # Mase regression test 
+    # -----------
+    
+    - name: Get dependences 
+      run: |
+          sudo apt-get update
+          sudo apt-get install apt-utils -y
+          sudo apt-get install -y \
+                          clang cmake graphviz-dev libclang-dev \
+                          pkg-config g++ libxtst6 xdg-utils \
+                          libboost-all-dev llvm gcc ninja-build \
+                          python3 python3-pip build-essential \
+                          libssl-dev git vim wget htop sudo \
+                          lld python3-sphinx
+
+          pip3 install --user --upgrade pip
+          pip3 install sphinx-rtd-theme ghp-import
+    
+    - name: Build sphinx html
+      run: |
+        cd machop/sphinx_docs
+        make html
+
+    - name: Run ghp-import
+      run: |
+        ghp-import -n -p -f machop/sphinx_docs/build/html
+
