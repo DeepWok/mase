@@ -16,6 +16,11 @@ def report_graph_analysis_pass(graph, file_name=None):
         "output": 0,
     }
     layer_types = []
+
+    for node in graph.fx_graph.nodes:
+        if node.meta["mase"].module is not None:
+            layer_types.append(node.meta["mase"].module)
+
     for node in graph.fx_graph.nodes:
         count[node.op] += 1
     buff += f"""Network overview:

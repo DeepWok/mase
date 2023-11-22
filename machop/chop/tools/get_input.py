@@ -179,7 +179,7 @@ class InputGenerator:
         if self.max_batches is not None and self.current_batch >= self.max_batches:
             raise StopIteration
 
-        if self.model_info.is_vision_model:
+        if self.model_info.is_vision_model or self.model_info.is_physical_model:
             match self.task:
                 case "classification" | "cls":
                     x, y = next(self.dataloader_iter)
