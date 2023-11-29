@@ -50,6 +50,8 @@ class MaseDatasetInfo:
     requires_preprocessing: bool = False
     preprocess_one_split_for_all: bool = True
 
+    data_collator_cls: type = None
+
     # tasks
     # cls
     image_classification: bool = False
@@ -79,19 +81,6 @@ class MaseDatasetInfo:
             DatasetSplit(split) if isinstance(split, str) else split
             for split in self.available_splits
         )
-        self._entries = {
-            "name",
-            "dataset_source",
-            "available_splits",
-            "image_classification",
-            "physical_data_point_classification",
-            "sequence_classification",
-            "causal_LM",
-            "seq2seqLM",
-            "num_classes",
-            "image_size",
-            "num_features",
-        }
 
     @property
     def train_split_available(self):
@@ -109,12 +98,6 @@ class MaseDatasetInfo:
     def pred_split_available(self):
         return DatasetSplit.PRED in self.available_splits
 
-    def __getitem__(self, key: str):
-        if key in self._entries:
-            return getattr(self, key)
-        else:
-            raise KeyError(f"key {key} not found in MaseDatasetInfo")
-
 
 def add_dataset_info(
     name: str,
@@ -128,6 +111,7 @@ def add_dataset_info(
     num_classes: int = None,
     image_size: tuple[int] = None,
     num_features: int = None,
+    data_collator_cls=None,
 ):
     """
     a decorator (factory) for adding dataset info to a dataset class
@@ -162,6 +146,7 @@ def add_dataset_info(
             num_classes=num_classes,
             image_size=image_size,
             num_features=num_features,
+            data_collator_cls=data_collator_cls,
         )
 
         return cls

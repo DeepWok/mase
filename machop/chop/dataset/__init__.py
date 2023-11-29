@@ -237,19 +237,31 @@ class MaseDataModule(pl.LightningDataModule):
                 self.pred_dataset.setup()
 
     def train_dataloader(self) -> DataLoader:
+        data_collator = None
+        if self.dataset_info.data_collator_cls is not None:
+            data_collator = self.dataset_info.data_collator_cls(
+                tokenizer=self.tokenizer
+            )
         return DataLoader(
             self.train_dataset,
             batch_size=self.batch_size,
             shuffle=True,
             num_workers=self.num_workers,
+            collate_fn=data_collator,
         )
 
     def val_dataloader(self) -> DataLoader:
+        data_collator = None
+        if self.dataset_info.data_collator_cls is not None:
+            data_collator = self.dataset_info.data_collator_cls(
+                tokenizer=self.tokenizer
+            )
         return DataLoader(
             self.val_dataset,
             batch_size=self.batch_size,
             shuffle=False,
             num_workers=self.num_workers,
+            collate_fn=data_collator,
         )
 
     def test_dataloader(self) -> DataLoader:
@@ -259,14 +271,25 @@ class MaseDataModule(pl.LightningDataModule):
                 "probably because the test set does not have ground truth labels, "
                 "or the test dataset does not exist. For the former case, try predict_dataloader"
             )
+        data_collator = None
+        if self.dataset_info.data_collator_cls is not None:
+            data_collator = self.dataset_info.data_collator_cls(
+                tokenizer=self.tokenizer
+            )
         return DataLoader(
             self.test_dataset,
             batch_size=self.batch_size,
             shuffle=False,
             num_workers=self.num_workers,
+            collate_fn=data_collator,
         )
 
     def pred_dataloader(self) -> DataLoader:
+        data_collator = None
+        if self.dataset_info.data_collator_cls is not None:
+            data_collator = self.dataset_info.data_collator_cls(
+                tokenizer=self.tokenizer
+            )
         if self.pred_dataset is None:
             raise RuntimeError("The pred dataset is not available.")
         return DataLoader(
@@ -274,4 +297,5 @@ class MaseDataModule(pl.LightningDataModule):
             batch_size=self.batch_size,
             shuffle=False,
             num_workers=self.num_workers,
+            collate_fn=data_collator,
         )
