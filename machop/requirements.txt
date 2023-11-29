@@ -1,11 +1,13 @@
 lightning
 transformers
+diffusers
 accelerate
 toml
 timm
 pytorch-nlp
 datasets
 onnx
+optimum
 black
 GitPython
 colorlog
