@@ -1,19 +1,29 @@
 import logging
 import math
 import os
+from pathlib import Path
+
 from types import FunctionType, ModuleType
 from typing import Any, Callable, Dict, Optional, Tuple
 
 import toml
 import torch
 import torch.fx as fx
+from torch.fx.passes.graph_drawer import FxGraphDrawer
+
 from chop.passes.common import MASE_IMPLICIT_FUNCS
 from chop.passes.transforms import utils as utils_passes
 from chop.passes.patching import MASE_LEAF_FUNCTIONS, MASE_LEAF_LAYERS
 from chop.passes.transforms.quantize import quantized_func_map, quantized_module_map
 from torch.fx import wrap as fx_wrap
 
+import onnx
+from optimum.exporters.onnx import main_export
+from .onnx_importer import ONNX_Importer
+
 logger = logging.getLogger(__name__)
+
+ROOT = Path(__file__).resolve().parents[4].as_posix()
 
 # ----------------------------------------
 #   Mase Tracer
@@ -93,14 +103,13 @@ class MaseGraph:
 
     def __init__(
         self,
-        model: torch.nn.Module,
+        model: torch.nn.Module | str | onnx.onnx_ml_pb2.ModelProto,
         cf_args: Optional[Dict[str, Any]] = None,
     ) -> None:
         assert isinstance(
-            model, torch.nn.Module
-        ), f"model must be a torch.nn.Module, got {type(model)}"
+            model, (torch.nn.Module, str, onnx.onnx_ml_pb2.ModelProto)
+        ), f"model must be a torch.nn.Module, checkpoint string or ONNX ModelProto. Received: {type(model)}"
 
-        # create graph module
         # MASE internal auto-wrapped functions/layers
         custom_leaf_modules = ()
         custom_leaf_functions = ()
@@ -115,26 +124,51 @@ class MaseGraph:
             custom_leaf_layers += tuple(patched_nodes["layers"])
             custom_leaf_functions += tuple(patched_nodes["functions"])
 
-        self.tracer = MaseTracer(
-            custom_leaf_modules=custom_leaf_modules,
-            custom_leaf_functions=custom_leaf_functions,
-            custom_leaf_layers=custom_leaf_layers,
-        )
         self.cf_args = cf_args
-        self.model = fx.GraphModule(model, self.tracer.trace(model, cf_args))
-        if patched_nodes:
-            self.model.patched_op_names = [
-                obj.__name__.lower()
-                for obj in model.patched_nodes["layers"]
-                + model.patched_nodes["functions"]
-            ]
-            # these are layers we believe the user will provide system verilog for
-            self.model.patched_custom_layers = model.patched_nodes["layers"]
-            self.model.additional_inputs = model.patched_nodes["additional_inputs"]
+
+        # Defined model checkpoint, run optimum onnx export
+        if isinstance(model, str):
+            model_path = f"{ROOT}/mase_output/onnx/{model}/model.onnx"
+            if not os.path.exists(model_path):
+                main_export(
+                    model,
+                    output=f"{ROOT}/mase_output/onnx/{model}",
+                    no_post_process=True,
+                    model_kwargs={"output_attentions": True},
+                )
+            self.onnx_model = onnx.load(model_path)
+            self.model = ONNX_Importer(self.onnx_model).raise_to_fx()
+
+        # Defined ONNX ModelProto, raise to FX
+        elif isinstance(model, onnx.onnx_ml_pb2.ModelProto):
+            self.model = ONNX_Importer(model).raise_to_fx()
+
+        # Defined torch.nn.Module, trace into fx graph
         else:
-            self.model.patched_op_names = []
-            self.model.patched_custom_layers = []
-            self.model.additional_inputs = {}
+            # create graph module
+            self.tracer = MaseTracer(
+                custom_leaf_modules=custom_leaf_modules,
+                custom_leaf_functions=custom_leaf_functions,
+                custom_leaf_layers=custom_leaf_layers,
+            )
+            self.model = fx.GraphModule(model, self.tracer.trace(model, cf_args))
+            if patched_nodes:
+                self.model.patched_op_names = [
+                    obj.__name__.lower()
+                    for obj in model.patched_nodes["layers"]
+                    + model.patched_nodes["functions"]
+                ]
+                # these are layers we believe the user will provide system verilog for
+                self.model.patched_custom_layers = model.patched_nodes["layers"]
+                self.model.additional_inputs = model.patched_nodes["additional_inputs"]
+            else:
+                self.model.patched_op_names = []
+                self.model.patched_custom_layers = []
+                self.model.additional_inputs = {}
+
+    def draw(self, file="mase_graph.svg"):
+        drawer = FxGraphDrawer(self.model, "masegraph")
+        drawer.get_dot_graph().write_svg(file)
 
     @property
     def fx_graph(self):

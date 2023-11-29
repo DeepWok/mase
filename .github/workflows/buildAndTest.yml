@@ -218,7 +218,7 @@ jobs:
                        timm pytorch-nlp datasets IPython ipdb \
                        sentencepiece einops deepspeed pybind11 \
                        tabulate tensorboard hyperopt accelerate \
-                       optuna stable-baselines3 scikit-learn
+                       optuna stable-baselines3 scikit-learn optimum
           pip3 install cocotb[bus]==1.8.0 nni
           pip3 install h5py
           pip3 install wandb==0.15.10 graphviz==0.20.1 onnxsim==0.4.33 \
