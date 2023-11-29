@@ -3,7 +3,8 @@ from .language_modeling import (
     LanguageModelingDatasetPTB,
     LanguageModelingDatasetWikitext2,
     LanguageModelingDatasetWikitext103,
-    LanguageModelingDatasetScienceQA,
+    LanguageModelingDatasetAlpaca,
+    # LanguageModelingDatasetScienceQA,
 )
 from .sentiment_analysis import (
     SentimentalAnalysisDatasetSST2,
@@ -76,8 +77,10 @@ def get_nlp_dataset(
             dataset_cls = LanguageModelingDatasetC4
         case "ptb":
             dataset_cls = LanguageModelingDatasetPTB
-        case "scienceqa":
-            dataset_cls = LanguageModelingDatasetScienceQA
+        # case "scienceqa":
+        #     dataset_cls = LanguageModelingDatasetScienceQA
+        case "alpaca":
+            dataset_cls = LanguageModelingDatasetAlpaca
         case "wmt19_de_en":
             dataset_cls = TranslationDatasetWMT19_DE_EN
         case "wmt19_zh_en":
@@ -139,7 +142,8 @@ NLP_DATASET_MAPPING = {
     "wikitext103": LanguageModelingDatasetWikitext103,
     "c4": LanguageModelingDatasetC4,
     "ptb": LanguageModelingDatasetPTB,
-    "scienceqa": LanguageModelingDatasetScienceQA,
+    "alpaca": LanguageModelingDatasetAlpaca,
+    # "scienceqa": LanguageModelingDatasetScienceQA,
 }
 
 
