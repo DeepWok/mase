@@ -88,7 +88,7 @@ class MaseDatasetInfo:
 
     @property
     def validation_split_available(self):
-        return DatasetSplit.VALID in self.available_splits
+        return DatasetSplit.VALIDATION in self.available_splits
 
     @property
     def test_split_available(self):

@@ -3,14 +3,17 @@ from dataclasses import dataclass
 from functools import partial
 import logging
 from itertools import chain
-from typing import Dict
+from typing import Dict, Sequence
 
 import torch
 import datasets as hf_datasets
+from huggingface_hub import snapshot_download, hf_hub_download
 from torch.utils.data import Dataset
+from torch.nn.utils.rnn import pad_sequence
 import transformers
 
 from ..utils import add_dataset_info
+
 
 logger = logging.getLogger(__name__)
 
@@ -23,7 +26,14 @@ def preprocess_datasets_causal_lm(
     load_from_cache_file: bool = True,
     text_column_name="text",
 ):
-    column_names = dataset_dict["train"].column_names
+    try:
+        column_names = dataset_dict["train"].column_names
+    except KeyError:
+        splits = list(dataset_dict.keys())
+        column_names = dataset_dict[splits[0]].column_names
+        logger.info(
+            f"Dataset doesn't have a 'train' split. Use the first split {splits[0]} instead."
+        )
     assert (
         text_column_name in column_names
     ), f"Need a column named '{text_column_name}' to run the tokenizer on the dataset"
@@ -334,3 +344,112 @@ class LanguageModelingDatasetAlpaca(LanguageModelingBase):
             input_ids=torch.tensor(data_row["input_ids"]),
             labels=torch.tensor(data_row["labels"]),
         )
+
+
+@dataclass
+class DataCollatorForCausalLMMMLU:
+    tokenizer: transformers.PreTrainedTokenizer
+    source_max_len: int = 2048
+    target_max_len: int = 128
+    train_on_source: bool = False
+    predict_with_generate: bool = False
+
+    IGNORE_INDEX = -100
+
+    def __call__(self, instances: Sequence[Dict]) -> Dict[str, torch.Tensor]:
+        # Extract elements
+        sources = [
+            f"{self.tokenizer.bos_token}{example['input']}" for example in instances
+        ]
+        targets = [
+            f"{example['output']}{self.tokenizer.eos_token}" for example in instances
+        ]
+        # Tokenize
+        tokenized_sources_with_prompt = self.tokenizer(
+            sources,
+            max_length=self.source_max_len,
+            truncation=True,
+            add_special_tokens=False,
+        )
+        tokenized_targets = self.tokenizer(
+            targets,
+            max_length=self.target_max_len,
+            truncation=True,
+            add_special_tokens=False,
+        )
+        # Build the input and labels for causal LM
+        input_ids = []
+        labels = []
+        for tokenized_source, tokenized_target in zip(
+            tokenized_sources_with_prompt["input_ids"], tokenized_targets["input_ids"]
+        ):
+            if not self.predict_with_generate:
+                input_ids.append(torch.tensor(tokenized_source + tokenized_target))
+                if not self.train_on_source:
+                    labels.append(
+                        torch.tensor(
+                            [self.IGNORE_INDEX for _ in range(len(tokenized_source))]
+                            + copy.deepcopy(tokenized_target)
+                        )
+                    )
+                else:
+                    labels.append(
+                        torch.tensor(copy.deepcopy(tokenized_source + tokenized_target))
+                    )
+            else:
+                input_ids.append(torch.tensor(tokenized_source))
+        # Apply padding
+        input_ids = pad_sequence(
+            input_ids, batch_first=True, padding_value=self.tokenizer.pad_token_id
+        )
+        labels = (
+            pad_sequence(labels, batch_first=True, padding_value=self.IGNORE_INDEX)
+            if not self.predict_with_generate
+            else None
+        )
+        data_dict = {
+            "input_ids": input_ids,
+            "attention_mask": input_ids.ne(self.tokenizer.pad_token_id),
+        }
+        if labels is not None:
+            data_dict["labels"] = labels
+        return data_dict
+
+
+@add_dataset_info(
+    name="mmlu-0-shot",
+    dataset_source="hf_datasets",
+    available_splits=("validation", "test"),
+    causal_LM=True,
+    data_collator_cls=DataCollatorForCausalLMMMLU,
+)
+class LanguageModelingDatasetMMLUZeroShot(LanguageModelingBase):
+    IGNORE_INDEX = -100
+
+    def _download_dataset(self) -> hf_datasets.DatasetDict:
+        dataset_dict = hf_datasets.load_dataset("Cheng98/mmlu", "zero-shot")
+        return dataset_dict
+
+    def prepare_data(self):
+        special_tokens_dict = {}
+        if self.tokenizer.pad_token is None:
+            special_tokens_dict["pad_token"] = "[PAD]"
+        if self.tokenizer.eos_token is None:
+            special_tokens_dict["eos_token"] = "</s>"
+        if self.tokenizer.bos_token is None:
+            special_tokens_dict["bos_token"] = "<s>"
+        if self.tokenizer.unk_token is None:
+            special_tokens_dict["unk_token"] = "<unk>"
+
+        self.tokenizer.add_special_tokens(special_tokens_dict)
+
+    def setup(self):
+        dataset_dict = self._download_dataset()
+        self.data = dataset_dict[self.split]
+
+    def __getitem__(self, index):
+        if self.data is None:
+            raise ValueError(
+                "Dataset is not setup. Please call `dataset.prepare_data()` + `dataset.setup()` or pass `auto_setup=True` before using the dataset."
+            )
+        return self.data[index]

@@ -5,6 +5,7 @@ from .language_modeling import (
     LanguageModelingDatasetWikitext103,
     LanguageModelingDatasetAlpaca,
     # LanguageModelingDatasetScienceQA,
+    LanguageModelingDatasetMMLUZeroShot,
 )
 from .sentiment_analysis import (
     SentimentalAnalysisDatasetSST2,
@@ -81,6 +82,8 @@ def get_nlp_dataset(
         #     dataset_cls = LanguageModelingDatasetScienceQA
         case "alpaca":
             dataset_cls = LanguageModelingDatasetAlpaca
+        case "mmlu-0-shot":
+            dataset_cls = LanguageModelingDatasetMMLUZeroShot
         case "wmt19_de_en":
             dataset_cls = TranslationDatasetWMT19_DE_EN
         case "wmt19_zh_en":
@@ -97,6 +100,12 @@ def get_nlp_dataset(
             dataset_cls = TranslationDatasetWMT16_RO_EN
         case _:
             raise ValueError(f"Unknown dataset {name}")
+
+    if ori_split == "train" and not dataset_cls.info.train_split_available:
+        return None
+
+    if ori_split == "validation" and not dataset_cls.info.validation_split_available:
+        return None
 
     if ori_split == "test" and not dataset_cls.info.test_split_available:
         return None
@@ -143,6 +152,7 @@ NLP_DATASET_MAPPING = {
     "c4": LanguageModelingDatasetC4,
     "ptb": LanguageModelingDatasetPTB,
     "alpaca": LanguageModelingDatasetAlpaca,
+    "mmlu-0-shot": LanguageModelingDatasetMMLUZeroShot,
     # "scienceqa": LanguageModelingDatasetScienceQA,
 }
 
