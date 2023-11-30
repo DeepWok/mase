@@ -196,7 +196,8 @@ class MaseDataModule(pl.LightningDataModule):
                 auto_setup=True,
                 model_name=self.model_name,
             )
-            self.train_dataset.setup()
+            if self.train_dataset is not None:
+                self.train_dataset.setup()
         if stage in ["fit", "validate", None]:
             self.val_dataset = get_dataset(
                 self.name,
@@ -208,7 +209,8 @@ class MaseDataModule(pl.LightningDataModule):
                 auto_setup=True,
                 model_name=self.model_name,
             )
-            self.val_dataset.setup()
+            if self.val_dataset is not None:
+                self.val_dataset.setup()
         if stage in ["test", None]:
             self.test_dataset = get_dataset(
                 self.name,
@@ -237,6 +239,12 @@ class MaseDataModule(pl.LightningDataModule):
                 self.pred_dataset.setup()
 
     def train_dataloader(self) -> DataLoader:
+        if self.train_dataset is None:
+            raise RuntimeError(
+                "The train dataset is not available"
+                "probably because the train set does not have ground truth labels, "
+                "or the train dataset does not exist."
+            )
         data_collator = None
         if self.dataset_info.data_collator_cls is not None:
             data_collator = self.dataset_info.data_collator_cls(
@@ -251,6 +259,12 @@ class MaseDataModule(pl.LightningDataModule):
         )
 
     def val_dataloader(self) -> DataLoader:
+        if self.val_dataset is None:
+            raise RuntimeError(
+                "The validation dataset is not available"
+                "probably because the validation set does not have ground truth labels, "
+                "or the validation dataset does not exist."
+            )
         data_collator = None
         if self.dataset_info.data_collator_cls is not None:
             data_collator = self.dataset_info.data_collator_cls(
