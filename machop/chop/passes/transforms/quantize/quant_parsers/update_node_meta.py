@@ -8,6 +8,7 @@ def entry_to_list(config: dict, entry: str, suffixes: tuple[str]):
 
 QUANT_ARITH_TO_SUFFIXES = {
     "integer": ("width", "frac_width"),
+    "fixed": ("width", "frac_width"),
     "binary": (
         "width",
         "stochastic",

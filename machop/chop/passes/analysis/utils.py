@@ -48,7 +48,11 @@ def _get_next_call_node(node, nodes_in):
             else next_node.name
         )
         # No need to synthsize into hardware
-        if name in MASE_IMPLICIT_FUNCS:
+        if (
+            name in MASE_IMPLICIT_FUNCS
+            or next_node.meta["mase"].parameters["common"]["mase_type"]
+            == "implicit_func"
+        ):
             nodes_in = _get_next_call_node(next_node, nodes_in)
             next_node.meta["mase"].parameters["hardware"]["is_implicit"] = True
         elif next_node not in nodes_in:
@@ -64,7 +68,11 @@ def _get_prev_call_node(node, nodes_out):
             if "_" in prev_node.name
             else prev_node.name
         )
-        if name in MASE_IMPLICIT_FUNCS:
+        implicit = (
+            prev_node.meta["mase"].parameters["common"]["mase_type"] == "implicit_func"
+            or prev_node.meta["mase"].parameters["common"]["mase_type"] == "placeholder"
+        )
+        if implicit:
             nodes_out = _get_prev_call_node(prev_node, nodes_out)
             prev_node.meta["mase"].parameters["hardware"]["is_implicit"] = True
         elif prev_node not in nodes_out:

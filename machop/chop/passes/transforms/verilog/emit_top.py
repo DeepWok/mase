@@ -49,7 +49,7 @@ def _get_cast_parameters(from_node, to_node, is_start=False, is_end=False):
     if is_start:
         to_type = from_type
         to_prec = from_prec
-        assert len(to_node.all_input_nodes) == 1
+        # assert len(to_node.all_input_nodes) == 1
         from_name = "data_in"
         from_param = "IN"
     if is_end:
@@ -179,12 +179,11 @@ input  data_out_ready,
             continue
         node_name = vf(node.name)
         for key, value in node.meta["mase"].parameters["common"]["results"].items():
-            if key == "data_out_0":
+            if "data_out" in key:
                 continue
             cap_key = v2p(key)
-            print(parameter_map)
-            width = parameter_map[f"{node_name}_{cap_key}_WIDTH"]
-            size = parameter_map[f"{node_name}_{cap_key}_SIZE"]
+            width = parameter_map[f"{node_name}_{cap_key}_0_WIDTH"]
+            size = parameter_map[f"{node_name}_{cap_key}_0_SIZE"]
             debug_info = f"// [{width}][{size}]"
             interface += f"""{debug_info}
 output [{node_name}_{cap_key}_WIDTH-1:0] {node_name}_{key} [{node_name}_{cap_key}_SIZE-1:0],
@@ -225,7 +224,7 @@ logic                             {node_name}_{key}_ready;
     for key, value in node.meta["mase"].parameters["common"]["results"].items():
         # No internal signals if the memory is stored off chip
         if (
-            key != "data_out_0"
+            "data_out" not in key
             and node.meta["mase"].parameters["hardware"]["interface_parameters"][key][
                 "storage"
             ]
@@ -400,7 +399,7 @@ def _emit_components_top_internal(node, parameter_map):
     for key, value in node.meta["mase"].parameters["common"]["results"].items():
         # Skip the parameter instance if the memory is stored off chip
         if (
-            key == "data_out_0"
+            "data_out" in key
             or node.meta["mase"].parameters["hardware"]["interface_parameters"][key][
                 "storage"
             ]
@@ -571,8 +570,8 @@ def _emit_hs_wires_top(from_node, to_node, parameter_map, is_start=False, is_end
     (
         from_name,
         to_name,
-        from_param,
-        to_param,
+        _,
+        _,
         cast_name,
         data_cast,
     ) = _cast_data(
@@ -584,6 +583,17 @@ def _emit_hs_wires_top(from_node, to_node, parameter_map, is_start=False, is_end
 assign {from_name}_ready  = {to_name}_ready;
 assign {to_name}_valid    = {from_name}_valid;
 assign {to_name} = {cast_name};
+"""
+
+
+def _emit_implicit_wires_top(from_node, to_node):
+    from_name = from_node.name
+    to_name = to_node.name
+
+    return f"""
+assign {from_name}_ready  = {to_name}_ready;
+assign {to_name}_valid    = {from_name}_valid;
+assign {to_name} = {from_name};
 """
 
 
@@ -842,10 +852,8 @@ def _emit_wires_top(graph, parameter_map):
 
     nodes_in = graph.nodes_in
     nodes_out = graph.nodes_out
-    node_in_name = vf(nodes_in[0].target)
-    arg_in = nodes_in[0].meta["mase"].parameters["common"]["args"]["data_in_0"]
-    in_type = arg_in["type"]
-    in_prec = arg_in["precision"]
+
+    # Process input signals
     if "INTERNAL" in nodes_in[0].meta["mase"].parameters["hardware"]["toolchain"]:
         wires += _emit_hs_wires_top(
             nodes_in[0], nodes_in[0], parameter_map, is_start=True
@@ -856,15 +864,8 @@ def _emit_wires_top(graph, parameter_map):
         )
     else:
         assert False, "Unknown node toolchain for signal declarations."
-    node_out_name = vf(nodes_out[0].target)
-    out_type = (
-        nodes_out[0].meta["mase"].parameters["common"]["results"]["data_out_0"]["type"]
-    )
-    out_prec = (
-        nodes_out[0]
-        .meta["mase"]
-        .parameters["common"]["results"]["data_out_0"]["precision"]
-    )
+
+    # Process output signals
     if "INTERNAL" in nodes_out[0].meta["mase"].parameters["hardware"]["toolchain"]:
         wires += _emit_hs_wires_top(
             nodes_out[0], nodes_out[0], parameter_map, is_end=True
@@ -880,28 +881,53 @@ def _emit_wires_top(graph, parameter_map):
     while nodes_in != nodes_out:
         next_nodes_in = []
         for node in nodes_in:
-            node_name = vf(node.name)
-            node_tc = node.meta["mase"].parameters["hardware"]["toolchain"]
-            if node not in searched:
+            if node in nodes_out:
+                if node not in next_nodes_in:
+                    next_nodes_in.append(node)
+                continue
+
+            if node in searched:
+                continue
+            else:
                 searched.append(node)
-            for next_node, x in node.users.items():
-                if next_node.meta["mase"].parameters["hardware"]["is_implicit"]:
-                    if next_node not in next_nodes_in:
-                        next_nodes_in.append(node)
+
+            node_name = vf(node.name)
+
+            # Non-implicit node mapping depends on hardware toolchain
+            # If node is implicit, map as if from internal RTL
+            if node.meta["mase"].parameters["hardware"]["is_implicit"]:
+                node_tc = "INTERNAL"
+            else:
+                node_tc = node.meta["mase"].parameters["hardware"]["toolchain"]
+
+            for next_node, _ in node.users.items():
+                # Process child node in next pass
+                if next_node not in next_nodes_in and next_node not in searched:
+                    next_nodes_in.append(next_node)
+
+                # If current node is implicit, add direct mapping whether next node is implicit or not
+                if node.meta["mase"].parameters["hardware"]["is_implicit"]:
+                    wires += _emit_implicit_wires_top(node, next_node)
                     continue
+
+                # If next node is implicit, map as if to internal RTL
+                if next_node.meta["mase"].parameters["hardware"]["is_implicit"]:
+                    next_node_tc = "INTERNAL"
                 else:
-                    if next_node not in next_nodes_in and next_node not in searched:
-                        next_nodes_in.append(next_node)
-                next_node_name = vf(next_node.name)
-                next_node_tc = next_node.meta["mase"].parameters["hardware"][
-                    "toolchain"
-                ]
+                    next_node_tc = next_node.meta["mase"].parameters["hardware"][
+                        "toolchain"
+                    ]
+
+                # RTL to RTL
                 if "INTERNAL" in node_tc and "INTERNAL" in next_node_tc:
                     wires += _emit_hs_wires_top(node, next_node, parameter_map)
+                # HLS to RTL
                 elif node_tc == "MLIR_HLS" and "INTERNAL" in next_node_tc:
                     wires += _emit_bram2hs_wires_top(node, next_node, parameter_map)
+                # RTL to HLS
                 elif "INTERNAL" in node_tc and next_node_tc == "MLIR_HLS":
                     wires += _emit_hs2bram_wires_top(node, next_node, parameter_map)
+                # HLS to HLS
                 elif node_tc == "MLIR_HLS" and next_node_tc == "MLIR_HLS":
                     wires += _emit_bram_wires_top(node, next_node, parameter_map)
                 else:

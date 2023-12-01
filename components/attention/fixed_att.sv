@@ -117,9 +117,9 @@ module fixed_att #(
     input data_in_v_valid,
     output data_in_v_ready,
 
-    output [DZ_WIDTH -1:0] data_out[OUT_PARALLELISM * OUT_SIZE - 1:0],
-    output data_out_valid,
-    input data_out_ready
+    output [DZ_WIDTH -1:0] data_out_0[OUT_PARALLELISM * OUT_SIZE - 1:0],
+    output data_out_0_valid,
+    input data_out_0_ready
 );
 
   logic [DQIN_WIDTH-1:0] ff_data_in_q[IN_PARALLELISM * IN_SIZE - 1:0];

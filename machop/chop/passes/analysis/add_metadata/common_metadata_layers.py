@@ -3,6 +3,7 @@ import math
 
 import torch
 from chop.passes.utils import vf, get_node_by_name
+import traceback
 
 # ----------------------------------------------------------
 # Placeholder
@@ -236,8 +237,17 @@ def analyse_common_parameters_method(meta):
     TODO: This needs to be replaced with direct shape inference
     """
 
-    self_obj, *args = _load_arg(meta)
-    kwargs = _load_kwarg(meta)
+    # self_obj is the node that drives the input to the current node (used downstream to generate dummy input for this node)
+    # this is usually the first argument in the function call
+    try:
+        # torch fx stored arguments in the args list
+        self_obj, *args = _load_arg(meta)
+        kwargs = _load_kwarg(meta)
+    except:
+        # torch fx stored arguments in the kwargs dict
+        args = _load_arg(meta)
+        kwargs = dict(_load_kwarg(meta))
+        self_obj = kwargs.pop(next(iter(kwargs)))
 
     dummy_data = torch.full(
         self_obj.meta["mase"].parameters["common"]["results"]["data_out_0"]["size"], 1
@@ -369,90 +379,92 @@ def _type_check(self_obj, meta, args_val, kwargs_val):
                         ),
                     )
                 else:
-                    dummy_data = torch.full(
-                        tuple(size),
-                        0,
-                    )
+                    dummy_data = torch.full(tuple(size), 0)
             result = meta.node.target(dummy_data, *args_val, **kwargs_val)
         # except RuntimeError:
-        except:
+        except Exception as error:
+            print("Error when attempting int:", error)
+            print(traceback.format_exc())
             is_int = False
 
-    if not is_int:
-        try:
-            if dummy_data_list != []:
-                dummy_data = dummy_data_list
-            elif dummy_data_size_list:
-                dummy_data = [
-                    (
-                        (torch.full(size, 1.0)),
-                    )  # Special tuple input - check relavant comments for single-element tuple result
-                    if list_depth(size) == 2 and len(size) == 1
-                    else torch.full(size, 1.0)
-                    for size in dummy_data_size_list
-                ]
-            elif (
-                "value"
-                in self_obj.meta["mase"]
-                .parameters["common"]["results"]["data_out_0"]
-                .keys()
-            ):
-                dummy_data = self_obj.meta["mase"].parameters["common"]["results"][
-                    "data_out_0"
-                ]["value"]
-            else:
-                size = self_obj.meta["mase"].parameters["common"]["results"][
-                    "data_out_0"
-                ]["size"]
-                dummy_data = (
-                    (
-                        (torch.full(size, 1.0)),
-                    )  # Special tuple input - check relavant comments for single-element tuple result
-                    if list_depth(size) == 2 and len(size) == 1
-                    else torch.full(size, 1.0)
-                )
-            result = meta.node.target(dummy_data, *args_val, **kwargs_val)
-        except:
-            is_float = False
-    # special handle for torch.where (accept a list of boolean)
-    if not is_float:
-        try:
-            if dummy_data_list != []:
-                dummy_data = dummy_data_list
-            elif dummy_data_size_list:
-                dummy_data = [
-                    (
-                        torch.full(size, True, dtype=torch.bool),
-                    )  # Special tuple input - check relavant comments for single-element tuple result
-                    if list_depth(size) == 2 and len(size) == 1
-                    else torch.full(size, True, dtype=torch.bool)
-                    for size in dummy_data_size_list
-                ]
-            elif (
-                "value"
-                in self_obj.meta["mase"]
-                .parameters["common"]["results"]["data_out_0"]
-                .keys()
-            ):
-                dummy_data = self_obj.meta["mase"].parameters["common"]["results"][
-                    "data_out_0"
-                ]["value"]
-            else:
-                size = self_obj.meta["mase"].parameters["common"]["results"][
-                    "data_out_0"
-                ]["size"]
+        if not is_int:
+            try:
+                if dummy_data_list != []:
+                    dummy_data = dummy_data_list
+                elif dummy_data_size_list:
+                    dummy_data = [
+                        (
+                            (torch.full(size, 1.0)),
+                        )  # Special tuple input - check relavant comments for single-element tuple result
+                        if list_depth(size) == 2 and len(size) == 1
+                        else torch.full(size, 1.0)
+                        for size in dummy_data_size_list
+                    ]
+                elif (
+                    "value"
+                    in self_obj.meta["mase"]
+                    .parameters["common"]["results"]["data_out_0"]
+                    .keys()
+                ):
+                    dummy_data = self_obj.meta["mase"].parameters["common"]["results"][
+                        "data_out_0"
+                    ]["value"]
+                else:
+                    size = self_obj.meta["mase"].parameters["common"]["results"][
+                        "data_out_0"
+                    ]["size"]
+                    dummy_data = (
+                        (
+                            (torch.full(size, 1.0)),
+                        )  # Special tuple input - check relavant comments for single-element tuple result
+                        if list_depth(size) == 2 and len(size) == 1
+                        else torch.full(size, 1.0)
+                    )
+                result = meta.node.target(dummy_data, *args_val, **kwargs_val)
+            except Exception as error:
+                print("Error when attempting float:", error)
+                print(traceback.format_exc())
+                is_float = False
+        # special handle for torch.where (accept a list of boolean)
+        if not is_float:
+            try:
+                if dummy_data_list != []:
+                    dummy_data = dummy_data_list
+                elif dummy_data_size_list:
+                    dummy_data = [
+                        (
+                            torch.full(size, True, dtype=torch.bool),
+                        )  # Special tuple input - check relavant comments for single-element tuple result
+                        if list_depth(size) == 2 and len(size) == 1
+                        else torch.full(size, True, dtype=torch.bool)
+                        for size in dummy_data_size_list
+                    ]
+                elif (
+                    "value"
+                    in self_obj.meta["mase"]
+                    .parameters["common"]["results"]["data_out_0"]
+                    .keys()
+                ):
+                    dummy_data = self_obj.meta["mase"].parameters["common"]["results"][
+                        "data_out_0"
+                    ]["value"]
+                else:
+                    size = self_obj.meta["mase"].parameters["common"]["results"][
+                        "data_out_0"
+                    ]["size"]
 
-                # Special tuple input - check relavant comments for single-element tuple result
-                dummy_data = (
-                    (
-                        torch.full(size, True, dtype=torch.bool),
-                    )  # Special tuple input - check relavant comments for single-element tuple result
-                    if list_depth(size) == 2 and len(size) == 1
-                    else torch.full(size, True, dtype=torch.bool)
-                )
-            result = meta.node.target(dummy_data, *args_val, **kwargs_val)
-        except:
-            is_bool = False
+                    # Special tuple input - check relavant comments for single-element tuple result
+                    dummy_data = (
+                        (
+                            torch.full(size, True, dtype=torch.bool),
+                        )  # Special tuple input - check relavant comments for single-element tuple result
+                        if list_depth(size) == 2 and len(size) == 1
+                        else torch.full(size, True, dtype=torch.bool)
+                    )
+                result = meta.node.target(dummy_data, *args_val, **kwargs_val)
+            except Exception as error:
+                print("Error when attempting bool:", error)
+                is_bool = False
 
     assert (
         is_int or is_float or is_bool
@@ -631,8 +643,18 @@ def _get_size_by_module_simulation(meta):
     """
     Obtain the size of the output by executing the module
     """
-    self_obj, *args = _load_arg(meta)
-    kwargs = _load_kwarg(meta)
+    # self_obj is the node that drives the input to the current node (used downstream to generate dummy input for this node)
+    # this is usually the first argument in the function call
+    try:
+        # torch fx stored arguments in the args list
+        self_obj, *args = _load_arg(meta)
+        kwargs = _load_kwarg(meta)
+    except:
+        # torch fx stored arguments in the kwargs dict
+        args = _load_arg(meta)
+        kwargs = dict(_load_kwarg(meta))
+        self_obj = kwargs.pop(next(iter(kwargs)))
+
     args_val = _arg_shape_to_val(args)
     kwargs_val = _kwarg_shape_to_val(kwargs)
 
@@ -690,7 +712,6 @@ def _get_size_by_module_simulation(meta):
 
             with torch.no_grad():
                 result = meta.module(dummy_data, *args_val, **kwargs_val)
-        # except RuntimeError:
         except:
             is_float = False
 
@@ -703,12 +724,11 @@ def _get_size_by_module_simulation(meta):
     if isinstance(result, tuple):
         if len(result) != 1:
             assert (
-                False
+                True
             ), "We have a real tuple output... need to discuss how to deal with it"
         return [[list(result[0].size())]]
 
     size = self_obj.meta["mase"].parameters["common"]["results"]["data_out_0"]["size"]
-    dummy_data = torch.full(size, 1.0)
     size_prods = size[0]
     for i in range(len(size) - 2):
         size_prods *= size[i + 2]
@@ -718,7 +738,6 @@ def _get_size_by_module_simulation(meta):
         # size is determined by using a dummy input. When batch size is effectively 1 such as
         # in the case of a dummy input, and the size of the feature layer is 1x1 then BatchNorm fails.
         # This hack bypasses this because batchnorm does not change the shape of its input.
-    result = meta.module(dummy_data, *args, **kwargs)
     size = list(result.size())
     return size
 

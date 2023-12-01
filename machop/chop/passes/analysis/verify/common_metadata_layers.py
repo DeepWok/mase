@@ -56,7 +56,7 @@ def verify_common_metadata_general(meta):
         result_type = param["type"]
         assert (
             result_type in meta.known_types
-        ), f"Unknown type for {result} : {result_type}"
+        ), f"Unknown type for node {meta.node.name}, result {result} : {result_type}"
         ## Valid size
         result_size = param["size"]
         assert result_size, f"Unknown size for {result} : {result_size}"

@@ -58,6 +58,7 @@ PASSES = {
     # analysis
     "init_metadata": init_metadata_analysis_pass,
     "add_common_metadata": add_common_metadata_analysis_pass,
+    "verify_common_metadata": verify_common_metadata_analysis_pass,
     "add_hardware_metadata": add_hardware_metadata_analysis_pass,
     "add_software_metadata": add_software_metadata_analysis_pass,
     "profile_statistics": profile_statistics_analysis_pass,
