@@ -4,6 +4,7 @@ accelerator = "cpu"
 [passes.quantize]
 by = "name"
 report = true
+
 # baseline_weight_path = "../mase_output/jsc-s_classification_jsc_2023-10-03/software/transform/transformed_ckpt_bl/transformed_ckpt/graph_module.mz" # This is the baseline model which we use to find out if there is any activation functions followed by targeted layer
 baseline_weight_path = "../mase_output/jsc-tiny_classification_jsc_2023-10-04/software/transform/transformed_ckpt_bl/transformed_ckpt/graph_module.mz" # This is the baseline model which we use to find out if there is any activation functions followed by targeted layer
 # baseline_weight_path = "/workspace/mase_output/jsc-s_classification_jsc_2023-09-25/software/transform/transformed_ckpt_bl/transformed_ckpt/graph_module.mz" # This is the baseline model which we use to find out if there is any activation functions followed by targeted layer

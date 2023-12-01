@@ -13,6 +13,7 @@ from torch import nn
 from .hardware_metadata_layers import (
     analyse_hardware_parameters_linear,
     analyse_hardware_parameters_relu,
+    analyse_hardware_parameters_batch_norm1d,
 )
 
 logger = logging.getLogger(__name__)
@@ -28,6 +29,8 @@ def analysis_hardware_parameters(node):
         node.meta["mase"] = analyse_hardware_parameters_linear(node.meta["mase"])
     elif op == "relu":
         node.meta["mase"] = analyse_hardware_parameters_relu(node.meta["mase"])
+    elif op == "batch_norm1d":
+        node.meta["mase"] = analyse_hardware_parameters_batch_norm1d(node.meta["mase"])
     else:
         raise ValueError(f"Unknown mase op: {op}")
 

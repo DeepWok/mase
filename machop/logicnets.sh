@@ -11,7 +11,7 @@ fi
 # Assign command-line arguments to variables for clarity.
 date_arg="$1"
 model_arg="$2"
-data_set_arg="$3"
+data_set_arg="$3" 
 
 # Train the model using high precision and specified configuration.
 ./ch train  ${model_arg} ${data_set_arg} --config configs/logicnets/train_jsc.toml
@@ -59,7 +59,16 @@ data_set_arg="$3"
 # ./ch transform ${model_arg} ${data_set_arg} --config configs/logicnets/integer_logicnets_fuse.toml --load "../mase_output/${model_arg}_classification_${data_set_arg}_$date_arg/software/transform/transformed_ckpt_pruned/graph_module.mz" --load-type mz 
 
 # Fuse batchnorm and activations with the linear layer
-# ./ch transform ${model_arg} ${data_set_arg} --config configs/logicnets/fusion.toml --load "../mase_output/${model_arg}_classification_${data_set_arg}_$date_arg/software/transform/transformed_ckpt_unfused_logicnets_lut/graph_module.mz" --load-type mz    
+# ./ch transform ${model_arg} ${data_set_arg} --config configs/logicnets/fusion.toml --load "../mase_output/${model_arg}_classification_${data_set_arg}_$date_arg/software/transform/transformed_ckpt_logicnets_unfused/graph_module.mz" --load-type mz    
+
+# ------------------------------------------------------------ #
+# INTEGER TRANSFORM for comparision
+# ------------------------------------------------------------ #
+./ch transform ${model_arg} ${data_set_arg} --config configs/logicnets/integer.toml --load "../mase_output/${model_arg}_classification_${data_set_arg}_$date_arg/software/transform/transformed_ckpt_pruned/graph_module.mz" --load-type mz 
+
+# ------------------------------------------------------------ #
+# Testing
+# ------------------------------------------------------------ #
 
 # Test the quantized model.
 # ./ch test ${model_arg} ${data_set_arg} --config configs/logicnets/integer_logicnets_fuse.toml --load "../mase_output/${model_arg}_classification_${data_set_arg}_${date_arg}/software/transform/transformed_ckpt/graph_module.mz" --load-type mz

@@ -30,7 +30,7 @@ def graph_iterator_inspect_node_type(graph):
 
 def report_node_type_analysis_pass(graph, pass_args=None):
     """
-    Inspect mase graph after initialization/loading, including
+    Inspect (pretty print) mase graph after initialization/loading, including
 
     - node inspection on types
     """
@@ -85,7 +85,7 @@ def graph_iterator_inspect_node_hardware_type(graph):
 
 def report_node_hardware_type_analysis_pass(graph, pass_args=None):
     """
-    Inspect mase graph after initialization/loading, including
+    Inspect (pretty print) mase graph after initialization/loading, including
 
     - node inspection on hardware types
     """

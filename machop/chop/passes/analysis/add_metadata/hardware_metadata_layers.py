@@ -37,6 +37,10 @@ import math
 import torch
 from chop.passes.utils import vf
 
+import logging
+
+logger = logging.getLogger(__name__)
+
 # ----------------------------------------------------------
 # Linear
 # ----------------------------------------------------------
@@ -155,6 +159,38 @@ def analyse_hardware_parameters_linear(meta):
         meta.parameters["hardware"]["verilog_parameters"]["OUT_0_SIZE"] = parallelism
         # BIAS_SIZE == PARALLELISM
         meta.parameters["hardware"]["verilog_parameters"]["BIAS_SIZE"] = parallelism
+    elif arg_type == "logicnets":
+        meta.parameters["hardware"] |= {
+            # "verilog_parameters": {
+            #     "HAS_BIAS": int("bias" in meta.parameters["common"]["args"].keys()),
+            #     "IN_0_SIZE": 1,
+            #     "IN_0_DEPTH": math.prod(
+            #         meta.parameters["common"]["args"]["data_in_0"]["size"]
+            #     ),
+            #     "PARALLELISM": meta.parameters["common"]["results"]["data_out_0"][
+            #         "size"
+            #     ][1],
+            #     # Adding precision paramter for binary. TODO: I am not sure if this is the right place for it. If it is we will then add it for the rest of the module
+            #     "IN_0_WIDTH": meta.parameters["common"]["args"]["data_in_0"][
+            #         "precision"
+            #     ][0],
+            #     "IN_0_FRAC_WIDTH": meta.parameters["common"]["args"]["data_in_0"][
+            #         "precision"
+            #     ][1],
+            #     "WEIGHT_WIDTH": meta.parameters["common"]["args"]["weight"][
+            #         "precision"
+            #     ][0],
+            #     "WEIGHT_FRAC_WIDTH": meta.parameters["common"]["args"]["weight"][
+            #         "precision"
+            #     ][1],
+            #     "BIAS_WIDTH": meta.parameters["common"]["args"]["bias"]["precision"][0],
+            #     "BIAS_FRAC_WIDTH": meta.parameters["common"]["args"]["bias"][
+            #         "precision"
+            #     ][1],
+            # },
+            "toolchain": "INTERNAL_RTL",
+            # "module": "fixed_activation_binary_linear",
+        }
     else:
         meta.parameters["hardware"] |= {
             "verilog_parameters": {},
@@ -210,6 +246,27 @@ def analyse_hardware_parameters_relu(meta):
             "module": vf(meta.node.name),
             "dependence_files": [],
         }
+
+    meta.parameters["hardware"]["interface_parameters"] = {}
+    return meta
+
+
+# ----------------------------------------------------------
+# BatchNorm1d
+# ----------------------------------------------------------
+
+
+def analyse_hardware_parameters_batch_norm1d(meta):
+    # We added binary here, because we believe binary relu should be the same as fixed. And it can be controlled by specifying width and height.
+    logger.warning(
+        "batch_norm1d has not yet been implemented in hardware, generating dummy meta data for now"
+    )
+    meta.parameters["hardware"] |= {
+        "verilog_parameters": {},
+        "toolchain": "MLIR_HLS",
+        "module": vf(meta.node.name),
+        "dependence_files": [],
+    }
 
     meta.parameters["hardware"]["interface_parameters"] = {}
     return meta

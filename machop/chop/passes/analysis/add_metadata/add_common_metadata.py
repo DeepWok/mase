@@ -322,6 +322,7 @@ def graph_iterator_for_metadata(graph, dummy_in=None):
 
     nodes_in = []
     for node in graph.fx_graph.nodes:
+        # if a node has no inputs then it itself represents the input of the graph as a whole
         if len(node.all_input_nodes) == 0:
             nodes_in.append(node)
 

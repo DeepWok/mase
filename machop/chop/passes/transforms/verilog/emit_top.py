@@ -1,5 +1,6 @@
 import glob
 import logging
+from typing import Tuple, Dict
 import math
 import multiprocessing
 import os
@@ -123,12 +124,17 @@ def _load_verilog_parameters_to_map(graph, parameter_map):
             if not isinstance(value, (int, float, complex, bool)):
                 value = '"' + value + '"'
             parameter_map[f"{node_name}_{key}"] = value
+
     return parameter_map
 
 
-def _emit_parameters_top(graph):
+def _emit_parameters_top(graph) -> Tuple[str, Dict[str, str]]:
     """
     Emit parameters at the top-level for the top-level module
+
+    Returns Tuple:
+    1) list of parameters as a string to be embedded in Verilog file
+    2) dict mapping parameter to value
     """
 
     nodes_in = graph.nodes_in
