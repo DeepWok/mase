@@ -1,7 +1,7 @@
 """
 The entrypoint to chop's pruning transforms
 
-The pruning passes are public-facing entrypoints to the functionality exposed by the 
+The pruning passes are public-facing entrypoints to the functionality exposed by the
 pruning transform. Currently, we support a layerwise pruning strategy for weights and
 support activation pruning as an add-on. Please take a look at the methods.py file for
 more details on the pruning methods. The iterator steps through compatible nodes in the
@@ -25,7 +25,7 @@ Internal Backlog:
    removing these masks to make the pruning permanent. The exact specifics may require
    a bit of thought as the model will have to be saved and then loaded again for
    training. Perhaps we could create a wrapper class (nn.Module) that uses a custom
-   forward function to apply the masks while training? 
+   forward function to apply the masks while training?
 2. Currently, our calibration pass only uses a single batch to generate a report on the
    channel-wise activation sparsity. Perhaps we could aggregate statistics over multiple
    batches to get a better estimate.
@@ -38,6 +38,7 @@ Internal Backlog:
 """
 
 from functools import partial
+import logging
 
 import torch
 import torch.nn as nn
@@ -45,7 +46,6 @@ from tqdm.contrib.logging import tqdm_logging_redirect
 
 from chop.passes.graph.mase_graph import MaseGraph
 from chop.passes.utils import get_mase_op, get_mase_type, get_node_actual_target
-from chop.tools.logger import getLogger
 
 from .criteria import RANK_CRITERIA
 from .methods import (
@@ -76,8 +76,8 @@ PRUNE_METHODS = {
 }
 
 # Housekeeping -------------------------------------------------------------------------
-logger = getLogger(__name__)
-logger.propagate = False  # Avoid duplicate logs
+logger = logging.getLogger(__name__)
+# logger.propagate = False  # Avoid duplicate logs
 
 
 # Passes -------------------------------------------------------------------------------

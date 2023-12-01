@@ -36,6 +36,11 @@ from .physical import (
     get_physical_model_info,
     is_physical_model,
 )
+from .nerf import (
+    get_nerf_model,
+    get_nerf_model_info,
+    is_nerf_model,
+)
 from .toys import get_toy_model, get_toy_model_info, is_toy_model
 from .utils import MaseModelInfo, ModelSource, ModelTaskType
 
@@ -49,6 +54,8 @@ def get_model_info(name: str) -> MaseModelInfo:
         info = get_vision_model_info(name)
     elif is_physical_model(name):
         info = get_physical_model_info(name)
+    elif is_nerf_model(name):
+        info = get_nerf_model_info(name)
     elif is_toy_model(name):
         info = get_toy_model_info(name)
     elif is_patched_model(name):
@@ -93,6 +100,8 @@ def get_model(
             model = get_physical_model(**model_kwargs)
         case ModelSource.TOY:
             model = get_toy_model(**model_kwargs)
+        case ModelSource.NERF:
+            model = get_nerf_model(**model_kwargs)
         case _:
             raise ValueError(f"Model source {model_info.model_source} not supported")
     return model

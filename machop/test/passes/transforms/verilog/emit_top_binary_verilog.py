@@ -33,10 +33,9 @@ from chop.passes.transforms import (
     quantize_transform_pass,
     emit_verilog_top_transform_pass,
 )
-from chop.tools.logger import getLogger
+from chop.tools.logger import set_logging_verbosity
 
-logger = getLogger("chop")
-logger.setLevel(logging.DEBUG)
+set_logging_verbosity("debug")
 
 
 # --------------------------------------------------

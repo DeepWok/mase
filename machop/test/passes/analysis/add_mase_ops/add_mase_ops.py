@@ -18,7 +18,7 @@ sys.path.append(
         "machop",
     )
 )
-from chop.tools.logger import getLogger
+from chop.tools.logger import set_logging_verbosity
 from chop.passes.graph.mase_graph import MaseGraph
 from chop.models.toys.toy_custom_fn import ToyCustomFnNet
 from chop.passes.analysis import (
@@ -26,8 +26,8 @@ from chop.passes.analysis import (
     init_metadata_analysis_pass,
 )
 
-logger = getLogger("chop")
-logger.setLevel(logging.DEBUG)
+logger = logging.getLogger("chop.test")
+set_logging_verbosity("debug")
 
 
 def main():

@@ -33,12 +33,13 @@ from chop.passes.transforms import (
     summarize_quantization_analysis_pass,
 )
 from chop.passes.utils import deepcopy_mase_graph
-from chop.tools.logger import getLogger
 from chop.tools.get_input import InputGenerator
 from chop.dataset import MaseDataModule
+from chop.tools.logger import set_logging_verbosity
 
-logger = getLogger("chop")
-logger.setLevel(logging.DEBUG)
+set_logging_verbosity("debug")
+
+logger = logging.getLogger("chop.test")
 
 
 def main():

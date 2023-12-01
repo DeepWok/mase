@@ -1,6 +1,7 @@
 # A pass to fuse batch normalisation layers with the preceeding convolutional layers
 # NOTE: This implementation is a derivative of the following:
 # https://github.com/pytorch/pytorch/blob/main/torch/fx/experimental/optimization.py
+import logging
 
 import torch.nn as nn
 import torch.fx as fx
@@ -11,11 +12,10 @@ from torch.fx.experimental.optimization import (
     replace_node_module,
 )
 
-from chop.tools.logger import getLogger
 
 # Housekeeping -------------------------------------------------------------------------
-logger = getLogger(__file__)
-logger.propagate = False  # Avoid duplicate logs
+logger = logging.getLogger(__file__)
+# logger.propagate = False  # Avoid duplicate logs
 
 
 def conv_bn_fusion_transform_pass(graph, **_):

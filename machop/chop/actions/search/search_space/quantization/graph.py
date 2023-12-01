@@ -10,14 +10,16 @@ from ..utils import flatten_dict, unflatten_dict
 from collections import defaultdict
 
 DEFAULT_QUANTIZATION_CONFIG = {
-    "name": "integer",
-    "bypass": True,
-    "bias_frac_width": 5,
-    "bias_width": 8,
-    "data_in_frac_width": 5,
-    "data_in_width": 8,
-    "weight_frac_width": 3,
-    "weight_width": 8,
+    "config": {
+        "name": "integer",
+        "bypass": True,
+        "bias_frac_width": 5,
+        "bias_width": 8,
+        "data_in_frac_width": 5,
+        "data_in_width": 8,
+        "weight_frac_width": 3,
+        "weight_width": 8,
+    }
 }
 
 
@@ -59,6 +61,12 @@ class GraphSearchSpaceMixedPrecisionPTQ(SearchSpaceBase):
         """
         Build a mapping from node name to mase_type and mase_op.
         """
+
+    def build_search_space(self):
+        """
+        Build the search space for the mase graph (only quantizeable ops)
+        """
+        # Build a mapping from node name to mase_type and mase_op.
         mase_graph = self.rebuild_model(sampled_config=None, is_eval_mode=True)
         node_info = {}
         for node in mase_graph.fx_graph.nodes:
@@ -66,14 +74,8 @@ class GraphSearchSpaceMixedPrecisionPTQ(SearchSpaceBase):
                 "mase_type": get_mase_type(node),
                 "mase_op": get_mase_op(node),
             }
-        self._node_info = node_info
 
-    def build_search_space(self):
-        """
-        Build the search space for the mase graph (only quantizeable ops)
-        """
-        self._build_node_info()
-
+        # Build the search space
         choices = {}
         seed = self.config["seed"]
 
@@ -82,7 +84,7 @@ class GraphSearchSpaceMixedPrecisionPTQ(SearchSpaceBase):
                 # iterate through all the quantizeable nodes in the graph
                 # if the node_name is in the seed, use the node seed search space
                 # else use the default search space for the node
-                for n_name, n_info in self._node_info.items():
+                for n_name, n_info in node_info.items():
                     if n_info["mase_op"] in QUANTIZEABLE_OP:
                         if n_name in seed:
                             choices[n_name] = deepcopy(seed[n_name])
@@ -92,13 +94,13 @@ class GraphSearchSpaceMixedPrecisionPTQ(SearchSpaceBase):
                 # iterate through all the quantizeable nodes in the graph
                 # if the node mase_op is in the seed, use the node seed search space
                 # else use the default search space for the node
-                for n_name, n_info in self._node_info.items():
+                for n_name, n_info in node_info.items():
                     n_op = n_info["mase_op"]
                     if n_op in QUANTIZEABLE_OP:
                         if n_op in seed:
                             choices[n_name] = deepcopy(seed[n_op])
                         else:
-                            choices[n_name] = {"config": deepcopy(seed["default"])}
+                            choices[n_name] = deepcopy(seed["default"])
             case _:
                 raise ValueError(
                     f"Unknown quantization by: {self.config['setup']['by']}"
@@ -112,7 +114,7 @@ class GraphSearchSpaceMixedPrecisionPTQ(SearchSpaceBase):
 
     def flattened_indexes_to_config(self, indexes: dict[str, int]):
         """
-        Convert sampled flattened indexes to a unflattened config which will be passed to `rebuild_model`.
+        Convert sampled flattened indexes to a nested config which will be passed to `rebuild_model`.
 
         ---
         For example:

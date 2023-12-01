@@ -1,6 +1,7 @@
 # A pass to eliminate any activation functions within the preceding LogicNets layer is made. The activation function is already considered during the initialization of the LogicNets.
 # NOTE: This implementation is a derivative of the following:
 # https://github.com/pytorch/pytorch/blob/main/torch/fx/experimental/optimization.py
+import logging
 
 import tqdm
 import torch.nn as nn
@@ -13,11 +14,10 @@ from torch.fx.experimental.optimization import (
 )
 from chop.passes.transforms.quantize.quantized_modules.linear import LinearLogicNets
 from chop.passes.transforms.quantize.quantized_modules.conv2d import Conv2DLogicNets
-from chop.tools.logger import getLogger
 
 # Housekeeping -------------------------------------------------------------------------
-logger = getLogger(__file__)
-logger.propagate = False  # Avoid duplicate logs
+logger = logging.getLogger(__file__)
+# logger.propagate = False  # Avoid duplicate logs
 
 
 def logicnets_fusion_transform_pass(graph, pass_args, **_):

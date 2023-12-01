@@ -1,7 +1,7 @@
 # A pass to convert a MASE graph to ONNX and annotate the relevant layers with sparsity
 # information. The code here is derived from Zhewen's SparseCNN codebase:
 # https://github.com/Yu-Zhewen/sparseCNN/blob/main/onnx_sparsity_attribute.py
-
+import logging
 from collections import OrderedDict
 import torch.nn as nn
 import torch
@@ -9,12 +9,11 @@ import onnx
 import toml
 from onnx import ModelProto, NodeProto
 from pathlib import Path
-from chop.tools.logger import getLogger
 
 
 # Housekeeping -------------------------------------------------------------------------
-logger = getLogger(__file__)
-logger.propagate = False  # Avoid duplicate logs
+logger = logging.getLogger(__file__)
+# logger.propagate = False  # Avoid duplicate logs
 
 
 def onnx_annotate_transform_pass(graph, **kwargs):

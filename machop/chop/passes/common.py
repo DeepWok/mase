@@ -97,6 +97,8 @@ MASE_TYPE_MAP = {
     "avg_pool1d": {"type": "module_related_func"},
     "avg_pool2d": {"type": "module_related_func"},
     "batch_norm": {"type": "module_related_func"},
+    "batch_norm1d": {"type": "module"},
+    "batch_norm2d": {"type": "module"},
     "conv1d": {"type": "module_related_func"},
     "conv2d": {"type": "module_related_func"},
     "layer_norm": {"type": "module_related_func"},

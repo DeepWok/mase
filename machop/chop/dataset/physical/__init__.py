@@ -1,22 +1,17 @@
-import os
-from .jsc import JetSubstructureDataset, get_jsc_dataset
+from pathlib import Path
+from .jsc import JetSubstructureDataset
 
 
-def get_physical_dataset(name: str, path: os.PathLike, split: str):
+def get_physical_dataset(name: str, path: Path, split: str):
     assert split in ["train", "validation", "test", "pred"]
 
     match name:
         case "jsc":
-            path = os.path.join(
-                path,
-                "processed-pythia82-lhc13-all-pt1-50k-r1_h022_e0175_t220_nonu_truth.z",
+            # h5 file path
+            path = path.joinpath(
+                "processed-pythia82-lhc13-all-pt1-50k-r1_h022_e0175_t220_nonu_truth.z"
             )
-            get_jsc_dataset(path)
-            config_file = os.path.abspath(
-                f"./chop/dataset/physical/jsc/yaml_IP_OP_config.yml"
-            )
-            # Dataset config
-            dataset = JetSubstructureDataset(path, config_file, split=split)
+            dataset = JetSubstructureDataset(path, split=split)
         case _:
             raise ValueError(f"Unknown dataset {name}")
 

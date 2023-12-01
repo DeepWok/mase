@@ -29,12 +29,11 @@ from chop.passes.analysis import (
     profile_statistics_analysis_pass,
     report_node_meta_param_analysis_pass,
 )
+from chop.tools.logger import set_logging_verbosity
 from chop.passes.graph.mase_graph import MaseGraph
 from chop.tools.get_input import InputGenerator
-from chop.tools.logger import getLogger
 
-logger = getLogger("chop")
-logger.setLevel(logging.DEBUG)
+set_logging_verbosity("debug")
 
 
 def main():

@@ -23,13 +23,13 @@ from chop.passes import (
 from chop.models import get_model_info
 from chop.models.toys.toy import ToyConvNet
 from chop.passes.graph.mase_graph import MaseGraph
-from chop.tools.logger import getLogger
 from chop.dataset import MaseDataModule
 from chop.tools.get_input import InputGenerator, get_dummy_input
+from chop.tools.logger import set_logging_verbosity
 
 
-logger = getLogger("chop")
-logger.setLevel(logging.DEBUG)
+set_logging_verbosity("debug")
+logger = logging.getLogger("chop.test")
 
 
 def main():

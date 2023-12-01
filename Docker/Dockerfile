@@ -78,6 +78,7 @@ RUN pip3 install --pre torchvision --extra-index-url https://download.pytorch.or
                     tabulate tensorboardx hyperopt accelerate \
                     optuna stable-baselines3 h5py scikit-learn \
                     scipy matplotlib nni sphinx-rtd-theme \
+                    imageio imageio-ffmpeg opencv-python kornia einops \
                     ghp-import
 
 # Add environment variables

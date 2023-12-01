@@ -1,5 +1,5 @@
-import os
 from copy import copy, deepcopy
+import logging
 
 from chop.passes.transforms.interface.save_and_load import (
     load_mase_graph_transform_pass,
@@ -16,13 +16,12 @@ from chop.passes.utils import (
     get_node_by_name,
     get_node_target_by_name,
 )
-from chop.tools.logger import getLogger
 
 from .modify import create_new_fn, create_new_module
 from .quant_parsers import parse_node_config, relink_node_meta, update_quant_meta_param
 from .summary import graph_iterator_compare_nodes, graph_iterator_node_histogram
 
-logger = getLogger(__name__)
+logger = logging.getLogger(__name__)
 
 QUANTIZEABLE_OP = (
     "add",
@@ -133,6 +132,7 @@ def graph_iterator_quantize_by_name(graph, config: dict):
             parent_name, name = get_parent_name(node.target)
             setattr(graph.modules[parent_name], name, new_module)
             update_quant_meta_param(node, node_config, get_mase_op(node))
+            logger.debug(f"Quantized module: {node.target} with config: {node_config}")
         elif get_mase_type(node) in [
             "builtin_func",
             "module_related_func",
@@ -146,6 +146,9 @@ def graph_iterator_quantize_by_name(graph, config: dict):
                 update_quant_meta_param(new_node, node_config, get_mase_op(node))
                 node.replace_all_uses_with(new_node)
             graph.fx_graph.erase_node(node)
+            logger.debug(
+                f"Quantized function: {node.target} with config: {node_config}"
+            )
         else:
             raise ValueError(
                 "Unsupported node type for quantisation: {}".format(get_mase_type(node))
@@ -193,45 +196,6 @@ def graph_iterator_quantize_by_regex_name(graph, config: dict):
                 "Unsupported node type for quantisation:{}".format(get_mase_type(node))
             )
     return graph
-
-
-# def quantize_transform_pass(graph, pass_args=None):
-#     if "report" not in pass_args:
-#         report = True
-#         logger.warning(
-#             "The `report` argument is not provided in quantize pass config. Generate the report by default, "
-#             "but running report creates a copy of model, which may lead to memory overflow if the model is huge."
-#         )
-#     else:
-#         report = pass_args["report"]
-#     if report:
-#         ori_graph = deepcopy(graph)
-
-#     save_dir = pass_args.pop("report_to", None)
-#     if save_dir is not None:
-#         os.makedirs(save_dir, exist_ok=True)
-
-#     by = pass_args.pop("by")
-#     match by:
-#         case "type":
-#             graph = graph_iterator_quantize_by_type(graph, pass_args)
-#         case "name":
-#             graph = graph_iterator_quantize_by_name(graph, pass_args)
-#         case "regex_name":
-#             graph = graph_iterator_quantize_by_regex_name(graph, pass_args)
-#         case _:
-#             raise ValueError(f'Unsupported quantize "by": {by}')
-
-#     table_path = os.path.join(save_dir, "quantize_table.csv") if save_dir else None
-#     histogram_path = (
-#         os.path.join(save_dir, "quantize_histogram.csv") if save_dir else None
-#     )
-#     if report:
-#         graph_iterator_compare_nodes(
-#             ori_graph, graph, save_path=table_path, silent=False
-#         )
-#         graph_iterator_node_histogram(ori_graph, graph, save_path=histogram_path)
-#     return graph
 
 
 def quantize_transform_pass(graph, pass_args=None):

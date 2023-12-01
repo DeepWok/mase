@@ -21,12 +21,12 @@ from chop.passes import (
     add_software_metadata_analysis_pass,
 )
 from chop.passes.graph.mase_graph import MaseGraph
-from chop.tools.logger import getLogger
 from chop.tools.get_input import get_dummy_input
 from chop.dataset import MaseDataModule, get_dataset_info
+from chop.tools.logger import set_logging_verbosity
 
-logger = getLogger("chop")
-logger.setLevel(logging.DEBUG)
+set_logging_verbosity("debug")
+logger = logging.getLogger("chop.test")
 
 
 def main():

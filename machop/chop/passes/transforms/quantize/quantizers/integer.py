@@ -8,7 +8,7 @@ from .utils import my_clamp, my_round
 
 
 def _integer_quantize(
-    x: Tensor | ndarray, width: int, frac_width: int, is_signed: bool = True
+    x: Tensor | ndarray, width: int, frac_width: int = None, is_signed: bool = True
 ):
     """
     - Do linear quantization to input according to a scale and number of bits
@@ -26,6 +26,9 @@ def _integer_quantize(
     For example: 0b101 . 00111, bits = 8, bias = 5
 
     """
+    if frac_width is None:
+        frac_width = width // 2
+
     if is_signed:
         int_min = -(2 ** (width - 1))
         int_max = 2 ** (width - 1) - 1

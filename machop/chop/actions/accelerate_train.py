@@ -6,7 +6,7 @@ from pathlib import Path
 import numpy as np
 import torch
 from accelerate import Accelerator, FullyShardedDataParallelPlugin
-from chop.tools.logger import getLogger
+from logging import getLogger
 from torch.distributed.fsdp import FullStateDictConfig
 from torch.distributed.fsdp import FullyShardedDataParallel as FSDP
 from torch.distributed.fsdp import StateDictType

@@ -1,0 +1,25 @@
+# basics
+model = "toy"
+dataset = "toy-tiny"
+
+[search_space]
+style = "mixed_precision"
+name = "integer"
+data_in_width = [2, 4, 8, 10]
+data_in_frac_width = [2, 4, 6]
+weight_width = [2, 4, 8, 10]
+weight_frac_width = [2, 4, 6]
+bias_width = [2, 4, 8, 10]
+bias_frac_width = [2, 4, 6]
+
+[strategy]
+name = "ea"
+pool = 20
+iterations = 100
+fitness = 'num_params'
+accuracy_constraint = 0.9
+training = false
+data_loader = 'train_dataloader'
+num_batches = 10
+runner = "module"
+

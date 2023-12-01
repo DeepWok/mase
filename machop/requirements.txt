@@ -31,6 +31,12 @@ pyyaml
 numpy
 pandas
 wandb
+# NeRF
+imageio
+imageio-ffmpeg
+opencv-python
+kornia
+einops
 # doc
 sphinx
 sphinx-rtd-theme

@@ -1,0 +1,85 @@
+# basics
+model = "jsc-tiny"
+dataset = "jsc"
+task = "cls"
+
+max_epochs = 5
+batch_size = 512
+learning_rate = 1e-2
+accelerator = "cpu"
+project = "jsc_toy"
+seed = 42
+log_every_n_steps = 5
+# load_name = "../mase_output/toy_toy_tiny/software/training_ckpts/best.ckpt"
+# load_type = "pl"
+
+[passes.quantize]
+by = "type"
+[passes.quantize.default.config]
+name = "NA"
+[passes.quantize.linear.config]
+name = "integer"
+"data_in_width" = 8
+"data_in_frac_width" = 4
+"weight_width" = 8
+"weight_frac_width" = 4
+"bias_width" = 8
+"bias_frac_width" = 4
+
+[search.search_space]
+name = "graph/quantize/mixed_precision_ptq"
+
+[search.search_space.setup]
+by = "name"
+
+[search.search_space.seed.default.config]
+# the only choice "NA" is used to indicate that layers are not quantized by default
+name = ["NA"]
+
+[search.search_space.seed.linear.config]
+# if search.search_space.setup.by = "type", this seed will be used to quantize all torch.nn.Linear/ F.linear
+name = ["integer"]
+data_in_width = [4, 8]
+data_in_frac_width = ["NA"] # "NA" means data_in_frac_width = data_in_width // 2
+weight_width = [2, 4, 8]
+weight_frac_width = ["NA"]
+bias_width = [2, 4, 8]
+bias_frac_width = ["NA"]
+
+[search.search_space.seed.seq_blocks_2.config]
+# if search.search_space.setup.by = "name", this seed will be used to quantize the mase graph node with name "seq_blocks_2"
+name = ["integer"]
+data_in_width = [4, 8]
+data_in_frac_width = ["NA"]
+weight_width = [2, 4, 8]
+weight_frac_width = ["NA"]
+bias_width = [2, 4, 8]
+bias_frac_width = ["NA"]
+
+[search.strategy]
+name = "optuna"
+eval_mode = true
+
+[search.strategy.sw_runner.basic_evaluation]
+data_loader = "val_dataloader"
+num_samples = 512
+
+[search.strategy.hw_runner.average_bitwidth]
+compare_to = 32 # compare to FP32
+
+[search.strategy.setup]
+n_jobs = 1
+n_trials = 20
+timeout = 20000
+sampler = "tpe"
+# sum_scaled_metrics = true # single objective
+# direction = "maximize"
+sum_scaled_metrics = false # multi objective
+
+[search.strategy.metrics]
+# loss.scale = 1.0
+# loss.direction = "minimize"
+accuracy.scale = 1.0
+accuracy.direction = "maximize"
+average_bitwidth.scale = 0.2
+average_bitwidth.direction = "minimize"

@@ -6,4 +6,4 @@
 
 from .checkpoint_load import load_model
 from .config_load import load_config, post_parse_load_config
-from .logger import getLogger
+from .logger import root_logger, set_logging_verbosity

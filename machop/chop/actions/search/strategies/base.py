@@ -68,17 +68,7 @@ class SearchStrategyBase:
                 )
             )
 
-        # self._set_loader(data_module)
         self._post_init_setup()
-
-    # def _set_loader(self, data_module):
-    #     """
-    #     Set the data loader and the number of batches.
-    #     """
-    #     self.data_loader = getattr(data_module, self.config["data_loader"])()
-    #     self.num_batches = math.ceil(
-    #         self.config["num_samples"] / data_module.batch_size
-    #     )
 
     @staticmethod
     def _save_study(study, save_path):
@@ -99,49 +89,3 @@ class SearchStrategyBase:
         Perform search, and save the results.
         """
         raise NotImplementedError()
-
-    # def sample(self):
-    #     raise NotImplementedError()
-
-    # def feedback(self):
-    #     raise NotImplementedError()
-
-    # def _create_logger(self):
-    #     logger = logging.getLogger("search")
-    #     logger.setLevel(logging.INFO)
-    #     self.logger = logger
-
-    # def run_model(self, sampled_config, search_space):
-    #     eval_mode = self.config.get("eval_mode", True)
-    #     model = search_space.rebuild_model(sampled_config, eval=eval_mode)
-
-    #     if eval_mode:
-    #         with torch.no_grad():
-    #             metrics = self.runner(self.data_loader, model, self.num_batches)
-    #     else:
-    #         metrics = self.runner(self.data_loader, model, self.num_batches)
-
-    #     return metrics
-
-    # def run_mase_graph(self, sampled_config, search_space):
-    #     eval_mode = self.config.get("eval_mode", True)
-    #     mg = search_space.rebuild_model(
-    #         sampled_config,
-    #         eval=eval_mode,
-    #     )
-    #     if eval_mode:
-    #         with torch.no_grad():
-    #             metrics = self.runner(self.data_loader, mg.model, self.num_batches)
-    #     else:
-    #         metrics = self.runner(self.data_loader, mg.model, self.num_batches)
-    #     return metrics
-
-    # def run_module_based_model(self, sampled_config, search_space):
-    #     eval_mode = self.config.get("eval_mode", True)
-    #     model = search_space.rebuild_model(sampled_config, eval=eval_mode)
-    #     if eval_mode:
-    #         with torch.no_grad():
-    #             metrics = self.runner(self.data_loader, model, self.num_batches)
-    #     else:
-    #         metrics = self.runner(self.data_loader, model, self.num_batches)
-    #     return metrics

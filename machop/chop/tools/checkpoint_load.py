@@ -75,11 +75,19 @@ def load_model(
         model = load_unwrapped_ckpt(checkpoint=load_name, model=model)
         logger.info(f"Loaded pytorch checkpoint from {load_name}")
     elif load_type == "pl":
+        if not load_name.endswith(".ckpt"):
+            logger.warning(
+                f"Lightning checkpoint should end with '.ckpt', but got {load_name}"
+            )
         model = load_lightning_ckpt_to_unwrapped_model(
             checkpoint=load_name, model=model
         )
         logger.info(f"Loaded pytorch lightning checkpoint from {load_name}")
     else:
+        assert load_name.endswith(
+            ".mz"
+        ), f"Invalid extension for 'load_type=mz': {load_name}, must be a '.mz' file, but got {load_name}."
+
         model = load_graph_module_ckpt(checkpoint=load_name)
         logger.info(f"Loaded mase checkpoint from {load_name}")
     return model
