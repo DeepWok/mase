@@ -2,7 +2,6 @@
 module roller #(
     parameter DATA_WIDTH = 16,
     parameter NUM        = 8,
-    parameter IN_SIZE    = 2,
     parameter ROLL_NUM   = 2
 ) (
     input logic clk,
@@ -38,21 +37,12 @@ module roller #(
 
   // We can take in value if we know shift_reg will be free next cycle.
   assign data_in_ready_next = counter_next == 0;
-  // keep in_size and flip, left shift to avoid data order problem
-  logic [DATA_WIDTH -1:0] data_in_reorder[NUM - 1:0];
-  for (genvar i = 0; i < NUM / IN_SIZE; i++)
-  for (genvar j = 0; j < IN_SIZE; j++)
-    assign data_in_reorder[(NUM/IN_SIZE-1-i)*IN_SIZE+j] = data_in[i*IN_SIZE+j];
-  // to avoid data arrange problem 
-  // realize data_out = shift_reg[0:ROLL_NUM - 1]
-  // shift_reg_next = {0,shift_reg[NUM - 1 : ROLL_NUM]}
-  for (genvar i = 0; i < ROLL_NUM; i++) begin
+  // shift_reg_next = {shift_reg[NUM - ROLL_NUM : NUM - 1], 0}
+  for (genvar i = 0; i < NUM - ROLL_NUM; i++) assign shift_reg_next[i] = shift_reg[i+ROLL_NUM];
+  for (genvar i = NUM - ROLL_NUM; i < NUM; i++) begin
     assign shift_reg_next[i] = 0;
-    assign data_out[i] = shift_reg[NUM-ROLL_NUM+i];
+    assign data_out[i-(NUM-ROLL_NUM)] = shift_reg[i-(NUM-ROLL_NUM)];
   end
-
-  for (genvar i = 0; i < NUM - ROLL_NUM; i++) assign shift_reg_next[i+ROLL_NUM] = shift_reg[i];
-
   for (genvar i = 0; i < NUM; i++) assign zeros[i] = 0;
 
 
@@ -65,9 +55,9 @@ module roller #(
       counter <= counter_next;
       data_in_ready <= data_in_ready_next;
 
-      // Don't consider the value data_in_valid when feeding into in_shaped, 
+      // Don't consider the value data_in_valid when feeding into in_shaped
       // to avoid data_in_valid from faning-out to all shift registers.
-      if (data_in_ready) shift_reg <= data_in_reorder;
+      if (data_in_ready) shift_reg <= data_in;
       else if (data_out_ready) shift_reg <= shift_reg_next;
     end
 

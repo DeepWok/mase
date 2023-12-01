@@ -3,24 +3,29 @@
 # This script tests the fixed point linear
 import random, os, math, logging, sys
 
+# pd is parent directory
+pd = os.path.dirname
 sys.path.append(
     os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 )
 print(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
-
+machop_dir = pd(pd(pd(pd(pd(os.path.abspath(__file__)))))) + "/machop"
+sys.path.append(machop_dir)
 from random_test import RandomSource
 from random_test import RandomSink
 from random_test import check_results
 
-from z_qlayers import QuantizedConvolution
+from chop.passes.transforms.quantize.quantized_modules import Conv2dInteger
+
 import torch
-import torch.nn as nn
 
 import cocotb
 from cocotb.triggers import Timer
 from cocotb.triggers import FallingEdge
 from cocotb.clock import Clock
 from cocotb.runner import get_runner
+
+from z_qlayers import quantize_to_int as q2i
 
 from math import ceil
 
@@ -34,70 +39,58 @@ if debug:
 # DUT test specifications
 class VerificationCase:
     def __init__(self, samples=1):
-        self.data_width = 32
-        self.data_frac_width = 1
-        self.weight_width = 16
-        self.weight_frac_width = 1
-        self.bias_width = 16
-        self.bias_frac_width = 1
-        self.out_data_width = 32
-        self.out_data_frac_width = 1
+        self.w_config = {
+            "data_in_width": 8,
+            "data_in_frac_width": 3,
+            "weight_width": 8,
+            "weight_frac_width": 3,
+            "bias_width": 8,
+            "bias_frac_width": 3,
+        }
+        self.data_out_width = 6
+        self.data_out_frac_width = 2
 
-        self.in_height = 2
-        self.in_width = 4
+        self.in_c = 2
+        self.in_y = 4
+        self.in_x = 3
 
-        self.in_channels = 2
+        self.out_channels = 4
+        self.kernel_y = 3
+        self.kernel_x = 2
+
         self.unroll_in_c = 2
         self.unroll_kernel_out = 4
 
-        self.kernel_height = 2
-        self.kernel_width = 3
-        self.out_channels = 4
         self.unroll_out_c = 2
 
-        self.stride = 3
-        self.padding_height = 1
-        self.padding_width = 2
+        self.stride = 2
+        self.padding_height = 2
+        self.padding_width = 1
 
         self.out_height = ceil(
-            (self.in_height - self.kernel_height + 2 * self.padding_height + 1)
-            / self.stride
+            (self.in_y - self.kernel_y + 2 * self.padding_height + 1) / self.stride
         )
         self.out_width = ceil(
-            (self.in_width - self.kernel_width + 2 * self.padding_width + 1)
-            / self.stride
+            (self.in_x - self.kernel_x + 2 * self.padding_width + 1) / self.stride
         )
 
-        self.sliding_depth = self.out_width * self.out_height
+        self.sliding_num = self.out_width * self.out_height
 
         self.samples = samples
-        test_data_in, test_weight, test_bias, _, _, _ = self.data_generate()
-        print(
-            "data_in",
-            test_data_in,
-            "test_weight",
-            test_weight,
-            "test_bias",
-            test_bias,
-        )
+        self.data_generate()
+
         self.data_in = RandomSource(
             name="data_in",
-            samples=int(
-                samples
-                * self.in_width
-                * self.in_height
-                * self.in_channels
-                / self.unroll_in_c
-            ),
+            samples=int(samples * self.in_x * self.in_y * self.in_c / self.unroll_in_c),
             num=self.unroll_in_c,
             max_stalls=2 * samples,
             debug=debug,
-            data_specify=test_data_in,
+            data_specify=self.hw_x,
         )
         self.weight_partition_depth = int(
-            self.kernel_height
-            * self.kernel_width
-            * self.in_channels
+            self.kernel_y
+            * self.kernel_x
+            * self.in_c
             * self.out_channels
             / self.unroll_kernel_out
             / self.unroll_out_c
@@ -107,7 +100,7 @@ class VerificationCase:
             samples=samples * self.weight_partition_depth,
             num=self.unroll_kernel_out * self.unroll_out_c,
             max_stalls=2 * samples * self.weight_partition_depth,
-            data_specify=test_weight,
+            data_specify=self.hw_w,
             debug=debug,
         )
         self.bias = RandomSource(
@@ -115,13 +108,13 @@ class VerificationCase:
             samples=samples * int(self.out_channels / self.unroll_out_c),
             num=self.unroll_out_c,
             max_stalls=2 * samples * int(self.out_channels / self.unroll_out_c),
-            data_specify=test_bias,
+            data_specify=self.hw_b,
             debug=debug,
         )
         self.outputs = RandomSink(
             samples=samples
             * int(self.out_channels / self.unroll_out_c)
-            * self.sliding_depth,
+            * self.sliding_num,
             max_stalls=2 * samples,
             debug=debug,
         )
@@ -129,24 +122,24 @@ class VerificationCase:
 
     def get_dut_parameters(self):
         return {
-            "DATA_WIDTH": self.data_width,
-            "DATA_FRAC_WIDTH": self.data_frac_width,
-            "W_WIDTH": self.weight_width,
-            "W_FRAC_WIDTH": self.weight_frac_width,
-            "BIAS_WIDTH": self.bias_width,
-            "BIAS_FRAC_WIDTH": self.bias_frac_width,
-            "OUT_WIDTH": self.out_data_width,
-            "OUT_FRAC_WIDTH": self.out_data_frac_width,
-            "IN_X": self.in_width,
-            "IN_Y": self.in_height,
-            "IN_C": self.in_channels,
-            "KERNEL_X": self.kernel_width,
-            "KERNEL_Y": self.kernel_height,
+            "DATA_WIDTH": self.w_config["data_in_width"],
+            "DATA_FRAC_WIDTH": self.w_config["data_in_frac_width"],
+            "W_WIDTH": self.w_config["weight_width"],
+            "W_FRAC_WIDTH": self.w_config["weight_frac_width"],
+            "BIAS_WIDTH": self.w_config["bias_width"],
+            "BIAS_FRAC_WIDTH": self.w_config["bias_frac_width"],
+            "OUT_WIDTH": self.data_out_width,
+            "OUT_FRAC_WIDTH": self.data_out_frac_width,
+            "IN_X": self.in_x,
+            "IN_Y": self.in_y,
+            "IN_C": self.in_c,
+            "KERNEL_X": self.kernel_x,
+            "KERNEL_Y": self.kernel_y,
             "OUT_C": self.out_channels,
             "UNROLL_OUT_C": self.unroll_out_c,
             "UNROLL_IN_C": self.unroll_in_c,
             "UNROLL_KERNEL_OUT": self.unroll_kernel_out,
-            "SLIDING_NUM": self.sliding_depth,
+            "SLIDING_NUM": self.sliding_num,
             "STRIDE": self.stride,
             "PADDING_Y": self.padding_height,
             "PADDING_X": self.padding_width,
@@ -154,118 +147,127 @@ class VerificationCase:
 
     def data_generate(self):
         torch.manual_seed(0)
-        samples = self.samples
-        # in dimension
-        in_width = self.in_width
-        in_height = self.in_height
-        in_channels = self.in_channels
-        unroll_in_c = self.unroll_in_c
-        # weight dimension
-        kernel_width = self.kernel_width
-        kernel_height = self.kernel_height
-        out_channels = self.out_channels
-        unroll_out_c = self.unroll_out_c
-        unroll_kernel_out = self.unroll_kernel_out
-        # data_pack
-        re_data_tensor = torch.randint(30, (samples, in_channels, in_height, in_width))
+        self.int_conv_layer = Conv2dInteger(
+            in_channels=self.in_c,
+            out_channels=self.out_channels,
+            kernel_size=(self.kernel_y, self.kernel_x),
+            stride=self.stride,
+            padding=(self.padding_height, self.padding_width),
+            config=self.w_config,
+        )
+
+        # get parameters with integer format
+        self.sw_x = 5 * torch.randn(self.samples, self.in_c, self.in_y, self.in_x)
+
+        self.sw_w = self.int_conv_layer.weight
+        self.sw_b = self.int_conv_layer.bias
+        # data_in_pack
+        x = q2i(
+            self.sw_x,
+            self.w_config["data_in_width"],
+            self.w_config["data_in_frac_width"],
+        )
+        print("x = ", x)
         # from (samples, c, h, w) to (samples*h*w*c/unroll_in_c, unroll_in_c)
-        data_tensor = re_data_tensor.permute(0, 2, 3, 1).reshape(-1, unroll_in_c)
-        data_in = data_tensor.type(torch.int).flip(0).tolist()
-        # weight_pack
-        re_w_tensor = torch.randint(
-            30, (samples, out_channels, in_channels, kernel_height, kernel_width)
+        # flip from convinient debug
+        reshape_x = (
+            x.permute(0, 2, 3, 1).reshape(-1).flip(0).reshape(-1, self.unroll_in_c)
         )
-
-        # from (oc,ic/unroll_in_c,unroll_in_c,h,w) to (ic/unroll_in_c,h*w,unroll_in_c,oc)
-        reorder_w_tensor = re_w_tensor.reshape(
-            samples,
-            out_channels,
-            int(in_channels / unroll_in_c),
-            unroll_in_c,
-            kernel_height * kernel_width,
-        ).permute(0, 2, 4, 3, 1)
-
-        # reverse the final 2 dimension
-        # from(samples, int(kernel_height * kernel_width * in_channels / unroll_kernel_out), unroll_kernel_out, int(out_channels/unroll_out_c ), unroll_out_c )
-        # to  (samples, int(out_channels/unroll_out_c ), int(kernel_height * kernel_width * in_channels / unroll_kernel_out), unroll_out_c , unroll_kernel_out)
-        w_tensor = reorder_w_tensor.reshape(
-            samples,
-            int(kernel_height * kernel_width * in_channels / unroll_kernel_out),
-            unroll_kernel_out,
-            int(out_channels / unroll_out_c),
-            unroll_out_c,
-        ).permute(0, 3, 1, 4, 2)
-
-        w_tensor = w_tensor.reshape(
-            -1,
-            unroll_out_c * unroll_kernel_out,
+        self.hw_x = reshape_x.type(torch.int).tolist()
+        # parameters packs
+        self.hw_w, self.hw_b = self.conv_pack(
+            weight=self.sw_w,
+            bias=self.sw_b,
+            in_channels=self.in_c,
+            kernel_size=[self.kernel_y, self.kernel_x],
+            out_channels=self.out_channels,
+            unroll_in_channels=self.unroll_in_c,
+            unroll_kernel_out=self.unroll_kernel_out,
+            unroll_out_channels=self.unroll_out_c,
         )
-        w_in = w_tensor.type(torch.int).flip(0).tolist()
-        # bias_pack
-        re_bias_tensor = torch.randint(30, (samples, out_channels))
-        bias_tensor = re_bias_tensor.reshape(-1, unroll_out_c)
-        bias_in = bias_tensor.type(torch.int).flip(0).tolist()
-        return (
-            data_in,
-            w_in,
-            bias_in,
-            re_data_tensor.type(torch.float),
-            re_w_tensor.type(torch.float),
-            re_bias_tensor.type(torch.float),
-        )
-
-    def out_unpack(self, data_out):
-        out_height = self.out_height
-        out_width = self.out_width
-        data_out = data_out.reshape(self.out_channels, out_height, out_width).permute(
-            1, 2, 0
-        )
-        return data_out.reshape(-1, self.out_channels)
 
     def sw_compute(self):
-        ref = []
-        output = []
-        _, _, _, data, weight, bias = self.data_generate()
-        logger.debug(
-            "input data: \n\
-            data_in = \n\
-            {} \n\
-            weight  = \n\
-            {} \n\
-            bias    = \n\
-            {} \n\
-            ".format(
-                data,
-                weight,
-                bias,
+        """
+        The output of this module should follow channel first output model
+        Software level output dimension should be [oc, oh, ow] first
+        it should be reshaped to [oh,ow,oc/u_oc,,u_oc]
+        then for the purpose of mapping hardware index, should flip the last dimension
+        """
+        sw_data_out = self.int_conv_layer(self.sw_x)
+        print(q2i(sw_data_out, self.data_out_width, self.data_out_frac_width))
+        data_out_temp = q2i(sw_data_out, self.data_out_width, self.data_out_frac_width)
+        data_out_temp = data_out_temp.permute(0, 2, 3, 1)
+        data_out_temp = data_out_temp.reshape(-1, self.unroll_out_c)
+        hw_data_out = data_out_temp.flip(-1).tolist()
+        return hw_data_out
+
+    def conv_pack(
+        self,
+        weight,
+        bias,
+        in_channels,
+        kernel_size,
+        out_channels,
+        unroll_in_channels,
+        unroll_kernel_out,
+        unroll_out_channels,
+    ):
+        print("weight = ", weight)
+        print("bias = ", bias)
+        weight = q2i(
+            weight,
+            self.w_config["weight_width"],
+            self.w_config["weight_frac_width"],
+        )
+        print("weight = ", weight)
+        bias = q2i(
+            bias,
+            self.w_config["bias_width"],
+            self.w_config["bias_frac_width"],
+        )
+        print("bias = ", bias)
+        samples = self.samples
+        # requires input as a quantized int format
+        # weight_pack
+        # from (oc,ic/u_ic,u_ic,h,w) to (ic/u_ic,h*w,u_ic,oc)
+        reorder_w_tensor = (
+            weight.repeat(samples, 1, 1, 1, 1)
+            .reshape(
+                samples,
+                out_channels,
+                int(in_channels / unroll_in_channels),
+                unroll_in_channels,
+                kernel_size[0] * kernel_size[1],
+            )
+            .permute(0, 2, 4, 3, 1)
+        )
+
+        # reverse the final 2 dimension
+        # from(samples, int(kernel_height * kernel_width * in_channels / unroll_kernel_out), unroll_kernel_out, int(out_channels/unroll_out_channels), unroll_out_channels)
+        # to  (samples, int(out_channels/unroll_out_channels), int(kernel_height * kernel_width * in_channels / unroll_kernel_out), unroll_out_channels, unroll_kernel_out)
+        w_tensor = reorder_w_tensor.reshape(
+            samples,
+            int(kernel_size[0] * kernel_size[1] * in_channels / unroll_kernel_out),
+            unroll_kernel_out,
+            int(out_channels / unroll_out_channels),
+            unroll_out_channels,
+        ).permute(0, 3, 1, 4, 2)
+
+        w_tensor = (
+            w_tensor.reshape(-1)
+            .flip(0)
+            .reshape(
+                -1,
+                unroll_out_channels * unroll_kernel_out,
             )
         )
-        for i in range(self.samples):
-            kernel_size = (self.kernel_height, self.kernel_width)
-            Qconv = QuantizedConvolution(
-                self.in_channels,
-                self.out_channels,
-                kernel_size,
-                weight[i],
-                bias[i],
-                stride=self.stride,
-                padding=(self.padding_height, self.padding_width),
-                data_width=self.data_width,
-                data_frac_width=self.data_frac_width,
-                weight_width=self.weight_width,
-                weight_frac_width=self.weight_frac_width,
-                bias_width=self.bias_width,
-                bias_frac_width=self.bias_frac_width,
-                out_width=self.out_data_width,
-                out_frac_width=self.out_data_frac_width,
-            )
-            # Turn an input to a single batch input
-            data_out = Qconv(data[i].unsqueeze(0))
-            data_out = self.out_unpack(data_out)
-            output = data_out.reshape(-1, self.unroll_out_c).tolist()
-            ref = ref + output
-        # ref.reverse()
-        return ref
+        w_in = w_tensor.type(torch.int).tolist()
+        # bias_pack
+        bias_tensor = (
+            bias.repeat(samples, 1).reshape(-1).flip(0).reshape(-1, unroll_out_channels)
+        )
+        b_in = bias_tensor.type(torch.int).tolist()
+        return w_in, b_in
 
 
 # Check if an is_impossible state is reached
@@ -327,8 +329,11 @@ async def test_fixed_linear(dut):
 
     done = False
     # Set a timeout to avoid deadlock
-    count = 0
-    for i in range(samples * 1000):
+    count1 = 0
+    count2 = 0
+    count3 = 0
+    count4 = 0
+    for i in range(samples * 100):
         await FallingEdge(dut.clk)
         debug_state(dut, "Post-clk")
         dut.weight_valid.value = test_case.weight.pre_compute()
@@ -357,30 +362,23 @@ async def test_fixed_linear(dut):
         await Timer(1, units="ns")
         debug_state(dut, "Pre-clk")
         wave_check(dut)
-        logger.debug(
-            "wave of interface:\n\
-                {},{} kernel = {}  \n\
-                {},{} rolled_k = {}   \n\
-                padding_x = {} \n\
-                padding_y = {} \n\
-                padding_c = {} \n\
-                ".format(
-                dut.kernel_valid.value,
-                dut.kernel_ready.value,
-                [int(i) for i in dut.kernel.value],
-                dut.rolled_k_valid.value,
-                dut.rolled_k_ready.value,
-                [int(i) for i in dut.rolled_k.value],
-                int(dut.sw_inst.padding_inst.count_x.value),
-                int(dut.sw_inst.padding_inst.count_y.value),
-                int(dut.sw_inst.padding_inst.count_c.value),
+        if dut.ib_weight_valid.value == 1 and dut.ib_weight_ready.value == 1:
+            count1 += 1
+        if dut.ib_bias_valid.value == 1 and dut.ib_bias_ready.value == 1:
+            count2 += 1
+        if dut.data_out_valid.value == 1 and dut.data_out_ready.value == 1:
+            count3 += 1
+        if dut.ib_rolled_k_valid.value == 1 and dut.ib_rolled_k_ready.value == 1:
+            count4 += 1
+        print(
+            "count:\n\
+              c_weight = {}\n\
+              c_bias = {}\n\
+              c_data_out = {}\n\
+              c_linear_in = {}".format(
+                count1, count2, count3, count4
             )
         )
-        if dut.kernel_valid.value == 1 and dut.kernel_ready.value == 1:
-            count += 1
-        print(count)
-
-        # breakpoint()
         if (
             (test_case.bias.is_empty())
             and test_case.weight.is_empty()
@@ -414,6 +412,33 @@ def wave_check(dut):
             [int(i) for i in dut.fl_instance.bias.value],
         )
     )
+    logger.debug(
+        "wave of interface:\n\
+            {},{} data_in = {}  \n\
+            {},{} kernel = {}  \n\
+            {},{} rolled_k = {}   \n\
+            {},{} data_out = {}  \n\
+            padding_x = {} \n\
+            padding_y = {} \n\
+            padding_c = {} \n\
+            ".format(
+            dut.data_in_valid.value,
+            dut.data_in_ready.value,
+            [int(i) for i in dut.data_in.value],
+            dut.kernel_valid.value,
+            dut.kernel_ready.value,
+            [int(i) for i in dut.kernel.value],
+            dut.rolled_k_valid.value,
+            dut.rolled_k_ready.value,
+            [int(i) for i in dut.rolled_k.value],
+            dut.data_out_valid.value,
+            dut.data_out_ready.value,
+            [int(i) for i in dut.data_out.value],
+            int(dut.sw_inst.padding_inst.count_x.value),
+            int(dut.sw_inst.padding_inst.count_y.value),
+            int(dut.sw_inst.padding_inst.count_c.value),
+        )
+    )
 
 
 def runner():
@@ -424,7 +449,7 @@ def runner():
         "../../../../components/conv/padding.sv",
         "../../../../components/conv/roller.sv",
         "../../../../components/conv/sliding_window.sv",
-        "../../../../components/cast/fixed_cast.sv",
+        "../../../../components/cast/fixed_rounding.sv",
         "../../../../components/linear/fixed_linear.sv",
         "../../../../components/fixed_arith/fixed_dot_product.sv",
         "../../../../components/fixed_arith/fixed_accumulator.sv",
@@ -432,11 +457,11 @@ def runner():
         "../../../../components/fixed_arith/fixed_adder_tree.sv",
         "../../../../components/fixed_arith/fixed_adder_tree_layer.sv",
         "../../../../components/fixed_arith/fixed_mult.sv",
-        "../../../../components/common/skid_buffer.sv",
-        "../../../../components/common/unpaced_skid_buffer.sv",
         "../../../../components/common/join2.sv",
         "../../../../components/common/input_buffer.sv",
-        "../../../../components/common/ram_block.sv",
+        "../../../../components/common/skid_buffer.sv",
+        "../../../../components/common/unpacked_skid_buffer.sv",
+        "../../../../components/common/blk_mem_gen_0.sv",
     ]
     test_case = VerificationCase()
 

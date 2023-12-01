@@ -59,8 +59,6 @@ module convolution #(
   logic [DATA_WIDTH * UNROLL_IN_C - 1:0] packed_data_in;
   logic [UNCAST_OUT_WIDTH - 1:0] uncast_data_out[UNROLL_OUT_C - 1:0];
 
-  logic reg_in_valid, reg_in_ready;
-  logic [UNCAST_OUT_WIDTH - 1:0] linear2cast[UNROLL_OUT_C - 1:0];
   localparam KERNEL_SIZE = KERNEL_Y * KERNEL_X * UNROLL_IN_C;
 
 
@@ -100,7 +98,6 @@ module convolution #(
   roller #(
       .DATA_WIDTH(DATA_WIDTH),
       .NUM(KERNEL_SIZE),
-      .IN_SIZE(UNROLL_IN_C),
       .ROLL_NUM(UNROLL_KERNEL_OUT)
   ) roller_inst (
       .data_in(kernel),
@@ -190,23 +187,10 @@ module convolution #(
       .bias_valid(ib_bias_valid),
       .bias_ready(ib_bias_ready),
       .data_out(uncast_data_out),
-      .data_out_valid(reg_in_valid),
-      .data_out_ready(reg_in_ready),
+      .data_out_valid(data_out_valid),
+      .data_out_ready(data_out_ready),
       .*
   );
-
-  unpacked_fifo #(
-      .DATA_WIDTH(UNCAST_OUT_WIDTH),
-      .DEPTH(4),
-      .IN_NUM(UNROLL_OUT_C)
-  ) skid_buffer (
-      .data_in_valid(reg_in_valid),
-      .data_in_ready(reg_in_ready),
-      .data_in(uncast_data_out),
-      .data_out(linear2cast),
-      .*
-  );
-
   fixed_rounding #(
       .IN_SIZE(UNROLL_OUT_C),
       .IN_WIDTH(UNCAST_OUT_WIDTH),
@@ -214,7 +198,7 @@ module convolution #(
       .OUT_WIDTH(OUT_WIDTH),
       .OUT_FRAC_WIDTH(OUT_FRAC_WIDTH)
   ) inst_cast (
-      .data_in (linear2cast),
+      .data_in (uncast_data_out),
       .data_out(data_out)
   );
 

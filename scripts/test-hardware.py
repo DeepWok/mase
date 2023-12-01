@@ -22,6 +22,7 @@ test_cases = {
     "common/skid_buffer": [],
     "common/fifo": ["common"],
     "common/input_buffer": ["common"],
+    "conv/convolution": ["conv", "linear", "common", "fixed_arith", "cast"],
     # "ViT/fixed_patch_embed": [
     #     "conv",
     #     "ViT",
@@ -53,7 +54,6 @@ test_cases = {
     #     "common",
     #     "fixed_arith",
     # ],
-    # "conv/convolution": ["conv", "linear", "common", "fixed_arith"],
     # "conv/sliding_window": ["cast", "conv", "linear", "common", "fixed_arith"],
     # "conv/padding": ["cast", "conv", "linear", "common", "fixed_arith"],
     # "conv/convolution": ["cast", "conv", "linear", "common", "fixed_arith"],
