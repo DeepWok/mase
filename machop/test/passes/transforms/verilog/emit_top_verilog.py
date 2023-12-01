@@ -121,8 +121,10 @@ def main():
             ]
 
     mg = report_node_type_analysis_pass(mg)
-    mg = add_hardware_metadata_analysis_pass(mg)
-    mg = report_node_hardware_type_analysis_pass(mg)
+    mg = add_hardware_metadata_analysis_pass(
+        mg
+    )  # add metadata for hardware in each mase node of graph
+    mg = report_node_hardware_type_analysis_pass(mg)  # pretty print
     # mg = verify_hardware_metadata_analysis_pass(mg)
 
     mg = emit_verilog_top_transform_pass(mg)

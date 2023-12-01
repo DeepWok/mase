@@ -2,15 +2,11 @@ import logging
 import os
 import shutil
 
-from chop.passes.utils import vf, init_project
+from chop.passes.utils import vf, v2p, get_module_by_name, init_project
 from .logicnets.emit_linear import LogicNetsLinearVerilog
 from .internal_file_dependences import INTERNAL_RTL_DEPENDENCIES
 
 logger = logging.getLogger(__name__)
-
-
-def _append(list1, list2):
-    return list1 + list(set(list2) - set(list1))
 
 
 def include_ip_to_project(node, rtl_dir):
@@ -24,12 +20,12 @@ def include_ip_to_project(node, rtl_dir):
     return INTERNAL_RTL_DEPENDENCIES[mase_op]
 
 
-def emit_internal_rtl_transform_pass(graph, pass_args={}):
+def emit_logicnets_transform_pass(graph, pass_args={}):
     """
-    Emit internal components
+    Emit LogicNets Components
     """
 
-    logger.info("Emitting internal components...")
+    logger.info("Emitting LogicNets components...")
     project_dir = (
         pass_args["project_dir"] if "project_dir" in pass_args.keys() else "top"
     )
@@ -43,19 +39,11 @@ def emit_internal_rtl_transform_pass(graph, pass_args={}):
         if node.meta["mase"].parameters["hardware"]["is_implicit"]:
             continue
         if "INTERNAL_RTL" == node.meta["mase"].parameters["hardware"]["toolchain"]:
-            if (
-                hasattr(node.meta["mase"].module, "config")
-                and node.meta["mase"].module.config.get("name", "") == "logicnets"
-            ):
-                # LogicNets hardware is generated programmatically from a mase node
-                logger.info("Emitting LogicNets components...")
-                node_name = vf(node.name)
-                emitter = LogicNetsLinearVerilog(node.meta["mase"].module)
-                emitter.gen_layer_verilog(node_name, rtl_dir)
-            else:
-                # For other nodes, simply include the corresponding written IP
-                files = include_ip_to_project(node, rtl_dir)
-                rtl_dependencies = _append(rtl_dependencies, files)
+            node_name = vf(node.name)
+            emitter = LogicNetsLinearVerilog(node.meta["mase"].module)
+            emitter.gen_layer_verilog(node_name, rtl_dir)
+            # files = include_ip_to_project(node, rtl_dir)
+            # rtl_dependencies = _append(rtl_dependencies, files)
         elif "INTERNAL_HLS" in node.meta["mase"].parameters["hardware"]["toolchain"]:
             assert False, "Intenral HLS not implemented yet."
 

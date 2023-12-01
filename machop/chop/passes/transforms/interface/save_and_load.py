@@ -166,6 +166,7 @@ def load_mase_graph_transform_pass(graph, pass_args: str):
     node_n_meta_param = load_n_meta_param(n_meta_param_ckpt)
     # load graph module
     graph.model = load_graph_module_ckpt(graph_module_ckpt)
+    graph.model.additional_inputs = {}
     graph = init_metadata_analysis_pass(graph)
     # add metadata.parameters to graph
     graph = graph_iterator_add_n_meta_param(graph, node_n_meta_param)

@@ -629,7 +629,7 @@ def analyse_common_parameters_function(meta):
 
 def _get_size_by_module_simulation(meta):
     """
-    Otain the size of the output by executing the module
+    Obtain the size of the output by executing the module
     """
     self_obj, *args = _load_arg(meta)
     kwargs = _load_kwarg(meta)
