@@ -7,9 +7,9 @@ A mapping from (quantization arithmetic name) to (a mapping from (operand name) 
 
 Example
 
-A integer quantized value is defined by (width, frac_width), thus the mapping is defined as follows:
+A fixed point quantized value is defined by (width, frac_width), thus the mapping is defined as follows:
 ```python
-"integer": {
+"fixed": {
     "weight_entries": ("weight_width", "weight_frac_width"),
     "data_in_entries": ("data_in_width", "data_in_frac_width"),
     "bias_entries": ("bias_width", "bias_frac_width"),
@@ -19,6 +19,11 @@ A integer quantized value is defined by (width, frac_width), thus the mapping is
 QUANT_ARITH_ENTRIES = {
     # <arith_name> : {<operand_name> : (<operand_quantization_spec_name>,)}
     "integer": {
+        "weight_entries": ("weight_width", "weight_frac_width"),
+        "data_in_entries": ("data_in_width", "data_in_frac_width"),
+        "bias_entries": ("bias_width", "bias_frac_width"),
+    },
+    "fixed": {
         "weight_entries": ("weight_width", "weight_frac_width"),
         "data_in_entries": ("data_in_width", "data_in_frac_width"),
         "bias_entries": ("bias_width", "bias_frac_width"),

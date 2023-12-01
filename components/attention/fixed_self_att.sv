@@ -3,19 +3,19 @@ module fixed_self_att #(
     parameter DATA_WIDTH = 8,
     parameter DATA_FRAC_WIDTH = 1,
 
-    parameter WQ_WIDTH = 8,
-    parameter WQ_FRAC_WIDTH = 1,
-    parameter WK_WIDTH = 8,
-    parameter WK_FRAC_WIDTH = 1,
-    parameter WV_WIDTH = 8,
-    parameter WV_FRAC_WIDTH = 1,
+    parameter WEIGHT_Q_WIDTH = 8,
+    parameter WEIGHT_Q_FRAC_WIDTH = 1,
+    parameter WEIGHT_K_WIDTH = 8,
+    parameter WEIGHT_K_FRAC_WIDTH = 1,
+    parameter WEIGHT_V_WIDTH = 8,
+    parameter WEIGHT_V_FRAC_WIDTH = 1,
 
-    parameter BQ_WIDTH = 8,
-    parameter BQ_FRAC_WIDTH = 1,
-    parameter BK_WIDTH = 8,
-    parameter BK_FRAC_WIDTH = 1,
-    parameter BV_WIDTH = 8,
-    parameter BV_FRAC_WIDTH = 1,
+    parameter BIAS_Q_WIDTH = 8,
+    parameter BIAS_Q_FRAC_WIDTH = 1,
+    parameter BIAS_K_WIDTH = 8,
+    parameter BIAS_K_FRAC_WIDTH = 1,
+    parameter BIAS_V_WIDTH = 8,
+    parameter BIAS_V_FRAC_WIDTH = 1,
 
     parameter DQ_WIDTH = 8,
     parameter DQ_FRAC_WIDTH = 1,
@@ -46,44 +46,52 @@ module fixed_self_att #(
     parameter W_NUM_PARALLELISM = 2,
     parameter W_SIZE = IN_SIZE,
 
-
     parameter OUT_PARALLELISM = IN_PARALLELISM,
-    parameter OUT_SIZE = W_PARALLELISM
+
+    parameter BIAS_Q_SIZE   = 3,
+    parameter BIAS_K_SIZE   = 3,
+    parameter BIAS_V_SIZE   = 3,
+    parameter WEIGHT_Q_SIZE = 9,
+    parameter WEIGHT_K_SIZE = 9,
+    parameter WEIGHT_V_SIZE = 9,
+
+    parameter OUT_SIZE  = OUT_PARALLELISM * OUT_SIZE,
+    parameter OUT_WIDTH = DZ_WIDTH
 ) (
     input clk,
     input rst,
 
-    input [WQ_WIDTH - 1:0] weight_q[W_PARALLELISM * W_SIZE -1 : 0],
+    input [WEIGHT_Q_WIDTH - 1:0] weight_q[WEIGHT_Q_SIZE -1 : 0],
     input weight_q_valid,
     output weight_q_ready,
 
-    input [WK_WIDTH - 1:0] weight_k[W_PARALLELISM * W_SIZE -1 : 0],
+    input [WEIGHT_K_WIDTH - 1:0] weight_k[WEIGHT_K_SIZE -1 : 0],
     input weight_k_valid,
     output weight_k_ready,
 
-    input [WV_WIDTH - 1:0] weight_v[W_PARALLELISM * W_SIZE -1 : 0],
+    input [WEIGHT_V_WIDTH - 1:0] weight_v[WEIGHT_V_SIZE -1 : 0],
     input weight_v_valid,
     output weight_v_ready,
 
-    input [BQ_WIDTH - 1:0] bias_q[W_PARALLELISM -1 : 0],
+    input [BIAS_Q_WIDTH - 1:0] bias_q[BIAS_Q_SIZE -1 : 0],
     input bias_q_valid,
     output bias_q_ready,
 
-    input [BK_WIDTH - 1:0] bias_k[W_PARALLELISM -1 : 0],
+    input [BIAS_K_WIDTH - 1:0] bias_k[BIAS_K_SIZE -1 : 0],
     input bias_k_valid,
     output bias_k_ready,
 
-    input [BV_WIDTH - 1:0] bias_v[W_PARALLELISM -1 : 0],
+    input [BIAS_V_WIDTH - 1:0] bias_v[BIAS_V_SIZE -1 : 0],
     input bias_v_valid,
     output bias_v_ready,
 
-    input [DATA_WIDTH -1:0] data_in[IN_PARALLELISM * IN_SIZE - 1 : 0],
-    input data_in_valid,
-    output data_in_ready,
+    input [DATA_WIDTH -1:0] data_in_0[IN_PARALLELISM * IN_SIZE - 1 : 0],
+    input data_in_0_valid,
+    output data_in_0_ready,
 
-    output [DZ_WIDTH -1:0] data_out[OUT_PARALLELISM * OUT_SIZE - 1:0],
-    output data_out_valid,
-    input data_out_ready
+    output [OUT_WIDTH -1:0] data_out_0[OUT_SIZE - 1:0],
+    output data_out_0_valid,
+    input data_out_0_ready
 );
   logic data_in_q_ready, data_in_k_ready, data_in_v_ready;
   logic data_in_q_valid, data_in_k_valid, data_in_v_valid;
@@ -100,19 +108,19 @@ module fixed_self_att #(
       .DVIN_WIDTH(DATA_WIDTH),
       .DVIN_FRAC_WIDTH(DATA_FRAC_WIDTH),
 
-      .WQ_WIDTH(WQ_WIDTH),
-      .WQ_FRAC_WIDTH(WQ_FRAC_WIDTH),
-      .WK_WIDTH(WK_WIDTH),
-      .WK_FRAC_WIDTH(WK_FRAC_WIDTH),
-      .WV_WIDTH(WV_WIDTH),
-      .WV_FRAC_WIDTH(WV_FRAC_WIDTH),
+      .WQ_WIDTH(WEIGHT_Q_WIDTH),
+      .WQ_FRAC_WIDTH(WEIGHT_Q_FRAC_WIDTH),
+      .WK_WIDTH(WEIGHT_K_WIDTH),
+      .WL_FRAC_WIDTH(WEIGHT_K_FRAC_WIDTH),
+      .WV_WIDTH(WEIGHT_V_WIDTH),
+      .WV_FRAC_WIDTH(WEIGHT_V_FRAC_WIDTH),
 
-      .BQ_WIDTH(BQ_WIDTH),
-      .BQ_FRAC_WIDTH(BQ_FRAC_WIDTH),
-      .BK_WIDTH(BK_WIDTH),
-      .BK_FRAC_WIDTH(BK_FRAC_WIDTH),
-      .BV_WIDTH(BV_WIDTH),
-      .BV_FRAC_WIDTH(BV_FRAC_WIDTH),
+      .BQ_WIDTH(BIAS_Q_WIDTH),
+      .BQ_FRAC_WIDTH(BIAS_Q_FRAC_WIDTH),
+      .BK_WIDTH(BIAS_K_WIDTH),
+      .BK_FRAC_WIDTH(BIAS_K_FRAC_WIDTH),
+      .BV_WIDTH(BIAS_V_WIDTH),
+      .BV_FRAC_WIDTH(BIAS_V_FRAC_WIDTH),
 
       .DQ_WIDTH(DQ_WIDTH),
       .DQ_FRAC_WIDTH(DQ_FRAC_WIDTH),
@@ -138,9 +146,9 @@ module fixed_self_att #(
       .W_PARALLELISM(W_PARALLELISM),
       .W_NUM_PARALLELISM(W_NUM_PARALLELISM)
   ) att_inst (
-      .data_in_q(data_in),
-      .data_in_k(data_in),
-      .data_in_v(data_in),
+      .data_in_q(data_in_0),
+      .data_in_k(data_in_0),
+      .data_in_v(data_in_0),
       .*
   );
 endmodule

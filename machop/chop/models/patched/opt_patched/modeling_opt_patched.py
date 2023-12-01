@@ -872,7 +872,7 @@ class OPTPatchedForCausalLM(OPTPatchedPreTrainedModel):
             "return_dict": True,
         },
         "modules": [],
-        "layers": [OPTLearnedPositionalEmbedding, OPTPatchedDecoderLayer],
+        "layers": [OPTLearnedPositionalEmbedding, OPTPatchedAttention],
         "functions": [
             torch_zeros,
             torch_ones,
@@ -1053,19 +1053,6 @@ class OPTPatchedForCausalLM(OPTPatchedPreTrainedModel):
         loss = opt_patched_fn_calculate_causal_lm_loss(
             logits, labels, self.config.vocab_size
         )
-        # loss = None
-        # if labels is not None:
-        #     # move labels to correct device to enable model parallelism
-        #     labels = labels.to(logits.device)
-        #     # Shift so that tokens < n predict n
-        #     shift_logits = logits[..., :-1, :].contiguous()
-        #     shift_labels = labels[..., 1:].contiguous()
-        #     # Flatten the tokens
-        #     # PATCH FIX: use F.cross_entropy instead of nn.CrossEntropyLoss
-        #     loss = F.cross_entropy(
-        #         shift_logits.view(-1, self.config.vocab_size),
-        #         shift_labels.view(-1),
-        #     )
 
         if not return_dict:
             output = (logits,) + outputs[1:]
@@ -1144,7 +1131,7 @@ class OPTPatchedForSequenceClassification(OPTPatchedPreTrainedModel):
             "return_dict": True,
         },
         "modules": [],
-        "layers": [OPTLearnedPositionalEmbedding, OPTPatchedDecoderLayer],
+        "layers": [OPTLearnedPositionalEmbedding, OPTPatchedAttention],
         "functions": [
             torch_zeros,
             torch_ones,

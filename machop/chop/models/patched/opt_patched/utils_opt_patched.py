@@ -149,8 +149,9 @@ def opt_patched_fn_calculate_causal_lm_loss(logits, labels, vocab_size: int):
         shift_labels = labels[..., 1:].contiguous()
         # Flatten the tokens
         # PATCH FIX: use F.cross_entropy instead of nn.CrossEntropyLoss
-        loss = F.cross_entropy(
-            shift_logits.view(-1, vocab_size),
-            shift_labels.view(-1),
-        )
-    return loss
+        # loss = F.cross_entropy(
+        #     shift_logits.view(-1, vocab_size),
+        #     shift_labels.view(-1),
+        # )
+    return 0
+    # return loss

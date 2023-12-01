@@ -4,6 +4,7 @@ import math
 import toml
 import torch
 import torch.fx as fx
+from torch.fx.passes.shape_prop import ShapeProp
 from chop.passes.analysis.utils import (
     is_tensor_constant,
     match_and_filter,
@@ -72,6 +73,7 @@ def graph_iterator_for_mase_ops(graph):
             elif isinstance(module, nn.Hardtanh):  # TODO: This is not implemented yet
                 mase_op = "hardtanh"
             elif isinstance(module, nn.Embedding):
+                mase_type = "implicit_func"
                 mase_op = "embedding"
             elif isinstance(module, tuple(graph.model.patched_custom_layers)):
                 mase_op = "patched_custom_layers"
@@ -85,6 +87,9 @@ def graph_iterator_for_mase_ops(graph):
                 mase_op = "hardswish"
             elif isinstance(module, nn.Hardsigmoid):
                 mase_op = "hardsigmoid"
+            # TODO: temporary. Support all patched attention layers
+            elif "attention" in module.__name__.lower():
+                mase_op = "attention"
             else:
                 raise ValueError(f"Unknown node type: {node.target}")
             node.meta["mase"].parameters["common"]["mase_type"] = mase_type
@@ -251,8 +256,6 @@ def _update_arg_in_next_node(offset, index, arg_in, next_node, node, keys=None):
 
 
 def analysis_common_parameters(node, dummy_in):
-    # mase_op = node.meta["mase"].parameters["common"]["mase_op"]
-    # print(node)
     if node.op == "placeholder":
         node.meta["mase"] = analyse_common_parameters_placeholder(
             node.meta["mase"], dummy_in
@@ -336,17 +339,21 @@ def graph_iterator_for_metadata(graph, dummy_in=None):
             count = 0
             for input_node in node.all_input_nodes:
                 count += input_node in updated_map
+
+            # Either there are no input nodes or all input nodes already processed
             if count == len(node.all_input_nodes):
                 analysis_common_parameters(node, dummy_in)
                 updated_map[node] = True
                 for next_node, x in node.users.items():
                     if next_node not in next_nodes_in:
                         next_nodes_in.append(next_node)
-            elif next_node not in next_nodes_in:
+
+            # Some input nodes not yet processed, process current node in the next iteration
+            elif node not in next_nodes_in:
                 next_nodes_in.append(node)
+
         if nodes_in == next_nodes_in:
             raise ValueError("Deadlock detected.")
-
         nodes_in = next_nodes_in
 
     assert len(updated_map.keys()) == len(graph.fx_graph.nodes)
@@ -366,6 +373,20 @@ add_common_metadata(name)_analysis(style)_pass
 passname : {args}
 
 """
+
+
+# TO DO: placeholder. Need to update iterator for metadata with fx's ShapeProp methodology
+def new_graph_iterator_for_metadata(graph, dummy_in=None):
+    """
+    The size of input and output cannot directly be accessed by functions and some modules.
+    This function traverses from the placeholder and passes the metadata through edges.
+    """
+
+    print(type(graph.model))
+    sp = ShapeProp(graph.model)
+    g = sp.propagate()
+
+    return graph
 
 
 def add_common_metadata_analysis_pass(graph, pass_args=None):

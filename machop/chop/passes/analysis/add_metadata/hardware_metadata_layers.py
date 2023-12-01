@@ -270,3 +270,119 @@ def analyse_hardware_parameters_batch_norm1d(meta):
 
     meta.parameters["hardware"]["interface_parameters"] = {}
     return meta
+
+
+# ----------------------------------------------------------
+# Layer norm
+# ----------------------------------------------------------
+
+
+def analyse_hardware_parameters_layer_norm(meta):
+    meta.parameters["hardware"]["is_implicit"] = True
+    return meta
+
+
+# ----------------------------------------------------------
+# Custom leaf modules
+# ----------------------------------------------------------
+
+opt_attn_param_to_interface = {
+    "q_proj.weight": "weight_q",
+    "k_proj.weight": "weight_k",
+    "v_proj.weight": "weight_v",
+    "q_proj.bias": "bias_q",
+    "k_proj.bias": "bias_k",
+    "v_proj.bias": "bias_v",
+}
+
+
+def analyse_hardware_parameters_opt_patched_attention(meta):
+    meta.parameters["hardware"] |= {
+        "verilog_parameters": {
+            "DATA_WIDTH": meta.parameters["common"]["args"]["data_in_0"]["precision"][
+                0
+            ],
+            "WQ_WIDTH": meta.parameters["common"]["args"]["data_in_0"]["precision"][0],
+            "WK_WIDTH": meta.parameters["common"]["args"]["data_in_0"]["precision"][0],
+            "WV_WIDTH": meta.parameters["common"]["args"]["data_in_0"]["precision"][0],
+            "BQ_WIDTH": meta.parameters["common"]["args"]["data_in_0"]["precision"][0],
+            "BK_WIDTH": meta.parameters["common"]["args"]["data_in_0"]["precision"][0],
+            "BV_WIDTH": meta.parameters["common"]["args"]["data_in_0"]["precision"][0],
+            "DQ_WIDTH": meta.parameters["common"]["args"]["data_in_0"]["precision"][0],
+            "DK_WIDTH": meta.parameters["common"]["args"]["data_in_0"]["precision"][0],
+            "DV_WIDTH": meta.parameters["common"]["args"]["data_in_0"]["precision"][0],
+            "DS_WIDTH": meta.parameters["common"]["args"]["data_in_0"]["precision"][0],
+            "EXP_WIDTH": meta.parameters["common"]["args"]["data_in_0"]["precision"][0],
+            "DIV_WIDTH": meta.parameters["common"]["args"]["data_in_0"]["precision"][0],
+            "DS_SOFTMAX_WIDTH": meta.parameters["common"]["args"]["data_in_0"][
+                "precision"
+            ][0],
+            "DZ_WIDTH": meta.parameters["common"]["args"]["data_in_0"]["precision"][0],
+            "DATA_FRAC_WIDTH": 0,
+            "WQ_FRAC_WIDTH": 0,
+            "WK_FRAC_WIDTH": 0,
+            "WV_FRAC_WIDTH": 0,
+            "BQ_FRAC_WIDTH": 0,
+            "BK_FRAC_WIDTH": 0,
+            "BV_FRAC_WIDTH": 0,
+            "DQ_FRAC_WIDTH": 0,
+            "DK_FRAC_WIDTH": 0,
+            "DV_FRAC_WIDTH": 0,
+            "DS_FRAC_WIDTH": 0,
+            "EXP_FRAC_WIDTH": 0,
+            "DS_SOFTMAX_FRAC_WIDTH": 0,
+            "DZ_FRAC_WIDTH": 0,
+            "IN_0_SIZE": 3,
+            "IN_0_DEPTH": 3,
+            "IN_0_PARALLELISM": 3,
+            "IN_0_NUM_PARALLELISM": 2,
+            "W_PARALLELISM": 3,
+            "W_NUM_PARALLELISM": 2,
+            "W_SIZE": 3,
+            "BIAS_Q_SIZE": 3,
+            "BIAS_K_SIZE": 3,
+            "BIAS_V_SIZE": 3,
+            "WEIGHT_Q_SIZE": 3 * 3,
+            "WEIGHT_K_SIZE": 3 * 3,
+            "WEIGHT_V_SIZE": 3 * 3,
+            "OUT_0_PARALLELISM": 3,
+            "OUT_0_SIZE": 3 * 3,
+            "OUT_0_WIDTH": meta.parameters["common"]["args"]["data_in_0"]["precision"][
+                0
+            ],
+        },
+        "toolchain": "INTERNAL_RTL",
+        "module": "fixed_self_att",
+        "dependence_files": ["attention/fixed_self_att.sv"],
+    }
+
+    # Module parameters are mapped to BRAM with weights, biases to be streamed into RTL
+    meta.parameters["hardware"]["interface_parameters"] = {}
+    for name, _ in meta.module.named_parameters():
+        # Output projection not supported in hw
+        if "out_proj" in name:
+            continue
+
+        param_name = opt_attn_param_to_interface[name]
+        meta.parameters["hardware"]["interface_parameters"][param_name] = {
+            "storage": "BRAM",
+            "transpose": False,
+        }
+
+    meta.parameters["hardware"]["interface_parameters"]["data_out_0"] = {
+        "storage": "",
+        "transpose": False,
+    }
+
+    return meta
+
+
+LEAF_NODE_HW_PARAMS_MAPPING = {
+    "OPTPatchedAttention": analyse_hardware_parameters_opt_patched_attention
+}
+
+
+def analyse_hardware_parameters_custom_layer(meta):
+    target = ".".join(meta.node.target.split(".")[:])
+    target_cls = meta.node.meta["nn_module_stack"][meta.node.target]
+    return LEAF_NODE_HW_PARAMS_MAPPING[target_cls.__name__](meta)

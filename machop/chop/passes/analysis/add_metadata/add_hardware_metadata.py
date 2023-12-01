@@ -14,6 +14,8 @@ from .hardware_metadata_layers import (
     analyse_hardware_parameters_linear,
     analyse_hardware_parameters_relu,
     analyse_hardware_parameters_batch_norm1d,
+    analyse_hardware_parameters_custom_layer,
+    analyse_hardware_parameters_layer_norm,
 )
 
 logger = logging.getLogger(__name__)
@@ -22,7 +24,6 @@ logger = logging.getLogger(__name__)
 def analysis_hardware_parameters(node):
     if node.meta["mase"].parameters["hardware"]["is_implicit"]:
         return
-
     op = node.meta["mase"].parameters["common"]["mase_op"]
 
     if op == "linear":
@@ -31,8 +32,14 @@ def analysis_hardware_parameters(node):
         node.meta["mase"] = analyse_hardware_parameters_relu(node.meta["mase"])
     elif op == "batch_norm1d":
         node.meta["mase"] = analyse_hardware_parameters_batch_norm1d(node.meta["mase"])
+    elif op == "patched_custom_layers":
+        node.meta["mase"] = analyse_hardware_parameters_custom_layer(node.meta["mase"])
+    elif op == "layer_norm":
+        node.meta["mase"] = analyse_hardware_parameters_layer_norm(node.meta["mase"])
     else:
-        raise ValueError(f"Unknown mase op: {op}")
+        # Implicit functions: getitem/getattr, assert, size, reshape etc
+        node.meta["mase"].parameters["hardware"]["is_implicit"] = True
+        # raise ValueError(f"Unknown mase op: {op}")
 
 
 """
