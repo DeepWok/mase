@@ -44,10 +44,9 @@ from chop.passes.transforms import (
 from chop.passes.utils import deepcopy_mase_graph
 from chop.models.utils import MaseModelInfo
 from chop.dataset import get_dataset_info
-from chop.tools.logger import getLogger
+from chop.tools.logger import set_logging_verbosity
 
-logger = getLogger("chop")
-logger.setLevel(logging.DEBUG)
+set_logging_verbosity("debug")
 
 
 # --------------------------------------------------

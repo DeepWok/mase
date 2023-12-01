@@ -34,7 +34,7 @@ class RunnerBasicEval(SWRunnerBase):
         assert "num_samples" in self.config, "num_samples is not set in the config."
 
     def _setup_metric(self):
-        if self.model_info.is_vision_model:
+        if self.model_info.is_vision_model or self.model_info.is_physical_model:
             match self.task:
                 case "classification" | "cls":
                     self.metric = MulticlassAccuracy(
@@ -56,7 +56,7 @@ class RunnerBasicEval(SWRunnerBase):
             raise ValueError(f"model type {self.model_info} is not supported.")
 
     def forward(self, batch: dict[str, torch.Tensor], model):
-        if self.model_info.is_vision_model:
+        if self.model_info.is_vision_model or self.model_info.is_physical_model:
             match self.task:
                 case "classification" | "cls":
                     return self.vision_cls_forward(batch, model)

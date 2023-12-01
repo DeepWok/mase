@@ -5,6 +5,7 @@ import toml
 import torch
 
 from ...tools.checkpoint_load import load_model
+from ...tools.config_load import load_config
 from ...tools.get_input import get_dummy_input
 from .search_space import get_search_space_cls
 from .strategies import get_search_strategy_cls
@@ -32,21 +33,11 @@ def parse_search_config(search_config):
     The search config must consist of two parts: strategy and search_space.
     """
     if not isinstance(search_config, dict):
-        with open(search_config, "r") as f:
-            search_config = toml.load(f)
+        search_config = load_config(search_config)
     search_config = search_config["search"]  # the actual config for action search
     strategy_config = search_config["strategy"]
     search_space_config = search_config["search_space"]
 
-    # config sanity check
-    # if strategy_config["data_loader"] not in [
-    #     "train_dataloader",
-    #     "val_dataloader",
-    #     "test_dataloader",
-    # ]:
-    #     raise ValueError(
-    #         "data_loader must be one of train_dataloader, val_dataloader, test_dataloader."
-    #     )
     return strategy_config, search_space_config
 
 

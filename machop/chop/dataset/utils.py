@@ -46,8 +46,7 @@ class MaseDatasetInfo:
     # available splits
     available_splits: tuple[DatasetSplit]
 
-    # requires preprocessing
-    requires_preprocessing: bool = False
+    # preprocess on split will preprocess all the splits in the dataset
     preprocess_one_split_for_all: bool = True
 
     data_collator_cls: type = None
@@ -71,6 +70,9 @@ class MaseDatasetInfo:
     image_size: tuple[int] = None
     num_features: int = None
 
+    # nerf
+    nerf_config: dict = None
+
     def __post_init__(self):
         self.dataset_source = (
             DatasetSource(self.dataset_source)
@@ -81,6 +83,20 @@ class MaseDatasetInfo:
             DatasetSplit(split) if isinstance(split, str) else split
             for split in self.available_splits
         )
+        self._entries = {
+            "name",
+            "dataset_source",
+            "available_splits",
+            "image_classification",
+            "physical_data_point_classification",
+            "sequence_classification",
+            "causal_LM",
+            "seq2seqLM",
+            "num_classes",
+            "image_size",
+            "num_features",
+            "nerf_config",
+        }
 
     @property
     def train_split_available(self):
@@ -111,6 +127,7 @@ def add_dataset_info(
     num_classes: int = None,
     image_size: tuple[int] = None,
     num_features: int = None,
+    nerf_config: dict = None,
     data_collator_cls=None,
 ):
     """
@@ -128,7 +145,7 @@ def add_dataset_info(
         num_classes (int, optional): the number of classes of the dataset. Defaults to None.
         image_size (tuple[int], optional): the image size of the dataset. Defaults to None.
         num_features (int, optional): Specifies the number of features in the dataset. This is particularly relevant for physical classification tasks that involve input feature vectors. Defaults to None.
-
+        nerf_config (dict, optional): stores configuration for training nerf
     Returns:
         type: the dataset class with dataset info
     """
@@ -146,6 +163,7 @@ def add_dataset_info(
             num_classes=num_classes,
             image_size=image_size,
             num_features=num_features,
+            nerf_config=nerf_config,
             data_collator_cls=data_collator_cls,
         )
 

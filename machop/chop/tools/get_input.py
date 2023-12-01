@@ -82,6 +82,10 @@ def get_dummy_input(
                 dummy_inputs = {"x": x}
             case _:
                 raise ValueError(f"Task {task} is not supported for {model_info.name}")
+    elif model_info.is_nerf_model:
+        # TODO:
+        pass
+
     elif model_info.is_nlp_model:
         match task:
             case "classification" | "cls":
@@ -180,6 +184,15 @@ class InputGenerator:
             raise StopIteration
 
         if self.model_info.is_vision_model or self.model_info.is_physical_model:
+            match self.task:
+                case "classification" | "cls":
+                    x, y = next(self.dataloader_iter)
+                    inputs = {"x": x}
+                case _:
+                    raise ValueError(
+                        f"Task {self.task} is not supported for {self.model_info.name}"
+                    )
+        elif self.model_info.is_physical_model:
             match self.task:
                 case "classification" | "cls":
                     x, y = next(self.dataloader_iter)

@@ -231,7 +231,7 @@ class SearchStrategyOptuna(SearchStrategyBase):
             :, ["software_metrics", "hardware_metrics", "scaled_metrics"]
         ] = df_truncated.loc[
             :, ["software_metrics", "hardware_metrics", "scaled_metrics"]
-        ].applymap(
+        ].map(
             beautify_metric
         )
         txt += tabulate(

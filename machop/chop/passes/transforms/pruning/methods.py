@@ -17,6 +17,7 @@ from abc import ABC, abstractmethod
 from pathlib import Path
 import toml
 import copy
+import logging
 
 import torch
 import torch.nn as nn
@@ -25,7 +26,6 @@ import numpy as np
 from nni.compression.pruning import L1NormPruner
 from nni.compression.speedup import ModelSpeedup
 
-from chop.tools.logger import getLogger
 from chop.passes.graph import MaseGraph
 from chop.passes.transforms.pruning.utilities import StatisticsCollector
 from chop.passes import (
@@ -40,8 +40,8 @@ from .utilities import get_module_by_name
 PRUNE_SCOPES = ["local", "global"]
 
 # Housekeeping -------------------------------------------------------------------------
-logger = getLogger(__name__)
-logger.propagate = False  # Avoids duplicate logging messages
+logger = logging.getLogger(__name__)
+# logger.propagate = False  # Avoids duplicate logging messages
 
 
 # Pruning routines ---------------------------------------------------------------------

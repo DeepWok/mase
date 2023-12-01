@@ -97,8 +97,3 @@ class SearchSpaceBase:
         txt += f"accelerator={self.accelerator}, "
         txt += f")"
         return txt
-
-    # def config_sampler(
-    #     self,
-    # ):
-    #     raise NotImplementedError()

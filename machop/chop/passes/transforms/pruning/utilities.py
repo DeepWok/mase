@@ -1,15 +1,15 @@
 # Utilities (helper classes, functions, etc.) for the pruning transform
 
+import logging
 from functools import reduce
 
 import torch
 import torch.nn as nn
 from pathlib import Path
 
-from chop.tools.logger import getLogger
 
 # Housekeeping -------------------------------------------------------------------------
-logger = getLogger(__file__)
+logger = logging.getLogger(__file__)
 logger.propagate = False
 
 

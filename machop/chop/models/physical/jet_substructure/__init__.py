@@ -37,7 +37,7 @@ class JSC_Tiny(nn.Module):
             nn.BatchNorm1d(16),  # input_quant       # 0
             nn.ReLU(16),  # 1
             nn.Linear(16, 5),  # linear              # 2
-            nn.BatchNorm1d(5),  # output_quant       # 3
+            # nn.BatchNorm1d(5),  # output_quant       # 3
             nn.ReLU(5),  # 4
         )
 

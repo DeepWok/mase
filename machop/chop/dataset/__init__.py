@@ -12,6 +12,11 @@ from .physical import (
     get_physical_dataset,
     get_physical_dataset_cls,
 )
+from .nerf import (
+    NERF_DATASET_MAPPING,
+    get_nerf_dataset,
+    get_nerf_dataset_cls,
+)
 
 DATASET_CACHE_DIR = MACHOP_CACHE_DIR / "dataset"
 
@@ -34,6 +39,8 @@ def get_dataset_info(name: str):
         return get_nlp_dataset_cls(name).info
     elif name in PHYSICAL_DATASET_MAPPING:
         return get_physical_dataset_cls(name).info
+    elif name in NERF_DATASET_MAPPING:
+        return get_nerf_dataset_cls(name).info
     else:
         raise ValueError(f"Dataset {name} is not supported")
 
@@ -47,6 +54,7 @@ def get_dataset(
     load_from_cache_file: bool = True,
     auto_setup: bool = True,
     model_name: str = None,
+    custom_path: str = None,
 ):
     """
     Args:
@@ -57,6 +65,7 @@ def get_dataset(
     Returns:
         dataset (torch.utils.data.Dataset): dataset (with transforms)
     """
+    # TODO: refactor and remove this global variable of cache dir
     global DATASET_CACHE_DIR
     MACHOP_CACHE_DIR.mkdir(parents=True, exist_ok=True)
     assert split in [
@@ -72,6 +81,9 @@ def get_dataset(
     elif name in PHYSICAL_DATASET_MAPPING:
         path = DATASET_CACHE_DIR / name
         dataset = get_physical_dataset(name, path, split)
+    elif name in NERF_DATASET_MAPPING:
+        path = DATASET_CACHE_DIR
+        dataset = get_nerf_dataset(name, path, split)
     elif name in VISION_DATASET_MAPPING:
         path = DATASET_CACHE_DIR / name
         dataset = get_vision_dataset(name, path, split, model_name)
@@ -96,6 +108,7 @@ AVAILABLE_DATASETS = (
     + list(NLP_DATASET_MAPPING.keys())
     + list(TOY_DATASET_MAPPING.keys())
     + list(PHYSICAL_DATASET_MAPPING.keys())
+    + list(NERF_DATASET_MAPPING.keys())
 )
 
 
@@ -175,14 +188,13 @@ class MaseDataModule(pl.LightningDataModule):
             model_name=self.model_name,
         )
 
-        if self.dataset_info.requires_preprocessing:
-            train_dataset.prepare_data()
-            if not self.dataset_info.preprocess_one_split_for_all:
-                val_dataset.prepare_data()
-                if test_dataset is not None:
-                    test_dataset.prepare_data()
-                if pred_dataset is not None:
-                    pred_dataset.prepare_data()
+        train_dataset.prepare_data()
+        if not self.dataset_info.preprocess_one_split_for_all:
+            val_dataset.prepare_data()
+            if test_dataset is not None:
+                test_dataset.prepare_data()
+            if pred_dataset is not None:
+                pred_dataset.prepare_data()
 
     def setup(self, stage: str = None) -> None:
         if stage in ["fit", None]:
@@ -272,7 +284,7 @@ class MaseDataModule(pl.LightningDataModule):
             )
         return DataLoader(
             self.val_dataset,
-            batch_size=self.batch_size,
+            batch_size=1 if "nerf" in self.name else self.batch_size,
             shuffle=False,
             num_workers=self.num_workers,
             collate_fn=data_collator,
@@ -292,7 +304,7 @@ class MaseDataModule(pl.LightningDataModule):
             )
         return DataLoader(
             self.test_dataset,
-            batch_size=self.batch_size,
+            batch_size=1 if "nerf" in self.name else self.batch_size,
             shuffle=False,
             num_workers=self.num_workers,
             collate_fn=data_collator,

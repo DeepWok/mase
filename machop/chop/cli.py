@@ -50,7 +50,7 @@ import torch
 from . import models
 from .actions import test, train, transform, search
 from .dataset import MaseDataModule, AVAILABLE_DATASETS, get_dataset_info
-from .tools import getLogger, post_parse_load_config, load_config
+from .tools import post_parse_load_config, load_config
 
 
 # Housekeeping -------------------------------------------------------------------------
@@ -171,7 +171,7 @@ class ChopCLI:
     def __init__(self, argv: Sequence[str] | None = None):
         super().__init__()
 
-        self.logger = getLogger("chop")
+        self.logger = logging.getLogger("chop")
         parser = self._setup_parser()
         args = parser.parse_intermixed_args(argv)
 
@@ -581,7 +581,7 @@ class ChopCLI:
             "--cpu",
             "--num-workers",
             dest="num_workers",
-            type=_positive_int,
+            type=_int,
             help="""
                 number of CPU workers; the default varies across systems and is set to
                 os.cpu_count(). (default: %(default)s)
@@ -865,7 +865,19 @@ def _positive_int(s: str) -> int | None:
         raise argparse.ArgumentError(f"expected integer, got {s!r}")
 
     if v <= 0:
+        logging.warning(
+            f"{s} is ignored because it is not a positive integer, and is set to None"
+        )
         return None
+    return v
+
+
+def _int(s: str) -> int | None:
+    try:
+        v = int(s)
+    except ValueError:
+        raise argparse.ArgumentError(f"expected integer, got {s!r}")
+
     return v
 
 

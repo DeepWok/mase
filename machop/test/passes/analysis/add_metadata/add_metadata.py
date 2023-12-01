@@ -28,10 +28,9 @@ from chop.passes.analysis import (
     add_software_metadata_analysis_pass,
 )
 from chop.passes.transforms import emit_verilog_top_transform_pass
-from chop.tools.logger import getLogger
+from chop.tools.logger import set_logging_verbosity
 
-logger = getLogger("chop")
-logger.setLevel(logging.DEBUG)
+set_logging_verbosity("debug")
 
 
 # --------------------------------------------------
