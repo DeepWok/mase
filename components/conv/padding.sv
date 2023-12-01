@@ -21,6 +21,16 @@ module padding #(
   localparam Y_WIDTH = $clog2(PADDING_HEIGHT * 2 + IMG_HEIGHT) + 1;
   localparam C_WIDTH = $clog2(CHANNELS) + 1;
 
+  logic [DATA_WIDTH - 1:0] reg_out;
+  logic reg_out_valid, reg_out_ready;
+  skid_buffer #(
+      .DATA_WIDTH(DATA_WIDTH)
+  ) register_slice (
+      .data_out(reg_out),
+      .data_out_valid(reg_out_valid),
+      .data_out_ready(reg_out_ready),
+      .*
+  );
   logic [C_WIDTH -1:0] count_c;
   logic [X_WIDTH -1:0] count_x;
   logic [Y_WIDTH -1:0] count_y;
@@ -28,7 +38,7 @@ module padding #(
   /* verilator lint_off WIDTH */
   // The start signal is used to determine whether padding output has started or ended.
   logic start;
-  logic end_signal = count_c == CHANNELS - 1 
+  logic end_signal = count_c == CHANNELS - 1
                 && count_x == PADDING_WIDTH *2 + IMG_WIDTH - 1
                 && count_y == PADDING_HEIGHT*2 + IMG_HEIGHT - 1
                 && data_out_valid&&data_out_ready;
@@ -75,9 +85,9 @@ module padding #(
   /* verilator lint_on UNSIGNED */
   /* verilator lint_on WIDTH */
 
-  assign data_out = (padding_condition) ? 0 : data_in;
-  assign data_out_valid = (padding_condition) ? start : data_in_valid;
-  assign data_in_ready = (padding_condition) ? 0 : data_out_ready;
+  assign data_out = (padding_condition) ? 0 : reg_out;
+  assign data_out_valid = (padding_condition) ? start : reg_out_valid;
+  assign reg_out_ready = (padding_condition) ? 0 : data_out_ready;
 
 
 
