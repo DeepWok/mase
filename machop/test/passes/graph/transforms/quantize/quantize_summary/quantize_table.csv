@@ -1,0 +1,18 @@
+,Ori name,New name,MASE_TYPE,Mase_OP,Original type,Quantized type,Changed
+0,x,x,placeholder,placeholder,x,x,False
+1,block_1_0,block_1_0,module_related_func,conv2d,Conv2d,Conv2d,False
+2,block_1_1,block_1_1,module_related_func,relu,ReLU,ReLU,False
+3,maxpool,maxpool,module_related_func,max_pool2d,MaxPool2d,MaxPool2d,False
+4,block_2_0,block_2_0,module_related_func,conv2d,Conv2d,Conv2d,False
+5,block_2_1,block_2_1,module_related_func,relu,ReLU,ReLU,False
+6,size,size,implicit_func,size,size,size,False
+7,view,view,implicit_func,view,view,view,False
+8,block_3_0,block_3_0,module_related_func,conv1d,Conv1d,Conv1d,False
+9,block_3_1,block_3_1,module_related_func,relu,ReLU,ReLU,False
+10,block_4_0,block_4_0,module_related_func,conv1d,Conv1d,Conv1d,False
+11,block_4_1,block_4_1,module_related_func,relu,ReLU,ReLU,False
+12,avgpool,avgpool,module_related_func,adaptive_avg_pool1d,AdaptiveAvgPool1d,AdaptiveAvgPool1d,False
+13,size_1,size_1,implicit_func,size,size,size,False
+14,view_1,view_1,implicit_func,view,view,view,False
+15,linear,linear,module_related_func,linear,Linear,Linear,False
+16,output,output,output,output,output,output,False

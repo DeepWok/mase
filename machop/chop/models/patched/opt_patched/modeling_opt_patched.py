@@ -50,7 +50,11 @@ from .utils_opt_patched import (
     opt_patched_shape_assertion_5,
     opt_patched_fn_calculate_causal_lm_loss,
 )
-from ....passes.patching.mase_op_wrapper import torch_arange, torch_ones, torch_zeros
+from ....passes.graph.patching.mase_op_wrapper import (
+    torch_arange,
+    torch_ones,
+    torch_zeros,
+)
 
 logger = logging.get_logger(__name__)
 

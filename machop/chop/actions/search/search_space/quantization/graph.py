@@ -2,10 +2,16 @@
 from copy import deepcopy
 from torch import nn
 from ..base import SearchSpaceBase
-from .....passes.transforms.quantize import QUANTIZEABLE_OP, quantize_transform_pass
-from .....passes.graph.mase_graph import MaseGraph
-from .....passes import init_metadata_analysis_pass, add_common_metadata_analysis_pass
-from .....passes.utils import get_mase_op, get_mase_type
+from .....passes.graph.transforms.quantize import (
+    QUANTIZEABLE_OP,
+    quantize_transform_pass,
+)
+from .....ir.graph.mase_graph import MaseGraph
+from .....passes.graph import (
+    init_metadata_analysis_pass,
+    add_common_metadata_analysis_pass,
+)
+from .....passes.graph.utils import get_mase_op, get_mase_type
 from ..utils import flatten_dict, unflatten_dict
 from collections import defaultdict
 

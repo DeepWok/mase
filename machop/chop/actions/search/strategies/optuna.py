@@ -8,7 +8,9 @@ import joblib
 from functools import partial
 from .base import SearchStrategyBase
 
-from ....passes.analysis.total_bits_estimator import total_bits_module_analysis_pass
+from ....passes.graph.analysis.total_bits_estimator import (
+    total_bits_module_analysis_pass,
+)
 
 logger = logging.getLogger(__name__)
 

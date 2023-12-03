@@ -5,8 +5,8 @@ import toml
 from pprint import pformat
 
 from torch import nn
-from ....passes.utils import get_mase_op, get_mase_type
-from ....passes.graph.mase_graph import MaseGraph
+from ....passes.graph.utils import get_mase_op, get_mase_type
+from ....ir.graph.mase_graph import MaseGraph
 
 
 class SearchSpaceBase:

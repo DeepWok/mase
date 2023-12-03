@@ -2,7 +2,9 @@ import torch
 from ..base import HWRunnerBase
 from .model_profiler import get_model_profiler
 
-from .......passes.analysis.total_bits_estimator import total_bits_module_analysis_pass
+from chop.passes.graph.analysis.total_bits_estimator import (
+    total_bits_module_analysis_pass,
+)
 
 
 class RunnerAvgBitwidthManualModel(HWRunnerBase):

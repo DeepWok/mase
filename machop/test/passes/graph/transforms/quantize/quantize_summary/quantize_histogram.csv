@@ -1,0 +1,11 @@
+Original type,OP,Total,Changed,Unchanged
+AdaptiveAvgPool1d,adaptive_avg_pool1d,1,0,1
+Conv1d,conv1d,2,0,2
+Conv2d,conv2d,2,0,2
+Linear,linear,1,0,1
+MaxPool2d,max_pool2d,1,0,1
+ReLU,relu,4,0,4
+output,output,1,0,1
+size,size,2,0,2
+view,view,2,0,2
+x,placeholder,1,0,1
