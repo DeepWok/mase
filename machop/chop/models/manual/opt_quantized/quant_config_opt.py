@@ -5,8 +5,9 @@ from copy import deepcopy
 import toml
 
 from ....tools.config_load import convert_str_na_to_none
-from ....passes import parse_node_config
+from ....passes.graph import parse_node_config
 
+from chop.passes.graph.transforms.quantize.quant_parsers import parse_quant_config
 
 """
 An example of quant_config for opt

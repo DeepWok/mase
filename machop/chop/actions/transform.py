@@ -4,18 +4,18 @@ from pathlib import Path
 import logging
 
 import torch
-from chop.passes import PASSES
-from chop.passes.analysis import (
+from chop.passes.graph import PASSES
+from chop.passes.graph.analysis import (
     add_common_metadata_analysis_pass,
     add_software_metadata_analysis_pass,
     init_metadata_analysis_pass,
 )
-from chop.passes.graph.mase_graph import MaseGraph
-from chop.passes.transforms.interface import (
+from chop.ir.graph.mase_graph import MaseGraph
+from chop.passes.graph.transforms.interface import (
     load_mase_graph_transform_pass,
     save_mase_graph_transform_pass,
 )
-from chop.passes.utils import deepcopy_mase_graph
+from chop.passes.graph.utils import deepcopy_mase_graph
 from chop.tools.checkpoint_load import load_model
 from chop.tools.config_load import load_config
 from chop.tools.get_input import InputGenerator, get_cf_args, get_dummy_input
@@ -166,9 +166,6 @@ def transform(
                     "data_path": pass_config["data_path"],
                 }
                 graph = PASSES[pass_name](graph, **kwargs)
-            case "fpgaconvnet_optimiser":
-                pass_config["save_dir"] = save_dir
-                graph = PASSES[pass_name](graph, pass_args=pass_config)
             case _:
                 my_pass = PASSES[pass_name]
                 graph = my_pass(graph, pass_args=pass_config)

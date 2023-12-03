@@ -6,13 +6,13 @@ import pytorch_lightning as pl
 from chop.plt_wrapper import get_model_wrapper
 from chop.tools.checkpoint_load import load_model
 from chop.tools.get_input import get_dummy_input
-from chop.passes import (
+from chop.passes.graph import (
     add_common_metadata_analysis_pass,
     init_metadata_analysis_pass,
     add_software_metadata_analysis_pass,
 )
-from chop.passes.transforms.interface import save_mase_graph_transform_pass
-from chop.passes.graph import MaseGraph
+from chop.passes.graph.transforms.interface import save_mase_graph_transform_pass
+from chop.ir.graph import MaseGraph
 from pytorch_lightning.callbacks import LearningRateMonitor, ModelCheckpoint
 from pytorch_lightning.loggers import TensorBoardLogger
 from pytorch_lightning.plugins.environments import SLURMEnvironment

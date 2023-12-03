@@ -129,7 +129,7 @@ def get_toynet(
     pretrained=False,
     **kwargs: Any,
 ):
-    image_size = info["image_size"]
+    image_size = info.image_size
     num_classes = info.num_classes
     return ToyNet(image_size, num_classes)
 

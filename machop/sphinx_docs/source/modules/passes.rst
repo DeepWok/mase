@@ -59,7 +59,6 @@ Analysis Passes
 	  analysis/report
 	  analysis/statistical_profiler
 	  analysis/verify
-	  analysis/fpgaconvnet
 	  analysis/total_bits_estimator
 
 

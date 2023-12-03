@@ -219,7 +219,9 @@ jobs:
                        sentencepiece einops deepspeed pybind11 \
                        tabulate tensorboard hyperopt accelerate \
                        optuna stable-baselines3 scikit-learn optimum \
-                       imageio imageio-ffmpeg opencv-python kornia einops
+                       imageio imageio-ffmpeg opencv-python kornia einops \
+                       pytest-cov pytest-xdist pytest-sugar pytest-html \
+                       pytest-profiling
           pip3 install cocotb[bus]==1.8.0 nni
           pip3 install h5py
           pip3 install wandb==0.15.10 graphviz==0.20.1 onnxsim==0.4.33 \
@@ -227,13 +229,6 @@ jobs:
                        protobuf==3.20.3 fpbinary==1.5.5
           pip3 install xgboost==1.7.2 --extra-index-url https://download.pytorch.org/whl/cpu
     
-    # TODO: This is a hack to get around a failing CI. The FPGAConvNet analysis pass
-    # imports from this third-party submodule which causes a failing CI as the submodule
-    # isn't setup.
-    - name: Setup the FPGAConvNet submodule
-      run: |
-        make sync-fpgaconvnet
-
     - name: Mase regression test 
       run: |
-          bash scripts/test-machop.sh
+          pytest --log-level=DEBUG --verbose -n auto --cov=machop/chop/ --cov-report=html machop/test/ --html=report.html --self-contained-html --profile --profile-svg

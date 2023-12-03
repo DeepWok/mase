@@ -8,9 +8,12 @@ from chop.tools.checkpoint_load import load_model
 from pytorch_lightning.loggers import TensorBoardLogger
 from pytorch_lightning.plugins.environments import SLURMEnvironment
 
+import pytest
+
 logger = logging.getLogger(__name__)
 
 
+@pytest.mark.skip(reason="This isn't a test")
 def test(
     model,
     model_info,
