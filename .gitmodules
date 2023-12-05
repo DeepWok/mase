@@ -7,3 +7,6 @@
 [submodule "machop/third-party/peft"]
 	path = machop/third-party/peft
 	url = git@github.com:huggingface/peft.git
+[submodule "Docker"]
+	path = Docker
+	url = git@github.com:JianyiCheng/mase-docker.git

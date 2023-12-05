@@ -21,136 +21,92 @@ on:
             - debug
 
 jobs:
+
   hardware-regression-test:
     runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/jianyicheng/mase-docker/mase-ci-build:latest
+      credentials:
+        username: ${{ github.actor }}
+        password: ${{ secrets.MASE_DOCKER_CRED }}
     steps:
-    - uses: actions/checkout@v3
-      with:
-          submodules: "true"
 
-    # -----------
-    # Hardware format test 
-    # -----------
-    
-    - name: Install Verible 
-      run: |
-          # Install SystemVerilog formatter
-          (mkdir -p "${HOME}"/srcPkgs \
-          && cd "${HOME}"/srcPkgs \
-          && wget https://github.com/chipsalliance/verible/releases/download/v0.0-2776-gbaf0efe9/verible-v0.0-2776-gbaf0efe9-Ubuntu-22.04-jammy-x86_64.tar.gz \
-          && mkdir -p verible \
-          && tar xzvf verible-*-x86_64.tar.gz -C verible --strip-components 1)
-          ln -s "${HOME}"/srcPkgs/verible/bin/verible-verilog-format /usr/local/bin/verible-verilog-format
-          ln -s "${HOME}"/srcPkgs/verible/bin/verible-verilog-diff /usr/local/bin/verible-verilog-diff
-          ln -s "${HOME}"/srcPkgs/verible/bin/git-verible-verilog-format.sh /usr/local/bin/git-verible-verilog-format.sh
+      # Clone the MASE repo and its submodules.
+      - name: Get MASE
+        uses: actions/checkout@v3
+        with:
+            submodules: "true"
 
-    # Choose the git commit to diff against for the purposes of linting.
-    # Since this workflow is triggered on both pushes and pull requests, w
-    # have to determine if the pull request target branch is set (which it
-    # will only be on the PR triggered flow). If it's not, then compare
-    # against the last commit.
-    - name: choose-commit
-      if: ${{ always() }}
-      env:
-        # Base ref is the target branch, in text form (not hash)
-        PR_BASE: ${{ github.base_ref }}
-      run: |
-        # Run clang-format
-        if [ -z "$PR_BASE" ]; then
-          DIFF_COMMIT_NAME="HEAD^"
-        else
-          DIFF_COMMIT_NAME="$PR_BASE"
-        fi
-        echo "DIFF_COMMIT_NAME=$DIFF_COMMIT_NAME" >> $GITHUB_ENV
+      - name: Set git safe
+        run: |
+          git config --global --add safe.directory $PWD
 
-    # Since we did a shallow fetch for this repo, we must fetch the commit
-    # upon which we be diff'ing. The last step set the ref name in the
-    # $DIFF_COMMIT_NAME environment variable. When running the fetch, resolve
-    # it to the commit hash and pass that hash along to subsequent steps.
-    - name: git fetch base commit
-      continue-on-error: true
-      run: |
-        if echo "$DIFF_COMMIT_NAME" | grep -q HEAD; then
-          DIFF_COMMIT_SHA=$( git rev-parse $DIFF_COMMIT_NAME )
-        else
-          git fetch --recurse-submodules=no origin $DIFF_COMMIT_NAME
-          DIFF_COMMIT_SHA=$( git rev-parse origin/$DIFF_COMMIT_NAME )
-        fi
-        echo "DIFF_COMMIT=$DIFF_COMMIT_SHA" >> $GITHUB_ENV
-    
-    # Run verible-verilog-format to check Verilog/SystemVerilog formatting.
-    - name: verilog-format
-      if: ${{ always() }}
-      shell: bash
-      run: |
-        files=$(git diff --name-only $DIFF_COMMIT | grep -e '\.sv$' || echo -n)
-        if [[ ! -z $files ]]; then
-          for f in $files
-          do
-            if [[ -f $f ]]; then
-              echo $f
-              verible-verilog-format $f | diff - $f
-            fi
-          done
-        fi
-        files=$(git diff --name-only $DIFF_COMMIT | grep -e '\.v$' || echo -n)
-        if [[ ! -z $files ]]; then
-          for f in $files
-          do
-            if [[ -f $f ]]; then
-              echo $f
-              verible-verilog-format $f | diff - $f
-            fi
-          done
-        fi
+      # Choose the git commit to diff against for the purposes of linting.
+      # Since this workflow is triggered on both pushes and pull requests, w
+      # have to determine if the pull request target branch is set (which it
+      # will only be on the PR triggered flow). If it's not, then compare
+      # against the last commit.
+      - name: choose-commit
+        if: ${{ always() }}
+        env:
+          # Base ref is the target branch, in text form (not hash)
+          PR_BASE: ${{ github.base_ref }}
+        run: |
+          # Run clang-format
+          if [ -z "$PR_BASE" ]; then
+            DIFF_COMMIT_NAME="HEAD^"
+          else
+            DIFF_COMMIT_NAME="$PR_BASE"
+          fi
+          echo "DIFF_COMMIT_NAME=$DIFF_COMMIT_NAME" >> $GITHUB_ENV
 
-    # -----------
-    # Hardware regression test 
-    # -----------
-    
-    - name: Get dependences 
-      run: |
-          sudo apt-get update
-          sudo apt-get install apt-utils -y
-          # sudo apt-get upgrade -y
-          sudo apt-get install -y \
-                          clang cmake graphviz-dev libclang-dev \
-                          pkg-config g++ libxtst6 xdg-utils \
-                          libboost-all-dev llvm gcc ninja-build \
-                          python3 python3-pip build-essential \
-                          libssl-dev git vim wget htop sudo \
-                          lld 
-          sudo apt-get update -y
-          sudo apt-get install -y \
-                          perl make autoconf flex bison libunwind-dev \
-                          ccache libgoogle-perftools-dev numactl \
-                          perl-doc libfl2 libfl-dev zlib1g zlib1g-dev \
-                          help2man libidn11-dev
+      # Since we did a shallow fetch for this repo, we must fetch the commit
+      # upon which we be diff'ing. The last step set the ref name in the
+      # $DIFF_COMMIT_NAME environment variable. When running the fetch, resolve
+      # it to the commit hash and pass that hash along to subsequent steps.
+      - name: git fetch base commit
+        continue-on-error: true
+        run: |
+          if echo "$DIFF_COMMIT_NAME" | grep -q HEAD; then
+            DIFF_COMMIT_SHA=$( git rev-parse $DIFF_COMMIT_NAME )
+          else
+            git fetch --recurse-submodules=no origin $DIFF_COMMIT_NAME
+            DIFF_COMMIT_SHA=$( git rev-parse origin/$DIFF_COMMIT_NAME )
+          fi
+          echo "DIFF_COMMIT=$DIFF_COMMIT_SHA" >> $GITHUB_ENV
+      
+      # Run verible-verilog-format to check Verilog/SystemVerilog formatting.
+      - name: verilog-format
+        if: ${{ always() }}
+        shell: bash
+        run: |
+          files=$(git diff --name-only $DIFF_COMMIT | grep -e '\.sv$' || echo -n)
+          if [[ ! -z $files ]]; then
+            for f in $files
+            do
+              if [[ -f $f ]]; then
+                echo $f
+                verible-verilog-format $f | diff - $f
+              fi
+            done
+          fi
+          files=$(git diff --name-only $DIFF_COMMIT | grep -e '\.v$' || echo -n)
+          if [[ ! -z $files ]]; then
+            for f in $files
+            do
+              if [[ -f $f ]]; then
+                echo $f
+                verible-verilog-format $f | diff - $f
+              fi
+            done
+          fi
 
-    - name: Install Verilator 
-      run: |
-          # Install verilator from source - version v5.006
-          (mkdir -p "${HOME}"/srcPkgs \
-          && cd "${HOME}"/srcPkgs \
-          && git clone https://github.com/verilator/verilator \
-          && unset VERILATOR_ROOT \
-          && cd verilator \
-          && git checkout v5.006 \
-          && autoconf \
-          && ./configure \
-          && make \
-          && sudo make install)
-
-          pip3 install --user --upgrade pip
-          pip3 install onnx toml GitPython colorlog \
-                       pytest pytorch-lightning transformers toml \
-                       timm pytorch-nlp datasets IPython ipdb \
-                       sentencepiece einops deepspeed pybind11 \
-                       tabulate tensorboard hyperopt nni optimum
-          pip3 install cocotb[bus]==1.8.0 
-
-    - name: Hardware regression test 
-      run: |
-          python3 scripts/test-hardware.py -a
+      # -----------
+      # Hardware regression test 
+      # -----------
+      
+      - name: Hardware regression test 
+        run: |
+            python3 scripts/test-hardware.py -a
 
 

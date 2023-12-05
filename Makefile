@@ -20,9 +20,7 @@ build-docker:
 	docker build --build-arg UID=$(user) --build-arg GID=$(group) --build-arg VHLS_PATH=$(vhls) -f Docker/Dockerfile --tag mase-ubuntu2204 Docker
 
 shell: build-docker
-	# docker run -it --shm-size 256m --hostname mase-ubuntu2204 -w /workspace -v $(vhls):$(vhls) -v $(shell pwd):/workspace:z mase-ubuntu2204:latest /bin/bash 
-	docker run -it --shm-size 256m --hostname mase-ubuntu2204 -w /workspace -v $(vhls):$(vhls) -v /home/$(shell whoami):/root -v $(shell pwd):/workspace:z mase-ubuntu2204:latest /bin/bash 
-
+	docker run -it --shm-size 256m --hostname mase-ubuntu2204 -w /workspace -v $(vhls):$(vhls) -v /home/$(shell whoami)/.gitconfig:/root/.gitconfig -v /home/$(shell whoami)/.ssh:/root/.ssh -v $(shell pwd):/workspace:z mase-ubuntu2204:latest /bin/bash 
 # There is a historical reason that test files are stored under the current directory
 # Short-term solution: call scripts under /tmp so we can clean it properly
 test-hw:
