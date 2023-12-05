@@ -1,4 +1,4 @@
-chop.passes.analysis.flop\_estimator 
+chop.passes.graph.analysis.flop\_estimator 
 ============================================
 
 Subpackages
@@ -7,31 +7,31 @@ Subpackages
 .. toctree::
    :maxdepth: 4
 
-   chop.passes.analysis.flop_estimator.calculator
+   chop.passes.graph.analysis.flop_estimator.calculator
 
 Submodules
 ----------
 
-chop.passes.analysis.flop\_estimator.deepspeed module
+chop.passes.graph.analysis.flop\_estimator.deepspeed module
 -----------------------------------------------------
 
-.. automodule:: chop.passes.analysis.flop_estimator.deepspeed
+.. automodule:: chop.passes.graph.analysis.flop_estimator.deepspeed
    :members:
    :undoc-members:
    :show-inheritance:
 
-chop.passes.analysis.flop\_estimator.fine\_grained module
+chop.passes.graph.analysis.flop\_estimator.fine\_grained module
 ---------------------------------------------------------
 
-.. automodule:: chop.passes.analysis.flop_estimator.fine_grained
+.. automodule:: chop.passes.graph.analysis.flop_estimator.fine_grained
    :members:
    :undoc-members:
    :show-inheritance:
 
-chop.passes.analysis.flop\_estimator.fx\_profiler module
+chop.passes.graph.analysis.flop\_estimator.fx\_profiler module
 --------------------------------------------------------
 
-.. automodule:: chop.passes.analysis.flop_estimator.fx_profiler
+.. automodule:: chop.passes.graph.analysis.flop_estimator.fx_profiler
    :members:
    :undoc-members:
    :show-inheritance:
@@ -39,7 +39,7 @@ chop.passes.analysis.flop\_estimator.fx\_profiler module
 Module contents
 ---------------
 
-.. automodule:: chop.passes.analysis.flop_estimator
+.. automodule:: chop.passes.graph.analysis.flop_estimator
    :members:
    :undoc-members:
    :show-inheritance:
