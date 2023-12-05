@@ -16,219 +16,195 @@ on:
             - warning
             - debug
   
-
 jobs:
 
   software-regression-test:
     runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/jianyicheng/mase-docker/mase-ci-build:latest
+      credentials:
+        username: ${{ github.actor }}
+        password: ${{ secrets.MASE_DOCKER_CRED }}
     steps:
-    - uses: actions/checkout@v3
-      with:
-          submodules: "true"
 
-    # -----------
-    # Software Format check 
-    # -----------
+      # Clone the MASE repo and its submodules.
+      - name: Get MASE
+        uses: actions/checkout@v3
+        with:
+            submodules: "true"
 
-    - name: Check missing breakpoint 
-      run: |
-          if [[ $(grep -rnw ./machop/chop -e "breakpoint()") -eq 1 ]]; then
-              echo "Found undeleted breakpoint:"
-              grep -rnw ./machop/chop -e "breakpoint()"
-              exit 1
-          fi
-          if [[ $(grep -rn ./machop/test -e "set_trace(") -eq 1 ]]; then
-              echo "Found undeleted breakpoint:"
-              grep -rn ./machop/test -e "set_trace("
-              exit 1
-          fi
-          if [[ $(grep -rn ./machop/chop -e "set_trace(") -eq 1 ]]; then
-              echo "Found undeleted breakpoint:"
-              grep -rn ./machop/chop -e "set_trace("
-              exit 1
-          fi
+      - name: Set git safe
+        run: |
+          git config --global --add safe.directory $PWD
 
-    # Choose the git commit to diff against for the purposes of linting.
-    # Since this workflow is triggered on both pushes and pull requests, w
-    # have to determine if the pull request target branch is set (which it
-    # will only be on the PR triggered flow). If it's not, then compare
-    # against the last commit.
-    - name: choose-commit
-      if: ${{ always() }}
-      env:
-        # Base ref is the target branch, in text form (not hash)
-        PR_BASE: ${{ github.base_ref }}
-      run: |
-        # Run clang-format
-        if [ -z "$PR_BASE" ]; then
-          DIFF_COMMIT_NAME="HEAD^"
-        else
-          DIFF_COMMIT_NAME="$PR_BASE"
-        fi
-        echo "DIFF_COMMIT_NAME=$DIFF_COMMIT_NAME" >> $GITHUB_ENV
+      # -----------
+      # Software Format check 
+      # -----------
 
-    # Since we did a shallow fetch for this repo, we must fetch the commit
-    # upon which we be diff'ing. The last step set the ref name in the
-    # $DIFF_COMMIT_NAME environment variable. When running the fetch, resolve
-    # it to the commit hash and pass that hash along to subsequent steps.
-    - name: git fetch base commit
-      continue-on-error: true
-      run: |
-        if echo "$DIFF_COMMIT_NAME" | grep -q HEAD; then
-          DIFF_COMMIT_SHA=$( git rev-parse $DIFF_COMMIT_NAME )
-        else
-          git fetch --recurse-submodules=no origin $DIFF_COMMIT_NAME
-          DIFF_COMMIT_SHA=$( git rev-parse origin/$DIFF_COMMIT_NAME )
-        fi
-        echo "DIFF_COMMIT=$DIFF_COMMIT_SHA" >> $GITHUB_ENV
-    
-    - name: Install black and clang 
-      run: |
-          sudo apt-get install -y \
-                          python3 python3-pip clang-format clang-tidy
-          pip3 install --user --upgrade pip
-          pip3 install black
-
-    # Run black to check Python formatting.
-    - name: python-format
-      if: ${{ always() }}
-      shell: bash
-      run: |
-        files=$(git diff --name-only $DIFF_COMMIT | grep -e '\.py$' || echo -n)
-        if [[ ! -z $files ]]; then
-          for f in $files
-          do
-            if [[ -f $f ]]; then
-              python3 -m black $f
+      - name: Check missing breakpoint 
+        run: |
+            if [[ $(grep -rnw ./machop/chop -e "breakpoint()") -eq 1 ]]; then
+                echo "Found undeleted breakpoint:"
+                grep -rnw ./machop/chop -e "breakpoint()"
+                exit 1
             fi
-          done
-        fi
+            if [[ $(grep -rn ./machop/test -e "set_trace(") -eq 1 ]]; then
+                echo "Found undeleted breakpoint:"
+                grep -rn ./machop/test -e "set_trace("
+                exit 1
+            fi
+            if [[ $(grep -rn ./machop/chop -e "set_trace(") -eq 1 ]]; then
+                echo "Found undeleted breakpoint:"
+                grep -rn ./machop/chop -e "set_trace("
+                exit 1
+            fi
 
-    # Run 'git clang-format', comparing against the target commit hash. If
-    # clang-format fixed anything, fail and output a patch.
-    - name: clang-format
-      if: ${{ always() }}
-      run: |
-        # Run clang-format
-        git clang-format $DIFF_COMMIT
-        git diff --ignore-submodules > clang-format.patch
-        if [ -s clang-format.patch ]; then
-          echo "Clang-format found formatting problems in the following " \
-            "files. See diff in the clang-format.patch artifact."
-          cat clang-format.patch
-          git diff --ignore-submodules --name-only
-          git checkout .
-          exit 1
-        fi
-        echo "Clang-format found no formatting problems"
-        exit 0
-    
-    # Upload the format patches to an artifact (zip'd) associated
-    # with the workflow run. Only run this on a failure.
-    - name: Upload format patches
-      uses: actions/upload-artifact@v2
-      continue-on-error: true
-      if: ${{ failure() }}
-      with:
-        name: clang-format-patches
-        path: clang-*.patch
+      # Choose the git commit to diff against for the purposes of linting.
+      # Since this workflow is triggered on both pushes and pull requests, w
+      # have to determine if the pull request target branch is set (which it
+      # will only be on the PR triggered flow). If it's not, then compare
+      # against the last commit.
 
-    # Unfortunately, artifact uploads are always zips so display the diff as
-    # well to provide feedback at a glance.
-    - name: clang format patches display
-      if: ${{ failure() }}
-      continue-on-error: true
-      run: |
-        # Display patches
-        if [ ! -z clang-format.patch ]; then
-          echo "Clang-format patch"
-          echo "================"
-          cat clang-format.patch
-          echo "================"
-        fi         
+      - name: choose-commit
+        if: ${{ always() }}
+        env:
+          # Base ref is the target branch, in text form (not hash)
+          PR_BASE: ${{ github.base_ref }}
+        run: |
+          # Run clang-format
+          if [ -z "$PR_BASE" ]; then
+            DIFF_COMMIT_NAME="HEAD^"
+          else
+            DIFF_COMMIT_NAME="$PR_BASE"
+          fi
+          echo "DIFF_COMMIT_NAME=$DIFF_COMMIT_NAME" >> $GITHUB_ENV
+
+      # Since we did a shallow fetch for this repo, we must fetch the commit
+      # upon which we be diff'ing. The last step set the ref name in the
+      # $DIFF_COMMIT_NAME environment variable. When running the fetch, resolve
+      # it to the commit hash and pass that hash along to subsequent steps.
+      - name: git fetch base commit
+        continue-on-error: true
+        run: |
+          if echo "$DIFF_COMMIT_NAME" | grep -q HEAD; then
+            DIFF_COMMIT_SHA=$( git rev-parse $DIFF_COMMIT_NAME )
+          else
+            git fetch --recurse-submodules=no origin $DIFF_COMMIT_NAME
+            DIFF_COMMIT_SHA=$( git rev-parse origin/$DIFF_COMMIT_NAME )
+          fi
+          echo "DIFF_COMMIT=$DIFF_COMMIT_SHA" >> $GITHUB_ENV
+      
+      - name: Install black and clang 
+        run: |
+            sudo apt-get install -y \
+                            python3 python3-pip clang-format clang-tidy
+            pip3 install --user --upgrade pip
+            pip3 install black
+
+      # Run black to check Python formatting.
+      - name: python-format
+        if: ${{ always() }}
+        shell: bash
+        run: |
+          files=$(git diff --name-only $DIFF_COMMIT | grep -e '\.py$' || echo -n)
+          if [[ ! -z $files ]]; then
+            for f in $files
+            do
+              if [[ -f $f ]]; then
+                python3 -m black $f
+              fi
+            done
+          fi
+
+      # Run 'git clang-format', comparing against the target commit hash. If
+      # clang-format fixed anything, fail and output a patch.
+      - name: clang-format
+        if: ${{ always() }}
+        run: |
+          # Run clang-format
+          git clang-format $DIFF_COMMIT
+          git diff --ignore-submodules > clang-format.patch
+          if [ -s clang-format.patch ]; then
+            echo "Clang-format found formatting problems in the following " \
+              "files. See diff in the clang-format.patch artifact."
+            cat clang-format.patch
+            git diff --ignore-submodules --name-only
+            git checkout .
+            exit 1
+          fi
+          echo "Clang-format found no formatting problems"
+          exit 0
+      
+      # Upload the format patches to an artifact (zip'd) associated
+      # with the workflow run. Only run this on a failure.
+      - name: Upload format patches
+        uses: actions/upload-artifact@v2
+        continue-on-error: true
+        if: ${{ failure() }}
+        with:
+          name: clang-format-patches
+          path: clang-*.patch
+
+      # Unfortunately, artifact uploads are always zips so display the diff as
+      # well to provide feedback at a glance.
+      - name: clang format patches display
+        if: ${{ failure() }}
+        continue-on-error: true
+        run: |
+          # Display patches
+          if [ ! -z clang-format.patch ]; then
+            echo "Clang-format patch"
+            echo "================"
+            cat clang-format.patch
+            echo "================"
+          fi         
+       
+      # Run clang-tidy against only the changes. The 'clang-tidy-diff' script
+      # does this if supplied with the diff.
+      - name: clang-tidy
+        if: ${{ always() }}
+        run: |
+          git diff -U0 $DIFF_COMMIT...HEAD | \
+            clang-tidy-diff -path build -p1 -fix -j$(nproc)
+          git clang-format -f $DIFF_COMMIT
+          git diff --ignore-submodules > clang-tidy.patch
+          if [ -s clang-tidy.patch ]; then
+            echo "Clang-tidy problems in the following files. " \
+              "See diff in the clang-tidy.patch artifact."
+            git diff --ignore-submodules --name-only
+            git checkout .
+            exit 1
+          fi
+          echo "Clang-tidy found no problems"
+          exit 0
      
-    # Run clang-tidy against only the changes. The 'clang-tidy-diff' script
-    # does this if supplied with the diff.
-    - name: clang-tidy
-      if: ${{ always() }}
-      run: |
-        git diff -U0 $DIFF_COMMIT...HEAD | \
-          clang-tidy-diff -path build -p1 -fix -j$(nproc)
-        git clang-format -f $DIFF_COMMIT
-        git diff --ignore-submodules > clang-tidy.patch
-        if [ -s clang-tidy.patch ]; then
-          echo "Clang-tidy problems in the following files. " \
-            "See diff in the clang-tidy.patch artifact."
-          git diff --ignore-submodules --name-only
-          git checkout .
-          exit 1
-        fi
-        echo "Clang-tidy found no problems"
-        exit 0
-   
-    # Upload the tidy patches to an artifact (zip'd) associated
-    # with the workflow run. Only run this on a failure.
-    - name: Upload tidy patches
-      uses: actions/upload-artifact@v2
-      continue-on-error: true
-      if: ${{ failure() }}
-      with:
-        name: clang-tidy-patches
-        path: clang-*.patch
-    
-    # Unfortunately, artifact uploads are always zips so display the diff as
-    # well to provide feedback at a glance.
-    - name: clang tidy patches display
-      if: ${{ failure() }}
-      continue-on-error: true
-      run: |
-        if [ ! -z clang-tidy.patch ]; then
-          echo "Clang-tidy patch"
-          echo "================"
-          cat clang-tidy.patch
-          echo "================"
-        fi
+      # Upload the tidy patches to an artifact (zip'd) associated
+      # with the workflow run. Only run this on a failure.
+      - name: Upload tidy patches
+        uses: actions/upload-artifact@v2
+        continue-on-error: true
+        if: ${{ failure() }}
+        with:
+          name: clang-tidy-patches
+          path: clang-*.patch
+      
+      # Unfortunately, artifact uploads are always zips so display the diff as
+      # well to provide feedback at a glance.
+      - name: clang tidy patches display
+        if: ${{ failure() }}
+        continue-on-error: true
+        run: |
+          if [ ! -z clang-tidy.patch ]; then
+            echo "Clang-tidy patch"
+            echo "================"
+            cat clang-tidy.patch
+            echo "================"
+          fi
 
-    # -----------
-    # Mase regression test 
-    # -----------
-    
-    - name: Get dependences 
-      run: |
-          sudo apt-get update
-          sudo apt-get install apt-utils -y
-          # sudo apt-get upgrade -y
-          sudo apt-get install -y \
-                          clang cmake graphviz-dev libclang-dev \
-                          pkg-config g++ libxtst6 xdg-utils \
-                          libboost-all-dev llvm gcc ninja-build \
-                          python3 python3-pip build-essential \
-                          libssl-dev git vim wget htop sudo \
-                          lld 
-          sudo apt-get update -y
-          sudo apt-get install -y \
-                          perl make autoconf flex bison libunwind-dev \
-                          ccache libgoogle-perftools-dev numactl \
-                          perl-doc libfl2 libfl-dev zlib1g zlib1g-dev \
-                          help2man libidn11-dev
-
-          pip3 install --user --upgrade pip
-          pip3 install onnx toml GitPython colorlog \
-                       pytest pytorch-lightning transformers toml \
-                       timm pytorch-nlp datasets IPython ipdb \
-                       sentencepiece einops deepspeed pybind11 \
-                       tabulate tensorboard hyperopt accelerate \
-                       optuna stable-baselines3 scikit-learn optimum \
-                       imageio imageio-ffmpeg opencv-python kornia einops \
-                       pytest-cov pytest-xdist pytest-sugar pytest-html \
-                       pytest-profiling
-          pip3 install cocotb[bus]==1.8.0 nni
-          pip3 install h5py
-          pip3 install wandb==0.15.10 graphviz==0.20.1 onnxsim==0.4.33 \
-                       onnxruntime==1.15.1 onnxoptimizer==0.3.13 pydot==1.4.2 \
-                       protobuf==3.20.3 fpbinary==1.5.5
-          pip3 install xgboost==1.7.2 --extra-index-url https://download.pytorch.org/whl/cpu
-    
-    - name: Mase regression test 
-      run: |
-          pytest --log-level=DEBUG --verbose -n auto --cov=machop/chop/ --cov-report=html machop/test/ --html=report.html --self-contained-html --profile --profile-svg
+      # -----------
+      # Mase regression test 
+      # -----------
+      
+      - name: Mase regression test 
+        run: |
+            pytest --log-level=DEBUG --verbose -n auto --cov=machop/chop/ --cov-report=html machop/test/ --html=report.html --self-contained-html --profile --profile-svg
