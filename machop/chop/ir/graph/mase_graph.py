@@ -34,10 +34,6 @@ ROOT = Path(__file__).resolve().parents[4].as_posix()
 
 
 class MaseTracer(fx.Tracer):
-    """
-    Mase Tracer is an extended version of FX Tracer.
-    """
-
     def __init__(
         self,
         custom_leaf_modules: tuple[ModuleType] = (),
@@ -45,26 +41,26 @@ class MaseTracer(fx.Tracer):
         custom_leaf_functions: tuple[Callable] = (),
         param_shapes_constant: bool = False,
     ) -> None:
-        """
-        Construct a Tracer object.
+        """Mase Tracer is an extended version of FX Tracer.
 
-        Args:
-            custom_leaf_modules (Tuple[ModuleType]): defaults to `()`,
-            Python modules whose functions should be wrapped automatically
+        :param custom_leaf_modules: Python modules whose functions should be wrapped automatically
             without needing to use fx.wrap(). Backward-compatibility for
-            this parameter is guaranteed.
-
-            custom_leaf_functions (Tuple[Callable, ...]): defaults to `()`,
-            Python functions that should be wrapped automatically without
+            this parameter is guaranteed, defaults to ()
+        :type custom_leaf_modules: tuple[ModuleType], optional
+        :param custom_leaf_layers: Python functions that should be wrapped automatically without
             needing to use fx.wrap(). Backward compatibility for this
-            parameter is guaranteed.
-
-            param_shapes_constant (bool): When this flag is set,  calls to shape,
+            parameter is guaranteed, defaults to ()
+        :type custom_leaf_layers: tuple[torch.nn.Module], optional
+        :param custom_leaf_functions: _description_, defaults to ()
+        :type custom_leaf_functions: tuple[Callable], optional
+        :param param_shapes_constant: When this flag is set,  calls to shape,
             size and a few other shape like attributes of a module's parameter
             will be evaluated directly, rather than returning a new Proxy value
             for an attribute access. Backward compatibility for this parameter
-            is guaranteed.
+            is guaranteed, defaults to False
+        :type param_shapes_constant: bool, optional
         """
+
         self.custom_leaf_layers = tuple(set(custom_leaf_layers))
         self.custom_leaf_modules = tuple(set(custom_leaf_modules))
         self.custom_leaf_functions = tuple(set(custom_leaf_functions))
@@ -91,12 +87,6 @@ class MaseTracer(fx.Tracer):
 # ----------------------------------------
 #   Mase Graph IR
 # ----------------------------------------
-"""
-Mase takes a torch.fx graph representation of a model and translates
-it into a customised representation (Mase graph IR). The Mase graph
-IR is a dataflow representation of the model with both software and
-hardware constraints.
-"""
 
 
 class MaseGraph:
@@ -107,6 +97,16 @@ class MaseGraph:
         model: torch.nn.Module | str | onnx.onnx_ml_pb2.ModelProto,
         cf_args: Optional[Dict[str, Any]] = None,
     ) -> None:
+        """Mase takes a torch.fx graph representation of a model and translates
+        it into a customised representation (Mase graph IR). The Mase graph
+        IR is a dataflow representation of the model with both software and
+        hardware constraints.
+
+        :param model: _description_
+        :type model: torch.nn.Module | str | onnx.onnx_ml_pb2.ModelProto
+        :param cf_args: _description_, defaults to None
+        :type cf_args: Optional[Dict[str, Any]], optional
+        """
         assert isinstance(
             model, (torch.nn.Module, str, onnx.onnx_ml_pb2.ModelProto)
         ), f"model must be a torch.nn.Module, checkpoint string or ONNX ModelProto. Received: {type(model)}"

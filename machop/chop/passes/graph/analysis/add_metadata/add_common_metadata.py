@@ -390,8 +390,14 @@ def new_graph_iterator_for_metadata(graph, dummy_in=None):
 
 
 def add_common_metadata_analysis_pass(graph, pass_args=None):
-    """
-    Pass args : initial dummy inputs for inferencing all the shapes for each node
+    """_summary_
+
+    Args:
+        graph (_type_): _description_
+        pass_args (_type_, optional): _description_. Defaults to None.
+
+    Returns:
+        _type_: _description_
     """
     logger.debug(graph.fx_graph)
     graph = graph_iterator_for_mase_ops(graph)
