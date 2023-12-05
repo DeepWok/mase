@@ -13,24 +13,24 @@ MaseGraph Analysis Passes
 
   * - Pass Name
     - Summary
+  * - :py:meth:`~chop.passes.graph.analysis.init_metadata.init_metadata_analysis_pass`
+    - Initialize each node with the MaseMetadata, this nees to run first before adding any metadata
   * - :py:meth:`~chop.passes.graph.analysis.add_metadata.add_common_metadata.add_common_metadata_analysis_pass`
-    - Add metadata used for both software and hardware
+    - Add metadata used for both software and hardware, this nees to run first before calling to add_software_metadata or add_hardware_metadata
   * - :py:meth:`~chop.passes.graph.analysis.add_metadata.add_software_metadata.add_software_metadata_analysis_pass`
     - Add hardware-specific metadata
   * - :py:meth:`~chop.passes.graph.analysis.add_metadata.add_hardware_metadata.add_hardware_metadata_analysis_pass`
     - Add software-specific metadata
-  * - :py:meth:`~chop.passes.graph.analysis.init_metadata.init_metadata_analysis_pass`
-    - Initialize each node with the MaseMetadata 
   * - :py:meth:`~chop.passes.graph.analysis.report.report_graph.report_graph_analysis_pass`
-    -  fill
+    -  Generates a report for the graph analysis and prints out an over the model in a table.
   * - :py:meth:`~chop.passes.graph.analysis.report.report_node.report_node_hardware_type_analysis_pass`
-    -  fill
+    -  Perform hardware type analysis on the given graph.
   * - :py:meth:`~chop.passes.graph.analysis.report.report_node.report_node_meta_param_analysis_pass`
-    -  fill
+    -  Perform meta parameter analysis on the nodes in the graph and generate a report.
   * - :py:meth:`~chop.passes.graph.analysis.report.report_node.report_node_shape_analysis_pass`
-    -  fill
+    -  Perform shape analysis on the nodes in the graph.
   * - :py:meth:`~chop.passes.graph.analysis.report.report_node.report_node_type_analysis_pass`
-    -  fill
+    -  Perform a node type analysis on the given graph, pretty print MaseGraph after initialization/loading.
   * - :py:meth:`~chop.passes.graph.analysis.statistical_profiler.profile_statistics.profile_statistics_analysis_pass`
     -  fill
   * - :py:meth:`~chop.passes.graph.analysis.verify.verify.verify_metadata_analysis_pass`
@@ -45,6 +45,9 @@ MaseGraph Analysis Passes
     -  fill
   * - :py:meth:`~chop.passes.graph.analysis.total_bits_estimator.total_bits_module.total_bits_module_analysis_pass`
     -  fill
+  * - :py:meth:`~chop.passes.graph.analysis.total_bits_estimator.total_bits_mg.total_bits_mg_analysis_pass`
+    -  Perform total bits analysis on the given graph.
+
 
 .. toctree::
 	  :maxdepth: 2

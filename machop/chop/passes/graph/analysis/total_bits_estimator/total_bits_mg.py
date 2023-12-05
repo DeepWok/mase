@@ -3,13 +3,26 @@ import numpy as np
 
 def total_bits_mg_analysis_pass(graph, pass_args: dict):
     """
-    Profile statistics analysis pass
-    """
+    Perform total bits analysis on the given graph.
 
+    :param graph: The graph to analyze.
+    :type graph: MaseGraph
+    :param pass_args: Additional arguments for the analysis pass.
+    :type pass_args: dict
+
+    :return: A tuple containing the analyzed graph and a dictionary with the average bit values for data and weights.
+    :rtype: tuple
+    :return graph: The analyzed graph.
+    :rtype graph: MaseGraph
+    :return dict: A dictionary with the following keys:
+        - 'data_avg_bit' (float): The average number of bits per value for data.
+        - 'w_avg_bit' (float): The average number of bits per value for weights.
+    :rtype dict: dict
+    """
     data_in_cost, weights_cost = 0, 0
     data_in_size, weights_size = 0, 0
 
-    for node in graph.nodes:
+    for node in graph.fx_graph.nodes:
         mase_meta = node.meta["mase"].parameters
         mase_op = mase_meta["common"]["mase_op"]
         mase_type = mase_meta["common"]["mase_type"]
@@ -25,7 +38,9 @@ def total_bits_mg_analysis_pass(graph, pass_args: dict):
                 data_in_size += d_size
                 weights_size += w_size
                 weights_cost += sum(w_meta["precision"]) * w_size
+
     # on average how many bits do we pay per value?
     data_avg_bit = data_in_cost / data_in_size
     w_avg_bit = weights_cost / weights_size
-    return {"graph": graph, "data_avg_bit": data_avg_bit, "w_avg_bit": w_avg_bit}
+
+    return graph, {"data_avg_bit": data_avg_bit, "w_avg_bit": w_avg_bit}

@@ -1,6 +1,3 @@
-#!/usr/bin/env python3
-# This example converts a simple MLP model to Verilog
-
 import logging
 import os
 import sys
@@ -24,18 +21,19 @@ print(sys.path)
 
 from chop.tools.logger import set_logging_verbosity
 from chop.ir.graph import MaseGraph
-from chop.models.toys.toy_custom_fn import ToyCustomFnNet
+from chop.models.toys.toy import ToyNet
 from chop.passes.graph.analysis import (
     add_common_metadata_analysis_pass,
     init_metadata_analysis_pass,
+    total_bits_mg_analysis_pass,
 )
 
 logger = logging.getLogger("chop.test")
 set_logging_verbosity("debug")
 
 
-def test_add_mase_ops():
-    mlp = ToyCustomFnNet(image_size=(1, 28, 28), num_classes=10)
+def test():
+    mlp = ToyNet(image_size=(1, 28, 28), num_classes=10)
     mg = MaseGraph(model=mlp)
 
     # Provide a dummy input for the graph so it can use for tracing
@@ -45,5 +43,13 @@ def test_add_mase_ops():
 
     dummy_in = {"x": x}
 
-    mg = init_metadata_analysis_pass(mg, None)
-    mg = add_common_metadata_analysis_pass(mg, dummy_in)
+    mg, _ = init_metadata_analysis_pass(mg, None)
+    mg, _ = add_common_metadata_analysis_pass(mg, dummy_in)
+    mg, info = total_bits_mg_analysis_pass(mg, dummy_in)
+    print(info)
+
+
+# --------------------------------------------------
+#   Execution
+# --------------------------------------------------
+test()

@@ -3,8 +3,21 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-def report_graph_analysis_pass(graph, file_name=None):
-    """Print out an overview of the model in a table."""
+def report_graph_analysis_pass(graph, pass_args={"file_name": None}):
+    """
+    Generates a report for the graph analysis
+    and prints out an over the model in a table.
+
+
+    :param graph: a MaseGraph
+    :type graph: MaseGraph
+    :param pass_args: this pass can take a string argument named "file_name", defaults to None
+    :type pass_args: dict, optional
+    :return: return a tuple of a MaseGraph and an empty dict (no additional info to return)
+    :rtype: tuple(MaseGraph, dict)
+
+    """
+    file_name = pass_args.get("file_name")
     buff = ""
     buff += str(graph.fx_graph)
     count = {
@@ -32,4 +45,4 @@ Layer types:
     else:
         with open(file_name, "w", encoding="utf-8") as outf:
             outf.write(buff)
-    return graph
+    return graph, {}
