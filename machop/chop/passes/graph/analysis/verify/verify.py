@@ -21,12 +21,16 @@ logger = logging.getLogger(__name__)
 
 def verify_node_common_metadata(node):
     """
-    Verify pass for metadata at node level
-    This pass is used for verification of Metadata. It does sanity checks the metadata of
-    each mase node locally, particularly for the following:
-    * TODO
+    Verify the common metadata of a node.
+
+    This function checks the common metadata of a node and performs specific verification based on the mase_op parameter.
+
+    :param node: The node to verify.
+    :type node: Node
+    :raises ValueError: If the mase_op parameter is unknown.
     """
     verify_common_metadata_general(node.meta["mase"])
+
     if node.meta["mase"].parameters["common"]["mase_op"] == "placeholder":
         verify_common_metadata_input(node.meta["mase"])
     elif node.meta["mase"].parameters["common"]["mase_op"] == "output":
@@ -38,6 +42,8 @@ def verify_node_common_metadata(node):
     elif node.meta["mase"].parameters["common"]["mase_op"] == "flatten":
         verify_common_metadata_flatten(node.meta["mase"])
     elif node.meta["mase"].parameters["common"]["mase_op"] == "constant":
+        # Add specific verification for constant operation
+        pass
         verify_common_metadata_input(node.meta["mase"])
     else:
         raise ValueError(
@@ -47,15 +53,22 @@ def verify_node_common_metadata(node):
         )
 
 
-def verify_common_metadata_analysis_pass(graph):
-    """
-    Verify pass for mase graph
-    This pass is used for verification of MaseGraph. It does sanity checks the common metadata of
-    each mase node locally and then verify the inter-node invariants, particularly for the following:
-    * TODO
+def verify_common_metadata_analysis_pass(graph, pass_args: dict = {}):
+    """Verify pass for mase graph
+    This pass is used for verification of MaseGraph.
+    It does sanity checks the common metadata of
+    each mase node locally and then verify the inter-node
+    invariants, particularly for the following:
+
+    :param graph: The input graph to analyze.
+    :type graph: MaseGraph
+    :param pass_args: Additional arguments for the analysis pass (optional).
+    :type pass_args: dict
+    :return: The analyzed graph and an empty dictionary.
+    :rtype: tuple(MaseGraph, Dict)
     """
 
-    # Verify each node int the graph
+    # Verify each node in the graph
     for node in graph.fx_graph.nodes:
         verify_node_common_metadata(node)
 
@@ -85,17 +98,26 @@ def verify_common_metadata_analysis_pass(graph):
                     .parameters["common"]["results"][f"data_out_0"]["size"]
                 )
                 assert dst_size == src_size
-    return graph
+
+    return graph, {}
 
 
-def verify_software_metadata_analysis_pass(graph):
+def verify_software_metadata_analysis_pass(graph, pass_args: dict = {}):
     """
     Verify pass for mase graph
     This pass is used for verification of MaseGraph. It does sanity checks the software metadata of
     each mase node locally and then verify the inter-node invariants, particularly for the following:
     * TODO
+
+    :param graph: The input graph to analyze.
+    :type graph: MaseGraph
+    :param pass_args: Additional arguments for the analysis pass (optional).
+    :type pass_args: dict
+    :return: The analyzed graph and an empty dictionary.
+    :rtype: tuple(MaseGraph, Dict)
+
     """
-    return graph
+    return graph, {}
 
 
 def verify_node_hardware_metadata(node):
@@ -114,12 +136,19 @@ def verify_node_hardware_metadata(node):
         raise ValueError(f"Unknown mase op: {node.op}")
 
 
-def verify_hardware_metadata_analysis_pass(graph):
+def verify_hardware_metadata_analysis_pass(graph, pass_args: dict = {}):
     """
     Verify pass for mase graph
     This pass is used for verification of MaseGraph. It does sanity checks the hardware metadata of
     each mase node locally and then verify the inter-node invariants, particularly for the following:
     * TODO
+
+    :param graph: The input graph to analyze.
+    :type graph: MaseGraph
+    :param pass_args: Additional arguments for the analysis pass (optional).
+    :type pass_args: dict
+    :return: The analyzed graph and an empty dictionary.
+    :rtype: tuple(MaseGraph, Dict)
     """
     # Verify each node int the graph
     for node in graph.fx_graph.nodes:
@@ -181,17 +210,24 @@ def verify_hardware_metadata_analysis_pass(graph):
             nodes_in != next_nodes_in
         ), f"Parsing error: cannot find the next nodes: {nodes_in}."
         nodes_in = next_nodes_in
-    return graph
+    return graph, {}
 
 
-def verify_metadata_analysis_pass(graph):
+def verify_metadata_analysis_pass(graph, pass_args: dict = {}):
     """
     Verify pass for mase graph
     This pass is used for verification of MaseGraph. It does sanity checks all the metadata of
     each mase node locally and then verify the inter-node invariants, particularly for the following:
     * TODO
+
+    :param graph: The input graph to analyze.
+    :type graph: MaseGraph
+    :param pass_args: Additional arguments for the analysis pass (optional).
+    :type pass_args: dict
+    :return: The analyzed graph and an empty dictionary.
+    :rtype: tuple(MaseGraph, Dict)
     """
-    verify_common_metadata_analysis_pass(graph)
-    verify_software_metadata_analysis_pass(graph)
-    verify_hardware_metadata_analysis_pass(graph)
-    return graph
+    _, _ = verify_common_metadata_analysis_pass(graph)
+    _, _ = verify_software_metadata_analysis_pass(graph)
+    _, _ = verify_hardware_metadata_analysis_pass(graph)
+    return graph, {}

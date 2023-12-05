@@ -42,23 +42,24 @@ def analysis_hardware_parameters(node):
         # raise ValueError(f"Unknown mase op: {op}")
 
 
-"""
-This is a standard analysis pass that runs at the start of all transform calls
-
-name_style_pass (graph, pass_args)
-
-This follows the the naming convention of
-[name]_[style]_pass
-add_hardware_metadata(name)_analysis(style)_pass
-
-passname : {args}
-
-"""
-
-
 def add_hardware_metadata_analysis_pass(graph, pass_args=None):
-    """
-    Add hardware metadata for accelerator mapping
+    """add hardware metadata
+    This is a standard analysis pass that runs at the start of all transform calls
+
+    name_style_pass (graph, pass_args)
+
+    This follows the the naming convention of
+    [name]_[style]_pass
+    add_hardware_metadata(name)_analysis(style)_pass
+
+    passname : {args}
+
+    :param graph: a MaseGraph
+    :type graph: MaseGraph
+    :param pass_args: this pass does not need any arguments, defaults to None
+    :type pass_args: _type_, optional
+    :return: return a tuple of a MaseGraph and an empty dict (no additional info to return)
+    :rtype: tuple(MaseGraph, Dict)
     """
     for node in graph.fx_graph.nodes:
         node.meta["mase"].parameters["hardware"]["is_implicit"] = False
@@ -67,4 +68,4 @@ def add_hardware_metadata_analysis_pass(graph, pass_args=None):
 
     for node in graph.fx_graph.nodes:
         analysis_hardware_parameters(node)
-    return graph
+    return graph, {}

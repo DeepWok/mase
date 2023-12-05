@@ -1,0 +1,1 @@
+from .analysis import total_bits_module_analysis_pass

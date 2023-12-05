@@ -10,6 +10,7 @@ from .analysis import (
     report_node_shape_analysis_pass,
     report_node_type_analysis_pass,
     verify_common_metadata_analysis_pass,
+    total_bits_mg_analysis_pass,
 )
 from .transforms import (
     load_mase_graph_transform_pass,
@@ -38,6 +39,7 @@ ANALYSIS_PASSES = [
     "report_node_meta_param",
     "report_node_shape",
     "report_node_type",
+    "total_bits_mg_analysis_pass",
 ]
 TRANSFORM_PASSES = [
     "load_mase_graph",
@@ -65,6 +67,7 @@ PASSES = {
     "report_node_meta_param": report_node_meta_param_analysis_pass,
     "report_node_shape": report_node_shape_analysis_pass,
     "report_node_type": report_node_type_analysis_pass,
+    "total_bits_mg_analysis_pass": total_bits_mg_analysis_pass,
     # transform
     "load_mase_graph": load_mase_graph_transform_pass,
     "load_node_meta_param": load_node_meta_param_transform_pass,

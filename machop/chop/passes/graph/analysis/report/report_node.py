@@ -3,6 +3,7 @@ from pprint import pformat
 from tabulate import tabulate
 from pathlib import Path
 
+
 logger = logging.getLogger(__name__)
 
 
@@ -28,20 +29,26 @@ def graph_iterator_inspect_node_type(graph):
     return graph
 
 
-def report_node_type_analysis_pass(graph, pass_args=None):
+def report_node_type_analysis_pass(graph, pass_args: dict = {}):
     """
-    Inspect (pretty print) mase graph after initialization/loading, including
+    Perform a node type analysis on the given graph, pretty print MaseGraph after initialization/loading.
 
-    - node inspection on types
+    :param graph: The graph to analyze.
+    :type graph: MaseGraph
+    :param pass_args: Additional arguments for the analysis pass (optional).
+    :type pass_args: dict
+    :return: The analyzed graph and an empty dictionary.
+    :rtype: tuple(MaseGraph, dict)
     """
     graph = graph_iterator_inspect_node_type(graph)
-    return graph
+    return graph, {}
 
 
 def graph_iterator_inspect_node_shape(graph):
     logger.info("Inspecting graph [add_common_node_shape_analysis_pass]")
     buffer = ""
     for node in graph.fx_graph.nodes:
+        print(node.name)
         buffer += f"{node.name}:\nin:\n"
         for key, value in node.meta["mase"].parameters["common"]["args"].items():
             from_name = "none" if value["from"] is None else value["from"].name
@@ -54,14 +61,19 @@ def graph_iterator_inspect_node_shape(graph):
     return graph
 
 
-def report_node_shape_analysis_pass(graph, pass_args=None):
+def report_node_shape_analysis_pass(graph, pass_args: dict = {}):
     """
-    Inspect mase graph after initialization/loading, including
+    Perform shape analysis on the nodes in the graph.
 
-    - node inspection on shapes
+    :param graph: The input graph to analyze.
+    :type graph: MaseGraph
+    :param pass_args: Additional arguments for the analysis pass (optional).
+    :type pass_args: dict
+    :return: The analyzed graph and an empty dictionary.
+    :rtype: tuple(MaseGraph, Dict)
     """
     graph = graph_iterator_inspect_node_shape(graph)
-    return graph
+    return graph, {}
 
 
 def graph_iterator_inspect_node_hardware_type(graph):
@@ -83,23 +95,33 @@ def graph_iterator_inspect_node_hardware_type(graph):
     return graph
 
 
-def report_node_hardware_type_analysis_pass(graph, pass_args=None):
+def report_node_hardware_type_analysis_pass(graph, pass_args: dict = {}):
     """
-    Inspect (pretty print) mase graph after initialization/loading, including
+    Perform hardware type analysis on the given graph.
 
-    - node inspection on hardware types
+    :param graph: The graph to perform the analysis on.
+    :type graph: MaseGraph
+    :param pass_args: Optional arguments for the analysis pass.
+    :type pass_args: dict, optional
+    :return: The analyzed graph and an empty dictionary.
+    :rtype: tuple(MaseGraph, dict)
     """
     graph = graph_iterator_inspect_node_hardware_type(graph)
-    return graph
+    return graph, {}
 
 
 def report_node_meta_param_analysis_pass(graph, pass_args: dict = None):
     """
-    Inspect mse metadata.parameter
+    Perform meta parameter analysis on the nodes in the graph and generate a report.
 
-    pass_args: a dict of arguments for this pass, including
-    - "which": a list of options in ["all", "common", "hardware", "software"], default ["all"]
-    - "save_path": a str of path to save the table, default None
+    :param graph: The graph to analyze.
+    :type graph: MaseGraph
+    :param pass_args: Optional arguments for the analysis pass, a dict of arguments for this pass, including
+        - "which": str, and a list of options in ["all", "common", "hardware", "software"], default ["all"]
+        - "save_path": str, a str of path to save the table, default None
+    :type pass_args: dict, default None
+    :return: The analyzed graph and an empty dictionary.
+    :rtype: tuple(MaseGraph, dict)
     """
     which_param = pass_args.get("which", ("all",))
     assert isinstance(which_param, (list, tuple))
@@ -154,4 +176,4 @@ def report_node_meta_param_analysis_pass(graph, pass_args: dict = None):
         with open(Path(save_path), "w") as f:
             f.write(table_txt)
             logger.info(f"Node meta param table is saved to {save_path}")
-    return graph
+    return graph, {}
