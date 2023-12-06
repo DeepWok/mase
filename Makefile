@@ -15,9 +15,9 @@ sync-mlir:
 
 # Build Docker container
 build-docker-nocache: 
-	docker build --no-cache --build-arg UID=$(user) --build-arg GID=$(group) --build-arg VHLS_PATH=$(vhls) -f Docker/Dockerfile --tag mase-ubuntu2204 Docker
+	docker build --no-cache --build-arg VHLS_PATH=$(vhls) -f Docker/Dockerfile --tag mase-ubuntu2204 Docker
 build-docker: 
-	docker build --build-arg UID=$(user) --build-arg GID=$(group) --build-arg VHLS_PATH=$(vhls) -f Docker/Dockerfile --tag mase-ubuntu2204 Docker
+	docker build --build-arg VHLS_PATH=$(vhls) -f Docker/Dockerfile --tag mase-ubuntu2204 Docker
 
 shell: build-docker
 	docker run -it --shm-size 256m --hostname mase-ubuntu2204 -w /workspace -v $(vhls):$(vhls) -v /home/$(shell whoami)/.gitconfig:/root/.gitconfig -v /home/$(shell whoami)/.ssh:/root/.ssh -v $(shell pwd):/workspace:z mase-ubuntu2204:latest /bin/bash 
