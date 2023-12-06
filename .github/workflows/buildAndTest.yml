@@ -207,4 +207,4 @@ jobs:
       
       - name: Mase regression test 
         run: |
-            pytest --log-level=DEBUG --verbose -n auto --cov=machop/chop/ --cov-report=html machop/test/ --html=report.html --self-contained-html --profile --profile-svg
+            pytest --log-level=DEBUG --verbose -n 1 --cov=machop/chop/ --cov-report=html machop/test/ --html=report.html --self-contained-html --profile --profile-svg
