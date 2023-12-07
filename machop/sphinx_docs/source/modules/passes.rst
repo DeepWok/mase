@@ -42,10 +42,6 @@ MaseGraph Analysis Passes
   * - :py:meth:`~chop.passes.graph.analysis.verify.verify.verify_hardware_metadata_analysis_pass`
     -  fill
   * - :py:meth:`~chop.passes.graph.analysis.total_bits_estimator.total_bits_mg.total_bits_mg_analysis_pass`
-    -  fill
-  * - :py:meth:`~chop.passes.graph.analysis.total_bits_estimator.total_bits_module.total_bits_module_analysis_pass`
-    -  fill
-  * - :py:meth:`~chop.passes.graph.analysis.total_bits_estimator.total_bits_mg.total_bits_mg_analysis_pass`
     -  Perform total bits analysis on the given graph.
 
 
@@ -69,14 +65,6 @@ MaseGraph Transform Passes
 
   * - Pass Name
     - Summary
-  * - :py:meth:`~chop.passes.graph.transforms.interface.save_and_load.load_mase_graph_transform_pass`
-    - fill me
-  * - :py:meth:`~chop.passes.graph.transforms.interface.save_and_load.save_mase_graph_transform_pass`
-    - fill me
-  * - :py:meth:`~chop.passes.graph.transforms.interface.save_and_load.save_node_meta_param_transform_pass`
-    - fill me
-  * - :py:meth:`~chop.passes.graph.transforms.interface.save_and_load.load_node_meta_param_transform_pass`
-    - fill me
   * - :py:meth:`~chop.passes.graph.transforms.pruning.prune.prune_transform_pass`
     - fill me
   * - :py:meth:`~chop.passes.graph.transforms.pruning.prune.prune_unwrap_transform_pass`
@@ -100,6 +88,25 @@ MaseGraph Transform Passes
   * - :py:meth:`~chop.passes.graph.transforms.verilog.emit_top.emit_mlir_hls_transform_pass`
     - fill me
   * - :py:meth:`~chop.passes.graph.transforms.verilog.emit_top.emit_internal_rtl_transform_pass`
+    - fill me
+
+
+MaseGraph Interface Passes
+-----------
+
+.. list-table:: A summary of all MaseGraph interface passes 
+  :widths: 25 75
+  :header-rows: 1
+
+  * - Pass Name
+    - Summary
+  * - :py:meth:`~chop.passes.graph.interface.save_and_load.load_mase_graph_transform_pass`
+    - fill me
+  * - :py:meth:`~chop.passes.graph.interface.save_and_load.save_mase_graph_transform_pass`
+    - fill me
+  * - :py:meth:`~chop.passes.graph.interface.save_and_load.save_node_meta_param_transform_pass`
+    - fill me
+  * - :py:meth:`~chop.passes.graph.interface.save_and_load.load_node_meta_param_transform_pass`
     - fill me
 
 

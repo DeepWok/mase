@@ -1,9 +1,10 @@
 import numpy as np
 
 
-def total_bits_mg_analysis_pass(graph, pass_args: dict):
+def calculate_avg_bits_mg_analysis_pass(graph, pass_args: dict):
     """
-    Perform total bits analysis on the given graph.
+    Calculate, on average, how many bits are spent on weights and activations, this is an analysis on the given graph.
+    This is useful when mixed-precision is happening, we may want to know on-average how many bits are we spending on weights and activations
 
     :param graph: The graph to analyze.
     :type graph: MaseGraph
@@ -32,8 +33,8 @@ def total_bits_mg_analysis_pass(graph, pass_args: dict):
                 data_in_0_meta = mase_meta["common"]["args"]["data_in_0"]
                 w_meta = mase_meta["common"]["args"]["weight"]
                 # maybe add bias
-                d_size = np.prod(data_in_0_meta["size"])
-                w_size = np.prod(w_meta["size"])
+                d_size = np.prod(data_in_0_meta["shape"])
+                w_size = np.prod(w_meta["shape"])
                 data_in_cost += sum(data_in_0_meta["precision"]) * d_size
                 data_in_size += d_size
                 weights_size += w_size

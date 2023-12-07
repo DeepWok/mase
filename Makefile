@@ -1,6 +1,7 @@
 vhls=/mnt/applications/Xilinx/23.1
 user=$(if $(shell id -u),$(shell id -u),9001)
 group=$(if $(shell id -g),$(shell id -g),1000)
+coverage=machop/test/
 
 # Make sure the repo is up to date
 sync:
@@ -28,8 +29,7 @@ test-hw:
 	(cd tmp; python3 ../scripts/test-hardware.py -a || exit 1)
 
 test-sw:
-	mkdir -p ./tmp
-	(cd tmp; bash ../scripts/test-machop.sh || exit 1)
+	pytest --log-level=DEBUG --verbose -n 1 --cov=machop/chop/ --cov-report=html $(coverage) --html=report.html --self-contained-html --profile --profile-svg
 
 test-all: test-hw test-sw
 	mkdir -p ./tmp

@@ -94,7 +94,7 @@ def graph_iterator_add_n_meta_param(graph, node_n_meta_param: dict):
     return graph
 
 
-def save_node_meta_param_transform_pass(graph, pass_args: str):
+def save_node_meta_param_interface_pass(graph, pass_args: str):
     """
     Save a mase graph metadata.parameters to a toml file.
     """
@@ -103,7 +103,7 @@ def save_node_meta_param_transform_pass(graph, pass_args: str):
     return graph
 
 
-def load_node_meta_param_transform_pass(graph, pass_args: str):
+def load_node_meta_param_interface_pass(graph, pass_args: str):
     """
     Load a mase graph metadata.parameters from a toml file.
     """
@@ -112,7 +112,7 @@ def load_node_meta_param_transform_pass(graph, pass_args: str):
     return graph
 
 
-def save_mase_graph_transform_pass(graph, pass_args: str):
+def save_mase_graph_interface_pass(graph, pass_args: dict = {}):
     """Save a mase graph.
 
     This saves the graph module as a serialized graph module and metadata.parameters as a toml file.
@@ -142,26 +142,34 @@ def save_mase_graph_transform_pass(graph, pass_args: str):
     graph = init_metadata_analysis_pass(graph)
     graph = graph_iterator_add_n_meta_param(graph, node_n_meta_param)
     logger.info(f"Saved mase graph to {save_dir}")
-    return graph
+    return graph, {}
 
 
-def load_mase_graph_transform_pass(graph, pass_args: str):
-    """Load a mase graph.
-
-    This loads the graph module as a serialized graph module and metadata.parameters as a toml file.
-
-    Args:
-        graph (MaseGraph): mase_graph to load
-        pass_args (str): load directory
-
-    Returns:
-        MaseGraph: mase_graph
+def load_mase_graph_interface_pass(graph, pass_args: dict = {"load_dir": None}):
     """
-    load_dir = pass_args
+    Load the MASE graph interface pass.
+
+    :param graph: The input graph to be transformed.
+    :type graph: MaseGraph
+
+    :param pass_args: Optional arguments for the transformation pass. Default is {'load_dir': None}, load_dir is required.
+    :type pass_args: dict
+
+    :return: The transformed graph and an empty dictionary.
+    :rtype: tuple(MaseGraph, dic)
+
+    :raises ValueError: If the load directory is not specified.
+    """
+    load_dir = pass_args.get("load_dir")
+    if load_dir is None:
+        raise ValueError(f"load dir cannot be {load_dir}")
+
     if os.path.isdir(load_dir):
         graph_module_ckpt = os.path.join(load_dir, "graph_module.mz")
         n_meta_param_ckpt = os.path.join(load_dir, "node_meta_param.toml")
     else:
+        # Handle the case when the load directory is not a directory
+        # ...
         load_dir = os.path.dirname(load_dir)
         graph_module_ckpt = os.path.join(load_dir, "graph_module.mz")
         n_meta_param_ckpt = os.path.join(load_dir, "node_meta_param.toml")
@@ -174,4 +182,4 @@ def load_mase_graph_transform_pass(graph, pass_args: str):
     # add metadata.parameters to graph
     graph = graph_iterator_add_n_meta_param(graph, node_n_meta_param)
     logger.info(f"Loaded mase graph from {load_dir}")
-    return graph
+    return graph, {}

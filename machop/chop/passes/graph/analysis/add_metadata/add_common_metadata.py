@@ -50,6 +50,10 @@ def graph_iterator_for_mase_ops(graph):
                 mase_op = "avg_pool1d"
             elif isinstance(module, nn.AvgPool2d):
                 mase_op = "avg_pool2d"
+            elif isinstance(module, nn.MaxPool1d):
+                mase_op = "max_pool1d"
+            elif isinstance(module, nn.MaxPool2d):
+                mase_op = "max_pool2d"
             elif isinstance(module, nn.BatchNorm1d):
                 mase_type = "module"
                 mase_op = "batch_norm1d"
@@ -64,10 +68,6 @@ def graph_iterator_for_mase_ops(graph):
                 mase_op = "layer_norm"
             elif isinstance(module, nn.Linear):
                 mase_op = "linear"
-            elif isinstance(module, nn.MaxPool1d):
-                mase_op = "max_pool1d"
-            elif isinstance(module, nn.MaxPool2d):
-                mase_op = "max_pool2d"
             elif isinstance(module, nn.ReLU):
                 mase_op = "relu"
             elif isinstance(module, nn.Hardtanh):  # TODO: This is not implemented yet
@@ -162,201 +162,68 @@ def graph_iterator_for_mase_ops(graph):
     return graph
 
 
-def _update_arg_in_next_node(offset, index, arg_in, next_node, node, keys=None):
-    if str(arg_in) == str(node.name):
-        assert (
-            f"data_in_{index}"
-            not in next_node.meta["mase"].parameters["common"]["args"]
-        ), f"Adding meta to an existing input: {next_node.name} at input {index}"
-        next_node.meta["mase"].parameters["common"]["args"][f"data_in_{index}"] = dict(
-            node.meta["mase"].parameters["common"]["results"]["data_out_0"]
-        )
-        next_node.meta["mase"].parameters["common"]["args"][f"data_in_{index}"][
-            "from"
-        ] = node
-        if keys is not None:
-            next_node.meta["mase"].parameters["common"]["args"][f"data_in_{index}"][
-                "key"
-            ] = keys[index - offset]
-    else:
-        # If an arg of the next node is a constant, add to the metadata,
-        # because this has no edge and cannot be udpated from traversing.
-        if (
-            "data_in_{index}"
-            in next_node.meta["mase"].parameters["common"][
-                "args"
-                # we also ignore arg_in as a string
-            ]
-            or isinstance(arg_in, torch.fx.Node)
-            or isinstance(arg_in, str)
-        ):
-            return
-
-        if isinstance(arg_in, float):
-            next_node.meta["mase"].parameters["common"]["args"][f"data_in_{index}"] = {
-                "size": [1],
-                "type": "float",
-                "precision": [32],
-                "from": "NA",
-                "value": arg_in,
-            }
-            if keys is not None:
-                next_node.meta["mase"].parameters["common"]["args"][f"data_in_{index}"][
-                    "key"
-                ] = keys[index - offset]
-
-        elif isinstance(arg_in, int):
-            next_node.meta["mase"].parameters["common"]["args"][f"data_in_{index}"] = {
-                "size": [1],
-                "type": "fixed",
-                "precision": [
-                    int(math.ceil(math.log2(max(abs(arg_in), 1)))) + 1,
-                    0,
-                ],
-                "from": "NA",
-                "value": arg_in,
-            }
-            if keys is not None:
-                next_node.meta["mase"].parameters["common"]["args"][f"data_in_{index}"][
-                    "key"
-                ] = keys[index - offset]
-        elif isinstance(arg_in, tuple):
-            # NOTE: Tuples are generally used to convey shape information
-            # (e.g. AdaptiveAvgPool2d's output_size). We don't associate them
-            # with metadata as we assume they're pretty much constant and can
-            # be considered as a local attribute of the model.
-            # Check if all elements of the tuple are fixed constants
-            if all(isinstance(x, int) for x in arg_in):
-                return
-            # TODO: Not really sure how to handle this. It seems to me that slicing a tensor would result to this.
-            # Adding a case to skip it first.
-            # out_bin[:, :, self.input_mask] evals to getitem(stack, (0, slice(None, None, None), slice(None, None, None)))
-            if node.name == "stack":
-                logger.warning(
-                    "Tuple contains unsupported types! For torch.stack involved"
-                )
-                return
-            logger.warning("Tuple contains unsupported types!")
-        elif arg_in is None:
-            pass
-        elif isinstance(arg_in, dict):
-            # TODO: This might overwrite the existing args!! Discuss when observed
-            arg_keys = list(arg_in.keys())
-            for i, a in enumerate(arg_in.values()):
-                _update_arg_in_next_node(index, i, a, next_node, node, keys=arg_keys)
-        elif isinstance(arg_in, list):
-            # TODO: A risk is that now the input count is a variable but it is fine for now
-            # We are recording the element within the list seperately here. (e.g. torch.stack)
-            for i, a in enumerate(arg_in):
-                if str(a) == str(node):
-                    _update_arg_in_next_node(index, i, a, next_node, node)
-
-        else:
-            assert False, "Unknown constant arg type."
+def load_arg(a, env):
+    return torch.fx.graph.map_arg(a, lambda n: env[n.name])
 
 
-def analysis_common_parameters(node, dummy_in):
-    if node.op == "placeholder":
-        node.meta["mase"] = analyse_common_parameters_placeholder(
-            node.meta["mase"], dummy_in
-        )
-    elif node.op == "output":
-        node.meta["mase"] = analyse_common_parameters_output(node.meta["mase"])
-    elif node.op == "call_module":
-        node.meta["mase"] = analyse_common_parameters_module(node.meta["mase"])
-    elif node.op == "call_function":
-        node.meta["mase"] = analyse_common_parameters_function(node.meta["mase"])
-    elif node.op == "call_method":
-        node.meta["mase"] = analyse_common_parameters_method(node.meta["mase"])
-    elif node.op == "get_attr":
-        node.meta["mase"] = analyse_common_parameters_attr(node.meta["mase"])
-    else:
-        raise ValueError(
-            "Unknown mase op: {}".format(
-                node.meta["mase"].parameters["common"]["mase_op"]
+def fetch_attr(mod, target: str):
+    target_atoms = target.split(".")
+    attr_itr = mod
+    for i, atom in enumerate(target_atoms):
+        if not hasattr(attr_itr, atom):
+            raise RuntimeError(
+                f"Node referenced nonexistant target {'.'.join(target_atoms[:i])}"
             )
-        )
-
-    if len(node.users) > 0:
-        logger.debug(
-            "{} : {}".format(
-                node.name,
-                node.meta["mase"].parameters["common"]["results"]["data_out_0"]["size"],
-            )
-        )
-
-    # Pass the output shape to the inputs of the next node
-    for next_node, _ in node.users.items():
-        if "args" not in next_node.meta["mase"].parameters["common"]:
-            next_node.meta["mase"].parameters["common"]["args"] = {}
-
-        for index, arg_in in enumerate(next_node.args):
-            _update_arg_in_next_node(0, index, arg_in, next_node, node)
-
-        if "stack" in next_node.name:
-            if node == next_node.args[0][-1]:
-                # We check if the current node is the last node of the list argument of torch.stack
-                # We treat all the element within the list seperately here. Hence, offset for keyarg is the len of the list + 1
-                offset = len(next_node.args[0]) + 1
-                for _index, arg_in in enumerate(next_node.kwargs.values()):
-                    index = _index + offset
-                    keys = list(next_node.kwargs.keys())
-                    _update_arg_in_next_node(
-                        offset, index, arg_in, next_node, node, keys=keys
-                    )
-        else:
-            offset = len(next_node.args)
-            keys = list(next_node.kwargs.keys())
-            for _index, arg_in in enumerate(next_node.kwargs.values()):
-                index = _index + offset
-                _update_arg_in_next_node(
-                    offset, index, arg_in, next_node, node, keys=keys
-                )
+        attr_itr = getattr(attr_itr, atom)
+    return attr_itr
 
 
-def graph_iterator_for_metadata(graph, dummy_in=None):
+def graph_iterator_for_metadata(graph, dummy_in=None, add_value=True):
     """
-    The size of input and output cannot directly be accessed by functions and some modules.
-    This function traverses from the placeholder and passes the metadata through edges.
+    largely apated from https://pytorch.org/docs/stable/fx.html
     """
 
-    # Keep track of which node has been updated
-    updated_map = {}
+    model, fx_graph, modules = graph.model, graph.fx_graph, graph.modules
+    env = {}
+    prev_result = None
 
-    nodes_in = []
     for node in graph.fx_graph.nodes:
-        # if a node has no inputs then it itself represents the input of the graph as a whole
-        if len(node.all_input_nodes) == 0:
-            nodes_in.append(node)
+        args, kwargs = None, None
+        if node.op == "placeholder":
+            result = dummy_in[node.name]
+            analyse_fn = analyse_common_parameters_placeholder
+        elif node.op == "get_attr":
+            result = fetch_attr(model, node.target)
+            analyse_fn = analyse_common_parameters_attr
+        elif node.op == "call_function":
+            args = load_arg(node.args, env)
+            kwargs = load_arg(node.kwargs, env)
+            result = node.target(*args, **kwargs)
+            analyse_fn = analyse_common_parameters_function
+        elif node.op == "call_method":
+            self_obj, *args = load_arg(node.args, env)
+            kwargs = load_arg(node.kwargs, env)
+            result = getattr(self_obj, node.target)(*args, **kwargs)
+            analyse_fn = analyse_common_parameters_method
+        elif node.op == "call_module":
+            args = load_arg(node.args, env)
+            kwargs = load_arg(node.kwargs, env)
+            result = modules[node.target](*args, **kwargs)
+            analyse_fn = analyse_common_parameters_module
+        elif node.op == "output":
+            analyse_fn = analyse_common_parameters_output
 
-    while len(nodes_in) > 0:
-        logger.debug(f"Live nodes = {len(nodes_in)}: {nodes_in}")
-        next_nodes_in = []
-        for node in nodes_in:
-            if node in updated_map:
-                continue
+        # This is the only code specific to shape propagation.
+        # you can delete this `if` branch and this becomes
+        # a generic GraphModule interpreter.
+        # if isinstance(result, torch.Tensor):
+        #     node.shape = result.shape
+        #     node.dtype = result.dtype
 
-            count = 0
-            for input_node in node.all_input_nodes:
-                count += input_node in updated_map
-
-            # Either there are no input nodes or all input nodes already processed
-            if count == len(node.all_input_nodes):
-                analysis_common_parameters(node, dummy_in)
-                updated_map[node] = True
-                for next_node, x in node.users.items():
-                    if next_node not in next_nodes_in:
-                        next_nodes_in.append(next_node)
-
-            # Some input nodes not yet processed, process current node in the next iteration
-            elif node not in next_nodes_in:
-                next_nodes_in.append(node)
-
-        if nodes_in == next_nodes_in:
-            raise ValueError("Deadlock detected.")
-        nodes_in = next_nodes_in
-
-    assert len(updated_map.keys()) == len(graph.fx_graph.nodes)
+        node.meta["mase"] = analyse_fn(
+            node.meta["mase"], result, args, kwargs, add_value=add_value
+        )
+        env[node.name] = result
 
     return graph
 
@@ -389,18 +256,19 @@ def new_graph_iterator_for_metadata(graph, dummy_in=None):
     return graph
 
 
-def add_common_metadata_analysis_pass(graph, pass_args=None):
+def add_common_metadata_analysis_pass(
+    graph, pass_args={"dummy_in": None, "add_value": True}
+):
     """add common metadata
 
     :param graph: a MaseGraph
     :type graph: MaseGraph
     :param pass_args: this pass does not need any arguments, defaults to None
-    :type pass_args: _type_, optional
+    :type pass_args: _type_, optional, "add_value" controls whether tensor values would be added to the meta data, defaults to True
     :return: return a tuple of a MaseGraph and an empty dict (no additional info to return)
     :rtype: tuple(MaseGraph, Dict)
     """
     logger.debug(graph.fx_graph)
     graph = graph_iterator_for_mase_ops(graph)
-    # TODO: FIXEME, this is temporary
-    graph = graph_iterator_for_metadata(graph, pass_args)
+    graph = graph_iterator_for_metadata(graph, **pass_args)
     return graph, {}

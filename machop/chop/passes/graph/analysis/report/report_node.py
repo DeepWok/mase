@@ -2,6 +2,7 @@ import logging
 from pprint import pformat
 from tabulate import tabulate
 from pathlib import Path
+import copy
 
 
 logger = logging.getLogger(__name__)
@@ -51,11 +52,15 @@ def graph_iterator_inspect_node_shape(graph):
         print(node.name)
         buffer += f"{node.name}:\nin:\n"
         for key, value in node.meta["mase"].parameters["common"]["args"].items():
-            from_name = "none" if value["from"] is None else value["from"].name
-            buffer += "{} = {}, from = {}\n".format(key, value["size"], from_name)
+            if "data_in" in key:
+                buffer += "{} = {}\n".format(key, value["shape"])
+            else:
+                buffer += "{} = {}\n".format(key, value)
+            # from_name = "none" if value["from"] is None else value["from"].name
+            # buffer += "{} = {}, from = {}\n".format(key, value["size"], from_name)
         buffer += "out:\n"
         for key, value in node.meta["mase"].parameters["common"]["results"].items():
-            buffer += "{} = {}\n".format(key, value["size"])
+            buffer += "{} = {}\n".format(key, value["shape"])
         buffer += "\n"
     logger.info(buffer)
     return graph

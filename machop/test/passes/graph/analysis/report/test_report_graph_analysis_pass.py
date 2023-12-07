@@ -46,9 +46,11 @@ def test():
 
     dummy_in = {"x": x}
 
-    mg, _ = init_metadata_analysis_pass(mg, None)
-    mg, _ = add_common_metadata_analysis_pass(mg, dummy_in)
-    mg, _ = report_graph_analysis_pass(mg, dummy_in)
+    mg, _ = init_metadata_analysis_pass(mg, {})
+    mg, _ = add_common_metadata_analysis_pass(
+        mg, {"dummy_in": dummy_in, "add_value": False}
+    )
+    mg, _ = report_graph_analysis_pass(mg, {})
 
 
 # --------------------------------------------------

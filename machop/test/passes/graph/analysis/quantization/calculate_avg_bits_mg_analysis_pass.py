@@ -25,7 +25,7 @@ from chop.models.toys.toy import ToyNet
 from chop.passes.graph.analysis import (
     add_common_metadata_analysis_pass,
     init_metadata_analysis_pass,
-    total_bits_mg_analysis_pass,
+    calculate_avg_bits_mg_analysis_pass,
 )
 
 logger = logging.getLogger("chop.test")
@@ -43,9 +43,11 @@ def test():
 
     dummy_in = {"x": x}
 
-    mg, _ = init_metadata_analysis_pass(mg, None)
-    mg, _ = add_common_metadata_analysis_pass(mg, dummy_in)
-    mg, info = total_bits_mg_analysis_pass(mg, dummy_in)
+    mg, _ = init_metadata_analysis_pass(mg, {})
+    mg, _ = add_common_metadata_analysis_pass(
+        mg, {"add_value": False, "dummy_in": dummy_in}
+    )
+    mg, info = calculate_avg_bits_mg_analysis_pass(mg, {})
     print(info)
 
 

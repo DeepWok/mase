@@ -43,45 +43,47 @@ def test_prune():
     with open(config_path) as f:
         config = toml.load(f)
 
-        # NOTE: We're only concerned with pre-trained vision models
-        dataset_info = get_dataset_info(config["dataset"])
-        model_info = models.get_model_info(config["model"])
-        data_module = MaseDataModule(
-            model_name=config["model"],
-            name=config["dataset"],
-            batch_size=BATCH_SIZE,
-            num_workers=os.cpu_count(),
-            tokenizer=None,
-            max_token_len=None,
-        )
-        data_module.prepare_data()
-        data_module.setup()
-        # NOTE: We only support vision classification models for now.
-        dummy_input = get_dummy_input(model_info, data_module, "cls")
+    # NOTE: We're only concerned with pre-trained vision models
+    dataset_info = get_dataset_info(config["dataset"])
+    model_info = models.get_model_info(config["model"])
+    data_module = MaseDataModule(
+        model_name=config["model"],
+        name=config["dataset"],
+        batch_size=BATCH_SIZE,
+        num_workers=os.cpu_count(),
+        tokenizer=None,
+        max_token_len=None,
+    )
+    data_module.prepare_data()
+    data_module.setup()
+    # NOTE: We only support vision classification models for now.
+    dummy_input = get_dummy_input(model_info, data_module, "cls")
 
-        # We need the input generator to do a sample forward pass to log information on
-        # the channel-wise activation sparsity.
-        input_generator = InputGenerator(
-            model_info=model_info,
-            data_module=data_module,
-            task="cls",
-            which_dataloader="train",
-        )
+    # We need the input generator to do a sample forward pass to log information on
+    # the channel-wise activation sparsity.
+    input_generator = InputGenerator(
+        model_info=model_info,
+        data_module=data_module,
+        task="cls",
+        which_dataloader="train",
+    )
 
-        model = models.get_model(config["model"], "cls", dataset_info, pretrained=True)
-        graph = MaseGraph(model=model)
+    model = models.get_model(config["model"], "cls", dataset_info, pretrained=True)
+    graph = MaseGraph(model=model)
 
-        # NOTE: Both functions have pass arguments that are not used in this example
-        graph = init_metadata_analysis_pass(graph, None)
-        graph = add_common_metadata_analysis_pass(graph, dummy_input)
-        graph = add_software_metadata_analysis_pass(graph, None)
-        logger.debug(graph.fx_graph)
+    # NOTE: Both functions have pass arguments that are not used in this example
+    graph = init_metadata_analysis_pass(graph, None)
+    graph = add_common_metadata_analysis_pass(
+        graph, {"dummy_input": dummy_input, "add_value": False}
+    )
+    graph = add_software_metadata_analysis_pass(graph, None)
+    logger.debug(graph.fx_graph)
 
-        config = config["passes"]["prune"]
-        config["input_generator"] = input_generator
+    config = config["passes"]["prune"]
+    config["input_generator"] = input_generator
 
-        save_dir = root / f"mase_output/machop_test/prune/{config_name}"
-        save_dir.mkdir(parents=True, exist_ok=True)
+    save_dir = root / f"mase_output/machop_test/prune/{config_name}"
+    save_dir.mkdir(parents=True, exist_ok=True)
 
-        # The default save directory is specified as the current working directory
-        graph = prune_transform_pass(graph, save_dir, config)
+    # The default save directory is specified as the current working directory
+    graph = prune_transform_pass(graph, save_dir, config)
