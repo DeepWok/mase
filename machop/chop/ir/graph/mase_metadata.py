@@ -17,17 +17,20 @@ class MaseMetadata:
       - mase_type -> str : the mase type of the node, e.g. module, builtin_func, module_related_func
       - args -> {}
          - $name : name of the arg
-           - type : type of the arg, e.g. fixed point or float
-           - precision : format of the type, e.g. (10, 5)
-           - size : size of the arg
-           - from : source node (for reconstructing the edge)
-           - key : key of the arg (for kwargs)
+           (if the arg is a tensor)
+           - type -> type of the arg, e.g. fixed point or float
+           - precision -> format of the type, e.g. (10, 5)
+           - shape -> shape of the arg
+           (if the arg is not a tensor)
+           - value of the arg
       - results -> {}
          - $name : name of the result
-           - type : type of the result, e.g. fixed point or float
-           - precision : format of the type, e.g. (10, 5)
-           - size : size of the result
-           - value : if the result is a constant scalar value, store it and use as parameters instead of runtime variable
+           (if the result is a tensor)
+           - type -> type of the result, e.g. fixed point or float
+           - precision -> format of the type, e.g. (10, 5)
+           - size -> size of the result
+           (if the result is not a tensor)
+           - value of the result
     - software: dict
       - args: dict
         - $name (dict): name of the arg, e.g. data_in_0
@@ -43,10 +46,10 @@ class MaseMetadata:
           - "stat": {"stat_name": { # stat_values } }
     - hardware
       - is_implicit -> bool : whether the node is mapped on hardware or software annotation only
-      - verilog_parameters -> {} : parameters need for customise the hardware module
+      - verilog_param -> {} : parameters need for customise the hardware module
       - toolchain -> str : tool chain for code generation, must be INTERNAL, EXTERNAL or HLS
       - module -> str : the name of the used hardware module
-      - interface_parameters -> {}
+      - interface -> {}
          - name : name of the parameters
            - storage : the hardware interface implemented, must be BRAM
            - transpose : whether the data needs to be transposed before emitting
