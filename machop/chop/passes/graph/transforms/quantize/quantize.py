@@ -1,7 +1,8 @@
 from copy import copy, deepcopy
 import logging
 
-from ..interface.save_and_load import load_mase_graph_transform_pass
+from chop.passes.graph.interface.save_and_load import load_mase_graph_interface_pass
+
 from ...utils import (
     deepcopy_mase_graph,
     get_mase_op,
@@ -51,7 +52,7 @@ def graph_iterator_quantize_by_type(graph, config: dict):
         and config.get("load_type") == "mz"
     ):
         bl_graph = deepcopy_mase_graph(graph)
-        bl_graph = load_mase_graph_transform_pass(
+        bl_graph = load_mase_graph_interface_pass(
             bl_graph, pass_args=config.get("baseline_weight_path")
         )
     else:

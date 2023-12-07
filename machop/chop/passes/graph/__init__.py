@@ -10,21 +10,25 @@ from .analysis import (
     report_node_shape_analysis_pass,
     report_node_type_analysis_pass,
     verify_common_metadata_analysis_pass,
-    total_bits_mg_analysis_pass,
+    calculate_avg_bits_mg_analysis_pass,
 )
 from .transforms import (
-    load_mase_graph_transform_pass,
-    load_node_meta_param_transform_pass,
     prune_transform_pass,
     prune_unwrap_transform_pass,
     quantize_transform_pass,
-    save_mase_graph_transform_pass,
-    save_node_meta_param_transform_pass,
     summarize_quantization_analysis_pass,
     conv_bn_fusion_transform_pass,
     logicnets_fusion_transform_pass,
     onnx_annotate_transform_pass,
 )
+
+from .interface import (
+    load_mase_graph_interface_pass,
+    save_mase_graph_interface_pass,
+    save_node_meta_param_interface_pass,
+    load_node_meta_param_interface_pass,
+)
+
 from .transforms.quantize import quantized_func_map, quantized_module_map
 from .transforms.quantize.quant_parsers import parse_node_config
 
@@ -39,19 +43,23 @@ ANALYSIS_PASSES = [
     "report_node_meta_param",
     "report_node_shape",
     "report_node_type",
-    "total_bits_mg_analysis_pass",
+    "calculate_avg_bits",
 ]
+
 TRANSFORM_PASSES = [
-    "load_mase_graph",
-    "load_node_meta_param",
-    "save_mase_graph",
-    "save_node_meta_param",
     "quantize",
     "summarize_quantization",
     "prune",
     "remove_prune_wrappers",
     "conv_bn_fusion",
     "logicnets_fusion",
+]
+
+INTERFACE_PASSES = [
+    "load_mase_graph",
+    "load_node_meta_param",
+    "save_mase_graph",
+    "save_node_meta_param",
 ]
 
 PASSES = {
@@ -67,12 +75,13 @@ PASSES = {
     "report_node_meta_param": report_node_meta_param_analysis_pass,
     "report_node_shape": report_node_shape_analysis_pass,
     "report_node_type": report_node_type_analysis_pass,
-    "total_bits_mg_analysis_pass": total_bits_mg_analysis_pass,
+    "calculate_avg_bits": calculate_avg_bits_mg_analysis_pass,
+    # interface
+    "load_mase_graph": load_mase_graph_interface_pass,
+    "load_node_meta_param": load_node_meta_param_interface_pass,
+    "save_mase_graph": save_mase_graph_interface_pass,
+    "save_node_meta_param": save_node_meta_param_interface_pass,
     # transform
-    "load_mase_graph": load_mase_graph_transform_pass,
-    "load_node_meta_param": load_node_meta_param_transform_pass,
-    "save_mase_graph": save_mase_graph_transform_pass,
-    "save_node_meta_param": save_node_meta_param_transform_pass,
     "quantize": quantize_transform_pass,
     "summarize_quantization": summarize_quantization_analysis_pass,
     "prune": prune_transform_pass,
