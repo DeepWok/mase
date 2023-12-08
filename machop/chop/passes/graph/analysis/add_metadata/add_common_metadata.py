@@ -272,53 +272,147 @@ def add_common_metadata_analysis_pass(
     The common metadata of a Mase node in a Mase graph describes the constraints of the
     node for any static analysis or possible transformation. The metadata has a
     tree structure, e.g.
+
     - common
-      - mase_op -> str : the mase op of the node, e.g. placeholder, linear, relu
-      - mase_type -> str : the mase type of the node, e.g. module, builtin_func, module_related_func
-      - args -> {}
-         - $name : name of the arg
-           (if the arg is a tensor)
-           - type -> type of the arg, e.g. fixed point or float
-           - precision -> format of the type, e.g. (10, 5)
-           - shape -> shape of the arg
-           (if the arg is not a tensor)
-           - value of the arg
-      - results -> {}
-         - $name : name of the result
-           (if the result is a tensor)
-           - type -> type of the result, e.g. fixed point or float
-           - precision -> format of the type, e.g. (10, 5)
-           - size -> size of the result
-           (if the result is not a tensor)
-           - value of the result
+        - mase_op -> str : the mase op of the node, e.g. placeholder, linear, relu
+        - mase_type -> str : the mase type of the node, e.g. module, builtin_func, module_related_func
+        - args -> {}
+             - $name : name of the arg
+               (if the arg is a tensor)
+                 - type -> type of the arg, e.g. fixed point or float
+                 - precision -> format of the type, e.g. (10, 5)
+                 - shape -> shape of the arg
+               (if the arg is not a tensor)
+                 - value of the arg
+        - results -> {}
+             - $name : name of the result
+               (if the result is a tensor)
+                 - type -> type of the result, e.g. fixed point or float
+                 - precision -> format of the type, e.g. (10, 5)
+                 - size -> size of the result
+               (if the result is not a tensor)
+                 - value of the result
 
     Examples:
 
     A linear layer in a mase graph:
 
-    %fc1 : [num_users=1] = call_module[target=fc1](args = (%flatten,), kwargs = {})
+    .. code-block:: shell
+
+        %fc1 : [num_users=1] = call_module[target=fc1](args = (%flatten,), kwargs = {})
+
 
     A linear layer after this pass:
 
-    {'common': {'mase_type': 'module_related_func', 'mase_op': 'linear', 'args': {'data_in_0': {'shape': [1, 784], 'torch_dtype': torch.float32, 'type': 'float', 'precision': [32]}, 'weight': {'type': 'float', 'precision': [32], 'shape': [784, 784]}, 'bias': {'type': 'float', 'precision': [32], 'shape': [784]}}, 'results': {'data_out_0': {'type': 'float', 'precision': [32], 'shape': [1, 784], 'torch_dtype': torch.float32}}}, 'software': {}, 'hardware': {}}
+    .. code-block:: JSON
+
+        {
+            "common": {
+                "mase_type": "module_related_func",
+                "mase_op": "linear",
+                "args": {
+                    "data_in_0": {
+                        "shape": [1, 784],
+                        "torch_dtype": torch.float32,
+                        "type": "float",
+                        "precision": [32],
+                    },
+                    "weight": {"type": "float", "precision": [32], "shape": [784, 784]},
+                    "bias": {"type": "float", "precision": [32], "shape": [784]},
+                },
+                "results": {
+                    "data_out_0": {
+                        "type": "float",
+                        "precision": [32],
+                        "shape": [1, 784],
+                        "torch_dtype": torch.float32,
+                    }
+                },
+            },
+            "software": {},
+            "hardware": {},
+        }
+
 
     A relu layer in a mase graph:
 
-    %relu : [num_users=1] = call_function[target=torch.nn.functional.relu](args = (%fc1,), kwargs = {inplace: False})
+    .. code-block:: shell
+
+        %relu : [num_users=1] = call_function[target=torch.nn.functional.relu](args = (%fc1,), kwargs = {inplace: False})
+
 
     A relu layer after this pass:
 
-    {'common': {'mase_type': 'module_related_func', 'mase_op': 'relu', 'results': {'data_out_0': {'type': 'float', 'precision': [32], 'shape': [1, 784], 'torch_dtype': torch.float32}}, 'args': {'data_in_0': {'shape': [1, 784], 'torch_dtype': torch.float32, 'type': 'float', 'precision': [32]}, 'inplace': False}}, 'software': {}, 'hardware': {}}
+    .. code-block:: JSON
+
+        {
+            "common": {
+                "mase_type": "module_related_func",
+                "mase_op": "relu",
+                "results": {
+                    "data_out_0": {
+                        "type": "float",
+                        "precision": [32],
+                        "shape": [1, 784],
+                        "torch_dtype": torch.float32,
+                    }
+                },
+                "args": {
+                    "data_in_0": {
+                        "shape": [1, 784],
+                        "torch_dtype": torch.float32,
+                        "type": "float",
+                        "precision": [32],
+                    },
+                    "inplace": False,
+                },
+            },
+            "software": {},
+            "hardware": {},
+        }
+
 
     A flatten op in a mase graph:
 
-    %flatten : [num_users=1] = call_function[target=torch.flatten](args = (%x,), kwargs = {start_dim: 1, end_dim: -1})
+    .. code-block:: shell
+
+        %flatten : [num_users=1] = call_function[target=torch.flatten](args = (%x,), kwargs = {start_dim: 1, end_dim: -1})
+
 
     A flatten op after this pass:
 
-    {'common': {'mase_type': 'implicit_func', 'mase_op': 'flatten', 'results': {'data_out_0': {'type': 'float', 'precision': [32], 'shape': [1, 784], 'torch_dtype': torch.float32}}, 'args': {'data_in_0': {'shape': [1, 28, 28], 'torch_dtype': torch.float32, 'type': 'float', 'precision': [32]}, 'start_dim': 1, 'end_dim': -1}}, 'software': {}, 'hardware': {}}
+
+    .. code-block:: JSON
+
+        {
+            "common": {
+                "mase_type": "implicit_func",
+                "mase_op": "flatten",
+                "results": {
+                    "data_out_0": {
+                        "type": "float",
+                        "precision": [32],
+                        "shape": [1, 784],
+                        "torch_dtype": torch.float32,
+                    }
+                },
+                "args": {
+                    "data_in_0": {
+                        "shape": [1, 28, 28],
+                        "torch_dtype": torch.float32,
+                        "type": "float",
+                        "precision": [32],
+                    },
+                    "start_dim": 1,
+                    "end_dim": -1,
+                },
+            },
+            "software": {},
+            "hardware": {},
+        }
 
     """
+
     logger.debug(graph.fx_graph)
     graph = graph_iterator_for_mase_ops(graph)
     graph = graph_iterator_for_metadata(graph, **pass_args)

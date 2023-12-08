@@ -116,70 +116,221 @@ def add_hardware_metadata_analysis_pass(graph, pass_args=None):
     tree structure, e.g.
 
     - hardware
-      - is_implicit -> bool : whether the node is mapped on hardware or software annotation only
-      - verilog_param -> {} : parameters need for customise the hardware module
-      - toolchain -> str : tool chain for code generation, must be INTERNAL, EXTERNAL or HLS
-      - module -> str : the name of the used hardware module
-      - interface -> {}
-         - name : name of the parameters
-           - storage : the hardware interface implemented, must be BRAM
-           - transpose : whether the data needs to be transposed before emitting
-      - dependence_files -> [] : the dependent files for the generated module
+        - is_implicit -> bool : whether the node is mapped on hardware or software annotation only
+        - verilog_param -> {} : parameters need for customise the hardware module
+        - toolchain -> str : tool chain for code generation, must be INTERNAL, EXTERNAL or HLS
+        - module -> str : the name of the used hardware module
+        - interface -> {}
+             - name : name of the parameters
+                 - storage : the hardware interface implemented, must be BRAM
+                 - transpose : whether the data needs to be transposed before emitting
+        - dependence_files -> [] : the dependent files for the generated module
 
     The verilog parameters follow the following naming rules:
 
     - Hardware signal naming rules
 
-      - Data with tensor types are explicit as hardware signals, such as weight and bias,
-        and Data with scalar/tuple types are implicit as parameters (TODO).
-      - Each op is a node with a set of inputs, outputs and parameters
-      - The input is named by: data_in_0 (data_in_0_ready, data_in_valid), data_in_1,
-      - The output is named by: data_out_0 (data_out_0_ready, data_out_valid), data_out_1, ..
-      - The parameters are named by PyTorch names: weight (weight_ready, weight_valid), bias (bias_ready, bias_valid)
+        - Data with tensor types are explicit as hardware signals, such as weight and bias,
+          and Data with scalar/tuple types are implicit as parameters (TODO).
+        - Each op is a node with a set of inputs, outputs and parameters
+        - The input is named by: data_in_0 (data_in_0_ready, data_in_valid), data_in_1,
+        - The output is named by: data_out_0 (data_out_0_ready, data_out_valid), data_out_1, ..
+        - The parameters are named by PyTorch names: weight (weight_ready, weight_valid), bias (bias_ready, bias_valid)
 
     - Hardware parameters naming rules
       Parameters with tensor types are explicit as hardware signals, such as weight and bias,
       and parameters with scalar/tuple types are implicit as hardware parameters.
 
-      - Taking data_in_0 for example:
-        DATA_IN_0_PRECISION_0
-        DATA_IN_0_PRECISION_1
-        ...
-        (depending on how many precision parameters we have.
-        The order matches the same order as the mase precision metadata)
-        DATA_IN_0_TENSOR_SIZE_DIM_0
-        DATA_IN_0_TENSOR_SIZE_DIM_1
-        DATA_IN_0_TENSOR_SIZE_DIM_2
-        DATA_IN_0_PARALLELISM_DIM_0
-        DATA_IN_0_PARALLELISM_DIM_1
-        DATA_IN_0_PARALLELISM_DIM_2
-        (This means that the number of iterations = tensor_size / spatial_size)
+        - Taking data_in_0 for example:
+            - `DATA_IN_0_PRECISION_0`
+            - `DATA_IN_0_PRECISION_1`
+            - ...
+            - (depending on how many precision parameters we have.
+            - The order matches the same order as the mase precision metadata)
+            - `DATA_IN_0_TENSOR_SIZE_DIM_0`
+            - `DATA_IN_0_TENSOR_SIZE_DIM_1`
+            - `DATA_IN_0_TENSOR_SIZE_DIM_2`
+            - `DATA_IN_0_PARALLELISM_DIM_0`
+            - `DATA_IN_0_PARALLELISM_DIM_1`
+            - `DATA_IN_0_PARALLELISM_DIM_2`
+            - (This means that the number of iterations = tensor_size / spatial_size)
 
-      - Implicit parameters are directly translated into verilog parameters, e.g.
-        STRIDE
-        DIM
+        - Implicit parameters are directly translated into verilog parameters, e.g.
+          STRIDE
+          DIM
 
     Examples:
 
     A linear layer in a mase graph with the following common metadata:
 
-    %fc1 : [num_users=1] = call_module[target=fc1](args = (%flatten,), kwargs = {})
+    .. code-block:: shell
 
-    {'common': {'mase_type': 'module_related_func', 'mase_op': 'linear', 'args': {'data_in_0': {'shape': [1, 784], 'torch_dtype': torch.float32, 'type': 'float', 'precision': [32]}, 'weight': {'type': 'float', 'precision': [32], 'shape': [784, 784]}, 'bias': {'type': 'float', 'precision': [32], 'shape': [784]}}, 'results': {'data_out_0': {'type': 'float', 'precision': [32], 'shape': [1, 784], 'torch_dtype': torch.float32}}}, 'software': {}, 'hardware': {}}
+        %fc1 : [num_users=1] = call_module[target=fc1](args = (%flatten,), kwargs = {})
+
+
+    .. code-block:: JSON
+
+        {
+            "common": {
+                "mase_type": "module_related_func",
+                "mase_op": "linear",
+                "args": {
+                    "data_in_0": {
+                        "shape": [1, 784],
+                        "torch_dtype": torch.float32,
+                        "type": "float",
+                        "precision": [32],
+                    },
+                    "weight": {"type": "float", "precision": [32], "shape": [784, 784]},
+                    "bias": {"type": "float", "precision": [32], "shape": [784]},
+                },
+                "results": {
+                    "data_out_0": {
+                        "type": "float",
+                        "precision": [32],
+                        "shape": [1, 784],
+                        "torch_dtype": torch.float32,
+                    }
+                },
+            },
+            "software": {},
+            "hardware": {},
+        }
+
 
     The hardware metadata of the linear layer after this pass:
 
-    {'common': {...}, 'software': {}, 'hardware': {'is_implicit': False, 'interface': {'weight': {'storage': 'BRAM', 'transpose': False}, 'bias': {'storage': 'BRAM', 'transpose': False}}, 'toolchain': 'INTERNAL', 'module': 'fixed_linear', 'dependence_files': ['cast/fixed_cast.sv', 'fixed_arith/fixed_dot_product.sv', 'fixed_arith/fixed_vector_mult.sv', 'fixed_arith/register_slice.sv', 'fixed_arith/fixed_accumulator.sv', 'fixed_arith/fixed_adder_tree.sv', 'fixed_arith/fixed_adder_tree_layer.sv', 'fixed_arith/fixed_mult.sv', 'common/join2.sv', 'linear/fixed_linear.sv'], 'verilog_param': {'DATA_IN_0_PRECISION_0': 8, 'DATA_IN_0_PRECISION_1': 3, 'DATA_IN_0_TENSOR_SIZE_DIM_0': 1, 'DATA_IN_0_PARALLELISM_DIM_0': 1, 'DATA_IN_0_TENSOR_SIZE_DIM_1': 784, 'DATA_IN_0_PARALLELISM_DIM_1': 784, 'DATA_IN_0_TENSOR_SIZE_DIM_2': 1, 'DATA_IN_0_PARALLELISM_DIM_2': 1, 'WEIGHT_PRECISION_0': 8, 'WEIGHT_PRECISION_1': 3, 'WEIGHT_TENSOR_SIZE_DIM_0': 784, 'WEIGHT_PARALLELISM_DIM_0': 784, 'WEIGHT_TENSOR_SIZE_DIM_1': 784, 'WEIGHT_PARALLELISM_DIM_1': 784, 'WEIGHT_TENSOR_SIZE_DIM_2': 1, 'WEIGHT_PARALLELISM_DIM_2': 1, 'BIAS_PRECISION_0': 8, 'BIAS_PRECISION_1': 3, 'BIAS_TENSOR_SIZE_DIM_0': 784, 'BIAS_PARALLELISM_DIM_0': 784, 'BIAS_TENSOR_SIZE_DIM_1': 1, 'BIAS_PARALLELISM_DIM_1': 1, 'BIAS_TENSOR_SIZE_DIM_2': 1, 'BIAS_PARALLELISM_DIM_2': 1, 'DATA_OUT_0_PRECISION_0': 8, 'DATA_OUT_0_PRECISION_1': 3, 'DATA_OUT_0_TENSOR_SIZE_1_DIM_0': 1, 'DATA_OUT_0_PARALLELISM_1_DIM_0': 1, 'DATA_OUT_0_TENSOR_SIZE_1_DIM_1': 784, 'DATA_OUT_0_PARALLELISM_1_DIM_1': 784, 'DATA_OUT_0_TENSOR_SIZE_1_DIM_2': 1, 'DATA_OUT_0_PARALLELISM_1_DIM_2': 1}}}
+    .. code-block:: JSON
+
+        {
+            "common": {...},
+            "software": {},
+            "hardware": {
+                "is_implicit": False,
+                "interface": {
+                    "weight": {"storage": "BRAM", "transpose": False},
+                    "bias": {"storage": "BRAM", "transpose": False},
+                },
+                "toolchain": "INTERNAL",
+                "module": "fixed_linear",
+                "dependence_files": [
+                    "cast/fixed_cast.sv",
+                    "fixed_arith/fixed_dot_product.sv",
+                    "fixed_arith/fixed_vector_mult.sv",
+                    "fixed_arith/register_slice.sv",
+                    "fixed_arith/fixed_accumulator.sv",
+                    "fixed_arith/fixed_adder_tree.sv",
+                    "fixed_arith/fixed_adder_tree_layer.sv",
+                    "fixed_arith/fixed_mult.sv",
+                    "common/join2.sv",
+                    "linear/fixed_linear.sv",
+                ],
+                "verilog_param": {
+                    "DATA_IN_0_PRECISION_0": 8,
+                    "DATA_IN_0_PRECISION_1": 3,
+                    "DATA_IN_0_TENSOR_SIZE_DIM_0": 1,
+                    "DATA_IN_0_PARALLELISM_DIM_0": 1,
+                    "DATA_IN_0_TENSOR_SIZE_DIM_1": 784,
+                    "DATA_IN_0_PARALLELISM_DIM_1": 784,
+                    "DATA_IN_0_TENSOR_SIZE_DIM_2": 1,
+                    "DATA_IN_0_PARALLELISM_DIM_2": 1,
+                    "WEIGHT_PRECISION_0": 8,
+                    "WEIGHT_PRECISION_1": 3,
+                    "WEIGHT_TENSOR_SIZE_DIM_0": 784,
+                    "WEIGHT_PARALLELISM_DIM_0": 784,
+                    "WEIGHT_TENSOR_SIZE_DIM_1": 784,
+                    "WEIGHT_PARALLELISM_DIM_1": 784,
+                    "WEIGHT_TENSOR_SIZE_DIM_2": 1,
+                    "WEIGHT_PARALLELISM_DIM_2": 1,
+                    "BIAS_PRECISION_0": 8,
+                    "BIAS_PRECISION_1": 3,
+                    "BIAS_TENSOR_SIZE_DIM_0": 784,
+                    "BIAS_PARALLELISM_DIM_0": 784,
+                    "BIAS_TENSOR_SIZE_DIM_1": 1,
+                    "BIAS_PARALLELISM_DIM_1": 1,
+                    "BIAS_TENSOR_SIZE_DIM_2": 1,
+                    "BIAS_PARALLELISM_DIM_2": 1,
+                    "DATA_OUT_0_PRECISION_0": 8,
+                    "DATA_OUT_0_PRECISION_1": 3,
+                    "DATA_OUT_0_TENSOR_SIZE_1_DIM_0": 1,
+                    "DATA_OUT_0_PARALLELISM_1_DIM_0": 1,
+                    "DATA_OUT_0_TENSOR_SIZE_1_DIM_1": 784,
+                    "DATA_OUT_0_PARALLELISM_1_DIM_1": 784,
+                    "DATA_OUT_0_TENSOR_SIZE_1_DIM_2": 1,
+                    "DATA_OUT_0_PARALLELISM_1_DIM_2": 1,
+                },
+            },
+        }
 
     A relu layer in a mase graph with the following common metadata:
 
-    %relu : [num_users=1] = call_function[target=torch.nn.functional.relu](args = (%fc1,), kwargs = {inplace: False})
+    .. code-block:: shell
 
-    {'common': {'mase_type': 'module_related_func', 'mase_op': 'relu', 'results': {'data_out_0': {'type': 'float', 'precision': [32], 'shape': [1, 784], 'torch_dtype': torch.float32}}, 'args': {'data_in_0': {'shape': [1, 784], 'torch_dtype': torch.float32, 'type': 'float', 'precision': [32]}, 'inplace': False}}, 'software': {}, 'hardware': {}}
+        %relu : [num_users=1] = call_function[target=torch.nn.functional.relu](args = (%fc1,), kwargs = {inplace: False})
+
+
+    .. code-block:: JSON
+
+        {
+            "common": {
+                "mase_type": "module_related_func",
+                "mase_op": "relu",
+                "results": {
+                    "data_out_0": {
+                        "type": "float",
+                        "precision": [32],
+                        "shape": [1, 784],
+                        "torch_dtype": torch.float32,
+                    }
+                },
+                "args": {
+                    "data_in_0": {
+                        "shape": [1, 784],
+                        "torch_dtype": torch.float32,
+                        "type": "float",
+                        "precision": [32],
+                    },
+                    "inplace": False,
+                },
+            },
+            "software": {},
+            "hardware": {},
+        }
 
     The hardware metadata of the relu layer after this pass:
 
-    {'common': {...}, 'software': {}, 'hardware': {'is_implicit': False, 'interface': {'inplace': {}}, 'toolchain': 'INTERNAL', 'module': 'fixed_relu', 'dependence_files': ['activations/fixed_relu.sv'], 'verilog_param': {'DATA_IN_0_PRECISION_0': 8, 'DATA_IN_0_PRECISION_1': 3, 'DATA_IN_0_TENSOR_SIZE_DIM_0': 1, 'DATA_IN_0_PARALLELISM_DIM_0': 1, 'DATA_IN_0_TENSOR_SIZE_DIM_1': 784, 'DATA_IN_0_PARALLELISM_DIM_1': 784, 'DATA_IN_0_TENSOR_SIZE_DIM_2': 1, 'DATA_IN_0_PARALLELISM_DIM_2': 1, 'INPLACE': False, 'DATA_OUT_0_PRECISION_0': 8, 'DATA_OUT_0_PRECISION_1': 3, 'DATA_OUT_0_TENSOR_SIZE_1_DIM_0': 1, 'DATA_OUT_0_PARALLELISM_1_DIM_0': 1, 'DATA_OUT_0_TENSOR_SIZE_1_DIM_1': 784, 'DATA_OUT_0_PARALLELISM_1_DIM_1': 784, 'DATA_OUT_0_TENSOR_SIZE_1_DIM_2': 1, 'DATA_OUT_0_PARALLELISM_1_DIM_2': 1}}}
+    .. code-block:: JSON
+
+        {
+            "common": {...},
+            "software": {},
+            "hardware": {
+                "is_implicit": False,
+                "interface": {"inplace": {}},
+                "toolchain": "INTERNAL",
+                "module": "fixed_relu",
+                "dependence_files": ["activations/fixed_relu.sv"],
+                "verilog_param": {
+                    "DATA_IN_0_PRECISION_0": 8,
+                    "DATA_IN_0_PRECISION_1": 3,
+                    "DATA_IN_0_TENSOR_SIZE_DIM_0": 1,
+                    "DATA_IN_0_PARALLELISM_DIM_0": 1,
+                    "DATA_IN_0_TENSOR_SIZE_DIM_1": 784,
+                    "DATA_IN_0_PARALLELISM_DIM_1": 784,
+                    "DATA_IN_0_TENSOR_SIZE_DIM_2": 1,
+                    "DATA_IN_0_PARALLELISM_DIM_2": 1,
+                    "INPLACE": False,
+                    "DATA_OUT_0_PRECISION_0": 8,
+                    "DATA_OUT_0_PRECISION_1": 3,
+                    "DATA_OUT_0_TENSOR_SIZE_1_DIM_0": 1,
+                    "DATA_OUT_0_PARALLELISM_1_DIM_0": 1,
+                    "DATA_OUT_0_TENSOR_SIZE_1_DIM_1": 784,
+                    "DATA_OUT_0_PARALLELISM_1_DIM_1": 784,
+                    "DATA_OUT_0_TENSOR_SIZE_1_DIM_2": 1,
+                    "DATA_OUT_0_PARALLELISM_1_DIM_2": 1,
+                },
+            },
+        }
 
     """
 
