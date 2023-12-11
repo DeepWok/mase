@@ -51,7 +51,7 @@ def test_complex_quantize():
         model_name="toy-fn",
         name="cifar10",
         batch_size=8,
-        num_workers=4,
+        num_workers=0,
         tokenizer=None,
         max_token_len=128,
     )
@@ -90,7 +90,7 @@ def test_complex_quantize():
         mg, pass_args={"dummy_in": dummy_in, "add_value": False}
     )
     mg, _ = add_software_metadata_analysis_pass(mg, pass_args=None)
-    mg = profile_statistics_analysis_pass(mg, stat_args)
+    mg, _ = profile_statistics_analysis_pass(mg, stat_args)
 
     config_files = [
         "integer.toml",

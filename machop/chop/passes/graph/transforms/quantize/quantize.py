@@ -196,6 +196,17 @@ def graph_iterator_quantize_by_regex_name(graph, config: dict):
 
 
 def quantize_transform_pass(graph, pass_args=None):
+    """
+    Apply quantization transformation to the given graph.
+
+    :param graph: The input graph to be transformed.
+    :type graph: MaseGraph
+    :param pass_args: Additional arguments for the transformation.
+    :type pass_args: dict, optional
+    :return: The transformed graph.
+    :rtype: MaseGraph
+    :raises ValueError: If the quantize "by" argument is unsupported.
+    """
     by = pass_args.pop("by")
     match by:
         case "type":

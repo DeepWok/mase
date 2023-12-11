@@ -35,7 +35,7 @@ logger = logging.getLogger("chop.test")
 set_logging_verbosity("debug")
 
 
-def test():
+def test_report_graph():
     mlp = ToyCustomFnNet(image_size=(1, 28, 28), num_classes=10)
     mg = MaseGraph(model=mlp)
 
@@ -56,4 +56,4 @@ def test():
 # --------------------------------------------------
 #   Execution
 # --------------------------------------------------
-test()
+test_report_graph()

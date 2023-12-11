@@ -48,7 +48,8 @@ def test_statistic_profiler():
         model_name="toy_custom_fn",
         batch_size=batch_size,
         name="cifar10",
-        num_workers=os.cpu_count(),
+        # num_workers=os.cpu_count(),
+        num_workers=0,
         tokenizer=None,
         max_token_len=None,
     )
@@ -93,5 +94,6 @@ def test_statistic_profiler():
         "input_generator": input_generator,
         "num_samples": 1,
     }
-    mg = profile_statistics_analysis_pass(mg, pass_arg)
-    mg = report_node_meta_param_analysis_pass(mg, {"which": ("software",)})
+
+    mg, _ = profile_statistics_analysis_pass(mg, pass_arg)
+    mg, _ = report_node_meta_param_analysis_pass(mg, {"which": ("software",)})

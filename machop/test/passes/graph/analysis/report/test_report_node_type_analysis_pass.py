@@ -1,3 +1,6 @@
+#!/usr/bin/env python3
+# This example converts a simple MLP model to Verilog
+
 import logging
 import os
 import sys
@@ -24,15 +27,17 @@ from chop.ir.graph import MaseGraph
 from chop.models.toys.toy import ToyNet
 from chop.passes.graph.analysis import (
     add_common_metadata_analysis_pass,
+    add_software_metadata_analysis_pass,
+    add_hardware_metadata_analysis_pass,
     init_metadata_analysis_pass,
-    calculate_avg_bits_mg_analysis_pass,
+    report_node_type_analysis_pass,
 )
 
 logger = logging.getLogger("chop.test")
 set_logging_verbosity("debug")
 
 
-def test_calculate_avg_bits():
+def test_report_node_type_analysis():
     mlp = ToyNet(image_size=(1, 28, 28), num_classes=10)
     mg = MaseGraph(model=mlp)
 
@@ -42,16 +47,16 @@ def test_calculate_avg_bits():
     logger.debug(mg.fx_graph)
 
     dummy_in = {"x": x}
+    pass_args = {}
 
-    mg, _ = init_metadata_analysis_pass(mg, {})
+    mg, _ = init_metadata_analysis_pass(mg, pass_args)
     mg, _ = add_common_metadata_analysis_pass(
-        mg, {"add_value": False, "dummy_in": dummy_in}
+        mg, {"dummy_in": dummy_in, "add_value": False}
     )
-    mg, info = calculate_avg_bits_mg_analysis_pass(mg, {})
-    print(info)
+    mg, _ = add_software_metadata_analysis_pass(mg, pass_args)
+    mg, _ = add_hardware_metadata_analysis_pass(mg, pass_args)
+
+    mg, _ = report_node_type_analysis_pass(mg, pass_args)
 
 
-# --------------------------------------------------
-#   Execution
-# --------------------------------------------------
-test_calculate_avg_bits()
+test_report_node_type_analysis()

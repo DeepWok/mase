@@ -2,8 +2,8 @@ import torch
 from ..base import HWRunnerBase
 from .model_profiler import get_model_profiler
 
-from chop.passes.graph.analysis.total_bits_estimator import (
-    total_bits_module_analysis_pass,
+from chop.passes.module.analysis.quantization import (
+    calculate_avg_bits_module_analysis_pass,
 )
 
 
@@ -27,7 +27,7 @@ class RunnerAvgBitwidthManualModel(HWRunnerBase):
         seq_len = input_ids.shape[1]
 
         if self.profiler_name == "profiler_pass":
-            total_bits_module_analysis_pass(pass_model, metrics)
+            calculate_avg_bits_module_analysis_pass(pass_model, metrics)
             metrics["memory_density"] = self.compare_to / metrics["average_bitwidth"]
         else:
             p_metrics = get_model_profiler(self.profiler_name)(
@@ -56,7 +56,7 @@ class RunnerAvgBitwidth(HWRunnerBase):
         else:
             pass_model = model
         # compose hardware analysis passes here
-        total_bits_module_analysis_pass(pass_model, metrics)
+        calculate_avg_bits_module_analysis_pass(pass_model, metrics)
         metrics["memory_density"] = (
             self.config["compare_to"] / metrics["average_bitwidth"]
         )

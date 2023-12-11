@@ -11,7 +11,7 @@ from chop.passes.graph import (
     init_metadata_analysis_pass,
     add_software_metadata_analysis_pass,
 )
-from chop.passes.graph.transforms.interface import save_mase_graph_transform_pass
+from chop.passes.graph.interface import save_mase_graph_interface_pass
 from chop.ir.graph import MaseGraph
 from pytorch_lightning.callbacks import LearningRateMonitor, ModelCheckpoint
 from pytorch_lightning.loggers import TensorBoardLogger
@@ -122,4 +122,4 @@ def train(
         graph = add_software_metadata_analysis_pass(graph, None)
         transformed_ckpt = Path(save_path) / "transformed_ckpt"
         transformed_ckpt.mkdir(parents=True, exist_ok=True)
-        save_mase_graph_transform_pass(graph, pass_args=transformed_ckpt)
+        save_mase_graph_interface_pass(graph, pass_args=transformed_ckpt)

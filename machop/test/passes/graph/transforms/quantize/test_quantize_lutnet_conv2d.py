@@ -248,3 +248,6 @@ def test_quantize_lutnet_conv2d():
         # assert torch.all(
         #     rounding(out_binary) == rounding(out)
         # ), "output:{} {} {}".format(out_binary == out, out_binary, out)
+
+
+test_quantize_lutnet_conv2d()
