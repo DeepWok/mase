@@ -5,11 +5,11 @@ import torch
 logger = logging.getLogger(__name__)
 
 
-def total_bits_module_analysis_pass(
+def calculate_avg_bits_module_analysis_pass(
     module: torch.nn.Module, pass_args: dict = {}
 ) -> tuple:
     """
-    Analyzes the total number of bits required by the quantized layers in a given module.
+    Analyzes the averaged bitwidth of a given module.
 
     :param module: The module to analyze.
     :type module: torch.nn.Module

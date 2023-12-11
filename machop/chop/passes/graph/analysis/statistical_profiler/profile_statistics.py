@@ -280,7 +280,16 @@ def graph_iterator_compute_and_unregister_stats(graph):
 
 def profile_statistics_analysis_pass(graph, pass_args: dict):
     """
-    Profile statistics analysis pass
+    Perform profile statistics analysis on the given graph.
+
+    :param graph: The graph to perform analysis on.
+    :type graph: MaseGraph
+
+    :param pass_args: The arguments for the analysis pass.
+    :type pass_args: dict
+
+    :return: The modified graph and an empty dictionary.
+    :rtype: tuple(MaseGraph, dict)
     """
 
     graph = graph_iterator_register_stat_collections(
@@ -303,4 +312,4 @@ def profile_statistics_analysis_pass(graph, pass_args: dict):
 
     graph = graph_iterator_compute_and_unregister_stats(graph)
 
-    return graph
+    return graph, {}

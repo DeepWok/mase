@@ -8,9 +8,7 @@ import joblib
 from functools import partial
 from .base import SearchStrategyBase
 
-from ....passes.graph.analysis.total_bits_estimator import (
-    total_bits_module_analysis_pass,
-)
+from chop.passes.module.analysis import calculate_avg_bits_module_analysis_pass
 
 logger = logging.getLogger(__name__)
 

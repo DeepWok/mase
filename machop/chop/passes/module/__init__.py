@@ -1,1 +1,1 @@
-from .analysis import total_bits_module_analysis_pass
+from .analysis import calculate_avg_bits_module_analysis_pass

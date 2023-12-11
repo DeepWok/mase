@@ -92,6 +92,3 @@ def test_quantize():
     mg = quantize_transform_pass(mg, quan_args)
 
     summarize_quantization_analysis_pass(ori_mg, mg, save_dir="quantize_summary")
-
-
-# test_quantize()

@@ -11,9 +11,9 @@ from chop.passes.graph.analysis import (
     init_metadata_analysis_pass,
 )
 from chop.ir.graph.mase_graph import MaseGraph
-from chop.passes.graph.transforms.interface import (
-    load_mase_graph_transform_pass,
-    save_mase_graph_transform_pass,
+from chop.passes.graph.interface import (
+    load_mase_graph_interface_pass,
+    save_mase_graph_interface_pass,
 )
 from chop.passes.graph.utils import deepcopy_mase_graph
 from chop.tools.checkpoint_load import load_model
@@ -58,7 +58,7 @@ def transform(
 
     # create or load metadata.parameters and mase_graph.model
     if load_name is not None and load_type == "mz":
-        graph = load_mase_graph_transform_pass(graph, pass_args=load_name)
+        graph = load_mase_graph_interface_pass(graph, pass_args=load_name)
     else:
         dummy_in = get_dummy_input(
             model_info=model_info,
@@ -177,5 +177,5 @@ def transform(
     if save_dir is not None:
         transformed_ckpt = save_dir / "transformed_ckpt"
         transformed_ckpt.mkdir(parents=True, exist_ok=True)
-        save_mase_graph_transform_pass(graph, pass_args=transformed_ckpt)
+        save_mase_graph_interface_pass(graph, pass_args=transformed_ckpt)
     return graph

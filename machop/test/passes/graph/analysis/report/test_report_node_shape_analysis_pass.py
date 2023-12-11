@@ -30,17 +30,14 @@ from chop.passes.graph.analysis import (
     add_software_metadata_analysis_pass,
     add_hardware_metadata_analysis_pass,
     init_metadata_analysis_pass,
-    report_node_hardware_type_analysis_pass,
-    report_node_meta_param_analysis_pass,
     report_node_shape_analysis_pass,
-    report_node_type_analysis_pass,
 )
 
 logger = logging.getLogger("chop.test")
 set_logging_verbosity("debug")
 
 
-def test():
+def test_report_node_shape_analysis_pass():
     mlp = ToyNet(image_size=(1, 28, 28), num_classes=10)
     mg = MaseGraph(model=mlp)
 
@@ -60,6 +57,6 @@ def test():
     mg, _ = add_hardware_metadata_analysis_pass(mg, pass_args)
 
     mg, _ = report_node_shape_analysis_pass(mg, pass_args)
-    mg, _ = report_node_type_analysis_pass(mg, pass_args)
-    mg, _ = report_node_meta_param_analysis_pass(mg, pass_args)
-    mg, _ = report_node_hardware_type_analysis_pass(mg, pass_args)
+
+
+test_report_node_shape_analysis_pass()

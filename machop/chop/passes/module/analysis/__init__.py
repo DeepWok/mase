@@ -1,1 +1,1 @@
-from .total_bits_estimator import total_bits_module_analysis_pass
+from .quantization import calculate_avg_bits_module_analysis_pass
