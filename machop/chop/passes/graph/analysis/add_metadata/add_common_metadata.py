@@ -16,6 +16,7 @@ from chop.passes.graph.common import (
     MASE_MODULE_RELATED_FUNCS,
 )
 from chop.ir.graph.mase_metadata import MaseMetadata
+from chop.passes.graph.analysis.utils import fetch_attr, load_arg
 from tabulate import tabulate
 from torch import nn
 
@@ -162,23 +163,9 @@ def graph_iterator_for_mase_ops(graph):
     return graph
 
 
-def load_arg(a, env):
-    return torch.fx.graph.map_arg(a, lambda n: env[n.name])
-
-
-def fetch_attr(mod, target: str):
-    target_atoms = target.split(".")
-    attr_itr = mod
-    for i, atom in enumerate(target_atoms):
-        if not hasattr(attr_itr, atom):
-            raise RuntimeError(
-                f"Node referenced nonexistant target {'.'.join(target_atoms[:i])}"
-            )
-        attr_itr = getattr(attr_itr, atom)
-    return attr_itr
-
-
-def graph_iterator_for_metadata(graph, dummy_in=None, add_value=True):
+def graph_iterator_for_metadata(
+    graph, dummy_in=None, add_value=True, force_device_meta=False
+):
     """
     largely apated from https://pytorch.org/docs/stable/fx.html
     """
@@ -186,6 +173,11 @@ def graph_iterator_for_metadata(graph, dummy_in=None, add_value=True):
     model, fx_graph, modules = graph.model, graph.fx_graph, graph.modules
     env = {}
     prev_result = None
+
+    # force everything to be on device="meta"
+    if force_device_meta:
+        dummy_in = {k: v.to("meta") for k, v in dummy_in.items()}
+        model = model.to("meta")
 
     for node in graph.fx_graph.nodes:
         args, kwargs = None, None
@@ -257,7 +249,7 @@ def new_graph_iterator_for_metadata(graph, dummy_in=None):
 
 
 def add_common_metadata_analysis_pass(
-    graph, pass_args={"dummy_in": None, "add_value": True}
+    graph, pass_args={"dummy_in": None, "add_value": True, "force_device_meta": False}
 ):
     """add common metadata
 

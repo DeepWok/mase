@@ -11,10 +11,14 @@ from .analysis import (
     report_node_type_analysis_pass,
     verify_common_metadata_analysis_pass,
     calculate_avg_bits_mg_analysis_pass,
+    add_pruning_metadata_analysis_pass,
+    add_natural_sparsity_metadata_analysis_pass,
+    hook_inspection_analysis_pass,
 )
 from .transforms import (
     prune_transform_pass,
-    prune_unwrap_transform_pass,
+    prune_detach_hook_transform_pass,
+    # prune_unwrap_transform_pass,
     quantize_transform_pass,
     summarize_quantization_analysis_pass,
     conv_bn_fusion_transform_pass,
@@ -44,14 +48,16 @@ ANALYSIS_PASSES = [
     "report_node_shape",
     "report_node_type",
     "calculate_avg_bits",
+    "add_pruning_metadata",
+    "add_natural_sparsity",
+    "hook_inspection",
 ]
 
 TRANSFORM_PASSES = [
     "quantize",
     "summarize_quantization",
     "prune",
-    "remove_prune_wrappers",
-    "conv_bn_fusion",
+    "prune_detach_hook" "conv_bn_fusion",
     "logicnets_fusion",
 ]
 
@@ -76,6 +82,9 @@ PASSES = {
     "report_node_shape": report_node_shape_analysis_pass,
     "report_node_type": report_node_type_analysis_pass,
     "calculate_avg_bits": calculate_avg_bits_mg_analysis_pass,
+    "add_pruning_metadata": add_pruning_metadata_analysis_pass,
+    "add_natural_sparsity": add_natural_sparsity_metadata_analysis_pass,
+    "hook_inspection": hook_inspection_analysis_pass,
     # interface
     "load_mase_graph": load_mase_graph_interface_pass,
     "load_node_meta_param": load_node_meta_param_interface_pass,
@@ -85,7 +94,8 @@ PASSES = {
     "quantize": quantize_transform_pass,
     "summarize_quantization": summarize_quantization_analysis_pass,
     "prune": prune_transform_pass,
-    "remove_prune_wrappers": prune_unwrap_transform_pass,
+    "prune_detach_hook": prune_detach_hook_transform_pass,
+    # "remove_prune_wrappers": prune_unwrap_transform_pass,
     "conv_bn_fusion": conv_bn_fusion_transform_pass,
     "logicnets_fusion": logicnets_fusion_transform_pass,
     "onnx_annotate": onnx_annotate_transform_pass,

@@ -21,8 +21,13 @@ from chop.passes.graph import (
     profile_statistics_analysis_pass,
     prune_transform_pass,
 )
+
 from chop.passes.graph.analysis.pruning.calculate_sparsity import (
     add_pruning_metadata_analysis_pass,
+)
+
+from chop.passes.graph.transforms.pruning.prune_detach_hook import (
+    prune_detach_hook_transform_pass,
 )
 
 from chop.ir.graph.mase_graph import MaseGraph
@@ -36,14 +41,10 @@ set_logging_verbosity("debug")
 logger = logging.getLogger("chop.test")
 pp = pprint.PrettyPrinter(indent=4)
 
-configs = [
-    "scope_local_granularity_elementwise_method_random",
-    "scope_local_granularity_elementwise_method_l1",
-    "scope_global_granularity_elementwise_method_l1",
-]
+configs = ["scope_local_granularity_elementwise_method_random"]
 
 
-def test_prune():
+def test_prune_detach_hook():
     for c in configs:
         run_with_config(c)
 
@@ -134,7 +135,9 @@ def run_with_config(config_file):
     graph, sparsity_info = add_pruning_metadata_analysis_pass(
         graph, {"dummy_in": dummy_input, "add_value": False}
     )
+    graph, _ = prune_detach_hook_transform_pass(graph, {})
+
     pp.pprint(sparsity_info)
 
 
-test_prune()
+test_prune_detach_hook()

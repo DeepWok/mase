@@ -44,6 +44,6 @@ make shell
 Now let's test with a small example `common/int_mult`. The RTL code is named `hardware/common/int_mult.sv` and the test bench is named `hardware/testbench/hardware/common/int_mult.sv'. To run the test bench:
 ```shell
 cd /workspace
-test-hardware.py common/int_mult
+make test-hw
 ```
 

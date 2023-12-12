@@ -22,6 +22,10 @@ from .verify import (
     verify_metadata_analysis_pass,
     verify_software_metadata_analysis_pass,
 )
-from .quantization import (
-    calculate_avg_bits_mg_analysis_pass,
+from .quantization import calculate_avg_bits_mg_analysis_pass
+
+from .pruning import (
+    add_pruning_metadata_analysis_pass,
+    add_natural_sparsity_metadata_analysis_pass,
+    hook_inspection_analysis_pass,
 )

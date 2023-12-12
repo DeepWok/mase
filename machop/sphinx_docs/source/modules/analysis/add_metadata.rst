@@ -1,5 +1,5 @@
 chop.passes.graph.analysis.add\_metadata
-==================================
+========================================
 
 add\_common\_metadata\_analysis\_pass
 -------------------------------------

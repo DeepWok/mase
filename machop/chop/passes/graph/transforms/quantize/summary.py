@@ -100,6 +100,14 @@ def graph_iterator_node_histogram(ori_graph, graph, save_path: str = None):
 def summarize_quantization_analysis_pass(
     ori_graph, graph, save_dir: str = None
 ) -> None:
+    """
+    Summarizes the quantization analysis pass.
+
+    Args:
+        ori_graph: The original graph.
+        graph: The modified graph.
+        save_dir (optional): The directory to save the summary files. Defaults to None.
+    """
     if save_dir is not None:
         os.makedirs(save_dir, exist_ok=True)
     table_path = os.path.join(save_dir, "quantize_table.csv") if save_dir else None

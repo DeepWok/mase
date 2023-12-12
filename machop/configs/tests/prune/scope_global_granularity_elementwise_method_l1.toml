@@ -1,0 +1,12 @@
+# A basic toy example that demonstrates weight and activation pruning
+[passes.prune.weight]
+scope = "global"
+granularity = "elementwise"
+method = "l1-norm"
+sparsity = 0.2
+
+[passes.prune.activation]
+scope = "global"
+granularity = "elementwise"
+method = "l1-norm"
+sparsity = 0.1

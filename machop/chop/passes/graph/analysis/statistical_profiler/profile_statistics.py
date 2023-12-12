@@ -211,7 +211,7 @@ class ActProfiler(Interpreter):
                         f"does not match number of act entries ({len(act_stats)})"
                     )
                 except AssertionError:
-                    breakpoint()
+                    exit(1)
 
                 for tensor_arg, stat in zip(numeric_args, act_stats):
                     stat.update(tensor_arg)

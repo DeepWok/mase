@@ -5,7 +5,7 @@ Chop Passes
 
 
 MaseGraph Analysis Passes
------------
+-------------------------
 
 .. list-table:: A summary of all MaseGraph analysis passes 
   :widths: 25 75
@@ -32,17 +32,15 @@ MaseGraph Analysis Passes
   * - :py:meth:`~chop.passes.graph.analysis.report.report_node.report_node_type_analysis_pass`
     -  Perform a node type analysis on the given graph, pretty print MaseGraph after initialization/loading.
   * - :py:meth:`~chop.passes.graph.analysis.statistical_profiler.profile_statistics.profile_statistics_analysis_pass`
-    -  fill
-  * - :py:meth:`~chop.passes.graph.analysis.verify.verify.verify_metadata_analysis_pass`
-    -  fill
-  * - :py:meth:`~chop.passes.graph.analysis.verify.verify.verify_common_metadata_analysis_pass`
-    -  fill
-  * - :py:meth:`~chop.passes.graph.analysis.verify.verify.verify_software_metadata_analysis_pass`
-    -  fill
-  * - :py:meth:`~chop.passes.graph.analysis.verify.verify.verify_hardware_metadata_analysis_pass`
-    -  fill
-  * - :py:meth:`~chop.passes.graph.analysis.total_bits_estimator.total_bits_mg.total_bits_mg_analysis_pass`
-    -  Perform total bits analysis on the given graph.
+    -  Perform profile statistics analysis on the given graph
+  * - :py:meth:`~chop.passes.graph.analysis.quantization.calculate_avg_bits.calculate_avg_bits_mg_analysis_pass`
+    -  Calculate, on average, how many bits are spent on weights and activations
+  * - :py:meth:`~chop.passes.graph.analysis.pruning.calculate_sparsity.add_pruning_metadata_analysis_pass`
+    - Add post-pruning metadata analysis pass to the given graph, the graph must have been pruned
+  * - :py:meth:`~chop.passes.graph.analysis.pruning.calculate_natural_sparsity.add_natural_sparsity_metadata_analysis_pass`
+    - Add natural sparsity metadata analysis pass to the given MaseGraph.
+  * - :py:meth:`~chop.passes.graph.analysis.pruning.hook_inspector.hook_inspection_analysis_pass`
+    - Remove and provide hook information of the modules
 
 
 .. toctree::
@@ -53,11 +51,12 @@ MaseGraph Analysis Passes
 	  analysis/report
 	  analysis/statistical_profiler
 	  analysis/verify
-	  analysis/total_bits_estimator
+	  analysis/quantization
+	  analysis/pruning
 
 
 MaseGraph Transform Passes
------------
+--------------------------
 
 .. list-table:: A summary of all MaseGraph transform passes 
   :widths: 25 75
@@ -66,13 +65,13 @@ MaseGraph Transform Passes
   * - Pass Name
     - Summary
   * - :py:meth:`~chop.passes.graph.transforms.pruning.prune.prune_transform_pass`
-    - fill me
-  * - :py:meth:`~chop.passes.graph.transforms.pruning.prune.prune_unwrap_transform_pass`
-    - fill me
+    - Apply pruning transformation to the given graph
+  * - :py:meth:`~chop.passes.graph.transforms.pruning.prune.prune_detach_hook_transform_pass`
+    - Apply a transformation to the given graph to remove all pruning hooks
   * - :py:meth:`~chop.passes.graph.transforms.quantize.quantize.quantize_transform_pass`
-    - fill me
+    - Apply quantization transformation to the given graph
   * - :py:meth:`~chop.passes.graph.transforms.quantize.quantize.summarize_quantization_analysis_pass`
-    - fill me
+    - fille me
   * - :py:meth:`~chop.passes.graph.transforms.utils.conv_bn_fusion_transform_pass`
     - fill me
   * - :py:meth:`~chop.passes.graph.transforms.utils.logicnets_fusion_transform_pass`
@@ -90,9 +89,17 @@ MaseGraph Transform Passes
   * - :py:meth:`~chop.passes.graph.transforms.verilog.emit_top.emit_internal_rtl_transform_pass`
     - fill me
 
+.. toctree::
+	  :maxdepth: 2
+
+	  transform/pruning
+	  transform/quantize
+	  transform/verilog
+	  transform/utils
+
 
 MaseGraph Interface Passes
------------
+--------------------------
 
 .. list-table:: A summary of all MaseGraph interface passes 
   :widths: 25 75
@@ -100,22 +107,17 @@ MaseGraph Interface Passes
 
   * - Pass Name
     - Summary
-  * - :py:meth:`~chop.passes.graph.interface.save_and_load.load_mase_graph_transform_pass`
+  * - :py:meth:`~chop.passes.graph.interface.save_and_load.load_mase_graph_interface_pass`
     - fill me
-  * - :py:meth:`~chop.passes.graph.interface.save_and_load.save_mase_graph_transform_pass`
+  * - :py:meth:`~chop.passes.graph.interface.save_and_load.save_mase_graph_interface_pass`
     - fill me
-  * - :py:meth:`~chop.passes.graph.interface.save_and_load.save_node_meta_param_transform_pass`
+  * - :py:meth:`~chop.passes.graph.interface.save_and_load.save_node_meta_param_interface_pass`
     - fill me
-  * - :py:meth:`~chop.passes.graph.interface.save_and_load.load_node_meta_param_transform_pass`
+  * - :py:meth:`~chop.passes.graph.interface.save_and_load.load_node_meta_param_interface_pass`
     - fill me
-
 
 .. toctree::
 	  :maxdepth: 2
 
-	  transform/interface
-	  transform/pruning
-	  transform/quantize
-	  transform/verilog
-	  transform/utils
+	  interface/save_and_load
 

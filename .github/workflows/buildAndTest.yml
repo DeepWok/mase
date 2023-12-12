@@ -43,21 +43,8 @@ jobs:
 
       - name: Check missing breakpoint 
         run: |
-            if [[ $(grep -rnw ./machop/chop -e "breakpoint()") -eq 1 ]]; then
-                echo "Found undeleted breakpoint:"
-                grep -rnw ./machop/chop -e "breakpoint()"
-                exit 1
-            fi
-            if [[ $(grep -rn ./machop/test -e "set_trace(") -eq 1 ]]; then
-                echo "Found undeleted breakpoint:"
-                grep -rn ./machop/test -e "set_trace("
-                exit 1
-            fi
-            if [[ $(grep -rn ./machop/chop -e "set_trace(") -eq 1 ]]; then
-                echo "Found undeleted breakpoint:"
-                grep -rn ./machop/chop -e "set_trace("
-                exit 1
-            fi
+            ! grep -rnw ./machop/chop -e "breakpoint()" || exit 1
+            ! grep -rn ./machop/chop -e "set_trace(" || exit 1
 
       # Choose the git commit to diff against for the purposes of linting.
       # Since this workflow is triggered on both pushes and pull requests, w
@@ -94,13 +81,6 @@ jobs:
           fi
           echo "DIFF_COMMIT=$DIFF_COMMIT_SHA" >> $GITHUB_ENV
       
-      - name: Install black and clang 
-        run: |
-            sudo apt-get install -y \
-                            python3 python3-pip clang-format clang-tidy
-            pip3 install --user --upgrade pip
-            pip3 install black
-
       # Run black to check Python formatting.
       - name: python-format
         if: ${{ always() }}
@@ -115,6 +95,17 @@ jobs:
               fi
             done
           fi
+          git diff --ignore-submodules > python-format.patch
+          if [ -s python-format.patch ]; then
+            echo "python-format found formatting problems in the following " \
+              "files. See diff in the python-format.patch artifact."
+            cat python-format.patch
+            git diff --ignore-submodules --name-only
+            git checkout .
+            exit 1
+          fi
+          echo "python-format found no formatting problems"
+          exit 0
 
       # Run 'git clang-format', comparing against the target commit hash. If
       # clang-format fixed anything, fail and output a patch.

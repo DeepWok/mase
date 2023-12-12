@@ -41,9 +41,12 @@ jobs:
       - name: Build sphinx html
         run: |
           cd machop/sphinx_docs
-          make html
+          make html 2>&1 | tee html.log
+          # temporarily - still launch doc with errors
+          ghp-import -n -p -f build/html
+          ! grep -rn html.log -e "Error" || exit 1
 
-      - name: Run ghp-import
-        run: |
-          ghp-import -n -p -f machop/sphinx_docs/build/html
+      # - name: Run ghp-import
+      #   run: |
+      #     ghp-import -n -p -f machop/sphinx_docs/build/html
 

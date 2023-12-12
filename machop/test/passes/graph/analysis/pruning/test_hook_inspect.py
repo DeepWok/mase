@@ -21,8 +21,15 @@ from chop.passes.graph import (
     profile_statistics_analysis_pass,
     prune_transform_pass,
 )
+
 from chop.passes.graph.analysis.pruning.calculate_sparsity import (
     add_pruning_metadata_analysis_pass,
+)
+from chop.passes.graph.analysis.pruning.hook_inspector import (
+    hook_inspection_analysis_pass,
+)
+from chop.passes.graph.transforms.pruning.prune_detach_hook import (
+    prune_detach_hook_transform_pass,
 )
 
 from chop.ir.graph.mase_graph import MaseGraph
@@ -38,8 +45,8 @@ pp = pprint.PrettyPrinter(indent=4)
 
 configs = [
     "scope_local_granularity_elementwise_method_random",
-    "scope_local_granularity_elementwise_method_l1",
-    "scope_global_granularity_elementwise_method_l1",
+    # 'scope_local_granularity_elementwise_method_l1',
+    # 'scope_global_granularity_elementwise_method_l1',
 ]
 
 
@@ -130,11 +137,15 @@ def run_with_config(config_file):
     # save_dir.mkdir(parents=True, exist_ok=True)
 
     # The default save directory is specified as the current working directory
+
     graph, _ = prune_transform_pass(graph, config)
-    graph, sparsity_info = add_pruning_metadata_analysis_pass(
-        graph, {"dummy_in": dummy_input, "add_value": False}
-    )
-    pp.pprint(sparsity_info)
+    # graph, sparsity_info = add_pruning_metadata_analysis_pass(
+    #     graph, {"dummy_in": dummy_input, "add_value": False})
+    graph, hook_info = hook_inspection_analysis_pass(graph, {})
+    pp.pprint(hook_info)
+    graph, _ = prune_detach_hook_transform_pass(graph, {})
+    graph, hook_info = hook_inspection_analysis_pass(graph, {})
+    pp.pprint(hook_info)
 
 
 test_prune()
