@@ -1,5 +1,6 @@
 import importlib
 import os
+import torch
 
 import regex as re
 from chop.passes.graph.common import MASE_IMPLICIT_FUNCS
@@ -8,6 +9,22 @@ from chop.passes.graph.common import MASE_IMPLICIT_FUNCS
 # from ..session.plt_wrapper.nlp.lm import NLPLanguageModelingModelWrapper
 # from ..session.plt_wrapper.nlp.translation import NLPTranslationModelWrapper
 # from ..session.plt_wrapper.vision import VisionModelWrapper
+
+
+def load_arg(a, env):
+    return torch.fx.graph.map_arg(a, lambda n: env[n.name])
+
+
+def fetch_attr(mod, target: str):
+    target_atoms = target.split(".")
+    attr_itr = mod
+    for i, atom in enumerate(target_atoms):
+        if not hasattr(attr_itr, atom):
+            raise RuntimeError(
+                f"Node referenced nonexistant target {'.'.join(target_atoms[:i])}"
+            )
+        attr_itr = getattr(attr_itr, atom)
+    return attr_itr
 
 
 def _import_config_from_py_file(model_name: str, file_path: str):

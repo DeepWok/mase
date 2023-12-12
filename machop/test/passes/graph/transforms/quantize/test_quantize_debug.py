@@ -20,7 +20,8 @@ from chop.passes.graph.analysis import (
 )
 
 from chop.actions.train import train
-from chop.actions.test import test
+
+# from chop.actions.test import test
 
 from chop.passes.graph.analysis.statistical_profiler import (
     profile_statistics_analysis_pass,

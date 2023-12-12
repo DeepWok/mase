@@ -1,0 +1,12 @@
+# A basic toy example that demonstrates weight and activation pruning
+[passes.prune.weight]
+scope = "local"
+granularity = "elementwise"
+method = "random"
+sparsity = 0.2
+
+[passes.prune.activation]
+scope = "local"
+granularity = "elementwise"
+method = "random"
+sparsity = 0.1

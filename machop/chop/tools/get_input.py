@@ -47,6 +47,7 @@ def get_dummy_input(
     model_info,
     data_module,
     task: str,
+    device: str = "meta",
 ) -> dict:
     """Create a single dummy input for a model. The dummy input is a single sample from the training set.
 
@@ -64,7 +65,6 @@ def get_dummy_input(
         data_module.train_dataset is not None
     ), "DataModule is not setup. Please call data_module.prepare_data() and .setup()."
     index: int = 0
-    device = "meta"
     train_iter = iter(data_module.train_dataloader())
     n_batches = len(data_module.train_dataloader())
     if index >= n_batches * data_module.batch_size:
