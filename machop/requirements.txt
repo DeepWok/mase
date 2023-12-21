@@ -30,7 +30,6 @@ tensorboard
 optuna
 stable-baselines3
 scikit-learn
-nni
 # LogicNets
 h5py
 pyyaml
