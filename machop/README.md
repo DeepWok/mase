@@ -42,82 +42,70 @@ For more, you can watch this [video](https://www.youtube.com/watch?v=JEUsN_KlDy8
 
 ### Prerequisites
 
-TBF
+The full list of dependencies is contained in the [Conda environment](./environment.yml) or the [Dockerfile](../Docker/Dockerfile). See instructions on the main [README](../README.md) for installing the dependencies.
 
-### Installation
+<!-- TO DO: add to PyPI -->
+<!-- ### Installation
 
-TBF
+TBF -->
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
-<!-- BASIC USAGE-->
 ## Basic Usage
 
-### Example CPU Run
+Machop has four actions: train, test, transform and search. Parameters for each action can be defined through command-line arguments or within a `toml` configuration file.
+
+|   Action  |                                                    Usage                                                    |
+|:---------:|:-----------------------------------------------------------------------------------------------------------:|
+|   Train   |                         Train a given model on the train split of the given dataset.                        |
+|    Test   |         Evaluate a given model on the test split of the given dataset, without modifying the model.         |
+| Transform | Run a transformation pass on the specified model, e.g. quantization or pruning.                             |
+|   Search  | Apply a given search strategy over a search space to optimize a specified set of hardware/software metrics. |
+
+The following command trains the ResNet-18 model with CIFAR10 dataset, and evaluates its accuracy on the test set.
 
 ```bash
-./chop --train \
---dataset=cifar10 \
---model=resnet18 \
---save=test
+# Train the toy model
+./ch train resnet18 cifar10 --project resnet18
+
+# Evaluate the accuracy, without modification
+export CKPT=$(pwd)/mase_output/resnet18/software/training_ckpts/best.ckpt
+./ch test resnet18 cifar10 --load $CKPT
 ```
 
-### Example Debug Run
+All arguments can be defined in a `toml` file and loaded using `--config`. See [`machop/configs`](https://github.com/DeepWok/mase/tree/main/machop/configs) for example configuration files.
+```bash
+export CONFIGS=$(pwd)/configs/by_model/resnet18/
+
+./ch train --config $CONFIG/train_resnet18.toml
+./ch test --config $CONFIG/test_resnet18.toml
+```
+
+A typical optimization scenario involves quantizing the model to integer precision, then optionally performing fine-tuning iterations. This is achieved by the following commands, which uses the trained checkpoint as a starting point.
 
 ```bash
-./chop --train \
---dataset=cifar10 \
---model=resnet18 \
---save=test \
---debug
+# Run the quantization pass on the trained model
+./ch transform resnet18 cifar10 --load $CKPT --config $CONFIGS/quantize_resnet18.toml
+
+# Perform further training iterations on the transformed model and evaluate the quantized model accuracy
+./ch train resnet18 cifar10 --config $CONFIGS/train_resnet18.toml
+./ch test resnet18 cifar10 --config $CONFIGS/test_resnet18.toml
 ```
 
-### Example GPU Run
+If the accuracy of the quantized model is undesirable, run the search action to obtain the optimal quantization scheme for the defined model.
 
 ```bash
-./chop --train \
---dataset=cifar10 \
---model=resnet18 \
---save=test \
---debug \
---accelerator=gpu \
---gpu=4
+./ch search --config $CONFIGS/search_quantize_resnet18.toml
 ```
 
-### Example Modify Run
+Once you're happy with the quantized model performance, you can run the emit verilog transform pass to generate the SystemVerilog files for deployment on FPGA.
 
 ```bash
-./chop \
---dataset=cifar10 \
---model=toy \
---save=test \
---debug \
---modify-sw=configs/test.toml
+./ch transform --config $CONFIGS/emit_resnet18.toml
 ```
 
-- All modifiable components should be defined in a `toml` file and loaded using `--modify-sw`.
-- This example command shows how to apply the command to a toy network.
-
-Mase also supports training with a modified model, for instance:
-
-```bash
-# train a normal model
-./chop --train --dataset=cifar10 --model=toy --save=test
-# Check the accuracy, without modification
-./chop --validate-sw --dataset=cifar --model=toy --load checkpoints/test/best.ckpt
-# Check the accuracy of modification, without re-training, this is a classic post-training quantization scenario
-./chop --validate-sw --dataset=cifar --model=toy --load checkpoints/test/best.ckpt --modify-sw=configs/test.toml
-
-# take the trained model, modify it and continue to train, this is known as quantization aware training
-./chop --train --dataset=cifar --model=toy --save modified_test --load checkpoints/test/best.ckpt --modify-sw=configs/test.toml
-# check again the re-trained accuracy
-./chop --validate-sw --dataset=cifar --model=toy --load checkpoints/modified_test/best.ckpt --modify-sw=configs/test.toml
-
-# enter modify again to check weights, etc.; you do not necessarily have to save the model in modify
-./chop --dataset=cifar --model=toy --load checkpoints/modified_test/best.ckpt --modify-sw configs/test.toml
-```
-
-### Example Software Estimation
+<!-- TO DO: need to implement analysis passes into transform action, or new analyze action -->
+<!-- ### Example Software Estimation
 
 ```bash
 ./chop --task cls --model roberta-base --pretrained --dataset mnli --estimate-sw --estimate-sw-config ./configs/estimate-sw/roberta_no_linear.py
@@ -125,13 +113,7 @@ Mase also supports training with a modified model, for instance:
 
 - This example shows how to estimate the FLOPs and parameter size in model roberta-base.
 - Under the hood DeepSpeed's profiler is used and a reported .txt file will be generated.
-- Custom profiling behavior is defined in the .py file specified by `estimate-sw-config` flag. The config dict in .py file supports an `ignore_modules` list to ignore certain nn.Modules. See `./configs/estimate-sw
-
-### Example Hardware Generation
-
-```bash
-./chop --train --dataset=cifar10 --model toy --save=test --debug --synthesize
-```
+- Custom profiling behavior is defined in the .py file specified by `estimate-sw-config` flag. The config dict in .py file supports an `ignore_modules` list to ignore certain nn.Modules. See `./configs/estimate-sw -->
 
 ### Log Reading
 
@@ -143,11 +125,11 @@ tensorboard --logdir your-log-directory
 
 ### Checkpointing
 
-Machop supports PyTorch state dict checkpoint (`.ckpt`) and PyTorch Lightning checkpoint (`.ckpt`). The modified model (generated by action `--modify-sw`) is always saved and loaded in pickle format (`.pkl`).
+Machop supports PyTorch state dict checkpoint (`.ckpt`) and PyTorch Lightning checkpoint (`.ckpt`). The modified model (generated by transform action) is always saved and loaded in pickle format (`.pkl`).
 
 #### Load checkpoint
 
-Machop uses *action (`--modify-sw`/`--train`/`test-sw`)*, `--load LOAD_NAME`, and `--load-type LOAD_TYPE` to infer when and how to load checkpoint. A proper `--load-type` is required if `--load LOAD_NAME` is specified.
+Machop uses the action name (`train`/`test`/`transform`/`search`)*, `--load LOAD_NAME`, and `--load-type LOAD_TYPE` to infer when and how to load checkpoint. A proper `--load-type` is required if `--load LOAD_NAME` is specified.
 
 `--load-type` should be one of `hf`, `pt`, `pl`, `pkl`:
 
@@ -158,33 +140,32 @@ Machop uses *action (`--modify-sw`/`--train`/`test-sw`)*, `--load LOAD_NAME`, an
 
 The figure below outlines how Machop determines when and where to load.
 
-- `--modify-sw` and `--train`/`--test` can not be specified at the same time. Please run these two actions in two separate commands.
 - If `--load` is not specified, `--load-type` is a don't-care.
-- `--load-type=hf` should be used to load HuggingFace model. Loading HuggingFace PreTrainedModel only happens in `init_model_and_dataset`. In this case,
+- If `--load-type=hf` is used,
   - `--pretrained --load-type=hf` downloads and loads the HuggingFace pretrained model specified by `--model MODEL`.
-  - `--pretrained --load=xxx --load-type=hf` loads a HuggingFace checkpoint saved by `PreTrainedModel.save_pretrained`. Here `--load` should be a directory.
-  - For patched models provided by Machop, `--pretrained` will loads the pretrained original model. For example `--model facebook/opt-125m@patched --pretrained --load-type=hf` will load pretrained `facebook/opt-125m` into `facebook/opt-125m@patched`
-- `--modify-sw` can load `pt` or `pl` checkpoints.
-- `--train`/`test-sw` can load `pt`, `pl`, or `pkl` checkpoints.
+  - `--pretrained --load=<path/to/checkpoint> --load-type=hf` loads a HuggingFace checkpoint saved by `PreTrainedModel.save_pretrained`.
+  - For patched models provided by Machop, `--pretrained` will loads the pretrained original model. For example `ch <ACTION> facebook/opt-125m@patched <DATASET> --pretrained --load-type=hf` will load Facebook's `opt-125m` checkpoint into the `facebook/opt-125m@patched` model.
+- The `transform` action can load `pt` or `pl` checkpoints.
+- The `train` and `test` actions can load `pt`, `pl`, or `pkl` checkpoints.
 
-![MASE_load](../docs/imgs/machop_load.jpg)
+<!-- ![MASE_load](../docs/imgs/machop_load.jpg) -->
 
 #### Save checkpoints
 
-- Modified models (`--modify-sw`) will be saved to `pkl` files (pickle checkpoints).
-- Trained models (`--train`) will be saved to `pl` files (PyTorch Lightning `.ckpt` checkpoints).
+- Transformed models will be saved to `pkl` files (pickle checkpoints).
+- Trained models will be saved to `pl` files (PyTorch Lightning `.ckpt` checkpoints).
 
 <p align="right">(<a href="#checkpointing">back to top</a>)</p>
 
 <!-- CODING STYLE -->
 ## Coding style
 
-- For Python: `docs/python.md`
+- For Python: see [standard](https://github.com/DeepWok/mase/blob/main/docs/Python-coding-style-specifications.md).
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 <!-- TESTED FLOW -->
-## Tested flow
+<!-- ## Tested flow
 
 - ResNet flow
 
@@ -277,12 +258,12 @@ The figure below outlines how Machop determines when and where to load.
   ./chop --task cls --model resnet18 --dataset cifar10 --estimate-sw --estimate-sw-config ./configs/estimate-sw/all_included_fine_grained.py
   ```
 
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
+<p align="right">(<a href="#readme-top">back to top</a>)</p> -->
 
 <!-- ROADMAP -->
 ## Roadmap
 
-- [X] Language Modeling Datasets (AZ, GH-36)
+<!-- - [X] Language Modeling Datasets (AZ, GH-36)
   - [X] Wikitext2
   - [X] Wikitext103
 - [X] Language Modeling Models (AZ, GH-36)
@@ -317,7 +298,7 @@ The figure below outlines how Machop determines when and where to load.
   - [ ] Add support for the multiply functions
 - [ ] More on README
   - [ ] Prerequisites
-  - [ ] Installation
+  - [ ] Installation -->
 
 See the [open issues](https://github.com/JianyiCheng/mase-tools/issues) for a full list of proposed features (and known issues).
 
@@ -325,141 +306,42 @@ See the [open issues](https://github.com/JianyiCheng/mase-tools/issues) for a fu
 
 ## Models and Datasets
 
-### Datasets
-
-|     Category    |        Task       |     Name    | Sub-tasks |
-|:---------------:|:-----------------:|:-----------:|:---------:|
-| Vision Datasets |   Classification  |   CIFAR10   |           |
-| Vision Datasets |   Classification  |   CIFAR100  |           |
-| Vision Datasets |   Classification  |   ImageNet  |           |
-|   NLP Datasets  |  Text Entailment  |     MNLI    |           |
-|   NLP Datasets  | Language Modeling |  Wikitext2  |           |
-|   NLP Datasets  | Language Modeling | Wikitext103 |           |
-|   NLP Datasets  |    Translation    |  iwslt2017  |   en-de   |
-|   NLP Datasets  |    Translation    |  iwslt2017  |   de-en   |
-|   NLP Datasets  |    Translation    |  iwslt2017  |   en-fr   |
-|   NLP Datasets  |    Translation    |  iwslt2017  |   en-ch   |
-|   NLP Datasets  |    Translation    |  wmt19      |   de-en   |
-|   NLP Datasets  |    Translation    |  wmt19      |   zh-en   |
-
-- Vision Datasets
-  - CIFAR10
-  - CIFAR100
-  - ImageNet
-
-- NLP Datasets
-  - MNLI
-  - Wikitext2
-  - Wikitext103
-  - iwslt2017
-    - en-de
-    - de-en
-    - en-fr
-    - en-ch
-  - wmt19_de_en
-  - wmt19_zh_en
-
 ### Models
 
-|     Category    |        Task       |     Name        | Sub-style         |
-|:---------------:|:-----------------:|:---------------:|:-----------------:|
-|   CNN           |   Classification  |   ResNet18      |                   |
-|   CNN           |   Classification  |   ResNet50      |                   |
-|   CNN           |   Classification  |   MobileNet     | mobilenetv3_small |
-|   CNN           |   Classification  |   MobileNet     | mobilenetv3_large |
-|   CNN           |   Classification  |   EfficientNet  | efficientnet_v2_s |
-|   CNN           |   Classification  |   EfficientNet  | efficientnet_v2_m |
-|   CNN           |   Classification  |   EfficientNet  | efficientnet_v2_l |
-|   ViT           |   Classification  |   PVT-V1        | pvt_tiny          |
-|   ViT           |   Classification  |   PVT-V1        | pvt_small         |
-|   ViT           |   Classification  |   PVT-V1        | pvt_medium        |
-|   ViT           |   Classification  |   PVT-V1        | pvt_large         |
-|   ViT           |   Classification  |   PVT-V2        | pvt_v2_b0         |
-|   ViT           |   Classification  |   PVT-V2        | pvt_v2_b1         |
-|   ViT           |   Classification  |   PVT-V2        | pvt_v2_b2         |
-|   ViT           |   Classification  |   PVT-V2        | pvt_v2_b3         |
-|   ViT           |   Classification  |   PVT-V2        | pvt_v2_b4         |
-|   ViT           |   Classification  |   PVT-V2        | pvt_v2_b5         |
-|   ViT           |   Classification  |   DeiT          | deit_tiny_224     |
-|   ViT           |   Classification  |   DeiT          | deit_small_224    |
-|   ViT           |   Classification  |   DeiT          | deit_base_224     |
-|   ViT           |   Classification  |   CSwin         | cswin_64_tiny     |
-|   ViT           |   Classification  |   CSwin         | cswin_64_small    |
-|   ViT           |   Classification  |   CSwin         | cswin_96_base     |
-|   ViT           |   Classification  |   CSwin         | cswin_144_large   |
-|   Transformers  |   LM              |   BERT          | bert-base-uncased |
-|   Transformers  |   LM              |   GPT2          | gpt2              |
-|   Transformers  |   Classification  |   RoBERTa       | roberta-base      |
-|   Transformers  |   Classification  |   RoBERTa       | roberta-large     |
-|   Transformers  |   LM              |   OPT           | facebook/opt-125m |
-|   Transformers  |   LM              |   OPT           | facebook/opt-350m |
-|   Transformers  |   LM              |   OPT           | facebook/opt-1.3b |
-|   Transformers  |   LM              |   OPT           | facebook/opt-2.7b |
-|   Transformers  |   LM              |   OPT           | facebook/opt-13b  |
-|   Transformers  |   LM              |   OPT           | facebook/opt-30b  |
-|   Transformers  |   LM              |   OPT           | facebook/opt-66b  |
-|   Transformers  |   LM              |   GPT-NEO       | EleutherAI/gpt-neo-125M  |
-|   Transformers  |   LM              |   GPT-NEO       | EleutherAI/gpt-neo-1.3B  |
-|   Transformers  |   LM              |   GPT-NEO       | EleutherAI/gpt-neo-2.7B  |
-|   Transformers  |   LM              |   GPT-NEO       | EleutherAI/gpt-neox-20b  |
-|   Transformers  |   Translation     |   T5            | t5-small          |
-|   Transformers  |   Translation     |   T5            | t5-base           |
-|   Transformers  |   Translation     |   T5            | t5-large          |
-|   Transformers  |   Translation     |   T5            | google/t5-v1_1-small  |
+The following model categories are supported. See [here](../docs/roadmap/supported-models.md) for a comprehensive list.
 
-- Vision Models
-  - ResNet18
-  - ResNet50
-  - MobileNets
-    - mobilenetv3_small
-    - mobilenetv3_large
-  - EfficientNets
-    - efficientnet_v2_s
-    - efficientnet_v2_m
-    - efficientnet_v2_l
-  - Pyramid Vision Transformers V1
-    - pvt_tiny
-    - pvt_small
-    - pvt_medium
-    - pvt_large
-  - Pyramid Vision Transformers V2
-    - pvt_v2_b0
-    - pvt_v2_b1
-    - pvt_v2_b2
-    - pvt_v2_b3
-    - pvt_v2_b4
-    - pvt_v2_b5
-  - Data Efficient Image Transformers (DeiT)
-    - deit_tiny_224
-    - deit_small_224
-    - deit_base_224
-  - CSWin Transformer
-    - cswin_64_tiny
-    - cswin_64_small
-    - cswin_96_base
-    - cswin_144_large
+|     Category    |        Task       |     Name        |
+|:---------------:|:-----------------:|:---------------:|
+|   CNN           |   Classification  |   ResNet18      |
+|   CNN           |   Classification  |   ResNet50      |
+|   CNN           |   Classification  |   MobileNet     |
+|   CNN           |   Classification  |   EfficientNet  |
+|   ViT           |   Classification  |   PVT-V1        |
+|   ViT           |   Classification  |   PVT-V2        |
+|   ViT           |   Classification  |   DeiT          |
+|   ViT           |   Classification  |   CSwin         |
+|   Transformers  |   LM              |   BERT          |
+|   Transformers  |   LM              |   GPT2          |
+|   Transformers  |   Classification  |   RoBERTa       |
+|   Transformers  |   LM              |   OPT           |
+|   Transformers  |   LM              |   GPT-NEO       |
+|   Transformers  |   Translation     |   T5            |
 
-- NLP Models
-  - BERT
-  - GPT2
-  - RoBERTa-base
-  - RoBERTa-large
-  - OPT
-    - facebook/opt-125m
-    - facebook/opt-350m
-    - facebook/opt-1.3b
-    - facebook/opt-2.7b
-    - facebook/opt-13b
-    - facebook/opt-30b
-    - facebook/opt-66b
-  - gpt-neo
-    - EleutherAI/gpt-neo-125M
-    - EleutherAI/gpt-neo-1.3B
-    - EleutherAI/gpt-neo-2.7B
-    - EleutherAI/gpt-neox-20b
-  - t5-small
-  - t5-base
-  - t5-large
-  - google/t5-v1_1-small
+### Datasets
+
+The following dataset categories are supported. See [here](../docs/roadmap/supported-datasets.md) for a comprehensive list.
+
+|     Category    |        Task       |     Name    |
+|:---------------:|:-----------------:|:-----------:|
+| Vision Datasets |   Classification  |   CIFAR10   |
+| Vision Datasets |   Classification  |   CIFAR100  |
+| Vision Datasets |   Classification  |   ImageNet  |
+|   NLP Datasets  |  Text Entailment  |     MNLI    |
+|   NLP Datasets  | Language Modeling |  Wikitext2  |
+|   NLP Datasets  | Language Modeling | Wikitext103 |
+|   NLP Datasets  |    Translation    |  iwslt2017  |
+|   NLP Datasets  |    Translation    |  wmt19      |
+
+
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>

@@ -1,5 +1,4 @@
 import torch
-import nni
 
 from .load import load_activation_prune_config, load_weight_prune_config
 from .pruning_methods import weight_criteria_map, activation_criteria_map

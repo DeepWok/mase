@@ -92,7 +92,7 @@ LOGO = f"""
 
      For comprehensive information on usage,
             please refer to the wiki:
-   https://github.com/JianyiCheng/mase-tools/wiki
+        https://github.com/DeepWok/mase/wiki
 """
 TASKS = ["classification", "cls", "translation", "tran", "language_modeling", "lm"]
 ACTIONS = ["train", "test", "transform", "search"]
@@ -108,6 +108,7 @@ LOG_LEVELS = ["debug", "info", "warning", "error", "critical"]
 REPORT_TO = ["wandb", "tensorboard"]
 ISSUES_URL = "https://github.com/JianyiCheng/mase-tools/issues"
 STRATEGIES = [
+    "auto",
     "ddp",
     "ddp_find_unused_parameters_true",
     # "fsdp",
@@ -115,7 +116,7 @@ STRATEGIES = [
     # "fsdp_custom",
     # "deepspeed_stage_3_offload",
 ]
-ACCELERATORS = ["auto", "cpu", "gpu"]
+ACCELERATORS = ["auto", "cpu", "gpu", "mps"]
 TRAINER_PRECISION = ["16-mixed", "32", "64", "bf16"]
 
 # NOTE: Any new argument (either required or optional) must have their default values
