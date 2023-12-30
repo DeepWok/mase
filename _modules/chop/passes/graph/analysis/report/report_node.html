@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>chop.passes.graph.analysis.report.report_node &mdash; MASE 0.0.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../../../../_static/css/theme.css?v=19f00094" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../../../../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../../../../../../_static/documentation_options.js?v=d45e8c67"></script>
+        <script src="../../../../../../_static/doctools.js?v=888ff710"></script>
+        <script src="../../../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../../../../index.html" class="icon icon-home">
+            MASE
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../modules/actions.html">Chop Actions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../modules/passes.html">Chop Passes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../modules/ir.html">IR</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../../../index.html">MASE</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">chop.passes.graph.analysis.report.report_node</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for chop.passes.graph.analysis.report.report_node</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">from</span> <span class="nn">pprint</span> <span class="kn">import</span> <span class="n">pformat</span>
+<span class="kn">from</span> <span class="nn">tabulate</span> <span class="kn">import</span> <span class="n">tabulate</span>
+<span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">Path</span>
+<span class="kn">import</span> <span class="nn">copy</span>
+
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">graph_iterator_inspect_node_type</span><span class="p">(</span><span class="n">graph</span><span class="p">):</span>
+    <span class="n">headers</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;Node name&quot;</span><span class="p">,</span> <span class="s2">&quot;Fx Node op&quot;</span><span class="p">,</span> <span class="s2">&quot;Mase type&quot;</span><span class="p">,</span> <span class="s2">&quot;Mase op&quot;</span><span class="p">,</span> <span class="s2">&quot;Value type&quot;</span><span class="p">]</span>
+    <span class="n">rows</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">graph</span><span class="o">.</span><span class="n">fx_graph</span><span class="o">.</span><span class="n">nodes</span><span class="p">:</span>
+        <span class="n">rows</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+            <span class="p">[</span>
+                <span class="n">node</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+                <span class="n">node</span><span class="o">.</span><span class="n">op</span><span class="p">,</span>
+                <span class="n">node</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;mase&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="s2">&quot;common&quot;</span><span class="p">][</span><span class="s2">&quot;mase_type&quot;</span><span class="p">],</span>
+                <span class="n">node</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;mase&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="s2">&quot;common&quot;</span><span class="p">][</span><span class="s2">&quot;mase_op&quot;</span><span class="p">],</span>
+                <span class="s2">&quot;NA&quot;</span>
+                <span class="k">if</span> <span class="s2">&quot;data_in_0&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">node</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;mase&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="s2">&quot;common&quot;</span><span class="p">][</span><span class="s2">&quot;args&quot;</span><span class="p">]</span>
+                <span class="k">else</span> <span class="n">node</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;mase&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="s2">&quot;common&quot;</span><span class="p">][</span><span class="s2">&quot;args&quot;</span><span class="p">][</span><span class="s2">&quot;data_in_0&quot;</span><span class="p">][</span>
+                    <span class="s2">&quot;type&quot;</span>
+                <span class="p">],</span>
+            <span class="p">]</span>
+        <span class="p">)</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Inspecting graph [add_common_node_type_analysis_pass]&quot;</span><span class="p">)</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">+</span> <span class="n">tabulate</span><span class="p">(</span><span class="n">rows</span><span class="p">,</span> <span class="n">headers</span><span class="o">=</span><span class="n">headers</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">graph</span>
+
+
+<div class="viewcode-block" id="report_node_type_analysis_pass">
+<a class="viewcode-back" href="../../../../../../modules/analysis/report.html#chop.passes.graph.analysis.report.report_node.report_node_type_analysis_pass">[docs]</a>
+<span class="k">def</span> <span class="nf">report_node_type_analysis_pass</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">pass_args</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">=</span> <span class="p">{}):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Perform a node type analysis on the given graph, pretty print MaseGraph after initialization/loading.</span>
+
+<span class="sd">    :param graph: The graph to analyze.</span>
+<span class="sd">    :type graph: MaseGraph</span>
+<span class="sd">    :param pass_args: Additional arguments for the analysis pass (optional).</span>
+<span class="sd">    :type pass_args: dict</span>
+<span class="sd">    :return: The analyzed graph and an empty dictionary.</span>
+<span class="sd">    :rtype: tuple(MaseGraph, dict)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">graph</span> <span class="o">=</span> <span class="n">graph_iterator_inspect_node_type</span><span class="p">(</span><span class="n">graph</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">graph</span><span class="p">,</span> <span class="p">{}</span></div>
+
+
+
+<span class="k">def</span> <span class="nf">graph_iterator_inspect_node_shape</span><span class="p">(</span><span class="n">graph</span><span class="p">):</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Inspecting graph [add_common_node_shape_analysis_pass]&quot;</span><span class="p">)</span>
+    <span class="n">buffer</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+    <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">graph</span><span class="o">.</span><span class="n">fx_graph</span><span class="o">.</span><span class="n">nodes</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+        <span class="n">buffer</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">node</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">:</span><span class="se">\n</span><span class="s2">in:</span><span class="se">\n</span><span class="s2">&quot;</span>
+        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">node</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;mase&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="s2">&quot;common&quot;</span><span class="p">][</span><span class="s2">&quot;args&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="s2">&quot;data_in&quot;</span> <span class="ow">in</span> <span class="n">key</span><span class="p">:</span>
+                <span class="n">buffer</span> <span class="o">+=</span> <span class="s2">&quot;</span><span class="si">{}</span><span class="s2"> = </span><span class="si">{}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">[</span><span class="s2">&quot;shape&quot;</span><span class="p">])</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">buffer</span> <span class="o">+=</span> <span class="s2">&quot;</span><span class="si">{}</span><span class="s2"> = </span><span class="si">{}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+            <span class="c1"># from_name = &quot;none&quot; if value[&quot;from&quot;] is None else value[&quot;from&quot;].name</span>
+            <span class="c1"># buffer += &quot;{} = {}, from = {}\n&quot;.format(key, value[&quot;size&quot;], from_name)</span>
+        <span class="n">buffer</span> <span class="o">+=</span> <span class="s2">&quot;out:</span><span class="se">\n</span><span class="s2">&quot;</span>
+        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">node</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;mase&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="s2">&quot;common&quot;</span><span class="p">][</span><span class="s2">&quot;results&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">buffer</span> <span class="o">+=</span> <span class="s2">&quot;</span><span class="si">{}</span><span class="s2"> = </span><span class="si">{}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">[</span><span class="s2">&quot;shape&quot;</span><span class="p">])</span>
+        <span class="n">buffer</span> <span class="o">+=</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="n">buffer</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">graph</span>
+
+
+<div class="viewcode-block" id="report_node_shape_analysis_pass">
+<a class="viewcode-back" href="../../../../../../modules/analysis/report.html#chop.passes.graph.analysis.report.report_node.report_node_shape_analysis_pass">[docs]</a>
+<span class="k">def</span> <span class="nf">report_node_shape_analysis_pass</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">pass_args</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">=</span> <span class="p">{}):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Perform shape analysis on the nodes in the graph.</span>
+
+<span class="sd">    :param graph: The input graph to analyze.</span>
+<span class="sd">    :type graph: MaseGraph</span>
+<span class="sd">    :param pass_args: Additional arguments for the analysis pass (optional).</span>
+<span class="sd">    :type pass_args: dict</span>
+<span class="sd">    :return: The analyzed graph and an empty dictionary.</span>
+<span class="sd">    :rtype: tuple(MaseGraph, Dict)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">graph</span> <span class="o">=</span> <span class="n">graph_iterator_inspect_node_shape</span><span class="p">(</span><span class="n">graph</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">graph</span><span class="p">,</span> <span class="p">{}</span></div>
+
+
+
+<span class="k">def</span> <span class="nf">graph_iterator_inspect_node_hardware_type</span><span class="p">(</span><span class="n">graph</span><span class="p">):</span>
+    <span class="n">headers</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;Node name&quot;</span><span class="p">,</span> <span class="s2">&quot;Fx Node op&quot;</span><span class="p">,</span> <span class="s2">&quot;Type&quot;</span><span class="p">,</span> <span class="s2">&quot;Tool Chain&quot;</span><span class="p">]</span>
+    <span class="n">rows</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">graph</span><span class="o">.</span><span class="n">fx_graph</span><span class="o">.</span><span class="n">nodes</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;mase&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="s2">&quot;hardware&quot;</span><span class="p">][</span><span class="s2">&quot;is_implicit&quot;</span><span class="p">]:</span>
+            <span class="k">continue</span>
+        <span class="n">rows</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+            <span class="p">[</span>
+                <span class="n">node</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+                <span class="n">node</span><span class="o">.</span><span class="n">op</span><span class="p">,</span>
+                <span class="n">node</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;mase&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="s2">&quot;common&quot;</span><span class="p">][</span><span class="s2">&quot;results&quot;</span><span class="p">][</span><span class="s2">&quot;data_out_0&quot;</span><span class="p">][</span><span class="s2">&quot;type&quot;</span><span class="p">],</span>
+                <span class="n">node</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;mase&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="s2">&quot;hardware&quot;</span><span class="p">][</span><span class="s2">&quot;toolchain&quot;</span><span class="p">],</span>
+            <span class="p">]</span>
+        <span class="p">)</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Inspecting graph [add_common_node_hardware_type_analysis_pass]&quot;</span><span class="p">)</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">+</span> <span class="n">tabulate</span><span class="p">(</span><span class="n">rows</span><span class="p">,</span> <span class="n">headers</span><span class="o">=</span><span class="n">headers</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">graph</span>
+
+
+<div class="viewcode-block" id="report_node_hardware_type_analysis_pass">
+<a class="viewcode-back" href="../../../../../../modules/analysis/report.html#chop.passes.graph.analysis.report.report_node.report_node_hardware_type_analysis_pass">[docs]</a>
+<span class="k">def</span> <span class="nf">report_node_hardware_type_analysis_pass</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">pass_args</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">=</span> <span class="p">{}):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Perform hardware type analysis on the given graph.</span>
+
+<span class="sd">    :param graph: The graph to perform the analysis on.</span>
+<span class="sd">    :type graph: MaseGraph</span>
+<span class="sd">    :param pass_args: Optional arguments for the analysis pass.</span>
+<span class="sd">    :type pass_args: dict, optional</span>
+<span class="sd">    :return: The analyzed graph and an empty dictionary.</span>
+<span class="sd">    :rtype: tuple(MaseGraph, dict)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">graph</span> <span class="o">=</span> <span class="n">graph_iterator_inspect_node_hardware_type</span><span class="p">(</span><span class="n">graph</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">graph</span><span class="p">,</span> <span class="p">{}</span></div>
+
+
+
+<div class="viewcode-block" id="report_node_meta_param_analysis_pass">
+<a class="viewcode-back" href="../../../../../../modules/analysis/report.html#chop.passes.graph.analysis.report.report_node.report_node_meta_param_analysis_pass">[docs]</a>
+<span class="k">def</span> <span class="nf">report_node_meta_param_analysis_pass</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">pass_args</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Perform meta parameter analysis on the nodes in the graph and generate a report.</span>
+
+<span class="sd">    :param graph: The graph to analyze.</span>
+<span class="sd">    :type graph: MaseGraph</span>
+<span class="sd">    :param pass_args: Optional arguments for the analysis pass, a dict of arguments for this pass, including</span>
+<span class="sd">        - &quot;which&quot;: str, and a list of options in [&quot;all&quot;, &quot;common&quot;, &quot;hardware&quot;, &quot;software&quot;], default [&quot;all&quot;]</span>
+<span class="sd">        - &quot;save_path&quot;: str, a str of path to save the table, default None</span>
+<span class="sd">    :type pass_args: dict, default None</span>
+<span class="sd">    :return: The analyzed graph and an empty dictionary.</span>
+<span class="sd">    :rtype: tuple(MaseGraph, dict)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">which_param</span> <span class="o">=</span> <span class="n">pass_args</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;which&quot;</span><span class="p">,</span> <span class="p">(</span><span class="s2">&quot;all&quot;</span><span class="p">,))</span>
+    <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">which_param</span><span class="p">,</span> <span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">))</span>
+    <span class="k">for</span> <span class="n">param</span> <span class="ow">in</span> <span class="n">which_param</span><span class="p">:</span>
+        <span class="k">assert</span> <span class="n">param</span> <span class="ow">in</span> <span class="p">[</span>
+            <span class="s2">&quot;all&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;common&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;hardware&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;software&quot;</span><span class="p">,</span>
+        <span class="p">],</span> <span class="sa">f</span><span class="s2">&quot;Invalid which_param </span><span class="si">{</span><span class="n">param</span><span class="si">}</span><span class="s2">, must be a list of options in [&#39;all&#39;, &#39;common&#39;, &#39;hardware&#39;, &#39;software&#39;], got </span><span class="si">{</span><span class="n">param</span><span class="si">}</span><span class="s2">&quot;</span>
+    <span class="n">save_path</span> <span class="o">=</span> <span class="n">pass_args</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;save_path&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+
+    <span class="n">headers</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="s2">&quot;Node name&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;Fx Node op&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;Mase type&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;Mase op&quot;</span><span class="p">,</span>
+    <span class="p">]</span>
+
+    <span class="k">if</span> <span class="s2">&quot;common&quot;</span> <span class="ow">in</span> <span class="n">which_param</span> <span class="ow">or</span> <span class="s2">&quot;all&quot;</span> <span class="ow">in</span> <span class="n">which_param</span><span class="p">:</span>
+        <span class="n">headers</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;Common Param&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="s2">&quot;hardware&quot;</span> <span class="ow">in</span> <span class="n">which_param</span> <span class="ow">or</span> <span class="s2">&quot;all&quot;</span> <span class="ow">in</span> <span class="n">which_param</span><span class="p">:</span>
+        <span class="n">headers</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;Hardware Param&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="s2">&quot;software&quot;</span> <span class="ow">in</span> <span class="n">which_param</span> <span class="ow">or</span> <span class="s2">&quot;all&quot;</span> <span class="ow">in</span> <span class="n">which_param</span><span class="p">:</span>
+        <span class="n">headers</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;Software Param&quot;</span><span class="p">)</span>
+
+    <span class="n">rows</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">graph</span><span class="o">.</span><span class="n">fx_graph</span><span class="o">.</span><span class="n">nodes</span><span class="p">:</span>
+        <span class="n">new_row</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">node</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+            <span class="n">node</span><span class="o">.</span><span class="n">op</span><span class="p">,</span>
+            <span class="n">node</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;mase&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="s2">&quot;common&quot;</span><span class="p">][</span><span class="s2">&quot;mase_type&quot;</span><span class="p">],</span>
+            <span class="n">node</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;mase&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="s2">&quot;common&quot;</span><span class="p">][</span><span class="s2">&quot;mase_op&quot;</span><span class="p">],</span>
+        <span class="p">]</span>
+
+        <span class="k">if</span> <span class="s2">&quot;common&quot;</span> <span class="ow">in</span> <span class="n">which_param</span> <span class="ow">or</span> <span class="s2">&quot;all&quot;</span> <span class="ow">in</span> <span class="n">which_param</span><span class="p">:</span>
+            <span class="n">new_row</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">pformat</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;mase&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="s2">&quot;common&quot;</span><span class="p">]))</span>
+        <span class="k">if</span> <span class="s2">&quot;hardware&quot;</span> <span class="ow">in</span> <span class="n">which_param</span> <span class="ow">or</span> <span class="s2">&quot;all&quot;</span> <span class="ow">in</span> <span class="n">which_param</span><span class="p">:</span>
+            <span class="n">new_row</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">pformat</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;mase&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="s2">&quot;hardware&quot;</span><span class="p">]))</span>
+        <span class="k">if</span> <span class="s2">&quot;software&quot;</span> <span class="ow">in</span> <span class="n">which_param</span> <span class="ow">or</span> <span class="s2">&quot;all&quot;</span> <span class="ow">in</span> <span class="n">which_param</span><span class="p">:</span>
+            <span class="n">new_row</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">pformat</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;mase&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="s2">&quot;software&quot;</span><span class="p">]))</span>
+
+        <span class="n">rows</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">new_row</span><span class="p">)</span>
+
+    <span class="n">table_txt</span> <span class="o">=</span> <span class="n">tabulate</span><span class="p">(</span><span class="n">rows</span><span class="p">,</span> <span class="n">headers</span><span class="o">=</span><span class="n">headers</span><span class="p">,</span> <span class="n">tablefmt</span><span class="o">=</span><span class="s2">&quot;grid&quot;</span><span class="p">)</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Inspecting graph [add_common_meta_param_analysis_pass]&quot;</span><span class="p">)</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">+</span> <span class="n">table_txt</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">save_path</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">save_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">save_path</span><span class="p">)</span>
+        <span class="n">save_path</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">Path</span><span class="p">(</span><span class="n">save_path</span><span class="p">),</span> <span class="s2">&quot;w&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">table_txt</span><span class="p">)</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Node meta param table is saved to </span><span class="si">{</span><span class="n">save_path</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">graph</span><span class="p">,</span> <span class="p">{}</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, DeepWok.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

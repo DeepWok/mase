@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>chop.actions.train &mdash; MASE 0.0.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=19f00094" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../../../_static/documentation_options.js?v=d45e8c67"></script>
+        <script src="../../../_static/doctools.js?v=888ff710"></script>
+        <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            MASE
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules/actions.html">Chop Actions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules/passes.html">Chop Passes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules/ir.html">IR</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">MASE</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">chop.actions.train</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for chop.actions.train</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">Path</span>
+
+<span class="kn">import</span> <span class="nn">pytorch_lightning</span> <span class="k">as</span> <span class="nn">pl</span>
+<span class="kn">from</span> <span class="nn">chop.plt_wrapper</span> <span class="kn">import</span> <span class="n">get_model_wrapper</span>
+<span class="kn">from</span> <span class="nn">chop.tools.checkpoint_load</span> <span class="kn">import</span> <span class="n">load_model</span>
+<span class="kn">from</span> <span class="nn">chop.tools.get_input</span> <span class="kn">import</span> <span class="n">get_dummy_input</span>
+<span class="kn">from</span> <span class="nn">chop.passes.graph</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">add_common_metadata_analysis_pass</span><span class="p">,</span>
+    <span class="n">init_metadata_analysis_pass</span><span class="p">,</span>
+    <span class="n">add_software_metadata_analysis_pass</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span> <span class="nn">chop.passes.graph.interface</span> <span class="kn">import</span> <span class="n">save_mase_graph_interface_pass</span>
+<span class="kn">from</span> <span class="nn">chop.ir.graph</span> <span class="kn">import</span> <span class="n">MaseGraph</span>
+<span class="kn">from</span> <span class="nn">pytorch_lightning.callbacks</span> <span class="kn">import</span> <span class="n">LearningRateMonitor</span><span class="p">,</span> <span class="n">ModelCheckpoint</span>
+<span class="kn">from</span> <span class="nn">pytorch_lightning.loggers</span> <span class="kn">import</span> <span class="n">TensorBoardLogger</span>
+<span class="kn">from</span> <span class="nn">pytorch_lightning.plugins.environments</span> <span class="kn">import</span> <span class="n">SLURMEnvironment</span>
+
+<span class="kn">from</span> <span class="nn">torch.distributed.fsdp</span> <span class="kn">import</span> <span class="n">FullyShardedDataParallel</span>
+<span class="kn">from</span> <span class="nn">pytorch_lightning.strategies</span> <span class="kn">import</span> <span class="n">DDPStrategy</span>
+
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+
+<span class="c1"># class CustomFSDPStrategy(DDPStrategy):</span>
+<span class="c1">#     def configure_ddp(self):</span>
+<span class="c1">#         # model = DistributedDataParallel(model)</span>
+<span class="c1">#         fsdp_model = FullyShardedDataParallel(</span>
+<span class="c1">#             self.model,</span>
+<span class="c1">#             # fsdp_auto_wrap_policy=default_auto_wrap_policy,</span>
+<span class="c1">#             # cpu_offload=CPUOffload(offload_params=True),</span>
+<span class="c1">#         )</span>
+<span class="c1">#         self.model = fsdp_model</span>
+
+
+<div class="viewcode-block" id="train">
+<a class="viewcode-back" href="../../../modules/actions.html#chop.actions.train.train">[docs]</a>
+<span class="k">def</span> <span class="nf">train</span><span class="p">(</span>
+    <span class="n">model</span><span class="p">,</span>
+    <span class="n">model_info</span><span class="p">,</span>
+    <span class="n">data_module</span><span class="p">,</span>
+    <span class="n">dataset_info</span><span class="p">,</span>
+    <span class="n">task</span><span class="p">,</span>
+    <span class="n">optimizer</span><span class="p">,</span>
+    <span class="n">learning_rate</span><span class="p">,</span>
+    <span class="n">weight_decay</span><span class="p">,</span>
+    <span class="n">plt_trainer_args</span><span class="p">,</span>
+    <span class="n">auto_requeue</span><span class="p">,</span>
+    <span class="n">save_path</span><span class="p">,</span>
+    <span class="n">visualizer</span><span class="p">,</span>
+    <span class="n">load_name</span><span class="p">,</span>
+    <span class="n">load_type</span><span class="p">,</span>
+<span class="p">):</span>
+    <span class="k">if</span> <span class="n">save_path</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="c1"># if save_path is None, the model will not be saved</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">save_path</span><span class="p">):</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">save_path</span><span class="p">)</span>
+        <span class="n">checkpoint_callback</span> <span class="o">=</span> <span class="n">ModelCheckpoint</span><span class="p">(</span>
+            <span class="n">save_top_k</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+            <span class="n">monitor</span><span class="o">=</span><span class="s2">&quot;val_loss_epoch&quot;</span><span class="p">,</span>
+            <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;min&quot;</span><span class="p">,</span>
+            <span class="n">filename</span><span class="o">=</span><span class="s2">&quot;best&quot;</span><span class="p">,</span>
+            <span class="n">dirpath</span><span class="o">=</span><span class="n">save_path</span><span class="p">,</span>
+            <span class="n">save_last</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="c1"># tb_logger = TensorBoardLogger(save_dir=save_path, name=&quot;logs&quot;)</span>
+        <span class="n">lr_monitor_callback</span> <span class="o">=</span> <span class="n">LearningRateMonitor</span><span class="p">(</span><span class="n">logging_interval</span><span class="o">=</span><span class="s2">&quot;step&quot;</span><span class="p">)</span>
+        <span class="n">plt_trainer_args</span><span class="p">[</span><span class="s2">&quot;callbacks&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">checkpoint_callback</span><span class="p">,</span>
+            <span class="n">lr_monitor_callback</span><span class="p">,</span>
+        <span class="p">]</span>
+        <span class="n">plt_trainer_args</span><span class="p">[</span><span class="s2">&quot;logger&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">visualizer</span>
+
+    <span class="c1"># plugin</span>
+    <span class="k">if</span> <span class="n">auto_requeue</span><span class="p">:</span>
+        <span class="n">plugins</span> <span class="o">=</span> <span class="p">[</span><span class="n">SLURMEnvironment</span><span class="p">(</span><span class="n">auto_requeue</span><span class="o">=</span><span class="n">auto_requeue</span><span class="p">)]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">plugins</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">plt_trainer_args</span><span class="p">[</span><span class="s2">&quot;plugins&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">plugins</span>
+
+    <span class="c1"># Check optimizer</span>
+    <span class="c1"># if plt_trainer_args[&quot;strategy&quot;] in [&quot;deepspeed_stage_3&quot;]:</span>
+    <span class="c1">#     assert optimizer in [</span>
+    <span class="c1">#         &quot;FusedAdam&quot;,</span>
+    <span class="c1">#         &quot;fused_adam&quot;,</span>
+    <span class="c1">#     ], &quot;optimizer should be &#39;fused_adam&#39; given --strategy={}&quot;.format(</span>
+    <span class="c1">#         plt_trainer_args[&quot;strategy&quot;]</span>
+    <span class="c1">#     )</span>
+    <span class="c1"># elif plt_trainer_args[&quot;strategy&quot;] in [&quot;fsdp_custom&quot;]:</span>
+    <span class="c1">#     plt_trainer_args[&quot;strategy&quot;] = CustomFSDPStrategy()</span>
+
+    <span class="n">wrapper_cls</span> <span class="o">=</span> <span class="n">get_model_wrapper</span><span class="p">(</span><span class="n">model_info</span><span class="p">,</span> <span class="n">task</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">load_name</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">model</span> <span class="o">=</span> <span class="n">load_model</span><span class="p">(</span><span class="n">load_name</span><span class="p">,</span> <span class="n">load_type</span><span class="o">=</span><span class="n">load_type</span><span class="p">,</span> <span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;&#39;</span><span class="si">{</span><span class="n">load_type</span><span class="si">}</span><span class="s2">&#39; checkpoint loaded before training&quot;</span><span class="p">)</span>
+
+    <span class="n">pl_model</span> <span class="o">=</span> <span class="n">wrapper_cls</span><span class="p">(</span>
+        <span class="n">model</span><span class="p">,</span>
+        <span class="n">dataset_info</span><span class="o">=</span><span class="n">dataset_info</span><span class="p">,</span>
+        <span class="n">learning_rate</span><span class="o">=</span><span class="n">learning_rate</span><span class="p">,</span>
+        <span class="n">weight_decay</span><span class="o">=</span><span class="n">weight_decay</span><span class="p">,</span>
+        <span class="n">epochs</span><span class="o">=</span><span class="n">plt_trainer_args</span><span class="p">[</span><span class="s2">&quot;max_epochs&quot;</span><span class="p">],</span>
+        <span class="n">optimizer</span><span class="o">=</span><span class="n">optimizer</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="n">trainer</span> <span class="o">=</span> <span class="n">pl</span><span class="o">.</span><span class="n">Trainer</span><span class="p">(</span><span class="o">**</span><span class="n">plt_trainer_args</span><span class="p">)</span>
+
+    <span class="n">trainer</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span>
+        <span class="n">pl_model</span><span class="p">,</span>
+        <span class="n">datamodule</span><span class="o">=</span><span class="n">data_module</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="c1"># Save the trained model along with relevant metadata in the training_ckpts folder.</span>
+    <span class="c1"># NOTE: This is important if the model was previously transformed with architectural</span>
+    <span class="c1"># changes. The state dictionary that&#39;s saved by PyTorch Lightning wouldn&#39;t work.</span>
+    <span class="k">if</span> <span class="n">save_path</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">load_name</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">load_type</span> <span class="o">==</span> <span class="s2">&quot;mz&quot;</span><span class="p">:</span>
+        <span class="n">graph</span> <span class="o">=</span> <span class="n">MaseGraph</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
+        <span class="n">dummy_input</span> <span class="o">=</span> <span class="n">get_dummy_input</span><span class="p">(</span><span class="n">model_info</span><span class="p">,</span> <span class="n">data_module</span><span class="p">,</span> <span class="n">task</span><span class="p">)</span>
+        <span class="n">graph</span> <span class="o">=</span> <span class="n">init_metadata_analysis_pass</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="n">graph</span> <span class="o">=</span> <span class="n">add_common_metadata_analysis_pass</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">dummy_input</span><span class="p">)</span>
+        <span class="n">graph</span> <span class="o">=</span> <span class="n">add_software_metadata_analysis_pass</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="n">transformed_ckpt</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">save_path</span><span class="p">)</span> <span class="o">/</span> <span class="s2">&quot;transformed_ckpt&quot;</span>
+        <span class="n">transformed_ckpt</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">save_mase_graph_interface_pass</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">pass_args</span><span class="o">=</span><span class="n">transformed_ckpt</span><span class="p">)</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, DeepWok.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
