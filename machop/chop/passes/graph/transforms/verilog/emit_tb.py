@@ -8,6 +8,8 @@ from .emit_tb_testbench import emit_top_tb
 
 logger = logging.getLogger(__name__)
 
+from pathlib import Path
+
 
 def emit_tb_verilog(graph, trans_num=1, project_dir="top"):
     sim_dir = os.path.join(project_dir, "hardware", "sim")
@@ -19,9 +21,7 @@ def emit_tb_verilog(graph, trans_num=1, project_dir="top"):
         os.mkdir(v_dir)
 
     # TODO : need to emit all the inputs
-    v_in_param = (
-        graph.nodes_in[0].meta["mase"].parameters["hardware"]["verilog_parameters"]
-    )
+    v_in_param = graph.nodes_in[0].meta["mase"].parameters["hardware"]["verilog_param"]
     w_in_param = graph.nodes_in[0].meta["mase"].parameters["common"]["args"]
     in_width = w_in_param["data_in_0"]["precision"][0]
     in_size = v_in_param["IN_0_SIZE"]
@@ -34,7 +34,7 @@ def emit_tb_verilog(graph, trans_num=1, project_dir="top"):
     emit_data_in_tb_sv(data_width, load_path, out_file)
 
     v_out_param = (
-        graph.nodes_out[0].meta["mase"].parameters["hardware"]["verilog_parameters"]
+        graph.nodes_out[0].meta["mase"].parameters["hardware"]["verilog_param"]
     )
     w_out_param = graph.nodes_in[0].meta["mase"].parameters["common"]["results"]
     out_width = w_out_param["data_out_0"]["precision"][0]
@@ -154,15 +154,15 @@ quit
     with open(out_file, "w", encoding="utf-8") as outf:
         outf.write(buff)
 
-    rtl_dir = os.path.join(prj_dir, "..", "..", "rtl")
-    v_dir = os.path.join(prj_dir, "..", "verilog")
+    rtl_dir = os.path.join(project_dir, "hardware", "rtl")
+    v_dir = os.path.join(project_dir, "hardware", "sim", "verilog")
 
     buff = ""
     for file_dir in [rtl_dir, v_dir]:
         for file in glob.glob(os.path.join(file_dir, "*.sv")) + glob.glob(
             os.path.join(file_dir, "*.v")
         ):
-            buff += f"""sv work "{file}"
+            buff += f"""sv work {file}
 """
             for file in glob.glob(os.path.join(file_dir, "*.vhd")):
                 buff += f"""vhdl work "{file}"

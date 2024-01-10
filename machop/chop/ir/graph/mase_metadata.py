@@ -47,6 +47,7 @@ class MaseMetadata:
     - hardware
       - is_implicit -> bool : whether the node is mapped on hardware or software annotation only
       - verilog_param -> {} : parameters need for customise the hardware module
+      - device_id -> int : the ID of the device where the node is mapped, default = -1
       - toolchain -> str : tool chain for code generation, must be INTERNAL, EXTERNAL or HLS
       - module -> str : the name of the used hardware module
       - interface -> {}

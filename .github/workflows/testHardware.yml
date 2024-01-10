@@ -86,7 +86,7 @@ jobs:
             do
               if [[ -f $f ]]; then
                 echo $f
-                verible-verilog-format $f | diff - $f
+                /srcPkgs/verible/bin/verible-verilog-format $f | diff - $f
               fi
             done
           fi
@@ -96,7 +96,7 @@ jobs:
             do
               if [[ -f $f ]]; then
                 echo $f
-                verible-verilog-format $f | diff - $f
+                /srcPkgs/verible/bin/verible-verilog-format $f | diff - $f
               fi
             done
           fi

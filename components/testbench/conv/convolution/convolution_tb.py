@@ -15,7 +15,7 @@ from random_test import RandomSource
 from random_test import RandomSink
 from random_test import check_results
 
-from chop.passes.transforms.quantize.quantized_modules import Conv2dInteger
+from chop.passes.graph.transforms.quantize.quantized_modules import Conv2dInteger
 
 import torch
 
@@ -290,10 +290,10 @@ def debug_state(dut, state):
             dut.bias_valid.value,
             dut.weight_ready.value,
             dut.weight_valid.value,
-            dut.data_in_ready.value,
-            dut.data_in_valid.value,
-            dut.data_out_ready.value,
-            dut.data_out_valid.value,
+            dut.data_in_0_ready.value,
+            dut.data_in_0_valid.value,
+            dut.data_out_0_ready.value,
+            dut.data_out_0_valid.value,
         )
     )
 
@@ -318,8 +318,8 @@ async def test_fixed_linear(dut):
     # Synchronize with the clock
     dut.weight_valid.value = 0
     dut.bias_valid.value = 0
-    dut.data_in_valid.value = 0
-    dut.data_out_ready.value = 1
+    dut.data_in_0_valid.value = 0
+    dut.data_out_0_ready.value = 1
     debug_state(dut, "Pre-clk")
     await FallingEdge(dut.clk)
     debug_state(dut, "Post-clk")
@@ -338,10 +338,10 @@ async def test_fixed_linear(dut):
         debug_state(dut, "Post-clk")
         dut.weight_valid.value = test_case.weight.pre_compute()
         dut.bias_valid.value = test_case.bias.pre_compute()
-        dut.data_in_valid.value = test_case.data_in.pre_compute()
+        dut.data_in_0_valid.value = test_case.data_in.pre_compute()
         await Timer(1, units="ns")
-        dut.data_out_ready.value = test_case.outputs.pre_compute(
-            dut.data_out_valid.value
+        dut.data_out_0_ready.value = test_case.outputs.pre_compute(
+            dut.data_out_0_valid.value
         )
         await Timer(1, units="ns")
         debug_state(dut, "Post-clk")
@@ -352,12 +352,12 @@ async def test_fixed_linear(dut):
         dut.weight_valid.value, dut.weight.value = test_case.weight.compute(
             dut.weight_ready.value
         )
-        dut.data_in_valid.value, dut.data_in.value = test_case.data_in.compute(
-            dut.data_in_ready.value
+        dut.data_in_0_valid.value, dut.data_in_0.value = test_case.data_in.compute(
+            dut.data_in_0_ready.value
         )
         await Timer(1, units="ns")
-        dut.data_out_ready.value = test_case.outputs.compute(
-            dut.data_out_valid.value, dut.data_out.value
+        dut.data_out_0_ready.value = test_case.outputs.compute(
+            dut.data_out_0_valid.value, dut.data_out_0.value
         )
         await Timer(1, units="ns")
         debug_state(dut, "Pre-clk")
@@ -366,7 +366,7 @@ async def test_fixed_linear(dut):
             count1 += 1
         if dut.ib_bias_valid.value == 1 and dut.ib_bias_ready.value == 1:
             count2 += 1
-        if dut.data_out_valid.value == 1 and dut.data_out_ready.value == 1:
+        if dut.data_out_0_valid.value == 1 and dut.data_out_0_ready.value == 1:
             count3 += 1
         if dut.ib_rolled_k_valid.value == 1 and dut.ib_rolled_k_ready.value == 1:
             count4 += 1
@@ -401,9 +401,9 @@ def wave_check(dut):
             {},{},weight = {}\n\
             {},{},bias = {}\n\
             ".format(
-            dut.fl_instance.data_in_valid.value,
-            dut.fl_instance.data_in_ready.value,
-            [int(i) for i in dut.fl_instance.data_in.value],
+            dut.fl_instance.data_in_0_valid.value,
+            dut.fl_instance.data_in_0_ready.value,
+            [int(i) for i in dut.fl_instance.data_in_0.value],
             dut.fl_instance.weight_valid.value,
             dut.fl_instance.weight_ready.value,
             [int(i) for i in dut.fl_instance.weight.value],
@@ -422,18 +422,18 @@ def wave_check(dut):
             padding_y = {} \n\
             padding_c = {} \n\
             ".format(
-            dut.data_in_valid.value,
-            dut.data_in_ready.value,
-            [int(i) for i in dut.data_in.value],
+            dut.data_in_0_valid.value,
+            dut.data_in_0_ready.value,
+            [int(i) for i in dut.data_in_0.value],
             dut.kernel_valid.value,
             dut.kernel_ready.value,
             [int(i) for i in dut.kernel.value],
             dut.rolled_k_valid.value,
             dut.rolled_k_ready.value,
             [int(i) for i in dut.rolled_k.value],
-            dut.data_out_valid.value,
-            dut.data_out_ready.value,
-            [int(i) for i in dut.data_out.value],
+            dut.data_out_0_valid.value,
+            dut.data_out_0_ready.value,
+            [int(i) for i in dut.data_out_0.value],
             int(dut.sw_inst.padding_inst.count_x.value),
             int(dut.sw_inst.padding_inst.count_y.value),
             int(dut.sw_inst.padding_inst.count_c.value),

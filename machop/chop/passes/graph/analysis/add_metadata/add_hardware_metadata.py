@@ -46,6 +46,8 @@ def add_component_source(node):
         node.meta["mase"].parameters["hardware"]["module"] = None
         node.meta["mase"].parameters["hardware"]["dependence_files"] = None
 
+    node.meta["mase"].parameters["hardware"]["device_id"] = -1
+
     # Current only support on-chip parameters
     args = node.meta["mase"].parameters["common"]["args"]
     for arg, _ in args.items():
@@ -120,6 +122,7 @@ def add_hardware_metadata_analysis_pass(graph, pass_args=None):
         - verilog_param -> {} : parameters need for customise the hardware module
         - toolchain -> str : tool chain for code generation, must be INTERNAL, EXTERNAL or HLS
         - module -> str : the name of the used hardware module
+        - device_id -> int : the ID of the device where the node is mapped, default = -1
         - interface -> {}
              - name : name of the parameters
                  - storage : the hardware interface implemented, must be BRAM
@@ -213,6 +216,7 @@ def add_hardware_metadata_analysis_pass(graph, pass_args=None):
                 },
                 "toolchain": "INTERNAL",
                 "module": "fixed_linear",
+                "device_id": -1,
                 "dependence_files": [
                     "cast/fixed_cast.sv",
                     "fixed_arith/fixed_dot_product.sv",
@@ -309,6 +313,7 @@ def add_hardware_metadata_analysis_pass(graph, pass_args=None):
                 "interface": {"inplace": {}},
                 "toolchain": "INTERNAL",
                 "module": "fixed_relu",
+                "device_id": -1,
                 "dependence_files": ["activations/fixed_relu.sv"],
                 "verilog_param": {
                     "DATA_IN_0_PRECISION_0": 8,
@@ -337,6 +342,8 @@ def add_hardware_metadata_analysis_pass(graph, pass_args=None):
     # Find implicit mase nodes
     for node in graph.fx_graph.nodes:
         node.meta["mase"].parameters["hardware"]["is_implicit"] = False
+        node.meta["mase"].parameters["hardware"]["device_id"] = 0
+
     graph.nodes_in = get_input_nodes(graph.fx_graph)
     graph.nodes_out = get_output_nodes(graph.fx_graph)
 

@@ -1,5 +1,9 @@
 name: mase
 
+channels:
+  - symbiflow
+
 dependencies:
   - python=3.10.6
   - pip
+  - verible

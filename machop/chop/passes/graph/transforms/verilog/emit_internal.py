@@ -66,10 +66,11 @@ def emit_internal_rtl_transform_pass(graph, pass_args={}):
         "..",
         "..",
         "..",
+        "..",
         "components",
     )
 
     for f in rtl_dependencies:
         shutil.copy(os.path.join(hardware_dir, f), rtl_dir)
 
-    return graph
+    return graph, {}
