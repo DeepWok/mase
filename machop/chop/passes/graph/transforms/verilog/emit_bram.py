@@ -28,7 +28,7 @@ def emit_parameters_in_mem_internal(node, param_name, file_name, data_name):
 
     # TODO: Force bias to have a depth of 1 for now
     if param_name != "bias":
-        out_depth = node.meta["mase"].parameters["hardware"]["verilog_parameters"][
+        out_depth = node.meta["mase"].parameters["hardware"]["verilog_param"][
             "IN_0_DEPTH"
         ]
     else:
@@ -174,14 +174,11 @@ def emit_parameters_in_dat_internal(node, param_name, file_name):
         node.meta["mase"].parameters["common"]["args"][param_name]["size"]
     )
 
-    if (
-        "IN_DEPTH"
-        in node.meta["mase"].parameters["hardware"]["verilog_parameters"].keys()
-    ):
+    if "IN_DEPTH" in node.meta["mase"].parameters["hardware"]["verilog_param"].keys():
         if param_name == "bias":
             out_depth = 1
         else:
-            out_depth = node.meta["mase"].parameters["hardware"]["verilog_parameters"][
+            out_depth = node.meta["mase"].parameters["hardware"]["verilog_param"][
                 "IN_DEPTH"
             ]
     else:
@@ -199,21 +196,13 @@ def emit_parameters_in_dat_internal(node, param_name, file_name):
 
     data_buff = ""
     param_data = node.meta["mase"].module.get_parameter(param_name).data
-    if node.meta["mase"].parameters["hardware"]["interface_parameters"][param_name][
-        "transpose"
-    ]:
+    if node.meta["mase"].parameters["hardware"]["interface"][param_name]["transpose"]:
         param_data = torch.reshape(
             param_data,
             (
-                node.meta["mase"].parameters["hardware"]["verilog_parameters"][
-                    "OUT_0_SIZE"
-                ],
-                node.meta["mase"].parameters["hardware"]["verilog_parameters"][
-                    "IN_0_DEPTH"
-                ],
-                node.meta["mase"].parameters["hardware"]["verilog_parameters"][
-                    "IN_0_SIZE"
-                ],
+                node.meta["mase"].parameters["hardware"]["verilog_param"]["OUT_0_SIZE"],
+                node.meta["mase"].parameters["hardware"]["verilog_param"]["IN_0_DEPTH"],
+                node.meta["mase"].parameters["hardware"]["verilog_param"]["IN_0_SIZE"],
             ),
         )
         param_data = torch.transpose(param_data, 0, 1)
@@ -262,7 +251,7 @@ def emit_parameters_in_dat_hls(node, param_name, file_name):
     )
     out_depth = total_size
     out_size = 1
-    out_width = node.meta["mase"].parameters["hardware"]["verilog_parameters"][
+    out_width = node.meta["mase"].parameters["hardware"]["verilog_param"][
         "{}_WIDTH".format(param_name.upper())
     ]
 
@@ -325,11 +314,12 @@ def emit_bram_handshake(node, rtl_dir):
     node_name = vf(node.name)
     for param_name, parameter in node.meta["mase"].module.named_parameters():
         if (
-            node.meta["mase"].parameters["hardware"]["interface_parameters"][
-                param_name
-            ]["storage"]
+            node.meta["mase"].parameters["hardware"]["interface"][param_name]["storage"]
             == "BRAM"
         ):
+            logger.debug(
+                f"Emitting DAT file for node: {node_name}, parameter: {param_name}"
+            )
             verilog_name = os.path.join(rtl_dir, f"{node_name}_{param_name}.sv")
             data_name = os.path.join(rtl_dir, f"{node_name}_{param_name}_rom.dat")
             emit_parameters_in_mem_internal(node, param_name, verilog_name, data_name)
@@ -358,7 +348,7 @@ def emit_parameters_in_mem_hls(node, param_name, file_name, data_name):
         total_size % out_depth == 0
     ), f"Cannot partition imperfect size for now = {total_size} / {out_depth}."
     # Assume the first index is the total width
-    out_width = node.meta["mase"].parameters["hardware"]["verilog_parameters"][
+    out_width = node.meta["mase"].parameters["hardware"]["verilog_param"][
         "{}_WIDTH".format(param_name.upper())
     ]
 
@@ -438,9 +428,7 @@ def emit_bram_hls(node, rtl_dir):
     node_name = vf(node.name)
     for param_name, parameter in node.meta["mase"].module.named_parameters():
         if (
-            node.meta["mase"].parameters["hardware"]["interface_parameters"][
-                param_name
-            ]["storage"]
+            node.meta["mase"].parameters["hardware"]["interface"][param_name]["storage"]
             == "BRAM"
         ):
             # Verilog code of the ROM has been emitted using mlir passes
@@ -458,7 +446,7 @@ def emit_bram_transform_pass(graph, pass_args={}):
     handshake interface for each parameter
     """
 
-    logger.info("Emitting Verilog...")
+    logger.info("Emitting BRAM...")
     project_dir = (
         pass_args["project_dir"] if "project_dir" in pass_args.keys() else "top"
     )

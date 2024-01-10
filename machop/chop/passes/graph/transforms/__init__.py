@@ -13,3 +13,5 @@ from .utils import (
     logicnets_fusion_transform_pass,
     onnx_annotate_transform_pass,
 )
+
+from .dse import partition_to_multi_device_transform_pass

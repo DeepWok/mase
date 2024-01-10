@@ -124,7 +124,7 @@ def test_complex_quantize():
         try:
             with open(os.path.join(path, config_file), "r") as f:
                 quan_args = toml.load(f)["passes"]["quantize"]
-            mg = quantize_transform_pass(mg, quan_args)
+            mg, _ = quantize_transform_pass(mg, quan_args)
             summarize_quantization_analysis_pass(
                 ori_mg, mg, save_dir="quantize_summary"
             )

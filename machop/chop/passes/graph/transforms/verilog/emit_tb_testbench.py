@@ -840,13 +840,13 @@ module `AUTOTB_TOP;
   ///////////////////////////////////////////////////////
   // dataflow status monitor
   ///////////////////////////////////////////////////////
-  dataflow_monitor U_dataflow_monitor (
-      .clock (AESL_clock),
-      .reset (rst),
-      .finish(all_finish)
-  );
+  // dataflow_monitor U_dataflow_monitor (
+  //     .clock (AESL_clock),
+  //     .reset (rst),
+  //     .finish(all_finish)
+  // );
 
-  `include "fifo_para.vh"
+  `include "fifo_para.v"
 
 endmodule
 """

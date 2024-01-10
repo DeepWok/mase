@@ -65,12 +65,12 @@ class VerificationCase:
 
     def get_dut_parameters(self):
         return {
-            "IN_WIDTH": self.data_in_width,
-            "IN_FRAC_WIDTH": self.data_in_frac_width,
+            "IN_0_WIDTH": self.data_in_width,
+            "IN_0_FRAC_WIDTH": self.data_in_frac_width,
             "WEIGHT_WIDTH": self.weight_width,
             "WEIGHT_FRAC_WIDTH": self.weight_frac_width,
-            "IN_SIZE": self.vector_size,
-            "IN_DEPTH": self.iterations,
+            "IN_0_SIZE": self.vector_size,
+            "IN_0_DEPTH": self.iterations,
             "PARALLELISM": self.parallelism,
             "HAS_BIAS": self.has_bias,
             "BIAS_WIDTH": self.bias_width,
@@ -111,10 +111,10 @@ def debug_state(dut, state):
             dut.bias_valid.value,
             dut.weight_ready.value,
             dut.weight_valid.value,
-            dut.data_in_ready.value,
-            dut.data_in_valid.value,
-            dut.data_out_ready.value,
-            dut.data_out_valid.value,
+            dut.data_in_0_ready.value,
+            dut.data_in_0_valid.value,
+            dut.data_out_0_ready.value,
+            dut.data_out_0_valid.value,
         )
     )
 
@@ -140,8 +140,8 @@ async def test_fixed_linear(dut):
     # Synchronize with the clock
     dut.weight_valid.value = 0
     dut.bias_valid.value = 0
-    dut.data_in_valid.value = 0
-    dut.data_out_ready.value = 1
+    dut.data_in_0_valid.value = 0
+    dut.data_out_0_ready.value = 1
     debug_state(dut, "Pre-clk")
     await FallingEdge(dut.clk)
     debug_state(dut, "Post-clk")
@@ -156,10 +156,10 @@ async def test_fixed_linear(dut):
         debug_state(dut, "Post-clk")
         dut.weight_valid.value = test_case.weight.pre_compute()
         dut.bias_valid.value = test_case.bias.pre_compute()
-        dut.data_in_valid.value = test_case.data_in.pre_compute()
+        dut.data_in_0_valid.value = test_case.data_in.pre_compute()
         await Timer(1, units="ns")
-        dut.data_out_ready.value = test_case.outputs.pre_compute(
-            dut.data_out_valid.value
+        dut.data_out_0_ready.value = test_case.outputs.pre_compute(
+            dut.data_out_0_valid.value
         )
         await Timer(1, units="ns")
         debug_state(dut, "Post-clk")
@@ -170,12 +170,12 @@ async def test_fixed_linear(dut):
         dut.weight_valid.value, dut.weight.value = test_case.weight.compute(
             dut.weight_ready.value
         )
-        dut.data_in_valid.value, dut.data_in.value = test_case.data_in.compute(
-            dut.data_in_ready.value
+        dut.data_in_0_valid.value, dut.data_in_0.value = test_case.data_in.compute(
+            dut.data_in_0_ready.value
         )
         await Timer(1, units="ns")
-        dut.data_out_ready.value = test_case.outputs.compute(
-            dut.data_out_valid.value, dut.data_out.value
+        dut.data_out_0_ready.value = test_case.outputs.compute(
+            dut.data_out_0_valid.value, dut.data_out_0.value
         )
         debug_state(dut, "Pre-clk")
 
