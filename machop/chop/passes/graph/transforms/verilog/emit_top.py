@@ -276,7 +276,8 @@ class VerilogInternalComponentEmitter:
         parameters = ""
         for param in node.meta["mase"].parameters["hardware"]["verilog_param"].keys():
             if f"{_cap(key)}_" in param:
-                parameters += f".{param}({node_name}_{param})\n"
+                parameters += f".{param}({node_name}_{param}),\n"
+        parameters = _remove_last_comma(parameters)
 
         return f"""
 {component_name} #(

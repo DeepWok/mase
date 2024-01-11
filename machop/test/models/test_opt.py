@@ -34,6 +34,7 @@ def test_opt():
     )
     opt_tokenizer = get_tokenizer("facebook/opt-125m:patched")
 
+    print(f"prepare data")
     # Get data module for dummy inputs
     data_module = MaseDataModule(
         name="wikitext2",
@@ -58,59 +59,60 @@ def test_opt():
         dummy_in = dummy_in | graph.model.additional_inputs
 
     # Generate graph and initialize metadata
+    print(f"init metadata")
     graph, _ = passes.init_metadata_analysis_pass(graph, pass_args=None)
-    graph, _ = passes.add_common_metadata_analysis_pass(
-        graph, pass_args={"dummy_in": dummy_in}
-    )
+    # graph, _ = passes.add_common_metadata_analysis_pass(
+    #     graph, pass_args={"dummy_in": dummy_in}
+    # )
 
     # Quantize and add hardware metadata
-    graph, _ = passes.quantize_transform_pass(graph, config["passes"]["quantize"])
-    graph, _ = passes.add_hardware_metadata_analysis_pass(graph, pass_args=None)
+    # graph, _ = passes.quantize_transform_pass(graph, config["passes"]["quantize"])
+    # graph, _ = passes.add_hardware_metadata_analysis_pass(graph, pass_args=None)
 
     # ==============================================
     # TO DO: TEMPORARY
-    print(f"before removal {graph.nodes_in}")
-    graph.nodes_in = graph.nodes_in[:-3]
-    print(f"after removal {graph.nodes_in}")
+    # print(f"before removal {graph.nodes_in}")
+    # graph.nodes_in = graph.nodes_in[:-3]
+    # print(f"after removal {graph.nodes_in}")
 
-    print(f"UPDATE ATTENTION ARGS")
+    # print(f"UPDATE ATTENTION ARGS")
     # Rename attention node inputs etc
-    for node in graph.fx_graph.nodes:
-        if "self_attn" in node.name and "layer_norm" not in node.name:
-            node.meta["mase"].parameters["common"]["args"]["bias_q"] = (
-                node.meta["mase"].parameters["common"]["args"].pop("q_proj.bias")
-            )
-            node.meta["mase"].parameters["common"]["args"]["bias_k"] = (
-                node.meta["mase"].parameters["common"]["args"].pop("k_proj.bias")
-            )
-            node.meta["mase"].parameters["common"]["args"]["bias_v"] = (
-                node.meta["mase"].parameters["common"]["args"].pop("v_proj.bias")
-            )
+    # for node in graph.fx_graph.nodes:
+    #     if "self_attn" in node.name and "layer_norm" not in node.name:
+    #         node.meta["mase"].parameters["common"]["args"]["bias_q"] = (
+    #             node.meta["mase"].parameters["common"]["args"].pop("q_proj.bias")
+    #         )
+    #         node.meta["mase"].parameters["common"]["args"]["bias_k"] = (
+    #             node.meta["mase"].parameters["common"]["args"].pop("k_proj.bias")
+    #         )
+    #         node.meta["mase"].parameters["common"]["args"]["bias_v"] = (
+    #             node.meta["mase"].parameters["common"]["args"].pop("v_proj.bias")
+    #         )
 
-            node.meta["mase"].parameters["common"]["args"]["weight_q"] = (
-                node.meta["mase"].parameters["common"]["args"].pop("q_proj.weight")
-            )
-            node.meta["mase"].parameters["common"]["args"]["weight_k"] = (
-                node.meta["mase"].parameters["common"]["args"].pop("k_proj.weight")
-            )
-            node.meta["mase"].parameters["common"]["args"]["weight_v"] = (
-                node.meta["mase"].parameters["common"]["args"].pop("v_proj.weight")
-            )
+    #         node.meta["mase"].parameters["common"]["args"]["weight_q"] = (
+    #             node.meta["mase"].parameters["common"]["args"].pop("q_proj.weight")
+    #         )
+    #         node.meta["mase"].parameters["common"]["args"]["weight_k"] = (
+    #             node.meta["mase"].parameters["common"]["args"].pop("k_proj.weight")
+    #         )
+    #         node.meta["mase"].parameters["common"]["args"]["weight_v"] = (
+    #             node.meta["mase"].parameters["common"]["args"].pop("v_proj.weight")
+    #         )
 
-            # Pop out attention_mask and output_attentions
-            node.meta["mase"].parameters["common"]["args"].pop("data_in_2")
-            node.meta["mase"].parameters["common"]["args"].pop("data_in_4")
+    #         # Pop out attention_mask and output_attentions
+    #         node.meta["mase"].parameters["common"]["args"].pop("data_in_2")
+    #         node.meta["mase"].parameters["common"]["args"].pop("data_in_4")
 
-            # Pop output projection weight/bias
-            node.meta["mase"].parameters["common"]["args"].pop("out_proj.weight")
-            node.meta["mase"].parameters["common"]["args"].pop("out_proj.bias")
+    #         # Pop output projection weight/bias
+    #         node.meta["mase"].parameters["common"]["args"].pop("out_proj.weight")
+    #         node.meta["mase"].parameters["common"]["args"].pop("out_proj.bias")
 
     # ==============================================
 
-    graph, _ = passes.report_node_type_analysis_pass(graph)
+    # graph, _ = passes.report_node_type_analysis_pass(graph)
 
     # Emit verilog
-    graph, _ = passes.emit_verilog_top_transform_pass(graph)
+    # graph, _ = passes.emit_verilog_top_transform_pass(graph)
 
 
 if __name__ == "__main__":

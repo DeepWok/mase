@@ -175,8 +175,8 @@ endmodule
 
 
 def emit_data_in_tb_dat(node, data_in, out_file):
-    in_size = node.meta["mase"].parameters["hardware"]["verilog_parameters"][
-        "IN_0_SIZE"
+    in_size = node.meta["mase"].parameters["hardware"]["verilog_param"][
+        "DATA_IN_0_TENSOR_SIZE_DIM_0"
     ]
     in_width = node.meta["mase"].parameters["common"]["args"]["data_in_0"]["precision"][
         0
@@ -213,9 +213,11 @@ def emit_data_in_tb_dat(node, data_in, out_file):
 
 
 def emit_data_in_stream_size_tb_dat(node, data_in, out_file):
-    in_size = node.meta["mase"].parameters["hardware"]["verilog_parameters"]["IN_SIZE"]
-    in_width = node.meta["mase"].parameters["hardware"]["verilog_parameters"][
-        "IN_WIDTH"
+    in_size = node.meta["mase"].parameters["hardware"]["verilog_param"][
+        "DATA_IN_0_TENSOR_SIZE_DIM_0"
+    ]
+    in_width = node.meta["mase"].parameters["hardware"]["verilog_param"][
+        "DATA_IN_0_PRECISION_0"
     ]
     assert len(data_in[0]) % in_size == 0
 
