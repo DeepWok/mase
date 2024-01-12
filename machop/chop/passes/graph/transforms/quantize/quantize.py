@@ -217,4 +217,4 @@ def quantize_transform_pass(graph, pass_args=None):
             graph = graph_iterator_quantize_by_regex_name(graph, pass_args)
         case _:
             raise ValueError(f'Unsupported quantize "by": {by}')
-    return graph
+    return graph, {}

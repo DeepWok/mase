@@ -3,9 +3,8 @@ import logging
 import os
 import sys
 
-from ..board_config import fpga_board_info
-from ..graph.utils import vf
-from ..utils import execute_cli
+from ....graph.utils import vf
+from .....tools.utils import execute_cli
 
 logger = logging.getLogger(__name__)
 
@@ -60,6 +59,7 @@ create_project -force {project_name} {project_dir} -part {target}
                 )
             ):
                 tcl_buff += "source -norecurse {" + file + "}\n"
+
     resource_report = os.path.join(project_dir, "utils.rpt")
     timing_report = os.path.join(project_dir, "timing.rpt")
     power_report = os.path.join(project_dir, "power.rpt")
@@ -82,11 +82,7 @@ report_power -file {power_report} -name {{power_1}}
         tcl_dir
     ), f"Vivado tcl not found. Please make sure if {tcl_dir} exists."
 
-    clk_buff = (
-        "create_clock -add -name clk -period "
-        + str(fpga_board_info[target]["CLK"])
-        + " [get_ports {clk}];"
-    )
+    clk_buff = "create_clock -add -name clk -period 20" + " [get_ports {clk}];"
     with open(clk_dir, "w", encoding="utf-8") as outf:
         outf.write(clk_buff)
     assert os.path.isfile(
@@ -97,6 +93,9 @@ report_power -file {power_report} -name {{power_1}}
     vivado = os.path.abspath(
         os.path.join(
             os.path.dirname(__file__),
+            "..",
+            "..",
+            "..",
             "..",
             "..",
             "..",

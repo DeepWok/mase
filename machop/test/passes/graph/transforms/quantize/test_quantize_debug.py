@@ -229,7 +229,7 @@ def test_quantize_debug():
 
     ori_mg = deepcopy_mase_graph(mg)
     # mg = profile_statistics_analysis_pass(mg, stat_args)
-    mg: MaseGraph = quantize_transform_pass(mg, quant_args)
+    mg, _ = quantize_transform_pass(mg, quant_args)
 
     dataset_info = get_dataset_info("cifar10")
     # plt_args = {"max_epochs": 20, "strategy": "sgd"}

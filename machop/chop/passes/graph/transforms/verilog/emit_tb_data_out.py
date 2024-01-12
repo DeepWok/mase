@@ -146,8 +146,8 @@ endmodule
 
 
 def emit_data_out_tb_dat(node, data_out, out_file):
-    out_size = node.meta["mase"].parameters["hardware"]["verilog_parameters"][
-        "OUT_0_SIZE"
+    out_size = node.meta["mase"].parameters["hardware"]["verilog_param"][
+        "DATA_OUT_0_TENSOR_SIZE_0_DIM_0"
     ]
     out_width = node.meta["mase"].parameters["common"]["results"]["data_out_0"][
         "precision"

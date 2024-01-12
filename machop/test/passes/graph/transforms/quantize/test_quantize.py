@@ -89,6 +89,6 @@ def test_quantize():
 
     # deep copy is only possible if we put "add_value" to False
     ori_mg = deepcopy_mase_graph(mg)
-    mg = quantize_transform_pass(mg, quan_args)
+    mg, _ = quantize_transform_pass(mg, quan_args)
 
     summarize_quantization_analysis_pass(ori_mg, mg, save_dir="quantize_summary")

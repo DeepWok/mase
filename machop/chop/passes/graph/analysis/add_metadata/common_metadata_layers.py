@@ -186,7 +186,6 @@ def analyse_common_parameters_placeholder(meta, result, args, kwargs, add_value=
 def analyse_common_parameters_function(meta, result, args, kwargs, add_value=True):
     # fetch mase info
     mase_op = meta.parameters["common"]["mase_op"]
-    mase_type = meta.parameters["common"]["mase_type"]
 
     # deal with result
     meta = analyse_result(meta, result, add_value)
@@ -209,7 +208,7 @@ def analyse_common_parameters_module(meta, result, args, kwargs, add_value=True)
             "type": "float",
             "precision": [32],
             "shape": list(parameter.shape),
-            # "from": None,
+            "from": None,
         }
         if add_value:
             meta.parameters["common"]["args"][name]["value"] = parameter
