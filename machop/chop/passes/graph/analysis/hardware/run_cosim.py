@@ -6,7 +6,7 @@ from chop.tools.utils import execute_cli
 logger = logging.getLogger(__name__)
 
 
-def run_cosim_analysis_pass(graph):
+def run_cosim_analysis_pass(graph, pass_args={}):
     """
     Call XSIM for simulation
     """
@@ -22,6 +22,7 @@ def run_cosim_analysis_pass(graph):
             "..",
             "..",
             "..",
+            "..",
             "scripts",
             "run-xsim.sh",
         )
@@ -32,11 +33,12 @@ def run_cosim_analysis_pass(graph):
         f"top_tb",
     ]
     sim_dir = os.path.join(project_dir, "hardware", "sim", "prj")
-    result = execute_cli(cmd, log_output=self.to_debug, cwd=sim_dir)
+    log = pass_args["log_file"] if "log_file" in pass_args.keys() else "simulation.log"
+    result = execute_cli(cmd, cwd=sim_dir, log_file=log)
 
     # TODO: seems xsim always returns 0 - needs to check
     if result:
-        logger.error(f"Co-simulation failed. {self.project}")
+        logger.error(f"Co-simulation failed.")
     else:
-        logger.debug(f"Co-simulation succeeded. {self.project}")
+        logger.debug(f"Co-simulation succeeded.")
     return graph

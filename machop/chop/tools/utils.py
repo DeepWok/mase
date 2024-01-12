@@ -8,12 +8,16 @@ import subprocess
 
 from torch import Tensor
 
+import logging
+
 # LUTNet
 import itertools
 
 use_cuda = torch.cuda.is_available()
 torch_cuda = torch.cuda if use_cuda else torch
 device = torch.device("cuda:0" if use_cuda else "cpu")
+
+logger = logging.getLogger(__name__)
 
 
 def to_numpy(x):
@@ -52,13 +56,13 @@ def execute_cli(cmd, log_output: bool = True, log_file=None, cwd="."):
                     if log_file:
                         f.write(line)
                     line = line.rstrip("\n")
-                    logging.trace(line)
+                    # logger.trace(line)
             if result.stderr:
                 for line in result.stderr:
                     if log_file:
                         f.write(line)
                     line = line.rstrip("\n")
-                    logging.trace(line)
+                    # logger.trace(line)
             if log_file:
                 f.close()
     else:

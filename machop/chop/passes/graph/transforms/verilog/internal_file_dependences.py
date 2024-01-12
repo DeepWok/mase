@@ -9,7 +9,9 @@ INTERNAL_RTL_DEPENDENCIES = {
         "fixed_arith/fixed_adder_tree_layer.sv",
         "fixed_arith/fixed_mult.sv",
         "common/register_slice.sv",
+        "common/skid_buffer.sv",
         "common/join2.sv",
+        "cast/fixed_rounding.sv",
     ],
     "relu": ["activations/fixed_relu.sv"],
 }

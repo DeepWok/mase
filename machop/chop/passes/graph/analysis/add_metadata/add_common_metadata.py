@@ -220,34 +220,6 @@ def graph_iterator_for_metadata(
     return graph
 
 
-"""
-This is a standard analysis pass that runs at the start of all transform calls
-
-name_style_pass (graph, pass_args)
-
-This follows the the naming convention of
-[name]_[style]_pass
-add_common_metadata(name)_analysis(style)_pass
-
-passname : {args}
-
-"""
-
-
-# TO DO: placeholder. Need to update iterator for metadata with fx's ShapeProp methodology
-def new_graph_iterator_for_metadata(graph, dummy_in=None):
-    """
-    The size of input and output cannot directly be accessed by functions and some modules.
-    This function traverses from the placeholder and passes the metadata through edges.
-    """
-
-    print(type(graph.model))
-    sp = ShapeProp(graph.model)
-    g = sp.propagate()
-
-    return graph
-
-
 def add_common_metadata_analysis_pass(
     graph, pass_args={"dummy_in": None, "add_value": True, "force_device_meta": False}
 ):
@@ -281,7 +253,7 @@ def add_common_metadata_analysis_pass(
                (if the result is a tensor)
                  - type -> type of the result, e.g. fixed point or float
                  - precision -> format of the type, e.g. (10, 5)
-                 - size -> size of the result
+                 - shape -> shape of the result
                (if the result is not a tensor)
                  - value of the result
 
