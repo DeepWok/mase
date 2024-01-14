@@ -206,7 +206,7 @@ def quantize_transform_pass(graph, pass_args=None):
     :type pass_args: dict, optional
 
     :return: The transformed graph.
-    :rtype: tuple 
+    :rtype: tuple
     :raises ValueError: If the quantize "by" argument is unsupported.
 
 
