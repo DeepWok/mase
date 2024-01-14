@@ -50,20 +50,19 @@ assert machop_path.exists(), "Failed to find machop at: {}".format(machop_path)
 sys.path.append(str(machop_path))
 
 from chop.dataset import MaseDataModule, get_dataset_info
-from chop.tools.logger import getLogger
+from chop.tools.logger import get_logger
 
-from chop.passes.transforms.interface import save_node_meta_param_transform_pass
-from chop.passes.analysis import (
+from chop.passes.graph.analysis import (
     report_node_meta_param_analysis_pass,
     profile_statistics_analysis_pass,
 )
-from chop.passes import (
+from chop.passes.graph import (
     add_common_metadata_analysis_pass,
     init_metadata_analysis_pass,
     add_software_metadata_analysis_pass,
 )
 from chop.tools.get_input import InputGenerator
-from chop.passes.graph.mase_graph import MaseGraph
+from chop.ir.graph.mase_graph import MaseGraph
 
 from chop.models import get_model_info, get_model
 
@@ -162,12 +161,14 @@ In contrast, the second `for` loop retrieves training samples from the train dat
 
 ```python
 # grid search
-ori_mg = deepcopy_mase_graph(mg)
 
 
 import torch
 from torchmetrics.classification import MulticlassAccuracy
 
+mg, _ = init_metadata_analysis_pass(mg, None)
+mg, _ = add_common_metadata_analysis_pass(mg, {"dummy_in": dummy_in})
+mg, _ = add_software_metadata_analysis_pass(mg, None)
 
 metric = MulticlassAccuracy(num_classes=5)
 num_batchs = 5
@@ -176,7 +177,7 @@ num_batchs = 5
 
 recorded_accs = []
 for i, config in enumerate(search_spaces):
-    mg = quantize_transform_pass(ori_mg, config)
+    mg, _ = quantize_transform_pass(mg, config)
     j = 0
 
     # this is the inner loop, where we also call it as a runner.
