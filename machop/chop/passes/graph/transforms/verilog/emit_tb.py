@@ -219,9 +219,18 @@ verilator --binary --build {verilator_buff}
 def emit_verilog_tb_transform_pass(graph, pass_args={}):
     """
     Emit test bench and related files for simulation
-    * project_dir : the directory of the project for cosimulation
-    * trans_num : the transaction count of cosimulation
-    * test_inputs : test vectors of inputs for cosimulation
+
+    :param graph: a MaseGraph
+    :type graph: MaseGraph
+    :param pass_args: this pass requires additional arguments which is explained below, defaults to {}
+    :type pass_args: _type_, optional
+    :return: return a tuple of a MaseGraph and an empty dict (no additional info to return)
+    :rtype: tuple(MaseGraph, Dict)
+
+    - pass_args
+        - project_dir -> str : the directory of the project for cosimulation
+        - trans_num -> str : the transaction count of cosimulation
+        - test_inputs -> str : test vectors of inputs for cosimulation
     """
     logger.info("Emitting test bench...")
     project_dir = (
