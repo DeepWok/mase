@@ -1,7 +1,15 @@
 Chop Passes
 ============================
 
+All passes, no matter analysis or transform, take a standard form:
 
+.. code-block:: python 
+
+  # pass_args is a dict
+  def pass(mg, pass_args):
+      ...
+  # info a a dict
+  return mg, info
 
 
 MaseGraph Analysis Passes
@@ -66,11 +74,11 @@ MaseGraph Transform Passes
     - Summary
   * - :py:meth:`~chop.passes.graph.transforms.pruning.prune.prune_transform_pass`
     - Apply pruning transformation to the given graph
-  * - :py:meth:`~chop.passes.graph.transforms.pruning.prune.prune_detach_hook_transform_pass`
+  * - :py:meth:`~chop.passes.graph.transforms.pruning.prune_detach_hook.prune_detach_hook_transform_pass`
     - Apply a transformation to the given graph to remove all pruning hooks
-  * - :py:meth:`~chop.passes.graph.transforms.quantize.quantize.quantize_transform_pass`
+  * - :py:meth:`~chop.passes.graph.transforms.quantize.quantize_transform_pass`
     - Apply quantization transformation to the given graph
-  * - :py:meth:`~chop.passes.graph.transforms.quantize.quantize.summarize_quantization_analysis_pass`
+  * - :py:meth:`~chop.passes.graph.transforms.quantize.summarize_quantization_analysis_pass`
     - fille me
   * - :py:meth:`~chop.passes.graph.transforms.utils.conv_bn_fusion_transform_pass`
     - fill me
@@ -79,11 +87,11 @@ MaseGraph Transform Passes
   * - :py:meth:`~chop.passes.graph.transforms.utils.onnx_annotate_transform_pass`
     - fill me
   * - :py:meth:`~chop.passes.graph.transforms.verilog.emit_top.emit_verilog_top_transform_pass`
-    - fill me
-  * - :py:meth:`~chop.passes.graph.transforms.verilog.emit_top.emit_verilog_tb_transform_pass`
-    - fill me
-  * - :py:meth:`~chop.passes.graph.transforms.verilog.emit_top.emit_bram_transform_pass`
-    - fill me
+    - Emit the top-level model design in Verilog
+  * - :py:meth:`~chop.passes.graph.transforms.verilog.emit_tb.emit_verilog_tb_transform_pass`
+    - Emit test bench and related files for simulation
+  * - :py:meth:`~chop.passes.graph.transforms.verilog.emit_bram.emit_bram_transform_pass`
+    - Enumerate input parameters of the node and emit a ROM block with handshake interface for each parameter
   * - :py:meth:`~chop.passes.graph.transforms.verilog.emit_top.emit_mlir_hls_transform_pass`
     - fill me
   * - :py:meth:`~chop.passes.graph.transforms.verilog.emit_top.emit_internal_rtl_transform_pass`
