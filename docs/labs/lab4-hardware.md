@@ -6,7 +6,7 @@
     <img src="../imgs/deepwok.png" alt="Logo" width="160" height="160">
   </a>
 
-  <h1 align="center">Lab 4 for Advanced Deep Learning Systems (ADLS) - Software Stream</h1>
+  <h1 align="center">Lab 4 for Advanced Deep Learning Systems (ADLS) - Hardware Stream</h1>
 
   <p align="center">
     ELEC70109/EE9-AML3-10/EE9-AO25
