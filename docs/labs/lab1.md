@@ -281,3 +281,8 @@ Now you are familiar with different components in the tool.
 
 4. Implement a network that has in total around 10x more parameters than the toy network.
 5. Test your implementation and evaluate its performance.
+
+
+# Google Colab Adaption
+
+[lab1.ipynb](./lab1.ipynb) contains an adaption of setting up the same thing on Google Colab. You would need to repeat the exercise on that because you would definitely need a powerful GPU for later labs and your Team Projects.
