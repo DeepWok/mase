@@ -1,5 +1,28 @@
 # Machine-Learning Accelerator System Exploration Tools
 
+[![Contributors][contributors-shield]][contributors-url]
+[![Forks][forks-shield]][forks-url]
+[![Stargazers][stars-shield]][stars-url]
+[![Issues][issues-shield]][issues-url]
+[![Doc][doc-shield]][doc-url]
+
+
+
+[contributors-shield]: https://img.shields.io/github/contributors/DeepWok/mase.svg?style=flat
+[contributors-url]: https://github.com/DeepWok/mase/graphs/contributors
+[forks-shield]: https://img.shields.io/github/forks/DeepWok/mase.svg?style=flat
+[forks-url]: https://github.com/DeepWok/mase/network/members
+[stars-shield]: https://img.shields.io/github/stars/DeepWok/mase.svg?style=flat
+[stars-url]: https://github.com/DeepWok/mase/stargazers
+[issues-shield]: https://img.shields.io/github/issues/DeepWok/mase.svg?style=flat
+[issues-url]: https://github.com/DeepWok/mase/issues
+[license-shield]: https://img.shields.io/github/license/DeepWok/mase.svg?style=flat
+[license-url]: https://github.com/DeepWok/mase/blob/master/LICENSE.txt
+[issues-shield]: https://img.shields.io/github/issues/DeepWok/mase.svg?style=flat
+[issues-url]: https://github.com/DeepWok/mase/issues
+[doc-shield]: https://readthedocs.org/projects/pytorch-geometric/badge/?version=latest
+[doc-url]: [https://github.com/DeepWok/mase/issues](https://deepwok.github.io/mase/)
+
 MASE papers:
 * Fast Prototyping Next-Generation Accelerators for New ML Models using MASE: ML Accelerator System Exploration, [link](https://arxiv.org/abs/2307.15517)
 * MASE: An Efficient Representation for Software-Defined ML Hardware System Exploration, [link](https://openreview.net/forum?id=Z7v6mxNVdU)
