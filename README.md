@@ -21,11 +21,23 @@
 [issues-shield]: https://img.shields.io/github/issues/DeepWok/mase.svg?style=flat
 [issues-url]: https://github.com/DeepWok/mase/issues
 [doc-shield]: https://readthedocs.org/projects/pytorch-geometric/badge/?version=latest
-[doc-url]: [https://github.com/DeepWok/mase/issues](https://deepwok.github.io/mase/)
+[doc-url]: https://deepwok.github.io/mase/
 
 MASE papers:
 * Fast Prototyping Next-Generation Accelerators for New ML Models using MASE: ML Accelerator System Exploration, [link](https://arxiv.org/abs/2307.15517)
+  ```
+  @article{cheng2023fast,
+  title={Fast prototyping next-generation accelerators for new ml models using mase: Ml accelerator system exploration},
+  author={Cheng, Jianyi and Zhang, Cheng and Yu, Zhewen and Montgomerie-Corcoran, Alex and Xiao, Can and Bouganis, Christos-Savvas and Zhao, Yiren},
+  journal={arXiv preprint arXiv:2307.15517},
+  year={2023}}
+  ```
 * MASE: An Efficient Representation for Software-Defined ML Hardware System Exploration, [link](https://openreview.net/forum?id=Z7v6mxNVdU)
+  ```
+  @article{zhangmase,
+  title={MASE: An Efficient Representation for Software-Defined ML Hardware System Exploration},
+  author={Zhang, Cheng and Cheng, Jianyi and Yu, Zhewen and Zhao, Yiren}}
+  ```
 
 ## Overview
 
