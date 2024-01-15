@@ -451,6 +451,19 @@ def emit_bram_transform_pass(graph, pass_args={}):
     """
     Enumerate input parameters of the node and emit a ROM block with
     handshake interface for each parameter
+
+
+    :param graph: a MaseGraph
+    :type graph: MaseGraph
+    :param pass_args: this pass requires additional arguments which is explained below, defaults to {}
+    :type pass_args: _type_, optional
+    :return: return a tuple of a MaseGraph and an empty dict (no additional info to return)
+    :rtype: tuple(MaseGraph, Dict)
+
+
+    - pass_args
+        - project_dir -> str : the directory of the project for cosimulation
+        - top_name -> str : name of the top module
     """
 
     logger.info("Emitting BRAM...")

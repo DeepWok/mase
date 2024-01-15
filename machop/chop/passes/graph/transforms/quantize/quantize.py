@@ -201,12 +201,19 @@ def quantize_transform_pass(graph, pass_args=None):
 
     :param graph: The input graph to be transformed.
     :type graph: MaseGraph
+
     :param pass_args: Additional arguments for the transformation.
     :type pass_args: dict, optional
+
     :return: The transformed graph.
-    :rtype: MaseGraph
+    :rtype: tuple
     :raises ValueError: If the quantize "by" argument is unsupported.
+
+
+    - pass_args
+        - by -> str : different quantization schemes choose from ["type", "name", "regx_name"]
     """
+
     by = pass_args.pop("by")
     match by:
         case "type":

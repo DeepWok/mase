@@ -647,8 +647,19 @@ endmodule
 
 
 def emit_verilog_top_transform_pass(graph, pass_args={}):
-    """
-    Emit the top-level model design in Verilog
+    """Emit the top-level model design in Verilog
+
+    :param graph: a MaseGraph
+    :type graph: MaseGraph
+    :param pass_args: this pass requires additional arguments which is explained below, defaults to {}
+    :type pass_args: _type_, optional
+    :return: return a tuple of a MaseGraph and an empty dict (no additional info to return)
+    :rtype: tuple(MaseGraph, Dict)
+
+
+    - pass_args
+        - project_dir -> str : the directory of the project for cosimulation
+        - top_name -> str : top-level name
     """
 
     logger.info("Emitting Verilog...")
