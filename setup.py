@@ -1,7 +1,7 @@
 from setuptools import setup, find_packages
 
 setup(
-    name="mase",
+    name="mase-tools",
     version="1.0.0",
     description="Machine-Learning Accelerator System Exploration Tools",
     author="Aaron Zhao, Jianyi Cheng, Cheng Zhang, Pedro Gimenes",
