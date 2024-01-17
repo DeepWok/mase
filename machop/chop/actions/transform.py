@@ -53,7 +53,7 @@ def transform(
     # graph generation
     graph = MaseGraph(model=model, cf_args=cf_args)
     # graph_metadata = Mase
-    graph = init_metadata_analysis_pass(graph, pass_args=None)
+    graph, _ = init_metadata_analysis_pass(graph, pass_args=None)
     # logger.info(f"graph: {graph.fx_graph}")
 
     # create or load metadata.parameters and mase_graph.model
@@ -67,8 +67,8 @@ def transform(
         )
         if len(graph.model.additional_inputs) > 0:
             dummy_in = dummy_in | graph.model.additional_inputs
-        graph = add_common_metadata_analysis_pass(graph, pass_args=dummy_in)
-        graph = add_software_metadata_analysis_pass(graph, pass_args=None)
+        graph, _ = add_common_metadata_analysis_pass(graph, pass_args={"dummy_in": dummy_in})
+        graph, _ = add_software_metadata_analysis_pass(graph, pass_args=None)
 
     pass_config = config["passes"]
 
