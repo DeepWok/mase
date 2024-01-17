@@ -1,11 +1,12 @@
+# Run the transform action with the CLI
 
-# Train a model
+## Train a model
 
 ```bash
 ./ch train --config configs/archive/test/train.toml --model toy
 ```
 
-# Quantise transform
+## Quantise transform
 
 - Quantise it with fixed-point quantisers
 - The load path `--load` changes with your generation time of course
@@ -37,7 +38,7 @@ With the config, we can quantise the whole network to integer arithmetic by doin
 ./ch transform --config configs/examples/toy_uniform.toml --model toy --load ../mase_output/toy_classification_toy-tiny_2023-07-05/software/training_ckpts/best.ckpt --load-type pl
 ```
 
-# QAT
+## QAT
 
 - Load and do Quantisation-aware-training (QAT) with a transformed model
 
@@ -50,7 +51,7 @@ toy-tiny_2023-07-05/software/transformed_ckpts/graph_module.mz --load-type mz
 - Quantise it with fixed-point quantisers
 - The load path `--load` changes with your generation time of course
 
-# Quantise transform by type
+## Quantise transform by type
 
 ```toml
 # basics
@@ -80,4 +81,4 @@ In this case, only linear layers are quantised!
 ./ch transform --config configs/examples/toy_by_type.toml --model toy --load ../mase_output/toy_classification_toy-tiny_2023-07-05/software/training_ckpts/best.ckpt --load-type pl
 ```
 
-# Direct training of a quantized model
+## Direct training of a quantized model

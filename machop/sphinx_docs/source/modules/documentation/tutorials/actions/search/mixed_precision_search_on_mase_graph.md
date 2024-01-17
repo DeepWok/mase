@@ -1,4 +1,4 @@
-# Example: Mixed-precision search on MASE Graph
+# Mixed-precision search on MASE Graph
 
 This tutorial shows how to search for mixed-precision quantization strategy for Toy model on ToyTiny dataset.
 
