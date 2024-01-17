@@ -1,4 +1,4 @@
-# FSDP
+# Accelerate FSDP
 
 ## HuggingFace Accelerate
 

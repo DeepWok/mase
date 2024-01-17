@@ -1,4 +1,4 @@
-# MASE ADLS Docker Environment Setup
+# ADLS Docker Environment Setup
 
 This guide provides a step-by-step walkthrough for running the MASE ADLS Docker image and connecting VSCode to the ADLS container to execute labs. Using Docker containers ensures a uniform development environment across various platforms.
 

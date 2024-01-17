@@ -1,3 +1,5 @@
+# For software project students: Get started on local machines
+
 Before you start, please make sure you have `conda` installed to ensure a easy manipulation of `Python` packages and environments.
 
 If you do not have `conda`, please check advice on the documentation in [Anaconda](https://docs.anaconda.com/free/anaconda/install/index.html). All the guide and installations have only be tested on unix-like OS.
