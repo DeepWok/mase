@@ -1,8 +1,6 @@
-# Introduction
+# Train command
 
 MASE has several functionalities, and this document aims to introduce the simplest `train` and `eval` pipelines.
-
-# Train command
 
 ## Command line interface
 
@@ -147,7 +145,7 @@ tensorboard --logdir <path_to_log_files>
 
 If you are using VSCode, this will show up popup asking if you want to open Tensorboard in your browser. Select yes.
 
-# Test command
+## Test command
 
 To test the model trained above you can use:
 
