@@ -1,5 +1,5 @@
 
-.. image:: ../../images/deepwok.png
+.. image:: ../../imgs/deepwok.png
    :width: 160px
    :height: 160px
    :scale: 100 %
@@ -109,7 +109,7 @@ A deeper dive into the quantisation transform
    indeed quantised. You might need to go through the source code of the
    implementation of the quantisation pass and also the implementation
    of the `Quantized
-   Layers <https://github.com/DeepWok/mase/blob/main/machop/chop/passes/graph/transforms/quantize/quantized_modules/linear.py>`__
+   Layers <https://github.com/DeepWok/mase/blob/main/machop/chop/passes/graph/transforms/quantize/quantized_modules>`__
    .
 
 The command line interface

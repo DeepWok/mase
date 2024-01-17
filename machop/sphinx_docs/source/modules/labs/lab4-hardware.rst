@@ -1,5 +1,5 @@
 
-.. image:: ../../images/deepwok.png
+.. image:: ../../imgs/deepwok.png
    :width: 160px
    :height: 160px
    :scale: 100 %
