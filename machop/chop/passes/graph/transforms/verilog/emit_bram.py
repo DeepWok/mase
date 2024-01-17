@@ -28,14 +28,15 @@ def emit_parameters_in_mem_internal(node, param_name, file_name, data_name):
 
     # TODO: Force bias to have a depth of 1 for now
     if param_name != "bias":
-        out_depth = node.meta["mase"].parameters["hardware"]["verilog_param"][
-            "IN_0_DEPTH"
-        ]
+        # out_depth = node.meta["mase"].parameters["hardware"]["verilog_param"][
+        #     "DATA_IN_0_DEPTH"
+        # ]
+        out_depth = 1
     else:
         out_depth = 1
     addr_width = clog2(out_depth) + 1
     total_size = math.prod(
-        node.meta["mase"].parameters["common"]["args"][param_name]["size"]
+        node.meta["mase"].parameters["common"]["args"][param_name]["shape"]
     )
     # The depth of parameters must match with the input depth
     assert (
@@ -171,7 +172,7 @@ def emit_parameters_in_dat_internal(node, param_name, file_name):
     Emit initialised data for the ROM block. Each element must be in 8 HEX digits.
     """
     total_size = math.prod(
-        node.meta["mase"].parameters["common"]["args"][param_name]["size"]
+        node.meta["mase"].parameters["common"]["args"][param_name]["shape"]
     )
 
     if "IN_DEPTH" in node.meta["mase"].parameters["hardware"]["verilog_param"].keys():
@@ -200,9 +201,15 @@ def emit_parameters_in_dat_internal(node, param_name, file_name):
         param_data = torch.reshape(
             param_data,
             (
-                node.meta["mase"].parameters["hardware"]["verilog_param"]["OUT_0_SIZE"],
-                node.meta["mase"].parameters["hardware"]["verilog_param"]["IN_0_DEPTH"],
-                node.meta["mase"].parameters["hardware"]["verilog_param"]["IN_0_SIZE"],
+                node.meta["mase"].parameters["hardware"]["verilog_param"][
+                    "DATA_OUT_0_SIZE"
+                ],
+                node.meta["mase"].parameters["hardware"]["verilog_param"][
+                    "DATA_IN_0_DEPTH"
+                ],
+                node.meta["mase"].parameters["hardware"]["verilog_param"][
+                    "DATA_IN_0_SIZE"
+                ],
             ),
         )
         param_data = torch.transpose(param_data, 0, 1)
@@ -247,7 +254,7 @@ def emit_parameters_in_dat_hls(node, param_name, file_name):
     Emit initialised data for the ROM block. Each element must be in 8 HEX digits.
     """
     total_size = math.prod(
-        node.meta["mase"].parameters["common"]["args"][param_name]["size"]
+        node.meta["mase"].parameters["common"]["args"][param_name]["shape"]
     )
     out_depth = total_size
     out_size = 1
@@ -336,12 +343,12 @@ def emit_parameters_in_mem_hls(node, param_name, file_name, data_name):
 
     # The depth of parameters matches with the input depth
     total_size = math.prod(
-        node.meta["mase"].parameters["common"]["args"][param_name]["size"]
+        node.meta["mase"].parameters["common"]["args"][param_name]["shape"]
     )
     out_depth = total_size
     addr_width = clog2(out_depth) + 1
     total_size = math.prod(
-        node.meta["mase"].parameters["common"]["args"][param_name]["size"]
+        node.meta["mase"].parameters["common"]["args"][param_name]["shape"]
     )
     out_size = iceil(total_size / out_depth)
     assert (
@@ -444,6 +451,19 @@ def emit_bram_transform_pass(graph, pass_args={}):
     """
     Enumerate input parameters of the node and emit a ROM block with
     handshake interface for each parameter
+
+
+    :param graph: a MaseGraph
+    :type graph: MaseGraph
+    :param pass_args: this pass requires additional arguments which is explained below, defaults to {}
+    :type pass_args: _type_, optional
+    :return: return a tuple of a MaseGraph and an empty dict (no additional info to return)
+    :rtype: tuple(MaseGraph, Dict)
+
+
+    - pass_args
+        - project_dir -> str : the directory of the project for cosimulation
+        - top_name -> str : name of the top module
     """
 
     logger.info("Emitting BRAM...")
@@ -466,4 +486,4 @@ def emit_bram_transform_pass(graph, pass_args={}):
         elif "MLIR_HLS" in node.meta["mase"].parameters["hardware"]["toolchain"]:
             emit_bram_hls(node, rtl_dir)
 
-    return graph
+    return graph, None

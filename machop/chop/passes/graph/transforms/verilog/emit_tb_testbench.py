@@ -846,7 +846,7 @@ module `AUTOTB_TOP;
   //     .finish(all_finish)
   // );
 
-  `include "fifo_para.v"
+  // `include "fifo_para.v"
 
 endmodule
 """

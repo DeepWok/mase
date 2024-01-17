@@ -57,18 +57,17 @@ sys.path.append(str(machop_path))
 from chop.dataset import MaseDataModule, get_dataset_info
 from chop.tools.logger import set_logging_verbosity, get_logger
 
-from chop.passes.transforms.interface import save_node_meta_param_transform_pass
-from chop.passes.analysis import (
+from chop.passes.graph.analysis import (
     report_node_meta_param_analysis_pass,
     profile_statistics_analysis_pass,
 )
-from chop.passes import (
+from chop.passes.graph import (
     add_common_metadata_analysis_pass,
     init_metadata_analysis_pass,
     add_software_metadata_analysis_pass,
 )
 from chop.tools.get_input import InputGenerator
-from chop.passes.graph.mase_graph import MaseGraph
+from chop.ir.graph.mase_graph import MaseGraph
 
 from chop.models import get_model_info, get_model
 
@@ -111,7 +110,7 @@ MASE integrates seamlessly with native Pytorch models.
 ```python
 
 from torch import nn
-from chop.passes.utils import get_parent_name
+from chop.passes.graph.utils import get_parent_name
 
 # define a new model 
 class JSC_Three_Linear_Layers(nn.Module):
@@ -134,7 +133,7 @@ model = JSC_Three_Linear_Layers()
 
 # generate the mase graph and initialize node metadata
 mg = MaseGraph(model=model)
-mg = init_metadata_analysis_pass(mg, None)
+mg, _ = init_metadata_analysis_pass(mg, None)
 ```
 
 # Model Architecture Modification as a Transformation Pass
@@ -177,7 +176,7 @@ def redefine_linear_transform_pass(graph, pass_args=None):
             new_module = instantiate_linear(in_features, out_features, bias)
             parent_name, name = get_parent_name(node.target)
             setattr(graph.modules[parent_name], name, new_module)
-    return graph
+    return graph, {}
 
 
 
@@ -206,7 +205,7 @@ pass_config = {
 }
 
 # this performs the architecture transformation based on the config
-mg = redefine_linear_transform_pass(
+mg, _ = redefine_linear_transform_pass(
     graph=mg, pass_args={"config": pass_config})
 ```
 

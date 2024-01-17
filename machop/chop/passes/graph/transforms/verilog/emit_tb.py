@@ -24,7 +24,7 @@ def emit_tb_verilog(graph, trans_num=1, project_dir="top"):
     v_in_param = graph.nodes_in[0].meta["mase"].parameters["hardware"]["verilog_param"]
     w_in_param = graph.nodes_in[0].meta["mase"].parameters["common"]["args"]
     in_width = w_in_param["data_in_0"]["precision"][0]
-    in_size = v_in_param["IN_0_SIZE"]
+    in_size = v_in_param["DATA_IN_0_TENSOR_SIZE_DIM_0"]
     data_width = in_width * in_size
     # TODO : need to check
     addr_width = 1
@@ -38,7 +38,8 @@ def emit_tb_verilog(graph, trans_num=1, project_dir="top"):
     )
     w_out_param = graph.nodes_in[0].meta["mase"].parameters["common"]["results"]
     out_width = w_out_param["data_out_0"]["precision"][0]
-    out_size = v_out_param["OUT_0_SIZE"]
+
+    out_size = v_out_param["DATA_OUT_0_TENSOR_SIZE_0_DIM_0"]
     data_width = out_width * out_size
     # TODO : need to check
     addr_width = 1
@@ -49,7 +50,8 @@ def emit_tb_verilog(graph, trans_num=1, project_dir="top"):
     emit_data_out_tb_sv(data_width, load_path, store_path, out_file)
 
     out_file = os.path.join(v_dir, f"top_tb.sv")
-    in_trans_num = v_in_param["IN_0_DEPTH"] * trans_num
+    # in_trans_num = v_in_param["DATA_IN_0_DEPTH"] * trans_num
+    in_trans_num = trans_num
     out_trans_num = trans_num
     emit_top_tb(
         tv_dir,
@@ -104,16 +106,26 @@ def emit_tb_dat(graph, trans_num=1, project_dir="top", test_inputs=None):
         .meta["mase"]
         .parameters["common"]["results"]["data_out_0"]["type"]
     )
+
+    prec = (
+        graph.nodes_out[0]
+        .meta["mase"]
+        .parameters["common"]["results"]["data_out_0"]["precision"]
+    )
+
     out_width = (
         graph.nodes_out[0]
         .meta["mase"]
         .parameters["common"]["results"]["data_out_0"]["precision"][0]
     )
-    out_frac_width = (
-        graph.nodes_out[0]
-        .meta["mase"]
-        .parameters["common"]["results"]["data_out_0"]["precision"][1]
-    )
+    if len(prec) > 1:
+        out_frac_width = (
+            graph.nodes_out[0]
+            .meta["mase"]
+            .parameters["common"]["results"]["data_out_0"]["precision"][1]
+        )
+    else:
+        out_frac_width = 0
 
     # TODO: Make out_type as input to support casting to any type
     hw_data_out = [
@@ -158,14 +170,17 @@ quit
     v_dir = os.path.join(project_dir, "hardware", "sim", "verilog")
 
     buff = ""
+    verilator_buff = ""
     for file_dir in [rtl_dir, v_dir]:
         for file in glob.glob(os.path.join(file_dir, "*.sv")) + glob.glob(
             os.path.join(file_dir, "*.v")
         ):
             buff += f"""sv work {file}
 """
-            for file in glob.glob(os.path.join(file_dir, "*.vhd")):
-                buff += f"""vhdl work "{file}"
+            verilator_buff += f"{file} "
+
+        for file in glob.glob(os.path.join(file_dir, "*.vhd")):
+            buff += f"""vhdl work "{file}"
 """
 
     # Add HLS tcls
@@ -191,13 +206,31 @@ quit
     with open(out_file, "w", encoding="utf-8") as outf:
         outf.write(buff)
 
+    verilator_build = f"""
+#!/bin/bash
+# This script is used to build the verilator simulation
+verilator --binary --build {verilator_buff}
+"""
+    verilator_file = os.path.join(sim_dir, "build.sh")
+    with open(verilator_file, "w", encoding="utf-8") as outf:
+        outf.write(verilator_build)
+
 
 def emit_verilog_tb_transform_pass(graph, pass_args={}):
     """
     Emit test bench and related files for simulation
-    * project_dir : the directory of the project for cosimulation
-    * trans_num : the transaction count of cosimulation
-    * test_inputs : test vectors of inputs for cosimulation
+
+    :param graph: a MaseGraph
+    :type graph: MaseGraph
+    :param pass_args: this pass requires additional arguments which is explained below, defaults to {}
+    :type pass_args: _type_, optional
+    :return: return a tuple of a MaseGraph and an empty dict (no additional info to return)
+    :rtype: tuple(MaseGraph, Dict)
+
+    - pass_args
+        - project_dir -> str : the directory of the project for cosimulation
+        - trans_num -> str : the transaction count of cosimulation
+        - test_inputs -> str : test vectors of inputs for cosimulation
     """
     logger.info("Emitting test bench...")
     project_dir = (
@@ -215,4 +248,4 @@ def emit_verilog_tb_transform_pass(graph, pass_args={}):
         graph, trans_num=trans_num, project_dir=project_dir, test_inputs=test_inputs
     )
     emit_tb_tcl(graph, project_dir=project_dir)
-    return graph
+    return graph, None
