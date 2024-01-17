@@ -6,7 +6,7 @@
 Welcome to Machop's documentation!
 ================================
 
-.. image:: images/machop.png
+.. image:: imgs/machop.png
    :alt: logo
    :align: center
 
