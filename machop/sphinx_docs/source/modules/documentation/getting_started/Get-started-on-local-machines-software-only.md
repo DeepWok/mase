@@ -1,4 +1,4 @@
-# For software project students: Get started on local machines
+# For software project: Get started on local machines
 
 Before you start, please make sure you have `conda` installed to ensure a easy manipulation of `Python` packages and environments.
 

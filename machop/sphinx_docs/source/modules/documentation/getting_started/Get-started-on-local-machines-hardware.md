@@ -1,4 +1,4 @@
-# For hardware project students: Get started on local machines
+# For hardware projects: Get started on local machines
 
 This document includes the steps to install Mase on your local machine.
 

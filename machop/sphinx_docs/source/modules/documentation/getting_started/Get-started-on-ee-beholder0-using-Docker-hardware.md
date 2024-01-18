@@ -1,4 +1,4 @@
-# For hardware project students: Get started on ee beholder0 (using Docker)
+# For hardware projects: Get started on ee beholder0 (using Docker)
 
 Mase can be directly installed and used on local machines. This document includes the steps to install Mase on the ee-server (`ee-beholder0` for this example).
 

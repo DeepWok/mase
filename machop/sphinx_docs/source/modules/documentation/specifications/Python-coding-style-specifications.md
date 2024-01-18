@@ -29,10 +29,10 @@ my_old_school_variable = 13
 
 ## Line breaks
 
-Line breaks are usually automatically handled by the pre-installed tool `yapf`.
+Line breaks are usually automatically handled by the pre-installed tool `black`.
 To format a specific python file:
 ```shell
-yapf -i xxx.py
+black xxx.py
 ```
 
 Here is an example: 
@@ -47,4 +47,16 @@ xs = [
 	'very', 'long']
 
 # same thing applies to dicts, strings ....
+```
+
+## Using Black in MASE
+
+[Black](https://github.com/psf/black) is the uncompromising Python code formatter, and has been used in many open-source projects. 
+If you installed the packages for MASE, black is then included. It is crucial to format your code using `black` before you make a pull request in MASE. Our CIs would check for formatting, and your PR will not pass this check if code is not formatted.
+
+Example on using black for format the whole directory:
+```bash
+# all .py files should be in chop
+cd machop/chop
+black *
 ```

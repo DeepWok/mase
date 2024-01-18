@@ -33,3 +33,4 @@ Tutorials
 
     tutorials/accelerate_fsdp
     tutorials/Add-model-to-machop
+    tutorials/doc_writing
