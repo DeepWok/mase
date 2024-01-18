@@ -1,5 +1,5 @@
 
-.. image:: ../../images/deepwok.png
+.. image:: ../../imgs/deepwok.png
    :width: 160px
    :height: 160px
    :scale: 100 %
@@ -31,7 +31,7 @@ software stack of MASE. There are in total 5 tasks you would need to finish.
 Preparation and installations
 =============================
 
-Make sure you have read and understood the installation of the framework, detailed `Tutorials/Getting Started/Get-started-on-local-machines-software-only <../Get-started-on-local-machines-software-only.md>`__.
+Make sure you have read and understood the installation of the framework, detailed `here <https://deepwok.github.io/mase/modules/documentation/getting_started/Get-started-on-local-machines-software-only.html>`__.
 
 Both streams (software and hardware) would start from software first. We
 are starting with simple toy networks that can train on most laptops.
@@ -103,6 +103,7 @@ evaluate the trained network through the command line flow.
 The dataset we look at is the Jet Substructure Classification (JSC)
 dataset.
 
+.. note::
    [A bit of physics] Jets are collimated showers of particles that
    result from the decay and hadronization of quarks q and gluons g. At
    the Large Hadron Collider (LHC), due to the high collision energy, a

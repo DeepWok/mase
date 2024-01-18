@@ -1,5 +1,5 @@
 
-.. image:: ../../images/deepwok.png
+.. image:: ../../imgs/deepwok.png
    :width: 160px
    :height: 160px
    :scale: 100 %
@@ -37,12 +37,12 @@ In this section, our objective is to gain a comprehensive understanding
 of the construction of the current search function in Mase. To achieve
 this, we will require these essential components:
 
--  MaseGraph: This component should be already created in the preceding
+-  ``MaseGraph``: This component should be already created in the preceding
    lab.
--  Search space: This component encompasses and defines the various
+-  ``Search space``: This component encompasses and defines the various
    available search options.
--  Search strategy: An implementation of a search algorithm.
--  Runner: This vital component manages and executes training,
+-  ``Search strategy``: An implementation of a search algorithm.
+-  ``Runner``: This vital component manages and executes training,
    evaluation, or both procedures while generating a quality metric.
 
 By analyzing these components, we can delve into the workings and
@@ -130,7 +130,8 @@ model:
 You may want to copy the code snippet and paste it to a file created in
 the current directory with a name of ``lab3.py``.
 
-   [Warning: Directory madness] The directory has to be correct because
+.. warning::
+   [Directory madness] The directory has to be correct because
    the line
    ``machop_path = Path(".").resolve().parent.parent /"machop"`` traces
    to the parent directory based on relative positions.
@@ -252,7 +253,7 @@ have constructed manually, the overall flow is implemented in
 following bullet points provide you pointers to the code base.
 
 -  MaseGraph: this is the
-   `MaseGraph <https://github.com/DeepWok/mase/blob/main/machop/chop/passes/graph/mase_graph.py>`__ that you
+   `MaseGraph <https://github.com/DeepWok/mase/blob/main/machop/chop/ir/graph/mase_graph.py>`__ that you
    have used in lab2.
 -  Search space: The base class is implemented in
    `base.py <https://github.com/DeepWok/mase/blob/main/machop/chop/actions/search/search_space/base.py>`__ ,
