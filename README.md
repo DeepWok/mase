@@ -21,7 +21,17 @@
 [doc-shield]: https://readthedocs.org/projects/pytorch-geometric/badge/?version=latest
 [doc-url]: https://deepwok.github.io/mase/
 
-MASE papers:
+## Overview
+
+Machine learning accelerators have been used extensively to compute models with high performance and low power. Unfortunately, the development pace of ML models is much faster than the accelerator design cycle, leading to frequent changes in the hardware architecture requirements, rendering many accelerators obsolete. Existing design tools and frameworks can provide quick accelerator prototyping, but only for a limited range of models that fit into a single hardware device. With the emergence of large language models such as GPT-3, there is an increased need for hardware prototyping of large models within a many-accelerator system to ensure the hardware can scale with ever-growing model sizes.
+
+MASE provides an efficient and scalable approach for exploring accelerator systems to compute large ML models by directly mapping onto an efficient streaming accelerator system. Over a set of ML models, MASE can achieve better energy efficiency to GPUs when computing inference for recent transformer models.
+
+![Alt text](./docs/imgs/overview.png)
+
+
+## MASE Publications
+
 * Fast Prototyping Next-Generation Accelerators for New ML Models using MASE: ML Accelerator System Exploration, [link](https://arxiv.org/abs/2307.15517)
   ```
   @article{cheng2023fast,
@@ -37,36 +47,14 @@ MASE papers:
   author={Zhang, Cheng and Cheng, Jianyi and Yu, Zhewen and Zhao, Yiren}}
   ```
 
-## Overview
-
-Machine learning accelerators have been used extensively to compute models with high performance and low power. Unfortunately, the development pace of ML models is much faster than the accelerator design cycle, leading to frequent changes in the hardware architecture requirements, rendering many accelerators obsolete. Existing design tools and frameworks can provide quick accelerator prototyping, but only for a limited range of models that fit into a single hardware device. With the emergence of large language models such as GPT-3, there is an increased need for hardware prototyping of large models within a many-accelerator system to ensure the hardware can scale with ever-growing model sizes.
-
-MASE provides an efficient and scalable approach for exploring accelerator systems to compute large ML models by directly mapping onto an efficient streaming accelerator system. Over a set of ML models, MASE can achieve better energy efficiency to GPUs when computing inference for recent transformer models.
-
-![Alt text](./docs/imgs/overview.png)
-
-
-### Repository structure
-
-This repo contains the following directories:
-* `components` - Internal hardware library
-* `scripts` - Installation scripts  
-* `machop` - MASE's software stack
-* `hls` - HLS component of MASE
-* `mlir-air` - MLIR AIR for ACAP devices
-* `docs` - Documentation
-* `Docker` - Docker container configurations
-
 ## MASE Dev Meetings
 
 * Subscribe [Mase Weekly Dev Meeting (Wednesday 4:30 UK time)](https://calendar.google.com/calendar/event?action=TEMPLATE&tmeid=N2lpc25mN3VoamE5NXVmdmY5ZW1tOWpmMGdfMjAyMzExMDFUMTYzMDAwWiBqYzI0ODlAY2FtLmFjLnVr&tmsrc=jc2489%40cam.ac.uk&scp=ALL). Everyone is welcomed!
 * Direct [Google Meet link](meet.google.com/fke-zvii-tgv)
 * If you want to discuss anything in future meetings, please add them as comments in the [meeting agenda](https://docs.google.com/document/d/12m96h7gOhhmikniXIu44FJ0sZ2mSxg9SqyX-Uu3s-tc/edit?usp=sharing) so we can review and add them.
 
-
 ## Donation  
 
 If you think MASE is helpful, please donate for our work, we appreciate your support!
 
-![Alt text](./docs/imgs/bmc_qr.png)
-
+<img src='./docs/imgs/bmc_qr.png' width='250'>
