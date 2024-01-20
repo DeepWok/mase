@@ -15,27 +15,27 @@ It is highly recommended to install [Docker](https://www.docker.com/), otherwise
 1. Clone Mase to your directory:
 ```shell
 cd ${HOME}
-git clone git@github.com:JianyiCheng/mase-tools.git
+git clone git@github.com:DeepWok/mase.git
 ```
 
 2. Create your own branch to work on:
 ```shell
-cd ${HOME}/mase-tools
+cd ${HOME}/mase
 git checkout -b your_branch_name
 ```
 
 3. Build the Docker container and install Mase:
 ```shell
-cd ${HOME}/mase-tools
+cd ${HOME}/mase
 make shell
 ```
-Then you will enter the Docker container under a directory named `workspace`. This is the main directory of the `mase-tools`. You can build your work from there.
+Then you will enter the Docker container under a directory named `workspace`. This is the main directory of the `mase`. You can build your work from there.
 
 ## Use Mase
 
 If you are running a new terminal after installation:
 ```shell
-cd /home/${USERNAME}/mase-tools
+cd /home/${USERNAME}/mase
 make shell
 ```
 
