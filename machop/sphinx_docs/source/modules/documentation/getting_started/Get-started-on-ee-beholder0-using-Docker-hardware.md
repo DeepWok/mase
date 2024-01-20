@@ -27,28 +27,28 @@ PS: For the first time logging in, the server has not created your home director
 2. Clone Mase to your directory:
 ```shell
 cd /home/${USERNAME}
-git clone git@github.com:JianyiCheng/mase-tools.git
+git clone git@github.com:DeepWok/mase.git
 ```
 
 3. Create your own branch to work on:
 ```shell
-cd /home/${USERNAME}/mase-tools/
+cd /home/${USERNAME}/mase/
 git checkout -b your_branch_name
 ```
 
 4. Start a Docker container as a virtual environment:
 ```shell
-cd /home/${USERNAME}/mase-tools/
+cd /home/${USERNAME}/mase/
 make shell
 ```
 This may take a long time for the first time. If you are working with an unstable connection, you can try [tmux](https://www.hamvocke.com/blog/a-quick-and-easy-guide-to-tmux/).
-The directory named `/workspace` is the main directory of the `mase-tools`. You can build your work from there.
+The directory named `/workspace` is the main directory of the `mase`. You can build your work from there.
 
 ## Use Mase
 
 If you are running a new terminal after installation:
 ```shell
-cd /home/${USERNAME}/mase-tools/
+cd /home/${USERNAME}/mase/
 make shell
 ```
 
