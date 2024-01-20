@@ -67,7 +67,7 @@ def emit_internal_rtl_transform_pass(graph, pass_args={}):
         "..",
         "..",
         "..",
-        "components",
+        "mase_components",
     )
 
     for f in rtl_dependencies:
