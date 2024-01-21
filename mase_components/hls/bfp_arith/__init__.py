@@ -1,4 +1,5 @@
 from .bfp_linear2d import bfp_linear2d_gen
+from .bfp_mm import bfp_mm_gen
 
 # from .bfp_softmax import bfp_softmax_gen
 # from .bfp_layernorm import bfp_layernorm_gen
