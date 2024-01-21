@@ -74,7 +74,7 @@ def v2p(string):
     """
     Variable to Parameter
     """
-    return string.upper().replace("DATA_", "")
+    return string.upper()
 
 
 def get_input_index(node, next_node):
