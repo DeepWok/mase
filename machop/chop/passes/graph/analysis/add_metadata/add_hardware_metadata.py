@@ -44,7 +44,7 @@ def add_component_source(node):
     else:
         node.meta["mase"].parameters["hardware"]["toolchain"] = "HLS"
         node.meta["mase"].parameters["hardware"]["module"] = None
-        node.meta["mase"].parameters["hardware"]["dependence_files"] = None
+        node.meta["mase"].parameters["hardware"]["dependence_files"] = []
 
     node.meta["mase"].parameters["hardware"]["device_id"] = -1
 
@@ -74,15 +74,22 @@ def add_verilog_param(node):
     vp = node.meta["mase"].parameters["hardware"]["verilog_param"]
     for arg, arg_info in args.items():
         if isinstance(arg_info, dict):
+            print(f"node name: {node.name}, arg: {arg}, arg_info: {arg_info}")
             for i, precision in enumerate(arg_info["precision"]):
                 vp[_cap(arg + f"_precision_{i}")] = arg_info["precision"][i]
-            for dim in range(0, MAX_DIM):
+            for dim in range(0, len(arg_info["shape"])):
                 vp[_cap(arg + f"_tensor_size_dim_{dim}")] = (
-                    arg_info["shape"][dim] if dim < len(arg_info["shape"]) else 1
+                    arg_info["shape"][len(arg_info["shape"]) - 1 - dim]
+                    if dim < len(arg_info["shape"])
+                    else 1
                 )
                 vp[_cap(arg + f"_parallelism_dim_{dim}")] = (
-                    arg_info["shape"][dim] if dim < len(arg_info["shape"]) else 1
+                    arg_info["shape"][len(arg_info["shape"]) - 1 - dim]
+                    if dim < len(arg_info["shape"])
+                    else 1
                 )
+        elif type(arg_info) == bool:
+            vp[_cap(arg)] = 1 if arg_info else 0
         else:
             vp[_cap(arg)] = arg_info
 
@@ -92,12 +99,16 @@ def add_verilog_param(node):
         if isinstance(result_info, dict):
             for i, precision in enumerate(result_info["precision"]):
                 vp[_cap(result + f"_precision_{i}")] = result_info["precision"][i]
-            for dim in range(0, MAX_DIM):
-                vp[_cap(result + f"_tensor_size_{i}_dim_{dim}")] = (
-                    result_info["shape"][dim] if dim < len(result_info["shape"]) else 1
+            for dim in range(0, len(result_info["shape"])):
+                vp[_cap(result + f"_tensor_size_dim_{dim}")] = (
+                    result_info["shape"][len(result_info["shape"]) - 1 - dim]
+                    if dim < len(result_info["shape"])
+                    else 1
                 )
-                vp[_cap(result + f"_parallelism_{i}_dim_{dim}")] = (
-                    result_info["shape"][dim] if dim < len(result_info["shape"]) else 1
+                vp[_cap(result + f"_parallelism_dim_{dim}")] = (
+                    result_info["shape"][len(result_info["shape"]) - 1 - dim]
+                    if dim < len(result_info["shape"])
+                    else 1
                 )
         else:
             vp[_cap(result)] = result_info
@@ -354,5 +365,14 @@ def add_hardware_metadata_analysis_pass(graph, pass_args=None):
     # Add hardware parameters
     for node in graph.fx_graph.nodes:
         add_verilog_param(node)
+
+    # Add graph metadata
+    graph.fx_graph.meta["mase"].parameters["hardware"]["verilog_sources"] = []
+    for node in graph.fx_graph.nodes:
+        if node.meta["mase"].parameters["hardware"]["is_implicit"]:
+            continue
+        graph.fx_graph.meta["mase"].parameters["hardware"][
+            "verilog_sources"
+        ] += node.meta["mase"].parameters["hardware"]["dependence_files"]
 
     return graph, {}

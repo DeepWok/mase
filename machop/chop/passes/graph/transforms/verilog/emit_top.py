@@ -9,6 +9,8 @@ from chop.passes.graph.utils import vf, v2p, init_project
 
 logger = logging.getLogger(__name__)
 
+from .util import get_verilog_parameters
+
 # =============================================================================
 # Utilities
 # =============================================================================
@@ -111,19 +113,30 @@ class VerilogInterfaceEmitter:
             for arg in node.meta["mase"].parameters["common"]["args"].keys():
                 if "data_in" in arg:
                     arg_name = _cap(arg)
+                    parallelism_params = [
+                        param
+                        for param in parameter_map
+                        if f"{node_name}_{arg_name}_PARALLELISM_DIM" in param
+                    ]
                     interface += f"""
-    input  [{node_name}_{arg_name}_PRECISION_0-1:0] data_in_{i} [{node_name}_{arg_name}_PARALLELISM_DIM_2*{node_name}_{arg_name}_PARALLELISM_DIM_1*{node_name}_{arg_name}_PARALLELISM_DIM_0-1:0],
+    input  [{node_name}_{arg_name}_PRECISION_0-1:0] data_in_{i} [{'*'.join(parallelism_params)}-1:0],
     input  data_in_{i}_valid,
     output data_in_{i}_ready,"""
                     i += 1
+
         i = 0
         for node in nodes_out:
             node_name = vf(node.name)
             for result in node.meta["mase"].parameters["common"]["results"].keys():
                 if "data_out" in result:
                     result_name = _cap(result)
+                    parallelism_params = [
+                        param
+                        for param in parameter_map
+                        if f"{node_name}_{result_name}_PARALLELISM_DIM" in param
+                    ]
                     interface += f"""
-    output  [{node_name}_{result_name}_PRECISION_0-1:0] data_out_{i} [{node_name}_{result_name}_PARALLELISM_DIM_2*{node_name}_{result_name}_PARALLELISM_DIM_1*{node_name}_{result_name}_PARALLELISM_DIM_0-1:0],
+    output  [{node_name}_{result_name}_PRECISION_0-1:0] data_out_{i} [{'*'.join(parallelism_params)}-1:0],
     output  data_out_{i}_valid,
     input data_out_{i}_ready,"""
                     i += 1
@@ -157,8 +170,13 @@ class VerilogSignalEmitter:
                 == "BRAM"
             ):
                 arg_name = v2p(arg)
+                parallelism_params = [
+                    param
+                    for param in parameter_map
+                    if f"{node_name}_{arg_name}_PARALLELISM_DIM" in param
+                ]
                 signals += f"""
-logic [{node_name}_{arg_name}_PRECISION_0-1:0]  {node_name}_{arg}        [{node_name}_{arg_name}_TENSOR_SIZE_DIM_0-1:0];
+logic [{node_name}_{arg_name}_PRECISION_0-1:0]  {node_name}_{arg}        [{'*'.join(parallelism_params)}-1:0];
 logic                             {node_name}_{arg}_valid;
 logic                             {node_name}_{arg}_ready;"""
 
@@ -178,8 +196,13 @@ logic                             {node_name}_{arg}_ready;"""
                 == "BRAM"
             ):
                 result_name = v2p(result)
+                parallelism_params = [
+                    param
+                    for param in parameter_map
+                    if f"{node_name}_{result_name}_PARALLELISM_DIM" in param
+                ]
                 signals += f"""
-logic [{node_name}_{result_name}_PRECISION_0-1:0]  {node_name}_{result}        [{node_name}_{result_name}_TENSOR_SIZE_DIM_0-1:0];
+logic [{node_name}_{result_name}_PRECISION_0-1:0]  {node_name}_{result}        [{'*'.join(parallelism_params)}-1:0];
 logic                             {node_name}_{result}_valid;
 logic                             {node_name}_{result}_ready;"""
 
@@ -308,6 +331,8 @@ class VerilogInternalComponentEmitter:
 
         # Emit component instantiation input signals
         for key, value in node.meta["mase"].parameters["common"]["args"].items():
+            if "data" not in key:
+                continue
             signals += f"""
     .{key}({node_name}_{key}),
     .{key}_valid({node_name}_{key}_valid),
@@ -316,6 +341,8 @@ class VerilogInternalComponentEmitter:
 
         # Emit component instantiation output signals
         for key, value in node.meta["mase"].parameters["common"]["results"].items():
+            if "data" not in key:
+                continue
             signals += f"""
     .{key}({node_name}_{key}),
     .{key}_valid({node_name}_{key}_valid),
@@ -574,27 +601,7 @@ class VerilogEmitter:
     def __init__(self, graph):
         self.graph = graph
 
-        self.parameter_map = self._load_verilog_parameters_to_map(graph)
-
-    def _load_verilog_parameters_to_map(self, graph):
-        parameter_map = {}
-
-        for node in graph.fx_graph.nodes:
-            if node.meta["mase"].parameters["hardware"]["is_implicit"]:
-                continue
-            node_name = vf(node.name)
-
-            for key, value in (
-                node.meta["mase"].parameters["hardware"]["verilog_param"].items()
-            ):
-                if not isinstance(value, (int, float, complex, bool)):
-                    value = '"' + value + '"'
-                assert (
-                    f"{node_name}_{key}" not in parameter_map.keys()
-                ), f"{node_name}_{key} already exists in the parameter map"
-                parameter_map[f"{node_name}_{key}"] = value
-
-        return parameter_map
+        self.parameter_map = get_verilog_parameters(graph)
 
     def emit(self, graph, top_name):
         parameters_to_emit = VerilogParameterEmitter(graph).emit(
