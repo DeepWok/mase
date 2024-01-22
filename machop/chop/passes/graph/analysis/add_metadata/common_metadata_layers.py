@@ -141,7 +141,9 @@ def analyse_result(meta, result, add_value):
             "torch_dtype": result.dtype,
         }
         if add_value:
-            meta.parameters["common"]["results"]["data_out_0"]["value"] = to_numpy(result)
+            meta.parameters["common"]["results"]["data_out_0"]["value"] = to_numpy(
+                result
+            )
     else:
         meta.parameters["common"]["results"]["data_out_0"] = {
             "type": type(result),
@@ -171,7 +173,9 @@ def analyse_common_parameters_placeholder(meta, result, args, kwargs, add_value=
             "torhc_dtype": result.dtype,
         }
         if add_value:
-            meta.parameters["common"]["results"]["data_out_0"]["value"] = to_numpy(result)
+            meta.parameters["common"]["results"]["data_out_0"]["value"] = to_numpy(
+                result
+            )
         return meta
 
     meta.parameters["common"]["args"] = {}
