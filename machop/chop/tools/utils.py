@@ -221,8 +221,9 @@ def nested_dict_replacer(compound_dict, fn):
     def _finditem(obj):
         for k, v in obj.items():
             if isinstance(v, dict):
-                _finditem(v)  #added return statement
+                _finditem(v)  # added return statement
             else:
                 obj[k] = fn(v)
+
     _finditem(compound_dict)
     return compound_dict
