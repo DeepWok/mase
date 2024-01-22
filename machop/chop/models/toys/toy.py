@@ -139,7 +139,7 @@ def get_toy_tiny(
     pretrained=False,
     **kwargs: Any,
 ):
-    image_size = info["image_size"]
+    image_size = info.image_size
     num_classes = info.num_classes
     return ToyTiny(image_size, num_classes)
 

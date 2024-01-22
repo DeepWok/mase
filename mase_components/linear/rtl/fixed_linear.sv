@@ -9,8 +9,8 @@ module fixed_linear #(
     /* verilator lint_off UNUSEDPARAM */
     parameter HAS_BIAS = 0,
 
-    parameter DATA_IN_0_PRECISION_0 = 32,
-    parameter DATA_IN_0_PRECISION_1 = 0,
+    parameter DATA_IN_0_PRECISION_0 = 16,
+    parameter DATA_IN_0_PRECISION_1 = 3,
     parameter DATA_IN_0_TENSOR_SIZE_DIM_0 = 4,
     parameter DATA_IN_0_TENSOR_SIZE_DIM_1 = 1,
     parameter DATA_IN_0_PARALLELISM_DIM_0 = 2,
@@ -18,7 +18,7 @@ module fixed_linear #(
     parameter IN_0_DEPTH = DATA_IN_0_TENSOR_SIZE_DIM_0 / DATA_IN_0_PARALLELISM_DIM_0,
 
     parameter WEIGHT_PRECISION_0 = 16,
-    parameter WEIGHT_PRECISION_1 = 0,
+    parameter WEIGHT_PRECISION_1 = 3,
     parameter WEIGHT_TENSOR_SIZE_DIM_0 = 32,
     parameter WEIGHT_TENSOR_SIZE_DIM_1 = 1,
     parameter WEIGHT_PARALLELISM_DIM_0 = 4,
@@ -30,13 +30,13 @@ module fixed_linear #(
         IN_0_DEPTH
     ) + HAS_BIAS,
     parameter DATA_OUT_0_PRECISION_1 = DATA_IN_0_PRECISION_1 + WEIGHT_PRECISION_1,
-    parameter DATA_OUT_0_TENSOR_SIZE_DIM_0 = DATA_IN_0_PARALLELISM_DIM_0,
+    parameter DATA_OUT_0_TENSOR_SIZE_DIM_0 = 4,
     parameter DATA_OUT_0_TENSOR_SIZE_DIM_1 = 1,
     parameter DATA_OUT_0_PARALLELISM_DIM_0 = DATA_IN_0_PARALLELISM_DIM_0,
     parameter DATA_OUT_0_PARALLELISM_DIM_1 = 1,
 
-    parameter BIAS_PRECISION_0 = 32,
-    parameter BIAS_PRECISION_1 = 0,
+    parameter BIAS_PRECISION_0 = 16,
+    parameter BIAS_PRECISION_1 = 3,
     parameter BIAS_TENSOR_SIZE_DIM_0 = DATA_OUT_0_TENSOR_SIZE_DIM_0,
     parameter BIAS_TENSOR_SIZE_DIM_1 = 1,
     parameter BIAS_PARALLELISM_DIM_0 = 4,
@@ -87,7 +87,7 @@ module fixed_linear #(
   /* verilator lint_on UNUSEDSIGNAL */
 
   logic                 acc_ready;
-  logic [ACC_WIDTH-1:0] acc_data_out [WEIGHT_PARALLELISM_DIM_0-1:0];
+  logic [ACC_WIDTH-1:0] acc_data_out [WEIGHT_PARALLELISM_DIM_0*WEIGHT_PARALLELISM_DIM_1-1:0];
 
   // There are WEIGHT_PARALLELISM_DIM_0 number of dot product instances with DATA_IN_0_TENSOR_SIZE_DIM_0 inputs
   // and each one computes for IN_0_DEPTH iterations for each inputs.
@@ -191,7 +191,10 @@ module fixed_linear #(
   end else begin
     assign acc_ready = data_out_0_ready;
     assign data_out_0_valid = linear[0].acc_data_out_valid;
-    assign data_out_0 = acc_data_out;
+
+    for (genvar i = 0; i < WEIGHT_PARALLELISM_DIM_0; i = i + 1) begin
+        assign data_out_0[i] = acc_data_out[i];
+    end
     assign bias_ready = 1;
   end
 

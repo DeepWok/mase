@@ -10,6 +10,7 @@ from chop.passes.graph.utils import vf, v2p, get_module_by_name, init_project
 from chop.passes.graph.transforms.quantize.quantizers import integer_quantizer_for_hw
 
 logger = logging.getLogger(__name__)
+from pathlib import Path
 
 
 def iceil(x):
@@ -479,7 +480,9 @@ def emit_bram_transform_pass(graph, pass_args={}):
 
     logger.info("Emitting BRAM...")
     project_dir = (
-        pass_args["project_dir"] if "project_dir" in pass_args.keys() else "top"
+        pass_args["project_dir"]
+        if "project_dir" in pass_args.keys()
+        else Path.home() / ".mase" / "top"
     )
     top_name = pass_args["top_name"] if "top_name" in pass_args.keys() else "top"
 
