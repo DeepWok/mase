@@ -21,9 +21,7 @@ from chop.passes.graph.analysis import (
 )
 
 from chop.ir.graph.mase_graph import MaseGraph
-from chop.passes.graph.transforms import (
-    metadata_value_type_cast_transform_pass
-)
+from chop.passes.graph.transforms import metadata_value_type_cast_transform_pass
 from chop.passes.graph.utils import deepcopy_mase_graph
 from chop.tools.get_input import InputGenerator
 from chop.dataset import MaseDataModule
@@ -77,5 +75,6 @@ def test_metadata_value_type_cast():
     mg, _ = metadata_value_type_cast_transform_pass(
         mg, pass_args={"fn": to_numpy_if_tensor}
     )
+
 
 test_metadata_value_type_cast()
