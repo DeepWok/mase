@@ -78,7 +78,8 @@ def get_dummy_input(
         match task:
             case "classification" | "cls":
                 x, y = next(train_iter)
-                x = x[[0], ...].to(device)
+                # x = x[[0], ...].to(device)
+                x = x.to(device)
                 dummy_inputs = {"x": x}
             case _:
                 raise ValueError(f"Task {task} is not supported for {model_info.name}")
