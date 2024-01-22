@@ -21,18 +21,18 @@ conda config --set auto_activate_base false
 Download Mase:
 ```shell
 cd /home/${USERNAME}
-git clone git@github.com:JianyiCheng/mase-tools.git
+git clone git@github.com:DeepWok/mase.git
 ```
 
 Create your own branch to work on:
 ```shell
-cd /home/${USERNAME}/mase-tools
+cd /home/${USERNAME}/mase
 git checkout -b your_branch_name
 ```
 
 Install PyTorch and load Conda environments:
 ```shell
-cd /home/${USERNAME}/mase-tools
+cd /home/${USERNAME}/mase
 bash scripts/init-conda.sh
 ```
 

@@ -8,20 +8,20 @@ The following lines should print out your current python version
 
 * Install Anaconda on your Linux/WSL2/Mac.
 
-* Clone the mase-tools to your pc.
+* Clone the mase to your pc.
 
  ```bash
- git clone git@github.com:JianyiCheng/mase-tools.git
+ git clone git@github.com:DeepWok/mase.git
  ```
 
 * Run the `int-conda.sh` script to create a Conda environment named "mase" and install related packages:
 
  ```bash
- cd mase-tools
+ cd mase
  bash scripts/init-conda.sh
  ```
 
-* Activate `mase` env when using mase-tools
+* Activate `mase` env when using mase
 
  ```bash
  conda activate mase
