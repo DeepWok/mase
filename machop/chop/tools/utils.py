@@ -20,10 +20,20 @@ device = torch.device("cuda:0" if use_cuda else "cpu")
 logger = logging.getLogger(__name__)
 
 
+def is_tensor(x):
+    return torch.is_tensor(x)
+
+
 def to_numpy(x):
     if use_cuda:
         x = x.cpu()
     return x.detach().numpy()
+
+
+def to_numpy_if_tensor(x):
+    if is_tensor(x):
+        return to_numpy(x)
+    return x
 
 
 def to_tensor(x):
