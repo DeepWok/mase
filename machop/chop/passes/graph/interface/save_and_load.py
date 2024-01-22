@@ -132,7 +132,8 @@ def save_mase_graph_interface_pass(graph, pass_args: dict = {}):
     # collect metadata.parameters
     node_n_meta_param = collect_n_meta_param(graph)
     # save metadata.parameters to toml
-    save_n_meta_param(node_n_meta_param, n_meta_param_ckpt)
+    # TODO: temporarily disabled
+    # save_n_meta_param(node_n_meta_param, n_meta_param_ckpt)
     # reset metadata to empty dict {}
     graph = graph_iterator_remove_metadata(graph)
     # save graph module & state dict
@@ -140,7 +141,8 @@ def save_mase_graph_interface_pass(graph, pass_args: dict = {}):
     save_state_dict_ckpt(graph.model, state_dict_ckpt)
     # restore metadata.parameters
     graph = init_metadata_analysis_pass(graph)
-    graph = graph_iterator_add_n_meta_param(graph, node_n_meta_param)
+    # TODO: temporarily disabled, why we need this? why save needs another pass here?
+    # graph = graph_iterator_add_n_meta_param(graph, node_n_meta_param)
     logger.info(f"Saved mase graph to {save_dir}")
     return graph, {}
 
