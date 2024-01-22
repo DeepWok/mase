@@ -212,7 +212,7 @@ def analyse_common_parameters_module(meta, result, args, kwargs, add_value=True)
             "from": None,
         }
         if add_value:
-            meta.parameters["common"]["args"][name]["value"] = parameter
+            meta.parameters["common"]["args"][name]["value"] = to_numpy(parameter)
 
     meta = analyse_result(meta, result, add_value)
     return meta
