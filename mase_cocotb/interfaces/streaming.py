@@ -26,6 +26,7 @@ class StreamDriver(Driver):
     async def _driver_send(self, data) -> None:
         while True:
             await RisingEdge(self.clk)
+            breakpoint()
             self.data.value = data
             if random.random() > self.valid_prob:
                 self.valid.value = 0

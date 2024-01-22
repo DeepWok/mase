@@ -3,190 +3,140 @@
 # This script tests the fixed point linear
 import os, logging
 
-from mase_cocotb.random_test import RandomSource, RandomSink, check_results
-from mase_cocotb.runner import mase_runner
-
 import cocotb
-from cocotb.triggers import Timer
-from cocotb.triggers import FallingEdge
-from cocotb.clock import Clock
+from cocotb.triggers import *
 
-debug = False
+from mase_cocotb.testbench import Testbench
+from mase_cocotb.interfaces.streaming import StreamDriver, StreamMonitor
+from mase_cocotb.z_qlayers import quantize_to_int
+from mase_cocotb.runner import mase_runner
+from mase_cocotb.utils import bit_driver, sign_extend_t
 
-logger = logging.getLogger("tb_signals")
-if debug:
-    logger.setLevel(logging.DEBUG)
+from chop.passes.graph.transforms.quantize.quantized_modules import LinearInteger
+
+import torch
+
+logger = logging.getLogger("testbench")
+logger.setLevel(logging.INFO)
 
 
-# DUT test specifications
-class VerificationCase:
-    def __init__(self, samples=10):
-        self.data_in_width = 32
-        self.data_in_frac_width = 16
-        self.weight_width = 16
-        self.weight_frac_width = 8
-        self.vector_size = 4
-        self.iterations = 5
-        self.parallelism = 7
-        self.has_bias = 1
-        self.bias_width = 8
-        self.bias_frac_width = 5
-        self.data_in = RandomSource(
-            name="data_in",
-            samples=samples * self.iterations,
-            num=self.vector_size,
-            max_stalls=0,
-            debug=debug,
+class LinearTB(Testbench):
+    def __init__(self, dut) -> None:
+        super().__init__(dut, dut.clk, dut.rst)
+        self.assign_self_params(
+            [
+                "DATA_IN_0_PRECISION_0",
+                "DATA_IN_0_PRECISION_1",
+                "DATA_IN_0_TENSOR_SIZE_DIM_0",
+                "DATA_IN_0_TENSOR_SIZE_DIM_1",
+                "DATA_IN_0_PARALLELISM_DIM_0",
+                "DATA_IN_0_PARALLELISM_DIM_1",
+                "IN_0_DEPTH",
+                "WEIGHT_PRECISION_0",
+                "WEIGHT_PRECISION_1",
+                "WEIGHT_TENSOR_SIZE_DIM_0",
+                "WEIGHT_TENSOR_SIZE_DIM_1",
+                "WEIGHT_PARALLELISM_DIM_0",
+                "WEIGHT_PARALLELISM_DIM_1",
+                "DATA_OUT_0_PRECISION_0",
+                "DATA_OUT_0_PRECISION_1",
+                "DATA_OUT_0_TENSOR_SIZE_DIM_0",
+                "DATA_OUT_0_TENSOR_SIZE_DIM_1",
+                "DATA_OUT_0_PARALLELISM_DIM_0",
+                "DATA_OUT_0_PARALLELISM_DIM_1",
+                "BIAS_PRECISION_0",
+                "BIAS_PRECISION_1",
+                "BIAS_TENSOR_SIZE_DIM_0",
+                "BIAS_TENSOR_SIZE_DIM_1",
+                "BIAS_PARALLELISM_DIM_0",
+                "BIAS_PARALLELISM_DIM_1",
+            ]
         )
-        self.weight = RandomSource(
-            name="weight",
-            samples=samples * self.iterations,
-            num=self.vector_size * self.parallelism,
-            max_stalls=0,
-            debug=debug,
+
+        self.data_in_0_driver = StreamDriver(
+            dut.clk, dut.data_in_0, dut.data_in_0_valid, dut.data_in_0_ready
         )
-        self.bias = RandomSource(
-            name="bias",
-            samples=samples,
-            num=self.parallelism,
-            max_stalls=0,
-            debug=debug,
+        self.weight_driver = StreamDriver(
+            dut.clk, dut.weight, dut.weight_valid, dut.weight_ready
         )
-        self.outputs = RandomSink(samples=samples, max_stalls=0, debug=debug)
-        self.samples = samples
-        self.ref = self.sw_compute()
-
-    def get_dut_parameters(self):
-        return {
-            "IN_0_WIDTH": self.data_in_width,
-            "IN_0_FRAC_WIDTH": self.data_in_frac_width,
-            "WEIGHT_WIDTH": self.weight_width,
-            "WEIGHT_FRAC_WIDTH": self.weight_frac_width,
-            "IN_0_SIZE": self.vector_size,
-            "IN_0_DEPTH": self.iterations,
-            "PARALLELISM": self.parallelism,
-            "HAS_BIAS": self.has_bias,
-            "BIAS_WIDTH": self.bias_width,
-            "BIAS_FRAC_WIDTH": self.bias_frac_width,
-        }
-
-    def sw_compute(self):
-        ref = []
-        for i in range(self.samples):
-            acc = [0 for _ in range(self.parallelism)]
-            for j in range(self.iterations):
-                data_idx = i * self.iterations + j
-                temp = []
-                for k in range(self.parallelism):
-                    s = [
-                        self.data_in.data[data_idx][h]
-                        * self.weight.data[data_idx][k * self.vector_size + h]
-                        for h in range(self.vector_size)
-                    ]
-                    acc[k] += sum(s)
-            if self.has_bias:
-                for k in range(self.parallelism):
-                    acc[k] += self.bias.data[i][k] << (
-                        self.weight_frac_width
-                        + self.data_in_frac_width
-                        - self.bias_frac_width
-                    )
-            ref.append(acc)
-        ref.reverse()
-        return ref
-
-
-def debug_state(dut, state):
-    logger.debug(
-        "{} State: (bias_ready,bias_valid,bias_ready,bias_valid,data_in_ready,data_in_valid,data_out_ready,data_out_valid) = ({},{},{},{},{},{})".format(
-            state,
-            dut.bias_ready.value,
-            dut.bias_valid.value,
-            dut.weight_ready.value,
-            dut.weight_valid.value,
-            dut.data_in_0_ready.value,
-            dut.data_in_0_valid.value,
-            dut.data_out_0_ready.value,
-            dut.data_out_0_valid.value,
+        # self.bias_driver = StreamDriver(
+        #     dut.clk, dut.data_in_0, dut.bias_valid, dut.bias_ready
+        # )
+        self.data_out_0_monitor = StreamMonitor(
+            dut.clk, dut.data_out_0, dut.data_out_0_valid, dut.data_out_0_ready
         )
-    )
+
+        # Model
+        self.linear_layer = LinearInteger(
+            in_features=784,
+            out_features=10,
+            bias=False,
+            config={
+                "data_in_width": 16,
+                "data_in_frac_width": 3,
+                "weight_width": 16,
+                "weight_frac_width": 3,
+                "bias_width": 16,
+                "bias_frac_width": 3,
+            },
+        )
+
+    def generate_inputs(self):
+        return torch.randn((1, 784))
+
+    def model(self, inputs):
+        # Run the model with the provided inputs and return the outputs
+        out = self.linear_layer(inputs)
+        return out
 
 
 @cocotb.test()
-async def test_fixed_linear(dut):
-    """Test integer based vector mult"""
-    samples = 1000
-    test_case = VerificationCase(samples=samples)
+async def test(dut):
+    tb = LinearTB(dut)
+    await tb.reset()
+    logger.info(f"Reset finished")
+    tb.data_out_0_monitor.ready.value = 1
 
-    # Reset cycle
-    await Timer(20, units="ns")
-    dut.rst.value = 1
-    await Timer(100, units="ns")
-    dut.rst.value = 0
+    inputs = tb.generate_inputs()
+    # logger.info(f"inputs: {inputs}, q_inputs: {q_inputs}")
+    exp_out = tb.model(inputs)
 
-    # Create a 10ns-period clock on port clk
-    clock = Clock(dut.clk, 10, units="ns")
-    # Start the clock
-    cocotb.start_soon(clock.start())
-    await Timer(500, units="ns")
+    # To do: replace with tb.load_drivers(inputs)
+    tb.data_in_0_driver.append(inputs.tolist())
+    tb.weight_driver.append(
+        tb.linear_layer.w_quantizer(tb.linear_layer.weight).tolist()
+    )
+    # tb.bias_driver.append(self.linear_layer.b_quantizer(self.linear_layer.bias))
 
-    # Synchronize with the clock
-    dut.weight_valid.value = 0
-    dut.bias_valid.value = 0
-    dut.data_in_0_valid.value = 0
-    dut.data_out_0_ready.value = 1
-    debug_state(dut, "Pre-clk")
-    await FallingEdge(dut.clk)
-    debug_state(dut, "Post-clk")
-    debug_state(dut, "Pre-clk")
-    await FallingEdge(dut.clk)
-    debug_state(dut, "Post-clk")
+    # To do: replace with tb.load_monitors(exp_out)
+    tb.data_out_0_monitor.expect(exp_out)
 
-    done = False
-    # Set a timeout to avoid deadlock
-    for i in range(samples * 100):
-        await FallingEdge(dut.clk)
-        debug_state(dut, "Post-clk")
-        dut.weight_valid.value = test_case.weight.pre_compute()
-        dut.bias_valid.value = test_case.bias.pre_compute()
-        dut.data_in_0_valid.value = test_case.data_in.pre_compute()
-        await Timer(1, units="ns")
-        dut.data_out_0_ready.value = test_case.outputs.pre_compute(
-            dut.data_out_0_valid.value
-        )
-        await Timer(1, units="ns")
-        debug_state(dut, "Post-clk")
-
-        dut.bias_valid.value, dut.bias.value = test_case.bias.compute(
-            dut.bias_ready.value
-        )
-        dut.weight_valid.value, dut.weight.value = test_case.weight.compute(
-            dut.weight_ready.value
-        )
-        dut.data_in_0_valid.value, dut.data_in_0.value = test_case.data_in.compute(
-            dut.data_in_0_ready.value
-        )
-        await Timer(1, units="ns")
-        dut.data_out_0_ready.value = test_case.outputs.compute(
-            dut.data_out_0_valid.value, dut.data_out_0.value
-        )
-        debug_state(dut, "Pre-clk")
-
-        if (
-            (not test_case.has_bias or test_case.bias.is_empty())
-            and test_case.weight.is_empty()
-            and test_case.data_in.is_empty()
-            and test_case.outputs.is_full()
-        ):
-            done = True
-            break
-    assert (
-        done
-    ), "Deadlock detected or the simulation reaches the maximum cycle limit (fixed it by adjusting the loop trip count)"
-
-    check_results(test_case.outputs.data, test_case.ref)
+    # To do: replace with tb.run()
+    await Timer(100, units="us")
+    # To do: replace with tb.monitors_done() --> for monitor, call monitor_done()
+    assert tb.data_out_0_monitor.exp_queue.empty()
 
 
 if __name__ == "__main__":
-    tb = VerificationCase()
-    mase_runner(module_param_list=[tb.get_dut_parameters()])
+    mase_runner(
+        module_param_list=[
+            {
+                "DATA_IN_0_TENSOR_SIZE_DIM_0": 4,
+                "DATA_IN_0_TENSOR_SIZE_DIM_1": 1,
+                "DATA_IN_0_PARALLELISM_DIM_0": 4,
+                "DATA_IN_0_PARALLELISM_DIM_1": 1,
+                "WEIGHT_TENSOR_SIZE_DIM_0": 32,
+                "WEIGHT_TENSOR_SIZE_DIM_1": 1,
+                "WEIGHT_PARALLELISM_DIM_0": 4,
+                "WEIGHT_PARALLELISM_DIM_1": 1,
+                "DATA_OUT_0_TENSOR_SIZE_DIM_0": 4,
+                "DATA_OUT_0_TENSOR_SIZE_DIM_1": 1,
+                "DATA_OUT_0_PARALLELISM_DIM_0": 4,
+                "DATA_OUT_0_PARALLELISM_DIM_1": 1,
+                "BIAS_TENSOR_SIZE_DIM_0": 4,
+                "BIAS_TENSOR_SIZE_DIM_1": 1,
+                "BIAS_PARALLELISM_DIM_0": 4,
+                "BIAS_PARALLELISM_DIM_1": 1,
+            }
+        ]
+    )

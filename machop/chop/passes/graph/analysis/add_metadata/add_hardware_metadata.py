@@ -74,7 +74,6 @@ def add_verilog_param(node):
     vp = node.meta["mase"].parameters["hardware"]["verilog_param"]
     for arg, arg_info in args.items():
         if isinstance(arg_info, dict):
-            print(f"node name: {node.name}, arg: {arg}, arg_info: {arg_info}")
             for i, precision in enumerate(arg_info["precision"]):
                 vp[_cap(arg + f"_precision_{i}")] = arg_info["precision"][i]
             for dim in range(0, len(arg_info["shape"])):
@@ -83,11 +82,16 @@ def add_verilog_param(node):
                     if dim < len(arg_info["shape"])
                     else 1
                 )
-                vp[_cap(arg + f"_parallelism_dim_{dim}")] = (
-                    arg_info["shape"][len(arg_info["shape"]) - 1 - dim]
-                    if dim < len(arg_info["shape"])
-                    else 1
-                )
+                if node.meta["mase"].parameters["hardware"]["parallelism"] is not None:
+                    vp[_cap(arg + f"_parallelism_dim_{dim}")] = node.meta[
+                        "mase"
+                    ].parameters["hardware"]["parallelism"]
+                else:
+                    vp[_cap(arg + f"_parallelism_dim_{dim}")] = (
+                        arg_info["shape"][len(arg_info["shape"]) - 1 - dim]
+                        if dim < len(arg_info["shape"])
+                        else 1
+                    )
         elif type(arg_info) == bool:
             vp[_cap(arg)] = 1 if arg_info else 0
         else:
@@ -105,11 +109,16 @@ def add_verilog_param(node):
                     if dim < len(result_info["shape"])
                     else 1
                 )
-                vp[_cap(result + f"_parallelism_dim_{dim}")] = (
-                    result_info["shape"][len(result_info["shape"]) - 1 - dim]
-                    if dim < len(result_info["shape"])
-                    else 1
-                )
+                if node.meta["mase"].parameters["hardware"]["parallelism"] is not None:
+                    vp[_cap(arg + f"_parallelism_dim_{dim}")] = node.meta[
+                        "mase"
+                    ].parameters["hardware"]["parallelism"]
+                else:
+                    vp[_cap(result + f"_parallelism_dim_{dim}")] = (
+                        result_info["shape"][len(result_info["shape"]) - 1 - dim]
+                        if dim < len(result_info["shape"])
+                        else 1
+                    )
         else:
             vp[_cap(result)] = result_info
 
@@ -361,6 +370,10 @@ def add_hardware_metadata_analysis_pass(graph, pass_args=None):
     # Add component source
     for node in graph.fx_graph.nodes:
         add_component_source(node)
+
+    # Temporary: fix parallelism to small value to enable verilator simulation
+    for node in graph.fx_graph.nodes:
+        node.meta["mase"].parameters["hardware"]["parallelism"] = 4
 
     # Add hardware parameters
     for node in graph.fx_graph.nodes:

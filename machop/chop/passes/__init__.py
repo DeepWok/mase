@@ -28,5 +28,5 @@ from .graph.transforms import (
     emit_verilog_top_transform_pass,
     emit_bram_transform_pass,
     emit_internal_rtl_transform_pass,
-    emit_verilog_tb_transform_pass,
+    emit_cocotb_transform_pass,
 )

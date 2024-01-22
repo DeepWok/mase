@@ -8,6 +8,8 @@ from .internal_file_dependences import INTERNAL_RTL_DEPENDENCIES
 
 logger = logging.getLogger(__name__)
 
+from pathlib import Path
+
 
 def _append(list1, list2):
     return list1 + list(set(list2) - set(list1))
@@ -31,7 +33,9 @@ def emit_internal_rtl_transform_pass(graph, pass_args={}):
 
     logger.info("Emitting internal components...")
     project_dir = (
-        pass_args["project_dir"] if "project_dir" in pass_args.keys() else "top"
+        pass_args["project_dir"]
+        if "project_dir" in pass_args.keys()
+        else Path.home() / ".mase" / "top"
     )
 
     init_project(project_dir)

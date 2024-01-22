@@ -59,9 +59,6 @@ def mase_runner(
             includes=[str(comp_path.joinpath(f"{d}/rtl/")) for d in deps],
             hdl_toplevel=module,
             build_args=[
-                "--Wall",
-                # Turn on assertions
-                "--assert",
                 # Verilator linter is overly strict.
                 # Too many errors
                 # These errors are in later versions of verilator
@@ -70,8 +67,18 @@ def mase_runner(
                 "-Wno-WIDTHTRUNC",
                 # Simulation Optimisation
                 "-Wno-UNOPTFLAT",
+                "-prof-c",
+                "--stats",
                 # Signal trace in dump.fst
                 *(["--trace-fst", "--trace-structs"] if trace else []),
+                "-trace-depth",
+                "--threads 4",
+                "-O0",
+                "-build-jobs",
+                "8",
+                "-Wno-fatal",
+                "-Wno-lint",
+                "-Wno-style",
                 *extra_build_args,
             ],
             parameters=module_params,

@@ -48,7 +48,7 @@ from tabulate import tabulate
 import torch
 
 from . import models
-from .actions import test, train, transform, search
+from .actions import test, train, transform, search, emit, simulate
 from .dataset import MaseDataModule, AVAILABLE_DATASETS, get_dataset_info
 from .tools import post_parse_load_config, load_config
 
@@ -95,7 +95,7 @@ LOGO = f"""
         https://github.com/DeepWok/mase/wiki
 """
 TASKS = ["classification", "cls", "translation", "tran", "language_modeling", "lm"]
-ACTIONS = ["train", "test", "transform", "search"]
+ACTIONS = ["train", "test", "transform", "search", "emit", "simulate"]
 INFO_TYPE = ["all", "model", "dataset"]
 LOAD_TYPE = [
     "pt",  # PyTorch module state dictionary
@@ -247,6 +247,10 @@ class ChopCLI:
                 self._run_test()
             case "search":
                 self._run_search()
+            case "emit":
+                self._run_emit()
+            case "simulate":
+                self._run_simulate()
 
     # Actions --------------------------------------------------------------------------
     def _run_train(self):
@@ -372,6 +376,33 @@ class ChopCLI:
 
         search(**search_params)
         self.logger.info("Searching is completed")
+
+    def _run_emit(self):
+        load_name = None
+        load_types = ["mz"]
+        if self.args.load_name is not None and self.args.load_type in load_types:
+            load_name = self.args.load_name
+
+        emit_params = {
+            "model": self.model,
+            "model_info": self.model_info,
+            "task": self.args.task,
+            "dataset_info": self.dataset_info,
+            "data_module": self.data_module,
+            "load_name": load_name,
+            "load_type": self.args.load_type,
+        }
+
+        emit(**emit_params)
+        self.logger.info("Verilog emit is completed")
+
+    def _run_simulate(self):
+        simulate_params = {
+            "skip_build": self.args.skip_build,
+            "skip_test": self.args.skip_test,
+        }
+        simulate(**simulate_params)
+        self.logger.info("Verilog simulation is completed")
 
     # Helpers --------------------------------------------------------------------------
     def _setup_parser(self):
@@ -666,6 +697,16 @@ class ChopCLI:
             type=int,
             help="number of FPGA devices. (default: %(default)s)",
             metavar="NUM",
+        )
+        hardware_group.add_argument(
+            "--skip-build",
+            dest="skip_build",
+            help="",
+        )
+        hardware_group.add_argument(
+            "--skip-test",
+            dest="skip_test",
+            help="",
         )
 
         # Language model options -------------------------------------------------------

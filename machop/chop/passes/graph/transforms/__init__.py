@@ -5,7 +5,7 @@ from .verilog import (
     emit_internal_rtl_transform_pass,
     emit_logicnets_transform_pass,
     emit_mlir_hls_transform_pass,
-    emit_verilog_tb_transform_pass,
+    emit_cocotb_transform_pass,
     emit_verilog_top_transform_pass,
 )
 from .utils import (

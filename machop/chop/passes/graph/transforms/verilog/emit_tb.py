@@ -256,7 +256,7 @@ from mase_cocotb.interfaces.streaming import StreamDriver, StreamMonitor
 from mase_cocotb.z_qlayers.tensor_cast import quantize_to_int
 
 
-def emit_verilog_tb_transform_pass(graph, pass_args={}):
+def emit_cocotb_transform_pass(graph, pass_args={}):
     """
     Emit test bench and related files for simulation
 
@@ -277,73 +277,85 @@ def emit_verilog_tb_transform_pass(graph, pass_args={}):
         pass_args["project_dir"] if "project_dir" in pass_args.keys() else "top"
     )
 
+    print("project_dir", project_dir)
     init_project(project_dir)
-    print("testing")
 
-    from .util import get_verilog_parameters
+    cocotb_template = """
+import cocotb
+from .util import get_verilog_parameters
 
-    # Define testbench class
-    class ModelTB(Testbench):
-        def __init__(self, dut):
-            super().__init__(dut, dut.clk, dut.rst)
-            # Assign module parameters from parameter map
-            # self.assign_self_params([])
+# Define testbench class
+class ModelTB(Testbench):
+    def __init__(self, dut):
+        super().__init__(dut, dut.clk, dut.rst)
+        # Assign module parameters from parameter map
+        # self.assign_self_params([])
 
-            # Instantiate as many drivers as required inputs
-            self.data_in_0_driver = StreamDriver(
-                dut.clk, dut.data_in_0, dut.data_in_0_valid, dut.data_in_0_ready
-            )
+        # Instantiate as many drivers as required inputs
+        self.data_in_0_driver = StreamDriver(
+            dut.clk, dut.data_in_0, dut.data_in_0_valid, dut.data_in_0_ready
+        )
 
-            # Instantiate as many monitors as required outputs
-            self.data_out_0_monitor = StreamMonitor(
-                dut.clk, dut.data_out_0, dut.data_out_0_valid, dut.data_out_0_ready
-            )
+        # Instantiate as many monitors as required outputs
+        self.data_out_0_monitor = StreamMonitor(
+            dut.clk, dut.data_out_0, dut.data_out_0_valid, dut.data_out_0_ready
+        )
 
-        def get_random_tensor(self, shape):
-            # Generate random tensors of the appropriate shape
-            return torch.rand(shape)
+    def get_random_tensor(self, shape):
+        # Generate random tensors of the appropriate shape
+        return torch.rand(shape)
 
-        def generate_inputs(self):
-            # Generate inputs for as many streaming interfaces as required
+    def generate_inputs(self):
+        # Generate inputs for as many streaming interfaces as required
 
-            # For every input to the model, generate random tensor according to its shape
-            inputs = []
-            inputs += get_random_tensor((1, 2))
+        # For every input to the model, generate random tensor according to its shape
+        inputs = []
+        inputs += get_random_tensor((1, 2))
 
-            # Quantize each input tensor to required precision
-            quantized_inputs = []
-            quantized_inputs += quantize_to_int(data_in_0_inputs)
+        # Quantize each input tensor to required precision
+        quantized_inputs = []
+        quantized_inputs += quantize_to_int(data_in_0_inputs)
 
-            return inputs, quantized_inputs
+        return inputs, quantized_inputs
 
-        def model(self, inputs):
-            # Run the model with the provided inputs and return the outputs
-            out = graph.model(inputs)
-            return out
+    def model(self, inputs):
+        # Run the model with the provided inputs and return the outputs
+        out = graph.model(inputs)
+        return out
 
-    async def test(dut):
-        tb = ModelTB(dut)
-        return
+@cocotb.test()
+async def test(dut):
+    tb = ModelTB(dut)
+    return
 
-        await tb.reset()
-        tb.output_monitor.ready.value = 1
-        inputs = tb.generate_inputs()
-        exp_out = tb.model(inputs)
+    await tb.reset()
+    tb.output_monitor.ready.value = 1
+    inputs = tb.generate_inputs()
+    exp_out = tb.model(inputs)
 
-        # To do: replace with tb.load_drivers(inputs)
-        for i in inputs[0]:
-            tb.data_in_0_driver.append(i)
+    # To do: replace with tb.load_drivers(inputs)
+    for i in inputs[0]:
+        tb.data_in_0_driver.append(i)
 
-        # To do: replace with tb.load_monitors(exp_out)
-        for out in exp_out:
-            tb.data_out_0_monitor.expect(out)
+    # To do: replace with tb.load_monitors(exp_out)
+    for out in exp_out:
+        tb.data_out_0_monitor.expect(out)
 
-        # To do: replace with tb.run()
-        await Timer(100, units="us")
-        # To do: replace with tb.monitors_done() --> for monitor, call monitor_done()
-        assert tb.data_out_0_monitor.exp_queue.empty()
+    # To do: replace with tb.run()
+    await Timer(100, units="us")
+    # To do: replace with tb.monitors_done() --> for monitor, call monitor_done()
+    assert tb.data_out_0_monitor.exp_queue.empty()
 
-    graph.fx_graph.meta["mase"].parameters["hardware"]["testbench"] = ModelTB
-    graph.fx_graph.meta["mase"].parameters["hardware"]["test"] = test
+"""
+
+    from pathlib import Path
+
+    file_path = Path.home() / ".mase" / "top" / "hardware" / "test" / "top_tb.py"
+    f = open(file_path, "w")
+    f.write(cocotb_template)
+    f.close()
+
+    # graph.fx_graph.meta["mase"].parameters["hardware"]["testbench"] = ModelTB
+    # graph.fx_graph.meta["mase"].parameters["hardware"]["test"] = test
 
     return graph, None
