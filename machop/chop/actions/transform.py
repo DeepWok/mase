@@ -81,13 +81,14 @@ def transform(
         pass_config: dict
         match pass_name:
             # TODO: fix this later!
-            # case "quantize":
-            #     pass_save_dir = save_dir / "quantize"
-            #     ori_graph = deepcopy_mase_graph(graph)
-            #     graph = PASSES["quantize"](graph, pass_args=pass_config)
-            #     PASSES["summarize_quantization"](
-            #         ori_graph, graph, save_dir=pass_save_dir
-            #     )
+            case "quantize":
+                pass_save_dir = save_dir / "quantize"
+                ori_graph = deepcopy_mase_graph(graph)
+                graph = PASSES["quantize"](graph, pass_args=pass_config)
+                new_graph = graph[0]
+                PASSES["summarize_quantization"](
+                    ori_graph, new_graph, save_dir=pass_save_dir
+                )
             case "profile_statistics":
                 input_generator = InputGenerator(
                     model_info=model_info,
