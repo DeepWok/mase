@@ -101,7 +101,7 @@ def match_args_and_kwargs(meta, args, kwargs, data, add_value):
                 "precision": [32],
             }
             if add_value:
-                arg_meta["value"] = to_numpy(x)
+                arg_meta["value"] = x
             meta.parameters["common"]["args"][f"data_in_{j}"] = arg_meta
             j += 1
         else:
@@ -119,7 +119,7 @@ def match_args_and_kwargs(meta, args, kwargs, data, add_value):
                 "precision": [32],
             }
             if add_value:
-                arg_meta["value"] = to_numpy(v)
+                arg_meta["value"] = v
             meta.parameters["common"]["args"][f"data_in_{j}"] = arg_meta
             j += 1
         else:
@@ -141,14 +141,12 @@ def analyse_result(meta, result, add_value):
             "torch_dtype": result.dtype,
         }
         if add_value:
-            meta.parameters["common"]["results"]["data_out_0"]["value"] = to_numpy(
-                result
-            )
+            meta.parameters["common"]["results"]["data_out_0"]["value"] = result
     else:
         meta.parameters["common"]["results"]["data_out_0"] = {
             "type": type(result),
             "shape": [1],
-            "value": to_numpy(result),
+            "value": result,
         }
     return meta
 
@@ -173,9 +171,7 @@ def analyse_common_parameters_placeholder(meta, result, args, kwargs, add_value=
             "torhc_dtype": result.dtype,
         }
         if add_value:
-            meta.parameters["common"]["results"]["data_out_0"]["value"] = to_numpy(
-                result
-            )
+            meta.parameters["common"]["results"]["data_out_0"]["value"] = result
         return meta
 
     meta.parameters["common"]["args"] = {}
@@ -216,7 +212,7 @@ def analyse_common_parameters_module(meta, result, args, kwargs, add_value=True)
             "from": None,
         }
         if add_value:
-            meta.parameters["common"]["args"][name]["value"] = to_numpy(parameter)
+            meta.parameters["common"]["args"][name]["value"] = parameter
 
     meta = analyse_result(meta, result, add_value)
     return meta

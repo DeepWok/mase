@@ -40,6 +40,12 @@ def to_tensor(x):
     return torch.from_numpy(x).to(device)
 
 
+def to_tensor_if_numpy(x):
+    if isinstance(x, np.ndarray):
+        return to_tensor(x)
+    return x
+
+
 def copy_weights(src_weight: Tensor, tgt_weight: Tensor):
     with torch.no_grad():
         tgt_weight.copy_(src_weight)

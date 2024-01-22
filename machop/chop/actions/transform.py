@@ -19,7 +19,9 @@ from chop.passes.graph.utils import deepcopy_mase_graph
 from chop.tools.checkpoint_load import load_model
 from chop.tools.config_load import load_config
 from chop.tools.get_input import InputGenerator, get_cf_args, get_dummy_input
-from chop.tools.utils import device
+from chop.tools.utils import device, to_numpy_if_tensor
+
+from chop.passes.graph.transforms import metadata_value_type_cast_transform_pass
 
 logger = logging.getLogger(__name__)
 
@@ -83,6 +85,11 @@ def transform(
             # TODO: fix this later!
             case "quantize":
                 pass_save_dir = save_dir / "quantize"
+
+                graph, _ = metadata_value_type_cast_transform_pass(
+                    graph, pass_args={"fn": to_numpy_if_tensor}
+                )
+
                 ori_graph = deepcopy_mase_graph(graph)
                 graph, _ = PASSES["quantize"](graph, pass_args=pass_config)
                 PASSES["summarize_quantization"](
@@ -181,5 +188,9 @@ def transform(
     if save_dir is not None:
         transformed_ckpt = save_dir / "transformed_ckpt"
         transformed_ckpt.mkdir(parents=True, exist_ok=True)
+
+        graph, _ = metadata_value_type_cast_transform_pass(
+            graph, pass_args={"fn": to_numpy_if_tensor}
+        )
         save_mase_graph_interface_pass(graph, pass_args=transformed_ckpt)
     return graph
