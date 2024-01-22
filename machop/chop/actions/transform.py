@@ -84,10 +84,9 @@ def transform(
             case "quantize":
                 pass_save_dir = save_dir / "quantize"
                 ori_graph = deepcopy_mase_graph(graph)
-                graph = PASSES["quantize"](graph, pass_args=pass_config)
-                new_graph = graph[0]
+                graph, _ = PASSES["quantize"](graph, pass_args=pass_config)
                 PASSES["summarize_quantization"](
-                    ori_graph, new_graph, save_dir=pass_save_dir
+                    ori_graph, graph, save_dir=pass_save_dir
                 )
             case "profile_statistics":
                 input_generator = InputGenerator(
@@ -97,45 +96,45 @@ def transform(
                     which_dataloader="train",
                 )
                 pass_config["input_generator"] = input_generator
-                graph = PASSES[pass_name](graph, pass_args=pass_config)
+                graph, _ = PASSES[pass_name](graph, pass_args=pass_config)
             case "report_graph":
                 pass_file_name = pass_config.get(
                     "file_name", save_dir / "report_graph.txt"
                 )
-                graph = PASSES[pass_name](graph, file_name=pass_file_name)
+                graph, _ = PASSES[pass_name](graph, file_name=pass_file_name)
             case "report_node_type":
-                graph = PASSES[pass_name](graph, pass_args=None)
+                graph, _ = PASSES[pass_name](graph, pass_args=None)
             case "report_node_meta_param":
                 # {"save_path": ..., "which": "all"|["common", "hardware", "software"]}
                 pass_save_path = pass_config.get("save_path", save_dir / "report")
                 pass_config["save_path"] = pass_save_path
-                graph = PASSES[pass_name](graph, pass_args=pass_config)
+                graph, _ = PASSES[pass_name](graph, pass_args=pass_config)
             case "report_node_shape":
-                graph = PASSES[pass_name](graph, pass_args=None)
+                graph, _ = PASSES[pass_name](graph, pass_args=None)
             case "report_node_type":
-                graph = PASSES[pass_name](graph, pass_args=None)
+                graph, _ = PASSES[pass_name](graph, pass_args=None)
             case "report_node_hardware_type":
-                graph = PASSES[pass_name](graph, pass_args=None)
+                graph, _ = PASSES[pass_name](graph, pass_args=None)
             case "report_node_shape":
-                graph = PASSES[pass_name](graph, pass_args=None)
+                graph, _ = PASSES[pass_name](graph, pass_args=None)
             case "report_node_type":
-                graph = PASSES[pass_name](graph, pass_args=None)
+                graph, _ = PASSES[pass_name](graph, pass_args=None)
             case "load_mase_graph":
                 pass_load_dir = pass_config["load_dir"]
-                graph = PASSES[pass_name](graph, pass_args=pass_load_dir)
+                graph, _ = PASSES[pass_name](graph, pass_args=pass_load_dir)
             case "load_node_meta_param":
                 pass_load_path = pass_config["load_path"]
-                graph = PASSES[pass_name](graph, pass_args=pass_load_path)
+                graph, _ = PASSES[pass_name](graph, pass_args=pass_load_path)
             case "save_mase_graph":
                 pass_save_dir = pass_config.get(
                     "save_dir", save_dir / "saved_mase_graph"
                 )
-                graph = PASSES[pass_name](graph, pass_args=pass_save_dir)
+                graph, _ = PASSES[pass_name](graph, pass_args=pass_save_dir)
             case "save_node_meta_param":
                 pass_save_path = pass_config.get(
                     "save_path", save_dir / "saved_node_meta_param"
                 )
-                graph = PASSES[pass_name](graph, pass_args=pass_save_path)
+                graph, _ = PASSES[pass_name](graph, pass_args=pass_save_path)
             case "prune":
                 # NOTE: The input generator is only used for when the user wants to
                 # enforce or observe activation sparsity. Otherwise, it's ignored.
@@ -152,18 +151,18 @@ def transform(
                 pass_config["input_generator"] = input_generator
                 prune_save_dir = save_dir / "prune"
                 prune_save_dir.mkdir(parents=True, exist_ok=True)
-                graph = PASSES[pass_name](
+                graph, _ = PASSES[pass_name](
                     graph,
                     save_dir=prune_save_dir,
                     config=pass_config,
                 )
             case "remove_prune_wrappers":
                 # Removes the pruning-related hooks and makes pruning permanent
-                graph = PASSES[pass_name](graph, pass_args=None)
+                graph, _ = PASSES[pass_name](graph, pass_args=None)
             case "conv_bn_fusion":
-                graph = PASSES[pass_name](graph, pass_args=None)
+                graph, _ = PASSES[pass_name](graph, pass_args=None)
             case "logicnets_fusion":
-                graph = PASSES[pass_name](graph, pass_args=pass_config)
+                graph, _ = PASSES[pass_name](graph, pass_args=pass_config)
             case "onnx_annotate":
                 onnx_dir = save_dir / "onnx"
                 onnx_dir.mkdir(parents=True, exist_ok=True)
@@ -171,11 +170,10 @@ def transform(
                     "save_path": onnx_dir,
                     "data_path": pass_config["data_path"],
                 }
-                graph = PASSES[pass_name](graph, **kwargs)
+                graph, _ = PASSES[pass_name](graph, **kwargs)
             case _:
                 my_pass = PASSES[pass_name]
-                graph = my_pass(graph, pass_args=pass_config)
-        graph, pass_info = graph
+                graph, _ = my_pass(graph, pass_args=pass_config)
         assert isinstance(
             graph, MaseGraph
         ), f"Return type of {pass_name} must be MaseGraph, got {type(graph)}"
