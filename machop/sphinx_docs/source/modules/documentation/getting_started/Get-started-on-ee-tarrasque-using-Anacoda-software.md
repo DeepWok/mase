@@ -1,4 +1,4 @@
-# For software project students: Get started on ee tarrasque (using Anacoda)
+# For software projects: Get started on ee tarrasque (using Anacoda)
 
 ## Install Anaconda (for the first time)
 
