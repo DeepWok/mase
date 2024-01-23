@@ -12,14 +12,6 @@ def simulate(skip_build: bool = False, skip_test: bool = False):
     if not skip_build:
         # To do: extract from mz checkpoint
         project_dir = Path.home() / ".mase" / "top"
-
-        # sources = [
-        #     Path(mase_components.__file__).parent.joinpath(dep)
-        #     for dep in mg.fx_graph.meta["mase"].parameters["hardware"][
-        #         "verilog_sources"
-        #     ]
-        # ]
-
         sources = [
             project_dir / "hardware" / "rtl" / "top.sv",
         ]
@@ -29,6 +21,7 @@ def simulate(skip_build: bool = False, skip_test: bool = False):
             includes=[
                 project_dir / "hardware" / "rtl",
             ]
+            # Include all mase components
             + [
                 Path(mase_components.__file__).parent / module / "rtl"
                 for module in get_modules()

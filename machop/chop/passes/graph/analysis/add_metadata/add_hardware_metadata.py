@@ -82,10 +82,14 @@ def add_verilog_param(node):
                     if dim < len(arg_info["shape"])
                     else 1
                 )
+                # If node data parallelism is set, take from hardware metadata
                 if node.meta["mase"].parameters["hardware"]["parallelism"] is not None:
                     vp[_cap(arg + f"_parallelism_dim_{dim}")] = node.meta[
                         "mase"
-                    ].parameters["hardware"]["parallelism"]
+                    ].parameters["hardware"]["parallelism"][
+                        len(arg_info["shape"]) - 1 - dim
+                    ]
+                # Otherwise, assign to tensor size by default
                 else:
                     vp[_cap(arg + f"_parallelism_dim_{dim}")] = (
                         arg_info["shape"][len(arg_info["shape"]) - 1 - dim]
@@ -110,9 +114,11 @@ def add_verilog_param(node):
                     else 1
                 )
                 if node.meta["mase"].parameters["hardware"]["parallelism"] is not None:
-                    vp[_cap(arg + f"_parallelism_dim_{dim}")] = node.meta[
+                    vp[_cap(result + f"_parallelism_dim_{dim}")] = node.meta[
                         "mase"
-                    ].parameters["hardware"]["parallelism"]
+                    ].parameters["hardware"]["parallelism"][
+                        len(arg_info["shape"]) - 1 - dim
+                    ]
                 else:
                     vp[_cap(result + f"_parallelism_dim_{dim}")] = (
                         result_info["shape"][len(result_info["shape"]) - 1 - dim]
@@ -373,7 +379,8 @@ def add_hardware_metadata_analysis_pass(graph, pass_args=None):
 
     # Temporary: fix parallelism to small value to enable verilator simulation
     for node in graph.fx_graph.nodes:
-        node.meta["mase"].parameters["hardware"]["parallelism"] = 4
+        # Batch parallelism set to 1, data parallelism to 4
+        node.meta["mase"].parameters["hardware"]["parallelism"] = [1, 4]
 
     # Add hardware parameters
     for node in graph.fx_graph.nodes:

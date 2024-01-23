@@ -678,7 +678,6 @@ def emit_verilog_top_transform_pass(graph, pass_args={}):
         if "project_dir" in pass_args.keys()
         else Path.home() / ".mase" / "top"
     )
-    breakpoint()
     top_name = pass_args["top_name"] if "top_name" in pass_args.keys() else "top"
     init_project(project_dir)
     rtl_dir = os.path.join(project_dir, "hardware", "rtl")
@@ -687,7 +686,6 @@ def emit_verilog_top_transform_pass(graph, pass_args={}):
 
     top_file = os.path.join(rtl_dir, f"{top_name}.sv")
     with open(top_file, "w") as top_design:
-        breakpoint()
         top_design.write(top)
 
     return graph, {}

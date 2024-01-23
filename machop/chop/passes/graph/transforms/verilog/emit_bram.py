@@ -122,6 +122,7 @@ module {node_param_name}_source #(
     parameter {_cap(param_name)}_TENSOR_SIZE_DIM_0  = 32,
     parameter {_cap(param_name)}_TENSOR_SIZE_DIM_1  = 1,
     parameter {_cap(param_name)}_PRECISION_0 = 16,
+    parameter {_cap(param_name)}_PRECISION_1 = 3,
 
     parameter {_cap(param_name)}_PARALLELISM_DIM_0 = 1,
     parameter {_cap(param_name)}_PARALLELISM_DIM_1 = 1,
