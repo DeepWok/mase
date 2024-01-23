@@ -20,14 +20,30 @@ device = torch.device("cuda:0" if use_cuda else "cpu")
 logger = logging.getLogger(__name__)
 
 
+def is_tensor(x):
+    return torch.is_tensor(x)
+
+
 def to_numpy(x):
     if use_cuda:
         x = x.cpu()
     return x.detach().numpy()
 
 
+def to_numpy_if_tensor(x):
+    if is_tensor(x):
+        return to_numpy(x)
+    return x
+
+
 def to_tensor(x):
     return torch.from_numpy(x).to(device)
+
+
+def to_tensor_if_numpy(x):
+    if isinstance(x, np.ndarray):
+        return to_tensor(x)
+    return x
 
 
 def copy_weights(src_weight: Tensor, tgt_weight: Tensor):
@@ -215,3 +231,15 @@ def init_Conv2dLUT_weight(
     initialized_weight = torch.cat([initialized_weight] * levels, dim=0)
     pruned_connection = torch.cat([pruned_connection] * levels, dim=0)
     return initialized_weight, pruned_connection
+
+
+def nested_dict_replacer(compound_dict, fn):
+    def _finditem(obj):
+        for k, v in obj.items():
+            if isinstance(v, dict):
+                _finditem(v)  # added return statement
+            else:
+                obj[k] = fn(v)
+
+    _finditem(compound_dict)
+    return compound_dict
