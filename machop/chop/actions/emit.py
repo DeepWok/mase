@@ -47,7 +47,6 @@ def emit(
     mg, _ = add_common_metadata_analysis_pass(
         mg, {"dummy_in": dummy_in, "add_value": False}
     )
-    mg, _ = add_hardware_metadata_analysis_pass(mg, None)
 
     # Temporary: quantizing the graph since mase only has fixed precision hardware components
     # In the future, either expect a pre-quantized mz checkpoint, or emit floating point components
@@ -75,6 +74,8 @@ def emit(
             if isinstance(result_info, dict):
                 result_info["type"] = "fixed"
                 result_info["precision"] = [8, 3]
+
+    mg, _ = add_hardware_metadata_analysis_pass(mg, None)
 
     # Now the fun stuff...
     mg, _ = emit_verilog_top_transform_pass(mg)
