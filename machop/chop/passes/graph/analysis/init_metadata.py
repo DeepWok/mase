@@ -17,5 +17,5 @@ def init_metadata_analysis_pass(graph, pass_args=None):
         node.meta["mase"] = MaseMetadata(node=node, model=graph.model)
 
     # Graph metadata
-    graph.fx_graph.meta = {"mase": MaseGraphMetadata(graph)}
+    graph.meta = {"mase": MaseGraphMetadata(graph)}
     return graph, {}
