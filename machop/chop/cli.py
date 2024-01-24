@@ -419,11 +419,27 @@ class ChopCLI:
         self.logger.info("Verilog emit is completed")
 
     def _run_simulate(self):
+        load_name = None
+        load_types = ["mz"]
+        if self.args.load_name is not None and self.args.load_type in load_types:
+            load_name = self.args.load_name
+
+        emit_params = {
+            "model": self.model,
+            "model_info": self.model_info,
+            "task": self.args.task,
+            "dataset_info": self.dataset_info,
+            "data_module": self.data_module,
+            "load_name": load_name,
+            "load_type": self.args.load_type,
+        }
+
         simulate_params = {
+            "run_emit": self.args.run_emit,
             "skip_build": self.args.skip_build,
             "skip_test": self.args.skip_test,
         }
-        simulate(**simulate_params)
+        simulate(**emit_params, **simulate_params)
         self.logger.info("Verilog simulation is completed")
 
     # Helpers --------------------------------------------------------------------------
@@ -719,6 +735,12 @@ class ChopCLI:
             type=int,
             help="number of FPGA devices. (default: %(default)s)",
             metavar="NUM",
+        )
+        hardware_group.add_argument(
+            "--run-emit",
+            dest="run_emit",
+            action="store_true",
+            help="",
         )
         hardware_group.add_argument(
             "--skip-build",
