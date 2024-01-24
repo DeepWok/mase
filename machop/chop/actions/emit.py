@@ -67,13 +67,11 @@ def emit(
 
     # TEMPORARY: Update the metadata (see https://github.com/jianyicheng/mase-tools/issues/502)
     for node in mg.fx_graph.nodes:
-        for arg, arg_info in node.meta["mase"].parameters["common"]["args"].items():
+        for arg, arg_info in node.meta["mase"]["common"]["args"].items():
             if isinstance(arg_info, dict):
                 arg_info["type"] = "fixed"
                 arg_info["precision"] = [8, 3]
-        for result, result_info in (
-            node.meta["mase"].parameters["common"]["results"].items()
-        ):
+        for result, result_info in node.meta["mase"]["common"]["results"].items():
             if isinstance(result_info, dict):
                 result_info["type"] = "fixed"
                 result_info["precision"] = [8, 3]
@@ -85,9 +83,3 @@ def emit(
     mg, _ = emit_internal_rtl_transform_pass(mg)
     mg, _ = emit_bram_transform_pass(mg)
     mg, _ = emit_cocotb_transform_pass(mg)
-
-    import dill
-
-    mg_dill = Path.home() / ".mase" / "masegraph.dill"
-    with open(mg_dill, "wb") as file:
-        dill.dump(mg, file)

@@ -176,5 +176,9 @@ class MaseGraph:
         return self.model.graph
 
     @property
+    def nodes(self):
+        return self.model.graph.nodes
+
+    @property
     def modules(self):
         return dict(self.model.named_modules())

@@ -9,6 +9,8 @@ from chop.passes.graph.analysis.utils import (
     is_tensor_constant,
     match_and_filter,
     is_seq_blocks_parameter,
+    get_input_nodes,
+    get_output_nodes,
 )
 from chop.passes.graph.common import (
     MASE_BUILTIN_FUNCS,
@@ -220,6 +222,34 @@ def graph_iterator_for_metadata(
     return graph
 
 
+def _add_graph_metadata(graph):
+    """
+    Register graph-level metadata
+    """
+    graph.meta["mase"]["common"] = {
+        "nodes_in": [],
+        "nodes_out": [],
+        "args": [],
+        "results": [],
+    }
+    graph.meta["mase"]["common"]["nodes_in"] = get_input_nodes(graph.fx_graph)
+    graph.meta["mase"]["common"]["nodes_out"] = get_output_nodes(graph.fx_graph)
+
+    graph.meta["mase"]["common"]["args"] = {}
+    for node in graph.meta["mase"]["common"]["nodes_in"]:
+        for arg, arg_info in node.meta["mase"]["common"]["args"].items():
+            if "data" in arg:
+                graph.meta["mase"]["common"]["args"][arg] = arg_info
+
+    graph.meta["mase"]["common"]["results"] = {}
+    for node in graph.meta["mase"]["common"]["nodes_out"]:
+        for result, result_info in node.meta["mase"]["common"]["results"].items():
+            if "data" in result:
+                graph.meta["mase"]["common"]["results"][result] = result_info
+
+    return graph
+
+
 def add_common_metadata_analysis_pass(
     graph, pass_args={"dummy_in": None, "add_value": True, "force_device_meta": False}
 ):
@@ -380,4 +410,5 @@ def add_common_metadata_analysis_pass(
     logger.debug(graph.fx_graph)
     graph = graph_iterator_for_mase_ops(graph)
     graph = graph_iterator_for_metadata(graph, **pass_args)
+    graph = _add_graph_metadata(graph)
     return graph, {}
