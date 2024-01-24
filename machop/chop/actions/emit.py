@@ -23,6 +23,8 @@ from ..passes.graph.transforms import (
 from ..tools.get_input import InputGenerator, get_cf_args, get_dummy_input
 from ..tools.config_load import load_config
 
+from pathlib import Path
+
 
 def emit(
     model: torch.nn.Module,
@@ -36,14 +38,15 @@ def emit(
     mg = MaseGraph(model=model)
     mg, _ = init_metadata_analysis_pass(mg, None)
 
-    data_module.prepare_data()
-    data_module.setup()
-    dummy_in = get_dummy_input(
-        model_info=model_info,
-        data_module=data_module,
-        task=task,
-        device="cpu",
-    )
+    # data_module.prepare_data()
+    # data_module.setup()
+    # dummy_in = get_dummy_input(
+    #     model_info=model_info,
+    #     data_module=data_module,
+    #     task=task,
+    #     device="cpu",
+    # )
+    dummy_in = {"x": torch.Tensor([[[[-0.2368, 0.4142], [0.6548, 0.6421]]]])}
     mg, _ = add_common_metadata_analysis_pass(
         mg, {"dummy_in": dummy_in, "add_value": False}
     )
@@ -82,3 +85,9 @@ def emit(
     mg, _ = emit_internal_rtl_transform_pass(mg)
     mg, _ = emit_bram_transform_pass(mg)
     mg, _ = emit_cocotb_transform_pass(mg)
+
+    import dill
+
+    mg_dill = Path.home() / ".mase" / "masegraph.dill"
+    with open(mg_dill, "wb") as file:
+        dill.dump(mg, file)

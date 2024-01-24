@@ -9,9 +9,10 @@ def simulate(skip_build: bool = False, skip_test: bool = False):
     SIM = getenv("SIM", "verilator")
     runner = get_runner(SIM)
 
+    project_dir = Path.home() / ".mase" / "top"
+
     if not skip_build:
         # To do: extract from mz checkpoint
-        project_dir = Path.home() / ".mase" / "top"
         sources = [
             project_dir / "hardware" / "rtl" / "top.sv",
         ]
@@ -36,8 +37,13 @@ def simulate(skip_build: bool = False, skip_test: bool = False):
         )
 
     if not skip_test:
+        # Add tb file to python path
+        import sys
+
+        sys.path.append(str(project_dir / "hardware" / "test"))
+
         runner.test(
-            hdl_toplevel="top", test_module="top_tb", hdl_toplevel_lang="verilog"
+            hdl_toplevel="top", test_module="mase_top_tb", hdl_toplevel_lang="verilog"
         )
-        num_tests, fail = get_results("build/results.xml")
-    return num_tests, fail
+    #     num_tests, fail = get_results("build/results.xml")
+    # return num_tests, fail
