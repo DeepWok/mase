@@ -83,9 +83,9 @@ module {node_param_name}_rom #(
   logic [DWIDTH-1:0] q0_t0;
   logic [DWIDTH-1:0] q0_t1;
 
-  initial begin
-    $readmemh("{data_name}", ram);
-  end
+  // initial begin
+  //   $readmemh("{data_name}", ram);
+  // end
 
   assign q0 = q0_t1;
 

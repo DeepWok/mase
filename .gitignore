@@ -37,6 +37,7 @@ __pycache__/
 # Distribution / packaging
 .Python
 build/
+sim_build/
 develop-eggs/
 dist/
 downloads/
@@ -138,3 +139,6 @@ venv.bak/
 
 # vscode
 .vscode
+
+# Data files for hardware simulation
+*.dat

@@ -36,6 +36,8 @@ from pathlib import Path
 from functools import partial
 
 import ipdb
+import cProfile
+import warnings
 
 # import pytorch_lightning as pl
 import lightning as pl
@@ -237,20 +239,40 @@ class ChopCLI:
         self.output_dir, self.output_dir_sw, self.output_dir_hw = self._setup_folders()
         self.visualizer = self._setup_visualizer()
 
+        if self.args.no_warnings:
+            # Disable all warnings
+            warnings.simplefilter("ignore")
+
     def run(self):
+        run_action_fn = None
         match self.args.action:
             case "transform":
-                self._run_transform()
+                run_action_fn = self._run_transform
             case "train":
-                self._run_train()
+                run_action_fn = self._run_train
             case "test":
-                self._run_test()
+                run_action_fn = self._run_test
             case "search":
-                self._run_search()
+                run_action_fn = self._run_search
             case "emit":
-                self._run_emit()
+                run_action_fn = self._run_emit
             case "simulate":
-                self._run_simulate()
+                run_action_fn = self._run_simulate
+
+        if run_action_fn is None:
+            raise ValueError(f"Unsupported action: {self.args.action}")
+
+        if self.args.profile:
+            prof = cProfile.runctx(
+                "run_action_fn()", globals(), locals(), sort="cumtime"
+            )
+            # import pstats
+            # from pstats import SortKey
+
+            # p = pstats.Stats(prof)
+            # p.sort_stats(SortKey.CUMULATIVE).print_stats(0.01)
+        else:
+            run_action_fn()
 
     # Actions --------------------------------------------------------------------------
     def _run_train(self):
@@ -701,11 +723,13 @@ class ChopCLI:
         hardware_group.add_argument(
             "--skip-build",
             dest="skip_build",
+            action="store_true",
             help="",
         )
         hardware_group.add_argument(
             "--skip-test",
             dest="skip_test",
+            action="store_true",
             help="",
         )
 
@@ -748,6 +772,18 @@ class ChopCLI:
                 (default: {MODEL-NAME}_{TASK-TYPE}_{DATASET-NAME}_{TIMESTAMP})
             """,
             metavar="NAME",
+        )
+        project_group.add_argument(
+            "--profile",
+            action="store_true",
+            dest="profile",
+            help="",
+        )
+        project_group.add_argument(
+            "--no-warnings",
+            action="store_true",
+            dest="no_warnings",
+            help="",
         )
 
         # Information flags ------------------------------------------------------------
