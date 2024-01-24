@@ -9,11 +9,11 @@ from .emit import emit
 
 
 def simulate(
-    model: torch.nn.Module,
-    model_info,
-    task: str,
-    dataset_info,
-    data_module,
+    model: torch.nn.Module = None,
+    model_info=None,
+    task: str = "",
+    dataset_info=None,
+    data_module=None,
     load_name: PathLike = None,
     load_type: str = None,
     run_emit: bool = False,
