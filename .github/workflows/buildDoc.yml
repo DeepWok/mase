@@ -40,6 +40,7 @@ jobs:
 
       - name: Build sphinx html
         run: |
+          export PYTHONPATH="${PATH}:$(pwd):$(pwd)/machop"
           cd machop/sphinx_docs
           make html 2>&1 | tee html.log
           ! grep -rn html.log -e "Error" || exit 1

@@ -110,7 +110,7 @@ def add_verilog_param(node):
                 if node.meta["mase"]["hardware"]["parallelism"] is not None:
                     vp[_cap(result + f"_parallelism_dim_{dim}")] = node.meta["mase"][
                         "hardware"
-                    ]["parallelism"][len(arg_info["shape"]) - 1 - dim]
+                    ]["parallelism"][len(result_info["shape"]) - 1 - dim]
                 else:
                     vp[_cap(result + f"_parallelism_dim_{dim}")] = (
                         result_info["shape"][len(result_info["shape"]) - 1 - dim]

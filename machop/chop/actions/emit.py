@@ -38,15 +38,14 @@ def emit(
     mg = MaseGraph(model=model)
     mg, _ = init_metadata_analysis_pass(mg, None)
 
-    # data_module.prepare_data()
-    # data_module.setup()
-    # dummy_in = get_dummy_input(
-    #     model_info=model_info,
-    #     data_module=data_module,
-    #     task=task,
-    #     device="cpu",
-    # )
-    dummy_in = {"x": torch.Tensor([[[[-0.2368, 0.4142], [0.6548, 0.6421]]]])}
+    data_module.prepare_data()
+    data_module.setup()
+    dummy_in = get_dummy_input(
+        model_info=model_info,
+        data_module=data_module,
+        task=task,
+        device="cpu",
+    )
     mg, _ = add_common_metadata_analysis_pass(
         mg, {"dummy_in": dummy_in, "add_value": False}
     )

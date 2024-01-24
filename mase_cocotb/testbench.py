@@ -44,6 +44,9 @@ class Testbench:
         for monitor in self.output_monitors:
             monitor.ready.value = 1
 
+    def generate_inputs(self, batches=1):
+        raise NotImplementedError
+
     def load_drivers(self, in_tensors):
         raise NotImplementedError
 
