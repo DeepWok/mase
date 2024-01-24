@@ -1,7 +1,10 @@
 import math, time, os, logging, torch, glob, shutil
 
 from chop.passes.graph.utils import vf, v2p, init_project
-from chop.passes.graph.transforms.quantize.quantizers import integer_quantizer_for_hw
+from chop.passes.graph.transforms.quantize.quantizers import (
+    integer_quantizer_for_hw,
+    integer_quantizer,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -18,34 +21,28 @@ import inspect
 
 @cocotb.test()
 async def test(dut):
+    from pathlib import Path
+    import dill
+    from cocotb.triggers import Timer
+
     tb_path = Path.home() / ".mase" / "top" / "hardware" / "test" / "mase_top_tb"
     with open(tb_path / "tb_obj.dill", "rb") as f:
         tb = dill.load(f)(dut)
 
-    await tb.reset()
-    tb.output_monitor.ready.value = 1
-    inputs = tb.generate_inputs()
-    exp_out = tb.model(inputs)
+    tb.initialize()
 
-    # To do: replace with tb.load_drivers(inputs)
-    for i in inputs[0]:
-        tb.data_in_0_driver.append(i)
+    in_tensors = tb.generate_inputs(batches=3)
+    exp_out = tb.model(*list(in_tensors.values()))
 
-    # To do: replace with tb.load_monitors(exp_out)
-    for out in exp_out:
-        tb.data_out_0_monitor.expect(out)
+    tb.load_drivers(in_tensors)
+    tb.load_monitors(exp_out)
 
-    # To do: replace with tb.run()
     await Timer(100, units="us")
-    # To do: replace with tb.monitors_done() --> for monitor, call monitor_done()
-    assert tb.data_out_0_monitor.exp_queue.empty()
 
 
 def _emit_cocotb_test(graph):
     test_template = f"""
 import cocotb
-from pathlib import Path
-import dill
 
 {inspect.getsource(test)}
 """
@@ -57,50 +54,81 @@ import dill
 
 
 def _emit_cocotb_tb(graph):
-    class ModelTB(Testbench):
+    class MaseGraphTB(Testbench):
         def __init__(self, dut):
             super().__init__(dut, dut.clk, dut.rst)
-            # Assign module parameters from parameter map
-            # self.assign_self_params([])
 
-            # Instantiate as many drivers as required inputs
-            self.input_driver = [
-                StreamDriver(
-                    dut.clk, dut.data_in_0, dut.data_in_0_valid, dut.data_in_0_ready
+            # Instantiate as many drivers as required inputs to the model
+            for arg in graph.meta["mase"]["common"]["args"].keys():
+                self.input_drivers.append(
+                    StreamDriver(
+                        dut.clk,
+                        getattr(dut, arg),
+                        getattr(dut, f"{arg}_valid"),
+                        getattr(dut, f"{arg}_ready"),
+                    )
                 )
-            ]
 
             # Instantiate as many monitors as required outputs
-            self.output_monitor = [
-                StreamMonitor(
-                    dut.clk, dut.data_out_0, dut.data_out_0_valid, dut.data_out_0_ready
+            for result in graph.meta["mase"]["common"]["results"].keys():
+                self.output_monitors.append(
+                    StreamMonitor(
+                        dut.clk,
+                        getattr(dut, result),
+                        getattr(dut, f"{result}_valid"),
+                        getattr(dut, f"{result}_ready"),
+                    )
                 )
+
+            self.model = graph.model
+
+            # To do: precision per input argument
+            self.input_precision = graph.meta["mase"]["common"]["args"]["data_in_0"][
+                "precision"
             ]
 
-        def get_random_tensor(self, shape):
-            # Generate random tensors of the appropriate shape
-            return torch.rand(shape)
+        def generate_inputs(self, batches):
+            """
+            Generate inputs for the model by sampling a random tensor
+            for each input argument, according to its shape
 
-        def generate_inputs(self):
-            # Generate inputs for as many streaming interfaces as required
+            :param batches: number of batches to generate for each argument
+            :type batches: int
+            :return: a dictionary of input arguments and their corresponding tensors
+            :rtype: Dict
+            """
+            inputs = {}
+            for arg, arg_info in graph.meta["mase"]["common"]["args"].items():
+                # Batch dimension always set to 1 in metadata
+                inputs[arg] = torch.rand(([batches] + arg_info["shape"][1:]))
+            return inputs
 
-            # For every input to the model, generate random tensor according to its shape
-            inputs = []
-            inputs += self.torch.rand((1, 4))
+        def load_drivers(self, in_tensors):
+            for arg_idx, arg_batches in enumerate(in_tensors.values()):
+                # Quantize input tensor according to precision
+                if len(self.input_precision) > 1:
+                    arg_batches = integer_quantizer(
+                        arg_batches,
+                        width=self.input_precision[0],
+                        frac_width=self.input_precision[1],
+                    )
+                    # Convert to integer equivalent of fixed point representation
+                    arg_batches = (
+                        (arg_batches * (2 ** self.input_precision[1])).int().tolist()
+                    )
+                else:
+                    # TO DO: convert to integer equivalent of floating point representation
+                    pass
 
-            # Quantize each input tensor to required precision
-            quantized_inputs = []
-            quantized_inputs += quantize_to_int(data_in_0_inputs)
+                # Append to input driver
+                for batch in arg_batches:
+                    self.input_drivers[arg_idx].append(batch)
 
-            return inputs, quantized_inputs
-
-        def model(self, inputs):
-            # Run the model with the provided inputs and return the outputs
-            out = graph.model(inputs)
-            return out
+        def load_monitors(self, expectation):
+            self.output_monitors[-1].expect(expectation.tolist())
 
     # Serialize testbench object to be instantiated within test by cocotb runner
-    cls_obj = ModelTB
+    cls_obj = MaseGraphTB
     tb_path = Path.home() / ".mase" / "top" / "hardware" / "test" / "mase_top_tb"
     tb_path.mkdir(parents=True, exist_ok=True)
     with open(tb_path / "tb_obj.dill", "wb") as file:
