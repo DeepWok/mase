@@ -9,6 +9,13 @@ class Testbench:
         self.clk = clk
         self.rst = rst
 
+        self.input_drivers = []
+        self.output_monitors = []
+
+        self.model = None
+
+        self.input_precision = [32]
+
         if self.clk != None:
             self.clock = Clock(self.clk, 20, units="ns")
             cocotb.start_soon(self.clock.start())
@@ -29,3 +36,16 @@ class Testbench:
         await RisingEdge(self.clk)
         self.rst.value = 0 if active_high else 1
         await RisingEdge(self.clk)
+
+    async def initialize(self):
+        await self.reset()
+
+        # Set all monitors ready
+        for monitor in self.output_monitors:
+            monitor.ready.value = 1
+
+    def load_drivers(self, in_tensors):
+        raise NotImplementedError
+
+    def load_monitors(self, expectation):
+        raise NotImplementedError

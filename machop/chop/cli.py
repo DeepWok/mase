@@ -266,11 +266,6 @@ class ChopCLI:
             prof = cProfile.runctx(
                 "run_action_fn()", globals(), locals(), sort="cumtime"
             )
-            # import pstats
-            # from pstats import SortKey
-
-            # p = pstats.Stats(prof)
-            # p.sort_stats(SortKey.CUMULATIVE).print_stats(0.01)
         else:
             run_action_fn()
 
