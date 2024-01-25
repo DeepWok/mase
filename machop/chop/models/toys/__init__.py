@@ -1,7 +1,13 @@
 import torch.nn as nn
 from ..utils import MaseModelInfo
 from .toy_custom_fn import get_toyfnnet
-from .toy import get_toy_tiny, get_toynet, get_toy_testmodel, get_toy_convnet
+from .toy import (
+    get_toy_tiny,
+    get_toynet,
+    get_toy_testmodel,
+    get_toy_convnet,
+    get_toy_emit,
+)
 
 TOY_MODELS = {
     "toy_tiny": {
@@ -48,6 +54,16 @@ TOY_MODELS = {
         "model": get_toy_testmodel,
         "info": MaseModelInfo(
             "toy_testmodel",
+            model_source="toy",
+            task_type="vision",
+            image_classification=True,
+            is_fx_traceable=True,
+        ),
+    },
+    "toy_emit": {
+        "model": get_toy_emit,
+        "info": MaseModelInfo(
+            "toy_emit",
             model_source="toy",
             task_type="vision",
             image_classification=True,
