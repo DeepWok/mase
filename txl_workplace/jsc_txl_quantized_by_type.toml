@@ -10,7 +10,7 @@ accelerator = "cpu"
 project = "jsc-txl"
 seed = 42
 log_every_n_steps = 5
- load_name = "/mnt/c/workplace/projects/ADLS/mase/mase_output/jsc-txl_classification_jsc_2024-01-25/software/training_ckpts/best-v2.ckpt"
+ load_name = "/mnt/d/project_files/Python/mase/mase_output/jsc-txl_classification_jsc_2024-01-22/software/training_ckpts/best.ckpt"
  load_type = "pl"
 
 [passes.quantize]

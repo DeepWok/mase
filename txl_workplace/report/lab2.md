@@ -70,7 +70,8 @@ class _LinearBase(torch.nn.Linear):
 
 ### Q7. Load your own pre-trained JSC network, and perform the quantisation using the command line interface.
 ```shell
-CUDA_VISIBLE_DEVICES=-1 ./machop/ch transform --config ./machop/cache/jsc_txl_quantized_by_type.toml --task cls --cpu=0
+CUDA_VISIBLE_DEVICES=-1 ./machop/ch transform --config ./txl_workplace/jsc_txl_quantized_by_type.toml --task cls --cpu=0
+# remember that the load-name config need to be adjusted
 ```
 ```toml
 # jsc_txl_quantized_by_type.toml
