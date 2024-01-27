@@ -69,8 +69,11 @@ mg, _ = add_software_metadata_analysis_pass(mg, None)
 
 # task 1
 # report graph is an analysis pass that shows you the detailed information in the graph
-# from chop.passes.graph import report_graph_analysis_pass
-# _ = report_graph_analysis_pass(mg)
+from chop.passes.graph import report_graph_analysis_pass
+_ = report_graph_analysis_pass(mg)
+import json
+for node in mg.fx_graph.nodes:
+    print(node.meta)
 
 # task 2
 # pass_args = {
