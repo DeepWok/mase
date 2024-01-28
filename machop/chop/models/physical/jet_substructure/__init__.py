@@ -146,3 +146,7 @@ def get_jsc_tiny(info):
 
 def get_jsc_s(info):
     return JSC_S(info)
+
+
+def get_jsc_ziyun_lab1(info):
+    return JSC_ziyun_lab1(info)

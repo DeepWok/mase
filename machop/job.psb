@@ -1,0 +1,10 @@
+#!/bin/bash
+#PBS -lselect=1:ncpus=8:mem=800gb:ngpus=1
+#PBS -lwalltime=1:20:00
+  
+cd $PBS_O_WORKDIR
+  
+module load anaconda3/personal
+source activate  mase
+  
+./ch train jsc-tiny jsc --max-epochs 10 --batch-size 32

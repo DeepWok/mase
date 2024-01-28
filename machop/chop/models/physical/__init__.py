@@ -33,6 +33,17 @@ PHYSICAL_MODELS = {
             is_fx_traceable=True,
         ),
     },
+
+        "jsc-ziyun-lab1": {
+        "model": get_jsc_ziyun_lab1,
+        "info": MaseModelInfo(
+            "jsc-s",
+            model_source="physical",
+            task_type="physical",
+            physical_data_point_classification=True,
+            is_fx_traceable=True,
+        ),
+    },
 }
 
 
