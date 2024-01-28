@@ -51,14 +51,6 @@ class JSC_ziyun_lab1(nn.Module):
             nn.BatchNorm1d(64),  # 6
             nn.ReLU(64),  # 7
 
-            nn.Linear(64, 128),  # 5
-            nn.BatchNorm1d(128),  # 6
-            nn.ReLU(128),  # 7
-
-
-            nn.Linear(128, 64),  # 5
-            nn.BatchNorm1d(64),  # 6
-            nn.ReLU(64),  # 7
 
             nn.Linear(64, 32),  # 5
             nn.BatchNorm1d(32),  # 6
