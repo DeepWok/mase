@@ -20,10 +20,59 @@ class JSC_Toy(nn.Module):
             nn.BatchNorm1d(8),  # 6
             nn.ReLU(8),  # 7
             # 3rd LogicNets Layer
-            nn.Linear(8, 6),  # 8
-            nn.BatchNorm1d(6),  # 9
-            nn.ReLU(6),
-            nn.Linear(6, 5),  # 8
+            nn.Linear(8, 5),  # 8
+            nn.BatchNorm1d(5),  # 9
+            nn.ReLU(5),
+        )
+
+    def forward(self, x):
+        return self.seq_blocks(x)
+    
+
+
+class JSC_ziyun_lab1(nn.Module):
+    def __init__(self, info):
+        super(JSC_Toy, self).__init__()
+        self.seq_blocks = nn.Sequential(
+            # 1st LogicNets Layer
+            nn.BatchNorm1d(16),  # input_quant       # 0
+            nn.ReLU(16),  # 1
+            nn.Linear(16, 12),  # linear              # 2
+            nn.BatchNorm1d(12),  # output_quant       # 3
+            nn.ReLU(12),  # 4
+
+
+            nn.Linear(12, 32),  # 5
+            nn.BatchNorm1d(32),  # 6
+            nn.ReLU(32),  # 7
+
+
+            nn.Linear(32, 64),  # 5
+            nn.BatchNorm1d(64),  # 6
+            nn.ReLU(64),  # 7
+
+            nn.Linear(64, 128),  # 5
+            nn.BatchNorm1d(128),  # 6
+            nn.ReLU(128),  # 7
+
+
+            nn.Linear(128, 64),  # 5
+            nn.BatchNorm1d(64),  # 6
+            nn.ReLU(64),  # 7
+
+            nn.Linear(64, 32),  # 5
+            nn.BatchNorm1d(32),  # 6
+            nn.ReLU(32),  # 7
+
+            nn.Linear(32, 12),  # 5
+            nn.BatchNorm1d(12),  # 6
+            nn.ReLU(12),  # 7
+
+            nn.Linear(12, 8),  # 5
+            nn.BatchNorm1d(8),  # 6
+            nn.ReLU(8),  # 7
+
+            nn.Linear(8, 5),  # 8
             nn.BatchNorm1d(5),  # 9
             nn.ReLU(5),
         )
