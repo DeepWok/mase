@@ -279,7 +279,7 @@ Similar to the model definitions, all datasets are defined in the [\_\_init__.py
 
 Now you are familiar with different components in the tool.
 
-4. Implement a network that has in total around 10x more parameters than the toy network.
+4. Implement a network that has in total around 10x more parameters than the `jsc-tiny` network.
 5. Test your implementation and evaluate its performance.
 
 
