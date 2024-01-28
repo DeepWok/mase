@@ -20,7 +20,10 @@ class JSC_Toy(nn.Module):
             nn.BatchNorm1d(8),  # 6
             nn.ReLU(8),  # 7
             # 3rd LogicNets Layer
-            nn.Linear(8, 5),  # 8
+            nn.Linear(8, 6),  # 8
+            nn.BatchNorm1d(6),  # 9
+            nn.ReLU(6),
+            nn.Linear(6, 5),  # 8
             nn.BatchNorm1d(5),  # 9
             nn.ReLU(5),
         )
