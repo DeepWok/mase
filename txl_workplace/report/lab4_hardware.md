@@ -1,5 +1,5 @@
 # Lab4
-### Q1. Read <a href=https://jianyicheng.github.io/mase-tools/modules/analysis/add_metadata.html#add-hardware-metadata-analysis-pass>this page</a> for more information on the hardware metadata pass. Why we have such a metadata setup? How is this different from the software metadata?
+### Q1. Read [this page](https://jianyicheng.github.io/mase-tools/modules/analysis/add_metadata.html#add-hardware-metadata-analysis-pass) for more information on the hardware metadata pass. Why we have such a metadata setup? How is this different from the software metadata?
 The hardware metadata is set up for auto verilog code generation and analysis passes. Key information required for verilog code generation is recorded.
 
     - software: dict
