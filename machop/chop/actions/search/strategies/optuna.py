@@ -101,8 +101,6 @@ class SearchStrategyOptuna(SearchStrategyBase):
         metrics = software_metrics | hardware_metrics
         scaled_metrics = {}
         for metric_name in self.metric_names:
-            if metric_name == 'average_bitwidth':
-                continue
             scaled_metrics[metric_name] = (
                 self.config["metrics"][metric_name]["scale"] * metrics[metric_name]
             )

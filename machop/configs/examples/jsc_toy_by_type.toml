@@ -78,8 +78,8 @@ sampler = "tpe"
 sum_scaled_metrics = false # multi objective
 
 [search.strategy.metrics]
-# loss.scale = 1.0
-# loss.direction = "minimize"
+ loss.scale = 1.0
+ loss.direction = "minimize"
 accuracy.scale = 1.0
 accuracy.direction = "maximize"
 average_bitwidth.scale = 0.2

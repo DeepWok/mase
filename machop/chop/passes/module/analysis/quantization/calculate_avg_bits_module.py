@@ -37,7 +37,6 @@ def calculate_avg_bits_module_analysis_pass(
             "No quantized layers found in the model, set average_bitwidth to 32"
         )
         return_info |= {"average_bitwidth": 32}
-        return module, return_info
     else:
         return_info |= {"average_bitwidth": weight_bits / weights_size}
-        return module, return_info
+    return module, return_info
