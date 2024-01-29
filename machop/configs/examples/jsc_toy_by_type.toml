@@ -10,7 +10,8 @@ accelerator = "cpu"
 project = "jsc-tiny"
 seed = 42
 log_every_n_steps = 5
-load_name = "/mnt/c/workplace/projects/ADLS/mase/mase_output/jsc-tiny_classification_jsc_2024-01-25/software/training_ckpts/best.ckpt"
+#load_name = "/mnt/c/workplace/projects/ADLS/mase/mase_output/jsc-tiny_classification_jsc_2024-01-25/software/training_ckpts/best.ckpt"
+load_name = "/mnt/d/project_files/Python/mase/mase_output/jsc-tiny_classification_jsc_2024-01-19/software/training_ckpts/best.ckpt"
 load_type = "pl"
 
 [passes.quantize]
