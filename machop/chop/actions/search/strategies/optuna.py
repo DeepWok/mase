@@ -87,6 +87,8 @@ class SearchStrategyOptuna(SearchStrategyBase):
         else:
             for name, length in search_space.choice_lengths_flattened.items():
                 sampled_indexes[name] = trial.suggest_int(name, 0, length - 1)
+                # if length > 1:
+                #     print(name, sampled_indexes[name]+1)
             sampled_config = search_space.flattened_indexes_to_config(sampled_indexes)
 
         is_eval_mode = self.config.get("eval_mode", True)
@@ -115,6 +117,7 @@ class SearchStrategyOptuna(SearchStrategyBase):
         if not self.sum_scaled_metrics:
             return list(scaled_metrics.values())
         else:
+            print(sum(scaled_metrics.values()))
             return sum(scaled_metrics.values())
 
     def search(self, search_space) -> optuna.study.Study:
