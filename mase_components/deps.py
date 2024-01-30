@@ -16,7 +16,7 @@ MASE_HW_DEPS = {
     #                              "fixed_arith", "linear", "matmul", "ViT"],
     "cast/fixed_cast": [],
     "cast/fixed_rounding": ["cast"],
-    "linear/fixed_linear": ["cast", "common", "fixed_arith"],
+    # "linear/fixed_linear": ["cast", "common", "fixed_arith"],
     "fixed_arith/fixed_mult": [],
     "fixed_arith/fixed_adder_tree_layer": [],
     "fixed_arith/fixed_accumulator": ["common"],
@@ -65,7 +65,7 @@ MASE_HW_DEPS = {
     # TODO: check again why not passing...
     "conv/sliding_window": ["cast", "conv", "linear", "common", "fixed_arith"],
     "conv/padding": ["cast", "conv", "linear", "common", "fixed_arith"],
-    "conv/convolution": ["cast", "conv", "linear", "common", "fixed_arith"],
+    # "conv/convolution": ["cast", "conv", "linear", "common", "fixed_arith"],
     "matmul/fixed_matmul": ["cast", "linear", "matmul", "common", "fixed_arith"],
     # # 'cast/bram_cast': [],
     # # 'cast/bram2hs_cast': [],

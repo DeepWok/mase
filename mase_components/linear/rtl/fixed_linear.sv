@@ -32,14 +32,14 @@ module fixed_linear #(
     parameter DATA_OUT_0_PRECISION_1 = DATA_IN_0_PRECISION_1 + WEIGHT_PRECISION_1,
     parameter DATA_OUT_0_TENSOR_SIZE_DIM_0 = 4,
     parameter DATA_OUT_0_TENSOR_SIZE_DIM_1 = 1,
-    parameter DATA_OUT_0_PARALLELISM_DIM_0 = DATA_IN_0_PARALLELISM_DIM_0,
+    parameter DATA_OUT_0_PARALLELISM_DIM_0 = WEIGHT_PARALLELISM_DIM_0,
     parameter DATA_OUT_0_PARALLELISM_DIM_1 = 1,
 
     parameter BIAS_PRECISION_0 = 16,
     parameter BIAS_PRECISION_1 = 3,
     parameter BIAS_TENSOR_SIZE_DIM_0 = DATA_OUT_0_TENSOR_SIZE_DIM_0,
     parameter BIAS_TENSOR_SIZE_DIM_1 = 1,
-    parameter BIAS_PARALLELISM_DIM_0 = 4,
+    parameter BIAS_PARALLELISM_DIM_0 = 1,
     parameter BIAS_PARALLELISM_DIM_1 = 1
 
 ) (
@@ -57,7 +57,7 @@ module fixed_linear #(
     output weight_ready,
 
     /* verilator lint_off UNUSEDSIGNAL */
-    input [BIAS_PRECISION_0-1:0] bias[BIAS_PARALLELISM_DIM_0 * DATA_IN_0_PARALLELISM_DIM_0-1:0],
+    input [BIAS_PRECISION_0-1:0] bias[BIAS_PARALLELISM_DIM_0 * DATA_OUT_0_PARALLELISM_DIM_0-1:0],
     input bias_valid,
     /* verilator lint_on UNUSEDSIGNAL */
     output bias_ready,

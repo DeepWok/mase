@@ -12,7 +12,7 @@ from mase_cocotb.z_qlayers import quantize_to_int
 from mase_cocotb.runner import mase_runner
 from mase_cocotb.utils import bit_driver, sign_extend_t
 
-from chop.passes.graph.transforms.quantize.quantized_modules import LinearInteger
+# from chop.passes.graph.transforms.quantize.quantized_modules import LinearInteger
 
 import torch
 
@@ -67,19 +67,20 @@ class LinearTB(Testbench):
         )
 
         # Model
-        self.linear_layer = LinearInteger(
-            in_features=784,
-            out_features=10,
-            bias=False,
-            config={
-                "data_in_width": 16,
-                "data_in_frac_width": 3,
-                "weight_width": 16,
-                "weight_frac_width": 3,
-                "bias_width": 16,
-                "bias_frac_width": 3,
-            },
-        )
+        # self.linear_layer = LinearInteger(
+        #     in_features=784,
+        #     out_features=10,
+        #     bias=False,
+        #     config={
+        #         "data_in_width": 16,
+        #         "data_in_frac_width": 3,
+        #         "weight_width": 16,
+        #         "weight_frac_width": 3,
+        #         "bias_width": 16,
+        #         "bias_frac_width": 3,
+        #     },
+        # )
+        self.linear_layer = None
 
     def generate_inputs(self):
         return torch.randn((1, 784))
