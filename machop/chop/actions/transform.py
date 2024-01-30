@@ -44,6 +44,7 @@ def transform(
     load_type: str = None,
 ):
     model = pre_transform_load(load_name=load_name, load_type=load_type, model=model)
+    model.to(device)
     config = load_config(config)
     save_dir = Path(save_dir)
     save_dir.mkdir(parents=True, exist_ok=True)
