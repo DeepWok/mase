@@ -115,7 +115,7 @@ class JSC_Three_Linear_Layers(nn.Module):
     ![result of Q3](img/lab4_soft_q3.png)
 
 ### Q4. Integrate the search to the <u>chop</u> flow, so we can run it from the command line.
-- Self defined [TXLSearchSpaceChannelMultiplier](machop/chop/actions/search/search_space/channel_multiplier/graph.py) is inherited form **SearchSpaceBase**
-- [.toml](txl_workplace/lab4_search_channel_multiplier.toml) file is configured
-- Both self defined BF search implemented in [Lab3](txl_workplace/report/lab3.md) and optuna engine in mase can be applied to this channel multiplier search space
+- Self defined [TXLSearchSpaceChannelMultiplier](../../machop/chop/actions/search/search_space/channel_multiplier/graph.py) is inherited form **SearchSpaceBase**
+- [.toml](../lab4_search_channel_multiplier.toml) file is configured
+- Both self defined BF search implemented in [Lab3](lab3.md) and optuna engine in mase can be applied to this channel multiplier search space
 ![terminal output](img/lab4_soft_q4.png)

@@ -60,6 +60,6 @@ class JSC_TXL(nn.Module):
 
 ### Q5. Test your implementation and evaluate its performance.
 * Training process
-<br><img src="img/lab1_q5_train.png" width=50% alt="Training process">
+<br>![Training process](img/lab1_q5_train.png)
 * Test result
-<br><img src="img/lab1_q5_test.png" width=20% alt="performance on test set">
+<br>![performance on test set](img/lab1_q5_test.png)
