@@ -76,15 +76,20 @@ module fixed_matmul_core #(
     logic [CAST_WIDTH-1:0] fmm_data_out[IN2_PARALLELISM - 1:0];
     logic fmm_data_out_ready;
     fixed_linear #(
-        .IN_0_WIDTH(IN1_WIDTH),
-        .IN_0_FRAC_WIDTH(IN1_FRAC_WIDTH),
-        .IN_0_SIZE(IN_SIZE),
+        .DATA_IN_0_PRECISION_0(IN1_WIDTH),
+        .DATA_IN_0_PRECISION_1(IN1_FRAC_WIDTH),
+        .DATA_IN_0_PARALLELISM_DIM_0(IN_SIZE),
         .IN_0_DEPTH(IN_DEPTH),
-        .WEIGHT_WIDTH(IN2_WIDTH),
-        .WEIGHT_FRAC_WIDTH(IN2_FRAC_WIDTH),
-        .BIAS_WIDTH(BIAS_WIDTH),
-        .BIAS_FRAC_WIDTH(BIAS_FRAC_WIDTH),
-        .PARALLELISM(IN2_PARALLELISM),
+
+        .WEIGHT_PRECISION_0(IN2_WIDTH),
+        .WEIGHT_PRECISION_1(IN2_FRAC_WIDTH),
+        .WEIGHT_PARALLELISM_DIM_0(IN2_PARALLELISM),
+
+        .BIAS_PRECISION_0(BIAS_WIDTH),
+        .BIAS_PRECISION_1(BIAS_FRAC_WIDTH),
+
+        .DATA_OUT_0_PRECISION_0(CAST_WIDTH),
+
         .HAS_BIAS(HAS_BIAS)
         /* verilator lint_off PINMISSING */
     ) fl_instance (
