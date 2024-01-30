@@ -1,6 +1,7 @@
 """
 Profiler is expected to be rewritten as interpreter passes.
 """
+
 from collections import defaultdict
 from typing import Any, Dict, Iterator, List, Optional, Tuple, Union
 

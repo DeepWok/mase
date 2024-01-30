@@ -19,6 +19,7 @@ from chop.passes.graph.utils import deepcopy_mase_graph
 from chop.tools.checkpoint_load import load_model
 from chop.tools.config_load import load_config
 from chop.tools.get_input import InputGenerator, get_cf_args, get_dummy_input
+from chop.tools.utils import device
 
 logger = logging.getLogger(__name__)
 
