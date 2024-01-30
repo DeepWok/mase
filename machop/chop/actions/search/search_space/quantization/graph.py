@@ -55,12 +55,11 @@ class GraphSearchSpaceMixedPrecisionPTQ(SearchSpaceBase):
         if self.mg is None:
             assert self.model_info.is_fx_traceable, "Model must be fx traceable"
             mg = MaseGraph(self.model)
-            mg, _ = init_metadata_analysis_pass(mg, None)
-            mg, _ = add_common_metadata_analysis_pass(
-                mg, {"dummy_in": self.dummy_input, "force_device_meta": False})
+            mg = init_metadata_analysis_pass(mg, None)
+            mg = add_common_metadata_analysis_pass(mg, self.dummy_input)
             self.mg = mg
         if sampled_config is not None:
-            mg, _ = quantize_transform_pass(self.mg, sampled_config)
+            mg = quantize_transform_pass(self.mg, sampled_config)
         mg.model.to(self.accelerator)
         return mg
 
