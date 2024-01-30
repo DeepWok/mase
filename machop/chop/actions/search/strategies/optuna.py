@@ -117,7 +117,7 @@ class SearchStrategyOptuna(SearchStrategyBase):
         if not self.sum_scaled_metrics:
             return list(scaled_metrics.values())
         else:
-            print(sum(scaled_metrics.values()))
+            # print(sum(scaled_metrics.values()))
             return sum(scaled_metrics.values())
 
     def search(self, search_space) -> optuna.study.Study:

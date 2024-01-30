@@ -1,5 +1,5 @@
 # basics
-model = "jsc-tiny"
+model = "jsc-toy"
 dataset = "jsc"
 task = "cls"
 
@@ -7,25 +7,12 @@ max_epochs = 5
 batch_size = 512
 learning_rate = 1e-2
 accelerator = "cpu"
-project = "jsc-tiny"
+project = "jsc-toy-search"
 seed = 42
 log_every_n_steps = 5
-#load_name = "/mnt/c/workplace/projects/ADLS/mase/mase_output/jsc-tiny_classification_jsc_2024-01-25/software/training_ckpts/best.ckpt"
-load_name = "/mnt/d/project_files/Python/mase/mase_output/jsc-tiny_classification_jsc_2024-01-19/software/training_ckpts/best.ckpt"
+load_name = "/mnt/c/workplace/projects/ADLS/mase/mase_output/jsc-toy_classification_jsc_2024-01-30/software/training_ckpts/best.ckpt"
+#load_name = "/mnt/d/project_files/Python/mase/mase_output/jsc-tiny_classification_jsc_2024-01-19/software/training_ckpts/best.ckpt"
 load_type = "pl"
-
-[passes.quantize]
-by = "type"
-[passes.quantize.default.config]
-name = "NA"
-[passes.quantize.linear.config]
-name = "integer"
-"data_in_width" = 8
-"data_in_frac_width" = 4
-"weight_width" = 8
-"weight_frac_width" = 4
-"bias_width" = 8
-"bias_frac_width" = 4
 
 [search.search_space]
 name = "channel_multiplier_search"
@@ -38,13 +25,28 @@ name = "channel_multiplier_search"
 name = ["NA"]
 
 [search.search_space.seed.seq_blocks_2.config]
+name = ["output_only"]
+channel_multiplier = [1, 2, 4]
+
+[search.search_space.seed.seq_blocks_3.config]
+prev_link = ["seq_blocks_2"]
+
+[search.search_space.seed.seq_blocks_5.config]
 name = ["both"]
-input_channel_multiplier = [1, 2, 4]
-output_channel_multiplier = [1, 2, 4]
+prev_link = ["seq_blocks_2"]
+channel_multiplier = [1, 2, 4]
+
+[search.search_space.seed.seq_blocks_6.config]
+prev_link = ["seq_blocks_5"]
+
+[search.search_space.seed.seq_blocks_8.config]
+name = ["input_only"]
+prev_link = ["seq_blocks_5"]
+
 
 [search.strategy]
-name = "txl_bf"
-#name = "optuna"
+#name = "txl_bf"
+name = "optuna"
 eval_mode = true
 
 [search.strategy.sw_runner.basic_evaluation]
@@ -56,7 +58,7 @@ compare_to = 32 # compare to FP32
 
 [search.strategy.setup]
 n_jobs = 1
-n_trials = 48
+n_trials = 20
 timeout = 20000
 sampler = "tpe"
 sum_scaled_metrics = true # single objective
@@ -64,9 +66,9 @@ direction = "maximize"
 #sum_scaled_metrics = false # multi objective
 
 [search.strategy.metrics]
-#loss.scale = -0.5
+#loss.scale = 1.0
 #loss.direction = "minimize"
-accuracy.scale = 2.0
+accuracy.scale = 1.0
 accuracy.direction = "maximize"
-average_bitwidth.scale = -0.1
-average_bitwidth.direction = "minimize"
+#average_bitwidth.scale = -0.1
+#average_bitwidth.direction = "minimize"

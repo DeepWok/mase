@@ -25,6 +25,9 @@ from chop.tools.get_input import InputGenerator
 from chop.ir.graph.mase_graph import MaseGraph
 
 from chop.models import get_model_info, get_model
+from chop.passes.graph.utils import get_node_actual_target
+
+from copy import deepcopy
 
 set_logging_verbosity("info")
 
@@ -108,32 +111,42 @@ def instantiate_linear(in_features, out_features, bias):
         out_features=out_features,
         bias=bias)
 
-def redefine_linear_transform_pass(graph, pass_args=None):
+def redefine_linear_transform_pass(ori_graph, pass_args=None):
+    # return a copy of origin graph, otherwise the number of channels will keep growing
+    graph = deepcopy(ori_graph)
     main_config = pass_args.pop('config')
     default = main_config.pop('default', None)
     if default is None:
         raise ValueError(f"default value must be provided.")
-    i = 0
     for node in graph.fx_graph.nodes:
-        i += 1
         # if node name is not matched, it won't be tracked
         config = main_config.get(node.name, default)['config']
-        name = config.get("name", None)
-        if name is not None:
-            ori_module = graph.modules[node.target]
-            in_features = ori_module.in_features
-            out_features = ori_module.out_features
-            bias = ori_module.bias
-            if name == "output_only":
-                out_features = out_features * config["output_channel_multiplier"]
-            elif name == "both":
-                in_features = in_features * config["input_channel_multiplier"]
-                out_features = out_features * config["output_channel_multiplier"]
-            elif name == "input_only":
-                in_features = in_features * config["input_channel_multiplier"]
-            new_module = instantiate_linear(in_features, out_features, bias)
-            parent_name, name = get_parent_name(node.target)
-            setattr(graph.modules[parent_name], name, new_module)
+        if isinstance(get_node_actual_target(node), nn.Linear):
+            name = config.get("name", None)
+            if name is not None:
+                ori_module = graph.modules[node.target]
+                in_features = ori_module.in_features
+                out_features = ori_module.out_features
+                bias = ori_module.bias
+                if name == "output_only":
+                    out_features = out_features * config["channel_multiplier"]
+                elif name == "both":
+                    in_features = in_features * main_config.get(config['prev_link'], default)['config']["channel_multiplier"]
+                    out_features = out_features * config["channel_multiplier"]
+                elif name == "input_only":
+                    in_features = in_features * main_config.get(config['prev_link'], default)['config']["channel_multiplier"]
+                new_module = instantiate_linear(in_features, out_features, bias)
+                parent_name, name = get_parent_name(node.target)
+                setattr(graph.modules[parent_name], name, new_module)
+        elif isinstance(get_node_actual_target(node), nn.BatchNorm1d):
+            prev_link = config.get("prev_link", None)
+            if prev_link is not None:
+                ori_module = graph.modules[node.target]
+                num_features, eps, momentum, affine = ori_module.num_features, ori_module.eps, ori_module.momentum, ori_module.affine
+                num_features = num_features * main_config.get(prev_link, default)['config']["channel_multiplier"]
+                new_module = nn.BatchNorm1d(num_features, eps, momentum, affine)
+                parent_name, name = get_parent_name(node.target)
+                setattr(graph.modules[parent_name], name, new_module)
     return graph, {}
 
 
@@ -145,20 +158,20 @@ pass_config = {
     "config": {
         "name": "output_only",
         # weight
-        "output_channel_multiplier": 2,
+        "channel_multiplier": 2,
         }
     },
 "seq_blocks_4": {
     "config": {
         "name": "both",
-        "input_channel_multiplier": 2,
-        "output_channel_multiplier": 2,
+        "prev_link": "seq_blocks_2",
+        "channel_multiplier": 2,
         }
     },
 "seq_blocks_6": {
     "config": {
         "name": "input_only",
-        "input_channel_multiplier": 2,
+        "prev_link": "seq_blocks_4",
         }
     },
 }
@@ -184,12 +197,8 @@ num_batchs = 5
 channel_multipliers = [1,2,3,4,5,6]
 search_spaces = []
 for cm_config in channel_multipliers:
-    pass_config['seq_blocks_2']['input_channel_multiplier'] = cm_config
-    pass_config['seq_blocks_2']['output_channel_multiplier'] = cm_config
-    pass_config['seq_blocks_4']['input_channel_multiplier'] = cm_config
-    pass_config['seq_blocks_4']['output_channel_multiplier'] = cm_config
-    pass_config['seq_blocks_6']['input_channel_multiplier'] = cm_config
-    pass_config['seq_blocks_6']['output_channel_multiplier'] = cm_config
+    pass_config['seq_blocks_2']['config']['channel_multiplier'] = cm_config
+    pass_config['seq_blocks_4']['config']['channel_multiplier'] = cm_config
     # dict.copy() and dict(dict) only perform shallow copies
     # in fact, only primitive data types in python are doing implicit copy when a = b happens
     search_spaces.append(copy.deepcopy(pass_config))
@@ -199,8 +208,8 @@ recorded_latencies = []
 recorded_model_sizes = []
 recorded_flops = []
 for i, config in enumerate(search_spaces):
-    mg, _ = redefine_linear_transform_pass(
-        graph=mg, pass_args={"config": config})
+    new_mg, _ = redefine_linear_transform_pass(
+        ori_graph=mg, pass_args={"config": config})
     j = 0
 
     # this is the inner loop, where we also call it as a runner.
@@ -211,7 +220,7 @@ for i, config in enumerate(search_spaces):
     for inputs in data_module.train_dataloader():
         xs, ys = inputs
         start = time.time()
-        preds = mg.model(xs)
+        preds = new_mg.model(xs)
         end = time.time()
         loss = nn.functional.cross_entropy(preds, ys)
         acc = metric(preds, ys)
@@ -224,7 +233,7 @@ for i, config in enumerate(search_spaces):
         latency += end - start
         if flag:
             flag = False
-            flops, model_size, _ = count_flops_params(mg.model, xs, verbose=False, mode='full')
+            flops, model_size, _ = count_flops_params(new_mg.model, xs, verbose=False, mode='full')
     acc_avg = sum(accs) / len(accs)
     loss_avg = sum(losses) / len(losses)
     print('accs: ', accs)

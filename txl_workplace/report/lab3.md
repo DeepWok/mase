@@ -8,7 +8,7 @@
 ![latency](img/lab3_q2_latency.png)
 ![model size](img/lab3_q2_size.png)
 ![flops](img/lab3_q2_flops.png)
-SThe model size and FLOPs of the different configuration is the same, as the configuration only change the quantize operation but not change the model architecture. 
+- The model size and FLOPs of the different configuration is the same, as the configuration only change the quantize operation but not change the model architecture. 
 ### Q3. Implement the brute-force search as an additional search method within the system, this would be a new search strategy in MASE.
 - key code block for self defined brute-force search which is inherited form **SearchStrategyBase**
 ```python
@@ -69,5 +69,37 @@ SThe model size and FLOPs of the different configuration is the same, as the con
 - The field <u>search.strategy.name</u> in .toml configuration file should also adjust to the key above.
 - The output of using self defined brute-force search
 ![output for self defined bruce-force search](img/lab3_q3_bf_output.png)
+
 ### Q4. Compare the brute-force search with the TPE based search, in terms of sample efficiency. Comment on the performance difference between the two search methods.
+- Part of settings about the experiment
+```toml
+[search.search_space.seed.seq_blocks_2.config]
+name = ["integer"]
+data_in_width = [4, 8, 16]
+data_in_frac_width = ["NA"]
+weight_width = [2, 4, 8, 16]
+weight_frac_width = ["NA"]
+bias_width = [2, 4, 8, 16]
+bias_frac_width = ["NA"]
+
+[search.strategy.setup]
+n_jobs = 1
+n_trials = 48
+timeout = 20000
+sampler = "tpe"
+sum_scaled_metrics = true
+direction = "maximize"
+
+[search.strategy.metrics]
+accuracy.scale = 2.0
+accuracy.direction = "maximize"
+average_bitwidth.scale = -0.1
+average_bitwidth.direction = "minimize"
+```
+- Experiment results
+<br>![bruce force](img/lab3_q4_bf.png)
+![tpe](img/lab3_q4_tpe.png)
+- From figures above, it is demonstrated that the 'TPE' strategy tends to try more possible better choice after the initial stage but might get poor result in final stage of searching. However, 'Brute Force' strategy is aimless by trying all possible choices one by one.
+- When the search space goes larger, TPE strategy would outperform the simple Brute Force. Because TPE might get an acceptable good result with very limited number of trials.
+
 
