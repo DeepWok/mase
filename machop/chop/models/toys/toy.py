@@ -35,8 +35,8 @@ class ToyTiny(nn.Module):
         x = x.view(x.size(0), -1)
         x = self.l1(x)
         x = self.relu_1(x)
-        x = self.l2(x)
-        x = self.relu_2(x)
+        # x = self.l2(x)
+        # x = self.relu_2(x)
         return x
 
 
@@ -139,7 +139,7 @@ def get_toy_tiny(
     pretrained=False,
     **kwargs: Any,
 ):
-    image_size = info["image_size"]
+    image_size = info.image_size
     num_classes = info.num_classes
     return ToyTiny(image_size, num_classes)
 
@@ -163,3 +163,13 @@ def get_toy_convnet(
     # NOTE: The model isn't configurable through the CLI or a configuration file yet.
     num_classes = info.num_classes
     return ToyConvNet(num_classes)
+
+
+def get_toy_emit(
+    info,
+    pretrained=False,
+    **kwargs: Any,
+):
+    image_size = info.image_size
+    num_classes = info.num_classes
+    return ToyEmit(image_size, num_classes)

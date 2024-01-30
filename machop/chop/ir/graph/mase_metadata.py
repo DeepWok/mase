@@ -94,3 +94,9 @@ class MaseMetadata:
     def graph(self):
         # The fx graph of the model
         return self.model.graph
+
+    def __getitem__(self, key):
+        return self.parameters[key]
+
+    def __setitem__(self, key, value):
+        self.parameters[key] = value

@@ -9,7 +9,7 @@ emit\_verilog\_top\_transform\_pass
 emit\_verilog\_tb\_transform\_pass
 ---------------------------------
 
-.. autofunction:: chop.passes.graph.transforms.verilog.emit_verilog_tb_transform_pass
+.. autofunction:: chop.passes.graph.transforms.verilog.emit_cocotb_transform_pass
 
 emit\_bram\_transform\_pass
 --------------------------
