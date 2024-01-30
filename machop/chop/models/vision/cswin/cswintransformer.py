@@ -347,9 +347,9 @@ class CSWinTransformer(nn.Module):
         super().__init__()
         self.use_chk = use_chk
         self.num_classes = num_classes
-        self.num_features = self.embed_dim = (
-            embed_dim  # num_features for consistency with other models
-        )
+        self.num_features = (
+            self.embed_dim
+        ) = embed_dim  # num_features for consistency with other models
         heads = num_heads
 
         self.stage1_conv_embed = nn.Sequential(
