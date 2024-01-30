@@ -48,26 +48,28 @@ module fixed_linear #(
 
     // input port for data_inivations
     input  [DATA_IN_0_PRECISION_0-1:0] data_in_0      [DATA_IN_0_PARALLELISM_DIM_0*DATA_IN_0_PARALLELISM_DIM_1-1:0],
-    input                   data_in_0_valid,
-    output                  data_in_0_ready,
+    input data_in_0_valid,
+    output data_in_0_ready,
 
     // input port for weight
     input  [WEIGHT_PRECISION_0-1:0] weight      [WEIGHT_PARALLELISM_DIM_0 * DATA_IN_0_PARALLELISM_DIM_0-1:0],
-    input                     weight_valid,
-    output                    weight_ready,
+    input weight_valid,
+    output weight_ready,
 
     /* verilator lint_off UNUSEDSIGNAL */
-    input  [BIAS_PRECISION_0-1:0] bias      [BIAS_PARALLELISM_DIM_0 * DATA_IN_0_PARALLELISM_DIM_0-1:0],
-    input                   bias_valid,
+    input [BIAS_PRECISION_0-1:0] bias[BIAS_PARALLELISM_DIM_0 * DATA_IN_0_PARALLELISM_DIM_0-1:0],
+    input bias_valid,
     /* verilator lint_on UNUSEDSIGNAL */
-    output                  bias_ready,
+    output bias_ready,
 
     output [DATA_OUT_0_PRECISION_0-1:0] data_out_0      [DATA_OUT_0_PARALLELISM_DIM_0*DATA_OUT_0_PARALLELISM_DIM_1-1:0],
-    output                   data_out_0_valid,
-    input                    data_out_0_ready
+    output data_out_0_valid,
+    input data_out_0_ready
 );
 
-  localparam FDP_WIDTH = DATA_IN_0_PRECISION_0 + WEIGHT_PRECISION_0 + $clog2(DATA_IN_0_PARALLELISM_DIM_0);
+  localparam FDP_WIDTH = DATA_IN_0_PRECISION_0 + WEIGHT_PRECISION_0 + $clog2(
+      DATA_IN_0_PARALLELISM_DIM_0
+  );
   localparam ACC_WIDTH = FDP_WIDTH + $clog2(IN_0_DEPTH);
 
   logic fdp_join_valid, fdp_join_ready;
@@ -87,7 +89,7 @@ module fixed_linear #(
   /* verilator lint_on UNUSEDSIGNAL */
 
   logic                 acc_ready;
-  logic [ACC_WIDTH-1:0] acc_data_out [WEIGHT_PARALLELISM_DIM_0*WEIGHT_PARALLELISM_DIM_1-1:0];
+  logic [ACC_WIDTH-1:0] acc_data_out[WEIGHT_PARALLELISM_DIM_0*WEIGHT_PARALLELISM_DIM_1-1:0];
 
   // There are WEIGHT_PARALLELISM_DIM_0 number of dot product instances with DATA_IN_0_TENSOR_SIZE_DIM_0 inputs
   // and each one computes for IN_0_DEPTH iterations for each inputs.
@@ -144,7 +146,7 @@ module fixed_linear #(
 
 
   if (HAS_BIAS == 1) begin
-    logic [ACC_WIDTH-1:0] bias_sext [BIAS_PARALLELISM_DIM_0 * DATA_IN_0_PARALLELISM_DIM_0-1:0];
+    logic [ACC_WIDTH-1:0] bias_sext[BIAS_PARALLELISM_DIM_0 * DATA_IN_0_PARALLELISM_DIM_0-1:0];
     logic acc_join_valid, acc_join_ready;
     logic [DATA_IN_0_PARALLELISM_DIM_0-1:0] reg_ready;
 
@@ -161,9 +163,9 @@ module fixed_linear #(
         .IN_FRAC_WIDTH(BIAS_PRECISION_1),
         .OUT_WIDTH(ACC_WIDTH),
         .OUT_FRAC_WIDTH(DATA_IN_0_PRECISION_1 + WEIGHT_PRECISION_1)
-        ) bias_cast (
-            .data_in (bias),
-            .data_out(bias_sext)
+    ) bias_cast (
+        .data_in (bias),
+        .data_out(bias_sext)
     );
 
     assign acc_join_ready = &reg_ready;
@@ -193,7 +195,7 @@ module fixed_linear #(
     assign data_out_0_valid = linear[0].acc_data_out_valid;
 
     for (genvar i = 0; i < WEIGHT_PARALLELISM_DIM_0; i = i + 1) begin
-        assign data_out_0[i] = acc_data_out[i];
+      assign data_out_0[i] = acc_data_out[i];
     end
     assign bias_ready = 1;
   end
