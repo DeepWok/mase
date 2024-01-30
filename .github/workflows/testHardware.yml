@@ -107,9 +107,7 @@ jobs:
       
       - name: Hardware regression test 
         run: |
-            pip3 --version
-            python3 --version
-            pip3 install .
+            pip install .
             python3 scripts/test-hardware.py -a
 
 
