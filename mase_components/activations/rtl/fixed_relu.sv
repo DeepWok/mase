@@ -1,5 +1,5 @@
 module fixed_relu #(
-  /* verilator lint_off UNUSEDPARAM */
+    /* verilator lint_off UNUSEDPARAM */
     parameter DATA_IN_0_PRECISION_0 = 8,
     parameter DATA_IN_0_PRECISION_1 = 1,
     parameter DATA_IN_0_TENSOR_SIZE_DIM_0 = 8,
