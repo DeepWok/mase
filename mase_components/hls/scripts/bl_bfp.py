@@ -14,7 +14,7 @@ from hls import HLSWriter
 
 
 def get_big_little_bfp(
-    HIGH_MAN_WIDTH=7,
+    HIGH_MAN_WIDTH=5,
     LOW_MAN_WIDTH=3,
     X_ROW=1,
     X_COL=4096,
@@ -36,14 +36,14 @@ def get_big_little_bfp(
         writer,
         # this is x
         w_exp_width=8,
-        w_man_width=7,
+        w_man_width=HIGH_MAN_WIDTH,
         w_row=1,
         w_col=16,
         w_row_depth=X_ROW,
         w_col_depth=int(X_COL / 16),
         # this is y
         x_exp_width=8,
-        x_man_width=3,
+        x_man_width=LOW_MAN_WIDTH,
         x_row=16,
         x_col=1,
         x_row_depth=int(W_ROW / 16),
@@ -55,14 +55,14 @@ def get_big_little_bfp(
         writer,
         # this is x
         w_exp_width=8,
-        w_man_width=7,
+        w_man_width=HIGH_MAN_WIDTH,
         w_row=1,
         w_col=16,
         w_row_depth=X_ROW,
         w_col_depth=int(X_COL / 16),
         # this is y
         x_exp_width=8,
-        x_man_width=7,
+        x_man_width=HIGH_MAN_WIDTH,
         x_row=16,
         x_col=1,
         x_row_depth=int(A_ROW / 16),
@@ -74,14 +74,14 @@ def get_big_little_bfp(
         writer,
         # this is x
         w_exp_width=8,
-        w_man_width=7,
+        w_man_width=HIGH_MAN_WIDTH,
         w_row=1,
         w_col=16,
         w_row_depth=X_ROW,
         w_col_depth=int(A_COL / 16),
         # this is y
         x_exp_width=8,
-        x_man_width=7,
+        x_man_width=HIGH_MAN_WIDTH,
         x_row=16,
         x_col=1,
         x_row_depth=int(B_ROW / 16),
@@ -93,10 +93,10 @@ def get_big_little_bfp(
         writer,
         # this is x
         w_exp_width=8,
-        w_man_width=7,
+        w_man_width=HIGH_MAN_WIDTH,
         # this is y
         x_exp_width=8,
-        x_man_width=7,
+        x_man_width=HIGH_MAN_WIDTH,
         x_row=16,
         x_col=1,
         x_row_depth=X_ROW,
@@ -132,7 +132,7 @@ def emit_top_level(
     B_ROW=-1,
     B_COL=-1,
 ):
-    top = """
+    top = f"""
 #include <algorithm>
 #include <ap_axi_sdata.h>
 #include <ap_fixed.h>
@@ -147,21 +147,21 @@ using namespace std;
 #include "bl_bfp.h"
 
 void cast_xa(
-  hls::stream<fixed_1_1_8_7_t> &xa,
-  hls::stream<fixed_1_16_8_7_t> &xa_c) {
-  for (int j = 0; j < 100; j++) {
-    fixed_1_1_8_7_t x[16];
-    fixed_1_16_8_7_t c;
+  hls::stream<fixed_1_1_8_{HIGH_MAN_WIDTH}_t> &xa,
+  hls::stream<fixed_1_16_8_{HIGH_MAN_WIDTH}_t> &xa_c) {{
+  for (int j = 0; j < 100; j++) {{
+    fixed_1_1_8_{HIGH_MAN_WIDTH}_t x[16];
+    fixed_1_16_8_{HIGH_MAN_WIDTH}_t c;
     ap_uint<8> exponent = 0;
-    for (int i = 0; i < 16; i++) {
+    for (int i = 0; i < 16; i++) {{
       x[i] = xa.read();
       exponent = (exponent < x[i].exponent) ? x[i].exponent : exponent;
-    }
+    }}
     c.exponent = exponent;
     ap_int<8> man[16];
-    for (int i = 0; i < 16; i++) {
+    for (int i = 0; i < 16; i++) {{
       man[i] = x[i].data_0_0 >> (exponent - x[i].exponent);
-    }
+    }}
     c.data_0_0 = man [0 ];
     c.data_0_1 = man [1 ];
     c.data_0_2 = man [2 ];
@@ -179,25 +179,25 @@ void cast_xa(
     c.data_0_14 = man[14];
     c.data_0_15 = man[15];
     xa_c.write(c);
-  }
-}
+  }}
+}}
 
 void cast_x(
-  hls::stream<fixed_1_1_8_7_t> &xa,
-  hls::stream<fixed_16_1_8_7_t> &xa_c) {
-  for (int j = 0; j < 100; j++) {
-    fixed_1_1_8_7_t x[16];
-    fixed_16_1_8_7_t c;
+  hls::stream<fixed_1_1_8_{HIGH_MAN_WIDTH}_t> &xa,
+  hls::stream<fixed_16_1_8_{HIGH_MAN_WIDTH}_t> &xa_c) {{
+  for (int j = 0; j < 100; j++) {{
+    fixed_1_1_8_{HIGH_MAN_WIDTH}_t x[16];
+    fixed_16_1_8_{HIGH_MAN_WIDTH}_t c;
     ap_uint<8> exponent = 0;
-    for (int i = 0; i < 16; i++) {
+    for (int i = 0; i < 16; i++) {{
       x[i] = xa.read();
       exponent = (exponent < x[i].exponent) ? x[i].exponent : exponent;
-    }
+    }}
     c.exponent = exponent;
     ap_int<8> man[16];
-    for (int i = 0; i < 16; i++) {
+    for (int i = 0; i < 16; i++) {{
       man[i] = x[i].data_0_0 >> (exponent - x[i].exponent);
-    }
+    }}
     c.data_0_0= man [0 ];
     c.data_1_0= man [1 ];
     c.data_2_0= man [2 ];
@@ -205,7 +205,7 @@ void cast_x(
     c.data_4_0= man [4 ];
     c.data_5_0= man [5 ];
     c.data_6_0= man [6 ];
-    c.data_7_0= man [7 ];
+    c.data_{HIGH_MAN_WIDTH}_0= man [7 ];
     c.data_8_0= man [8 ];
     c.data_9_0= man [9 ];
     c.data_10_0 = man[10];
@@ -215,23 +215,23 @@ void cast_x(
     c.data_14_0 = man[14];
     c.data_15_0 = man[15];
     xa_c.write(c);
-  }
-}
+  }}
+}}
 
 void top(
 hls::stream<fixed_16_1_8_3_t> &w,
-hls::stream<fixed_1_16_8_7_t> &x,
-hls::stream<fixed_16_1_8_7_t> &a,
-hls::stream<fixed_16_1_8_7_t> &b,
-hls::stream<fixed_16_1_8_7_t> &y
-) {
+hls::stream<fixed_1_16_8_{HIGH_MAN_WIDTH}_t> &x,
+hls::stream<fixed_16_1_8_{HIGH_MAN_WIDTH}_t> &a,
+hls::stream<fixed_16_1_8_{HIGH_MAN_WIDTH}_t> &b,
+hls::stream<fixed_16_1_8_{HIGH_MAN_WIDTH}_t> &y
+) {{
 
-  hls::stream<fixed_1_1_8_7_t> x1;
-  hls::stream<fixed_16_1_8_7_t> x1_c;
-  hls::stream<fixed_1_1_8_7_t> xa;
-  hls::stream<fixed_1_16_8_7_t> xa_c;
-  hls::stream<fixed_1_1_8_7_t> x2;
-  hls::stream<fixed_16_1_8_7_t> x2_c;
+  hls::stream<fixed_1_1_8_{HIGH_MAN_WIDTH}_t> x1;
+  hls::stream<fixed_16_1_8_{HIGH_MAN_WIDTH}_t> x1_c;
+  hls::stream<fixed_1_1_8_{HIGH_MAN_WIDTH}_t> xa;
+  hls::stream<fixed_1_16_8_{HIGH_MAN_WIDTH}_t> xa_c;
+  hls::stream<fixed_1_1_8_{HIGH_MAN_WIDTH}_t> x2;
+  hls::stream<fixed_16_1_8_{HIGH_MAN_WIDTH}_t> x2_c;
 
   bfp_mm_0(w, x, x1);
   bfp_mm_1(a, x, xa);
@@ -240,7 +240,7 @@ hls::stream<fixed_16_1_8_7_t> &y
   cast_x(x1, x1_c);
   cast_x(x2, x2_c);
   bfp_add_5(x1_c, x2_c, y);
-}
+}}
 """
     file_path = "bl_bfp.cpp"
     f = open(file_path, "w")
