@@ -13,7 +13,7 @@ module fixed_linear #(
     parameter DATA_IN_0_PRECISION_1 = 3,
     parameter DATA_IN_0_TENSOR_SIZE_DIM_0 = 4,
     parameter DATA_IN_0_TENSOR_SIZE_DIM_1 = 1,
-    parameter DATA_IN_0_PARALLELISM_DIM_0 = 2,
+    parameter DATA_IN_0_PARALLELISM_DIM_0 = 4,
     parameter DATA_IN_0_PARALLELISM_DIM_1 = 1,
     parameter IN_0_DEPTH = DATA_IN_0_TENSOR_SIZE_DIM_0 / DATA_IN_0_PARALLELISM_DIM_0,
 
