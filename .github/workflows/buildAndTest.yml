@@ -3,14 +3,8 @@ name: Software Test
 on:
   push:
     branches: [ "main" ]
-    paths:
-      - 'machop/**'
-      - '!machop/sphinx_docs/**'
   pull_request:
     branches: [ "main" ]
-    paths:
-      - 'machop/**'
-      - '!machop/sphinx_docs/**'
   workflow_dispatch:
     logLevel:
           description: 'Log level'
@@ -204,5 +198,5 @@ jobs:
       
       - name: Mase regression test 
         run: |
-            export PYTHONPATH="${PATH}:$(pwd)/machop"
+            export PYTHONPATH="${PATH}:$(pwd):$(pwd)/machop"
             pytest --log-level=DEBUG --verbose -n 1 --cov=machop/chop/ --cov-report=html machop/test/ --html=report.html --self-contained-html --profile --profile-svg
