@@ -7,91 +7,8 @@ import sys, os, time, logging, colorlog, glob, subprocess, multiprocessing, shut
 from multiprocessing import Process, Queue
 import maselogger
 
-# Add more test cases here
-test_cases = {
-    "cast/fixed_rounding": [],
-    "linear/fixed_linear": ["common", "fixed_arith"],
-    "fixed_arith/fixed_mult": [],
-    "fixed_arith/fixed_adder_tree_layer": [],
-    "fixed_arith/fixed_accumulator": ["common"],
-    "fixed_arith/fixed_adder_tree": ["fixed_arith", "common"],
-    "fixed_arith/fixed_vector_mult": ["fixed_arith", "common"],
-    "fixed_arith/fixed_dot_product": ["fixed_arith", "common"],
-    "common/cut_data": ["common"],
-    "common/wrap_data": ["common"],
-    "common/skid_buffer": [],
-    "common/fifo": ["common"],
-    "common/input_buffer": ["common"],
-    "conv/convolution": ["conv", "linear", "common", "fixed_arith", "cast"],
-    # "ViT/fixed_patch_embed": [
-    #     "conv",
-    #     "ViT",
-    #     "cast",
-    #     "matmul",
-    #     "linear",
-    #     "attention",
-    #     "common",
-    #     "fixed_arith",
-    # ],
-    # "ViT/fixed_msa": [
-    #     "conv",
-    #     "ViT",
-    #     "cast",
-    #     "matmul",
-    #     "linear",
-    #     "attention",
-    #     "common",
-    #     "fixed_arith",
-    # ],
-    # # now is at the rounding version, so do not test cast version matmul core anymore
-    # # "fixed_arith/fixed_matmul_core": ["cast", "linear", "fixed_arith", "common"],
-    # # "cast/fixed_cast": [],
-    # "attention/fixed_msa": [
-    #     "cast",
-    #     "matmul",
-    #     "linear",
-    #     "attention",
-    #     "common",
-    #     "fixed_arith",
-    # ],
-    # "conv/sliding_window": ["cast", "conv", "linear", "common", "fixed_arith"],
-    # "conv/padding": ["cast", "conv", "linear", "common", "fixed_arith"],
-    # "conv/convolution": ["cast", "conv", "linear", "common", "fixed_arith"],
-    # "matmul/fixed_matmul": ["cast", "linear", "matmul", "common", "fixed_arith"],
-    # # 'cast/bram_cast': [],
-    # # 'cast/bram2hs_cast': [],
-    # # 'cast/hs2bram_cast': [],
-    # # 'common/ram_block': [],
-    # # 'common/join2': [],
-    # "binary_arith/binary_activation_binary_mult": [],
-    # "binary_arith/binary_activation_binary_vector_mult": ["binary_arith", "common"],
-    # "binary_arith/binary_activation_binary_adder_tree_layer": [],
-    # "binary_arith/binary_activation_binary_adder_tree": ["binary_arith", "common"],
-    # "binary_arith/binary_activation_binary_dot_product": ["binary_arith", "common"],
-    # "binary_arith/fixed_activation_binary_mult": [],
-    # "binary_arith/fixed_activation_binary_vector_mult": ["binary_arith", "common"],
-    # "binary_arith/fixed_activation_binary_dot_product": [
-    #     "binary_arith",
-    #     "fixed_arith",
-    #     "common",
-    # ],
-    # "linear/binary_activation_binary_linear": [
-    #     "cast",
-    #     "linear",
-    #     "fixed_arith",
-    #     "binary_arith",
-    #     "common",
-    # ],
-    # "linear/fixed_activation_binary_linear": [
-    #     "cast",
-    #     "linear",
-    #     "fixed_arith",
-    #     "binary_arith",
-    #     "common",
-    # ],
-    # "activations/fixed_relu": ["common"],
-    # 'activations/int_relu6': ['common'],
-}
+# add components to path
+from mase_components.deps import MASE_HW_DEPS  # TODO: check deps again
 
 
 # ---------- TestHardware class --------------
@@ -104,9 +21,14 @@ class TestHardware:
         self.logger = maselogger.getLogger(
             "test-hardware", os.path.join(self.root, "test-hardware.log")
         )
+
+        # Initialize test cases
         self.test_cases = self.args.test_cases
         if self.args.run_all:
-            self.test_cases = test_cases.keys()
+            self.test_cases = list(MASE_HW_DEPS.keys())
+        self.logger.debug(f"Test cases: ")
+        self.logger.debug("\n           ".join(self.test_cases))
+
         check_fail = self.check_files()
         if check_fail:
             sys.exit(check_fail)
@@ -114,58 +36,49 @@ class TestHardware:
     def check_files(self):
         """Check if all the required files exist for test cases"""
         for test_case in self.test_cases:
-            base_name = os.path.basename(test_case)
+            group, module = test_case.split("/")
             # Check if the test bench exists
-            if not os.path.exists(
-                os.path.join(
-                    self.root,
-                    "components",
-                    "testbench",
-                    test_case,
-                    "{}_tb.py".format(base_name),
-                )
-            ):
+            tb_path = os.path.join(
+                self.root, "mase_components", group, f"test/{module}_tb.py"
+            )
+            if not os.path.exists(tb_path):
                 self.logger.error(
-                    "Cannot find the testbench! Expected to be {}".format(
-                        os.path.join(
-                            self.root,
-                            "components",
-                            "testbench",
-                            test_case,
-                            "{}_tb.py".format(base_name),
-                        )
-                    )
+                    f"Cannot find the testbench! Expected to be {tb_path}"
                 )
                 return 1
             # Check if the design file exists
-            if not os.path.isfile(
-                os.path.join(self.root, "components", "{}.sv".format(test_case))
-            ):
+            rtl_file = os.path.join(
+                self.root, f"mase_components/{group}/rtl/{module}.sv"
+            )
+            if not os.path.isfile(rtl_file):
                 self.logger.error(
-                    "Cannot find the design file! Expected to be {}".format(
-                        os.path.join(self.root, "components", "{}.sv".format(test_case))
-                    )
+                    f"Cannot find the design file! Expected to be {rtl_file}"
                 )
                 return 1
         return 0
 
     def lint(self):
         """Lint all the required design files"""
-        cwd = os.path.join(self.root)
+        cwd = os.path.join(self.root)  # What is this for?
         self.logger.info("Linting all the design files...")
         for test_case in self.test_cases:
-            design_file = os.path.join(self.root, "components", test_case)
+            group, module = test_case.split("/")
+            rtl_file = os.path.join(
+                self.root, "mase_components", group, f"rtl/{module}.sv"
+            )
             include_files = [
-                "-I{}".format(
-                    os.path.join(self.root, "components", "{}".format(include_file))
-                )
-                for include_file in test_cases[test_case]
+                f"-I{os.path.join(self.root, 'mase_components', group, 'rtl')}"
+                for group in MASE_HW_DEPS[test_case]
             ]
             cmd = [
                 "verilator",
                 "--lint-only",
                 "--Wall",
-                "{}.sv".format(design_file),
+                # These errors are in later versions of verilator
+                "-Wno-GENUNNAMED",  # Too many existing errors
+                "-Wno-WIDTHEXPAND",
+                "-Wno-WIDTHTRUNC",
+                rtl_file,
             ] + include_files
             result, _ = self.execute(cmd, log_output=self.isdebug, cwd=cwd)
             if result:
@@ -175,10 +88,12 @@ class TestHardware:
     def test(self):
         """Test the given test cases"""
         test_count = len(self.test_cases)
+
         jobs = [None] * test_count
         queue = Queue(test_count)
         for i, test_case in enumerate(self.test_cases):
-            jobs[i] = Process(target=self.single_test, args=(test_case, queue))
+            group, module = test_case.split("/")
+            jobs[i] = Process(target=self.single_test, args=(group, module, queue))
             jobs[i].start()
 
         for job in jobs:
@@ -196,22 +111,21 @@ class TestHardware:
                 "Hardware regression test finished. {} errors.".format(err)
             )
 
-        cwd = os.path.join(self.root, "components", "testbench")
+        cwd = os.path.join(self.root, "mase_components", "testbench")
         pycache_files = os.path.join(cwd, "__pycache__")
         if os.path.exists(pycache_files):
             shutil.rmtree(pycache_files)
         return err
 
-    def single_test(self, test_case, queue):
-        self.logger.info("Running unit test for {}...".format(test_case))
-        base_name = os.path.basename(test_case)
-        cwd = os.path.join(self.root, "components", "testbench", test_case)
-        cmd = ["python3", "{}_tb.py".format(base_name)]
+    def single_test(self, group, module, queue):
+        self.logger.info(f"Running unit test for {group}/{module}...")
+        cwd = os.path.join(self.root, "mase_components", group, "test")
+        cmd = ["python3", "{}_tb.py".format(module)]
 
         result, buff = self.execute(cmd, log_output=self.isdebug, cwd=cwd)
         # Cocotb returns 0 even when the result is wrong. Here check log file as well
         if result or "FAIL=0" not in buff:
-            self.logger.error(f"FAIL: {test_case}.")
+            self.logger.error(f"FAIL: {group}/{module}.")
             result = 1
         else:
             # Clean files
@@ -244,7 +158,7 @@ class TestHardware:
                         f.write(line)
                     line = line.rstrip("\n")
                     if log_output:
-                        self.logger.trace(line)
+                        self.logger.info(line)
             if result.stderr:
                 for line in result.stderr:
                     buff += line
@@ -252,7 +166,7 @@ class TestHardware:
                         f.write(line)
                     line = line.rstrip("\n")
                     if log_output:
-                        self.logger.trace(line)
+                        self.logger.info(line)
             if log_file:
                 f.close()
         return result.returncode, buff
@@ -260,7 +174,7 @@ class TestHardware:
 
 # ---------- main function --------------
 def main():
-    USAGE = """Usage: 
+    USAGE = """Usage:
 test-hardware.py --test common/int_mult ...
 test-hardware.py -a"""
 
