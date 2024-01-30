@@ -37,6 +37,7 @@ __pycache__/
 # Distribution / packaging
 .Python
 build/
+sim_build/
 develop-eggs/
 dist/
 downloads/
@@ -60,7 +61,8 @@ MANIFEST
 *.spec
 
 # Installer logs
-*.txt
+pip-log.txt
+pip-delete-this-directory.txt
 
 # Unit test / coverage reports
 htmlcov/
@@ -76,6 +78,7 @@ coverage.xml
 
 # Hardware tests
 components/testbench/**/sim_build/
+build/
 
 # Translations
 *.mo
@@ -132,6 +135,10 @@ venv.bak/
 
 # mypy
 .mypy_cache/
+*.png
 
 # vscode
 .vscode
+
+# Data files for hardware simulation
+*.dat
