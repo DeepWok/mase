@@ -89,8 +89,8 @@ class SearchStrategyBruteForce(SearchStrategyBase):
             if index == len(name_list):
                 score = self.run_trial(search_space, sampled_indexes)
                 self.counter += 1
-                # print(f'For proposal-{self.counter}, score: {score}')
-                print(score)
+                print(f'For proposal-{self.counter}, score: {score}')
+                # print(score)
                 self.bf_result[str(sampled_indexes)] = score
                 if self.highest_score is None or score > self.highest_score:
                     self.highest_score = score
