@@ -1,6 +1,7 @@
 """
 Some of the functions here are taken from the Modifier class we had before
 """
+
 from typing import Dict
 
 import torch
