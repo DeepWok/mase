@@ -26,79 +26,97 @@ def _cap(name):
 
 
 def add_component_source(node):
-    if node.meta["mase"].parameters["hardware"]["is_implicit"]:
+    if node.meta["mase"]["hardware"]["is_implicit"]:
         return
 
-    node.meta["mase"].parameters["hardware"]["interface"] = {}
+    node.meta["mase"]["hardware"]["interface"] = {}
 
-    mase_op = node.meta["mase"].parameters["common"]["mase_op"]
+    mase_op = node.meta["mase"]["common"]["mase_op"]
     if mase_op in INTERNAL_COMP.keys():
-        node.meta["mase"].parameters["hardware"]["toolchain"] = "INTERNAL"
+        node.meta["mase"]["hardware"]["toolchain"] = "INTERNAL"
         # take the first ip in the component list by default
-        node.meta["mase"].parameters["hardware"]["module"] = INTERNAL_COMP[mase_op][0][
-            "name"
+        node.meta["mase"]["hardware"]["module"] = INTERNAL_COMP[mase_op][0]["name"]
+        node.meta["mase"]["hardware"]["dependence_files"] = INTERNAL_COMP[mase_op][0][
+            "dependence_files"
         ]
-        node.meta["mase"].parameters["hardware"]["dependence_files"] = INTERNAL_COMP[
-            mase_op
-        ][0]["dependence_files"]
     else:
-        node.meta["mase"].parameters["hardware"]["toolchain"] = "HLS"
-        node.meta["mase"].parameters["hardware"]["module"] = None
-        node.meta["mase"].parameters["hardware"]["dependence_files"] = None
+        node.meta["mase"]["hardware"]["toolchain"] = "HLS"
+        node.meta["mase"]["hardware"]["module"] = None
+        node.meta["mase"]["hardware"]["dependence_files"] = []
 
-    node.meta["mase"].parameters["hardware"]["device_id"] = -1
+    node.meta["mase"]["hardware"]["device_id"] = -1
 
     # Current only support on-chip parameters
-    args = node.meta["mase"].parameters["common"]["args"]
+    args = node.meta["mase"]["common"]["args"]
     for arg, _ in args.items():
         if "data_in" in arg:
             continue
         arg_info = args[arg]
         if isinstance(arg_info, dict):
-            node.meta["mase"].parameters["hardware"]["interface"][arg] = {
+            node.meta["mase"]["hardware"]["interface"][arg] = {
                 "storage": "BRAM",
                 "transpose": False,
             }
         else:
-            node.meta["mase"].parameters["hardware"]["interface"][arg] = {}
+            node.meta["mase"]["hardware"]["interface"][arg] = {}
 
 
 def add_verilog_param(node):
-    if node.meta["mase"].parameters["hardware"]["is_implicit"]:
+    if node.meta["mase"]["hardware"]["is_implicit"]:
         return
 
-    node.meta["mase"].parameters["hardware"]["verilog_param"] = {}
+    node.meta["mase"]["hardware"]["verilog_param"] = {}
 
-    args = node.meta["mase"].parameters["common"]["args"]
-    results = node.meta["mase"].parameters["common"]["results"]
-    vp = node.meta["mase"].parameters["hardware"]["verilog_param"]
+    args = node.meta["mase"]["common"]["args"]
+    results = node.meta["mase"]["common"]["results"]
+    vp = node.meta["mase"]["hardware"]["verilog_param"]
     for arg, arg_info in args.items():
         if isinstance(arg_info, dict):
             for i, precision in enumerate(arg_info["precision"]):
                 vp[_cap(arg + f"_precision_{i}")] = arg_info["precision"][i]
-            for dim in range(0, MAX_DIM):
+            for dim in range(0, len(arg_info["shape"])):
                 vp[_cap(arg + f"_tensor_size_dim_{dim}")] = (
-                    arg_info["shape"][dim] if dim < len(arg_info["shape"]) else 1
+                    arg_info["shape"][len(arg_info["shape"]) - 1 - dim]
+                    if dim < len(arg_info["shape"])
+                    else 1
                 )
-                vp[_cap(arg + f"_parallelism_dim_{dim}")] = (
-                    arg_info["shape"][dim] if dim < len(arg_info["shape"]) else 1
-                )
+                # If node data parallelism is set, take from hardware metadata
+                if node.meta["mase"]["hardware"]["parallelism"] is not None:
+                    vp[_cap(arg + f"_parallelism_dim_{dim}")] = node.meta["mase"][
+                        "hardware"
+                    ]["parallelism"][len(arg_info["shape"]) - 1 - dim]
+                # Otherwise, assign to tensor size by default
+                else:
+                    vp[_cap(arg + f"_parallelism_dim_{dim}")] = (
+                        arg_info["shape"][len(arg_info["shape"]) - 1 - dim]
+                        if dim < len(arg_info["shape"])
+                        else 1
+                    )
+        elif type(arg_info) == bool:
+            vp[_cap(arg)] = 1 if arg_info else 0
         else:
             vp[_cap(arg)] = arg_info
 
-    for result, result_info in (
-        node.meta["mase"].parameters["common"]["results"].items()
-    ):
+    for result, result_info in node.meta["mase"]["common"]["results"].items():
         if isinstance(result_info, dict):
             for i, precision in enumerate(result_info["precision"]):
                 vp[_cap(result + f"_precision_{i}")] = result_info["precision"][i]
-            for dim in range(0, MAX_DIM):
-                vp[_cap(result + f"_tensor_size_{i}_dim_{dim}")] = (
-                    result_info["shape"][dim] if dim < len(result_info["shape"]) else 1
+            for dim in range(0, len(result_info["shape"])):
+                vp[_cap(result + f"_tensor_size_dim_{dim}")] = (
+                    result_info["shape"][len(result_info["shape"]) - 1 - dim]
+                    if dim < len(result_info["shape"])
+                    else 1
                 )
-                vp[_cap(result + f"_parallelism_{i}_dim_{dim}")] = (
-                    result_info["shape"][dim] if dim < len(result_info["shape"]) else 1
-                )
+                if node.meta["mase"]["hardware"]["parallelism"] is not None:
+                    vp[_cap(result + f"_parallelism_dim_{dim}")] = node.meta["mase"][
+                        "hardware"
+                    ]["parallelism"][len(result_info["shape"]) - 1 - dim]
+                else:
+                    vp[_cap(result + f"_parallelism_dim_{dim}")] = (
+                        result_info["shape"][len(result_info["shape"]) - 1 - dim]
+                        if dim < len(result_info["shape"])
+                        else 1
+                    )
         else:
             vp[_cap(result)] = result_info
 
@@ -340,19 +358,33 @@ def add_hardware_metadata_analysis_pass(graph, pass_args=None):
     """
 
     # Find implicit mase nodes
-    for node in graph.fx_graph.nodes:
-        node.meta["mase"].parameters["hardware"]["is_implicit"] = False
-        node.meta["mase"].parameters["hardware"]["device_id"] = 0
+    for node in graph.nodes:
+        node.meta["mase"]["hardware"]["is_implicit"] = False
+        node.meta["mase"]["hardware"]["device_id"] = 0
 
     graph.nodes_in = get_input_nodes(graph.fx_graph)
     graph.nodes_out = get_output_nodes(graph.fx_graph)
 
     # Add component source
-    for node in graph.fx_graph.nodes:
+    for node in graph.nodes:
         add_component_source(node)
 
+    # Temporary: fix parallelism to small value to enable verilator simulation
+    for node in graph.nodes:
+        # Batch parallelism set to 1, data parallelism to 4
+        node.meta["mase"]["hardware"]["parallelism"] = [1, 4]
+
     # Add hardware parameters
-    for node in graph.fx_graph.nodes:
+    for node in graph.nodes:
         add_verilog_param(node)
+
+    # Add graph metadata
+    graph.meta["mase"]["hardware"]["verilog_sources"] = []
+    for node in graph.nodes:
+        if node.meta["mase"]["hardware"]["is_implicit"]:
+            continue
+        graph.meta["mase"]["hardware"]["verilog_sources"] += node.meta["mase"][
+            "hardware"
+        ]["dependence_files"]
 
     return graph, {}
