@@ -59,7 +59,7 @@ class GraphSearchSpaceMixedPrecisionPTQ(SearchSpaceBase):
             mg = MaseGraph(self.model)
             mg, _ = init_metadata_analysis_pass(mg, None)
             mg, _ = add_common_metadata_analysis_pass(
-                mg, {"dummy_in": self.dummy_input}
+                mg, {"dummy_in": self.dummy_input, "force_device_meta": False}
             )
             self.mg = mg
         if sampled_config is not None:
