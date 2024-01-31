@@ -9,8 +9,6 @@ def get_modules():
         for d in os.listdir(current_dir)
         if os.path.isdir(os.path.join(current_dir, d))
     ]
-    print(current_dir)
-    print(os.listdir(current_dir))
     if "__pycache__" in mods:
         mods.remove("__pycache__")
     return mods
