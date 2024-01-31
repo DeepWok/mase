@@ -256,4 +256,3 @@ def parse_accelerator(accelerator: str):
     else:
         raise RuntimeError(f"Unsupported accelerator {accelerator}")
     return device
-
