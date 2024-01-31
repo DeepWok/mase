@@ -12,6 +12,7 @@ from .utils import (
     conv_bn_fusion_transform_pass,
     logicnets_fusion_transform_pass,
     onnx_annotate_transform_pass,
+    metadata_value_type_cast_transform_pass,
 )
 
 from .dse import partition_to_multi_device_transform_pass
