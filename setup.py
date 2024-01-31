@@ -1,7 +1,7 @@
 from setuptools import setup, find_packages
 
 setup(
-    name="mase",
+    name="mase-tools",
     version="1.0.0",
     description="Machine-Learning Accelerator System Exploration Tools",
     author="Aaron Zhao, Jianyi Cheng, Cheng Zhang, Pedro Gimenes",
@@ -9,11 +9,9 @@ setup(
     license_files=("LICENSE",),
     python_requires=">=3.10.6",
     package_dir={
-        "chop": "machop/chop",
-        "mase_components": "mase_components",
-        "mase_cocotb": "mase_cocotb",
+        "": "machop",
     },
-    packages=find_packages("machop") + find_packages("."),
+    packages=find_packages("machop"),
     install_requires=[
         "torch",
         "torchvision",
