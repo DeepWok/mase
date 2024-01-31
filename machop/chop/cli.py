@@ -366,6 +366,7 @@ class ChopCLI:
             "save_dir": os.path.join(self.output_dir_sw, "transform"),
             "load_name": self.args.load_name,
             "load_type": self.args.load_type,
+            "accelerator": self.args.accelerator,
         }
 
         transform(**transform_params)
