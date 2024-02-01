@@ -265,9 +265,9 @@ def runner():
     verilog_sources = [
         "../../../../components/ViT/hash_softmax.sv",
         "../../../../components/conv/roller.sv",
-        "../../../../components/fixed_arith/fixed_adder_tree.sv",
-        "../../../../components/fixed_arith/fixed_adder_tree_layer.sv",
-        "../../../../components/fixed_arith/fixed_accumulator.sv",
+        "../../../../components/fixed_arithmetic/fixed_adder_tree.sv",
+        "../../../../components/fixed_arithmetic/fixed_adder_tree_layer.sv",
+        "../../../../components/fixed_arithmetic/fixed_accumulator.sv",
         "../../../../components/common/join2.sv",
         "../../../../components/common/split2.sv",
         "../../../../components/common/fifo.sv",

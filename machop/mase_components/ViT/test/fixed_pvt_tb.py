@@ -1490,13 +1490,13 @@ def runner():
         "../../../../components/common/unpacked_skid_buffer.sv",
         "../../../../components/common/join2.sv",
         "../../../../components/common/split2.sv",
-        "../../../../components/fixed_arith/fixed_matmul_core.sv",
-        "../../../../components/fixed_arith/fixed_dot_product.sv",
-        "../../../../components/fixed_arith/fixed_accumulator.sv",
-        "../../../../components/fixed_arith/fixed_vector_mult.sv",
-        "../../../../components/fixed_arith/fixed_adder_tree.sv",
-        "../../../../components/fixed_arith/fixed_adder_tree_layer.sv",
-        "../../../../components/fixed_arith/fixed_mult.sv",
+        "../../../../components/fixed_arithmetic/fixed_matmul_core.sv",
+        "../../../../components/fixed_arithmetic/fixed_dot_product.sv",
+        "../../../../components/fixed_arithmetic/fixed_accumulator.sv",
+        "../../../../components/fixed_arithmetic/fixed_vector_mult.sv",
+        "../../../../components/fixed_arithmetic/fixed_adder_tree.sv",
+        "../../../../components/fixed_arithmetic/fixed_adder_tree_layer.sv",
+        "../../../../components/fixed_arithmetic/fixed_mult.sv",
     ]
     test_case = VerificationCase()
 
