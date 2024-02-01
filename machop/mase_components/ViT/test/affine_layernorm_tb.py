@@ -267,8 +267,8 @@ def runner():
         "../../../../components/ViT/affine_layernorm.sv",
         "../../../../components/cast/fixed_rounding.sv",
         "../../../../components/common/join2.sv",
-        "../../../../components/fixed_arith/fixed_vector_mult.sv",
-        "../../../../components/fixed_arith/fixed_mult.sv",
+        "../../../../components/fixed_arithmetic/fixed_vector_mult.sv",
+        "../../../../components/fixed_arithmetic/fixed_mult.sv",
         "../../../../components/common/fifo.sv",
     ]
     test_case = VerificationCase()

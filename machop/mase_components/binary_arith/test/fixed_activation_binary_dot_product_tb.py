@@ -164,8 +164,8 @@ def runner():
     verilog_sources = [
         "../../../../components/binary_arith/fixed_activation_binary_dot_product.sv",
         "../../../../components/binary_arith/fixed_activation_binary_vector_mult.sv",
-        "../../../../components/fixed_arith/fixed_adder_tree.sv",
-        "../../../../components/fixed_arith/fixed_adder_tree_layer.sv",
+        "../../../../components/fixed_arithmetic/fixed_adder_tree.sv",
+        "../../../../components/fixed_arithmetic/fixed_adder_tree_layer.sv",
         "../../../../components/binary_arith/fixed_activation_binary_mult.sv",
         "../../../../components/common/register_slice.sv",
         "../../../../components/common/join2.sv",

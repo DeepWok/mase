@@ -1112,13 +1112,13 @@ def runner():
         "../../../../components/linear/fixed_2d_linear.sv",
         "../../../../components/cast/fixed_rounding.sv",
         "../../../../components/activations/fixed_relu.sv",
-        "../../../../components/fixed_arith/fixed_matmul_core.sv",
-        "../../../../components/fixed_arith/fixed_dot_product.sv",
-        "../../../../components/fixed_arith/fixed_accumulator.sv",
-        "../../../../components/fixed_arith/fixed_vector_mult.sv",
-        "../../../../components/fixed_arith/fixed_adder_tree.sv",
-        "../../../../components/fixed_arith/fixed_adder_tree_layer.sv",
-        "../../../../components/fixed_arith/fixed_mult.sv",
+        "../../../../components/fixed_arithmetic/fixed_matmul_core.sv",
+        "../../../../components/fixed_arithmetic/fixed_dot_product.sv",
+        "../../../../components/fixed_arithmetic/fixed_accumulator.sv",
+        "../../../../components/fixed_arithmetic/fixed_vector_mult.sv",
+        "../../../../components/fixed_arithmetic/fixed_adder_tree.sv",
+        "../../../../components/fixed_arithmetic/fixed_adder_tree_layer.sv",
+        "../../../../components/fixed_arithmetic/fixed_mult.sv",
     ]
     test_case = VerificationCase()
 

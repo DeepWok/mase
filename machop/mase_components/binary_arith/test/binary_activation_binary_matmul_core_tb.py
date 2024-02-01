@@ -223,7 +223,7 @@ def runner():
         "../../../../components/cast/fixed_cast.sv",
         "../../../../components/cast/integer_cast.sv",
         "../../../../components/binary_arith/binary_activation_binary_dot_product.sv",
-        "../../../../components/fixed_arith/fixed_accumulator.sv",
+        "../../../../components/fixed_arithmetic/fixed_accumulator.sv",
         "../../../../components/binary_arith/binary_activation_binary_vector_mult.sv",
         "../../../../components/binary_arith/binary_activation_binary_adder_tree.sv",
         "../../../../components/binary_arith/binary_activation_binary_adder_tree_layer.sv",

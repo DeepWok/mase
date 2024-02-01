@@ -48,3 +48,4 @@ einops
 # doc
 sphinx
 sphinx-rtd-theme
+myst-parser

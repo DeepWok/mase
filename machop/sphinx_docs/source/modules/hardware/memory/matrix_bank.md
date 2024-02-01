@@ -1,0 +1,9 @@
+# Matrix Bank
+
+Each row of the matrix is stored in a separate Ultraram FIFO, such that matrix elements can be flushed in the required order through the Row Channels.
+
+![Matrix Bank State Machine](https://raw.githubusercontent.com/DeepWok/mase/main/machop/sphinx_docs/source/imgs/hardware/matrix_bank.png)
+
+As shown in the figure, the matrix bank cycles between FETCH_REQ, WAIT_RESP and WRITE states while matrix elements are fetched. Each request to the AXI read master is for a single row in the matrix. Each AXI response beat contains up to 16 features, hence the required number of AXI beats is dynamically determined depending on the feature count. After receiving each response beat, the state machine transitions from the WAIT_RESP state to WRITE, where each of the 16 features is pushed into the FIFO over 16 cycles. After storing the last feature in the last expected response beat, the state machine either transitions back to FETCH_REQ (if there are more rows pending) or into MATRIX_WAITING. In the latter case, the matrix bank waits for a request from the FTE to dump the rows over the Row Channels.
+
+In the DUMP_ELEMENTS state, the row FIFOs are pulsed such that elements arrive diagonally in the systolic modules. This is achieved by an instance of the Systolic Module Driver. During the row dumping phase, the internal FIFO read pointers for each row are updated, but no data is overwritten in the Ultraram blocks. When transitioning back to the MATRIX_WAITING state, the pointers are reset to their original value. As such, the matrix is immediately ready to be re-used for updating subsequent nodes in the same layer, without the requirement for repeated fetching.

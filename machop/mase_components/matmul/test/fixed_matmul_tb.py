@@ -358,13 +358,13 @@ def runner():
         "../../../mase_components/cast/rtl/fixed_round.sv",
         "../../../mase_components/cast/rtl/fixed_rounding.sv",
         "../../../mase_components/cast/rtl/fixed_cast.sv",
-        "../../../mase_components/fixed_arith/rtl/fixed_matmul_core.sv",
-        "../../../mase_components/fixed_arith/rtl/fixed_dot_product.sv",
-        "../../../mase_components/fixed_arith/rtl/fixed_accumulator.sv",
-        "../../../mase_components/fixed_arith/rtl/fixed_vector_mult.sv",
-        "../../../mase_components/fixed_arith/rtl/fixed_adder_tree.sv",
-        "../../../mase_components/fixed_arith/rtl/fixed_adder_tree_layer.sv",
-        "../../../mase_components/fixed_arith/rtl/fixed_mult.sv",
+        "../../../mase_components/fixed_arithmetic/rtl/fixed_matmul_core.sv",
+        "../../../mase_components/fixed_arithmetic/rtl/fixed_dot_product.sv",
+        "../../../mase_components/fixed_arithmetic/rtl/fixed_accumulator.sv",
+        "../../../mase_components/fixed_arithmetic/rtl/fixed_vector_mult.sv",
+        "../../../mase_components/fixed_arithmetic/rtl/fixed_adder_tree.sv",
+        "../../../mase_components/fixed_arithmetic/rtl/fixed_adder_tree_layer.sv",
+        "../../../mase_components/fixed_arithmetic/rtl/fixed_mult.sv",
     ]
     test_case = VerificationCase()
 
