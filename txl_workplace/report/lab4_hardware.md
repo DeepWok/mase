@@ -35,4 +35,4 @@ From description of software and hardware metadata above, it is clear that softw
   3.  component modules corresponding to the pre-defined model architecture are instantiation. Sources files of these modules can be found in <u>./components/</u>
   4.  Signals connected components and shared feature maps are linked by **assign** 
 ### Q3. Launch the simulation, log and show the simulation results.
-[run](img/lab4_hard_q3.png)
+![run](img/lab4_hard_q3.png)
