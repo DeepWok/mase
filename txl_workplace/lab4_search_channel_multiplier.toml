@@ -53,8 +53,9 @@ eval_mode = true
 data_loader = "val_dataloader"
 num_samples = 512
 
-[search.strategy.hw_runner.average_bitwidth]
-compare_to = 32 # compare to FP32
+[search.strategy.hw_runner.hw_dummy]
+#[search.strategy.hw_runner.average_bitwidth]
+#compare_to = 32 # compare to FP32
 
 [search.strategy.setup]
 n_jobs = 1

@@ -99,6 +99,7 @@ class RunnerBasicTrain(SWRunnerBase):
     def nlp_lm_forward(self, batch, model):
         raise NotImplementedError()
 
+    # TXL
     def vision_cls_forward(self, batch, model):
         raise NotImplementedError()
 
@@ -133,6 +134,11 @@ class RunnerBasicTrain(SWRunnerBase):
         return reduced
 
     def __call__(self, data_module, model, sampled_config) -> dict[str, float]:
+        if not isinstance(model, torch.nn.Module):
+            forward_model = model.model
+        else:
+            forward_model = model
+
         num_samples = self.config["num_samples"]
         max_epochs = self.config["max_epochs"]
 
@@ -156,7 +162,7 @@ class RunnerBasicTrain(SWRunnerBase):
         # model = torch.compile(model)
 
         optimizer = get_optimizer(
-            model=model,
+            model=forward_model,
             optimizer=self.config["optimizer"],
             learning_rate=self.config["learning_rate"],
             weight_decay=self.config.get("weight_decay", 0.0),
@@ -182,8 +188,8 @@ class RunnerBasicTrain(SWRunnerBase):
                 train_iter = iter(train_dataloader)
                 batch = next(train_iter)
 
-            model.train()
-            loss_i = self.forward(self.task, batch, model)
+            forward_model.train()
+            loss_i = self.forward(self.task, batch, forward_model)
             loss_i = loss_i / grad_accumulation_steps
             loss_i.backward()
 

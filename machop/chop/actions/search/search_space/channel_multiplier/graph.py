@@ -139,6 +139,7 @@ def redefine_linear_transform_pass(ori_graph, pass_args=None):
     for node in graph.fx_graph.nodes:
         # if node name is not matched, it won't be tracked
         config = main_config.get(node.name, default)['config']
+        new_module = None
         if isinstance(get_node_actual_target(node), nn.Linear):
             name = config.get("name", None)
             if name is not None:
@@ -154,8 +155,27 @@ def redefine_linear_transform_pass(ori_graph, pass_args=None):
                 elif name == "input_only":
                     in_features = in_features * main_config.get(config['prev_link'], default)['config']["channel_multiplier"]
                 new_module = instantiate_linear(in_features, out_features, bias)
-                parent_name, name = get_parent_name(node.target)
-                setattr(graph.modules[parent_name], name, new_module)
+        elif isinstance(get_node_actual_target(node), nn.Conv2d):
+            name = config.get("name", None)
+            if name is not None:
+                ori_module = graph.modules[node.target]
+                in_channels = ori_module.in_channels
+                out_channels = ori_module.out_channels
+                bias = ori_module.bias
+                if name == "output_only":
+                    out_channels = out_channels * config["channel_multiplier"]
+                elif name == "both":
+                    in_channels = in_channels * main_config.get(config['prev_link'], default)['config'][
+                        "channel_multiplier"]
+                    out_channels = out_channels * config["channel_multiplier"]
+                elif name == "input_only":
+                    in_channels = in_channels * main_config.get(config['prev_link'], default)['config'][
+                        "channel_multiplier"]
+                new_module = nn.Conv2d(in_channels, out_channels,
+                                       kernel_size=ori_module.kernel_size, stride=ori_module.stride,
+                                       padding=ori_module.padding, dilation=ori_module.dilation,
+                                       groups=ori_module.groups, bias=ori_module.bias is not None,
+                                       padding_mode=ori_module.padding_mode)
         elif isinstance(get_node_actual_target(node), nn.BatchNorm1d):
             prev_link = config.get("prev_link", None)
             if prev_link is not None:
@@ -163,8 +183,16 @@ def redefine_linear_transform_pass(ori_graph, pass_args=None):
                 num_features, eps, momentum, affine = ori_module.num_features, ori_module.eps, ori_module.momentum, ori_module.affine
                 num_features = num_features * main_config.get(prev_link, default)['config']["channel_multiplier"]
                 new_module = nn.BatchNorm1d(num_features, eps, momentum, affine)
-                parent_name, name = get_parent_name(node.target)
-                setattr(graph.modules[parent_name], name, new_module)
+        elif isinstance(get_node_actual_target(node), nn.BatchNorm2d):
+            prev_link = config.get("prev_link", None)
+            if prev_link is not None:
+                ori_module = graph.modules[node.target]
+                num_features, eps, momentum, affine = ori_module.num_features, ori_module.eps, ori_module.momentum, ori_module.affine
+                num_features = num_features * main_config.get(prev_link, default)['config']["channel_multiplier"]
+                new_module = nn.BatchNorm2d(num_features, eps, momentum, affine)
 
+        if new_module is not None:
+            parent_name, name = get_parent_name(node.target)
+            setattr(graph.modules[parent_name], name, new_module)
 
     return graph, {}
