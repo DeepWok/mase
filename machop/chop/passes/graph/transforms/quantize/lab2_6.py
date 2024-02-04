@@ -4,8 +4,6 @@ def print_arg(node, arg_name):
     
         print(node.meta["mase"].parameters["common"]["args"][arg_name]["precision"])
     
-        print(node.meta["mase"].parameters["common"]["args"][arg_name]["size"])
-
 
 MASE_OP_TO_INPUT_ENTRIES_AND_ARGS = {
     # entry and arg corresponding to name in software and hardware mapping
