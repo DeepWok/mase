@@ -36,9 +36,9 @@ def graph_iterator_quantize_verify(graph):
     for node in graph.fx_graph.nodes:
         mase_op = node.meta["mase"].parameters["common"]["mase_op"]
         node_args = node.meta["mase"].parameters["common"]["args"]
-
-        for arg_name, arg_val in node_args : 
-            print(arg_val["type"])
-            print(arg_val["precision"])
+        print(node_args)
+        #for arg_name, arg_val in node_args : 
+         #   print(arg_val["type"])
+         #   print(arg_val["precision"])
     
 
