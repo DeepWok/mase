@@ -33,7 +33,7 @@ For more, you can watch this
 
 .. toctree::
    :maxdepth: 2
-   :caption: Python API
+   :caption: Machop API
 
    modules/api/actions
    modules/api/passes
@@ -41,17 +41,12 @@ For more, you can watch this
 
 .. toctree::
    :maxdepth: 1
+   :caption: Mase Components
+
+   modules/hardware/hardware_documentation
+
+.. toctree::
+   :maxdepth: 1
    :caption: Students
 
    modules/labs
-
-
-.. Indices and tables
-.. ==================
-
-Functionalities
----------------
-
-.. * :ref:`genindex`
-.. * :ref:`modindex`
-.. * :ref:`search`
