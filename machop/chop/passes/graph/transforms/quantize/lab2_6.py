@@ -1,9 +1,9 @@
 def print_arg(node, arg_name):
-    if dtype is not None:
+    
         print(node.meta["mase"].parameters["common"]["args"][arg_name]["type"])
-    if precision is not None:
+    
         print(node.meta["mase"].parameters["common"]["args"][arg_name]["precision"])
-    if size is not None:
+    
         print(node.meta["mase"].parameters["common"]["args"][arg_name]["size"])
 
 
