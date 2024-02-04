@@ -35,9 +35,10 @@ def print_node_meta_param(node, mase_op: str) -> None:
 def graph_iterator_quantize_verify(graph):
     for node in graph.fx_graph.nodes:
         mase_op = node.meta["mase"].parameters["common"]["mase_op"]
-        print(node.meta["mase"].parameters["common"]["args"])
-        #for arg_name, arg_val in node.meta["mase"].parameters["common"]["args"] : 
-           # print_arg(node, arg_name)
-        
+        node_args = node.meta["mase"].parameters["common"]["args"]
+
+        for arg_name, arg_val in node_args : 
+            print(arg_val["type"])
+            print(arg_val["precision"])
     
 
