@@ -25,8 +25,6 @@ def graph_iterator_quantize_verify(graph):
         ]:
        
           for arg_name, arg_val in node_args.items() : 
-              print(arg_val["type"])
-              print(arg_val["precision"])
               rows.append(
                 [
                 node.name,
