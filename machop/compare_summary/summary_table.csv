@@ -1,0 +1,7 @@
+,Ori name,New name,MASE_TYPE,Mase_OP,Original type,Quantized type,Changed
+0,x,x,placeholder,placeholder,x,x,False
+1,seq_blocks_0,seq_blocks_0,module,batch_norm1d,BatchNorm1d,BatchNorm1d,False
+2,seq_blocks_1,seq_blocks_1,module_related_func,relu,ReLU,ReLU,False
+3,seq_blocks_2,seq_blocks_2,module_related_func,linear,Linear,LinearInteger,True
+4,seq_blocks_3,seq_blocks_3,module_related_func,relu,ReLU,ReLU,False
+5,output,output,output,output,output,output,False
