@@ -216,6 +216,11 @@ The search flow implemented in MASE is very similar to the one that you have con
 
 This enables one to execute the search through the MASE command line interface, remember to change the name after the `--load` option.
 
+> [Warning! Incorrect Pandas on Colab]
+
+You might see an error message complaining about `AttributeError: 'DataFrame' object has no attribute 'map'. Did you mean: 'mad'?`
+`, this is normally because of an incorrect installation on Colab, you can find the [issue](https://github.com/DeepWok/mase/issues/37#issuecomment-1919191598) here. Also, learn to search your issues on the repository may help you to find answers to many of your problems!
+
 ```bash
 ./ch search --config configs/examples/jsc_toy_by_type.toml --load your_pre_trained_ckpt
 ```
