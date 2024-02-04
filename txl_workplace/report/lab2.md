@@ -104,3 +104,14 @@ name = "integer"
 "bias_frac_width" = 4
 ```
 ![result in file system](img/lab2_q7.png)
+
+### OPT. Implement a pass to count the number of FLOPs (floating-point operations) and BitOPs (bit-wise operations).
+- Main calculation operation is defined in [counter.py](../counter.py)
+- Analysis pass entrance is defined in [lab2_opt.py](../lab2_opt.py)
+- Output of examples:
+  - unquantized model <br>![unquantized](img/lab2_opt_unquantized.png)
+  - quantized model with configuration above<br>![quantized](img/lab2_opt_quantized.png)
+  - FLOPs of quantized model remains same with the origin, but BitOPS reduce significantly.
+- Problem unsolved:
+  - The '**width**' of data/parameters is not stored in the **MaseGraph** during quantize transformation, thus there are duplicate steps for processing the configuration in current version.
+  - Various type of module is supported for FLOPs calculation. But only LinearInteger, BatchNorm and Relu supported for BitOPs calculation in current version.

@@ -120,7 +120,7 @@ class JSC_Three_Linear_Layers(nn.Module):
 - Both self defined BF search implemented in [Lab3](lab3.md) and optuna engine in mase can be applied to this channel multiplier search space
 ![terminal output](img/lab4_soft_q4.png)
 
-### OPT Can you define a search space (maybe channel dimension) for the VGG network, and use the TPE-search to tune it?
+### OPT. Can you define a search space (maybe channel dimension) for the VGG network, and use the TPE-search to tune it?
 - The search-space used above can be easily applied to **vgg7** with **redefine_transform_pass** for **nn.Cov2d** and **nn.BatchNorm2d** implemented.
 <br>![printed info in terminal](img/lab4_opt_terminal.png)
 - Although evaluation mode in software runner is not suitable for this case. But the dependent function **vision_cls_forward** in **RunnerBasicTrain** is not implemented yet, thus the **search.strategy.sw_runner.basic_evaluation** is used currently for testing and demonstration.

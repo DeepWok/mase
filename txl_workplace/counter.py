@@ -12,6 +12,8 @@ from chop.passes.graph.transforms.quantize.quantized_modules.linear import Linea
 
 __all__ = ['count_flops_params']
 
+BITOPS_FLOAT16 = [16, 6+10*10]
+BITOPS_FLOAT32 = [32, 9+23*23]
 
 def _get_params(m):
     return sum([p.numel() for p in m.parameters()])
@@ -80,19 +82,20 @@ class ModelProfiler:
     def _push_result(self, result):
         self.results.append(result)
 
-    def _get_result(self, m, flops):
+    def _get_result(self, m, flops, bitops = 0):
         # assume weight is called `weight`, otherwise it's not applicable
         # if user customize the operation, the callback function should
         # return the dict result, inluding calculated flops, params and weight_shape.
 
         result = {
             'flops': flops,
+            'bitops': bitops,
             'params': _get_params(m),
             'weight_shape': tuple(m.weight.size()) if hasattr(m, 'weight') else 0,
         }
         return result
 
-    def _count_convNd(self, m, x, y):
+    def _count_convNd(self, m, x, y, bitops):
         cin = m.in_channels
         kernel_ops = torch.zeros(m.weight.size()[2:]).numel()
         output_size = torch.zeros(y.size()[2:]).numel()
@@ -109,31 +112,38 @@ class ModelProfiler:
 
         return self._get_result(m, total_ops)
 
-    def _count_linear(self, m, x, y):
+    def _count_linear(self, m, x, y, bitops):
         out_features = m.out_features
         if hasattr(m, 'weight_mask'):
             out_features = m.weight_mask.sum() // m.in_features
         total_ops = out_features * m.in_features
 
+        total_bitops = total_ops * (9 + 23 * 23)
+
         if self._count_bias:
             bias_flops = 1 if m.bias is not None else 0
             total_ops += out_features * bias_flops
+            total_bitops += out_features * bias_flops * 32
 
-        return self._get_result(m, total_ops)
+        return self._get_result(m, total_ops, total_bitops)
 
-    def _count_bn(self, m, x, y):
+    def _count_bn(self, m, x, y, bitops):
         total_ops = 2 * x[0][0].numel()
-        return self._get_result(m, total_ops)
+        # - and / is applied to each element
+        total_bitops = x[0][0].numel() * (32 + (9+23*23))
+        return self._get_result(m, total_ops, total_bitops)
 
-    def _count_relu(self, m, x, y):
+    def _count_relu(self, m, x, y, bitops):
         total_ops = x[0][0].numel()
+        # only need to check the sign bit
+        total_bitops = x[0][0].numel()
         return self._get_result(m, total_ops)
 
-    def _count_avgpool(self, m, x, y):
+    def _count_avgpool(self, m, x, y, bitops):
         total_ops = y[0].numel()
         return self._get_result(m, total_ops)
 
-    def _count_adap_avgpool(self, m, x, y):
+    def _count_adap_avgpool(self, m, x, y, bitops):
         kernel = torch.Tensor([*(x[0].shape[2:])]) // torch.Tensor(list((m.output_size,))).squeeze()
         total_add = int(torch.prod(kernel))
         total_div = 1
@@ -143,7 +153,7 @@ class ModelProfiler:
 
         return self._get_result(m, total_ops)
 
-    def _count_upsample(self, m, x, y):
+    def _count_upsample(self, m, x, y, bitops):
         if m.mode == 'linear':
             total_ops = y[0].nelement() * 5  # 2 muls + 3 add
         elif m.mode == 'bilinear':
@@ -203,15 +213,15 @@ class ModelProfiler:
 
         return total_ops
 
-    def _count_rnn_cell(self, m, x, y):
+    def _count_rnn_cell(self, m, x, y, bitops):
         total_ops = self._count_cell_flops(m.input_size, m.hidden_size, 'rnn')
         return self._get_result(m, total_ops)
 
-    def _count_gru_cell(self, m, x, y):
+    def _count_gru_cell(self, m, x, y, bitops):
         total_ops = self._count_cell_flops(m.input_size, m.hidden_size, 'gru')
         return self._get_result(m, total_ops)
 
-    def _count_lstm_cell(self, m, x, y):
+    def _count_lstm_cell(self, m, x, y, bitops):
         total_ops = self._count_cell_flops(m.input_size, m.hidden_size, 'lstm')
         return self._get_result(m, total_ops)
 
@@ -247,24 +257,24 @@ class ModelProfiler:
         total_ops *= num_steps
         return total_ops
 
-    def _count_rnn(self, m, x, y):
+    def _count_rnn(self, m, x, y, bitops):
         total_ops = self._count_rnn_module(m, x, y, 'rnn')
 
         return self._get_result(m, total_ops)
 
-    def _count_gru(self, m, x, y):
+    def _count_gru(self, m, x, y, bitops):
         total_ops = self._count_rnn_module(m, x, y, 'gru')
 
         return self._get_result(m, total_ops)
 
-    def _count_lstm(self, m, x, y):
+    def _count_lstm(self, m, x, y, bitops):
         total_ops = self._count_rnn_module(m, x, y, 'lstm')
 
         return self._get_result(m, total_ops)
 
-    def count_module(self, m, x, y, name):
+    def count_module(self, m, x, y, name, bitops=BITOPS_FLOAT32):
         # assume x is tuple of single tensor
-        result = self.ops[type(m)](m, x, y)
+        result = self.ops[type(m)](m, x, y, bitops)
         output_size = y[0].size() if isinstance(y, tuple) else y.size()
 
         total_result = {
@@ -282,6 +292,9 @@ class ModelProfiler:
 
     def sum_params(self):
         return sum({s['name']: s['params'] for s in self.results}.values())
+
+    def sum_bitops(self):
+        return sum([s['bitops'] for s in self.results])
 
 
 
@@ -328,6 +341,9 @@ def count_flops_params(model, x, custom_ops=None, verbose=True, mode='default'):
     original_device = next(model.parameters()).device
     training = model.training
 
+    bitops = BITOPS_FLOAT32
+    if x.dtype == torch.float16:
+        bitops = BITOPS_FLOAT32
     if isinstance(x, tuple) and all(isinstance(t, int) for t in x):
         x = (torch.zeros(x).to(original_device), )
     elif torch.is_tensor(x):
@@ -348,7 +364,7 @@ def count_flops_params(model, x, custom_ops=None, verbose=True, mode='default'):
         # prev_m = m
         if type(m) in profiler.ops:
             # if a leaf node
-            _handler = m.register_forward_hook(functools.partial(profiler.count_module, name=name))
+            _handler = m.register_forward_hook(functools.partial(profiler.count_module, name=name,bitops=bitops))
             handler_collection.append(_handler)
 
     model.eval()
@@ -364,6 +380,7 @@ def count_flops_params(model, x, custom_ops=None, verbose=True, mode='default'):
     if verbose:
         # get detail information
         print(f'FLOPs total: {profiler.sum_flops()}')
+        print(f'BITOPs total: {profiler.sum_bitops()}')
         print(f'#Params total: {profiler.sum_params()}')
 
-    return profiler.sum_flops(), profiler.sum_params(), profiler.results
+    return profiler.sum_flops(), profiler.sum_bitops(), profiler.sum_params(), profiler.results
