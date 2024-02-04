@@ -6,6 +6,7 @@
 | Training efficiency  | Less time required to go through one epoch                | More time consuming for every epoch                                    |
 | Converging stability | Loss curve would decrease more smoothly, less oscillation | More noise within each gradient calculation                            |
 | Generalization       | More stability means less generalization ability          | More noise in each bach propagation brings more generalization ability |
+
 <br>![vary batch size](img/lab1_q1.png)
 * batch sizes increase from 64 to 1024. The figure above demonstrates that, in this case, with smaller batch sizes the parameters update more frequently which leads to a better outcome.
 ### Q2. Why is the impact of varying maximum epoch number
