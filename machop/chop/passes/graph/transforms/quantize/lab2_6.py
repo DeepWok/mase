@@ -35,7 +35,7 @@ def graph_iterator_quantize_verify(graph):
                 arg_name,
                 arg_val["type"],
                 arg_val["precision"],
-                ]  
+                ])  
         
     df = pd.DataFrame(rows, columns=headers)    
     logger.info("Compare nodes:")
