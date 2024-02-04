@@ -37,9 +37,9 @@ def print_node_meta_param(node, mase_op: str) -> None:
 
 
 def graph_iterator_quantize_verify(graph):
-    for node in graph.fx_graph.nodes:
-        if node.op == "call_module":    
-            mase_op = node.meta["mase"].parameters["common"]["mase_op"]
+   for node in graph.fx_graph.nodes:
+        mase_op = node.meta["mase"].parameters["common"]["mase_op"]
+        if mase_op == "linear":    
             print_node_meta_param(node,mase_op)
         
         
