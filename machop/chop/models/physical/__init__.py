@@ -6,7 +6,7 @@ PHYSICAL_MODELS = {
     "jsc-toy": {
         "model": get_jsc_toy,
         "info": MaseModelInfo(
-            "jsc-s",
+            "jsc-toy",
             model_source="physical",
             task_type="physical",
             physical_data_point_classification=True,
@@ -16,7 +16,7 @@ PHYSICAL_MODELS = {
     "jsc-tiny": {
         "model": get_jsc_tiny,
         "info": MaseModelInfo(
-            "jsc-s",
+            "jsc-tiny",
             model_source="physical",
             task_type="physical",
             physical_data_point_classification=True,

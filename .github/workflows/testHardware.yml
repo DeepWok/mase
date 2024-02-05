@@ -4,11 +4,11 @@ on:
   push:
     branches: [ "main", "extended-tests" ]
     paths:
-      - 'components/**'
+      - 'machop/mase_components/**'
   pull_request:
     branches: [ "main", "extended-tests" ]
     paths:
-      - 'components/**'
+      - 'machop/mase_components/**'
   workflow_dispatch:
     logLevel:
           description: 'Log level'
@@ -107,6 +107,10 @@ jobs:
       
       - name: Hardware regression test 
         run: |
+            pip3 --version 
+            python3 --version
+            pip3 install -e . -vvv
+            export PYTHONPATH="${PATH}:$(pwd):$(pwd)/machop"
             python3 scripts/test-hardware.py -a
 
 

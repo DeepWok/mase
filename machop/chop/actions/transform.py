@@ -19,7 +19,7 @@ from chop.passes.graph.utils import deepcopy_mase_graph
 from chop.tools.checkpoint_load import load_model
 from chop.tools.config_load import load_config
 from chop.tools.get_input import InputGenerator, get_cf_args, get_dummy_input
-from chop.tools.utils import device, to_numpy_if_tensor
+from chop.tools.utils import parse_accelerator, to_numpy_if_tensor
 
 from chop.passes.graph.transforms import metadata_value_type_cast_transform_pass
 
@@ -42,8 +42,11 @@ def transform(
     save_dir: str = None,
     load_name: str = None,
     load_type: str = None,
+    accelerator: str = "auto",
 ):
+    accelerator = parse_accelerator(accelerator)
     model = pre_transform_load(load_name=load_name, load_type=load_type, model=model)
+    model.to(accelerator)
     config = load_config(config)
     save_dir = Path(save_dir)
     save_dir.mkdir(parents=True, exist_ok=True)
@@ -61,18 +64,18 @@ def transform(
 
     # create or load metadata.parameters and mase_graph.model
     if load_name is not None and load_type == "mz":
-        graph = load_mase_graph_interface_pass(graph, pass_args=load_name)
+        graph, _ = load_mase_graph_interface_pass(graph, pass_args=load_name)
     else:
         dummy_in = get_dummy_input(
             model_info=model_info,
             data_module=data_module,
             task=task,
-            device=device,
+            device=accelerator,
         )
         if len(graph.model.additional_inputs) > 0:
             dummy_in = dummy_in | graph.model.additional_inputs
         graph, _ = add_common_metadata_analysis_pass(
-            graph, pass_args={"dummy_in": dummy_in, "force_device_meta": False}
+            graph, pass_args={"dummy_in": dummy_in}
         )
         graph, _ = add_software_metadata_analysis_pass(graph, pass_args=None)
 
@@ -82,14 +85,11 @@ def transform(
         pass_name: str
         pass_config: dict
         match pass_name:
-            # TODO: fix this later!
             case "quantize":
                 pass_save_dir = save_dir / "quantize"
-
                 graph, _ = metadata_value_type_cast_transform_pass(
                     graph, pass_args={"fn": to_numpy_if_tensor}
                 )
-
                 ori_graph = deepcopy_mase_graph(graph)
                 graph, _ = PASSES["quantize"](graph, pass_args=pass_config)
                 PASSES["summarize_quantization"](
@@ -181,6 +181,7 @@ def transform(
             case _:
                 my_pass = PASSES[pass_name]
                 graph, _ = my_pass(graph, pass_args=pass_config)
+
         assert isinstance(
             graph, MaseGraph
         ), f"Return type of {pass_name} must be MaseGraph, got {type(graph)}"
@@ -188,7 +189,6 @@ def transform(
     if save_dir is not None:
         transformed_ckpt = save_dir / "transformed_ckpt"
         transformed_ckpt.mkdir(parents=True, exist_ok=True)
-
         graph, _ = metadata_value_type_cast_transform_pass(
             graph, pass_args={"fn": to_numpy_if_tensor}
         )

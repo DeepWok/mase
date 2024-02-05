@@ -26,6 +26,7 @@ shell: build-docker
 # Short-term solution: call scripts under /tmp so we can clean it properly
 test-hw:
 	mkdir -p ./tmp
+	pip install .
 	(cd tmp; python3 ../scripts/test-hardware.py -a || exit 1)
 
 test-sw:

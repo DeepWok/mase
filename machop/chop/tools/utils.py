@@ -1,6 +1,7 @@
 import numpy as np
 import os
 import pickle
+import torch
 
 import colorlog
 import torch
@@ -243,3 +244,15 @@ def nested_dict_replacer(compound_dict, fn):
 
     _finditem(compound_dict)
     return compound_dict
+
+
+def parse_accelerator(accelerator: str):
+    if accelerator == "auto":
+        device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+    elif accelerator == "gpu":
+        device = torch.device("cuda:0")
+    elif accelerator == "cpu":
+        device = torch.device("cpu")
+    else:
+        raise RuntimeError(f"Unsupported accelerator {accelerator}")
+    return device
