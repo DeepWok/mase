@@ -5,7 +5,7 @@ from tabulate import tabulate
 
 logger = logging.getLogger(__name__)
 
-def graph_iterator_quantize_verify(graph):
+def graph_iterator_quantize_verify(graph)-> pd.DataFrame:
     headers = [
         "Graph name",
         "MASE_TYPE",
@@ -39,3 +39,4 @@ def graph_iterator_quantize_verify(graph):
     logger.info("Compare nodes:")
     logger.info("\n" + tabulate(df, headers=headers, tablefmt="orgtbl"))
 
+    return df
