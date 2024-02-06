@@ -1,11 +1,19 @@
 from os import getenv, PathLike
 import torch
-from cocotb.runner import get_runner, get_results
 from pathlib import Path
 import mase_components
 from mase_components import get_modules
 
 from .emit import emit
+
+import warnings
+
+warnings.filterwarnings(
+    "ignore",
+    category=UserWarning,
+    message="Python runners and associated APIs are an experimental feature and subject to change.",
+)
+from cocotb.runner import get_runner, get_results
 
 
 def simulate(

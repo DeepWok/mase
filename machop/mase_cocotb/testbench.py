@@ -12,8 +12,6 @@ class Testbench:
         self.input_drivers = []
         self.output_monitors = []
 
-        self.model = None
-
         self.input_precision = [32]
 
         if self.clk != None:
