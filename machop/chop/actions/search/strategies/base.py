@@ -54,19 +54,32 @@ class SearchStrategyBase:
         self.hw_runner = []
         # the software runner's __call__ will use the rebuilt model to calculate the software metrics like accuracy, loss, ...
 
-        for runner_name, runner_cfg in config["sw_runner"].items():
-            self.sw_runner.append(
-                get_sw_runner(
-                    runner_name, model_info, task, dataset_info, accelerator, runner_cfg
+        if "sw_runner" in config.keys():
+            for runner_name, runner_cfg in config["sw_runner"].items():
+                self.sw_runner.append(
+                    get_sw_runner(
+                        runner_name,
+                        model_info,
+                        task,
+                        dataset_info,
+                        accelerator,
+                        runner_cfg,
+                    )
                 )
-            )
-        # the hardware runner's __call__ will use the rebuilt model to calculate the hardware metrics like average bitwidth, latency, ...
-        for runner_name, runner_cfg in config["hw_runner"].items():
-            self.hw_runner.append(
-                get_hw_runner(
-                    runner_name, model_info, task, dataset_info, accelerator, runner_cfg
+
+        if "hw_runner" in config.keys():
+            # the hardware runner's __call__ will use the rebuilt model to calculate the hardware metrics like average bitwidth, latency, ...
+            for runner_name, runner_cfg in config["hw_runner"].items():
+                self.hw_runner.append(
+                    get_hw_runner(
+                        runner_name,
+                        model_info,
+                        task,
+                        dataset_info,
+                        accelerator,
+                        runner_cfg,
+                    )
                 )
-            )
 
         self._post_init_setup()
 
