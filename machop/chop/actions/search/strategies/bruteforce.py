@@ -5,6 +5,7 @@ import logging
 from tabulate import tabulate
 import joblib
 import numpy as np
+import time
 
 from functools import partial
 from .base import SearchStrategyBase
@@ -87,6 +88,7 @@ class SearchStrategyBruteForce(SearchStrategyBase):
         return {"sw_metrics":software_metrics,"hw_metrics":hardware_metrics,"scaled_metrics": scaled_metrics, "aggregate":scaled_metrics_aggregrate} 
         
     def search(self, search_space) -> optuna.study.Study:
+        start_time = time.time()
         keys = search_space.choice_lengths_flattened.keys()
         keys_list = list(keys)
 
@@ -119,12 +121,17 @@ class SearchStrategyBruteForce(SearchStrategyBase):
             }
             all_metrics.append(metrics_for_combination)
             self.visualizer.log_metrics(metrics=scaled_metrics[i], step=i)
+        best_index = np.argmax(scaled_metrics_aggregrate)
+
+        end_time = time.time()
+        total_time = end_time - start_time
+        logger.info("Total time taken for search: %f seconds", total_time)
 
         df = pd.DataFrame(all_metrics)
         print("Results for all Configurations in Search Space")
         print(tabulate(df, headers='keys', tablefmt='psql'))
 
-        best_index = np.argmax(scaled_metrics_aggregrate)
+        
         best_sw_metrics = sw_metrics[best_index] 
         best_hw_metrics = hw_metrics[best_index] 
         best_scaled_metric = scaled_metrics[best_index]  
