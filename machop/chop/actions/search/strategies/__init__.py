@@ -1,6 +1,6 @@
 # from .rl import StrategyRL
 from .optuna import SearchStrategyOptuna
-from .SearchStrategyBruteForce import SearchStrategyBruteForce
+from .bruteforce import SearchStrategyBruteForce
 from .base import SearchStrategyBase
 
 
