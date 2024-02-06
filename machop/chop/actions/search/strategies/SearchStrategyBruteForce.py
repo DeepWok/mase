@@ -24,21 +24,6 @@ def brute_force_combinations(variable_ranges, current_combination=[], all_combin
 def lists_to_dict(keys, values):
     return dict(zip(keys, values))
 
-def callback_save_study(
-    study: optuna.study.Study,
-    frozen_trial: optuna.trial.FrozenTrial,
-    save_dir,
-    save_every_n_trials=1,
-):
-    if (frozen_trial.number + 1) % save_every_n_trials == 0:
-        study_path = save_dir / f"study_trial_{frozen_trial.number}.pkl"
-        if not study_path.parent.exists():
-            study_path.parent.mkdir(parents=True)
-
-        with open(study_path, "wb") as f:
-            joblib.dump(study, f)
-
-
 class SearchStrategyBruteForce(SearchStrategyBase):
     is_iterative = False
 
