@@ -84,12 +84,7 @@ class SearchStrategyBruteForce(SearchStrategyBase):
                     scaled_metrics_aggregrate -= scaled_metrics[metric_name] 
                 else:
                     scaled_metrics_aggregrate += scaled_metrics[metric_name]   
-            
-
-        self.visualizer.log_metrics(metrics=scaled_metrics, step=i)
-
-    
-        return metrics, scaled_metrics, scaled_metrics_aggregrate 
+        return {"sw_metrics":software_metrics,"hw_metrics":hardware_metrics,"scaled_metrics": scaled_metrics, "aggregate":scaled_metrics_aggregrate} 
         
     def search(self, search_space) -> optuna.study.Study:
         keys = search_space.choice_lengths_flattened.keys()
@@ -102,29 +97,49 @@ class SearchStrategyBruteForce(SearchStrategyBase):
             no_combinations = no_combinations*v
 
         all_combinations = brute_force_combinations(variable_ranges)
-        metrics=[]
+        results={}
+        sw_metrics=[]
+        hw_metrics=[]
         scaled_metrics=[]
         scaled_metrics_aggregrate=[]
+        all_metrics = []
         for i in range(no_combinations):
             sampled_index = lists_to_dict(keys_list, all_combinations[i])
-            print(sampled_index)
-            
-            metrics[i],scaled_metrics[i],scaled_metrics_aggregrate[i] = objective(self, sampled_index, search_space)
+            results = self.objective(sampled_index, search_space)
+            sw_metrics.append(results["sw_metrics"])
+            hw_metrics.append(results["hw_metrics"])
+            scaled_metrics.append(results["scaled_metrics"]) 
+            scaled_metrics_aggregrate.append(results["aggregate"]) 
+
+            metrics_for_combination = {
+              "Config Number": i,
+              "Software Metrics": results["sw_metrics"],
+              "Hardware Metrics": results["hw_metrics"],
+              "Scaled Metrics": results["scaled_metrics"],
+            }
+            all_metrics.append(metrics_for_combination)
+            self.visualizer.log_metrics(metrics=scaled_metrics[i], step=i)
+
+        df = pd.DataFrame(all_metrics)
+        print("Results for all Configurations in Search Space")
+        print(tabulate(df, headers='keys', tablefmt='psql'))
 
         best_index = np.argmax(scaled_metrics_aggregrate)
-        best_metrics = metrics[best_index]  # Parameters corresponding to best result
-        best_scaled_metric = scaled_metrics[best_index]  # Metric A value for best result
+        best_sw_metrics = sw_metrics[best_index] 
+        best_hw_metrics = hw_metrics[best_index] 
+        best_scaled_metric = scaled_metrics[best_index]  
         best_config = search_space.flattened_indexes_to_config(lists_to_dict(keys_list, all_combinations[best_index]))
-        search_result = {"index":best_index,"metrics":best_metrics,"scaled metrics":best_scaled_metric,"config": best_config}
-        self._save_study(search_result, self.save_dir / "best_result")
+        search_result = {"index":best_index,"sw_metrics":best_sw_metrics,"hw_metrics":best_hw_metrics,"scaled_metrics":best_scaled_metric,"config": best_config}
+       
+        self._save_best(search_result, self.save_dir / "study.pkl")
+        print("Best Configuration is :", best_config)
         return search_result
 
     @staticmethod
     def _save_best(search_result, save_path):
         df = pd.DataFrame(
             columns=[
-                "number",
-                "value",
+                "Config number",
                 "software_metrics",
                 "hardware_metrics",
                 "scaled_metrics",
@@ -132,22 +147,20 @@ class SearchStrategyBruteForce(SearchStrategyBase):
             ]
         )
         row = [
-                trial.number,
-                trial.values,
-                trial.user_attrs["software_metrics"],
-                trial.user_attrs["hardware_metrics"],
-                trial.user_attrs["scaled_metrics"],
-                trial.user_attrs["sampled_config"],
-            ]
+                search_result["index"],
+                search_result["sw_metrics"],
+                search_result["hw_metrics"],
+                search_result["scaled_metrics"],
+                search_result["config"],
+            ]    
         df.loc[len(df)] = row
        
         df.to_json(save_path, orient="index", indent=4)
 
-        txt = "Best trial(s):\n"
+        txt = "Best Result(s):\n"
         df_truncated = df.loc[
-            :, ["number", "software_metrics", "hardware_metrics", "scaled_metrics"]
+            :, ["Config number", "software_metrics", "hardware_metrics", "scaled_metrics"]
         ]
-
         def beautify_metric(metric: dict):
             beautified = {}
             for k, v in metric.items():
@@ -174,5 +187,5 @@ class SearchStrategyBruteForce(SearchStrategyBase):
             headers="keys",
             tablefmt="orgtbl",
         )
-        logger.info(f"Best trial(s):\n{txt}")
+        logger.info(f"Best Result(s):\n{txt}")
         return df
