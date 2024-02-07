@@ -71,8 +71,8 @@ def mase_runner(
                 "--stats",
                 # Signal trace in dump.fst
                 *(["--trace-fst", "--trace-structs"] if trace else []),
-                "-trace-depth",
-                "--threads 4",
+                "--trace",
+                # "-trace-depth",
                 "-O0",
                 "-build-jobs",
                 "8",
