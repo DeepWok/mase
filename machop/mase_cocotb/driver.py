@@ -1,6 +1,7 @@
 from queue import Queue
 
 import cocotb
+from cocotb.log import SimLog
 from cocotb.decorators import coroutine
 from cocotb.triggers import *
 
@@ -42,6 +43,11 @@ class Driver:
 
     def clear(self):
         self.send_queue = Queue()
+
+    def load_driver(self, tensor):
+        for beat in tensor:
+            self.log.info(f"Loaded beat {beat} to driver {self.__class__.__name__}")
+            self.append(beat)
 
     @coroutine
     async def send(self, transaction) -> None:

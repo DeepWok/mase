@@ -22,6 +22,12 @@ Hardware Documentation
 
 .. toctree::
     :maxdepth: 1
+    :caption: Linear Layer
+
+    linear/fixed_linear
+
+.. toctree::
+    :maxdepth: 1
     :caption: On-Chip Memory
 
     memory/matrix_bank
