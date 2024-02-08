@@ -51,6 +51,7 @@ MASE provides an efficient and scalable approach for exploring accelerator syste
 
 * Subscribe [Mase Weekly Dev Meeting (Wednesday 4:30 UK time)](https://calendar.google.com/calendar/event?action=TEMPLATE&tmeid=N2lpc25mN3VoamE5NXVmdmY5ZW1tOWpmMGdfMjAyMzExMDFUMTYzMDAwWiBqYzI0ODlAY2FtLmFjLnVr&tmsrc=jc2489%40cam.ac.uk&scp=ALL). Everyone is welcomed!
 * Direct [Google Meet link](meet.google.com/fke-zvii-tgv)
+* Join the [Mase Slack](https://join.slack.com/t/cl-bxr2817/shared_invite/zt-2c57uqo07-eAubscjejZOSRuFVQMBN2w)
 * If you want to discuss anything in future meetings, please add them as comments in the [meeting agenda](https://docs.google.com/document/d/12m96h7gOhhmikniXIu44FJ0sZ2mSxg9SqyX-Uu3s-tc/edit?usp=sharing) so we can review and add them.
 
 ## Donation  
