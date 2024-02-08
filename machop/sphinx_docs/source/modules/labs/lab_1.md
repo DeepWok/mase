@@ -26,7 +26,7 @@ There are in total 5 tasks you would need to finish.
 
 # Preparation and installations
 
-Make sure you have read and understood the installation of the framework in [Get-started-on-local-machines-software-only](../Get-started-on-local-machines-software-only.md).
+Make sure you have read and understood the installation of the framework detailed [here](https://deepwok.github.io/mase/modules/documentation/getting_started.html).
 
 Both streams (software and hardware) would start from software first. We are starting with simple toy networks that can train on most laptops.
 
