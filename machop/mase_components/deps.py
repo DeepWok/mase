@@ -7,7 +7,6 @@ Entry format:
 
 """
 
-
 MASE_HW_DEPS = {
     # TODO: Failing Test
     # "activations/fixed_relu": [],
@@ -66,7 +65,7 @@ MASE_HW_DEPS = {
     "conv/sliding_window": ["cast", "conv", "linear", "common", "fixed_arithmetic"],
     "conv/padding": ["cast", "conv", "linear", "common", "fixed_arithmetic"],
     # "conv/convolution": ["cast", "conv", "linear", "common", "fixed_arithmetic"],
-    "matmul/fixed_matmul": ["cast", "linear", "matmul", "common", "fixed_arithmetic"],
+    "matmul/matmul": ["cast", "linear", "matmul", "common", "fixed_arithmetic"],
     # # 'cast/bram_cast': [],
     # # 'cast/bram2hs_cast': [],
     # # 'cast/hs2bram_cast': [],
