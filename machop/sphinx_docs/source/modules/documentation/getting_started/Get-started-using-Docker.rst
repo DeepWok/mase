@@ -40,6 +40,7 @@ If you do not have access to one of our servers and need access to Vivado/Vitis 
 The first argument points to your Xilinx tool directory and you should see the following folder under the path:
  
 .. code-block:: shell
+
   DocNav  Model_Composer  Vitis  Vitis_HLS  Vivado  xic
 
 The second argument indicates your Xilinx tool version, e.g. 2023.1.
