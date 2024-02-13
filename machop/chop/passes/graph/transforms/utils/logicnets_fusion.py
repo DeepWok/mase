@@ -70,7 +70,6 @@ def logicnets_fusion_transform_pass(graph, pass_args, **_):
                 graph.fx_graph.erase_node(node)
                 pbar.update(1)  # Account for removed node :)
             pbar.update(1)
-
         # Update the model to reflect the changes in the graph
         graph.model = fx.GraphModule(graph.model, graph.fx_graph)
         pbar.set_description("Done")

@@ -39,7 +39,7 @@ class TestHardware:
             group, module = test_case.split("/")
             # Check if the test bench exists
             tb_path = os.path.join(
-                self.root, "mase_components", group, f"test/{module}_tb.py"
+                self.root, "machop/mase_components", group, f"test/{module}_tb.py"
             )
             if not os.path.exists(tb_path):
                 self.logger.error(
@@ -48,7 +48,7 @@ class TestHardware:
                 return 1
             # Check if the design file exists
             rtl_file = os.path.join(
-                self.root, f"mase_components/{group}/rtl/{module}.sv"
+                self.root, f"machop/mase_components/{group}/rtl/{module}.sv"
             )
             if not os.path.isfile(rtl_file):
                 self.logger.error(
@@ -64,10 +64,10 @@ class TestHardware:
         for test_case in self.test_cases:
             group, module = test_case.split("/")
             rtl_file = os.path.join(
-                self.root, "mase_components", group, f"rtl/{module}.sv"
+                self.root, "machop/mase_components", group, f"rtl/{module}.sv"
             )
             include_files = [
-                f"-I{os.path.join(self.root, 'mase_components', group, 'rtl')}"
+                f"-I{os.path.join(self.root, 'machop/mase_components', group, 'rtl')}"
                 for group in MASE_HW_DEPS[test_case]
             ]
             cmd = [
@@ -111,7 +111,7 @@ class TestHardware:
                 "Hardware regression test finished. {} errors.".format(err)
             )
 
-        cwd = os.path.join(self.root, "mase_components", "testbench")
+        cwd = os.path.join(self.root, "machop/mase_components", "testbench")
         pycache_files = os.path.join(cwd, "__pycache__")
         if os.path.exists(pycache_files):
             shutil.rmtree(pycache_files)
@@ -119,7 +119,7 @@ class TestHardware:
 
     def single_test(self, group, module, queue):
         self.logger.info(f"Running unit test for {group}/{module}...")
-        cwd = os.path.join(self.root, "mase_components", group, "test")
+        cwd = os.path.join(self.root, "machop/mase_components", group, "test")
         cmd = ["python3", "{}_tb.py".format(module)]
 
         result, buff = self.execute(cmd, log_output=self.isdebug, cwd=cwd)

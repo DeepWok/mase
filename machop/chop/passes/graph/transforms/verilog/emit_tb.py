@@ -52,6 +52,15 @@ import cocotb
     with open(tb_path / "test.py", "w") as f:
         f.write(test_template)
 
+    verilator_build = f"""
+#!/bin/bash
+# This script is used to build the verilator simulation
+verilator --binary --build {verilator_buff}
+"""
+    verilator_file = os.path.join(sim_dir, "build.sh")
+    with open(verilator_file, "w", encoding="utf-8") as outf:
+        outf.write(verilator_build)
+
 
 def _emit_cocotb_tb(graph):
     class MaseGraphTB(Testbench):
