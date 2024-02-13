@@ -29,12 +29,13 @@ MASE_HW_DEPS = {
     # "common/fifo": ["common"],
     "common/input_buffer": ["common"],
     # New matrix multiplication modules
-    # "common/repeat_circular_buffer": ["common"],
-    # "cast/fixed_signed_cast": ["cast"],
-    # "matmul/simple_matmul": ["common", "linear", "cast", "fixed_arithmetic"],
-    "matmul/fixed_matmul": ["common", "linear", "cast", "fixed_arithmetic", "matmul"],
-    # "matmul/test_chain_matmul": ["common", "linear", "cast", "fixed_arithmetic", "matmul"],
-    # "matmul/transpose": [],
+    "common/repeat_circular_buffer": ["common"],
+    "cast/fixed_signed_cast": ["cast"],
+    "matmul/simple_matmul": ["common", "linear", "cast", "fixed_arith"],
+    "matmul/fixed_matmul": ["common", "linear", "cast", "fixed_arith", "matmul"],
+    "matmul/test_chain_matmul": ["common", "linear", "cast", "fixed_arith", "matmul"],
+    "matmul/transpose": [],
+    "matmul/matrix_stream_transpose": ["common", "matmul"],
     # TODO: Geniune test case failure
     # "ViT/fixed_patch_embed": [
     #     "conv",
