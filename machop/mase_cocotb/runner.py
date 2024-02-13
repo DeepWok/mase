@@ -15,6 +15,8 @@ def mase_runner(
     extra_build_args: list[str] = [],
     trace: bool = False,
     seed: int = None,
+    skip_build: bool = False,
+    skip_test: bool = False,
 ):
     assert type(module_param_list) == list, "Need to pass in a list of dicts!"
 
@@ -40,8 +42,6 @@ def mase_runner(
 
     build_dir = group_path.joinpath(f"test/build/{module}")
     print(build_dir)
-    if path.exists(build_dir):
-        rmtree(build_dir)
 
     deps = MASE_HW_DEPS[f"{group}/{module}"]
 
@@ -54,45 +54,57 @@ def mase_runner(
         print("##########################################")
         test_work_dir = group_path.joinpath(f"test/build/{module}/test_{i}")
         runner = get_runner(SIM)
-        runner.build(
-            verilog_sources=[module_path],
-            includes=[str(comp_path.joinpath(f"{d}/rtl/")) for d in deps],
-            hdl_toplevel=module,
-            build_args=[
-                # Verilator linter is overly strict.
-                # Too many errors
-                # These errors are in later versions of verilator
-                "-Wno-GENUNNAMED",
-                "-Wno-WIDTHEXPAND",
-                "-Wno-WIDTHTRUNC",
-                # Simulation Optimisation
-                "-Wno-UNOPTFLAT",
-                "-prof-c",
-                "--stats",
-                # Signal trace in dump.fst
-                *(["--trace-fst", "--trace-structs"] if trace else []),
-                "--trace",
-                # "-trace-depth",
-                "-O0",
-                "-build-jobs",
-                "8",
-                "-Wno-fatal",
-                "-Wno-lint",
-                "-Wno-style",
-                *extra_build_args,
-            ],
-            parameters=module_params,
-            build_dir=test_work_dir,
-        )
-        runner.test(
-            hdl_toplevel=module,
-            test_module=module + "_tb",
-            seed=seed,
-            results_xml="results.xml",
-        )
-        num_tests, fail = get_results(test_work_dir.joinpath("results.xml"))
-        total_tests += num_tests
-        total_fail += fail
+
+        if not skip_build:
+
+            if path.exists(build_dir):
+                rmtree(build_dir)
+
+            runner.build(
+                verilog_sources=[module_path],
+                includes=[str(comp_path.joinpath(f"{d}/rtl/")) for d in deps],
+                hdl_toplevel=module,
+                build_args=[
+                    "--Wall",
+                    # Turn on assertions
+                    "--assert",
+                    # Verilator linter is overly strict.
+                    # Too many errors
+                    # These errors are in later versions of verilator
+                    "-Wno-PINCONNECTEMPTY",
+                    "-Wno-GENUNNAMED",
+                    "-Wno-WIDTHEXPAND",
+                    "-Wno-WIDTHTRUNC",
+                    # Simulation Optimisation
+                    "-Wno-UNOPTFLAT",
+                    "-prof-c",
+                    "--stats",
+                    # Signal trace in dump.fst
+                    *(["--trace-fst", "--trace-structs"] if trace else []),
+                    "--trace",
+                    # "-trace-depth",
+                    "-O0",
+                    "-build-jobs",
+                    "8",
+                    "-Wno-fatal",
+                    "-Wno-lint",
+                    "-Wno-style",
+                    *extra_build_args,
+                ],
+                parameters=module_params,
+                build_dir=test_work_dir,
+            )
+
+        if not skip_test:
+            runner.test(
+                hdl_toplevel=module,
+                test_module=module + "_tb",
+                seed=seed,
+                results_xml="results.xml",
+            )
+            num_tests, fail = get_results(test_work_dir.joinpath("results.xml"))
+            total_tests += num_tests
+            total_fail += fail
 
     print("TEST RESULTS")
     print("    PASSED:", total_tests - total_fail)
