@@ -9,20 +9,10 @@ from ...tools.config_load import load_config
 from ...tools.get_input import get_dummy_input
 from .search_space import get_search_space_cls
 from .strategies import get_search_strategy_cls
+from chop.tools.utils import device
+from chop.tools.utils import parse_accelerator
 
 logger = logging.getLogger(__name__)
-
-
-def parse_accelerator(accelerator: str):
-    if accelerator == "auto":
-        device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-    elif accelerator == "gpu":
-        device = torch.device("cuda:0")
-    elif accelerator == "cpu":
-        device = torch.device("cpu")
-    else:
-        raise RuntimeError(f"Unsupported accelerator {accelerator}")
-    return device
 
 
 def parse_search_config(search_config):
@@ -67,7 +57,7 @@ def search(
     if load_name is not None and load_type in ["pl", "mz", "pt"]:
         model = load_model(load_name=load_name, load_type=load_type, model=model)
         logger.info(f"Loaded model from {load_name}.")
-
+    model.to(accelerator)
     # set up data module
     data_module.prepare_data()
     data_module.setup()
@@ -79,7 +69,7 @@ def search(
         model=model,
         model_info=model_info,
         config=search_space_config,
-        dummy_input=get_dummy_input(model_info, data_module, task),
+        dummy_input=get_dummy_input(model_info, data_module, task, device=accelerator),
         accelerator=accelerator,
     )
     search_space.build_search_space()

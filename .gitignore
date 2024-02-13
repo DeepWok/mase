@@ -135,7 +135,6 @@ venv.bak/
 
 # mypy
 .mypy_cache/
-*.png
 
 # vscode
 .vscode
