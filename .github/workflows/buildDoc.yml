@@ -3,6 +3,8 @@ name: Build Doc for the MASE website
 on:
   push:
     branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
   workflow_dispatch:
     logLevel:
           description: 'Log level'
