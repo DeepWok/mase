@@ -74,9 +74,11 @@ class ClassificationPresetTrain:
 
         transforms.extend(
             [
-                T.ToDtype(torch.float, scale=True)
-                if use_v2
-                else T.ConvertImageDtype(torch.float),
+                (
+                    T.ToDtype(torch.float, scale=True)
+                    if use_v2
+                    else T.ConvertImageDtype(torch.float)
+                ),
                 T.Normalize(mean=mean, std=std),
             ]
         )
@@ -121,9 +123,11 @@ class ClassificationPresetEval:
             transforms.append(T.PILToTensor())
 
         transforms += [
-            T.ToDtype(torch.float, scale=True)
-            if use_v2
-            else T.ConvertImageDtype(torch.float),
+            (
+                T.ToDtype(torch.float, scale=True)
+                if use_v2
+                else T.ConvertImageDtype(torch.float)
+            ),
             T.Normalize(mean=mean, std=std),
         ]
 

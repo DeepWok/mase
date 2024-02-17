@@ -9,6 +9,8 @@ from chop.passes.graph.analysis.utils import (
     is_tensor_constant,
     match_and_filter,
     is_seq_blocks_parameter,
+    get_input_nodes,
+    get_output_nodes,
 )
 from chop.passes.graph.common import (
     MASE_BUILTIN_FUNCS,
@@ -220,30 +222,30 @@ def graph_iterator_for_metadata(
     return graph
 
 
-"""
-This is a standard analysis pass that runs at the start of all transform calls
-
-name_style_pass (graph, pass_args)
-
-This follows the the naming convention of
-[name]_[style]_pass
-add_common_metadata(name)_analysis(style)_pass
-
-passname : {args}
-
-"""
-
-
-# TO DO: placeholder. Need to update iterator for metadata with fx's ShapeProp methodology
-def new_graph_iterator_for_metadata(graph, dummy_in=None):
+def _add_graph_metadata(graph):
     """
-    The size of input and output cannot directly be accessed by functions and some modules.
-    This function traverses from the placeholder and passes the metadata through edges.
+    Register graph-level metadata
     """
+    graph.meta["mase"]["common"] = {
+        "nodes_in": [],
+        "nodes_out": [],
+        "args": [],
+        "results": [],
+    }
+    graph.meta["mase"]["common"]["nodes_in"] = get_input_nodes(graph.fx_graph)
+    graph.meta["mase"]["common"]["nodes_out"] = get_output_nodes(graph.fx_graph)
 
-    print(type(graph.model))
-    sp = ShapeProp(graph.model)
-    g = sp.propagate()
+    graph.meta["mase"]["common"]["args"] = {}
+    for node in graph.meta["mase"]["common"]["nodes_in"]:
+        for arg, arg_info in node.meta["mase"]["common"]["args"].items():
+            if "data" in arg:
+                graph.meta["mase"]["common"]["args"][arg] = arg_info
+
+    graph.meta["mase"]["common"]["results"] = {}
+    for node in graph.meta["mase"]["common"]["nodes_out"]:
+        for result, result_info in node.meta["mase"]["common"]["results"].items():
+            if "data" in result:
+                graph.meta["mase"]["common"]["results"][result] = result_info
 
     return graph
 
@@ -281,7 +283,7 @@ def add_common_metadata_analysis_pass(
                (if the result is a tensor)
                  - type -> type of the result, e.g. fixed point or float
                  - precision -> format of the type, e.g. (10, 5)
-                 - size -> size of the result
+                 - shape -> shape of the result
                (if the result is not a tensor)
                  - value of the result
 
@@ -408,4 +410,5 @@ def add_common_metadata_analysis_pass(
     logger.debug(graph.fx_graph)
     graph = graph_iterator_for_mase_ops(graph)
     graph = graph_iterator_for_metadata(graph, **pass_args)
+    graph = _add_graph_metadata(graph)
     return graph, {}

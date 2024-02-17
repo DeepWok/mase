@@ -6,8 +6,9 @@
 Welcome to Machop's documentation!
 ================================
 
-.. .. image:: deepwok.png
-..    :width: 200
+.. image:: imgs/machop.png
+   :alt: logo
+   :align: center
 
 `Machop <https://bulbapedia.bulbagarden.net/wiki/Machop_(Pok%C3%A9mon)>`_
 is a humanoid, bipedal Pokémon that has blue-gray skin. 
@@ -22,20 +23,30 @@ For more, you can watch this
 `video <https://www.youtube.com/watch?v=JEUsN_KlDy8&ab_channel=Mah-Dry-Bread-Gameplay%26Streams%21>`_.
 
 .. toctree::
-   :maxdepth: 3
+   :maxdepth: 1
    :caption: Documentation
 
-   modules/actions
-   modules/passes
-   modules/ir
+   modules/documentation/getting_started
+   modules/documentation/tutorials
+   modules/documentation/roadmap
+   modules/documentation/specifications
 
+.. toctree::
+   :maxdepth: 2
+   :caption: Machop API
 
-.. Indices and tables
-.. ==================
+   modules/api/actions
+   modules/api/passes
+   modules/api/ir
 
-Functionalities
----------------
+.. toctree::
+   :maxdepth: 1
+   :caption: Mase Components
 
-.. * :ref:`genindex`
-.. * :ref:`modindex`
-.. * :ref:`search`
+   modules/hardware/hardware_documentation
+
+.. toctree::
+   :maxdepth: 1
+   :caption: Students
+
+   modules/labs

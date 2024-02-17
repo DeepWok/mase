@@ -114,6 +114,26 @@ QUANT_ARITH_ENTRIES = {
             "bias_bipolar",
         ),
     },
+    "binary_residual": {
+        "weight_entries": (
+            "weight_width",
+            "weight_stochastic",
+            "weight_bipolar",
+            "binary_training",
+        ),
+        "data_in_entries": (
+            "data_in_width",
+            "data_in_stochastic",
+            "data_in_bipolar",
+            "data_in_residual_sign",
+            "data_in_levels",  # data_in_levels (int): number of residual levels to use in lutnet
+        ),
+        "bias_entries": (
+            "bias_width",
+            "bias_stochastic",
+            "bias_bipolar",
+        ),
+    },
     "ternary": {
         "weight_entries": (
             "weight_width",

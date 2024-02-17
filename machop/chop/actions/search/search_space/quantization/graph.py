@@ -47,6 +47,8 @@ class GraphSearchSpaceMixedPrecisionPTQ(SearchSpaceBase):
 
     def rebuild_model(self, sampled_config, is_eval_mode: bool = True):
         # set train/eval mode before creating mase graph
+
+        self.model.to(self.accelerator)
         if is_eval_mode:
             self.model.eval()
         else:
@@ -55,11 +57,13 @@ class GraphSearchSpaceMixedPrecisionPTQ(SearchSpaceBase):
         if self.mg is None:
             assert self.model_info.is_fx_traceable, "Model must be fx traceable"
             mg = MaseGraph(self.model)
-            mg = init_metadata_analysis_pass(mg, None)
-            mg = add_common_metadata_analysis_pass(mg, self.dummy_input)
+            mg, _ = init_metadata_analysis_pass(mg, None)
+            mg, _ = add_common_metadata_analysis_pass(
+                mg, {"dummy_in": self.dummy_input, "force_device_meta": False}
+            )
             self.mg = mg
         if sampled_config is not None:
-            mg = quantize_transform_pass(self.mg, sampled_config)
+            mg, _ = quantize_transform_pass(self.mg, sampled_config)
         mg.model.to(self.accelerator)
         return mg
 

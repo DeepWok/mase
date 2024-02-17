@@ -18,11 +18,13 @@ def graph_iterator_inspect_node_type(graph):
                 node.op,
                 node.meta["mase"].parameters["common"]["mase_type"],
                 node.meta["mase"].parameters["common"]["mase_op"],
-                "NA"
-                if "data_in_0" not in node.meta["mase"].parameters["common"]["args"]
-                else node.meta["mase"].parameters["common"]["args"]["data_in_0"][
-                    "type"
-                ],
+                (
+                    "NA"
+                    if "data_in_0" not in node.meta["mase"].parameters["common"]["args"]
+                    else node.meta["mase"].parameters["common"]["args"]["data_in_0"][
+                        "type"
+                    ]
+                ),
             ]
         )
     logger.info("Inspecting graph [add_common_node_type_analysis_pass]")
@@ -82,7 +84,7 @@ def report_node_shape_analysis_pass(graph, pass_args: dict = {}):
 
 
 def graph_iterator_inspect_node_hardware_type(graph):
-    headers = ["Node name", "Fx Node op", "Type", "Tool Chain"]
+    headers = ["Node name", "Fx Node op", "Type", "Tool Chain", "Device ID"]
     rows = []
     for node in graph.fx_graph.nodes:
         if node.meta["mase"].parameters["hardware"]["is_implicit"]:
@@ -93,6 +95,7 @@ def graph_iterator_inspect_node_hardware_type(graph):
                 node.op,
                 node.meta["mase"].parameters["common"]["results"]["data_out_0"]["type"],
                 node.meta["mase"].parameters["hardware"]["toolchain"],
+                node.meta["mase"].parameters["hardware"]["device_id"],
             ]
         )
     logger.info("Inspecting graph [add_common_node_hardware_type_analysis_pass]")

@@ -4,11 +4,11 @@ on:
   push:
     branches: [ "main", "extended-tests" ]
     paths:
-      - 'components/**'
+      - 'machop/mase_components/**'
   pull_request:
     branches: [ "main", "extended-tests" ]
     paths:
-      - 'components/**'
+      - 'machop/mase_components/**'
   workflow_dispatch:
     logLevel:
           description: 'Log level'
@@ -86,7 +86,7 @@ jobs:
             do
               if [[ -f $f ]]; then
                 echo $f
-                verible-verilog-format $f | diff - $f
+                /srcPkgs/verible/bin/verible-verilog-format $f | diff - $f
               fi
             done
           fi
@@ -96,7 +96,7 @@ jobs:
             do
               if [[ -f $f ]]; then
                 echo $f
-                verible-verilog-format $f | diff - $f
+                /srcPkgs/verible/bin/verible-verilog-format $f | diff - $f
               fi
             done
           fi
@@ -107,6 +107,9 @@ jobs:
       
       - name: Hardware regression test 
         run: |
+            pip3 --version 
+            python3 --version
+            pip3 install .
             python3 scripts/test-hardware.py -a
 
 

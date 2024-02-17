@@ -1,6 +1,6 @@
 from copy import copy, deepcopy
 import logging
-
+import torch
 from chop.passes.graph.interface.save_and_load import load_mase_graph_interface_pass
 
 from ...utils import (
@@ -201,12 +201,19 @@ def quantize_transform_pass(graph, pass_args=None):
 
     :param graph: The input graph to be transformed.
     :type graph: MaseGraph
+
     :param pass_args: Additional arguments for the transformation.
     :type pass_args: dict, optional
+
     :return: The transformed graph.
-    :rtype: MaseGraph
+    :rtype: tuple
     :raises ValueError: If the quantize "by" argument is unsupported.
+
+
+    - pass_args
+        - by -> str : different quantization schemes choose from ["type", "name", "regx_name"]
     """
+
     by = pass_args.pop("by")
     match by:
         case "type":
@@ -217,4 +224,7 @@ def quantize_transform_pass(graph, pass_args=None):
             graph = graph_iterator_quantize_by_regex_name(graph, pass_args)
         case _:
             raise ValueError(f'Unsupported quantize "by": {by}')
-    return graph
+
+    # link the model with graph
+    graph.model = torch.fx.GraphModule(graph.model, graph.fx_graph)
+    return graph, {}

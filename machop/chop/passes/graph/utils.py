@@ -5,6 +5,7 @@ from copy import deepcopy
 from typing import Tuple
 
 import torch
+from pathlib import Path
 
 
 def check_func_type(node, my_func):
@@ -74,7 +75,7 @@ def v2p(string):
     """
     Variable to Parameter
     """
-    return string.upper().replace("DATA_", "")
+    return string.upper()
 
 
 def get_input_index(node, next_node):
@@ -144,20 +145,14 @@ def init_project(project_dir):
     """
     Create project dir tree
     """
-    if not os.path.exists(project_dir):
-        os.mkdir(project_dir)
-    software_dir = os.path.join(project_dir, "software")
-    if not os.path.exists(software_dir):
-        os.mkdir(software_dir)
-    hardware_dir = os.path.join(project_dir, "hardware")
-    if not os.path.exists(hardware_dir):
-        os.mkdir(hardware_dir)
-    rtl_dir = os.path.join(hardware_dir, "rtl")
-    if not os.path.exists(rtl_dir):
-        os.mkdir(rtl_dir)
-    sim_dir = os.path.join(hardware_dir, "sim")
-    if not os.path.exists(sim_dir):
-        os.mkdir(sim_dir)
-    hls_dir = os.path.join(hardware_dir, "hls")
-    if not os.path.exists(hls_dir):
-        os.mkdir(hls_dir)
+    Path(project_dir).mkdir(parents=True, exist_ok=True)
+    Path(os.path.join(project_dir, "software")).mkdir(parents=True, exist_ok=True)
+
+    hardware_dir = Path(os.path.join(project_dir, "hardware"))
+    Path(hardware_dir).mkdir(parents=True, exist_ok=True)
+    Path(hardware_dir / "rtl").mkdir(parents=True, exist_ok=True)
+    Path(hardware_dir / "sim").mkdir(parents=True, exist_ok=True)
+    Path(hardware_dir / "test").mkdir(parents=True, exist_ok=True)
+    Path(hardware_dir / "test" / "mase_top_tb").mkdir(parents=True, exist_ok=True)
+    Path(hardware_dir / "test").mkdir(parents=True, exist_ok=True)
+    Path(hardware_dir / "hls").mkdir(parents=True, exist_ok=True)

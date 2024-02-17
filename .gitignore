@@ -37,6 +37,7 @@ __pycache__/
 # Distribution / packaging
 .Python
 build/
+sim_build/
 develop-eggs/
 dist/
 downloads/
@@ -77,6 +78,7 @@ coverage.xml
 
 # Hardware tests
 components/testbench/**/sim_build/
+build/
 
 # Translations
 *.mo
@@ -133,7 +135,9 @@ venv.bak/
 
 # mypy
 .mypy_cache/
-*.png
 
 # vscode
 .vscode
+
+# Data files for hardware simulation
+*.dat

@@ -3,6 +3,7 @@ import math
 
 import torch
 import inspect
+from chop.tools.utils import to_numpy_if_tensor as to_numpy
 from chop.passes.graph.utils import vf, get_node_by_name
 import traceback
 
@@ -186,7 +187,6 @@ def analyse_common_parameters_placeholder(meta, result, args, kwargs, add_value=
 def analyse_common_parameters_function(meta, result, args, kwargs, add_value=True):
     # fetch mase info
     mase_op = meta.parameters["common"]["mase_op"]
-    mase_type = meta.parameters["common"]["mase_type"]
 
     # deal with result
     meta = analyse_result(meta, result, add_value)
@@ -209,7 +209,7 @@ def analyse_common_parameters_module(meta, result, args, kwargs, add_value=True)
             "type": "float",
             "precision": [32],
             "shape": list(parameter.shape),
-            # "from": None,
+            "from": None,
         }
         if add_value:
             meta.parameters["common"]["args"][name]["value"] = parameter

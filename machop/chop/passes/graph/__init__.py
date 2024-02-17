@@ -10,6 +10,8 @@ from .analysis import (
     report_node_shape_analysis_pass,
     report_node_type_analysis_pass,
     verify_common_metadata_analysis_pass,
+    run_cosim_analysis_pass,
+    get_synthesis_results,
     calculate_avg_bits_mg_analysis_pass,
     add_pruning_metadata_analysis_pass,
     add_natural_sparsity_metadata_analysis_pass,
@@ -24,6 +26,7 @@ from .transforms import (
     conv_bn_fusion_transform_pass,
     logicnets_fusion_transform_pass,
     onnx_annotate_transform_pass,
+    partition_to_multi_device_transform_pass,
 )
 
 from .interface import (
@@ -47,6 +50,9 @@ ANALYSIS_PASSES = [
     "report_node_meta_param",
     "report_node_shape",
     "report_node_type",
+    "total_bits_mg_analysis_pass",
+    "run_cosim_analysis_pass",
+    "get_synthesis_results",
     "calculate_avg_bits",
     "add_pruning_metadata",
     "add_natural_sparsity",
@@ -81,6 +87,8 @@ PASSES = {
     "report_node_meta_param": report_node_meta_param_analysis_pass,
     "report_node_shape": report_node_shape_analysis_pass,
     "report_node_type": report_node_type_analysis_pass,
+    "run_cosim_analysis_pass": run_cosim_analysis_pass,
+    "get_synthesis_results": get_synthesis_results,
     "calculate_avg_bits": calculate_avg_bits_mg_analysis_pass,
     "add_pruning_metadata": add_pruning_metadata_analysis_pass,
     "add_natural_sparsity": add_natural_sparsity_metadata_analysis_pass,

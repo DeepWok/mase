@@ -147,3 +147,12 @@ def is_seq_blocks_parameter(s):
 
     # If there's a match, return True; otherwise, return False
     return bool(match)
+
+
+def get_hardware_nodes(mg):
+    hw_nodes = []
+    for node in mg.fx_graph.nodes:
+        if node.meta["mase"].parameters["hardware"]["is_implicit"]:
+            continue
+        hw_nodes.append(node)
+    return hw_nodes
