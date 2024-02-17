@@ -33,7 +33,6 @@ Tutorials
 
 .. toctree::
     :maxdepth: 1
-
     :caption: Passes
 
     tutorials/stat_to_config
