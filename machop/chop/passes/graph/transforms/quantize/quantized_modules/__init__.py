@@ -107,4 +107,5 @@ quantized_module_map = {
     "relu_block_fp": ReLUBlockFP,
     "relu_binary": ReLUBinary,
     "relu_ternary": ReLUTernary,
+    "batch_norm1d" : None,
 }

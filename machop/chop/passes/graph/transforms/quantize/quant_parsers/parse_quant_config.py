@@ -357,6 +357,7 @@ MASE_OP_TO_ENTRIES = {
         ("name", "data_in_entries"),
         ("bypass",),
     ),  # RoPE of Llama
+    "batch_norm1d": (("name", "data_in_entries", "weight_entries"), ("bypass",)),
 }
 
 
