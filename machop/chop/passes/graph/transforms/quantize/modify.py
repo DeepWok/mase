@@ -173,6 +173,10 @@ def create_new_module(
         new_module = new_module_cls(
             output_size=original_module.output_size, config=config
         )
+    elif mase_op == "batch_norm1d":
+        raise NotImplementedError(
+            f"Unsupported module class {original_module_cls} to modify"
+        )
     else:
         raise NotImplementedError(
             f"Unsupported module class {original_module_cls} to modify"
