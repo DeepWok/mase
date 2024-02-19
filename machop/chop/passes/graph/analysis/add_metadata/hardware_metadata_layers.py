@@ -27,4 +27,11 @@ INTERNAL_COMP = {
             ],
         },
     ],
+    "batch_norm1d": [
+        {
+            "name": "fixed_batch_norm1d",
+            "dependence_files": [
+            ],
+        },
+    ],
 }
