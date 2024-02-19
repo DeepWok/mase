@@ -57,6 +57,9 @@ from .relu import (
     ReLUBinary,
     ReLUTernary,
 )
+from .batch_norm1d import (
+    BatchNorm1dInteger,       
+)
 
 quantized_module_map = {
     "conv1d_block_minifloat": Conv1dBlockMinifloat,
@@ -107,5 +110,6 @@ quantized_module_map = {
     "relu_block_fp": ReLUBlockFP,
     "relu_binary": ReLUBinary,
     "relu_ternary": ReLUTernary,
-    "batch_norm1d" : None,
+    "batch_norm1d_fixed" : BatchNorm1dInteger,
+    "batch_norm1d_linear" : BatchNorm1dInteger,
 }

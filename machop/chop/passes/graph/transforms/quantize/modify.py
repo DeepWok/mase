@@ -31,7 +31,7 @@ def create_new_module(
 ):
     original_module_cls = type(original_module)
     quant_name = config.get("name")
-
+    print("create_new_module config: ", config)
     if quant_name == "ternary":
         config.update(
             {"node_meta_stat": node_meta["mase"].parameters["software"]["args"]}
@@ -174,9 +174,22 @@ def create_new_module(
             output_size=original_module.output_size, config=config
         )
     elif mase_op == "batch_norm1d":
-        raise NotImplementedError(
-            f"Unsupported module class {original_module_cls} to modify"
+        new_module_cls = quantized_module_map[f"batch_norm1d_{quant_name}"]
+        
+        # TODO(jlsand): The device/dtype does not need to be copied over? 
+        new_module = new_module_cls(
+            num_features=original_module.num_features,
+            eps=original_module.eps,
+            momentum=original_module.momentum,
+            affine=original_module.affine,
+            track_running_stats=original_module.track_running_stats,
+            config=config,
         )
+
+        # TODO(jlsand): Consider supporting use_pruning and dropping bias operations.
+        
+        copy_weights(original_module.weight, new_module.weight)
+        copy_weights(original_module.bias, new_module.bias)
     else:
         raise NotImplementedError(
             f"Unsupported module class {original_module_cls} to modify"
