@@ -38,6 +38,7 @@ from .interface import (
 
 from .transforms.quantize import quantized_func_map, quantized_module_map
 from .transforms.quantize.quant_parsers import parse_node_config
+from .transforms.tensorrt import tensorrt_quantize_transform_pass
 
 ANALYSIS_PASSES = [
     "init_metadata",
@@ -100,6 +101,7 @@ PASSES = {
     "save_node_meta_param": save_node_meta_param_interface_pass,
     # transform
     "quantize": quantize_transform_pass,
+    "tensorrt-quantize": tensorrt_quantize_transform_pass,
     "summarize_quantization": summarize_quantization_analysis_pass,
     "prune": prune_transform_pass,
     "prune_detach_hook": prune_detach_hook_transform_pass,

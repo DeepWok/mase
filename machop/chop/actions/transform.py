@@ -84,7 +84,26 @@ def transform(
     for pass_name, pass_config in pass_config.items():
         pass_name: str
         pass_config: dict
+        pass_name_components = pass_name.split("-")
+        pass_name = pass_name_components[0]
         match pass_name:
+            case "tensorrt":  
+                pass_name_extended = pass_name_components[1]
+                match pass_name_extended: 
+                    case "quantize":
+                        pass_save_dir = save_dir / "tensorrt"
+                        graph, _ = metadata_value_type_cast_transform_pass(
+                            graph, pass_args={}
+                        )
+                        ori_graph = deepcopy_mase_graph(graph)
+                        graph, _ = PASSES["tensorrt-quantize"](graph, pass_args=pass_config)
+                        PASSES["summarize_quantization"](
+                            ori_graph, graph, save_dir=pass_save_dir
+                        )
+                    case "fusion":
+                        raise NotImplementedError()
+                    case "kerneltuning":
+                        raise NotImplementedError()
             case "quantize":
                 pass_save_dir = save_dir / "quantize"
                 graph, _ = metadata_value_type_cast_transform_pass(
