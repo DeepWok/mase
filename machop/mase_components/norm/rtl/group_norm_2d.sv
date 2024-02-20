@@ -83,8 +83,8 @@ matrix_flatten #(
     .data_out(in_data_flat)
 );
 
-fifo #(
-    .DEPTH(NUM_ITERS),
+full_throughput_fifo #(
+    .SIZE(NUM_ITERS),
     .DATA_WIDTH(DATA_FLAT_WIDTH)
 ) fifo_inst (
     .clk(clk),
@@ -94,10 +94,7 @@ fifo #(
     .in_ready(fifo_in_ready),
     .out_data(out_data_flat),
     .out_valid(fifo_out_valid),
-    .out_ready(fifo_out_ready),
-    .full(),
-    .empty(),
-    .count()
+    .out_ready(fifo_out_ready)
 );
 
 matrix_unflatten #(

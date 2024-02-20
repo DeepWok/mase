@@ -27,6 +27,7 @@ MASE_HW_DEPS = {
     "common/skid_buffer": [],
     # TODO: Geniune test case failure
     # "common/fifo": ["common"],
+    "common/full_throughput_fifo": ["common"],
     "common/input_buffer": ["common"],
     # New matrix multiplication modules
     "common/repeat_circular_buffer": ["common"],
