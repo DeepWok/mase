@@ -67,7 +67,7 @@ class _BatchNorm1dBase(torch.nn.BatchNorm1d):
             # Quantise relevant parameters.
             x = self.x_quantizer(x)
             w = self.w_quantizer(self.weight)
-            b = self.w_quantizer(self.bias)
+            b = self.b_quantizer(self.bias)
 
             r"""
             Buffers are only updated if they are to be tracked and we are in training mode. Thus they only need to be
