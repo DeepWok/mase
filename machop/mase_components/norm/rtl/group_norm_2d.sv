@@ -16,23 +16,25 @@ Description : This module calculates the generalised group norm.
 module group_norm_2d #(
     // Dimensions
     parameter TOTAL_DIM0          = 4,
-    parameter TOTAL_DIM1          = 4,
+    parameter TOTAL_DIM1          = 6,
     parameter COMPUTE_DIM0        = 2,
     parameter COMPUTE_DIM1        = 2,
     parameter GROUP_CHANNELS      = 2,
 
     // Data widths
-    parameter WIDTH               = 8,
-    parameter FRAC_WIDTH          = 8
+    parameter IN_WIDTH            = 8,
+    parameter IN_FRAC_WIDTH       = 2,
+    parameter OUT_WIDTH           = 8,
+    parameter OUT_FRAC_WIDTH      = 7
 ) (
     input  logic             clk,
     input  logic             rst,
 
-    input  logic [WIDTH-1:0] in_data  [COMPUTE_DIM0*COMPUTE_DIM1-1:0],
+    input  logic [IN_WIDTH-1:0] in_data  [COMPUTE_DIM0*COMPUTE_DIM1-1:0],
     input  logic             in_valid,
     output logic             in_ready,
 
-    output logic [WIDTH-1:0] out_data [COMPUTE_DIM0*COMPUTE_DIM1-1:0],
+    output logic [IN_WIDTH-1:0] out_data [COMPUTE_DIM0*COMPUTE_DIM1-1:0],
     output logic             out_valid,
     input  logic             out_ready
 );
@@ -46,22 +48,23 @@ localparam ITER_WIDTH = $clog2(NUM_ITERS);
 
 // State
 struct {
-    logic [ITER_WIDTH+WIDTH-1:0] acc_sum;
-    logic [ITER_WIDTH+WIDTH-1:0] sum;
+    logic [ITER_WIDTH+IN_WIDTH-1:0] acc_sum;
+    logic [ITER_WIDTH+IN_WIDTH-1:0] sum;
     logic [ITER_WIDTH-1:0] sum_counter;
-    logic [ITER_WIDTH+WIDTH-1:0] variance;
+    logic [ITER_WIDTH+IN_WIDTH-1:0] variance;
     logic [ITER_WIDTH-1:0] variance_counter;
 } self, next_self;
 
 
-localparam DATA_FLAT_WIDTH = WIDTH * COMPUTE_DIM0 * COMPUTE_DIM1;
+localparam DATA_FLAT_WIDTH = IN_WIDTH * COMPUTE_DIM0 * COMPUTE_DIM1;
 localparam FIFO_DEPTH = GROUP_CHANNELS * DEPTH_DIM0 * DEPTH_DIM1;
 
 logic [DATA_FLAT_WIDTH-1:0] in_data_flat, out_data_flat;
+logic [IN_WIDTH-1:0] fifo_data  [COMPUTE_DIM0*COMPUTE_DIM1-1:0];
 logic fifo_valid, fifo_ready;
 
 matrix_flatten #(
-    .DATA_WIDTH(WIDTH),
+    .DATA_WIDTH(IN_WIDTH),
     .DIM0(COMPUTE_DIM0),
     .DIM1(COMPUTE_DIM1)
 ) input_flatten (
@@ -71,7 +74,7 @@ matrix_flatten #(
 
 fifo #(
     .DEPTH(FIFO_DEPTH),
-    .WIDTH(DATA_FLAT_WIDTH)
+    .DATA_WIDTH(DATA_FLAT_WIDTH)
 ) fifo_inst (
     .in_data(in_data_flat),
     .in_valid(), // TODO
@@ -85,23 +88,23 @@ fifo #(
 );
 
 matrix_unflatten #(
-    .DATA_WIDTH(WIDTH),
+    .DATA_WIDTH(IN_WIDTH),
     .DIM0(COMPUTE_DIM0),
     .DIM1(COMPUTE_DIM1)
 ) fifo_unflatten (
     .data_in(out_data_flat),
-    .data_out(in_data_flat)
+    .data_out(fifo_data)
 );
 
 localparam ADDER_TREE_IN_SIZE = COMPUTE_DIM0 * COMPUTE_DIM1;
-localparam ADDER_TREE_OUT_WIDTH = $clog2(ADDER_TREE_IN_SIZE) + WIDTH;
+localparam ADDER_TREE_OUT_WIDTH = $clog2(ADDER_TREE_IN_SIZE) + IN_WIDTH;
 
 logic [ADDER_TREE_OUT_WIDTH-1:0] adder_tree_data;
 logic adder_tree_valid, adder_tree_ready;
 
 fixed_adder_tree #(
     .IN_SIZE(COMPUTE_DIM0 * COMPUTE_DIM1),
-    .IN_WIDTH(WIDTH),
+    .IN_WIDTH(IN_WIDTH),
 ) sum_adder_tree (
     .clk(clk),
     .rst(rst),
