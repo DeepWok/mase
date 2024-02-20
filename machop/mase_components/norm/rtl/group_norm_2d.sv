@@ -12,6 +12,7 @@ Description : This module calculates the generalised group norm.
 */
 
 `timescale 1ns/1ps
+`default_nettype none
 
 module group_norm_2d #(
     // Dimensions
@@ -43,25 +44,35 @@ module group_norm_2d #(
 localparam DEPTH_DIM0 = TOTAL_DIM0 / COMPUTE_DIM0;
 localparam DEPTH_DIM1 = TOTAL_DIM1 / COMPUTE_DIM1;
 
-localparam NUM_ITERS = TOTAL_DIM0 * TOTAL_DIM1 * GROUP_CHANNELS;
+localparam NUM_ITERS = DEPTH_DIM0 * DEPTH_DIM1 * GROUP_CHANNELS;
 localparam ITER_WIDTH = $clog2(NUM_ITERS);
 
 // State
 struct {
-    logic [ITER_WIDTH+IN_WIDTH-1:0] acc_sum;
-    logic [ITER_WIDTH+IN_WIDTH-1:0] sum;
-    logic [ITER_WIDTH-1:0] sum_counter;
-    logic [ITER_WIDTH+IN_WIDTH-1:0] variance;
-    logic [ITER_WIDTH-1:0] variance_counter;
+    // Batched Difference: X - mu
+    logic [IN_WIDTH-1:0] diff [COMPUTE_DIM0*COMPUTE_DIM1-1:0];
+    logic diff_valid;
+
+    // Batched Squared: (X - mu)^2
+    logic [(IN_WIDTH*2)-1:0] squared [COMPUTE_DIM0*COMPUTE_DIM1-1:0];
+    logic squared_valid;
+
+    // Batched Variance: (X - mu)^2 / N
+    // TODO: change this width to more precise??
+    logic [(IN_WIDTH*2)-1:0] variance [COMPUTE_DIM0*COMPUTE_DIM1-1:0];
+    logic variance_valid;
+
 } self, next_self;
 
 
+// Input FIFO
 localparam DATA_FLAT_WIDTH = IN_WIDTH * COMPUTE_DIM0 * COMPUTE_DIM1;
-localparam FIFO_DEPTH = GROUP_CHANNELS * DEPTH_DIM0 * DEPTH_DIM1;
+// localparam FIFO_DEPTH = GROUP_CHANNELS * DEPTH_DIM0 * DEPTH_DIM1;
 
 logic [DATA_FLAT_WIDTH-1:0] in_data_flat, out_data_flat;
 logic [IN_WIDTH-1:0] fifo_data  [COMPUTE_DIM0*COMPUTE_DIM1-1:0];
-logic fifo_valid, fifo_ready;
+logic fifo_out_valid, fifo_out_ready;
+logic fifo_in_valid, fifo_in_ready;
 
 matrix_flatten #(
     .DATA_WIDTH(IN_WIDTH),
@@ -73,15 +84,17 @@ matrix_flatten #(
 );
 
 fifo #(
-    .DEPTH(FIFO_DEPTH),
+    .DEPTH(NUM_ITERS),
     .DATA_WIDTH(DATA_FLAT_WIDTH)
 ) fifo_inst (
+    .clk(clk),
+    .rst(rst),
     .in_data(in_data_flat),
-    .in_valid(), // TODO
-    .in_ready(),
+    .in_valid(fifo_in_valid),
+    .in_ready(fifo_in_ready),
     .out_data(out_data_flat),
-    .out_valid(fifo_valid),
-    .out_ready(fifo_ready),
+    .out_valid(fifo_out_valid),
+    .out_ready(fifo_out_ready),
     .full(),
     .empty(),
     .count()
@@ -96,11 +109,13 @@ matrix_unflatten #(
     .data_out(fifo_data)
 );
 
+// Input Adder Tree
 localparam ADDER_TREE_IN_SIZE = COMPUTE_DIM0 * COMPUTE_DIM1;
 localparam ADDER_TREE_OUT_WIDTH = $clog2(ADDER_TREE_IN_SIZE) + IN_WIDTH;
 
 logic [ADDER_TREE_OUT_WIDTH-1:0] adder_tree_data;
-logic adder_tree_valid, adder_tree_ready;
+logic adder_tree_out_valid, adder_tree_out_ready;
+logic adder_tree_in_valid, adder_tree_in_ready;
 
 fixed_adder_tree #(
     .IN_SIZE(COMPUTE_DIM0 * COMPUTE_DIM1),
@@ -109,27 +124,175 @@ fixed_adder_tree #(
     .clk(clk),
     .rst(rst),
     .data_in(in_data),
+    .data_in_valid(adder_tree_in_valid),
+    .data_in_ready(adder_tree_in_ready),
+    .data_out(adder_tree_data),
+    .data_out_valid(adder_tree_out_valid),
+    .data_out_ready(adder_tree_out_ready)
+);
+
+// Split2 for input to FIFO & Adder Tree
+split2 input_fifo_adder_split (
     .data_in_valid(in_valid),
     .data_in_ready(in_ready),
-    .data_out(adder_tree_data),
-    .data_out_valid(adder_tree_valid),
-    .data_out_ready(adder_tree_ready)
+    .data_out_valid({adder_tree_in_valid, fifo_in_valid}),
+    .data_out_ready({adder_tree_in_ready, fifo_in_ready})
 );
+
+
+// Accumulator for mu
+// localparam ACC_DETPH = GROUP_CHANNELS * DEPTH_DIM0 * DEPTH_DIM1;
+localparam ACC_OUT_WIDTH = $clog2(NUM_ITERS) + ADDER_TREE_OUT_WIDTH;
+
+logic [ACC_OUT_WIDTH-1:0] mu_acc, mu_acc_div;
+logic mu_acc_valid, mu_acc_ready;
+
+fixed_accumulator #(
+    .IN_DEPTH(NUM_ITERS),
+    .IN_WIDTH(ADDER_TREE_OUT_WIDTH)
+) mu_accumulator (
+    .clk(clk),
+    .rst(rst),
+    .data_in(adder_tree_data),
+    .data_in_valid(adder_tree_out_valid),
+    .data_in_ready(adder_tree_out_ready),
+    .data_out(mu_acc),
+    .data_out_valid(mu_acc_valid),
+    .data_out_ready(mu_acc_ready)
+);
+
+// Division logic for mu
+logic [IN_WIDTH-1:0] mu_in, mu_out;
+logic mu_out_valid, mu_out_ready;
+
+assign mu_acc_div = mu_acc / NUM_ITERS;
+assign mu_in = mu_acc_div[IN_WIDTH-1:0];
+
+repeat_circular_buffer #(
+    .DATA_WIDTH(IN_WIDTH),
+    .REPEAT(NUM_ITERS),
+    .SIZE(1)
+) mu_buffer (
+    .clk(clk),
+    .rst(rst),
+    .in_data(mu_in),
+    .in_valid(mu_acc_valid),
+    .in_ready(mu_acc_ready),
+    .out_data(mu_out),
+    .out_valid(mu_out_valid),
+    .out_ready(mu_out_ready)
+);
+
+// Join 2 for combining fifo and mu buffer signals
+logic mu_fifo_valid, mu_fifo_ready;
+
+join2 mu_fifo_join2 (
+    .data_in_valid({mu_out_valid, fifo_out_valid}),
+    .data_in_ready({mu_out_ready, fifo_out_ready}),
+    .data_out_valid(mu_fifo_valid),
+    .data_out_ready(mu_fifo_ready)
+);
+
+// Subtract -> Square -> Divide Pipeline
+for (genvar i = 0; i < COMPUTE_DIM0 * COMPUTE_DIM1; i++) begin : var_pipeline
+
+    logic [IN_WIDTH-1:0] diff_in, diff_out;
+    logic diff_out_valid, diff_out_ready;
+    assign diff_in = fifo_data[i] - mu_out;
+
+    skid_buffer #(
+        .DATA_WIDTH(IN_WIDTH)
+    ) subtract_ff (
+        .clk(clk),
+        .rst(rst),
+        .data_in(diff_in),
+        .data_in_valid(mu_fifo_valid),
+        .data_in_ready(mu_fifo_ready),
+        .data_out(diff_out),
+        .data_out_valid(diff_out_valid),
+        .data_out_ready(diff_out_ready)
+    );
+
+    logic [(IN_WIDTH*2)-1:0] square_in, square_out;
+    logic square_out_valid, square_out_ready;
+    assign square_in = diff_out * diff_out;
+
+    skid_buffer #(
+        .DATA_WIDTH(IN_WIDTH*2)
+    ) square_ff (
+        .clk(clk),
+        .rst(rst),
+        .data_in(square_in),
+        .data_in_valid(diff_out_valid),
+        .data_in_ready(diff_out_ready),
+        .data_out(square_out),
+        .data_out_valid(square_out_valid),
+        .data_out_ready(square_out_ready)
+    );
+
+    logic [(IN_WIDTH*2)-1:0] variance_in, variance_out;
+    logic variance_out_valid, variance_out_ready;
+    assign variance_in = square_out / NUM_ITERS;
+
+    skid_buffer #(
+        .DATA_WIDTH(IN_WIDTH*2)
+    ) variance_ff (
+        .clk(clk),
+        .rst(rst),
+        .data_in(variance_in),
+        .data_in_valid(square_out_valid),
+        .data_in_ready(square_out_ready),
+        .data_out(variance_out),
+        .data_out_valid(variance_out_valid),
+        .data_out_ready(variance_out_ready)
+    );
+
+end
+
 
 always_comb begin
     next_self = self;
 
-    // Accumulation logic: mu
-    if (adder_tree_valid && adder_tree_ready) begin
-        if (self.sum_counter == NUM_ITERS-1) begin
-            // Output sum
-            next_self.sum = self.acc_sum + adder_tree_data;
-            next_self.acc_sum = 0;
-        end else begin
-            // Accumulate temporary sum
-            next_self.acc_sum = self.acc_sum + adder_tree_data;
-        end
-    end
+    // // mu_acc_ready = !self.mu_valid;
+    // // fifo_out_ready = self.mu_valid && fifo_out_valid;
+
+    // // // Division logic to get mu
+    // // if (mu_acc_valid && mu_acc_ready) begin
+    // //     // Truncation rounding
+    // //     mu_acc_div = mu_acc / (GROUP_CHANNELS * DEPTH_DIM0 * DEPTH_DIM1);
+    // //     next_self.mu = mu_acc_div[IN_WIDTH-1:0];
+    // //     next_self.mu_valid = 1;
+    // //     next_self.mu_counter = 0;
+    // // end
+
+    // mu_fifo_ready = !self.diff_valid; // More complex logic to ff
+
+    // // Batched subtract logic
+    // if (mu_fifo_valid && mu_fifo_ready) begin
+    //     for (int i = 0; i < COMPUTE_DIM0 * COMPUTE_DIM1; i++) begin
+    //         next_self.diff[i] = fifo_data[i] - mu_out;
+    //     end
+    //     next_self.diff_valid = 1;
+    // end
+
+    // // Batched squared logic
+    // if (self.diff_valid && !self.squared_valid) begin
+    //     for (int i = 0; i < COMPUTE_DIM0 * COMPUTE_DIM1; i++) begin
+    //         next_self.squared[i] = $signed(self.diff[i]) * $signed(self.diff[i]);
+    //     end
+    //     next_self.squared_valid = 1;
+    // end
+
+    // // Batched variance logic
+    // if (self.squared_valid && !self.variance_valid) begin
+    //     for (int i = 0; i < COMPUTE_DIM0 * COMPUTE_DIM1; i++) begin
+    //         logic [(IN_WIDTH*2)-1:0] squared_div;
+    //         squared_div = self.squared[i] / NUM_ITERS;
+    //         next_self.variance[i] = squared_div[IN_WIDTH-1:0];
+    //     end
+    //     next_self.variance_valid = 1;
+    // end
+
 end
 
 always_ff @(posedge clk) begin

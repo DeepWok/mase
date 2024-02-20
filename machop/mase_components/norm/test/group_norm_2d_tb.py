@@ -12,11 +12,16 @@ from cocotb.triggers import *
 from mase_cocotb.testbench import Testbench
 from mase_cocotb.interfaces.streaming import StreamDriver, StreamMonitor
 from mase_cocotb.runner import mase_runner
-from mase_cocotb.matrix_tools import gen_random_matrix_input, rebuild_matrix, split_matrix
+from mase_cocotb.matrix_tools import (
+    gen_random_matrix_input,
+    rebuild_matrix,
+    split_matrix,
+)
 from mase_cocotb.utils import bit_driver
 
-from chop.passes.graph.transforms.quantize.quantizers import integer_quantizer, integer_quantizer_for_hw
-
+from chop.passes.graph.transforms.quantize.quantizers.quantizers_for_hw import (
+    integer_quantizer_for_hw,
+)
 
 logger = logging.getLogger("testbench")
 logger.setLevel(logging.DEBUG)
@@ -91,7 +96,7 @@ async def basic(dut):
     exp_out = tb.model(inputs)
     tb.output_monitor.load_monitor(exp_out)
 
-    await Timer(100, 'us')
+    await Timer(1, 'us')
     assert tb.output_monitor.exp_queue.empty()
 
 
