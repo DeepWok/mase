@@ -136,6 +136,6 @@ See the Machop [README](./machop/README.md) for a more detailed introduction.
 
 ## Donation  
 
-If you think MASE is helpful, please donate for our work, we appreciate your support!
+If you think MASE is helpful, please [donate](https://www.buymeacoffee.com/mase_tools) for our work, we appreciate your support!
 
 <img src='./docs/imgs/bmc_qr.png' width='250'>
