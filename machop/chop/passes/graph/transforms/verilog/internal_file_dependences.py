@@ -14,4 +14,5 @@ INTERNAL_RTL_DEPENDENCIES = {
         "cast/rtl/fixed_rounding.sv",
     ],
     "relu": ["activations/fixed_relu.sv"],
+    "batch_norm1d" : ["normalisation/rtl/fixed_batch_norm1d.sv"]
 }
