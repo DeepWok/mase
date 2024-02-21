@@ -13,7 +13,7 @@ import cocotb
 from cocotb.triggers import *
 
 
-class FullThroughputFifoTB(Testbench):
+class FifoV2TB(Testbench):
     def __init__(self, dut) -> None:
         super().__init__(dut, dut.clk, dut.rst)
         self.assign_self_params([
@@ -31,22 +31,22 @@ class FullThroughputFifoTB(Testbench):
 
 
 @cocotb.test()
-async def basic_buffering(dut):
-    tb = FullThroughputFifoTB(dut)
+async def test_basic_buffering(dut):
+    tb = FifoV2TB(dut)
     await tb.reset()
     tb.output_monitor.ready.value = 1
 
-    inputs = tb.generate_inputs()
+    inputs = tb.generate_inputs(num=10)
     tb.in_driver.load_driver(inputs)
     tb.output_monitor.load_monitor(inputs)
 
-    await Timer(1, "us")
+    await Timer(2, "us")
     assert tb.output_monitor.exp_queue.empty()
 
 
 @cocotb.test()
-async def large_buffering(dut):
-    tb = FullThroughputFifoTB(dut)
+async def test_large_buffering(dut):
+    tb = FifoV2TB(dut)
     await tb.reset()
     tb.output_monitor.ready.value = 1
 
@@ -54,13 +54,13 @@ async def large_buffering(dut):
     tb.in_driver.load_driver(inputs)
     tb.output_monitor.load_monitor(inputs)
 
-    await Timer(100, "us")
+    await Timer(40, "us")
     assert tb.output_monitor.exp_queue.empty()
 
 
 @cocotb.test()
-async def valid_flip(dut):
-    tb = FullThroughputFifoTB(dut)
+async def test_valid(dut):
+    tb = FifoV2TB(dut)
     await tb.reset()
     tb.in_driver.set_valid_prob(0.5)
     tb.output_monitor.ready.value = 1
@@ -72,10 +72,22 @@ async def valid_flip(dut):
     await Timer(20, "us")
     assert tb.output_monitor.exp_queue.empty()
 
+@cocotb.test()
+async def test_backpressure(dut):
+    tb = FifoV2TB(dut)
+    await tb.reset()
+    cocotb.start_soon(bit_driver(dut.out_ready, dut.clk, 0.9))
+
+    inputs = tb.generate_inputs(num=200)
+    tb.in_driver.load_driver(inputs)
+    tb.output_monitor.load_monitor(inputs)
+
+    await Timer(20, "us")
+    assert tb.output_monitor.exp_queue.empty()
 
 @cocotb.test()
-async def valid_flip_backpressure(dut):
-    tb = FullThroughputFifoTB(dut)
+async def test_valid_backpressure(dut):
+    tb = FifoV2TB(dut)
     await tb.reset()
     tb.in_driver.set_valid_prob(0.7)
     cocotb.start_soon(bit_driver(dut.out_ready, dut.clk, 0.7))
@@ -88,6 +100,20 @@ async def valid_flip_backpressure(dut):
     assert tb.output_monitor.exp_queue.empty()
 
 
+@cocotb.test()
+async def test_soak(dut):
+    tb = FifoV2TB(dut)
+    await tb.reset()
+    tb.in_driver.set_valid_prob(0.7)
+    cocotb.start_soon(bit_driver(dut.out_ready, dut.clk, 0.7))
+
+    inputs = tb.generate_inputs(num=20000)
+    tb.in_driver.load_driver(inputs)
+    tb.output_monitor.load_monitor(inputs)
+
+    await Timer(1000, "us")
+    assert tb.output_monitor.exp_queue.empty()
+
 
 if __name__ == "__main__":
-    mase_runner(trace=True)
+    mase_runner(seed=0, trace=True)

@@ -1,11 +1,12 @@
 /*
-Module      : full_throughput_fifo
-Description : This module implements a fifo.
+Module      : fifo_v2
+Description : This module implements a max throughput streaming fifo with
+              registered output.
 */
 
 `timescale 1ns/1ps
 
-module full_throughput_fifo #(
+module fifo_v2 #(
     parameter  DATA_WIDTH  = 8,
     parameter  SIZE        = 16
 ) (
@@ -27,7 +28,7 @@ localparam PTR_WIDTH = ADDR_WIDTH + 1;
 typedef struct {
     logic [DATA_WIDTH-1:0] data;
     logic valid;
-} extra_reg_t;
+} reg_t;
 
 struct {
     // Write state
@@ -36,10 +37,17 @@ struct {
 
     // Read state
     logic [PTR_WIDTH-1:0] read_ptr;
-    logic rd_valid;
+    logic ram_dout_valid; // Pulse signal for ram reads
+
+    // Controls the next register to be connected to output
+    logic next_reg;
+
+    // Output register
+    reg_t out_reg;
 
     // Extra register required to buffer the output of RAM due to delay
-    extra_reg_t extra_reg;
+    reg_t extra_reg;
+
 } self, next_self;
 
 // Ram signals
@@ -47,23 +55,19 @@ logic ram_wr_en;
 logic [DATA_WIDTH-1:0] ram_rd_dout;
 
 // Backpressure control signal
+logic output_buffer_ready;
+
 logic pause_reads;
-
-// Output register slice
-logic [DATA_WIDTH-1:0] reg_in_data, reg_out_data;
-logic reg_in_valid, reg_out_valid;
-logic reg_in_ready, reg_out_ready;
-
-
-// logic [ADDR_WIDTH-1:0] write_addr, read_addr;
-// assign write_addr = self.write_ptr[ADDR_WIDTH-1:0];
-// assign read_addr = self.read_ptr[ADDR_WIDTH-1:0];
 
 always_comb begin
     next_self = self;
 
     // Input side ready
     in_ready = self.size != SIZE-1;
+    output_buffer_ready = !self.out_reg.valid;
+
+    // Pause reading when there is (no transfer on this cycle) AND the registers are full.
+    pause_reads = !out_ready && (self.out_reg.valid || self.extra_reg.valid);
 
     // Write side of machine
     // Increment write pointer
@@ -76,59 +80,52 @@ always_comb begin
     end
 
     // Read side of machine
-    if (self.size > 0 && (self.read_ptr != self.write_ptr) && !pause_reads) begin
+    if (self.size != 0 && !pause_reads) begin
         if (self.read_ptr == SIZE-1) begin
             next_self.read_ptr = 0;
         end else begin
             next_self.read_ptr += 1;
         end
-        next_self.rd_valid = 1;
         next_self.size -= 1;
+        // next_self.out_reg.data = ram_rd_dout;
+        // next_self.out_reg.valid = 1;
+        next_self.ram_dout_valid = 1;
     end else begin
-        next_self.rd_valid = 0;
+        // next_self.out_reg.valid = 0;
+        next_self.ram_dout_valid = 0;
     end
 
-    // We need to store this extra value that spills out due to the read latency
-    // being 1. If the latency was N, we would need N spill over registers.
-    if (pause_reads && self.rd_valid) begin
-        next_self.extra_reg.data = ram_rd_dout;
-        next_self.extra_reg.valid = 1;
+    // Input mux for extra reg
+    if (self.ram_dout_valid) begin
+        if (self.out_reg.valid && !out_ready) begin
+            next_self.extra_reg.data = ram_rd_dout;
+            next_self.extra_reg.valid = 1;
+        end else begin
+            next_self.out_reg.data = ram_rd_dout;
+            next_self.out_reg.valid = 1;
+        end
     end
 
-    // Clearing value in extra spill over register
-    if (self.extra_reg.valid) begin
-        reg_in_data = self.extra_reg.data;
-        reg_in_valid = 1;
-        if (reg_in_ready) begin
-            // Reset back if transfer happened: reg_in_valid && reg_in_ready
+    // Output mux for extra reg
+    if (self.next_reg) begin
+        out_data = self.extra_reg.data;
+        out_valid = self.extra_reg.valid;
+        if (out_ready && self.extra_reg.valid) begin
             next_self.extra_reg.valid = 0;
+            next_self.next_reg = 0;
         end
     end else begin
-        reg_in_data = ram_rd_dout;
-        reg_in_valid = self.rd_valid;
+        out_data = self.out_reg.data;
+        out_valid = self.out_reg.valid;
+        if (out_ready && self.out_reg.valid) begin
+            next_self.out_reg.valid = self.ram_dout_valid;
+            if (self.extra_reg.valid) begin
+                next_self.next_reg = 1;
+            end
+        end
     end
 
 end
-
-register_slice #(
-    .DATA_WIDTH (DATA_WIDTH)
-) reg_slice_inst (
-    .clk        (clk),
-    .rst        (rst),
-    .in_data    (reg_in_data),
-    .in_valid   (reg_in_valid),
-    .in_ready   (reg_in_ready),
-    .out_data   (reg_out_data),
-    .out_valid  (reg_out_valid),
-    .out_ready  (reg_out_ready)
-);
-
-// Pause reading when there is (no transfer on this cycle AND we already have
-// valid data in the output buffer) OR the extra spill over register is full.
-assign pause_reads = (!out_ready && reg_out_valid) || self.extra_reg.valid;
-assign out_data = reg_out_data;
-assign out_valid = reg_out_valid;
-assign reg_out_ready = out_ready;
 
 simple_dual_port_ram #(
     .DATA_WIDTH   (DATA_WIDTH),
