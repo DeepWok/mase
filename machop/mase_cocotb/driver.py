@@ -46,7 +46,7 @@ class Driver:
 
     def load_driver(self, tensor):
         for beat in tensor:
-            self.log.info(f"Loaded beat {beat} to driver {self.__class__.__name__}")
+            self.log.debug(f"Loaded beat {beat} to driver {self.__class__.__name__}")
             self.append(beat)
 
     @coroutine

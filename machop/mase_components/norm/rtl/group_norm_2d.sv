@@ -83,7 +83,7 @@ matrix_flatten #(
     .data_out(in_data_flat)
 );
 
-full_throughput_fifo #(
+fifo_v2 #(
     .SIZE(NUM_ITERS),
     .DATA_WIDTH(DATA_FLAT_WIDTH)
 ) fifo_inst (
@@ -210,6 +210,9 @@ for (genvar i = 0; i < COMPUTE_DIM0 * COMPUTE_DIM1; i++) begin : var_pipeline
         .data_out_ready(diff_out_ready)
     );
 
+    // Assign the output of diff int batch to be buffered
+    assign diff_batch_in[i] = diff_out;
+
     logic [(IN_WIDTH*2)-1:0] square_in, square_out;
     logic square_out_valid, square_out_ready;
     assign square_in = diff_out * diff_out;
@@ -245,6 +248,44 @@ for (genvar i = 0; i < COMPUTE_DIM0 * COMPUTE_DIM1; i++) begin : var_pipeline
     );
 
 end
+
+// FIFO for differences
+logic [IN_WIDTH-1:0] diff_batch_in [COMPUTE_DIM0*COMPUTE_DIM1-1:0];
+logic [IN_WIDTH-1:0] diff_batch_out [COMPUTE_DIM0*COMPUTE_DIM1-1:0];
+logic [IN_WIDTH*COMPUTE_DIM0*COMPUTE_DIM1-1:0] diff_batch_in_flat;
+logic [IN_WIDTH*COMPUTE_DIM0*COMPUTE_DIM1-1:0] diff_batch_out_flat;
+
+matrix_flatten #(
+    .DATA_WIDTH(IN_WIDTH),
+    .DIM0(COMPUTE_DIM0),
+    .DIM1(COMPUTE_DIM1)
+) input_flatten (
+    .data_in(diff_batch),
+    .data_out(diff_batch_in_flat)
+);
+
+fifo_v2 #(
+    .SIZE(),
+    .DATA_WIDTH(DATA_FLAT_WIDTH)
+) fifo_inst (
+    .clk(clk),
+    .rst(rst),
+    .in_data(diff_batch_in_flat),
+    .in_valid(),
+    .in_ready(),
+    .out_data(diff_batch_out_flat),
+    .out_valid(),
+    .out_ready()
+);
+
+matrix_unflatten #(
+    .DATA_WIDTH(IN_WIDTH),
+    .DIM0(COMPUTE_DIM0),
+    .DIM1(COMPUTE_DIM1)
+) fifo_unflatten (
+    .data_in(diff_batch_out_flat),
+    .data_out(diff_batch_out)
+);
 
 
 always_comb begin
