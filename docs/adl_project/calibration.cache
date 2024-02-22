@@ -1,0 +1,44 @@
+TRT-8601-EntropyCalibration2
+input_0: 3caa54fc
+(Unnamed Layer* 0) [Convolution]_output: 3d06c37a
+(Unnamed Layer* 1) [Scale]_output: 3d304ba9
+(Unnamed Layer* 2) [Activation]_output: 3d315503
+(Unnamed Layer* 3) [Convolution]_output: 3c94f02c
+(Unnamed Layer* 4) [Scale]_output: 3d3d34f8
+(Unnamed Layer* 5) [Activation]_output: 3d3d1eb9
+(Unnamed Layer* 6) [Pooling]_output: 3d3d1eb9
+(Unnamed Layer* 7) [Convolution]_output: 3cc3aa73
+(Unnamed Layer* 8) [Scale]_output: 3d2d160e
+(Unnamed Layer* 9) [Activation]_output: 3d21c51c
+(Unnamed Layer* 10) [Convolution]_output: 3c8ddfbc
+(Unnamed Layer* 11) [Scale]_output: 3d31f041
+(Unnamed Layer* 12) [Activation]_output: 3d2d5533
+(Unnamed Layer* 13) [Pooling]_output: 3d2d5533
+(Unnamed Layer* 14) [Convolution]_output: 3cc57dae
+(Unnamed Layer* 15) [Scale]_output: 3d25a1ee
+(Unnamed Layer* 16) [Activation]_output: 3d234b43
+(Unnamed Layer* 17) [Convolution]_output: 3c8e497a
+(Unnamed Layer* 18) [Scale]_output: 3d3dee1d
+(Unnamed Layer* 19) [Activation]_output: 3d3dee1d
+(Unnamed Layer* 20) [Pooling]_output: 3d3dee1d
+(Unnamed Layer* 21) [Shuffle]_output: 3d4d5511
+(Unnamed Layer* 22) [Constant]_output: 38db968a
+(Unnamed Layer* 23) [Shuffle]_output: 38db968a
+(Unnamed Layer* 24) [Matrix Multiply]_output: 3d898c7b
+(Unnamed Layer* 25) [Constant]_output: 38bcdee6
+(Unnamed Layer* 26) [Shuffle]_output: 38bcdee6
+(Unnamed Layer* 27) [ElementWise]_output: 3d89bf6c
+(Unnamed Layer* 28) [Activation]_output: 3d89a152
+(Unnamed Layer* 29) [Constant]_output: 398b3641
+(Unnamed Layer* 30) [Shuffle]_output: 398b3641
+(Unnamed Layer* 31) [Matrix Multiply]_output: 3d4d219a
+(Unnamed Layer* 32) [Constant]_output: 3982c7ef
+(Unnamed Layer* 33) [Shuffle]_output: 3982c7ef
+(Unnamed Layer* 34) [ElementWise]_output: 3d53eaa2
+(Unnamed Layer* 35) [Activation]_output: 3d53eaa2
+(Unnamed Layer* 36) [Constant]_output: 398861a5
+(Unnamed Layer* 37) [Shuffle]_output: 398861a5
+(Unnamed Layer* 38) [Matrix Multiply]_output: 3daa877d
+(Unnamed Layer* 39) [Constant]_output: 397ba0a2
+(Unnamed Layer* 40) [Shuffle]_output: 397ba0a2
+output_0: 3dae5c60
