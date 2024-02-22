@@ -86,7 +86,7 @@ matrix_flatten #(
 fifo_v2 #(
     .SIZE(NUM_ITERS),
     .DATA_WIDTH(DATA_FLAT_WIDTH)
-) fifo_inst (
+) input_fifo_inst (
     .clk(clk),
     .rst(rst),
     .in_data(in_data_flat),
@@ -194,7 +194,7 @@ join2 mu_fifo_join2 (
 for (genvar i = 0; i < COMPUTE_DIM0 * COMPUTE_DIM1; i++) begin : var_pipeline
 
     logic [IN_WIDTH-1:0] diff_in, diff_out;
-    logic diff_out_valid, diff_out_ready;
+    logic diff_out_valid;
     assign diff_in = fifo_data[i] - mu_out;
 
     skid_buffer #(
@@ -207,13 +207,16 @@ for (genvar i = 0; i < COMPUTE_DIM0 * COMPUTE_DIM1; i++) begin : var_pipeline
         .data_in_ready(mu_fifo_ready),
         .data_out(diff_out),
         .data_out_valid(diff_out_valid),
-        .data_out_ready(diff_out_ready)
+        .data_out_ready(fifo_diff_in_ready)
     );
 
     // Assign the output of diff int batch to be buffered
     assign diff_batch_in[i] = diff_out;
 
+    // There will be a split in the pipline here, split2 is down below.
+
     logic [(IN_WIDTH*2)-1:0] square_in, square_out;
+    logic square_in_ready;
     logic square_out_valid, square_out_ready;
     assign square_in = diff_out * diff_out;
 
@@ -223,8 +226,8 @@ for (genvar i = 0; i < COMPUTE_DIM0 * COMPUTE_DIM1; i++) begin : var_pipeline
         .clk(clk),
         .rst(rst),
         .data_in(square_in),
-        .data_in_valid(diff_out_valid),
-        .data_in_ready(diff_out_ready),
+        .data_in_valid(fifo_diff_out_valid),
+        .data_in_ready(square_in_ready),
         .data_out(square_out),
         .data_out_valid(square_out_valid),
         .data_out_ready(square_out_ready)
@@ -249,9 +252,21 @@ for (genvar i = 0; i < COMPUTE_DIM0 * COMPUTE_DIM1; i++) begin : var_pipeline
 
 end
 
-// FIFO for differences
+// Split2 for split in pipeline from diff
+logic fifo_diff_in_ready;
+logic fifo_diff_out_valid;
+split2 fifo_diff_split (
+    .data_in_valid(var_pipeline[0].diff_out_valid),
+    .data_in_ready(fifo_diff_in_ready),
+    .data_out_valid({diff_batch_in_valid, fifo_diff_out_valid}),
+    .data_out_ready({diff_batch_in_ready, var_pipeline[0].square_in_ready})
+);
+
+// FIFO for storing X-mu differences
 logic [IN_WIDTH-1:0] diff_batch_in [COMPUTE_DIM0*COMPUTE_DIM1-1:0];
+logic diff_batch_in_valid, diff_batch_in_ready;
 logic [IN_WIDTH-1:0] diff_batch_out [COMPUTE_DIM0*COMPUTE_DIM1-1:0];
+logic diff_batch_out_valid, diff_batch_out_ready;
 logic [IN_WIDTH*COMPUTE_DIM0*COMPUTE_DIM1-1:0] diff_batch_in_flat;
 logic [IN_WIDTH*COMPUTE_DIM0*COMPUTE_DIM1-1:0] diff_batch_out_flat;
 
@@ -259,30 +274,30 @@ matrix_flatten #(
     .DATA_WIDTH(IN_WIDTH),
     .DIM0(COMPUTE_DIM0),
     .DIM1(COMPUTE_DIM1)
-) input_flatten (
-    .data_in(diff_batch),
+) diff_flatten (
+    .data_in(diff_batch_in),
     .data_out(diff_batch_in_flat)
 );
 
 fifo_v2 #(
     .SIZE(),
     .DATA_WIDTH(DATA_FLAT_WIDTH)
-) fifo_inst (
+) diff_fifo_inst (
     .clk(clk),
     .rst(rst),
     .in_data(diff_batch_in_flat),
-    .in_valid(),
-    .in_ready(),
+    .in_valid(diff_batch_in_valid),
+    .in_ready(diff_batch_in_ready),
     .out_data(diff_batch_out_flat),
-    .out_valid(),
-    .out_ready()
+    .out_valid(diff_batch_out_valid),
+    .out_ready(diff_batch_out_ready)
 );
 
 matrix_unflatten #(
     .DATA_WIDTH(IN_WIDTH),
     .DIM0(COMPUTE_DIM0),
     .DIM1(COMPUTE_DIM1)
-) fifo_unflatten (
+) diff_unflatten (
     .data_in(diff_batch_out_flat),
     .data_out(diff_batch_out)
 );
@@ -290,47 +305,6 @@ matrix_unflatten #(
 
 always_comb begin
     next_self = self;
-
-    // // mu_acc_ready = !self.mu_valid;
-    // // fifo_out_ready = self.mu_valid && fifo_out_valid;
-
-    // // // Division logic to get mu
-    // // if (mu_acc_valid && mu_acc_ready) begin
-    // //     // Truncation rounding
-    // //     mu_acc_div = mu_acc / (GROUP_CHANNELS * DEPTH_DIM0 * DEPTH_DIM1);
-    // //     next_self.mu = mu_acc_div[IN_WIDTH-1:0];
-    // //     next_self.mu_valid = 1;
-    // //     next_self.mu_counter = 0;
-    // // end
-
-    // mu_fifo_ready = !self.diff_valid; // More complex logic to ff
-
-    // // Batched subtract logic
-    // if (mu_fifo_valid && mu_fifo_ready) begin
-    //     for (int i = 0; i < COMPUTE_DIM0 * COMPUTE_DIM1; i++) begin
-    //         next_self.diff[i] = fifo_data[i] - mu_out;
-    //     end
-    //     next_self.diff_valid = 1;
-    // end
-
-    // // Batched squared logic
-    // if (self.diff_valid && !self.squared_valid) begin
-    //     for (int i = 0; i < COMPUTE_DIM0 * COMPUTE_DIM1; i++) begin
-    //         next_self.squared[i] = $signed(self.diff[i]) * $signed(self.diff[i]);
-    //     end
-    //     next_self.squared_valid = 1;
-    // end
-
-    // // Batched variance logic
-    // if (self.squared_valid && !self.variance_valid) begin
-    //     for (int i = 0; i < COMPUTE_DIM0 * COMPUTE_DIM1; i++) begin
-    //         logic [(IN_WIDTH*2)-1:0] squared_div;
-    //         squared_div = self.squared[i] / NUM_ITERS;
-    //         next_self.variance[i] = squared_div[IN_WIDTH-1:0];
-    //     end
-    //     next_self.variance_valid = 1;
-    // end
-
 end
 
 always_ff @(posedge clk) begin
