@@ -93,9 +93,26 @@ def transform(
                     case "quantize":
                         pass_save_dir = save_dir / "tensorrt"
                         graph, _ = metadata_value_type_cast_transform_pass(
-                            graph, pass_args={}
+                            graph, pass_args={"fn": to_numpy_if_tensor}
                         )
                         ori_graph = deepcopy_mase_graph(graph)
+
+                        train_generator = InputGenerator(
+                            model_info=model_info,
+                            data_module=data_module,
+                            task=task,
+                            which_dataloader="train",
+                        )
+
+                        val_generator = InputGenerator(
+                            model_info=model_info,
+                            data_module=data_module,
+                            task=task,
+                            which_dataloader="train",
+                        )
+                        pass_config["train_generator"] = train_generator
+                        pass_config["val_generator"] = val_generator
+
                         graph, _ = PASSES["tensorrt-quantize"](graph, pass_args=pass_config)
                         PASSES["summarize_quantization"](
                             ori_graph, graph, save_dir=pass_save_dir

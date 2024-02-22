@@ -63,5 +63,7 @@ setup(
         "einops",
         "sphinx",
         "sphinx-rtd-theme",
+        "tensorrt",
+        "pytorch-quantization"
     ],
 )

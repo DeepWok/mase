@@ -49,3 +49,13 @@ einops
 sphinx
 sphinx-rtd-theme
 myst-parser
+# tensorRT
+torch-tensorRT
+tensorRT
+numpy
+absl-py
+scipy
+sphinx-glpi-theme
+prettytable
+pyyaml
+pytorch-quantization
