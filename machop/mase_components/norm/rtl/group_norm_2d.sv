@@ -191,8 +191,11 @@ join2 mu_fifo_join2 (
 );
 
 // Subtract -> Square -> Divide Pipeline
-for (genvar i = 0; i < COMPUTE_DIM0 * COMPUTE_DIM1; i++) begin : var_pipeline
+localparam VARIANCE_WIDTH = IN_WIDTH * 2;
 
+for (genvar i = 0; i < COMPUTE_DIM0 * COMPUTE_DIM1; i++) begin : compute_pipe
+
+    // Take the difference between input and mean: (X - mu)
     logic [IN_WIDTH-1:0] diff_in, diff_out;
     logic diff_out_valid;
     assign diff_in = fifo_data[i] - mu_out;
@@ -215,13 +218,14 @@ for (genvar i = 0; i < COMPUTE_DIM0 * COMPUTE_DIM1; i++) begin : var_pipeline
 
     // There will be a split in the pipline here, split2 is down below.
 
-    logic [(IN_WIDTH*2)-1:0] square_in, square_out;
+    // Take the difference and square it: (X - mu) ^ 2
+    logic [VARIANCE_WIDTH-1:0] square_in, square_out;
     logic square_in_ready;
     logic square_out_valid, square_out_ready;
     assign square_in = diff_out * diff_out;
 
     skid_buffer #(
-        .DATA_WIDTH(IN_WIDTH*2)
+        .DATA_WIDTH(VARIANCE_WIDTH)
     ) square_ff (
         .clk(clk),
         .rst(rst),
@@ -233,12 +237,13 @@ for (genvar i = 0; i < COMPUTE_DIM0 * COMPUTE_DIM1; i++) begin : var_pipeline
         .data_out_ready(square_out_ready)
     );
 
-    logic [(IN_WIDTH*2)-1:0] variance_in, variance_out;
+    // Take the square and divide it to get variance: (X - mu) ^ 2 / N
+    logic [VARIANCE_WIDTH-1:0] variance_in, variance_out;
     logic variance_out_valid, variance_out_ready;
     assign variance_in = square_out / NUM_ITERS;
 
     skid_buffer #(
-        .DATA_WIDTH(IN_WIDTH*2)
+        .DATA_WIDTH(VARIANCE_WIDTH)
     ) variance_ff (
         .clk(clk),
         .rst(rst),
@@ -250,16 +255,67 @@ for (genvar i = 0; i < COMPUTE_DIM0 * COMPUTE_DIM1; i++) begin : var_pipeline
         .data_out_ready(variance_out_ready)
     );
 
+    // Take inverse square root of variance: 1/root(Var(X))
+    logic [VARIANCE_WIDTH-1:0] inv_sqrt_data;
+    logic inv_sqrt_valid;
+
+    temp_inv_sqrt #(
+        .WIDTH(VARIANCE_WIDTH),
+        .PIPELINE_CYCLES(2)
+    ) temp_inv_sqrt_inst (
+        .clk(clk),
+        .rst(rst),
+        .in_data(variance_out),
+        .in_valid(variance_out_valid),
+        .in_ready(variance_out_ready),
+        .out_data(inv_sqrt_data),
+        .out_valid(inv_sqrt_valid),
+        .out_ready(inv_sqrt_ready)
+    );
+
+    // Multiply difference with 1/sqrt(var) to get normalized result
+    // Will need a join2 inserted to join the diff_buffer with the sqrt pipeline
+    logic [VARIANCE_WIDTH-1:0] norm_in_data;
+    logic norm_in_ready;
+    logic [VARIANCE_WIDTH-1:0] norm_out_data;
+    logic norm_out_valid;
+
+    assign norm_in_data = inv_sqrt_data * diff_batch_out[i];
+
+    skid_buffer #(
+        .DATA_WIDTH(VARIANCE_WIDTH)
+    ) norm_ff (
+        .clk(clk),
+        .rst(rst),
+        .data_in(norm_in_data),
+        .data_in_valid(norm_in_valid),
+        .data_in_ready(norm_in_ready),
+        .data_out(norm_out_data),
+        .data_out_valid(norm_out_valid),
+        .data_out_ready(norm_batch_ready)
+    );
+
+    assign norm_batch_data[i] = norm_out_data;
 end
 
 // Split2 for split in pipeline from diff
 logic fifo_diff_in_ready;
 logic fifo_diff_out_valid;
 split2 fifo_diff_split (
-    .data_in_valid(var_pipeline[0].diff_out_valid),
+    .data_in_valid(compute_pipe[0].diff_out_valid),
     .data_in_ready(fifo_diff_in_ready),
     .data_out_valid({diff_batch_in_valid, fifo_diff_out_valid}),
-    .data_out_ready({diff_batch_in_ready, var_pipeline[0].square_in_ready})
+    .data_out_ready({diff_batch_in_ready, compute_pipe[0].square_in_ready})
+);
+
+// Join2 for pipeline join at sqrt and diff fifo
+logic inv_sqrt_ready;
+logic norm_in_valid;
+join2 diff_fifo_sqrt_join (
+    .data_in_valid({diff_batch_out_valid, compute_pipe[0].inv_sqrt_valid}),
+    .data_in_ready({diff_batch_out_ready, inv_sqrt_ready}),
+    .data_out_valid(norm_in_valid),
+    .data_out_ready(compute_pipe[0].norm_in_ready)
 );
 
 // FIFO for storing X-mu differences
@@ -303,16 +359,12 @@ matrix_unflatten #(
 );
 
 
-always_comb begin
-    next_self = self;
-end
+// Final connection to output
+logic [IN_WIDTH-1:0] norm_batch_data [COMPUTE_DIM0*COMPUTE_DIM1-1:0];
+logic norm_batch_ready;
 
-always_ff @(posedge clk) begin
-    if (rst) begin
-        self <= '{default: '0};
-    end else begin
-        self <= next_self;
-    end
-end
+assign out_data = norm_batch_data;
+assign out_valid = compute_pipe[0].norm_out_valid;
+assign norm_batch_ready = out_ready;
 
 endmodule

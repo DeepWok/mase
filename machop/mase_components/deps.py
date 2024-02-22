@@ -37,7 +37,9 @@ MASE_HW_DEPS = {
     "matmul/test_chain_matmul": ["common", "linear", "cast", "fixed_arith", "matmul"],
     "matmul/transpose": [],
     "matmul/matrix_stream_transpose": ["common", "matmul"],
-    "norm/group_norm_2d": ["common", "matmul", "fixed_arithmetic"],
+    "norm/group_norm_2d": ["common", "matmul", "fixed_arithmetic", "norm"],
+    # TODO: Remove this once inv sqrt is done
+    "norm/temp_inv_sqrt": ["common"],
     # TODO: Geniune test case failure
     # "ViT/fixed_patch_embed": [
     #     "conv",
