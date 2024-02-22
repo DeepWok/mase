@@ -47,27 +47,8 @@ localparam DEPTH_DIM1 = TOTAL_DIM1 / COMPUTE_DIM1;
 localparam NUM_ITERS = DEPTH_DIM0 * DEPTH_DIM1 * GROUP_CHANNELS;
 localparam ITER_WIDTH = $clog2(NUM_ITERS);
 
-// State
-struct {
-    // Batched Difference: X - mu
-    logic [IN_WIDTH-1:0] diff [COMPUTE_DIM0*COMPUTE_DIM1-1:0];
-    logic diff_valid;
-
-    // Batched Squared: (X - mu)^2
-    logic [(IN_WIDTH*2)-1:0] squared [COMPUTE_DIM0*COMPUTE_DIM1-1:0];
-    logic squared_valid;
-
-    // Batched Variance: (X - mu)^2 / N
-    // TODO: change this width to more precise??
-    logic [(IN_WIDTH*2)-1:0] variance [COMPUTE_DIM0*COMPUTE_DIM1-1:0];
-    logic variance_valid;
-
-} self, next_self;
-
-
 // Input FIFO
 localparam DATA_FLAT_WIDTH = IN_WIDTH * COMPUTE_DIM0 * COMPUTE_DIM1;
-// localparam FIFO_DEPTH = GROUP_CHANNELS * DEPTH_DIM0 * DEPTH_DIM1;
 
 logic [DATA_FLAT_WIDTH-1:0] in_data_flat, out_data_flat;
 logic [IN_WIDTH-1:0] fifo_data  [COMPUTE_DIM0*COMPUTE_DIM1-1:0];
@@ -138,7 +119,6 @@ split2 input_fifo_adder_split (
 
 
 // Accumulator for mu
-// localparam ACC_DETPH = GROUP_CHANNELS * DEPTH_DIM0 * DEPTH_DIM1;
 localparam ACC_OUT_WIDTH = $clog2(NUM_ITERS) + ADDER_TREE_OUT_WIDTH;
 
 logic [ACC_OUT_WIDTH-1:0] mu_acc, mu_acc_div;
