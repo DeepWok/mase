@@ -1,19 +1,23 @@
 from copy import copy, deepcopy
 import logging
 import torch
-from torch_tensorrt import torchtrt
+import os
+import sys
+from pathlib import Path
+from datetime import datetime
+import tensorrt as trt
 
 # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 # pip install --no-cache-dir --index-url https://pypi.nvidia.com pytorch-quantization !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-
-
 from pytorch_quantization import quant_modules, calib
 from pytorch_quantization import nn as quant_nn
 from pytorch_quantization.nn import TensorQuantizer
 from pytorch_quantization.tensor_quant import QuantDescriptor
-``
+
+
+
 from chop.passes.graph.interface.save_and_load import load_mase_graph_interface_pass
 from ....utils import deepcopy_mase_graph
 
@@ -23,63 +27,85 @@ def get_config(config: dict, name: str):
         return config[name]["config"]
     else:
         return config["default"]["config"]
+    
+def pre_quantization_test(model):
+    print("Evaluate pre-quantization performance...")
+    ...
 
-def pytorch_quantize_by_type(graph, config: dict):        
-    # Apply symbolic tracing to create the FX graph
+def pytorch_quantize_by_type(graph, config):
+
+
+
+def pytorch_to_onnx(model, config):
+    print("Converting PyTorch model to ONNX...")
+
+    # Prepare the save path
+    root = Path(__file__).resolve().parents[7]
+    current_date = datetime.now().strftime("%Y_%m_%d")
+    save_dir = root / "mase_output/TensorRT/Quantization/ONNX" / current_date
+    save_dir.mkdir(parents=True, exist_ok=True)
+
+    # Extract existing version numbers
+    existing_versions = [int(d.name.split("_")[-1]) for d in save_dir.parent.iterdir() if d.is_dir() and d.name.startswith(current_date) and d.name.startswith("version_")]
+    version = "version_0" if not existing_versions else f"version_{max(existing_versions) + 1}"
+
+    save_dir = save_dir / version
+    save_dir.mkdir(parents=True, exist_ok=True)
+    save_path = save_dir / "model.onnx"
+    import pdb; pdb.set_trace()
+
+    dataloader = config['train_generator'].dataloader    
+    train_sample = next(iter(dataloader))[0]
+    train_sample.to(config['device'])
+
+    torch.onnx.export(model, train_sample, save_path,
+                    export_params=True, opset_version=11, do_constant_folding=True,
+                    input_names = ['input'])
+    print(f"ONNX model saved to {save_path}")
+    print("Conversion to ONNX done!")
+    return save_path
+
+
+def calibrate_onnx(model, train_loader, onnx_path):
+    print("Calibrating model for quantization...") 
+    
+    TRT_LOGGER = trt.Logger(trt.Logger.WARNING)
+    builder = trt.Builder(TRT_LOGGER)
+    network = builder.create_network(1 << int(trt.NetworkDefinitionCreationFlag.EXPLICIT_BATCH))
+    parser = trt.OnnxParser(network, TRT_LOGGER)
+
+    with open(onnx_path, 'rb') as model:
+        if not parser.parse(model.read()):
+            print('ERROR: Failed to parse the ONNX file.')
+            for error in range(parser.num_errors):
+                print(parser.get_error(error))
+            return
+
+    config = builder.create_builder_config()
+    config.max_workspace_size = 1 << 20  # Adjust size as needed
+    engine = builder.build_engine(network, config)
+
+    with open(onnx_path / 'trt', 'wb') as f:
+        f.write(engine.serialize())   
+
+    print("Calibration done!")
+
+def save_tensorrt_model(model, output_dir):
+    print(f"Saving quantized TensorRT model in {output_dir}")
+    ...
+    
+def quantize():
+    ...
+
+def pytorch_quantize_by_type(graph, config: dict):  
     if 'default' in config:
-        model = graph.model
-        # Monkey-patch the model with quantization modules
-        quant_modules.initialize(model, dtype=torch.quint8)
-
-        # Freeze weights to avoid further updates during quantization calibration
-        for param in model.parameters():
-            param.requires_grad = False
-
-        # Calibrate the model with representative input data
-        # Replace this with your own calibration step
-        dummy_input = config["train_generator"]
-        model.eval()
-        quant_modules.prepare(model, calib_data=[dummy_input])
-
-        # Convert the model to a quantized state
-        quant_modules.convert(model)
-
-        # Save the quantized model
-        torch.save(model.state_dict(), "quantized_model.pt")
-
-        print("Successfully quantized the model using monkey-patching!")
-
-        # fx_model = torch.fx.symbolic_trace(graph.model)
-
-        # quant_modules.initialize()
-        # TensorQuantizer.use_fb_fake_quant = True  # Use fake quantization for calibration
-
-        # # Prepare the model by inserting quantization nodes
-        # quant_desc_input = QuantDescriptor(calib_method='histogram')
-        # quant_nn.QuantConv2d.set_default_quant_desc_input(quant_desc_input)
-        # quant_nn.QuantLinear.set_default_quant_desc_input(quant_desc_input)
-
-        # # model = fx_model
-        # # model.cuda()
-
-        # # Calibrate the model (replace 'calibration_loader' with your data loader)
-        # for inputs, _ in config["train_generator"]:
-        #     quant_modules(inputs)
-
-        # # Convert the model to a quantized version
-        # quantized_model = quant_modules.convert_fx(quant_modules)
-
-        # # Evaluate the model (replace 'evaluation_loader' with your data loader)
-        # quantized_model.eval()
-        # with torch.no_grad():
-        #     for inputs, labels in config["val_generator"]:
-        #         outputs = quantized_model(inputs)
-        #         # Evaluate your model’s performance
-
-        # # Convert the modified FX graph back to a PyTorch model
-        # quantized_model = fx_model.to_pytorch_module()
-
-        graph.model = quantized_model
+        model = graph.model.eval()
+        onnx_path = pytorch_to_onnx(model, config)
+        calibrate_onnx(model, config['train_generator'].dataloader, onnx_path)
+        
+        
+    
+        
 
     return graph
 

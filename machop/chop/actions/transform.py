@@ -112,6 +112,7 @@ def transform(
                         )
                         pass_config["train_generator"] = train_generator
                         pass_config["val_generator"] = val_generator
+                        pass_config['device'] = accelerator
 
                         graph, _ = PASSES["tensorrt-quantize"](graph, pass_args=pass_config)
                         PASSES["summarize_quantization"](
