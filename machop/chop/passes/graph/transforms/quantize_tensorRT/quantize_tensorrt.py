@@ -89,7 +89,7 @@ def convert_model_to_onnx(graph, input_generator, onnxFile):
     onnx_model = torch.onnx.export(graph.model.cuda(), dummy_input, onnxFile)
 
     # Load the ONNX model
-    onnx_model = torch.onnx.load(onnxFile)
+    # onnx_model = torch.onnx.load(onnxFile)
 
     return onnx_model
 
