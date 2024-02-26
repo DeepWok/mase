@@ -50,42 +50,58 @@ localparam ITER_WIDTH = $clog2(NUM_ITERS);
 // Input FIFO
 localparam DATA_FLAT_WIDTH = IN_WIDTH * COMPUTE_DIM0 * COMPUTE_DIM1;
 
-logic [DATA_FLAT_WIDTH-1:0] in_data_flat, out_data_flat;
+// logic [DATA_FLAT_WIDTH-1:0] in_data_flat, out_data_flat;
+// logic fifo_in_valid, fifo_in_ready;
 logic [IN_WIDTH-1:0] fifo_data  [COMPUTE_DIM0*COMPUTE_DIM1-1:0];
 logic fifo_out_valid, fifo_out_ready;
-logic fifo_in_valid, fifo_in_ready;
 
-matrix_flatten #(
-    .DATA_WIDTH(IN_WIDTH),
-    .DIM0(COMPUTE_DIM0),
-    .DIM1(COMPUTE_DIM1)
-) input_flatten (
-    .data_in(in_data),
-    .data_out(in_data_flat)
-);
-
-fifo_v2 #(
-    .SIZE(NUM_ITERS),
-    .DATA_WIDTH(DATA_FLAT_WIDTH)
+matrix_fifo #(
+    .DATA_WIDTH  (IN_WIDTH),
+    .DIM0        (COMPUTE_DIM0),
+    .DIM1        (COMPUTE_DIM1),
+    .FIFO_SIZE   (NUM_ITERS)
 ) input_fifo_inst (
     .clk(clk),
-    .rst(rst),
-    .in_data(in_data_flat),
+    .rst(rst).
+    .in_data(in_data),
     .in_valid(fifo_in_valid),
     .in_ready(fifo_in_ready),
-    .out_data(out_data_flat),
+    .out_data(fifo_data),
     .out_valid(fifo_out_valid),
     .out_ready(fifo_out_ready)
 );
 
-matrix_unflatten #(
-    .DATA_WIDTH(IN_WIDTH),
-    .DIM0(COMPUTE_DIM0),
-    .DIM1(COMPUTE_DIM1)
-) fifo_unflatten (
-    .data_in(out_data_flat),
-    .data_out(fifo_data)
-);
+// matrix_flatten #(
+//     .DATA_WIDTH(IN_WIDTH),
+//     .DIM0(COMPUTE_DIM0),
+//     .DIM1(COMPUTE_DIM1)
+// ) input_flatten (
+//     .data_in(in_data),
+//     .data_out(in_data_flat)
+// );
+
+// fifo_v2 #(
+//     .SIZE(NUM_ITERS),
+//     .DATA_WIDTH(DATA_FLAT_WIDTH)
+// ) input_fifo_inst (
+//     .clk(clk),
+//     .rst(rst),
+//     .in_data(in_data_flat),
+//     .in_valid(fifo_in_valid),
+//     .in_ready(fifo_in_ready),
+//     .out_data(out_data_flat),
+//     .out_valid(fifo_out_valid),
+//     .out_ready(fifo_out_ready)
+// );
+
+// matrix_unflatten #(
+//     .DATA_WIDTH(IN_WIDTH),
+//     .DIM0(COMPUTE_DIM0),
+//     .DIM1(COMPUTE_DIM1)
+// ) fifo_unflatten (
+//     .data_in(out_data_flat),
+//     .data_out(fifo_data)
+// );
 
 // Input Adder Tree
 localparam ADDER_TREE_IN_SIZE = COMPUTE_DIM0 * COMPUTE_DIM1;
