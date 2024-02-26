@@ -16,6 +16,7 @@ MASE_HW_DEPS = {
     "cast/fixed_cast": [],
     "cast/fixed_rounding": ["cast"],
     "linear/fixed_linear": ["cast", "common", "fixed_arithmetic"],
+    "normalisation/fixed_batch_norm1d": [], #["cast", "common", "fixed_arithmetic"],
     "fixed_arithmetic/fixed_mult": [],
     "fixed_arithmetic/fixed_adder_tree_layer": [],
     "fixed_arithmetic/fixed_accumulator": ["common"],
