@@ -80,7 +80,6 @@ def convert_model_to_onnx(graph, input_generator, onnxFile):
     """
 
 
-
     # Create a dummy input
     dummy_in = next(iter(input_generator))['x']
     dummy_input = Variable(dummy_in.cuda(), requires_grad=True)
@@ -176,11 +175,10 @@ def quantize_tensorrt_transform_pass(graph, pass_args=None):
 
     # Create a TensorRT engine
     engine = build_trt_engine(pass_args)
-
     return graph, engine
 
 
-def test_quantize_tensorrt_transform_pass(pass_args):
+def test_quantize_tensorrt_transform_pass(input_generator, engineFile):
     """
     Test the quantize_tensorrt_transform_pass function.
 
@@ -190,24 +188,62 @@ def test_quantize_tensorrt_transform_pass(pass_args):
 
     # Load engineString from file
     logger = trt.Logger(trt.Logger.ERROR)
-    with open(pass_args['engineFile'], "rb") as f:
+    with open(engineFile, "rb") as f:
         engine = trt.Runtime(logger).deserialize_cuda_engine(f.read())
-        print("engine.__len__() = %d" % len(engine))
-        print("engine.__sizeof__() = %d" % engine.__sizeof__())
-        print("engine.__str__() = %s" % engine.__str__())
+    #     print("engine.__len__() = %d" % len(engine))
+    #     print("engine.__sizeof__() = %d" % engine.__sizeof__())
+    #     print("engine.__str__() = %s" % engine.__str__())
 
-        print("\nEngine related ========================================================")
+    #     print("\nEngine related ========================================================")
     
-    inspector = engine.create_engine_inspector()
-    print("inspector.execution_context=", inspector.execution_context)
-    print("inspector.error_recorder=", inspector.error_recorder)  # ErrorRecorder can be set into EngineInspector, usage of ErrorRecorder refer to 02-API/ErrorRecorder
+    # inspector = engine.create_engine_inspector()
+    # print("inspector.execution_context=", inspector.execution_context)
+    # print("inspector.error_recorder=", inspector.error_recorder)  # ErrorRecorder can be set into EngineInspector, usage of ErrorRecorder refer to 02-API/ErrorRecorder
 
-    print("Engine information:")  # engine information is equivalent to put all layer information together
-    print(inspector.get_engine_information(trt.LayerInformationFormat.ONELINE))  # .txt format
-    #print(inspector.get_engine_information(trt.LayerInformationFormat.JSON))  # .json format
+    # print("Engine information:")  # engine information is equivalent to put all layer information together
+    # print(inspector.get_engine_information(trt.LayerInformationFormat.ONELINE))  # .txt format
+    # #print(inspector.get_engine_information(trt.LayerInformationFormat.JSON))  # .json format
 
-    print("Layer information:")
-    for i in range(engine.num_layers):
-        print(inspector.get_layer_information(i, trt.LayerInformationFormat.ONELINE))
+    # print("Layer information:")
+    # for i in range(engine.num_layers):
+    #     print(inspector.get_layer_information(i, trt.LayerInformationFormat.ONELINE))
+    
+    nIO = engine.num_io_tensors
+    lTensorName = [engine.get_tensor_name(i) for i in range(nIO)]
+    nInput = [engine.get_tensor_mode(lTensorName[i]) for i in range(nIO)].count(trt.TensorIOMode.INPUT)
 
-    pass
+    context = engine.create_execution_context()
+
+    input_shape = next(iter(input_generator))['x'].shape
+    context.set_input_shape(lTensorName[0], input_shape)
+    for i in range(nIO):
+        print("[%2d]%s->" % (i, "Input " if i < nInput else "Output"), engine.get_tensor_dtype(lTensorName[i]), engine.get_tensor_shape(lTensorName[i]), context.get_tensor_shape(lTensorName[i]), lTensorName[i])
+
+    bufferH = []
+    data = next(iter(input_generator))['x']
+    bufferH.append(np.ascontiguousarray(data))
+    for i in range(nInput, nIO):
+        bufferH.append(np.empty(context.get_tensor_shape(lTensorName[i]), dtype=trt.nptype(engine.get_tensor_dtype(lTensorName[i]))))
+    bufferD = []
+    for i in range(nIO):
+        bufferD.append(cudart.cudaMalloc(bufferH[i].nbytes)[1])
+
+    for i in range(nInput):
+        cudart.cudaMemcpy(bufferD[i], bufferH[i].ctypes.data, bufferH[i].nbytes, cudart.cudaMemcpyKind.cudaMemcpyHostToDevice)
+
+    for i in range(nIO):
+        context.set_tensor_address(lTensorName[i], int(bufferD[i]))
+
+    context.execute_async_v3(0)
+
+    for i in range(nInput, nIO):
+        cudart.cudaMemcpy(bufferH[i].ctypes.data, bufferD[i], bufferH[i].nbytes, cudart.cudaMemcpyKind.cudaMemcpyDeviceToHost)
+
+    for i in range(nIO):
+        print(lTensorName[i])
+        print(bufferH[i])
+
+    for b in bufferD:
+        cudart.cudaFree(b)
+
+    print("Succeeded running model in TensorRT!")
