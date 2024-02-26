@@ -1,0 +1,12 @@
+TRT-8601-EntropyCalibration2
+input: 0
+(Unnamed Layer* 5) [Shuffle]_output: 0
+(Unnamed Layer* 6) [Scale]_output: 3c669b59
+/seq_blocks.0/BatchNormalization_output_0: 3c669b59
+/seq_blocks.1/Relu_output_0: 3c669b59
+(Unnamed Layer* 10) [Constant]_output: 3c5e9608
+(Unnamed Layer* 11) [Matrix Multiply]_output: 3d13bcf6
+(Unnamed Layer* 12) [Constant]_output: 3c2e08ee
+(Unnamed Layer* 13) [Shuffle]_output: 3c2e08ee
+/seq_blocks.2/Gemm_output_0: 3cd07574
+output: 3c1545ad

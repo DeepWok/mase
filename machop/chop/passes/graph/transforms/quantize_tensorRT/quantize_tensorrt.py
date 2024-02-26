@@ -14,16 +14,17 @@ import torch
 import torch.nn.functional as F
 from cuda import cudart
 from torch.autograd import Variable
+import onnx
 
 logger = logging.getLogger(__name__)
 
 
 class MyCalibrator(trt.IInt8EntropyCalibrator2):
-    def __init__(self, calibrationDataPath, nCalibration, input_generator, cacheFile):
+    def __init__(self, nCalibration, input_generator, cacheFile):
         trt.IInt8EntropyCalibrator2.__init__(self)
         self.cacheFile = cacheFile
         self.nCalibration = nCalibration
-        self.shape = next(iter(self.input_generator)).shape
+        self.shape = next(iter(input_generator))['x'].shape
         self.buffeSize = trt.volume(self.shape) * trt.float32.itemsize
         self.cacheFile = cacheFile
         _, self.dIn = cudart.cudaMalloc(self.buffeSize)
@@ -34,8 +35,8 @@ class MyCalibrator(trt.IInt8EntropyCalibrator2):
 
     def get_batch(self, nameList=None, inputNodeName=None):
         try:
-            data = next(iter(self.input_generator))
-            cudart.cudaMemcpy(self.dIn, data.ctypes.data, self.buffeSize, cudart.cudaMemcpyKind.cudaMemcpyHostToDevice)
+            data = next(iter(self.input_generator))['x']
+            # cudart.cudaMemcpy(self.dIn, data.ctypes.data, self.buffeSize, cudart.cudaMemcpyKind.cudaMemcpyHostToDevice)
             return [int(self.dIn)]
         except StopIteration:
             return None
@@ -86,15 +87,15 @@ def convert_model_to_onnx(graph, input_generator, onnxFile):
 
     # Export the model to ONNX
     # torch.onnx.export(graph.model, dummy_input, "model.onnx", verbose=True)
-    onnx_model = torch.onnx.export(graph.model.cuda(), dummy_input, onnxFile)
+    torch.onnx.export(graph.model.cuda(), dummy_input, onnxFile, verbose=True)
+    torch.onnx.export(graph.model.cuda(), dummy_input, onnxFile, export_params=True, opset_version=11, do_constant_folding=True, \
+                      input_names = ['input'], output_names = ['output'], dynamic_axes={'input' : {0 : 'batch_size'}, 'output' : {0 : 'batch_size'}})
 
     # Load the ONNX model
-    # onnx_model = torch.onnx.load(onnxFile)
-
-    return onnx_model
+    # onnx_model = onnx.load(onnxFile)
 
 
-def build_trt_engine(onnx_model, pass_args=None):
+def build_trt_engine(pass_args=None):
     """
     Build a TensorRT engine from the ONNX model.
 
@@ -115,12 +116,11 @@ def build_trt_engine(onnx_model, pass_args=None):
     profile = builder.create_optimization_profile()
 
     config = builder.create_builder_config()
-    if pass_args['precison'] == 'fp16':
+    if pass_args['precision'] == 'fp16':
         config.set_flag(trt.BuilderFlag.FP16)
-    if pass_args['precison'] == 'int8':
+    if pass_args['precision'] == 'int8':
         config.set_flag(trt.BuilderFlag.INT8)
         config.int8_calibrator = MyCalibrator(
-            pass_args['calibrationDataPath'], 
             pass_args['nCalibration'], 
             pass_args['input_generator'],
             pass_args['cacheFile'], 
@@ -140,10 +140,9 @@ def build_trt_engine(onnx_model, pass_args=None):
         print("Succeeded parsing .onnx file!")
 
     inputTensor = network.get_input(0)
-    profile.set_shape(inputTensor.name, 'min', 'opt', 'max')
+    profile.set_shape(inputTensor.name, (1,) + inputTensor.shape[1:], (8,) + inputTensor.shape[1:], (32,) + inputTensor.shape[1:])
     config.add_optimization_profile(profile)
 
-    network.unmark_output(network.get_output(0))  # remove output tensor "y"
     engineString = builder.build_serialized_network(network, config)
     if engineString == None:
         print("Failed building engine!")
@@ -173,10 +172,42 @@ def quantize_tensorrt_transform_pass(graph, pass_args=None):
     """
 
     # Convert model to ONNX
-    onnx_model = convert_model_to_onnx(graph, input_generator=pass_args["input_generator"], onnxFile=pass_args["onnxFile"])
-    print(onnx_model)
+    convert_model_to_onnx(graph, input_generator=pass_args["input_generator"], onnxFile=pass_args["onnxFile"])
 
     # Create a TensorRT engine
-    engine = build_trt_engine(onnx_model, pass_args)
+    engine = build_trt_engine(pass_args)
 
     return graph, engine
+
+
+def test_quantize_tensorrt_transform_pass(pass_args):
+    """
+    Test the quantize_tensorrt_transform_pass function.
+
+    :param pass_args: A dictionary of arguments for the pass.
+    :type pass_args: dict
+    """
+
+    # Load engineString from file
+    logger = trt.Logger(trt.Logger.ERROR)
+    with open(pass_args['engineFile'], "rb") as f:
+        engine = trt.Runtime(logger).deserialize_cuda_engine(f.read())
+        print("engine.__len__() = %d" % len(engine))
+        print("engine.__sizeof__() = %d" % engine.__sizeof__())
+        print("engine.__str__() = %s" % engine.__str__())
+
+        print("\nEngine related ========================================================")
+    
+    inspector = engine.create_engine_inspector()
+    print("inspector.execution_context=", inspector.execution_context)
+    print("inspector.error_recorder=", inspector.error_recorder)  # ErrorRecorder can be set into EngineInspector, usage of ErrorRecorder refer to 02-API/ErrorRecorder
+
+    print("Engine information:")  # engine information is equivalent to put all layer information together
+    print(inspector.get_engine_information(trt.LayerInformationFormat.ONELINE))  # .txt format
+    #print(inspector.get_engine_information(trt.LayerInformationFormat.JSON))  # .json format
+
+    print("Layer information:")
+    for i in range(engine.num_layers):
+        print(inspector.get_layer_information(i, trt.LayerInformationFormat.ONELINE))
+
+    pass

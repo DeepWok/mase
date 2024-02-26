@@ -28,6 +28,7 @@ from .transforms import (
     onnx_annotate_transform_pass,
     partition_to_multi_device_transform_pass,
     quantize_tensorrt_transform_pass,
+    test_quantize_tensorrt_transform_pass,
 )
 
 from .interface import (

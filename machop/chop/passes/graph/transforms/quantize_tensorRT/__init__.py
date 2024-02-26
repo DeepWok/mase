@@ -1,1 +1,1 @@
-from .quantize_tensorrt import quantize_tensorrt_transform_pass
+from .quantize_tensorrt import quantize_tensorrt_transform_pass, test_quantize_tensorrt_transform_pass
