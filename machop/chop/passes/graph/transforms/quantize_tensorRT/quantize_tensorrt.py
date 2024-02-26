@@ -15,6 +15,7 @@ import torch.nn.functional as F
 from cuda import cudart
 from torch.autograd import Variable
 import onnx
+import time
 
 logger = logging.getLogger(__name__)
 
@@ -35,8 +36,8 @@ class MyCalibrator(trt.IInt8EntropyCalibrator2):
 
     def get_batch(self, nameList=None, inputNodeName=None):
         try:
-            data = next(iter(self.input_generator))['x']
-            # cudart.cudaMemcpy(self.dIn, data.ctypes.data, self.buffeSize, cudart.cudaMemcpyKind.cudaMemcpyHostToDevice)
+            data = np.array(next(iter(self.input_generator))['x'])
+            cudart.cudaMemcpy(self.dIn, data.ctypes.data, self.buffeSize, cudart.cudaMemcpyKind.cudaMemcpyHostToDevice)
             return [int(self.dIn)]
         except StopIteration:
             return None
@@ -178,7 +179,7 @@ def quantize_tensorrt_transform_pass(graph, pass_args=None):
     return graph, engine
 
 
-def test_quantize_tensorrt_transform_pass(input_generator, engineFile):
+def test_quantize_tensorrt_transform_pass(dataloader, engineFile):
     """
     Test the quantize_tensorrt_transform_pass function.
 
@@ -214,36 +215,52 @@ def test_quantize_tensorrt_transform_pass(input_generator, engineFile):
 
     context = engine.create_execution_context()
 
-    input_shape = next(iter(input_generator))['x'].shape
+    dataiter = iter(dataloader())
+    input, labels = next(dataiter)
+    input_shape = input.shape
     context.set_input_shape(lTensorName[0], input_shape)
     for i in range(nIO):
         print("[%2d]%s->" % (i, "Input " if i < nInput else "Output"), engine.get_tensor_dtype(lTensorName[i]), engine.get_tensor_shape(lTensorName[i]), context.get_tensor_shape(lTensorName[i]), lTensorName[i])
 
-    bufferH = []
-    data = next(iter(input_generator))['x']
-    bufferH.append(np.ascontiguousarray(data))
-    for i in range(nInput, nIO):
-        bufferH.append(np.empty(context.get_tensor_shape(lTensorName[i]), dtype=trt.nptype(engine.get_tensor_dtype(lTensorName[i]))))
-    bufferD = []
-    for i in range(nIO):
-        bufferD.append(cudart.cudaMalloc(bufferH[i].nbytes)[1])
+    execute_time = []
+    accuracy = []
+    for data, label in dataloader():
+        bufferH = []
+        bufferH.append(np.ascontiguousarray(data))
+        for i in range(nInput, nIO):
+            bufferH.append(np.empty(context.get_tensor_shape(lTensorName[i]), dtype=trt.nptype(engine.get_tensor_dtype(lTensorName[i]))))
+        bufferD = []
+        for i in range(nIO):
+            bufferD.append(cudart.cudaMalloc(bufferH[i].nbytes)[1])
 
-    for i in range(nInput):
-        cudart.cudaMemcpy(bufferD[i], bufferH[i].ctypes.data, bufferH[i].nbytes, cudart.cudaMemcpyKind.cudaMemcpyHostToDevice)
+        for i in range(nInput):
+            cudart.cudaMemcpy(bufferD[i], bufferH[i].ctypes.data, bufferH[i].nbytes, cudart.cudaMemcpyKind.cudaMemcpyHostToDevice)
 
-    for i in range(nIO):
-        context.set_tensor_address(lTensorName[i], int(bufferD[i]))
+        for i in range(nIO):
+            context.set_tensor_address(lTensorName[i], int(bufferD[i]))
 
-    context.execute_async_v3(0)
+        start_time = time.time()
+        context.execute_async_v3(0)
+        execute_time.append(time.time() - start_time)
 
-    for i in range(nInput, nIO):
-        cudart.cudaMemcpy(bufferH[i].ctypes.data, bufferD[i], bufferH[i].nbytes, cudart.cudaMemcpyKind.cudaMemcpyDeviceToHost)
+        for i in range(nInput, nIO):
+            cudart.cudaMemcpy(bufferH[i].ctypes.data, bufferD[i], bufferH[i].nbytes, cudart.cudaMemcpyKind.cudaMemcpyDeviceToHost)
+            
+            categories = np.argmax(bufferH[nInput], axis=1)
+            # print(categories, label)
+            acc = np.sum(categories == np.array(label)) / len(label)
+            # print("Accuracy: %.2f%%" % (acc * 100))
+            accuracy.append(acc)
+        
+        # for i in range(nIO):
+        #     print(lTensorName[i])
+        #     print(bufferH[i])
+        #     print(categories, label)
 
-    for i in range(nIO):
-        print(lTensorName[i])
-        print(bufferH[i])
-
-    for b in bufferD:
-        cudart.cudaFree(b)
-
+        for b in bufferD:
+            cudart.cudaFree(b)
     print("Succeeded running model in TensorRT!")
+    print("Average execute time for one batch: %.2fms" % (sum(execute_time) / len(execute_time) * 1000))
+    print("Total accuracy: %.2f%%" % (sum(accuracy) / len(accuracy) * 100))
+
+    
