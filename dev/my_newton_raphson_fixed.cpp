@@ -1,20 +1,23 @@
+// LIBRARIES
+// ---------
 #include <cstdint>
 #include <cmath>
 #include <bits/stdc++.h>
 #include <string>
 #include <stdlib.h>
 
-// FORMAT: Q1.15
-#define ISQRT_2 0b0101101010000010
-#define SQRT_2 0b1011010100000100
-// NOTE: LUT_SIZE must be a power of 2.
-#define LUT_POW 5
-#define LUT_SIZE 32
-#define LUT_STEP (1.0f / (LUT_SIZE + 1.0f))
-#define I_WIDTH 8
-#define FRAC_WIDTH 8
-#define WIDTH (I_WIDTH + FRAC_WIDTH)
+// MACROS
+// ------
+#define ISQRT_2 0b0101101010000010          // FORMAT: Q1.(WIDTH-1)
+#define SQRT_2 0b1011010100000100           // FORMAT: Q1.(WIDTH-1)
+#define LUT_POW 5                           // LUT_POW = log2(LUT_SIZE)
+#define LUT_SIZE 32                         // NOTE: LUT_SIZE must be a power of 2.
+#define LUT_STEP (1.0f / (LUT_SIZE + 1.0f)) // FORMAT: float
+#define I_WIDTH 8                           // FORMAT: integer
+#define FRAC_WIDTH 8                        // FORMAT: integer
+#define WIDTH (I_WIDTH + FRAC_WIDTH)        // FORMAT: integer
 
+// Signatures for utils.
 void print_float(std::string label, float x);
 void print_int(std::string label, uint16_t x);
 void print_int32(std::string label, uint32_t x);
@@ -22,8 +25,8 @@ void print_int64(std::string label, uint64_t x);
 void print_bit(std::string label, bool bit);
 void print_bit(int label, bool bit);
 uint16_t float_to_q88(float x);
-uint16_t float_to_q115(float x); // NOTE: the input is assumed to be in the range [1, 2)
-uint16_t float_to_q016(float x); // NOTE: the input is assumed to be in the range [0, 1)
+uint16_t float_to_q115(float x);
+uint16_t float_to_q016(float x);
 float q115_to_float(uint16_t x);
 float q016_to_float(uint16_t x);
 float q1616_to_float(uint32_t x);
@@ -35,28 +38,23 @@ float q88_to_float(uint16_t x);
 // ---------------------------------------------------------------------------
 
 // NOTE: Range reduction
-// The input that can be supported by this algorithm is [0, inf). To make the 
-// usage of the LUT more effective the values are mapped to a reduced range
-// (see below).
-// NOTE: this reduced range does not attempt to squash infinity into a small.
+// The input is mapped to the range [1, 2).
+// The reason for this range is because 1/sqrt(x) contains values between (1/sqrt(2), 1].
+// Both input range and output range can be supported by the format Q1.(WIDTH-1).
+// Also the format Q1.(WIDTH-1) supports the 1.5f present in the Newton-Raphson 
+// equation.
+//
+// NOTE: this reduced range does not attempt to squash infinity into a small range.
 // The process is performed by dividing the input by 2 until it falls in the 
-// range [1, 2). However, doing this is the same as moving the decimal point 
-// up to right before the MSB, as long as the MSB exists in the integer part of the number 
-// this equates to just imagining that the format of the number has changed 
-// from Q(INT_WIDTH).(FRAC_WIDTH) to Q1.(MSB_POS?).
+// range [1, 2) or multiplying by 2 until it falls in the range [1, 2). However
+// this operation is the same as moving the fixed point behind the MSB of the 
+// input number.
 
-// NOTE: the lut values are in the format Q0.(WIDTH).
+// NOTE: the lut values are in the format Q1.(WIDTH-1).
 // The reason for this format is because the range of the input is mapped to
 // [1, 2) therefore the possible values for 1/sqrt(x) will be (1/sqrt(2), 1].
-// If we ignore the 1 in the domain then the mapped range becomes (1/sqrt(2), 1)
-// which can be represented with the format Q0.(WIDTH). In this when the input
-// is mapped to 1 then this will be handled with separate logic.
 
-// NOTE: had to change the format of the LUT table values to Q1.15 due to the 
-// existance of the 1.5f in the Newton Raphson method. For other methods such 
-// as interpolation which do not include this then the format Q0.16 will be completely 
-// valid.
-
+// FORMAT: Q1.(WIDTH-1)
 uint16_t lut[LUT_SIZE];
 
 // FORMAT: Q1.(WIDTH-1)
@@ -195,19 +193,20 @@ uint16_t isqrt(uint16_t x){
         return 0xFFFF;
     }
 
+    // FORMAT: Integer
     uint16_t msb_index = find_msb(x);
-    //if(msb_index == 0xFFFF){
-    //    std::cout << "[ERROR] The input number x is invalid." << "\n";
-    //    std::cout << "[X] " << x << "\n";
-    //    return 0xFFFF;
-    //}
-    // FORMAT Q1.15
+
+    // FORMAT Q1.(WIDTH-1)
     uint32_t x_red = range_reduction(x, msb_index);
+
+    // If X gets mapped to 1 then 1/sqrt(x) is 1. Then augment range.
     if(x_red == 0x8000){
-        //std::cout << "X red: " << q115_to_float(x_red) << "\n";
         uint16_t out = range_augmentation(x_red, msb_index);
-        //std::cout << "Out: " << q88_to_float(out) << "\n";
         bool msb_bit = (out >> 15) & 0b1;
+
+        // Check that overflow does not occur.
+        // TODO: how to deal with overflow in actual implementation? Return MAX_NUM?
+        // Have an output wire OVERFLOW?
         if(msb_bit){
             std::cout << "[OVERFLOW]" << "\n";
             return 0xFFFF;
@@ -220,9 +219,6 @@ uint16_t isqrt(uint16_t x){
     // Shift the number to match the Q1.(WIDTH-1) format.
     intermediate = x << (WIDTH - 1 - msb_index);
 
-    // TODO: what to do when the intermediate returns as a 1?
-    // TODO: what to do when the intermediate is 0?
-    
     // Get rid of the 1 from the format for index calculation.
     // This is easier in SystemVerilog, just turn the bit to a 0.
     uint32_t temp = intermediate - (0b1 << (WIDTH - 1));
@@ -234,8 +230,7 @@ uint16_t isqrt(uint16_t x){
     uint16_t lut_index = temp;
     //std::cout << "LUT index " << lut_index << "\n";
 
-    // FORMAT: Q0.(WIDTH)
-    // FORMAT: Q16.16
+    // FORMAT: Q1.(WIDTH-1)
     uint32_t initial_guess;
     if(lut_index == 0){
         initial_guess = lut[0];
@@ -243,136 +238,79 @@ uint16_t isqrt(uint16_t x){
     else{
         initial_guess = lut[lut_index - 1];
     }
-
-    // FORMAT: Q1.15
-    //uint32_t y = 0x4000;        // Q1.15 format
-    // This represents 1.5 in Q1.15 format and 0.75 in Q0.16 format.
-    //uint32_t x_red = 0xC000 >> 1;    // Q1.15 format therefore need to divide by 2.
-    //std::cout << "X red: " << q115_to_float(x_red) << "\n";
-    //std::cout << "Y    : " << q115_to_float(y) << "\n";
-    //uint32_t yy = (y * y) >> 15;
-    //std::cout << "YY   : " << q115_to_float(yy) << "\n";
-    //uint32_t mult = (yy * x_red) >> 15;
-    //std::cout << "Mult : " << q115_to_float(mult) << "\n";
-    //uint32_t threehalfs = 0x3 << (WIDTH - 2); // FORMAT Q1.15
-    //std::cout << "3/2  : " << q115_to_float(threehalfs) << "\n";
-    //uint32_t sub = threehalfs - mult;
-    //std::cout << "Sub  : " << q115_to_float(sub) << "\n";
-
-    //y = sub; // FORMAT: Q1.16
-    //yy = (y * y) >> 15; // FORMAT: Q1.16 * Q1.16 = Q1.34
-    //std::cout << "YY   : " << q115_to_float(yy) << "\n";
-    //mult = (yy * x_red) >> 15;
-    //std::cout << "Mult : " << q115_to_float(mult) << "\n";
-    //sub = threehalfs - mult;
-    //std::cout << "Sub  : " << q115_to_float(sub) << "\n";
-
-    // NOTE: since the format for intermediate is Q1.(WIDTH-1) and we are using
-    // it with Q0.(WIDTH) numbers all that is needed to transform it to Q0.(WIDTH)
-    // format is to multiply it by two since the fixed point will need to be
-    // moved up by one position to the left.
-    // With 32 bits this can be viewed as Q(32-WIDTH).(WIDTH) format.
-
-    // FORMAT: Q16.16
-    // TODO: is this correct? Is it meant to be by 2?
-    // Mapped to [1, 2).
-    //intermediate = intermediate << 1;
-    //std::cout << "Inter: " << q1616_to_float(intermediate) << "\n";
-    //uint32_t threehalfs = 0x3 << (WIDTH - 1); // FORMAT Q1.16
-    //std::cout << "Three: " << q1616_to_float(threehalfs) << "\n";
     
-    uint32_t y = initial_guess;     // FORMAT: Q1.15
-    //uint32_t x_red = intermediate >> 1;  // FORMAT: Q1.15 and divide by 2 now.
-    x_red = x_red >> 1;
-    //std::cout << "X red: " << q115_to_float(x_red) << "\n";
-    uint32_t mult; // FORMAT Q1.15
-    uint32_t yy; // FORMAT Q1.15
-    uint32_t sub; // FORMAT Q1.15
-    uint32_t threehalfs = 0x3 << (WIDTH - 2); // FORMAT Q1.15
-    for (int i = 0; i < 5; ++i) { // Adjust the number of iterations as needed
-        //std::cout << "I: " << i << "\n";
-        //std::cout << "Y   : " << q115_to_float(y) << "\n";
-        yy = (y * y) >> 15; // Multiplication moves format to Q0.32 therefore need to shift by 16 to get Q0.16 format back.
-        //std::cout << "YY  : " << q115_to_float(yy) << "\n";
-        mult = (yy * x_red) >> 15; // Multiplication moves from to Q0.32 therefore need to shift by 16 to get Q0.16 format back.
-        //std::cout << "MULT: " << q115_to_float(mult) << "\n";
-        // In this case the format would change to Q1.16 which is ?
-        sub = threehalfs - mult;
-        //std::cout << "SUB : " << q115_to_float(sub) << "\n";
-        y = (y * sub) >> 15;
-        //std::cout << "Out : " << q115_to_float(y) << "\n";
-        //y = y - (1.0f / (y * y) - intermediate) / (-2.0f / (y * y * y));
-        //y = y * (1.5f - 0.5f * intermediate * y * y);
-        
-        //y = y * (threehalfs - (intermediate >> 1) * y * y);
+    
+    uint32_t y = initial_guess;                 // FORMAT: Q1.(WIDTH-1)
+    uint32_t mult;                              // FORMAT: Q1.(WIDTH-1)
+    uint32_t yy;                                // FORMAT: Q1.(WIDTH-1)
+    uint32_t sub;                               // FORMAT: Q1.(WIDTH-1)
+    uint32_t threehalfs = 0x3 << (WIDTH - 2);   // FORMAT: Q1.(WIDTH-1)
 
-        //print_int32("Y ", y);
-        // TODO: multiplication of 2 32 bit numbers needs a result of 64 bits.
+    // Divide mapped input by 2 as stated in Newton-Raphson formula.
+    x_red = x_red >> 1;
+
+    // TODO: vary the number of iterations and evaluate the error.
+    for (int i = 0; i < 5; ++i) {
+        // FORMAT: Q1.(WIDTH-1) x Q1.(WIDTH-1) = Q2.(2*WIDTH - 2) >> (WIDTH - 1) = Q1.(WIDTH-1)
+        // NOTE: the format calculations may be off.
+        yy = (y * y) >> (WIDTH - 1);
+        // FORMAT: Q1.(WIDTH-1) x Q1.(WIDTH-1) = Q2.(2*WIDTH - 2) >> (WIDTH - 1) = Q1.(WIDTH-1)
+        mult = (yy * x_red) >> (WIDTH - 1);
+        // FORMAT: Q1.(WIDTH-1)
+        sub = threehalfs - mult;
+        // FORMAT: Q1.(WIDTH-1) x Q1.(WIDTH-1) = Q2.(2*WIDTH - 2) >> (WIDTH - 1) = Q1.(WIDTH-1)
+        y = (y * sub) >> (WIDTH - 1);
     }
-    //print_int32("Y ", y);
+
+    // FORMAT: Q(I_WIDTH).(FRAC_WIDTH)
     y = range_augmentation(y, msb_index);
 
-    // Range augmentation.
-    // FORMAT: from Q(32-WIDTH).(WIDTH) back to Q(INT_WIDTH).(FRAC_WIDTH)
-    
     // If overflow then return max number possible.
     // Overflow is detected by checking if the MSB of Q1.15 format is asserted.
     // This is because the output range of y is [0.707, 1).
     // Can we get overflow? If the algorithm does not converge then yes.
-    bool msb_bit = (y >> 15) & 0b1;
+    bool msb_bit = (y >> (WIDTH - 1)) & 0b1;
     if(msb_bit){
         std::cout << "[OVERFLOW]" << "\n";
         return 0xFFFF;
     }
 
-    // If underflow then this should be dealt with ignoring the underflowed bits.
-    
-
-    // NOTE: this is just bit selection of the correct integer and fractional
-    // bits and should be easier in SystemVerilog.
-    //uint32_t mask = (0b1 << WIDTH) - 1; 
-    //mask = mask << (16 - FRAC_WIDTH);
-    //print_int32("MASK ", mask);
-    //uint16_t out = intermediate & mask;
-    //print_int("Out ", out);
-
-    // RANGE augmentation is just changing the format back to Q(I_WIDTH).(FRAC_WIDTH)
-    // which is just achieved through doing nothing.
-    //std::cout << "Output: " << q88_to_float(y) << "\n";
+    // FORMAT: Q(I_WIDTH).(FRAC_WIDTH)
     return y;
 }
 
 // ===========================================================================
-// Driver 
+// Main
 // ---------------------------------------------------------------------------
 
 uint16_t test(uint16_t val){
     if(val == 0){
         return 0;
     }
+
+    // Convert to float for reference calculation.
     float val_f = q88_to_float(val);
+    // Reference calculation.
     float expected_f = 1.0f / sqrt(val_f);
+    // Quantise the value for fair comparison.
     uint16_t expected = float_to_q88(expected_f);
+    // Update the reference value.
     expected_f = q88_to_float(expected);
+
+    // Apply model.
     uint16_t output = isqrt(val);
     float output_f = q88_to_float(output);
-    float error = abs(output_f - expected_f);
 
+    // Calculate error in floating point.
+    float error = abs(output_f - expected_f);
     std::cout << "Square root " << val_f << ") = " << expected_f << " |  " << output_f << " | Error: " << error << "\n";
     return error;
 }
 
+// NOTE: for the Q8.8 format the max error achieved is 2^-8.
 int main()
 {
     init_lut();
-
-    // X_red = 1.495971875
-    // But range_reduction() is not choosing 1.5 as X_red in order to avoid this
-    // error the range_reduction() needs to be changed so that it also looks from above.
-    // However this will require more logic. Not sure if this is desired.
-    //float x_f = 47.8711f;
-    //uint16_t x = float_to_q88(x_f);
-    //test(x);
 
     float step = 1.0f;
     float x_f = step;
@@ -436,7 +374,6 @@ uint16_t float_to_q88(float x){
     return output;
 }
 
-// RANGE: [0, 1)
 float q016_to_float(uint16_t x){
 
     float output = 0.0f;
@@ -451,7 +388,6 @@ float q016_to_float(uint16_t x){
     return output;
 }
 
-// RANGE: [0, 1)
 uint16_t float_to_q016(float x){
     if(x >= 1){
         std::cout << "[error] input to float_to_q016 is larger than or equal to 1" << "\n";
@@ -475,16 +411,7 @@ uint16_t float_to_q016(float x){
     return output;
 }
 
-// NOTE: the input is assumed to be in the range [1, 2)
 uint16_t float_to_q115(float x){
-    //if(x >= 2){
-    //    std::cout << "[ERROR] Input to float_to_q115 is larger than or equal to 2" << "\n";
-    //    std::cout << "[ERROR] " << x << "\n";
-    //}
-    //else if(x < 1){
-    //    std::cout << "[ERROR] Input to float_to_q115 is smaller than 1" << "\n";
-    //    std::cout << "[ERROR] " << x << "\n";
-    //}
     // Get integer part.
     uint16_t integer = static_cast<uint16_t>(x);
     float integer_float = static_cast<float>(integer);
@@ -537,8 +464,6 @@ float q88_to_float(uint16_t x){
     return output;
 }
 
-// TODO: fix this function.
-// Also figure out a way to make a function that takes in FRAC and INT widths.
 float q1616_to_float(uint32_t x){
     float output = 0.0f;
     // Integer part
