@@ -44,10 +44,11 @@ module group_norm_2d #(
     input  logic             out_ready
 );
 
-// Constant derived params
+// Derived params
 localparam DEPTH_DIM0 = TOTAL_DIM0 / COMPUTE_DIM0;
 localparam DEPTH_DIM1 = TOTAL_DIM1 / COMPUTE_DIM1;
 
+localparam NUM_VALUES = TOTAL_DIM0 * TOTAL_DIM1 * GROUP_CHANNELS;
 localparam NUM_ITERS = DEPTH_DIM0 * DEPTH_DIM1 * GROUP_CHANNELS;
 localparam ITER_WIDTH = $clog2(NUM_ITERS);
 
@@ -55,8 +56,6 @@ localparam VARIANCE_WIDTH = IN_WIDTH * 2;
 localparam VARIANCE_FRAC_WIDTH = IN_FRAC_WIDTH * 2;
 
 // Input FIFO
-localparam DATA_FLAT_WIDTH = IN_WIDTH * COMPUTE_DIM0 * COMPUTE_DIM1;
-
 logic [IN_WIDTH-1:0] fifo_data  [COMPUTE_DIM0*COMPUTE_DIM1-1:0];
 logic fifo_out_valid, fifo_out_ready;
 logic fifo_in_valid, fifo_in_ready;
@@ -209,7 +208,7 @@ for (genvar i = 0; i < COMPUTE_DIM0 * COMPUTE_DIM1; i++) begin : compute_pipe
     // Take the square and divide it to get variance: (X - mu) ^ 2 / N
     logic [VARIANCE_WIDTH-1:0] variance_in, variance_out;
     logic variance_out_valid, variance_out_ready;
-    assign variance_in = square_out / NUM_ITERS;
+    assign variance_in = square_out / NUM_VALUES;
 
     skid_buffer #(
         .DATA_WIDTH(VARIANCE_WIDTH)
