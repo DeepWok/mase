@@ -26,7 +26,11 @@ module group_norm_2d #(
     parameter IN_WIDTH            = 8,
     parameter IN_FRAC_WIDTH       = 2,
     parameter OUT_WIDTH           = 8,
-    parameter OUT_FRAC_WIDTH      = 7
+    parameter OUT_FRAC_WIDTH      = 6,
+
+    // Precision of inverse sqrt unit
+    parameter INV_SQRT_WIDTH      = 16,
+    parameter INV_SQRT_FRAC_WIDTH = 10
 ) (
     input  logic             clk,
     input  logic             rst,
@@ -47,22 +51,24 @@ localparam DEPTH_DIM1 = TOTAL_DIM1 / COMPUTE_DIM1;
 localparam NUM_ITERS = DEPTH_DIM0 * DEPTH_DIM1 * GROUP_CHANNELS;
 localparam ITER_WIDTH = $clog2(NUM_ITERS);
 
+localparam VARIANCE_WIDTH = IN_WIDTH * 2;
+localparam VARIANCE_FRAC_WIDTH = IN_FRAC_WIDTH * 2;
+
 // Input FIFO
 localparam DATA_FLAT_WIDTH = IN_WIDTH * COMPUTE_DIM0 * COMPUTE_DIM1;
 
-// logic [DATA_FLAT_WIDTH-1:0] in_data_flat, out_data_flat;
-// logic fifo_in_valid, fifo_in_ready;
 logic [IN_WIDTH-1:0] fifo_data  [COMPUTE_DIM0*COMPUTE_DIM1-1:0];
 logic fifo_out_valid, fifo_out_ready;
+logic fifo_in_valid, fifo_in_ready;
 
 matrix_fifo #(
     .DATA_WIDTH  (IN_WIDTH),
     .DIM0        (COMPUTE_DIM0),
     .DIM1        (COMPUTE_DIM1),
-    .FIFO_SIZE   (NUM_ITERS)
+    .FIFO_SIZE   (2*NUM_ITERS)
 ) input_fifo_inst (
     .clk(clk),
-    .rst(rst).
+    .rst(rst),
     .in_data(in_data),
     .in_valid(fifo_in_valid),
     .in_ready(fifo_in_ready),
@@ -70,38 +76,6 @@ matrix_fifo #(
     .out_valid(fifo_out_valid),
     .out_ready(fifo_out_ready)
 );
-
-// matrix_flatten #(
-//     .DATA_WIDTH(IN_WIDTH),
-//     .DIM0(COMPUTE_DIM0),
-//     .DIM1(COMPUTE_DIM1)
-// ) input_flatten (
-//     .data_in(in_data),
-//     .data_out(in_data_flat)
-// );
-
-// fifo_v2 #(
-//     .SIZE(NUM_ITERS),
-//     .DATA_WIDTH(DATA_FLAT_WIDTH)
-// ) input_fifo_inst (
-//     .clk(clk),
-//     .rst(rst),
-//     .in_data(in_data_flat),
-//     .in_valid(fifo_in_valid),
-//     .in_ready(fifo_in_ready),
-//     .out_data(out_data_flat),
-//     .out_valid(fifo_out_valid),
-//     .out_ready(fifo_out_ready)
-// );
-
-// matrix_unflatten #(
-//     .DATA_WIDTH(IN_WIDTH),
-//     .DIM0(COMPUTE_DIM0),
-//     .DIM1(COMPUTE_DIM1)
-// ) fifo_unflatten (
-//     .data_in(out_data_flat),
-//     .data_out(fifo_data)
-// );
 
 // Input Adder Tree
 localparam ADDER_TREE_IN_SIZE = COMPUTE_DIM0 * COMPUTE_DIM1;
@@ -158,7 +132,7 @@ fixed_accumulator #(
 logic [IN_WIDTH-1:0] mu_in, mu_out;
 logic mu_out_valid, mu_out_ready;
 
-assign mu_acc_div = mu_acc / NUM_ITERS;
+assign mu_acc_div = $signed(mu_acc) / NUM_ITERS;
 assign mu_in = mu_acc_div[IN_WIDTH-1:0];
 
 repeat_circular_buffer #(
@@ -183,27 +157,26 @@ join2 mu_fifo_join2 (
     .data_in_valid({mu_out_valid, fifo_out_valid}),
     .data_in_ready({mu_out_ready, fifo_out_ready}),
     .data_out_valid(mu_fifo_valid),
-    .data_out_ready(mu_fifo_ready)
+    .data_out_ready(compute_pipe[0].diff_in_ready)
 );
 
-// Subtract -> Square -> Divide Pipeline
-localparam VARIANCE_WIDTH = IN_WIDTH * 2;
-
+// Compute pipeline
 for (genvar i = 0; i < COMPUTE_DIM0 * COMPUTE_DIM1; i++) begin : compute_pipe
 
     // Take the difference between input and mean: (X - mu)
     logic [IN_WIDTH-1:0] diff_in, diff_out;
+    logic diff_in_ready;
     logic diff_out_valid;
     assign diff_in = fifo_data[i] - mu_out;
 
     skid_buffer #(
         .DATA_WIDTH(IN_WIDTH)
-    ) subtract_ff (
+    ) subtract_reg (
         .clk(clk),
         .rst(rst),
         .data_in(diff_in),
         .data_in_valid(mu_fifo_valid),
-        .data_in_ready(mu_fifo_ready),
+        .data_in_ready(diff_in_ready),
         .data_out(diff_out),
         .data_out_valid(diff_out_valid),
         .data_out_ready(fifo_diff_in_ready)
@@ -222,7 +195,7 @@ for (genvar i = 0; i < COMPUTE_DIM0 * COMPUTE_DIM1; i++) begin : compute_pipe
 
     skid_buffer #(
         .DATA_WIDTH(VARIANCE_WIDTH)
-    ) square_ff (
+    ) square_reg (
         .clk(clk),
         .rst(rst),
         .data_in(square_in),
@@ -240,7 +213,7 @@ for (genvar i = 0; i < COMPUTE_DIM0 * COMPUTE_DIM1; i++) begin : compute_pipe
 
     skid_buffer #(
         .DATA_WIDTH(VARIANCE_WIDTH)
-    ) variance_ff (
+    ) variance_reg (
         .clk(clk),
         .rst(rst),
         .data_in(variance_in),
@@ -252,11 +225,14 @@ for (genvar i = 0; i < COMPUTE_DIM0 * COMPUTE_DIM1; i++) begin : compute_pipe
     );
 
     // Take inverse square root of variance: 1/root(Var(X))
-    logic [VARIANCE_WIDTH-1:0] inv_sqrt_data;
+    logic [INV_SQRT_WIDTH-1:0] inv_sqrt_data;
     logic inv_sqrt_valid;
 
     temp_inv_sqrt #(
-        .WIDTH(VARIANCE_WIDTH),
+        .IN_WIDTH(VARIANCE_WIDTH),
+        .IN_FRAC_WIDTH(VARIANCE_FRAC_WIDTH),
+        .OUT_WIDTH(INV_SQRT_WIDTH),
+        .OUT_FRAC_WIDTH(INV_SQRT_FRAC_WIDTH),
         .PIPELINE_CYCLES(2)
     ) temp_inv_sqrt_inst (
         .clk(clk),
@@ -274,13 +250,13 @@ for (genvar i = 0; i < COMPUTE_DIM0 * COMPUTE_DIM1; i++) begin : compute_pipe
     logic [VARIANCE_WIDTH-1:0] norm_in_data;
     logic norm_in_ready;
     logic [VARIANCE_WIDTH-1:0] norm_out_data;
-    logic norm_out_valid;
+    logic norm_out_valid, norm_batch_ready;
 
     assign norm_in_data = inv_sqrt_data * diff_batch_out[i];
 
     skid_buffer #(
         .DATA_WIDTH(VARIANCE_WIDTH)
-    ) norm_ff (
+    ) norm_reg (
         .clk(clk),
         .rst(rst),
         .data_in(norm_in_data),
@@ -291,7 +267,37 @@ for (genvar i = 0; i < COMPUTE_DIM0 * COMPUTE_DIM1; i++) begin : compute_pipe
         .data_out_ready(norm_batch_ready)
     );
 
-    assign norm_batch_data[i] = norm_out_data;
+    // Output Rounding Stage
+    logic [OUT_WIDTH-1:0] norm_round_out;
+    logic [OUT_WIDTH-1:0] output_reg_data;
+    logic output_reg_valid;
+
+    fixed_signed_cast #(
+        .IN_WIDTH(VARIANCE_WIDTH),
+        .IN_FRAC_WIDTH(VARIANCE_FRAC_WIDTH),
+        .OUT_WIDTH(OUT_WIDTH),
+        .OUT_FRAC_WIDTH(OUT_FRAC_WIDTH),
+        .SYMMETRIC(0),
+        .ROUND_FLOOR(1)
+    ) output_cast (
+        .in_data(norm_out_data),
+        .out_data(norm_round_out)
+    );
+
+    skid_buffer #(
+        .DATA_WIDTH(OUT_WIDTH)
+    ) output_reg (
+        .clk(clk),
+        .rst(rst),
+        .data_in(norm_round_out),
+        .data_in_valid(norm_out_valid),
+        .data_in_ready(norm_batch_ready),
+        .data_out(output_reg_data),
+        .data_out_valid(output_reg_valid),
+        .data_out_ready(output_reg_ready)
+    );
+
+    assign norm_batch_data[i] = output_reg_data;
 end
 
 // Split2 for split in pipeline from diff
@@ -319,48 +325,29 @@ logic [IN_WIDTH-1:0] diff_batch_in [COMPUTE_DIM0*COMPUTE_DIM1-1:0];
 logic diff_batch_in_valid, diff_batch_in_ready;
 logic [IN_WIDTH-1:0] diff_batch_out [COMPUTE_DIM0*COMPUTE_DIM1-1:0];
 logic diff_batch_out_valid, diff_batch_out_ready;
-logic [IN_WIDTH*COMPUTE_DIM0*COMPUTE_DIM1-1:0] diff_batch_in_flat;
-logic [IN_WIDTH*COMPUTE_DIM0*COMPUTE_DIM1-1:0] diff_batch_out_flat;
 
-matrix_flatten #(
+matrix_fifo #(
     .DATA_WIDTH(IN_WIDTH),
     .DIM0(COMPUTE_DIM0),
-    .DIM1(COMPUTE_DIM1)
-) diff_flatten (
-    .data_in(diff_batch_in),
-    .data_out(diff_batch_in_flat)
-);
-
-fifo_v2 #(
-    .SIZE(),
-    .DATA_WIDTH(DATA_FLAT_WIDTH)
+    .DIM1(COMPUTE_DIM1),
+    .FIFO_SIZE(NUM_ITERS) // TODO: Change
 ) diff_fifo_inst (
     .clk(clk),
     .rst(rst),
-    .in_data(diff_batch_in_flat),
+    .in_data(diff_batch_in),
     .in_valid(diff_batch_in_valid),
     .in_ready(diff_batch_in_ready),
-    .out_data(diff_batch_out_flat),
+    .out_data(diff_batch_out),
     .out_valid(diff_batch_out_valid),
     .out_ready(diff_batch_out_ready)
 );
 
-matrix_unflatten #(
-    .DATA_WIDTH(IN_WIDTH),
-    .DIM0(COMPUTE_DIM0),
-    .DIM1(COMPUTE_DIM1)
-) diff_unflatten (
-    .data_in(diff_batch_out_flat),
-    .data_out(diff_batch_out)
-);
-
-
 // Final connection to output
-logic [IN_WIDTH-1:0] norm_batch_data [COMPUTE_DIM0*COMPUTE_DIM1-1:0];
-logic norm_batch_ready;
+logic [OUT_WIDTH-1:0] norm_batch_data [COMPUTE_DIM0*COMPUTE_DIM1-1:0];
+logic output_reg_ready;
 
 assign out_data = norm_batch_data;
-assign out_valid = compute_pipe[0].norm_out_valid;
-assign norm_batch_ready = out_ready;
+assign out_valid = compute_pipe[0].output_reg_valid;
+assign output_reg_ready = out_ready;
 
 endmodule

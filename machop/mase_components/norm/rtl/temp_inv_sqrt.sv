@@ -4,21 +4,27 @@
 `timescale 1ns/1ps
 
 module temp_inv_sqrt #(
-    parameter WIDTH           = 8,
-    // parameter FRAC_WIDTH      = 8,
-    parameter PIPELINE_CYCLES = 2
+    parameter IN_WIDTH           = 8,
+    parameter IN_FRAC_WIDTH      = 8,
+    parameter OUT_WIDTH          = 8,
+    parameter OUT_FRAC_WIDTH     = 8,
+    parameter PIPELINE_CYCLES    = 2
 ) (
     input  logic             clk,
     input  logic             rst,
 
-    input  logic [WIDTH-1:0] in_data,
+    input  logic [IN_WIDTH-1:0] in_data,
     input  logic             in_valid,
     output logic             in_ready,
 
-    output logic [WIDTH-1:0] out_data,
+    output logic [IN_WIDTH-1:0] out_data,
     output logic             out_valid,
     input  logic             out_ready
 );
+
+initial begin
+    assert (IN_WIDTH == OUT_WIDTH);
+end
 
 // "Model" the square root operation
 assign pipe[0].in_data = in_data;
@@ -28,14 +34,14 @@ assign in_ready = pipe[0].in_ready;
 // Make the pipeline
 for (genvar i = 0; i < PIPELINE_CYCLES; i++) begin : pipe
 
-    logic [WIDTH-1:0] in_data;
+    logic [IN_WIDTH-1:0] in_data;
     logic in_valid, in_ready;
 
-    logic [WIDTH-1:0] out_data;
+    logic [IN_WIDTH-1:0] out_data;
     logic out_valid, out_ready;
 
     register_slice #(
-        .DATA_WIDTH  (WIDTH)
+        .DATA_WIDTH  (IN_WIDTH)
     ) reg_slice_inst (
         .clk         (clk),
         .rst         (rst),

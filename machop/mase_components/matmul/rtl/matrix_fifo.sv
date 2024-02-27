@@ -28,10 +28,7 @@ module matrix_fifo #(
 // Wires
 localparam FLAT_DATA_WIDTH = DATA_WIDTH * DIM0 * DIM1;
 
-logic [DATA_FLAT_WIDTH-1:0] in_data_flat, out_data_flat;
-logic [DATA_WIDTH-1:0] fifo_data [DIM0*DIM1-1:0];
-logic fifo_out_valid, fifo_out_ready;
-logic fifo_in_valid, fifo_in_ready;
+logic [FLAT_DATA_WIDTH-1:0] in_data_flat, out_data_flat;
 
 // Modules
 matrix_flatten #(
@@ -50,11 +47,11 @@ fifo_v2 #(
     .clk(clk),
     .rst(rst),
     .in_data(in_data_flat),
-    .in_valid(fifo_in_valid),
-    .in_ready(fifo_in_ready),
+    .in_valid(in_valid),
+    .in_ready(in_ready),
     .out_data(out_data_flat),
-    .out_valid(fifo_out_valid),
-    .out_ready(fifo_out_ready)
+    .out_valid(out_valid),
+    .out_ready(out_ready)
 );
 
 matrix_unflatten #(
@@ -63,7 +60,7 @@ matrix_unflatten #(
     .DIM1(DIM1)
 ) fifo_unflatten (
     .data_in(out_data_flat),
-    .data_out(fifo_data)
+    .data_out(out_data)
 );
 
 endmodule
