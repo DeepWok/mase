@@ -3,9 +3,6 @@
 # This script tests the fixed point linear
 import os, logging
 
-import sys
-sys.path.insert(0,'/home/sv720/mase_fork/mase_group7/machop')
-
 import cocotb
 from cocotb.log import SimLog
 from cocotb.triggers import *
