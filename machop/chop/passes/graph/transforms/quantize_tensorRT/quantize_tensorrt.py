@@ -6,7 +6,6 @@ import os
 from datetime import datetime as dt
 from glob import glob
 
-# import calibrator
 import cv2
 import numpy as np
 import tensorrt as trt
@@ -242,7 +241,7 @@ def test_quantize_tensorrt_transform_pass(dataloader, engineFile):
         start_time = time.time()
         context.execute_async_v3(0)
         execute_time.append(time.time() - start_time)
-
+    
         for i in range(nInput, nIO):
             cudart.cudaMemcpy(bufferH[i].ctypes.data, bufferD[i], bufferH[i].nbytes, cudart.cudaMemcpyKind.cudaMemcpyDeviceToHost)
             
@@ -263,4 +262,3 @@ def test_quantize_tensorrt_transform_pass(dataloader, engineFile):
     print("Average execute time for one batch: %.2fms" % (sum(execute_time) / len(execute_time) * 1000))
     print("Total accuracy: %.2f%%" % (sum(accuracy) / len(accuracy) * 100))
 
-    
