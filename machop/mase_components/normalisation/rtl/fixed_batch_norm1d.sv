@@ -1,5 +1,6 @@
 `timescale 1ns / 1ps
 module fixed_batch_norm1d #(
+    // TODO(jlsand): Some of these parameter names need to be standardized.
     parameter IN_WIDTH          = 8,
     parameter IN_FRAC_WIDTH     = 4, 
     parameter IN_DEPTH          = 16, 
