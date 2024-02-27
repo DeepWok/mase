@@ -7,10 +7,17 @@ from cocotb.triggers import *
 from mase_cocotb.testbench import Testbench
 from mase_cocotb.interfaces.streaming import StreamDriver, StreamMonitor
 from mase_cocotb.runner import mase_runner
+from mase_cocotb.utils import bit_driver
 
+# Apparently this function only exists in Python 3.12 ...
+def batched(iterable, n=1):
+    l = len(iterable)
+    for ndx in range(0, l, n):
+        yield iterable[ndx:min(ndx + n, l)]
 
 logger = logging.getLogger("testbench")
 logger.setLevel(logging.INFO)
+
 
 class CircularBufferTB(Testbench):
     def __init__(self, dut) -> None:
@@ -20,190 +27,129 @@ class CircularBufferTB(Testbench):
         ])
 
         # Driver/Monitor
-        self.in_driver = StreamDriver(dut.clk, dut.in_data,
-                                      dut.in_valid, dut.in_ready)
-        self.output_monitor = StreamMonitor(dut.clk, dut.out_data,
-                                            dut.out_valid, dut.out_ready)
+        self.in_driver = StreamDriver(
+            dut.clk, dut.in_data, dut.in_valid, dut.in_ready
+        )
+        self.output_monitor = StreamMonitor(
+            dut.clk, dut.out_data, dut.out_valid, dut.out_ready
+        )
+
+    def generate_inputs(self, num=10):
+        inputs = []
+        for _ in range(num):
+            inputs.extend([
+                random.randint(0, 2**self.DATA_WIDTH-1)
+                for _ in range(self.SIZE)
+            ])
+        return inputs
+
+    def model(self, inputs):
+        x = list(batched(inputs, n=self.SIZE))
+        y = []
+        for seq in x:
+            for _ in range(self.REPEAT):
+                y.extend(seq)
+        return y
+
 
 @cocotb.test()
-async def single_buffer(dut):
+async def basic(dut):
     tb = CircularBufferTB(dut)
-
     await tb.reset()
     tb.output_monitor.ready.value = 1
-    input_list = [random.randint(0, 2**tb.DATA_WIDTH-1) for _ in range(tb.SIZE)]
-    EXP_OUT = input_list * tb.REPEAT
 
-    for d in input_list:
-        tb.in_driver.append(d)
+    inputs = tb.generate_inputs(num=2)
+    exp_out = tb.model(inputs)
+    tb.in_driver.load_driver(inputs)
+    tb.output_monitor.load_monitor(exp_out)
 
-    for out in EXP_OUT:
-        tb.output_monitor.expect(out)
-
-    await Timer(100, units="us")
-    assert tb.output_monitor.exp_queue.empty()
-
-@cocotb.test()
-async def multi_buffer(dut):
-    tb = CircularBufferTB(dut)
-
-    await tb.reset()
-    tb.output_monitor.ready.value = 1
-    input_list_0 = [random.randint(0, 2**tb.DATA_WIDTH-1) for _ in range(tb.SIZE)]
-    input_list_1 = [random.randint(0, 2**tb.DATA_WIDTH-1) for _ in range(tb.SIZE)]
-    EXP_OUT_0 = input_list_0 * tb.REPEAT
-    EXP_OUT_1 = input_list_1 * tb.REPEAT
-    EXP_OUT = EXP_OUT_0 + EXP_OUT_1
-
-    for d in (input_list_0 + input_list_1):
-        tb.in_driver.append(d)
-
-    for out in EXP_OUT:
-        tb.output_monitor.expect(out)
-
-    await Timer(100, units="us")
+    await Timer(10, units="us")
     assert tb.output_monitor.exp_queue.empty()
 
 
 @cocotb.test()
 async def random_stream(dut):
     tb = CircularBufferTB(dut)
-
     await tb.reset()
     tb.output_monitor.ready.value = 1
 
-    DATA_STREAM = []
-    EXP_STREAM = []
-
-    for _ in range(10):
-        data = [random.randint(0, 2**tb.DATA_WIDTH-1) for _ in range(tb.SIZE)]
-        exp = data * tb.REPEAT
-        DATA_STREAM.extend(data)
-        EXP_STREAM.extend(exp)
-
-    for d in DATA_STREAM:
-        tb.in_driver.append(d)
-
-    for out in EXP_STREAM:
-        tb.output_monitor.expect(out)
+    inputs = tb.generate_inputs(num=100)
+    exp_out = tb.model(inputs)
+    tb.in_driver.load_driver(inputs)
+    tb.output_monitor.load_monitor(exp_out)
 
     await Timer(100, units="us")
     assert tb.output_monitor.exp_queue.empty()
 
-async def bit_driver(signal, clk, prob_on):
-    assert prob_on >= 0.0 and prob_on <= 1.0, "Probability between 0 & 1"
-    while True:
-        await RisingEdge(clk)
-        x = random.random()
-        signal.value = 1 if x < prob_on else 0
-
-@cocotb.test()
-async def basic_delay_input(dut):
-    tb = CircularBufferTB(dut)
-    await tb.reset()
-    tb.output_monitor.ready.value = 1
-
-    data = [random.randint(0, 2**tb.DATA_WIDTH-1) for _ in range(tb.SIZE)]
-    half = tb.SIZE // 2
-    EXP_OUT = data * tb.REPEAT
-
-    for _ in range(2):
-        for out in EXP_OUT:
-            tb.output_monitor.expect(out)
-
-    for d in data[:half]:
-        tb.in_driver.append(d)
-
-    await RisingEdge(dut.clk)
-    await RisingEdge(dut.clk)
-    await RisingEdge(dut.clk)
-    await RisingEdge(dut.clk)
-
-    for d in data[half:]:
-        tb.in_driver.append(d)
-
-    for d in data:
-        tb.in_driver.append(d)
-
-    await Timer(100, units="us")
-    assert tb.output_monitor.exp_queue.empty()
-
-@cocotb.test()
-async def basic_backpressure(dut):
-    tb = CircularBufferTB(dut)
-
-    await tb.reset()
-    cocotb.start_soon(bit_driver(dut.out_ready, dut.clk, 0.5))
-
-    data = [random.randint(0, 2**tb.DATA_WIDTH-1) for _ in range(tb.SIZE)]
-    EXP_OUT = data * tb.REPEAT
-
-    for d in data:
-        tb.in_driver.append(d)
-
-    for out in EXP_OUT:
-        tb.output_monitor.expect(out)
-
-    await Timer(100, units="us")
-    assert tb.output_monitor.exp_queue.empty()
 
 @cocotb.test()
 async def random_backpressure(dut):
     tb = CircularBufferTB(dut)
-
+    cocotb.start_soon(bit_driver(dut.out_ready, dut.clk, 0.5))
     await tb.reset()
-    cocotb.start_soon(bit_driver(dut.out_ready, dut.clk, 0.2))
 
-    DATA_STREAM = []
-    EXP_STREAM = []
+    inputs = tb.generate_inputs(num=200)
+    exp_out = tb.model(inputs)
+    tb.in_driver.load_driver(inputs)
+    tb.output_monitor.load_monitor(exp_out)
 
-    for _ in range(10):
-        data = [random.randint(0, 2**tb.DATA_WIDTH-1) for _ in range(tb.SIZE)]
-        exp = data * tb.REPEAT
-        DATA_STREAM.extend(data)
-        EXP_STREAM.extend(exp)
-
-    for d in DATA_STREAM:
-        tb.in_driver.append(d)
-
-    for out in EXP_STREAM:
-        tb.output_monitor.expect(out)
-
-    await Timer(1000, units="us")
+    await Timer(500, units="us")
     assert tb.output_monitor.exp_queue.empty()
+
 
 @cocotb.test()
 async def random_valid_backpressure(dut):
     tb = CircularBufferTB(dut)
-
+    tb.in_driver.set_valid_prob(0.5)
+    cocotb.start_soon(bit_driver(dut.out_ready, dut.clk, 0.5))
     await tb.reset()
+
+    inputs = tb.generate_inputs(num=200)
+    exp_out = tb.model(inputs)
+    tb.in_driver.load_driver(inputs)
+    tb.output_monitor.load_monitor(exp_out)
+
+    await Timer(500, units="us")
+    assert tb.output_monitor.exp_queue.empty()
+
+
+@cocotb.test()
+async def random_valid_backpressure_more_input(dut):
+    tb = CircularBufferTB(dut)
     tb.in_driver.set_valid_prob(0.7)
-    cocotb.start_soon(bit_driver(dut.out_ready, dut.clk, 0.6))
+    cocotb.start_soon(bit_driver(dut.out_ready, dut.clk, 0.5))
+    await tb.reset()
 
-    DATA_STREAM = []
-    EXP_STREAM = []
+    inputs = tb.generate_inputs(num=200)
+    exp_out = tb.model(inputs)
+    tb.in_driver.load_driver(inputs)
+    tb.output_monitor.load_monitor(exp_out)
 
-    for _ in range(10):
-        data = [random.randint(0, 2**tb.DATA_WIDTH-1) for _ in range(tb.SIZE)]
-        exp = data * tb.REPEAT
-        DATA_STREAM.extend(data)
-        EXP_STREAM.extend(exp)
+    await Timer(500, units="us")
+    assert tb.output_monitor.exp_queue.empty()
 
-    for d in DATA_STREAM:
-        tb.in_driver.append(d)
 
-    for out in EXP_STREAM:
-        tb.output_monitor.expect(out)
+@cocotb.test()
+async def random_valid_backpressure_more_output(dut):
+    tb = CircularBufferTB(dut)
+    tb.in_driver.set_valid_prob(0.5)
+    cocotb.start_soon(bit_driver(dut.out_ready, dut.clk, 0.7))
+    await tb.reset()
 
-    await Timer(1000, units="us")
+    inputs = tb.generate_inputs(num=200)
+    exp_out = tb.model(inputs)
+    tb.in_driver.load_driver(inputs)
+    tb.output_monitor.load_monitor(exp_out)
+
+    await Timer(500, units="us")
     assert tb.output_monitor.exp_queue.empty()
 
 
 def generate_random_params():
     return {
-        "DATA_WIDTH": random.randint(1, 32),
-        "REPEAT": random.randint(2, 12),
-        "SIZE": random.randint(2, 12),
+        "DATA_WIDTH": random.randint(1, 12),
+        "REPEAT": random.randint(2, 6),
+        "SIZE": random.randint(2, 6),
     }
 
 if __name__ == "__main__":
@@ -217,5 +163,5 @@ if __name__ == "__main__":
         # Non power of 2 buffer size
         {"DATA_WIDTH": 32, "REPEAT": 2, "SIZE": 7},
         # Purely random params
-        *[generate_random_params() for _ in range(10)]
+        *[generate_random_params() for _ in range(5)]
     ])

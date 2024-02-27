@@ -24,144 +24,148 @@ module repeat_circular_buffer #(
     input  logic                  out_ready
 );
 
-localparam REPS_WIDTH = $clog2(REPEAT);
-localparam ADDR_WIDTH = SIZE == 1 ? 1 : $clog2(SIZE);
+  localparam REPS_WIDTH = $clog2(REPEAT);
+  localparam ADDR_WIDTH = SIZE == 1 ? 1 : $clog2(SIZE);
+  localparam PTR_WIDTH = ADDR_WIDTH + 1;
 
-// Coded for RAM read latency of 1 cycle
-localparam READ_LATENCY = 1;
-
-// Top bit signifies write done
-localparam WRITE_PTR_WIDTH = ADDR_WIDTH + 1;
-
-initial begin
-    assert (REPEAT > 1);
-    assert (READ_LATENCY == 1) else $fatal("Currently not supported.");
-end
-
-typedef struct {
+  typedef struct {
     logic [DATA_WIDTH-1:0] data;
     logic valid;
-} extra_reg_t;
+  } reg_t;
 
-struct {
+  struct {
     // Write state
-    logic [WRITE_PTR_WIDTH-1:0] write_ptr;
-    logic [ADDR_WIDTH:0] size;
+    logic [PTR_WIDTH-1:0] write_ptr;
+    logic [ADDR_WIDTH:0]  size;
 
     // Read state
-    logic [ADDR_WIDTH-1:0] read_ptr;
+    logic [PTR_WIDTH-1:0] read_ptr;
     logic [REPS_WIDTH-1:0] rep;
-    logic rd_valid;
+    logic ram_dout_valid;  // Pulse signal for ram reads
+
+    // Controls the next register to be connected to output
+    logic next_reg;
+
+    // Output register
+    reg_t out_reg;
 
     // Extra register required to buffer the output of RAM due to delay
-    extra_reg_t extra_reg;
-} self, next_self;
+    reg_t extra_reg;
+  }
+      self, next_self;
 
-// Ram signals
-logic ram_wr_en;
-logic [DATA_WIDTH-1:0] ram_rd_dout;
+  // Ram signals
+  logic ram_wr_en;
+  logic [DATA_WIDTH-1:0] ram_rd_dout;
 
-// Backpressure control signal
-logic pause_reads;
+  // Backpressure control signal
+  logic pause_reads;
 
-// Output register slice
-logic [DATA_WIDTH-1:0] reg_in_data, reg_out_data;
-logic reg_in_valid, reg_out_valid;
-logic reg_in_ready, reg_out_ready;
-
-always_comb begin
+  always_comb begin
     next_self = self;
 
     // Input side ready
-    in_ready = self.rep == 0 && self.size != SIZE;
+    in_ready = self.size != SIZE && !(self.rep == REPEAT-1 && self.write_ptr == self.read_ptr);
+
+    // Pause reading when there is (no transfer on this cycle) AND the registers are full.
+    pause_reads = !out_ready && (self.out_reg.valid || self.extra_reg.valid);
 
     // Write side of machine
-    // Increment write pointer
-    if (in_valid && in_ready) begin
+    if (self.write_ptr == SIZE) begin
+      // Write is finished, reset when we are on the last rep
+      if (self.rep == REPEAT-1) begin
+        next_self.write_ptr = 0;
+      end
+      ram_wr_en = 0;
+    end else begin
+      // Still need to write into ram
+      if (in_valid && in_ready) begin
         next_self.write_ptr = self.write_ptr + 1;
         next_self.size = self.size + 1;
         ram_wr_en = 1;
-    end else begin
+      end else begin
         ram_wr_en = 0;
+      end
     end
 
     // Read side of machine
-    if (self.read_ptr < self.write_ptr && !pause_reads) begin
-        if (self.read_ptr == SIZE-1 && self.rep == REPEAT-1) begin
-            // FULL RESET
-            next_self = '{default: 0};
-        end else if (self.read_ptr == SIZE-1) begin
-            next_self.read_ptr = 0;
-            next_self.rep += 1;
-        end else begin
-            next_self.read_ptr += 1;
-        end
-        next_self.rd_valid = 1;
+    // Conditions:
+    // - There is data in the RAM
+    // - AND there is no backpressure from output regs (pause_reads)
+    // - AND we are not ahead of write ptr on the first rep where write side of
+    //   machine is still writing into RAM. This is to prevent read and write to
+    //   the same address at the same time, yielding invalid data.
+    if (self.size != 0 && !pause_reads && !(self.rep == 0 && self.read_ptr == self.write_ptr)) begin
+      if (self.read_ptr == SIZE-1 && self.rep == REPEAT-1) begin
+        next_self.read_ptr = 0;
+        next_self.rep = 0;
+      end else if (self.read_ptr == SIZE-1) begin
+        next_self.read_ptr = 0;
+        next_self.rep += 1;
+      end else begin
+        next_self.read_ptr += 1;
+      end
+      // Decrease fifo size only on last rep
+      if (self.rep == REPEAT-1) begin
+        next_self.size -= 1;
+      end
+      next_self.ram_dout_valid = 1;
     end else begin
-        next_self.rd_valid = 0;
+      next_self.ram_dout_valid = 0;
     end
+    // end
 
-    // We need to store this extra value that spills out due to the read latency
-    // being 1. If the latency was N, we would need N spill over registers.
-    if (pause_reads && self.rd_valid) begin
-        next_self.extra_reg.data = ram_rd_dout;
+    // Input mux for extra reg
+    if (self.ram_dout_valid) begin
+      if (self.out_reg.valid && !out_ready) begin
+        next_self.extra_reg.data  = ram_rd_dout;
         next_self.extra_reg.valid = 1;
+      end else begin
+        next_self.out_reg.data  = ram_rd_dout;
+        next_self.out_reg.valid = 1;
+      end
     end
 
-    // Clearing value in extra spill over register
-    if (self.extra_reg.valid) begin
-        reg_in_data = self.extra_reg.data;
-        reg_in_valid = 1;
-        if (reg_in_ready) begin
-            // Reset back if transfer happened: reg_in_valid && reg_in_ready
-            next_self.extra_reg.valid = 0;
+    // Output mux for extra reg
+    if (self.next_reg) begin
+      out_data  = self.extra_reg.data;
+      out_valid = self.extra_reg.valid;
+      if (out_ready && self.extra_reg.valid) begin
+        next_self.extra_reg.valid = 0;
+        next_self.next_reg = 0;
+      end
+    end else begin
+      out_data  = self.out_reg.data;
+      out_valid = self.out_reg.valid;
+      if (out_ready && self.out_reg.valid) begin
+        next_self.out_reg.valid = self.ram_dout_valid;
+        if (self.extra_reg.valid) begin
+          next_self.next_reg = 1;
         end
-    end else begin
-        reg_in_data = ram_rd_dout;
-        reg_in_valid = self.rd_valid;
+      end
     end
 
-end
+  end
 
-register_slice #(
-    .DATA_WIDTH (DATA_WIDTH)
-) reg_slice_inst (
-    .clk        (clk),
-    .rst        (rst),
-    .in_data    (reg_in_data),
-    .in_valid   (reg_in_valid),
-    .in_ready   (reg_in_ready),
-    .out_data   (reg_out_data),
-    .out_valid  (reg_out_valid),
-    .out_ready  (reg_out_ready)
-);
+  simple_dual_port_ram #(
+      .DATA_WIDTH(DATA_WIDTH),
+      .ADDR_WIDTH(ADDR_WIDTH),
+      .SIZE      (SIZE)
+  ) ram_inst (
+      .clk    (clk),
+      .wr_addr(self.write_ptr),
+      .wr_din (in_data),
+      .wr_en  (ram_wr_en),
+      .rd_addr(self.read_ptr),
+      .rd_dout(ram_rd_dout)
+  );
 
-// Pause reading when there is (no transfer on this cycle AND we already have
-// valid data in the output buffer) OR the extra spill over register is full.
-assign pause_reads = (!out_ready && reg_out_valid) || self.extra_reg.valid;
-assign out_data = reg_out_data;
-assign out_valid = reg_out_valid;
-assign reg_out_ready = out_ready;
-
-simple_dual_port_ram #(
-    .DATA_WIDTH   (DATA_WIDTH),
-    .ADDR_WIDTH   (ADDR_WIDTH),
-    .SIZE         (SIZE)
-) ram_inst (
-    .clk        (clk),
-    .wr_addr    (self.write_ptr),
-    .wr_din     (in_data),
-    .wr_en      (ram_wr_en),
-    .rd_addr    (self.read_ptr),
-    .rd_dout    (ram_rd_dout)
-);
-
-always_ff @(posedge clk) begin
+  always_ff @(posedge clk) begin
     if (rst) begin
-        self <= '{default: 0};
+      self <= '{default: 0};
     end else begin
-        self <= next_self;
+      self <= next_self;
     end
-end
+  end
 
 endmodule
