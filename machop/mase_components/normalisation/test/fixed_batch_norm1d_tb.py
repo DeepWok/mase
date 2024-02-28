@@ -83,12 +83,17 @@ class BatchNormTB(Testbench):
         return data_in
 
     def preprocess_tensor(self, tensor, quantizer, config, parallelism):
-        print("BEFORE: ", tensor)
+        # print("BEFORE: ", tensor)
         tensor = quantizer(tensor)
         tensor = (tensor * 2 ** config["frac_width"]).int()
-        logger.info(f"\nTensor in int format: {tensor}")
+        # logger.info(f"\nTensor in int format: {tensor}")
         tensor = tensor.reshape(-1, parallelism).tolist()
-        logger.info(f"\nTensor after reshaping: {tensor}")
+        # logger.info(f"\nTensor after reshaping: {tensor}")
+        return tensor
+
+    
+    def postprocess_tensor(self, tensor, config):
+        tensor = [item * (1.0/2.0) ** config["frac_width"] for item in tensor]
         return tensor
     
     async def run_test(self): 
@@ -103,9 +108,11 @@ class BatchNormTB(Testbench):
         self.model.training = False
 
         inputs = torch.randn((1, self.model.num_features))
+        print("Inputs: ", inputs)
         exp_outputs = self.model(inputs)
-        # print("EXP OUTPUTS", exp_outputs)
-        
+        # print("MEAN: ", self.model.running_mean)
+        # print("MEAN: ", self.model.)
+        print("Quantized inputs: ", self.model.x_quantizer(inputs))
         
         inputs = self.preprocess_tensor(
             inputs, 
@@ -113,6 +120,9 @@ class BatchNormTB(Testbench):
             {"width": 8, "frac_width": 3}, 
             int(self.dut.PARALLELISM)
         )
+        print("Pre-processed inputs: ", inputs)
+        
+        print("Post-processed inputs: ", self.postprocess_tensor(inputs[0], {"width": 8, "frac_width": 3}))
 
         print("INPUT SIZE:", len(inputs), len(inputs[0]))
 
@@ -124,41 +134,44 @@ class BatchNormTB(Testbench):
         )
 
         # print(self.model.bias)
-        # beta = self.preprocess_tensor(
-        #     self.model.bias, 
-        #     self.model.b_quantizer, 
-        #     {"width": 8, "frac_width": 3}, 
-        #     1
-        # )
-        # print(beta)
+        beta = self.preprocess_tensor(
+            self.model.bias, 
+            self.model.b_quantizer, 
+            {"width": 8, "frac_width": 3}, 
+            int(self.dut.PARALLELISM)
+        )
 
-        # stdv = torch.tensor([var ** (1.0/2.0) for var in self.model.running_var])
-        # stdv = self.preprocess_tensor(
-        #     stdv, 
-        #     self.model.w_quantizer, 
-        #     {"width": 8, "frac_width": 3}, 
-        #     1
-        # )
+        print("Running variance: ", self.model.running_var)
+        stdv = torch.tensor([var ** (1.0/2.0) for var in self.model.running_var])
+        print("Stdv: ", stdv)
+        stdv = self.preprocess_tensor(
+            stdv, 
+            self.model.w_quantizer, 
+            {"width": 8, "frac_width": 3}, 
+            int(self.dut.PARALLELISM)
+        )
 
-        # mean = self.preprocess_tensor(
-        #     self.model.running_mean, 
-        #     self.model.b_quantizer, 
-        #     {"width": 8, "frac_width": 3}, 
-        #     1
-        # )
+        print("Running mean: ", self.model.running_mean)
+        mean = self.preprocess_tensor(
+            self.model.running_mean, 
+            self.model.b_quantizer, 
+            {"width": 8, "frac_width": 3}, 
+            int(self.dut.PARALLELISM)
+        )
 
 
         self.data_out_0_monitor.ready.value = 1
         print(f'================= DEBUG: asserted ready_out ================= \n')
 
-        print("MODEL VALUES: ", self.model.weight)
+        # print("MODEL VALUES: ", self.model.weight)
         
         print(self.dut.gamma.value)
-        self.dut.gamma.value = gamma
-        # print(self.dut.gamma.value)
-        # print(len(self.dut.gamma.value)) # 16
-        # print(len(self.dut.gamma.value[0])) # 8
-
+        print(gamma)
+        self.dut.gamma.value = gamma[0]
+        self.dut.beta.value = beta[0]
+        self.dut.mean.value = mean[0]
+        self.dut.stdv.value = stdv[0]
+        
         # self.dut.gamma.value = [BinaryValue(bytes(gamma[j])) for j in range(16)]
         # self.dut.gamma.value = [BinaryValue(0) * 16 for _ in range(16)]
         # self.dut.beta.value =  [BinaryValue(0) * 16 for _ in range(16)]
@@ -170,6 +183,11 @@ class BatchNormTB(Testbench):
         self.data_in_0_driver.load_driver(inputs) #this needs to be a tensor
         print(f'================= DEBUG: put values on input ports ================= \n')
 
+        print("Exp. outputs model: ", self.model.x_quantizer(exp_outputs))
+
+        exp_outputs = (torch.tensor(inputs[0]) - torch.tensor(mean[0])) * torch.tensor(gamma[0]) / torch.tensor(stdv[0]) + torch.tensor(beta[0])
+
+        print("Exp. outputs manual: ", self.postprocess_tensor(exp_outputs, {"width": 8, "frac_width": 3}))
 
         exp_outputs_quant = self.preprocess_tensor(
             exp_outputs, 
