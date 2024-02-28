@@ -9,6 +9,7 @@ import tensorrt as trt
 
 # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 # pip install --no-cache-dir --index-url https://pypi.nvidia.com pytorch-quantization !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+#  ./ch transform --config configs/examples/toy_uniform_tensorRT.toml --load /home/wfp23/ADL/Mauro/mase/mase_output/jsc-tiny_classification_jsc_2024-02-20/software/training_ckpts/best.ckpt --load-type pl
 # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 from pytorch_quantization import quant_modules, calib
@@ -17,7 +18,7 @@ from pytorch_quantization.nn import TensorQuantizer
 from pytorch_quantization.tensor_quant import QuantDescriptor
 
 
-
+from chop.passes.graph.utils import get_mase_op, get_mase_type, get_node_actual_target
 from chop.passes.graph.interface.save_and_load import load_mase_graph_interface_pass
 from ....utils import deepcopy_mase_graph
 
@@ -33,8 +34,7 @@ def pre_quantization_test(model):
     ...
 
 def pytorch_quantize_by_type(graph, config):
-
-
+    ...
 
 def pytorch_to_onnx(model, config):
     print("Converting PyTorch model to ONNX...")
@@ -97,14 +97,23 @@ def save_tensorrt_model(model, output_dir):
 def quantize():
     ...
 
+def convert_to_quantized_node(node):
+    match get_node_actual_target(node):
+        case 'torch.nn.modules.batchnorm.BatchNorm1d':
+            return 
+
+
 def pytorch_quantize_by_type(graph, config: dict):  
     if 'default' in config:
         model = graph.model.eval()
-        onnx_path = pytorch_to_onnx(model, config)
-        calibrate_onnx(model, config['train_generator'].dataloader, onnx_path)
-        
-        
-    
+        import pdb
+        for node in graph.nodes:
+            convert_to_quantized_node(node)
+            pdb.set_trace()
+
+        # model = graph.model.eval()
+        # onnx_path = pytorch_to_onnx(model, config)
+        # calibrate_onnx(model, config['train_generator'].dataloader, onnx_path)  
         
 
     return graph
