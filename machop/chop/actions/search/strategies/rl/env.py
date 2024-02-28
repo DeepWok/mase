@@ -5,10 +5,6 @@ from gymnasium.spaces import Box, Dict, Discrete, MultiBinary, MultiDiscrete
 
 # from ray.rllib.algorithms.ppo import PPOConfig
 from stable_baselines3.common.callbacks import BaseCallback
-from chop.passes.graph.analysis.total_bits_estimator import (
-    total_bits_module_analysis_pass,
-)
-
 
 class LLMMixedPrecisionEnv(gym.Env):
     def __init__(self, config):
@@ -65,7 +61,7 @@ class LLMMixedPrecisionEnv(gym.Env):
 
     def compute_software_metric(self, model):
         loss, _ = self.runner(model)
-        cost = total_bits_module_analysis_pass(model, {})
+        cost = 10 # TODO: fix
         return loss + cost["avg_bit"]
 
     def reset(self, *, seed=None, options=None):
