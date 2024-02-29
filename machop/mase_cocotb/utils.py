@@ -8,6 +8,13 @@ from torch import Tensor
 from mase_cocotb.z_qlayers import quantize_to_int
 
 
+# Apparently this function only exists in Python 3.12 ...
+def batched(iterable, n=1):
+    l = len(iterable)
+    for ndx in range(0, l, n):
+        yield iterable[ndx:min(ndx + n, l)]
+
+
 def binary_encode(x):
     assert x in [-1, 1]
     return 0 if x == -1 else 1

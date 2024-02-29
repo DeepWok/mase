@@ -5,8 +5,6 @@ from random import randint
 # from itertools import batched  # Python 3.12
 
 import torch
-from torch import Tensor
-import torch.nn.functional as F
 import cocotb
 from cocotb.triggers import *
 
@@ -20,27 +18,15 @@ from mase_cocotb.matrix_tools import (
 )
 from mase_cocotb.utils import (
     bit_driver,
+    batched,
     sign_extend_t,
-    signed_to_unsigned,
     int_floor_quantizer,
 )
 
 from mase_components.cast.test.fixed_signed_cast_tb import _fixed_signed_cast_model
-from chop.passes.graph.transforms.quantize.quantizers.quantizers_for_hw import (
-    integer_quantizer_for_hw,
-)
-from chop.passes.graph.transforms.quantize.quantizers.integer import (
-    integer_quantizer,
-)
 
 logger = logging.getLogger("testbench")
-logger.setLevel(logging.DEBUG)
-
-# Apparently this function only exists in Python 3.12 ...
-def batched(iterable, n=1):
-    l = len(iterable)
-    for ndx in range(0, l, n):
-        yield iterable[ndx:min(ndx + n, l)]
+logger.setLevel(logging.INFO)
 
 
 class GroupNorm2dTB(Testbench):
@@ -70,10 +56,10 @@ class GroupNorm2dTB(Testbench):
             dut.clk, dut.out_data, dut.out_valid, dut.out_ready
         )
 
-        self.in_driver.log.setLevel(logging.DEBUG)
-        self.output_monitor.log.setLevel(logging.DEBUG)
+        # self.in_driver.log.setLevel(logging.DEBUG)
+        # self.output_monitor.log.setLevel(logging.DEBUG)
 
-    def generate_inputs(self, num=2):
+    def generate_inputs(self, num=1):
         inputs = list()
         for _ in range(self.GROUP_CHANNELS * num):
             inputs.extend(gen_random_matrix_input(
@@ -116,24 +102,22 @@ class GroupNorm2dTB(Testbench):
 
         # Norm calculation
         diff = x - mu
+        logger.debug("Diff:")
+        logger.debug(diff[0])
         norm_out = diff * inv_sqrt
-        _, norm_out = _fixed_signed_cast_model(
+        logger.debug("Norm:")
+        logger.debug(norm_out[0])
+        norm_int_out, norm_out_float = _fixed_signed_cast_model(
             norm_out, self.OUT_WIDTH, self.OUT_FRAC_WIDTH,
             symmetric=False, rounding_mode="floor"
         )
-        logger.debug("Diff:")
-        logger.debug(diff[0])
-        logger.debug("Norm:")
-        logger.debug(norm_out[0])
+        logger.debug("Norm (Casted):")
+        logger.debug(norm_out_float[0])
 
         # Rescale & Reshape for output monitor
-        norm_out *= (2 ** self.OUT_FRAC_WIDTH)
-        logger.debug("Norm (signed):")
-        logger.debug(norm_out[0])
-        norm_out = signed_to_unsigned(norm_out.to(dtype=torch.int32), self.OUT_WIDTH)
         logger.debug("Norm (unsigned):")
-        logger.debug(norm_out[0])
-        y = norm_out.reshape(-1, self.TOTAL_DIM1, self.TOTAL_DIM0)
+        logger.debug(norm_int_out[0])
+        y = norm_int_out.reshape(-1, self.TOTAL_DIM1, self.TOTAL_DIM0)
 
         # Output beat reconstruction
         model_out = list()
@@ -148,7 +132,7 @@ async def basic(dut):
     await tb.reset()
     tb.output_monitor.ready.value = 1
 
-    inputs = tb.generate_inputs()
+    inputs = tb.generate_inputs(num=1)
     tb.in_driver.load_driver(inputs)
     exp_out = tb.model(inputs)
     tb.output_monitor.load_monitor(exp_out)
@@ -157,5 +141,67 @@ async def basic(dut):
     assert tb.output_monitor.exp_queue.empty()
 
 
+@cocotb.test()
+async def stream(dut):
+    tb = GroupNorm2dTB(dut)
+    await tb.reset()
+    tb.output_monitor.ready.value = 1
+
+    inputs = tb.generate_inputs(num=600)
+    tb.in_driver.load_driver(inputs)
+    exp_out = tb.model(inputs)
+    tb.output_monitor.load_monitor(exp_out)
+
+    await Timer(200, 'us')
+    assert tb.output_monitor.exp_queue.empty()
+
+
+@cocotb.test()
+async def backpressure(dut):
+    tb = GroupNorm2dTB(dut)
+    await tb.reset()
+    cocotb.start_soon(bit_driver(dut.out_ready, dut.clk, 0.5))
+
+    inputs = tb.generate_inputs(num=100)
+    tb.in_driver.load_driver(inputs)
+    exp_out = tb.model(inputs)
+    tb.output_monitor.load_monitor(exp_out)
+
+    await Timer(100, 'us')
+    assert tb.output_monitor.exp_queue.empty()
+
+
+@cocotb.test()
+async def valid_toggle(dut):
+    tb = GroupNorm2dTB(dut)
+    await tb.reset()
+    tb.output_monitor.ready.value = 1
+    tb.in_driver.set_valid_prob(0.5)
+
+    inputs = tb.generate_inputs(num=100)
+    tb.in_driver.load_driver(inputs)
+    exp_out = tb.model(inputs)
+    tb.output_monitor.load_monitor(exp_out)
+
+    await Timer(100, 'us')
+    assert tb.output_monitor.exp_queue.empty()
+
+
+@cocotb.test()
+async def valid_backpressure(dut):
+    tb = GroupNorm2dTB(dut)
+    await tb.reset()
+    tb.in_driver.set_valid_prob(0.5)
+    cocotb.start_soon(bit_driver(dut.out_ready, dut.clk, 0.5))
+
+    inputs = tb.generate_inputs(num=100)
+    tb.in_driver.load_driver(inputs)
+    exp_out = tb.model(inputs)
+    tb.output_monitor.load_monitor(exp_out)
+
+    await Timer(200, 'us')
+    assert tb.output_monitor.exp_queue.empty()
+
+
 if __name__ == "__main__":
-    mase_runner(seed=0, trace=True)
+    mase_runner()

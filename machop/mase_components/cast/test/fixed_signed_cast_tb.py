@@ -63,11 +63,11 @@ def _fixed_signed_cast_model(
         out_int = torch.round(scaled_float)
     else:
         raise Exception("Rounding mode not recognised.")
-    out_float = out_int / (2 ** out_frac_width)
     out_int = torch.clamp(out_int,
         min=-(2**(out_width-1))+1 if symmetric else -(2**(out_width-1)),
         max=(2**(out_width-1))-1
     ).int()
+    out_float = out_int / (2 ** out_frac_width)
     out_uint = signed_to_unsigned(out_int, out_width)
     return out_uint, out_float
 

@@ -32,16 +32,16 @@ module group_norm_2d #(
     parameter INV_SQRT_WIDTH      = 16,
     parameter INV_SQRT_FRAC_WIDTH = 10
 ) (
-    input  logic             clk,
-    input  logic             rst,
+    input  logic                clk,
+    input  logic                rst,
 
     input  logic [IN_WIDTH-1:0] in_data  [COMPUTE_DIM0*COMPUTE_DIM1-1:0],
-    input  logic             in_valid,
-    output logic             in_ready,
+    input  logic                in_valid,
+    output logic                in_ready,
 
     output logic [IN_WIDTH-1:0] out_data [COMPUTE_DIM0*COMPUTE_DIM1-1:0],
-    output logic             out_valid,
-    input  logic             out_ready
+    output logic                out_valid,
+    input  logic                out_ready
 );
 
 // Derived params
@@ -49,6 +49,8 @@ localparam DEPTH_DIM0 = TOTAL_DIM0 / COMPUTE_DIM0;
 localparam DEPTH_DIM1 = TOTAL_DIM1 / COMPUTE_DIM1;
 
 localparam NUM_VALUES = TOTAL_DIM0 * TOTAL_DIM1 * GROUP_CHANNELS;
+localparam logic signed [16:0] INV_NUM_VALUES = (1 << 16) / NUM_VALUES;
+
 localparam NUM_ITERS = DEPTH_DIM0 * DEPTH_DIM1 * GROUP_CHANNELS;
 localparam ITER_WIDTH = $clog2(NUM_ITERS);
 
@@ -115,7 +117,7 @@ split2 input_fifo_adder_split (
 // Accumulator for mu
 localparam ACC_OUT_WIDTH = $clog2(NUM_ITERS) + ADDER_TREE_OUT_WIDTH;
 
-logic [ACC_OUT_WIDTH-1:0] mu_acc, mu_acc_div;
+logic [ACC_OUT_WIDTH-1:0] mu_acc;
 logic mu_acc_valid, mu_acc_ready;
 
 fixed_accumulator #(
@@ -136,7 +138,10 @@ fixed_accumulator #(
 logic [IN_WIDTH-1:0] mu_in, mu_out;
 logic mu_out_valid, mu_out_ready;
 
-assign mu_acc_div = $signed(mu_acc) / NUM_VALUES;
+logic [ACC_OUT_WIDTH+16-1:0] mu_acc_div;
+
+// TODO: change the division to mult, this is problematic...
+assign mu_acc_div = ($signed(mu_acc) * INV_NUM_VALUES) >>> 16;
 assign mu_in = mu_acc_div[IN_WIDTH-1:0];
 
 repeat_circular_buffer #(
