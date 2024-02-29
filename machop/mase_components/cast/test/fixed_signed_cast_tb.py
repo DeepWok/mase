@@ -1,12 +1,13 @@
 import logging
 from math import trunc, floor
 
+import torch
 import cocotb
 from cocotb.triggers import *
 
 from random import randint
 from mase_cocotb.runner import mase_runner
-from mase_cocotb.utils import sign_extend, sign_extend_t, signed_to_unsigned
+from mase_cocotb.utils import sign_extend, sign_extend_t, signed_to_unsigned, clamp
 
 logger = logging.getLogger("testbench")
 logger.setLevel(logging.INFO)
@@ -20,24 +21,21 @@ def get_input(uint, in_width, in_frac_width):
                   % (uint, num_int, num_float))
     return uint, num_float
 
-def clamp(n, smallest, largest):
-    return max(smallest, min(n, largest))
-
-def get_output(float_input, out_width, out_frac_width, symmetric, rounding_mode):
+def _fixed_signed_cast_model(float_input, out_width, out_frac_width, symmetric, rounding_mode):
+    scaled_float = float_input * (2 ** out_frac_width)
     if rounding_mode == "floor":
-        out_int = floor(float_input * (2 ** out_frac_width))
+        out_int = torch.floor(scaled_float)
     elif rounding_mode == "trunc":
-        out_int = trunc(float_input * (2 ** out_frac_width))
+        out_int = torch.trunc(scaled_float)
     elif rounding_mode == "round_nearest_half_even":
-        # Note: Python round is nearest int, round half to even
-        out_int = round(float_input * (2 ** out_frac_width))
+        out_int = torch.round(scaled_float)
     else:
         raise Exception("Rounding mode not recognised.")
     out_float = out_int / (2 ** out_frac_width)
-    out_int = clamp(out_int,
-        smallest=-(2**(out_width-1))+1 if symmetric else -(2**(out_width-1)),
-        largest=(2**(out_width-1))-1
-    )
+    out_int = torch.clamp(out_int,
+        min=-(2**(out_width-1))+1 if symmetric else -(2**(out_width-1)),
+        max=(2**(out_width-1))-1
+    ).int()
     out_uint = signed_to_unsigned(out_int, out_width)
     return out_uint, out_float
 
@@ -74,7 +72,7 @@ async def exhaustive_test(dut):
         got_signed_y = sign_extend(y, OUT_WIDTH)
         got_float_y = got_signed_y / (2**OUT_FRAC_WIDTH)
 
-        y_exp, y_float = get_output(x_float, OUT_WIDTH, OUT_FRAC_WIDTH,
+        y_exp, y_float = _fixed_signed_cast_model(x_float, OUT_WIDTH, OUT_FRAC_WIDTH,
                                     SYMMETRIC, get_rounding_mode(dut))
 
         exp_signed_y = sign_extend(y_exp, OUT_WIDTH)

@@ -18,8 +18,14 @@ from mase_cocotb.matrix_tools import (
     rebuild_matrix,
     split_matrix,
 )
-from mase_cocotb.utils import bit_driver, sign_extend_t, signed_to_unsigned
+from mase_cocotb.utils import (
+    bit_driver,
+    sign_extend_t,
+    signed_to_unsigned,
+    int_floor_quantizer,
+)
 
+from mase_components.cast.test.fixed_signed_cast_tb import _fixed_signed_cast_model
 from chop.passes.graph.transforms.quantize.quantizers.quantizers_for_hw import (
     integer_quantizer_for_hw,
 )
@@ -47,7 +53,7 @@ class GroupNorm2dTB(Testbench):
             "OUT_WIDTH", "OUT_FRAC_WIDTH",
             "VARIANCE_WIDTH", "VARIANCE_FRAC_WIDTH",
             "INV_SQRT_WIDTH", "INV_SQRT_FRAC_WIDTH",
-            "DEPTH_DIM0", "DEPTH_DIM1"
+            "DEPTH_DIM0", "DEPTH_DIM1",
         ])
 
         # Helper tuples
@@ -61,10 +67,13 @@ class GroupNorm2dTB(Testbench):
             dut.clk, dut.in_data, dut.in_valid, dut.in_ready
         )
         self.output_monitor = StreamMonitor(
-            dut.clk, dut.out_data, dut.out_valid, dut.out_ready, check=False
+            dut.clk, dut.out_data, dut.out_valid, dut.out_ready
         )
 
-    def generate_inputs(self, num=10):
+        self.in_driver.log.setLevel(logging.DEBUG)
+        self.output_monitor.log.setLevel(logging.DEBUG)
+
+    def generate_inputs(self, num=2):
         inputs = list()
         for _ in range(self.GROUP_CHANNELS * num):
             inputs.extend(gen_random_matrix_input(
@@ -86,32 +95,44 @@ class GroupNorm2dTB(Testbench):
 
         # Mean calculation
         mu = x.mean(dim=(1, 2, 3), keepdim=True)
-        mu = integer_quantizer(mu, self.IN_WIDTH, self.IN_FRAC_WIDTH)
+        logger.debug("Mu:")
+        logger.debug(mu[0])
+        mu = int_floor_quantizer(mu, self.IN_WIDTH, self.IN_FRAC_WIDTH)
         logger.debug("Mu:")
         logger.debug(mu[0])
 
         # Variance calculation
         var = ((x - mu) ** 2).mean(dim=(1, 2, 3), keepdim=True)
-        var = integer_quantizer(var, self.VARIANCE_WIDTH, self.VARIANCE_FRAC_WIDTH)
+        var = int_floor_quantizer(var, self.VARIANCE_WIDTH, self.VARIANCE_FRAC_WIDTH)
         logger.debug("Variance:")
         logger.debug(var[0])
 
         # Inverse Square Root calculation
         # inv_sqrt = inv_sqrt_model(var)  # TODO: Add inv sqrt model
-        inv_sqrt = 1 / torch.sqrt(var)
-        inv_sqrt = integer_quantizer(inv_sqrt, self.INV_SQRT_WIDTH, self.INV_SQRT_FRAC_WIDTH)
+        inv_sqrt = torch.full_like(var, 0.25)  # TODO: remove this later
+        inv_sqrt = int_floor_quantizer(inv_sqrt, self.INV_SQRT_WIDTH, self.INV_SQRT_FRAC_WIDTH)
         logger.debug("Inverse SQRT:")
         logger.debug(inv_sqrt[0])
 
         # Norm calculation
-        norm_out = (x - mu) * inv_sqrt
-        norm_out = integer_quantizer(norm_out, self.OUT_WIDTH, self.OUT_FRAC_WIDTH)
+        diff = x - mu
+        norm_out = diff * inv_sqrt
+        _, norm_out = _fixed_signed_cast_model(
+            norm_out, self.OUT_WIDTH, self.OUT_FRAC_WIDTH,
+            symmetric=False, rounding_mode="floor"
+        )
+        logger.debug("Diff:")
+        logger.debug(diff[0])
         logger.debug("Norm:")
         logger.debug(norm_out[0])
 
         # Rescale & Reshape for output monitor
         norm_out *= (2 ** self.OUT_FRAC_WIDTH)
+        logger.debug("Norm (signed):")
+        logger.debug(norm_out[0])
         norm_out = signed_to_unsigned(norm_out.to(dtype=torch.int32), self.OUT_WIDTH)
+        logger.debug("Norm (unsigned):")
+        logger.debug(norm_out[0])
         y = norm_out.reshape(-1, self.TOTAL_DIM1, self.TOTAL_DIM0)
 
         # Output beat reconstruction
@@ -137,4 +158,4 @@ async def basic(dut):
 
 
 if __name__ == "__main__":
-    mase_runner(trace=True)
+    mase_runner(seed=0, trace=True)

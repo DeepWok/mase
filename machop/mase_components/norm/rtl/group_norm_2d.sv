@@ -17,7 +17,7 @@ Description : This module calculates the generalised group norm.
 module group_norm_2d #(
     // Dimensions
     parameter TOTAL_DIM0          = 4,
-    parameter TOTAL_DIM1          = 6,
+    parameter TOTAL_DIM1          = 4,
     parameter COMPUTE_DIM0        = 2,
     parameter COMPUTE_DIM1        = 2,
     parameter GROUP_CHANNELS      = 2,
@@ -26,7 +26,7 @@ module group_norm_2d #(
     parameter IN_WIDTH            = 8,
     parameter IN_FRAC_WIDTH       = 2,
     parameter OUT_WIDTH           = 8,
-    parameter OUT_FRAC_WIDTH      = 6,
+    parameter OUT_FRAC_WIDTH      = 4,
 
     // Precision of inverse sqrt unit
     parameter INV_SQRT_WIDTH      = 16,
@@ -52,8 +52,14 @@ localparam NUM_VALUES = TOTAL_DIM0 * TOTAL_DIM1 * GROUP_CHANNELS;
 localparam NUM_ITERS = DEPTH_DIM0 * DEPTH_DIM1 * GROUP_CHANNELS;
 localparam ITER_WIDTH = $clog2(NUM_ITERS);
 
+localparam DIFF_WIDTH = IN_WIDTH + 1;
+localparam DIFF_FRAC_WIDTH = IN_FRAC_WIDTH;
+
 localparam VARIANCE_WIDTH = IN_WIDTH * 2;
 localparam VARIANCE_FRAC_WIDTH = IN_FRAC_WIDTH * 2;
+
+localparam NORM_WIDTH = INV_SQRT_WIDTH + DIFF_WIDTH;
+localparam NORM_FRAC_WIDTH = INV_SQRT_FRAC_WIDTH + DIFF_FRAC_WIDTH;
 
 // Input FIFO
 logic [IN_WIDTH-1:0] fifo_data  [COMPUTE_DIM0*COMPUTE_DIM1-1:0];
@@ -106,7 +112,6 @@ split2 input_fifo_adder_split (
     .data_out_ready({adder_tree_in_ready, fifo_in_ready})
 );
 
-
 // Accumulator for mu
 localparam ACC_OUT_WIDTH = $clog2(NUM_ITERS) + ADDER_TREE_OUT_WIDTH;
 
@@ -131,7 +136,7 @@ fixed_accumulator #(
 logic [IN_WIDTH-1:0] mu_in, mu_out;
 logic mu_out_valid, mu_out_ready;
 
-assign mu_acc_div = $signed(mu_acc) / NUM_ITERS;
+assign mu_acc_div = $signed(mu_acc) / NUM_VALUES;
 assign mu_in = mu_acc_div[IN_WIDTH-1:0];
 
 repeat_circular_buffer #(
@@ -163,13 +168,13 @@ join2 mu_fifo_join2 (
 for (genvar i = 0; i < COMPUTE_DIM0 * COMPUTE_DIM1; i++) begin : compute_pipe
 
     // Take the difference between input and mean: (X - mu)
-    logic [IN_WIDTH-1:0] diff_in, diff_out;
+    logic signed [DIFF_WIDTH-1:0] diff_in, diff_out;
     logic diff_in_ready;
     logic diff_out_valid;
-    assign diff_in = fifo_data[i] - mu_out;
+    assign diff_in = $signed(fifo_data[i]) - $signed(mu_out);
 
     skid_buffer #(
-        .DATA_WIDTH(IN_WIDTH)
+        .DATA_WIDTH(DIFF_WIDTH)
     ) subtract_reg (
         .clk(clk),
         .rst(rst),
@@ -246,15 +251,15 @@ for (genvar i = 0; i < COMPUTE_DIM0 * COMPUTE_DIM1; i++) begin : compute_pipe
 
     // Multiply difference with 1/sqrt(var) to get normalized result
     // Will need a join2 inserted to join the diff_buffer with the sqrt pipeline
-    logic [VARIANCE_WIDTH-1:0] norm_in_data;
+    logic [NORM_WIDTH-1:0] norm_in_data;
     logic norm_in_ready;
-    logic [VARIANCE_WIDTH-1:0] norm_out_data;
+    logic [NORM_WIDTH-1:0] norm_out_data;
     logic norm_out_valid, norm_batch_ready;
 
-    assign norm_in_data = inv_sqrt_data * diff_batch_out[i];
+    assign norm_in_data = $signed({1'b0, inv_sqrt_data}) * $signed(diff_batch_out[i]);
 
     skid_buffer #(
-        .DATA_WIDTH(VARIANCE_WIDTH)
+        .DATA_WIDTH(NORM_WIDTH)
     ) norm_reg (
         .clk(clk),
         .rst(rst),
@@ -272,8 +277,8 @@ for (genvar i = 0; i < COMPUTE_DIM0 * COMPUTE_DIM1; i++) begin : compute_pipe
     logic output_reg_valid;
 
     fixed_signed_cast #(
-        .IN_WIDTH(VARIANCE_WIDTH),
-        .IN_FRAC_WIDTH(VARIANCE_FRAC_WIDTH),
+        .IN_WIDTH(NORM_WIDTH),
+        .IN_FRAC_WIDTH(NORM_FRAC_WIDTH),
         .OUT_WIDTH(OUT_WIDTH),
         .OUT_FRAC_WIDTH(OUT_FRAC_WIDTH),
         .SYMMETRIC(0),
@@ -320,13 +325,13 @@ join2 diff_fifo_sqrt_join (
 );
 
 // FIFO for storing X-mu differences
-logic [IN_WIDTH-1:0] diff_batch_in [COMPUTE_DIM0*COMPUTE_DIM1-1:0];
+logic [DIFF_WIDTH-1:0] diff_batch_in [COMPUTE_DIM0*COMPUTE_DIM1-1:0];
 logic diff_batch_in_valid, diff_batch_in_ready;
-logic [IN_WIDTH-1:0] diff_batch_out [COMPUTE_DIM0*COMPUTE_DIM1-1:0];
+logic [DIFF_WIDTH-1:0] diff_batch_out [COMPUTE_DIM0*COMPUTE_DIM1-1:0];
 logic diff_batch_out_valid, diff_batch_out_ready;
 
 matrix_fifo #(
-    .DATA_WIDTH(IN_WIDTH),
+    .DATA_WIDTH(DIFF_WIDTH),
     .DIM0(COMPUTE_DIM0),
     .DIM1(COMPUTE_DIM1),
     .FIFO_SIZE(NUM_ITERS) // TODO: Change

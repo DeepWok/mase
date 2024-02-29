@@ -45,3 +45,18 @@ def floor_rounding(value, in_frac_width, out_frac_width):
     elif in_frac_width < out_frac_width:
         return value << (in_frac_width - out_frac_width)
     return value
+
+
+def clamp(n, smallest, largest):
+    return max(smallest, min(n, largest))
+
+
+def int_floor_quantizer(x: Tensor, width: int, frac_width: int, signed=True):
+    if signed:
+        int_min = -(2 ** (width - 1))
+        int_max = 2 ** (width - 1) - 1
+    else:
+        int_min = 0
+        int_max = 2**width - 1
+    scale = 2 ** frac_width
+    return torch.clamp(torch.floor(x.mul(scale)), int_min, int_max).div(scale)

@@ -10,16 +10,16 @@ module temp_inv_sqrt #(
     parameter OUT_FRAC_WIDTH     = 8,
     parameter PIPELINE_CYCLES    = 2
 ) (
-    input  logic             clk,
-    input  logic             rst,
+    input  logic                clk,
+    input  logic                rst,
 
     input  logic [IN_WIDTH-1:0] in_data,
-    input  logic             in_valid,
-    output logic             in_ready,
+    input  logic                in_valid,
+    output logic                in_ready,
 
     output logic [IN_WIDTH-1:0] out_data,
-    output logic             out_valid,
-    input  logic             out_ready
+    output logic                out_valid,
+    input  logic                out_ready
 );
 
 initial begin
@@ -27,7 +27,8 @@ initial begin
 end
 
 // "Model" the square root operation
-assign pipe[0].in_data = in_data;
+// Output a constant 1/4
+assign pipe[0].in_data = 1 << (OUT_FRAC_WIDTH-2);
 assign pipe[0].in_valid = in_valid;
 assign in_ready = pipe[0].in_ready;
 
