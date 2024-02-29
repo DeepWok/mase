@@ -86,8 +86,7 @@ async def exhaustive_test(dut):
         await Timer(10, "ns")
         got_y = int(dut.out_data.value)
 
-        assert (
-            got_y == exp_output[i],
+        assert got_y == exp_output[i], (
             f"Output did not match! Got {got_y}, Exp {exp_y}"
         )
 
