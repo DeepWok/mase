@@ -140,7 +140,6 @@ logic mu_out_valid, mu_out_ready;
 
 logic [ACC_OUT_WIDTH+16-1:0] mu_acc_div;
 
-// TODO: change the division to mult, this is problematic...
 assign mu_acc_div = ($signed(mu_acc) * INV_NUM_VALUES) >>> 16;
 assign mu_in = mu_acc_div[IN_WIDTH-1:0];
 
@@ -218,6 +217,8 @@ for (genvar i = 0; i < COMPUTE_DIM0 * COMPUTE_DIM1; i++) begin : compute_pipe
     // Take the square and divide it to get variance: (X - mu) ^ 2 / N
     logic [VARIANCE_WIDTH-1:0] variance_in, variance_out;
     logic variance_out_valid, variance_out_ready;
+
+    // TODO: This probably needs to change into multiplication + shift
     assign variance_in = square_out / NUM_VALUES;
 
     skid_buffer #(
