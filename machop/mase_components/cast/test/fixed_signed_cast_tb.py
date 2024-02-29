@@ -6,22 +6,54 @@ import cocotb
 from cocotb.triggers import *
 
 from random import randint
+from mase_cocotb.testbench import Testbench
 from mase_cocotb.runner import mase_runner
-from mase_cocotb.utils import sign_extend, sign_extend_t, signed_to_unsigned, clamp
+from mase_cocotb.utils import (
+    sign_extend,
+    sign_extend_t,
+    signed_to_unsigned,
+)
 
 logger = logging.getLogger("testbench")
 logger.setLevel(logging.INFO)
 
 
-def get_input(uint, in_width, in_frac_width):
-    num_int = sign_extend(uint, in_width)
-    num_float = float(num_int) / (2**in_frac_width)
+class FixedSignedCastTB(Testbench):
+    def __init__(self, dut) -> None:
+        super().__init__(dut)
 
-    logger.debug("Drive bus with %d, signed: %d, float: %f"
-                  % (uint, num_int, num_float))
-    return uint, num_float
+        self.assign_self_params([
+            "IN_WIDTH", "IN_FRAC_WIDTH", "OUT_WIDTH", "OUT_FRAC_WIDTH",
+            "SYMMETRIC", "ROUND_FLOOR", "ROUND_TRUNCATE",
+            "ROUND_NEAREST_INT_HALF_EVEN"
+        ])
 
-def _fixed_signed_cast_model(float_input, out_width, out_frac_width, symmetric, rounding_mode):
+    def generate_inputs(self):
+        uints = torch.arange(2**self.IN_WIDTH)
+        num_int = sign_extend_t(uints, self.IN_WIDTH)
+        num_float = num_int / (2**self.IN_FRAC_WIDTH)
+        return num_int, num_float
+
+    def rounding_mode(self):
+        if self.ROUND_FLOOR:
+            return "floor"
+        elif self.ROUND_TRUNCATE:
+            return "trunc"
+        elif self.ROUND_NEAREST_INT_HALF_EVEN:
+            return "round_nearest_half_even"
+        else:
+            raise Exception("Rounding mode not recognised.")
+
+    def model(self, inputs):
+        return _fixed_signed_cast_model(
+            inputs, self.OUT_WIDTH, self.OUT_FRAC_WIDTH, self.SYMMETRIC,
+            rounding_mode=self.rounding_mode()
+        )
+
+
+def _fixed_signed_cast_model(
+    float_input, out_width, out_frac_width, symmetric, rounding_mode
+):
     scaled_float = float_input * (2 ** out_frac_width)
     if rounding_mode == "floor":
         out_int = torch.floor(scaled_float)
@@ -39,54 +71,26 @@ def _fixed_signed_cast_model(float_input, out_width, out_frac_width, symmetric, 
     out_uint = signed_to_unsigned(out_int, out_width)
     return out_uint, out_float
 
-def get_rounding_mode(dut):
-    if int(dut.ROUND_FLOOR.value):
-        return "floor"
-    elif int(dut.ROUND_TRUNCATE.value):
-        return "trunc"
-    elif int(dut.ROUND_NEAREST_INT_HALF_EVEN.value):
-        return "round_nearest_half_even"
-    else:
-        raise Exception("Rounding mode not recognised.")
 
 @cocotb.test()
 async def exhaustive_test(dut):
-    IN_WIDTH = int(dut.IN_WIDTH.value)
-    IN_FRAC_WIDTH = int(dut.IN_FRAC_WIDTH.value)
-    OUT_WIDTH = int(dut.OUT_WIDTH.value)
-    OUT_FRAC_WIDTH = int(dut.OUT_FRAC_WIDTH.value)
-    SYMMETRIC = int(dut.SYMMETRIC.value)
-    await Timer(10, "ns")
+    tb = FixedSignedCastTB(dut)
+    driver_in, float_in = tb.generate_inputs()
+    exp_output, exp_float = tb.model(float_in)
 
-    logger.debug(f"MIN_VAL: {dut.clamp_inst.MIN_VAL.value}")
-    logger.debug(f"MAX_VAL: {dut.clamp_inst.MAX_VAL.value}")
-
-    for uint in range(2**IN_WIDTH):
-        x, x_float = get_input(uint, IN_WIDTH, IN_FRAC_WIDTH)
+    for i in range(driver_in.shape[0]):
+        x = driver_in[i].item()
+        exp_y = exp_output[i].item()
 
         dut.in_data.value = x
         await Timer(10, "ns")
-        y = int(dut.out_data.value)
+        got_y = int(dut.out_data.value)
 
-        signed_x = sign_extend(x, IN_WIDTH)
-        got_signed_y = sign_extend(y, OUT_WIDTH)
-        got_float_y = got_signed_y / (2**OUT_FRAC_WIDTH)
+        assert (
+            got_y == exp_output[i],
+            f"Output did not match! Got {got_y}, Exp {exp_y}"
+        )
 
-        y_exp, y_float = _fixed_signed_cast_model(x_float, OUT_WIDTH, OUT_FRAC_WIDTH,
-                                    SYMMETRIC, get_rounding_mode(dut))
-
-        exp_signed_y = sign_extend(y_exp, OUT_WIDTH)
-        exp_float_y = exp_signed_y / (2**OUT_FRAC_WIDTH)
-        # logger.debug(f"out_int: {dut.floor_round_inst.out_int.value}, out_frac: {dut.floor_round_inst.out_frac.value}")
-        logger.debug(f"round_out: {dut.round_out.value}")
-        logger.debug(f"clamp_bounds: {dut.clamp_inst.MIN_VAL.value} <-> {dut.clamp_inst.MAX_VAL.value}")
-        logger.debug(f"clamp: {dut.clamp_inst.in_data.value} -> {dut.clamp_inst.out_data.value}")
-        logger.debug(f"GOT: 0x{x:x} [{signed_x}] ({x_float}) " +
-                     f"-> 0x{y:x} [{got_signed_y}] ({got_float_y})")
-        logger.debug(f"EXP: 0x{x:x} [{signed_x}] ({x_float}) " +
-                     f"-> 0x{y_exp:x} [{exp_signed_y}] ({exp_float_y})")
-
-        assert y == y_exp, "Output doesn't match with expected."
 
 if __name__ == "__main__":
     DEFAULT_CONFIG = {
