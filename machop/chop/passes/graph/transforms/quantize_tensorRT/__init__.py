@@ -1,1 +1,3 @@
 from .quantize_tensorrt import quantize_tensorrt_transform_pass, test_quantize_tensorrt_transform_pass
+from .qat import fake_quantize_transform_pass
+from .calibrator import graph_calibration_pass

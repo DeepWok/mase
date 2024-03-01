@@ -29,6 +29,8 @@ from .transforms import (
     partition_to_multi_device_transform_pass,
     quantize_tensorrt_transform_pass,
     test_quantize_tensorrt_transform_pass,
+    fake_quantize_transform_pass,
+    graph_calibration_pass,
 )
 
 from .interface import (
