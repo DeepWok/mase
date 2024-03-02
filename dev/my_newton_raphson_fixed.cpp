@@ -13,25 +13,20 @@
 #define LUT_POW 5                           // LUT_POW = log2(LUT_SIZE)
 #define LUT_SIZE 32                         // NOTE: LUT_SIZE must be a power of 2.
 #define LUT_STEP (1.0f / (LUT_SIZE + 1.0f)) // FORMAT: float
-#define I_WIDTH 8                           // FORMAT: integer
-#define FRAC_WIDTH 8                        // FORMAT: integer
-#define WIDTH (I_WIDTH + FRAC_WIDTH)        // FORMAT: integer
+#define NUM_ITER 1
+
+int i_width = 3;
+int f_width = 8;
+int w_width = i_width + f_width;
+uint16_t max_num = (0b1 << w_width) - 0b1;
 
 // Signatures for utils.
-void print_float(std::string label, float x);
-void print_int(std::string label, uint16_t x);
-void print_int32(std::string label, uint32_t x);
-void print_int64(std::string label, uint64_t x);
-void print_bit(std::string label, bool bit);
-void print_bit(int label, bool bit);
-uint16_t float_to_q88(float x);
-uint16_t float_to_q115(float x);
-uint16_t float_to_q016(float x);
-float q115_to_float(uint16_t x);
-float q016_to_float(uint16_t x);
-float q1616_to_float(uint32_t x);
-float q3232_to_float(uint64_t x);
-float q88_to_float(uint16_t x);
+float qxy_to_float(uint64_t x, uint8_t int_width, uint8_t frac_width);
+uint64_t float_to_qxy(float x, uint8_t int_width, uint8_t frac_width);
+template<int WWIDTH>
+void print_bits(std::string label, uint64_t x){
+    std::cout << label << ": " << std::bitset<WWIDTH>(x) << "\n";
+}
 
 // ===========================================================================
 // Newton Raphson method
@@ -65,8 +60,7 @@ void init_lut(){
         float ref = 1.0f / sqrt(x);
         // Convert look up values to Q1.(WIDTH-1) format.
         // NOTE: since we only support 16 bit numbers this can be hard coded.
-        // TODO: figure out how to support multiple WIDTH values.
-        lut[i] += float_to_q115(ref);
+        lut[i] = float_to_qxy(ref, 1, w_width-1);
         x += LUT_STEP;
     }
 }
@@ -76,10 +70,10 @@ void init_lut(){
 // FORMAT: Integer
 uint16_t find_msb(uint16_t x){
 
-    for(int i = 1; i < WIDTH + 1; i++){
-        bool msb = (x >> (WIDTH - i)) & 0b1;
+    for(int i = 1; i < w_width + 1; i++){
+        bool msb = (x >> (w_width - i)) & 0b1;
         if(msb){
-            return WIDTH - i;
+            return w_width - i;
         }
     }
 
@@ -92,12 +86,12 @@ uint16_t find_msb(uint16_t x){
 // be a 1:1 mapping. Instead it does a 1:N mapping where multiple values of the
 // original range will map to the same value in the new range.
 //
-// INPUT FORMAT: Q(I_WIDTH).(FRAC_WIDTH)
+// INPUT FORMAT: Q(i_width).(f_width)
 // OUTPUT FORMAT: Q1.(WIDTH-1)
 uint32_t range_reduction(uint32_t x, uint16_t msb_index){
     // Shifts the input left until the MSB of x is at the leftmost index.
-    if(msb_index < WIDTH - 1){
-        return x << (WIDTH - 1 - msb_index);
+    if(msb_index < w_width - 1){
+        return x << (w_width - 1 - msb_index);
     }
     // X is perfect because MSB is at the leftmost position.
     else{
@@ -121,13 +115,13 @@ uint32_t range_reduction(uint32_t x, uint16_t msb_index){
 //          1 / sqrt(x) = sqrt(1/2) * [1 / sqrt(x * 2^(k))] << (k/2)    Through math.
 //
 // INPUT FORMAT: Q1.15
-// OUTPUT FORMAT: Q(I_WIDTH).(FRAC_WIDTH)
+// OUTPUT FORMAT: Q(i_width).(f_width)
 uint32_t range_augmentation(uint32_t x_red, uint16_t msb_index){
     // Determine whether shifted right or left and by how much relative to the 
-    // position of the fixed point in Q(I_WIDTH).(FRAC_WIDTH)
+    // position of the fixed point in Q(i_width).(f_width)
     // Left shift = Positive
     // Right shift = Negative
-    int16_t shifted = FRAC_WIDTH - msb_index;
+    int16_t shifted = f_width - msb_index;
 
     // Reduction was through multiplication.
     // Therefore augmentation is through multiplication.
@@ -136,8 +130,8 @@ uint32_t range_augmentation(uint32_t x_red, uint16_t msb_index){
             int16_t shift = shifted >> 1; // k / 2
             // FORMAT: Q1.15
             int32_t res = x_red << shift;
-            // FORMAT Q(I_WIDTH).(FRAC_WIDTH)
-            res = res >> ((WIDTH - 1) - FRAC_WIDTH);
+            // FORMAT Q(i_width).(f_width)
+            res = res >> ((w_width - 1) - f_width);
             return res;
         }
         else{
@@ -145,8 +139,8 @@ uint32_t range_augmentation(uint32_t x_red, uint16_t msb_index){
             // FORMAT: Q1.15
             int32_t res = (x_red * SQRT_2) >> 15;
             res = res << shift;
-            // FORMAT Q(I_WIDTH).(FRAC_WIDTH)
-            res = res >> ((WIDTH - 1) - FRAC_WIDTH);
+            // FORMAT Q(i_width).(f_width)
+            res = res >> ((w_width - 1) - f_width);
             return res;
         }
     }
@@ -158,8 +152,8 @@ uint32_t range_augmentation(uint32_t x_red, uint16_t msb_index){
             int16_t shift = (-shifted) >> 1;
             // FORMAT Q.15
             int32_t res = x_red >> shift;
-            // FORMAT Q(I_WIDTH).(FRAC_WIDTH)
-            res = res >> ((WIDTH - 1) - FRAC_WIDTH);
+            // FORMAT Q(i_width).(f_width)
+            res = res >> ((w_width - 1) - f_width);
             return res;
         }
         else{
@@ -167,30 +161,30 @@ uint32_t range_augmentation(uint32_t x_red, uint16_t msb_index){
             // FORMAT: Q1.15
             int32_t res = (x_red * ISQRT_2) >> 15;
             res = res >> shift;
-            // FORMAT Q(I_WIDTH).(FRAC_WIDTH)
-            res = res >> ((WIDTH - 1) - FRAC_WIDTH);
+            // FORMAT Q(i_width).(f_width)
+            res = res >> ((w_width - 1) - f_width);
             return res;
         }
     }
     // Reduction was not done.
     // Therefore just convert format.
     else{
-        // FORMAT Q(I_WIDTH).(FRAC_WIDTH)
-        return x_red >> ((WIDTH - 1) - FRAC_WIDTH);
+        // FORMAT Q(i_width).(f_width)
+        return x_red >> ((w_width - 1) - f_width);
     }
 }
 
 // Newton Raphson's method.
 //
-// INPUT FORMAT: Q(I_WIDTH).(FRAC_WIDTH)
-// OUTPUT FORMAT: Q(I_WIDTH).(FRAC_WIDTH)
+// INPUT FORMAT: Q(i_width).(f_width)
+// OUTPUT FORMAT: Q(i_width).(f_width)
 uint16_t isqrt(uint16_t x){
     // X = 0 is invalid.
     // TODO: how to handle this for actual implementation? Return 0? Return MAX_NUM?
     if(x == 0){
         std::cout << "[ERROR] The input number x is invalid." << "\n";
         std::cout << "[X] " << x << "\n";
-        return 0xFFFF;
+        return max_num;
     }
 
     // FORMAT: Integer
@@ -200,16 +194,14 @@ uint16_t isqrt(uint16_t x){
     uint32_t x_red = range_reduction(x, msb_index);
 
     // If X gets mapped to 1 then 1/sqrt(x) is 1. Then augment range.
-    if(x_red == 0x8000){
-        uint16_t out = range_augmentation(x_red, msb_index);
-        bool msb_bit = (out >> 15) & 0b1;
+    if(x_red == (0b1 << (w_width - 1))){
+        uint32_t out = range_augmentation(x_red, msb_index);
 
         // Check that overflow does not occur.
         // TODO: how to deal with overflow in actual implementation? Return MAX_NUM?
         // Have an output wire OVERFLOW?
-        if(msb_bit){
-            std::cout << "[OVERFLOW]" << "\n";
-            return 0xFFFF;
+        if(out > max_num){
+            return max_num;
         }
         return out;
     }
@@ -217,16 +209,16 @@ uint16_t isqrt(uint16_t x){
     // FORMAT Q17.15
     uint32_t intermediate;
     // Shift the number to match the Q1.(WIDTH-1) format.
-    intermediate = x << (WIDTH - 1 - msb_index);
+    intermediate = x << (w_width - 1 - msb_index);
 
     // Get rid of the 1 from the format for index calculation.
     // This is easier in SystemVerilog, just turn the bit to a 0.
-    uint32_t temp = intermediate - (0b1 << (WIDTH - 1));
+    uint32_t temp = intermediate - (0b1 << (w_width - 1));
     temp = temp << LUT_POW;
     // Going from Q1.(WIDTH-1) to Q(WIDTH).0 in order to index the lut.
     // TODO: it will be easier to choose the first LUT_POW bits and use them 
     // to index the LUT.
-    temp = temp >> (WIDTH - 1);
+    temp = temp >> (w_width - 1);
     uint16_t lut_index = temp;
     //std::cout << "LUT index " << lut_index << "\n";
 
@@ -239,43 +231,42 @@ uint16_t isqrt(uint16_t x){
         initial_guess = lut[lut_index - 1];
     }
     
-    
     uint32_t y = initial_guess;                 // FORMAT: Q1.(WIDTH-1)
     uint32_t mult;                              // FORMAT: Q1.(WIDTH-1)
     uint32_t yy;                                // FORMAT: Q1.(WIDTH-1)
     uint32_t sub;                               // FORMAT: Q1.(WIDTH-1)
-    uint32_t threehalfs = 0x3 << (WIDTH - 2);   // FORMAT: Q1.(WIDTH-1)
+    // NOTE: if the input is only 1 bit wide then this gets ignored because of the 
+    // if statement checking whether x_red is 1 or 0.
+    uint32_t threehalfs = 0x3 << (w_width - 2);   // FORMAT: Q1.(WIDTH-1)
 
     // Divide mapped input by 2 as stated in Newton-Raphson formula.
     x_red = x_red >> 1;
 
     // TODO: vary the number of iterations and evaluate the error.
-    for (int i = 0; i < 5; ++i) {
+    for (int i = 0; i < NUM_ITER; ++i) {
         // FORMAT: Q1.(WIDTH-1) x Q1.(WIDTH-1) = Q2.(2*WIDTH - 2) >> (WIDTH - 1) = Q1.(WIDTH-1)
         // NOTE: the format calculations may be off.
-        yy = (y * y) >> (WIDTH - 1);
+        yy = (y * y) >> (w_width - 1);
         // FORMAT: Q1.(WIDTH-1) x Q1.(WIDTH-1) = Q2.(2*WIDTH - 2) >> (WIDTH - 1) = Q1.(WIDTH-1)
-        mult = (yy * x_red) >> (WIDTH - 1);
+        mult = (yy * x_red) >> (w_width - 1);
         // FORMAT: Q1.(WIDTH-1)
         sub = threehalfs - mult;
         // FORMAT: Q1.(WIDTH-1) x Q1.(WIDTH-1) = Q2.(2*WIDTH - 2) >> (WIDTH - 1) = Q1.(WIDTH-1)
-        y = (y * sub) >> (WIDTH - 1);
+        y = (y * sub) >> (w_width - 1);
     }
 
-    // FORMAT: Q(I_WIDTH).(FRAC_WIDTH)
+    // FORMAT: Q(i_width).(f_width)
     y = range_augmentation(y, msb_index);
 
     // If overflow then return max number possible.
     // Overflow is detected by checking if the MSB of Q1.15 format is asserted.
     // This is because the output range of y is [0.707, 1).
     // Can we get overflow? If the algorithm does not converge then yes.
-    bool msb_bit = (y >> (WIDTH - 1)) & 0b1;
-    if(msb_bit){
-        std::cout << "[OVERFLOW]" << "\n";
-        return 0xFFFF;
+    if(y > max_num){
+        return max_num;
     }
 
-    // FORMAT: Q(I_WIDTH).(FRAC_WIDTH)
+    // FORMAT: Q(i_width).(f_width)
     return y;
 }
 
@@ -283,48 +274,64 @@ uint16_t isqrt(uint16_t x){
 // Main
 // ---------------------------------------------------------------------------
 
-uint16_t test(uint16_t val){
-    if(val == 0){
+float test(uint16_t val, bool verbose){
+    uint64_t mask = (0b1 << (i_width + f_width)) - 0b1;
+    val = val & mask;
+    // Convert to float for reference calculation.
+    float val_f = qxy_to_float(val, i_width, f_width);
+
+    if(val_f == 0){
         return 0;
     }
 
-    // Convert to float for reference calculation.
-    float val_f = q88_to_float(val);
     // Reference calculation.
     float expected_f = 1.0f / sqrt(val_f);
     // Quantise the value for fair comparison.
-    uint16_t expected = float_to_q88(expected_f);
+    uint16_t expected = float_to_qxy(expected_f, i_width, f_width);
     // Update the reference value.
-    expected_f = q88_to_float(expected);
+    expected_f = qxy_to_float(expected, i_width, f_width);
+    if(expected > max_num){
+        expected_f = qxy_to_float(max_num, i_width, f_width);
+    }
 
     // Apply model.
     uint16_t output = isqrt(val);
-    float output_f = q88_to_float(output);
+    float output_f = qxy_to_float(output, i_width, f_width);
 
     // Calculate error in floating point.
     float error = abs(output_f - expected_f);
-    std::cout << "Square root " << val_f << ") = " << expected_f << " |  " << output_f << " | Error: " << error << "\n";
+    if(verbose){
+        std::cout << "sqrt(" << val_f << ") = " << expected_f << " |  " << output_f << " | Error: " << error << "\n";
+    }
     return error;
 }
 
 // NOTE: for the Q8.8 format the max error achieved is 2^-8.
 int main()
 {
-    init_lut();
-
-    float step = 1.0f;
-    float x_f = step;
-    float max_error = 0.0f;
-    for(int i = 0; i < 1000; i++){
-        int16_t x = float_to_q88(x_f);
-        float error = test(x);
-        max_error = std::max(max_error, error);
-        if(error > 0.0f){
-            break;
+    for(i_width = 1; i_width < 9; i_width++){
+        for(f_width = 1; f_width < 9; f_width++){
+            float step = 0.001;
+            float x_f = step;
+            float max_error = 0.0f;
+            w_width = i_width + f_width;
+            max_num = (0b1 << w_width) - 0b1;
+            init_lut();
+            std::cout << "INT WIDTH: " << i_width << " ";
+            std::cout << "FRAC WIDTH: " << f_width << " ";
+            for(int i = 0; i < 100000; i++){
+                int16_t x = float_to_qxy(x_f, i_width, f_width);
+                float error = test(x, false);
+                max_error = std::max(max_error, error);
+                //if(error > 0.011f){
+                //    print_bits<16>("IN", x);
+                //    break;
+                //}
+                x_f += step;
+            }
+            std::cout << "Max error: " << max_error << "\n";
         }
-        x_f += step;
     }
-    std::cout << "Max error: " << max_error << "\n";
 
 	return 0;
 }
@@ -333,171 +340,38 @@ int main()
 // Utils
 // ---------------------------------------------------------------------------
 
-void print_float(std::string label, float x){
-    std::cout << label << ": " << x << "\n";
+float qxy_to_float(uint64_t x, uint8_t int_width, uint8_t frac_width){
+    float output = 0.0f;
+    // Integer part
+    uint64_t mask = (0b1 << int_width) - 0b1;
+    uint64_t integer = (x >> frac_width) & mask;
+    output = static_cast<float>(integer);
+
+    // Fractional part
+    mask = (0b1 << frac_width) - 0b1;
+    uint64_t fraction = ((x << int_width) >> int_width) & mask;
+    for(int i = 1; i < frac_width+1; i++){
+        bool current_bit = (fraction >> (frac_width - i)) & 0b1;
+        if(current_bit){
+            float bin = pow(2, -i);
+            output += bin;
+        }
+    }
+    return output;
 }
 
-void print_int(std::string label, uint16_t x){
-    std::cout << label << ": " << std::bitset<WIDTH>(x) << "\n";
-}
-
-void print_int32(std::string label, uint32_t x){
-    std::cout << label << ": " << std::bitset<32>(x) << "\n";
-}
-
-void print_int64(std::string label, uint64_t x){
-    std::cout << label << ": " << std::bitset<64>(x) << "\n";
-}
-
-void print_bit(std::string label, bool bit){
-    std::cout << label << ": "<< bit << "\n";
-}
-
-void print_bit(int label, bool bit){
-    std::cout << label << ": "<< bit << "\n";
-}
-
-uint16_t float_to_q88(float x){
-    uint16_t integer = static_cast<uint16_t>(x);
+uint64_t float_to_qxy(float x, uint8_t int_width, uint8_t frac_width){
+    uint64_t integer = static_cast<uint64_t>(x);
     float integer_float = static_cast<float>(integer);
     x -= integer_float;
-    uint16_t output = integer << FRAC_WIDTH;
+    uint64_t output = integer << frac_width;
 
-    for(int i = 1; i < FRAC_WIDTH+1; i++){
+    for(int i = 1; i < frac_width+1; i++){
         float power = pow(2, -i);
-        if(power < x){
-            uint16_t bin = 0b1 << (FRAC_WIDTH - i);
-            output += bin;
-            x-= power;
-        }
-    }
-    return output;
-}
-
-float q016_to_float(uint16_t x){
-
-    float output = 0.0f;
-
-    for(int i = 1; i < WIDTH + 1; i++){
-        bool current_bit = (x >> (WIDTH - i)) & 0b1;
-        if(current_bit){
-            float bin = pow(2, -i);
-            output += bin;
-        }
-    }
-    return output;
-}
-
-uint16_t float_to_q016(float x){
-    if(x >= 1){
-        std::cout << "[error] input to float_to_q016 is larger than or equal to 1" << "\n";
-        std::cout << "[error] " << x << "\n";
-    }
-    else if(x < 0){
-        std::cout << "[error] input to float_to_q116 is smaller than 0" << "\n";
-        std::cout << "[error] " << x << "\n";
-    }
-
-    uint16_t output = 0;
-
-    for(int i = 1; i < WIDTH + 1; i++){
-        float power = pow(2, -(i));
         if(power <= x){
-            uint16_t bin = 0b1 << (WIDTH - i);
+            uint64_t bin = 0b1 << (frac_width - i);
             output += bin;
             x-= power;
-        }
-    }
-    return output;
-}
-
-uint16_t float_to_q115(float x){
-    // Get integer part.
-    uint16_t integer = static_cast<uint16_t>(x);
-    float integer_float = static_cast<float>(integer);
-    x -= integer_float;
-    uint16_t output = integer << (WIDTH-1);
-
-    for(int i = 2; i < WIDTH + 1; i++){
-        float power = pow(2, -(i-1));
-        if(power <= x){
-            uint16_t bin = 0b1 << (WIDTH - i);
-            output += bin;
-            x-= power;
-        }
-    }
-    return output;
-}
-
-float q115_to_float(uint16_t x){
-    float output = 0.0f;
-    bool bit1 = (x >> (WIDTH-1)) & 0b1;
-    output += bit1 ? 1.0f : 0.0f;
-
-    uint16_t fraction = x;
-    for(int i = 2; i < WIDTH+1; i++){
-        bool current_bit = (fraction >> (WIDTH - i)) & 0b1;
-        if(current_bit){
-            float bin = pow(2, -(i-1));
-            output += bin;
-        }
-    }
-    return output;
-}
-
-float q88_to_float(uint16_t x){
-    float output = 0.0f;
-    // Integer part
-    uint16_t mask = (0b1 << FRAC_WIDTH) - 0b1;
-    uint16_t integer = (x >> FRAC_WIDTH) & mask;
-    output += static_cast<float>(integer);
-
-    // Fractional part
-    uint16_t fraction = ((x << I_WIDTH) >> I_WIDTH) & mask;
-    for(int i = 1; i < FRAC_WIDTH+1; i++){
-        bool current_bit = (fraction >> (FRAC_WIDTH - i)) & 0b1;
-        if(current_bit){
-            float bin = pow(2, -i);
-            output += bin;
-        }
-    }
-    return output;
-}
-
-float q1616_to_float(uint32_t x){
-    float output = 0.0f;
-    // Integer part
-    uint16_t mask = (0b1 << 16) - 0b1;
-    uint16_t integer = (x >> 16) & mask;
-    output += static_cast<float>(integer);
-
-    // Fractional part
-    uint16_t fraction = ((x << 16) >> 16) & mask;
-    for(int i = 1; i < 16+1; i++){
-        bool current_bit = (fraction >> (16 - i)) & 0b1;
-        if(current_bit){
-            float bin = pow(2, -i);
-            output += bin;
-        }
-    }
-    return output;
-}
-
-
-float q3232_to_float(uint64_t x){
-    float output = 0.0f;
-    // Integer part
-    uint32_t mask =  - 0b1;
-    uint32_t integer = (x >> 32) & mask;
-    output += static_cast<float>(integer);
-
-    // Fractional part
-    uint32_t fraction = ((x << 32) >> 32) & mask;
-    for(int i = 1; i < 32+1; i++){
-        bool current_bit = (fraction >> (32 - i)) & 0b1;
-        if(current_bit){
-            float bin = pow(2, -i);
-            output += bin;
         }
     }
     return output;
