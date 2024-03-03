@@ -19,7 +19,6 @@ from chop.passes.graph.interface.save_and_load import load_mase_graph_interface_
 from ....utils import deepcopy_mase_graph
 
 
-
 class Quantizer:
     def __init__(self, config):
         self.config = config
@@ -97,6 +96,8 @@ class Quantizer:
 
 
 def tensorrt_quantize_transform_pass(graph, pass_args=None):
+    quantizer = Quantizer(pass_args)
+    
     by = pass_args.pop("by")
     match by:
         case "type":
