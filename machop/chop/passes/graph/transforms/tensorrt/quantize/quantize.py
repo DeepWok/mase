@@ -25,11 +25,11 @@ def tensorrt_quantize_transform_pass(graph, pass_args=None):
     by = pass_args.pop("by")
     match by:
         case "type":
-            graph = pytorch_quantize_by_type(graph)
+            trt_graph = quantizer.pytorch_to_trt(graph)
         case "name":
-            graph = pytorch_quantize_by_name(graph)
+            ...
         case "regex_name":
-            graph = pytorch_quantize_by_regex_name(graph)
+            ...
         case _:
             raise ValueError(f'Unsupported quantize "by": {by}')
 
@@ -56,7 +56,44 @@ class Quantizer:
         """Applies quantization procedures to PyTorch graph based on type."""
         # Add quantization code here
 
-    def pytorch_to_onnx(self, model):
+    def pytorch_to_trt(self, graph):
+        """Converts PyTorch model to TensorRT format."""
+        self.logger.info("Converting PyTorch model to TensorRT...")
+
+        # Converts and saves to path
+        ONNX_path = self.pytorch_to_ONNX(graph.model)
+        TRT_path = self.ONNX_to_TRT(ONNX_path)
+
+
+        
+    def ONNX_to_TRT(self, ONNX_path):
+        TRT_LOGGER = trt.Logger(trt.Logger.WARNING)
+        builder = trt.Builder(TRT_LOGGER)
+        network = builder.create_network(1 << (int)(trt.NetworkDefinitionCreationFlag.EXPLICIT_BATCH))
+        parser = trt.OnnxParser(network, TRT_LOGGER)
+
+        with open(ONNX_path, "rb") as model:
+            if not parser.parse(model.read()):
+                print('ERROR: Failed to parse the ONNX file.')
+                for error in range(parser.num_errors):
+                    print(parser.get_error(error))
+                exit()
+
+        config = builder.create_builder_config()
+        config.max_workspace_size = 1 << 30  # Adjust workspace size as necessary.
+        config.set_flag(trt.BuilderFlag.FP16)
+
+        # Optimization profiles are needed for dynamic input shapes.
+        profile = builder.create_optimization_profile()
+        profile.set_shape("input_tensor_name", min=(1, 3, 224, 224), opt=(1, 3, 224, 224), max=(1, 3, 224, 224))  # Change based on model input.
+        config.add_optimization_profile(profile)
+
+        engine = builder.build_engine(network, config)
+
+        with open("model.trt", "wb") as f:
+            f.write(engine.serialize())
+
+    def pytorch_to_ONNX(self, model):
         """Converts PyTorch model to ONNX format and saves it."""
         self.logger.info("Converting PyTorch model to ONNX...")
         # Prepare the save path
@@ -80,33 +117,3 @@ class Quantizer:
                           do_constant_folding=True, input_names=['input'])
         self.logger.info(f"ONNX Conversion Complete. Stored ONNX model saved to {save_path}")
         return save_path
-
-    # def calibrate_onnx(self, model, train_loader, onnx_path):
-    #     """Calibrates ONNX model for quantization."""
-    #     print("Calibrating model for quantization...") 
-        
-    #     TRT_LOGGER = trt.Logger(trt.Logger.WARNING)
-    #     builder = trt.Builder(TRT_LOGGER)
-    #     network = builder.create_network(1 << int(trt.NetworkDefinitionCreationFlag.EXPLICIT_BATCH))
-    #     parser = trt.OnnxParser(network, TRT_LOGGER)
-
-    #     with open(onnx_path, 'rb') as model_file:
-    #         if not parser.parse(model_file.read()):
-    #             print('ERROR: Failed to parse the ONNX file.')
-    #             for error in range(parser.num_errors):
-    #                 print(parser.get_error(error))
-    #             return
-
-    #     config = builder.create_builder_config()
-    #     config.max_workspace_size = 1 << 20  # Adjust size as needed
-    #     engine = builder.build_engine(network, config)
-
-    #     with open(str(onnx_path) + 'trt', 'wb') as f:
-    #         f.write(engine.serialize())
-
-    #     print("Calibration done!")
-
-    def save_tensorrt_model(self, model, output_dir):
-        """Saves the quantized TensorRT model."""
-        print(f"Saving quantized TensorRT model in {output_dir}")
-        # Add saving mechanism here

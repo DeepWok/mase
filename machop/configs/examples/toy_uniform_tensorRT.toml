@@ -9,16 +9,12 @@ accelerator = "gpu"
 
 [passes.tensorrt-calibrate]
 by = "type"
-calibrator = "percentile"
+calibrator = ["percentile", "max", "mse", "entropy"]
 percentiles = [99]
-
-# calibrator = "max"
-
 report = true
 
-
-[passes.tensorrt-quantize]
-by = "type"
+# [passes.tensorrt-quantize]
+# by = "type"
 
 [passes.tensorrt-quantize.default.config]
 name = "integer"

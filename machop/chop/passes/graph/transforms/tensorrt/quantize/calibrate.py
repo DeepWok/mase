@@ -2,8 +2,6 @@ import os
 from datetime import datetime as dt
 from glob import glob
 import logging
-
-import cv2
 import numpy as np
 import pytorch_quantization.calib as calib
 import pytorch_quantization.nn as qnn
@@ -75,8 +73,6 @@ class Calibrator:
                         module.disable()
 
             for i, (xTrain, yTrain) in enumerate(dataloader):
-                if i >= 30:  # Limit the number of batches to process
-                    break
                 graph.model(Variable(xTrain).cuda())
 
             # Turn off calibration tool

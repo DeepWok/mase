@@ -115,14 +115,14 @@ def transform(
                 pass_config['data_loader'] = data_module.train_dataloader()
 
                 match pass_name_extended: 
-                    case "train":
-                        graph, _ = PASSES["tensorrt-train"](graph, pass_args=pass_config)
-                        PASSES["summarize_quantization"](
-                            ori_graph, graph, save_dir=pass_save_dir
-                        )
                     case "calibrate":
                         import pdb; pdb.set_trace()
                         graph, _ = PASSES["tensorrt-calibrate"](graph, pass_args=pass_config)
+                        PASSES["summarize_quantization"](
+                            ori_graph, graph, save_dir=pass_save_dir
+                        )
+                    case "train":
+                        graph, _ = PASSES["tensorrt-train"](graph, pass_args=pass_config)
                         PASSES["summarize_quantization"](
                             ori_graph, graph, save_dir=pass_save_dir
                         )

@@ -15,19 +15,6 @@ from pytorch_quantization.tensor_quant import QuantDescriptor
 from torch.autograd import Variable            
 import torch
 
-from ...utils import (
-    deepcopy_mase_graph,
-    get_mase_op,
-    get_mase_type,
-    get_node_actual_target,
-    get_parent_name,
-    get_similar_node_actual_target,
-    match_a_pattern,
-    get_node_target_by_name,
-)
-
-from .utils import create_new_module
-
 QUANTIZEABLE_OP = (
     # "add",
     # "bmm",
@@ -43,7 +30,7 @@ QUANTIZEABLE_OP = (
 def tensorrt_train_transform_pass(graph, pass_args=None):
     """ Performs Quantized Aware Training """
     by = pass_args.pop("by")
-    trainer = Trainer(pass_args)
+    trainer = FineTuning(pass_args)
     match by:
         case "type":
             graph = trainer.fake_quantize_by_type(graph)
@@ -59,7 +46,7 @@ def tensorrt_train_transform_pass(graph, pass_args=None):
     return graph, {}
 
 
-class Trainer:
+class FineTuning:
     def __init__(self, config):
         self.config = config
 
