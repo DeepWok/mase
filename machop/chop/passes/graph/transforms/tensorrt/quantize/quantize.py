@@ -21,8 +21,7 @@ from ....utils import deepcopy_mase_graph
 
 def tensorrt_quantize_transform_pass(graph, pass_args=None):
     quantizer = Quantizer(pass_args)
-    
-    by = pass_args.pop("by")
+    by = pass_args["by"]
     match by:
         case "type":
             trt_graph = quantizer.pytorch_to_trt(graph)

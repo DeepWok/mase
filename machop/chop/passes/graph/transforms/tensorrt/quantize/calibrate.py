@@ -13,21 +13,23 @@ from pytorch_quantization import quant_modules
 from pytorch_quantization.tensor_quant import QuantDescriptor
 from torch.autograd import Variable
 import torch
-
+from .utils import FakeQuantizer
 
 def tensorrt_calibrate_transform_pass(graph, pass_args=None):
-    by = pass_args.pop("by")
+    by = pass_args["by"]
     calibrator = Calibrator(pass_args)
+    fq = FakeQuantizer(pass_args)
     match by:
         case "type":
-            graph = calibrator.calibrate_model_by_type(graph)
+            graph = fq.fake_quantize_by_type(graph)
         case "name":
-            ...
+            graph = fq.fake_quantize_by_name(graph)
         case "regex_name":
             ...
         case _:
             raise ValueError(f'Unsupported quantize "by": {by}')
 
+    graph = calibrator.calibrate_model(graph)
     # link the model with graph
     graph.model = torch.fx.GraphModule(graph.model, graph.fx_graph)
     return graph, {}
@@ -56,7 +58,7 @@ class Calibrator:
                 self.logger.info(f"{name:40}: {module}")
         model.cuda()
 
-    def calibrate_model_by_type(self, graph):
+    def calibrate_model(self, graph):
         """Performs the calibration pass on the model using the given data loader."""
         dataloader = self.config['data_loader']
         quant_modules.initialize()
