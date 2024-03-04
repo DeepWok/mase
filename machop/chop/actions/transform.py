@@ -116,7 +116,6 @@ def transform(
 
                 match pass_name_extended: 
                     case "calibrate":
-                        import pdb; pdb.set_trace()
                         graph, _ = PASSES["tensorrt-calibrate"](graph, pass_args=pass_config)
                         PASSES["summarize_quantization"](
                             ori_graph, graph, save_dir=pass_save_dir
