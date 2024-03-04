@@ -14,15 +14,15 @@ from cuda import cudart
 from pytorch_quantization import quant_modules
 from pytorch_quantization.tensor_quant import QuantDescriptor
 from torch.autograd import Variable
+import torch
 
-logger = logging.getLogger(__name__)
 
 def tensorrt_calibrate_transform_pass(graph, pass_args=None):
     by = pass_args.pop("by")
-    calibrator = Calibrator()
+    calibrator = Calibrator(pass_args)
     match by:
         case "type":
-            graph = calibrator.calibrate_model(graph, pass_args=pass_args)
+            graph = calibrator.calibrate_model_by_type(graph)
         case "name":
             ...
         case "regex_name":
@@ -30,14 +30,15 @@ def tensorrt_calibrate_transform_pass(graph, pass_args=None):
         case _:
             raise ValueError(f'Unsupported quantize "by": {by}')
 
-    # # link the model with graph
-    # graph.model = torch.fx.GraphModule(graph.model, graph.fx_graph)
-    # return graph, {}
+    # link the model with graph
+    graph.model = torch.fx.GraphModule(graph.model, graph.fx_graph)
+    return graph, {}
 
 
 class Calibrator:
-    def __init__(self):
-        pass
+    def __init__(self, config):
+        self.config = config
+        self.logger = logging.getLogger(__name__)
 
     def get_config(self, config: dict, name: str):
         """Retrieve specific configuration from the config dictionary or return default."""
@@ -54,12 +55,12 @@ class Calibrator:
                         module.load_calib_amax()
                     else:
                         module.load_calib_amax(**kwargs)
-                logger.info(f"{name:40}: {module}")
+                self.logger.info(f"{name:40}: {module}")
         model.cuda()
 
-    def calibrate_model(self, graph, pass_args=None):
+    def calibrate_model_by_type(self, graph):
         """Performs the calibration pass on the model using the given data loader."""
-        dataloader = pass_args['data_loader']
+        dataloader = self.config['data_loader']
         quant_modules.initialize()
         graph.model.cuda()
         
@@ -88,12 +89,13 @@ class Calibrator:
                         module.enable()
             
             # Apply the specific calibration based on user input
-            if pass_args:
-                match pass_args['calibrator']:
+            if self.config:
+                match self.config['calibrator']:
                     case "percentile":
-                        for percentile in pass_args.get('percentiles', [99]):
+                        for percentile in self.config.get('percentiles', [99]):
                             self.compute_activation_max(graph.model, method="percentile")
                     case _:
-                        self.compute_activation_max(graph.model, method=pass_args.get('calibrator', 'max'))
+                        self.compute_activation_max(graph.model, method=self.config.get('calibrator', 'max'))
 
-            logger.info("Succeeded in calibrating the model in PyTorch!")
+            self.logger.info("Succeeded in calibrating the model in PyTorch!")
+            return graph

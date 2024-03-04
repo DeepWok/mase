@@ -126,6 +126,11 @@ def transform(
                         PASSES["summarize_quantization"](
                             ori_graph, graph, save_dir=pass_save_dir
                         )
+                    case "train":
+                        graph, _ = PASSES["tensorrt-train"](graph, pass_args=pass_config)
+                        PASSES["summarize_quantization"](
+                            ori_graph, graph, save_dir=pass_save_dir
+                        )
                     case "fusion":
                         raise NotImplementedError()
                     case "kerneltuning":

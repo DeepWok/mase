@@ -1,2 +1,3 @@
 from .quantize import tensorrt_quantize_transform_pass
 from .calibrate import tensorrt_calibrate_transform_pass
+from .train import tensorrt_train_transform_pass
