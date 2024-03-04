@@ -13,6 +13,9 @@ calibrator = ["percentile", "max", "mse", "entropy"]
 percentiles = [99]
 report = true
 
+[passes.tensorrt-calibrate.default.config]
+
+
 # [passes.tensorrt-quantize]
 # by = "type"
 

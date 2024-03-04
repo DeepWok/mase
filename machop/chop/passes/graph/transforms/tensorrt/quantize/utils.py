@@ -14,6 +14,19 @@ from pytorch_quantization import quant_modules
 from pytorch_quantization.tensor_quant import QuantDescriptor
 from torch.autograd import Variable            
 import torch
+from typing import Dict
+from chop.tools.utils import copy_weights, init_LinearLUT_weight, init_Conv2dLUT_weight
+from torch import nn
+
+from ....utils import (
+    get_mase_op,
+    get_mase_type,
+    get_node_actual_target,
+    get_parent_name,
+    get_similar_node_actual_target,
+    match_a_pattern,
+    get_node_target_by_name,
+)
 
 QUANTIZEABLE_OP = (
     # "add",
@@ -32,24 +45,75 @@ class FakeQuantizer:
         self.config = config
         self.logger = logging.getLogger(__name__)
 
+    def create_quantized_module(self,
+        mase_op: str,
+        original_module: nn.Module
+    ):
+        original_module_cls = type(original_module)
+
+        if mase_op == "linear":
+            use_bias = original_module.bias is not None
+
+            new_module = qnn.QuantLinear(
+                in_features=original_module.in_features,
+                out_features=original_module.out_features,
+                bias=use_bias
+            )
+            new_module.set_default_quant_desc_input(QuantDescriptor(calib_method=self.config["input"]["calibrator"], axis=self.config["input"]["quantize_axis"]))
+            new_module.set_default_quant_desc_weight(QuantDescriptor(calib_method=self.config["weight"]["calibrator"], axis=self.config["weight"]["quantize_axis"]))
+
+            copy_weights(original_module.weight, new_module.weight)
+            if use_bias:
+                copy_weights(original_module.bias, new_module.bias)
+        
+        elif mase_op in ("conv2d"):
+            use_bias = original_module.bias is not None
+            new_module = qnn.QuantConv2d(
+                in_channels=original_module.in_channels,
+                out_channels=original_module.out_channels,
+                kernel_size=original_module.kernel_size,
+                stride=original_module.stride,
+                padding=original_module.padding,
+                dilation=original_module.dilation,
+                groups=original_module.groups,
+                bias=use_bias,
+                padding_mode=original_module.padding_mode,
+            )
+
+            new_module.set_default_quant_desc_input(QuantDescriptor(calib_method=self.config["input"]["calibrator"], axis=self.config["input"]["quantize_axis"]))
+            new_module.set_default_quant_desc_weight(QuantDescriptor(calib_method=self.config["weight"]["calibrator"], axis=self.config["weight"]["quantize_axis"]))
+
+            copy_weights(original_module.weight, new_module.weight)
+            if use_bias:    
+                copy_weights(original_module.bias, new_module.bias)
+        else:
+            raise NotImplementedError(
+                f"Unsupported module class {original_module_cls} to modify"
+            )
+        return new_module
+    
+    def get_config(self, name: str):
+        """Retrieve specific configuration from the instance's config dictionary or return default."""
+        return self.config.get(name, self.config['default'])['config']
+
     def fake_quantize_by_type(self, graph):
             """
             This method applies fake quantization to the graph based on the type of each node.
             """
             for node in graph.fx_graph.nodes:
-                if self.get_mase_operation(node) not in QUANTIZEABLE_OP:
+                if get_mase_op(node) not in QUANTIZEABLE_OP:
                     continue
-                node_config = self.get_node_config(self.get_mase_operation(node))
+                node_config = self.get_config(self.config, get_mase_op(node))
                 if node_config["name"] is None:
                     continue
                 if node.op == "call_module":
                     original_module = self.get_actual_node_target(node)
                     new_module = self.create_quantized_module(
-                        self.get_mase_operation(node),
+                        get_mase_op(node),
                         original_module,
                         node_config,
                     )
-                    parent_name, name = self.get_parent_name(node.target)
+                    parent_name, name = get_parent_name(node.target)
                     setattr(graph.modules[parent_name], name, new_module)
             return graph
 
@@ -58,20 +122,20 @@ class FakeQuantizer:
         This method applies fake quantization to the graph based on the name of each node.
         """
         for node in graph.fx_graph.nodes:
-            if self.get_mase_operation(node) not in QUANTIZEABLE_OP:
+            if get_mase_op(node) not in QUANTIZEABLE_OP:
                 continue
-            node_config = self.get_node_config(node.name)
+            node_config = self.get_config(node.name)
             if node_config["name"] is None:
                 continue
             if node.op == "call_module":
                 original_module = self.get_actual_node_target(node)
                 new_module = self.create_quantized_module(
-                    self.get_mase_operation(node),
+                    get_mase_op(node),
                     original_module,
                     node_config,
                 )
-                parent_name, name = self.get_parent_name(node.target)
+                parent_name, name = get_parent_name(node.target)
                 setattr(graph.modules[parent_name], name, new_module)
             else:
-                raise ValueError(f"Unsupported node type for quantization: {self.get_mase_type(node)}")
+                raise ValueError(f"Unsupported node type for quantization: {get_mase_type(node)}")
         return graph

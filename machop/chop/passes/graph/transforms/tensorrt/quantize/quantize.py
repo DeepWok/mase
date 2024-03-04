@@ -62,8 +62,6 @@ class Quantizer:
         # Converts and saves to path
         ONNX_path = self.pytorch_to_ONNX(graph.model)
         TRT_path = self.ONNX_to_TRT(ONNX_path)
-
-
         
     def ONNX_to_TRT(self, ONNX_path):
         TRT_LOGGER = trt.Logger(trt.Logger.WARNING)
