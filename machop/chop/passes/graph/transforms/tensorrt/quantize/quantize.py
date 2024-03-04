@@ -19,9 +19,29 @@ from chop.passes.graph.interface.save_and_load import load_mase_graph_interface_
 from ....utils import deepcopy_mase_graph
 
 
+def tensorrt_quantize_transform_pass(graph, pass_args=None):
+    quantizer = Quantizer(pass_args)
+    
+    by = pass_args.pop("by")
+    match by:
+        case "type":
+            graph = pytorch_quantize_by_type(graph)
+        case "name":
+            graph = pytorch_quantize_by_name(graph)
+        case "regex_name":
+            graph = pytorch_quantize_by_regex_name(graph)
+        case _:
+            raise ValueError(f'Unsupported quantize "by": {by}')
+
+    # link the model with graph
+    graph.model = torch.fx.GraphModule(graph.model, graph.fx_graph)
+    return graph, {}
+
+
 class Quantizer:
     def __init__(self, config):
         self.config = config
+        self.logger = logging.getLogger(__name__)
 
     def get_config(self, name: str):
         """Retrieve specific configuration from the instance's config dictionary or return default."""
@@ -38,7 +58,7 @@ class Quantizer:
 
     def pytorch_to_onnx(self, model):
         """Converts PyTorch model to ONNX format and saves it."""
-        print("Converting PyTorch model to ONNX...")
+        self.logger.info("Converting PyTorch model to ONNX...")
         # Prepare the save path
         root = Path(__file__).resolve().parents[7]
         current_date = datetime.now().strftime("%Y_%m_%d")
@@ -58,57 +78,35 @@ class Quantizer:
 
         torch.onnx.export(model, train_sample, save_path, export_params=True, opset_version=11, 
                           do_constant_folding=True, input_names=['input'])
-        print(f"ONNX model saved to {save_path}")
-        print("Conversion to ONNX done!")
+        self.logger.info(f"ONNX Conversion Complete. Stored ONNX model saved to {save_path}")
         return save_path
 
-    def calibrate_onnx(self, model, train_loader, onnx_path):
-        """Calibrates ONNX model for quantization."""
-        print("Calibrating model for quantization...") 
+    # def calibrate_onnx(self, model, train_loader, onnx_path):
+    #     """Calibrates ONNX model for quantization."""
+    #     print("Calibrating model for quantization...") 
         
-        TRT_LOGGER = trt.Logger(trt.Logger.WARNING)
-        builder = trt.Builder(TRT_LOGGER)
-        network = builder.create_network(1 << int(trt.NetworkDefinitionCreationFlag.EXPLICIT_BATCH))
-        parser = trt.OnnxParser(network, TRT_LOGGER)
+    #     TRT_LOGGER = trt.Logger(trt.Logger.WARNING)
+    #     builder = trt.Builder(TRT_LOGGER)
+    #     network = builder.create_network(1 << int(trt.NetworkDefinitionCreationFlag.EXPLICIT_BATCH))
+    #     parser = trt.OnnxParser(network, TRT_LOGGER)
 
-        with open(onnx_path, 'rb') as model_file:
-            if not parser.parse(model_file.read()):
-                print('ERROR: Failed to parse the ONNX file.')
-                for error in range(parser.num_errors):
-                    print(parser.get_error(error))
-                return
+    #     with open(onnx_path, 'rb') as model_file:
+    #         if not parser.parse(model_file.read()):
+    #             print('ERROR: Failed to parse the ONNX file.')
+    #             for error in range(parser.num_errors):
+    #                 print(parser.get_error(error))
+    #             return
 
-        config = builder.create_builder_config()
-        config.max_workspace_size = 1 << 20  # Adjust size as needed
-        engine = builder.build_engine(network, config)
+    #     config = builder.create_builder_config()
+    #     config.max_workspace_size = 1 << 20  # Adjust size as needed
+    #     engine = builder.build_engine(network, config)
 
-        with open(str(onnx_path) + 'trt', 'wb') as f:
-            f.write(engine.serialize())
+    #     with open(str(onnx_path) + 'trt', 'wb') as f:
+    #         f.write(engine.serialize())
 
-        print("Calibration done!")
+    #     print("Calibration done!")
 
     def save_tensorrt_model(self, model, output_dir):
         """Saves the quantized TensorRT model."""
         print(f"Saving quantized TensorRT model in {output_dir}")
         # Add saving mechanism here
-
-    # Add any additional methods here if necessary
-
-
-def tensorrt_quantize_transform_pass(graph, pass_args=None):
-    quantizer = Quantizer(pass_args)
-    
-    by = pass_args.pop("by")
-    match by:
-        case "type":
-            graph = pytorch_quantize_by_type(graph, pass_args)
-        case "name":
-            graph = pytorch_quantize_by_name(graph, pass_args)
-        case "regex_name":
-            graph = pytorch_quantize_by_regex_name(graph, pass_args)
-        case _:
-            raise ValueError(f'Unsupported quantize "by": {by}')
-
-    # link the model with graph
-    graph.model = torch.fx.GraphModule(graph.model, graph.fx_graph)
-    return graph, {}

@@ -44,7 +44,7 @@ class Calibrator:
         """Retrieve specific configuration from the config dictionary or return default."""
         return config.get(name, config['default'])['config']
 
-    def compute_activation_max(self, model, **kwargs):
+    def compute_amax(self, model, **kwargs):
         """Computes and loads the maximum activation values for quantization calibration."""
         # Load calibration result
         for name, module in model.named_modules():
@@ -90,12 +90,17 @@ class Calibrator:
             
             # Apply the specific calibration based on user input
             if self.config:
-                match self.config['calibrator']:
-                    case "percentile":
-                        for percentile in self.config.get('percentiles', [99]):
-                            self.compute_activation_max(graph.model, method="percentile")
-                    case _:
-                        self.compute_activation_max(graph.model, method=self.config.get('calibrator', 'max'))
-
+                for calib in self.config['calibrator']:
+                    match calib:
+                        case "max":
+                            self.compute_amax(graph.model, method=calib)
+                        case "entropy":
+                            self.compute_amax(graph.model, method=calib)
+                        case "percentile":
+                            for percentile in self.config.get('percentiles', [99]):
+                                self.compute_amax(graph.model, method="percentile")
+                        case "mse":
+                            self.compute_amax(graph.model, method=calib)
+            
             self.logger.info("Succeeded in calibrating the model in PyTorch!")
             return graph
