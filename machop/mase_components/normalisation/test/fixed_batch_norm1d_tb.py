@@ -183,9 +183,19 @@ class BatchNormTB(Testbench):
         self.data_in_0_driver.load_driver(inputs) #this needs to be a tensor
         print(f'================= DEBUG: put values on input ports ================= \n')
 
+        print(inputs)
+        print(gamma)
+        print(beta)
+        print(stdv)
+        print(mean)
+        print(len(inputs[0]))
         print("Exp. outputs model: ", self.model.x_quantizer(exp_outputs))
 
-        exp_outputs = (torch.tensor(inputs[0]) - torch.tensor(mean[0])) * torch.tensor(gamma[0]) / torch.tensor(stdv[0]) + torch.tensor(beta[0])
+        # exp_outputs = [i for i in range(0, len(inputs[0]))]
+        exp_outputs = torch.tensor([[(inputs[0][i] - mean[0][i]) * gamma[0][i] / stdv[0][i] + beta[0][i] for i in range(0, len(inputs[0]))]])
+        # exp_outputs = (torch.tensor(inputs[0]) - torch.tensor(mean[0])) * torch.tensor(gamma[0]) / torch.tensor(stdv[0]) + torch.tensor(beta[0])
+
+        # exp_outputs = (torch.tensor(inputs[0]) - torch.tensor(mean[0])) * torch.tensor(gamma[0]) / torch.tensor(stdv[0]) + torch.tensor(beta[0])
 
         print("Exp. outputs manual: ", self.postprocess_tensor(exp_outputs, {"width": 8, "frac_width": 3}))
 
