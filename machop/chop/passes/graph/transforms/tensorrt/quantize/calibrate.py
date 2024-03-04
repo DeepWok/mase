@@ -22,7 +22,7 @@ def tensorrt_calibrate_transform_pass(graph, pass_args=None):
     calibrator = Calibrator()
     match by:
         case "type":
-            graph = calibrator.calibrate_model()
+            graph = calibrator.calibrate_model(graph, pass_args=pass_args)
         case "name":
             ...
         case "regex_name":
@@ -57,8 +57,9 @@ class Calibrator:
                 logger.info(f"{name:40}: {module}")
         model.cuda()
 
-    def calibrate_model(self, graph, dataloader, pass_args=None):
+    def calibrate_model(self, graph, pass_args=None):
         """Performs the calibration pass on the model using the given data loader."""
+        dataloader = pass_args['data_loader']
         quant_modules.initialize()
         graph.model.cuda()
         

@@ -86,7 +86,6 @@ def transform(
         pass_config: dict
         pass_name_components = pass_name.split("-")
         pass_name = pass_name_components[0]
-        import pdb; pdb.set_trace()
 
         match pass_name:
             case "tensorrt":  
@@ -113,9 +112,11 @@ def transform(
                 pass_config["train_generator"] = train_generator
                 pass_config["val_generator"] = val_generator
                 pass_config['device'] = accelerator
+                pass_config['data_loader'] = data_module.train_dataloader()
 
                 match pass_name_extended: 
                     case "calibrate":
+                        import pdb; pdb.set_trace()
                         graph, _ = PASSES["tensorrt-calibrate"](graph, pass_args=pass_config)
                         PASSES["summarize_quantization"](
                             ori_graph, graph, save_dir=pass_save_dir
