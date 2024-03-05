@@ -49,8 +49,8 @@ class Quantizer:
         save_dir = root / f"mase_output/TensorRT/Quantization/{method}" / current_date
         save_dir.mkdir(parents=True, exist_ok=True)
 
-        existing_versions = [int(d.name.split("_")[-1]) for d in save_dir.parent.iterdir() if d.is_dir() and d.name.startswith(current_date)]
-        version = "version_0" if not existing_versions else f"version_{max(existing_versions) + 1}"
+        existing_versions = len(os.listdir(save_dir))
+        version = "version_0" if existing_versions==0 else f"version_{existing_versions}"
 
         save_dir = save_dir / version
         save_dir.mkdir(parents=True, exist_ok=True)
@@ -72,13 +72,16 @@ class Quantizer:
 
     def pytorch_to_trt(self, graph):
         """Converts PyTorch model to TensorRT format."""
-
-        # Converts and saves to path
+        # Model is first converted to ONNX format and then to TensorRT
         ONNX_path = self.pytorch_to_ONNX(graph.model)
         TRT_path = self.ONNX_to_TRT(ONNX_path)
+
+        return TRT_path
         
     def ONNX_to_TRT(self, ONNX_path):
         self.logger.info("Converting PyTorch model to TensorRT...")
+        if self.config['accelerator'] == 'cuda':
+            os.environ['CUDA_MODULE_LOADING'] = 'LAZY'
         TRT_LOGGER = trt.Logger(trt.Logger.WARNING)
         builder = trt.Builder(TRT_LOGGER)
         network = builder.create_network(1 << (int)(trt.NetworkDefinitionCreationFlag.EXPLICIT_BATCH))
@@ -95,16 +98,20 @@ class Quantizer:
         config.max_workspace_size = 1 << 30  # Adjust workspace size as necessary.
         config.set_flag(trt.BuilderFlag.FP16)
 
-        # Optimization profiles are needed for dynamic input shapes.
-        profile = builder.create_optimization_profile()
-        profile.set_shape("input_tensor_name", min=(1, 3, 224, 224), opt=(1, 3, 224, 224), max=(1, 3, 224, 224))  # Change based on model input.
-        config.add_optimization_profile(profile)
+        #TODO add optimizations based on input tensor
+        # # Optimization profiles are needed for dynamic input shapes.
+        # profile = builder.create_optimization_profile()
+        # profile.set_shape("input_tensor_name", min=(1, 3, 224, 224), opt=(1, 3, 224, 224), max=(1, 3, 224, 224))  # Change based on model input.
+        # config.add_optimization_profile(profile)
 
         engine = builder.build_engine(network, config)
 
         save_path = self.prepare_save_path(method='TRT')
         with open(save_path, "wb") as f:
             f.write(engine.serialize())
+
+        self.logger.info(f"TensorRT Conversion Complete. Stored trt model to {save_path}")
+        return save_path
 
     def pytorch_to_ONNX(self, model):
         """Converts PyTorch model to ONNX format and saves it."""
@@ -114,9 +121,9 @@ class Quantizer:
 
         dataloader = self.config['train_generator'].dataloader    
         train_sample = next(iter(dataloader))[0]
-        train_sample = train_sample.to(self.config['device'])
+        train_sample = train_sample.to(self.config['accelerator'])
 
         torch.onnx.export(model, train_sample, save_path, export_params=True, opset_version=11, 
                           do_constant_folding=True, input_names=['input'])
-        self.logger.info(f"ONNX Conversion Complete. Stored ONNX model saved to {save_path}")
+        self.logger.info(f"ONNX Conversion Complete. Stored ONNX model to {save_path}")
         return save_path

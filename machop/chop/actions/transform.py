@@ -111,9 +111,11 @@ def transform(
                 )
                 pass_config["train_generator"] = train_generator
                 pass_config["val_generator"] = val_generator
-                pass_config['device'] = accelerator
                 pass_config['data_loader'] = data_module.train_dataloader()
-
+                pass_config['accelerator'] = 'cuda' if accelerator == 'gpu' else accelerator
+                if accelerator == 'gpu':
+                    #TODO this seems innefective - known issue - https://github.com/NVIDIA/TensorRT/issues/2468
+                    os.environ['CUDA_MODULE_LOADING'] = 'LAZY'
                 match pass_name_extended: 
                     case "calibrate":
                         import pdb; pdb.set_trace()
@@ -122,12 +124,12 @@ def transform(
                             ori_graph, graph, save_dir=pass_save_dir
                         )
                         pdb.set_trace()
-                    case "train":
-                        import pdb; pdb.set_trace()
-                        graph, _ = PASSES["tensorrt-train"](graph, pass_args=pass_config)
-                        PASSES["summarize_quantization"](
-                            ori_graph, graph, save_dir=pass_save_dir
-                        )
+                    # case "train":
+                    #     import pdb; pdb.set_trace()
+                    #     graph, _ = PASSES["tensorrt-train"](graph, pass_args=pass_config)
+                    #     PASSES["summarize_quantization"](
+                    #         ori_graph, graph, save_dir=pass_save_dir
+                    #     )
                     case "quantize":
                         graph, _ = PASSES["tensorrt-quantize"](graph, pass_args=pass_config)
                         PASSES["summarize_quantization"](

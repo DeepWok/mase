@@ -30,7 +30,6 @@ def tensorrt_calibrate_transform_pass(graph, pass_args=None):
             raise ValueError(f'Unsupported quantize "by": {by}')
 
     graph = calibrator.calibrate_model(graph)
-    # link the model with graph
     graph.model = torch.fx.GraphModule(graph.model, graph.fx_graph)
     return graph, {}
 

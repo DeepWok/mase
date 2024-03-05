@@ -20,11 +20,12 @@ def tensorrt_train_transform_pass(graph, pass_args=None):
     """ Performs Quantized Aware Training """
     by = pass_args["by"]
     trainer = FineTuning(pass_args)
+    #TODO implement fine tuning (QAT)
     match by:
         case "type":
-            graph = trainer.fake_quantize_by_type(graph)
+            ...
         case "name":
-            graph = trainer.fake_quantize_by_name(graph)
+            ...
         case "regex_name":
             ...
         case _:

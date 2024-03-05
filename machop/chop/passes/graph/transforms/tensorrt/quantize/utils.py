@@ -51,7 +51,7 @@ class FakeQuantizer:
         config: dict
     ):
         original_module_cls = type(original_module)
-
+        #TODO implement more module support: https://docs.nvidia.com/deeplearning/tensorrt/pytorch-quantization-toolkit/docs/index.html#quantized-modules
         try:
             if mase_op == "linear":
                 use_bias = original_module.bias is not None
@@ -132,21 +132,5 @@ class FakeQuantizer:
         """
         This method applies fake quantization to the graph based on the name of each node.
         """
-        for node in graph.fx_graph.nodes:
-            if get_mase_op(node) not in QUANTIZEABLE_OP:
-                continue
-            node_config = self.get_config(node.name)
-            if node_config["name"] is None:
-                continue
-            if node.op == "call_module":
-                original_module = get_node_actual_target(node)
-                new_module = self.create_quantized_module(
-                    get_mase_op(node),
-                    original_module,
-                    node_config,
-                )
-                parent_name, name = get_parent_name(node.target)
-                setattr(graph.modules[parent_name], name, new_module)
-            else:
-                raise ValueError(f"Unsupported node type for quantization: {get_mase_type(node)}")
+        #TODO implement fake quantize_by_name
         return graph
