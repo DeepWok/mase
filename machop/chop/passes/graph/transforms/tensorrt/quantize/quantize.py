@@ -42,9 +42,24 @@ class Quantizer:
         self.config = config
         self.logger = logging.getLogger(__name__)
 
+    def prepare_save_path(self, method: str):
+        """Creates and returns a save path for the model."""
+        root = Path(__file__).resolve().parents[7]
+        current_date = datetime.now().strftime("%Y_%m_%d")
+        save_dir = root / f"mase_output/TensorRT/Quantization/{method}" / current_date
+        save_dir.mkdir(parents=True, exist_ok=True)
+
+        existing_versions = [int(d.name.split("_")[-1]) for d in save_dir.parent.iterdir() if d.is_dir() and d.name.startswith(current_date)]
+        version = "version_0" if not existing_versions else f"version_{max(existing_versions) + 1}"
+
+        save_dir = save_dir / version
+        save_dir.mkdir(parents=True, exist_ok=True)
+
+        return save_dir / f"model.{method.lower()}"
+    
     def get_config(self, name: str):
         """Retrieve specific configuration from the instance's config dictionary or return default."""
-        return self.config.get(name, self.config['default'])['config']
+        return self.config.get(name, 'default')
     
     def pre_quantization_test(self, model):
         """Evaluate pre-quantization performance."""
@@ -57,13 +72,13 @@ class Quantizer:
 
     def pytorch_to_trt(self, graph):
         """Converts PyTorch model to TensorRT format."""
-        self.logger.info("Converting PyTorch model to TensorRT...")
 
         # Converts and saves to path
         ONNX_path = self.pytorch_to_ONNX(graph.model)
         TRT_path = self.ONNX_to_TRT(ONNX_path)
         
     def ONNX_to_TRT(self, ONNX_path):
+        self.logger.info("Converting PyTorch model to TensorRT...")
         TRT_LOGGER = trt.Logger(trt.Logger.WARNING)
         builder = trt.Builder(TRT_LOGGER)
         network = builder.create_network(1 << (int)(trt.NetworkDefinitionCreationFlag.EXPLICIT_BATCH))
@@ -87,24 +102,15 @@ class Quantizer:
 
         engine = builder.build_engine(network, config)
 
-        with open("model.trt", "wb") as f:
+        save_path = self.prepare_save_path(method='TRT')
+        with open(save_path, "wb") as f:
             f.write(engine.serialize())
 
     def pytorch_to_ONNX(self, model):
         """Converts PyTorch model to ONNX format and saves it."""
         self.logger.info("Converting PyTorch model to ONNX...")
-        # Prepare the save path
-        root = Path(__file__).resolve().parents[7]
-        current_date = datetime.now().strftime("%Y_%m_%d")
-        save_dir = root / "mase_output/TensorRT/Quantization/ONNX" / current_date
-        save_dir.mkdir(parents=True, exist_ok=True)
 
-        existing_versions = [int(d.name.split("_")[-1]) for d in save_dir.parent.iterdir() if d.is_dir() and d.name.startswith(current_date)]
-        version = "version_0" if not existing_versions else f"version_{max(existing_versions) + 1}"
-
-        save_dir = save_dir / version
-        save_dir.mkdir(parents=True, exist_ok=True)
-        save_path = save_dir / "model.onnx"
+        save_path = self.prepare_save_path(method='ONNX')
 
         dataloader = self.config['train_generator'].dataloader    
         train_sample = next(iter(dataloader))[0]
