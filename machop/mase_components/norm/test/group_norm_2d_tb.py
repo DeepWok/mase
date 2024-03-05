@@ -20,10 +20,11 @@ from mase_cocotb.utils import (
     bit_driver,
     batched,
     sign_extend_t,
-    int_floor_quantizer,
 )
 
-from mase_components.cast.test.fixed_signed_cast_tb import _fixed_signed_cast_model
+from chop.passes.graph.transforms.quantize.quantized_modules.group_norm2d import (
+    _fixed_group_norm_2d_model
+)
 
 logger = logging.getLogger("testbench")
 logger.setLevel(logging.INFO)
@@ -76,50 +77,22 @@ class GroupNorm2dTB(Testbench):
             -1, self.GROUP_CHANNELS, self.TOTAL_DIM1, self.TOTAL_DIM0
         )
         x = sign_extend_t(x, self.IN_WIDTH).to(dtype=torch.float32) / (2 ** self.IN_FRAC_WIDTH)
-        logger.debug("Input:")
-        logger.debug(x[0])
 
-        # Mean calculation
-        mu = x.mean(dim=(1, 2, 3), keepdim=True)
-        logger.debug("Mu:")
-        logger.debug(mu[0])
-        mu = int_floor_quantizer(mu, self.IN_WIDTH, self.IN_FRAC_WIDTH)
-        logger.debug("Mu:")
-        logger.debug(mu[0])
-
-        # Variance calculation
-        var = ((x - mu) ** 2).mean(dim=(1, 2, 3), keepdim=True)
-        var = int_floor_quantizer(var, self.VARIANCE_WIDTH, self.VARIANCE_FRAC_WIDTH)
-        logger.debug("Variance:")
-        logger.debug(var[0])
-
-        # Inverse Square Root calculation
-        # inv_sqrt = inv_sqrt_model(var)  # TODO: Add inv sqrt model
-        inv_sqrt = torch.full_like(var, 0.25)  # TODO: remove this later
-        inv_sqrt = int_floor_quantizer(inv_sqrt, self.INV_SQRT_WIDTH, self.INV_SQRT_FRAC_WIDTH)
-        logger.debug("Inverse SQRT:")
-        logger.debug(inv_sqrt[0])
-
-        # Norm calculation
-        diff = x - mu
-        logger.debug("Diff:")
-        logger.debug(diff[0])
-        norm_out = diff * inv_sqrt
-        logger.debug("Norm:")
-        logger.debug(norm_out[0])
-        norm_int_out, norm_out_float = _fixed_signed_cast_model(
-            norm_out, self.OUT_WIDTH, self.OUT_FRAC_WIDTH,
-            symmetric=False, rounding_mode="floor"
+        # Float Model
+        norm_out_float, norm_int_out = _fixed_group_norm_2d_model(
+            x=x,
+            in_width=self.IN_WIDTH,
+            in_frac_width=self.IN_FRAC_WIDTH,
+            variance_width=self.VARIANCE_WIDTH,
+            variance_frac_width=self.VARIANCE_FRAC_WIDTH,
+            inv_sqrt_width=self.INV_SQRT_WIDTH,
+            inv_sqrt_frac_width=self.INV_SQRT_FRAC_WIDTH,
+            out_width=self.OUT_WIDTH,
+            out_frac_width=self.OUT_FRAC_WIDTH,
         )
-        logger.debug("Norm (Casted):")
-        logger.debug(norm_out_float[0])
-
-        # Rescale & Reshape for output monitor
-        logger.debug("Norm (unsigned):")
-        logger.debug(norm_int_out[0])
-        y = norm_int_out.reshape(-1, self.TOTAL_DIM1, self.TOTAL_DIM0)
 
         # Output beat reconstruction
+        y = norm_int_out.reshape(-1, self.TOTAL_DIM1, self.TOTAL_DIM0)
         model_out = list()
         for i in range(y.shape[0]):
             model_out.extend(split_matrix(y[i], *self.total_tup, *self.compute_tup))

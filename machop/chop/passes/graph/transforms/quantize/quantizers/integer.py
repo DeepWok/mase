@@ -4,7 +4,7 @@ from numpy import ndarray
 from torch import Tensor
 import torch
 
-from .utils import my_clamp, my_round
+from .utils import my_clamp, my_round, my_floor
 
 
 def _integer_quantize(
@@ -46,10 +46,45 @@ def _integer_quantize(
         return my_clamp(my_round(x * scale), int_min, int_max) / scale
 
 
+def _integer_floor_quantize(
+    x: Tensor, width: int, frac_width: int = None, is_signed: bool = True
+):
+    if frac_width is None:
+        frac_width = width // 2
+
+    if is_signed:
+        int_min = -(2 ** (width - 1))
+        int_max = 2 ** (width - 1) - 1
+    else:
+        int_min = 0
+        int_max = 2**width - 1
+    scale = 2 ** frac_width
+
+    if isinstance(x, (Tensor, ndarray)):
+        return my_clamp(my_floor(x.mul(scale)), int_min, int_max).div(scale)
+    elif isinstance(x, int):
+        return x
+    else:
+        return my_clamp(my_floor(x * scale), int_min, int_max) / scale
+
+
 class IntegerQuantize(torch.autograd.Function):
     @staticmethod
     def forward(ctx, x: Tensor, width: int, frac_width: int, is_signed: bool = True):
         return _integer_quantize(
+            x, width=width, frac_width=frac_width, is_signed=is_signed
+        )
+
+    @staticmethod
+    def backward(ctx, grad_output):
+        grad_input = grad_output.clone()
+        return grad_input, None, None, None
+
+
+class IntegerFloorQuantize(torch.autograd.Function):
+    @staticmethod
+    def forward(ctx, x: Tensor, width: int, frac_width: int, is_signed: bool = True):
+        return _integer_floor_quantize(
             x, width=width, frac_width=frac_width, is_signed=is_signed
         )
 
@@ -79,6 +114,12 @@ def integer_quantizer(
 
     """
     return IntegerQuantize.apply(x, width, frac_width, is_signed)
+
+
+def integer_floor_quantizer(
+    x: Tensor | ndarray, width: int, frac_width: int, is_signed: bool = True
+):
+    return IntegerFloorQuantize.apply(x, width, frac_width, is_signed)
 
 
 def integer_fraction(

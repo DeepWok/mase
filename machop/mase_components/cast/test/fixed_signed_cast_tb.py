@@ -8,10 +8,10 @@ from cocotb.triggers import *
 from random import randint
 from mase_cocotb.testbench import Testbench
 from mase_cocotb.runner import mase_runner
-from mase_cocotb.utils import (
-    sign_extend,
-    sign_extend_t,
-    signed_to_unsigned,
+from mase_cocotb.utils import sign_extend_t
+
+from chop.passes.graph.transforms.quantize.quantized_modules.fixed_signed_cast import (
+    _fixed_signed_cast_model
 )
 
 logger = logging.getLogger("testbench")
@@ -46,37 +46,19 @@ class FixedSignedCastTB(Testbench):
 
     def model(self, inputs):
         return _fixed_signed_cast_model(
-            inputs, self.OUT_WIDTH, self.OUT_FRAC_WIDTH, self.SYMMETRIC,
+            float_input=inputs,
+            out_width=self.OUT_WIDTH,
+            out_frac_width=self.OUT_FRAC_WIDTH,
+            symmetric=self.SYMMETRIC,
             rounding_mode=self.rounding_mode()
         )
-
-
-def _fixed_signed_cast_model(
-    float_input, out_width, out_frac_width, symmetric, rounding_mode
-):
-    scaled_float = float_input * (2 ** out_frac_width)
-    if rounding_mode == "floor":
-        out_int = torch.floor(scaled_float)
-    elif rounding_mode == "trunc":
-        out_int = torch.trunc(scaled_float)
-    elif rounding_mode == "round_nearest_half_even":
-        out_int = torch.round(scaled_float)
-    else:
-        raise Exception("Rounding mode not recognised.")
-    out_int = torch.clamp(out_int,
-        min=-(2**(out_width-1))+1 if symmetric else -(2**(out_width-1)),
-        max=(2**(out_width-1))-1
-    ).int()
-    out_float = out_int / (2 ** out_frac_width)
-    out_uint = signed_to_unsigned(out_int, out_width)
-    return out_uint, out_float
 
 
 @cocotb.test()
 async def exhaustive_test(dut):
     tb = FixedSignedCastTB(dut)
     driver_in, float_in = tb.generate_inputs()
-    exp_output, exp_float = tb.model(float_in)
+    exp_float, exp_output = tb.model(float_in)
 
     for i in range(driver_in.shape[0]):
         x = driver_in[i].item()

@@ -20,10 +20,11 @@ from mase_cocotb.utils import (
     bit_driver,
     batched,
     sign_extend_t,
-    int_floor_quantizer,
 )
 
-from mase_components.cast.test.fixed_signed_cast_tb import _fixed_signed_cast_model
+from chop.passes.graph.transforms.quantize.quantized_modules.rms_norm2d import (
+    _fixed_rms_norm_2d_model
+)
 
 logger = logging.getLogger("testbench")
 logger.setLevel(logging.INFO)
@@ -57,9 +58,6 @@ class RMSNorm2dTB(Testbench):
             dut.clk, dut.out_data, dut.out_valid, dut.out_ready
         )
 
-        # self.in_driver.log.setLevel(logging.DEBUG)
-        # self.output_monitor.log.setLevel(logging.DEBUG)
-
     def generate_inputs(self, num=2):
         inputs = list()
         for _ in range(self.CHANNELS * num):
@@ -77,45 +75,20 @@ class RMSNorm2dTB(Testbench):
             -1, self.CHANNELS, self.TOTAL_DIM1, self.TOTAL_DIM0
         )
         x = sign_extend_t(x, self.IN_WIDTH).to(dtype=torch.float32) / (2 ** self.IN_FRAC_WIDTH)
-        logger.debug("Input:")
-        logger.debug(x[0])
 
-        # Sum of Squares
-        sum_sq = torch.square(x).sum(dim=(1, 2, 3), keepdim=True)
-        sum_sq = int_floor_quantizer(sum_sq, self.ACC_WIDTH, self.ACC_FRAC_WIDTH)
-        logger.debug("Sum of Squares:")
-        logger.debug(sum_sq[0])
-
-        # Divide to get mean square
-        mean_sq = sum_sq / self.NUM_VALUES
-        mean_sq = int_floor_quantizer(mean_sq, self.ACC_WIDTH, self.ACC_FRAC_WIDTH)
-        logger.debug("Mean Square:")
-        logger.debug(mean_sq[0])
-
-        # Get inverse sqrt of mean square
-        # inv_sqrt = inv_sqrt_model(mean_sq)  # TODO: Add inv sqrt model
-        inv_sqrt = torch.full_like(mean_sq, 0.25)  # TODO: remove this later
-        inv_sqrt = int_floor_quantizer(inv_sqrt, self.INV_SQRT_WIDTH, self.INV_SQRT_FRAC_WIDTH)
-        logger.debug("Inverse SQRT:")
-        logger.debug(inv_sqrt[0])
-
-        # Norm calculation
-        norm_out = x * inv_sqrt
-        logger.debug("Norm:")
-        logger.debug(norm_out[0])
-        norm_int_out, norm_out_float = _fixed_signed_cast_model(
-            norm_out, self.OUT_WIDTH, self.OUT_FRAC_WIDTH,
-            symmetric=False, rounding_mode="floor"
+        # Float model
+        norm_out_float, norm_int_out = _fixed_rms_norm_2d_model(
+            x=x,
+            acc_width=self.ACC_WIDTH,
+            acc_frac_width=self.ACC_FRAC_WIDTH,
+            inv_sqrt_width=self.INV_SQRT_WIDTH,
+            inv_sqrt_frac_width=self.INV_SQRT_FRAC_WIDTH,
+            out_width=self.OUT_WIDTH,
+            out_frac_width=self.OUT_FRAC_WIDTH,
         )
-        logger.debug("Norm (Casted):")
-        logger.debug(norm_out_float[0])
-
-        # Rescale & Reshape for output monitor
-        logger.debug("Norm (unsigned):")
-        logger.debug(norm_int_out[0])
-        y = norm_int_out.reshape(-1, self.TOTAL_DIM1, self.TOTAL_DIM0)
 
         # Output beat reconstruction
+        y = norm_int_out.reshape(-1, self.TOTAL_DIM1, self.TOTAL_DIM0)
         model_out = list()
         for i in range(y.shape[0]):
             model_out.extend(split_matrix(y[i], *self.total_tup, *self.compute_tup))
