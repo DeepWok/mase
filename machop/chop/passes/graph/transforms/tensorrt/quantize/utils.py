@@ -47,54 +47,65 @@ class FakeQuantizer:
 
     def create_quantized_module(self,
         mase_op: str,
-        original_module: nn.Module
+        original_module: nn.Module,
+        config: dict
     ):
         original_module_cls = type(original_module)
 
-        if mase_op == "linear":
-            use_bias = original_module.bias is not None
+        try:
+            if mase_op == "linear":
+                use_bias = original_module.bias is not None
 
-            new_module = qnn.QuantLinear(
-                in_features=original_module.in_features,
-                out_features=original_module.out_features,
-                bias=use_bias
-            )
-            new_module.set_default_quant_desc_input(QuantDescriptor(calib_method=self.config["input"]["calibrator"], axis=self.config["input"]["quantize_axis"]))
-            new_module.set_default_quant_desc_weight(QuantDescriptor(calib_method=self.config["weight"]["calibrator"], axis=self.config["weight"]["quantize_axis"]))
+                new_module = qnn.QuantLinear(
+                    in_features=original_module.in_features,
+                    out_features=original_module.out_features,
+                    bias=use_bias
+                )
+                new_module.set_default_quant_desc_input(QuantDescriptor(calib_method=config["input"]["calibrator"], axis=config["input"]["quantize_axis"]))
+                new_module.set_default_quant_desc_weight(QuantDescriptor(calib_method=config["weight"]["calibrator"], axis=config["weight"]["quantize_axis"]))
 
-            copy_weights(original_module.weight, new_module.weight)
-            if use_bias:
-                copy_weights(original_module.bias, new_module.bias)
+                copy_weights(original_module.weight, new_module.weight)
+                if use_bias:
+                    copy_weights(original_module.bias, new_module.bias)
         
-        elif mase_op in ("conv2d"):
-            use_bias = original_module.bias is not None
-            new_module = qnn.QuantConv2d(
-                in_channels=original_module.in_channels,
-                out_channels=original_module.out_channels,
-                kernel_size=original_module.kernel_size,
-                stride=original_module.stride,
-                padding=original_module.padding,
-                dilation=original_module.dilation,
-                groups=original_module.groups,
-                bias=use_bias,
-                padding_mode=original_module.padding_mode,
-            )
+            elif mase_op in ("conv2d"):
+                use_bias = original_module.bias is not None
+                new_module = qnn.QuantConv2d(
+                    in_channels=original_module.in_channels,
+                    out_channels=original_module.out_channels,
+                    kernel_size=original_module.kernel_size,
+                    stride=original_module.stride,
+                    padding=original_module.padding,
+                    dilation=original_module.dilation,
+                    groups=original_module.groups,
+                    bias=use_bias,
+                    padding_mode=original_module.padding_mode,
+                )
 
-            new_module.set_default_quant_desc_input(QuantDescriptor(calib_method=self.config["input"]["calibrator"], axis=self.config["input"]["quantize_axis"]))
-            new_module.set_default_quant_desc_weight(QuantDescriptor(calib_method=self.config["weight"]["calibrator"], axis=self.config["weight"]["quantize_axis"]))
+                new_module.set_default_quant_desc_input(QuantDescriptor(calib_method=config["input"]["calibrator"], axis=config["input"]["quantize_axis"]))
+                new_module.set_default_quant_desc_weight(QuantDescriptor(calib_method=config["weight"]["calibrator"], axis=config["weight"]["quantize_axis"]))
 
-            copy_weights(original_module.weight, new_module.weight)
-            if use_bias:    
-                copy_weights(original_module.bias, new_module.bias)
-        else:
-            raise NotImplementedError(
-                f"Unsupported module class {original_module_cls} to modify"
-            )
+                copy_weights(original_module.weight, new_module.weight)
+                if use_bias:    
+                    copy_weights(original_module.bias, new_module.bias)
+
+            else:
+                raise NotImplementedError(
+                    f"Unsupported module class {original_module_cls} to modify"
+                )
+            
+        except KeyError:
+            raise Exception(f"Config/TOML not configured correctly for layer {original_module_cls}. Please check documentation for what must be defined.")
+        
         return new_module
     
     def get_config(self, name: str):
         """Retrieve specific configuration from the instance's config dictionary or return default."""
-        return self.config.get(name, self.config['default'])['config']
+        try:
+            config = self.config.get(name, 'default')
+        except KeyError:
+            raise Exception(f"Please check Config/TOML file. Default config must be defined.")
+        return config
 
     def fake_quantize_by_type(self, graph):
             """
@@ -104,10 +115,10 @@ class FakeQuantizer:
                 if get_mase_op(node) not in QUANTIZEABLE_OP:
                     continue
                 node_config = self.get_config(get_mase_op(node))
-                if not node_config["quantize"]:
+                if not node_config['config']['quantize']:
                     continue
                 if node.op == "call_module":
-                    original_module = self.get_node_actual_target(node)
+                    original_module = get_node_actual_target(node)
                     new_module = self.create_quantized_module(
                         get_mase_op(node),
                         original_module,
@@ -128,7 +139,7 @@ class FakeQuantizer:
             if node_config["name"] is None:
                 continue
             if node.op == "call_module":
-                original_module = self.get_node_actual_target(node)
+                original_module = get_node_actual_target(node)
                 new_module = self.create_quantized_module(
                     get_mase_op(node),
                     original_module,

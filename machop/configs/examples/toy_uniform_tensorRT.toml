@@ -13,14 +13,30 @@ calibrator = ["percentile", "max", "mse", "entropy"]
 percentiles = [99]
 report = true
 
-# [passes.tensorrt-calibrate]
+[passes.tensorrt-calibrate.linear.config]
+quantize = true
 
+[passes.tensorrt-calibrate.linear.input]
+calibrator = 'histogram'
+quantize_axis = false
+
+[passes.tensorrt-calibrate.linear.weight]
+calibrator = 'histogram'
+quantize_axis = false
 
 [passes.tensorrt-calibrate.default.config]
-quantize = false
+quantize = true
 
-# [passes.tensorrt-quantize]
-# by = "type"
+[passes.tensorrt-calibrate.default.config.input]
+calibrator = 'histogram'
+quantize_axis = false
+
+[passes.tensorrt-calibrate.default.config.weight]
+calibrator = 'histogram'
+quantize_axis = false
+
+[passes.tensorrt-quantize]
+by = "type"
 
 [passes.tensorrt-quantize.default.config]
 name = "integer"
