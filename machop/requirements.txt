@@ -59,3 +59,4 @@ sphinx-glpi-theme
 prettytable
 pyyaml
 pytorch-quantization
+pynvml

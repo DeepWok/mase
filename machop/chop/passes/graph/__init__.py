@@ -38,7 +38,7 @@ from .interface import (
 
 from .transforms.quantize import quantized_func_map, quantized_module_map
 from .transforms.quantize.quant_parsers import parse_node_config
-from .transforms.tensorrt import tensorrt_quantize_transform_pass, tensorrt_calibrate_transform_pass, tensorrt_train_transform_pass
+from .transforms.tensorrt import tensorrt_quantize_transform_pass, tensorrt_calibrate_transform_pass, tensorrt_train_transform_pass, tensorrt_analysis_pass
 
 ANALYSIS_PASSES = [
     "init_metadata",
@@ -94,6 +94,7 @@ PASSES = {
     "add_pruning_metadata": add_pruning_metadata_analysis_pass,
     "add_natural_sparsity": add_natural_sparsity_metadata_analysis_pass,
     "hook_inspection": hook_inspection_analysis_pass,
+    "tensorrt-analysis": tensorrt_analysis_pass,
     # interface
     "load_mase_graph": load_mase_graph_interface_pass,
     "load_node_meta_param": load_node_meta_param_interface_pass,
@@ -101,8 +102,8 @@ PASSES = {
     "save_node_meta_param": save_node_meta_param_interface_pass,
     # transform
     "quantize": quantize_transform_pass,
-    "tensorrt-quantize": tensorrt_quantize_transform_pass,
     "tensorrt-calibrate": tensorrt_calibrate_transform_pass,
+    "tensorrt-quantize": tensorrt_quantize_transform_pass,
     "tensorrt-train": tensorrt_train_transform_pass,
     "summarize_quantization": summarize_quantization_analysis_pass,
     "prune": prune_transform_pass,

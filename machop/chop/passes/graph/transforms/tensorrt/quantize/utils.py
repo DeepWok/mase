@@ -61,6 +61,7 @@ class FakeQuantizer:
                     out_features=original_module.out_features,
                     bias=use_bias
                 )
+                #TODO this causes error if called before a linear layer: Calibrator histogram collection only supports per tensor scaling
                 new_module.set_default_quant_desc_input(QuantDescriptor(calib_method=config["input"]["calibrator"], axis=config["input"]["quantize_axis"]))
                 new_module.set_default_quant_desc_weight(QuantDescriptor(calib_method=config["weight"]["calibrator"], axis=config["weight"]["quantize_axis"]))
 

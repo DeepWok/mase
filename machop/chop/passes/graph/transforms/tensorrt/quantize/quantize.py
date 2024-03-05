@@ -24,7 +24,7 @@ def tensorrt_quantize_transform_pass(graph, pass_args=None):
     by = pass_args["by"]
     match by:
         case "type":
-            trt_graph = quantizer.pytorch_to_trt(graph)
+            trt_graph_path = quantizer.pytorch_to_trt(graph)
         case "name":
             ...
         case "regex_name":
@@ -34,7 +34,7 @@ def tensorrt_quantize_transform_pass(graph, pass_args=None):
 
     # link the model with graph
     graph.model = torch.fx.GraphModule(graph.model, graph.fx_graph)
-    return graph, {}
+    return graph, {'trt_graph_path': trt_graph_path}
 
 
 class Quantizer:
