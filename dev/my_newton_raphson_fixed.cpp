@@ -8,24 +8,67 @@
 
 // MACROS
 // ------
-#define ISQRT_2 0b0101101010000010          // FORMAT: Q1.(WIDTH-1)
-#define SQRT_2 0b1011010100000100           // FORMAT: Q1.(WIDTH-1)
+
+// NOTE: the following constants are set to width 16 for extra precision.
+#define ISQRT_2 0b0101101010000010          // FORMAT: Q1.15
+#define SQRT_2 0b1011010100000100           // FORMAT: Q1.15
 #define LUT_POW 5                           // LUT_POW = log2(LUT_SIZE)
-#define LUT_SIZE 32                         // NOTE: LUT_SIZE must be a power of 2.
+#define LUT_SIZE (0b1 << LUT_POW)           // NOTE: LUT_SIZE must be a power of 2.
 #define LUT_STEP (1.0f / (LUT_SIZE + 1.0f)) // FORMAT: float
 #define NUM_ITER 1
 
-int i_width = 3;
+// Global Variables
+// ----------------
+int i_width = 8;
 int f_width = 8;
 int w_width = i_width + f_width;
 uint16_t max_num = (0b1 << w_width) - 0b1;
 
-// Signatures for utils.
-float qxy_to_float(uint64_t x, uint8_t int_width, uint8_t frac_width);
-uint64_t float_to_qxy(float x, uint8_t int_width, uint8_t frac_width);
+uint16_t lut[LUT_SIZE]; // FORMAT: Q1.(WIDTH-1)
+
+// ===========================================================================
+// Utils
+// ===========================================================================
 template<int WWIDTH>
 void print_bits(std::string label, uint64_t x){
     std::cout << label << ": " << std::bitset<WWIDTH>(x) << "\n";
+}
+
+float qxy_to_float(uint64_t x, uint8_t int_width, uint8_t frac_width){
+    float output = 0.0f;
+    // Integer part
+    uint64_t mask = (0b1 << int_width) - 0b1;
+    uint64_t integer = (x >> frac_width) & mask;
+    output = static_cast<float>(integer);
+
+    // Fractional part
+    mask = (0b1 << frac_width) - 0b1;
+    uint64_t fraction = ((x << int_width) >> int_width) & mask;
+    for(int i = 1; i < frac_width+1; i++){
+        bool current_bit = (fraction >> (frac_width - i)) & 0b1;
+        if(current_bit){
+            float bin = pow(2, -i);
+            output += bin;
+        }
+    }
+    return output;
+}
+
+uint64_t float_to_qxy(float x, uint8_t int_width, uint8_t frac_width){
+    uint64_t integer = static_cast<uint64_t>(x);
+    float integer_float = static_cast<float>(integer);
+    x -= integer_float;
+    uint64_t output = integer << frac_width;
+
+    for(int i = 1; i < frac_width+1; i++){
+        float power = pow(2, -i);
+        if(power <= x){
+            uint64_t bin = 0b1 << (frac_width - i);
+            output += bin;
+            x-= power;
+        }
+    }
+    return output;
 }
 
 // ===========================================================================
@@ -49,8 +92,6 @@ void print_bits(std::string label, uint64_t x){
 // The reason for this format is because the range of the input is mapped to
 // [1, 2) therefore the possible values for 1/sqrt(x) will be (1/sqrt(2), 1].
 
-// FORMAT: Q1.(WIDTH-1)
-uint16_t lut[LUT_SIZE];
 
 // FORMAT: Q1.(WIDTH-1)
 void init_lut(){
@@ -114,7 +155,7 @@ uint32_t range_reduction(uint32_t x, uint16_t msb_index){
 //      Case 4: k is positive and odd
 //          1 / sqrt(x) = sqrt(1/2) * [1 / sqrt(x * 2^(k))] << (k/2)    Through math.
 //
-// INPUT FORMAT: Q1.15
+// INPUT FORMAT: Q1.(WIDTH-1)
 // OUTPUT FORMAT: Q(i_width).(f_width)
 uint32_t range_augmentation(uint32_t x_red, uint16_t msb_index){
     // Determine whether shifted right or left and by how much relative to the 
@@ -122,56 +163,82 @@ uint32_t range_augmentation(uint32_t x_red, uint16_t msb_index){
     // Left shift = Positive
     // Right shift = Negative
     int16_t shifted = f_width - msb_index;
+    int32_t res;
+    int16_t shift;
 
     // Reduction was through multiplication.
     // Therefore augmentation is through multiplication.
     if(shifted > 0){
         if(shifted % 2 == 0){
-            int16_t shift = shifted >> 1; // k / 2
-            // FORMAT: Q1.15
-            int32_t res = x_red << shift;
-            // FORMAT Q(i_width).(f_width)
-            res = res >> ((w_width - 1) - f_width);
-            return res;
+            shift = shifted >> 1; // k / 2
+            // FORMAT Q1.(w_width - 1)
+            res = x_red;
         }
         else{
-            int16_t shift = (shifted - 1) >> 1; // (k - 1) / 2
-            // FORMAT: Q1.15
-            int32_t res = (x_red * SQRT_2) >> 15;
-            res = res << shift;
-            // FORMAT Q(i_width).(f_width)
-            res = res >> ((w_width - 1) - f_width);
-            return res;
+            shift = (shifted - 1) >> 1; // (k - 1) / 2
+            // FORMAT Q1.(w_width - 1)
+            res = (x_red * SQRT_2) >> 15;
         }
+        res = res << shift;
     }
     // Reduction was through division.
     // Therefore augementation is through division.
     else if(shifted < 0){
         // Even shifting.
         if(shifted % 2 == 0){
-            int16_t shift = (-shifted) >> 1;
-            // FORMAT Q.15
-            int32_t res = x_red >> shift;
-            // FORMAT Q(i_width).(f_width)
-            res = res >> ((w_width - 1) - f_width);
-            return res;
+            shift = (-shifted) >> 1;
+            // FORMAT Q1.(w_width - 1)
+            res = x_red;
         }
         else{
-            int16_t shift = (-shifted - 1) >> 1;
-            // FORMAT: Q1.15
-            int32_t res = (x_red * ISQRT_2) >> 15;
-            res = res >> shift;
-            // FORMAT Q(i_width).(f_width)
-            res = res >> ((w_width - 1) - f_width);
-            return res;
+            shift = (-shifted - 1) >> 1;
+            // FORMAT Q1.(w_width - 1)
+            res = (x_red * ISQRT_2) >> 15;
         }
+        res = res >> shift;
     }
     // Reduction was not done.
     // Therefore just convert format.
     else{
-        // FORMAT Q(i_width).(f_width)
-        return x_red >> ((w_width - 1) - f_width);
+        res = x_red;
     }
+    // FORMAT Q(i_width).(f_width)
+    res = res >> ((w_width - 1) - f_width);
+
+    return res;
+}
+
+uint16_t find_lut_index(uint16_t x, uint16_t msb_index){
+    // FORMAT Q1.15
+    uint32_t intermediate;
+    // Shift the number to match the Q1.(WIDTH-1) format.
+    intermediate = x << (w_width - 1 - msb_index);
+
+    // Get rid of the 1 from the format for index calculation.
+    // This is easier in SystemVerilog, just turn the bit to a 0.
+    uint32_t temp = intermediate - (0b1 << (w_width - 1));
+    temp = temp << LUT_POW;
+    // Going from Q1.(WIDTH-1) to Q(WIDTH).0 in order to index the lut.
+    temp = temp >> (w_width - 1);
+    //uint32_t temp = (0b1 << LUT_POW) * (x << (-msb_index) - 1);
+    return temp;
+}
+
+uint16_t find_lut_index2(uint16_t x, uint16_t msb_index){
+    // FORMAT Q17.15
+    uint32_t intermediate;
+    // Shift the number to match the Q1.(WIDTH-1) format.
+    intermediate = x << (w_width - 1 - msb_index);
+
+    // Get rid of the 1 from the format for index calculation.
+    // This is easier in SystemVerilog, just turn the bit to a 0.
+    uint32_t temp = intermediate - (0b1 << (w_width - 1));
+    temp = temp << LUT_POW;
+    // Going from Q1.(WIDTH-1) to Q(WIDTH).0 in order to index the lut.
+    // TODO: it will be easier to choose the first LUT_POW bits and use them 
+    // to index the LUT.
+    temp = temp >> (w_width - 1);
+    return temp;
 }
 
 // Newton Raphson's method.
@@ -206,21 +273,7 @@ uint16_t isqrt(uint16_t x){
         return out;
     }
 
-    // FORMAT Q17.15
-    uint32_t intermediate;
-    // Shift the number to match the Q1.(WIDTH-1) format.
-    intermediate = x << (w_width - 1 - msb_index);
-
-    // Get rid of the 1 from the format for index calculation.
-    // This is easier in SystemVerilog, just turn the bit to a 0.
-    uint32_t temp = intermediate - (0b1 << (w_width - 1));
-    temp = temp << LUT_POW;
-    // Going from Q1.(WIDTH-1) to Q(WIDTH).0 in order to index the lut.
-    // TODO: it will be easier to choose the first LUT_POW bits and use them 
-    // to index the LUT.
-    temp = temp >> (w_width - 1);
-    uint16_t lut_index = temp;
-    //std::cout << "LUT index " << lut_index << "\n";
+    uint16_t lut_index = find_lut_index(x, msb_index);
 
     // FORMAT: Q1.(WIDTH-1)
     uint32_t initial_guess;
@@ -242,8 +295,9 @@ uint16_t isqrt(uint16_t x){
     // Divide mapped input by 2 as stated in Newton-Raphson formula.
     x_red = x_red >> 1;
 
-    // TODO: vary the number of iterations and evaluate the error.
     for (int i = 0; i < NUM_ITER; ++i) {
+        // EQUATION: y = y * (1.5 - 0.5 * x * y * y)
+        //
         // FORMAT: Q1.(WIDTH-1) x Q1.(WIDTH-1) = Q2.(2*WIDTH - 2) >> (WIDTH - 1) = Q1.(WIDTH-1)
         // NOTE: the format calculations may be off.
         yy = (y * y) >> (w_width - 1);
@@ -306,9 +360,32 @@ float test(uint16_t val, bool verbose){
     return error;
 }
 
-// NOTE: for the Q8.8 format the max error achieved is 2^-8.
 int main()
 {
+    w_width = i_width + f_width;
+
+    // Testing range_augmentation()
+    float x_f = 5.0f;
+    int x = float_to_qxy(x_f, 8, 8);
+    int msb_index = find_msb(x);
+    int x_red = range_reduction(x, msb_index);
+    int x_hat = range_augmentation(x_red, msb_index);
+    std::cout << "X red: " << qxy_to_float(x_red, 1, 15) << "\n";
+    std::cout << "X hat: " << qxy_to_float(x_hat, 8, 8) << "\n";
+
+    /*
+    // Testing find_lut_index()
+    for(float i = 0; i < 10.0; i++){
+        float x_f = 1.0f + i / 10.0f;
+        int x = float_to_qxy(x_f, 8, 8);
+        int msb_index = find_msb(x);
+        int lut = find_lut_index(x, msb_index);
+        std::cout << "LUT index: " << lut << "\n";
+    }
+    */
+
+    /*
+    // Testing ISQRT.
     for(i_width = 1; i_width < 9; i_width++){
         for(f_width = 1; f_width < 9; f_width++){
             float step = 0.001;
@@ -332,47 +409,7 @@ int main()
             std::cout << "Max error: " << max_error << "\n";
         }
     }
+    */
 
 	return 0;
-}
-
-// ===========================================================================
-// Utils
-// ---------------------------------------------------------------------------
-
-float qxy_to_float(uint64_t x, uint8_t int_width, uint8_t frac_width){
-    float output = 0.0f;
-    // Integer part
-    uint64_t mask = (0b1 << int_width) - 0b1;
-    uint64_t integer = (x >> frac_width) & mask;
-    output = static_cast<float>(integer);
-
-    // Fractional part
-    mask = (0b1 << frac_width) - 0b1;
-    uint64_t fraction = ((x << int_width) >> int_width) & mask;
-    for(int i = 1; i < frac_width+1; i++){
-        bool current_bit = (fraction >> (frac_width - i)) & 0b1;
-        if(current_bit){
-            float bin = pow(2, -i);
-            output += bin;
-        }
-    }
-    return output;
-}
-
-uint64_t float_to_qxy(float x, uint8_t int_width, uint8_t frac_width){
-    uint64_t integer = static_cast<uint64_t>(x);
-    float integer_float = static_cast<float>(integer);
-    x -= integer_float;
-    uint64_t output = integer << frac_width;
-
-    for(int i = 1; i < frac_width+1; i++){
-        float power = pow(2, -i);
-        if(power <= x){
-            uint64_t bin = 0b1 << (frac_width - i);
-            output += bin;
-            x-= power;
-        }
-    }
-    return output;
 }
