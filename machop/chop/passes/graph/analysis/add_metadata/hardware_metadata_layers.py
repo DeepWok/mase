@@ -7,6 +7,11 @@ norm = {
         "common/rtl/split2.sv",
         "common/rtl/repeat_circular_buffer.sv",
         "common/rtl/skid_buffer.sv",
+        "common/rtl/register_slice.sv",
+        "common/rtl/simple_dual_port_ram.sv",
+        "common/rtl/fifo.sv",
+        "cast/rtl/floor_round.sv",
+        "cast/rtl/signed_clamp.sv",
         "cast/rtl/fixed_signed_cast.sv",
         "fixed_arithmetic/rtl/fixed_accumulator.sv",
         "fixed_arithmetic/rtl/fixed_adder_tree.sv",
@@ -14,10 +19,10 @@ norm = {
         "matmul/rtl/matrix_fifo.sv",
         "matmul/rtl/matrix_flatten.sv",
         "matmul/rtl/matrix_unflatten.sv",
-        "norm/temp_inv_sqrt.sv",
-        "norm/group_norm_2d.sv",
-        "norm/rms_norm_2d.sv",
-        "norm/norm.sv",
+        "norm/rtl/temp_inv_sqrt.sv",
+        "norm/rtl/group_norm_2d.sv",
+        "norm/rtl/rms_norm_2d.sv",
+        "norm/rtl/norm.sv",
     ]
 }
 

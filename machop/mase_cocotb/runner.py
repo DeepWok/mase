@@ -100,3 +100,48 @@ def mase_runner(
     print("    NUM TESTS:", total_tests)
 
     return total_fail
+
+
+def simulate_pass(
+    project_dir: Path,
+    module_params: dict[str, Any] = {},
+    extra_build_args: list[str] = [],
+):
+    rtl_dir = project_dir / "hardware" / "rtl"
+    sim_dir = project_dir / "hardware" / "sim"
+    test_dir = project_dir / "hardware" / "test" / "mase_top_tb"
+
+    SIM = getenv("SIM", "verilator")
+
+    runner = get_runner(SIM)
+    runner.build(
+        verilog_sources=[rtl_dir / "top.sv"],
+        includes=[rtl_dir],
+        hdl_toplevel="top",
+        build_args=[
+            # Verilator linter is overly strict.
+            # Too many errors
+            # These errors are in later versions of verilator
+            "-Wno-GENUNNAMED",
+            "-Wno-WIDTHEXPAND",
+            "-Wno-WIDTHTRUNC",
+            # Simulation Optimisation
+            "-Wno-UNOPTFLAT",
+            "-prof-c",
+            "--stats",
+            "-O2",
+            "-build-jobs",
+            "8",
+            "-Wno-fatal",
+            "-Wno-lint",
+            "-Wno-style",
+            *extra_build_args,
+        ],
+        parameters=module_params,
+        build_dir=sim_dir,
+    )
+    runner.test(
+        hdl_toplevel="top",
+        test_module="test",
+        results_xml="results.xml",
+    )

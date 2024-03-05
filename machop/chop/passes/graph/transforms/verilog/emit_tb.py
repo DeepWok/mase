@@ -16,17 +16,24 @@ from mase_cocotb.interfaces.streaming import StreamDriver, StreamMonitor
 from mase_cocotb.z_qlayers.tensor_cast import quantize_to_int
 
 import dill
-import inspect
 
+
+def _emit_cocotb_test(graph, project_dir: Path):
+    tb_dir = project_dir / "hardware" / "test" / "mase_top_tb"
+
+    test_template = f"""\
+import dill
+from pathlib import Path
+
+import cocotb
+from cocotb.triggers import Timer
+
+from mase_cocotb.runner import simulate_pass
 
 @cocotb.test()
 async def test(dut):
-    from pathlib import Path
-    import dill
-    from cocotb.triggers import Timer
 
-    tb_path = Path.home() / ".mase" / "top" / "hardware" / "test" / "mase_top_tb"
-    with open(tb_path / "tb_obj.dill", "rb") as f:
+    with open("{tb_dir / 'tb_obj.dill'}", "rb") as f:
         tb = dill.load(f)(dut)
 
     tb.initialize()
@@ -40,29 +47,16 @@ async def test(dut):
     await Timer(100, units="us")
 
 
-def _emit_cocotb_test(graph):
-    test_template = f"""
-import cocotb
-
-{inspect.getsource(test)}
+if __name__ == "__main__":
+    simulate_pass(Path("{project_dir}"))
 """
 
-    tb_path = Path.home() / ".mase" / "top" / "hardware" / "test" / "mase_top_tb"
-    tb_path.mkdir(parents=True, exist_ok=True)
-    with open(tb_path / "test.py", "w") as f:
+    with open(tb_dir / "test.py", "w") as f:
         f.write(test_template)
 
-    verilator_build = f"""
-#!/bin/bash
-# This script is used to build the verilator simulation
-verilator --binary --build {verilator_buff}
-"""
-    verilator_file = os.path.join(sim_dir, "build.sh")
-    with open(verilator_file, "w", encoding="utf-8") as outf:
-        outf.write(verilator_build)
 
+def _emit_cocotb_tb(graph, tb_dir: Path):
 
-def _emit_cocotb_tb(graph):
     class MaseGraphTB(Testbench):
         def __init__(self, dut):
             super().__init__(dut, dut.clk, dut.rst)
@@ -138,11 +132,9 @@ def _emit_cocotb_tb(graph):
 
     # Serialize testbench object to be instantiated within test by cocotb runner
     cls_obj = MaseGraphTB
-    tb_path = Path.home() / ".mase" / "top" / "hardware" / "test" / "mase_top_tb"
-    tb_path.mkdir(parents=True, exist_ok=True)
-    with open(tb_path / "tb_obj.dill", "wb") as file:
+    with open(tb_dir / "tb_obj.dill", "wb") as file:
         dill.dump(cls_obj, file)
-    with open(tb_path / "__init__.py", "w") as file:
+    with open(tb_dir / "__init__.py", "w") as file:
         file.write("from .test import test")
 
 
@@ -162,12 +154,16 @@ def emit_cocotb_transform_pass(graph, pass_args={}):
     """
     logger.info("Emitting testbench...")
     project_dir = (
-        pass_args["project_dir"] if "project_dir" in pass_args.keys() else "top"
+        pass_args["project_dir"]
+        if "project_dir" in pass_args.keys()
+        else Path.home() / ".mase" / "top"
     )
-
     init_project(project_dir)
 
-    _emit_cocotb_test(graph)
-    _emit_cocotb_tb(graph)
+    tb_dir = project_dir / "hardware" / "test" / "mase_top_tb"
+    tb_dir.mkdir(parents=True, exist_ok=True)
+
+    _emit_cocotb_test(graph, project_dir)
+    _emit_cocotb_tb(graph, tb_dir)
 
     return graph, None

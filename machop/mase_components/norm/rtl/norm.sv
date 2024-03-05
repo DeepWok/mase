@@ -13,22 +13,59 @@ Description : Module which unifies all types of normalization.
 `default_nettype none
 
 module norm #(
+
+    // -----
+    // SOFTWARE PARAMETERS
+    // -----
+
+    // DIMENSIONS:
+    // batch (3), channel (2), dim1 (1), dim0 (0)
+
+    // PRECISION:
+    // width (1), frac_width (0)
+
+    parameter DATA_IN_0_PRECISION_0         = -1,
+    parameter DATA_IN_0_PRECISION_1         = -1,
+    parameter DATA_IN_0_TENSOR_SIZE_DIM_0   = -1,
+    parameter DATA_IN_0_PARALLELISM_DIM_0   = -1,
+    parameter DATA_IN_0_TENSOR_SIZE_DIM_1   = -1,
+    parameter DATA_IN_0_PARALLELISM_DIM_1   = -1,
+    parameter DATA_IN_0_TENSOR_SIZE_DIM_2   = -1,
+    parameter DATA_IN_0_PARALLELISM_DIM_2   = -1,
+    parameter DATA_IN_0_TENSOR_SIZE_DIM_3   = -1,
+    parameter DATA_IN_0_PARALLELISM_DIM_3   = -1,
+
+    parameter DATA_OUT_0_PRECISION_0        = -1,
+    parameter DATA_OUT_0_PRECISION_1        = -1,
+    parameter DATA_OUT_0_TENSOR_SIZE_DIM_0  = -1,
+    parameter DATA_OUT_0_PARALLELISM_DIM_0  = -1,
+    parameter DATA_OUT_0_TENSOR_SIZE_DIM_1  = -1,
+    parameter DATA_OUT_0_PARALLELISM_DIM_1  = -1,
+    parameter DATA_OUT_0_TENSOR_SIZE_DIM_2  = -1,
+    parameter DATA_OUT_0_PARALLELISM_DIM_2  = -1,
+    parameter DATA_OUT_0_TENSOR_SIZE_DIM_3  = -1,
+    parameter DATA_OUT_0_PARALLELISM_DIM_3  = -1,
+
+    // -----
+    // HARDWARE ALIASES
+    // -----
+
     // Dimensions
-    parameter TOTAL_DIM0          = 4,
-    parameter TOTAL_DIM1          = 4,
-    parameter COMPUTE_DIM0        = 2,
-    parameter COMPUTE_DIM1        = 2,
+    parameter TOTAL_DIM0          = DATA_IN_0_TENSOR_SIZE_DIM_0,
+    parameter TOTAL_DIM1          = DATA_IN_0_TENSOR_SIZE_DIM_1,
+    parameter COMPUTE_DIM0        = DATA_IN_0_PARALLELISM_DIM_0,
+    parameter COMPUTE_DIM1        = DATA_IN_0_PARALLELISM_DIM_1,
 
     // Layer: CHANNELS should be set to total number of channels
     // RMS: CHANNELS should be set to total number of channels
     // Group: CHANNELS can be set to any factor of total channels
-    parameter CHANNELS            = 2,
+    parameter CHANNELS            = DATA_IN_0_PARALLELISM_DIM_2,
 
     // Data widths
-    parameter IN_FRAC_WIDTH       = 2,
-    parameter IN_WIDTH            = 8,
-    parameter OUT_WIDTH           = 8,
-    parameter OUT_FRAC_WIDTH      = 4,
+    parameter IN_WIDTH            = DATA_IN_0_PRECISION_0,
+    parameter IN_FRAC_WIDTH       = DATA_IN_0_PRECISION_1,
+    parameter OUT_WIDTH           = DATA_OUT_0_PRECISION_0,
+    parameter OUT_FRAC_WIDTH      = DATA_OUT_0_PRECISION_1,
 
     // Precision of inverse sqrt unit
     parameter INV_SQRT_WIDTH      = 16,
@@ -43,13 +80,13 @@ module norm #(
     input  logic                clk,
     input  logic                rst,
 
-    input  logic [IN_WIDTH-1:0] in_data  [COMPUTE_DIM0*COMPUTE_DIM1-1:0],
-    input  logic                in_valid,
-    output logic                in_ready,
+    input  logic [IN_WIDTH-1:0] data_in_0  [COMPUTE_DIM0*COMPUTE_DIM1-1:0],
+    input  logic                data_in_0_valid,
+    output logic                data_in_0_ready,
 
-    output logic [IN_WIDTH-1:0] out_data [COMPUTE_DIM0*COMPUTE_DIM1-1:0],
-    output logic                out_valid,
-    input  logic                out_ready
+    output logic [IN_WIDTH-1:0] data_out_0 [COMPUTE_DIM0*COMPUTE_DIM1-1:0],
+    output logic                data_out_0_valid,
+    input  logic                data_out_0_ready
 );
 
 initial begin
@@ -78,12 +115,12 @@ group_norm_2d #(
 ) group_norm_inst (
     .clk(clk),
     .rst(rst),
-    .in_data(in_data),
-    .in_valid(in_valid),
-    .in_ready(in_ready),
-    .out_data(out_data),
-    .out_valid(out_valid),
-    .out_ready(out_ready)
+    .in_data(data_in_0),
+    .in_valid(data_in_0_valid),
+    .in_ready(data_in_0_ready),
+    .out_data(data_out_0),
+    .out_valid(data_out_0_valid),
+    .out_ready(data_out_0_ready)
 );
 
 end else if (RMS_NORM) begin : rms_norm
@@ -103,12 +140,12 @@ rms_norm_2d #(
 ) rms_norm_inst (
     .clk(clk),
     .rst(rst),
-    .in_data(in_data),
-    .in_valid(in_valid),
-    .in_ready(in_ready),
-    .out_data(out_data),
-    .out_valid(out_valid),
-    .out_ready(out_ready)
+    .in_data(data_in_0),
+    .in_valid(data_in_0_valid),
+    .in_ready(data_in_0_ready),
+    .out_data(data_out_0),
+    .out_valid(data_out_0_valid),
+    .out_ready(data_out_0_ready)
 );
 
 end

@@ -33,14 +33,14 @@ def add_component_source(node):
 
     mase_op = node.meta["mase"]["common"]["mase_op"]
     if mase_op in INTERNAL_COMP.keys():
-        node.meta["mase"]["hardware"]["toolchain"] = "INTERNAL"
+        node.meta["mase"]["hardware"]["toolchain"] = "INTERNAL_RTL"
         # take the first ip in the component list by default
         node.meta["mase"]["hardware"]["module"] = INTERNAL_COMP[mase_op][0]["name"]
         node.meta["mase"]["hardware"]["dependence_files"] = INTERNAL_COMP[mase_op][0][
             "dependence_files"
         ]
     else:
-        node.meta["mase"]["hardware"]["toolchain"] = "HLS"
+        node.meta["mase"]["hardware"]["toolchain"] = "INTERNAL_HLS"
         node.meta["mase"]["hardware"]["module"] = None
         node.meta["mase"]["hardware"]["dependence_files"] = []
 

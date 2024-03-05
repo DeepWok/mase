@@ -2,6 +2,7 @@
 # This example converts a simple MLP model to Verilog
 import os, sys, logging
 import toml
+from pathlib import Path
 
 import torch
 import torch.nn as nn
@@ -12,6 +13,7 @@ from chop.passes.graph.analysis import (
     add_common_metadata_analysis_pass,
     add_hardware_metadata_analysis_pass,
     report_node_type_analysis_pass,
+    report_node_hardware_type_analysis_pass,
 )
 from chop.passes.graph.utils import get_mase_op
 from chop.passes.graph.transforms import (
@@ -21,6 +23,10 @@ from chop.passes.graph.transforms import (
     emit_cocotb_transform_pass,
     quantize_transform_pass,
 )
+
+from chop.tools.logger import set_logging_verbosity
+
+set_logging_verbosity("debug")
 
 class BatchNormNet(nn.Module):
     def __init__(self, channels=64) -> None:
@@ -88,6 +94,13 @@ def test_emit_verilog_norm():
         mg, {"dummy_in": dummy_in, "add_value": False}
     )
 
+
+    # Remove weight & bias from layernorm (NOT SUPPORTED)
+    for n in mg.fx_graph.nodes:
+        if get_mase_op(n) == "layer_norm":
+            del n.meta["mase"]["common"]["args"]["weight"]
+            del n.meta["mase"]["common"]["args"]["bias"]
+
     # Quantize NN
     quant_config = {
         "by": "type",
@@ -99,8 +112,9 @@ def test_emit_verilog_norm():
             }
         }
     }
-
     mg, _ = quantize_transform_pass(mg, quant_config)
+
+    # TODO: TEMPORARY PATCH DUE TO QUANTIZER BUG NOT UPDATING METADATA
     for n in mg.fx_graph.nodes:
         common_p = n.meta["mase"].parameters["common"]
         hardware_p = n.meta["mase"].parameters["hardware"]
@@ -135,9 +149,34 @@ def test_emit_verilog_norm():
                 ]
         hardware_p["parallelism"] = [1, 1, 4, 4]
 
-    mg, _ = add_hardware_metadata_analysis_pass(mg)
+    # Add extra parameters for RTL instantiation
+    for n in mg.fx_graph.nodes:
+        if get_mase_op(n) == "layer_norm":
+            args = n.meta["mase"]["common"]["args"]
+            args["INV_SQRT_WIDTH"] = 16
+            args["INV_SQRT_FRAC_WIDTH"] = 10
+            args["LAYER_NORM"] = 1
 
+    # Add hardware metadata
+    mg, _ = add_hardware_metadata_analysis_pass(mg)
     _debug_mase_metadata(mg)
+
+    # Emit top level file
+    emit_cfg = {
+        "project_dir": Path(__file__).parent / "build"
+    }
+    mg, _ = emit_verilog_top_transform_pass(mg, emit_cfg)
+
+    # Copy over internal rtl
+    mg, _ = emit_internal_rtl_transform_pass(mg, emit_cfg)
+
+    # Emit testbench
+    mg, _ = emit_cocotb_transform_pass(mg, emit_cfg)
+
+    # Simulate
+    testfile = emit_cfg["project_dir"] / "hardware" / "test" / "mase_top_tb"
+    os.system(f"python3 {testfile}/test.py")
+
 
 if __name__ == "__main__":
     test_emit_verilog_norm()
