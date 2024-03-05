@@ -11,6 +11,8 @@ class MixedPrecisionEnv(gym.Env):
         self.search_space = config.get("search_space", None)
         self.run_trial = config.get("run_trial", None)
 
+        # TODO get layer information from self.search_space.model to build observation space
+        # TODO get choices from self.search_space.choices_flattened to build action space
         # observation space definition
         self.observation_space = Dict({"loss": Box(0.0, 10e4, shape=(1,))})
         for k, v in self.search_space.search_space_flattened.items():
