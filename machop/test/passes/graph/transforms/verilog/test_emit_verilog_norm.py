@@ -74,15 +74,18 @@ class RMSNormNet(nn.Module):
 
 
 def _debug_mase_metadata(mg):
+    print("#### GRAPH METADATA ####")
+    print(mg.meta["mase"].parameters)
+    print("#### NODE METADATA ####")
     for n in mg.fx_graph.nodes:
         print(n.meta["mase"].parameters, end="\n\n")
 
 def test_emit_verilog_norm():
 
     batch_size = 10
-    channels = 32
-    width = 32
-    height = 32
+    channels = 8
+    width = 8
+    height = 8
 
     nn = LayerNormNet(chw_shape=[channels, width, height])
     mg = MaseGraph(model=nn)
@@ -159,7 +162,6 @@ def test_emit_verilog_norm():
 
     # Add hardware metadata
     mg, _ = add_hardware_metadata_analysis_pass(mg)
-    _debug_mase_metadata(mg)
 
     # Emit top level file
     emit_cfg = {
@@ -171,6 +173,7 @@ def test_emit_verilog_norm():
     mg, _ = emit_internal_rtl_transform_pass(mg, emit_cfg)
 
     # Emit testbench
+    _debug_mase_metadata(mg)
     mg, _ = emit_cocotb_transform_pass(mg, emit_cfg)
 
     # Simulate

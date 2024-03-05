@@ -1,50 +1,285 @@
-import math, time, os, logging, torch, glob, shutil
+import logging, torch
+from pathlib import Path
+from textwrap import indent
 
-from chop.passes.graph.utils import vf, v2p, init_project
-from chop.passes.graph.transforms.quantize.quantizers import (
-    integer_quantizer_for_hw,
-    integer_quantizer,
-)
+from chop.passes.graph.utils import init_project, get_node_by_name
 
 logger = logging.getLogger(__name__)
 
-from pathlib import Path
 
-import cocotb
+def _generate_input_4d(
+    arg: str,
+    channels: int,
+    total_dim0: int,
+    total_dim1: int,
+    parallel_dim0: int,
+    parallel_dim1: int,
+    width: int,
+    frac_width: int,
+):
+    return f"""
+{arg}_in = list()
+for _ in range({channels} * batches):
+    {arg}_in.extend(gen_random_matrix_input(
+        {total_dim0},  # total_dim0
+        {total_dim1},  # total_dim1
+        {parallel_dim0},  # compute_dim0
+        {parallel_dim1},  # compute_dim1
+        {width},  # width
+        {frac_width}  # frac_width
+    ))
+inputs["{arg}"] = {arg}_in
+""".strip()
+
+def _reconstruct_input_4d(
+    arg: str,
+    channels: int,
+    total_dim0: int,
+    total_dim1: int,
+    parallel_dim0: int,
+    parallel_dim1: int,
+    width: int,
+    frac_width: int,
+):
+    return f"""
+# INPUT: {arg}
+{arg}_driver = inputs["{arg}"]
+{arg}_batched = batched({arg}_driver, {(total_dim0 // parallel_dim0) * (total_dim1 // parallel_dim1)})
+{arg}_mat_list = [rebuild_matrix(b, {total_dim0}, {total_dim1}, {parallel_dim0}, \
+{parallel_dim1}) for b in {arg}_batched]
+{arg}_recon = torch.stack({arg}_mat_list).reshape(-1, {channels}, {total_dim1}, \
+{total_dim0})
+{arg}_recon = sign_extend_t({arg}_recon, {width}).to(dtype=torch.float32) / \
+(2 ** {frac_width})
+recon_dict["{arg}"] = {arg}_recon
+""".strip()
+
+def _process_output_4d(
+    arg: str,
+    total_dim0: int,
+    total_dim1: int,
+    parallel_dim0: int,
+    parallel_dim1: int,
+    width: int,
+    frac_width: int,
+):
+    return f"""
+# OUTPUT: {arg}
+{arg}_flat = model_out.reshape(-1, {total_dim1}, {total_dim0})
+{arg}_flat, _ = _fixed_signed_cast_model({arg}_flat, {width}, {frac_width}, False, "floor")
+{arg}_monitor_exp = list()
+for i in range({arg}_flat.shape[0]):
+    {arg}_monitor_exp.extend(split_matrix({arg}_flat[i], {total_dim0}, {total_dim1}, \
+{parallel_dim0}, {parallel_dim1}))
+return {arg}_monitor_exp
+""".strip()
+
+def _make_stream_driver(data, valid, ready):
+    return f"StreamDriver(dut.clk, dut.{data}, dut.{valid}, dut.{ready})"
+
+def _make_stream_monitor(data, valid, ready):
+    return f"StreamMonitor(dut.clk, dut.{data}, dut.{valid}, dut.{ready})"
+
+def _emit_cocotb_tb_str(graph, tb_dir: Path):
+
+    # Drivers and Monitors
+    drivers = []
+    for arg in graph.meta["mase"]["common"]["args"].keys():
+        drivers.append(_make_stream_driver(arg, f"{arg}_valid", f"{arg}_ready"))
+
+    monitors = []
+    for res in graph.meta["mase"]["common"]["results"].keys():
+        monitors.append(_make_stream_monitor(res, f"{res}_valid", f"{res}_ready"))
+
+    # Save torch model
+    model_path = tb_dir / "model.pth"
+    torch.save(graph.model, model_path)
+
+    # Inputs, Reconstructs, Output Processing
+    inputs = []
+    reconstructs = []
+
+    # Input processing
+    graph_inputs = graph.meta["mase"]["common"]["nodes_in"]
+    node_args = graph.meta["mase"]["common"]["args"].items()
+    for i, (arg, arg_info) in enumerate(node_args):
+        node_name = graph_inputs[i].name
+        shape = arg_info["shape"]
+        precision = arg_info["precision"]
+        parallelism = get_node_by_name(
+            graph.fx_graph, node_name
+        ).meta["mase"]["hardware"]["parallelism"]
+
+        # Input shape: (N, C, H, W)
+        if len(shape) == 4:
+            inputs.append(
+                _generate_input_4d(
+                    arg=arg,
+                    channels=shape[1],
+                    total_dim0=shape[3],
+                    total_dim1=shape[2],
+                    parallel_dim0=parallelism[3],
+                    parallel_dim1=parallelism[2],
+                    width=precision[0],
+                    frac_width=precision[1],
+                )
+            )
+            reconstructs.append(
+                _reconstruct_input_4d(
+                    arg=arg,
+                    channels=shape[1],
+                    total_dim0=shape[3],
+                    total_dim1=shape[2],
+                    parallel_dim0=parallelism[3],
+                    parallel_dim1=parallelism[2],
+                    width=precision[0],
+                    frac_width=precision[1],
+                )
+            )
+
+        # Input shape: (N, C)
+        elif len(shape) == 2:
+            # Batch dimension always set to 1 in metadata
+            # inputs[arg] = torch.rand(([batches] + arg_info["shape"][1:]))
+            raise NotImplementedError()
+
+        else:
+            raise Exception(
+                f"Not sure how to drive {len(shape)} dimensional input."
+            )
+
+    # Output processing
+    graph_outputs = graph.meta["mase"]["common"]["nodes_out"]
+    results = graph.meta["mase"]["common"]["results"].items()
+    assert len(results) == 1, "Only supporting single output!"
+    result_name, result_info = next(iter(results))
+
+    node_name = graph_outputs[0].name
+    shape = result_info["shape"]
+    precision = result_info["precision"]
+    parallelism = get_node_by_name(
+        graph.fx_graph, node_name
+    ).meta["mase"]["hardware"]["parallelism"]
+
+    if len(shape) == 4:
+        output_processing = _process_output_4d(
+            arg=result_name,
+            total_dim0=shape[3],
+            total_dim1=shape[2],
+            parallel_dim0=parallelism[3],
+            parallel_dim1=parallelism[2],
+            width=precision[0],
+            frac_width=precision[1],
+        )
+    elif len(shape) == 2:
+        raise NotImplementedError()
+    else:
+        raise Exception(
+            f"Not sure how to process {len(shape)} dimensional input."
+        )
+
+    driver_text = indent("\n".join(drivers), " "*12)
+    monitor_text = indent("\n".join(monitors), " "*12)
+    inputs_text = indent("\n".join(inputs), " "*8)
+    reconstruct_text = indent("\n".join(reconstructs), " "*8)
+    output_processing_text = indent(output_processing, " "*8)
+
+    testbench_template = f"""
 from mase_cocotb.testbench import Testbench
 from mase_cocotb.interfaces.streaming import StreamDriver, StreamMonitor
-from mase_cocotb.z_qlayers.tensor_cast import quantize_to_int
+from mase_cocotb.utils import batched, sign_extend_t
+from mase_cocotb.matrix_tools import (
+    gen_random_matrix_input,
+    rebuild_matrix,
+    split_matrix,
+)
 
-import dill
+from mase_components.cast.test.fixed_signed_cast_tb import (
+    _fixed_signed_cast_model
+)
+
+
+class MaseGraphTB(Testbench):
+    def __init__(self, dut):
+        super().__init__(dut, dut.clk, dut.rst)
+
+        # Instantiate drivers
+        self.input_drivers.extend([
+{driver_text}
+        ])
+
+        # Instantiate monitors
+        self.output_monitors.extend([
+{monitor_text}
+        ])
+
+        # Load model
+        self.model = torch.load("{model_path}")
+
+    def generate_inputs(self, batches):
+        \"\"\"Generates unsigned integer lists for the cocotb drivers.\"\"\"
+        inputs = dict()
+{inputs_text}
+        return inputs
+
+    def reconstruct(self, inputs):
+        \"\"\"Reconstructs float tensors from integer lists for software model.\"\"\"
+        recon_dict = dict()
+{reconstruct_text}
+        return recon_dict
+
+    def output_processing(self, model_out):
+        \"\"\"Casts float tensors outputed by software model into unsigned integer
+        lists for cocotb monitors.\"\"\"
+{output_processing_text}
+
+    def load_drivers(self, inputs):
+        \"\"\"Load the corresponding index driver using inputs dict.\"\"\"
+        for arg_idx, arg_in in enumerate(inputs.values()):
+            self.input_drivers[arg_idx].load_driver(arg_in)
+
+    def load_monitors(self, expectation):
+        \"\"\"Load the expected output.\"\"\"
+        self.output_monitors[0].load_monitor(expectation)
+
+    def all_monitors_empty(self):
+        \"\"\"Assert that all monitor expectation queues are drained.\"\"\"
+        for mon in self.output_monitors:
+            if not mon.exp_queue.empty():
+                return False
+        return True
+""".strip()
+    return testbench_template
 
 
 def _emit_cocotb_test(graph, project_dir: Path):
     tb_dir = project_dir / "hardware" / "test" / "mase_top_tb"
 
-    test_template = f"""\
-import dill
+    test_template = f"""
+import torch
 from pathlib import Path
 
 import cocotb
 from cocotb.triggers import Timer
 
 from mase_cocotb.runner import simulate_pass
+{_emit_cocotb_tb_str(graph, tb_dir)}
+
 
 @cocotb.test()
 async def test(dut):
-
-    with open("{tb_dir / 'tb_obj.dill'}", "rb") as f:
-        tb = dill.load(f)(dut)
-
-    tb.initialize()
-
+    tb = MaseGraphTB(dut)
+    await tb.initialize()
     in_tensors = tb.generate_inputs(batches=3)
-    exp_out = tb.model(*list(in_tensors.values()))
+    recon_in = tb.reconstruct(in_tensors)
+    model_out = tb.model(*list(recon_in.values()))
+    mon_exp = tb.output_processing(model_out)
 
     tb.load_drivers(in_tensors)
-    tb.load_monitors(exp_out)
+    tb.load_monitors(mon_exp)
 
-    await Timer(100, units="us")
+    await Timer(1000, units="us")
+    assert tb.all_monitors_empty()
 
 
 if __name__ == "__main__":
@@ -53,89 +288,6 @@ if __name__ == "__main__":
 
     with open(tb_dir / "test.py", "w") as f:
         f.write(test_template)
-
-
-def _emit_cocotb_tb(graph, tb_dir: Path):
-
-    class MaseGraphTB(Testbench):
-        def __init__(self, dut):
-            super().__init__(dut, dut.clk, dut.rst)
-
-            # Instantiate as many drivers as required inputs to the model
-            for arg in graph.meta["mase"]["common"]["args"].keys():
-                self.input_drivers.append(
-                    StreamDriver(
-                        dut.clk,
-                        getattr(dut, arg),
-                        getattr(dut, f"{arg}_valid"),
-                        getattr(dut, f"{arg}_ready"),
-                    )
-                )
-
-            # Instantiate as many monitors as required outputs
-            for result in graph.meta["mase"]["common"]["results"].keys():
-                self.output_monitors.append(
-                    StreamMonitor(
-                        dut.clk,
-                        getattr(dut, result),
-                        getattr(dut, f"{result}_valid"),
-                        getattr(dut, f"{result}_ready"),
-                    )
-                )
-
-            self.model = graph.model
-
-            # To do: precision per input argument
-            self.input_precision = graph.meta["mase"]["common"]["args"]["data_in_0"][
-                "precision"
-            ]
-
-        def generate_inputs(self, batches):
-            """
-            Generate inputs for the model by sampling a random tensor
-            for each input argument, according to its shape
-
-            :param batches: number of batches to generate for each argument
-            :type batches: int
-            :return: a dictionary of input arguments and their corresponding tensors
-            :rtype: Dict
-            """
-            inputs = {}
-            for arg, arg_info in graph.meta["mase"]["common"]["args"].items():
-                # Batch dimension always set to 1 in metadata
-                inputs[arg] = torch.rand(([batches] + arg_info["shape"][1:]))
-            return inputs
-
-        def load_drivers(self, in_tensors):
-            for arg_idx, arg_batches in enumerate(in_tensors.values()):
-                # Quantize input tensor according to precision
-                if len(self.input_precision) > 1:
-                    arg_batches = integer_quantizer(
-                        arg_batches,
-                        width=self.input_precision[0],
-                        frac_width=self.input_precision[1],
-                    )
-                    # Convert to integer equivalent of fixed point representation
-                    arg_batches = (
-                        (arg_batches * (2 ** self.input_precision[1])).int().tolist()
-                    )
-                else:
-                    # TO DO: convert to integer equivalent of floating point representation
-                    pass
-
-                # Append to input driver
-                for batch in arg_batches:
-                    self.input_drivers[arg_idx].append(batch)
-
-        def load_monitors(self, expectation):
-            self.output_monitors[-1].expect(expectation.tolist())
-
-    # Serialize testbench object to be instantiated within test by cocotb runner
-    cls_obj = MaseGraphTB
-    with open(tb_dir / "tb_obj.dill", "wb") as file:
-        dill.dump(cls_obj, file)
-    with open(tb_dir / "__init__.py", "w") as file:
-        file.write("from .test import test")
 
 
 def emit_cocotb_transform_pass(graph, pass_args={}):
@@ -164,6 +316,5 @@ def emit_cocotb_transform_pass(graph, pass_args={}):
     tb_dir.mkdir(parents=True, exist_ok=True)
 
     _emit_cocotb_test(graph, project_dir)
-    _emit_cocotb_tb(graph, tb_dir)
 
     return graph, None
