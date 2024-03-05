@@ -40,7 +40,7 @@ matrix_flatten #(
     .data_out(in_data_flat)
 );
 
-fifo_v2 #(
+fifo #(
     .SIZE(FIFO_SIZE),
     .DATA_WIDTH(FLAT_DATA_WIDTH)
 ) input_fifo_inst (

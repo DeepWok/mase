@@ -1,5 +1,26 @@
 # mase_op : the set of functional equivalent IPs with different design configurations.
 # The first IP in each list is used by default
+norm = {
+    "name": "norm",
+    "dependence_files": [
+        "common/rtl/join2.sv",
+        "common/rtl/split2.sv",
+        "common/rtl/repeat_circular_buffer.sv",
+        "common/rtl/skid_buffer.sv",
+        "cast/rtl/fixed_signed_cast.sv",
+        "fixed_arithmetic/rtl/fixed_accumulator.sv",
+        "fixed_arithmetic/rtl/fixed_adder_tree.sv",
+        "fixed_arithmetic/rtl/fixed_adder_tree_layer.sv",
+        "matmul/rtl/matrix_fifo.sv",
+        "matmul/rtl/matrix_flatten.sv",
+        "matmul/rtl/matrix_unflatten.sv",
+        "norm/temp_inv_sqrt.sv",
+        "norm/group_norm_2d.sv",
+        "norm/rms_norm_2d.sv",
+        "norm/norm.sv",
+    ]
+}
+
 INTERNAL_COMP = {
     "linear": [
         {
@@ -27,4 +48,5 @@ INTERNAL_COMP = {
             ],
         },
     ],
+    "layer_norm" : [norm],
 }

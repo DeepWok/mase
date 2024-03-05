@@ -173,6 +173,12 @@ def create_new_module(
         new_module = new_module_cls(
             output_size=original_module.output_size, config=config
         )
+    elif mase_op == "layer_norm":
+        new_module_cls = quantized_module_map[f"layer_norm_{quant_name}"]
+        new_module = new_module_cls(
+            normalized_shape=original_module.normalized_shape,
+            config=config
+        )
     else:
         raise NotImplementedError(
             f"Unsupported module class {original_module_cls} to modify"

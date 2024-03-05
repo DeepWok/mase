@@ -30,6 +30,7 @@ QUANTIZEABLE_OP = (
     "linear",
     "relu",
     "sub",
+    "layer_norm",
 )
 
 
