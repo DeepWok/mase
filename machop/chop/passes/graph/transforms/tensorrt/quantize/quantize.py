@@ -80,8 +80,6 @@ class Quantizer:
         
     def ONNX_to_TRT(self, ONNX_path):
         self.logger.info("Converting PyTorch model to TensorRT...")
-        if self.config['accelerator'] == 'cuda':
-            os.environ['CUDA_MODULE_LOADING'] = 'LAZY'
         TRT_LOGGER = trt.Logger(trt.Logger.WARNING)
         builder = trt.Builder(TRT_LOGGER)
         network = builder.create_network(1 << (int)(trt.NetworkDefinitionCreationFlag.EXPLICIT_BATCH))
