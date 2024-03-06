@@ -31,16 +31,39 @@ from torchmetrics.classification import MulticlassAccuracy
 import torchmetrics
 import numpy as np
 import torch
+import tensorrt as trt
+import pycuda.driver as cuda
+import pycuda.autoinit  # This is needed for initializing CUDA driver
 # from chop.passes.graph.analysis.quantization import calculate_flops_pass #TODO add FLOPS
+TRT_LOGGER = trt.Logger(trt.Logger.WARNING)
+trt_runtime = trt.Runtime(TRT_LOGGER)
 
-def tensorrt_analysis_pass(original_graph, quantized_graph, pass_args=None):
-    analysis = QuantizationAnalysis(original_graph, quantized_graph, pass_args)
+
+def tensorrt_analysis_pass(original_graph, trt_engine_path, pass_args=None):
+    analysis = QuantizationAnalysis(original_graph, trt_engine_path, pass_args)
     analysis.evaluate()
 
 class QuantizationAnalysis():
-    def __init__(self, original_graph, quantized_graph, config):
+    def __init__(self, original_graph, trt_engine_path, config):
         self.original_graph = original_graph
-        self.quantized_graph = quantized_graph
+
+        # Load the serialized TensorRT engine
+        with open(trt_engine_path, "rb") as f:
+            engine_data = f.read()
+        self.trt_engine = trt_runtime.deserialize_cuda_engine(engine_data)
+
+        # Allocate buffers for input and output
+        self.context = self.engine.create_execution_context()
+        # NOTE: You should calculate or know your input/output sizes.
+        #       They depend on your model's configuration.
+        self.input_nbytes = ...  
+        self.output_nbytes = ...
+        self.input_memory = cuda.mem_alloc(self.input_nbytes)
+        self.output_memory = cuda.mem_alloc(self.output_nbytes)
+
+        # Create a stream for CUDA operations
+        self.stream = cuda.Stream()
+
         self.config = config
         self.logger = logging.getLogger(__name__)
         self.power_monitor = Power_Monitor(self.config)
@@ -56,6 +79,22 @@ class QuantizationAnalysis():
                 case _:
                     raise ValueError(f"Unsupported analysis: {analysis}")
         self.logger.info("Finished TensorRT transformation analysis")
+
+    def infer_mg(self, graph, input_data):
+        graph.model(input_data)
+
+    def infer_trt(self, trt_context, input_data):
+        # Copy input data to the GPU
+        cuda.memcpy_htod_async(self.input_memory, input_data, self.stream)
+        # Execute the model
+        trt_context.execute_async(batch_size=1, bindings=[int(self.input_memory), int(self.output_memory)], stream_handle=self.stream.handle)
+        # Prepare buffer for output data
+        host_output_data = np.empty(self.output_shape, dtype=np.float32)  # Adjust dtype and shape as necessary
+        # Copy output data back to CPU
+        cuda.memcpy_dtoh_async(host_output_data, self.output_memory, self.stream)
+        # Synchronize the stream
+        self.stream.synchronize()
+        return host_output_data
 
     def eval(self):
         # Create CUDA events for timing GPU operations
@@ -73,7 +112,7 @@ class QuantizationAnalysis():
         all_accs, all_precisions, all_recalls, all_f1s = [], [], [], []
         all_losses, all_latencies, all_gpu_powers, all_gpu_energy, all_flops = [], [], [], [], []
         
-        search_spaces = [self.original_graph,self.quantized_graph]
+        search_spaces = [self.original_graph, self.trt_context]
 
         # Iterate over different configurations
         for i, graph in enumerate(search_spaces):
@@ -95,12 +134,16 @@ class QuantizationAnalysis():
                 xs, ys = inputs
 
                 # Instantiate and start the power monitor
-                self.start()
+                self.power_monitor.start()
 
                 torch.cuda.empty_cache()
+                
                 # Record start time of the model prediction
                 start.record()
-                preds = graph.model(xs)  # Run model prediction
+                if isinstance(graph, trt.IExecutionContext):
+                    preds = self.infer_trt(graph, xs)
+                else:
+                    preds = self.infer_mg(graph, xs)  # Run model prediction
                 end.record()          # Record end time
 
                 # Synchronize to ensure all GPU operations are finished

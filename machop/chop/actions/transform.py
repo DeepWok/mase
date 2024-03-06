@@ -140,7 +140,7 @@ def transform(
                             trt_dict['trt_graph_path']
                         except KeyError:
                             raise ValueError(f"tensorrt-quantize must be run before tensorrt-analysis: graph must be quantized to a tensorRT format first.")
-                        graph, _ = PASSES["tensorrt-analysis"](graph, pass_args=pass_config)
+                        graph, _ = PASSES["tensorrt-analysis"](graph, trt_dict['trt_graph_path'], pass_args=pass_config)
                     case "fusion":
                         raise NotImplementedError()
                     case "kerneltuning":

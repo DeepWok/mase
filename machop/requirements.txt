@@ -60,3 +60,4 @@ prettytable
 pyyaml
 pytorch-quantization
 pynvml
+pycuda
