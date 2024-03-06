@@ -364,6 +364,12 @@ int main()
 {
     w_width = i_width + f_width;
 
+    init_lut();
+    for(int i = 0; i < LUT_SIZE; i++){
+        std::cout << lut[i] << "\n";
+    }
+
+    /*
     // Testing range_augmentation()
     float x_f = 5.0f;
     int x = float_to_qxy(x_f, 8, 8);
@@ -372,6 +378,7 @@ int main()
     int x_hat = range_augmentation(x_red, msb_index);
     std::cout << "X red: " << qxy_to_float(x_red, 1, 15) << "\n";
     std::cout << "X hat: " << qxy_to_float(x_hat, 8, 8) << "\n";
+    */
 
     /*
     // Testing find_lut_index()

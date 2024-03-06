@@ -2,11 +2,13 @@
 module fixed_range_reduction #(
     parameter WIDTH = 16
 ) (
+    // x
     input logic[2*WIDTH-1:0] data_a,    // FORMAT: Q(INT_WIDTH).(FRAC_WIDTH).
-    output logic[2*WIDTH-1:0] data_out  // FORMAT: Q1.(WIDTH-1).
+    // x reduced
+    output logic[2*WIDTH-1:0] data_out,  // FORMAT: Q1.(WIDTH-1).
+    // msb_index
+    output logic[WIDTH-1:0] msb_index
 );
-
-    logic[WIDTH/2-1:0] msb_index;
 
     integer i;
     always @* begin

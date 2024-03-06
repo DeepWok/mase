@@ -3,8 +3,10 @@ module fixed_lut_index #(
     parameter WIDTH = 16,
     parameter LUT_POW = 5
 ) (
+    // Input number x.
     input logic[2*WIDTH-1:0] data_a,    // FORMAT: Q(INT_WIDTH).(FRAC_WIDTH).
-    input logic[2*WIDTH-1:0] data_b,
+    // MSB index
+    input logic[2*WIDTH-1:0] data_b,    // FORMAT: Q(WIDTH).0.
     output logic[2*WIDTH-1:0] data_out  // FORMAT: Q(WIDTH).0.
 );
 
