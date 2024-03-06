@@ -1,43 +1,65 @@
 `timescale 1ns / 1ps
 module fixed_isqrt #(
-    parameter INT_WIDTH = 8,
-    parameter FRAC_WIDTH = 8,
-    parameter WIDTH = INT_WIDTH + FRAC_WIDTH,
-    parameter MAX_NUM = (1 << WIDTH) - 1,
+    parameter IN_WIDTH = 16,
+    parameter IN_FRAC_WIDTH = 7,
     parameter LUT_POW = 5,
-    parameter THREEHALFS = 3 << (WIDTH - 2),
-    parameter ONE = 1 << (WIDTH-1) // FORMAT: Q1.(WIDTH-1)
+    // TODO: how to use these? Will the output width not always be the same as
+    // the input width?
+    parameter OUT_WIDTH = 16,
+    parameter OUT_FRAC_WIDTH = 7,
+    // TODO: the design is stateless therefore no cycles needed.
+    // if the critical path is too large for this module then it can be 
+    // pipelined.
+    parameter PIPELINE_CYCLES = 0,
+    localparam INT_WIDTH = IN_WIDTH - IN_FRAC_WIDTH,
+    localparam MAX_NUM = (1 << IN_WIDTH) - 1,
+    localparam MSB_WIDTH = $clog2(IN_WIDTH),
+    localparam ONE = 1 << (IN_WIDTH-1) // FORMAT: Q1.(WIDTH-1)
 ) (
-    input logic[2*WIDTH-1:0] data_a,
-    output logic[2*WIDTH-1:0] isqrt
+    // TODO: stateless design would not need these pins.
+    // input logic clk,
+    // input logic rst,
+    
+    input   logic[IN_WIDTH-1:0] in_data,
+    // TODO: usage of these pins depends on whether or not the design is
+    // pipelined whether.
+    input   logic               in_valid,
+    output  logic               in_ready,
+
+    output  logic[IN_WIDTH-1:0] out_data,
+    // TODO: usage of these pins depends on whether or not the design is
+    // pipelined whether.
+    output  logic               out_valid,
+    input   logic               out_ready
+
 );
 
-    logic[2*WIDTH-1:0] x_reduced;
-    logic[2*WIDTH-1:0] msb_index;
-    logic[2*WIDTH-1:0] lut_index;
-    logic[2*WIDTH-1:0] lut_value;
-    logic[2*WIDTH-1:0] y;
-    logic[2*WIDTH-1:0] y_aug;
+    logic[IN_WIDTH-1:0] x_reduced;
+    logic[MSB_WIDTH-1:0] msb_index;
+    logic[MSB_WIDTH-1:0] lut_index;
+    logic[IN_WIDTH-1:0] lut_value;
+    logic[IN_WIDTH-1:0] y;
+    logic[IN_WIDTH-1:0] y_aug;
     
     fixed_range_reduction #(
-        .WIDTH(WIDTH)
+        .WIDTH(IN_WIDTH)
     ) fixed_range_reduction_inst (
-        .data_a(data_a),
+        .data_a(in_data),
         .data_out(x_reduced),
         .msb_index(msb_index)
     );
 
     fixed_lut_index #(
-        .WIDTH(WIDTH),
+        .WIDTH(IN_WIDTH),
         .LUT_POW(LUT_POW)
     ) fixed_lut_index_inst (
-        .data_a(data_a),
+        .data_a(in_data),
         .data_b(msb_index),
         .data_out(lut_index)
     );
 
     fixed_lut #(
-        .WIDTH(WIDTH),
+        .WIDTH(IN_WIDTH),
         .LUT_POW(LUT_POW)
     ) fixed_lut_inst (
         .data_a(lut_index),
@@ -45,10 +67,7 @@ module fixed_isqrt #(
     );
 
     fixed_nr_stage #(
-        .INT_WIDTH(INT_WIDTH),
-        .FRAC_WIDTH(FRAC_WIDTH),
-        .WIDTH(WIDTH),
-        .THREEHALFS(THREEHALFS) // TODO: make this a local parameter.
+        .WIDTH(IN_WIDTH)
     ) fixed_nr_stage_inst_1 (
         .data_a(x_reduced),
         .data_b(lut_value),
@@ -58,19 +77,17 @@ module fixed_isqrt #(
     assign y = (x_reduced == ONE) ? x_reduced : y;
     
     fixed_range_augmentation #(
-        .WIDTH(WIDTH),
-        .FRAC_WIDTH(FRAC_WIDTH),
-        .SQRT2(16'b1011010100000100), // TODO: make this a local parameter.
-        .ISQRT2(16'b0101101010000010) // TODO: make this a local parameter.
+        .WIDTH(IN_WIDTH),
+        .FRAC_WIDTH(IN_FRAC_WIDTH)
     ) fixed_range_augmentation_inst (
         .data_a(y),
         .data_b(msb_index),
         .data_out(y_aug)
     );
 
-    assign isqrt = 
+    assign out_data = 
         // Fishing for 0s.
-        (data_a == 0) ? 
+        (in_data == 0) ? 
             MAX_NUM 
             : 
             (
