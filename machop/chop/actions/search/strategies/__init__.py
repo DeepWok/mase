@@ -1,11 +1,13 @@
 # from .rl import StrategyRL
 from .optuna import SearchStrategyOptuna
+from .naslib import SearchStrategyNaslib
 from .base import SearchStrategyBase
 
 
 SEARCH_STRATEGY_MAP = {
     # "rl": StrategyRL,
     "optuna": SearchStrategyOptuna,
+    "naslib": SearchStrategyNaslib,
 }
 
 
