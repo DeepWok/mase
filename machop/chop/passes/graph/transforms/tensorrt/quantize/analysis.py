@@ -68,77 +68,74 @@ class QuantizationAnalysis():
         self.runtime = trt.Runtime(trt.Logger(trt.Logger.WARNING)) 
 
         nIO = self.engine.num_io_tensors
-        lTensorName = [self.engine.get_tensor_name(i) for i in range(nIO)]
-        nInput = [self.engine.get_tensor_mode(lTensorName[i]) for i in range(nIO)].count(trt.TensorIOMode.INPUT)
+        self.lTensorName = [self.engine.get_tensor_name(i) for i in range(nIO)]
+        self.nInput = [self.engine.get_tensor_mode(self.lTensorName[i]) for i in range(nIO)].count(trt.TensorIOMode.INPUT)
         self.context = self.engine.create_execution_context()
-
-        for i in range(nIO):
-            print("[%2d]%s->" % (i, "Input " if i < nInput else "Output"), self.engine.get_tensor_dtype(lTensorName[i]), self.engine.get_tensor_shape(lTensorName[i]), self.context.get_tensor_shape(lTensorName[i]), lTensorName[i])
-
-        execute_time = []
-        accuracy = []
-        for data, label in config['data_module'].val_dataloader():
-            bufferH = []
-            bufferH.append(np.ascontiguousarray(data))
-            for i in range(nInput, nIO):
-                bufferH.append(np.empty(self.context.get_tensor_shape(lTensorName[i]), dtype=trt.nptype(self.engine.get_tensor_dtype(lTensorName[i]))))
-            bufferD = []
-            for i in range(nIO):
-                bufferD.append(cudart.cudaMalloc(bufferH[i].nbytes)[1])
-
-            for i in range(nInput):
-                cudart.cudaMemcpy(bufferD[i], bufferH[i].ctypes.data, bufferH[i].nbytes, cudart.cudaMemcpyKind.cudaMemcpyHostToDevice)
-
-            for i in range(nIO):
-                self.context.set_tensor_address(lTensorName[i], int(bufferD[i]))
-
-            start_time = time.time()
-            self.context.execute_async_v3(0)
-            execute_time.append(time.time() - start_time)
-    
-            for i in range(nInput, nIO):
-                cudart.cudaMemcpy(bufferH[i].ctypes.data, bufferD[i], bufferH[i].nbytes, cudart.cudaMemcpyKind.cudaMemcpyDeviceToHost)
-                categories = np.argmax(bufferH[nInput], axis=1)
-                try:
-                    acc = np.sum(categories == np.array(label)) / len(label)
-                except:
-                    accuracy.append(0.69)
-            accuracy.append(acc)
-
-        for b in bufferD:
-            cudart.cudaFree(b)
-
-        print("Succeeded running model in TensorRT!")
-        print("Average execute time for one batch: %.2fms" % (sum(execute_time) / len(execute_time) * 1000))
-        print("Total accuracy: %.2f%%" % (sum(accuracy) / len(accuracy) * 100))
+        
+        # for i in range(nIO):
+        #     print("[%2d]%s->" % (i, "Input " if i < nInput else "Output"), self.engine.get_tensor_dtype(self.lTensorName[i]), self.engine.get_tensor_shape(self.lTensorName[i]), self.context.get_tensor_shape(self.lTensorName[i]), self.lTensorName[i])
 
         self.config = config
         self.logger = logging.getLogger(__name__)
 
     def infer_mg(self, graph, input_data):
-        return graph.model(input_data)
+        input_data = input_data.cuda()
 
-    def infer_trt(self, trt_context, input_data):
-        # Transfer input data to the GPU
-        cuda.memcpy_htod_async(self.d_input, input_data.cuda(), self.stream)
-
-        # Run inference
-        trt_context.execute_async_v2(bindings=self.bindings, stream_handle=self.stream.handle)
-
-        # Transfer predictions back from the GPU
-        cuda.memcpy_dtoh_async(self.output, self.d_output, self.stream)
-
-        # Synchronize the stream
-        self.stream.synchronize()
-
-        return self.output
-    
-    def evaluate(self):
-        self.logger.info("Starting TensorRT transformation analysis")
         # Create CUDA events for timing GPU operations
         start = torch.cuda.Event(enable_timing=True)
         end = torch.cuda.Event(enable_timing=True)
+        
+        # INFERENCE!
+        start.record()
+        preds = graph.model(input_data)
+        end.record()
 
+        # Calculate latency between start and end events
+        latency = start.elapsed_time(end)
+
+        # Synchronize to ensure all GPU operations are finished
+        torch.cuda.synchronize()
+
+        return np.array(preds), latency
+
+    def infer_trt(self, trt_context, input_data):
+        bufferH = []
+        bufferH.append(np.ascontiguousarray(input_data))
+        for i in range(self.nInput, self.nIO):
+            bufferH.append(np.empty(self.context.get_tensor_shape(self.lTensorName[i]), dtype=trt.nptype(self.engine.get_tensor_dtype(self.lTensorName[i]))))
+        bufferD = []
+        for i in range(self.nIO):
+            bufferD.append(cudart.cudaMalloc(bufferH[i].nbytes)[1])
+
+        for i in range(self.nInput):
+            cudart.cudaMemcpy(bufferD[i], bufferH[i].ctypes.data, bufferH[i].nbytes, cudart.cudaMemcpyKind.cudaMemcpyHostToDevice)
+
+        for i in range(self.nIO):
+            self.context.set_tensor_address(self.lTensorName[i], int(bufferD[i]))
+
+        # Create CUDA events for timing GPU operations
+        start = torch.cuda.Event(enable_timing=True)
+        end = torch.cuda.Event(enable_timing=True)
+        
+        # INFERENCE!
+        start.record()
+        self.context.execute_async_v3(0)
+        end.record()
+
+        # Calculate latency between start and end events
+        latency = start.elapsed_time(end)
+
+        for i in range(self.nInput, self.nIO):
+            cudart.cudaMemcpy(bufferH[i].ctypes.data, bufferD[i], bufferH[i].nbytes, cudart.cudaMemcpyKind.cudaMemcpyDeviceToHost)
+            preds = np.argmax(bufferH[self.nInput], axis=1)
+
+        for b in bufferD:
+            cudart.cudaFree(b)
+
+        return preds, latency
+    
+    def evaluate(self):
+        self.logger.info("Starting TensorRT transformation analysis")
         num_warmup_iterations = 5
 
         # Instantiate metrics with the specified task type
@@ -162,14 +159,10 @@ class QuantizationAnalysis():
             flops = []
             
             # Iterate over batches in the training data
-            for j, inputs in enumerate(self.config['data_module'].val_dataloader()):
-
+            for j, (xs, ys) in enumerate(self.config['data_module'].val_dataloader()):
                 # Break the loop after processing the specified number of batches
                 if j >= self.config['num_batches']:
                     break
-
-                # Unpack inputs and labels
-                xs, ys = inputs
 
                 # Instantiate and start the power monitor
                 power_monitor = PowerMonitor(self.config)
@@ -177,22 +170,16 @@ class QuantizationAnalysis():
 
                 torch.cuda.empty_cache()
 
-                # Record start time of the model prediction
-                start.record()
                 if isinstance(graph, trt.IExecutionContext):
-                    preds = self.infer_trt(graph, xs)
+                    preds, latency = self.infer_trt(graph, xs)
                 else:
-                    xs.cuda()
-                    preds = self.infer_mg(graph, xs)  # Run model prediction
-                end.record()          # Record end time
-
-                # Synchronize to ensure all GPU operations are finished
-                torch.cuda.synchronize()
-
-                # Calculate latency between start and end events
-                latency = start.elapsed_time(end)
-                latencies.append(latency)
+                    preds, latency = self.infer_mg(graph, xs)  # Run model prediction
                 
+                latencies.append(latency)
+
+                # convert output to numpy since TensorRT requires numpy input not pytorch tensor
+                ys = np.array(ys)
+
                 # Stop the power monitor and calculate average power
                 power_monitor.stop()
                 power_monitor.join()  # Ensure monitoring thread has finished
