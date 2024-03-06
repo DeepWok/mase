@@ -53,7 +53,7 @@ class QuantizationAnalysis():
         self.trt_engine = trt_runtime.deserialize_cuda_engine(engine_data)
 
         # Allocate buffers for input and output
-        self.context = self.trt_engine.create_execution_context()
+        self.trt_context = self.trt_engine.create_execution_context()
 
         # Calculate input/output sizes.
         for inputs in config['data_module'].val_dataloader():
@@ -68,24 +68,12 @@ class QuantizationAnalysis():
         # Create a stream for CUDA operations
         self.stream = cuda.Stream()
 
-        self.trt_config = config
+        self.config = config
         self.logger = logging.getLogger(__name__)
-        self.power_monitor = Power_Monitor(self.config)
-    
-    def evaluate(self):
-        self.logger.info("Starting TensorRT transformation analysis")
-        for analysis in self.config["analysis"]:
-            match analysis:
-                case "latency":
-                    self.eval()
-                case "accuracy":
-                    self.eval()
-                case _:
-                    raise ValueError(f"Unsupported analysis: {analysis}")
-        self.logger.info("Finished TensorRT transformation analysis")
+        self.power_monitor = Power_Monitor(config)
 
     def infer_mg(self, graph, input_data):
-        graph.model(input_data)
+        return graph.model(input_data.cuda())
 
     def infer_trt(self, trt_context, input_data):
         # Copy input data to the GPU
@@ -99,8 +87,9 @@ class QuantizationAnalysis():
         # Synchronize the stream
         self.stream.synchronize()
         return host_output_data
-
-    def eval(self):
+    
+    def evaluate(self):
+        self.logger.info("Starting TensorRT transformation analysis")
         # Create CUDA events for timing GPU operations
         start = torch.cuda.Event(enable_timing=True)
         end = torch.cuda.Event(enable_timing=True)
@@ -108,7 +97,7 @@ class QuantizationAnalysis():
         num_warmup_iterations = 5
 
         # Instantiate metrics with the specified task type
-        metric = MulticlassAccuracy(num_classes=5)
+        metric = MulticlassAccuracy(num_classes=5).cuda()
         precision_metric = torchmetrics.Precision(num_classes=5, average='weighted', task='multiclass')
         recall_metric = torchmetrics.Recall(num_classes=5, average='weighted', task='multiclass')
         f1_metric = torchmetrics.F1Score(num_classes=5, average='weighted', task='multiclass')
@@ -165,19 +154,18 @@ class QuantizationAnalysis():
                 gpu_power_usages.append(avg_power)
                 
                 # data = calculate_flops_mg_pass(graph.model)
-                
 
                 # Calculate accuracy and loss for the batch
-                loss = torch.nn.functional.cross_entropy(preds, ys)
-                acc = metric(preds, ys)
+                loss = torch.nn.functional.cross_entropy(preds, ys.cuda())
+                acc = metric(preds, ys.cuda())
                 accs.append(acc)
                 losses.append(loss.item())
                 # flops.append(data[1]['total_flops'])
                 # Update torchmetrics metrics
                 preds_labels = torch.argmax(preds, dim=1)
-                precision_metric(preds_labels, ys)
-                recall_metric(preds_labels, ys)
-                f1_metric(preds_labels, ys)
+                precision_metric(preds_labels, ys.cuda())
+                recall_metric(preds_labels, ys.cuda())
+                f1_metric(preds_labels, ys.cuda())
 
             # Compute final precision, recall, and F1 for this configuration
             avg_precision = precision_metric.compute()
@@ -224,10 +212,11 @@ class QuantizationAnalysis():
                 all_gpu_powers.append(avg_gpu_power_usage)
                 all_gpu_energy.append(avg_gpu_energy_usage)
                 # all_flops.append(avg_flops)
-
+        self.logger.info("Finished TensorRT transformation analysis")
 
 class Power_Monitor(threading.Thread):
     def __init__(self, config):
+        super().__init__()  # Call the initializer of the base class, threading.Thread
         # Initialize the NVIDIA Management Library (NVML)
         pynvml.nvmlInit()
         self.power_readings = []  # List to store power readings

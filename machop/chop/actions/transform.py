@@ -136,10 +136,12 @@ def transform(
                             ori_graph, graph, save_dir=pass_save_dir
                         )
                     case "analysis":
+                        if accelerator != 'gpu':
+                            raise Exception(f"tensorrt-analysis must be run on a GPU: {accelerator}")
                         try:
                             trt_dict['trt_graph_path']
                         except KeyError:
-                            raise ValueError(f"tensorrt-quantize must be run before tensorrt-analysis: graph must be quantized to a tensorRT format first.")
+                            raise Exception(f"tensorrt-quantize must be run before tensorrt-analysis: graph must be quantized to a tensorRT format first.")
                         graph, _ = PASSES["tensorrt-analysis"](graph, trt_dict['trt_graph_path'], pass_args=pass_config)
                     case "fusion":
                         raise NotImplementedError()
