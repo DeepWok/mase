@@ -111,6 +111,7 @@ def transform(
                 # )
                 # pass_config["train_generator"] = train_generator
                 # pass_config["val_generator"] = val_generator
+                pass_config['batch_size'] = config['batch_size']
                 pass_config['data_module'] = data_module
                 pass_config['accelerator'] = 'cuda' if accelerator == 'gpu' else accelerator
                 if accelerator == 'gpu':
@@ -120,6 +121,7 @@ def transform(
                 trt_dict = {}
                 match pass_name_extended: 
                     case "calibrate":
+                        import pdb; pdb.set_trace()
                         graph, _ = PASSES["tensorrt-calibrate"](graph, pass_args=pass_config)
                         PASSES["summarize_quantization"](
                             ori_graph, graph, save_dir=pass_save_dir
@@ -136,8 +138,9 @@ def transform(
                             ori_graph, graph, save_dir=pass_save_dir
                         )
                     case "analysis":
+                        import pdb; pdb.set_trace()
                         if accelerator != 'gpu':
-                            raise Exception(f"tensorrt-analysis must be run on a GPU: {accelerator}")
+                            raise Exception(f"tensorrt-analysis must be run on a GPU, not a: {accelerator}")
                         try:
                             trt_dict['trt_graph_path']
                         except KeyError:

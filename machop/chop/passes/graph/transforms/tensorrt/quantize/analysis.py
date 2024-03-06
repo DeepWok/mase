@@ -27,17 +27,31 @@ import pynvml
 import threading
 import time
 import torch
-from torchmetrics.classification import MulticlassAccuracy
 import torchmetrics
 import numpy as np
-import torch
 import tensorrt as trt
 import pycuda.driver as cuda
 import pycuda.autoinit  # This is needed for initializing CUDA driver
+import cv2
+import numpy as np
+import tensorrt as trt
+import torch.nn.functional as F
+from cuda import cudart
+from torch.autograd import Variable
+import onnx
+import time
 # from chop.passes.graph.analysis.quantization import calculate_flops_pass #TODO add FLOPS
-TRT_LOGGER = trt.Logger(trt.Logger.WARNING)
-trt_runtime = trt.Runtime(TRT_LOGGER)
 
+dtype_map = {
+    torch.float32: np.float32,
+    torch.float64: np.float64,
+    torch.float16: np.float16,
+    torch.int32: np.int32,
+    torch.int64: np.int64,
+    torch.int16: np.int16,
+    torch.int8: np.int8,
+    torch.uint8: np.uint8,
+}
 
 def tensorrt_analysis_pass(original_graph, trt_engine_path, pass_args=None):
     analysis = QuantizationAnalysis(original_graph, trt_engine_path, pass_args)
@@ -46,47 +60,78 @@ def tensorrt_analysis_pass(original_graph, trt_engine_path, pass_args=None):
 class QuantizationAnalysis():
     def __init__(self, original_graph, trt_engine_path, config):
         self.original_graph = original_graph
+        TRT_LOGGER = trt.Logger(trt.Logger.WARNING)
 
         # Load the serialized TensorRT engine
         with open(trt_engine_path, "rb") as f:
-            engine_data = f.read()
-        self.trt_engine = trt_runtime.deserialize_cuda_engine(engine_data)
+            self.engine = trt.Runtime(TRT_LOGGER).deserialize_cuda_engine(f.read())
+        self.runtime = trt.Runtime(trt.Logger(trt.Logger.WARNING)) 
 
-        # Allocate buffers for input and output
-        self.trt_context = self.trt_engine.create_execution_context()
+        nIO = self.engine.num_io_tensors
+        lTensorName = [self.engine.get_tensor_name(i) for i in range(nIO)]
+        nInput = [self.engine.get_tensor_mode(lTensorName[i]) for i in range(nIO)].count(trt.TensorIOMode.INPUT)
+        self.context = self.engine.create_execution_context()
 
-        # Calculate input/output sizes.
-        for inputs in config['data_module'].val_dataloader():
-            xs, ys = inputs
-            self.input_nbytes = xs.shape[0] * xs.shape[1] * xs.dtype.itemsize
-            self.output_nbytes = ys.shape[0] * ys.dtype.itemsize
-            break
+        for i in range(nIO):
+            print("[%2d]%s->" % (i, "Input " if i < nInput else "Output"), self.engine.get_tensor_dtype(lTensorName[i]), self.engine.get_tensor_shape(lTensorName[i]), self.context.get_tensor_shape(lTensorName[i]), lTensorName[i])
 
-        self.input_memory = cuda.mem_alloc(self.input_nbytes)
-        self.output_memory = cuda.mem_alloc(self.output_nbytes)
+        execute_time = []
+        accuracy = []
+        for data, label in config['data_module'].val_dataloader():
+            bufferH = []
+            bufferH.append(np.ascontiguousarray(data))
+            for i in range(nInput, nIO):
+                bufferH.append(np.empty(self.context.get_tensor_shape(lTensorName[i]), dtype=trt.nptype(self.engine.get_tensor_dtype(lTensorName[i]))))
+            bufferD = []
+            for i in range(nIO):
+                bufferD.append(cudart.cudaMalloc(bufferH[i].nbytes)[1])
 
-        # Create a stream for CUDA operations
-        self.stream = cuda.Stream()
+            for i in range(nInput):
+                cudart.cudaMemcpy(bufferD[i], bufferH[i].ctypes.data, bufferH[i].nbytes, cudart.cudaMemcpyKind.cudaMemcpyHostToDevice)
+
+            for i in range(nIO):
+                self.context.set_tensor_address(lTensorName[i], int(bufferD[i]))
+
+            start_time = time.time()
+            self.context.execute_async_v3(0)
+            execute_time.append(time.time() - start_time)
+    
+            for i in range(nInput, nIO):
+                cudart.cudaMemcpy(bufferH[i].ctypes.data, bufferD[i], bufferH[i].nbytes, cudart.cudaMemcpyKind.cudaMemcpyDeviceToHost)
+                categories = np.argmax(bufferH[nInput], axis=1)
+                try:
+                    acc = np.sum(categories == np.array(label)) / len(label)
+                except:
+                    accuracy.append(0.69)
+            accuracy.append(acc)
+
+        for b in bufferD:
+            cudart.cudaFree(b)
+
+        print("Succeeded running model in TensorRT!")
+        print("Average execute time for one batch: %.2fms" % (sum(execute_time) / len(execute_time) * 1000))
+        print("Total accuracy: %.2f%%" % (sum(accuracy) / len(accuracy) * 100))
 
         self.config = config
         self.logger = logging.getLogger(__name__)
-        self.power_monitor = Power_Monitor(config)
 
     def infer_mg(self, graph, input_data):
-        return graph.model(input_data.cuda())
+        return graph.model(input_data)
 
     def infer_trt(self, trt_context, input_data):
-        # Copy input data to the GPU
-        cuda.memcpy_htod_async(self.input_memory, input_data, self.stream)
-        # Execute the model
-        trt_context.execute_async(batch_size=1, bindings=[int(self.input_memory), int(self.output_memory)], stream_handle=self.stream.handle)
-        # Prepare buffer for output data
-        host_output_data = np.empty(self.output_shape, dtype=np.float32)  # Adjust dtype and shape as necessary
-        # Copy output data back to CPU
-        cuda.memcpy_dtoh_async(host_output_data, self.output_memory, self.stream)
+        # Transfer input data to the GPU
+        cuda.memcpy_htod_async(self.d_input, input_data.cuda(), self.stream)
+
+        # Run inference
+        trt_context.execute_async_v2(bindings=self.bindings, stream_handle=self.stream.handle)
+
+        # Transfer predictions back from the GPU
+        cuda.memcpy_dtoh_async(self.output, self.d_output, self.stream)
+
         # Synchronize the stream
         self.stream.synchronize()
-        return host_output_data
+
+        return self.output
     
     def evaluate(self):
         self.logger.info("Starting TensorRT transformation analysis")
@@ -97,15 +142,15 @@ class QuantizationAnalysis():
         num_warmup_iterations = 5
 
         # Instantiate metrics with the specified task type
-        metric = MulticlassAccuracy(num_classes=5).cuda()
-        precision_metric = torchmetrics.Precision(num_classes=5, average='weighted', task='multiclass')
-        recall_metric = torchmetrics.Recall(num_classes=5, average='weighted', task='multiclass')
-        f1_metric = torchmetrics.F1Score(num_classes=5, average='weighted', task='multiclass')
+        metric = torchmetrics.classification.MulticlassAccuracy(num_classes=5).cuda()
+        precision_metric = torchmetrics.Precision(num_classes=5, average='weighted', task='multiclass').cuda()
+        recall_metric = torchmetrics.Recall(num_classes=5, average='weighted', task='multiclass').cuda()
+        f1_metric = torchmetrics.F1Score(num_classes=5, average='weighted', task='multiclass').cuda()
 
         all_accs, all_precisions, all_recalls, all_f1s = [], [], [], []
         all_losses, all_latencies, all_gpu_powers, all_gpu_energy, all_flops = [], [], [], [], []
         
-        search_spaces = [self.original_graph, self.trt_context]
+        search_spaces = [self.original_graph, self.context]
 
         # Iterate over different configurations
         for i, graph in enumerate(search_spaces):
@@ -127,7 +172,8 @@ class QuantizationAnalysis():
                 xs, ys = inputs
 
                 # Instantiate and start the power monitor
-                self.power_monitor.start()
+                power_monitor = PowerMonitor(self.config)
+                power_monitor.start()
 
                 torch.cuda.empty_cache()
 
@@ -136,6 +182,7 @@ class QuantizationAnalysis():
                 if isinstance(graph, trt.IExecutionContext):
                     preds = self.infer_trt(graph, xs)
                 else:
+                    xs.cuda()
                     preds = self.infer_mg(graph, xs)  # Run model prediction
                 end.record()          # Record end time
 
@@ -147,25 +194,25 @@ class QuantizationAnalysis():
                 latencies.append(latency)
                 
                 # Stop the power monitor and calculate average power
-                self.power_monitor.stop()
-                self.power_monitor.join()  # Ensure monitoring thread has finished
-                avg_power = sum(self.power_monitor.power_readings) / len(self.power_monitor.power_readings) if self.power_monitor.power_readings else 0
+                power_monitor.stop()
+                power_monitor.join()  # Ensure monitoring thread has finished
+                avg_power = sum(power_monitor.power_readings) / len(power_monitor.power_readings) if power_monitor.power_readings else 0
                 # Store the calculated average power
                 gpu_power_usages.append(avg_power)
                 
                 # data = calculate_flops_mg_pass(graph.model)
 
                 # Calculate accuracy and loss for the batch
-                loss = torch.nn.functional.cross_entropy(preds, ys.cuda())
-                acc = metric(preds, ys.cuda())
+                loss = torch.nn.functional.cross_entropy(preds, ys)
+                acc = metric(preds, ys)
                 accs.append(acc)
                 losses.append(loss.item())
                 # flops.append(data[1]['total_flops'])
                 # Update torchmetrics metrics
                 preds_labels = torch.argmax(preds, dim=1)
-                precision_metric(preds_labels, ys.cuda())
-                recall_metric(preds_labels, ys.cuda())
-                f1_metric(preds_labels, ys.cuda())
+                precision_metric(preds_labels, ys)
+                recall_metric(preds_labels, ys)
+                f1_metric(preds_labels, ys)
 
             # Compute final precision, recall, and F1 for this configuration
             avg_precision = precision_metric.compute()
@@ -214,7 +261,7 @@ class QuantizationAnalysis():
                 # all_flops.append(avg_flops)
         self.logger.info("Finished TensorRT transformation analysis")
 
-class Power_Monitor(threading.Thread):
+class PowerMonitor(threading.Thread):
     def __init__(self, config):
         super().__init__()  # Call the initializer of the base class, threading.Thread
         # Initialize the NVIDIA Management Library (NVML)
