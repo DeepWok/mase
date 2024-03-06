@@ -99,6 +99,7 @@ class LinearTB(Testbench):
             int(self.dut.WEIGHT_PARALLELISM_DIM_0)
             * int(self.dut.DATA_IN_0_PARALLELISM_DIM_0),
         )
+        
         self.weight_driver.load_driver(weights)
 
         # Load the output monitor

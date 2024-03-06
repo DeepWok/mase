@@ -141,3 +141,9 @@ venv.bak/
 
 # Data files for hardware simulation
 *.dat
+
+#Submodules
+Docker/
+mlir-air/
+verilog-ethernet/
+submodules/
