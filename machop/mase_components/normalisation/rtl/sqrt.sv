@@ -1,29 +1,47 @@
-module codic_sqrt #(
+//This is a cordic square-root module that takes inpiration for the localFixedPointCORDICSQRT MATLAB function
+module sqrt #(
     parameter IN_WIDTH      = 8,
-    parameter NUM_ITERATION = 10, 
-
+    parameter IN_FRAC_WIDTH = 3, 
+    parameter NUM_ITERATION = 10
 
 )(
-    input                   clk,
-    input                   rst, 
-    input   [IN_WIDTH-1:0]  v_in, 
-    input                   valid_in, 
+    input                           clk,
+    input                           rst, 
+    input           [IN_WIDTH-1:0]  v_in, 
+    input                           v_in_valid, 
+    output logic                    v_in_ready,
 
-    output   [IN_WIDTH-1:0] x_out, 
-    output                  valid_out
+    
+    
 
+    output logic    [IN_WIDTH-1:0]  v_out, 
+    output logic                    v_out_valid,
+    input                           v_out_ready //TODO: assign to this
+    
 );  
 
     parameter NUM_STATES = NUM_ITERATION + 2; // a rst and final state
-    parameter K_WORDSIZE = 32; 
+    parameter NUM_STATE_BITS = $clog2(NUM_STATES) + 1;
+    parameter K_WORDSIZE = 32;
 
     // Define an enum for states (one hot)
-    typedef enum logic [NUM_STATES-1:0] {
-        RST = '0,
-        `SV_FOR (int i = 1; i < NUM_ITERATION; i++) begin
-            STATE{i} = i;
-        end
-        DONE = '1
+    typedef enum logic [NUM_STATE_BITS-1:0] {
+        RST         = '0,
+        //Didn't find a way to change this automatically
+        // w/ for loop so just gonna have to change by hand
+        STATE_1     = 1, 
+        STATE_2     = 2, 
+        STATE_3     = 3,
+        STATE_4     = 4, 
+        STATE_5     = 5,
+        STATE_6     = 6,
+        STATE_7     = 7,
+        STATE_8     = 8,
+        STATE_9     = 9,
+        STATE_10    = 10,
+        READY_STATE = 11, 
+        UNASSIGNED  = 12,
+        DONE        = '1
     } state_t;
 
 
@@ -44,11 +62,12 @@ module codic_sqrt #(
 
     assign xtmp = (x_r >> state_r);
     assign ytmp = (y_r >> state_r);
+    assign v_in_ready = (state_r == READY_STATE) ? 1 : 0; 
 
 
     always_ff @(posedge clk)
     begin
-        if (!rst) // sv720 TODO: check if reset is active high or low
+        if (rst) // sv720 TODO: check if reset is active high or low
         begin 
             x_r     <= '0; 
             y_r     <= '0; 
@@ -65,33 +84,36 @@ module codic_sqrt #(
         end
     end 
 
-    
-    
-
-
     always_comb
     begin 
         //Set default values of _b wires here
-        k_b     = '0; 
-        state_b = '0;
-        x_b     = '0; 
-        y_b     = '0; 
+        k_b         = '0; 
+        state_b     = RST;
+        x_b         = '0; 
+        y_b         = '0; 
+        v_out_valid = '0;
+        v_out       = '0; 
 
-
-        if (valid_in) //N.B. 1 cycle delay (potential for optimization)
+        if (state_r == RST)
         begin 
-            x_b     = v_in + 0.25;
-            y_b     = v_in - 0.25;
-            state_b = 1;
+            state_b = READY_STATE;
+        end
+        else if (v_in_valid) //N.B. 1 cycle delay (potential for optimization)
+        begin 
+            x_b     = v_in + 32'b10; // + 0.25
+            y_b     = v_in - 32'b10; // - 0.25
+            state_b = STATE_1;
             k_b     = 4;
         end
         else if (state_r == DONE)
         begin 
-            valid_out   = 1; 
-            state_b     = '0;
+            v_out_valid = 1;
+            v_out       = x_r;
+            state_b     = READY_STATE;
         end
         else
         begin
+            state_b =  state_t'(state_r + 1);
             if (y_r < 0)
             begin 
                 x_b = x_r + xtmp; 
@@ -103,7 +125,7 @@ module codic_sqrt #(
                 y_b = y_r - ytmp;
             end 
 
-            if (state == k) //if state is k: do it again
+            if (state_r == k_r) //if state is k: do it again
             begin
                 if (y_r < 0)
                 begin 
