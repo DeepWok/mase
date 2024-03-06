@@ -117,7 +117,7 @@ class Quantizer:
 
         save_path = self.prepare_save_path(method='ONNX')
 
-        dataloader = self.config['train_generator'].dataloader    
+        dataloader = self.config['data_module'].train_dataloader()  
         train_sample = next(iter(dataloader))[0]
         train_sample = train_sample.to(self.config['accelerator'])
 

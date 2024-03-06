@@ -96,22 +96,22 @@ def transform(
                 )
                 ori_graph = deepcopy_mase_graph(graph)
 
-                train_generator = InputGenerator(
-                    model_info=model_info,
-                    data_module=data_module,
-                    task=task,
-                    which_dataloader="train",
-                )
+                # train_generator = InputGenerator(
+                #     model_info=model_info,
+                #     data_module=data_module,
+                #     task=task,
+                #     which_dataloader="train",
+                # )
 
-                val_generator = InputGenerator(
-                    model_info=model_info,
-                    data_module=data_module,
-                    task=task,
-                    which_dataloader="train",
-                )
-                pass_config["train_generator"] = train_generator
-                pass_config["val_generator"] = val_generator
-                pass_config['data_loader'] = data_module.train_dataloader()
+                # val_generator = InputGenerator(
+                #     model_info=model_info,
+                #     data_module=data_module,
+                #     task=task,
+                #     which_dataloader="train",
+                # )
+                # pass_config["train_generator"] = train_generator
+                # pass_config["val_generator"] = val_generator
+                pass_config['data_module'] = data_module
                 pass_config['accelerator'] = 'cuda' if accelerator == 'gpu' else accelerator
                 if accelerator == 'gpu':
                     #TODO this seems innefective - known issue - https://github.com/NVIDIA/TensorRT/issues/2468

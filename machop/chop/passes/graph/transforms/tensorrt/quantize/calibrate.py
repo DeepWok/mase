@@ -59,7 +59,7 @@ class Calibrator:
 
     def calibrate_model(self, graph):
         """Performs the calibration pass on the model using the given data loader."""
-        dataloader = self.config['data_loader']
+        dataloader = self.config['data_module'].train_dataloader()
         quant_modules.initialize()
         graph.model.cuda()
         

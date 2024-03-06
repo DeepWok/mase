@@ -53,18 +53,22 @@ class QuantizationAnalysis():
         self.trt_engine = trt_runtime.deserialize_cuda_engine(engine_data)
 
         # Allocate buffers for input and output
-        self.context = self.engine.create_execution_context()
-        # NOTE: You should calculate or know your input/output sizes.
-        #       They depend on your model's configuration.
-        self.input_nbytes = ...  
-        self.output_nbytes = ...
+        self.context = self.trt_engine.create_execution_context()
+
+        # Calculate input/output sizes.
+        for inputs in config['data_module'].val_dataloader():
+            xs, ys = inputs
+            self.input_nbytes = xs.shape[0] * xs.shape[1] * xs.dtype.itemsize
+            self.output_nbytes = ys.shape[0] * ys.dtype.itemsize
+            break
+
         self.input_memory = cuda.mem_alloc(self.input_nbytes)
         self.output_memory = cuda.mem_alloc(self.output_nbytes)
 
         # Create a stream for CUDA operations
         self.stream = cuda.Stream()
 
-        self.config = config
+        self.trt_config = config
         self.logger = logging.getLogger(__name__)
         self.power_monitor = Power_Monitor(self.config)
     
@@ -124,7 +128,7 @@ class QuantizationAnalysis():
             flops = []
             
             # Iterate over batches in the training data
-            for j, inputs in enumerate(self.config['data_loader']):
+            for j, inputs in enumerate(self.config['data_module'].val_dataloader()):
 
                 # Break the loop after processing the specified number of batches
                 if j >= self.config['num_batches']:
@@ -137,7 +141,7 @@ class QuantizationAnalysis():
                 self.power_monitor.start()
 
                 torch.cuda.empty_cache()
-                
+
                 # Record start time of the model prediction
                 start.record()
                 if isinstance(graph, trt.IExecutionContext):
