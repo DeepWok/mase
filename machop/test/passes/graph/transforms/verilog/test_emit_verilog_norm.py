@@ -107,7 +107,7 @@ def test_emit_verilog_norm():
     # Quantize NN
     quant_config = {
         "by": "type",
-        "default": {
+        "layer_norm": {
             "config": {
                 "name": "integer",
                 "data_in_width": 8,
@@ -128,12 +128,12 @@ def test_emit_verilog_norm():
             ):
                 common_p["args"][arg][
                     "type"
-                ] = quant_config["default"]["config"]["name"]
+                ] = quant_config["layer_norm"]["config"]["name"]
                 common_p["args"][arg][
                     "precision"
                 ] = [
-                    quant_config["default"]["config"]["data_in_width"],
-                    quant_config["default"]["config"]["data_in_frac_width"]
+                    quant_config["layer_norm"]["config"]["data_in_width"],
+                    quant_config["layer_norm"]["config"]["data_in_frac_width"]
                 ]
         for result, _ in common_p["results"].items():
             if (
@@ -143,12 +143,12 @@ def test_emit_verilog_norm():
             ):
                 common_p["results"][result][
                     "type"
-                ] = quant_config["default"]["config"]["name"]
+                ] = quant_config["layer_norm"]["config"]["name"]
                 common_p["results"][result][
                     "precision"
                 ] = [
-                    quant_config["default"]["config"]["data_in_width"],
-                    quant_config["default"]["config"]["data_in_frac_width"]
+                    quant_config["layer_norm"]["config"]["data_in_width"],
+                    quant_config["layer_norm"]["config"]["data_in_frac_width"]
                 ]
         hardware_p["parallelism"] = [1, 1, 4, 4]
 

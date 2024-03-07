@@ -59,6 +59,7 @@ from .relu import (
 )
 from.layer_norm import (
     LayerNormInteger,
+    LayerNormHWInteger
 )
 
 quantized_module_map = {
@@ -110,5 +111,5 @@ quantized_module_map = {
     "relu_block_fp": ReLUBlockFP,
     "relu_binary": ReLUBinary,
     "relu_ternary": ReLUTernary,
-    "layer_norm_integer": LayerNormInteger,
+    "layer_norm_integer": LayerNormHWInteger,
 }

@@ -92,61 +92,62 @@ module norm #(
 initial begin
     // Only one normalization should be selected
     assert (LAYER_NORM + INSTANCE_NORM + GROUP_NORM + RMS_NORM == 1);
-
-    //
 end
+
 
 generate
 
 if (LAYER_NORM || INSTANCE_NORM || GROUP_NORM) begin : group_norm
 
-group_norm_2d #(
-    .TOTAL_DIM0(TOTAL_DIM0),
-    .TOTAL_DIM1(TOTAL_DIM1),
-    .COMPUTE_DIM0(COMPUTE_DIM0),
-    .COMPUTE_DIM1(COMPUTE_DIM1),
-    .GROUP_CHANNELS(CHANNELS),
-    .IN_FRAC_WIDTH(IN_FRAC_WIDTH),
-    .IN_WIDTH(IN_WIDTH),
-    .OUT_WIDTH(OUT_WIDTH),
-    .OUT_FRAC_WIDTH(OUT_FRAC_WIDTH),
-    .INV_SQRT_WIDTH(INV_SQRT_WIDTH),
-    .INV_SQRT_FRAC_WIDTH(INV_SQRT_FRAC_WIDTH)
-) group_norm_inst (
-    .clk(clk),
-    .rst(rst),
-    .in_data(data_in_0),
-    .in_valid(data_in_0_valid),
-    .in_ready(data_in_0_ready),
-    .out_data(data_out_0),
-    .out_valid(data_out_0_valid),
-    .out_ready(data_out_0_ready)
-);
+    localparam NORM_CHANNELS = (INSTANCE_NORM) ? 1: CHANNELS;
+
+    group_norm_2d #(
+        .TOTAL_DIM0(TOTAL_DIM0),
+        .TOTAL_DIM1(TOTAL_DIM1),
+        .COMPUTE_DIM0(COMPUTE_DIM0),
+        .COMPUTE_DIM1(COMPUTE_DIM1),
+        .GROUP_CHANNELS(NORM_CHANNELS),
+        .IN_FRAC_WIDTH(IN_FRAC_WIDTH),
+        .IN_WIDTH(IN_WIDTH),
+        .OUT_WIDTH(OUT_WIDTH),
+        .OUT_FRAC_WIDTH(OUT_FRAC_WIDTH),
+        .INV_SQRT_WIDTH(INV_SQRT_WIDTH),
+        .INV_SQRT_FRAC_WIDTH(INV_SQRT_FRAC_WIDTH)
+    ) group_norm_inst (
+        .clk(clk),
+        .rst(rst),
+        .in_data(data_in_0),
+        .in_valid(data_in_0_valid),
+        .in_ready(data_in_0_ready),
+        .out_data(data_out_0),
+        .out_valid(data_out_0_valid),
+        .out_ready(data_out_0_ready)
+    );
 
 end else if (RMS_NORM) begin : rms_norm
 
-rms_norm_2d #(
-    .TOTAL_DIM0(TOTAL_DIM0),
-    .TOTAL_DIM1(TOTAL_DIM1),
-    .COMPUTE_DIM0(COMPUTE_DIM0),
-    .COMPUTE_DIM1(COMPUTE_DIM1),
-    .CHANNELS(CHANNELS),
-    .IN_FRAC_WIDTH(IN_FRAC_WIDTH),
-    .IN_WIDTH(IN_WIDTH),
-    .OUT_WIDTH(OUT_WIDTH),
-    .OUT_FRAC_WIDTH(OUT_FRAC_WIDTH),
-    .INV_SQRT_WIDTH(INV_SQRT_WIDTH),
-    .INV_SQRT_FRAC_WIDTH(INV_SQRT_FRAC_WIDTH)
-) rms_norm_inst (
-    .clk(clk),
-    .rst(rst),
-    .in_data(data_in_0),
-    .in_valid(data_in_0_valid),
-    .in_ready(data_in_0_ready),
-    .out_data(data_out_0),
-    .out_valid(data_out_0_valid),
-    .out_ready(data_out_0_ready)
-);
+    rms_norm_2d #(
+        .TOTAL_DIM0(TOTAL_DIM0),
+        .TOTAL_DIM1(TOTAL_DIM1),
+        .COMPUTE_DIM0(COMPUTE_DIM0),
+        .COMPUTE_DIM1(COMPUTE_DIM1),
+        .CHANNELS(CHANNELS),
+        .IN_FRAC_WIDTH(IN_FRAC_WIDTH),
+        .IN_WIDTH(IN_WIDTH),
+        .OUT_WIDTH(OUT_WIDTH),
+        .OUT_FRAC_WIDTH(OUT_FRAC_WIDTH),
+        .INV_SQRT_WIDTH(INV_SQRT_WIDTH),
+        .INV_SQRT_FRAC_WIDTH(INV_SQRT_FRAC_WIDTH)
+    ) rms_norm_inst (
+        .clk(clk),
+        .rst(rst),
+        .in_data(data_in_0),
+        .in_valid(data_in_0_valid),
+        .in_ready(data_in_0_ready),
+        .out_data(data_out_0),
+        .out_valid(data_out_0_valid),
+        .out_ready(data_out_0_ready)
+    );
 
 end
 

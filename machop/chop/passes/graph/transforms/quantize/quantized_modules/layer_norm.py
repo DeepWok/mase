@@ -7,6 +7,7 @@ import torch.nn.functional as F
 from ..quantizers import (
     integer_quantizer,
 )
+from .group_norm2d import _fixed_group_norm_2d_model
 
 
 class _LayerNormBase(nn.LayerNorm):
@@ -58,3 +59,32 @@ class LayerNormInteger(_LayerNormBase):
         self.x_quantizer = partial(
             integer_quantizer, width=x_width, frac_width=x_frac_width
         )
+
+
+class LayerNormHWInteger(nn.Module):
+    def __init__(
+        self,
+        normalized_shape,
+        config = None,
+    ) -> None:
+        super().__init__()
+        assert config is not None, "config is None!"
+        self.config = config
+        self.bypass = config.get("bypass", False)
+
+    def forward(self, x: Tensor) -> Tensor:
+        if self.bypass:
+            return F.layer_norm(x, self.normalized_shape)
+        else:
+            x_float, x_int = _fixed_group_norm_2d_model(
+                x=x,
+                in_width=self.config["data_in_width"],
+                in_frac_width=self.config["data_in_frac_width"],
+                variance_width=self.config["variance_width"],
+                variance_frac_width=self.config["variance_frac_width"],
+                inv_sqrt_width=self.config["inv_sqrt_width"],
+                inv_sqrt_frac_width=self.config["inv_sqrt_frac_width"],
+                out_width=self.config["out_width"],
+                out_frac_width=self.config["out_frac_width"],
+            )
+            return x_float
