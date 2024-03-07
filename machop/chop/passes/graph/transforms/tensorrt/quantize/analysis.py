@@ -53,13 +53,14 @@ dtype_map = {
     torch.uint8: np.uint8,
 }
 
-def tensorrt_analysis_pass(original_graph, trt_engine_path, pass_args=None):
-    analysis = QuantizationAnalysis(original_graph, trt_engine_path, pass_args)
-    analysis.evaluate()
+def tensorrt_analysis_pass(original_model, trt_engine_path, pass_args=None):
+    analysis = QuantizationAnalysis(original_model, trt_engine_path, pass_args)
+    results = analysis.evaluate()
+    return original_model, results
 
 class QuantizationAnalysis():
-    def __init__(self, original_graph, trt_engine_path, config):
-        self.original_graph = original_graph
+    def __init__(self, original_model, trt_engine_path, config):
+        self.original_model = original_model
         TRT_LOGGER = trt.Logger(trt.Logger.WARNING)
 
         # Load the serialized TensorRT engine
@@ -67,19 +68,25 @@ class QuantizationAnalysis():
             self.engine = trt.Runtime(TRT_LOGGER).deserialize_cuda_engine(f.read())
         self.runtime = trt.Runtime(trt.Logger(trt.Logger.WARNING)) 
 
-        nIO = self.engine.num_io_tensors
-        self.lTensorName = [self.engine.get_tensor_name(i) for i in range(nIO)]
-        self.nInput = [self.engine.get_tensor_mode(self.lTensorName[i]) for i in range(nIO)].count(trt.TensorIOMode.INPUT)
+        self.num_io = self.engine.num_io_tensors
+        self.lTensorName = [self.engine.get_tensor_name(i) for i in range(self.num_io)]
+        self.n_Input = [self.engine.get_tensor_mode(self.lTensorName[i]) for i in range(self.num_io)].count(trt.TensorIOMode.INPUT)
         self.context = self.engine.create_execution_context()
-        
-        # for i in range(nIO):
-        #     print("[%2d]%s->" % (i, "Input " if i < nInput else "Output"), self.engine.get_tensor_dtype(self.lTensorName[i]), self.engine.get_tensor_shape(self.lTensorName[i]), self.context.get_tensor_shape(self.lTensorName[i]), self.lTensorName[i])
+
+        for (_, ys) in config['data_module'].val_dataloader():
+            self.num_of_classes = len(torch.unique(ys))
+            break
+
+        # for i in range(self.num_io):
+        #     print("[%2d]%s->" % (i, "Input " if i < n_Input else "Output"), self.engine.get_tensor_dtype(self.lTensorName[i]), self.engine.get_tensor_shape(self.lTensorName[i]), self.context.get_tensor_shape(self.lTensorName[i]), self.lTensorName[i])
 
         self.config = config
         self.logger = logging.getLogger(__name__)
 
-    def infer_mg(self, graph, input_data):
+    def infer_mg(self, model, input_data):
+        # send model and input data to GPU for inference
         input_data = input_data.cuda()
+        model = model.cuda()
 
         # Create CUDA events for timing GPU operations
         start = torch.cuda.Event(enable_timing=True)
@@ -87,7 +94,7 @@ class QuantizationAnalysis():
         
         # INFERENCE!
         start.record()
-        preds = graph.model(input_data)
+        preds = model(input_data)
         end.record()
 
         # Calculate latency between start and end events
@@ -96,21 +103,22 @@ class QuantizationAnalysis():
         # Synchronize to ensure all GPU operations are finished
         torch.cuda.synchronize()
 
-        return np.array(preds), latency
+        # return the prediction back to the CPU
+        return preds.detach().cpu(), latency
 
     def infer_trt(self, trt_context, input_data):
         bufferH = []
         bufferH.append(np.ascontiguousarray(input_data))
-        for i in range(self.nInput, self.nIO):
+        for i in range(self.n_Input, self.num_io):
             bufferH.append(np.empty(self.context.get_tensor_shape(self.lTensorName[i]), dtype=trt.nptype(self.engine.get_tensor_dtype(self.lTensorName[i]))))
         bufferD = []
-        for i in range(self.nIO):
+        for i in range(self.num_io):
             bufferD.append(cudart.cudaMalloc(bufferH[i].nbytes)[1])
 
-        for i in range(self.nInput):
+        for i in range(self.n_Input):
             cudart.cudaMemcpy(bufferD[i], bufferH[i].ctypes.data, bufferH[i].nbytes, cudart.cudaMemcpyKind.cudaMemcpyHostToDevice)
 
-        for i in range(self.nIO):
+        for i in range(self.num_io):
             self.context.set_tensor_address(self.lTensorName[i], int(bufferD[i]))
 
         # Create CUDA events for timing GPU operations
@@ -125,32 +133,45 @@ class QuantizationAnalysis():
         # Calculate latency between start and end events
         latency = start.elapsed_time(end)
 
-        for i in range(self.nInput, self.nIO):
-            cudart.cudaMemcpy(bufferH[i].ctypes.data, bufferD[i], bufferH[i].nbytes, cudart.cudaMemcpyKind.cudaMemcpyDeviceToHost)
-            preds = np.argmax(bufferH[self.nInput], axis=1)
+        # for i in range(self.n_Input, self.num_io):
+        #     cudart.cudaMemcpy(bufferH[i].ctypes.data, bufferD[i], bufferH[i].nbytes, cudart.cudaMemcpyKind.cudaMemcpyDeviceToHost)
+        #     preds = np.argmax(bufferH[self.n_Input], axis=1)
+
+        # Copying data from device to host and collecting output tensors
+        output_data = [
+            bufferH[i] for i in range(self.n_Input, self.num_io)
+            for _ in [cudart.cudaMemcpy(bufferH[i].ctypes.data, bufferD[i], bufferH[i].nbytes, cudart.cudaMemcpyKind.cudaMemcpyDeviceToHost)]
+        ]
+
+        # Flatten output if it consists of only one item
+        output_data = output_data[0] if len(output_data) == 1 else output_data
 
         for b in bufferD:
             cudart.cudaFree(b)
 
-        return preds, latency
+        # Convert the raw scores from numpy array to PyTorch tensor
+        preds_tensor = torch.tensor(output_data, device='cpu', dtype=torch.float32)
+
+        return preds_tensor, latency
     
     def evaluate(self):
         self.logger.info("Starting TensorRT transformation analysis")
-        num_warmup_iterations = 5
+        num_warmup_iterations = self.config['num_GPU_warmup_iterations']
 
         # Instantiate metrics with the specified task type
-        metric = torchmetrics.classification.MulticlassAccuracy(num_classes=5).cuda()
-        precision_metric = torchmetrics.Precision(num_classes=5, average='weighted', task='multiclass').cuda()
-        recall_metric = torchmetrics.Recall(num_classes=5, average='weighted', task='multiclass').cuda()
-        f1_metric = torchmetrics.F1Score(num_classes=5, average='weighted', task='multiclass').cuda()
+        metric = torchmetrics.classification.MulticlassAccuracy(num_classes=self.num_of_classes)
+        precision_metric = torchmetrics.Precision(num_classes=self.num_of_classes, average='weighted', task='multiclass')
+        recall_metric = torchmetrics.Recall(num_classes=self.num_of_classes, average='weighted', task='multiclass')
+        f1_metric = torchmetrics.F1Score(num_classes=self.num_of_classes, average='weighted', task='multiclass')
 
         all_accs, all_precisions, all_recalls, all_f1s = [], [], [], []
         all_losses, all_latencies, all_gpu_powers, all_gpu_energy, all_flops = [], [], [], [], []
         
-        search_spaces = [self.original_graph, self.context]
+        search_spaces = [self.original_model, self.context]
+        models = ['Original Model', 'TensorRT Quantized Model']
 
         # Iterate over different configurations
-        for i, graph in enumerate(search_spaces):
+        for i, model in enumerate(search_spaces):
             # Initialize lists to store metrics for each configuration
             recorded_accs = []
             latencies = []
@@ -170,24 +191,26 @@ class QuantizationAnalysis():
 
                 torch.cuda.empty_cache()
 
-                if isinstance(graph, trt.IExecutionContext):
-                    preds, latency = self.infer_trt(graph, xs)
+                if isinstance(model, trt.IExecutionContext):
+                    preds, latency = self.infer_trt(model, xs)
                 else:
-                    preds, latency = self.infer_mg(graph, xs)  # Run model prediction
+                    preds, latency = self.infer_mg(model, xs)  # Run model prediction
                 
-                latencies.append(latency)
-
-                # convert output to numpy since TensorRT requires numpy input not pytorch tensor
-                ys = np.array(ys)
-
                 # Stop the power monitor and calculate average power
                 power_monitor.stop()
                 power_monitor.join()  # Ensure monitoring thread has finished
+
+                # Skip the first number of iterations to allow the model to warm up
+                if j < num_warmup_iterations:
+                    continue
+
+                latencies.append(latency)
+
                 avg_power = sum(power_monitor.power_readings) / len(power_monitor.power_readings) if power_monitor.power_readings else 0
                 # Store the calculated average power
                 gpu_power_usages.append(avg_power)
                 
-                # data = calculate_flops_mg_pass(graph.model)
+                # data = calculate_flops_mg_pass(model)
 
                 # Calculate accuracy and loss for the batch
                 loss = torch.nn.functional.cross_entropy(preds, ys)
@@ -214,39 +237,58 @@ class QuantizationAnalysis():
             recall_metric.reset()
             f1_metric.reset()
             
-            if i < num_warmup_iterations:
-                continue
-            else:
-                # Calculate and record average metrics for the current configuration
-                acc_avg = sum(accs) / len(accs)
-                loss_avg = sum(losses) / len(losses)
-                recorded_accs.append(acc_avg)
-                avg_latency = sum(latencies) / len(latencies)
-                avg_gpu_power_usage = sum(gpu_power_usages) / len(gpu_power_usages)
-                avg_gpu_energy_usage = (avg_gpu_power_usage / 1000) * avg_latency / (1000*3600)
-                
-                # Print the average metrics for the current configuration
-                print(f"Configuration {i-num_warmup_iterations}:")
-                print(f"Average Accuracy: {acc_avg}")
-                print(f"Average Precision: {avg_precision}")
-                print(f"Average Recall: {avg_recall}")
-                print(f"Average F1 Score: {avg_f1}")
-                print(f"Average Loss: {loss_avg}")
-                print(f"Average Latency: {avg_latency} milliseconds")
-                print(f"Average GPU Power Usage: {avg_gpu_power_usage} watts")
-                print(f"Average GPU Energy Usage: {avg_gpu_energy_usage} kW/hr")
-                # print(f"FLOPs: {avg_flops}")
-                
-                all_accs.append(acc_avg)
-                all_precisions.append(avg_precision.item())
-                all_recalls.append(avg_recall.item())
-                all_f1s.append(avg_f1.item())
-                all_losses.append(loss_avg)
-                all_latencies.append(avg_latency)
-                all_gpu_powers.append(avg_gpu_power_usage)
-                all_gpu_energy.append(avg_gpu_energy_usage)
-                # all_flops.append(avg_flops)
-        self.logger.info("Finished TensorRT transformation analysis")
+            # Calculate and record average metrics for the current configuration
+            acc_avg = sum(accs) / len(accs)
+            loss_avg = sum(losses) / len(losses)
+            recorded_accs.append(acc_avg)
+            avg_latency = sum(latencies) / len(latencies)
+            avg_gpu_power_usage = sum(gpu_power_usages) / len(gpu_power_usages)
+            avg_gpu_energy_usage = (avg_gpu_power_usage / 1000) * avg_latency / (1000*3600)
+            
+            # Assuming self.logger is already set up with your preferred logging level and format
+            self.logger.info(f"Configuration {models[i]}:")
+            self.logger.info(
+                "\n".join([
+                    "Metric                    | Value",
+                    "--------------------------|-----------------------",
+                    f"Average Accuracy         | {acc_avg}",
+                    f"Average Precision        | {avg_precision}",
+                    f"Average Recall           | {avg_recall}",
+                    f"Average F1 Score         | {avg_f1}",
+                    f"Average Loss             | {loss_avg}",
+                    f"Average Latency          | {avg_latency} milliseconds",
+                    f"Average GPU Power Usage  | {avg_gpu_power_usage} watts",
+                    f"Average GPU Energy Usage | {avg_gpu_energy_usage} kW/hr"
+                    # "FLOPs                   | {avg_flops}"
+                ])
+            )
+        
+            all_accs.append(acc_avg)
+            all_precisions.append(avg_precision.item())
+            all_recalls.append(avg_recall.item())
+            all_f1s.append(avg_f1.item())
+            all_losses.append(loss_avg)
+            all_latencies.append(avg_latency)
+            all_gpu_powers.append(avg_gpu_power_usage)
+            all_gpu_energy.append(avg_gpu_energy_usage)
+            # all_flops.append(avg_flops)
+
+        results = {}
+
+        # Loop through your models
+        for k in range(len(models)):
+            results[models[k]] = {
+                'Accuracy': all_accs[k],
+                'Precision': all_precisions[k],
+                'Recall': all_recalls[k],
+                'F1 Score': all_f1s[k],
+                'Loss': all_losses[k],
+                'Latency': all_latencies[k],
+                'GPU Power Usage': all_gpu_powers[k],
+                'GPU Energy Usage': all_gpu_energy[k]
+            }
+
+        return results
 
 class PowerMonitor(threading.Thread):
     def __init__(self, config):

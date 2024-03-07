@@ -94,7 +94,15 @@ class Quantizer:
 
         config = builder.create_builder_config()
         config.max_workspace_size = 1 << 30  # Adjust workspace size as necessary.
-        config.set_flag(trt.BuilderFlag.FP16)
+        if self.config['precision'] == 'fp16':
+            config.set_flag(trt.BuilderFlag.FP16)
+        if self.config['precision'] == 'int8':
+            config.set_flag(trt.BuilderFlag.INT8)
+            config.int8_calibrator = MyCalibrator(
+                self.config['nCalibration'], 
+                self.config['input_generator'],
+                self.config['cacheFile'], 
+                )
 
         #TODO add optimizations based on input tensor
         # # Optimization profiles are needed for dynamic input shapes.
