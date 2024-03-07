@@ -17,20 +17,12 @@ from pytorch_quantization.tensor_quant import QuantDescriptor
 from chop.passes.graph.utils import get_mase_op, get_mase_type, get_node_actual_target
 from chop.passes.graph.interface.save_and_load import load_mase_graph_interface_pass
 from ....utils import deepcopy_mase_graph
+from .utils import INT8Calibrator
 
 
 def tensorrt_quantize_transform_pass(graph, pass_args=None):
     quantizer = Quantizer(pass_args)
-    by = pass_args["by"]
-    match by:
-        case "type":
-            trt_graph_path = quantizer.pytorch_to_trt(graph)
-        case "name":
-            ...
-        case "regex_name":
-            ...
-        case _:
-            raise ValueError(f'Unsupported quantize "by": {by}')
+    trt_graph_path = quantizer.pytorch_to_trt(graph)
 
     # link the model with graph
     graph.model = torch.fx.GraphModule(graph.model, graph.fx_graph)
@@ -94,11 +86,13 @@ class Quantizer:
 
         config = builder.create_builder_config()
         config.max_workspace_size = 1 << 30  # Adjust workspace size as necessary.
-        if self.config['precision'] == 'fp16':
+        if self.config['precision'] == 'FP16':
             config.set_flag(trt.BuilderFlag.FP16)
-        if self.config['precision'] == 'int8':
+            
+        #TODO need to fix INT8 calibration
+        if self.config['precision'] == 'INT8':
             config.set_flag(trt.BuilderFlag.INT8)
-            config.int8_calibrator = MyCalibrator(
+            config.int8_calibrator = INT8Calibrator(
                 self.config['nCalibration'], 
                 self.config['input_generator'],
                 self.config['cacheFile'], 

@@ -36,7 +36,7 @@ calibrator = 'histogram'
 quantize_axis = false
 
 [passes.tensorrt-quantize]
-by = "type"
+precision = 'FP16'
 
 [passes.tensorrt-quantize.default.config]
 name = "integer"
