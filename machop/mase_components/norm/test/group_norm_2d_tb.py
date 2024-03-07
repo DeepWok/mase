@@ -20,6 +20,7 @@ from mase_cocotb.utils import (
     bit_driver,
     batched,
     sign_extend_t,
+    random_2d_dimensions,
 )
 
 from chop.passes.graph.transforms.quantize.quantized_modules.group_norm2d import (
@@ -114,7 +115,7 @@ async def basic(dut):
     assert tb.output_monitor.exp_queue.empty()
 
 
-@cocotb.test(skip=True)
+@cocotb.test()
 async def stream(dut):
     tb = GroupNorm2dTB(dut)
     await tb.reset()
@@ -129,7 +130,7 @@ async def stream(dut):
     assert tb.output_monitor.exp_queue.empty()
 
 
-@cocotb.test(skip=True)
+@cocotb.test()
 async def backpressure(dut):
     tb = GroupNorm2dTB(dut)
     await tb.reset()
@@ -144,7 +145,7 @@ async def backpressure(dut):
     assert tb.output_monitor.exp_queue.empty()
 
 
-@cocotb.test(skip=True)
+@cocotb.test()
 async def valid_toggle(dut):
     tb = GroupNorm2dTB(dut)
     await tb.reset()
@@ -160,7 +161,7 @@ async def valid_toggle(dut):
     assert tb.output_monitor.exp_queue.empty()
 
 
-@cocotb.test(skip=True)
+@cocotb.test()
 async def valid_backpressure(dut):
     tb = GroupNorm2dTB(dut)
     await tb.reset()
@@ -177,4 +178,18 @@ async def valid_backpressure(dut):
 
 
 if __name__ == "__main__":
-    mase_runner(trace=True)
+    def gen_random_cfg():
+        compute_dim0, compute_dim1, total_dim0, total_dim1 = random_2d_dimensions()
+        return {
+            "TOTAL_DIM0": total_dim0,
+            "TOTAL_DIM1": total_dim1,
+            "COMPUTE_DIM0": compute_dim0,
+            "COMPUTE_DIM1": compute_dim1,
+            "GROUP_CHANNELS": randint(1, 4),
+        }
+    mase_runner(
+        module_param_list=[
+            gen_random_cfg() for _ in range(3)
+        ],
+        trace=True,
+    )

@@ -67,3 +67,11 @@ def int_floor_quantizer(x: Tensor, width: int, frac_width: int, signed=True):
         int_max = 2**width - 1
     scale = 2 ** frac_width
     return torch.clamp(torch.floor(x.mul(scale)), int_min, int_max).div(scale)
+
+
+def random_2d_dimensions():
+    compute_dim0 = random.randint(2, 3)
+    compute_dim1 = random.randint(2, 3)
+    total_dim0 = compute_dim0 * random.randint(1, 3)
+    total_dim1 = compute_dim1 * random.randint(1, 3)
+    return compute_dim0, compute_dim1, total_dim0, total_dim1
