@@ -97,16 +97,16 @@ async def test_fixed_isqrt(dut):
 
         # Check the output.
         assert (
-                int_to_float(dut.out_data.value.integer, int_width, frac_width) - expected < 2**(-8)
+                abs(int_to_float(dut.out_data.value.integer, int_width, frac_width) - expected) < 2**(-8)
             ), f"""
             <<< --- Test failed --- >>>
-            Input: 
+            Input:
             X float : {int_to_float(data_a, int_width, frac_width)}
 
             Output:
             {int_to_float(dut.out_data.value.integer, int_width, frac_width)}
-            
-            Expected: 
+
+            Expected:
             {expected}
 
             Test index:
@@ -116,4 +116,4 @@ async def test_fixed_isqrt(dut):
 
 if __name__ == "__main__":
     tb = VerificationCase()
-    mase_runner(module_param_list=[tb.get_dut_parameters()])
+    mase_runner(module_param_list=[tb.get_dut_parameters()], trace=True)

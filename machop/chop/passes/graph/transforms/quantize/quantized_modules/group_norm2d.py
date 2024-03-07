@@ -7,9 +7,11 @@ from torch import Tensor
 from ..quantizers.integer import integer_floor_quantizer
 from .fixed_signed_cast import _fixed_signed_cast_model
 
+from mase_components.fixed_arithmetic.test.fixed_isqrt_tb import isqrt_sw
+
 
 logger = logging.getLogger(__file__)
-logger.setLevel(logging.INFO)
+logger.setLevel(logging.DEBUG)
 
 
 def _fixed_group_norm_2d_model(
@@ -38,14 +40,26 @@ def _fixed_group_norm_2d_model(
     var = ((x - mu) ** 2).mean(dim=(1, 2, 3), keepdim=True)
     var = integer_floor_quantizer(var, variance_width, variance_frac_width)
     logger.debug("Variance:")
-    logger.debug(var[0])
+    logger.debug(f"{var[0]} ({var[0] / (2 ** variance_frac_width)})")
 
     # Inverse Square Root calculation
-    # inv_sqrt = inv_sqrt_model(var)  # TODO: Add inv sqrt model
-    inv_sqrt = torch.full_like(var, 0.25)  # TODO: remove this later
+    # inv_sqrt = isqrt_sw(var)  # TODO: Add inv sqrt model
+    # sqrt_list = []
+    # for i in range(var.shape[0]):
+    #     sqrt_list.append(isqrt_sw(
+    #         var[i].item(),
+    #         variance_width - variance_frac_width,
+    #         variance_frac_width
+    #     ))
+    # inv_sqrt = torch.Tensor(sqrt_list).reshape(var.shape[0], 1, 1, 1)
+    inv_sqrt = 1 / torch.sqrt(var)
+    logger.debug("Pre-quantized INV SQRT:")
+    logger.debug(f"{inv_sqrt[0]} ({inv_sqrt[0] / (2 ** inv_sqrt_frac_width)})")
+
+    # inv_sqrt = torch.full_like(var, 0.25)  # TODO: remove this later
     inv_sqrt = integer_floor_quantizer(inv_sqrt, inv_sqrt_width, inv_sqrt_frac_width)
     logger.debug("Inverse SQRT:")
-    logger.debug(inv_sqrt[0])
+    logger.debug(f"{inv_sqrt[0]} ({inv_sqrt[0] / (2 ** inv_sqrt_frac_width)})")
 
     # Norm calculation
     diff = x - mu

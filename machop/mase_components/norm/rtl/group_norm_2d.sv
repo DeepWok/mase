@@ -24,13 +24,13 @@ module group_norm_2d #(
 
     // Data widths
     parameter IN_WIDTH            = 8,
-    parameter IN_FRAC_WIDTH       = 2,
+    parameter IN_FRAC_WIDTH       = 4,
     parameter OUT_WIDTH           = 8,
-    parameter OUT_FRAC_WIDTH      = 4,
+    parameter OUT_FRAC_WIDTH      = 4
 
     // Precision of inverse sqrt unit
-    parameter INV_SQRT_WIDTH      = 16,
-    parameter INV_SQRT_FRAC_WIDTH = 10
+    // parameter INV_SQRT_WIDTH      = 16,
+    // parameter INV_SQRT_FRAC_WIDTH = 10
 ) (
     input  logic                clk,
     input  logic                rst,
@@ -39,7 +39,7 @@ module group_norm_2d #(
     input  logic                in_valid,
     output logic                in_ready,
 
-    output logic [IN_WIDTH-1:0] out_data [COMPUTE_DIM0*COMPUTE_DIM1-1:0],
+    output logic [OUT_WIDTH-1:0] out_data [COMPUTE_DIM0*COMPUTE_DIM1-1:0],
     output logic                out_valid,
     input  logic                out_ready
 );
@@ -59,6 +59,9 @@ localparam DIFF_FRAC_WIDTH = IN_FRAC_WIDTH;
 
 localparam VARIANCE_WIDTH = IN_WIDTH * 2;
 localparam VARIANCE_FRAC_WIDTH = IN_FRAC_WIDTH * 2;
+
+parameter INV_SQRT_WIDTH      = VARIANCE_WIDTH;
+parameter INV_SQRT_FRAC_WIDTH = VARIANCE_FRAC_WIDTH;
 
 localparam NORM_WIDTH = INV_SQRT_WIDTH + DIFF_WIDTH;
 localparam NORM_FRAC_WIDTH = INV_SQRT_FRAC_WIDTH + DIFF_FRAC_WIDTH;
@@ -238,15 +241,15 @@ for (genvar i = 0; i < COMPUTE_DIM0 * COMPUTE_DIM1; i++) begin : compute_pipe
     logic [INV_SQRT_WIDTH-1:0] inv_sqrt_data;
     logic inv_sqrt_valid;
 
-    temp_inv_sqrt #(
+    fixed_isqrt #(
         .IN_WIDTH(VARIANCE_WIDTH),
         .IN_FRAC_WIDTH(VARIANCE_FRAC_WIDTH),
         .OUT_WIDTH(INV_SQRT_WIDTH),
-        .OUT_FRAC_WIDTH(INV_SQRT_FRAC_WIDTH),
-        .PIPELINE_CYCLES(2)
-    ) temp_inv_sqrt_inst (
-        .clk(clk),
-        .rst(rst),
+        .OUT_FRAC_WIDTH(INV_SQRT_FRAC_WIDTH)
+        // .PIPELINE_CYCLES(2)
+    ) inv_sqrt_inst (
+        // .clk(clk),
+        // .rst(rst),
         .in_data(variance_out),
         .in_valid(variance_out_valid),
         .in_ready(variance_out_ready),

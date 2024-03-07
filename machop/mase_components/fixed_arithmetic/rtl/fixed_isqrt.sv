@@ -8,7 +8,7 @@ module fixed_isqrt #(
     parameter OUT_WIDTH = 16,
     parameter OUT_FRAC_WIDTH = 7,
     // TODO: the design is stateless therefore no cycles needed.
-    // if the critical path is too large for this module then it can be 
+    // if the critical path is too large for this module then it can be
     // pipelined.
     parameter PIPELINE_CYCLES = 0,
     localparam INT_WIDTH = IN_WIDTH - IN_FRAC_WIDTH,
@@ -19,7 +19,7 @@ module fixed_isqrt #(
     // TODO: stateless design would not need these pins.
     // input logic clk,
     // input logic rst,
-    
+
     input   logic[IN_WIDTH-1:0] in_data,
     // TODO: usage of these pins depends on whether or not the design is
     // pipelined whether.
@@ -40,7 +40,7 @@ module fixed_isqrt #(
     logic[IN_WIDTH-1:0] lut_value;
     logic[IN_WIDTH-1:0] y;
     logic[IN_WIDTH-1:0] y_aug;
-    
+
     fixed_range_reduction #(
         .WIDTH(IN_WIDTH)
     ) fixed_range_reduction_inst (
@@ -75,7 +75,7 @@ module fixed_isqrt #(
     );
 
     assign y = (x_reduced == ONE) ? x_reduced : y;
-    
+
     fixed_range_augmentation #(
         .WIDTH(IN_WIDTH),
         .FRAC_WIDTH(IN_FRAC_WIDTH)
@@ -85,11 +85,11 @@ module fixed_isqrt #(
         .data_out(y_aug)
     );
 
-    assign out_data = 
+    assign out_data =
         // Fishing for 0s.
-        (in_data == 0) ? 
-            MAX_NUM 
-            : 
+        (in_data == 0) ?
+            MAX_NUM
+            :
             (
                 // Fishing for overflows.
                 (y_aug > MAX_NUM) ?
@@ -98,5 +98,7 @@ module fixed_isqrt #(
                     y_aug
             );
 
-endmodule
+    assign out_valid = in_valid;
+    assign in_ready = out_ready;
 
+endmodule

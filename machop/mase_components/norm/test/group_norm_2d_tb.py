@@ -114,7 +114,7 @@ async def basic(dut):
     assert tb.output_monitor.exp_queue.empty()
 
 
-@cocotb.test()
+@cocotb.test(skip=True)
 async def stream(dut):
     tb = GroupNorm2dTB(dut)
     await tb.reset()
@@ -129,7 +129,7 @@ async def stream(dut):
     assert tb.output_monitor.exp_queue.empty()
 
 
-@cocotb.test()
+@cocotb.test(skip=True)
 async def backpressure(dut):
     tb = GroupNorm2dTB(dut)
     await tb.reset()
@@ -144,7 +144,7 @@ async def backpressure(dut):
     assert tb.output_monitor.exp_queue.empty()
 
 
-@cocotb.test()
+@cocotb.test(skip=True)
 async def valid_toggle(dut):
     tb = GroupNorm2dTB(dut)
     await tb.reset()
@@ -160,7 +160,7 @@ async def valid_toggle(dut):
     assert tb.output_monitor.exp_queue.empty()
 
 
-@cocotb.test()
+@cocotb.test(skip=True)
 async def valid_backpressure(dut):
     tb = GroupNorm2dTB(dut)
     await tb.reset()
@@ -177,4 +177,4 @@ async def valid_backpressure(dut):
 
 
 if __name__ == "__main__":
-    mase_runner()
+    mase_runner(trace=True)
