@@ -85,7 +85,7 @@ class Quantizer:
                 exit()
 
         config = builder.create_builder_config()
-        config.max_workspace_size = 1 << 30  # Adjust workspace size as necessary.
+        config.max_workspace_size = 1 << 30
         if self.config['precision'] == 'FP16':
             config.set_flag(trt.BuilderFlag.FP16)
 
@@ -94,8 +94,7 @@ class Quantizer:
             config.set_flag(trt.BuilderFlag.INT8)
             config.int8_calibrator = INT8Calibrator(
                 self.config['num_calibration_batches'], 
-                self.config[''].train_dataloader(),
-                self.config['cacheFile'], 
+                self.config[''].train_dataloader() 
                 )
 
         #TODO add optimizations based on input tensor

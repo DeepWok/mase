@@ -66,7 +66,7 @@ class QuantizationAnalysis():
         # Load the serialized TensorRT engine
         with open(trt_engine_path, "rb") as f:
             self.engine = trt.Runtime(TRT_LOGGER).deserialize_cuda_engine(f.read())
-        self.runtime = trt.Runtime(trt.Logger(trt.Logger.WARNING)) 
+        self.runtime = trt.Runtime(TRT_LOGGER) 
 
         self.num_io = self.engine.num_io_tensors
         self.lTensorName = [self.engine.get_tensor_name(i) for i in range(self.num_io)]

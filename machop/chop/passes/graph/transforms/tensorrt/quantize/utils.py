@@ -145,7 +145,7 @@ class INT8Calibrator(trt.IInt8EntropyCalibrator2):
         self.nCalibration = nCalibration
         self.shape = next(iter(train_generator))['x'].shape
         self.buffeSize = trt.volume(self.shape) * trt.float32.itemsize
-        self.cacheFile = cacheFile
+        self.cacheFile = 'int8_calibrator.cache'
         _, self.dIn = cudart.cudaMalloc(self.buffeSize)
         self.input_generator = train_generator
     

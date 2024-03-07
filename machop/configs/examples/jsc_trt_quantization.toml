@@ -38,6 +38,9 @@ quantize_axis = false
 calibrator = 'histogram'
 quantize_axis = false
 
+[passes.tensorrt-train]
+qat_epochs = 10
+
 [passes.tensorrt-analysis]
 num_batches = 20
 num_GPU_warmup_batches = 5
