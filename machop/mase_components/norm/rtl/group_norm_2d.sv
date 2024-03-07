@@ -27,21 +27,17 @@ module group_norm_2d #(
     parameter IN_FRAC_WIDTH       = 4,
     parameter OUT_WIDTH           = 8,
     parameter OUT_FRAC_WIDTH      = 4
-
-    // Precision of inverse sqrt unit
-    // parameter INV_SQRT_WIDTH      = 16,
-    // parameter INV_SQRT_FRAC_WIDTH = 10
 ) (
-    input  logic                clk,
-    input  logic                rst,
+    input  logic                 clk,
+    input  logic                 rst,
 
-    input  logic [IN_WIDTH-1:0] in_data  [COMPUTE_DIM0*COMPUTE_DIM1-1:0],
-    input  logic                in_valid,
-    output logic                in_ready,
+    input  logic [IN_WIDTH-1:0]  in_data  [COMPUTE_DIM0*COMPUTE_DIM1-1:0],
+    input  logic                 in_valid,
+    output logic                 in_ready,
 
     output logic [OUT_WIDTH-1:0] out_data [COMPUTE_DIM0*COMPUTE_DIM1-1:0],
-    output logic                out_valid,
-    input  logic                out_ready
+    output logic                 out_valid,
+    input  logic                 out_ready
 );
 
 // Derived params
@@ -246,10 +242,7 @@ for (genvar i = 0; i < COMPUTE_DIM0 * COMPUTE_DIM1; i++) begin : compute_pipe
         .IN_FRAC_WIDTH(VARIANCE_FRAC_WIDTH),
         .OUT_WIDTH(INV_SQRT_WIDTH),
         .OUT_FRAC_WIDTH(INV_SQRT_FRAC_WIDTH)
-        // .PIPELINE_CYCLES(2)
     ) inv_sqrt_inst (
-        // .clk(clk),
-        // .rst(rst),
         .in_data(variance_out),
         .in_valid(variance_out_valid),
         .in_ready(variance_out_ready),

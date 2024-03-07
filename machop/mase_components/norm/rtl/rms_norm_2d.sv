@@ -22,8 +22,8 @@ module rms_norm_2d #(
     parameter OUT_FRAC_WIDTH      = 4,
 
     // Precision of inverse sqrt unit
-    parameter INV_SQRT_WIDTH      = 16,
-    parameter INV_SQRT_FRAC_WIDTH = 10
+    // parameter INV_SQRT_WIDTH      = 16,
+    // parameter INV_SQRT_FRAC_WIDTH = 10
 ) (
     input  logic                 clk,
     input  logic                 rst,
@@ -55,6 +55,9 @@ localparam ADDER_FRAC_WIDTH = SQUARE_FRAC_WIDTH;
 
 localparam ACC_WIDTH = ADDER_WIDTH + ITER_WIDTH;
 localparam ACC_FRAC_WIDTH = ADDER_FRAC_WIDTH;
+
+localparam INV_SQRT_WIDTH = ACC_WIDTH;
+localparam INV_SQRT_FRAC_WIDTH = ACC_FRAC_WIDTH;
 
 localparam NORM_WIDTH = INV_SQRT_WIDTH + IN_WIDTH;
 localparam NORM_FRAC_WIDTH = INV_SQRT_FRAC_WIDTH + IN_FRAC_WIDTH;
@@ -174,15 +177,12 @@ skid_buffer #(
 logic [INV_SQRT_WIDTH-1:0] inv_sqrt_data;
 logic inv_sqrt_valid, inv_sqrt_ready;
 
-temp_inv_sqrt #(
+fixed_isqrt #(
     .IN_WIDTH(ACC_WIDTH),
     .IN_FRAC_WIDTH(ACC_FRAC_WIDTH),
     .OUT_WIDTH(INV_SQRT_WIDTH),
-    .OUT_FRAC_WIDTH(INV_SQRT_FRAC_WIDTH),
-    .PIPELINE_CYCLES(2)
-) temp_inv_sqrt_inst (
-    .clk(clk),
-    .rst(rst),
+    .OUT_FRAC_WIDTH(INV_SQRT_FRAC_WIDTH)
+) inv_sqrt_inst (
     .in_data(mean_out_data),
     .in_valid(mean_out_valid),
     .in_ready(mean_out_ready),

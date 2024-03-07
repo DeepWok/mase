@@ -110,9 +110,7 @@ if (LAYER_NORM || INSTANCE_NORM || GROUP_NORM) begin : group_norm
         .IN_FRAC_WIDTH(IN_FRAC_WIDTH),
         .IN_WIDTH(IN_WIDTH),
         .OUT_WIDTH(OUT_WIDTH),
-        .OUT_FRAC_WIDTH(OUT_FRAC_WIDTH),
-        .INV_SQRT_WIDTH(INV_SQRT_WIDTH),
-        .INV_SQRT_FRAC_WIDTH(INV_SQRT_FRAC_WIDTH)
+        .OUT_FRAC_WIDTH(OUT_FRAC_WIDTH)
     ) group_norm_inst (
         .clk(clk),
         .rst(rst),
@@ -135,9 +133,7 @@ end else if (RMS_NORM) begin : rms_norm
         .IN_FRAC_WIDTH(IN_FRAC_WIDTH),
         .IN_WIDTH(IN_WIDTH),
         .OUT_WIDTH(OUT_WIDTH),
-        .OUT_FRAC_WIDTH(OUT_FRAC_WIDTH),
-        .INV_SQRT_WIDTH(INV_SQRT_WIDTH),
-        .INV_SQRT_FRAC_WIDTH(INV_SQRT_FRAC_WIDTH)
+        .OUT_FRAC_WIDTH(OUT_FRAC_WIDTH)
     ) rms_norm_inst (
         .clk(clk),
         .rst(rst),
