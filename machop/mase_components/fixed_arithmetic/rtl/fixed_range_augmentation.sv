@@ -16,35 +16,35 @@ module fixed_range_augmentation #(
     logic[MSB_WIDTH:0] shift_amount;
     logic[2*WIDTH-1:0] res;
 
-    assign shift_amount = (FRAC_WIDTH > data_b) ? 
+    assign shift_amount = (FRAC_WIDTH > data_b) ?
                                 (
                                     // Check wheter FRAC_WIDTH - data_b is odd
                                     // or even.
-                                    (FRAC_WIDTH[0] == data_b[0]) ? 
-                                        (FRAC_WIDTH - data_b) >> 1 
+                                    (FRAC_WIDTH[0] == data_b[0]) ?
+                                        (FRAC_WIDTH - data_b) >> 1
                                         :
                                         (FRAC_WIDTH - data_b - 1) >> 1
-                                ) 
-                                : 
+                                )
+                                :
                                 (
-                                    (FRAC_WIDTH == data_b) ? 
+                                    (FRAC_WIDTH == data_b) ?
                                         0
                                         :
                                         (
                                             // Check wheter FRAC_WIDTH - data_b is odd
                                             // or even.
-                                            (FRAC_WIDTH[0] == data_b[0]) ? 
+                                            (FRAC_WIDTH[0] == data_b[0]) ?
                                                 (data_b - FRAC_WIDTH) >> 1
                                                 :
                                                 (data_b - FRAC_WIDTH - 1) >> 1
                                         )
                                 );
 
-    assign res = (FRAC_WIDTH > data_b) ? 
+    assign res = (FRAC_WIDTH > data_b) ?
                     (
                         // Check wheter FRAC_WIDTH - data_b is odd
                         // or even.
-                        (FRAC_WIDTH[0] == data_b[0]) ? 
+                        (FRAC_WIDTH[0] == data_b[0]) ?
                             data_a << shift_amount
                             :
                             ((data_a * SQRT2) >> (WIDTH-1) << shift_amount)
@@ -56,12 +56,12 @@ module fixed_range_augmentation #(
                             :
                             // Check wheter FRAC_WIDTH - data_b is odd
                             // or even.
-                            (FRAC_WIDTH[0] == data_b[0]) ? 
+                            (FRAC_WIDTH[0] == data_b[0]) ?
                                 data_a >> shift_amount
                                 :
                                 ((data_a * ISQRT2) >> (WIDTH-1) >> shift_amount)
                     );
 
     assign data_out = res >> ((WIDTH-1) - FRAC_WIDTH);
-                    
+
 endmodule

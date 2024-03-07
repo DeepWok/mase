@@ -18,8 +18,8 @@ def _fixed_group_norm_2d_model(
     in_frac_width: int,
     variance_width: int,
     variance_frac_width: int,
-    inv_sqrt_width: int,
-    inv_sqrt_frac_width: int,
+    # inv_sqrt_width: int,
+    # inv_sqrt_frac_width: int,
     out_width: int,
     out_frac_width: int,
 ):
@@ -38,7 +38,7 @@ def _fixed_group_norm_2d_model(
     var = ((x - mu) ** 2).mean(dim=(1, 2, 3), keepdim=True)
     var = integer_floor_quantizer(var, variance_width, variance_frac_width)
     logger.debug("Variance:")
-    logger.debug(f"{var[0]} ({var[0] / (2 ** variance_frac_width)})")
+    logger.debug(f"{var[0]}")
 
     # Inverse Square Root calculation
     # inv_sqrt = isqrt_sw(var)  # TODO: Add inv sqrt model
@@ -52,12 +52,12 @@ def _fixed_group_norm_2d_model(
     # inv_sqrt = torch.Tensor(sqrt_list).reshape(var.shape[0], 1, 1, 1)
     inv_sqrt = 1 / torch.sqrt(var)
     logger.debug("Pre-quantized INV SQRT:")
-    logger.debug(f"{inv_sqrt[0]} ({inv_sqrt[0] / (2 ** inv_sqrt_frac_width)})")
+    logger.debug(f"{inv_sqrt[0]}")
 
     # inv_sqrt = torch.full_like(var, 0.25)  # TODO: remove this later
-    inv_sqrt = integer_floor_quantizer(inv_sqrt, inv_sqrt_width, inv_sqrt_frac_width)
+    inv_sqrt = integer_floor_quantizer(inv_sqrt, variance_width, variance_frac_width)
     logger.debug("Inverse SQRT:")
-    logger.debug(f"{inv_sqrt[0]} ({inv_sqrt[0] / (2 ** inv_sqrt_frac_width)})")
+    logger.debug(f"{inv_sqrt[0]}")
 
     # Norm calculation
     diff = x - mu
