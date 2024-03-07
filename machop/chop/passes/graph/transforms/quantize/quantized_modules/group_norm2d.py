@@ -7,8 +7,6 @@ from torch import Tensor
 from ..quantizers.integer import integer_floor_quantizer
 from .fixed_signed_cast import _fixed_signed_cast_model
 
-from mase_components.fixed_arithmetic.test.fixed_isqrt_tb import isqrt_sw
-
 
 logger = logging.getLogger(__file__)
 logger.setLevel(logging.DEBUG)
