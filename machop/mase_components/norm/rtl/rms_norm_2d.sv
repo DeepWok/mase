@@ -19,11 +19,7 @@ module rms_norm_2d #(
     parameter IN_WIDTH            = 8,
     parameter IN_FRAC_WIDTH       = 2,
     parameter OUT_WIDTH           = 8,
-    parameter OUT_FRAC_WIDTH      = 4,
-
-    // Precision of inverse sqrt unit
-    // parameter INV_SQRT_WIDTH      = 16,
-    // parameter INV_SQRT_FRAC_WIDTH = 10
+    parameter OUT_FRAC_WIDTH      = 4
 ) (
     input  logic                 clk,
     input  logic                 rst,
