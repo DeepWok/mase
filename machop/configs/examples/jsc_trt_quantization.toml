@@ -7,47 +7,37 @@ batch_size = 256
 learning_rate = 1e-3
 accelerator = "gpu"
 
-[passes.tensorrt-calibrate]
+[passes.tensorrt-quantize]
 by = "type"
 calibrator = ["percentile", "max", "mse", "entropy"]
+num_calibration_batches = 100
 percentiles = [99]
 report = true
 
-[passes.tensorrt-calibrate.linear.config]
+[passes.tensorrt-quantize.linear.config]
 quantize = true
-
-[passes.tensorrt-calibrate.linear.input]
-calibrator = 'histogram'
-quantize_axis = false
-
-[passes.tensorrt-calibrate.linear.weight]
-calibrator = 'histogram'
-quantize_axis = false
-
-[passes.tensorrt-calibrate.default.config]
-quantize = true
-
-[passes.tensorrt-calibrate.default.config.input]
-calibrator = 'histogram'
-quantize_axis = false
-
-[passes.tensorrt-calibrate.default.config.weight]
-calibrator = 'histogram'
-quantize_axis = false
-
-[passes.tensorrt-quantize]
 precision = 'FP16'
 
+[passes.tensorrt-quantize.linear.input]
+calibrator = 'histogram'
+quantize_axis = false
+
+[passes.tensorrt-quantize.linear.weight]
+calibrator = 'histogram'
+quantize_axis = false
+
 [passes.tensorrt-quantize.default.config]
-name = "integer"
-data_in_width = 8
-data_in_frac_width = 4
-weight_width = 8
-weight_frac_width = 9
-bias_width = 8
-bias_frac_width = 9
+quantize = true
+precision = 'FP16'
+
+[passes.tensorrt-quantize.default.config.input]
+calibrator = 'histogram'
+quantize_axis = false
+
+[passes.tensorrt-quantize.default.config.weight]
+calibrator = 'histogram'
+quantize_axis = false
 
 [passes.tensorrt-analysis]
-analysis = ['latency', 'accuracy', 'gpu_power', 'F1_score', 'recall', 'precision']
 num_batches = 20
-num_GPU_warmup_iterations = 5
+num_GPU_warmup_batches = 5

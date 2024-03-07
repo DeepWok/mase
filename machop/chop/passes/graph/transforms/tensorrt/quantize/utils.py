@@ -137,16 +137,17 @@ class FakeQuantizer:
         return graph
 
 
+#TODO cache file path
 class INT8Calibrator(trt.IInt8EntropyCalibrator2):
-    def __init__(self, nCalibration, input_generator, cacheFile):
+    def __init__(self, nCalibration, train_generator, cacheFile):
         trt.IInt8EntropyCalibrator2.__init__(self)
         self.cacheFile = cacheFile
         self.nCalibration = nCalibration
-        self.shape = next(iter(input_generator))['x'].shape
+        self.shape = next(iter(train_generator))['x'].shape
         self.buffeSize = trt.volume(self.shape) * trt.float32.itemsize
         self.cacheFile = cacheFile
         _, self.dIn = cudart.cudaMalloc(self.buffeSize)
-        self.input_generator = input_generator
+        self.input_generator = train_generator
     
     def get_batch_size(self):
         return self.shape[0]
@@ -161,7 +162,7 @@ class INT8Calibrator(trt.IInt8EntropyCalibrator2):
 
     def read_calibration_cache(self):
         if os.path.exists(self.cacheFile):
-            print("Succeed finding cahce file: %s" % (self.cacheFile))
+            print("Succeed finding cache file: %s" % (self.cacheFile))
             with open(self.cacheFile, "rb") as f:
                 cache = f.read()
                 return cache

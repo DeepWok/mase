@@ -156,7 +156,7 @@ class QuantizationAnalysis():
     
     def evaluate(self):
         self.logger.info("Starting TensorRT transformation analysis")
-        num_warmup_iterations = self.config['num_GPU_warmup_iterations']
+        num_GPU_warmup_batches = self.config['num_GPU_warmup_batches']
 
         # Instantiate metrics with the specified task type
         metric = torchmetrics.classification.MulticlassAccuracy(num_classes=self.num_of_classes)
@@ -201,7 +201,7 @@ class QuantizationAnalysis():
                 power_monitor.join()  # Ensure monitoring thread has finished
 
                 # Skip the first number of iterations to allow the model to warm up
-                if j < num_warmup_iterations:
+                if j < num_GPU_warmup_batches:
                     continue
 
                 latencies.append(latency)
@@ -246,8 +246,8 @@ class QuantizationAnalysis():
             avg_gpu_energy_usage = (avg_gpu_power_usage / 1000) * avg_latency / (1000*3600)
             
             # Assuming self.logger is already set up with your preferred logging level and format
-            self.logger.info(f"Configuration {models[i]}:")
             self.logger.info(
+                f"\nConfiguration {models[i]}:\n" +
                 "\n".join([
                     "Metric                    | Value",
                     "--------------------------|-----------------------",

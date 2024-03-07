@@ -88,13 +88,13 @@ class Quantizer:
         config.max_workspace_size = 1 << 30  # Adjust workspace size as necessary.
         if self.config['precision'] == 'FP16':
             config.set_flag(trt.BuilderFlag.FP16)
-            
+
         #TODO need to fix INT8 calibration
         if self.config['precision'] == 'INT8':
             config.set_flag(trt.BuilderFlag.INT8)
             config.int8_calibrator = INT8Calibrator(
-                self.config['nCalibration'], 
-                self.config['input_generator'],
+                self.config['num_calibration_batches'], 
+                self.config[''].train_dataloader(),
                 self.config['cacheFile'], 
                 )
 
