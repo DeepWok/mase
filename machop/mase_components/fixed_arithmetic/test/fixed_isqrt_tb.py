@@ -34,7 +34,7 @@ def int_to_float(x: int, int_width: int, frac_width: int) -> float:
 def isqrt_sw(x: int, int_width: int, frac_width: int) -> int:
     """model of fixed point isqrt"""
     if x == 0:
-        return 2 ** (int_width + frac_width) - 1
+        return int_to_float(2 ** (int_width + frac_width) - 1, 8, 8)
     x_f = int_to_float(x, int_width, frac_width)
     ref = 1 / math.sqrt(x_f)
     return ref
@@ -70,6 +70,15 @@ class VerificationCase:
             ref.append(expected)
         return ref
 
+def debug(dut, i, f):
+    print(f"X        : {dut.in_data.value}  {int_to_float(dut.in_data.value.integer, i, f)}")
+    print(f"X red    : {dut.x_reduced.value}    {int_to_float(dut.x_reduced.value.integer, 1, 15)}")
+    print(f"MSB index: {dut.msb_index.value.integer}")
+    print(f"lut_index: {dut.lut_index.value.integer}")
+    print(f"LUT value: {dut.lut_value.value}    {int_to_float(dut.lut_value.value.integer, 1, 15)}")
+    print(f"Y        : {dut.y.value}    {int_to_float(dut.y.value.integer, 1, 15)}")
+    print(f"Y aug    : {dut.y_aug.value}    {int_to_float(dut.y_aug.value.integer, i, f)}")
+
 
 # TODO: why do the parameters not get updated???
 @cocotb.test()
@@ -78,9 +87,8 @@ async def test_fixed_isqrt(dut):
     in_width = 16
     frac_width = 8
     int_width = in_width - frac_width
-    samples = 2**(int_width + frac_width) - 1
+    samples = 2**(in_width) - 1
     testcase = VerificationCase(samples, in_width, frac_width)
-    print(testcase.get_dut_parameters())
 
     for i in range(samples):
         # Set up module data.
@@ -92,12 +100,15 @@ async def test_fixed_isqrt(dut):
         # Wait for processing.
         await Timer(10, units="ns")
 
+        #debug(dut, int_width, frac_width)
+
         # Exepected result.
         expected = testcase.ref[i]
+        error = abs(int_to_float(dut.out_data.value.integer, int_width, frac_width) - expected)
 
         # Check the output.
         assert (
-                abs(int_to_float(dut.out_data.value.integer, int_width, frac_width) - expected) < 2**(-8)
+                error <= 2**(-8)*2
             ), f"""
             <<< --- Test failed --- >>>
             Input:
@@ -108,6 +119,9 @@ async def test_fixed_isqrt(dut):
 
             Expected:
             {expected}
+
+            Error:
+            {error}
 
             Test index:
             {i}

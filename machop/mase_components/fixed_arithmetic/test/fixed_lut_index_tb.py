@@ -78,6 +78,11 @@ class VerificationCase:
             ref.append(expected)
         return ref
 
+def debug(dut):
+    print("X:   ", dut.data_a.value)
+    print("MSB: ", dut.data_b.value.integer)
+    print("Out: ", dut.data_out.value.integer)
+
 @cocotb.test()
 async def test_fixed_lut_index(dut):
     """Test for finding LUT index for ISQRT"""

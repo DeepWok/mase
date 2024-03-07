@@ -7,14 +7,14 @@ module fixed_range_augmentation #(
     localparam MSB_WIDTH = $clog2(WIDTH)
 ) (
     // Reduced y
-    input logic[WIDTH-1:0] data_a,    // FORMAT: Q(INT_WIDTH).(FRAC_WIDTH).
+    input logic[2*WIDTH-1:0] data_a,    // FORMAT: Q(INT_WIDTH).(FRAC_WIDTH).
     // MSB width
     input logic[MSB_WIDTH-1:0] data_b,    // FORMAT: Q(WIDTH).0.
-    output logic[WIDTH-1:0] data_out  // FORMAT: Q1.(WIDTH-1).
+    output logic[2*WIDTH-1:0] data_out  // FORMAT: Q1.(WIDTH-1).
 );
 
     logic[MSB_WIDTH:0] shift_amount;
-    logic[WIDTH-1:0] res;
+    logic[2*WIDTH-1:0] res;
 
     assign shift_amount = (FRAC_WIDTH > data_b) ? 
                                 (

@@ -20,13 +20,13 @@ module fixed_isqrt #(
     // input logic clk,
     // input logic rst,
 
-    input   logic[IN_WIDTH-1:0] in_data,
+    input   logic[2*IN_WIDTH-1:0] in_data,
     // TODO: usage of these pins depends on whether or not the design is
     // pipelined whether.
     input   logic               in_valid,
     output  logic               in_ready,
 
-    output  logic[IN_WIDTH-1:0] out_data,
+    output  logic[2*IN_WIDTH-1:0] out_data,
     // TODO: usage of these pins depends on whether or not the design is
     // pipelined whether.
     output  logic               out_valid,
@@ -34,12 +34,12 @@ module fixed_isqrt #(
 
 );
 
-    logic[IN_WIDTH-1:0] x_reduced;
+    logic[2*IN_WIDTH-1:0] x_reduced;
     logic[MSB_WIDTH-1:0] msb_index;
-    logic[MSB_WIDTH-1:0] lut_index;
-    logic[IN_WIDTH-1:0] lut_value;
-    logic[IN_WIDTH-1:0] y;
-    logic[IN_WIDTH-1:0] y_aug;
+    logic[2*IN_WIDTH-1:0] lut_index;
+    logic[2*IN_WIDTH-1:0] lut_value;
+    logic[2*IN_WIDTH-1:0] y;
+    logic[2*IN_WIDTH-1:0] y_aug;
 
     fixed_range_reduction #(
         .WIDTH(IN_WIDTH)
