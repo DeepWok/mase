@@ -38,6 +38,7 @@ class SearchStrategyRL(SearchStrategyBase):
         self.env = env_map[env_name]
         self.search_space = None
         self.best_performance = 0
+        self.best_sample = {}
 
     def compute_software_metrics(self, model, sampled_config: dict, is_eval_mode: bool):
         # note that model can be mase_graph or nn.Module
@@ -63,10 +64,17 @@ class SearchStrategyRL(SearchStrategyBase):
         return metrics
 
     def run_trial(self, sampled_indexes):
+        """
+            compute metrics of a sample in search space
+        """
+        # parse the sample
         sampled_config = self.search_space.flattened_indexes_to_config(sampled_indexes)
 
+        # rebuild model with sampled configuration
         is_eval_mode = self.config.get("eval_mode", True)
         model = self.search_space.rebuild_model(sampled_config, is_eval_mode)
+
+        # get metrics
         software_metrics = self.compute_software_metrics(
             model, sampled_config, is_eval_mode
         )
@@ -74,6 +82,8 @@ class SearchStrategyRL(SearchStrategyBase):
             model, sampled_config, is_eval_mode
         )
         metrics = software_metrics | hardware_metrics
+
+        # sum the metrics with configured scales
         scaled_metrics = {}
         for metric_name in self.metric_names:
             scaled_metrics[metric_name] = (
@@ -81,6 +91,7 @@ class SearchStrategyRL(SearchStrategyBase):
             )
         if sum(scaled_metrics.values()) > self.best_performance:
             self.best_performance = sum(scaled_metrics.values())
+            self.best_sample = sampled_config
             print(f'highest reward: {sum(scaled_metrics.values()):.4f}')
             for metric_name in self.metric_names:
                 print(f'{metric_name}: {metrics[metric_name]:.4f}')
@@ -98,9 +109,6 @@ class SearchStrategyRL(SearchStrategyBase):
             eval_freq=500,
         )
         callback = CallbackList([checkpoint_callback, eval_callback])
-
-        # possible extension is to allow custom policy network
-        # https://stable-baselines3.readthedocs.io/en/master/guide/custom_policy.html
 
         model = self.algorithm(
             "MlpPolicy",

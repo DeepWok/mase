@@ -73,7 +73,7 @@ compare_to = 32 # compare to FP32
 
 [search.strategy.setup]
 device = "cpu"
-total_timesteps = 54
+total_timesteps = 270
 algorithm = "a2c"
 env = "MixedPrecisionEnv"
 

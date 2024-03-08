@@ -9,9 +9,6 @@ from chop.passes.graph import (
 )
 class MixedPrecisionEnv(gym.Env):
     def __init__(self, config):
-        # Make the space (for actions and observations) configurable.
-        # Since actions should repeat observations, their spaces must be the
-        # same.
         self.search_space = config.get("search_space", None)
         self.run_trial = config.get("run_trial", None)
 
@@ -34,7 +31,7 @@ class MixedPrecisionEnv(gym.Env):
             # elif get_mase_op(node) == 'relu':
             #     layer_info[node.name] = [idx, 0, 0, 1, 0]
             #     idx += 1
-        # get choices from self.search_space.choices_flattened
+        # get choices from self.search_space.choices_flattened to build observation enumeration list
         self.obs_list = []
         self.sample_namespace = []
         self.sample = {}
@@ -54,26 +51,34 @@ class MixedPrecisionEnv(gym.Env):
             self.obs_list.append(obs)
         self.state = 0
         self.obs_list = np.array(self.obs_list)
+        # get observation space definition from observation enumeration list
         low = np.min(self.obs_list, axis=0)
         high = np.max(self.obs_list, axis=0)
         self.observation_space = Box(low=np.append(low, 0.), high=np.append(high, 6.))
+
+        # static action space, quantize bits width can only be chosen from [2, 3, 4, 5, 6, 7, 8]
+        # TODO support various range by config
         self.action_space = Discrete(7)
 
     def reset(self, *, seed=None, options=None):
-        """Resets the episode and returns the initial observation of the new one."""
+        """
+            Resets the episode and returns the initial observation of the new one.
+            Always start from the first element in observation list.
+        """
         self.state = 0
         obs = np.append(self.obs_list[self.state, :], 0).astype(np.float32)
         return obs, {}
 
     def step(self, action):
         """Takes a single step in the episode given `action`
-
+            The episode would end in fixed timestep (same with the length of observation list)
         Returns:
-            New observation, reward, done-flag, info-dict (empty).
+            observation (ObsType): A list format as [order of layer, input channels, output channels, kernel size, stride size, data/weight/bias, previous action].
+            reward (SupportsFloat): Sum of metrics calculated by provided function in SearchStrategy.
+            terminated (bool): .
+            truncated (bool): Always False. No need for truncation, as the episode is fixed.
+            info (dict): Empty.
         """
-        # action = int(action*7)
-        # if action == 7:
-        #     action -= 1
         self.sample[self.sample_namespace[self.state]] = action
         reward = 0
         terminated = False
