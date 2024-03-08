@@ -8,7 +8,8 @@ from stable_baselines3.common.callbacks import (
     CheckpointCallback,
     EvalCallback,
 )
-from txl_workplace.TXLenv import MixedPrecisionEnv
+from stable_baselines3.common.env_checker import check_env
+from .TXLenv import MixedPrecisionEnv
 
 logger = logging.getLogger(__name__)
 
@@ -25,10 +26,10 @@ class SearchStrategyRL(SearchStrategyBase):
     def _post_init_setup(self):
         self.metric_names = list(sorted(self.config["metrics"].keys()))
         setup = self.config['setup']
-        self.device = setup.get('device', default='cpu')
+        self.device = setup.get('device', 'cpu')
         self.total_timesteps = setup["total_timesteps"]
-        algorithm_name = setup.get('algorithm', default='ppo')
-        env_name = setup.get('env', default='MixedPrecisionEnv')
+        algorithm_name = setup.get('algorithm', 'ppo')
+        env_name = setup.get('env', 'MixedPrecisionEnv')
         if algorithm_name not in algorithm_map:
             raise ValueError(f"Unsupported algorithm name: {algorithm_name}")
         if env_name not in env_map:
@@ -36,6 +37,7 @@ class SearchStrategyRL(SearchStrategyBase):
         self.algorithm = algorithm_map[algorithm_name]
         self.env = env_map[env_name]
         self.search_space = None
+        self.best_performance = 0
 
     def compute_software_metrics(self, model, sampled_config: dict, is_eval_mode: bool):
         # note that model can be mase_graph or nn.Module
@@ -77,17 +79,22 @@ class SearchStrategyRL(SearchStrategyBase):
             scaled_metrics[metric_name] = (
                     self.config["metrics"][metric_name]["scale"] * metrics[metric_name]
             )
+        if sum(scaled_metrics.values()) > self.best_performance:
+            self.best_performance = sum(scaled_metrics.values())
+            print(f'highest reward: {sum(scaled_metrics.values()):.4f}')
+            for metric_name in self.metric_names:
+                print(f'{metric_name}: {metrics[metric_name]:.4f}')
         return sum(scaled_metrics.values())
 
     def search(self, search_space):
         self.search_space = search_space
         env = self.env(config={"search_space": self.search_space, "run_trial": self.run_trial})
-
-        checkpoint_callback = CheckpointCallback(save_freq=1000, save_path="./logs/")
+        check_env(env)
+        checkpoint_callback = CheckpointCallback(save_freq=1000, save_path=f"{self.save_dir}/logs/")
         eval_callback = EvalCallback(
             env,
-            best_model_save_path="./logs/best_model",
-            log_path="./logs/results",
+            best_model_save_path=f"{self.save_dir}/logs/best_model",
+            log_path=f"{self.save_dir}/logs/results",
             eval_freq=500,
         )
         callback = CallbackList([checkpoint_callback, eval_callback])
@@ -96,16 +103,18 @@ class SearchStrategyRL(SearchStrategyBase):
         # https://stable-baselines3.readthedocs.io/en/master/guide/custom_policy.html
 
         model = self.algorithm(
-            "MultiInputPolicy",
+            "MlpPolicy",
             env,
             verbose=1,
             device=self.device,
-            tensorboard_log="./logs/",
+            tensorboard_log=f"{self.save_dir}/logs/",
         )
 
-        vec_env = model.get_env()
+        # vec_env = model.get_env()
         model.learn(
             total_timesteps=int(self.total_timesteps),
             progress_bar=True,
             callback=callback,
         )
+
+        # TODO report best performed sample

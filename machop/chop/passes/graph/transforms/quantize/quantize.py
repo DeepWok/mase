@@ -60,7 +60,7 @@ def graph_iterator_quantize_by_type(graph, config: dict):
     for node in graph.fx_graph.nodes:
         if get_mase_op(node) not in QUANTIZEABLE_OP:
             continue
-        node_config = get_config(config, get_mase_op(node))
+        node_config = get_config(config, node.name)
         if node_config["name"] is None:
             continue
         node_config = parse_node_config(node_config, get_mase_op(node))
