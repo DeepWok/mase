@@ -5,6 +5,7 @@
 #include <bits/stdc++.h>
 #include <string>
 #include <stdlib.h>
+#include <iomanip>
 
 // MACROS
 // ------
@@ -274,6 +275,7 @@ uint16_t isqrt(uint16_t x){
     }
 
     uint16_t lut_index = find_lut_index(x, msb_index);
+    std::cout << "Index: " << lut_index << "\n";
 
     // FORMAT: Q1.(WIDTH-1)
     uint32_t initial_guess;
@@ -281,8 +283,10 @@ uint16_t isqrt(uint16_t x){
         initial_guess = lut[0];
     }
     else{
-        initial_guess = lut[lut_index - 1];
+        initial_guess = lut[lut_index];
+        //initial_guess = lut[lut_index - 1];
     }
+    std::cout << "LUT: " << qxy_to_float(initial_guess, 1, 15) << "\n";
     
     uint32_t y = initial_guess;                 // FORMAT: Q1.(WIDTH-1)
     uint32_t mult;                              // FORMAT: Q1.(WIDTH-1)
@@ -363,11 +367,18 @@ float test(uint16_t val, bool verbose){
 int main()
 {
     w_width = i_width + f_width;
-
     init_lut();
-    for(int i = 0; i < LUT_SIZE; i++){
-        std::cout << lut[i] << "\n";
-    }
+    //float x = 1.3203125;
+    //int xint = float_to_qxy(x, 8, 8);
+    int xint = 0x152;
+    float error = test(xint, true);
+
+    //w_width = i_width + f_width;
+
+    //init_lut();
+    //for(int i = 0; i < LUT_SIZE; i++){
+    //    std::cout << lut[i] << "\n";
+    //}
 
     /*
     // Testing range_augmentation()

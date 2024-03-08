@@ -8,28 +8,6 @@ from cocotb.triggers import Timer
 from mase_cocotb.runner import mase_runner
 import math
 
-def float_to_int(x: float, int_width: int, frac_width: int) -> int:
-    integer = int(x)
-    x -= integer
-    res = integer * (2 ** frac_width)
-    for i in range(1, frac_width+1):
-        power = 2 ** (-i)
-        if power <= x:
-            x -= power
-            res += 2 ** (frac_width - i)
-    return res
-
-def int_to_float(x: int, int_width: int, frac_width: int) -> float:
-    integer = x / (2 ** frac_width)
-    fraction = x - integer * 2 ** frac_width
-    res = integer
-
-    for i in range(1, frac_width+1):
-        power = 2 ** (frac_width - i)
-        if power < fraction:
-            res += 2 ** (-i)
-            fraction -= power
-    return res
 
 def isqrt_sw(x: int, int_width: int, frac_width: int) -> int:
     """model of fixed point isqrt"""
