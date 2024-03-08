@@ -7,34 +7,24 @@ from stable_baselines3.common.callbacks import (
     EvalCallback,
 )
 
-
 algorithm_map = {
-    # TODO: maybe network architecture needs complication.
     "ppo": PPO,
     "a2c": A2C,
 }
 
-
 class StrategyRL(SearchStrategyBase):
     iterative = True
 
-    def _setup(self):
-        setup = self.config["setup"]
-        self.model_parallel = setup["model_parallel"]
-        self.runner_style = setup["runner_style"]
-        self.runner = self.get_runner(self.runner_style)
-
-        self.algorithm_name = setup["algorithm"]
-        # self.device = setup["device"]
-        self.total_timesteps = setup["total_timesteps"]
-        self.save_name = setup["save_name"]
-
-        self.env_name = setup["env"]
-        self.env = env_map[self.env_name]
+    def _post_init_setup(self):
+        self.algorithm_name = self.config["algorithm"]
         self.algorithm = algorithm_map[self.algorithm_name]
-
+        self.total_timesteps = self.config["total_timesteps"]
+        self.save_name = self.config["save_name"]
+        self.env = env_map[self.config["env"]]
+        self.device = self.config["device"]
+    
     def search(self, search_space):
-        env = self.env(config={"search_space": search_space, "runner": self.runner})
+        env = self.env(config=self.config, search_space=search_space, sw_runner=self.sw_runner, data_module=self.data_module)
 
         checkpoint_callback = CheckpointCallback(save_freq=1000, save_path="./logs/")
         eval_callback = EvalCallback(
@@ -54,6 +44,7 @@ class StrategyRL(SearchStrategyBase):
             verbose=1,
             device=self.device,
             tensorboard_log="./logs/",
+            n_steps=10,
         )
 
         vec_env = model.get_env()
@@ -64,7 +55,6 @@ class StrategyRL(SearchStrategyBase):
         )
 
         # TODO
-        # improvements needed
         # drop this to mase_output
         model.save(self.save_name)
 
@@ -72,5 +62,5 @@ class StrategyRL(SearchStrategyBase):
         obs = vec_env.reset()
         for _ in range(1000):
             action, _state = model.predict(obs, deterministic=True)
-            obs, reward, done, info = vec_env.step(action)
+            obs, reward, done, truncated, info = vec_env.step(action)
         return obs["loss"], obs, model
