@@ -57,24 +57,19 @@ class BatchNormTB(Testbench):
             dut.data_out_0_ready,
             check=True,
         )
-        """ 
-        self.data_in_width = 8
-        self.data_in_frac_width = 4
-        self.data_out_width = 8
-        self.data_out_frac_width = 4
-        self.parallelism = 16
-        """
+        
+        self.config = {
+            "data_in_width": 8,
+            "data_in_frac_width": 3,
+            "weight_width": 8,
+            "weight_frac_width": 3,
+            "bias_width": 8,
+            "bias_frac_width": 3,
+        }
 
         self.model = BatchNorm1dInteger(
-            num_features,                
-            config={
-                "data_in_width": 8,
-                "data_in_frac_width": 3,
-                "weight_width": 8,
-                "weight_frac_width": 3,
-                "bias_width": 8,
-                "bias_frac_width": 3,
-            },
+            num_features,
+            config=self.config                
         )
     
     def fe_model(self, data_in): 
@@ -100,44 +95,44 @@ class BatchNormTB(Testbench):
         await self.reset()
         print(f'================= DEBUG: in run_test ================= \n')
 
-
+        # Store fixed point data
+        # TODO(jlsand): We assume that the fixed point format is the same for all
+        # parameters. Fair assumption or faulty?
+        width = self.config["data_in_width"]
+        frac_width = self.config["data_in_frac_width"]
+        local_config = {"width": width, "frac_width": frac_width}
+        
         # Train first to generate a running mean/average
         training_inputs = torch.randn((10, self.model.num_features))
         self.model(training_inputs)
 
+        # Now run inference to generate expected model outputs
         self.model.training = False
 
         inputs = torch.randn((1, self.model.num_features))
         print("Inputs: ", inputs)
-        exp_outputs = self.model(inputs)
-        # print("MEAN: ", self.model.running_mean)
-        # print("MEAN: ", self.model.)
-        print("Quantized inputs: ", self.model.x_quantizer(inputs))
-        
+        exp_outputs_model = self.model(inputs)
+        print("Expected outputs model: ", exp_outputs_model)
+    
         inputs = self.preprocess_tensor(
             inputs, 
             self.model.x_quantizer, 
-            {"width": 8, "frac_width": 3}, 
+            local_config, 
             int(self.dut.PARALLELISM)
         )
         print("Pre-processed inputs: ", inputs)
-        
-        print("Post-processed inputs: ", self.postprocess_tensor(inputs[0], {"width": 8, "frac_width": 3}))
-
-        print("INPUT SIZE:", len(inputs), len(inputs[0]))
 
         gamma = self.preprocess_tensor(
             self.model.weight, 
             self.model.w_quantizer, 
-            {"width": 8, "frac_width": 3}, 
+            local_config, 
             int(self.dut.PARALLELISM)
         )
 
-        # print(self.model.bias)
         beta = self.preprocess_tensor(
             self.model.bias, 
             self.model.b_quantizer, 
-            {"width": 8, "frac_width": 3}, 
+            local_config, 
             int(self.dut.PARALLELISM)
         )
 
@@ -147,7 +142,7 @@ class BatchNormTB(Testbench):
         stdv = self.preprocess_tensor(
             stdv, 
             self.model.w_quantizer, 
-            {"width": 8, "frac_width": 3}, 
+            local_config, 
             int(self.dut.PARALLELISM)
         )
 
@@ -155,66 +150,54 @@ class BatchNormTB(Testbench):
         mean = self.preprocess_tensor(
             self.model.running_mean, 
             self.model.b_quantizer, 
-            {"width": 8, "frac_width": 3}, 
+            local_config, 
             int(self.dut.PARALLELISM)
         )
 
 
         self.data_out_0_monitor.ready.value = 1
         print(f'================= DEBUG: asserted ready_out ================= \n')
-
-        # print("MODEL VALUES: ", self.model.weight)
         
-        print(self.dut.gamma.value)
-        print(gamma)
         self.dut.gamma.value = gamma[0]
         self.dut.beta.value = beta[0]
         self.dut.mean.value = mean[0]
-        self.dut.stdv.value = stdv[0]
-        
-        # self.dut.gamma.value = [BinaryValue(bytes(gamma[j])) for j in range(16)]
-        # self.dut.gamma.value = [BinaryValue(0) * 16 for _ in range(16)]
-        # self.dut.beta.value =  [BinaryValue(0) * 16 for _ in range(16)]
-        # self.dut.gamma.value = [BinaryValue(1) * 16 for _ in range(16)]
-        # self.dut.stdv.value =  [BinaryValue(1) * 16 for _ in range(16)]
+        self.dut.stdv.value = stdv[0]        
 
-        # inputs = [[1] * 8 for _ in range(16)]
-
-        self.data_in_0_driver.load_driver(inputs) #this needs to be a tensor
+        self.data_in_0_driver.load_driver(inputs)
         print(f'================= DEBUG: put values on input ports ================= \n')
 
-        print(inputs)
-        print(gamma)
-        print(beta)
-        print(stdv)
-        print(mean)
-        print(len(inputs[0]))
-        print("Exp. outputs model: ", self.model.x_quantizer(exp_outputs))
+        print("Exp. outputs model: ", self.model.x_quantizer(exp_outputs_model))
 
-        # exp_outputs = [i for i in range(0, len(inputs[0]))]
-        exp_outputs = torch.tensor([[(inputs[0][i] - mean[0][i]) * gamma[0][i] / stdv[0][i] + beta[0][i] for i in range(0, len(inputs[0]))]])
-        # exp_outputs = (torch.tensor(inputs[0]) - torch.tensor(mean[0])) * torch.tensor(gamma[0]) / torch.tensor(stdv[0]) + torch.tensor(beta[0])
-
-        # exp_outputs = (torch.tensor(inputs[0]) - torch.tensor(mean[0])) * torch.tensor(gamma[0]) / torch.tensor(stdv[0]) + torch.tensor(beta[0])
-
-        print("Exp. outputs manual: ", self.postprocess_tensor(exp_outputs, {"width": 8, "frac_width": 3}))
-
-        exp_outputs_quant = self.preprocess_tensor(
-            exp_outputs, 
+        exp_outputs_model = self.preprocess_tensor(
+            exp_outputs_model, 
             self.model.x_quantizer, 
-            {"width": 8, "frac_width": 3}, 
+            local_config, 
             int(self.dut.PARALLELISM)
         )
 
-        # exp_out = [[1] * 8 for _ in range(16)]#self.fe_model(inputs) #TODO: implement FE model
+        print("Exp. outputs model pre-processed: ", exp_outputs_model)
+
+        exp_outputs_manual = (torch.tensor(inputs) - torch.tensor(mean)) * torch.tensor(gamma) / torch.tensor(stdv) + torch.tensor(beta)
+        print("Exp. outputs manual: ", exp_outputs_manual)
+
+        # The output from the module is treated as positive integers
+        # convert the expected outputs
+        def convert(x):
+            if x >= 0:
+                return x
+            else:
+                # print(f"Converting {x} bytes {(-x)/(1<<5)}")
+                return 2**(width-frac_width) + x         
+        exp_outputs_manual = exp_outputs_manual.int().apply_(convert)
+
+        print("Exp. outputs manual converted: ", exp_outputs_manual)
         print(f'================= DEBUG: generated values with fe model ================= \n')
 
-
-        self.data_out_0_monitor.load_monitor(exp_outputs_quant)
+        self.data_out_0_monitor.load_monitor(exp_outputs_manual)
         print(f'================= DEBUG: loaded hw outptus ================= \n')
-        
 
         await Timer(1000, units="us")
+
         print(f'================= DEBUG: in run_test waited 1ms ================= \n')
 
 @cocotb.test()
