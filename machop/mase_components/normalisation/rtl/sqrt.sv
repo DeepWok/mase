@@ -44,7 +44,7 @@ module sqrt #(
         DONE        = '1
     } state_t;
 
-
+    //logic   [IN_WIDTH-1:0]  log2_v_in;
 
     logic   [IN_WIDTH-1:0]  x_b;
     logic   [IN_WIDTH-1:0]  x_r;
@@ -60,6 +60,7 @@ module sqrt #(
     logic   [K_WORDSIZE-1:0]    k_b;
     logic   [K_WORDSIZE-1:0]    k_r;    
 
+    //assign log2_v_in = ($clog2(v_in) -3); // -3 bc 3 bit decimal precission
     assign xtmp = (x_r >> state_r);
     assign ytmp = (y_r >> state_r);
     assign v_in_ready = (state_r == READY_STATE) ? 1 : 0; 
@@ -87,10 +88,10 @@ module sqrt #(
     always_comb
     begin 
         //Set default values of _b wires here
-        k_b         = '0; 
+        k_b         = k_r; 
         state_b     = RST;
-        x_b         = '0; 
-        y_b         = '0; 
+        x_b         = x_r; 
+        y_b         = y_r; 
         v_out_valid = '0;
         v_out       = '0; 
 
@@ -98,18 +99,28 @@ module sqrt #(
         begin 
             state_b = READY_STATE;
         end
-        else if (v_in_valid) //N.B. 1 cycle delay (potential for optimization)
+        else if ((state_r == READY_STATE) && v_in_valid) //N.B. 1 cycle delay (potential for optimization)
         begin 
             x_b     = v_in + 32'b10; // + 0.25
             y_b     = v_in - 32'b10; // - 0.25
             state_b = STATE_1;
             k_b     = 4;
         end
+        else if (state_r == READY_STATE)
+        begin
+            state_b = READY_STATE;
+
+        end
         else if (state_r == DONE)
         begin 
             v_out_valid = 1;
             v_out       = x_r;
             state_b     = READY_STATE;
+        end
+        else if (state_r == STATE_10)
+        begin
+            state_b     = DONE;
+                        
         end
         else
         begin

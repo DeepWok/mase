@@ -157,7 +157,10 @@ class BatchNormTB(Testbench):
         #self.dut.v_in.value = 100
     
         #inputs = 1
-        inputs = [1] * 8
+        # n.b. 200 is 25 with 3 decimal bits (but out of range for 8 bits)
+        # n.b. 128 is 16 with 3 decimal bits
+
+        inputs = [128] #,2,3,4,5,6,7,8] #[1] * 8
         #inputs = torch.randn((3, self.model.num_features))
 
         print(inputs)
