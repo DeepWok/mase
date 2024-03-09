@@ -26,11 +26,37 @@ name = "integer"
 "bias_width" = 8
 "bias_frac_width" = 4
 
+
 [search.search_space]
 name = "graph/quantize/mixed_precision_ptq"
 
 [search.search_space.setup]
 by = "name"
+
+[search.nas.other_config]
+path = ''
+
+[search.nas.op_config]
+op_indices=[[0,1,2,3,4],[2,3,4,1,0],[0,1,3,2,3]]
+
+[search.nas.proxy_config]
+proxy = ['epe_nas', 
+        'fisher', 
+        'grad_norm', 
+        'grasp', 
+        'jacov', 
+        'l2_norm', 
+        'nwot', 
+        'plain', 
+        'snip', 
+        'synflow', 
+        'zen', 
+        'flops', 
+        'params']
+
+
+
+
 
 [search.search_space.seed.default.config]
 # the only choice "NA" is used to indicate that layers are not quantized by default
