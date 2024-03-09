@@ -15,19 +15,22 @@ from chop.tools.utils import parse_accelerator
 logger = logging.getLogger(__name__)
 
 
-def parse_search_config(search_config):
+def parse_search_config(config):
     """
     Parse search config from a dict or a toml file and do sanity check.
 
     ---
     The search config must consist of two parts: strategy and search_space.
     """
-    if 
+    
 
 
-    if not isinstance(search_config, dict):
-        search_config = load_config(search_config)
-    search_config = search_config["search"]  # the actual config for action search
+    if not isinstance(config, dict):
+        search_config = load_config(config)
+    # if search_config["using_nas"] is True:
+    #     saerch_config = search_config["search"]
+
+    search_config = config["search"]  # the actual config for action search
     strategy_config = search_config["strategy"]
     search_space_config = search_config["search_space"]
 
