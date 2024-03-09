@@ -4,6 +4,7 @@ import pandas as pd
 import logging
 from tabulate import tabulate
 import joblib
+import pdb
 
 from functools import partial
 from .base import SearchStrategyBase
@@ -53,6 +54,8 @@ class SearchStrategyNaslib(SearchStrategyBase):
                 sampler = optuna.samplers.NSGAIIISampler()
             case "qmc":
                 sampler = optuna.samplers.QMCSampler()
+            case "bruteforce":
+                sampler = optuna.samplers.BruteForceSampler()
             case _:
                 raise ValueError(f"Unknown sampler name: {name}")
         return sampler
@@ -118,6 +121,10 @@ class SearchStrategyNaslib(SearchStrategyBase):
             return sum(scaled_metrics.values())
 
     def search(self, search_space) -> optuna.study.Study:
+        print("search_space:  ", search_space)
+        print("spearman_metrics: ", search_space.spearman_metrics)
+        
+        # pdb.set_trace()
         study_kwargs = {
             "sampler": self.sampler_map(self.config["setup"]["sampler"]),
         }

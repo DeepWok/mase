@@ -34,6 +34,8 @@ import matplotlib.pyplot as plt
 from naslib.utils import compute_scores  # computes more metrics than just correlation
 from scipy.stats import kendalltau, spearmanr
 
+from .utils import sample_arch_dataset, evaluate_predictions, iterate_whole_searchspace, encode_archs, eval_zcp
+
 DEFAULT_QUANTIZATION_CONFIG = {
     "config": {
         "name": "integer",
@@ -47,17 +49,19 @@ DEFAULT_QUANTIZATION_CONFIG = {
     }
 }
 
-config = {
-    'benchmark': 'nas-bench-201',
-    'dataset': 'cifar10',
-    'how_many_archs': 10,
-    'zc_proxy': 'synflow'
+DEFAULT_ZERO_COST_PROXY_CONFIG = {
+    "config": {
+        'benchmark': 'nas-bench-201',
+        'dataset': 'cifar10',
+        'how_many_archs': 10,
+        'zc_proxy': 'synflow'
+    }
 }
 
 
 class ZeroCostProxy(SearchSpaceBase):
     """
-    Post-Training quantization search space for mase graph.
+    Zero Cost Proxy search space.
     """
 
     def _post_init_setup(self):
@@ -65,6 +69,8 @@ class ZeroCostProxy(SearchSpaceBase):
         self.mg = None
         self._node_info = None
         self.default_config = DEFAULT_QUANTIZATION_CONFIG
+        self.scores = {}
+        self.spearman_metrics = {}
 
         # quantize the model by type or name
         assert (
@@ -73,6 +79,8 @@ class ZeroCostProxy(SearchSpaceBase):
 
     def rebuild_model(self, sampled_config, is_eval_mode: bool = True):
         # set train/eval mode before creating mase graph
+
+        print("sampled_config:  ", sampled_config)
 
         self.model.to(self.accelerator)
         if is_eval_mode:
@@ -103,15 +111,20 @@ class ZeroCostProxy(SearchSpaceBase):
         Build the search space for the mase graph (only quantizeable ops)
         """
 
-        graph = NasBench201SearchSpace(n_classes=10)
-        graph.sample_random_architecture()
-        graph.parse()
-        graph.get_hash()
-        print(graph.get_hash())
+        # Build a mapping from node name to mase_type and mase_op.
+        mase_graph = self.rebuild_model(sampled_config=None, is_eval_mode=True)
+        node_info = {}
+        for node in mase_graph.fx_graph.nodes:
+            node_info[node.name] = {
+                "mase_type": get_mase_type(node),
+                "mase_op": get_mase_op(node),
+            }
 
-        # Create configs required for get_train_val_loaders
+
+
+        # # Create configs required for get_train_val_loaders
         config_dict = {
-            'dataset': 'cifar10', # Dataset to loader: can be cifar10, cifar100, ImageNet16-120
+            'dataset': self.config["zc"]["dataset"], # Dataset to loader: can be cifar10, cifar100, ImageNet16-120
             'data': str(get_project_root()) + '/data', # path to naslib/data where cifar is saved
             'search': {
                 'seed': 9001, # Seed to use in the train, validation and test dataloaders
@@ -125,24 +138,45 @@ class ZeroCostProxy(SearchSpaceBase):
         train_loader, val_loader, test_loader, train_transform, valid_transform = get_train_val_loaders(config)
 
         # Sample a random NB201 graph and instantiate it
-        graph = NasBench201SearchSpace()
-        graph.sample_random_architecture()
-        graph.parse()
+        # if self.config["zc"]["benchmark"] == 'nasbench201':
+        #     graph = NasBench201SearchSpace()
+        #     graph.sample_random_architecture()
+        #     graph.parse()
+        # else:
+        #     raise ValueError(f"Unknown benchmark: {self.config['zc']['benchmark']}")
 
-        zc_proxy = 'plain'
-        zc_predictor = ZeroCost(method_type=zc_proxy)
-        score = zc_predictor.query(graph=graph, dataloader=train_loader)
-        print(f'Score of model for Zero Cost predictor {zc_proxy}: {score}')
+        # print('Scores of the model: ')
+        # for zc_proxy in self.config["zc"]["zc_proxies"]:
+        #     zc_predictor = ZeroCost(method_type=zc_proxy)
+        #     score = zc_predictor.query(graph=graph, dataloader=train_loader)
+        #     self.scores[zc_proxy] = score
+
+        # print("self.scores: ", self.scores)
 
 
-        # Build a mapping from node name to mase_type and mase_op.
-        mase_graph = self.rebuild_model(sampled_config=None, is_eval_mode=True)
-        node_info = {}
-        for node in mase_graph.fx_graph.nodes:
-            node_info[node.name] = {
-                "mase_type": get_mase_type(node),
-                "mase_op": get_mase_op(node),
-            }
+        seed = 2
+        pred_dataset = self.config["zc"]["dataset"]
+        pred_api = get_dataset_api(search_space=self.config["zc"]["benchmark"], dataset=self.config["zc"]["dataset"])
+        train_size = self.config["zc"]["num_archs"]
+        test_size = self.config["zc"]["num_archs"]
+
+        train_sample, train_hashes = sample_arch_dataset(NasBench201SearchSpace(), pred_dataset, pred_api, data_size=train_size, shuffle=True, seed=seed)
+        test_sample, _ = sample_arch_dataset(NasBench201SearchSpace(), pred_dataset, pred_api, arch_hashes=train_hashes, data_size=test_size, shuffle=True, seed=seed + 1)
+
+        # xtrain, ytrain, _ = train_sample
+        xtest, ytest, _ = test_sample
+
+        for zcp_name in self.config["zc"]["zc_proxies"]:
+            # train and query expect different ZCP formats for some reason
+            # zcp_train = {'zero_cost_scores': [eval_zcp(t_arch, zcp_name, train_loader) for t_arch in tqdm(xtrain)]}
+            zcp_test = [{'zero_cost_scores': eval_zcp(t_arch, zcp_name, train_loader)} for t_arch in tqdm(xtest)]
+
+            zcp_pred = [s['zero_cost_scores'][zcp_name] for s in zcp_test]
+            metrics = evaluate_predictions(ytest, zcp_pred)
+
+            self.spearman_metrics[zcp_name] = metrics['spearmanr']
+
+        print("spearman_metrics:  ", self.spearman_metrics)
 
         # Build the search space
         choices = {}
