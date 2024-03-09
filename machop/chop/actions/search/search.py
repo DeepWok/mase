@@ -70,7 +70,7 @@ def search(
     """
     # search preparation
     accelerator = parse_accelerator(accelerator)
-    
+    # breakpoint() #######################################################
     ### Our contribution here:
     if isinstance(search_config['search']['nas'],dict):
         op_config, proxy_config = parse_nas_config(search_config)   # type(op_config) = list of tuple , type(proxy_config) = list of strings
