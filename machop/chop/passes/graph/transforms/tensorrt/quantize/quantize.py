@@ -8,6 +8,8 @@ from datetime import datetime
 import tensorrt as trt
 from pathlib import Path
 from datetime import datetime
+import onnx
+import numpy as np
 
 from pytorch_quantization import quant_modules, calib
 from pytorch_quantization import nn as quant_nn
@@ -19,7 +21,6 @@ from chop.passes.graph.interface.save_and_load import load_mase_graph_interface_
 from ....utils import deepcopy_mase_graph
 from .utils import INT8Calibrator
 
-
 def tensorrt_quantize_transform_pass(graph, pass_args=None):
     quantizer = Quantizer(pass_args)
     trt_graph_path = quantizer.pytorch_to_trt(graph)
@@ -27,7 +28,6 @@ def tensorrt_quantize_transform_pass(graph, pass_args=None):
     # link the model with graph
     graph.model = torch.fx.GraphModule(graph.model, graph.fx_graph)
     return graph, {'trt_graph_path': trt_graph_path}
-
 
 class Quantizer:
     def __init__(self, config):
@@ -66,6 +66,7 @@ class Quantizer:
         """Converts PyTorch model to TensorRT format."""
         # Model is first converted to ONNX format and then to TensorRT
         ONNX_path = self.pytorch_to_ONNX(graph.model)
+        self.summarize_ONNX_graph(ONNX_path)
         TRT_path = self.ONNX_to_TRT(ONNX_path)
 
         return TRT_path
@@ -86,16 +87,20 @@ class Quantizer:
 
         config = builder.create_builder_config()
         config.max_workspace_size = 1 << 30
-        if self.config['precision'] == 'FP16':
+        #TODO add multiprecision exportation
+        if self.config['default']['config']['precision'] == 'FP16':
             config.set_flag(trt.BuilderFlag.FP16)
 
         #TODO need to fix INT8 calibration
-        if self.config['precision'] == 'INT8':
+        elif self.config['default']['config']['precision'] == 'INT8':
             config.set_flag(trt.BuilderFlag.INT8)
             config.int8_calibrator = INT8Calibrator(
                 self.config['num_calibration_batches'], 
-                self.config[''].train_dataloader() 
+                self.config['data_module'].train_dataloader() 
                 )
+
+        else:
+            Exception("Unsupported precision type. Please choose from 'FP16' or 'INT8'.")
 
         #TODO add optimizations based on input tensor
         # # Optimization profiles are needed for dynamic input shapes.
@@ -126,3 +131,36 @@ class Quantizer:
                           do_constant_folding=True, input_names=['input'])
         self.logger.info(f"ONNX Conversion Complete. Stored ONNX model to {save_path}")
         return save_path
+    
+    def summarize_ONNX_graph(self, onnx_model_path):
+        # Load ONNX model
+        model = onnx.load(onnx_model_path)
+        graph = model.graph
+
+        # Header for the table
+        header = "Layer Name               | Type         | Input Shape(s)                       | Output Shape(s)"
+        divider = "-" * len(header)
+
+        # Start logging
+        self.logger.info("\n" + divider + "\n" + header + "\n" + divider)
+
+        # Iterate through each node (layer) in the graph
+        for i, node in enumerate(graph.node):
+            layer_name = node.name or f"Layer_{i}"  # Some nodes might not have a name
+            layer_type = node.op_type
+
+            # Retrieve input and output shapes
+            input_shapes = [str(graph.value_info[input_name].type.tensor_type.shape) for input_name in node.input if input_name in graph.value_info]
+            output_shapes = [str(graph.value_info[output_name].type.tensor_type.shape) for output_name in node.output if output_name in graph.value_info]
+
+            # Format the shapes for better readability
+            input_shapes_str = ', '.join(input_shapes) or 'Unknown'
+            output_shapes_str = ', '.join(output_shapes) or 'Unknown'
+
+            # Create the log entry for this layer
+            log_entry = f"{layer_name:<25} | {layer_type:<12} | {input_shapes_str:<37} | {output_shapes_str}"
+            
+            # Log the entry
+            self.logger.info(log_entry)
+
+        self.logger.info(divider)  # End with a divider

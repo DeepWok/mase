@@ -1,0 +1,22 @@
+TRT-8601-EntropyCalibration2
+input: 3d193bb7
+(Unnamed Layer* 2) [Shuffle]_output: 3d193bb7
+(Unnamed Layer* 3) [Scale]_output: 3e16bd4e
+/seq_blocks.0/BatchNormalization_output_0: 3e16bd4e
+/seq_blocks.1/Relu_output_0: 3e58320f
+(Unnamed Layer* 6) [Shuffle]_output: 3cd9a0b9
+/seq_blocks.2/_input_quantizer/Mul_output_0: 3f364f31
+/seq_blocks.2/_input_quantizer/Round_output_0: 3f65f061
+/seq_blocks.2/_input_quantizer/Clip_output_0: 3f65f061
+(Unnamed Layer* 10) [Shuffle]_output: 3cd9a0b9
+/seq_blocks.2/_input_quantizer/Div_output_0: 3e8856cf
+(Unnamed Layer* 12) [Constant]_output: 3f800800
+/seq_blocks.2/_weight_quantizer/Round_output_0: 3f800800
+/seq_blocks.2/_weight_quantizer/Clip_output_0: 3f800800
+(Unnamed Layer* 15) [Constant]_output: 3f581410
+/seq_blocks.2/_weight_quantizer/Div_output_0: 3c5ef43a
+(Unnamed Layer* 17) [Matrix Multiply]_output: 3f8f1968
+(Unnamed Layer* 18) [Constant]_output: 3c2e027d
+(Unnamed Layer* 19) [Shuffle]_output: 3c2e027d
+/seq_blocks.2/Gemm_output_0: 3f820f6b
+35: 3d96688e

@@ -15,9 +15,9 @@ from torch.autograd import Variable
 import torch
 from .utils import FakeQuantizer
 
-def tensorrt_calibrate_transform_pass(graph, pass_args=None):
+
+def tensorrt_fake_quantize_transform_pass(graph, pass_args=None):
     by = pass_args["by"]
-    calibrator = Calibrator(pass_args)
     fq = FakeQuantizer(pass_args)
     match by:
         case "type":
@@ -29,10 +29,14 @@ def tensorrt_calibrate_transform_pass(graph, pass_args=None):
         case _:
             raise ValueError(f'Unsupported quantize "by": {by}')
 
+    return graph, {}
+
+def tensorrt_calibrate_transform_pass(graph, pass_args=None):
+    graph, _ = tensorrt_fake_quantize_transform_pass(graph, pass_args)
+    calibrator = Calibrator(pass_args)
     graph = calibrator.calibrate_model(graph)
     graph.model = torch.fx.GraphModule(graph.model, graph.fx_graph)
     return graph, {}
-
 
 class Calibrator:
     def __init__(self, config):

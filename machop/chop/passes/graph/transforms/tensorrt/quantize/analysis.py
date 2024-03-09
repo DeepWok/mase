@@ -77,11 +77,68 @@ class QuantizationAnalysis():
             self.num_of_classes = len(torch.unique(ys))
             break
 
-        # for i in range(self.num_io):
-        #     print("[%2d]%s->" % (i, "Input " if i < n_Input else "Output"), self.engine.get_tensor_dtype(self.lTensorName[i]), self.engine.get_tensor_shape(self.lTensorName[i]), self.context.get_tensor_shape(self.lTensorName[i]), self.lTensorName[i])
-
         self.config = config
         self.logger = logging.getLogger(__name__)
+        self.summarize()
+
+    def summarize(self):
+        io_info_lines = [
+            "Index | Type    | DataType | Static Shape         | Dynamic Shape        | Name",
+            "------|---------|----------|----------------------|----------------------|-----------------------"
+        ]
+
+        for name in self.lTensorName:
+            # Get the binding index for the tensor name
+            binding_index = self.engine.get_binding_index(name)
+            
+            # Determine whether this is an input or an output
+            io_type = "Input" if binding_index < self.n_Input else "Output"
+
+            # Get data type and shapes using the binding index
+            dtype = self.engine.get_binding_dtype(binding_index)
+            static_shape = self.engine.get_binding_shape(binding_index)
+            dynamic_shape = self.context.get_binding_shape(binding_index)
+
+            # Translate TensorRT data type to string
+            dtype_str = str(dtype).split('.')[-1]  # Convert from DataType.FLOAT to FLOAT
+
+            # Format the IO information
+            io_info = f"{binding_index:<5} | {io_type:<7} | {dtype_str:<8} | {str(static_shape):<22} | {str(dynamic_shape):<22} | {name}"
+            io_info_lines.append(io_info)
+
+        # Join all IO information into a single string and log it
+        io_info_str = "\n".join(io_info_lines)
+        self.logger.info(f"\nTensorRT Engine Input/Output Information:\n{io_info_str}")
+
+        # # Now adding layer precision info as before
+        # layer_info_lines = [
+        #     "Layer Name               | Precision",
+        #     "-------------------------|-----------------------"
+        # ]
+
+        # for i in range(self.engine.num_layers):
+        #     layer = self.engine.get_layer(i)
+        #     # Determine the precision
+        #     precision = 'Unknown'
+        #     if layer.precision == trt.DataType.FLOAT:
+        #         precision = 'FP32'
+        #     elif layer.precision == trt.DataType.HALF:
+        #         precision = 'FP16'
+        #     elif layer.precision == trt.DataType.INT8:
+        #         precision = 'INT8'
+        #     elif layer.precision == trt.DataType.BOOL:
+        #         precision = 'BOOL'
+        #     elif layer.precision == trt.DataType.INT32:
+        #         precision = 'INT32'
+
+        #     # Format and add each layer's info
+        #     layer_info = f"{layer.name:<25} | {precision}"
+        #     layer_info_lines.append(layer_info)
+
+        # # Join and log the layer information
+        # layer_info_str = "\n".join(layer_info_lines)
+        # self.logger.info(f"\nTensorRT Engine Layer Precisions:\n{layer_info_str}")
+
 
     def infer_mg(self, model, input_data):
         # send model and input data to GPU for inference

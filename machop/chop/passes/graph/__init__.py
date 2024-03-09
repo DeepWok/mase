@@ -38,7 +38,13 @@ from .interface import (
 
 from .transforms.quantize import quantized_func_map, quantized_module_map
 from .transforms.quantize.quant_parsers import parse_node_config
-from .transforms.tensorrt import tensorrt_quantize_transform_pass, tensorrt_calibrate_transform_pass, tensorrt_train_transform_pass, tensorrt_analysis_pass
+from .transforms.tensorrt import (
+    tensorrt_quantize_transform_pass,
+    tensorrt_calibrate_transform_pass,
+    tensorrt_train_transform_pass,
+    tensorrt_analysis_pass,
+    tensorrt_fake_quantize_transform_pass
+)
 
 ANALYSIS_PASSES = [
     "init_metadata",
@@ -103,6 +109,7 @@ PASSES = {
     # transform
     "quantize": quantize_transform_pass,
     "tensorrt-calibrate": tensorrt_calibrate_transform_pass,
+    "tensorrt-fake-quantize": tensorrt_fake_quantize_transform_pass,
     "tensorrt-quantize": tensorrt_quantize_transform_pass,
     "tensorrt-train": tensorrt_train_transform_pass,
     "summarize_quantization": summarize_quantization_analysis_pass,

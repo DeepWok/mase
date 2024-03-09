@@ -139,23 +139,22 @@ class FakeQuantizer:
 
 #TODO cache file path
 class INT8Calibrator(trt.IInt8EntropyCalibrator2):
-    def __init__(self, nCalibration, train_generator, cacheFile):
+    def __init__(self, nCalibration, input_generator):
         trt.IInt8EntropyCalibrator2.__init__(self)
-        self.cacheFile = cacheFile
         self.nCalibration = nCalibration
-        self.shape = next(iter(train_generator))['x'].shape
-        self.buffeSize = trt.volume(self.shape) * trt.float32.itemsize
+        self.shape = next(iter(input_generator))[0].shape
+        self.buffer_size = trt.volume(self.shape) * trt.float32.itemsize
         self.cacheFile = 'int8_calibrator.cache'
-        _, self.dIn = cudart.cudaMalloc(self.buffeSize)
-        self.input_generator = train_generator
+        _, self.dIn = cudart.cudaMalloc(self.buffer_size)
+        self.input_generator = input_generator
     
     def get_batch_size(self):
         return self.shape[0]
 
     def get_batch(self, nameList=None, inputNodeName=None):
         try:
-            data = np.array(next(iter(self.input_generator))['x'])
-            cudart.cudaMemcpy(self.dIn, data.ctypes.data, self.buffeSize, cudart.cudaMemcpyKind.cudaMemcpyHostToDevice)
+            data = np.array(next(iter(self.input_generator))[0])
+            cudart.cudaMemcpy(self.dIn, data.ctypes.data, self.buffer_size, cudart.cudaMemcpyKind.cudaMemcpyHostToDevice)
             return [int(self.dIn)]
         except StopIteration:
             return None
