@@ -22,6 +22,9 @@ def parse_search_config(search_config):
     ---
     The search config must consist of two parts: strategy and search_space.
     """
+    if 
+
+
     if not isinstance(search_config, dict):
         search_config = load_config(search_config)
     search_config = search_config["search"]  # the actual config for action search
