@@ -13,7 +13,7 @@ from chop.tools.utils import device
 from chop.tools.utils import parse_accelerator
 
 logger = logging.getLogger(__name__)
-
+IS_NAS=False
 
 def parse_search_config(config):
     """
@@ -23,17 +23,21 @@ def parse_search_config(config):
     The search config must consist of two parts: strategy and search_space.
     """
     
+    if isinstance(config['nas'],dict):
+        search_config = config["search"]
+        n_config =config[]
 
+        return
+    
 
     if not isinstance(config, dict):
         search_config = load_config(config)
-    # if search_config["using_nas"] is True:
-    #     saerch_config = search_config["search"]
 
     search_config = config["search"]  # the actual config for action search
+    
     strategy_config = search_config["strategy"]
     search_space_config = search_config["search_space"]
-
+        
     return strategy_config, search_space_config
 
 
