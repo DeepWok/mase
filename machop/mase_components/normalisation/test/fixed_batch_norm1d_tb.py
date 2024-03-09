@@ -98,6 +98,11 @@ class BatchNormTB(Testbench):
         # Store fixed point data
         # TODO(jlsand): We assume that the fixed point format is the same for all
         # parameters. Fair assumption or faulty?
+
+        # TODO(jlsand): Using the batch norm layer does not always work. Here we rely
+        # on a manually written FE model. Reason for discrepancy for layer and verilog
+        # module is still unknown, although seems like discrepancies mainly happen when
+        # running mean is non-zero.
         width = self.config["data_in_width"]
         frac_width = self.config["data_in_frac_width"]
         local_config = {"width": width, "frac_width": frac_width}
@@ -157,6 +162,7 @@ class BatchNormTB(Testbench):
 
         self.data_out_0_monitor.ready.value = 1
         print(f'================= DEBUG: asserted ready_out ================= \n')
+
         
         self.dut.gamma.value = gamma[0]
         self.dut.beta.value = beta[0]
@@ -177,7 +183,7 @@ class BatchNormTB(Testbench):
 
         print("Exp. outputs model pre-processed: ", exp_outputs_model)
 
-        exp_outputs_manual = (torch.tensor(inputs) - torch.tensor(mean)) * torch.tensor(gamma) / torch.tensor(stdv) + torch.tensor(beta)
+        exp_outputs_manual = ((torch.tensor(inputs) - torch.tensor(mean)) * torch.tensor(gamma) / torch.tensor(stdv) + torch.tensor(beta)).int()
         print("Exp. outputs manual: ", exp_outputs_manual)
 
         # The output from the module is treated as positive integers
@@ -186,9 +192,8 @@ class BatchNormTB(Testbench):
             if x >= 0:
                 return x
             else:
-                # print(f"Converting {x} bytes {(-x)/(1<<5)}")
                 return 2**(width-frac_width) + x         
-        exp_outputs_manual = exp_outputs_manual.int().apply_(convert)
+        exp_outputs_manual = exp_outputs_manual.apply_(convert)
 
         print("Exp. outputs manual converted: ", exp_outputs_manual)
         print(f'================= DEBUG: generated values with fe model ================= \n')
