@@ -104,8 +104,6 @@ class VerificationCase(Testbench):
             data_x.append(x)
             msb_indices.append(msb_index)
         return data_x, msb_indices, samples
-    def gen_single_test(self):
-        return [3], [1], 1
 
     def model(self, data_x, msb_indices):
         ref = []
