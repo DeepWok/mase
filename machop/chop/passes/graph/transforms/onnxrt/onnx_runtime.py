@@ -14,20 +14,17 @@ def onnx_runtime_transform_pass(graph, pass_args="None"):
     onnx_runtime_session = ONNXRuntime()
 
     pytorch_model = graph.model
-
     do_test = pass_args['do_test']
 
     if do_test == 'before' or do_test == 'both':
-        onnx_runtime_session.test_performances("pytorch")
+        onnx_runtime_session.test_performances(model_type="pytorch", model=pytorch_model)
 
     onnx_model_path = onnx_runtime_session.pytorch_to_onnx(pytorch_model)
-
     onnx_model_graph = onnx_runtime_session.load_onnx(onnx_model_path).graph
-
     onnx_runtime_session.summarize_ONNX_graph(onnx_model_graph)
 
     if do_test == 'after' or do_test == 'both':
-        onnx_runtime_session.test_performances("onnx")
+        onnx_runtime_session.test_performances(model_type='onnx', model_path=onnx_model_path)
 
     elif do_test == 'NA':
         pass
@@ -111,11 +108,16 @@ class ONNXRuntime:
 
         return onnx_model
 
-    def test_performances(self, model_type):
+    def test_performances(self, model_type, model=None, model_path=None):
+        '''Extract various performance and efficiency metrics to either pytorch or onnx models'''
         if model_type == 'pytorch':
             ...
+
         elif model_type == 'onnx':
-            ...
+            ort_sess = ort.InferenceSession(model_path)
+            outputs = ort_sess.run(None, {'input': x.numpy()})
+            ... 
+            
         else:
             raise Exception(f"Expected model_type being either 'pytorch' or 'onnx', but '{model_type}' received.")
 
@@ -125,8 +127,8 @@ class ONNXRuntime:
 
         save_path = self.prepare_save_path(method='ONNX')
 
-        dataloader = self.config['data_module'].train_dataloader()  
-        train_sample = next(iter(dataloader))[0]
+        train_dataloader = self.config['data_module'].train_dataloader()  
+        train_sample = next(iter(train_dataloader))[0]
         train_sample = train_sample.to(self.config['accelerator'])
 
         torch.onnx.export(model, train_sample, save_path, export_params=True, opset_version=11, 
