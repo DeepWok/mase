@@ -28,7 +28,7 @@ setup(
         "pytorch-nlp",
         "datasets",
         "onnx",
-        "onnxruntime",
+        "onnxruntime-gpu",
         "optimum",
         "black",
         "GitPython",
