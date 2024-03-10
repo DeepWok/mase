@@ -6,8 +6,6 @@ import sys
 from pathlib import Path
 from datetime import datetime
 import tensorrt as trt
-from pathlib import Path
-from datetime import datetime
 import onnx
 import numpy as np
 
