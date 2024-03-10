@@ -4,16 +4,18 @@
 import random, os
 
 import cocotb
+from mase_cocotb.testbench import Testbench
 from cocotb.triggers import Timer
 from mase_cocotb.runner import mase_runner
 import math
 
 
-# AIM: move the the MSB to the leftmost position.
+## AIM: move the the MSB to the leftmost position.
 def range_reduction_sw(x: int, width: int) -> int:
     """model of range reduction for isqrt"""
     # Find MSB
-    msb_index = None
+    # NOTE: if the input is 0 then consider msb index as width-1.
+    msb_index = width-1
     for i in range(1, width+1):
         power = 2 ** (width - i)
         if power <= x:
@@ -48,27 +50,21 @@ def int_to_float(x: int, int_width: int, frac_width: int) -> float:
             fraction -= power
     return res
 
-# TODO: this is just for the Q8.0 format. Need to generalise to other formats.
-class VerificationCase:
-    def __init__(self, samples=1):
-        self.int_width = 8
-        self.frac_width = 8
-        self.data_in_width = self.int_width + self.frac_width
-        self.data_in_x = [val for val in range(1, samples+1)]
-        self.samples = samples
-        self.ref = self.sw_compute()
+class VerificationCase(Testbench):
+    def __init__(self, dut) -> None:
+        super().__init__(dut)
+        self.assign_self_params([
+            "WIDTH"
+        ])
 
-    def get_dut_parameters(self):
-        return {
-            "IN_WIDTH": self.data_in_width,
-            "INT_WIDTH": self.int_width,
-            "FRAC_WIDTH": self.frac_width
-        }
-
-    def sw_compute(self):
+    def generate_inputs(self):
+        samples = 2 ** self.WIDTH
+        return [val for val in range(0, samples)], samples
+        
+    def model(self, inputs):
         ref = []
-        for x in self.data_in_x:
-            expected = range_reduction_sw(x, self.data_in_width) 
+        for x in inputs:
+            expected = range_reduction_sw(x, self.WIDTH)
             ref.append(expected)
         return ref
 
@@ -76,13 +72,13 @@ class VerificationCase:
 @cocotb.test()
 async def test_fixed_range_reduction(dut):
     """Test for adding 2 random numbers multiple times"""
-    samples = 65536
-    testcase = VerificationCase(samples=samples)
+    testcase = VerificationCase(dut)
+    data_in_x, samples = testcase.generate_inputs()
+    ref = testcase.model(data_in_x)
 
-    #for i in range(samples):
     for i in range(samples):
         # Set up module data.
-        data_a = testcase.data_in_x[i]
+        data_a = data_in_x[i]
 
         # Force module data.
         dut.data_a.value = data_a
@@ -90,7 +86,7 @@ async def test_fixed_range_reduction(dut):
         await Timer(10, units="ns")
 
         # Exepected result.
-        expected = testcase.ref[i]
+        expected = ref[i]
 
         # Check the output.
         assert (
@@ -108,4 +104,14 @@ async def test_fixed_range_reduction(dut):
             """
 
 if __name__ == "__main__":
-    mase_runner()
+    def full_sweep():
+        parameter_list = []
+        for width in range(1, 17):
+            parameters = {"WIDTH": width}
+            parameter_list.append(parameters)
+        return parameter_list
+
+    parameter_list = full_sweep()
+    #parameter_list = [{"WIDTH": 2}]
+
+    mase_runner(module_param_list=parameter_list)

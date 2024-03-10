@@ -26,6 +26,4 @@ module fixed_lut_index #(
     // Getting rid of fractional bits.
     assign data_out = temp3 >> (WIDTH - 1);
 
-    assign data_out = (data_a >> data_b) - (1'b1 << LUT_POW);
-
 endmodule

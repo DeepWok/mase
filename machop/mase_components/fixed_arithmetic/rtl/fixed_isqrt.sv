@@ -36,6 +36,7 @@ module fixed_isqrt #(
 
     logic[2*IN_WIDTH-1:0] x_reduced;
     logic[MSB_WIDTH-1:0] msb_index;
+    logic[2*IN_WIDTH-1:0] lut_pos;
     logic[2*IN_WIDTH-1:0] lut_index;
     logic[2*IN_WIDTH-1:0] lut_value;
     logic[2*IN_WIDTH-1:0] y;
@@ -55,8 +56,10 @@ module fixed_isqrt #(
     ) fixed_lut_index_inst (
         .data_a(in_data),
         .data_b(msb_index),
-        .data_out(lut_index)
+        .data_out(lut_pos)
     );
+
+    assign lut_index = lut_pos - 1;
 
     fixed_lut #(
         .WIDTH(IN_WIDTH),
