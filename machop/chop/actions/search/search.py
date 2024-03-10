@@ -29,7 +29,7 @@ def parse_nas_config(config):
     nas_config = search_config['nas']  # parse into nas
     op_config = nas_config['op_config']
     proxy_config = nas_config['proxy_config']
-    return op_config, proxy_config
+    return op_config['op_indices'], proxy_config['proxy']# one more time one more chance running
     
 
     
@@ -75,7 +75,7 @@ def search(
     if not isinstance(search_config, dict):
         search_config = load_config(search_config)
     searchconfig=search_config['search']
-    print(searchconfig)
+    
     if isinstance(searchconfig['nas'],dict):
         op_config, proxy_config = parse_nas_config(search_config)   # type(op_config) = list of tuple , type(proxy_config) = list of strings
         # Prepare dict for recording scores
@@ -98,10 +98,10 @@ def search(
             }
             config = CfgNode(config_dict)
             train_loader, val_loader, test_loader, train_transform, valid_transform = get_train_val_loaders(config)
-
             # Generate models
             graph = NasBench201SearchSpace(n_classes=10)
-            graph.sample_architecture(op_indces=op)
+            graph.sample_architecture(op_indices=op)
+            # graph.sample_random_architecture()
             graph.parse()
             graph.get_hash()
             dataset_apis={}
@@ -116,11 +116,12 @@ def search(
             for zc_proxy in proxy_config:
                 zc_predictor = ZeroCost(method_type=zc_proxy)
                 score = zc_predictor.query(graph=graph, dataloader=train_loader)
-                scores[proxy_name].append(score)
-
-        np.save(scores)
-        np.save(train_accuries)
-        np.save(val_accuries)
+                # print(score)
+                scores[zc_proxy].append(score)
+        print(scores)
+        np.save(r'/home/ansonhon/mase_project/nas_results/scores_test2',scores)
+        np.save(r'/home/ansonhon/mase_project/nas_results/train_acc_test2',train_accuries)
+        np.save(r'/home/ansonhon/mase_project/nas_results/val_acc_test2',val_accuries)
 
         return
     

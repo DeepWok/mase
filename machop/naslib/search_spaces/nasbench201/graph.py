@@ -237,12 +237,32 @@ class NasBench201SearchSpace(Graph):
         assert self.labeled_archs is not None, "Labeled archs not provided to sample from"
 
         op_indices = random.choice(self.labeled_archs)
+        print("debugging...")
+        print(op_indices)
 
         if self.sample_without_replacement == True:
             self.labeled_archs.pop(self.labeled_archs.index(op_indices))
 
         self.set_spec(op_indices)
-
+    def sample_architecture(self,dataset_api: dict = None, load_labeled: bool = False, op_indices:list=None) -> None:
+        if load_labeled == True:
+            return self.sample_random_labeled_architecture()
+        def is_valid_arch(op_indices: list) -> bool:
+            return not ((op_indices[0] == op_indices[1] == op_indices[2] == 1) or
+                        (op_indices[2] == op_indices[4] == op_indices[5] == 1))
+        # print(op_indices)
+        # breakpoint()
+        op_indices = [int(x) for x in op_indices]
+        
+        
+        while True:
+            if not is_valid_arch(op_indices):
+                op_indices = np.random.randint(NUM_OPS, size=(NUM_EDGES)).tolist()
+                continue
+            self.set_op_indices(op_indices)
+            break
+        self.compact = self.get_op_indices()
+        
     def sample_random_architecture(self, dataset_api: dict = None, load_labeled: bool = False) -> None:
         """
         This will sample a random architecture and update the edges in the
@@ -258,7 +278,7 @@ class NasBench201SearchSpace(Graph):
 
         while True:
             op_indices = np.random.randint(NUM_OPS, size=(NUM_EDGES)).tolist()
-
+            print(op_indices)
             if not is_valid_arch(op_indices):
                 continue
 
