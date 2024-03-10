@@ -1,0 +1,46 @@
+# basics
+model = "jsc-tiny"
+dataset = "jsc"
+
+max_epochs = 10
+batch_size = 256
+learning_rate = 1e-3
+accelerator = "gpu"
+
+[passes.tensorrt-quantize]
+by = "type"
+calibrator = ["percentile", "max", "mse", "entropy"]
+num_calibration_batches = 100
+percentiles = [99]
+report = true
+
+[passes.tensorrt-quantize.linear.config]
+quantize = true
+precision = 'FP16' # 'INT8'
+
+[passes.tensorrt-quantize.linear.input]
+calibrator = 'histogram'
+quantize_axis = false
+
+[passes.tensorrt-quantize.linear.weight]
+calibrator = 'histogram'
+quantize_axis = false
+
+[passes.tensorrt-quantize.default.config]
+quantize = true
+precision = 'FP16'
+
+[passes.tensorrt-quantize.default.config.input]
+calibrator = 'histogram'
+quantize_axis = false
+
+[passes.tensorrt-quantize.default.config.weight]
+calibrator = 'histogram'
+quantize_axis = false
+
+[passes.tensorrt-train]
+qat_epochs = 10
+
+[passes.tensorrt-analysis]
+num_batches = 20
+num_GPU_warmup_batches = 5

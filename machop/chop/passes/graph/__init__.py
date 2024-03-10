@@ -46,6 +46,8 @@ from .transforms.tensorrt import (
     tensorrt_fake_quantize_transform_pass
 )
 
+from .transforms.onnxrt import onnx_runtime_transform_pass
+
 ANALYSIS_PASSES = [
     "init_metadata",
     "add_common_metadata",
@@ -112,6 +114,7 @@ PASSES = {
     "tensorrt-fake-quantize": tensorrt_fake_quantize_transform_pass,
     "tensorrt-quantize": tensorrt_quantize_transform_pass,
     "tensorrt-train": tensorrt_train_transform_pass,
+    "onnxruntime": onnx_runtime_transform_pass,
     "summarize_quantization": summarize_quantization_analysis_pass,
     "prune": prune_transform_pass,
     "prune_detach_hook": prune_detach_hook_transform_pass,

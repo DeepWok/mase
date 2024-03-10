@@ -150,6 +150,28 @@ def transform(
                         raise NotImplementedError()
                     case "kerneltuning":
                         raise NotImplementedError()
+                    
+            case "onnxruntime":
+                pass_save_dir = save_dir / "quantize"
+                graph, _ = metadata_value_type_cast_transform_pass(
+                    graph, pass_args={"fn": to_numpy_if_tensor}
+                )
+                ori_graph = deepcopy_mase_graph(graph)
+
+                pass_config['batch_size'] = config['batch_size']
+                pass_config['data_module'] = data_module
+                pass_config['accelerator'] = 'cuda' if accelerator == 'gpu' else accelerator
+                if accelerator == 'gpu':
+                    #TODO this seems innefective - known issue - https://github.com/NVIDIA/TensorRT/issues/2468
+                    os.environ['CUDA_MODULE_LOADING'] = 'LAZY'
+
+                graph, _ = PASSES["onnxruntime"](graph, pass_args=pass_config)
+                
+                # TODO: substitute with performance comparison
+                # PASSES["summarize_quantization"]( 
+                #     ori_graph, graph, save_dir=pass_save_dir
+                # )
+
             case "quantize":
                 pass_save_dir = save_dir / "quantize"
                 graph, _ = metadata_value_type_cast_transform_pass(

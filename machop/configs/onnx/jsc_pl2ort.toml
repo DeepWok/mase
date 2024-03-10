@@ -1,0 +1,16 @@
+# basics
+model = "jsc-tiny"
+dataset = "jsc"
+
+max_epochs = 10
+batch_size = 256
+learning_rate = 1e-3
+accelerator = "gpu"
+# project = "jsc-tiny"
+# load_name = "../mase_output/toy_toy_tiny/software/training_ckpts/best.ckpt"
+# load_type = "pl"
+
+
+[passes.onnxruntime]
+do_test = "both" # tests original PyTorch checkpoint performance if "before", post-conversion performance if "after", both if "both"
+do_train = false
