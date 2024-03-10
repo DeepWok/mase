@@ -15,11 +15,11 @@ from chop.tools.utils import parse_accelerator
 
 # For nas proxy search
 import numpy as np
-from chop.NASLib.naslib.search_spaces import NasBench201SearchSpace
-from chop.NASLib.naslib.utils import get_zc_benchmark_api,get_dataset_api
-from chop.NASLib.naslib.utils import get_train_val_loaders, get_project_root
-from chop.NASLib.naslib.predictors import ZeroCost
-from chop.NASLib.naslib.search_spaces.core import Metric
+from naslib.search_spaces import NasBench201SearchSpace
+from naslib.utils import get_zc_benchmark_api,get_dataset_api
+from naslib.utils import get_train_val_loaders, get_project_root
+from naslib.predictors import ZeroCost
+from naslib.search_spaces.core import Metric
 
 
 logger = logging.getLogger(__name__)
