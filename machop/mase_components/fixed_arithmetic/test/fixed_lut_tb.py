@@ -5,6 +5,7 @@ import random, os
 
 import cocotb
 from cocotb.triggers import Timer
+from mase_cocotb.testbench import Testbench
 from mase_cocotb.runner import mase_runner
 import math
 
@@ -42,50 +43,47 @@ def make_lut(lut_size, width):
         lut.append(value)
         x += lut_step
 
-    for i in range(lut_size):
-        print(lut[i])
     return lut
 
 def lut_value_sw(lut, lut_index: int, lut_size: int) -> int:
     return lut[lut_index%lut_size]
 
+class VerificationCase(Testbench):
+    def __init__(self, dut):
+        super().__init__(dut)
+        self.assign_self_params([
+            "WIDTH", "LUT_POW", "LUT00", "LUT01", "LUT02", "LUT03",
+            "LUT04", "LUT05", "LUT06", "LUT07", "LUT08", "LUT09",
+            "LUT10", "LUT11", "LUT12", "LUT13", "LUT14", "LUT15",
+            "LUT16", "LUT17", "LUT18", "LUT19", "LUT20", "LUT21",
+            "LUT22", "LUT23", "LUT24", "LUT25", "LUT26", "LUT27",
+            "LUT28", "LUT29", "LUT30", "LUT31"
+        ])
 
-# TODO: this is just for the Q8.0 format. Need to generalise to other formats.
-class VerificationCase:
-    def __init__(self, samples=1):
-        self.int_width = 8
-        self.frac_width = 8
-        self.data_in_width = self.int_width + self.frac_width
-        self.data_in_x = [i for i in range(samples)]
-        self.samples = samples
-        self.lut_pow = 5
-        self.lut_size = 2 ** self.lut_pow
-        self.lut = make_lut(self.lut_size, self.data_in_width)
-        self.ref = self.sw_compute()
+    def generate_inputs(self):
+        samples = 2 ** self.LUT_POW
+        data_x = [x for x in range(samples)]
+        return data_x, samples
 
-    def get_dut_parameters(self):
-        return {
-            "IN_WIDTH": self.data_in_width,
-            "INT_WIDTH": self.int_width,
-            "FRAC_WIDTH": self.frac_width
-        }
-
-    def sw_compute(self):
+    def model(self, data_x):
+        lut_size = 2 ** self.LUT_POW
+        lut = make_lut(lut_size, self.WIDTH)
         ref = []
-        for x in self.data_in_x:
-            expected = lut_value_sw(self.lut, x, self.lut_size)
+        for x in data_x:
+            expected = lut_value_sw(lut, x, lut_size)
             ref.append(expected)
         return ref
 
 @cocotb.test()
 async def test_fixed_lut(dut):
     """Test for finding LUT value for ISQRT"""
-    samples = 32
-    testcase = VerificationCase(samples=samples)
+    testcase = VerificationCase(dut)
+    data_x, samples = testcase.generate_inputs()
+    ref = testcase.model(data_x)
 
     for i in range(samples):
         # Set up module data.
-        data_a = testcase.data_in_x[i]
+        data_a = data_x[i]
 
         # Force module data.
         dut.data_a.value = data_a
@@ -94,7 +92,7 @@ async def test_fixed_lut(dut):
         await Timer(10, units="ns")
 
         # Exepected result.
-        expected = testcase.ref[i]
+        expected = ref[i]
 
         # Check the output.
         assert (
@@ -112,4 +110,24 @@ async def test_fixed_lut(dut):
             """
 
 if __name__ == "__main__":
-    mase_runner()
+    def full_sweep():    
+        parameter_list = []
+        lut_pow = 5      
+        lut_size = 2 ** lut_pow
+        for width in range(1, 17):
+            lut = make_lut(lut_size, width)
+            parameters = {"WIDTH": width, "LUT_POW": lut_pow}
+            lut_prefix = "LUT"
+            for i in range(lut_size):
+                if i < 10:
+                    lut_suffix = "0" + str(i)
+                else:
+                    lut_suffix = str(i)
+                name = lut_prefix + lut_suffix
+                parameters |= {name: lut[i]}
+            parameter_list.append(parameters)
+        return parameter_list
+
+    parameter_list = full_sweep()
+
+    mase_runner(module_param_list=parameter_list)
