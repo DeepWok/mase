@@ -1,8 +1,8 @@
 import numpy as np
 import torch.nn as nn
 
-from nasbench_pytorch.model import Network
-from nasbench_pytorch.model import ModelSpec
+# from nasbench_pytorch.model import Network
+# from nasbench_pytorch.model import ModelSpec
 
 from naslib.search_spaces.nasbench101.primitives import ModelWrapper
 

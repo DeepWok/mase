@@ -72,7 +72,11 @@ def search(
     accelerator = parse_accelerator(accelerator)
     # breakpoint() #######################################################
     ### Our contribution here:
-    if isinstance(search_config['search']['nas'],dict):
+    if not isinstance(search_config, dict):
+        search_config = load_config(search_config)
+    searchconfig=search_config['search']
+    print(searchconfig)
+    if isinstance(searchconfig['nas'],dict):
         op_config, proxy_config = parse_nas_config(search_config)   # type(op_config) = list of tuple , type(proxy_config) = list of strings
         # Prepare dict for recording scores
         scores = {}
@@ -121,8 +125,6 @@ def search(
         return
     
     ### End of our contribution
-
-        
     strategy_config, search_space_config = parse_search_config(search_config)
     save_path.mkdir(parents=True, exist_ok=True)
 

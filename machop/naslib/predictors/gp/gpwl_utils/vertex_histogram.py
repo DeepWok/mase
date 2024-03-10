@@ -9,7 +9,7 @@
 from warnings import warn
 
 from collections import Counter
-from collections import Iterable
+# from collections import Iterable
 
 from sklearn.exceptions import NotFittedError
 from sklearn.utils.validation import check_is_fitted
