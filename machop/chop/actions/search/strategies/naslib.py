@@ -122,7 +122,6 @@ class SearchStrategyNaslib(SearchStrategyBase):
 
     def search(self, search_space) -> optuna.study.Study:
         print("search_space:  ", search_space)
-        print("spearman_metrics: ", search_space.spearman_metrics)
         
         # pdb.set_trace()
         study_kwargs = {
@@ -155,12 +154,11 @@ class SearchStrategyNaslib(SearchStrategyBase):
             ],
             show_progress_bar=True,
         )
-        print("study best_trials:  ", study.best_trials)
         self._save_study(study, self.save_dir / "study.pkl")
         self._save_search_dataframe(study, search_space, self.save_dir / "log.json")
         # self._save_best(study, self.save_dir / "best.json")
 
-        self._save_best_zero_cost(search_space.spearman_metrics, self.save_dir / "metrics.json")
+        self._save_best_zero_cost(search_space, self.save_dir / "metrics.json")
 
         return study
 
@@ -182,18 +180,29 @@ class SearchStrategyNaslib(SearchStrategyBase):
         return df
     
     @staticmethod
-    def _save_best_zero_cost(spearman_metrics, save_path):
-        sorted_spearman_metrics = dict(sorted(spearman_metrics.items(), key=lambda item: item[1], reverse=True))
+    def _save_best_zero_cost(search_space, save_path):
+        # import pdb
+        # pdb.set_trace()
+
+        result_dict = {}
+        for item in search_space.zcp_results:
+            key = list(item.keys())[0]
+            values = item[key]
+            result_dict[key] = {'test_spearman': values['test_spearman'], 'train_spearman': values['train_spearman']}
+
+
+        print("result_dict:  ", result_dict)
+
 
         df = pd.DataFrame(
             columns=[
                 "number",
-                "zero_cost_metrics",
+                "result_dict",
             ]
         )
         row = [
             0,
-            sorted_spearman_metrics,
+            result_dict,
             ]
         
         df.loc[len(df)] = row
@@ -202,29 +211,27 @@ class SearchStrategyNaslib(SearchStrategyBase):
         txt = "Best trial(s):\n"
         print("df:  ", df)
         df_truncated = df.loc[
-            :, ["zero_cost_metrics"]
+            :, ["result_dict"]
         ]
 
         def beautify_metric(metric: dict):
             beautified = {}
-            # import pdb
-            # pdb.set_trace()
             for k, v in metric.items():
                 if isinstance(v, (float, int)):
                     beautified[k] = round(v, 3)
                 else:
                     txt = str(v)
-                    if len(txt) > 20:
-                        txt = txt[:20] + "..."
+                    if len(txt) > 40:
+                        txt = txt[:40] + "..."
                     else:
-                        txt = txt[:20]
+                        txt = txt[:40]
                     beautified[k] = txt
             return beautified
 
         df_truncated.loc[
-            :, ["zero_cost_metrics"]
+            :, ["result_dict"]
         ] = df_truncated.loc[
-            :, ["zero_cost_metrics"]
+            :, ["result_dict"]
         ].map(
             beautify_metric
         )
