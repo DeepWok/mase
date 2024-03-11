@@ -3,7 +3,7 @@ module fixed_nr_stage #(
     parameter WIDTH = 16,
     localparam THREEHALFS = 3 << (WIDTH - 2)
 ) (
-    // Input x.
+    // Input x reduced
     input logic[WIDTH-1:0] data_a,    // FORMAT: Q1.(WIDTH-1).
     // Initial LUT guess.
     input logic[WIDTH-1:0] data_b,    // FORMAT: Q1.(WIDTH-1).

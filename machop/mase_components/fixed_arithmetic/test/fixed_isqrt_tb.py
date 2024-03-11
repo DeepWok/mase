@@ -7,44 +7,31 @@ import cocotb
 from cocotb.triggers import Timer
 from mase_cocotb.runner import mase_runner
 import math
+from mase_cocotb.testbench import Testbench
+from isqrt_sw import isqrt_sw2, int_to_float, make_lut
 
 
-def isqrt_sw(x: int, int_width: int, frac_width: int) -> int:
-    """model of fixed point isqrt"""
-    if x == 0:
-        return int_to_float(2 ** (int_width + frac_width) - 1, 8, 8)
-    x_f = int_to_float(x, int_width, frac_width)
-    ref = 1 / math.sqrt(x_f)
-    return ref
+class VerificationCase(Testbench):
+    def __init__(self, dut):
+        super().__init__(dut)
+        self.assign_self_params([
+            "IN_WIDTH",
+            "IN_FRAC_WIDTH",
+            "LUT_POW",
+            "OUT_WIDTH",
+            "OUT_FRAC_WIDTH"
+        ])
 
-class VerificationCase:
-    def __init__(self, samples=1, in_width=16, frac_width=8):
-        self.in_width       = in_width
-        self.in_frac_width  = frac_width
-        self.lut_pow        = 5
-        self.out_width      = in_width
-        self.out_frac_width = frac_width
-        self.out_frac_width = self.in_frac_width
-        self.pipeline_cycles = 0
-        self.data_in = [val for val in range(samples)]
-        self.samples = samples
-        self.ref = self.sw_compute()
+    def generate_inputs(self):
+        samples = 2 ** self.IN_WIDTH
+        return [val for val in range(samples)], samples
 
-    def get_dut_parameters(self):
-        return {
-            "IN_WIDTH": self.in_width,
-            "IN_FRAC_WIDTH": self.in_frac_width,
-            "LUT_POW": self.lut_pow,
-            "OUT_WIDTH": self.out_width,
-            "OUT_FRAC_WIDTH": self.out_frac_width,
-            "PIPELINE_CYCLES": self.pipeline_cycles
-        }
-
-    def sw_compute(self):
+    def model(self, data_in):
         ref = []
-        for sample in self.data_in:
-            int_width = self.in_width - self.in_frac_width
-            expected = isqrt_sw(sample, int_width, self.in_frac_width)
+        lut_size = 2 ** self.LUT_POW
+        lut = make_lut(lut_size, self.IN_WIDTH)
+        for x in data_in:
+            expected = isqrt_sw2(x, self.IN_WIDTH, self.IN_FRAC_WIDTH, self.LUT_POW, lut)
             ref.append(expected)
         return ref
 
@@ -58,19 +45,16 @@ def debug(dut, i, f):
     print(f"Y aug    : {dut.y_aug.value}    {int_to_float(dut.y_aug.value.integer, i, f)}")
 
 
-# TODO: why do the parameters not get updated???
 @cocotb.test()
 async def test_fixed_isqrt(dut):
     """Test for inverse square root"""
-    in_width = 16
-    frac_width = 8
-    int_width = in_width - frac_width
-    samples = 2**(in_width) - 1
-    testcase = VerificationCase(samples, in_width, frac_width)
+    testcase = VerificationCase(dut)
+    data_in, samples = testcase.generate_inputs()
+    ref = testcase.model(data_in)
 
     for i in range(samples):
         # Set up module data.
-        data_a = testcase.data_in[i]
+        data_a = data_in[i]
 
         # Force module data.
         dut.in_data.value = data_a
@@ -81,12 +65,11 @@ async def test_fixed_isqrt(dut):
         #debug(dut, int_width, frac_width)
 
         # Exepected result.
-        expected = testcase.ref[i]
-        error = abs(int_to_float(dut.out_data.value.integer, int_width, frac_width) - expected)
+        expected = ref[i]
 
         # Check the output.
         assert (
-                error <= 2**(-8)*2
+                expected == dut.out_data.value.integer
             ), f"""
             <<< --- Test failed --- >>>
             Input:
@@ -98,14 +81,51 @@ async def test_fixed_isqrt(dut):
             Expected:
             {expected}
 
-            Error:
-            {error}
-
             Test index:
             {i}
             """
 
 
 if __name__ == "__main__":
-    tb = VerificationCase()
-    mase_runner(module_param_list=[tb.get_dut_parameters()], trace=True)
+    def create_lut_parameters(lut_size, width):
+        lut_parameters = {}
+        lut = make_lut(lut_size, width)
+        lut_prefix = "LUT"
+        for i in range(lut_size):
+            if i < 10:
+                lut_suffix = "0" + str(i)
+            else:
+                lut_suffix = str(i)
+            name = lut_prefix + lut_suffix
+            lut_parameters |= {name: lut[i]}
+        return lut_parameters
+
+    def single_test(width, frac_width, lut_pow, pipeline_cycles):
+        parameter_list = []
+        lut_size = 2 ** lut_pow
+        parameters = {
+                "IN_WIDTH": width, "IN_FRAC_WIDTH": frac_width,
+                "OUT_WIDTH": width, "OUT_FRAC_WIDTH": frac_width,
+                "LUT_POW": lut_pow, "PIPELINE_CYCLES": pipeline_cycles
+                }
+        lut_parameters = create_lut_parameters(lut_size, width)
+        parameter_list.append(parameters | lut_parameters)
+        return parameter_list
+
+    def full_sweep():
+        parameter_list = []
+        lut_pow = 5
+        lut_size = 2 ** lut_pow
+        pipeline_cycles = 0
+        for int_width in range(1, 9):
+            for frac_width in range(0, 9):
+                width = int_width + frac_width
+                parameters = single_test(width, frac_width, lut_pow, pipeline_cycles)
+                parameter_list += parameters
+        return parameter_list
+
+    parameter_list = full_sweep()
+
+    #parameter_list = single_test(8, 4)
+
+    mase_runner(module_param_list=parameter_list, trace=False)
