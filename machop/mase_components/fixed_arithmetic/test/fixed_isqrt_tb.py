@@ -51,6 +51,8 @@ async def test_fixed_isqrt(dut):
     testcase = VerificationCase(dut)
     data_in, samples = testcase.generate_inputs()
     ref = testcase.model(data_in)
+    int_width = testcase.IN_WIDTH - testcase.IN_FRAC_WIDTH
+    frac_width = testcase.IN_FRAC_WIDTH
 
     for i in range(samples):
         # Set up module data.
@@ -79,12 +81,11 @@ async def test_fixed_isqrt(dut):
             {int_to_float(dut.out_data.value.integer, int_width, frac_width)}
 
             Expected:
-            {expected}
+            {int_to_float(expected, int_width, frac_width)}
 
             Test index:
             {i}
             """
-
 
 if __name__ == "__main__":
     def create_lut_parameters(lut_size, width):
@@ -126,6 +127,6 @@ if __name__ == "__main__":
 
     parameter_list = full_sweep()
 
-    #parameter_list = single_test(8, 4)
+    #parameter_list = single_test(8, 4, 5, 0)
 
     mase_runner(module_param_list=parameter_list, trace=False)
