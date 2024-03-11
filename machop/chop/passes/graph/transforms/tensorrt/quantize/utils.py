@@ -139,12 +139,12 @@ class FakeQuantizer:
 
 #TODO cache file path
 class INT8Calibrator(trt.IInt8EntropyCalibrator2):
-    def __init__(self, nCalibration, input_generator):
+    def __init__(self, nCalibration, input_generator, cache_file_path):
         trt.IInt8EntropyCalibrator2.__init__(self)
         self.nCalibration = nCalibration
         self.shape = next(iter(input_generator))[0].shape
         self.buffer_size = trt.volume(self.shape) * trt.float32.itemsize
-        self.cacheFile = 'int8_calibrator.cache'
+        self.cache_file = cache_file_path
         _, self.dIn = cudart.cudaMalloc(self.buffer_size)
         self.input_generator = input_generator
     
@@ -160,9 +160,9 @@ class INT8Calibrator(trt.IInt8EntropyCalibrator2):
             return None
 
     def read_calibration_cache(self):
-        if os.path.exists(self.cacheFile):
-            print("Succeed finding cache file: %s" % (self.cacheFile))
-            with open(self.cacheFile, "rb") as f:
+        if os.path.exists(self.cache_file):
+            print("Succeed finding cache file: %s" % (self.cache_file))
+            with open(self.cache_file, "rb") as f:
                 cache = f.read()
                 return cache
         else:
@@ -170,7 +170,7 @@ class INT8Calibrator(trt.IInt8EntropyCalibrator2):
             return
 
     def write_calibration_cache(self, cache):
-        with open(self.cacheFile, "wb") as f:
+        with open(self.cache_file, "wb") as f:
             f.write(cache)
         print("Succeed saving int8 cache!")
         return

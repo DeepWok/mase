@@ -16,7 +16,7 @@ report = true
 
 [passes.tensorrt-quantize.linear.config]
 quantize = true
-precision = 'FP16' # 'INT8'
+precision = 'INT8'
 
 [passes.tensorrt-quantize.linear.input]
 calibrator = 'histogram'
@@ -28,7 +28,7 @@ quantize_axis = false
 
 [passes.tensorrt-quantize.default.config]
 quantize = true
-precision = 'FP16'
+precision = 'INT8'
 
 [passes.tensorrt-quantize.default.config.input]
 calibrator = 'histogram'
