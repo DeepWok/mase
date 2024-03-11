@@ -64,7 +64,6 @@ class Quantizer:
         """Converts PyTorch model to TensorRT format."""
         # Model is first converted to ONNX format and then to TensorRT
         ONNX_path = self.pytorch_to_ONNX(graph.model)
-        self.summarize_ONNX_graph(ONNX_path)
         TRT_path = self.ONNX_to_TRT(ONNX_path)
 
         return TRT_path
@@ -89,22 +88,22 @@ class Quantizer:
         if self.config['default']['config']['precision'] == 'FP16':
             config.set_flag(trt.BuilderFlag.FP16)
 
-        #TODO need to fix INT8 calibration
-        elif self.config['default']['config']['precision'] == 'INT8':
-            config.set_flag(trt.BuilderFlag.INT8)
-            config.int8_calibrator = INT8Calibrator(
-                self.config['num_calibration_batches'], 
-                self.config['data_module'].train_dataloader() 
-                )
+        # #TODO need to fix INT8 calibration
+        # elif self.config['default']['config']['precision'] == 'INT8':
+        #     config.set_flag(trt.BuilderFlag.INT8)
+        #     config.int8_calibrator = INT8Calibrator(
+        #         self.config['num_calibration_batches'], 
+        #         self.config['data_module'].train_dataloader() 
+        #         self.prepare_save_path(method='CACHE')
+        #         )
 
         else:
             Exception("Unsupported precision type. Please choose from 'FP16' or 'INT8'.")
 
-        #TODO add optimizations based on input tensor
-        # # Optimization profiles are needed for dynamic input shapes.
-        # profile = builder.create_optimization_profile()
-        # profile.set_shape("input_tensor_name", min=(1, 3, 224, 224), opt=(1, 3, 224, 224), max=(1, 3, 224, 224))  # Change based on model input.
-        # config.add_optimization_profile(profile)
+        # Optimization profiles are needed for dynamic input shapes.
+        profile = builder.create_optimization_profile()
+        inputTensor = network.get_input(0)
+        profile.set_shape(inputTensor.name, (1,) + inputTensor.shape[1:], (8,) + inputTensor.shape[1:], (32,) + inputTensor.shape[1:])
 
         engine = builder.build_engine(network, config)
 
@@ -129,36 +128,3 @@ class Quantizer:
                           do_constant_folding=True, input_names=['input'])
         self.logger.info(f"ONNX Conversion Complete. Stored ONNX model to {save_path}")
         return save_path
-    
-    def summarize_ONNX_graph(self, onnx_model_path):
-        # Load ONNX model
-        model = onnx.load(onnx_model_path)
-        graph = model.graph
-
-        # Header for the table
-        header = "Layer Name               | Type         | Input Shape(s)                       | Output Shape(s)"
-        divider = "-" * len(header)
-
-        # Start logging
-        self.logger.info("\n" + divider + "\n" + header + "\n" + divider)
-
-        # Iterate through each node (layer) in the graph
-        for i, node in enumerate(graph.node):
-            layer_name = node.name or f"Layer_{i}"  # Some nodes might not have a name
-            layer_type = node.op_type
-
-            # Retrieve input and output shapes
-            input_shapes = [str(graph.value_info[input_name].type.tensor_type.shape) for input_name in node.input if input_name in graph.value_info]
-            output_shapes = [str(graph.value_info[output_name].type.tensor_type.shape) for output_name in node.output if output_name in graph.value_info]
-
-            # Format the shapes for better readability
-            input_shapes_str = ', '.join(input_shapes) or 'Unknown'
-            output_shapes_str = ', '.join(output_shapes) or 'Unknown'
-
-            # Create the log entry for this layer
-            log_entry = f"{layer_name:<25} | {layer_type:<12} | {input_shapes_str:<37} | {output_shapes_str}"
-            
-            # Log the entry
-            self.logger.info(log_entry)
-
-        self.logger.info(divider)  # End with a divider
