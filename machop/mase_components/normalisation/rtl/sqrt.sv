@@ -24,6 +24,8 @@ module sqrt #(
     parameter NUM_STATE_BITS = $clog2(NUM_STATES) + 1;
     parameter K_WORDSIZE = 32;
 
+    parameter LOG2_IN_WIDTH = $clog2(IN_WIDTH);
+
     // Define an enum for states (one hot)
     typedef enum logic [NUM_STATE_BITS-1:0] {
         RST         = '0,
@@ -46,63 +48,92 @@ module sqrt #(
 
     //logic   [IN_WIDTH-1:0]  log2_v_in;
 
-    logic   [IN_WIDTH-1:0]  x_b;
-    logic   [IN_WIDTH-1:0]  x_r;
-    logic   [IN_WIDTH-1:0]  y_b;   
-    logic   [IN_WIDTH-1:0]  y_r;  
+    logic   [IN_WIDTH+IN_WIDTH-1:0]  x_b;
+    logic   [IN_WIDTH+IN_WIDTH-1:0]  x_r;
+    logic   [IN_WIDTH+IN_WIDTH-1:0]  y_b;   
+    logic   [IN_WIDTH+IN_WIDTH-1:0]  y_r;  
 
     state_t state_b; 
     state_t state_r; 
 
-    logic   [IN_WIDTH-1:0]  xtmp;  
-    logic   [IN_WIDTH-1:0]  ytmp;
+    logic   [IN_WIDTH:0]        v_more_fractional;
+    logic   [IN_WIDTH:0]        zero_point_25; 
+
+    logic   [LOG2_IN_WIDTH-1:0] right_shift_to_apply_b;
+    logic   [LOG2_IN_WIDTH-1:0] right_shift_to_apply_r;
+
+    logic   [IN_WIDTH+IN_WIDTH-1:0]      xtmp;  
+    logic   [IN_WIDTH+IN_WIDTH-1:0]      ytmp;
 
     logic   [K_WORDSIZE-1:0]    k_b;
-    logic   [K_WORDSIZE-1:0]    k_r;    
+    logic   [K_WORDSIZE-1:0]    k_r;   
 
     //assign log2_v_in = ($clog2(v_in) -3); // -3 bc 3 bit decimal precission
-    assign xtmp = (x_r >> state_r);
-    assign ytmp = (y_r >> state_r);
+    assign xtmp = (x_r >>> state_r);
+    assign ytmp = (y_r >>> state_r);
     assign v_in_ready = (state_r == READY_STATE) ? 1 : 0; 
+
+    assign zero_point_25 = 8'h20;//(32'b10 << right_shift_to_apply_b);
 
 
     always_ff @(posedge clk)
     begin
         if (rst) // sv720 TODO: check if reset is active high or low
         begin 
-            x_r     <= '0; 
-            y_r     <= '0; 
-            state_r <=  RST;
-            k_r     <=  '0;
+            x_r                     <= '0; 
+            y_r                     <= '0; 
+            state_r                 <=  RST;
+            k_r                     <=  '0;
+            right_shift_to_apply_r  <= '0; 
 
         end
         else
         begin
-            x_r     <= x_b;
-            y_r     <= y_b;
-            state_r <= state_b;
-            k_r     <= k_b;
+            x_r                     <= x_b;
+            y_r                     <= y_b;
+            state_r                 <= state_b;
+            k_r                     <= k_b;
+            right_shift_to_apply_r  <= right_shift_to_apply_b;
         end
     end 
+
+    logic dbg_in_if_1; //TODO: remove 
+    logic dbg_in_if_2; //TODO: remove 
 
     always_comb
     begin 
         //Set default values of _b wires here
-        k_b         = k_r; 
-        state_b     = RST;
-        x_b         = x_r; 
-        y_b         = y_r; 
-        v_out_valid = '0;
-        v_out       = '0; 
+        k_b                     = k_r; 
+        state_b                 = RST;
+        x_b                     = x_r; 
+        y_b                     = y_r; 
+        v_out_valid             = '0;
+        v_out                   = '0; 
+        right_shift_to_apply_b  = right_shift_to_apply_r;
+        dbg_in_if_1 = '0;
+        dbg_in_if_2 = '0;
 
         if (state_r == RST)
         begin 
             state_b = READY_STATE;
         end
         else if ((state_r == READY_STATE) && v_in_valid) //N.B. 1 cycle delay (potential for optimization)
-        begin 
-            x_b     = v_in + 32'b10; // + 0.25
-            y_b     = v_in - 32'b10; // - 0.25
+        begin
+            //shift the values such that we have as many fractional bits to work with
+            //find MSB 
+            for (int i=0; i<IN_WIDTH; i++)
+            begin
+                if (v_in[i] == 1)
+                begin
+                    right_shift_to_apply_b  = (IN_WIDTH-1-i);
+
+                    //N.B. if odd we need to *2 //TODO: check if this is needed
+                    v_more_fractional       = ((IN_WIDTH-1-i)%2 ==0) ? (v_in << (IN_WIDTH-1-i)) : (v_in << (IN_WIDTH-i));
+                    
+                end
+            end
+            x_b     = {v_more_fractional + zero_point_25, 8'b0}; //(32'b10 << right_shift_to_apply_b); // + 0.25
+            y_b     = {v_more_fractional - zero_point_25, 8'b0}; //(32'b10 << right_shift_to_apply_b); // - 0.25
             state_b = STATE_1;
             k_b     = 4;
         end
@@ -114,7 +145,7 @@ module sqrt #(
         else if (state_r == DONE)
         begin 
             v_out_valid = 1;
-            v_out       = x_r;
+            v_out       = ((x_r[(IN_WIDTH+IN_WIDTH-1): IN_WIDTH]) >>> right_shift_to_apply_r);
             state_b     = READY_STATE;
         end
         else if (state_r == STATE_10)
@@ -125,32 +156,35 @@ module sqrt #(
         else
         begin
             state_b =  state_t'(state_r + 1);
-            if (y_r < 0)
+            if ($signed(y_r) < 0)
             begin 
-                x_b = x_r + xtmp; 
-                y_b = y_r + ytmp; 
+                dbg_in_if_1 = '1;
+                x_b = x_r + ytmp; 
+                y_b = y_r + xtmp; 
             end
             else
             begin
-                x_b = x_r - xtmp;
-                y_b = y_r - ytmp;
+                dbg_in_if_2 = '1;
+                x_b = x_r - ytmp;
+                y_b = y_r - xtmp;
             end 
 
-            if (state_r == k_r) //if state is k: do it again
-            begin
-                if (y_r < 0)
-                begin 
-                    x_b = x_r + xtmp; 
-                    y_b = y_r + ytmp; 
-                end
-                else
-                begin
-                    x_b = x_r - xtmp;
-                    y_b = y_r - ytmp;
-                end 
+            // TODO: uncomment
+            // if (state_r == k_r) //if state is k: do it again
+            // begin
+            //     if ($signed(y_r) < 0)
+            //     begin 
+            //         x_b = x_r + xtmp; 
+            //         y_b = y_r + ytmp; 
+            //     end
+            //     else
+            //     begin
+            //         x_b = x_r - xtmp;
+            //         y_b = y_r - ytmp;
+            //     end 
 
-                k_b = 3*k_r + 1;
-            end
+            //     k_b = 3*k_r + 1;
+            // end
         end
     end
 
