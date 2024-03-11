@@ -19,7 +19,6 @@ DEFAULT_ZERO_COST_PROXY_CONFIG = {
     }
 }
 
-
 class ZeroCostProxy(SearchSpaceBase):
     """
     Zero Cost Proxy search space.
@@ -68,7 +67,7 @@ class ZeroCostProxy(SearchSpaceBase):
 
         for zcp_name in self.config["zc"]["zc_proxies"]:
 
-            # train and query expect different ZCP formats for some reason
+            # train and query expect different ZCP formats
             zcp_train = [{'zero_cost_scores': eval_zcp(t_arch, zcp_name, train_loader)} for t_arch in tqdm(xtrain)]
             zcp_test = [{'zero_cost_scores': eval_zcp(t_arch, zcp_name, train_loader)} for t_arch in tqdm(xtest)]            
 

@@ -30,23 +30,21 @@ zc_proxies = ['epe_nas', 'fisher', 'grad_norm']
 
 [search.strategy]
 name = "naslib"
-eval_mode = true
+ensemble_mode = true
 
 [search.strategy.sw_runner.basic_evaluation]
 data_loader = "val_dataloader"
 num_samples = 512
 
 [search.strategy.hw_runner.average_bitwidth]
-compare_to = 32 # compare to FP32
+compare_to = 32
 
 [search.strategy.setup]
-n_jobs = 1
+n_jobs = 4
 n_trials = 1
 timeout = 20000
-sampler = "bruteforce"
-# sum_scaled_metrics = true # single objective
-# direction = "maximize"
-sum_scaled_metrics = false # multi objective
+sampler = "tpe"
+direction = "minimize"
 
 [search.strategy.metrics]
 # loss.scale = 1.0

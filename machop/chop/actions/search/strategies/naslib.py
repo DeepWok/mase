@@ -33,14 +33,7 @@ class SearchStrategyNaslib(SearchStrategyBase):
     is_iterative = False
 
     def _post_init_setup(self):
-        self.sum_scaled_metrics = self.config["setup"]["sum_scaled_metrics"]
-        self.metric_names = list(sorted(self.config["metrics"].keys()))
-        if not self.sum_scaled_metrics:
-            self.directions = [
-                self.config["metrics"][k]["direction"] for k in self.metric_names
-            ]
-        else:
-            self.direction = self.config["setup"]["direction"]
+        self.direction = self.config["setup"]["direction"]
 
     def sampler_map(self, name):
         match name.lower():
@@ -60,76 +53,71 @@ class SearchStrategyNaslib(SearchStrategyBase):
                 raise ValueError(f"Unknown sampler name: {name}")
         return sampler
 
-    # def objective(trial):
-    #     # Suggesting weights for each metric
-    #     weight_epe_nas = trial.suggest_float("weight_epe_nas", -50, 50)
-    #     weight_fisher = trial.suggest_float("weight_fisher", -50, 50)
-    #     weight_grad_norm = trial.suggest_float("weight_grad_norm", -50, 50)
-        
-    #     total_loss = 0
-    #     penalty = 0  # Initialize penalty
-        
-    #     for item in combined_data_list:
-    #         # Calculate predicted accuracy based on weights and zc metrics
-    #         predicted_accuracy = (item['metrics']['epe_nas'] * weight_epe_nas +
-    #                             item['metrics']['fisher'] * weight_fisher +
-    #                             item['metrics']['grad_norm'] * weight_grad_norm)
+    def combined_list(self, data):
+        # Initialize a dictionary to hold combined data
+        combined_data = {}
+
+        # Iterate through each metric's data
+        for metric_data in data:
+            for metric_name, details in metric_data.items():
+                for result in details['results']:
+                    # Convert the test_hash tuple to a string to use it as a dictionary key
+                    test_hash_key = str(result['test_hash'])
+                    
+                    if test_hash_key not in combined_data:
+                        combined_data[test_hash_key] = {
+                            'test_hash': result['test_hash'],
+                            'test_accuracy': result['test_accuracy'],
+                            'metrics': {}
+                        }
+                    
+                    # Store the zc_metric under the corresponding metric name
+                    combined_data[test_hash_key]['metrics'][metric_name] = result['zc_metric']
+
+        # Convert the combined data back to a list format if needed
+        combined_data_list = list(combined_data.values())
+
+        return combined_data_list
+    
+    def objective(self, trial, search_space):
+
+        combined_data_list = self.combined_list(search_space.zcp_results)
+    
+        # Dynamically find all unique metric names
+        unique_metric_names = set()
+        for item in combined_data_list:
+            unique_metric_names.update(item['metrics'].keys())
+
+        # Convert set to list to ensure consistent ordering
+        unique_metric_names = sorted(list(unique_metric_names))
+
+        # Suggest weights for each unique metric dynamically
+        weights = {metric: trial.suggest_float(f"weight_{metric}", -50, 50) for metric in unique_metric_names}
+
+        total_loss = 0
+        penalty = 0
+
+        for item in combined_data_list:
+            # Dynamically calculate predicted accuracy based on the weights of the zc metrics
+            predicted_accuracy = sum(item['metrics'][metric] * weights[metric] for metric in item['metrics'].keys())
             
-    #         # Assume 'train_accuracy' is your target
-    #         actual_accuracy = item['train_accuracy']
+            # Assume 'train_accuracy' is your target
+            actual_accuracy = item['test_accuracy']
             
-    #         # Calculating squared error loss
-    #         loss = (predicted_accuracy - actual_accuracy) ** 2
-    #         total_loss += loss
+            # Calculating squared error loss
+            loss = (predicted_accuracy - actual_accuracy) ** 2
+            total_loss += loss
             
-    #         # Apply penalties for predictions outside the [0, 100] range
-    #         if predicted_accuracy > 100:
-    #             penalty += (predicted_accuracy - 100) ** 2  # Penalty for exceeding 100%
-    #         elif predicted_accuracy < 0:
-    #             penalty += (predicted_accuracy - 0) ** 2  # Penalty for going below 0%
-        
-    #     # Incorporate penalties into the average loss
-    #     average_loss_with_penalty = (total_loss + penalty) / len(combined_data_list)
-        
-    #     return average_loss_with_penalty
+            # Apply penalties for predictions outside the [0, 100] range
+            if predicted_accuracy > 100:
+                penalty += (predicted_accuracy - 100) ** 2
+            elif predicted_accuracy < 0:
+                penalty += (predicted_accuracy) ** 2
 
+        # Incorporate penalties into the average loss
+        average_loss_with_penalty = (total_loss + penalty) / len(combined_data_list)
 
-    # def objective(self, trial: optuna.trial.Trial, search_space):
-    #     sampled_indexes = {}
-    #     if hasattr(search_space, "optuna_sampler"):
-    #         sampled_config = search_space.optuna_sampler(trial)
-    #     else:
-    #         for name, length in search_space.choice_lengths_flattened.items():
-    #             sampled_indexes[name] = trial.suggest_int(name, 0, length - 1)
-    #         sampled_config = search_space.flattened_indexes_to_config(sampled_indexes)
-
-    #     is_eval_mode = self.config.get("eval_mode", True)
-    #     model = search_space.rebuild_model(sampled_config, is_eval_mode)
-
-    #     software_metrics = self.compute_software_metrics(
-    #         model, sampled_config, is_eval_mode
-    #     )
-    #     hardware_metrics = self.compute_hardware_metrics(
-    #         model, sampled_config, is_eval_mode
-    #     )
-    #     metrics = software_metrics | hardware_metrics
-    #     scaled_metrics = {}
-    #     for metric_name in self.metric_names:
-    #         scaled_metrics[metric_name] = (
-    #             self.config["metrics"][metric_name]["scale"] * metrics[metric_name]
-    #         )
-
-    #     trial.set_user_attr("software_metrics", software_metrics)
-    #     trial.set_user_attr("hardware_metrics", hardware_metrics)
-    #     trial.set_user_attr("scaled_metrics", scaled_metrics)
-    #     trial.set_user_attr("sampled_config", sampled_config)
-
-    #     self.visualizer.log_metrics(metrics=scaled_metrics, step=trial.number)
-
-    #     if not self.sum_scaled_metrics:
-    #         return list(scaled_metrics.values())
-    #     else:
-    #         return sum(scaled_metrics.values())
+        return average_loss_with_penalty
 
     def search(self, search_space) -> optuna.study.Study:
         print("search_space:  ", search_space)
@@ -137,40 +125,43 @@ class SearchStrategyNaslib(SearchStrategyBase):
         # pdb.set_trace()
         study_kwargs = {
             "sampler": self.sampler_map(self.config["setup"]["sampler"]),
+            "direction": self.config["setup"]["direction"]
         }
-        # if not self.sum_scaled_metrics:
-        #     study_kwargs["directions"] = self.directions
-        # else:
-        #     study_kwargs["direction"] = self.direction
-
-        # if isinstance(self.config["setup"].get("pkl_ckpt", None), str):
-        #     study = joblib.load(self.config["setup"]["pkl_ckpt"])
-        #     logger.info(f"Loaded study from {self.config['setup']['pkl_ckpt']}")
-        # else:
         
         study = optuna.create_study(**study_kwargs)
 
         # study.optimize(
-        #     func=partial(self.objective, search_space=search_space),
-        #     n_jobs=self.config["setup"]["n_jobs"],
+        #     func=partial(self.objective, search_space=search_space), 
         #     n_trials=self.config["setup"]["n_trials"],
-        #     timeout=self.config["setup"]["timeout"],
-        #     callbacks=[
-        #         partial(
-        #             callback_save_study,
-        #             save_dir=self.save_dir,
-        #             save_every_n_trials=self.config["setup"].get(
-        #                 "save_every_n_trials", 10
-        #             ),
-        #         )
-        #     ],
-        #     show_progress_bar=True,
-        # )
+        #     show_progress_bar=True
+        #     )
+        
+
+        # study = optuna.create_study(**study_kwargs)
+
+        study.optimize(
+            func=partial(self.objective, search_space=search_space),
+            n_jobs=self.config["setup"]["n_jobs"],
+            n_trials=self.config["setup"]["n_trials"],
+            timeout=self.config["setup"]["timeout"],
+            callbacks=[
+                partial(
+                    callback_save_study,
+                    save_dir=self.save_dir,
+                    save_every_n_trials=self.config["setup"].get(
+                        "save_every_n_trials", 10
+                    ),
+                )
+            ],
+            show_progress_bar=True,
+        )
+
+        best_params = study.best_params  
+        print("best_params:  ", best_params)
+
 
         self._save_study(study, self.save_dir / "study.pkl")
         self._save_search_dataframe(study, search_space, self.save_dir / "log.json")
-        # self._save_best(study, self.save_dir / "best.json")
-
         self._save_best_zero_cost(search_space, self.save_dir / "metrics.json")
 
         return study
@@ -203,9 +194,7 @@ class SearchStrategyNaslib(SearchStrategyBase):
             values = item[key]
             result_dict[key] = {'test_spearman': values['test_spearman'], 'train_spearman': values['train_spearman']}
 
-
         print("result_dict:  ", result_dict)
-
 
         df = pd.DataFrame(
             columns=[
