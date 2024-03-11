@@ -1,19 +1,40 @@
 `timescale 1ns / 1ps
+// TODO(jlsand): I think we can remove the 1d, LayerNorm implementation should not be specific to any
+// feature dimensions
+
+// TODO(jlsand): Currently, our LayerNorm normalises over every dimension of data passed to it.
+// LayerNorm requires that the normalisation be possible to only happen over some dimensions
 module fixed_layer_norm1d #(
+    
+    // parameter NUM_GROUPS
+    // parameter NUM_CHANNELS
+    // General input for normalisation
+    
     // TODO(jlsand): Some of these parameter names need to be standardized.
     parameter IN_WIDTH          = 8,
     parameter IN_FRAC_WIDTH     = 4, 
+
+    // IN_DEPTH describes the number of data points per sample.
+    // In image contexts, IN_DEPTH = sum_product of C, H & W.
     parameter IN_DEPTH          = 16, 
     parameter PARALLELISM       = 16, 
+
+    // PARTS_PER_NORM describes how many partitions of the input
+    // data (sample) should be considered per normalisation.
+    // Must divide IN_DEPTH.
+    
+    // The default is 1. In this case, normalisation
+    // is performed over all dimensions of the sample at once.
+    // EXAMPLE: Input data is 20 RGBA 10x10 images with data stored as 
+    // (N, C, H, W) = (20, 4, 10, 10) matrix yielding IN_DEPTH = C * H * W = 400.  
+    // PARTS_PER_NORM = 1 will normalise each image with all channels at once.
+    // PARTS_PER_NORM = C = 4 will normalise each image one channel at a time.
+    // PARTS_PER_NORM = C * H = 40 will normalise one row at a time per image per channel. 
+    parameter PARTS_PER_NORM = IN_DEPTH,
 
     parameter OUT_WIDTH         = IN_WIDTH,
     parameter OUT_FRAC_WIDTH    = IN_FRAC_WIDTH,
     parameter OUT_DEPTH         = IN_DEPTH,
-
-    // parameter string GAMMA_DATA_PATH =  "/home/sv720/mase_fork/mase_group7/machop/mase_components/normalisation/rtl/memory/batch_norm_gamma_ram.dat",
-    // parameter string BETA_DATA_PATH =   "/home/sv720/mase_fork/mase_group7/machop/mase_components/normalisation/rtl/memory/batch_norm_beta_ram.dat",
-    // parameter string MEAN_DATA_PATH =   "/home/sv720/mase_fork/mase_group7/machop/mase_components/normalisation/rtl/memory/batch_norm_mean_ram.dat",
-    // parameter string STD_DATA_PATH =    "/home/sv720/mase_fork/mase_group7/machop/mase_components/normalisation/rtl/memory/batch_norm_std_ram.dat"
 
     parameter GAMMA_RAM_WIDTH = IN_WIDTH,
     parameter GAMMA_RAM_DEPTH = IN_DEPTH,
