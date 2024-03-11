@@ -122,7 +122,7 @@ class ZeroCostProxy(SearchSpaceBase):
 
 
 
-        # # Create configs required for get_train_val_loaders
+        # Create configs required for get_train_val_loaders
         config_dict = {
             'dataset': self.config["zc"]["dataset"], # Dataset to loader: can be cifar10, cifar100, ImageNet16-120
             'data': str(get_project_root()) + '/data', # path to naslib/data where cifar is saved

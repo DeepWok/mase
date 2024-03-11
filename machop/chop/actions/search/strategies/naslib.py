@@ -155,9 +155,12 @@ class SearchStrategyNaslib(SearchStrategyBase):
             ],
             show_progress_bar=True,
         )
+        print("study best_trials:  ", study.best_trials)
         self._save_study(study, self.save_dir / "study.pkl")
         self._save_search_dataframe(study, search_space, self.save_dir / "log.json")
-        self._save_best(study, self.save_dir / "best.json")
+        # self._save_best(study, self.save_dir / "best.json")
+
+        self._save_best_zero_cost(search_space.spearman_metrics, self.save_dir / "metrics.json")
 
         return study
 
@@ -176,6 +179,61 @@ class SearchStrategyNaslib(SearchStrategyBase):
             )
         )
         df.to_json(save_path, orient="index", indent=4)
+        return df
+    
+    @staticmethod
+    def _save_best_zero_cost(spearman_metrics, save_path):
+        sorted_spearman_metrics = dict(sorted(spearman_metrics.items(), key=lambda item: item[1], reverse=True))
+
+        df = pd.DataFrame(
+            columns=[
+                "number",
+                "zero_cost_metrics",
+            ]
+        )
+        row = [
+            0,
+            sorted_spearman_metrics,
+            ]
+        
+        df.loc[len(df)] = row
+        # df.to_json(save_path, orient="index", indent=4)
+
+        txt = "Best trial(s):\n"
+        print("df:  ", df)
+        df_truncated = df.loc[
+            :, ["zero_cost_metrics"]
+        ]
+
+        def beautify_metric(metric: dict):
+            beautified = {}
+            # import pdb
+            # pdb.set_trace()
+            for k, v in metric.items():
+                if isinstance(v, (float, int)):
+                    beautified[k] = round(v, 3)
+                else:
+                    txt = str(v)
+                    if len(txt) > 20:
+                        txt = txt[:20] + "..."
+                    else:
+                        txt = txt[:20]
+                    beautified[k] = txt
+            return beautified
+
+        df_truncated.loc[
+            :, ["zero_cost_metrics"]
+        ] = df_truncated.loc[
+            :, ["zero_cost_metrics"]
+        ].map(
+            beautify_metric
+        )
+        txt += tabulate(
+            df_truncated,
+            headers="keys",
+            tablefmt="orgtbl",
+        )
+        logger.info(f"Best trial(s):\n{txt}")
         return df
 
     @staticmethod
@@ -216,6 +274,7 @@ class SearchStrategyNaslib(SearchStrategyBase):
         df.to_json(save_path, orient="index", indent=4)
 
         txt = "Best trial(s):\n"
+        print("df:  ", df)
         df_truncated = df.loc[
             :, ["number", "software_metrics", "hardware_metrics", "scaled_metrics"]
         ]
