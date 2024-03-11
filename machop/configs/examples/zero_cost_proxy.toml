@@ -28,16 +28,6 @@ num_archs_test = 3
 zc_proxies = ['epe_nas', 'fisher', 'grad_norm']
 # zc_proxies = ['epe_nas', 'fisher', 'grad_norm', 'grasp', 'jacov', 'l2_norm', 'nwot', 'plain', 'snip', 'synflow', 'zen', 'flops', 'params']
 
-
-[search.search_space.seed.default.config]
-name = ["integer"]
-data_in_width = [4, 8]
-data_in_frac_width = [3, 4, 5, 6, 7, 8, 9]
-weight_width = [2, 4, 8]
-weight_frac_width = [3, 4, 5, 6, 7, 8, 9]
-bias_width = [2, 4, 8]
-bias_frac_width = [3, 4, 5, 6, 7, 8, 9]
-
 [search.strategy]
 name = "naslib"
 eval_mode = true
