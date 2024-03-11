@@ -8,47 +8,8 @@ from mase_cocotb.testbench import Testbench
 from cocotb.triggers import Timer
 from mase_cocotb.runner import mase_runner
 import math
+from isqrt_sw import range_reduction_sw, int_to_float
 
-
-## AIM: move the the MSB to the leftmost position.
-def range_reduction_sw(x: int, width: int) -> int:
-    """model of range reduction for isqrt"""
-    # Find MSB
-    # NOTE: if the input is 0 then consider msb index as width-1.
-    msb_index = width-1
-    for i in range(1, width+1):
-        power = 2 ** (width - i)
-        if power <= x:
-            msb_index = width - i
-            break
-    res = x
-    if msb_index < (width - 1):
-        res = res * 2 ** (width - 1 - msb_index)
-
-    return res
-
-def float_to_int(x: float, int_width: int, frac_width: int) -> int:
-    integer = int(x)
-    x -= integer
-    res = integer * (2 ** frac_width)
-    for i in range(1, frac_width+1):
-        power = 2 ** (-i)
-        if power <= x:
-            x -= power
-            res += 2 ** (frac_width - i)
-    return res
-
-def int_to_float(x: int, int_width: int, frac_width: int) -> float:
-    integer = x / (2 ** frac_width)
-    fraction = x - integer * 2 ** frac_width
-    res = integer
-
-    for i in range(1, frac_width+1):
-        power = 2 ** (frac_width - i)
-        if power < fraction:
-            res += 2 ** (-i)
-            fraction -= power
-    return res
 
 class VerificationCase(Testbench):
     def __init__(self, dut) -> None:

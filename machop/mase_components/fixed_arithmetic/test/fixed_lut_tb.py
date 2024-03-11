@@ -8,45 +8,8 @@ from cocotb.triggers import Timer
 from mase_cocotb.testbench import Testbench
 from mase_cocotb.runner import mase_runner
 import math
+from isqrt_sw import int_to_float, float_to_int, make_lut
 
-
-def float_to_int(x: float, int_width: int, frac_width: int) -> int:
-    integer = int(x)
-    x -= integer
-    res = integer * (2 ** frac_width)
-    for i in range(1, frac_width+1):
-        power = 2 ** (-i)
-        if power <= x:
-            x -= power
-            res += 2 ** (frac_width - i)
-    return res
-
-def int_to_float(x: int, int_width: int, frac_width: int) -> float:
-    integer = x / (2 ** frac_width)
-    fraction = x - integer * 2 ** frac_width
-    res = integer
-
-    for i in range(1, frac_width+1):
-        power = 2 ** (frac_width - i)
-        if power < fraction:
-            res += 2 ** (-i)
-            fraction -= power
-    return res
-
-def make_lut(lut_size, width):
-    lut_step = 1 / (lut_size + 1)
-    x = 1 + lut_step
-    lut = []
-    for i in range(lut_size):
-        value = 1 / math.sqrt(x)
-        value = float_to_int(value, 1, width - 1)
-        lut.append(value)
-        x += lut_step
-
-    return lut
-
-def lut_value_sw(lut, lut_index: int, lut_size: int) -> int:
-    return lut[lut_index%lut_size]
 
 class VerificationCase(Testbench):
     def __init__(self, dut):
@@ -70,7 +33,7 @@ class VerificationCase(Testbench):
         lut = make_lut(lut_size, self.WIDTH)
         ref = []
         for x in data_x:
-            expected = lut_value_sw(lut, x, lut_size)
+            expected = lut[x%lut_size]
             ref.append(expected)
         return ref
 
@@ -80,6 +43,7 @@ async def test_fixed_lut(dut):
     testcase = VerificationCase(dut)
     data_x, samples = testcase.generate_inputs()
     ref = testcase.model(data_x)
+    width = testcase.WIDTH
 
     for i in range(samples):
         # Set up module data.
@@ -96,17 +60,17 @@ async def test_fixed_lut(dut):
 
         # Check the output.
         assert (
-                dut.data_out.value.integer - expected < 2
+                dut.data_out.value.integer == expected
             ), f"""
             <<< --- Test failed --- >>>
             Input: 
-            X  : {int_to_float(data_a, 16, 0)}
+            X  : {int_to_float(data_a, 1, width-1)}
 
             Output:
-            Out: {dut.data_out.value.integer}
+            Out: {int_to_float(dut.data_out.value.integer, 1, width-1)}
             
             Expected: 
-            {expected}
+            {int_to_float(expected, 1, width-1)}
             """
 
 if __name__ == "__main__":
