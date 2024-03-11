@@ -108,14 +108,19 @@ class ONNXRuntime:
 
         return onnx_model
 
+    def _get_execution_provider(self):
+        EP_list = ['CUDAExecutionProvider', 'CPUExecutionProvider']
+        
+        return 'CUDAExecutionProvider' if self.config['accelerator'] == 'cuda' else 'CPUExecutionProvider'
+
     def test_performances(self, model_type, model=None, model_path=None):
         '''Extract various performance and efficiency metrics to either pytorch or onnx models'''
         if model_type == 'pytorch':
             ...
 
         elif model_type == 'onnx':
-            ort_sess = ort.InferenceSession(model_path)
-            outputs = ort_sess.run(None, {'input': x.numpy()})
+            ort_sess = ort.InferenceSession(model_path, providers=[self._get_execution_provider])
+            outputs = ort_sess.run(None, {'input': ....numpy()})
             ... 
             
         else:
