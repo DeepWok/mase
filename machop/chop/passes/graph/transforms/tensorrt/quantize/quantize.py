@@ -32,6 +32,15 @@ class Quantizer:
         self.config = config
         self.logger = logging.getLogger(__name__)
 
+    def pytorch_to_trt(self, graph):
+        """Converts PyTorch model to TensorRT format."""
+        # Model is first converted to ONNX format and then to TensorRT
+        ONNX_path = self.pytorch_to_ONNX(graph.model)
+        TRT_path = self.ONNX_to_TRT(ONNX_path)
+        self.export_TRT_model_summary(TRT_path)
+
+        return TRT_path
+    
     def prepare_save_path(self, method: str):
         """Creates and returns a save path for the model."""
         root = Path(__file__).resolve().parents[7]
@@ -60,14 +69,7 @@ class Quantizer:
         """Applies quantization procedures to PyTorch graph based on type."""
         # Add quantization code here
 
-    def pytorch_to_trt(self, graph):
-        """Converts PyTorch model to TensorRT format."""
-        # Model is first converted to ONNX format and then to TensorRT
-        ONNX_path = self.pytorch_to_ONNX(graph.model)
-        TRT_path = self.ONNX_to_TRT(ONNX_path)
 
-        return TRT_path
-        
     def ONNX_to_TRT(self, ONNX_path):
         self.logger.info("Converting PyTorch model to TensorRT...")
         TRT_LOGGER = trt.Logger(trt.Logger.WARNING)
@@ -85,17 +87,27 @@ class Quantizer:
         config = builder.create_builder_config()
         config.max_workspace_size = 4 << 30  # 4GB
         config.profiling_verbosity = trt.ProfilingVerbosity.VERBOSE
-        config.set_flag(trt.BuilderFlag.FP16)
+        config.set_flag(trt.BuilderFlag.FP16) if self.config['default']['config']['precision'] == 'FP16' else config.set_flag(trt.BuilderFlag.INT8)
+        if self.config['default']['config']['precision'] == 'INT8':
+            config.int8_calibrator = INT8Calibrator(
+                self.config['num_calibration_batches'], 
+                self.config['data_module'].train_dataloader(), 
+                self.prepare_save_path(method='CACHE')
+                )
         config.set_flag(trt.BuilderFlag.PREFER_PRECISION_CONSTRAINTS)
         config.set_flag(trt.BuilderFlag.DIRECT_IO)
         config.set_flag(trt.BuilderFlag.REJECT_EMPTY_ALGORITHMS)
         config.set_flag(trt.BuilderFlag.STRICT_TYPES)
 
-        # Set layer precision and type after creating the config
+        # Set layer precision and type bsed on TOML configuration
         for idx in range(network.num_layers):
             layer = network.get_layer(idx)
-            layer.precision = trt.float16
-            layer.set_output_type(0, trt.DataType.HALF)
+            if self.config['default']['config']['precision'] == 'FP16':
+                layer.precision = trt.float16
+                layer.set_output_type(0, trt.DataType.HALF)
+            elif self.config['default']['config']['precision'] == 'INT8':
+                layer.precision = trt.int8
+                layer.set_output_type(0, trt.DataType.INT8)
 
         serialized_engine = builder.build_serialized_network(network, config)
         if serialized_engine is None:
@@ -112,11 +124,6 @@ class Quantizer:
         # #TODO need to fix INT8 calibration
         # elif self.config['default']['config']['precision'] == 'INT8':
         #     config.set_flag(trt.BuilderFlag.INT8)
-        # #     config.int8_calibrator = INT8Calibrator(
-        # #         self.config['num_calibration_batches'], 
-        # #         self.config['data_module'].train_dataloader() 
-        # #         self.prepare_save_path(method='CACHE')
-        # #         )
 
         # else:
         #     Exception("Unsupported precision type. Please choose from 'FP16' or 'INT8'.")
@@ -125,25 +132,6 @@ class Quantizer:
         # profile = builder.create_optimization_profile()
         # inputTensor = network.get_input(0)
         # profile.set_shape(inputTensor.name, (1,) + inputTensor.shape[1:], (8,) + inputTensor.shape[1:], (32,) + inputTensor.shape[1:])
-
-        # engine = builder.build_engine(network, config)
-
-        # trt_path = self.prepare_save_path(method='TRT')
-        # with open(trt_path, "wb") as f:
-        #     f.write(engine.serialize())
-
-        # Use inspector to print all layer, i found all layer weight is Half.
-        with open(trt_path, 'rb') as f:
-            trt_engine = trt.Runtime(trt.Logger(trt.Logger.ERROR)).deserialize_cuda_engine(f.read())
-            inspector = trt_engine.create_engine_inspector()
-            
-            # Retrieve engine information in JSON format
-            layer_info_json = inspector.get_engine_information(trt.LayerInformationFormat.JSON)
-            
-            # Save the engine information to a JSON file
-            json_filename = self.prepare_save_path(method='JSON')
-            with open(json_filename, 'w') as json_file:
-                json_file.write(layer_info_json)
 
         self.logger.info(f"TensorRT Conversion Complete. Stored trt model to {trt_path}")
         return trt_path
@@ -169,3 +157,17 @@ class Quantizer:
 
         self.logger.info(f"ONNX Conversion Complete. Stored ONNX model to {onnx_path}")
         return onnx_path
+    
+    def export_TRT_model_summary(self, TRT_path):
+        """Saves TensorRT model summary to json"""
+        with open(TRT_path, 'rb') as f:
+            trt_engine = trt.Runtime(trt.Logger(trt.Logger.ERROR)).deserialize_cuda_engine(f.read())
+            inspector = trt_engine.create_engine_inspector()
+            
+            # Retrieve engine information in JSON format
+            layer_info_json = inspector.get_engine_information(trt.LayerInformationFormat.JSON)
+            
+            # Save the engine information to a JSON file
+            json_filename = self.prepare_save_path(method='JSON')
+            with open(json_filename, 'w') as json_file:
+                json_file.write(layer_info_json)
