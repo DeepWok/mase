@@ -110,36 +110,6 @@ class QuantizationAnalysis():
         io_info_str = "\n".join(io_info_lines)
         self.logger.info(f"\nTensorRT Engine Input/Output Information:\n{io_info_str}")
 
-        # # Now adding layer precision info as before
-        # layer_info_lines = [
-        #     "Layer Name               | Precision",
-        #     "-------------------------|-----------------------"
-        # ]
-
-        # for i in range(self.engine.num_layers):
-        #     layer = self.engine.get_layer(i)
-        #     # Determine the precision
-        #     precision = 'Unknown'
-        #     if layer.precision == trt.DataType.FLOAT:
-        #         precision = 'FP32'
-        #     elif layer.precision == trt.DataType.HALF:
-        #         precision = 'FP16'
-        #     elif layer.precision == trt.DataType.INT8:
-        #         precision = 'INT8'
-        #     elif layer.precision == trt.DataType.BOOL:
-        #         precision = 'BOOL'
-        #     elif layer.precision == trt.DataType.INT32:
-        #         precision = 'INT32'
-
-        #     # Format and add each layer's info
-        #     layer_info = f"{layer.name:<25} | {precision}"
-        #     layer_info_lines.append(layer_info)
-
-        # # Join and log the layer information
-        # layer_info_str = "\n".join(layer_info_lines)
-        # self.logger.info(f"\nTensorRT Engine Layer Precisions:\n{layer_info_str}")
-
-
     def infer_mg(self, model, input_data):
         # send model and input data to GPU for inference
         input_data = input_data.cuda()
@@ -189,10 +159,6 @@ class QuantizationAnalysis():
 
         # Calculate latency between start and end events
         latency = start.elapsed_time(end)
-
-        # for i in range(self.n_Input, self.num_io):
-        #     cudart.cudaMemcpy(bufferH[i].ctypes.data, bufferD[i], bufferH[i].nbytes, cudart.cudaMemcpyKind.cudaMemcpyDeviceToHost)
-        #     preds = np.argmax(bufferH[self.n_Input], axis=1)
 
         # Copying data from device to host and collecting output tensors
         output_data = [
@@ -274,6 +240,7 @@ class QuantizationAnalysis():
                 acc = metric(preds, ys)
                 accs.append(acc)
                 losses.append(loss.item())
+                
                 # flops.append(data[1]['total_flops'])
                 # Update torchmetrics metrics
                 preds_labels = torch.argmax(preds, dim=1)
@@ -306,17 +273,17 @@ class QuantizationAnalysis():
             self.logger.info(
                 f"\nConfiguration {models[i]}:\n" +
                 "\n".join([
-                    "Metric                    | Value",
-                    "--------------------------|-----------------------",
-                    f"Average Accuracy         | {acc_avg}",
-                    f"Average Precision        | {avg_precision}",
-                    f"Average Recall           | {avg_recall}",
-                    f"Average F1 Score         | {avg_f1}",
-                    f"Average Loss             | {loss_avg}",
-                    f"Average Latency          | {avg_latency} milliseconds",
-                    f"Average GPU Power Usage  | {avg_gpu_power_usage} watts",
-                    f"Average GPU Energy Usage | {avg_gpu_energy_usage} kW/hr"
-                    # "FLOPs                   | {avg_flops}"
+                    "Metric                             | Value",
+                    "-----------------------------------|-----------------------",
+                    f"Average Accuracy                  | {acc_avg}",
+                    f"Average Precision                 | {avg_precision}",
+                    f"Average Recall                    | {avg_recall}",
+                    f"Average F1 Score                  | {avg_f1}",
+                    f"Average Loss                      | {loss_avg}",
+                    f"Average Latency                   | {avg_latency} milliseconds",
+                    f"Average GPU Power Usage           | {avg_gpu_power_usage} watts",
+                    f"Inference Energy Consumption      | {avg_gpu_energy_usage} kW/hr"
+                    # "FLOPs                            | {avg_flops}"
                 ])
             )
         

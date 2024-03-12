@@ -31,6 +31,7 @@ class Quantizer:
     def __init__(self, config):
         self.config = config
         self.logger = logging.getLogger(__name__)
+        logging.getLogger("pytorch_quantization").setLevel(logging.ERROR)
 
     def pytorch_to_trt(self, graph):
         """Converts PyTorch model to TensorRT format."""
@@ -72,6 +73,10 @@ class Quantizer:
 
     def ONNX_to_TRT(self, ONNX_path):
         self.logger.info("Converting PyTorch model to TensorRT...")
+
+        # Check for mixed_precision
+        mixed_precision = True if 'INT8' in self.config and 'FP16' in self.config else False
+
         TRT_LOGGER = trt.Logger(trt.Logger.WARNING)
         builder = trt.Builder(TRT_LOGGER)
         network = builder.create_network(1 << int(trt.NetworkDefinitionCreationFlag.EXPLICIT_BATCH))
@@ -86,33 +91,42 @@ class Quantizer:
         # Create the config object here
         config = builder.create_builder_config()
         config.max_workspace_size = 4 << 30  # 4GB
-        config.profiling_verbosity = trt.ProfilingVerbosity.VERBOSE
-        config.set_flag(trt.BuilderFlag.FP16) if self.config['default']['config']['precision'] == 'FP16' else config.set_flag(trt.BuilderFlag.INT8)
+
+        # This section may be uncommented if pytorch-quantization is not used for INT8 Calibration
+        '''
+        # Only required if pytorch-quantization is not used
+        config.set_flag(trt.BuilderFlag.INT8)
         if self.config['default']['config']['precision'] == 'INT8':
             config.int8_calibrator = INT8Calibrator(
                 self.config['num_calibration_batches'], 
                 self.config['data_module'].train_dataloader(), 
                 self.prepare_save_path(method='CACHE')
                 )
-        config.set_flag(trt.BuilderFlag.PREFER_PRECISION_CONSTRAINTS)
-        config.set_flag(trt.BuilderFlag.DIRECT_IO)
-        config.set_flag(trt.BuilderFlag.REJECT_EMPTY_ALGORITHMS)
-        config.set_flag(trt.BuilderFlag.STRICT_TYPES)
+        '''
 
-        #TODO add multiprecision exportation
-        #TODO need to fix INT8 calibration
-        # Set layer precision and type bsed on TOML configuration
-        for idx in range(network.num_layers):
-            layer = network.get_layer(idx)
-            if self.config['default']['config']['precision'] == 'FP16':
-                layer.precision = trt.float16
-                layer.set_output_type(0, trt.DataType.HALF)
-            elif self.config['default']['config']['precision'] == 'INT8':
-                layer.precision = trt.int8
-                layer.set_output_type(0, trt.DataType.INT8)
-            else:
-                Exception("Unsupported precision type. Please choose from 'FP16' or 'INT8'.")
+        # INT8 is already quantized and calibrated using pytorch-quantization
+        if self.config['default']['config']['precision'] != 'INT8':
+            config.set_flag(trt.BuilderFlag.PREFER_PRECISION_CONSTRAINTS)
+            config.set_flag(trt.BuilderFlag.DIRECT_IO)
+            config.set_flag(trt.BuilderFlag.REJECT_EMPTY_ALGORITHMS)
+            config.set_flag(trt.BuilderFlag.STRICT_TYPES)
 
+        if self.config['default']['config']['precision'] == 'FP16' and not mixed_precision:
+            config.set_flag(trt.BuilderFlag.FP16)
+            
+        elif mixed_precision:
+            # Set layer precision and type bsed on TOML configuration
+            for idx in range(network.num_layers):
+                layer = network.get_layer(idx)
+                if self.config['default']['config']['precision'] == 'FP16':
+                    layer.precision = trt.float16
+                    layer.set_output_type(0, trt.DataType.HALF)
+                elif self.config['default']['config']['precision'] == 'INT8':
+                    layer.precision = trt.int8
+                    layer.set_output_type(0, trt.DataType.INT8)
+                else:
+                    Exception("Unsupported precision type. Please choose from 'FP16' or 'INT8'.")
+        
         serialized_engine = builder.build_serialized_network(network, config)
         if serialized_engine is None:
             raise Exception('Failed to build serialized network.')
@@ -165,3 +179,4 @@ class Quantizer:
             json_filename = self.prepare_save_path(method='JSON')
             with open(json_filename, 'w') as json_file:
                 json_file.write(layer_info_json)
+        self.logger.info(f"TensorRT Model Summary Exported to {json_filename}")

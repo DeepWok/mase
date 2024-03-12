@@ -39,7 +39,6 @@ QUANTIZEABLE_OP = (
     # "relu",
     # "sub",
 )
-
 class FakeQuantizer:
     def __init__(self, config):
         self.config = config
@@ -51,8 +50,14 @@ class FakeQuantizer:
         config: dict
     ):
         original_module_cls = type(original_module)
+        # convert quantize_axis from false to None (since TOML does not support None)
+        config["input"]["quantize_axis"] = None if config["input"]["quantize_axis"] == False else config["input"]["quantize_axis"]
+        config["weight"]["quantize_axis"] = None if config["weight"]["quantize_axis"] == False else config["weight"]["quantize_axis"]
         #TODO implement more module support: https://docs.nvidia.com/deeplearning/tensorrt/pytorch-quantization-toolkit/docs/index.html#quantized-modules
         try:
+            # Set default quantization descriptor for input and weights
+            qnn.QuantLinear.set_default_quant_desc_input(QuantDescriptor(calib_method=config['config']['calibrator'], axis=config["input"]["quantize_axis"]))
+            qnn.QuantLinear.set_default_quant_desc_weight(QuantDescriptor(calib_method=config['config']['calibrator'], axis=config["input"]["quantize_axis"]))
             if mase_op == "linear":
                 use_bias = original_module.bias is not None
 
@@ -61,15 +66,15 @@ class FakeQuantizer:
                     out_features=original_module.out_features,
                     bias=use_bias
                 )
-                #TODO this causes error if called before a linear layer: Calibrator histogram collection only supports per tensor scaling
-                new_module.set_default_quant_desc_input(QuantDescriptor(calib_method=config["input"]["calibrator"], axis=config["input"]["quantize_axis"]))
-                new_module.set_default_quant_desc_weight(QuantDescriptor(calib_method=config["weight"]["calibrator"], axis=config["weight"]["quantize_axis"]))
 
                 copy_weights(original_module.weight, new_module.weight)
                 if use_bias:
                     copy_weights(original_module.bias, new_module.bias)
         
             elif mase_op in ("conv2d"):
+                # Set default quantization descriptor for input and weights
+                qnn.QuantConv2d.set_default_quant_desc_input(QuantDescriptor(calib_method=config['config']['calibrator'], axis=config["input"]["quantize_axis"]))
+                qnn.QuantConv2d.set_default_quant_desc_weight(QuantDescriptor(calib_method=config['config']['calibrator'], axis=config["input"]["quantize_axis"]))
                 use_bias = original_module.bias is not None
                 new_module = qnn.QuantConv2d(
                     in_channels=original_module.in_channels,
@@ -82,9 +87,6 @@ class FakeQuantizer:
                     bias=use_bias,
                     padding_mode=original_module.padding_mode,
                 )
-
-                new_module.set_default_quant_desc_input(QuantDescriptor(calib_method=config["input"]["calibrator"], axis=config["input"]["quantize_axis"]))
-                new_module.set_default_quant_desc_weight(QuantDescriptor(calib_method=config["weight"]["calibrator"], axis=config["weight"]["quantize_axis"]))
 
                 copy_weights(original_module.weight, new_module.weight)
                 if use_bias:    
@@ -102,32 +104,33 @@ class FakeQuantizer:
     
     def get_config(self, name: str):
         """Retrieve specific configuration from the instance's config dictionary or return default."""
-        try:
-            config = self.config.get(name, 'default')
-        except KeyError:
-            raise Exception(f"Please check Config/TOML file. Default config must be defined.")
+        config = self.config.get(name)
+        if type(config) is type(None):
+            raise Exception(f"Please check Config/TOML file. Layer config {name} must be defined.")
         return config
 
     def fake_quantize_by_type(self, graph):
-            """
-            This method applies fake quantization to the graph based on the type of each node.
-            """
-            for node in graph.fx_graph.nodes:
-                if get_mase_op(node) not in QUANTIZEABLE_OP:
-                    continue
-                node_config = self.get_config(get_mase_op(node))
-                if not node_config['config']['quantize']:
-                    continue
-                if node.op == "call_module":
-                    original_module = get_node_actual_target(node)
-                    new_module = self.create_quantized_module(
-                        get_mase_op(node),
-                        original_module,
-                        node_config,
-                    )
-                    parent_name, name = get_parent_name(node.target)
-                    setattr(graph.modules[parent_name], name, new_module)
-            return graph
+        """
+        This method applies fake quantization to the graph based on the type of each node.
+        """
+        self.logger.info("Applying fake quantization to PyTorch model...")
+        for node in graph.fx_graph.nodes:
+            if get_mase_op(node) not in QUANTIZEABLE_OP:
+                continue
+            node_config = self.get_config(get_mase_op(node))
+            if not node_config['config']['quantize']:
+                continue
+            if node.op == "call_module":
+                original_module = get_node_actual_target(node)
+                new_module = self.create_quantized_module(
+                    get_mase_op(node),
+                    original_module,
+                    node_config,
+                )
+                parent_name, name = get_parent_name(node.target)
+                setattr(graph.modules[parent_name], name, new_module)
+        self.logger.info("Fake quantization applied to PyTorch model.")
+        return graph
 
     def fake_quantize_by_name(self, graph):
         """
@@ -136,8 +139,6 @@ class FakeQuantizer:
         #TODO implement fake quantize_by_name
         return graph
 
-
-#TODO cache file path
 class INT8Calibrator(trt.IInt8EntropyCalibrator2):
     def __init__(self, nCalibration, input_generator, cache_file_path):
         trt.IInt8EntropyCalibrator2.__init__(self)

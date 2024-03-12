@@ -1,6 +1,6 @@
 # basics
-model = "jsc-toy"
-dataset = "jsc"
+model = "vgg7"
+dataset = "cifar10"
 
 max_epochs = 10
 batch_size = 256
@@ -23,6 +23,17 @@ precision = 'INT8'
 quantize_axis = false
 
 [passes.tensorrt-quantize.linear.weight]
+quantize_axis = false 
+
+[passes.tensorrt-quantize.conv2d.config]
+quantize = true
+calibrator = 'histogram'
+precision = 'INT8'
+
+[passes.tensorrt-quantize.conv2d.input]
+quantize_axis = false
+
+[passes.tensorrt-quantize.conv2d.weight]
 quantize_axis = false
 
 [passes.tensorrt-quantize.default.config]

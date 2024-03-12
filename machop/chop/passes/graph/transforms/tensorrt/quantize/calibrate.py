@@ -63,6 +63,7 @@ class Calibrator:
 
     def calibrate_model(self, graph):
         """Performs the calibration pass on the model using the given data loader."""
+        self.logger.info("Starting calibration of the model in PyTorch...")
         dataloader = self.config['data_module'].train_dataloader()
         quant_modules.initialize()
         graph.model.cuda()
@@ -79,6 +80,8 @@ class Calibrator:
 
             for i, (xTrain, yTrain) in enumerate(dataloader):
                 graph.model(Variable(xTrain).cuda())
+                if i >= self.config['num_calibration_batches']:
+                    break
 
             # Turn off calibration tool
             for name, module in graph.model.named_modules():

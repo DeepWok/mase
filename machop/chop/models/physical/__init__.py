@@ -36,7 +36,7 @@ PHYSICAL_MODELS = {
     "jsc-trt": {
         "model": get_jsc_trt,
         "info": MaseModelInfo(
-            "jsc-will",
+            "jsc-trt",
             model_source="physical",
             task_type="physical",
             physical_data_point_classification=True,
