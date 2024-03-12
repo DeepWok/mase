@@ -7,6 +7,12 @@ batch_size = 256
 learning_rate = 1e-3
 accelerator = "gpu"
 
+[passes.tensorrt-fake_quantize]
+by = "type"
+
+[passes.tensorrt-calibrate]
+calibrate = true
+
 [passes.tensorrt-quantize]
 by = "type"
 calibrator = ["percentile", "max", "mse", "entropy"]
@@ -28,7 +34,7 @@ quantize_axis = false
 
 [passes.tensorrt-quantize.default.config]
 quantize = true
-precision = 'INT8'
+precision = 'FP16' # 'INT8' #
 
 [passes.tensorrt-quantize.default.config.input]
 calibrator = 'histogram'

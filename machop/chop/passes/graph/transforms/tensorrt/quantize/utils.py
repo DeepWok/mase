@@ -116,6 +116,7 @@ class FakeQuantizer:
                 if get_mase_op(node) not in QUANTIZEABLE_OP:
                     continue
                 node_config = self.get_config(get_mase_op(node))
+                import pdb; pdb.set_trace()
                 if not node_config['config']['quantize']:
                     continue
                 if node.op == "call_module":
@@ -140,18 +141,23 @@ class FakeQuantizer:
 #TODO cache file path
 class INT8Calibrator(trt.IInt8EntropyCalibrator2):
     def __init__(self, nCalibration, input_generator, cache_file_path):
-        trt.IInt8EntropyCalibrator2.__init__(self)
+        # trt.IInt8EntropyCalibrator2.__init__(self)
+        super(INT8Calibrator, self).__init__()
         self.nCalibration = nCalibration
         self.shape = next(iter(input_generator))[0].shape
         self.buffer_size = trt.volume(self.shape) * trt.float32.itemsize
         self.cache_file = cache_file_path
         _, self.dIn = cudart.cudaMalloc(self.buffer_size)
         self.input_generator = input_generator
+        self.num_of_batches = 0
     
     def get_batch_size(self):
         return self.shape[0]
 
     def get_batch(self, nameList=None, inputNodeName=None):
+        self.num_of_batches += 1
+        if self.num_of_batches > 10:
+            return None
         try:
             data = np.array(next(iter(self.input_generator))[0])
             cudart.cudaMemcpy(self.dIn, data.ctypes.data, self.buffer_size, cudart.cudaMemcpyKind.cudaMemcpyHostToDevice)

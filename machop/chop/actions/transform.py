@@ -96,37 +96,26 @@ def transform(
                 )
                 ori_graph = deepcopy_mase_graph(graph)
 
-                # train_generator = InputGenerator(
-                #     model_info=model_info,
-                #     data_module=data_module,
-                #     task=task,
-                #     which_dataloader="train",
-                # )
-
-                # val_generator = InputGenerator(
-                #     model_info=model_info,
-                #     data_module=data_module,
-                #     task=task,
-                #     which_dataloader="train",
-                # )
-                # pass_config["train_generator"] = train_generator
-                # pass_config["val_generator"] = val_generator
+                pass_config['logger'] = logger
                 pass_config['batch_size'] = config['batch_size']
                 pass_config['data_module'] = data_module
-                pass_config['accelerator'] = 'cuda' if accelerator == 'gpu' else accelerator
-                if accelerator == 'gpu':
+                pass_config['accelerator'] = accelerator.type
+                if pass_config['accelerator'] == 'cuda':
                     #TODO this seems innefective - known issue - https://github.com/NVIDIA/TensorRT/issues/2468
                     os.environ['CUDA_MODULE_LOADING'] = 'LAZY'
 
                 trt_meta = {}
+                import pdb; pdb.set_trace()
                 match pass_name_extended: 
-                    case "fake_quantize":
-                        graph, _ = PASSES["tensorrt-fake_quantize"](graph, pass_args=pass_config)
-                    case "calibrate":
-                        graph, _ = PASSES["tensorrt-calibrate"](graph, pass_args=pass_config)
-                        PASSES["summarize_quantization"](
-                            ori_graph, graph, save_dir=pass_save_dir
-                        )
+                    # case "fake_quantize":
+                    #     import pdb; pdb.set_trace()
+                    #     graph, _ = PASSES["tensorrt-fake_quantize"](graph, pass_args=pass_config)
+                    # case "calibrate":
+                    #     import pdb; pdb.set_trace()
+                    #     graph, _ = PASSES["tensorrt-calibrate"](graph, pass_args=pass_config)
+                    #     PASSES["summarize_quantization"](
+                    #         ori_graph, graph, save_dir=pass_save_dir
+                    #     )
                     # case "train":
                     #     import pdb; pdb.set_trace()
                     #     graph, _ = PASSES["tensorrt-train"](graph, pass_args=pass_config)
@@ -134,18 +123,20 @@ def transform(
                     #         ori_graph, graph, save_dir=pass_save_dir
                     #     )
                     case "quantize":
+                        import pdb; pdb.set_trace()
                         graph, trt_meta = PASSES["tensorrt-quantize"](graph, pass_args=pass_config)
                         PASSES["summarize_quantization"](
                             ori_graph, graph, save_dir=pass_save_dir
                         )
                     case "analysis":
-                        if accelerator != 'gpu':
-                            raise Exception(f"tensorrt-analysis must be run on a GPU, not a: {accelerator}")
+                        import pdb; pdb.set_trace()
+                        if pass_config['accelerator'] != 'cuda':
+                            raise Exception(f"tensorrt-analysis must be run on a GPU, not a: {accelerator.type}")
                         try:
-                            trt_meta['graph_path']
+                            trt_meta['trt_graph_path']
                         except KeyError:
                             raise Exception(f"tensorrt-quantize must be run before tensorrt-analysis: graph must be quantized to a tensorRT format first.")
-                        graph, _ = PASSES["tensorrt-analysis"](graph, trt_meta['graph_path'], pass_args=pass_config)
+                        graph, _ = PASSES["tensorrt-analysis"](graph, trt_meta['trt_graph_path'], pass_args=pass_config)
                     case "fusion":
                         raise NotImplementedError()
                     case "kerneltuning":

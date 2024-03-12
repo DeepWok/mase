@@ -60,6 +60,7 @@ def tensorrt_analysis_pass(original_model, trt_engine_path, pass_args=None):
 
 class QuantizationAnalysis():
     def __init__(self, original_model, trt_engine_path, config):
+        self.logger = config['logger']
         self.original_model = original_model
         TRT_LOGGER = trt.Logger(trt.Logger.WARNING)
 
@@ -78,7 +79,6 @@ class QuantizationAnalysis():
             break
 
         self.config = config
-        self.logger = logging.getLogger(__name__)
         self.summarize()
 
     def summarize(self):
@@ -109,36 +109,6 @@ class QuantizationAnalysis():
         # Join all IO information into a single string and log it
         io_info_str = "\n".join(io_info_lines)
         self.logger.info(f"\nTensorRT Engine Input/Output Information:\n{io_info_str}")
-
-        # # Now adding layer precision info as before
-        # layer_info_lines = [
-        #     "Layer Name               | Precision",
-        #     "-------------------------|-----------------------"
-        # ]
-
-        # for i in range(self.engine.num_layers):
-        #     layer = self.engine.get_layer(i)
-        #     # Determine the precision
-        #     precision = 'Unknown'
-        #     if layer.precision == trt.DataType.FLOAT:
-        #         precision = 'FP32'
-        #     elif layer.precision == trt.DataType.HALF:
-        #         precision = 'FP16'
-        #     elif layer.precision == trt.DataType.INT8:
-        #         precision = 'INT8'
-        #     elif layer.precision == trt.DataType.BOOL:
-        #         precision = 'BOOL'
-        #     elif layer.precision == trt.DataType.INT32:
-        #         precision = 'INT32'
-
-        #     # Format and add each layer's info
-        #     layer_info = f"{layer.name:<25} | {precision}"
-        #     layer_info_lines.append(layer_info)
-
-        # # Join and log the layer information
-        # layer_info_str = "\n".join(layer_info_lines)
-        # self.logger.info(f"\nTensorRT Engine Layer Precisions:\n{layer_info_str}")
-
 
     def infer_mg(self, model, input_data):
         # send model and input data to GPU for inference

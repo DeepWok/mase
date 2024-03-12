@@ -32,7 +32,6 @@ def tensorrt_fake_quantize_transform_pass(graph, pass_args=None):
     return graph, {}
 
 def tensorrt_calibrate_transform_pass(graph, pass_args=None):
-    graph, _ = tensorrt_fake_quantize_transform_pass(graph, pass_args)
     calibrator = Calibrator(pass_args)
     graph = calibrator.calibrate_model(graph)
     graph.model = torch.fx.GraphModule(graph.model, graph.fx_graph)
@@ -41,7 +40,7 @@ def tensorrt_calibrate_transform_pass(graph, pass_args=None):
 class Calibrator:
     def __init__(self, config):
         self.config = config
-        self.logger = logging.getLogger(__name__)
+        self.logger = config['logger']
 
     def get_config(self, config: dict, name: str):
         """Retrieve specific configuration from the config dictionary or return default."""
