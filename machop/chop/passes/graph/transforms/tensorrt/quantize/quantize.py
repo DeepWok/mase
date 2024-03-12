@@ -99,8 +99,6 @@ class Quantizer:
         config.set_flag(trt.BuilderFlag.REJECT_EMPTY_ALGORITHMS)
         config.set_flag(trt.BuilderFlag.STRICT_TYPES)
 
-        #TODO add multiprecision exportation
-        #TODO need to fix INT8 calibration
         # Set layer precision and type bsed on TOML configuration
         for idx in range(network.num_layers):
             layer = network.get_layer(idx)
@@ -110,8 +108,6 @@ class Quantizer:
             elif self.config['default']['config']['precision'] == 'INT8':
                 layer.precision = trt.int8
                 layer.set_output_type(0, trt.DataType.INT8)
-            else:
-                Exception("Unsupported precision type. Please choose from 'FP16' or 'INT8'.")
 
         serialized_engine = builder.build_serialized_network(network, config)
         if serialized_engine is None:
@@ -121,11 +117,21 @@ class Quantizer:
         with open(trt_path, 'wb') as f:
             f.write(serialized_engine)
 
-        # Optimization profiles are needed for dynamic input shapes.
-        profile = builder.create_optimization_profile()
-        inputTensor = network.get_input(0)
-        profile.set_shape(inputTensor.name, (1,) + inputTensor.shape[1:], (8,) + inputTensor.shape[1:], (32,) + inputTensor.shape[1:])
-        config.add_optimization_profile(profile)
+        # #TODO add multiprecision exportation
+        # if self.config['default']['config']['precision'] == 'FP16':
+        #     config.set_flag(trt.BuilderFlag.FP16)
+
+        # #TODO need to fix INT8 calibration
+        # elif self.config['default']['config']['precision'] == 'INT8':
+        #     config.set_flag(trt.BuilderFlag.INT8)
+
+        # else:
+        #     Exception("Unsupported precision type. Please choose from 'FP16' or 'INT8'.")
+
+        # # Optimization profiles are needed for dynamic input shapes.
+        # profile = builder.create_optimization_profile()
+        # inputTensor = network.get_input(0)
+        # profile.set_shape(inputTensor.name, (1,) + inputTensor.shape[1:], (8,) + inputTensor.shape[1:], (32,) + inputTensor.shape[1:])
 
         self.logger.info(f"TensorRT Conversion Complete. Stored trt model to {trt_path}")
         return trt_path

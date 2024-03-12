@@ -111,7 +111,7 @@ PASSES = {
     # transform
     "quantize": quantize_transform_pass,
     "tensorrt-calibrate": tensorrt_calibrate_transform_pass,
-    "tensorrt-fake_quantize": tensorrt_fake_quantize_transform_pass,
+    "tensorrt-fake-quantize": tensorrt_fake_quantize_transform_pass,
     "tensorrt-quantize": tensorrt_quantize_transform_pass,
     "tensorrt-train": tensorrt_train_transform_pass,
     "onnxruntime": onnx_runtime_transform_pass,
