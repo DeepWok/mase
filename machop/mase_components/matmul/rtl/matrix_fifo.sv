@@ -4,7 +4,6 @@ Description : FIFO to buffer matrices or 2D data.
 */
 
 `timescale 1ns/1ps
-`default_nettype none
 
 module matrix_fifo #(
     // Dimensions

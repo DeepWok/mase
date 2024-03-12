@@ -12,7 +12,6 @@ Description : This module calculates the generalised group norm.
 */
 
 `timescale 1ns/1ps
-`default_nettype none
 
 module group_norm_2d #(
     // Dimensions

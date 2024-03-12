@@ -5,7 +5,6 @@ Description : This module calculates root-mean-square norm.
 */
 
 `timescale 1ns/1ps
-`default_nettype none
 
 module rms_norm_2d #(
     // Dimensions
