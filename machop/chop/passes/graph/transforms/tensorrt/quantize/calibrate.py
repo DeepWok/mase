@@ -32,7 +32,6 @@ def tensorrt_fake_quantize_transform_pass(graph, pass_args=None):
     return graph, {}
 
 def tensorrt_calibrate_transform_pass(graph, pass_args=None):
-    graph, _ = tensorrt_fake_quantize_transform_pass(graph, pass_args)
     calibrator = Calibrator(pass_args)
     graph = calibrator.calibrate_model(graph)
     graph.model = torch.fx.GraphModule(graph.model, graph.fx_graph)
@@ -73,6 +72,7 @@ class Calibrator:
             for name, module in graph.model.named_modules():
                 if isinstance(module, qnn.TensorQuantizer):
                     if module._calibrator is not None:
+                        self.logger.info("Disabling Quantization and Enabling Calibration")
                         module.disable_quant()
                         module.enable_calib()
                     else:
@@ -88,6 +88,7 @@ class Calibrator:
                 if isinstance(module, qnn.TensorQuantizer):
                     if module._calibrator is not None:
                         module.enable_quant()
+                        self.logger.info("Enabling Quantization and Disabling Calibration")
                         module.disable_calib()
                     else:
                         module.enable()

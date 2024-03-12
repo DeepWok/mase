@@ -16,8 +16,10 @@ from torch.autograd import Variable
 import torch
 from torch.optim.lr_scheduler import CosineAnnealingLR
 import logging
+from chop.actions import train
+from chop.models import get_model_info, get_model
 
-def tensorrt_train_transform_pass(graph, pass_args=None):
+def tensorrt_fine_tune_transform_pass(graph, pass_args=None):
     """ Performs Quantized Aware Training """
     trainer = FineTuning(graph, pass_args)
     graph = trainer.train()
@@ -25,42 +27,29 @@ def tensorrt_train_transform_pass(graph, pass_args=None):
     graph.model = torch.fx.GraphModule(graph.model, graph.fx_graph)
     return graph, {}
 
-
 class FineTuning:
     def __init__(self, graph, config):
         self.logger = logging.getLogger(__name__)
         self.config = config
         self.graph = graph
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-        self.graph.to(self.device)
+        self.graph.model.to(self.device)
         self.criterion = torch.nn.CrossEntropyLoss()
         
         # Initialize the optimizer.
-        initial_learning_rate = self.config['learning_rate'] * 0.01  # Start with 1% of the original LR
-        #TODO find masegraph optimizer
-        self.optimizer = torch.optim.Adam(self.graph.parameters(), lr=initial_learning_rate)
+        self.learning_rate = self.config['learning_rate'] if 'learning_rate' in self.config else 1e-5
+        self.weight_decay = self.config['weight_decay'] if 'weight_decay' in self.config else 0
+        plt_trainer_args = {
+            "max_epochs": self.config['fine_tune']['qat_epochs'],
+            "accelerator": self.config['accelerator'],
+            }
+        initial_learning_rate = self.learning_rate * 0.01  # Start with 1% of the original LR
+        optimizer = torch.optim.Adam(self.graph.parameters(), lr=initial_learning_rate)
         
         # Set up the scheduler
         self.num_steps = len(self.config['data_module'].train_dataloader())
         self.total_steps =  self.num_steps * self.config['qat_epochs']
         self.scheduler = CosineAnnealingLR(self.optimizer, T_max=self.total_steps, eta_min=initial_learning_rate * 0.01)  # Decreases to 0.01% of initial
 
-    def train(self):
-        self.graph.train()  # Set the model to training mode
-        for epoch in range(self.epochs):
-            for batch_idx, (xs, ys) in enumerate(self.config['data_module'].train_dataloader()):
-                xs, ys = xs.to(self.config['accelerator']), ys.to(self.config['accelerator'])
-                
-                # Forward pass
-                outputs = self.graph(xs)
-                loss = self.criterion(outputs, ys)
-                
-                # Backward and optimize
-                self.optimizer.zero_grad()
-                loss.backward()
-                self.optimizer.step()
-                self.scheduler.step()  # Update the learning rate
-                
-                if batch_idx % 5 == 0:
-                    self.logger.info(f'Epoch [{epoch+1}/{self.config["epochs"]}], Step [{batch_idx+1}/{self.num_steps}], Loss: {loss.item():.4f}')
-        return self.graph
+    def train(self):        
+        train(self.graph.model, get_model_info(self.config['model']), self.config['data_module'], self.config['data_module'].dataset_info, 'Quantization Fine Tuning', self.optimizer, self.learning_rate, self.weight_decay, self.plt_trainer_args, False, './ckpts/quant-fine-tuning', None, None, "")

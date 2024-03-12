@@ -1,4 +1,4 @@
-from .quantize import tensorrt_quantize_transform_pass
+from .quantize import tensorrt_engine_interface_pass
 from .calibrate import tensorrt_calibrate_transform_pass, tensorrt_fake_quantize_transform_pass
-from .train import tensorrt_train_transform_pass
+from .fine_tune import tensorrt_fine_tune_transform_pass
 from .analysis import tensorrt_analysis_pass

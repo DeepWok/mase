@@ -19,13 +19,13 @@ from chop.passes.graph.interface.save_and_load import load_mase_graph_interface_
 from ....utils import deepcopy_mase_graph
 from .utils import INT8Calibrator
 
-def tensorrt_quantize_transform_pass(graph, pass_args=None):
+def tensorrt_engine_interface_pass(graph, pass_args=None):
     quantizer = Quantizer(pass_args)
-    trt_graph_path = quantizer.pytorch_to_trt(graph)
+    graph_path = quantizer.pytorch_to_trt(graph)
 
     # link the model with graph
     graph.model = torch.fx.GraphModule(graph.model, graph.fx_graph)
-    return graph, {'trt_graph_path': trt_graph_path}
+    return graph, {'graph_path': graph_path}
 
 class Quantizer:
     def __init__(self, config):
@@ -70,12 +70,11 @@ class Quantizer:
         """Applies quantization procedures to PyTorch graph based on type."""
         # Add quantization code here
 
-
     def ONNX_to_TRT(self, ONNX_path):
         self.logger.info("Converting PyTorch model to TensorRT...")
 
-        # Check for mixed_precision
-        mixed_precision = True if 'INT8' in self.config and 'FP16' in self.config else False
+        # Check for layer wise mixed precision
+        layer_wise_mixed_precision = True if 'INT8' in self.config and 'FP16' in self.config else False
 
         TRT_LOGGER = trt.Logger(trt.Logger.WARNING)
         builder = trt.Builder(TRT_LOGGER)
@@ -111,10 +110,10 @@ class Quantizer:
             config.set_flag(trt.BuilderFlag.REJECT_EMPTY_ALGORITHMS)
             config.set_flag(trt.BuilderFlag.STRICT_TYPES)
 
-        if self.config['default']['config']['precision'] == 'FP16' and not mixed_precision:
+        if self.config['default']['config']['precision'] == 'FP16' and not layer_wise_mixed_precision:
             config.set_flag(trt.BuilderFlag.FP16)
-            
-        elif mixed_precision:
+
+        elif layer_wise_mixed_precision:
             # Set layer precision and type bsed on TOML configuration
             for idx in range(network.num_layers):
                 layer = network.get_layer(idx)

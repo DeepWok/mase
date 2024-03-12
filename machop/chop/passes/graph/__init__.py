@@ -39,9 +39,9 @@ from .interface import (
 from .transforms.quantize import quantized_func_map, quantized_module_map
 from .transforms.quantize.quant_parsers import parse_node_config
 from .transforms.tensorrt import (
-    tensorrt_quantize_transform_pass,
+    tensorrt_engine_interface_pass,
     tensorrt_calibrate_transform_pass,
-    tensorrt_train_transform_pass,
+    tensorrt_fine_tune_transform_pass,
     tensorrt_analysis_pass,
     tensorrt_fake_quantize_transform_pass
 )
@@ -66,6 +66,7 @@ ANALYSIS_PASSES = [
     "add_pruning_metadata",
     "add_natural_sparsity",
     "hook_inspection",
+    "tensorrt_analysis",
 ]
 
 TRANSFORM_PASSES = [
@@ -74,6 +75,9 @@ TRANSFORM_PASSES = [
     "prune",
     "prune_detach_hook" "conv_bn_fusion",
     "logicnets_fusion",
+    "tensorrt_fake_quantize"
+    "tensorrt_calibrate"
+    "tensorrt_fine_tune"
 ]
 
 INTERFACE_PASSES = [
@@ -81,6 +85,7 @@ INTERFACE_PASSES = [
     "load_node_meta_param",
     "save_mase_graph",
     "save_node_meta_param",
+    "tensorrt_quantize"
 ]
 
 PASSES = {
@@ -102,7 +107,7 @@ PASSES = {
     "add_pruning_metadata": add_pruning_metadata_analysis_pass,
     "add_natural_sparsity": add_natural_sparsity_metadata_analysis_pass,
     "hook_inspection": hook_inspection_analysis_pass,
-    "tensorrt-analysis": tensorrt_analysis_pass,
+    "tensorrt_analysis": tensorrt_analysis_pass,
     # interface
     "load_mase_graph": load_mase_graph_interface_pass,
     "load_node_meta_param": load_node_meta_param_interface_pass,
@@ -110,10 +115,9 @@ PASSES = {
     "save_node_meta_param": save_node_meta_param_interface_pass,
     # transform
     "quantize": quantize_transform_pass,
-    "tensorrt-calibrate": tensorrt_calibrate_transform_pass,
-    "tensorrt-fake-quantize": tensorrt_fake_quantize_transform_pass,
-    "tensorrt-quantize": tensorrt_quantize_transform_pass,
-    "tensorrt-train": tensorrt_train_transform_pass,
+    "tensorrt_calibrate": tensorrt_calibrate_transform_pass,
+    "tensorrt_fake_quantize": tensorrt_fake_quantize_transform_pass,
+    "tensorrt_fine_tune": tensorrt_fine_tune_transform_pass,
     "onnxruntime": onnx_runtime_transform_pass,
     "summarize_quantization": summarize_quantization_analysis_pass,
     "prune": prune_transform_pass,
@@ -121,5 +125,5 @@ PASSES = {
     # "remove_prune_wrappers": prune_unwrap_transform_pass,
     "conv_bn_fusion": conv_bn_fusion_transform_pass,
     "logicnets_fusion": logicnets_fusion_transform_pass,
-    "onnx_annotate": onnx_annotate_transform_pass,
+    "onnx_annotate": onnx_annotate_transform_pass
 }

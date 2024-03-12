@@ -96,21 +96,6 @@ def transform(
                 )
                 ori_graph = deepcopy_mase_graph(graph)
 
-                # train_generator = InputGenerator(
-                #     model_info=model_info,
-                #     data_module=data_module,
-                #     task=task,
-                #     which_dataloader="train",
-                # )
-
-                # val_generator = InputGenerator(
-                #     model_info=model_info,
-                #     data_module=data_module,
-                #     task=task,
-                #     which_dataloader="train",
-                # )
-                # pass_config["train_generator"] = train_generator
-                # pass_config["val_generator"] = val_generator
                 pass_config['batch_size'] = config['batch_size']
                 pass_config['data_module'] = data_module
                 pass_config['accelerator'] = 'cuda' if accelerator == 'gpu' else accelerator
@@ -120,32 +105,36 @@ def transform(
 
                 trt_meta = {}
                 match pass_name_extended: 
-                    case "fake_quantize":
-                        graph, _ = PASSES["tensorrt-fake_quantize"](graph, pass_args=pass_config)
-                    case "calibrate":
-                        graph, _ = PASSES["tensorrt-calibrate"](graph, pass_args=pass_config)
-                        PASSES["summarize_quantization"](
-                            ori_graph, graph, save_dir=pass_save_dir
-                        )
-                    # case "train":
-                    #     import pdb; pdb.set_trace()
-                    #     graph, _ = PASSES["tensorrt-train"](graph, pass_args=pass_config)
-                    #     PASSES["summarize_quantization"](
-                    #         ori_graph, graph, save_dir=pass_save_dir
-                    #     )
                     case "quantize":
-                        graph, trt_meta = PASSES["tensorrt-quantize"](graph, pass_args=pass_config)
+                        # Firstly fake quantize the model for calibration (only required if using INT8 precision otherwise skipped)
+                        graph, _ = PASSES["tensorrt_fake_quantize"](graph, pass_args=pass_config)
+                        
+                        # Then calibrate the model using the fake quantization to set AMAXs
+                        graph, _ = PASSES["tensorrt_calibrate"](graph, pass_args=pass_config)
                         PASSES["summarize_quantization"](
                             ori_graph, graph, save_dir=pass_save_dir
                         )
+
+                        # # Apply post-quantization fine tuning (Quantization Aware Training)
+                        # graph, _ = PASSES["tensorrt_fine_tune"](graph, pass_args=pass_config)
+                        # PASSES["summarize_quantization"](
+                        #     ori_graph, graph, save_dir=pass_save_dir
+                        # )
+
+                        # Convert the model to TensorRT format and apply FP16 or layer-wise mixed precision quantization
+                        graph, trt_meta = PASSES["tensorrt_quantize"](graph, pass_args=pass_config)
+                        PASSES["summarize_quantization"](
+                            ori_graph, graph, save_dir=pass_save_dir
+                        )
+                    
                     case "analysis":
                         if accelerator != 'gpu':
-                            raise Exception(f"tensorrt-analysis must be run on a GPU, not a: {accelerator}")
+                            raise Exception(f"tensorrt_analysis must be run on a GPU, not a: {accelerator}")
                         try:
                             trt_meta['graph_path']
                         except KeyError:
-                            raise Exception(f"tensorrt-quantize must be run before tensorrt-analysis: graph must be quantized to a tensorRT format first.")
-                        graph, _ = PASSES["tensorrt-analysis"](graph, trt_meta['graph_path'], pass_args=pass_config)
+                            raise Exception(f"tensorrt_quantize must be run before tensorrt_analysis: graph must be quantized to a tensorRT format first.")
+                        graph, _ = PASSES["tensorrt_analysis"](trt_meta['graph_path'], pass_args=pass_config)
                     case "fusion":
                         raise NotImplementedError()
                     case "kerneltuning":
@@ -166,11 +155,6 @@ def transform(
                     os.environ['CUDA_MODULE_LOADING'] = 'LAZY'
 
                 graph, _ = PASSES["onnxruntime"](graph, pass_args=pass_config)
-                
-                # TODO: substitute with performance comparison
-                # PASSES["summarize_quantization"]( 
-                #     ori_graph, graph, save_dir=pass_save_dir
-                # )
 
             case "quantize":
                 pass_save_dir = save_dir / "quantize"
