@@ -2,6 +2,8 @@
 
 import logging
 from random import randint
+from math import ceil, log2
+from copy import copy
 # from itertools import batched  # Python 3.12
 
 import torch
@@ -27,6 +29,10 @@ from chop.passes.graph.transforms.quantize.quantized_modules.group_norm2d import
     _fixed_group_norm_2d_model
 )
 
+from mase_components.fixed_arithmetic.test.isqrt_sw import (
+    lut_parameter_dict, make_lut
+)
+
 logger = logging.getLogger("testbench")
 logger.setLevel(logging.INFO)
 
@@ -40,7 +46,6 @@ class GroupNorm2dTB(Testbench):
             "GROUP_CHANNELS", "IN_WIDTH", "IN_FRAC_WIDTH",
             "OUT_WIDTH", "OUT_FRAC_WIDTH",
             "VARIANCE_WIDTH", "VARIANCE_FRAC_WIDTH",
-            # "INV_SQRT_WIDTH", "INV_SQRT_FRAC_WIDTH",
             "DEPTH_DIM0", "DEPTH_DIM1",
         ])
 
@@ -58,8 +63,8 @@ class GroupNorm2dTB(Testbench):
             dut.clk, dut.out_data, dut.out_valid, dut.out_ready
         )
 
-        # self.in_driver.log.setLevel(logging.DEBUG)
-        # self.output_monitor.log.setLevel(logging.DEBUG)
+        # Inverse Square Root LUT
+        self.isqrt_lut = make_lut(2**5, self.VARIANCE_WIDTH)
 
     def generate_inputs(self, num=1):
         inputs = list()
@@ -86,10 +91,9 @@ class GroupNorm2dTB(Testbench):
             in_frac_width=self.IN_FRAC_WIDTH,
             variance_width=self.VARIANCE_WIDTH,
             variance_frac_width=self.VARIANCE_FRAC_WIDTH,
-            # inv_sqrt_width=self.INV_SQRT_WIDTH,
-            # inv_sqrt_frac_width=self.INV_SQRT_FRAC_WIDTH,
             out_width=self.OUT_WIDTH,
             out_frac_width=self.OUT_FRAC_WIDTH,
+            isqrt_lut=self.isqrt_lut,
         )
 
         # Output beat reconstruction
@@ -115,7 +119,7 @@ async def basic(dut):
     assert tb.output_monitor.exp_queue.empty()
 
 
-@cocotb.test(skip=True)
+@cocotb.test()
 async def stream(dut):
     tb = GroupNorm2dTB(dut)
     await tb.reset()
@@ -130,7 +134,7 @@ async def stream(dut):
     assert tb.output_monitor.exp_queue.empty()
 
 
-@cocotb.test(skip=True)
+@cocotb.test()
 async def backpressure(dut):
     tb = GroupNorm2dTB(dut)
     await tb.reset()
@@ -145,7 +149,7 @@ async def backpressure(dut):
     assert tb.output_monitor.exp_queue.empty()
 
 
-@cocotb.test(skip=True)
+@cocotb.test()
 async def valid_toggle(dut):
     tb = GroupNorm2dTB(dut)
     await tb.reset()
@@ -161,7 +165,7 @@ async def valid_toggle(dut):
     assert tb.output_monitor.exp_queue.empty()
 
 
-@cocotb.test(skip=True)
+@cocotb.test()
 async def valid_backpressure(dut):
     tb = GroupNorm2dTB(dut)
     await tb.reset()
@@ -178,18 +182,40 @@ async def valid_backpressure(dut):
 
 
 if __name__ == "__main__":
-    def gen_random_cfg():
+    def calculate_isqrt_width(
+        total_dim0, total_dim1, compute_dim0, compute_dim1, group_channels,
+        in_width, **kwargs
+    ):
+        depth_dim0 = total_dim0 // compute_dim0
+        depth_dim1 = total_dim1 // compute_dim1
+        square_width = in_width * 2
+        squares_adder_tree_in_size = compute_dim0 * compute_dim1
+        squares_adder_tree_out_width = ceil(log2(squares_adder_tree_in_size)) + square_width
+        num_iters = depth_dim0 * depth_dim1 * group_channels
+        iter_width = ceil(log2(num_iters))
+        isqrt_width = iter_width + squares_adder_tree_out_width
+        return isqrt_width
+
+
+    def gen_cfg():
         compute_dim0, compute_dim1, total_dim0, total_dim1 = random_2d_dimensions()
-        return {
-            "TOTAL_DIM0": total_dim0,
-            "TOTAL_DIM1": total_dim1,
-            "COMPUTE_DIM0": compute_dim0,
-            "COMPUTE_DIM1": compute_dim1,
-            "GROUP_CHANNELS": randint(1, 4),
+        params = {
+            "TOTAL_DIM0": 4,
+            "TOTAL_DIM1": 4,
+            "COMPUTE_DIM0": 2,
+            "COMPUTE_DIM1": 2,
+            "GROUP_CHANNELS": 2, # randint(1, 4),
+            "IN_WIDTH": 8,
+            "IN_FRAC_WIDTH": 4,
+            "OUT_WIDTH": 8,
+            "OUT_FRAC_WIDTH": 4,
         }
+        lower_case_keys = {k.lower(): v for k, v in params.items()}
+        lut_width = calculate_isqrt_width(**lower_case_keys)
+        params |= lut_parameter_dict(2**5, lut_width)
+        return params
+
     mase_runner(
-        # module_param_list=[
-        #     gen_random_cfg() for _ in range(1)
-        # ],
+        module_param_list=[gen_cfg()],
         trace=True,
     )

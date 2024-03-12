@@ -1,4 +1,6 @@
 import logging
+from math import ceil, log2
+from functools import partial
 
 import torch
 import torch.nn as nn
@@ -8,8 +10,12 @@ from ..quantizers.integer import integer_floor_quantizer
 from .fixed_signed_cast import _fixed_signed_cast_model
 
 
+from mase_components.fixed_arithmetic.test.isqrt_sw import (
+    isqrt_sw2
+)
+
 logger = logging.getLogger(__file__)
-logger.setLevel(logging.DEBUG)
+logger.setLevel(logging.INFO)
 
 
 def _fixed_group_norm_2d_model(
@@ -18,8 +24,7 @@ def _fixed_group_norm_2d_model(
     in_frac_width: int,
     variance_width: int,
     variance_frac_width: int,
-    # inv_sqrt_width: int,
-    # inv_sqrt_frac_width: int,
+    isqrt_lut: list,
     out_width: int,
     out_frac_width: int,
 ):
@@ -41,20 +46,28 @@ def _fixed_group_norm_2d_model(
     logger.debug(f"{var[0]}")
 
     # Inverse Square Root calculation
-    # inv_sqrt = isqrt_sw(var)  # TODO: Add inv sqrt model
-    # sqrt_list = []
-    # for i in range(var.shape[0]):
-    #     sqrt_list.append(isqrt_sw(
-    #         var[i].item(),
-    #         variance_width - variance_frac_width,
-    #         variance_frac_width
-    #     ))
-    # inv_sqrt = torch.Tensor(sqrt_list).reshape(var.shape[0], 1, 1, 1)
-    inv_sqrt = 1 / torch.sqrt(var)
+    lut_pow = ceil(log2(len(isqrt_lut)))
+    var_int = (var * (2 ** variance_frac_width)).int()
+    logger.debug("Variance INT:")
+    logger.debug(f"{var_int[0]}")
+
+    f = partial(
+        isqrt_sw2,
+        in_width=variance_width,
+        frac_width=variance_frac_width,
+        lut_pow=lut_pow,
+        lut=isqrt_lut,
+        debug=False,
+    )
+    inv_sqrt_int = var_int.apply_(f)
+
+    logger.debug("INV SQRT INT:")
+    logger.debug(f"{inv_sqrt_int[0]}")
+
+    inv_sqrt = inv_sqrt_int / (2 ** variance_frac_width)
     logger.debug("Pre-quantized INV SQRT:")
     logger.debug(f"{inv_sqrt[0]}")
 
-    # inv_sqrt = torch.full_like(var, 0.25)  # TODO: remove this later
     inv_sqrt = integer_floor_quantizer(inv_sqrt, variance_width, variance_frac_width)
     logger.debug("Inverse SQRT:")
     logger.debug(f"{inv_sqrt[0]}")

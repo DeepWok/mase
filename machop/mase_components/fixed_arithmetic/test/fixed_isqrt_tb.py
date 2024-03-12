@@ -111,7 +111,18 @@ if __name__ == "__main__":
                 parameter_list += parameters
         return parameter_list
 
-    parameter_list = full_sweep()
+    parameter_list = [
+        {
+            "IN_WIDTH": 21,
+            "IN_FRAC_WIDTH": 8,
+            "OUT_WIDTH": 21,
+            "OUT_FRAC_WIDTH": 8,
+            "LUT_POW": 5,
+            "PIPELINE_CYCLES": 0,
+            **lut_parameter_dict(2**5, 21)
+        }
+    ]
+    parameter_list.extend(full_sweep())
 
     #parameter_list = single_test(8, 4, 5, 0)
 
