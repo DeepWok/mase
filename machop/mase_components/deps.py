@@ -14,6 +14,8 @@ MASE_HW_DEPS = {
     # "attention/fixed_self_att": ["attention", "cast", "common", "conv",
     #                              "fixed_arithmetic", "linear", "matmul", "ViT"],
     "cast/fixed_cast": [],
+    "scatter/scatter": [],
+    "activations/fixed_relu":[],
     "cast/fixed_rounding": ["cast"],
     "linear/fixed_linear": ["cast", "common", "fixed_arithmetic"],
     "linear/fixed_2d_linear": ["cast", "common", "fixed_arithmetic","matmul","linear"],
