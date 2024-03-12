@@ -8,7 +8,7 @@ from cocotb.triggers import Timer
 from mase_cocotb.runner import mase_runner
 import math
 from mase_cocotb.testbench import Testbench
-from isqrt_sw import isqrt_sw2, int_to_float, make_lut
+from isqrt_sw import isqrt_sw2, int_to_float, make_lut, lut_parameter_dict
 
 
 class VerificationCase(Testbench):
@@ -88,19 +88,6 @@ async def test_fixed_isqrt(dut):
             """
 
 if __name__ == "__main__":
-    def create_lut_parameters(lut_size, width):
-        lut_parameters = {}
-        lut = make_lut(lut_size, width)
-        lut_prefix = "LUT"
-        for i in range(lut_size):
-            if i < 10:
-                lut_suffix = "0" + str(i)
-            else:
-                lut_suffix = str(i)
-            name = lut_prefix + lut_suffix
-            lut_parameters |= {name: lut[i]}
-        return lut_parameters
-
     def single_test(width, frac_width, lut_pow, pipeline_cycles):
         parameter_list = []
         lut_size = 2 ** lut_pow
@@ -109,14 +96,13 @@ if __name__ == "__main__":
                 "OUT_WIDTH": width, "OUT_FRAC_WIDTH": frac_width,
                 "LUT_POW": lut_pow, "PIPELINE_CYCLES": pipeline_cycles
                 }
-        lut_parameters = create_lut_parameters(lut_size, width)
+        lut_parameters = lut_parameter_dict(lut_size, width)
         parameter_list.append(parameters | lut_parameters)
         return parameter_list
 
     def full_sweep():
         parameter_list = []
         lut_pow = 5
-        lut_size = 2 ** lut_pow
         pipeline_cycles = 0
         for int_width in range(1, 9):
             for frac_width in range(0, 9):

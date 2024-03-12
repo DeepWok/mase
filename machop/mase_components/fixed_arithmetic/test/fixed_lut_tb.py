@@ -8,7 +8,7 @@ from cocotb.triggers import Timer
 from mase_cocotb.testbench import Testbench
 from mase_cocotb.runner import mase_runner
 import math
-from isqrt_sw import int_to_float, float_to_int, make_lut
+from isqrt_sw import int_to_float, float_to_int, make_lut, lut_parameter_dict
 
 
 class VerificationCase(Testbench):
@@ -63,33 +63,27 @@ async def test_fixed_lut(dut):
                 dut.data_out.value.integer == expected
             ), f"""
             <<< --- Test failed --- >>>
-            Input: 
+            Input:
             X  : {int_to_float(data_a, 1, width-1)}
 
             Output:
             Out: {int_to_float(dut.data_out.value.integer, 1, width-1)}
-            
-            Expected: 
+
+            Expected:
             {int_to_float(expected, 1, width-1)}
             """
 
 if __name__ == "__main__":
-    def full_sweep():    
+    def full_sweep():
         parameter_list = []
-        lut_pow = 5      
+        lut_pow = 5
         lut_size = 2 ** lut_pow
         for width in range(1, 17):
-            lut = make_lut(lut_size, width)
-            parameters = {"WIDTH": width, "LUT_POW": lut_pow}
-            lut_prefix = "LUT"
-            for i in range(lut_size):
-                if i < 10:
-                    lut_suffix = "0" + str(i)
-                else:
-                    lut_suffix = str(i)
-                name = lut_prefix + lut_suffix
-                parameters |= {name: lut[i]}
-            parameter_list.append(parameters)
+            parameter_list.append({
+                "WIDTH": width,
+                "LUT_POW": lut_pow,
+                **lut_parameter_dict(lut_size, width)
+            })
         return parameter_list
 
     parameter_list = full_sweep()

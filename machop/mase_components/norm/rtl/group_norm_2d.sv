@@ -26,7 +26,41 @@ module group_norm_2d #(
     parameter IN_WIDTH            = 8,
     parameter IN_FRAC_WIDTH       = 4,
     parameter OUT_WIDTH           = 8,
-    parameter OUT_FRAC_WIDTH      = 4
+    parameter OUT_FRAC_WIDTH      = 4,
+
+    // Inverse Sqrt LUT (TODO: Change to .mem file)
+    parameter LUT00               = 0,
+    parameter LUT01               = 0,
+    parameter LUT02               = 0,
+    parameter LUT03               = 0,
+    parameter LUT04               = 0,
+    parameter LUT05               = 0,
+    parameter LUT06               = 0,
+    parameter LUT07               = 0,
+    parameter LUT08               = 0,
+    parameter LUT09               = 0,
+    parameter LUT10               = 0,
+    parameter LUT11               = 0,
+    parameter LUT12               = 0,
+    parameter LUT13               = 0,
+    parameter LUT14               = 0,
+    parameter LUT15               = 0,
+    parameter LUT16               = 0,
+    parameter LUT17               = 0,
+    parameter LUT18               = 0,
+    parameter LUT19               = 0,
+    parameter LUT20               = 0,
+    parameter LUT21               = 0,
+    parameter LUT22               = 0,
+    parameter LUT23               = 0,
+    parameter LUT24               = 0,
+    parameter LUT25               = 0,
+    parameter LUT26               = 0,
+    parameter LUT27               = 0,
+    parameter LUT28               = 0,
+    parameter LUT29               = 0,
+    parameter LUT30               = 0,
+    parameter LUT31               = 0
 ) (
     input  logic                 clk,
     input  logic                 rst,
@@ -45,7 +79,6 @@ localparam DEPTH_DIM0 = TOTAL_DIM0 / COMPUTE_DIM0;
 localparam DEPTH_DIM1 = TOTAL_DIM1 / COMPUTE_DIM1;
 
 localparam NUM_VALUES = TOTAL_DIM0 * TOTAL_DIM1 * GROUP_CHANNELS;
-// localparam logic [31:0] INV_NUM_VALUES = (1 << 31) / NUM_VALUES;
 
 localparam NUM_ITERS = DEPTH_DIM0 * DEPTH_DIM1 * GROUP_CHANNELS;
 localparam ITER_WIDTH = $clog2(NUM_ITERS);
@@ -55,9 +88,6 @@ localparam DIFF_FRAC_WIDTH = IN_FRAC_WIDTH;
 
 localparam SQUARE_WIDTH = IN_WIDTH * 2;
 localparam SQUARE_FRAC_WIDTH = IN_FRAC_WIDTH * 2;
-
-// parameter INV_SQRT_WIDTH      = VARIANCE_WIDTH;
-// parameter INV_SQRT_FRAC_WIDTH = VARIANCE_FRAC_WIDTH;
 
 localparam NORM_WIDTH = VARIANCE_WIDTH + DIFF_WIDTH;
 localparam NORM_FRAC_WIDTH = VARIANCE_FRAC_WIDTH + DIFF_FRAC_WIDTH;
@@ -336,7 +366,15 @@ fixed_isqrt #(
     .IN_WIDTH(VARIANCE_WIDTH),
     .IN_FRAC_WIDTH(VARIANCE_FRAC_WIDTH),
     .OUT_WIDTH(VARIANCE_WIDTH),
-    .OUT_FRAC_WIDTH(VARIANCE_FRAC_WIDTH)
+    .OUT_FRAC_WIDTH(VARIANCE_FRAC_WIDTH),
+    .LUT00(LUT00), .LUT01(LUT01), .LUT02(LUT02), .LUT03(LUT03),
+    .LUT04(LUT04), .LUT05(LUT05), .LUT06(LUT06), .LUT07(LUT07),
+    .LUT08(LUT08), .LUT09(LUT09), .LUT10(LUT10), .LUT11(LUT11),
+    .LUT12(LUT12), .LUT13(LUT13), .LUT14(LUT14), .LUT15(LUT15),
+    .LUT16(LUT16), .LUT17(LUT17), .LUT18(LUT18), .LUT19(LUT19),
+    .LUT20(LUT20), .LUT21(LUT21), .LUT22(LUT22), .LUT23(LUT23),
+    .LUT24(LUT24), .LUT25(LUT25), .LUT26(LUT26), .LUT27(LUT27),
+    .LUT28(LUT28), .LUT29(LUT29), .LUT30(LUT30), .LUT31(LUT31)
 ) inv_sqrt_inst (
     .in_data(variance_out),
     .in_valid(variance_out_valid),

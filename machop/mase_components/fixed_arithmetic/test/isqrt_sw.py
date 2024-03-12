@@ -101,7 +101,7 @@ def nr_stage_sw(x_red: int, in_width: int, initial_guess: int) -> int:
         threehalfs = 0
     else:
         threehalfs = 3 * 2 ** (in_width - 2)
-        
+
     y = initial_guess
     x_red = x_red >> 1
 
@@ -121,7 +121,7 @@ def isqrt_sw2(x: int, in_width: int, frac_width: int, lut_pow: int, lut: list, d
     msb_index = find_msb(x, in_width)
 
     x_red = range_reduction_sw(x, in_width)
-    if debug: 
+    if debug:
         print("MSB index: ", msb_index)
         print("X red: ", int_to_float(x_red, 1, in_width-1))
 
@@ -239,6 +239,19 @@ def debug_single():
     verbose = True
     debug = True
     error = single_test(val, verbose, int_width, frac_width, lut_pow, lut, debug)
+
+
+def lut_parameter_dict(lut_size: int, width: int, lut_prefix: str = "LUT"):
+    lut = make_lut(lut_size, width)
+    parameters = {}
+    for i in range(lut_size):
+        if i < 10:
+            lut_suffix = "0" + str(i)
+        else:
+            lut_suffix = str(i)
+        name = lut_prefix + lut_suffix
+        parameters |= {name: lut[i]}
+    return parameters
 
 if __name__ == "__main__":
     #debug_single()
