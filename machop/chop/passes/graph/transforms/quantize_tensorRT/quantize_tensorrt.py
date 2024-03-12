@@ -65,7 +65,7 @@ def get_config(config: dict, name: str):
         return config["default"]["config"]
 
 
-def convert_model_to_onnx(graph, input_generator, onnxFile):
+def convert_model_to_onnx(graph, dummy_in, onnxFile):
     """
     Convert the graph to ONNX format.
 
@@ -81,13 +81,13 @@ def convert_model_to_onnx(graph, input_generator, onnxFile):
 
 
     # Create a dummy input
-    dummy_in = next(iter(input_generator))['x']
-    dummy_input = Variable(dummy_in.cuda(), requires_grad=True)
+    # dummy_in = next(iter(input_generator))['x']
+    # dummy_input = Variable(dummy_in.cuda(), requires_grad=True)
 
     # Export the model to ONNX
     # torch.onnx.export(graph.model, dummy_input, "model.onnx", verbose=True)
-    torch.onnx.export(graph.model.cuda(), dummy_input, onnxFile, verbose=True)
-    torch.onnx.export(graph.model.cuda(), dummy_input, onnxFile, export_params=True, opset_version=11, do_constant_folding=True, \
+    # torch.onnx.export(graph.model.cuda(), dummy_input, onnxFile, verbose=True)
+    torch.onnx.export(graph.model.cuda(), dummy_in.cuda(), onnxFile, export_params=True, opset_version=13, do_constant_folding=True, \
                       input_names = ['input'], output_names = ['output'], dynamic_axes={'input' : {0 : 'batch_size'}, 'output' : {0 : 'batch_size'}})
 
     # Load the ONNX model
@@ -171,7 +171,7 @@ def quantize_tensorrt_transform_pass(graph, pass_args=None):
     """
 
     # Convert model to ONNX
-    convert_model_to_onnx(graph, input_generator=pass_args["input_generator"], onnxFile=pass_args["onnxFile"])
+    convert_model_to_onnx(graph, dummy_in=pass_args["dummy_in"], onnxFile=pass_args["onnxFile"])
 
     # Create a TensorRT engine
     engine = build_trt_engine(pass_args)

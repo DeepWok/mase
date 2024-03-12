@@ -25,13 +25,16 @@ def create_new_module(
     if mase_op == "linear":
         use_bias = original_module.bias is not None
 
+        if "input" in config:
+            qnn.QuantLinear.set_default_quant_desc_input(QuantDescriptor(calib_method=config["input"]["calibrator"], axis=config["input"]["quantize_axis"]))
+        if "weight" in config:
+            qnn.QuantLinear.set_default_quant_desc_weight(QuantDescriptor(calib_method=config["weight"]["calibrator"], axis=config["weight"]["quantize_axis"]))
+        
         new_module = qnn.QuantLinear(
             in_features=original_module.in_features,
             out_features=original_module.out_features,
             bias=use_bias
         )
-        new_module.set_default_quant_desc_input(QuantDescriptor(calib_method=config["input"]["calibrator"], axis=config["input"]["quantize_axis"]))
-        new_module.set_default_quant_desc_weight(QuantDescriptor(calib_method=config["weight"]["calibrator"], axis=config["weight"]["quantize_axis"]))
 
         copy_weights(original_module.weight, new_module.weight)
         if use_bias:
@@ -39,6 +42,12 @@ def create_new_module(
     
     elif mase_op in ("conv2d"):
         use_bias = original_module.bias is not None
+
+        if "input" in config:
+            qnn.QuantConv2d.set_default_quant_desc_input(QuantDescriptor(calib_method=config["input"]["calibrator"], axis=config["input"]["quantize_axis"]))
+        if "weight" in config:
+            qnn.QuantConv2d.set_default_quant_desc_weight(QuantDescriptor(calib_method=config["weight"]["calibrator"], axis=config["weight"]["quantize_axis"]))
+
         new_module = qnn.QuantConv2d(
             in_channels=original_module.in_channels,
             out_channels=original_module.out_channels,
@@ -50,9 +59,6 @@ def create_new_module(
             bias=use_bias,
             padding_mode=original_module.padding_mode,
         )
-
-        new_module.set_default_quant_desc_input(QuantDescriptor(calib_method=config["input"]["calibrator"], axis=config["input"]["quantize_axis"]))
-        new_module.set_default_quant_desc_weight(QuantDescriptor(calib_method=config["weight"]["calibrator"], axis=config["weight"]["quantize_axis"]))
 
         copy_weights(original_module.weight, new_module.weight)
         if use_bias:    
