@@ -33,6 +33,7 @@ class MixedPrecisionEnv(gym.Env):
             #     idx += 1
         # get choices from self.search_space.choices_flattened to build observation enumeration list
         self.obs_list = []
+        self.act_list = []
         self.sample_namespace = []
         self.sample = {}
         for name, choices in self.search_space.choices_flattened.items():
@@ -49,16 +50,15 @@ class MixedPrecisionEnv(gym.Env):
             elif _name[2] == 'bias_width':
                 obs.append(2)
             self.obs_list.append(obs)
+            self.act_list.append(sorted(choices))
+
         self.state = 0
         self.obs_list = np.array(self.obs_list)
         # get observation space definition from observation enumeration list
         low = np.min(self.obs_list, axis=0)
         high = np.max(self.obs_list, axis=0)
-        self.observation_space = Box(low=np.append(low, 0.), high=np.append(high, 6.))
-
-        # static action space, quantize bits width can only be chosen from [2, 3, 4, 5, 6, 7, 8]
-        # TODO support various range by config
-        self.action_space = Discrete(7)
+        self.observation_space = Box(low=np.append(low, min([min(sub) for sub in self.act_list])), high=np.append(high, max([max(sub) for sub in self.act_list])))
+        self.action_space = Box(low=0, high=1.)
 
     def reset(self, *, seed=None, options=None):
         """
@@ -66,7 +66,7 @@ class MixedPrecisionEnv(gym.Env):
             Always start from the first element in observation list.
         """
         self.state = 0
-        obs = np.append(self.obs_list[self.state, :], 0).astype(np.float32)
+        obs = np.append(self.obs_list[self.state, :], min(self.act_list[self.state])).astype(np.float32)
         return obs, {}
 
     def step(self, action):
@@ -79,6 +79,8 @@ class MixedPrecisionEnv(gym.Env):
             truncated (bool): Always False. No need for truncation, as the episode is fixed.
             info (dict): Empty.
         """
+        choices = self.act_list[self.state]
+        action = int(action*len(choices) - 1e-2)
         self.sample[self.sample_namespace[self.state]] = action
         reward = 0
         terminated = False
@@ -88,5 +90,5 @@ class MixedPrecisionEnv(gym.Env):
             terminated = True
             reward = self.run_trial(self.sample)
         obs = self.obs_list[self.state].copy()
-        obs = np.append(obs, action).astype(np.float32)
+        obs = np.append(obs, choices[action]).astype(np.float32)
         return obs, reward, terminated, False, {}
