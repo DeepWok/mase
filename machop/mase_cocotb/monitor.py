@@ -9,14 +9,18 @@ from cocotb.result import TestFailure
 class Monitor:
     """Simplified version of cocotb_bus.monitors.Monitor"""
 
-    def __init__(self, clk, check=True):
+    def __init__(self, clk, check=True, name=None):
         self.clk = clk
         self.recv_queue = Queue()
         self.exp_queue = Queue()
         self.check = check
+        self.name = name
 
         if not hasattr(self, "log"):
-            self.log = SimLog("cocotb.monitor.%s" % (type(self).__qualname__))
+            self.log = SimLog(
+                "cocotb.monitor.%s" % (type(self).__qualname__)
+                if self.name == None else self.name
+            )
 
         self._thread = cocotb.start_soon(self._recv_thread())
 

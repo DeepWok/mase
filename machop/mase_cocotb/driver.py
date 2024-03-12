@@ -9,12 +9,16 @@ from cocotb.triggers import *
 class Driver:
     """Simplified version of cocotb_bus.drivers.Driver"""
 
-    def __init__(self):
+    def __init__(self, name=None):
         self._pending = Event(name="Driver._pending")
         self.send_queue = Queue()
+        self.name = name
 
         if not hasattr(self, "log"):
-            self.log = SimLog("cocotb.driver.%s" % (type(self).__qualname__))
+            self.log = SimLog(
+                "cocotb.driver.%s" % (type(self).__qualname__)
+                if self.name == None else self.name
+            )
 
         # Create an independent coroutine which can send stuff
         self._thread = cocotb.start_soon(self._send_thread())

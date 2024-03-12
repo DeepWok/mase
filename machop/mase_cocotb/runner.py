@@ -39,9 +39,8 @@ def mase_runner(
     SIM = getenv("SIM", "verilator")
 
     build_dir = group_path.joinpath(f"test/build/{module}")
-    print(build_dir)
-    if path.exists(build_dir):
-        rmtree(build_dir)
+    # if path.exists(build_dir):
+    #     rmtree(build_dir)
 
     deps = MASE_HW_DEPS[f"{group}/{module}"]
 

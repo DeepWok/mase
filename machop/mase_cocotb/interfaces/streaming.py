@@ -3,7 +3,6 @@ import random
 import numpy as np
 
 from cocotb.binary import BinaryValue
-from cocotb.result import TestFailure
 from cocotb.triggers import *
 
 from mase_cocotb.driver import Driver
@@ -42,13 +41,15 @@ class StreamDriver(Driver):
 
 
 class StreamMonitor(Monitor):
-    def __init__(self, clk, data, valid, ready, check=True):
-        super().__init__(clk)
+    def __init__(self, clk, data, valid, ready, check=True, name=None):
+        super().__init__(clk, check=check, name=name)
         self.clk = clk
         self.data = data
         self.valid = valid
         self.ready = ready
         self.check = check
+        self.name = name
+        self.log.setLevel("DEBUG")
 
     def _trigger(self):
         return self.valid.value == 1 and self.ready.value == 1
@@ -62,4 +63,12 @@ class StreamMonitor(Monitor):
     def _check(self, got, exp):
         if self.check:
             if not np.equal(got, exp).all():
-                raise TestFailure("\nGot \n%s, \nExpected \n%s" % (got, exp))
+                self.log.error(
+                    "%s: \nGot \n%s, \nExpected \n%s" %
+                    (
+                        self.name if self.name != None else "Unnamed StreamMonitor",
+                        got,
+                        exp
+                    )
+                )
+                assert False, "Test Failed!"

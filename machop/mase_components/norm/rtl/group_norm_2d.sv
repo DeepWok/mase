@@ -83,14 +83,32 @@ localparam NUM_VALUES = TOTAL_DIM0 * TOTAL_DIM1 * GROUP_CHANNELS;
 localparam NUM_ITERS = DEPTH_DIM0 * DEPTH_DIM1 * GROUP_CHANNELS;
 localparam ITER_WIDTH = $clog2(NUM_ITERS);
 
+// Compute Pipeline Widths
+
+localparam ADDER_TREE_IN_SIZE = COMPUTE_DIM0 * COMPUTE_DIM1;
+localparam ADDER_TREE_OUT_WIDTH = $clog2(ADDER_TREE_IN_SIZE) + IN_WIDTH;
+
+localparam ACC_OUT_WIDTH = ITER_WIDTH + ADDER_TREE_OUT_WIDTH;
+
 localparam DIFF_WIDTH = IN_WIDTH + 1;
 localparam DIFF_FRAC_WIDTH = IN_FRAC_WIDTH;
 
-localparam SQUARE_WIDTH = IN_WIDTH * 2;
-localparam SQUARE_FRAC_WIDTH = IN_FRAC_WIDTH * 2;
+localparam SQUARE_WIDTH = DIFF_WIDTH * 2;
+localparam SQUARE_FRAC_WIDTH = DIFF_FRAC_WIDTH * 2;
 
-localparam NORM_WIDTH = VARIANCE_WIDTH + DIFF_WIDTH;
-localparam NORM_FRAC_WIDTH = VARIANCE_FRAC_WIDTH + DIFF_FRAC_WIDTH;
+localparam SQUARES_ADDER_TREE_IN_SIZE = COMPUTE_DIM0 * COMPUTE_DIM1;
+localparam SQUARES_ADDER_TREE_OUT_WIDTH = $clog2(SQUARES_ADDER_TREE_IN_SIZE) + SQUARE_WIDTH;
+localparam SQUARES_ADDER_TREE_OUT_FRAC_WIDTH = SQUARE_FRAC_WIDTH;
+
+localparam VARIANCE_WIDTH = ITER_WIDTH + SQUARES_ADDER_TREE_OUT_WIDTH;
+localparam VARIANCE_FRAC_WIDTH = SQUARES_ADDER_TREE_OUT_FRAC_WIDTH;
+
+// Must be same as variance
+localparam ISQRT_WIDTH = 16;
+localparam ISQRT_FRAC_WIDTH = VARIANCE_FRAC_WIDTH;
+
+localparam NORM_WIDTH = ISQRT_WIDTH + DIFF_WIDTH;
+localparam NORM_FRAC_WIDTH = ISQRT_FRAC_WIDTH + DIFF_FRAC_WIDTH;
 
 // Input FIFO
 logic [IN_WIDTH-1:0] fifo_data  [COMPUTE_DIM0*COMPUTE_DIM1-1:0];
@@ -101,7 +119,7 @@ matrix_fifo #(
     .DATA_WIDTH  (IN_WIDTH),
     .DIM0        (COMPUTE_DIM0),
     .DIM1        (COMPUTE_DIM1),
-    .FIFO_SIZE   (2*NUM_ITERS)
+    .FIFO_SIZE   (10*NUM_ITERS)
 ) input_fifo_inst (
     .clk(clk),
     .rst(rst),
@@ -114,9 +132,6 @@ matrix_fifo #(
 );
 
 // Input Adder Tree
-localparam ADDER_TREE_IN_SIZE = COMPUTE_DIM0 * COMPUTE_DIM1;
-localparam ADDER_TREE_OUT_WIDTH = $clog2(ADDER_TREE_IN_SIZE) + IN_WIDTH;
-
 logic [ADDER_TREE_OUT_WIDTH-1:0] adder_tree_data;
 logic adder_tree_out_valid, adder_tree_out_ready;
 logic adder_tree_in_valid, adder_tree_in_ready;
@@ -144,8 +159,6 @@ split2 input_fifo_adder_split (
 );
 
 // Accumulator for mu
-localparam ACC_OUT_WIDTH = ITER_WIDTH + ADDER_TREE_OUT_WIDTH;
-
 logic [ACC_OUT_WIDTH-1:0] mu_acc;
 logic mu_acc_valid, mu_acc_ready;
 
@@ -167,9 +180,11 @@ fixed_accumulator #(
 logic [IN_WIDTH-1:0] mu_in, mu_out;
 logic mu_out_valid, mu_out_ready;
 
-logic [ACC_OUT_WIDTH+16-1:0] mu_acc_div;
+logic [ACC_OUT_WIDTH-1:0] mu_acc_div;
 
-assign mu_acc_div = $signed(mu_acc) / $signed(NUM_VALUES);
+// Division by NUM_VALUES
+localparam INV_NUMVALUES_0 = ((1 << ACC_OUT_WIDTH) / NUM_VALUES);
+assign mu_acc_div = ($signed(mu_acc) * $signed({1'b0, INV_NUMVALUES_0})) >>> ACC_OUT_WIDTH;
 assign mu_in = mu_acc_div[IN_WIDTH-1:0];
 
 repeat_circular_buffer #(
@@ -189,17 +204,17 @@ repeat_circular_buffer #(
 
 // Join 2 for combining fifo and mu buffer signals
 logic mu_fifo_valid, mu_fifo_ready;
+assign mu_fifo_ready = compute_pipe[0].diff_in_ready;
 
 join2 mu_fifo_join2 (
     .data_in_valid({mu_out_valid, fifo_out_valid}),
     .data_in_ready({mu_out_ready, fifo_out_ready}),
     .data_out_valid(mu_fifo_valid),
-    .data_out_ready(compute_pipe[0].diff_in_ready)
+    .data_out_ready(mu_fifo_ready)
 );
 
 // Compute pipeline
 logic [SQUARE_WIDTH-1:0] square_out [COMPUTE_DIM0*COMPUTE_DIM1-1:0];
-logic square_out_ready;
 
 for (genvar i = 0; i < COMPUTE_DIM0 * COMPUTE_DIM1; i++) begin : compute_pipe
 
@@ -231,7 +246,7 @@ for (genvar i = 0; i < COMPUTE_DIM0 * COMPUTE_DIM1; i++) begin : compute_pipe
     logic [SQUARE_WIDTH-1:0] square_in;
     logic square_in_ready;
     logic square_out_valid;
-    assign square_in = diff_out * diff_out;
+    assign square_in = $signed(diff_batch_in[i]) * $signed(diff_batch_in[i]);
 
     skid_buffer #(
         .DATA_WIDTH(SQUARE_WIDTH)
@@ -243,66 +258,28 @@ for (genvar i = 0; i < COMPUTE_DIM0 * COMPUTE_DIM1; i++) begin : compute_pipe
         .data_in_ready(square_in_ready),
         .data_out(square_out[i]),
         .data_out_valid(square_out_valid),
-        .data_out_ready(square_out_ready)
+        .data_out_ready(squares_adder_tree_in_ready)
     );
 end
 
 // Split2 for split in pipeline from diff
-logic fifo_diff_in_ready;
+logic fifo_diff_in_valid, fifo_diff_in_ready;
 logic fifo_diff_out_valid;
+
+assign fifo_diff_in_valid = compute_pipe[0].diff_out_valid;
 split2 fifo_diff_split (
-    .data_in_valid(compute_pipe[0].diff_out_valid),
+    .data_in_valid(fifo_diff_in_valid),
     .data_in_ready(fifo_diff_in_ready),
     .data_out_valid({diff_batch_in_valid, fifo_diff_out_valid}),
     .data_out_ready({diff_batch_in_ready, compute_pipe[0].square_in_ready})
 );
 
-    // Take the square and divide it to get variance: (X - mu) ^ 2 / N
-    // logic [SQUARE_WIDTH-1:0] variance_in, variance_out;
-    // logic variance_out_valid, variance_out_ready;
-
-    // // TODO: This probably needs to change into multiplication + shift
-    // assign variance_in = square_out / NUM_VALUES;
-
-    // skid_buffer #(
-    //     .DATA_WIDTH(SQUARE_WIDTH)
-    // ) variance_reg (
-    //     .clk(clk),
-    //     .rst(rst),
-    //     .data_in(variance_in),
-    //     .data_in_valid(square_out_valid),
-    //     .data_in_ready(square_out_ready),
-    //     .data_out(variance_out),
-    //     .data_out_valid(variance_out_valid),
-    //     .data_out_ready(variance_out_ready)
-    // );
-
-    // // Take inverse square root of variance: 1/root(Var(X))
-    // logic [INV_SQRT_WIDTH-1:0] inv_sqrt_data;
-    // logic inv_sqrt_valid;
-
-    // fixed_isqrt #(
-    //     .IN_WIDTH(SQUARE_WIDTH),
-    //     .IN_FRAC_WIDTH(SQUARE_FRAC_WIDTH),
-    //     .OUT_WIDTH(INV_SQRT_WIDTH),
-    //     .OUT_FRAC_WIDTH(INV_SQRT_FRAC_WIDTH)
-    // ) inv_sqrt_inst (
-    //     .in_data(variance_out),
-    //     .in_valid(variance_out_valid),
-    //     .in_ready(variance_out_ready),
-    //     .out_data(inv_sqrt_data),
-    //     .out_valid(inv_sqrt_valid),
-    //     .out_ready(inv_sqrt_ready)
-    // );
-
 // Squares adder tree
-localparam SQUARES_ADDER_TREE_IN_SIZE = COMPUTE_DIM0 * COMPUTE_DIM1;
-localparam SQUARES_ADDER_TREE_OUT_WIDTH = $clog2(SQUARES_ADDER_TREE_IN_SIZE) + SQUARE_WIDTH;
-localparam SQUARES_ADDER_TREE_OUT_FRAC_WIDTH = SQUARE_FRAC_WIDTH;
-
 logic [SQUARES_ADDER_TREE_OUT_WIDTH-1:0] squares_adder_tree_data;
 logic squares_adder_tree_out_valid, squares_adder_tree_out_ready;
 logic squares_adder_tree_in_valid, squares_adder_tree_in_ready;
+
+assign squares_adder_tree_in_valid = compute_pipe[0].square_out_valid;
 
 fixed_adder_tree #(
     .IN_SIZE(SQUARES_ADDER_TREE_IN_SIZE),
@@ -311,17 +288,14 @@ fixed_adder_tree #(
     .clk(clk),
     .rst(rst),
     .data_in(square_out),
-    .data_in_valid(compute_pipe[0].square_out_valid),
-    .data_in_ready(square_out_ready),
+    .data_in_valid(squares_adder_tree_in_valid),
+    .data_in_ready(squares_adder_tree_in_ready),
     .data_out(squares_adder_tree_data),
     .data_out_valid(squares_adder_tree_out_valid),
     .data_out_ready(squares_adder_tree_out_ready)
 );
 
 // Squares Accumulator
-localparam VARIANCE_WIDTH = ITER_WIDTH + SQUARES_ADDER_TREE_OUT_WIDTH;
-localparam VARIANCE_FRAC_WIDTH = SQUARES_ADDER_TREE_OUT_FRAC_WIDTH;
-
 logic [VARIANCE_WIDTH-1:0] squares_acc;
 logic squares_acc_valid, squares_acc_ready;
 
@@ -340,10 +314,14 @@ fixed_accumulator #(
 );
 
 // Take the accumulated squares and divide it to get variance
+logic [SQUARES_ADDER_TREE_OUT_WIDTH+VARIANCE_WIDTH:0] variance_buffer;
 logic [VARIANCE_WIDTH-1:0] variance_in, variance_out;
 logic variance_out_valid, variance_out_ready;
 
-assign variance_in = squares_acc / NUM_VALUES;
+// Division by NUM_VALUES
+localparam INV_NUMVALUES_1 = ((1 << SQUARES_ADDER_TREE_OUT_WIDTH) / NUM_VALUES);
+assign variance_buffer = (squares_acc * INV_NUMVALUES_1) >> SQUARES_ADDER_TREE_OUT_WIDTH;
+assign variance_in = variance_buffer[VARIANCE_WIDTH-1:0];
 
 skid_buffer #(
     .DATA_WIDTH(VARIANCE_WIDTH)
@@ -358,15 +336,41 @@ skid_buffer #(
     .data_out_ready(variance_out_ready)
 );
 
+// Clamp the variance
+logic [ISQRT_WIDTH-1:0] variance_clamp_in, variance_clamp_out;
+logic variance_clamp_valid, variance_clamp_ready;
+
+always_comb begin
+    if(variance_out > 2**ISQRT_WIDTH-1) begin
+        variance_clamp_in = 2**ISQRT_WIDTH-1;
+    end else begin
+        variance_clamp_in = variance_out;
+    end
+end
+
+skid_buffer #(
+    .DATA_WIDTH(ISQRT_WIDTH)
+) variance_cast_reg (
+    .clk(clk),
+    .rst(rst),
+    .data_in(variance_clamp_in),
+    .data_in_valid(variance_out_valid),
+    .data_in_ready(variance_out_ready),
+    .data_out(variance_clamp_out),
+    .data_out_valid(variance_clamp_valid),
+    .data_out_ready(variance_clamp_ready)
+);
+
 // Take inverse square root of variance
-logic [VARIANCE_WIDTH-1:0] inv_sqrt_data;
+logic [ISQRT_WIDTH-1:0] inv_sqrt_data;
 logic inv_sqrt_valid, inv_sqrt_ready;
 
 fixed_isqrt #(
-    .IN_WIDTH(VARIANCE_WIDTH),
-    .IN_FRAC_WIDTH(VARIANCE_FRAC_WIDTH),
-    .OUT_WIDTH(VARIANCE_WIDTH),
-    .OUT_FRAC_WIDTH(VARIANCE_FRAC_WIDTH),
+    .IN_WIDTH(ISQRT_WIDTH),
+    .IN_FRAC_WIDTH(ISQRT_FRAC_WIDTH),
+    // Module ignores these anyway
+    // .OUT_WIDTH(ISQRT_WIDTH),
+    // .OUT_FRAC_WIDTH(ISQRT_FRAC_WIDTH),
     .LUT00(LUT00), .LUT01(LUT01), .LUT02(LUT02), .LUT03(LUT03),
     .LUT04(LUT04), .LUT05(LUT05), .LUT06(LUT06), .LUT07(LUT07),
     .LUT08(LUT08), .LUT09(LUT09), .LUT10(LUT10), .LUT11(LUT11),
@@ -376,45 +380,28 @@ fixed_isqrt #(
     .LUT24(LUT24), .LUT25(LUT25), .LUT26(LUT26), .LUT27(LUT27),
     .LUT28(LUT28), .LUT29(LUT29), .LUT30(LUT30), .LUT31(LUT31)
 ) inv_sqrt_inst (
-    .in_data(variance_out),
-    .in_valid(variance_out_valid),
-    .in_ready(variance_out_ready),
+    .in_data(variance_clamp_out),
+    .in_valid(variance_clamp_valid),
+    .in_ready(variance_clamp_ready),
     .out_data(inv_sqrt_data),
     .out_valid(inv_sqrt_valid),
     .out_ready(inv_sqrt_ready)
 );
 
-logic [VARIANCE_WIDTH-1:0] isqrt_data;
-logic isqrt_valid, isqrt_ready;
-
-skid_buffer #(
-    .DATA_WIDTH(VARIANCE_WIDTH)
-) isqrt_reg (
-    .clk(clk),
-    .rst(rst),
-    .data_in(inv_sqrt_data),
-    .data_in_valid(inv_sqrt_valid),
-    .data_in_ready(inv_sqrt_ready),
-    .data_out(isqrt_data),
-    .data_out_valid(isqrt_valid),
-    .data_out_ready(isqrt_ready)
-);
-
-
 // Repeat circular buffer to hold inverse square root of variance during mult
-logic [VARIANCE_WIDTH-1:0] isqrt_circ_data;
+logic [ISQRT_WIDTH-1:0] isqrt_circ_data;
 logic isqrt_circ_valid, isqrt_circ_ready;
 
 repeat_circular_buffer #(
-    .DATA_WIDTH(VARIANCE_WIDTH),
+    .DATA_WIDTH(ISQRT_WIDTH),
     .REPEAT(NUM_ITERS),
     .SIZE(1)
-) isqrt_var_buffer (
+) isqrt_var_circ_buffer (
     .clk(clk),
     .rst(rst),
-    .in_data(isqrt_data),
-    .in_valid(isqrt_valid),
-    .in_ready(isqrt_ready),
+    .in_data(inv_sqrt_data),
+    .in_valid(inv_sqrt_valid),
+    .in_ready(inv_sqrt_ready),
     .out_data(isqrt_circ_data),
     .out_valid(isqrt_circ_valid),
     .out_ready(isqrt_circ_ready)
@@ -440,7 +427,7 @@ matrix_fifo #(
     .DATA_WIDTH(DIFF_WIDTH),
     .DIM0(COMPUTE_DIM0),
     .DIM1(COMPUTE_DIM1),
-    .FIFO_SIZE(NUM_ITERS) // TODO: Change
+    .FIFO_SIZE(10*NUM_ITERS) // TODO: Change
 ) diff_fifo_inst (
     .clk(clk),
     .rst(rst),
@@ -452,35 +439,37 @@ matrix_fifo #(
     .out_ready(diff_batch_out_ready)
 );
 
+logic [NORM_WIDTH-1:0] norm_in_data [COMPUTE_DIM0*COMPUTE_DIM1-1:0];
+logic [NORM_WIDTH-1:0] norm_out_data [COMPUTE_DIM0*COMPUTE_DIM1-1:0];
+logic [OUT_WIDTH-1:0] norm_round_out [COMPUTE_DIM0*COMPUTE_DIM1-1:0];
+
+// Signals for cocotb monitor
+logic norm_monitor_valid, norm_monitor_ready;
+assign norm_monitor_valid = out_mult_pipe[0].norm_out_valid;
+assign norm_monitor_ready = out_mult_pipe[0].norm_batch_ready;
+
 // Output chunks compute pipeline: final multiply and output cast
 for (genvar i = 0; i < COMPUTE_DIM0 * COMPUTE_DIM1; i++) begin : out_mult_pipe
 
     // Multiply difference with 1/sqrt(var) to get normalized result
-    logic [NORM_WIDTH-1:0] norm_in_data;
     logic norm_in_ready;
-    logic [NORM_WIDTH-1:0] norm_out_data;
     logic norm_out_valid, norm_batch_ready;
-
-    assign norm_in_data = $signed({1'b0, inv_sqrt_data}) * $signed(diff_batch_out[i]);
+    assign norm_in_data[i] = $signed({1'b0, isqrt_circ_data}) * $signed(diff_batch_out[i]);
 
     skid_buffer #(
         .DATA_WIDTH(NORM_WIDTH)
     ) norm_reg (
         .clk(clk),
         .rst(rst),
-        .data_in(norm_in_data),
+        .data_in(norm_in_data[i]),
         .data_in_valid(norm_in_valid),
         .data_in_ready(norm_in_ready),
-        .data_out(norm_out_data),
+        .data_out(norm_out_data[i]),
         .data_out_valid(norm_out_valid),
         .data_out_ready(norm_batch_ready)
     );
 
     // Output Rounding Stage
-    logic [OUT_WIDTH-1:0] norm_round_out;
-    logic [OUT_WIDTH-1:0] output_reg_data;
-    logic output_reg_valid;
-
     fixed_signed_cast #(
         .IN_WIDTH(NORM_WIDTH),
         .IN_FRAC_WIDTH(NORM_FRAC_WIDTH),
@@ -489,24 +478,23 @@ for (genvar i = 0; i < COMPUTE_DIM0 * COMPUTE_DIM1; i++) begin : out_mult_pipe
         .SYMMETRIC(0),
         .ROUND_FLOOR(1)
     ) output_cast (
-        .in_data(norm_out_data),
-        .out_data(norm_round_out)
+        .in_data(norm_out_data[i]),
+        .out_data(norm_round_out[i])
     );
 
+    logic output_reg_valid;
     skid_buffer #(
         .DATA_WIDTH(OUT_WIDTH)
     ) output_reg (
         .clk(clk),
         .rst(rst),
-        .data_in(norm_round_out),
+        .data_in(norm_round_out[i]),
         .data_in_valid(norm_out_valid),
         .data_in_ready(norm_batch_ready),
-        .data_out(output_reg_data),
+        .data_out(norm_batch_data[i]),
         .data_out_valid(output_reg_valid),
         .data_out_ready(output_reg_ready)
     );
-
-    assign norm_batch_data[i] = output_reg_data;
 end
 
 // Final connection to output
