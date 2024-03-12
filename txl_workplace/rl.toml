@@ -39,20 +39,20 @@ name = ["NA"]
 [search.search_space.seed.linear.config]
 # if search.search_space.setup.by = "type", this seed will be used to quantize all torch.nn.Linear/ F.linear
 name = ["integer"]
-data_in_width = [2, 3, 4, 5, 6, 7, 8]
+data_in_width = [6, 7, 8, 9]
 data_in_frac_width = ["NA"] # "NA" means data_in_frac_width = data_in_width // 2
-weight_width = [2, 3, 4, 5, 6, 7, 8]
+weight_width = [5, 6, 7]
 weight_frac_width = ["NA"]
-bias_width = [2, 3, 4, 5, 6, 7, 8]
+bias_width = [5, 6, 7, 8]
 bias_frac_width = ["NA"]
 
 [search.search_space.seed.conv2d.config]
 name = ["integer"]
-data_in_width = [2, 3, 4, 5, 6, 7, 8]
+data_in_width = [8, 9, 10, 11, 12, 14]
 data_in_frac_width = ["NA"] # "NA" means data_in_frac_width = data_in_width // 2
-weight_width = [2, 3, 4, 5, 6, 7, 8]
+weight_width = [4, 6, 7, 8]
 weight_frac_width = ["NA"]
-bias_width = [2, 3, 4, 5, 6, 7, 8]
+bias_width = [4, 5, 6, 7, 8, 10]
 bias_frac_width = ["NA"]
 
 #[search.search_space.seed.relu.config]
@@ -73,7 +73,7 @@ compare_to = 32 # compare to FP32
 
 [search.strategy.setup]
 device = "cpu"
-total_timesteps = 270
+total_trials = 100
 algorithm = "a2c"
 env = "MixedPrecisionEnv"
 

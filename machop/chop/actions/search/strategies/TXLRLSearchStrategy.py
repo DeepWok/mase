@@ -27,7 +27,7 @@ class SearchStrategyRL(SearchStrategyBase):
         self.metric_names = list(sorted(self.config["metrics"].keys()))
         setup = self.config['setup']
         self.device = setup.get('device', 'cpu')
-        self.total_timesteps = setup["total_timesteps"]
+        self.total_trials = setup["total_trials"]
         algorithm_name = setup.get('algorithm', 'ppo')
         env_name = setup.get('env', 'MixedPrecisionEnv')
         if algorithm_name not in algorithm_map:
@@ -118,9 +118,8 @@ class SearchStrategyRL(SearchStrategyBase):
             tensorboard_log=f"{self.save_dir}/logs/",
         )
 
-        # vec_env = model.get_env()
         model.learn(
-            total_timesteps=int(self.total_timesteps),
+            total_timesteps=int(self.total_trials * len(env.obs_list)),
             progress_bar=True,
             callback=callback,
         )
