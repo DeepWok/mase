@@ -72,59 +72,100 @@ class Quantizer:
         self.logger.info("Converting PyTorch model to TensorRT...")
         TRT_LOGGER = trt.Logger(trt.Logger.WARNING)
         builder = trt.Builder(TRT_LOGGER)
-        network = builder.create_network(1 << (int)(trt.NetworkDefinitionCreationFlag.EXPLICIT_BATCH))
+        network = builder.create_network(1 << int(trt.NetworkDefinitionCreationFlag.EXPLICIT_BATCH))
         parser = trt.OnnxParser(network, TRT_LOGGER)
 
         with open(ONNX_path, "rb") as model:
             if not parser.parse(model.read()):
-                print('ERROR: Failed to parse the ONNX file.')
                 for error in range(parser.num_errors):
-                    print(parser.get_error(error))
-                exit()
+                    self.logger.error(parser.get_error(error))
+                raise Exception('Failed to parse the ONNX file.')
 
+        # Create the config object here
         config = builder.create_builder_config()
-        config.max_workspace_size = 1 << 30
-        #TODO add multiprecision exportation
-        if self.config['default']['config']['precision'] == 'FP16':
-            config.set_flag(trt.BuilderFlag.FP16)
+        config.max_workspace_size = 4 << 30  # 4GB
+        config.profiling_verbosity = trt.ProfilingVerbosity.VERBOSE
+        config.set_flag(trt.BuilderFlag.FP16)
+        config.set_flag(trt.BuilderFlag.PREFER_PRECISION_CONSTRAINTS)
+        config.set_flag(trt.BuilderFlag.DIRECT_IO)
+        config.set_flag(trt.BuilderFlag.REJECT_EMPTY_ALGORITHMS)
+        config.set_flag(trt.BuilderFlag.STRICT_TYPES)
+
+        # Set layer precision and type after creating the config
+        for idx in range(network.num_layers):
+            layer = network.get_layer(idx)
+            layer.precision = trt.float16
+            layer.set_output_type(0, trt.DataType.HALF)
+
+        serialized_engine = builder.build_serialized_network(network, config)
+        if serialized_engine is None:
+            raise Exception('Failed to build serialized network.')
+
+        trt_path = self.prepare_save_path(method='TRT')
+        with open(trt_path, 'wb') as f:
+            f.write(serialized_engine)
+
+        # #TODO add multiprecision exportation
+        # if self.config['default']['config']['precision'] == 'FP16':
+        #     config.set_flag(trt.BuilderFlag.FP16)
 
         # #TODO need to fix INT8 calibration
         # elif self.config['default']['config']['precision'] == 'INT8':
         #     config.set_flag(trt.BuilderFlag.INT8)
-        #     config.int8_calibrator = INT8Calibrator(
-        #         self.config['num_calibration_batches'], 
-        #         self.config['data_module'].train_dataloader() 
-        #         self.prepare_save_path(method='CACHE')
-        #         )
+        # #     config.int8_calibrator = INT8Calibrator(
+        # #         self.config['num_calibration_batches'], 
+        # #         self.config['data_module'].train_dataloader() 
+        # #         self.prepare_save_path(method='CACHE')
+        # #         )
 
-        else:
-            Exception("Unsupported precision type. Please choose from 'FP16' or 'INT8'.")
+        # else:
+        #     Exception("Unsupported precision type. Please choose from 'FP16' or 'INT8'.")
 
-        # Optimization profiles are needed for dynamic input shapes.
-        profile = builder.create_optimization_profile()
-        inputTensor = network.get_input(0)
-        profile.set_shape(inputTensor.name, (1,) + inputTensor.shape[1:], (8,) + inputTensor.shape[1:], (32,) + inputTensor.shape[1:])
+        # # Optimization profiles are needed for dynamic input shapes.
+        # profile = builder.create_optimization_profile()
+        # inputTensor = network.get_input(0)
+        # profile.set_shape(inputTensor.name, (1,) + inputTensor.shape[1:], (8,) + inputTensor.shape[1:], (32,) + inputTensor.shape[1:])
 
-        engine = builder.build_engine(network, config)
+        # engine = builder.build_engine(network, config)
 
-        save_path = self.prepare_save_path(method='TRT')
-        with open(save_path, "wb") as f:
-            f.write(engine.serialize())
+        # trt_path = self.prepare_save_path(method='TRT')
+        # with open(trt_path, "wb") as f:
+        #     f.write(engine.serialize())
 
-        self.logger.info(f"TensorRT Conversion Complete. Stored trt model to {save_path}")
-        return save_path
+        # Use inspector to print all layer, i found all layer weight is Half.
+        with open(trt_path, 'rb') as f:
+            trt_engine = trt.Runtime(trt.Logger(trt.Logger.ERROR)).deserialize_cuda_engine(f.read())
+            inspector = trt_engine.create_engine_inspector()
+            
+            # Retrieve engine information in JSON format
+            layer_info_json = inspector.get_engine_information(trt.LayerInformationFormat.JSON)
+            
+            # Save the engine information to a JSON file
+            json_filename = self.prepare_save_path(method='JSON')
+            with open(json_filename, 'w') as json_file:
+                json_file.write(layer_info_json)
+
+        self.logger.info(f"TensorRT Conversion Complete. Stored trt model to {trt_path}")
+        return trt_path
 
     def pytorch_to_ONNX(self, model):
         """Converts PyTorch model to ONNX format and saves it."""
         self.logger.info("Converting PyTorch model to ONNX...")
 
-        save_path = self.prepare_save_path(method='ONNX')
+        onnx_path = self.prepare_save_path(method='ONNX')
 
         dataloader = self.config['data_module'].train_dataloader()  
         train_sample = next(iter(dataloader))[0]
         train_sample = train_sample.to(self.config['accelerator'])
 
-        torch.onnx.export(model, train_sample, save_path, export_params=True, opset_version=11, 
-                          do_constant_folding=True, input_names=['input'])
-        self.logger.info(f"ONNX Conversion Complete. Stored ONNX model to {save_path}")
-        return save_path
+        torch.onnx.export(model, train_sample, onnx_path, export_params=True, opset_version=11, 
+                          do_constant_folding=True, input_names=['input'])# Load the ONNX model
+        
+        model = onnx.load(onnx_path)
+        try:
+            onnx.checker.check_model(model)
+        except onnx.checker.ValidationError as e:
+            raise Exception(f"ONNX Conversion Failed: {e}")
+
+        self.logger.info(f"ONNX Conversion Complete. Stored ONNX model to {onnx_path}")
+        return onnx_path
