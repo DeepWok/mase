@@ -3,28 +3,44 @@
 
 module scatter #(
 
-    // parameter DATA_IN_0_PRECISION_0 = 16,
+    parameter DATA_IN_0_PRECISION_0 = 4,
     // parameter DATA_IN_0_PRECISION_1 = 3,
-    // parameter DATA_IN_0_TENSOR_SIZE_DIM_0 = 4,
+    parameter DATA_IN_0_TENSOR_SIZE_DIM_0 = 4,
     // parameter DATA_IN_0_PRECISION_0 = 32,
-    // parameter DATA_OUT_0_PRECISION_0 = 32,
+    parameter DATA_OUT_0_PRECISION_0 = 4
     // parameter DATA_IN_0_PARALLELISM_DIM_0 = 16,
     // parameter DATA_IN_0_PARALLELISM_DIM_1 = 1,
-    // parameter DATA_OUT_0_PARALLELISM_DIM_0 = 16,
+    // parameter DATA_OUT_0_PARALLELISM_DIM_0 = 16
     // parameter DATA_OUT_0_PARALLELISM_DIM_1 = 1
 ) (
     input clk,
     input rst,
-    input  logic signed [31:0] data_in,
-    output signed [31:0] data_out
+    input  logic  [DATA_IN_0_PRECISION_0-1:0] data_in[DATA_IN_0_TENSOR_SIZE_DIM_0-1:0],
+    output  [DATA_OUT_0_PRECISION_0-1:0] data_out[DATA_IN_0_TENSOR_SIZE_DIM_0-1:0]
 );
-    // for (genvar i = 0; i < DATA_IN_0_PARALLELISM_DIM_0*DATA_IN_0_PARALLELISM_DIM_1; i = i + 1) begin : equals
-    //     assign data_out[i] = data_in[i];
-    // end
-    assign data_out = data_in;
+
+    logic [DATA_IN_0_TENSOR_SIZE_DIM_0-1:0] high_precision_req_vec;
+    logic [1:0] msbs [DATA_IN_0_TENSOR_SIZE_DIM_0-1:0];
+    for (genvar i = 0; i < DATA_IN_0_TENSOR_SIZE_DIM_0; i = i + 1) begin
+        //10 | 01
+        assign msbs[i] = data_in[i][DATA_IN_0_TENSOR_SIZE_DIM_0-1:DATA_IN_0_TENSOR_SIZE_DIM_0-2];
+        assign high_precision_req_vec[i] = (msbs[i] == 2'b10 || msbs[i]  == 2'b01) ? 1'b1 : 1'b0; 
+        assign data_out[i] = data_in[i];
+    end
+    // assign data_out = data_in;
+    logic address_max;
+    priority_encoder #(
+        .no_input_channels(DATA_IN_0_TENSOR_SIZE_DIM_0),
+        .no_output_channels(1'b1)) 
+    encoder1(
+        .input_channels(high_precision_req_vec),
+        .output_channels(address_max)
+    );
+
 
 
 endmodule
+
 
 
 
