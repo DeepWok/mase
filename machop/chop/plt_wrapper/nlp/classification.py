@@ -13,6 +13,7 @@ class NLPClassificationModelWrapper(WrapperBase):
         dataset_info,
         learning_rate=1e-4,
         weight_decay=0.0,
+        scheduler_args=None,
         epochs=200,
         optimizer=None,
     ):
@@ -21,6 +22,7 @@ class NLPClassificationModelWrapper(WrapperBase):
             dataset_info=dataset_info,
             learning_rate=learning_rate,
             weight_decay=weight_decay,
+            scheduler_args=scheduler_args,
             epochs=epochs,
             optimizer=optimizer,
         )
