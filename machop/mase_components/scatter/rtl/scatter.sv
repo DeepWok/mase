@@ -9,14 +9,13 @@ module scatter #(
     // parameter DATA_IN_0_PRECISION_0 = 32,
     parameter DATA_OUT_0_PRECISION_0 = 4,
     parameter HIGH_SLOTS = 2,
+    parameter MSB_CHECK_DEPTH = 2,
     parameter LOW_SLOTS = DATA_IN_0_TENSOR_SIZE_DIM_0-HIGH_SLOTS
     // parameter DATA_IN_0_PARALLELISM_DIM_0 = 16,
     // parameter DATA_IN_0_PARALLELISM_DIM_1 = 1,
     // parameter DATA_OUT_0_PARALLELISM_DIM_0 = 16
     // parameter DATA_OUT_0_PARALLELISM_DIM_1 = 1,
 ) (
-    input clk,
-    input rst,
     input  logic  [DATA_IN_0_PRECISION_0-1:0] data_in[DATA_IN_0_TENSOR_SIZE_DIM_0-1:0],
     output  [DATA_OUT_0_PRECISION_0-1:0] data_out[DATA_IN_0_TENSOR_SIZE_DIM_0-1:0],
     output [DATA_IN_0_PRECISION_0-1:0] o_high_precision [DATA_IN_0_TENSOR_SIZE_DIM_0-1:0], 
