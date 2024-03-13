@@ -46,27 +46,40 @@ module sqrt #(
         DONE        = '1
     } state_t;
 
-    //logic   [IN_WIDTH-1:0]  log2_v_in;
 
-    logic   [IN_WIDTH+IN_WIDTH-1:0]  x_b;
-    logic   [IN_WIDTH+IN_WIDTH-1:0]  x_r;
-    logic   [IN_WIDTH+IN_WIDTH-1:0]  y_b;   
-    logic   [IN_WIDTH+IN_WIDTH-1:0]  y_r;  
+    logic signed  [IN_WIDTH+IN_WIDTH-1:0]       x_b; //here will work with 14 factional bits
+    logic signed  [IN_WIDTH+IN_WIDTH-1:0]       x_r; //here will work with 14 factional bits
+    logic signed  [IN_WIDTH+IN_WIDTH-1:0]       y_b; //here will work with 14 factional bits  
+    logic signed  [IN_WIDTH+IN_WIDTH-1:0]       y_r; //here will work with 14 factional bits
+    logic signed  [IN_WIDTH+IN_WIDTH-1:0]       igc;
+
+    parameter X_IGC_WIDTH = (IN_WIDTH+IN_WIDTH)*2;
+    
+    logic signed  [X_IGC_WIDTH-1:0]   x_igc; //implicitly: we move multiply by 4: this is done only be working with 12 fract bits instead of 14
+
+    assign igc = 16'h136F; //~ 1.2144775390625 //N.B. using 12 fractional bits
+    assign x_igc = x_r*igc;
+
+    
+                 
 
     state_t state_b; 
     state_t state_r; 
 
-    logic   [IN_WIDTH:0]        v_more_fractional;
-    logic   [IN_WIDTH:0]        zero_point_25; 
+    logic signed  [IN_WIDTH:0]        v_more_fractional;
+    logic signed  [IN_WIDTH:0]        zero_point_25; 
 
     logic   [LOG2_IN_WIDTH-1:0] right_shift_to_apply_b;
     logic   [LOG2_IN_WIDTH-1:0] right_shift_to_apply_r;
 
-    logic   [IN_WIDTH+IN_WIDTH-1:0]      xtmp;  
-    logic   [IN_WIDTH+IN_WIDTH-1:0]      ytmp;
+    logic signed  [IN_WIDTH+IN_WIDTH-1:0]      xtmp;  
+    logic signed  [IN_WIDTH+IN_WIDTH-1:0]      ytmp;
 
     logic   [K_WORDSIZE-1:0]    k_b;
-    logic   [K_WORDSIZE-1:0]    k_r;   
+    logic   [K_WORDSIZE-1:0]    k_r; 
+
+    logic   [K_WORDSIZE-1:0]    idx_b; 
+    logic   [K_WORDSIZE-1:0]    idx_r;  
 
     //assign log2_v_in = ($clog2(v_in) -3); // -3 bc 3 bit decimal precission
     assign xtmp = (x_r >>> state_r);
@@ -85,6 +98,7 @@ module sqrt #(
             state_r                 <=  RST;
             k_r                     <=  '0;
             right_shift_to_apply_r  <= '0; 
+            idx_r                   <= 1;
 
         end
         else
@@ -93,17 +107,22 @@ module sqrt #(
             y_r                     <= y_b;
             state_r                 <= state_b;
             k_r                     <= k_b;
+            idx_r                   <= idx_b;
             right_shift_to_apply_r  <= right_shift_to_apply_b;
         end
     end 
 
     logic dbg_in_if_1; //TODO: remove 
     logic dbg_in_if_2; //TODO: remove 
+    logic dbg_in_if_3; //TODO: remove 
+    logic dbg_in_if_4; //TODO: remove 
+    logic dbg_in_if_5; //TODO: remove 
 
     always_comb
     begin 
         //Set default values of _b wires here
         k_b                     = k_r; 
+        idx_b                   = idx_r;
         state_b                 = RST;
         x_b                     = x_r; 
         y_b                     = y_r; 
@@ -112,6 +131,9 @@ module sqrt #(
         right_shift_to_apply_b  = right_shift_to_apply_r;
         dbg_in_if_1 = '0;
         dbg_in_if_2 = '0;
+        dbg_in_if_3 = '0;
+        dbg_in_if_4 = '0;
+        dbg_in_if_5 = '0;
 
         if (state_r == RST)
         begin 
@@ -132,8 +154,8 @@ module sqrt #(
                     
                 end
             end
-            x_b     = {v_more_fractional + zero_point_25, 8'b0}; //(32'b10 << right_shift_to_apply_b); // + 0.25
-            y_b     = {v_more_fractional - zero_point_25, 8'b0}; //(32'b10 << right_shift_to_apply_b); // - 0.25
+            x_b     = {v_more_fractional + zero_point_25, 7'b0}; //(32'b10 << right_shift_to_apply_b); // + 0.25
+            y_b     = {v_more_fractional - zero_point_25, 7'b0}; //(32'b10 << right_shift_to_apply_b); // - 0.25
             state_b = STATE_1;
             k_b     = 4;
         end
@@ -145,22 +167,23 @@ module sqrt #(
         else if (state_r == DONE)
         begin 
             v_out_valid = 1;
-            v_out       = ((x_r[(IN_WIDTH+IN_WIDTH-1): IN_WIDTH]) >>> right_shift_to_apply_r);
+            v_out       = ((x_igc[(X_IGC_WIDTH-1-3): (X_IGC_WIDTH-1-10)]) >>> right_shift_to_apply_r);
             state_b     = READY_STATE;
+            idx_b       = 1;
         end
         else if (state_r == STATE_10)
         begin
-            state_b     = DONE;
-                        
+            state_b     = DONE;               
         end
         else
         begin
             state_b =  state_t'(state_r + 1);
+            idx_b   = idx_r + 1;
             if ($signed(y_r) < 0)
             begin 
                 dbg_in_if_1 = '1;
-                x_b = x_r + ytmp; 
-                y_b = y_r + xtmp; 
+                x_b = $signed(x_r) + $signed(ytmp); 
+                y_b = $signed(y_r) + $signed(xtmp); 
             end
             else
             begin
@@ -169,22 +192,26 @@ module sqrt #(
                 y_b = y_r - xtmp;
             end 
 
-            // TODO: uncomment
-            // if (state_r == k_r) //if state is k: do it again
-            // begin
-            //     if ($signed(y_r) < 0)
-            //     begin 
-            //         x_b = x_r + xtmp; 
-            //         y_b = y_r + ytmp; 
-            //     end
-            //     else
-            //     begin
-            //         x_b = x_r - xtmp;
-            //         y_b = y_r - ytmp;
-            //     end 
+            
+            if (idx_r == k_r) //if state is k: do it again
+            begin
+                dbg_in_if_3 = '1;
+                
+                if ($signed(y_r) < 0)
+                begin 
+                    dbg_in_if_4 = '1;
+                    x_b = x_r + ytmp; 
+                    y_b = y_r + xtmp; 
+                end
+                else
+                begin
+                    dbg_in_if_5 = '1;
+                    x_b = x_r - ytmp;
+                    y_b = y_r - xtmp;
+                end 
 
-            //     k_b = 3*k_r + 1;
-            // end
+                k_b = 3*k_r + 1;
+            end
         end
     end
 

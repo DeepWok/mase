@@ -162,10 +162,12 @@ class BatchNormTB(Testbench):
 
         inputs = [128] #,2,3,4,5,6,7,8] #[1] * 8
         #inputs = torch.randn((3, self.model.num_features))
-
+        exp_output = [32] #32 is 4 with 3 decimal bits
         print(inputs)
 
         self.v_in_driver.load_driver(inputs) #this needs to be a tensor
+        
+        self.v_out_monitor.load_monitor(exp_output)
         print(f'================= DEBUG: put values on input ports ================= \n')
         await Timer(1000, units="us")
         
@@ -197,7 +199,7 @@ class BatchNormTB(Testbench):
         print(f'================= DEBUG: generated values with fe model ================= \n')
 
 
-        self.data_out_0_monitor.load_monitor(exp_outputs_quant)
+        self.data_out_0_rmonitor.load_monito(exp_outputs_quant)
         print(f'================= DEBUG: loaded hw outptus ================= \n')
         
 
