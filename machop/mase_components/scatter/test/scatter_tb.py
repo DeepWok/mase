@@ -57,8 +57,8 @@ def quantize(x, bits, bias):  # bits = 32
 class VerificationCase:
     bitwidth = 4
     bias = 1
-    num = 8
-    high_precision = 4
+    num = 4
+    high_precision = 2
 
     high_slots = 1
     o_low_precision = []

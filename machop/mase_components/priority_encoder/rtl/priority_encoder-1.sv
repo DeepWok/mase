@@ -84,6 +84,7 @@ always @(*) begin
         end else begin
             data_out_0[i] = 0; 
             data_out_1[i] = data[i];
+
         end
     end
 end
@@ -110,58 +111,5 @@ module parallel_abs_quantize#(
 
         assign output_array[i] = (sign[i])? !msbs[i]:msbs[i];
     end
-
-endmodule
-
-
-
-
-`timescale 1ns / 1ps
-module n_largest_mask #(
-    parameter NUM_INPUTS = 4,
-    parameter N = 1,
-    parameter PRECISION = 2
-
-)(
-    input [PRECISION-1:0] input_array [NUM_INPUTS-1:0],
-    output logic [PRECISION-1:0] masked_high_precision_array [NUM_INPUTS-1:0],
-    output logic [PRECISION-1:0] masked_low_precision_array [NUM_INPUTS-1:0]
-);  
-
-    // Create zero mask of  for N largest values
-    logic [NUM_INPUTS-1:0] mask;
-    integer i;
-    integer j;
-    logic [$clog2(NUM_INPUTS)-1:0] largest_idx; 
-    always @* begin
-        mask = {NUM_INPUTS{1'b1}}; 
-        
-        for (j = 0; j < N; j = j + 1) begin: COMPARISION
-            largest_idx = 0;
-            for (i=0; i<NUM_INPUTS; i=i+1) begin
-                if (input_array[i]>input_array[largest_idx] & mask[i]) begin
-                    largest_idx = i;             
-                end
-            end
-            mask[largest_idx] = 0;
-
-        end
-    end
-
-    // Apply to input array
-    array_zero_mask #(
-        .NUM_INPUTS(NUM_INPUTS),
-        .PRECISION(PRECISION)
-    )masker(
-        .data(input_array),   // Unpacked array of 4 8-bit vectors
-        .mask(mask),        // 4-bit mask
-        .data_out_0(masked_high_precision_array),  // Modified array
-        .data_out_1(masked_low_precision_array)  // Modified array
-    
-    );
-
-    
-
-
 
 endmodule
