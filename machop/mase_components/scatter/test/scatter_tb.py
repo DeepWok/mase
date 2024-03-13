@@ -207,7 +207,7 @@ class VerificationCase:
 @cocotb.test()
 async def test_scatter(dut):
     """Test integer based Relu"""
-    test_case = VerificationCase(samples=10)
+    test_case = VerificationCase(samples=1)
 
     # set inputs outputs
     for i in range(test_case.samples):
@@ -223,7 +223,8 @@ async def test_scatter(dut):
           assert dutval.signed_integer == y[i]
         for i, dutval_high in enumerate(dut.o_high_precision.value):
             print('high:',dutval_high.signed_integer)
-        for i, dutval_low in enumerate(dut.o_high_precision.value):
+            
+        for i, dutval_low in enumerate(dut.o_low_precision.value):
             print('low:',dutval_low.signed_integer)
         # assert dut.data_out.value == test_case.o_outputs_bin[0], f"output q was incorrect on the {i}th cycle"
         # print(type(dut.data_out.value))

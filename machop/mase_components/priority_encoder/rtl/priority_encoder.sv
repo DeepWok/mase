@@ -6,26 +6,24 @@ module priority_encoder #(
 
 )(
     input [NUM_INPUT_CHANNELS-1:0] input_channels,
-    output logic [$clog2(NUM_INPUT_CHANNELS)-1:0] output_channels [NO_INDICIES-1:0],
-    output logic [NUM_INPUT_CHANNELS-1:0] output_mask
+    // output logic [$clog2(NUM_INPUT_CHANNELS)-1:0] output_channels [NO_INDICIES-1:0],
+    output logic [NUM_INPUT_CHANNELS-1:0] mask
 );  
 
     //Check what happens when there are input channel is zero, what is default behaviour
-    logic [NUM_INPUT_CHANNELS-1:0] mask;
+    // logic [NUM_INPUT_CHANNELS-1:0] mask;
     integer i;
     integer j;
     always @* begin
         mask = {NUM_INPUT_CHANNELS{1'b1}}; 
-        
         for (j = 0; j < NO_INDICIES; j = j + 1) begin: PRIORITY_ENCODER
             //LSB Priority
             for (i=NUM_INPUT_CHANNELS-1; i>=0; i=i-1) begin
                 // output_channels[j] = 1'b1;
                 if (input_channels[i] & mask[i]) begin
                     mask[i] = 0;
-                    output_channels[j] = i;
-                    output_mask = mask;
-                    
+                    // output_channels[j] = i;
+                    // output_mask = mask;
                 end
             end
         end
@@ -39,25 +37,25 @@ module priority_encoder #(
 endmodule
 
 
-module index_to_mask #(
-    parameter NUM_INPUT_CHANNELS = 4,
-    parameter NUM_OUPUT_CHANNELS = 1,
-    parameter NO_INDICIES = 1,
-    parameter OUTPUT_WIDTH = 4
+// module index_to_mask #(
+//     parameter NUM_INPUT_CHANNELS = 4,
+//     parameter NUM_OUPUT_CHANNELS = 1,
+//     parameter NO_INDICIES = 1,
+//     parameter OUTPUT_WIDTH = 4
 
-)(
-    input [$clog2(NUM_INPUT_CHANNELS)-1:0] indicies [NO_INDICIES-1:0],
-    output logic [OUTPUT_WIDTH-1:0] output_mask
-);
-    integer i;
-    always @* begin
-        output_mask = 0;
-        for (i=0; i< NO_INDICIES; i=i+1)
-            output_mask[indicies[i]] = 1'b1;
-    end
+// )(
+//     input [$clog2(NUM_INPUT_CHANNELS)-1:0] indicies [NO_INDICIES-1:0],
+//     output logic [OUTPUT_WIDTH-1:0] output_mask
+// );
+//     integer i;
+//     always @* begin
+//         output_mask = 0;
+//         for (i=0; i< NO_INDICIES; i=i+1)
+//             output_mask[indicies[i]] = 1'b1;
+//     end
 
 
-endmodule
+// endmodule
 
 
 
@@ -81,7 +79,7 @@ always @(*) begin
             data_out_0[i] = data[i];
             data_out_1[i] = 0; 
 
-        end else begin
+        end else if (mask[i] == 1'b0) begin
             data_out_0[i] = 0; 
             data_out_1[i] = data[i];
 
