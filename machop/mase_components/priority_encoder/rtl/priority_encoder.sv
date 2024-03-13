@@ -6,15 +6,36 @@ module priority_encoder #(
 
 )(
     input [NUM_INPUT_CHANNELS-1:0] input_channels,
-    output logic [$clog2(NUM_OUPUT_CHANNELS)-1:0] output_channels [NO_INDICIES-1:0]
-);
+    output logic [$clog2(NUM_INPUT_CHANNELS)-1:0] output_channels [NO_INDICIES-1:0],
+    output logic [NUM_INPUT_CHANNELS-1:0] output_mask
+);  
+
+    //Check what happens when there are input channel is zero, what is default behaviour
+    logic [NUM_INPUT_CHANNELS-1:0] mask;
     integer i;
+    integer j;
     always @* begin
-    output_channels[0] = 0; // default value if 'in' is all 0's
-    //LSB Priority
-    for (i=2**NUM_INPUT_CHANNELS-1; i>=0; i=i-1)
-        if (input_channels[i]) output_channels[0] = i;
+        mask = {NUM_INPUT_CHANNELS{1'b1}}; 
+        
+        for (j = 0; j < NO_INDICIES; j = j + 1) begin: PRIORITY_ENCODER
+            //LSB Priority
+            for (i=NUM_INPUT_CHANNELS-1; i>=0; i=i-1) begin
+                // output_channels[j] = 1'b1;
+                if (input_channels[i] & mask[i]) begin
+                    mask[i] = 0;
+                    output_channels[j] = i;
+                    output_mask = mask;
+                    
+                end
+            end
+        end
     end
+
+
+    
+
+
+
 endmodule
 
 

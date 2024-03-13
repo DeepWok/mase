@@ -8,7 +8,7 @@ module scatter #(
     parameter DATA_IN_0_TENSOR_SIZE_DIM_0 = 4,
     // parameter DATA_IN_0_PRECISION_0 = 32,
     parameter DATA_OUT_0_PRECISION_0 = 4,
-    parameter HIGH_SLOTS = 1,
+    parameter HIGH_SLOTS = 2,
     parameter LOW_SLOTS = DATA_IN_0_TENSOR_SIZE_DIM_0-HIGH_SLOTS
     // parameter DATA_IN_0_PARALLELISM_DIM_0 = 16,
     // parameter DATA_IN_0_PARALLELISM_DIM_1 = 1,
@@ -39,13 +39,14 @@ module scatter #(
     end
 
 
-
+    
     //Logic to assign indicies based on priority
-    logic [$clog2(DATA_IN_0_TENSOR_SIZE_DIM_0)-1:0] address_max[0:0];
+    //Pack array first
+    logic [$clog2(DATA_IN_0_TENSOR_SIZE_DIM_0)-1:0] address_max[HIGH_SLOTS-1:0];
     priority_encoder #(
         .NUM_INPUT_CHANNELS(DATA_IN_0_TENSOR_SIZE_DIM_0),
-        .NUM_OUPUT_CHANNELS(1'b1),
-        .NO_INDICIES(1)
+        .NUM_OUPUT_CHANNELS(DATA_IN_0_TENSOR_SIZE_DIM_0),
+        .NO_INDICIES(HIGH_SLOTS)
     )
     encoder1(
         .input_channels(high_precision_req_vec),
@@ -56,10 +57,10 @@ module scatter #(
 
     wire [3:0] output_mask;
     index_to_mask #(
-    .NUM_INPUT_CHANNELS(DATA_IN_0_TENSOR_SIZE_DIM_0),
-    .NUM_OUPUT_CHANNELS(1'b1),
-    .NO_INDICIES(1),
-    .OUTPUT_WIDTH(DATA_IN_0_TENSOR_SIZE_DIM_0)
+        .NUM_INPUT_CHANNELS(DATA_IN_0_TENSOR_SIZE_DIM_0),
+        .NUM_OUPUT_CHANNELS(DATA_IN_0_TENSOR_SIZE_DIM_0),
+        .NO_INDICIES(HIGH_SLOTS),
+        .OUTPUT_WIDTH(DATA_IN_0_TENSOR_SIZE_DIM_0)
     )mask_gen(
         .indicies(address_max),
         .output_mask(output_mask)

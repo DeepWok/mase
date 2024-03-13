@@ -57,10 +57,10 @@ def quantize(x, bits, bias):  # bits = 32
 class VerificationCase:
     bitwidth = 4
     bias = 1
-    num = 4
+    num = 8
     high_precision = 4
 
-    high_slots = 2
+    high_slots = 1
     o_low_precision = []
     o_high_precision = []
     o_outputs_bin = []
@@ -143,7 +143,7 @@ class VerificationCase:
             "DATA_IN_0_TENSOR_SIZE_DIM_0": self.num,
             "DATA_IN_0_PRECISION_0": self.bitwidth,
             "DATA_OUT_0_PRECISION_0": self.bitwidth,
-            "HIGH_PRECISION": self.high_precision,
+            "HIGH_SLOTS": self.high_slots,
 
         }
 
