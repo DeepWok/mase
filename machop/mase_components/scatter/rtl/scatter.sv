@@ -28,14 +28,32 @@ module scatter #(
         assign data_out[i] = data_in[i];
     end
     // assign data_out = data_in;
-    logic address_max;
+    logic [$clog2(DATA_IN_0_TENSOR_SIZE_DIM_0)-1:0] address_max[0:0];
     priority_encoder #(
-        .no_input_channels(DATA_IN_0_TENSOR_SIZE_DIM_0),
-        .no_output_channels(1'b1)) 
+        .NUM_INPUT_CHANNELS(DATA_IN_0_TENSOR_SIZE_DIM_0),
+        .NUM_OUPUT_CHANNELS(1'b1),
+        .NO_INDICIES(1)
+    )
     encoder1(
         .input_channels(high_precision_req_vec),
         .output_channels(address_max)
     );
+
+    
+    wire [3:0] output_mask;
+    index_to_mask #(
+    .NUM_INPUT_CHANNELS(DATA_IN_0_TENSOR_SIZE_DIM_0),
+    .NUM_OUPUT_CHANNELS(1'b1),
+    .NO_INDICIES(1),
+    .OUTPUT_WIDTH(DATA_IN_0_TENSOR_SIZE_DIM_0)
+    )mask_gen(
+        .indicies(address_max),
+        .output_mask(output_mask)
+    );
+
+
+
+    
 
 
 
