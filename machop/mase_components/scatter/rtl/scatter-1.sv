@@ -29,6 +29,7 @@ module scatter #(
     //Logic to indentify values larger than x (2MSB check) //Can parameterise
     logic [DATA_IN_0_TENSOR_SIZE_DIM_0-1:0] high_precision_req_vec;
     logic [1:0] msbs [DATA_IN_0_TENSOR_SIZE_DIM_0-1:0];
+    
     for (genvar i = 0; i < DATA_IN_0_TENSOR_SIZE_DIM_0; i = i + 1) begin
         //Extract top bits
         assign msbs[i] = data_in[i][DATA_IN_0_TENSOR_SIZE_DIM_0-1:DATA_IN_0_TENSOR_SIZE_DIM_0-2];

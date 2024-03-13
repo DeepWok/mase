@@ -16,8 +16,6 @@ pytestmark = pytest.mark.simulator_required
 
 
 
-
-
 # snippets
 class MyClamp(InplaceFunction):
     @staticmethod
@@ -70,7 +68,7 @@ class VerificationCase:
         self.inputs, self.outputs = [], []
         for _ in range(samples):
             i, o= self.single_run()
-
+            
             self.inputs.append(i)
             self.outputs.append(o)
 
@@ -99,7 +97,7 @@ class VerificationCase:
           x_bin = self.to_twos_complement(x)
         #   print('bin_quant_input_val',x_bin)
           outputs.append(x_bin)
-
+        
 
           # #Fill high slots with 
           # high_out = x_bin.copy()
