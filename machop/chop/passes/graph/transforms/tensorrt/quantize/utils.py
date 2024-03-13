@@ -215,5 +215,8 @@ def prepare_save_path(method: str):
     save_dir = save_dir / version
     save_dir.mkdir(parents=True, exist_ok=True)
 
+    if method == 'CKPT':
+        return save_dir / "fine_tuning_ckpts"
+
     return save_dir / f"model.{method.lower()}"
 

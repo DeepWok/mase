@@ -92,4 +92,4 @@ class FineTuning():
             ""
          )
 
-        return ckpt_save_path
+        return ckpt_save_path / 'best.ckpt'
