@@ -58,6 +58,7 @@ class VerificationCase:
     bitwidth = 4
     bias = 1
     num = 4
+    high_precision = 4
 
     high_slots = 2
     o_low_precision = []
@@ -74,7 +75,7 @@ class VerificationCase:
             self.outputs.append(o)
 
         self.o_outputs_bin, self.o_low_precision, self.o_high_precision = self.scatter_model(samples)
-        print('outputs_bin',self.o_outputs_bin)
+        # print('outputs_bin',self.o_outputs_bin)
         self.samples = samples
 
     def single_run(self):
@@ -94,9 +95,9 @@ class VerificationCase:
         
         for i in range(samples):
           x = self.get_dut_input(i)
-          print('quant_input_val',x)
+        #   print('quant_input_val',x)
           x_bin = self.to_twos_complement(x)
-          print('bin_quant_input_val',x_bin)
+        #   print('bin_quant_input_val',x_bin)
           outputs.append(x_bin)
 
 
@@ -142,6 +143,7 @@ class VerificationCase:
             "DATA_IN_0_TENSOR_SIZE_DIM_0": self.num,
             "DATA_IN_0_PRECISION_0": self.bitwidth,
             "DATA_OUT_0_PRECISION_0": self.bitwidth,
+            "HIGH_PRECISION": self.high_precision,
 
         }
 
@@ -220,10 +222,11 @@ async def test_scatter(dut):
 
     
         for i, dutval in enumerate(dut.data_out.value):
-          print('dutval',dutval.signed_integer)
-          print('y',y[i])
           assert dutval.signed_integer == y[i]
-          
+        for i, dutval_high in enumerate(dut.o_high_precision.value):
+            print('high:',dutval_high.signed_integer)
+        for i, dutval_low in enumerate(dut.o_high_precision.value):
+            print('low:',dutval_low.signed_integer)
         # assert dut.data_out.value == test_case.o_outputs_bin[0], f"output q was incorrect on the {i}th cycle"
         # print(type(dut.data_out.value))
 
