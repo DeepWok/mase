@@ -15,6 +15,7 @@ MASE_HW_DEPS = {
     #                              "fixed_arithmetic", "linear", "matmul", "ViT"],
     "cast/fixed_cast": [],
     "scatter/scatter": ["scatter","priority_encoder"],
+    "scatter/scatter_threshold": ["scatter","priority_encoder"],
     "activations/fixed_relu":[],
     "cast/fixed_rounding": ["cast"],
     "linear/fixed_linear": ["cast", "common", "fixed_arithmetic"],

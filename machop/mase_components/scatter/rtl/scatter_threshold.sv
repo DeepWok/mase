@@ -1,7 +1,7 @@
 `timescale 1ns / 1ps
 
 
-module scatter #(
+module scatter_threshold #(
     parameter DATA_IN_0_PRECISION_0 = 4,
     
     // parameter DATA_IN_0_PRECISION_1 = 3,
