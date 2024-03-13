@@ -58,9 +58,9 @@ class VerificationCase:
     bitwidth = 4
     bias = 1
     num = 4
-    high_precision = 2
+    # high_precision = 2
 
-    high_slots = 1
+    high_slots = 2
     o_low_precision = []
     o_high_precision = []
     o_outputs_bin = []

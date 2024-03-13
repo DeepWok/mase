@@ -15,9 +15,9 @@ module parallel_abs_quantize#(
     for (genvar i = 0; i < NO_INPUTS; i = i + 1) begin
         //Extract sign bit
         assign sign[i] = input_array[i][INPUT_PRECISION-1];
-        assign msbs[i] = input_array[i][INPUT_PRECISION-2:INPUT_PRECISION-2-OUTPUT_PRECISION];
+        assign msbs[i] = input_array[i][INPUT_PRECISION-1:INPUT_PRECISION-1-OUTPUT_PRECISION];
 
-        assign output_array[i] = (sign[i])? !msbs[i]:msbs[i];
+        assign output_array[i] = (sign[i])? ~msbs[i]:msbs[i];
     end
 
 endmodule
