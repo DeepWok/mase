@@ -1,10 +1,6 @@
 from copy import copy, deepcopy
 import logging
 import torch
-import os
-import sys
-from pathlib import Path
-from datetime import datetime
 import tensorrt as trt
 import onnx
 import numpy as np
@@ -17,7 +13,7 @@ from pytorch_quantization.tensor_quant import QuantDescriptor
 from chop.passes.graph.utils import get_mase_op, get_mase_type, get_node_actual_target
 from chop.passes.graph.interface.save_and_load import load_mase_graph_interface_pass
 from ....utils import deepcopy_mase_graph
-from .utils import INT8Calibrator
+from .utils import INT8Calibrator, prepare_save_path
 
 def tensorrt_engine_interface_pass(graph, pass_args=None):
     quantizer = Quantizer(pass_args)
@@ -41,21 +37,6 @@ class Quantizer:
         self.export_TRT_model_summary(TRT_path)
 
         return TRT_path
-    
-    def prepare_save_path(self, method: str):
-        """Creates and returns a save path for the model."""
-        root = Path(__file__).resolve().parents[7]
-        current_date = datetime.now().strftime("%Y_%m_%d")
-        save_dir = root / f"mase_output/TensorRT/Quantization/{method}" / current_date
-        save_dir.mkdir(parents=True, exist_ok=True)
-
-        existing_versions = len(os.listdir(save_dir))
-        version = "version_0" if existing_versions==0 else f"version_{existing_versions}"
-
-        save_dir = save_dir / version
-        save_dir.mkdir(parents=True, exist_ok=True)
-
-        return save_dir / f"model.{method.lower()}"
     
     def get_config(self, name: str):
         """Retrieve specific configuration from the instance's config dictionary or return default."""
@@ -99,7 +80,7 @@ class Quantizer:
             config.int8_calibrator = INT8Calibrator(
                 self.config['num_calibration_batches'], 
                 self.config['data_module'].train_dataloader(), 
-                self.prepare_save_path(method='CACHE')
+                prepare_save_path(method='CACHE')
                 )
         '''
 
@@ -130,7 +111,7 @@ class Quantizer:
         if serialized_engine is None:
             raise Exception('Failed to build serialized network.')
 
-        trt_path = self.prepare_save_path(method='TRT')
+        trt_path = prepare_save_path(method='TRT')
         with open(trt_path, 'wb') as f:
             f.write(serialized_engine)
 
@@ -147,7 +128,7 @@ class Quantizer:
         """Converts PyTorch model to ONNX format and saves it."""
         self.logger.info("Converting PyTorch model to ONNX...")
 
-        onnx_path = self.prepare_save_path(method='ONNX')
+        onnx_path = prepare_save_path(method='ONNX')
 
         dataloader = self.config['data_module'].train_dataloader()  
         train_sample = next(iter(dataloader))[0]
@@ -175,7 +156,7 @@ class Quantizer:
             layer_info_json = inspector.get_engine_information(trt.LayerInformationFormat.JSON)
             
             # Save the engine information to a JSON file
-            json_filename = self.prepare_save_path(method='JSON')
+            json_filename = prepare_save_path(method='JSON')
             with open(json_filename, 'w') as json_file:
                 json_file.write(layer_info_json)
         self.logger.info(f"TensorRT Model Summary Exported to {json_filename}")

@@ -39,7 +39,7 @@ calibrator = 'histogram'
 quantize_axis = false
 
 [passes.tensorrt_fine_tune]
-qat_epochs = 10
+epochs = 10
 
 [passes.tensorrt_analysis]
 num_batches = 20

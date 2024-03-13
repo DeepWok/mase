@@ -17,6 +17,11 @@ import torch
 from typing import Dict
 from chop.tools.utils import copy_weights, init_LinearLUT_weight, init_Conv2dLUT_weight
 from torch import nn
+from pathlib import Path
+from datetime import datetime
+import time
+import pynvml
+import threading
 
 from ....utils import (
     get_mase_op,
@@ -175,3 +180,40 @@ class INT8Calibrator(trt.IInt8EntropyCalibrator2):
             f.write(cache)
         print("Succeed saving int8 cache!")
         return
+
+class PowerMonitor(threading.Thread):
+    def __init__(self, config):
+        super().__init__()  # Call the initializer of the base class, threading.Thread
+        # Initialize the NVIDIA Management Library (NVML)
+        pynvml.nvmlInit()
+        self.power_readings = []  # List to store power readings
+        self.running = False      # Flag to control the monitoring loop
+        self.handle = pynvml.nvmlDeviceGetHandleByIndex(0)  # Assume using GPU 0
+
+    def run(self):
+        self.running = True
+        while self.running:
+            # Get current GPU power usage in milliwatts and convert to watts
+            power_mW = pynvml.nvmlDeviceGetPowerUsage(self.handle)
+            power_W = power_mW / 1000.0
+            self.power_readings.append(power_W)
+            time.sleep(0.001)  # Wait before next reading
+
+    def stop(self):
+        self.running = False  # Stop the monitoring loop
+
+def prepare_save_path(method: str):
+    """Creates and returns a save path for the model."""
+    root = Path(__file__).resolve().parents[7]
+    current_date = datetime.now().strftime("%Y_%m_%d")
+    save_dir = root / f"mase_output/TensorRT/Quantization/{method}" / current_date
+    save_dir.mkdir(parents=True, exist_ok=True)
+
+    existing_versions = len(os.listdir(save_dir))
+    version = "version_0" if existing_versions==0 else f"version_{existing_versions}"
+
+    save_dir = save_dir / version
+    save_dir.mkdir(parents=True, exist_ok=True)
+
+    return save_dir / f"model.{method.lower()}"
+

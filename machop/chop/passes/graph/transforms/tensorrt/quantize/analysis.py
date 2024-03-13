@@ -17,29 +17,21 @@ from chop.passes.graph.utils import get_mase_op, get_mase_type, get_node_actual_
 from chop.passes.graph.interface.save_and_load import load_mase_graph_interface_pass
 from chop.ir import MaseGraph
 from ....utils import deepcopy_mase_graph
+from .utils import PowerMonitor
 import sys
 import logging 
 import os
 from pprint import pprint as pp
-import time
-import pynvml
-import threading
-import time
 import torch
 import torchmetrics
 import numpy as np
 import tensorrt as trt
 import pycuda.driver as cuda
-import pycuda.autoinit  # This is needed for initializing CUDA driver
-import cv2
 import numpy as np
 import tensorrt as trt
 import torch.nn.functional as F
 from cuda import cudart
 from torch.autograd import Variable
-import onnx
-import time
-# from chop.passes.graph.analysis.quantization import calculate_flops_pass #TODO add FLOPS
 
 dtype_map = {
     torch.float32: np.float32,
@@ -78,9 +70,7 @@ class QuantizationAnalysis():
         else:
             raise Exception("Model must be a MaseGraph or a PosixPath to a trt file. Have you run the quantization pass?")
 
-        for (_, ys) in config['data_module'].val_dataloader():
-            self.num_of_classes = len(torch.unique(ys))
-            break
+        self.num_of_classes = self.config['data_module'].dataset_info.num_classes
 
         self.config = config
         self.logger = logging.getLogger(__name__)
@@ -290,25 +280,3 @@ class QuantizationAnalysis():
             "Inference Energy Consumption": f"{avg_gpu_energy_usage} kW/hr"
         }
         return results
-
-
-class PowerMonitor(threading.Thread):
-    def __init__(self, config):
-        super().__init__()  # Call the initializer of the base class, threading.Thread
-        # Initialize the NVIDIA Management Library (NVML)
-        pynvml.nvmlInit()
-        self.power_readings = []  # List to store power readings
-        self.running = False      # Flag to control the monitoring loop
-        self.handle = pynvml.nvmlDeviceGetHandleByIndex(0)  # Assume using GPU 0
-
-    def run(self):
-        self.running = True
-        while self.running:
-            # Get current GPU power usage in milliwatts and convert to watts
-            power_mW = pynvml.nvmlDeviceGetPowerUsage(self.handle)
-            power_W = power_mW / 1000.0
-            self.power_readings.append(power_W)
-            time.sleep(0.001)  # Wait before next reading
-
-    def stop(self):
-        self.running = False  # Stop the monitoring loop
