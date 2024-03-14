@@ -49,7 +49,6 @@ class StreamMonitor(Monitor):
         self.ready = ready
         self.check = check
         self.name = name
-        self.log.setLevel("DEBUG")
 
     def _trigger(self):
         return self.valid.value == 1 and self.ready.value == 1

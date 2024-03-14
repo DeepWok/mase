@@ -57,8 +57,11 @@ from .relu import (
     ReLUBinary,
     ReLUTernary,
 )
-from.layer_norm import (
+from .layer_norm import (
     LayerNormInteger,
+)
+from .group_norm import (
+    GroupNormInteger
 )
 
 quantized_module_map = {

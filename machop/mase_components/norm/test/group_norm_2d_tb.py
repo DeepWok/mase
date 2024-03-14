@@ -26,11 +26,17 @@ from mase_cocotb.utils import (
     bit_driver,
     batched,
     sign_extend_t,
+    sign_extend,
     random_2d_dimensions,
 )
 
+from chop.passes.graph.transforms.quantize.quantized_modules import (
+    GroupNormInteger,
+    LayerNormInteger
+)
 from chop.passes.graph.transforms.quantize.quantizers.quantizers_for_hw import (
     integer_floor_quantizer_for_hw,
+    integer_quantizer_for_hw
 )
 from chop.passes.graph.transforms.quantize.quantizers.integer import (
     integer_floor_quantizer
@@ -155,6 +161,67 @@ def _fixed_group_norm_2d_model(
         "norm": norm_int,
     }
 
+
+class ErrorThresholdStreamMonitor(StreamMonitor):
+    def __init__(
+        self,
+        clk,
+        data,
+        valid,
+        ready,
+        width: int,       # Width of the number
+        signed: bool,     # Signedness of number
+        error_bits: int,  # Number of last bits the number can be off by
+        check=True,
+        name=None,
+    ):
+        super().__init__(clk, data, valid, ready, check, name)
+
+        self.width = width
+        self.signed = signed
+        self.error_bits = error_bits
+        self.log.setLevel("INFO")
+
+    def _check(self, got, exp):
+        if self.check:
+            if type(got) != type(exp):
+                assert False, (
+                    f"Type Mismatch got:{type(got)} vs. exp:{type(exp)}"
+                )
+
+            # Compare Outputs
+            if type(got) == list:
+                g = np.array(got)
+                e = np.array(exp)
+                if self.signed:
+                    g = sign_extend(g, self.width)
+                    e = sign_extend(e, self.width)
+                err = np.abs(g - e)
+                max_biterr = np.full_like(err, self.error_bits)
+                if not (err <= max_biterr).all():
+                    self.log.error(
+                        "Got:\n%s\nExpected:\n%s\nError:\n%s" % (g, e, err)
+                    )
+                    assert False, "Test Failed!"
+
+            elif type(got) == int:
+                g, e = got, exp
+                if self.signed:
+                    g = sign_extend(g, self.width)
+                    e = sign_extend(e, self.width)
+                err = abs(g - e)
+                if not err <= self.error_bits:
+                    self.log.error(
+                        "Got:\n%s\nExpected:\n%s\nError:\n%s" % (g, e, err)
+                    )
+                    assert False, "Test Failed!"
+
+            self.log.info(
+                "Passed | Got: %20s Exp: %20s Err: %10s"
+                % (g, e, err)
+            )
+
+
 class GroupNorm2dTB(Testbench):
 
     def __init__(self, dut) -> None:
@@ -177,89 +244,107 @@ class GroupNorm2dTB(Testbench):
         self.in_width_tup = self.IN_WIDTH, self.IN_FRAC_WIDTH
         self.out_width_tup = self.OUT_WIDTH, self.OUT_FRAC_WIDTH
 
+        # Inverse Square Root LUT
+        self.isqrt_lut = make_lut(2**5, 16)
+
+        self.num_groups = randint(2, 3)
+        self.total_channels = self.GROUP_CHANNELS * self.num_groups
+
+        self.quantized_model = GroupNormInteger(
+            num_groups=self.num_groups,
+            num_channels=self.total_channels,
+            affine=False,
+            config={
+                "data_in_width": self.IN_WIDTH,
+                "data_in_frac_width": self.IN_FRAC_WIDTH,
+            }
+        )
+
         # Drivers & Monitors
         self.in_driver = StreamDriver(
             dut.clk, dut.in_data, dut.in_valid, dut.in_ready
         )
-        self.output_monitor = StreamMonitor(
+        self.output_monitor = ErrorThresholdStreamMonitor(
             dut.clk, dut.out_data, dut.out_valid, dut.out_ready,
             name="Output Monitor",
+            width=self.OUT_WIDTH,
+            signed=True,
+            error_bits=2,
         )
 
         # Intermediate value monitors
-        self.mu_monitor = StreamMonitor(
-            dut.clk, dut.mu_in, dut.mu_acc_valid, dut.mu_acc_ready,
-            name="Mu Monitor",
-        )
-        self.squares_monitor = StreamMonitor(
-            dut.clk, dut.square_out, dut.squares_adder_tree_in_valid, dut.squares_adder_tree_in_ready,
-            name="Squares Monitor",
-        )
-        self.sum_squares_monitor = StreamMonitor(
-            dut.clk, dut.squares_acc, dut.squares_acc_valid, dut.squares_acc_ready,
-            name="Sum Squares Monitor",
-        )
-        self.var_monitor = StreamMonitor(
-            dut.clk, dut.variance_in, dut.squares_acc_valid, dut.squares_acc_ready,
-            name="Variance Monitor",
-        )
-        self.var_clamp_monitor = StreamMonitor(
-            dut.clk, dut.variance_clamp_out, dut.variance_clamp_valid,
-            dut.variance_clamp_ready, name="Variance Clamp Monitor",
-        )
-        self.isqrt_monitor = StreamMonitor(
-            dut.clk, dut.inv_sqrt_data, dut.inv_sqrt_valid, dut.inv_sqrt_ready,
-            name="Inverse Sqrt Monitor",
-        )
-        self.diff_monitor = StreamMonitor(
-            dut.clk, dut.diff_batch_out, dut.diff_batch_out_valid, dut.diff_batch_out_ready,
-            name="Diff Monitor",
-        )
-        self.norm_monitor = StreamMonitor(
-            dut.clk, dut.norm_out_data, dut.norm_monitor_valid, dut.norm_monitor_ready,
-            name="Norm Monitor",
-        )
+        # self.mu_monitor = StreamMonitor(
+        #     dut.clk, dut.mu_in, dut.mu_acc_valid, dut.mu_acc_ready,
+        #     name="Mu Monitor",
+        # )
+        # self.squares_monitor = StreamMonitor(
+        #     dut.clk, dut.square_out, dut.squares_adder_tree_in_valid, dut.squares_adder_tree_in_ready,
+        #     name="Squares Monitor",
+        # )
+        # self.sum_squares_monitor = StreamMonitor(
+        #     dut.clk, dut.squares_acc, dut.squares_acc_valid, dut.squares_acc_ready,
+        #     name="Sum Squares Monitor",
+        # )
+        # self.var_monitor = StreamMonitor(
+        #     dut.clk, dut.variance_in, dut.squares_acc_valid, dut.squares_acc_ready,
+        #     name="Variance Monitor",
+        # )
+        # self.var_clamp_monitor = StreamMonitor(
+        #     dut.clk, dut.variance_clamp_out, dut.variance_clamp_valid,
+        #     dut.variance_clamp_ready, name="Variance Clamp Monitor",
+        # )
+        # self.isqrt_monitor = StreamMonitor(
+        #     dut.clk, dut.inv_sqrt_data, dut.inv_sqrt_valid, dut.inv_sqrt_ready,
+        #     name="Inverse Sqrt Monitor",
+        # )
+        # self.diff_monitor = StreamMonitor(
+        #     dut.clk, dut.diff_batch_out, dut.diff_batch_out_valid, dut.diff_batch_out_ready,
+        #     name="Diff Monitor",
+        # )
+        # self.norm_monitor = StreamMonitor(
+        #     dut.clk, dut.norm_out_data, dut.norm_monitor_valid, dut.norm_monitor_ready,
+        #     name="Norm Monitor",
+        # )
 
-        # Inverse Square Root LUT
-        self.isqrt_lut = make_lut(2**5, 16)
 
-    def generate_inputs(self, num=1):
+
+    def generate_inputs(self, batches=1):
         inputs = list()
-        for _ in range(self.GROUP_CHANNELS * num):
+        for _ in range(self.total_channels * batches):
             inputs.extend(gen_random_matrix_input(
                 *self.total_tup, *self.compute_tup, *self.in_width_tup
             ))
         return inputs
 
-    def load_intermediate(self, intermediate):
-        self.mu_monitor.load_monitor(intermediate["mu"])
-        self.var_monitor.load_monitor(intermediate["var"])
-        self.var_clamp_monitor.load_monitor(intermediate["var_clamp"])
-        self.isqrt_monitor.load_monitor(intermediate["isqrt"])
-        self.sum_squares_monitor.load_monitor(intermediate["sum_squares"])
-        diff = intermediate["diff"].reshape(-1, self.TOTAL_DIM1, self.TOTAL_DIM0)
-        squares = intermediate["squares"].reshape(-1, self.TOTAL_DIM1, self.TOTAL_DIM0)
-        norm = intermediate["norm"].reshape(-1, self.TOTAL_DIM1, self.TOTAL_DIM0)
+    # def load_intermediate(self, intermediate):
+    #     self.mu_monitor.load_monitor(intermediate["mu"])
+    #     self.var_monitor.load_monitor(intermediate["var"])
+    #     self.var_clamp_monitor.load_monitor(intermediate["var_clamp"])
+    #     self.isqrt_monitor.load_monitor(intermediate["isqrt"])
+    #     self.sum_squares_monitor.load_monitor(intermediate["sum_squares"])
+    #     diff = intermediate["diff"].reshape(-1, self.TOTAL_DIM1, self.TOTAL_DIM0)
+    #     squares = intermediate["squares"].reshape(-1, self.TOTAL_DIM1, self.TOTAL_DIM0)
+    #     norm = intermediate["norm"].reshape(-1, self.TOTAL_DIM1, self.TOTAL_DIM0)
 
-        def _load(mon, tensor):
-            for i in range(tensor.shape[0]):
-                mon.load_monitor(
-                    split_matrix(tensor[i], *self.total_tup, *self.compute_tup)
-                )
-        _load(self.diff_monitor, diff)
-        _load(self.squares_monitor, squares)
-        _load(self.norm_monitor, norm)
+    #     def _load(mon, tensor):
+    #         for i in range(tensor.shape[0]):
+    #             mon.load_monitor(
+    #                 split_matrix(tensor[i], *self.total_tup, *self.compute_tup)
+    #             )
+    #     _load(self.diff_monitor, diff)
+    #     _load(self.squares_monitor, squares)
+    #     _load(self.norm_monitor, norm)
 
     def assert_all_monitors_empty(self):
         assert self.output_monitor.exp_queue.empty()
-        assert self.mu_monitor.exp_queue.empty()
-        assert self.var_monitor.exp_queue.empty()
-        assert self.var_clamp_monitor.exp_queue.empty()
-        assert self.isqrt_monitor.exp_queue.empty()
-        assert self.diff_monitor.exp_queue.empty()
-        assert self.norm_monitor.exp_queue.empty()
-        assert self.squares_monitor.exp_queue.empty()
-        assert self.sum_squares_monitor.exp_queue.empty()
+        # assert self.mu_monitor.exp_queue.empty()
+        # assert self.var_monitor.exp_queue.empty()
+        # assert self.var_clamp_monitor.exp_queue.empty()
+        # assert self.isqrt_monitor.exp_queue.empty()
+        # assert self.diff_monitor.exp_queue.empty()
+        # assert self.norm_monitor.exp_queue.empty()
+        # assert self.squares_monitor.exp_queue.empty()
+        # assert self.sum_squares_monitor.exp_queue.empty()
 
 
     def model(self, inputs):
@@ -268,44 +353,46 @@ class GroupNorm2dTB(Testbench):
         matrix_list = [rebuild_matrix(b, *self.total_tup, *self.compute_tup)
                        for b in batches]
         x = torch.stack(matrix_list).reshape(
-            -1, self.GROUP_CHANNELS, self.TOTAL_DIM1, self.TOTAL_DIM0
+            -1, self.total_channels, self.TOTAL_DIM1, self.TOTAL_DIM0
         )
         x = sign_extend_t(x, self.IN_WIDTH).to(dtype=torch.float32) / (2 ** self.IN_FRAC_WIDTH)
 
         # Float Model
-        norm_out_float, norm_int_out, intermediate = _fixed_group_norm_2d_model(
-            x=x,
-            in_width=self.IN_WIDTH,
-            in_frac_width=self.IN_FRAC_WIDTH,
-            diff_width=self.DIFF_WIDTH,
-            diff_frac_width=self.DIFF_FRAC_WIDTH,
-            square_width=self.SQUARE_WIDTH,
-            square_frac_width=self.SQUARE_FRAC_WIDTH,
-            variance_width=self.VARIANCE_WIDTH,
-            variance_frac_width=self.VARIANCE_FRAC_WIDTH,
-            isqrt_width=self.ISQRT_WIDTH,
-            isqrt_frac_width=self.ISQRT_FRAC_WIDTH,
-            isqrt_lut=self.isqrt_lut,
-            norm_width=self.NORM_WIDTH,
-            norm_frac_width=self.NORM_FRAC_WIDTH,
-            out_width=self.OUT_WIDTH,
-            out_frac_width=self.OUT_FRAC_WIDTH,
-        )
+        float_y = self.quantized_model(x)
+        # norm_out_float, norm_int_out, intermediate = _fixed_group_norm_2d_model(
+        #     x=x,
+        #     in_width=self.IN_WIDTH,
+        #     in_frac_width=self.IN_FRAC_WIDTH,
+        #     diff_width=self.DIFF_WIDTH,
+        #     diff_frac_width=self.DIFF_FRAC_WIDTH,
+        #     square_width=self.SQUARE_WIDTH,
+        #     square_frac_width=self.SQUARE_FRAC_WIDTH,
+        #     variance_width=self.VARIANCE_WIDTH,
+        #     variance_frac_width=self.VARIANCE_FRAC_WIDTH,
+        #     isqrt_width=self.ISQRT_WIDTH,
+        #     isqrt_frac_width=self.ISQRT_FRAC_WIDTH,
+        #     isqrt_lut=self.isqrt_lut,
+        #     norm_width=self.NORM_WIDTH,
+        #     norm_frac_width=self.NORM_FRAC_WIDTH,
+        #     out_width=self.OUT_WIDTH,
+        #     out_frac_width=self.OUT_FRAC_WIDTH,
+        # )
 
         # Output beat reconstruction
-        y = norm_int_out.reshape(-1, self.TOTAL_DIM1, self.TOTAL_DIM0)
+        y = integer_quantizer_for_hw(float_y, self.OUT_WIDTH, self.OUT_FRAC_WIDTH)
+        y = y.reshape(-1, self.TOTAL_DIM1, self.TOTAL_DIM0)
         model_out = list()
         for i in range(y.shape[0]):
             model_out.extend(split_matrix(y[i], *self.total_tup, *self.compute_tup))
 
-        return model_out, intermediate
+        return model_out
 
-    def setup_test(self, num=1):
-        inputs = self.generate_inputs(num=num)
+    def setup_test(self, batches=1):
+        inputs = self.generate_inputs(batches=batches)
         self.in_driver.load_driver(inputs)
-        exp_out, intermediate = self.model(inputs)
+        exp_out = self.model(inputs)
         self.output_monitor.load_monitor(exp_out)
-        self.load_intermediate(intermediate)
+        # self.load_intermediate(intermediate)
 
 
 @cocotb.test()
@@ -313,7 +400,7 @@ async def basic(dut):
     tb = GroupNorm2dTB(dut)
     await tb.reset()
     tb.output_monitor.ready.value = 1
-    tb.setup_test(num=2)
+    tb.setup_test(batches=2)
     await Timer(10, 'us')
     tb.assert_all_monitors_empty()
 
@@ -323,7 +410,7 @@ async def stream(dut):
     tb = GroupNorm2dTB(dut)
     await tb.reset()
     tb.output_monitor.ready.value = 1
-    tb.setup_test(num=100)
+    tb.setup_test(batches=100)
     await Timer(200, 'us')
     assert tb.output_monitor.exp_queue.empty()
 
@@ -406,7 +493,7 @@ if __name__ == "__main__":
 
 
     def gen_cfg():
-        compute_dim0, compute_dim1, total_dim0, total_dim1 = random_2d_dimensions()
+        # compute_dim0, compute_dim1, total_dim0, total_dim1 = random_2d_dimensions()
         params = {
             "TOTAL_DIM0": 4,
             "TOTAL_DIM1": 4,

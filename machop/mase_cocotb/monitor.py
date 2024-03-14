@@ -22,7 +22,7 @@ class Monitor:
                 if self.name == None else self.name
             )
 
-        self._thread = cocotb.start_soon(self._recv_thread())
+        self._thread = cocotb.scheduler.add(self._recv_thread())
 
     def kill(self):
         if self._thread:
