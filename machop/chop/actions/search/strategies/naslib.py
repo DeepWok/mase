@@ -137,27 +137,6 @@ class SearchStrategyNaslib(SearchStrategyBase):
 
         return ensemble_weight
 
-    # add = lambda x, y: x + y
-    # print(add(5, 3))  # Output: 8
-    
-    # zcp_preds = {}
-    # for zcp_name in zc_proxies:
-    #   zcp_test = [{'zero_cost_scores': eval_zcp(t_arch, zcp_name, train_loader)} for t_arch in tqdm(xtest)]
-    #   zcp_pred = [s['zero_cost_scores'][zcp_name] for s in zcp_test]
-    #   zcp_preds[zcp_name] = zcp_pred
-
-
-    # ensemble_preds = []
-    # for i in range(train_size):
-    #   ensemble_preds.append(sum([zcp_preds[zcp_name][i] * best_params[zcp_name] for zcp_name in zc_proxies])) 
-
-    # print(ensemble_preds)
-
-    # ens_metrics = evaluate_predictions(ytest, ensemble_preds, plot=False,
-    #                                 title=f"NB201 accuracies vs {zcp_name}")
-
-    # print("ens_metrics:  ", ens_metrics)
-
     def search(self, search_space) -> optuna.study.Study:
         print("search_space:  ", search_space)
 
@@ -173,7 +152,6 @@ class SearchStrategyNaslib(SearchStrategyBase):
 
         study.optimize(
             func=partial(self.objective, search_space=search_space),
-            n_jobs=self.config["setup"]["n_jobs"],
             n_trials=self.config["setup"]["n_trials"],
             timeout=self.config["setup"]["timeout"],
             callbacks=[
@@ -194,21 +172,11 @@ class SearchStrategyNaslib(SearchStrategyBase):
 
         model_results = self.combined_list(search_space.zcp_results)
 
-        # ytest = []
-        # ensemble_preds = []
         for x in model_results:
             x['metrics']['ensemble'] = self.get_ensemble_weight(x, best_params)
-            # ensemble_preds.append(x['metrics']['ensemble'])
-            # ytest.append(x['test_accuraccy'])
-
-            # import pdb
-            # pdb.set_trace()
         
         print("model_results: ", model_results)
 
-        # ensemble_metric = evaluate_predictions(ytest, ensemble_preds)
-
-        
         self._save_study(study, self.save_dir / "study.pkl")
         self._save_search_dataframe(study, search_space, self.save_dir / "log.json")
         self._save_best_zero_cost(study, search_space, model_results, self.save_dir / "metrics.json")
