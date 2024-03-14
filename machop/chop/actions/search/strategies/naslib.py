@@ -80,7 +80,6 @@ class SearchStrategyNaslib(SearchStrategyBase):
         return combined_data_list
     
     def objective(self, trial, search_space):
-
         combined_data_list = self.combined_list(search_space.zcp_results)
     
         # Dynamically find all unique metric names
@@ -92,7 +91,7 @@ class SearchStrategyNaslib(SearchStrategyBase):
         unique_metric_names = sorted(list(unique_metric_names))
 
         # Suggest weights for each unique metric dynamically
-        weights = {metric: trial.suggest_float(f"weight_{metric}", -50, 50) for metric in unique_metric_names}
+        weights = {metric: trial.suggest_float(f"{metric}", self.config["setup"]["weight_lower_limit"], self.config["setup"]["weight_upper_limit"]) for metric in unique_metric_names}
 
         total_loss = 0
         penalty = 0
@@ -121,23 +120,16 @@ class SearchStrategyNaslib(SearchStrategyBase):
 
     def search(self, search_space) -> optuna.study.Study:
         print("search_space:  ", search_space)
-        
+
+        # import pdb
         # pdb.set_trace()
+        
         study_kwargs = {
             "sampler": self.sampler_map(self.config["setup"]["sampler"]),
             "direction": self.config["setup"]["direction"]
         }
         
         study = optuna.create_study(**study_kwargs)
-
-        # study.optimize(
-        #     func=partial(self.objective, search_space=search_space), 
-        #     n_trials=self.config["setup"]["n_trials"],
-        #     show_progress_bar=True
-        #     )
-        
-
-        # study = optuna.create_study(**study_kwargs)
 
         study.optimize(
             func=partial(self.objective, search_space=search_space),
@@ -156,13 +148,12 @@ class SearchStrategyNaslib(SearchStrategyBase):
             show_progress_bar=True,
         )
 
-        best_params = study.best_params  
+        best_params = study.best_params
         print("best_params:  ", best_params)
-
 
         self._save_study(study, self.save_dir / "study.pkl")
         self._save_search_dataframe(study, search_space, self.save_dir / "log.json")
-        self._save_best_zero_cost(search_space, self.save_dir / "metrics.json")
+        self._save_best_zero_cost(study, search_space, self.combined_list(search_space.zcp_results), self.save_dir / "metrics.json")
 
         return study
 
@@ -184,7 +175,7 @@ class SearchStrategyNaslib(SearchStrategyBase):
         return df
     
     @staticmethod
-    def _save_best_zero_cost(search_space, save_path):
+    def _save_best_zero_cost(study, search_space, model_results, save_path):
         # import pdb
         # pdb.set_trace()
 
@@ -192,7 +183,11 @@ class SearchStrategyNaslib(SearchStrategyBase):
         for item in search_space.zcp_results:
             key = list(item.keys())[0]
             values = item[key]
-            result_dict[key] = {'test_spearman': values['test_spearman'], 'train_spearman': values['train_spearman']}
+            result_dict[key] = {
+                'test_spearman': values['test_spearman'], 
+                'train_spearman': values['train_spearman'], 
+                "zero_cost_weight": study.best_params[key]
+            }
 
         print("result_dict:  ", result_dict)
 
@@ -200,15 +195,17 @@ class SearchStrategyNaslib(SearchStrategyBase):
             columns=[
                 "number",
                 "result_dict",
+                "model_results"
             ]
         )
         row = [
             0,
             result_dict,
+            model_results,
             ]
         
         df.loc[len(df)] = row
-        # df.to_json(save_path, orient="index", indent=4)
+        df.to_json(save_path, orient="index", indent=4)
 
         txt = "Best trial(s):\n"
         print("df:  ", df)

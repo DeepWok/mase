@@ -31,7 +31,7 @@ class ZeroCostProxy(SearchSpaceBase):
         self.default_config = DEFAULT_ZERO_COST_PROXY_CONFIG
         self.scores = {}
         self.zcp_results = []
-
+    
     def build_search_space(self):
         """
         Build the search space for the mase graph (only quantizeable ops)
@@ -60,20 +60,19 @@ class ZeroCostProxy(SearchSpaceBase):
         test_size = self.config["zc"]["num_archs_test"]
         
         train_sample, train_hashes = sample_arch_dataset(NasBench201SearchSpace(), pred_dataset, pred_api, data_size=train_size, shuffle=True, seed=seed)
-        test_sample, test_hashes = sample_arch_dataset(NasBench201SearchSpace(), pred_dataset, pred_api, arch_hashes=train_hashes, data_size=train_size, shuffle=True, seed=seed+1)
-
+        test_sample, test_hashes = sample_arch_dataset(NasBench201SearchSpace(), pred_dataset, pred_api, arch_hashes=train_hashes, data_size=test_size, shuffle=True, seed=seed+1)
+        
         xtrain, ytrain, _ = train_sample
         xtest, ytest, _ = test_sample
 
         for zcp_name in self.config["zc"]["zc_proxies"]:
-
             # train and query expect different ZCP formats
             zcp_train = [{'zero_cost_scores': eval_zcp(t_arch, zcp_name, train_loader)} for t_arch in tqdm(xtrain)]
             zcp_test = [{'zero_cost_scores': eval_zcp(t_arch, zcp_name, train_loader)} for t_arch in tqdm(xtest)]            
 
             zcp_pred_test = [s['zero_cost_scores'][zcp_name] for s in zcp_test]
             zcp_pred_train = [s['zero_cost_scores'][zcp_name] for s in zcp_train]
-    
+            
             train_metrics = evaluate_predictions(ytrain, zcp_pred_train)
             test_metrics = evaluate_predictions(ytest, zcp_pred_test)
 

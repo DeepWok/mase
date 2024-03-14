@@ -7,7 +7,7 @@ max_epochs = 5
 batch_size = 512
 learning_rate = 1e-2
 accelerator = "cpu"
-project = "zero_cost_proxy"
+project = "zero_cost_proxy_test"
 seed = 42
 log_every_n_steps = 5
 load_name = "../mase_output/jsc_tiny_search_test_1/software/training_ckpts/best.ckpt"
@@ -22,6 +22,7 @@ by = "name"
 [search.search_space.zc]
 seed = 2
 benchmark = 'nasbench201'
+ensemble_mode = true
 dataset = 'cifar10'
 num_archs_train = 3
 num_archs_test = 3
@@ -30,7 +31,6 @@ zc_proxies = ['epe_nas', 'fisher', 'grad_norm']
 
 [search.strategy]
 name = "naslib"
-ensemble_mode = true
 
 [search.strategy.sw_runner.basic_evaluation]
 data_loader = "val_dataloader"
@@ -45,11 +45,13 @@ n_trials = 1
 timeout = 20000
 sampler = "tpe"
 direction = "minimize"
+weight_lower_limit = -50
+weight_upper_limit = 50
 
-[search.strategy.metrics]
-# loss.scale = 1.0
-# loss.direction = "minimize"
-accuracy.scale = 1.0
-accuracy.direction = "maximize"
-average_bitwidth.scale = 0.2
-average_bitwidth.direction = "minimize"
+# [search.strategy.metrics]
+# # loss.scale = 1.0
+# # loss.direction = "minimize"
+# accuracy.scale = 1.0
+# accuracy.direction = "maximize"
+# average_bitwidth.scale = 0.2
+# average_bitwidth.direction = "minimize"
