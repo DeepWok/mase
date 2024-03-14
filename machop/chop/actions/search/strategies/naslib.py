@@ -5,11 +5,10 @@ import logging
 from tabulate import tabulate
 import joblib
 import pdb
+from ..search_space.zero_cost_proxy.utils import evaluate_predictions
 
 from functools import partial
 from .base import SearchStrategyBase
-
-from chop.passes.module.analysis import calculate_avg_bits_module_analysis_pass
 
 logger = logging.getLogger(__name__)
 
@@ -195,14 +194,21 @@ class SearchStrategyNaslib(SearchStrategyBase):
 
         model_results = self.combined_list(search_space.zcp_results)
 
+        # ytest = []
+        # ensemble_preds = []
         for x in model_results:
             x['metrics']['ensemble'] = self.get_ensemble_weight(x, best_params)
+            # ensemble_preds.append(x['metrics']['ensemble'])
+            # ytest.append(x['test_accuraccy'])
 
             # import pdb
             # pdb.set_trace()
         
         print("model_results: ", model_results)
 
+        # ensemble_metric = evaluate_predictions(ytest, ensemble_preds)
+
+        
         self._save_study(study, self.save_dir / "study.pkl")
         self._save_search_dataframe(study, search_space, self.save_dir / "log.json")
         self._save_best_zero_cost(study, search_space, model_results, self.save_dir / "metrics.json")
@@ -231,7 +237,14 @@ class SearchStrategyNaslib(SearchStrategyBase):
         # import pdb
         # pdb.set_trace()
 
-        result_dict = {}
+        # calculate ensemble metric
+        ytest = [x['test_accuracy'] for x in model_results]
+        ensemble_preds = [x['metrics']['ensemble'] for x in model_results]
+        ensemble_metric = evaluate_predictions(ytest, ensemble_preds)
+
+        print("ensemble_metric:  ", ensemble_metric)
+
+        result_dict = {"ensemble_metric": ensemble_metric}
         for item in search_space.zcp_results:
             key = list(item.keys())[0]
             values = item[key]
