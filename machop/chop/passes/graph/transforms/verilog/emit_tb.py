@@ -63,10 +63,11 @@ def _process_output_4d(
     width: int,
     frac_width: int,
 ):
+    # TODO: Add signedness to output cast
     return f"""
 # OUTPUT: {arg}
 {arg}_flat = model_out.reshape(-1, {total_dim1}, {total_dim0})
-{arg}_flat, _ = _fixed_signed_cast_model({arg}_flat, {width}, {frac_width}, False, "floor")
+{arg}_flat = integer_quantizer_for_hw({arg}_flat, {width}, {frac_width})
 {arg}_monitor_exp = list()
 for i in range({arg}_flat.shape[0]):
     {arg}_monitor_exp.extend(split_matrix({arg}_flat[i], {total_dim0}, {total_dim1}, \
@@ -194,8 +195,8 @@ from mase_cocotb.matrix_tools import (
     split_matrix,
 )
 
-from mase_components.cast.test.fixed_signed_cast_tb import (
-    _fixed_signed_cast_model
+from chop.passes.graph.transforms.quantize.quantizers.quantizers_for_hw import (
+    integer_quantizer_for_hw
 )
 
 

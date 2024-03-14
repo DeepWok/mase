@@ -63,6 +63,9 @@ from .layer_norm import (
 from .group_norm import (
     GroupNormInteger
 )
+from .instance_norm2d import (
+    InstanceNorm2dInteger
+)
 
 quantized_module_map = {
     "conv1d_block_minifloat": Conv1dBlockMinifloat,

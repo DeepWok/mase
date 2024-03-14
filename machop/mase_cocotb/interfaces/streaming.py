@@ -71,3 +71,64 @@ class StreamMonitor(Monitor):
                     )
                 )
                 assert False, "Test Failed!"
+
+
+class ErrorThresholdStreamMonitor(StreamMonitor):
+    def __init__(
+        self,
+        clk,
+        data,
+        valid,
+        ready,
+        width: int,       # Width of the number
+        signed: bool,     # Signedness of number
+        error_bits: int,  # Number of last bits the number can be off by
+        check=True,
+        name=None,
+    ):
+        super().__init__(clk, data, valid, ready, check, name)
+
+        self.width = width
+        self.signed = signed
+        self.error_bits = error_bits
+        self.log.setLevel("INFO")
+
+    def _check(self, got, exp):
+        fail = not self.check
+        if type(got) != type(exp):
+            assert fail, (
+                f"Type Mismatch got:{type(got)} vs. exp:{type(exp)}"
+            )
+
+        # Compare Outputs
+        if type(got) == list:
+            g = np.array(got)
+            e = np.array(exp)
+            if self.signed:
+                g = sign_extend(g, self.width)
+                e = sign_extend(e, self.width)
+            err = np.abs(g - e)
+            max_biterr = np.full_like(err, self.error_bits)
+            if not (err <= max_biterr).all():
+                self.log.error(
+                    "Failed | Got: %20s Exp: %20s Err: %14s" % (g, e, err)
+                )
+                assert fail, "Test Failed!"
+                return
+
+        elif type(got) == int:
+            g, e = got, exp
+            if self.signed:
+                g = sign_extend(g, self.width)
+                e = sign_extend(e, self.width)
+            err = abs(g - e)
+            if not err <= self.error_bits:
+                self.log.error(
+                    "Failed | Got: %20s Exp: %20s Err: %10s" % (g, e, err)
+                )
+                assert fail, "Test Failed!"
+                return
+
+        self.log.debug(
+            "Passed | Got: %20s Exp: %20s Err: %10s" % (g, e, err)
+        )

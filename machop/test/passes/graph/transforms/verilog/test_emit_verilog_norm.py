@@ -80,6 +80,7 @@ def _debug_mase_metadata(mg):
     for n in mg.fx_graph.nodes:
         print(n.meta["mase"].parameters, end="\n\n")
 
+
 def test_emit_verilog_norm():
 
     batch_size = 10
