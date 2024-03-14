@@ -1,5 +1,8 @@
+import logging
+from math import ceil, log2
 from functools import partial
 
+import torch
 import torch.nn as nn
 from torch import Tensor
 import torch.nn.functional as F
@@ -9,46 +12,47 @@ from ..quantizers import (
 )
 
 
-class _LayerNormBase(nn.LayerNorm):
+from mase_components.fixed_arithmetic.test.isqrt_sw import (
+    isqrt_sw2
+)
+
+logger = logging.getLogger(__file__)
+logger.setLevel(logging.DEBUG)
+
+
+class _GroupNormBase(nn.GroupNorm):
     def __init__(
         self,
-        normalized_shape,
+        num_groups: int,
+        num_channels: int,
         eps: float = 0.00001,
-        elementwise_affine: bool = False,
-        bias: bool = False,
+        affine: bool = True,
         device = None,
         dtype = None,
     ) -> None:
+        super().__init__(num_groups, num_channels, eps, affine, device, dtype)
 
-        assert elementwise_affine == False, "elementwise_affine not supported!"
-        super().__init__(
-            normalized_shape, eps, elementwise_affine, bias, device, dtype
-        )
         self.bypass = False
         self.x_quantizer = None
 
     def forward(self, x: Tensor) -> Tensor:
         if not self.bypass:
             x = self.x_quantizer(x)
-        return F.layer_norm(
-            x, self.normalized_shape, None, None
-        )
+        return F.group_norm(x, self.num_groups, None, None, self.eps)
 
 
-class LayerNormInteger(_LayerNormBase):
+class GroupNormInteger(_GroupNormBase):
     def __init__(
         self,
-        normalized_shape,
+        num_groups: int,
+        num_channels: int,
         eps: float = 0.00001,
-        elementwise_affine: bool = False,
-        bias: bool = False,
+        affine: bool = True,
         device = None,
         dtype = None,
         config = None,
     ) -> None:
-        super().__init__(
-            normalized_shape, eps, elementwise_affine, bias, device, dtype
-        )
+        super().__init__(num_groups, num_channels, eps, affine, device, dtype)
         assert config is not None, "config is None!"
         self.config = config
         self.bypass = config.get("bypass", False)

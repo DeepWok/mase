@@ -8,14 +8,39 @@ from cocotb.triggers import *
 from random import randint
 from mase_cocotb.testbench import Testbench
 from mase_cocotb.runner import mase_runner
-from mase_cocotb.utils import sign_extend_t
+from mase_cocotb.utils import sign_extend_t, signed_to_unsigned
 
-from chop.passes.graph.transforms.quantize.quantized_modules.fixed_signed_cast import (
-    _fixed_signed_cast_model
+from chop.passes.graph.transforms.quantize.quantizers.utils import (
+    my_floor,
+    my_round,
+    my_clamp,
 )
+
+
+def _fixed_signed_cast_model(
+    float_input, out_width, out_frac_width, symmetric, rounding_mode
+):
+    scaled_float = float_input * (2 ** out_frac_width)
+    if rounding_mode == "floor":
+        out_int = my_floor(scaled_float)
+    elif rounding_mode == "round_nearest_half_even":
+        out_int = my_round(scaled_float)
+    else:
+        raise Exception("Rounding mode not recognised.")
+    out_int = my_clamp(
+        out_int,
+        -(2**(out_width-1))+1 if symmetric else -(2**(out_width-1)),
+        (2**(out_width-1))-1
+    )
+    out_float = out_int / (2 ** out_frac_width)
+    # out_uint is a non-differentiable path
+    out_uint = signed_to_unsigned(out_int.int(), out_width)
+    return out_float, out_uint
+
 
 logger = logging.getLogger("testbench")
 logger.setLevel(logging.INFO)
+
 
 
 class FixedSignedCastTB(Testbench):
