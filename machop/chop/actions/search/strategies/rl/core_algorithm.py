@@ -44,7 +44,7 @@ class StrategyRL(SearchStrategyBase):
             verbose=1,
             device=self.device,
             tensorboard_log="./logs/",
-            n_steps=40,
+            n_steps=64,
         )
 
         vec_env = model.get_env()

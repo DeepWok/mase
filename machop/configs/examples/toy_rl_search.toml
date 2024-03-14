@@ -32,7 +32,7 @@ algorithm = 'ppo'
 env = 'mixed_precision'
 num_episodes = 1 
 device = 'cuda'
-total_timesteps = 200
+total_timesteps = 20000
 save_name = 'tmp'
 
 [search.strategy.sw_runner.basic_evaluation]
