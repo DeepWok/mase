@@ -30,9 +30,9 @@ bias_frac_width = [2, 4, 6]
 name = "rl"
 algorithm = 'ppo'
 env = 'mixed_precision'
-num_episodes = 1
-device = 'cpu'
-total_timesteps = 10000
+num_episodes = 1 
+device = 'cuda'
+total_timesteps = 200
 save_name = 'tmp'
 
 [search.strategy.sw_runner.basic_evaluation]

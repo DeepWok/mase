@@ -151,7 +151,6 @@ class SearchStrategyOptuna(SearchStrategyBase):
         self._save_study(study, self.save_dir / "study.pkl")
         self._save_search_dataframe(study, search_space, self.save_dir / "log.json")
         self._save_best(study, self.save_dir / "best.json")
-
         return study
 
     @staticmethod

@@ -24,7 +24,7 @@ class StrategyRL(SearchStrategyBase):
         self.device = self.config["device"]
     
     def search(self, search_space):
-        env = self.env(config=self.config, search_space=search_space, sw_runner=self.sw_runner, data_module=self.data_module)
+        env = self.env(config=self.config, search_space=search_space, sw_runner=self.sw_runner, hw_runner=self.hw_runner, data_module=self.data_module)
 
         checkpoint_callback = CheckpointCallback(save_freq=1000, save_path="./logs/")
         eval_callback = EvalCallback(
@@ -44,7 +44,7 @@ class StrategyRL(SearchStrategyBase):
             verbose=1,
             device=self.device,
             tensorboard_log="./logs/",
-            n_steps=10,
+            n_steps=40,
         )
 
         vec_env = model.get_env()
@@ -60,7 +60,10 @@ class StrategyRL(SearchStrategyBase):
 
         # inference run, but not needed?
         obs = vec_env.reset()
-        for _ in range(1000):
+        for _ in range(10):
             action, _state = model.predict(obs, deterministic=True)
-            obs, reward, done, truncated, info = vec_env.step(action)
-        return obs["loss"], obs, model
+            obs, reward, done, info = vec_env.step(action)
+
+        print(obs) # TODO: Pretty print results
+        
+        return obs["cost"], obs, model
