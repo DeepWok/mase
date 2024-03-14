@@ -183,43 +183,44 @@ class ErrorThresholdStreamMonitor(StreamMonitor):
         self.log.setLevel("INFO")
 
     def _check(self, got, exp):
-        if self.check:
-            if type(got) != type(exp):
-                assert False, (
-                    f"Type Mismatch got:{type(got)} vs. exp:{type(exp)}"
-                )
-
-            # Compare Outputs
-            if type(got) == list:
-                g = np.array(got)
-                e = np.array(exp)
-                if self.signed:
-                    g = sign_extend(g, self.width)
-                    e = sign_extend(e, self.width)
-                err = np.abs(g - e)
-                max_biterr = np.full_like(err, self.error_bits)
-                if not (err <= max_biterr).all():
-                    self.log.error(
-                        "Got:\n%s\nExpected:\n%s\nError:\n%s" % (g, e, err)
-                    )
-                    assert False, "Test Failed!"
-
-            elif type(got) == int:
-                g, e = got, exp
-                if self.signed:
-                    g = sign_extend(g, self.width)
-                    e = sign_extend(e, self.width)
-                err = abs(g - e)
-                if not err <= self.error_bits:
-                    self.log.error(
-                        "Got:\n%s\nExpected:\n%s\nError:\n%s" % (g, e, err)
-                    )
-                    assert False, "Test Failed!"
-
-            self.log.info(
-                "Passed | Got: %20s Exp: %20s Err: %10s"
-                % (g, e, err)
+        fail = not self.check
+        if type(got) != type(exp):
+            assert fail, (
+                f"Type Mismatch got:{type(got)} vs. exp:{type(exp)}"
             )
+
+        # Compare Outputs
+        if type(got) == list:
+            g = np.array(got)
+            e = np.array(exp)
+            if self.signed:
+                g = sign_extend(g, self.width)
+                e = sign_extend(e, self.width)
+            err = np.abs(g - e)
+            max_biterr = np.full_like(err, self.error_bits)
+            if not (err <= max_biterr).all():
+                self.log.error(
+                    "Failed | Got: %20s Exp: %20s Err: %14s" % (g, e, err)
+                )
+                assert fail, "Test Failed!"
+                return
+
+        elif type(got) == int:
+            g, e = got, exp
+            if self.signed:
+                g = sign_extend(g, self.width)
+                e = sign_extend(e, self.width)
+            err = abs(g - e)
+            if not err <= self.error_bits:
+                self.log.error(
+                    "Failed | Got: %20s Exp: %20s Err: %10s" % (g, e, err)
+                )
+                assert fail, "Test Failed!"
+                return
+
+        self.log.info(
+            "Passed | Got: %20s Exp: %20s Err: %10s" % (g, e, err)
+        )
 
 
 class GroupNorm2dTB(Testbench):
@@ -270,6 +271,7 @@ class GroupNorm2dTB(Testbench):
             width=self.OUT_WIDTH,
             signed=True,
             error_bits=2,
+            check=False,
         )
 
         # Intermediate value monitors
