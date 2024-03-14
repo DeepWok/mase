@@ -72,7 +72,11 @@ always_comb begin
     // Write side of machine
     // Increment write pointer
     if (in_valid && in_ready) begin
-        next_self.write_ptr = self.write_ptr + 1;
+        if (self.write_ptr == SIZE-1) begin
+            next_self.write_ptr = 0;
+        end else begin
+            next_self.write_ptr += 1;
+        end
         next_self.size = self.size + 1;
         ram_wr_en = 1;
     end else begin
