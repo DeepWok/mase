@@ -117,6 +117,47 @@ class SearchStrategyNaslib(SearchStrategyBase):
         average_loss_with_penalty = (total_loss + penalty) / len(combined_data_list)
 
         return average_loss_with_penalty
+    
+    def get_ensemble_weight(self, model_result, best_params):
+        """
+        Calculates the ensemble weight for a given model result and the best parameters.
+
+        The ensemble weight is computed by summing the product of each metric's value
+        in the model result with its corresponding best parameter value.
+
+        Args:
+            model_result (dict): A dictionary containing the model's results, including a 'metrics' sub-dictionary.
+            best_params (dict): A dictionary containing the best parameter value for each metric.
+
+        Returns:
+            float: The calculated ensemble weight.
+        """
+
+        # Calculate the ensemble weight as the sum of products of each metric's value and its best parameter.
+        ensemble_weight = sum(model_result['metrics'][metric] * best_params[metric] for metric in model_result['metrics'])
+
+        return ensemble_weight
+
+    # add = lambda x, y: x + y
+    # print(add(5, 3))  # Output: 8
+    
+    # zcp_preds = {}
+    # for zcp_name in zc_proxies:
+    #   zcp_test = [{'zero_cost_scores': eval_zcp(t_arch, zcp_name, train_loader)} for t_arch in tqdm(xtest)]
+    #   zcp_pred = [s['zero_cost_scores'][zcp_name] for s in zcp_test]
+    #   zcp_preds[zcp_name] = zcp_pred
+
+
+    # ensemble_preds = []
+    # for i in range(train_size):
+    #   ensemble_preds.append(sum([zcp_preds[zcp_name][i] * best_params[zcp_name] for zcp_name in zc_proxies])) 
+
+    # print(ensemble_preds)
+
+    # ens_metrics = evaluate_predictions(ytest, ensemble_preds, plot=False,
+    #                                 title=f"NB201 accuracies vs {zcp_name}")
+
+    # print("ens_metrics:  ", ens_metrics)
 
     def search(self, search_space) -> optuna.study.Study:
         print("search_space:  ", search_space)
@@ -151,9 +192,20 @@ class SearchStrategyNaslib(SearchStrategyBase):
         best_params = study.best_params
         print("best_params:  ", best_params)
 
+
+        model_results = self.combined_list(search_space.zcp_results)
+
+        for x in model_results:
+            x['metrics']['ensemble'] = self.get_ensemble_weight(x, best_params)
+
+            # import pdb
+            # pdb.set_trace()
+        
+        print("model_results: ", model_results)
+
         self._save_study(study, self.save_dir / "study.pkl")
         self._save_search_dataframe(study, search_space, self.save_dir / "log.json")
-        self._save_best_zero_cost(study, search_space, self.combined_list(search_space.zcp_results), self.save_dir / "metrics.json")
+        self._save_best_zero_cost(study, search_space, model_results, self.save_dir / "metrics.json")
 
         return study
 
