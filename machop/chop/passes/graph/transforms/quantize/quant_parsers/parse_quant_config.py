@@ -357,10 +357,22 @@ MASE_OP_TO_ENTRIES = {
         ("name", "data_in_entries"),
         ("bypass",),
     ),  # RoPE of Llama
+    "batch_norm2d": (
+        ("name", "data_in_entries"),
+        ("bypass",),
+    ),
     "layer_norm": (
         ("name", "data_in_entries"),
         ("bypass",),
-    )
+    ),
+    "group_norm": (
+        ("name", "data_in_entries"),
+        ("bypass",),
+    ),
+    "instance_norm2d": (
+        ("name", "data_in_entries"),
+        ("bypass",),
+    ),
 }
 
 

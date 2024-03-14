@@ -57,6 +57,9 @@ from .relu import (
     ReLUBinary,
     ReLUTernary,
 )
+from .batch_norm2d import (
+    BatchNorm2dInteger
+)
 from .layer_norm import (
     LayerNormInteger,
 )
@@ -116,5 +119,8 @@ quantized_module_map = {
     "relu_block_fp": ReLUBlockFP,
     "relu_binary": ReLUBinary,
     "relu_ternary": ReLUTernary,
+    "batch_norm2d_integer": BatchNorm2dInteger,
     "layer_norm_integer": LayerNormInteger,
+    "group_norm_integer": GroupNormInteger,
+    "instance_norm2d_integer": InstanceNorm2dInteger,
 }

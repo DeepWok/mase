@@ -59,5 +59,8 @@ INTERNAL_COMP = {
             ],
         },
     ],
+    "batch_norm2d" : [norm],
     "layer_norm" : [norm],
+    "group_norm" : [norm],
+    "instance_norm2d" : [norm],
 }
