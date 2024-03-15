@@ -268,18 +268,18 @@ class QuantizationAnalysis():
         avg_gpu_energy_usage = (avg_gpu_power_usage* 1000) * (avg_latency / 3600000)
         
         metrics = [
-            ["Average " + dataset + " Accuracy", f"{acc_avg:.5f}"],
-            ["Average Precision", f"{avg_precision:.5f}"],
-            ["Average Recall", f"{avg_recall:.5f}"],
-            ["Average F1 Score", f"{avg_f1:.5f}"],
-            ["Average Loss", f"{loss_avg:.5f}"],
-            ["Average Latency", f"{avg_latency:.5f} ms"],
-            ["Average GPU Power Usage", f"{avg_gpu_power_usage:.5f} W"],
-            ["Inference Energy Consumption", f"{avg_gpu_energy_usage:.5f} mWh"]
+            ["Average " + dataset + " Accuracy", f"{acc_avg:.5g}"],
+            ["Average Precision", f"{avg_precision:.5g}"],
+            ["Average Recall", f"{avg_recall:.5g}"],
+            ["Average F1 Score", f"{avg_f1:.5g}"],
+            ["Average Loss", f"{loss_avg:.5g}"],
+            ["Average Latency", f"{avg_latency:.5g} ms"],
+            ["Average GPU Power Usage", f"{avg_gpu_power_usage:.5g} W"],
+            ["Inference Energy Consumption", f"{avg_gpu_energy_usage:.5g} mWh"]
         ]
 
         # Formatting the table with tabulate
-        formatted_metrics = tabulate(metrics, headers=['Metric', 'Value'], tablefmt="pretty", floatfmt=".5f")
+        formatted_metrics = tabulate(metrics, headers=['Metric', 'Value'], tablefmt="pretty", floatfmt=".5g")
 
         # Print result summary
         self.logger.info(f"\nConfiguration {self.model_name}:\n" + formatted_metrics)
@@ -291,8 +291,8 @@ class QuantizationAnalysis():
             "Average Recall": avg_recall,
             "Average F1 Score": avg_f1,
             "Average Loss": loss_avg,
-            "Average Latency": f"{avg_latency} milliseconds",
-            "Average GPU Power Usage": f"{avg_gpu_power_usage} watts",
-            "Inference Energy Consumption": f"{avg_gpu_energy_usage} kW/hr"
+            "Average Latency": avg_latency,
+            "Average GPU Power Usage": avg_gpu_power_usage,
+            "Inference Energy Consumption": avg_gpu_energy_usage
         }
         return results
