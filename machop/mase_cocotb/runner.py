@@ -54,6 +54,7 @@ def mase_runner(
         print("##########################################")
         print(f"#### Test {i+1}/{len(module_param_list)}")
         print(f"#### Parameters:")
+        print(f"#### - {'Test Index':20}: {i}")
         for k, v in module_params.items():
             print(f"#### - {k:20}: {v}")
         print("##########################################")

@@ -27,39 +27,8 @@ module group_norm_2d #(
     parameter OUT_WIDTH           = 8,
     parameter OUT_FRAC_WIDTH      = 4,
 
-    // Inverse Sqrt LUT (TODO: Change to .mem file)
-    parameter LUT00               = 0,
-    parameter LUT01               = 0,
-    parameter LUT02               = 0,
-    parameter LUT03               = 0,
-    parameter LUT04               = 0,
-    parameter LUT05               = 0,
-    parameter LUT06               = 0,
-    parameter LUT07               = 0,
-    parameter LUT08               = 0,
-    parameter LUT09               = 0,
-    parameter LUT10               = 0,
-    parameter LUT11               = 0,
-    parameter LUT12               = 0,
-    parameter LUT13               = 0,
-    parameter LUT14               = 0,
-    parameter LUT15               = 0,
-    parameter LUT16               = 0,
-    parameter LUT17               = 0,
-    parameter LUT18               = 0,
-    parameter LUT19               = 0,
-    parameter LUT20               = 0,
-    parameter LUT21               = 0,
-    parameter LUT22               = 0,
-    parameter LUT23               = 0,
-    parameter LUT24               = 0,
-    parameter LUT25               = 0,
-    parameter LUT26               = 0,
-    parameter LUT27               = 0,
-    parameter LUT28               = 0,
-    parameter LUT29               = 0,
-    parameter LUT30               = 0,
-    parameter LUT31               = 0
+    // Inverse Sqrt LUT
+    parameter ISQRT_LUT_MEMFILE   = ""
 ) (
     input  logic                 clk,
     input  logic                 rst,
@@ -370,14 +339,7 @@ fixed_isqrt #(
     // Module ignores these anyway
     // .OUT_WIDTH(ISQRT_WIDTH),
     // .OUT_FRAC_WIDTH(ISQRT_FRAC_WIDTH),
-    .LUT00(LUT00), .LUT01(LUT01), .LUT02(LUT02), .LUT03(LUT03),
-    .LUT04(LUT04), .LUT05(LUT05), .LUT06(LUT06), .LUT07(LUT07),
-    .LUT08(LUT08), .LUT09(LUT09), .LUT10(LUT10), .LUT11(LUT11),
-    .LUT12(LUT12), .LUT13(LUT13), .LUT14(LUT14), .LUT15(LUT15),
-    .LUT16(LUT16), .LUT17(LUT17), .LUT18(LUT18), .LUT19(LUT19),
-    .LUT20(LUT20), .LUT21(LUT21), .LUT22(LUT22), .LUT23(LUT23),
-    .LUT24(LUT24), .LUT25(LUT25), .LUT26(LUT26), .LUT27(LUT27),
-    .LUT28(LUT28), .LUT29(LUT29), .LUT30(LUT30), .LUT31(LUT31)
+    .LUT_MEMFILE(ISQRT_LUT_MEMFILE)
 ) inv_sqrt_inst (
     .in_data(variance_clamp_out),
     .in_valid(variance_clamp_valid),
