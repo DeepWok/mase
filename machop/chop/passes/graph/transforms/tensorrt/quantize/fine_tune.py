@@ -29,11 +29,6 @@ def tensorrt_fine_tune_transform_pass(graph, pass_args=None):
     trainer = FineTuning(graph, pass_args)
     ckpt_save_path = trainer.train()
 
-    from chop.tools.checkpoint_load import load_model
-    from chop.ir import MaseGraph
-    model = load_model(load_name=ckpt_save_path, load_type="pl", model=graph.model)
-    graph = MaseGraph(model=model)
-
     # link the model with graph
     graph.model = torch.fx.GraphModule(graph.model, graph.fx_graph)
 

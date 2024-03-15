@@ -134,7 +134,13 @@ class Quantizer:
         train_sample = next(iter(dataloader))[0]
         train_sample = train_sample.to(self.config['accelerator'])
 
-        torch.onnx.export(model, train_sample, onnx_path, export_params=True, opset_version=11, 
+        ''' 
+        This line may produce the warning if the model input size is fixed:
+                torch.onnx.export(model.cuda(), train_sample.cuda(), onnx_path, export_params=True, opset_version=11, 
+                          do_constant_folding=True, input_names=['input'])# Load the ONNX model
+        It is a known issue: https://github.com/onnx/onnx/issues/2836 https://github.com/ultralytics/yolov5/issues/5505 
+        '''
+        torch.onnx.export(model.cuda(), train_sample.cuda(), onnx_path, export_params=True, opset_version=11, 
                           do_constant_folding=True, input_names=['input'])# Load the ONNX model
         
         model = onnx.load(onnx_path)

@@ -197,7 +197,7 @@ class PowerMonitor(threading.Thread):
             power_mW = pynvml.nvmlDeviceGetPowerUsage(self.handle)
             power_W = power_mW / 1000.0
             self.power_readings.append(power_W)
-            time.sleep(0.001)  # Wait before next reading
+            time.sleep(0.001)  # Wait before next readi
 
     def stop(self):
         self.running = False  # Stop the monitoring loop

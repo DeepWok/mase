@@ -51,29 +51,34 @@ def tensorrt_analysis_pass(model, pass_args=None):
 
 class QuantizationAnalysis():
     def __init__(self, model, config):
-        # Check if model is mase graph
-        if isinstance(model, MaseGraph):
-            self.model = model
-        # Otherwise assume path is to a trt file
-        elif isinstance(model, PosixPath):
-            TRT_LOGGER = trt.Logger(trt.Logger.WARNING)
-            # Load the serialized TensorRT engine
-            with open(model, "rb") as f:
-                self.engine = trt.Runtime(TRT_LOGGER).deserialize_cuda_engine(f.read())
-            self.runtime = trt.Runtime(TRT_LOGGER) 
-            self.num_io = self.engine.num_io_tensors
-            self.lTensorName = [self.engine.get_tensor_name(i) for i in range(self.num_io)]
-            self.n_Input = [self.engine.get_tensor_mode(self.lTensorName[i]) for i in range(self.num_io)].count(trt.TensorIOMode.INPUT)
-            self.context = self.engine.create_execution_context()
-            self.model = self.context
-            self.summarize()
-        else:
-            raise Exception("Model must be a MaseGraph or a PosixPath to a trt file. Have you run the quantization pass?")
-
-        self.num_of_classes = self.config['data_module'].dataset_info.num_classes
 
         self.config = config
         self.logger = logging.getLogger(__name__)
+        self.num_of_classes = self.config['data_module'].dataset_info.num_classes
+
+        # Check if model is mase graph
+        if isinstance(model, MaseGraph):
+            self.model = model.model
+            self.model_name = self.config['model']
+        # Otherwise check file type
+        elif isinstance(model, PosixPath):
+            if model.suffix == '.trt':
+                TRT_LOGGER = trt.Logger(trt.Logger.WARNING)
+                # Load the serialized TensorRT engine
+                with open(model, "rb") as f:
+                    self.engine = trt.Runtime(TRT_LOGGER).deserialize_cuda_engine(f.read())
+                self.runtime = trt.Runtime(TRT_LOGGER) 
+                self.num_io = self.engine.num_io_tensors
+                self.lTensorName = [self.engine.get_tensor_name(i) for i in range(self.num_io)]
+                self.n_Input = [self.engine.get_tensor_mode(self.lTensorName[i]) for i in range(self.num_io)].count(trt.TensorIOMode.INPUT)
+                self.context = self.engine.create_execution_context()
+                self.model = self.context
+                self.summarize()
+                self.model_name = f"{self.config['model']}-quantized"
+            else:
+                raise Exception("Model must be a MaseGraph or a path to a trt file. Have you run the quantization pass?")
+        else:
+            raise Exception("Model must be a MaseGraph or a PosixPath to a trt file. Have you run the quantization pass?")
 
     def summarize(self):
         io_info_lines = [
@@ -116,13 +121,14 @@ class QuantizationAnalysis():
         # INFERENCE!
         start.record()
         preds = model(input_data)
+        
         end.record()
-
-        # Calculate latency between start and end events
-        latency = start.elapsed_time(end)
 
         # Synchronize to ensure all GPU operations are finished
         torch.cuda.synchronize()
+
+        # Calculate latency between start and end events
+        latency = start.elapsed_time(end)
 
         # return the prediction back to the CPU
         return preds.detach().cpu(), latency
@@ -150,6 +156,9 @@ class QuantizationAnalysis():
         start.record()
         self.context.execute_async_v3(0)
         end.record()
+
+        # Synchronize to ensure all GPU operations are finished
+        torch.cuda.synchronize()
 
         # Calculate latency between start and end events
         latency = start.elapsed_time(end)
@@ -200,6 +209,8 @@ class QuantizationAnalysis():
             power_monitor = PowerMonitor(self.config)
             power_monitor.start()
 
+            # Synchronize to ensure all GPU operations are finished
+            torch.cuda.synchronize()
             torch.cuda.empty_cache()
 
             if isinstance(self.model, trt.IExecutionContext):
@@ -255,16 +266,16 @@ class QuantizationAnalysis():
         self.logger.info(
             f"\nConfiguration {self.model_name}:\n" +
             "\n".join([
-                "Metric                             | Value",
-                "-----------------------------------|-----------------------",
-                f"Average Accuracy                  | {acc_avg}",
-                f"Average Precision                 | {avg_precision}",
-                f"Average Recall                    | {avg_recall}",
-                f"Average F1 Score                  | {avg_f1}",
-                f"Average Loss                      | {loss_avg}",
-                f"Average Latency                   | {avg_latency} milliseconds",
-                f"Average GPU Power Usage           | {avg_gpu_power_usage} watts",
-                f"Inference Energy Consumption      | {avg_gpu_energy_usage} kW/hr"
+                "Metric                                  | Value",
+                "----------------------------------------|-----------------------",
+                f"Average Validation Accuracy             | {acc_avg:.5f}",
+                f"Average Precision                       | {avg_precision:.5f}",
+                f"Average Recall                          | {avg_recall:.5f}",
+                f"Average F1 Score                        | {avg_f1:.5f}",
+                f"Average Loss                            | {loss_avg:.5f}",
+                f"Average Latency                         | {avg_latency:.5f} milliseconds",
+                f"Average GPU Power Usage                 | {avg_gpu_power_usage:.5f} watts",
+                f"Inference Energy Consumption            | {avg_gpu_energy_usage:.5f} kW/hr"
             ])
         )
 

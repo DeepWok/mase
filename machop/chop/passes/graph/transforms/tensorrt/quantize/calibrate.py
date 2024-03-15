@@ -24,8 +24,6 @@ def tensorrt_fake_quantize_transform_pass(graph, pass_args=None):
             graph = fq.fake_quantize_by_type(graph)
         case "name":
             graph = fq.fake_quantize_by_name(graph)
-        case "regex_name":
-            ...
         case _:
             raise ValueError(f'Unsupported quantize "by": {by}')
 

@@ -84,7 +84,7 @@ def transform(
     for pass_name, pass_config in pass_config.items():
         pass_name: str
         pass_config: dict
-        pass_name_components = pass_name.split("-")
+        pass_name_components = pass_name.split("_")
         pass_name = pass_name_components[0]
 
         match pass_name:
@@ -97,13 +97,13 @@ def transform(
                 ori_graph = deepcopy_mase_graph(graph)
 
                 pass_config['batch_size'] = config['batch_size']
+                pass_config['model'] = config['model']
                 pass_config['data_module'] = data_module
                 pass_config['accelerator'] = 'cuda' if accelerator == 'gpu' else accelerator
                 if accelerator == 'gpu':
                     #TODO this seems innefective - known issue - https://github.com/NVIDIA/TensorRT/issues/2468
                     os.environ['CUDA_MODULE_LOADING'] = 'LAZY'
 
-                trt_meta = {}
                 match pass_name_extended: 
                     case "quantize":
                         # Firstly fake quantize the model for calibration (only required if using INT8 precision otherwise skipped)
@@ -139,6 +139,8 @@ def transform(
                         raise NotImplementedError()
                     case "kerneltuning":
                         raise NotImplementedError()
+                    case _:
+                        raise ValueError(f"Unsupported tensorrt pass: {pass_name_extended}")
                     
             case "onnxruntime":
                 pass_save_dir = save_dir / "quantize"
