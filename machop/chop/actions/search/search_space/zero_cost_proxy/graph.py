@@ -3,7 +3,7 @@
 from ..base import SearchSpaceBase
 
 from naslib.search_spaces import NasBench201SearchSpace
-from naslib.utils import get_dataset_api
+from naslib.utils import get_dataset_api, setup_logger, get_zc_benchmark_api
 from naslib.utils import get_train_val_loaders, get_project_root
 from fvcore.common.config import CfgNode
 from tqdm import tqdm
@@ -71,9 +71,13 @@ class ZeroCostProxy(SearchSpaceBase):
         xgboost_metrics = {}
         for zcp_name in self.config["zc"]["zc_proxies"]:
             # train and query expect different ZCP formats
-            zcp_train = [{'zero_cost_scores': eval_zcp(t_arch, zcp_name, train_loader)} for t_arch in tqdm(xtrain)]
-            zcp_test = [{'zero_cost_scores': eval_zcp(t_arch, zcp_name, train_loader)} for t_arch in tqdm(xtest)]            
-
+            # zcp_train = [{'zero_cost_scores': eval_zcp(t_arch, zcp_name, train_loader)} for t_arch in tqdm(xtrain)]
+            # zcp_test = [{'zero_cost_scores': eval_zcp(t_arch, zcp_name, train_loader)} for t_arch in tqdm(xtest)]
+            zc_api = get_zc_benchmark_api(self.config["zc"]["benchmark"], pred_dataset)
+            
+            zcp_train = [{'zero_cost_scores': zc_api[str(t_arch)][zcp_name]['score']} for t_arch in tqdm(xtrain)]
+            zcp_test = [{'zero_cost_scores': zc_api[str(t_arch)][zcp_name]['score']} for t_arch in tqdm(xtest)]               
+                       
             zcp_pred_test = [s['zero_cost_scores'][zcp_name] for s in zcp_test]
             zcp_pred_train = [s['zero_cost_scores'][zcp_name] for s in zcp_train]
             

@@ -23,11 +23,19 @@ by = "name"
 seed = 2
 benchmark = 'nasbench201'
 ensemble_mode = true
+<<<<<<< HEAD
 dataset = 'cifar100'
 num_archs_train = 3
 num_archs_test = 3
 zc_proxies = ['epe_nas']
 # zc_proxies = ['epe_nas', 'fisher', 'grad_norm', 'grasp', 'jacov', 'l2_norm', 'nwot', 'plain', 'snip', 'synflow', 'zen', 'flops', 'params']
+=======
+dataset = 'cifar10'
+num_archs_train = 500
+num_archs_test = 500
+# zc_proxies = ['epe_nas', 'fisher']
+zc_proxies = ['epe_nas', 'fisher', 'grad_norm', 'grasp', 'jacov', 'l2_norm', 'nwot', 'plain', 'snip', 'synflow', 'zen', 'flops', 'params']
+>>>>>>> e4375e8 (Added zc api)
 
 [search.strategy]
 name = "naslib"
@@ -41,7 +49,7 @@ compare_to = 32
 
 [search.strategy.setup]
 n_jobs = 4
-n_trials = 1
+n_trials = 1000
 timeout = 20000
 sampler = "tpe"
 direction = "minimize"
