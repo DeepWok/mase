@@ -20,11 +20,7 @@ class VerificationCase(Testbench):
     def __init__(self, dut):
         super().__init__(dut)
         self.assign_self_params([
-            "IN_WIDTH",
-            "IN_FRAC_WIDTH",
-            "LUT_POW",
-            "OUT_WIDTH",
-            "OUT_FRAC_WIDTH"
+            "IN_WIDTH", "IN_FRAC_WIDTH", "LUT_POW",
         ])
 
     def generate_inputs(self):
@@ -104,8 +100,7 @@ if __name__ == "__main__":
         write_memb(mem_path, lut, width)
         return {
             "IN_WIDTH": width, "IN_FRAC_WIDTH": frac_width,
-            "OUT_WIDTH": width, "OUT_FRAC_WIDTH": frac_width,
-            "LUT_POW": lut_pow, "PIPELINE_CYCLES": pipeline_cycles,
+            "LUT_POW": lut_pow,
             "LUT_MEMFILE": verilator_str_param(str(mem_path)),
         }
 
