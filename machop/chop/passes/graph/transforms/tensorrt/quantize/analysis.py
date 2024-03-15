@@ -274,7 +274,7 @@ class QuantizationAnalysis():
             ["Average F1 Score", f"{avg_f1:.5f}"],
             ["Average Loss", f"{loss_avg:.5f}"],
             ["Average Latency", f"{avg_latency:.5f} ms"],
-            ["Average GPU Power Usage", f"{avg_gpu_power_usage:.5f} watts"],
+            ["Average GPU Power Usage", f"{avg_gpu_power_usage:.5f} W"],
             ["Inference Energy Consumption", f"{avg_gpu_energy_usage:.5f} mWh"]
         ]
 
