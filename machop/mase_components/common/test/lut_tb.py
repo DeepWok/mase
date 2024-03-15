@@ -63,7 +63,9 @@ async def exhaust(dut):
 def write_memb(file: Path, nums: list[int], width: int):
     num_str = ["{0:0{width}b}".format(x, width=width) for x in nums]
     with open(file, "w") as f:
-        f.write("\n".join(num_str))
+        #  !!! Need to write new line at end of file or $readmem will silently
+        #  fail on last line of mem file :(
+        f.write("\n".join(num_str) + "\n")
 
 
 if __name__ == "__main__":

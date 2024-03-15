@@ -1,4 +1,5 @@
 from os import path, getenv
+import logging
 from shutil import rmtree
 from pathlib import Path
 import re
@@ -9,6 +10,8 @@ import torch
 from cocotb.runner import get_runner, get_results
 from mase_components.deps import MASE_HW_DEPS
 
+logger = logging.getLogger("mase_runner")
+logger.setLevel("INFO")
 
 def mase_runner(
     module_param_list: list[dict[str, Any]] = [dict()],
@@ -49,7 +52,10 @@ def mase_runner(
 
     for i, module_params in enumerate(module_param_list):
         print("##########################################")
-        print(f"#### TEST {i} : {module_params}")
+        print(f"#### Test {i+1}/{len(module_param_list)}")
+        print(f"#### Parameters:")
+        for k, v in module_params.items():
+            print(f"#### - {k:20}: {v}")
         print("##########################################")
         test_work_dir = group_path.joinpath(f"test/build/{module}/test_{i}")
         runner = get_runner(SIM)
@@ -94,9 +100,9 @@ def mase_runner(
         total_fail += fail
 
     print("TEST RESULTS")
-    print("    PASSED:", total_tests - total_fail)
-    print("    FAILED:", total_fail)
-    print("    NUM TESTS:", total_tests)
+    print("    PASSED: %d" % (total_tests - total_fail))
+    print("    FAILED: %d" % (total_fail))
+    print("    NUM TESTS: %d" % (total_tests))
 
     return total_fail
 

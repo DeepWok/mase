@@ -2,14 +2,19 @@
 
 # This script tests the fixed point inverse square root.
 import random, os
+from pathlib import Path
+from os import makedirs
 
 import cocotb
 from cocotb.triggers import Timer
 from mase_cocotb.runner import mase_runner
 import math
 from mase_cocotb.testbench import Testbench
-from isqrt_sw import isqrt_sw2, int_to_float, make_lut, lut_parameter_dict
-
+from mase_cocotb.utils import verilator_str_param
+from mase_components.fixed_arithmetic.test.isqrt_sw import (
+    isqrt_sw2, int_to_float, make_lut
+)
+from mase_components.common.test.lut_tb import write_memb
 
 class VerificationCase(Testbench):
     def __init__(self, dut):
@@ -88,17 +93,21 @@ async def test_fixed_isqrt(dut):
             """
 
 if __name__ == "__main__":
-    def single_test(width, frac_width, lut_pow, pipeline_cycles):
-        parameter_list = []
+
+    mem_dir = Path(__file__).parent / "build" / "fixed_isqrt" / "mem"
+    makedirs(mem_dir, exist_ok=True)
+
+    def single_cfg(width, frac_width, lut_pow, pipeline_cycles, str_id):
         lut_size = 2 ** lut_pow
-        parameters = {
-                "IN_WIDTH": width, "IN_FRAC_WIDTH": frac_width,
-                "OUT_WIDTH": width, "OUT_FRAC_WIDTH": frac_width,
-                "LUT_POW": lut_pow, "PIPELINE_CYCLES": pipeline_cycles
-                }
-        lut_parameters = lut_parameter_dict(lut_size, width)
-        parameter_list.append(parameters | lut_parameters)
-        return parameter_list
+        lut = make_lut(lut_size, width)
+        mem_path = mem_dir / f"lutmem-{str_id}.mem"
+        write_memb(mem_path, lut, width)
+        return {
+            "IN_WIDTH": width, "IN_FRAC_WIDTH": frac_width,
+            "OUT_WIDTH": width, "OUT_FRAC_WIDTH": frac_width,
+            "LUT_POW": lut_pow, "PIPELINE_CYCLES": pipeline_cycles,
+            "LUT_MEMFILE": verilator_str_param(str(mem_path)),
+        }
 
     def full_sweep():
         parameter_list = []
@@ -107,23 +116,16 @@ if __name__ == "__main__":
         for int_width in range(1, 9):
             for frac_width in range(0, 9):
                 width = int_width + frac_width
-                parameters = single_test(width, frac_width, lut_pow, pipeline_cycles)
-                parameter_list += parameters
+                parameters = single_cfg(
+                    width, frac_width, lut_pow, pipeline_cycles,
+                    str_id=f"{int_width}-{frac_width}"
+                )
+                parameter_list.append(parameters)
         return parameter_list
 
     parameter_list = [
-        {
-            "IN_WIDTH": 21,
-            "IN_FRAC_WIDTH": 8,
-            "OUT_WIDTH": 21,
-            "OUT_FRAC_WIDTH": 8,
-            "LUT_POW": 5,
-            "PIPELINE_CYCLES": 0,
-            **lut_parameter_dict(2**5, 21)
-        }
+        # A use case in group_norm
+        single_cfg(21, 8, 5, 0, "large"),
+        *full_sweep(),
     ]
-    parameter_list.extend(full_sweep())
-
-    #parameter_list = single_test(8, 4, 5, 0)
-
-    mase_runner(module_param_list=parameter_list, trace=False)
+    mase_runner(module_param_list=parameter_list)

@@ -21,7 +21,7 @@ MASE_HW_DEPS = {
     "fixed_arithmetic/fixed_lut_index": [],
     "fixed_arithmetic/fixed_range_augmentation": [],
     "fixed_arithmetic/fixed_lut": [],
-    "fixed_arithmetic/fixed_isqrt": ["fixed_arithmetic"],
+    "fixed_arithmetic/fixed_isqrt": ["common", "fixed_arithmetic"],
     "fixed_arithmetic/fixed_mult": [],
     "fixed_arithmetic/fixed_adder_tree_layer": [],
     "fixed_arithmetic/fixed_accumulator": ["common"],
