@@ -78,8 +78,9 @@ return {arg}_monitor_exp
 def _make_stream_driver(data, valid, ready):
     return f"StreamDriver(dut.clk, dut.{data}, dut.{valid}, dut.{ready})"
 
-def _make_stream_monitor(data, valid, ready):
-    return f"StreamMonitor(dut.clk, dut.{data}, dut.{valid}, dut.{ready})"
+def _make_stream_monitor(data, valid, ready, width, signed, error_bits):
+    return f"ErrorThresholdStreamMonitor(dut.clk, dut.{data}, dut.{valid}, " \
+           f"dut.{ready}, width={width}, signed={signed}, error_bits={error_bits})"
 
 def _emit_cocotb_tb_str(graph, tb_dir: Path):
 
@@ -90,7 +91,13 @@ def _emit_cocotb_tb_str(graph, tb_dir: Path):
 
     monitors = []
     for res in graph.meta["mase"]["common"]["results"].keys():
-        monitors.append(_make_stream_monitor(res, f"{res}_valid", f"{res}_ready"))
+        prec = graph.meta["mase"]["common"]["results"][res]["precision"]
+        monitors.append(
+            _make_stream_monitor(
+                res, f"{res}_valid", f"{res}_ready",
+                prec[0], True, error_bits=4
+            )
+        )
 
     # Save torch model
     model_path = tb_dir / "model.pth"
@@ -187,7 +194,10 @@ def _emit_cocotb_tb_str(graph, tb_dir: Path):
 
     testbench_template = f"""
 from mase_cocotb.testbench import Testbench
-from mase_cocotb.interfaces.streaming import StreamDriver, StreamMonitor
+from mase_cocotb.interfaces.streaming import (
+    StreamDriver,
+    ErrorThresholdStreamMonitor,
+)
 from mase_cocotb.utils import batched, sign_extend_t
 from mase_cocotb.matrix_tools import (
     gen_random_matrix_input,
@@ -253,7 +263,7 @@ class MaseGraphTB(Testbench):
     return testbench_template
 
 
-def _emit_cocotb_test(graph, project_dir: Path):
+def _emit_cocotb_test(graph, project_dir: Path, trace: bool):
     tb_dir = project_dir / "hardware" / "test" / "mase_top_tb"
 
     test_template = f"""
@@ -284,7 +294,7 @@ async def test(dut):
 
 
 if __name__ == "__main__":
-    simulate_pass(Path("{project_dir}"))
+    simulate_pass(Path("{project_dir}"), trace={trace})
 """
 
     with open(tb_dir / "test.py", "w") as f:
@@ -304,6 +314,7 @@ def emit_cocotb_transform_pass(graph, pass_args={}):
 
     - pass_args
         - project_dir -> str : the directory of the project
+        - trace -> bool : trace waves in the simulation
     """
     logger.info("Emitting testbench...")
     project_dir = (
@@ -316,6 +327,7 @@ def emit_cocotb_transform_pass(graph, pass_args={}):
     tb_dir = project_dir / "hardware" / "test" / "mase_top_tb"
     tb_dir.mkdir(parents=True, exist_ok=True)
 
-    _emit_cocotb_test(graph, project_dir)
+    trace_waves = pass_args.get("trace", False)
+    _emit_cocotb_test(graph, project_dir, trace_waves)
 
     return graph, None

@@ -336,9 +336,8 @@ logic inv_sqrt_valid, inv_sqrt_ready;
 fixed_isqrt #(
     .IN_WIDTH(ISQRT_WIDTH),
     .IN_FRAC_WIDTH(ISQRT_FRAC_WIDTH),
-    // Module ignores these anyway
-    // .OUT_WIDTH(ISQRT_WIDTH),
-    // .OUT_FRAC_WIDTH(ISQRT_FRAC_WIDTH),
+    .OUT_WIDTH(ISQRT_WIDTH), // Module ignores these anyway
+    .OUT_FRAC_WIDTH(ISQRT_FRAC_WIDTH), // Module ignores these anyway
     .LUT_MEMFILE(ISQRT_LUT_MEMFILE)
 ) inv_sqrt_inst (
     .in_data(variance_clamp_out),

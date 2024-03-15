@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # This example converts a simple MLP model to Verilog
 import os, sys, logging
-import toml
+from os import makedirs
 from pathlib import Path
 
 import torch
@@ -26,6 +26,10 @@ from chop.passes.graph.transforms import (
 
 from chop.tools.logger import set_logging_verbosity
 
+from mase_cocotb.utils import verilator_str_param
+from mase_components.fixed_arithmetic.test.isqrt_sw import make_lut
+from mase_components.common.test.lut_tb import write_memb
+
 set_logging_verbosity("debug")
 
 class BatchNormNet(nn.Module):
@@ -40,7 +44,7 @@ class BatchNormNet(nn.Module):
 class LayerNormNet(nn.Module):
     def __init__(self, chw_shape=[64, 32, 32]) -> None:
         super().__init__()
-        self.net = nn.LayerNorm(chw_shape)
+        self.net = nn.LayerNorm(chw_shape, elementwise_affine=False)
 
     def forward(self, x):
         return self.net(x)
@@ -98,12 +102,11 @@ def test_emit_verilog_norm():
         mg, {"dummy_in": dummy_in, "add_value": False}
     )
 
-
     # Remove weight & bias from layernorm (NOT SUPPORTED)
-    for n in mg.fx_graph.nodes:
-        if get_mase_op(n) == "layer_norm":
-            del n.meta["mase"]["common"]["args"]["weight"]
-            del n.meta["mase"]["common"]["args"]["bias"]
+    # for n in mg.fx_graph.nodes:
+    #     if get_mase_op(n) == "layer_norm":
+    #         del n.meta["mase"]["common"]["args"]["weight"]
+            # del n.meta["mase"]["common"]["args"]["bias"]
 
     # Quantize NN
     quant_config = {
@@ -153,20 +156,37 @@ def test_emit_verilog_norm():
                 ]
         hardware_p["parallelism"] = [1, 1, 4, 4]
 
+    # Generate lut
+    LUT_POW = 5
+    ISQRT_WIDTH = 16
+
+    mem_dir = Path(__file__).parent / "build" / "norm" / "mem"
+    makedirs(mem_dir, exist_ok=True)
+    lut = make_lut(2 ** LUT_POW, ISQRT_WIDTH)
+    mem_path = mem_dir / f"norm_isqrt_lut.mem"
+    write_memb(mem_path, lut, ISQRT_WIDTH)
+
     # Add extra parameters for RTL instantiation
     for n in mg.fx_graph.nodes:
-        if get_mase_op(n) == "layer_norm":
+        mase_op = get_mase_op(n)
+        if mase_op == "batch_norm2d":
+            raise NotImplementedError()
+        elif mase_op == "layer_norm":
             args = n.meta["mase"]["common"]["args"]
-            args["INV_SQRT_WIDTH"] = 16
-            args["INV_SQRT_FRAC_WIDTH"] = 10
-            args["LAYER_NORM"] = 1
+            args["NORM_TYPE"] = "LAYER_NORM"
+            args["ISQRT_LUT_MEMFILE"] = str(mem_path)
+        elif mase_op == "group_norm":
+            raise NotImplementedError()
+        elif mase_op == "instance_norm2d":
+            raise NotImplementedError()
 
     # Add hardware metadata
     mg, _ = add_hardware_metadata_analysis_pass(mg)
 
     # Emit top level file
     emit_cfg = {
-        "project_dir": Path(__file__).parent / "build"
+        "project_dir": Path(__file__).parent / "build",
+        "trace": True,
     }
     mg, _ = emit_verilog_top_transform_pass(mg, emit_cfg)
 

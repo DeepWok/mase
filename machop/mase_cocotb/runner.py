@@ -51,13 +51,14 @@ def mase_runner(
     total_fail = 0
 
     for i, module_params in enumerate(module_param_list):
-        print("##########################################")
-        print(f"#### Test {i+1}/{len(module_param_list)}")
-        print(f"#### Parameters:")
-        print(f"#### - {'Test Index'}: {i}")
+        print( "# ---------------------------------------")
+        print(f"# Test {i+1}/{len(module_param_list)}")
+        print( "# ---------------------------------------")
+        print(f"# Parameters:")
+        print(f"# - {'Test Index'}: {i}")
         for k, v in module_params.items():
-            print(f"#### - {k}: {v}")
-        print("##########################################")
+            print(f"# - {k}: {v}")
+        print( "# ---------------------------------------")
         test_work_dir = group_path.joinpath(f"test/build/{module}/test_{i}")
         runner = get_runner(SIM)
         runner.build(
@@ -77,9 +78,7 @@ def mase_runner(
                 "--stats",
                 # Signal trace in dump.fst
                 *(["--trace-fst", "--trace-structs"] if trace else []),
-                "--trace",
-                # "-trace-depth",
-                "-O0",
+                "-O2",
                 "-build-jobs",
                 "8",
                 "-Wno-fatal",
@@ -112,6 +111,7 @@ def simulate_pass(
     project_dir: Path,
     module_params: dict[str, Any] = {},
     extra_build_args: list[str] = [],
+    trace: bool = False,
 ):
     rtl_dir = project_dir / "hardware" / "rtl"
     sim_dir = project_dir / "hardware" / "sim"
@@ -133,6 +133,8 @@ def simulate_pass(
             "-Wno-WIDTHTRUNC",
             # Simulation Optimisation
             "-Wno-UNOPTFLAT",
+            # Signal trace in dump.fst
+            *(["--trace-fst", "--trace-structs"] if trace else []),
             "-prof-c",
             "--stats",
             "-O2",
