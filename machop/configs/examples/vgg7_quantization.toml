@@ -53,3 +53,4 @@ epochs = 10
 [passes.tensorrt_analysis]
 num_batches = 20
 num_GPU_warmup_batches = 5
+test = true

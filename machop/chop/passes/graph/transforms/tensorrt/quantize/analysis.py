@@ -21,7 +21,7 @@ from .utils import PowerMonitor
 import sys
 import logging 
 import os
-from pprint import pprint as pp
+from tabulate import tabulate
 import torch
 import torchmetrics
 import numpy as np
@@ -29,7 +29,6 @@ import tensorrt as trt
 import pycuda.driver as cuda
 import numpy as np
 import tensorrt as trt
-import torch.nn.functional as F
 from cuda import cudart
 from torch.autograd import Variable
 
@@ -51,7 +50,6 @@ def tensorrt_analysis_pass(model, pass_args=None):
 
 class QuantizationAnalysis():
     def __init__(self, model, config):
-
         self.config = config
         self.logger = logging.getLogger(__name__)
         self.num_of_classes = self.config['data_module'].dataset_info.num_classes
@@ -198,9 +196,16 @@ class QuantizationAnalysis():
         latencies = []
         gpu_power_usages = []
         accs, losses = [], []
+
+        if 'test' in self.config and self.config['test']:
+            dataloader = self.config['data_module'].test_dataloader()
+            dataset = 'Test'
+        else:
+            dataloader = self.config['data_module'].val_dataloader()
+            dataset = 'Validation'
         
-        # Iterate over batches in the training data
-        for j, (xs, ys) in enumerate(self.config['data_module'].val_dataloader()):
+        # Iterate over batches in the validation/train dataset
+        for j, (xs, ys) in enumerate(dataloader):
             # Break the loop after processing the specified number of batches
             if j >= self.config['num_batches']:
                 break
@@ -262,22 +267,22 @@ class QuantizationAnalysis():
         avg_gpu_power_usage = sum(gpu_power_usages) / len(gpu_power_usages)
         avg_gpu_energy_usage = (avg_gpu_power_usage* 1000) * (avg_latency / 3600000)
         
-        # Assuming self.logger is already set up with your preferred logging level and format
-        self.logger.info(
-            f"\nConfiguration {self.model_name}:\n" +
-            "\n".join([
-                "Metric                                  | Value",
-                "----------------------------------------|-----------------------",
-                f"Average Validation Accuracy             | {acc_avg:.5f}",
-                f"Average Precision                       | {avg_precision:.5f}",
-                f"Average Recall                          | {avg_recall:.5f}",
-                f"Average F1 Score                        | {avg_f1:.5f}",
-                f"Average Loss                            | {loss_avg:.5f}",
-                f"Average Latency                         | {avg_latency:.5f} milliseconds",
-                f"Average GPU Power Usage                 | {avg_gpu_power_usage:.5f} watts",
-                f"Inference Energy Consumption            | {avg_gpu_energy_usage:.5f} mWh"
-            ])
-        )
+        metrics = [
+            ["Average " + dataset + " Accuracy", f"{acc_avg:.5f}"],
+            ["Average Precision", f"{avg_precision:.5f}"],
+            ["Average Recall", f"{avg_recall:.5f}"],
+            ["Average F1 Score", f"{avg_f1:.5f}"],
+            ["Average Loss", f"{loss_avg:.5f}"],
+            ["Average Latency", f"{avg_latency:.5f} milliseconds"],
+            ["Average GPU Power Usage", f"{avg_gpu_power_usage:.5f} watts"],
+            ["Inference Energy Consumption", f"{avg_gpu_energy_usage:.5f} mWh"]
+        ]
+
+        # Formatting the table with tabulate
+        formatted_metrics = tabulate(metrics, headers=['Metric', 'Value'], tablefmt="pretty", floatfmt=".5f")
+
+        # Print result summary
+        self.logger.info(f"\nConfiguration {self.model_name}:\n" + formatted_metrics)
 
         # Store the results in a dictionary and return it
         results = {

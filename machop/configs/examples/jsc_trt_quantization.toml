@@ -40,5 +40,5 @@ quantize_axis = false
 epochs = 1
 
 [passes.tensorrt_analysis]
-num_batches = 20
+num_batches = 100
 num_GPU_warmup_batches = 5
