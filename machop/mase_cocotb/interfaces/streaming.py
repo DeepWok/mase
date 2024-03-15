@@ -59,7 +59,12 @@ class StreamMonitor(Monitor):
         elif type(self.data.value) == BinaryValue:
             return int(self.data.value)
 
+    def postprocess_tensor(self, tensor, config):
+        tensor = [item * (1.0/2.0) ** config["frac_width"] for item in tensor]
+        return tensor
+
     def _check(self, got, exp):
         if self.check:
+            print("_check: ", self.postprocess_tensor(got, {"frac_width" : 3}))
             if not np.equal(got, exp).all():
                 raise TestFailure("\nGot \n%s, \nExpected \n%s" % (got, exp))
