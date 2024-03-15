@@ -110,8 +110,8 @@ class LayerNormTB(Testbench):
 
         exp_outputs_model = self.model(inputs)
         print("Expected outputs model: ", exp_outputs_model)        
-        print("Expected mean of quantized inputs: ", quantizer(sum(quantized_inputs[0]))/len(inputs[0]))
-        print("Expected var of quantized inputs: ", quantizer(quantized_inputs[0].var() * len(inputs[0])))
+        print("Expected mean of quantized inputs: ", quantizer(quantizer(sum(quantized_inputs[0]))/len(inputs[0])))
+        print("Expected var of quantized inputs: ", quantizer(quantized_inputs[0].var()))
         # print("Expected stdv of quantized inputs: ", quantizer(np.var(quantized_inputs[0]) ** 0.5))
         
         inputs = self.preprocess_tensor(
