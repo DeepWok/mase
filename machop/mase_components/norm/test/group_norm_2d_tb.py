@@ -269,7 +269,7 @@ async def basic(dut):
     await tb.reset()
     tb.output_monitor.ready.value = 1
     tb.setup_test(batches=2)
-    await Timer(10, 'us')
+    await Timer(100, 'us')
     tb.assert_all_monitors_empty()
 
 
@@ -279,7 +279,7 @@ async def stream(dut):
     await tb.reset()
     tb.output_monitor.ready.value = 1
     tb.setup_test(batches=100)
-    await Timer(200, 'us')
+    await Timer(1000, 'us')
     assert tb.output_monitor.exp_queue.empty()
 
 
@@ -289,7 +289,7 @@ async def backpressure(dut):
     await tb.reset()
     cocotb.start_soon(bit_driver(dut.out_ready, dut.clk, 0.5))
     tb.setup_test(batches=200)
-    await Timer(400, 'us')
+    await Timer(1000, 'us')
     assert tb.output_monitor.exp_queue.empty()
 
 
@@ -300,7 +300,7 @@ async def valid_toggle(dut):
     tb.output_monitor.ready.value = 1
     tb.in_driver.set_valid_prob(0.5)
     tb.setup_test(batches=200)
-    await Timer(400, 'us')
+    await Timer(1000, 'us')
     assert tb.output_monitor.exp_queue.empty()
 
 
@@ -312,7 +312,7 @@ async def valid_backpressure(dut):
     cocotb.start_soon(bit_driver(dut.out_ready, dut.clk, 0.5))
     tb.setup_test(batches=200)
 
-    await Timer(400, 'us')
+    await Timer(1000, 'us')
     assert tb.output_monitor.exp_queue.empty()
 
 
@@ -320,7 +320,6 @@ if __name__ == "__main__":
     # Consts
     LUT_POW = 5
     ISQRT_WIDTH = 16
-
 
     mem_dir = Path(__file__).parent / "build" / "group_norm_2d" / "mem"
     makedirs(mem_dir, exist_ok=True)
@@ -370,4 +369,5 @@ if __name__ == "__main__":
             gen_cfg(4, 4, 2, 2, 2, 8, 4, 8, 2, "down_frac"),
             gen_cfg(4, 4, 2, 2, 2, 8, 4, 8, 6, "up_frac"),
         ],
+        trace=True,
     )

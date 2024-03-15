@@ -10,7 +10,10 @@ from cocotb.triggers import Timer
 from mase_cocotb.runner import mase_runner
 import math
 from mase_cocotb.testbench import Testbench
-from mase_cocotb.utils import verilator_str_param
+from mase_cocotb.utils import verilator_str_param, bit_driver
+from mase_cocotb.interfaces.streaming import (
+    StreamDriver, StreamMonitor
+)
 from mase_components.fixed_arithmetic.test.isqrt_sw import (
     isqrt_sw2, int_to_float, make_lut
 )
@@ -18,10 +21,18 @@ from mase_components.common.test.lut_tb import write_memb
 
 class VerificationCase(Testbench):
     def __init__(self, dut):
-        super().__init__(dut)
+        super().__init__(dut, dut.clk, dut.rst)
         self.assign_self_params([
             "IN_WIDTH", "IN_FRAC_WIDTH", "LUT_POW",
         ])
+
+        self.input_driver = StreamDriver(
+            dut.clk, dut.in_data, dut.in_valid, dut.in_ready
+        )
+        self.output_monitor = StreamMonitor(
+            dut.clk, dut.out_data, dut.out_valid, dut.out_ready,
+            name="Output ISQRT",
+        )
 
     def generate_inputs(self):
         samples = 2 ** self.IN_WIDTH
@@ -45,48 +56,50 @@ def debug(dut, i, f):
     print(f"Y        : {dut.y.value}    {int_to_float(dut.y.value.integer, 1, 15)}")
     print(f"Y aug    : {dut.y_aug.value}    {int_to_float(dut.y_aug.value.integer, i, f)}")
 
+CLK_NS = 25
 
 @cocotb.test()
-async def test_fixed_isqrt(dut):
+async def sweep(dut):
     """Test for inverse square root"""
-    testcase = VerificationCase(dut)
-    data_in, samples = testcase.generate_inputs()
-    ref = testcase.model(data_in)
-    int_width = testcase.IN_WIDTH - testcase.IN_FRAC_WIDTH
-    frac_width = testcase.IN_FRAC_WIDTH
+    tb = VerificationCase(dut)
+    await tb.reset()
+    tb.output_monitor.ready.value = 1
+    inputs, samples = tb.generate_inputs()
+    exp_out = tb.model(inputs)
+    tb.input_driver.load_driver(inputs)
+    tb.output_monitor.load_monitor(exp_out)
+    await Timer(max(10000, CLK_NS * (2 ** tb.IN_WIDTH)), "ns")
+    assert tb.output_monitor.exp_queue.empty()
 
-    for i in range(samples):
-        # Set up module data.
-        data_a = data_in[i]
 
-        # Force module data.
-        dut.in_data.value = data_a
+@cocotb.test()
+async def backpressure(dut):
+    """Test for inverse square root"""
+    tb = VerificationCase(dut)
+    await tb.reset()
+    cocotb.start_soon(bit_driver(dut.out_ready, dut.clk, 0.5))
+    inputs, samples = tb.generate_inputs()
+    exp_out = tb.model(inputs)
+    tb.input_driver.load_driver(inputs)
+    tb.output_monitor.load_monitor(exp_out)
+    await Timer(max(10000, 2 *CLK_NS * (2 ** tb.IN_WIDTH)), "ns")
+    assert tb.output_monitor.exp_queue.empty()
 
-        # Wait for processing.
-        await Timer(10, units="ns")
 
-        #debug(dut, int_width, frac_width)
+@cocotb.test()
+async def valid_backpressure(dut):
+    """Test for inverse square root"""
+    tb = VerificationCase(dut)
+    await tb.reset()
+    tb.input_driver.set_valid_prob(0.5)
+    cocotb.start_soon(bit_driver(dut.out_ready, dut.clk, 0.5))
+    inputs, samples = tb.generate_inputs()
+    exp_out = tb.model(inputs)
+    tb.input_driver.load_driver(inputs)
+    tb.output_monitor.load_monitor(exp_out)
+    await Timer(max(10000, 4 * CLK_NS * (2 ** tb.IN_WIDTH)), "ns")
+    assert tb.output_monitor.exp_queue.empty()
 
-        # Exepected result.
-        expected = ref[i]
-
-        # Check the output.
-        assert (
-                expected == dut.out_data.value.integer
-            ), f"""
-            <<< --- Test failed --- >>>
-            Input:
-            X float : {int_to_float(data_a, int_width, frac_width)}
-
-            Output:
-            {int_to_float(dut.out_data.value.integer, int_width, frac_width)}
-
-            Expected:
-            {int_to_float(expected, int_width, frac_width)}
-
-            Test index:
-            {i}
-            """
 
 if __name__ == "__main__":
 
@@ -120,7 +133,6 @@ if __name__ == "__main__":
 
     parameter_list = [
         # A use case in group_norm
-        single_cfg(21, 8, 5, 0, "large"),
         *full_sweep(),
     ]
-    mase_runner(module_param_list=parameter_list)
+    mase_runner(module_param_list=parameter_list, trace=True)

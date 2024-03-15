@@ -87,7 +87,7 @@ matrix_fifo #(
     .DATA_WIDTH  (IN_WIDTH),
     .DIM0        (COMPUTE_DIM0),
     .DIM1        (COMPUTE_DIM1),
-    .FIFO_SIZE   (10*NUM_ITERS) // TODO: Change
+    .FIFO_SIZE   (2*NUM_ITERS) // TODO: Change
 ) input_fifo_inst (
     .clk(clk),
     .rst(rst),
@@ -338,6 +338,8 @@ fixed_isqrt #(
     .IN_FRAC_WIDTH(ISQRT_FRAC_WIDTH),
     .LUT_MEMFILE(ISQRT_LUT_MEMFILE)
 ) inv_sqrt_inst (
+    .clk(clk),
+    .rst(rst),
     .in_data(variance_clamp_out),
     .in_valid(variance_clamp_valid),
     .in_ready(variance_clamp_ready),
@@ -385,7 +387,7 @@ matrix_fifo #(
     .DATA_WIDTH(DIFF_WIDTH),
     .DIM0(COMPUTE_DIM0),
     .DIM1(COMPUTE_DIM1),
-    .FIFO_SIZE(10*NUM_ITERS) // TODO: Change
+    .FIFO_SIZE(2*NUM_ITERS) // TODO: Change
 ) diff_fifo_inst (
     .clk(clk),
     .rst(rst),
