@@ -24,10 +24,10 @@ seed = 2
 benchmark = 'nasbench201'
 ensemble_mode = true
 dataset = 'cifar100'
-num_archs_train = 3
-num_archs_test = 3
-zc_proxies = ['epe_nas']
-# zc_proxies = ['epe_nas', 'fisher', 'grad_norm', 'grasp', 'jacov', 'l2_norm', 'nwot', 'plain', 'snip', 'synflow', 'zen', 'flops', 'params']
+num_archs_train = 100
+num_archs_test = 100
+# zc_proxies = ['epe_nas']
+zc_proxies = ['epe_nas', 'fisher', 'grad_norm', 'grasp', 'jacov', 'l2_norm', 'nwot', 'plain', 'snip', 'synflow', 'zen', 'flops', 'params']
 
 [search.strategy]
 name = "naslib"
@@ -45,8 +45,8 @@ n_trials = 1000
 timeout = 20000
 sampler = "tpe"
 direction = "minimize"
-weight_lower_limit = -50
-weight_upper_limit = 50
+weight_lower_limit = -5
+weight_upper_limit = 15
 
 # [search.strategy.metrics]
 # # loss.scale = 1.0

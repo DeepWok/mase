@@ -76,10 +76,13 @@ class ZeroCostProxy(SearchSpaceBase):
             zc_api = get_zc_benchmark_api(self.config["zc"]["benchmark"], pred_dataset)
             
             zcp_train = [{'zero_cost_scores': zc_api[str(t_arch)][zcp_name]['score']} for t_arch in tqdm(xtrain)]
-            zcp_test = [{'zero_cost_scores': zc_api[str(t_arch)][zcp_name]['score']} for t_arch in tqdm(xtest)]               
+            zcp_test = [{'zero_cost_scores': zc_api[str(t_arch)][zcp_name]['score']} for t_arch in tqdm(xtest)]    
+
+            # import pdb
+            # pdb.set_trace()
                        
-            zcp_pred_test = [s['zero_cost_scores'][zcp_name] for s in zcp_test]
-            zcp_pred_train = [s['zero_cost_scores'][zcp_name] for s in zcp_train]
+            zcp_pred_test = [s['zero_cost_scores'] for s in zcp_test]
+            zcp_pred_train = [s['zero_cost_scores'] for s in zcp_train]
             
             train_metrics = evaluate_predictions(ytrain, zcp_pred_train)
             test_metrics = evaluate_predictions(ytest, zcp_pred_test)
@@ -118,8 +121,6 @@ class ZeroCostProxy(SearchSpaceBase):
                 }
             })
 
-            # import pdb
-            # pdb.set_trace()
 
         print("zcp_results: ", self.zcp_results)
         print("xgboost_metrics: ", xgboost_metrics)
