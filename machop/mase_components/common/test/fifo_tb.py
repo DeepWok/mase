@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 
-# This script tests the fixed point dot product
 import os, logging
 from random import randint
 

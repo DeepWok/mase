@@ -8,7 +8,7 @@ from cocotb.triggers import Timer
 from mase_cocotb.testbench import Testbench
 from mase_cocotb.runner import mase_runner
 import math
-from isqrt_sw import int_to_float, float_to_int, make_lut, lut_parameter_dict
+from .isqrt_sw import int_to_float, float_to_int, make_lut, lut_parameter_dict
 
 
 class VerificationCase(Testbench):

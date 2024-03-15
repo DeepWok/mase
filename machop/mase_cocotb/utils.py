@@ -75,3 +75,7 @@ def random_2d_dimensions():
     total_dim0 = compute_dim0 * random.randint(1, 3)
     total_dim1 = compute_dim1 * random.randint(1, 3)
     return compute_dim0, compute_dim1, total_dim0, total_dim1
+
+
+def verilator_str_param(s):
+    return f"\"{s}\""

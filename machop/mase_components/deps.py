@@ -36,6 +36,7 @@ MASE_HW_DEPS = {
     "common/input_buffer": ["common"],
     # New matrix multiplication modules
     "common/repeat_circular_buffer": ["common"],
+    "common/lut": [],
     "cast/fixed_signed_cast": ["cast"],
     "matmul/simple_matmul": ["common", "linear", "cast", "fixed_arith"],
     "matmul/fixed_matmul": ["common", "linear", "cast", "fixed_arith", "matmul"],
