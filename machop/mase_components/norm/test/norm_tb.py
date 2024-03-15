@@ -32,7 +32,9 @@ from mase_cocotb.utils import (
 )
 
 from chop.passes.graph.transforms.quantize.quantized_modules import (
+    LayerNormInteger,
     GroupNormInteger,
+    InstanceNorm2dInteger
 )
 from chop.passes.graph.transforms.quantize.quantizers.quantizers_for_hw import (
     integer_floor_quantizer_for_hw,
@@ -54,129 +56,16 @@ logger = logging.getLogger("testbench")
 logger.setLevel(logging.INFO)
 
 
-def _fixed_group_norm_2d_model(
-    x: Tensor,
-    in_width: int,
-    in_frac_width: int,
-    diff_width: int,
-    diff_frac_width: int,
-    square_width: int,
-    square_frac_width: int,
-    variance_width: int,
-    variance_frac_width: int,
-    isqrt_width: int,
-    isqrt_frac_width: int,
-    isqrt_lut: list,
-    norm_width: int,
-    norm_frac_width: int,
-    out_width: int,
-    out_frac_width: int,
-):
-    logger.debug("Input:")
-    logger.debug(x[0])
-
-    # Mean calculation
-    mu = x.mean(dim=(1, 2, 3), keepdim=True)
-    logger.debug("Mu:")
-    logger.debug(mu[0])
-    mu = integer_floor_quantizer(mu, in_width, in_frac_width)
-    mu_int = integer_floor_quantizer_for_hw(mu.clone(), in_width, in_frac_width)
-    logger.debug("Mu Quantized:")
-    logger.debug(mu[0])
-
-    # Variance calculation
-    diff = x - mu
-    diff_int = integer_floor_quantizer_for_hw(diff.clone(), diff_width, diff_frac_width)
-    logger.debug("Diff:")
-    logger.debug(diff[0])
-
-    squares = diff ** 2
-    logger.debug("Squares:")
-    logger.debug(squares[0])
-    squares_int = (squares * (2**square_frac_width)).int()
-    logger.debug(squares * (2**square_frac_width))
-
-    sum_squares = torch.sum(squares, dim=(1, 2, 3), keepdim=True)
-    sum_squares = integer_floor_quantizer(sum_squares, variance_width, variance_frac_width)
-    sum_squares_int = integer_floor_quantizer_for_hw(sum_squares.clone(), variance_width, variance_frac_width)
-
-    num_vals = x.shape[1] * x.shape[2] * x.shape[3]
-    logger.debug("Num Values: %d" % (num_vals))
-    var = sum_squares / num_vals
-    var = integer_floor_quantizer(var, variance_width, variance_frac_width)
-    var_i = integer_floor_quantizer_for_hw(var.clone(), variance_width, variance_frac_width)
-    logger.debug("Variance:")
-    logger.debug(f"{var[0]}")
-
-    # Clamp down variance to isqrt width
-    var_clamp = torch.clamp(var, 0.0, ((2**isqrt_width)-1)/(2**isqrt_frac_width))
-    logger.debug("Variance Clamped:")
-    logger.debug(f"{var_clamp[0]}")
-    var_clamp_int = (var_clamp * (2 ** isqrt_frac_width)).int()
-
-    # Inverse Square Root calculation
-    lut_pow = ceil(log2(len(isqrt_lut)))
-    logger.debug("Variance INT:")
-    logger.debug(f"{var_clamp_int[0]}")
-
-    f = partial(
-        isqrt_sw2,
-        in_width=isqrt_width,
-        frac_width=isqrt_frac_width,
-        lut_pow=lut_pow,
-        lut=isqrt_lut,
-        debug=False,
-    )
-    inv_sqrt_int = var_clamp_int.clone().apply_(f)
-
-    logger.debug("INV SQRT INT:")
-    logger.debug(f"{inv_sqrt_int[0]}")
-
-    inv_sqrt = inv_sqrt_int / (2 ** isqrt_frac_width)
-    logger.debug("Inverse SQRT:")
-    logger.debug(f"{inv_sqrt[0]}")
-
-    # Norm calculation
-    norm_out = diff * inv_sqrt
-    norm_int = integer_floor_quantizer_for_hw(
-        norm_out.clone(), norm_width, norm_frac_width
-    )
-    logger.debug("Norm:")
-    logger.debug(norm_out[0])
-
-    norm_out_float, norm_int_out = _fixed_signed_cast_model(
-        norm_out, out_width, out_frac_width,
-        symmetric=False, rounding_mode="floor"
-    )
-    logger.debug("Norm (Casted):")
-    logger.debug(norm_out_float[0])
-
-    return norm_out_float, norm_int_out, {
-        "mu": mu_int.squeeze(dim=(1, 2, 3)).tolist(),
-        "squares": squares_int,
-        "sum_squares": sum_squares_int.squeeze(dim=(1, 2, 3)).tolist(),
-        "var": var_i.squeeze(dim=(1, 2, 3)).tolist(),
-        "var_clamp": var_clamp_int.squeeze(dim=(1, 2, 3)).tolist(),
-        "isqrt": inv_sqrt_int.squeeze(dim=(1, 2, 3)).tolist(),
-        "diff": diff_int,
-        "norm": norm_int,
-    }
-
-
-class GroupNorm2dTB(Testbench):
+class NormTB(Testbench):
 
     def __init__(self, dut) -> None:
         super().__init__(dut, dut.clk, dut.rst)
         self.assign_self_params([
             "TOTAL_DIM0", "TOTAL_DIM1", "COMPUTE_DIM0", "COMPUTE_DIM1",
-            "GROUP_CHANNELS", "IN_WIDTH", "IN_FRAC_WIDTH",
-            "OUT_WIDTH", "OUT_FRAC_WIDTH",
-            "DIFF_WIDTH", "DIFF_FRAC_WIDTH",
-            "SQUARE_WIDTH", "SQUARE_FRAC_WIDTH",
-            "VARIANCE_WIDTH", "VARIANCE_FRAC_WIDTH",
-            "ISQRT_WIDTH", "ISQRT_FRAC_WIDTH",
-            "NORM_WIDTH", "NORM_FRAC_WIDTH",
             "DEPTH_DIM0", "DEPTH_DIM1",
+            "CHANNELS", "IN_WIDTH", "IN_FRAC_WIDTH",
+            "OUT_WIDTH", "OUT_FRAC_WIDTH",
+            "LAYER_NORM", "INSTANCE_NORM", "GROUP_NORM", "RMS_NORM",
         ])
 
         # Helper tuples
@@ -188,22 +77,46 @@ class GroupNorm2dTB(Testbench):
         # Inverse Square Root LUT
         self.isqrt_lut = make_lut(2**5, 16)
 
-        self.num_groups = randint(2, 3)
-        self.total_channels = self.GROUP_CHANNELS * self.num_groups
-
-        self.quantized_model = GroupNormInteger(
-            num_groups=self.num_groups,
-            num_channels=self.total_channels,
-            affine=False,
-            config={
-                "data_in_width": self.IN_WIDTH,
-                "data_in_frac_width": self.IN_FRAC_WIDTH,
-            }
-        )
+        if self.GROUP_NORM:
+            self.num_groups = randint(2, 3)  # Random number of groups
+            self.total_channels = self.CHANNELS * self.num_groups
+            self.quantized_model = GroupNormInteger(
+                num_groups=self.num_groups,
+                num_channels=self.total_channels,
+                affine=False,
+                config={
+                    "data_in_width": self.IN_WIDTH,
+                    "data_in_frac_width": self.IN_FRAC_WIDTH,
+                }
+            )
+        elif self.LAYER_NORM:
+            self.total_channels = self.CHANNELS
+            self.quantized_model = LayerNormInteger(
+                normalized_shape=[self.total_channels, self.TOTAL_DIM1, self.TOTAL_DIM0],
+                elementwise_affine=False,
+                config={
+                    "data_in_width": self.IN_WIDTH,
+                    "data_in_frac_width": self.IN_FRAC_WIDTH,
+                }
+            )
+        elif self.INSTANCE_NORM:
+            self.total_channels = randint(3, 4)  # Random number of total channels
+            self.quantized_model = InstanceNorm2dInteger(
+                num_features=self.total_channels,
+                affine=False,
+                config={
+                    "data_in_width": self.IN_WIDTH,
+                    "data_in_frac_width": self.IN_FRAC_WIDTH,
+                }
+            )
+        elif self.RMS_NORM:
+            raise NotImplementedError()
+        else:
+            raise Exception("Norm type is unknown.")
 
         # Drivers & Monitors
         self.in_driver = StreamDriver(
-            dut.clk, dut.in_data, dut.in_valid, dut.in_ready
+            dut.clk, dut.data_in_0, dut.data_in_0_valid, dut.data_in_0_ready
         )
 
         # Bit Error calculation
@@ -215,7 +128,7 @@ class GroupNorm2dTB(Testbench):
             error_bits += 2 ** (self.OUT_FRAC_WIDTH - self.IN_FRAC_WIDTH)
 
         self.output_monitor = ErrorThresholdStreamMonitor(
-            dut.clk, dut.out_data, dut.out_valid, dut.out_ready,
+            dut.clk, dut.data_out_0, dut.data_out_0_valid, dut.data_out_0_ready,
             name="Output Monitor",
             width=self.OUT_WIDTH,
             signed=True,
@@ -232,7 +145,6 @@ class GroupNorm2dTB(Testbench):
 
     def assert_all_monitors_empty(self):
         assert self.output_monitor.exp_queue.empty()
-
 
     def model(self, inputs):
         # Input reconstruction
@@ -265,7 +177,7 @@ class GroupNorm2dTB(Testbench):
 
 @cocotb.test()
 async def basic(dut):
-    tb = GroupNorm2dTB(dut)
+    tb = NormTB(dut)
     await tb.reset()
     tb.output_monitor.ready.value = 1
     tb.setup_test(batches=2)
@@ -275,7 +187,7 @@ async def basic(dut):
 
 @cocotb.test()
 async def stream(dut):
-    tb = GroupNorm2dTB(dut)
+    tb = NormTB(dut)
     await tb.reset()
     tb.output_monitor.ready.value = 1
     tb.setup_test(batches=100)
@@ -285,9 +197,9 @@ async def stream(dut):
 
 @cocotb.test()
 async def backpressure(dut):
-    tb = GroupNorm2dTB(dut)
+    tb = NormTB(dut)
     await tb.reset()
-    cocotb.start_soon(bit_driver(dut.out_ready, dut.clk, 0.5))
+    cocotb.start_soon(bit_driver(dut.data_out_0_ready, dut.clk, 0.5))
     tb.setup_test(batches=200)
     await Timer(400, 'us')
     assert tb.output_monitor.exp_queue.empty()
@@ -295,7 +207,7 @@ async def backpressure(dut):
 
 @cocotb.test()
 async def valid_toggle(dut):
-    tb = GroupNorm2dTB(dut)
+    tb = NormTB(dut)
     await tb.reset()
     tb.output_monitor.ready.value = 1
     tb.in_driver.set_valid_prob(0.5)
@@ -306,10 +218,10 @@ async def valid_toggle(dut):
 
 @cocotb.test()
 async def valid_backpressure(dut):
-    tb = GroupNorm2dTB(dut)
+    tb = NormTB(dut)
     await tb.reset()
     tb.in_driver.set_valid_prob(0.5)
-    cocotb.start_soon(bit_driver(dut.out_ready, dut.clk, 0.5))
+    cocotb.start_soon(bit_driver(dut.data_out_0_ready, dut.clk, 0.5))
     tb.setup_test(batches=200)
 
     await Timer(400, 'us')
@@ -321,8 +233,7 @@ if __name__ == "__main__":
     LUT_POW = 5
     ISQRT_WIDTH = 16
 
-
-    mem_dir = Path(__file__).parent / "build" / "group_norm_2d" / "mem"
+    mem_dir = Path(__file__).parent / "build" / "norm" / "mem"
     makedirs(mem_dir, exist_ok=True)
 
     def gen_cfg(
@@ -336,38 +247,32 @@ if __name__ == "__main__":
         out_width: int = 8,
         out_frac_width: int = 4,
         str_id: str = "default",
+        norm_type: str = "LAYER_NORM",
     ):
         lut = make_lut(2 ** LUT_POW, ISQRT_WIDTH)
         mem_path = mem_dir / f"lutmem-{str_id}.mem"
         write_memb(mem_path, lut, ISQRT_WIDTH)
         params = {
-            "TOTAL_DIM0": total_dim0,
-            "TOTAL_DIM1": total_dim1,
-            "COMPUTE_DIM0": compute_dim0,
-            "COMPUTE_DIM1": compute_dim1,
-            "GROUP_CHANNELS": channels,
-            "IN_WIDTH": in_width,
-            "IN_FRAC_WIDTH": in_frac_width,
-            "OUT_WIDTH": out_width,
-            "OUT_FRAC_WIDTH": out_frac_width,
+            "DATA_IN_0_TENSOR_SIZE_DIM_0": total_dim0,
+            "DATA_IN_0_TENSOR_SIZE_DIM_1": total_dim1,
+            "DATA_IN_0_PARALLELISM_DIM_0": compute_dim0,
+            "DATA_IN_0_PARALLELISM_DIM_1": compute_dim1,
+            "DATA_IN_0_PARALLELISM_DIM_2": channels,
+            "DATA_IN_0_PRECISION_0": in_width,
+            "DATA_IN_0_PRECISION_1": in_frac_width,
+            "DATA_OUT_0_PRECISION_0": out_width,
+            "DATA_OUT_0_PRECISION_1": out_frac_width,
             "ISQRT_LUT_MEMFILE": verilator_str_param(str(mem_path)),
+            "NORM_TYPE": verilator_str_param(norm_type.upper()),
         }
         return params
 
     mase_runner(
         module_param_list=[
-            # Default
-            gen_cfg(),
-            # Rectangle
-            gen_cfg(4, 6, 2, 2, 2, 8, 4, 8, 4, "rect0"),
-            gen_cfg(6, 2, 2, 2, 2, 8, 4, 8, 4, "rect1"),
-            gen_cfg(6, 2, 3, 2, 2, 8, 4, 8, 4, "rect2"),
-            gen_cfg(4, 6, 2, 3, 2, 8, 4, 8, 4, "rect3"),
-            # Channels
-            gen_cfg(4, 4, 2, 2, 1, 8, 4, 8, 4, "channels0"),
-            gen_cfg(4, 4, 2, 2, 3, 8, 4, 8, 4, "channels1"),
-            # Precision
-            gen_cfg(4, 4, 2, 2, 2, 8, 4, 8, 2, "down_frac"),
-            gen_cfg(4, 4, 2, 2, 2, 8, 4, 8, 6, "up_frac"),
+            # Test All Supported Norm Types
+            gen_cfg(norm_type="LAYER_NORM", str_id="layer"),
+            gen_cfg(norm_type="GROUP_NORM", str_id="group"),
+            gen_cfg(norm_type="INSTANCE_NORM", str_id="inst"),
+            # gen_cfg(norm_type="RMS_NORM"),
         ],
     )

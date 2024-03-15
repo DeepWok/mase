@@ -50,31 +50,31 @@ module norm #(
     // -----
 
     // Dimensions
-    parameter TOTAL_DIM0          = DATA_IN_0_TENSOR_SIZE_DIM_0,
-    parameter TOTAL_DIM1          = DATA_IN_0_TENSOR_SIZE_DIM_1,
-    parameter COMPUTE_DIM0        = DATA_IN_0_PARALLELISM_DIM_0,
-    parameter COMPUTE_DIM1        = DATA_IN_0_PARALLELISM_DIM_1,
+    localparam TOTAL_DIM0          = DATA_IN_0_TENSOR_SIZE_DIM_0,
+    localparam TOTAL_DIM1          = DATA_IN_0_TENSOR_SIZE_DIM_1,
+    localparam COMPUTE_DIM0        = DATA_IN_0_PARALLELISM_DIM_0,
+    localparam COMPUTE_DIM1        = DATA_IN_0_PARALLELISM_DIM_1,
+
+    localparam DEPTH_DIM0          = TOTAL_DIM0 / COMPUTE_DIM0,
+    localparam DEPTH_DIM1          = TOTAL_DIM1 / COMPUTE_DIM1,
 
     // Layer: CHANNELS should be set to total number of channels
     // RMS: CHANNELS should be set to total number of channels
     // Group: CHANNELS can be set to any factor of total channels
-    parameter CHANNELS            = DATA_IN_0_PARALLELISM_DIM_2,
+    localparam CHANNELS            = DATA_IN_0_PARALLELISM_DIM_2,
 
     // Data widths
-    parameter IN_WIDTH            = DATA_IN_0_PRECISION_0,
-    parameter IN_FRAC_WIDTH       = DATA_IN_0_PRECISION_1,
-    parameter OUT_WIDTH           = DATA_OUT_0_PRECISION_0,
-    parameter OUT_FRAC_WIDTH      = DATA_OUT_0_PRECISION_1,
+    localparam IN_WIDTH            = DATA_IN_0_PRECISION_0,
+    localparam IN_FRAC_WIDTH       = DATA_IN_0_PRECISION_1,
+    localparam OUT_WIDTH           = DATA_OUT_0_PRECISION_0,
+    localparam OUT_FRAC_WIDTH      = DATA_OUT_0_PRECISION_1,
 
-    // Precision of inverse sqrt unit
-    parameter INV_SQRT_WIDTH      = 16,
-    parameter INV_SQRT_FRAC_WIDTH = 10,
+    // Inverse sqrt unit LUT file
+    parameter ISQRT_LUT_MEMFILE    = "",
 
     // Norm select
-    parameter LAYER_NORM          = 0,
-    parameter INSTANCE_NORM       = 0,
-    parameter GROUP_NORM          = 0,
-    parameter RMS_NORM            = 0
+    // LAYER_NORM, INSTANCE_NORM, GROUP_NORM, RMS_NORM
+    parameter NORM_TYPE            = "LAYER_NORM"
 ) (
     input  logic                clk,
     input  logic                rst,
@@ -88,17 +88,16 @@ module norm #(
     input  logic                data_out_0_ready
 );
 
-initial begin
-    // Only one normalization should be selected
-    assert (LAYER_NORM + INSTANCE_NORM + GROUP_NORM + RMS_NORM == 1);
-end
-
+localparam LAYER_NORM = (NORM_TYPE == "LAYER_NORM");
+localparam INSTANCE_NORM = (NORM_TYPE == "INSTANCE_NORM");
+localparam GROUP_NORM = (NORM_TYPE == "GROUP_NORM");
+localparam RMS_NORM = (NORM_TYPE == "RMS_NORM");
 
 generate
 
 if (LAYER_NORM || INSTANCE_NORM || GROUP_NORM) begin : group_norm
 
-    localparam NORM_CHANNELS = (INSTANCE_NORM) ? 1: CHANNELS;
+    localparam NORM_CHANNELS = INSTANCE_NORM ? 1 : CHANNELS;
 
     group_norm_2d #(
         .TOTAL_DIM0(TOTAL_DIM0),
@@ -109,7 +108,8 @@ if (LAYER_NORM || INSTANCE_NORM || GROUP_NORM) begin : group_norm
         .IN_FRAC_WIDTH(IN_FRAC_WIDTH),
         .IN_WIDTH(IN_WIDTH),
         .OUT_WIDTH(OUT_WIDTH),
-        .OUT_FRAC_WIDTH(OUT_FRAC_WIDTH)
+        .OUT_FRAC_WIDTH(OUT_FRAC_WIDTH),
+        .ISQRT_LUT_MEMFILE(ISQRT_LUT_MEMFILE)
     ) group_norm_inst (
         .clk(clk),
         .rst(rst),
@@ -123,26 +123,26 @@ if (LAYER_NORM || INSTANCE_NORM || GROUP_NORM) begin : group_norm
 
 end else if (RMS_NORM) begin : rms_norm
 
-    rms_norm_2d #(
-        .TOTAL_DIM0(TOTAL_DIM0),
-        .TOTAL_DIM1(TOTAL_DIM1),
-        .COMPUTE_DIM0(COMPUTE_DIM0),
-        .COMPUTE_DIM1(COMPUTE_DIM1),
-        .CHANNELS(CHANNELS),
-        .IN_FRAC_WIDTH(IN_FRAC_WIDTH),
-        .IN_WIDTH(IN_WIDTH),
-        .OUT_WIDTH(OUT_WIDTH),
-        .OUT_FRAC_WIDTH(OUT_FRAC_WIDTH)
-    ) rms_norm_inst (
-        .clk(clk),
-        .rst(rst),
-        .in_data(data_in_0),
-        .in_valid(data_in_0_valid),
-        .in_ready(data_in_0_ready),
-        .out_data(data_out_0),
-        .out_valid(data_out_0_valid),
-        .out_ready(data_out_0_ready)
-    );
+    // rms_norm_2d #(
+    //     .TOTAL_DIM0(TOTAL_DIM0),
+    //     .TOTAL_DIM1(TOTAL_DIM1),
+    //     .COMPUTE_DIM0(COMPUTE_DIM0),
+    //     .COMPUTE_DIM1(COMPUTE_DIM1),
+    //     .CHANNELS(CHANNELS),
+    //     .IN_FRAC_WIDTH(IN_FRAC_WIDTH),
+    //     .IN_WIDTH(IN_WIDTH),
+    //     .OUT_WIDTH(OUT_WIDTH),
+    //     .OUT_FRAC_WIDTH(OUT_FRAC_WIDTH)
+    // ) rms_norm_inst (
+    //     .clk(clk),
+    //     .rst(rst),
+    //     .in_data(data_in_0),
+    //     .in_valid(data_in_0_valid),
+    //     .in_ready(data_in_0_ready),
+    //     .out_data(data_out_0),
+    //     .out_valid(data_out_0_valid),
+    //     .out_ready(data_out_0_ready)
+    // );
 
 end
 
