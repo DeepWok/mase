@@ -174,9 +174,7 @@ logic inv_sqrt_valid, inv_sqrt_ready;
 
 fixed_isqrt #(
     .IN_WIDTH(ACC_WIDTH),
-    .IN_FRAC_WIDTH(ACC_FRAC_WIDTH),
-    .OUT_WIDTH(INV_SQRT_WIDTH),
-    .OUT_FRAC_WIDTH(INV_SQRT_FRAC_WIDTH)
+    .IN_FRAC_WIDTH(ACC_FRAC_WIDTH)
 ) inv_sqrt_inst (
     .in_data(mean_out_data),
     .in_valid(mean_out_valid),

@@ -5,12 +5,12 @@ module fixed_isqrt #(
     parameter LUT_POW = 5,
     // TODO: how to use these? Will the output width not always be the same as
     // the input width?
-    parameter OUT_WIDTH = 16,
-    parameter OUT_FRAC_WIDTH = 7,
+    // parameter OUT_WIDTH = 16,
+    // parameter OUT_FRAC_WIDTH = 7,
     // TODO: the design is stateless therefore no cycles needed.
     // if the critical path is too large for this module then it can be
     // pipelined.
-    parameter PIPELINE_CYCLES = 0,
+    // parameter PIPELINE_CYCLES = 0,
 
     // LUT parameters
     parameter string LUT_MEMFILE = "",
@@ -42,6 +42,7 @@ module fixed_isqrt #(
     logic[2*IN_WIDTH-1:0] lut_index;
     logic[2*IN_WIDTH-1:0] lut_value;
     logic[2*IN_WIDTH-1:0] y;
+    logic[2*IN_WIDTH-1:0] y_or_one;
     logic[2*IN_WIDTH-1:0] y_aug;
 
     fixed_range_reduction #(
@@ -80,13 +81,13 @@ module fixed_isqrt #(
         .data_out(y)
     );
 
-    assign y = (x_reduced == ONE) ? ONE : y;
+    assign y_or_one = (x_reduced == ONE) ? ONE : y;
 
     fixed_range_augmentation #(
         .WIDTH(IN_WIDTH),
         .FRAC_WIDTH(IN_FRAC_WIDTH)
     ) fixed_range_augmentation_inst (
-        .data_a(y),
+        .data_a(y_or_one),
         .data_b(msb_index),
         .data_out(y_aug)
     );
