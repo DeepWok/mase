@@ -260,7 +260,7 @@ class QuantizationAnalysis():
         recorded_accs.append(acc_avg)
         avg_latency = sum(latencies) / len(latencies)
         avg_gpu_power_usage = sum(gpu_power_usages) / len(gpu_power_usages)
-        avg_gpu_energy_usage = (avg_gpu_power_usage / 1000) * avg_latency / (1000*3600)
+        avg_gpu_energy_usage = (avg_gpu_power_usage* 1000) * (avg_latency / 3600000)
         
         # Assuming self.logger is already set up with your preferred logging level and format
         self.logger.info(
@@ -275,7 +275,7 @@ class QuantizationAnalysis():
                 f"Average Loss                            | {loss_avg:.5f}",
                 f"Average Latency                         | {avg_latency:.5f} milliseconds",
                 f"Average GPU Power Usage                 | {avg_gpu_power_usage:.5f} watts",
-                f"Inference Energy Consumption            | {avg_gpu_energy_usage:.5f} kW/hr"
+                f"Inference Energy Consumption            | {avg_gpu_energy_usage:.5f} mWh"
             ])
         )
 
