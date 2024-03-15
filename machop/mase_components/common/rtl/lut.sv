@@ -14,7 +14,7 @@ module lut #(
     parameter OUTPUT_REG = 0,
 
     // Memfile
-    parameter string MEM_FILE = "/Users/dereklai/mase/machop/mase_components/common/rtl/lut_mem0.mem",
+    parameter string MEM_FILE = "",
 
     // Derived params
     localparam ADDR_WIDTH = SIZE == 1 ? 1 : $clog2(SIZE)
