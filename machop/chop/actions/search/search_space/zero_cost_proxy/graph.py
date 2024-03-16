@@ -17,8 +17,6 @@ from torch.utils.data import Dataset, DataLoader
 from .models import ZeroCostLinearModel, ZeroCostNonLinearModel
 from .utils import sample_arch_dataset, evaluate_predictions, eval_zcp, encode_archs
 
-# model = ZeroCostNonLinearModel()
-# print("PARAMS: ", list(model.parameters()))
 
 DEFAULT_ZERO_COST_PROXY_CONFIG = {
     "config": {
@@ -40,6 +38,7 @@ class ZeroCostProxy(SearchSpaceBase):
         self._node_info = None
         self.default_config = DEFAULT_ZERO_COST_PROXY_CONFIG
         self.zcp_results = []
+        self.custom_ensemble_metrics = {}
 
     def zc_ensemble_model(self, inputs_train, targets_train, inputs_test, targets_test):
         class CustomDataset(Dataset):
@@ -142,10 +141,7 @@ class ZeroCostProxy(SearchSpaceBase):
             if (epoch+1) % 1 == 0:
                 print(f'Epoch [{epoch+1}/{epochs}], Train Loss: {epoch_loss_train:.4f}, Test Loss: {epoch_loss_test:.4f}')
 
-        # Print trained weights
-        for name, param in model.named_parameters():
-            if param.requires_grad:
-                print(name, param.data)
+        return model
 
     def get_model_inputs(self, dataset, archs, zc_proxies):
         inputs = []
@@ -192,35 +188,17 @@ class ZeroCostProxy(SearchSpaceBase):
         inputs_test = self.get_model_inputs(zc_api, xtest, self.config["zc"]["zc_proxies"])
 
         # neural network model
-        self.zc_ensemble_model(inputs_train, ytrain, inputs_test, ytest)
-
-        # import pdb
-        # pdb.set_trace()
-
-
-        # model.eval()  # Set the model to evaluation mode
-        # predicted_accuracies = []
-        # actual_accuracies = []
-
-        # model.eval()  # Ensure model is in evaluation mode
-
-        # with torch.no_grad():  # No need to track gradients
-        #     for i in range(len(inputs_test)):  # Assuming you want to use all test inputs
-        #         predicted_accuracy = model(inputs_test[i].unsqueeze(0))  # Add batch dimension
-        #         predicted_accuracies.append(predicted_accuracy.item())
-        #         actual_accuracies.append(targets_test[i].item())
+        model = self.zc_ensemble_model(inputs_train, ytrain, inputs_test, ytest)
+        model.eval()  
+        
+        predicted_accuracies = []
+        with torch.no_grad():  # No need to track gradients
+            for i in range(len(inputs_test)):  # Assuming you want to use all test inputs
+                predicted_accuracy = model(torch.Tensor(inputs_test[i]))  # Add batch dimension
+                predicted_accuracies.append(predicted_accuracy.item())
                 
-        # import matplotlib.pyplot as plt
-        # import seaborn as sns
-        # from scipy.stats import spearmanr
-
-        # # Assuming predicted_accuracies and actual_accuracies are available
-        # predicted_accuracies_np = np.array(predicted_accuracies)
-        # actual_accuracies_np = np.array(actual_accuracies)
-
-        # # Calculate Spearman's rank correlation
-        # spearman_corr, _ = spearmanr(predicted_accuracies_np, actual_accuracies_np)
-
+            self.custom_ensemble_metrics = evaluate_predictions(ytest, predicted_accuracies)
+        
         for zcp_name in self.config["zc"]["zc_proxies"]:
             if self.config["zc"]["calculate_proxy"]:
                 # train and query expect different ZCP formats

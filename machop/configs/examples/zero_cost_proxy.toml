@@ -32,7 +32,6 @@ epochs = 30
 dataset = 'cifar10'
 num_archs_train = 5
 num_archs_test = 5
-
 # zc_proxies = ['epe_nas']
 zc_proxies = ['epe_nas', 'fisher', 'grad_norm', 'grasp', 'jacov', 'l2_norm', 'nwot', 'plain', 'snip', 'synflow', 'zen', 'flops', 'params']
 

@@ -205,9 +205,17 @@ class SearchStrategyNaslib(SearchStrategyBase):
         ensemble_preds = [x['metrics']['optuna_ensemble'] for x in model_results]
         ensemble_metric = evaluate_predictions(ytest, ensemble_preds)
 
-        print("ensemble_metric:  ", ensemble_metric)
+        print("optuna_ensemble_metric:  ", ensemble_metric)
 
-        result_dict = {"ensemble_metric": {"test_spearman": ensemble_metric['spearmanr']}}
+        result_dict = {
+            "optuna_ensemble_metric": {
+                "test_spearman": ensemble_metric['spearmanr']
+                },
+             search_space.config['zc']['ensemble_model']: {
+                "test_spearman": search_space.custom_ensemble_metrics['spearmanr']
+                }
+        }
+
         for item in search_space.zcp_results:
             key = list(item.keys())[0]
             values = item[key]
@@ -284,3 +292,4 @@ class SearchStrategyNaslib(SearchStrategyBase):
         )
         logger.info(f"Best trial(s):\n{txt}")
         return df
+
