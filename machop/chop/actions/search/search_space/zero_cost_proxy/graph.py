@@ -1,21 +1,23 @@
 # This is the search space for Zero Cost Proxies
 
 from ..base import SearchSpaceBase
+import logging
 
 from naslib.search_spaces import NasBench201SearchSpace
-from naslib.utils import get_dataset_api, setup_logger, get_zc_benchmark_api
+from naslib.utils import get_dataset_api, get_zc_benchmark_api
 from naslib.utils import get_train_val_loaders, get_project_root
 from fvcore.common.config import CfgNode
-from tqdm import tqdm
-from naslib.defaults.predictor_evaluator import PredictorEvaluator
-from naslib.predictors import XGBoost
-from naslib.utils.encodings import EncodingType
 import torch
 import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data import Dataset, DataLoader
+from xgboost import XGBRegressor
+import numpy as np
+
 from .models import ZeroCostLinearModel, ZeroCostNonLinearModel
 from .utils import sample_arch_dataset, evaluate_predictions, eval_zcp, encode_archs
+
+logger = logging.getLogger(__name__)
 
 
 DEFAULT_ZERO_COST_PROXY_CONFIG = {
@@ -39,8 +41,10 @@ class ZeroCostProxy(SearchSpaceBase):
         self.default_config = DEFAULT_ZERO_COST_PROXY_CONFIG
         self.zcp_results = []
         self.custom_ensemble_metrics = {}
+        self.xgboost_metrics = {}
 
     def train_zc_ensemble_model(self, inputs_train, targets_train, inputs_test, targets_test):
+        logger.info("Training Custom Neural Network")
         class CustomDataset(Dataset):
             def __init__(self, inputs, targets):
                 self.inputs = inputs
@@ -131,8 +135,8 @@ class ZeroCostProxy(SearchSpaceBase):
 
             epoch_loss_test = running_loss_test / len(test_loader.dataset)
 
-            if (epoch+1) % 1 == 0:
-                print(f'Epoch [{epoch+1}/{epochs}], Train Loss: {epoch_loss_train:.4f}, Validation Loss: {epoch_loss_test:.4f}')
+            # if (epoch+1) % 1 == 0:
+            #     print(f'Epoch [{epoch+1}/{epochs}], Train Loss: {epoch_loss_train:.4f}, Validation Loss: {epoch_loss_test:.4f}')
 
             # Check if this is the best model based on test loss and update accordingly
             if epoch_loss_test < best_test_loss:
@@ -159,12 +163,8 @@ class ZeroCostProxy(SearchSpaceBase):
         for arch in archs:
             inputs.append([dataset[str(arch)].get(metric_name, 0)['score'] for metric_name in zc_proxies])
         return inputs
-        
-    def build_search_space(self):
-        """
-        Build the search space for the mase graph (only quantizeable ops)
-        """
-
+    
+    def calculate_zc(self, xtrain, xtest, ytrain, ytest, zc_api):
         # Create configs required for get_train_val_loaders
         config_dict = {
             'dataset': self.config["zc"]["dataset"], # Dataset to loader: can be cifar10, cifar100, ImageNet16-120
@@ -178,40 +178,18 @@ class ZeroCostProxy(SearchSpaceBase):
         config = CfgNode(config_dict)
 
         # Get the dataloaders
-        train_loader, val_loader, test_loader, train_transform, valid_transform = get_train_val_loaders(config)
+        train_loader, _, _, _, _ = get_train_val_loaders(config)
 
-        seed = self.config["zc"]["seed"]
-        pred_dataset = self.config["zc"]["dataset"]
-        # get data from api
-        zc_api = get_zc_benchmark_api(self.config["zc"]["benchmark"], pred_dataset)
-        pred_api = get_dataset_api(search_space=self.config["zc"]["benchmark"], dataset=self.config["zc"]["dataset"])
-        train_size = self.config["zc"]["num_archs_train"]
-        test_size = self.config["zc"]["num_archs_test"]
-        
-        train_sample, train_hashes = sample_arch_dataset(NasBench201SearchSpace(), pred_dataset, pred_api, data_size=train_size, shuffle=True, seed=seed)
-        test_sample, test_hashes = sample_arch_dataset(NasBench201SearchSpace(), pred_dataset, pred_api, arch_hashes=train_hashes, data_size=test_size, shuffle=True, seed=seed+1)
-        
-        xtrain, ytrain, _ = train_sample
-        xtest, ytest, _ = test_sample
-
-        # prepare the inputs and targets based on the modified combined_data_list
-        inputs_train = self.get_model_inputs(zc_api, xtrain, self.config["zc"]["zc_proxies"])
-        inputs_test = self.get_model_inputs(zc_api, xtest, self.config["zc"]["zc_proxies"])
-
-        # neural network model
-        model = self.train_zc_ensemble_model(inputs_train, ytrain, inputs_test, ytest)
-        self.test_zc_ensemble_model(model, inputs_test, ytest)  
-        
         for zcp_name in self.config["zc"]["zc_proxies"]:
             if self.config["zc"]["calculate_proxy"]:
                 # train and query expect different ZCP formats
-                zcp_train = [{'zero_cost_scores': eval_zcp(t_arch, zcp_name, train_loader)} for t_arch in tqdm(xtrain)]
-                zcp_test = [{'zero_cost_scores': eval_zcp(t_arch, zcp_name, train_loader)} for t_arch in tqdm(xtest)]
+                zcp_train = [{'zero_cost_scores': eval_zcp(t_arch, zcp_name, train_loader)} for t_arch in xtrain]
+                zcp_test = [{'zero_cost_scores': eval_zcp(t_arch, zcp_name, train_loader)} for t_arch in xtest]
                 zcp_pred_test = [s['zero_cost_scores'][zcp_name] for s in zcp_test]
                 zcp_pred_train = [s['zero_cost_scores'][zcp_name] for s in zcp_train]
             else:
-                zcp_train = [{'zero_cost_scores': zc_api[str(t_arch)][zcp_name]['score']} for t_arch in tqdm(xtrain)]
-                zcp_test = [{'zero_cost_scores': zc_api[str(t_arch)][zcp_name]['score']} for t_arch in tqdm(xtest)]
+                zcp_train = [{'zero_cost_scores': zc_api[str(t_arch)][zcp_name]['score']} for t_arch in xtrain]
+                zcp_test = [{'zero_cost_scores': zc_api[str(t_arch)][zcp_name]['score']} for t_arch in xtest]
         
                 zcp_pred_test = [s['zero_cost_scores'] for s in zcp_test]
                 zcp_pred_train = [s['zero_cost_scores'] for s in zcp_train]
@@ -220,7 +198,7 @@ class ZeroCostProxy(SearchSpaceBase):
             test_metrics = evaluate_predictions(ytest, zcp_pred_test)
 
             results = []
-            for i, t_arch in tqdm(enumerate(xtest)):
+            for i, t_arch in enumerate(xtest):
                 results.append({
                     "test_hash": f'{t_arch}',
                     "test_accuracy": ytest[i],
@@ -235,5 +213,45 @@ class ZeroCostProxy(SearchSpaceBase):
                     "results": results
                 }
             })
+        
+    def build_search_space(self):
+        """
+        Build the search space zero cost proxies
+        """
 
-        print("zcp_results: ", self.zcp_results)
+        seed = self.config["zc"]["seed"]
+        pred_dataset = self.config["zc"]["dataset"]
+
+        # get data from api
+        zc_api = get_zc_benchmark_api(self.config["zc"]["benchmark"], pred_dataset)
+        pred_api = get_dataset_api(search_space=self.config["zc"]["benchmark"], dataset=self.config["zc"]["dataset"])
+        train_size = self.config["zc"]["num_archs_train"]
+        test_size = self.config["zc"]["num_archs_test"]
+        
+        # get train and test architectures
+        train_sample, train_hashes = sample_arch_dataset(NasBench201SearchSpace(), pred_dataset, pred_api, data_size=train_size, shuffle=True, seed=seed)
+        test_sample, _ = sample_arch_dataset(NasBench201SearchSpace(), pred_dataset, pred_api, arch_hashes=train_hashes, data_size=test_size, shuffle=True, seed=seed+1)
+        
+        # get train and test samles
+        xtrain, ytrain, _ = train_sample
+        xtest, ytest, _ = test_sample
+
+        # prepare the inputs and targets based on the modified combined_data_list
+        inputs_train = self.get_model_inputs(zc_api, xtrain, self.config["zc"]["zc_proxies"])
+        inputs_test = self.get_model_inputs(zc_api, xtest, self.config["zc"]["zc_proxies"])
+
+        # neural network model
+        model = self.train_zc_ensemble_model(inputs_train, ytrain, inputs_test, ytest)
+        self.test_zc_ensemble_model(model, inputs_test, ytest)
+
+        # XGBoost model
+        X_train = np.array(inputs_train)
+        X_test = np.array(inputs_test)
+        xgb_model = XGBRegressor()
+        xgb_model.fit(X_train, ytrain)
+        xgb_preds = xgb_model.predict(X_test)
+        self.xgboost_metrics = evaluate_predictions(ytest, xgb_preds)
+        
+        # calculate zc proxies
+        self.calculate_zc(xtrain, xtest, ytrain, ytest, zc_api)
+        

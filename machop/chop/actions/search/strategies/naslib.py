@@ -4,7 +4,6 @@ import pandas as pd
 import logging
 from tabulate import tabulate
 import joblib
-import pdb
 from ..search_space.zero_cost_proxy.utils import evaluate_predictions
 
 from functools import partial
@@ -195,15 +194,10 @@ class SearchStrategyNaslib(SearchStrategyBase):
     
     @staticmethod
     def _save_best_zero_cost(search_space, model_results, save_path):
-        # import pdb
-        # pdb.set_trace()
-
         # calculate ensemble metric
         ytest = [x['test_accuracy'] for x in model_results]
         ensemble_preds = [x['metrics']['optuna_ensemble'] for x in model_results]
         ensemble_metric = evaluate_predictions(ytest, ensemble_preds)
-
-        print("optuna_ensemble_metric:  ", ensemble_metric)
 
         result_dict = {
             "optuna_ensemble_metric": {
@@ -213,6 +207,10 @@ class SearchStrategyNaslib(SearchStrategyBase):
              search_space.config['zc']['ensemble_model']: {
                 "test_spearman": search_space.custom_ensemble_metrics['spearmanr'],
                  "test_kendaltau": search_space.custom_ensemble_metrics['kendalltau']
+                },
+            'xgboost': {
+                "test_spearman": search_space.xgboost_metrics['spearmanr'],
+                 "test_kendaltau": search_space.xgboost_metrics['kendalltau']
                 }
         }
         for item in search_space.zcp_results:
@@ -223,8 +221,6 @@ class SearchStrategyNaslib(SearchStrategyBase):
                 'train_spearman': values['train_spearman'], 
                 'test_kendaltau': values['test_kendaltau'], 
             }
-
-        print("result_dict:  ", result_dict)
 
         # save to metrics.json
         save_df = pd.DataFrame(
@@ -251,6 +247,7 @@ class SearchStrategyNaslib(SearchStrategyBase):
             {"benchmark": search_space.config['zc']['benchmark']},
             {"num_zc_proxies": len(search_space.config['zc']['zc_proxies'])}
             ]
+        
         # Initialize the DataFrame with an empty column list if it's solely for the results below
         df = pd.DataFrame()
         df["spearman"] = [{key: value["test_spearman"]} for key, value in sorted(result_dict.items(), key=lambda item: item[1]["test_spearman"], reverse=True)]
