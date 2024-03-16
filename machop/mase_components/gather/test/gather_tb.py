@@ -1,21 +1,42 @@
 import torch
-
-from torch import nn
-from torch.autograd.function import InplaceFunction
-
-import cocotb
-
-from cocotb.triggers import Timer
-
 import pytest
 import cocotb
+import random
 
+from torch.autograd.function import InplaceFunction
+from cocotb.triggers import Timer
 from mase_cocotb.runner import mase_runner
 
 pytestmark = pytest.mark.simulator_required
 
 
+# snippets
+class MyClamp(InplaceFunction):
+    @staticmethod
+    def forward(ctx, input, min, max):
+        return input.clamp(min=min, max=max)
 
+    @staticmethod
+    def backward(ctx, grad_output):
+        grad_input = grad_output.clone()
+        return grad_input
+
+
+class MyRound(InplaceFunction):
+    @staticmethod
+    def forward(ctx, input):
+        ctx.input = input
+        return input.round()
+
+    @staticmethod
+    def backward(ctx, grad_output):
+        grad_input = grad_output.clone()
+        return grad_input
+
+
+# wrap through module to make it a function
+my_clamp = MyClamp.apply
+my_round = MyRound.apply
 
 # fixed-point quantization with a bias
 def quantize(x, bits, bias):  # bits = 32
@@ -26,50 +47,68 @@ def quantize(x, bits, bias):  # bits = 32
 
 
 class VerificationCase:
-    bitwidth = 4
+    bitwidth = 8
     bias = 1
-      
-    x = 4
-    y = 4
+    num = 6
+    high_slots = 3
 
-    high_slots = 1
-    o_low_precision = []
-    o_high_precision = []
-    o_outputs_bin = []
-
-    def __init__(self, samples=2,test = False):
-        # self.m = nn.ReLU()
-        self.inputs, self.outputs = [], []
-        for _ in range(samples):
-            i1,i2, o= self.single_run()
-
-            self.inputs.append([i1,i2])
-            self.outputs.append(o)
-
-        # self.o_outputs_bin, self.o_low_precision, self.o_high_precision = self.scatter_model(samples)
-        # print('outputs_bin',self.o_outputs_bin)
+    def __init__(self, samples=2, test = False):
         self.samples = samples
+        self.low_in = []
+        self.high_in = []
 
-    def single_run(width, height, bitwidth, bias):
-      mat_a, mat_b = generate_matrices(width, height, bitwidth, bias)
-      mat_sum = mat_a + mat_b
-      return mat_a, mat_b, mat_sum
+        for _ in range(samples):
+            i1, i2 = self.single_run()
+            self.low_in.append(i1)
+            self.high_in.append(i2)
+
+
+        self.outputs = self.gather_model(samples)
+
+
+    def single_run(self):
+        ya = torch.rand(self.num)
+        yb = torch.rand(self.num)
+      
+        # Range for normalization
+        r1, r2 = 4, -4
+      
+        # Normalize and quantize mat_a
+        ya = (r1 - r2) * ya + r2
+        ya = quantize(ya, self.bitwidth, self.bias)
+      
+        # Normalize and quantize mat_b using the same parameters
+        yb = (r1 - r2) * yb + r2
+        yb = quantize(yb, self.bitwidth, self.bias)
+
+        kept = random.randint(1, self.high_slots)
+        index = [random.randint(0, self.num - 1) for _ in range(kept)]
+
+        for k in range(self.num) :
+            if k in index :
+                ya[k] = 0
+            else :
+                yb[k] = 0
+
+        return ya, yb
     
 
     def gather_model(self, samples):
         outputs = []
-        high_out= []
-        low_out = []
         
         for i in range(samples):
-          x = self.get_dut_input(i)
-        #   print('quant_input_val',x)
-          x_bin = self.to_twos_complement(x)
-        #   print('bin_quant_input_val',x_bin)
-          outputs.append(x_bin)
+            x_low = self.get_dut_input_0(i)
+            x_high = self.get_dut_input_1(i)
 
-        return outputs,high_out,low_ou
+            print(x_low)
+            print(x_high)
 
+            y = [x_low[k] + x_high[k] for k in range(len(x_high))]
+            outputs.append(y)
+
+        return outputs
+
+    # Will be usefull for 2D version
     def generate_matrices(width, height, bitwidth, bias):
       # Generate random tensor for mat_a and mat_b
       mat_a = torch.rand(height, width)
@@ -87,111 +126,57 @@ class VerificationCase:
       mat_b = quantize(mat_b, bitwidth, bias)
     
       return mat_a, mat_b
-
     
 
     def get_dut_parameters(self):
         return {
-            "DIM_X": self.x,
-            "DIM_Y": self.y,
+            "DIM_X": 3,
+            "DIM_Y": 2,
             "PRECISION": self.bitwidth,
             "HIGH_SLOTS": self.high_slots,
-
         }
 
-    # def get_dut_input(self, i):
-    #     return self.inputs[i]
-
-    # def get_dut_output(self, i):
-
-    #     return self.outputs[i].int
-
-
     def get_dut_input_0(self, i):
-        inputs = self.inputs[i][0]
+        inputs = self.low_in[i]
         shifted_integers = (inputs * (2**self.bias)).int()
-        # if(self.num == 1):
-        #     print("input",shifted_integers)
-        #     return shifted_integers
+
         return shifted_integers.numpy().tolist()
 
-
     def get_dut_input_1(self, i):
-        inputs = self.inputs[i][1]
+        inputs = self.high_in[i]
         shifted_integers = (inputs * (2**self.bias)).int()
-        # if(self.num == 1):
-        #     print("input",shifted_integers)
-        #     return shifted_integers
+
         return shifted_integers.numpy().tolist()
 
     def get_dut_output(self, i):
         outputs = self.outputs[i]
         shifted_integers = (outputs * (2**self.bias)).int()
-        # if(self.num == 1):
-        #     return shifted_integers.int()
+
         return shifted_integers.numpy().tolist()
-
-
-    def to_twos_complement(self, integers):
-            return [format((1 << self.bitwidth) + x if x < 0 else x, f'0{self.bitwidth}b') for x in integers]
-
-
-    def int_to_signed_magnitude_binary(self,number):
-      # Determine the sign bit (0 for positive, 1 for negative)
-      if number >= 0:
-          sign_bit = '0'
-      else:
-          sign_bit = '1'
-          number = -number  # Make the number positive for binary conversion
-
-      # Convert the absolute value to binary
-      binary_representation = bin(number)[2:]  # [2:] to remove the '0b' prefix
-
-      # Ensure the binary representation fits the desired total length, including the sign bit
-      if len(binary_representation) < (self.bitwidth - 1):
-          # Prepend zeros to reach the desired length
-          binary_representation = binary_representation.rjust(self.bitwidth - 1, '0')
-      elif len(binary_representation) > (self.bitwidth - 1):
-          raise ValueError("The number is too large to fit in the specified total length")
-
-    
-
-      # Combine the sign bit with the binary representation
-      signed_magnitude_binary = sign_bit + binary_representation
-      
-      return signed_magnitude_binary
-
-    def int_list_to_signed_magnitude_binary(self,int_list):    
-      binary_list = [self.int_to_signed_magnitude_binary(number) for number in int_list]
-      return binary_list
 
 
 
 @cocotb.test()
-async def test_scatter(dut):
-    """Test integer based Relu"""
-    test_case = VerificationCase(samples=10)
+async def test_gather(dut):
+    """Test gather function"""
+    test_case = VerificationCase(samples=1)
 
     # set inputs outputs
     for i in range(test_case.samples):
-        x1 = test_case.get_dut_input_0(i)
-        x2 = test_case.get_dut_input_1(i)
+        x_low = test_case.get_dut_input_0(i)
+        x_high = test_case.get_dut_input_1(i)
 
         y = test_case.get_dut_output(i)
-        print('x:',x)
+        print('x_low :', x_low)
+        print('x_high :', x_high)
 
-        dut.data_in.value = x
+        dut.mat_a.value = x_low
+        dut.mat_b.value = x_high
         await Timer(2, units="ns")
 
-    
-        for i, dutval in enumerate(dut.data_out.value):
-          assert dutval.signed_integer == y[i]
-        for i, dutval_high in enumerate(dut.o_high_precision.value):
-            print('high:',dutval_high.signed_integer)
-        for i, dutval_low in enumerate(dut.o_high_precision.value):
-            print('low:',dutval_low.signed_integer)
-        # assert dut.data_out.value == test_case.o_outputs_bin[0], f"output q was incorrect on the {i}th cycle"
-        # print(type(dut.data_out.value))
+        for j, output in enumerate(dut.mat_sum):
+            assert output.signed_integer == y[j]
+            print('output:', output.signed_integer)
 
 if __name__ == "__main__":
     tb = VerificationCase()

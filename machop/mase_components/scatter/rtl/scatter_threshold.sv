@@ -77,8 +77,8 @@ module scatter_threshold #(
     )masker(
         .data(data_in),   // Unpacked array of 4 8-bit vectors
         .mask(output_mask),        // 4-bit mask
-        .data_out_0(o_low_precision),
-        .data_out_1(o_high_precision) 
+        .data_out_0(o_high_precision),
+        .data_out_1(o_low_precision) 
 
     );
 

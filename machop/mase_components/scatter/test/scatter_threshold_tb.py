@@ -10,7 +10,6 @@ from mase_cocotb.runner import mase_runner
 pytestmark = pytest.mark.simulator_required
 
 
-
 # snippets
 class MyClamp(InplaceFunction):
     @staticmethod
@@ -48,10 +47,10 @@ def quantize(x, bits, bias):  # bits = 32
 
 
 class VerificationCase:
-    bitwidth = 4
+    bitwidth = 8
     bias = 1
     num = 6
-    high_slots = 2
+    high_slots = 3
 
     def __init__(self, threshold, samples=2, test = False):
         self.samples = samples
@@ -65,16 +64,12 @@ class VerificationCase:
         
 
     def single_run(self):
-        xs = torch.rand(self.num) * 10
-        
-        #r1, r2 = 4, -4
-        #xs = (r1 - r2) * xs + r2
-        # 8-bit, (5, 3)
-        #xs = quantize(xs, self.bitwidth, self.bias)
-        # if(self.num == 1):
-        #    return xs[0], xs[0]
+        x = torch.rand(self.num)
+        r1, r2 = 4, -4
+        x = (r1 - r2) * x + r2
+        x = quantize(x, self.bitwidth, self.bias)
 
-        return xs
+        return x
 
     def scatter_model(self, samples):
         high_out = []
@@ -88,12 +83,12 @@ class VerificationCase:
             x = self.get_dut_input(i)
 
             for k in x :
-                if k >= self.threshold and count_high < 3 :
+                if abs(k) >= self.threshold and count_high < self.high_slots :
                     high_mat.append(k)
-                    low_mat.append(0.0)
+                    low_mat.append(0)
                     count_high += 1
                 else :
-                    high_mat.append(0.0)
+                    high_mat.append(0)
                     low_mat.append(k)
                   
             low_out.append(low_mat)
@@ -108,60 +103,16 @@ class VerificationCase:
             "DATA_IN_0_PRECISION_0": self.bitwidth,
             "DATA_OUT_0_PRECISION_0": self.bitwidth,
             "HIGH_SLOTS": self.high_slots,
+            "THRESHOLD": self.threshold,
         }
-
 
     def get_dut_input(self, i):
         inputs = self.inputs[i]
         shifted_integers = (inputs * (2**self.bias)).int()
-        # if(self.num == 1):
-        #     print("input",shifted_integers)
-        #     return shifted_integers
         return shifted_integers.numpy().tolist()
 
     def get_dut_output(self, i):
-        low_outputs = self.low_out[i]
-        high_outputs = self.high_out[i]
-
-        low_shifted_integers = [(k * (2**self.bias)) for k in low_outputs]
-        high_shifted_integers = [(k * (2**self.bias)) for k in high_outputs]
-
-        outputs = [low_shifted_integers, high_shifted_integers]
-
-        return outputs
-
-
-    def to_twos_complement(self, integers):
-        return [format((1 << self.bitwidth) + x if x < 0 else x, f'0{self.bitwidth}b') for x in integers]
-
-
-    def int_to_signed_magnitude_binary(self,number):
-      # Determine the sign bit (0 for positive, 1 for negative)
-      if number >= 0:
-          sign_bit = '0'
-      else:
-          sign_bit = '1'
-          number = -number  # Make the number positive for binary conversion
-
-      # Convert the absolute value to binary
-      binary_representation = bin(number)[2:]  # [2:] to remove the '0b' prefix
-
-      # Ensure the binary representation fits the desired total length, including the sign bit
-      if len(binary_representation) < (self.bitwidth - 1):
-          # Prepend zeros to reach the desired length
-          binary_representation = binary_representation.rjust(self.bitwidth - 1, '0')
-      elif len(binary_representation) > (self.bitwidth - 1):
-          raise ValueError("The number is too large to fit in the specified total length")
-
-      # Combine the sign bit with the binary representation
-      signed_magnitude_binary = sign_bit + binary_representation
-      
-      return signed_magnitude_binary
-
-
-    def int_list_to_signed_magnitude_binary(self,int_list):    
-      binary_list = [self.int_to_signed_magnitude_binary(number) for number in int_list]
-      return binary_list
+        return [self.low_out[i], self.high_out[i]]
 
 
 
@@ -174,21 +125,27 @@ async def test_scatter(dut):
     for i in range(test_case.samples):
         x = test_case.get_dut_input(i)
         y = test_case.get_dut_output(i)
+        y_low = y[0]
+        y_high = y[1]
+
         print('x:', x)
-        print('low_out:', y[0])
-        print('high_out:', y[1])
+        print('low_out:', y_low)
+        print('high_out:', y_high)
 
         dut.data_in.value = x
         await Timer(2, units="ns")
-
     
-        for i, dutval in enumerate(dut.data_out.value):
-          assert dutval.signed_integer == y[i]
-        for i, dutval_high in enumerate(dut.o_high_precision.value):
-            print('high:',dutval_high.signed_integer)
+        #for j, dutval in enumerate(dut.data_out.value):
+        #    assert dutval.signed_integer == y[j]
+
+        for j, dutval_high in enumerate(dut.o_high_precision.value):
+            assert dutval_high.signed_integer == y_high[j]
+            print('high:', dutval_high.signed_integer)
             
-        for i, dutval_low in enumerate(dut.o_low_precision.value):
-            print('low:',dutval_low.signed_integer)
+        for j, dutval_low in enumerate(dut.o_low_precision.value):
+            assert dutval_low.signed_integer == y_low[j]
+            print('low:', dutval_low.signed_integer)
+
         # assert dut.data_out.value == test_case.o_outputs_bin[0], f"output q was incorrect on the {i}th cycle"
         # print(type(dut.data_out.value))
 
