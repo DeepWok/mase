@@ -1,5 +1,8 @@
 import torch
 import logging
+import matplotlib.pyplot as plt
+from matplotlib.ticker import MultipleLocator
+from datetime import datetime
 
 from chop.actions.search.strategies.base import SearchStrategyBase
 from stable_baselines3 import A2C, PPO
@@ -92,6 +95,7 @@ class SearchStrategyRL(SearchStrategyBase):
         if sum(scaled_metrics.values()) > self.best_performance:
             self.best_performance = sum(scaled_metrics.values())
             self.best_sample = sampled_config
+            self.layers, self.layer_types = get_layers_of_graph(model)
             print(f'highest reward: {sum(scaled_metrics.values()):.4f}')
             for metric_name in self.metric_names:
                 print(f'{metric_name}: {metrics[metric_name]:.4f}')
@@ -125,3 +129,62 @@ class SearchStrategyRL(SearchStrategyBase):
         )
 
         # TODO report best performed sample
+        plot_config(self.best_sample, self.layers, self.layer_types)
+
+
+def get_layers_of_graph(graph):
+    layers = []
+    layer_types = []
+    for node in graph.fx_graph.nodes:
+        if node.meta["mase"].module is not None:
+            layers.append(str(node))
+            layer_types.append(type(node.meta["mase"].module).__name__)
+    return layers, layer_types
+
+
+def plot_config(config, layers, layer_types):
+    layer_dict = dict(zip(layers, layer_types))
+    data_in_width = []
+    weight_width = []
+    bias_width = []
+    layers_to_plot = []
+    for layer in layers:
+        if layer in config and config[layer]['config']['name'] == 'integer':
+            values = config[layer]['config']
+            data_in_width.append(values['data_in_width'])
+            weight_width.append(values['weight_width'])
+            bias_width.append(values['bias_width'])
+            layers_to_plot.append(layer_dict[layer])
+
+    min_value = min([min(data_in_width), min(weight_width), min(bias_width)])
+    max_value = max([max(data_in_width), max(weight_width), max(bias_width)])
+    # title_fontsize = 16
+    label_fontsize = 14
+    ticks_fontsize = 14
+
+    fig, ax = plt.subplots(figsize=(10, 4))
+
+    bar_width = 0.2
+    # Derive the x coordinates for each bar
+    r1 = range(len(layers_to_plot))
+    r2 = [x + bar_width for x in r1]
+    r3 = [x + bar_width for x in r2]
+
+    # Plot the bar chart
+    rects1 = ax.bar(r1, data_in_width, color='skyblue', width=bar_width, edgecolor='white', label='Data In Width')
+    rects2 = ax.bar(r2, weight_width, color='lightgreen', width=bar_width, edgecolor='white', label='Weight Width')
+    rects3 = ax.bar(r3, bias_width, color='salmon', width=bar_width, edgecolor='white', label='Bias Width')
+
+    ax.set_ylabel('#bit', fontsize=label_fontsize)
+    ax.set_xticks([r + bar_width for r in range(len(layers_to_plot))])
+    ax.set_xticklabels(layers_to_plot, rotation=45, ha='right', fontsize=ticks_fontsize)
+    ax.legend(fontsize=14, framealpha=0.3)
+    ax.tick_params(axis='y', labelsize=14)
+    ax.set_ylim([min_value - 0.5, max_value + 0.5])
+    ax.yaxis.set_major_locator(MultipleLocator(1))
+    ax.yaxis.grid(True, which='major', linestyle='--', linewidth=0.5)
+
+    plt.tight_layout()
+    datetime_str = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+    plt.savefig(f"{dir}/quantized_bit_width_{datetime_str}.png", dpi=300)
+    plt.show()
