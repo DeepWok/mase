@@ -1,0 +1,34 @@
+# basics
+model = "jsc-toy"
+dataset = "jsc"
+
+max_epochs = 10
+batch_size = 256
+learning_rate = 1e-3
+accelerator = "gpu"
+
+[passes.tensorrt_quantize]
+by = "type"
+num_calibration_batches = 10
+
+[passes.tensorrt_quantize.default.config]
+quantize = true
+calibrators = ["percentile"]
+percentiles = [99]
+precision = 'INT8'
+
+[passes.tensorrt_quantize.default.input]
+calibrator = 'histogram'
+quantize_axis = false
+
+[passes.tensorrt_quantize.default.weight]
+calibrator = 'histogram'
+quantize_axis = false
+
+[passes.tensorrt_quantize.fine_tune]
+epochs = 1
+
+[passes.tensorrt_analysis]
+num_batches = 500
+num_GPU_warmup_batches = 5
+test = true

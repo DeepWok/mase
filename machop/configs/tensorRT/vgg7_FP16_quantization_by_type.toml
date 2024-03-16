@@ -9,7 +9,7 @@ accelerator = "gpu"
 
 [passes.tensorrt_quantize]
 by = "type"
-calibrator = ["percentile", "mse", "entropy"] # max can only be used if histogram is not set
+calibrator = ["percentile", "mse", "entropy"]
 num_calibration_batches = 10
 percentiles = [99]
 report = true
@@ -52,6 +52,6 @@ quantize_axis = false
 epochs = 10
 
 [passes.tensorrt_analysis]
-num_batches = 20
+num_batches = 500
 num_GPU_warmup_batches = 5
 test = true

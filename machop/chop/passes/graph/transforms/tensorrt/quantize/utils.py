@@ -61,8 +61,8 @@ class FakeQuantizer:
         #TODO implement more module support: https://docs.nvidia.com/deeplearning/tensorrt/pytorch-quantization-toolkit/docs/index.html#quantized-modules
         try:
             # Set default quantization descriptor for input and weights
-            qnn.QuantLinear.set_default_quant_desc_input(QuantDescriptor(calib_method=config['config']['calibrator'], axis=config["input"]["quantize_axis"]))
-            qnn.QuantLinear.set_default_quant_desc_weight(QuantDescriptor(calib_method=config['config']['calibrator'], axis=config["input"]["quantize_axis"]))
+            qnn.QuantLinear.set_default_quant_desc_input(QuantDescriptor(calib_method=config['input']['calibrator'], axis=config["input"]["quantize_axis"]))
+            qnn.QuantLinear.set_default_quant_desc_weight(QuantDescriptor(calib_method=config['weight']['calibrator'], axis=config["input"]["quantize_axis"]))
             if mase_op == "linear":
                 use_bias = original_module.bias is not None
 
@@ -78,8 +78,8 @@ class FakeQuantizer:
         
             elif mase_op in ("conv2d"):
                 # Set default quantization descriptor for input and weights
-                qnn.QuantConv2d.set_default_quant_desc_input(QuantDescriptor(calib_method=config['config']['calibrator'], axis=config["input"]["quantize_axis"]))
-                qnn.QuantConv2d.set_default_quant_desc_weight(QuantDescriptor(calib_method=config['config']['calibrator'], axis=config["input"]["quantize_axis"]))
+                qnn.QuantConv2d.set_default_quant_desc_input(QuantDescriptor(calib_method=config['input']['calibrator'], axis=config["input"]["quantize_axis"]))
+                qnn.QuantConv2d.set_default_quant_desc_weight(QuantDescriptor(calib_method=config['weight']['calibrator'], axis=config["input"]["quantize_axis"]))
                 use_bias = original_module.bias is not None
                 new_module = qnn.QuantConv2d(
                     in_channels=original_module.in_channels,
@@ -109,9 +109,20 @@ class FakeQuantizer:
     
     def get_config(self, name: str):
         """Retrieve specific configuration from the instance's config dictionary or return default."""
-        config = self.config.get(name)
-        if type(config) is type(None):
-            raise Exception(f"Please check Config/TOML file. Layer config {name} must be defined.")
+        config = self.config.get(name) or self.config.get('default')
+
+        if config is None:
+            raise Exception("Please check Config/TOML file. Default config must be defined.")
+
+        # Check if required keys are defined
+        try:
+            config['config']['quantize']
+            config["input"]["quantize_axis"]
+            config["input"]["calibrator"]
+            config["weight"]["quantize_axis"]
+            config["weight"]["calibrator"]
+        except KeyError:
+            raise Exception(f"Config/TOML not configured correctly. Please check documentation for what must be defined.")
         return config
 
     def fake_quantize_by_type(self, graph):

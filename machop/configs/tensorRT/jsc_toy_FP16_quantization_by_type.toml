@@ -17,7 +17,7 @@ report = true
 [passes.tensorrt_quantize.default.config]
 quantize = true
 calibrator = 'histogram'
-precision ='FP16' # 'FP16'
+precision = 'FP16'
 
 [passes.tensorrt_quantize.default.config.input]
 calibrator = 'histogram'
@@ -26,20 +26,6 @@ quantize_axis = false
 [passes.tensorrt_quantize.default.config.weight]
 calibrator = 'histogram'
 quantize_axis = false
-
-[passes.tensorrt_quantize.linear.config]
-calibrator = 'histogram'
-quantize = true
-precision = 'FP16'
-
-[passes.tensorrt_quantize.linear.input]
-calibrator = 'histogram'
-quantize_axis = false
-
-[passes.tensorrt_quantize.linear.weight]
-calibrator = 'histogram'
-quantize_axis = false
-
 
 [passes.tensorrt_quantize.fine_tune]
 epochs = 1

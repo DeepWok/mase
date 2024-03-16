@@ -44,6 +44,15 @@ class Calibrator:
         """Retrieve specific configuration from the config dictionary or return default."""
         return config.get(name, config['default'])['config']
 
+    def evaluate(self, graph):
+        batches = self.config.get('num_calibration_batches', 10)
+        dataloader = self.config['data_module'].val_dataloader()
+
+        for i, (xTrain, yTrain) in enumerate(dataloader):
+            gy_pred = graph.model(Variable(xTrain).cuda())
+            if i >= batches:
+                break
+
     def compute_amax(self, model, **kwargs):
         """Computes and loads the maximum activation values for quantization calibration."""
         # Load calibration result
@@ -61,7 +70,6 @@ class Calibrator:
     def calibrate_model(self, graph):
         """Performs the calibration pass on the model using the given data loader."""
         self.logger.info("Starting calibration of the model in PyTorch...")
-        dataloader = self.config['data_module'].train_dataloader()
         quant_modules.initialize()
         graph.model.cuda()
         
@@ -76,13 +84,10 @@ class Calibrator:
                     else:
                         module.disable()
 
-            for i, (xTrain, yTrain) in enumerate(dataloader):
-                graph.model(Variable(xTrain).cuda())
-                if i >= self.config['num_calibration_batches']:
-                    break
+            self.train(graph)
 
             # Turn off calibration tool
-            for name, module in graph.model.named_modules():
+            for _, module in graph.model.named_modules():
                 if isinstance(module, qnn.TensorQuantizer):
                     if module._calibrator is not None:
                         module.enable_quant()
@@ -92,18 +97,25 @@ class Calibrator:
                         module.enable()
             
             # Apply the specific calibration based on user input
-            if self.config:
-                for calib in self.config['calibrator']:
-                    match calib:
-                        case "max":
+            try:
+                calibs = self.config.get('default')['config']['calibrators']
+            except KeyError:
+                calibs = 'entropy'
+            for calib in calibs:
+                match calib:
+                    case "entropy":
+                        self.compute_amax(graph.model, method=calib)
+                    case "percentile":
+                        try:
+                            percentiles = self.config.get('default')['config']['percentiles']
+                        except KeyError:
+                            percentiles = [99]
+                        for percentile in percentiles:
                             self.compute_amax(graph.model, method=calib)
-                        case "entropy":
-                            self.compute_amax(graph.model, method=calib)
-                        case "percentile":
-                            for percentile in self.config.get('percentiles', [99]):
-                                self.compute_amax(graph.model, method="percentile")
-                        case "mse":
-                            self.compute_amax(graph.model, method=calib)
+                    case "mse":
+                        self.compute_amax(graph.model, method=calib)
+                
+                self.evaluate()
             
             self.logger.info("Succeeded in calibrating the model in PyTorch!")
             return graph

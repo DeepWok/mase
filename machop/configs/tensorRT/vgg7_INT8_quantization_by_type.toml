@@ -1,6 +1,6 @@
 # basics
-model = "jsc-tiny"
-dataset = "jsc"
+model = "vgg7"
+dataset = "cifar10"
 
 max_epochs = 10
 batch_size = 256
@@ -9,38 +9,46 @@ accelerator = "gpu"
 
 [passes.tensorrt_quantize]
 by = "type"
-calibrator = ["percentile", "max", "mse", "entropy"]
-num_calibration_batches = 100
+calibrator = ["percentile", "mse", "entropy"]
+num_calibration_batches = 10
 percentiles = [99]
 report = true
 
-[passes.tensorrt_quantize.linear.config]
+[passes.tensorrt_quantize.default.config]
 quantize = true
-precision = 'FP16' # 'INT8'
+calibrator = 'histogram'
+precision = 'INT8' 
+
+[passes.tensorrt_quantize.linear.config]
+calibrator = 'histogram'
+quantize = true
 
 [passes.tensorrt_quantize.linear.input]
-calibrator = 'histogram'
 quantize_axis = false
 
 [passes.tensorrt_quantize.linear.weight]
+quantize_axis = false 
+
+[passes.tensorrt_quantize.conv2d.config]
+quantize = true
 calibrator = 'histogram'
+
+[passes.tensorrt_quantize.conv2d.input]
 quantize_axis = false
 
-[passes.tensorrt_quantize.default.config]
-quantize = true
-precision = 'FP16'
+[passes.tensorrt_quantize.conv2d.weight]
+quantize_axis = false
 
 [passes.tensorrt_quantize.default.config.input]
-calibrator = 'histogram'
 quantize_axis = false
 
 [passes.tensorrt_quantize.default.config.weight]
-calibrator = 'histogram'
 quantize_axis = false
 
 [passes.tensorrt_fine_tune]
 epochs = 10
 
 [passes.tensorrt_analysis]
-num_batches = 20
+num_batches = 500
 num_GPU_warmup_batches = 5
+test = true

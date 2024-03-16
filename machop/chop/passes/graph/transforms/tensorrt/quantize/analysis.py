@@ -209,9 +209,6 @@ class QuantizationAnalysis():
         recall_metric = torchmetrics.Recall(num_classes=self.num_of_classes, average='weighted', task='multiclass')
         f1_metric = torchmetrics.F1Score(num_classes=self.num_of_classes, average='weighted', task='multiclass')
 
-        all_accs, all_precisions, all_recalls, all_f1s = [], [], [], []
-        all_losses, all_latencies, all_gpu_powers, all_gpu_energy = [], [], [], []
-        
         # Initialize lists to store metrics for each configuration
         recorded_accs = []
         latencies = []
