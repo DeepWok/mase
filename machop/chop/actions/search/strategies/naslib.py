@@ -134,8 +134,6 @@ class SearchStrategyNaslib(SearchStrategyBase):
 
 
         for x in model_results:
-            # import pdb
-            # pdb.set_trace() 
             x['metrics']['optuna_ensemble'] = sum(x['metrics'][metric] * best_params[metric] for metric in x['metrics'])
 
         return model_results
@@ -170,14 +168,9 @@ class SearchStrategyNaslib(SearchStrategyBase):
         )
 
         best_params = study.best_params
-        print("best_params:  ", best_params)
-
 
         model_results = self.combined_list(search_space.zcp_results)
-
         model_results = self.get_optuna_prediction(model_results, best_params)
-        
-        print("model_results: ", model_results)
 
         self._save_study(study, self.save_dir / "study.pkl")
         self._save_search_dataframe(study, search_space, self.save_dir / "log.json")
@@ -214,7 +207,7 @@ class SearchStrategyNaslib(SearchStrategyBase):
 
         print("ensemble_metric:  ", ensemble_metric)
 
-        result_dict = {"ensemble_metric": ensemble_metric}
+        result_dict = {"ensemble_metric": {"test_spearman": ensemble_metric['spearmanr']}}
         for item in search_space.zcp_results:
             key = list(item.keys())[0]
             values = item[key]
@@ -225,7 +218,9 @@ class SearchStrategyNaslib(SearchStrategyBase):
 
         print("result_dict:  ", result_dict)
 
-        df = pd.DataFrame(
+        sorted_results = [{key: value["test_spearman"]} for key, value in sorted(result_dict.items(), key=lambda item: item[1]["test_spearman"], reverse=True)]
+
+        save_df = pd.DataFrame(
             columns=[
                 "number",
                 "result_dict",
@@ -238,13 +233,27 @@ class SearchStrategyNaslib(SearchStrategyBase):
             model_results,
             ]
         
-        df.loc[len(df)] = row
-        df.to_json(save_path, orient="index", indent=4)
+        save_df.loc[len(save_df)] = row
+        save_df.to_json(save_path, orient="index", indent=4)
+
+        df = pd.DataFrame(
+            columns=[
+                "number",
+                "spearman",
+            ]
+        )
+        for i, result in enumerate(sorted_results[0:5]):
+            row = [
+                i,
+                result
+               
+            ]
+            df.loc[len(df)] = row
 
         txt = "Best trial(s):\n"
         print("df:  ", df)
         df_truncated = df.loc[
-            :, ["result_dict"]
+            :, ["spearman"]
         ]
 
         def beautify_metric(metric: dict):
@@ -262,9 +271,9 @@ class SearchStrategyNaslib(SearchStrategyBase):
             return beautified
 
         df_truncated.loc[
-            :, ["result_dict"]
+            :, ["spearman"]
         ] = df_truncated.loc[
-            :, ["result_dict"]
+            :, ["spearman"]
         ].map(
             beautify_metric
         )
