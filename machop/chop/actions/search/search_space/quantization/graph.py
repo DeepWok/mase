@@ -171,7 +171,7 @@ class GraphSearchSpaceMixedPrecisionPTQ(SearchSpaceBase):
         layer_identifiers = set(k.split('/')[0] for k in choices_flattened.keys())
         num_layers = len(layer_identifiers)
 
-        # Extract parameters for a single layer, ignoring 'name'
+        # Extract parameters for a single layer
         parameters = self._extract_layer_parameters(next(iter(layer_identifiers)))
         
         # Construct the action space with the correct number of options for each parameter, for all layers
@@ -181,4 +181,4 @@ class GraphSearchSpaceMixedPrecisionPTQ(SearchSpaceBase):
     def _extract_layer_parameters(self, layer_identifier):
         """Extracts parameters for a given layer, excluding 'name'."""
         return {k.split('/')[-1]: v for k, v in self.choices_flattened.items() 
-                if k.startswith(layer_identifier)} # and not k.endswith("name")
+                if k.startswith(layer_identifier)}

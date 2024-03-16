@@ -29,11 +29,16 @@ bias_frac_width = [2, 4, 6]
 [search.strategy]
 name = "rl"
 algorithm = 'ppo'
-env = 'mixed_precision'
+env = 'mixed_precision_hi_lo'
 num_episodes = 1 
 device = 'cuda'
-total_timesteps = 200
-save_name = 'tmp'
+total_timesteps = 2000
+save_name = 'tmp_rl'
+
+[search.strategy.setup]
+# sum_scaled_metrics = true # single objective
+# direction = "maximize"
+sum_scaled_metrics = false # multi objective
 
 [search.strategy.sw_runner.basic_evaluation]
 data_loader = "val_dataloader"
@@ -41,3 +46,11 @@ num_samples = 512
 
 [search.strategy.hw_runner.average_bitwidth]
 compare_to = 32 # compare to FP32
+
+[search.strategy.metrics]
+# loss.scale = 1.0
+# loss.direction = "minimize"
+accuracy.scale = 1.0
+accuracy.direction = "maximize"
+average_bitwidth.scale = 0.2
+average_bitwidth.direction = "minimize"
