@@ -40,7 +40,7 @@ class ZeroCostProxy(SearchSpaceBase):
         self.zcp_results = []
         self.custom_ensemble_metrics = {}
 
-    def zc_ensemble_model(self, inputs_train, targets_train, inputs_test, targets_test):
+    def train_zc_ensemble_model(self, inputs_train, targets_train, inputs_test, targets_test):
         class CustomDataset(Dataset):
             def __init__(self, inputs, targets):
                 self.inputs = inputs
@@ -104,12 +104,7 @@ class ZeroCostProxy(SearchSpaceBase):
             
         optimizer = optim.Adam(model.parameters(), lr=lr)
 
-        # Tracking loss for plotting
-        train_losses = []
-        test_losses = []
-        
         epochs = self.config["zc"]["epochs"]
-
         for epoch in range(epochs):
             model.train()
             running_loss_train = 0.0
@@ -134,14 +129,20 @@ class ZeroCostProxy(SearchSpaceBase):
 
             epoch_loss_test = running_loss_test / len(test_loader.dataset)
 
-            # Save losses for plotting
-            train_losses.append(epoch_loss_train)
-            test_losses.append(epoch_loss_test)
-
             if (epoch+1) % 1 == 0:
                 print(f'Epoch [{epoch+1}/{epochs}], Train Loss: {epoch_loss_train:.4f}, Test Loss: {epoch_loss_test:.4f}')
 
         return model
+    
+    def test_zc_ensemble_model(self, model, inputs_test, ytest):
+        model.eval()
+        predicted_accuracies = []
+        with torch.no_grad():  # No need to track gradients
+            for i in range(len(inputs_test)):  # Assuming you want to use all test inputs
+                predicted_accuracy = model(torch.Tensor(inputs_test[i]))  # Add batch dimension
+                predicted_accuracies.append(predicted_accuracy.item())
+                
+        self.custom_ensemble_metrics = evaluate_predictions(ytest, predicted_accuracies)
 
     def get_model_inputs(self, dataset, archs, zc_proxies):
         inputs = []
@@ -188,16 +189,8 @@ class ZeroCostProxy(SearchSpaceBase):
         inputs_test = self.get_model_inputs(zc_api, xtest, self.config["zc"]["zc_proxies"])
 
         # neural network model
-        model = self.zc_ensemble_model(inputs_train, ytrain, inputs_test, ytest)
-        model.eval()  
-        
-        predicted_accuracies = []
-        with torch.no_grad():  # No need to track gradients
-            for i in range(len(inputs_test)):  # Assuming you want to use all test inputs
-                predicted_accuracy = model(torch.Tensor(inputs_test[i]))  # Add batch dimension
-                predicted_accuracies.append(predicted_accuracy.item())
-                
-            self.custom_ensemble_metrics = evaluate_predictions(ytest, predicted_accuracies)
+        model = self.train_zc_ensemble_model(inputs_train, ytrain, inputs_test, ytest)
+        self.test_zc_ensemble_model(model, inputs_test, ytest)  
         
         for zcp_name in self.config["zc"]["zc_proxies"]:
             if self.config["zc"]["calculate_proxy"]:
@@ -213,9 +206,6 @@ class ZeroCostProxy(SearchSpaceBase):
                 zcp_pred_test = [s['zero_cost_scores'] for s in zcp_test]
                 zcp_pred_train = [s['zero_cost_scores'] for s in zcp_train]
                 
-                # import pdb
-                # pdb.set_trace()
-            
             train_metrics = evaluate_predictions(ytrain, zcp_pred_train)
             test_metrics = evaluate_predictions(ytest, zcp_pred_test)
 
