@@ -71,85 +71,130 @@ module fixed_layer_norm #(
     input                   data_out_0_ready 
 
 );
+    // logic valid_out_b; 
+    // logic valid_out_r; 
+    // logic valid_out_rr;
+
+    // parameter MEAN_WIDTH = $clog2(IN_DEPTH*(2 ** IN_WIDTH)); 
+    // parameter VAR_WIDTH = $clog2(IN_DEPTH*( (2 ** IN_WIDTH)**2) );
+
+    // // Sum register must account for largest possible sum of inputs 
+    // logic signed [MEAN_WIDTH - 1:0]    mean_r; 
+    // logic signed [MEAN_WIDTH + $clog2(IN_DEPTH)- 1 :0]    mean_i; 
+    // logic signed [MEAN_WIDTH + $clog2(IN_DEPTH)- 1 :0]    sum_i; 
+    // logic signed [MEAN_WIDTH - 1:0]    sum_b; 
+    // logic signed [VAR_WIDTH -1:0]    var_r; 
+    // logic signed [VAR_WIDTH -1:0]    var_b; 
+
+    // logic signed  [IN_WIDTH-1:0]  var_b_i     [IN_DEPTH-1:0];
+    
+    
+    // assign data_in_0_ready     = 1'b1;
+    // assign data_out_0_valid    = valid_out_rr;
+
+    // always_comb
+    // begin
+    //     valid_out_b     = data_in_0_valid; 
+    // end
+
+
+    // // assign mean_i[$clog2(IN_DEPTH):0] = 0;
+    // // assign mean_i[$clog2(IN_DEPTH):0] = 0;
+    // assign sum_i = sum_b << $clog2(IN_DEPTH);
+    // assign mean_i = (sum_i / IN_DEPTH);
+
+    // always_ff @(posedge clk)
+    // begin
+    //     valid_out_r     <= valid_out_b;
+    //     valid_out_rr     <= valid_out_r;
+    //     mean_r          <= (mean_i >> $clog2(IN_DEPTH));
+    //     var_r         <= (var_b >> $clog2(IN_DEPTH));
+    // end
+
+
+    // always_comb
+    // begin
+    //     sum_b = 0;
+    //     // TODO: Take into account PARTS_PER_NORM
+    //     for (int i = 0; i < IN_DEPTH; i++) begin
+    //         sum_b += $signed(data_in_0[i]); // Sum over all elements of the array
+    //     end
+
+    //     var_b = 0;
+    //     for (int i = 0; i < IN_DEPTH; i++) begin
+    //         var_b += ((data_in_0[i] << $clog2(IN_DEPTH)) - mean_i) ** 2;
+    //     end
+
+    //     for (int i = 0; i < IN_DEPTH; i++) begin
+    //         var_b_i[i] = (data_in_0[i] - mean_r) ** 2;
+    //     end
+    // end
+
+    // generate
+    //     genvar i;
+    //     for (i = 0; i < IN_DEPTH; i++) 
+    //     begin
+    //         assign data_out_0[i] = (var_r >> IN_FRAC_WIDTH);
+    //         // assign data_out_0[i] = var_r[IN_WIDTH + IN_FRAC_WIDTH - 1:IN_FRAC_WIDTH];
+    //         // assign data_out_0[i] = (data_in_0[i] - (sum_r[IN_WIDTH-1:0] >> $clog(IN_DEPTH))) / $sqrt(var_r);
+    //         // assign data_out_0[i] = (data_in_0[i] - sum_r)/ var_r;
+    //     end
+    // endgenerate    
+
+    // The max size the sum for calculating the mean is
+    // MAX_NUM_ELEMS * MAX_SIZE_PER_ELEM = IN_DEPTH * 2^IN_WIDTH
+    parameter SUM_MAX_SIZE = IN_DEPTH*(2 ** IN_WIDTH);
+
+    // We need larger bitwidth than the inputs.
+    parameter SUM_EXTRA_FRAC_WIDTH = $clog2(IN_DEPTH); 
+    parameter SUM_WIDTH = $clog2(SUM_MAX_SIZE) + SUM_EXTRA_FRAC_WIDTH;
+    parameter SUM_FRAC_WIDTH = IN_FRAC_WIDTH + SUM_EXTRA_FRAC_WIDTH;
+    
+    logic signed [SUM_WIDTH - 1:0]   sum;
+    logic signed [SUM_WIDTH - 1:0]   mean;
+    logic signed [SUM_WIDTH - 1:0]   sum_inputs [IN_DEPTH];
+
+    always_comb
+    begin
+        // Convert the inputs to a larger bitwidth and a FP format with more frac. bits.        
+        for (int i = 0; i < IN_DEPTH; i++) begin
+            sum_inputs[i][SUM_EXTRA_FRAC_WIDTH-1:0] = 0;
+            sum_inputs[i][SUM_EXTRA_FRAC_WIDTH+IN_WIDTH-1:SUM_EXTRA_FRAC_WIDTH] = data_in_0[i];
+            sum_inputs[i][SUM_WIDTH-1:SUM_EXTRA_FRAC_WIDTH+IN_WIDTH] = 0;
+        end
+
+        // Sum over the widened inputs.
+        sum = 0;
+        // TODO: Take into account PARTS_PER_NORM
+        for (int i = 0; i < IN_DEPTH; i++) begin
+            sum += sum_inputs[i];
+        end
+    end
+
+
+    // Data outputs.
+    assign data_in_0_ready     = 1'b1;
+
     logic valid_out_b; 
     logic valid_out_r; 
-    logic valid_out_rr;
-
-    parameter MEAN_WIDTH = $clog2(IN_DEPTH*(2 ** IN_WIDTH)); 
-    parameter VAR_WIDTH = $clog2(IN_DEPTH*( (2 ** IN_WIDTH)**2) );
-
-    // Sum register must account for largest possible sum of inputs 
-    logic signed [MEAN_WIDTH - 1:0]    mean_r; 
-    logic signed [MEAN_WIDTH + $clog2(IN_DEPTH)- 1 :0]    mean_i; 
-    logic signed [MEAN_WIDTH + $clog2(IN_DEPTH)- 1 :0]    sum_i; 
-    logic signed [MEAN_WIDTH - 1:0]    sum_b; 
-    logic signed [VAR_WIDTH -1:0]    var_r; 
-    logic signed [VAR_WIDTH -1:0]    var_b; 
-
-    logic signed  [IN_WIDTH-1:0]  var_b_i     [IN_DEPTH-1:0];
-    
-    
-    assign data_in_0_ready     = 1'b1;
-    assign data_out_0_valid    = valid_out_rr;
-
     always_comb
     begin
         valid_out_b     = data_in_0_valid; 
     end
 
-
-    // assign mean_i[$clog2(IN_DEPTH):0] = 0;
-    // assign mean_i[$clog2(IN_DEPTH):0] = 0;
-    assign sum_i = sum_b << $clog2(IN_DEPTH);
-    assign mean_i = (sum_i / IN_DEPTH);
-
     always_ff @(posedge clk)
     begin
         valid_out_r     <= valid_out_b;
-        valid_out_rr     <= valid_out_r;
-        mean_r          <= (mean_i >> $clog2(IN_DEPTH));
-        var_r         <= (var_b >> $clog2(IN_DEPTH));
-    end
-
-
-    always_comb
-    begin
-        sum_b = 0;
-        // TODO: Take into account PARTS_PER_NORM
-        for (int i = 0; i < IN_DEPTH; i++) begin
-            sum_b += $signed(data_in_0[i]); // Sum over all elements of the array
-        end
-
-        var_b = 0;
-        for (int i = 0; i < IN_DEPTH; i++) begin
-            var_b += ((data_in_0[i] << $clog2(IN_DEPTH)) - mean_i) ** 2;
-        end
-
-        for (int i = 0; i < IN_DEPTH; i++) begin
-            var_b_i[i] = (data_in_0[i] - mean_r) ** 2;
-        end
     end
     
-
-    // //ACCESS MEMORY: 
-    // initial
-    // begin
-    //     $readmemh(GAMMA_DATA_PATH,  gamma_ram);
-    //     $readmemh(BETA_DATA_PATH,   beta_ram);
-    //     $readmemh(MEAN_DATA_PATH,   sum_ram);
-    //     $readmemh(STD_DATA_PATH,    std_ram); //N.B.: it is assumed that epsilon in inculded here
-    //     //TODO: think if should provide gamma/std instead to multiply in hw instead of division
-    // end
+    assign data_out_0_valid     = valid_out_r;
 
     generate
         genvar i;
         for (i = 0; i < IN_DEPTH; i++) 
         begin
-            assign data_out_0[i] = (var_r >> IN_FRAC_WIDTH);
-            // assign data_out_0[i] = var_r[IN_WIDTH + IN_FRAC_WIDTH - 1:IN_FRAC_WIDTH];
-            // assign data_out_0[i] = (data_in_0[i] - (sum_r[IN_WIDTH-1:0] >> $clog(IN_DEPTH))) / $sqrt(var_r);
-            // assign data_out_0[i] = (data_in_0[i] - sum_r)/ var_r;
+            assign data_out_0[i] = (sum >>> SUM_EXTRA_FRAC_WIDTH);
         end
-    endgenerate    
+    endgenerate
     
 endmodule
