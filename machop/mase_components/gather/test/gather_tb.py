@@ -130,10 +130,8 @@ class VerificationCase:
 
     def get_dut_parameters(self):
         return {
-            "DIM_X": 3,
-            "DIM_Y": 2,
+            "DIM": self.num,
             "PRECISION": self.bitwidth,
-            "HIGH_SLOTS": self.high_slots,
         }
 
     def get_dut_input_0(self, i):
