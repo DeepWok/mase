@@ -90,6 +90,7 @@ def graph_fake_quantize_by_type(graph, config: dict):
 
 
 def graph_fake_quantize_by_name(graph, config: dict):
+    quant_modules.initialize()
     for node in graph.fx_graph.nodes:
         if get_mase_op(node) not in QUANTIZEABLE_OP:
             continue
@@ -128,6 +129,8 @@ def graph_fake_quantize_by_name(graph, config: dict):
             raise ValueError(
                 "Unsupported node type for quantisation: {}".format(get_mase_type(node))
             )
+    
+    quant_modules.deactivate()
     return graph
 
 
@@ -261,6 +264,7 @@ def evaluate_fake_quantize_pass(graph, pass_args=None):
     """
 
     # quant_modules.initialize()
+    # qnn.TensorQuantizer.use_fb_fake_quant = True
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     graph.model.to(device)
     val_loader = pass_args["data_module"].test_dataloader()
@@ -278,7 +282,7 @@ def evaluate_fake_quantize_pass(graph, pass_args=None):
             n += data.size(0)
         acc /= n
         print("Average execute time for one batch: %.2fms" % (sum(execute_time) / len(execute_time) * 1000))
-        print(f"Quantized model accuracy: {acc}")
+        print("Total accuracy: %.2f%%" % (acc * 100))
 
     return graph
 
