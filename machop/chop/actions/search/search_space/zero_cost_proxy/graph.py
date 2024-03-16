@@ -55,7 +55,6 @@ class ZeroCostProxy(SearchSpaceBase):
         # Convert lists to PyTorch tensors
         inputs_train_tensor = torch.tensor(inputs_train, dtype=torch.float32)
         targets_train_tensor = torch.tensor(targets_train, dtype=torch.float32).view(-1, 1)
-
         inputs_test_tensor = torch.tensor(inputs_test, dtype=torch.float32)
         targets_test_tensor = torch.tensor(targets_test, dtype=torch.float32).view(-1, 1)
 
@@ -105,6 +104,9 @@ class ZeroCostProxy(SearchSpaceBase):
         optimizer = optim.Adam(model.parameters(), lr=lr)
 
         epochs = self.config["zc"]["epochs"]
+        best_test_loss = float('inf')  # Initialize best test loss to a high value
+        best_model_state = None  # To store the best model state
+
         for epoch in range(epochs):
             model.train()
             running_loss_train = 0.0
@@ -130,7 +132,15 @@ class ZeroCostProxy(SearchSpaceBase):
             epoch_loss_test = running_loss_test / len(test_loader.dataset)
 
             if (epoch+1) % 1 == 0:
-                print(f'Epoch [{epoch+1}/{epochs}], Train Loss: {epoch_loss_train:.4f}, Test Loss: {epoch_loss_test:.4f}')
+                print(f'Epoch [{epoch+1}/{epochs}], Train Loss: {epoch_loss_train:.4f}, Validation Loss: {epoch_loss_test:.4f}')
+
+            # Check if this is the best model based on test loss and update accordingly
+            if epoch_loss_test < best_test_loss:
+                best_test_loss = epoch_loss_test
+                best_model_state = model.state_dict().copy()  # Save a copy of the best model state
+
+        # After training, load the best model state back into your model
+        model.load_state_dict(best_model_state)
 
         return model
     
@@ -221,6 +231,7 @@ class ZeroCostProxy(SearchSpaceBase):
                 zcp_name: {
                     "test_spearman": test_metrics['spearmanr'],
                     "train_spearman": train_metrics['spearmanr'],
+                    "test_kendaltau": test_metrics['kendalltau'],
                     "results": results
                 }
             })

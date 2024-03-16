@@ -139,8 +139,6 @@ class SearchStrategyNaslib(SearchStrategyBase):
         return model_results
 
     def search(self, search_space) -> optuna.study.Study:
-        print("search_space:  ", search_space)
-
         # import pdb
         # pdb.set_trace()
         
@@ -209,25 +207,26 @@ class SearchStrategyNaslib(SearchStrategyBase):
 
         result_dict = {
             "optuna_ensemble_metric": {
-                "test_spearman": ensemble_metric['spearmanr']
+                "test_spearman": ensemble_metric['spearmanr'],
+                "test_kendaltau": ensemble_metric['kendalltau']
                 },
              search_space.config['zc']['ensemble_model']: {
-                "test_spearman": search_space.custom_ensemble_metrics['spearmanr']
+                "test_spearman": search_space.custom_ensemble_metrics['spearmanr'],
+                 "test_kendaltau": search_space.custom_ensemble_metrics['kendalltau']
                 }
         }
-
         for item in search_space.zcp_results:
             key = list(item.keys())[0]
             values = item[key]
             result_dict[key] = {
                 'test_spearman': values['test_spearman'], 
                 'train_spearman': values['train_spearman'], 
+                'test_kendaltau': values['test_kendaltau'], 
             }
 
         print("result_dict:  ", result_dict)
 
-        sorted_results = [{key: value["test_spearman"]} for key, value in sorted(result_dict.items(), key=lambda item: item[1]["test_spearman"], reverse=True)]
-
+        # save to metrics.json
         save_df = pd.DataFrame(
             columns=[
                 "number",
@@ -243,26 +242,25 @@ class SearchStrategyNaslib(SearchStrategyBase):
         
         save_df.loc[len(save_df)] = row
         save_df.to_json(save_path, orient="index", indent=4)
-
-        df = pd.DataFrame(
-            columns=[
-                "number",
-                "spearman",
+                
+        # List of custom dictionaries for "Global Parameters"
+        dict_list = [
+            {"num_training_archs": search_space.config['zc']['num_archs_train']}, 
+            {"num_testing_archs": search_space.config['zc']['num_archs_test']}, 
+            {"dataset": search_space.config['zc']['dataset']}, 
+            {"benchmark": search_space.config['zc']['benchmark']},
+            {"num_zc_proxies": len(search_space.config['zc']['zc_proxies'])}
             ]
-        )
-        for i, result in enumerate(sorted_results[0:5]):
-            row = [
-                i,
-                result
-               
-            ]
-            df.loc[len(df)] = row
+        # Initialize the DataFrame with an empty column list if it's solely for the results below
+        df = pd.DataFrame()
+        df["spearman"] = [{key: value["test_spearman"]} for key, value in sorted(result_dict.items(), key=lambda item: item[1]["test_spearman"], reverse=True)]
+        df["kendaltau"] = [{key: value["test_kendaltau"]} for key, value in sorted(result_dict.items(), key=lambda item: item[1]["test_kendaltau"], reverse=True)]
+        df["Global Parameters"] = pd.Series(dict_list[:len(df)])
 
         txt = "Best trial(s):\n"
-        print("df:  ", df)
         df_truncated = df.loc[
-            :, ["spearman"]
-        ]
+            :, ["spearman", "kendaltau", "Global Parameters"]
+        ].head()
 
         def beautify_metric(metric: dict):
             beautified = {}
@@ -279,9 +277,9 @@ class SearchStrategyNaslib(SearchStrategyBase):
             return beautified
 
         df_truncated.loc[
-            :, ["spearman"]
+            :, ["spearman", "kendaltau", "Global Parameters"]
         ] = df_truncated.loc[
-            :, ["spearman"]
+            :, ["spearman", "kendaltau", "Global Parameters"]
         ].map(
             beautify_metric
         )
