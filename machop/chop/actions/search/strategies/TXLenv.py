@@ -7,6 +7,7 @@ from chop.passes.graph import (
     add_common_metadata_analysis_pass,
     init_metadata_analysis_pass,
 )
+
 class MixedPrecisionEnv(gym.Env):
     def __init__(self, config):
         self.search_space = config.get("search_space", None)
@@ -91,4 +92,7 @@ class MixedPrecisionEnv(gym.Env):
             reward = self.run_trial(self.sample)
         obs = self.obs_list[self.state].copy()
         obs = np.append(obs, choices[action]).astype(np.float32)
+        if reward != 0:
+            with open('/mnt/d/project_files/Python/mase/txl_workplace/log.txt', 'a') as f:
+                f.write(f'{reward}\n')
         return obs, reward, terminated, False, {}
