@@ -88,7 +88,7 @@ def transform(
         pass_name = pass_name_components[0]
 
         match pass_name:
-            case "tensorrt":  
+            case "tensorrt":
                 pass_name_extended = pass_name_components[1]
                 pass_save_dir = save_dir / "tensorrt"
                 graph, _ = metadata_value_type_cast_transform_pass(
@@ -96,71 +96,89 @@ def transform(
                 )
                 ori_graph = deepcopy_mase_graph(graph)
 
-                pass_config['batch_size'] = config['batch_size']
-                pass_config['model'] = config['model']
-                pass_config['data_module'] = data_module
-                pass_config['accelerator'] = accelerator.type
-                if accelerator == 'gpu':
-                    #TODO this seems innefective - known issue - https://github.com/NVIDIA/TensorRT/issues/2468
-                    os.environ['CUDA_MODULE_LOADING'] = 'LAZY'
+                pass_config["batch_size"] = config["batch_size"]
+                pass_config["model"] = config["model"]
+                pass_config["data_module"] = data_module
+                pass_config["accelerator"] = accelerator.type
+                if accelerator == "gpu":
+                    # TODO this seems innefective - known issue - https://github.com/NVIDIA/TensorRT/issues/2468
+                    os.environ["CUDA_MODULE_LOADING"] = "LAZY"
 
-                match pass_name_extended: 
+                match pass_name_extended:
                     case "quantize":
                         # Firstly fake quantize the model for calibration (only required if using INT8 precision otherwise skipped)
-                        graph, _ = PASSES["tensorrt_fake_quantize"](graph, pass_args=pass_config)
-                        
+                        graph, _ = PASSES["tensorrt_fake_quantize"](
+                            graph, pass_args=pass_config
+                        )
+
                         # Then calibrate the model using the fake quantization to set AMAXs
-                        graph, _ = PASSES["tensorrt_calibrate"](graph, pass_args=pass_config)
+                        graph, _ = PASSES["tensorrt_calibrate"](
+                            graph, pass_args=pass_config
+                        )
+                        
                         PASSES["summarize_quantization"](
                             ori_graph, graph, save_dir=pass_save_dir
                         )
 
                         # Apply post-quantization fine tuning (Quantization Aware Training)
-                        graph, _ = PASSES["tensorrt_fine_tune"](graph, pass_args=pass_config)
+                        graph, _ = PASSES["tensorrt_fine_tune"](
+                            graph, pass_args=pass_config
+                        )
+
                         PASSES["summarize_quantization"](
                             ori_graph, graph, save_dir=pass_save_dir
                         )
 
                         # Convert the model to TensorRT format and apply FP16 or layer-wise mixed precision quantization
-                        graph, trt_meta = PASSES["tensorrt_quantize"](graph, pass_args=pass_config)
+                        graph, meta = PASSES["tensorrt_quantize"](
+                            graph, pass_args=pass_config
+                        )
                         PASSES["summarize_quantization"](
                             ori_graph, graph, save_dir=pass_save_dir
                         )
-                    
+
                     case "analysis":
-                        if accelerator != 'gpu':
-                            raise Exception(f"tensorrt_analysis must be run on a GPU, not a: {accelerator}")
+                        if accelerator != "gpu":
+                            raise Exception(
+                                f"tensorrt_analysis must be run on a GPU, not a: {accelerator}"
+                            )
                         try:
-                            trt_meta['graph_path']
+                            meta["graph_path"]
                         except KeyError:
-                            raise Exception(f"tensorrt_quantize must be run before tensorrt_analysis: graph must be quantized to a tensorRT format first.")
-                        graph, _ = PASSES["tensorrt_analysis"](trt_meta['graph_path'], pass_args=pass_config)
+                            raise Exception(
+                                f"tensorrt_quantize must be run before tensorrt_analysis: graph must be quantized to a tensorRT format first."
+                            )
+                        graph, _ = PASSES["tensorrt_analysis"](
+                            meta["graph_path"], pass_args=pass_config
+                        )
                     case "fusion":
                         raise NotImplementedError()
                     case "kerneltuning":
                         raise NotImplementedError()
                     case _:
-                        raise ValueError(f"Unsupported tensorrt pass: {pass_name_extended}")
-                    
+                        raise ValueError(
+                            f"Unsupported tensorrt pass: {pass_name_extended}"
+                        )
+
             case "onnxruntime":
                 pass_save_dir = save_dir / "onnxruntime"
                 graph, _ = metadata_value_type_cast_transform_pass(
                     graph, pass_args={"fn": to_numpy_if_tensor}
                 )
                 ori_graph = deepcopy_mase_graph(graph)
-                pass_config['batch_size'] = config['batch_size']
-                pass_config['data_module'] = data_module
-                pass_config['accelerator'] = accelerator.type
-                pass_config['model'] = config['model']
+                pass_config["batch_size"] = config["batch_size"]
+                pass_config["data_module"] = data_module
+                pass_config["accelerator"] = accelerator.type
+                pass_config["model"] = config["model"]
 
-                #TODO: convert the following in analysis args and use them in tensorrt analysis pass
+                # TODO: convert the following in analysis args and use them in tensorrt analysis pass
                 # pass_config['num_GPU_warmap_batches'] = config['tensorrt_analysis']['num_GPU_warmap_batches']
                 # pass_config['num_batches'] = config['tensorrt_analysis']['num_batches']
                 # pass_config['test'] = config['tensorrt_analysis']['test']
 
-                if accelerator == 'gpu':
-                    #TODO this seems innefective - known issue - https://github.com/NVIDIA/TensorRT/issues/2468
-                    os.environ['CUDA_MODULE_LOADING'] = 'LAZY'
+                if accelerator == "gpu":
+                    # TODO this seems innefective - known issue - https://github.com/NVIDIA/TensorRT/issues/2468
+                    os.environ["CUDA_MODULE_LOADING"] = "LAZY"
 
                 graph, _ = PASSES["onnxruntime"](graph, pass_args=pass_config)
 

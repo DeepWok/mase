@@ -42,7 +42,7 @@ def onnx_runtime_transform_pass(graph, pass_args="None"):
             f"Test argument not recognized; expected one in ['before','after','both','NA'], but {do_test} was received."
         )
 
-    return onnx_model_graph, {}
+    return graph, {}
 
 
 class ONNXRuntime:
@@ -52,7 +52,7 @@ class ONNXRuntime:
 
     def _prepare_save_path(self):
         """Creates and returns a save path for the model."""
-        root = Path(__file__).resolve().parents[7]
+        root = Path(__file__).resolve().parents[6]
         current_date = datetime.now().strftime("%Y_%m_%d")
         save_dir = root / f"mase_output/onnx_runtime" / current_date
         save_dir.mkdir(parents=True, exist_ok=True)
@@ -165,25 +165,3 @@ class ONNXRuntime:
             )
 
         return results
-
-    def pytorch_to_ONNX(self, model):
-        """Converts PyTorch model to ONNX format and saves it."""
-        self.logger.info("Converting PyTorch model to ONNX...")
-
-        save_path = self._prepare_save_path(method="ONNX")
-
-        train_dataloader = self.config["data_module"].train_dataloader()
-        train_sample = next(iter(train_dataloader))[0]
-        train_sample = train_sample.to(self.config["accelerator"])
-
-        torch.onnx.export(
-            model,
-            train_sample,
-            save_path,
-            export_params=True,
-            opset_version=11,
-            do_constant_folding=True,
-            input_names=["input"],
-        )
-        self.logger.info(f"ONNX Conversion Complete. Stored ONNX model to {save_path}")
-        return save_path

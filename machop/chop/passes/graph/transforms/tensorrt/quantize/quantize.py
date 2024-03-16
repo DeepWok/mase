@@ -17,11 +17,11 @@ from .utils import INT8Calibrator, prepare_save_path
 
 def tensorrt_engine_interface_pass(graph, pass_args=None):
     quantizer = Quantizer(pass_args)
-    graph_path = quantizer.pytorch_to_trt(graph)
+    trt_engine_path, onnx_path = quantizer.pytorch_to_trt(graph)
 
     # link the model with graph
     graph.model = torch.fx.GraphModule(graph.model, graph.fx_graph)
-    return graph, {'graph_path': graph_path}
+    return graph, {'trt_engine_path': trt_engine_path, 'onnx_path': onnx_path}
 
 class Quantizer:
     def __init__(self, config):
@@ -36,7 +36,7 @@ class Quantizer:
         TRT_path = self.ONNX_to_TRT(ONNX_path)
         self.export_TRT_model_summary(TRT_path)
 
-        return TRT_path
+        return TRT_path, ONNX_path
     
     def get_config(self, name: str):
         """Retrieve specific configuration from the instance's config dictionary or return default."""
