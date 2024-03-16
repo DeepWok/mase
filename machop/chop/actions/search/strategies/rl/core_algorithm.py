@@ -21,7 +21,7 @@ algorithm_map = {
     "ppo": PPO,
     "a2c": A2C,
     "her": HER,
-    "DDPG": DDPG,
+    "ddpg": DDPG,
 }
 env_map = {
     "MixedPrecisionEnv": MixedPrecisionEnv
