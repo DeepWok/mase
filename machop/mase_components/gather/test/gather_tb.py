@@ -52,8 +52,23 @@ class VerificationCase:
 
     def single_run(width, height, bitwidth, bias):
       mat_a, mat_b = generate_matrices(width, height, bitwidth, bias)
-      mat_sum = mat_a+mat_b
-      return mat_a,mat_b,mat_sum
+      mat_sum = mat_a + mat_b
+      return mat_a, mat_b, mat_sum
+    
+
+    def gather_model(self, samples):
+        outputs = []
+        high_out= []
+        low_out = []
+        
+        for i in range(samples):
+          x = self.get_dut_input(i)
+        #   print('quant_input_val',x)
+          x_bin = self.to_twos_complement(x)
+        #   print('bin_quant_input_val',x_bin)
+          outputs.append(x_bin)
+
+        return outputs,high_out,low_ou
 
     def generate_matrices(width, height, bitwidth, bias):
       # Generate random tensor for mat_a and mat_b
