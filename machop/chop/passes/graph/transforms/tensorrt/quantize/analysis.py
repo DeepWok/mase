@@ -1,23 +1,10 @@
-from copy import copy, deepcopy
 import logging
 import torch
-import os
-import sys
+import json
 from pathlib import PosixPath
-from datetime import datetime
 import tensorrt as trt
-from datetime import datetime
-
-from pytorch_quantization import quant_modules, calib
-from pytorch_quantization import nn as quant_nn
-from pytorch_quantization.nn import TensorQuantizer
-from pytorch_quantization.tensor_quant import QuantDescriptor
-
-from chop.passes.graph.utils import get_mase_op, get_mase_type, get_node_actual_target
-from chop.passes.graph.interface.save_and_load import load_mase_graph_interface_pass
 from chop.ir import MaseGraph
-from ....utils import deepcopy_mase_graph
-from .utils import PowerMonitor
+from .utils import PowerMonitor, prepare_save_path
 import sys
 import logging 
 import os
@@ -29,10 +16,8 @@ import tensorrt as trt
 import pycuda.driver as cuda
 import numpy as np
 import tensorrt as trt
-import onnx
 import onnxruntime as ort
 from cuda import cudart
-from torch.autograd import Variable
 
 dtype_map = {
     torch.float32: np.float32,
@@ -48,6 +33,11 @@ dtype_map = {
 def tensorrt_analysis_pass(model, pass_args=None):
     analysis = QuantizationAnalysis(model, pass_args)
     results = analysis.evaluate()
+
+    results_path = prepare_save_path(method='analysis', suffix='json')
+    with open(results_path, 'w') as json_file:
+        json.dump(results, json_file, indent=4)
+    
     return model, results
 
 class QuantizationAnalysis():

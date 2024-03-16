@@ -80,10 +80,10 @@ class Quantizer:
             config.int8_calibrator = INT8Calibrator(
                 self.config['num_calibration_batches'], 
                 self.config['data_module'].train_dataloader(), 
-                prepare_save_path(method='CACHE')
+                prepare_save_path(method='cache', suffix='cache')
                 )
         '''
-        
+
         # Only quantize and calibrate non INT8  pytorch-quantization
         if self.config['default']['config']['precision'] != 'INT8':
             config.set_flag(trt.BuilderFlag.PREFER_PRECISION_CONSTRAINTS)
@@ -111,7 +111,7 @@ class Quantizer:
         if serialized_engine is None:
             raise Exception('Failed to build serialized network.')
 
-        trt_path = prepare_save_path(method='TRT')
+        trt_path = prepare_save_path(method='trt', suffix='trt')
         with open(trt_path, 'wb') as f:
             f.write(serialized_engine)
 
@@ -128,7 +128,7 @@ class Quantizer:
         """Converts PyTorch model to ONNX format and saves it."""
         self.logger.info("Converting PyTorch model to ONNX...")
 
-        onnx_path = prepare_save_path(method='ONNX')
+        onnx_path = prepare_save_path(method='onnx', suffix='onnx')
 
         dataloader = self.config['data_module'].train_dataloader()  
         train_sample = next(iter(dataloader))[0]
@@ -162,7 +162,7 @@ class Quantizer:
             layer_info_json = inspector.get_engine_information(trt.LayerInformationFormat.JSON)
             
             # Save the engine information to a JSON file
-            json_filename = prepare_save_path(method='JSON')
+            json_filename = prepare_save_path(method='json', suffix='json')
             with open(json_filename, 'w') as json_file:
                 json_file.write(layer_info_json)
         self.logger.info(f"TensorRT Model Summary Exported to {json_filename}")
