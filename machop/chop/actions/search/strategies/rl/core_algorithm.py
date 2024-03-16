@@ -6,7 +6,7 @@ from datetime import datetime
 
 
 from chop.actions.search.strategies.base import SearchStrategyBase
-from stable_baselines3 import A2C, PPO
+from stable_baselines3 import A2C, PPO, DDPG, HER
 from stable_baselines3.common.callbacks import (
     CallbackList,
     CheckpointCallback,
@@ -20,6 +20,8 @@ logger = logging.getLogger(__name__)
 algorithm_map = {
     "ppo": PPO,
     "a2c": A2C,
+    "her": HER,
+    "DDPG": DDPG,
 }
 env_map = {
     "MixedPrecisionEnv": MixedPrecisionEnv
