@@ -66,7 +66,7 @@ module sqrt #(
     state_t state_b; 
     state_t state_r; 
 
-    logic signed  [IN_WIDTH:0]        v_more_fractional;
+    // logic signed  [IN_WIDTH:0]        v_more_fractional;
     logic signed  [IN_WIDTH:0]        zero_point_25; 
 
     logic   [LOG2_IN_WIDTH-1:0] right_shift_to_apply_b;
@@ -143,19 +143,19 @@ module sqrt #(
         begin
             //shift the values such that we have as many fractional bits to work with
             //find MSB 
-            for (int i=0; i<IN_WIDTH; i++)
-            begin
-                if (v_in[i] == 1)
-                begin
-                    right_shift_to_apply_b  = (IN_WIDTH-1-i);
+            // for (int i=0; i<IN_WIDTH; i++)
+            // begin
+            //     if (v_in[i] == 1)
+            //     begin
+            //         right_shift_to_apply_b  = (IN_WIDTH-1-i);
 
-                    //N.B. if odd we need to *2 //TODO: check if this is needed
-                    v_more_fractional       = ((IN_WIDTH-1-i)%2 ==0) ? (v_in << (IN_WIDTH-1-i)) : (v_in << (IN_WIDTH-i));
+            //         //N.B. if odd we need to *2 //TODO: check if this is needed
+            //         v_more_fractional       = ((IN_WIDTH-1-i)%2 ==0) ? (v_in << (IN_WIDTH-1-i)) : (v_in << (IN_WIDTH-i));
                     
-                end
-            end
-            x_b     = {v_more_fractional + zero_point_25, 7'b0}; //(32'b10 << right_shift_to_apply_b); // + 0.25
-            y_b     = {v_more_fractional - zero_point_25, 7'b0}; //(32'b10 << right_shift_to_apply_b); // - 0.25
+            //     end
+            // end
+            x_b     = {v_in + zero_point_25, 7'b0}; //(32'b10 << right_shift_to_apply_b); // + 0.25
+            y_b     = {v_in - zero_point_25, 7'b0}; //(32'b10 << right_shift_to_apply_b); // - 0.25
             state_b = STATE_1;
             k_b     = 4;
         end

@@ -149,27 +149,42 @@ module fixed_layer_norm #(
     parameter SUM_EXTRA_FRAC_WIDTH = $clog2(IN_DEPTH); 
     parameter SUM_WIDTH = $clog2(SUM_MAX_SIZE) + SUM_EXTRA_FRAC_WIDTH;
     parameter SUM_FRAC_WIDTH = IN_FRAC_WIDTH + SUM_EXTRA_FRAC_WIDTH;
+    parameter SUM_NUM_MSb_PADDING_BITS = SUM_WIDTH - IN_WIDTH - SUM_EXTRA_FRAC_WIDTH;
     
     logic signed [SUM_WIDTH - 1:0]   sum;
     logic signed [SUM_WIDTH - 1:0]   mean;
-    logic signed [SUM_WIDTH - 1:0]   sum_inputs [IN_DEPTH];
+    logic signed [SUM_WIDTH - 1:0]   data_in_zero_padded [IN_DEPTH];
+
+    logic signed  [SUM_WIDTH-1:0]   data_in_minus_mean      [IN_DEPTH-1:0];
 
     always_comb
     begin
         // Convert the inputs to a larger bitwidth and a FP format with more frac. bits.        
         for (int i = 0; i < IN_DEPTH; i++) begin
-            sum_inputs[i][SUM_EXTRA_FRAC_WIDTH-1:0] = 0;
-            sum_inputs[i][SUM_EXTRA_FRAC_WIDTH+IN_WIDTH-1:SUM_EXTRA_FRAC_WIDTH] = data_in_0[i];
-            sum_inputs[i][SUM_WIDTH-1:SUM_EXTRA_FRAC_WIDTH+IN_WIDTH] = 0;
+            data_in_zero_padded[i][SUM_EXTRA_FRAC_WIDTH-1:0] = 1'b0; 
+            data_in_zero_padded[i][SUM_EXTRA_FRAC_WIDTH+IN_WIDTH-1:SUM_EXTRA_FRAC_WIDTH] = data_in_0[i];
+            data_in_zero_padded[i][SUM_WIDTH-1:SUM_EXTRA_FRAC_WIDTH+IN_WIDTH] = {{SUM_NUM_MSb_PADDING_BITS}{data_in_0[i][IN_WIDTH-1]}}; //sv720: sign extention
         end
+
+        
+
 
         // Sum over the widened inputs.
         sum = 0;
         // TODO: Take into account PARTS_PER_NORM
         for (int i = 0; i < IN_DEPTH; i++) begin
-            sum += sum_inputs[i];
+            sum += data_in_zero_padded[i];
         end
+
+        assign mean = sum / IN_DEPTH;
+
+        for (int i = 0; i < IN_DEPTH; i++)
+        begin
+            data_in_minus_mean[i] = data_in_zero_padded[i] - mean;
+        end 
+        
     end
+
 
 
     // Data outputs.

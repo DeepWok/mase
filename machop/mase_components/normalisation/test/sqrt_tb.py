@@ -160,9 +160,9 @@ class BatchNormTB(Testbench):
         # n.b. 200 is 25 with 3 decimal bits (but out of range for 8 bits)
         # n.b. 128 is 16 with 3 decimal bits
 
-        inputs = [128, 64] #,2,3,4,5,6,7,8] #[1] * 8
+        inputs = [128, 64, 56] #,2,3,4,5,6,7,8] #[1] * 8
         #inputs = torch.randn((3, self.model.num_features))
-        exp_output = [32, 22] #32 is 4 with 3 decimal bits
+        exp_output = [32, 22, 21] #32 is 4 with 3 decimal bits
         print(inputs)
 
         self.v_in_driver.load_driver(inputs) #this needs to be a tensor
