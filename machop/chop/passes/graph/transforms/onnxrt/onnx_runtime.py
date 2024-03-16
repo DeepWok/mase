@@ -14,20 +14,20 @@ import onnxruntime as ort
 # TODO: investigate huggingface models to onnx
 
 def onnx_runtime_transform_pass(graph, pass_args="None"):
-    onnx_runtime_session = ONNXRuntime()
+    onnx_runtime_session = ONNXRuntime(config=pass_args)
 
     pytorch_model = graph.model
     do_test = pass_args['do_test']
-
-    if do_test == 'before' or do_test == 'both':
-        onnx_runtime_session.test_performances(model_type="pytorch", model=pytorch_model)
 
     onnx_model_path = onnx_runtime_session.pytorch_to_onnx(pytorch_model)
     onnx_model_graph = onnx_runtime_session.load_onnx(onnx_model_path).graph
     onnx_runtime_session.summarize_ONNX_graph(onnx_model_graph)
 
-    if do_test == 'after' or do_test == 'both':
-        onnx_runtime_session.test_performances(model_type='onnx', model_path=onnx_model_path)
+    if do_test == 'before' or do_test == 'both':
+        pytorch_results = onnx_runtime_session.test_performances(model_type="pytorch", graph=graph)
+
+    elif do_test == 'after' or do_test == 'both':
+        ort_results = onnx_runtime_session.test_performances(model_type='onnx', model_path=onnx_model_path)
 
     elif do_test == 'NA':
         pass
@@ -36,12 +36,13 @@ def onnx_runtime_transform_pass(graph, pass_args="None"):
         raise Exception(f"Test argument not recognized; expected one in ['before','after','both','NA'], but {do_test} was received.")
     
     return onnx_model_graph, {}
+
 class ONNXRuntime:
     def __init__(self, config):
         self.config = config
         self.logger = logging.getLogger(__name__)
 
-    def prepare_save_path(self):
+    def _prepare_save_path(self):
         """Creates and returns a save path for the model."""
         root = Path(__file__).resolve().parents[7]
         current_date = datetime.now().strftime("%Y_%m_%d")
@@ -60,7 +61,7 @@ class ONNXRuntime:
         """Converts PyTorch model to ONNX format and saves it."""
         self.logger.info("Converting PyTorch model to ONNX...")
 
-        save_path = self.prepare_save_path(method='ONNX')
+        save_path = self._prepare_save_path()
         
         dataloader = self.config['data_module'].train_dataloader()  
         train_sample = next(iter(dataloader))[0]
@@ -116,24 +117,29 @@ class ONNXRuntime:
         
         return 'CUDAExecutionProvider' if self.config['accelerator'] == 'cuda' else 'CPUExecutionProvider'
 
-    def test_performances(self, model_type, model=None, model_path=None):
+    def test_performances(self, model_type, graph=None, model_path=None):
+        from ..tensorrt.quantize.analysis import tensorrt_analysis_pass
+
         '''Extract various performance and efficiency metrics to either pytorch or onnx models'''
         if model_type == 'pytorch':
-            ...
+            graph, results = tensorrt_analysis_pass(graph, self.config)
 
         elif model_type == 'onnx':
-            ort_sess = ort.InferenceSession(model_path, providers=[self._get_execution_provider])
-            outputs = ort_sess.run(None, {'input': ....numpy()})
+            self.config['execution_provider'] = self._get_execution_provider
+            model, results = tensorrt_analysis_pass(model_path, self.config)
+
             ... 
             
         else:
             raise Exception(f"Expected model_type being either 'pytorch' or 'onnx', but '{model_type}' received.")
 
+        return results
+    
     def pytorch_to_ONNX(self, model):
         """Converts PyTorch model to ONNX format and saves it."""
         self.logger.info("Converting PyTorch model to ONNX...")
 
-        save_path = self.prepare_save_path(method='ONNX')
+        save_path = self._prepare_save_path(method='ONNX')
 
         train_dataloader = self.config['data_module'].train_dataloader()  
         train_sample = next(iter(train_dataloader))[0]

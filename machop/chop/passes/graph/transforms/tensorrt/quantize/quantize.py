@@ -83,8 +83,8 @@ class Quantizer:
                 prepare_save_path(method='CACHE')
                 )
         '''
-
-        # INT8 is already quantized and calibrated using pytorch-quantization
+        
+        # Only quantize and calibrate non INT8  pytorch-quantization
         if self.config['default']['config']['precision'] != 'INT8':
             config.set_flag(trt.BuilderFlag.PREFER_PRECISION_CONSTRAINTS)
             config.set_flag(trt.BuilderFlag.DIRECT_IO)

@@ -29,6 +29,8 @@ import tensorrt as trt
 import pycuda.driver as cuda
 import numpy as np
 import tensorrt as trt
+import onnx
+import onnxruntime as ort
 from cuda import cudart
 from torch.autograd import Variable
 
@@ -50,33 +52,51 @@ def tensorrt_analysis_pass(model, pass_args=None):
 
 class QuantizationAnalysis():
     def __init__(self, model, config):
+
+        # Istantiate default performance analyzer args
+        if 'num_batches' not in config.keys():
+            config['num_batches'] = 100
+            config['num_GPU_warmup_batches'] = 5
+            config['test'] = True
+        
         self.config = config
+
         self.logger = logging.getLogger(__name__)
         self.num_of_classes = self.config['data_module'].dataset_info.num_classes
 
-        # Check if model is mase graph
-        if isinstance(model, MaseGraph):
-            self.model = model.model
-            self.model_name = self.config['model']
-        # Otherwise check file type
-        elif isinstance(model, PosixPath):
-            if model.suffix == '.trt':
-                TRT_LOGGER = trt.Logger(trt.Logger.WARNING)
-                # Load the serialized TensorRT engine
-                with open(model, "rb") as f:
-                    self.engine = trt.Runtime(TRT_LOGGER).deserialize_cuda_engine(f.read())
-                self.runtime = trt.Runtime(TRT_LOGGER) 
-                self.num_io = self.engine.num_io_tensors
-                self.lTensorName = [self.engine.get_tensor_name(i) for i in range(self.num_io)]
-                self.n_Input = [self.engine.get_tensor_mode(self.lTensorName[i]) for i in range(self.num_io)].count(trt.TensorIOMode.INPUT)
-                self.context = self.engine.create_execution_context()
-                self.model = self.context
-                self.summarize()
-                self.model_name = f"{self.config['model']}-quantized"
-            else:
-                raise Exception("Model must be a MaseGraph or a path to a trt file. Have you run the quantization pass?")
-        else:
-            raise Exception("Model must be a MaseGraph or a PosixPath to a trt file. Have you run the quantization pass?")
+        match model:
+            case MaseGraph():
+                # Check if model is mase graph
+                self.model = model.model
+                self.model_name = self.config['model']
+            
+            case PosixPath() as path:
+                match path.suffix:
+                    case '.trt':
+                        # Load the serialized TensorRT engine
+                        TRT_LOGGER = trt.Logger(trt.Logger.WARNING)
+                        with open(path, "rb") as f:
+                            self.engine = trt.Runtime(TRT_LOGGER).deserialize_cuda_engine(f.read())
+                        self.runtime = trt.Runtime(TRT_LOGGER) 
+                        self.num_io = self.engine.num_io_tensors
+                        self.lTensorName = [self.engine.get_tensor_name(i) for i in range(self.num_io)]
+                        self.n_Input = [self.engine.get_tensor_mode(self.lTensorName[i]) for i in range(self.num_io)].count(trt.TensorIOMode.INPUT)
+                        self.context = self.engine.create_execution_context()
+                        self.model = self.context
+                        self.summarize()
+                        self.model_name = f"{self.config['model']}-quantized"
+                        
+                    case '.onnx':
+                        # Assuming there are specific actions for ONNX models similar to TRT case
+                        self.ort_sess = ort.InferenceSession(path, providers=[config['execution_provider']])
+                        ...
+                        
+                    case _:
+                        # If file type is neither .trt nor .onnx
+                        raise Exception("Model must be a MaseGraph or a path to a trt file. Have you run the quantization pass?")
+            case _:
+                # If model is neither MaseGraph nor PosixPath
+                raise Exception("Model must be a MaseGraph or a PosixPath to a trt file. Have you run the quantization pass?")
 
     def summarize(self):
         io_info_lines = [
@@ -180,6 +200,7 @@ class QuantizationAnalysis():
     
     def evaluate(self):
         self.logger.info("Starting TensorRT transformation analysis")
+
         num_GPU_warmup_batches = self.config['num_GPU_warmup_batches']
 
         # Instantiate metrics with the specified task type
@@ -282,7 +303,7 @@ class QuantizationAnalysis():
         formatted_metrics = tabulate(metrics, headers=['Metric', 'Value'], tablefmt="pretty", floatfmt=".5g")
 
         # Print result summary
-        self.logger.info(f"\nConfiguration {self.model_name}:\n" + formatted_metrics)
+        self.logger.info(f"\nResults {self.model_name}:\n" + formatted_metrics)
 
         # Store the results in a dictionary and return it
         results = {

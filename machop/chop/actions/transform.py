@@ -143,15 +143,21 @@ def transform(
                         raise ValueError(f"Unsupported tensorrt pass: {pass_name_extended}")
                     
             case "onnxruntime":
-                pass_save_dir = save_dir / "quantize"
+                pass_save_dir = save_dir / "onnxruntime"
                 graph, _ = metadata_value_type_cast_transform_pass(
                     graph, pass_args={"fn": to_numpy_if_tensor}
                 )
                 ori_graph = deepcopy_mase_graph(graph)
-
                 pass_config['batch_size'] = config['batch_size']
                 pass_config['data_module'] = data_module
                 pass_config['accelerator'] = 'cuda' if accelerator == 'gpu' else accelerator
+                pass_config['model'] = config['model']
+
+                #TODO: convert the following in analysis args and use them in tensorrt analysis pass
+                # pass_config['num_GPU_warmap_batches'] = config['tensorrt_analysis']['num_GPU_warmap_batches']
+                # pass_config['num_batches'] = config['tensorrt_analysis']['num_batches']
+                # pass_config['test'] = config['tensorrt_analysis']['test']
+
                 if accelerator == 'gpu':
                     #TODO this seems innefective - known issue - https://github.com/NVIDIA/TensorRT/issues/2468
                     os.environ['CUDA_MODULE_LOADING'] = 'LAZY'

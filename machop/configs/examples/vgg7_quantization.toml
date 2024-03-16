@@ -14,6 +14,11 @@ num_calibration_batches = 10
 percentiles = [99]
 report = true
 
+[passes.tensorrt_quantize.default.config]
+quantize = true
+calibrator = 'histogram'
+precision = 'INT8' # 'FP16'  
+
 [passes.tensorrt_quantize.linear.config]
 calibrator = 'histogram'
 quantize = true
@@ -36,10 +41,6 @@ quantize_axis = false
 [passes.tensorrt_quantize.conv2d.weight]
 quantize_axis = false
 
-[passes.tensorrt_quantize.default.config]
-quantize = true
-calibrator = 'histogram'
-precision = 'FP16' # 'INT8'
 
 [passes.tensorrt_quantize.default.config.input]
 quantize_axis = false
