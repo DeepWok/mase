@@ -10,8 +10,15 @@ from tqdm import tqdm
 from naslib.defaults.predictor_evaluator import PredictorEvaluator
 from naslib.predictors import XGBoost
 from naslib.utils.encodings import EncodingType
-
+import torch
+import torch.nn as nn
+import torch.optim as optim
+from torch.utils.data import Dataset, DataLoader
+from .models import ZeroCostLinearModel, ZeroCostNonLinearModel
 from .utils import sample_arch_dataset, evaluate_predictions, eval_zcp, encode_archs
+
+# model = ZeroCostNonLinearModel()
+# print("PARAMS: ", list(model.parameters()))
 
 DEFAULT_ZERO_COST_PROXY_CONFIG = {
     "config": {
@@ -32,9 +39,120 @@ class ZeroCostProxy(SearchSpaceBase):
         self.mg = None
         self._node_info = None
         self.default_config = DEFAULT_ZERO_COST_PROXY_CONFIG
-        self.scores = {}
         self.zcp_results = []
-    
+
+    def zc_ensemble_model(self, inputs_train, targets_train, inputs_test, targets_test):
+        class CustomDataset(Dataset):
+            def __init__(self, inputs, targets):
+                self.inputs = inputs
+                self.targets = targets
+
+            def __len__(self):
+                return len(self.inputs)
+
+            def __getitem__(self, idx):
+                return self.inputs[idx], self.targets[idx]
+
+        # Convert lists to PyTorch tensors
+        inputs_train_tensor = torch.tensor(inputs_train, dtype=torch.float32)
+        targets_train_tensor = torch.tensor(targets_train, dtype=torch.float32).view(-1, 1)
+
+        inputs_test_tensor = torch.tensor(inputs_test, dtype=torch.float32)
+        targets_test_tensor = torch.tensor(targets_test, dtype=torch.float32).view(-1, 1)
+
+        # Create dataset instances
+        train_dataset = CustomDataset(inputs_train_tensor, targets_train_tensor)
+        test_dataset = CustomDataset(inputs_test_tensor, targets_test_tensor)
+
+        batch_size =  self.config["zc"]["batch_size"]
+
+        train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
+        test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
+
+        ensemble_model = self.config["zc"]["ensemble_model"]
+        input_size = len(inputs_train[0])
+        try:
+            if ensemble_model == 'linear':
+                model = ZeroCostLinearModel(input_size)
+            elif ensemble_model == 'nonlinear':
+                model = ZeroCostNonLinearModel(input_size)
+        except:
+            raise ValueError(f"Unknown model type: {ensemble_model}. Has to be one of linear or nonlinear")
+
+        loss = self.config["zc"]["loss_fn"]
+        try:
+            if loss == 'mse':
+                criterion = nn.MSELoss()
+            elif loss == 'mae':
+                criterion = nn.L1Loss()
+            elif loss == 'huber':
+                criterion = nn.SmoothL1Loss()
+        except:
+            raise ValueError(f"Unknown criterion type: {loss}. Has to be one of mse, mae or huber")
+        
+        opt = self.config["zc"]["optimizer"]
+        lr = self.config["zc"]["learning_rate"]
+        
+        try:
+            if opt == 'adam':
+                optimizer = optim.Adam(model.parameters(), lr=lr)
+            elif opt == 'adamW':
+                optimizer = optim.AdamW(model.parameters(), lr=lr)
+            elif opt == 'rmsProp':
+                optimizer = optim.RMSprop(model.parameters(), lr=lr)
+        except:
+            raise ValueError(f"Unknown optimizer type: {opt}. Has to be one of adam, adamW or rmsProp")
+            
+        optimizer = optim.Adam(model.parameters(), lr=lr)
+
+        # Tracking loss for plotting
+        train_losses = []
+        test_losses = []
+        
+        epochs = self.config["zc"]["epochs"]
+
+        for epoch in range(epochs):
+            model.train()
+            running_loss_train = 0.0
+            for inputs_batch, targets_batch in train_loader:
+                optimizer.zero_grad()
+                outputs_train = model(inputs_batch)
+                loss_train = criterion(outputs_train, targets_batch)
+                loss_train.backward()
+                optimizer.step()
+                running_loss_train += loss_train.item() * inputs_batch.size(0)
+            
+            epoch_loss_train = running_loss_train / len(train_loader.dataset)
+
+            # Evaluation mode (no gradients)
+            model.eval()
+            running_loss_test = 0.0
+            with torch.no_grad():
+                for inputs_batch, targets_batch in test_loader:
+                    outputs_test = model(inputs_batch)
+                    loss_test = criterion(outputs_test, targets_batch)
+                    running_loss_test += loss_test.item() * inputs_batch.size(0)
+
+            epoch_loss_test = running_loss_test / len(test_loader.dataset)
+
+            # Save losses for plotting
+            train_losses.append(epoch_loss_train)
+            test_losses.append(epoch_loss_test)
+
+            if (epoch+1) % 1 == 0:
+                print(f'Epoch [{epoch+1}/{epochs}], Train Loss: {epoch_loss_train:.4f}, Test Loss: {epoch_loss_test:.4f}')
+
+        # Print trained weights
+        for name, param in model.named_parameters():
+            if param.requires_grad:
+                print(name, param.data)
+
+    def get_model_inputs(self, dataset, archs, zc_proxies):
+        inputs = []
+        for arch in archs:
+            inputs.append([dataset[str(arch)].get(metric_name, 0)['score'] for metric_name in zc_proxies])
+        return inputs
+        
     def build_search_space(self):
         """
         Build the search space for the mase graph (only quantizeable ops)
@@ -56,8 +174,9 @@ class ZeroCostProxy(SearchSpaceBase):
         train_loader, val_loader, test_loader, train_transform, valid_transform = get_train_val_loaders(config)
 
         seed = self.config["zc"]["seed"]
-        
         pred_dataset = self.config["zc"]["dataset"]
+        # get data from api
+        zc_api = get_zc_benchmark_api(self.config["zc"]["benchmark"], pred_dataset)
         pred_api = get_dataset_api(search_space=self.config["zc"]["benchmark"], dataset=self.config["zc"]["dataset"])
         train_size = self.config["zc"]["num_archs_train"]
         test_size = self.config["zc"]["num_archs_test"]
@@ -68,42 +187,59 @@ class ZeroCostProxy(SearchSpaceBase):
         xtrain, ytrain, _ = train_sample
         xtest, ytest, _ = test_sample
 
-        xgboost_metrics = {}
-        for zcp_name in self.config["zc"]["zc_proxies"]:
-            # train and query expect different ZCP formats
-            # zcp_train = [{'zero_cost_scores': eval_zcp(t_arch, zcp_name, train_loader)} for t_arch in tqdm(xtrain)]
-            # zcp_test = [{'zero_cost_scores': eval_zcp(t_arch, zcp_name, train_loader)} for t_arch in tqdm(xtest)]
-            zc_api = get_zc_benchmark_api(self.config["zc"]["benchmark"], pred_dataset)
-            
-            zcp_train = [{'zero_cost_scores': zc_api[str(t_arch)][zcp_name]['score']} for t_arch in tqdm(xtrain)]
-            zcp_test = [{'zero_cost_scores': zc_api[str(t_arch)][zcp_name]['score']} for t_arch in tqdm(xtest)]    
+        # prepare the inputs and targets based on the modified combined_data_list
+        inputs_train = self.get_model_inputs(zc_api, xtrain, self.config["zc"]["zc_proxies"])
+        inputs_test = self.get_model_inputs(zc_api, xtest, self.config["zc"]["zc_proxies"])
 
-            # import pdb
-            # pdb.set_trace()
-                       
-            zcp_pred_test = [s['zero_cost_scores'] for s in zcp_test]
-            zcp_pred_train = [s['zero_cost_scores'] for s in zcp_train]
+        # neural network model
+        self.zc_ensemble_model(inputs_train, ytrain, inputs_test, ytest)
+
+        # import pdb
+        # pdb.set_trace()
+
+
+        # model.eval()  # Set the model to evaluation mode
+        # predicted_accuracies = []
+        # actual_accuracies = []
+
+        # model.eval()  # Ensure model is in evaluation mode
+
+        # with torch.no_grad():  # No need to track gradients
+        #     for i in range(len(inputs_test)):  # Assuming you want to use all test inputs
+        #         predicted_accuracy = model(inputs_test[i].unsqueeze(0))  # Add batch dimension
+        #         predicted_accuracies.append(predicted_accuracy.item())
+        #         actual_accuracies.append(targets_test[i].item())
+                
+        # import matplotlib.pyplot as plt
+        # import seaborn as sns
+        # from scipy.stats import spearmanr
+
+        # # Assuming predicted_accuracies and actual_accuracies are available
+        # predicted_accuracies_np = np.array(predicted_accuracies)
+        # actual_accuracies_np = np.array(actual_accuracies)
+
+        # # Calculate Spearman's rank correlation
+        # spearman_corr, _ = spearmanr(predicted_accuracies_np, actual_accuracies_np)
+
+        for zcp_name in self.config["zc"]["zc_proxies"]:
+            if self.config["zc"]["calculate_proxy"]:
+                # train and query expect different ZCP formats
+                zcp_train = [{'zero_cost_scores': eval_zcp(t_arch, zcp_name, train_loader)} for t_arch in tqdm(xtrain)]
+                zcp_test = [{'zero_cost_scores': eval_zcp(t_arch, zcp_name, train_loader)} for t_arch in tqdm(xtest)]
+                zcp_pred_test = [s['zero_cost_scores'][zcp_name] for s in zcp_test]
+                zcp_pred_train = [s['zero_cost_scores'][zcp_name] for s in zcp_train]
+            else:
+                zcp_train = [{'zero_cost_scores': zc_api[str(t_arch)][zcp_name]['score']} for t_arch in tqdm(xtrain)]
+                zcp_test = [{'zero_cost_scores': zc_api[str(t_arch)][zcp_name]['score']} for t_arch in tqdm(xtest)]
+        
+                zcp_pred_test = [s['zero_cost_scores'] for s in zcp_test]
+                zcp_pred_train = [s['zero_cost_scores'] for s in zcp_train]
+                
+                # import pdb
+                # pdb.set_trace()
             
             train_metrics = evaluate_predictions(ytrain, zcp_pred_train)
             test_metrics = evaluate_predictions(ytest, zcp_pred_test)
-
-
-            # ### XGBoost (NOT working) ###
-            # zcp_train = {'zero_cost_scores': [eval_zcp(t_arch, zcp_name, train_loader) for t_arch in tqdm(xtrain)]}
-            # zc_only = False
-            # zcp_model = XGBoost(zc=True, zc_only=zc_only)
-            # zcp_model.set_pre_computations(xtrain_zc_info=zcp_train)
-
-            # # even when using zc_only, you must pass a list to both fit and query (it can be empty)
-            # enc_type = EncodingType.ADJACENCY_ONE_HOT
-            # enc_train = encode_archs(NasBench201SearchSpace(), xtrain, encoding=enc_type)
-            # enc_test = encode_archs(NasBench201SearchSpace(), xtest, encoding=enc_type)
-            # zcp_model.fit(enc_train, ytrain)
-            # res = zcp_model.query(enc_test, info=zcp_test)
-
-            # xgb_metrics = evaluate_predictions(ytest, res)
-            # xgboost_metrics[zcp_name] = xgb_metrics
-            # ### ###
 
             results = []
             for i, t_arch in tqdm(enumerate(xtest)):
@@ -121,6 +257,4 @@ class ZeroCostProxy(SearchSpaceBase):
                 }
             })
 
-
         print("zcp_results: ", self.zcp_results)
-        print("xgboost_metrics: ", xgboost_metrics)

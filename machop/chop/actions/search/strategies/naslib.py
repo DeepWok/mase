@@ -117,7 +117,7 @@ class SearchStrategyNaslib(SearchStrategyBase):
 
         return average_loss_with_penalty
     
-    def get_ensemble_weight(self, model_result, best_params):
+    def get_optuna_prediction(self, model_results, best_params):
         """
         Calculates the ensemble weight for a given model result and the best parameters.
 
@@ -132,10 +132,13 @@ class SearchStrategyNaslib(SearchStrategyBase):
             float: The calculated ensemble weight.
         """
 
-        # Calculate the ensemble weight as the sum of products of each metric's value and its best parameter.
-        ensemble_weight = sum(model_result['metrics'][metric] * best_params[metric] for metric in model_result['metrics'])
 
-        return ensemble_weight
+        for x in model_results:
+            # import pdb
+            # pdb.set_trace() 
+            x['metrics']['optuna_ensemble'] = sum(x['metrics'][metric] * best_params[metric] for metric in x['metrics'])
+
+        return model_results
 
     def search(self, search_space) -> optuna.study.Study:
         print("search_space:  ", search_space)
@@ -172,14 +175,13 @@ class SearchStrategyNaslib(SearchStrategyBase):
 
         model_results = self.combined_list(search_space.zcp_results)
 
-        for x in model_results:
-            x['metrics']['ensemble'] = self.get_ensemble_weight(x, best_params)
+        model_results = self.get_optuna_prediction(model_results, best_params)
         
         print("model_results: ", model_results)
 
         self._save_study(study, self.save_dir / "study.pkl")
         self._save_search_dataframe(study, search_space, self.save_dir / "log.json")
-        self._save_best_zero_cost(study, search_space, model_results, self.save_dir / "metrics.json")
+        self._save_best_zero_cost(search_space, model_results, self.save_dir / "metrics.json")
 
         return study
 
@@ -201,13 +203,13 @@ class SearchStrategyNaslib(SearchStrategyBase):
         return df
     
     @staticmethod
-    def _save_best_zero_cost(study, search_space, model_results, save_path):
+    def _save_best_zero_cost(search_space, model_results, save_path):
         # import pdb
         # pdb.set_trace()
 
         # calculate ensemble metric
         ytest = [x['test_accuracy'] for x in model_results]
-        ensemble_preds = [x['metrics']['ensemble'] for x in model_results]
+        ensemble_preds = [x['metrics']['optuna_ensemble'] for x in model_results]
         ensemble_metric = evaluate_predictions(ytest, ensemble_preds)
 
         print("ensemble_metric:  ", ensemble_metric)
@@ -219,7 +221,6 @@ class SearchStrategyNaslib(SearchStrategyBase):
             result_dict[key] = {
                 'test_spearman': values['test_spearman'], 
                 'train_spearman': values['train_spearman'], 
-                "zero_cost_weight": study.best_params[key]
             }
 
         print("result_dict:  ", result_dict)

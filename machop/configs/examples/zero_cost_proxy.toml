@@ -22,10 +22,17 @@ by = "name"
 [search.search_space.zc]
 seed = 2
 benchmark = 'nasbench201'
-ensemble_mode = true
-dataset = 'cifar100'
-num_archs_train = 100
-num_archs_test = 100
+calculate_proxy = false
+ensemble_model = 'nonlinear'
+loss_fn = 'mae'
+optimizer = 'adam'
+batch_size = 1
+learning_rate = 0.01
+epochs = 30
+dataset = 'cifar10'
+num_archs_train = 5
+num_archs_test = 5
+
 # zc_proxies = ['epe_nas']
 zc_proxies = ['epe_nas', 'fisher', 'grad_norm', 'grasp', 'jacov', 'l2_norm', 'nwot', 'plain', 'snip', 'synflow', 'zen', 'flops', 'params']
 
@@ -41,12 +48,12 @@ compare_to = 32
 
 [search.strategy.setup]
 n_jobs = 4
-n_trials = 1000
+n_trials = 100
 timeout = 20000
 sampler = "tpe"
 direction = "minimize"
-weight_lower_limit = -5
-weight_upper_limit = 15
+weight_lower_limit = 0
+weight_upper_limit = 30
 
 # [search.strategy.metrics]
 # # loss.scale = 1.0
