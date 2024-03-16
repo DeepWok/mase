@@ -1,11 +1,13 @@
 # from .rl import StrategyRL
 from .optuna import SearchStrategyOptuna
+from .proxy import SearchStrategyDaddyProxy
 from .base import SearchStrategyBase
 
 
 SEARCH_STRATEGY_MAP = {
     # "rl": StrategyRL,
     "optuna": SearchStrategyOptuna,
+    "proxy" : SearchStrategyDaddyProxy
 }
 
 

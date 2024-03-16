@@ -111,3 +111,10 @@ def compute_fisher_per_weight(net, inputs, targets, loss_fn, mode, split_data=1)
     grads_abs = reshape_elements(grads_abs_ch, shapes, device)
 
     return grads_abs
+
+
+
+
+
+
+

@@ -80,9 +80,6 @@ def search(
         search_config = load_config(search_config)
     searchconfig=search_config['search']
     
-    
-        
-    
     ### End of our contribution
     strategy_config, search_space_config = parse_search_config(search_config)
     save_path.mkdir(parents=True, exist_ok=True)

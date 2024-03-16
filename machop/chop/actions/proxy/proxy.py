@@ -8,17 +8,19 @@ from fvcore.common.config import CfgNode
 from ...tools.checkpoint_load import load_model
 from ...tools.config_load import load_config
 from ...tools.get_input import get_dummy_input
-from .search_space import get_search_space_cls
-from .strategies import get_search_strategy_cls
+# from .search_space import get_search_space_cls
+# from .strategies import get_search_strategy_cls
 from chop.tools.utils import device
 from chop.tools.utils import parse_accelerator
 
 import numpy as np
-from .naslib.search_spaces import NasBench201SearchSpace
-from .naslib.utils import get_zc_benchmark_api,get_dataset_api
-from .naslib.utils import get_train_val_loaders, get_project_root
-from .naslib.predictors import ZeroCost
-from .naslib.search_spaces.core import Metric
+
+from naslib.utils import get_zc_benchmark_api,get_dataset_api
+from naslib.utils import get_train_val_loaders, get_project_root
+from naslib.search_spaces import NasBench201SearchSpace
+from naslib.predictors import ZeroCost
+from naslib.search_spaces.core import Metric
+
 
 # For training  meta-proxy network
 import numpy as np
@@ -29,6 +31,8 @@ from einops import rearrange
 from torch import optim
 import torch.nn.functional as F
 
+logger = logging.getLogger(__name__)
+
 def parse_nas_config(config):
     search_config = config["search"]   #p arse into search config
     nas_config = search_config['nas']  # parse into nas
@@ -36,7 +40,10 @@ def parse_nas_config(config):
     proxy_config = nas_config['proxy_config']
     return op_config['op_indices'], proxy_config['proxy']# one more time one more chance running
     
-def proxy_predcitor(config):
+def proxy(config:dict | PathLike):
+    if not isinstance(config, dict):
+        config = load_config(config)
+    
     op_config, proxy_config = parse_nas_config(config)   # type(op_config) = list of integers , type(proxy_config) = list of strings
         
     # Create list of indecies for architectures to be quired in nas-bench
