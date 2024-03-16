@@ -2,7 +2,7 @@
 model = "jsc-toy"
 dataset = "jsc"
 
-max_epochs = 10
+max_epochs = 20
 batch_size = 256
 learning_rate = 1e-3
 accelerator = "gpu"
@@ -25,9 +25,6 @@ quantize_axis = false
 [passes.tensorrt_quantize.default.weight]
 calibrator = 'histogram'
 quantize_axis = false
-
-[passes.tensorrt_quantize.fine_tune]
-epochs = 1
 
 [passes.tensorrt_analysis]
 num_batches = 500
