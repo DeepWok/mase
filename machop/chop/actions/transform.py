@@ -99,7 +99,7 @@ def transform(
                 pass_config['batch_size'] = config['batch_size']
                 pass_config['model'] = config['model']
                 pass_config['data_module'] = data_module
-                pass_config['accelerator'] = 'cuda' if accelerator == 'gpu' else accelerator
+                pass_config['accelerator'] = accelerator.type
                 if accelerator == 'gpu':
                     #TODO this seems innefective - known issue - https://github.com/NVIDIA/TensorRT/issues/2468
                     os.environ['CUDA_MODULE_LOADING'] = 'LAZY'
@@ -115,11 +115,11 @@ def transform(
                             ori_graph, graph, save_dir=pass_save_dir
                         )
 
-                        # # Apply post-quantization fine tuning (Quantization Aware Training)
-                        # graph, _ = PASSES["tensorrt_fine_tune"](graph, pass_args=pass_config)
-                        # PASSES["summarize_quantization"](
-                        #     ori_graph, graph, save_dir=pass_save_dir
-                        # )
+                        # Apply post-quantization fine tuning (Quantization Aware Training)
+                        graph, _ = PASSES["tensorrt_fine_tune"](graph, pass_args=pass_config)
+                        PASSES["summarize_quantization"](
+                            ori_graph, graph, save_dir=pass_save_dir
+                        )
 
                         # Convert the model to TensorRT format and apply FP16 or layer-wise mixed precision quantization
                         graph, trt_meta = PASSES["tensorrt_quantize"](graph, pass_args=pass_config)
@@ -150,7 +150,7 @@ def transform(
                 ori_graph = deepcopy_mase_graph(graph)
                 pass_config['batch_size'] = config['batch_size']
                 pass_config['data_module'] = data_module
-                pass_config['accelerator'] = 'cuda' if accelerator == 'gpu' else accelerator
+                pass_config['accelerator'] = accelerator.type
                 pass_config['model'] = config['model']
 
                 #TODO: convert the following in analysis args and use them in tensorrt analysis pass

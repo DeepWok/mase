@@ -10,10 +10,11 @@ accelerator = "gpu"
 [passes.tensorrt_quantize]
 by = "type"
 num_calibration_batches = 10
+post_calibration_analysis = true
 
 [passes.tensorrt_quantize.default.config]
 quantize = true
-calibrators = ["percentile"]
+calibrators = ["percentile", "mse", "entropy"]
 percentiles = [99]
 precision = 'INT8'
 

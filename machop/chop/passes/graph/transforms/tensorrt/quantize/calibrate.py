@@ -15,7 +15,6 @@ from torch.autograd import Variable
 import torch
 from .utils import FakeQuantizer
 
-
 def tensorrt_fake_quantize_transform_pass(graph, pass_args=None):
     by = pass_args["by"]
     fq = FakeQuantizer(pass_args)
@@ -43,15 +42,6 @@ class Calibrator:
     def get_config(self, config: dict, name: str):
         """Retrieve specific configuration from the config dictionary or return default."""
         return config.get(name, config['default'])['config']
-
-    def evaluate(self, graph):
-        batches = self.config.get('num_calibration_batches', 10)
-        dataloader = self.config['data_module'].val_dataloader()
-
-        for i, (xTrain, yTrain) in enumerate(dataloader):
-            gy_pred = graph.model(Variable(xTrain).cuda())
-            if i >= batches:
-                break
 
     def compute_amax(self, model, **kwargs):
         """Computes and loads the maximum activation values for quantization calibration."""
@@ -84,7 +74,13 @@ class Calibrator:
                     else:
                         module.disable()
 
-            self.train(graph)
+            batches = self.config.get('num_calibration_batches', 10)
+            dataloader = self.config['data_module'].train_dataloader()
+
+            for i, (xTrain, _) in enumerate(dataloader):
+                graph.model(Variable(xTrain).cuda())
+                if i >= batches:
+                    break           
 
             # Turn off calibration tool
             for _, module in graph.model.named_modules():
@@ -114,8 +110,13 @@ class Calibrator:
                             self.compute_amax(graph.model, method=calib)
                     case "mse":
                         self.compute_amax(graph.model, method=calib)
-                
-                self.evaluate()
+
+                # perform an analysis pass if required
+                if self.config['post_calibration_analysis']:
+                    from chop.passes.graph import tensorrt_analysis_pass
+                    self.logger.info(f"Performing post calibration analysis for calibrator {calib}...")
+                    tensorrt_analysis_pass(graph, pass_args=self.config)
+                    self.logger.info("Post calibration analysis complete.")
             
             self.logger.info("Succeeded in calibrating the model in PyTorch!")
             return graph
