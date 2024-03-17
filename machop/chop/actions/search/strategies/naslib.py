@@ -58,53 +58,65 @@ class SearchStrategyNaslib(SearchStrategyBase):
         # Iterate through each metric's data
         for metric_data in data:
             for metric_name, details in metric_data.items():
-                for result in details['results']:
+                for result in details["results"]:
                     # Convert the test_hash tuple to a string to use it as a dictionary key
-                    test_hash_key = str(result['test_hash'])
-                    
+                    test_hash_key = str(result["test_hash"])
+
                     if test_hash_key not in combined_data:
                         combined_data[test_hash_key] = {
-                            'test_hash': result['test_hash'],
-                            'test_accuracy': result['test_accuracy'],
-                            'metrics': {}
+                            "test_hash": result["test_hash"],
+                            "test_accuracy": result["test_accuracy"],
+                            "metrics": {},
                         }
-                    
+
                     # Store the zc_metric under the corresponding metric name
-                    combined_data[test_hash_key]['metrics'][metric_name] = result['zc_metric']
+                    combined_data[test_hash_key]["metrics"][metric_name] = result[
+                        "zc_metric"
+                    ]
 
         # Convert the combined data back to a list format if needed
         combined_data_list = list(combined_data.values())
 
         return combined_data_list
-    
+
     def objective(self, trial, search_space):
         combined_data_list = self.combined_list(search_space.zcp_results)
-    
+
         # Dynamically find all unique metric names
         unique_metric_names = set()
         for item in combined_data_list:
-            unique_metric_names.update(item['metrics'].keys())
+            unique_metric_names.update(item["metrics"].keys())
 
         # Convert set to list to ensure consistent ordering
         unique_metric_names = sorted(list(unique_metric_names))
 
         # Suggest weights for each unique metric dynamically
-        weights = {metric: trial.suggest_float(f"{metric}", self.config["setup"]["weight_lower_limit"], self.config["setup"]["weight_upper_limit"]) for metric in unique_metric_names}
+        weights = {
+            metric: trial.suggest_float(
+                f"{metric}",
+                self.config["setup"]["weight_lower_limit"],
+                self.config["setup"]["weight_upper_limit"],
+            )
+            for metric in unique_metric_names
+        }
 
         total_loss = 0
         penalty = 0
 
         for item in combined_data_list:
             # Dynamically calculate predicted accuracy based on the weights of the zc metrics
-            predicted_accuracy = sum(item['metrics'][metric] * weights[metric] for metric in item['metrics'].keys())
-            
+            predicted_accuracy = sum(
+                item["metrics"][metric] * weights[metric]
+                for metric in item["metrics"].keys()
+            )
+
             # Assume 'train_accuracy' is your target
-            actual_accuracy = item['test_accuracy']
-            
+            actual_accuracy = item["test_accuracy"]
+
             # Calculating squared error loss
             loss = (predicted_accuracy - actual_accuracy) ** 2
             total_loss += loss
-            
+
             # Apply penalties for predictions outside the [0, 100] range
             if predicted_accuracy > 100:
                 penalty += (predicted_accuracy - 100) ** 2
@@ -115,7 +127,7 @@ class SearchStrategyNaslib(SearchStrategyBase):
         average_loss_with_penalty = (total_loss + penalty) / len(combined_data_list)
 
         return average_loss_with_penalty
-    
+
     def get_optuna_prediction(self, model_results, best_params):
         """
         Calculates the ensemble weight for a given model result and the best parameters.
@@ -131,21 +143,22 @@ class SearchStrategyNaslib(SearchStrategyBase):
             float: The calculated ensemble weight.
         """
 
-
         for x in model_results:
-            x['metrics']['optuna_ensemble'] = sum(x['metrics'][metric] * best_params[metric] for metric in x['metrics'])
+            x["metrics"]["optuna_ensemble"] = sum(
+                x["metrics"][metric] * best_params[metric] for metric in x["metrics"]
+            )
 
         return model_results
 
     def search(self, search_space) -> optuna.study.Study:
         # import pdb
         # pdb.set_trace()
-        
+
         study_kwargs = {
             "sampler": self.sampler_map(self.config["setup"]["sampler"]),
-            "direction": self.config["setup"]["direction"]
+            "direction": self.config["setup"]["direction"],
         }
-        
+
         study = optuna.create_study(**study_kwargs)
 
         study.optimize(
@@ -171,7 +184,9 @@ class SearchStrategyNaslib(SearchStrategyBase):
 
         self._save_study(study, self.save_dir / "study.pkl")
         self._save_search_dataframe(study, search_space, self.save_dir / "log.json")
-        self._save_best_zero_cost(search_space, model_results, self.save_dir / "metrics.json")
+        self._save_best_zero_cost(
+            search_space, model_results, self.save_dir / "metrics.json"
+        )
 
         return study
 
@@ -191,73 +206,79 @@ class SearchStrategyNaslib(SearchStrategyBase):
         )
         df.to_json(save_path, orient="index", indent=4)
         return df
-    
+
     @staticmethod
     def _save_best_zero_cost(search_space, model_results, save_path):
         # calculate ensemble metric
-        ytest = [x['test_accuracy'] for x in model_results]
-        ensemble_preds = [x['metrics']['optuna_ensemble'] for x in model_results]
+        ytest = [x["test_accuracy"] for x in model_results]
+        ensemble_preds = [x["metrics"]["optuna_ensemble"] for x in model_results]
         ensemble_metric = evaluate_predictions(ytest, ensemble_preds)
 
         result_dict = {
             "optuna_ensemble_metric": {
-                "test_spearman": ensemble_metric['spearmanr'],
-                "test_kendaltau": ensemble_metric['kendalltau']
-                },
-             search_space.config['zc']['ensemble_model']: {
-                "test_spearman": search_space.custom_ensemble_metrics['spearmanr'],
-                 "test_kendaltau": search_space.custom_ensemble_metrics['kendalltau']
-                },
-            'xgboost': {
-                "test_spearman": search_space.xgboost_metrics['spearmanr'],
-                 "test_kendaltau": search_space.xgboost_metrics['kendalltau']
-                }
+                "test_spearman": ensemble_metric["spearmanr"],
+                "test_kendaltau": ensemble_metric["kendalltau"],
+            },
+            search_space.config["zc"]["ensemble_model"]: {
+                "test_spearman": search_space.custom_ensemble_metrics["spearmanr"],
+                "test_kendaltau": search_space.custom_ensemble_metrics["kendalltau"],
+            },
+            "xgboost": {
+                "test_spearman": search_space.xgboost_metrics["spearmanr"],
+                "test_kendaltau": search_space.xgboost_metrics["kendalltau"],
+            },
         }
         for item in search_space.zcp_results:
             key = list(item.keys())[0]
             values = item[key]
             result_dict[key] = {
-                'test_spearman': values['test_spearman'], 
-                'train_spearman': values['train_spearman'], 
-                'test_kendaltau': values['test_kendaltau'], 
+                "test_spearman": values["test_spearman"],
+                "train_spearman": values["train_spearman"],
+                "test_kendaltau": values["test_kendaltau"],
             }
 
         # save to metrics.json
-        save_df = pd.DataFrame(
-            columns=[
-                "number",
-                "result_dict",
-                "model_results"
-            ]
-        )
+        save_df = pd.DataFrame(columns=["number", "result_dict", "model_results"])
         row = [
             0,
             result_dict,
             model_results,
-            ]
-        
+        ]
+
         save_df.loc[len(save_df)] = row
         save_df.to_json(save_path, orient="index", indent=4)
-                
+
         # List of custom dictionaries for "Global Parameters"
         dict_list = [
-            {"num_training_archs": search_space.config['zc']['num_archs_train']}, 
-            {"num_testing_archs": search_space.config['zc']['num_archs_test']}, 
-            {"dataset": search_space.config['zc']['dataset']}, 
-            {"benchmark": search_space.config['zc']['benchmark']},
-            {"num_zc_proxies": len(search_space.config['zc']['zc_proxies'])}
-            ]
-        
+            {"num_training_archs": search_space.config["zc"]["num_archs_train"]},
+            {"num_testing_archs": search_space.config["zc"]["num_archs_test"]},
+            {"dataset": search_space.config["zc"]["dataset"]},
+            {"benchmark": search_space.config["zc"]["benchmark"]},
+            {"num_zc_proxies": len(search_space.config["zc"]["zc_proxies"])},
+        ]
+
         # Initialize the DataFrame with an empty column list if it's solely for the results below
         df = pd.DataFrame()
-        df["spearman"] = [{key: value["test_spearman"]} for key, value in sorted(result_dict.items(), key=lambda item: item[1]["test_spearman"], reverse=True)]
-        df["kendaltau"] = [{key: value["test_kendaltau"]} for key, value in sorted(result_dict.items(), key=lambda item: item[1]["test_kendaltau"], reverse=True)]
-        df["Global Parameters"] = pd.Series(dict_list[:len(df)])
+        df["spearman"] = [
+            {key: value["test_spearman"]}
+            for key, value in sorted(
+                result_dict.items(),
+                key=lambda item: item[1]["test_spearman"],
+                reverse=True,
+            )
+        ]
+        df["kendaltau"] = [
+            {key: value["test_kendaltau"]}
+            for key, value in sorted(
+                result_dict.items(),
+                key=lambda item: item[1]["test_kendaltau"],
+                reverse=True,
+            )
+        ]
+        df["Global Parameters"] = pd.Series(dict_list[: len(df)])
 
         txt = "Best trial(s):\n"
-        df_truncated = df.loc[
-            :, ["spearman", "kendaltau", "Global Parameters"]
-        ].head()
+        df_truncated = df.loc[:, ["spearman", "kendaltau", "Global Parameters"]].head()
 
         def beautify_metric(metric: dict):
             beautified = {}
@@ -275,9 +296,7 @@ class SearchStrategyNaslib(SearchStrategyBase):
 
         df_truncated.loc[
             :, ["spearman", "kendaltau", "Global Parameters"]
-        ] = df_truncated.loc[
-            :, ["spearman", "kendaltau", "Global Parameters"]
-        ].map(
+        ] = df_truncated.loc[:, ["spearman", "kendaltau", "Global Parameters"]].map(
             beautify_metric
         )
         txt += tabulate(
@@ -287,4 +306,3 @@ class SearchStrategyNaslib(SearchStrategyBase):
         )
         logger.info(f"Best trial(s):\n{txt}")
         return df
-
