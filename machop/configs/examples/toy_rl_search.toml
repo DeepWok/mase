@@ -1,6 +1,6 @@
 # basics
-model = "toy"
-dataset = "toy_tiny"
+model = "vgg7"
+dataset = "cifar10"
 task = "cls"
 
 max_epochs = 5

@@ -131,11 +131,19 @@ class MixedPrecisionEnv(gym.Env):
         self.sum_scaled_metrics = self.config["setup"]["sum_scaled_metrics"]
         self.metric_names = list(sorted(self.config["metrics"].keys()))
         self.directions = [self.config["metrics"][k]["direction"] for k in self.metric_names]
+        
+        # Calculate direction multipliers based on metric directions
+        self.direction_multipliers = {
+            metric: (1 if self.config["metrics"][metric]["direction"] == "maximize" else -1)
+            for metric in self.metric_names
+        }
+
         self._define_observation_space()
         self._define_action_space()
         self.cur_obs = None
         self.episode_len = 0
         self.episode_max_len = episode_max_len
+
 
     def _define_observation_space(self):
         """Defines the observation space based on the search space."""
@@ -157,40 +165,40 @@ class MixedPrecisionEnv(gym.Env):
         return self.cur_obs, {}
 
     def step(self, action):
-        """
-        Apply the mixed-precision configuration defined by `action`, compute the model's metrics,
-        update the environment's state, calculate the reward, and check if the episode should end.
-        """
         # Map action to model configuration changes
         flattened_sampled_indexes = self._action_to_config(action)
         sampled_config = self.search_space.flattened_indexes_to_config(flattened_sampled_indexes)
         model = self.search_space.rebuild_model(sampled_config)
-    
+
         software_metrics = self.compute_software_metrics(model, sampled_config)
         hardware_metrics = self.compute_hardware_metrics(model, sampled_config)
 
         metrics = software_metrics | hardware_metrics
         scaled_metrics = {}
+        cost = 0
         for metric_name in self.metric_names:
-            scaled_metrics[metric_name] = (
-                self.config["metrics"][metric_name]["scale"] * metrics[metric_name]
-            )
+            # Apply scaling and direction multiplier from pre-computed values
+            scaled_metric_value = self.config["metrics"][metric_name]["scale"] * metrics[metric_name] * self.direction_multipliers[metric_name]
+            scaled_metrics[metric_name] = scaled_metric_value
+            cost += scaled_metric_value
 
-        cost = sum(scaled_metrics.values())
         self.cur_obs['cost'] = np.array([cost], dtype=np.float32)
         self.cur_obs.update(sampled_config)
-        reward = -cost
+        
+        # Adjust reward calculation based on your scenario
+        reward = -cost if self.sum_scaled_metrics else sum([v for k, v in scaled_metrics.items() if self.direction_multipliers[k] > 0])
 
         # Determine if the episode is done
         self.episode_len += 1
-        done = self.episode_len >= self.episode_max_len #TODO: not sure what should this be used for
-        truncated = self.episode_len >= self.episode_max_len #TODO: not sure what should this be used for
-    
+        done = self.episode_len >= self.episode_max_len
+        truncated = self.episode_len >= self.episode_max_len
+        
         # Optional additional info about the step
         info = {"loss": software_metrics['loss'], "average_bitwidth": hardware_metrics['average_bitwidth'], "accuracy": software_metrics['accuracy'], "memory density": hardware_metrics['memory_density']}
         print(info)
 
         return self.cur_obs, reward, done, truncated, info
+
 
     def _action_to_config(self, action):
         config = {}
@@ -239,6 +247,13 @@ class MixedPrecisionEnvHiLo(gym.Env):
         self.sum_scaled_metrics = self.config["setup"]["sum_scaled_metrics"]
         self.metric_names = list(sorted(self.config["metrics"].keys()))
         self.directions = [self.config["metrics"][k]["direction"] for k in self.metric_names]
+        
+        # Calculate direction multipliers based on metric directions
+        self.direction_multipliers = {
+            metric: (1 if self.config["metrics"][metric]["direction"] == "maximize" else -1)
+            for metric in self.metric_names
+        }
+        self.directions = [self.config["metrics"][k]["direction"] for k in self.metric_names]
         self._define_observation_space()
         self._define_action_space()
         self.cur_obs = None
@@ -264,10 +279,10 @@ class MixedPrecisionEnvHiLo(gym.Env):
         #self.model_config = {key: 0 for key in self.search_space.choices_flattened.keys()}
 
         # Another option is init on median values: 
-        # Initialize model configuration to the median precision setting for each parameter
+        # Initialize model configuration to the middle precision setting for each parameter
         self.model_config = {
-            key: choices[math.floor(len(choices) / 2)] for key, choices in self.search_space.choices_flattened.items()
-        }
+        key: len(options) // 2 for key, options in self.search_space.choices_flattened.items()
+    }
 
         return self.cur_obs, {}
 
@@ -282,20 +297,25 @@ class MixedPrecisionEnvHiLo(gym.Env):
 
         metrics = software_metrics | hardware_metrics
         scaled_metrics = {}
+        cost = 0
         for metric_name in self.metric_names:
-            scaled_metrics[metric_name] = (
-                self.config["metrics"][metric_name]["scale"] * metrics[metric_name]
-            )
+            # Apply scaling and direction multiplier from pre-computed values
+            scaled_metric_value = self.config["metrics"][metric_name]["scale"] * metrics[metric_name] * self.direction_multipliers[metric_name]
+            scaled_metrics[metric_name] = scaled_metric_value
+            cost += scaled_metric_value
 
-        cost = sum(scaled_metrics.values())
         self.cur_obs['cost'] = np.array([cost], dtype=np.float32)
         self.cur_obs.update(sampled_config)
-        reward = -cost
+        
+        # Adjust reward calculation based on your scenario
+        reward = -cost if self.sum_scaled_metrics else sum([v for k, v in scaled_metrics.items() if self.direction_multipliers[k] > 0])
 
+        # Determine if the episode is done
         self.episode_len += 1
         done = self.episode_len >= self.episode_max_len
         truncated = self.episode_len >= self.episode_max_len
-    
+        
+        # Optional additional info about the step
         info = {"loss": software_metrics['loss'], "average_bitwidth": hardware_metrics['average_bitwidth'], "accuracy": software_metrics['accuracy'], "memory density": hardware_metrics['memory_density']}
         print(info)
 
