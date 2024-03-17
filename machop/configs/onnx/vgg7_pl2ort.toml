@@ -4,7 +4,7 @@ dataset = "cifar10"
 
 # max_epochs = 10
 batch_size = 16
-accelerator = "cpu"
+accelerator = "gpu"
 # learning_rate = 1e-3
 # project = "jsc-tiny"
 load_name = "../TensorRTDev/vgg7-test-accu-0.9332.ckpt"
@@ -12,7 +12,7 @@ load_type = "pl"
 
 
 [passes.onnxruntime]
-do_test = "both" # tests original PyTorch checkpoint performance if "before", post-conversion performance if "after", both if "both"; no test if "NA"
+do_test = "after" # tests original PyTorch checkpoint performance if "before", post-conversion performance if "after", both if "both"; no test if "NA"
 do_train = false
 
 # [passes.tensorrt_analysis]

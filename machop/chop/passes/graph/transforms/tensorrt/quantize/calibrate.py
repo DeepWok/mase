@@ -55,13 +55,13 @@ class Calibrator:
         )
 
         # Temporarily change 'test' in config for evaluation on the validation set, not the test set
-        config_test = self.config.get('test', False)  # Store original 'test' value
-        self.config['test'] = False  # Ensure evaluation is not on test set
+        config_test = self.config.get("test", False)  # Store original 'test' value
+        self.config["test"] = False  # Ensure evaluation is not on test set
 
         tensorrt_analysis_pass(graph, pass_args=self.config)  # Run the analysis pass
 
         # Restore original 'test' configuration after evaluation
-        self.config['test'] = config_test
+        self.config["test"] = config_test
 
         self.logger.info("Post calibration analysis complete.")
 
@@ -81,6 +81,13 @@ class Calibrator:
 
     def calibrate_model(self, graph):
         """Performs the calibration pass on the model using the given data loader."""
+
+        if "INT8" not in self.config:
+            self.logger.warning(
+                "INT8 precision not found in config. Skipping calibration."
+            )
+            return graph
+
         self.logger.info("Starting calibration of the model in PyTorch...")
         quant_modules.initialize()
         graph.model.cuda()
@@ -135,7 +142,9 @@ class Calibrator:
                         except KeyError:
                             percentiles = [99]
                         for percentile in percentiles:
-                            self.compute_amax(graph.model, method=calib, percentile=percentile)
+                            self.compute_amax(
+                                graph.model, method=calib, percentile=percentile
+                            )
                             # perform an analysis pass if required
                             if self.config["post_calibration_analysis"]:
                                 self.eval_calibration(graph, f"{calib}_{percentile}")
