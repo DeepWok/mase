@@ -45,7 +45,7 @@ class QuantizationAnalysis():
 
         # Istantiate default performance analyzer args
         if 'num_batches' not in config.keys():
-            config['num_batches'] = 100
+            config['num_batches'] = 500
             config['num_GPU_warmup_batches'] = 5
             config['test'] = True
         

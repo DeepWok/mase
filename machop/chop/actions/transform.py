@@ -86,7 +86,6 @@ def transform(
         pass_config: dict
         pass_name_components = pass_name.split("_")
         pass_name = pass_name_components[0]
-
         match pass_name:
             case "tensorrt":
                 pass_name_extended = pass_name_components[1]
@@ -94,18 +93,21 @@ def transform(
                 graph, _ = metadata_value_type_cast_transform_pass(
                     graph, pass_args={"fn": to_numpy_if_tensor}
                 )
+                import pdb; pdb.set_trace()
                 ori_graph = deepcopy_mase_graph(graph)
+                pdb.set_trace()
 
                 pass_config["batch_size"] = config["batch_size"]
                 pass_config["model"] = config["model"]
                 pass_config["data_module"] = data_module
                 pass_config["accelerator"] = accelerator.type
-                if accelerator.type == "cuda":
-                    # TODO this seems innefective - known issue - https://github.com/NVIDIA/TensorRT/issues/2468
-                    os.environ["CUDA_MODULE_LOADING"] = "LAZY"
+                # if accelerator.type == "cuda":
+                #     # TODO this seems innefective - known issue - https://github.com/NVIDIA/TensorRT/issues/2468
+                #     os.environ["CUDA_MODULE_LOADING"] = "LAZY"
 
                 match pass_name_extended:
                     case "quantize":
+                        import pdb; pdb.set_trace()
                         if "INT8" in pass_config:
                             # Firstly fake quantize the model for calibration (only required if using INT8 precision otherwise skipped)
                             graph, _ = PASSES["tensorrt_fake_quantize"](
