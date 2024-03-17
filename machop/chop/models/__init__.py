@@ -44,6 +44,7 @@ from .nerf import (
 from .toys import get_toy_model, get_toy_model_info, is_toy_model
 from .utils import MaseModelInfo, ModelSource, ModelTaskType
 
+import torch.nn as nn
 
 def get_model_info(name: str) -> MaseModelInfo:
     if is_manual_model(name):
@@ -104,6 +105,35 @@ def get_model(
             model = get_nerf_model(**model_kwargs)
         case _:
             raise ValueError(f"Model source {model_info.model_source} not supported")
+
+
+    if dataset_info.name == 'mnist' and model_info.task_type._value_ == 'vision':
+
+        if hasattr(model, 'features') and isinstance(model.features, nn.Sequential):
+            layers = model.features
+        elif isinstance(model, nn.Sequential):
+            layers = model
+        else:
+            # If model is neither, treat it as a generic nn.Module.
+            layers = model.children()
+
+        # Now extract the very first input layer
+        for i, layer in enumerate(layers):
+            first_layer = next(layer.children())
+            break
+
+        # Check if first layer is a Conv2d expecting 3 input channels (whilst MNIST comes in gray-scale)
+        if isinstance(first_layer, nn.Conv2d):
+            if first_layer.in_channels != 1:
+                # Define a new Conv2d layer to take 1 input channel and output 3 channels
+                new_first_layer = nn.Conv2d(1, 3, kernel_size=(1, 1), stride=(1, 1), padding=(0, 0))
+                
+                # Now, add this layer at the beginning of the model accepting 3 channels
+                model = nn.Sequential(
+                    new_first_layer,
+                    model
+                )    
+
     return model
 
 
