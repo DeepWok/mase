@@ -14,20 +14,43 @@ module priority_encoder #(
     // logic [NUM_INPUT_CHANNELS-1:0] mask;
     integer i;
     integer j;
-    always @* begin
-        mask = {NUM_INPUT_CHANNELS{1'b1}}; 
+    logic set;
+    // logic [NUM_INPUT_CHANNELS-1:0] idx;
+    logic [NUM_INPUT_CHANNELS-1:0] input_channels_temp;
+    logic [NUM_INPUT_CHANNELS-1:0] channel_mask;
+  
+    always_comb begin
+        input_channels_temp = input_channels;
+        mask = {NUM_INPUT_CHANNELS{1'b0}}; 
+
         for (j = 0; j < NO_INDICIES; j = j + 1) begin: PRIORITY_ENCODER
-            //LSB Priority
-            for (i=NUM_INPUT_CHANNELS-1; i>=0; i=i-1) begin
-                // output_channels[j] = 1'b1;
-                if (input_channels[i] & mask[i]) begin
-                    mask[i] = 0;
-                    // output_channels[j] = i;
-                    // output_mask = mask;
-                end
-            end
+            channel_mask = input_channels_temp&(~(input_channels_temp-1));
+            input_channels_temp = input_channels_temp &~ channel_mask;
+            mask = mask | channel_mask;
         end
-    end
+
+
+    //     // for (j = 0; j < NO_INDICIES; j = j + 1) begin: PRIORITY_ENCODER
+    //     //     //LSB Priority
+    //     //         // idx = -1;
+    //     //MSB Priortiy encoder
+    //         set = 1'b0;
+    //         for (i=0; i<NUM_INPUT_CHANNELS; i=i-1) begin
+    //             // output_channels[j] = 1'b1;
+    //             if (input_channels[i] /*& mask[i]*/) begin
+    //                 idx = i;
+    //                 set = 1'b1;
+    //                 // output_channels[j] = i;
+    //                 // output_mask = mask;
+    //             end
+    //             test = i;
+
+    //         end
+    //         if (set) begin
+    //             mask[idx] = 0;
+    //         end
+        end
+    // // end
 
 
     

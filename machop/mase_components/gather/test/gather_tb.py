@@ -130,7 +130,7 @@ class VerificationCase:
 
     def get_dut_parameters(self):
         return {
-            "DIM": self.num,
+            "TENSOR_SIZE_DIM": self.num,
             "PRECISION": self.bitwidth,
         }
 
@@ -154,7 +154,7 @@ class VerificationCase:
 @cocotb.test()
 async def test_gather(dut):
     """Test gather function"""
-    test_case = VerificationCase(samples=1)
+    test_case = VerificationCase(samples=50)
 
     # set inputs outputs
     for i in range(test_case.samples):

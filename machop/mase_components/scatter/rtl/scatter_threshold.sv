@@ -9,9 +9,9 @@ module scatter_threshold #(
 ) (
     input clk,
     input rst,
-    input logic signed [PRECISION-1:0] data_in [TENSOR_SIZE_DIM-1:0],
-    output [PRECISION-1:0] o_high_precision [TENSOR_SIZE_DIM-1:0], 
-    output [PRECISION-1:0] o_low_precision [TENSOR_SIZE_DIM-1:0] 
+    input logic [PRECISION-1:0] data_in [TENSOR_SIZE_DIM-1:0],
+    output logic [PRECISION-1:0] o_high_precision [TENSOR_SIZE_DIM-1:0], 
+    output logic [PRECISION-1:0] o_low_precision [TENSOR_SIZE_DIM-1:0] 
 );
 
     //Logic to indentify values larger than x (2MSB check) //Can parameterise

@@ -47,10 +47,10 @@ def quantize(x, bits, bias):  # bits = 32
 
 
 class VerificationCase:
-    bitwidth = 8
+    bitwidth = 4
     bias = 1
-    num = 6
-    high_slots = 3
+    num = 4
+    high_slots = 2
 
     def __init__(self, threshold, samples=2, test = False):
         self.samples = samples
@@ -81,9 +81,9 @@ class VerificationCase:
             count_high = 0
 
             x = self.get_dut_input(i)
-
+            
             for k in x :
-                if abs(k) >= self.threshold and count_high < self.high_slots :
+                if abs(k) > self.threshold and count_high < self.high_slots :
                     high_mat.append(k)
                     low_mat.append(0)
                     count_high += 1
@@ -99,9 +99,9 @@ class VerificationCase:
 
     def get_dut_parameters(self):
         return {
-            "DATA_IN_0_TENSOR_SIZE_DIM_0": self.num,
-            "DATA_IN_0_PRECISION_0": self.bitwidth,
-            "DATA_OUT_0_PRECISION_0": self.bitwidth,
+            "TENSOR_SIZE_DIM": self.num,
+            "PRECISION": self.bitwidth,
+            "PRECISION": self.bitwidth,
             "HIGH_SLOTS": self.high_slots,
             "THRESHOLD": self.threshold,
         }
@@ -119,7 +119,7 @@ class VerificationCase:
 @cocotb.test()
 async def test_scatter(dut):
     """Test scatter function"""
-    test_case = VerificationCase(threshold=6, samples=1)
+    test_case = VerificationCase(threshold=6, samples=20)
 
     # set inputs outputs
     for i in range(test_case.samples):
@@ -128,23 +128,34 @@ async def test_scatter(dut):
         y_low = y[0]
         y_high = y[1]
 
+
+       
+        dut.data_in.value = x
+        await Timer(1, units="ns")
+
+            
+
+        print('HIGH_SLOTS',dut.HIGH_SLOTS.value)
         print('x:', x)
         print('low_out:', y_low)
-        print('high_out:', y_high)
+        print('dutval low', dut.o_low_precision.value)
 
-        dut.data_in.value = x
-        await Timer(2, units="ns")
+        print('high_out:', y_high)
+        print('dutval high', dut.o_high_precision.value)
     
         #for j, dutval in enumerate(dut.data_out.value):
         #    assert dutval.signed_integer == y[j]
 
         for j, dutval_high in enumerate(dut.o_high_precision.value):
+
             assert dutval_high.signed_integer == y_high[j]
-            print('high:', dutval_high.signed_integer)
+            print('dutval_high,y_high',dutval_high.signed_integer,y_high[j])
+
+            # print('high:', dutval_high.signed_integer)
             
         for j, dutval_low in enumerate(dut.o_low_precision.value):
             assert dutval_low.signed_integer == y_low[j]
-            print('low:', dutval_low.signed_integer)
+            print('dutval_low,y_low',dutval_low.signed_integer,y_low[j])
 
         # assert dut.data_out.value == test_case.o_outputs_bin[0], f"output q was incorrect on the {i}th cycle"
         # print(type(dut.data_out.value))
