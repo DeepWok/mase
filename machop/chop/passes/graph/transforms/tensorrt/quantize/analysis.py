@@ -45,7 +45,7 @@ class QuantizationAnalysis():
 
         # Istantiate default performance analyzer args
         if 'num_batches' not in config.keys():
-            config['num_batches'] = 500
+            config['num_batches'] = 100
             config['num_GPU_warmup_batches'] = 5
             config['test'] = True
         
@@ -79,10 +79,6 @@ class QuantizationAnalysis():
                     case '.onnx':
                         # Load the exported ONNX model into an ONNXRuntime inference session
                         self.model = ort.InferenceSession(path, providers=[config['execution_provider']])
-
-                        print('Model input shape:', self.model.graph.input[0].type.tensor_type.shape)
-                        exit()
-                        
                         self.model_name = f"{self.config['model']}-onnx"
                     case _:
                         # If file type is neither .trt nor .onnx
@@ -197,6 +193,7 @@ class QuantizationAnalysis():
         end = torch.cuda.Event(enable_timing=True)
 
         start.record()
+        
         output_data = ort_inference_session.run(None, {'input': input_data.numpy()})
         end.record()
         

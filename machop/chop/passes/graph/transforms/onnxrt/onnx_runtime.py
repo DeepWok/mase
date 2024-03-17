@@ -85,6 +85,7 @@ class ONNXRuntime:
             opset_version=11,
             do_constant_folding=True,
             input_names=["input"],
+            # dynamic_axes={'input': {0: 'batch_size'}, 'output': {0: 'batch_size'}}
         )
         self.logger.info(f"ONNX Conversion Complete. Stored ONNX model to {save_path}")
 
