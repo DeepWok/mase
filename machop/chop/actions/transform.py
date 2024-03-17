@@ -106,29 +106,33 @@ def transform(
 
                 match pass_name_extended:
                     case "quantize":
-                        # Firstly fake quantize the model for calibration (only required if using INT8 precision otherwise skipped)
-                        graph, _ = PASSES["tensorrt_fake_quantize"](
-                            graph, pass_args=pass_config
-                        )
+                        if "INT8" in pass_config:
+                            # Firstly fake quantize the model for calibration (only required if using INT8 precision otherwise skipped)
+                            graph, _ = PASSES["tensorrt_fake_quantize"](
+                                graph, pass_args=pass_config
+                            )
 
-                        # Then calibrate the model using the fake quantization to set AMAXs
-                        graph, _ = PASSES["tensorrt_calibrate"](
-                            graph, pass_args=pass_config
-                        )
+                            # Then calibrate the model using the fake quantization to set AMAXs
+                            graph, _ = PASSES["tensorrt_calibrate"](
+                                graph, pass_args=pass_config
+                            )
 
-                        PASSES["summarize_quantization"](
-                            ori_graph, graph, save_dir=pass_save_dir
-                        )
+                            PASSES["summarize_quantization"](
+                                ori_graph, graph, save_dir=pass_save_dir
+                            )
 
-                        # Apply post-quantization fine tuning (Quantization Aware Training)
-                        graph, _ = PASSES["tensorrt_fine_tune"](
-                            graph, pass_args=pass_config
-                        )
+                            # Apply post-quantization fine tuning (Quantization Aware Training)
+                            graph, _ = PASSES["tensorrt_fine_tune"](
+                                graph, pass_args=pass_config
+                            )
 
-                        PASSES["summarize_quantization"](
-                            ori_graph, graph, save_dir=pass_save_dir
-                        )
-
+                            PASSES["summarize_quantization"](
+                                ori_graph, graph, save_dir=pass_save_dir
+                            )
+                        else:
+                            logger.warning(
+                                "INT8 precision not found in config. Skipping fake quantization, calibration and fine-tuning passes."
+                            )
                         # Convert the model to TensorRT format and apply FP16 or layer-wise mixed precision quantization
                         graph, meta = PASSES["tensorrt_quantize"](
                             graph, pass_args=pass_config
