@@ -85,13 +85,6 @@ weight_frac_width = ["NA"]
 bias_width = [2, 4, 8]
 bias_frac_width = ["NA"]
  
-[search.strategy.sw_runner.basic_evaluation]
-data_loader = "val_dataloader"
-num_samples = 512
- 
-[search.strategy.hw_runner.average_bitwidth]
-compare_to = 32 # compare to FP32
- 
 [search.strategy]
 name = "rl"
 algorithm = 'ppo'
