@@ -79,6 +79,10 @@ class QuantizationAnalysis():
                     case '.onnx':
                         # Load the exported ONNX model into an ONNXRuntime inference session
                         self.model = ort.InferenceSession(path, providers=[config['execution_provider']])
+
+                        print('Model input shape:', self.model.graph.input[0].type.tensor_type.shape)
+                        exit()
+                        
                         self.model_name = f"{self.config['model']}-onnx"
                     case _:
                         # If file type is neither .trt nor .onnx
