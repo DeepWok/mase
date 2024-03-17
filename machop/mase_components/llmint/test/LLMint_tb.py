@@ -1,7 +1,6 @@
 import torch
 import pytest
 import cocotb
-import random
 
 from torch.autograd.function import InplaceFunction
 from cocotb.triggers import Timer
@@ -47,103 +46,76 @@ def quantize(x, bits, bias):  # bits = 32
 
 
 class VerificationCase:
+    weight_dim = [6,6]
     bitwidth = 8
+    reduced_bitwidth = 4
     bias = 1
     num = 6
     high_slots = 3
+    threshold = 6
 
     def __init__(self, samples=2, test = False):
         self.samples = samples
-        self.low_in = []
-        self.high_in = []
+        self.inputs = []
+        self.weights = []
 
         for _ in range(samples):
-            i1, i2 = self.single_run()
-            self.low_in.append(i1)
-            self.high_in.append(i2)
+            self.inputs.append(self.single_run())
+            self.weights.append(self.generate_weights())
 
-
-        self.outputs = self.gather_model(samples)
+        self.outputs = self.LLMint_model(samples)
 
 
     def single_run(self):
-        ya = torch.rand(self.num)
-        yb = torch.rand(self.num)
-      
-        # Range for normalization
+        x = torch.rand(self.num)
         r1, r2 = 4, -4
-      
-        # Normalize and quantize mat_a
-        ya = (r1 - r2) * ya + r2
-        ya = quantize(ya, self.bitwidth, self.bias)
-      
-        # Normalize and quantize mat_b using the same parameters
-        yb = (r1 - r2) * yb + r2
-        yb = quantize(yb, self.bitwidth, self.bias)
+        x = (r1 - r2) * x + r2
+        x = quantize(x, self.bitwidth, self.bias)
 
-        kept = random.randint(1, self.high_slots)
-        index = [random.randint(0, self.num - 1) for _ in range(kept)]
-
-        for k in range(self.num) :
-            if k in index :
-                ya[k] = 0
-            else :
-                yb[k] = 0
-
-        return ya, yb
+        return x
     
 
-    def gather_model(self, samples):
-        outputs = []
+    def LLMint_model(self, samples):
+        outputs = [1]
         
         for i in range(samples):
-            x_low = self.get_dut_input_0(i)
-            x_high = self.get_dut_input_1(i)
-
-            print(x_low)
-            print(x_high)
-
-            y = [x_low[k] + x_high[k] for k in range(len(x_high))]
-            outputs.append(y)
+            print("hey")
+            #TODO: Implement LLMint model
 
         return outputs
 
-    # Will be usefull for 2D version
-    def generate_matrices(width, height, bitwidth, bias):
+
+    def generate_weights(self):
       # Generate random tensor for mat_a and mat_b
-      mat_a = torch.rand(height, width)
-      mat_b = torch.rand(height, width)
+      weights = torch.rand(self.weight_dim[0], self.weight_dim[1])
       
-      # Range for normalization
+      # normalization and quantization
       r1, r2 = 4, -4
-      
-      # Normalize and quantize mat_a
-      mat_a = (r1 - r2) * mat_a + r2
-      mat_a = quantize(mat_a, bitwidth, bias)
-      
-      # Normalize and quantize mat_b using the same parameters
-      mat_b = (r1 - r2) * mat_b + r2
-      mat_b = quantize(mat_b, bitwidth, bias)
+      weights = (r1 - r2) * weights + r2
+      weights = quantize(weights, self.bitwidth, self.bias)
     
-      return mat_a, mat_b
+      return weights
     
 
     def get_dut_parameters(self):
         return {
-            "DIM": self.num,
-            "PRECISION": self.bitwidth,
+            "ORIGINAL_PRECISION": self.bitwidth,
+            "REDUCED_PRECISION": self.reduced_bitwidth,
+            "TENSOR_SIZE_DIM": self.num,
+            "WEIGHT_DIM_0": self.weight_dim[0],
+            "WEIGHT_DIM_1": self.weight_dim[1],
+            "HIGH_SLOTS": self.high_slots,
+            "THRESHOLD": self.threshold,
         }
 
-    def get_dut_input_0(self, i):
-        inputs = self.low_in[i]
+    def get_dut_input(self, i):
+        inputs = self.inputs[i]
         shifted_integers = (inputs * (2**self.bias)).int()
-
         return shifted_integers.numpy().tolist()
-
-    def get_dut_input_1(self, i):
-        inputs = self.high_in[i]
-        shifted_integers = (inputs * (2**self.bias)).int()
-
+    
+    def get_dut_weights(self, i):
+        weights = self.weights[i]
+        shifted_integers = (weights * (2**self.bias)).int()
         return shifted_integers.numpy().tolist()
 
     def get_dut_output(self, i):
@@ -152,26 +124,25 @@ class VerificationCase:
 
 
 @cocotb.test()
-async def test_gather(dut):
-    """Test gather function"""
+async def test_LLMint(dut):
+    """Test LLmint module"""
     test_case = VerificationCase(samples=1)
 
     # set inputs outputs
     for i in range(test_case.samples):
-        x_low = test_case.get_dut_input_0(i)
-        x_high = test_case.get_dut_input_1(i)
+        x = test_case.get_dut_input(i)
+        weights = test_case.get_dut_weights(i)
         y = test_case.get_dut_output(i)
 
-        print('x_low :', x_low)
-        print('x_high :', x_high)
+        print('x :', x)
         print('y :', y)
 
-        dut.mat_a.value = x_low
-        dut.mat_b.value = x_high
+        dut.data_in.value = x
+        dut.weights.value = weights
         await Timer(2, units="ns")
 
-        for j, output in enumerate(dut.mat_sum.value):
-            #assert output.signed_integer == y[j]
+        for j, output in enumerate(dut.data_out.value):
+            assert output.signed_integer == y[j]
             print('output:', output.signed_integer)
 
 if __name__ == "__main__":
