@@ -89,6 +89,7 @@ def find_measures_arrays(
                         loss_fn=loss_fn,
                         split_data=ds,
                     )
+                    
                     measure_values[measure_name] = val
 
             done = True
@@ -116,7 +117,7 @@ def find_measures(
     dataloader,  # a data loader (typically for training data)
     dataload_info,  # a tuple with (dataload_type = {random, grasp}, number_of_batches_for_random_or_images_per_class_for_grasp, number of classes)
     device,  # GPU/CPU device used
-    loss_fn,  # loss function to use within the zero-cost metrics
+    loss_function,  # loss function to use within the zero-cost metrics
     measure_names=None,  # an array of measure names to compute, if left blank, all measures are computed by default
     measures_arr=None,
 ):
@@ -156,14 +157,14 @@ def find_measures(
             dataloader,
             dataload_info,
             device,
-            loss_fn=loss_fn,
+            loss_fn=loss_function,
             measure_names=measure_names,
         )
-
+    measure_score={}
     for k, v in measures_arr.items():
         if k == "jacov" or k == 'epe_nas' or k=='nwot' or k=='zen':
-            measure_score = v
+            measure_score[k] = v
         else:
-            measure_score = sum_arr(v)
+            measure_score[k] = sum_arr(v)
     return measure_score
 

@@ -98,8 +98,6 @@ def proxy(config:dict | PathLike):
     # np.save(r'/home/ansonhon/mase_project/nas_results/train_acc_test3',train_accuries)
     # np.save(r'/home/ansonhon/mase_project/nas_results/val_acc_test3',val_accuries)
 
-    ### TODO: Add Meta-proxy neural network training here
-
 
     # Prepare dataset for training meta-proxy
     proxy = proxy_config
@@ -152,7 +150,7 @@ def proxy(config:dict | PathLike):
         if (epoch+1) % 50 == 0:
             print(f'Epoch [{epoch+1}/{num_epochs}], Loss: {loss.item():.4f}')
 
-    # Saved the trained model
+    # Saved the trained model, this is the daddy proxy
     torch.save(model.state_dict(), '/home/ansonhon/mase_project/nas_results/model_state_dict.pt')
 
     return

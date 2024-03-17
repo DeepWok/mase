@@ -95,6 +95,9 @@ class SearchStrategyOptuna(SearchStrategyBase):
         software_metrics = self.compute_software_metrics(
             model, sampled_config, is_eval_mode
         )
+        
+        print(software_metrics)
+
         hardware_metrics = self.compute_hardware_metrics(
             model, sampled_config, is_eval_mode
         )
