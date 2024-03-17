@@ -26,8 +26,9 @@ class WrapperBase(pl.LightningModule):
         self.loss_fn = torch.nn.CrossEntropyLoss()
         self.epochs = epochs
         self.optimizer = optimizer
-        self.t_max = scheduler_args.t_max if scheduler_args else None
-        self.eta_min = scheduler_args.eta_min if scheduler_args else None
+
+        self.t_max = getattr(scheduler_args, 't_max', None) if scheduler_args else None
+        self.eta_min = getattr(scheduler_args, 'eta_min', None) if scheduler_args else None
 
         if dataset_info and dataset_info.num_classes:
             self.num_classes = dataset_info.num_classes
