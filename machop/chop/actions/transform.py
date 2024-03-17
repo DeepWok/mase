@@ -151,10 +151,6 @@ def transform(
                         graph, _ = PASSES["tensorrt_analysis"](
                             meta["graph_path"], pass_args=pass_config
                         )
-                    case "fusion":
-                        raise NotImplementedError()
-                    case "kerneltuning":
-                        raise NotImplementedError()
                     case _:
                         raise ValueError(
                             f"Unsupported tensorrt pass: {pass_name_extended}"
