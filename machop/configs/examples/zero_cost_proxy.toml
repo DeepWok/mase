@@ -35,7 +35,7 @@ num_archs_test = 2000
 zc_proxies = ['epe_nas', 'fisher', 'grad_norm', 'grasp', 'jacov', 'l2_norm', 'nwot', 'plain', 'snip', 'synflow', 'zen', 'flops', 'params']
 
 [search.strategy]
-name = "naslib"
+name = "zero_cost"
 
 [search.strategy.sw_runner.basic_evaluation]
 data_loader = "val_dataloader"

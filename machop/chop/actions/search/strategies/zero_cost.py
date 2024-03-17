@@ -27,7 +27,7 @@ def callback_save_study(
             joblib.dump(study, f)
 
 
-class SearchStrategyNaslib(SearchStrategyBase):
+class SearchStrategyZeroCost(SearchStrategyBase):
     is_iterative = False
 
     def _post_init_setup(self):
