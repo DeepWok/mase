@@ -10,7 +10,7 @@ accelerator = "gpu"
 project = "vgg7"
 seed = 42
 log_every_n_steps = 5
-load_name = "/home/mp1820/mase/mase_output/test-accu-0.9332.ckpt"
+load_name = "../test-accu-0.9332.ckpt"
 load_type = "pl"
  
 [passes.quantize]

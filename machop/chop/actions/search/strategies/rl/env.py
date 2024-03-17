@@ -118,7 +118,7 @@ class LLMMixedPrecisionEnv(gym.Env):
     
 
 class MixedPrecisionEnv(gym.Env):
-    def __init__(self, config, search_space, sw_runner, hw_runner, data_module):
+    def __init__(self, config, search_space, sw_runner, hw_runner, data_module, episode_max_len):
         if search_space is None:
             raise ValueError("search_space cannot be None")
         
@@ -134,6 +134,7 @@ class MixedPrecisionEnv(gym.Env):
         self._define_action_space()
         self.cur_obs = None
         self.episode_len = 0
+        self.episode_max_len = episode_max_len
 
     def _define_observation_space(self):
         """Defines the observation space based on the search space."""
@@ -178,8 +179,8 @@ class MixedPrecisionEnv(gym.Env):
 
         # Determine if the episode is done
         self.episode_len += 1
-        done = self.episode_len >= 10 #TODO: not sure what should this be used for
-        truncated = self.episode_len >= 10 #TODO: not sure what should this be used for
+        done = self.episode_len >= self.episode_max_len #TODO: not sure what should this be used for
+        truncated = self.episode_len >= self.episode_max_len #TODO: not sure what should this be used for
     
         # Optional additional info about the step
         info = {"loss": software_metrics['loss'], "average_bitwidth": hardware_metrics['average_bitwidth']}
@@ -222,10 +223,9 @@ class MixedPrecisionEnv(gym.Env):
 
 
 class MixedPrecisionEnvHiLo(gym.Env):
-    def __init__(self, config, search_space, sw_runner, hw_runner, data_module):
+    def __init__(self, config, search_space, sw_runner, hw_runner, data_module, episode_max_len):
         if search_space is None:
             raise ValueError("search_space cannot be None")
-        
         self.config = config
         self.search_space = search_space
         self.sw_runner = sw_runner
@@ -238,6 +238,7 @@ class MixedPrecisionEnvHiLo(gym.Env):
         self._define_action_space()
         self.cur_obs = None
         self.episode_len = 0
+        self.episode_max_len = episode_max_len
         # Initialize model configuration with the lowest precision settings
         self.model_config = {key: 0 for key in self.search_space.choices_flattened.keys()}
 
@@ -287,8 +288,8 @@ class MixedPrecisionEnvHiLo(gym.Env):
         reward = -cost
 
         self.episode_len += 1
-        done = self.episode_len >= 10
-        truncated = self.episode_len >= 10
+        done = self.episode_len >= self.episode_max_len
+        truncated = self.episode_len >= self.episode_max_len
     
         info = {"loss": software_metrics['loss'], "average_bitwidth": hardware_metrics['average_bitwidth']}
 

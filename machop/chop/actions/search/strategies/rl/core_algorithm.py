@@ -22,16 +22,17 @@ class StrategyRL(SearchStrategyBase):
         self.save_name = self.config["save_name"]
         self.env = env_map[self.config["env"]]
         self.device = self.config["device"]
+        self.episode_max_len = 100 # TODO: Try and change this
     
     def search(self, search_space):
-        env = self.env(config=self.config, search_space=search_space, sw_runner=self.sw_runner, hw_runner=self.hw_runner, data_module=self.data_module)
+        env = self.env(config=self.config, search_space=search_space, sw_runner=self.sw_runner, hw_runner=self.hw_runner, data_module=self.data_module, episode_max_len=self.episode_max_len)
 
         checkpoint_callback = CheckpointCallback(save_freq=1000, save_path="./logs/")
         eval_callback = EvalCallback(
             env,
             best_model_save_path="./logs/best_model",
             log_path="./logs/results",
-            eval_freq=8, #500
+            eval_freq=500,
         )
         callback = CallbackList([checkpoint_callback, eval_callback])
 
@@ -44,7 +45,7 @@ class StrategyRL(SearchStrategyBase):
             verbose=1,
             device=self.device,
             tensorboard_log="./logs/",
-            n_steps=8, #2048 
+            n_steps=2048, # TODO: Try and change this
         )
 
         vec_env = model.get_env()
@@ -60,7 +61,7 @@ class StrategyRL(SearchStrategyBase):
 
         # inference run, but not needed?
         obs = vec_env.reset()
-        for _ in range(10):
+        for _ in range(self.episode_max_len):
             action, _state = model.predict(obs, deterministic=True)
             obs, reward, done, info = vec_env.step(action)
 
