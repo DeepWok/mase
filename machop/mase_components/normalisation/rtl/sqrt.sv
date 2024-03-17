@@ -86,7 +86,7 @@ module sqrt #(
     assign ytmp = (y_r >>> state_r);
     assign v_in_ready = (state_r == READY_STATE) ? 1 : 0; 
 
-    assign zero_point_25 = 8'h20;//(32'b10 << right_shift_to_apply_b);
+    
 
 
     always_ff @(posedge clk)
@@ -121,6 +121,9 @@ module sqrt #(
     always_comb
     begin 
         //Set default values of _b wires here
+        zero_point_25                   = '0;
+        zero_point_25[IN_WIDTH-3]       = 1'b1;
+
         k_b                     = k_r; 
         idx_b                   = idx_r;
         state_b                 = RST;
