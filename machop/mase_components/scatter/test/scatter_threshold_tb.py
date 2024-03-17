@@ -101,7 +101,6 @@ class VerificationCase:
         return {
             "TENSOR_SIZE_DIM": self.num,
             "PRECISION": self.bitwidth,
-            "PRECISION": self.bitwidth,
             "HIGH_SLOTS": self.high_slots,
             "THRESHOLD": self.threshold,
         }

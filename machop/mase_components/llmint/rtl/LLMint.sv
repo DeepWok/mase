@@ -20,9 +20,17 @@ module LLMint #(
     )masker(
         .data_in(data_in),
         .o_high_precision(),
-        .o_low_precision() 
+        .o_low_precision()
     );
 
+    linear#(
+        .PRECISION(ORIGINAL_PRECISION),
+        .REDUCED_PRECISION(REDUCED_PRECISION_0),
+        .TENSOR_SIZE_DIM(TENSOR_SIZE_DIM)
+    )reducer(
+        .data_in(data_in),
+        .data_out(data_out)
+    );
 
 
     gather#(
