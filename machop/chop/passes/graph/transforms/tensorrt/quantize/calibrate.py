@@ -15,6 +15,7 @@ from torch.autograd import Variable
 import torch
 from .utils import FakeQuantizer
 
+
 def tensorrt_fake_quantize_transform_pass(graph, pass_args=None):
     by = pass_args["by"]
     fq = FakeQuantizer(pass_args)
@@ -28,11 +29,13 @@ def tensorrt_fake_quantize_transform_pass(graph, pass_args=None):
 
     return graph, {}
 
+
 def tensorrt_calibrate_transform_pass(graph, pass_args=None):
     calibrator = Calibrator(pass_args)
     graph = calibrator.calibrate_model(graph)
     graph.model = torch.fx.GraphModule(graph.model, graph.fx_graph)
     return graph, {}
+
 
 class Calibrator:
     def __init__(self, config):
@@ -41,13 +44,25 @@ class Calibrator:
 
     def get_config(self, config: dict, name: str):
         """Retrieve specific configuration from the config dictionary or return default."""
-        return config.get(name, config['default'])['config']
+        return config.get(name, config["default"])["config"]
 
-    def eval_calibration(self, calibrator):
+    def eval_calibration(self, graph, calibrator):
         """Performs post calibration analysis for the given calibrator."""
         from chop.passes.graph import tensorrt_analysis_pass
-        self.logger.info(f"Performing post calibration analysis for calibrator {calibrator}...")
-        tensorrt_analysis_pass(graph, pass_args=self.config)
+
+        self.logger.info(
+            f"Performing post calibration analysis for calibrator {calibrator}..."
+        )
+
+        # Temporarily change 'test' in config for evaluation on the validation set, not the test set
+        config_test = self.config.get('test', False)  # Store original 'test' value
+        self.config['test'] = False  # Ensure evaluation is not on test set
+
+        tensorrt_analysis_pass(graph, pass_args=self.config)  # Run the analysis pass
+
+        # Restore original 'test' configuration after evaluation
+        self.config['test'] = config_test
+
         self.logger.info("Post calibration analysis complete.")
 
     def compute_amax(self, model, **kwargs):
@@ -69,61 +84,68 @@ class Calibrator:
         self.logger.info("Starting calibration of the model in PyTorch...")
         quant_modules.initialize()
         graph.model.cuda()
-        
+
         with t.no_grad():
             # Turn on calibration tool
             for name, module in graph.model.named_modules():
                 if isinstance(module, qnn.TensorQuantizer):
                     if module._calibrator is not None:
-                        self.logger.info("Disabling Quantization and Enabling Calibration")
+                        self.logger.info(
+                            "Disabling Quantization and Enabling Calibration"
+                        )
                         module.disable_quant()
                         module.enable_calib()
                     else:
                         module.disable()
 
-            batches = self.config.get('num_calibration_batches', 10)
-            dataloader = self.config['data_module'].train_dataloader()
+            batches = self.config.get("num_calibration_batches", 10)
+            dataloader = self.config["data_module"].train_dataloader()
 
             for i, (xTrain, _) in enumerate(dataloader):
                 graph.model(Variable(xTrain).cuda())
                 if i >= batches:
-                    break           
+                    break
 
             # Turn off calibration tool
             for _, module in graph.model.named_modules():
                 if isinstance(module, qnn.TensorQuantizer):
                     if module._calibrator is not None:
                         module.enable_quant()
-                        self.logger.info("Enabling Quantization and Disabling Calibration")
+                        self.logger.info(
+                            "Enabling Quantization and Disabling Calibration"
+                        )
                         module.disable_calib()
                     else:
                         module.enable()
-            
+
             # Apply the specific calibration based on user input
             try:
-                calibs = self.config.get('default')['config']['calibrators']
+                calibs = self.config.get("default")["config"]["calibrators"]
             except KeyError:
-                calibs = 'entropy'
+                calibs = "entropy"
             for calib in calibs:
                 match calib:
                     case "entropy":
                         self.compute_amax(graph.model, method=calib)
                     case "percentile":
                         try:
-                            percentiles = self.config.get('default')['config']['percentiles']
+                            percentiles = self.config.get("default")["config"][
+                                "percentiles"
+                            ]
                         except KeyError:
                             percentiles = [99]
                         for percentile in percentiles:
-                            self.compute_amax(graph.model, method=calib)
+                            self.compute_amax(graph.model, method=calib, percentile=percentile)
                             # perform an analysis pass if required
-                            if self.config['post_calibration_analysis']:
-                                self.eval_calibration(f"{calib}_{percentile}")
+                            if self.config["post_calibration_analysis"]:
+                                self.eval_calibration(graph, f"{calib}_{percentile}")
+                        continue
                     case "mse":
                         self.compute_amax(graph.model, method=calib)
 
                 # perform an analysis pass if required
-                if self.config['post_calibration_analysis']:
-                    self.eval_calibration(calib)
-            
+                if self.config["post_calibration_analysis"]:
+                    self.eval_calibration(graph, calib)
+
             self.logger.info("Succeeded in calibrating the model in PyTorch!")
             return graph
