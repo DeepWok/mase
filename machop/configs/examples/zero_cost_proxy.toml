@@ -3,21 +3,13 @@ model = "jsc-tiny"
 dataset = "jsc"
 task = "cls"
 
-max_epochs = 5
-batch_size = 512
-learning_rate = 1e-2
 accelerator = "cpu"
 project = "zero_cost_proxy_test"
-seed = 42
-log_every_n_steps = 5
 load_name = "../mase_output/jsc_tiny_search_test_1/software/training_ckpts/best.ckpt"
 load_type = "pl"
 
 [search.search_space]
 name = "graph/zero_cost_proxy"
-
-[search.search_space.setup]
-by = "name"
 
 [search.search_space.zc]
 seed = 2

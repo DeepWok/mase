@@ -9,9 +9,6 @@ This tutorial shows how to do a zero cost proxy NAS search using different datas
 [search.search_space]
 name = "graph/zero_cost_proxy"
 
-[search.search_space.setup]
-by = "name"
-
 # configuration settings for doing a zero cost NAS
 [search.search_space.zc]
 seed = 2
