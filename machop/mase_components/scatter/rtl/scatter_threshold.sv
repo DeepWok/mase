@@ -26,6 +26,7 @@ module scatter_threshold #(
 
     
     //Logic to assign indicies based on priority
+
     //Pack array first
     wire [3:0] output_mask;
 
@@ -40,20 +41,6 @@ module scatter_threshold #(
         // .output_channels(address_outliers)
         .mask(output_mask)
     );
-
-    //Logic to turn indicies to mask
-
-    // index_to_mask #(
-    //     .NUM_INPUT_CHANNELS(DATA_IN_0_TENSOR_SIZE_DIM_0),
-    //     .NUM_OUPUT_CHANNELS(DATA_IN_0_TENSOR_SIZE_DIM_0),
-    //     .NO_INDICIES(HIGH_SLOTS),
-    //     .OUTPUT_WIDTH(DATA_IN_0_TENSOR_SIZE_DIM_0)
-    // )mask_gen(
-    //     .indicies(address_outliers),
-    //     .output_mask(output_mask)
-    // );
-
-
 
     //Logic to apply mask
     array_zero_mask#(
