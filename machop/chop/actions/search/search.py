@@ -92,7 +92,7 @@ def search(
     # set up data module
     data_module.prepare_data()
     data_module.setup()
-
+    
     # construct the search space
     logger.info("Building search space...")
     search_space_cls = get_search_space_cls(search_space_config["name"])
@@ -105,16 +105,9 @@ def search(
     )
     search_space.build_search_space()
     dummy_input = get_dummy_input(model_info, data_module, task, device=accelerator)
-    # print("dummy input: ",dummy_input)
-    # construct a search strategy
+
     strategy_cls = get_search_strategy_cls(strategy_config["name"])
-    train_iter = iter(data_module.train_dataloader())
-    x, y = next(train_iter)
-    print("data x: ",x)
-    print("data y: ",y)
-   
-    # print("data_info:",dataset_info)
-    # import pdb;pdb.set_trace()
+
     strategy = strategy_cls(
         model_info=model_info,
         task=task,

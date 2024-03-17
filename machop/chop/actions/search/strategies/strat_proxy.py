@@ -7,14 +7,15 @@ import optuna
 from functools import partial
 from .base import SearchStrategyBase
 from chop.passes.module.analysis import calculate_avg_bits_module_analysis_pass
-
-
+from torch.utils.data import DataLoader
+from itertools import islice
 
 # For compute software metrics()
 from naslib.predictors.utils.pruners.predictive import find_measures
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from einops import rearrange
 
 ### Class for meta proxy
 class NeuralModel(nn.Module):
@@ -55,10 +56,7 @@ def callback_save_study(
 class SearchStrategyDaddyProxy(SearchStrategyBase):
     is_iterative = False
 
-    model = NeuralModel(13)
-    pretrained_model_path = r'/home/ansonhon/mase_project/nas_results/model_state_dict.pt'
-    model.load_state_dict(torch.load(pretrained_model_path))
-    model.eval()
+    
     
     def _post_init_setup(self):
         self.sum_scaled_metrics = self.config["setup"]["sum_scaled_metrics"]
@@ -88,24 +86,49 @@ class SearchStrategyDaddyProxy(SearchStrategyBase):
 
     def compute_software_metrics(self, model):
         # note that model can be mase_graph or nn.Module
+        proxy_model = NeuralModel(13)
+        pretrained_model_path = r'/home/ansonhon/mase_project/nas_results/model_state_dict.pt'
+        proxy_model.load_state_dict(torch.load(pretrained_model_path))
+        proxy_model.eval()
         measure_names = ['epe_nas', 'fisher', 'grad_norm', 'grasp', 'jacov', 'l2_norm', 'nwot', 'plain', 'snip', 'synflow', 'zen', 'params', 'flops']
+
         metrics = {}
+
         dataloader=self.data_module.train_dataloader()
         dataload_info=["random",len(dataloader),10]
-        loss_function = nn.CrossEntropyLoss
-        device = "cuda" #torch.cuda.device
-        
-        
+        loss_function = nn.MSELoss()
+        device = "cuda" 
+        # print("Model:",model.model)
+        model=model.model
+        # device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
+        device = torch.device('cuda')
+        model.to(device)
+        num_batches_to_keep = 1
+
+        # 创建一个新的空列表来存储减少后的数据
+        small_data = []
+        for idx, (data, target) in enumerate(dataloader):
+            small_data.append([data, target])
+            if idx + 1 == num_batches_to_keep:
+                break
+
+        # 使用减少后的数据创建一个新的 DataLoader 对象
+        small_trainloader = DataLoader(small_data)
+              
         small_proxy_scores = find_measures(model,dataloader, dataload_info, device , loss_function, measure_names)
-        print("successfully obtain scores from small proxies")
+
         measure_values_list = [small_proxy_scores[s] for s in measure_names]
         measure_values_tensor = torch.tensor(measure_values_list, dtype = torch.float)
+
+
         ### Make prediction
         with torch.no_grad():
-            prediction = model(measure_values_tensor)
+            prediction = proxy_model(measure_values_tensor)
 
         prediction_numpy = prediction.numpy()
-
+        print("Prediction here: ")
+        print(prediction_numpy)
+        print(metrics)
         
         return metrics
 
@@ -192,6 +215,7 @@ class SearchStrategyDaddyProxy(SearchStrategyBase):
             ],
             show_progress_bar=True,
         )
+        
         self._save_study(study, self.save_dir / "study.pkl")
         self._save_search_dataframe(study, search_space, self.save_dir / "log.json")
         self._save_best(study, self.save_dir / "best.json")

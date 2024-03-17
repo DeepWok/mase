@@ -44,13 +44,17 @@ def get_batch_jacobian(net, x, target, to, device, args=None):
 
 def eval_score_perclass(jacob, labels=None, n_classes=10):
     k = 1e-5
-
+    
     per_class={}
     for i, label in enumerate(labels[0]):
+
         if label in per_class:
             per_class[label] = np.vstack((per_class[label],jacob[i]))
         else:
             per_class[label] = jacob[i]
+
+    print("epe_nas start")
+    # import pdb;pdb.set_trace()
 
     ind_corr_matrix_score = {}
     for c in per_class.keys():
@@ -64,6 +68,8 @@ def eval_score_perclass(jacob, labels=None, n_classes=10):
         except: # defensive programming
             continue
         ind_corr_matrix_score[c] = s
+
+    
 
     # per class-corr matrix A and B
     score = 0
@@ -92,7 +98,6 @@ def compute_epe_score(net, inputs, targets, loss_fn, split_data=1):
     labels = []
 
     try:
-
         jacobs_batch, target, n_classes = get_batch_jacobian(net, inputs, targets, None, None)
         jacobs.append(jacobs_batch.reshape(jacobs_batch.size(0), -1).cpu().numpy())
 

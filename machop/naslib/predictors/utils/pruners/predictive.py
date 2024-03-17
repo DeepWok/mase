@@ -52,7 +52,6 @@ def find_measures_arrays(
 
     if not hasattr(net_orig, "get_prunable_copy"):
         net_orig.get_prunable_copy = types.MethodType(copynet, net_orig)
-
     # move to cpu to free up mem
     torch.cuda.empty_cache()
     net_orig = net_orig.cpu()
@@ -76,16 +75,28 @@ def find_measures_arrays(
     done, ds = False, 1
     measure_values = {}
 
+    # Turn target into one-hot vector
+    inputs = inputs[0:512,:]   ###
+    targets = targets[0:512]
+    target_onehot = F.one_hot(targets, num_classes = max(targets)+1)
+
+    # Convert datatype to float
+    inputs = torch.tensor(inputs, dtype = torch.float)
+    target_onehot = torch.tensor(target_onehot, dtype = torch.float)
+
+
     while not done:
         try:
             for measure_name in measure_names:
+                print(measure_name)
+
                 if measure_name not in measure_values:
                     val = measures.calc_measure(
                         measure_name,
                         net_orig,
                         device,
                         inputs,
-                        targets,
+                        target_onehot,
                         loss_fn=loss_fn,
                         split_data=ds,
                     )
@@ -153,7 +164,6 @@ def find_measures(
     #         measure_score = float(model_stats.parameters)/1e6 # megaparams
     #     return measure_score
     #################################################################################################
-
     measure_score={}
     data_iterator = iter(dataloader)
     x, target = next(data_iterator)
@@ -171,6 +181,7 @@ def find_measures(
     if 'params' in measure_names:
         measure_score['params'] = float(model_stats.parameters)/1e6
         measure_names.remove('params')
+        
     if measures_arr is None:
         measures_arr = find_measures_arrays(
             net_orig,
@@ -180,7 +191,7 @@ def find_measures(
             loss_fn=loss_function,
             measure_names=measure_names,
         )
-    
+
     for k, v in measures_arr.items():
         if k == "jacov" or k == 'epe_nas' or k=='nwot' or k=='zen':
             measure_score[k] = v
