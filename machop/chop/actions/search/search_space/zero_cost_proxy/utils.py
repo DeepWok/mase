@@ -6,7 +6,6 @@ from naslib.predictors import ZeroCost
 from naslib.search_spaces import NasBench201SearchSpace
 
 
-## Zero cost proxies for performance prediction
 def evaluate_predictions(y_true, y_pred):
     res = {}
     res["kendalltau"] = kendalltau(y_true, y_pred)[0]
@@ -16,7 +15,6 @@ def evaluate_predictions(y_true, y_pred):
 
 
 def iterate_whole_searchspace(search_space, dataset_api, seed=None, shuffle=False):
-    # Note - for nb301, this method only returns the training set architectures
     arch_iter = search_space.get_arch_iterator(dataset_api)
     if shuffle:
         arch_iter = list(arch_iter)
@@ -41,9 +39,7 @@ def sample_arch_dataset(
     train_times = []
     arch_hashes = arch_hashes if arch_hashes is not None else set()
 
-    # Cloning NASLib objects takes some time - this is a hack-... speedup so that
-    # we can quickly get all architecture hashes and accuracies in a searchspace.
-    # However, not all methods are available - e.g. you can't encode the architecture
+    # get all architecture hashes and accuracies in a searchspace.
     search_space = search_space.clone()
     search_space.instantiate_model = False
     arch_iterator = iterate_whole_searchspace(

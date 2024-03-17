@@ -12,7 +12,7 @@ name = "graph/zero_cost_proxy"
 # configuration settings for doing a zero cost NAS
 [search.search_space.zc]
 seed = 2
-benchmark = 'nasbench201' # the benchmark you are using, one of [nasbench101, nasbench201, nasbench301]
+benchmark = 'nasbench201' # the benchmark you are using, one of [nasbench101, nasbench201]
 dataset = 'cifar10' # the dataset you are using, one of [cifar10, cifar100]
 calculate_proxy = false # whether to calculate the proxy from scratch or look them up from an api
 ensemble_model = 'nonlinear' # for the neural network ensemble model, either 'linear' or 'nonlinear'
