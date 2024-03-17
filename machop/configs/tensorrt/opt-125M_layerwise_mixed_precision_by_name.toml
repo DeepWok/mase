@@ -1,6 +1,6 @@
 # basics
-model = "opt"
-dataset = "cifar10"
+model = "facebook/opt-125m:patched"
+dataset = "wikitext2"
 
 max_epochs = 10
 batch_size = 256
