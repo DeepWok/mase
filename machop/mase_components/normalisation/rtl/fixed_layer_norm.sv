@@ -49,7 +49,7 @@ module fixed_layer_norm #(
     input logic signed  [IN_WIDTH-1:0]  gamma_in     [IN_DEPTH-1:0],
       
     // Output ports for data
-    output  [OUT_WIDTH-1:0] data_out_0    [OUT_DEPTH-1:0],
+    output  signed [OUT_WIDTH-1:0] data_out_0    [OUT_DEPTH-1:0],
     output                  data_out_0_valid,
     input                   data_out_0_ready 
 
@@ -127,7 +127,7 @@ module fixed_layer_norm #(
             sum += data_in_zero_padded[i];
         end
 
-        assign mean = sum / IN_DEPTH;
+        mean = sum / IN_DEPTH;
 
         sum_of_squared_differences = '0;
 
@@ -212,12 +212,14 @@ module fixed_layer_norm #(
     
     assign data_out_0_valid     = valid_out_r;
 
-    generate
-        genvar i;
-        for (i = 0; i < IN_DEPTH; i++) 
-        begin
-            assign data_out_0[i] = (sum >>> SUM_EXTRA_FRAC_WIDTH);
-        end
-    endgenerate
+
+    assign data_out_0 = normalised_data_r;
+    // generate
+    //     genvar i;
+    //     for (i = 0; i < IN_DEPTH; i++) 
+    //     begin
+    //         assign data_out_0[i] = (sum >>> SUM_EXTRA_FRAC_WIDTH);
+    //     end
+    // endgenerate
     
 endmodule
