@@ -109,10 +109,36 @@ module fixed_layer_norm #(
     logic signed  [IN_WIDTH-1:0]  normalised_data_b    [IN_DEPTH-1:0];
     logic signed  [IN_WIDTH-1:0]  normalised_data_r    [IN_DEPTH-1:0];
 
+    logic sqrt_v_in_ready; //TODO: use this
+    logic sqrt_v_out_valid; //TODO: use this
+
+    logic valid_out_b; 
+    logic valid_out_r; 
+
+    logic valid_in_sqrt_b;
+    logic valid_in_sqrt_r;
+
 
 
     always_comb
     begin
+
+        valid_in_sqrt_b     = data_in_0_valid; 
+        valid_out_b         = sqrt_v_out_valid;
+
+        normalised_data_b   = normalised_data_r;
+
+        data_b    = data_r;
+        beta_b    = beta_r; 
+        gamma_b   = gamma_r;  
+
+        if (data_in_0_valid)
+        begin 
+            data_b    = data_in_0;
+            beta_b    = beta_in;
+            gamma_b   = gamma_in;
+        end
+
         // Convert the inputs to a larger bitwidth and a FP format with more frac. bits.        
         for (int i = 0; i < IN_DEPTH; i++) begin
             data_in_zero_padded[i][SUM_EXTRA_FRAC_WIDTH-1:0] = 1'b0; 
@@ -152,9 +178,6 @@ module fixed_layer_norm #(
     
     end
 
-    logic sqrt_v_in_ready; //TODO: use this
-    logic sqrt_v_out_valid; //TODO: use this
-
     sqrt #(
         .IN_WIDTH(IN_WIDTH),
         .IN_FRAC_WIDTH(IN_FRAC_WIDTH),
@@ -175,30 +198,11 @@ module fixed_layer_norm #(
     // Data outputs.
     assign data_in_0_ready     = 1'b1;
 
-    logic valid_out_b; 
-    logic valid_out_r; 
+    assign data_out_0_valid     = valid_out_r;
+    assign data_out_0 = normalised_data_r;
 
-    logic valid_in_sqrt_b;
-    logic valid_in_sqrt_r;
+  
 
-    always_comb
-    begin
-        valid_in_sqrt_b     = data_in_0_valid; 
-        valid_out_b         = sqrt_v_out_valid;
-
-        normalised_data_b   = normalised_data_r;
-
-        data_b    = data_r;
-        beta_b    = beta_r; 
-        gamma_b   = gamma_r;  
-
-        if (data_in_0_valid)
-        begin 
-            data_b    = data_in_0;
-            beta_b    = beta_in;
-            gamma_b   = gamma_in;
-        end
-    end
 
     always_ff @(posedge clk) //TODO: add asynchronous reset behaviour
     begin
@@ -209,17 +213,7 @@ module fixed_layer_norm #(
         gamma_r         <= gamma_b;
         normalised_data_r <= normalised_data_b;
     end
-    
-    assign data_out_0_valid     = valid_out_r;
 
-
-    assign data_out_0 = normalised_data_r;
-    // generate
-    //     genvar i;
-    //     for (i = 0; i < IN_DEPTH; i++) 
-    //     begin
-    //         assign data_out_0[i] = (sum >>> SUM_EXTRA_FRAC_WIDTH);
-    //     end
-    // endgenerate
+  
     
 endmodule
