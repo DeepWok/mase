@@ -77,10 +77,9 @@ class QuantizationAnalysis():
                         self.model_name = f"{self.config['model']}-quantized"
                         
                     case '.onnx':
-                        # Assuming there are specific actions for ONNX models similar to TRT case
-                        self.ort_sess = ort.InferenceSession(path, providers=[config['execution_provider']])
-                        ...
-                        
+                        # Load the exported ONNX model into an ONNXRuntime inference session
+                        self.model = ort.InferenceSession(path, providers=[config['execution_provider']])
+                        self.model_name = f"{self.config['model']}-onnx"
                     case _:
                         # If file type is neither .trt nor .onnx
                         raise Exception("Model must be a MaseGraph or a path to a trt file. Have you run the quantization pass?")
@@ -188,47 +187,23 @@ class QuantizationAnalysis():
 
         return preds_tensor, latency
     
-    def infer_onnx(self, trt_context, input_data):
-        bufferH = []
-        bufferH.append(np.ascontiguousarray(input_data))
-        for i in range(self.n_Input, self.num_io):
-            bufferH.append(np.empty(self.context.get_tensor_shape(self.lTensorName[i]), dtype=trt.nptype(self.engine.get_tensor_dtype(self.lTensorName[i]))))
-        bufferD = []
-        for i in range(self.num_io):
-            bufferD.append(cudart.cudaMalloc(bufferH[i].nbytes)[1])
-
-        for i in range(self.n_Input):
-            cudart.cudaMemcpy(bufferD[i], bufferH[i].ctypes.data, bufferH[i].nbytes, cudart.cudaMemcpyKind.cudaMemcpyHostToDevice)
-
-        for i in range(self.num_io):
-            self.context.set_tensor_address(self.lTensorName[i], int(bufferD[i]))
-
+    def infer_onnx(self, ort_inference_session, input_data):
         # Create CUDA events for timing GPU operations
         start = torch.cuda.Event(enable_timing=True)
         end = torch.cuda.Event(enable_timing=True)
-        
-        # INFERENCE!
-        start.record()
-        self.context.execute_async_v3(0)
-        end.record()
 
+        start.record()
+        output_data = ort_inference_session.run(None, {'input': input_data.numpy()})
+        end.record()
+        
         # Synchronize to ensure all GPU operations are finished
         torch.cuda.synchronize()
 
         # Calculate latency between start and end events
         latency = start.elapsed_time(end)
 
-        # Copying data from device to host and collecting output tensors
-        output_data = [
-            bufferH[i] for i in range(self.n_Input, self.num_io)
-            for _ in [cudart.cudaMemcpy(bufferH[i].ctypes.data, bufferD[i], bufferH[i].nbytes, cudart.cudaMemcpyKind.cudaMemcpyDeviceToHost)]
-        ]
-
         # Flatten output if it consists of only one item
         output_data = output_data[0] if len(output_data) == 1 else output_data
-
-        for b in bufferD:
-            cudart.cudaFree(b)
 
         # Convert the raw scores from numpy array to PyTorch tensor
         preds_tensor = torch.tensor(output_data, device='cpu', dtype=torch.float32)
@@ -236,7 +211,7 @@ class QuantizationAnalysis():
         return preds_tensor, latency
     
     def evaluate(self):
-        self.logger.info("Starting TensorRT transformation analysis")
+        self.logger.info("Starting transformation analysis")
 
         num_GPU_warmup_batches = self.config['num_GPU_warmup_batches']
 

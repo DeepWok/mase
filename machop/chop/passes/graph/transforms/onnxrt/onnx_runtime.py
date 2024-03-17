@@ -145,6 +145,7 @@ class ONNXRuntime:
             if self.config["accelerator"] == "cuda"
             else "CPUExecutionProvider"
         )
+        
 
     def test_performances(self, model_type, graph=None, model_path=None):
         from ..tensorrt.quantize.analysis import tensorrt_analysis_pass
@@ -154,10 +155,8 @@ class ONNXRuntime:
             graph, results = tensorrt_analysis_pass(graph, self.config)
 
         elif model_type == "onnx":
-            self.config["execution_provider"] = self._get_execution_provider
+            self.config["execution_provider"] = self._get_execution_provider()
             model, results = tensorrt_analysis_pass(model_path, self.config)
-
-            ...
 
         else:
             raise Exception(
