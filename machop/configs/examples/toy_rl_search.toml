@@ -32,7 +32,7 @@ algorithm = 'ppo'
 env = 'mixed_precision_hi_lo'
 num_episodes = 1 
 device = 'cuda'
-total_timesteps = 2000
+total_timesteps = 100000
 save_name = 'tmp_rl'
 
 [search.strategy.setup]
