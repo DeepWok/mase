@@ -3,15 +3,14 @@ model = "vgg7"
 dataset = "cifar10"
 task = "cls"
 
-#max_epochs = 300
-batch_size = 512
-#learning_rate = 1e-2
+max_epochs = 300
+batch_size = 1024
+learning_rate = 1e-2
 accelerator = "cpu"
-project = "rl_search"
+project = "tpe_search"
 seed = 42
 log_every_n_steps = 5
 load_name = "/mnt/c/workplace/projects/ADLS/mase/txl_workplace/test-accu-0.9332.ckpt"
-#load_name = "/mnt/d/project_files/Python/mase/txl_workplace/test-accu-0.9332.ckpt"
 load_type = "pl"
 
 [passes.quantize]
@@ -56,13 +55,19 @@ weight_frac_width = ["NA"]
 bias_width = [6, 8, 10, 12]
 bias_frac_width = ["NA"]
 
-#[search.search_space.seed.relu.config]
+#[search.search_space.seed.seq_blocks_2.config]
+## if search.search_space.setup.by = "name", this seed will be used to quantize the mase graph node with name "seq_blocks_2"
 #name = ["integer"]
-#data_in_width = [2, 3, 4, 5, 6, 7, 8]
-#data_in_frac_width = ["NA"] # "NA" means data_in_frac_width = data_in_width // 2
+#data_in_width = [4, 8]
+#data_in_frac_width = ["NA"]
+#weight_width = [2, 4, 8]
+#weight_frac_width = ["NA"]
+#bias_width = [2, 4, 8]
+#bias_frac_width = ["NA"]
 
 [search.strategy]
-name = "rl"
+name = "optuna"
+#name = "bf"
 eval_mode = true
 
 [search.strategy.sw_runner.basic_evaluation]
@@ -73,13 +78,16 @@ num_samples = 1024
 compare_to = 32 # compare to FP32
 
 [search.strategy.setup]
-device = "cpu"
-total_trials = 300
-algorithm = "a2c"
-env = "MixedPrecisionEnv"
+n_jobs = 1
+n_trials = 300
+timeout = 20000
+sampler = "tpe"
+ sum_scaled_metrics = true # single objective
+ direction = "maximize"
+#sum_scaled_metrics = false # multi objective
 
 [search.strategy.metrics]
-accuracy.scale = 1
+accuracy.scale = 1.0
+accuracy.direction = "maximize"
 average_bitwidth.scale = -0.1
-average_bitwidth.lower_bound = 6
-average_bitwidth.upper_bound = 12
+average_bitwidth.direction = "maximize"

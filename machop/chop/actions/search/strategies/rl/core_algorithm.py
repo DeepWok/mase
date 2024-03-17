@@ -92,20 +92,21 @@ class SearchStrategyRL(SearchStrategyBase):
 
         # sum the metrics with configured scales
         scaled_metrics = {}
-        for metric_name in self.metric_names:
-            scaled_metrics[metric_name] = (
-                    self.config["metrics"][metric_name]["scale"] * metrics[metric_name]
-            )
-        if sum(scaled_metrics.values()) > self.best_performance:
-            self.best_performance = sum(scaled_metrics.values())
+        upper_bound = self.config["metrics"]['average_bitwidth']["upper_bound"]
+        lower_bound = self.config["metrics"]['average_bitwidth']["lower_bound"]
+        performance = (metrics['average_bitwidth'] * self.config["metrics"]['average_bitwidth']["scale"]
+                       + metrics['accuracy'] * self.config["metrics"]['accuracy']["scale"])
+
+        if performance > self.best_performance:
+            self.best_performance = performance
             self.best_sample = sampled_config
             self.layers, self.layer_types = get_layers_of_graph(model)
-            print(f'highest reward: {sum(scaled_metrics.values()):.4f}')
+            print(f'highest reward: {performance:.4f}')
             for metric_name in self.metric_names:
                 print(f'{metric_name}: {metrics[metric_name]:.4f}')
                 self.metric_values[metric_name] = metrics[metric_name]
 
-        return sum(scaled_metrics.values())
+        return performance
 
     def search(self, search_space):
         self.search_space = search_space
