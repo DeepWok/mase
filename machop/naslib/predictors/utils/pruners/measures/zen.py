@@ -53,12 +53,12 @@ def compute_zen_score(net, inputs, targets, loss_fn=None, split_data=1,
                 output = net.forward(input)
                 mixup_output = net.forward(mixup_input)
 
-            # 在这里继续处理 output 和 mixup_output
-
-
-            nas_score = torch.sum(torch.abs(output - mixup_output), dim=[1, 2, 3])
-            nas_score = torch.mean(nas_score)
-
+            try:
+                nas_score = torch.sum(torch.abs(output - mixup_output), dim=[1, 2, 3])
+                nas_score = torch.mean(nas_score)
+            except IndexError:
+                nas_score = torch.sum(torch.abs(output - mixup_output))
+                nas_score = torch.mean(nas_score)
             # compute BN scaling
             log_bn_scaling_factor = 0.0
             for m in net.modules():

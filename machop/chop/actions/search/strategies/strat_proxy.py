@@ -116,7 +116,7 @@ class SearchStrategyDaddyProxy(SearchStrategyBase):
         small_trainloader = DataLoader(small_data)
               
         small_proxy_scores = find_measures(model,dataloader, dataload_info, device , loss_function, measure_names)
-
+        measure_names = ['epe_nas', 'fisher', 'grad_norm', 'grasp', 'jacov', 'l2_norm', 'nwot', 'plain', 'snip', 'synflow', 'zen', 'params', 'flops']
         measure_values_list = [small_proxy_scores[s] for s in measure_names]
         measure_values_tensor = torch.tensor(measure_values_list, dtype = torch.float)
 
@@ -126,9 +126,7 @@ class SearchStrategyDaddyProxy(SearchStrategyBase):
             prediction = proxy_model(measure_values_tensor)
 
         prediction_numpy = prediction.numpy()
-        print("Prediction here: ")
-        print(prediction_numpy)
-        print(metrics)
+
         
         return metrics
 
