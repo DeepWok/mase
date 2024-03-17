@@ -76,12 +76,38 @@ module fixed_layer_norm #(
     parameter VAR_BITS = SUM_OF_SQUARES_BITS;
     parameter VAR_FRAC_WIDTH = SUM_SQUARED_FRAC_WIDTH + $clog2(IN_DEPTH); //sv720: division by depth -> less integer bits
 
-    parameter EPSILON = 1; 
+    parameter EPSILON = 1;
 
+    parameter NUM_STATE_BITS = 32;
+
+    typedef enum logic [NUM_STATE_BITS-1:0] {
+        RST_STATE       = '0,
+        MEAN_SUM_STATE  = 1, 
+        MEAN_DIV_STATE  = 2, 
+        SUB_STATE       = 3,
+        SQUARING_STATE  = 4,
+        SUM_SQU_STATE   = 5,
+        VAR_DIV_STATE   = 6,  //if right shift -> drop this
+        NORM_DIFF_STATE = 7, 
+        WAITING_FOR_SQRT    = 8,
+        NORM_DIV_STATE  = 9, 
+        NORM_MULT_STATE = 10, 
+        NORM_ADD_STATE  = 11,
+
+        READY_STATE = 12, 
+        UNASSIGNED  = 13,
+        DONE        = '1
+    } state_t;
+
+    state_t                     state_b; 
+    state_t                     state_r;
     logic rst = ~reset_n;
 
     logic signed  [IN_WIDTH-1:0]  data_r     [IN_DEPTH-1:0];
     logic signed  [IN_WIDTH-1:0]  data_b     [IN_DEPTH-1:0]; 
+
+    logic signed  [IN_WIDTH-1:0]  data_minus_mean_r     [IN_DEPTH-1:0];
+    logic signed  [IN_WIDTH-1:0]  data_minus_mean_b     [IN_DEPTH-1:0]; 
 
     logic signed  [IN_WIDTH-1:0]  beta_r    [IN_DEPTH-1:0];
     logic signed  [IN_WIDTH-1:0]  gamma_r   [IN_DEPTH-1:0];
@@ -90,24 +116,42 @@ module fixed_layer_norm #(
     logic signed  [IN_WIDTH-1:0]  gamma_b   [IN_DEPTH-1:0];
 
 
-    logic signed    [SUM_WIDTH - 1:0]   sum;
-    logic signed    [SUM_WIDTH - 1:0]   mean;
+    logic signed    [SUM_WIDTH - 1:0]   sum_b;
+    logic signed    [SUM_WIDTH - 1:0]   sum_r;
+
+    logic signed    [SUM_WIDTH - 1:0]   mean_b;
+    logic signed    [SUM_WIDTH - 1:0]   mean_r;
+
     logic signed    [SUM_WIDTH - 1:0]   data_in_zero_padded [IN_DEPTH];
 
     logic signed    [SUM_WIDTH - 1:0]             data_in_minus_mean          [IN_DEPTH-1:0];
     logic           [SUM_SQUARED_BITS - 1:0]      data_in_minus_mean_squared  [IN_DEPTH-1:0];
 
-    logic           [SUM_OF_SQUARES_BITS - 1:0]         sum_of_squared_differences; 
+    logic           [SUM_OF_SQUARES_BITS - 1:0]         sum_of_squared_differences_b; 
+    logic           [SUM_OF_SQUARES_BITS - 1:0]         sum_of_squared_differences_r;
+     
+    logic           [SUM_OF_SQUARES_BITS - 1:0]         sum_of_squared_differences_tmp; 
     logic           [SUM_OF_SQUARES_BITS_PADDED - 1:0]  sum_of_squared_differences_padded;
     logic           [VAR_BITS - 1:0]                    variance;
-    logic           [VAR_BITS_PADDED - 1:0]             variance_padded;
+    logic           [VAR_BITS_PADDED - 1:0]             variance_padded_b;
+    logic           [VAR_BITS_PADDED - 1:0]             variance_padded_r;
     logic           [IN_WIDTH - 1:0]                    variance_in_width;
-    logic           [IN_WIDTH - 1:0]                    standard_deviation;
-
-    
+    logic           [IN_WIDTH - 1:0]                    sqrt_out;
+    logic           [IN_WIDTH - 1:0]                    standard_deviation_b;
+    logic           [IN_WIDTH - 1:0]                    standard_deviation_r;
 
     logic signed  [IN_WIDTH-1:0]  normalised_data_b    [IN_DEPTH-1:0];
     logic signed  [IN_WIDTH-1:0]  normalised_data_r    [IN_DEPTH-1:0];
+
+    logic signed  [IN_WIDTH-1:0]  data_minus_mean_div_by_std_b    [IN_DEPTH-1:0];
+    logic signed  [IN_WIDTH-1:0]  data_minus_mean_div_by_std_r    [IN_DEPTH-1:0];
+
+    logic signed  [IN_WIDTH-1:0]  data_minus_mean_div_by_std_times_gamma_b    [IN_DEPTH-1:0];
+    logic signed  [IN_WIDTH-1:0]  data_minus_mean_div_by_std_times_gamma_r    [IN_DEPTH-1:0];
+
+    
+
+    
 
     logic sqrt_v_in_ready; //TODO: use this
     logic sqrt_v_out_valid; //TODO: use this
@@ -122,18 +166,34 @@ module fixed_layer_norm #(
 
     always_comb
     begin
+        state_b             = state_r; 
 
-        valid_in_sqrt_b     = data_in_0_valid; 
-        valid_out_b         = sqrt_v_out_valid;
+        valid_in_sqrt_b     = '0; 
+        valid_out_b         = '0;
 
         normalised_data_b   = normalised_data_r;
 
-        data_b    = data_r;
-        beta_b    = beta_r; 
-        gamma_b   = gamma_r;  
+        data_b  = data_r;
+        beta_b  = beta_r; 
+        gamma_b = gamma_r;
+        sum_b   = sum_r;  
+        mean_b  = mean_r;
+
+        variance_padded_b               = variance_padded_r;
+
+        sum_of_squared_differences_b    = sum_of_squared_differences_r;
+        sum_of_squared_differences_tmp  = '0;
+
+        data_minus_mean_b   = data_minus_mean_r;
+
+        standard_deviation_b = standard_deviation_r;
+        data_minus_mean_div_by_std_b = data_minus_mean_div_by_std_r;
+
+        data_minus_mean_div_by_std_times_gamma_b = data_minus_mean_div_by_std_times_gamma_r;
 
         if (data_in_0_valid)
         begin 
+            state_b   = MEAN_SUM_STATE;
             data_b    = data_in_0;
             beta_b    = beta_in;
             gamma_b   = gamma_in;
@@ -146,36 +206,120 @@ module fixed_layer_norm #(
             data_in_zero_padded[i][SUM_WIDTH-1:SUM_EXTRA_FRAC_WIDTH+IN_WIDTH] = {{SUM_NUM_MSb_PADDING_BITS}{data_r[i][IN_WIDTH-1]}}; //sv720: sign extention
         end
 
-        // Sum over the widened inputs.
-        sum = '0;
-        // TODO: Take into account PARTS_PER_NORM
-        for (int i = 0; i < IN_DEPTH; i++) begin
-            sum += data_in_zero_padded[i];
-        end
+        sum_of_squared_differences_padded = (sum_of_squared_differences_r << $clog2(IN_DEPTH) );
 
-        mean = sum / IN_DEPTH;
-
-        sum_of_squared_differences = '0;
-
-        for (int i = 0; i < IN_DEPTH; i++) begin
-            data_in_minus_mean[i] =         data_in_zero_padded[i] - mean;
-            data_in_minus_mean_squared[i] = data_in_minus_mean[i]**2;
-            sum_of_squared_differences +=   data_in_minus_mean_squared[i];
-        end
-
-        sum_of_squared_differences_padded = (sum_of_squared_differences << $clog2(IN_DEPTH) );
-
-        variance_padded = sum_of_squared_differences_padded / IN_DEPTH;
-
-        variance = variance_padded[VAR_BITS-1:0];
+        variance = variance_padded_r[VAR_BITS-1:0];
         variance_in_width = variance[ IN_WIDTH + VAR_FRAC_WIDTH - IN_FRAC_WIDTH -1 : VAR_FRAC_WIDTH - IN_FRAC_WIDTH ];
 
-
-        for (int i=0; i<IN_DEPTH; i++)
-        begin
-            normalised_data_b[i] = (data_r[i] - mean)/(standard_deviation + EPSILON)*gamma_r[i] + beta_r[i];
+        if (sqrt_v_out_valid)
+        begin 
+            standard_deviation_b = sqrt_out; 
         end
-    
+
+
+        if (state_r == MEAN_SUM_STATE)
+        begin
+            // Sum over the widened inputs.
+            sum_b = '0;
+            // TODO: Take into account PARTS_PER_NORM
+            for (int i = 0; i < IN_DEPTH; i++) begin
+                sum_b += data_in_zero_padded[i];
+            end
+            state_b = MEAN_DIV_STATE;
+        end
+        else if (state_r == MEAN_DIV_STATE)
+        begin 
+            mean_b  = sum_r / IN_DEPTH;
+            state_b = SUB_STATE;
+        end
+        else if (state_r == SUB_STATE)
+        begin
+            for (int i = 0; i < IN_DEPTH; i++) 
+            begin
+                data_in_minus_mean[i] =         data_in_zero_padded[i] - mean_r;
+            end
+            state_b = SQUARING_STATE;
+        end
+        else if (state_r == SQUARING_STATE)
+        begin
+            for (int i = 0; i < IN_DEPTH; i++) begin
+                // data_in_minus_mean[i] =         data_in_zero_padded[i] - mean_r;
+                data_in_minus_mean_squared[i] = data_in_minus_mean[i]**2;
+            end
+            state_b = SUM_SQU_STATE; 
+        end
+        else if (state_r == SUM_SQU_STATE)
+        begin
+            sum_of_squared_differences_tmp = '0;
+            for (int i = 0; i < IN_DEPTH; i++) begin
+                sum_of_squared_differences_tmp +=   data_in_minus_mean_squared[i];
+            end
+            sum_of_squared_differences_b = sum_of_squared_differences_tmp;
+            state_b = VAR_DIV_STATE;
+        end
+        else if (state_r == VAR_DIV_STATE)
+        begin
+            variance_padded_b = sum_of_squared_differences_padded / IN_DEPTH;
+            state_b = NORM_DIFF_STATE;
+            valid_in_sqrt_b = '1;
+        end
+        else if (state_r == NORM_DIFF_STATE)
+        begin 
+            for (int i=0; i<IN_DEPTH; i++)
+            begin
+                data_minus_mean_b[i] = (data_r[i] - mean_r[ IN_WIDTH + SUM_FRAC_WIDTH - IN_FRAC_WIDTH - 1:SUM_FRAC_WIDTH - IN_FRAC_WIDTH ]);
+            end
+
+            if (sqrt_v_out_valid)
+            begin
+                state_b = NORM_DIV_STATE;
+            end
+            else
+            begin 
+                state_b = WAITING_FOR_SQRT;
+            end
+        end
+        else if (state_r == WAITING_FOR_SQRT)
+        begin
+             if (sqrt_v_out_valid)
+            begin
+                state_b = NORM_DIV_STATE;
+            end
+            else
+            begin 
+                state_b = WAITING_FOR_SQRT;
+            end
+        end
+        else if (state_r == NORM_DIV_STATE)
+        begin 
+            for (int i=0; i<IN_DEPTH; i++)
+            begin
+                data_minus_mean_div_by_std_b[i] = data_minus_mean_r[i]/(standard_deviation_r + EPSILON);     
+            end
+            state_b = NORM_MULT_STATE;
+        end
+        else if (state_r == NORM_MULT_STATE)
+        begin 
+            for (int i=0; i<IN_DEPTH; i++)
+            begin
+                data_minus_mean_div_by_std_times_gamma_b[i] = data_minus_mean_div_by_std_r[i]*gamma_r[i];
+            end
+            state_b = NORM_ADD_STATE;
+        end
+        else if (state_r == NORM_ADD_STATE)
+        begin 
+            for (int i=0; i<IN_DEPTH; i++)
+            begin
+                normalised_data_b[i] = data_minus_mean_div_by_std_times_gamma_r[i] + beta_r[i];
+            end
+            state_b = DONE;  
+            valid_out_b = 1;   
+        end
+        else if (state_r == DONE)
+        begin
+            state_b = READY_STATE;
+
+        end
     end
 
     sqrt #(
@@ -189,7 +333,7 @@ module fixed_layer_norm #(
         .v_in_valid(valid_in_sqrt_r), //TODO: set meaningful value
         .v_in_ready(sqrt_v_in_ready),
 
-        .v_out(standard_deviation),
+        .v_out(sqrt_out),
         .v_out_valid(sqrt_v_out_valid),
         .v_out_ready('1) //TODO: assign this and check in module
     );
@@ -206,12 +350,21 @@ module fixed_layer_norm #(
 
     always_ff @(posedge clk) //TODO: add asynchronous reset behaviour
     begin
-        data_r          <= data_b;
-        valid_out_r     <= valid_out_b;
-        valid_in_sqrt_r <= valid_in_sqrt_b;
-        beta_r          <= beta_b;
-        gamma_r         <= gamma_b;
-        normalised_data_r <= normalised_data_b;
+        state_r                                     <= state_b;
+        data_r                                      <= data_b;
+        valid_out_r                                 <= valid_out_b;
+        valid_in_sqrt_r                             <= valid_in_sqrt_b;
+        beta_r                                      <= beta_b;
+        gamma_r                                     <= gamma_b;
+        normalised_data_r                           <= normalised_data_b;
+        sum_r                                       <= sum_b; 
+        mean_r                                      <= mean_b;
+        sum_of_squared_differences_r                <= sum_of_squared_differences_b;
+        variance_padded_r                           <= variance_padded_b;
+        data_minus_mean_r                           <= data_minus_mean_b; 
+        standard_deviation_r                        <= standard_deviation_b;
+        data_minus_mean_div_by_std_r                <= data_minus_mean_div_by_std_b;   
+        data_minus_mean_div_by_std_times_gamma_r    <= data_minus_mean_div_by_std_times_gamma_b;
     end
 
   
