@@ -87,12 +87,11 @@ def proxy(config:dict | PathLike):
         
         train_accuries.append(train_acc_parent)
         val_accuries.append(val_acc_parent)
-
+        print("debugging...")
 
         for zc_proxy in proxy_config:
             zc_predictor = ZeroCost(method_type=zc_proxy)
             score = zc_predictor.query(graph=graph, dataloader=train_loader)
-            # print(score)
             scores[zc_proxy].append(score)
     # np.save(r'/home/ansonhon/mase_project/nas_results/scores_test3',scores)
     # np.save(r'/home/ansonhon/mase_project/nas_results/train_acc_test3',train_accuries)

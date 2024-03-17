@@ -122,22 +122,20 @@ class SearchStrategyDaddyProxy(SearchStrategyBase):
         ### Make prediction
         with torch.no_grad():
             prediction = proxy_model(measure_values_tensor)
-
         prediction_numpy = prediction.numpy()
-
         metrics["accuracy"]=prediction_numpy
         return metrics
 
-    # def compute_hardware_metrics(self, model, sampled_config, is_eval_mode: bool):
-    #     metrics = {}
-    #     if is_eval_mode:
-    #         with torch.no_grad():
-    #             for runner in self.hw_runner:
-    #                 metrics |= runner(self.data_module, model, sampled_config)
-    #     else:
-    #         for runner in self.hw_runner:
-    #             metrics |= runner(self.data_module, model, sampled_config)
-    #     return metrics
+    def compute_hardware_metrics(self, model, sampled_config, is_eval_mode: bool):
+        metrics = {}
+        if is_eval_mode:
+            with torch.no_grad():
+                for runner in self.hw_runner:
+                    metrics |= runner(self.data_module, model, sampled_config)
+        else:
+            for runner in self.hw_runner:
+                metrics |= runner(self.data_module, model, sampled_config)
+        return metrics
 
     def objective(self, trial: optuna.trial.Trial, search_space):
         sampled_indexes = {}
@@ -157,10 +155,10 @@ class SearchStrategyDaddyProxy(SearchStrategyBase):
         software_metrics = self.compute_software_metrics(
             model #, sampled_config, is_eval_mode
         )
-        # hardware_metrics = self.compute_hardware_metrics(
-        #     model, sampled_config, is_eval_mode
-        # )
-        metrics = software_metrics #| hardware_metrics
+        hardware_metrics = self.compute_hardware_metrics(
+            model, sampled_config, is_eval_mode
+        )
+        metrics = software_metrics | hardware_metrics
 
         scaled_metrics = {}
         for metric_name in self.metric_names:
@@ -169,7 +167,7 @@ class SearchStrategyDaddyProxy(SearchStrategyBase):
             )
 
         trial.set_user_attr("software_metrics", software_metrics)
-        # trial.set_user_attr("hardware_metrics", hardware_metrics)
+        trial.set_user_attr("hardware_metrics", hardware_metrics)
         trial.set_user_attr("scaled_metrics", scaled_metrics)
         trial.set_user_attr("sampled_config", sampled_config)
 

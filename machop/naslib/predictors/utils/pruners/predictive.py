@@ -88,7 +88,6 @@ def find_measures_arrays(
     while not done:
         try:
             for measure_name in measure_names:
-                print(measure_name)
 
                 if measure_name not in measure_values:
                     val = measures.calc_measure(

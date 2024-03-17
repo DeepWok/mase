@@ -33,9 +33,13 @@ class ZeroCost(Predictor):
                 dataloader=dataloader,
                 dataload_info=(self.dataload, self.num_imgs_or_batches, n_classes),
                 device=self.device,
-                loss_fn=loss_fn,
+                loss_function=loss_fn,
                 measure_names=[self.method_type],
             )
+        if isinstance(score, dict):
+            score = [float(value) for value in score.values()]
+            # print(score[0])
+            score = score[0]
 
         if math.isnan(score) or math.isinf(score):
             score = -1e8
