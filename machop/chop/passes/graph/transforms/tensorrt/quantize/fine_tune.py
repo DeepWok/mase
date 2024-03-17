@@ -83,7 +83,7 @@ class FineTuning:
         except KeyError:
             t_max = (len(self.config["data_module"].train_dataloader()) * self.config("max_epochs", 20) * 0.1)
 
-        ckpt_save_path = prepare_save_path(method="ckpts/fine_tuning_ckpts", suffix="ckpt")
+        ckpt_save_path = prepare_save_path(method="ckpts/fine_tuning", suffix="ckpt")
 
         scheduler_args = {
             "t_max": t_max, 

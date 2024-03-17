@@ -44,6 +44,7 @@ def transform(
     load_type: str = None,
     accelerator: str = "auto",
 ):
+    import pdb; pdb.set_trace()
     accelerator = parse_accelerator(accelerator)
     model = pre_transform_load(load_name=load_name, load_type=load_type, model=model)
     model.to(accelerator)
@@ -115,7 +116,7 @@ def transform(
                         graph, _ = PASSES["tensorrt_calibrate"](
                             graph, pass_args=pass_config
                         )
-                        
+
                         PASSES["summarize_quantization"](
                             ori_graph, graph, save_dir=pass_save_dir
                         )
