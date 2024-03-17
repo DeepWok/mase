@@ -179,6 +179,6 @@ class GraphSearchSpaceMixedPrecisionPTQ(SearchSpaceBase):
         return action_space_options
 
     def _extract_layer_parameters(self, layer_identifier):
-        """Extracts parameters for a given layer, excluding 'name'."""
+        """Extracts parameters for a given layer identifier."""
         return {k.split('/')[-1]: v for k, v in self.choices_flattened.items() 
                 if k.startswith(layer_identifier)}

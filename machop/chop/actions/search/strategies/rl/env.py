@@ -2,6 +2,7 @@ import gymnasium as gym
 import copy
 import torch
 import numpy as np
+import math
 from gymnasium.spaces import Box, Dict, Discrete, MultiBinary, MultiDiscrete
 from stable_baselines3.common.callbacks import BaseCallback
 
@@ -143,8 +144,11 @@ class MixedPrecisionEnv(gym.Env):
             self.observation_space[key] = Discrete(len(choices))
 
     def _define_action_space(self):
-        """Defines the action space based on the search space."""
-        self.action_space = MultiDiscrete(self.search_space.get_action_space_options())
+        # Extract the number of options for each key
+        num_options_per_key = [len(options) for options in self.search_space.choices_flattened.values()]
+    
+        # Create a MultiDiscrete space with these options
+        self.action_space = MultiDiscrete(num_options_per_key)
     
     def reset(self, *, seed=None, options=None):
         """Resets the episode and returns the initial observation of the new one."""
@@ -183,7 +187,8 @@ class MixedPrecisionEnv(gym.Env):
         truncated = self.episode_len >= self.episode_max_len #TODO: not sure what should this be used for
     
         # Optional additional info about the step
-        info = {"loss": software_metrics['loss'], "average_bitwidth": hardware_metrics['average_bitwidth']}
+        info = {"loss": software_metrics['loss'], "average_bitwidth": hardware_metrics['average_bitwidth'], "accuracy": software_metrics['accuracy'], "memory density": hardware_metrics['memory_density']}
+        print(info)
 
         return self.cur_obs, reward, done, truncated, info
 
@@ -256,13 +261,13 @@ class MixedPrecisionEnvHiLo(gym.Env):
         self.episode_len = 0
         self.cur_obs = self.observation_space.sample()
         # Reset model configuration to the lowest precision settings
-        self.model_config = {key: 0 for key in self.search_space.choices_flattened.keys()}
+        #self.model_config = {key: 0 for key in self.search_space.choices_flattened.keys()}
 
         # Another option is init on median values: 
         # Initialize model configuration to the median precision setting for each parameter
-        #self.model_config = {
-        #    key: choices[math.floor(len(choices) / 2)] for key, choices in self.search_space.choices_flattened.items()
-        #}
+        self.model_config = {
+            key: choices[math.floor(len(choices) / 2)] for key, choices in self.search_space.choices_flattened.items()
+        }
 
         return self.cur_obs, {}
 
@@ -291,7 +296,8 @@ class MixedPrecisionEnvHiLo(gym.Env):
         done = self.episode_len >= self.episode_max_len
         truncated = self.episode_len >= self.episode_max_len
     
-        info = {"loss": software_metrics['loss'], "average_bitwidth": hardware_metrics['average_bitwidth']}
+        info = {"loss": software_metrics['loss'], "average_bitwidth": hardware_metrics['average_bitwidth'], "accuracy": software_metrics['accuracy'], "memory density": hardware_metrics['memory_density']}
+        print(info)
 
         return self.cur_obs, reward, done, truncated, info
 

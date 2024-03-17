@@ -22,7 +22,7 @@ class StrategyRL(SearchStrategyBase):
         self.save_name = self.config["save_name"]
         self.env = env_map[self.config["env"]]
         self.device = self.config["device"]
-        self.episode_max_len = 100 # TODO: Try and change this
+        self.episode_max_len = 10 # TODO: Try and change this
     
     def search(self, search_space):
         env = self.env(config=self.config, search_space=search_space, sw_runner=self.sw_runner, hw_runner=self.hw_runner, data_module=self.data_module, episode_max_len=self.episode_max_len)
@@ -32,7 +32,7 @@ class StrategyRL(SearchStrategyBase):
             env,
             best_model_save_path="./logs/best_model",
             log_path="./logs/results",
-            eval_freq=500,
+            eval_freq=20,
         )
         callback = CallbackList([checkpoint_callback, eval_callback])
 
@@ -45,7 +45,7 @@ class StrategyRL(SearchStrategyBase):
             verbose=1,
             device=self.device,
             tensorboard_log="./logs/",
-            n_steps=2048, # TODO: Try and change this
+            n_steps=4, # TODO: Try and change this
         )
 
         vec_env = model.get_env()
