@@ -82,7 +82,7 @@ class VerificationCase:
 
             x = self.get_dut_input(i)
             
-            for k in x :
+            for k in reversed(x) :
                 if abs(k) > self.threshold and count_high < self.high_slots :
                     high_mat.append(k)
                     low_mat.append(0)
@@ -91,6 +91,8 @@ class VerificationCase:
                     high_mat.append(0)
                     low_mat.append(k)
                   
+            low_mat.reverse()
+            high_mat.reverse()
             low_out.append(low_mat)
             high_out.append(high_mat)
 
