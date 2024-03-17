@@ -15,6 +15,7 @@ vagrant/.vagrant/
 /mase_output/
 .devcontainer/
 *.ckpt
+!/docs/tutorials/tensorrt/checkpoints/*.ckpt
 *.pkl
 /machop/examples/**/cache/
 /machop/examples/**/ckpts/
