@@ -11,7 +11,6 @@ project = "rl_search"
 seed = 42
 log_every_n_steps = 5
 load_name = "/mnt/c/workplace/projects/ADLS/mase/txl_workplace/test-accu-0.9332.ckpt"
-#load_name = "/mnt/d/project_files/Python/mase/txl_workplace/test-accu-0.9332.ckpt"
 load_type = "pl"
 
 [passes.quantize]
@@ -79,7 +78,7 @@ algorithm = "a2c"
 env = "MixedPrecisionEnv"
 
 [search.strategy.metrics]
-accuracy.scale = 1
-average_bitwidth.scale = -0.1
+accuracy.scale = 0.7
+average_bitwidth.scale = 0.3
 average_bitwidth.lower_bound = 6
 average_bitwidth.upper_bound = 12

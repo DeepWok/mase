@@ -92,8 +92,4 @@ class MixedPrecisionEnv(gym.Env):
             reward = self.run_trial(self.sample)
         obs = self.obs_list[self.state].copy()
         obs = np.append(obs, choices[action]).astype(np.float32)
-        # TODO delete later
-        if reward != 0:
-            with open('./txl_workplace/log.txt', 'a') as f:
-                f.write(f'{reward}\n')
         return obs, reward, terminated, False, {}

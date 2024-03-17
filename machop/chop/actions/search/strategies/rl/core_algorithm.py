@@ -6,7 +6,7 @@ from datetime import datetime
 
 
 from chop.actions.search.strategies.base import SearchStrategyBase
-from stable_baselines3 import A2C, PPO, DDPG, HER
+from stable_baselines3 import A2C, PPO, DDPG, SAC
 from stable_baselines3.common.callbacks import (
     CallbackList,
     CheckpointCallback,
@@ -20,8 +20,8 @@ logger = logging.getLogger(__name__)
 algorithm_map = {
     "ppo": PPO,
     "a2c": A2C,
-    "her": HER,
     "ddpg": DDPG,
+    "sac": SAC,
 }
 env_map = {
     "MixedPrecisionEnv": MixedPrecisionEnv
@@ -34,7 +34,7 @@ class SearchStrategyRL(SearchStrategyBase):
         setup = self.config['setup']
         self.device = setup.get('device', 'cpu')
         self.total_trials = setup["total_trials"]
-        algorithm_name = setup.get('algorithm', 'ppo')
+        algorithm_name = setup.get('algorithm', 'a2c')
         env_name = setup.get('env', 'MixedPrecisionEnv')
         if algorithm_name not in algorithm_map:
             raise ValueError(f"Unsupported algorithm name: {algorithm_name}")
@@ -92,10 +92,13 @@ class SearchStrategyRL(SearchStrategyBase):
 
         # sum the metrics with configured scales
         scaled_metrics = {}
-        upper_bound = self.config["metrics"]['average_bitwidth']["upper_bound"]
-        lower_bound = self.config["metrics"]['average_bitwidth']["lower_bound"]
-        performance = (metrics['average_bitwidth'] * self.config["metrics"]['average_bitwidth']["scale"]
-                       + metrics['accuracy'] * self.config["metrics"]['accuracy']["scale"])
+        for metric_name in self.metric_names:
+            # default range is [0,1]
+            upper_bound = self.config["metrics"][metric_name].get('upper_bound', 1)
+            lower_bound = self.config["metrics"][metric_name].get('lower_bound', 0)
+            unit_metric = max(upper_bound - max(lower_bound, self.config["metrics"][metric_name]["scale"]), 0) / (upper_bound - lower_bound)
+            scaled_metrics[metric_name] = unit_metric * metrics[metric_name]
+        performance = sum(scaled_metrics.values())
 
         if performance > self.best_performance:
             self.best_performance = performance
@@ -135,7 +138,6 @@ class SearchStrategyRL(SearchStrategyBase):
             callback=callback,
         )
 
-        # TODO report best performed sample
         print("Best performed sample:")
         print(self.best_sample)
         plot_config(self.best_sample, self.layers, self.layer_types, self.save_dir, self.metric_values)
