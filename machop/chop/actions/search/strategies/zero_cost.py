@@ -151,9 +151,6 @@ class SearchStrategyZeroCost(SearchStrategyBase):
         return model_results
 
     def search(self, search_space) -> optuna.study.Study:
-        # import pdb
-        # pdb.set_trace()
-
         study_kwargs = {
             "sampler": self.sampler_map(self.config["setup"]["sampler"]),
             "direction": self.config["setup"]["direction"],
