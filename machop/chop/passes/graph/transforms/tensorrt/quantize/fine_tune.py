@@ -79,9 +79,11 @@ class FineTuning:
 
         # Check if user would like to override the number of epochs otherwise default to 10% of original epochs
         try:
-            t_max = self.config["fine_tune"]["epochs"]
+            epochs = self.config["fine_tune"]["epochs"]
         except KeyError:
-            t_max = (len(self.config["data_module"].train_dataloader()) * self.config("max_epochs", 20) * 0.1)
+            epochs = int(self.config.get("max_epochs", 20) * 0.1)
+
+e        t_max = int(len(self.config["data_module"].train_dataloader()) * epochs)
 
         ckpt_save_path = prepare_save_path(method="ckpts/fine_tuning", suffix="ckpt")
 
@@ -91,7 +93,7 @@ class FineTuning:
         }
 
         plt_trainer_args = {
-            "max_epochs": self.config["fine_tune"]["epochs"],
+            "max_epochs": epochs,
             "accelerator": self.config["accelerator"],
         }
 
