@@ -15,17 +15,39 @@ from xgboost import XGBRegressor
 import numpy as np
 
 from .models import ZeroCostLinearModel, ZeroCostNonLinearModel
-from .utils import sample_arch_dataset, evaluate_predictions, eval_zcp, encode_archs
+from .utils import sample_arch_dataset, evaluate_predictions, eval_zcp
 
 logger = logging.getLogger(__name__)
 
 
 DEFAULT_ZERO_COST_PROXY_CONFIG = {
     "config": {
-        "benchmark": "nas-bench-201",
+        "benchmark": "nasbench201",
         "dataset": "cifar10",
-        "how_many_archs": 10,
-        "zc_proxy": "synflow",
+        "num_archs_train": 2000,
+        "num_archs_test": 2000,
+        "calculate_proxy": False,
+        "ensemble_model": "nonlinear",
+        "loss_fn": "mae",
+        "optimizer": "adam",
+        "batch_size": 4,
+        "learning_rate": 0.02,
+        "epochs": 30,
+        "zc_proxies": [
+            "epe_nas",
+            "fisher",
+            "grad_norm",
+            "grasp",
+            "jacov",
+            "l2_norm",
+            "nwot",
+            "plain",
+            "snip",
+            "synflow",
+            "zen",
+            "flops",
+            "params",
+        ],
     }
 }
 
