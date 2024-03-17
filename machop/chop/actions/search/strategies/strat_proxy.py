@@ -119,15 +119,13 @@ class SearchStrategyDaddyProxy(SearchStrategyBase):
         measure_names = ['epe_nas', 'fisher', 'grad_norm', 'grasp', 'jacov', 'l2_norm', 'nwot', 'plain', 'snip', 'synflow', 'zen', 'params', 'flops']
         measure_values_list = [small_proxy_scores[s] for s in measure_names]
         measure_values_tensor = torch.tensor(measure_values_list, dtype = torch.float)
-
-
         ### Make prediction
         with torch.no_grad():
             prediction = proxy_model(measure_values_tensor)
 
         prediction_numpy = prediction.numpy()
 
-        
+        metrics["accuracy"]=prediction_numpy
         return metrics
 
     # def compute_hardware_metrics(self, model, sampled_config, is_eval_mode: bool):
@@ -163,7 +161,7 @@ class SearchStrategyDaddyProxy(SearchStrategyBase):
         #     model, sampled_config, is_eval_mode
         # )
         metrics = software_metrics #| hardware_metrics
-        import pdb;pdb.set_trace()
+
         scaled_metrics = {}
         for metric_name in self.metric_names:
             scaled_metrics[metric_name] = (

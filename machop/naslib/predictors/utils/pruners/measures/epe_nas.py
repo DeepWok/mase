@@ -40,26 +40,24 @@ def get_batch_jacobian(net, x, target, to, device, args=None):
 
 def eval_score_perclass(jacob, labels=None, n_classes=10):
     k = 1e-5
-
+    
     per_class={}
-    for i, label in enumerate(labels):
+    for i, label in enumerate(labels[0]):
         if label in per_class:
             per_class[label] = np.vstack((per_class[label],jacob[i]))
         else:
             per_class[label] = jacob[i]
 
-    print(per_class)
-    pdb.set_trace()
+    
     ind_corr_matrix_score = {}
     for c in per_class.keys():
         s = 0
-        pdb.set_trace()
         # try:
         corrs = np.array(np.corrcoef(per_class[c]))
         if c == 2:
             print(corrs)
             s = np.sum(np.log(abs(corrs)+k))
-            pdb.set_trace()
+            
         
         s = np.sum(np.log(abs(corrs)+k))#/len(corrs)
         if n_classes > 100:
@@ -67,8 +65,6 @@ def eval_score_perclass(jacob, labels=None, n_classes=10):
         # except: # defensive programming
         #     continue
         ind_corr_matrix_score[c] = s
-
-    
     # per class-corr matrix A and B
     score = 0
     ind_corr_matrix_score_keys = ind_corr_matrix_score.keys()
@@ -91,23 +87,57 @@ def eval_score_perclass(jacob, labels=None, n_classes=10):
 
 
 @measure("epe_nas")
+# def compute_epe_score(net, inputs, targets, loss_fn, split_data=1):
+#     jacobs = []
+#     labels = []
+
+#     # try:
+#     jacobs_batch, target, n_classes = get_batch_jacobian(net, inputs, targets, None, None)
+#     jacobs.append(jacobs_batch.reshape(jacobs_batch.size(0), -1).cpu().numpy())
+#     if len(target.shape) == 2: # Hack to handle TNB101 classification tasks
+#         target = torch.argmax(target, dim=1)
+#     labels.append(target.cpu().numpy())
+#     jacobs = np.concatenate(jacobs, axis=0)
+
+#     s = eval_score_perclass(jacobs, labels, n_classes)
+
+#     # except Exception as e:
+#     #     print(e)
+#     #     s = np.nan
+
+#     return s
+
+
+
+
 def compute_epe_score(net, inputs, targets, loss_fn, split_data=1):
-    jacobs = []
-    labels = []
+    net.zero_grad()
 
-    try:
-        jacobs_batch, target, n_classes = get_batch_jacobian(net, inputs, targets, None, None)
-        jacobs.append(jacobs_batch.reshape(jacobs_batch.size(0), -1).cpu().numpy())
-        print("hi che") 
-        pdb.set_trace()
-        if len(target.shape) == 2: # Hack to handle TNB101 classification tasks
-            target = torch.argmax(target, dim=1)
-        labels.append(target.cpu().numpy())
-        # jacobs = np.concatenate(jacobs, axis=0)
-        s = eval_score_perclass(jacobs, labels, n_classes)
+    inputs.requires_grad_(True)
+    outputs = net(inputs)  # 在移动 inputs 到设备之前定义 outputs
+    inputs = inputs.to(outputs.device)  # 将 inputs 张量移动到与 outputs 张量相同的设备上
+    targets = targets.to(outputs.device)
+    loss = loss_fn(outputs, targets)
+    loss.backward()
+    jacobian = inputs.grad.detach().cpu()  # 获取雅可比矩阵，并转换为 CPU 上的张量
+    inputs=inputs.to("cpu")
+    targets=targets.to("cpu")
+    # 计算每个类别的雅可比矩阵的相关系数矩阵
+    corr_matrices = {}
+    unique_labels = torch.unique(targets)
+    for label in unique_labels:
+        label_indices = torch.where(targets == label)[0].to("cpu")  # 将索引移动到与 outputs 张量相同的设备上
+        jacobian_label = jacobian[label_indices]
+        corr_matrix = torch.cov(jacobian_label.t())
+        corr_matrices[label.item()] = corr_matrix
+    
+    # 计算性能评分
+    score = 0
+    for corr_matrix in corr_matrices.values():
+        score += torch.sum(torch.abs(corr_matrix))
+    # score /= len(corr_matrices)  # 取平均值作为最终评分
+    
+    return score.item()
 
-    except Exception as e:
-        print(e)
-        s = np.nan
 
-    return s
+

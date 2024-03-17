@@ -81,5 +81,5 @@ sum_scaled_metrics = false # multi objective
 # loss.direction = "minimize"
 accuracy.scale = 1.0
 accuracy.direction = "maximize"
-average_bitwidth.scale = 0.2
-average_bitwidth.direction = "minimize"
+# average_bitwidth.scale = 0.2
+# average_bitwidth.direction = "minimize"
