@@ -126,6 +126,8 @@ class LayerNormTB(Testbench):
         print(f'================= DEBUG: asserted ready_out ================= \n')
         
         self.data_in_0_driver.load_driver(inputs)
+        self.dut.gamma_in.value = inputs[0]; 
+        self.dut.beta_in.value = inputs[0]; 
         print(f'================= DEBUG: put values on input ports ================= \n')
 
         quant_exp_outputs_model = quantizer(exp_outputs_model)
