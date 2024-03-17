@@ -25,44 +25,79 @@ def create_new_module(
     if mase_op == "linear":
         use_bias = original_module.bias is not None
 
-        if "input" in config:
-            qnn.QuantLinear.set_default_quant_desc_input(QuantDescriptor(calib_method=config["input"]["calibrator"], axis=config["input"]["quantize_axis"]))
-        if "weight" in config:
-            qnn.QuantLinear.set_default_quant_desc_weight(QuantDescriptor(calib_method=config["weight"]["calibrator"], axis=config["weight"]["quantize_axis"]))
-        
-        new_module = qnn.QuantLinear(
-            in_features=original_module.in_features,
-            out_features=original_module.out_features,
-            bias=use_bias
-        )
+        if config.get("name") == "int":      
+            if "input" in config:
+                qnn.QuantLinear.set_default_quant_desc_input(QuantDescriptor(calib_method=config["input"]["calibrator"], axis=config["input"]["quantize_axis"]))
+            if "weight" in config:
+                qnn.QuantLinear.set_default_quant_desc_weight(QuantDescriptor(calib_method=config["weight"]["calibrator"], axis=config["weight"]["quantize_axis"]))
+            
+            new_module = qnn.QuantLinear(
+                in_features=original_module.in_features,
+                out_features=original_module.out_features,
+                bias=use_bias
+            )
 
-        copy_weights(original_module.weight, new_module.weight)
-        if use_bias:
-            copy_weights(original_module.bias, new_module.bias)
+            copy_weights(original_module.weight, new_module.weight)
+            if use_bias:
+                copy_weights(original_module.bias, new_module.bias)
+
+        elif config.get("name") == "fp16":
+            new_module = original_module.half()
     
     elif mase_op in ("conv2d"):
+        if config.get("name") == "int":  
+            use_bias = original_module.bias is not None
+
+            if "input" in config:
+                qnn.QuantConv2d.set_default_quant_desc_input(QuantDescriptor(calib_method=config["input"]["calibrator"], axis=config["input"]["quantize_axis"]))
+            if "weight" in config:
+                qnn.QuantConv2d.set_default_quant_desc_weight(QuantDescriptor(calib_method=config["weight"]["calibrator"], axis=config["weight"]["quantize_axis"]))
+
+            new_module = qnn.QuantConv2d(
+                in_channels=original_module.in_channels,
+                out_channels=original_module.out_channels,
+                kernel_size=original_module.kernel_size,
+                stride=original_module.stride,
+                padding=original_module.padding,
+                dilation=original_module.dilation,
+                groups=original_module.groups,
+                bias=use_bias,
+                padding_mode=original_module.padding_mode,
+            )
+
+            copy_weights(original_module.weight, new_module.weight)
+            if use_bias:    
+                copy_weights(original_module.bias, new_module.bias)
+        elif config.get("name") == "fp16":  
+            new_module = original_module.half()
+
+    elif mase_op in ("conv1d"):
         use_bias = original_module.bias is not None
 
-        if "input" in config:
-            qnn.QuantConv2d.set_default_quant_desc_input(QuantDescriptor(calib_method=config["input"]["calibrator"], axis=config["input"]["quantize_axis"]))
-        if "weight" in config:
-            qnn.QuantConv2d.set_default_quant_desc_weight(QuantDescriptor(calib_method=config["weight"]["calibrator"], axis=config["weight"]["quantize_axis"]))
+        if config.get("name") == "fp16":  
+            if "input" in config:
+                qnn.QuantConv1d.set_default_quant_desc_input(QuantDescriptor(calib_method=config["input"]["calibrator"], axis=config["input"]["quantize_axis"]))
+            if "weight" in config:
+                qnn.QuantConv1d.set_default_quant_desc_weight(QuantDescriptor(calib_method=config["weight"]["calibrator"], axis=config["weight"]["quantize_axis"]))
 
-        new_module = qnn.QuantConv2d(
-            in_channels=original_module.in_channels,
-            out_channels=original_module.out_channels,
-            kernel_size=original_module.kernel_size,
-            stride=original_module.stride,
-            padding=original_module.padding,
-            dilation=original_module.dilation,
-            groups=original_module.groups,
-            bias=use_bias,
-            padding_mode=original_module.padding_mode,
-        )
+            new_module = qnn.QuantConv1d(
+                in_channels=original_module.in_channels,
+                out_channels=original_module.out_channels,
+                kernel_size=original_module.kernel_size,
+                stride=original_module.stride,
+                padding=original_module.padding,
+                dilation=original_module.dilation,
+                groups=original_module.groups,
+                bias=use_bias,
+                padding_mode=original_module.padding_mode,
+            )
 
-        copy_weights(original_module.weight, new_module.weight)
-        if use_bias:    
-            copy_weights(original_module.bias, new_module.bias)
+            copy_weights(original_module.weight, new_module.weight)
+            if use_bias:    
+                copy_weights(original_module.bias, new_module.bias)
+        
+        elif config.get("name") == "fp16":  
+            new_module = original_module.half()
 
     # elif mase_op == "relu":
     #     new_module_cls = quantized_module_map[f"relu_{quant_name}"]

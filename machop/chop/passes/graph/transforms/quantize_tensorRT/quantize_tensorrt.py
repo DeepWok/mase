@@ -87,7 +87,15 @@ def convert_model_to_onnx(graph, dummy_in, onnxFile):
     # Export the model to ONNX
     # torch.onnx.export(graph.model, dummy_input, "model.onnx", verbose=True)
     # torch.onnx.export(graph.model.cuda(), dummy_input, onnxFile, verbose=True)
-    torch.onnx.export(graph.model.cuda(), dummy_in.cuda(), onnxFile, export_params=True, opset_version=13, do_constant_folding=True, \
+    if isinstance(dummy_in, dict):
+        dummy_in = {
+                k: v.cuda() if isinstance(v, torch.Tensor) else v
+                for k, v in dummy_in.items()
+            }
+    else:
+        dummy_in = dummy_in.cuda()
+        
+    torch.onnx.export(graph.model.cuda(), dummy_in, onnxFile, export_params=True, opset_version=13, do_constant_folding=True, \
                       input_names = ['input'], output_names = ['output'], dynamic_axes={'input' : {0 : 'batch_size'}, 'output' : {0 : 'batch_size'}})
 
     # Load the ONNX model
