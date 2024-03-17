@@ -99,9 +99,8 @@ class VerificationCase:
 
     def get_dut_parameters(self):
         return {
-            "DATA_IN_0_TENSOR_SIZE_DIM_0": self.num,
-            "DATA_IN_0_PRECISION_0": self.bitwidth,
-            "DATA_OUT_0_PRECISION_0": self.bitwidth,
+            "TENSOR_SIZE_DIM": self.num,
+            "PRECISION": self.bitwidth,
             "HIGH_SLOTS": self.high_slots,
             "THRESHOLD": self.threshold,
         }

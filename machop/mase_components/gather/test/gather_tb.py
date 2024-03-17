@@ -130,7 +130,7 @@ class VerificationCase:
 
     def get_dut_parameters(self):
         return {
-            "DIM": self.num,
+            "TENSOR_SIZE_DIM": self.num,
             "PRECISION": self.bitwidth,
         }
 
