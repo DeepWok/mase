@@ -45,12 +45,12 @@ class FineTuning:
 
     def train(self):
         """
-        For QAT it is typical to employ 10% of the original training epochs, 
-        starting at 1% of the initial training learning rate, and a cosine 
-        annealing learning rate schedule that follows the decreasing half of 
-        a cosine period, down to 1% of the initial fine tuning learning rate 
-        (0.01% of the initial training learning rate). However this default 
-        can be overidden by setting the `epochs`, `initial_learning_rate` and 
+        For QAT it is typical to employ 10% of the original training epochs,
+        starting at 1% of the initial training learning rate, and a cosine
+        annealing learning rate schedule that follows the decreasing half of
+        a cosine period, down to 1% of the initial fine tuning learning rate
+        (0.01% of the initial training learning rate). However this default
+        can be overidden by setting the `epochs`, `initial_learning_rate` and
         `final_learning_rate` in `passes.tensorrt_quantize.fine_tune`.
         """
 
@@ -64,18 +64,18 @@ class FineTuning:
         )
         optimizer = self.config["optimizer"] if "optimizer" in self.config else "adam"
 
-        # Check if user would like to override the initial learning rate otherwise default to 1% of original LR 
+        # Check if user would like to override the initial learning rate otherwise default to 1% of original LR
         try:
             initial_fine_tune_lr = (self.config["initial_learning_rate"]) * 0.01
         except KeyError:
             initial_fine_tune_lr = (self.config.get("learning_rate", 1e-5)) * 0.01
-        
-        # Check if user would like to override the final learning rate otherwise default to 
+
+        # Check if user would like to override the final learning rate otherwise default to
         # 1% of initial learning rate or 0.01% of original learning rate
         try:
             eta_min = self.config["final_learning_rate"]
         except KeyError:
-            eta_min = (initial_fine_tune_lr * 0.01)  # Decreases to 
+            eta_min = initial_fine_tune_lr * 0.01  # Decreases to
 
         # Check if user would like to override the number of epochs otherwise default to 10% of original epochs
         try:
@@ -83,14 +83,11 @@ class FineTuning:
         except KeyError:
             epochs = int(self.config.get("max_epochs", 20) * 0.1)
 
-e        t_max = int(len(self.config["data_module"].train_dataloader()) * epochs)
+        t_max = int(len(self.config["data_module"].train_dataloader()) * epochs)
 
         ckpt_save_path = prepare_save_path(method="ckpts/fine_tuning", suffix="ckpt")
 
-        scheduler_args = {
-            "t_max": t_max, 
-            "eta_min": eta_min
-        }
+        scheduler_args = {"t_max": t_max, "eta_min": eta_min}
 
         plt_trainer_args = {
             "max_epochs": epochs,

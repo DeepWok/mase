@@ -44,7 +44,6 @@ def transform(
     load_type: str = None,
     accelerator: str = "auto",
 ):
-    import pdb; pdb.set_trace()
     accelerator = parse_accelerator(accelerator)
     model = pre_transform_load(load_name=load_name, load_type=load_type, model=model)
     model.to(accelerator)

@@ -164,6 +164,11 @@ class FakeQuantizer:
         This method applies fake quantization to the graph based on the type of each node.
         """
         self.logger.info("Applying fake quantization to PyTorch model...")
+        
+        if 'INT8' not in self.config:
+            self.logger.warning("INT8 nodes not found in config. Skipping fake quantization.")
+            return graph
+
         for node in graph.fx_graph.nodes:
             if get_mase_op(node) not in QUANTIZEABLE_OP:
                 continue
