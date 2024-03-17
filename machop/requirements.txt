@@ -58,6 +58,7 @@ scipy
 sphinx-glpi-theme
 prettytable
 pyyaml
-pytorch-quantization
 pynvml
 pycuda
+cuda-python
+pytorch-quantization

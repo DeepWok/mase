@@ -53,7 +53,7 @@ class FineTuning:
         can be overidden by setting the `epochs`, `initial_learning_rate` and
         `final_learning_rate` in `passes.tensorrt_quantize.fine_tune`.
         """
-
+        self.logger.info("Starting Fine Tuning...")
         from chop.actions import train
         from chop.models import get_model_info
 
@@ -112,4 +112,5 @@ class FineTuning:
             "",
         )
 
+        self.logger.info("Fine Tuning Complete")
         return ckpt_save_path / "best.ckpt"

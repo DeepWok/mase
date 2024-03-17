@@ -100,7 +100,7 @@ def transform(
                 pass_config["model"] = config["model"]
                 pass_config["data_module"] = data_module
                 pass_config["accelerator"] = accelerator.type
-                if accelerator == "gpu":
+                if accelerator.type == "cuda":
                     # TODO this seems innefective - known issue - https://github.com/NVIDIA/TensorRT/issues/2468
                     os.environ["CUDA_MODULE_LOADING"] = "LAZY"
 
@@ -142,18 +142,18 @@ def transform(
                         )
 
                     case "analysis":
-                        if accelerator != "gpu":
+                        if accelerator.type != "cuda":
                             raise Exception(
-                                f"tensorrt_analysis must be run on a GPU, not a: {accelerator}"
+                                f"tensorrt_analysis must be run on a GPU, not a: {accelerator.type}"
                             )
                         try:
-                            meta["graph_path"]
+                            meta["trt_engine_path"]
                         except KeyError:
                             raise Exception(
                                 f"tensorrt_quantize must be run before tensorrt_analysis: graph must be quantized to a tensorRT format first."
                             )
-                        graph, _ = PASSES["tensorrt_analysis"](
-                            meta["graph_path"], pass_args=pass_config
+                        _, _ = PASSES["tensorrt_analysis"](
+                            meta["trt_engine_path"], pass_args=pass_config
                         )
                     case _:
                         raise ValueError(
