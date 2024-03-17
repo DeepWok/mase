@@ -43,6 +43,13 @@ class Calibrator:
         """Retrieve specific configuration from the config dictionary or return default."""
         return config.get(name, config['default'])['config']
 
+    def eval_calibration(self, calibrator):
+        """Performs post calibration analysis for the given calibrator."""
+        from chop.passes.graph import tensorrt_analysis_pass
+        self.logger.info(f"Performing post calibration analysis for calibrator {calibrator}...")
+        tensorrt_analysis_pass(graph, pass_args=self.config)
+        self.logger.info("Post calibration analysis complete.")
+
     def compute_amax(self, model, **kwargs):
         """Computes and loads the maximum activation values for quantization calibration."""
         # Load calibration result
@@ -108,15 +115,15 @@ class Calibrator:
                             percentiles = [99]
                         for percentile in percentiles:
                             self.compute_amax(graph.model, method=calib)
+                            # perform an analysis pass if required
+                            if self.config['post_calibration_analysis']:
+                                self.eval_calibration(f"{calib}_{percentile}")
                     case "mse":
                         self.compute_amax(graph.model, method=calib)
 
                 # perform an analysis pass if required
                 if self.config['post_calibration_analysis']:
-                    from chop.passes.graph import tensorrt_analysis_pass
-                    self.logger.info(f"Performing post calibration analysis for calibrator {calib}...")
-                    tensorrt_analysis_pass(graph, pass_args=self.config)
-                    self.logger.info("Post calibration analysis complete.")
+                    self.eval_calibration(calib)
             
             self.logger.info("Succeeded in calibrating the model in PyTorch!")
             return graph

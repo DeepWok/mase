@@ -15,7 +15,7 @@ post_calibration_analysis = true
 [passes.tensorrt_quantize.default.config]
 quantize = true
 calibrators = ["percentile", "mse", "entropy"]
-percentiles = [99]
+percentiles = [99.0, 99.9, 99.99]
 precision = 'INT8'
 
 [passes.tensorrt_quantize.default.input]
