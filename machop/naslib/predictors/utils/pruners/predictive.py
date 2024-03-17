@@ -133,24 +133,44 @@ def find_measures(
             sum += torch.sum(arr[i])
         return sum.item()
 
-    if measure_names[0] in ['flops', 'params']:
-        data_iterator = iter(dataloader)
-        x, target = next(data_iterator)
-        x_shape = list(x.shape)
-        x_shape[0] = 1 # to prevent overflow
 
-        model_stats = get_model_stats(
-            net_orig,
-            input_tensor_shape=x_shape,
-            clone_model=True
-        )
+    ######## Original NASLib calculation for getting flops and number of params in a model##########
+    # if measure_names[0] in ['flops', 'params']:
+        # data_iterator = iter(dataloader)
+        # x, target = next(data_iterator)
+        # x_shape = list(x.shape)
+        # x_shape[0] = 1 # to prevent overflow
 
-        if measure_names[0] == 'flops':
-            measure_score = float(model_stats.Flops)/1e6 # megaflops
-        else:
-            measure_score = float(model_stats.parameters)/1e6 # megaparams
-        return measure_score
+        # model_stats = get_model_stats(
+        #     net_orig,
+        #     input_tensor_shape=x_shape,
+        #     clone_model=True
+        # )
 
+    #     if measure_names[0] == 'flops':
+    #         measure_score = float(model_stats.Flops)/1e6 # megaflops
+    #     else:
+    #         measure_score = float(model_stats.parameters)/1e6 # megaparams
+    #     return measure_score
+    #################################################################################################
+
+    measure_score={}
+    data_iterator = iter(dataloader)
+    x, target = next(data_iterator)
+    x_shape = list(x.shape)
+    x_shape[0] = 1 # to prevent overflow
+
+    model_stats = get_model_stats(
+        net_orig,
+        input_tensor_shape=x_shape,
+        clone_model=True
+    )
+    if 'flops' in measure_names:
+        measure_score['flops'] = float(model_stats.Flops)/1e6
+        measure_names.remove('flops')
+    if 'params' in measure_names:
+        measure_score['params'] = float(model_stats.parameters)/1e6
+        measure_names.remove('params')
     if measures_arr is None:
         measures_arr = find_measures_arrays(
             net_orig,
@@ -160,7 +180,7 @@ def find_measures(
             loss_fn=loss_function,
             measure_names=measure_names,
         )
-    measure_score={}
+    
     for k, v in measures_arr.items():
         if k == "jacov" or k == 'epe_nas' or k=='nwot' or k=='zen':
             measure_score[k] = v

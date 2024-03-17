@@ -82,7 +82,7 @@ bias_width = [2, 4, 8]
 bias_frac_width = ["NA"]
 
 [search.strategy]
-name = "proxy"
+name = "optuna"
 eval_mode = true
 
 [search.strategy.sw_runner.basic_evaluation]

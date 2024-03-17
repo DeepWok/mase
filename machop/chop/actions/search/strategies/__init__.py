@@ -1,6 +1,6 @@
 # from .rl import StrategyRL
-from .optuna import SearchStrategyOptuna
-from .proxy import SearchStrategyDaddyProxy
+from .strat_optuna import SearchStrategyOptuna
+from .strat_proxy import SearchStrategyDaddyProxy
 from .base import SearchStrategyBase
 
 

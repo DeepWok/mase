@@ -8,7 +8,30 @@ from functools import partial
 from .base import SearchStrategyBase
 from chop.passes.module.analysis import calculate_avg_bits_module_analysis_pass
 
-from naslib.predictors.utils.pruners.predictive import find_measures_arrays 
+
+
+# For compute software metrics()
+from naslib.predictors.utils.pruners.predictive import find_measures
+import torch
+import torch.nn as nn
+import torch.nn.functional as F
+
+### Class for meta proxy
+class NeuralModel(nn.Module):
+    def __init__(self, input_size):
+        super(NeuralModel, self).__init__()
+        self.linear1 = nn.Linear(input_size, 64)
+        self.sigmoid = nn.Sigmoid()
+        self.linear2 = nn.Linear(64, 128)
+        self.relu = nn.ReLU()
+        self.linear3 = nn.Linear(128, 1)
+
+    def forward(self, x):
+        x = self.sigmoid(self.linear1(x))
+        x = self.relu(self.linear2(x))
+        x = torch.sigmoid(self.linear3(x))
+        return x
+
 
 
 logger = logging.getLogger(__name__)
@@ -32,6 +55,11 @@ def callback_save_study(
 class SearchStrategyDaddyProxy(SearchStrategyBase):
     is_iterative = False
 
+    model = NeuralModel(13)
+    pretrained_model_path = r'/home/ansonhon/mase_project/nas_results/model_state_dict.pt'
+    model.load_state_dict(torch.load(pretrained_model_path))
+    model.eval()
+    
     def _post_init_setup(self):
         self.sum_scaled_metrics = self.config["setup"]["sum_scaled_metrics"]
         self.metric_names = list(sorted(self.config["metrics"].keys()))
@@ -58,26 +86,39 @@ class SearchStrategyDaddyProxy(SearchStrategyBase):
                 raise ValueError(f"Unknown sampler name: {name}")
         return sampler
 
-    def compute_software_metrics(self, model, sampled_config: dict, is_eval_mode: bool):
+    def compute_software_metrics(self, model):
         # note that model can be mase_graph or nn.Module
+        measure_names = ['epe_nas', 'fisher', 'grad_norm', 'grasp', 'jacov', 'l2_norm', 'nwot', 'plain', 'snip', 'synflow', 'zen', 'params', 'flops']
         metrics = {}
-        small_proxy_scores = find_measures_arrays(model)
-        print("ran successfully")
+        dataloader=self.data_module.train_dataloader()
+        dataload_info=["random",len(dataloader),10]
+        loss_function = nn.CrossEntropyLoss
+        device = "cuda" #torch.cuda.device
+        
+        
+        small_proxy_scores = find_measures(model,dataloader, dataload_info, device , loss_function, measure_names)
+        print("successfully obtain scores from small proxies")
+        measure_values_list = [small_proxy_scores[s] for s in measure_names]
+        measure_values_tensor = torch.tensor(measure_values_list, dtype = torch.float)
+        ### Make prediction
+        with torch.no_grad():
+            prediction = model(measure_values_tensor)
 
+        prediction_numpy = prediction.numpy()
 
         
         return metrics
 
-    def compute_hardware_metrics(self, model, sampled_config, is_eval_mode: bool):
-        metrics = {}
-        if is_eval_mode:
-            with torch.no_grad():
-                for runner in self.hw_runner:
-                    metrics |= runner(self.data_module, model, sampled_config)
-        else:
-            for runner in self.hw_runner:
-                metrics |= runner(self.data_module, model, sampled_config)
-        return metrics
+    # def compute_hardware_metrics(self, model, sampled_config, is_eval_mode: bool):
+    #     metrics = {}
+    #     if is_eval_mode:
+    #         with torch.no_grad():
+    #             for runner in self.hw_runner:
+    #                 metrics |= runner(self.data_module, model, sampled_config)
+    #     else:
+    #         for runner in self.hw_runner:
+    #             metrics |= runner(self.data_module, model, sampled_config)
+    #     return metrics
 
     def objective(self, trial: optuna.trial.Trial, search_space):
         sampled_indexes = {}
@@ -91,13 +132,17 @@ class SearchStrategyDaddyProxy(SearchStrategyBase):
         is_eval_mode = self.config.get("eval_mode", True)
         model = search_space.rebuild_model(sampled_config, is_eval_mode)
 
+
+        # build dataloader
+
         software_metrics = self.compute_software_metrics(
-            model, sampled_config, is_eval_mode
+            model #, sampled_config, is_eval_mode
         )
-        hardware_metrics = self.compute_hardware_metrics(
-            model, sampled_config, is_eval_mode
-        )
-        metrics = software_metrics | hardware_metrics
+        # hardware_metrics = self.compute_hardware_metrics(
+        #     model, sampled_config, is_eval_mode
+        # )
+        metrics = software_metrics #| hardware_metrics
+        import pdb;pdb.set_trace()
         scaled_metrics = {}
         for metric_name in self.metric_names:
             scaled_metrics[metric_name] = (
@@ -105,7 +150,7 @@ class SearchStrategyDaddyProxy(SearchStrategyBase):
             )
 
         trial.set_user_attr("software_metrics", software_metrics)
-        trial.set_user_attr("hardware_metrics", hardware_metrics)
+        # trial.set_user_attr("hardware_metrics", hardware_metrics)
         trial.set_user_attr("scaled_metrics", scaled_metrics)
         trial.set_user_attr("sampled_config", sampled_config)
 
