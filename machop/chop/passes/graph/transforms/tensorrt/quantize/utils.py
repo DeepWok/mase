@@ -33,17 +33,23 @@ from ....utils import (
     get_node_target_by_name,
 )
 
-QUANTIZEABLE_OP = (
-    # "add",
-    # "bmm",
-    # "conv1d",
-    "conv2d",
-    # "matmul",
-    # "mul",
-    "linear",
-    # "relu",
-    # "sub",
-)
+
+QUANTIZEABLE_OP = {
+    "conv1d": qnn.QuantConv1d,
+    "conv2d": qnn.QuantConv2d,
+    "conv3d": qnn.QuantConv3d,
+    "convTranspose1d": qnn.QuantConvTranspose1d,
+    "convTranspose2d": qnn.QuantConvTranspose2d,
+    "convTranspose3d": qnn.QuantConvTranspose3d,
+    "linear": qnn.QuantLinear,
+    "avgPool1d": qnn.QuantAvgPool1d,
+    "avgPool2d": qnn.QuantAvgPool2d,
+    "avgPool3d": qnn.QuantAvgPool3d,
+    "maxPool1d": qnn.QuantMaxPool1d,
+    "maxPool2d": qnn.QuantMaxPool2d,
+    "maxPool3d": qnn.QuantMaxPool3d
+}
+
 
 
 class FakeQuantizer:
@@ -81,54 +87,78 @@ class FakeQuantizer:
                     axis=config["input"]["quantize_axis"],
                 )
             )
-            if mase_op == "linear":
-                use_bias = original_module.bias is not None
+            match mase_op:
+                case "linear":
+                    use_bias = original_module.bias is not None
 
-                new_module = qnn.QuantLinear(
-                    in_features=original_module.in_features,
-                    out_features=original_module.out_features,
-                    bias=use_bias,
-                )
-
-                copy_weights(original_module.weight, new_module.weight)
-                if use_bias:
-                    copy_weights(original_module.bias, new_module.bias)
-
-            elif mase_op in ("conv2d"):
-                # Set default quantization descriptor for input and weights
-                qnn.QuantConv2d.set_default_quant_desc_input(
-                    QuantDescriptor(
-                        calib_method=config["input"]["calibrator"],
-                        axis=config["input"]["quantize_axis"],
+                    new_module = QUANTIZEABLE_OP[mase_op](
+                        in_features=original_module.in_features,
+                        out_features=original_module.out_features,
+                        bias=use_bias,
                     )
-                )
-                qnn.QuantConv2d.set_default_quant_desc_weight(
-                    QuantDescriptor(
-                        calib_method=config["weight"]["calibrator"],
-                        axis=config["input"]["quantize_axis"],
+
+                    copy_weights(original_module.weight, new_module.weight)
+                    if use_bias:
+                        copy_weights(original_module.bias, new_module.bias)
+
+                case "conv1d" | "conv2d" | "conv3d" | "convTranspose1d" | "convTranspose2d" | "convTranspose3d":
+                    op = QUANTIZEABLE_OP[mase_op]
+
+                    # Set default quantization descriptor for input and weights
+                    op.set_default_quant_desc_input(
+                        QuantDescriptor(
+                            calib_method=config["input"]["calibrator"],
+                            axis=config["input"]["quantize_axis"],
+                        )
                     )
-                )
-                use_bias = original_module.bias is not None
-                new_module = qnn.QuantConv2d(
-                    in_channels=original_module.in_channels,
-                    out_channels=original_module.out_channels,
-                    kernel_size=original_module.kernel_size,
-                    stride=original_module.stride,
-                    padding=original_module.padding,
-                    dilation=original_module.dilation,
-                    groups=original_module.groups,
-                    bias=use_bias,
-                    padding_mode=original_module.padding_mode,
-                )
+                    op.set_default_quant_desc_weight(
+                        QuantDescriptor(
+                            calib_method=config["weight"]["calibrator"],
+                            axis=config["input"]["quantize_axis"],
+                        )
+                    )
+                    use_bias = original_module.bias is not None
+                    new_module = op(
+                        in_channels=original_module.in_channels,
+                        out_channels=original_module.out_channels,
+                        kernel_size=original_module.kernel_size,
+                        stride=original_module.stride,
+                        padding=original_module.padding,
+                        dilation=original_module.dilation,
+                        groups=original_module.groups,
+                        bias=use_bias,
+                        padding_mode=original_module.padding_mode,
+                    )
 
-                copy_weights(original_module.weight, new_module.weight)
-                if use_bias:
-                    copy_weights(original_module.bias, new_module.bias)
+                    copy_weights(original_module.weight, new_module.weight)
+                    if use_bias:
+                        copy_weights(original_module.bias, new_module.bias)
+                
+                case "avgPool1d" | "avgPool2d" | "avgPool3d" | "maxPool1d" | "maxPool2d" | "maxPool3d":
+                    op = QUANTIZEABLE_OP[mase_op]
 
-            else:
-                raise NotImplementedError(
-                    f"Unsupported module class {original_module_cls} to modify"
-                )
+                    # Set default quantization descriptor for input since pooling layers typically do not have weights
+                    op.set_default_quant_desc_input(
+                        QuantDescriptor(
+                            calib_method=config["input"]["calibrator"],
+                            axis=config["input"]["quantize_axis"],
+                        )
+                    )
+                    
+                    # Configure new pooling module with parameters from the original module
+                    new_module = op(
+                        kernel_size=original_module.kernel_size,
+                        stride=original_module.stride,
+                        padding=original_module.padding,
+                        dilation=original_module.dilation if hasattr(original_module, 'dilation') else None, # Not all pooling layers have a dilation attribute
+                        return_indices=original_module.return_indices if hasattr(original_module, 'return_indices') else False, # Only relevant for max pooling
+                        ceil_mode=original_module.ceil_mode,
+                    )
+
+                case _:
+                    raise NotImplementedError(
+                        f"Unsupported module class {original_module_cls} to modify"
+                    )
 
         except KeyError:
             raise Exception(
@@ -154,6 +184,7 @@ class FakeQuantizer:
             config['config']['quantize'] = config['config'].get('quantize', self.config.get("default")['config']['quantize'])
             config['config']['precision'] = config['config'].get('precision', self.config.get("default")['config']['precision'])
             config['input']['calibrator'] = config['input'].get('calibrator', self.config.get("default")['input']['calibrator'])       
+            config['weight']['calibrator'] = config['weight'].get('calibrator', self.config.get("default")['weight']['calibrator'])       
         except KeyError:
             raise Exception(
                 f"Config/TOML not configured correctly. Please check documentation for what must be defined."

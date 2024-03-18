@@ -237,8 +237,8 @@ class QuantizationAnalysis():
         
         # Iterate over batches in the validation/train dataset
         for j, (xs, ys) in enumerate(dataloader):
-            # Break the loop after processing the specified number of batches
-            if j >= self.config['num_batches']:
+            # Break the loop after processing the specified number of batches or to drop the last incomplete batch
+            if j >= self.config['num_batches'] or xs.shape[0] != self.config['batch_size']:
                 break
 
             # Instantiate and start the power monitor
@@ -249,22 +249,15 @@ class QuantizationAnalysis():
             torch.cuda.synchronize()
             torch.cuda.empty_cache()
 
+            # TRT Inference
             if isinstance(self.model, trt.IExecutionContext):
                 preds, latency = self.infer_trt(self.model, xs)
-                
+
+            # ONNX Inference
             elif isinstance(self.model, ort.InferenceSession):
-
-                # Since dynamic batching is not supported, the last test batch is not dropped, the last batch 
-                # size may mismatch with the expected size. Skip the sample if a mismatch if detected.
-                if xs.shape[0] != self.config['batch_size']:
-                    power_monitor.stop()
-                    power_monitor.join() 
-
-                    print(f"Dynamic batching not supported: received batch of size {xs.shape[0]} but expected size {self.config['batch_size']}.")
-                    continue
-
                 preds, latency = self.infer_onnx(self.model, xs)
-
+                
+            # MaseGraph Inference
             else:
                 preds, latency = self.infer_mg(self.model, xs)  # Run model prediction
             

@@ -80,7 +80,6 @@ def transform(
         graph, _ = add_software_metadata_analysis_pass(graph, pass_args=None)
 
     pass_config = config["passes"]
-
     for pass_name, pass_config in pass_config.items():
         pass_name: str
         pass_config: dict
