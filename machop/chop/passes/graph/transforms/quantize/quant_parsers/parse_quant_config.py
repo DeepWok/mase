@@ -360,6 +360,7 @@ MASE_OP_TO_ENTRIES = {
     # TODO(jlsand): Consider making bias optional, in a similar vein to the Linear layer.
     # This functionality seems redundant, but may be desired in edge cases.
     "batch_norm1d": (("name", "data_in_entries", "weight_entries", "bias_entries"), ("bypass",)),
+    "layer_norm": (("name", "data_in_entries", "weight_entries", "bias_entries"), ("bypass", )),
 }
 
 

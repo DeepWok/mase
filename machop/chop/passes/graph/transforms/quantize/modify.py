@@ -185,23 +185,36 @@ def create_new_module(
             track_running_stats=original_module.track_running_stats,
             config=config,
         )
-        
-        # Add interface for mean and variance.
-        # TODO(jlsand): This is a bit janky, and would be better placed somewhere in the emit verilog pass. 
-        node_meta["mase"].parameters["common"]["args"]["mean"] = node_meta["mase"].parameters["common"]["args"]["weight"]
-        node_meta["mase"].parameters["common"]["args"]["stdv"] = node_meta["mase"].parameters["common"]["args"]["weight"]
-
-        config["mean_width"] = config["weight_width"];
-        config["mean_frac_width"] = config["weight_frac_width"];
-        config["stdv_width"] = config["weight_width"];
-        config["stdv_frac_width"] = config["weight_frac_width"];
 
         # TODO(jlsand): Consider supporting use_pruning and dropping bias operations.
+        
+        # Add interface for mean.
+        # This is needed to due to the discrepancy between BatchNorm1D and BatchNorm1DInteger -
+        # The former only has bias and weights as inputs, while the latter also requires a pre-computed mean.
+        node_meta["mase"].parameters["common"]["args"]["mean"] = node_meta["mase"].parameters["common"]["args"]["weight"]
+        config["mean_width"] = config["weight_width"];
+        config["mean_frac_width"] = config["weight_frac_width"];
+
+        # Combine the weight (gamma) and variance into a single tensor in the quantized version.
+        # This avoids having to perform the division at run-time for the hardware. 
+        copy_weights(original_module.weight / original_module.running_var, new_module.weight)
+        copy_weights(torch.zeros_like(original_module.running_var), new_module.running_var)
+
+        copy_weights(original_module.bias, new_module.bias)
+        copy_weights(original_module.running_mean, new_module.running_mean)
+    elif mase_op == "layer_norm":
+        new_module_cls = quantized_module_map[f"layer_norm_{quant_name}"]
+        
+        # TODO(jlsand): The device/dtype does not need to be copied over? 
+        new_module = new_module_cls(
+            normalized_shape=original_module.normalized_shape, 
+            eps=original_module.eps, 
+            elementwise_affine=original_module.elementwise_affine, 
+            config=config
+        )
+
         copy_weights(original_module.weight, new_module.weight)
         copy_weights(original_module.bias, new_module.bias)
-
-        copy_weights(original_module.running_mean, new_module.running_mean)
-        copy_weights(original_module.running_var, new_module.running_var)
     else:
         raise NotImplementedError(
             f"Unsupported module class {original_module_cls} to modify"
