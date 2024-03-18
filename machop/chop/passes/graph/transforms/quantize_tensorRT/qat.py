@@ -43,6 +43,10 @@ QUANTIZEABLE_OP = (
     # "sub",
 )
 
+class ToFP16(torch.nn.Module):
+    def forward(self, x):
+        return x.half()
+
 logger = logging.getLogger(__name__)
 
 def get_config(config: dict, name: str):
@@ -53,6 +57,7 @@ def get_config(config: dict, name: str):
 
 
 def graph_fake_quantize_by_type(graph, config: dict):
+    graph.fx_graph.to_fp16 = ToFP16()
     for node in graph.fx_graph.nodes:
         if get_mase_op(node) not in QUANTIZEABLE_OP:
             continue
@@ -90,6 +95,8 @@ def graph_fake_quantize_by_type(graph, config: dict):
 
 
 def graph_fake_quantize_by_name(graph, config: dict):
+    graph.fx_graph.to_fp16 = ToFP16()
+
     quant_modules.initialize()
     for node in graph.fx_graph.nodes:
         if get_mase_op(node) not in QUANTIZEABLE_OP:
@@ -107,6 +114,21 @@ def graph_fake_quantize_by_name(graph, config: dict):
             )
             parent_name, name = get_parent_name(node.target)
             setattr(graph.modules[parent_name], name, new_module)
+
+            if node_config["name"] == "fp16":
+                # for iter_node in graph.nodes:
+                #     if iter_node.name == node.name :
+                #         target_node = iter_node
+                #         break
+                #     prev_node = iter_node
+
+                # if target_node is not None and prev_node is not None:
+                #     print('find prev')
+                with graph.fx_graph.inserting_before(node):
+                    new_node = graph.fx_graph.call_function(torch.half, args=(node,))
+                    node.replace_all_uses_with(new_node)
+                    new_node.args = (node,)
+            
             # update_quant_meta_param(node, node_config, get_mase_op(node))
             logger.debug(f"Quantized module: {node.target} with config: {node_config}")
         # elif get_mase_type(node) in [
