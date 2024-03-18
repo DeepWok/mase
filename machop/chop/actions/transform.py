@@ -94,7 +94,7 @@ def transform(
                     graph, pass_args={"fn": to_numpy_if_tensor}
                 )
                 ori_graph = deepcopy_mase_graph(graph)
-
+                pass_config['task'] = task
                 pass_config["batch_size"] = config["batch_size"]
                 pass_config["model"] = config["model"]
                 pass_config["data_module"] = data_module
