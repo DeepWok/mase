@@ -12,7 +12,7 @@ load_type = "pl"
 
 
 [passes.onnxruntime]
-do_test = "both" #tests original PyTorch checkpoint performance if "before", post-conversion performance if "after", both if "both"; no test if "NA"
+do_test = "both" # tests original PyTorch checkpoint performance if "before", post-conversion performance if "after", both if "both"; no test if "NA"
 do_train = false
 
 # [passes.tensorrt_analysis]
