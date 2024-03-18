@@ -134,7 +134,7 @@ class MixedPrecisionEnv(gym.Env):
         
         # Calculate direction multipliers based on metric directions
         self.direction_multipliers = {
-            metric: (1 if self.config["metrics"][metric]["direction"] == "maximize" else -1)
+            metric: (-1 if self.config["metrics"][metric]["direction"] == "maximize" else 1)
             for metric in self.metric_names
         }
 
@@ -250,7 +250,7 @@ class MixedPrecisionEnvHiLo(gym.Env):
         
         # Calculate direction multipliers based on metric directions
         self.direction_multipliers = {
-            metric: (1 if self.config["metrics"][metric]["direction"] == "maximize" else -1)
+            metric: (-1 if self.config["metrics"][metric]["direction"] == "maximize" else 1)
             for metric in self.metric_names
         }
         self.directions = [self.config["metrics"][k]["direction"] for k in self.metric_names]

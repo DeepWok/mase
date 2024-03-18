@@ -21,12 +21,12 @@ by = "name"
  
 [search.search_space.seed.default.config]
 name = ["integer"]
-data_in_width = [2, 4, 8, 10]
-data_in_frac_width = [2, 4, 6]
-weight_width = [2, 4, 8, 10]
-weight_frac_width = [2, 4, 6]
-bias_width = [2, 4, 8, 10]
-bias_frac_width = [2, 4, 6]
+data_in_width = [16, 32]
+data_in_frac_width = [2, 4, 8, 10, 12, 16]
+weight_width = [16, 32]
+weight_frac_width = [2, 4, 8, 10, 12, 16]
+bias_width = [16, 32]
+bias_frac_width = [2, 4, 8, 10, 12, 16]
  
 [search.strategy]
 name = "rl"
