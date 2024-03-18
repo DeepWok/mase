@@ -164,11 +164,11 @@ async def test(dut):
     await tb.run_test()
   
 dut_params = {
-                "DATA_IN_0_TENSOR_SIZE_DIM_0": 8,
-                "DATA_IN_0_TENSOR_SIZE_DIM_1": 6,
+                "DATA_IN_0_TENSOR_SIZE_DIM_0": 12,
+                "DATA_IN_0_TENSOR_SIZE_DIM_1": 12,
                 
-                "DATA_IN_0_PARALLELISM_DIM_0": 2,
-                "DATA_IN_0_PARALLELISM_DIM_1": 2,
+                "DATA_IN_0_PARALLELISM_DIM_0": 4,
+                "DATA_IN_0_PARALLELISM_DIM_1": 3,
                 
                 "DATA_IN_0_PRECISION_0": 16,
                 "DATA_IN_0_PRECISION_1": 8,
@@ -176,11 +176,11 @@ dut_params = {
                 "DATA_OUT_0_PRECISION_0": 16,
                 "DATA_OUT_0_PRECISION_1": 8,
                 
-                "DATA_OUT_0_TENSOR_SIZE_DIM_0": 8,
-                "DATA_OUT_0_TENSOR_SIZE_DIM_1": 6,
+                "DATA_OUT_0_TENSOR_SIZE_DIM_0": 12,
+                "DATA_OUT_0_TENSOR_SIZE_DIM_1": 12,
                 
-                "DATA_OUT_0_PARALLELISM_DIM_0": 2,
-                "DATA_OUT_0_PARALLELISM_DIM_1": 2,
+                "DATA_OUT_0_PARALLELISM_DIM_0": 4,
+                "DATA_OUT_0_PARALLELISM_DIM_1": 3,
             }
 
 torch.manual_seed(1)

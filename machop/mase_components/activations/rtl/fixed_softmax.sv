@@ -105,20 +105,42 @@ module fixed_softmax #(
       .data_out_ready(ff_data_ready) // read enable
   );
   
-  roller #(
-      .DATA_WIDTH(DATA_IN_0_PRECISION_0),
-      .NUM(DATA_IN_0_PARALLELISM_DIM_0*DATA_IN_0_PARALLELISM_DIM_1),
-      .ROLL_NUM(DATA_OUT_0_PARALLELISM_DIM_0*DATA_OUT_0_PARALLELISM_DIM_1)
-  ) roller_inst (
-      .clk(clk),
-      .rst(rst),
-      .data_in(ff_data),
-      .data_in_valid(ff_data_valid),
-      .data_in_ready(ff_data_ready),
-      .data_out(roll_data),
-      .data_out_valid(roll_data_valid),
-      .data_out_ready(roll_data_ready)
-  );
+  localparam STRAIGHT_THROUGH = (DATA_IN_0_PARALLELISM_DIM_0*DATA_IN_0_PARALLELISM_DIM_1 == DATA_OUT_0_PARALLELISM_DIM_0*DATA_OUT_0_PARALLELISM_DIM_1);
+
+  generate
+    if (STRAIGHT_THROUGH) begin
+      unpacked_register_slice #(
+          .DATA_WIDTH(DATA_IN_0_PRECISION_0),
+          .IN_SIZE(DATA_IN_0_PARALLELISM_DIM_0*DATA_IN_0_PARALLELISM_DIM_1),
+      )  single_buffer (
+          .clk(clk),
+          .rst(rst),
+          .in_data(ff_data),
+          .in_valid(ff_data_valid),
+          .in_ready(ff_data_ready),
+          .out_data(roll_data),
+          .out_valid(roll_data_valid),
+          .out_ready(roll_data_ready)
+      );
+
+    end else begin
+
+      roller #(
+          .DATA_WIDTH(DATA_IN_0_PRECISION_0),
+          .NUM(DATA_IN_0_PARALLELISM_DIM_0*DATA_IN_0_PARALLELISM_DIM_1),
+          .ROLL_NUM(DATA_OUT_0_PARALLELISM_DIM_0*DATA_OUT_0_PARALLELISM_DIM_1)
+      ) roller_inst (
+          .clk(clk),
+          .rst(rst),
+          .data_in(ff_data),
+          .data_in_valid(ff_data_valid),
+          .data_in_ready(ff_data_ready),
+          .data_out(roll_data),
+          .data_out_valid(roll_data_valid),
+          .data_out_ready(roll_data_ready)
+      );
+    end
+  endgenerate
 
   split2 #(
   ) input_handshake_split (
