@@ -2,6 +2,7 @@ import torch
 import pytest
 import cocotb
 
+import torch.nn as nn
 from torch.autograd.function import InplaceFunction
 from cocotb.triggers import Timer
 from mase_cocotb.runner import mase_runner
@@ -74,13 +75,61 @@ class VerificationCase:
 
         return x
     
-
-    def LLMint_model(self, samples):
-        outputs = [1]
+    def scatter(self, x):
         
+        high_mat = []
+        low_mat = []
+        count_high = 0
+                    
+        for k in reversed(x) :
+            if abs(k) > self.threshold and count_high < self.high_slots :
+                high_mat.append(k)
+                low_mat.append(0)
+                count_high += 1
+            else :
+                high_mat.append(0)
+                low_mat.append(k)
+
+        low_mat.reverse()
+        high_mat.reverse()
+
+        return low_mat, high_mat
+    
+
+    def gather(self, x_low, x_high):
+        return [x_low[k] + x_high[k] for k in range(len(x_high))]
+    
+    # LLMint model is the combination of scatter, 2 linear layers and gather
+    # Scatter separates the input into high and low precision values based on a threshold (padded with zeros)
+    # Low precision values are quantized and passed through a low precision linear layer
+    # High precision values are passed through a high precision linear layer
+    # The outputs of the two linear layers are then combined using gather
+    def LLMint_model(self, samples):
+        outputs = []
+
         for i in range(samples):
-            print("hey")
-            #TODO: Implement LLMint model
+            x = self.get_dut_input(i)
+            w = self.get_dut_weights(i)
+            x_low, x_high = self.scatter(x)
+
+            x_low = torch.tensor(x_low)
+            x_high = torch.tensor(x_high)
+            w = torch.tensor(w)
+
+            x_low_q = quantize(x_low, self.reduced_bitwidth, self.bias)
+            x_high_q = quantize(x_high, self.bitwidth, self.bias)
+            w = quantize(w, self.bitwidth, self.bias)
+            w_q = quantize(w, self.reduced_bitwidth, self.bias)
+
+            linear_low = nn.Linear(self.weight_dim[0], self.weight_dim[1], bias=False)
+            linear_high = nn.Linear(self.weight_dim[0], self.weight_dim[1], bias=False)
+            linear_low.weight.data = w_q
+            linear_high.weight.data = w
+
+            x_low_o = linear_low(x_low_q)
+            x_high_o = linear_high(x_high_q)
+
+            outputs.append(self.gather(x_low_o, x_high_o))
 
         return outputs
 
