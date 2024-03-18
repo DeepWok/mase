@@ -10,10 +10,6 @@ import numpy as np
 import onnx
 import onnxruntime as ort
 
-# TODO: add input type to toml and different input processing to onnx runtime
-# TODO: investigate huggingface models to onnx
-
-
 def onnx_runtime_transform_pass(graph, pass_args="None"):
     onnx_runtime_session = ONNXRuntime(config=pass_args)
 
