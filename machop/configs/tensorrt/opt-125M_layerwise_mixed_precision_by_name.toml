@@ -1,5 +1,5 @@
 # basics
-model = "facebook/opt-125m:patched"
+model = "facebook/opt-125m@patched" # "facebook/opt-125m:patched"
 dataset = "wikitext2"
 
 max_epochs = 10

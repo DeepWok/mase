@@ -45,7 +45,7 @@ class QuantizationAnalysis():
 
         # Istantiate default performance analyzer args
         if 'num_batches' not in config.keys():
-            config['num_batches'] = 100
+            config['num_batches'] = 500
             config['num_GPU_warmup_batches'] = 5
             config['test'] = True
         
@@ -250,15 +250,20 @@ class QuantizationAnalysis():
 
             if isinstance(self.model, trt.IExecutionContext):
                 preds, latency = self.infer_trt(self.model, xs)
-            elif isinstance(self.model, ort.InferenceSession):
                 
+            elif isinstance(self.model, ort.InferenceSession):
+
+                # Since dynamic batching is not supported, the last test batch is not dropped, the last batch 
+                # size may mismatch with the expected size. Skip the sample if a mismatch if detected.
                 if xs.shape[0] != self.config['batch_size']:
-                    
                     power_monitor.stop()
                     power_monitor.join() 
 
+                    print(f"Dynamic batching not supported: received batch of size {xs.shape[0]} but expected size {self.config['batch_size']}.")
                     continue
+
                 preds, latency = self.infer_onnx(self.model, xs)
+                
             else:
                 preds, latency = self.infer_mg(self.model, xs)  # Run model prediction
             

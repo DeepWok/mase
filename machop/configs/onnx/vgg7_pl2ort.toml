@@ -3,7 +3,7 @@ model = "vgg7"
 dataset = "cifar10"
 
 # max_epochs = 10
-batch_size = 32
+batch_size = 64
 accelerator = "gpu"
 # learning_rate = 1e-3
 # project = "jsc-tiny"
