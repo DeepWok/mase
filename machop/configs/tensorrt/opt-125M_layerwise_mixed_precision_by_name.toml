@@ -1,12 +1,16 @@
 # basics
-model = "facebook/opt-125m:patched"
+# model = "facebook/opt-125m:patched"
+# dataset = "wikitext2"
+# task = "lm"
+
+model = "facebook/opt-125m"
 dataset = "wikitext2"
 task = "lm"
 
-max_epochs = 10
-batch_size = 32
+max_epochs = 5
+batch_size = 16
 learning_rate = 1e-3
-accelerator = "gpu"
+accelerator = "cpu"
 
 [passes.tensorrt_quantize]
 by = "type"
