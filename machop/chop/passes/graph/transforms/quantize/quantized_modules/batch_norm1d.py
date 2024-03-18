@@ -29,12 +29,15 @@ class _BatchNorm1dBase(torch.nn.BatchNorm1d):
         self.w_quantizer = None
         self.b_quantizer = None
 
+        # Register mean as a named parameter
+        self.mean = torch.nn.Parameter(torch.zeros_like(self.weight))
+
+
     def forward(self, x: Tensor) -> Tensor:
         if self.bypass:
             # If bypass, there is no quantization. Let Torch handle the forward pass.
             return super().forward(x)
         else:
-            # TODO(jlsand): This is taken fairly directly from the torch _BatchNorm class.
             # Could perhaps be done in a cleaner manner using a super() call.
             self._check_input_dim(x)
 
@@ -69,18 +72,19 @@ class _BatchNorm1dBase(torch.nn.BatchNorm1d):
             w = self.w_quantizer(self.weight)
             b = self.b_quantizer(self.bias)
 
+            mean = self.w_quantizer(self.running_mean)
+            var = self.b_quantizer(self.running_var)
+            
             r"""
             Buffers are only updated if they are to be tracked and we are in training mode. Thus they only need to be
             passed when the update should occur (i.e. in training mode when they are tracked), or when buffer stats are
             used for normalization (i.e. in eval mode when buffers are not None).
             """
-            # TODO(jlsand): is this enough for quantization, or must we re-implement the batch_norm
-            # function as well?         
             return F.batch_norm(
                 x,
                 # If buffers are not to be tracked, ensure that they won't be updated
-                self.running_mean if not self.training or self.track_running_stats else None,
-                self.running_var if not self.training or self.track_running_stats else None,
+                mean if not self.training or self.track_running_stats else None,
+                var if not self.training or self.track_running_stats else None,
                 w,
                 b,
                 bn_training,
