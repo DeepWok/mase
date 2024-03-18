@@ -1,9 +1,10 @@
 # basics
-model = "facebook/opt-125m@patched" # "facebook/opt-125m:patched"
+model = "facebook/opt-125m:patched"
 dataset = "wikitext2"
+task = "lm"
 
 max_epochs = 10
-batch_size = 256
+batch_size = 32
 learning_rate = 1e-3
 accelerator = "gpu"
 
