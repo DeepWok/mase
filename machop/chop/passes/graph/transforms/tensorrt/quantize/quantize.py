@@ -13,7 +13,7 @@ from pytorch_quantization.tensor_quant import QuantDescriptor
 from chop.passes.graph.utils import get_mase_op, get_mase_type, get_node_actual_target
 from chop.passes.graph.interface.save_and_load import load_mase_graph_interface_pass
 from ....utils import deepcopy_mase_graph
-from .utils import INT8Calibrator, prepare_save_path
+from .utils import INT8Calibrator, prepare_save_path, check_for_value_in_dict
 
 def tensorrt_engine_interface_pass(graph, pass_args=None):
     quantizer = Quantizer(pass_args)
@@ -55,7 +55,7 @@ class Quantizer:
         self.logger.info("Converting PyTorch model to TensorRT...")
 
         # Check for layer wise mixed precision
-        layer_wise_mixed_precision = True if 'INT8' in self.config and 'FP16' in self.config else False
+        layer_wise_mixed_precision = True if check_for_value_in_dict(self.config, 'INT8') and check_for_value_in_dict(self.config, 'FP16') else False
 
         TRT_LOGGER = trt.Logger(trt.Logger.WARNING)
         builder = trt.Builder(TRT_LOGGER)

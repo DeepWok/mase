@@ -120,10 +120,9 @@ def transform(
                         )
 
                         # Apply post-quantization fine tuning (Quantization Aware Training)
-                        if pass_config['tensorrt_fine_tune']['fine_tune']:
-                            graph, _ = PASSES["tensorrt_fine_tune"](
-                                graph, pass_args=pass_config
-                            )
+                        graph, _ = PASSES["tensorrt_fine_tune"](
+                            graph, pass_args=pass_config
+                        )
 
                         PASSES["summarize_quantization"](
                             ori_graph, graph, save_dir=pass_save_dir

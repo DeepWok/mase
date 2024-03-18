@@ -99,7 +99,7 @@ class FineTuning:
             "max_epochs": epochs,
             "accelerator": self.config["accelerator"],
         }
-
+        self.logger.info(f"Fine tuninig for {epochs} epochs")
         train(
             self.graph.model,
             model_info,
