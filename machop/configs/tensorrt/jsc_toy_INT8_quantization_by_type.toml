@@ -6,6 +6,7 @@ max_epochs = 10
 batch_size = 256
 learning_rate = 1e-3
 accelerator = "gpu"
+task="cls"
 
 [passes.tensorrt_quantize]
 by = "type"

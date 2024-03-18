@@ -139,20 +139,21 @@ class FakeQuantizer:
 
     def get_config(self, name: str):
         """Retrieve specific configuration from the instance's config dictionary or return default."""
-        config = self.config.get(name) or self.config.get("default")
+        try:
+            config = self.config.get(name) or self.config.get("default")
+            config['input'] = config.get('input', self.config['default'].get("input"))
+            config['weight'] = config.get('weight', self.config['default'].get("weight"))
 
-        if config is None:
+        except KeyError:
             raise Exception(
-                "Please check Config/TOML file. Default config must be defined."
+                f"Please check Config/TOML file. Default or layer {name} config must be defined."
             )
-
+        
         # Check if required keys are defined
         try:
-            config["config"]["quantize"]
-            config["input"]["quantize_axis"]
-            config["input"]["calibrator"]
-            config["weight"]["quantize_axis"]
-            config["weight"]["calibrator"]
+            config['config']['quantize'] = config['config'].get('quantize', self.config.get("default")['config']['quantize'])
+            config['config']['precision'] = config['config'].get('precision', self.config.get("default")['config']['precision'])
+            config['input']['calibrator'] = config['input'].get('calibrator', self.config.get("default")['input']['calibrator'])       
         except KeyError:
             raise Exception(
                 f"Config/TOML not configured correctly. Please check documentation for what must be defined."
@@ -177,7 +178,7 @@ class FakeQuantizer:
             node_config = self.get_config(get_mase_op(node))
             if not node_config["config"]["quantize"]:
                 continue
-            if not node_config["precision"] == "INT8":
+            if not node_config["config"]["precision"] == "INT8":
                 continue
             if node.op == "call_module":
                 original_module = get_node_actual_target(node)
@@ -193,9 +194,34 @@ class FakeQuantizer:
 
     def fake_quantize_by_name(self, graph):
         """
-        This method applies fake quantization to the graph based on the name of each node.
+        This method applies fake quantization to the graph based on the type of each node.
         """
-        # TODO implement fake quantize_by_name
+        self.logger.info("Applying fake quantization to PyTorch model...")
+
+        if not check_for_value_in_dict(self.config, 'INT8'):
+            self.logger.warning(
+                "INT8 precision not found in config. Skipping fake quantization."
+            )
+            return graph
+
+        for node in graph.fx_graph.nodes:
+            if get_mase_op(node) not in QUANTIZEABLE_OP:
+                continue
+            node_config = self.get_config(node.name)
+            if not node_config["config"]["quantize"]:
+                continue
+            if not node_config["config"]["precision"] == "INT8":
+                continue
+            if node.op == "call_module":
+                original_module = get_node_actual_target(node)
+                new_module = self.create_quantized_module(
+                    get_mase_op(node),
+                    original_module,
+                    node_config,
+                )
+                parent_name, name = get_parent_name(node.target)
+                setattr(graph.modules[parent_name], name, new_module)
+        self.logger.info("Fake quantization applied to PyTorch model.")
         return graph
 
 

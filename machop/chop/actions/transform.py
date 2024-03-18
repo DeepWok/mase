@@ -93,9 +93,7 @@ def transform(
                 graph, _ = metadata_value_type_cast_transform_pass(
                     graph, pass_args={"fn": to_numpy_if_tensor}
                 )
-                import pdb; pdb.set_trace()
                 ori_graph = deepcopy_mase_graph(graph)
-                pdb.set_trace()
 
                 pass_config["batch_size"] = config["batch_size"]
                 pass_config["model"] = config["model"]
@@ -122,9 +120,10 @@ def transform(
                         )
 
                         # Apply post-quantization fine tuning (Quantization Aware Training)
-                        graph, _ = PASSES["tensorrt_fine_tune"](
-                            graph, pass_args=pass_config
-                        )
+                        if pass_config['tensorrt_fine_tune']['fine_tune']:
+                            graph, _ = PASSES["tensorrt_fine_tune"](
+                                graph, pass_args=pass_config
+                            )
 
                         PASSES["summarize_quantization"](
                             ori_graph, graph, save_dir=pass_save_dir

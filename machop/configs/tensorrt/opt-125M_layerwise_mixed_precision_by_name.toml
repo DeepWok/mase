@@ -10,10 +10,10 @@ task = "lm"
 max_epochs = 5
 batch_size = 16
 learning_rate = 1e-3
-accelerator = "cpu"
+accelerator = "gpu"
 
 [passes.tensorrt_quantize]
-by = "type"
+by = "name"
 calibrator = ["percentile", "mse", "entropy"]
 num_calibration_batches = 10
 percentiles = [99]
@@ -24,33 +24,34 @@ quantize = true
 calibrator = 'histogram'
 precision = 'INT8' 
 
-[passes.tensorrt_quantize.linear.config]
-calibrator = 'histogram'
-quantize = true
+# [passes.tensorrt_quantize.linear.config]
+# calibrator = 'histogram'
+# quantize = true
 
-[passes.tensorrt_quantize.linear.input]
-quantize_axis = false
+# [passes.tensorrt_quantize.linear.input]
+# quantize_axis = false
 
-[passes.tensorrt_quantize.linear.weight]
-quantize_axis = false 
+# [passes.tensorrt_quantize.linear.weight]
+# quantize_axis = false 
 
-[passes.tensorrt_quantize.conv2d.config]
-quantize = true
-calibrator = 'histogram'
+# [passes.tensorrt_quantize.conv2d.config]
+# quantize = true
+# calibrator = 'histogram'
 
-[passes.tensorrt_quantize.conv2d.input]
-quantize_axis = false
+# [passes.tensorrt_quantize.conv2d.input]
+# quantize_axis = false
 
-[passes.tensorrt_quantize.conv2d.weight]
-quantize_axis = false
+# [passes.tensorrt_quantize.conv2d.weight]
+# quantize_axis = false
 
-[passes.tensorrt_quantize.default.config.input]
-quantize_axis = false
+# [passes.tensorrt_quantize.default.config.input]
+# quantize_axis = false
 
-[passes.tensorrt_quantize.default.config.weight]
-quantize_axis = false
+# [passes.tensorrt_quantize.default.config.weight]
+# quantize_axis = false
 
 [passes.tensorrt_fine_tune]
+fine_tune = true
 epochs = 10
 
 [passes.tensorrt_analysis]

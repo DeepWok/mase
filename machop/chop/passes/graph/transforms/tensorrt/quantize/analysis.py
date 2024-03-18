@@ -216,10 +216,11 @@ class QuantizationAnalysis():
         num_GPU_warmup_batches = self.config['num_GPU_warmup_batches']
 
         # Instantiate metrics with the specified task type
-        metric = torchmetrics.classification.MulticlassAccuracy(num_classes=self.num_of_classes)
-        precision_metric = torchmetrics.Precision(num_classes=self.num_of_classes, average='weighted', task='multiclass')
-        recall_metric = torchmetrics.Recall(num_classes=self.num_of_classes, average='weighted', task='multiclass')
-        f1_metric = torchmetrics.F1Score(num_classes=self.num_of_classes, average='weighted', task='multiclass')
+        if self.config['task'] == 'cls':
+            metric = torchmetrics.classification.MulticlassAccuracy(num_classes=self.num_of_classes)
+            precision_metric = torchmetrics.Precision(num_classes=self.num_of_classes, average='weighted', task='multiclass')
+            recall_metric = torchmetrics.Recall(num_classes=self.num_of_classes, average='weighted', task='multiclass')
+            f1_metric = torchmetrics.F1Score(num_classes=self.num_of_classes, average='weighted', task='multiclass')            
 
         # Initialize lists to store metrics for each configuration
         recorded_accs = []
