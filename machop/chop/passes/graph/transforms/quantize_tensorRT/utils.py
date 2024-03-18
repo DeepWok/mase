@@ -103,7 +103,7 @@ def create_new_module(
                 copy_weights(original_module.bias, new_module.bias)
         
         elif config.get("name") == "fp16":  
-            new_module = original_module.half()
+            new_module = original_module.to(torch.float16)
 
     # elif mase_op == "relu":
     #     new_module_cls = quantized_module_map[f"relu_{quant_name}"]

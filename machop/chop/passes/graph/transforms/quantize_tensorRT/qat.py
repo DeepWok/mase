@@ -46,6 +46,12 @@ QUANTIZEABLE_OP = (
 class ToFP16(torch.nn.Module):
     def forward(self, x):
         return x.half()
+    
+def to_fp16(x):
+    return x.half()
+
+def to_fp32(x):
+    return x.float()
 
 logger = logging.getLogger(__name__)
 
@@ -57,7 +63,7 @@ def get_config(config: dict, name: str):
 
 
 def graph_fake_quantize_by_type(graph, config: dict):
-    graph.fx_graph.to_fp16 = ToFP16()
+    # graph.fx_graph.to_fp16 = ToFP16()
     for node in graph.fx_graph.nodes:
         if get_mase_op(node) not in QUANTIZEABLE_OP:
             continue
@@ -95,7 +101,7 @@ def graph_fake_quantize_by_type(graph, config: dict):
 
 
 def graph_fake_quantize_by_name(graph, config: dict):
-    graph.fx_graph.to_fp16 = ToFP16()
+    # graph.fx_graph.to_fp16 = ToFP16()
 
     quant_modules.initialize()
     for node in graph.fx_graph.nodes:
@@ -124,10 +130,22 @@ def graph_fake_quantize_by_name(graph, config: dict):
 
                 # if target_node is not None and prev_node is not None:
                 #     print('find prev')
+                args, kwargs = node.args, node.kwargs
                 with graph.fx_graph.inserting_before(node):
-                    new_node = graph.fx_graph.call_function(torch.half, args=(node,))
-                    node.replace_all_uses_with(new_node)
-                    new_node.args = (node,)
+                    new_node = graph.fx_graph.call_function(to_fp16, args, kwargs)
+                    print(new_node)
+                    new_node.name = node.name + "_fp16"
+                    # node.replace_all_uses_with(new_node)
+                    node.args = (new_node, )
+                    # graph.recompile()
+                
+                args, kwargs = node.args, node.kwargs
+                with graph.fx_graph.inserting_after(node):
+                    new_node = graph.fx_graph.call_function(to_fp32, args, kwargs)
+                    print(new_node)
+                    new_node.name = node.name + "_fp32"
+                    # node.replace_all_uses_with(new_node)
+                    # node.args = (new_node, )
             
             # update_quant_meta_param(node, node_config, get_mase_op(node))
             logger.debug(f"Quantized module: {node.target} with config: {node_config}")
@@ -170,7 +188,8 @@ def fake_quantize_transform_pass(graph, pass_args=None):
         case _:
             raise ValueError(f'Unsupported quantize "by": {by}')
 
-    # graph.model = torch.fx.GraphModule(graph.model, graph.fx_graph)
+    graph.model = torch.fx.GraphModule(graph.model, graph.fx_graph)
+
     return graph
 
 
