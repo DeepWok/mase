@@ -41,14 +41,19 @@ class BatchNormTB(Testbench):
             dut.data_in_0_ready
         )
 
-        # self.weight_driver = StreamDriver(
-        #     dut.clk, dut.weight, dut.weight_valid, dut.weight_ready
-        # )
+        self.weight_driver = StreamDriver(
+            dut.clk, dut.weight, dut.weight_valid, dut.weight_ready
+        )
 
-        # self.bias_driver = StreamDriver(
-        #     dut.clk, dut.bias, dut.bias_valid, dut.bias_ready
-        # )
+        self.bias_driver = StreamDriver(
+            dut.clk, dut.bias, dut.bias_valid, dut.bias_ready
+        )
+
+        self.mean_driver = StreamDriver(
+            dut.clk, dut.mean, dut.mean_valid, dut.mean_ready
+        )
         
+        self.num_features = num_features
 
         self.data_out_0_monitor = StreamMonitor(
             dut.clk,
@@ -58,29 +63,16 @@ class BatchNormTB(Testbench):
             check=True,
         )
         
-        self.config = {
-            "data_in_width": 8,
-            "data_in_frac_width": 3,
-            "weight_width": 8,
-            "weight_frac_width": 3,
-            "bias_width": 8,
-            "bias_frac_width": 3,
-        }
-
-        self.model = BatchNorm1dInteger(
-            num_features,
-            config=self.config                
-        )
     
     def fe_model(self, data_in): 
         #TODO: implement a functionally equivalent model here 
         #TODO: combine with random testing
         return data_in
 
-    def preprocess_tensor(self, tensor, quantizer, config, parallelism):
+    def preprocess_tensor(self, tensor, quantizer, frac_width, parallelism):
         # print("BEFORE: ", tensor)
         tensor = quantizer(tensor)
-        tensor = (tensor * 2 ** config["frac_width"]).int()
+        tensor = (tensor * 2 ** frac_width).int()
         # logger.info(f"\nTensor in int format: {tensor}")
         tensor = tensor.reshape(-1, parallelism).tolist()
         # logger.info(f"\nTensor after reshaping: {tensor}")
@@ -99,106 +91,113 @@ class BatchNormTB(Testbench):
         # TODO(jlsand): We assume that the fixed point format is the same for all
         # parameters. Fair assumption or faulty?
 
-        # TODO(jlsand): Using the batch norm layer does not always work. Here we rely
-        # on a manually written FE model. Reason for discrepancy for layer and verilog
-        # module is still unknown, although seems like discrepancies mainly happen when
-        # running mean is non-zero.
-        width = self.config["data_in_width"]
-        frac_width = self.config["data_in_frac_width"]
-        local_config = {"width": width, "frac_width": frac_width}
+        # Setup functionally equivalent model
+        config = {
+            "data_in_width": int(self.dut.DATA_IN_0_PRECISION_0),
+            "data_in_frac_width": int(self.dut.DATA_IN_0_PRECISION_1),
+            "weight_width": int(self.dut.WEIGHT_PRECISION_0),
+            "weight_frac_width": int(self.dut.WEIGHT_PRECISION_1),
+            "bias_width": int(self.dut.BIAS_PRECISION_0),
+            "bias_frac_width": int(self.dut.BIAS_PRECISION_1),
+        }
+
+        data_width = config["data_in_width"]
+        data_frac_width = config["data_in_frac_width"]
+        parallelism = int(self.dut.DATA_IN_0_PARALLELISM_DIM_0) * int(self.dut.DATA_IN_0_PARALLELISM_DIM_1)    
+        local_config = {"width": data_width, "frac_width": data_frac_width}
+
+        model = BatchNorm1dInteger(
+            num_features=self.num_features,
+            config=config                
+        )
         
         # Train first to generate a running mean/average
-        training_inputs = torch.randn((10, self.model.num_features))
-        self.model(training_inputs)
+        training_inputs = torch.randn((10, model.num_features))
+        model.train(True)
+        model(training_inputs)
 
         # Now run inference to generate expected model outputs
-        self.model.training = False
-
-        inputs = torch.randn((1, self.model.num_features))
+        model.train(False)
+        inputs = torch.randn((1, model.num_features))
         print("Inputs: ", inputs)
-        exp_outputs_model = self.model(inputs)
+        print("Inputs (quantized): ", model.w_quantizer(inputs))
+        exp_outputs_model = model(inputs)
         print("Expected outputs model: ", exp_outputs_model)
-    
+
         inputs = self.preprocess_tensor(
             inputs, 
-            self.model.x_quantizer, 
-            local_config, 
-            int(self.dut.PARALLELISM)
+            model.x_quantizer, 
+            config["data_in_frac_width"], 
+            int(parallelism)
         )
         print("Pre-processed inputs: ", inputs)
 
-        gamma = self.preprocess_tensor(
-            self.model.weight, 
-            self.model.w_quantizer, 
-            local_config, 
-            int(self.dut.PARALLELISM)
-        )
-
-        beta = self.preprocess_tensor(
-            self.model.bias, 
-            self.model.b_quantizer, 
-            local_config, 
-            int(self.dut.PARALLELISM)
-        )
-
-        print("Running variance: ", self.model.running_var)
-        stdv = torch.tensor([var ** (1.0/2.0) for var in self.model.running_var])
+        print("Running variance: ", model.running_var)
+        stdv = torch.tensor([var ** (1.0/2.0) for var in model.running_var])
         print("Stdv: ", stdv)
-        stdv = self.preprocess_tensor(
-            stdv, 
-            self.model.w_quantizer, 
-            local_config, 
-            int(self.dut.PARALLELISM)
+
+        print("model weight: ", model.weight)
+        weight = model.weight / stdv
+        print("weight: ", weight)
+        weight = self.preprocess_tensor(
+            weight, 
+            model.w_quantizer, 
+            config["weight_frac_width"], 
+            int(parallelism)
         )
 
-        print("Running mean: ", self.model.running_mean)
+        bias = self.preprocess_tensor(
+            model.bias, 
+            model.b_quantizer, 
+            config["bias_frac_width"], 
+            int(parallelism)
+        )
+        
+        print("Running mean: ", model.running_mean)
         mean = self.preprocess_tensor(
-            self.model.running_mean, 
-            self.model.b_quantizer, 
-            local_config, 
-            int(self.dut.PARALLELISM)
+            model.running_mean, 
+            model.b_quantizer, 
+            config["weight_frac_width"], 
+            int(parallelism)
         )
 
-
+        # Set the other inputs to the module.
         self.data_out_0_monitor.ready.value = 1
         print(f'================= DEBUG: asserted ready_out ================= \n')
 
-        
-        self.dut.gamma.value = gamma[0]
-        self.dut.beta.value = beta[0]
-        self.dut.mean.value = mean[0]
-        self.dut.stdv.value = stdv[0]        
+        # self.dut.weight.value = weight[0]
+        # self.dut.bias.value = bias[0]
+        # self.dut.mean.value = mean[0]
 
+        self.weight_driver.load_driver(weight)
+        self.bias_driver.load_driver(bias)
+        self.mean_driver.load_driver(mean)
         self.data_in_0_driver.load_driver(inputs)
         print(f'================= DEBUG: put values on input ports ================= \n')
 
-        print("Exp. outputs model: ", self.model.x_quantizer(exp_outputs_model))
+        exp_outputs_model = model.x_quantizer(exp_outputs_model)
+        print("Exp. outputs model: ", exp_outputs_model)
 
-        exp_outputs_model = self.preprocess_tensor(
-            exp_outputs_model, 
-            self.model.x_quantizer, 
-            local_config, 
-            int(self.dut.PARALLELISM)
-        )
-
-        print("Exp. outputs model pre-processed: ", exp_outputs_model)
-
-        exp_outputs_manual = ((torch.tensor(inputs) - torch.tensor(mean)) * torch.tensor(gamma) / torch.tensor(stdv) + torch.tensor(beta)).int()
-        print("Exp. outputs manual: ", exp_outputs_manual)
-
-        # The output from the module is treated as positive integers
-        # convert the expected outputs
+        # # The output from the module is treated as positive integers
+        # # convert the negative expected outputs to their positive
+        # # equivalent when not treated as 2's complement.
         def convert(x):
             if x >= 0:
                 return x
             else:
-                return 2**(width-frac_width) + x         
-        exp_outputs_manual = exp_outputs_manual.apply_(convert)
+                new_x = x + (2 ** (data_width-data_frac_width))
+                print(x, " ", new_x)
+                return new_x
+        exp_outputs_model.detach().apply_(convert)
+        print("Exp. outputs model: ", exp_outputs_model)
 
-        print("Exp. outputs manual converted: ", exp_outputs_manual)
+        exp_outputs_model= (exp_outputs_model* 2 ** data_frac_width).int()
+        exp_outputs_model= exp_outputs_model.reshape(-1, int(parallelism)).tolist()
+        
+        print("Exp. outputs model pre-processed: ", exp_outputs_model)
         print(f'================= DEBUG: generated values with fe model ================= \n')
 
-        self.data_out_0_monitor.load_monitor(exp_outputs_manual)
+        self.data_out_0_monitor.load_monitor(exp_outputs_model)
         print(f'================= DEBUG: loaded hw outptus ================= \n')
 
         await Timer(1000, units="us")
@@ -218,17 +217,42 @@ if __name__ == "__main__":
     mase_runner(
         trace=True,
         module_param_list=[
+             # {
+             #    "DATA_IN_0_PRECISION_0": 8,
+             #    "DATA_IN_0_PRECISION_1": 3,
+             #    "DATA_IN_0_PARALLELISM_DIM_0": 16,
+             #    "DATA_IN_0_PARALLELISM_DIM_1": 1,                  
+             # },
+             # {
+             #    "DATA_IN_0_PRECISION_0": 8,
+             #    "DATA_IN_0_PRECISION_1": 3,
+             #    "DATA_IN_0_PARALLELISM_DIM_0": 32,
+             #    "DATA_IN_0_PARALLELISM_DIM_1": 1,                  
+             # },            
+             # {
+             #    "DATA_IN_0_PRECISION_0": 16,
+             #    "DATA_IN_0_PRECISION_1": 5,
+             #    "DATA_IN_0_PARALLELISM_DIM_0": 16,
+             #    "DATA_IN_0_PARALLELISM_DIM_1": 1,                  
+             # },
+             # {
+             #    "DATA_IN_0_PRECISION_0": 8,
+             #    "DATA_IN_0_PRECISION_1": 3,
+             #    "DATA_IN_0_PARALLELISM_DIM_0": 16,
+             #    "DATA_IN_0_PARALLELISM_DIM_1": 1,
+             #    "WEIGHT_PRECISION_0": 16,
+             #    "WEIGHT_PRECISION_1": 5,
+             # },
              {
-                "IN_WIDTH": 8,
-                "IN_FRAC_WIDTH": 3,
-                "IN_DEPTH": 16,
-                "PARALLELISM": 16,                  
-             }
+                "DATA_IN_0_PRECISION_0": 8,
+                "DATA_IN_0_PRECISION_1": 3,
+                "DATA_IN_0_PARALLELISM_DIM_0": 16,
+                "DATA_IN_0_PARALLELISM_DIM_1": 1,
+                "WEIGHT_PRECISION_0": 16,
+                "WEIGHT_PRECISION_1": 5,
+                "BIAS_PRECISION_0": 12,
+                "BIAS_PRECISION_1": 4,
+             },
               
         ]    
-    )
-
-
-
-    #def get_dut_parameters(self): #TODO: discuss need for this function
-        
+    )        

@@ -1,83 +1,131 @@
 `timescale 1ns / 1ps
 module fixed_batch_norm1d #(
-    // TODO(jlsand): Some of these parameter names need to be standardized.
-    parameter IN_WIDTH          = 8,
-    parameter IN_FRAC_WIDTH     = 4, 
-    parameter IN_DEPTH          = 16, 
-    parameter PARALLELISM       = 16, 
+    parameter DATA_IN_0_PRECISION_0 = 8,
+    parameter DATA_IN_0_PRECISION_1 = 3,
+    parameter DATA_IN_0_TENSOR_SIZE_DIM_0 = 16,
+    parameter DATA_IN_0_PARALLELISM_DIM_0 = 4,
 
-    parameter OUT_WIDTH         = IN_WIDTH,
-    parameter OUT_FRAC_WIDTH    = IN_FRAC_WIDTH,
-    parameter OUT_DEPTH         = IN_DEPTH,
+    parameter DATA_IN_0_TENSOR_SIZE_DIM_1 = 8,
+    parameter DATA_IN_0_PARALLELISM_DIM_1 = 1,
 
-    // parameter string GAMMA_DATA_PATH =  "/home/sv720/mase_fork/mase_group7/machop/mase_components/normalisation/rtl/memory/batch_norm_gamma_ram.dat",
-    // parameter string BETA_DATA_PATH =   "/home/sv720/mase_fork/mase_group7/machop/mase_components/normalisation/rtl/memory/batch_norm_beta_ram.dat",
-    // parameter string MEAN_DATA_PATH =   "/home/sv720/mase_fork/mase_group7/machop/mase_components/normalisation/rtl/memory/batch_norm_mean_ram.dat",
-    // parameter string STD_DATA_PATH =    "/home/sv720/mase_fork/mase_group7/machop/mase_components/normalisation/rtl/memory/batch_norm_std_ram.dat"
+    // The different inputs may have different levels of precision:
+    // we use an internal FP format large enough to store all.
+    // However, the tensor sizes must of course equal
+    // those of data in.
+    parameter MEAN_PRECISION_0 = DATA_IN_0_PRECISION_0,
+    parameter MEAN_PRECISION_1 = DATA_IN_0_PRECISION_1,
+    parameter MEAN_TENSOR_SIZE_DIM_0 = DATA_IN_0_TENSOR_SIZE_DIM_0,
+    parameter MEAN_PARALLELISM_DIM_0 = DATA_IN_0_PARALLELISM_DIM_0,
 
-    parameter GAMMA_RAM_WIDTH = IN_WIDTH,
-    parameter GAMMA_RAM_DEPTH = IN_DEPTH,
+    parameter WEIGHT_PRECISION_0 = DATA_IN_0_PRECISION_0,
+    parameter WEIGHT_PRECISION_1 = DATA_IN_0_PRECISION_1,
+    parameter WEIGHT_TENSOR_SIZE_DIM_0 = DATA_IN_0_TENSOR_SIZE_DIM_0,
+    parameter WEIGHT_PARALLELISM_DIM_0 = DATA_IN_0_PARALLELISM_DIM_0,
 
-    parameter BETA_RAM_WIDTH = IN_WIDTH,
-    parameter BETA_RAM_DEPTH = IN_DEPTH,
+    parameter BIAS_PRECISION_0 = DATA_IN_0_PRECISION_0,
+    parameter BIAS_PRECISION_1 = DATA_IN_0_PRECISION_1,
+    parameter BIAS_TENSOR_SIZE_DIM_0 = DATA_IN_0_TENSOR_SIZE_DIM_0,
+    parameter BIAS_PARALLELISM_DIM_0 = DATA_IN_0_PARALLELISM_DIM_0,
 
-    parameter MEAN_RAM_WIDTH = IN_WIDTH,
-    parameter MEAN_RAM_DEPTH = IN_DEPTH,
-
-    parameter STD_RAM_WIDTH = IN_WIDTH,
-    parameter STD_RAM_DEPTH = IN_DEPTH
+    parameter DATA_OUT_0_PRECISION_0 = DATA_IN_0_PRECISION_0,
+    parameter DATA_OUT_0_PRECISION_1 = DATA_IN_0_PRECISION_1,
+    parameter DATA_OUT_0_TENSOR_SIZE_DIM_0 = DATA_IN_0_TENSOR_SIZE_DIM_0,
+    parameter DATA_OUT_0_PARALLELISM_DIM_0 = DATA_IN_0_PARALLELISM_DIM_0,
+    
+    parameter DATA_OUT_0_TENSOR_SIZE_DIM_1 = DATA_IN_0_TENSOR_SIZE_DIM_1,
+    parameter DATA_OUT_0_PARALLELISM_DIM_1 = DATA_IN_0_PARALLELISM_DIM_1
 ) (
     input                   clk, 
     input                   rst, 
     
-    // Input ports for data
-    input   [IN_WIDTH-1:0]  data_in_0     [IN_DEPTH-1:0], 
-    input                   data_in_0_valid,
-    output                  data_in_0_ready, 
+    input  [DATA_IN_0_PRECISION_0-1:0] data_in_0        [DATA_IN_0_PARALLELISM_DIM_0-1:0],
+    input                              data_in_0_valid,
+    output                             data_in_0_ready,
 
-    // Input ports for gamma AKA weights in torch terminology
-    input   [GAMMA_RAM_WIDTH-1:0]  gamma  [GAMMA_RAM_DEPTH-1:0], 
-    input                          gamma_valid,
-    output                         gamma_ready, 
+    // input ports for gamma divided by the standard deviation
+    input  [WEIGHT_PRECISION_0-1:0] weight      [WEIGHT_PARALLELISM_DIM_0-1:0],
+    input                           weight_valid,
+    output                          weight_ready,
 
-    // Input ports for beta AKA bias in torch terminology
-    input   [BETA_RAM_WIDTH-1:0]  beta     [BETA_RAM_DEPTH-1:0], 
-    input                         beta_valid,
-    output                        beta_ready, 
-   
-    // Input ports for mean
-    input   [MEAN_RAM_WIDTH-1:0]  mean     [MEAN_RAM_DEPTH-1:0], 
-    input                         mean_valid,
-    output                        mean_ready,
+    // input ports bias/beta
+    input [BIAS_PRECISION_0-1:0] bias [BIAS_PARALLELISM_DIM_0-1:0],
+    input                        bias_valid,
+    output                       bias_ready,
 
-    // Input ports for standard devitation
-    input   [STD_RAM_WIDTH-1:0]   stdv     [STD_RAM_DEPTH-1:0], 
-    input                         stdv_valid,
-    output                        stdv_ready, 
+    input [MEAN_PRECISION_0-1:0] mean [MEAN_PARALLELISM_DIM_0-1:0],
+    input                        mean_valid,
+    output                       mean_ready,
 
     // Output ports for data
-    output  [OUT_WIDTH-1:0] data_out_0    [OUT_DEPTH-1:0],
-    output                  data_out_0_valid,
-    input                   data_out_0_ready 
+    output logic [DATA_OUT_0_PRECISION_0-1:0] data_out_0      [DATA_OUT_0_PARALLELISM_DIM_0-1:0],
+    output data_out_0_valid,
+    input data_out_0_ready
 
 );
+    // Rename parameters to more descriptive names.
+    localparam IN_WIDTH      = DATA_IN_0_PRECISION_0; 
+    localparam IN_FRAC_WIDTH = DATA_IN_0_PRECISION_1; 
+    localparam IN_DEPTH      = DATA_IN_0_PARALLELISM_DIM_0*DATA_IN_0_PARALLELISM_DIM_1; 
 
+    let max2(v1, v2) = (v1 > v2) ? v1 : v2;
+    
+    // Intermediate FP format for the result of the data - mean subtraction
+    parameter FP_SUB_FRAC_WIDTH = max2(DATA_IN_0_PRECISION_1, MEAN_PRECISION_1);
+    parameter FP_SUB_WIDTH = max2(DATA_IN_0_PRECISION_0 - DATA_IN_0_PRECISION_1, MEAN_PRECISION_0 - MEAN_PRECISION_1) + FP_SUB_FRAC_WIDTH;
+    logic signed [FP_SUB_WIDTH-1:0] data_sub_format         [DATA_IN_0_PARALLELISM_DIM_0-1:0];
+    logic signed [FP_SUB_WIDTH-1:0] mean_sub_format         [DATA_IN_0_PARALLELISM_DIM_0-1:0];
+    logic signed [FP_SUB_WIDTH-1:0] sub_res                 [DATA_IN_0_PARALLELISM_DIM_0-1:0];
 
-    // logic [GAMMA_RAM_WIDTH-1:0] gamma_ram   [0:GAMMA_RAM_DEPTH-1];
-    // logic [BETA_RAM_WIDTH-1:0]  beta_ram    [0:BETA_RAM_DEPTH-1];  
-    // logic [MEAN_RAM_WIDTH-1:0]  mean_ram    [0:MEAN_RAM_DEPTH-1];
-    // logic [STD_RAM_WIDTH-1:0]   std_ram     [0:STD_RAM_DEPTH-1];  
+    // Intermediate FP format for result (sumres) * weight multiplication
+    localparam FP_MULT_FRAC_WIDTH = FP_SUB_FRAC_WIDTH + WEIGHT_PRECISION_1;
+    localparam FP_MULT_WIDTH = FP_SUB_WIDTH + WEIGHT_PRECISION_0;
+    logic signed [FP_MULT_WIDTH-1:0] mult_res               [DATA_IN_0_PARALLELISM_DIM_0-1:0];
 
+    // Intermediate FP format for the result of the bias subtraction
+    parameter FP_FINAL_FRAC_WIDTH = max2(FP_MULT_FRAC_WIDTH, BIAS_PRECISION_1);
+    parameter FP_FINAL_WIDTH = max2(FP_MULT_WIDTH - FP_MULT_FRAC_WIDTH, BIAS_PRECISION_0 - BIAS_PRECISION_1) + FP_FINAL_FRAC_WIDTH;
+    logic signed [FP_FINAL_WIDTH-1:0] mult_res_final_format        [DATA_IN_0_PARALLELISM_DIM_0-1:0];
+    logic signed [FP_FINAL_WIDTH-1:0] bias_final_format            [DATA_IN_0_PARALLELISM_DIM_0-1:0];
+    logic signed [FP_FINAL_WIDTH-1:0] final_res                    [DATA_IN_0_PARALLELISM_DIM_0-1:0];
 
-    logic                       valid_out_b; 
-    logic                       valid_out_r; 
+    always_comb begin
+        for (int i = 0; i < IN_DEPTH; i++) 
+        begin
+            data_sub_format[i] = 0;
+            mean_sub_format[i] = 0;
+
+            mult_res_final_format[i] = 0;
+            bias_final_format    [i] = 0;
+
+            data_sub_format[i][FP_SUB_WIDTH-1:FP_SUB_WIDTH-DATA_IN_0_PRECISION_0] = data_in_0[i];
+            data_sub_format[i] = data_sub_format[i] >>> (FP_SUB_WIDTH - DATA_IN_0_PRECISION_0);
+            
+            mean_sub_format[i][FP_SUB_WIDTH-1:FP_SUB_WIDTH-MEAN_PRECISION_0]      = mean[i];
+            mean_sub_format[i] = mean_sub_format[i]      >>> (FP_SUB_WIDTH - MEAN_PRECISION_0);;
+            sub_res[i] = data_sub_format[i] - mean_sub_format[i];
+
+            mult_res[i] = sub_res[i] * weight[i];
+            mult_res_final_format[i][FP_FINAL_WIDTH-1:FP_FINAL_WIDTH-FP_MULT_WIDTH] = mult_res[i];
+            mult_res_final_format[i] = mult_res_final_format[i] >>> (FP_FINAL_WIDTH - FP_MULT_WIDTH);
+            
+            bias_final_format[i][FP_FINAL_WIDTH-1:FP_FINAL_WIDTH-BIAS_PRECISION_0] = bias[i];
+            bias_final_format[i] = bias_final_format[i]         >>> (FP_FINAL_WIDTH - BIAS_PRECISION_0);
+
+            final_res[i] = mult_res_final_format[i] + bias_final_format[i];
+            data_out_0[i] = (final_res[i] >>> (FP_FINAL_FRAC_WIDTH - DATA_OUT_0_PRECISION_1));
+        end
+    end
+    
+    // Delay line for valid out.
+    logic valid_out_b; 
+    logic valid_out_r; 
 
     assign data_in_0_ready     = 1'b1;
     assign data_out_0_valid    = valid_out_r;
 
     always_comb 
-    begin 
-        valid_out_b     = data_in_0_valid; 
+    begin
+        valid_out_b     = data_in_0_valid && weight_valid && mean_valid && bias_valid; 
     end
 
     always_ff @(posedge clk)
@@ -85,24 +133,6 @@ module fixed_batch_norm1d #(
         valid_out_r     <= valid_out_b; 
         //delay line as expect the TB requires small delay (+ real designs will have it so best to check)
     end
-    
 
-    // //ACCESS MEMORY: 
-    // initial
-    // begin
-    //     $readmemh(GAMMA_DATA_PATH,  gamma_ram);
-    //     $readmemh(BETA_DATA_PATH,   beta_ram);
-    //     $readmemh(MEAN_DATA_PATH,   mean_ram);
-    //     $readmemh(STD_DATA_PATH,    std_ram); //N.B.: it is assumed that epsilon in inculded here
-    //     //TODO: think if should provide gamma/std instead to multiply in hw instead of division
-    // end
-
-    generate
-        genvar i;
-        for (i = 0; i < IN_DEPTH; i++) 
-        begin
-            assign data_out_0[i] = (data_in_0[i] - mean[i])*gamma[i]/ stdv[i] + beta[i];
-        end
-    endgenerate    
     
 endmodule
