@@ -22,6 +22,7 @@ from mase_cocotb.runner import mase_runner
 from mase_cocotb.utils import bit_driver, sign_extend_t
 
 from chop.passes.graph.transforms.quantize.quantizers import integer_quantizer
+from chop.passes.graph.transforms.quantize.quantized_modules import LayerNormInteger
 
 import torch
 from queue import Queue
@@ -63,12 +64,12 @@ class LayerNormTB(Testbench):
             "bias_frac_width": 3,
         }
 
-        self.model = torch.nn.LayerNorm(num_features, elementwise_affine=False);
+        self.model = LayerNormInteger(num_features, elementwise_affine=False, config=self.config);
       
-    def preprocess_tensor(self, tensor, quantizer, config, parallelism):
+    def preprocess_tensor(self, tensor, quantizer, frac_width, parallelism):
         # print("BEFORE: ", tensor)
         tensor = quantizer(tensor)
-        tensor = (tensor * 2 ** config["frac_width"]).int()
+        tensor = (tensor * (2 ** frac_width)).int()
         # logger.info(f"\nTensor in int format: {tensor}")
         tensor = tensor.reshape(-1, parallelism).tolist()
         # logger.info(f"\nTensor after reshaping: {tensor}")
@@ -87,21 +88,19 @@ class LayerNormTB(Testbench):
         # TODO(jlsand): We assume that the fixed point format is the same for all
         # parameters. Fair assumption or faulty?
 
-        width = self.config["data_in_width"]
-        frac_width = self.config["data_in_frac_width"]
-        local_config = {"width": width, "frac_width": frac_width}
-        
-        # Train first to generate a running mean/average
-        training_inputs = torch.randn((10, self.model.normalized_shape[0]))
-        self.model(training_inputs)
+        data_width = self.config["data_in_width"]
+        data_frac_width = self.config["data_in_frac_width"]
+        parallelism = int(self.dut.DATA_IN_0_PARALLELISM_DIM_0) * int(self.dut.DATA_IN_0_PARALLELISM_DIM_1)    
+        local_config = {"width": data_width, "frac_width": data_frac_width}
 
-        # Now run inference to generate expected model outputs
+        self.model.reset_parameters()
+        print(self.model.weight)
+        print(self.model.bias)
         self.model.training = False
-
         inputs = torch.randn((1, self.model.normalized_shape[0])) + 0.5
         
         quantizer = partial(
-            integer_quantizer, width=width, frac_width=frac_width
+            integer_quantizer, width=data_width, frac_width=data_frac_width
         )
         
         print("Inputs: ", inputs)
@@ -109,7 +108,8 @@ class LayerNormTB(Testbench):
         print("Inputs (quantized): ", quantized_inputs)
 
         exp_outputs_model = self.model(inputs)
-        print("Expected outputs model: ", exp_outputs_model)        
+        print("Expected outputs model: ", exp_outputs_model)
+        print("Expected sum of quantized inputs: ", quantizer(sum(quantized_inputs[0])))
         print("Expected mean of quantized inputs: ", quantizer(quantizer(sum(quantized_inputs[0]))/len(inputs[0])))
         print("Expected var of quantized inputs: ", quantizer(quantized_inputs[0].var()))
         # print("Expected stdv of quantized inputs: ", quantizer(np.var(quantized_inputs[0]) ** 0.5))
@@ -117,44 +117,52 @@ class LayerNormTB(Testbench):
         inputs = self.preprocess_tensor(
             inputs, 
             quantizer, 
-            local_config, 
-            int(self.dut.PARALLELISM)
+            data_frac_width, 
+            parallelism
         )
         print("Pre-processed inputs: ", inputs)
+
+        weight = self.preprocess_tensor(
+            self.model.weight, 
+            self.model.w_quantizer, 
+            data_frac_width, 
+            int(parallelism)
+        )
+
+        bias = self.preprocess_tensor(
+            self.model.bias, 
+            self.model.b_quantizer, 
+            data_frac_width, 
+            int(parallelism)
+        )
 
         self.data_out_0_monitor.ready.value = 1
         print(f'================= DEBUG: asserted ready_out ================= \n')
         
         self.data_in_0_driver.load_driver(inputs)
-        self.dut.gamma_in.value = inputs[0]; 
-        self.dut.beta_in.value = inputs[0]; 
+        self.dut.weight.value = weight[0]; 
+        self.dut.bias.value = bias[0]; 
         print(f'================= DEBUG: put values on input ports ================= \n')
 
-        quant_exp_outputs_model = quantizer(exp_outputs_model)
-        print("Exp. outputs model (quantized): ", quant_exp_outputs_model)
+        exp_outputs_model = quantizer(exp_outputs_model)
+        print("Exp. outputs model: ", exp_outputs_model)
 
-        exp_outputs_model = self.preprocess_tensor(
-            exp_outputs_model, 
-            quantizer, 
-            local_config, 
-            int(self.dut.PARALLELISM)
-        )
+        # # The output from the module is treated as positive integers
+        # # convert the negative expected outputs to their positive
+        # # equivalent when not treated as 2's complement.
+        def convert(x):
+            if x >= 0:
+                return x
+            else:
+                new_x = x + (2 ** (data_width-data_frac_width))
+                print(x, " ", new_x)
+                return new_x
+        exp_outputs_model.detach().apply_(convert)
+        # exp_outputs_model = exp_outputs_model.floor() 
+        print("Exp. outputs model: ", exp_outputs_model)
 
-        print("Exp. outputs model (pre-processed): ", exp_outputs_model)
-
-        # exp_outputs_manual = ((torch.tensor(inputs) - torch.tensor(mean)) * torch.tensor(gamma) / torch.tensor(stdv) + torch.tensor(beta)).int()
-        # print("Exp. outputs manual: ", exp_outputs_manual)
-
-        # The output from the module is treated as positive integers
-        # convert the expected outputs
-        # def convert(x):
-        #     if x >= 0:
-        #         return x
-        #     else:
-        #         return 2**(width-frac_width) + x         
-        # exp_outputs_manual = exp_outputs_manual.apply_(convert)
-
-        # print("Exp. outputs manual converted: ", exp_outputs_manual)
+        exp_outputs_model= (exp_outputs_model* 2 ** data_frac_width).int()
+        exp_outputs_model= exp_outputs_model.reshape(-1, int(parallelism)).tolist()
         print(f'================= DEBUG: generated values with fe model ================= \n')
 
         self.data_out_0_monitor.load_monitor(exp_outputs_model)
@@ -178,11 +186,11 @@ if __name__ == "__main__":
         trace=True,
         module_param_list=[
              {
-                "IN_WIDTH": 8,
-                "IN_FRAC_WIDTH": 3,
-                "IN_DEPTH": 16,
-                "PARALLELISM": 16,                  
-             }
+                "DATA_IN_0_PRECISION_0": 8,
+                "DATA_IN_0_PRECISION_1": 3,
+                "DATA_IN_0_PARALLELISM_DIM_0": 16,
+                "DATA_IN_0_PARALLELISM_DIM_1": 1,                  
+             },
               
         ]    
     )

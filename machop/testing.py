@@ -26,7 +26,7 @@ from chop.tools.logger import set_logging_verbosity
 
 from torchmetrics.classification import MulticlassAccuracy
 
-set_logging_verbosity("debug")
+set_logging_verbosity("info")
 
 import toml
 import torch
@@ -77,6 +77,7 @@ model = get_model(
 print(model)
 mg = MaseGraph(model=model)
 
+# print(mg.modules.named_parameters())
 # Generate MaseGraph and generate meta data.
 # mlp = MLP()
 # mg = MaseGraph(model=mlp)
@@ -101,7 +102,6 @@ input_generator = InputGenerator(
 
 dummy_in = next(iter(input_generator))
 _ = model(**dummy_in)
-
 
 mg, _ = init_metadata_analysis_pass(mg, None)
 mg, _ = add_common_metadata_analysis_pass(
@@ -157,6 +157,13 @@ def quantize_and_compare(mg: MaseGraph, ori_mg: MaseGraph):
                 # bias
                 "bias_width": 8,
                 "bias_frac_width": 4,
+                
+                # # stdv
+                # "stdv_width": 8,
+                # "stdv_frac_width": 4,
+                # # mean
+                # "mean_width": 8,
+                # "mean_frac_width": 4,
             }
         },
     }
@@ -170,6 +177,8 @@ def quantize_and_compare(mg: MaseGraph, ori_mg: MaseGraph):
 # Ensure the node types are correct after the quantization pass.
 _ = report_node_type_analysis_pass(mg)
 
+mg, _ = report_node_meta_param_analysis_pass(mg, {"which": ("software", )})
+mg, _ = report_node_meta_param_analysis_pass(mg, {"which": ("common", )})
 
 # ------------------------ Own traversal of the original and quantised graphs ------------------- 
 from tabulate import tabulate
@@ -280,12 +289,14 @@ mg, _ = report_node_meta_param_analysis_pass(mg, {"which": ("hardware",)})
 
 
 mg, _ = emit_verilog_top_transform_pass(mg)
+
+mg, _ = emit_bram_transform_pass(mg)
+
 mg, _ = emit_internal_rtl_transform_pass(mg)
 
 # Init block memory.
-mg, _ = emit_bram_transform_pass(mg)
 # Emit testbench
-mg, _ = emit_cocotb_transform_pass(mg)
+# mg, _ = emit_cocotb_transform_pass(mg)
 
 
 from chop.actions import simulate

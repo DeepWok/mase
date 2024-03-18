@@ -2,24 +2,47 @@
 // TODO(jlsand): Currently, our LayerNorm normalises over every dimension of data passed to it.
 // LayerNorm requires that the normalisation be possible to only happen over some dimensions
 module fixed_layer_norm #(
-    
-    // parameter NUM_GROUPS
-    // parameter NUM_CHANNELS
-    // General input for normalisation
-    
-    parameter IN_WIDTH          = 8,
-    parameter IN_FRAC_WIDTH     = 4, 
 
-    parameter OUT_WIDTH = IN_WIDTH,
-    parameter OUT_FRAC_WIDTH     = IN_FRAC_WIDTH,
+
+    parameter DATA_IN_0_PRECISION_0 = 8,
+    parameter DATA_IN_0_PRECISION_1 = 4,
+    parameter DATA_IN_0_TENSOR_SIZE_DIM_0 = 16,
+    parameter DATA_IN_0_PARALLELISM_DIM_0 = 16,
+    parameter DATA_IN_0_TENSOR_SIZE_DIM_1 = 8,
+    parameter DATA_IN_0_PARALLELISM_DIM_1 = 1,
+    
+    parameter WEIGHT_PRECISION_0 = DATA_IN_0_PRECISION_0,
+    parameter WEIGHT_PRECISION_1 = DATA_IN_0_PRECISION_1,
+    parameter WEIGHT_TENSOR_SIZE_DIM_0 = DATA_IN_0_TENSOR_SIZE_DIM_0,
+    parameter WEIGHT_PARALLELISM_DIM_0 = DATA_IN_0_PARALLELISM_DIM_0,
+
+    parameter BIAS_PRECISION_0 = DATA_IN_0_PRECISION_0,
+    parameter BIAS_PRECISION_1 = DATA_IN_0_PRECISION_1,
+    parameter BIAS_TENSOR_SIZE_DIM_0 = DATA_IN_0_TENSOR_SIZE_DIM_0,
+    parameter BIAS_PARALLELISM_DIM_0 = DATA_IN_0_PARALLELISM_DIM_0,
+
+    parameter DATA_OUT_0_PRECISION_0 = DATA_IN_0_PRECISION_0,
+    parameter DATA_OUT_0_PRECISION_1 = DATA_IN_0_PRECISION_1,
+    parameter DATA_OUT_0_TENSOR_SIZE_DIM_0 = DATA_IN_0_TENSOR_SIZE_DIM_0,
+    parameter DATA_OUT_0_PARALLELISM_DIM_0 = DATA_IN_0_PARALLELISM_DIM_0,
+    
+    parameter DATA_OUT_0_TENSOR_SIZE_DIM_1 = DATA_IN_0_TENSOR_SIZE_DIM_1,
+    parameter DATA_OUT_0_PARALLELISM_DIM_1 = DATA_IN_0_PARALLELISM_DIM_1,
+
+
+    // ------ We need to use the above parameters a lot, rename some of the most used ----------
+    parameter IN_WIDTH          = DATA_IN_0_PRECISION_0,
+    parameter IN_FRAC_WIDTH     = DATA_IN_0_PRECISION_1, 
+
+    parameter OUT_WIDTH         = IN_WIDTH,
+    parameter OUT_FRAC_WIDTH    = IN_FRAC_WIDTH,
     
     // IN_DEPTH describes the number of data points per sample.
     // In image contexts, IN_DEPTH = sum_product of C, H & W.
-    parameter IN_DEPTH          = 16, 
+    parameter IN_DEPTH          = DATA_IN_0_PARALLELISM_DIM_0, 
     parameter OUT_DEPTH         = IN_DEPTH,
-    parameter PARALLELISM       = 16, 
-
-    parameter NUM_NORMALIZATION_ZONES = IN_DEPTH/2, 
+    parameter NUM_NORMALIZATION_ZONES = 1, 
+    // parameter NUM_NORMALIZATION_ZONES = IN_DEPTH/2, 
 
     // PARTS_PER_NORM describes how many partitions of the input
     // data (sample) should be considered per normalisation.
@@ -32,28 +55,28 @@ module fixed_layer_norm #(
     // PARTS_PER_NORM = 1 will normalise each image with all channels at once.
     // PARTS_PER_NORM = C = 4 will normalise each image one channel at a time.
     // PARTS_PER_NORM = C * H = 40 will normalise one row at a time per image per channel. 
-    parameter PARTS_PER_NORM = IN_DEPTH,
-
-    parameter ELEMENTWISE_AFFINE = 0,
-    parameter BIAS = 0
-
-    // parameter STD_RAM_DEPTH = IN_DEPTH
+    parameter PARTS_PER_NORM = IN_DEPTH
 ) (
     input                   clk, 
-    input                   reset_n, 
+    input                   rst, 
     
     // Input ports for data
-    input logic signed  [IN_WIDTH-1:0]  data_in_0     [IN_DEPTH-1:0], 
-    input                   data_in_0_valid,
-    output                  data_in_0_ready, 
+    input logic signed  [IN_WIDTH-1:0]  data_in_0     [DATA_IN_0_PARALLELISM_DIM_0-1:0], 
+    input                               data_in_0_valid,
+    output                              data_in_0_ready, 
 
-    input logic signed  [IN_WIDTH-1:0]  beta_in     [IN_DEPTH-1:0],
-    input logic signed  [IN_WIDTH-1:0]  gamma_in     [IN_DEPTH-1:0],
-      
+    input logic signed  [IN_WIDTH-1:0]  bias     [IN_DEPTH-1:0],
+    input                               bias_in_0_valid,
+    output                              bias_in_0_ready, 
+    
+    input logic signed  [IN_WIDTH-1:0]  weight    [IN_DEPTH-1:0],
+    input                               weight_in_0_valid,
+    output                              weight_in_0_ready, 
+
     // Output ports for data
-    output  signed [OUT_WIDTH-1:0] data_out_0    [OUT_DEPTH-1:0],
-    output                  data_out_0_valid,
-    input                   data_out_0_ready 
+    output  signed [OUT_WIDTH-1:0] data_out_0    [DATA_OUT_0_PARALLELISM_DIM_0-1:0],
+    output                         data_out_0_valid,
+    input                          data_out_0_ready 
 
 );
     
@@ -80,7 +103,7 @@ module fixed_layer_norm #(
     parameter VAR_BITS = SUM_OF_SQUARES_BITS;
     parameter VAR_FRAC_WIDTH = SUM_SQUARED_FRAC_WIDTH + $clog2(IN_DEPTH); //sv720: division by depth -> less integer bits
 
-    parameter EPSILON = 1;
+    parameter EPSILON = 0;
 
     parameter NUM_STATE_BITS = 32;
 
@@ -105,7 +128,7 @@ module fixed_layer_norm #(
 
     state_t                     state_b; 
     state_t                     state_r;
-    logic rst = ~reset_n;
+    // logic rst = ~reset_n;
 
     logic signed  [IN_WIDTH-1:0]  data_r     [IN_DEPTH-1:0];
     logic signed  [IN_WIDTH-1:0]  data_b     [IN_DEPTH-1:0]; 
@@ -203,15 +226,18 @@ module fixed_layer_norm #(
         begin 
             state_b   = MEAN_SUM_STATE;
             data_b    = data_in_0;
-            beta_b    = beta_in;
-            gamma_b   = gamma_in;
+            beta_b    = bias;
+            gamma_b   = weight;
         end
 
         // Convert the inputs to a larger bitwidth and a FP format with more frac. bits.        
         for (int i = 0; i < IN_DEPTH; i++) begin
-            data_in_zero_padded[i][SUM_EXTRA_FRAC_WIDTH-1:0] = 1'b0; 
-            data_in_zero_padded[i][SUM_EXTRA_FRAC_WIDTH+IN_WIDTH-1:SUM_EXTRA_FRAC_WIDTH] = data_r[i];
-            data_in_zero_padded[i][SUM_WIDTH-1:SUM_EXTRA_FRAC_WIDTH+IN_WIDTH] = {{SUM_NUM_MSb_PADDING_BITS}{data_r[i][IN_WIDTH-1]}}; //sv720: sign extention
+            data_in_zero_padded[i][SUM_WIDTH-1:0] = 0; 
+            // data_in_zero_padded[i][SUM_EXTRA_FRAC_WIDTH+IN_WIDTH-1:SUM_EXTRA_FRAC_WIDTH] = data_r[i];
+            // data_in_zero_padded[i][SUM_WIDTH-1:SUM_EXTRA_FRAC_WIDTH+IN_WIDTH] = {{SUM_NUM_MSb_PADDING_BITS}{data_r[i][IN_WIDTH-1]}}; //sv720: sign extention
+            data_in_zero_padded[i][SUM_WIDTH-1:SUM_WIDTH-IN_WIDTH] = data_r[i];
+            data_in_zero_padded[i] = data_in_zero_padded[i] >>> (SUM_WIDTH - IN_WIDTH - SUM_EXTRA_FRAC_WIDTH);
+
         end
 
         
@@ -238,7 +264,7 @@ module fixed_layer_norm #(
             for (int j = 0; j < NUM_NORMALIZATION_ZONES; j++)
             begin
                 // Sum over the widened inputs.
-                sum_b[j] = '0;
+                sum_b[j] = 0;
                 for (int i = 0; i < NORMALIZATION_ZONE_PERIOD; i++) begin
                     sum_b[j] += data_in_zero_padded[i+j*NORMALIZATION_ZONE_PERIOD];
                 end
@@ -302,6 +328,7 @@ module fixed_layer_norm #(
                 for (int i=0; i<NORMALIZATION_ZONE_PERIOD; i++)
                 begin
                     data_minus_mean_b[i+j*NORMALIZATION_ZONE_PERIOD] = (data_r[i+j*NORMALIZATION_ZONE_PERIOD] - mean_r[j][ IN_WIDTH + SUM_FRAC_WIDTH - IN_FRAC_WIDTH - 1:SUM_FRAC_WIDTH - IN_FRAC_WIDTH ]);
+                    // data_minus_mean_b[i+j*NORMALIZATION_ZONE_PERIOD] = (data_r[i+j*NORMALIZATION_ZONE_PERIOD] - mean_r[j]);
                 end
             end
 
