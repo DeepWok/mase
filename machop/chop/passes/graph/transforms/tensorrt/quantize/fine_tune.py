@@ -21,7 +21,7 @@ import os
 from pathlib import Path
 from ......plt_wrapper.base import WrapperBase
 from pytorch_lightning import Trainer
-from .utils import prepare_save_path
+from .utils import prepare_save_path, check_for_value_in_dict
 
 
 def tensorrt_fine_tune_transform_pass(graph, pass_args=None):
@@ -53,6 +53,12 @@ class FineTuning:
         can be overidden by setting the `epochs`, `initial_learning_rate` and
         `final_learning_rate` in `passes.tensorrt_quantize.fine_tune`.
         """
+        if not check_for_value_in_dict(self.config, "INT8"):
+            self.logger.warning(
+                "INT8 precision not found in config. Skipping QAT fine tuning."
+            )
+            return None
+
         self.logger.info("Starting Fine Tuning...")
         from chop.actions import train
         from chop.models import get_model_info

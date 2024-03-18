@@ -193,7 +193,6 @@ class QuantizationAnalysis():
         end = torch.cuda.Event(enable_timing=True)
 
         start.record()
-        
         output_data = ort_inference_session.run(None, {'input': input_data.numpy()})
         end.record()
         
@@ -252,6 +251,13 @@ class QuantizationAnalysis():
             if isinstance(self.model, trt.IExecutionContext):
                 preds, latency = self.infer_trt(self.model, xs)
             elif isinstance(self.model, ort.InferenceSession):
+                
+                if xs.shape[0] != self.config['batch_size']:
+                    
+                    power_monitor.stop()
+                    power_monitor.join() 
+
+                    continue
                 preds, latency = self.infer_onnx(self.model, xs)
             else:
                 preds, latency = self.infer_mg(self.model, xs)  # Run model prediction

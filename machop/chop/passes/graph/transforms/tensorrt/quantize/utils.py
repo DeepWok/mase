@@ -165,7 +165,7 @@ class FakeQuantizer:
         """
         self.logger.info("Applying fake quantization to PyTorch model...")
 
-        if "INT8" not in self.config:
+        if not check_for_value_in_dict(self.config, 'INT8'):
             self.logger.warning(
                 "INT8 precision not found in config. Skipping fake quantization."
             )
@@ -278,3 +278,19 @@ def prepare_save_path(method: str, suffix: str):
     save_dir.mkdir(parents=True, exist_ok=True)
 
     return save_dir / f"model.{suffix}"
+
+
+def check_for_value_in_dict(d, value):
+    """Checks if a value is in a hierarchical dictionary."""
+    if isinstance(d, dict):  # Check if it's a dictionary
+        for k, v in d.items():
+            if v == value:  # Check if the value matches
+                return True
+            elif isinstance(v, (dict, list)):  # If the value is a dict or list, search recursively
+                if check_for_value_in_dict(v, value):
+                    return True
+    elif isinstance(d, list):  # Check if it's a list
+        for item in d:
+            if check_for_value_in_dict(item, value):  # Recurse for each item
+                return True
+    return False

@@ -13,7 +13,7 @@ from pytorch_quantization import quant_modules
 from pytorch_quantization.tensor_quant import QuantDescriptor
 from torch.autograd import Variable
 import torch
-from .utils import FakeQuantizer
+from .utils import FakeQuantizer, check_for_value_in_dict
 
 
 def tensorrt_fake_quantize_transform_pass(graph, pass_args=None):
@@ -82,7 +82,7 @@ class Calibrator:
     def calibrate_model(self, graph):
         """Performs the calibration pass on the model using the given data loader."""
 
-        if "INT8" not in self.config:
+        if not check_for_value_in_dict(self.config, "INT8"):
             self.logger.warning(
                 "INT8 precision not found in config. Skipping calibration."
             )
