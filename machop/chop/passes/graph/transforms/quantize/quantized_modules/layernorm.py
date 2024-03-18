@@ -3,6 +3,8 @@ from functools import partial
 import torch
 from torch import Tensor
 from torch.nn import functional as F
+from torch.nn import init
+from torch.nn.parameter import Parameter
 
 from ..quantizers import (
     integer_quantizer,
@@ -27,8 +29,15 @@ class LayerNormInteger(torch.nn.LayerNorm):
         )
         self.config = config
 
+        factory_kwargs = {'device': device, 'dtype': dtype}
+        self.weight = Parameter(torch.empty(self.normalized_shape, **factory_kwargs))
+        self.bias = Parameter(torch.empty(self.normalized_shape, **factory_kwargs))
+        init.ones_(self.weight)
+        init.zeros_(self.bias)
+
         
     def forward(self, input: Tensor) -> Tensor:
+        input = self.x_quantizer(input)
         weight = self.w_quantizer(self.weight)
         bias = self.b_quantizer(self.bias)
         return F.layer_norm(input, self.normalized_shape, weight, bias, self.eps)
