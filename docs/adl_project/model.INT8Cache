@@ -1,0 +1,35 @@
+TRT-8601-EntropyCalibration2
+input: 3c83a4f6
+/feature_layers.0/Conv_output_0: 3dc72972
+/feature_layers.2/Relu_output_0: 3daa1651
+/feature_layers.3/Conv_output_0: 3d9c0788
+/feature_layers.5/Relu_output_0: 3d475ffb
+/feature_layers.6/MaxPool_output_0: 3d475ffb
+/feature_layers.7/Conv_output_0: 3d7f5050
+/feature_layers.9/Relu_output_0: 3d2f7255
+/feature_layers.10/Conv_output_0: 3d5e1eca
+/feature_layers.12/Relu_output_0: 3d32a375
+/feature_layers.13/MaxPool_output_0: 3d32a375
+/feature_layers.14/Conv_output_0: 3d516cf9
+/feature_layers.16/Relu_output_0: 3d43fe3c
+/feature_layers.17/Conv_output_0: 3d6bfc30
+/feature_layers.19/Relu_output_0: 3d6a9c9d
+/feature_layers.20/MaxPool_output_0: 3d6a9c9d
+/Reshape_output_0: 3d93bf8a
+(Unnamed Layer* 16) [Constant]_output: 3ade69bb
+(Unnamed Layer* 17) [Matrix Multiply]_output: 3f7152d1
+(Unnamed Layer* 18) [Constant]_output: 3a009cc5
+(Unnamed Layer* 19) [Shuffle]_output: 3a009cc5
+/classifier.0/Gemm_output_0: 3f71506b
+/classifier.1/Relu_output_0: 3fd0de97
+(Unnamed Layer* 22) [Constant]_output: 3ac45125
+(Unnamed Layer* 23) [Matrix Multiply]_output: 3eeefdf9
+(Unnamed Layer* 24) [Constant]_output: 3a9c4beb
+(Unnamed Layer* 25) [Shuffle]_output: 3a9c4beb
+/classifier.2/Gemm_output_0: 3ef00130
+/classifier.3/Relu_output_0: 3f17a4da
+(Unnamed Layer* 28) [Constant]_output: 3ada0f86
+(Unnamed Layer* 29) [Matrix Multiply]_output: 3ec87083
+(Unnamed Layer* 30) [Constant]_output: 3a534696
+(Unnamed Layer* 31) [Shuffle]_output: 3a534696
+output: 3ec98021
