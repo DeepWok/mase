@@ -1,0 +1,19 @@
+[
+  { "count" : 22504 }
+, { "name" : "Reformatting CopyNode for Input Tensor 0 to /feature_layers.0/Conv + /feature_layers.2/Relu", "timeMs" : 94.7683, "averageMs" : 0.00421118, "medianMs" : 0.004096, "percentage" : 3.81854 }
+, { "name" : "/feature_layers.0/Conv + /feature_layers.2/Relu", "timeMs" : 114.863, "averageMs" : 0.00510414, "medianMs" : 0.00512, "percentage" : 4.62824 }
+, { "name" : "/feature_layers.3/Conv + /feature_layers.5/Relu", "timeMs" : 216.942, "averageMs" : 0.00964016, "medianMs" : 0.009216, "percentage" : 8.74134 }
+, { "name" : "/feature_layers.6/MaxPool", "timeMs" : 85.7163, "averageMs" : 0.00380894, "medianMs" : 0.004096, "percentage" : 3.4538 }
+, { "name" : "/feature_layers.7/Conv + /feature_layers.9/Relu", "timeMs" : 174.222, "averageMs" : 0.00774181, "medianMs" : 0.007616, "percentage" : 7.01999 }
+, { "name" : "/feature_layers.10/Conv + /feature_layers.12/Relu", "timeMs" : 226.03, "averageMs" : 0.010044, "medianMs" : 0.01024, "percentage" : 9.10751 }
+, { "name" : "/feature_layers.13/MaxPool", "timeMs" : 85.6995, "averageMs" : 0.00380819, "medianMs" : 0.004096, "percentage" : 3.45313 }
+, { "name" : "/feature_layers.14/Conv + /feature_layers.16/Relu", "timeMs" : 203.19, "averageMs" : 0.00902907, "medianMs" : 0.009216, "percentage" : 8.18722 }
+, { "name" : "/feature_layers.17/Conv + /feature_layers.19/Relu", "timeMs" : 284.079, "averageMs" : 0.0126235, "medianMs" : 0.012288, "percentage" : 11.4465 }
+, { "name" : "/feature_layers.20/MaxPool", "timeMs" : 80.6388, "averageMs" : 0.00358331, "medianMs" : 0.003392, "percentage" : 3.24921 }
+, { "name" : "/Reshape + reshape_before_/classifier.0/Gemm", "timeMs" : 91.7702, "averageMs" : 0.00407795, "medianMs" : 0.004096, "percentage" : 3.69774 }
+, { "name" : "/classifier.0/Gemm + /classifier.1/Relu", "timeMs" : 560.683, "averageMs" : 0.0249148, "medianMs" : 0.024576, "percentage" : 22.5918 }
+, { "name" : "/classifier.2/Gemm + /classifier.3/Relu", "timeMs" : 161.333, "averageMs" : 0.00716906, "medianMs" : 0.007168, "percentage" : 6.50064 }
+, { "name" : "Reformatting CopyNode for Input Tensor 0 to /last_layer/Gemm", "timeMs" : 0, "averageMs" : 0, "medianMs" : 0, "percentage" : 0 }
+, { "name" : "/last_layer/Gemm", "timeMs" : 101.86, "averageMs" : 0.00452631, "medianMs" : 0.004096, "percentage" : 4.10429 }
+, { "name" : "reshape_after_/last_layer/Gemm", "timeMs" : 0, "averageMs" : 0, "medianMs" : 0, "percentage" : 0 }
+]
