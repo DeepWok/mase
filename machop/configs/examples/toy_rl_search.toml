@@ -1,15 +1,17 @@
 # basics
-model = "toy"
-dataset = "toy_tiny"
+model = "jsc-tiny"
+dataset = "jsc"
 task = "cls"
 
-max_epochs = 5
+max_epochs = 10
 batch_size = 512
 learning_rate = 1e-2
 accelerator = "gpu"
 project = "jsc-tiny"
 seed = 42
 log_every_n_steps = 5
+load_name = "mase_output/jsc-tiny_classification_jsc_2024-01-31/software/training_ckpts/best-v3.ckpt"
+load_type = "pl"
 
 [search.search_space]
 name = "graph/quantize/mixed_precision_ptq"
@@ -34,6 +36,7 @@ num_episodes = 1
 device = 'cuda'
 total_timesteps = 100000
 save_name = 'tmp_rl'
+#load_name = 'logs/best_model/best_model.zip'
 
 [search.strategy.setup]
 # sum_scaled_metrics = true # single objective

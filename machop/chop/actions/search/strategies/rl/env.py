@@ -3,6 +3,7 @@ import copy
 import torch
 import numpy as np
 import math
+from pprint import pprint 
 from gymnasium.spaces import Box, Dict, Discrete, MultiBinary, MultiDiscrete
 from stable_baselines3.common.callbacks import BaseCallback
 
@@ -201,7 +202,10 @@ class MixedPrecisionEnv(gym.Env):
         
         # Optional additional info about the step
         info = {"loss": software_metrics['loss'], "average_bitwidth": hardware_metrics['average_bitwidth'], "accuracy": software_metrics['accuracy'], "memory density": hardware_metrics['memory_density']}
-        print(info)
+        if done:
+            print(f'reward: {reward}')
+            pprint(info)
+            print("\n")
 
         return self.cur_obs, reward, done, truncated, info
 
@@ -312,9 +316,7 @@ class MixedPrecisionEnvHiLo(gym.Env):
             # Apply scaling and direction multiplier from pre-computed values
             scaled_metric_value = self.config["metrics"][metric_name]["scale"] * metrics[metric_name] * self.direction_multipliers[metric_name]
             scaled_metrics[metric_name] = scaled_metric_value
-            print(f'{metric_name}: {scaled_metric_value}')
             cost += scaled_metric_value
-        print(f'cost: {cost}')
         
 
         self.cur_obs['accuracy'] = np.array([software_metrics['accuracy']], dtype=np.float32)
@@ -324,7 +326,6 @@ class MixedPrecisionEnvHiLo(gym.Env):
         
         # Adjust reward calculation based on your scenario
         reward = -cost
-        print(f'reward: {reward}')
 
         # Determine if the episode is done
         self.episode_len += 1
@@ -333,8 +334,11 @@ class MixedPrecisionEnvHiLo(gym.Env):
         
         # Optional additional info about the step
         info = {"loss": software_metrics['loss'], "average_bitwidth": hardware_metrics['average_bitwidth'], "accuracy": software_metrics['accuracy'], "memory density": hardware_metrics['memory_density']}
-        print(info)
 
+        if done:
+            print(f'reward: {reward}')
+            pprint(info)
+            print("\n")
         return self.cur_obs, reward, done, truncated, info
 
     def _action_to_config(self, action):
