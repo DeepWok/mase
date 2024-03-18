@@ -60,7 +60,6 @@ def transform(
     graph = MaseGraph(model=model, cf_args=cf_args)
     # graph_metadata = Mase
     graph, _ = init_metadata_analysis_pass(graph, pass_args=None)
-    # logger.info(f"graph: {graph.fx_graph}")
 
     # create or load metadata.parameters and mase_graph.model
     if load_name is not None and load_type == "mz":
@@ -92,7 +91,14 @@ def transform(
                 graph, _ = metadata_value_type_cast_transform_pass(
                     graph, pass_args={"fn": to_numpy_if_tensor}
                 )
-                ori_graph = deepcopy_mase_graph(graph)
+                
+                # For the tensorRT analysis comparision we must deepcopy the original graph.
+                # Due to the immutable nature of the following graph passses this must be done before.
+                for pass_name, pass_config in config["passes"].items():
+                    pass_name = pass_name.split("_")[0]
+                    if pass_name == "tensorrt":
+                        ori_graph = deepcopy_mase_graph(graph)
+
                 pass_config['task'] = task
                 pass_config["batch_size"] = config["batch_size"]
                 pass_config["model"] = config["model"]

@@ -50,8 +50,6 @@ QUANTIZEABLE_OP = {
     "maxPool3d": qnn.QuantMaxPool3d
 }
 
-
-
 class FakeQuantizer:
     def __init__(self, config):
         self.config = config
