@@ -24,6 +24,7 @@ def onnx_runtime_transform_pass(graph, pass_args="None"):
     onnx_model_graph = onnx_runtime_session.load_onnx(onnx_model_path).graph
     onnx_runtime_session.summarize_ONNX_graph(onnx_model_graph)
 
+
     if do_test == "before" or do_test == "both":
         pytorch_results = onnx_runtime_session.test_performances(
             model_type="pytorch", graph=graph

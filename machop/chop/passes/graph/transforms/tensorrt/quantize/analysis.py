@@ -263,7 +263,7 @@ class QuantizationAnalysis():
                     continue
 
                 preds, latency = self.infer_onnx(self.model, xs)
-                
+
             else:
                 preds, latency = self.infer_mg(self.model, xs)  # Run model prediction
             
