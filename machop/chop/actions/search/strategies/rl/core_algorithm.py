@@ -96,8 +96,14 @@ class SearchStrategyRL(SearchStrategyBase):
             # default range is [0,1]
             upper_bound = self.config["metrics"][metric_name].get('upper_bound', 1)
             lower_bound = self.config["metrics"][metric_name].get('lower_bound', 0)
-            unit_metric = max(upper_bound - max(lower_bound, self.config["metrics"][metric_name]["scale"]), 0) / (upper_bound - lower_bound)
-            scaled_metrics[metric_name] = unit_metric * metrics[metric_name]
+            direction = self.config["metrics"][metric_name].get('direction', "maximize")
+            if direction == "maximize":
+                unit_metric = max(max(lower_bound, metrics[metric_name]) - lower_bound, 0) / (
+                        upper_bound - lower_bound)
+            else:
+                unit_metric = max(upper_bound - max(lower_bound, metrics[metric_name]), 0) / (
+                            upper_bound - lower_bound)
+            scaled_metrics[metric_name] = unit_metric * self.config["metrics"][metric_name]["scale"]
         performance = sum(scaled_metrics.values())
 
         if performance > self.best_performance:
