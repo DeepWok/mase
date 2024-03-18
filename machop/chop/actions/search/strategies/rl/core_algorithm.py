@@ -32,7 +32,7 @@ class StrategyRL(SearchStrategyBase):
             env,
             best_model_save_path="./logs/best_model",
             log_path="./logs/results",
-            eval_freq=20,
+            eval_freq=100,
         )
         callback = CallbackList([checkpoint_callback, eval_callback])
 
@@ -45,7 +45,7 @@ class StrategyRL(SearchStrategyBase):
             verbose=1,
             device=self.device,
             tensorboard_log="./logs/",
-            n_steps=4, # TODO: Try and change this
+            n_steps=64, # TODO: Try and change this
         )
 
         vec_env = model.get_env()
