@@ -147,7 +147,11 @@ class MixedPrecisionEnv(gym.Env):
 
     def _define_observation_space(self):
         """Defines the observation space based on the search space."""
-        self.observation_space = Dict({"cost": Box(0.0, 10e4, shape=(1,))})
+        self.observation_space = Dict({
+            "cost": Box(0.0, 10e4, shape=(1,)),
+            "accuracy": Box(0.0, 1.0, shape=(1,)),  # Assuming accuracy is a fraction; adjust if using percentage
+            "average_bitwidth": Box(2.0, 32.0, shape=(1,))  # Adjust the range based on your bitwidth options
+        })
         for key, choices in self.search_space.choices_flattened.items():
             self.observation_space[key] = Discrete(len(choices))
 
@@ -182,6 +186,8 @@ class MixedPrecisionEnv(gym.Env):
             scaled_metrics[metric_name] = scaled_metric_value
             cost += scaled_metric_value
 
+        self.cur_obs['accuracy'] = np.array([software_metrics['accuracy']], dtype=np.float32)
+        self.cur_obs['average_bitwidth'] = np.array([hardware_metrics['average_bitwidth']], dtype=np.float32)
         self.cur_obs['cost'] = np.array([cost], dtype=np.float32)
         self.cur_obs.update(sampled_config)
         
@@ -263,7 +269,11 @@ class MixedPrecisionEnvHiLo(gym.Env):
         self.model_config = {key: 0 for key in self.search_space.choices_flattened.keys()}
 
     def _define_observation_space(self):
-        self.observation_space = Dict({"cost": Box(0.0, 10e4, shape=(1,))})
+        self.observation_space = Dict({
+            "cost": Box(0.0, 10e4, shape=(1,)),
+            "accuracy": Box(0.0, 1.0, shape=(1,)),  # Assuming accuracy is a fraction; adjust if using percentage
+            "average_bitwidth": Box(2.0, 32.0, shape=(1,))  # Adjust the range based on your bitwidth options
+        })
         for key, choices in self.search_space.choices_flattened.items():
             self.observation_space[key] = Discrete(len(choices))
 
@@ -303,7 +313,9 @@ class MixedPrecisionEnvHiLo(gym.Env):
             scaled_metric_value = self.config["metrics"][metric_name]["scale"] * metrics[metric_name] * self.direction_multipliers[metric_name]
             scaled_metrics[metric_name] = scaled_metric_value
             cost += scaled_metric_value
-
+        
+        self.cur_obs['accuracy'] = np.array([software_metrics['accuracy']], dtype=np.float32)
+        self.cur_obs['average_bitwidth'] = np.array([hardware_metrics['average_bitwidth']], dtype=np.float32)
         self.cur_obs['cost'] = np.array([cost], dtype=np.float32)
         self.cur_obs.update(sampled_config)
         
