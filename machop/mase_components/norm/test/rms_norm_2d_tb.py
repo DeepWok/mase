@@ -2,6 +2,8 @@
 
 import logging
 from random import randint
+from os import makedirs
+from pathlib import Path
 # from itertools import batched  # Python 3.12
 
 import torch
@@ -10,7 +12,10 @@ import cocotb
 from cocotb.triggers import *
 
 from mase_cocotb.testbench import Testbench
-from mase_cocotb.interfaces.streaming import StreamDriver, StreamMonitor
+from mase_cocotb.interfaces.streaming import (
+    StreamDriver,
+    ErrorThresholdStreamMonitor,
+)
 from mase_cocotb.runner import mase_runner
 from mase_cocotb.matrix_tools import (
     gen_random_matrix_input,
@@ -21,61 +26,21 @@ from mase_cocotb.utils import (
     bit_driver,
     batched,
     sign_extend_t,
+    verilator_str_param,
 )
 
-from chop.passes.graph.transforms.quantize.quantizers.integer import (
-    integer_floor_quantizer
+from chop.passes.graph.transforms.quantize.quantizers.quantizers_for_hw import (
+    integer_quantizer_for_hw,
+)
+from chop.passes.graph.transforms.quantize.quantized_modules.rms_norm import (
+    RMSNormInteger,
 )
 
-from mase_components.cast.test.fixed_signed_cast_tb import (
-    _fixed_signed_cast_model
-)
+from mase_components.fixed_arithmetic.test.isqrt_sw import make_lut
+from mase_components.common.test.lut_tb import write_memb
 
 logger = logging.getLogger("testbench")
 logger.setLevel(logging.INFO)
-
-
-def _fixed_rms_norm_2d_model(
-    x: Tensor,
-    acc_width: int,
-    acc_frac_width: int,
-    inv_sqrt_width: int,
-    inv_sqrt_frac_width: int,
-    out_width: int,
-    out_frac_width: int,
-):
-    logger.debug("Input:")
-    logger.debug(x[0])
-
-    # Sum of Squares
-    sum_sq = torch.square(x).sum(dim=(1, 2, 3), keepdim=True)
-    sum_sq = integer_floor_quantizer(sum_sq, acc_width, acc_frac_width)
-    logger.debug("Sum of Squares:")
-    logger.debug(sum_sq[0])
-
-    # Divide to get mean square
-    mean_sq = sum_sq / (x.shape[1] * x.shape[2] * x.shape[3])
-    mean_sq = integer_floor_quantizer(mean_sq, acc_width, acc_frac_width)
-    logger.debug("Mean Square:")
-    logger.debug(mean_sq[0])
-
-    # Get inverse sqrt of mean square
-    # inv_sqrt = inv_sqrt_model(mean_sq)  # TODO: Add inv sqrt model
-    inv_sqrt = torch.full_like(mean_sq, 0.25)  # TODO: remove this later
-    inv_sqrt = integer_floor_quantizer(inv_sqrt, inv_sqrt_width, inv_sqrt_frac_width)
-    logger.debug("Inverse SQRT:")
-    logger.debug(inv_sqrt[0])
-
-    # Norm calculation
-    norm_out = x * inv_sqrt
-    logger.debug("Norm:")
-    logger.debug(norm_out[0])
-    norm_out_float, norm_int_out = _fixed_signed_cast_model(
-        norm_out, out_width, out_frac_width,
-        symmetric=False, rounding_mode="floor"
-    )
-
-    return norm_out_float, norm_int_out
 
 
 class RMSNorm2dTB(Testbench):
@@ -86,8 +51,7 @@ class RMSNorm2dTB(Testbench):
             "TOTAL_DIM0", "TOTAL_DIM1", "COMPUTE_DIM0", "COMPUTE_DIM1",
             "CHANNELS", "IN_WIDTH", "IN_FRAC_WIDTH",
             "OUT_WIDTH", "OUT_FRAC_WIDTH",
-            "INV_SQRT_WIDTH", "INV_SQRT_FRAC_WIDTH",
-            "ACC_WIDTH", "ACC_FRAC_WIDTH",
+            "ISQRT_WIDTH", "ISQRT_FRAC_WIDTH",
             "DEPTH_DIM0", "DEPTH_DIM1",
             "NUM_VALUES"
         ])
@@ -98,13 +62,38 @@ class RMSNorm2dTB(Testbench):
         self.in_width_tup = self.IN_WIDTH, self.IN_FRAC_WIDTH
         self.out_width_tup = self.OUT_WIDTH, self.OUT_FRAC_WIDTH
 
+        # Model
+        self.quantized_model = RMSNormInteger(
+            normalized_shape=[self.CHANNELS, self.TOTAL_DIM1, self.TOTAL_DIM0],
+            elementwise_affine=False,
+            bias=False,
+            config={
+                "data_in_width": self.IN_WIDTH,
+                "data_in_frac_width": self.IN_FRAC_WIDTH,
+            }
+        )
+
         # Drivers & Monitors
         self.in_driver = StreamDriver(
             dut.clk, dut.in_data, dut.in_valid, dut.in_ready
         )
-        self.output_monitor = StreamMonitor(
-            dut.clk, dut.out_data, dut.out_valid, dut.out_ready
+
+        # Bit Error calculation
+        error_bits = 10
+
+        # If we want the output frac to have larger width, we can expect a
+        # larger rounding error difference between the integer and float models
+        if self.OUT_FRAC_WIDTH > self.IN_FRAC_WIDTH:
+            error_bits += 2 ** (self.OUT_FRAC_WIDTH - self.IN_FRAC_WIDTH)
+
+        self.output_monitor = ErrorThresholdStreamMonitor(
+            dut.clk, dut.out_data, dut.out_valid, dut.out_ready,
+            name="Output Monitor",
+            width=self.OUT_WIDTH,
+            signed=True,
+            error_bits=error_bits,
         )
+        self.output_monitor.log.setLevel("DEBUG")
 
     def generate_inputs(self, num=2):
         inputs = list()
@@ -124,19 +113,12 @@ class RMSNorm2dTB(Testbench):
         )
         x = sign_extend_t(x, self.IN_WIDTH).to(dtype=torch.float32) / (2 ** self.IN_FRAC_WIDTH)
 
-        # Float model
-        norm_out_float, norm_int_out = _fixed_rms_norm_2d_model(
-            x=x,
-            acc_width=self.ACC_WIDTH,
-            acc_frac_width=self.ACC_FRAC_WIDTH,
-            inv_sqrt_width=self.INV_SQRT_WIDTH,
-            inv_sqrt_frac_width=self.INV_SQRT_FRAC_WIDTH,
-            out_width=self.OUT_WIDTH,
-            out_frac_width=self.OUT_FRAC_WIDTH,
-        )
+        # Quantized Software model
+        float_y = self.quantized_model(x)
 
         # Output beat reconstruction
-        y = norm_int_out.reshape(-1, self.TOTAL_DIM1, self.TOTAL_DIM0)
+        y = integer_quantizer_for_hw(float_y, self.OUT_WIDTH, self.OUT_FRAC_WIDTH)
+        y = y.reshape(-1, self.TOTAL_DIM1, self.TOTAL_DIM0)
         model_out = list()
         for i in range(y.shape[0]):
             model_out.extend(split_matrix(y[i], *self.total_tup, *self.compute_tup))
@@ -221,4 +203,45 @@ async def valid_backpressure(dut):
 
 
 if __name__ == "__main__":
-    mase_runner()
+    # Consts
+    LUT_POW = 5
+    ISQRT_WIDTH = 16
+
+    mem_dir = Path(__file__).parent / "build" / "group_norm_2d" / "mem"
+    makedirs(mem_dir, exist_ok=True)
+
+    def gen_cfg(
+        total_dim0: int = 4,
+        total_dim1: int = 4,
+        compute_dim0: int = 2,
+        compute_dim1: int = 2,
+        channels: int = 2,
+        in_width: int = 8,
+        in_frac_width: int = 4,
+        out_width: int = 8,
+        out_frac_width: int = 4,
+        str_id: str = "default",
+    ):
+        lut = make_lut(2 ** LUT_POW, ISQRT_WIDTH)
+        mem_path = mem_dir / f"lutmem-{str_id}.mem"
+        write_memb(mem_path, lut, ISQRT_WIDTH)
+        params = {
+            "TOTAL_DIM0": total_dim0,
+            "TOTAL_DIM1": total_dim1,
+            "COMPUTE_DIM0": compute_dim0,
+            "COMPUTE_DIM1": compute_dim1,
+            "CHANNELS": channels,
+            "IN_WIDTH": in_width,
+            "IN_FRAC_WIDTH": in_frac_width,
+            "OUT_WIDTH": out_width,
+            "OUT_FRAC_WIDTH": out_frac_width,
+            "ISQRT_LUT_MEMFILE": verilator_str_param(str(mem_path)),
+        }
+        return params
+
+    mase_runner(
+        module_param_list=[
+            gen_cfg(),
+        ],
+        trace=True,
+    )

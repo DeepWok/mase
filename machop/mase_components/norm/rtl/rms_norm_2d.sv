@@ -2,9 +2,14 @@
 Module      : rms_norm_2d
 Description : This module calculates root-mean-square norm.
               https://arxiv.org/abs/1910.07467
+
+              RMS norm is independent of batch size, like layer norm so the
+              input shape is:
+              (CHANNELS, DEPTH_DIM1 * DEPTH_DIM0, COMPUTE_DIM1 * COMPUTE_DIM0)
 */
 
 `timescale 1ns/1ps
+`default_nettype none
 
 module rms_norm_2d #(
     // Dimensions
@@ -18,7 +23,10 @@ module rms_norm_2d #(
     parameter IN_WIDTH            = 8,
     parameter IN_FRAC_WIDTH       = 2,
     parameter OUT_WIDTH           = 8,
-    parameter OUT_FRAC_WIDTH      = 4
+    parameter OUT_FRAC_WIDTH      = 4,
+
+    // Inverse Sqrt LUT
+    parameter ISQRT_LUT_MEMFILE   = ""
 ) (
     input  logic                 clk,
     input  logic                 rst,
@@ -37,7 +45,6 @@ localparam DEPTH_DIM0 = TOTAL_DIM0 / COMPUTE_DIM0;
 localparam DEPTH_DIM1 = TOTAL_DIM1 / COMPUTE_DIM1;
 
 localparam NUM_VALUES = TOTAL_DIM0 * TOTAL_DIM1 * CHANNELS;
-localparam logic signed [16:0] INV_NUM_VALUES = (1 << 16) / NUM_VALUES;
 
 localparam NUM_ITERS = DEPTH_DIM0 * DEPTH_DIM1 * CHANNELS;
 localparam ITER_WIDTH = $clog2(NUM_ITERS);
@@ -51,11 +58,11 @@ localparam ADDER_FRAC_WIDTH = SQUARE_FRAC_WIDTH;
 localparam ACC_WIDTH = ADDER_WIDTH + ITER_WIDTH;
 localparam ACC_FRAC_WIDTH = ADDER_FRAC_WIDTH;
 
-localparam INV_SQRT_WIDTH = ACC_WIDTH;
-localparam INV_SQRT_FRAC_WIDTH = ACC_FRAC_WIDTH;
+localparam ISQRT_WIDTH = 16;
+localparam ISQRT_FRAC_WIDTH = ACC_FRAC_WIDTH;
 
-localparam NORM_WIDTH = INV_SQRT_WIDTH + IN_WIDTH;
-localparam NORM_FRAC_WIDTH = INV_SQRT_FRAC_WIDTH + IN_FRAC_WIDTH;
+localparam NORM_WIDTH = ISQRT_WIDTH + IN_WIDTH;
+localparam NORM_FRAC_WIDTH = ISQRT_FRAC_WIDTH + IN_FRAC_WIDTH;
 
 // Split2 for input to FIFO & Compute Pipeline
 logic compute_in_valid, compute_in_ready;
@@ -97,7 +104,7 @@ for (genvar i = 0; i < COMPUTE_DIM0*COMPUTE_DIM1; i++) begin : squares
     logic [SQUARE_WIDTH-1:0] square_in, square_out;
     logic square_in_ready;
     logic square_out_valid;
-    assign square_in = $signed(fifo_data[i]) * $signed(fifo_data[i]);
+    assign square_in = $signed(in_data[i]) * $signed(in_data[i]);
     skid_buffer #(
         .DATA_WIDTH(SQUARE_WIDTH)
     ) square_reg (
@@ -153,7 +160,12 @@ fixed_accumulator #(
 logic [ACC_WIDTH-1:0] mean_in_data, mean_out_data;
 logic mean_out_valid, mean_out_ready;
 
-assign mean_in_data = ($signed(squares_acc_data) * INV_NUM_VALUES) >>> 16;
+// Division by NUM_VALUES
+localparam INV_NUMVALUES_0 = ((1 << ACC_WIDTH) / NUM_VALUES);
+logic [ACC_WIDTH*2+1:0] mean_in_buffer;
+assign mean_in_buffer = ($signed(squares_acc_data) * $signed({1'b0, INV_NUMVALUES_0})) >> ACC_WIDTH;
+assign mean_in_data = mean_in_buffer[ACC_WIDTH-1:0];
+// assign mean_in_data = ($signed(squares_acc_data) * INV_NUM_VALUES) >>> 16;
 
 skid_buffer #(
     .DATA_WIDTH(ACC_WIDTH)
@@ -168,28 +180,56 @@ skid_buffer #(
     .data_out_ready(mean_out_ready)
 );
 
+// Clamp Mean Square
+logic [ISQRT_WIDTH-1:0] mse_clamp_in, mse_clamp_out;
+logic mse_clamp_valid, mse_clamp_ready;
+
+always_comb begin
+    if(mean_out_data > 2**ISQRT_WIDTH-1) begin
+        mse_clamp_in = 2**ISQRT_WIDTH-1;
+    end else begin
+        mse_clamp_in = mean_out_data;
+    end
+end
+
+skid_buffer #(
+    .DATA_WIDTH(ISQRT_WIDTH)
+) mse_clamp_reg (
+    .clk(clk),
+    .rst(rst),
+    .data_in(mse_clamp_in),
+    .data_in_valid(mean_out_valid),
+    .data_in_ready(mean_out_ready),
+    .data_out(mse_clamp_out),
+    .data_out_valid(mse_clamp_valid),
+    .data_out_ready(mse_clamp_ready)
+);
+
 // Inverse Square Root of mean square
-logic [INV_SQRT_WIDTH-1:0] inv_sqrt_data;
+logic [ISQRT_WIDTH-1:0] inv_sqrt_data;
 logic inv_sqrt_valid, inv_sqrt_ready;
 
 fixed_isqrt #(
-    .IN_WIDTH(ACC_WIDTH),
-    .IN_FRAC_WIDTH(ACC_FRAC_WIDTH)
+    .IN_WIDTH(ISQRT_WIDTH),
+    .IN_FRAC_WIDTH(ISQRT_FRAC_WIDTH),
+    .LUT_MEMFILE(ISQRT_LUT_MEMFILE)
 ) inv_sqrt_inst (
-    .in_data(mean_out_data),
-    .in_valid(mean_out_valid),
-    .in_ready(mean_out_ready),
+    .clk(clk),
+    .rst(rst),
+    .in_data(mse_clamp_out),
+    .in_valid(mse_clamp_valid),
+    .in_ready(mse_clamp_ready),
     .out_data(inv_sqrt_data),
     .out_valid(inv_sqrt_valid),
     .out_ready(inv_sqrt_ready)
 );
 
 // Buffer the Inverse SQRT for NUM_ITERS
-logic [INV_SQRT_WIDTH-1:0] inv_sqrt_buff_data;
+logic [ISQRT_WIDTH-1:0] inv_sqrt_buff_data;
 logic inv_sqrt_buff_valid, inv_sqrt_buff_ready;
 
 repeat_circular_buffer #(
-    .DATA_WIDTH(INV_SQRT_WIDTH),
+    .DATA_WIDTH(ISQRT_WIDTH),
     .REPEAT(NUM_ITERS),
     .SIZE(1)
 ) inv_sqrt_circ_buffer (
