@@ -1,6 +1,6 @@
 # basics
-model = "vgg7"
-dataset = "cifar10"
+model = "toy"
+dataset = "toy_tiny"
 task = "cls"
 
 max_epochs = 5
@@ -19,12 +19,12 @@ by = "name"
 
 [search.search_space.seed.default.config]
 name = ["integer"]
-data_in_width = [2, 4, 8, 10]
-data_in_frac_width = [2, 4, 6]
-weight_width = [2, 4, 8, 10]
-weight_frac_width = [2, 4, 6]
-bias_width = [2, 4, 8, 10]
-bias_frac_width = [2, 4, 6]
+data_in_width = [4, 8]
+data_in_frac_width = [3, 4, 5, 6, 7, 8, 9]
+weight_width = [2, 4, 8]
+weight_frac_width = [3, 4, 5, 6, 7, 8, 9]
+bias_width = [2, 4, 8]
+bias_frac_width = [3, 4, 5, 6, 7, 8, 9]
 
 [search.strategy]
 name = "rl"

@@ -192,7 +192,7 @@ class MixedPrecisionEnv(gym.Env):
         self.cur_obs.update(sampled_config)
         
         # Adjust reward calculation based on your scenario
-        reward = -cost if self.sum_scaled_metrics else sum([v for k, v in scaled_metrics.items() if self.direction_multipliers[k] > 0])
+        reward = -cost
 
         # Determine if the episode is done
         self.episode_len += 1
@@ -312,15 +312,19 @@ class MixedPrecisionEnvHiLo(gym.Env):
             # Apply scaling and direction multiplier from pre-computed values
             scaled_metric_value = self.config["metrics"][metric_name]["scale"] * metrics[metric_name] * self.direction_multipliers[metric_name]
             scaled_metrics[metric_name] = scaled_metric_value
+            print(f'{metric_name}: {scaled_metric_value}')
             cost += scaled_metric_value
+        print(f'cost: {cost}')
         
+
         self.cur_obs['accuracy'] = np.array([software_metrics['accuracy']], dtype=np.float32)
         self.cur_obs['average_bitwidth'] = np.array([hardware_metrics['average_bitwidth']], dtype=np.float32)
         self.cur_obs['cost'] = np.array([cost], dtype=np.float32)
         self.cur_obs.update(sampled_config)
         
         # Adjust reward calculation based on your scenario
-        reward = -cost if self.sum_scaled_metrics else sum([v for k, v in scaled_metrics.items() if self.direction_multipliers[k] > 0])
+        reward = -cost
+        print(f'reward: {reward}')
 
         # Determine if the episode is done
         self.episode_len += 1
