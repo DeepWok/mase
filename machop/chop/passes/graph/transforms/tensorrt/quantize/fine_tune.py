@@ -59,7 +59,6 @@ class FineTuning:
             )
             return None
 
-        self.logger.info("Starting Fine Tuning...")
         from chop.actions import train
         from chop.models import get_model_info
 
@@ -99,7 +98,7 @@ class FineTuning:
             "max_epochs": epochs,
             "accelerator": self.config["accelerator"],
         }
-        self.logger.info(f"Fine tuninig for {epochs} epochs")
+        self.logger.info(f"Starting Fine Tuning for {epochs} epochs...")
         train(
             self.graph.model,
             model_info,
