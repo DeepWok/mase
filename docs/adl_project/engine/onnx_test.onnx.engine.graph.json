@@ -1,41 +1,1053 @@
-{"Layers": ["onnx::Mul_182_clone_1"
-,"onnx::Mul_173_clone_1"
-,"onnx::Mul_164_clone_1"
-,"onnx::Round_169"
-,"onnx::Round_178"
-,"onnx::Round_187"
-,"Identity_0"
-,"Identity_1"
-,"Identity_2"
-,"(Unnamed Layer* 56) [Shuffle]"
-,"(Unnamed Layer* 39) [Shuffle]"
-,"(Unnamed Layer* 10) [Shuffle]"
-,"PWN(PWN(PWN(/feature_layers.0/_weight_quantizer/Round), PWN(/feature_layers.0/_weight_quantizer/Clip)), PWN(onnx::Div_172 + (Unnamed Layer* 16) [Shuffle], /feature_layers.0/_weight_quantizer/Div))"
-,"PWN(PWN(PWN(/classifier.0/_weight_quantizer/Round), PWN(/classifier.0/_weight_quantizer/Clip)), PWN(onnx::Div_181 + (Unnamed Layer* 45) [Shuffle], /classifier.0/_weight_quantizer/Div))"
-,"PWN(PWN(PWN(/classifier.2/_weight_quantizer/Round), PWN(/classifier.2/_weight_quantizer/Clip)), PWN(onnx::Div_190 + (Unnamed Layer* 62) [Shuffle], /classifier.2/_weight_quantizer/Div))"
-,"Reformatting CopyNode for Input Tensor 0 to PWN(PWN(PWN(onnx::Mul_164 + (Unnamed Layer* 6) [Shuffle] + /feature_layers.0/_input_quantizer/Mul, PWN(/feature_layers.0/_input_quantizer/Round)), PWN(/feature_layers.0/_input_quantizer/Clip)), /feature_layers.0/_input_quantizer/Div)"
-,"PWN(PWN(PWN(onnx::Mul_164 + (Unnamed Layer* 6) [Shuffle] + /feature_layers.0/_input_quantizer/Mul, PWN(/feature_layers.0/_input_quantizer/Round)), PWN(/feature_layers.0/_input_quantizer/Clip)), /feature_layers.0/_input_quantizer/Div)"
-,"Reformatting CopyNode for Input Tensor 0 to /feature_layers.0/Conv"
-,"/feature_layers.0/Conv"
-,"/feature_layers.1/BatchNormalization + /feature_layers.2/Relu"
-,"/feature_layers.3/Conv + /feature_layers.5/Relu"
-,"/feature_layers.6/MaxPool"
-,"/feature_layers.7/Conv + /feature_layers.9/Relu"
-,"/feature_layers.10/Conv + /feature_layers.12/Relu"
-,"/feature_layers.13/MaxPool"
-,"/feature_layers.14/Conv + /feature_layers.16/Relu"
-,"/feature_layers.17/Conv + /feature_layers.19/Relu"
-,"/feature_layers.20/MaxPool"
-,"/Reshape"
-,"PWN(PWN(PWN(PWN(onnx::Mul_173 + (Unnamed Layer* 35) [Shuffle], /classifier.0/_input_quantizer/Mul), PWN(/classifier.0/_input_quantizer/Round)), PWN(/classifier.0/_input_quantizer/Clip)), /classifier.0/_input_quantizer/Div)"
-,"/classifier.0/Gemm"
-,"PWN(PWN(PWN(PWN(PWN(/classifier.1/Relu), PWN(onnx::Mul_182 + (Unnamed Layer* 52) [Shuffle], /classifier.2/_input_quantizer/Mul)), PWN(/classifier.2/_input_quantizer/Round)), PWN(/classifier.2/_input_quantizer/Clip)), /classifier.2/_input_quantizer/Div)"
-,"/classifier.2/Gemm"
-,"PWN(/classifier.3/Relu)"
-,"reshape_before_/last_layer/Gemm"
-,"/last_layer/Gemm"
-,"reshape_after_/last_layer/Gemm"
-],
+{"Layers": [{
+  "Name": "onnx::Mul_182_clone_1",
+  "LayerType": "Constant",
+  "Inputs": [],
+  "Outputs": [
+  {
+    "Name": "(Unnamed Layer* 0) [Constant]_output_clone_1",
+    "Location": "Device",
+    "Dimensions": [],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "ParameterType": "Constant",
+  "weights": {"Type": "Float", "Count": 1},
+  "dimensions": [],
+  "TacticValue": "0x0000000000000000",
+  "StreamId": 0,
+  "Metadata": ""
+},{
+  "Name": "onnx::Mul_173_clone_1",
+  "LayerType": "Constant",
+  "Inputs": [],
+  "Outputs": [
+  {
+    "Name": "(Unnamed Layer* 2) [Constant]_output_clone_1",
+    "Location": "Device",
+    "Dimensions": [],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "ParameterType": "Constant",
+  "weights": {"Type": "Float", "Count": 1},
+  "dimensions": [],
+  "TacticValue": "0x0000000000000000",
+  "StreamId": 0,
+  "Metadata": ""
+},{
+  "Name": "onnx::Mul_164_clone_1",
+  "LayerType": "Constant",
+  "Inputs": [],
+  "Outputs": [
+  {
+    "Name": "(Unnamed Layer* 4) [Constant]_output_clone_1",
+    "Location": "Device",
+    "Dimensions": [],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "ParameterType": "Constant",
+  "weights": {"Type": "Float", "Count": 1},
+  "dimensions": [],
+  "TacticValue": "0x0000000000000000",
+  "StreamId": 0,
+  "Metadata": ""
+},{
+  "Name": "onnx::Round_169",
+  "LayerType": "Constant",
+  "Inputs": [],
+  "Outputs": [
+  {
+    "Name": "(Unnamed Layer* 12) [Constant]_output",
+    "Location": "Device",
+    "Dimensions": [128,3,3,3],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "ParameterType": "Constant",
+  "weights": {"Type": "Float", "Count": 3456},
+  "dimensions": [128,3,3,3],
+  "TacticValue": "0x0000000000000000",
+  "StreamId": 0,
+  "Metadata": ""
+},{
+  "Name": "onnx::Round_178",
+  "LayerType": "Constant",
+  "Inputs": [],
+  "Outputs": [
+  {
+    "Name": "(Unnamed Layer* 41) [Constant]_output",
+    "Location": "Device",
+    "Dimensions": [1024,8192],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "ParameterType": "Constant",
+  "weights": {"Type": "Float", "Count": 8388608},
+  "dimensions": [1024,8192],
+  "TacticValue": "0x0000000000000000",
+  "StreamId": 0,
+  "Metadata": ""
+},{
+  "Name": "onnx::Round_187",
+  "LayerType": "Constant",
+  "Inputs": [],
+  "Outputs": [
+  {
+    "Name": "(Unnamed Layer* 58) [Constant]_output",
+    "Location": "Device",
+    "Dimensions": [1024,1024],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "ParameterType": "Constant",
+  "weights": {"Type": "Float", "Count": 1048576},
+  "dimensions": [1024,1024],
+  "TacticValue": "0x0000000000000000",
+  "StreamId": 0,
+  "Metadata": ""
+},{
+  "Name": "Identity_0",
+  "LayerType": "Reformat",
+  "Inputs": [
+  {
+    "Name": "(Unnamed Layer* 0) [Constant]_output_clone_1",
+    "Location": "Device",
+    "Dimensions": [],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "Outputs": [
+  {
+    "Name": "onnx::Div_185",
+    "Location": "Device",
+    "Dimensions": [],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "ParameterType": "Reformat",
+  "Origin": "CAST",
+  "TacticValue": "0x00000000000003e8",
+  "StreamId": 0,
+  "Metadata": ""
+},{
+  "Name": "Identity_1",
+  "LayerType": "Reformat",
+  "Inputs": [
+  {
+    "Name": "(Unnamed Layer* 2) [Constant]_output_clone_1",
+    "Location": "Device",
+    "Dimensions": [],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "Outputs": [
+  {
+    "Name": "onnx::Div_176",
+    "Location": "Device",
+    "Dimensions": [],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "ParameterType": "Reformat",
+  "Origin": "CAST",
+  "TacticValue": "0x00000000000003e8",
+  "StreamId": 0,
+  "Metadata": ""
+},{
+  "Name": "Identity_2",
+  "LayerType": "Reformat",
+  "Inputs": [
+  {
+    "Name": "(Unnamed Layer* 4) [Constant]_output_clone_1",
+    "Location": "Device",
+    "Dimensions": [],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "Outputs": [
+  {
+    "Name": "onnx::Div_167",
+    "Location": "Device",
+    "Dimensions": [],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "ParameterType": "Reformat",
+  "Origin": "CAST",
+  "TacticValue": "0x00000000000003e8",
+  "StreamId": 0,
+  "Metadata": ""
+},{
+  "Name": "(Unnamed Layer* 56) [Shuffle]",
+  "LayerType": "NoOp",
+  "Inputs": [
+  {
+    "Name": "onnx::Div_185",
+    "Location": "Device",
+    "Dimensions": [],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "Outputs": [
+  {
+    "Name": "(Unnamed Layer* 56) [Shuffle]_output",
+    "Location": "Device",
+    "Dimensions": [1,1],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "TacticValue": "0x0000000000000000",
+  "StreamId": 0,
+  "Metadata": ""
+},{
+  "Name": "(Unnamed Layer* 39) [Shuffle]",
+  "LayerType": "NoOp",
+  "Inputs": [
+  {
+    "Name": "onnx::Div_176",
+    "Location": "Device",
+    "Dimensions": [],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "Outputs": [
+  {
+    "Name": "(Unnamed Layer* 39) [Shuffle]_output",
+    "Location": "Device",
+    "Dimensions": [1,1],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "TacticValue": "0x0000000000000000",
+  "StreamId": 0,
+  "Metadata": ""
+},{
+  "Name": "(Unnamed Layer* 10) [Shuffle]",
+  "LayerType": "NoOp",
+  "Inputs": [
+  {
+    "Name": "onnx::Div_167",
+    "Location": "Device",
+    "Dimensions": [],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "Outputs": [
+  {
+    "Name": "(Unnamed Layer* 10) [Shuffle]_output",
+    "Location": "Device",
+    "Dimensions": [1,1,1,1],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "TacticValue": "0x0000000000000000",
+  "StreamId": 0,
+  "Metadata": ""
+},{
+  "Name": "PWN(PWN(PWN(/feature_layers.0/_weight_quantizer/Round), PWN(/feature_layers.0/_weight_quantizer/Clip)), PWN(onnx::Div_172 + (Unnamed Layer* 16) [Shuffle], /feature_layers.0/_weight_quantizer/Div))",
+  "LayerType": "PointWiseV2",
+  "Inputs": [
+  {
+    "Name": "(Unnamed Layer* 12) [Constant]_output",
+    "Location": "Device",
+    "Dimensions": [128,3,3,3],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "Outputs": [
+  {
+    "Name": "/feature_layers.0/_weight_quantizer/Div_output_0",
+    "Location": "Device",
+    "Dimensions": [128,3,3,3],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "ParameterType": "PointWise",
+  "ParameterSubType": "PointWiseExpression",
+  "NbInputArgs": 1,
+  "InputArgs": ["arg0"],
+  "NbOutputVars": 1,
+  "OutputVars": ["var3"],
+  "NbParams": 0,
+  "Params": [],
+  "NbLiterals": 5,
+  "Literals": ["0.000000e+00f", "1.000000e+00f", "-1.280000e+02f", "1.270000e+02f", "4.541313e+02f"],
+  "NbOperations": 4,
+  "Operations": ["auto const var0 = pwgen::iRound(arg0);", "auto const var1 = pwgen::iMin(literal3, var0);", "auto const var2 = pwgen::iMax(literal2, var1);", "auto const var3 = pwgen::iDiv(var2, literal4);"],
+  "TacticValue": "0x000000000000001c",
+  "StreamId": 0,
+  "Metadata": "[ONNX Layer: /feature_layers.0/_weight_quantizer/Round]\u001e[ONNX Layer: /feature_layers.0/_weight_quantizer/Clip]\u001e[ONNX Layer: /feature_layers.0/_weight_quantizer/Div]"
+},{
+  "Name": "PWN(PWN(PWN(/classifier.0/_weight_quantizer/Round), PWN(/classifier.0/_weight_quantizer/Clip)), PWN(onnx::Div_181 + (Unnamed Layer* 45) [Shuffle], /classifier.0/_weight_quantizer/Div))",
+  "LayerType": "PointWiseV2",
+  "Inputs": [
+  {
+    "Name": "(Unnamed Layer* 41) [Constant]_output",
+    "Location": "Device",
+    "Dimensions": [1024,8192],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "Outputs": [
+  {
+    "Name": "/classifier.0/_weight_quantizer/Div_output_0",
+    "Location": "Device",
+    "Dimensions": [1024,8192],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "ParameterType": "PointWise",
+  "ParameterSubType": "PointWiseExpression",
+  "NbInputArgs": 1,
+  "InputArgs": ["arg0"],
+  "NbOutputVars": 1,
+  "OutputVars": ["var3"],
+  "NbParams": 0,
+  "Params": [],
+  "NbLiterals": 5,
+  "Literals": ["0.000000e+00f", "1.000000e+00f", "-1.280000e+02f", "1.270000e+02f", "2.700561e+02f"],
+  "NbOperations": 4,
+  "Operations": ["auto const var0 = pwgen::iRound(arg0);", "auto const var1 = pwgen::iMin(literal3, var0);", "auto const var2 = pwgen::iMax(literal2, var1);", "auto const var3 = pwgen::iDiv(var2, literal4);"],
+  "TacticValue": "0x0000000000000003",
+  "StreamId": 0,
+  "Metadata": "[ONNX Layer: /classifier.0/_weight_quantizer/Round]\u001e[ONNX Layer: /classifier.0/_weight_quantizer/Clip]\u001e[ONNX Layer: /classifier.0/_weight_quantizer/Div]"
+},{
+  "Name": "PWN(PWN(PWN(/classifier.2/_weight_quantizer/Round), PWN(/classifier.2/_weight_quantizer/Clip)), PWN(onnx::Div_190 + (Unnamed Layer* 62) [Shuffle], /classifier.2/_weight_quantizer/Div))",
+  "LayerType": "PointWiseV2",
+  "Inputs": [
+  {
+    "Name": "(Unnamed Layer* 58) [Constant]_output",
+    "Location": "Device",
+    "Dimensions": [1024,1024],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "Outputs": [
+  {
+    "Name": "/classifier.2/_weight_quantizer/Div_output_0",
+    "Location": "Device",
+    "Dimensions": [1024,1024],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "ParameterType": "PointWise",
+  "ParameterSubType": "PointWiseExpression",
+  "NbInputArgs": 1,
+  "InputArgs": ["arg0"],
+  "NbOutputVars": 1,
+  "OutputVars": ["var3"],
+  "NbParams": 0,
+  "Params": [],
+  "NbLiterals": 5,
+  "Literals": ["0.000000e+00f", "1.000000e+00f", "-1.280000e+02f", "1.270000e+02f", "3.698508e+02f"],
+  "NbOperations": 4,
+  "Operations": ["auto const var0 = pwgen::iRound(arg0);", "auto const var1 = pwgen::iMin(literal3, var0);", "auto const var2 = pwgen::iMax(literal2, var1);", "auto const var3 = pwgen::iDiv(var2, literal4);"],
+  "TacticValue": "0x000000000000001c",
+  "StreamId": 0,
+  "Metadata": "[ONNX Layer: /classifier.2/_weight_quantizer/Round]\u001e[ONNX Layer: /classifier.2/_weight_quantizer/Clip]\u001e[ONNX Layer: /classifier.2/_weight_quantizer/Div]"
+},{
+  "Name": "Reformatting CopyNode for Input Tensor 0 to PWN(PWN(PWN(onnx::Mul_164 + (Unnamed Layer* 6) [Shuffle] + /feature_layers.0/_input_quantizer/Mul, PWN(/feature_layers.0/_input_quantizer/Round)), PWN(/feature_layers.0/_input_quantizer/Clip)), /feature_layers.0/_input_quantizer/Div)",
+  "LayerType": "NoOp",
+  "Inputs": [
+  {
+    "Name": "input",
+    "Location": "Device",
+    "Dimensions": [1,3,32,32],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "Outputs": [
+  {
+    "Name": "Reformatted Input Tensor 0 to PWN(PWN(PWN(onnx::Mul_164 + (Unnamed Layer* 6) [Shuffle] + /feature_layers.0/_input_quantizer/Mul, PWN(/feature_layers.0/_input_quantizer/Round)), PWN(/feature_layers.0/_input_quantizer/Clip)), /feature_layers.0/_input_quantizer/Div)",
+    "Location": "Device",
+    "Dimensions": [1,3,32,32],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "TacticValue": "0x0000000000000000",
+  "StreamId": 0,
+  "Metadata": ""
+},{
+  "Name": "PWN(PWN(PWN(onnx::Mul_164 + (Unnamed Layer* 6) [Shuffle] + /feature_layers.0/_input_quantizer/Mul, PWN(/feature_layers.0/_input_quantizer/Round)), PWN(/feature_layers.0/_input_quantizer/Clip)), /feature_layers.0/_input_quantizer/Div)",
+  "LayerType": "PointWiseV2",
+  "Inputs": [
+  {
+    "Name": "Reformatted Input Tensor 0 to PWN(PWN(PWN(onnx::Mul_164 + (Unnamed Layer* 6) [Shuffle] + /feature_layers.0/_input_quantizer/Mul, PWN(/feature_layers.0/_input_quantizer/Round)), PWN(/feature_layers.0/_input_quantizer/Clip)), /feature_layers.0/_input_quantizer/Div)",
+    "Location": "Device",
+    "Dimensions": [1,3,32,32],
+    "Format/Datatype": "Row major linear FP32"
+  },
+  {
+    "Name": "(Unnamed Layer* 10) [Shuffle]_output",
+    "Location": "Device",
+    "Dimensions": [1,1,1,1],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "Outputs": [
+  {
+    "Name": "/feature_layers.0/_input_quantizer/Div_output_0",
+    "Location": "Device",
+    "Dimensions": [1,3,32,32],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "ParameterType": "PointWise",
+  "ParameterSubType": "PointWiseExpression",
+  "NbInputArgs": 2,
+  "InputArgs": ["arg0", "arg1"],
+  "NbOutputVars": 1,
+  "OutputVars": ["var4"],
+  "NbParams": 0,
+  "Params": [],
+  "NbLiterals": 6,
+  "Literals": ["0.000000e+00f", "2.883176e+01f", "0.000000e+00f", "1.000000e+00f", "-1.280000e+02f", "1.270000e+02f"],
+  "NbOperations": 5,
+  "Operations": ["auto const var0 = pwgen::iMul(arg0, literal1);", "auto const var1 = pwgen::iRound(var0);", "auto const var2 = pwgen::iMin(literal5, var1);", "auto const var3 = pwgen::iMax(literal4, var2);", "auto const var4 = pwgen::iDiv(var3, arg1);"],
+  "TacticValue": "0x000000000000001c",
+  "StreamId": 0,
+  "Metadata": "[ONNX Layer: /feature_layers.0/_input_quantizer/Mul]\u001e[ONNX Layer: /feature_layers.0/_input_quantizer/Round]\u001e[ONNX Layer: /feature_layers.0/_input_quantizer/Clip]\u001e[ONNX Layer: /feature_layers.0/_input_quantizer/Div]"
+},{
+  "Name": "Reformatting CopyNode for Input Tensor 0 to /feature_layers.0/Conv",
+  "LayerType": "NoOp",
+  "Inputs": [
+  {
+    "Name": "/feature_layers.0/_input_quantizer/Div_output_0",
+    "Location": "Device",
+    "Dimensions": [1,3,32,32],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "Outputs": [
+  {
+    "Name": "Reformatted Input Tensor 0 to /feature_layers.0/Conv",
+    "Location": "Device",
+    "Dimensions": [1,3,32,32],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "TacticValue": "0x0000000000000000",
+  "StreamId": 0,
+  "Metadata": ""
+},{
+  "Name": "/feature_layers.0/Conv",
+  "LayerType": "CaskConvolution",
+  "Inputs": [
+  {
+    "Name": "Reformatted Input Tensor 0 to /feature_layers.0/Conv",
+    "Location": "Device",
+    "Dimensions": [1,3,32,32],
+    "Format/Datatype": "Row major linear FP32"
+  },
+  {
+    "Name": "/feature_layers.0/_weight_quantizer/Div_output_0",
+    "Location": "Device",
+    "Dimensions": [128,3,3,3],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "Outputs": [
+  {
+    "Name": "/feature_layers.0/Conv_output_0",
+    "Location": "Device",
+    "Dimensions": [1,128,32,32],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "ParameterType": "Convolution",
+  "Kernel": [3,3],
+  "PaddingMode": "kEXPLICIT_ROUND_DOWN",
+  "PrePadding": [1,1],
+  "PostPadding": [1,1],
+  "Stride": [1,1],
+  "Dilation": [1,1],
+  "OutMaps": 128,
+  "Groups": 1,
+  "Weights": {"Type": "Float", "Count": 0},
+  "Bias": {"Type": "Float", "Count": 128},
+  "HasSparseWeights": 0,
+  "HasDynamicFilter": 1,
+  "HasDynamicBias": 0,
+  "HasResidual": 0,
+  "ConvXAsActInputIdx": -1,
+  "BiasAsActInputIdx": -1,
+  "ResAsActInputIdx": -1,
+  "Activation": "NONE",
+  "HasBias": 1,
+  "HasReLU": 0,
+  "TacticName": "sm80_xmma_fprop_implicit_gemm_f32f32_f32f32_f32_nchwkcrs_nchw_tilesize64x64x8_stage3_warpsize1x4x1_g1_ffma_t1r3s3_aligna4_alignc4",
+  "TacticValue": "0x4727434768e46395",
+  "StreamId": 0,
+  "Metadata": "[ONNX Layer: /feature_layers.0/Conv]"
+},{
+  "Name": "/feature_layers.1/BatchNormalization + /feature_layers.2/Relu",
+  "LayerType": "Scale",
+  "Inputs": [
+  {
+    "Name": "/feature_layers.0/Conv_output_0",
+    "Location": "Device",
+    "Dimensions": [1,128,32,32],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "Outputs": [
+  {
+    "Name": "/feature_layers.2/Relu_output_0",
+    "Location": "Device",
+    "Dimensions": [1,128,32,32],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "ParameterType": "Scale",
+  "Mode": "CHANNEL",
+  "Shift": {"Type": "Float", "Count": 128},
+  "Scale": {"Type": "Float", "Count": 128},
+  "Power": {"Type": "Float", "Count": 0},
+  "Activation": "RELU",
+  "ChannelAxis": 1,
+  "TacticValue": "0x0000000000000000",
+  "StreamId": 0,
+  "Metadata": "[ONNX Layer: /feature_layers.1/BatchNormalization]\u001e[ONNX Layer: /feature_layers.2/Relu]"
+},{
+  "Name": "/feature_layers.3/Conv + /feature_layers.5/Relu",
+  "LayerType": "CaskConvolution",
+  "Inputs": [
+  {
+    "Name": "/feature_layers.2/Relu_output_0",
+    "Location": "Device",
+    "Dimensions": [1,128,32,32],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "Outputs": [
+  {
+    "Name": "/feature_layers.5/Relu_output_0",
+    "Location": "Device",
+    "Dimensions": [1,128,32,32],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "ParameterType": "Convolution",
+  "Kernel": [3,3],
+  "PaddingMode": "kEXPLICIT_ROUND_DOWN",
+  "PrePadding": [1,1],
+  "PostPadding": [1,1],
+  "Stride": [1,1],
+  "Dilation": [1,1],
+  "OutMaps": 128,
+  "Groups": 1,
+  "Weights": {"Type": "Float", "Count": 147456},
+  "Bias": {"Type": "Float", "Count": 128},
+  "HasSparseWeights": 0,
+  "HasDynamicFilter": 0,
+  "HasDynamicBias": 0,
+  "HasResidual": 0,
+  "ConvXAsActInputIdx": -1,
+  "BiasAsActInputIdx": -1,
+  "ResAsActInputIdx": -1,
+  "Activation": "RELU",
+  "HasBias": 1,
+  "HasReLU": 1,
+  "TacticName": "ampere_scudnn_winograd_128x128_ldg1_ldg4_relu_tile148t_nt_v1",
+  "TacticValue": "0x94119b4c514b211a",
+  "StreamId": 0,
+  "Metadata": "[ONNX Layer: /feature_layers.3/Conv]\u001e[ONNX Layer: /feature_layers.5/Relu]"
+},{
+  "Name": "/feature_layers.6/MaxPool",
+  "LayerType": "CaskPooling",
+  "Inputs": [
+  {
+    "Name": "/feature_layers.5/Relu_output_0",
+    "Location": "Device",
+    "Dimensions": [1,128,32,32],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "Outputs": [
+  {
+    "Name": "/feature_layers.6/MaxPool_output_0",
+    "Location": "Device",
+    "Dimensions": [1,128,16,16],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "ParameterType": "Pooling",
+  "PoolingType": "MAX",
+  "WindowSize": [2,2],
+  "PaddingMode": "kEXPLICIT_ROUND_DOWN",
+  "PrePadding": [0,0],
+  "PostPadding": [0,0],
+  "Stride": [2,2],
+  "BlendFactor": 0,
+  "AverageCountExcludesPadding": 1,
+  "TacticName": "sm50_xmma_pooling_tiled_FP32NCHW_kMAX_tP2_tQ16_tR2_tS2_tU2_tV2_tUnroll3_tThreads128",
+  "TacticValue": "0x7a0d6790c453b5f4",
+  "StreamId": 0,
+  "Metadata": "[ONNX Layer: /feature_layers.6/MaxPool]"
+},{
+  "Name": "/feature_layers.7/Conv + /feature_layers.9/Relu",
+  "LayerType": "CaskConvolution",
+  "Inputs": [
+  {
+    "Name": "/feature_layers.6/MaxPool_output_0",
+    "Location": "Device",
+    "Dimensions": [1,128,16,16],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "Outputs": [
+  {
+    "Name": "/feature_layers.9/Relu_output_0",
+    "Location": "Device",
+    "Dimensions": [1,256,16,16],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "ParameterType": "Convolution",
+  "Kernel": [3,3],
+  "PaddingMode": "kEXPLICIT_ROUND_DOWN",
+  "PrePadding": [1,1],
+  "PostPadding": [1,1],
+  "Stride": [1,1],
+  "Dilation": [1,1],
+  "OutMaps": 256,
+  "Groups": 1,
+  "Weights": {"Type": "Float", "Count": 294912},
+  "Bias": {"Type": "Float", "Count": 256},
+  "HasSparseWeights": 0,
+  "HasDynamicFilter": 0,
+  "HasDynamicBias": 0,
+  "HasResidual": 0,
+  "ConvXAsActInputIdx": -1,
+  "BiasAsActInputIdx": -1,
+  "ResAsActInputIdx": -1,
+  "Activation": "RELU",
+  "HasBias": 1,
+  "HasReLU": 1,
+  "TacticName": "sm80_xmma_fprop_wngd_f32f32_f32_f32_nchwkcrs_nchw_tilesize8x16x16x8_warpsize8x1x1_wngd2x2",
+  "TacticValue": "0xe38e9dfd56c33779",
+  "StreamId": 0,
+  "Metadata": "[ONNX Layer: /feature_layers.7/Conv]\u001e[ONNX Layer: /feature_layers.9/Relu]"
+},{
+  "Name": "/feature_layers.10/Conv + /feature_layers.12/Relu",
+  "LayerType": "CaskConvolution",
+  "Inputs": [
+  {
+    "Name": "/feature_layers.9/Relu_output_0",
+    "Location": "Device",
+    "Dimensions": [1,256,16,16],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "Outputs": [
+  {
+    "Name": "/feature_layers.12/Relu_output_0",
+    "Location": "Device",
+    "Dimensions": [1,256,16,16],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "ParameterType": "Convolution",
+  "Kernel": [3,3],
+  "PaddingMode": "kEXPLICIT_ROUND_DOWN",
+  "PrePadding": [1,1],
+  "PostPadding": [1,1],
+  "Stride": [1,1],
+  "Dilation": [1,1],
+  "OutMaps": 256,
+  "Groups": 1,
+  "Weights": {"Type": "Float", "Count": 589824},
+  "Bias": {"Type": "Float", "Count": 256},
+  "HasSparseWeights": 0,
+  "HasDynamicFilter": 0,
+  "HasDynamicBias": 0,
+  "HasResidual": 0,
+  "ConvXAsActInputIdx": -1,
+  "BiasAsActInputIdx": -1,
+  "ResAsActInputIdx": -1,
+  "Activation": "RELU",
+  "HasBias": 1,
+  "HasReLU": 1,
+  "TacticName": "sm80_xmma_fprop_wngd_f32f32_f32_f32_nchwkcrs_nchw_tilesize8x16x16x8_warpsize8x1x1_wngd2x2",
+  "TacticValue": "0xe38e9dfd56c33779",
+  "StreamId": 0,
+  "Metadata": "[ONNX Layer: /feature_layers.10/Conv]\u001e[ONNX Layer: /feature_layers.12/Relu]"
+},{
+  "Name": "/feature_layers.13/MaxPool",
+  "LayerType": "CaskPooling",
+  "Inputs": [
+  {
+    "Name": "/feature_layers.12/Relu_output_0",
+    "Location": "Device",
+    "Dimensions": [1,256,16,16],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "Outputs": [
+  {
+    "Name": "/feature_layers.13/MaxPool_output_0",
+    "Location": "Device",
+    "Dimensions": [1,256,8,8],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "ParameterType": "Pooling",
+  "PoolingType": "MAX",
+  "WindowSize": [2,2],
+  "PaddingMode": "kEXPLICIT_ROUND_DOWN",
+  "PrePadding": [0,0],
+  "PostPadding": [0,0],
+  "Stride": [2,2],
+  "BlendFactor": 0,
+  "AverageCountExcludesPadding": 1,
+  "TacticName": "sm50_xmma_pooling_tiled_FP32NCHW_kMAX_tP2_tQ16_tR2_tS2_tU2_tV2_tUnroll4_tThreads128",
+  "TacticValue": "0xdd39499496c9cc38",
+  "StreamId": 0,
+  "Metadata": "[ONNX Layer: /feature_layers.13/MaxPool]"
+},{
+  "Name": "/feature_layers.14/Conv + /feature_layers.16/Relu",
+  "LayerType": "CaskConvolution",
+  "Inputs": [
+  {
+    "Name": "/feature_layers.13/MaxPool_output_0",
+    "Location": "Device",
+    "Dimensions": [1,256,8,8],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "Outputs": [
+  {
+    "Name": "/feature_layers.16/Relu_output_0",
+    "Location": "Device",
+    "Dimensions": [1,512,8,8],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "ParameterType": "Convolution",
+  "Kernel": [3,3],
+  "PaddingMode": "kEXPLICIT_ROUND_DOWN",
+  "PrePadding": [1,1],
+  "PostPadding": [1,1],
+  "Stride": [1,1],
+  "Dilation": [1,1],
+  "OutMaps": 512,
+  "Groups": 1,
+  "Weights": {"Type": "Float", "Count": 1179648},
+  "Bias": {"Type": "Float", "Count": 512},
+  "HasSparseWeights": 0,
+  "HasDynamicFilter": 0,
+  "HasDynamicBias": 0,
+  "HasResidual": 0,
+  "ConvXAsActInputIdx": -1,
+  "BiasAsActInputIdx": -1,
+  "ResAsActInputIdx": -1,
+  "Activation": "RELU",
+  "HasBias": 1,
+  "HasReLU": 1,
+  "TacticName": "sm50_xmma_conv_fprop_fused_conv_act_fp32_NCHW_fp32_NCHW_KCRS_fp32_fp32_fp32_Accfloat_1_1_cC1_dC1_srcVec2_fltVec1_1_TP6_TQ8_C8_R3_S3_U1_V1",
+  "TacticValue": "0xee473898b5318f6e",
+  "StreamId": 0,
+  "Metadata": "[ONNX Layer: /feature_layers.14/Conv]\u001e[ONNX Layer: /feature_layers.16/Relu]"
+},{
+  "Name": "/feature_layers.17/Conv + /feature_layers.19/Relu",
+  "LayerType": "CaskConvolution",
+  "Inputs": [
+  {
+    "Name": "/feature_layers.16/Relu_output_0",
+    "Location": "Device",
+    "Dimensions": [1,512,8,8],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "Outputs": [
+  {
+    "Name": "/feature_layers.19/Relu_output_0",
+    "Location": "Device",
+    "Dimensions": [1,512,8,8],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "ParameterType": "Convolution",
+  "Kernel": [3,3],
+  "PaddingMode": "kEXPLICIT_ROUND_DOWN",
+  "PrePadding": [1,1],
+  "PostPadding": [1,1],
+  "Stride": [1,1],
+  "Dilation": [1,1],
+  "OutMaps": 512,
+  "Groups": 1,
+  "Weights": {"Type": "Float", "Count": 2359296},
+  "Bias": {"Type": "Float", "Count": 512},
+  "HasSparseWeights": 0,
+  "HasDynamicFilter": 0,
+  "HasDynamicBias": 0,
+  "HasResidual": 0,
+  "ConvXAsActInputIdx": -1,
+  "BiasAsActInputIdx": -1,
+  "ResAsActInputIdx": -1,
+  "Activation": "RELU",
+  "HasBias": 1,
+  "HasReLU": 1,
+  "TacticName": "sm50_xmma_conv_fprop_fused_conv_act_fp32_NCHW_fp32_NCHW_KCRS_fp32_fp32_fp32_Accfloat_1_1_cC1_dC1_srcVec2_fltVec1_1_TP6_TQ8_C8_R3_S3_U1_V1",
+  "TacticValue": "0xee473898b5318f6e",
+  "StreamId": 0,
+  "Metadata": "[ONNX Layer: /feature_layers.17/Conv]\u001e[ONNX Layer: /feature_layers.19/Relu]"
+},{
+  "Name": "/feature_layers.20/MaxPool",
+  "LayerType": "CaskPooling",
+  "Inputs": [
+  {
+    "Name": "/feature_layers.19/Relu_output_0",
+    "Location": "Device",
+    "Dimensions": [1,512,8,8],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "Outputs": [
+  {
+    "Name": "/feature_layers.20/MaxPool_output_0",
+    "Location": "Device",
+    "Dimensions": [1,512,4,4],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "ParameterType": "Pooling",
+  "PoolingType": "MAX",
+  "WindowSize": [2,2],
+  "PaddingMode": "kEXPLICIT_ROUND_DOWN",
+  "PrePadding": [0,0],
+  "PostPadding": [0,0],
+  "Stride": [2,2],
+  "BlendFactor": 0,
+  "AverageCountExcludesPadding": 1,
+  "TacticName": "sm50_xmma_pooling_tiled_FP32NCHW_kMAX_tP2_tQ16_tR2_tS2_tU2_tV2_tUnroll5_tThreads128",
+  "TacticValue": "0x0090bbea764abf95",
+  "StreamId": 0,
+  "Metadata": "[ONNX Layer: /feature_layers.20/MaxPool]"
+},{
+  "Name": "/Reshape",
+  "LayerType": "NoOp",
+  "Inputs": [
+  {
+    "Name": "/feature_layers.20/MaxPool_output_0",
+    "Location": "Device",
+    "Dimensions": [1,512,4,4],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "Outputs": [
+  {
+    "Name": "/Reshape_output_0",
+    "Location": "Device",
+    "Dimensions": [1,8192],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "TacticValue": "0x0000000000000000",
+  "StreamId": 0,
+  "Metadata": "[ONNX Layer: /Reshape]"
+},{
+  "Name": "PWN(PWN(PWN(PWN(onnx::Mul_173 + (Unnamed Layer* 35) [Shuffle], /classifier.0/_input_quantizer/Mul), PWN(/classifier.0/_input_quantizer/Round)), PWN(/classifier.0/_input_quantizer/Clip)), /classifier.0/_input_quantizer/Div)",
+  "LayerType": "PointWiseV2",
+  "Inputs": [
+  {
+    "Name": "/Reshape_output_0",
+    "Location": "Device",
+    "Dimensions": [1,8192],
+    "Format/Datatype": "Row major linear FP32"
+  },
+  {
+    "Name": "(Unnamed Layer* 39) [Shuffle]_output",
+    "Location": "Device",
+    "Dimensions": [1,1],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "Outputs": [
+  {
+    "Name": "/classifier.0/_input_quantizer/Div_output_0",
+    "Location": "Device",
+    "Dimensions": [1,8192],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "ParameterType": "PointWise",
+  "ParameterSubType": "PointWiseExpression",
+  "NbInputArgs": 2,
+  "InputArgs": ["arg0", "arg1"],
+  "NbOutputVars": 1,
+  "OutputVars": ["var4"],
+  "NbParams": 0,
+  "Params": [],
+  "NbLiterals": 5,
+  "Literals": ["5.560756e+01f", "0.000000e+00f", "1.000000e+00f", "-1.280000e+02f", "1.270000e+02f"],
+  "NbOperations": 5,
+  "Operations": ["auto const var0 = pwgen::iMul(arg0, literal0);", "auto const var1 = pwgen::iRound(var0);", "auto const var2 = pwgen::iMin(literal4, var1);", "auto const var3 = pwgen::iMax(literal3, var2);", "auto const var4 = pwgen::iDiv(var3, arg1);"],
+  "TacticValue": "0x0000000000000000",
+  "StreamId": 0,
+  "Metadata": "[ONNX Layer: /classifier.0/_input_quantizer/Mul]\u001e[ONNX Layer: /classifier.0/_input_quantizer/Round]\u001e[ONNX Layer: /classifier.0/_input_quantizer/Clip]\u001e[ONNX Layer: /classifier.0/_input_quantizer/Div]"
+},{
+  "Name": "/classifier.0/Gemm",
+  "LayerType": "CaskGemmMatrixMultiply",
+  "Inputs": [
+  {
+    "Name": "/classifier.0/_input_quantizer/Div_output_0",
+    "Location": "Device",
+    "Dimensions": [1,8192],
+    "Format/Datatype": "Row major linear FP32"
+  },
+  {
+    "Name": "/classifier.0/_weight_quantizer/Div_output_0",
+    "Location": "Device",
+    "Dimensions": [1024,8192],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "Outputs": [
+  {
+    "Name": "/classifier.0/Gemm_output_0",
+    "Location": "Device",
+    "Dimensions": [1,1024],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "ParameterType": "MatrixMultiply",
+  "MatrixOpA": "NONE",
+  "MatrixOpB": "TRANSPOSE",
+  "Alpha": 1,
+  "Beta": 0,
+  "TacticName": "sm50_xmma_cublas_gemvx_f32f32_f32_f32_tn_n_int32_unit_n_launch_param16x32x32_strided_unit_stride",
+  "TacticValue": "0x0000000000020213",
+  "StreamId": 0,
+  "Metadata": "[ONNX Layer: /classifier.0/Gemm]\u001e"
+},{
+  "Name": "PWN(PWN(PWN(PWN(PWN(/classifier.1/Relu), PWN(onnx::Mul_182 + (Unnamed Layer* 52) [Shuffle], /classifier.2/_input_quantizer/Mul)), PWN(/classifier.2/_input_quantizer/Round)), PWN(/classifier.2/_input_quantizer/Clip)), /classifier.2/_input_quantizer/Div)",
+  "LayerType": "PointWiseV2",
+  "Inputs": [
+  {
+    "Name": "/classifier.0/Gemm_output_0",
+    "Location": "Device",
+    "Dimensions": [1,1024],
+    "Format/Datatype": "Row major linear FP32"
+  },
+  {
+    "Name": "(Unnamed Layer* 56) [Shuffle]_output",
+    "Location": "Device",
+    "Dimensions": [1,1],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "Outputs": [
+  {
+    "Name": "/classifier.2/_input_quantizer/Div_output_0",
+    "Location": "Device",
+    "Dimensions": [1,1024],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "ParameterType": "PointWise",
+  "ParameterSubType": "PointWiseExpression",
+  "NbInputArgs": 2,
+  "InputArgs": ["arg0", "arg1"],
+  "NbOutputVars": 1,
+  "OutputVars": ["var5"],
+  "NbParams": 0,
+  "Params": [],
+  "NbLiterals": 9,
+  "Literals": ["0.000000e+00f", "1.000000e+00f", "0.000000e+00f", "0.000000e+00f", "1.324615e+01f", "0.000000e+00f", "1.000000e+00f", "-1.280000e+02f", "1.270000e+02f"],
+  "NbOperations": 6,
+  "Operations": ["auto const var0 = pwgen::iMax(arg0, literal0);", "auto const var1 = pwgen::iMul(var0, literal4);", "auto const var2 = pwgen::iRound(var1);", "auto const var3 = pwgen::iMin(literal8, var2);", "auto const var4 = pwgen::iMax(literal7, var3);", "auto const var5 = pwgen::iDiv(var4, arg1);"],
+  "TacticValue": "0x0000000000000000",
+  "StreamId": 0,
+  "Metadata": "[ONNX Layer: /classifier.1/Relu]\u001e[ONNX Layer: /classifier.2/_input_quantizer/Mul]\u001e[ONNX Layer: /classifier.2/_input_quantizer/Round]\u001e[ONNX Layer: /classifier.2/_input_quantizer/Clip]\u001e[ONNX Layer: /classifier.2/_input_quantizer/Div]"
+},{
+  "Name": "/classifier.2/Gemm",
+  "LayerType": "CaskGemmMatrixMultiply",
+  "Inputs": [
+  {
+    "Name": "/classifier.2/_input_quantizer/Div_output_0",
+    "Location": "Device",
+    "Dimensions": [1,1024],
+    "Format/Datatype": "Row major linear FP32"
+  },
+  {
+    "Name": "/classifier.2/_weight_quantizer/Div_output_0",
+    "Location": "Device",
+    "Dimensions": [1024,1024],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "Outputs": [
+  {
+    "Name": "/classifier.2/Gemm_output_0",
+    "Location": "Device",
+    "Dimensions": [1,1024],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "ParameterType": "MatrixMultiply",
+  "MatrixOpA": "NONE",
+  "MatrixOpB": "TRANSPOSE",
+  "Alpha": 1,
+  "Beta": 0,
+  "TacticName": "sm50_xmma_cublas_gemvx_f32f32_f32_f32_tn_n_int32_unit_n_launch_param16x8x8_strided_unit_stride",
+  "TacticValue": "0x0000000000020521",
+  "StreamId": 0,
+  "Metadata": "[ONNX Layer: /classifier.2/Gemm]\u001e"
+},{
+  "Name": "PWN(/classifier.3/Relu)",
+  "LayerType": "PointWiseV2",
+  "Inputs": [
+  {
+    "Name": "/classifier.2/Gemm_output_0",
+    "Location": "Device",
+    "Dimensions": [1,1024],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "Outputs": [
+  {
+    "Name": "/classifier.3/Relu_output_0",
+    "Location": "Device",
+    "Dimensions": [1,1024],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "ParameterType": "PointWise",
+  "ParameterSubType": "PointWiseExpression",
+  "NbInputArgs": 1,
+  "InputArgs": ["arg0"],
+  "NbOutputVars": 1,
+  "OutputVars": ["var0"],
+  "NbParams": 0,
+  "Params": [],
+  "NbLiterals": 4,
+  "Literals": ["0.000000e+00f", "1.000000e+00f", "0.000000e+00f", "0.000000e+00f"],
+  "NbOperations": 1,
+  "Operations": ["auto const var0 = pwgen::iMax(arg0, literal0);"],
+  "TacticValue": "0x0000000000000000",
+  "StreamId": 0,
+  "Metadata": "[ONNX Layer: /classifier.3/Relu]"
+},{
+  "Name": "reshape_before_/last_layer/Gemm",
+  "LayerType": "NoOp",
+  "Inputs": [
+  {
+    "Name": "/classifier.3/Relu_output_0",
+    "Location": "Device",
+    "Dimensions": [1,1024],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "Outputs": [
+  {
+    "Name": "reshape_before_/last_layer/Gemm_out_tensor",
+    "Location": "Device",
+    "Dimensions": [1,1024,1,1],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "TacticValue": "0x0000000000000000",
+  "StreamId": 0,
+  "Metadata": "[ONNX Layer: /last_layer/Gemm]"
+},{
+  "Name": "/last_layer/Gemm",
+  "LayerType": "CaskGemmConvolution",
+  "Inputs": [
+  {
+    "Name": "reshape_before_/last_layer/Gemm_out_tensor",
+    "Location": "Device",
+    "Dimensions": [1,1024,1,1],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "Outputs": [
+  {
+    "Name": "/last_layer/Gemm_out_tensor",
+    "Location": "Device",
+    "Dimensions": [1,10,1,1],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "ParameterType": "Convolution",
+  "Kernel": [1,1],
+  "PaddingMode": "kEXPLICIT_ROUND_DOWN",
+  "PrePadding": [0,0],
+  "PostPadding": [0,0],
+  "Stride": [1,1],
+  "Dilation": [1,1],
+  "OutMaps": 10,
+  "Groups": 1,
+  "Weights": {"Type": "Float", "Count": 10240},
+  "Bias": {"Type": "Float", "Count": 10},
+  "HasSparseWeights": 0,
+  "HasDynamicFilter": 0,
+  "HasDynamicBias": 0,
+  "HasResidual": 0,
+  "ConvXAsActInputIdx": -1,
+  "BiasAsActInputIdx": -1,
+  "ResAsActInputIdx": -1,
+  "Activation": "NONE",
+  "TacticName": "sm50_xmma_cublas_gemvx_f32f32_f32_f32_tn_n_int32_unit_n_launch_param4x32x32_strided_unit_stride",
+  "TacticValue": "0x00000000000204b1",
+  "StreamId": 0,
+  "Metadata": "[ONNX Layer: /last_layer/Gemm]"
+},{
+  "Name": "reshape_after_/last_layer/Gemm",
+  "LayerType": "NoOp",
+  "Inputs": [
+  {
+    "Name": "/last_layer/Gemm_out_tensor",
+    "Location": "Device",
+    "Dimensions": [1,10,1,1],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "Outputs": [
+  {
+    "Name": "output",
+    "Location": "Device",
+    "Dimensions": [1,10],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "TacticValue": "0x0000000000000000",
+  "StreamId": 0,
+  "Metadata": "[ONNX Layer: /last_layer/Gemm]"
+}],
 "Bindings": ["input"
 ,"output"
 ]}

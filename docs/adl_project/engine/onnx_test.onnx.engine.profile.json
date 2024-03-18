@@ -1,40 +1,40 @@
 [
-  { "count" : 5208 }
+  { "count" : 5404 }
 , { "name" : "onnx::Mul_182_clone_1", "timeMs" : 0, "averageMs" : 0, "medianMs" : 0, "percentage" : 0 }
 , { "name" : "onnx::Mul_173_clone_1", "timeMs" : 0, "averageMs" : 0, "medianMs" : 0, "percentage" : 0 }
 , { "name" : "onnx::Mul_164_clone_1", "timeMs" : 0, "averageMs" : 0, "medianMs" : 0, "percentage" : 0 }
 , { "name" : "onnx::Round_169", "timeMs" : 0, "averageMs" : 0, "medianMs" : 0, "percentage" : 0 }
 , { "name" : "onnx::Round_178", "timeMs" : 0, "averageMs" : 0, "medianMs" : 0, "percentage" : 0 }
 , { "name" : "onnx::Round_187", "timeMs" : 0, "averageMs" : 0, "medianMs" : 0, "percentage" : 0 }
-, { "name" : "Identity_0", "timeMs" : 32.4188, "averageMs" : 0.00622481, "medianMs" : 0.00512, "percentage" : 1.13123 }
-, { "name" : "Identity_1", "timeMs" : 31.1188, "averageMs" : 0.0059752, "medianMs" : 0.00512, "percentage" : 1.08587 }
-, { "name" : "Identity_2", "timeMs" : 26.7497, "averageMs" : 0.00513627, "medianMs" : 0.004832, "percentage" : 0.933412 }
+, { "name" : "Identity_0", "timeMs" : 21.7553, "averageMs" : 0.00402579, "medianMs" : 0.003072, "percentage" : 0.738505 }
+, { "name" : "Identity_1", "timeMs" : 18.6359, "averageMs" : 0.00344854, "medianMs" : 0.003072, "percentage" : 0.632613 }
+, { "name" : "Identity_2", "timeMs" : 19.4855, "averageMs" : 0.00360576, "medianMs" : 0.003072, "percentage" : 0.661454 }
 , { "name" : "(Unnamed Layer* 56) [Shuffle]", "timeMs" : 0, "averageMs" : 0, "medianMs" : 0, "percentage" : 0 }
 , { "name" : "(Unnamed Layer* 39) [Shuffle]", "timeMs" : 0, "averageMs" : 0, "medianMs" : 0, "percentage" : 0 }
 , { "name" : "(Unnamed Layer* 10) [Shuffle]", "timeMs" : 0, "averageMs" : 0, "medianMs" : 0, "percentage" : 0 }
-, { "name" : "PWN(PWN(PWN(/feature_layers.0/_weight_quantizer/Round), PWN(/feature_layers.0/_weight_quantizer/Clip)), PWN(onnx::Div_172 + (Unnamed Layer* 16) [Shuffle], /feature_layers.0/_weight_quantizer/Div))", "timeMs" : 27.2627, "averageMs" : 0.00523478, "medianMs" : 0.00512, "percentage" : 0.951313 }
-, { "name" : "PWN(PWN(PWN(/classifier.0/_weight_quantizer/Round), PWN(/classifier.0/_weight_quantizer/Clip)), PWN(onnx::Div_181 + (Unnamed Layer* 45) [Shuffle], /classifier.0/_weight_quantizer/Div))", "timeMs" : 839.691, "averageMs" : 0.161231, "medianMs" : 0.159744, "percentage" : 29.3004 }
-, { "name" : "PWN(PWN(PWN(/classifier.2/_weight_quantizer/Round), PWN(/classifier.2/_weight_quantizer/Clip)), PWN(onnx::Div_190 + (Unnamed Layer* 62) [Shuffle], /classifier.2/_weight_quantizer/Div))", "timeMs" : 125.029, "averageMs" : 0.0240071, "medianMs" : 0.023552, "percentage" : 4.36281 }
+, { "name" : "PWN(PWN(PWN(/feature_layers.0/_weight_quantizer/Round), PWN(/feature_layers.0/_weight_quantizer/Clip)), PWN(onnx::Div_172 + (Unnamed Layer* 16) [Shuffle], /feature_layers.0/_weight_quantizer/Div))", "timeMs" : 20.031, "averageMs" : 0.00370669, "medianMs" : 0.003136, "percentage" : 0.679969 }
+, { "name" : "PWN(PWN(PWN(/classifier.0/_weight_quantizer/Round), PWN(/classifier.0/_weight_quantizer/Clip)), PWN(onnx::Div_181 + (Unnamed Layer* 45) [Shuffle], /classifier.0/_weight_quantizer/Div))", "timeMs" : 869.283, "averageMs" : 0.160859, "medianMs" : 0.159744, "percentage" : 29.5086 }
+, { "name" : "PWN(PWN(PWN(/classifier.2/_weight_quantizer/Round), PWN(/classifier.2/_weight_quantizer/Clip)), PWN(onnx::Div_190 + (Unnamed Layer* 62) [Shuffle], /classifier.2/_weight_quantizer/Div))", "timeMs" : 131.223, "averageMs" : 0.0242825, "medianMs" : 0.024544, "percentage" : 4.45448 }
 , { "name" : "Reformatting CopyNode for Input Tensor 0 to PWN(PWN(PWN(onnx::Mul_164 + (Unnamed Layer* 6) [Shuffle] + /feature_layers.0/_input_quantizer/Mul, PWN(/feature_layers.0/_input_quantizer/Round)), PWN(/feature_layers.0/_input_quantizer/Clip)), /feature_layers.0/_input_quantizer/Div)", "timeMs" : 0, "averageMs" : 0, "medianMs" : 0, "percentage" : 0 }
-, { "name" : "PWN(PWN(PWN(onnx::Mul_164 + (Unnamed Layer* 6) [Shuffle] + /feature_layers.0/_input_quantizer/Mul, PWN(/feature_layers.0/_input_quantizer/Round)), PWN(/feature_layers.0/_input_quantizer/Clip)), /feature_layers.0/_input_quantizer/Div)", "timeMs" : 20.7771, "averageMs" : 0.00398947, "medianMs" : 0.004096, "percentage" : 0.725003 }
+, { "name" : "PWN(PWN(PWN(onnx::Mul_164 + (Unnamed Layer* 6) [Shuffle] + /feature_layers.0/_input_quantizer/Mul, PWN(/feature_layers.0/_input_quantizer/Round)), PWN(/feature_layers.0/_input_quantizer/Clip)), /feature_layers.0/_input_quantizer/Div)", "timeMs" : 21.2283, "averageMs" : 0.00392827, "medianMs" : 0.004096, "percentage" : 0.720616 }
 , { "name" : "Reformatting CopyNode for Input Tensor 0 to /feature_layers.0/Conv", "timeMs" : 0, "averageMs" : 0, "medianMs" : 0, "percentage" : 0 }
-, { "name" : "/feature_layers.0/Conv", "timeMs" : 46.899, "averageMs" : 0.00900518, "medianMs" : 0.009216, "percentage" : 1.63651 }
-, { "name" : "/feature_layers.1/BatchNormalization + /feature_layers.2/Relu", "timeMs" : 25.7786, "averageMs" : 0.0049498, "medianMs" : 0.005088, "percentage" : 0.899525 }
-, { "name" : "/feature_layers.3/Conv + /feature_layers.5/Relu", "timeMs" : 146.669, "averageMs" : 0.0281622, "medianMs" : 0.027648, "percentage" : 5.1179 }
-, { "name" : "/feature_layers.6/MaxPool", "timeMs" : 18.5801, "averageMs" : 0.0035676, "medianMs" : 0.003104, "percentage" : 0.648338 }
-, { "name" : "/feature_layers.7/Conv + /feature_layers.9/Relu", "timeMs" : 120.973, "averageMs" : 0.0232283, "medianMs" : 0.023136, "percentage" : 4.22126 }
-, { "name" : "/feature_layers.10/Conv + /feature_layers.12/Relu", "timeMs" : 205.268, "averageMs" : 0.0394141, "medianMs" : 0.038912, "percentage" : 7.1627 }
-, { "name" : "/feature_layers.13/MaxPool", "timeMs" : 19.81, "averageMs" : 0.00380377, "medianMs" : 0.004096, "percentage" : 0.691257 }
-, { "name" : "/feature_layers.14/Conv + /feature_layers.16/Relu", "timeMs" : 203.854, "averageMs" : 0.0391426, "medianMs" : 0.038912, "percentage" : 7.11336 }
-, { "name" : "/feature_layers.17/Conv + /feature_layers.19/Relu", "timeMs" : 363.17, "averageMs" : 0.069733, "medianMs" : 0.069632, "percentage" : 12.6725 }
-, { "name" : "/feature_layers.20/MaxPool", "timeMs" : 19.3779, "averageMs" : 0.0037208, "medianMs" : 0.003968, "percentage" : 0.676179 }
+, { "name" : "/feature_layers.0/Conv", "timeMs" : 46.6848, "averageMs" : 0.00863894, "medianMs" : 0.008192, "percentage" : 1.58476 }
+, { "name" : "/feature_layers.1/BatchNormalization + /feature_layers.2/Relu", "timeMs" : 27.2668, "averageMs" : 0.00504567, "medianMs" : 0.00512, "percentage" : 0.925596 }
+, { "name" : "/feature_layers.3/Conv + /feature_layers.5/Relu", "timeMs" : 154.973, "averageMs" : 0.0286774, "medianMs" : 0.028672, "percentage" : 5.26069 }
+, { "name" : "/feature_layers.6/MaxPool", "timeMs" : 19.6184, "averageMs" : 0.00363035, "medianMs" : 0.003552, "percentage" : 0.665964 }
+, { "name" : "/feature_layers.7/Conv + /feature_layers.9/Relu", "timeMs" : 127.141, "averageMs" : 0.0235273, "medianMs" : 0.023552, "percentage" : 4.31593 }
+, { "name" : "/feature_layers.10/Conv + /feature_layers.12/Relu", "timeMs" : 217.052, "averageMs" : 0.040165, "medianMs" : 0.039936, "percentage" : 7.36802 }
+, { "name" : "/feature_layers.13/MaxPool", "timeMs" : 20.2895, "averageMs" : 0.00375452, "medianMs" : 0.004, "percentage" : 0.688744 }
+, { "name" : "/feature_layers.14/Conv + /feature_layers.16/Relu", "timeMs" : 215.445, "averageMs" : 0.0398677, "medianMs" : 0.039936, "percentage" : 7.31348 }
+, { "name" : "/feature_layers.17/Conv + /feature_layers.19/Relu", "timeMs" : 384.504, "averageMs" : 0.0711517, "medianMs" : 0.070656, "percentage" : 13.0523 }
+, { "name" : "/feature_layers.20/MaxPool", "timeMs" : 21.4531, "averageMs" : 0.00396986, "medianMs" : 0.004096, "percentage" : 0.728246 }
 , { "name" : "/Reshape", "timeMs" : 0, "averageMs" : 0, "medianMs" : 0, "percentage" : 0 }
-, { "name" : "PWN(PWN(PWN(PWN(onnx::Mul_173 + (Unnamed Layer* 35) [Shuffle], /classifier.0/_input_quantizer/Mul), PWN(/classifier.0/_input_quantizer/Round)), PWN(/classifier.0/_input_quantizer/Clip)), /classifier.0/_input_quantizer/Div)", "timeMs" : 19.5862, "averageMs" : 0.00376079, "medianMs" : 0.004096, "percentage" : 0.683446 }
-, { "name" : "/classifier.0/Gemm", "timeMs" : 430.824, "averageMs" : 0.0827235, "medianMs" : 0.082624, "percentage" : 15.0333 }
-, { "name" : "PWN(PWN(PWN(PWN(PWN(/classifier.1/Relu), PWN(onnx::Mul_182 + (Unnamed Layer* 52) [Shuffle], /classifier.2/_input_quantizer/Mul)), PWN(/classifier.2/_input_quantizer/Round)), PWN(/classifier.2/_input_quantizer/Clip)), /classifier.2/_input_quantizer/Div)", "timeMs" : 17.6501, "averageMs" : 0.00338904, "medianMs" : 0.003072, "percentage" : 0.615888 }
-, { "name" : "/classifier.2/Gemm", "timeMs" : 82.0081, "averageMs" : 0.0157466, "medianMs" : 0.01536, "percentage" : 2.86161 }
-, { "name" : "PWN(/classifier.3/Relu)", "timeMs" : 16.725, "averageMs" : 0.0032114, "medianMs" : 0.003072, "percentage" : 0.583607 }
+, { "name" : "PWN(PWN(PWN(PWN(onnx::Mul_173 + (Unnamed Layer* 35) [Shuffle], /classifier.0/_input_quantizer/Mul), PWN(/classifier.0/_input_quantizer/Round)), PWN(/classifier.0/_input_quantizer/Clip)), /classifier.0/_input_quantizer/Div)", "timeMs" : 20.6623, "averageMs" : 0.00382352, "medianMs" : 0.004096, "percentage" : 0.701401 }
+, { "name" : "/classifier.0/Gemm", "timeMs" : 447.036, "averageMs" : 0.0827232, "medianMs" : 0.082816, "percentage" : 15.175 }
+, { "name" : "PWN(PWN(PWN(PWN(PWN(/classifier.1/Relu), PWN(onnx::Mul_182 + (Unnamed Layer* 52) [Shuffle], /classifier.2/_input_quantizer/Mul)), PWN(/classifier.2/_input_quantizer/Round)), PWN(/classifier.2/_input_quantizer/Clip)), /classifier.2/_input_quantizer/Div)", "timeMs" : 18.5603, "averageMs" : 0.00343454, "medianMs" : 0.003072, "percentage" : 0.630045 }
+, { "name" : "/classifier.2/Gemm", "timeMs" : 79.5497, "averageMs" : 0.0147205, "medianMs" : 0.014336, "percentage" : 2.70039 }
+, { "name" : "PWN(/classifier.3/Relu)", "timeMs" : 16.9188, "averageMs" : 0.00313079, "medianMs" : 0.003072, "percentage" : 0.574324 }
 , { "name" : "reshape_before_/last_layer/Gemm", "timeMs" : 0, "averageMs" : 0, "medianMs" : 0, "percentage" : 0 }
-, { "name" : "/last_layer/Gemm", "timeMs" : 25.5775, "averageMs" : 0.0049112, "medianMs" : 0.00512, "percentage" : 0.89251 }
+, { "name" : "/last_layer/Gemm", "timeMs" : 27.0663, "averageMs" : 0.00500856, "medianMs" : 0.00512, "percentage" : 0.918789 }
 , { "name" : "reshape_after_/last_layer/Gemm", "timeMs" : 0, "averageMs" : 0, "medianMs" : 0, "percentage" : 0 }
 ]
