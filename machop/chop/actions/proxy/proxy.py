@@ -1,4 +1,5 @@
 import logging
+import os
 from os import PathLike
 
 import toml
@@ -30,7 +31,7 @@ from sklearn.model_selection import train_test_split
 from einops import rearrange
 from torch import optim
 import torch.nn.functional as F
-
+import time
 logger = logging.getLogger(__name__)
 
 def parse_nas_config(config):
@@ -38,13 +39,14 @@ def parse_nas_config(config):
     nas_config = search_config['nas']  # parse into nas
     op_config = nas_config['op_config']
     proxy_config = nas_config['proxy_config']
-    return op_config['op_indices'], proxy_config['proxy']# one more time one more chance running
+    dataset_info = nas_config['proxy_dataset']
+    return op_config['op_indices'], proxy_config['proxy'],dataset_info# one more time one more chance running
     
 def proxy(config:dict | PathLike):
     if not isinstance(config, dict):
         config = load_config(config)
     
-    op_config, proxy_config = parse_nas_config(config)   # type(op_config) = list of integers , type(proxy_config) = list of strings
+    op_config, proxy_config,dataset_info = parse_nas_config(config)   # type(op_config) = list of integers , type(proxy_config) = list of strings
         
     # Create list of indecies for architectures to be quired in nas-bench
     indicies_list = []
@@ -87,15 +89,14 @@ def proxy(config:dict | PathLike):
         
         train_accuries.append(train_acc_parent)
         val_accuries.append(val_acc_parent)
-        print("debugging...")
-
+        
         for zc_proxy in proxy_config:
             zc_predictor = ZeroCost(method_type=zc_proxy)
-            score = zc_predictor.query(graph=graph, dataloader=train_loader)
+            score = zc_predictor.query(graph=graph, dataloader=train_loader)    ### Very slow function, need to investigate
+
             scores[zc_proxy].append(score)
-    # np.save(r'/home/ansonhon/mase_project/nas_results/scores_test3',scores)
-    # np.save(r'/home/ansonhon/mase_project/nas_results/train_acc_test3',train_accuries)
-    # np.save(r'/home/ansonhon/mase_project/nas_results/val_acc_test3',val_accuries)
+        
+
 
 
     # Prepare dataset for training meta-proxy
@@ -150,6 +151,10 @@ def proxy(config:dict | PathLike):
             print(f'Epoch [{epoch+1}/{num_epochs}], Loss: {loss.item():.4f}')
 
     # Saved the trained model, this is the daddy proxy
-    torch.save(model.state_dict(), '/home/ansonhon/mase_project/nas_results/model_state_dict.pt')
+    relative_path = r'nas_results/model_state_dict.pt'
+    current_directory = os.getcwd()
+    one_level_up_directory = os.path.abspath(os.path.join(current_directory, os.pardir))
+    file_path = os.path.join(one_level_up_directory, relative_path)
+    torch.save(model.state_dict(), file_path)
 
     return

@@ -90,35 +90,34 @@ class SearchStrategyDaddyProxy(SearchStrategyBase):
         pretrained_model_path = r'/home/ansonhon/mase_project/nas_results/model_state_dict.pt'
         proxy_model.load_state_dict(torch.load(pretrained_model_path))
         proxy_model.eval()
+
         measure_names = ['epe_nas', 'fisher', 'grad_norm', 'grasp', 'jacov', 'l2_norm', 'nwot', 'plain', 'snip', 'synflow', 'zen', 'params', 'flops']
 
         metrics = {}
-
         dataloader=self.data_module.train_dataloader()
         dataload_info=["random",len(dataloader),10]
         loss_function = nn.MSELoss()
         device = "cuda" 
-        # print("Model:",model.model)
         model=model.model
         # device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
         device = torch.device('cuda')
         model.to(device)
         num_batches_to_keep = 1
 
-        # 创建一个新的空列表来存储减少后的数据
+        # Get a batch of data
         small_data = []
         for idx, (data, target) in enumerate(dataloader):
             small_data.append([data, target])
             if idx + 1 == num_batches_to_keep:
                 break
 
-        # 使用减少后的数据创建一个新的 DataLoader 对象
+        # Create data loader with 1 batch of data
         small_trainloader = DataLoader(small_data)
-              
         small_proxy_scores = find_measures(model,dataloader, dataload_info, device , loss_function, measure_names)
         measure_names = ['epe_nas', 'fisher', 'grad_norm', 'grasp', 'jacov', 'l2_norm', 'nwot', 'plain', 'snip', 'synflow', 'zen', 'params', 'flops']
         measure_values_list = [small_proxy_scores[s] for s in measure_names]
         measure_values_tensor = torch.tensor(measure_values_list, dtype = torch.float)
+        
         ### Make prediction
         with torch.no_grad():
             prediction = proxy_model(measure_values_tensor)

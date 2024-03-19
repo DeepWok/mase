@@ -45,6 +45,7 @@ def find_measures_arrays(
     measure_names=None,
     loss_fn=F.cross_entropy,
 ):
+    device="cpu"
     if measure_names is None:
         measure_names = measures.available_measures
 
@@ -76,13 +77,13 @@ def find_measures_arrays(
     measure_values = {}
 
     # Turn target into one-hot vector
-    inputs = inputs[0:512,:]   ###
-    targets = targets[0:512]
-    target_onehot = F.one_hot(targets, num_classes = max(targets)+1)
+    # inputs = inputs[0:512,:]   ###
+    # targets = targets[0:512]
+    # target_onehot = F.one_hot(targets, num_classes = max(targets)+1)
 
-    # Convert datatype to float
-    inputs = torch.tensor(inputs, dtype = torch.float)
-    target_onehot = torch.tensor(target_onehot, dtype = torch.float)
+    # # Convert datatype to float
+    # inputs = torch.tensor(inputs, dtype = torch.float)
+    # target_onehot = torch.tensor(target_onehot, dtype = torch.float)
 
 
     while not done:
@@ -90,15 +91,20 @@ def find_measures_arrays(
             for measure_name in measure_names:
 
                 if measure_name not in measure_values:
+                    import time
+                    start = time.time()
                     val = measures.calc_measure(
                         measure_name,
                         net_orig,
                         device,
                         inputs,
-                        target_onehot,
+                        targets,
+                        # target_onehot,
                         loss_fn=loss_fn,
                         split_data=ds,
                     )
+                    end = time.time()
+                    print(end - start)
                     
                     measure_values[measure_name] = val
 
@@ -117,7 +123,7 @@ def find_measures_arrays(
                 print(f"Caught CUDA OOM, retrying with data split into {ds} parts")
             else:
                 raise e
-
+    
     net_orig = net_orig.to(device).train()
     return measure_values
 
@@ -182,6 +188,7 @@ def find_measures(
         measure_names.remove('params')
         
     if measures_arr is None:
+
         measures_arr = find_measures_arrays(
             net_orig,
             dataloader,
@@ -190,6 +197,7 @@ def find_measures(
             loss_fn=loss_function,
             measure_names=measure_names,
         )
+
 
     for k, v in measures_arr.items():
         if k == "jacov" or k == 'epe_nas' or k=='nwot' or k=='zen':
