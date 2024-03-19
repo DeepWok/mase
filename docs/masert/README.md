@@ -39,6 +39,8 @@ Runtime frameworks such as ONNX (Open Neural Network Exchange) Runtime and Nvidi
 | GPU (Generic)  | ✅                     | ❌             |
 | NVIDIA GPU     | ✅                     | ✅             |
 
+ONNXRT offers  extensive hardware support, accommodating not just NVIDIA GPUs but also CPUs, AMD GPUs, and other accelerators, thus it is an ideal choice if you're working without a NVIDIA GPU. Additionally, ONNXRT has high interoperability, allowing for model conversions through the ONNX framework, such as from PyTorch to TensorFlow. However, NVIDIA has significantly optimized TensorRT specifically for their devices, achieving higher throughput and lower latency compared to ONNXRT.
+
 ##  <img src="https://raw.githubusercontent.com/unifyai/unifyai.github.io/main/img/externally_linked/related_work/vendor_specific_apis/tensorrt.png" width="20" height="20"> TensorRT
 
 **Module Support** 
@@ -131,10 +133,3 @@ The procedure in the [How It Works Section](#⚙️-how-it-works) can be acompli
 We strongly recommend you look through the dedicated tutorials which walk you through the process of utilising MaseRT:
 - [TensorRT Tutorial](/docs/tutorials/tensorrt/tensorRT_quantization_tutorial.ipynb) 
 - [ONNXRT Tutorial](/docs/tutorials/)
-
-### Which Runtime Should I Use?
-
-- Hardware: ONNXRT supports a wider range of hardware beyond NVIDIA GPUs, including CPUs, AMD GPUs, and other accelerators. If you do not have a NVIDIA GPU, use ONNXRT.
-- Cross-Frameworks: ONNXRT allows conversion to other models through their ONNX framework (i.e., from PyTorch to Tensorflow)
-- Cross-Platform Deployment: ONNX enables easier deployment across different operating systems and environments.
-- Sheer Power: NVIDIA has heavily optimised TensorRT for their devices so their runtime has shown to acheive higher throughput, and lower latency copmared with ONNXRT.
