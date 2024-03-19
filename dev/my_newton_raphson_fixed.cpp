@@ -179,8 +179,10 @@ uint32_t range_augmentation(uint32_t x_red, uint16_t msb_index){
             shift = (shifted - 1) >> 1; // (k - 1) / 2
             // FORMAT Q1.(w_width - 1)
             res = (x_red * SQRT_2) >> 15;
+            std::cout << "REs 1: " << res << "\n";
         }
         res = res << shift;
+        std::cout << "Res 2: " << res << "\n";
     }
     // Reduction was through division.
     // Therefore augementation is through division.
@@ -205,7 +207,7 @@ uint32_t range_augmentation(uint32_t x_red, uint16_t msb_index){
     }
     // FORMAT Q(i_width).(f_width)
     res = res >> ((w_width - 1) - f_width);
-
+    std::cout << "Shift: " << (w_width - 1) - f_width << "\n";
     return res;
 }
 
@@ -214,7 +216,6 @@ uint16_t find_lut_index(uint16_t x, uint16_t msb_index){
     uint32_t intermediate;
     // Shift the number to match the Q1.(WIDTH-1) format.
     intermediate = x << (w_width - 1 - msb_index);
-
     // Get rid of the 1 from the format for index calculation.
     // This is easier in SystemVerilog, just turn the bit to a 0.
     uint32_t temp = intermediate - (0b1 << (w_width - 1));
@@ -222,23 +223,6 @@ uint16_t find_lut_index(uint16_t x, uint16_t msb_index){
     // Going from Q1.(WIDTH-1) to Q(WIDTH).0 in order to index the lut.
     temp = temp >> (w_width - 1);
     //uint32_t temp = (0b1 << LUT_POW) * (x << (-msb_index) - 1);
-    return temp;
-}
-
-uint16_t find_lut_index2(uint16_t x, uint16_t msb_index){
-    // FORMAT Q17.15
-    uint32_t intermediate;
-    // Shift the number to match the Q1.(WIDTH-1) format.
-    intermediate = x << (w_width - 1 - msb_index);
-
-    // Get rid of the 1 from the format for index calculation.
-    // This is easier in SystemVerilog, just turn the bit to a 0.
-    uint32_t temp = intermediate - (0b1 << (w_width - 1));
-    temp = temp << LUT_POW;
-    // Going from Q1.(WIDTH-1) to Q(WIDTH).0 in order to index the lut.
-    // TODO: it will be easier to choose the first LUT_POW bits and use them 
-    // to index the LUT.
-    temp = temp >> (w_width - 1);
     return temp;
 }
 
@@ -275,18 +259,11 @@ uint16_t isqrt(uint16_t x){
     }
 
     uint16_t lut_index = find_lut_index(x, msb_index);
-    std::cout << "Index: " << lut_index << "\n";
+    //std::cout << "Index: " << lut_index << "\n";
 
     // FORMAT: Q1.(WIDTH-1)
-    uint32_t initial_guess;
-    if(lut_index == 0){
-        initial_guess = lut[0];
-    }
-    else{
-        initial_guess = lut[lut_index];
-        //initial_guess = lut[lut_index - 1];
-    }
-    std::cout << "LUT: " << qxy_to_float(initial_guess, 1, 15) << "\n";
+    uint32_t initial_guess = lut[lut_index];
+    //std::cout << "LUT: " << qxy_to_float(initial_guess, 1, 15) << "\n";
     
     uint32_t y = initial_guess;                 // FORMAT: Q1.(WIDTH-1)
     uint32_t mult;                              // FORMAT: Q1.(WIDTH-1)
@@ -343,7 +320,7 @@ float test(uint16_t val, bool verbose){
     }
 
     // Reference calculation.
-    float expected_f = 1.0f / sqrt(val_f);
+    double expected_f = 1.0f / sqrtl(val_f);
     // Quantise the value for fair comparison.
     uint16_t expected = float_to_qxy(expected_f, i_width, f_width);
     // Update the reference value.
@@ -359,19 +336,24 @@ float test(uint16_t val, bool verbose){
     // Calculate error in floating point.
     float error = abs(output_f - expected_f);
     if(verbose){
-        std::cout << "sqrt(" << val_f << ") = " << expected_f << " |  " << output_f << " | Error: " << error << "\n";
+        std::cout << std::setprecision(10) << expected_f << "\n";
+        std::cout << std::setprecision(10) << "sqrt(" << val_f << ") = " << expected_f << " |  " << output_f << " | Error: " << error << "\n";
     }
     return error;
 }
 
 int main()
 {
+
+    i_width = 0;
+    f_width = 2;
     w_width = i_width + f_width;
     init_lut();
     //float x = 1.3203125;
     //int xint = float_to_qxy(x, 8, 8);
-    int xint = 0x152;
+    int xint = 3;
     float error = test(xint, true);
+    std::cout << "Out: " << range_augmentation(xint, 1);
 
     //w_width = i_width + f_width;
 
