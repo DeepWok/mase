@@ -9,11 +9,11 @@ from functools import partial
 from cocotb.triggers import *
 from chop.passes.graph.transforms.quantize.quantizers import *
 from mase_cocotb.testbench import Testbench 
-from mase_cocotb.interfaces.streaming import StreamDriver, StreamMonitor
+from mase_cocotb.interfaces.streaming import StreamDriver, StreamMonitor, StreamMonitorFloat
 from mase_cocotb.z_qlayers import quantize_to_int
 from mase_cocotb.runner import mase_runner
 from mase_cocotb.utils import bit_driver, sign_extend_t
-
+from math import ceil
 # from chop.passes.graph.transforms.quantize.quantized_modules import LinearInteger
 
 import torch
@@ -21,9 +21,19 @@ import torch
 logger = logging.getLogger("testbench")
 logger.setLevel(logging.INFO)
 
+def split_and_flatten_2d_tensor(input_tensor, row_block_size, col_block_size):
+    rows, cols = input_tensor.size()
+    
+    num_row_blocks = rows // row_block_size
+    num_col_blocks = cols // col_block_size
+    
+    reshaped_tensor = input_tensor.view(num_row_blocks, row_block_size, num_col_blocks, col_block_size)
+    reshaped_tensor = reshaped_tensor.permute(0, 2, 1, 3).contiguous()
+    flattened_tensor = reshaped_tensor.view(-1, row_block_size * col_block_size)
+    return flattened_tensor
 
 class fixed_silu_tb(Testbench):
-    def __init__(self, dut, dut_params, num_words) -> None:
+    def __init__(self, module, dut, dut_params, float_test = False) -> None:
         super().__init__(dut, dut.clk, dut.rst)
 
         self.data_width = dut_params["DATA_IN_0_PRECISION_0"] 
@@ -31,36 +41,84 @@ class fixed_silu_tb(Testbench):
 
         self.outputwidth = dut_params["DATA_OUT_0_PRECISION_0"] 
         self.outputfracw = dut_params["DATA_OUT_0_PRECISION_1"]
-
-        self.num_words_per_input = num_words
-
+        
+        self.num_in_features = dut_params["DATA_IN_0_TENSOR_SIZE_DIM_0"]
+        self.num_in_batches = dut_params["DATA_IN_0_TENSOR_SIZE_DIM_1"]
+        
+        self.size_in_feature_blocks = dut_params["DATA_IN_0_PARALLELISM_DIM_0"]
+        self.size_in_batch_blocks = dut_params["DATA_IN_0_PARALLELISM_DIM_1"]
+        
+        self.num_in_feature_splits = int(ceil(self.num_in_features / self.size_in_feature_blocks))
+        self.num_in_batch_splits = int(ceil(self.num_in_batches / self.size_in_batch_blocks))
+        
+        self.num_out_features = dut_params["DATA_OUT_0_TENSOR_SIZE_DIM_0"]
+        self.num_out_batches = dut_params["DATA_OUT_0_TENSOR_SIZE_DIM_1"]
+        
+        self.size_out_feature_blocks = dut_params["DATA_OUT_0_PARALLELISM_DIM_0"]
+        self.size_out_batch_blocks = dut_params["DATA_OUT_0_PARALLELISM_DIM_1"]
+        
+        self.num_out_feature_splits = int(ceil(self.num_out_features / self.size_out_feature_blocks))
+        self.num_out_batch_splits = int(ceil(self.num_out_batches / self.size_out_batch_blocks))
+        
         self.data_in_0_driver = StreamDriver(
             dut.clk, dut.data_in_0, dut.data_in_0_valid, dut.data_in_0_ready
         )
-        self.data_out_0_monitor = StreamMonitor(
-            dut.clk, dut.data_out_0, dut.data_out_0_valid, dut.data_out_0_ready
-        )
-
-    def exp(self, inputs):
-        # Run the model with the provided inputs and return the outputs
-        # cond = torch.logical_not(torch.logical_and(inputs <= self.thresh*2**self.frac_width, inputs >= -1 * self.thresh *2**self.frac_width))
-        # out = torch.where(cond, inputs, torch.tensor(0))
-        # unsignedout = torch.where(out < 0, torch.tensor(out % (2**self.data_width)), out)
-        m = torch.nn.SiLU()(inputs.to(torch.float))
-        m = self.dquantizer(m)
-        # mout = m.clamp(min=-1*2**(self.outputwidth-1), max = 2**(self.outputwidth-1)-1)
-        m2 = (m * 2 ** self.frac_width).to(torch.int64)
-        m2 = torch.where(m2 < 0, (m2.clone().detach() % (2**self.outputwidth)), m2)
-        # logger.info(f"out of silu and quantizer: {m}, int version {m2}")
-        return m2
         
+        if float_test:
+            self.data_out_0_monitor = StreamMonitorFloat(
+                dut.clk, dut.data_out_0, dut.data_out_0_valid, dut.data_out_0_ready, self.outputwidth, self.outputfracw
+            )  
+        else: 
+            self.data_out_0_monitor = StreamMonitor(
+                dut.clk, dut.data_out_0, dut.data_out_0_valid, dut.data_out_0_ready
+            )  
 
-    def generate_inputs(self):
-        self.dquantizer = partial(
-            integer_quantizer, width=self.data_width, frac_width=self.frac_width
+        self.in_dquantizer = partial(
+            integer_quantizer, width=self.data_width, frac_width=self.frac_width, is_signed = True
         )
-        realinp = torch.randn(self.num_words_per_input)
-        inputs = self.dquantizer(realinp)
+        
+        self.out_dquantizer = partial(
+            integer_quantizer, width=self.outputwidth, frac_width=self.outputfracw, is_signed = True
+        )
+
+        self.model = module
+        self.real_in_tensor = torch.randn(self.num_in_batches, self.num_in_features)
+        self.real_inp = self.real_in_tensor
+        self.quant_in_tensor = self.in_dquantizer(self.real_in_tensor)
+        self.real_out_tensor = self.model(self.quant_in_tensor)
+        
+        logger.info(f"REAL IN TENSOR: \n{self.real_in_tensor}")
+        logger.info(f"REAL OUT TENSOR: \n{self.real_out_tensor}")
+    
+    # def exp(self):
+    #     m = self.model(self.real_inp)
+    #     m = split_and_flatten_2d_tensor(m, self.size_out_feature_blocks, self.size_out_batch_blocks)
+    #     logger.info(f'IN EXP - FLOAT OUTPUT: \n{m}')
+    #     m = self.out_dquantizer(m)
+    #     logger.info(f'IN EXP - DQ OUTPUT: \n{m}')
+    #     # mout = m.clamp(min=-1*2**(self.outputwidth-1), max = 2**(self.outputwidth-1)-1)
+    #     print(f"Output width: {self.outputwidth}, output frac width: {self.outputfracw}")
+        
+    #     m2 = (m * 2 ** self.outputfracw).to(torch.int64)
+    #     print(m2)
+    #     m2 = torch.where(m2 < 0, (m2.clone().detach() % (2**self.outputwidth)), m2)
+    #     return m2
+    
+    def exp(self):
+        # Run the model with the provided inputs and return the expected integer outputs in the format expected by the monitor
+        m = split_and_flatten_2d_tensor(self.real_out_tensor, self.size_out_batch_blocks, self.size_out_feature_blocks) # match output
+        logger.info(f'EXP - FLOAT OUTPUT: \n{m}')
+        m = self.out_dquantizer(m)        
+        m2 = (m * 2 ** self.outputfracw).to(torch.int64)
+        m2 = m2.clone().detach() % (2**self.outputwidth)
+        
+        return m2
+    
+    def generate_inputs(self):
+        # Generate the integer inputs for the DUT in the format expected by the driver
+        inputs = split_and_flatten_2d_tensor(self.real_in_tensor, self.size_in_batch_blocks, self.size_in_feature_blocks)
+        logger.info(f"FLOAT INPUT: \n{inputs}")
+        inputs = self.in_dquantizer(inputs)
         intinp = (inputs * 2**self.frac_width).to(torch.int64)
         return intinp, inputs
 
@@ -74,48 +132,55 @@ class fixed_silu_tb(Testbench):
         await self.reset()
         logger.info(f"Reset finished")
         self.data_out_0_monitor.ready.value = 1
-        for i in range(1000):
-            inputs, real_inp = self.generate_inputs()
+        for i in range(10):
+            inputs, real_tensor = self.generate_inputs()
+            exp_out = self.exp()
+            logger.info(f"exp out {exp_out}")
             inputs = inputs.tolist()
-            exp_out = self.exp(real_inp)
             exp_out = exp_out.tolist()
             logger.info("Inputs and expected generated")
-            
-            self.data_in_0_driver.load_driver([inputs])
-            # self.data_in_0_driver.append(inputs)
-            self.data_out_0_monitor.load_monitor([exp_out])
+            logger.info(f"DUT IN: {inputs}")
+            logger.info(f"DUT EXP OUT: {exp_out}")
+            self.data_in_0_driver.load_driver(inputs)
+            self.data_out_0_monitor.load_monitor(exp_out)
 
         await Timer(1000, units="us")
         assert self.data_out_0_monitor.exp_queue.empty()
 
 @cocotb.test()
 async def test(dut):
-    data_width = dut_params["DATA_IN_0_PRECISION_0"] 
-    frac_width = dut_params["DATA_IN_0_PRECISION_1"]
-    nw_per_input = dut_params["DATA_IN_0_PARALLELISM_DIM_0"] * dut_params["DATA_IN_0_PARALLELISM_DIM_1"]
-    generate_memory.generate_mem("silu", data_width, frac_width)
-    
-    tb = fixed_silu_tb(dut, dut_params, num_words=nw_per_input)
+    in_data_width = dut_params["DATA_IN_0_PRECISION_0"] 
+    in_frac_width = dut_params["DATA_IN_0_PRECISION_1"]
+    out_data_width = dut_params["DATA_OUT_0_PRECISION_0"] 
+    out_frac_width = dut_params["DATA_OUT_0_PRECISION_1"]
+    generate_memory.generate_mem("silu", in_data_width, in_frac_width, out_data_width, out_frac_width)
+    print("Generated memory")
+    tb = fixed_silu_tb(torch.nn.SiLU(), dut, dut_params, float_test = False)
     await tb.run_test()
   
 dut_params = {
-                "DATA_IN_0_TENSOR_SIZE_DIM_0": 10,
-                "DATA_IN_0_TENSOR_SIZE_DIM_1": 1,
-                "DATA_IN_0_PARALLELISM_DIM_0": 10,
-                "DATA_IN_0_PARALLELISM_DIM_1": 1,
-                "DATA_IN_0_PRECISION_0": 5,
-                "DATA_IN_0_PRECISION_1": 1,
+                "DATA_IN_0_TENSOR_SIZE_DIM_0": 12,
+                "DATA_IN_0_TENSOR_SIZE_DIM_1": 12,
+                
+                "DATA_IN_0_PARALLELISM_DIM_0": 4,
+                "DATA_IN_0_PARALLELISM_DIM_1": 3,
+                
+                "DATA_IN_0_PRECISION_0": 16,
+                "DATA_IN_0_PRECISION_1": 8,
 
-                "DATA_OUT_0_PRECISION_0": 5,
-                "DATA_OUT_0_PRECISION_1": 1,
-                "DATA_OUT_0_TENSOR_SIZE_DIM_0": 10,
-                "DATA_OUT_0_TENSOR_SIZE_DIM_1": 1,
-                "DATA_OUT_0_PARALLELISM_DIM_0": 10,
-                "DATA_OUT_0_PARALLELISM_DIM_1": 1,
-
+                "DATA_OUT_0_PRECISION_0": 8,
+                "DATA_OUT_0_PRECISION_1": 4,
+                
+                "DATA_OUT_0_TENSOR_SIZE_DIM_0": 12,
+                "DATA_OUT_0_TENSOR_SIZE_DIM_1": 12,
+                
+                "DATA_OUT_0_PARALLELISM_DIM_0": 4,
+                "DATA_OUT_0_PARALLELISM_DIM_1": 3,
             }
 
+torch.manual_seed(1)
 if __name__ == "__main__":
+    # generate_memory.generate_mem("exp", dut_params["DATA_IN_0_PRECISION_0"], dut_params["DATA_IN_0_PRECISION_1"])
     mase_runner(
         module_param_list=[
             dut_params

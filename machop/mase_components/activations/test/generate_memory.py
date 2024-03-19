@@ -77,6 +77,7 @@ def aligned_generate_lookup(in_data_width, in_f_width, data_width: int, f_width:
         val = quanter(f(torch.tensor(pi))) # entry in the lookup table
         lut[doubletofx(data_width=in_data_width, f_width=in_f_width, num=pi, type=type)] = doubletofx(data_width=data_width, f_width=f_width, num=val.item(), type=type)
         pi += 2 ** -(in_f_width)
+    
     i = minval
     while i <= -1 * 2**-(in_f_width):
         count +=1
@@ -84,6 +85,7 @@ def aligned_generate_lookup(in_data_width, in_f_width, data_width: int, f_width:
         val = quanter(f(torch.tensor(i))) # entry in the lookup table
         lut[doubletofx(data_width=in_data_width, f_width=in_f_width, num=i, type=type)] = doubletofx(data_width=data_width, f_width=f_width, num=val.item(), type=type)
         i+= 2 ** -(in_f_width)
+    
     iarr = [(x * 2 **(in_f_width)) for x in iarr]
     # print(iarr)
     return lut
@@ -163,6 +165,6 @@ def generate_sv_lut(function_name, data_width, f_width, dir = None):
 
 if __name__ == "__main__":
     # generate_sv_lut("silu", 8, 4)
-    dicto = aligned_generate_lookup(in_data_width=16, in_f_width=8, data_width=8, f_width=4, function='exp', type="bin")
+    dicto = aligned_generate_lookup(in_data_width=8, in_f_width=4, data_width=8, f_width=4, function='exp', type="bin")
     # dicto = {k: v for k, v in dicto.items() if k not in ['data_width', 'f_width', 'func', 'in_data_width', 'in_f_width']}  
     testlookup(dicto)

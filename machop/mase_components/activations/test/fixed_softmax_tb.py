@@ -33,7 +33,7 @@ def split_and_flatten_2d_tensor(input_tensor, row_block_size, col_block_size):
     return flattened_tensor
 
 class fixed_softmax_tb(Testbench):
-    def __init__(self, dut, dut_params) -> None:
+    def __init__(self, module, dut, dut_params, float_test = False) -> None:
         super().__init__(dut, dut.clk, dut.rst)
 
         self.data_width = dut_params["DATA_IN_0_PRECISION_0"] 
@@ -63,9 +63,15 @@ class fixed_softmax_tb(Testbench):
         self.data_in_0_driver = StreamDriver(
             dut.clk, dut.data_in_0, dut.data_in_0_valid, dut.data_in_0_ready
         )
-        self.data_out_0_monitor = StreamMonitorFloat(
-            dut.clk, dut.data_out_0, dut.data_out_0_valid, dut.data_out_0_ready, self.outputwidth, self.outputfracw
-        )  
+        
+        if float_test:
+            self.data_out_0_monitor = StreamMonitorFloat(
+                dut.clk, dut.data_out_0, dut.data_out_0_valid, dut.data_out_0_ready, self.outputwidth, self.outputfracw
+            )  
+        else: 
+            self.data_out_0_monitor = StreamMonitor(
+                dut.clk, dut.data_out_0, dut.data_out_0_valid, dut.data_out_0_ready
+            )  
 
         self.in_dquantizer = partial(
             integer_quantizer, width=self.data_width, frac_width=self.frac_width, is_signed = True
@@ -75,54 +81,30 @@ class fixed_softmax_tb(Testbench):
             integer_quantizer, width=self.outputwidth, frac_width=self.outputfracw, is_signed = True
         )
 
-        self.model = torch.nn.Softmax()
-        self.real_tensor = torch.randn(self.num_in_batches, self.num_in_features)
-        logger.info(f"REAL TENSOR: \n{self.real_tensor}")
+        self.model = module
+        
+        self.real_in_tensor = torch.randn(self.num_in_batches, self.num_in_features)
+        self.quant_in_tensor = self.in_dquantizer(self.real_in_tensor)
+        self.real_out_tensor = self.model(self.quant_in_tensor)
+        
+        logger.info(f"REAL IN TENSOR: \n{self.real_in_tensor}")
+        logger.info(f"REAL OUT TENSOR: \n{self.real_out_tensor}")
         
     def exp(self):
-        # Run the model with the provided inputs and return the outputs
-        # cond = torch.logical_not(torch.logical_and(inputs <= self.thresh*2**self.frac_width, inputs >= -1 * self.thresh *2**self.frac_width))
-        # out = torch.where(cond, inputs, torch.tensor(0))
-        # unsignedout = torch.where(out < 0, torch.tensor(out % (2**self.data_width)), out)
-        # logger.info(f'IN EXP - Inputs: \n{inputs}')
-        # logger.info(f'IN EXP - FLOAT Inputs: \n{inputs.float()}')
-        # inputs = torch.flip(inputs, [1]) # match endianess of verilog
-        
-        m = self.model(self.real_tensor)
-        
-        
-        # I think this is needed for endian matching when IN_PLL != OUT_PLL (maybe not w s-window?)
-        
-        
-        # m = split_and_flatten_2d_tensor(m, self.size_in_batch_blocks, self.size_in_feature_blocks) # match input
-        # m = torch.flip(m, [1]) # match endianess of verilog
-         
-        # m = torch.reshape(m, (self.num_out_batches, self.num_out_features)) # set to output tensor shape
-        m = split_and_flatten_2d_tensor(m, self.size_out_batch_blocks, self.size_out_feature_blocks) # match output
-        
-        
+        # Run the model with the provided inputs and return the expected integer outputs in the format expected by the monitor
+        m = split_and_flatten_2d_tensor(self.real_out_tensor, self.size_out_batch_blocks, self.size_out_feature_blocks) # match output
         logger.info(f'EXP - FLOAT OUTPUT: \n{m}')
-        m = self.out_dquantizer(m)
-        # mout = m.clamp(min=-1*2**(self.outputwidth-1), max = 2**(self.outputwidth-1)-1)
-        print(f"Output width: {self.outputwidth}, output frac width: {self.outputfracw}")
-        
+        m = self.out_dquantizer(m)        
         m2 = (m * 2 ** self.outputfracw).to(torch.int64)
-        print(m2)
-        m2 = torch.where(m2 < 0, (m2.clone().detach() % (2**self.outputwidth)), m2)
-        
+        m2 = m2.clone().detach() % (2 ** self.outputwidth)
+                
         return m2
     
     def generate_inputs(self):
-        
-        
-        # realinp = torch.Tensor([-0.4519])
-        # logger.info(f"Real input: \n{realinp}")
-        inputs = split_and_flatten_2d_tensor(self.real_tensor, self.size_in_batch_blocks, self.size_in_feature_blocks)
-        logger.info(f"EXP - FLOAT INPUT: \n{inputs}")
+        # Generate the integer inputs for the DUT in the format expected by the driver
+        inputs = split_and_flatten_2d_tensor(self.real_in_tensor, self.size_in_batch_blocks, self.size_in_feature_blocks)
+        logger.info(f"FLOAT INPUT: \n{inputs}")
         inputs = self.in_dquantizer(inputs)
-        # inputs = inputs.reshape(self.num_in_feature_blocks, self.num_in_batch_blocks, self.num_in_feature_splits, self.num_in_batch_splits)
-        
-        # logger.info(f"Input: \n{inputs}")
         intinp = (inputs * 2**self.frac_width).to(torch.int64)
         return intinp, inputs
 
@@ -139,14 +121,12 @@ class fixed_softmax_tb(Testbench):
         for i in range(1):
             inputs, real_tensor = self.generate_inputs()
             exp_out = self.exp()
-            logger.info(f"real inputs: {real_tensor}")
             inputs = inputs.tolist()
             exp_out = exp_out.tolist()
             logger.info("Inputs and expected generated")
             logger.info(f"DUT IN: {inputs}")
             logger.info(f"DUT EXP OUT: {exp_out}")
             self.data_in_0_driver.load_driver(inputs)
-            # self.data_in_0_driver.append(inputs)
             self.data_out_0_monitor.load_monitor(exp_out)
 
         await Timer(1000, units="us")
@@ -158,9 +138,11 @@ async def test(dut):
     in_frac_width = dut_params["DATA_IN_0_PRECISION_1"]
     out_data_width = dut_params["DATA_OUT_0_PRECISION_0"] 
     out_frac_width = dut_params["DATA_OUT_0_PRECISION_1"]
-    generate_memory.generate_mem("exp", in_data_width, in_frac_width, out_data_width, out_frac_width)
+    inter_data_width = dut_params["DATA_INTERMEDIATE_0_PRECISION_0"]
+    inter_frac_width = dut_params["DATA_INTERMEDIATE_0_PRECISION_1"]
+    generate_memory.generate_mem("exp", in_data_width, in_frac_width, inter_data_width, inter_frac_width)
     print("Generated memory")
-    tb = fixed_softmax_tb(dut, dut_params)
+    tb = fixed_softmax_tb(torch.nn.Softmax(), dut, dut_params, float_test = True)
     await tb.run_test()
   
 dut_params = {
@@ -168,19 +150,22 @@ dut_params = {
                 "DATA_IN_0_TENSOR_SIZE_DIM_1": 12,
                 
                 "DATA_IN_0_PARALLELISM_DIM_0": 4,
-                "DATA_IN_0_PARALLELISM_DIM_1": 3,
+                "DATA_IN_0_PARALLELISM_DIM_1": 4,
                 
                 "DATA_IN_0_PRECISION_0": 16,
                 "DATA_IN_0_PRECISION_1": 8,
 
-                "DATA_OUT_0_PRECISION_0": 16,
-                "DATA_OUT_0_PRECISION_1": 8,
+                "DATA_OUT_0_PRECISION_0": 8,
+                "DATA_OUT_0_PRECISION_1": 4,
                 
                 "DATA_OUT_0_TENSOR_SIZE_DIM_0": 12,
                 "DATA_OUT_0_TENSOR_SIZE_DIM_1": 12,
                 
                 "DATA_OUT_0_PARALLELISM_DIM_0": 4,
-                "DATA_OUT_0_PARALLELISM_DIM_1": 3,
+                "DATA_OUT_0_PARALLELISM_DIM_1": 4,
+                
+                "DATA_INTERMEDIATE_0_PRECISION_0": 16,
+                "DATA_INTERMEDIATE_0_PRECISION_1": 8,
             }
 
 torch.manual_seed(1)

@@ -20,7 +20,9 @@ module fixed_softmax #(
     parameter OUT_0_DEPTH = $rtoi($ceil(DATA_OUT_0_TENSOR_SIZE_DIM_0 / DATA_OUT_0_PARALLELISM_DIM_0)),
 
     parameter DATA_INTERMEDIATE_0_PRECISION_0 = DATA_OUT_0_PRECISION_0,
-    parameter DATA_INTERMEDIATE_0_PRECISION_1 = DATA_OUT_0_PRECISION_1
+    parameter DATA_INTERMEDIATE_0_PRECISION_1 = DATA_OUT_0_PRECISION_1,
+
+    parameter IN_PALCE = 0
 ) (
     /* verilator lint_off UNUSEDSIGNAL */
     input rst,
@@ -85,8 +87,9 @@ module fixed_softmax #(
     // $sformat(out_data_string, "%s", DATA_OUT_0_PRECISION_0);
     // $sformat(out_f_string, "%s", DATA_OUT_0_PRECISION_1);
 
-    // $sformat(filename, "/home/aw23/mase/machop/mase_components/activations/rtl/exp_IN%d_%d_OUT%d_%d_map.mem", DATA_IN_0_PRECISION_0, DATA_IN_0_PRECISION_1, DATA_OUT_0_PRECISION_0, DATA_OUT_0_PRECISION_1);
-    $display("%s", filename);
+    // string filename;
+    // $sformat(filename, "/home/aw23/mase/machop/mase_components/activations/rtl/exp_IN%d_%d_OUT%d_%d_map.mem", DATA_IN_0_PRECISION_0, DATA_IN_0_PRECISION_1, DATA_INTERMEDIATE_0_PRECISION_0, DATA_INTERMEDIATE_0_PRECISION_1);
+    // $display("%s", filename);
     $readmemb(filename, exp); // change name
   end              //mase/machop/mase_components/activations/rtl/elu_map.mem
   
@@ -112,7 +115,7 @@ module fixed_softmax #(
       unpacked_register_slice #(
           .DATA_WIDTH(DATA_IN_0_PRECISION_0),
           .IN_SIZE(DATA_IN_0_PARALLELISM_DIM_0*DATA_IN_0_PARALLELISM_DIM_1),
-      )  single_buffer (
+      )  single_roll (
           .clk(clk),
           .rst(rst),
           .in_data(ff_data),
@@ -230,25 +233,38 @@ generate
   );
 
 
-  logic [DATA_INTERMEDIATE_0_PRECISION_0 + DATA_INTERMEDIATE_0_PRECISION_1 :0] extended_divisor [DATA_IN_0_PARALLELISM_DIM_0*DATA_OUT_0_PARALLELISM_DIM_1-1:0]; // extra bit for rounding division
-  logic [DATA_INTERMEDIATE_0_PRECISION_0 + DATA_INTERMEDIATE_0_PRECISION_1 :0] extended_quotient [DATA_IN_0_PARALLELISM_DIM_0*DATA_OUT_0_PARALLELISM_DIM_1-1:0]; // extra bit for quantization
+  logic [DATA_INTERMEDIATE_0_PRECISION_0 + DATA_INTERMEDIATE_0_PRECISION_1 - 1 :0] extended_divisor [DATA_OUT_0_PARALLELISM_DIM_0*DATA_OUT_0_PARALLELISM_DIM_1-1:0]; // extra bit for rounding division
+  logic [DATA_INTERMEDIATE_0_PRECISION_0 + DATA_INTERMEDIATE_0_PRECISION_1 - 1 :0] extended_quotient [DATA_OUT_0_PARALLELISM_DIM_0*DATA_OUT_0_PARALLELISM_DIM_1-1:0]; // extra bit for quantization
+  logic [DATA_INTERMEDIATE_0_PRECISION_0 - 1 :0] inter_quotient [DATA_OUT_0_PARALLELISM_DIM_0*DATA_OUT_0_PARALLELISM_DIM_1-1:0]; // extra bit for quantization
 
   for (genvar i = 0; i < DATA_OUT_0_PARALLELISM_DIM_1; i++) begin : scale_batches
     for (genvar j = 0; j < DATA_OUT_0_PARALLELISM_DIM_0; j++) begin : div_elements
       always_comb begin
-        extended_divisor[DATA_OUT_0_PARALLELISM_DIM_0*(i) + j] = ff_exp_data[DATA_OUT_0_PARALLELISM_DIM_0*(i) + j] << DATA_INTERMEDIATE_0_PRECISION_1 + 1;
+        extended_divisor[DATA_OUT_0_PARALLELISM_DIM_0*(i) + j] = ff_exp_data[DATA_OUT_0_PARALLELISM_DIM_0*(i) + j] << DATA_INTERMEDIATE_0_PRECISION_1;
         extended_quotient[DATA_OUT_0_PARALLELISM_DIM_0*(i) + j]  = extended_divisor[DATA_OUT_0_PARALLELISM_DIM_0*(i) + j] / ff_accumulated_exp_data[i];
+        inter_quotient[DATA_OUT_0_PARALLELISM_DIM_0*(i) + j]  = extended_quotient[DATA_OUT_0_PARALLELISM_DIM_0*(i) + j][DATA_INTERMEDIATE_0_PRECISION_0-1:0];
         // data_out_0[DATA_OUT_0_PARALLELISM_DIM_1*(i) + j] = extended_quotient[DATA_OUT_0_PARALLELISM_DIM_1*(i) + j][DATA_OUT_0_PRECISION_0-1:0];
       end
-        quick_round #(
-          .DATA_WIDTH(DATA_OUT_0_PRECISION_0)
-        ) round (
-          .data_in(extended_quotient[DATA_OUT_0_PARALLELISM_DIM_0*(i) + j][DATA_OUT_0_PRECISION_0-1:1]),
-          .round_bit(extended_quotient[DATA_OUT_0_PARALLELISM_DIM_0*(i) + j][0]),
-          .data_out(data_out_0[DATA_OUT_0_PARALLELISM_DIM_0*(i) + j])
-        );
+        // quick_round #(
+        //   .DATA_WIDTH(DATA_OUT_0_PRECISION_0)
+        // ) round (
+        //   .data_in(extended_quotient[DATA_OUT_0_PARALLELISM_DIM_0*(i) + j][DATA_OUT_0_PRECISION_0-1:1]),
+        //   .round_bit(extended_quotient[DATA_OUT_0_PARALLELISM_DIM_0*(i) + j][0]),
+        //   .data_out(data_out_0[DATA_OUT_0_PARALLELISM_DIM_0*(i) + j])
+        // );
     end
   end
+  // assign data_out_0 = inter_quotient;
+  fixed_rounding #(
+      .IN_SIZE(DATA_OUT_0_PARALLELISM_DIM_0 * DATA_OUT_0_PARALLELISM_DIM_1),
+      .IN_WIDTH(DATA_INTERMEDIATE_0_PRECISION_0),
+      .IN_FRAC_WIDTH(DATA_INTERMEDIATE_0_PRECISION_1),
+      .OUT_WIDTH(DATA_OUT_0_PRECISION_0),
+      .OUT_FRAC_WIDTH(DATA_OUT_0_PRECISION_1)
+  ) data_out_cast (
+      .data_in (inter_quotient),
+      .data_out(data_out_0)
+  );
 
   join2 #(
   ) output_handshake_split (

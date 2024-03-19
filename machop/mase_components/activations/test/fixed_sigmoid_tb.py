@@ -32,7 +32,7 @@ def split_and_flatten_2d_tensor(input_tensor, row_block_size, col_block_size):
     flattened_tensor = reshaped_tensor.view(-1, row_block_size * col_block_size)
     return flattened_tensor
 
-class fixed_elu_tb(Testbench):
+class fixed_sigmoid_tb(Testbench):
     def __init__(self, module, dut, dut_params, float_test = False) -> None:
         super().__init__(dut, dut.clk, dut.rst)
 
@@ -83,34 +83,19 @@ class fixed_elu_tb(Testbench):
 
         self.model = module
         self.real_in_tensor = torch.randn(self.num_in_batches, self.num_in_features)
-        self.real_inp = self.real_in_tensor
         self.quant_in_tensor = self.in_dquantizer(self.real_in_tensor)
         self.real_out_tensor = self.model(self.quant_in_tensor)
         
         logger.info(f"REAL IN TENSOR: \n{self.real_in_tensor}")
         logger.info(f"REAL OUT TENSOR: \n{self.real_out_tensor}")
-    
-    # def exp(self):
-    #     m = self.model(self.real_inp)
-    #     m = split_and_flatten_2d_tensor(m, self.size_out_feature_blocks, self.size_out_batch_blocks)
-    #     logger.info(f'IN EXP - FLOAT OUTPUT: \n{m}')
-    #     m = self.out_dquantizer(m)
-    #     logger.info(f'IN EXP - DQ OUTPUT: \n{m}')
-    #     # mout = m.clamp(min=-1*2**(self.outputwidth-1), max = 2**(self.outputwidth-1)-1)
-    #     print(f"Output width: {self.outputwidth}, output frac width: {self.outputfracw}")
         
-    #     m2 = (m * 2 ** self.outputfracw).to(torch.int64)
-    #     print(m2)
-    #     m2 = torch.where(m2 < 0, (m2.clone().detach() % (2**self.outputwidth)), m2)
-    #     return m2
-    
     def exp(self):
         # Run the model with the provided inputs and return the expected integer outputs in the format expected by the monitor
         m = split_and_flatten_2d_tensor(self.real_out_tensor, self.size_out_batch_blocks, self.size_out_feature_blocks) # match output
         logger.info(f'EXP - FLOAT OUTPUT: \n{m}')
         m = self.out_dquantizer(m)        
         m2 = (m * 2 ** self.outputfracw).to(torch.int64)
-        m2 = m2.clone().detach() % (2**self.outputwidth)
+        m2 = m2.clone().detach() % (2 ** self.outputwidth)        
         
         return m2
     
@@ -135,9 +120,10 @@ class fixed_elu_tb(Testbench):
         for i in range(10):
             inputs, real_tensor = self.generate_inputs()
             exp_out = self.exp()
-            logger.info(f"exp out {exp_out}")
+            
             inputs = inputs.tolist()
             exp_out = exp_out.tolist()
+            
             logger.info("Inputs and expected generated")
             logger.info(f"DUT IN: {inputs}")
             logger.info(f"DUT EXP OUT: {exp_out}")
@@ -153,9 +139,9 @@ async def test(dut):
     in_frac_width = dut_params["DATA_IN_0_PRECISION_1"]
     out_data_width = dut_params["DATA_OUT_0_PRECISION_0"] 
     out_frac_width = dut_params["DATA_OUT_0_PRECISION_1"]
-    generate_memory.generate_mem("elu", in_data_width, in_frac_width, out_data_width, out_frac_width)
+    generate_memory.generate_mem("sigmoid", in_data_width, in_frac_width, out_data_width, out_frac_width)
     print("Generated memory")
-    tb = fixed_elu_tb(torch.nn.ELU(), dut, dut_params, float_test = False)
+    tb = fixed_sigmoid_tb(torch.nn.Sigmoid(), dut, dut_params, float_test = False)
     await tb.run_test()
   
 dut_params = {
@@ -186,3 +172,6 @@ if __name__ == "__main__":
             dut_params
         ]
     )
+
+
+# [3, 5, 5, 3, 7, 14, 9, 10, 12, 7, 2, 3]
