@@ -34,6 +34,7 @@ QUANTIZEABLE_OP = (
     "layer_norm",
     "group_norm",
     "instance_norm2d",
+    "rms_norm",
 )
 
 

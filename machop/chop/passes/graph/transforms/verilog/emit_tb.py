@@ -95,7 +95,7 @@ def _emit_cocotb_tb_str(graph, tb_dir: Path):
         monitors.append(
             _make_stream_monitor(
                 res, f"{res}_valid", f"{res}_ready",
-                prec[0], True, error_bits=4
+                prec[0], True, error_bits=5  # TODO: determine error bits
             )
         )
 

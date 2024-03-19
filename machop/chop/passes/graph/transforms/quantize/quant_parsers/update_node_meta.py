@@ -66,6 +66,7 @@ MASE_OP_TO_INPUT_ENTRIES_AND_ARGS = {
     "layer_norm": (("data_in",), ("data_in_0")),
     "group_norm": (("data_in",), ("data_in_0")),
     "instance_norm2d": (("data_in",), ("data_in_0")),
+    "rms_norm": (("data_in",), ("data_in_0")),
 }
 
 
@@ -95,6 +96,7 @@ MASE_OP_TO_OUTPUT_ENTRIES = {
     "layer_norm": (("data_out",), ("data_out_0")),
     "group_norm": (("data_out",), ("data_out_0")),
     "instance_norm2d": (("data_out",), ("data_out_0")),
+    "rms_norm": (("data_out",), ("data_out_0")),
 }
 
 

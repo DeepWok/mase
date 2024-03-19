@@ -211,6 +211,15 @@ def create_new_module(
             track_running_stats=original_module.track_running_stats,
             config=config,
         )
+    elif mase_op == "rms_norm":
+        new_module_cls = quantized_module_map[f"rms_norm_{quant_name}"]
+        new_module = new_module_cls(
+            normalized_shape=original_module.normalized_shape,
+            eps=original_module.eps,
+            elementwise_affine=original_module.elementwise_affine,
+            bias=original_module.bias,
+            config=config,
+        )
     else:
         raise NotImplementedError(
             f"Unsupported module class {original_module_cls} to modify"

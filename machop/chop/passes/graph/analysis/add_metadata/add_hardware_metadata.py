@@ -8,6 +8,8 @@ from chop.passes.graph.analysis.utils import (
     get_input_nodes,
     get_output_nodes,
 )
+from chop.passes.graph.utils import get_mase_op
+
 from torch import nn
 
 from .hardware_metadata_layers import INTERNAL_COMP

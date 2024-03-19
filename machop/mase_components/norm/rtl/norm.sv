@@ -3,6 +3,7 @@ Module      : norm
 Description : Module which unifies all types of normalization.
 
               Currently supports:
+              - Batch Norm
               - Layer Norm
               - Instance Norm
               - Group Norm
@@ -76,18 +77,19 @@ module norm #(
     // LAYER_NORM, INSTANCE_NORM, GROUP_NORM, RMS_NORM
     parameter NORM_TYPE            = "LAYER_NORM"
 ) (
-    input  logic                clk,
-    input  logic                rst,
+    input  logic                 clk,
+    input  logic                 rst,
 
-    input  logic [IN_WIDTH-1:0] data_in_0  [COMPUTE_DIM0*COMPUTE_DIM1-1:0],
-    input  logic                data_in_0_valid,
-    output logic                data_in_0_ready,
+    input  logic [IN_WIDTH-1:0]  data_in_0  [COMPUTE_DIM0*COMPUTE_DIM1-1:0],
+    input  logic                 data_in_0_valid,
+    output logic                 data_in_0_ready,
 
-    output logic [IN_WIDTH-1:0] data_out_0 [COMPUTE_DIM0*COMPUTE_DIM1-1:0],
-    output logic                data_out_0_valid,
-    input  logic                data_out_0_ready
+    output logic [OUT_WIDTH-1:0] data_out_0 [COMPUTE_DIM0*COMPUTE_DIM1-1:0],
+    output logic                 data_out_0_valid,
+    input  logic                 data_out_0_ready
 );
 
+localparam BATCH_NORM = (NORM_TYPE == "BATCH_NORM");
 localparam LAYER_NORM = (NORM_TYPE == "LAYER_NORM");
 localparam INSTANCE_NORM = (NORM_TYPE == "INSTANCE_NORM");
 localparam GROUP_NORM = (NORM_TYPE == "GROUP_NORM");
@@ -95,7 +97,11 @@ localparam RMS_NORM = (NORM_TYPE == "RMS_NORM");
 
 generate
 
-if (LAYER_NORM || INSTANCE_NORM || GROUP_NORM) begin : group_norm
+if (BATCH_NORM) begin : batch_norm
+
+    //....
+
+end else if (LAYER_NORM || INSTANCE_NORM || GROUP_NORM) begin : group_norm
 
     localparam NORM_CHANNELS = INSTANCE_NORM ? 1 : CHANNELS;
 
@@ -105,8 +111,8 @@ if (LAYER_NORM || INSTANCE_NORM || GROUP_NORM) begin : group_norm
         .COMPUTE_DIM0(COMPUTE_DIM0),
         .COMPUTE_DIM1(COMPUTE_DIM1),
         .GROUP_CHANNELS(NORM_CHANNELS),
-        .IN_FRAC_WIDTH(IN_FRAC_WIDTH),
         .IN_WIDTH(IN_WIDTH),
+        .IN_FRAC_WIDTH(IN_FRAC_WIDTH),
         .OUT_WIDTH(OUT_WIDTH),
         .OUT_FRAC_WIDTH(OUT_FRAC_WIDTH),
         .ISQRT_LUT_MEMFILE(ISQRT_LUT_MEMFILE)
@@ -123,26 +129,27 @@ if (LAYER_NORM || INSTANCE_NORM || GROUP_NORM) begin : group_norm
 
 end else if (RMS_NORM) begin : rms_norm
 
-    // rms_norm_2d #(
-    //     .TOTAL_DIM0(TOTAL_DIM0),
-    //     .TOTAL_DIM1(TOTAL_DIM1),
-    //     .COMPUTE_DIM0(COMPUTE_DIM0),
-    //     .COMPUTE_DIM1(COMPUTE_DIM1),
-    //     .CHANNELS(CHANNELS),
-    //     .IN_FRAC_WIDTH(IN_FRAC_WIDTH),
-    //     .IN_WIDTH(IN_WIDTH),
-    //     .OUT_WIDTH(OUT_WIDTH),
-    //     .OUT_FRAC_WIDTH(OUT_FRAC_WIDTH)
-    // ) rms_norm_inst (
-    //     .clk(clk),
-    //     .rst(rst),
-    //     .in_data(data_in_0),
-    //     .in_valid(data_in_0_valid),
-    //     .in_ready(data_in_0_ready),
-    //     .out_data(data_out_0),
-    //     .out_valid(data_out_0_valid),
-    //     .out_ready(data_out_0_ready)
-    // );
+    rms_norm_2d #(
+        .TOTAL_DIM0(TOTAL_DIM0),
+        .TOTAL_DIM1(TOTAL_DIM1),
+        .COMPUTE_DIM0(COMPUTE_DIM0),
+        .COMPUTE_DIM1(COMPUTE_DIM1),
+        .CHANNELS(CHANNELS),
+        .IN_WIDTH(IN_WIDTH),
+        .IN_FRAC_WIDTH(IN_FRAC_WIDTH),
+        .OUT_WIDTH(OUT_WIDTH),
+        .OUT_FRAC_WIDTH(OUT_FRAC_WIDTH),
+        .ISQRT_LUT_MEMFILE(ISQRT_LUT_MEMFILE)
+    ) rms_norm_inst (
+        .clk(clk),
+        .rst(rst),
+        .in_data(data_in_0),
+        .in_valid(data_in_0_valid),
+        .in_ready(data_in_0_ready),
+        .out_data(data_out_0),
+        .out_valid(data_out_0_valid),
+        .out_ready(data_out_0_ready)
+    );
 
 end
 

@@ -373,6 +373,10 @@ MASE_OP_TO_ENTRIES = {
         ("name", "data_in_entries"),
         ("bypass",),
     ),
+    "rms_norm": (
+        ("name", "data_in_entries"),
+        ("bypass",),
+    ),
 }
 
 

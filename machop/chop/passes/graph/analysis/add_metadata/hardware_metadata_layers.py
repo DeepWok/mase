@@ -62,4 +62,5 @@ INTERNAL_COMP = {
     "layer_norm" : [norm],
     "group_norm" : [norm],
     "instance_norm2d" : [norm],
+    "rms_norm" : [norm],
 }
