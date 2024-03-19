@@ -36,4 +36,15 @@ import_files -force
 
 update_compile_order -fileset sources_1
 
+# add_files -fileset constrs_1 alveo-u250-norm.xdc
+
+# set_property target_constrs_file /scratch/ddl20/mase/machop/mase_components/norm/alveo-u250-norm.xdc [current_fileset -constrset]
+read_xdc alveo-u250-norm.xdc
+
+launch_runs synth_1 -jobs 10
+wait_on_runs synth_1
+
+launch_runs impl_1 -jobs 10
+wait_on_runs impl_1
+
 start_gui
