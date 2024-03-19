@@ -1,6 +1,7 @@
 import logging
 import math
 
+import chop.models.manual.rms_norm as rms
 import toml
 import torch
 import torch.fx as fx
@@ -16,9 +17,6 @@ from chop.passes.graph.common import (
     MASE_BUILTIN_FUNCS,
     MASE_IMPLICIT_FUNCS,
     MASE_MODULE_RELATED_FUNCS,
-)
-from chop.passes.graph.transforms.quantize.quantized_modules.rms_norm import (
-    RMSNorm,
 )
 from chop.ir.graph.mase_metadata import MaseMetadata
 from chop.passes.graph.analysis.utils import fetch_attr, load_arg
@@ -76,7 +74,7 @@ def graph_iterator_for_mase_ops(graph):
                 mase_op = "group_norm"
             elif isinstance(module, nn.InstanceNorm2d):
                 mase_op = "instance_norm2d"
-            elif isinstance(module, RMSNorm):
+            elif isinstance(module, rms.RMSNorm):
                 mase_op = "rms_norm"
             elif isinstance(module, nn.Linear):
                 mase_op = "linear"
