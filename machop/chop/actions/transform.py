@@ -61,6 +61,24 @@ def transform(
     # graph_metadata = Mase
     graph, _ = init_metadata_analysis_pass(graph, pass_args=None)
 
+    # For the tensorRT analysis comparision we must deepcopy the original graph.
+    # Due to the immutable nature of the following graph passses this must be done before.
+    for pass_name, pass_config in config["passes"].items():
+        pass_name = pass_name.split("_")[0]
+        if pass_name == "tensorrt":
+            ori_graph = deepcopy_mase_graph(graph)
+            dummy_in = get_dummy_input(
+                model_info=model_info,
+                data_module=data_module,
+                task=task,
+                device=accelerator,
+            )
+            if len(graph.model.additional_inputs) > 0:
+                dummy_in = dummy_in | graph.model.additional_inputs
+            ori_graph, _ = add_common_metadata_analysis_pass(ori_graph, {"dummy_in": dummy_in})
+            ori_graph, _ = add_software_metadata_analysis_pass(ori_graph, None)
+            ori_graph, _ = metadata_value_type_cast_transform_pass(ori_graph, pass_args={"fn": to_numpy_if_tensor})
+
     # create or load metadata.parameters and mase_graph.model
     if load_name is not None and load_type == "mz":
         graph, _ = load_mase_graph_interface_pass(graph, pass_args=load_name)
@@ -91,13 +109,6 @@ def transform(
                 graph, _ = metadata_value_type_cast_transform_pass(
                     graph, pass_args={"fn": to_numpy_if_tensor}
                 )
-                
-                # For the tensorRT analysis comparision we must deepcopy the original graph.
-                # Due to the immutable nature of the following graph passses this must be done before.
-                for pass_name, pass_config in config["passes"].items():
-                    pass_name = pass_name.split("_")[0]
-                    if pass_name == "tensorrt":
-                        ori_graph = deepcopy_mase_graph(graph)
 
                 pass_config['task'] = task
                 pass_config["batch_size"] = config["batch_size"]
