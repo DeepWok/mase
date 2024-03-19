@@ -11,12 +11,13 @@ from ..quantizers import (
 
 
 def _rms_norm(x: Tensor, eps, bias, scale, offset):
-    norm_x = x.norm(2, dim=-1, keepdim=True)
-    rms_x = norm_x.mean(dim=(1, 2, 3), keepdim=True).sqrt()
+    mean_squares = x.square().mean(dim=(1, 2, 3), keepdim=True)
+    rms_x = mean_squares.sqrt()
     x_normed = x / (rms_x + eps)
     if bias:
         return scale * x_normed + offset
     return scale * x_normed
+
 
 class RMSNorm(nn.Module):
     """Root Mean Square Layer Normalization"""

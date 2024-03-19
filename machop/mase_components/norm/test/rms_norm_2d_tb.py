@@ -79,7 +79,7 @@ class RMSNorm2dTB(Testbench):
         )
 
         # Bit Error calculation
-        error_bits = 10
+        error_bits = 2
 
         # If we want the output frac to have larger width, we can expect a
         # larger rounding error difference between the integer and float models
@@ -93,7 +93,6 @@ class RMSNorm2dTB(Testbench):
             signed=True,
             error_bits=error_bits,
         )
-        self.output_monitor.log.setLevel("DEBUG")
 
     def generate_inputs(self, num=2):
         inputs = list()
@@ -242,6 +241,16 @@ if __name__ == "__main__":
     mase_runner(
         module_param_list=[
             gen_cfg(),
+            # Rectangle
+            gen_cfg(4, 6, 2, 2, 2, 8, 4, 8, 4, "rect0"),
+            gen_cfg(6, 2, 2, 2, 2, 8, 4, 8, 4, "rect1"),
+            gen_cfg(6, 2, 3, 2, 2, 8, 4, 8, 4, "rect2"),
+            gen_cfg(4, 6, 2, 3, 2, 8, 4, 8, 4, "rect3"),
+            # Channels
+            gen_cfg(4, 4, 2, 2, 1, 8, 4, 8, 4, "channels0"),
+            gen_cfg(4, 4, 2, 2, 3, 8, 4, 8, 4, "channels1"),
+            # Precision
+            gen_cfg(4, 4, 2, 2, 2, 8, 4, 8, 2, "down_frac"),
+            gen_cfg(4, 4, 2, 2, 2, 8, 4, 8, 6, "up_frac"),
         ],
-        trace=True,
     )

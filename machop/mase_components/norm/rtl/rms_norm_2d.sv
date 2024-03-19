@@ -185,8 +185,8 @@ logic [ISQRT_WIDTH-1:0] mse_clamp_in, mse_clamp_out;
 logic mse_clamp_valid, mse_clamp_ready;
 
 always_comb begin
-    if(mean_out_data > 2**ISQRT_WIDTH-1) begin
-        mse_clamp_in = 2**ISQRT_WIDTH-1;
+    if(mean_out_data > (2**ISQRT_WIDTH)-1) begin
+        mse_clamp_in = (2**ISQRT_WIDTH)-1;
     end else begin
         mse_clamp_in = mean_out_data;
     end
@@ -253,31 +253,33 @@ join2 fifo_inv_sqrt_join2 (
 );
 
 // Batched Multiply & Output Casting
+logic [NORM_WIDTH-1:0] norm_in_data [COMPUTE_DIM0*COMPUTE_DIM1-1:0];
+logic [NORM_WIDTH-1:0] norm_out_data [COMPUTE_DIM0*COMPUTE_DIM1-1:0];
+logic [OUT_WIDTH-1:0] norm_round_out [COMPUTE_DIM0*COMPUTE_DIM1-1:0];
+logic [OUT_WIDTH-1:0] output_reg_data [COMPUTE_DIM0*COMPUTE_DIM1-1:0];
+
 for (genvar i = 0; i < COMPUTE_DIM0*COMPUTE_DIM1; i++) begin : mult_cast
 
     // Multiplication with inverse sqrt
-    logic [NORM_WIDTH-1:0] norm_in_data, norm_out_data;
     logic norm_in_ready;
     logic norm_out_valid, norm_out_ready;
 
-    assign norm_in_data = $signed({1'b0, inv_sqrt_buff_data}) * $signed(fifo_data[i]);
+    assign norm_in_data[i] = $signed({1'b0, inv_sqrt_buff_data}) * $signed(fifo_data[i]);
 
     skid_buffer #(
         .DATA_WIDTH(NORM_WIDTH)
     ) norm_reg (
         .clk(clk),
         .rst(rst),
-        .data_in(norm_in_data),
+        .data_in(norm_in_data[i]),
         .data_in_valid(norm_in_valid),
         .data_in_ready(norm_in_ready),
-        .data_out(norm_out_data),
+        .data_out(norm_out_data[i]),
         .data_out_valid(norm_out_valid),
         .data_out_ready(norm_out_ready)
     );
 
     // Output Rounding Stage
-    logic [OUT_WIDTH-1:0] norm_round_out;
-    logic [OUT_WIDTH-1:0] output_reg_data;
     logic output_reg_valid;
 
     fixed_signed_cast #(
@@ -288,8 +290,8 @@ for (genvar i = 0; i < COMPUTE_DIM0*COMPUTE_DIM1; i++) begin : mult_cast
         .SYMMETRIC(0),
         .ROUND_FLOOR(1)
     ) output_cast (
-        .in_data(norm_out_data),
-        .out_data(norm_round_out)
+        .in_data(norm_out_data[i]),
+        .out_data(norm_round_out[i])
     );
 
     skid_buffer #(
@@ -297,22 +299,19 @@ for (genvar i = 0; i < COMPUTE_DIM0*COMPUTE_DIM1; i++) begin : mult_cast
     ) output_reg (
         .clk(clk),
         .rst(rst),
-        .data_in(norm_round_out),
+        .data_in(norm_round_out[i]),
         .data_in_valid(norm_out_valid),
         .data_in_ready(norm_out_ready),
-        .data_out(output_reg_data),
+        .data_out(output_reg_data[i]),
         .data_out_valid(output_reg_valid),
         .data_out_ready(output_reg_ready)
     );
-
-    assign batched_norm_out_data[i] = output_reg_data;
 end
 
 // Output assignments
-logic [OUT_WIDTH-1:0] batched_norm_out_data [COMPUTE_DIM0*COMPUTE_DIM1-1:0];
 logic output_reg_ready;
 
-assign out_data = batched_norm_out_data;
+assign out_data = output_reg_data;
 assign out_valid = mult_cast[0].output_reg_valid;
 assign output_reg_ready = out_ready;
 
