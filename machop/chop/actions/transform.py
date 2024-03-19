@@ -168,9 +168,7 @@ def transform(
                 if 'tensorrt_engine_path' in config:
                     _, _ = PASSES["runtime_analysis"](config["tensorrt_engine_path"], pass_args=pass_config)
                 if 'onnx_path' in config:
-                    _, _ = PASSES["runtime_analysis"](config["onnx_path"], pass_args=pass_config)              
-
-                
+                    _, _ = PASSES["runtime_analysis"](config["onnx_path"], pass_args=pass_config)                              
 
             case "quantize":
                 pass_save_dir = save_dir / "quantize"

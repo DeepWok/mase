@@ -4,39 +4,23 @@ import os
 import sys
 from datetime import datetime
 from pathlib import Path
+from prettytable import PrettyTable
 
 import numpy as np
 
 import onnx
 import onnxruntime as ort
+from .quantize import Quantizer
 
-def onnx_runtime_transform_pass(graph, pass_args="None"):
+def onnx_runtime_transform_pass(graph, pass_args="None"):    
     onnx_runtime_session = ONNXRuntime(config=pass_args)
 
     pytorch_model = graph.model
-    do_test = pass_args["do_test"]
 
     onnx_model_path = onnx_runtime_session.pytorch_to_onnx(pytorch_model)
     onnx_model_graph = onnx_runtime_session.load_onnx(onnx_model_path).graph
     onnx_runtime_session.summarize_ONNX_graph(onnx_model_graph)
-
-    if do_test == "before" or do_test == "both":
-        pytorch_results = onnx_runtime_session.test_performances(
-            model_type="pytorch", graph=graph
-        )
-
-    if do_test == "after" or do_test == "both":
-        ort_results = onnx_runtime_session.test_performances(
-            model_type="onnx", model_path=onnx_model_path
-        )
-
-    if do_test == "NA":
-        pass
-
-    if do_test not in ("before", "after", "both", "NA"):
-        raise Exception(
-            f"Test argument not recognized; expected one in ['before','after','both','NA'], but {do_test} was received."
-        )
+    _  = onnx_runtime_session.quantize(onnx_model_graph)
 
     return graph, {'onnx_path': onnx_model_path}
 
@@ -90,41 +74,43 @@ class ONNXRuntime:
         return save_path
 
     def summarize_ONNX_graph(self, graph):
-        # Header for the table
-        header = "Layer Name               | Type         | Input Shape(s)                       | Output Shape(s)"
-        divider = "-" * len(header)
+        # Initialize a PrettyTable to display the summary
+        summary_table = PrettyTable()
+        summary_table.field_names = ["Index", "Name", "Type", "Inputs", "Outputs", "Attributes"]
 
-        # Start logging
-        self.logger.info("\n" + divider + "\n" + header + "\n" + divider)
+        # Parse through the model's graph
+        for index, node in enumerate(graph.node):
+            # Gather node information
+            node_name = node.name or f"Node_{index}"  # Some nodes might not have names
+            node_type = node.op_type
+            inputs = [str(input) for input in node.input]
+            outputs = [str(output) for output in node.output]
+            attributes = [attr.name for attr in node.attribute]
 
-        # Iterate through each node (layer) in the graph
-        for i, node in enumerate(graph.node):
-            layer_name = node.name or f"Layer_{i}"  # Some nodes might not have a name
-            layer_type = node.op_type
+            # Add information to the table
+            summary_table.add_row([index, node_name, node_type, ', '.join(inputs), ', '.join(outputs), ', '.join(attributes)])
+        self.logger.info(f"ONNX Model Summary: \n{summary_table}")
+    
+    def quantize(self, graph):
+        if 'quantize_type' in self.config['default']['config']:
+            quantizer = Quantizer(self.config)
+            try:
+                self.config['default']['config']['quantize']
+            except:
+                self.config['default']['config']['quantize'] = False
+                self.logger.warning("quantization is not set in default config. Skipping quantization.")
+            try:
+                quant_type = self.config['default']['config']['quantize_type']
+            except (TypeError, KeyError):
+                quant_type = 'static'
 
-            # Retrieve input and output shapes
-            input_shapes = [
-                str(graph.value_info[input_name].type.tensor_type.shape)
-                for input_name in node.input
-                if input_name in graph.value_info
-            ]
-            output_shapes = [
-                str(graph.value_info[output_name].type.tensor_type.shape)
-                for output_name in node.output
-                if output_name in graph.value_info
-            ]
-
-            # Format the shapes for better readability
-            input_shapes_str = ", ".join(input_shapes) or "Unknown"
-            output_shapes_str = ", ".join(output_shapes) or "Unknown"
-
-            # Create the log entry for this layer
-            log_entry = f"{layer_name:<25} | {layer_type:<12} | {input_shapes_str:<37} | {output_shapes_str}"
-
-            # Log the entry
-            self.logger.info(log_entry)
-
-        self.logger.info(divider)  # End with a divider
+            match quant_type:
+                case 'static':
+                    onnx_model_path = quantizer.static_quantization(onnx_model_path)
+                case 'dynamic':
+                    onnx_model_path = quantizer.dynamic_quantization(onnx_model_path)
+                case _:
+                    raise Exception(f"Invalid quantization type: {quant_type}")
 
     def load_onnx(self, onnx_model_path):
         """Load .onnx model"""

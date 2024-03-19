@@ -52,7 +52,7 @@ class RuntimeAnalysis():
                         self.context = self.engine.create_execution_context()
                         self.model = self.context
                         self.summarize()
-                        self.model_name = f"{self.config['model']}-quantized"
+                        self.model_name = f"{self.config['model']}-trt_quantized"
                         
                     case '.onnx':
                         # Load the exported ONNX model into an ONNXRuntime inference session
@@ -189,7 +189,7 @@ class RuntimeAnalysis():
         return preds_tensor, latency
     
     def evaluate(self):
-        self.logger.info("Starting transformation analysis")
+        self.logger.info(f"Starting transformation analysis on {self.model_name}")
 
         num_GPU_warmup_batches = self.config['num_GPU_warmup_batches']
 
