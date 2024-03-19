@@ -110,13 +110,13 @@ def transform(
                             graph, pass_args=pass_config
                         )
 
+                        PASSES["summarize_quantization"](
+                            ori_graph, graph, save_dir=pass_save_dir
+                        )
+
                         # Then calibrate the model using the fake quantization to set AMAXs
                         graph, _ = PASSES["tensorrt_calibrate"](
                             graph, pass_args=pass_config
-                        )
-
-                        PASSES["summarize_quantization"](
-                            ori_graph, graph, save_dir=pass_save_dir
                         )
 
                         # Apply post-quantization fine tuning (Quantization Aware Training)
@@ -128,10 +128,6 @@ def transform(
                         graph, meta = PASSES["tensorrt_quantize"](
                             graph, pass_args=pass_config
                         )
-                        PASSES["summarize_quantization"](
-                            ori_graph, graph, save_dir=pass_save_dir
-                        )
-
                     case "analysis":
                         if accelerator.type != "cuda":
                             raise Exception(
