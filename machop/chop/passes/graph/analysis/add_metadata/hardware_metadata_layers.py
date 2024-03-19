@@ -27,4 +27,20 @@ INTERNAL_COMP = {
             ],
         },
     ],
+    "selu": [
+        {
+            "name": "fixed_selu",
+            "dependence_files": [
+                "activations/rtl/fixed_selu.sv",
+            ],
+        },
+    ],
+    "tanh": [
+        {
+            "name": "fixed_tanh",
+            "dependence_files": [
+                "activations/rtl/fixed_tanh.sv",
+            ],
+        },
+    ],
 }

@@ -73,6 +73,30 @@ from .relu import (
     relu_ternary,
 )
 
+from .selu import (
+    selu_block_fp,
+    selu_block_log,
+    selu_block_minifloat,
+    selu_integer,
+    selu_log,
+    selu_minifloat_denorm,
+    selu_minifloat_ieee,
+    selu_binary,
+    selu_ternary,
+)
+
+from .tanh import (
+    tanh_block_fp,
+    tanh_block_log,
+    tanh_block_minifloat,
+    tanh_integer,
+    tanh_log,
+    tanh_minifloat_denorm,
+    tanh_minifloat_ieee,
+    tanh_binary,
+    tanh_ternary,
+)
+
 quantized_func_map = {
     "add_block_minifloat": add_block_minifloat,
     "add_integer": add_integer,
@@ -134,4 +158,24 @@ quantized_func_map = {
     "relu_block_log": relu_block_log,
     "relu_binary": relu_binary,
     "relu_ternary": relu_ternary,
+    "selu_block_minifloat": selu_block_minifloat,
+    "selu_integer": selu_integer,
+    "selu_fixed": selu_integer,
+    "selu_log": selu_log,
+    "selu_minifloat_ieee": selu_minifloat_ieee,
+    "selu_minifloat_denorm": selu_minifloat_denorm,
+    "selu_block_fp": selu_block_fp,
+    "selu_block_log": selu_block_log,
+    "selu_binary": selu_binary,
+    "selu_ternary": selu_ternary,
+    "tanh_block_minifloat": tanh_block_minifloat,
+    "tanh_integer": tanh_integer,
+    "tanh_fixed": tanh_integer,
+    "tanh_log": tanh_log,
+    "tanh_minifloat_ieee": tanh_minifloat_ieee,
+    "tanh_minifloat_denorm": tanh_minifloat_denorm,
+    "tanh_block_fp": tanh_block_fp,
+    "tanh_block_log": tanh_block_log,
+    "tanh_binary": tanh_binary,
+    "tanh_ternary": tanh_ternary,
 }

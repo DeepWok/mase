@@ -30,6 +30,8 @@ QUANTIZEABLE_OP = (
     "linear",
     "relu",
     "sub",
+    "selu",
+    "tanh"
 )
 
 
