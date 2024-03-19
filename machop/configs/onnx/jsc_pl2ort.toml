@@ -1,23 +1,23 @@
 # basics
 model = "jsc-tiny"
 dataset = "jsc"
+task = "cls"
 
 # max_epochs = 10
 batch_size = 16
 accelerator = "cpu"
 # learning_rate = 1e-3
 # project = "jsc-tiny"
-load_name = "../TensorRTDev/jsc-tiny_classification_jsc_2024-03-05/software/training_ckpts/best.ckpt"
+load_name = "../mase_output/jsc-toy_classification_jsc_2024-03-17/software/training_ckpts/best.ckpt"
 load_type = "pl"
-
 
 [passes.onnxruntime]
 do_test = "both" # tests original PyTorch checkpoint performance if "before", post-conversion performance if "after", both if "both"; no test if "NA"
 do_train = false
 
-# [passes.tensorrt_analysis]
-# num_batches = 100
-# num_GPU_warmup_batches = 5
-# test = true
+[passes.runtime_analysis]
+num_batches = 100
+num_GPU_warmup_batches = 5
+test = true
 
 # TODO: add input type (ONNXRuntime must process different inputs accordingly)

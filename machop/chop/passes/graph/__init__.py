@@ -42,7 +42,7 @@ from .transforms.tensorrt import (
     tensorrt_engine_interface_pass,
     tensorrt_calibrate_transform_pass,
     tensorrt_fine_tune_transform_pass,
-    tensorrt_analysis_pass,
+    runtime_analysis_pass,
     tensorrt_fake_quantize_transform_pass
 )
 
@@ -66,7 +66,7 @@ ANALYSIS_PASSES = [
     "add_pruning_metadata",
     "add_natural_sparsity",
     "hook_inspection",
-    "tensorrt_analysis",
+    "runtime_analysis",
 ]
 
 TRANSFORM_PASSES = [
@@ -85,7 +85,7 @@ INTERFACE_PASSES = [
     "load_node_meta_param",
     "save_mase_graph",
     "save_node_meta_param",
-    "tensorrt_quantize"
+    "tensorrt"
 ]
 
 PASSES = {
@@ -107,7 +107,7 @@ PASSES = {
     "add_pruning_metadata": add_pruning_metadata_analysis_pass,
     "add_natural_sparsity": add_natural_sparsity_metadata_analysis_pass,
     "hook_inspection": hook_inspection_analysis_pass,
-    "tensorrt_analysis": tensorrt_analysis_pass,
+    "runtime_analysis": runtime_analysis_pass,
     # interface
     "load_mase_graph": load_mase_graph_interface_pass,
     "load_node_meta_param": load_node_meta_param_interface_pass,

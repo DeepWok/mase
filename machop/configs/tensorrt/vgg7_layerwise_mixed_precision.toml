@@ -8,38 +8,38 @@ learning_rate = 1e-3
 accelerator = "gpu"
 task="cls"
 
-[passes.tensorrt_quantize]
+[passes.tensorrt]
 by = "name"
 num_calibration_batches = 10
 post_calibration_analysis = true
 
-[passes.tensorrt_quantize.default.config]
+[passes.tensorrt.default.config]
 quantize = true
 calibrators = ["percentile"]
 percentiles = [99.0, 99.9]
 precision = 'INT8'
 
-[passes.tensorrt_quantize.default.input]
+[passes.tensorrt.default.input]
 calibrator = 'histogram'
 quantize_axis = false
 
-[passes.tensorrt_quantize.default.weight]
+[passes.tensorrt.default.weight]
 calibrator = 'histogram'
 quantize_axis = false
 
-[passes.tensorrt_quantize.feature_layers_0.config]
+[passes.tensorrt.feature_layers_0.config]
 precision = 'FP16'
 
-[passes.tensorrt_quantize.feature_layers_1.config]
+[passes.tensorrt.feature_layers_1.config]
 precision = 'FP16'
 
-[passes.tensorrt_quantize.feature_layers_2.config]
+[passes.tensorrt.feature_layers_2.config]
 precision = 'INT8'
 
-[passes.tensorrt_quantize.feature_layers_3.config]
+[passes.tensorrt.feature_layers_3.config]
 precision = 'INT8'
 
-[passes.tensorrt_analysis]
+[passes.runtime_analysis]
 num_batches = 500
 num_GPU_warmup_batches = 5
 test = true

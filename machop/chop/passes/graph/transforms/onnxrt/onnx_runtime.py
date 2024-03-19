@@ -20,7 +20,6 @@ def onnx_runtime_transform_pass(graph, pass_args="None"):
     onnx_model_graph = onnx_runtime_session.load_onnx(onnx_model_path).graph
     onnx_runtime_session.summarize_ONNX_graph(onnx_model_graph)
 
-
     if do_test == "before" or do_test == "both":
         pytorch_results = onnx_runtime_session.test_performances(
             model_type="pytorch", graph=graph
@@ -39,7 +38,7 @@ def onnx_runtime_transform_pass(graph, pass_args="None"):
             f"Test argument not recognized; expected one in ['before','after','both','NA'], but {do_test} was received."
         )
 
-    return graph, {}
+    return graph, {'onnx_path': onnx_model_path}
 
 
 class ONNXRuntime:
@@ -143,22 +142,3 @@ class ONNXRuntime:
             if self.config["accelerator"] == "cuda"
             else "CPUExecutionProvider"
         )
-        
-
-    def test_performances(self, model_type, graph=None, model_path=None):
-        from ..tensorrt.quantize.analysis import tensorrt_analysis_pass
-
-        """Extract various performance and efficiency metrics to either pytorch or onnx models"""
-        if model_type == "pytorch":
-            graph, results = tensorrt_analysis_pass(graph, self.config)
-
-        elif model_type == "onnx":
-            self.config["execution_provider"] = self._get_execution_provider()
-            model, results = tensorrt_analysis_pass(model_path, self.config)
-
-        else:
-            raise Exception(
-                f"Expected model_type being either 'pytorch' or 'onnx', but '{model_type}' received."
-            )
-
-        return results

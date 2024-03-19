@@ -51,7 +51,7 @@ class FineTuning:
         a cosine period, down to 1% of the initial fine tuning learning rate
         (0.01% of the initial training learning rate). However this default
         can be overidden by setting the `epochs`, `initial_learning_rate` and
-        `final_learning_rate` in `passes.tensorrt_quantize.fine_tune`.
+        `final_learning_rate` in `passes.tensorrt.fine_tune`.
         """
         if not check_for_value_in_dict(self.config, "INT8"):
             self.logger.warning(

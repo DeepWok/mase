@@ -1,1 +1,1 @@
-from .quantize import tensorrt_engine_interface_pass, tensorrt_calibrate_transform_pass, tensorrt_fine_tune_transform_pass, tensorrt_analysis_pass, tensorrt_fake_quantize_transform_pass
+from .quantize import tensorrt_engine_interface_pass, tensorrt_calibrate_transform_pass, tensorrt_fine_tune_transform_pass, runtime_analysis_pass, tensorrt_fake_quantize_transform_pass

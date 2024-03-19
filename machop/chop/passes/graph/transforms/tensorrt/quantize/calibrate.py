@@ -48,7 +48,7 @@ class Calibrator:
 
     def eval_calibration(self, graph, calibrator):
         """Performs post calibration analysis for the given calibrator."""
-        from chop.passes.graph import tensorrt_analysis_pass
+        from chop.passes.graph import runtime_analysis_pass
 
         self.logger.info(
             f"Performing post calibration analysis for calibrator {calibrator}..."
@@ -58,7 +58,7 @@ class Calibrator:
         config_test = self.config.get("test", False)  # Store original 'test' value
         self.config["test"] = False  # Ensure evaluation is not on test set
 
-        tensorrt_analysis_pass(graph, pass_args=self.config)  # Run the analysis pass
+        runtime_analysis_pass(graph, pass_args=self.config)  # Run the analysis pass
 
         # Restore original 'test' configuration after evaluation
         self.config["test"] = config_test
