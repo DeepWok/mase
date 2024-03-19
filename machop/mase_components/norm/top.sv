@@ -22,7 +22,7 @@ module top #(
     parameter DATA_OUT_0_PRECISION_1        = 4, // OUT_FRAC_WIDTH
 
     // Inverse sqrt unit LUT file
-    parameter ISQRT_LUT_MEMFILE    = "",
+    parameter ISQRT_LUT_MEMFILE    = "/scratch/ddl20/mase/machop/mase_components/norm/isqrt-16-lut.memory",
 
     // Norm select
     // LAYER_NORM, INSTANCE_NORM, GROUP_NORM, RMS_NORM

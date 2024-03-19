@@ -10,6 +10,7 @@ add_files {
     ../common/rtl/register_slice.sv
     ../common/rtl/simple_dual_port_ram.sv
     ../common/rtl/fifo.sv
+    ../common/rtl/lut.sv
     ../cast/rtl/floor_round.sv
     ../cast/rtl/signed_clamp.sv
     ../cast/rtl/fixed_signed_cast.sv
@@ -17,7 +18,6 @@ add_files {
     ../fixed_arithmetic/rtl/fixed_adder_tree.sv
     ../fixed_arithmetic/rtl/fixed_adder_tree_layer.sv
     ../fixed_arithmetic/rtl/fixed_lut_index.sv
-    ../fixed_arithmetic/rtl/fixed_lut.sv
     ../fixed_arithmetic/rtl/fixed_nr_stage.sv
     ../fixed_arithmetic/rtl/fixed_range_augmentation.sv
     ../fixed_arithmetic/rtl/fixed_range_reduction.sv
@@ -26,6 +26,10 @@ add_files {
     ../matmul/rtl/matrix_flatten.sv
     ../matmul/rtl/matrix_unflatten.sv
     ../norm/rtl/group_norm_2d.sv
+    ../norm/rtl/rms_norm_2d.sv
+    ../norm/rtl/norm.sv
+    isqrt-16-lut.mem
+    top.sv
 }
 
 import_files -force
