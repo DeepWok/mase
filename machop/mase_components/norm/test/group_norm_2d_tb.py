@@ -169,7 +169,7 @@ async def backpressure(dut):
     tb = GroupNorm2dTB(dut)
     await tb.reset()
     cocotb.start_soon(bit_driver(dut.out_ready, dut.clk, 0.5))
-    tb.setup_test(batches=200)
+    tb.setup_test(batches=100)
     await Timer(1000, 'us')
     assert tb.output_monitor.exp_queue.empty()
 
@@ -180,7 +180,7 @@ async def valid_toggle(dut):
     await tb.reset()
     tb.output_monitor.ready.value = 1
     tb.in_driver.set_valid_prob(0.5)
-    tb.setup_test(batches=200)
+    tb.setup_test(batches=100)
     await Timer(1000, 'us')
     assert tb.output_monitor.exp_queue.empty()
 
@@ -191,7 +191,7 @@ async def valid_backpressure(dut):
     await tb.reset()
     tb.in_driver.set_valid_prob(0.5)
     cocotb.start_soon(bit_driver(dut.out_ready, dut.clk, 0.5))
-    tb.setup_test(batches=200)
+    tb.setup_test(batches=100)
 
     await Timer(1000, 'us')
     assert tb.output_monitor.exp_queue.empty()

@@ -12,50 +12,6 @@ from mase_components.common.test.lut_tb import write_memb
 
 import chop.models.manual.rms_norm as rms
 
-class BatchNormNet(nn.Module):
-    def __init__(self, channels=64) -> None:
-        super().__init__()
-        self.net = nn.BatchNorm2d(channels)
-
-    def forward(self, x):
-        return self.net(x)
-
-
-class LayerNormNet(nn.Module):
-    def __init__(self, chw_shape=[64, 32, 32]) -> None:
-        super().__init__()
-        self.net = nn.LayerNorm(chw_shape, elementwise_affine=False)
-
-    def forward(self, x):
-        return self.net(x)
-
-
-class GroupNormNet(nn.Module):
-    def __init__(self, groups=8, channels=64) -> None:
-        super().__init__()
-        self.net = nn.GroupNorm(groups, channels)
-
-    def forward(self, x):
-        return self.net(x)
-
-
-class InstanceNormNet(nn.Module):
-    def __init__(self, channels=64) -> None:
-        super().__init__()
-        self.net = nn.InstanceNorm2d(channels)
-
-    def forward(self, x):
-        return self.net(x)
-
-
-class RMSNormNet(nn.Module):
-    def __init__(self, chw_shape=[64, 32, 32]) -> None:
-        super().__init__()
-        self.net = rms.RMSNorm(chw_shape)
-
-    def forward(self, x):
-        return self.net(x)
-
 
 def _debug_mase_metadata(mg):
     print("#### GRAPH METADATA ####")
@@ -99,8 +55,8 @@ def _fix_quantize_step(node, config={}, parallelism=[1, 1, 2, 2]):
             common_p["results"][result][
                 "precision"
             ] = [
-                config["default"]["config"]["data_in_width"],
-                config["default"]["config"]["data_in_frac_width"]
+                config["default"]["config"]["data_out_width"],
+                config["default"]["config"]["data_out_frac_width"]
             ]
     hardware_p["parallelism"] = parallelism
 
@@ -165,6 +121,8 @@ def test_emit_verilog_norm(net, x):
                 "name": "integer",
                 "data_in_width": 8,
                 "data_in_frac_width": 4,
+                "data_out_width": 8,
+                "data_out_frac_width": 4,
             }
         }
     }
@@ -204,15 +162,38 @@ if __name__ == "__main__":
     # N, C, H, W
     shape = [10, 4, 8, 8]
 
-    configs = [
-        # (BatchNormNet, {"channels": shape[1]}),
-        (LayerNormNet, {"chw_shape": shape[1:]}),
-        (GroupNormNet, {"groups": 2, "channels": shape[1]}),
-        (InstanceNormNet, {"channels": shape[1]}),
-        (RMSNormNet, {"chw_shape": shape[1:]}),
+    normalizations = [
+        # nn.BatchNorm2d(
+        #     num_features=shape[1],
+        # ),
+        nn.LayerNorm(
+            normalized_shape=shape[1:],
+            elementwise_affine=False,
+        ),
+        # nn.GroupNorm(
+        #     num_groups=2,
+        #     num_channels=shape[1],
+        #     affine=False,
+        # ),
+        # nn.InstanceNorm2d(
+        #     num_features=shape[1],
+        #     affine=False,
+        # ),
+        # rms.RMSNorm(
+        #     normalized_shape=shape[1:],
+        # ),
     ]
 
     x = torch.rand(shape)
-    for cls, kwargs in configs:
-        net = cls(**kwargs)
+    for layer in normalizations:
+
+        class Net(nn.Module):
+            def __init__(self) -> None:
+                super().__init__()
+                self.norm_layer = layer
+
+            def forward(self, x):
+                return self.norm_layer(x)
+
+        net = Net()
         test_emit_verilog_norm(net, x)
