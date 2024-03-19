@@ -7,6 +7,7 @@ from math import ceil, log2
 from copy import copy
 from pathlib import Path
 from os import makedirs
+import pickle
 # from itertools import batched  # Python 3.12
 
 import torch
@@ -29,6 +30,7 @@ from mase_cocotb.utils import (
 )
 
 from chop.passes.graph.transforms.quantize.quantized_modules import (
+    BatchNorm2dInteger,
     LayerNormInteger,
     GroupNormInteger,
     InstanceNorm2dInteger,
@@ -41,6 +43,7 @@ from chop.passes.graph.transforms.quantize.quantizers.quantizers_for_hw import (
 )
 from mase_components.fixed_arithmetic.test.isqrt_sw import make_lut
 from mase_components.common.test.lut_tb import write_memb
+from mase_components.norm.test.batch_norm_2d_tb import gen_mem_files
 
 logger = logging.getLogger("testbench")
 logger.setLevel(logging.INFO)
@@ -54,8 +57,9 @@ class NormTB(Testbench):
             "TOTAL_DIM0", "TOTAL_DIM1", "COMPUTE_DIM0", "COMPUTE_DIM1",
             "DEPTH_DIM0", "DEPTH_DIM1",
             "CHANNELS", "IN_WIDTH", "IN_FRAC_WIDTH",
-            "OUT_WIDTH", "OUT_FRAC_WIDTH",
+            "OUT_WIDTH", "OUT_FRAC_WIDTH", "BATCH_NORM",
             "LAYER_NORM", "INSTANCE_NORM", "GROUP_NORM", "RMS_NORM",
+            "MEM_ID",
         ])
 
         # Helper tuples
@@ -67,7 +71,17 @@ class NormTB(Testbench):
         # Inverse Square Root LUT
         self.isqrt_lut = make_lut(2**5, 16)
 
-        if self.GROUP_NORM:
+        if self.BATCH_NORM:
+            self.total_channels = self.CHANNELS
+            self.quantized_model = BatchNorm2dInteger(
+                num_features=self.total_channels,
+                affine=False,
+                config={
+                    "data_in_width": self.IN_WIDTH,
+                    "data_in_frac_width": self.IN_FRAC_WIDTH,
+                }
+            )
+        elif self.GROUP_NORM:
             self.num_groups = randint(2, 3)  # Random number of groups
             self.total_channels = self.CHANNELS * self.num_groups
             self.quantized_model = GroupNormInteger(
@@ -145,6 +159,19 @@ class NormTB(Testbench):
     def assert_all_monitors_empty(self):
         assert self.output_monitor.exp_queue.empty()
 
+    def grab_mem_arr_data(self) -> tuple:
+        mem_dir_arr = Path(__file__).parent / "build" / "batch_norm_2d" / "mem" / "arr"
+        arr_mem_path = mem_dir_arr / f"arr_mem-{self.MEM_ID}.mem"
+
+        arrs = {}
+
+        with open(arr_mem_path, "rb") as f:
+            arrs = pickle.load(f)
+
+        mean = arrs["mean"]
+        var = arrs["var"]
+        return torch.tensor(mean), torch.tensor(var)
+
     def model(self, inputs):
         # Input reconstruction
         batches = batched(inputs, self.DEPTH_DIM0 * self.DEPTH_DIM1)
@@ -156,6 +183,11 @@ class NormTB(Testbench):
         x = sign_extend_t(x, self.IN_WIDTH).to(dtype=torch.float32) / (2 ** self.IN_FRAC_WIDTH)
 
         # Float Model
+        if self.BATCH_NORM:
+            self.quantized_model.training = False
+            mean, var = self.grab_mem_arr_data()
+            self.quantized_model.running_mean = torch.tensor(mean)
+            self.quantized_model.running_var = torch.tensor(var)
         float_y = self.quantized_model(x)
 
         # Output beat reconstruction
@@ -247,10 +279,14 @@ if __name__ == "__main__":
         out_frac_width: int = 4,
         str_id: str = "default",
         norm_type: str = "LAYER_NORM",
+        mem_id: int = 0,
     ):
         lut = make_lut(2 ** LUT_POW, ISQRT_WIDTH)
         mem_path = mem_dir / f"lutmem-{str_id}.mem"
         write_memb(mem_path, lut, ISQRT_WIDTH)
+        scale_mem_path, shift_mem_path = gen_mem_files(
+            mem_id, in_width, in_frac_width, channels, affine=False
+        )
         params = {
             "DATA_IN_0_TENSOR_SIZE_DIM_0": total_dim0,
             "DATA_IN_0_TENSOR_SIZE_DIM_1": total_dim1,
@@ -262,6 +298,9 @@ if __name__ == "__main__":
             "DATA_OUT_0_PRECISION_0": out_width,
             "DATA_OUT_0_PRECISION_1": out_frac_width,
             "ISQRT_LUT_MEMFILE": verilator_str_param(str(mem_path)),
+            "SCALE_LUT_MEMFILE": verilator_str_param(str(scale_mem_path)),
+            "SHIFT_LUT_MEMFILE": verilator_str_param(str(shift_mem_path)),
+            "MEM_ID": mem_id,
             "NORM_TYPE": verilator_str_param(norm_type.upper()),
         }
         return params
@@ -269,9 +308,11 @@ if __name__ == "__main__":
     mase_runner(
         module_param_list=[
             # Test All Supported Norm Types
+            gen_cfg(norm_type="BATCH_NORM", str_id="layer"),
             gen_cfg(norm_type="LAYER_NORM", str_id="layer"),
             gen_cfg(norm_type="GROUP_NORM", str_id="group"),
             gen_cfg(norm_type="INSTANCE_NORM", str_id="inst"),
             gen_cfg(norm_type="RMS_NORM", str_id="rms"),
         ],
+        trace=True,
     )

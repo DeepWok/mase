@@ -171,82 +171,84 @@ async def basic(dut):
     await Timer(100, 'us')
     tb.assert_all_monitors_empty()
 
+
+def integer_quantizer_list(x: list, width: int, frac_width: int) -> list:
+    t = torch.tensor(x)
+    return integer_quantizer(t, width, frac_width).numpy().tolist()
+
+def integer_quantizer_list_hw(x: list, width: int, frac_width: int) -> list:
+    t = torch.tensor(x)
+    return integer_quantizer_for_hw(t, width, frac_width).numpy().tolist()
+
+def write_float_mem(x: dict, filepath: Path) -> None:
+    with open(filepath, "wb") as f:
+        pickle.dump(x, f)
+
+def gen_mem_files(mem_id, width, frac_width, channels, affine=False):
+    # Make the directories
+    mem_dir = Path(__file__).parent / "build" / "batch_norm_2d" / "mem"
+    makedirs(mem_dir, exist_ok=True)
+    mem_dir_arr = Path(__file__).parent / "build" / "batch_norm_2d" / "mem" / "arr"
+    makedirs(mem_dir_arr, exist_ok=True)
+
+    # Generate mean, var, gamma and beta vectors
+    max_number = (2 ** (width - 1) - 1) / 2 ** (frac_width)
+    min_number = - 2 ** (width - 1)
+    min_number_var = 2 ** (frac_width)
+    mean_f = [max_number * uniform(min_number, max_number) for _ in range(channels)]
+    var_f = [max_number * uniform(min_number_var, max_number) for _ in range(1, channels+1)] # NOTE: variance cannot be negative or 0
+
+    if affine:
+        gamma_f = [max_number * uniform(min_number, max_number) for _ in range(channels)]
+        beta_f = [max_number * uniform(min_number, max_number) for _ in range(channels)]
+
+    # Quantized lists
+    mean = integer_quantizer_list(mean_f, width, frac_width)
+    var = integer_quantizer_list(var_f, width, frac_width)
+    if affine:
+        gamma = integer_quantizer_list(gamma_f, width, frac_width)
+        beta = integer_quantizer_list(beta_f, width, frac_width)
+
+    # Calculate scale and shift LUTs
+    if affine:
+        # Generate floating point representation
+        scale = [g / sqrt(variance) for variance, g in zip(var, gamma)]
+        shift = [b - mu * g / sqrt(variance) for mu, variance, g, b in zip(mean, var, gamma, beta)]
+    else:
+        # Generate floating point representation
+        scale = [1 / sqrt(variance) for variance in var]
+        shift = [-mu / sqrt(variance) for mu, variance in zip(mean, var)]
+
+    var = [1 / (sca) ** 2 for sca in integer_quantizer_list(scale, width, frac_width)]
+    var = integer_quantizer_list(var, width, frac_width)
+
+    mean = [-mu / sca for sca, mu in zip(integer_quantizer_list(scale, width, frac_width), integer_quantizer_list(shift, width, frac_width))]
+    mean = integer_quantizer_list(mean, width, frac_width)
+
+    # Generate fixed point representation
+    scale = integer_quantizer_list_hw(scale, width, frac_width)
+    shift = integer_quantizer_list_hw(shift, width, frac_width)
+
+    arr_mem = {"mean": mean, "var": var}
+    if affine:
+        gamma = integer_quantizer_list_hw(gamma, width, frac_width)
+        beta = integer_quantizer_list_hw(beta, width, frac_width)
+        arr_mem.update({"gamma": gamma, "beta": beta})
+
+    # File names with id
+    scale_mem_path = mem_dir / f"scale_lutmem-{mem_id}.mem"
+    shift_mem_path = mem_dir / f"shift_lutmem-{mem_id}.mem"
+    arr_mem_path = mem_dir_arr / f"arr_mem-{mem_id}.mem"
+
+    # Write LUTs to mem files.
+    write_memb(scale_mem_path, scale, width)
+    write_memb(shift_mem_path, shift, width)
+    write_float_mem(arr_mem, arr_mem_path)
+
+    return scale_mem_path, shift_mem_path
+
+
 if __name__ == "__main__":
-
-    def integer_quantizer_list(x: list, width: int, frac_width: int) -> list:
-        t = torch.tensor(x)
-        return integer_quantizer(t, width, frac_width).numpy().tolist()
-
-    def integer_quantizer_list_hw(x: list, width: int, frac_width: int) -> list:
-        t = torch.tensor(x)
-        return integer_quantizer_for_hw(t, width, frac_width).numpy().tolist()
-
-    def write_float_mem(x: dict, filepath: Path) -> None:
-        with open(filepath, "wb") as f:
-            pickle.dump(x, f)
-
-    def gen_mem_files(mem_id, width, frac_width, channels, affine=False):
-        # Make the directories
-        mem_dir = Path(__file__).parent / "build" / "batch_norm_2d" / "mem"
-        makedirs(mem_dir, exist_ok=True)
-        mem_dir_arr = Path(__file__).parent / "build" / "batch_norm_2d" / "mem" / "arr"
-        makedirs(mem_dir_arr, exist_ok=True)
-
-        # Generate mean, var, gamma and beta vectors
-        max_number = (2 ** (width - 1) - 1) / 2 ** (frac_width)
-        min_number = - 2 ** (width - 1)
-        min_number_var = 2 ** (frac_width)
-        mean_f = [max_number * uniform(min_number, max_number) for _ in range(channels)]
-        var_f = [max_number * uniform(min_number_var, max_number) for _ in range(1, channels+1)] # NOTE: variance cannot be negative or 0
-
-        if affine:
-            gamma_f = [max_number * uniform(min_number, max_number) for _ in range(channels)]
-            beta_f = [max_number * uniform(min_number, max_number) for _ in range(channels)]
-
-        # Quantized lists
-        mean = integer_quantizer_list(mean_f, width, frac_width)
-        var = integer_quantizer_list(var_f, width, frac_width)
-        if affine:
-            gamma = integer_quantizer_list(gamma_f, width, frac_width)
-            beta = integer_quantizer_list(beta_f, width, frac_width)
-        
-        # Calculate scale and shift LUTs
-        if affine:
-            # Generate floating point representation
-            scale = [g / sqrt(variance) for variance, g in zip(var, gamma)]
-            shift = [b - mu * g / sqrt(variance) for mu, variance, g, b in zip(mean, var, gamma, beta)]
-        else:
-            # Generate floating point representation
-            scale = [1 / sqrt(variance) for variance in var]
-            shift = [-mu / sqrt(variance) for mu, variance in zip(mean, var)]
-
-        var = [1 / (sca) ** 2 for sca in integer_quantizer_list(scale, width, frac_width)]
-        var = integer_quantizer_list(var, width, frac_width)
-
-        mean = [-mu / sca for sca, mu in zip(integer_quantizer_list(scale, width, frac_width), integer_quantizer_list(shift, width, frac_width))]
-        mean = integer_quantizer_list(mean, width, frac_width)
-
-        # Generate fixed point representation
-        scale = integer_quantizer_list_hw(scale, width, frac_width)
-        shift = integer_quantizer_list_hw(shift, width, frac_width)
-
-        arr_mem = {"mean": mean, "var": var}
-        if affine:
-            gamma = integer_quantizer_list_hw(gamma, width, frac_width)
-            beta = integer_quantizer_list_hw(beta, width, frac_width)
-            arr_mem.update({"gamma": gamma, "beta": beta})
-
-        # File names with id
-        scale_mem_path = mem_dir / f"scale_lutmem-{mem_id}.mem"
-        shift_mem_path = mem_dir / f"shift_lutmem-{mem_id}.mem"
-        arr_mem_path = mem_dir_arr / f"arr_mem-{mem_id}.mem"
-
-        # Write LUTs to mem files.
-        write_memb(scale_mem_path, scale, width)
-        write_memb(shift_mem_path, shift, width)
-        write_float_mem(arr_mem, arr_mem_path)
-
-        return scale_mem_path, shift_mem_path
 
     def gen_cfg(
         total_dim0: int = 4,
