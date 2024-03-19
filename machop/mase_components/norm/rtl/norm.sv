@@ -88,6 +88,7 @@ module norm #(
     input  logic                data_out_0_ready
 );
 
+localparam BATCH_NORM = (NORM_TYPE == "BATCH_NORM");
 localparam LAYER_NORM = (NORM_TYPE == "LAYER_NORM");
 localparam INSTANCE_NORM = (NORM_TYPE == "INSTANCE_NORM");
 localparam GROUP_NORM = (NORM_TYPE == "GROUP_NORM");
@@ -95,7 +96,11 @@ localparam RMS_NORM = (NORM_TYPE == "RMS_NORM");
 
 generate
 
-if (LAYER_NORM || INSTANCE_NORM || GROUP_NORM) begin : group_norm
+if (BATCH_NORM) begin : batch_norm
+
+    //....
+
+end else if (LAYER_NORM || INSTANCE_NORM || GROUP_NORM) begin : group_norm
 
     localparam NORM_CHANNELS = INSTANCE_NORM ? 1 : CHANNELS;
 
