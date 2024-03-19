@@ -73,6 +73,11 @@ module norm #(
     // Inverse sqrt unit LUT file
     parameter ISQRT_LUT_MEMFILE    = "",
 
+    // Batch norm lut files
+    parameter SCALE_LUT_MEMFILE   = "",
+    parameter SHIFT_LUT_MEMFILE   = "",
+    parameter MEM_ID              = 0,
+
     // Norm select
     // BATCH_NORM, LAYER_NORM, INSTANCE_NORM, GROUP_NORM, RMS_NORM
     parameter NORM_TYPE            = "LAYER_NORM"
@@ -99,7 +104,28 @@ generate
 
 if (BATCH_NORM) begin : batch_norm
 
-    //....
+    batch_norm_2d #(
+        .TOTAL_DIM0(TOTAL_DIM0),
+        .TOTAL_DIM1(TOTAL_DIM1),
+        .COMPUTE_DIM0(COMPUTE_DIM0),
+        .COMPUTE_DIM1(COMPUTE_DIM1),
+        .NUM_CHANNELS(NORM_CHANNELS),
+        .IN_WIDTH(IN_WIDTH),
+        .IN_FRAC_WIDTH(IN_FRAC_WIDTH),
+        .OUT_WIDTH(OUT_WIDTH),
+        .OUT_FRAC_WIDTH(OUT_FRAC_WIDTH),
+        .SCALE_LUT_MEMFILE(SCALE_LUT_MEMFILE)
+        .SHIFT_LUT_MEMFILE(SHIFT_LUT_MEMFILE)
+    ) batch_norm_inst (
+        .clk(clk),
+        .rst(rst),
+        .in_data(data_in_0),
+        .in_valid(data_in_0_valid),
+        .in_ready(data_in_0_ready),
+        .out_data(data_out_0),
+        .out_valid(data_out_0_valid),
+        .out_ready(data_out_0_ready)
+    );
 
 end else if (LAYER_NORM || INSTANCE_NORM || GROUP_NORM) begin : group_norm
 

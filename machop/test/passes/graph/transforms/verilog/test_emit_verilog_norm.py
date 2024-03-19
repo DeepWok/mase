@@ -7,8 +7,13 @@ from pathlib import Path
 import torch
 import torch.nn as nn
 
+from math import sqrt
 from mase_components.fixed_arithmetic.test.isqrt_sw import make_lut
 from mase_components.common.test.lut_tb import write_memb
+from chop.passes.graph.utils import get_module_by_name
+from chop.passes.graph.transforms.quantize.quantizers.quantizers_for_hw import (
+    integer_quantizer_for_hw
+)
 
 import chop.models.manual.rms_norm as rms
 
@@ -60,6 +65,25 @@ def _fix_quantize_step(node, config={}, parallelism=[1, 1, 2, 2]):
             ]
     hardware_p["parallelism"] = parallelism
 
+def gen_batchnorm_luts(mem_id, mem_dir, n, model, config):
+    scale_mem_path = mem_dir / f"batchnorm_scale_lut{mem_id}.mem"
+    shift_mem_path = mem_dir / f"batchnorm_shift_lut{mem_id}.mem"
+    
+    module = get_module_by_name(model, n.name)
+    
+    mean_f = module.running_mean
+    var_f = module.running_var
+    
+    scale_lut = torch.tensor([1 / sqrt(variance) for variance in var_f])
+    shift_lut = torch.tensor([-mu / sqrt(variance) for mu, variance in zip(mean_f, var_f)])
+    
+    scale_lut = integer_quantizer_for_hw(scale_lut, config["data_in_width"], config["data_in_frac_width"]).numpy().tolist()
+    shift_lut = integer_quantizer_for_hw(shift_lut, config["data_in_width"], config["data_in_frac_width"]).numpy().tolist()
+    
+    write_memb(scale_mem_path, scale_lut, config["data_in_width"])
+    write_memb(shift_mem_path, shift_lut, config["data_in_width"])
+
+    return scale_mem_path, shift_mem_path
 
 def add_norm_metadata_gen_lut_analysis_pass(mg, config={}):
     """
@@ -77,14 +101,18 @@ def add_norm_metadata_gen_lut_analysis_pass(mg, config={}):
     lut = make_lut(2 ** LUT_POW, ISQRT_WIDTH)
     mem_path = mem_dir / f"norm_isqrt_lut.mem"
     write_memb(mem_path, lut, ISQRT_WIDTH)
+    mem_id = 0
 
     # Add extra parameters for RTL instantiation
     for n in mg.fx_graph.nodes:
         mase_op = get_mase_op(n)
         args = n.meta["mase"]["common"]["args"]
         if mase_op == "batch_norm2d":
-            # ...
+            scale_mem_path, shift_mem_path = gen_batchnorm_luts(mem_id, mem_dir, n, mg.model, config)
+            args["SCALE_LUT_MEMFILE"] = str(scale_mem_path)
+            args["SHIFT_LUT_MEMFILE"] = str(shift_mem_path)
             args["NORM_TYPE"] = "BATCH_NORM"
+            mem_id += 1
         elif mase_op == "layer_norm":
             args["ISQRT_LUT_MEMFILE"] = str(mem_path)
             args["NORM_TYPE"] = "LAYER_NORM"
@@ -142,7 +170,7 @@ def test_emit_verilog_norm(net, x):
         _fix_quantize_step(n, quant_config)
 
     # Add norm params
-    mg, _ = add_norm_metadata_gen_lut_analysis_pass(mg)
+    mg, _ = add_norm_metadata_gen_lut_analysis_pass(mg, quant_config["default"]["config"])
 
     # Add hardware metadata
     mg, _ = add_hardware_metadata_analysis_pass(mg)
@@ -172,13 +200,13 @@ if __name__ == "__main__":
     shape = [10, 4, 8, 8]
 
     normalizations = [
-        # nn.BatchNorm2d(
-        #     num_features=shape[1],
-        # ),
-        nn.LayerNorm(
-            normalized_shape=shape[1:],
-            elementwise_affine=False,
-        ),
+         nn.BatchNorm2d(
+             num_features=shape[1],
+         ),
+        #nn.LayerNorm(
+        #    normalized_shape=shape[1:],
+        #    elementwise_affine=False,
+        #),
         # nn.GroupNorm(
         #     num_groups=2,
         #     num_channels=shape[1],

@@ -22,8 +22,8 @@ module batch_norm_2d #(
     parameter OUT_FRAC_WIDTH      = 4,
 
     // Scale and Shift LUTs
-`ifdef COCOTB_SIM
     parameter MEM_ID              = 0,
+`ifdef COCOTB_SIM
     parameter AFFINE              = 0,
 `endif
     parameter SCALE_LUT_MEMFILE   = "",

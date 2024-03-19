@@ -67,6 +67,10 @@ def write_memb(file: Path, nums: list[int], width: int):
         #  fail on last line of mem file :(
         f.write("\n".join(num_str) + "\n")
 
+def read_memb(file: Path, width):
+    with open(file, "r") as f:
+        lines = f.readlines()
+    return [int(line.strip(), 2) for line in lines]
 
 if __name__ == "__main__":
     DATA_WIDTH = 8

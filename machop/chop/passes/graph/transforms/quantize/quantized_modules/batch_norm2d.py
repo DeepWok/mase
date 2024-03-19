@@ -73,6 +73,7 @@ class BatchNorm2dInteger(_BatchNorm2dBase):
         if self.bypass:
             return
         x_width, x_frac_width = config["data_in_width"], config["data_in_frac_width"]
+
         self.x_quantizer = partial(
             integer_quantizer, width=x_width, frac_width=x_frac_width
         )

@@ -25,8 +25,10 @@ norm = {
         "matmul/rtl/matrix_fifo.sv",
         "matmul/rtl/matrix_flatten.sv",
         "matmul/rtl/matrix_unflatten.sv",
+        "norm/rtl/channel_selection.sv",
         "norm/rtl/group_norm_2d.sv",
         "norm/rtl/rms_norm_2d.sv",
+        "norm/rtl/batch_norm_2d.sv",
         "norm/rtl/norm.sv",
     ]
 }
