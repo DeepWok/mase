@@ -10,10 +10,7 @@ from os import makedirs
 # from itertools import batched  # Python 3.12
 
 import torch
-from torch import Tensor
-import numpy as np
 import cocotb
-from cocotb.result import TestFailure
 from cocotb.triggers import *
 
 from mase_cocotb.testbench import Testbench
@@ -34,22 +31,15 @@ from mase_cocotb.utils import (
 from chop.passes.graph.transforms.quantize.quantized_modules import (
     LayerNormInteger,
     GroupNormInteger,
-    InstanceNorm2dInteger
+    InstanceNorm2dInteger,
+)
+from chop.passes.graph.transforms.quantize.quantized_modules.rms_norm import (
+    RMSNormInteger
 )
 from chop.passes.graph.transforms.quantize.quantizers.quantizers_for_hw import (
-    integer_floor_quantizer_for_hw,
     integer_quantizer_for_hw
 )
-from chop.passes.graph.transforms.quantize.quantizers.integer import (
-    integer_floor_quantizer
-)
-
-from mase_components.cast.test.fixed_signed_cast_tb import (
-    _fixed_signed_cast_model
-)
-from mase_components.fixed_arithmetic.test.isqrt_sw import (
-    lut_parameter_dict, make_lut, isqrt_sw2
-)
+from mase_components.fixed_arithmetic.test.isqrt_sw import make_lut
 from mase_components.common.test.lut_tb import write_memb
 
 logger = logging.getLogger("testbench")
@@ -110,7 +100,16 @@ class NormTB(Testbench):
                 }
             )
         elif self.RMS_NORM:
-            raise NotImplementedError()
+            self.total_channels = self.CHANNELS
+            self.quantized_model = RMSNormInteger(
+                normalized_shape=[self.total_channels, self.TOTAL_DIM1, self.TOTAL_DIM0],
+                elementwise_affine=False,
+                bias=False,
+                config={
+                    "data_in_width": self.IN_WIDTH,
+                    "data_in_frac_width": self.IN_FRAC_WIDTH,
+                }
+            )
         else:
             raise Exception("Norm type is unknown.")
 
@@ -273,6 +272,6 @@ if __name__ == "__main__":
             gen_cfg(norm_type="LAYER_NORM", str_id="layer"),
             gen_cfg(norm_type="GROUP_NORM", str_id="group"),
             gen_cfg(norm_type="INSTANCE_NORM", str_id="inst"),
-            # gen_cfg(norm_type="RMS_NORM"),
+            gen_cfg(norm_type="RMS_NORM", str_id="rms"),
         ],
     )
