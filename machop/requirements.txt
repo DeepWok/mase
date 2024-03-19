@@ -62,3 +62,6 @@ pynvml
 pycuda
 cuda-python
 pytorch-quantization
+# onnx
+onnxruntime
+onnxruntime-tools
