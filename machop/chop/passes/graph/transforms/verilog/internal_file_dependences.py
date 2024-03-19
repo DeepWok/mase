@@ -14,4 +14,6 @@ INTERNAL_RTL_DEPENDENCIES = {
         "cast/rtl/fixed_rounding.sv",
     ],
     "relu": ["activations/fixed_relu.sv"],
+    "selu": ["activations/fixed_selu.sv"],
+    "tanh": ["activations/fixed_tanh.sv"],
 }

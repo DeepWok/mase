@@ -156,6 +156,13 @@ def create_new_module(
     elif mase_op == "relu":
         new_module_cls = quantized_module_map[f"relu_{quant_name}"]
         new_module = new_module_cls(inplace=original_module.inplace, config=config)
+    elif mase_op == "selu":
+        new_module_cls = quantized_module_map[f"selu_{quant_name}"]
+        new_module = new_module_cls(inplace=original_module.inplace, config=config)
+    elif mase_op == "tanh":
+        new_module_cls = quantized_module_map[f"tanh_{quant_name}"]
+        new_module = new_module_cls(config=config)    
+
 
     elif mase_op == "avg_pool2d":
         new_module_cls = quantized_module_map[f"avg_pool2d_{quant_name}"]

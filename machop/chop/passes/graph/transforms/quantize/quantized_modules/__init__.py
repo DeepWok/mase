@@ -58,6 +58,30 @@ from .relu import (
     ReLUTernary,
 )
 
+from .selu import (
+    SELUBlockFP,
+    SELUBlockMinifloat,
+    SELUInteger,
+    SELULog,
+    SELUBlockLog,
+    SELUMinifloatDenorm,
+    SELUMinifloatIEEE,
+    SELUBinary,
+    SELUTernary,
+)
+
+from .tanh import (
+    TanhBlockFP,
+    TanhBlockMinifloat,
+    TanhInteger,
+    TanhLog,
+    TanhBlockLog,
+    TanhMinifloatDenorm,
+    TanhMinifloatIEEE,
+    TanhBinary,
+    TanhTernary,
+)
+
 quantized_module_map = {
     "conv1d_block_minifloat": Conv1dBlockMinifloat,
     "conv1d_integer": Conv1dInteger,
@@ -107,4 +131,24 @@ quantized_module_map = {
     "relu_block_fp": ReLUBlockFP,
     "relu_binary": ReLUBinary,
     "relu_ternary": ReLUTernary,
+    "selu_block_minifloat": SELUBlockMinifloat,
+    "selu_integer": SELUInteger,
+    "selu_fixed": SELUInteger,
+    "selu_log": SELULog,
+    "selu_block_log": SELUBlockLog,
+    "selu_minifloat_ieee": SELUMinifloatIEEE,
+    "selu_minifloat_denorm": SELUMinifloatDenorm,
+    "selu_block_fp": SELUBlockFP,
+    "selu_binary": SELUBinary,
+    "selu_ternary": SELUTernary,
+    "tanh_block_minifloat": TanhBlockMinifloat,
+    "tanh_integer": TanhInteger,
+    "tanh_fixed": TanhInteger,
+    "tanh_log": TanhLog,
+    "tanh_block_log": TanhBlockLog,
+    "tanh_minifloat_ieee": TanhMinifloatIEEE,
+    "tanh_minifloat_denorm": TanhMinifloatDenorm,
+    "tanh_block_fp": TanhBlockFP,
+    "tanh_binary": TanhBinary,
+    "tanh_ternary": TanhTernary
 }
