@@ -25,6 +25,9 @@ from chop.passes.graph.transforms import (
 )
 
 from chop.tools.logger import set_logging_verbosity
+from chop.passes.graph.transforms.quantize.quantized_modules.rms_norm import (
+    RMSNorm,
+)
 
 from mase_cocotb.utils import verilator_str_param
 from mase_components.fixed_arithmetic.test.isqrt_sw import make_lut
@@ -71,7 +74,7 @@ class InstanceNormNet(nn.Module):
 class RMSNormNet(nn.Module):
     def __init__(self, chw_shape=[64, 32, 32]) -> None:
         super().__init__()
-        self.net = nn.LayerNorm(chw_shape)
+        self.net = RMSNorm(chw_shape)
 
     def forward(self, x):
         return self.net(x)
