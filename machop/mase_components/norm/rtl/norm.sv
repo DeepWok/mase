@@ -74,7 +74,7 @@ module norm #(
     parameter ISQRT_LUT_MEMFILE    = "",
 
     // Norm select
-    // LAYER_NORM, INSTANCE_NORM, GROUP_NORM, RMS_NORM
+    // BATCH_NORM, LAYER_NORM, INSTANCE_NORM, GROUP_NORM, RMS_NORM
     parameter NORM_TYPE            = "LAYER_NORM"
 ) (
     input  logic                 clk,

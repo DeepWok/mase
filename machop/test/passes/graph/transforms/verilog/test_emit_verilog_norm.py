@@ -82,16 +82,20 @@ def add_norm_metadata_gen_lut_analysis_pass(mg, config={}):
     for n in mg.fx_graph.nodes:
         mase_op = get_mase_op(n)
         args = n.meta["mase"]["common"]["args"]
-        args["ISQRT_LUT_MEMFILE"] = str(mem_path)
         if mase_op == "batch_norm2d":
+            # ...
             args["NORM_TYPE"] = "BATCH_NORM"
         elif mase_op == "layer_norm":
+            args["ISQRT_LUT_MEMFILE"] = str(mem_path)
             args["NORM_TYPE"] = "LAYER_NORM"
         elif mase_op == "group_norm":
+            args["ISQRT_LUT_MEMFILE"] = str(mem_path)
             args["NORM_TYPE"] = "GROUP_NORM"
         elif mase_op == "instance_norm2d":
+            args["ISQRT_LUT_MEMFILE"] = str(mem_path)
             args["NORM_TYPE"] = "INSTANCE_NORM"
         elif mase_op == "rms_norm":
+            args["ISQRT_LUT_MEMFILE"] = str(mem_path)
             args["NORM_TYPE"] = "RMS_NORM"
 
     return mg, {}
