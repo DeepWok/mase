@@ -31,9 +31,9 @@ class LayerNormNet(nn.Module):
 
 
 class GroupNormNet(nn.Module):
-    def __init__(self, groups=8, chw_shape=[64, 32, 32]) -> None:
+    def __init__(self, groups=8, channels=64) -> None:
         super().__init__()
-        self.net = nn.GroupNorm(groups, chw_shape)
+        self.net = nn.GroupNorm(groups, channels)
 
     def forward(self, x):
         return self.net(x)
@@ -65,7 +65,7 @@ def _debug_mase_metadata(mg):
         print(n.meta["mase"].parameters, end="\n\n")
 
 
-def _fix_quantize_step(node, config={}):
+def _fix_quantize_step(node, config={}, parallelism=[1, 1, 2, 2]):
     """
     This function is only required right now because quantize_transform_pass
     is broken and does not assign metadata correctly.
@@ -102,7 +102,7 @@ def _fix_quantize_step(node, config={}):
                 config["default"]["config"]["data_in_width"],
                 config["default"]["config"]["data_in_frac_width"]
             ]
-    hardware_p["parallelism"] = [1, 1, 4, 4]
+    hardware_p["parallelism"] = parallelism
 
 
 def add_norm_metadata_gen_lut_analysis_pass(mg, config={}):
@@ -136,16 +136,10 @@ def add_norm_metadata_gen_lut_analysis_pass(mg, config={}):
     return mg, {}
 
 
-def test_emit_verilog_norm():
+def test_emit_verilog_norm(net, x):
 
-    # N, C, H, W
-    shape = [10, 8, 8, 8]
-
-    nn = LayerNormNet(chw_shape=shape[1:])
     import chop.ir.graph.mase_graph as mase_graph
-    mg = mase_graph.MaseGraph(model=nn)
-
-    x = torch.randn(shape)
+    mg = mase_graph.MaseGraph(model=net)
 
     from chop.passes.graph.analysis import (
         init_metadata_analysis_pass,
@@ -206,4 +200,19 @@ def test_emit_verilog_norm():
 
 
 if __name__ == "__main__":
-    test_emit_verilog_norm()
+
+    # N, C, H, W
+    shape = [10, 4, 8, 8]
+
+    configs = [
+        # (BatchNormNet, {"channels": shape[1]}),
+        (LayerNormNet, {"chw_shape": shape[1:]}),
+        (GroupNormNet, {"groups": 2, "channels": shape[1]}),
+        (InstanceNormNet, {"channels": shape[1]}),
+        (RMSNormNet, {"chw_shape": shape[1:]}),
+    ]
+
+    x = torch.rand(shape)
+    for cls, kwargs in configs:
+        net = cls(**kwargs)
+        test_emit_verilog_norm(net, x)

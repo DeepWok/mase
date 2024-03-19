@@ -21,9 +21,6 @@ class _BatchNorm2dBase(nn.BatchNorm2d):
         dtype = None,
     ) -> None:
 
-        # Hardware Limitations:
-        assert affine == False, "affine not supported!"
-
         super().__init__(
             num_features, eps, momentum, affine, track_running_stats, device, dtype
         )
