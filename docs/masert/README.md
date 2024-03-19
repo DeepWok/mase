@@ -62,27 +62,77 @@ Mixed precision is also supported, both for layerwise (by name) and typewise (by
 ## ⚙️ How It Works
 
 ### TensorRT
+<div align="center">
+    <img src='../imgs/tensorrt_flow.png' width='300'>
+</div>
+
+
+**Fake Quantization**
+
+To minimise losses during quantization, we first utilise Nvidia's Pytorch-Quantization framework to convert the model to a fake-quantized form.Fake quantization is used to perform calibration and fine tuning (QAT) before actually quantizing. The [Pytorch-Quantization](https://docs.nvidia.com/deeplearning/tensorrt/pytorch-quantization-toolkit/docs/index.html#) libray simply emulates and prepares for quantization - which can then later be converted to ONNX and passed through to TensorRT. 
+
+*Note:* This is only used if we have INT8 quantized modules, as other precisions are not currently supported within the library.
+
+This is acheived through the `tensorrt_fake_quantize_transform_pass` which goes through the model, either by type or by name, replaces each layer appropriately to a fake quantized form if the `quantize` parameter is set in the default config (`passes.tensorrt_quantize.default.config`) or on a per name or type basis. 
+
+**Calibration**
+Calibration is the TensorRT terminology of passing data samples to the quantizer and deciding the best amax for activations.
+
+Calibrators can be added as a search space parameter to examine the best performing calibrator. These include `max`, `entropy`, `percentile` and `mse`.
+
 **Quantization-aware Training**
 
 Quantization-aware training (QAT) achieves the highest accuracy compared to dynamic quantization (whereby the quantization occurs just before doing compute), and Post Training Static Quantization or (PTQ) (whereby the model is statically calibrated).
 
-In QAT, during both forward and backward training passes, weights and activations undergo "fake quantization": although they are rounded to simulate int8 values, computations continue to utilize floating point numbers. Consequently, adjustments to the weights throughout the training process take into account the eventual quantization of the model. As a result, this method often leads to higher accuracy post-quantization compared to the other two techniques.
+In QAT, during both forward and backward training passes, weights and activations undergo "fake quantization" (although they are rounded to simulate int8 values, computations continue to utilize floating point numbers). Consequently, adjustments to the weights throughout the training process take into account the eventual quantization of the model. As a result, this method often leads to higher accuracy post-quantization compared to the other two techniques.
 
-<img src='../imgs/tensorrt_flow_chart.png' width='200'>
+The `tensorrt_fine_tune_transform_pass` is used to fine tune the quantized model. 
 
-Fake quantization is used to perform calibration and fine tuning (QAT) before actually quantizing. The [Pytorch-Quantization](https://docs.nvidia.com/deeplearning/tensorrt/pytorch-quantization-toolkit/docs/index.html#) libray simply emulates and prepares for quantization - which can then later be converted to ONNX and passed through to TensorRT. This is only used if we have INT8 calibration, as other precisions are not currently supported within the library.
+For QAT it is typical to employ 10% of the original training epochs, starting at 1% of the initial training learning rate, and a cosine annealing learning rate schedule that follows the decreasing half of a cosine period, down to 1% of the initial fine tuning learning rate (0.01% of the initial training learning rate). However this default can be overidden by setting the `epochs`, `initial_learning_rate` and `final_learning_rate` in `passes.tensorrt_quantize.fine_tune`.
 
-This is acheived through the `tensorrt_fake_quantize_transform_pass` which goes through the model, either by type or by name, replaces each layer appropriately to a fake quantized form if the `quantize` parameter is set in the default config (`passes.tensorrt_quantize.default.config`) or on a per name or type basis. 
+The fine tuned checkpoints are stored in the ckpts/fine_tuning folder:
+
+```
+mase_output
+└── tensorrt
+    └── quantization
+        ├── cache
+        ├── ckpts
+        │   └── fine_tuning
+        ├── json
+        ├── onnx
+        └── trt
+```
+
+**TensorRT Quantization**
+
+After QAT, we are now ready to convert the model to a tensorRT engine so that it can be run with the superior inference speeds. To do so, we use the `tensorrt_engine_interface_pass` which converts the `MaseGraph`'s model from a Pytorch one to an ONNX format as an intermediate stage of the conversion.
+
+During the conversion process, the `.onnx` and `.trt` files are stored to their respective folders shown above. This means that the `.onnx` files can be utilised for other model types and does not need to be just an unutilized, intermediary step.
+
+This interface pass returns a dictionary containing the `onnx_path` and `trt_engine_path`.
+
+**Performance Anaylisis**
+To showcase the improved inference speeds and to evaluate accuracy and other performance metrics, the `tensorrt_analysis_pass` can be used.
+
+The tensorRT engine path obtained the previous interface pass is now inputted into the the analysis pass. The same pass can take a MaseGraph as an input, as well as an ONNX graph. For this comparison, we will first run the anaylsis pass on the original unquantized model and then on the INT8 quantized model.
+
 
 ## 🚀 Getting Started
+The environment setup during the [MASE installation](../../README.md) either through Docker or Conda will have you covered, there are no other requirements. 
 
-The environment setup during the [MASE installation](../../../README.md) either through Docker or Conda will have you covered, there are no other requirements. 
+The procedure in the [How It Works Section](#⚙️-how-it-works) can be acomplished by the machop's transform action.
+
+```python
+./ch transform --config {config_file} --load {model_checkpoint} --load-type pl
+```
 
 ### Tutorials
 We strongly recommend you look through the dedicated tutorials which walk you through the process of utilising MaseRT:
-- [TensorRT tutorial](/docs/tutorials/tensorrt/tensorRT_quantization_tutorial.ipynb) 
+- [TensorRT Tutorial](/docs/tutorials/tensorrt/tensorRT_quantization_tutorial.ipynb) 
+- [ONNXRT Tutorial](/docs/tutorials/)
 
-### Which Runtime Should I Use
+### Which Runtime Should I Use?
 
 - Hardware: ONNXRT supports a wider range of hardware beyond NVIDIA GPUs, including CPUs, AMD GPUs, and other accelerators. If you do not have a NVIDIA GPU, use ONNXRT.
 - Cross-Frameworks: ONNXRT allows conversion to other models through their ONNX framework (i.e., from PyTorch to Tensorflow)
