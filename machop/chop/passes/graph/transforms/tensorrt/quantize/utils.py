@@ -246,9 +246,9 @@ class FakeQuantizer:
         """
         self.logger.info("Applying fake quantization to PyTorch model...")
 
-        if not check_for_value_in_dict(self.config, 'INT8'):
+        if not check_for_value_in_dict(self.config, 'int8'):
             self.logger.warning(
-                "INT8 precision not found in config. Skipping fake quantization."
+                "int8 precision not found in config. Skipping fake quantization."
             )
             return graph
 
@@ -258,7 +258,7 @@ class FakeQuantizer:
             node_config = self.get_config(get_mase_op(node))
             if not node_config["config"]["quantize"]:
                 continue
-            if not node_config["config"]["precision"] == "INT8":
+            if not node_config["config"]["precision"] == "int8":
                 continue
             if node.op == "call_module":
                 original_module = get_node_actual_target(node)
@@ -278,9 +278,9 @@ class FakeQuantizer:
         """
         self.logger.info("Applying fake quantization to PyTorch model...")
 
-        if not check_for_value_in_dict(self.config, 'INT8'):
+        if not check_for_value_in_dict(self.config, 'int8'):
             self.logger.warning(
-                "INT8 precision not found in config. Skipping fake quantization."
+                "int8 precision not found in config. Skipping fake quantization."
             )
             return graph
 
@@ -290,7 +290,7 @@ class FakeQuantizer:
             node_config = self.get_config(node.name)
             if not node_config["config"]["quantize"]:
                 continue
-            if not node_config["config"]["precision"] == "INT8":
+            if not node_config["config"]["precision"] == "int8":
                 continue
             if node.op == "call_module":
                 original_module = get_node_actual_target(node)
@@ -305,7 +305,7 @@ class FakeQuantizer:
         return graph
 
 
-class INT8Calibrator(trt.IInt8EntropyCalibrator2):
+class Int8Calibrator(trt.IInt8EntropyCalibrator2):
     def __init__(self, nCalibration, input_generator, cache_file_path):
         trt.IInt8EntropyCalibrator2.__init__(self)
         self.nCalibration = nCalibration

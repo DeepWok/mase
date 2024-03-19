@@ -84,11 +84,11 @@ def transform(
         pass_config: dict
         match pass_name:
             case "tensorrt":
+                graph, _ = metadata_value_type_cast_transform_pass(
+                    graph, pass_args={"fn": to_numpy_if_tensor}
+                )
                 ori_graph = deepcopy_mase_graph(graph)
                 pass_save_dir = save_dir / "tensorrt"
-                # graph, _ = metadata_value_type_cast_transform_pass(
-                #     graph, pass_args={"fn": to_numpy_if_tensor}
-                # )
 
                 pass_config['task'] = task
                 pass_config["batch_size"] = config["batch_size"]
@@ -99,7 +99,7 @@ def transform(
                     # TODO this seems innefective - known issue - https://github.com/NVIDIA/TensorRT/issues/2468
                     os.environ["CUDA_MODULE_LOADING"] = "LAZY"
 
-                # Firstly fake quantize the model for calibration (only if using INT8 precision otherwise skipped)
+                # Firstly fake quantize the model for calibration (only if using int8 precision otherwise skipped)
                 graph, _ = PASSES["tensorrt_fake_quantize"](
                     graph, pass_args=pass_config
                 )
@@ -119,7 +119,7 @@ def transform(
                     graph, pass_args=pass_config
                 )
                 
-                # Apply FP16 or layer-wise mixed precision quantization if necessary and convert the model to TensorRT format
+                # Apply fp16 or layer-wise mixed precision quantization if necessary and convert the model to TensorRT format
                 graph, runtime_meta = PASSES["tensorrt_quantize"](
                     graph, pass_args=pass_config
                 )

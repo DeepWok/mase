@@ -14,7 +14,7 @@ load_type = "pl"
 [passes.onnxruntime.default.config]
 quantize = true
 quantize_type = 'dynamic'
-precision = 'INT8'
+precision = 'int8'
 
 [passes.runtime_analysis]
 num_batches = 100

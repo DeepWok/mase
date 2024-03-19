@@ -1,7 +1,6 @@
 import logging
 import torch
 import os
-import sys
 from datetime import datetime
 from pathlib import Path
 from prettytable import PrettyTable
@@ -20,9 +19,9 @@ def onnx_runtime_transform_pass(graph, pass_args="None"):
     onnx_model_path = onnx_runtime_session.pytorch_to_onnx(pytorch_model)
     onnx_model_graph = onnx_runtime_session.load_onnx(onnx_model_path).graph
     onnx_runtime_session.summarize_ONNX_graph(onnx_model_graph)
-    _  = onnx_runtime_session.quantize(onnx_model_graph)
+    quant_meta = onnx_runtime_session.quantize(onnx_model_path)
 
-    return graph, {'onnx_path': onnx_model_path}
+    return graph, {'onnx_path': onnx_model_path, **quant_meta}
 
 
 class ONNXRuntime:
@@ -30,11 +29,11 @@ class ONNXRuntime:
         self.config = config
         self.logger = logging.getLogger(__name__)
 
-    def _prepare_save_path(self):
+    def _prepare_save_path(self, quantized_type:str):
         """Creates and returns a save path for the model."""
         root = Path(__file__).resolve().parents[6]
         current_date = datetime.now().strftime("%Y_%m_%d")
-        save_dir = root / f"mase_output/onnx_runtime" / current_date
+        save_dir = root / f"mase_output/onnx_runtime/{quantized_type}" / current_date
         save_dir.mkdir(parents=True, exist_ok=True)
 
         existing_versions = len(os.listdir(save_dir))
@@ -51,7 +50,7 @@ class ONNXRuntime:
         """Converts PyTorch model to ONNX format and saves it."""
         self.logger.info("Converting PyTorch model to ONNX...")
 
-        save_path = self._prepare_save_path()
+        save_path = self._prepare_save_path("unquantized")
 
         dataloader = self.config["data_module"].train_dataloader()
         train_sample = next(iter(dataloader))[0]
@@ -91,7 +90,7 @@ class ONNXRuntime:
             summary_table.add_row([index, node_name, node_type, ', '.join(inputs), ', '.join(outputs), ', '.join(attributes)])
         self.logger.info(f"ONNX Model Summary: \n{summary_table}")
     
-    def quantize(self, graph):
+    def quantize(self, model_path) -> dict:
         if 'quantize_type' in self.config['default']['config']:
             quantizer = Quantizer(self.config)
             try:
@@ -106,11 +105,16 @@ class ONNXRuntime:
 
             match quant_type:
                 case 'static':
-                    onnx_model_path = quantizer.static_quantization(onnx_model_path)
+                    quantized_path = self._prepare_save_path("static_quantized")
+                    quantizer.quantize_static(model_path, quantized_path)
+                    return {'onnx_static_quantized_path': quantized_path}
                 case 'dynamic':
-                    onnx_model_path = quantizer.dynamic_quantization(onnx_model_path)
+                    quantized_path = self._prepare_save_path("dynamic_quantized")
+                    quantizer.quantize_dynamic(model_path, quantized_path)
+                    return {'onnx_dynamic_quantized_path': quantized_path}
                 case _:
                     raise Exception(f"Invalid quantization type: {quant_type}")
+        return {}
 
     def load_onnx(self, onnx_model_path):
         """Load .onnx model"""

@@ -57,9 +57,9 @@ Currently, Pytorch-Quantization only supports the modules above, however custom 
 
 **Precision** 
 
-The supported modules can be converted to FP32, FP16, or INT8.
+The supported modules can be converted to FP32, fp16, or int8.
 
-Mixed precision is also supported, both for layerwise (by name) and typewise (by type). This means that you could, for example, quantize a CNN by setting all convolutional layers to FP16, and set the linear layers to INT8 (typewise) or by setting all but the last two layers to INT8. 
+Mixed precision is also supported, both for layerwise (by name) and typewise (by type). This means that you could, for example, quantize a CNN by setting all convolutional layers to fp16, and set the linear layers to int8 (typewise) or by setting all but the last two layers to int8. 
 
 ## ⚙️ How It Works
 
@@ -73,7 +73,7 @@ Mixed precision is also supported, both for layerwise (by name) and typewise (by
 
 To minimise losses during quantization, we first utilise Nvidia's Pytorch-Quantization framework to convert the model to a fake-quantized form.Fake quantization is used to perform calibration and fine tuning (QAT) before actually quantizing. The [Pytorch-Quantization](https://docs.nvidia.com/deeplearning/tensorrt/pytorch-quantization-toolkit/docs/index.html#) libray simply emulates and prepares for quantization - which can then later be converted to ONNX and passed through to TensorRT. 
 
-*Note:* This is only used if we have INT8 quantized modules, as other precisions are not currently supported within the library.
+*Note:* This is only used if we have int8 quantized modules, as other precisions are not currently supported within the library.
 
 This is acheived through the `tensorrt_fake_quantize_transform_pass` which goes through the model, either by type or by name, replaces each layer appropriately to a fake quantized form if the `quantize` parameter is set in the default config (`passes.tensorrt.default.config`) or on a per name or type basis. 
 
@@ -88,7 +88,7 @@ Quantization-aware training (QAT) achieves the highest accuracy compared to dyna
 
 In QAT, during both forward and backward training passes, weights and activations undergo "fake quantization" (although they are rounded to simulate int8 values, computations continue to utilize floating point numbers). Consequently, adjustments to the weights throughout the training process take into account the eventual quantization of the model. As a result, this method often leads to higher accuracy post-quantization compared to the other two techniques.
 
-Since float quantization does not require calibration, nor is it supported by `pytorch-quantization`, models that do not contain INT8 modules will not undergo fake quantization, unfortunately, for the time being this means QAT is unavailable and only udergoes Post Training Quantization (PTQ).
+Since float quantization does not require calibration, nor is it supported by `pytorch-quantization`, models that do not contain int8 modules will not undergo fake quantization, unfortunately, for the time being this means QAT is unavailable and only udergoes Post Training Quantization (PTQ).
 
 The `tensorrt_fine_tune_transform_pass` is used to fine tune the quantized model. 
 
@@ -117,7 +117,7 @@ During the conversion process, the `.onnx` and `.trt` files are stored to their 
 This interface pass returns a dictionary containing the `onnx_path` and `trt_engine_path`.
 
 **Performance Anaylisis**
-To showcase the improved inference speeds and to evaluate accuracy and other performance metrics, the `runtime_analysis_pass` can be used. The pass can take a MaseGraph as an input, as well as an ONNX graph. For this comparison, we will first run the anaylsis pass on the original unquantized model and then on the INT8 quantized model.
+To showcase the improved inference speeds and to evaluate accuracy and other performance metrics, the `runtime_analysis_pass` can be used. The pass can take a MaseGraph as an input, as well as an ONNX graph. For this comparison, we will first run the anaylsis pass on the original unquantized model and then on the int8 quantized model.
 
 
 ## 🚀 Getting Started

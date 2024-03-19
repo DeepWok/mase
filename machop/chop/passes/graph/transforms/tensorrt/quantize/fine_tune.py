@@ -53,9 +53,9 @@ class FineTuning:
         can be overidden by setting the `epochs`, `initial_learning_rate` and
         `final_learning_rate` in `passes.tensorrt.fine_tune`.
         """
-        if not check_for_value_in_dict(self.config, "INT8"):
+        if not check_for_value_in_dict(self.config, "int8"):
             self.logger.warning(
-                "INT8 precision not found in config. Skipping QAT fine tuning."
+                "int8 precision not found in config. Skipping QAT fine tuning."
             )
             return None
 

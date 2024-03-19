@@ -13,7 +13,7 @@ from pytorch_quantization.tensor_quant import QuantDescriptor
 from chop.passes.graph.utils import get_mase_op, get_mase_type, get_node_actual_target
 from chop.passes.graph.interface.save_and_load import load_mase_graph_interface_pass
 from ....utils import deepcopy_mase_graph
-from .utils import INT8Calibrator, prepare_save_path, check_for_value_in_dict
+from .utils import Int8Calibrator, prepare_save_path, check_for_value_in_dict
 
 def tensorrt_engine_interface_pass(graph, pass_args=None):
     quantizer = Quantizer(pass_args)
@@ -55,7 +55,7 @@ class Quantizer:
         self.logger.info("Converting PyTorch model to TensorRT...")
 
         # Check for layer wise mixed precision
-        layer_wise_mixed_precision = True if check_for_value_in_dict(self.config, 'INT8') and check_for_value_in_dict(self.config, 'FP16') else False
+        layer_wise_mixed_precision = True if check_for_value_in_dict(self.config, 'int8') and check_for_value_in_dict(self.config, 'fp16') else False
 
         TRT_LOGGER = trt.Logger(trt.Logger.WARNING)
         builder = trt.Builder(TRT_LOGGER)
@@ -72,40 +72,40 @@ class Quantizer:
         config = builder.create_builder_config()
         config.max_workspace_size = 4 << 30  # 4GB
 
-        # This section may be uncommented if pytorch-quantization is not used for INT8 Calibration
+        # This section may be uncommented if pytorch-quantization is not used for int8 Calibration
         '''
         # Only required if pytorch-quantization is not used
-        config.set_flag(trt.BuilderFlag.INT8)
-        if self.config['default']['config']['precision'] == 'INT8':
-            config.int8_calibrator = INT8Calibrator(
+        config.set_flag(trt.BuilderFlag.int8)
+        if self.config['default']['config']['precision'] == 'int8':
+            config.int8_calibrator = Int8Calibrator(
                 self.config['num_calibration_batches'], 
                 self.config['data_module'].train_dataloader(), 
                 prepare_save_path(method='cache', suffix='cache')
                 )
         '''
 
-        # Only quantize and calibrate non INT8  pytorch-quantization
-        if self.config['default']['config']['precision'] != 'INT8':
+        # Only quantize and calibrate non int8  pytorch-quantization
+        if self.config['default']['config']['precision'] != 'int8':
             config.set_flag(trt.BuilderFlag.PREFER_PRECISION_CONSTRAINTS)
             config.set_flag(trt.BuilderFlag.DIRECT_IO)
             config.set_flag(trt.BuilderFlag.REJECT_EMPTY_ALGORITHMS)
             config.set_flag(trt.BuilderFlag.STRICT_TYPES)
 
-        if self.config['default']['config']['precision'] == 'FP16' and not layer_wise_mixed_precision:
-            config.set_flag(trt.BuilderFlag.FP16)
+        if self.config['default']['config']['precision'] == 'fp16' and not layer_wise_mixed_precision:
+            config.set_flag(trt.BuilderFlag.fp16)
 
         elif layer_wise_mixed_precision:
             # Set layer precision and type bsed on TOML configuration
             for idx in range(network.num_layers):
                 layer = network.get_layer(idx)
-                if self.config['default']['config']['precision'] == 'FP16':
+                if self.config['default']['config']['precision'] == 'fp16':
                     layer.precision = trt.float16
                     layer.set_output_type(0, trt.DataType.HALF)
-                elif self.config['default']['config']['precision'] == 'INT8':
+                elif self.config['default']['config']['precision'] == 'int8':
                     layer.precision = trt.int8
-                    layer.set_output_type(0, trt.DataType.INT8)
+                    layer.set_output_type(0, trt.DataType.int8)
                 else:
-                    Exception("Unsupported precision type. Please choose from 'FP16' or 'INT8'.")
+                    Exception("Unsupported precision type. Please choose from 'fp16' or 'int8'.")
         
         serialized_engine = builder.build_serialized_network(network, config)
         if serialized_engine is None:

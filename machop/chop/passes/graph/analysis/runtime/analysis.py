@@ -3,9 +3,7 @@ import torch
 from pathlib import PosixPath
 import tensorrt as trt
 from chop.ir import MaseGraph
-
 from .utils import PowerMonitor
-import sys
 import logging 
 import os
 from tabulate import tabulate
@@ -17,7 +15,21 @@ import numpy as np
 import tensorrt as trt
 import onnxruntime as ort
 from cuda import cudart
+import json
+import datetime
+from pathlib import Path
 
+
+def runtime_analysis_pass(model, pass_args=None):
+    analysis = RuntimeAnalysis(model, pass_args)
+    results = analysis.evaluate()
+
+    results_path = analysis._prepare_save_path(method='analysis', suffix='json')
+
+    with open(results_path, 'w') as json_file:
+        json.dump(results, json_file, indent=4)
+    
+    return model, results
 
 class RuntimeAnalysis():
     def __init__(self, model, config):
@@ -53,17 +65,33 @@ class RuntimeAnalysis():
                         self.model = self.context
                         self.summarize()
                         self.model_name = f"{self.config['model']}-trt_quantized"
+                        self.model_type = 'tensorrt'
                         
                     case '.onnx':
                         # Load the exported ONNX model into an ONNXRuntime inference session
                         self.model = ort.InferenceSession(path, providers=[config['execution_provider']])
                         self.model_name = f"{self.config['model']}-onnx"
+                        self.model_type = 'onnx'
                     case _:
                         # If file type is neither .trt nor .onnx
                         raise Exception("Model must be a MaseGraph or a path to a trt file. Have you run the quantization pass?")
             case _:
                 # If model is neither MaseGraph nor PosixPath
                 raise Exception("Model must be a MaseGraph or a PosixPath to a trt file. Have you run the quantization pass?")
+
+    def prepare_save_path(method: str, suffix: str):
+        """Creates and returns a save path for the model."""
+        root = Path(__file__).resolve().parents[7]
+        current_date = datetime.now().strftime("%Y_%m_%d")
+        save_dir = root / f"mase_output/tensorrt/quantization/{method}" / current_date
+        save_dir.mkdir(parents=True, exist_ok=True)
+
+        existing_versions = len(os.listdir(save_dir))
+        version = "version_0" if existing_versions == 0 else f"version_{existing_versions}"
+
+        save_dir = save_dir / version
+        save_dir.mkdir(parents=True, exist_ok=True)
+        return save_dir / f"model.{suffix}"
 
     def summarize(self):
         io_info_lines = [
@@ -256,7 +284,7 @@ class RuntimeAnalysis():
             # Calculate accuracy and loss for the batch
             loss = torch.nn.functional.cross_entropy(preds, ys)
             acc = metric(preds, ys)
-            accs.append(acc)
+            accs.append(acc.item())
             losses.append(loss.item())
             
             # Update torchmetrics metrics
@@ -269,6 +297,11 @@ class RuntimeAnalysis():
         avg_precision = precision_metric.compute()
         avg_recall = recall_metric.compute()
         avg_f1 = f1_metric.compute()
+
+        # Convert metrics to float if they are tensors
+        avg_precision = avg_precision.item() if torch.is_tensor(avg_precision) else avg_precision
+        avg_recall = avg_recall.item() if torch.is_tensor(avg_recall) else avg_recall
+        avg_f1 = avg_f1.item() if torch.is_tensor(avg_f1) else avg_f1
         
         # Reset metrics for the next configuration
         precision_metric.reset()

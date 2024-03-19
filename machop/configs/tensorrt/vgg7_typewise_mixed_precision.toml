@@ -17,7 +17,7 @@ post_calibration_analysis = true
 quantize = true
 calibrators = ["percentile"]
 percentiles = [99.0, 99.9]
-precision = 'INT8'
+precision = 'int8'
 
 [passes.tensorrt.default.input]
 calibrator = 'histogram'
@@ -32,7 +32,7 @@ quantize = false
 
 [passes.tensorrt.conv2d.config]
 quantize = true
-precision = 'INT8'
+precision = 'int8'
 calibrator = 'histogram'
 
 [passes.tensorrt.conv2d.input]

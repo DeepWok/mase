@@ -82,9 +82,9 @@ class Calibrator:
     def calibrate_model(self, graph):
         """Performs the calibration pass on the model using the given data loader."""
 
-        if not check_for_value_in_dict(self.config, "INT8"):
+        if not check_for_value_in_dict(self.config, "int8"):
             self.logger.warning(
-                "INT8 precision not found in config. Skipping calibration."
+                "int8 precision not found in config. Skipping calibration."
             )
             return graph
 

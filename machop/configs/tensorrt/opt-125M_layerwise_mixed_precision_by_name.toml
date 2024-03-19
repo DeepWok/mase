@@ -22,7 +22,7 @@ report = true
 [passes.tensorrt.default.config]
 quantize = true
 calibrator = 'histogram'
-precision = 'INT8' 
+precision = 'int8' 
 
 # [passes.tensorrt.linear.config]
 # calibrator = 'histogram'
