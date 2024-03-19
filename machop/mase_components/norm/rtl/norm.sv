@@ -3,6 +3,7 @@ Module      : norm
 Description : Module which unifies all types of normalization.
 
               Currently supports:
+              - Batch Norm
               - Layer Norm
               - Instance Norm
               - Group Norm
