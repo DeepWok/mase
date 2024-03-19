@@ -9,7 +9,6 @@ Description : This module calculates root-mean-square norm.
 */
 
 `timescale 1ns/1ps
-`default_nettype none
 
 module rms_norm_2d #(
     // Dimensions
@@ -126,7 +125,7 @@ logic adder_tree_valid, adder_tree_ready;
 
 fixed_adder_tree #(
     .IN_SIZE(COMPUTE_DIM0 * COMPUTE_DIM1),
-    .IN_WIDTH(SQUARE_WIDTH),
+    .IN_WIDTH(SQUARE_WIDTH)
 ) adder_tree (
     .clk(clk),
     .rst(rst),

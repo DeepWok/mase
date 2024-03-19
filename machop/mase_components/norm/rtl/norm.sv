@@ -77,16 +77,16 @@ module norm #(
     // LAYER_NORM, INSTANCE_NORM, GROUP_NORM, RMS_NORM
     parameter NORM_TYPE            = "LAYER_NORM"
 ) (
-    input  logic                clk,
-    input  logic                rst,
+    input  logic                 clk,
+    input  logic                 rst,
 
-    input  logic [IN_WIDTH-1:0] data_in_0  [COMPUTE_DIM0*COMPUTE_DIM1-1:0],
-    input  logic                data_in_0_valid,
-    output logic                data_in_0_ready,
+    input  logic [IN_WIDTH-1:0]  data_in_0  [COMPUTE_DIM0*COMPUTE_DIM1-1:0],
+    input  logic                 data_in_0_valid,
+    output logic                 data_in_0_ready,
 
-    output logic [IN_WIDTH-1:0] data_out_0 [COMPUTE_DIM0*COMPUTE_DIM1-1:0],
-    output logic                data_out_0_valid,
-    input  logic                data_out_0_ready
+    output logic [OUT_WIDTH-1:0] data_out_0 [COMPUTE_DIM0*COMPUTE_DIM1-1:0],
+    output logic                 data_out_0_valid,
+    input  logic                 data_out_0_ready
 );
 
 localparam BATCH_NORM = (NORM_TYPE == "BATCH_NORM");
