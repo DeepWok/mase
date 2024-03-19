@@ -62,6 +62,11 @@ def _fix_quantize_step(node, config={}, parallelism=[1, 1, 2, 2]):
 
 
 def add_norm_metadata_gen_lut_analysis_pass(mg, config={}):
+    """
+    This is a new pass which can be added to MASE that deals with assigning
+    metadata to quantized normalization layers and also generates the necessary
+    LUTs which exist in the normalization hardware.
+    """
     from chop.passes.graph.utils import get_mase_op
     # Generate lut
     LUT_POW = 5
