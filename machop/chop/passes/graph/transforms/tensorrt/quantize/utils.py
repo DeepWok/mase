@@ -70,29 +70,32 @@ class FakeQuantizer:
             if config["weight"]["quantize_axis"] == False
             else config["weight"]["quantize_axis"]
         )
-        # TODO implement more module support: https://docs.nvidia.com/deeplearning/tensorrt/pytorch-quantization-toolkit/docs/index.html#quantized-modules
         try:
-            # Set default quantization descriptor for input and weights
-            qnn.QuantLinear.set_default_quant_desc_input(
-                QuantDescriptor(
-                    calib_method=config["input"]["calibrator"],
-                    axis=config["input"]["quantize_axis"],
-                )
-            )
-            qnn.QuantLinear.set_default_quant_desc_weight(
-                QuantDescriptor(
-                    calib_method=config["weight"]["calibrator"],
-                    axis=config["input"]["quantize_axis"],
-                )
-            )
+            op = QUANTIZEABLE_OP[mase_op]
+        except:
+            raise Exception(f"Module {original_module_cls} unsupported. Please check documentation for what is currently supported.")
+        try:
             match mase_op:
                 case "linear":
                     use_bias = original_module.bias is not None
 
-                    new_module = QUANTIZEABLE_OP[mase_op](
+                    new_module = op(
                         in_features=original_module.in_features,
                         out_features=original_module.out_features,
                         bias=use_bias,
+                    )
+                    # Set default quantization descriptor for input and weights
+                    op.set_default_quant_desc_input(
+                        QuantDescriptor(
+                            calib_method=config["input"]["calibrator"],
+                            axis=config["input"]["quantize_axis"],
+                        )
+                    )
+                    op.set_default_quant_desc_weight(
+                        QuantDescriptor(
+                            calib_method=config["weight"]["calibrator"],
+                            axis=config["input"]["quantize_axis"],
+                        )
                     )
 
                     copy_weights(original_module.weight, new_module.weight)
@@ -100,8 +103,6 @@ class FakeQuantizer:
                         copy_weights(original_module.bias, new_module.bias)
 
                 case "conv1d" | "conv2d" | "conv3d" | "convTranspose1d" | "convTranspose2d" | "convTranspose3d":
-                    op = QUANTIZEABLE_OP[mase_op]
-
                     # Set default quantization descriptor for input and weights
                     op.set_default_quant_desc_input(
                         QuantDescriptor(
@@ -133,8 +134,6 @@ class FakeQuantizer:
                         copy_weights(original_module.bias, new_module.bias)
                 
                 case "avgPool1d" | "avgPool2d" | "avgPool3d" | "maxPool1d" | "maxPool2d" | "maxPool3d":
-                    op = QUANTIZEABLE_OP[mase_op]
-
                     # Set default quantization descriptor for input since pooling layers typically do not have weights
                     op.set_default_quant_desc_input(
                         QuantDescriptor(
@@ -152,6 +151,58 @@ class FakeQuantizer:
                         return_indices=original_module.return_indices if hasattr(original_module, 'return_indices') else False, # Only relevant for max pooling
                         ceil_mode=original_module.ceil_mode,
                     )
+
+                case "LSTM":
+                    new_module = QUANTIZEABLE_OP["LSTM"](
+                        input_size=original_module.input_size,
+                        hidden_size=original_module.hidden_size,
+                        num_layers=original_module.num_layers,
+                        bias=original_module.bias,
+                        batch_first=original_module.batch_first,
+                        dropout=original_module.dropout,
+                        bidirectional=original_module.bidirectional,
+                    )
+                        
+                    # Check the number of layers and bidirectional configuration
+                    num_layers = original_module.num_layers
+                    bidirectional = 2 if original_module.bidirectional else 1
+                    
+                    for layer in range(num_layers):
+                        for direction in range(bidirectional):
+                            # Suffix to identify the parameters for the layer and direction
+                            suffix = f'_reverse' if direction == 1 else ''
+                            layer_idx = f'{layer}{suffix}'
+                            
+                            # Copy weights for the input-hidden connections (ih)
+                            attr = f'weight_ih_l{layer_idx}'
+                            getattr(new_module, attr).data.copy_(getattr(original_module, attr).data)
+                            
+                            # Copy weights for the hidden-hidden connections (hh)
+                            attr = f'weight_hh_l{layer_idx}'
+                            getattr(new_module, attr).data.copy_(getattr(original_module, attr).data)
+                            
+                            # Copy biases, if they exist
+                            if original_module.bias:
+                                attr = f'bias_ih_l{layer_idx}'
+                                getattr(new_module, attr).data.copy_(getattr(original_module, attr).data)
+                                
+                                attr = f'bias_hh_l{layer_idx}'
+                                getattr(new_module, attr).data.copy_(getattr(original_module, attr).data)
+
+                case "LSTMCell":
+                    new_module = QUANTIZEABLE_OP["LSTMCell"](
+                        input_size=original_module.input_size,
+                        hidden_size=original_module.hidden_size,
+                        bias=original_module.bias,
+                    )
+                    
+                    # Copy weights and biases from the original module to the new quantized module
+                    copy_weights(original_module.weight_ih, new_module.weight_ih)
+                    copy_weights(original_module.weight_hh, new_module.weight_hh)
+                    if original_module.bias:
+                        copy_weights(original_module.bias_ih, new_module.bias_ih)
+                        copy_weights(original_module.bias_hh, new_module.bias_hh)
+
 
                 case _:
                     raise NotImplementedError(
