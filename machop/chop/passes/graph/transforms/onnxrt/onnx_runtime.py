@@ -123,12 +123,3 @@ class ONNXRuntime:
         onnx.checker.check_model(onnx_model)
 
         return onnx_model
-
-    def _get_execution_provider(self):
-        EP_list = ["CUDAExecutionProvider", "CPUExecutionProvider"]
-
-        return (
-            "CUDAExecutionProvider"
-            if self.config["accelerator"] == "cuda"
-            else "CPUExecutionProvider"
-        )

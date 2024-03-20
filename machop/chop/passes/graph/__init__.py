@@ -16,6 +16,7 @@ from .analysis import (
     add_pruning_metadata_analysis_pass,
     add_natural_sparsity_metadata_analysis_pass,
     hook_inspection_analysis_pass,
+    runtime_analysis_pass,
 )
 from .transforms import (
     prune_transform_pass,
@@ -42,7 +43,6 @@ from .transforms.tensorrt import (
     tensorrt_engine_interface_pass,
     tensorrt_calibrate_transform_pass,
     tensorrt_fine_tune_transform_pass,
-    runtime_analysis_pass,
     tensorrt_fake_quantize_transform_pass
 )
 

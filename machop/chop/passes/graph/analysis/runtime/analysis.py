@@ -16,19 +16,15 @@ import tensorrt as trt
 import onnxruntime as ort
 from cuda import cudart
 import json
-import datetime
+from datetime import datetime
 from pathlib import Path
 
 
 def runtime_analysis_pass(model, pass_args=None):
     analysis = RuntimeAnalysis(model, pass_args)
     results = analysis.evaluate()
+    analysis.store(results)
 
-    results_path = analysis._prepare_save_path(method='analysis', suffix='json')
-
-    with open(results_path, 'w') as json_file:
-        json.dump(results, json_file, indent=4)
-    
     return model, results
 
 class RuntimeAnalysis():
@@ -49,6 +45,7 @@ class RuntimeAnalysis():
                 # Check if model is mase graph
                 self.model = model.model
                 self.model_name = self.config['model']
+                self.model_type = 'mase_graph'
             
             case PosixPath() as path:
                 match path.suffix:
@@ -69,7 +66,7 @@ class RuntimeAnalysis():
                         
                     case '.onnx':
                         # Load the exported ONNX model into an ONNXRuntime inference session
-                        self.model = ort.InferenceSession(path, providers=[config['execution_provider']])
+                        self.model = ort.InferenceSession(path, providers=[self._get_execution_provider()])
                         self.model_name = f"{self.config['model']}-onnx"
                         self.model_type = 'onnx'
                     case _:
@@ -79,10 +76,26 @@ class RuntimeAnalysis():
                 # If model is neither MaseGraph nor PosixPath
                 raise Exception("Model must be a MaseGraph or a PosixPath to a trt file. Have you run the quantization pass?")
 
-    def prepare_save_path(method: str, suffix: str):
+    def store(self, results):
+        # Save the results in a JSON file
+        save_path = self._prepare_save_path(self.model_type, "json")
+        with open(save_path, "w") as f:
+            json.dump(results, f, indent=4)
+        self.logger.info(f"Runtime analysis results saved to {save_path}")
+    
+    def _get_execution_provider(self):
+        EP_list = ["CUDAExecutionProvider", "CPUExecutionProvider"]
+
+        return (
+            "CUDAExecutionProvider"
+            if self.config["accelerator"] == "cuda"
+            else "CPUExecutionProvider"
+        )
+
+    def _prepare_save_path(self, method: str, suffix: str):
         """Creates and returns a save path for the model."""
         root = Path(__file__).resolve().parents[7]
-        current_date = datetime.now().strftime("%Y_%m_%d")
+        current_date = datetime.now().strftime("%Y-%m-%d")
         save_dir = root / f"mase_output/tensorrt/quantization/{method}" / current_date
         save_dir.mkdir(parents=True, exist_ok=True)
 
