@@ -3,7 +3,7 @@ import torch
 from pathlib import PosixPath
 import tensorrt as trt
 from chop.ir import MaseGraph
-from .utils import PowerMonitor
+from .utils import PowerMonitor, get_execution_provider
 import logging 
 import os
 from tabulate import tabulate
@@ -66,7 +66,7 @@ class RuntimeAnalysis():
                         
                     case '.onnx':
                         # Load the exported ONNX model into an ONNXRuntime inference session
-                        self.model = ort.InferenceSession(path, providers=[self._get_execution_provider()])
+                        self.model = ort.InferenceSession(path, providers=[get_execution_provider(self.config)])
                         self.model_name = f"{self.config['model']}-onnx"
                         self.model_type = 'onnx'
                     case _:
@@ -82,15 +82,6 @@ class RuntimeAnalysis():
         with open(save_path, "w") as f:
             json.dump(results, f, indent=4)
         self.logger.info(f"Runtime analysis results saved to {save_path}")
-    
-    def _get_execution_provider(self):
-        EP_list = ["CUDAExecutionProvider", "CPUExecutionProvider"]
-
-        return (
-            "CUDAExecutionProvider"
-            if self.config["accelerator"] == "cuda"
-            else "CPUExecutionProvider"
-        )
 
     def _prepare_save_path(self, method: str, suffix: str):
         """Creates and returns a save path for the model."""
@@ -234,12 +225,14 @@ class RuntimeAnalysis():
 
         num_GPU_warmup_batches = self.config['num_GPU_warmup_batches']
 
-        # Instantiate metrics with the specified task type
-        if self.config['task'] == 'cls':
-            metric = torchmetrics.classification.MulticlassAccuracy(num_classes=self.num_of_classes)
-            precision_metric = torchmetrics.Precision(num_classes=self.num_of_classes, average='weighted', task='multiclass')
-            recall_metric = torchmetrics.Recall(num_classes=self.num_of_classes, average='weighted', task='multiclass')
-            f1_metric = torchmetrics.F1Score(num_classes=self.num_of_classes, average='weighted', task='multiclass')            
+        match self.config['task']:
+            case 'cls':
+                metric = torchmetrics.classification.MulticlassAccuracy(num_classes=self.num_of_classes)
+                precision_metric = torchmetrics.Precision(num_classes=self.num_of_classes, average='weighted', task='multiclass')
+                recall_metric = torchmetrics.Recall(num_classes=self.num_of_classes, average='weighted', task='multiclass')
+                f1_metric = torchmetrics.F1Score(num_classes=self.num_of_classes, average='weighted', task='multiclass')
+            case _:
+                raise Exception("Unsupported task type. Please set a supported task type in the config file.")
 
         # Initialize lists to store metrics for each configuration
         recorded_accs = []
