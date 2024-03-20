@@ -22,7 +22,7 @@ class Quantizer:
         # pre-process the model adding further optimizations
         shape_inference.quant_pre_process(str(model_path), str(prep_path), skip_symbolic_shape=False)
 
-    def quantize_dynamic(self, model_path:PosixPath, prep_path:PosixPath, quantized_model_path:PosixPath):
+    def quantize_dynamic(self, model_path:PosixPath, quantized_model_path:PosixPath):
         """Quantize the model using dynamic quantization."""
         self.logger.info("Quantizing model using dynamic quantization...")
         

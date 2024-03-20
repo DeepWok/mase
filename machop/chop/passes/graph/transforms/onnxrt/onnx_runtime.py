@@ -106,19 +106,20 @@ class ONNXRuntime:
             # Pre-process the model adding further optimizations and store to prep_path
             prep_path = self._prepare_save_path("pre_processed")
             quantizer.pre_process(model_path, prep_path)
+            quant_models = {}
             for quant_type in quant_types:
                 match quant_type:
                     case 'static':
                         quantized_path = self._prepare_save_path("static_quantized")
                         quantizer.quantize_static(prep_path, quantized_path)
-                        return {'onnx_static_quantized_path': quantized_path}
+                        quant_models['onnx_static_quantized_path'] = quantized_path
                     case 'dynamic':
                         quantized_path = self._prepare_save_path("dynamic_quantized")
                         quantizer.quantize_dynamic(prep_path, quantized_path)
-                        return {'onnx_dynamic_quantized_path': quantized_path}
+                        quant_models['onnx_dynamic_quantized_path'] = quantized_path
                     case _:
                         raise Exception(f"Invalid quantization type: {quant_type}")
-        return {}
+        return quant_models
 
     def load_onnx(self, onnx_model_path):
         """Load .onnx model"""

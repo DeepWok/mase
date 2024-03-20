@@ -219,7 +219,7 @@ class RuntimeAnalysis():
 
     def infer_onnx_cpu(self, ort_inference_session, input_data):
         # Convert PyTorch tensor to numpy array for ONNX Runtime
-        input_data_np = input_data.cpu().numpy()
+        input_data_np = input_data.numpy()
 
         # Start timing CPU operations
         start_time = time.time()
@@ -242,12 +242,14 @@ class RuntimeAnalysis():
         return preds_tensor, latency
     
     def infer_onnx_cuda(self, ort_inference_session, input_data):
+        input_data_np = input_data.numpy()
+
         # Create CUDA events for timing GPU operations
         start = torch.cuda.Event(enable_timing=True)
         end = torch.cuda.Event(enable_timing=True)
 
         start.record()
-        output_data = ort_inference_session.run(None, {'input': input_data.numpy()})
+        output_data = ort_inference_session.run(None, {'input': input_data_np})
         end.record()
         
         # Synchronize to ensure all GPU operations are finished
@@ -314,9 +316,9 @@ class RuntimeAnalysis():
             # ONNX Inference
             elif isinstance(self.model, ort.InferenceSession):
                 if self.config['accelerator'] == 'cpu':
-                    preds, latency = self.infer_onnx_cpu(self.model, xs.cpu())
+                    preds, latency = self.infer_onnx_cpu(self.model, xs)
                 elif self.config['accelerator'] == 'cuda':
-                    preds, latency = self.infer_onnx_cuda(self.model, xs.cuda)
+                    preds, latency = self.infer_onnx_cuda(self.model, xs)
                 else:
                     raise Exception(f"ONNX inference is not support by device {self.config['accelerator']}.")
             
@@ -385,7 +387,7 @@ class RuntimeAnalysis():
         ]
 
         # Formatting the table with tabulate
-        formatted_metrics = tabulate(metrics, headers=['Metric', 'Value'], tablefmt="pretty", floatfmt=".5g")
+        formatted_metrics = tabulate(metrics, headers=['Metric (Per Batch)', 'Value'], tablefmt="pretty", floatfmt=".5g")
 
         # Print result summary
         self.logger.info(f"\nResults {self.model_name}:\n" + formatted_metrics)
