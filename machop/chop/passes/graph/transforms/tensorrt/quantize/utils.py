@@ -370,10 +370,11 @@ class PowerMonitor(threading.Thread):
         self.running = False  # Stop the monitoring loop
 
 
-def prepare_save_path(method: str, suffix: str):
+def prepare_save_path(config, method: str, suffix: str):
     """Creates and returns a save path for the model."""
     root = Path(__file__).resolve().parents[7]
-    current_date = datetime.now().strftime("%Y_%m_%d")
+    current_date = datetime.now().strftime("%Y-%m-%d")
+    model_dir = f'{config["model"]}_{config["task"]}_{config["dataset"]}_{current_date}'
     save_dir = root / f"mase_output/tensorrt/quantization/{method}" / current_date
     save_dir.mkdir(parents=True, exist_ok=True)
 

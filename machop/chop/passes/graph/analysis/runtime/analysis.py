@@ -18,7 +18,7 @@ from cuda import cudart
 import json
 from datetime import datetime
 from pathlib import Path
-
+import time
 
 def runtime_analysis_pass(model, pass_args=None):
     analysis = RuntimeAnalysis(model, pass_args)
@@ -87,7 +87,8 @@ class RuntimeAnalysis():
         """Creates and returns a save path for the model."""
         root = Path(__file__).resolve().parents[7]
         current_date = datetime.now().strftime("%Y-%m-%d")
-        save_dir = root / f"mase_output/tensorrt/quantization/{method}" / current_date
+        model_dir = f'{self.config["model"]}_{self.config["task"]}_{self.config["dataset"]}_{current_date}'
+        save_dir = root / f"mase_output/tensorrt/quantization/{model_dir}/{method}"
         save_dir.mkdir(parents=True, exist_ok=True)
 
         existing_versions = len(os.listdir(save_dir))
@@ -126,7 +127,27 @@ class RuntimeAnalysis():
         io_info_str = "\n".join(io_info_lines)
         self.logger.info(f"\nTensorRT Engine Input/Output Information:\n{io_info_str}")
 
-    def infer_mg(self, model, input_data):
+    def infer_mg_cpu(self, model, input_data):
+        # Ensure model and input data are on CPU
+        input_data = input_data.cpu()
+        model = model.cpu()
+
+        # Start timing CPU operations
+        start_time = time.time()
+
+        # INFERENCE!
+        preds = model(input_data)
+
+        # End timing CPU operations
+        end_time = time.time()
+
+        # Calculate latency
+        latency = (end_time - start_time) * 1000.0  # Convert from seconds to milliseconds
+
+        # Return the predictions
+        return preds.detach(), latency
+
+    def infer_mg_cuda(self, model, input_data):
         # send model and input data to GPU for inference
         input_data = input_data.cuda()
         model = model.cuda()
@@ -138,7 +159,6 @@ class RuntimeAnalysis():
         # INFERENCE!
         start.record()
         preds = model(input_data)
-        
         end.record()
 
         # Synchronize to ensure all GPU operations are finished
@@ -150,9 +170,9 @@ class RuntimeAnalysis():
         # return the prediction back to the CPU
         return preds.detach().cpu(), latency
 
-    def infer_trt(self, trt_context, input_data):
+    def infer_trt_cuda(self, trt_context, input_data):
         bufferH = []
-        bufferH.append(np.ascontiguousarray(input_data))
+        bufferH.append(np.ascontiguousarray(input_data.cuda()))
         for i in range(self.n_Input, self.num_io):
             bufferH.append(np.empty(self.context.get_tensor_shape(self.lTensorName[i]), dtype=trt.nptype(self.engine.get_tensor_dtype(self.lTensorName[i]))))
         bufferD = []
@@ -196,8 +216,32 @@ class RuntimeAnalysis():
         preds_tensor = torch.tensor(output_data, device='cpu', dtype=torch.float32)
 
         return preds_tensor, latency
+
+    def infer_onnx_cpu(self, ort_inference_session, input_data):
+        # Convert PyTorch tensor to numpy array for ONNX Runtime
+        input_data_np = input_data.cpu().numpy()
+
+        # Start timing CPU operations
+        start_time = time.time()
+
+        # Run inference using ONNX Runtime
+        output_data = ort_inference_session.run(None, {'input': input_data_np})
+
+        # End timing CPU operations
+        end_time = time.time()
+
+        # Calculate latency in milliseconds
+        latency = (end_time - start_time) * 1000.0  # Convert from seconds to milliseconds
+
+        # Flatten output if it consists of only one item
+        output_data = output_data[0] if len(output_data) == 1 else output_data
+
+        # Convert the raw scores from numpy array back to PyTorch tensor
+        preds_tensor = torch.from_numpy(output_data).float()  # Ensure tensor is on CPU and in float32 format
+
+        return preds_tensor, latency
     
-    def infer_onnx(self, ort_inference_session, input_data):
+    def infer_onnx_cuda(self, ort_inference_session, input_data):
         # Create CUDA events for timing GPU operations
         start = torch.cuda.Event(enable_timing=True)
         end = torch.cuda.Event(enable_timing=True)
@@ -263,15 +307,22 @@ class RuntimeAnalysis():
 
             # TRT Inference
             if isinstance(self.model, trt.IExecutionContext):
-                preds, latency = self.infer_trt(self.model, xs)
+                if self.config['accelerator'] != 'cuda':
+                    raise Exception("TensorRT inference is only supported on CUDA devices.")
+                preds, latency = self.infer_trt_cuda(self.model, xs)
 
             # ONNX Inference
             elif isinstance(self.model, ort.InferenceSession):
-                preds, latency = self.infer_onnx(self.model, xs)
-                
+                if self.config['accelerator'] == 'cpu':
+                    preds, latency = self.infer_onnx_cpu(self.model, xs.cpu())
+                elif self.config['accelerator'] == 'cuda':
+                    preds, latency = self.infer_onnx_cuda(self.model, xs.cuda)
+                else:
+                    raise Exception(f"ONNX inference is not support by device {self.config['accelerator']}.")
+            
             # MaseGraph Inference
             else:
-                preds, latency = self.infer_mg(self.model, xs)  # Run model prediction
+                preds, latency = self.infer_mg_cuda(self.model, xs)  # Run model prediction
             
             # Stop the power monitor and calculate average power
             power_monitor.stop()

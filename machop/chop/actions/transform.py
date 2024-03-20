@@ -140,10 +140,11 @@ def transform(
                 )
                 ori_graph = deepcopy_mase_graph(graph)
                 pass_config['task'] = task
-                pass_config["batch_size"] = config["batch_size"]
                 pass_config["data_module"] = data_module
                 pass_config["accelerator"] = accelerator.type
+                pass_config["batch_size"] = config["batch_size"]
                 pass_config["model"] = config["model"]
+                pass_config["dataset"] = config["dataset"]
 
                 if accelerator.type == "cuda":
                     # TODO this seems innefective - known issue - https://github.com/NVIDIA/TensorRT/issues/2468
@@ -151,14 +152,32 @@ def transform(
 
                 graph, runtime_meta = PASSES["onnxruntime"](graph, pass_args=pass_config)
 
-                # Perform runtime analysis on original and new graph
+                # Perform runtime analysis on original graph
+                logger.info("Performing runtime analysis on original graph...")
                 _, _ = PASSES["runtime_analysis"](
                         ori_graph, pass_args=pass_config
                     )
                 
+                # Perform runtime analysis on opmitized graph
+                logger.info("Performing runtime analysis on optimized graph...")
                 _, _ = PASSES["runtime_analysis"](
-                        runtime_meta["trt_engine_path"], pass_args=pass_config
-                    )
+                    runtime_meta["onnx_path"], pass_args=pass_config
+                )
+
+                # Pefrom runtime analysis on quantized forms if appropriate
+                quant_types = pass_config['default']['config']['quantize_types']
+                for quant_type in quant_types:
+                    match quant_type:
+                        case "static":
+                            logger.info("Performing runtime analysis on static quantized graph...")
+                            _, _ = PASSES["runtime_analysis"](
+                                runtime_meta["onnx_static_quantized_path"], pass_args=pass_config
+                            )
+                        case "dynamic":
+                            logger.info("Performing runtime analysis on dynamic quantized graph...")
+                            _, _ = PASSES["runtime_analysis"](
+                                runtime_meta["onnx_dynamic_quantized_path"], pass_args=pass_config
+                            )
 
             case "runtime_analysis":
                 # Run inference on graph for comparision

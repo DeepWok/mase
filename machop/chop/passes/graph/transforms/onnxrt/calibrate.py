@@ -1,6 +1,5 @@
 import onnxruntime
 from onnxruntime.quantization import CalibrationDataReader
-import torch
 
 class StaticCalibrationDataReader(CalibrationDataReader):
     def __init__(self, data_loader, input_name):
@@ -21,6 +20,4 @@ class StaticCalibrationDataReader(CalibrationDataReader):
 
     def rewind(self):
         self.enum_data = iter(self.data_loader)
-
-
     

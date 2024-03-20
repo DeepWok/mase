@@ -1,0 +1,19 @@
+# basics
+model = "jsc-toy"
+dataset = "jsc"
+task = "cls"
+
+max_epochs = 10
+batch_size = 256
+accelerator = "cpu"
+learning_rate = 1e3
+
+[passes.onnxruntime.default.config]
+quantize = true
+quantize_types = ['static', 'dynamic']
+precision = 'int8'
+
+[passes.runtime_analysis]
+num_batches = 500
+num_GPU_warmup_batches = 5
+test = true

@@ -90,7 +90,7 @@ class FineTuning:
 
         t_max = int(len(self.config["data_module"].train_dataloader()) * epochs)
 
-        ckpt_save_path = prepare_save_path(method="ckpts/fine_tuning", suffix="ckpt")
+        ckpt_save_path = prepare_save_path(self.config, method="ckpts/fine_tuning", suffix="ckpt")
 
         scheduler_args = {"t_max": t_max, "eta_min": eta_min}
 

@@ -1,9 +1,10 @@
 
 
 def get_execution_provider(config):
-    EP_list = ["CUDAExecutionProvider", "CPUExecutionProvider"]
-    return (
-        "CUDAExecutionProvider"
-        if config["accelerator"] == "cuda"
-        else "CPUExecutionProvider"
-    )
+    match config["accelerator"]:
+        case "cuda":
+            return "CUDAExecutionProvider"
+        case "cpu":
+            return "CPUExecutionProvider"
+        case _:
+            raise Exception("Unsupported accelerator. Please set a supported accelerator in the config file.")
