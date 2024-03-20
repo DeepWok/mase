@@ -163,26 +163,21 @@ class BatchNorm2dTB(Testbench):
         exp_out = self.model(inputs)
         self.output_monitor.load_monitor(exp_out)
 
-@cocotb.test()
-async def basic(dut):
-    tb = BatchNorm2dTB(dut)
-    tb.output_monitor.ready.value = 1
-    tb.setup_test(batches=100)
-    await Timer(100, 'us')
-    tb.assert_all_monitors_empty()
-
 
 def integer_quantizer_list(x: list, width: int, frac_width: int) -> list:
     t = torch.tensor(x)
     return integer_quantizer(t, width, frac_width).numpy().tolist()
 
+
 def integer_quantizer_list_hw(x: list, width: int, frac_width: int) -> list:
     t = torch.tensor(x)
     return integer_quantizer_for_hw(t, width, frac_width).numpy().tolist()
 
+
 def write_float_mem(x: dict, filepath: Path) -> None:
     with open(filepath, "wb") as f:
         pickle.dump(x, f)
+
 
 def gen_mem_files(mem_id, width, frac_width, channels, affine=False):
     # Make the directories
@@ -246,6 +241,58 @@ def gen_mem_files(mem_id, width, frac_width, channels, affine=False):
     write_float_mem(arr_mem, arr_mem_path)
 
     return scale_mem_path, shift_mem_path
+
+
+@cocotb.test()
+async def basic(dut):
+    tb = BatchNorm2dTB(dut)
+    tb.output_monitor.ready.value = 1
+    tb.setup_test(batches=2)
+    await Timer(100, 'us')
+    tb.assert_all_monitors_empty()
+
+
+@cocotb.test()
+async def stream(dut):
+    tb = BatchNorm2dTB(dut)
+    await tb.reset()
+    tb.output_monitor.ready.value = 1
+    tb.setup_test(batches=100)
+    await Timer(200, 'us')
+    assert tb.output_monitor.exp_queue.empty()
+
+
+@cocotb.test()
+async def backpressure(dut):
+    tb = BatchNorm2dTB(dut)
+    await tb.reset()
+    cocotb.start_soon(bit_driver(dut.out_ready, dut.clk, 0.5))
+    tb.setup_test(batches=100)
+    await Timer(200, 'us')
+    assert tb.output_monitor.exp_queue.empty()
+
+
+@cocotb.test()
+async def valid_toggle(dut):
+    tb = BatchNorm2dTB(dut)
+    await tb.reset()
+    tb.output_monitor.ready.value = 1
+    tb.in_driver.set_valid_prob(0.5)
+    tb.setup_test(batches=100)
+    await Timer(200, 'us')
+    assert tb.output_monitor.exp_queue.empty()
+
+
+@cocotb.test()
+async def valid_backpressure(dut):
+    tb = BatchNorm2dTB(dut)
+    await tb.reset()
+    tb.in_driver.set_valid_prob(0.5)
+    cocotb.start_soon(bit_driver(dut.out_ready, dut.clk, 0.5))
+    tb.setup_test(batches=100)
+
+    await Timer(200, 'us')
+    assert tb.output_monitor.exp_queue.empty()
 
 
 if __name__ == "__main__":

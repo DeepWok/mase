@@ -9,6 +9,7 @@ module channel_selection #(
 ) (
     input  logic                 clk,
     input  logic                 rst,
+    input  logic                 inc,
     output logic[OUT_WIDTH-1:0]  channel
 );
 
@@ -20,10 +21,13 @@ generate
     end else begin
         logic[STATE_WIDTH-1:0] state;
 
-        always_ff @(posedge clk, posedge rst) begin
-            if(rst) state <= 0;
-            else if(state >= MAX_STATE) state <= 0;
-            else state <= state + 1;
+        always_ff @(posedge clk) begin
+            if (rst) begin
+                state <= 0;
+            end else if (inc) begin
+                if (state >= MAX_STATE) state <= 0;
+                else state <= state + 1;
+            end
         end
 
         assign channel = state[STATE_WIDTH-1:STATE_WIDTH-OUT_WIDTH];
