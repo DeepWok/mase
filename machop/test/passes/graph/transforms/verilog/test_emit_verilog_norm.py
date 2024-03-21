@@ -68,18 +68,18 @@ def _fix_quantize_step(node, config={}, parallelism=[1, 1, 2, 2]):
 def gen_batchnorm_luts(mem_id, mem_dir, n, model, config):
     scale_mem_path = mem_dir / f"batchnorm_scale_lut{mem_id}.mem"
     shift_mem_path = mem_dir / f"batchnorm_shift_lut{mem_id}.mem"
-    
+
     module = get_module_by_name(model, n.name)
-    
+
     mean_f = module.running_mean
     var_f = module.running_var
-    
+
     scale_lut = torch.tensor([1 / sqrt(variance) for variance in var_f])
     shift_lut = torch.tensor([-mu / sqrt(variance) for mu, variance in zip(mean_f, var_f)])
-    
+
     scale_lut = integer_quantizer_for_hw(scale_lut, config["data_in_width"], config["data_in_frac_width"]).numpy().tolist()
     shift_lut = integer_quantizer_for_hw(shift_lut, config["data_in_width"], config["data_in_frac_width"]).numpy().tolist()
-    
+
     write_memb(scale_mem_path, scale_lut, config["data_in_width"])
     write_memb(shift_mem_path, shift_lut, config["data_in_width"])
 
@@ -108,7 +108,9 @@ def add_norm_metadata_gen_lut_analysis_pass(mg, config={}):
         mase_op = get_mase_op(n)
         args = n.meta["mase"]["common"]["args"]
         if mase_op == "batch_norm2d":
-            scale_mem_path, shift_mem_path = gen_batchnorm_luts(mem_id, mem_dir, n, mg.model, config)
+            scale_mem_path, shift_mem_path = gen_batchnorm_luts(
+                mem_id, mem_dir, n, mg.model, config
+            )
             args["SCALE_LUT_MEMFILE"] = str(scale_mem_path)
             args["SHIFT_LUT_MEMFILE"] = str(shift_mem_path)
             args["NORM_TYPE"] = "BATCH_NORM"
@@ -200,9 +202,9 @@ if __name__ == "__main__":
     shape = [10, 4, 8, 8]
 
     normalizations = [
-         nn.BatchNorm2d(
-             num_features=shape[1],
-         ),
+        nn.BatchNorm2d(
+            num_features=shape[1],
+        ),
         #nn.LayerNorm(
         #    normalized_shape=shape[1:],
         #    elementwise_affine=False,

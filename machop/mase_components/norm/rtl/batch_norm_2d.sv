@@ -2,7 +2,6 @@
 Module      : batch_norm_2d
 Description : This module implements 2D batch normalisation.
               https://arxiv.org/abs/1502.03167
-
 */
 
 `timescale 1ns/1ps

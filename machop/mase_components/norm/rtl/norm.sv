@@ -22,7 +22,7 @@ module norm #(
     // batch (3), channel (2), dim1 (1), dim0 (0)
 
     // PRECISION:
-    // width (1), frac_width (0)
+    // width (0), frac_width (1)
 
     parameter DATA_IN_0_PRECISION_0         = -1,
     parameter DATA_IN_0_PRECISION_1         = -1,
