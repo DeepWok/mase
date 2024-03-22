@@ -54,7 +54,7 @@ precision = 'int8'
 fine_tune = true
 epochs = 10
 
-[passes.runtime_analysis]
+[passes.tensorrt.runtime_analysis]
 num_batches = 500
 num_GPU_warmup_batches = 5
 test = true

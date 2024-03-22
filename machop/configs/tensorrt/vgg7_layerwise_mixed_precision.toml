@@ -39,7 +39,7 @@ precision = 'int8'
 [passes.tensorrt.feature_layers_3.config]
 precision = 'int8'
 
-[passes.runtime_analysis]
+[passes.tensorrt.runtime_analysis]
 num_batches = 500
 num_GPU_warmup_batches = 5
 test = true
