@@ -145,7 +145,18 @@ class MixedPrecisionEnv(gym.Env):
         self.episode_len = 0
         self.episode_max_len = episode_max_len
 
+        self.seed()
 
+    def seed(self, seed=None):
+        if seed is None or seed < 0 or seed >= 2**32:
+            seed = np.random.randint(0, 2**32)
+        
+        self.rng, seed = gym.utils.seeding.np_random(seed)
+        np.random.seed(seed)
+        torch.manual_seed(seed)
+        
+        return [seed]
+    
     def _define_observation_space(self):
         """Defines the observation space based on the search space."""
         self.observation_space = Dict({

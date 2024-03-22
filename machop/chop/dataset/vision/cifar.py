@@ -42,7 +42,6 @@ class Cifar10Mase(datasets.CIFAR10):
             targets.extend([i] * self.subset_size_per_class)
         
         data = np.concatenate(data, axis=0)
-        print(data.shape)
         return data, targets
 
 
