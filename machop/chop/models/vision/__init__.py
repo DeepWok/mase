@@ -44,7 +44,8 @@ from .resnet import (
 )
 from .wideresnet import wideresnet28_cifar
 
-from .vgg_cifar import get_vgg7
+from .vgg_cifar import get_vgg7, get_vgg_tiny
+
 from .repvgg import (
     get_repvgg_a0,
     get_repvgg_a1,
@@ -370,6 +371,12 @@ VISION_MODELS = {
         "get_model_fn_image_classification": get_vgg7,
         "info": MaseModelInfo(
             "vgg7", model_source="vision_others", task_type="vision", image_classification=True, is_fx_traceable=True
+        )
+    },
+     "vgg_tiny": {
+        "get_model_fn_image_classification": get_vgg_tiny,
+        "info": MaseModelInfo(
+            "vgg_tiny", model_source="vision_others", task_type="vision", image_classification=True, is_fx_traceable=True
         )
     }
 }

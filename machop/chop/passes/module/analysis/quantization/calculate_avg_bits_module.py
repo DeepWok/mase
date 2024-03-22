@@ -31,6 +31,11 @@ def calculate_avg_bits_module_analysis_pass(
         if isinstance(m, torch.nn.Linear) and hasattr(m, "config"):
             weights_size += m.in_features * m.out_features
             weight_bits += m.in_features * m.out_features * m.config["weight_width"]
+            
+        if isinstance(m, torch.nn.Conv2d) and hasattr(m, "config"):
+            weights_size += m.in_channels * m.out_channels* m.kernel_size[0]* m.kernel_size[1]
+            weight_bits += m.in_channels * m.out_channels * m.kernel_size[0]* m.kernel_size[1]* m.config["weight_width"]
+
 
     if weight_bits == 0:
         logger.warning(

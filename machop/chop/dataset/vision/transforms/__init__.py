@@ -15,7 +15,7 @@ def get_vision_dataset_transform(name: str, train: bool, model_name: str):
     match name.lower():
         case "mnist":
             return get_mnist_transform(train, model_name)
-        case "cifar10":
+        case "cifar10" | "cifar10_subset":
             return get_cifar10_transform(train, model_name)
         case "cifar100":
             return get_cifar100_transform(train, model_name)

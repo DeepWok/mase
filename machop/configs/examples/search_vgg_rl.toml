@@ -1,6 +1,6 @@
 # basics
-model = "vgg7"
-dataset = "cifar10"
+model = "vgg_tiny"
+dataset = "cifar10_subset"
 task = "cls"
  
 max_epochs = 5512
@@ -10,7 +10,7 @@ accelerator = "gpu"
 project = "vgg7"
 seed = 42
 log_every_n_steps = 5
-load_name = "../../drive/MyDrive/test-accu-0.9332.ckpt"
+load_name = "TinyVGG-epoch=32-val_acc=0.67.ckpt"
 load_type = "pl"
  
 [search.search_space]
