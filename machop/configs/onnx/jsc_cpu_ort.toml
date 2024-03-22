@@ -8,7 +8,7 @@ batch_size = 256
 accelerator = "cpu"
 learning_rate = 1e-3
 
-[passes.runtime_analysis]
+[passes.onnxruntime.runtime_analysis]
 num_batches = 500
 num_GPU_warmup_batches = 5
 test = true
