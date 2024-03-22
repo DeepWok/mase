@@ -11,7 +11,6 @@ batch_size = 256
 
 
 [passes.tensorrt]
-by = "name"
 num_calibration_batches = 10
 post_calibration_analysis = true
 
@@ -41,10 +40,11 @@ name = ["NA"]
 
 [search.search_space.seed.seq_blocks_2.config]
 # if search.search_space.setup.by = "name", this seed will be used to quantize the mase graph node with name "seq_blocks_2"
-name = ["integer"]
+# name = ["integer"]
 precision = ['int8', 'fp16']
-calibration_method = ['percentile','entropy','mse','max']
-percentiles = [99.0, 99.5, 99.9] # only used if calibration_method='percentile'
+calibrators = ['percentile','entropy','mse','max']
+percentile = [99.0, 99.5, 99.9] # only used if calibration_method='percentile'
+# num_calibration_batches = 10
 
 [search.strategy]
 name = "optuna"
