@@ -68,7 +68,8 @@ module batch_norm_2d #(
     assign increment_count = in_valid && in_ready;
 
     channel_selection #(
-        .NUM_CHANNELS(NUM_CHANNELS)
+        .NUM_CHANNELS(NUM_CHANNELS),
+        .NUM_SPATIAL_BLOCKS(DEPTH_DIM0 * DEPTH_DIM1)
     ) channel_selection_inst (
         .clk(clk),
         .rst(rst),
