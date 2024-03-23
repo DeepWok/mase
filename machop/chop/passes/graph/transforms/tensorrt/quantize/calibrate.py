@@ -13,7 +13,7 @@ from pytorch_quantization import quant_modules
 from pytorch_quantization.tensor_quant import QuantDescriptor
 from torch.autograd import Variable
 import torch
-from .utils import FakeQuantizer, check_for_value_in_dict
+from .utils import FakeQuantizer, check_for_value_in_dict, get_calibrator_dataloader
 
 
 def tensorrt_fake_quantize_transform_pass(graph, pass_args=None):
@@ -105,13 +105,12 @@ class Calibrator:
                     else:
                         module.disable()
 
-            batches = self.config.get("num_calibration_batches", 10)
-            dataloader = self.config["data_module"].train_dataloader()
+            # Create a calibrator_dataloader that is a subset of the training dataloader
+            # Number of batches defined in the config by num_calibration_batches
+            calibrator_dataloader = get_calibrator_dataloader(self.config['data_module'].train_dataloader, self.config.get('num_calibration_batches', 200))        
 
-            for i, (xTrain, _) in enumerate(dataloader):
+            for i, (xTrain, _) in enumerate(calibrator_dataloader):
                 graph.model(Variable(xTrain).cuda())
-                if i >= batches:
-                    break
 
             # Turn off calibration tool
             for _, module in graph.model.named_modules():
