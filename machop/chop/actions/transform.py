@@ -139,8 +139,12 @@ def transform(
                     graph, pass_args={"fn": to_numpy_if_tensor}
                 )
                 ori_graph = deepcopy_mase_graph(graph)
-                pass_config['task'] = task
                 pass_config["data_module"] = data_module
+
+                # crop the train dataloader to behave as the calibrated dataloader
+                pass_config["data_module"].train_dataloader 
+
+                pass_config['task'] = task
                 pass_config["accelerator"] = accelerator.type
                 pass_config["batch_size"] = config["batch_size"]
                 pass_config["model"] = config["model"]
@@ -192,33 +196,6 @@ def transform(
                                 _, _ = PASSES["runtime_analysis"](
                                     runtime_meta["onnx_dynamic_quantized_path"], pass_args=pass_config
                                 )
-
-            # case "runtime_analysis":
-            #     # Run inference on graph for comparision
-            #     logger.info("Performing runtime analysis on original graph...")
-            #     _, _ = PASSES["runtime_analysis"](config["onnx_path"], pass_args=pass_config)
-
-            #     # Run inference on runtime graphs if set in config
-            #     if 'tensorrt_engine_path' in config:
-            #         logger.info("Performing runtime analysis on TensorRT graph...")
-            #         _, _ = PASSES["runtime_analysis"](config["tensorrt_engine_path"], pass_args=pass_config)
-            #     if 'onnx_path' in config:
-            #         # Perform runtime analysis on opmitized graph
-            #         logger.info("Performing runtime analysis on optimized graph...")
-            #         _, _ = PASSES["runtime_analysis"](
-            #             config["onnx_path"], pass_args=pass_config
-            #         )
-
-            #     if 'onnx_static_quantized_path' in config:
-            #         logger.info("Performing runtime analysis on static quantized graph...")
-            #         _, _ = PASSES["runtime_analysis"](
-            #             config["onnx_static_quantized_path"], pass_args=pass_config
-            #         )
-            #     if 'onnx_dynamic_quantized_path' in config:
-            #         logger.info("Performing runtime analysis on dynamic quantized graph...")
-            #         _, _ = PASSES["runtime_analysis"](
-            #             config["onnx_dynamic_quantized_path"], pass_args=pass_config
-            #         )
 
             case "quantize":
                 pass_save_dir = save_dir / "quantize"

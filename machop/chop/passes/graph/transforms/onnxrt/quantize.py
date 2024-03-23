@@ -4,7 +4,8 @@ from pathlib import PosixPath
 from onnxruntime.quantization import quantize_dynamic, quantize_static, QuantType, shape_inference
 from onnxruntime import InferenceSession, SessionOptions
 from .calibrate import StaticCalibrationDataReader
-from .utils import get_execution_provider
+from .utils import get_execution_provider, get_calibrator_dataloader
+from torch.utils.data import DataLoader, Subset
 
 QUANT_MAP = {
     "int8": QuantType.QInt8,
@@ -69,7 +70,12 @@ class Quantizer:
         else:
             ort_session = InferenceSession(model_path, providers=[get_execution_provider(self.config)])
 
-        data_reader = StaticCalibrationDataReader(self.config['data_module'].train_dataloader(), input_name=ort_session.get_inputs()[0].name)
+        # Create a calibrator_dataloader that is a subset of the training dataloader
+        # Number of batches defined in the config by num_calibration_batches
+        calibrator_dataloader = get_calibrator_dataloader(self.config['data_module'].train_dataloader, self.config.get('num_calibration_batches', 200))
+
+        data_reader = StaticCalibrationDataReader(calibrator_dataloader, input_name=ort_session.get_inputs()[0].name)
+        
         quantized_model = quantize_static(
             model_path,
             quantized_model_path,
