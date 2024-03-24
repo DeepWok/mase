@@ -1,200 +1,231 @@
-import torch
-import pytest
+#!/usr/bin/env python3
+
+# This script tests the fixed point linear
+import os, logging
+
 import cocotb
+from cocotb.log import SimLog
+from cocotb.triggers import *
 
-import torch.nn as nn
-from torch.autograd.function import InplaceFunction
-from cocotb.triggers import Timer
+from mase_cocotb.testbench import Testbench
+from mase_cocotb.interfaces.streaming import StreamDriver, StreamMonitor
+from mase_cocotb.z_qlayers import quantize_to_int
 from mase_cocotb.runner import mase_runner
+from mase_cocotb.utils import bit_driver, sign_extend_t
+from functools import partial
 
-pytestmark = pytest.mark.simulator_required
+from chop.passes.graph.transforms.quantize.quantized_modules import LinearInteger
+from chop.passes.graph.transforms.quantize.quantizers import integer_quantizer
 
+import torch
 
-# snippets
-class MyClamp(InplaceFunction):
-    @staticmethod
-    def forward(ctx, input, min, max):
-        return input.clamp(min=min, max=max)
-
-    @staticmethod
-    def backward(ctx, grad_output):
-        grad_input = grad_output.clone()
-        return grad_input
+logger = logging.getLogger("testbench")
+logger.setLevel(logging.DEBUG)
 
 
-class MyRound(InplaceFunction):
-    @staticmethod
-    def forward(ctx, input):
-        ctx.input = input
-        return input.round()
-
-    @staticmethod
-    def backward(ctx, grad_output):
-        grad_input = grad_output.clone()
-        return grad_input
-
-
-# wrap through module to make it a function
-my_clamp = MyClamp.apply
-my_round = MyRound.apply
-
-# fixed-point quantization with a bias
-def quantize(x, bits, bias):  # bits = 32
-    """Do linear quantization to input according to a scale and number of bits"""
-    thresh = 2 ** (bits - 1)
-    scale = 2**bias
-    return my_clamp(my_round(x.mul(scale)), -thresh, thresh - 1).div(scale)
-
-
-class VerificationCase:
-    weight_dim = [6,6]
+class LinearTB(Testbench):
     bitwidth = 8
     reduced_bitwidth = 4
-    bias = 1
-    num = 6
     high_slots = 3
     threshold = 6
 
-    def __init__(self, samples=2, test = False):
-        self.samples = samples
-        self.inputs = []
-        self.weights = []
+    def __init__(self, dut, in_features=4, out_features=4) -> None:
+        super().__init__(dut, dut.clk, dut.rst)
 
-        for _ in range(samples):
-            self.inputs.append(self.single_run())
-            self.weights.append(self.generate_weights())
+        self.in_features = in_features
+        self.out_features = out_features
 
-        self.outputs = self.LLMint_model(samples)
+        if not hasattr(self, "log"):
+            self.log = SimLog("%s" % (type(self).__qualname__))
+
+        self.data_in_driver = StreamDriver(
+            dut.clk, dut.data_in, dut.data_in_valid, dut.data_in_ready
+        )
+
+        self.weight_driver = StreamDriver(
+            dut.clk, dut.weights, dut.weight_valid, dut.weight_ready
+        )
+
+        self.quantizer = partial(
+            integer_quantizer, width=self.bitwidth, frac_width=0
+        )
+
+        self.reduced_quantizer = partial(
+            integer_quantizer, width=self.reduced_bitwidth, frac_width=0
+        )
+
+        # For latter if we tackle bias
+        '''
+        if int(dut.HAS_BIAS) == 1:
+            self.bias_driver = StreamDriver(
+                dut.clk, dut.bias, dut.bias_valid, dut.bias_ready
+            )
+        '''
+
+        self.data_out_monitor = StreamMonitor(
+            dut.clk,
+            dut.data_out,
+            dut.data_out_valid,
+            dut.data_out_ready,
+            check=False,
+        )
+
+        self.linear_low = LinearInteger(
+            in_features=in_features,
+            out_features=out_features,
+            bias=False,
+            config={
+                "data_in_width": self.bitwidth,
+                "data_in_frac_width": 0,
+                "weight_width": self.bitwidth,
+                "weight_frac_width": 0,
+            },
+        )
+
+        self.linear_high = LinearInteger(
+            in_features=in_features,
+            out_features=out_features,
+            bias=False,
+            config={
+                "data_in_width": self.reduced_bitwidth,
+                "data_in_frac_width": 0,
+                "weight_width": self.reduced_bitwidth,
+                "weight_frac_width": 0,
+            },
+        )
+
+        # Not sure about this line
+        self.linear_low.weight = self.reduced_quantizer(self.linear_high.weight)
 
 
-    def single_run(self):
-        x = torch.rand(self.num)
-        r1, r2 = 4, -4
-        x = (r1 - r2) * x + r2
-        x = quantize(x, self.bitwidth, self.bias)
-
-        return x
+    def gather(self, x_low, x_high):
+        return x_low + x_high
     
     def scatter(self, x):
-        
         high_mat = []
         low_mat = []
         count_high = 0
-                    
-        for k in reversed(x) :
-            if abs(k) > self.threshold and count_high < self.high_slots :
+
+        for k in reversed(x.tolist()):
+            if abs(k) > self.threshold and count_high < self.high_slots:
                 high_mat.append(k)
                 low_mat.append(0)
                 count_high += 1
-            else :
+            else:
                 high_mat.append(0)
                 low_mat.append(k)
 
         low_mat.reverse()
         high_mat.reverse()
 
-        return low_mat, high_mat
+        return torch.tensor(low_mat), torch.tensor(high_mat)
     
+    def LLMint_model(self, inputs):
+        x_low_i, x_high_i = self.scatter(inputs)
 
-    def gather(self, x_low, x_high):
-        return [x_low[k] + x_high[k] for k in range(len(x_high))]
-    
-    # LLMint model is the combination of scatter, 2 linear layers and gather
-    # Scatter separates the input into high and low precision values based on a threshold (padded with zeros)
-    # Low precision values are quantized and passed through a low precision linear layer
-    # High precision values are passed through a high precision linear layer
-    # The outputs of the two linear layers are then combined using gather
-    def LLMint_model(self, samples):
-        outputs = []
+        x_low_o = self.linear_low(x_low_i)
+        x_high_o = self.linear_high(x_high_i)
 
-        for i in range(samples):
-            x = self.get_dut_input(i)
-            w = self.get_dut_weights(i)
-            x_low, x_high = self.scatter(x)
-
-            x_low = torch.tensor(x_low)
-            x_high = torch.tensor(x_high)
-            w = torch.tensor(w)
-
-            x_low_q = quantize(x_low, self.reduced_bitwidth, self.bias)
-            x_high_q = quantize(x_high, self.bitwidth, self.bias)
-            w = quantize(w, self.bitwidth, self.bias)
-            w_q = quantize(w, self.reduced_bitwidth, self.bias)
-
-            linear_low = nn.Linear(self.weight_dim[0], self.weight_dim[1], bias=False)
-            linear_high = nn.Linear(self.weight_dim[0], self.weight_dim[1], bias=False)
-            linear_low.weight.data = w_q
-            linear_high.weight.data = w
-
-            x_low_o = linear_low(x_low_q)
-            x_high_o = linear_high(x_high_q)
-
-            outputs.append(self.gather(x_low_o, x_high_o))
+        outputs = self.gather(x_low_o, x_high_o)
 
         return outputs
 
+    def generate_inputs(self):
+        return torch.randn((1, self.in_features))
 
-    def generate_weights(self):
-      # Generate random tensor for mat_a and mat_b
-      weights = torch.rand(self.weight_dim[0], self.weight_dim[1])
-      
-      # normalization and quantization
-      r1, r2 = 4, -4
-      weights = (r1 - r2) * weights + r2
-      weights = quantize(weights, self.bitwidth, self.bias)
-    
-      return weights
-    
+    def preprocess_tensor(self, tensor, quantizer, parallelism):
+        tensor = quantizer(tensor).int()
+        logger.info(f"Tensor in int format: {tensor}")
+        tensor = tensor.reshape(-1, parallelism).tolist()
+        return tensor
 
-    def get_dut_parameters(self):
-        return {
-            "ORIGINAL_PRECISION": self.bitwidth,
-            "REDUCED_PRECISION": self.reduced_bitwidth,
-            "TENSOR_SIZE_DIM": self.num,
-            "WEIGHT_DIM_0": self.weight_dim[0],
-            "WEIGHT_DIM_1": self.weight_dim[1],
-            "HIGH_SLOTS": self.high_slots,
-            "THRESHOLD": self.threshold,
-        }
+    async def run_test(self):
+        await self.reset()
+        logger.info(f"Reset finished")
+        self.data_out_monitor.ready.value = 1
 
-    def get_dut_input(self, i):
-        inputs = self.inputs[i]
-        shifted_integers = (inputs * (2**self.bias)).int()
-        return shifted_integers.numpy().tolist()
-    
-    def get_dut_weights(self, i):
-        weights = self.weights[i]
-        shifted_integers = (weights * (2**self.bias)).int()
-        return shifted_integers.numpy().tolist()
+        inputs = self.generate_inputs()
+        exp_out = self.LLMint_model(inputs)
 
-    def get_dut_output(self, i):
-        return self.outputs[i]
+        # Load the inputs driver
+        logger.info(f"Processing inputs")
+        inputs = self.preprocess_tensor(
+            inputs,
+            self.quantizer,
+            int(self.dut.DATA_IN_0_PARALLELISM_DIM_0),
+        )
+        self.data_in_driver.load_driver(inputs)
 
+        # Load the weights driver
+        logger.info(f"Processing weights")
+        weights = self.preprocess_tensor(
+            self.weights,
+            self.quantizer,
+            int(self.dut.WEIGHT_PARALLELISM_DIM_0) * int(self.dut.DATA_IN_0_PARALLELISM_DIM_0),
+        )
+        reduced_weights = self.preprocess_tensor(
+            self.q_weights,
+            self.reduced_quantizer,
+            int(self.dut.WEIGHT_PARALLELISM_DIM_0) * int(self.dut.DATA_IN_0_PARALLELISM_DIM_0),
+        )
+        # Combine the weights. weights and reduced_weights are lists of tensors. We need to combine them into 
+        # a single list of augmented tensors
+        combined_weights = [weights[i] + reduced_weights[i] for i in range(len(weights))]
+        self.weight_driver.load_driver(combined_weights)
+
+        # Load the output monitor
+        logger.info(f"Processing outputs: {exp_out}")
+        # To do: need to quantize output to a different precision
+        outs = self.preprocess_tensor(
+            exp_out,
+            self.quantizer,
+            int(self.dut.DATA_OUT_0_PARALLELISM_DIM_0),
+        )
+        self.data_out_monitor.load_monitor(outs)
+
+        await Timer(1000, units="us")
+        assert self.data_out_monitor.exp_queue.empty()
 
 
 @cocotb.test()
-async def test_LLMint(dut):
-    """Test LLmint module"""
-    test_case = VerificationCase(samples=1)
+async def test_6x6(dut):
+    tb = LinearTB(dut, in_features=6, out_features=6)
+    await tb.run_test()
 
-    # set inputs outputs
-    for i in range(test_case.samples):
-        x = test_case.get_dut_input(i)
-        weights = test_case.get_dut_weights(i)
-        y = test_case.get_dut_output(i)
-
-        print('x :', x)
-        print('y :', y)
-
-        dut.data_in.value = x
-        dut.weights.value = weights
-        await Timer(2, units="ns")
-
-        for j, output in enumerate(dut.data_out.value):
-            assert output.signed_integer == y[j]
-            print('output:', output.signed_integer)
 
 if __name__ == "__main__":
-    tb = VerificationCase()
-    mase_runner(module_param_list=[tb.get_dut_parameters()])
-    # mase_runner()
+    mase_runner(
+        trace=True,
+        module_param_list=[
+            {
+                "DATA_IN_0_TENSOR_SIZE_DIM_0": 20,
+                "DATA_IN_0_PARALLELISM_DIM_0": 2,
+                "WEIGHT_TENSOR_SIZE_DIM_0": 20,
+                "WEIGHT_TENSOR_SIZE_DIM_1": 20,
+                "WEIGHT_PARALLELISM_DIM_0": 20,
+                "DATA_OUT_0_TENSOR_SIZE_DIM_0": 20,
+                "DATA_OUT_0_PARALLELISM_DIM_0": 20,
+                "BIAS_TENSOR_SIZE_DIM_0": 20,
+            },
+            {
+                "DATA_IN_0_TENSOR_SIZE_DIM_0": 20,
+                "DATA_IN_0_PARALLELISM_DIM_0": 4,
+                "WEIGHT_TENSOR_SIZE_DIM_0": 20,
+                "WEIGHT_TENSOR_SIZE_DIM_1": 20,
+                "WEIGHT_PARALLELISM_DIM_0": 20,
+                "DATA_OUT_0_TENSOR_SIZE_DIM_0": 20,
+                "DATA_OUT_0_PARALLELISM_DIM_0": 20,
+                "BIAS_TENSOR_SIZE_DIM_0": 20,
+            },
+            {
+                "DATA_IN_0_TENSOR_SIZE_DIM_0": 20,
+                "DATA_IN_0_PARALLELISM_DIM_0": 5,
+                "WEIGHT_TENSOR_SIZE_DIM_0": 20,
+                "WEIGHT_TENSOR_SIZE_DIM_1": 20,
+                "WEIGHT_PARALLELISM_DIM_0": 20,
+                "DATA_OUT_0_TENSOR_SIZE_DIM_0": 20,
+                "DATA_OUT_0_PARALLELISM_DIM_0": 20,
+                "BIAS_TENSOR_SIZE_DIM_0": 20,
+            },
+        ],
+    )

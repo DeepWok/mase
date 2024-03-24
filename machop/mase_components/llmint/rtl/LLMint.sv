@@ -12,8 +12,15 @@ module LLMint #(
 ) (
     input clk,
     input rst,
+    input logic data_in_valid;
+    output logic data_in_ready;
+    input logic weight_valid;
+    output logic weight_ready;
+    input logic data_out_ready;
+    output logic data_out_valid;
     input logic signed [ORIGINAL_PRECISION-1:0] data_in[TENSOR_SIZE_DIM-1:0],
-    input logic signed [ORIGINAL_PRECISION-1:0] weights[WEIGHT_DIM_0 * WEIGHT_DIM_1-1:0],
+    // We combine weights and quantized weights into a single array
+    input logic signed [ORIGINAL_PRECISION-1:0] weights[2 * WEIGHT_DIM_0 * WEIGHT_DIM_1-1:0],
     output logic signed [ORIGINAL_PRECISION-1:0] data_out[TENSOR_SIZE_DIM-1:0]
 );
 
@@ -79,13 +86,17 @@ module LLMint #(
         .rst(rst),
 
         .data_in_0(input_linear_low_precision),
-        .data_in_0_valid(data_in_0_valid_low),
+        .data_in_0_valid(data_in_valid),
+        .data_in_0_ready(data_in_ready),
 
         .weight(quantized_weights),
-        .weight_valid(weight_valid_low),
+        .weight_valid(weight_valid),
+        .weight_ready(weight_ready),
 
         .data_out_0(output_linear_low_precision),
-        .data_out_0_ready(data_out_0_ready_low)       
+        .data_out_0_ready(data_out_ready),
+        .data_out_0_valid(data_out_valid),
+
     );
 
     fixed_linear#(
@@ -107,21 +118,17 @@ module LLMint #(
         .rst(rst),
 
         .data_in_0(high_precision_masked),
-        .data_in_0_valid(data_in_0_valid_high),
+        .data_in_0_valid(data_in_valid),
+        .data_in_0_ready(data_in_ready),
 
         .weight(weights),
-        .weight_valid(weight_valid_high),
+        .weight_valid(weight_valid),
+        .weight_ready(weight_ready),
 
         .data_out_0(output_linear_high_precision),
-        .data_out_0_ready(data_out_0_ready_high)
+        .data_out_0_ready(data_out_ready),
+        .data_out_0_valid(data_out_valid),
     );
-
-    assign data_in_0_valid_low = 1'b1;
-    assign weight_valid_low = 1'b1;
-    assign data_out_0_ready_low = 1'b1;
-    assign data_in_0_valid_high = 1'b1;
-    assign weight_valid_high = 1'b1;
-    assign data_out_0_ready_high = 1'b1;
 
     for (genvar i = 0; i < TENSOR_SIZE_DIM; i = i + 1) begin
         assign high_for_gather[i] = output_linear_high_precision[i] >>> (2 * ORIGINAL_PRECISION + $clog2(TENSOR_SIZE_DIM) - ORIGINAL_PRECISION);
