@@ -118,7 +118,6 @@ class NormTB(Testbench):
             self.quantized_model = RMSNormInteger(
                 normalized_shape=[self.total_channels, self.TOTAL_DIM1, self.TOTAL_DIM0],
                 elementwise_affine=False,
-                bias=False,
                 config={
                     "data_in_width": self.IN_WIDTH,
                     "data_in_frac_width": self.IN_FRAC_WIDTH,

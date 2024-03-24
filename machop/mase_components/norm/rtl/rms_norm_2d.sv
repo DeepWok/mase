@@ -21,22 +21,28 @@ module rms_norm_2d #(
     // Data widths
     parameter IN_WIDTH            = 8,
     parameter IN_FRAC_WIDTH       = 2,
+    parameter SCALE_WIDTH         = 8,
+    parameter SCALE_FRAC_WIDTH    = 2,
     parameter OUT_WIDTH           = 8,
     parameter OUT_FRAC_WIDTH      = 4,
 
     // Inverse Sqrt LUT
     parameter ISQRT_LUT_MEMFILE   = ""
 ) (
-    input  logic                 clk,
-    input  logic                 rst,
+    input  logic                   clk,
+    input  logic                   rst,
 
-    input  logic [IN_WIDTH-1:0]  in_data  [COMPUTE_DIM0*COMPUTE_DIM1-1:0],
-    input  logic                 in_valid,
-    output logic                 in_ready,
+    input  logic [IN_WIDTH-1:0]    in_data  [COMPUTE_DIM0*COMPUTE_DIM1-1:0],
+    input  logic                   in_valid,
+    output logic                   in_ready,
 
-    output logic [OUT_WIDTH-1:0] out_data [COMPUTE_DIM0*COMPUTE_DIM1-1:0],
-    output logic                 out_valid,
-    input  logic                 out_ready
+    input  logic [SCALE_WIDTH-1:0] weight_data  [COMPUTE_DIM0*COMPUTE_DIM1-1:0],
+    input  logic                   weight_valid,
+    output logic                   weight_ready,
+
+    output logic [OUT_WIDTH-1:0]   out_data [COMPUTE_DIM0*COMPUTE_DIM1-1:0],
+    output logic                   out_valid,
+    input  logic                   out_ready
 );
 
 // Derived params
@@ -62,6 +68,9 @@ localparam ISQRT_FRAC_WIDTH = ACC_FRAC_WIDTH;
 
 localparam NORM_WIDTH = ISQRT_WIDTH + IN_WIDTH;
 localparam NORM_FRAC_WIDTH = ISQRT_FRAC_WIDTH + IN_FRAC_WIDTH;
+
+localparam AFFINE_WIDTH = NORM_WIDTH + SCALE_WIDTH;
+localparam AFFINE_FRAC_WIDTH = NORM_FRAC_WIDTH + SCALE_FRAC_WIDTH;
 
 // Split2 for input to FIFO & Compute Pipeline
 logic compute_in_valid, compute_in_ready;
@@ -254,14 +263,27 @@ join2 fifo_inv_sqrt_join2 (
 // Batched Multiply & Output Casting
 logic [NORM_WIDTH-1:0] norm_in_data [COMPUTE_DIM0*COMPUTE_DIM1-1:0];
 logic [NORM_WIDTH-1:0] norm_out_data [COMPUTE_DIM0*COMPUTE_DIM1-1:0];
-logic [OUT_WIDTH-1:0] norm_round_out [COMPUTE_DIM0*COMPUTE_DIM1-1:0];
+logic [AFFINE_WIDTH-1:0] affine_in_data [COMPUTE_DIM0*COMPUTE_DIM1-1:0];
+logic [AFFINE_WIDTH-1:0] affine_out_data [COMPUTE_DIM0*COMPUTE_DIM1-1:0];
+
+logic [OUT_WIDTH-1:0] affine_round_out [COMPUTE_DIM0*COMPUTE_DIM1-1:0];
 logic [OUT_WIDTH-1:0] output_reg_data [COMPUTE_DIM0*COMPUTE_DIM1-1:0];
+
+logic affine_in_valid;
+logic norm_out_ready;
+
+join2 weight_norm_affine_join (
+    .data_in_valid({weight_valid, mult_cast[0].norm_out_valid}),
+    .data_in_ready({weight_ready, norm_out_ready}),
+    .data_out_valid(affine_in_valid),
+    .data_out_ready(mult_cast[0].affine_in_ready)
+);
 
 for (genvar i = 0; i < COMPUTE_DIM0*COMPUTE_DIM1; i++) begin : mult_cast
 
     // Multiplication with inverse sqrt
     logic norm_in_ready;
-    logic norm_out_valid, norm_out_ready;
+    logic norm_out_valid;
 
     assign norm_in_data[i] = $signed({1'b0, inv_sqrt_buff_data}) * $signed(fifo_data[i]);
 
@@ -278,19 +300,40 @@ for (genvar i = 0; i < COMPUTE_DIM0*COMPUTE_DIM1; i++) begin : mult_cast
         .data_out_ready(norm_out_ready)
     );
 
+    // Here is where the join2 between norm_out & weight input is placed
+
+    // Affine Scale Transform
+    logic affine_in_ready;
+    logic affine_out_valid, affine_out_ready;
+
+    assign affine_in_data[i] = $signed(norm_out_data[i]) * $signed(weight_data[i]);
+
+    skid_buffer #(
+        .DATA_WIDTH(AFFINE_WIDTH)
+    ) affine_reg (
+        .clk(clk),
+        .rst(rst),
+        .data_in(affine_in_data[i]),
+        .data_in_valid(affine_in_valid),
+        .data_in_ready(affine_in_ready),
+        .data_out(affine_out_data[i]),
+        .data_out_valid(affine_out_valid),
+        .data_out_ready(affine_out_ready)
+    );
+
     // Output Rounding Stage
     logic output_reg_valid;
 
     fixed_signed_cast #(
-        .IN_WIDTH(NORM_WIDTH),
-        .IN_FRAC_WIDTH(NORM_FRAC_WIDTH),
+        .IN_WIDTH(AFFINE_WIDTH),
+        .IN_FRAC_WIDTH(AFFINE_FRAC_WIDTH),
         .OUT_WIDTH(OUT_WIDTH),
         .OUT_FRAC_WIDTH(OUT_FRAC_WIDTH),
         .SYMMETRIC(0),
         .ROUND_FLOOR(1)
     ) output_cast (
-        .in_data(norm_out_data[i]),
-        .out_data(norm_round_out[i])
+        .in_data(affine_out_data[i]),
+        .out_data(affine_round_out[i])
     );
 
     skid_buffer #(
@@ -298,9 +341,9 @@ for (genvar i = 0; i < COMPUTE_DIM0*COMPUTE_DIM1; i++) begin : mult_cast
     ) output_reg (
         .clk(clk),
         .rst(rst),
-        .data_in(norm_round_out[i]),
-        .data_in_valid(norm_out_valid),
-        .data_in_ready(norm_out_ready),
+        .data_in(affine_round_out[i]),
+        .data_in_valid(affine_out_valid),
+        .data_in_ready(affine_out_ready),
         .data_out(output_reg_data[i]),
         .data_out_valid(output_reg_valid),
         .data_out_ready(output_reg_ready)

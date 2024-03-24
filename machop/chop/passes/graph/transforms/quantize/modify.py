@@ -217,7 +217,6 @@ def create_new_module(
             normalized_shape=original_module.normalized_shape,
             eps=original_module.eps,
             elementwise_affine=original_module.elementwise_affine,
-            bias=original_module.bias,
             config=config,
         )
     else:
