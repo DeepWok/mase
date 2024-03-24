@@ -119,8 +119,7 @@ class RMSNorm2dTB(Testbench):
 
         # Set weight tensor into model
         weights_t = self.reconstruct_tensor(weights, self.SCALE_WIDTH, self.SCALE_FRAC_WIDTH)
-        expanded_weights = torch.repeat_interleave(weights_t, repeats=num, dim=0)
-        self.quantized_model.weight = nn.Parameter(expanded_weights)
+        self.quantized_model.weight = nn.Parameter(weights_t)
 
         # Weights are same across all batches, however we need to repeat them to the driver
         repeated_weights = list()

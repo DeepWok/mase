@@ -3,11 +3,11 @@ Module      : norm
 Description : Module which unifies all types of normalization.
 
               Currently supports:
-              - Batch Norm
-              - Layer Norm
-              - Instance Norm
-              - Group Norm
-              - RMS Norm
+              - Batch Norm (no affine)
+              - Layer Norm (no affine)
+              - Instance Norm (no affine)
+              - Group Norm (no affine)
+              - RMS Norm (optional affine)
 */
 
 `timescale 1ns/1ps
@@ -34,6 +34,13 @@ module norm #(
     parameter DATA_IN_0_PARALLELISM_DIM_2   = -1,
     parameter DATA_IN_0_TENSOR_SIZE_DIM_3   = -1,
     parameter DATA_IN_0_PARALLELISM_DIM_3   = -1,
+
+    parameter WEIGHT_PRECISION_0            = -1,
+    parameter WEIGHT_PRECISION_1            = -1,
+    parameter WEIGHT_TENSOR_SIZE_DIM_0      = -1,
+    parameter WEIGHT_TENSOR_SIZE_DIM_1      = -1,
+    parameter WEIGHT_PARALLELISM_DIM_0      = -1,
+    parameter WEIGHT_PARALLELISM_DIM_1      = -1,
 
     parameter DATA_OUT_0_PRECISION_0        = -1,
     parameter DATA_OUT_0_PRECISION_1        = -1,
@@ -67,6 +74,8 @@ module norm #(
     // Data widths
     localparam IN_WIDTH            = DATA_IN_0_PRECISION_0,
     localparam IN_FRAC_WIDTH       = DATA_IN_0_PRECISION_1,
+    localparam WEIGHT_WIDTH        = WEIGHT_PRECISION_0,
+    localparam WEIGHT_FRAC_WIDTH   = WEIGHT_PRECISION_1,
     localparam OUT_WIDTH           = DATA_OUT_0_PRECISION_0,
     localparam OUT_FRAC_WIDTH      = DATA_OUT_0_PRECISION_1,
 
@@ -74,24 +83,28 @@ module norm #(
     parameter ISQRT_LUT_MEMFILE    = "",
 
     // Batch norm lut files
-    parameter SCALE_LUT_MEMFILE   = "",
-    parameter SHIFT_LUT_MEMFILE   = "",
-    parameter MEM_ID              = 0,
+    parameter SCALE_LUT_MEMFILE    = "",
+    parameter SHIFT_LUT_MEMFILE    = "",
+    parameter MEM_ID               = 0,
 
     // Norm select
     // BATCH_NORM, LAYER_NORM, INSTANCE_NORM, GROUP_NORM, RMS_NORM
     parameter NORM_TYPE            = "LAYER_NORM"
 ) (
-    input  logic                 clk,
-    input  logic                 rst,
+    input  logic                    clk,
+    input  logic                    rst,
 
-    input  logic [IN_WIDTH-1:0]  data_in_0  [COMPUTE_DIM0*COMPUTE_DIM1-1:0],
-    input  logic                 data_in_0_valid,
-    output logic                 data_in_0_ready,
+    input  logic [IN_WIDTH-1:0]     data_in_0 [COMPUTE_DIM0*COMPUTE_DIM1-1:0],
+    input  logic                    data_in_0_valid,
+    output logic                    data_in_0_ready,
 
-    output logic [OUT_WIDTH-1:0] data_out_0 [COMPUTE_DIM0*COMPUTE_DIM1-1:0],
-    output logic                 data_out_0_valid,
-    input  logic                 data_out_0_ready
+    input  logic [WEIGHT_WIDTH-1:0] weight [COMPUTE_DIM0*COMPUTE_DIM1-1:0],
+    input  logic                    weight_valid,
+    output logic                    weight_ready,
+
+    output logic [OUT_WIDTH-1:0]    data_out_0 [COMPUTE_DIM0*COMPUTE_DIM1-1:0],
+    output logic                    data_out_0_valid,
+    input  logic                    data_out_0_ready
 );
 
 localparam BATCH_NORM = (NORM_TYPE == "BATCH_NORM");
@@ -127,6 +140,9 @@ if (BATCH_NORM) begin : batch_norm
         .out_ready(data_out_0_ready)
     );
 
+    // Weights not implemented
+    assign weight_ready = '0;
+
 end else if (LAYER_NORM || INSTANCE_NORM || GROUP_NORM) begin : group_norm
 
     localparam NORM_CHANNELS = INSTANCE_NORM ? 1 : CHANNELS;
@@ -153,6 +169,9 @@ end else if (LAYER_NORM || INSTANCE_NORM || GROUP_NORM) begin : group_norm
         .out_ready(data_out_0_ready)
     );
 
+    // Weights not implemented
+    assign weight_ready = '0;
+
 end else if (RMS_NORM) begin : rms_norm
 
     rms_norm_2d #(
@@ -172,6 +191,9 @@ end else if (RMS_NORM) begin : rms_norm
         .in_data(data_in_0),
         .in_valid(data_in_0_valid),
         .in_ready(data_in_0_ready),
+        .weight_data(weight),
+        .weight_valid(weight_valid),
+        .weight_ready(weight_ready),
         .out_data(data_out_0),
         .out_valid(data_out_0_valid),
         .out_ready(data_out_0_ready)

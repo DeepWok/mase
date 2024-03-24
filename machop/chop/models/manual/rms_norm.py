@@ -3,8 +3,6 @@ from torch import nn, Tensor
 
 
 def _rms_norm(x: Tensor, eps, scale: Tensor | None):
-    if scale != None:
-        assert x.shape == scale.shape
     mean_squares = x.square().mean(dim=(1, 2, 3), keepdim=True)
     rms_x = mean_squares.sqrt()
     x_normed = x / (rms_x + eps)

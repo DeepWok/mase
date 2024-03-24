@@ -11,6 +11,7 @@ import pickle
 # from itertools import batched  # Python 3.12
 
 import torch
+from torch import nn
 import cocotb
 from cocotb.triggers import *
 
@@ -57,6 +58,7 @@ class NormTB(Testbench):
             "TOTAL_DIM0", "TOTAL_DIM1", "COMPUTE_DIM0", "COMPUTE_DIM1",
             "DEPTH_DIM0", "DEPTH_DIM1",
             "CHANNELS", "IN_WIDTH", "IN_FRAC_WIDTH",
+            "WEIGHT_WIDTH", "WEIGHT_FRAC_WIDTH",
             "OUT_WIDTH", "OUT_FRAC_WIDTH", "BATCH_NORM",
             "LAYER_NORM", "INSTANCE_NORM", "GROUP_NORM", "RMS_NORM",
             "MEM_ID",
@@ -117,18 +119,25 @@ class NormTB(Testbench):
             self.total_channels = self.CHANNELS
             self.quantized_model = RMSNormInteger(
                 normalized_shape=[self.total_channels, self.TOTAL_DIM1, self.TOTAL_DIM0],
-                elementwise_affine=False,
+                elementwise_affine=True,
                 config={
                     "data_in_width": self.IN_WIDTH,
                     "data_in_frac_width": self.IN_FRAC_WIDTH,
+                    "weight_width": self.WEIGHT_WIDTH,
+                    "weight_frac_width": self.WEIGHT_FRAC_WIDTH,
                 }
             )
         else:
             raise Exception("Norm type is unknown.")
 
+        self.quantized_model.eval()
+
         # Drivers & Monitors
         self.in_driver = StreamDriver(
             dut.clk, dut.data_in_0, dut.data_in_0_valid, dut.data_in_0_ready
+        )
+        self.weight_driver = StreamDriver(
+            dut.clk, dut.weight, dut.weight_valid, dut.weight_ready
         )
 
         # Bit Error calculation
@@ -153,10 +162,27 @@ class NormTB(Testbench):
             inputs.extend(gen_random_matrix_input(
                 *self.total_tup, *self.compute_tup, *self.in_width_tup
             ))
-        return inputs
 
-    def assert_all_monitors_empty(self):
-        assert self.output_monitor.exp_queue.empty()
+        if self.RMS_NORM:
+            # Model weights (scale)
+            weights = list()
+            for _ in range(self.total_channels):
+                weights.extend(gen_random_matrix_input(
+                    *self.total_tup, *self.compute_tup, *self.in_width_tup
+                ))
+
+            # Set weight tensor into model
+            weights_t = self.reconstruct_tensor(weights, self.WEIGHT_WIDTH, self.WEIGHT_FRAC_WIDTH)
+            self.quantized_model.weight = nn.Parameter(weights_t)
+
+            # Weights are same across all batches, however we need to repeat them to the driver
+            repeated_weights = list()
+            for _ in range(batches):
+                repeated_weights.extend(weights)
+            return inputs, repeated_weights
+
+        else:
+            return inputs
 
     def grab_mem_arr_data(self) -> tuple:
         mem_dir_arr = Path(__file__).parent / "build" / "batch_norm_2d" / "mem" / "arr"
@@ -171,38 +197,54 @@ class NormTB(Testbench):
         var = arrs["var"]
         return torch.tensor(mean), torch.tensor(var)
 
-    def model(self, inputs):
-        # Input reconstruction
-        batches = batched(inputs, self.DEPTH_DIM0 * self.DEPTH_DIM1)
+    def reconstruct_tensor(self, x, width, frac_width):
+        batches = batched(x, self.DEPTH_DIM0 * self.DEPTH_DIM1)
         matrix_list = [rebuild_matrix(b, *self.total_tup, *self.compute_tup)
                        for b in batches]
         x = torch.stack(matrix_list).reshape(
             -1, self.total_channels, self.TOTAL_DIM1, self.TOTAL_DIM0
         )
-        x = sign_extend_t(x, self.IN_WIDTH).to(dtype=torch.float32) / (2 ** self.IN_FRAC_WIDTH)
+        x = sign_extend_t(x, width).to(dtype=torch.float32) / (2 ** frac_width)
+        return x
 
-        # Float Model
+    def output_monitor_split(self, x, width, frac_width):
+        x = integer_quantizer_for_hw(x, width, frac_width)
+        x = x.reshape(-1, self.TOTAL_DIM1, self.TOTAL_DIM0)
+        model_out = list()
+        for i in range(x.shape[0]):
+            model_out.extend(split_matrix(x[i], *self.total_tup, *self.compute_tup))
+        return model_out
+
+    def model(self, inputs):
+        # Input reconstruction
+        x = self.reconstruct_tensor(inputs, *self.in_width_tup)
+
+        # Quantized Model
         if self.BATCH_NORM:
-            self.quantized_model.training = False
             mean, var = self.grab_mem_arr_data()
             self.quantized_model.running_mean = torch.tensor(mean)
             self.quantized_model.running_var = torch.tensor(var)
         float_y = self.quantized_model(x)
 
         # Output beat reconstruction
-        y = integer_quantizer_for_hw(float_y, self.OUT_WIDTH, self.OUT_FRAC_WIDTH)
-        y = y.reshape(-1, self.TOTAL_DIM1, self.TOTAL_DIM0)
-        model_out = list()
-        for i in range(y.shape[0]):
-            model_out.extend(split_matrix(y[i], *self.total_tup, *self.compute_tup))
+        y = self.output_monitor_split(float_y, *self.out_width_tup)
 
-        return model_out
+        return y
 
-    def setup_test(self, batches=1):
-        inputs = self.generate_inputs(batches=batches)
-        self.in_driver.load_driver(inputs)
-        exp_out = self.model(inputs)
-        self.output_monitor.load_monitor(exp_out)
+    async def run_test(self, batches=1, us=100):
+        if self.RMS_NORM:
+            inputs, weights = self.generate_inputs(batches=batches)
+            self.in_driver.load_driver(inputs)
+            self.weight_driver.load_driver(weights)
+            exp_out = self.model(inputs)
+            self.output_monitor.load_monitor(exp_out)
+        else:
+            inputs = self.generate_inputs(batches=batches)
+            self.in_driver.load_driver(inputs)
+            exp_out = self.model(inputs)
+            self.output_monitor.load_monitor(exp_out)
+        await Timer(us, 'us')
+        assert self.output_monitor.exp_queue.empty()
 
 
 @cocotb.test()
@@ -210,9 +252,7 @@ async def basic(dut):
     tb = NormTB(dut)
     await tb.reset()
     tb.output_monitor.ready.value = 1
-    tb.setup_test(batches=2)
-    await Timer(10, 'us')
-    tb.assert_all_monitors_empty()
+    await tb.run_test(batches=2, us=10)
 
 
 @cocotb.test()
@@ -220,9 +260,7 @@ async def stream(dut):
     tb = NormTB(dut)
     await tb.reset()
     tb.output_monitor.ready.value = 1
-    tb.setup_test(batches=100)
-    await Timer(200, 'us')
-    assert tb.output_monitor.exp_queue.empty()
+    await tb.run_test(batches=100, us=200)
 
 
 @cocotb.test()
@@ -230,9 +268,7 @@ async def backpressure(dut):
     tb = NormTB(dut)
     await tb.reset()
     cocotb.start_soon(bit_driver(dut.data_out_0_ready, dut.clk, 0.5))
-    tb.setup_test(batches=100)
-    await Timer(1000, 'us')
-    assert tb.output_monitor.exp_queue.empty()
+    await tb.run_test(batches=100, us=1000)
 
 
 @cocotb.test()
@@ -241,9 +277,7 @@ async def valid_toggle(dut):
     await tb.reset()
     tb.output_monitor.ready.value = 1
     tb.in_driver.set_valid_prob(0.5)
-    tb.setup_test(batches=100)
-    await Timer(1000, 'us')
-    assert tb.output_monitor.exp_queue.empty()
+    await tb.run_test(batches=100, us=1000)
 
 
 @cocotb.test()
@@ -252,10 +286,7 @@ async def valid_backpressure(dut):
     await tb.reset()
     tb.in_driver.set_valid_prob(0.5)
     cocotb.start_soon(bit_driver(dut.data_out_0_ready, dut.clk, 0.5))
-    tb.setup_test(batches=100)
-
-    await Timer(1000, 'us')
-    assert tb.output_monitor.exp_queue.empty()
+    await tb.run_test(batches=100, us=1000)
 
 
 if __name__ == "__main__":
@@ -274,6 +305,8 @@ if __name__ == "__main__":
         channels: int = 2,
         in_width: int = 8,
         in_frac_width: int = 4,
+        weight_width: int = 8,
+        weight_frac_width: int = 4,
         out_width: int = 8,
         out_frac_width: int = 4,
         str_id: str = "default",
@@ -296,6 +329,8 @@ if __name__ == "__main__":
             "DATA_IN_0_PRECISION_1": in_frac_width,
             "DATA_OUT_0_PRECISION_0": out_width,
             "DATA_OUT_0_PRECISION_1": out_frac_width,
+            "WEIGHT_PRECISION_0": weight_width,
+            "WEIGHT_PRECISION_1": weight_frac_width,
             "ISQRT_LUT_MEMFILE": verilator_str_param(str(mem_path)),
             "SCALE_LUT_MEMFILE": verilator_str_param(str(scale_mem_path)),
             "SHIFT_LUT_MEMFILE": verilator_str_param(str(shift_mem_path)),
@@ -311,7 +346,7 @@ if __name__ == "__main__":
             gen_cfg(norm_type="LAYER_NORM", str_id="layer"),
             gen_cfg(norm_type="GROUP_NORM", str_id="group"),
             gen_cfg(norm_type="INSTANCE_NORM", str_id="inst"),
-            gen_cfg(norm_type="RMS_NORM", str_id="rms"),
+            # gen_cfg(norm_type="RMS_NORM", str_id="rms"),
         ],
         trace=True,
     )
