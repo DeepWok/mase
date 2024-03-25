@@ -16,8 +16,6 @@ module fixed_hardshrink #(
     parameter DATA_OUT_0_PARALLELISM_DIM_1 = 1,
     parameter LAMBDA = 0.5, //the threshold
     parameter FX_LAMBDA = $rtoi(LAMBDA * 2**(DATA_IN_0_PRECISION_1)), //the threshold
-
-    parameter INPLACE = 0
 ) (
     /* verilator lint_off UNUSEDSIGNAL */
     input rst,
@@ -33,19 +31,15 @@ module fixed_hardshrink #(
   logic [DATA_IN_0_PRECISION_0-1:0] fx_lambda;
   logic [DATA_IN_0_PRECISION_0-1:0] cast_data [DATA_IN_0_PARALLELISM_DIM_0*DATA_IN_0_PARALLELISM_DIM_1-1:0];
 
-  for (genvar i = 0; i < DATA_IN_0_TENSOR_SIZE_DIM_0; i++) begin : ReLU
+  for (genvar i = 0; i < DATA_IN_0_PARALLELISM_DIM_0*DATA_IN_0_PARALLELISM_DIM_1; i++) begin : HardShrink
     always_comb begin
-      // negative value, put to zero
-      // fx_lambda = LAMBDA << DATA_IN_0_PRECISION_1;
       if ($signed(data_in_0[i]) < -1*FX_LAMBDA) cast_data[i] = data_in_0[i];
       else if($signed(data_in_0[i]) > FX_LAMBDA ) cast_data[i] = data_in_0[i];
       else cast_data[i] = '0;
       $display("%d", cast_data[i]);
     end
   end
-  //sw clamping:       [127, 34, 11, 0, 0, 32, 21, 0, 0, 12]
-  //hardware rounding: [103, 34, 11, 0, 0, 32, 21, 0, 0, 12]
-  //b4 rounding:       [231, 34, 11, 0, 0, 32, 21, 0, 0, 12]
+
   fixed_rounding #(
       .IN_SIZE(DATA_IN_0_PARALLELISM_DIM_0 * DATA_IN_0_PARALLELISM_DIM_1),
       .IN_WIDTH(DATA_IN_0_PRECISION_0),
