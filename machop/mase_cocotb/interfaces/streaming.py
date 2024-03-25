@@ -84,6 +84,7 @@ class ErrorThresholdStreamMonitor(StreamMonitor):
         width: int,       # Width of the number
         signed: bool,     # Signedness of number
         error_bits: int,  # Number of last bits the number can be off by
+        log_error=False,  # Keep note of all errors
         check=True,
         name=None,
     ):
@@ -92,6 +93,8 @@ class ErrorThresholdStreamMonitor(StreamMonitor):
         self.width = width
         self.signed = signed
         self.error_bits = error_bits
+        self.error_log = [] if log_error else None
+        self.log_error = log_error
         self.log.setLevel("INFO")
 
     def _check(self, got, exp):
@@ -109,6 +112,8 @@ class ErrorThresholdStreamMonitor(StreamMonitor):
                 g = sign_extend(g, self.width)
                 e = sign_extend(e, self.width)
             err = np.abs(g - e)
+            if self.log_error:
+                self.error_log.append(err)
             max_biterr = np.full_like(err, self.error_bits)
             if not (err <= max_biterr).all():
                 self.log.error(
@@ -123,6 +128,8 @@ class ErrorThresholdStreamMonitor(StreamMonitor):
                 g = sign_extend(g, self.width)
                 e = sign_extend(e, self.width)
             err = abs(g - e)
+            if self.log_error:
+                self.error_log.append(err)
             if not err <= self.error_bits:
                 self.log.error(
                     "Failed | Got: %20s Exp: %20s Err: %10s" % (g, e, err)

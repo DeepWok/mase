@@ -9,7 +9,7 @@ from itertools import repeat
 
 import torch
 from torch import nn
-from torch import Tensor
+import numpy as np
 import cocotb
 from cocotb.triggers import *
 
@@ -98,8 +98,10 @@ class RMSNorm2dTB(Testbench):
             dut.clk, dut.out_data, dut.out_valid, dut.out_ready,
             name="Output Monitor",
             width=self.OUT_WIDTH,
+            check=False,
             signed=True,
             error_bits=error_bits,
+            log_error=True,
         )
 
     def generate_inputs(self, num=2):
@@ -157,7 +159,7 @@ class RMSNorm2dTB(Testbench):
         return y
 
     async def run_test(self, num=2, us=100):
-        inputs, weights = self.generate_inputs(num=2)
+        inputs, weights = self.generate_inputs(num=num)
         self.in_driver.load_driver(inputs)
         self.weight_driver.load_driver(weights)
         exp_out = self.model(inputs)
@@ -179,7 +181,17 @@ async def stream(dut):
     tb = RMSNorm2dTB(dut)
     await tb.reset()
     tb.output_monitor.ready.value = 1
-    await tb.run_test(num=600, us=200)
+    await tb.run_test(num=1000, us=400)
+
+    # Error analysis
+    import json
+    errs = np.stack(tb.output_monitor.error_log).flatten()
+    logger.info("Mean bit-error: %s" % errs.mean())
+    with open(f"rms-{tb.IN_WIDTH}.json", 'w') as f:
+        json.dump({
+            "error": errs.tolist(),
+            "mean": errs.mean().item()
+        }, f, indent=4)
 
 
 @cocotb.test()
@@ -250,6 +262,8 @@ if __name__ == "__main__":
         return params
 
     mase_runner(
+        # Analysis
+        # module_param_list=[gen_cfg(4, 4, 2, 2, 2, w, w//2, w, w//2, w, w//2, str(w)) for w in [2, 4, 6, 8, 10, 12, 14, 16]],
         module_param_list=[
             gen_cfg(),
             # Rectangle

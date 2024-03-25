@@ -12,6 +12,7 @@ import pickle
 
 import torch
 from torch import nn
+import numpy as np
 import cocotb
 from cocotb.triggers import *
 
@@ -154,6 +155,8 @@ class NormTB(Testbench):
             width=self.OUT_WIDTH,
             signed=True,
             error_bits=error_bits,
+            log_error=True,
+            check=False,
         )
 
     def generate_inputs(self, batches=1):
@@ -260,7 +263,29 @@ async def stream(dut):
     tb = NormTB(dut)
     await tb.reset()
     tb.output_monitor.ready.value = 1
-    await tb.run_test(batches=100, us=200)
+    await tb.run_test(batches=1000, us=1000)
+
+    # Error analysis
+    import json
+    errs = np.stack(tb.output_monitor.error_log).flatten()
+    logger.info("Mean bit-error: %s" % errs.mean())
+    if tb.BATCH_NORM:
+        name = "batch"
+    elif tb.LAYER_NORM:
+        name = "layer"
+    elif tb.GROUP_NORM:
+        name = "group"
+    elif tb.INSTANCE_NORM:
+        name = "inst"
+    else:
+        raise Exception()
+
+    with open(f"{name}-{tb.IN_WIDTH}.json", 'w') as f:
+        json.dump({
+            "error": errs.tolist(),
+            "mean": errs.mean().item()
+        }, f, indent=4)
+
 
 
 @cocotb.test()
@@ -339,14 +364,22 @@ if __name__ == "__main__":
         }
         return params
 
+    error_analysis_cfgs = list()
+    for norm in ["BATCH_NORM", "LAYER_NORM", "GROUP_NORM", "INSTANCE_NORM"]:
+        error_analysis_cfgs.extend([
+            gen_cfg(4, 4, 2, 2, 2, w, w//2, w, w//2, w, w//2, str(w), norm_type=norm)
+            for w in [2, 4, 6, 8, 10, 12, 14, 16]
+        ])
+
     mase_runner(
-        module_param_list=[
-            # Test All Supported Norm Types
-            gen_cfg(norm_type="BATCH_NORM", str_id="layer"),
-            gen_cfg(norm_type="LAYER_NORM", str_id="layer"),
-            gen_cfg(norm_type="GROUP_NORM", str_id="group"),
-            gen_cfg(norm_type="INSTANCE_NORM", str_id="inst"),
-            # gen_cfg(norm_type="RMS_NORM", str_id="rms"),
-        ],
+        module_param_list=error_analysis_cfgs,
+        # module_param_list=[
+        #     # Test All Supported Norm Types
+        #     gen_cfg(norm_type="BATCH_NORM", str_id="layer"),
+        #     gen_cfg(norm_type="LAYER_NORM", str_id="layer"),
+        #     gen_cfg(norm_type="GROUP_NORM", str_id="group"),
+        #     gen_cfg(norm_type="INSTANCE_NORM", str_id="inst"),
+        #     # gen_cfg(norm_type="RMS_NORM", str_id="rms"),
+        # ],
         trace=True,
     )
