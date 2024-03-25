@@ -59,7 +59,7 @@ def sample_arch_dataset(
 
         # query metric for the current architecture hash
         accuracy = search_space.query(
-            metric=Metric.TRAIN_ACCURACY, dataset=dataset, dataset_api=dataset_api
+            metric=Metric.TEST_ACCURACY, dataset=dataset, dataset_api=dataset_api
         )
         train_time = search_space.query(
             metric=Metric.TRAIN_TIME, dataset=dataset, dataset_api=dataset_api

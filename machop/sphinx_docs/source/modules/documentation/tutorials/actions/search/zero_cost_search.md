@@ -12,15 +12,15 @@ name = "graph/zero_cost_proxy"
 # configuration settings for doing a zero cost NAS
 [search.search_space.zc]
 seed = 2
-benchmark = 'nasbench201' # the benchmark you are using, one of [nasbench101, nasbench201]
-dataset = 'cifar10' # the dataset you are using, one of [cifar10, cifar100]
+benchmark = 'nasbench201' # the benchmark you are using, one of [nasbench201]
+dataset = 'cifar10' # the dataset you are using, one of ['cifar10', 'cifar100', 'ImageNet16-120']
 calculate_proxy = false # whether to calculate the proxy from scratch or look them up from an api
-ensemble_model = 'nonlinear' # for the neural network ensemble model, either 'linear' or 'nonlinear'
-loss_fn = 'mae' # the loss function to use for the 'ensemble_model', one of [mse, mae, huber]
-optimizer = 'adam' # the optimizer to use for the 'ensemble_model', one of [adam, adamW, rmsProp]
+ensemble_model = 'nonlinear' # for the neural network ensemble model, one of ['linear', 'nonlinear']
+loss_fn = 'mae' # the loss function to use for the 'ensemble_model', one of ['mse', 'mae', 'huber']
+optimizer = 'adam' # the optimizer to use for the 'ensemble_model', one of ['adam', 'adamW', 'rmsProp']
 batch_size = 4 # the batch size to use for the 'ensemble_model'
 learning_rate = 0.02 # the learning rate for the 'ensemble_model'
-epochs = 30 # the number of epochs to train the 'ensemble_model'
+epochs = 30 # the number of epochs to train the 'ensemble_model' for
 num_archs_train = 2000 # the number of architectures to use to train 'ensemble_model'
 num_archs_test = 2000 # the number of architectures to use to test 'ensemble_model'
 zc_proxies = ['epe_nas', 'fisher', 'grad_norm', 'grasp', 'jacov', 'l2_norm', 'nwot', 'plain', 'snip', 'synflow', 'zen', 'flops', 'params'] # the zero cost proxies to evaluate
@@ -55,7 +55,7 @@ Run the following command to start the search. We search for 100 trials and save
 ```
 
 When the search is completed, you will see the best metrics printed in the terminal, along with the parameters used. 
-The 'spearman' column ranks the top 5 best metrics based on the spearman correlation, the 'kendaltau' column ranks the top 5 best metrics based on the kendaltau correlation, and the 'Global Parameters' column shows 5 parameters used in the search configuration file. 
+The 'spearman' column ranks the top 5 best metrics based on the Spearman correlation, the 'kendaltau' column ranks the top 5 best metrics based on the Kendal tau correlation, and the 'Global Parameters' column shows 5 parameters set in the search configuration file. 
 
 ```text
 |    | spearman                          | kendaltau                         | Global Parameters            |
@@ -102,10 +102,12 @@ Here is part of the `log.json`:
 
 Additionally, the metrics is saved in `mase_output/zero_cost_proxy_test/software/search_ckpts/metrics.json`.
 
-This file contains the results of each test architecture which includes the zero cost metric for each zero cost proxy, as well as the ensemble weight assigned to that archiecture when using optuna. Additionally, the file contains the Pearson and KendalTau correlation for all the single zero cost proxies, as well as the results of three ensemble methods; 
-1. the optuna ensemble
+This file contains the results of each test architecture which includes the zero cost metric for each zero cost proxy, as well as the ensemble weight assigned to that architecture when using Optuna. 
+
+Additionally, the file contains the Spearman and Kendal tau correlations for all the single zero cost proxies, as well as the results of the three ensemble methods; 
+1. Optuna ensemble
 2. linear/nonlinear neural network ensemble
-3. xgboost ensemble
+3. XGBoost ensemble
 
 Here is part of the `metrics.json`:
 
