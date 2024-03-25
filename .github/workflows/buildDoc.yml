@@ -22,7 +22,7 @@ jobs:
   software-regression-test:
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/jianyicheng/mase-docker/mase-ci-build:latest
+      image: deepwok/mase-docker:latest
     steps:
 
       # Clone the MASE repo and its submodules.
