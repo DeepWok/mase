@@ -66,7 +66,10 @@ class LinearTB(Testbench):
 
     def preprocess_tensor(self, tensor, quantizer, config, parallelism):
         tensor = quantizer(tensor)
+        print('tensor',tensor)
         tensor = (tensor * 2 ** config["frac_width"]).int()
+        print('tensor',tensor)
+
         logger.info(f"Tensor in int format: {tensor}")
         tensor = tensor.reshape(-1, parallelism).tolist()
         return tensor
@@ -99,7 +102,7 @@ class LinearTB(Testbench):
             * int(self.dut.DATA_IN_0_PARALLELISM_DIM_0),
         )
         self.weight_driver.load_driver(weights)
-
+        print('weights',weights)
         # Load the output monitor
         logger.info(f"Processing outputs: {exp_out}")
         # To do: need to quantize output to a different precision

@@ -17,6 +17,7 @@ from mase_cocotb.utils import bit_driver, sign_extend_t
 
 from chop.passes.graph.transforms.quantize.quantized_modules import LinearInteger
 from chop.passes.graph.transforms.quantize.quantizers import integer_quantizer
+import torch.nn.init as init
 
 import torch
 print(torch.__version__)
@@ -60,11 +61,11 @@ class LinearTB(Testbench):
         )
 
         self.quantizer = partial(
-            integer_quantizer, width=self.bitwidth, frac_width=3
+            integer_quantizer, width=self.bitwidth, frac_width=0
         )
 
         self.reduced_quantizer = partial(
-            integer_quantizer, width=self.reduced_bitwidth, frac_width=3
+            integer_quantizer, width=self.reduced_bitwidth, frac_width=0
         )
 
         # For latter if we tackle bias
@@ -85,7 +86,8 @@ class LinearTB(Testbench):
         )
 
         print('----------------Linear low---------------')
-
+        # self.initialize_weights(self.linear_low, mean=0.0, std=30.0)  # Adjust mean and std as needed for larger values
+        # self.initialize_weights(self.linear_high, mean=0.0, std=30.0)  # Adjust accordingly
 
 # Model
         
@@ -187,7 +189,16 @@ class LinearTB(Testbench):
         outputs = self.gather(x_low_o, x_high_o)
 
         return outputs
+    
+    def initialize_weights(self,layer, mean=0.0, std=1.0):
+        if hasattr(layer, 'weight'):
+            # For uniform distribution
+            # init.uniform_(layer.weight, a=lower_bound, b=upper_bound)
 
+            # For normal distribution with larger values
+            init.normal_(layer.weight, mean=mean, std=std)
+        if hasattr(layer, 'bias') and layer.bias is not None:
+            init.constant_(layer.bias, 0.0)
     #Ensure high does not go above maximum bitwidth
     def generate_random_numbers(self, low=-4000, high=4000):
         return torch.rand((1, self.in_features)) * (high - low) + low
@@ -197,8 +208,12 @@ class LinearTB(Testbench):
 
         # return torch.randn((1, self.in_features))
 
-    def preprocess_tensor(self, tensor, quantizer, parallelism):
+    def preprocess_tensor(self, tensor, quantizer, parallelism,multiplier = 0):
+        # print('tensor pre',tensor)
+        # tensor = tensor**multiplier
+        # tensor = (tensor * 2 ** multiplier).int()
         tensor = quantizer(tensor).int()
+        # print('input',tensor)
         logger.info(f"Tensor in int format: {tensor}")
         tensor = tensor.reshape(-1, parallelism).tolist()
         return tensor
@@ -226,31 +241,26 @@ class LinearTB(Testbench):
 
         self.data_in_driver.load_driver(inputs)
 
-        print('inputs',inputs)
 
         # Load the weights driver
         logger.info(f"Processing weights")
         weights = self.preprocess_tensor(
             self.linear_high.weight,
             self.quantizer,
-            int(self.dut.TENSOR_SIZE_DIM) * int(self.dut.TENSOR_SIZE_DIM),
+            int(self.dut.TENSOR_SIZE_DIM) * int(self.dut.TENSOR_SIZE_DIM),8
         )
-        print('self.linear_high.weight',self.linear_high.weight)  
-        # weights = [[2, 2, 2, 2,2, 2, 2, 2, 2, 2, 2,2, 2, 2,2, 2,2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,2, 2, 2, 2, 2, 2]]
 
         print('weights',weights)
         reduced_weights = self.preprocess_tensor(
             self.linear_low.weight,
             self.reduced_quantizer,
-            int(self.dut.TENSOR_SIZE_DIM) * int(self.dut.TENSOR_SIZE_DIM),
+            int(self.dut.TENSOR_SIZE_DIM) * int(self.dut.TENSOR_SIZE_DIM), 8
         )
-        # reduced_weights = [[-1, -1, -1, -1,-1, -1,-1, -1, -1, -1, -1,-1, -1, -1,-1, -1,-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,-1,-1, -1, -1, -1, -1]]
         print('reduced_weights',reduced_weights)
 
         # Combine the weights. weights and reduced_weights are lists of tensors. We need to combine them into 
         # a single list of augmented tensors
         combined_weights = [reduced_weights[i] + weights[i] for i in range(len(weights))]
-        print('combined_weights',combined_weights)
 
         self.weight_driver.load_driver(combined_weights)
 
@@ -262,7 +272,7 @@ class LinearTB(Testbench):
             self.quantizer,
             int(self.dut.TENSOR_SIZE_DIM),
         )
-        print('outs',outs)
+        print('exp outs',outs)
         self.data_out_monitor.load_monitor(outs)
 
         await Timer(400, units="ns")
