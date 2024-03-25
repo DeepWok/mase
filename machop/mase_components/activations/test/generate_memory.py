@@ -91,6 +91,30 @@ def aligned_generate_lookup(in_data_width, in_f_width, data_width: int, f_width:
     # print(iarr)
     return lut
 
+def generate_elu(in_data_width, in_f_width, data_width: int, f_width: int, alpha=1.0, type = "hex"):
+    f = nn.ELU(alpha)
+    lut = {'data_width': data_width,
+           'f_width' : f_width,
+           'in_data_width': data_width,
+           'in_f_width' : f_width,
+           'func' : f
+           }
+    # entries = 2 ** data_width
+    minval = float(-2 ** (in_data_width-in_f_width-1))
+    maxval = (2**(in_data_width-1) - 1) * 2**(-in_f_width)
+    inp_quanter = make_quantizer(in_data_width, in_f_width)
+    quanter = make_quantizer(data_width, f_width)
+    pi = float(0)
+    while pi <= maxval:
+        val = quanter(f(torch.tensor(pi))) # entry in the lookup table
+        lut[doubletofx(data_width=in_data_width, f_width=in_f_width, num=pi, type=type)] = doubletofx(data_width=data_width, f_width=f_width, num=val.item(), type=type)
+        pi += 2 ** -(in_f_width)
+    i = minval
+    while i <= -1 * 2**-(in_f_width):
+        val = quanter(f(torch.tensor(i))) # entry in the lookup table
+        lut[doubletofx(data_width=in_data_width, f_width=in_f_width, num=i, type=type)] = doubletofx(data_width=data_width, f_width=f_width, num=val.item(), type=type)
+        i+= 2 ** -(in_f_width)
+    return lut
 
 def testlookup(lut):
     d = lut['data_width']

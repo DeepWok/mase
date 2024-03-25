@@ -34,7 +34,7 @@ module fixed_HardSwish #(
   logic [DATA_IN_0_PRECISION_0-1:0] tmp_2 [DATA_IN_0_TENSOR_SIZE_DIM_0-1:0];
   logic [DATA_IN_0_PRECISION_0-1:0] tmp_3 [DATA_IN_0_TENSOR_SIZE_DIM_0-1:0];
 
-  for (genvar i = 0; i < DATA_IN_0_TENSOR_SIZE_DIM_0; i++) begin : HardSwish
+  for (genvar i = 0; i < DATA_IN_0_PARALLELISM_DIM_0*DATA_IN_0_PARALLELISM_DIM; i++) begin : HardSwish
 
     fixed_mult #(
       .IN_A_WIDTH(DATA_IN_0_PRECISION_0),
