@@ -1,7 +1,7 @@
 
 # Fixed-Point SiLU Layer
 
-The `fixed_silu` module implements the [Pytorch SiLU](https://pytorch.org/docs/stable/generated/torch.nn.SiLU.html) layer. Given the input vector $x \in \R^{m x n}$, `fixed_SiLU` returns $y \in \R^{m x n}$. 
+The `fixed_silu` module implements the [Pytorch SiLU](https://pytorch.org/docs/stable/generated/torch.nn.SiLU.html) layer. Given the input vector $x \in \R^{m x n}$, `fixed_silu` returns $y \in \R^{m x n}$. 
 
 SiLU(x) $\coloneqq$ x * $\sigma$(x) 
   
@@ -19,11 +19,8 @@ SiLU(x_3) & SiLU(x_4) \\
 
 ## Overview
 
-The `fixed_SiLU` module follows the dataflow streaming protocol and works by employing a table mapping which is used to compute the SiLU function. The table is generated during the emit verilog pass and is used to compute the SiLU function in a single cycle with input and output quantization to the desired precision. This can be instantiated using LUTs or BRAM (memory).
+The `fixed_silu` module follows the dataflow streaming protocol and works by employing a table mapping which is used to compute the SiLU function. The table is generated during the emit verilog pass and is used to compute the SiLU function in a single cycle with input and output quantization to the desired precision. This can be instantiated using LUTs or BRAM (memory).
 
-<p align="center">
-  <img src="https://raw.githubusercontent.com/DeepWok/mase/main/machop/sphinx_docs/source/imgs/SiLU/fixed_SiLU.png" alt="img">
-</p>
 
 The module has the following parameters, following the hardware metadata standard (see [here](https://deepwok.github.io/mase/modules/api/analysis/add_metadata.html#add-hardware-metadata-analysis-pass)). Besides `PRECISION_DIM_*` parameters, which dictate the numerical precision, and `TENSOR_SIZE_DIM_*`, which is directly inferred from Pytorch tensor shapes, the following parameters can be adjusted to affect hardware performance.
 
@@ -36,4 +33,4 @@ The module has the following parameters, following the hardware metadata standar
 
 ## <a name="latency_analaysis"></a> Latency Analysis
 
-The time taken to compute a SiLU layer using the `fixed_SiLU` module, $L_{SiLU}$ depends entirely on the operating frequency of the hardware. The implemented designs operate combinatorially, this will be ideal in the majority of cases due to the read only nature of the memories and lack of arithemtic logic resulting in a short critical path. The latency can be calculated as follows: $\frac{1}{f_{clk}}$ where $f_{clk}$ is the operating frequency of the hardware.
+The time taken to compute a SiLU layer using the `fixed_silu` module, $L_{SiLU}$ depends entirely on the operating frequency of the hardware. The implemented designs operate combinatorially, this will be ideal in the majority of cases due to the read only nature of the memories and lack of arithemtic logic resulting in a short critical path. The latency can be calculated as follows: $\frac{1}{f_{clk}}$ where $f_{clk}$ is the operating frequency of the hardware.
