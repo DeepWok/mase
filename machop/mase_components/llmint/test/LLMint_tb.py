@@ -30,13 +30,13 @@ class LinearTB(Testbench):
     def __init__(self, dut) -> None:
         super().__init__(dut, dut.clk, dut.rst)
 
-        self.in_features = dut.TENSOR_SIZE_DIM
-        self.out_features = dut.TENSOR_SIZE_DIM
-        self.high_slots = dut.HIGH_SLOTS
-        self.threshold = dut.THRESHOLD
-        self.bitwidth = dut.ORIGINAL_PRECISION
-        self.reduced_bitwidth = dut.REDUCED_PRECISION
-        self.weights_size = [dut.WEIGHT_DIM_0, dut.WEIGHT_DIM_1]
+        self.in_features = dut.TENSOR_SIZE_DIM.value
+        self.out_features = dut.TENSOR_SIZE_DIM.value
+        self.high_slots = dut.HIGH_SLOTS.value
+        self.threshold = dut.THRESHOLD.value
+        self.bitwidth = dut.ORIGINAL_PRECISION.value
+        self.reduced_bitwidth = dut.REDUCED_PRECISION.value
+        self.weights_size = [dut.WEIGHT_DIM_0.value, dut.WEIGHT_DIM_1.value]
 
         if not hasattr(self, "log"):
             self.log = SimLog("%s" % (type(self).__qualname__))
@@ -82,6 +82,8 @@ class LinearTB(Testbench):
                 "data_in_frac_width": 0,
                 "weight_width": self.bitwidth,
                 "weight_frac_width": 0,
+                "bias_width": self.bitwidth,
+                "bias_frac_width": 0,
             },
         )
 
@@ -94,6 +96,8 @@ class LinearTB(Testbench):
                 "data_in_frac_width": 0,
                 "weight_width": self.reduced_bitwidth,
                 "weight_frac_width": 0,
+                "bias_width": self.reduced_bitwidth,
+                "bias_frac_width": 0,
             },
         )
 
@@ -109,7 +113,7 @@ class LinearTB(Testbench):
         low_mat = []
         count_high = 0
 
-        for k in reversed(x.tolist()):
+        for k in reversed(x[0].tolist()):
             if abs(k) > self.threshold and count_high < self.high_slots:
                 high_mat.append(k)
                 low_mat.append(0)
