@@ -3,7 +3,7 @@ model = "jsc-tiny"
 dataset = "jsc"
 task = "cls"
 
-max_epochs = 5
+max_epochs = -5
 batch_size = 512
 learning_rate = 1e-2
 accelerator = "gpu"
@@ -81,6 +81,10 @@ weight_frac_width = ["NA"]
 bias_width = [2, 4, 8]
 bias_frac_width = ["NA"]
 
+[search.strategy.load_path]
+path = "../nas_results/model_state_dict.pt"
+
+
 [search.strategy]
 name = "proxy"
 eval_mode = true
@@ -102,9 +106,9 @@ sampler = "tpe"
 sum_scaled_metrics = false # multi objective
 
 [search.strategy.metrics]
-# loss.scale = 1.0
-# loss.direction = "minimize"
+loss.scale = 1.0
+loss.direction = "minimize"
 accuracy.scale = 1.0
 accuracy.direction = "maximize"
-average_bitwidth.scale = 0.2
-average_bitwidth.direction = "minimize"
+# average_bitwidth.scale = 0.2
+# average_bitwidth.direction = "minimize"

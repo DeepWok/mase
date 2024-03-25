@@ -136,6 +136,7 @@ def find_measures(
     loss_function,  # loss function to use within the zero-cost metrics
     measure_names=None,  # an array of measure names to compute, if left blank, all measures are computed by default
     measures_arr=None,
+    nlp = False
 ):
 
     # Given a neural net
@@ -171,6 +172,7 @@ def find_measures(
     #################################################################################################
     measure_score={}
     data_iterator = iter(dataloader)
+
     x, target = next(data_iterator)
     x_shape = list(x.shape)
     x_shape[0] = 1 # to prevent overflow
@@ -206,3 +208,65 @@ def find_measures(
             measure_score[k] = sum_arr(v)
     return measure_score
 
+
+
+
+def find_nlp_measures(
+    net_orig,  # neural network
+    dataloader,  # a data loader (typically for training data)
+    dataload_info,  # a tuple with (dataload_type = {random, grasp}, number_of_batches_for_random_or_images_per_class_for_grasp, number of classes)
+    device,  # GPU/CPU device used
+    loss_function,  # loss function to use within the zero-cost metrics
+    measure_names=None,  # an array of measure names to compute, if left blank, all measures are computed by default
+    measures_arr=None
+):
+
+    # Given a neural net
+    # and some information about the input data (dataloader)
+    # and loss function (loss_fn)
+    # this function returns an array of zero-cost proxy metrics.
+
+    def sum_arr(arr):
+        sum = 0.0
+        for i in range(len(arr)):
+            sum += torch.sum(arr[i])
+        return sum.item()
+
+
+    measure_score={}
+    data_iterator = iter(dataloader)
+
+    x = next(data_iterator)
+    x_shape = list(x.shape)
+    x_shape[0] = 1 # to prevent overflow
+
+    model_stats = get_model_stats(
+        net_orig,
+        input_tensor_shape=x_shape,
+        clone_model=True
+    )
+    if 'flops' in measure_names:
+        measure_score['flops'] = float(model_stats.Flops)/1e6
+        measure_names.remove('flops')
+    if 'params' in measure_names:
+        measure_score['params'] = float(model_stats.parameters)/1e6
+        measure_names.remove('params')
+        
+    if measures_arr is None:
+
+        measures_arr = find_measures_arrays(
+            net_orig,
+            dataloader,
+            dataload_info,
+            device,
+            loss_fn=loss_function,
+            measure_names=measure_names,
+        )
+
+
+    for k, v in measures_arr.items():
+        if k == "jacov" or k == 'epe_nas' or k=='nwot' or k=='zen':
+            measure_score[k] = v
+        else:
+            measure_score[k] = sum_arr(v)
+    return measure_score

@@ -85,40 +85,40 @@ class SearchStrategyDaddyProxy(SearchStrategyBase):
         return sampler
 
     def compute_software_metrics(self, model):
-        # note that model can be mase_graph or nn.Module
-        proxy_model = NeuralModel(13)
-        pretrained_model_path = r'/home/ansonhon/mase_project/nas_results/model_state_dict.pt'
-        proxy_model.load_state_dict(torch.load(pretrained_model_path))
-        proxy_model.eval()
-
-        measure_names = ['epe_nas', 'fisher', 'grad_norm', 'grasp', 'jacov', 'l2_norm', 'nwot', 'plain', 'snip', 'synflow', 'zen', 'params', 'flops']
 
         metrics = {}
         dataloader=self.data_module.train_dataloader()
         dataload_info=["random",len(dataloader),10]
         loss_function = nn.MSELoss()
-        device = "cuda" 
         model=model.model
-        # device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
         device = torch.device('cuda')
         model.to(device)
-        num_batches_to_keep = 1
 
-        # Get a batch of data
-        small_data = []
-        for idx, (data, target) in enumerate(dataloader):
-            small_data.append([data, target])
-            if idx + 1 == num_batches_to_keep:
-                break
+        
+        # num_batches_to_keep = 1
+        # # Create data loader with 1 batch of data
+        # # Get a batch of data
+        # small_data = []
+        # for idx, (data, target) in enumerate(dataloader):
+        #     small_data.append([data, target])
+        #     if idx + 1 == num_batches_to_keep:
+        #         break
+        # small_dataloader = DataLoader(small_data)
 
-        # Create data loader with 1 batch of data
-        small_trainloader = DataLoader(small_data)
-        small_proxy_scores = find_measures(model,dataloader, dataload_info, device , loss_function, measure_names)
         measure_names = ['epe_nas', 'fisher', 'grad_norm', 'grasp', 'jacov', 'l2_norm', 'nwot', 'plain', 'snip', 'synflow', 'zen', 'params', 'flops']
+        small_proxy_scores = find_measures(model,dataloader, dataload_info, device , loss_function, measure_names)
+
+        # load meta proxy 
+        proxy_model = NeuralModel(13)
+        pretrained_model_path = r'../nas_results/model_state_dict.pt'
+        proxy_model.load_state_dict(torch.load(pretrained_model_path))
+        proxy_model.eval()
+        
+        # Convert small proxy scores from dict to a tensor in specific order
         measure_values_list = [small_proxy_scores[s] for s in measure_names]
         measure_values_tensor = torch.tensor(measure_values_list, dtype = torch.float)
         
-        ### Make prediction
+        ### Make prediction using the meta proxy
         with torch.no_grad():
             prediction = proxy_model(measure_values_tensor)
         prediction_numpy = prediction.numpy()
@@ -191,7 +191,7 @@ class SearchStrategyDaddyProxy(SearchStrategyBase):
             logger.info(f"Loaded study from {self.config['setup']['pkl_ckpt']}")
         else:
             study = optuna.create_study(**study_kwargs)
-
+            
         study.optimize(
             func=partial(self.objective, search_space=search_space),
             n_jobs=self.config["setup"]["n_jobs"],
@@ -208,11 +208,9 @@ class SearchStrategyDaddyProxy(SearchStrategyBase):
             ],
             show_progress_bar=True,
         )
-        
         self._save_study(study, self.save_dir / "study.pkl")
         self._save_search_dataframe(study, search_space, self.save_dir / "log.json")
         self._save_best(study, self.save_dir / "best.json")
-
         return study
 
     @staticmethod

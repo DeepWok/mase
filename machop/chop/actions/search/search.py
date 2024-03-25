@@ -74,7 +74,7 @@ def search(
     """
     # search preparation
     accelerator = parse_accelerator(accelerator)
-    # breakpoint() #######################################################
+    #######################################################
     ### Our contribution here:
     if not isinstance(search_config, dict):
         search_config = load_config(search_config)

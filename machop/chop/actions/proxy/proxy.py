@@ -1,7 +1,7 @@
 import logging
 import os
 from os import PathLike
-
+import pdb
 import toml
 import torch
 
@@ -32,7 +32,16 @@ from einops import rearrange
 from torch import optim
 import torch.nn.functional as F
 import time
+import json
+
+
 logger = logging.getLogger(__name__)
+
+
+def read_json_file(file_path):
+    with open(file_path, 'r') as file:
+        data = json.load(file)
+    return data
 
 def parse_nas_config(config):
     search_config = config["search"]   #p arse into search config
@@ -42,78 +51,7 @@ def parse_nas_config(config):
     dataset_info = nas_config['proxy_dataset']
     return op_config['op_indices'], proxy_config['proxy'],dataset_info# one more time one more chance running
     
-def proxy(config:dict | PathLike):
-    if not isinstance(config, dict):
-        config = load_config(config)
-    
-    op_config, proxy_config,dataset_info = parse_nas_config(config)   # type(op_config) = list of integers , type(proxy_config) = list of strings
-        
-    # Create list of indecies for architectures to be quired in nas-bench
-    indicies_list = []
-    while len(indicies_list) < op_config:
-        small_rand_list = [int(np.random.rand()*5) for _ in range(6)]
-        if small_rand_list not in indicies_list:
-            indicies_list.append(small_rand_list)
-    
-
-    # Prepare list and dict for recording scores
-    scores = {}
-    for proxy_name in proxy_config:
-        scores[proxy_name] = []
-    train_accuries = []
-    val_accuries = []
-    config_dict = {
-        'dataset': 'cifar10', # Dataset to loader: can be cifar10, cifar100, ImageNet16-120
-        'data': str(get_project_root()) + '/data', # path to naslib/data where cifar is saved
-        'search': {
-            'seed': 9001, # Seed to use in the train, validation and test dataloaders
-            'train_portion': 0.7, # Portion of train dataset to use as train dataset. The rest is used as validation dataset.
-            'batch_size': 32, # batch size of the dataloaders
-        }
-    }
-    config = CfgNode(config_dict)
-    train_loader, val_loader, test_loader, train_transform, valid_transform = get_train_val_loaders(config)
-    dataset_apis={}
-    dataset_apis["NASBench201-cifar10"] = get_dataset_api(search_space='nasbench201', dataset='cifar10')
-
-    for op in indicies_list:
-        # config_dict is config from nas-bench
-        # Generate models
-        graph = NasBench201SearchSpace(n_classes=10)
-        graph.sample_architecture(op_indices=op)
-        # graph.sample_random_architecture()
-        graph.parse()
-        graph.get_hash()
-        train_acc_parent = graph.query(metric=Metric.TRAIN_ACCURACY, dataset='cifar10', dataset_api=dataset_apis["NASBench201-cifar10"])
-        val_acc_parent = graph.query(metric=Metric.VAL_ACCURACY, dataset='cifar10', dataset_api=dataset_apis["NASBench201-cifar10"])
-        
-        train_accuries.append(train_acc_parent)
-        val_accuries.append(val_acc_parent)
-        
-        for zc_proxy in proxy_config:
-            zc_predictor = ZeroCost(method_type=zc_proxy)
-            score = zc_predictor.query(graph=graph, dataloader=train_loader)    ### Very slow function, need to investigate
-
-            scores[zc_proxy].append(score)
-        
-
-
-
-    # Prepare dataset for training meta-proxy
-    proxy = proxy_config
-    data_set = []
-    for proxy_name in proxy:
-        data_set.append(np.array(scores[proxy_name]))
-    data_set = np.array(data_set)
-    features = rearrange(data_set, 'a b -> b a')
-    labels = np.array(val_accuries)
-    labels /= 100
-    features = torch.Tensor(features)
-    labels = torch.Tensor(labels)
-    dataset = TensorDataset(features, labels)                       # Prepare it for pytorch format
-    dataloader = DataLoader(dataset, batch_size=8, shuffle=True)    # Prepare for pytorch format
-
-    # Define model to be trained as meta-proxy
+def predictor_trian(dataloader,proxy):
     class NeuralModel(nn.Module):
         def __init__(self, input_size):
             super(NeuralModel, self).__init__()
@@ -157,4 +95,115 @@ def proxy(config:dict | PathLike):
     file_path = os.path.join(one_level_up_directory, relative_path)
     torch.save(model.state_dict(), file_path)
 
+    return
+
+def proxy(config:dict | PathLike):
+    if not isinstance(config, dict):
+        config = load_config(config)
+    op_config, proxy_config,dataset_info = parse_nas_config(config)   #op_config = list of integers , proxy_config = list of strings
+    dataset_info=dataset_info['dataset']
+    nas201_dataset_names = ["cifar10","cifar100","ImageNet16-120"] 
+    if dataset_info in nas201_dataset_names:                #Ensure the dataset chosen is in nasbench201
+        # Read json file that contain proxy score and validation accuracy of each architecture in search space 
+        file_path = './naslib/data/zc_nasbench201.json'
+        nas201_record =  read_json_file(file_path)
+        data = nas201_record[dataset_info] 
+        
+        indicies_list = []
+        while len(indicies_list) < op_config:
+            small_rand_list = [int(np.random.rand()*5) for _ in range(6)]
+            if small_rand_list not in indicies_list:
+                indicies_list.append(small_rand_list)
+        scores = {}
+        val_accuries = []
+        for proxy_name in proxy_config:
+            scores[proxy_name] = []
+        for op in indicies_list:
+            op= '(' + ', '.join(map(str, op)) + ')'
+            proxy_score = data[op]
+            for proxy_name in proxy_config:
+                scores[proxy_name].append(proxy_score[proxy_name]['score'])
+            val_accuries.append(proxy_score['val_accuracy'])
+
+        # Prepare dataset for training meta-proxy
+        proxy = proxy_config
+        data_set = []
+        for proxy_name in proxy:
+            data_set.append(np.array(scores[proxy_name]))
+        data_set = np.array(data_set)
+        features = rearrange(data_set, 'a b -> b a')
+        labels = np.array(val_accuries)
+        labels /= 100
+        features = torch.Tensor(features)
+        labels = torch.Tensor(labels)
+        dataset = TensorDataset(features, labels)                       # Prepare it for pytorch format
+        dataloader = DataLoader(dataset, batch_size=8, shuffle=True)    # Prepare for pytorch format
+        predictor_trian(dataloader,proxy)
+        pdb.set_trace()
+    elif dataset_info=='ptb':
+        pass
+    else:
+        print("The dataset config is not available")
+        exit()
+
+
+    # dataset_infoCreate list of indecies for architectures to be quired in nas-bench
+    indicies_list = []
+    while len(indicies_list) < op_config:
+        small_rand_list = [int(np.random.rand()*5) for _ in range(6)]
+        if small_rand_list not in indicies_list:
+            indicies_list.append(small_rand_list)
+    # Prepare list and dict for recording scores
+    scores = {}
+    for proxy_name in proxy_config:
+        scores[proxy_name] = []
+    train_accuries = []
+    val_accuries = []
+    config_dict = {
+        'dataset': 'cifar10', # Dataset to loader: can be cifar10, cifar100, ImageNet16-120
+        'data': str(get_project_root()) + '/data', # path to naslib/data where cifar is saved
+        'search': {
+            'seed': 9001, # Seed to use in the train, validation and test dataloaders
+            'train_portion': 0.7, # Portion of train dataset to use as train dataset. The rest is used as validation dataset.
+            'batch_size': 32, # batch size of the dataloaders
+        }
+    }
+
+
+
+    for op in indicies_list:
+        # config_dict is config from nas-bench
+        # Generate models
+        graph = NasBench201SearchSpace(n_classes=10)
+        graph.sample_architecture(op_indices=op)
+        # graph.sample_random_architecture()
+        graph.parse()
+        graph.get_hash()
+        train_acc_parent = graph.query(metric=Metric.TRAIN_ACCURACY, dataset='cifar10', dataset_api=dataset_apis["NASBench201-cifar10"])
+        val_acc_parent = graph.query(metric=Metric.VAL_ACCURACY, dataset='cifar10', dataset_api=dataset_apis["NASBench201-cifar10"])
+        
+        train_accuries.append(train_acc_parent)
+        val_accuries.append(val_acc_parent)
+        
+        for zc_proxy in proxy_config:
+            zc_predictor = ZeroCost(method_type=zc_proxy)
+            score = zc_predictor.query(graph=graph, dataloader= train_loader)
+            scores[zc_proxy].append(score)
+        
+
+    # Prepare dataset for training meta-proxy
+    proxy = proxy_config
+    data_set = []
+    for proxy_name in proxy:
+        data_set.append(np.array(scores[proxy_name]))
+    data_set = np.array(data_set)
+    features = rearrange(data_set, 'a b -> b a')
+    labels = np.array(val_accuries)
+    labels /= 100
+    features = torch.Tensor(features)
+    labels = torch.Tensor(labels)
+    dataset = TensorDataset(features, labels)                       # Prepare it for pytorch format
+    dataloader = DataLoader(dataset, batch_size=8, shuffle=True)    # Prepare for pytorch format
+
+    # Define model to be trained as meta-proxy
     return
