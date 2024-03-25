@@ -1,6 +1,6 @@
 `timescale 1ns / 1ps
 
-
+// Update for input unpacked 2D matrix 
 module gather #(
     parameter TENSOR_SIZE_DIM = 1,
     parameter PRECISION = 1

@@ -2,7 +2,7 @@
 
 
 module LLMint #(
-    parameter ORIGINAL_PRECISION = 16,
+    parameter ORIGINAL_PRECISION = 32,
     parameter REDUCED_PRECISION = 8,
     parameter TENSOR_SIZE_DIM = 4,
     parameter WEIGHT_DIM_0 = TENSOR_SIZE_DIM,
@@ -12,12 +12,12 @@ module LLMint #(
 ) (
     input clk,
     input rst,
-    input logic data_in_valid;
-    output logic data_in_ready;
-    input logic weight_valid;
-    output logic weight_ready;
-    input logic data_out_ready;
-    output logic data_out_valid;
+    input logic data_in_valid,
+    output logic data_in_ready,
+    input logic weight_valid,
+    output logic weight_ready,
+    input logic data_out_ready,
+    output logic data_out_valid,
     input logic signed [ORIGINAL_PRECISION-1:0] data_in[TENSOR_SIZE_DIM-1:0],
     // We combine weights and quantized weights into a single array
     input logic signed [ORIGINAL_PRECISION-1:0] weights[2 * WEIGHT_DIM_0 * WEIGHT_DIM_1-1:0],
@@ -95,7 +95,7 @@ module LLMint #(
 
         .data_out_0(output_linear_low_precision),
         .data_out_0_ready(data_out_ready),
-        .data_out_0_valid(data_out_valid),
+        .data_out_0_valid(data_out_valid)
 
     );
 
@@ -127,7 +127,7 @@ module LLMint #(
 
         .data_out_0(output_linear_high_precision),
         .data_out_0_ready(data_out_ready),
-        .data_out_0_valid(data_out_valid),
+        .data_out_0_valid(data_out_valid)
     );
 
     for (genvar i = 0; i < TENSOR_SIZE_DIM; i = i + 1) begin
