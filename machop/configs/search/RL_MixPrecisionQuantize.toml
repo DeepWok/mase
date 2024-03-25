@@ -75,6 +75,7 @@ compare_to = 32 # compare to FP32
 [search.strategy.setup]
 device = "cpu"
 total_trials = 300
+# choose between ppo, a2c, ddpg, sac
 algorithm = "a2c"
 env = "MixedPrecisionEnv"
 
