@@ -22,18 +22,21 @@ import torch
 logger = logging.getLogger("testbench")
 logger.setLevel(logging.DEBUG)
 
+global_tensor_size = 6
+
 
 class LinearTB(Testbench):
-    bitwidth = 8
-    reduced_bitwidth = 4
-    high_slots = 3
-    threshold = 6
 
-    def __init__(self, dut, in_features=4, out_features=4) -> None:
+    def __init__(self, dut) -> None:
         super().__init__(dut, dut.clk, dut.rst)
 
-        self.in_features = in_features
-        self.out_features = out_features
+        self.in_features = dut.TENSOR_SIZE_DIM
+        self.out_features = dut.TENSOR_SIZE_DIM
+        self.high_slots = dut.HIGH_SLOTS
+        self.threshold = dut.THRESHOLD
+        self.bitwidth = dut.ORIGINAL_PRECISION
+        self.reduced_bitwidth = dut.REDUCED_PRECISION
+        self.weights_size = [dut.WEIGHT_DIM_0, dut.WEIGHT_DIM_1]
 
         if not hasattr(self, "log"):
             self.log = SimLog("%s" % (type(self).__qualname__))
@@ -71,8 +74,8 @@ class LinearTB(Testbench):
         )
 
         self.linear_low = LinearInteger(
-            in_features=in_features,
-            out_features=out_features,
+            in_features=self.in_features,
+            out_features=self.out_features,
             bias=False,
             config={
                 "data_in_width": self.bitwidth,
@@ -83,8 +86,8 @@ class LinearTB(Testbench):
         )
 
         self.linear_high = LinearInteger(
-            in_features=in_features,
-            out_features=out_features,
+            in_features=self.in_features,
+            out_features=self.out_features,
             bias=False,
             config={
                 "data_in_width": self.reduced_bitwidth,
@@ -188,44 +191,23 @@ class LinearTB(Testbench):
 
 
 @cocotb.test()
-async def test_6x6(dut):
-    tb = LinearTB(dut, in_features=6, out_features=6)
+async def test(dut):
+    tb = LinearTB(dut)
     await tb.run_test()
 
 
 if __name__ == "__main__":
     mase_runner(
         trace=True,
-        # module_param_list=[
-        #     {
-        #         "DATA_IN_0_TENSOR_SIZE_DIM_0": 20,
-        #         "DATA_IN_0_PARALLELISM_DIM_0": 2,
-        #         "WEIGHT_TENSOR_SIZE_DIM_0": 20,
-        #         "WEIGHT_TENSOR_SIZE_DIM_1": 20,
-        #         "WEIGHT_PARALLELISM_DIM_0": 20,
-        #         "DATA_OUT_0_TENSOR_SIZE_DIM_0": 20,
-        #         "DATA_OUT_0_PARALLELISM_DIM_0": 20,
-        #         "BIAS_TENSOR_SIZE_DIM_0": 20,
-        #     },
-        #     {
-        #         "DATA_IN_0_TENSOR_SIZE_DIM_0": 20,
-        #         "DATA_IN_0_PARALLELISM_DIM_0": 4,
-        #         "WEIGHT_TENSOR_SIZE_DIM_0": 20,
-        #         "WEIGHT_TENSOR_SIZE_DIM_1": 20,
-        #         "WEIGHT_PARALLELISM_DIM_0": 20,
-        #         "DATA_OUT_0_TENSOR_SIZE_DIM_0": 20,
-        #         "DATA_OUT_0_PARALLELISM_DIM_0": 20,
-        #         "BIAS_TENSOR_SIZE_DIM_0": 20,
-        #     },
-        #     {
-        #         "DATA_IN_0_TENSOR_SIZE_DIM_0": 20,
-        #         "DATA_IN_0_PARALLELISM_DIM_0": 5,
-        #         "WEIGHT_TENSOR_SIZE_DIM_0": 20,
-        #         "WEIGHT_TENSOR_SIZE_DIM_1": 20,
-        #         "WEIGHT_PARALLELISM_DIM_0": 20,
-        #         "DATA_OUT_0_TENSOR_SIZE_DIM_0": 20,
-        #         "DATA_OUT_0_PARALLELISM_DIM_0": 20,
-        #         "BIAS_TENSOR_SIZE_DIM_0": 20,
-        #     },
-        # ],
+        module_param_list=[
+            {
+                "ORIGINAL_PRECISION": 16,
+                "REDUCED_PRECISION": 8,
+                "TENSOR_SIZE_DIM": global_tensor_size,
+                "WEIGHT_DIM_0": global_tensor_size,
+                "WEIGHT_DIM_1": global_tensor_size,
+                "HIGH_SLOTS": 3,
+                "THRESHOLD": 6,
+            }
+        ],
     )
