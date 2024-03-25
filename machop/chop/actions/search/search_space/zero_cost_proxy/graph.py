@@ -171,9 +171,6 @@ class ZeroCostProxy(SearchSpaceBase):
 
             epoch_loss_test = running_loss_test / len(test_loader.dataset)
 
-            # if (epoch+1) % 1 == 0:
-            #     print(f'Epoch [{epoch+1}/{epochs}], Train Loss: {epoch_loss_train:.4f}, Validation Loss: {epoch_loss_test:.4f}')
-
             # Check if this is the best model based on test loss and update accordingly
             if epoch_loss_test < best_test_loss:
                 best_test_loss = epoch_loss_test
