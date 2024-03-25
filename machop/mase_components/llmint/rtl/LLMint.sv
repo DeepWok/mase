@@ -12,12 +12,12 @@ module LLMint #(
 ) (
     input clk,
     input rst,
-    input logic data_in_valid;
-    output logic data_in_ready;
-    input logic weight_valid;
-    output logic weight_ready;
-    input logic data_out_ready;
-    output logic data_out_valid;
+    input logic data_in_valid,
+    output logic data_in_ready,
+    input logic weight_valid,
+    output logic weight_ready,
+    input logic data_out_ready,
+    output logic data_out_valid,
     input logic signed [ORIGINAL_PRECISION-1:0] data_in[TENSOR_SIZE_DIM-1:0],
     // We combine weights and quantized weights into a single array
     input logic signed [ORIGINAL_PRECISION-1:0] weights[2 * WEIGHT_DIM_0 * WEIGHT_DIM_1-1:0],
@@ -31,6 +31,7 @@ module LLMint #(
 
     logic signed [REDUCED_PRECISION-1:0] input_linear_low_precision[TENSOR_SIZE_DIM-1:0];
     logic signed [REDUCED_PRECISION-1:0] quantized_weights[WEIGHT_DIM_0 * WEIGHT_DIM_1-1:0];
+    logic signed [ORIGINAL_PRECISION-1:0] non_quantized_weights[WEIGHT_DIM_0 * WEIGHT_DIM_1-1:0];
     logic signed [ORIGINAL_PRECISION-1:0] high_for_gather[TENSOR_SIZE_DIM-1:0];
     logic signed [ORIGINAL_PRECISION-1:0] low_for_gather[TENSOR_SIZE_DIM-1:0];
 
@@ -51,7 +52,11 @@ module LLMint #(
     end
 
     for (genvar i = 0; i < WEIGHT_DIM_0 * WEIGHT_DIM_1; i = i + 1) begin
-        assign quantized_weights[i] = weights[i] >>> (ORIGINAL_PRECISION - REDUCED_PRECISION);
+        assign non_quantized_weights[i] = weights[i];
+    end
+
+    for (genvar i = WEIGHT_DIM_0 * WEIGHT_DIM_1; i < 2 * WEIGHT_DIM_0 * WEIGHT_DIM_1; i = i + 1) begin
+        assign quantized_weights[i - WEIGHT_DIM_0 * WEIGHT_DIM_1] = weights[i] >>> (ORIGINAL_PRECISION - REDUCED_PRECISION);
     end
 
     /*
@@ -95,7 +100,7 @@ module LLMint #(
 
         .data_out_0(output_linear_low_precision),
         .data_out_0_ready(data_out_ready),
-        .data_out_0_valid(data_out_valid),
+        .data_out_0_valid(data_out_valid)
 
     );
 
@@ -121,13 +126,13 @@ module LLMint #(
         .data_in_0_valid(data_in_valid),
         .data_in_0_ready(data_in_ready),
 
-        .weight(weights),
+        .weight(non_quantized_weights),
         .weight_valid(weight_valid),
         .weight_ready(weight_ready),
 
         .data_out_0(output_linear_high_precision),
         .data_out_0_ready(data_out_ready),
-        .data_out_0_valid(data_out_valid),
+        .data_out_0_valid(data_out_valid)
     );
 
     for (genvar i = 0; i < TENSOR_SIZE_DIM; i = i + 1) begin
