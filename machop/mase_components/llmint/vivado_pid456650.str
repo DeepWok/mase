@@ -1364,3 +1364,225 @@ dismissDialog("Starting Design Runs"); // bB (cr)
 // TclEventType: RUN_STATUS_CHANGE
 // TclEventType: RUN_STEP_COMPLETED
 // TclEventType: RUN_STATUS_CHANGE
+// TclEventType: RUN_STEP_COMPLETED
+// Elapsed time: 232 seconds
+selectTree(PAResourceItoN.MsgTreePanel_MESSAGE_VIEW_TREE, "[, Synthesis, [Constraints 18-5210] No constraints selected for write.. Resolution: This message can indicate that there are no constraints for the design, or it can indicate that the used_in flags are set such that the constraints are ignored. This later case is used when running synth_design to not write synthesis constraints to the resulting checkpoint. Instead, project constraints are read when the synthesized design is opened.. ]", 9, false); // ah (O, cr)
+selectTree(PAResourceItoN.MsgTreePanel_MESSAGE_VIEW_TREE, "[, Synthesis, [Constraints 18-5210] No constraints selected for write.. Resolution: This message can indicate that there are no constraints for the design, or it can indicate that the used_in flags are set such that the constraints are ignored. This later case is used when running synth_design to not write synthesis constraints to the resulting checkpoint. Instead, project constraints are read when the synthesized design is opened.. ]", 9, false); // ah (O, cr)
+selectTree(PAResourceEtoH.FlowNavigatorTreePanel_FLOW_NAVIGATOR_TREE, "[, Implementation, Run Implementation]", 17, false); // u (O, cr)
+// Run Command: PAResourceCommand.PACommandNames_RUN_IMPLEMENTATION
+// TclEventType: RUN_STEP_COMPLETED
+// TclEventType: RUN_FAILED
+// TclEventType: RUN_STATUS_CHANGE
+// TclEventType: RUN_STEP_COMPLETED
+// aj (cr): Implementation Failed: addNotify
+// Elapsed time: 89 seconds
+selectButton(RDIResource.BaseDialog_OK, "OK"); // a (aj)
+// Run Command: PAResourceCommand.PACommandNames_MESSAGE_WINDOW
+dismissDialog("Implementation Failed"); // aj (cr)
+selectTree(PAResourceEtoH.FileSetPanel_FILE_SET_PANEL_TREE, "[root, Design Sources, top (llm_int_wrapper.sv), llm_int : LLMint (LLMint.sv)]", 2, true); // B (F, cr) - Node
+selectTree(PAResourceEtoH.FileSetPanel_FILE_SET_PANEL_TREE, "[root, Design Sources, top (llm_int_wrapper.sv)]", 1, true); // B (F, cr) - Node
+selectTree(PAResourceEtoH.FileSetPanel_FILE_SET_PANEL_TREE, "[root, Design Sources, top (llm_int_wrapper.sv)]", 1, true, false, false, false, true, false); // B (F, cr) - Popup Trigger - Node
+selectMenu(PAResourceCommand.PACommandNames_AUTO_UPDATE_HIER, "Hierarchy Update"); // af (ao, cr)
+selectMenu(PAResourceCommand.PACommandNames_AUTO_UPDATE_HIER, "Hierarchy Update"); // af (ao, cr)
+selectTree(PAResourceEtoH.FileSetPanel_FILE_SET_PANEL_TREE, "[root, Design Sources, top (llm_int_wrapper.sv), llm_int : LLMint (LLMint.sv)]", 2, true); // B (F, cr) - Node
+selectTree(PAResourceEtoH.FileSetPanel_FILE_SET_PANEL_TREE, "[root, Design Sources, top (llm_int_wrapper.sv), llm_int : LLMint (LLMint.sv)]", 2, true, false, false, false, true, false); // B (F, cr) - Popup Trigger - Node
+selectTree(PAResourceEtoH.FileSetPanel_FILE_SET_PANEL_TREE, "[root, Design Sources, top (llm_int_wrapper.sv)]", 1, true); // B (F, cr) - Node
+selectTree(PAResourceEtoH.FileSetPanel_FILE_SET_PANEL_TREE, "[root, Design Sources, top (llm_int_wrapper.sv)]", 1, true, false, false, false, true, false); // B (F, cr) - Popup Trigger - Node
+selectMenu(PAResourceCommand.PACommandNames_AUTO_UPDATE_HIER, "Hierarchy Update"); // af (ao, cr)
+selectMenu(PAResourceQtoS.SrcMenu_IP_HIERARCHY, "IP Hierarchy"); // af (ao, cr)
+selectMenuItem(PAResourceCommand.PACommandNames_SET_AS_TOP, "Set as Top"); // ai (ao, cr)
+// Run Command: PAResourceCommand.PACommandNames_SET_AS_TOP
+// TclEventType: FILE_SET_CHANGE
+// TclEventType: FILE_SET_OPTIONS_CHANGE
+// TclEventType: DG_GRAPH_STALE
+// Tcl Message: set_property top top [current_fileset] 
+// TclEventType: DG_GRAPH_STALE
+selectButton(PAResourceEtoH.FileSetPanel_RELOAD, "Reload..."); // h (ds, cr)
+selectMenu(PAResourceCommand.PACommandNames_AUTO_UPDATE_HIER, "Hierarchy Update"); // af (cr)
+selectMenuItem(PAResourceQtoS.SrcMenu_REFRESH_HIERARCHY, "Refresh Hierarchy"); // ai (cr)
+selectTree(PAResourceEtoH.FileSetPanel_FILE_SET_PANEL_TREE, "[root, Design Sources, top (llm_int_wrapper.sv)]", 1, true, false, false, false, true, false); // B (F, cr) - Popup Trigger - Node
+selectTree(PAResourceEtoH.FileSetPanel_FILE_SET_PANEL_TREE, "[root, Design Sources, top (llm_int_wrapper.sv), llm_int : LLMint (LLMint.sv), low_precision_linear : fixed_linear (fixed_linear.sv)]", 4, true); // B (F, cr) - Node
+selectTree(PAResourceEtoH.FlowNavigatorTreePanel_FLOW_NAVIGATOR_TREE, "[, Implementation, Run Implementation]", 17, false); // u (O, cr)
+// Run Command: PAResourceCommand.PACommandNames_RUN_IMPLEMENTATION
+// bB (cr):  Resetting Runs : addNotify
+// TclEventType: RUN_MODIFY
+// TclEventType: RUN_RESET
+// TclEventType: RUN_STATUS_CHANGE
+// TclEventType: RUN_RESET
+// TclEventType: RUN_STATUS_CHANGE
+// TclEventType: RUN_RESET
+// TclEventType: RUN_MODIFY
+// Tcl Message: reset_run synth_1 
+// bB (cr):  Resetting Runs : addNotify
+// bB (cr):  Starting Design Runs : addNotify
+// TclEventType: RUN_LAUNCH
+// Tcl Message: launch_runs impl_1 -jobs 20 
+// TclEventType: RUN_LAUNCH
+// TclEventType: RUN_MODIFY
+// TclEventType: RUN_STATUS_CHANGE
+// TclEventType: RUN_MODIFY
+// Tcl Message: [Mon Mar 25 19:58:21 2024] Launched synth_1... Run output will be captured here: /home/aw1223/new/mase/machop/mase_components/llmint/vivado/vivado.runs/synth_1/runme.log [Mon Mar 25 19:58:21 2024] Launched impl_1... Run output will be captured here: /home/aw1223/new/mase/machop/mase_components/llmint/vivado/vivado.runs/impl_1/runme.log 
+dismissDialog("Starting Design Runs"); // bB (cr)
+// TclEventType: RUN_STATUS_CHANGE
+// TclEventType: RUN_FAILED
+// TclEventType: RUN_STATUS_CHANGE
+// TclEventType: RUN_STEP_COMPLETED
+// TclEventType: RUN_STATUS_CHANGE
+// Elapsed time: 43 seconds
+selectTree(PAResourceItoN.MsgTreePanel_MESSAGE_VIEW_TREE, "[, Synthesis, [Synth 8-659] type mismatch in port association: bit [7:0]A[23:0] vs. bit [7:0]B[35:0] [/home/aw1223/new/mase/machop/mase_components/llmint/rtl/LLMint.sv:114]. ]", 1, false); // ah (O, cr)
+selectTree(PAResourceItoN.MsgTreePanel_MESSAGE_VIEW_TREE, "[, Synthesis, [Synth 8-659] type mismatch in port association: bit [7:0]A[23:0] vs. bit [7:0]B[35:0] [/home/aw1223/new/mase/machop/mase_components/llmint/rtl/LLMint.sv:114]. ]", 1, false, false, false, false, false, true); // ah (O, cr) - Double Click
+selectTree(PAResourceItoN.MsgTreePanel_MESSAGE_VIEW_TREE, "[, Synthesis, [Synth 8-659] type mismatch in port association: bit [7:0]A[23:0] vs. bit [7:0]B[35:0] [/home/aw1223/new/mase/machop/mase_components/llmint/rtl/LLMint.sv:114]. ]", 1, false); // ah (O, cr)
+selectTree(PAResourceItoN.MsgTreePanel_MESSAGE_VIEW_TREE, "[, Synthesis, [Synth 8-659] type mismatch in port association: bit [7:0]A[23:0] vs. bit [7:0]B[35:0] [/home/aw1223/new/mase/machop/mase_components/llmint/rtl/LLMint.sv:114]. ]", 1, false, false, false, false, false, true); // ah (O, cr) - Double Click
+selectTree(PAResourceItoN.MsgTreePanel_MESSAGE_VIEW_TREE, "[, Synthesis, [Synth 8-659] type mismatch in port association: bit [7:0]A[23:0] vs. bit [7:0]B[35:0] [/home/aw1223/new/mase/machop/mase_components/llmint/rtl/LLMint.sv:114]. ]", 1, false); // ah (O, cr)
+selectTree(PAResourceItoN.MsgTreePanel_MESSAGE_VIEW_TREE, "[, Synthesis, [Synth 8-659] type mismatch in port association: bit [7:0]A[23:0] vs. bit [7:0]B[35:0] [/home/aw1223/new/mase/machop/mase_components/llmint/rtl/LLMint.sv:114]. ]", 1, false); // ah (O, cr)
+messagesViewCrossProbe(PAResourceItoN.MsgTreePanel_MESSAGE_VIEW_TREE, "src;-;/home/aw1223/new/mase/machop/mase_components/llmint/rtl/LLMint.sv;-;;-;16;-;line;-;114;-;;-;16;-;"); // ah (O, cr)
+selectCodeEditor("LLMint.sv", 517, 118); // ch (w, cr)
+selectTree(PAResourceItoN.MsgTreePanel_MESSAGE_VIEW_TREE, "[, Synthesis, [Synth 8-659] type mismatch in port association: bit [7:0]A[23:0] vs. bit [7:0]B[35:0] [/home/aw1223/new/mase/machop/mase_components/llmint/rtl/LLMint.sv:114]. ]", 1, false); // ah (O, cr)
+messagesViewCrossProbe(PAResourceItoN.MsgTreePanel_MESSAGE_VIEW_TREE, "src;-;/home/aw1223/new/mase/machop/mase_components/llmint/rtl/LLMint.sv;-;;-;16;-;line;-;114;-;;-;16;-;"); // ah (O, cr)
+selectTree(PAResourceItoN.MsgTreePanel_MESSAGE_VIEW_TREE, "[, Synthesis, [Synth 8-659] type mismatch in port association: bit [7:0]A[23:0] vs. bit [7:0]B[35:0] [/home/aw1223/new/mase/machop/mase_components/llmint/rtl/LLMint.sv:114]. ]", 1, false, false, false, false, false, true); // ah (O, cr) - Double Click
+selectTree(PAResourceItoN.MsgTreePanel_MESSAGE_VIEW_TREE, "[, Synthesis, [Synth 8-659] type mismatch in port association: bit [7:0]A[23:0] vs. bit [7:0]B[35:0] [/home/aw1223/new/mase/machop/mase_components/llmint/rtl/LLMint.sv:114]. ]", 1, false); // ah (O, cr)
+// Elapsed time: 10 seconds
+selectTree(PAResourceItoN.MsgTreePanel_MESSAGE_VIEW_TREE, "[, Synthesis, [Synth 8-659] type mismatch in port association: bit [7:0]A[23:0] vs. bit [7:0]B[35:0] [/home/aw1223/new/mase/machop/mase_components/llmint/rtl/LLMint.sv:114]. ]", 1, false); // ah (O, cr)
+messagesViewCrossProbe(PAResourceItoN.MsgTreePanel_MESSAGE_VIEW_TREE, "src;-;/home/aw1223/new/mase/machop/mase_components/llmint/rtl/LLMint.sv;-;;-;16;-;line;-;114;-;;-;16;-;"); // ah (O, cr)
+selectTree(PAResourceItoN.MsgTreePanel_MESSAGE_VIEW_TREE, "[, Synthesis, [Synth 8-659] type mismatch in port association: bit [7:0]A[23:0] vs. bit [7:0]B[35:0] [/home/aw1223/new/mase/machop/mase_components/llmint/rtl/LLMint.sv:114]. ]", 1, false, false, false, false, false, true); // ah (O, cr) - Double Click
+selectTree(PAResourceItoN.MsgTreePanel_MESSAGE_VIEW_TREE, "[, Synthesis, [Synth 8-659] type mismatch in port association: bit [7:0]A[23:0] vs. bit [7:0]B[35:0] [/home/aw1223/new/mase/machop/mase_components/llmint/rtl/LLMint.sv:114]. ]", 1, false); // ah (O, cr)
+selectTree(PAResourceEtoH.FileSetPanel_FILE_SET_PANEL_TREE, "[root, Design Sources, top (llm_int_wrapper.sv)]", 1, true); // B (F, cr) - Node
+selectTree(PAResourceEtoH.FileSetPanel_FILE_SET_PANEL_TREE, "[root, Design Sources, top (llm_int_wrapper.sv)]", 1, true, false, false, false, false, true); // B (F, cr) - Double Click - Node
+selectTab("PlanAheadTabBaseWorkspace_JideTabbedPane", (HResource) null, "scatter_threshold.sv", 4); // i (h, cr)
+selectTab("PlanAheadTabBaseWorkspace_JideTabbedPane", (HResource) null, "fixed_vector_mult.sv", 3); // i (h, cr)
+selectTree(PAResourceItoN.MsgTreePanel_MESSAGE_VIEW_TREE, "[, Synthesis, [Synth 8-659] type mismatch in port association: bit [7:0]A[23:0] vs. bit [7:0]B[35:0] [/home/aw1223/new/mase/machop/mase_components/llmint/rtl/LLMint.sv:114]. ]", 1, false); // ah (O, cr)
+messagesViewCrossProbe(PAResourceItoN.MsgTreePanel_MESSAGE_VIEW_TREE, "src;-;/home/aw1223/new/mase/machop/mase_components/llmint/rtl/LLMint.sv;-;;-;16;-;line;-;114;-;;-;16;-;"); // ah (O, cr)
+selectTree(PAResourceItoN.MsgTreePanel_MESSAGE_VIEW_TREE, "[, Synthesis, [Synth 8-659] type mismatch in port association: bit [7:0]A[23:0] vs. bit [7:0]B[35:0] [/home/aw1223/new/mase/machop/mase_components/llmint/rtl/LLMint.sv:114]. ]", 1, false, false, false, false, false, true); // ah (O, cr) - Double Click
+selectTree(PAResourceItoN.MsgTreePanel_MESSAGE_VIEW_TREE, "[, Synthesis, [Synth 8-659] type mismatch in port association: bit [7:0]A[23:0] vs. bit [7:0]B[35:0] [/home/aw1223/new/mase/machop/mase_components/llmint/rtl/LLMint.sv:114]. ]", 1, false); // ah (O, cr)
+// Elapsed time: 13 seconds
+selectTree(PAResourceItoN.MsgTreePanel_MESSAGE_VIEW_TREE, "[, Synthesis, [Synth 8-659] type mismatch in port association: bit [7:0]A[23:0] vs. bit [7:0]B[35:0] [/home/aw1223/new/mase/machop/mase_components/llmint/rtl/LLMint.sv:114]. ]", 1, false); // ah (O, cr)
+messagesViewCrossProbe(PAResourceItoN.MsgTreePanel_MESSAGE_VIEW_TREE, "src;-;/home/aw1223/new/mase/machop/mase_components/llmint/rtl/LLMint.sv;-;;-;16;-;line;-;114;-;;-;16;-;"); // ah (O, cr)
+selectTree(PAResourceItoN.MsgTreePanel_MESSAGE_VIEW_TREE, "[, Synthesis, [Synth 8-659] type mismatch in port association: bit [7:0]A[23:0] vs. bit [7:0]B[35:0] [/home/aw1223/new/mase/machop/mase_components/llmint/rtl/LLMint.sv:114]. ]", 1, false, false, false, false, false, true); // ah (O, cr) - Double Click
+selectTree(PAResourceItoN.MsgTreePanel_MESSAGE_VIEW_TREE, "[, Synthesis, [Synth 8-6156] failed synthesizing module 'LLMint' [/home/aw1223/new/mase/machop/mase_components/llmint/rtl/LLMint.sv:4]. ]", 2, true); // ah (O, cr) - Node
+messagesViewCrossProbe(PAResourceItoN.MsgTreePanel_MESSAGE_VIEW_TREE, "src;-;/home/aw1223/new/mase/machop/mase_components/llmint/rtl/LLMint.sv;-;;-;16;-;line;-;4;-;;-;16;-;"); // ah (O, cr)
+selectTree(PAResourceItoN.MsgTreePanel_MESSAGE_VIEW_TREE, "[, Synthesis, [Synth 8-6156] failed synthesizing module 'LLMint' [/home/aw1223/new/mase/machop/mase_components/llmint/rtl/LLMint.sv:4]. ]", 2, true, false, false, false, false, true); // ah (O, cr) - Double Click - Node
+selectTree(PAResourceItoN.MsgTreePanel_MESSAGE_VIEW_TREE, "[, Synthesis, [Synth 8-6156] failed synthesizing module 'LLMint' [/home/aw1223/new/mase/machop/mase_components/llmint/rtl/LLMint.sv:4]. ]", 2, true); // ah (O, cr) - Node
+selectTree(PAResourceItoN.MsgTreePanel_MESSAGE_VIEW_TREE, "[, Synthesis, [Synth 8-6156] failed synthesizing module 'LLMint' [/home/aw1223/new/mase/machop/mase_components/llmint/rtl/LLMint.sv:4]. , [Synth 8-6156] failed synthesizing module 'top' [/home/aw1223/new/mase/machop/mase_components/llmint/misc/llm_int_wrapper.sv:3]. ]", 3, false); // ah (O, cr)
+messagesViewCrossProbe(PAResourceItoN.MsgTreePanel_MESSAGE_VIEW_TREE, "src;-;/home/aw1223/new/mase/machop/mase_components/llmint/misc/llm_int_wrapper.sv;-;;-;16;-;line;-;3;-;;-;16;-;"); // ah (O, cr)
+selectTree(PAResourceItoN.MsgTreePanel_MESSAGE_VIEW_TREE, "[, Synthesis, [Synth 8-6156] failed synthesizing module 'LLMint' [/home/aw1223/new/mase/machop/mase_components/llmint/rtl/LLMint.sv:4]. , [Synth 8-6156] failed synthesizing module 'top' [/home/aw1223/new/mase/machop/mase_components/llmint/misc/llm_int_wrapper.sv:3]. ]", 3, false, false, false, false, false, true); // ah (O, cr) - Double Click
+selectTree(PAResourceItoN.MsgTreePanel_MESSAGE_VIEW_TREE, "[, Synthesis, [Synth 8-6156] failed synthesizing module 'LLMint' [/home/aw1223/new/mase/machop/mase_components/llmint/rtl/LLMint.sv:4]. ]", 2, true); // ah (O, cr) - Node
+messagesViewCrossProbe(PAResourceItoN.MsgTreePanel_MESSAGE_VIEW_TREE, "src;-;/home/aw1223/new/mase/machop/mase_components/llmint/rtl/LLMint.sv;-;;-;16;-;line;-;4;-;;-;16;-;"); // ah (O, cr)
+selectTree(PAResourceItoN.MsgTreePanel_MESSAGE_VIEW_TREE, "[, Synthesis, [Synth 8-6156] failed synthesizing module 'LLMint' [/home/aw1223/new/mase/machop/mase_components/llmint/rtl/LLMint.sv:4]. ]", 2, true, false, false, false, false, true); // ah (O, cr) - Double Click - Node
+selectTree(PAResourceItoN.MsgTreePanel_MESSAGE_VIEW_TREE, "[, Synthesis, [Synth 8-659] type mismatch in port association: bit [7:0]A[23:0] vs. bit [7:0]B[35:0] [/home/aw1223/new/mase/machop/mase_components/llmint/rtl/LLMint.sv:114]. ]", 1, false); // ah (O, cr)
+selectTree(PAResourceItoN.MsgTreePanel_MESSAGE_VIEW_TREE, "[, Synthesis, [Synth 8-659] type mismatch in port association: bit [7:0]A[23:0] vs. bit [7:0]B[35:0] [/home/aw1223/new/mase/machop/mase_components/llmint/rtl/LLMint.sv:114]. ]", 1, false, false, false, false, false, true); // ah (O, cr) - Double Click
+selectTree(PAResourceItoN.MsgTreePanel_MESSAGE_VIEW_TREE, "[, Synthesis, [Synth 8-659] type mismatch in port association: bit [7:0]A[23:0] vs. bit [7:0]B[35:0] [/home/aw1223/new/mase/machop/mase_components/llmint/rtl/LLMint.sv:114]. ]", 1, false); // ah (O, cr)
+messagesViewCrossProbe(PAResourceItoN.MsgTreePanel_MESSAGE_VIEW_TREE, "src;-;/home/aw1223/new/mase/machop/mase_components/llmint/rtl/LLMint.sv;-;;-;16;-;line;-;114;-;;-;16;-;"); // ah (O, cr)
+selectTree(PAResourceItoN.MsgTreePanel_MESSAGE_VIEW_TREE, "[, Synthesis, [Synth 8-659] type mismatch in port association: bit [7:0]A[23:0] vs. bit [7:0]B[35:0] [/home/aw1223/new/mase/machop/mase_components/llmint/rtl/LLMint.sv:114]. ]", 1, false, false, false, false, false, true); // ah (O, cr) - Double Click
+// Elapsed time: 10 seconds
+selectTree(PAResourceEtoH.FileSetPanel_FILE_SET_PANEL_TREE, "[root, Design Sources, top (llm_int_wrapper.sv)]", 1, true); // B (F, cr) - Node
+selectTree(PAResourceEtoH.FileSetPanel_FILE_SET_PANEL_TREE, "[root, Design Sources, top (llm_int_wrapper.sv)]", 1, true, false, false, false, false, true); // B (F, cr) - Double Click - Node
+selectCodeEditor("llm_int_wrapper.sv", 155, 100); // ch (w, cr)
+// TclEventType: DG_GRAPH_STALE
+// TclEventType: FILE_SET_CHANGE
+selectCodeEditor("llm_int_wrapper.sv", 167, 80); // ch (w, cr)
+selectCodeEditor("llm_int_wrapper.sv", 207, 101); // ch (w, cr)
+selectCodeEditor("llm_int_wrapper.sv", 166, 83); // ch (w, cr)
+selectCodeEditor("llm_int_wrapper.sv", 138, 129); // ch (w, cr)
+selectCodeEditor("llm_int_wrapper.sv", 288, 97); // ch (w, cr)
+selectButton(PAResourceItoN.MainToolbarMgr_RUN, (String) null); // az (f, cr)
+selectMenuItem(PAResourceCommand.PACommandNames_RUN_IMPLEMENTATION, "Run Implementation"); // ai (cr)
+// Run Command: PAResourceCommand.PACommandNames_RUN_IMPLEMENTATION
+// bB (cr):  Resetting Runs : addNotify
+selectButton("OptionPane.button", "OK"); // JButton (A, G)
+// TclEventType: RUN_MODIFY
+// TclEventType: RUN_RESET
+// TclEventType: RUN_STATUS_CHANGE
+// TclEventType: RUN_RESET
+// TclEventType: RUN_MODIFY
+// Tcl Message: reset_run synth_1 
+// bB (cr):  Resetting Runs : addNotify
+// bB (cr):  Starting Design Runs : addNotify
+// Tcl Message: launch_runs impl_1 -jobs 20 
+// TclEventType: RUN_LAUNCH
+// TclEventType: RUN_MODIFY
+// TclEventType: RUN_STATUS_CHANGE
+// TclEventType: RUN_MODIFY
+// Tcl Message: [Mon Mar 25 20:00:48 2024] Launched synth_1... Run output will be captured here: /home/aw1223/new/mase/machop/mase_components/llmint/vivado/vivado.runs/synth_1/runme.log [Mon Mar 25 20:00:48 2024] Launched impl_1... Run output will be captured here: /home/aw1223/new/mase/machop/mase_components/llmint/vivado/vivado.runs/impl_1/runme.log 
+// 'c' command handler elapsed time: 4 seconds
+dismissDialog("Starting Design Runs"); // bB (cr)
+// TclEventType: RUN_STATUS_CHANGE
+selectTab("PlanAheadTabBaseWorkspace_JideTabbedPane", (HResource) null, "llm_int_wrapper.sv", 3); // i (h, cr)
+expandTree(PAResourceEtoH.FileSetPanel_FILE_SET_PANEL_TREE, "[root, Design Sources, top (llm_int_wrapper.sv)]", 1); // B (F, cr)
+selectTree(PAResourceEtoH.FileSetPanel_FILE_SET_PANEL_TREE, "[root, Design Sources, top (llm_int_wrapper.sv), llm_int : LLMint (LLMint.sv)]", 2, true); // B (F, cr) - Node
+selectTree(PAResourceEtoH.FileSetPanel_FILE_SET_PANEL_TREE, "[root, Design Sources, top (llm_int_wrapper.sv), llm_int : LLMint (LLMint.sv)]", 2, true, false, false, false, false, true); // B (F, cr) - Double Click - Node
+// TclEventType: RUN_FAILED
+// TclEventType: RUN_STATUS_CHANGE
+// TclEventType: RUN_STEP_COMPLETED
+// TclEventType: RUN_STATUS_CHANGE
+// Elapsed time: 37 seconds
+selectTree(PAResourceItoN.MsgTreePanel_MESSAGE_VIEW_TREE, "[, Synthesis, [Synth 8-659] type mismatch in port association: bit [7:0]A[95:0] vs. bit [7:0]B[35:0] [/home/aw1223/new/mase/machop/mase_components/llmint/rtl/LLMint.sv:114]. ]", 1, false); // ah (O, cr)
+messagesViewCrossProbe(PAResourceItoN.MsgTreePanel_MESSAGE_VIEW_TREE, "src;-;/home/aw1223/new/mase/machop/mase_components/llmint/rtl/LLMint.sv;-;;-;16;-;line;-;114;-;;-;16;-;"); // ah (O, cr)
+selectTree(PAResourceItoN.MsgTreePanel_MESSAGE_VIEW_TREE, "[, Synthesis, [Synth 8-659] type mismatch in port association: bit [7:0]A[95:0] vs. bit [7:0]B[35:0] [/home/aw1223/new/mase/machop/mase_components/llmint/rtl/LLMint.sv:114]. ]", 1, false, false, false, false, false, true); // ah (O, cr) - Double Click
+selectTree(PAResourceItoN.MsgTreePanel_MESSAGE_VIEW_TREE, "[, Synthesis, [Synth 8-659] type mismatch in port association: bit [7:0]A[95:0] vs. bit [7:0]B[35:0] [/home/aw1223/new/mase/machop/mase_components/llmint/rtl/LLMint.sv:114]. ]", 1, false); // ah (O, cr)
+selectCodeEditor("LLMint.sv", 641, 102); // ch (w, cr)
+selectCodeEditor("LLMint.sv", 420, 132); // ch (w, cr)
+selectCodeEditor("LLMint.sv", 420, 132, false, false, false, false, true); // ch (w, cr) - Double Click
+// Elapsed time: 10 seconds
+selectTree(PAResourceEtoH.FileSetPanel_FILE_SET_PANEL_TREE, "[root, Design Sources, top (llm_int_wrapper.sv)]", 1, true); // B (F, cr) - Node
+selectTree(PAResourceEtoH.FileSetPanel_FILE_SET_PANEL_TREE, "[root, Design Sources, top (llm_int_wrapper.sv)]", 1, true, false, false, false, false, true); // B (F, cr) - Double Click - Node
+selectCodeEditor("llm_int_wrapper.sv", 161, 104); // ch (w, cr)
+// TclEventType: DG_GRAPH_STALE
+// TclEventType: FILE_SET_CHANGE
+selectButton(PAResourceItoN.MainToolbarMgr_RUN, (String) null); // az (f, cr)
+selectMenuItem(PAResourceCommand.PACommandNames_RUN_SYNTHESIS, "Run Synthesis"); // ai (cr)
+// Run Command: PAResourceCommand.PACommandNames_RUN_SYNTHESIS
+// bB (cr):  Resetting Runs : addNotify
+// TclEventType: RUN_MODIFY
+// TclEventType: RUN_RESET
+// TclEventType: RUN_STATUS_CHANGE
+// TclEventType: RUN_RESET
+// TclEventType: RUN_MODIFY
+// Tcl Message: reset_run synth_1 
+// bB (cr):  Starting Design Runs : addNotify
+// Tcl Message: launch_runs synth_1 -jobs 20 
+// TclEventType: RUN_LAUNCH
+// TclEventType: RUN_MODIFY
+// TclEventType: RUN_STATUS_CHANGE
+// Tcl Message: [Mon Mar 25 20:02:05 2024] Launched synth_1... Run output will be captured here: /home/aw1223/new/mase/machop/mase_components/llmint/vivado/vivado.runs/synth_1/runme.log 
+dismissDialog("Starting Design Runs"); // bB (cr)
+// TclEventType: RUN_STATUS_CHANGE
+// TclEventType: RUN_FAILED
+// TclEventType: RUN_STATUS_CHANGE
+// TclEventType: RUN_STEP_COMPLETED
+// Elapsed time: 49 seconds
+selectTree(PAResourceItoN.MsgTreePanel_MESSAGE_VIEW_TREE, "[, Synthesis, [Synth 8-659] type mismatch in port association: bit [7:0]A[5:0] vs. bit [7:0]B[35:0] [/home/aw1223/new/mase/machop/mase_components/llmint/rtl/LLMint.sv:114]. ]", 1, false); // ah (O, cr)
+messagesViewCrossProbe(PAResourceItoN.MsgTreePanel_MESSAGE_VIEW_TREE, "src;-;/home/aw1223/new/mase/machop/mase_components/llmint/rtl/LLMint.sv;-;;-;16;-;line;-;114;-;;-;16;-;"); // ah (O, cr)
+selectCodeEditor("LLMint.sv", 335, 78); // ch (w, cr)
+selectCodeEditor("LLMint.sv", 347, 98); // ch (w, cr)
+selectCodeEditor("LLMint.sv", 347, 98, false, false, false, false, true); // ch (w, cr) - Double Click
+// Elapsed time: 11 seconds
+selectTree(PAResourceEtoH.FileSetPanel_FILE_SET_PANEL_TREE, "[root, Design Sources, top (llm_int_wrapper.sv)]", 1, true); // B (F, cr) - Node
+selectTree(PAResourceEtoH.FileSetPanel_FILE_SET_PANEL_TREE, "[root, Design Sources, top (llm_int_wrapper.sv)]", 1, true, false, false, false, false, true); // B (F, cr) - Double Click - Node
+selectCodeEditor("llm_int_wrapper.sv", 150, 101); // ch (w, cr)
+// TclEventType: DG_GRAPH_STALE
+// TclEventType: FILE_SET_CHANGE
+selectButton(PAResourceItoN.MainToolbarMgr_RUN, (String) null); // az (f, cr)
+selectMenuItem(PAResourceCommand.PACommandNames_RUN_SYNTHESIS, "Run Synthesis"); // ai (cr)
+// Run Command: PAResourceCommand.PACommandNames_RUN_SYNTHESIS
+// bB (cr):  Resetting Runs : addNotify
+// TclEventType: RUN_MODIFY
+// TclEventType: RUN_RESET
+// TclEventType: RUN_STATUS_CHANGE
+// TclEventType: RUN_RESET
+// TclEventType: RUN_MODIFY
+// Tcl Message: reset_run synth_1 
+// bB (cr):  Starting Design Runs : addNotify
+// Tcl Message: launch_runs synth_1 -jobs 20 
+// TclEventType: RUN_LAUNCH
+// TclEventType: RUN_MODIFY
+// TclEventType: RUN_STATUS_CHANGE
+// Tcl Message: [Mon Mar 25 20:03:24 2024] Launched synth_1... Run output will be captured here: /home/aw1223/new/mase/machop/mase_components/llmint/vivado/vivado.runs/synth_1/runme.log 
+dismissDialog("Starting Design Runs"); // bB (cr)
+// TclEventType: RUN_STATUS_CHANGE
+// TclEventType: RUN_FAILED
+// TclEventType: RUN_STATUS_CHANGE
+// TclEventType: RUN_STEP_COMPLETED
+// Elapsed time: 43 seconds
+selectTree(PAResourceItoN.MsgTreePanel_MESSAGE_VIEW_TREE, "[, Synthesis, [Synth 8-659] type mismatch in port association: bit [7:0]A[23:0] vs. bit [7:0]B[35:0] [/home/aw1223/new/mase/machop/mase_components/llmint/rtl/LLMint.sv:114]. ]", 1, false); // ah (O, cr)
+messagesViewCrossProbe(PAResourceItoN.MsgTreePanel_MESSAGE_VIEW_TREE, "src;-;/home/aw1223/new/mase/machop/mase_components/llmint/rtl/LLMint.sv;-;;-;16;-;line;-;114;-;;-;16;-;"); // ah (O, cr)
+selectTree(PAResourceItoN.MsgTreePanel_MESSAGE_VIEW_TREE, "[, Synthesis, [Synth 8-659] type mismatch in port association: bit [7:0]A[23:0] vs. bit [7:0]B[35:0] [/home/aw1223/new/mase/machop/mase_components/llmint/rtl/LLMint.sv:114]. ]", 1, false, false, false, false, false, true); // ah (O, cr) - Double Click

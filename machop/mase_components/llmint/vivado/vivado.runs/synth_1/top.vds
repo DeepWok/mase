@@ -1,0 +1,175 @@
+#-----------------------------------------------------------
+# Vivado v2019.2 (64-bit)
+# SW Build 2708876 on Wed Nov  6 21:39:14 MST 2019
+# IP Build 2700528 on Thu Nov  7 00:09:20 MST 2019
+# Start of session at: Mon Mar 25 20:03:26 2024
+# Process ID: 505516
+# Current directory: /home/aw1223/new/mase/machop/mase_components/llmint/vivado/vivado.runs/synth_1
+# Command line: vivado -log top.vds -product Vivado -mode batch -messageDb vivado.pb -notrace -source top.tcl
+# Log file: /home/aw1223/new/mase/machop/mase_components/llmint/vivado/vivado.runs/synth_1/top.vds
+# Journal file: /home/aw1223/new/mase/machop/mase_components/llmint/vivado/vivado.runs/synth_1/vivado.jou
+#-----------------------------------------------------------
+source top.tcl -notrace
+Command: synth_design -top top -part xcu280-fsvh2892-2L-e
+Starting synth_design
+Attempting to get a license for feature 'Synthesis' and/or device 'xcu280'
+INFO: [Common 17-349] Got license for feature 'Synthesis' and/or device 'xcu280'
+INFO: Launching helper process for spawning children vivado processes
+INFO: Helper process launched with PID 505602 
+---------------------------------------------------------------------------------
+Starting Synthesize : Time (s): cpu = 00:00:04 ; elapsed = 00:00:06 . Memory (MB): peak = 1935.305 ; gain = 214.629 ; free physical = 193436 ; free virtual = 205823
+---------------------------------------------------------------------------------
+INFO: [Synth 8-6157] synthesizing module 'top' [/home/aw1223/new/mase/machop/mase_components/llmint/misc/llm_int_wrapper.sv:3]
+WARNING: [Synth 8-4446] all outputs are unconnected for this instance and logic may be removed [/home/aw1223/new/mase/machop/mase_components/llmint/misc/llm_int_wrapper.sv:14]
+INFO: [Synth 8-6157] synthesizing module 'LLMint' [/home/aw1223/new/mase/machop/mase_components/llmint/rtl/LLMint.sv:4]
+	Parameter ORIGINAL_PRECISION bound to: 32 - type: integer 
+	Parameter REDUCED_PRECISION bound to: 8 - type: integer 
+	Parameter TENSOR_SIZE_DIM bound to: 4 - type: integer 
+	Parameter WEIGHT_DIM_0 bound to: 6 - type: integer 
+	Parameter WEIGHT_DIM_1 bound to: 6 - type: integer 
+	Parameter HIGH_SLOTS bound to: 2 - type: integer 
+	Parameter THRESHOLD bound to: 6 - type: integer 
+WARNING: [Synth 8-451] negative shift count is treated as unsigned [/home/aw1223/new/mase/machop/mase_components/llmint/rtl/LLMint.sv:161]
+WARNING: [Synth 8-451] negative shift count is treated as unsigned [/home/aw1223/new/mase/machop/mase_components/llmint/rtl/LLMint.sv:161]
+WARNING: [Synth 8-451] negative shift count is treated as unsigned [/home/aw1223/new/mase/machop/mase_components/llmint/rtl/LLMint.sv:161]
+WARNING: [Synth 8-451] negative shift count is treated as unsigned [/home/aw1223/new/mase/machop/mase_components/llmint/rtl/LLMint.sv:161]
+INFO: [Synth 8-6157] synthesizing module 'scatter_threshold' [/home/aw1223/new/mase/machop/mase_components/scatter/rtl/scatter_threshold.sv:4]
+	Parameter PRECISION bound to: 32 - type: integer 
+	Parameter TENSOR_SIZE_DIM bound to: 4 - type: integer 
+	Parameter HIGH_SLOTS bound to: 2 - type: integer 
+	Parameter THRESHOLD bound to: 6 - type: integer 
+INFO: [Synth 8-6157] synthesizing module 'priority_encoder' [/home/aw1223/new/mase/machop/mase_components/priority_encoder/rtl/priority_encoder.sv:2]
+	Parameter NUM_INPUT_CHANNELS bound to: 4 - type: integer 
+	Parameter NUM_OUPUT_CHANNELS bound to: 4 - type: integer 
+	Parameter NO_INDICIES bound to: 2 - type: integer 
+INFO: [Synth 8-6155] done synthesizing module 'priority_encoder' (1#1) [/home/aw1223/new/mase/machop/mase_components/priority_encoder/rtl/priority_encoder.sv:2]
+INFO: [Synth 8-6157] synthesizing module 'array_zero_mask' [/home/aw1223/new/mase/machop/mase_components/scatter/rtl/array_zero_mask.sv:2]
+	Parameter NUM_INPUTS bound to: 4 - type: integer 
+	Parameter PRECISION bound to: 32 - type: integer 
+INFO: [Synth 8-6155] done synthesizing module 'array_zero_mask' (2#1) [/home/aw1223/new/mase/machop/mase_components/scatter/rtl/array_zero_mask.sv:2]
+INFO: [Synth 8-6155] done synthesizing module 'scatter_threshold' (3#1) [/home/aw1223/new/mase/machop/mase_components/scatter/rtl/scatter_threshold.sv:4]
+INFO: [Synth 8-6157] synthesizing module 'fixed_linear' [/home/aw1223/new/mase/machop/mase_components/linear/rtl/fixed_linear.sv:8]
+	Parameter HAS_BIAS bound to: 0 - type: integer 
+	Parameter DATA_IN_0_PRECISION_0 bound to: 8 - type: integer 
+	Parameter DATA_IN_0_PRECISION_1 bound to: 3 - type: integer 
+	Parameter DATA_IN_0_TENSOR_SIZE_DIM_0 bound to: 4 - type: integer 
+	Parameter DATA_IN_0_TENSOR_SIZE_DIM_1 bound to: 1 - type: integer 
+	Parameter DATA_IN_0_PARALLELISM_DIM_0 bound to: 4 - type: integer 
+	Parameter DATA_IN_0_PARALLELISM_DIM_1 bound to: 1 - type: integer 
+	Parameter IN_0_DEPTH bound to: 1 - type: integer 
+	Parameter WEIGHT_PRECISION_0 bound to: 8 - type: integer 
+	Parameter WEIGHT_PRECISION_1 bound to: 3 - type: integer 
+	Parameter WEIGHT_TENSOR_SIZE_DIM_0 bound to: 6 - type: integer 
+	Parameter WEIGHT_TENSOR_SIZE_DIM_1 bound to: 6 - type: integer 
+	Parameter WEIGHT_PARALLELISM_DIM_0 bound to: 6 - type: integer 
+	Parameter WEIGHT_PARALLELISM_DIM_1 bound to: 1 - type: integer 
+	Parameter DATA_OUT_0_PRECISION_0 bound to: 18 - type: integer 
+	Parameter DATA_OUT_0_PRECISION_1 bound to: 6 - type: integer 
+	Parameter DATA_OUT_0_TENSOR_SIZE_DIM_0 bound to: 4 - type: integer 
+	Parameter DATA_OUT_0_TENSOR_SIZE_DIM_1 bound to: 1 - type: integer 
+	Parameter DATA_OUT_0_PARALLELISM_DIM_0 bound to: 6 - type: integer 
+	Parameter DATA_OUT_0_PARALLELISM_DIM_1 bound to: 1 - type: integer 
+	Parameter BIAS_PRECISION_0 bound to: 16 - type: integer 
+	Parameter BIAS_PRECISION_1 bound to: 3 - type: integer 
+	Parameter BIAS_TENSOR_SIZE_DIM_0 bound to: 4 - type: integer 
+	Parameter BIAS_TENSOR_SIZE_DIM_1 bound to: 1 - type: integer 
+	Parameter BIAS_PARALLELISM_DIM_0 bound to: 1 - type: integer 
+	Parameter BIAS_PARALLELISM_DIM_1 bound to: 1 - type: integer 
+	Parameter FDP_WIDTH bound to: 18 - type: integer 
+	Parameter ACC_WIDTH bound to: 18 - type: integer 
+INFO: [Synth 8-6157] synthesizing module 'fixed_dot_product' [/home/aw1223/new/mase/machop/mase_components/fixed_arithmetic/rtl/fixed_dot_product.sv:2]
+	Parameter IN_WIDTH bound to: 8 - type: integer 
+	Parameter IN_SIZE bound to: 4 - type: integer 
+	Parameter WEIGHT_WIDTH bound to: 8 - type: integer 
+	Parameter OUT_WIDTH bound to: 18 - type: integer 
+	Parameter PRODUCT_WIDTH bound to: 16 - type: integer 
+INFO: [Synth 8-6157] synthesizing module 'fixed_vector_mult' [/home/aw1223/new/mase/machop/mase_components/fixed_arithmetic/rtl/fixed_vector_mult.sv:2]
+	Parameter IN_WIDTH bound to: 8 - type: integer 
+	Parameter WEIGHT_WIDTH bound to: 8 - type: integer 
+	Parameter OUT_WIDTH bound to: 16 - type: integer 
+	Parameter IN_SIZE bound to: 4 - type: integer 
+	Parameter PRODUCT_WIDTH bound to: 16 - type: integer 
+INFO: [Synth 8-6157] synthesizing module 'fixed_mult' [/home/aw1223/new/mase/machop/mase_components/fixed_arithmetic/rtl/fixed_mult.sv:4]
+	Parameter IN_A_WIDTH bound to: 8 - type: integer 
+	Parameter IN_B_WIDTH bound to: 8 - type: integer 
+INFO: [Synth 8-6155] done synthesizing module 'fixed_mult' (4#1) [/home/aw1223/new/mase/machop/mase_components/fixed_arithmetic/rtl/fixed_mult.sv:4]
+INFO: [Synth 8-6157] synthesizing module 'join2' [/home/aw1223/new/mase/machop/mase_components/common/rtl/join2.sv:3]
+INFO: [Synth 8-6155] done synthesizing module 'join2' (5#1) [/home/aw1223/new/mase/machop/mase_components/common/rtl/join2.sv:3]
+INFO: [Synth 8-6157] synthesizing module 'skid_buffer' [/home/aw1223/new/mase/machop/mase_components/common/rtl/skid_buffer.sv:3]
+	Parameter DATA_WIDTH bound to: 64 - type: integer 
+INFO: [Synth 8-6155] done synthesizing module 'skid_buffer' (6#1) [/home/aw1223/new/mase/machop/mase_components/common/rtl/skid_buffer.sv:3]
+INFO: [Synth 8-6155] done synthesizing module 'fixed_vector_mult' (7#1) [/home/aw1223/new/mase/machop/mase_components/fixed_arithmetic/rtl/fixed_vector_mult.sv:2]
+INFO: [Synth 8-6157] synthesizing module 'fixed_adder_tree' [/home/aw1223/new/mase/machop/mase_components/fixed_arithmetic/rtl/fixed_adder_tree.sv:2]
+	Parameter IN_SIZE bound to: 4 - type: integer 
+	Parameter IN_WIDTH bound to: 16 - type: integer 
+	Parameter OUT_WIDTH bound to: 18 - type: integer 
+	Parameter LEVELS bound to: 2 - type: integer 
+INFO: [Synth 8-6157] synthesizing module 'fixed_adder_tree_layer' [/home/aw1223/new/mase/machop/mase_components/fixed_arithmetic/rtl/fixed_adder_tree_layer.sv:2]
+	Parameter IN_SIZE bound to: 4 - type: integer 
+	Parameter IN_WIDTH bound to: 16 - type: integer 
+INFO: [Synth 8-6155] done synthesizing module 'fixed_adder_tree_layer' (8#1) [/home/aw1223/new/mase/machop/mase_components/fixed_arithmetic/rtl/fixed_adder_tree_layer.sv:2]
+INFO: [Synth 8-6157] synthesizing module 'skid_buffer__parameterized0' [/home/aw1223/new/mase/machop/mase_components/common/rtl/skid_buffer.sv:3]
+	Parameter DATA_WIDTH bound to: 34 - type: integer 
+INFO: [Synth 8-6155] done synthesizing module 'skid_buffer__parameterized0' (8#1) [/home/aw1223/new/mase/machop/mase_components/common/rtl/skid_buffer.sv:3]
+INFO: [Synth 8-6157] synthesizing module 'fixed_adder_tree_layer__parameterized0' [/home/aw1223/new/mase/machop/mase_components/fixed_arithmetic/rtl/fixed_adder_tree_layer.sv:2]
+	Parameter IN_SIZE bound to: 2 - type: integer 
+	Parameter IN_WIDTH bound to: 17 - type: integer 
+INFO: [Synth 8-6155] done synthesizing module 'fixed_adder_tree_layer__parameterized0' (8#1) [/home/aw1223/new/mase/machop/mase_components/fixed_arithmetic/rtl/fixed_adder_tree_layer.sv:2]
+INFO: [Synth 8-6157] synthesizing module 'skid_buffer__parameterized1' [/home/aw1223/new/mase/machop/mase_components/common/rtl/skid_buffer.sv:3]
+	Parameter DATA_WIDTH bound to: 18 - type: integer 
+INFO: [Synth 8-6155] done synthesizing module 'skid_buffer__parameterized1' (8#1) [/home/aw1223/new/mase/machop/mase_components/common/rtl/skid_buffer.sv:3]
+
+Warning: Trying to implement RAM in registers. Block RAM or DRAM implementation is not possible for one or more of the following reasons :
+	1: RAM's read address port stuck at constant. 
+	2: Unable to determine number of words or word size in RAM. 
+	3: No valid read/write found for RAM. 
+RAM dissolved into registers
+
+Warning: Trying to implement RAM in registers. Block RAM or DRAM implementation is not possible for one or more of the following reasons :
+	1: RAM read is not driven by RAM register. 
+	2: RAM read is not driven by RAM register. 
+	3: Unable to determine number of words or word size in RAM. 
+	4: No valid read/write found for RAM. 
+RAM dissolved into registers
+
+Warning: Trying to implement RAM in registers. Block RAM or DRAM implementation is not possible for one or more of the following reasons :
+	1: RAM's read address port stuck at constant. 
+	2: Unable to determine number of words or word size in RAM. 
+	3: No valid read/write found for RAM. 
+RAM dissolved into registers
+WARNING: [Synth 8-3848] Net vars[0].data0 in module/entity fixed_adder_tree does not have driver. [/home/aw1223/new/mase/machop/mase_components/fixed_arithmetic/rtl/fixed_adder_tree.sv:89]
+WARNING: [Synth 8-3848] Net vars[0].data0 in module/entity fixed_adder_tree does not have driver. [/home/aw1223/new/mase/machop/mase_components/fixed_arithmetic/rtl/fixed_adder_tree.sv:89]
+WARNING: [Synth 8-3848] Net vars[0].data0 in module/entity fixed_adder_tree does not have driver. [/home/aw1223/new/mase/machop/mase_components/fixed_arithmetic/rtl/fixed_adder_tree.sv:89]
+WARNING: [Synth 8-3848] Net vars[0].data0 in module/entity fixed_adder_tree does not have driver. [/home/aw1223/new/mase/machop/mase_components/fixed_arithmetic/rtl/fixed_adder_tree.sv:89]
+WARNING: [Synth 8-3848] Net vars[0].data0 in module/entity fixed_adder_tree does not have driver. [/home/aw1223/new/mase/machop/mase_components/fixed_arithmetic/rtl/fixed_adder_tree.sv:89]
+WARNING: [Synth 8-3848] Net vars[0].data0 in module/entity fixed_adder_tree does not have driver. [/home/aw1223/new/mase/machop/mase_components/fixed_arithmetic/rtl/fixed_adder_tree.sv:89]
+WARNING: [Synth 8-3848] Net vars[0].data0 in module/entity fixed_adder_tree does not have driver. [/home/aw1223/new/mase/machop/mase_components/fixed_arithmetic/rtl/fixed_adder_tree.sv:89]
+WARNING: [Synth 8-3848] Net vars[0].data0 in module/entity fixed_adder_tree does not have driver. [/home/aw1223/new/mase/machop/mase_components/fixed_arithmetic/rtl/fixed_adder_tree.sv:89]
+WARNING: [Synth 8-3848] Net vars[0].data0 in module/entity fixed_adder_tree does not have driver. [/home/aw1223/new/mase/machop/mase_components/fixed_arithmetic/rtl/fixed_adder_tree.sv:89]
+WARNING: [Synth 8-3848] Net vars[0].data0 in module/entity fixed_adder_tree does not have driver. [/home/aw1223/new/mase/machop/mase_components/fixed_arithmetic/rtl/fixed_adder_tree.sv:89]
+WARNING: [Synth 8-3848] Net vars[0].data0 in module/entity fixed_adder_tree does not have driver. [/home/aw1223/new/mase/machop/mase_components/fixed_arithmetic/rtl/fixed_adder_tree.sv:89]
+WARNING: [Synth 8-3848] Net vars[0].data0 in module/entity fixed_adder_tree does not have driver. [/home/aw1223/new/mase/machop/mase_components/fixed_arithmetic/rtl/fixed_adder_tree.sv:89]
+WARNING: [Synth 8-3848] Net vars[1].data0 in module/entity fixed_adder_tree does not have driver. [/home/aw1223/new/mase/machop/mase_components/fixed_arithmetic/rtl/fixed_adder_tree.sv:82]
+WARNING: [Synth 8-3848] Net vars[1].data0 in module/entity fixed_adder_tree does not have driver. [/home/aw1223/new/mase/machop/mase_components/fixed_arithmetic/rtl/fixed_adder_tree.sv:82]
+INFO: [Synth 8-6155] done synthesizing module 'fixed_adder_tree' (9#1) [/home/aw1223/new/mase/machop/mase_components/fixed_arithmetic/rtl/fixed_adder_tree.sv:2]
+INFO: [Synth 8-6155] done synthesizing module 'fixed_dot_product' (10#1) [/home/aw1223/new/mase/machop/mase_components/fixed_arithmetic/rtl/fixed_dot_product.sv:2]
+INFO: [Synth 8-6157] synthesizing module 'fixed_accumulator' [/home/aw1223/new/mase/machop/mase_components/fixed_arithmetic/rtl/fixed_accumulator.sv:2]
+	Parameter IN_DEPTH bound to: 1 - type: integer 
+	Parameter IN_WIDTH bound to: 18 - type: integer 
+	Parameter OUT_WIDTH bound to: 18 - type: integer 
+	Parameter COUNTER_WIDTH bound to: 0 - type: integer 
+WARNING: [Synth 8-693] zero replication count - replication ignored [/home/aw1223/new/mase/machop/mase_components/fixed_arithmetic/rtl/fixed_accumulator.sv:35]
+INFO: [Synth 8-6155] done synthesizing module 'fixed_accumulator' (11#1) [/home/aw1223/new/mase/machop/mase_components/fixed_arithmetic/rtl/fixed_accumulator.sv:2]
+INFO: [Synth 8-6155] done synthesizing module 'fixed_linear' (12#1) [/home/aw1223/new/mase/machop/mase_components/linear/rtl/fixed_linear.sv:8]
+ERROR: [Synth 8-659] type mismatch in port association: bit [7:0]A[23:0] vs. bit [7:0]B[35:0] [/home/aw1223/new/mase/machop/mase_components/llmint/rtl/LLMint.sv:114]
+ERROR: [Synth 8-6156] failed synthesizing module 'LLMint' [/home/aw1223/new/mase/machop/mase_components/llmint/rtl/LLMint.sv:4]
+ERROR: [Synth 8-6156] failed synthesizing module 'top' [/home/aw1223/new/mase/machop/mase_components/llmint/misc/llm_int_wrapper.sv:3]
+---------------------------------------------------------------------------------
+Finished Synthesize : Time (s): cpu = 00:00:05 ; elapsed = 00:00:11 . Memory (MB): peak = 1998.055 ; gain = 277.379 ; free physical = 193331 ; free virtual = 205718
+---------------------------------------------------------------------------------
+synthesize failed
+INFO: [Common 17-83] Releasing license: Synthesis
+34 Infos, 20 Warnings, 0 Critical Warnings and 4 Errors encountered.
+synth_design failed
+ERROR: [Common 17-69] Command failed: Vivado Synthesis failed
+INFO: [Common 17-206] Exiting Vivado at Mon Mar 25 20:03:54 2024...

@@ -90,3 +90,20 @@ launch_runs synth_1 -jobs 20
 wait_on_run synth_1
 launch_runs impl_1 -jobs 20
 wait_on_run impl_1
+# Disabling source management mode.  This is to allow the top design properties to be set without GUI intervention.
+set_property source_mgmt_mode None [current_project]
+set_property top top [current_fileset]
+# Re-enabling previously disabled source management mode.
+set_property source_mgmt_mode None [current_project]
+reset_run synth_1
+launch_runs impl_1 -jobs 20
+wait_on_run impl_1
+reset_run synth_1
+launch_runs impl_1 -jobs 20
+wait_on_run impl_1
+reset_run synth_1
+launch_runs synth_1 -jobs 20
+wait_on_run synth_1
+reset_run synth_1
+launch_runs synth_1 -jobs 20
+wait_on_run synth_1

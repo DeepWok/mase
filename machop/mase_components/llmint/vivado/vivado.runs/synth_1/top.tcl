@@ -59,12 +59,12 @@ foreach dcp [get_files -quiet -all -filter file_type=="Design\ Checkpoint"] {
 set_param ips.enableIPCacheLiteLoad 1
 close [open __synthesis_is_running__ w]
 
-synth_design -top LLMint -part xcu280-fsvh2892-2L-e
+synth_design -top top -part xcu280-fsvh2892-2L-e
 
 
 # disable binary constraint mode for synth run checkpoints
 set_param constraints.enableBinaryConstraints false
-write_checkpoint -force -noxdef LLMint.dcp
-create_report "synth_1_synth_report_utilization_0" "report_utilization -file LLMint_utilization_synth.rpt -pb LLMint_utilization_synth.pb"
+write_checkpoint -force -noxdef top.dcp
+create_report "synth_1_synth_report_utilization_0" "report_utilization -file top_utilization_synth.rpt -pb top_utilization_synth.pb"
 file delete __synthesis_is_running__
 close [open __synthesis_is_complete__ w]
