@@ -2,7 +2,6 @@
 
 # This script tests the fixed point linear
 import os, logging
-from functools import partial
 
 import cocotb
 from cocotb.log import SimLog
@@ -13,12 +12,12 @@ from mase_cocotb.interfaces.streaming import StreamDriver, StreamMonitor
 from mase_cocotb.z_qlayers import quantize_to_int
 from mase_cocotb.runner import mase_runner
 from mase_cocotb.utils import bit_driver, sign_extend_t
+from functools import partial
 
 from chop.passes.graph.transforms.quantize.quantized_modules import LinearInteger
 from chop.passes.graph.transforms.quantize.quantizers import integer_quantizer
 
 import torch
-print(torch.__version__)
 
 logger = logging.getLogger("testbench")
 logger.setLevel(logging.DEBUG)
@@ -30,7 +29,7 @@ class LinearTB(Testbench):
 
     def __init__(self, dut) -> None:
         super().__init__(dut, dut.clk, dut.rst)
-        
+
         self.in_features = dut.TENSOR_SIZE_DIM.value
         self.out_features = dut.TENSOR_SIZE_DIM.value
         self.high_slots = dut.HIGH_SLOTS.value
@@ -39,9 +38,16 @@ class LinearTB(Testbench):
         self.reduced_bitwidth = dut.REDUCED_PRECISION.value
         self.weights_size = [dut.WEIGHT_DIM_0.value, dut.WEIGHT_DIM_1.value]
 
-       
-        print('----------------Assigned---------------')
-        print(self.in_features)
+
+
+        print(type(self.in_features))
+        print(type(self.out_features))
+        print(type(self.high_slots ))
+        print(type(self.threshold ))
+        print(type(self.bitwidth ))
+        print(type(self.reduced_bitwidth))
+        print(type(self.weights_size))
+
         if not hasattr(self, "log"):
             self.log = SimLog("%s" % (type(self).__qualname__))
 
@@ -54,11 +60,11 @@ class LinearTB(Testbench):
         )
 
         self.quantizer = partial(
-            integer_quantizer, width=self.bitwidth, frac_width=3
+            integer_quantizer, width=self.bitwidth, frac_width=0
         )
 
         self.reduced_quantizer = partial(
-            integer_quantizer, width=self.reduced_bitwidth, frac_width=3
+            integer_quantizer, width=self.reduced_bitwidth, frac_width=0
         )
 
         # For latter if we tackle bias
@@ -68,7 +74,6 @@ class LinearTB(Testbench):
                 dut.clk, dut.bias, dut.bias_valid, dut.bias_ready
             )
         '''
-        print('----------------Monitor B---------------')
 
         self.data_out_monitor = StreamMonitor(
             dut.clk,
@@ -78,71 +83,32 @@ class LinearTB(Testbench):
             check=False,
         )
 
-        print('----------------Linear low---------------')
-
-
-# Model
-        
-        # self.linear_low = LinearInteger(
-        #     in_features=10,
-        #     out_features=10,
-        #     bias=False,
-        #     config={
-        #         "data_in_width": self.bitwidth,
-        #         "data_in_frac_width": 3,
-        #         "weight_width": self.bitwidth,
-        #         "weight_frac_width": 3,
-        #     },
-        # )
-
-        print('----------------Linear high--------------')
-
-
-        # self.linear_high = LinearInteger(
-        #     in_features=self.in_features,
-        #     out_features=self.out_features,
-        #     bias=False,
-        #     config={
-        #         "data_in_width": self.reduced_bitwidth,
-        #         "data_in_frac_width": 3,
-        #         "weight_width": self.reduced_bitwidth,
-        #         "weight_frac_width": 3,
-        #     },
-        # )
-
-
         self.linear_low = LinearInteger(
             in_features=self.in_features,
             out_features=self.out_features,
             bias=False,
             config={
-                "data_in_width": 16,
-                "data_in_frac_width": 0,
-                "weight_width": 16,
-                "weight_frac_width": 0,
-                "bias_width": 16,
-                "bias_frac_width": 0,
+                "data_in_width": self.bitwidth,
+                "data_in_frac_width": 1,
+                "weight_width": self.bitwidth,
+                "weight_frac_width": 1,
             },
         )
 
-        self.linear_high= LinearInteger(
+        self.linear_high = LinearInteger(
             in_features=self.in_features,
             out_features=self.out_features,
             bias=False,
             config={
-                "data_in_width": 16,
-                "data_in_frac_width": 0,
-                "weight_width": 16,
-                "weight_frac_width": 0,
-                "bias_width": 16,
-                "bias_frac_width": 0,
+                "data_in_width": self.reduced_bitwidth,
+                "data_in_frac_width": 1,
+                "weight_width": self.reduced_bitwidth,
+                "weight_frac_width": 1,
             },
         )
-        print('----------------Models---------------')
 
         # Not sure about this line
-        # self.linear_low.weight = self.reduced_quantizer(self.linear_high.weight)
-        print('----------------Finish consturctor---------------')
+        self.linear_low.weight = self.reduced_quantizer(self.linear_high.weight)
 
 
     def gather(self, x_low, x_high):
@@ -152,9 +118,8 @@ class LinearTB(Testbench):
         high_mat = []
         low_mat = []
         count_high = 0
-        print('x',x.tolist())
-        for k in reversed(x[0].tolist()):
-            
+
+        for k in reversed(x.tolist()):
             if abs(k) > self.threshold and count_high < self.high_slots:
                 high_mat.append(k)
                 low_mat.append(0)
@@ -191,14 +156,10 @@ class LinearTB(Testbench):
         await self.reset()
         logger.info(f"Reset finished")
         self.data_out_monitor.ready.value = 1
-        print('----------------Ready---------------')
-
 
         inputs = self.generate_inputs()
         exp_out = self.LLMint_model(inputs)
-        print('----------------expout---------------')
 
-        print('inputs',inputs)
         # Load the inputs driver
         logger.info(f"Processing inputs")
         inputs = self.preprocess_tensor(
@@ -241,8 +202,6 @@ class LinearTB(Testbench):
 
 @cocotb.test()
 async def test(dut):
-    print('----------------Started test---------------')
-
     tb = LinearTB(dut)
     await tb.run_test()
 

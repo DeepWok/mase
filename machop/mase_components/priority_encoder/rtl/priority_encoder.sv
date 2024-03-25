@@ -13,7 +13,7 @@ module priority_encoder #(
     //Can use multiplexer design and check which is better after synthesis
     integer i;
     integer j;
-    logic set;
+    // logic set;
     // logic [NUM_INPUT_CHANNELS-1:0] idx;
     logic [NUM_INPUT_CHANNELS-1:0] input_channels_temp;
     logic [NUM_INPUT_CHANNELS-1:0] channel_mask;

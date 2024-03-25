@@ -2,6 +2,8 @@
 
 # This script tests the fixed point linear
 import os, logging
+from functools import partial
+
 import cocotb
 from cocotb.log import SimLog
 from cocotb.triggers import *
@@ -13,6 +15,7 @@ from mase_cocotb.runner import mase_runner
 from mase_cocotb.utils import bit_driver, sign_extend_t
 
 from chop.passes.graph.transforms.quantize.quantized_modules import LinearInteger
+from chop.passes.graph.transforms.quantize.quantizers import integer_quantizer
 
 import torch
 
@@ -21,35 +24,44 @@ logger.setLevel(logging.DEBUG)
 
 
 class LinearTB(Testbench):
-    def __init__(self, dut, in_features=4, out_features=4) -> None:
+    def __init__(self, dut) -> None:
         super().__init__(dut, dut.clk, dut.rst)
 
+        self.in_features = dut.TENSOR_SIZE_DIM.value
+        self.out_features = dut.TENSOR_SIZE_DIM.value
+        self.high_slots = dut.HIGH_SLOTS.value
+        self.threshold = dut.THRESHOLD.value
+        self.bitwidth = dut.ORIGINAL_PRECISION.value
+        self.reduced_bitwidth = dut.REDUCED_PRECISION.value
+        self.weights_size = [dut.WEIGHT_DIM_0.value, dut.WEIGHT_DIM_1.value]
+
+
+        print('----------------Assigned---------------')
+        # print(self.in_features)
+        print('features',self.in_features)
+        print('type',type(self.in_features))
         if not hasattr(self, "log"):
             self.log = SimLog("%s" % (type(self).__qualname__))
 
-        self.data_in_0_driver = StreamDriver(
-            dut.clk, dut.data_in_0, dut.data_in_0_valid, dut.data_in_0_ready
+        self.data_in_driver = StreamDriver(
+            dut.clk, dut.data_in, dut.data_in_valid, dut.data_in_ready
         )
+
         self.weight_driver = StreamDriver(
-            dut.clk, dut.weight, dut.weight_valid, dut.weight_ready
+            dut.clk, dut.weights, dut.weight_valid, dut.weight_ready
         )
 
-        if int(dut.HAS_BIAS) == 1:
-            self.bias_driver = StreamDriver(
-                dut.clk, dut.bias, dut.bias_valid, dut.bias_ready
-            )
+        self.quantizer = partial(
+            integer_quantizer, width=32, frac_width=3
+        )
 
-        self.data_out_0_monitor = StreamMonitor(
-            dut.clk,
-            dut.data_out_0,
-            dut.data_out_0_valid,
-            dut.data_out_0_ready,
-            check=False,
+        self.reduced_quantizer = partial(
+            integer_quantizer, width=16, frac_width=3
         )
         # Model
-        self.model = LinearInteger(
-            in_features=in_features,
-            out_features=out_features,
+        self.linear_low = LinearInteger(
+            in_features=4,
+            out_features=4,
             bias=False,
             config={
                 "data_in_width": 16,
@@ -60,6 +72,22 @@ class LinearTB(Testbench):
                 "bias_frac_width": 3,
             },
         )
+
+        self.linear_high= LinearInteger(
+            in_features=4,
+            out_features=4,
+            bias=False,
+            config={
+                "data_in_width": 16,
+                "data_in_frac_width": 3,
+                "weight_width": 16,
+                "weight_frac_width": 3,
+                "bias_width": 16,
+                "bias_frac_width": 3,
+            },
+        )
+
+    print('------done----')
 
     def generate_inputs(self):
         return torch.randn((1, self.model.in_features))
@@ -118,43 +146,43 @@ class LinearTB(Testbench):
 
 @cocotb.test()
 async def test_20x20(dut):
-    tb = LinearTB(dut, in_features=20, out_features=20)
+    tb = LinearTB(dut)
     await tb.run_test()
 
 
 if __name__ == "__main__":
     mase_runner(
-        trace=True,
-        module_param_list=[
-            {
-                "DATA_IN_0_TENSOR_SIZE_DIM_0": 20,
-                "DATA_IN_0_PARALLELISM_DIM_0": 2,
-                "WEIGHT_TENSOR_SIZE_DIM_0": 20,
-                "WEIGHT_TENSOR_SIZE_DIM_1": 20,
-                "WEIGHT_PARALLELISM_DIM_0": 20,
-                "DATA_OUT_0_TENSOR_SIZE_DIM_0": 20,
-                "DATA_OUT_0_PARALLELISM_DIM_0": 20,
-                "BIAS_TENSOR_SIZE_DIM_0": 20,
-            },
-            {
-                "DATA_IN_0_TENSOR_SIZE_DIM_0": 20,
-                "DATA_IN_0_PARALLELISM_DIM_0": 4,
-                "WEIGHT_TENSOR_SIZE_DIM_0": 20,
-                "WEIGHT_TENSOR_SIZE_DIM_1": 20,
-                "WEIGHT_PARALLELISM_DIM_0": 20,
-                "DATA_OUT_0_TENSOR_SIZE_DIM_0": 20,
-                "DATA_OUT_0_PARALLELISM_DIM_0": 20,
-                "BIAS_TENSOR_SIZE_DIM_0": 20,
-            },
-            {
-                "DATA_IN_0_TENSOR_SIZE_DIM_0": 20,
-                "DATA_IN_0_PARALLELISM_DIM_0": 5,
-                "WEIGHT_TENSOR_SIZE_DIM_0": 20,
-                "WEIGHT_TENSOR_SIZE_DIM_1": 20,
-                "WEIGHT_PARALLELISM_DIM_0": 20,
-                "DATA_OUT_0_TENSOR_SIZE_DIM_0": 20,
-                "DATA_OUT_0_PARALLELISM_DIM_0": 20,
-                "BIAS_TENSOR_SIZE_DIM_0": 20,
-            },
-        ],
+        trace=True
+        # module_param_list=[
+        #     {
+        #         "DATA_IN_0_TENSOR_SIZE_DIM_0": 20,
+        #         "DATA_IN_0_PARALLELISM_DIM_0": 2,
+        #         "WEIGHT_TENSOR_SIZE_DIM_0": 20,
+        #         "WEIGHT_TENSOR_SIZE_DIM_1": 20,
+        #         "WEIGHT_PARALLELISM_DIM_0": 20,
+        #         "DATA_OUT_0_TENSOR_SIZE_DIM_0": 20,
+        #         "DATA_OUT_0_PARALLELISM_DIM_0": 20,
+        #         "BIAS_TENSOR_SIZE_DIM_0": 20,
+        #     },
+        #     {
+        #         "DATA_IN_0_TENSOR_SIZE_DIM_0": 20,
+        #         "DATA_IN_0_PARALLELISM_DIM_0": 4,
+        #         "WEIGHT_TENSOR_SIZE_DIM_0": 20,
+        #         "WEIGHT_TENSOR_SIZE_DIM_1": 20,
+        #         "WEIGHT_PARALLELISM_DIM_0": 20,
+        #         "DATA_OUT_0_TENSOR_SIZE_DIM_0": 20,
+        #         "DATA_OUT_0_PARALLELISM_DIM_0": 20,
+        #         "BIAS_TENSOR_SIZE_DIM_0": 20,
+        #     },
+        #     {
+        #         "DATA_IN_0_TENSOR_SIZE_DIM_0": 20,
+        #         "DATA_IN_0_PARALLELISM_DIM_0": 5,
+        #         "WEIGHT_TENSOR_SIZE_DIM_0": 20,
+        #         "WEIGHT_TENSOR_SIZE_DIM_1": 20,
+        #         "WEIGHT_PARALLELISM_DIM_0": 20,
+        #         "DATA_OUT_0_TENSOR_SIZE_DIM_0": 20,
+        #         "DATA_OUT_0_PARALLELISM_DIM_0": 20,
+        #         "BIAS_TENSOR_SIZE_DIM_0": 20,
+        #     },
+        # ],
     )
