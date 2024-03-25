@@ -21,8 +21,8 @@ import torch
 print(torch.__version__)
 
 logger = logging.getLogger("testbench")
-logger.setLevel(logging.DEBUG)
-
+# logger.setLevel(logging.DEBUG)
+logging.getLogger().setLevel(logging.INFO)
 global_tensor_size = 6
 
 
@@ -117,11 +117,11 @@ class LinearTB(Testbench):
             bias=False,
             config={
                 "data_in_width": 16,
-                "data_in_frac_width": 0,
+                "data_in_frac_width": 3,
                 "weight_width": 16,
-                "weight_frac_width": 0,
+                "weight_frac_width": 3,
                 "bias_width": 16,
-                "bias_frac_width": 0,
+                "bias_frac_width": 3,
             },
         )
 
@@ -131,11 +131,11 @@ class LinearTB(Testbench):
             bias=False,
             config={
                 "data_in_width": 16,
-                "data_in_frac_width": 0,
+                "data_in_frac_width": 3,
                 "weight_width": 16,
-                "weight_frac_width": 0,
+                "weight_frac_width": 3,
                 "bias_width": 16,
-                "bias_frac_width": 0,
+                "bias_frac_width": 3,
             },
         )
         print('----------------Models---------------')
@@ -207,6 +207,7 @@ class LinearTB(Testbench):
             int(self.dut.TENSOR_SIZE_DIM),
         )
         self.data_in_driver.load_driver(inputs)
+        print('inputs',inputs)
 
         # Load the weights driver
         logger.info(f"Processing weights")
@@ -215,11 +216,15 @@ class LinearTB(Testbench):
             self.quantizer,
             int(self.dut.TENSOR_SIZE_DIM) * int(self.dut.TENSOR_SIZE_DIM),
         )
+        print('self.linear_high.weight',self.linear_high.weight)  
+        print('weights',weights)
         reduced_weights = self.preprocess_tensor(
             self.linear_low.weight,
             self.reduced_quantizer,
             int(self.dut.TENSOR_SIZE_DIM) * int(self.dut.TENSOR_SIZE_DIM),
         )
+        print('reduced_weights',reduced_weights)
+
         # Combine the weights. weights and reduced_weights are lists of tensors. We need to combine them into 
         # a single list of augmented tensors
         combined_weights = [weights[i] + reduced_weights[i] for i in range(len(weights))]
@@ -233,9 +238,10 @@ class LinearTB(Testbench):
             self.quantizer,
             int(self.dut.TENSOR_SIZE_DIM),
         )
+        print('outs',outs)
         self.data_out_monitor.load_monitor(outs)
 
-        await Timer(1000, units="us")
+        await Timer(200, units="ns")
         assert self.data_out_monitor.exp_queue.empty()
 
 

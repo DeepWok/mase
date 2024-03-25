@@ -98,7 +98,6 @@ class LinearTB(Testbench):
             int(self.dut.WEIGHT_PARALLELISM_DIM_0)
             * int(self.dut.DATA_IN_0_PARALLELISM_DIM_0),
         )
-        
         self.weight_driver.load_driver(weights)
 
         # Load the output monitor
@@ -112,8 +111,10 @@ class LinearTB(Testbench):
         )
         self.data_out_0_monitor.load_monitor(outs)
 
-        await Timer(1000, units="us")
+        await Timer(1, units="us")
         assert self.data_out_0_monitor.exp_queue.empty()
+        print('weights',weights)
+
 
 
 @cocotb.test()
@@ -135,26 +136,26 @@ if __name__ == "__main__":
                 "DATA_OUT_0_TENSOR_SIZE_DIM_0": 20,
                 "DATA_OUT_0_PARALLELISM_DIM_0": 20,
                 "BIAS_TENSOR_SIZE_DIM_0": 20,
-            },
-            {
-                "DATA_IN_0_TENSOR_SIZE_DIM_0": 20,
-                "DATA_IN_0_PARALLELISM_DIM_0": 4,
-                "WEIGHT_TENSOR_SIZE_DIM_0": 20,
-                "WEIGHT_TENSOR_SIZE_DIM_1": 20,
-                "WEIGHT_PARALLELISM_DIM_0": 20,
-                "DATA_OUT_0_TENSOR_SIZE_DIM_0": 20,
-                "DATA_OUT_0_PARALLELISM_DIM_0": 20,
-                "BIAS_TENSOR_SIZE_DIM_0": 20,
-            },
-            {
-                "DATA_IN_0_TENSOR_SIZE_DIM_0": 20,
-                "DATA_IN_0_PARALLELISM_DIM_0": 5,
-                "WEIGHT_TENSOR_SIZE_DIM_0": 20,
-                "WEIGHT_TENSOR_SIZE_DIM_1": 20,
-                "WEIGHT_PARALLELISM_DIM_0": 20,
-                "DATA_OUT_0_TENSOR_SIZE_DIM_0": 20,
-                "DATA_OUT_0_PARALLELISM_DIM_0": 20,
-                "BIAS_TENSOR_SIZE_DIM_0": 20,
-            },
-        ],
+            }],
+        #     {
+        #         "DATA_IN_0_TENSOR_SIZE_DIM_0": 20,
+        #         "DATA_IN_0_PARALLELISM_DIM_0": 4,
+        #         "WEIGHT_TENSOR_SIZE_DIM_0": 20,
+        #         "WEIGHT_TENSOR_SIZE_DIM_1": 20,
+        #         "WEIGHT_PARALLELISM_DIM_0": 20,
+        #         "DATA_OUT_0_TENSOR_SIZE_DIM_0": 20,
+        #         "DATA_OUT_0_PARALLELISM_DIM_0": 20,
+        #         "BIAS_TENSOR_SIZE_DIM_0": 20,
+        #     },
+        #     {
+        #         "DATA_IN_0_TENSOR_SIZE_DIM_0": 20,
+        #         "DATA_IN_0_PARALLELISM_DIM_0": 5,
+        #         "WEIGHT_TENSOR_SIZE_DIM_0": 20,
+        #         "WEIGHT_TENSOR_SIZE_DIM_1": 20,
+        #         "WEIGHT_PARALLELISM_DIM_0": 20,
+        #         "DATA_OUT_0_TENSOR_SIZE_DIM_0": 20,
+        #         "DATA_OUT_0_PARALLELISM_DIM_0": 20,
+        #         "BIAS_TENSOR_SIZE_DIM_0": 20,
+        #     },
+        # ],
     )

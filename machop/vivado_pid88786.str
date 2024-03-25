@@ -636,3 +636,5 @@ dismissDialog("New Project"); // f (cr)
 // WARNING: HEventQueue.dispatchEvent() is taking  1001 ms.
 // WARNING: HEventQueue.dispatchEvent() is taking  1001 ms.
 // WARNING: HEventQueue.dispatchEvent() is taking  1001 ms.
+// WARNING: HEventQueue.dispatchEvent() is taking  1001 ms.
+// WARNING: HEventQueue.dispatchEvent() is taking  1001 ms.
