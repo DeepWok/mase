@@ -690,6 +690,8 @@ def emit_verilog_top_transform_pass(graph, pass_args={}):
 
     # Code to generate the LUTs for activation functions. Currently here because RTL dir is required. 
     # Move to verilog emitter if you can pass path somehow.
+    # Alternatively, add a class to the emitter that can be called to generate LUTs, for LUT based implementations of activation functions, 
+    # or other functions that require LUTs such as PolyLUT neurons.
     for node in graph.fx_graph.nodes:
             if "INTERNAL" in node.meta["mase"].parameters["hardware"]["toolchain"]:
                 if(node.name in ['softmax', 'logsigmoid', 'sigmoid', 'elu', 'silu']):
