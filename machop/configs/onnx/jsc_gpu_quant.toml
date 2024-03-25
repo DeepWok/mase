@@ -10,6 +10,7 @@ learning_rate = 1e3
 
 [passes.onnxruntime.default.config]
 quantize = true
+num_calibration_batches = 200
 quantize_types = ['static', 'dynamic']
 precision = 'int8'
 
@@ -17,4 +18,3 @@ precision = 'int8'
 num_batches = 500
 num_GPU_warmup_batches = 5
 test = true
-

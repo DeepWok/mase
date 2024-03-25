@@ -66,7 +66,7 @@ class RuntimeAnalysis():
                         
                     case '.onnx':
                         # Load the exported ONNX model into an ONNXRuntime inference session
-                        self.model = ort.InferenceSession(path, providers=[get_execution_provider(self.config)])
+                        self.model = ort.InferenceSession(path, providers=get_execution_provider(self.config))
                         self.model_name = f"{self.config['model']}-onnx"
                         self.model_type = 'onnx'
                     case _:

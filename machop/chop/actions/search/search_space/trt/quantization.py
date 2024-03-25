@@ -120,4 +120,9 @@ class GraphSearchSpaceTRTMixedPrecisionPTQ(SearchSpaceBase):
         config = unflatten_dict(flattened_config)
         config["default"] = self.default_config
         config["by"] = self.config["setup"]["by"]
+
+        config['model'] = self.config["setup"]["model"]
+        config['dataset'] = self.config["setup"]["dataset"]
+        config['task'] = self.config["setup"]["task"]
+
         return config

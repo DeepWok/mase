@@ -8,9 +8,6 @@ import onnx
 import onnxruntime as ort
 from .quantize import Quantizer
 
-# TODO: check if transformers work, otherwise use convert_graph_to_onnx.py from transformers library
-# TODO: test multiple CPUs (as ONNXRuntime supports cpu)
-
 def onnx_runtime_transform_pass(graph, pass_args="None"):    
     onnx_runtime_session = ONNXRuntime(config=pass_args)
     pytorch_model = graph.model

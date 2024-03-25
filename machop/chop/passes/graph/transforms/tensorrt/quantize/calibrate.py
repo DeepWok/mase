@@ -107,7 +107,7 @@ class Calibrator:
 
             # Create a calibrator_dataloader that is a subset of the training dataloader
             # Number of batches defined in the config by num_calibration_batches
-            calibrator_dataloader = get_calibrator_dataloader(self.config['data_module'].train_dataloader, self.config.get('num_calibration_batches', 200))        
+            calibrator_dataloader = get_calibrator_dataloader(self.config['data_module'].train_dataloader(), self.config.get('num_calibration_batches', 200))        
 
             for i, (xTrain, _) in enumerate(calibrator_dataloader):
                 graph.model(Variable(xTrain).cuda())

@@ -51,7 +51,7 @@ precision = 'int8'
 # quantize_axis = false
 
 [passes.tensorrt_fine_tune]
-fine_tune = true
+fine_tune = false
 epochs = 10
 
 [passes.tensorrt.runtime_analysis]
