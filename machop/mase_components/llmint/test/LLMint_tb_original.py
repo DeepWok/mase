@@ -172,12 +172,12 @@ class LinearTB(Testbench):
         # Load the weights driver
         logger.info(f"Processing weights")
         weights = self.preprocess_tensor(
-            self.weights,
+            self.linear_high.weight,
             self.quantizer,
             int(self.dut.TENSOR_SIZE_DIM) * int(self.dut.TENSOR_SIZE_DIM),
         )
         reduced_weights = self.preprocess_tensor(
-            self.q_weights,
+            self.linear_low.weight,
             self.reduced_quantizer,
             int(self.dut.TENSOR_SIZE_DIM) * int(self.dut.TENSOR_SIZE_DIM),
         )
@@ -192,7 +192,7 @@ class LinearTB(Testbench):
         outs = self.preprocess_tensor(
             exp_out,
             self.quantizer,
-            int(self.dut.DATA_OUT_0_PARALLELISM_DIM_0),
+            int(self.dut.TENSOR_SIZE_DIM),
         )
         self.data_out_monitor.load_monitor(outs)
 
