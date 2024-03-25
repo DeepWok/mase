@@ -12,7 +12,7 @@ name = "graph/zero_cost_proxy"
 [search.search_space.zc]
 seed = 2
 benchmark = 'nasbench201'
-dataset = 'cifar10'
+dataset = 'ImageNet16-120'
 calculate_proxy = false
 ensemble_model = 'nonlinear'
 loss_fn = 'mae'

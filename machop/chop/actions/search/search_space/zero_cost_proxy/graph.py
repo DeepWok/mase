@@ -226,11 +226,11 @@ class ZeroCostProxy(SearchSpaceBase):
         }
         config = CfgNode(config_dict)
 
-        # Get the dataloaders
-        train_loader, _, _, _, _ = get_train_val_loaders(config)
 
         for zcp_name in self.config["zc"]["zc_proxies"]:
             if self.config["zc"]["calculate_proxy"]:
+                # Get the dataloaders
+                train_loader, _, _, _, _ = get_train_val_loaders(config)
                 # train and query expect different ZCP formats
                 zcp_train = [
                     {"zero_cost_scores": eval_zcp(t_arch, zcp_name, train_loader)}
