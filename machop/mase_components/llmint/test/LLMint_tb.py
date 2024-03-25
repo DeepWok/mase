@@ -123,11 +123,11 @@ class LinearTB(Testbench):
             bias=False,
             config={
                 "data_in_width": self.reduced_bitwidth,
-                "data_in_frac_width": 3,
+                "data_in_frac_width": 0,
                 "weight_width": self.reduced_bitwidth,
-                "weight_frac_width": 3,
+                "weight_frac_width": 0,
                 "bias_width": self.reduced_bitwidth,
-                "bias_frac_width": 3,
+                "bias_frac_width": 0,
             },
         )
 
@@ -137,11 +137,11 @@ class LinearTB(Testbench):
             bias=False,
             config={
                 "data_in_width": self.bitwidth,
-                "data_in_frac_width": 3,
+                "data_in_frac_width": 0,
                 "weight_width": self.bitwidth,
-                "weight_frac_width": 3,
+                "weight_frac_width": 0,
                 "bias_width": self.bitwidth,
-                "bias_frac_width": 3,
+                "bias_frac_width": 0,
             },
         )
         print('----------------Models---------------')
@@ -172,6 +172,10 @@ class LinearTB(Testbench):
         low_mat.reverse()
         high_mat.reverse()
 
+        print('-----SCATTER-------')
+        print('low_mat',low_mat)
+        print('high_mat',high_mat)
+
         return torch.tensor(low_mat), torch.tensor(high_mat)
     
     def LLMint_model(self, inputs):
@@ -184,10 +188,10 @@ class LinearTB(Testbench):
 
         return outputs
 
+    #Ensure high does not go above maximum bitwidth
+    def generate_random_numbers(self, low=-4000, high=4000):
+        return torch.rand((1, self.in_features)) * (high - low) + low
 
-    def generate_random_numbers(self,low=6000, high=10000):
-        return torch.randn((1, self.in_features)) * (high - low) + low
-    
     def generate_inputs(self):
         return self.generate_random_numbers()
 
