@@ -35,6 +35,11 @@ module LLMint #(
     logic signed [ORIGINAL_PRECISION-1:0] high_for_gather[TENSOR_SIZE_DIM-1:0];
     logic signed [ORIGINAL_PRECISION-1:0] low_for_gather[TENSOR_SIZE_DIM-1:0];
 
+
+    wire [ORIGINAL_PRECISION-1:0] test;
+    assign test = weights[WEIGHT_DIM_0 * WEIGHT_DIM_1+1];
+
+
     scatter_threshold#(
         .PRECISION(ORIGINAL_PRECISION),
         .TENSOR_SIZE_DIM(TENSOR_SIZE_DIM),

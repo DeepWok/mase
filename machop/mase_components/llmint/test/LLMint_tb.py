@@ -7,6 +7,7 @@ from functools import partial
 import cocotb
 from cocotb.log import SimLog
 from cocotb.triggers import *
+from mase_cocotb.random_test import RandomSource, RandomSink, check_results
 
 from mase_cocotb.testbench import Testbench
 from mase_cocotb.interfaces.streaming import StreamDriver, StreamMonitor
@@ -24,6 +25,11 @@ logger = logging.getLogger("testbench")
 # logger.setLevel(logging.DEBUG)
 logging.getLogger().setLevel(logging.INFO)
 global_tensor_size = 6
+
+
+
+# LLMint_monitor()
+
 
 
 class LinearTB(Testbench):
@@ -75,7 +81,7 @@ class LinearTB(Testbench):
             dut.data_out,
             dut.data_out_valid,
             dut.data_out_ready,
-            check=False,
+            check=True,
         )
 
         print('----------------Linear low---------------')
@@ -178,8 +184,14 @@ class LinearTB(Testbench):
 
         return outputs
 
+
+    def generate_random_numbers(self,low=6000, high=10000):
+        return torch.randn((1, self.in_features)) * (high - low) + low
+    
     def generate_inputs(self):
-        return torch.randn((1, self.in_features))
+        return self.generate_random_numbers()
+
+        # return torch.randn((1, self.in_features))
 
     def preprocess_tensor(self, tensor, quantizer, parallelism):
         tensor = quantizer(tensor).int()
@@ -206,7 +218,10 @@ class LinearTB(Testbench):
             self.quantizer,
             int(self.dut.TENSOR_SIZE_DIM),
         )
+        # inputs = [[-20000, -2, -2000, -2000,-2000, -2000]]
+
         self.data_in_driver.load_driver(inputs)
+
         print('inputs',inputs)
 
         # Load the weights driver
@@ -217,7 +232,7 @@ class LinearTB(Testbench):
             int(self.dut.TENSOR_SIZE_DIM) * int(self.dut.TENSOR_SIZE_DIM),
         )
         print('self.linear_high.weight',self.linear_high.weight)  
-        weights = [[2, 2, 2, 2,2, 2, 2, 2, 2, 2, 2,2, 2, 2,2, 2,2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,2, 2, 2, 2, 2, 2]]
+        # weights = [[2, 2, 2, 2,2, 2, 2, 2, 2, 2, 2,2, 2, 2,2, 2,2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,2, 2, 2, 2, 2, 2]]
 
         print('weights',weights)
         reduced_weights = self.preprocess_tensor(
@@ -225,12 +240,12 @@ class LinearTB(Testbench):
             self.reduced_quantizer,
             int(self.dut.TENSOR_SIZE_DIM) * int(self.dut.TENSOR_SIZE_DIM),
         )
-        reduced_weights = [[1, 1, 1, 1,1, 1, 1, 1, 1, 1, 1,1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]]
+        # reduced_weights = [[-1, -1, -1, -1,-1, -1,-1, -1, -1, -1, -1,-1, -1, -1,-1, -1,-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,-1,-1, -1, -1, -1, -1]]
         print('reduced_weights',reduced_weights)
 
         # Combine the weights. weights and reduced_weights are lists of tensors. We need to combine them into 
         # a single list of augmented tensors
-        combined_weights = [weights[i] + reduced_weights[i] for i in range(len(weights))]
+        combined_weights = [reduced_weights[i] + weights[i] for i in range(len(weights))]
         print('combined_weights',combined_weights)
 
         self.weight_driver.load_driver(combined_weights)
@@ -246,9 +261,8 @@ class LinearTB(Testbench):
         print('outs',outs)
         self.data_out_monitor.load_monitor(outs)
 
-        await Timer(200, units="ns")
+        await Timer(400, units="ns")
         assert self.data_out_monitor.exp_queue.empty()
-
 
 @cocotb.test()
 async def test(dut):
