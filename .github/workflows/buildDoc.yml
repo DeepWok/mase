@@ -46,7 +46,10 @@ jobs:
       - name: Run ghp-import
         run: |
           echo "${{ github.repository }}"
-          if [[ "${{ github.repository }}" == "DeepWok/mase" ]]; then
+          if [ "${{ secrets.MASE_DOCKER_CRED }}" != "" ]; then
             ghp-import -n -p -f machop/sphinx_docs/build/html
+            echo "MASE Doc deployed."
+          else
+            echo "Skipped MASE Doc deployment."
           fi
 
