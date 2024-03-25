@@ -77,22 +77,7 @@ module fixed_softmax #(
   logic ff_acc_ready;
 
   localparam MEM_SIZE = (2**(DATA_IN_0_PRECISION_0)); //the threshold
-  logic [DATA_INTERMEDIATE_0_PRECISION_0-1:0] exp [MEM_SIZE];
 
-  initial begin
-    string filename = "/home/aw23/mase/machop/mase_components/activations/rtl/exp_IN16_8_OUT16_8_map.mem";
-    
-    // $sformat(in_data_string, "%s", DATA_IN_0_PRECISION_0);
-    // $sformat(in_f_string, "%s", DATA_IN_0_PRECISION_1);
-    // $sformat(out_data_string, "%s", DATA_OUT_0_PRECISION_0);
-    // $sformat(out_f_string, "%s", DATA_OUT_0_PRECISION_1);
-
-    // string filename;
-    // $sformat(filename, "/home/aw23/mase/machop/mase_components/activations/rtl/exp_IN%d_%d_OUT%d_%d_map.mem", DATA_IN_0_PRECISION_0, DATA_IN_0_PRECISION_1, DATA_INTERMEDIATE_0_PRECISION_0, DATA_INTERMEDIATE_0_PRECISION_1);
-    // $display("%s", filename);
-    $readmemb(filename, exp); // change name
-  end              //mase/machop/mase_components/activations/rtl/elu_map.mem
-  
   unpacked_fifo #(
       .DEPTH(IN_0_DEPTH),
       .DATA_WIDTH(DATA_IN_0_PRECISION_0),
@@ -155,9 +140,16 @@ module fixed_softmax #(
 
 
   for (genvar i = 0; i < DATA_OUT_0_PARALLELISM_DIM_0*DATA_OUT_0_PARALLELISM_DIM_1; i++) begin : exp_mem_read
-    always_comb begin
-      exp_data[i] = exp[roll_data[i]]; // exponential
-    end
+    exp_lut #(
+      .DATA_IN_0_PRECISION_0(DATA_IN_0_PRECISION_0),
+      .DATA_IN_0_PRECISION_1(DATA_IN_0_PRECISION_1),
+      .DATA_OUT_0_PRECISION_0(DATA_OUT_0_PRECISION_0),
+      .DATA_OUT_0_PRECISION_1(DATA_OUT_0_PRECISION_1)
+    )
+    exp_map (
+      .data_in_0(roll_data[i]),
+      .data_out_0(exp_data[i])
+    );
   end
 
   unpacked_fifo #(

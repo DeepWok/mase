@@ -154,7 +154,17 @@ def lookup_to_sv_file(in_data_width:int, in_f_width:int, data_width: int, f_widt
     value_format = f"{data_width}'b{{}}"
 
     # Starting the module and case statement
-    sv_code = f"module {function}_lut_{data_width}_{f_width}(input logic [{data_width-1}:0] data_in_0, output logic [{data_width-1}:0] data_out_0);\n"
+    sv_code = f"""
+module {function}_lut_{data_width}_{f_width} #
+    (
+        parameter DATA_IN_0_PRECISION_0 = 16,
+        parameter DATA_IN_0_PRECISION_1 = 8,
+        parameter DATA_OUT_0_PRECISION_0 = 16,
+        parameter DATA_OUT_0_PRECISION_1 = 8,
+    )
+    (input logic [{data_width-1}:0] data_in_0, output logic [{data_width-1}:0] data_out_0);
+    
+"""
     sv_code += "    always_comb begin\n"
     sv_code += "        case(data_in_0)\n"
 
