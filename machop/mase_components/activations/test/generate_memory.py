@@ -121,9 +121,9 @@ def lookup_to_file(in_data_width, in_f_width, data_width: int, f_width: int, fun
         file.write('\n'.join(str(value) for value in dicto.values()))
         file.write('\n')
 
-def lookup_to_sv_file(data_width: int, f_width: int, function: str, file_path = None):
-    dicto = aligned_generate_lookup(data_width=data_width, f_width=f_width, function=function, type="bin")
-    dicto = {k: v for k, v in dicto.items() if k not in ['data_width', 'f_width', 'func']}  
+def lookup_to_sv_file(in_data_width:int, in_f_width:int, data_width: int, f_width: int, function: str, file_path = None):
+    dicto = aligned_generate_lookup(in_data_width=in_data_width, in_f_width=in_f_width, data_width=data_width, f_width=f_width, function=function, type="bin")
+    dicto = {k: v for k, v in dicto.items() if k not in ['data_width', 'f_width', 'func', 'in_data_width', 'in_f_width']}  
     # Format for bit sizing
     key_format = f"{data_width}'b{{}}"
     value_format = f"{data_width}'b{{}}"
@@ -155,16 +155,23 @@ def generate_mem(function_name, in_data_width, in_f_width, data_width, f_width):
     assert function_name in FUNCTION_TABLE, f"Function {function_name} not found in FUNCTION_TABLE"
     lookup_to_file(in_data_width, in_f_width, data_width, f_width, function_name, f'/home/aw23/mase/machop/mase_components/activations/rtl/{function_name}_IN{in_data_width}_{in_f_width}_OUT{data_width}_{f_width}_map.mem')
 
-def generate_sv_lut(function_name, data_width, f_width, dir = None):
+def generate_sv_lut(function_name, in_data_width, in_f_width, data_width, f_width, dir = None, path_with_dtype = False):
     assert function_name in FUNCTION_TABLE, f"Function {function_name} not found in FUNCTION_TABLE"
-    if dir is None:
-        lookup_to_sv_file(data_width, f_width, function_name, f'/workspace/machop/mase_components/activations/rtl/{function_name}_map.sv')
+
+    if(path_with_dtype):
+        end = f'_{data_width}_{f_width}'
     else:
-        lookup_to_sv_file(data_width, f_width, function_name, f'{dir}/{function_name}_map_{data_width}_{f_width}.sv')
+        end = ''
+    if dir is None:
+        lookup_to_sv_file(in_data_width, in_f_width, data_width, f_width, function_name, f'/workspace/machop/mase_components/activations/rtl/{function_name}_map{end}.sv')
+    else:
+        lookup_to_sv_file(in_data_width, in_f_width, data_width, f_width, function_name, f'{dir}/{function_name}_map{end}.sv')
 
 
 if __name__ == "__main__":
-    # generate_sv_lut("silu", 8, 4)
-    dicto = aligned_generate_lookup(in_data_width=8, in_f_width=4, data_width=8, f_width=4, function='exp', type="bin")
-    # dicto = {k: v for k, v in dicto.items() if k not in ['data_width', 'f_width', 'func', 'in_data_width', 'in_f_width']}  
-    testlookup(dicto)
+    # for k, v in FUNCTION_TABLE.items():
+        # generate_sv_lut(k, 16, 8, 16, 8, dir="/home/bardia/code/adls/project/report_test", path_with_dtype=True)
+    
+    # dicto = aligned_generate_lookup(in_data_width=16, in_f_width=8, data_width=8, f_width=4, function='exp', type="bin")
+    # # dicto = {k: v for k, v in dicto.items() if k not in ['data_width', 'f_width', 'func', 'in_data_width', 'in_f_width']}  
+    # testlookup(dicto)

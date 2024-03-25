@@ -40,6 +40,7 @@ INTERNAL_COMP = {
             "name": "fixed_silu",
             "dependence_files": [
                 "activations/rtl/fixed_silu.sv",
+                "activations/rtl/silu_lut.sv",
             ],
         },
     ],
@@ -48,6 +49,7 @@ INTERNAL_COMP = {
             "name": "fixed_elu",
             "dependence_files": [
                 "activations/rtl/fixed_elu.sv",
+                "activations/rtl/elu_lut.sv",
             ],
         },
     ],
@@ -56,6 +58,7 @@ INTERNAL_COMP = {
             "name": "fixed_sigmoid",
             "dependence_files": [
                 "activations/rtl/fixed_sigmoid.sv",
+                "activations/rtl/sigmoid_lut.sv"
             ],
         },
     ],
@@ -72,6 +75,7 @@ INTERNAL_COMP = {
             "name": "fixed_logsigmoid",
             "dependence_files": [
                 "activations/rtl/fixed_logsigmoid.sv",
+                "activations/rtl/logsigmoid_lut.sv",
             ],
         },
     ],
@@ -80,6 +84,7 @@ INTERNAL_COMP = {
             "name": "fixed_softmax",
             "dependence_files": [
                 "activations/rtl/fixed_softmax.sv",
+                "activations/rtl/exp_lut .sv",
             ],
         },
     ],
