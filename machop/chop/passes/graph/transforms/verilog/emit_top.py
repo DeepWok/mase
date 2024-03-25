@@ -688,7 +688,8 @@ def emit_verilog_top_transform_pass(graph, pass_args={}):
     with open(top_file, "w") as top_design:
         top_design.write(top)
 
-    # Code to generate the LUTs for activation functions. Currently here because RTL dir is required. Move to verilog emitter if you can pass path somehow.
+    # Code to generate the LUTs for activation functions. Currently here because RTL dir is required. 
+    # Move to verilog emitter if you can pass path somehow.
     for node in graph.fx_graph.nodes:
             if "INTERNAL" in node.meta["mase"].parameters["hardware"]["toolchain"]:
                 if(node.name in ['softmax', 'logsigmoid', 'sigmoid', 'elu', 'silu']):
