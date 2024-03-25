@@ -116,11 +116,11 @@ class LinearTB(Testbench):
             out_features=self.out_features,
             bias=False,
             config={
-                "data_in_width": 16,
+                "data_in_width": self.reduced_bitwidth,
                 "data_in_frac_width": 3,
-                "weight_width": 16,
+                "weight_width": self.reduced_bitwidth,
                 "weight_frac_width": 3,
-                "bias_width": 16,
+                "bias_width": self.reduced_bitwidth,
                 "bias_frac_width": 3,
             },
         )
@@ -130,11 +130,11 @@ class LinearTB(Testbench):
             out_features=self.out_features,
             bias=False,
             config={
-                "data_in_width": 16,
+                "data_in_width": self.bitwidth,
                 "data_in_frac_width": 3,
-                "weight_width": 16,
+                "weight_width": self.bitwidth,
                 "weight_frac_width": 3,
-                "bias_width": 16,
+                "bias_width": self.bitwidth,
                 "bias_frac_width": 3,
             },
         )
@@ -217,17 +217,22 @@ class LinearTB(Testbench):
             int(self.dut.TENSOR_SIZE_DIM) * int(self.dut.TENSOR_SIZE_DIM),
         )
         print('self.linear_high.weight',self.linear_high.weight)  
+        weights = [[2, 2, 2, 2,2, 2, 2, 2, 2, 2, 2,2, 2, 2,2, 2,2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,2, 2, 2, 2, 2, 2]]
+
         print('weights',weights)
         reduced_weights = self.preprocess_tensor(
             self.linear_low.weight,
             self.reduced_quantizer,
             int(self.dut.TENSOR_SIZE_DIM) * int(self.dut.TENSOR_SIZE_DIM),
         )
+        reduced_weights = [[1, 1, 1, 1,1, 1, 1, 1, 1, 1, 1,1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]]
         print('reduced_weights',reduced_weights)
 
         # Combine the weights. weights and reduced_weights are lists of tensors. We need to combine them into 
         # a single list of augmented tensors
         combined_weights = [weights[i] + reduced_weights[i] for i in range(len(weights))]
+        print('combined_weights',combined_weights)
+
         self.weight_driver.load_driver(combined_weights)
 
         # Load the output monitor
