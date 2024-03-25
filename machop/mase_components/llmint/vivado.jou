@@ -1,0 +1,92 @@
+#-----------------------------------------------------------
+# Vivado v2019.2 (64-bit)
+# SW Build 2708876 on Wed Nov  6 21:39:14 MST 2019
+# IP Build 2700528 on Thu Nov  7 00:09:20 MST 2019
+# Start of session at: Mon Mar 25 18:57:07 2024
+# Process ID: 456650
+# Current directory: /home/aw1223/new/mase/machop/mase_components/llmint
+# Command line: vivado
+# Log file: /home/aw1223/new/mase/machop/mase_components/llmint/vivado.log
+# Journal file: /home/aw1223/new/mase/machop/mase_components/llmint/vivado.jou
+#-----------------------------------------------------------
+start_gui
+create_project vivado /home/aw1223/new/mase/machop/mase_components/llmint/vivado -part xcu280-fsvh2892-2L-e
+set_property board_part xilinx.com:au280:part0:1.1 [current_project]
+add_files -norecurse {/home/aw1223/new/mase/machop/mase_components/priority_encoder/rtl/priority_encoder.sv /home/aw1223/new/mase/machop/mase_components/common/rtl/skid_buffer.sv /home/aw1223/new/mase/machop/mase_components/linear/rtl/fixed_linear.sv /home/aw1223/new/mase/machop/mase_components/llmint/rtl/LLMint.sv /home/aw1223/new/mase/machop/mase_components/gather/rtl/gather.sv /home/aw1223/new/mase/machop/mase_components/scatter/rtl/array_zero_mask.sv /home/aw1223/new/mase/machop/mase_components/common/rtl/join2.sv /home/aw1223/new/mase/machop/mase_components/scatter/rtl/scatter_threshold.sv}
+update_compile_order -fileset sources_1
+update_compile_order -fileset sources_1
+launch_runs synth_1 -jobs 20
+wait_on_run synth_1
+reset_run synth_1
+launch_runs synth_1 -jobs 20
+wait_on_run synth_1
+reset_run synth_1
+launch_runs synth_1 -jobs 20
+wait_on_run synth_1
+reset_run synth_1
+launch_runs synth_1 -jobs 20
+wait_on_run synth_1
+reset_run synth_1
+launch_runs synth_1 -jobs 20
+wait_on_run synth_1
+add_files -norecurse {/home/aw1223/new/mase/machop/mase_components/fixed_arithmetic/rtl/fixed_adder_tree.sv /home/aw1223/new/mase/machop/mase_components/fixed_arithmetic/rtl/fixed_adder_tree_layer.sv /home/aw1223/new/mase/machop/mase_components/fixed_arithmetic/rtl/fixed_dot_product.sv /home/aw1223/new/mase/machop/mase_components/fixed_arithmetic/rtl/fixed_vector_mult.sv}
+update_compile_order -fileset sources_1
+reset_run synth_1
+launch_runs synth_1 -jobs 20
+wait_on_run synth_1
+add_files -norecurse {/home/aw1223/new/mase/machop/mase_components/fixed_arithmetic/rtl/fixed_accumulator.sv /home/aw1223/new/mase/machop/mase_components/fixed_arithmetic/rtl/fixed_mult.sv /home/aw1223/new/mase/machop/mase_components/fixed_arithmetic/rtl/fixed_mac.sv}
+reset_run synth_1
+update_compile_order -fileset sources_1
+launch_runs synth_1 -jobs 20
+wait_on_run synth_1
+reset_run synth_1
+launch_runs synth_1 -jobs 20
+wait_on_run synth_1
+reset_run synth_1
+launch_runs synth_1 -jobs 20
+wait_on_run synth_1
+reset_run synth_1
+launch_runs synth_1 -jobs 20
+wait_on_run synth_1
+reset_run synth_1
+launch_runs synth_1 -jobs 20
+wait_on_run synth_1
+reset_run synth_1
+launch_runs synth_1 -jobs 20
+wait_on_run synth_1
+reset_run synth_1
+launch_runs synth_1 -jobs 20
+wait_on_run synth_1
+reset_run synth_1
+launch_runs synth_1 -jobs 20
+wait_on_run synth_1
+reset_run synth_1
+launch_runs synth_1 -jobs 20
+wait_on_run synth_1
+launch_runs impl_1 -jobs 20
+wait_on_run impl_1
+reset_run synth_1
+launch_runs impl_1 -jobs 20
+wait_on_run impl_1
+reset_run synth_1
+launch_runs impl_1 -jobs 20
+wait_on_run impl_1
+add_files -norecurse /home/aw1223/new/mase/machop/mase_components/llmint/misc/llm_int_wrapper.sv
+reset_run synth_1
+launch_runs impl_1 -jobs 20
+wait_on_run impl_1
+set_property source_mgmt_mode None [current_project]
+# Disabling source management mode.  This is to allow the top design properties to be set without GUI intervention.
+set_property source_mgmt_mode None [current_project]
+set_property top LLMint [current_fileset]
+# Re-enabling previously disabled source management mode.
+set_property source_mgmt_mode None [current_project]
+add_files -norecurse /home/aw1223/new/mase/machop/mase_components/llmint/misc/llm_int_wrapper.sv
+reset_run synth_1
+launch_runs synth_1 -jobs 20
+wait_on_run synth_1
+reset_run synth_1
+launch_runs synth_1 -jobs 20
+wait_on_run synth_1
+launch_runs impl_1 -jobs 20
+wait_on_run impl_1

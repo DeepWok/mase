@@ -14,7 +14,7 @@ module gather #(
     
     integer i;
     for(i=0; i<TENSOR_SIZE_DIM; i=i+1) begin
-      assign mat_sum[i] = mat_a[i] + mat_b[i];
+      mat_sum[i] = mat_a[i] + mat_b[i];
     end
 
   end

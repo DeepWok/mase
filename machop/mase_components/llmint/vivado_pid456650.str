@@ -1,0 +1,1366 @@
+/*
+
+Xilinx Vivado v2019.2 (64-bit) [Major: 2019, Minor: 2]
+SW Build: 2708876 on Wed Nov  6 21:39:14 MST 2019
+IP Build: 2700528 on Thu Nov  7 00:09:20 MST 2019
+
+Process ID (PID): 456650
+License: Customer
+
+Current time: 	Mon Mar 25 18:57:30 GMT 2024
+Time zone: 	Greenwich Mean Time (Europe/London)
+
+OS: Red Hat Enterprise Linux release 9.3 (Plow)
+OS Version: 5.14.0-362.18.1.el9_3.x86_64
+OS Architecture: amd64
+Available processors (cores): 40
+
+Display: :2
+Screen size: 1440x779
+Screen resolution (DPI): 100
+Available screens: 1
+Available disk space: 37 GB
+Default font: family=Dialog,name=Dialog,style=plain,size=12
+
+Java version: 	9.0.4 64-bit
+Java home: 	/mnt/applications/Xilinx/19.2/Vivado/2019.2/tps/lnx64/jre9.0.4
+Java executable location: 	/mnt/applications/Xilinx/19.2/Vivado/2019.2/tps/lnx64/jre9.0.4/bin/java
+Java initial memory (-Xms): 	128 MB
+Java maximum memory (-Xmx):	 3 GB
+
+
+User name: 	aw1223
+User home directory: /home/aw1223
+User working directory: /home/aw1223/new/mase/machop/mase_components/llmint
+User country: 	GB
+User language: 	en
+User locale: 	en_GB
+
+RDI_BASEROOT: /mnt/applications/Xilinx/19.2/Vivado
+HDI_APPROOT: /mnt/applications/Xilinx/19.2/Vivado/2019.2
+RDI_DATADIR: /mnt/applications/Xilinx/19.2/Vivado/2019.2/data
+RDI_BINDIR: /mnt/applications/Xilinx/19.2/Vivado/2019.2/bin
+
+Vivado preferences file location: /home/aw1223/.Xilinx/Vivado/2019.2/vivado.xml
+Vivado preferences directory: /home/aw1223/.Xilinx/Vivado/2019.2/
+Vivado layouts directory: /home/aw1223/.Xilinx/Vivado/2019.2/layouts
+PlanAhead jar file location: 	/mnt/applications/Xilinx/19.2/Vivado/2019.2/lib/classes/planAhead.jar
+Vivado log file location: 	/home/aw1223/new/mase/machop/mase_components/llmint/vivado.log
+Vivado journal file location: 	/home/aw1223/new/mase/machop/mase_components/llmint/vivado.jou
+Engine tmp dir: 	./.Xil/Vivado-456650-ee-beholder1
+
+Xilinx Environment Variables
+----------------------------
+ALTERAOCLSDKROOT: /mnt/applications/altera/18.1//hld
+AMDAPPSDKROOT: /mnt/applications/AMD/APP/3.0
+XILINX: /mnt/applications/Xilinx/19.2/Vivado/2019.2/ids_lite/ISE
+XILINXD_LICENSE_FILE: 2100@ee-llic01.ee.ic.ac.uk
+XILINX_DSP: /mnt/applications/Xilinx/19.2/Vivado/2019.2/ids_lite/ISE
+XILINX_HLS: /mnt/applications/Xilinx/23.1/Vitis_HLS/2023.1
+XILINX_PLANAHEAD: /mnt/applications/Xilinx/19.2/Vivado/2019.2
+XILINX_SDK: /mnt/applications/Xilinx/19.2/Vitis/2019.2
+XILINX_VITIS: /mnt/applications/Xilinx/19.2/Vitis/2019.2
+XILINX_VIVADO: /mnt/applications/Xilinx/19.2/Vivado/2019.2
+XILINX_VIVADO_HLS: /mnt/applications/Xilinx/19.2/Vivado/2019.2
+
+
+GUI allocated memory:	185 MB
+GUI max memory:		3,072 MB
+Engine allocated memory: 1,091 MB
+
+Copyright 1986-2019 Xilinx, Inc. All Rights Reserved.
+
+*/
+
+// TclEventType: START_GUI
+// Tcl Message: start_gui 
+// Tcl Message: xterm: /mnt/applications/Xilinx/19.2/Vitis/2019.2/lib/lnx64.o/libxml2.so.2: no version information available (required by /lib64/libfontconfig.so.1) xterm: /mnt/applications/Xilinx/19.2/Vitis/2019.2/lib/lnx64.o/libxml2.so.2: no version information available (required by /lib64/libfontconfig.so.1) 
+selectButton(PAResourceEtoH.GettingStartedView_CREATE_NEW_PROJECT, "Create Project"); // y (x, cr)
+// Run Command: PAResourceCommand.PACommandNames_NEW_PROJECT
+// [GUI Memory]: 76 MB (+77012kb) [00:00:08]
+// [Engine Memory]: 1,061 MB (+961001kb) [00:00:08]
+// [GUI Memory]: 97 MB (+18564kb) [00:00:11]
+// [GUI Memory]: 114 MB (+12716kb) [00:00:11]
+// f (cr): New Project: addNotify
+// HMemoryUtils.trashcanNow. Engine heap size: 1,070 MB. GUI used memory: 47 MB. Current time: 3/25/24, 6:57:30 PM GMT
+selectButton("NEXT", "Next >"); // JButton (j, f)
+setText(PAResourceOtoP.ProjectNameChooser_PROJECT_NAME, "vivado"); // ac (Q, f)
+selectButton("NEXT", "Next >"); // JButton (j, f)
+selectButton("NEXT", "Next >"); // JButton (j, f)
+selectButton(PAResourceQtoS.SrcChooserPanel_ADD_HDL_AND_NETLIST_FILES_TO_YOUR_PROJECT, "Add Files"); // a (E, f)
+setFileChooser("/home/aw1223/new/mase/machop/mase_components/llmint/rtl/LLMint.sv");
+selectButton(PAResourceQtoS.SrcChooserPanel_ADD_HDL_AND_NETLIST_FILES_TO_YOUR_PROJECT, "Add Files"); // a (E, f)
+// Elapsed time: 24 seconds
+String[] filenames31467 = {"/home/aw1223/new/mase/machop/mase_components/common/rtl/join2.sv", "/home/aw1223/new/mase/machop/mase_components/common/rtl/skid_buffer.sv"};
+setFileChooser(filenames31467);
+selectButton(PAResourceQtoS.SrcChooserPanel_ADD_HDL_AND_NETLIST_FILES_TO_YOUR_PROJECT, "Add Files"); // a (E, f)
+// Elapsed time: 25 seconds
+setFileChooser("/home/aw1223/new/mase/machop/mase_components/linear/rtl/fixed_linear.sv");
+selectButton(PAResourceQtoS.SrcChooserPanel_ADD_HDL_AND_NETLIST_FILES_TO_YOUR_PROJECT, "Add Files"); // a (E, f)
+setFileChooser("/home/aw1223/new/mase/machop/mase_components/gather/rtl/gather.sv");
+selectButton(PAResourceQtoS.SrcChooserPanel_ADD_HDL_AND_NETLIST_FILES_TO_YOUR_PROJECT, "Add Files"); // a (E, f)
+// Elapsed time: 11 seconds
+setFileChooser("/home/aw1223/new/mase/machop/mase_components/priority_encoder/rtl/priority_encoder.sv");
+selectButton(PAResourceQtoS.SrcChooserPanel_ADD_HDL_AND_NETLIST_FILES_TO_YOUR_PROJECT, "Add Files"); // a (E, f)
+String[] filenames16706 = {"/home/aw1223/new/mase/machop/mase_components/scatter/rtl/array_zero_mask.sv", "/home/aw1223/new/mase/machop/mase_components/scatter/rtl/scatter_threshold.sv"};
+setFileChooser(filenames16706);
+selectCheckBox(PAResourceQtoS.SrcChooserPanel_SCAN_AND_ADD_RTL_INCLUDE_FILES_INTO, "Scan and add RTL include files into project", true); // g (bm, f): TRUE
+selectCheckBox(PAResourceQtoS.SrcChooserPanel_SCAN_AND_ADD_RTL_INCLUDE_FILES_INTO, "Scan and add RTL include files into project", false); // g (bm, f): FALSE
+selectButton("NEXT", "Next >"); // JButton (j, f)
+selectButton("NEXT", "Next >"); // JButton (j, f)
+// WARNING: HEventQueue.dispatchEvent() is taking  1926 ms.
+selectTab(PAResourceOtoP.PartChooser_TABBED_PANE, (HResource) null, "Boards", 1); // i (T, f)
+// HMemoryUtils.trashcanNow. Engine heap size: 1,113 MB. GUI used memory: 51 MB. Current time: 3/25/24, 6:59:24 PM GMT
+// WARNING: HEventQueue.dispatchEvent() is taking  3746 ms.
+selectTable(PAResourceAtoD.BoardChooser_BOARD_TABLE, "Alveo U280 Data Center Accelerator Card ; Alveo U280 Data Center Accelerator Card ; xilinx.com ; 1.1 ; xcu280-fsvh2892-2L-e ; 2892 ; 1.2 ; 624 ; 1303680 ; 2607360 ; 2016 ; 960 ; 9024 ; 24 ; 0 ; 0 ; 0 ; 0 ; 0 ; 0 ; 0 ; 24 ; 6 ; 12 ; 0 ; 100 ; 100 ; E ; 0.825 ; 0.850 ; 0.876 ; ", 6, "Alveo U280 Data Center Accelerator Card", 0); // d (O, f)
+selectButton("NEXT", "Next >"); // JButton (j, f)
+// bB (f):  Create Project : addNotify
+// TclEventType: DEBUG_PROBE_SET_CHANGE
+// TclEventType: FILE_SET_NEW
+// Tcl Message: create_project vivado /home/aw1223/new/mase/machop/mase_components/llmint/vivado -part xcu280-fsvh2892-2L-e 
+// TclEventType: FILE_SET_NEW
+// TclEventType: RUN_ADD
+// TclEventType: RUN_CURRENT
+// TclEventType: PROJECT_DASHBOARD_NEW
+// TclEventType: PROJECT_DASHBOARD_GADGET_NEW
+// TclEventType: PROJECT_DASHBOARD_GADGET_CHANGE
+// TclEventType: PROJECT_DASHBOARD_GADGET_NEW
+// TclEventType: PROJECT_DASHBOARD_GADGET_CHANGE
+// TclEventType: PROJECT_DASHBOARD_GADGET_NEW
+// TclEventType: PROJECT_DASHBOARD_GADGET_CHANGE
+// TclEventType: PROJECT_DASHBOARD_GADGET_NEW
+// TclEventType: PROJECT_DASHBOARD_GADGET_CHANGE
+// TclEventType: PROJECT_DASHBOARD_GADGET_NEW
+// TclEventType: PROJECT_DASHBOARD_GADGET_CHANGE
+// TclEventType: PROJECT_DASHBOARD_GADGET_NEW
+// TclEventType: PROJECT_DASHBOARD_GADGET_CHANGE
+// TclEventType: PROJECT_NEW
+// Tcl Message: INFO: [IP_Flow 19-234] Refreshing IP repositories INFO: [IP_Flow 19-1704] No user IP repositories specified 
+// TclEventType: PROJECT_NEW
+// [Engine Memory]: 1,226 MB (+117106kb) [00:02:33]
+// WARNING: HEventQueue.dispatchEvent() is taking  2052 ms.
+// TclEventType: FILE_SET_OPTIONS_CHANGE
+// Tcl Message: INFO: [IP_Flow 19-2313] Loaded Vivado IP repository '/mnt/applications/Xilinx/19.2/Vivado/2019.2/data/ip'. 
+// TclEventType: FILE_SET_OPTIONS_CHANGE
+// [Engine Memory]: 1,302 MB (+15469kb) [00:02:35]
+// TclEventType: FILE_SET_OPTIONS_CHANGE
+// HMemoryUtils.trashcanNow. Engine heap size: 1,259 MB. GUI used memory: 57 MB. Current time: 3/25/24, 6:59:53 PM GMT
+// TclEventType: FILE_SET_OPTIONS_CHANGE
+// Tcl Message: create_project: Time (s): cpu = 00:00:36 ; elapsed = 00:00:16 . Memory (MB): peak = 6995.270 ; gain = 111.789 ; free physical = 199323 ; free virtual = 209778 
+// TclEventType: BOARD_MODIFIED
+// WARNING: HEventQueue.dispatchEvent() is taking  1035 ms.
+// Tcl Message: set_property board_part xilinx.com:au280:part0:1.1 [current_project] 
+// TclEventType: FILE_SET_CHANGE
+// Tcl Message: add_files -norecurse {/home/aw1223/new/mase/machop/mase_components/priority_encoder/rtl/priority_encoder.sv /home/aw1223/new/mase/machop/mase_components/common/rtl/skid_buffer.sv /home/aw1223/new/mase/machop/mase_components/linear/rtl/fixed_linear.sv /home/aw1223/new/mase/machop/mase_components/llmint/rtl/LLMint.sv /home/aw1223/new/mase/machop/mase_components/gather/rtl/gather.sv /home/aw1223/new/mase/machop/mase_components/scatter/rtl/array_zero_mask.sv /home/aw1223/new/mase/machop/mase_components/common/rtl/join2.sv /home/aw1223/new/mase/machop/mase_components/scatter/rtl/scatter_threshold.sv} 
+// Elapsed time: 20 seconds
+selectButton("FINISH", "Finish"); // JButton (j, f)
+// 'g' command handler elapsed time: 155 seconds
+// [GUI Memory]: 156 MB (+37670kb) [00:02:43]
+dismissDialog("Create Project"); // bB (f)
+dismissDialog("New Project"); // f (cr)
+// TclEventType: FILE_SET_CHANGE
+// TclEventType: DG_GRAPH_STALE
+// TclEventType: FILE_SET_CHANGE
+// TclEventType: DG_GRAPH_STALE
+// Tcl Message: update_compile_order -fileset sources_1 
+// [GUI Memory]: 164 MB (+483kb) [00:02:50]
+// TclEventType: DG_GRAPH_STALE
+// TclEventType: FILE_SET_CHANGE
+// Tcl Message: update_compile_order -fileset sources_1 
+// [GUI Memory]: 183 MB (+10852kb) [00:02:56]
+// Elapsed time: 37 seconds
+selectTree(PAResourceEtoH.FlowNavigatorTreePanel_FLOW_NAVIGATOR_TREE, "[, Synthesis, Run Synthesis]", 14, false); // u (O, cr)
+// Run Command: PAResourceCommand.PACommandNames_RUN_SYNTHESIS
+// f (cr): Launch Runs: addNotify
+selectRadioButton(PAResourceItoN.LaunchPanel_LAUNCH_RUNS_ON_CLUSTER, "Launch runs on Cluster"); // a (Q, f)
+selectRadioButton(PAResourceItoN.LaunchPanel_LAUNCH_RUNS_ON_LOCAL_HOST, "Launch runs on local host:"); // a (Q, f)
+selectButton(RDIResource.BaseDialog_OK, "OK"); // a (f)
+// bB (cr):  Starting Design Runs : addNotify
+dismissDialog("Launch Runs"); // f (cr)
+// TclEventType: RUN_LAUNCH
+// Tcl Message: launch_runs synth_1 -jobs 20 
+// TclEventType: RUN_MODIFY
+// TclEventType: RUN_STATUS_CHANGE
+// Tcl Message: [Mon Mar 25 19:00:48 2024] Launched synth_1... Run output will be captured here: /home/aw1223/new/mase/machop/mase_components/llmint/vivado/vivado.runs/synth_1/runme.log 
+// 'k' command handler elapsed time: 9 seconds
+dismissDialog("Starting Design Runs"); // bB (cr)
+// TclEventType: RUN_STATUS_CHANGE
+selectTreeTable(PAResourceEtoH.ExpRunTreePanel_EXP_RUN_TREE_TABLE, "impl_1 ; constrs_1 ; Not started ;  ;  ;  ;  ;  ;  ;  ;  ;  ;  ;  ;  ;  ;  ; Vivado Implementation Defaults (Vivado Implementation 2019) ; Vivado Implementation Default Reports (Vivado Implementation 2019) ; xcu280-fsvh2892-2L-e ;  ; Default settings for Implementation.", 1, "Not started", 2, false); // az (O, cr)
+// PAPropertyPanels.initPanels (impl_1) elapsed time: 0.6s
+// HMemoryUtils.trashcanNow. Engine heap size: 1,358 MB. GUI used memory: 134 MB. Current time: 3/25/24, 7:00:58 PM GMT
+// PAResourceOtoP.PAViews_PROJECT_SUMMARY: Project Summary: close view
+// Elapsed time: 23 seconds
+closeView(PAResourceOtoP.PAViews_PROJECT_SUMMARY, "Project Summary"); // v
+// TclEventType: RUN_FAILED
+// TclEventType: RUN_STATUS_CHANGE
+// TclEventType: RUN_STEP_COMPLETED
+// aj (cr): Synthesis Failed: addNotify
+selectButton(RDIResource.BaseDialog_OK, "OK"); // a (aj)
+// Run Command: PAResourceCommand.PACommandNames_MESSAGE_WINDOW
+dismissDialog("Synthesis Failed"); // aj (cr)
+selectTree(PAResourceItoN.MsgTreePanel_MESSAGE_VIEW_TREE, "[, Synthesis, [Synth 8-1705] bit-select or part-select is not allowed in a assign statement for non-net mat_sum [/home/aw1223/new/mase/machop/mase_components/gather/rtl/gather.sv:17]. ]", 1, false); // ah (O, cr)
+selectTree(PAResourceItoN.MsgTreePanel_MESSAGE_VIEW_TREE, "[, Synthesis, [Synth 8-1705] bit-select or part-select is not allowed in a assign statement for non-net mat_sum [/home/aw1223/new/mase/machop/mase_components/gather/rtl/gather.sv:17]. ]", 1, false); // ah (O, cr)
+messagesViewCrossProbe(PAResourceItoN.MsgTreePanel_MESSAGE_VIEW_TREE, "src;-;/home/aw1223/new/mase/machop/mase_components/gather/rtl/gather.sv;-;;-;16;-;line;-;17;-;;-;16;-;"); // ah (O, cr)
+// [Engine Memory]: 1,372 MB (+5419kb) [00:04:13]
+// Elapsed time: 12 seconds
+selectCodeEditor("gather.sv", 92, 70); // ch (w, cr)
+selectCodeEditor("gather.sv", 92, 70, false, false, false, false, true); // ch (w, cr) - Double Click
+// TclEventType: DG_GRAPH_STALE
+// TclEventType: FILE_SET_CHANGE
+selectCodeEditor("gather.sv", 120, 135); // ch (w, cr)
+// [GUI Memory]: 193 MB (+1027kb) [00:04:28]
+selectCodeEditor("gather.sv", 123, 186); // ch (w, cr)
+selectCodeEditor("gather.sv", 73, 178); // ch (w, cr)
+// HMemoryUtils.trashcanNow. Engine heap size: 1,395 MB. GUI used memory: 185 MB. Current time: 3/25/24, 7:01:48 PM GMT
+selectTree(PAResourceEtoH.FlowNavigatorTreePanel_FLOW_NAVIGATOR_TREE, "[, Synthesis, Run Synthesis]", 14, false); // u (O, cr)
+// Run Command: PAResourceCommand.PACommandNames_RUN_SYNTHESIS
+// bB (cr):  Resetting Runs : addNotify
+// TclEventType: RUN_MODIFY
+// TclEventType: RUN_RESET
+// TclEventType: RUN_STATUS_CHANGE
+// TclEventType: RUN_RESET
+// TclEventType: RUN_MODIFY
+// Tcl Message: reset_run synth_1 
+// f (cr): Launch Runs: addNotify
+selectButton(RDIResource.BaseDialog_OK, "OK"); // a (f)
+// bB (cr):  Starting Design Runs : addNotify
+dismissDialog("Launch Runs"); // f (cr)
+// TclEventType: RUN_LAUNCH
+// TclEventType: RUN_MODIFY
+// TclEventType: RUN_STATUS_CHANGE
+// Tcl Message: launch_runs synth_1 -jobs 20 
+// Tcl Message: [Mon Mar 25 19:01:55 2024] Launched synth_1... Run output will be captured here: /home/aw1223/new/mase/machop/mase_components/llmint/vivado/vivado.runs/synth_1/runme.log 
+dismissDialog("Starting Design Runs"); // bB (cr)
+// TclEventType: RUN_STATUS_CHANGE
+// TclEventType: RUN_FAILED
+// TclEventType: RUN_STATUS_CHANGE
+// TclEventType: RUN_STEP_COMPLETED
+// aj (cr): Synthesis Failed: addNotify
+// Elapsed time: 34 seconds
+selectButton(RDIResource.BaseDialog_OK, "OK"); // a (aj)
+// Run Command: PAResourceCommand.PACommandNames_MESSAGE_WINDOW
+dismissDialog("Synthesis Failed"); // aj (cr)
+selectTree(PAResourceItoN.MsgTreePanel_MESSAGE_VIEW_TREE, "[, Synthesis, [Synth 8-2576] procedural assignment to a non-register mat_sum is not permitted [/home/aw1223/new/mase/machop/mase_components/gather/rtl/gather.sv:17]. ]", 1, false); // ah (O, cr)
+messagesViewCrossProbe(PAResourceItoN.MsgTreePanel_MESSAGE_VIEW_TREE, "src;-;/home/aw1223/new/mase/machop/mase_components/gather/rtl/gather.sv;-;;-;16;-;line;-;17;-;;-;16;-;"); // ah (O, cr)
+selectTree(PAResourceItoN.MsgTreePanel_MESSAGE_VIEW_TREE, "[, Synthesis, [Synth 8-2576] procedural assignment to a non-register mat_sum is not permitted [/home/aw1223/new/mase/machop/mase_components/gather/rtl/gather.sv:17]. ]", 1, false); // ah (O, cr)
+selectTree(PAResourceItoN.MsgTreePanel_MESSAGE_VIEW_TREE, "[, Synthesis, [Synth 8-2576] procedural assignment to a non-register mat_sum is not permitted [/home/aw1223/new/mase/machop/mase_components/gather/rtl/gather.sv:17]. ]", 1, false, false, false, false, false, true); // ah (O, cr) - Double Click
+selectCodeEditor("gather.sv", 60, 177); // ch (w, cr)
+selectCodeEditor("gather.sv", 59, 177, false, false, false, false, true); // ch (w, cr) - Double Click
+selectCodeEditor("gather.sv", 75, 67); // ch (w, cr)
+// TclEventType: DG_GRAPH_STALE
+// TclEventType: FILE_SET_CHANGE
+selectTree(PAResourceItoN.MsgTreePanel_MESSAGE_VIEW_TREE, "[, Synthesis, [Synth 8-1705] bit-select or part-select is not allowed in a assign statement for non-net mat_sum [/home/aw1223/new/mase/machop/mase_components/gather/rtl/gather.sv:17]. ]", 2, false); // ah (O, cr)
+selectTree(PAResourceItoN.MsgTreePanel_MESSAGE_VIEW_TREE, "[, Synthesis, [Synth 8-1705] bit-select or part-select is not allowed in a assign statement for non-net mat_sum [/home/aw1223/new/mase/machop/mase_components/gather/rtl/gather.sv:17]. ]", 2, false, false, false, false, false, true); // ah (O, cr) - Double Click
+selectTree(PAResourceItoN.MsgTreePanel_MESSAGE_VIEW_TREE, "[, Synthesis, [Common 17-69] Command failed: Vivado Synthesis failed. ]", 3, false); // ah (O, cr)
+selectTree(PAResourceItoN.MsgTreePanel_MESSAGE_VIEW_TREE, "[, Synthesis, [Common 17-69] Command failed: Vivado Synthesis failed. ]", 3, false, false, false, false, false, true); // ah (O, cr) - Double Click
+selectTree(PAResourceEtoH.FlowNavigatorTreePanel_FLOW_NAVIGATOR_TREE, "[, Synthesis, Run Synthesis]", 14, false); // u (O, cr)
+// Run Command: PAResourceCommand.PACommandNames_RUN_SYNTHESIS
+// bB (cr):  Resetting Runs : addNotify
+// TclEventType: RUN_MODIFY
+// TclEventType: RUN_RESET
+// TclEventType: RUN_STATUS_CHANGE
+// Tcl Message: reset_run synth_1 
+// TclEventType: RUN_RESET
+// [Engine Memory]: 1,441 MB (+14kb) [00:05:32]
+// TclEventType: RUN_MODIFY
+// f (cr): Launch Runs: addNotify
+selectButton(RDIResource.BaseDialog_OK, "OK"); // a (f)
+// bB (cr):  Starting Design Runs : addNotify
+dismissDialog("Launch Runs"); // f (cr)
+// TclEventType: RUN_LAUNCH
+// TclEventType: RUN_MODIFY
+// TclEventType: RUN_STATUS_CHANGE
+// Tcl Message: launch_runs synth_1 -jobs 20 
+// Tcl Message: [Mon Mar 25 19:02:52 2024] Launched synth_1... Run output will be captured here: /home/aw1223/new/mase/machop/mase_components/llmint/vivado/vivado.runs/synth_1/runme.log 
+dismissDialog("Starting Design Runs"); // bB (cr)
+// TclEventType: RUN_STATUS_CHANGE
+expandTree(PAResourceEtoH.FileSetPanel_FILE_SET_PANEL_TREE, "[root, Design Sources, LLMint (LLMint.sv), scatter : scatter_threshold (scatter_threshold.sv)]", 2); // B (F, cr)
+selectTab(PAResourceEtoH.FileSetView_TABBED_PANE, (HResource) null, "Libraries", 1); // i (N, cr)
+selectTab(PAResourceEtoH.FileSetView_TABBED_PANE, (HResource) null, "Hierarchy", 0); // i (N, cr)
+selectTree(PAResourceEtoH.FileSetPanel_FILE_SET_PANEL_TREE, "[root, Design Sources, LLMint (LLMint.sv)]", 1, true); // B (F, cr) - Node
+selectTree(PAResourceEtoH.FileSetPanel_FILE_SET_PANEL_TREE, "[root, Design Sources, LLMint (LLMint.sv)]", 1, true); // B (F, cr) - Node
+selectTree(PAResourceEtoH.FileSetPanel_FILE_SET_PANEL_TREE, "[root, Design Sources, LLMint (LLMint.sv)]", 1, true, false, false, false, false, true); // B (F, cr) - Double Click - Node
+selectCodeEditor("LLMint.sv", 117, 186); // ch (w, cr)
+selectCodeEditor("LLMint.sv", 213, 168); // ch (w, cr)
+// HMemoryUtils.trashcanNow. Engine heap size: 1,457 MB. GUI used memory: 137 MB. Current time: 3/25/24, 7:03:18 PM GMT
+selectCodeEditor("LLMint.sv", 213, 168); // ch (w, cr)
+selectCodeEditor("LLMint.sv", 213, 168); // ch (w, cr)
+selectCodeEditor("LLMint.sv", 97, 200); // ch (w, cr)
+selectCodeEditor("LLMint.sv", 97, 200, false, false, false, false, true); // ch (w, cr) - Double Click
+selectCodeEditor("LLMint.sv", 73, 229); // ch (w, cr)
+selectCodeEditor("LLMint.sv", 97, 177); // ch (w, cr)
+selectCodeEditor("LLMint.sv", 97, 177, false, false, false, false, true); // ch (w, cr) - Double Click
+selectCodeEditor("LLMint.sv", 97, 177); // ch (w, cr)
+selectCodeEditor("LLMint.sv", 97, 177); // ch (w, cr)
+// TclEventType: RUN_FAILED
+// TclEventType: RUN_STATUS_CHANGE
+// TclEventType: RUN_STEP_COMPLETED
+// aj (cr): Synthesis Failed: addNotify
+selectButton(RDIResource.BaseDialog_OK, "OK"); // a (aj)
+// Run Command: PAResourceCommand.PACommandNames_MESSAGE_WINDOW
+dismissDialog("Synthesis Failed"); // aj (cr)
+selectTree(PAResourceItoN.MsgTreePanel_MESSAGE_VIEW_TREE, "[, Synthesis, [Synth 8-659] type mismatch in port association: bit [31:0]A[3:0] vs. bit signed [31:0]B[3:0] [/home/aw1223/new/mase/machop/mase_components/scatter/rtl/scatter_threshold.sv:50]. ]", 1, false); // ah (O, cr)
+messagesViewCrossProbe(PAResourceItoN.MsgTreePanel_MESSAGE_VIEW_TREE, "src;-;/home/aw1223/new/mase/machop/mase_components/scatter/rtl/scatter_threshold.sv;-;;-;16;-;line;-;50;-;;-;16;-;"); // ah (O, cr)
+// Elapsed time: 27 seconds
+selectTree(PAResourceEtoH.FileSetPanel_FILE_SET_PANEL_TREE, "[root, Design Sources, LLMint (LLMint.sv), scatter : scatter_threshold (scatter_threshold.sv), masker : array_zero_mask (priority_encoder.sv)]", 4, false); // B (F, cr)
+selectTree(PAResourceEtoH.FileSetPanel_FILE_SET_PANEL_TREE, "[root, Design Sources, LLMint (LLMint.sv), scatter : scatter_threshold (scatter_threshold.sv), masker : array_zero_mask (priority_encoder.sv)]", 4, false, false, false, false, false, true); // B (F, cr) - Double Click
+selectCodeEditor("priority_encoder.sv", 124, 212); // ch (w, cr)
+selectCodeEditor("priority_encoder.sv", 119, 245); // ch (w, cr)
+selectCodeEditor("priority_encoder.sv", 82, 217); // ch (w, cr)
+selectCodeEditor("priority_encoder.sv", 74, 219); // ch (w, cr)
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+selectCodeEditor("priority_encoder.sv", 73, 224); // ch (w, cr)
+selectCodeEditor("priority_encoder.sv", 71, 234); // ch (w, cr)
+// TclEventType: DG_GRAPH_STALE
+// TclEventType: FILE_SET_CHANGE
+selectTree(PAResourceEtoH.FlowNavigatorTreePanel_FLOW_NAVIGATOR_TREE, "[, Synthesis, Run Synthesis]", 14, false); // u (O, cr)
+// Run Command: PAResourceCommand.PACommandNames_RUN_SYNTHESIS
+// bB (cr):  Resetting Runs : addNotify
+// TclEventType: RUN_MODIFY
+// TclEventType: RUN_RESET
+// TclEventType: RUN_STATUS_CHANGE
+// TclEventType: RUN_RESET
+// TclEventType: RUN_MODIFY
+// Tcl Message: reset_run synth_1 
+// f (cr): Launch Runs: addNotify
+selectButton(RDIResource.BaseDialog_OK, "OK"); // a (f)
+// bB (cr):  Starting Design Runs : addNotify
+dismissDialog("Launch Runs"); // f (cr)
+// TclEventType: RUN_LAUNCH
+// Tcl Message: launch_runs synth_1 -jobs 20 
+// TclEventType: RUN_MODIFY
+// TclEventType: RUN_STATUS_CHANGE
+// Tcl Message: [Mon Mar 25 19:04:20 2024] Launched synth_1... Run output will be captured here: /home/aw1223/new/mase/machop/mase_components/llmint/vivado/vivado.runs/synth_1/runme.log 
+dismissDialog("Starting Design Runs"); // bB (cr)
+// TclEventType: RUN_STATUS_CHANGE
+// HMemoryUtils.trashcanNow. Engine heap size: 1,487 MB. GUI used memory: 138 MB. Current time: 3/25/24, 7:04:23 PM GMT
+// TclEventType: RUN_FAILED
+// TclEventType: RUN_STATUS_CHANGE
+// TclEventType: RUN_STEP_COMPLETED
+// aj (cr): Synthesis Failed: addNotify
+// Elapsed time: 51 seconds
+selectCheckBox(RDIResource.MessageWithOptionDialog_DONT_SHOW_THIS_DIALOG_AGAIN, "Don't show this dialog again", true); // g (Q, aj): TRUE
+selectButton(RDIResource.BaseDialog_OK, "OK"); // a (aj)
+// Run Command: PAResourceCommand.PACommandNames_MESSAGE_WINDOW
+dismissDialog("Synthesis Failed"); // aj (cr)
+selectTree(PAResourceItoN.MsgTreePanel_MESSAGE_VIEW_TREE, "[, Synthesis, [Synth 8-659] type mismatch in port association: bit signed [31:0]A[3:0] vs. bit [31:0]B[3:0] [/home/aw1223/new/mase/machop/mase_components/scatter/rtl/scatter_threshold.sv:52]. ]", 1, false); // ah (O, cr)
+selectTree(PAResourceItoN.MsgTreePanel_MESSAGE_VIEW_TREE, "[, Synthesis, [Synth 8-659] type mismatch in port association: bit signed [31:0]A[3:0] vs. bit [31:0]B[3:0] [/home/aw1223/new/mase/machop/mase_components/scatter/rtl/scatter_threshold.sv:52]. ]", 1, false, false, false, false, false, true); // ah (O, cr) - Double Click
+selectTree(PAResourceItoN.MsgTreePanel_MESSAGE_VIEW_TREE, "[, Synthesis, [Synth 8-659] type mismatch in port association: bit signed [31:0]A[3:0] vs. bit [31:0]B[3:0] [/home/aw1223/new/mase/machop/mase_components/scatter/rtl/scatter_threshold.sv:52]. ]", 1, false); // ah (O, cr)
+selectTree(PAResourceItoN.MsgTreePanel_MESSAGE_VIEW_TREE, "[, Synthesis, [Synth 8-659] type mismatch in port association: bit signed [31:0]A[3:0] vs. bit [31:0]B[3:0] [/home/aw1223/new/mase/machop/mase_components/scatter/rtl/scatter_threshold.sv:52]. ]", 1, false); // ah (O, cr)
+messagesViewCrossProbe(PAResourceItoN.MsgTreePanel_MESSAGE_VIEW_TREE, "src;-;/home/aw1223/new/mase/machop/mase_components/scatter/rtl/scatter_threshold.sv;-;;-;16;-;line;-;52;-;;-;16;-;"); // ah (O, cr)
+selectCodeEditor("scatter_threshold.sv", 237, 161); // ch (w, cr)
+selectCodeEditor("scatter_threshold.sv", 237, 161, false, false, false, false, true); // ch (w, cr) - Double Click
+selectCodeEditor("scatter_threshold.sv", 121, 163); // ch (w, cr)
+selectCodeEditor("scatter_threshold.sv", 121, 163, false, false, false, false, true); // ch (w, cr) - Double Click
+selectTree(PAResourceEtoH.FileSetPanel_FILE_SET_PANEL_TREE, "[root, Design Sources, LLMint (LLMint.sv), scatter : scatter_threshold (scatter_threshold.sv), masker : array_zero_mask (priority_encoder.sv)]", 4, false); // B (F, cr)
+selectTree(PAResourceEtoH.FileSetPanel_FILE_SET_PANEL_TREE, "[root, Design Sources, LLMint (LLMint.sv), scatter : scatter_threshold (scatter_threshold.sv), masker : array_zero_mask (priority_encoder.sv)]", 4, false, false, false, false, false, true); // B (F, cr) - Double Click
+selectCodeEditor("priority_encoder.sv", 120, 204); // ch (w, cr)
+selectCodeEditor("priority_encoder.sv", 123, 220); // ch (w, cr)
+// TclEventType: DG_GRAPH_STALE
+// TclEventType: FILE_SET_CHANGE
+selectTree(PAResourceEtoH.FlowNavigatorTreePanel_FLOW_NAVIGATOR_TREE, "[, Synthesis, Run Synthesis]", 14, false); // u (O, cr)
+// Run Command: PAResourceCommand.PACommandNames_RUN_SYNTHESIS
+// bB (cr):  Resetting Runs : addNotify
+// TclEventType: RUN_MODIFY
+// TclEventType: RUN_RESET
+// TclEventType: RUN_STATUS_CHANGE
+// TclEventType: RUN_RESET
+// HMemoryUtils.trashcanNow. Engine heap size: 1,504 MB. GUI used memory: 187 MB. Current time: 3/25/24, 7:05:33 PM GMT
+// TclEventType: RUN_MODIFY
+// Tcl Message: reset_run synth_1 
+// f (cr): Launch Runs: addNotify
+selectButton(RDIResource.BaseDialog_OK, "OK"); // a (f)
+// bB (cr):  Starting Design Runs : addNotify
+dismissDialog("Launch Runs"); // f (cr)
+// TclEventType: RUN_LAUNCH
+// Tcl Message: launch_runs synth_1 -jobs 20 
+// TclEventType: RUN_MODIFY
+// TclEventType: RUN_STATUS_CHANGE
+// Tcl Message: [Mon Mar 25 19:05:35 2024] Launched synth_1... Run output will be captured here: /home/aw1223/new/mase/machop/mase_components/llmint/vivado/vivado.runs/synth_1/runme.log 
+dismissDialog("Starting Design Runs"); // bB (cr)
+// TclEventType: RUN_STATUS_CHANGE
+// TclEventType: RUN_FAILED
+// TclEventType: RUN_STATUS_CHANGE
+// TclEventType: RUN_STEP_COMPLETED
+// Elapsed time: 44 seconds
+selectTree(PAResourceItoN.MsgTreePanel_MESSAGE_VIEW_TREE, "[, Synthesis, [Synth 8-196] conditional expression could not be resolved to a constant [/home/aw1223/new/mase/machop/mase_components/linear/rtl/fixed_linear.sv:96]. ]", 2, false); // ah (O, cr)
+messagesViewCrossProbe(PAResourceItoN.MsgTreePanel_MESSAGE_VIEW_TREE, "src;-;/home/aw1223/new/mase/machop/mase_components/linear/rtl/fixed_linear.sv;-;;-;16;-;line;-;96;-;;-;16;-;"); // ah (O, cr)
+selectCodeEditor("fixed_linear.sv", 226, 110); // ch (w, cr)
+selectButton(PAResourceCommand.PACommandNames_ADD_SOURCES, "Sources_add_sources"); // E (f, cr)
+// Run Command: PAResourceCommand.PACommandNames_ADD_SOURCES
+// c (cr): Add Sources: addNotify
+selectButton("NEXT", "Next >"); // JButton (j, c)
+selectButton(PAResourceQtoS.SrcChooserPanel_ADD_OR_CREATE_SOURCE_FILE, "Add"); // E (f, c)
+selectMenuItem(PAResourceQtoS.SrcChooserPanel_ADD_HDL_AND_NETLIST_FILES_TO_YOUR_PROJECT, "Add Files..."); // ai (ao, c)
+// Elapsed time: 43 seconds
+setFileChooser("/home/aw1223/new/mase/machop/mase_components/fixed_arithmetic/rtl/fixed_adder_tree_layer.sv");
+selectButton(PAResourceQtoS.SrcChooserPanel_ADD_HDL_AND_NETLIST_FILES_TO_YOUR_PROJECT, "Add Files"); // a (E, c)
+String[] filenames29306 = {"/home/aw1223/new/mase/machop/mase_components/fixed_arithmetic/rtl/fixed_adder_tree.sv", "/home/aw1223/new/mase/machop/mase_components/fixed_arithmetic/rtl/fixed_adder_tree_layer.sv", "/home/aw1223/new/mase/machop/mase_components/fixed_arithmetic/rtl/fixed_dot_product.sv", "/home/aw1223/new/mase/machop/mase_components/fixed_arithmetic/rtl/fixed_vector_mult.sv"};
+setFileChooser(filenames29306);
+selectButton("FINISH", "Finish"); // JButton (j, c)
+// 'h' command handler elapsed time: 56 seconds
+dismissDialog("Add Sources"); // c (cr)
+// TclEventType: DG_GRAPH_STALE
+// TclEventType: FILE_SET_CHANGE
+// Tcl Message: add_files -norecurse {/home/aw1223/new/mase/machop/mase_components/fixed_arithmetic/rtl/fixed_adder_tree.sv /home/aw1223/new/mase/machop/mase_components/fixed_arithmetic/rtl/fixed_adder_tree_layer.sv /home/aw1223/new/mase/machop/mase_components/fixed_arithmetic/rtl/fixed_dot_product.sv /home/aw1223/new/mase/machop/mase_components/fixed_arithmetic/rtl/fixed_vector_mult.sv} 
+// [Engine Memory]: 1,532 MB (+20659kb) [00:10:10]
+selectCodeEditor("fixed_linear.sv", 98, 156); // ch (w, cr)
+selectCodeEditor("fixed_linear.sv", 98, 156, false, false, false, false, true); // ch (w, cr) - Double Click
+selectCodeEditor("fixed_linear.sv", 98, 156); // ch (w, cr)
+selectCodeEditor("fixed_linear.sv", 81, 220); // ch (w, cr)
+selectCodeEditor("fixed_linear.sv", 81, 220, false, false, false, false, true); // ch (w, cr) - Double Click
+selectCodeEditor("fixed_linear.sv", 81, 220); // ch (w, cr)
+selectCodeEditor("fixed_linear.sv", 100, 164, false, false, false, true, false); // ch (w, cr) - Popup Trigger
+// TclEventType: FILE_SET_CHANGE
+// Tcl Message: update_compile_order -fileset sources_1 
+selectCodeEditor("fixed_linear.sv", 64, 160); // ch (w, cr)
+selectCodeEditor("fixed_linear.sv", 49, 162); // ch (w, cr)
+// HMemoryUtils.trashcanNow. Engine heap size: 1,533 MB. GUI used memory: 135 MB. Current time: 3/25/24, 7:07:33 PM GMT
+selectCodeEditor("fixed_linear.sv", 48, 162, false, false, false, true, false); // ch (w, cr) - Popup Trigger
+selectTree(PAResourceEtoH.FlowNavigatorTreePanel_FLOW_NAVIGATOR_TREE, "[, Synthesis, Run Synthesis]", 14, false); // u (O, cr)
+// Run Command: PAResourceCommand.PACommandNames_RUN_SYNTHESIS
+// bB (cr):  Resetting Runs : addNotify
+// TclEventType: RUN_MODIFY
+// TclEventType: RUN_RESET
+// TclEventType: RUN_STATUS_CHANGE
+// TclEventType: RUN_RESET
+// TclEventType: RUN_MODIFY
+// Tcl Message: reset_run synth_1 
+// f (cr): Launch Runs: addNotify
+selectButton(RDIResource.BaseDialog_OK, "OK"); // a (f)
+// bB (cr):  Starting Design Runs : addNotify
+dismissDialog("Launch Runs"); // f (cr)
+// TclEventType: RUN_LAUNCH
+// TclEventType: RUN_MODIFY
+// TclEventType: RUN_STATUS_CHANGE
+// Tcl Message: launch_runs synth_1 -jobs 20 
+// Tcl Message: [Mon Mar 25 19:07:41 2024] Launched synth_1... Run output will be captured here: /home/aw1223/new/mase/machop/mase_components/llmint/vivado/vivado.runs/synth_1/runme.log 
+dismissDialog("Starting Design Runs"); // bB (cr)
+// TclEventType: RUN_STATUS_CHANGE
+// TclEventType: RUN_FAILED
+// TclEventType: RUN_STATUS_CHANGE
+// TclEventType: RUN_STEP_COMPLETED
+// Elapsed time: 59 seconds
+selectTree(PAResourceItoN.MsgTreePanel_MESSAGE_VIEW_TREE, "[, Synthesis, [Synth 8-439] module 'fixed_mult' not found [/home/aw1223/new/mase/machop/mase_components/fixed_arithmetic/rtl/fixed_vector_mult.sv:40]. ]", 1, false); // ah (O, cr)
+messagesViewCrossProbe(PAResourceItoN.MsgTreePanel_MESSAGE_VIEW_TREE, "src;-;/home/aw1223/new/mase/machop/mase_components/fixed_arithmetic/rtl/fixed_vector_mult.sv;-;;-;16;-;line;-;40;-;;-;16;-;"); // ah (O, cr)
+selectCodeEditor("fixed_vector_mult.sv", 74, 18); // ch (w, cr)
+selectCodeEditor("fixed_vector_mult.sv", 74, 19, false, false, false, false, true); // ch (w, cr) - Double Click
+selectButton(PAResourceCommand.PACommandNames_ADD_SOURCES, "Sources_add_sources"); // E (f, cr)
+// Run Command: PAResourceCommand.PACommandNames_ADD_SOURCES
+// c (cr): Add Sources: addNotify
+selectButton("NEXT", "Next >"); // JButton (j, c)
+selectButton(PAResourceQtoS.SrcChooserPanel_ADD_OR_CREATE_SOURCE_FILE, "Add"); // E (f, c)
+selectMenuItem(PAResourceQtoS.SrcChooserPanel_ADD_HDL_AND_NETLIST_FILES_TO_YOUR_PROJECT, "Add Files..."); // ai (ao, c)
+String[] filenames17995 = {"/home/aw1223/new/mase/machop/mase_components/fixed_arithmetic/rtl/fixed_accumulator.sv", "/home/aw1223/new/mase/machop/mase_components/fixed_arithmetic/rtl/fixed_mac.sv", "/home/aw1223/new/mase/machop/mase_components/fixed_arithmetic/rtl/fixed_mult.sv"};
+setFileChooser(filenames17995);
+selectButton("FINISH", "Finish"); // JButton (j, c)
+// 'h' command handler elapsed time: 13 seconds
+dismissDialog("Add Sources"); // c (cr)
+// TclEventType: DG_GRAPH_STALE
+// TclEventType: FILE_SET_CHANGE
+// Tcl Message: add_files -norecurse {/home/aw1223/new/mase/machop/mase_components/fixed_arithmetic/rtl/fixed_accumulator.sv /home/aw1223/new/mase/machop/mase_components/fixed_arithmetic/rtl/fixed_mult.sv /home/aw1223/new/mase/machop/mase_components/fixed_arithmetic/rtl/fixed_mac.sv} 
+selectTree(PAResourceEtoH.FlowNavigatorTreePanel_FLOW_NAVIGATOR_TREE, "[, Synthesis, Run Synthesis]", 14, false); // u (O, cr)
+// Run Command: PAResourceCommand.PACommandNames_RUN_SYNTHESIS
+// bB (cr):  Resetting Runs : addNotify
+// TclEventType: RUN_MODIFY
+// TclEventType: RUN_RESET
+// TclEventType: RUN_STATUS_CHANGE
+// TclEventType: RUN_RESET
+// TclEventType: RUN_MODIFY
+// Tcl Message: reset_run synth_1 
+// f (cr): Launch Runs: addNotify
+selectButton(RDIResource.BaseDialog_OK, "OK"); // a (f)
+// TclEventType: DG_GRAPH_STALE
+// TclEventType: FILE_SET_CHANGE
+// bB (cr):  Starting Design Runs : addNotify
+// Tcl Message: update_compile_order -fileset sources_1 
+dismissDialog("Launch Runs"); // f (cr)
+// Tcl Message: launch_runs synth_1 -jobs 20 
+// TclEventType: RUN_LAUNCH
+// TclEventType: RUN_MODIFY
+// TclEventType: RUN_STATUS_CHANGE
+// Tcl Message: [Mon Mar 25 19:09:07 2024] Launched synth_1... Run output will be captured here: /home/aw1223/new/mase/machop/mase_components/llmint/vivado/vivado.runs/synth_1/runme.log 
+// 'k' command handler elapsed time: 4 seconds
+dismissDialog("Starting Design Runs"); // bB (cr)
+// HMemoryUtils.trashcanNow. Engine heap size: 1,576 MB. GUI used memory: 136 MB. Current time: 3/25/24, 7:09:09 PM GMT
+// TclEventType: RUN_STATUS_CHANGE
+// TclEventType: RUN_FAILED
+// TclEventType: RUN_STATUS_CHANGE
+// TclEventType: RUN_STEP_COMPLETED
+// Elapsed time: 42 seconds
+selectTree(PAResourceItoN.MsgTreePanel_MESSAGE_VIEW_TREE, "[, Synthesis, [Synth 8-659] type mismatch in port association: bit [7:0]A[3:0] vs. bit signed [7:0]B[3:0] [/home/aw1223/new/mase/machop/mase_components/llmint/rtl/LLMint.sv:98]. ]", 1, false); // ah (O, cr)
+messagesViewCrossProbe(PAResourceItoN.MsgTreePanel_MESSAGE_VIEW_TREE, "src;-;/home/aw1223/new/mase/machop/mase_components/llmint/rtl/LLMint.sv;-;;-;16;-;line;-;98;-;;-;16;-;"); // ah (O, cr)
+selectCodeEditor("LLMint.sv", 74, 102); // ch (w, cr)
+selectCodeEditor("LLMint.sv", 74, 102, false, false, false, false, true); // ch (w, cr) - Double Click
+selectCodeEditor("LLMint.sv", 74, 102); // ch (w, cr)
+selectCodeEditor("LLMint.sv", 135, 102); // ch (w, cr)
+closeView(PAResourceOtoP.PAViews_CODE, "Code"); // B
+closeView(PAResourceOtoP.PAViews_CODE, "Code"); // B
+selectCodeEditor("LLMint.sv", 118, 166); // ch (w, cr)
+selectTab("PlanAheadTabBaseWorkspace_JideTabbedPane", (HResource) null, "fixed_linear.sv", 2); // i (h, cr)
+// Elapsed time: 10 seconds
+selectTab("PlanAheadTabBaseWorkspace_JideTabbedPane", (HResource) null, "LLMint.sv", 1); // i (h, cr)
+selectCodeEditor("LLMint.sv", 105, 222); // ch (w, cr)
+selectCodeEditor("LLMint.sv", 104, 222, false, false, false, false, true); // ch (w, cr) - Double Click
+selectCodeEditor("LLMint.sv", 85, 238); // ch (w, cr)
+selectCodeEditor("LLMint.sv", 85, 238, false, false, false, false, true); // ch (w, cr) - Double Click
+selectCodeEditor("LLMint.sv", 95, 244); // ch (w, cr)
+selectCodeEditor("LLMint.sv", 95, 245, false, false, false, false, true); // ch (w, cr) - Double Click
+selectCodeEditor("LLMint.sv", 97, 72); // ch (w, cr)
+selectCodeEditor("LLMint.sv", 97, 72, false, false, false, false, true); // ch (w, cr) - Double Click
+selectCodeEditor("LLMint.sv", 86, 100); // ch (w, cr)
+selectCodeEditor("LLMint.sv", 85, 100, false, false, false, false, true); // ch (w, cr) - Double Click
+selectCodeEditor("LLMint.sv", 85, 115); // ch (w, cr)
+selectCodeEditor("LLMint.sv", 85, 115, false, false, false, false, true); // ch (w, cr) - Double Click
+selectCodeEditor("LLMint.sv", 85, 123); // ch (w, cr)
+selectCodeEditor("LLMint.sv", 85, 123, false, false, false, false, true); // ch (w, cr) - Double Click
+selectCodeEditor("LLMint.sv", 85, 136); // ch (w, cr)
+selectCodeEditor("LLMint.sv", 85, 144); // ch (w, cr)
+selectCodeEditor("LLMint.sv", 85, 144, false, false, false, false, true); // ch (w, cr) - Double Click
+selectCodeEditor("LLMint.sv", 87, 160); // ch (w, cr)
+selectCodeEditor("LLMint.sv", 87, 160, false, false, false, false, true); // ch (w, cr) - Double Click
+selectCodeEditor("LLMint.sv", 103, 158); // ch (w, cr)
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+selectCodeEditor("LLMint.sv", 94, 162); // ch (w, cr)
+selectCodeEditor("LLMint.sv", 94, 162, false, false, false, false, true); // ch (w, cr) - Double Click
+selectTree(PAResourceEtoH.FlowNavigatorTreePanel_FLOW_NAVIGATOR_TREE, "[, Synthesis, Run Synthesis]", 14, false); // u (O, cr)
+// Run Command: PAResourceCommand.PACommandNames_RUN_SYNTHESIS
+// al (cr): Save Project: addNotify
+selectButton(PAResourceQtoS.SaveProjectUtils_SAVE, "Save"); // a (al)
+// bB (cr):  Save Constraints : addNotify
+// TclEventType: DG_GRAPH_STALE
+// bB (cr):  Resetting Runs : addNotify
+dismissDialog("Save Project"); // al (cr)
+// TclEventType: DG_GRAPH_STALE
+// TclEventType: RUN_MODIFY
+// TclEventType: DG_GRAPH_STALE
+// TclEventType: FILE_SET_CHANGE
+// TclEventType: RUN_MODIFY
+// TclEventType: RUN_RESET
+// TclEventType: FILE_SET_CHANGE
+// TclEventType: RUN_RESET
+// TclEventType: RUN_STATUS_CHANGE
+// TclEventType: RUN_RESET
+// TclEventType: RUN_MODIFY
+// Tcl Message: reset_run synth_1 
+// f (cr): Launch Runs: addNotify
+selectCheckBox(PAResourceItoN.LaunchPanel_DONT_SHOW_THIS_DIALOG_AGAIN, "Don't show this dialog again", true); // g (a, f): TRUE
+selectButton(RDIResource.BaseDialog_OK, "OK"); // a (f)
+// bB (cr):  Starting Design Runs : addNotify
+dismissDialog("Launch Runs"); // f (cr)
+// Tcl Message: launch_runs synth_1 -jobs 20 
+// TclEventType: RUN_LAUNCH
+// TclEventType: RUN_MODIFY
+// HMemoryUtils.trashcanNow. Engine heap size: 1,592 MB. GUI used memory: 136 MB. Current time: 3/25/24, 7:11:09 PM GMT
+// TclEventType: RUN_MODIFY
+// TclEventType: RUN_STATUS_CHANGE
+// Tcl Message: [Mon Mar 25 19:11:08 2024] Launched synth_1... Run output will be captured here: /home/aw1223/new/mase/machop/mase_components/llmint/vivado/vivado.runs/synth_1/runme.log 
+// 'k' command handler elapsed time: 7 seconds
+dismissDialog("Starting Design Runs"); // bB (cr)
+// TclEventType: RUN_STATUS_CHANGE
+// TclEventType: RUN_FAILED
+// TclEventType: RUN_STATUS_CHANGE
+// TclEventType: RUN_STEP_COMPLETED
+// Elapsed time: 43 seconds
+selectTree(PAResourceItoN.MsgTreePanel_MESSAGE_VIEW_TREE, "[, Synthesis, [Synth 8-659] type mismatch in port association: bit [7:0]A[15:0] vs. bit signed [7:0]B[15:0] [/home/aw1223/new/mase/machop/mase_components/llmint/rtl/LLMint.sv:102]. ]", 1, false); // ah (O, cr)
+messagesViewCrossProbe(PAResourceItoN.MsgTreePanel_MESSAGE_VIEW_TREE, "src;-;/home/aw1223/new/mase/machop/mase_components/llmint/rtl/LLMint.sv;-;;-;16;-;line;-;102;-;;-;16;-;"); // ah (O, cr)
+selectTree(PAResourceItoN.MsgTreePanel_MESSAGE_VIEW_TREE, "[, Synthesis, [Synth 8-659] type mismatch in port association: bit [7:0]A[15:0] vs. bit signed [7:0]B[15:0] [/home/aw1223/new/mase/machop/mase_components/llmint/rtl/LLMint.sv:102]. ]", 1, false, false, false, false, false, true); // ah (O, cr) - Double Click
+selectTree(PAResourceItoN.MsgTreePanel_MESSAGE_VIEW_TREE, "[, Synthesis, [Synth 8-659] type mismatch in port association: bit [7:0]A[15:0] vs. bit signed [7:0]B[15:0] [/home/aw1223/new/mase/machop/mase_components/llmint/rtl/LLMint.sv:102]. ]", 1, false); // ah (O, cr)
+messagesViewCrossProbe(PAResourceItoN.MsgTreePanel_MESSAGE_VIEW_TREE, "src;-;/home/aw1223/new/mase/machop/mase_components/llmint/rtl/LLMint.sv;-;;-;16;-;line;-;102;-;;-;16;-;"); // ah (O, cr)
+selectTree(PAResourceItoN.MsgTreePanel_MESSAGE_VIEW_TREE, "[, Synthesis, [Synth 8-659] type mismatch in port association: bit [7:0]A[15:0] vs. bit signed [7:0]B[15:0] [/home/aw1223/new/mase/machop/mase_components/llmint/rtl/LLMint.sv:102]. ]", 1, false, false, false, false, false, true); // ah (O, cr) - Double Click
+selectTree(PAResourceItoN.MsgTreePanel_MESSAGE_VIEW_TREE, "[, Synthesis, [Synth 8-659] type mismatch in port association: bit [7:0]A[15:0] vs. bit signed [7:0]B[15:0] [/home/aw1223/new/mase/machop/mase_components/llmint/rtl/LLMint.sv:102]. ]", 1, false); // ah (O, cr)
+selectCodeEditor("LLMint.sv", 95, 218); // ch (w, cr)
+selectCodeEditor("LLMint.sv", 95, 219, false, false, false, false, true); // ch (w, cr) - Double Click
+// TclEventType: DG_GRAPH_STALE
+// TclEventType: FILE_SET_CHANGE
+selectTree(PAResourceEtoH.FlowNavigatorTreePanel_FLOW_NAVIGATOR_TREE, "[, Synthesis, Run Synthesis]", 14, false); // u (O, cr)
+// Run Command: PAResourceCommand.PACommandNames_RUN_SYNTHESIS
+// bB (cr):  Resetting Runs : addNotify
+// TclEventType: RUN_MODIFY
+// TclEventType: RUN_RESET
+// TclEventType: RUN_STATUS_CHANGE
+// TclEventType: RUN_RESET
+// TclEventType: RUN_MODIFY
+// Tcl Message: reset_run synth_1 
+// bB (cr):  Starting Design Runs : addNotify
+// Tcl Message: launch_runs synth_1 -jobs 20 
+// TclEventType: RUN_LAUNCH
+// TclEventType: RUN_MODIFY
+// TclEventType: RUN_STATUS_CHANGE
+// Tcl Message: [Mon Mar 25 19:12:10 2024] Launched synth_1... Run output will be captured here: /home/aw1223/new/mase/machop/mase_components/llmint/vivado/vivado.runs/synth_1/runme.log 
+dismissDialog("Starting Design Runs"); // bB (cr)
+// TclEventType: RUN_STATUS_CHANGE
+// TclEventType: RUN_FAILED
+// TclEventType: RUN_STATUS_CHANGE
+// TclEventType: RUN_STEP_COMPLETED
+// Elapsed time: 40 seconds
+selectTree(PAResourceItoN.MsgTreePanel_MESSAGE_VIEW_TREE, "[, Synthesis, [Synth 8-659] type mismatch in port association: bit signed [17:0]A[3:0] vs. bit [17:0]B[3:0] [/home/aw1223/new/mase/machop/mase_components/llmint/rtl/LLMint.sv:106]. ]", 1, false); // ah (O, cr)
+messagesViewCrossProbe(PAResourceItoN.MsgTreePanel_MESSAGE_VIEW_TREE, "src;-;/home/aw1223/new/mase/machop/mase_components/llmint/rtl/LLMint.sv;-;;-;16;-;line;-;106;-;;-;16;-;"); // ah (O, cr)
+selectTree(PAResourceItoN.MsgTreePanel_MESSAGE_VIEW_TREE, "[, Synthesis, [Synth 8-659] type mismatch in port association: bit signed [17:0]A[3:0] vs. bit [17:0]B[3:0] [/home/aw1223/new/mase/machop/mase_components/llmint/rtl/LLMint.sv:106]. ]", 1, false); // ah (O, cr)
+messagesViewCrossProbe(PAResourceItoN.MsgTreePanel_MESSAGE_VIEW_TREE, "src;-;/home/aw1223/new/mase/machop/mase_components/llmint/rtl/LLMint.sv;-;;-;16;-;line;-;106;-;;-;16;-;"); // ah (O, cr)
+// Elapsed time: 23 seconds
+selectCodeEditor("LLMint.sv", 242, 168); // ch (w, cr)
+selectCodeEditor("LLMint.sv", 231, 159); // ch (w, cr)
+selectCodeEditor("LLMint.sv", 231, 159, false, false, false, false, true); // ch (w, cr) - Double Click
+selectCodeEditor("LLMint.sv", 89, 15); // ch (w, cr)
+selectCodeEditor("LLMint.sv", 87, 23); // ch (w, cr)
+selectCodeEditor("LLMint.sv", 87, 24, false, false, false, false, true); // ch (w, cr) - Double Click
+// [Engine Memory]: 1,609 MB (+415kb) [00:16:06]
+// TclEventType: DG_GRAPH_STALE
+// TclEventType: FILE_SET_CHANGE
+selectTree(PAResourceEtoH.FlowNavigatorTreePanel_FLOW_NAVIGATOR_TREE, "[, Synthesis, Run Synthesis]", 14, false); // u (O, cr)
+// Run Command: PAResourceCommand.PACommandNames_RUN_SYNTHESIS
+// bB (cr):  Resetting Runs : addNotify
+// TclEventType: RUN_MODIFY
+// TclEventType: RUN_RESET
+// TclEventType: RUN_STATUS_CHANGE
+// TclEventType: RUN_RESET
+// TclEventType: RUN_MODIFY
+// Tcl Message: reset_run synth_1 
+// bB (cr):  Starting Design Runs : addNotify
+// TclEventType: RUN_LAUNCH
+// TclEventType: RUN_MODIFY
+// HMemoryUtils.trashcanNow. Engine heap size: 1,626 MB. GUI used memory: 137 MB. Current time: 3/25/24, 7:13:29 PM GMT
+// TclEventType: RUN_MODIFY
+// TclEventType: RUN_STATUS_CHANGE
+// Tcl Message: launch_runs synth_1 -jobs 20 
+// Tcl Message: [Mon Mar 25 19:13:28 2024] Launched synth_1... Run output will be captured here: /home/aw1223/new/mase/machop/mase_components/llmint/vivado/vivado.runs/synth_1/runme.log 
+dismissDialog("Starting Design Runs"); // bB (cr)
+// TclEventType: RUN_STATUS_CHANGE
+// TclEventType: RUN_FAILED
+// TclEventType: RUN_STATUS_CHANGE
+// TclEventType: RUN_STEP_COMPLETED
+// Elapsed time: 40 seconds
+selectTree(PAResourceItoN.MsgTreePanel_MESSAGE_VIEW_TREE, "[, Synthesis, [Synth 8-659] type mismatch in port association: bit [31:0]A[3:0] vs. bit signed [31:0]B[3:0] [/home/aw1223/new/mase/machop/mase_components/llmint/rtl/LLMint.sv:130]. ]", 1, false); // ah (O, cr)
+messagesViewCrossProbe(PAResourceItoN.MsgTreePanel_MESSAGE_VIEW_TREE, "src;-;/home/aw1223/new/mase/machop/mase_components/llmint/rtl/LLMint.sv;-;;-;16;-;line;-;130;-;;-;16;-;"); // ah (O, cr)
+selectTree(PAResourceItoN.MsgTreePanel_MESSAGE_VIEW_TREE, "[, Synthesis, [Synth 8-659] type mismatch in port association: bit [31:0]A[3:0] vs. bit signed [31:0]B[3:0] [/home/aw1223/new/mase/machop/mase_components/llmint/rtl/LLMint.sv:130]. ]", 1, false, false, false, false, false, true); // ah (O, cr) - Double Click
+selectTree(PAResourceItoN.MsgTreePanel_MESSAGE_VIEW_TREE, "[, Synthesis, [Synth 8-659] type mismatch in port association: bit [31:0]A[3:0] vs. bit signed [31:0]B[3:0] [/home/aw1223/new/mase/machop/mase_components/llmint/rtl/LLMint.sv:130]. ]", 1, false); // ah (O, cr)
+selectCodeEditor("LLMint.sv", 245, 154); // ch (w, cr)
+selectCodeEditor("LLMint.sv", 225, 219); // ch (w, cr)
+selectCodeEditor("LLMint.sv", 224, 220, false, false, false, false, true); // ch (w, cr) - Double Click
+selectCodeEditor("LLMint.sv", 97, 21); // ch (w, cr)
+selectCodeEditor("LLMint.sv", 97, 21, false, false, false, false, true); // ch (w, cr) - Double Click
+selectCodeEditor("LLMint.sv", 169, 65); // ch (w, cr)
+selectCodeEditor("LLMint.sv", 169, 65, false, false, false, false, true); // ch (w, cr) - Double Click
+selectCodeEditor("LLMint.sv", 85, 22); // ch (w, cr)
+selectCodeEditor("LLMint.sv", 85, 22, false, false, false, false, true); // ch (w, cr) - Double Click
+selectCodeEditor("LLMint.sv", 165, 180); // ch (w, cr)
+selectCodeEditor("LLMint.sv", 166, 181, false, false, false, false, true); // ch (w, cr) - Double Click
+selectCodeEditor("LLMint.sv", 105, 30); // ch (w, cr)
+selectCodeEditor("LLMint.sv", 105, 30); // ch (w, cr)
+selectCodeEditor("LLMint.sv", 105, 30); // ch (w, cr)
+selectCodeEditor("LLMint.sv", 105, 30); // ch (w, cr)
+selectCodeEditor("LLMint.sv", 105, 30); // ch (w, cr)
+selectCodeEditor("LLMint.sv", 105, 30); // ch (w, cr)
+selectCodeEditor("LLMint.sv", 105, 30); // ch (w, cr)
+selectCodeEditor("LLMint.sv", 105, 30); // ch (w, cr)
+selectCodeEditor("LLMint.sv", 105, 30); // ch (w, cr)
+selectCodeEditor("LLMint.sv", 105, 30); // ch (w, cr)
+selectCodeEditor("LLMint.sv", 105, 30); // ch (w, cr)
+selectCodeEditor("LLMint.sv", 105, 30); // ch (w, cr)
+selectCodeEditor("LLMint.sv", 105, 30); // ch (w, cr)
+selectCodeEditor("LLMint.sv", 103, 24); // ch (w, cr)
+selectCodeEditor("LLMint.sv", 103, 24, false, false, false, false, true); // ch (w, cr) - Double Click
+// TclEventType: DG_GRAPH_STALE
+// TclEventType: FILE_SET_CHANGE
+selectTree(PAResourceEtoH.FlowNavigatorTreePanel_FLOW_NAVIGATOR_TREE, "[, Synthesis, Run Synthesis]", 14, false); // u (O, cr)
+// Run Command: PAResourceCommand.PACommandNames_RUN_SYNTHESIS
+// bB (cr):  Resetting Runs : addNotify
+// TclEventType: RUN_MODIFY
+// TclEventType: RUN_RESET
+// TclEventType: RUN_STATUS_CHANGE
+// TclEventType: RUN_RESET
+// TclEventType: RUN_MODIFY
+// Tcl Message: reset_run synth_1 
+// bB (cr):  Starting Design Runs : addNotify
+// TclEventType: RUN_LAUNCH
+// Tcl Message: launch_runs synth_1 -jobs 20 
+// TclEventType: RUN_MODIFY
+// TclEventType: RUN_STATUS_CHANGE
+// Tcl Message: [Mon Mar 25 19:14:54 2024] Launched synth_1... Run output will be captured here: /home/aw1223/new/mase/machop/mase_components/llmint/vivado/vivado.runs/synth_1/runme.log 
+dismissDialog("Starting Design Runs"); // bB (cr)
+// TclEventType: RUN_STATUS_CHANGE
+// TclEventType: RUN_FAILED
+// TclEventType: RUN_STATUS_CHANGE
+// TclEventType: RUN_STEP_COMPLETED
+// Elapsed time: 35 seconds
+selectTree(PAResourceItoN.MsgTreePanel_MESSAGE_VIEW_TREE, "[, Synthesis, [Synth 8-659] type mismatch in port association: bit [31:0]A[3:0] vs. bit signed [31:0]B[3:0] [/home/aw1223/new/mase/machop/mase_components/llmint/rtl/LLMint.sv:50]. ]", 1, false); // ah (O, cr)
+messagesViewCrossProbe(PAResourceItoN.MsgTreePanel_MESSAGE_VIEW_TREE, "src;-;/home/aw1223/new/mase/machop/mase_components/llmint/rtl/LLMint.sv;-;;-;16;-;line;-;50;-;;-;16;-;"); // ah (O, cr)
+selectTree(PAResourceItoN.MsgTreePanel_MESSAGE_VIEW_TREE, "[, Synthesis, [Synth 8-659] type mismatch in port association: bit [31:0]A[3:0] vs. bit signed [31:0]B[3:0] [/home/aw1223/new/mase/machop/mase_components/llmint/rtl/LLMint.sv:50]. ]", 1, false); // ah (O, cr)
+messagesViewCrossProbe(PAResourceItoN.MsgTreePanel_MESSAGE_VIEW_TREE, "src;-;/home/aw1223/new/mase/machop/mase_components/llmint/rtl/LLMint.sv;-;;-;16;-;line;-;50;-;;-;16;-;"); // ah (O, cr)
+selectTree(PAResourceItoN.MsgTreePanel_MESSAGE_VIEW_TREE, "[, Synthesis, [Synth 8-659] type mismatch in port association: bit [31:0]A[3:0] vs. bit signed [31:0]B[3:0] [/home/aw1223/new/mase/machop/mase_components/llmint/rtl/LLMint.sv:50]. ]", 1, false); // ah (O, cr)
+messagesViewCrossProbe(PAResourceItoN.MsgTreePanel_MESSAGE_VIEW_TREE, "src;-;/home/aw1223/new/mase/machop/mase_components/llmint/rtl/LLMint.sv;-;;-;16;-;line;-;50;-;;-;16;-;"); // ah (O, cr)
+selectCodeEditor("LLMint.sv", 288, 167); // ch (w, cr)
+selectCodeEditor("LLMint.sv", 288, 167, false, false, false, false, true); // ch (w, cr) - Double Click
+selectCodeEditor("LLMint.sv", 266, 157); // ch (w, cr)
+selectCodeEditor("LLMint.sv", 266, 157, false, false, false, false, true); // ch (w, cr) - Double Click
+// TclEventType: DG_GRAPH_STALE
+// TclEventType: FILE_SET_CHANGE
+// Elapsed time: 28 seconds
+selectTree(PAResourceEtoH.FlowNavigatorTreePanel_FLOW_NAVIGATOR_TREE, "[, Synthesis, Run Synthesis]", 14, false); // u (O, cr)
+// Run Command: PAResourceCommand.PACommandNames_RUN_SYNTHESIS
+// bB (cr):  Resetting Runs : addNotify
+// TclEventType: RUN_MODIFY
+// TclEventType: RUN_RESET
+// TclEventType: RUN_STATUS_CHANGE
+// TclEventType: RUN_RESET
+// TclEventType: RUN_MODIFY
+// Tcl Message: reset_run synth_1 
+// bB (cr):  Starting Design Runs : addNotify
+// TclEventType: RUN_LAUNCH
+// Tcl Message: launch_runs synth_1 -jobs 20 
+// TclEventType: RUN_MODIFY
+// HMemoryUtils.trashcanNow. Engine heap size: 1,660 MB. GUI used memory: 137 MB. Current time: 3/25/24, 7:16:14 PM GMT
+// TclEventType: RUN_MODIFY
+// TclEventType: RUN_STATUS_CHANGE
+// Tcl Message: [Mon Mar 25 19:16:13 2024] Launched synth_1... Run output will be captured here: /home/aw1223/new/mase/machop/mase_components/llmint/vivado/vivado.runs/synth_1/runme.log 
+dismissDialog("Starting Design Runs"); // bB (cr)
+// TclEventType: RUN_STATUS_CHANGE
+// TclEventType: RUN_FAILED
+// TclEventType: RUN_STATUS_CHANGE
+// TclEventType: RUN_STEP_COMPLETED
+// Elapsed time: 40 seconds
+selectTree(PAResourceItoN.MsgTreePanel_MESSAGE_VIEW_TREE, "[, Synthesis, [Synth 8-659] type mismatch in port association: bit signed [31:0]A[3:0] vs. bit [31:0]B[3:0] [/home/aw1223/new/mase/machop/mase_components/scatter/rtl/scatter_threshold.sv:50]. ]", 1, false); // ah (O, cr)
+messagesViewCrossProbe(PAResourceItoN.MsgTreePanel_MESSAGE_VIEW_TREE, "src;-;/home/aw1223/new/mase/machop/mase_components/scatter/rtl/scatter_threshold.sv;-;;-;16;-;line;-;50;-;;-;16;-;"); // ah (O, cr)
+// Elapsed time: 14 seconds
+selectCodeEditor("scatter_threshold.sv", 62, 116); // ch (w, cr)
+selectCodeEditor("scatter_threshold.sv", 62, 116); // ch (w, cr)
+selectCodeEditor("scatter_threshold.sv", 62, 116); // ch (w, cr)
+// TclEventType: DG_GRAPH_STALE
+// TclEventType: FILE_SET_CHANGE
+// Elapsed time: 47 seconds
+selectTree(PAResourceEtoH.FlowNavigatorTreePanel_FLOW_NAVIGATOR_TREE, "[, Synthesis, Run Synthesis]", 14, false); // u (O, cr)
+// Run Command: PAResourceCommand.PACommandNames_RUN_SYNTHESIS
+// bB (cr):  Resetting Runs : addNotify
+// TclEventType: RUN_MODIFY
+// TclEventType: RUN_RESET
+// TclEventType: RUN_STATUS_CHANGE
+// TclEventType: RUN_RESET
+// TclEventType: RUN_MODIFY
+// Tcl Message: reset_run synth_1 
+// bB (cr):  Starting Design Runs : addNotify
+// Tcl Message: launch_runs synth_1 -jobs 20 
+// TclEventType: DG_GRAPH_STALE
+// TclEventType: FILE_SET_CHANGE
+// TclEventType: RUN_LAUNCH
+// TclEventType: RUN_MODIFY
+// TclEventType: RUN_STATUS_CHANGE
+// Tcl Message: [Mon Mar 25 19:18:02 2024] Launched synth_1... Run output will be captured here: /home/aw1223/new/mase/machop/mase_components/llmint/vivado/vivado.runs/synth_1/runme.log 
+// 'k' command handler elapsed time: 4 seconds
+dismissDialog("Starting Design Runs"); // bB (cr)
+// TclEventType: RUN_STATUS_CHANGE
+// TclEventType: RUN_FAILED
+// TclEventType: RUN_STATUS_CHANGE
+// TclEventType: RUN_STEP_COMPLETED
+// Elapsed time: 36 seconds
+selectTree(PAResourceItoN.MsgTreePanel_MESSAGE_VIEW_TREE, "[, Synthesis, [Synth 8-659] type mismatch in port association: bit [31:0]A[3:0] vs. bit signed [31:0]B[3:0] [/home/aw1223/new/mase/machop/mase_components/llmint/rtl/LLMint.sv:49]. ]", 1, false); // ah (O, cr)
+messagesViewCrossProbe(PAResourceItoN.MsgTreePanel_MESSAGE_VIEW_TREE, "src;-;/home/aw1223/new/mase/machop/mase_components/llmint/rtl/LLMint.sv;-;;-;16;-;line;-;49;-;;-;16;-;"); // ah (O, cr)
+// Elapsed time: 11 seconds
+selectCodeEditor("LLMint.sv", 139, 199); // ch (w, cr)
+selectCodeEditor("LLMint.sv", 139, 199, false, false, false, false, true); // ch (w, cr) - Double Click
+selectCodeEditor("LLMint.sv", 128, 28); // ch (w, cr)
+selectCodeEditor("LLMint.sv", 128, 28, false, false, false, false, true); // ch (w, cr) - Double Click
+// TclEventType: DG_GRAPH_STALE
+// TclEventType: FILE_SET_CHANGE
+selectTree(PAResourceEtoH.FlowNavigatorTreePanel_FLOW_NAVIGATOR_TREE, "[, Synthesis, Run Synthesis]", 14, false); // u (O, cr)
+// Run Command: PAResourceCommand.PACommandNames_RUN_SYNTHESIS
+// [Engine Memory]: 1,692 MB (+2380kb) [00:21:40]
+// bB (cr):  Resetting Runs : addNotify
+// TclEventType: RUN_MODIFY
+// TclEventType: RUN_RESET
+// TclEventType: RUN_STATUS_CHANGE
+// TclEventType: RUN_RESET
+// TclEventType: RUN_MODIFY
+// Tcl Message: reset_run synth_1 
+// bB (cr):  Starting Design Runs : addNotify
+// Tcl Message: launch_runs synth_1 -jobs 20 
+// TclEventType: RUN_LAUNCH
+// TclEventType: RUN_MODIFY
+// TclEventType: RUN_STATUS_CHANGE
+// Tcl Message: [Mon Mar 25 19:19:01 2024] Launched synth_1... Run output will be captured here: /home/aw1223/new/mase/machop/mase_components/llmint/vivado/vivado.runs/synth_1/runme.log 
+dismissDialog("Starting Design Runs"); // bB (cr)
+// TclEventType: RUN_STATUS_CHANGE
+// HMemoryUtils.trashcanNow. Engine heap size: 1,692 MB. GUI used memory: 137 MB. Current time: 3/25/24, 7:19:04 PM GMT
+// TclEventType: RUN_FAILED
+// TclEventType: RUN_STATUS_CHANGE
+// TclEventType: RUN_STEP_COMPLETED
+// Elapsed time: 59 seconds
+selectTree(PAResourceItoN.MsgTreePanel_MESSAGE_VIEW_TREE, "[, Synthesis, [Synth 8-659] type mismatch in port association: bit signed [31:0]A[3:0] vs. bit [31:0]B[3:0] [/home/aw1223/new/mase/machop/mase_components/llmint/rtl/LLMint.sv:51]. ]", 1, false); // ah (O, cr)
+messagesViewCrossProbe(PAResourceItoN.MsgTreePanel_MESSAGE_VIEW_TREE, "src;-;/home/aw1223/new/mase/machop/mase_components/llmint/rtl/LLMint.sv;-;;-;16;-;line;-;51;-;;-;16;-;"); // ah (O, cr)
+selectCodeEditor("LLMint.sv", 197, 158); // ch (w, cr)
+selectCodeEditor("LLMint.sv", 197, 158, false, false, false, false, true); // ch (w, cr) - Double Click
+selectCodeEditor("LLMint.sv", 107, 21); // ch (w, cr)
+selectCodeEditor("LLMint.sv", 107, 21, false, false, false, false, true); // ch (w, cr) - Double Click
+selectCodeEditor("LLMint.sv", 91, 147); // ch (w, cr)
+selectCodeEditor("LLMint.sv", 91, 146, false, false, false, false, true); // ch (w, cr) - Double Click
+selectCodeEditor("LLMint.sv", 134, 81); // ch (w, cr)
+selectCodeEditor("LLMint.sv", 134, 81, false, false, false, false, true); // ch (w, cr) - Double Click
+// TclEventType: DG_GRAPH_STALE
+// TclEventType: FILE_SET_CHANGE
+selectTree(PAResourceEtoH.FlowNavigatorTreePanel_FLOW_NAVIGATOR_TREE, "[, Synthesis, Run Synthesis]", 14, false); // u (O, cr)
+// Run Command: PAResourceCommand.PACommandNames_RUN_SYNTHESIS
+// bB (cr):  Resetting Runs : addNotify
+// TclEventType: RUN_MODIFY
+// TclEventType: RUN_RESET
+// TclEventType: RUN_STATUS_CHANGE
+// TclEventType: RUN_RESET
+// TclEventType: RUN_MODIFY
+// Tcl Message: reset_run synth_1 
+// bB (cr):  Starting Design Runs : addNotify
+// Tcl Message: launch_runs synth_1 -jobs 20 
+// TclEventType: RUN_LAUNCH
+// TclEventType: RUN_STATUS_CHANGE
+// TclEventType: RUN_MODIFY
+// Tcl Message: [Mon Mar 25 19:20:23 2024] Launched synth_1... Run output will be captured here: /home/aw1223/new/mase/machop/mase_components/llmint/vivado/vivado.runs/synth_1/runme.log 
+dismissDialog("Starting Design Runs"); // bB (cr)
+// TclEventType: RUN_STATUS_CHANGE
+// Elapsed time: 66 seconds
+selectTree(PAResourceEtoH.FlowNavigatorTreePanel_FLOW_NAVIGATOR_TREE, "[, Synthesis, Run Synthesis]", 14, false); // u (O, cr)
+// Run Command: PAResourceCommand.PACommandNames_RUN_SYNTHESIS
+selectButton("OptionPane.button", "Cancel"); // JButton (A, G)
+selectTab((HResource) null, (HResource) null, "Tcl Console", 0); // aL (aI, cr)
+selectTab((HResource) null, (HResource) null, "Messages", 1); // aL (aI, cr)
+selectButton(RDIResource.FilterToolBar_SHOW_ALL, "Show All"); // a (f, cr)
+expandTree(PAResourceItoN.MsgTreePanel_MESSAGE_VIEW_TREE, "[, Vivado Commands, General Messages,  [Mon Mar 25 19:00:48 2024] Launched synth_1.... ]", 5); // ah (O, cr)
+selectTree(PAResourceItoN.MsgTreePanel_MESSAGE_VIEW_TREE, "[, Vivado Commands, General Messages,  [Mon Mar 25 19:00:48 2024] Launched synth_1.... ,  [Mon Mar 25 19:19:01 2024] Launched synth_1.... ]", 31, false); // ah (O, cr)
+collapseTree(PAResourceItoN.MsgTreePanel_MESSAGE_VIEW_TREE, "[, Vivado Commands, General Messages,  [Mon Mar 25 19:00:48 2024] Launched synth_1.... ]", 5); // ah (O, cr)
+// Elapsed time: 34 seconds
+selectTree(PAResourceItoN.MsgTreePanel_MESSAGE_VIEW_TREE, "[, Vivado Commands, General Messages,  [Mon Mar 25 19:00:48 2024] Launched synth_1.... ]", 5, true); // ah (O, cr) - Node
+selectTab((HResource) null, (HResource) null, "Log", 2); // aL (aI, cr)
+selectCodeEditor(PAResourceItoN.LogMonitor_MONITOR, 341, 70); // n (q, cr)
+// Elapsed time: 12 seconds
+selectTree(PAResourceEtoH.FlowNavigatorTreePanel_FLOW_NAVIGATOR_TREE, "[, Synthesis, Run Synthesis]", 14, false); // u (O, cr)
+// Run Command: PAResourceCommand.PACommandNames_RUN_SYNTHESIS
+selectButton("OptionPane.button", "Cancel"); // JButton (A, G)
+// Elapsed time: 17 seconds
+selectTab((HResource) null, (HResource) null, "Messages", 1); // aL (aI, cr)
+selectTab((HResource) null, (HResource) null, "Log", 2); // aL (aI, cr)
+selectTab((HResource) null, (HResource) null, "Messages", 1); // aL (aI, cr)
+collapseTree(PAResourceItoN.MsgTreePanel_MESSAGE_VIEW_TREE, "[, Vivado Commands]", 0); // ah (O, cr)
+selectTab((HResource) null, (HResource) null, "Log", 2); // aL (aI, cr)
+selectTab((HResource) null, (HResource) null, "Reports", 3); // aL (aI, cr)
+// TclEventType: RUN_COMPLETED
+// TclEventType: RUN_STATUS_CHANGE
+// TclEventType: RUN_STEP_COMPLETED
+// aj (cr): Synthesis Completed: addNotify
+// Elapsed time: 11 seconds
+selectButton(RDIResource.BaseDialog_OK, "OK"); // a (aj)
+// Run Command: PAResourceCommand.PACommandNames_RUN_IMPLEMENTATION
+// bB (cr):  Starting Design Runs : addNotify
+// Tcl Message: launch_runs impl_1 -jobs 20 
+// TclEventType: RUN_LAUNCH
+// TclEventType: RUN_MODIFY
+// TclEventType: RUN_STATUS_CHANGE
+// Tcl Message: [Mon Mar 25 19:23:19 2024] Launched impl_1... Run output will be captured here: /home/aw1223/new/mase/machop/mase_components/llmint/vivado/vivado.runs/impl_1/runme.log 
+dismissDialog("Starting Design Runs"); // bB (cr)
+// TclEventType: RUN_STATUS_CHANGE
+// Elapsed time: 13 seconds
+selectTreeTable(PAResourceEtoH.ExpReportTreePanel_EXP_REPORT_TREE_TABLE, "synth_1_synth_report_utilization_0 ; report_utilization ;  ; Mon Mar 25 19:22:59 GMT 2024 ; 12859", 2, "synth_1_synth_report_utilization_0", 0, false); // O (O, cr)
+selectTreeTable(PAResourceEtoH.ExpReportTreePanel_EXP_REPORT_TREE_TABLE, "synth_1_synth_report_utilization_0 ; report_utilization ;  ; Mon Mar 25 19:22:59 GMT 2024 ; 12859", 2, "synth_1_synth_report_utilization_0", 0, false, false, false, false, false, true); // O (O, cr) - Double Click
+// Elapsed time: 50 seconds
+selectTreeTable(PAResourceEtoH.ExpReportTreePanel_EXP_REPORT_TREE_TABLE, "synth_1_synth_report_utilization_0 ; report_utilization ;  ; Mon Mar 25 19:22:59 GMT 2024 ; 12859", 2, "synth_1_synth_report_utilization_0", 0, false, false, false, false, true, false); // O (O, cr) - Popup Trigger
+selectTreeTable(PAResourceEtoH.ExpReportTreePanel_EXP_REPORT_TREE_TABLE, "synth_1_synth_synthesis_report_0 ;  ;  ; Mon Mar 25 19:22:59 GMT 2024 ; 114599", 3, "synth_1_synth_synthesis_report_0", 0, false); // O (O, cr)
+selectTreeTable(PAResourceEtoH.ExpReportTreePanel_EXP_REPORT_TREE_TABLE, "synth_1_synth_report_utilization_0 ; report_utilization ;  ; Mon Mar 25 19:22:59 GMT 2024 ; 12859", 2, "synth_1_synth_report_utilization_0", 0, false); // O (O, cr)
+// TclEventType: RUN_STEP_COMPLETED
+// TclEventType: RUN_FAILED
+// TclEventType: RUN_STATUS_CHANGE
+// TclEventType: RUN_STEP_COMPLETED
+// aj (cr): Implementation Failed: addNotify
+// Elapsed time: 41 seconds
+selectButton(RDIResource.BaseDialog_OK, "OK"); // a (aj)
+// Run Command: PAResourceCommand.PACommandNames_MESSAGE_WINDOW
+dismissDialog("Implementation Failed"); // aj (cr)
+expandTree(PAResourceItoN.MsgTreePanel_MESSAGE_VIEW_TREE, "[, Synthesis, [Synth 8-6859] multi-driven net on pin data_out_valid_OBUF with 1st driver pin 'low_precision_linear/linear[0].fixed_accumulator_inst/register_slice/data_out_valid_reg/Q' [/home/aw1223/new/mase/machop/mase_components/common/rtl/skid_buffer.sv:50]. ]", 1); // ah (O, cr)
+selectTree(PAResourceItoN.MsgTreePanel_MESSAGE_VIEW_TREE, "[, Synthesis, [Synth 8-6859] multi-driven net on pin data_out_valid_OBUF with 1st driver pin 'low_precision_linear/linear[0].fixed_accumulator_inst/register_slice/data_out_valid_reg/Q' [/home/aw1223/new/mase/machop/mase_components/common/rtl/skid_buffer.sv:50]. ]", 1, true); // ah (O, cr) - Node
+messagesViewCrossProbe(PAResourceItoN.MsgTreePanel_MESSAGE_VIEW_TREE, "src;-;/home/aw1223/new/mase/machop/mase_components/common/rtl/skid_buffer.sv;-;;-;16;-;line;-;50;-;;-;16;-;"); // ah (O, cr)
+selectCodeEditor("skid_buffer.sv", 91, 54); // ch (w, cr)
+selectCodeEditor("skid_buffer.sv", 91, 54, false, false, false, false, true); // ch (w, cr) - Double Click
+// Elapsed time: 25 seconds
+selectTree(PAResourceItoN.MsgTreePanel_MESSAGE_VIEW_TREE, "[, Implementation, Opt Design]", 8, true); // ah (O, cr) - Node
+selectTree(PAResourceItoN.MsgTreePanel_MESSAGE_VIEW_TREE, "[, Implementation, Opt Design, DRC, Netlist, Net, [DRC MDRV-1] Multiple Driver Nets: Net high_precision_linear/linear[0].fixed_accumulator_inst/register_slice/data_out_valid has multiple drivers: high_precision_linear/linear[0].fixed_accumulator_inst/register_slice/data_out_valid_reg/Q, and low_precision_linear/linear[0].fixed_accumulator_inst/register_slice/data_out_valid_reg/Q.. ]", 12, true); // ah (O, cr) - Node
+selectTree(PAResourceItoN.MsgTreePanel_MESSAGE_VIEW_TREE, "[, Implementation, Opt Design, DRC, Netlist, Net, [DRC MDRV-1] Multiple Driver Nets: Net high_precision_linear/linear[0].fixed_accumulator_inst/register_slice/data_out_valid has multiple drivers: high_precision_linear/linear[0].fixed_accumulator_inst/register_slice/data_out_valid_reg/Q, and low_precision_linear/linear[0].fixed_accumulator_inst/register_slice/data_out_valid_reg/Q.. , [DRC MDRV-1] Multiple Driver Nets: Net low_precision_linear/linear[0].fdp_inst/fixed_vector_mult_inst/register_slice/data_in_ready_OBUF has multiple drivers: high_precision_linear/linear[0].fdp_inst/fixed_vector_mult_inst/register_slice/data_in_ready_OBUF_inst_i_2/O, and low_precision_linear/linear[0].fdp_inst/fixed_vector_mult_inst/register_slice/data_in_ready_OBUF_inst_i_1/O.. ]", 13, false, false, false, false, false, true); // ah (O, cr) - Double Click
+selectTree(PAResourceItoN.MsgTreePanel_MESSAGE_VIEW_TREE, "[, Implementation, Opt Design, DRC, Netlist, Net, [DRC MDRV-1] Multiple Driver Nets: Net high_precision_linear/linear[0].fixed_accumulator_inst/register_slice/data_out_valid has multiple drivers: high_precision_linear/linear[0].fixed_accumulator_inst/register_slice/data_out_valid_reg/Q, and low_precision_linear/linear[0].fixed_accumulator_inst/register_slice/data_out_valid_reg/Q.. ]", 12, true); // ah (O, cr) - Node
+selectTree(PAResourceItoN.MsgTreePanel_MESSAGE_VIEW_TREE, "[, Implementation, Opt Design, DRC, Netlist, Net, [DRC MDRV-1] Multiple Driver Nets: Net high_precision_linear/linear[0].fixed_accumulator_inst/register_slice/data_out_valid has multiple drivers: high_precision_linear/linear[0].fixed_accumulator_inst/register_slice/data_out_valid_reg/Q, and low_precision_linear/linear[0].fixed_accumulator_inst/register_slice/data_out_valid_reg/Q.. ]", 12, true, false, false, false, false, true); // ah (O, cr) - Double Click - Node
+selectTree(PAResourceItoN.MsgTreePanel_MESSAGE_VIEW_TREE, "[, Implementation, Opt Design, DRC, Netlist, Net, [DRC MDRV-1] Multiple Driver Nets: Net high_precision_linear/linear[0].fixed_accumulator_inst/register_slice/data_out_valid has multiple drivers: high_precision_linear/linear[0].fixed_accumulator_inst/register_slice/data_out_valid_reg/Q, and low_precision_linear/linear[0].fixed_accumulator_inst/register_slice/data_out_valid_reg/Q.. ]", 12, true); // ah (O, cr) - Node
+selectTree(PAResourceItoN.MsgTreePanel_MESSAGE_VIEW_TREE, "[, Implementation, Opt Design, DRC, Netlist, Net, [DRC MDRV-1] Multiple Driver Nets: Net high_precision_linear/linear[0].fixed_accumulator_inst/register_slice/data_out_valid has multiple drivers: high_precision_linear/linear[0].fixed_accumulator_inst/register_slice/data_out_valid_reg/Q, and low_precision_linear/linear[0].fixed_accumulator_inst/register_slice/data_out_valid_reg/Q.. ]", 12, true); // ah (O, cr) - Node
+selectTree(PAResourceItoN.MsgTreePanel_MESSAGE_VIEW_TREE, "[, Implementation, Opt Design, DRC, Netlist, Net, [DRC MDRV-1] Multiple Driver Nets: Net high_precision_linear/linear[0].fixed_accumulator_inst/register_slice/data_out_valid has multiple drivers: high_precision_linear/linear[0].fixed_accumulator_inst/register_slice/data_out_valid_reg/Q, and low_precision_linear/linear[0].fixed_accumulator_inst/register_slice/data_out_valid_reg/Q.. , [DRC MDRV-1] Multiple Driver Nets: Net low_precision_linear/linear[0].fdp_inst/fixed_vector_mult_inst/register_slice/weight_ready_OBUF has multiple drivers: high_precision_linear/linear[0].fdp_inst/fixed_vector_mult_inst/register_slice/weight_ready_OBUF_inst_i_2/O, and low_precision_linear/linear[0].fdp_inst/fixed_vector_mult_inst/register_slice/weight_ready_OBUF_inst_i_1/O.. ]", 14, false, false, false, false, false, true); // ah (O, cr) - Double Click
+selectTree(PAResourceItoN.MsgTreePanel_MESSAGE_VIEW_TREE, "[, Implementation, Opt Design, DRC, Netlist, Net, [DRC MDRV-1] Multiple Driver Nets: Net high_precision_linear/linear[0].fixed_accumulator_inst/register_slice/data_out_valid has multiple drivers: high_precision_linear/linear[0].fixed_accumulator_inst/register_slice/data_out_valid_reg/Q, and low_precision_linear/linear[0].fixed_accumulator_inst/register_slice/data_out_valid_reg/Q.. , [DRC MDRV-1] Multiple Driver Nets: Net low_precision_linear/linear[0].fdp_inst/fixed_vector_mult_inst/register_slice/weight_ready_OBUF has multiple drivers: high_precision_linear/linear[0].fdp_inst/fixed_vector_mult_inst/register_slice/weight_ready_OBUF_inst_i_2/O, and low_precision_linear/linear[0].fdp_inst/fixed_vector_mult_inst/register_slice/weight_ready_OBUF_inst_i_1/O.. ]", 14, false); // ah (O, cr)
+selectTree(PAResourceItoN.MsgTreePanel_MESSAGE_VIEW_TREE, "[, Implementation, Opt Design, DRC, Netlist, Net, [DRC MDRV-1] Multiple Driver Nets: Net high_precision_linear/linear[0].fixed_accumulator_inst/register_slice/data_out_valid has multiple drivers: high_precision_linear/linear[0].fixed_accumulator_inst/register_slice/data_out_valid_reg/Q, and low_precision_linear/linear[0].fixed_accumulator_inst/register_slice/data_out_valid_reg/Q.. ]", 12, true); // ah (O, cr) - Node
+selectTree(PAResourceItoN.MsgTreePanel_MESSAGE_VIEW_TREE, "[, Implementation, Opt Design, DRC, Netlist, Net, [DRC MDRV-1] Multiple Driver Nets: Net high_precision_linear/linear[0].fixed_accumulator_inst/register_slice/data_out_valid has multiple drivers: high_precision_linear/linear[0].fixed_accumulator_inst/register_slice/data_out_valid_reg/Q, and low_precision_linear/linear[0].fixed_accumulator_inst/register_slice/data_out_valid_reg/Q.. , [DRC MDRV-1] Multiple Driver Nets: Net low_precision_linear/linear[0].fdp_inst/fixed_vector_mult_inst/register_slice/data_in_ready_OBUF has multiple drivers: high_precision_linear/linear[0].fdp_inst/fixed_vector_mult_inst/register_slice/data_in_ready_OBUF_inst_i_2/O, and low_precision_linear/linear[0].fdp_inst/fixed_vector_mult_inst/register_slice/data_in_ready_OBUF_inst_i_1/O.. ]", 13, false); // ah (O, cr)
+selectTree(PAResourceItoN.MsgTreePanel_MESSAGE_VIEW_TREE, "[, Implementation, Opt Design, DRC, Netlist, Net, [DRC MDRV-1] Multiple Driver Nets: Net high_precision_linear/linear[0].fixed_accumulator_inst/register_slice/data_out_valid has multiple drivers: high_precision_linear/linear[0].fixed_accumulator_inst/register_slice/data_out_valid_reg/Q, and low_precision_linear/linear[0].fixed_accumulator_inst/register_slice/data_out_valid_reg/Q.. , [DRC MDRV-1] Multiple Driver Nets: Net low_precision_linear/linear[0].fdp_inst/fixed_vector_mult_inst/register_slice/data_in_ready_OBUF has multiple drivers: high_precision_linear/linear[0].fdp_inst/fixed_vector_mult_inst/register_slice/data_in_ready_OBUF_inst_i_2/O, and low_precision_linear/linear[0].fdp_inst/fixed_vector_mult_inst/register_slice/data_in_ready_OBUF_inst_i_1/O.. ]", 13, false, false, false, false, false, true); // ah (O, cr) - Double Click
+selectTree(PAResourceItoN.MsgTreePanel_MESSAGE_VIEW_TREE, "[, Implementation, Opt Design, DRC, Netlist, Net, [DRC MDRV-1] Multiple Driver Nets: Net high_precision_linear/linear[0].fixed_accumulator_inst/register_slice/data_out_valid has multiple drivers: high_precision_linear/linear[0].fixed_accumulator_inst/register_slice/data_out_valid_reg/Q, and low_precision_linear/linear[0].fixed_accumulator_inst/register_slice/data_out_valid_reg/Q.. , [DRC MDRV-1] Multiple Driver Nets: Net low_precision_linear/linear[0].fdp_inst/fixed_vector_mult_inst/register_slice/data_in_ready_OBUF has multiple drivers: high_precision_linear/linear[0].fdp_inst/fixed_vector_mult_inst/register_slice/data_in_ready_OBUF_inst_i_2/O, and low_precision_linear/linear[0].fdp_inst/fixed_vector_mult_inst/register_slice/data_in_ready_OBUF_inst_i_1/O.. ]", 13, false); // ah (O, cr)
+selectTree(PAResourceItoN.MsgTreePanel_MESSAGE_VIEW_TREE, "[, Implementation, Opt Design, DRC, Netlist, Net, [DRC MDRV-1] Multiple Driver Nets: Net high_precision_linear/linear[0].fixed_accumulator_inst/register_slice/data_out_valid has multiple drivers: high_precision_linear/linear[0].fixed_accumulator_inst/register_slice/data_out_valid_reg/Q, and low_precision_linear/linear[0].fixed_accumulator_inst/register_slice/data_out_valid_reg/Q.. , [DRC MDRV-1] Multiple Driver Nets: Net low_precision_linear/linear[0].fdp_inst/fixed_vector_mult_inst/register_slice/data_in_ready_OBUF has multiple drivers: high_precision_linear/linear[0].fdp_inst/fixed_vector_mult_inst/register_slice/data_in_ready_OBUF_inst_i_2/O, and low_precision_linear/linear[0].fdp_inst/fixed_vector_mult_inst/register_slice/data_in_ready_OBUF_inst_i_1/O.. ]", 13, false, false, false, false, false, true); // ah (O, cr) - Double Click
+selectTree(PAResourceItoN.MsgTreePanel_MESSAGE_VIEW_TREE, "[, Implementation, Opt Design, DRC, Netlist, Net, [DRC MDRV-1] Multiple Driver Nets: Net high_precision_linear/linear[0].fixed_accumulator_inst/register_slice/data_out_valid has multiple drivers: high_precision_linear/linear[0].fixed_accumulator_inst/register_slice/data_out_valid_reg/Q, and low_precision_linear/linear[0].fixed_accumulator_inst/register_slice/data_out_valid_reg/Q.. , [DRC MDRV-1] Multiple Driver Nets: Net low_precision_linear/linear[0].fdp_inst/fixed_vector_mult_inst/register_slice/data_in_ready_OBUF has multiple drivers: high_precision_linear/linear[0].fdp_inst/fixed_vector_mult_inst/register_slice/data_in_ready_OBUF_inst_i_2/O, and low_precision_linear/linear[0].fdp_inst/fixed_vector_mult_inst/register_slice/data_in_ready_OBUF_inst_i_1/O.. ]", 13, false); // ah (O, cr)
+selectTree(PAResourceItoN.MsgTreePanel_MESSAGE_VIEW_TREE, "[, Implementation, Opt Design, DRC, Netlist, Net, [DRC MDRV-1] Multiple Driver Nets: Net high_precision_linear/linear[0].fixed_accumulator_inst/register_slice/data_out_valid has multiple drivers: high_precision_linear/linear[0].fixed_accumulator_inst/register_slice/data_out_valid_reg/Q, and low_precision_linear/linear[0].fixed_accumulator_inst/register_slice/data_out_valid_reg/Q.. , [DRC MDRV-1] Multiple Driver Nets: Net low_precision_linear/linear[0].fdp_inst/fixed_vector_mult_inst/register_slice/data_in_ready_OBUF has multiple drivers: high_precision_linear/linear[0].fdp_inst/fixed_vector_mult_inst/register_slice/data_in_ready_OBUF_inst_i_2/O, and low_precision_linear/linear[0].fdp_inst/fixed_vector_mult_inst/register_slice/data_in_ready_OBUF_inst_i_1/O.. ]", 13, false); // ah (O, cr)
+// HMemoryUtils.trashcanNow. Engine heap size: 1,818 MB. GUI used memory: 139 MB. Current time: 3/25/24, 7:25:59 PM GMT
+selectTree(PAResourceItoN.MsgTreePanel_MESSAGE_VIEW_TREE, "[, Implementation, Opt Design, DRC, Netlist, Net, [DRC MDRV-1] Multiple Driver Nets: Net high_precision_linear/linear[0].fixed_accumulator_inst/register_slice/data_out_valid has multiple drivers: high_precision_linear/linear[0].fixed_accumulator_inst/register_slice/data_out_valid_reg/Q, and low_precision_linear/linear[0].fixed_accumulator_inst/register_slice/data_out_valid_reg/Q.. ]", 12, true); // ah (O, cr) - Node
+selectTree(PAResourceItoN.MsgTreePanel_MESSAGE_VIEW_TREE, "[, Implementation, Opt Design, DRC, Netlist, Net, [DRC MDRV-1] Multiple Driver Nets: Net high_precision_linear/linear[0].fixed_accumulator_inst/register_slice/data_out_valid has multiple drivers: high_precision_linear/linear[0].fixed_accumulator_inst/register_slice/data_out_valid_reg/Q, and low_precision_linear/linear[0].fixed_accumulator_inst/register_slice/data_out_valid_reg/Q.. ]", 12, true, false, false, false, false, true); // ah (O, cr) - Double Click - Node
+selectTree(PAResourceItoN.MsgTreePanel_MESSAGE_VIEW_TREE, "[, Implementation, Opt Design, [Vivado_Tcl 4-78] Error(s) found during DRC. Opt_design not run.. ]", 13, false); // ah (O, cr)
+selectTree(PAResourceItoN.MsgTreePanel_MESSAGE_VIEW_TREE, "[, Implementation, Opt Design, [Vivado_Tcl 4-78] Error(s) found during DRC. Opt_design not run.. ]", 13, false, false, false, false, false, true); // ah (O, cr) - Double Click
+expandTree(PAResourceItoN.MsgTreePanel_MESSAGE_VIEW_TREE, "[, Implementation, Opt Design, DRC, Netlist, Net, [DRC MDRV-1] Multiple Driver Nets: Net high_precision_linear/linear[0].fixed_accumulator_inst/register_slice/data_out_valid has multiple drivers: high_precision_linear/linear[0].fixed_accumulator_inst/register_slice/data_out_valid_reg/Q, and low_precision_linear/linear[0].fixed_accumulator_inst/register_slice/data_out_valid_reg/Q.. ]", 12); // ah (O, cr)
+selectTree(PAResourceItoN.MsgTreePanel_MESSAGE_VIEW_TREE, "[, Implementation, Opt Design, DRC, Netlist, Net, [DRC MDRV-1] Multiple Driver Nets: Net high_precision_linear/linear[0].fixed_accumulator_inst/register_slice/data_out_valid has multiple drivers: high_precision_linear/linear[0].fixed_accumulator_inst/register_slice/data_out_valid_reg/Q, and low_precision_linear/linear[0].fixed_accumulator_inst/register_slice/data_out_valid_reg/Q.. , [DRC MDRV-1] Multiple Driver Nets: Net low_precision_linear/linear[0].fdp_inst/fixed_vector_mult_inst/register_slice/data_in_ready_OBUF has multiple drivers: high_precision_linear/linear[0].fdp_inst/fixed_vector_mult_inst/register_slice/data_in_ready_OBUF_inst_i_2/O, and low_precision_linear/linear[0].fdp_inst/fixed_vector_mult_inst/register_slice/data_in_ready_OBUF_inst_i_1/O.. ]", 13, false); // ah (O, cr)
+// [Engine Memory]: 1,933 MB (+163916kb) [00:29:09]
+// TclEventType: DG_GRAPH_STALE
+// TclEventType: FILE_SET_CHANGE
+// TclEventType: DG_GRAPH_STALE
+// TclEventType: FILE_SET_CHANGE
+// HMemoryUtils.trashcanNow. Engine heap size: 1,954 MB. GUI used memory: 139 MB. Current time: 3/25/24, 7:27:03 PM GMT
+// TclEventType: DG_GRAPH_STALE
+// TclEventType: FILE_SET_CHANGE
+// TclEventType: DG_GRAPH_STALE
+// TclEventType: FILE_SET_CHANGE
+// TclEventType: DG_GRAPH_STALE
+// TclEventType: FILE_SET_CHANGE
+// TclEventType: DG_GRAPH_STALE
+// TclEventType: FILE_SET_CHANGE
+// HMemoryUtils.trashcanNow. Engine heap size: 2,039 MB. GUI used memory: 139 MB. Current time: 3/25/24, 7:27:24 PM GMT
+// TclEventType: DG_GRAPH_STALE
+// TclEventType: FILE_SET_CHANGE
+// [Engine Memory]: 2,039 MB (+9668kb) [00:30:06]
+// TclEventType: DG_GRAPH_STALE
+// TclEventType: FILE_SET_CHANGE
+// TclEventType: DG_GRAPH_STALE
+// TclEventType: FILE_SET_CHANGE
+// TclEventType: DG_GRAPH_STALE
+// TclEventType: FILE_SET_CHANGE
+// TclEventType: DG_GRAPH_STALE
+// TclEventType: FILE_SET_CHANGE
+// TclEventType: DG_GRAPH_STALE
+// TclEventType: FILE_SET_CHANGE
+// TclEventType: DG_GRAPH_STALE
+// TclEventType: FILE_SET_CHANGE
+// [Engine Memory]: 2,151 MB (+10702kb) [00:30:31]
+// TclEventType: DG_GRAPH_STALE
+// TclEventType: FILE_SET_CHANGE
+// HMemoryUtils.trashcanNow. Engine heap size: 2,151 MB. GUI used memory: 139 MB. Current time: 3/25/24, 7:27:53 PM GMT
+// TclEventType: FILE_SET_CHANGE
+// TclEventType: DG_GRAPH_STALE
+// TclEventType: FILE_SET_CHANGE
+// TclEventType: DG_GRAPH_STALE
+// TclEventType: FILE_SET_CHANGE
+// Elapsed time: 110 seconds
+selectTree(PAResourceEtoH.FlowNavigatorTreePanel_FLOW_NAVIGATOR_TREE, "[, Implementation, Run Implementation]", 17, false); // u (O, cr)
+// Run Command: PAResourceCommand.PACommandNames_RUN_IMPLEMENTATION
+// A (cr): Synthesis is Out-of-date: addNotify
+selectCheckBox(RDIResource.MessageWithOptionDialog_DONT_SHOW_THIS_DIALOG_AGAIN, "Don't show this dialog again", true); // g (Q, A): TRUE
+selectButton(RDIResource.BaseDialog_YES, "Yes"); // a (A)
+// 'c' command handler elapsed time: 4 seconds
+// bB (cr):  Resetting Runs : addNotify
+dismissDialog("Synthesis is Out-of-date"); // A (cr)
+// TclEventType: RUN_MODIFY
+// TclEventType: RUN_RESET
+// TclEventType: RUN_STATUS_CHANGE
+// TclEventType: RUN_RESET
+// TclEventType: RUN_STATUS_CHANGE
+closeView(PAResourceOtoP.PAViews_PAR_REPORT, "PAR Report"); // c
+// TclEventType: RUN_RESET
+// TclEventType: RUN_MODIFY
+// Tcl Message: reset_run synth_1 
+// TclEventType: RUN_MODIFY
+// bB (cr):  Starting Design Runs : addNotify
+// TclEventType: RUN_LAUNCH
+// Tcl Message: launch_runs impl_1 -jobs 20 
+// TclEventType: RUN_LAUNCH
+// TclEventType: RUN_MODIFY
+// TclEventType: RUN_STATUS_CHANGE
+// TclEventType: RUN_MODIFY
+// Tcl Message: [Mon Mar 25 19:28:11 2024] Launched synth_1... Run output will be captured here: /home/aw1223/new/mase/machop/mase_components/llmint/vivado/vivado.runs/synth_1/runme.log [Mon Mar 25 19:28:11 2024] Launched impl_1... Run output will be captured here: /home/aw1223/new/mase/machop/mase_components/llmint/vivado/vivado.runs/impl_1/runme.log 
+dismissDialog("Starting Design Runs"); // bB (cr)
+// TclEventType: RUN_STATUS_CHANGE
+// Elapsed time: 134 seconds
+selectTab((HResource) null, (HResource) null, "Reports", 3); // aL (aI, cr)
+selectTab((HResource) null, (HResource) null, "Log", 2); // aL (aI, cr)
+// TclEventType: RUN_COMPLETED
+// TclEventType: RUN_STATUS_CHANGE
+// TclEventType: RUN_STEP_COMPLETED
+// TclEventType: RUN_STATUS_CHANGE
+// TclEventType: DG_GRAPH_STALE
+// TclEventType: FILE_SET_CHANGE
+// TclEventType: DG_GRAPH_STALE
+// TclEventType: FILE_SET_CHANGE
+// HMemoryUtils.trashcanNow. Engine heap size: 2,231 MB. GUI used memory: 139 MB. Current time: 3/25/24, 7:30:59 PM GMT
+// TclEventType: DG_GRAPH_STALE
+// TclEventType: FILE_SET_CHANGE
+// TclEventType: DG_GRAPH_STALE
+// TclEventType: FILE_SET_CHANGE
+// [Engine Memory]: 2,263 MB (+4558kb) [00:33:51]
+// TclEventType: DG_GRAPH_STALE
+// TclEventType: FILE_SET_CHANGE
+// TclEventType: DG_GRAPH_STALE
+// TclEventType: FILE_SET_CHANGE
+// TclEventType: DG_GRAPH_STALE
+// TclEventType: FILE_SET_CHANGE
+// TclEventType: DG_GRAPH_STALE
+// TclEventType: FILE_SET_CHANGE
+// HMemoryUtils.trashcanNow. Engine heap size: 2,327 MB. GUI used memory: 139 MB. Current time: 3/25/24, 7:31:28 PM GMT
+// TclEventType: DG_GRAPH_STALE
+// TclEventType: FILE_SET_CHANGE
+// TclEventType: DG_GRAPH_STALE
+// TclEventType: FILE_SET_CHANGE
+// HMemoryUtils.trashcanNow. Engine heap size: 2,359 MB. GUI used memory: 139 MB. Current time: 3/25/24, 7:31:53 PM GMT
+// TclEventType: DG_GRAPH_STALE
+// TclEventType: FILE_SET_CHANGE
+// TclEventType: DG_GRAPH_STALE
+// TclEventType: FILE_SET_CHANGE
+// [Engine Memory]: 2,391 MB (+15466kb) [00:34:45]
+// TclEventType: DG_GRAPH_STALE
+// TclEventType: FILE_SET_CHANGE
+// TclEventType: RUN_STEP_COMPLETED
+// TclEventType: DG_GRAPH_STALE
+// TclEventType: FILE_SET_CHANGE
+// TclEventType: DG_GRAPH_STALE
+// TclEventType: RUN_FAILED
+// TclEventType: RUN_STATUS_CHANGE
+// TclEventType: RUN_STEP_COMPLETED
+// aj (cr): Implementation Failed: addNotify
+// HMemoryUtils.trashcanNow. Engine heap size: 2,439 MB. GUI used memory: 140 MB. Current time: 3/25/24, 7:32:13 PM GMT
+// TclEventType: DG_GRAPH_STALE
+// TclEventType: FILE_SET_CHANGE
+// TclEventType: DG_GRAPH_STALE
+// TclEventType: FILE_SET_CHANGE
+// TclEventType: DG_GRAPH_STALE
+// TclEventType: FILE_SET_CHANGE
+// TclEventType: DG_GRAPH_STALE
+// TclEventType: FILE_SET_CHANGE
+// Elapsed time: 125 seconds
+selectButton(RDIResource.BaseDialog_OK, "OK"); // a (aj)
+// Run Command: PAResourceCommand.PACommandNames_MESSAGE_WINDOW
+dismissDialog("Implementation Failed"); // aj (cr)
+// HMemoryUtils.trashcanNow. Engine heap size: 2,503 MB. GUI used memory: 139 MB. Current time: 3/25/24, 7:32:33 PM GMT
+selectTree(PAResourceItoN.MsgTreePanel_MESSAGE_VIEW_TREE, "[, Implementation, Opt Design, DRC, Netlist, Net, [DRC MDRV-1] Multiple Driver Nets: Net high_precision_linear/linear[0].fixed_accumulator_inst/register_slice/data_out_valid has multiple drivers: high_precision_linear/linear[0].fixed_accumulator_inst/register_slice/data_out_valid_reg/Q, and low_precision_linear/linear[0].fixed_accumulator_inst/register_slice/data_out_valid_reg/Q.. ]", 7, true); // ah (O, cr) - Node
+selectTree(PAResourceItoN.MsgTreePanel_MESSAGE_VIEW_TREE, "[, Implementation, Opt Design, DRC, Netlist, Net, [DRC MDRV-1] Multiple Driver Nets: Net high_precision_linear/linear[0].fixed_accumulator_inst/register_slice/data_out_valid has multiple drivers: high_precision_linear/linear[0].fixed_accumulator_inst/register_slice/data_out_valid_reg/Q, and low_precision_linear/linear[0].fixed_accumulator_inst/register_slice/data_out_valid_reg/Q.. ]", 7, true); // ah (O, cr) - Node
+selectTree(PAResourceItoN.MsgTreePanel_MESSAGE_VIEW_TREE, "[, Implementation, Opt Design, DRC, Netlist, Net, [DRC MDRV-1] Multiple Driver Nets: Net high_precision_linear/linear[0].fixed_accumulator_inst/register_slice/data_out_valid has multiple drivers: high_precision_linear/linear[0].fixed_accumulator_inst/register_slice/data_out_valid_reg/Q, and low_precision_linear/linear[0].fixed_accumulator_inst/register_slice/data_out_valid_reg/Q.. ]", 7, true); // ah (O, cr) - Node
+selectTree(PAResourceItoN.MsgTreePanel_MESSAGE_VIEW_TREE, "[, Implementation, Opt Design, DRC, Netlist, Net, [DRC MDRV-1] Multiple Driver Nets: Net high_precision_linear/linear[0].fixed_accumulator_inst/register_slice/data_out_valid has multiple drivers: high_precision_linear/linear[0].fixed_accumulator_inst/register_slice/data_out_valid_reg/Q, and low_precision_linear/linear[0].fixed_accumulator_inst/register_slice/data_out_valid_reg/Q.. ]", 7, true); // ah (O, cr) - Node
+selectTree(PAResourceItoN.MsgTreePanel_MESSAGE_VIEW_TREE, "[, Implementation, Opt Design, DRC, Netlist, Net, [DRC MDRV-1] Multiple Driver Nets: Net high_precision_linear/linear[0].fixed_accumulator_inst/register_slice/data_out_valid has multiple drivers: high_precision_linear/linear[0].fixed_accumulator_inst/register_slice/data_out_valid_reg/Q, and low_precision_linear/linear[0].fixed_accumulator_inst/register_slice/data_out_valid_reg/Q.. ]", 7, true); // ah (O, cr) - Node
+selectTree(PAResourceEtoH.FlowNavigatorTreePanel_FLOW_NAVIGATOR_TREE, "[, Implementation, Run Implementation]", 17, false); // u (O, cr)
+// Run Command: PAResourceCommand.PACommandNames_RUN_IMPLEMENTATION
+// bB (cr):  Resetting Runs : addNotify
+// TclEventType: RUN_MODIFY
+// TclEventType: RUN_RESET
+// TclEventType: RUN_STATUS_CHANGE
+// TclEventType: RUN_RESET
+// TclEventType: RUN_STATUS_CHANGE
+// TclEventType: RUN_RESET
+// TclEventType: RUN_MODIFY
+// Tcl Message: reset_run synth_1 
+// TclEventType: RUN_MODIFY
+// bB (cr):  Starting Design Runs : addNotify
+// TclEventType: RUN_LAUNCH
+// Tcl Message: launch_runs impl_1 -jobs 20 
+// TclEventType: RUN_LAUNCH
+// TclEventType: RUN_MODIFY
+// TclEventType: RUN_STATUS_CHANGE
+// TclEventType: RUN_MODIFY
+// Tcl Message: [Mon Mar 25 19:32:42 2024] Launched synth_1... Run output will be captured here: /home/aw1223/new/mase/machop/mase_components/llmint/vivado/vivado.runs/synth_1/runme.log [Mon Mar 25 19:32:42 2024] Launched impl_1... Run output will be captured here: /home/aw1223/new/mase/machop/mase_components/llmint/vivado/vivado.runs/impl_1/runme.log 
+dismissDialog("Starting Design Runs"); // bB (cr)
+// TclEventType: RUN_STATUS_CHANGE
+// TclEventType: RUN_COMPLETED
+// TclEventType: RUN_STATUS_CHANGE
+// TclEventType: RUN_STEP_COMPLETED
+// TclEventType: RUN_STATUS_CHANGE
+// TclEventType: RUN_STEP_COMPLETED
+// Elapsed time: 325 seconds
+selectTab((HResource) null, (HResource) null, "Log", 2); // aL (aI, cr)
+// TclEventType: RUN_FAILED
+// TclEventType: RUN_STATUS_CHANGE
+// TclEventType: RUN_STEP_COMPLETED
+// aj (cr): Implementation Failed: addNotify
+selectButton(RDIResource.BaseDialog_OK, "OK"); // a (aj)
+// Run Command: PAResourceCommand.PACommandNames_MESSAGE_WINDOW
+dismissDialog("Implementation Failed"); // aj (cr)
+// Elapsed time: 222 seconds
+selectButton(PAResourceCommand.PACommandNames_ADD_SOURCES, "Sources_add_sources"); // E (f, cr)
+// Run Command: PAResourceCommand.PACommandNames_ADD_SOURCES
+// c (cr): Add Sources: addNotify
+selectButton("NEXT", "Next >"); // JButton (j, c)
+selectButton(PAResourceQtoS.SrcChooserPanel_ADD_HDL_AND_NETLIST_FILES_TO_YOUR_PROJECT, "Add Files"); // a (E, c)
+// Elapsed time: 52 seconds
+setFileChooser("/home/aw1223/new/mase/machop/mase_components/llmint/misc/llm_int_wrapper.sv");
+selectButton("FINISH", "Finish"); // JButton (j, c)
+// 'h' command handler elapsed time: 61 seconds
+dismissDialog("Add Sources"); // c (cr)
+// TclEventType: DG_GRAPH_STALE
+// TclEventType: FILE_SET_CHANGE
+// Tcl Message: add_files -norecurse /home/aw1223/new/mase/machop/mase_components/llmint/misc/llm_int_wrapper.sv 
+// [Engine Memory]: 2,519 MB (+9054kb) [00:45:41]
+selectTree(PAResourceEtoH.FlowNavigatorTreePanel_FLOW_NAVIGATOR_TREE, "[, Implementation, Run Implementation]", 17, false); // u (O, cr)
+// Run Command: PAResourceCommand.PACommandNames_RUN_IMPLEMENTATION
+// bB (cr):  Resetting Runs : addNotify
+// TclEventType: RUN_MODIFY
+// TclEventType: RUN_RESET
+// TclEventType: RUN_STATUS_CHANGE
+// TclEventType: RUN_RESET
+// TclEventType: RUN_STATUS_CHANGE
+// TclEventType: RUN_RESET
+// TclEventType: RUN_MODIFY
+// Tcl Message: reset_run synth_1 
+// bB (cr):  Starting Design Runs : addNotify
+// TclEventType: DG_GRAPH_STALE
+// TclEventType: FILE_SET_CHANGE
+// Tcl Message: launch_runs impl_1 -jobs 20 
+// TclEventType: FILE_SET_CHANGE
+// TclEventType: RUN_LAUNCH
+// TclEventType: RUN_MODIFY
+// TclEventType: RUN_STATUS_CHANGE
+// TclEventType: RUN_MODIFY
+// Tcl Message: [Mon Mar 25 19:43:03 2024] Launched synth_1... Run output will be captured here: /home/aw1223/new/mase/machop/mase_components/llmint/vivado/vivado.runs/synth_1/runme.log [Mon Mar 25 19:43:03 2024] Launched impl_1... Run output will be captured here: /home/aw1223/new/mase/machop/mase_components/llmint/vivado/vivado.runs/impl_1/runme.log 
+dismissDialog("Starting Design Runs"); // bB (cr)
+// TclEventType: RUN_STATUS_CHANGE
+// TclEventType: FILE_SET_CHANGE
+// TclEventType: DG_GRAPH_STALE
+// HMemoryUtils.trashcanNow. Engine heap size: 2,527 MB. GUI used memory: 140 MB. Current time: 3/25/24, 7:43:09 PM GMT
+// TclEventType: DG_GRAPH_STALE
+// TclEventType: FILE_SET_CHANGE
+// Elapsed time: 103 seconds
+selectTab(PAResourceEtoH.FileSetView_TABBED_PANE, (HResource) null, "Libraries", 1); // i (N, cr)
+selectTab(PAResourceEtoH.FileSetView_TABBED_PANE, (HResource) null, "Hierarchy", 0); // i (N, cr)
+// Elapsed time: 16 seconds
+maximizeFrame(PAResourceOtoP.PAViews_SOURCES, "Sources"); // aA (aL, cr)
+selectTree(PAResourceEtoH.FileSetPanel_FILE_SET_PANEL_TREE, "[root, Design Sources, LLMint (LLMint.sv)]", 2, true); // B (F, cr) - Node
+selectTree(PAResourceEtoH.FileSetPanel_FILE_SET_PANEL_TREE, "[root, Design Sources, LLMint (LLMint.sv)]", 9, true); // B (F, cr) - Node
+selectMenu(PAResourceItoN.MainMenuMgr_FILE, "File"); // aa (q, cr)
+selectMenu(PAResourceItoN.MainMenuMgr_PROJECT, "Project"); // af (cr)
+selectMenuItem(PAResourceCommand.PACommandNames_ADD_SOURCES, "Add Sources..."); // ai (cr)
+dismissMenu(PAResourceItoN.MainMenuMgr_FILE, "File"); // aa (q, cr)
+// Run Command: PAResourceCommand.PACommandNames_ADD_SOURCES
+// c (cr): Add Sources: addNotify
+selectButton("NEXT", "Next >"); // JButton (j, c)
+// 'h' command handler elapsed time: 9 seconds
+dismissDialog("Add Sources"); // c (cr)
+expandTree(PAResourceEtoH.FileSetPanel_FILE_SET_PANEL_TREE, "[root, Design Sources, Non-module Files]", 1); // B (F, cr)
+selectTree(PAResourceEtoH.FileSetPanel_FILE_SET_PANEL_TREE, "[root, Design Sources, Non-module Files, llm_int_wrapper.sv]", 2, false); // B (F, cr)
+selectTree(PAResourceEtoH.FileSetPanel_FILE_SET_PANEL_TREE, "[root, Design Sources, Non-module Files, llm_int_wrapper.sv]", 2, false, false, false, false, true, false); // B (F, cr) - Popup Trigger
+selectMenu(PAResourceCommand.PACommandNames_AUTO_UPDATE_HIER, "Hierarchy Update"); // af (ao, cr)
+selectMenu(PAResourceQtoS.SrcMenu_IP_HIERARCHY, "IP Hierarchy"); // af (ao, cr)
+// TclEventType: RUN_COMPLETED
+// TclEventType: RUN_STATUS_CHANGE
+// TclEventType: RUN_STEP_COMPLETED
+// TclEventType: RUN_STATUS_CHANGE
+// Elapsed time: 22 seconds
+selectTree(PAResourceEtoH.FileSetPanel_FILE_SET_PANEL_TREE, "[root, Design Sources, Non-module Files, llm_int_wrapper.sv]", 2, false); // B (F, cr)
+selectTree(PAResourceEtoH.FileSetPanel_FILE_SET_PANEL_TREE, "[root, Design Sources, Non-module Files, llm_int_wrapper.sv]", 2, false, false, false, false, true, false); // B (F, cr) - Popup Trigger
+selectMenu(PAResourceCommand.PACommandNames_AUTO_UPDATE_HIER, "Hierarchy Update"); // af (ao, cr)
+selectMenu(PAResourceQtoS.SrcMenu_IP_HIERARCHY, "IP Hierarchy"); // af (ao, cr)
+selectTree(PAResourceEtoH.FileSetPanel_FILE_SET_PANEL_TREE, "[root, Design Sources, LLMint (LLMint.sv)]", 3, true); // B (F, cr) - Node
+unMaximizeFrame(PAResourceOtoP.PAViews_SOURCES, "Sources"); // aA (aL, cr)
+selectTree(PAResourceItoN.MsgTreePanel_MESSAGE_VIEW_TREE, "[, Synthesis, [Synth 8-3332] Sequential element (fixed_vector_mult_inst/register_slice/FSM_onehot_state_reg[2]) is unused and will be removed from module fixed_dot_product__2.. ]", 10, true); // ah (O, cr) - Node
+selectTree(PAResourceItoN.MsgTreePanel_MESSAGE_VIEW_TREE, "[, Synthesis, [Synth 8-3332] Sequential element (fixed_vector_mult_inst/register_slice/FSM_onehot_state_reg[2]) is unused and will be removed from module fixed_dot_product__2.. ]", 10, true); // ah (O, cr) - Node
+selectTree(PAResourceItoN.MsgTreePanel_MESSAGE_VIEW_TREE, "[, Synthesis, [Synth 8-3332] Sequential element (fixed_vector_mult_inst/register_slice/FSM_onehot_state_reg[2]) is unused and will be removed from module fixed_dot_product__2.. ]", 10, true); // ah (O, cr) - Node
+maximizeFrame(PAResourceOtoP.PAViews_SOURCES, "Sources"); // aA (aL, cr)
+selectTree(PAResourceEtoH.FileSetPanel_FILE_SET_PANEL_TREE, "[root, Design Sources, LLMint (LLMint.sv)]", 3, true, false, false, false, true, false); // B (F, cr) - Popup Trigger - Node
+selectMenu(PAResourceCommand.PACommandNames_AUTO_UPDATE_HIER, "Hierarchy Update"); // af (ao, cr)
+selectMenu(PAResourceQtoS.SrcMenu_IP_HIERARCHY, "IP Hierarchy"); // af (ao, cr)
+selectMenuItem(PAResourceQtoS.SrcMenu_SET_FILE_TYPE, "Set File Type..."); // ai (ao, cr)
+// Y (cr): Set Type: addNotify
+selectButton(RDIResource.BaseDialog_CANCEL, "Cancel"); // a (Y)
+dismissDialog("Set Type"); // Y (cr)
+selectTree(PAResourceEtoH.FileSetPanel_FILE_SET_PANEL_TREE, "[root, Design Sources, Non-module Files, llm_int_wrapper.sv]", 2, false); // B (F, cr)
+selectTree(PAResourceEtoH.FileSetPanel_FILE_SET_PANEL_TREE, "[root, Design Sources, Non-module Files, llm_int_wrapper.sv]", 2, false, false, false, false, true, false); // B (F, cr) - Popup Trigger
+selectMenuItem(PAResourceCommand.PACommandNames_SET_USED_IN_PROP, "Set Used In..."); // ai (ao, cr)
+// Run Command: PAResourceCommand.PACommandNames_SET_USED_IN_PROP
+// de (cr): Set Used In: addNotify
+dismissDialog("Set Used In"); // de (cr)
+selectTree(PAResourceEtoH.FileSetPanel_FILE_SET_PANEL_TREE, "[root, Design Sources, Non-module Files, llm_int_wrapper.sv]", 2, false); // B (F, cr)
+selectTree(PAResourceEtoH.FileSetPanel_FILE_SET_PANEL_TREE, "[root, Design Sources, Non-module Files, llm_int_wrapper.sv]", 2, false, false, false, false, true, false); // B (F, cr) - Popup Trigger
+selectMenu(PAResourceCommand.PACommandNames_AUTO_UPDATE_HIER, "Hierarchy Update"); // af (ao, cr)
+selectMenu(PAResourceQtoS.SrcMenu_IP_HIERARCHY, "IP Hierarchy"); // af (ao, cr)
+selectMenuItem(PAResourceQtoS.SrcMenu_REFRESH_HIERARCHY, "Refresh Hierarchy"); // ai (ao, cr)
+unMaximizeFrame(PAResourceOtoP.PAViews_SOURCES, "Sources"); // aA (aL, cr)
+// HMemoryUtils.trashcanNow. Engine heap size: 2,561 MB. GUI used memory: 139 MB. Current time: 3/25/24, 7:46:29 PM GMT
+// Elapsed time: 28 seconds
+selectTab((HResource) null, (HResource) null, "Log", 2); // aL (aI, cr)
+selectCodeEditor(PAResourceItoN.LogMonitor_MONITOR, 150, 77); // n (q, cr)
+selectCodeEditor(PAResourceItoN.LogMonitor_MONITOR, 150, 77); // n (q, cr)
+selectCodeEditor(PAResourceItoN.LogMonitor_MONITOR, 150, 77); // n (q, cr)
+selectTab((HResource) null, (HResource) null, "Messages", 1); // aL (aI, cr)
+selectTab((HResource) null, (HResource) null, "Log", 2); // aL (aI, cr)
+// TclEventType: RUN_STEP_COMPLETED
+// Elapsed time: 38 seconds
+selectCodeEditor(PAResourceItoN.LogMonitor_MONITOR, 193, 5); // n (q, cr)
+selectCodeEditor(PAResourceItoN.LogMonitor_MONITOR, 193, 5); // n (q, cr)
+selectTab((HResource) null, (HResource) null, "Messages", 1); // aL (aI, cr)
+selectTree(PAResourceItoN.MsgTreePanel_MESSAGE_VIEW_TREE, "[, Synthesis, [Constraints 18-5210] No constraints selected for write.. Resolution: This message can indicate that there are no constraints for the design, or it can indicate that the used_in flags are set such that the constraints are ignored. This later case is used when running synth_design to not write synthesis constraints to the resulting checkpoint. Instead, project constraints are read when the synthesized design is opened.. ]", 11, false); // ah (O, cr)
+selectTab((HResource) null, (HResource) null, "Log", 2); // aL (aI, cr)
+// Elapsed time: 28 seconds
+selectTree(PAResourceEtoH.FlowNavigatorTreePanel_FLOW_NAVIGATOR_TREE, "[, Implementation, Run Implementation]", 17, false); // u (O, cr)
+// Run Command: PAResourceCommand.PACommandNames_RUN_IMPLEMENTATION
+selectButton("OptionPane.button", "Cancel"); // JButton (A, G)
+// TclEventType: RUN_STEP_COMPLETED
+// TclEventType: RUN_FAILED
+// TclEventType: RUN_STATUS_CHANGE
+// TclEventType: RUN_STEP_COMPLETED
+// aj (cr): Implementation Failed: addNotify
+// Elapsed time: 29 seconds
+selectButton(RDIResource.BaseDialog_OK, "OK"); // a (aj)
+// Run Command: PAResourceCommand.PACommandNames_MESSAGE_WINDOW
+dismissDialog("Implementation Failed"); // aj (cr)
+// Elapsed time: 16 seconds
+maximizeFrame(PAResourceOtoP.PAViews_SOURCES, "Sources"); // aA (aL, cr)
+selectTree(PAResourceEtoH.FileSetPanel_FILE_SET_PANEL_TREE, "[root, Design Sources, LLMint (LLMint.sv)]", 3, true); // B (F, cr) - Node
+selectTree(PAResourceEtoH.FileSetPanel_FILE_SET_PANEL_TREE, "[root, Design Sources, Non-module Files, llm_int_wrapper.sv]", 2, false); // B (F, cr)
+selectTree(PAResourceEtoH.FileSetPanel_FILE_SET_PANEL_TREE, "[root, Design Sources, Non-module Files, llm_int_wrapper.sv]", 2, false, false, false, false, true, false); // B (F, cr) - Popup Trigger
+selectMenu(PAResourceCommand.PACommandNames_AUTO_UPDATE_HIER, "Hierarchy Update"); // af (ao, cr)
+selectMenu(PAResourceQtoS.SrcMenu_IP_HIERARCHY, "IP Hierarchy"); // af (ao, cr)
+// Elapsed time: 13 seconds
+selectTree(PAResourceEtoH.FileSetPanel_FILE_SET_PANEL_TREE, "[root, Design Sources, Non-module Files, llm_int_wrapper.sv]", 2, false, false, false, false, true, false); // B (F, cr) - Popup Trigger
+selectMenu(PAResourceCommand.PACommandNames_AUTO_UPDATE_HIER, "Hierarchy Update"); // af (ao, cr)
+selectMenuItem(PAResourceOtoP.Project_NO_UPDATE_MANUAL_COMPILE_ORDER, "No Update, Manual Compile Order"); // W (cr)
+// TclEventType: DG_GRAPH_STALE
+// TclEventType: FILE_SET_CHANGE
+// TclEventType: SRC_MGMT_MODE_CHANGE
+// Tcl Message: set_property source_mgmt_mode None [current_project] 
+selectButton(PAResourceEtoH.FileSetPanel_RELOAD, "Reload..."); // h (ds, cr)
+selectMenu(PAResourceCommand.PACommandNames_AUTO_UPDATE_HIER, "Hierarchy Update"); // af (cr)
+selectMenuItem(PAResourceQtoS.SrcMenu_REFRESH_HIERARCHY, "Refresh Hierarchy"); // ai (cr)
+selectTab(PAResourceEtoH.FileSetView_TABBED_PANE, (HResource) null, "Compile Order", 2); // i (N, cr)
+expandTree(PAResourceEtoH.FileSetPanel_FILE_SET_PANEL_TREE, "[root, Design Sources]", 0); // B (F, cr)
+selectTree(PAResourceEtoH.FileSetPanel_FILE_SET_PANEL_TREE, "[root, Design Sources, llm_int_wrapper.sv]", 16, false); // B (F, cr)
+selectTab(PAResourceEtoH.FileSetView_TABBED_PANE, (HResource) null, "Libraries", 1); // i (N, cr)
+selectTab(PAResourceEtoH.FileSetView_TABBED_PANE, (HResource) null, "Hierarchy", 0); // i (N, cr)
+selectButton(PAResourceEtoH.FileSetPanel_MESSAGES, "2"); // h (f, cr)
+// Elapsed time: 15 seconds
+maximizeFrame(RDIResource.RDIViews_PROPERTIES, "Properties"); // aA (aL, cr)
+// RDIResource.RDIViews_PROPERTIES: Source File Properties: close view
+// Elapsed time: 40 seconds
+selectTree(PAResourceEtoH.FileSetPanel_FILE_SET_PANEL_TREE, "[root, Design Sources, Non-module Files, llm_int_wrapper.sv]", 2, false, false, false, false, true, false); // B (F, cr) - Popup Trigger
+selectMenuItem(PAResourceCommand.PACommandNames_SET_AS_TOP, "Set as Top"); // ai (ao, cr)
+selectMenu(PAResourceQtoS.SrcMenu_IP_HIERARCHY, "IP Hierarchy"); // af (ao, cr)
+selectTree(PAResourceEtoH.FileSetPanel_FILE_SET_PANEL_TREE, "[root, Design Sources, LLMint (LLMint.sv), scatter : scatter_threshold (scatter_threshold.sv), encoder1 : priority_encoder (priority_encoder.sv)]", 5, false); // B (F, cr)
+selectTree(PAResourceEtoH.FileSetPanel_FILE_SET_PANEL_TREE, "[root, Design Sources, LLMint (LLMint.sv)]", 3, true); // B (F, cr) - Node
+selectTree(PAResourceEtoH.FileSetPanel_FILE_SET_PANEL_TREE, "[root, Design Sources, LLMint (LLMint.sv)]", 3, true, false, false, false, true, false); // B (F, cr) - Popup Trigger - Node
+selectMenu(PAResourceCommand.PACommandNames_AUTO_UPDATE_HIER, "Hierarchy Update"); // af (ao, cr)
+selectMenu(PAResourceQtoS.SrcMenu_IP_HIERARCHY, "IP Hierarchy"); // af (ao, cr)
+selectMenu(PAResourceQtoS.SrcMenu_IP_HIERARCHY, "IP Hierarchy"); // af (ao, cr)
+selectMenu(PAResourceCommand.PACommandNames_AUTO_UPDATE_HIER, "Hierarchy Update"); // af (ao, cr)
+selectTree(PAResourceEtoH.FileSetPanel_FILE_SET_PANEL_TREE, "[root, Design Sources, LLMint (LLMint.sv)]", 3, true); // B (F, cr) - Node
+selectTree(PAResourceEtoH.FileSetPanel_FILE_SET_PANEL_TREE, "[root, Design Sources, LLMint (LLMint.sv)]", 3, true, false, false, false, true, false); // B (F, cr) - Popup Trigger - Node
+selectMenu(PAResourceCommand.PACommandNames_AUTO_UPDATE_HIER, "Hierarchy Update"); // af (ao, cr)
+selectMenu(PAResourceQtoS.SrcMenu_IP_HIERARCHY, "IP Hierarchy"); // af (ao, cr)
+selectMenuItem(PAResourceCommand.PACommandNames_SET_AS_TOP, "Set as Top"); // ai (ao, cr)
+// Run Command: PAResourceCommand.PACommandNames_SET_AS_TOP
+// Tcl Message: set_property top LLMint [current_fileset] 
+selectTree(PAResourceEtoH.FileSetPanel_FILE_SET_PANEL_TREE, "[root, Design Sources, Non-module Files, llm_int_wrapper.sv]", 2, false); // B (F, cr)
+selectTree(PAResourceEtoH.FileSetPanel_FILE_SET_PANEL_TREE, "[root, Design Sources, Non-module Files, llm_int_wrapper.sv]", 2, false, false, false, false, true, false); // B (F, cr) - Popup Trigger
+selectMenu(PAResourceCommand.PACommandNames_AUTO_UPDATE_HIER, "Hierarchy Update"); // af (ao, cr)
+selectMenu(PAResourceQtoS.SrcMenu_IP_HIERARCHY, "IP Hierarchy"); // af (ao, cr)
+selectMenuItem(PAResourceCommand.PACommandNames_SET_GLOBAL_INCLUDE, "Set Global Include"); // ai (ao, cr)
+selectMenu(PAResourceQtoS.SrcMenu_IP_HIERARCHY, "IP Hierarchy"); // af (ao, cr)
+selectMenu(PAResourceCommand.PACommandNames_AUTO_UPDATE_HIER, "Hierarchy Update"); // af (ao, cr)
+selectTree(PAResourceEtoH.FileSetPanel_FILE_SET_PANEL_TREE, "[root, Design Sources, LLMint (LLMint.sv), scatter : scatter_threshold (scatter_threshold.sv)]", 4, true); // B (F, cr) - Node
+selectTree(PAResourceEtoH.FileSetPanel_FILE_SET_PANEL_TREE, "[root, Design Sources, LLMint (LLMint.sv), scatter : scatter_threshold (scatter_threshold.sv)]", 4, true, false, false, false, true, false); // B (F, cr) - Popup Trigger - Node
+selectMenu(PAResourceQtoS.SrcMenu_IP_HIERARCHY, "IP Hierarchy"); // af (ao, cr)
+selectTree(PAResourceEtoH.FlowNavigatorTreePanel_FLOW_NAVIGATOR_TREE, "[, IP Integrator, Generate Block Design]", 8, false); // u (O, cr)
+selectTree(PAResourceEtoH.FileSetPanel_FILE_SET_PANEL_TREE, "[root, Design Sources, Non-module Files, llm_int_wrapper.sv]", 2, false); // B (F, cr)
+selectTree(PAResourceEtoH.FileSetPanel_FILE_SET_PANEL_TREE, "[root, Design Sources, Non-module Files]", 1, true); // B (F, cr) - Node
+selectTree(PAResourceEtoH.FileSetPanel_FILE_SET_PANEL_TREE, "[root, Design Sources, Non-module Files, llm_int_wrapper.sv]", 2, false); // B (F, cr)
+selectTree(PAResourceEtoH.FileSetPanel_FILE_SET_PANEL_TREE, "[root, Design Sources, Non-module Files, llm_int_wrapper.sv]", 2, false, false, false, false, true, false); // B (F, cr) - Popup Trigger
+selectMenu(PAResourceCommand.PACommandNames_AUTO_UPDATE_HIER, "Hierarchy Update"); // af (ao, cr)
+selectMenu(PAResourceQtoS.SrcMenu_IP_HIERARCHY, "IP Hierarchy"); // af (ao, cr)
+expandTree(PAResourceEtoH.FileSetPanel_FILE_SET_PANEL_TREE, "[root, Design Sources, LLMint (LLMint.sv), high_precision_linear : fixed_linear (fixed_linear.sv)]", 8); // B (F, cr)
+collapseTree(PAResourceEtoH.FileSetPanel_FILE_SET_PANEL_TREE, "[root, Design Sources, LLMint (LLMint.sv), high_precision_linear : fixed_linear (fixed_linear.sv)]", 8); // B (F, cr)
+// Elapsed time: 24 seconds
+selectButton(PAResourceCommand.PACommandNames_ADD_SOURCES, "Sources_add_sources"); // E (f, cr)
+// Run Command: PAResourceCommand.PACommandNames_ADD_SOURCES
+// c (cr): Add Sources: addNotify
+selectButton("NEXT", "Next >"); // JButton (j, c)
+selectButton(PAResourceQtoS.SrcChooserPanel_ADD_OR_CREATE_SOURCE_FILE, "Add"); // E (f, c)
+selectMenuItem(PAResourceQtoS.SrcChooserPanel_ADD_HDL_AND_NETLIST_FILES_TO_YOUR_PROJECT, "Add Files..."); // ai (ao, c)
+setFileChooser("/home/aw1223/new/mase/machop/mase_components/llmint/misc/llm_int_wrapper.sv");
+selectButton("FINISH", "Finish"); // JButton (j, c)
+// 'h' command handler elapsed time: 7 seconds
+dismissDialog("Add Sources"); // c (cr)
+// Tcl Message: add_files -norecurse /home/aw1223/new/mase/machop/mase_components/llmint/misc/llm_int_wrapper.sv 
+selectCodeEditor("skid_buffer.sv", 113, 35); // ch (w, cr)
+selectTree(PAResourceEtoH.FileSetPanel_FILE_SET_PANEL_TREE, "[root, Design Sources, Non-module Files, llm_int_wrapper.sv]", 2, false); // B (F, cr)
+selectTree(PAResourceEtoH.FileSetPanel_FILE_SET_PANEL_TREE, "[root, Design Sources, Non-module Files, llm_int_wrapper.sv]", 2, false, false, false, false, false, true); // B (F, cr) - Double Click
+selectCodeEditor("llm_int_wrapper.sv", 81, 28); // ch (w, cr)
+// Elapsed time: 11 seconds
+selectCodeEditor("llm_int_wrapper.sv", 122, 96); // ch (w, cr)
+selectCodeEditor("llm_int_wrapper.sv", 49, 194); // ch (w, cr)
+selectCodeEditor("llm_int_wrapper.sv", 126, 169); // ch (w, cr)
+// TclEventType: DG_GRAPH_STALE
+// TclEventType: FILE_SET_CHANGE
+selectTree(PAResourceEtoH.FlowNavigatorTreePanel_FLOW_NAVIGATOR_TREE, "[, Synthesis, Run Synthesis]", 14, false); // u (O, cr)
+// Run Command: PAResourceCommand.PACommandNames_RUN_SYNTHESIS
+// bB (cr):  Resetting Runs : addNotify
+// TclEventType: RUN_MODIFY
+// TclEventType: RUN_RESET
+// TclEventType: RUN_STATUS_CHANGE
+// TclEventType: RUN_RESET
+// TclEventType: RUN_STATUS_CHANGE
+// TclEventType: RUN_RESET
+// TclEventType: RUN_MODIFY
+// Tcl Message: reset_run synth_1 
+// bB (cr):  Starting Design Runs : addNotify
+// Tcl Message: launch_runs synth_1 -jobs 20 
+// TclEventType: RUN_LAUNCH
+// TclEventType: RUN_MODIFY
+// TclEventType: RUN_STATUS_CHANGE
+// Tcl Message: [Mon Mar 25 19:52:05 2024] Launched synth_1... Run output will be captured here: /home/aw1223/new/mase/machop/mase_components/llmint/vivado/vivado.runs/synth_1/runme.log 
+dismissDialog("Starting Design Runs"); // bB (cr)
+selectTree(PAResourceEtoH.FileSetPanel_FILE_SET_PANEL_TREE, "[root, Design Sources, Non-module Files, llm_int_wrapper.sv]", 2, false, false, false, false, true, false); // B (F, cr) - Popup Trigger
+selectMenu(PAResourceCommand.PACommandNames_AUTO_UPDATE_HIER, "Hierarchy Update"); // af (ao, cr)
+selectMenu(PAResourceQtoS.SrcMenu_IP_HIERARCHY, "IP Hierarchy"); // af (ao, cr)
+selectMenu(PAResourceQtoS.SrcMenu_IP_HIERARCHY, "IP Hierarchy"); // af (ao, cr)
+selectTree(PAResourceEtoH.FileSetPanel_FILE_SET_PANEL_TREE, "[root, Design Sources, LLMint (LLMint.sv), scatter : scatter_threshold (scatter_threshold.sv), encoder1 : priority_encoder (priority_encoder.sv)]", 5, false); // B (F, cr)
+// TclEventType: RUN_STATUS_CHANGE
+selectButton(PAResourceEtoH.FileSetPanel_RELOAD, "Reload..."); // h (ds, cr)
+selectMenu(PAResourceCommand.PACommandNames_AUTO_UPDATE_HIER, "Hierarchy Update"); // af (cr)
+selectMenuItem(PAResourceQtoS.SrcMenu_REFRESH_HIERARCHY, "Refresh Hierarchy"); // ai (cr)
+selectTree(PAResourceEtoH.FileSetPanel_FILE_SET_PANEL_TREE, "[root, Design Sources, Non-module Files, llm_int_wrapper.sv]", 2, false, false, false, false, true, false); // B (F, cr) - Popup Trigger
+selectMenu(PAResourceQtoS.SrcMenu_IP_HIERARCHY, "IP Hierarchy"); // af (ao, cr)
+selectMenuItem(PAResourceCommand.PACommandNames_SET_AS_TOP, "Set as Top"); // ai (ao, cr)
+// Run Command: PAResourceCommand.PACommandNames_SET_AS_TOP
+// HMemoryUtils.trashcanNow. Engine heap size: 2,351 MB. GUI used memory: 63 MB. Current time: 3/25/24, 7:52:14 PM GMT
+expandTree(PAResourceEtoH.FileSetPanel_FILE_SET_PANEL_TREE, "[root, Design Sources, top (llm_int_wrapper.sv), llm_int : LLMint (LLMint.sv)]", 2); // B (F, cr)
+selectTree(PAResourceEtoH.FileSetPanel_FILE_SET_PANEL_TREE, "[root, Design Sources, top (llm_int_wrapper.sv), llm_int : LLMint (LLMint.sv)]", 2, true); // B (F, cr) - Node
+selectTree(PAResourceEtoH.FileSetPanel_FILE_SET_PANEL_TREE, "[root, Design Sources, top (llm_int_wrapper.sv)]", 1, true); // B (F, cr) - Node
+selectCodeEditor("llm_int_wrapper.sv", 175, 66); // ch (w, cr)
+selectTree(PAResourceEtoH.FlowNavigatorTreePanel_FLOW_NAVIGATOR_TREE, "[, Synthesis, Run Synthesis]", 14, false); // u (O, cr)
+// Run Command: PAResourceCommand.PACommandNames_RUN_SYNTHESIS
+// bB (cr):  Resetting Runs : addNotify
+selectButton("OptionPane.button", "OK"); // JButton (A, G)
+// TclEventType: RUN_MODIFY
+// TclEventType: RUN_RESET
+// TclEventType: RUN_STATUS_CHANGE
+// Tcl Message: reset_run synth_1 
+// TclEventType: RUN_RESET
+// TclEventType: RUN_MODIFY
+// bB (cr):  Starting Design Runs : addNotify
+// TclEventType: RUN_LAUNCH
+// Tcl Message: launch_runs synth_1 -jobs 20 
+// TclEventType: RUN_MODIFY
+// TclEventType: RUN_STATUS_CHANGE
+// Tcl Message: [Mon Mar 25 19:52:25 2024] Launched synth_1... Run output will be captured here: /home/aw1223/new/mase/machop/mase_components/llmint/vivado/vivado.runs/synth_1/runme.log 
+dismissDialog("Starting Design Runs"); // bB (cr)
+selectTree(PAResourceEtoH.FlowNavigatorTreePanel_FLOW_NAVIGATOR_TREE, "[, Implementation, Run Implementation]", 17, false); // u (O, cr)
+// Run Command: PAResourceCommand.PACommandNames_RUN_IMPLEMENTATION
+// TclEventType: RUN_STATUS_CHANGE
+// bB (cr):  Resetting Runs : addNotify
+selectButton("OptionPane.button", "OK"); // JButton (A, G)
+// bB (cr):  Starting Design Runs : addNotify
+// Tcl Message: launch_runs impl_1 -jobs 20 
+// TclEventType: RUN_LAUNCH
+// TclEventType: RUN_MODIFY
+// TclEventType: RUN_STATUS_CHANGE
+// TclEventType: RUN_MODIFY
+// Tcl Message: [Mon Mar 25 19:52:32 2024] Launched synth_1... Run output will be captured here: /home/aw1223/new/mase/machop/mase_components/llmint/vivado/vivado.runs/synth_1/runme.log [Mon Mar 25 19:52:32 2024] Launched impl_1... Run output will be captured here: /home/aw1223/new/mase/machop/mase_components/llmint/vivado/vivado.runs/impl_1/runme.log 
+// 'c' command handler elapsed time: 5 seconds
+dismissDialog("Starting Design Runs"); // bB (cr)
+// TclEventType: RUN_COMPLETED
+// TclEventType: RUN_STATUS_CHANGE
+// TclEventType: RUN_STEP_COMPLETED
+// TclEventType: RUN_STATUS_CHANGE
