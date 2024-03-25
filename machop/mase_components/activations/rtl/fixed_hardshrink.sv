@@ -15,7 +15,7 @@ module fixed_hardshrink #(
     parameter DATA_OUT_0_PARALLELISM_DIM_0 = 1,
     parameter DATA_OUT_0_PARALLELISM_DIM_1 = 1,
     parameter LAMBDA = 0.5, //the threshold
-    parameter FX_LAMBDA = $rtoi(LAMBDA * 2**(DATA_IN_0_PRECISION_1)), //the threshold
+    parameter FX_LAMBDA = $rtoi(LAMBDA * 2**(DATA_IN_0_PRECISION_1)) //the threshold
 ) (
     /* verilator lint_off UNUSEDSIGNAL */
     input rst,
