@@ -11,7 +11,7 @@ load_name = "/mnt/c/Users/1/Downloads/test-accu-0.9332.ckpt"
 load_type = "pl"
 
 [search.search_space]
-name = "graph/quantize/mixed_precision_ptq"
+name = "rl/quantize/mixed_precision_ptq"
 
 [search.search_space.setup]
 by = "type"
@@ -53,7 +53,7 @@ compare_to = 32 # compare to FP32
 
 [search.strategy.setup]
 device = "cpu"
-total_trials = 1000
+total_trials = 2
 # choose between ppo, a2c, ddpg, sac
 algorithm = "a2c"
 env = "MixedPrecisionEnv"
