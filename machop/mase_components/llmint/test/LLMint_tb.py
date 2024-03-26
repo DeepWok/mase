@@ -45,6 +45,7 @@ class LinearTB(Testbench):
         self.bitwidth = dut.ORIGINAL_PRECISION.value
         self.reduced_bitwidth = dut.REDUCED_PRECISION.value
         self.weights_size = [dut.WEIGHT_DIM_0.value, dut.WEIGHT_DIM_1.value]
+        self.dut = dut
 
        
         #----------------Drivers---------------
@@ -146,6 +147,8 @@ class LinearTB(Testbench):
     def LLMint_model(self, inputs):
         x_low_i, x_high_i = self.scatter(inputs)
 
+        x_low_i = self.linear_low.x_quantizer(x_low_i).int()
+
         x_low_o = self.linear_low(x_low_i)
         x_high_o = self.linear_high(x_high_i)
 
@@ -224,7 +227,10 @@ class LinearTB(Testbench):
         )
         self.data_out_monitor.load_monitor(outs)
 
-        await Timer(400, units="ns")
+        await Timer(10000, units="ns")
+        logger.info(f"high_precision_masked: {self.dut.high_precision_masked.value}")
+        logger.info(f"low_precision_masked: {self.dut.low_precision_masked.value}")
+        logger.info(f"input_linear_low_precision: {self.dut.input_linear_low_precision.value}")
         assert self.data_out_monitor.exp_queue.empty()
 
 @cocotb.test()
