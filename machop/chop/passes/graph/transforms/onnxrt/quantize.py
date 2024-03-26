@@ -6,8 +6,8 @@ from onnxruntime.quantization import quantize_dynamic, quantize_static, QuantTyp
 from onnxruntime import InferenceSession, SessionOptions
 from onnxconverter_common import auto_mixed_precision
 from .calibrate import StaticCalibrationDataReader
-from .utils import get_execution_provider, get_calibrator_dataloader
 from torch.utils.data import DataLoader, Subset
+from .utils import get_execution_provider, get_calibrator_dataloader, convert_dataloader_to_numpy
 
 QUANT_MAP = {
     "int8": QuantType.QInt8,
@@ -94,8 +94,14 @@ class Quantizer:
         self.logger.info("Quantizing model using automatic mixed precision quantization...")
 
         model_path = str(model_path)
+        model = onnx.load(model_path)
+        import pdb; pdb.set_trace()
+
+        # convert validation dataloader to a numpy array 
+        converted_dataloader = convert_dataloader_to_numpy(self.config['data_module'].val_dataloader(), 'input')
+        quantized_model = auto_mixed_precision(model, converted_dataloader, rtol=0.01, atol=0.001, keep_io_types=True)
+        
         quantized_model_path = str(quantized_model_path)
-        quantized_model = auto_mixed_precision(model_path, self.config['data_module'].val_dataloader(), rtol=0.01, atol=0.001, keep_io_types=True)
         onnx.save(quantized_model, quantized_model_path)
 
         self.logger.info("Quantization complete. Model is now quantized using automatic mixed precision.")

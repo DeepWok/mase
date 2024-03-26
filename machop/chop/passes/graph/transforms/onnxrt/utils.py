@@ -35,3 +35,26 @@ def get_calibrator_dataloader(original_dataloader, num_batches=200):
     )
     
     return calibrator_dataloader
+
+def convert_dataloader_to_numpy(dataloader, input_names=None):
+    """
+    Converts dataloader to a list of dictionaries with NumPy arrays.
+    If input_names is provided, it uses it to map tensors to the expected ONNX input names.
+    """
+    numpy_data = []
+    for batch in dataloader:
+        # Convert batch to numpy arrays
+        if isinstance(batch, (list, tuple)):
+            batch_data = [item.numpy() for item in batch]
+        elif isinstance(batch, dict):
+            batch_data = {key: value.numpy() for key, value in batch.items()}
+        else:  # Assuming the batch itself is a tensor
+            batch_data = batch.numpy()
+        
+        # Map to input names if provided
+        if input_names:
+            assert isinstance(batch_data, list) and len(batch_data) == len(input_names)
+            batch_data = {name: array for name, array in zip(input_names, batch_data)}
+        
+        numpy_data.append(batch_data)
+    return numpy_data
