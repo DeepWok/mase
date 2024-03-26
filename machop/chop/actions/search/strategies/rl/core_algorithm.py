@@ -22,6 +22,8 @@ class StrategyRL(SearchStrategyBase):
         self.save_name = self.config["save_name"]
         self.env = env_map[self.config["env"]]
         self.device = self.config["device"]
+        self.n_steps = self.config["n_steps"]
+        self.n_envs = self.config["n_envs"]
         self.episode_max_len = 10  # TODO: Try and change this
         self.registered_env_name = registered_env_map[self.config["env"]]
 
@@ -33,7 +35,7 @@ class StrategyRL(SearchStrategyBase):
         else:
             #env =self.env(config=self.config, search_space=search_space, sw_runner=self.sw_runner, hw_runner=self.hw_runner, data_module=self.data_module, episode_max_len=self.episode_max_len)
             env = make_vec_env(
-                self.registered_env_name, n_envs=256, seed=0, 
+                self.registered_env_name, n_envs=self.n_envs, seed=0, 
                 env_kwargs={"config": self.config, "search_space": search_space , 
                 "sw_runner": self.sw_runner, "hw_runner": self.hw_runner, 
                 "data_module": self.data_module, "episode_max_len":self.episode_max_len}
@@ -44,7 +46,7 @@ class StrategyRL(SearchStrategyBase):
                 env,
                 best_model_save_path="./logs/best_model",
                 log_path="./logs/results",
-                eval_freq=100,
+                eval_freq=1000,
             )
             callback = CallbackList([checkpoint_callback, eval_callback])
 
@@ -54,7 +56,7 @@ class StrategyRL(SearchStrategyBase):
                 verbose=1,
                 device=self.device,
                 tensorboard_log="./logs/",
-                n_steps=64,  # TODO: Try and change this
+                n_steps=self.n_steps,
             )
 
             vec_env = model.get_env()
