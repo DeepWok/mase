@@ -87,7 +87,7 @@ matrix_fifo #(
     .DATA_WIDTH  (IN_WIDTH),
     .DIM0        (COMPUTE_DIM0),
     .DIM1        (COMPUTE_DIM1),
-    .FIFO_SIZE   (2*NUM_ITERS) // TODO: Change
+    .FIFO_SIZE   (4*NUM_ITERS)
 ) input_fifo_inst (
     .clk(clk),
     .rst(rst),
@@ -387,7 +387,7 @@ matrix_fifo #(
     .DATA_WIDTH(DIFF_WIDTH),
     .DIM0(COMPUTE_DIM0),
     .DIM1(COMPUTE_DIM1),
-    .FIFO_SIZE(2*NUM_ITERS) // TODO: Change
+    .FIFO_SIZE(4*NUM_ITERS)
 ) diff_fifo_inst (
     .clk(clk),
     .rst(rst),
