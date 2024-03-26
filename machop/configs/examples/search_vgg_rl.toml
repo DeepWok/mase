@@ -2,14 +2,8 @@
 model = "vgg_tiny"
 dataset = "cifar10_subset"
 task = "cls"
- 
-max_epochs = 5512
-batch_size = 512
-learning_rate = 1e-2
-accelerator = "gpu"
-project = "vgg7"
+project = "vgg_tiny"
 seed = 42
-log_every_n_steps = 5
 load_name = "TinyVGG-epoch=32-val_acc=0.67.ckpt"
 load_type = "pl"
  
@@ -22,23 +16,24 @@ by = "name"
 [search.search_space.seed.default.config]
 name = ["integer"]
 data_in_width = [16, 32]
-data_in_frac_width = [2, 4, 8, 10, 12, 16]
+data_in_frac_width = [2, 4, 8, 16]
 weight_width = [16, 32]
-weight_frac_width = [2, 4, 8, 10, 12, 16]
+weight_frac_width = [2, 4, 8, 16]
 bias_width = [16, 32]
-bias_frac_width = [2, 4, 8, 10, 12, 16]
+bias_frac_width = [2, 4, 8, 16]
  
 [search.strategy]
 name = "rl"
 algorithm = 'ppo'
 env = 'mixed_precision'
-num_episodes = 1 
 device = 'cuda'
 total_timesteps = 1000
-n_steps = 256
+n_steps = 32
 n_envs = 8
 eval_freq = 200
 save_freq = 200
+episodes_max_len = 10
+learning_rate = 2.5e-4
 save_name = 'tmp_rl'
 
 [search.strategy.setup]

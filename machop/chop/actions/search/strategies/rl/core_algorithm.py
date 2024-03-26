@@ -26,7 +26,8 @@ class StrategyRL(SearchStrategyBase):
         self.n_envs = self.config["n_envs"]
         self.eval_freq = self.config["eval_freq"]
         self.save_freq = self.config["save_freq"]
-        self.episode_max_len = 10  # TODO: Try and change this
+        self.episode_max_len = self.config["episode_max_len"]
+        self.learning_rate = self.config["learning_rate"]
         self.registered_env_name = registered_env_map[self.config["env"]]
 
     def search(self, search_space):
@@ -59,6 +60,7 @@ class StrategyRL(SearchStrategyBase):
                 device=self.device,
                 tensorboard_log="./logs/",
                 n_steps=self.n_steps,
+                learning_rate=self.learning_rate,
             )
 
             vec_env = model.get_env()
