@@ -1,8 +1,10 @@
 import logging
 import os
 from pathlib import PosixPath
+import onnx
 from onnxruntime.quantization import quantize_dynamic, quantize_static, QuantType, shape_inference
 from onnxruntime import InferenceSession, SessionOptions
+from onnxconverter_common import auto_mixed_precision
 from .calibrate import StaticCalibrationDataReader
 from .utils import get_execution_provider, get_calibrator_dataloader
 from torch.utils.data import DataLoader, Subset
@@ -83,7 +85,20 @@ class Quantizer:
             weight_type=precision,
         )
 
-        self.logger.info("Quantization complete. Model is now calibrated and dynamically quantized.")
+        self.logger.info("Quantization complete. Model is now calibrated and statically quantized.")
+
+        return quantized_model
+
+    def quantize_auto_mixed_precision(self, model_path:PosixPath, quantized_model_path:PosixPath):
+        """Quantize the model using mixed precision quantization of FP16 and FP32."""
+        self.logger.info("Quantizing model using automatic mixed precision quantization...")
+
+        model_path = str(model_path)
+        quantized_model_path = str(quantized_model_path)
+        quantized_model = auto_mixed_precision(model_path, quantized_model_path, rtol=0.01, atol=0.001, keep_io_types=True)
+        onnx.save(quantized_model, quantized_model_path)
+
+        self.logger.info("Quantization complete. Model is now quantized using automatic mixed precision.")
 
         return quantized_model
 

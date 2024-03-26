@@ -196,6 +196,11 @@ def transform(
                                 _, _ = PASSES["runtime_analysis"](
                                     runtime_meta["onnx_dynamic_quantized_path"], pass_args=pass_config
                                 )
+                            case "auto":
+                                logger.info("Performing runtime analysis on auto mixed precision quantized graph...")
+                                _, _ = PASSES["runtime_analysis"](
+                                    runtime_meta["onnx_auto_mixed_precision_path"], pass_args=pass_config
+                                )
 
             case "quantize":
                 pass_save_dir = save_dir / "quantize"
