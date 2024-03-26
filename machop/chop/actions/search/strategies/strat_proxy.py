@@ -95,17 +95,14 @@ class SearchStrategyDaddyProxy(SearchStrategyBase):
         device = torch.device('cuda')
         model.to(device)
 
-
         # measure_names = ['epe_nas', 'fisher', 'grad_norm', 'grasp', 'jacov', 'l2_norm', 'nwot', 'plain', 'snip', 'synflow', 'zen', 'params', 'flops']
-        
         measure_names = ['epe_nas', 'fisher', 'grad_norm', 'grasp', 'jacov', 'l2_norm',  'plain', 'snip', 'synflow', 'zen', 'params', 'flops']
         small_proxy_scores = find_measures(model,dataloader, dataload_info, device , F.cross_entropy, measure_names)
-
 
         # load meta proxy 
         proxy_model = NeuralModel(len(measure_names))    
         # pretrained_model_path = r'../nas_results/model_state_dict.pt'
-        pretrained_model_path = r'../nas_results/meta_proxy/meta_proxy_cifar10.pt'
+        pretrained_model_path = r'../nas_results/meta_proxy/meta_proxy.pt'
         proxy_model.load_state_dict(torch.load(pretrained_model_path))
         
         # Load mean and standard deviaiton for data normalization and store in list

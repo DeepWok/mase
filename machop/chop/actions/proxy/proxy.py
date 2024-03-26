@@ -80,7 +80,6 @@ def proxy(config:dict | PathLike):
     #     if dataset_info not in accepted_dataset:
     #         dataset_info = "cifar10"
 
-
     switch = {
     "cifar10": 10,
     "cifar100": 100,
@@ -150,9 +149,6 @@ def proxy(config:dict | PathLike):
     # Write dictionary to JSON file
     with open(file_path, 'w') as json_file:
         json.dump(proxy_mean_stddev, json_file)
-
-
-
     return
 
 # dataset_infoCreate list of indecies for architectures to be quired in nas-bench
