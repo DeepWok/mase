@@ -15,23 +15,9 @@ from naslib.predictors.utils.pruners.predictive import find_measures
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from einops import rearrange
+import json
 
-### Class for meta proxy
-class NeuralModel(nn.Module):
-    def __init__(self, input_size):
-        super(NeuralModel, self).__init__()
-        self.linear1 = nn.Linear(input_size, 64)
-        self.sigmoid = nn.Sigmoid()
-        self.linear2 = nn.Linear(64, 128)
-        self.relu = nn.ReLU()
-        self.linear3 = nn.Linear(128, 1)
 
-    def forward(self, x):
-        x = self.sigmoid(self.linear1(x))
-        x = self.relu(self.linear2(x))
-        x = torch.sigmoid(self.linear3(x))
-        return x
 
 
 
@@ -85,6 +71,22 @@ class SearchStrategyDaddyProxy(SearchStrategyBase):
         return sampler
 
     def compute_software_metrics(self, model):
+        ### Class for meta proxy
+        class NeuralModel(nn.Module):
+            def __init__(self, input_size):
+                super(NeuralModel, self).__init__()
+                self.linear1 = nn.Linear(input_size, 64)
+                self.sigmoid = nn.Sigmoid()
+                self.linear2 = nn.Linear(64, 128)
+                self.relu = nn.ReLU()
+                self.linear3 = nn.Linear(128, 1)
+
+            def forward(self, x):
+                x = self.sigmoid(self.linear1(x))
+                x = self.relu(self.linear2(x))
+                x = self.sigmoid(self.linear3(x))
+                return x
+            
 
         metrics = {}
         dataloader=self.data_module.train_dataloader()
@@ -92,34 +94,43 @@ class SearchStrategyDaddyProxy(SearchStrategyBase):
         model=model.model
         device = torch.device('cuda')
         model.to(device)
-        # num_batches_to_keep = 1
-        # # Create data loader with 1 batch of data
-        # # Get a batch of data
-        # small_data = []
-        # for idx, (data, target) in enumerate(dataloader):
-        #     small_data.append([data, target])
-        #     if idx + 1 == num_batches_to_keep:
-        #         break
-        # small_dataloader = DataLoader(small_data)
 
-        measure_names = ['epe_nas', 'fisher', 'grad_norm', 'grasp', 'jacov', 'l2_norm', 'nwot', 'plain', 'snip', 'synflow', 'zen', 'params', 'flops']
+
+        # measure_names = ['epe_nas', 'fisher', 'grad_norm', 'grasp', 'jacov', 'l2_norm', 'nwot', 'plain', 'snip', 'synflow', 'zen', 'params', 'flops']
+        
+        measure_names = ['epe_nas', 'fisher', 'grad_norm', 'grasp', 'jacov', 'l2_norm',  'plain', 'snip', 'synflow', 'zen', 'params', 'flops']
         small_proxy_scores = find_measures(model,dataloader, dataload_info, device , F.cross_entropy, measure_names)
 
 
         # load meta proxy 
-        proxy_model = NeuralModel(13)
-        pretrained_model_path = r'../nas_results/model_state_dict.pt'
+        proxy_model = NeuralModel(len(measure_names))    
+        # pretrained_model_path = r'../nas_results/model_state_dict.pt'
+        pretrained_model_path = r'../nas_results/meta_proxy/meta_proxy_cifar10.pt'
         proxy_model.load_state_dict(torch.load(pretrained_model_path))
-        proxy_model.eval()
         
-        # Convert small proxy scores from dict to a tensor in specific order
-        measure_values_list = [small_proxy_scores[s] for s in measure_names]
+        # Load mean and standard deviaiton for data normalization and store in list
+        file_path = r'../nas_results/proxy_mean_stddev.json'
+        with open(file_path, 'r') as file:
+            proxy_mean_stddev = json.load(file)
+        
+        
+        # z normalize data and store them in a list
+        measure_values_list = []
+        for name in measure_names:
+            val = small_proxy_scores[name]
+            mean = proxy_mean_stddev[name]['mean']
+            stddev = proxy_mean_stddev[name]['stddev']
+            val_norm = (val - mean) / stddev
+            measure_values_list.append(val_norm)
+
         measure_values_tensor = torch.tensor(measure_values_list, dtype = torch.float)
         
+
         ### Make prediction using the meta proxy
+        proxy_model.eval()
         with torch.no_grad():
             prediction = proxy_model(measure_values_tensor)
-        
+
         prediction_numpy = prediction.numpy()
         metrics["accuracy"] = prediction_numpy
         return metrics

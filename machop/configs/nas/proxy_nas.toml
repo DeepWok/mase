@@ -37,7 +37,7 @@ by = "name"
 path = ''
 
 [search.nas.op_config]
-op_indices = 8
+op_indices = 3
 
 [search.nas.proxy_config]
 proxy = ['epe_nas', 
@@ -57,6 +57,8 @@ proxy = ['epe_nas',
 [search.nas.proxy_dataset]
 dataset = "cifar10"
 
+[search.nas.search_space]
+search_space = "nas201"
 
 [search.search_space.seed.default.config]
 # the only choice "NA" is used to indicate that layers are not quantized by default

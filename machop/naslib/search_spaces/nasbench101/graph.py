@@ -195,7 +195,7 @@ class NasBench101SearchSpace(Graph):
 
         self.set_spec(op_indices)
 
-    def sample_random_architecture(self, dataset_api: dict, load_labeled: bool = False) -> None:
+    def sample_random_architecture(self, dataset_api: dict = None, load_labeled: bool = False) -> None:
         """
         This will sample a random architecture and update the edges in the
         naslib object accordingly.

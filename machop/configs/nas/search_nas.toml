@@ -1,15 +1,28 @@
 # basics
-model = "jsc-tiny"
-dataset = "jsc"
+model = "resnet18"
+dataset = "cifar10"
 task = "cls"
 
-max_epochs = -5
-batch_size = 512
+max_epochs = 5
+batch_size = 128
 learning_rate = 1e-2
 accelerator = "gpu"
-project = "jsc-tiny"
+project = "resnet18_cifar10"
 seed = 42
-log_every_n_steps = 5
+
+
+# # basics
+# model = "jsc-tiny"
+# dataset = "jsc"
+# task = "cls"
+
+# max_epochs = -5
+# batch_size = 512
+# learning_rate = 1e-2
+# accelerator = "gpu"
+# project = "jsc-tiny"
+# seed = 42
+# log_every_n_steps = 5
 # load_name = "../mase_output/toy_toy_tiny/software/training_ckpts/best.ckpt"
 # load_type = "pl"
 
@@ -38,6 +51,7 @@ path = ''
 
 [search.nas.op_config]
 op_indices = 8
+
 [search.nas.proxy_config]
 proxy = ['epe_nas', 
         'fisher', 
@@ -45,13 +59,14 @@ proxy = ['epe_nas',
         'grasp', 
         'jacov', 
         'l2_norm', 
-        'nwot', 
+        # 'nwot', 
         'plain', 
         'snip', 
         'synflow', 
         'zen', 
         'flops', 
         'params']
+
 
 
 [search.search_space.seed.default.config]

@@ -18,7 +18,7 @@ import numpy as np
 
 from naslib.utils import get_zc_benchmark_api,get_dataset_api
 from naslib.utils import get_train_val_loaders, get_project_root
-from naslib.search_spaces import NasBench201SearchSpace
+from naslib.search_spaces import NasBench101SearchSpace , NasBench201SearchSpace , NasBench301SearchSpace
 from naslib.predictors import ZeroCost
 from naslib.search_spaces.core import Metric
 
@@ -43,21 +43,46 @@ def read_json_file(file_path):
     return data
 
 def parse_nas_config(config):
-    search_config = config["search"]   #p arse into search config
-    nas_config = search_config['nas']  # parse into nas
-    op_config = nas_config['op_config']
-    proxy_config = nas_config['proxy_config']
-    dataset_info = nas_config['proxy_dataset']
-    return op_config['op_indices'], proxy_config['proxy'],dataset_info# one more time one more chance running
+    try:
+        search_config = config["search"]   #p arse into search config
+        nas_config = search_config['nas']  # parse into nas
+        op_config = nas_config['op_config']
+        proxy_config = nas_config['proxy_config']
+        dataset_info = nas_config['proxy_dataset']
+        search_space_info = nas_config['search_space']
+        if search_space_info['search_space'] not in ["nas201", "nas301"]:
+            logger.info("Invalid Search Space!")
+            exit()
+        return op_config['op_indices'], proxy_config['proxy'], dataset_info['dataset'], search_space_info['search_space'] # one more time one more chance running
+    except:
+        logger.info("Invalid Config!")
+        exit()
     
 
 def proxy(config:dict | PathLike):
 
     if not isinstance(config, dict):
         config = load_config(config)
-    op_config, proxy_config, dataset_info = parse_nas_config(config)   #op_config = list of integers , proxy_config = list of strings
-    dataset_info = dataset_info['dataset']
-    
+    op_config, proxy_config, dataset_info, search_space_info = parse_nas_config(config)   #op_config = list of integers , proxy_config = list of strings
+
+    dataset_info = "cifar10"
+    # accepted_dataset = ["cifar10", "cifar100", "ImageNet16-120"]
+    # if search_space_info == "nas101" or search_space_info == "nas301":
+    #     dataset_info = "cifar10"
+    # elif search_space_info == "nas201":
+    #     if dataset_info not in accepted_dataset:
+    #         dataset_info = "cifar10"
+
+
+    switch = {
+    "cifar10": 10,
+    "cifar100": 100,
+    "ImageNet16-120": 120
+    }
+
+    n_classes = switch[dataset_info]
+
+
     ### Prepare dataloader for running proxies
     config_dict = {
         'dataset': dataset_info, # Dataset to loader: can be cifar10, cifar100, ImageNet16-120
@@ -68,50 +93,70 @@ def proxy(config:dict | PathLike):
             'batch_size': 32, # batch size of the dataloaders
         }
     }
-
+    
     dataset_config = CfgNode(config_dict)
     train_loader, val_loader, test_loader, train_transform, valid_transform = get_train_val_loaders(dataset_config)
-
-    # dataset_infoCreate list of indecies for architectures to be quired in nas-bench
-    indicies_list = []
-    while len(indicies_list) < op_config:
-        small_rand_list = [int(np.random.rand()*5) for _ in range(6)]
-        if small_rand_list not in indicies_list:
-            indicies_list.append(small_rand_list)
-
-    # Prepare list and dict for recording scores
     scores = {}
 #   
-
-    for op in indicies_list:
+    while len(list(scores.keys())) < op_config:
         # Generate models
-        scores[str(op)]={}
-        graph = NasBench201SearchSpace(n_classes=10)
-        graph.sample_architecture(op_indices=op)
-        # graph.sample_random_architecture()
+        # if search_space_info == "nas101":
+        #     graph = NasBench101SearchSpace(n_classes)
+        if search_space_info == "nas201":
+            graph = NasBench201SearchSpace(n_classes)
+        elif search_space_info == "nas301":
+            graph = NasBench301SearchSpace(n_classes)
+        graph.sample_random_architecture(None)
         graph.parse()
-        graph.get_hash()
-        
-        for zc_proxy in proxy_config:
-            zc_predictor = ZeroCost(method_type=zc_proxy)
-            score = zc_predictor.query(graph=graph, dataloader = train_loader)
-            scores[str(op)][zc_proxy] = score
-        
-    # Path for saving the scores
-    file_path = "proxy_scores.json"
+        op = graph.get_hash()
+        if str(op) not in scores:
+            scores[str(op)]={}
+            for zc_proxy in proxy_config:
+                zc_predictor = ZeroCost(method_type=zc_proxy)
+                score = zc_predictor.query(graph=graph, dataloader = train_loader)
+                scores[str(op)][zc_proxy] = score
 
-    print(scores)
+    # Path for saving the scores
+    file_path = "../nas_results/proxy_scores.json"
     # Write dictionary to JSON file
     with open(file_path, 'w') as json_file:
         json.dump(scores, json_file)
 
 
-    # Calculate stddev and mean for data normalisation
-    # for zc_proxy in proxy_config:
-    #     for key in 
+    # Calculate stddev and mean for future data normalisation
+    proxy_mean_stddev = {}
+    for zc_proxy in proxy_config:
+        temp = []
+        proxy_mean_stddev[zc_proxy] = {}
+        for key in scores:
+            score = scores[key][zc_proxy] 
+            temp.append(score)
+        temp = np.array(temp)
+        mean = np.mean(temp)
+        stddev = np.std(temp)
+        if stddev == 0:
+            stddev = 1e-8
+        proxy_mean_stddev[zc_proxy]['mean'] = mean
+        proxy_mean_stddev[zc_proxy]['stddev'] = stddev
+
+    # Save mean and standard deviation of proxy score distribution
+    file_path = "../nas_results/proxy_mean_stddev.json"
+    # Write dictionary to JSON file
+    with open(file_path, 'w') as json_file:
+        json.dump(proxy_mean_stddev, json_file)
+
+
 
     return
 
+    # dataset_infoCreate list of indecies for architectures to be quired in nas-bench
+    # indicies_list = []
+    # while len(indicies_list) < op_config:
+    #     small_rand_list = [int(np.random.rand()*5) for _ in range(6)]
+    #     if small_rand_list not in indicies_list:
+    #         indicies_list.append(small_rand_list)
+
+    # Prepare list and dict for recording scores
     # # Prepare dataset for training meta-proxy
     # proxy = proxy_config
     # data_set = []

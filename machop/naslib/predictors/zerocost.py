@@ -38,7 +38,6 @@ class ZeroCost(Predictor):
             )
         if isinstance(score, dict):
             score = [float(value) for value in score.values()]
-            # print(score[0])
             score = score[0]
 
         if math.isnan(score) or math.isinf(score):

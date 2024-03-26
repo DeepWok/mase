@@ -213,16 +213,11 @@ def find_measures(
             sum += torch.sum(arr[i])
         return sum.item()
 
-
     measure_score={}
     data_iterator = iter(dataloader)
     x, target = next(data_iterator)
-
-
-
     x_shape = list(x.shape)
     x_shape[0] = 1 # to prevent overflow
-
 
     model_stats = get_model_stats(
         net_orig,
@@ -231,10 +226,8 @@ def find_measures(
     )
     if 'flops' in measure_names:
         measure_score['flops'] = float(model_stats.Flops)/1e6
-        # measure_names.remove('flops')
     if 'params' in measure_names:
         measure_score['params'] = float(model_stats.parameters)/1e6
-        # measure_names.remove('params')
         
 
     if measures_arr is None:
@@ -260,70 +253,70 @@ def find_measures(
 
 
 
-def find_nlp_measures(
-    net_orig,  # neural network
-    inputs,
-    target,  # a tuple with (dataload_type = {random, grasp}, number_of_batches_for_random_or_images_per_class_for_grasp, number of classes)
-    device,  # GPU/CPU device used
-    loss_function,  # loss function to use within the zero-cost metrics
-    emsize,
-    measure_names=None,  # an array of measure names to compute, if left blank, all measures are computed by default
-    measures_arr=None
-):
+# def find_nlp_measures(
+#     net_orig,  # neural network
+#     inputs,
+#     target,  # a tuple with (dataload_type = {random, grasp}, number_of_batches_for_random_or_images_per_class_for_grasp, number of classes)
+#     device,  # GPU/CPU device used
+#     loss_function,  # loss function to use within the zero-cost metrics
+#     emsize,
+#     measure_names=None,  # an array of measure names to compute, if left blank, all measures are computed by default
+#     measures_arr=None
+# ):
 
-    # Given a neural net
-    # and some information about the input data (dataloader)
-    # and loss function (loss_fn)
-    # this function returns an array of zero-cost proxy metrics.
+#     # Given a neural net
+#     # and some information about the input data (dataloader)
+#     # and loss function (loss_fn)
+#     # this function returns an array of zero-cost proxy metrics.
 
-    def sum_arr(arr):
-        sum = 0.0
-        for i in range(len(arr)):
-            sum += torch.sum(arr[i])
-        return sum.item()
+#     def sum_arr(arr):
+#         sum = 0.0
+#         for i in range(len(arr)):
+#             sum += torch.sum(arr[i])
+#         return sum.item()
 
 
-    measure_score={}
-    # data_iterator = iter(dataloader)
+#     measure_score={}
+#     # data_iterator = iter(dataloader)
 
-    # x = next(data_iterator)
-    # x = np.array(x)
-    # x_shape = list(x.shape)
-    # x_shape[0] = 1 # to prevent overflow
-    # print("shape of x: ", x.shape)
-    # model_stats = get_model_stats(
-    #     net_orig,
-    #     input_tensor_shape=x.shape,
-    #     clone_model=True
-    # )
+#     # x = next(data_iterator)
+#     # x = np.array(x)
+#     # x_shape = list(x.shape)
+#     # x_shape[0] = 1 # to prevent overflow
+#     # print("shape of x: ", x.shape)
+#     # model_stats = get_model_stats(
+#     #     net_orig,
+#     #     input_tensor_shape=x.shape,
+#     #     clone_model=True
+#     # )
 
-    # if 'flops' in measure_names:
-    #     measure_score['flops'] = float(model_stats.Flops)/1e6
-    #     measure_names.remove('flops')
-    # if 'params' in measure_names:
-    #     measure_score['params'] = float(model_stats.parameters)/1e6
-    #     measure_names.remove('params')
+#     # if 'flops' in measure_names:
+#     #     measure_score['flops'] = float(model_stats.Flops)/1e6
+#     #     measure_names.remove('flops')
+#     # if 'params' in measure_names:
+#     #     measure_score['params'] = float(model_stats.parameters)/1e6
+#     #     measure_names.remove('params')
         
-    # x = torch.rand(70, 50).to('cuda')
+#     # x = torch.rand(70, 50).to('cuda')
 
-    loss_function = CustomLoss(emsize, net_orig.decoder.weight, net_orig.decoder.bias)
+#     loss_function = CustomLoss(emsize, net_orig.decoder.weight, net_orig.decoder.bias)
 
-    if measures_arr is None:
-        measures_arr = find_nlp_measures_arrays(
-            net_orig,
-            inputs,
-            target,
-            device,
-            measure_names=measure_names,
-            loss_fn=loss_function
-        )
+#     if measures_arr is None:
+#         measures_arr = find_nlp_measures_arrays(
+#             net_orig,
+#             inputs,
+#             target,
+#             device,
+#             measure_names=measure_names,
+#             loss_fn=loss_function
+#         )
 
-    for k, v in measures_arr.items():
-        if k == "jacov" or k == 'epe_nas' or k=='nwot' or k=='zen':
-            measure_score[k] = v
-        else:
-            measure_score[k] = sum_arr(v)
-    return measure_score
+#     for k, v in measures_arr.items():
+#         if k == "jacov" or k == 'epe_nas' or k=='nwot' or k=='zen':
+#             measure_score[k] = v
+#         else:
+#             measure_score[k] = sum_arr(v)
+#     return measure_score
 
     ######## Original NASLib calculation for getting flops and number of params in a model##########
     # if measure_names[0] in ['flops', 'params']:
