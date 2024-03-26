@@ -128,6 +128,7 @@ class MaseGraph:
         self.cf_args = cf_args
 
         # Defined model checkpoint, run optimum onnx export
+        model = "../mase_output/facebook-opt-125m-checkpoint"
         if isinstance(model, str):
             model_path = f"{ROOT}/mase_output/onnx/{model}/model.onnx"
             if not os.path.exists(model_path):

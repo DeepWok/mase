@@ -95,11 +95,10 @@ class Quantizer:
 
         model_path = str(model_path)
         model = onnx.load(model_path)
-        import pdb; pdb.set_trace()
 
         # convert validation dataloader to a numpy array 
-        converted_dataloader = convert_dataloader_to_numpy(self.config['data_module'].val_dataloader(), 'input')
-        quantized_model = auto_mixed_precision(model, converted_dataloader, rtol=0.01, atol=0.001, keep_io_types=True)
+        converted_dataloader = convert_dataloader_to_numpy(self.config['data_module'].val_dataloader())
+        quantized_model = auto_mixed_precision.auto_convert_mixed_precision(model, converted_dataloader, rtol=0.01, atol=0.001, keep_io_types=True)
         
         quantized_model_path = str(quantized_model_path)
         onnx.save(quantized_model, quantized_model_path)
