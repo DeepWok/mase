@@ -33,17 +33,25 @@ from . import measure
 
 def compute_epe_score2(net, inputs, targets, loss_fn, split_data=1):
     net.zero_grad()
-
+    print(inputs.shape)
+    inputs = torch.tensor(inputs, dtype = torch.float32)
     inputs.requires_grad_(True)
+    inputs = torch.tensor(inputs, dtype = torch.int)
+    inputs=inputs.to("cpu")
+    targets=targets.to("cpu")
+    net.to('cpu')
     outputs = net(inputs)  # 在移动 inputs 到设备之前定义 outputs
+
     inputs = inputs.to(outputs.device)  # 将 inputs 张量移动到与 outputs 张量相同的设备上
     targets = targets.to(outputs.device)
     loss = loss_fn(outputs, targets)
     loss.backward()
+
+        
+    inputs = torch.tensor(inputs, dtype = torch.float32)
+    inputs.requires_grad_(True)
+
     jacobian = inputs.grad.detach().cpu()  # 获取雅可比矩阵，并转换为 CPU 上的张量
-    inputs=inputs.to("cpu")
-    targets=targets.to("cpu")
-    # 计算每个类别的雅可比矩阵的相关系数矩阵
     corr_matrices = {}
     unique_labels = torch.unique(targets)
     for label in unique_labels:
@@ -59,6 +67,9 @@ def compute_epe_score2(net, inputs, targets, loss_fn, split_data=1):
     # score /= len(corr_matrices)  # 取平均值作为最终评分
     
     return score.item()
+
+
+
 # def get_batch_jacobian(net, x, target, to, device, args=None):
 #     net.zero_grad()
 #     x.requires_grad_(True)

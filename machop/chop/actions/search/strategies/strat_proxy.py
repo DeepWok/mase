@@ -93,7 +93,6 @@ class SearchStrategyDaddyProxy(SearchStrategyBase):
         model=model.model
         device = torch.device('cuda')
         model.to(device)
-
         
         # num_batches_to_keep = 1
         # # Create data loader with 1 batch of data

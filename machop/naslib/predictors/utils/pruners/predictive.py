@@ -37,6 +37,75 @@ def copynet(self, bn):
     return net
 
 
+# class CustomLoss(nn.Module):
+#     def __init__(self, size=None,  weight=None, bias=None):
+#         super(CustomLoss, self).__init__()
+#         self.weight = weight
+#         self.bias = bias
+#         self.size = size
+
+#     def forward(self, output, target, weight=None, bias=None):
+#         if weight is None:
+#             weight = self.weight
+#         if bias is None:
+#             bias = self.bias
+#         criterion = SplitCrossEntropyLoss(self.size, splits=[], verbose=False)
+#         loss = criterion(weight, bias, output, target)
+
+#         return loss
+
+
+def find_nlp_measures_arrays(
+    net_orig,
+    inputs,
+    target,
+    device,
+    measure_names=None,
+    loss_fn=F.cross_entropy,
+):
+
+
+    ds = 1
+    measure_values = {}
+
+
+
+    for measure_name in measure_names:
+        if measure_name not in measure_values:
+            val = measures.calc_measure(
+                measure_name,
+                net_orig,
+                device,
+                inputs,
+                target,
+                # target_onehot,
+                loss_fn=loss_fn,
+                split_data=ds,
+            )
+            measure_values[measure_name] = val
+
+        # done = True
+        # except RuntimeError as e:
+        #     if "out of memory" in str(e):
+        #         done = False
+        #         if ds == inputs.shape[0] // 2:
+        #             raise ValueError(
+        #                 f"Can't split data anymore, but still unable to run. Something is wrong"
+        #             )
+        #         ds += 1
+        #         while inputs.shape[0] % ds != 0:
+        #             ds += 1
+        #         torch.cuda.empty_cache()
+        #         print(f"Caught CUDA OOM, retrying with data split into {ds} parts")
+        #     else:
+        #         raise e
+    
+    # net_orig = net_orig.to(device).train()
+    return measure_values
+  
+
+
+
 def find_measures_arrays(
     net_orig,
     trainloader,
@@ -104,7 +173,7 @@ def find_measures_arrays(
                         split_data=ds,
                     )
                     end = time.time()
-                    print(end - start)
+                    # print(end - start)
                     
                     measure_values[measure_name] = val
 
@@ -213,10 +282,11 @@ def find_measures(
 
 def find_nlp_measures(
     net_orig,  # neural network
-    dataloader,  # a data loader (typically for training data)
-    dataload_info,  # a tuple with (dataload_type = {random, grasp}, number_of_batches_for_random_or_images_per_class_for_grasp, number of classes)
+    inputs,
+    target,  # a tuple with (dataload_type = {random, grasp}, number_of_batches_for_random_or_images_per_class_for_grasp, number of classes)
     device,  # GPU/CPU device used
     loss_function,  # loss function to use within the zero-cost metrics
+    emsize,
     measure_names=None,  # an array of measure names to compute, if left blank, all measures are computed by default
     measures_arr=None
 ):
@@ -234,35 +304,39 @@ def find_nlp_measures(
 
 
     measure_score={}
-    data_iterator = iter(dataloader)
+    # data_iterator = iter(dataloader)
 
-    x = next(data_iterator)
-    x_shape = list(x.shape)
-    x_shape[0] = 1 # to prevent overflow
+    # x = next(data_iterator)
+    # x = np.array(x)
+    # x_shape = list(x.shape)
+    # x_shape[0] = 1 # to prevent overflow
+    # print("shape of x: ", x.shape)
+    # model_stats = get_model_stats(
+    #     net_orig,
+    #     input_tensor_shape=x.shape,
+    #     clone_model=True
+    # )
 
-    model_stats = get_model_stats(
-        net_orig,
-        input_tensor_shape=x_shape,
-        clone_model=True
-    )
-    if 'flops' in measure_names:
-        measure_score['flops'] = float(model_stats.Flops)/1e6
-        measure_names.remove('flops')
-    if 'params' in measure_names:
-        measure_score['params'] = float(model_stats.parameters)/1e6
-        measure_names.remove('params')
+    # if 'flops' in measure_names:
+    #     measure_score['flops'] = float(model_stats.Flops)/1e6
+    #     measure_names.remove('flops')
+    # if 'params' in measure_names:
+    #     measure_score['params'] = float(model_stats.parameters)/1e6
+    #     measure_names.remove('params')
         
+    # x = torch.rand(70, 50).to('cuda')
+
+    loss_function = CustomLoss(emsize, net_orig.decoder.weight, net_orig.decoder.bias)
+
     if measures_arr is None:
-
-        measures_arr = find_measures_arrays(
+        measures_arr = find_nlp_measures_arrays(
             net_orig,
-            dataloader,
-            dataload_info,
+            inputs,
+            target,
             device,
-            loss_fn=loss_function,
             measure_names=measure_names,
+            loss_fn=loss_function
         )
-
 
     for k, v in measures_arr.items():
         if k == "jacov" or k == 'epe_nas' or k=='nwot' or k=='zen':

@@ -37,6 +37,7 @@ def compute_zen_score(net, inputs, targets, loss_fn=None, split_data=1,
     device = inputs.device
     dtype = torch.half if fp16 else torch.float32
 
+
     with torch.no_grad():
         for repeat_count in range(repeat):
             network_weight_gaussian_init(net)
@@ -50,8 +51,8 @@ def compute_zen_score(net, inputs, targets, loss_fn=None, split_data=1,
                 mixup_output = net.forward_before_global_avg_pool(mixup_input)
             except AttributeError:
                 # 如果没有 forward_before_global_avg_pool 方法，则直接调用 forward 方法
-                output = net.forward(input)
-                mixup_output = net.forward(mixup_input)
+                output = net.forward(input.to('cpu'))
+                mixup_output = net.forward(mixup_input.to('cpu'))
 
             try:
                 nas_score = torch.sum(torch.abs(output - mixup_output), dim=[1, 2, 3])

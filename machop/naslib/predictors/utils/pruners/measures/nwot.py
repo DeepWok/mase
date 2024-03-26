@@ -46,7 +46,7 @@ def compute_nwot(net, inputs, targets, split_data=1, loss_fn=None):
             module.register_forward_hook(counting_forward_hook)
 
     x = torch.clone(inputs)
-    net(x)
+    net(x.to('cpu'))
     s, jc = np.linalg.slogdet(net.K)
 
     return jc
