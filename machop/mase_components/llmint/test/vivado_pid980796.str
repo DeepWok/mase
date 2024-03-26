@@ -1078,3 +1078,950 @@ selectTreeTable(PAResourceEtoH.ExpReportTreePanel_EXP_REPORT_TREE_TABLE, "Post-R
 // Elapsed time: 95 seconds
 selectCodeEditor("scatter_threshold.sv", 272, 106); // ch (w, cr)
 selectCodeEditor("scatter_threshold.sv", 272, 106, false, false, false, false, true); // ch (w, cr) - Double Click
+// TclEventType: DESIGN_STALE
+// TclEventType: RUN_COMPLETED
+// TclEventType: RUN_STATUS_CHANGE
+// TclEventType: RUN_STEP_COMPLETED
+// aj (cr): Implementation Completed: addNotify
+// Elapsed time: 554 seconds
+selectRadioButton(PAResourceCommand.PACommandNames_REPORTS_WINDOW, "View Reports"); // a (Q, aj)
+selectButton(RDIResource.BaseDialog_OK, "OK"); // a (aj)
+// Run Command: PAResourceCommand.PACommandNames_REPORTS_WINDOW
+dismissDialog("Implementation Completed"); // aj (cr)
+// Elapsed time: 21 seconds
+selectTree(PAResourceEtoH.FlowNavigatorTreePanel_FLOW_NAVIGATOR_TREE, "[, Implementation, Open Implemented Design, Report Methodology]", 35, false); // u (O, cr)
+selectTree(PAResourceEtoH.FlowNavigatorTreePanel_FLOW_NAVIGATOR_TREE, "[, Implementation, Open Implemented Design, Report Timing Summary]", 32, false); // u (O, cr)
+// TclEventType: CURR_DESIGN_SET
+// Run Command: PAResourceCommand.PACommandNames_REPORT_TIMING_SUMMARY
+// aJ (cr): Report Timing Summary: addNotify
+// WARNING: HEventQueue.dispatchEvent() is taking  2226 ms.
+// Tcl Message: current_design impl_1 
+dismissDialog("Report Timing Summary"); // aJ (cr)
+selectTreeTable(PAResourceEtoH.ExpRunTreePanel_EXP_RUN_TREE_TABLE, "impl_1 ; constrs_1 ; route_design Complete! ; NA ; NA ; NA ; NA ; NA ; 22.110654830932617 ; 0 ; 43 ; 0 ; 0.0 ; 0 ; 0 ; Tue Mar 26 15:00:53 GMT 2024 ; 00:12:59 ; Vivado Implementation Defaults (Vivado Implementation 2019) ; Vivado Implementation Default Reports (Vivado Implementation 2019) ; xcu280-fsvh2892-2L-e ; ee-beholder1 ; Default settings for Implementation.", 1, "impl_1", 0, false); // az (O, cr)
+selectTreeTable(PAResourceEtoH.ExpRunTreePanel_EXP_RUN_TREE_TABLE, "impl_1 ; constrs_1 ; route_design Complete! ; NA ; NA ; NA ; NA ; NA ; 22.110654830932617 ; 0 ; 43 ; 0 ; 0.0 ; 0 ; 0 ; Tue Mar 26 15:00:53 GMT 2024 ; 00:12:59 ; Vivado Implementation Defaults (Vivado Implementation 2019) ; Vivado Implementation Default Reports (Vivado Implementation 2019) ; xcu280-fsvh2892-2L-e ; ee-beholder1 ; Default settings for Implementation.", 1, "impl_1", 0, false, false, false, false, false, true); // az (O, cr) - Double Click
+selectTreeTable(PAResourceEtoH.ExpRunTreePanel_EXP_RUN_TREE_TABLE, "impl_1 ; constrs_1 ; route_design Complete! ; NA ; NA ; NA ; NA ; NA ; 22.110654830932617 ; 0 ; 43 ; 0 ; 0.0 ; 0 ; 0 ; Tue Mar 26 15:00:53 GMT 2024 ; 00:12:59 ; Vivado Implementation Defaults (Vivado Implementation 2019) ; Vivado Implementation Default Reports (Vivado Implementation 2019) ; xcu280-fsvh2892-2L-e ; ee-beholder1 ; Default settings for Implementation.", 1, "impl_1", 0, false); // az (O, cr)
+// HMemoryUtils.trashcanNow. Engine heap size: 6,220 MB. GUI used memory: 308 MB. Current time: 3/26/24, 3:14:30 PM GMT
+selectTab("PlanAheadTabBaseWorkspace_JideTabbedPane", (HResource) null, "Timing Constraints", 5); // i (h, cr)
+maximizeView(PAResourceOtoP.PAViews_BASE_WORKSPACE, "BaseWorkspace"); // H (aI, cr)
+closeView(PAResourceOtoP.PAViews_TIMING_CONSTRAINTS, "Timing Constraints"); // a
+selectTree(PAResourceEtoH.FlowNavigatorTreePanel_FLOW_NAVIGATOR_TREE, "[, Implementation, Open Implemented Design]", 29, true); // u (O, cr) - Node
+// TclEventType: CURR_DESIGN_SET
+// Run Command: PAResourceCommand.PACommandNames_REPORT_CLOCK_INTERACTION
+// af (cr): Report Clock Interaction: addNotify
+// WARNING: HEventQueue.dispatchEvent() is taking  2198 ms.
+// Tcl Message: current_design synth_1 
+selectButton(RDIResource.BaseDialog_OK, "OK"); // a (af)
+dismissDialog("Report Clock Interaction"); // af (cr)
+// bB (cr):  Report Clock Interaction : addNotify
+// HMemoryUtils.trashcanNow. Engine heap size: 6,342 MB. GUI used memory: 308 MB. Current time: 3/26/24, 3:14:55 PM GMT
+// Tcl Message: report_clock_interaction -delay_type min_max -significant_digits 3 -name timing_1 
+// TclEventType: CLOCK_INTERACTION_UPDATED
+// Tcl Message: INFO: [Timing 38-35] Done setting XDC timing constraints. 
+// Tcl Message: report_clock_interaction: Time (s): cpu = 00:00:09 ; elapsed = 00:00:06 . Memory (MB): peak = 11546.660 ; gain = 233.086 ; free physical = 180754 ; free virtual = 203726 
+// [Engine Memory]: 6,575 MB (+169829kb) [01:55:20]
+selectButton("OptionPane.button", "OK"); // JButton (A, G)
+// RDIResource.RDIViews_PROPERTIES: Implementation Run Properties: close view
+// Elapsed time: 14 seconds
+selectTreeTable(PAResourceEtoH.ExpReportTreePanel_EXP_REPORT_TREE_TABLE, "impl_1_route_report_bus_skew_0 ; report_bus_skew ; warn_on_violation = true;  ; Tue Mar 26 15:13:52 GMT 2024 ; 1032", 32, "impl_1_route_report_bus_skew_0", 0, false); // O (O, cr)
+selectTreeTable(PAResourceEtoH.ExpReportTreePanel_EXP_REPORT_TREE_TABLE, "impl_1_route_report_timing_summary_0 ; report_timing_summary ; max_paths = 10;  ; Tue Mar 26 15:13:42 GMT 2024 ; 7494", 29, "impl_1_route_report_timing_summary_0", 0, false); // O (O, cr)
+expandTreeTable(PAResourceEtoH.ExpReportTreePanel_EXP_REPORT_TREE_TABLE, "impl_1_route_report_timing_summary_0 ; report_timing_summary ; max_paths = 10;  ; Tue Mar 26 15:13:42 GMT 2024 ; 7494", 29); // O (O, cr)
+selectTreeTable(PAResourceEtoH.ExpReportTreePanel_EXP_REPORT_TREE_TABLE, "impl_1_route_report_timing_summary_0 ; report_timing_summary ; max_paths = 10;  ; Tue Mar 26 15:13:42 GMT 2024 ; 7494", 29, "impl_1_route_report_timing_summary_0", 0, false, false, false, false, false, true); // O (O, cr) - Double Click
+selectTreeTable(PAResourceEtoH.ExpReportTreePanel_EXP_REPORT_TREE_TABLE, "impl_1_route_report_timing_summary_0 ; report_timing_summary ; max_paths = 10;  ; Tue Mar 26 15:13:42 GMT 2024 ; 7494", 29, "max_paths = 10; ", 2, false); // O (O, cr)
+selectTreeTable(PAResourceEtoH.ExpReportTreePanel_EXP_REPORT_TREE_TABLE, "impl_1_route_report_timing_summary_0 ; report_timing_summary ; max_paths = 10;  ; Tue Mar 26 15:13:42 GMT 2024 ; 7494", 29, "max_paths = 10; ", 2, false, false, false, false, false, true); // O (O, cr) - Double Click
+maximizeView(PAResourceOtoP.PAViews_BASE_WORKSPACE, "BaseWorkspace"); // H (aI, cr)
+closeView(PAResourceOtoP.PAViews_PAR_REPORT, "PAR Report"); // c
+closeView(PAResourceOtoP.PAViews_PAR_REPORT, "PAR Report"); // c
+selectCodeEditor("constraints.xdc", 557, 0); // ch (w, cr)
+selectCodeEditor("constraints.xdc", 554, 16); // ch (w, cr)
+selectCodeEditor("constraints.xdc", 554, 16, false, false, false, false, true); // ch (w, cr) - Double Click
+closeView(PAResourceOtoP.PAViews_CODE, "Code"); // B
+// HMemoryUtils.trashcanNow. Engine heap size: 6,599 MB. GUI used memory: 307 MB. Current time: 3/26/24, 3:15:45 PM GMT
+closeView(PAResourceOtoP.PAViews_TIMING_CONSTRAINTS, "Timing Constraints"); // a
+unMinimizeFrame(PAResourceOtoP.PAViews_SOURCES, "Sources"); // aA
+selectTree(PAResourceEtoH.FileSetPanel_FILE_SET_PANEL_TREE, "[root, Design Sources, scatter_threshold (scatter_threshold.sv)]", 1, true); // B (F, cr) - Node
+selectTree(PAResourceEtoH.FileSetPanel_FILE_SET_PANEL_TREE, "[root, Design Sources, scatter_threshold (scatter_threshold.sv)]", 1, true, false, false, false, false, true); // B (F, cr) - Double Click - Node
+selectTree(PAResourceEtoH.FileSetPanel_FILE_SET_PANEL_TREE, "[root, Simulation Sources, sim_1, tb_scatter_threshold (scatter_tb.sv)]", 10, true); // B (F, cr) - Node
+selectTree(PAResourceEtoH.FileSetPanel_FILE_SET_PANEL_TREE, "[root, Simulation Sources, sim_1, tb_scatter_threshold (scatter_tb.sv)]", 10, true, false, false, false, false, true); // B (F, cr) - Double Click - Node
+selectTree(PAResourceEtoH.FileSetPanel_FILE_SET_PANEL_TREE, "[root, Design Sources, scatter_threshold (scatter_threshold.sv)]", 1, true); // B (F, cr) - Node
+selectTree(PAResourceEtoH.FileSetPanel_FILE_SET_PANEL_TREE, "[root, Design Sources, scatter_threshold (scatter_threshold.sv)]", 1, true, false, false, false, false, true); // B (F, cr) - Double Click - Node
+selectTree(PAResourceEtoH.FileSetPanel_FILE_SET_PANEL_TREE, "[root, Design Sources, scatter_threshold (scatter_threshold.sv)]", 1, true); // B (F, cr) - Node
+expandTree(PAResourceEtoH.FileSetPanel_FILE_SET_PANEL_TREE, "[root, Design Sources, scatter_threshold (scatter_threshold.sv)]", 1); // B (F, cr)
+selectButton(PAResourceCommand.PACommandNames_ADD_SOURCES, "Sources_add_sources"); // E (f, cr)
+// Run Command: PAResourceCommand.PACommandNames_ADD_SOURCES
+// c (cr): Add Sources: addNotify
+selectRadioButton(PAResourceAtoD.AddSrcWizard_SPECIFY_HDL_NETLIST_BLOCK_DESIGN, "Add or create design sources"); // a (o, c)
+selectButton("NEXT", "Next >"); // JButton (j, c)
+selectButton(PAResourceQtoS.SrcChooserPanel_ADD_OR_CREATE_SOURCE_FILE, "Add"); // E (f, c)
+selectMenuItem(PAResourceQtoS.SrcChooserPanel_ADD_HDL_AND_NETLIST_FILES_TO_YOUR_PROJECT, "Add Files..."); // ai (ao, c)
+setFileChooser("/home/aw1223/new/mase/machop/mase_components/scatter/rtl/scatter_wrapper.sv");
+selectButton("FINISH", "Finish"); // JButton (j, c)
+// 'h' command handler elapsed time: 12 seconds
+dismissDialog("Add Sources"); // c (cr)
+// TclEventType: DG_GRAPH_STALE
+// TclEventType: FILE_SET_CHANGE
+// Tcl Message: add_files -norecurse /home/aw1223/new/mase/machop/mase_components/scatter/rtl/scatter_wrapper.sv 
+selectTree(PAResourceEtoH.FileSetPanel_FILE_SET_PANEL_TREE, "[root, Design Sources, scatter_threshold (scatter_threshold.sv)]", 1, true); // B (F, cr) - Node
+// TclEventType: DG_GRAPH_STALE
+// TclEventType: FILE_SET_CHANGE
+// Tcl Message: update_compile_order -fileset sources_1 
+selectTree(PAResourceEtoH.FileSetPanel_FILE_SET_PANEL_TREE, "[root, Design Sources, top (scatter_wrapper.sv), core_module : scatter_threshold (scatter_threshold.sv)]", 2, true); // B (F, cr) - Node
+selectTree(PAResourceEtoH.FileSetPanel_FILE_SET_PANEL_TREE, "[root, Design Sources, top (scatter_wrapper.sv), core_module : scatter_threshold (scatter_threshold.sv)]", 2, true); // B (F, cr) - Node
+selectTree(PAResourceEtoH.FileSetPanel_FILE_SET_PANEL_TREE, "[root, Design Sources, top (scatter_wrapper.sv), core_module : scatter_threshold (scatter_threshold.sv)]", 2, true, false, false, false, false, true); // B (F, cr) - Double Click - Node
+selectTree(PAResourceEtoH.FileSetPanel_FILE_SET_PANEL_TREE, "[root, Design Sources, top (scatter_wrapper.sv)]", 1, true); // B (F, cr) - Node
+selectTree(PAResourceEtoH.FileSetPanel_FILE_SET_PANEL_TREE, "[root, Design Sources, top (scatter_wrapper.sv)]", 1, true, false, false, false, false, true); // B (F, cr) - Double Click - Node
+selectTree(PAResourceEtoH.FileSetPanel_FILE_SET_PANEL_TREE, "[root, Design Sources, top (scatter_wrapper.sv)]", 1, true, false, false, false, true, false); // B (F, cr) - Popup Trigger - Node
+selectMenu(PAResourceCommand.PACommandNames_AUTO_UPDATE_HIER, "Hierarchy Update"); // af (ao, cr)
+selectMenuItem(PAResourceCommand.PACommandNames_SET_AS_TOP, "Set as Top"); // ai (ao, cr)
+// Run Command: PAResourceCommand.PACommandNames_SET_AS_TOP
+// TclEventType: DG_GRAPH_STALE
+// TclEventType: FILE_SET_CHANGE
+// TclEventType: FILE_SET_OPTIONS_CHANGE
+// Tcl Message: set_property top top [current_fileset] 
+// HMemoryUtils.trashcanNow. Engine heap size: 6,656 MB. GUI used memory: 308 MB. Current time: 3/26/24, 3:16:25 PM GMT
+selectTree(PAResourceEtoH.FileSetPanel_FILE_SET_PANEL_TREE, "[root, Design Sources, top (scatter_wrapper.sv)]", 1, true); // B (F, cr) - Node
+selectTree(PAResourceEtoH.FileSetPanel_FILE_SET_PANEL_TREE, "[root, Design Sources, top (scatter_wrapper.sv)]", 1, true, false, false, false, true, false); // B (F, cr) - Popup Trigger - Node
+selectMenu(PAResourceCommand.PACommandNames_AUTO_UPDATE_HIER, "Hierarchy Update"); // af (ao, cr)
+selectMenu(PAResourceQtoS.SrcMenu_IP_HIERARCHY, "IP Hierarchy"); // af (ao, cr)
+selectMenuItem(PAResourceCommand.PACommandNames_SET_AS_TOP, "Set as Top"); // ai (ao, cr)
+// Run Command: PAResourceCommand.PACommandNames_SET_AS_TOP
+// TclEventType: DG_GRAPH_STALE
+// TclEventType: FILE_SET_CHANGE
+// Tcl Message: update_compile_order -fileset sources_1 
+selectCodeEditor("scatter_wrapper.sv", 197, 151); // ch (w, cr)
+selectCodeEditor("scatter_wrapper.sv", 157, 108); // ch (w, cr)
+selectCodeEditor("scatter_wrapper.sv", 157, 108, false, false, false, false, true); // ch (w, cr) - Double Click
+selectTree(PAResourceEtoH.FlowNavigatorTreePanel_FLOW_NAVIGATOR_TREE, "[, Synthesis, Open Synthesized Design, Constraints Wizard]", 16, false); // u (O, cr)
+// Run Command: PAResourceCommand.PACommandNames_TIMING_CONSTRAINTS_WIZARD
+// cY (cr): Design Modified on Disk: addNotify
+selectButton(PAResourceOtoP.ProjectTab_RELOAD, "Reload"); // a (cY)
+// bB (cr):  Reloading : addNotify
+dismissDialog("Design Modified on Disk"); // cY (cr)
+// TclEventType: DESIGN_REFRESH
+// HMemoryUtils.trashcanNow. Engine heap size: 6,675 MB. GUI used memory: 302 MB. Current time: 3/26/24, 3:16:41 PM GMT
+// TclEventType: TIMING_RESULTS_UNLOAD
+// Engine heap size: 6,675 MB. GUI used memory: 303 MB. Current time: 3/26/24, 3:16:42 PM GMT
+// WARNING: HEventQueue.dispatchEvent() is taking  2228 ms.
+// Tcl Message: refresh_design 
+// TclEventType: READ_XDC_FILE_START
+// TclEventType: READ_XDC_FILE_END
+// TclEventType: FLOORPLAN_MODIFY
+// TclEventType: DESIGN_REFRESH
+// HMemoryUtils.trashcanNow. Engine heap size: 6,623 MB. GUI used memory: 297 MB. Current time: 3/26/24, 3:16:45 PM GMT
+// TclEventType: HFED_INIT_ROUTE_STORAGE_COMPLETED
+// RouteApi::loadEngineXgd elapsed time: 3.5s
+// Device: addNotify
+// DeviceView Instantiated
+// WARNING: HEventQueue.dispatchEvent() is taking  6525 ms.
+// Tcl Message: Netlist sorting complete. Time (s): cpu = 00:00:00 ; elapsed = 00:00:00 . Memory (MB): peak = 11647.105 ; gain = 0.000 ; free physical = 183858 ; free virtual = 206836 
+// Tcl Message: INFO: [Netlist 29-17] Analyzing 32 Unisim elements for replacement INFO: [Netlist 29-28] Unisim Transformation completed in 0 CPU seconds INFO: [Project 1-479] Netlist was created with Vivado 2019.2 INFO: [Project 1-570] Preparing netlist for logic optimization 
+// Tcl Message: Parsing XDC File [/home/aw1223/new/mase/machop/mase_components/scatter/scatter_vivado/constraints.xdc] 
+// Tcl Message: Finished Parsing XDC File [/home/aw1223/new/mase/machop/mase_components/scatter/scatter_vivado/constraints.xdc] 
+// Tcl Message: INFO: [Opt 31-138] Pushed 0 inverter(s) to 0 load pin(s). 
+// Tcl Message: refresh_design: Time (s): cpu = 00:00:19 ; elapsed = 00:00:12 . Memory (MB): peak = 11647.105 ; gain = 2.961 ; free physical = 183354 ; free virtual = 206332 
+// S (cr): Critical Messages: addNotify
+// Elapsed time: 12 seconds
+dismissDialog("Reloading"); // bB (cr)
+// RouteApi::initDelayMediator elapsed time: 4.7s
+// RouteApi: Init Delay Mediator Swing Worker Finished
+// Elapsed time: 30 seconds
+selectButton(PAResourceAtoD.CmdMsgDialog_OK, "OK"); // f (S)
+dismissDialog("Critical Messages"); // S (cr)
+selectTree(PAResourceEtoH.FlowNavigatorTreePanel_FLOW_NAVIGATOR_TREE, "[, Synthesis]", 13, true, false, false, false, true, false); // u (O, cr) - Popup Trigger - Node
+setText("RDIResource.SearchCommandComponent_QUICK_ACCESS", "create clk", true); // OverlayTextField (O, cr)
+// HOptionPane Error: 'Can't find a command that matches 'create clk' (Command Not Found)'
+setText("RDIResource.SearchCommandComponent_QUICK_ACCESS", "create clock", true); // OverlayTextField (O, cr)
+// HOptionPane Error: 'Can't find a command that matches 'create clock' (Command Not Found)'
+selectButton("OptionPane.button", "OK"); // JButton (A, G)
+// Elapsed time: 11 seconds
+selectMenu(PAResourceItoN.MainMenuMgr_TOOLS, "Tools"); // aa (q, cr)
+selectMenu(PAResourceItoN.MainMenuMgr_FLOORPLANNING, "Floorplanning"); // af (cr)
+selectMenu(PAResourceItoN.MainMenuMgr_IO_PLANNING, "I/O Planning"); // af (cr)
+selectMenu(PAResourceItoN.MainMenuMgr_TIMING, "Timing"); // af (cr)
+selectMenu(RDIResourceCommand.RDICommands_CUSTOM_COMMANDS, "Custom Commands"); // af (cr)
+selectMenu(RDIResourceCommand.RDICommands_CUSTOM_COMMANDS, "Custom Commands"); // af (cr)
+selectMenu(RDIResourceCommand.RDICommands_CUSTOM_COMMANDS, "Custom Commands"); // af (cr)
+selectMenu(RDIResourceCommand.RDICommands_CUSTOM_COMMANDS, "Custom Commands"); // af (cr)
+selectMenu(PAResourceItoN.MainMenuMgr_TIMING, "Timing"); // af (cr)
+selectMenuItem(PAResourceCommand.PACommandNames_TIMING_CONSTRAINTS_WIZARD, "Constraints Wizard..."); // ai (cr)
+dismissMenu(PAResourceItoN.MainMenuMgr_TOOLS, "Tools"); // aa (q, cr)
+// Run Command: PAResourceCommand.PACommandNames_TIMING_CONSTRAINTS_WIZARD
+// Tcl Command: 'create_clock -help'
+// Tcl Command: 'create_clock -help'
+// Tcl Command: 'create_clock -help'
+// Tcl Command: 'create_clock -help'
+// Tcl Command: 'create_clock -help'
+// Tcl Command: 'create_clock -help'
+// Tcl Command: 'create_clock -help'
+// Tcl Command: 'create_clock -help'
+// Tcl Command: 'create_clock -help'
+// Tcl Command: 'create_clock -help'
+// Tcl Command: 'create_clock -help'
+// cC (cr): Timing Constraints Wizard: addNotify
+// bB (cC):  Timing Constraints Wizard : addNotify
+// TclEventType: TIMING_CONSTRAINTS_WIZARD_CREATED
+// bB (cC):  Timing Constraints Wizard : addNotify
+// Elapsed time: 12 seconds
+selectButton("NEXT", "Next >"); // JButton (j, cC)
+dismissDialog("Timing Constraints Wizard"); // bB (cC)
+// TclEventType: DESIGN_STALE
+// TclEventType: FILE_SET_CHANGE
+// Elapsed time: 80 seconds
+selectTableHeader(PAResourceOtoP.PrimaryClocksPanel_RECOMMENDED_CONSTRAINTS_TABLE, "Frequency (MHz)", 3); // cj (O, cC)
+selectTableHeader(PAResourceOtoP.PrimaryClocksPanel_RECOMMENDED_CONSTRAINTS_TABLE, "Object", 1); // cj (O, cC)
+selectList(RDIResource.SelectableListPanel_SELECTABLE_LIST, null, -1); // J (O, cC)
+selectButton((HResource) null, "PAResourceOtoP.PrimaryClocksPanel_RECOMMENDED_CONSTRAINTS_TABLE_CLOCK_NETWORKS"); // E (f, cC)
+// bB (cC):  Apply XDC Constraints : addNotify
+// TclEventType: TIMING_CONSTRAINTS_WIZARD_CLOSED
+dismissDialog("Apply XDC Constraints"); // bB (cC)
+dismissDialog("Timing Constraints Wizard"); // cC (cr)
+selectTree(PAResourceEtoH.FileSetPanel_FILE_SET_PANEL_TREE, "[root, Constraints, constrs_1, constraints.xdc]", 5, false); // B (F, cr)
+selectTree(PAResourceEtoH.FileSetPanel_FILE_SET_PANEL_TREE, "[root, Constraints, constrs_1, constraints.xdc]", 5, false, false, false, false, false, true); // B (F, cr) - Double Click
+selectCodeEditor("constraints.xdc", 366, 12); // ch (w, cr)
+selectCodeEditor("constraints.xdc", 559, 6); // ch (w, cr)
+selectCodeEditor("constraints.xdc", 559, 6, false, false, false, false, true); // ch (w, cr) - Double Click
+typeControlKey((HResource) null, "constraints.xdc", 'c'); // ch (w, cr)
+selectTree(PAResourceEtoH.FileSetPanel_FILE_SET_PANEL_TREE, "[root, Design Sources, top (scatter_wrapper.sv)]", 1, true); // B (F, cr) - Node
+selectTree(PAResourceEtoH.FileSetPanel_FILE_SET_PANEL_TREE, "[root, Design Sources, top (scatter_wrapper.sv)]", 1, true, false, false, false, true, false); // B (F, cr) - Popup Trigger - Node
+selectTree(PAResourceEtoH.FileSetPanel_FILE_SET_PANEL_TREE, "[root, Design Sources, top (scatter_wrapper.sv)]", 1, true); // B (F, cr) - Node
+selectTree(PAResourceEtoH.FileSetPanel_FILE_SET_PANEL_TREE, "[root, Design Sources, top (scatter_wrapper.sv)]", 1, true, false, false, false, true, false); // B (F, cr) - Popup Trigger - Node
+selectMenu(PAResourceQtoS.SrcMenu_IP_HIERARCHY, "IP Hierarchy"); // af (ao, cr)
+selectMenu(PAResourceQtoS.SrcMenu_IP_HIERARCHY, "IP Hierarchy"); // af (ao, cr)
+selectMenuItem(PAResourceQtoS.SrcMenu_REFRESH_HIERARCHY, "Refresh Hierarchy"); // ai (ao, cr)
+selectTree(PAResourceEtoH.FlowNavigatorTreePanel_FLOW_NAVIGATOR_TREE, "[, Synthesis, Run Synthesis]", 14, false); // u (O, cr)
+// HMemoryUtils.trashcanNow. Engine heap size: 6,698 MB. GUI used memory: 306 MB. Current time: 3/26/24, 3:20:00 PM GMT
+selectTree(PAResourceEtoH.FlowNavigatorTreePanel_FLOW_NAVIGATOR_TREE, "[, Synthesis, Open Synthesized Design, Edit Timing Constraints]", 17, false); // u (O, cr)
+// Run Command: PAResourceCommand.PACommandNames_TIMING_CONSTRAINTS_WINDOW
+selectTree(PAResourceTtoZ.XdcCategoryTree_XDC_CATEGORY_TREE, "[All Categories (0), Clocks (0), Create Clock (0)]", 1, false); // bk (O, cr)
+selectTree(PAResourceTtoZ.XdcCategoryTree_XDC_CATEGORY_TREE, "[All Categories (0), Clocks (0), Create Clock (0)]", 1, false, false, false, false, false, true); // bk (O, cr) - Double Click
+// Run Command: PAResourceCommand.PACommandNames_XDC_CREATE_CLOCK
+// cY (cr): Design Modified on Disk: addNotify
+selectButton(PAResourceOtoP.ProjectTab_RELOAD, "Reload"); // a (cY)
+// bB (cr):  Reloading : addNotify
+dismissDialog("Design Modified on Disk"); // cY (cr)
+// TclEventType: DESIGN_REFRESH
+// HMemoryUtils.trashcanNow. Engine heap size: 6,704 MB. GUI used memory: 309 MB. Current time: 3/26/24, 3:20:08 PM GMT
+// Engine heap size: 6,704 MB. GUI used memory: 310 MB. Current time: 3/26/24, 3:20:09 PM GMT
+// WARNING: HEventQueue.dispatchEvent() is taking  2169 ms.
+// Tcl Message: refresh_design 
+// TclEventType: DEBUG_GRAPH_STALE
+// TclEventType: READ_XDC_FILE_START
+// TclEventType: READ_XDC_FILE_END
+// TclEventType: FLOORPLAN_MODIFY
+// TclEventType: DESIGN_REFRESH
+// HMemoryUtils.trashcanNow. Engine heap size: 6,652 MB. GUI used memory: 306 MB. Current time: 3/26/24, 3:20:12 PM GMT
+// TclEventType: HFED_INIT_ROUTE_STORAGE_COMPLETED
+// RouteApi::loadEngineXgd elapsed time: 3.7s
+// Device: addNotify
+// DeviceView Instantiated
+// WARNING: HEventQueue.dispatchEvent() is taking  7025 ms.
+// Tcl Message: INFO: [Project 1-570] Preparing netlist for logic optimization 
+// Tcl Message: Parsing XDC File [/home/aw1223/new/mase/machop/mase_components/scatter/scatter_vivado/constraints.xdc] 
+// Tcl Message: Finished Parsing XDC File [/home/aw1223/new/mase/machop/mase_components/scatter/scatter_vivado/constraints.xdc] 
+// Tcl Message: INFO: [Opt 31-138] Pushed 0 inverter(s) to 0 load pin(s). 
+// Tcl Message: refresh_design: Time (s): cpu = 00:00:20 ; elapsed = 00:00:12 . Memory (MB): peak = 11673.113 ; gain = 0.000 ; free physical = 182997 ; free virtual = 205981 
+// S (cr): Critical Messages: addNotify
+// Elapsed time: 13 seconds
+dismissDialog("Reloading"); // bB (cr)
+// RouteApi::initDelayMediator elapsed time: 4.4s
+// RouteApi: Init Delay Mediator Swing Worker Finished
+selectList(PAResourceAtoD.CmdMsgDialog_MESSAGES, "[Vivado 12-4739] create_clock:No valid object(s) found for '-objects [get_ports sys_clk]'. [/home/aw1223/new/mase/machop/mase_components/scatter/scatter_vivado/constraints.xdc:1]. Resolution: Check if the specified object(s) exists in the current design. If it does, ensure that the correct design hierarchy was specified for the object. If you are working with clocks, make sure create_clock was used to create the clock object before it is referenced.", 0); // b (F, S)
+// Elapsed time: 22 seconds
+selectButton(PAResourceAtoD.CmdMsgDialog_OPEN_MESSAGES_VIEW, "Open Messages View"); // a (S)
+// Run Command: PAResourceCommand.PACommandNames_MESSAGE_WINDOW
+dismissDialog("Critical Messages"); // S (cr)
+selectTree(PAResourceItoN.MsgTreePanel_MESSAGE_VIEW_TREE, "[, Synthesis, [Vivado 12-4739] create_clock:No valid object(s) found for '-objects [get_ports sys_clk]'. [/home/aw1223/new/mase/machop/mase_components/scatter/scatter_vivado/constraints.xdc:1]. ]", 1, false); // ah (O, cr)
+messagesViewCrossProbe(PAResourceItoN.MsgTreePanel_MESSAGE_VIEW_TREE, "src;-;/home/aw1223/new/mase/machop/mase_components/scatter/scatter_vivado/constraints.xdc;-;;-;16;-;line;-;1;-;;-;16;-;"); // ah (O, cr)
+selectCodeEditor("constraints.xdc", 566, 17); // ch (w, cr)
+selectCodeEditor("constraints.xdc", 566, 17, false, false, false, false, true); // ch (w, cr) - Double Click
+selectCodeEditor("constraints.xdc", 567, 14); // ch (w, cr)
+selectCodeEditor("constraints.xdc", 567, 13, false, false, false, false, true); // ch (w, cr) - Double Click
+typeControlKey((HResource) null, "constraints.xdc", 'c'); // ch (w, cr)
+selectTab("PlanAheadTabBaseWorkspace_JideTabbedPane", (HResource) null, "scatter_wrapper.sv", 4); // i (h, cr)
+selectCodeEditor("scatter_wrapper.sv", 197, 122); // ch (w, cr)
+selectTab("PlanAheadTabBaseWorkspace_JideTabbedPane", (HResource) null, "constraints.xdc", 5); // i (h, cr)
+// Elapsed time: 38 seconds
+selectTree(PAResourceEtoH.FlowNavigatorTreePanel_FLOW_NAVIGATOR_TREE, "[, Synthesis, Open Synthesized Design, Report Clock Networks]", 20, false); // u (O, cr)
+// Run Command: PAResourceCommand.PACommandNames_REPORT_CLOCK_NETWORKS
+// a (cr): Report Clock Networks: addNotify
+selectButton(RDIResource.BaseDialog_OK, "OK"); // a (a)
+dismissDialog("Report Clock Networks"); // a (cr)
+// bB (cr):  Report Clock Networks : addNotify
+// Tcl Message: report_clock_networks -name {network_1} 
+// Tcl Message: INFO: [Timing 38-35] Done setting XDC timing constraints. 
+// TclEventType: TIMING_CLOCK_NETWORKS_UPDATED
+// Tcl Message: report_clock_networks: Time (s): cpu = 00:00:07 ; elapsed = 00:00:06 . Memory (MB): peak = 11688.738 ; gain = 15.625 ; free physical = 194760 ; free virtual = 217747 
+dismissDialog("Report Clock Networks"); // bB (cr)
+// HMemoryUtils.trashcanNow. Engine heap size: 6,720 MB. GUI used memory: 318 MB. Current time: 3/26/24, 3:21:50 PM GMT
+// Elapsed time: 12 seconds
+selectTree(PAResourceEtoH.FlowNavigatorTreePanel_FLOW_NAVIGATOR_TREE, "[, Implementation, Open Implemented Design]", 29, true); // u (O, cr) - Node
+// Run Command: PAResourceCommand.PACommandNames_GOTO_IMPLEMENTED_DESIGN
+// TclEventType: CURR_DESIGN_SET
+selectTree(PAResourceEtoH.FlowNavigatorTreePanel_FLOW_NAVIGATOR_TREE, "[, Implementation, Open Implemented Design]", 29, true, false, false, false, false, true); // u (O, cr) - Double Click - Node
+// Tcl Message: current_design impl_1 
+selectTree(PAResourceEtoH.FlowNavigatorTreePanel_FLOW_NAVIGATOR_TREE, "[, Implementation, Open Implemented Design]", 29, true); // u (O, cr) - Node
+selectTree(PAResourceEtoH.FlowNavigatorTreePanel_FLOW_NAVIGATOR_TREE, "[, Implementation, Open Implemented Design]", 29, true, false, false, false, false, true); // u (O, cr) - Double Click - Node
+selectTreeTable(PAResourceEtoH.ExpRunTreePanel_EXP_RUN_TREE_TABLE, "impl_1 ; constrs_1 ; Implementation Out-of-date ; NA ; NA ; NA ; NA ; NA ; 22.110654830932617 ; 0 ; 43 ; 0 ; 0.0 ; 0 ; 0 ; Tue Mar 26 15:00:53 GMT 2024 ; 00:12:59 ; Vivado Implementation Defaults (Vivado Implementation 2019) ; Vivado Implementation Default Reports (Vivado Implementation 2019) ; xcu280-fsvh2892-2L-e ; ee-beholder1 ; Default settings for Implementation.", 1, "Implementation Out-of-date", 2, false); // az (O, cr)
+selectTreeTable(PAResourceEtoH.ExpRunTreePanel_EXP_RUN_TREE_TABLE, "impl_1 ; constrs_1 ; Implementation Out-of-date ; NA ; NA ; NA ; NA ; NA ; 22.110654830932617 ; 0 ; 43 ; 0 ; 0.0 ; 0 ; 0 ; Tue Mar 26 15:00:53 GMT 2024 ; 00:12:59 ; Vivado Implementation Defaults (Vivado Implementation 2019) ; Vivado Implementation Default Reports (Vivado Implementation 2019) ; xcu280-fsvh2892-2L-e ; ee-beholder1 ; Default settings for Implementation.", 1, "Implementation Out-of-date", 2, false, false, false, false, false, true); // az (O, cr) - Double Click
+selectTreeTable(PAResourceEtoH.ExpRunTreePanel_EXP_RUN_TREE_TABLE, "impl_1 ; constrs_1 ; Implementation Out-of-date ; NA ; NA ; NA ; NA ; NA ; 22.110654830932617 ; 0 ; 43 ; 0 ; 0.0 ; 0 ; 0 ; Tue Mar 26 15:00:53 GMT 2024 ; 00:12:59 ; Vivado Implementation Defaults (Vivado Implementation 2019) ; Vivado Implementation Default Reports (Vivado Implementation 2019) ; xcu280-fsvh2892-2L-e ; ee-beholder1 ; Default settings for Implementation.", 1, "Implementation Out-of-date", 2, false); // az (O, cr)
+selectTreeTable(PAResourceEtoH.ExpRunTreePanel_EXP_RUN_TREE_TABLE, "impl_1 ; constrs_1 ; Implementation Out-of-date ; NA ; NA ; NA ; NA ; NA ; 22.110654830932617 ; 0 ; 43 ; 0 ; 0.0 ; 0 ; 0 ; Tue Mar 26 15:00:53 GMT 2024 ; 00:12:59 ; Vivado Implementation Defaults (Vivado Implementation 2019) ; Vivado Implementation Default Reports (Vivado Implementation 2019) ; xcu280-fsvh2892-2L-e ; ee-beholder1 ; Default settings for Implementation.", 1, "Implementation Out-of-date", 2, false, false, false, false, false, true); // az (O, cr) - Double Click
+selectTreeTable(PAResourceEtoH.ExpRunTreePanel_EXP_RUN_TREE_TABLE, "synth_1 ; constrs_1 ; Synthesis Out-of-date ;  ;  ;  ;  ;  ;  ;  ; 43 ; 0 ; 0.0 ; 0 ; 0 ; Tue Mar 26 14:56:43 GMT 2024 ; 00:03:08 ; Vivado Synthesis Defaults (Vivado Synthesis 2019) ; Vivado Synthesis Default Reports (Vivado Synthesis 2019) ; xcu280-fsvh2892-2L-e ; ee-beholder1 ; Vivado Synthesis Defaults", 0, "synth_1", 0, true); // az (O, cr) - Node
+collapseTreeTable(PAResourceEtoH.ExpRunTreePanel_EXP_RUN_TREE_TABLE, "synth_1 ; constrs_1 ; Synthesis Out-of-date ;  ;  ;  ;  ;  ;  ;  ; 43 ; 0 ; 0.0 ; 0 ; 0 ; Tue Mar 26 14:56:43 GMT 2024 ; 00:03:08 ; Vivado Synthesis Defaults (Vivado Synthesis 2019) ; Vivado Synthesis Default Reports (Vivado Synthesis 2019) ; xcu280-fsvh2892-2L-e ; ee-beholder1 ; Vivado Synthesis Defaults", 0); // az (O, cr)
+selectTreeTable(PAResourceEtoH.ExpRunTreePanel_EXP_RUN_TREE_TABLE, "synth_1 ; constrs_1 ; Synthesis Out-of-date ;  ;  ;  ;  ;  ;  ;  ; 43 ; 0 ; 0.0 ; 0 ; 0 ; Tue Mar 26 14:56:43 GMT 2024 ; 00:03:08 ; Vivado Synthesis Defaults (Vivado Synthesis 2019) ; Vivado Synthesis Default Reports (Vivado Synthesis 2019) ; xcu280-fsvh2892-2L-e ; ee-beholder1 ; Vivado Synthesis Defaults", 0, "synth_1", 0, true, false, false, false, false, true); // az (O, cr) - Double Click - Node
+selectTreeTable(PAResourceEtoH.ExpReportTreePanel_EXP_REPORT_TREE_TABLE, "impl_1_route_report_timing_summary_0 ; report_timing_summary ; max_paths = 10;  ; Tue Mar 26 15:13:42 GMT 2024 ; 7494", 29, "impl_1_route_report_timing_summary_0", 0, false); // O (O, cr)
+selectTreeTable(PAResourceEtoH.ExpReportTreePanel_EXP_REPORT_TREE_TABLE, "impl_1_route_report_timing_summary_0 ; report_timing_summary ; max_paths = 10;  ; Tue Mar 26 15:13:42 GMT 2024 ; 7494", 29, "impl_1_route_report_timing_summary_0", 0, false, false, false, false, false, true); // O (O, cr) - Double Click
+selectMenu(PAResourceItoN.MainMenuMgr_VIEW, "View"); // aa (q, cr)
+dismissMenu(PAResourceItoN.MainMenuMgr_VIEW, "View"); // aa (q, cr)
+selectTreeTable(PAResourceEtoH.ExpReportTreePanel_EXP_REPORT_TREE_TABLE, "impl_1_route_report_clock_utilization_0 ; report_clock_utilization ;  ; Tue Mar 26 15:13:52 GMT 2024 ; 46904", 31, (String) null, 2, false); // O (O, cr)
+// HMemoryUtils.trashcanNow. Engine heap size: 6,747 MB. GUI used memory: 319 MB. Current time: 3/26/24, 3:22:30 PM GMT
+selectTree(PAResourceEtoH.FlowNavigatorTreePanel_FLOW_NAVIGATOR_TREE, "[, Implementation, Open Implemented Design, Report Timing Summary]", 32, false); // u (O, cr)
+// Run Command: PAResourceCommand.PACommandNames_REPORT_TIMING_SUMMARY
+// aJ (cr): Report Timing Summary: addNotify
+selectButton(RDIResource.BaseDialog_OK, "OK"); // a (aJ)
+dismissDialog("Report Timing Summary"); // aJ (cr)
+// TclEventType: TIMING_SUMMARY_UPDATED
+// Tcl Message: report_timing_summary -delay_type min_max -report_unconstrained -check_timing_verbose -max_paths 10 -input_pins -routable_nets -name timing_1 
+// Tcl Message: INFO: [Timing 38-91] UpdateTimingParams: Speed grade: -2L, Temperature grade: E, Delay Type: min_max. INFO: [Timing 38-191] Multithreading enabled for timing update using a maximum of 8 CPUs 
+// bB (cr):  Report Timing Summary : addNotify
+dismissDialog("Report Timing Summary"); // bB (cr)
+selectTree(PAResourceItoN.NavigableTimingReportTab_TIMING_REPORT_NAVIGATION_TREE, "[Root, User Ignored Paths]", 8, false); // a (O, cr)
+expandTree(PAResourceItoN.NavigableTimingReportTab_TIMING_REPORT_NAVIGATION_TREE, "[Root, Unconstrained Paths]", 9); // a (O, cr)
+expandTree(PAResourceItoN.NavigableTimingReportTab_TIMING_REPORT_NAVIGATION_TREE, "[Root, Unconstrained Paths, NONE to NONE]", 10); // a (O, cr)
+selectTree(PAResourceItoN.NavigableTimingReportTab_TIMING_REPORT_NAVIGATION_TREE, "[Root, Unconstrained Paths, NONE to NONE, Setup]", 11, false); // a (O, cr)
+selectTree(PAResourceItoN.NavigableTimingReportTab_TIMING_REPORT_NAVIGATION_TREE, "[Root, Unconstrained Paths, NONE to NONE, Setup]", 11, false, false, false, false, false, true); // a (O, cr) - Double Click
+selectTree(PAResourceItoN.NavigableTimingReportTab_TIMING_REPORT_NAVIGATION_TREE, "[Root, Unconstrained Paths, NONE to NONE]", 10, true); // a (O, cr) - Node
+selectTree(PAResourceItoN.NavigableTimingReportTab_TIMING_REPORT_NAVIGATION_TREE, "[Root, Unconstrained Paths, NONE to NONE, Setup]", 11, false); // a (O, cr)
+// PAPropertyPanels.initPanels (Path 1) elapsed time: 0.3s
+selectTable(PAResourceTtoZ.TimingItemFlatTablePanel_TABLE, "Path 1 ; Infinity ; 6 ; 4 ; 16 ; data_in[2][1] ; o_low_precision[2][1] ; 6.560299 ; 2.188299 ; 4.372 ; Infinity ; input port clock ;  ;  ; 0.0", 0, "6.560299", 7); // i (O, cr)
+selectTable(PAResourceTtoZ.TimingItemFlatTablePanel_TABLE, "Path 1 ; Infinity ; 6 ; 4 ; 16 ; data_in[2][1] ; o_low_precision[2][1] ; 6.560299 ; 2.188299 ; 4.372 ; Infinity ; input port clock ;  ;  ; 0.0", 0, "6.560299", 7); // i (O, cr)
+selectTable(PAResourceTtoZ.TimingItemFlatTablePanel_TABLE, "Path 1 ; Infinity ; 6 ; 4 ; 16 ; data_in[2][1] ; o_low_precision[2][1] ; 6.560299 ; 2.188299 ; 4.372 ; Infinity ; input port clock ;  ;  ; 0.0", 0, "6.560299", 7, false, false, false, false, true); // i (O, cr) - Double Click
+selectTable(PAResourceTtoZ.TimingItemFlatTablePanel_TABLE, "Path 1 ; Infinity ; 6 ; 4 ; 16 ; data_in[2][1] ; o_low_precision[2][1] ; 6.560299 ; 2.188299 ; 4.372 ; Infinity ; input port clock ;  ;  ; 0.0", 0, "6.560299", 7, false, false, false, true, false); // i (O, cr) - Popup Trigger
+selectMenu(PAResourceTtoZ.TimingItemFlatTablePanel_FLOORPLANNING, "Floorplanning"); // af (ao, cr)
+selectMenu(RDIResource.HTable_SET_ELIDING_FOR_TABLE_CELLS, "Elide Setting"); // G (ao, cr)
+selectMenu(PAResourceTtoZ.TimingItemFlatTablePanel_FLOORPLANNING, "Floorplanning"); // af (ao, cr)
+selectMenu(PAResourceQtoS.SelectMenu_HIGHLIGHT, "Highlight"); // af (ao, cr)
+selectMenu(PAResourceQtoS.SelectMenu_MARK, "Mark"); // af (ao, cr)
+selectTable(PAResourceTtoZ.TimingItemFlatTablePanel_TABLE, "Path 6 ; Infinity ; 6 ; 4 ; 16 ; data_in[2][1] ; o_low_precision[2][5] ; 6.3981404 ; 2.2071397 ; 4.191 ; Infinity ; input port clock ;  ;  ; 0.0", 5, "data_in[2][1]", 5); // i (O, cr)
+selectTable(PAResourceTtoZ.TimingItemFlatTablePanel_TABLE, "Path 1 ; Infinity ; 6 ; 4 ; 16 ; data_in[2][1] ; o_low_precision[2][1] ; 6.560299 ; 2.188299 ; 4.372 ; Infinity ; input port clock ;  ;  ; 0.0", 0, "6.560299", 7); // i (O, cr)
+// HMemoryUtils.trashcanNow. Engine heap size: 6,773 MB. GUI used memory: 324 MB. Current time: 3/26/24, 3:23:05 PM GMT
+selectTab("PlanAheadTabBaseWorkspace_JideTabbedPane", (HResource) null, "scatter_wrapper.sv", 6); // i (h, cr)
+// Elapsed time: 74 seconds
+selectTree(PAResourceOtoP.PowerResultTab_REPORT_NAVIGATION_TREE, "[Report Contents, Utilization Details, Signals]", 5, true); // h (O, cr) - Node
+selectTree(PAResourceOtoP.PowerResultTab_REPORT_NAVIGATION_TREE, "[Report Contents, Utilization Details, Hierarchical]", 4, false); // h (O, cr)
+selectTree(PAResourceOtoP.PowerResultTab_REPORT_NAVIGATION_TREE, "[Report Contents, Utilization Details, Hierarchical]", 4, false, false, false, false, false, true); // h (O, cr) - Double Click
+selectTreeTable(PAResourceOtoP.PowerInstTreeTablePanel_POWER_INST_TREE_TABLE, "18.542553 ; scatter_threshold ;  ;  ;  ; ", 0, "18.542553", 0, true); // f (O, cr) - Node
+// Elapsed time: 30 seconds
+selectTreeTable(PAResourceTtoZ.VioTreeTablePanel_VIO_TREE_TABLE, "UCIO #1 ; 96 out of 96 logical ports have no user assigned specific location constraint (LOC). This may cause I/O contention or incompatibility with the board power or connectivity affecting performance, signal integrity or in extreme cases cause damage to the device or the components to which it is connected. To correct this violation, specify all pin locations. This design will fail to generate a bitstream unless all logical ports have a user specified site LOC constraint defined.  To allow bitstream creation with unspecified pin locations (not recommended), use this command: set_property SEVERITY {Warning} [get_drc_checks UCIO-1].  NOTE: When using the Vivado Runs infrastructure (e.g. launch_runs Tcl command), add this command to a .tcl file and add that file as a pre-hook for write_bitstream step for the implementation run.  Problem ports: data_in[0][7], data_in[0][6], data_in[0][5], data_in[0][4], data_in[0][3], data_in[0][2], data_in[0][1], data_in[0][0], data_in[1][7], data_in[1][6], data_in[1][5], data_in[1][4], data_in[1][3], data_in[1][2], data_in[1][1] (the first 15 of 96 listed).", 5, "Critical Warning", 1, false); // P (O, cr)
+selectTree(PAResourceEtoH.FlowNavigatorTreePanel_FLOW_NAVIGATOR_TREE, "[, Implementation, Open Implemented Design, Report Utilization]", 37, false); // u (O, cr)
+// Run Command: PAResourceCommand.PACommandNames_RESOURCE_UTILIZATION
+// a (cr): Report Utilization: addNotify
+selectButton(RDIResource.BaseDialog_OK, "OK"); // a (a)
+dismissDialog("Report Utilization"); // a (cr)
+// bB (cr):  Report Utilization : addNotify
+// Tcl Message: report_utilization -name utilization_1 
+// TclEventType: UTILIZATION_RESULT_GENERATED
+// HMemoryUtils.trashcanNow. Engine heap size: 6,793 MB. GUI used memory: 335 MB. Current time: 3/26/24, 3:25:04 PM GMT
+// WARNING: HEventQueue.dispatchEvent() is taking  1901 ms.
+dismissDialog("Report Utilization"); // bB (cr)
+selectTreeTable("PAResourceTtoZ.UtilizationHierViewTreeTablePanel_TABLE(Hierarchy)", "scatter_threshold ; 43 ; 24 ; 43 ; 96 ; 48 ; 48", 0, "43", 1, false); // z (O, cr)
+selectTreeTable("PAResourceTtoZ.UtilizationHierViewTreeTablePanel_TABLE(Hierarchy)", "scatter_threshold ; 43 ; 24 ; 43 ; 96 ; 48 ; 48", 0, "0", 4, false); // z (O, cr)
+selectTreeTable("PAResourceTtoZ.UtilizationHierViewTreeTablePanel_TABLE(Hierarchy)", "scatter_threshold ; 43 ; 24 ; 43 ; 96 ; 48 ; 48", 0, "0", 6, false); // z (O, cr)
+selectTreeTable("PAResourceTtoZ.UtilizationHierViewTreeTablePanel_TABLE(Hierarchy)", "scatter_threshold ; 43 ; 24 ; 43 ; 96 ; 48 ; 48", 0, "0", 3, false); // z (O, cr)
+selectTreeTable("PAResourceTtoZ.UtilizationHierViewTreeTablePanel_TABLE(Hierarchy)", "scatter_threshold ; 43 ; 24 ; 43 ; 96 ; 48 ; 48", 0, "0", 3, false); // z (O, cr)
+selectTreeTable("PAResourceTtoZ.UtilizationHierViewTreeTablePanel_TABLE(Hierarchy)", "scatter_threshold ; 43 ; 24 ; 43 ; 96 ; 48 ; 48", 0, "0", 2, false); // z (O, cr)
+selectTreeTable("PAResourceTtoZ.UtilizationHierViewTreeTablePanel_TABLE(Hierarchy)", "scatter_threshold ; 43 ; 0 ; 24 ; 43 ; 96 ; 48 ; 48", 0, "0", 2, false); // z (O, cr)
+// [GUI Memory]: 391 MB (+1293kb) [02:06:26]
+// Elapsed time: 153 seconds
+selectTable(PAResourceTtoZ.TimingItemFlatTablePanel_TABLE, "Path 1 ; Infinity ; 6 ; 4 ; 16 ; data_in[2][1] ; o_low_precision[2][1] ; 6.560299 ; 2.188299 ; 4.372 ; Infinity ; input port clock ;  ;  ; 0.0", 0, "Path 1", 0); // i (O, cr)
+selectTable(PAResourceTtoZ.TimingItemFlatTablePanel_TABLE, "Path 1 ; Infinity ; 6 ; 4 ; 16 ; data_in[2][1] ; o_low_precision[2][1] ; 6.560299 ; 2.188299 ; 4.372 ; Infinity ; input port clock ;  ;  ; 0.0", 0, "Path 1", 0, false, false, false, false, true); // i (O, cr) - Double Click
+// Elapsed time: 123 seconds
+selectTab("PlanAheadTabBaseWorkspace_JideTabbedPane", (HResource) null, "scatter_wrapper.sv", 6); // i (h, cr)
+selectCodeEditor("scatter_wrapper.sv", 207, 65); // ch (w, cr)
+// TclEventType: DG_GRAPH_STALE
+// TclEventType: FILE_SET_CHANGE
+// TclEventType: DG_GRAPH_STALE
+// TclEventType: FILE_SET_CHANGE
+// WARNING: HEventQueue.dispatchEvent() is taking  1090 ms.
+// HMemoryUtils.trashcanNow. Engine heap size: 6,826 MB. GUI used memory: 335 MB. Current time: 3/26/24, 3:30:25 PM GMT
+// TclEventType: DG_GRAPH_STALE
+// TclEventType: FILE_SET_CHANGE
+// TclEventType: DG_GRAPH_STALE
+// TclEventType: FILE_SET_CHANGE
+// Tcl Message: update_compile_order -fileset sources_1 
+// TclEventType: DG_GRAPH_STALE
+// TclEventType: FILE_SET_CHANGE
+// TclEventType: DG_GRAPH_STALE
+// HMemoryUtils.trashcanNow. Engine heap size: 6,895 MB. GUI used memory: 336 MB. Current time: 3/26/24, 3:30:40 PM GMT
+// TclEventType: DG_GRAPH_STALE
+// TclEventType: FILE_SET_CHANGE
+// [Engine Memory]: 6,911 MB (+7894kb) [02:11:04]
+// TclEventType: DG_GRAPH_STALE
+// TclEventType: FILE_SET_CHANGE
+// TclEventType: DG_GRAPH_STALE
+// TclEventType: FILE_SET_CHANGE
+// HMemoryUtils.trashcanNow. Engine heap size: 6,943 MB. GUI used memory: 380 MB. Current time: 3/26/24, 3:30:55 PM GMT
+// TclEventType: DG_GRAPH_STALE
+// TclEventType: FILE_SET_CHANGE
+// TclEventType: DG_GRAPH_STALE
+// TclEventType: FILE_SET_CHANGE
+// TclEventType: DG_GRAPH_STALE
+// TclEventType: FILE_SET_CHANGE
+// TclEventType: DG_GRAPH_STALE
+// TclEventType: FILE_SET_CHANGE
+// TclEventType: DG_GRAPH_STALE
+// TclEventType: FILE_SET_CHANGE
+// Tcl Message: update_compile_order -fileset sources_1 
+// TclEventType: FILE_SET_CHANGE
+// HMemoryUtils.trashcanNow. Engine heap size: 7,023 MB. GUI used memory: 335 MB. Current time: 3/26/24, 3:31:20 PM GMT
+// TclEventType: DG_GRAPH_STALE
+// TclEventType: FILE_SET_CHANGE
+// Tcl Message: update_compile_order -fileset sources_1 
+// TclEventType: DG_GRAPH_STALE
+// TclEventType: FILE_SET_CHANGE
+// TclEventType: DG_GRAPH_STALE
+// TclEventType: FILE_SET_CHANGE
+// Tcl Message: update_compile_order -fileset sources_1 
+// TclEventType: DG_GRAPH_STALE
+// TclEventType: FILE_SET_CHANGE
+// Tcl Message: update_compile_order -fileset sources_1 
+// TclEventType: DG_GRAPH_STALE
+// TclEventType: FILE_SET_CHANGE
+// TclEventType: DG_GRAPH_STALE
+// TclEventType: FILE_SET_CHANGE
+// HMemoryUtils.trashcanNow. Engine heap size: 7,103 MB. GUI used memory: 336 MB. Current time: 3/26/24, 3:31:40 PM GMT
+// TclEventType: DG_GRAPH_STALE
+// TclEventType: FILE_SET_CHANGE
+// Tcl Message: update_compile_order -fileset sources_1 
+// TclEventType: FILE_SET_CHANGE
+// TclEventType: DG_GRAPH_STALE
+// TclEventType: FILE_SET_CHANGE
+// Tcl Message: update_compile_order -fileset sources_1 
+// TclEventType: FILE_SET_CHANGE
+// TclEventType: DG_GRAPH_STALE
+// TclEventType: FILE_SET_CHANGE
+// Tcl Message: update_compile_order -fileset sources_1 
+// TclEventType: FILE_SET_CHANGE
+// TclEventType: DG_GRAPH_STALE
+// TclEventType: FILE_SET_CHANGE
+// TclEventType: DG_GRAPH_STALE
+// TclEventType: FILE_SET_CHANGE
+// HMemoryUtils.trashcanNow. Engine heap size: 7,200 MB. GUI used memory: 336 MB. Current time: 3/26/24, 3:32:00 PM GMT
+// TclEventType: DG_GRAPH_STALE
+// TclEventType: FILE_SET_CHANGE
+// TclEventType: DG_GRAPH_STALE
+// TclEventType: FILE_SET_CHANGE
+// HMemoryUtils.trashcanNow. Engine heap size: 7,232 MB. GUI used memory: 336 MB. Current time: 3/26/24, 3:32:20 PM GMT
+// TclEventType: DG_GRAPH_STALE
+// TclEventType: FILE_SET_CHANGE
+// TclEventType: DG_GRAPH_STALE
+// TclEventType: FILE_SET_CHANGE
+// [Engine Memory]: 7,264 MB (+7400kb) [02:12:54]
+// HMemoryUtils.trashcanNow. Engine heap size: 7,264 MB. GUI used memory: 336 MB. Current time: 3/26/24, 3:32:35 PM GMT
+// Elapsed time: 160 seconds
+unMinimizeFrame(PAResourceOtoP.PAViews_SOURCES, "Sources"); // aA (aL)
+selectTree(PAResourceEtoH.FileSetPanel_FILE_SET_PANEL_TREE, "[root, Simulation Sources, sim_1, tb_scatter_threshold (scatter_tb.sv)]", 7, true, false, false, false, true, false); // B (F, cr) - Popup Trigger - Node
+selectMenu(PAResourceCommand.PACommandNames_AUTO_UPDATE_HIER, "Hierarchy Update"); // af (ao, cr)
+selectMenu(PAResourceQtoS.SrcMenu_IP_HIERARCHY, "IP Hierarchy"); // af (ao, cr)
+selectMenu(PAResourceQtoS.SrcMenu_IP_HIERARCHY, "IP Hierarchy"); // af (ao, cr)
+selectMenuItem(PAResourceQtoS.SrcMenu_REFRESH_HIERARCHY, "Refresh Hierarchy"); // ai (ao, cr)
+selectTree(PAResourceEtoH.FlowNavigatorTreePanel_FLOW_NAVIGATOR_TREE, "[, Synthesis, Open Synthesized Design, Report Clock Networks]", 20, false); // u (O, cr)
+// TclEventType: CURR_DESIGN_SET
+// Run Command: PAResourceCommand.PACommandNames_REPORT_CLOCK_NETWORKS
+// a (cr): Report Clock Networks: addNotify
+// WARNING: HEventQueue.dispatchEvent() is taking  2242 ms.
+// HMemoryUtils.trashcanNow. Engine heap size: 7,519 MB. GUI used memory: 338 MB. Current time: 3/26/24, 3:32:57 PM GMT
+// Tcl Message: current_design synth_1 
+selectButton(RDIResource.BaseDialog_OK, "OK"); // a (a)
+// 'cg' command handler elapsed time: 3 seconds
+// TclEventType: TIMING_CLOCK_NETWORKS_UPDATED
+dismissDialog("Report Clock Networks"); // a (cr)
+// Tcl Message: report_clock_networks -name {network_2} 
+// Elapsed time: 40 seconds
+selectCodeEditor("constraints.xdc", 426, 77); // ch (w, cr)
+selectButton(PAResourceQtoS.StaleMoreAction_OUT_OF_DATE_DETAILS, "details"); // h (ds, cr)
+selectButton(PAResourceQtoS.StaleMoreAction_FORCE_UP_TO_DATE, "Force up-to-date"); // h (n, ResizableWindow)
+// TclEventType: FILESET_TARGET_UCF_CHANGE
+// Tcl Message: set_property needs_refresh false [get_runs synth_1] 
+// bB (cr):  Force Current Runs Up-to-date : addNotify
+// Tcl Message: set_property needs_refresh false [get_runs impl_1] 
+// TclEventType: FILESET_TARGET_UCF_CHANGE
+dismissDialog("Force Current Runs Up-to-date"); // bB (cr)
+selectTree(PAResourceEtoH.FlowNavigatorTreePanel_FLOW_NAVIGATOR_TREE, "[, Synthesis, Open Synthesized Design, Report Clock Networks]", 20, false); // u (O, cr)
+// Run Command: PAResourceCommand.PACommandNames_REPORT_CLOCK_NETWORKS
+// a (cr): Report Clock Networks: addNotify
+selectButton(RDIResource.BaseDialog_OK, "OK"); // a (a)
+// TclEventType: TIMING_CLOCK_NETWORKS_UPDATED
+dismissDialog("Report Clock Networks"); // a (cr)
+// Tcl Message: report_clock_networks -name {network_3} 
+selectTree(PAResourceEtoH.FlowNavigatorTreePanel_FLOW_NAVIGATOR_TREE, "[, Synthesis, Open Synthesized Design, Edit Timing Constraints]", 17, false); // u (O, cr)
+// Run Command: PAResourceCommand.PACommandNames_TIMING_CONSTRAINTS_WINDOW
+selectTree(PAResourceEtoH.FlowNavigatorTreePanel_FLOW_NAVIGATOR_TREE, "[, Synthesis, Open Synthesized Design, Edit Timing Constraints]", 17, false); // u (O, cr)
+// Run Command: PAResourceCommand.PACommandNames_TIMING_CONSTRAINTS_WINDOW
+// Elapsed time: 24 seconds
+selectTreeTable(PAResourceTtoZ.XdcViewerTreeTablePanel_XDC_VIEWER_TREE_TABLE, " ; create_clock -name sys_clk -period 5.000  -waveform {0.000 2.500} [get_ports sys_clk] ; ", 1, "create_clock -name sys_clk -period 5.000  -waveform {0.000 2.500} [get_ports sys_clk]", 1, false); // A (O, cr)
+selectTreeTable(PAResourceTtoZ.XdcViewerTreeTablePanel_XDC_VIEWER_TREE_TABLE, " ; create_clock -name sys_clk -period 5.000  -waveform {0.000 2.500} [get_ports sys_clk] ; ", 1, "create_clock -name sys_clk -period 5.000  -waveform {0.000 2.500} [get_ports sys_clk]", 1, false); // A (O, cr)
+expandTreeTable(PAResourceTtoZ.XdcViewerTreeTablePanel_XDC_VIEWER_TREE_TABLE, " ; create_clock -name sys_clk -period 5.000  -waveform {0.000 2.500} [get_ports sys_clk] ; ", 1); // A (O, cr)
+selectTreeTable(PAResourceTtoZ.XdcViewerTreeTablePanel_XDC_VIEWER_TREE_TABLE, " ; create_clock -name sys_clk -period 5.000  -waveform {0.000 2.500} [get_ports sys_clk] ; ", 1, "create_clock -name sys_clk -period 5.000  -waveform {0.000 2.500} [get_ports sys_clk]", 1, false, false, false, false, false, true); // A (O, cr) - Double Click
+selectTreeTable(PAResourceTtoZ.XdcViewerTreeTablePanel_XDC_VIEWER_TREE_TABLE, " ; create_clock -name sys_clk -period 5.000  -waveform {0.000 2.500} [get_ports sys_clk] ; ", 1, "create_clock -name sys_clk -period 5.000  -waveform {0.000 2.500} [get_ports sys_clk]", 1, false, false, false, false, true, false); // A (O, cr) - Popup Trigger
+selectTreeTable(PAResourceTtoZ.XdcViewerTreeTablePanel_XDC_VIEWER_TREE_TABLE, " ; create_clock -name sys_clk -period 5.000  -waveform {0.000 2.500} [get_ports sys_clk] ; ", 1, (String) null, 0, false); // A (O, cr)
+selectTreeTable(PAResourceTtoZ.XdcViewerTreeTablePanel_XDC_VIEWER_TREE_TABLE, " ; create_clock -name sys_clk -period 5.000  -waveform {0.000 2.500} [get_ports sys_clk] ; ", 1, (String) null, 0, false, false, false, false, false, true); // A (O, cr) - Double Click
+selectTable(PAResourceEtoH.EditCreateClockTablePanel_EDIT_CREATE_CLOCK_TABLE, " ;  ;  ;  ;  ;  ;  ;  ;  ; ", 0, (String) null, 0); // f (O, cr)
+selectTable(PAResourceEtoH.EditCreateClockTablePanel_EDIT_CREATE_CLOCK_TABLE, " ;  ;  ;  ;  ;  ;  ;  ;  ; ", 0, (String) null, 0); // f (O, cr)
+selectTable(PAResourceEtoH.EditCreateClockTablePanel_EDIT_CREATE_CLOCK_TABLE, " ;  ;  ;  ;  ;  ;  ;  ;  ; ", 0, (String) null, 0, false, false, false, false, true); // f (O, cr) - Double Click
+// Run Command: PAResourceCommand.PACommandNames_XDC_CREATE_CLOCK
+// bl (cr): Create Clock: addNotify
+setText(PAResourceAtoD.ClockCreationPanel_CLOCK_NAME, "sys_clk"); // ac (n, bl)
+setSpinner(PAResourceAtoD.ClockCreationPanel_ENTER_POSITIVE_NUMBER, "9.0"); // b (E, bl)
+setSpinner(PAResourceAtoD.ClockCreationPanel_ENTER_POSITIVE_NUMBER, "8.0"); // b (E, bl)
+setSpinner(PAResourceAtoD.ClockCreationPanel_ENTER_POSITIVE_NUMBER, "7.0"); // b (E, bl)
+setSpinner(PAResourceAtoD.ClockCreationPanel_ENTER_POSITIVE_NUMBER, "6.0"); // b (E, bl)
+setSpinner(PAResourceAtoD.ClockCreationPanel_ENTER_POSITIVE_NUMBER, "5.0"); // b (E, bl)
+selectButton(PAResourceQtoS.SdcGetObjectsPanel_SPECIFY_CLOCK_SOURCE_OBJECTS, (String) null); // t (h, bl)
+// s (cr): Specify Clock Source Objects: addNotify
+selectButton(PAResourceEtoH.GetObjectsDialog_FIND, "Find"); // a (i, s)
+// bB (s):  Find Names : addNotify
+dismissDialog("Find Names"); // bB (s)
+selectButton(RDIResource.HDualList_MOVE_SELECTED_ITEMS_UP, "moveUp"); // k (e, s)
+selectComboBox(PAResourceEtoH.GetObjectsDialog_FIND, "I/O Port", 0); // e (E, s)
+selectList(RDIResource.HDualList_FIND_RESULTS, "clk", 0); // f (c, s)
+selectButton(PAResourceEtoH.GetObjectsDialog_FIND, "Find"); // a (i, s)
+// bB (s):  Find Names : addNotify
+dismissDialog("Find Names"); // bB (s)
+selectButton(PAResourceEtoH.GetObjectsDialog_SPECIFY_OF_OBJECTS_OPTION, (String) null); // t (U, s)
+// S (s): Of Objects I/O Port: addNotify
+// Elapsed time: 51 seconds
+dismissDialog("Of Objects I/O Port"); // S (s)
+dismissDialog("Specify Clock Source Objects"); // s (cr)
+// 'e' command handler elapsed time: 90 seconds
+dismissDialog("Create Clock"); // bl (cr)
+selectTree(PAResourceEtoH.FileSetPanel_FILE_SET_PANEL_TREE, "[root, Design Sources, top (scatter_wrapper.sv)]", 1, true); // B (F, cr) - Node
+selectTree(PAResourceEtoH.FileSetPanel_FILE_SET_PANEL_TREE, "[root, Design Sources, top (scatter_wrapper.sv)]", 1, true, false, false, false, false, true); // B (F, cr) - Double Click - Node
+selectCodeEditor("scatter_wrapper.sv", 141, 111); // ch (w, cr)
+selectCodeEditor("scatter_wrapper.sv", 141, 111, false, false, false, false, true); // ch (w, cr) - Double Click
+typeControlKey((HResource) null, "scatter_wrapper.sv", 'c'); // ch (w, cr)
+selectTab("PlanAheadTabBaseWorkspace_JideTabbedPane", (HResource) null, "Timing Constraints", 6); // i (h, cr)
+selectTreeTable(PAResourceTtoZ.XdcViewerTreeTablePanel_XDC_VIEWER_TREE_TABLE, " ; create_clock -name sys_clk -period 5.000  -waveform {0.000 2.500} [get_ports sys_clk] ; ", 1, "create_clock -name sys_clk -period 5.000  -waveform {0.000 2.500} [get_ports sys_clk]", 1, false); // A (O, cr)
+selectTreeTable(PAResourceTtoZ.XdcViewerTreeTablePanel_XDC_VIEWER_TREE_TABLE, " ; create_clock -name sys_clk -period 5.000  -waveform {0.000 2.500} [get_ports sys_clk] ; ", 1, "create_clock -name sys_clk -period 5.000  -waveform {0.000 2.500} [get_ports sys_clk]", 1, false, false, false, false, false, true); // A (O, cr) - Double Click
+// Elapsed time: 14 seconds
+selectTable(PAResourceEtoH.EditCreateClockTablePanel_EDIT_CREATE_CLOCK_TABLE, " ;  ;  ;  ;  ;  ;  ;  ;  ; ", 0, (String) null, 0); // f (O, cr)
+selectTable(PAResourceEtoH.EditCreateClockTablePanel_EDIT_CREATE_CLOCK_TABLE, " ;  ;  ;  ;  ;  ;  ;  ;  ; ", 0, (String) null, 0); // f (O, cr)
+selectTable(PAResourceEtoH.EditCreateClockTablePanel_EDIT_CREATE_CLOCK_TABLE, " ;  ;  ;  ;  ;  ;  ;  ;  ; ", 0, (String) null, 0, false, false, false, false, true); // f (O, cr) - Double Click
+// Run Command: PAResourceCommand.PACommandNames_XDC_CREATE_CLOCK
+// bl (cr): Create Clock: addNotify
+selectButton(PAResourceQtoS.SdcGetObjectsPanel_SPECIFY_CLOCK_SOURCE_OBJECTS, (String) null); // t (h, bl)
+// s (cr): Specify Clock Source Objects: addNotify
+// Elapsed time: 17 seconds
+selectButton(PAResourceEtoH.GetObjectsDialog_SPECIFY_OF_OBJECTS_OPTION, (String) null); // t (U, s)
+// S (s): Of Objects I/O Port: addNotify
+selectComboBox(PAResourceOtoP.OfObjectsDialog_FIND, "Nets", 0); // e (E, S)
+selectButton(RDIResource.BaseDialog_OK, "OK"); // a (S)
+dismissDialog("Of Objects I/O Port"); // S (s)
+selectButton(PAResourceEtoH.GetObjectsDialog_FIND, "Find"); // a (i, s)
+// bB (s):  Find Names : addNotify
+dismissDialog("Find Names"); // bB (s)
+setText(PAResourceEtoH.GetObjectsDialog_SPECIFY_OF_OBJECTS_OPTION, (String) null); // f (U, s)
+setText(PAResourceEtoH.GetObjectsDialog_SPECIFY_OF_OBJECTS_OPTION, (String) null); // f (U, s)
+dismissDialog("Specify Clock Source Objects"); // s (cr)
+// 'e' command handler elapsed time: 57 seconds
+// Elapsed time: 21 seconds
+dismissDialog("Create Clock"); // bl (cr)
+selectTable(PAResourceEtoH.EditCreateClockTablePanel_EDIT_CREATE_CLOCK_TABLE, " ;  ;  ;  ;  ;  ;  ;  ;  ; ", 0, (String) null, 0); // f (O, cr)
+selectTree(PAResourceTtoZ.XdcCategoryTree_XDC_CATEGORY_TREE, "[All Categories (0), Clocks (0), Create Generated Clock (0)]", 2, false); // bk (O, cr)
+selectTree(PAResourceTtoZ.XdcCategoryTree_XDC_CATEGORY_TREE, "[All Categories (0), Clocks (0), Rename Auto-Derived Clock (0)]", 3, false); // bk (O, cr)
+selectTree(PAResourceTtoZ.XdcCategoryTree_XDC_CATEGORY_TREE, "[All Categories (0), Clocks (0), Create Clock (0)]", 1, false); // bk (O, cr)
+selectTree(PAResourceEtoH.FileSetPanel_FILE_SET_PANEL_TREE, "[root, Design Sources, top (scatter_wrapper.sv), core_module : scatter_threshold (scatter_threshold.sv)]", 2, true); // B (F, cr) - Node
+selectTree(PAResourceEtoH.FileSetPanel_FILE_SET_PANEL_TREE, "[root, Design Sources, top (scatter_wrapper.sv)]", 1, true); // B (F, cr) - Node
+selectTree(PAResourceEtoH.FileSetPanel_FILE_SET_PANEL_TREE, "[root, Design Sources, top (scatter_wrapper.sv)]", 1, true, false, false, false, false, true); // B (F, cr) - Double Click - Node
+selectCodeEditor("scatter_wrapper.sv", 250, 103); // ch (w, cr)
+selectCodeEditor("scatter_wrapper.sv", 172, 112); // ch (w, cr)
+selectCodeEditor("scatter_wrapper.sv", 168, 171); // ch (w, cr)
+selectCodeEditor("scatter_wrapper.sv", 82, 112); // ch (w, cr)
+selectCodeEditor("scatter_wrapper.sv", 82, 112, false, false, false, false, true); // ch (w, cr) - Double Click
+typeControlKey(null, null, 'z');
+selectTree(PAResourceEtoH.FileSetPanel_FILE_SET_PANEL_TREE, "[root, Simulation Sources, sim_1, tb_scatter_threshold (scatter_tb.sv)]", 7, true); // B (F, cr) - Node
+selectTree(PAResourceEtoH.FileSetPanel_FILE_SET_PANEL_TREE, "[root, Simulation Sources, sim_1, tb_scatter_threshold (scatter_tb.sv)]", 7, true, false, false, false, false, true); // B (F, cr) - Double Click - Node
+selectTree(PAResourceEtoH.FileSetPanel_FILE_SET_PANEL_TREE, "[root, Simulation Sources, sim_1, tb_scatter_threshold (scatter_tb.sv), uut : scatter_threshold (scatter_threshold.sv)]", 8, true); // B (F, cr) - Node
+selectTree(PAResourceEtoH.FileSetPanel_FILE_SET_PANEL_TREE, "[root, Simulation Sources, sim_1, tb_scatter_threshold (scatter_tb.sv), uut : scatter_threshold (scatter_threshold.sv)]", 8, true, false, false, false, false, true); // B (F, cr) - Double Click - Node
+selectCodeEditor("scatter_threshold.sv", 88, 161); // ch (w, cr)
+selectCodeEditor("scatter_threshold.sv", 88, 161, false, false, false, false, true); // ch (w, cr) - Double Click
+selectTree(PAResourceEtoH.FileSetPanel_FILE_SET_PANEL_TREE, "[root, Simulation Sources, sim_1, tb_scatter_threshold (scatter_tb.sv)]", 7, true); // B (F, cr) - Node
+selectTree(PAResourceEtoH.FileSetPanel_FILE_SET_PANEL_TREE, "[root, Design Sources, top (scatter_wrapper.sv)]", 1, true); // B (F, cr) - Node
+expandTree(PAResourceEtoH.FileSetPanel_FILE_SET_PANEL_TREE, "[root, Design Sources, top (scatter_wrapper.sv)]", 1); // B (F, cr)
+selectTree(PAResourceEtoH.FileSetPanel_FILE_SET_PANEL_TREE, "[root, Design Sources, top (scatter_wrapper.sv), core_module : scatter_threshold (scatter_threshold.sv)]", 2, true, false, false, false, true, false); // B (F, cr) - Popup Trigger - Node
+selectMenu(PAResourceCommand.PACommandNames_AUTO_UPDATE_HIER, "Hierarchy Update"); // af (ao, cr)
+selectMenu(PAResourceQtoS.SrcMenu_IP_HIERARCHY, "IP Hierarchy"); // af (ao, cr)
+selectMenuItem(PAResourceCommand.PACommandNames_SET_AS_TOP, "Set as Top"); // ai (ao, cr)
+// Run Command: PAResourceCommand.PACommandNames_SET_AS_TOP
+// TclEventType: FILE_SET_CHANGE
+// TclEventType: FILE_SET_OPTIONS_CHANGE
+// TclEventType: DG_GRAPH_STALE
+// Tcl Message: set_property top scatter_threshold [current_fileset] 
+// TclEventType: DG_GRAPH_STALE
+// TclEventType: FILE_SET_CHANGE
+// Tcl Message: update_compile_order -fileset sources_1 
+expandTree(PAResourceEtoH.FileSetPanel_FILE_SET_PANEL_TREE, "[root, Design Sources, top (scatter_wrapper.sv), core_module : scatter_threshold (scatter_threshold.sv)]", 2); // B (F, cr)
+selectTree(PAResourceEtoH.FileSetPanel_FILE_SET_PANEL_TREE, "[root, Design Sources, top (scatter_wrapper.sv)]", 1, true); // B (F, cr) - Node
+selectTree(PAResourceEtoH.FileSetPanel_FILE_SET_PANEL_TREE, "[root, Design Sources, top (scatter_wrapper.sv)]", 1, true, false, false, false, true, false); // B (F, cr) - Popup Trigger - Node
+selectMenu(PAResourceCommand.PACommandNames_AUTO_UPDATE_HIER, "Hierarchy Update"); // af (ao, cr)
+selectMenu(PAResourceQtoS.SrcMenu_IP_HIERARCHY, "IP Hierarchy"); // af (ao, cr)
+selectMenuItem(PAResourceCommand.PACommandNames_SET_AS_TOP, "Set as Top"); // ai (ao, cr)
+// Run Command: PAResourceCommand.PACommandNames_SET_AS_TOP
+// TclEventType: FILE_SET_CHANGE
+// TclEventType: FILE_SET_OPTIONS_CHANGE
+// TclEventType: DG_GRAPH_STALE
+// Tcl Message: set_property top top [current_fileset] 
+// TclEventType: DG_GRAPH_STALE
+// TclEventType: FILE_SET_CHANGE
+// Tcl Message: update_compile_order -fileset sources_1 
+// Elapsed time: 38 seconds
+selectTab(PAResourceEtoH.FileSetView_TABBED_PANE, (HResource) null, "Compile Order", 2); // i (N, cr)
+selectTree(PAResourceEtoH.FileSetPanel_FILE_SET_PANEL_TREE, "[root, Design Sources]", 0, true); // B (F, cr) - Node
+expandTree(PAResourceEtoH.FileSetPanel_FILE_SET_PANEL_TREE, "[root, Design Sources]", 0); // B (F, cr)
+selectTree(PAResourceEtoH.FileSetPanel_FILE_SET_PANEL_TREE, "[root, Design Sources, scatter_wrapper.sv]", 4, false); // B (F, cr)
+selectTree(PAResourceEtoH.FileSetPanel_FILE_SET_PANEL_TREE, "[root, Design Sources, scatter_wrapper.sv]", 4, false); // B (F, cr)
+selectButton("OptionPane.button", "Yes"); // JButton (A, G)
+// TclEventType: SRC_MGMT_MODE_CHANGE
+// Tcl Message: set_property source_mgmt_mode DisplayOnly [current_project] 
+// TclEventType: FILE_SET_CHANGE
+// Tcl Message: reorder_files -before /home/aw1223/new/mase/machop/mase_components/scatter/rtl/array_zero_mask.sv /home/aw1223/new/mase/machop/mase_components/scatter/rtl/scatter_wrapper.sv 
+// Elapsed time: 29 seconds
+selectTree(PAResourceEtoH.FileSetPanel_FILE_SET_PANEL_TREE, "[root, Design Sources, scatter_wrapper.sv]", 1, false); // B (F, cr)
+selectCodeEditor("scatter_threshold.sv", 271, 80); // ch (w, cr)
+selectTree(PAResourceEtoH.FlowNavigatorTreePanel_FLOW_NAVIGATOR_TREE, "[, Synthesis, Open Synthesized Design, Edit Timing Constraints]", 17, false); // u (O, cr)
+// Run Command: PAResourceCommand.PACommandNames_TIMING_CONSTRAINTS_WINDOW
+selectTreeTable(PAResourceTtoZ.XdcViewerTreeTablePanel_XDC_VIEWER_TREE_TABLE, "/home/aw1223/new/mase/machop/mase_components/scatter/scatter_vivado/constraints.xdc ;  ; ", 0, "/home/aw1223/new/mase/machop/mase_components/scatter/scatter_vivado/constraints.xdc", 0, true); // A (O, cr) - Node
+collapseTreeTable(PAResourceTtoZ.XdcViewerTreeTablePanel_XDC_VIEWER_TREE_TABLE, "/home/aw1223/new/mase/machop/mase_components/scatter/scatter_vivado/constraints.xdc ;  ; ", 0); // A (O, cr)
+selectTreeTable(PAResourceTtoZ.XdcViewerTreeTablePanel_XDC_VIEWER_TREE_TABLE, "/home/aw1223/new/mase/machop/mase_components/scatter/scatter_vivado/constraints.xdc ;  ; ", 0, "/home/aw1223/new/mase/machop/mase_components/scatter/scatter_vivado/constraints.xdc", 0, true, false, false, false, false, true); // A (O, cr) - Double Click - Node
+selectTreeTable(PAResourceTtoZ.XdcViewerTreeTablePanel_XDC_VIEWER_TREE_TABLE, "/home/aw1223/new/mase/machop/mase_components/scatter/scatter_vivado/constraints.xdc ;  ; ", 0, "/home/aw1223/new/mase/machop/mase_components/scatter/scatter_vivado/constraints.xdc", 0, true); // A (O, cr) - Node
+expandTreeTable(PAResourceTtoZ.XdcViewerTreeTablePanel_XDC_VIEWER_TREE_TABLE, "/home/aw1223/new/mase/machop/mase_components/scatter/scatter_vivado/constraints.xdc ;  ; ", 0); // A (O, cr)
+selectTreeTable(PAResourceTtoZ.XdcViewerTreeTablePanel_XDC_VIEWER_TREE_TABLE, " ; create_clock -name sys_clk -period 5.000  -waveform {0.000 2.500} [get_ports sys_clk] ; ", 1, (String) null, 0, false); // A (O, cr)
+selectTreeTable(PAResourceTtoZ.XdcViewerTreeTablePanel_XDC_VIEWER_TREE_TABLE, " ; create_clock -name sys_clk -period 5.000  -waveform {0.000 2.500} [get_ports sys_clk] ; ", 1, (String) null, 0, false, false, false, false, false, true); // A (O, cr) - Double Click
+selectTreeTable(PAResourceTtoZ.XdcViewerTreeTablePanel_XDC_VIEWER_TREE_TABLE, " ; create_clock -name sys_clk -period 5.000  -waveform {0.000 2.500} [get_ports sys_clk] ; ", 1, "create_clock -name sys_clk -period 5.000  -waveform {0.000 2.500} [get_ports sys_clk]", 1, false); // A (O, cr)
+selectTreeTable(PAResourceTtoZ.XdcViewerTreeTablePanel_XDC_VIEWER_TREE_TABLE, " ; create_clock -name sys_clk -period 5.000  -waveform {0.000 2.500} [get_ports sys_clk] ; ", 1, "create_clock -name sys_clk -period 5.000  -waveform {0.000 2.500} [get_ports sys_clk]", 1, false, false, false, false, false, true); // A (O, cr) - Double Click
+selectTreeTable(PAResourceTtoZ.XdcViewerTreeTablePanel_XDC_VIEWER_TREE_TABLE, " ; create_clock -name sys_clk -period 5.000  -waveform {0.000 2.500} [get_ports sys_clk] ; ", 1, "create_clock -name sys_clk -period 5.000  -waveform {0.000 2.500} [get_ports sys_clk]", 1, false); // A (O, cr)
+selectTab("PlanAheadTabBaseWorkspace_JideTabbedPane", (HResource) null, "scatter_wrapper.sv", 4); // i (h, cr)
+selectCodeEditor("scatter_wrapper.sv", 88, 116); // ch (w, cr)
+selectCodeEditor("scatter_wrapper.sv", 88, 117, false, false, false, false, true); // ch (w, cr) - Double Click
+selectButton(PAResourceQtoS.StaleMoreAction_OUT_OF_DATE_DETAILS, "details"); // h (ds, cr)
+selectButton(PAResourceQtoS.StaleMoreAction_FORCE_UP_TO_DATE, "Force up-to-date"); // h (n, ResizableWindow)
+// TclEventType: FILESET_TARGET_UCF_CHANGE
+// Tcl Message: set_property needs_refresh false [get_runs synth_1] 
+// Tcl Message: set_property needs_refresh false [get_runs impl_1] 
+// bB (cr):  Force Current Runs Up-to-date : addNotify
+// TclEventType: FILESET_TARGET_UCF_CHANGE
+dismissDialog("Force Current Runs Up-to-date"); // bB (cr)
+selectTab("PlanAheadTabBaseWorkspace_JideTabbedPane", (HResource) null, "constraints.xdc", 5); // i (h, cr)
+selectCodeEditor("constraints.xdc", 552, 8); // ch (w, cr)
+selectCodeEditor("constraints.xdc", 552, 8, false, false, false, false, true); // ch (w, cr) - Double Click
+typeControlKey((HResource) null, "constraints.xdc", 'c'); // ch (w, cr)
+selectTab("PlanAheadTabBaseWorkspace_JideTabbedPane", (HResource) null, "scatter_wrapper.sv", 4); // i (h, cr)
+selectTab((HResource) null, "PlanAheadTabBaseWorkspace_JideTabbedPane", (HResource) null, "scatter_wrapper.sv", 4, false, true); // i (h, cr) - Double Click
+maximizeView(PAResourceOtoP.PAViews_BASE_WORKSPACE, "BaseWorkspace"); // H (aI, cr)
+selectCodeEditor("scatter_wrapper.sv", 104, 119); // ch (w, cr)
+selectCodeEditor("scatter_wrapper.sv", 104, 119, false, false, false, false, true); // ch (w, cr) - Double Click
+typeControlKey((HResource) null, "scatter_wrapper.sv", 'v'); // ch (w, cr)
+selectCodeEditor("scatter_wrapper.sv", 247, 112); // ch (w, cr)
+// TclEventType: DG_GRAPH_STALE
+// TclEventType: FILE_SET_CHANGE
+selectTree(PAResourceEtoH.FlowNavigatorTreePanel_FLOW_NAVIGATOR_TREE, "[, Synthesis, Open Synthesized Design, Constraints Wizard]", 16, false); // u (O, cr)
+// Run Command: PAResourceCommand.PACommandNames_TIMING_CONSTRAINTS_WIZARD
+// Tcl Command: 'create_clock -help'
+// Tcl Command: 'create_clock -help'
+// Tcl Command: 'create_clock -help'
+// Tcl Command: 'create_clock -help'
+// Tcl Command: 'create_clock -help'
+// Tcl Command: 'create_clock -help'
+// Tcl Command: 'create_clock -help'
+// Tcl Command: 'create_clock -help'
+// Tcl Command: 'create_clock -help'
+// Tcl Command: 'create_clock -help'
+// Tcl Command: 'create_clock -help'
+// cC (cr): Timing Constraints Wizard: addNotify
+dismissDialog("Timing Constraints Wizard"); // cC (cr)
+selectTree(PAResourceEtoH.FlowNavigatorTreePanel_FLOW_NAVIGATOR_TREE, "[, Synthesis, Open Synthesized Design, Edit Timing Constraints]", 17, false); // u (O, cr)
+selectTree(PAResourceEtoH.FlowNavigatorTreePanel_FLOW_NAVIGATOR_TREE, "[, Synthesis, Open Synthesized Design, Edit Timing Constraints]", 17, false); // u (O, cr)
+// Run Command: PAResourceCommand.PACommandNames_TIMING_CONSTRAINTS_WINDOW
+// Run Command: PAResourceCommand.PACommandNames_TIMING_CONSTRAINTS_WINDOW
+selectTree(PAResourceEtoH.FlowNavigatorTreePanel_FLOW_NAVIGATOR_TREE, "[, Synthesis, Open Synthesized Design, Edit Timing Constraints]", 17, false, false, false, false, false, true); // u (O, cr) - Double Click
+selectTreeTable(PAResourceTtoZ.XdcViewerTreeTablePanel_XDC_VIEWER_TREE_TABLE, " ; create_clock -name sys_clk -period 5.000  -waveform {0.000 2.500} [get_ports sys_clk] ; ", 1, "create_clock -name sys_clk -period 5.000  -waveform {0.000 2.500} [get_ports sys_clk]", 1, false); // A (O, cr)
+expandTreeTable(PAResourceTtoZ.XdcViewerTreeTablePanel_XDC_VIEWER_TREE_TABLE, " ; create_clock -name sys_clk -period 5.000  -waveform {0.000 2.500} [get_ports sys_clk] ; ", 1); // A (O, cr)
+selectTreeTable(PAResourceTtoZ.XdcViewerTreeTablePanel_XDC_VIEWER_TREE_TABLE, " ; create_clock -name sys_clk -period 5.000  -waveform {0.000 2.500} [get_ports sys_clk] ; ", 1, "create_clock -name sys_clk -period 5.000  -waveform {0.000 2.500} [get_ports sys_clk]", 1, false, false, false, false, false, true); // A (O, cr) - Double Click
+selectTreeTable(PAResourceTtoZ.XdcViewerTreeTablePanel_XDC_VIEWER_TREE_TABLE, " ; create_clock -name sys_clk -period 5.000  -waveform {0.000 2.500} [get_ports sys_clk] ; ", 1, "create_clock -name sys_clk -period 5.000  -waveform {0.000 2.500} [get_ports sys_clk]", 1, false); // A (O, cr)
+selectTreeTable(PAResourceTtoZ.XdcViewerTreeTablePanel_XDC_VIEWER_TREE_TABLE, " ; create_clock -name sys_clk -period 5.000  -waveform {0.000 2.500} [get_ports sys_clk] ; ", 1, "create_clock -name sys_clk -period 5.000  -waveform {0.000 2.500} [get_ports sys_clk]", 1, false, false, false, false, false, true); // A (O, cr) - Double Click
+selectTreeTable(PAResourceTtoZ.XdcViewerTreeTablePanel_XDC_VIEWER_TREE_TABLE, " ; create_clock -name sys_clk -period 5.000  -waveform {0.000 2.500} [get_ports sys_clk] ; ", 1, "create_clock -name sys_clk -period 5.000  -waveform {0.000 2.500} [get_ports sys_clk]", 1, false, false, false, false, true, false); // A (O, cr) - Popup Trigger
+selectTreeTable(PAResourceTtoZ.XdcViewerTreeTablePanel_XDC_VIEWER_TREE_TABLE, " ; create_clock -name sys_clk -period 5.000  -waveform {0.000 2.500} [get_ports sys_clk] ; ", 1, "create_clock -name sys_clk -period 5.000  -waveform {0.000 2.500} [get_ports sys_clk]", 1, false, false, false, false, true, false); // A (O, cr) - Popup Trigger
+selectMenuItem(PAResourceCommand.PACommandNames_GOTO_XDC_SOURCE, "Go to Source"); // ai (ao, cr)
+// Run Command: PAResourceCommand.PACommandNames_GOTO_XDC_SOURCE
+selectCodeEditor("constraints.xdc", 337, 21); // ch (w, cr)
+selectCodeEditor("constraints.xdc", 183, 10); // ch (w, cr)
+selectCodeEditor("constraints.xdc", 313, 74); // ch (w, cr)
+// Elapsed time: 18 seconds
+selectTab("PlanAheadTabBaseWorkspace_JideTabbedPane", (HResource) null, "scatter_wrapper.sv", 4); // i (h, cr)
+selectTab("PlanAheadTabBaseWorkspace_JideTabbedPane", (HResource) null, "constraints.xdc", 5); // i (h, cr)
+selectCodeEditor("constraints.xdc", 459, 44); // ch (w, cr)
+// HOptionPane Error: 'The paste failed. The clipboard content is not text. (Paste Error)'
+typeControlKey((HResource) null, "constraints.xdc", 'v'); // ch (w, cr)
+selectButton("OptionPane.button", "OK"); // JButton (A, G)
+// Elapsed time: 11 seconds
+selectCodeEditor("constraints.xdc", 187, 15); // ch (w, cr)
+selectCodeEditor("constraints.xdc", 190, 10); // ch (w, cr)
+selectCodeEditor("constraints.xdc", 137, 22); // ch (w, cr)
+selectCodeEditor("constraints.xdc", 136, 22, false, false, false, true, false); // ch (w, cr) - Popup Trigger
+selectMenuItem(RDIResourceCommand.RDICommands_PASTE, "Paste"); // ai (ao, cr)
+// HOptionPane Error: 'The paste failed. The clipboard content is not text. (Paste Error)'
+selectButton("OptionPane.button", "OK"); // JButton (A, G)
+selectCodeEditor("constraints.xdc", 55, 38); // ch (w, cr)
+// Elapsed time: 35 seconds
+selectCodeEditor("constraints.xdc", 356, 26); // ch (w, cr)
+selectCodeEditor("constraints.xdc", 390, 27); // ch (w, cr)
+// Elapsed time: 13 seconds
+selectCodeEditor("constraints.xdc", 218, 88); // ch (w, cr)
+// TclEventType: DESIGN_STALE
+// TclEventType: FILE_SET_CHANGE
+selectButton(PAResourceOtoP.ProjectTab_RELOAD, "Reload"); // h (ds, cr)
+// bB (cr):  Reloading : addNotify
+// TclEventType: DESIGN_REFRESH
+// HMemoryUtils.trashcanNow. Engine heap size: 7,593 MB. GUI used memory: 337 MB. Current time: 3/26/24, 3:41:53 PM GMT
+// Engine heap size: 7,593 MB. GUI used memory: 339 MB. Current time: 3/26/24, 3:41:53 PM GMT
+// WARNING: HEventQueue.dispatchEvent() is taking  3641 ms.
+// TclEventType: TIMING_CLOCK_NETWORKS_UNLOAD
+// Tcl Message: refresh_design 
+// TclEventType: TIMING_CLOCK_NETWORKS_UNLOAD
+selectButton(RDIResource.ProgressDialog_BACKGROUND, "Background"); // a (bB)
+// TclEventType: DEBUG_GRAPH_STALE
+// TclEventType: READ_XDC_FILE_START
+// TclEventType: READ_XDC_FILE_END
+// TclEventType: FLOORPLAN_MODIFY
+// TclEventType: DESIGN_REFRESH
+// HMemoryUtils.trashcanNow. Engine heap size: 7,520 MB. GUI used memory: 334 MB. Current time: 3/26/24, 3:41:58 PM GMT
+// TclEventType: HFED_INIT_ROUTE_STORAGE_COMPLETED
+// RouteApi::loadEngineXgd elapsed time: 3.8s
+// Device: addNotify
+// DeviceView Instantiated
+// WARNING: HEventQueue.dispatchEvent() is taking  7129 ms.
+selectTab("PlanAheadTabBaseWorkspace_JideTabbedPane", (HResource) null, "scatter_threshold.sv", 2); // i (h, cr)
+// Tcl Message: INFO: [Project 1-570] Preparing netlist for logic optimization 
+// Tcl Message: Parsing XDC File [/home/aw1223/new/mase/machop/mase_components/scatter/scatter_vivado/constraints.xdc] 
+// Tcl Message: Finished Parsing XDC File [/home/aw1223/new/mase/machop/mase_components/scatter/scatter_vivado/constraints.xdc] 
+// Tcl Message: INFO: [Opt 31-138] Pushed 0 inverter(s) to 0 load pin(s). 
+selectButton(PAResourceQtoS.StaleMoreAction_OUT_OF_DATE_DETAILS, "details"); // h (ds, cr)
+// HOptionPane Warning: 'A background task is running. Please wait until it completes and try again. (Background Task)'
+// Tcl Message: refresh_design: Time (s): cpu = 00:00:24 ; elapsed = 00:00:15 . Memory (MB): peak = 12336.477 ; gain = 0.000 ; free physical = 179488 ; free virtual = 202637 
+// S (cr): Critical Messages: addNotify
+dismissDialog("Reloading"); // bB (cr)
+selectButton("OptionPane.button", "OK"); // JButton (A, G)
+// RouteApi::initDelayMediator elapsed time: 4.8s
+// RouteApi: Init Delay Mediator Swing Worker Finished
+selectButton(PAResourceAtoD.CmdMsgDialog_OK, "OK"); // f (S)
+dismissDialog("Critical Messages"); // S (cr)
+selectTab("PlanAheadTabBaseWorkspace_JideTabbedPane", (HResource) null, "Device", 1); // i (h, cr)
+// Device view-level: 0.0
+selectTab("PlanAheadTabBaseWorkspace_JideTabbedPane", (HResource) null, "scatter_wrapper.sv", 4); // i (h, cr)
+selectCodeEditor("scatter_wrapper.sv", 99, 114); // ch (w, cr)
+selectCodeEditor("scatter_wrapper.sv", 172, 98); // ch (w, cr)
+selectButton(PAResourceQtoS.StaleMoreAction_OUT_OF_DATE_DETAILS, "details"); // h (ds, cr)
+selectButton(PAResourceQtoS.StaleMoreAction_FORCE_UP_TO_DATE, "Force up-to-date"); // h (n, ResizableWindow)
+// TclEventType: FILESET_TARGET_UCF_CHANGE
+// Tcl Message: set_property needs_refresh false [get_runs synth_1] 
+// bB (cr):  Force Current Runs Up-to-date : addNotify
+// TclEventType: FILESET_TARGET_UCF_CHANGE
+// Tcl Message: set_property needs_refresh false [get_runs impl_1] 
+dismissDialog("Force Current Runs Up-to-date"); // bB (cr)
+selectTree(PAResourceEtoH.FlowNavigatorTreePanel_FLOW_NAVIGATOR_TREE, "[, Synthesis, Open Synthesized Design, Edit Timing Constraints]", 17, false); // u (O, cr)
+// Run Command: PAResourceCommand.PACommandNames_TIMING_CONSTRAINTS_WINDOW
+selectTree(PAResourceEtoH.FlowNavigatorTreePanel_FLOW_NAVIGATOR_TREE, "[, Synthesis, Open Synthesized Design, Edit Timing Constraints]", 17, false); // u (O, cr)
+// Run Command: PAResourceCommand.PACommandNames_TIMING_CONSTRAINTS_WINDOW
+selectTreeTable(PAResourceTtoZ.XdcViewerTreeTablePanel_XDC_VIEWER_TREE_TABLE, " ; create_clock -name SysClk -period 10  -waveform {0 5} [get_ports sysclk] ; ", 1, "create_clock -name SysClk -period 10  -waveform {0 5} [get_ports sysclk]", 1, false); // A (O, cr)
+selectTable(PAResourceEtoH.EditCreateClockTablePanel_EDIT_CREATE_CLOCK_TABLE, " ;  ;  ;  ;  ;  ;  ;  ;  ; ", 0, (String) null, 0); // f (O, cr)
+selectTable(PAResourceEtoH.EditCreateClockTablePanel_EDIT_CREATE_CLOCK_TABLE, " ;  ;  ;  ;  ;  ;  ;  ;  ; ", 0, (String) null, 0, false, false, false, false, true); // f (O, cr) - Double Click
+// Run Command: PAResourceCommand.PACommandNames_XDC_CREATE_CLOCK
+// bl (cr): Create Clock: addNotify
+selectButton(PAResourceQtoS.SdcGetObjectsPanel_SPECIFY_CLOCK_SOURCE_OBJECTS, (String) null); // t (h, bl)
+// s (cr): Specify Clock Source Objects: addNotify
+// Elapsed time: 14 seconds
+dismissDialog("Specify Clock Source Objects"); // s (cr)
+// 'e' command handler elapsed time: 21 seconds
+dismissDialog("Create Clock"); // bl (cr)
+selectTree(PAResourceEtoH.FileSetPanel_FILE_SET_PANEL_TREE, "[root, Design Sources, scatter_wrapper.sv]", 1, false); // B (F, cr)
+selectTree(PAResourceEtoH.FileSetPanel_FILE_SET_PANEL_TREE, "[root, Design Sources, scatter_wrapper.sv]", 1, false, false, false, false, true, false); // B (F, cr) - Popup Trigger
+selectMenuItem(PAResourceCommand.PACommandNames_EDIT_CONSTRAINT_SETS, "Edit Constraints Sets..."); // ai (ao, cr)
+// Run Command: PAResourceCommand.PACommandNames_EDIT_CONSTRAINT_SETS
+// at (cr): Edit Constraints Sets: addNotify
+selectTableHeader(PAResourceAtoD.ConstraintsChooserPanel_FILE_TABLE, "Location", 1); // t (O, at)
+selectTable(PAResourceAtoD.ConstraintsChooserPanel_FILE_TABLE, "constraints.xdc ; /home/aw1223/new/mase/machop/mase_components/scatter/scatter_vivado", 0, "/home/aw1223/new/mase/machop/mase_components/scatter/scatter_vivado", 1); // t (O, at)
+selectButton(PAResourceAtoD.ConstraintsChooserPanel_ADD_FILES, "Add Files"); // a (E, at)
+dismissFileChooser();
+selectButton(PAResourceAtoD.ConstraintsChooserPanel_ADD_FILES, "Add Files"); // a (E, at)
+setFileChooser("/home/aw1223/new/mase/machop/mase_components/scatter/scatter_vivado/constraints.xdc");
+selectButton(RDIResource.BaseDialog_OK, "OK"); // a (at)
+// 'as' command handler elapsed time: 18 seconds
+// [GUI Memory]: 431 MB (+21265kb) [02:23:38]
+dismissDialog("Edit Constraints Sets"); // at (cr)
+selectTree(PAResourceEtoH.FileSetPanel_FILE_SET_PANEL_TREE, "[root, Design Sources, scatter_wrapper.sv]", 1, false); // B (F, cr)
+selectTree(PAResourceEtoH.FileSetPanel_FILE_SET_PANEL_TREE, "[root, Design Sources, scatter_wrapper.sv]", 1, false, false, false, false, false, true); // B (F, cr) - Double Click
+selectTree(PAResourceEtoH.FlowNavigatorTreePanel_FLOW_NAVIGATOR_TREE, "[, Synthesis, Open Synthesized Design, Edit Timing Constraints]", 17, false); // u (O, cr)
+// Run Command: PAResourceCommand.PACommandNames_TIMING_CONSTRAINTS_WINDOW
+selectTree(PAResourceTtoZ.XdcCategoryTree_XDC_CATEGORY_TREE, "[All Categories (0), Clocks (0), Create Clock (0)]", 1, false); // bk (O, cr)
+selectTree(PAResourceTtoZ.XdcCategoryTree_XDC_CATEGORY_TREE, "[All Categories (0), Clocks (0), Create Clock (0)]", 1, false, false, false, false, false, true); // bk (O, cr) - Double Click
+// Run Command: PAResourceCommand.PACommandNames_XDC_CREATE_CLOCK
+// bl (cr): Create Clock: addNotify
+selectButton(PAResourceQtoS.SdcGetObjectsPanel_SPECIFY_CLOCK_SOURCE_OBJECTS, (String) null); // t (h, bl)
+// s (cr): Specify Clock Source Objects: addNotify
+selectButton(PAResourceEtoH.GetObjectsDialog_FIND, "Find"); // a (i, s)
+// bB (s):  Find Names : addNotify
+dismissDialog("Find Names"); // bB (s)
+selectButton(RDIResource.BaseDialog_CANCEL, "Cancel"); // a (s)
+dismissDialog("Specify Clock Source Objects"); // s (cr)
+// 'e' command handler elapsed time: 48 seconds
+// Elapsed time: 39 seconds
+dismissDialog("Create Clock"); // bl (cr)
+selectTree(PAResourceEtoH.FlowNavigatorTreePanel_FLOW_NAVIGATOR_TREE, "[, Synthesis, Run Synthesis]", 14, false); // u (O, cr)
+// Run Command: PAResourceCommand.PACommandNames_RUN_SYNTHESIS
+// A (cr): Run Synthesis: addNotify
+selectButton(RDIResource.BaseDialog_OK, "OK"); // a (A)
+// al (cr): Save Project: addNotify
+dismissDialog("Run Synthesis"); // A (cr)
+selectButton(PAResourceQtoS.SaveProjectUtils_DONT_SAVE, "Don't Save"); // a (al)
+dismissDialog("Save Project"); // al (cr)
+// bB (cr):  Resetting Runs : addNotify
+selectButton("OptionPane.button", "OK"); // JButton (A, G)
+// TclEventType: RUN_MODIFY
+// TclEventType: DESIGN_STALE
+// TclEventType: RUN_RESET
+// TclEventType: RUN_STATUS_CHANGE
+closeView(PAResourceOtoP.PAViews_PAR_REPORT, "PAR Report"); // c
+// Tcl Message: reset_run synth_1 
+// TclEventType: RUN_RESET
+// TclEventType: DESIGN_STALE
+// TclEventType: RUN_RESET
+// TclEventType: RUN_STATUS_CHANGE
+// TclEventType: RUN_RESET
+// TclEventType: RUN_MODIFY
+// k (cr): Text Changed: addNotify
+selectButton(RDIResource.ConfirmSaveTextEditsDialog_NO, "No"); // a (k)
+// bB (cr):  Starting Design Runs : addNotify
+dismissDialog("Text Changed"); // k (cr)
+// TclEventType: FILESET_TARGET_UCF_CHANGE
+// TclEventType: DESIGN_STALE
+// TclEventType: RUN_LAUNCH
+// Tcl Message: launch_runs synth_1 -jobs 20 
+// TclEventType: RUN_MODIFY
+// TclEventType: RUN_STATUS_CHANGE
+// Tcl Message: [Tue Mar 26 15:44:24 2024] Launched synth_1... Run output will be captured here: /home/aw1223/new/mase/machop/mase_components/scatter/scatter_vivado/scatter_vivado.runs/synth_1/runme.log 
+// 'k' command handler elapsed time: 10 seconds
+dismissDialog("Starting Design Runs"); // bB (cr)
+selectTab("PlanAheadTabBaseWorkspace_JideTabbedPane", (HResource) null, "constraints.xdc", 5); // i (h, cr)
+// TclEventType: RUN_STATUS_CHANGE
+selectTree(PAResourceEtoH.FlowNavigatorTreePanel_FLOW_NAVIGATOR_TREE, "[, Synthesis, Run Synthesis]", 14, false); // u (O, cr)
+// Run Command: PAResourceCommand.PACommandNames_RUN_SYNTHESIS
+selectButton("OptionPane.button", "Cancel"); // JButton (A, G)
+selectCodeEditor("constraints.xdc", 403, 20); // ch (w, cr)
+selectCodeEditor("constraints.xdc", 403, 20, false, false, false, false, true); // ch (w, cr) - Double Click
+selectCodeEditor("constraints.xdc", 529, 25); // ch (w, cr)
+// Elapsed time: 76 seconds
+selectCodeEditor("constraints.xdc", 222, 164); // ch (w, cr)
+// Elapsed time: 35 seconds
+selectCodeEditor("constraints.xdc", 98, 149); // ch (w, cr)
+// TclEventType: DESIGN_STALE
+// TclEventType: RUN_COMPLETED
+// TclEventType: RUN_STATUS_CHANGE
+// TclEventType: RUN_STEP_COMPLETED
+// aj (cr): Synthesis Completed: addNotify
+// Elapsed time: 170 seconds
+selectButton(RDIResource.BaseDialog_OK, "OK"); // a (aj)
+// Run Command: PAResourceCommand.PACommandNames_REPORTS_WINDOW
+dismissDialog("Synthesis Completed"); // aj (cr)
+selectTreeTable(PAResourceEtoH.ExpReportTreePanel_EXP_REPORT_TREE_TABLE, "synth_1_synth_report_utilization_0 ; report_utilization ;  ; Tue Mar 26 15:47:33 GMT 2024 ; 12460", 2, "synth_1_synth_report_utilization_0", 0, false); // O (O, cr)
+selectTree(PAResourceEtoH.FlowNavigatorTreePanel_FLOW_NAVIGATOR_TREE, "[, Synthesis, Open Synthesized Design, Edit Timing Constraints]", 17, false); // u (O, cr)
+// Run Command: PAResourceCommand.PACommandNames_TIMING_CONSTRAINTS_WINDOW
+selectTreeTable(PAResourceTtoZ.XdcViewerTreeTablePanel_XDC_VIEWER_TREE_TABLE, "/home/aw1223/new/mase/machop/mase_components/scatter/scatter_vivado/constraints.xdc ;  ; ", 0, "/home/aw1223/new/mase/machop/mase_components/scatter/scatter_vivado/constraints.xdc", 0, true); // A (O, cr) - Node
+selectTreeTable(PAResourceTtoZ.XdcViewerTreeTablePanel_XDC_VIEWER_TREE_TABLE, " ; create_clock -name SysClk -period 10  -waveform {0 5} [get_ports sysclk] ; ", 1, "create_clock -name SysClk -period 10  -waveform {0 5} [get_ports sysclk]", 1, false); // A (O, cr)
+// Elapsed time: 28 seconds
+selectTable(PAResourceEtoH.EditCreateClockTablePanel_EDIT_CREATE_CLOCK_TABLE, " ;  ;  ;  ;  ;  ;  ;  ;  ; ", 0, (String) null, 0); // f (O, cr)
+selectTable(PAResourceEtoH.EditCreateClockTablePanel_EDIT_CREATE_CLOCK_TABLE, " ;  ;  ;  ;  ;  ;  ;  ;  ; ", 0, (String) null, 0, false, false, false, false, true); // f (O, cr) - Double Click
+// Run Command: PAResourceCommand.PACommandNames_XDC_CREATE_CLOCK
+// cY (cr): Design Modified on Disk: addNotify
+selectButton(PAResourceOtoP.ProjectTab_RELOAD, "Reload"); // a (cY)
+// bB (cr):  Reloading : addNotify
+dismissDialog("Design Modified on Disk"); // cY (cr)
+// TclEventType: DESIGN_REFRESH
+// HMemoryUtils.trashcanNow. Engine heap size: 7,505 MB. GUI used memory: 346 MB. Current time: 3/26/24, 3:50:07 PM GMT
+// Engine heap size: 7,505 MB. GUI used memory: 348 MB. Current time: 3/26/24, 3:50:08 PM GMT
+// WARNING: HEventQueue.dispatchEvent() is taking  2897 ms.
+// Tcl Message: refresh_design 
+// TclEventType: READ_XDC_FILE_START
+// TclEventType: POWER_CNS_STALE
+// TclEventType: POWER_REPORT_STALE
+// TclEventType: SDC_CONSTRAINT_ADD
+// TclEventType: READ_XDC_FILE_END
+// TclEventType: FLOORPLAN_MODIFY
+// TclEventType: DESIGN_REFRESH
+// HMemoryUtils.trashcanNow. Engine heap size: 7,505 MB. GUI used memory: 343 MB. Current time: 3/26/24, 3:50:17 PM GMT
+// TclEventType: HFED_INIT_ROUTE_STORAGE_COMPLETED
+// RouteApi::loadEngineXgd elapsed time: 3.7s
+// Device: addNotify
+// DeviceView Instantiated
+// WARNING: HEventQueue.dispatchEvent() is taking  7835 ms.
+// Tcl Message: Netlist sorting complete. Time (s): cpu = 00:00:00 ; elapsed = 00:00:00 . Memory (MB): peak = 12336.477 ; gain = 0.000 ; free physical = 184164 ; free virtual = 207128 
+// Tcl Message: INFO: [Netlist 29-17] Analyzing 32 Unisim elements for replacement INFO: [Netlist 29-28] Unisim Transformation completed in 0 CPU seconds INFO: [Project 1-479] Netlist was created with Vivado 2019.2 INFO: [Project 1-570] Preparing netlist for logic optimization 
+// Tcl Message: Parsing XDC File [/home/aw1223/new/mase/machop/mase_components/scatter/scatter_vivado/constraints.xdc] 
+// Tcl Message: create_clock: Time (s): cpu = 00:00:05 ; elapsed = 00:00:06 . Memory (MB): peak = 12336.477 ; gain = 0.000 ; free physical = 183386 ; free virtual = 206355 
+// Tcl Message: Finished Parsing XDC File [/home/aw1223/new/mase/machop/mase_components/scatter/scatter_vivado/constraints.xdc] 
+// Tcl Message: INFO: [Opt 31-138] Pushed 0 inverter(s) to 0 load pin(s). 
+// Tcl Message: refresh_design: Time (s): cpu = 00:00:28 ; elapsed = 00:00:19 . Memory (MB): peak = 12336.477 ; gain = 0.000 ; free physical = 182924 ; free virtual = 205903 
+// S (cr): Critical Messages: addNotify
+// Elapsed time: 20 seconds
+dismissDialog("Reloading"); // bB (cr)
+// RouteApi::initDelayMediator elapsed time: 4.8s
+// RouteApi: Init Delay Mediator Swing Worker Finished
+selectButton(PAResourceAtoD.CmdMsgDialog_OK, "OK"); // f (S)
+dismissDialog("Critical Messages"); // S (cr)
+selectTreeTable(PAResourceTtoZ.XdcViewerTreeTablePanel_XDC_VIEWER_TREE_TABLE, "1 ; create_clock -period 5.000 -waveform {0.000 2.500} [get_ports sys_clk] ; ", 2, "create_clock -period 5.000 -waveform {0.000 2.500} [get_ports sys_clk]", 1, false); // A (O, cr)
+selectTree(PAResourceEtoH.FileSetPanel_FILE_SET_PANEL_TREE, "[root, Design Sources, scatter_wrapper.sv]", 1, false); // B (F, cr)
+selectTree(PAResourceEtoH.FileSetPanel_FILE_SET_PANEL_TREE, "[root, Design Sources, scatter_wrapper.sv]", 1, false, false, false, false, false, true); // B (F, cr) - Double Click
+selectCodeEditor("scatter_wrapper.sv", 94, 113); // ch (w, cr)
+// TclEventType: DG_GRAPH_STALE
+// TclEventType: FILE_SET_CHANGE
+selectButton(PAResourceQtoS.StaleMoreAction_OUT_OF_DATE_DETAILS, "details"); // h (ds, cr)
+selectButton(PAResourceQtoS.StaleMoreAction_FORCE_UP_TO_DATE, "Force up-to-date"); // h (n, ResizableWindow)
+// TclEventType: FILESET_TARGET_UCF_CHANGE
+// Tcl Message: set_property needs_refresh false [get_runs synth_1] 
+// Tcl Message: set_property needs_refresh false [get_runs impl_1] 
+selectTab("PlanAheadTabBaseWorkspace_JideTabbedPane", (HResource) null, "constraints.xdc", 5); // i (h, cr)
+selectTab("PlanAheadTabBaseWorkspace_JideTabbedPane", (HResource) null, "Timing Constraints", 6); // i (h, cr)
+selectTreeTable(PAResourceTtoZ.XdcViewerTreeTablePanel_XDC_VIEWER_TREE_TABLE, " ; create_clock -name SysClk -period 10  -waveform {0 5} [get_ports sysclk] ; ", 1, "create_clock -name SysClk -period 10  -waveform {0 5} [get_ports sysclk]", 1, false); // A (O, cr)
+selectTreeTable(PAResourceTtoZ.XdcViewerTreeTablePanel_XDC_VIEWER_TREE_TABLE, "1 ; create_clock -period 5.000 -waveform {0.000 2.500} [get_ports sys_clk] ; ", 2, "create_clock -period 5.000 -waveform {0.000 2.500} [get_ports sys_clk]", 1, false); // A (O, cr)
+expandTreeTable(PAResourceTtoZ.XdcViewerTreeTablePanel_XDC_VIEWER_TREE_TABLE, "1 ; create_clock -period 5.000 -waveform {0.000 2.500} [get_ports sys_clk] ; ", 2); // A (O, cr)
+selectTreeTable(PAResourceTtoZ.XdcViewerTreeTablePanel_XDC_VIEWER_TREE_TABLE, "1 ; create_clock -period 5.000 -waveform {0.000 2.500} [get_ports sys_clk] ; ", 2, "create_clock -period 5.000 -waveform {0.000 2.500} [get_ports sys_clk]", 1, false, false, false, false, false, true); // A (O, cr) - Double Click
+selectTreeTable(PAResourceTtoZ.XdcViewerTreeTablePanel_XDC_VIEWER_TREE_TABLE, "1 ; create_clock -period 5.000 -waveform {0.000 2.500} [get_ports sys_clk] ; ", 2, "create_clock -period 5.000 -waveform {0.000 2.500} [get_ports sys_clk]", 1, false); // A (O, cr)
+selectTree(PAResourceEtoH.FlowNavigatorTreePanel_FLOW_NAVIGATOR_TREE, "[, Synthesis, Open Synthesized Design, Edit Timing Constraints]", 17, false); // u (O, cr)
+// Run Command: PAResourceCommand.PACommandNames_TIMING_CONSTRAINTS_WINDOW
+selectTree(PAResourceEtoH.FlowNavigatorTreePanel_FLOW_NAVIGATOR_TREE, "[, Synthesis, Open Synthesized Design, Edit Timing Constraints]", 17, false); // u (O, cr)
+// Run Command: PAResourceCommand.PACommandNames_TIMING_CONSTRAINTS_WINDOW
+selectTree(PAResourceTtoZ.XdcCategoryTree_XDC_CATEGORY_TREE, "[All Categories (1), Clocks (1), Set Clock Uncertainty (0)]", 5, false); // bk (O, cr)
+selectTree(PAResourceTtoZ.XdcCategoryTree_XDC_CATEGORY_TREE, "[All Categories (1), Clocks (1), Set Clock Latency (0)]", 4, false); // bk (O, cr)
+selectTree(PAResourceTtoZ.XdcCategoryTree_XDC_CATEGORY_TREE, "[All Categories (1), Clocks (1), Create Generated Clock (0)]", 2, false); // bk (O, cr)
+selectTree(PAResourceTtoZ.XdcCategoryTree_XDC_CATEGORY_TREE, "[All Categories (1), Clocks (1), Create Clock (1)]", 1, false); // bk (O, cr)
+selectTree(PAResourceTtoZ.XdcCategoryTree_XDC_CATEGORY_TREE, "[All Categories (1), Clocks (1), Create Generated Clock (0)]", 2, false); // bk (O, cr)
+selectTree(PAResourceTtoZ.XdcCategoryTree_XDC_CATEGORY_TREE, "[All Categories (1), Clocks (1), Set Clock Latency (0)]", 4, false); // bk (O, cr)
+selectTreeTable(PAResourceTtoZ.XdcViewerTreeTablePanel_XDC_VIEWER_TREE_TABLE, "1 ; create_clock -period 5.000 -waveform {0.000 2.500} [get_ports sys_clk] ; ", 2, "create_clock -period 5.000 -waveform {0.000 2.500} [get_ports sys_clk]", 1, false); // A (O, cr)
+selectTree(PAResourceEtoH.FlowNavigatorTreePanel_FLOW_NAVIGATOR_TREE, "[, Implementation, Run Implementation]", 28, false); // u (O, cr)
+// Run Command: PAResourceCommand.PACommandNames_RUN_IMPLEMENTATION
+// al (cr): Save Project: addNotify
+selectButton(PAResourceQtoS.SaveProjectUtils_DONT_SAVE, "Don't Save"); // a (al)
+// bB (cr):  Starting Design Runs : addNotify
+dismissDialog("Save Project"); // al (cr)
+// TclEventType: FILESET_TARGET_UCF_CHANGE
+// Tcl Message: launch_runs impl_1 -jobs 20 
+// Tcl Message: Netlist sorting complete. Time (s): cpu = 00:00:00 ; elapsed = 00:00:00 . Memory (MB): peak = 12336.477 ; gain = 0.000 ; free physical = 181594 ; free virtual = 204636 
+// Tcl Message: INFO: [Timing 38-480] Writing timing data to binary archive. 
+// TclEventType: DESIGN_STALE
+// TclEventType: RUN_LAUNCH
+// TclEventType: RUN_MODIFY
+// Tcl Message: [Tue Mar 26 15:51:23 2024] Launched impl_1... Run output will be captured here: /home/aw1223/new/mase/machop/mase_components/scatter/scatter_vivado/scatter_vivado.runs/impl_1/runme.log 
+dismissDialog("Starting Design Runs"); // bB (cr)
+// TclEventType: RUN_STATUS_CHANGE
+selectTree(PAResourceEtoH.FlowNavigatorTreePanel_FLOW_NAVIGATOR_TREE, "[, Synthesis, Open Synthesized Design, Report Methodology]", 22, false); // u (O, cr)
+selectTree(PAResourceEtoH.FlowNavigatorTreePanel_FLOW_NAVIGATOR_TREE, "[, Implementation, Run Implementation]", 28, false); // u (O, cr)
+// Run Command: PAResourceCommand.PACommandNames_RUN_IMPLEMENTATION
+selectButton("OptionPane.button", "Cancel"); // JButton (A, G)
+// TclEventType: RUN_STEP_COMPLETED
