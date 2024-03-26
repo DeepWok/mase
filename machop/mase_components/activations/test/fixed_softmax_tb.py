@@ -140,8 +140,8 @@ async def test(dut):
     out_frac_width = dut_params["DATA_OUT_0_PRECISION_1"]
     inter_data_width = dut_params["DATA_INTERMEDIATE_0_PRECISION_0"]
     inter_frac_width = dut_params["DATA_INTERMEDIATE_0_PRECISION_1"]
-    generate_memory.generate_mem("exp", in_data_width, in_frac_width, inter_data_width, inter_frac_width)
-    print("Generated memory")
+    # generate_memory.generate_sv_lut("exp", in_data_width, in_frac_width, inter_data_width, inter_frac_width)
+    # print("Generated memory")
     tb = fixed_softmax_tb(torch.nn.Softmax(), dut, dut_params, float_test = True)
     await tb.run_test()
   
@@ -152,8 +152,8 @@ dut_params = {
                 "DATA_IN_0_PARALLELISM_DIM_0": 4,
                 "DATA_IN_0_PARALLELISM_DIM_1": 4,
                 
-                "DATA_IN_0_PRECISION_0": 16,
-                "DATA_IN_0_PRECISION_1": 8,
+                "DATA_IN_0_PRECISION_0": 12,
+                "DATA_IN_0_PRECISION_1": 6,
 
                 "DATA_OUT_0_PRECISION_0": 8,
                 "DATA_OUT_0_PRECISION_1": 4,
@@ -171,6 +171,8 @@ dut_params = {
 torch.manual_seed(1)
 if __name__ == "__main__":
     # generate_memory.generate_mem("exp", dut_params["DATA_IN_0_PRECISION_0"], dut_params["DATA_IN_0_PRECISION_1"])
+    generate_memory.generate_sv_lut("exp", dut_params["DATA_IN_0_PRECISION_0"], dut_params["DATA_IN_0_PRECISION_1"], dut_params["DATA_INTERMEDIATE_0_PRECISION_0"], dut_params["DATA_INTERMEDIATE_0_PRECISION_1"])
+    print("Generated memory")
     mase_runner(
         module_param_list=[
             dut_params

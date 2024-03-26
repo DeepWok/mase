@@ -155,12 +155,12 @@ def lookup_to_sv_file(in_data_width:int, in_f_width:int, data_width: int, f_widt
 
     # Starting the module and case statement
     sv_code = f"""
-module {function}_lut_{data_width}_{f_width} #
+module {function}_lut #
     (
         parameter DATA_IN_0_PRECISION_0 = 16,
         parameter DATA_IN_0_PRECISION_1 = 8,
         parameter DATA_OUT_0_PRECISION_0 = 16,
-        parameter DATA_OUT_0_PRECISION_1 = 8,
+        parameter DATA_OUT_0_PRECISION_1 = 8
     )
     (input logic [{data_width-1}:0] data_in_0, output logic [{data_width-1}:0] data_out_0);
     
@@ -198,12 +198,13 @@ def generate_sv_lut(function_name, in_data_width, in_f_width, data_width, f_widt
     else:
         end = ''
     if dir is None:
-        lookup_to_sv_file(in_data_width, in_f_width, data_width, f_width, function_name, f'/workspace/machop/mase_components/activations/rtl/{function_name}_map{end}.sv')
+        lookup_to_sv_file(in_data_width, in_f_width, data_width, f_width, function_name, f'machop/mase_components/activations/rtl/{function_name}_lut{end}.sv')
     else:
-        lookup_to_sv_file(in_data_width, in_f_width, data_width, f_width, function_name, f'{dir}/{function_name}_map{end}.sv')
+        lookup_to_sv_file(in_data_width, in_f_width, data_width, f_width, function_name, f'{dir}/{function_name}_lut{end}.sv')
 
 
 if __name__ == "__main__":
+    generate_sv_lut("exp", 16, 8, 16, 8)
     # for k, v in FUNCTION_TABLE.items():
         # generate_sv_lut(k, 16, 8, 16, 8, dir="/home/bardia/code/adls/project/report_test", path_with_dtype=True)
     

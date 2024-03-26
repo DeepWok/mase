@@ -31,7 +31,6 @@ module fixed_sigmoid #(
     output logic data_out_0_valid,
     input  logic data_out_0_ready
 );
-  localparam MEM_SIZE = (2**(DATA_IN_0_PRECISION_0)); //the threshold
 
   logic [DATA_IN_0_PRECISION_0-1:0] ff_data[DATA_IN_0_PARALLELISM_DIM_0*DATA_IN_0_PARALLELISM_DIM_1-1:0];
   logic [DATA_IN_0_PRECISION_0-1:0] roll_data[DATA_OUT_0_PARALLELISM_DIM_0*DATA_OUT_0_PARALLELISM_DIM_1-1:0];
