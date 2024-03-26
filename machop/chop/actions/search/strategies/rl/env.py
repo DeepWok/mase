@@ -17,17 +17,31 @@ class MixedPrecisionEnv(gym.Env):
         # get layer information from self.search_space.model
         graph = MaseGraph(self.search_space.model)
         graph, _ = init_metadata_analysis_pass(graph)
-        graph, _ = add_common_metadata_analysis_pass(graph, {"dummy_in": self.search_space.dummy_input})
+        graph, _ = add_common_metadata_analysis_pass(
+            graph, {"dummy_in": self.search_space.dummy_input}
+        )
         layer_info = {}
         idx = 0
         for node in graph.fx_graph.nodes:
-            if get_mase_op(node) == 'linear':
+            if get_mase_op(node) == "linear":
                 target = get_node_actual_target(node)
-                layer_info[node.name] = [idx, target.in_features, target.out_features, 1, 0]
+                layer_info[node.name] = [
+                    idx,
+                    target.in_features,
+                    target.out_features,
+                    1,
+                    0,
+                ]
                 idx += 1
-            elif get_mase_op(node) == 'conv2d':
+            elif get_mase_op(node) == "conv2d":
                 target = get_node_actual_target(node)
-                layer_info[node.name] = [idx, target.in_channels, target.out_channels, target.kernel_size[0], target.stride[0]]
+                layer_info[node.name] = [
+                    idx,
+                    target.in_channels,
+                    target.out_channels,
+                    target.kernel_size[0],
+                    target.stride[0],
+                ]
                 idx += 1
         # get choices from self.search_space.choices_flattened to build observation enumeration list
         self.obs_list = []
@@ -39,13 +53,13 @@ class MixedPrecisionEnv(gym.Env):
                 self.sample[name] = 0
                 continue
             self.sample_namespace.append(name)
-            _name = name.split('/')
+            _name = name.split("/")
             obs = layer_info[_name[0]].copy()
-            if _name[2] == 'data_in_width':
+            if _name[2] == "data_in_width":
                 obs.append(0)
-            elif _name[2] == 'weight_width':
+            elif _name[2] == "weight_width":
                 obs.append(1)
-            elif _name[2] == 'bias_width':
+            elif _name[2] == "bias_width":
                 obs.append(2)
             self.obs_list.append(obs)
             self.act_list.append(sorted(choices))
@@ -55,16 +69,21 @@ class MixedPrecisionEnv(gym.Env):
         # get observation space definition from observation enumeration list
         low = np.min(self.obs_list, axis=0)
         high = np.max(self.obs_list, axis=0)
-        self.observation_space = Box(low=np.append(low, min([min(sub) for sub in self.act_list])), high=np.append(high, max([max(sub) for sub in self.act_list])))
-        self.action_space = Box(low=0, high=1.)
+        self.observation_space = Box(
+            low=np.append(low, min([min(sub) for sub in self.act_list])),
+            high=np.append(high, max([max(sub) for sub in self.act_list])),
+        )
+        self.action_space = Box(low=0, high=1.0)
 
     def reset(self, *, seed=None, options=None):
         """
-            Resets the episode and returns the initial observation of the new one.
-            Always start from the first element in observation list.
+        Resets the episode and returns the initial observation of the new one.
+        Always start from the first element in observation list.
         """
         self.state = 0
-        obs = np.append(self.obs_list[self.state, :], min(self.act_list[self.state])).astype(np.float32)
+        obs = np.append(
+            self.obs_list[self.state, :], min(self.act_list[self.state])
+        ).astype(np.float32)
         return obs, {}
 
     def step(self, action):
@@ -78,7 +97,7 @@ class MixedPrecisionEnv(gym.Env):
             info (dict): Empty.
         """
         choices = self.act_list[self.state]
-        action = int(action*len(choices) - 1e-2)
+        action = int(action * len(choices) - 1e-2)
         self.sample[self.sample_namespace[self.state]] = action
         reward = 0
         terminated = False

@@ -159,5 +159,5 @@ class RLSearchSpaceMixedPrecisionPTQ(SearchSpaceBase):
         config = unflatten_dict(flattened_config)
         config["default"] = self.default_config
         # by name, so each layer can be quantized differently
-        config["by"] = 'name'
+        config["by"] = "name"
         return config
