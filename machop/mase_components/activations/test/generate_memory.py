@@ -165,7 +165,7 @@ module {function}_lut{end} #
         parameter DATA_OUT_0_PRECISION_0 = 16,
         parameter DATA_OUT_0_PRECISION_1 = 8
     )
-    (input logic [{data_width-1}:0] data_in_0, output logic [{data_width-1}:0] data_out_0);
+    (input logic [{in_data_width-1}:0] data_in_0, output logic [{data_width-1}:0] data_out_0);
     
 """
     sv_code += "    always_comb begin\n"

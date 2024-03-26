@@ -19,10 +19,10 @@ module fixed_softmax #(
 
     parameter OUT_0_DEPTH = $rtoi($ceil(DATA_OUT_0_TENSOR_SIZE_DIM_0 / DATA_OUT_0_PARALLELISM_DIM_0)),
 
-    parameter DATA_INTERMEDIATE_0_PRECISION_0 = DATA_OUT_0_PRECISION_0,
-    parameter DATA_INTERMEDIATE_0_PRECISION_1 = DATA_OUT_0_PRECISION_1,
+    parameter DATA_INTERMEDIATE_0_PRECISION_0 = 12,
+    parameter DATA_INTERMEDIATE_0_PRECISION_1 = 6,
 
-    parameter IN_PALCE = 0
+    parameter IN_PLACE = 0
 ) (
     /* verilator lint_off UNUSEDSIGNAL */
     input rst,
@@ -76,7 +76,6 @@ module fixed_softmax #(
   logic ff_acc_valid;
   logic ff_acc_ready;
 
-
   unpacked_fifo #(
       .DEPTH(IN_0_DEPTH),
       .DATA_WIDTH(DATA_IN_0_PRECISION_0),
@@ -98,7 +97,7 @@ module fixed_softmax #(
     if (STRAIGHT_THROUGH) begin
       unpacked_register_slice #(
           .DATA_WIDTH(DATA_IN_0_PRECISION_0),
-          .IN_SIZE(DATA_IN_0_PARALLELISM_DIM_0*DATA_IN_0_PARALLELISM_DIM_1),
+          .IN_SIZE(DATA_IN_0_PARALLELISM_DIM_0*DATA_IN_0_PARALLELISM_DIM_1)
       )  single_roll (
           .clk(clk),
           .rst(rst),
@@ -224,10 +223,17 @@ generate
   );
 
 
+  logic [DATA_INTERMEDIATE_0_PRECISION_0 - 1 :0] inter_quotient1 [DATA_OUT_0_PARALLELISM_DIM_0*DATA_OUT_0_PARALLELISM_DIM_1-1:0]; // extra bit for rounding division
+  logic [DATA_INTERMEDIATE_0_PRECISION_0 - 1 :0] inter_quotient2 [DATA_OUT_0_PARALLELISM_DIM_0*DATA_OUT_0_PARALLELISM_DIM_1-1:0]; // extra bit for rounding division
+  logic [DATA_INTERMEDIATE_0_PRECISION_0 - 1 :0] inter_quotient3[DATA_OUT_0_PARALLELISM_DIM_0*DATA_OUT_0_PARALLELISM_DIM_1-1:0]; // extra bit for rounding division
+  logic [DATA_INTERMEDIATE_0_PRECISION_0 - 1 :0] inter_quotient4 [DATA_OUT_0_PARALLELISM_DIM_0*DATA_OUT_0_PARALLELISM_DIM_1-1:0]; // extra bit for rounding division
   logic [DATA_INTERMEDIATE_0_PRECISION_0 + DATA_INTERMEDIATE_0_PRECISION_1 - 1 :0] extended_divisor [DATA_OUT_0_PARALLELISM_DIM_0*DATA_OUT_0_PARALLELISM_DIM_1-1:0]; // extra bit for rounding division
+
   logic [DATA_INTERMEDIATE_0_PRECISION_0 + DATA_INTERMEDIATE_0_PRECISION_1 - 1 :0] extended_quotient [DATA_OUT_0_PARALLELISM_DIM_0*DATA_OUT_0_PARALLELISM_DIM_1-1:0]; // extra bit for quantization
   logic [DATA_INTERMEDIATE_0_PRECISION_0 - 1 :0] inter_quotient [DATA_OUT_0_PARALLELISM_DIM_0*DATA_OUT_0_PARALLELISM_DIM_1-1:0]; // extra bit for quantization
-
+  
+  
+   
   for (genvar i = 0; i < DATA_OUT_0_PARALLELISM_DIM_1; i++) begin : scale_batches
     for (genvar j = 0; j < DATA_OUT_0_PARALLELISM_DIM_0; j++) begin : div_elements
       always_comb begin
@@ -246,6 +252,26 @@ generate
     end
   end
   // assign data_out_0 = inter_quotient;
+  
+  // Divide pipeline (retiming)
+  logic data_out_0_valid_0;
+  logic data_out_0_valid_1;
+  logic data_out_0_valid_2;
+  logic data_out_0_valid_3;
+  logic data_out_0_valid_4;
+  always_ff @(posedge clk) begin
+    inter_quotient1 <= inter_quotient;
+    inter_quotient2 <= inter_quotient1;
+    inter_quotient3 <= inter_quotient2;
+    inter_quotient4 <= inter_quotient3;
+
+    data_out_0_valid_1 <= data_out_0_valid_0;
+    data_out_0_valid_2 <= data_out_0_valid_1;
+    data_out_0_valid_3 <= data_out_0_valid_2;
+    data_out_0_valid_4 <= data_out_0_valid_3;
+    
+  end
+
   fixed_rounding #(
       .IN_SIZE(DATA_OUT_0_PARALLELISM_DIM_0 * DATA_OUT_0_PARALLELISM_DIM_1),
       .IN_WIDTH(DATA_INTERMEDIATE_0_PRECISION_0),
@@ -253,7 +279,7 @@ generate
       .OUT_WIDTH(DATA_OUT_0_PRECISION_0),
       .OUT_FRAC_WIDTH(DATA_OUT_0_PRECISION_1)
   ) data_out_cast (
-      .data_in (inter_quotient),
+      .data_in (inter_quotient4),
       .data_out(data_out_0)
   );
 
@@ -261,10 +287,11 @@ generate
   ) output_handshake_split (
     .data_in_valid({ff_exp_data_valid, ff_acc_valid}),
     .data_in_ready({ff_exp_data_ready, ff_acc_ready}),
-    .data_out_valid(data_out_0_valid),
+    .data_out_valid(data_out_0_valid_0),
     .data_out_ready(data_out_0_ready)
   );
-
+   
+   assign data_out_0_valid = data_out_0_valid_4;
 endmodule
 
 module hold_buffer #(
