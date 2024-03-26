@@ -10,8 +10,7 @@ accelerator = "gpu"
 project = "jsc-tiny"
 seed = 42
 log_every_n_steps = 5
-# load_name = "../mase_output/toy_toy_tiny/software/training_ckpts/best.ckpt"
-# load_type = "pl"
+
 
 [passes.quantize]
 by = "type"
@@ -32,33 +31,6 @@ name = "graph/quantize/mixed_precision_ptq"
 
 [search.search_space.setup]
 by = "name"
-
-[search.nas.other_config]
-path = ''
-
-[search.nas.op_config]
-op_indices = 3
-
-[search.nas.proxy_config]
-proxy = ['epe_nas', 
-        'fisher', 
-        'grad_norm', 
-        'grasp', 
-        'jacov', 
-        'l2_norm', 
-        'nwot', 
-        'plain', 
-        'snip', 
-        'synflow', 
-        'zen', 
-        'flops', 
-        'params']
-
-[search.nas.proxy_dataset]
-dataset = "cifar10"
-
-[search.nas.search_space]
-search_space = "nas201"
 
 [search.search_space.seed.default.config]
 # the only choice "NA" is used to indicate that layers are not quantized by default
@@ -111,3 +83,32 @@ accuracy.scale = 1.0
 accuracy.direction = "maximize"
 average_bitwidth.scale = 0.2
 average_bitwidth.direction = "minimize"
+
+
+
+[proxy.other_config]
+path = ''
+
+[proxy.op_config]
+num_samples = 8
+
+[proxy.proxies]
+proxy_list = ['epe_nas', 
+        'fisher', 
+        'grad_norm', 
+        'grasp', 
+        'jacov', 
+        'l2_norm', 
+        'nwot', 
+        'plain', 
+        'snip', 
+        'synflow', 
+        'zen', 
+        'flops', 
+        'params']
+
+[proxy.proxy_dataset]
+dataset = "cifar10"
+
+[proxy.search_space]
+search_space = "nas201"

@@ -1,9 +1,10 @@
 import logging
 import os
 from os import PathLike
-import pdb
 import toml
 import torch
+import numpy as np
+import json
 
 from fvcore.common.config import CfgNode
 from ...tools.checkpoint_load import load_model
@@ -14,7 +15,6 @@ from ...tools.get_input import get_dummy_input
 from chop.tools.utils import device
 from chop.tools.utils import parse_accelerator
 
-import numpy as np
 
 from naslib.utils import get_zc_benchmark_api,get_dataset_api
 from naslib.utils import get_train_val_loaders, get_project_root
@@ -23,16 +23,14 @@ from naslib.predictors import ZeroCost
 from naslib.search_spaces.core import Metric
 
 
-# For training  meta-proxy network
-import numpy as np
-from torch import nn
-from torch.utils.data import DataLoader, TensorDataset
-from sklearn.model_selection import train_test_split
-from einops import rearrange
-from torch import optim
-import torch.nn.functional as F
-import time
-import json
+# For training meta-proxy network
+# from torch import nn
+# from torch.utils.data import DataLoader, TensorDataset
+# from sklearn.model_selection import train_test_split
+# from einops import rearrange
+# from torch import optim
+# import torch.nn.functional as F
+# import time
 
 
 logger = logging.getLogger(__name__)
@@ -42,28 +40,37 @@ def read_json_file(file_path):
         data = json.load(file)
     return data
 
-def parse_nas_config(config):
+def parse_proxy_config(config):
     try:
-        search_config = config["search"]   #p arse into search config
-        nas_config = search_config['nas']  # parse into nas
-        op_config = nas_config['op_config']
-        proxy_config = nas_config['proxy_config']
-        dataset_info = nas_config['proxy_dataset']
-        search_space_info = nas_config['search_space']
-        if search_space_info['search_space'] not in ["nas201", "nas301"]:
-            logger.info("Invalid Search Space!")
-            exit()
-        return op_config['op_indices'], proxy_config['proxy'], dataset_info['dataset'], search_space_info['search_space'] # one more time one more chance running
+        proxy_config = config['proxy']
+        op_config = proxy_config['op_config']
+        proxies = proxy_config['proxies']
+        dataset_info = proxy_config['proxy_dataset']
+        search_space_info = proxy_config['search_space']
+
+        return op_config['num_samples'], proxies['proxy_list'], dataset_info['dataset'], search_space_info['search_space']
+    
     except:
         logger.info("Invalid Config!")
         exit()
-    
+
+    # try:
+    #     search_config = config["proxy"]   #p arse into search config
+    #     nas_config = search_config['nas']  # parse into nas
+    #     op_config = nas_config['op_config']
+    #     proxy_config = nas_config['proxy_config']
+    #     dataset_info = nas_config['proxy_dataset']
+    #     search_space_info = nas_config['search_space']
+    #     if search_space_info['search_space'] not in ["nas201", "nas301"]:
+    #         logger.info("Invalid Search Space!")
+    #         exit()
+    #     return op_config['op_indices'], proxy_config['proxy'], dataset_info['dataset'], search_space_info['search_space'] # one more time one more chance running
 
 def proxy(config:dict | PathLike):
 
     if not isinstance(config, dict):
         config = load_config(config)
-    op_config, proxy_config, dataset_info, search_space_info = parse_nas_config(config)   #op_config = list of integers , proxy_config = list of strings
+    op_config, proxy_config, dataset_info, search_space_info = parse_proxy_config(config)   #op_config = list of integers , proxy_config = list of strings
 
     dataset_info = "cifar10"
     # accepted_dataset = ["cifar10", "cifar100", "ImageNet16-120"]
@@ -81,7 +88,6 @@ def proxy(config:dict | PathLike):
     }
 
     n_classes = switch[dataset_info]
-
 
     ### Prepare dataloader for running proxies
     config_dict = {
@@ -149,21 +155,21 @@ def proxy(config:dict | PathLike):
 
     return
 
-    # dataset_infoCreate list of indecies for architectures to be quired in nas-bench
-    # indicies_list = []
-    # while len(indicies_list) < op_config:
-    #     small_rand_list = [int(np.random.rand()*5) for _ in range(6)]
-    #     if small_rand_list not in indicies_list:
-    #         indicies_list.append(small_rand_list)
+# dataset_infoCreate list of indecies for architectures to be quired in nas-bench
+# indicies_list = []
+# while len(indicies_list) < op_config:
+#     small_rand_list = [int(np.random.rand()*5) for _ in range(6)]
+#     if small_rand_list not in indicies_list:
+#         indicies_list.append(small_rand_list)
 
-    # Prepare list and dict for recording scores
-    # # Prepare dataset for training meta-proxy
-    # proxy = proxy_config
-    # data_set = []
-    # for proxy_name in proxy:
-    #     data_set.append(np.array(scores[proxy_name]))
-    # data_set = np.array(data_set)
-    # features = rearrange(data_set, 'a b -> b a')
+# Prepare list and dict for recording scores
+# # Prepare dataset for training meta-proxy
+# proxy = proxy_config
+# data_set = []
+# for proxy_name in proxy:
+#     data_set.append(np.array(scores[proxy_name]))
+# data_set = np.array(data_set)
+# features = rearrange(data_set, 'a b -> b a')
 
 
 # def predictor_trian(dataloader, proxy):
