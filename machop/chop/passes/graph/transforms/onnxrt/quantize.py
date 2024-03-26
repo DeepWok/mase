@@ -1,4 +1,5 @@
 import logging
+import warnings
 import os
 from pathlib import PosixPath
 import onnx
@@ -7,7 +8,7 @@ from onnxruntime import InferenceSession, SessionOptions
 from onnxconverter_common import auto_mixed_precision
 from .calibrate import StaticCalibrationDataReader
 from torch.utils.data import DataLoader, Subset
-from .utils import get_execution_provider, get_calibrator_dataloader, convert_dataloader_to_numpy
+from .utils import get_execution_provider, get_calibrator_dataloader, convert_dataloader_to_onnx_dataset_dict
 
 QUANT_MAP = {
     "int8": QuantType.QInt8,
@@ -93,15 +94,24 @@ class Quantizer:
         """Quantize the model using mixed precision quantization of FP16 and FP32."""
         self.logger.info("Quantizing model using automatic mixed precision quantization...")
 
+        # Load the model
         model_path = str(model_path)
         model = onnx.load(model_path)
 
+        # Get the configuration settings if they exist
+        config_defaults = self.config.get('default', {}).get('config', {})
+        rtol = config_defaults.get('rtol', 0.1)
+        atol = config_defaults.get('atol', 0.01)
+        keep_io_types = config_defaults.get('keep_io_types', True)
+
         # convert validation dataloader to a numpy array 
-        converted_dataloader = convert_dataloader_to_numpy(self.config['data_module'].val_dataloader())
-        quantized_model = auto_mixed_precision.auto_convert_mixed_precision(model, converted_dataloader, rtol=0.01, atol=0.001, keep_io_types=True)
+        val_data = convert_dataloader_to_onnx_dataset_dict(self.config['data_module'].val_dataloader(), ['input'])
+        # supress warnings regarding F32 truncation
+        warnings.filterwarnings("ignore", message="the float32 number .* will be truncated to .*", category=UserWarning)
+        quantized_model = auto_mixed_precision.auto_convert_mixed_precision(model, val_data[0], rtol=rtol, atol=atol, keep_io_types=keep_io_types)
         
-        quantized_model_path = str(quantized_model_path)
-        onnx.save(quantized_model, quantized_model_path)
+        # Save the quantized model
+        onnx.save(quantized_model, str(quantized_model_path))
 
         self.logger.info("Quantization complete. Model is now quantized using automatic mixed precision.")
 

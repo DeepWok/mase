@@ -123,7 +123,7 @@ class ONNXRuntime:
                 case 'auto':
                     quantized_path = self._prepare_save_path("auto_quantized")
                     quantizer.quantize_auto_mixed_precision(prep_path, quantized_path)
-                    quant_models['onnx_auto_quantized_path'] = quantized_path
+                    quant_models['onnx_auto_mixed_precision_path'] = quantized_path
                 case _:
                     raise Exception(f"Invalid quantization type: {quant_type}")           
         return quant_models

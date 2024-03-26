@@ -128,7 +128,6 @@ class MaseGraph:
         self.cf_args = cf_args
 
         # Defined model checkpoint, run optimum onnx export
-        model = "../mase_output/facebook-opt-125m-checkpoint"
         if isinstance(model, str):
             model_path = f"{ROOT}/mase_output/onnx/{model}/model.onnx"
             if not os.path.exists(model_path):
@@ -153,6 +152,7 @@ class MaseGraph:
                 custom_leaf_functions=custom_leaf_functions,
                 custom_leaf_layers=custom_leaf_layers,
             )
+
             self.model = fx.GraphModule(model, self.tracer.trace(model, cf_args))
             if patched_nodes:
                 self.model.patched_op_names = [

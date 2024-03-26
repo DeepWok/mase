@@ -324,7 +324,12 @@ class RuntimeAnalysis():
             
             # MaseGraph Inference
             else:
-                preds, latency = self.infer_mg_cuda(self.model, xs)  # Run model prediction
+                if self.config['accelerator'] == 'cpu':
+                    preds, latency = self.infer_mg_cpu(self.model, xs) 
+                elif self.config['accelerator'] == 'cuda':
+                    preds, latency = self.infer_mg_cuda(self.model, xs)
+                else:
+                    raise Exception(f"MaseGraph inference is not support by device {self.config['accelerator']}.")
             
             # Stop the power monitor and calculate average power
             power_monitor.stop()
