@@ -95,7 +95,7 @@ class Quantizer:
 
         model_path = str(model_path)
         quantized_model_path = str(quantized_model_path)
-        quantized_model = auto_mixed_precision(model_path, quantized_model_path, rtol=0.01, atol=0.001, keep_io_types=True)
+        quantized_model = auto_mixed_precision(model_path, self.config['data_module'].val_dataloader(), rtol=0.01, atol=0.001, keep_io_types=True)
         onnx.save(quantized_model, quantized_model_path)
 
         self.logger.info("Quantization complete. Model is now quantized using automatic mixed precision.")

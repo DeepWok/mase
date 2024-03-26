@@ -105,7 +105,7 @@ class ONNXRuntime:
             quant_types = self.config['default']['config']['quantize_types']
         except (TypeError, KeyError):
             quant_types = ['static']
-        
+
         # Pre-process the model adding further optimizations and store to prep_path
         prep_path = self._prepare_save_path("pre_processed")
         quantizer.pre_process(model_path, prep_path)
@@ -127,6 +127,7 @@ class ONNXRuntime:
                 case _:
                     raise Exception(f"Invalid quantization type: {quant_type}")           
         return quant_models
+
 
     def load_onnx(self, onnx_model_path):
         """Load .onnx model"""

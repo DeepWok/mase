@@ -11,7 +11,7 @@ learning_rate = 1e-3
 [passes.onnxruntime.default.config]
 quantize = true
 num_calibration_batches = 200
-quantize_types = ['static', 'dynamic']
+quantize_types = ['static', 'dynamic', 'auto']
 precision = 'int8'
 
 [passes.onnxruntime.runtime_analysis]
