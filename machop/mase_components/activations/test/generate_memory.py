@@ -207,7 +207,7 @@ def generate_sv_lut(function_name, in_data_width, in_f_width, data_width, f_widt
 
 
 if __name__ == "__main__":
-    dwidths = [16, 8, 4, 2]
+    dwidths = [12]
     for i in dwidths:
         generate_sv_lut("exp", 8, 4, data_width=i, f_width=int(i/2), path_with_dtype=True)
     # for k, v in FUNCTION_TABLE.items():
