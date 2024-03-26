@@ -28,7 +28,7 @@ module group_norm_2d #(
     parameter OUT_FRAC_WIDTH      = 4,
 
     // Inverse Sqrt LUT
-    parameter ISQRT_LUT_MEMFILE   = ""
+    parameter ISQRT_LUT_MEMFILE   = "/home/derek/mase/machop/mase_components/norm/isqrt-16-lut.mem"
 ) (
     input  logic                 clk,
     input  logic                 rst,

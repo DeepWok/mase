@@ -17,9 +17,6 @@ module simple_dual_port_ram #(
     output logic [DATA_WIDTH-1:0]  rd_dout
 );
 
-// initial begin
-//     assert (2**ADDR_WIDTH == SIZE) else $fatal("2**ADDR_WIDTH != SIZE");
-// end
 
 logic [DATA_WIDTH-1:0] mem [SIZE-1:0];
 

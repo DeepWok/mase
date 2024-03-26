@@ -11,10 +11,11 @@ module top #(
     // SOFTWARE PARAMETERS
     // -----
 
-    parameter DATA_IN_0_TENSOR_SIZE_DIM_0   = 8, // TOTAL_DIM0
-    parameter DATA_IN_0_TENSOR_SIZE_DIM_1   = 8, // TOTAL_DIM1
-    parameter DATA_IN_0_PARALLELISM_DIM_0   = 2, // COMPUTE_DIM0
-    parameter DATA_IN_0_PARALLELISM_DIM_1   = 2, // COMPUTE_DIM1
+    parameter DATA_IN_0_TENSOR_SIZE_DIM_0   = 128, // TOTAL_DIM0
+    parameter DATA_IN_0_TENSOR_SIZE_DIM_1   = 128, // TOTAL_DIM1
+    parameter DATA_IN_0_PARALLELISM_DIM_0   = 4, // COMPUTE_DIM0
+    parameter DATA_IN_0_PARALLELISM_DIM_1   = 4, // COMPUTE_DIM1
+    parameter DATA_IN_0_TENSOR_SIZE_DIM_2   = 64, // CHANNELS
 
     parameter DATA_IN_0_PRECISION_0         = 8, // IN_WIDTH
     parameter DATA_IN_0_PRECISION_1         = 4, // IN_FRAC_WIDTH
@@ -23,13 +24,15 @@ module top #(
     parameter DATA_OUT_0_PRECISION_1        = 4, // OUT_FRAC_WIDTH
 
     // Inverse sqrt unit LUT file
-    parameter ISQRT_LUT_MEMFILE    = "/scratch/ddl20/mase/machop/mase_components/norm/isqrt-16-lut.mem",
+    parameter ISQRT_LUT_MEMFILE    = "",
+
+    // Batch norm LUT files
+    parameter SCALE_LUT_MEMFILE    = "",
+    parameter SHIFT_LUT_MEMFILE    = "",
 
     // Norm select: BATCH_NORM, LAYER_NORM, INSTANCE_NORM, GROUP_NORM, RMS_NORM
     parameter NORM_TYPE            = "LAYER_NORM",
 
-    localparam TOTAL_DIM0          = DATA_IN_0_TENSOR_SIZE_DIM_0,
-    localparam TOTAL_DIM1          = DATA_IN_0_TENSOR_SIZE_DIM_1,
     localparam COMPUTE_DIM0        = DATA_IN_0_PARALLELISM_DIM_0,
     localparam COMPUTE_DIM1        = DATA_IN_0_PARALLELISM_DIM_1,
     localparam IN_WIDTH            = DATA_IN_0_PRECISION_0,
@@ -54,7 +57,7 @@ norm #(
     .DATA_IN_0_PARALLELISM_DIM_0(DATA_IN_0_PARALLELISM_DIM_0),
     .DATA_IN_0_TENSOR_SIZE_DIM_1(DATA_IN_0_TENSOR_SIZE_DIM_1),
     .DATA_IN_0_PARALLELISM_DIM_1(DATA_IN_0_PARALLELISM_DIM_1),
-    .DATA_IN_0_TENSOR_SIZE_DIM_2('0),
+    .DATA_IN_0_TENSOR_SIZE_DIM_2(DATA_IN_0_TENSOR_SIZE_DIM_2), // Channels
     .DATA_IN_0_PARALLELISM_DIM_2('0),
     .DATA_IN_0_TENSOR_SIZE_DIM_3('0),
     .DATA_IN_0_PARALLELISM_DIM_3('0),
@@ -69,6 +72,8 @@ norm #(
     .DATA_OUT_0_TENSOR_SIZE_DIM_3('0),
     .DATA_OUT_0_PARALLELISM_DIM_3('0),
     .ISQRT_LUT_MEMFILE(ISQRT_LUT_MEMFILE),
+    .SCALE_LUT_MEMFILE(SCALE_LUT_MEMFILE),
+    .SHIFT_LUT_MEMFILE(SHIFT_LUT_MEMFILE),
     .NORM_TYPE(NORM_TYPE)
 ) norm_inst (
     .clk(clk),

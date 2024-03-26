@@ -69,7 +69,7 @@ module norm #(
     // Layer: CHANNELS should be set to total number of channels
     // RMS: CHANNELS should be set to total number of channels
     // Group: CHANNELS can be set to any factor of total channels
-    localparam CHANNELS            = DATA_IN_0_PARALLELISM_DIM_2,
+    localparam CHANNELS            = DATA_IN_0_TENSOR_SIZE_DIM_2,
 
     // Data widths
     localparam IN_WIDTH            = DATA_IN_0_PRECISION_0,
@@ -113,6 +113,8 @@ localparam INSTANCE_NORM = (NORM_TYPE == "INSTANCE_NORM");
 localparam GROUP_NORM = (NORM_TYPE == "GROUP_NORM");
 localparam RMS_NORM = (NORM_TYPE == "RMS_NORM");
 
+localparam NORM_CHANNELS = INSTANCE_NORM ? 1 : CHANNELS;
+
 generate
 
 if (BATCH_NORM) begin : batch_norm
@@ -144,8 +146,6 @@ if (BATCH_NORM) begin : batch_norm
     assign weight_ready = '0;
 
 end else if (LAYER_NORM || INSTANCE_NORM || GROUP_NORM) begin : group_norm
-
-    localparam NORM_CHANNELS = INSTANCE_NORM ? 1 : CHANNELS;
 
     group_norm_2d #(
         .TOTAL_DIM0(TOTAL_DIM0),
