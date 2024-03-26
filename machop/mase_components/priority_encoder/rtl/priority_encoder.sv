@@ -60,55 +60,55 @@ endmodule
 
 
 
-module array_zero_mask#(
-    parameter NUM_INPUTS =4,
-    parameter PRECISION = 4
-    )(
-    input [PRECISION-1:0] data[NUM_INPUTS-1:0],   // Unpacked array of 4 8-bit vectors
-    input [NUM_INPUTS-1:0] mask,        // 4-bit mask
-    output logic [PRECISION-1:0] data_out_0[NUM_INPUTS-1:0],  // Modified array
-    output logic [PRECISION-1:0] data_out_1[NUM_INPUTS-1:0]  // Modified array
+// module array_zero_mask#(
+//     parameter NUM_INPUTS =4,
+//     parameter PRECISION = 4
+//     )(
+//     input signed [PRECISION-1:0] data[NUM_INPUTS-1:0],   // Unpacked array of 4 8-bit vectors
+//     input [NUM_INPUTS-1:0] mask,        // 4-bit mask
+//     output logic signed [PRECISION-1:0] data_out_0[NUM_INPUTS-1:0],  // Modified array
+//     output logic signed [PRECISION-1:0] data_out_1[NUM_INPUTS-1:0]  // Modified array
 
-);
+// );
 
-// Always block that updates the output based on the mask
-always @(*) begin
-    integer i;
-    for (i = 0; i < NUM_INPUTS; i = i + 1) begin
-        // Check each bit of the mask; if it's 0, copy the original data, else set to zero
-        if (mask[i] == 1'b1) begin
-            data_out_0[i] = data[i];
-            data_out_1[i] = 0; 
+// // Always block that updates the output based on the mask
+// always @(*) begin
+//     integer i;
+//     for (i = 0; i < NUM_INPUTS; i = i + 1) begin
+//         // Check each bit of the mask; if it's 0, copy the original data, else set to zero
+//         if (mask[i] == 1'b1) begin
+//             data_out_0[i] = data[i];
+//             data_out_1[i] = 0; 
 
-        end else if (mask[i] == 1'b0) begin
-            data_out_0[i] = 0; 
-            data_out_1[i] = data[i];
+//         end else if (mask[i] == 1'b0) begin
+//             data_out_0[i] = 0; 
+//             data_out_1[i] = data[i];
 
-        end
-    end
-end
+//         end
+//     end
+// end
 
-endmodule
+// endmodule
 
 
-module parallel_abs_quantize#(
-    NO_INPUTS = 2,
-    INPUT_PRECISION = 16,
-    OUTPUT_PRECISION = 1
-    )(
-    input [INPUT_PRECISION-1:0] input_array [NO_INPUTS-1:0],
-    output logic [OUTPUT_PRECISION-1:0] output_array [NO_INPUTS-1:0]
-);
+// module parallel_abs_quantize#(
+//     NO_INPUTS = 2,
+//     INPUT_PRECISION = 16,
+//     OUTPUT_PRECISION = 1
+//     )(
+//     input [INPUT_PRECISION-1:0] input_array [NO_INPUTS-1:0],
+//     output logic [OUTPUT_PRECISION-1:0] output_array [NO_INPUTS-1:0]
+// );
 
-    logic sign  [INPUT_PRECISION-1:0];
-    logic [OUTPUT_PRECISION-1:0] msbs [INPUT_PRECISION-1:0];
+//     logic sign  [INPUT_PRECISION-1:0];
+//     logic [OUTPUT_PRECISION-1:0] msbs [INPUT_PRECISION-1:0];
 
-    for (genvar i = 0; i < NO_INPUTS; i = i + 1) begin
-        //Extract sign bit
-        assign sign[i] = input_array[i][INPUT_PRECISION-1];
-        assign msbs[i] = input_array[i][INPUT_PRECISION-2:INPUT_PRECISION-2-OUTPUT_PRECISION];
+//     for (genvar i = 0; i < NO_INPUTS; i = i + 1) begin
+//         //Extract sign bit
+//         assign sign[i] = input_array[i][INPUT_PRECISION-1];
+//         assign msbs[i] = input_array[i][INPUT_PRECISION-2:INPUT_PRECISION-2-OUTPUT_PRECISION];
 
-        assign output_array[i] = (sign[i])? !msbs[i]:msbs[i];
-    end
+//         assign output_array[i] = (sign[i])? !msbs[i]:msbs[i];
+//     end
 
-endmodule
+// endmodule

@@ -1,3 +1,4 @@
+`timescale 1ns / 1ps
 
 module array_zero_mask#(
     parameter NUM_INPUTS =4,

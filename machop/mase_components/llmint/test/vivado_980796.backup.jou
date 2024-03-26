@@ -1,0 +1,52 @@
+#-----------------------------------------------------------
+# Vivado v2019.2 (64-bit)
+# SW Build 2708876 on Wed Nov  6 21:39:14 MST 2019
+# IP Build 2700528 on Thu Nov  7 00:09:20 MST 2019
+# Start of session at: Tue Mar 26 13:19:28 2024
+# Process ID: 980796
+# Current directory: /home/aw1223/new/mase/machop/mase_components/llmint/test
+# Command line: vivado
+# Log file: /home/aw1223/new/mase/machop/mase_components/llmint/test/vivado.log
+# Journal file: /home/aw1223/new/mase/machop/mase_components/llmint/test/vivado.jou
+#-----------------------------------------------------------
+start_gui
+create_project scatter_vivado /home/aw1223/new/mase/machop/mase_components/scatter/scatter_vivado -part xcu280-fsvh2892-2L-e
+set_property board_part xilinx.com:au280:part0:1.1 [current_project]
+add_files -norecurse {/home/aw1223/new/mase/machop/mase_components/priority_encoder/rtl/priority_encoder.sv /home/aw1223/new/mase/machop/mase_components/scatter/rtl/array_zero_mask.sv /home/aw1223/new/mase/machop/mase_components/scatter/rtl/scatter_threshold.sv}
+update_compile_order -fileset sources_1
+set_property SOURCE_SET sources_1 [get_filesets sim_1]
+add_files -fileset sim_1 -norecurse /home/aw1223/new/mase/machop/mase_components/scatter/test/scatter_tb.sv
+update_compile_order -fileset sim_1
+update_compile_order -fileset sim_1
+launch_simulation
+source tb_scatter_threshold.tcl
+launch_runs synth_1 -jobs 20
+wait_on_run synth_1
+launch_runs impl_1 -jobs 20
+wait_on_run impl_1
+update_compile_order -fileset sources_1
+update_compile_order -fileset sources_1
+update_compile_order -fileset sources_1
+open_run impl_1
+add_files -fileset constrs_1 -norecurse /home/aw1223/new/mase/machop/mase_components/scatter/scatter_vivado/alveo-u280-xdc_20210505/alveo-u280-xdc.xdc
+reset_run synth_1
+launch_runs impl_1 -jobs 20
+wait_on_run impl_1
+refresh_design
+report_timing_summary -delay_type min_max -report_unconstrained -check_timing_verbose -max_paths 10 -input_pins -routable_nets -name timing_1
+open_run synth_1 -name synth_1
+current_design impl_1
+create_clock -period 5.000 -name sys_clk -waveform {0.000 2.500} -add
+export_ip_user_files -of_objects  [get_files /home/aw1223/new/mase/machop/mase_components/scatter/scatter_vivado/alveo-u280-xdc_20210505/alveo-u280-xdc.xdc] -no_script -reset -force -quiet
+remove_files  -fileset constrs_1 /home/aw1223/new/mase/machop/mase_components/scatter/scatter_vivado/alveo-u280-xdc_20210505/alveo-u280-xdc.xdc
+add_files -fileset constrs_1 -norecurse /home/aw1223/new/mase/machop/mase_components/scatter/scatter_vivado/constraints.xdc
+set_property target_constrs_file /home/aw1223/new/mase/machop/mase_components/scatter/scatter_vivado/constraints.xdc [current_fileset -constrset]
+save_constraints -force
+reset_run synth_1
+save_constraints -force
+launch_runs synth_1 -jobs 20
+wait_on_run synth_1
+save_constraints -force
+launch_runs impl_1 -jobs 20
+wait_on_run impl_1
+current_design synth_1
