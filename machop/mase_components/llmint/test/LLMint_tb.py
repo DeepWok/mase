@@ -179,8 +179,16 @@ class LinearTB(Testbench):
         tensor = tensor.reshape(-1, parallelism).tolist()
         return tensor
 
+    def convert_to_integer_list(self,list_val):
+        new_list = []
+        for val in list_val:
+            new_list.append(val.signed_integer)
+
+        return new_list
+
     async def run_test(self):
         await self.reset()
+
         logger.info(f"Reset finished")
         self.data_out_monitor.ready.value = 1
 
@@ -228,31 +236,43 @@ class LinearTB(Testbench):
         self.data_out_monitor.load_monitor(outs)
 
         await Timer(10000, units="ns")
-        logger.info(f"high_precision_masked: {self.dut.high_precision_masked.value}")
-        logger.info(f"low_precision_masked: {self.dut.low_precision_masked.value}")
-        logger.info(f"input_linear_low_precision: {self.dut.input_linear_low_precision.value}")
+        logger.info(f"high_precision_masked: {self.convert_to_integer_list(self.dut.high_precision_masked.value)}")
+        logger.info(f"low_precision_masked: {self.convert_to_integer_list(self.dut.low_precision_masked.value)}")
+
+
+        logger.info(f"input_linear_low_precision: {self.convert_to_integer_list(self.dut.input_linear_low_precision.value)}")
+        logger.info(f"output_linear_low_precision: {self.convert_to_integer_list(self.dut.output_linear_low_precision.value)}")
+
+
+
+        # logger.info(f"input_linear_high_precision: {self.dut.input_linear_high_precision.value}")
+        logger.info(f"output_linear_high_precision: {self.convert_to_integer_list(self.dut.output_linear_high_precision.value)}")
+
+
         assert self.data_out_monitor.exp_queue.empty()
 
 @cocotb.test()
 async def test(dut):
     print('----------------Started test---------------')
 
+    # for i in range(10):
     tb = LinearTB(dut)
     await tb.run_test()
 
 
 if __name__ == "__main__":
+
+
     mase_runner(
         trace=True,
         module_param_list=[
             {
-                "ORIGINAL_PRECISION": 8,
-                "REDUCED_PRECISION": 4,
+                "ORIGINAL_PRECISION": 16,
+                "REDUCED_PRECISION": 8, 
                 "TENSOR_SIZE_DIM": global_tensor_size,
                 "WEIGHT_DIM_0": global_tensor_size,
                 "WEIGHT_DIM_1": global_tensor_size,
                 "HIGH_SLOTS": 3,
                 "THRESHOLD": 6,
-            }
-        ],
+            }],
     )

@@ -2330,3 +2330,56 @@ selectMenu(PAResourceItoN.MainMenuMgr_VIEW, "View"); // aa (q, cr)
 // HMemoryUtils.trashcanNow. Engine heap size: 5,889 MB. GUI used memory: 224 MB. Current time: 3/26/24, 3:44:16 PM GMT
 // TclEventType: DG_GRAPH_STALE
 // TclEventType: FILE_SET_CHANGE
+// HMemoryUtils.trashcanNow. Engine heap size: 5,889 MB. GUI used memory: 225 MB. Current time: 3/26/24, 4:14:16 PM GMT
+// HMemoryUtils.trashcanNow. Engine heap size: 5,889 MB. GUI used memory: 226 MB. Current time: 3/26/24, 4:44:16 PM GMT
+// aj (cr): Implementation Completed: addNotify
+// HMemoryUtils.trashcanNow. Engine heap size: 5,889 MB. GUI used memory: 225 MB. Current time: 3/26/24, 5:14:16 PM GMT
+// Elapsed time: 9055 seconds
+dismissMenu(PAResourceItoN.MainMenuMgr_VIEW, "View"); // aa (q, cr)
+selectButton(RDIResource.BaseDialog_OK, "OK"); // a (aj)
+// Run Command: PAResourceCommand.PACommandNames_GOTO_IMPLEMENTED_DESIGN
+// bB (cr):  Reloading : addNotify
+// Tcl Message: refresh_design 
+// TclEventType: DESIGN_REFRESH
+// HMemoryUtils.trashcanNow. Engine heap size: 5,889 MB. GUI used memory: 214 MB. Current time: 3/26/24, 5:15:21 PM GMT
+// TclEventType: TIMING_RESULTS_UNLOAD
+// Engine heap size: 5,889 MB. GUI used memory: 215 MB. Current time: 3/26/24, 5:15:22 PM GMT
+// WARNING: HEventQueue.dispatchEvent() is taking  2446 ms.
+closeView(PAResourceOtoP.PAViews_PROJECT_SUMMARY, "Project Summary"); // v
+// TclEventType: POWER_CNS_UPDATED
+// TclEventType: SDC_CONSTRAINT_ADD
+// TclEventType: POWER_REPORT_STALE
+// TclEventType: SDC_CONSTRAINT_ADD
+// TclEventType: POWER_CNS_STALE
+// TclEventType: FLOORPLAN_MODIFY
+// TclEventType: DESIGN_REFRESH
+// HMemoryUtils.trashcanNow. Engine heap size: 5,673 MB. GUI used memory: 97 MB. Current time: 3/26/24, 5:15:38 PM GMT
+// Xgd.load filename: /mnt/applications/Xilinx/19.2/Vivado/2019.2/data/parts/xilinx/virtexuplusHBM/devint/virtexuplusHBM/xcu280/xcu280.xgd; ZipEntry: xcu280_detail.xgd elapsed time: 2.3s
+// [Engine Memory]: 6,115 MB (+104815kb) [22:18:26]
+// TclEventType: HFED_INIT_ROUTE_STORAGE_COMPLETED
+// RouteApi::loadEngineXgd elapsed time: 5.6s
+// Device: addNotify
+// DeviceView Instantiated
+// WARNING: HEventQueue.dispatchEvent() is taking  7751 ms.
+// Tcl Message: Netlist sorting complete. Time (s): cpu = 00:00:00.13 ; elapsed = 00:00:00.12 . Memory (MB): peak = 11243.184 ; gain = 0.000 ; free physical = 178994 ; free virtual = 203177 
+// Tcl Message: INFO: [Netlist 29-17] Analyzing 489 Unisim elements for replacement INFO: [Netlist 29-28] Unisim Transformation completed in 0 CPU seconds INFO: [Project 1-479] Netlist was created with Vivado 2019.2 INFO: [Project 1-570] Preparing netlist for logic optimization INFO: [Timing 38-478] Restoring timing data from binary archive. INFO: [Timing 38-479] Binary timing data restore complete. INFO: [Project 1-856] Restoring constraints from binary archive. INFO: [Project 1-853] Binary constraint restore complete. 
+// Tcl Message: Reading XDEF placement. Reading placer database... Reading XDEF routing. 
+// Tcl Message: Read XDEF File: Time (s): cpu = 00:00:00.86 ; elapsed = 00:00:00.90 . Memory (MB): peak = 11243.184 ; gain = 0.000 ; free physical = 178515 ; free virtual = 202699 
+// Tcl Message: Restored from archive | CPU: 0.920000 secs | Memory: 14.420601 MB | 
+// Tcl Message: Finished XDEF File Restore: Time (s): cpu = 00:00:00.87 ; elapsed = 00:00:00.93 . Memory (MB): peak = 11243.184 ; gain = 0.000 ; free physical = 178515 ; free virtual = 202699 
+// Tcl Message: refresh_design: Time (s): cpu = 00:00:48 ; elapsed = 00:00:28 . Memory (MB): peak = 12145.422 ; gain = 902.238 ; free physical = 177663 ; free virtual = 201847 
+// TclEventType: DRC_ADDED
+// TclEventType: METHODOLOGY_ADDED
+// TclEventType: POWER_UPDATED
+// RouteApi::initDelayMediator elapsed time: 4.3s
+// WARNING: HEventQueue.dispatchEvent() is taking  6648 ms.
+// TclEventType: TIMING_SUMMARY_UPDATED
+// RouteApi: Init Delay Mediator Swing Worker Finished
+// TclEventType: TIMING_SUMMARY_UPDATED
+// Elapsed time: 33 seconds
+dismissDialog("Reloading"); // bB (cr)
+// HMemoryUtils.trashcanNow. Engine heap size: 6,529 MB. GUI used memory: 316 MB. Current time: 3/26/24, 5:16:01 PM GMT
+// [Engine Memory]: 6,529 MB (+113501kb) [22:19:26]
+// TclEventType: FILE_SET_CHANGE
+// HMemoryUtils.trashcanNow. Engine heap size: 6,529 MB. GUI used memory: 315 MB. Current time: 3/26/24, 5:46:01 PM GMT
+// HMemoryUtils.trashcanNow. Engine heap size: 6,529 MB. GUI used memory: 240 MB. Current time: 3/26/24, 6:16:01 PM GMT

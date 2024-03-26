@@ -111,3 +111,7 @@ set_property needs_refresh false [get_runs synth_1]
 set_property needs_refresh false [get_runs impl_1]
 launch_runs impl_1 -jobs 20
 wait_on_run impl_1
+report_timing_summary -delay_type min_max -report_unconstrained -check_timing_verbose -max_paths 10 -input_pins -routable_nets -name timing_1
+current_design impl_1
+refresh_design
+report_clock_networks -name {network_1}

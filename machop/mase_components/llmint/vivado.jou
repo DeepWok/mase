@@ -135,3 +135,4 @@ add_files -fileset constrs_1 -norecurse /home/aw1223/new/mase/machop/mase_compon
 reset_run synth_1
 launch_runs impl_1 -jobs 20
 wait_on_run impl_1
+refresh_design
