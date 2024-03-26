@@ -78,7 +78,7 @@ def mase_runner(
                 "8",
                 "-Wno-fatal",
                 "-Wno-lint",
-                "-Wno-style",
+                "-Wno-style",                
                 *extra_build_args,
             ],
             parameters=module_params,
