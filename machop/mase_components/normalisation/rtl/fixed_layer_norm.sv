@@ -106,6 +106,8 @@ module fixed_layer_norm #(
     parameter EPSILON = 0;
 
     parameter NUM_STATE_BITS = 32;
+    parameter VALID_IN_DELAY_DELAY_LINE_SIZE = 6;
+    parameter DATA_DELAY_LINE_SIZE = 12;
 
     typedef enum logic [NUM_STATE_BITS-1:0] {
         RST_STATE       = '0,
@@ -130,9 +132,22 @@ module fixed_layer_norm #(
     state_t                     state_r;
     // logic rst = ~reset_n;
 
+    logic signed  [IN_WIDTH-1:0]  data_r7    [IN_DEPTH-1:0];
+    logic signed  [IN_WIDTH-1:0]  data_r3    [IN_DEPTH-1:0];
     logic signed  [IN_WIDTH-1:0]  data_r     [IN_DEPTH-1:0];
     logic signed  [IN_WIDTH-1:0]  data_b     [IN_DEPTH-1:0]; 
 
+    logic signed  [IN_WIDTH-1:0]  data_minus_mean_r11   [IN_DEPTH-1:0];
+    logic signed  [IN_WIDTH-1:0]  data_minus_mean_r10   [IN_DEPTH-1:0];
+    logic signed  [IN_WIDTH-1:0]  data_minus_mean_r9    [IN_DEPTH-1:0];
+    logic signed  [IN_WIDTH-1:0]  data_minus_mean_r8    [IN_DEPTH-1:0];
+    logic signed  [IN_WIDTH-1:0]  data_minus_mean_r7    [IN_DEPTH-1:0];
+    logic signed  [IN_WIDTH-1:0]  data_minus_mean_r6    [IN_DEPTH-1:0];
+    logic signed  [IN_WIDTH-1:0]  data_minus_mean_r5    [IN_DEPTH-1:0];
+    logic signed  [IN_WIDTH-1:0]  data_minus_mean_r4    [IN_DEPTH-1:0];
+    logic signed  [IN_WIDTH-1:0]  data_minus_mean_r3    [IN_DEPTH-1:0];
+    logic signed  [IN_WIDTH-1:0]  data_minus_mean_r2    [IN_DEPTH-1:0];
+    logic signed  [IN_WIDTH-1:0]  data_minus_mean_r1    [IN_DEPTH-1:0];
     logic signed  [IN_WIDTH-1:0]  data_minus_mean_r     [IN_DEPTH-1:0];
     logic signed  [IN_WIDTH-1:0]  data_minus_mean_b     [IN_DEPTH-1:0]; 
 
@@ -148,11 +163,18 @@ module fixed_layer_norm #(
 
     logic signed    [SUM_WIDTH - 1:0]   mean_b [NUM_NORMALIZATION_ZONES-1:0];
     logic signed    [SUM_WIDTH - 1:0]   mean_r [NUM_NORMALIZATION_ZONES-1:0];
+    logic signed    [SUM_WIDTH - 1:0]   mean_r2 [NUM_NORMALIZATION_ZONES-1:0];
+    logic signed    [SUM_WIDTH - 1:0]   mean_r3 [NUM_NORMALIZATION_ZONES-1:0];
+    logic signed    [SUM_WIDTH - 1:0]   mean_r4 [NUM_NORMALIZATION_ZONES-1:0];
+    logic signed    [SUM_WIDTH - 1:0]   mean_r5 [NUM_NORMALIZATION_ZONES-1:0];
 
-    logic signed    [SUM_WIDTH - 1:0]   data_in_zero_padded [IN_DEPTH];
+    logic signed    [SUM_WIDTH - 1:0]   data_r_zero_padded      [IN_DEPTH];
+    logic signed    [SUM_WIDTH - 1:0]   data_r_r_r_zero_padded  [IN_DEPTH];
 
-    logic signed    [SUM_WIDTH - 1:0]             data_in_minus_mean          [IN_DEPTH-1:0];
-    logic           [SUM_SQUARED_BITS - 1:0]      data_in_minus_mean_squared  [IN_DEPTH-1:0];
+    logic signed    [SUM_WIDTH - 1:0]             data_in_minus_mean_b          [IN_DEPTH-1:0];
+    logic signed    [SUM_WIDTH - 1:0]             data_in_minus_mean_r          [IN_DEPTH-1:0];
+    logic           [SUM_SQUARED_BITS - 1:0]      data_in_minus_mean_squared_b  [IN_DEPTH-1:0];
+    logic           [SUM_SQUARED_BITS - 1:0]      data_in_minus_mean_squared_r  [IN_DEPTH-1:0];
 
     logic           [SUM_OF_SQUARES_BITS - 1:0]         sum_of_squared_differences_b        [NUM_NORMALIZATION_ZONES-1:0]; 
     logic           [SUM_OF_SQUARES_BITS - 1:0]         sum_of_squared_differences_r        [NUM_NORMALIZATION_ZONES-1:0];
@@ -185,22 +207,50 @@ module fixed_layer_norm #(
 
     logic valid_out_b; 
     logic valid_out_r; 
+    logic valid_out_r2; 
+    logic valid_out_r3; 
+    logic valid_out_r4; 
 
-    logic valid_in_sqrt_b;
-    logic valid_in_sqrt_r;
+    // logic valid_in_sqrt_b;
+    // logic valid_in_sqrt_r;
+    logic valid_in_sqrt;
+
+    logic [VALID_IN_DELAY_DELAY_LINE_SIZE - 1: 0]   data_in_valid_delay_line_b; 
+    logic [VALID_IN_DELAY_DELAY_LINE_SIZE - 1: 0]   data_in_valid_delay_line_r; 
+
+    logic           [IN_WIDTH-1:0]                  data_r_delay_line_b [DATA_DELAY_LINE_SIZE-1:0] [IN_DEPTH-1:0] ;
+    logic           [IN_WIDTH-1:0]                  data_r_delay_line_r [DATA_DELAY_LINE_SIZE-1:0] [IN_DEPTH-1:0] ;
+    logic signed    [IN_WIDTH-1:0]                  data_array_zeros    [IN_DEPTH-1:0];
+
+    assign valid_in_sqrt = data_in_valid_delay_line_r [VALID_IN_DELAY_DELAY_LINE_SIZE - 1];
 
 
+    assign data_r7 = data_r_delay_line_r[6][IN_DEPTH-1:0];
+    assign data_r3 = data_r_delay_line_r[2][IN_DEPTH-1:0];
 
+    
     always_comb
     begin
+
+        for (int i=0; i < IN_DEPTH; i++)
+        begin
+            data_array_zeros[i] = '1;
+        end
+
+        for (int i=0; i < IN_DEPTH; i++)
+        begin
+            data_in_valid_delay_line_b[i] = '0;
+        end
+
+        
         state_b             = state_r; 
 
-        valid_in_sqrt_b     = '0; 
+        // valid_in_sqrt_b     = '0; 
         valid_out_b         = '0;
 
         normalised_data_b   = normalised_data_r;
 
-        data_b  = data_r;
+        data_b  = data_r; 
         beta_b  = beta_r; 
         gamma_b = gamma_r;
         sum_b   = sum_r;  
@@ -224,20 +274,38 @@ module fixed_layer_norm #(
 
         if (data_in_0_valid)
         begin 
+            data_in_valid_delay_line_b[0] = 1'b1;
             state_b   = MEAN_SUM_STATE;
             data_b    = data_in_0;
             beta_b    = bias;
             gamma_b   = weight;
         end
+        else
+        begin
+            data_in_valid_delay_line_b = data_in_valid_delay_line_r << 1;
+        end
+
+        data_r_delay_line_b[0] = data_b;
+        
+        for (int i =1; i < DATA_DELAY_LINE_SIZE; i++)
+        begin
+            data_r_delay_line_b[i] = data_r_delay_line_r[i-1];
+        end
+
 
         // Convert the inputs to a larger bitwidth and a FP format with more frac. bits.        
         for (int i = 0; i < IN_DEPTH; i++) begin
-            data_in_zero_padded[i][SUM_WIDTH-1:0] = 0; 
-            // data_in_zero_padded[i][SUM_EXTRA_FRAC_WIDTH+IN_WIDTH-1:SUM_EXTRA_FRAC_WIDTH] = data_r[i];
-            // data_in_zero_padded[i][SUM_WIDTH-1:SUM_EXTRA_FRAC_WIDTH+IN_WIDTH] = {{SUM_NUM_MSb_PADDING_BITS}{data_r[i][IN_WIDTH-1]}}; //sv720: sign extention
-            data_in_zero_padded[i][SUM_WIDTH-1:SUM_WIDTH-IN_WIDTH] = data_r[i];
-            data_in_zero_padded[i] = data_in_zero_padded[i] >>> (SUM_WIDTH - IN_WIDTH - SUM_EXTRA_FRAC_WIDTH);
+            data_r_zero_padded[i][SUM_WIDTH-1:0] = 0; 
+            data_r_zero_padded[i][SUM_WIDTH-1:SUM_WIDTH-IN_WIDTH] = data_r[i];
+            data_r_zero_padded[i] = data_r_zero_padded[i] >>> (SUM_WIDTH - IN_WIDTH - SUM_EXTRA_FRAC_WIDTH);
 
+        end
+
+        //needed for SUB_STATE
+        for (int i = 0; i < IN_DEPTH; i++) begin
+            data_r_r_r_zero_padded[i][SUM_WIDTH-1:0] = 0; 
+            data_r_r_r_zero_padded[i][SUM_WIDTH-1:SUM_WIDTH-IN_WIDTH] = data_r3[i];
+            data_r_r_r_zero_padded[i] = data_r_r_r_zero_padded[i] >>> (SUM_WIDTH - IN_WIDTH - SUM_EXTRA_FRAC_WIDTH);
         end
 
         
@@ -252,85 +320,116 @@ module fixed_layer_norm #(
             if (&sqrt_v_out_valid)
             begin 
                 standard_deviation_b = sqrt_out; 
+                valid_out_b         = '1; //TODO: change this to delayed version
             end
         end
-        
 
-
-        if (state_r == MEAN_SUM_STATE)
-        begin
-            
-            // TODO: Take into account PARTS_PER_NORM //sv720:DONE
+         // TODO: Take into account PARTS_PER_NORM //sv720:DONE
             for (int j = 0; j < NUM_NORMALIZATION_ZONES; j++)
             begin
                 // Sum over the widened inputs.
                 sum_b[j] = 0;
                 for (int i = 0; i < NORMALIZATION_ZONE_PERIOD; i++) begin
-                    sum_b[j] += data_in_zero_padded[i+j*NORMALIZATION_ZONE_PERIOD];
+                    sum_b[j] += data_r_zero_padded[i+j*NORMALIZATION_ZONE_PERIOD];
                 end
             end
-            state_b = MEAN_DIV_STATE;
-        end
-        else if (state_r == MEAN_DIV_STATE)
-        begin 
+
             for (int j = 0; j < NUM_NORMALIZATION_ZONES; j++)
             begin
                 mean_b[j]  = sum_r[j] / NORMALIZATION_ZONE_PERIOD;
             end
-            state_b = SUB_STATE;
-        end
-        else if (state_r == SUB_STATE)
-        begin
+
             for (int j = 0; j < NUM_NORMALIZATION_ZONES; j++)
             begin
                 for (int i = 0; i < NORMALIZATION_ZONE_PERIOD; i++) 
                 begin
-                    data_in_minus_mean[i+j*NORMALIZATION_ZONE_PERIOD] =         data_in_zero_padded[i+ j*NORMALIZATION_ZONE_PERIOD] - mean_r[j];
+                    data_in_minus_mean_b[i+j*NORMALIZATION_ZONE_PERIOD] =         data_r_r_r_zero_padded[i+ j*NORMALIZATION_ZONE_PERIOD] - mean_r[j];
                 end
             end
-            state_b = SQUARING_STATE;
-        end
-        else if (state_r == SQUARING_STATE)
-        begin
+
             for (int i = 0; i < IN_DEPTH; i++) begin
-                // data_in_minus_mean[i] =         data_in_zero_padded[i] - mean_r;
-                data_in_minus_mean_squared[i] = data_in_minus_mean[i]**2;
+                data_in_minus_mean_squared_b[i] = data_in_minus_mean_r[i]**2;
             end
-            state_b = SUM_SQU_STATE; 
-        end
-        else if (state_r == SUM_SQU_STATE)
-        begin
+
             for (int j=0; j < NUM_NORMALIZATION_ZONES; j++)
             begin
                 sum_of_squared_differences_tmp[j]   = '0;
 
                 for (int i = 0; i < NORMALIZATION_ZONE_PERIOD; i++) begin
-                    sum_of_squared_differences_tmp[j] +=   data_in_minus_mean_squared[i+j*NORMALIZATION_ZONE_PERIOD];
+                    sum_of_squared_differences_tmp[j] +=   data_in_minus_mean_squared_r[i+j*NORMALIZATION_ZONE_PERIOD];
                 end
             end
             
             sum_of_squared_differences_b = sum_of_squared_differences_tmp;
-            state_b = VAR_DIV_STATE;
-        end
-        else if (state_r == VAR_DIV_STATE)
-        begin
+
             for (int j=0; j < NUM_NORMALIZATION_ZONES; j++)
             begin 
                 variance_padded_b[j] = sum_of_squared_differences_padded[j] / NORMALIZATION_ZONE_PERIOD;
             end
-            state_b = NORM_DIFF_STATE;
-            valid_in_sqrt_b = '1;
-        end
-        else if (state_r == NORM_DIFF_STATE)
-        begin 
+
             for (int j=0; j<NUM_NORMALIZATION_ZONES; j++)
             begin
                 for (int i=0; i<NORMALIZATION_ZONE_PERIOD; i++)
                 begin
-                    data_minus_mean_b[i+j*NORMALIZATION_ZONE_PERIOD] = (data_r[i+j*NORMALIZATION_ZONE_PERIOD] - mean_r[j][ IN_WIDTH + SUM_FRAC_WIDTH - IN_FRAC_WIDTH - 1:SUM_FRAC_WIDTH - IN_FRAC_WIDTH ]);
+                    data_minus_mean_b[i+j*NORMALIZATION_ZONE_PERIOD] = (data_r7[i+j*NORMALIZATION_ZONE_PERIOD] - mean_r5[j][ IN_WIDTH + SUM_FRAC_WIDTH - IN_FRAC_WIDTH - 1:SUM_FRAC_WIDTH - IN_FRAC_WIDTH ]);
                     // data_minus_mean_b[i+j*NORMALIZATION_ZONE_PERIOD] = (data_r[i+j*NORMALIZATION_ZONE_PERIOD] - mean_r[j]);
                 end
             end
+
+            for (int i=0; i<IN_DEPTH; i++)
+            begin
+                data_minus_mean_div_by_std_b[i] = data_minus_mean_r11[i]/(standard_deviation_r[int'(i/NORMALIZATION_ZONE_PERIOD)] + EPSILON);     
+            end
+
+            for (int i=0; i<IN_DEPTH; i++)
+            begin
+                data_minus_mean_div_by_std_times_gamma_b[i] = data_minus_mean_div_by_std_r[i]*gamma_r[i];
+            end
+
+            for (int i=0; i<IN_DEPTH; i++)
+            begin
+                normalised_data_b[i] = data_minus_mean_div_by_std_times_gamma_r[i] + beta_r[i];
+            end
+        
+
+
+        //TODO: remove the state machine below - left for debugging only
+
+        if (state_r == MEAN_SUM_STATE)
+        begin
+            
+           
+            state_b = MEAN_DIV_STATE;
+        end
+        else if (state_r == MEAN_DIV_STATE)
+        begin 
+            
+            state_b = SUB_STATE;
+        end
+        else if (state_r == SUB_STATE)
+        begin
+            
+            state_b = SQUARING_STATE;
+        end
+        else if (state_r == SQUARING_STATE)
+        begin
+            
+            state_b = SUM_SQU_STATE; 
+        end
+        else if (state_r == SUM_SQU_STATE)
+        begin
+            
+            state_b = VAR_DIV_STATE;
+        end
+        else if (state_r == VAR_DIV_STATE)
+        begin
+            
+            state_b = NORM_DIFF_STATE;
+            
+        end
+        else if (state_r == NORM_DIFF_STATE)
+        begin 
+            
 
             if (&sqrt_v_out_valid)
             begin
@@ -354,28 +453,19 @@ module fixed_layer_norm #(
         end
         else if (state_r == NORM_DIV_STATE)
         begin 
-            for (int i=0; i<IN_DEPTH; i++)
-            begin
-                data_minus_mean_div_by_std_b[i] = data_minus_mean_r[i]/(standard_deviation_r[int'(i/NORMALIZATION_ZONE_PERIOD)] + EPSILON);     
-            end
+            
             state_b = NORM_MULT_STATE;
         end
         else if (state_r == NORM_MULT_STATE)
         begin 
-            for (int i=0; i<IN_DEPTH; i++)
-            begin
-                data_minus_mean_div_by_std_times_gamma_b[i] = data_minus_mean_div_by_std_r[i]*gamma_r[i];
-            end
+            
             state_b = NORM_ADD_STATE;
         end
         else if (state_r == NORM_ADD_STATE)
         begin 
-            for (int i=0; i<IN_DEPTH; i++)
-            begin
-                normalised_data_b[i] = data_minus_mean_div_by_std_times_gamma_r[i] + beta_r[i];
-            end
+            
             state_b = DONE;  
-            valid_out_b = 1;   
+            
         end
         else if (state_r == DONE)
         begin
@@ -396,7 +486,7 @@ module fixed_layer_norm #(
                 .clk(clk),
                 .rst(rst),
                 .v_in(variance_in_width[j]),
-                .v_in_valid(valid_in_sqrt_r), //TODO: set meaningful value
+                .v_in_valid(valid_in_sqrt), //TODO: set meaningful value
                 .v_in_ready(sqrt_v_in_ready),
 
                 .v_out(sqrt_out[j*NORMALIZATION_ZONE_PERIOD]),
@@ -412,7 +502,7 @@ module fixed_layer_norm #(
     // Data outputs.
     assign data_in_0_ready     = 1'b1;
 
-    assign data_out_0_valid     = valid_out_r;
+    assign data_out_0_valid     = valid_out_r4;
     assign data_out_0 = normalised_data_r;
 
   
@@ -423,18 +513,40 @@ module fixed_layer_norm #(
         state_r                                     <= state_b;
         data_r                                      <= data_b;
         valid_out_r                                 <= valid_out_b;
-        valid_in_sqrt_r                             <= valid_in_sqrt_b;
+        valid_out_r2                                <= valid_out_r;
+        valid_out_r3                                <= valid_out_r2;
+        valid_out_r4                                <= valid_out_r3;
+        // valid_in_sqrt_r                             <= valid_in_sqrt_b;
         beta_r                                      <= beta_b;
         gamma_r                                     <= gamma_b;
         normalised_data_r                           <= normalised_data_b;
         sum_r                                       <= sum_b; 
         mean_r                                      <= mean_b;
+        mean_r2                                     <= mean_r;
+        mean_r3                                     <= mean_r2;
+        mean_r4                                     <= mean_r3;
+        mean_r5                                     <= mean_r4;
+        data_in_minus_mean_r                        <= data_in_minus_mean_b;
+        data_in_minus_mean_squared_r                <= data_in_minus_mean_squared_b;
         sum_of_squared_differences_r                <= sum_of_squared_differences_b;
         variance_padded_r                           <= variance_padded_b;
         data_minus_mean_r                           <= data_minus_mean_b; 
+        data_minus_mean_r2                          <= data_minus_mean_r; 
+        data_minus_mean_r3                          <= data_minus_mean_r2; 
+        data_minus_mean_r4                          <= data_minus_mean_r3; 
+        data_minus_mean_r5                          <= data_minus_mean_r4; 
+        data_minus_mean_r6                          <= data_minus_mean_r5; 
+        data_minus_mean_r7                          <= data_minus_mean_r6; 
+        data_minus_mean_r8                          <= data_minus_mean_r7; 
+        data_minus_mean_r9                          <= data_minus_mean_r8; 
+        data_minus_mean_r10                         <= data_minus_mean_r9; 
+        data_minus_mean_r11                         <= data_minus_mean_r10; 
         standard_deviation_r                        <= standard_deviation_b;
         data_minus_mean_div_by_std_r                <= data_minus_mean_div_by_std_b;   
         data_minus_mean_div_by_std_times_gamma_r    <= data_minus_mean_div_by_std_times_gamma_b;
+        data_in_valid_delay_line_r                  <= data_in_valid_delay_line_b;
+        data_r_delay_line_r                         <= data_r_delay_line_b;
+        
     end
 
   
