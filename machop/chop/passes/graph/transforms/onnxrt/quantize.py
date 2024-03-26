@@ -83,6 +83,7 @@ class Quantizer:
             model_path,
             quantized_model_path,
             data_reader,
+            activation_type=precision,
             weight_type=precision,
         )
 
@@ -97,6 +98,7 @@ class Quantizer:
         # Load the model
         model_path = str(model_path)
         model = onnx.load(model_path)
+        onnx.checker.check_model(model)
 
         # Get the configuration settings if they exist
         config_defaults = self.config.get('default', {}).get('config', {})
