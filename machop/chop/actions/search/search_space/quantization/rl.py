@@ -55,7 +55,6 @@ class RLSearchSpaceMixedPrecisionPTQ(SearchSpaceBase):
             self.model.train()
 
         if self.mg is None:
-            assert self.model_info.is_fx_traceable, "Model must be fx traceable"
             mg = MaseGraph(self.model)
             mg, _ = init_metadata_analysis_pass(mg, None)
             mg, _ = add_common_metadata_analysis_pass(
