@@ -125,4 +125,7 @@ class GraphSearchSpaceTRTMixedPrecisionPTQ(SearchSpaceBase):
         config['dataset'] = self.config["setup"]["dataset"]
         config['task'] = self.config["setup"]["task"]
 
+        config['data_module'] = self.data_module
+        config['accelerator'] = self.accelerator
+
         return config

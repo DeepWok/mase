@@ -37,12 +37,14 @@ class SearchSpaceBase:
         config: dict,
         dummy_input,
         accelerator,
+        data_module,
     ) -> None:
         self.model = model
         self.model_info = model_info
         self.config = config
         self.dummy_input = dummy_input
         self.accelerator = accelerator
+        self.data_module = data_module
 
         self.choices_flattened: dict[str, list] = {}
         self.choice_lengths_flattened: dict[str, int] = {}

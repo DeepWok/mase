@@ -105,7 +105,7 @@ class Quantizer:
                     layer.precision = trt.int8
                     layer.set_output_type(0, trt.DataType.INT8)
                 else:
-                    Exception("Unsupported precision type. Please choose from 'fp16' or 'int8'.")
+                    raise Exception("Unsupported precision type. Please choose from 'fp16' or 'int8'.")
         
         serialized_engine = builder.build_serialized_network(network, config)
         if serialized_engine is None:
