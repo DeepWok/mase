@@ -107,3 +107,31 @@ wait_on_run synth_1
 reset_run synth_1
 launch_runs synth_1 -jobs 20
 wait_on_run synth_1
+reset_run synth_1
+launch_runs synth_1 -jobs 20
+wait_on_run synth_1
+launch_runs impl_1 -jobs 20
+wait_on_run impl_1
+reset_run synth_1
+launch_runs synth_1 -jobs 20
+wait_on_run synth_1
+launch_runs impl_1 -jobs 20
+wait_on_run impl_1
+reset_run synth_1
+launch_runs synth_1 -jobs 20
+wait_on_run synth_1
+reset_run synth_1
+launch_runs synth_1 -jobs 20
+wait_on_run synth_1
+launch_runs impl_1 -jobs 20
+wait_on_run impl_1
+open_run impl_1
+add_files -fileset constrs_1 -norecurse /home/aw1223/new/mase/machop/mase_components/llmint/vivado/alveo-u280-xdc_20210505/alveo-u280-xdc.xdc
+reset_run synth_1
+launch_runs impl_1 -jobs 20
+wait_on_run impl_1
+refresh_design
+add_files -fileset constrs_1 -norecurse /home/aw1223/new/mase/machop/mase_components/llmint/vivado/constraints.xdc
+reset_run synth_1
+launch_runs impl_1 -jobs 20
+wait_on_run impl_1

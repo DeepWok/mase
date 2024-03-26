@@ -1,0 +1,930 @@
+#-----------------------------------------------------------
+# Vivado v2019.2 (64-bit)
+# SW Build 2708876 on Wed Nov  6 21:39:14 MST 2019
+# IP Build 2700528 on Thu Nov  7 00:09:20 MST 2019
+# Start of session at: Tue Mar 26 14:42:04 2024
+# Process ID: 1055518
+# Current directory: /home/aw1223/new/mase/machop/mase_components/llmint/vivado/vivado.runs/impl_1
+# Command line: vivado -log top.vdi -applog -product Vivado -messageDb vivado.pb -mode batch -source top.tcl -notrace
+# Log file: /home/aw1223/new/mase/machop/mase_components/llmint/vivado/vivado.runs/impl_1/top.vdi
+# Journal file: /home/aw1223/new/mase/machop/mase_components/llmint/vivado/vivado.runs/impl_1/vivado.jou
+#-----------------------------------------------------------
+source top.tcl -notrace
+Command: link_design -top top -part xcu280-fsvh2892-2L-e
+Design is defaulting to srcset: sources_1
+Design is defaulting to constrset: constrs_1
+INFO: [Device 21-403] Loading part xcu280-fsvh2892-2L-e
+Netlist sorting complete. Time (s): cpu = 00:00:00.10 ; elapsed = 00:00:00.10 . Memory (MB): peak = 2913.773 ; gain = 0.000 ; free physical = 180863 ; free virtual = 203683
+INFO: [Netlist 29-17] Analyzing 489 Unisim elements for replacement
+INFO: [Netlist 29-28] Unisim Transformation completed in 1 CPU seconds
+INFO: [Project 1-479] Netlist was created with Vivado 2019.2
+INFO: [Project 1-570] Preparing netlist for logic optimization
+Parsing XDC File [/home/aw1223/new/mase/machop/mase_components/llmint/vivado/alveo-u280-xdc_20210505/alveo-u280-xdc.xdc]
+WARNING: [Vivado 12-584] No ports matched 'SYS_CLK0_N'. [/home/aw1223/new/mase/machop/mase_components/llmint/vivado/alveo-u280-xdc_20210505/alveo-u280-xdc.xdc:133]
+CRITICAL WARNING: [Common 17-55] 'set_property' expects at least one object. [/home/aw1223/new/mase/machop/mase_components/llmint/vivado/alveo-u280-xdc_20210505/alveo-u280-xdc.xdc:133]
+Resolution: If [get_<value>] was used to populate the object, check to make sure this command returns at least one valid object.
+WARNING: [Vivado 12-584] No ports matched 'SYS_CLK0_N'. [/home/aw1223/new/mase/machop/mase_components/llmint/vivado/alveo-u280-xdc_20210505/alveo-u280-xdc.xdc:134]
+CRITICAL WARNING: [Common 17-55] 'set_property' expects at least one object. [/home/aw1223/new/mase/machop/mase_components/llmint/vivado/alveo-u280-xdc_20210505/alveo-u280-xdc.xdc:134]
+Resolution: If [get_<value>] was used to populate the object, check to make sure this command returns at least one valid object.
+WARNING: [Vivado 12-584] No ports matched 'SYS_CLK0_P'. [/home/aw1223/new/mase/machop/mase_components/llmint/vivado/alveo-u280-xdc_20210505/alveo-u280-xdc.xdc:135]
+CRITICAL WARNING: [Common 17-55] 'set_property' expects at least one object. [/home/aw1223/new/mase/machop/mase_components/llmint/vivado/alveo-u280-xdc_20210505/alveo-u280-xdc.xdc:135]
+Resolution: If [get_<value>] was used to populate the object, check to make sure this command returns at least one valid object.
+WARNING: [Vivado 12-584] No ports matched 'SYS_CLK0_P'. [/home/aw1223/new/mase/machop/mase_components/llmint/vivado/alveo-u280-xdc_20210505/alveo-u280-xdc.xdc:136]
+CRITICAL WARNING: [Common 17-55] 'set_property' expects at least one object. [/home/aw1223/new/mase/machop/mase_components/llmint/vivado/alveo-u280-xdc_20210505/alveo-u280-xdc.xdc:136]
+Resolution: If [get_<value>] was used to populate the object, check to make sure this command returns at least one valid object.
+WARNING: [Vivado 12-584] No ports matched 'SYS_CLK0_P'. [/home/aw1223/new/mase/machop/mase_components/llmint/vivado/alveo-u280-xdc_20210505/alveo-u280-xdc.xdc:138]
+CRITICAL WARNING: [Common 17-55] 'set_property' expects at least one object. [/home/aw1223/new/mase/machop/mase_components/llmint/vivado/alveo-u280-xdc_20210505/alveo-u280-xdc.xdc:138]
+Resolution: If [get_<value>] was used to populate the object, check to make sure this command returns at least one valid object.
+WARNING: [Vivado 12-584] No ports matched 'SYS_CLK1_N'. [/home/aw1223/new/mase/machop/mase_components/llmint/vivado/alveo-u280-xdc_20210505/alveo-u280-xdc.xdc:140]
+CRITICAL WARNING: [Common 17-55] 'set_property' expects at least one object. [/home/aw1223/new/mase/machop/mase_components/llmint/vivado/alveo-u280-xdc_20210505/alveo-u280-xdc.xdc:140]
+Resolution: If [get_<value>] was used to populate the object, check to make sure this command returns at least one valid object.
+WARNING: [Vivado 12-584] No ports matched 'SYS_CLK1_N'. [/home/aw1223/new/mase/machop/mase_components/llmint/vivado/alveo-u280-xdc_20210505/alveo-u280-xdc.xdc:141]
+CRITICAL WARNING: [Common 17-55] 'set_property' expects at least one object. [/home/aw1223/new/mase/machop/mase_components/llmint/vivado/alveo-u280-xdc_20210505/alveo-u280-xdc.xdc:141]
+Resolution: If [get_<value>] was used to populate the object, check to make sure this command returns at least one valid object.
+WARNING: [Vivado 12-584] No ports matched 'SYS_CLK1_P'. [/home/aw1223/new/mase/machop/mase_components/llmint/vivado/alveo-u280-xdc_20210505/alveo-u280-xdc.xdc:142]
+CRITICAL WARNING: [Common 17-55] 'set_property' expects at least one object. [/home/aw1223/new/mase/machop/mase_components/llmint/vivado/alveo-u280-xdc_20210505/alveo-u280-xdc.xdc:142]
+Resolution: If [get_<value>] was used to populate the object, check to make sure this command returns at least one valid object.
+WARNING: [Vivado 12-584] No ports matched 'SYS_CLK1_P'. [/home/aw1223/new/mase/machop/mase_components/llmint/vivado/alveo-u280-xdc_20210505/alveo-u280-xdc.xdc:143]
+CRITICAL WARNING: [Common 17-55] 'set_property' expects at least one object. [/home/aw1223/new/mase/machop/mase_components/llmint/vivado/alveo-u280-xdc_20210505/alveo-u280-xdc.xdc:143]
+Resolution: If [get_<value>] was used to populate the object, check to make sure this command returns at least one valid object.
+WARNING: [Vivado 12-584] No ports matched 'SYS_CLK1_P'. [/home/aw1223/new/mase/machop/mase_components/llmint/vivado/alveo-u280-xdc_20210505/alveo-u280-xdc.xdc:145]
+CRITICAL WARNING: [Common 17-55] 'set_property' expects at least one object. [/home/aw1223/new/mase/machop/mase_components/llmint/vivado/alveo-u280-xdc_20210505/alveo-u280-xdc.xdc:145]
+Resolution: If [get_<value>] was used to populate the object, check to make sure this command returns at least one valid object.
+WARNING: [Vivado 12-584] No ports matched 'SYS_CLK3_N'. [/home/aw1223/new/mase/machop/mase_components/llmint/vivado/alveo-u280-xdc_20210505/alveo-u280-xdc.xdc:149]
+CRITICAL WARNING: [Common 17-55] 'set_property' expects at least one object. [/home/aw1223/new/mase/machop/mase_components/llmint/vivado/alveo-u280-xdc_20210505/alveo-u280-xdc.xdc:149]
+Resolution: If [get_<value>] was used to populate the object, check to make sure this command returns at least one valid object.
+WARNING: [Vivado 12-584] No ports matched 'SYS_CLK3_N'. [/home/aw1223/new/mase/machop/mase_components/llmint/vivado/alveo-u280-xdc_20210505/alveo-u280-xdc.xdc:150]
+CRITICAL WARNING: [Common 17-55] 'set_property' expects at least one object. [/home/aw1223/new/mase/machop/mase_components/llmint/vivado/alveo-u280-xdc_20210505/alveo-u280-xdc.xdc:150]
+Resolution: If [get_<value>] was used to populate the object, check to make sure this command returns at least one valid object.
+WARNING: [Vivado 12-584] No ports matched 'SYS_CLK3_P'. [/home/aw1223/new/mase/machop/mase_components/llmint/vivado/alveo-u280-xdc_20210505/alveo-u280-xdc.xdc:151]
+CRITICAL WARNING: [Common 17-55] 'set_property' expects at least one object. [/home/aw1223/new/mase/machop/mase_components/llmint/vivado/alveo-u280-xdc_20210505/alveo-u280-xdc.xdc:151]
+Resolution: If [get_<value>] was used to populate the object, check to make sure this command returns at least one valid object.
+WARNING: [Vivado 12-584] No ports matched 'SYS_CLK3_P'. [/home/aw1223/new/mase/machop/mase_components/llmint/vivado/alveo-u280-xdc_20210505/alveo-u280-xdc.xdc:152]
+CRITICAL WARNING: [Common 17-55] 'set_property' expects at least one object. [/home/aw1223/new/mase/machop/mase_components/llmint/vivado/alveo-u280-xdc_20210505/alveo-u280-xdc.xdc:152]
+Resolution: If [get_<value>] was used to populate the object, check to make sure this command returns at least one valid object.
+WARNING: [Vivado 12-584] No ports matched 'USER_SI570_CLOCK_N'. [/home/aw1223/new/mase/machop/mase_components/llmint/vivado/alveo-u280-xdc_20210505/alveo-u280-xdc.xdc:154]
+CRITICAL WARNING: [Common 17-55] 'set_property' expects at least one object. [/home/aw1223/new/mase/machop/mase_components/llmint/vivado/alveo-u280-xdc_20210505/alveo-u280-xdc.xdc:154]
+Resolution: If [get_<value>] was used to populate the object, check to make sure this command returns at least one valid object.
+WARNING: [Vivado 12-584] No ports matched 'USER_SI570_CLOCK_N'. [/home/aw1223/new/mase/machop/mase_components/llmint/vivado/alveo-u280-xdc_20210505/alveo-u280-xdc.xdc:155]
+CRITICAL WARNING: [Common 17-55] 'set_property' expects at least one object. [/home/aw1223/new/mase/machop/mase_components/llmint/vivado/alveo-u280-xdc_20210505/alveo-u280-xdc.xdc:155]
+Resolution: If [get_<value>] was used to populate the object, check to make sure this command returns at least one valid object.
+WARNING: [Vivado 12-584] No ports matched 'USER_SI570_CLOCK_P'. [/home/aw1223/new/mase/machop/mase_components/llmint/vivado/alveo-u280-xdc_20210505/alveo-u280-xdc.xdc:156]
+CRITICAL WARNING: [Common 17-55] 'set_property' expects at least one object. [/home/aw1223/new/mase/machop/mase_components/llmint/vivado/alveo-u280-xdc_20210505/alveo-u280-xdc.xdc:156]
+Resolution: If [get_<value>] was used to populate the object, check to make sure this command returns at least one valid object.
+WARNING: [Vivado 12-584] No ports matched 'USER_SI570_CLOCK_P'. [/home/aw1223/new/mase/machop/mase_components/llmint/vivado/alveo-u280-xdc_20210505/alveo-u280-xdc.xdc:157]
+CRITICAL WARNING: [Common 17-55] 'set_property' expects at least one object. [/home/aw1223/new/mase/machop/mase_components/llmint/vivado/alveo-u280-xdc_20210505/alveo-u280-xdc.xdc:157]
+Resolution: If [get_<value>] was used to populate the object, check to make sure this command returns at least one valid object.
+WARNING: [Vivado 12-584] No ports matched 'PCIE_CLK1_N'. [/home/aw1223/new/mase/machop/mase_components/llmint/vivado/alveo-u280-xdc_20210505/alveo-u280-xdc.xdc:166]
+CRITICAL WARNING: [Common 17-55] 'set_property' expects at least one object. [/home/aw1223/new/mase/machop/mase_components/llmint/vivado/alveo-u280-xdc_20210505/alveo-u280-xdc.xdc:166]
+Resolution: If [get_<value>] was used to populate the object, check to make sure this command returns at least one valid object.
+WARNING: [Vivado 12-584] No ports matched 'PCIE_CLK1_P'. [/home/aw1223/new/mase/machop/mase_components/llmint/vivado/alveo-u280-xdc_20210505/alveo-u280-xdc.xdc:167]
+CRITICAL WARNING: [Common 17-55] 'set_property' expects at least one object. [/home/aw1223/new/mase/machop/mase_components/llmint/vivado/alveo-u280-xdc_20210505/alveo-u280-xdc.xdc:167]
+Resolution: If [get_<value>] was used to populate the object, check to make sure this command returns at least one valid object.
+WARNING: [Vivado 12-584] No ports matched 'SYS_CLK5_N'. [/home/aw1223/new/mase/machop/mase_components/llmint/vivado/alveo-u280-xdc_20210505/alveo-u280-xdc.xdc:168]
+CRITICAL WARNING: [Common 17-55] 'set_property' expects at least one object. [/home/aw1223/new/mase/machop/mase_components/llmint/vivado/alveo-u280-xdc_20210505/alveo-u280-xdc.xdc:168]
+Resolution: If [get_<value>] was used to populate the object, check to make sure this command returns at least one valid object.
+WARNING: [Vivado 12-584] No ports matched 'SYS_CLK5_P'. [/home/aw1223/new/mase/machop/mase_components/llmint/vivado/alveo-u280-xdc_20210505/alveo-u280-xdc.xdc:169]
+CRITICAL WARNING: [Common 17-55] 'set_property' expects at least one object. [/home/aw1223/new/mase/machop/mase_components/llmint/vivado/alveo-u280-xdc_20210505/alveo-u280-xdc.xdc:169]
+Resolution: If [get_<value>] was used to populate the object, check to make sure this command returns at least one valid object.
+WARNING: [Vivado 12-584] No ports matched 'PCIE_CLK0_N'. [/home/aw1223/new/mase/machop/mase_components/llmint/vivado/alveo-u280-xdc_20210505/alveo-u280-xdc.xdc:174]
+CRITICAL WARNING: [Common 17-55] 'set_property' expects at least one object. [/home/aw1223/new/mase/machop/mase_components/llmint/vivado/alveo-u280-xdc_20210505/alveo-u280-xdc.xdc:174]
+Resolution: If [get_<value>] was used to populate the object, check to make sure this command returns at least one valid object.
+WARNING: [Vivado 12-584] No ports matched 'PCIE_CLK0_P'. [/home/aw1223/new/mase/machop/mase_components/llmint/vivado/alveo-u280-xdc_20210505/alveo-u280-xdc.xdc:175]
+CRITICAL WARNING: [Common 17-55] 'set_property' expects at least one object. [/home/aw1223/new/mase/machop/mase_components/llmint/vivado/alveo-u280-xdc_20210505/alveo-u280-xdc.xdc:175]
+Resolution: If [get_<value>] was used to populate the object, check to make sure this command returns at least one valid object.
+WARNING: [Vivado 12-584] No ports matched 'SYS_CLK2_N'. [/home/aw1223/new/mase/machop/mase_components/llmint/vivado/alveo-u280-xdc_20210505/alveo-u280-xdc.xdc:176]
+CRITICAL WARNING: [Common 17-55] 'set_property' expects at least one object. [/home/aw1223/new/mase/machop/mase_components/llmint/vivado/alveo-u280-xdc_20210505/alveo-u280-xdc.xdc:176]
+Resolution: If [get_<value>] was used to populate the object, check to make sure this command returns at least one valid object.
+WARNING: [Vivado 12-584] No ports matched 'SYS_CLK2_P'. [/home/aw1223/new/mase/machop/mase_components/llmint/vivado/alveo-u280-xdc_20210505/alveo-u280-xdc.xdc:177]
+CRITICAL WARNING: [Common 17-55] 'set_property' expects at least one object. [/home/aw1223/new/mase/machop/mase_components/llmint/vivado/alveo-u280-xdc_20210505/alveo-u280-xdc.xdc:177]
+Resolution: If [get_<value>] was used to populate the object, check to make sure this command returns at least one valid object.
+WARNING: [Vivado 12-584] No ports matched 'MGT_SI570_CLOCK0_N'. [/home/aw1223/new/mase/machop/mase_components/llmint/vivado/alveo-u280-xdc_20210505/alveo-u280-xdc.xdc:184]
+CRITICAL WARNING: [Common 17-55] 'set_property' expects at least one object. [/home/aw1223/new/mase/machop/mase_components/llmint/vivado/alveo-u280-xdc_20210505/alveo-u280-xdc.xdc:184]
+Resolution: If [get_<value>] was used to populate the object, check to make sure this command returns at least one valid object.
+WARNING: [Vivado 12-584] No ports matched 'MGT_SI570_CLOCK0_P'. [/home/aw1223/new/mase/machop/mase_components/llmint/vivado/alveo-u280-xdc_20210505/alveo-u280-xdc.xdc:185]
+CRITICAL WARNING: [Common 17-55] 'set_property' expects at least one object. [/home/aw1223/new/mase/machop/mase_components/llmint/vivado/alveo-u280-xdc_20210505/alveo-u280-xdc.xdc:185]
+Resolution: If [get_<value>] was used to populate the object, check to make sure this command returns at least one valid object.
+WARNING: [Vivado 12-584] No ports matched 'QSFP0_CLOCK_N'. [/home/aw1223/new/mase/machop/mase_components/llmint/vivado/alveo-u280-xdc_20210505/alveo-u280-xdc.xdc:186]
+CRITICAL WARNING: [Common 17-55] 'set_property' expects at least one object. [/home/aw1223/new/mase/machop/mase_components/llmint/vivado/alveo-u280-xdc_20210505/alveo-u280-xdc.xdc:186]
+Resolution: If [get_<value>] was used to populate the object, check to make sure this command returns at least one valid object.
+WARNING: [Vivado 12-584] No ports matched 'QSFP0_CLOCK_P'. [/home/aw1223/new/mase/machop/mase_components/llmint/vivado/alveo-u280-xdc_20210505/alveo-u280-xdc.xdc:187]
+CRITICAL WARNING: [Common 17-55] 'set_property' expects at least one object. [/home/aw1223/new/mase/machop/mase_components/llmint/vivado/alveo-u280-xdc_20210505/alveo-u280-xdc.xdc:187]
+Resolution: If [get_<value>] was used to populate the object, check to make sure this command returns at least one valid object.
+WARNING: [Vivado 12-584] No ports matched 'QSFP0_FS'. [/home/aw1223/new/mase/machop/mase_components/llmint/vivado/alveo-u280-xdc_20210505/alveo-u280-xdc.xdc:189]
+CRITICAL WARNING: [Common 17-55] 'set_property' expects at least one object. [/home/aw1223/new/mase/machop/mase_components/llmint/vivado/alveo-u280-xdc_20210505/alveo-u280-xdc.xdc:189]
+Resolution: If [get_<value>] was used to populate the object, check to make sure this command returns at least one valid object.
+WARNING: [Vivado 12-584] No ports matched 'QSFP0_FS'. [/home/aw1223/new/mase/machop/mase_components/llmint/vivado/alveo-u280-xdc_20210505/alveo-u280-xdc.xdc:190]
+CRITICAL WARNING: [Common 17-55] 'set_property' expects at least one object. [/home/aw1223/new/mase/machop/mase_components/llmint/vivado/alveo-u280-xdc_20210505/alveo-u280-xdc.xdc:190]
+Resolution: If [get_<value>] was used to populate the object, check to make sure this command returns at least one valid object.
+WARNING: [Vivado 12-584] No ports matched 'QSFP0_OEB'. [/home/aw1223/new/mase/machop/mase_components/llmint/vivado/alveo-u280-xdc_20210505/alveo-u280-xdc.xdc:191]
+CRITICAL WARNING: [Common 17-55] 'set_property' expects at least one object. [/home/aw1223/new/mase/machop/mase_components/llmint/vivado/alveo-u280-xdc_20210505/alveo-u280-xdc.xdc:191]
+Resolution: If [get_<value>] was used to populate the object, check to make sure this command returns at least one valid object.
+WARNING: [Vivado 12-584] No ports matched 'QSFP0_OEB'. [/home/aw1223/new/mase/machop/mase_components/llmint/vivado/alveo-u280-xdc_20210505/alveo-u280-xdc.xdc:192]
+CRITICAL WARNING: [Common 17-55] 'set_property' expects at least one object. [/home/aw1223/new/mase/machop/mase_components/llmint/vivado/alveo-u280-xdc_20210505/alveo-u280-xdc.xdc:192]
+Resolution: If [get_<value>] was used to populate the object, check to make sure this command returns at least one valid object.
+WARNING: [Vivado 12-584] No ports matched 'MGT_SI570_CLOCK1_N'. [/home/aw1223/new/mase/machop/mase_components/llmint/vivado/alveo-u280-xdc_20210505/alveo-u280-xdc.xdc:199]
+CRITICAL WARNING: [Common 17-55] 'set_property' expects at least one object. [/home/aw1223/new/mase/machop/mase_components/llmint/vivado/alveo-u280-xdc_20210505/alveo-u280-xdc.xdc:199]
+Resolution: If [get_<value>] was used to populate the object, check to make sure this command returns at least one valid object.
+WARNING: [Vivado 12-584] No ports matched 'MGT_SI570_CLOCK1_P'. [/home/aw1223/new/mase/machop/mase_components/llmint/vivado/alveo-u280-xdc_20210505/alveo-u280-xdc.xdc:200]
+CRITICAL WARNING: [Common 17-55] 'set_property' expects at least one object. [/home/aw1223/new/mase/machop/mase_components/llmint/vivado/alveo-u280-xdc_20210505/alveo-u280-xdc.xdc:200]
+Resolution: If [get_<value>] was used to populate the object, check to make sure this command returns at least one valid object.
+WARNING: [Vivado 12-584] No ports matched 'QSFP1_CLOCK_N'. [/home/aw1223/new/mase/machop/mase_components/llmint/vivado/alveo-u280-xdc_20210505/alveo-u280-xdc.xdc:201]
+CRITICAL WARNING: [Common 17-55] 'set_property' expects at least one object. [/home/aw1223/new/mase/machop/mase_components/llmint/vivado/alveo-u280-xdc_20210505/alveo-u280-xdc.xdc:201]
+Resolution: If [get_<value>] was used to populate the object, check to make sure this command returns at least one valid object.
+WARNING: [Vivado 12-584] No ports matched 'QSFP1_CLOCK_P'. [/home/aw1223/new/mase/machop/mase_components/llmint/vivado/alveo-u280-xdc_20210505/alveo-u280-xdc.xdc:202]
+CRITICAL WARNING: [Common 17-55] 'set_property' expects at least one object. [/home/aw1223/new/mase/machop/mase_components/llmint/vivado/alveo-u280-xdc_20210505/alveo-u280-xdc.xdc:202]
+Resolution: If [get_<value>] was used to populate the object, check to make sure this command returns at least one valid object.
+WARNING: [Vivado 12-584] No ports matched 'QSFP1_OEB'. [/home/aw1223/new/mase/machop/mase_components/llmint/vivado/alveo-u280-xdc_20210505/alveo-u280-xdc.xdc:203]
+CRITICAL WARNING: [Common 17-55] 'set_property' expects at least one object. [/home/aw1223/new/mase/machop/mase_components/llmint/vivado/alveo-u280-xdc_20210505/alveo-u280-xdc.xdc:203]
+Resolution: If [get_<value>] was used to populate the object, check to make sure this command returns at least one valid object.
+WARNING: [Vivado 12-584] No ports matched 'QSFP1_OEB'. [/home/aw1223/new/mase/machop/mase_components/llmint/vivado/alveo-u280-xdc_20210505/alveo-u280-xdc.xdc:204]
+CRITICAL WARNING: [Common 17-55] 'set_property' expects at least one object. [/home/aw1223/new/mase/machop/mase_components/llmint/vivado/alveo-u280-xdc_20210505/alveo-u280-xdc.xdc:204]
+Resolution: If [get_<value>] was used to populate the object, check to make sure this command returns at least one valid object.
+WARNING: [Vivado 12-584] No ports matched 'QSFP1_FS'. [/home/aw1223/new/mase/machop/mase_components/llmint/vivado/alveo-u280-xdc_20210505/alveo-u280-xdc.xdc:205]
+CRITICAL WARNING: [Common 17-55] 'set_property' expects at least one object. [/home/aw1223/new/mase/machop/mase_components/llmint/vivado/alveo-u280-xdc_20210505/alveo-u280-xdc.xdc:205]
+Resolution: If [get_<value>] was used to populate the object, check to make sure this command returns at least one valid object.
+WARNING: [Vivado 12-584] No ports matched 'QSFP1_FS'. [/home/aw1223/new/mase/machop/mase_components/llmint/vivado/alveo-u280-xdc_20210505/alveo-u280-xdc.xdc:206]
+CRITICAL WARNING: [Common 17-55] 'set_property' expects at least one object. [/home/aw1223/new/mase/machop/mase_components/llmint/vivado/alveo-u280-xdc_20210505/alveo-u280-xdc.xdc:206]
+Resolution: If [get_<value>] was used to populate the object, check to make sure this command returns at least one valid object.
+WARNING: [Vivado 12-584] No ports matched 'SYS_CLK0_P'. [/home/aw1223/new/mase/machop/mase_components/llmint/vivado/alveo-u280-xdc_20210505/alveo-u280-xdc.xdc:210]
+CRITICAL WARNING: [Vivado 12-4739] create_clock:No valid object(s) found for '-objects [get_ports SYS_CLK0_P]'. [/home/aw1223/new/mase/machop/mase_components/llmint/vivado/alveo-u280-xdc_20210505/alveo-u280-xdc.xdc:210]
+Resolution: Check if the specified object(s) exists in the current design. If it does, ensure that the correct design hierarchy was specified for the object. If you are working with clocks, make sure create_clock was used to create the clock object before it is referenced.
+WARNING: [Vivado 12-584] No ports matched 'SYS_CLK1_P'. [/home/aw1223/new/mase/machop/mase_components/llmint/vivado/alveo-u280-xdc_20210505/alveo-u280-xdc.xdc:211]
+CRITICAL WARNING: [Vivado 12-4739] create_clock:No valid object(s) found for '-objects [get_ports SYS_CLK1_P]'. [/home/aw1223/new/mase/machop/mase_components/llmint/vivado/alveo-u280-xdc_20210505/alveo-u280-xdc.xdc:211]
+Resolution: Check if the specified object(s) exists in the current design. If it does, ensure that the correct design hierarchy was specified for the object. If you are working with clocks, make sure create_clock was used to create the clock object before it is referenced.
+WARNING: [Vivado 12-584] No ports matched 'SYS_CLK3_P'. [/home/aw1223/new/mase/machop/mase_components/llmint/vivado/alveo-u280-xdc_20210505/alveo-u280-xdc.xdc:212]
+CRITICAL WARNING: [Vivado 12-4739] create_clock:No valid object(s) found for '-objects [get_ports SYS_CLK3_P]'. [/home/aw1223/new/mase/machop/mase_components/llmint/vivado/alveo-u280-xdc_20210505/alveo-u280-xdc.xdc:212]
+Resolution: Check if the specified object(s) exists in the current design. If it does, ensure that the correct design hierarchy was specified for the object. If you are working with clocks, make sure create_clock was used to create the clock object before it is referenced.
+WARNING: [Vivado 12-584] No ports matched 'PCIE_CLK0_P'. [/home/aw1223/new/mase/machop/mase_components/llmint/vivado/alveo-u280-xdc_20210505/alveo-u280-xdc.xdc:213]
+CRITICAL WARNING: [Vivado 12-4739] create_clock:No valid object(s) found for '-objects [get_ports PCIE_CLK0_P]'. [/home/aw1223/new/mase/machop/mase_components/llmint/vivado/alveo-u280-xdc_20210505/alveo-u280-xdc.xdc:213]
+Resolution: Check if the specified object(s) exists in the current design. If it does, ensure that the correct design hierarchy was specified for the object. If you are working with clocks, make sure create_clock was used to create the clock object before it is referenced.
+WARNING: [Vivado 12-584] No ports matched 'SYS_CLK2_P'. [/home/aw1223/new/mase/machop/mase_components/llmint/vivado/alveo-u280-xdc_20210505/alveo-u280-xdc.xdc:214]
+CRITICAL WARNING: [Vivado 12-4739] create_clock:No valid object(s) found for '-objects [get_ports SYS_CLK2_P]'. [/home/aw1223/new/mase/machop/mase_components/llmint/vivado/alveo-u280-xdc_20210505/alveo-u280-xdc.xdc:214]
+Resolution: Check if the specified object(s) exists in the current design. If it does, ensure that the correct design hierarchy was specified for the object. If you are working with clocks, make sure create_clock was used to create the clock object before it is referenced.
+WARNING: [Vivado 12-584] No ports matched 'PCIE_CLK1_P'. [/home/aw1223/new/mase/machop/mase_components/llmint/vivado/alveo-u280-xdc_20210505/alveo-u280-xdc.xdc:215]
+CRITICAL WARNING: [Vivado 12-4739] create_clock:No valid object(s) found for '-objects [get_ports PCIE_CLK1_P]'. [/home/aw1223/new/mase/machop/mase_components/llmint/vivado/alveo-u280-xdc_20210505/alveo-u280-xdc.xdc:215]
+Resolution: Check if the specified object(s) exists in the current design. If it does, ensure that the correct design hierarchy was specified for the object. If you are working with clocks, make sure create_clock was used to create the clock object before it is referenced.
+WARNING: [Vivado 12-584] No ports matched 'SYS_CLK5_P'. [/home/aw1223/new/mase/machop/mase_components/llmint/vivado/alveo-u280-xdc_20210505/alveo-u280-xdc.xdc:216]
+CRITICAL WARNING: [Vivado 12-4739] create_clock:No valid object(s) found for '-objects [get_ports SYS_CLK5_P]'. [/home/aw1223/new/mase/machop/mase_components/llmint/vivado/alveo-u280-xdc_20210505/alveo-u280-xdc.xdc:216]
+Resolution: Check if the specified object(s) exists in the current design. If it does, ensure that the correct design hierarchy was specified for the object. If you are working with clocks, make sure create_clock was used to create the clock object before it is referenced.
+WARNING: [Vivado 12-584] No ports matched 'MGT_SI570_CLOCK0_P'. [/home/aw1223/new/mase/machop/mase_components/llmint/vivado/alveo-u280-xdc_20210505/alveo-u280-xdc.xdc:217]
+CRITICAL WARNING: [Vivado 12-4739] create_clock:No valid object(s) found for '-objects [get_ports MGT_SI570_CLOCK0_P]'. [/home/aw1223/new/mase/machop/mase_components/llmint/vivado/alveo-u280-xdc_20210505/alveo-u280-xdc.xdc:217]
+Resolution: Check if the specified object(s) exists in the current design. If it does, ensure that the correct design hierarchy was specified for the object. If you are working with clocks, make sure create_clock was used to create the clock object before it is referenced.
+WARNING: [Vivado 12-584] No ports matched 'QSFP0_CLOCK_P'. [/home/aw1223/new/mase/machop/mase_components/llmint/vivado/alveo-u280-xdc_20210505/alveo-u280-xdc.xdc:218]
+CRITICAL WARNING: [Vivado 12-4739] create_clock:No valid object(s) found for '-objects [get_ports QSFP0_CLOCK_P]'. [/home/aw1223/new/mase/machop/mase_components/llmint/vivado/alveo-u280-xdc_20210505/alveo-u280-xdc.xdc:218]
+Resolution: Check if the specified object(s) exists in the current design. If it does, ensure that the correct design hierarchy was specified for the object. If you are working with clocks, make sure create_clock was used to create the clock object before it is referenced.
+WARNING: [Vivado 12-584] No ports matched 'MGT_SI570_CLOCK1_P'. [/home/aw1223/new/mase/machop/mase_components/llmint/vivado/alveo-u280-xdc_20210505/alveo-u280-xdc.xdc:219]
+CRITICAL WARNING: [Vivado 12-4739] create_clock:No valid object(s) found for '-objects [get_ports MGT_SI570_CLOCK1_P]'. [/home/aw1223/new/mase/machop/mase_components/llmint/vivado/alveo-u280-xdc_20210505/alveo-u280-xdc.xdc:219]
+Resolution: Check if the specified object(s) exists in the current design. If it does, ensure that the correct design hierarchy was specified for the object. If you are working with clocks, make sure create_clock was used to create the clock object before it is referenced.
+WARNING: [Vivado 12-584] No ports matched 'QSFP1_CLOCK_P'. [/home/aw1223/new/mase/machop/mase_components/llmint/vivado/alveo-u280-xdc_20210505/alveo-u280-xdc.xdc:220]
+CRITICAL WARNING: [Vivado 12-4739] create_clock:No valid object(s) found for '-objects [get_ports QSFP1_CLOCK_P]'. [/home/aw1223/new/mase/machop/mase_components/llmint/vivado/alveo-u280-xdc_20210505/alveo-u280-xdc.xdc:220]
+Resolution: Check if the specified object(s) exists in the current design. If it does, ensure that the correct design hierarchy was specified for the object. If you are working with clocks, make sure create_clock was used to create the clock object before it is referenced.
+WARNING: [Vivado 12-584] No ports matched 'PEX_PWRBRKN'. [/home/aw1223/new/mase/machop/mase_components/llmint/vivado/alveo-u280-xdc_20210505/alveo-u280-xdc.xdc:226]
+CRITICAL WARNING: [Common 17-55] 'set_property' expects at least one object. [/home/aw1223/new/mase/machop/mase_components/llmint/vivado/alveo-u280-xdc_20210505/alveo-u280-xdc.xdc:226]
+Resolution: If [get_<value>] was used to populate the object, check to make sure this command returns at least one valid object.
+WARNING: [Vivado 12-584] No ports matched 'PEX_PWRBRKN'. [/home/aw1223/new/mase/machop/mase_components/llmint/vivado/alveo-u280-xdc_20210505/alveo-u280-xdc.xdc:227]
+CRITICAL WARNING: [Common 17-55] 'set_property' expects at least one object. [/home/aw1223/new/mase/machop/mase_components/llmint/vivado/alveo-u280-xdc_20210505/alveo-u280-xdc.xdc:227]
+Resolution: If [get_<value>] was used to populate the object, check to make sure this command returns at least one valid object.
+WARNING: [Vivado 12-584] No ports matched 'PCIE_PERST'. [/home/aw1223/new/mase/machop/mase_components/llmint/vivado/alveo-u280-xdc_20210505/alveo-u280-xdc.xdc:228]
+CRITICAL WARNING: [Common 17-55] 'set_property' expects at least one object. [/home/aw1223/new/mase/machop/mase_components/llmint/vivado/alveo-u280-xdc_20210505/alveo-u280-xdc.xdc:228]
+Resolution: If [get_<value>] was used to populate the object, check to make sure this command returns at least one valid object.
+WARNING: [Vivado 12-584] No ports matched 'PCIE_PERST'. [/home/aw1223/new/mase/machop/mase_components/llmint/vivado/alveo-u280-xdc_20210505/alveo-u280-xdc.xdc:229]
+CRITICAL WARNING: [Common 17-55] 'set_property' expects at least one object. [/home/aw1223/new/mase/machop/mase_components/llmint/vivado/alveo-u280-xdc_20210505/alveo-u280-xdc.xdc:229]
+Resolution: If [get_<value>] was used to populate the object, check to make sure this command returns at least one valid object.
+WARNING: [Vivado 12-584] No ports matched 'SYSMON_SDA'. [/home/aw1223/new/mase/machop/mase_components/llmint/vivado/alveo-u280-xdc_20210505/alveo-u280-xdc.xdc:235]
+CRITICAL WARNING: [Common 17-55] 'set_property' expects at least one object. [/home/aw1223/new/mase/machop/mase_components/llmint/vivado/alveo-u280-xdc_20210505/alveo-u280-xdc.xdc:235]
+Resolution: If [get_<value>] was used to populate the object, check to make sure this command returns at least one valid object.
+WARNING: [Vivado 12-584] No ports matched 'SYSMON_SDA'. [/home/aw1223/new/mase/machop/mase_components/llmint/vivado/alveo-u280-xdc_20210505/alveo-u280-xdc.xdc:236]
+CRITICAL WARNING: [Common 17-55] 'set_property' expects at least one object. [/home/aw1223/new/mase/machop/mase_components/llmint/vivado/alveo-u280-xdc_20210505/alveo-u280-xdc.xdc:236]
+Resolution: If [get_<value>] was used to populate the object, check to make sure this command returns at least one valid object.
+WARNING: [Vivado 12-584] No ports matched 'SYSMON_SCL'. [/home/aw1223/new/mase/machop/mase_components/llmint/vivado/alveo-u280-xdc_20210505/alveo-u280-xdc.xdc:237]
+CRITICAL WARNING: [Common 17-55] 'set_property' expects at least one object. [/home/aw1223/new/mase/machop/mase_components/llmint/vivado/alveo-u280-xdc_20210505/alveo-u280-xdc.xdc:237]
+Resolution: If [get_<value>] was used to populate the object, check to make sure this command returns at least one valid object.
+WARNING: [Vivado 12-584] No ports matched 'SYSMON_SCL'. [/home/aw1223/new/mase/machop/mase_components/llmint/vivado/alveo-u280-xdc_20210505/alveo-u280-xdc.xdc:238]
+CRITICAL WARNING: [Common 17-55] 'set_property' expects at least one object. [/home/aw1223/new/mase/machop/mase_components/llmint/vivado/alveo-u280-xdc_20210505/alveo-u280-xdc.xdc:238]
+Resolution: If [get_<value>] was used to populate the object, check to make sure this command returns at least one valid object.
+WARNING: [Vivado 12-584] No ports matched 'I2C_MAIN_INT_B'. [/home/aw1223/new/mase/machop/mase_components/llmint/vivado/alveo-u280-xdc_20210505/alveo-u280-xdc.xdc:246]
+CRITICAL WARNING: [Common 17-55] 'set_property' expects at least one object. [/home/aw1223/new/mase/machop/mase_components/llmint/vivado/alveo-u280-xdc_20210505/alveo-u280-xdc.xdc:246]
+Resolution: If [get_<value>] was used to populate the object, check to make sure this command returns at least one valid object.
+WARNING: [Vivado 12-584] No ports matched 'I2C_MAIN_INT_B'. [/home/aw1223/new/mase/machop/mase_components/llmint/vivado/alveo-u280-xdc_20210505/alveo-u280-xdc.xdc:247]
+CRITICAL WARNING: [Common 17-55] 'set_property' expects at least one object. [/home/aw1223/new/mase/machop/mase_components/llmint/vivado/alveo-u280-xdc_20210505/alveo-u280-xdc.xdc:247]
+Resolution: If [get_<value>] was used to populate the object, check to make sure this command returns at least one valid object.
+WARNING: [Vivado 12-584] No ports matched 'I2C_MUX0_INTB_FPGA'. [/home/aw1223/new/mase/machop/mase_components/llmint/vivado/alveo-u280-xdc_20210505/alveo-u280-xdc.xdc:248]
+CRITICAL WARNING: [Common 17-55] 'set_property' expects at least one object. [/home/aw1223/new/mase/machop/mase_components/llmint/vivado/alveo-u280-xdc_20210505/alveo-u280-xdc.xdc:248]
+Resolution: If [get_<value>] was used to populate the object, check to make sure this command returns at least one valid object.
+WARNING: [Vivado 12-584] No ports matched 'I2C_MUX0_INTB_FPGA'. [/home/aw1223/new/mase/machop/mase_components/llmint/vivado/alveo-u280-xdc_20210505/alveo-u280-xdc.xdc:249]
+CRITICAL WARNING: [Common 17-55] 'set_property' expects at least one object. [/home/aw1223/new/mase/machop/mase_components/llmint/vivado/alveo-u280-xdc_20210505/alveo-u280-xdc.xdc:249]
+Resolution: If [get_<value>] was used to populate the object, check to make sure this command returns at least one valid object.
+WARNING: [Vivado 12-584] No ports matched 'I2C_FPGA_SDA'. [/home/aw1223/new/mase/machop/mase_components/llmint/vivado/alveo-u280-xdc_20210505/alveo-u280-xdc.xdc:250]
+CRITICAL WARNING: [Common 17-55] 'set_property' expects at least one object. [/home/aw1223/new/mase/machop/mase_components/llmint/vivado/alveo-u280-xdc_20210505/alveo-u280-xdc.xdc:250]
+Resolution: If [get_<value>] was used to populate the object, check to make sure this command returns at least one valid object.
+WARNING: [Vivado 12-584] No ports matched 'I2C_FPGA_SDA'. [/home/aw1223/new/mase/machop/mase_components/llmint/vivado/alveo-u280-xdc_20210505/alveo-u280-xdc.xdc:251]
+CRITICAL WARNING: [Common 17-55] 'set_property' expects at least one object. [/home/aw1223/new/mase/machop/mase_components/llmint/vivado/alveo-u280-xdc_20210505/alveo-u280-xdc.xdc:251]
+Resolution: If [get_<value>] was used to populate the object, check to make sure this command returns at least one valid object.
+WARNING: [Vivado 12-584] No ports matched 'I2C_FPGA_SCL'. [/home/aw1223/new/mase/machop/mase_components/llmint/vivado/alveo-u280-xdc_20210505/alveo-u280-xdc.xdc:252]
+CRITICAL WARNING: [Common 17-55] 'set_property' expects at least one object. [/home/aw1223/new/mase/machop/mase_components/llmint/vivado/alveo-u280-xdc_20210505/alveo-u280-xdc.xdc:252]
+Resolution: If [get_<value>] was used to populate the object, check to make sure this command returns at least one valid object.
+WARNING: [Vivado 12-584] No ports matched 'I2C_FPGA_SCL'. [/home/aw1223/new/mase/machop/mase_components/llmint/vivado/alveo-u280-xdc_20210505/alveo-u280-xdc.xdc:253]
+CRITICAL WARNING: [Common 17-55] 'set_property' expects at least one object. [/home/aw1223/new/mase/machop/mase_components/llmint/vivado/alveo-u280-xdc_20210505/alveo-u280-xdc.xdc:253]
+Resolution: If [get_<value>] was used to populate the object, check to make sure this command returns at least one valid object.
+WARNING: [Vivado 12-584] No ports matched 'USB_UART_TX'. [/home/aw1223/new/mase/machop/mase_components/llmint/vivado/alveo-u280-xdc_20210505/alveo-u280-xdc.xdc:259]
+CRITICAL WARNING: [Common 17-55] 'set_property' expects at least one object. [/home/aw1223/new/mase/machop/mase_components/llmint/vivado/alveo-u280-xdc_20210505/alveo-u280-xdc.xdc:259]
+Resolution: If [get_<value>] was used to populate the object, check to make sure this command returns at least one valid object.
+WARNING: [Vivado 12-584] No ports matched 'USB_UART_TX'. [/home/aw1223/new/mase/machop/mase_components/llmint/vivado/alveo-u280-xdc_20210505/alveo-u280-xdc.xdc:260]
+CRITICAL WARNING: [Common 17-55] 'set_property' expects at least one object. [/home/aw1223/new/mase/machop/mase_components/llmint/vivado/alveo-u280-xdc_20210505/alveo-u280-xdc.xdc:260]
+Resolution: If [get_<value>] was used to populate the object, check to make sure this command returns at least one valid object.
+WARNING: [Vivado 12-584] No ports matched 'USB_UART_RX'. [/home/aw1223/new/mase/machop/mase_components/llmint/vivado/alveo-u280-xdc_20210505/alveo-u280-xdc.xdc:261]
+CRITICAL WARNING: [Common 17-55] 'set_property' expects at least one object. [/home/aw1223/new/mase/machop/mase_components/llmint/vivado/alveo-u280-xdc_20210505/alveo-u280-xdc.xdc:261]
+Resolution: If [get_<value>] was used to populate the object, check to make sure this command returns at least one valid object.
+WARNING: [Vivado 12-584] No ports matched 'USB_UART_RX'. [/home/aw1223/new/mase/machop/mase_components/llmint/vivado/alveo-u280-xdc_20210505/alveo-u280-xdc.xdc:262]
+CRITICAL WARNING: [Common 17-55] 'set_property' expects at least one object. [/home/aw1223/new/mase/machop/mase_components/llmint/vivado/alveo-u280-xdc_20210505/alveo-u280-xdc.xdc:262]
+Resolution: If [get_<value>] was used to populate the object, check to make sure this command returns at least one valid object.
+WARNING: [Vivado 12-584] No ports matched 'FPGA_TXD_MSP'. [/home/aw1223/new/mase/machop/mase_components/llmint/vivado/alveo-u280-xdc_20210505/alveo-u280-xdc.xdc:269]
+CRITICAL WARNING: [Common 17-55] 'set_property' expects at least one object. [/home/aw1223/new/mase/machop/mase_components/llmint/vivado/alveo-u280-xdc_20210505/alveo-u280-xdc.xdc:269]
+Resolution: If [get_<value>] was used to populate the object, check to make sure this command returns at least one valid object.
+WARNING: [Vivado 12-584] No ports matched 'FPGA_TXD_MSP'. [/home/aw1223/new/mase/machop/mase_components/llmint/vivado/alveo-u280-xdc_20210505/alveo-u280-xdc.xdc:270]
+CRITICAL WARNING: [Common 17-55] 'set_property' expects at least one object. [/home/aw1223/new/mase/machop/mase_components/llmint/vivado/alveo-u280-xdc_20210505/alveo-u280-xdc.xdc:270]
+Resolution: If [get_<value>] was used to populate the object, check to make sure this command returns at least one valid object.
+WARNING: [Vivado 12-584] No ports matched 'FPGA_RXD_MSP'. [/home/aw1223/new/mase/machop/mase_components/llmint/vivado/alveo-u280-xdc_20210505/alveo-u280-xdc.xdc:271]
+CRITICAL WARNING: [Common 17-55] 'set_property' expects at least one object. [/home/aw1223/new/mase/machop/mase_components/llmint/vivado/alveo-u280-xdc_20210505/alveo-u280-xdc.xdc:271]
+Resolution: If [get_<value>] was used to populate the object, check to make sure this command returns at least one valid object.
+WARNING: [Vivado 12-584] No ports matched 'FPGA_RXD_MSP'. [/home/aw1223/new/mase/machop/mase_components/llmint/vivado/alveo-u280-xdc_20210505/alveo-u280-xdc.xdc:272]
+CRITICAL WARNING: [Common 17-55] 'set_property' expects at least one object. [/home/aw1223/new/mase/machop/mase_components/llmint/vivado/alveo-u280-xdc_20210505/alveo-u280-xdc.xdc:272]
+Resolution: If [get_<value>] was used to populate the object, check to make sure this command returns at least one valid object.
+WARNING: [Vivado 12-584] No ports matched 'HBM_CATTRIP'. [/home/aw1223/new/mase/machop/mase_components/llmint/vivado/alveo-u280-xdc_20210505/alveo-u280-xdc.xdc:279]
+CRITICAL WARNING: [Common 17-55] 'set_property' expects at least one object. [/home/aw1223/new/mase/machop/mase_components/llmint/vivado/alveo-u280-xdc_20210505/alveo-u280-xdc.xdc:279]
+Resolution: If [get_<value>] was used to populate the object, check to make sure this command returns at least one valid object.
+WARNING: [Vivado 12-584] No ports matched 'HBM_CATTRIP'. [/home/aw1223/new/mase/machop/mase_components/llmint/vivado/alveo-u280-xdc_20210505/alveo-u280-xdc.xdc:280]
+CRITICAL WARNING: [Common 17-55] 'set_property' expects at least one object. [/home/aw1223/new/mase/machop/mase_components/llmint/vivado/alveo-u280-xdc_20210505/alveo-u280-xdc.xdc:280]
+Resolution: If [get_<value>] was used to populate the object, check to make sure this command returns at least one valid object.
+WARNING: [Vivado 12-584] No ports matched 'HBM_CATTRIP'. [/home/aw1223/new/mase/machop/mase_components/llmint/vivado/alveo-u280-xdc_20210505/alveo-u280-xdc.xdc:281]
+CRITICAL WARNING: [Common 17-55] 'set_property' expects at least one object. [/home/aw1223/new/mase/machop/mase_components/llmint/vivado/alveo-u280-xdc_20210505/alveo-u280-xdc.xdc:281]
+Resolution: If [get_<value>] was used to populate the object, check to make sure this command returns at least one valid object.
+WARNING: [Vivado 12-584] No ports matched 'DDR4_RESET_GATE'. [/home/aw1223/new/mase/machop/mase_components/llmint/vivado/alveo-u280-xdc_20210505/alveo-u280-xdc.xdc:287]
+CRITICAL WARNING: [Common 17-55] 'set_property' expects at least one object. [/home/aw1223/new/mase/machop/mase_components/llmint/vivado/alveo-u280-xdc_20210505/alveo-u280-xdc.xdc:287]
+Resolution: If [get_<value>] was used to populate the object, check to make sure this command returns at least one valid object.
+WARNING: [Vivado 12-584] No ports matched 'DDR4_RESET_GATE'. [/home/aw1223/new/mase/machop/mase_components/llmint/vivado/alveo-u280-xdc_20210505/alveo-u280-xdc.xdc:288]
+CRITICAL WARNING: [Common 17-55] 'set_property' expects at least one object. [/home/aw1223/new/mase/machop/mase_components/llmint/vivado/alveo-u280-xdc_20210505/alveo-u280-xdc.xdc:288]
+Resolution: If [get_<value>] was used to populate the object, check to make sure this command returns at least one valid object.
+WARNING: [Vivado 12-584] No ports matched 'CPU_RESET_FPGA'. [/home/aw1223/new/mase/machop/mase_components/llmint/vivado/alveo-u280-xdc_20210505/alveo-u280-xdc.xdc:304]
+CRITICAL WARNING: [Common 17-55] 'set_property' expects at least one object. [/home/aw1223/new/mase/machop/mase_components/llmint/vivado/alveo-u280-xdc_20210505/alveo-u280-xdc.xdc:304]
+Resolution: If [get_<value>] was used to populate the object, check to make sure this command returns at least one valid object.
+WARNING: [Vivado 12-584] No ports matched 'CPU_RESET_FPGA'. [/home/aw1223/new/mase/machop/mase_components/llmint/vivado/alveo-u280-xdc_20210505/alveo-u280-xdc.xdc:305]
+CRITICAL WARNING: [Common 17-55] 'set_property' expects at least one object. [/home/aw1223/new/mase/machop/mase_components/llmint/vivado/alveo-u280-xdc_20210505/alveo-u280-xdc.xdc:305]
+Resolution: If [get_<value>] was used to populate the object, check to make sure this command returns at least one valid object.
+WARNING: [Vivado 12-584] No ports matched 'c0_ddr4_dq[42]'. [/home/aw1223/new/mase/machop/mase_components/llmint/vivado/alveo-u280-xdc_20210505/alveo-u280-xdc.xdc:317]
+CRITICAL WARNING: [Common 17-55] 'set_property' expects at least one object. [/home/aw1223/new/mase/machop/mase_components/llmint/vivado/alveo-u280-xdc_20210505/alveo-u280-xdc.xdc:317]
+Resolution: If [get_<value>] was used to populate the object, check to make sure this command returns at least one valid object.
+WARNING: [Vivado 12-584] No ports matched 'c0_ddr4_dq[42]'. [/home/aw1223/new/mase/machop/mase_components/llmint/vivado/alveo-u280-xdc_20210505/alveo-u280-xdc.xdc:318]
+CRITICAL WARNING: [Common 17-55] 'set_property' expects at least one object. [/home/aw1223/new/mase/machop/mase_components/llmint/vivado/alveo-u280-xdc_20210505/alveo-u280-xdc.xdc:318]
+Resolution: If [get_<value>] was used to populate the object, check to make sure this command returns at least one valid object.
+WARNING: [Vivado 12-584] No ports matched 'c0_ddr4_dq[43]'. [/home/aw1223/new/mase/machop/mase_components/llmint/vivado/alveo-u280-xdc_20210505/alveo-u280-xdc.xdc:319]
+CRITICAL WARNING: [Common 17-55] 'set_property' expects at least one object. [/home/aw1223/new/mase/machop/mase_components/llmint/vivado/alveo-u280-xdc_20210505/alveo-u280-xdc.xdc:319]
+Resolution: If [get_<value>] was used to populate the object, check to make sure this command returns at least one valid object.
+WARNING: [Vivado 12-584] No ports matched 'c0_ddr4_dq[43]'. [/home/aw1223/new/mase/machop/mase_components/llmint/vivado/alveo-u280-xdc_20210505/alveo-u280-xdc.xdc:320]
+CRITICAL WARNING: [Common 17-55] 'set_property' expects at least one object. [/home/aw1223/new/mase/machop/mase_components/llmint/vivado/alveo-u280-xdc_20210505/alveo-u280-xdc.xdc:320]
+Resolution: If [get_<value>] was used to populate the object, check to make sure this command returns at least one valid object.
+WARNING: [Vivado 12-584] No ports matched 'c0_ddr4_dq[40]'. [/home/aw1223/new/mase/machop/mase_components/llmint/vivado/alveo-u280-xdc_20210505/alveo-u280-xdc.xdc:321]
+CRITICAL WARNING: [Common 17-55] 'set_property' expects at least one object. [/home/aw1223/new/mase/machop/mase_components/llmint/vivado/alveo-u280-xdc_20210505/alveo-u280-xdc.xdc:321]
+Resolution: If [get_<value>] was used to populate the object, check to make sure this command returns at least one valid object.
+WARNING: [Vivado 12-584] No ports matched 'c0_ddr4_dq[40]'. [/home/aw1223/new/mase/machop/mase_components/llmint/vivado/alveo-u280-xdc_20210505/alveo-u280-xdc.xdc:322]
+CRITICAL WARNING: [Common 17-55] 'set_property' expects at least one object. [/home/aw1223/new/mase/machop/mase_components/llmint/vivado/alveo-u280-xdc_20210505/alveo-u280-xdc.xdc:322]
+Resolution: If [get_<value>] was used to populate the object, check to make sure this command returns at least one valid object.
+WARNING: [Vivado 12-584] No ports matched 'c0_ddr4_dq[41]'. [/home/aw1223/new/mase/machop/mase_components/llmint/vivado/alveo-u280-xdc_20210505/alveo-u280-xdc.xdc:323]
+CRITICAL WARNING: [Common 17-55] 'set_property' expects at least one object. [/home/aw1223/new/mase/machop/mase_components/llmint/vivado/alveo-u280-xdc_20210505/alveo-u280-xdc.xdc:323]
+Resolution: If [get_<value>] was used to populate the object, check to make sure this command returns at least one valid object.
+WARNING: [Vivado 12-584] No ports matched 'c0_ddr4_dq[41]'. [/home/aw1223/new/mase/machop/mase_components/llmint/vivado/alveo-u280-xdc_20210505/alveo-u280-xdc.xdc:324]
+CRITICAL WARNING: [Common 17-55] 'set_property' expects at least one object. [/home/aw1223/new/mase/machop/mase_components/llmint/vivado/alveo-u280-xdc_20210505/alveo-u280-xdc.xdc:324]
+Resolution: If [get_<value>] was used to populate the object, check to make sure this command returns at least one valid object.
+WARNING: [Vivado 12-584] No ports matched 'c0_ddr4_dqs_c[10]'. [/home/aw1223/new/mase/machop/mase_components/llmint/vivado/alveo-u280-xdc_20210505/alveo-u280-xdc.xdc:325]
+CRITICAL WARNING: [Common 17-55] 'set_property' expects at least one object. [/home/aw1223/new/mase/machop/mase_components/llmint/vivado/alveo-u280-xdc_20210505/alveo-u280-xdc.xdc:325]
+Resolution: If [get_<value>] was used to populate the object, check to make sure this command returns at least one valid object.
+WARNING: [Vivado 12-584] No ports matched 'c0_ddr4_dqs_c[10]'. [/home/aw1223/new/mase/machop/mase_components/llmint/vivado/alveo-u280-xdc_20210505/alveo-u280-xdc.xdc:326]
+CRITICAL WARNING: [Common 17-55] 'set_property' expects at least one object. [/home/aw1223/new/mase/machop/mase_components/llmint/vivado/alveo-u280-xdc_20210505/alveo-u280-xdc.xdc:326]
+Resolution: If [get_<value>] was used to populate the object, check to make sure this command returns at least one valid object.
+WARNING: [Vivado 12-584] No ports matched 'c0_ddr4_dqs_t[10]'. [/home/aw1223/new/mase/machop/mase_components/llmint/vivado/alveo-u280-xdc_20210505/alveo-u280-xdc.xdc:327]
+CRITICAL WARNING: [Common 17-55] 'set_property' expects at least one object. [/home/aw1223/new/mase/machop/mase_components/llmint/vivado/alveo-u280-xdc_20210505/alveo-u280-xdc.xdc:327]
+Resolution: If [get_<value>] was used to populate the object, check to make sure this command returns at least one valid object.
+WARNING: [Vivado 12-584] No ports matched 'c0_ddr4_dqs_t[10]'. [/home/aw1223/new/mase/machop/mase_components/llmint/vivado/alveo-u280-xdc_20210505/alveo-u280-xdc.xdc:328]
+CRITICAL WARNING: [Common 17-55] 'set_property' expects at least one object. [/home/aw1223/new/mase/machop/mase_components/llmint/vivado/alveo-u280-xdc_20210505/alveo-u280-xdc.xdc:328]
+Resolution: If [get_<value>] was used to populate the object, check to make sure this command returns at least one valid object.
+WARNING: [Vivado 12-584] No ports matched 'c0_ddr4_dq[44]'. [/home/aw1223/new/mase/machop/mase_components/llmint/vivado/alveo-u280-xdc_20210505/alveo-u280-xdc.xdc:329]
+CRITICAL WARNING: [Common 17-55] 'set_property' expects at least one object. [/home/aw1223/new/mase/machop/mase_components/llmint/vivado/alveo-u280-xdc_20210505/alveo-u280-xdc.xdc:329]
+Resolution: If [get_<value>] was used to populate the object, check to make sure this command returns at least one valid object.
+WARNING: [Vivado 12-584] No ports matched 'c0_ddr4_dq[44]'. [/home/aw1223/new/mase/machop/mase_components/llmint/vivado/alveo-u280-xdc_20210505/alveo-u280-xdc.xdc:330]
+CRITICAL WARNING: [Common 17-55] 'set_property' expects at least one object. [/home/aw1223/new/mase/machop/mase_components/llmint/vivado/alveo-u280-xdc_20210505/alveo-u280-xdc.xdc:330]
+Resolution: If [get_<value>] was used to populate the object, check to make sure this command returns at least one valid object.
+WARNING: [Vivado 12-584] No ports matched 'c0_ddr4_dq[45]'. [/home/aw1223/new/mase/machop/mase_components/llmint/vivado/alveo-u280-xdc_20210505/alveo-u280-xdc.xdc:331]
+CRITICAL WARNING: [Common 17-55] 'set_property' expects at least one object. [/home/aw1223/new/mase/machop/mase_components/llmint/vivado/alveo-u280-xdc_20210505/alveo-u280-xdc.xdc:331]
+Resolution: If [get_<value>] was used to populate the object, check to make sure this command returns at least one valid object.
+WARNING: [Vivado 12-584] No ports matched 'c0_ddr4_dq[45]'. [/home/aw1223/new/mase/machop/mase_components/llmint/vivado/alveo-u280-xdc_20210505/alveo-u280-xdc.xdc:332]
+INFO: [Common 17-14] Message 'Vivado 12-584' appears 100 times and further instances of the messages will be disabled. Use the Tcl command set_msg_config to change the current settings. [/home/aw1223/new/mase/machop/mase_components/llmint/vivado/alveo-u280-xdc_20210505/alveo-u280-xdc.xdc:332]
+CRITICAL WARNING: [Common 17-55] 'set_property' expects at least one object. [/home/aw1223/new/mase/machop/mase_components/llmint/vivado/alveo-u280-xdc_20210505/alveo-u280-xdc.xdc:332]
+Resolution: If [get_<value>] was used to populate the object, check to make sure this command returns at least one valid object.
+CRITICAL WARNING: [Common 17-55] 'set_property' expects at least one object. [/home/aw1223/new/mase/machop/mase_components/llmint/vivado/alveo-u280-xdc_20210505/alveo-u280-xdc.xdc:333]
+Resolution: If [get_<value>] was used to populate the object, check to make sure this command returns at least one valid object.
+CRITICAL WARNING: [Common 17-55] 'set_property' expects at least one object. [/home/aw1223/new/mase/machop/mase_components/llmint/vivado/alveo-u280-xdc_20210505/alveo-u280-xdc.xdc:334]
+Resolution: If [get_<value>] was used to populate the object, check to make sure this command returns at least one valid object.
+CRITICAL WARNING: [Common 17-55] 'set_property' expects at least one object. [/home/aw1223/new/mase/machop/mase_components/llmint/vivado/alveo-u280-xdc_20210505/alveo-u280-xdc.xdc:335]
+Resolution: If [get_<value>] was used to populate the object, check to make sure this command returns at least one valid object.
+CRITICAL WARNING: [Common 17-55] 'set_property' expects at least one object. [/home/aw1223/new/mase/machop/mase_components/llmint/vivado/alveo-u280-xdc_20210505/alveo-u280-xdc.xdc:336]
+Resolution: If [get_<value>] was used to populate the object, check to make sure this command returns at least one valid object.
+CRITICAL WARNING: [Common 17-55] 'set_property' expects at least one object. [/home/aw1223/new/mase/machop/mase_components/llmint/vivado/alveo-u280-xdc_20210505/alveo-u280-xdc.xdc:337]
+Resolution: If [get_<value>] was used to populate the object, check to make sure this command returns at least one valid object.
+CRITICAL WARNING: [Common 17-55] 'set_property' expects at least one object. [/home/aw1223/new/mase/machop/mase_components/llmint/vivado/alveo-u280-xdc_20210505/alveo-u280-xdc.xdc:338]
+Resolution: If [get_<value>] was used to populate the object, check to make sure this command returns at least one valid object.
+CRITICAL WARNING: [Common 17-55] 'set_property' expects at least one object. [/home/aw1223/new/mase/machop/mase_components/llmint/vivado/alveo-u280-xdc_20210505/alveo-u280-xdc.xdc:339]
+Resolution: If [get_<value>] was used to populate the object, check to make sure this command returns at least one valid object.
+CRITICAL WARNING: [Common 17-55] 'set_property' expects at least one object. [/home/aw1223/new/mase/machop/mase_components/llmint/vivado/alveo-u280-xdc_20210505/alveo-u280-xdc.xdc:340]
+Resolution: If [get_<value>] was used to populate the object, check to make sure this command returns at least one valid object.
+CRITICAL WARNING: [Common 17-55] 'set_property' expects at least one object. [/home/aw1223/new/mase/machop/mase_components/llmint/vivado/alveo-u280-xdc_20210505/alveo-u280-xdc.xdc:345]
+Resolution: If [get_<value>] was used to populate the object, check to make sure this command returns at least one valid object.
+CRITICAL WARNING: [Common 17-55] 'set_property' expects at least one object. [/home/aw1223/new/mase/machop/mase_components/llmint/vivado/alveo-u280-xdc_20210505/alveo-u280-xdc.xdc:346]
+Resolution: If [get_<value>] was used to populate the object, check to make sure this command returns at least one valid object.
+CRITICAL WARNING: [Common 17-55] 'set_property' expects at least one object. [/home/aw1223/new/mase/machop/mase_components/llmint/vivado/alveo-u280-xdc_20210505/alveo-u280-xdc.xdc:347]
+Resolution: If [get_<value>] was used to populate the object, check to make sure this command returns at least one valid object.
+INFO: [Common 17-14] Message 'Common 17-55' appears 100 times and further instances of the messages will be disabled. Use the Tcl command set_msg_config to change the current settings. [/home/aw1223/new/mase/machop/mase_components/llmint/vivado/alveo-u280-xdc_20210505/alveo-u280-xdc.xdc:347]
+Finished Parsing XDC File [/home/aw1223/new/mase/machop/mase_components/llmint/vivado/alveo-u280-xdc_20210505/alveo-u280-xdc.xdc]
+Parsing XDC File [/home/aw1223/new/mase/machop/mase_components/llmint/vivado/constraints.xdc]
+Finished Parsing XDC File [/home/aw1223/new/mase/machop/mase_components/llmint/vivado/constraints.xdc]
+INFO: [Opt 31-138] Pushed 0 inverter(s) to 0 load pin(s).
+Netlist sorting complete. Time (s): cpu = 00:00:00 ; elapsed = 00:00:00.01 . Memory (MB): peak = 3072.242 ; gain = 0.000 ; free physical = 180248 ; free virtual = 203068
+INFO: [Project 1-111] Unisim Transformation Summary:
+  A total of 197 instances were transformed.
+  DSP48E2 => DSP48E2 (DSP_ALU, DSP_A_B_DATA, DSP_C_DATA, DSP_MULTIPLIER, DSP_M_DATA, DSP_OUTPUT, DSP_PREADD, DSP_PREADD_DATA): 64 instances
+  IBUF => IBUF (IBUFCTRL, INBUF): 133 instances
+
+9 Infos, 100 Warnings, 111 Critical Warnings and 0 Errors encountered.
+link_design completed successfully
+link_design: Time (s): cpu = 00:00:27 ; elapsed = 00:01:20 . Memory (MB): peak = 3072.242 ; gain = 1367.438 ; free physical = 180248 ; free virtual = 203068
+Command: opt_design
+Attempting to get a license for feature 'Implementation' and/or device 'xcu280'
+INFO: [Common 17-349] Got license for feature 'Implementation' and/or device 'xcu280'
+Running DRC as a precondition to command opt_design
+
+Starting DRC Task
+INFO: [DRC 23-27] Running DRC with 8 threads
+INFO: [Project 1-461] DRC finished with 0 Errors
+INFO: [Project 1-462] Please refer to the DRC report (report_drc) for more information.
+
+Time (s): cpu = 00:00:04 ; elapsed = 00:00:03 . Memory (MB): peak = 3181.836 ; gain = 109.594 ; free physical = 180134 ; free virtual = 202954
+
+Starting Cache Timing Information Task
+INFO: [Timing 38-35] Done setting XDC timing constraints.
+Ending Cache Timing Information Task | Checksum: e226baab
+
+Time (s): cpu = 00:00:22 ; elapsed = 00:00:22 . Memory (MB): peak = 3599.586 ; gain = 417.750 ; free physical = 179237 ; free virtual = 202058
+
+Starting Logic Optimization Task
+
+Phase 1 Retarget
+INFO: [Opt 31-138] Pushed 1 inverter(s) to 4241 load pin(s).
+INFO: [Opt 31-49] Retargeted 0 cell(s).
+Phase 1 Retarget | Checksum: 5f6b57ac
+
+Time (s): cpu = 00:00:02 ; elapsed = 00:00:01 . Memory (MB): peak = 3762.461 ; gain = 0.000 ; free physical = 178996 ; free virtual = 201816
+INFO: [Opt 31-389] Phase Retarget created 0 cells and removed 1 cells
+INFO: [Opt 31-1021] In phase Retarget, 1024 netlist objects are constrained preventing optimization. Please run opt_design with -debug_log to get more detail. 
+
+Phase 2 Constant propagation
+INFO: [Opt 31-138] Pushed 0 inverter(s) to 0 load pin(s).
+Phase 2 Constant propagation | Checksum: 09495e24
+
+Time (s): cpu = 00:00:03 ; elapsed = 00:00:02 . Memory (MB): peak = 3762.461 ; gain = 0.000 ; free physical = 178996 ; free virtual = 201817
+INFO: [Opt 31-389] Phase Constant propagation created 0 cells and removed 0 cells
+INFO: [Opt 31-1021] In phase Constant propagation, 1024 netlist objects are constrained preventing optimization. Please run opt_design with -debug_log to get more detail. 
+
+Phase 3 Sweep
+Phase 3 Sweep | Checksum: fed4568d
+
+Time (s): cpu = 00:00:03 ; elapsed = 00:00:02 . Memory (MB): peak = 3762.461 ; gain = 0.000 ; free physical = 178930 ; free virtual = 201750
+INFO: [Opt 31-389] Phase Sweep created 0 cells and removed 0 cells
+INFO: [Opt 31-1021] In phase Sweep, 1024 netlist objects are constrained preventing optimization. Please run opt_design with -debug_log to get more detail. 
+
+Phase 4 BUFG optimization
+INFO: [Opt 31-1077] Phase BUFG optimization inserted 0 global clock buffer(s) for CLOCK_LOW_FANOUT.
+INFO: [Opt 31-1112] Starts optimizing BUFG(s) with a common MMCM/DPLL/XPLL driver.
+INFO: [Opt 31-1112] Starts optimizing BUFG(s) with a common driver.
+INFO: [Opt 31-1092] Phase BUFG optimization transformed 0 BUFG(s) to MBUFG(s).
+Phase 4 BUFG optimization | Checksum: fed4568d
+
+Time (s): cpu = 00:00:04 ; elapsed = 00:00:03 . Memory (MB): peak = 3762.461 ; gain = 0.000 ; free physical = 178917 ; free virtual = 201738
+INFO: [Opt 31-662] Phase BUFG optimization created 0 cells of which 0 are BUFGs and removed 0 cells.
+
+Phase 5 Shift Register Optimization
+INFO: [Opt 31-1064] SRL Remap converted 0 SRLs to 0 registers and converted 0 registers of register chains to 0 SRLs
+Phase 5 Shift Register Optimization | Checksum: fed4568d
+
+Time (s): cpu = 00:00:04 ; elapsed = 00:00:03 . Memory (MB): peak = 3762.461 ; gain = 0.000 ; free physical = 178915 ; free virtual = 201735
+INFO: [Opt 31-389] Phase Shift Register Optimization created 0 cells and removed 0 cells
+
+Phase 6 Post Processing Netlist
+Phase 6 Post Processing Netlist | Checksum: fed4568d
+
+Time (s): cpu = 00:00:04 ; elapsed = 00:00:03 . Memory (MB): peak = 3762.461 ; gain = 0.000 ; free physical = 178911 ; free virtual = 201732
+INFO: [Opt 31-389] Phase Post Processing Netlist created 0 cells and removed 0 cells
+INFO: [Opt 31-1021] In phase Post Processing Netlist, 1024 netlist objects are constrained preventing optimization. Please run opt_design with -debug_log to get more detail. 
+Opt_design Change Summary
+=========================
+
+
+-------------------------------------------------------------------------------------------------------------------------
+|  Phase                        |  #Cells created  |  #Cells Removed  |  #Constrained objects preventing optimizations  |
+-------------------------------------------------------------------------------------------------------------------------
+|  Retarget                     |               0  |               1  |                                           1024  |
+|  Constant propagation         |               0  |               0  |                                           1024  |
+|  Sweep                        |               0  |               0  |                                           1024  |
+|  BUFG optimization            |               0  |               0  |                                              0  |
+|  Shift Register Optimization  |               0  |               0  |                                              0  |
+|  Post Processing Netlist      |               0  |               0  |                                           1024  |
+-------------------------------------------------------------------------------------------------------------------------
+
+
+
+Starting Connectivity Check Task
+
+Time (s): cpu = 00:00:00.03 ; elapsed = 00:00:00.02 . Memory (MB): peak = 3762.461 ; gain = 0.000 ; free physical = 178898 ; free virtual = 201719
+Ending Logic Optimization Task | Checksum: b87d87b9
+
+Time (s): cpu = 00:00:05 ; elapsed = 00:00:04 . Memory (MB): peak = 3762.461 ; gain = 0.000 ; free physical = 178898 ; free virtual = 201718
+
+Starting Power Optimization Task
+INFO: [Pwropt 34-132] Skipping clock gating for clocks with a period < 2.00 ns.
+Ending Power Optimization Task | Checksum: b87d87b9
+
+Time (s): cpu = 00:00:00.03 ; elapsed = 00:00:00.05 . Memory (MB): peak = 3762.461 ; gain = 0.000 ; free physical = 178896 ; free virtual = 201717
+
+Starting Final Cleanup Task
+Ending Final Cleanup Task | Checksum: b87d87b9
+
+Time (s): cpu = 00:00:00 ; elapsed = 00:00:00.05 . Memory (MB): peak = 3762.461 ; gain = 0.000 ; free physical = 178912 ; free virtual = 201732
+
+Starting Netlist Obfuscation Task
+Netlist sorting complete. Time (s): cpu = 00:00:00 ; elapsed = 00:00:00 . Memory (MB): peak = 3762.461 ; gain = 0.000 ; free physical = 178909 ; free virtual = 201730
+Ending Netlist Obfuscation Task | Checksum: b87d87b9
+
+Time (s): cpu = 00:00:00 ; elapsed = 00:00:00.04 . Memory (MB): peak = 3762.461 ; gain = 0.000 ; free physical = 178908 ; free virtual = 201729
+INFO: [Common 17-83] Releasing license: Implementation
+34 Infos, 100 Warnings, 111 Critical Warnings and 0 Errors encountered.
+opt_design completed successfully
+opt_design: Time (s): cpu = 00:00:32 ; elapsed = 00:00:33 . Memory (MB): peak = 3762.461 ; gain = 690.219 ; free physical = 178899 ; free virtual = 201720
+Netlist sorting complete. Time (s): cpu = 00:00:00 ; elapsed = 00:00:00 . Memory (MB): peak = 3762.461 ; gain = 0.000 ; free physical = 178897 ; free virtual = 201717
+INFO: [Timing 38-480] Writing timing data to binary archive.
+INFO: [Common 17-1381] The checkpoint '/home/aw1223/new/mase/machop/mase_components/llmint/vivado/vivado.runs/impl_1/top_opt.dcp' has been generated.
+INFO: [runtcl-4] Executing : report_drc -file top_drc_opted.rpt -pb top_drc_opted.pb -rpx top_drc_opted.rpx
+Command: report_drc -file top_drc_opted.rpt -pb top_drc_opted.pb -rpx top_drc_opted.rpx
+INFO: [IP_Flow 19-234] Refreshing IP repositories
+INFO: [IP_Flow 19-1704] No user IP repositories specified
+INFO: [IP_Flow 19-2313] Loaded Vivado IP repository '/mnt/applications/Xilinx/19.2/Vivado/2019.2/data/ip'.
+INFO: [DRC 23-27] Running DRC with 8 threads
+INFO: [Coretcl 2-168] The results of DRC are in file /home/aw1223/new/mase/machop/mase_components/llmint/vivado/vivado.runs/impl_1/top_drc_opted.rpt.
+report_drc completed successfully
+report_drc: Time (s): cpu = 00:00:07 ; elapsed = 00:00:06 . Memory (MB): peak = 3854.242 ; gain = 59.766 ; free physical = 178770 ; free virtual = 201595
+Command: place_design
+Attempting to get a license for feature 'Implementation' and/or device 'xcu280'
+INFO: [Common 17-349] Got license for feature 'Implementation' and/or device 'xcu280'
+INFO: [DRC 23-27] Running DRC with 8 threads
+INFO: [Vivado_Tcl 4-198] DRC finished with 0 Errors
+INFO: [Vivado_Tcl 4-199] Please refer to the DRC report (report_drc) for more information.
+Running DRC as a precondition to command place_design
+INFO: [DRC 23-27] Running DRC with 8 threads
+INFO: [Vivado_Tcl 4-198] DRC finished with 0 Errors
+INFO: [Vivado_Tcl 4-199] Please refer to the DRC report (report_drc) for more information.
+
+Starting Placer Task
+INFO: [Place 30-611] Multithreading enabled for place_design using a maximum of 8 CPUs
+
+Phase 1 Placer Initialization
+
+Phase 1.1 Placer Initialization Netlist Sorting
+Netlist sorting complete. Time (s): cpu = 00:00:00.01 ; elapsed = 00:00:00 . Memory (MB): peak = 3860.180 ; gain = 0.000 ; free physical = 178609 ; free virtual = 201430
+Phase 1.1 Placer Initialization Netlist Sorting | Checksum: 18484ad3
+
+Time (s): cpu = 00:00:00.02 ; elapsed = 00:00:00.19 . Memory (MB): peak = 3860.180 ; gain = 0.000 ; free physical = 178609 ; free virtual = 201430
+Netlist sorting complete. Time (s): cpu = 00:00:00 ; elapsed = 00:00:00 . Memory (MB): peak = 3860.180 ; gain = 0.000 ; free physical = 178609 ; free virtual = 201430
+
+Phase 1.2 IO Placement/ Clock Placement/ Build Placer Device
+INFO: [Timing 38-35] Done setting XDC timing constraints.
+Phase 1.2 IO Placement/ Clock Placement/ Build Placer Device | Checksum: 84d2d4a3
+
+Time (s): cpu = 00:01:14 ; elapsed = 00:01:26 . Memory (MB): peak = 4910.734 ; gain = 1050.555 ; free physical = 179962 ; free virtual = 202791
+
+Phase 1.3 Build Placer Netlist Model
+Phase 1.3 Build Placer Netlist Model | Checksum: a0ae1167
+
+Time (s): cpu = 00:01:27 ; elapsed = 00:01:39 . Memory (MB): peak = 4968.746 ; gain = 1108.566 ; free physical = 179573 ; free virtual = 202403
+
+Phase 1.4 Constrain Clocks/Macros
+Phase 1.4 Constrain Clocks/Macros | Checksum: a0ae1167
+
+Time (s): cpu = 00:01:27 ; elapsed = 00:01:39 . Memory (MB): peak = 4968.746 ; gain = 1108.566 ; free physical = 179572 ; free virtual = 202402
+Phase 1 Placer Initialization | Checksum: a0ae1167
+
+Time (s): cpu = 00:01:27 ; elapsed = 00:01:39 . Memory (MB): peak = 4968.746 ; gain = 1108.566 ; free physical = 179561 ; free virtual = 202391
+
+Phase 2 Global Placement
+
+Phase 2.1 Floorplanning
+Phase 2.1 Floorplanning | Checksum: 20919e7bb
+
+Time (s): cpu = 00:01:31 ; elapsed = 00:01:45 . Memory (MB): peak = 5168.137 ; gain = 1307.957 ; free physical = 179198 ; free virtual = 202028
+
+Phase 2.2 Global Placement Core
+
+Phase 2.2.1 Physical Synthesis In Placer
+INFO: [Physopt 32-1018] Found 1051 candidate LUT instances to create LUTNM shape
+INFO: [Physopt 32-775] End 1 Pass. Optimized 13 nets or cells. Created 0 new cell, deleted 13 existing cells and moved 0 existing cell
+INFO: [Physopt 32-65] No nets found for high-fanout optimization.
+INFO: [Physopt 32-232] Optimized 0 net. Created 0 new instance.
+INFO: [Physopt 32-775] End 1 Pass. Optimized 0 net or cell. Created 0 new cell, deleted 0 existing cell and moved 0 existing cell
+INFO: [Physopt 32-670] No setup violation found.  DSP Register Optimization was not performed.
+INFO: [Physopt 32-670] No setup violation found.  Shift Register to Pipeline Optimization was not performed.
+INFO: [Physopt 32-670] No setup violation found.  Shift Register Optimization was not performed.
+INFO: [Physopt 32-670] No setup violation found.  BRAM Register Optimization was not performed.
+INFO: [Physopt 32-949] No candidate nets found for HD net replication
+INFO: [Physopt 32-775] End 1 Pass. Optimized 0 net or cell. Created 0 new cell, deleted 0 existing cell and moved 0 existing cell
+Netlist sorting complete. Time (s): cpu = 00:00:00 ; elapsed = 00:00:00 . Memory (MB): peak = 5529.012 ; gain = 0.000 ; free physical = 178763 ; free virtual = 201595
+
+Summary of Physical Synthesis Optimizations
+============================================
+
+
+-----------------------------------------------------------------------------------------------------------------------------------------------------------
+|  Optimization                                     |  Added Cells  |  Removed Cells  |  Optimized Cells/Nets  |  Dont Touch  |  Iterations  |  Elapsed   |
+-----------------------------------------------------------------------------------------------------------------------------------------------------------
+|  LUT Combining                                    |            0  |             13  |                    13  |           0  |           1  |  00:00:00  |
+|  Very High Fanout                                 |            0  |              0  |                     0  |           0  |           1  |  00:00:00  |
+|  DSP Register                                     |            0  |              0  |                     0  |           0  |           0  |  00:00:00  |
+|  Shift Register to Pipeline                       |            0  |              0  |                     0  |           0  |           0  |  00:00:00  |
+|  Shift Register                                   |            0  |              0  |                     0  |           0  |           0  |  00:00:00  |
+|  BRAM Register                                    |            0  |              0  |                     0  |           0  |           0  |  00:00:00  |
+|  Dynamic/Static Region Interface Net Replication  |            0  |              0  |                     0  |           0  |           1  |  00:00:00  |
+|  Total                                            |            0  |             13  |                    13  |           0  |           3  |  00:00:00  |
+-----------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+Phase 2.2.1 Physical Synthesis In Placer | Checksum: 1b856add7
+
+Time (s): cpu = 00:01:56 ; elapsed = 00:02:03 . Memory (MB): peak = 5529.012 ; gain = 1668.832 ; free physical = 178833 ; free virtual = 201665
+Phase 2.2 Global Placement Core | Checksum: 1a32a81d1
+
+Time (s): cpu = 00:02:01 ; elapsed = 00:02:04 . Memory (MB): peak = 5561.027 ; gain = 1700.848 ; free physical = 178761 ; free virtual = 201593
+Phase 2 Global Placement | Checksum: 1a32a81d1
+
+Time (s): cpu = 00:02:01 ; elapsed = 00:02:04 . Memory (MB): peak = 5561.027 ; gain = 1700.848 ; free physical = 178807 ; free virtual = 201638
+
+Phase 3 Detail Placement
+
+Phase 3.1 Commit Multi Column Macros
+Phase 3.1 Commit Multi Column Macros | Checksum: 20d0330d2
+
+Time (s): cpu = 00:02:02 ; elapsed = 00:02:05 . Memory (MB): peak = 5625.059 ; gain = 1764.879 ; free physical = 178800 ; free virtual = 201632
+
+Phase 3.2 Commit Most Macros & LUTRAMs
+Phase 3.2 Commit Most Macros & LUTRAMs | Checksum: e03afba0
+
+Time (s): cpu = 00:02:04 ; elapsed = 00:02:06 . Memory (MB): peak = 5625.059 ; gain = 1764.879 ; free physical = 178747 ; free virtual = 201579
+
+Phase 3.3 Area Swap Optimization
+Phase 3.3 Area Swap Optimization | Checksum: c4ba27fc
+
+Time (s): cpu = 00:02:04 ; elapsed = 00:02:06 . Memory (MB): peak = 5625.059 ; gain = 1764.879 ; free physical = 178734 ; free virtual = 201566
+
+Phase 3.4 Small Shape DP
+
+Phase 3.4.1 Small Shape Clustering
+Phase 3.4.1 Small Shape Clustering | Checksum: 1519855f3
+
+Time (s): cpu = 00:02:05 ; elapsed = 00:02:07 . Memory (MB): peak = 5625.059 ; gain = 1764.879 ; free physical = 178696 ; free virtual = 201528
+
+Phase 3.4.2 Flow Legalize Slice Clusters
+Phase 3.4.2 Flow Legalize Slice Clusters | Checksum: be2db5c6
+
+Time (s): cpu = 00:02:06 ; elapsed = 00:02:08 . Memory (MB): peak = 5625.059 ; gain = 1764.879 ; free physical = 178674 ; free virtual = 201506
+
+Phase 3.4.3 Slice Area Swap
+Phase 3.4.3 Slice Area Swap | Checksum: 130d0be8d
+
+Time (s): cpu = 00:02:07 ; elapsed = 00:02:09 . Memory (MB): peak = 5636.426 ; gain = 1776.246 ; free physical = 178504 ; free virtual = 201336
+
+Phase 3.4.4 Commit Slice Clusters
+Phase 3.4.4 Commit Slice Clusters | Checksum: 1aeedd28f
+
+Time (s): cpu = 00:02:09 ; elapsed = 00:02:09 . Memory (MB): peak = 5636.426 ; gain = 1776.246 ; free physical = 178534 ; free virtual = 201366
+Phase 3.4 Small Shape DP | Checksum: 1aeedd28f
+
+Time (s): cpu = 00:02:09 ; elapsed = 00:02:10 . Memory (MB): peak = 5636.426 ; gain = 1776.246 ; free physical = 178639 ; free virtual = 201471
+
+Phase 3.5 Re-assign LUT pins
+Phase 3.5 Re-assign LUT pins | Checksum: 17c173d25
+
+Time (s): cpu = 00:02:10 ; elapsed = 00:02:10 . Memory (MB): peak = 5636.426 ; gain = 1776.246 ; free physical = 178625 ; free virtual = 201457
+
+Phase 3.6 Pipeline Register Optimization
+Phase 3.6 Pipeline Register Optimization | Checksum: f7b0d4e6
+
+Time (s): cpu = 00:02:10 ; elapsed = 00:02:10 . Memory (MB): peak = 5636.426 ; gain = 1776.246 ; free physical = 178623 ; free virtual = 201456
+Phase 3 Detail Placement | Checksum: f7b0d4e6
+
+Time (s): cpu = 00:02:10 ; elapsed = 00:02:10 . Memory (MB): peak = 5636.426 ; gain = 1776.246 ; free physical = 178620 ; free virtual = 201452
+
+Phase 4 Post Placement Optimization and Clean-Up
+
+Phase 4.1 Post Commit Optimization
+INFO: [Timing 38-35] Done setting XDC timing constraints.
+
+Phase 4.1.1 Post Placement Optimization
+Post Placement Optimization Initialization | Checksum: 1e684e461
+
+Phase 4.1.1.1 BUFG Insertion
+INFO: [Place 46-56] BUFG insertion identified 0 candidate nets. Inserted BUFG: 0, Replicated BUFG Driver: 0, Skipped due to Placement/Routing Conflicts: 0, Skipped due to Timing Degradation: 0, Skipped due to Illegal Netlist: 0.
+Phase 4.1.1.1 BUFG Insertion | Checksum: 1e684e461
+
+Time (s): cpu = 00:02:34 ; elapsed = 00:02:26 . Memory (MB): peak = 5725.645 ; gain = 1865.465 ; free physical = 177858 ; free virtual = 200691
+
+Phase 4.1.1.2 BUFG Replication
+INFO: [Place 46-63] BUFG replication identified 0 candidate nets: Replicated nets: 0, Replicated BUFGs: 0, Replicated BUFG Driver: 0, Skipped due to Placement / Routing Conflict: 0, Skipped due to Timing: 0, Skipped due to constraints: 0
+Phase 4.1.1.2 BUFG Replication | Checksum: 1e684e461
+
+Time (s): cpu = 00:02:35 ; elapsed = 00:02:26 . Memory (MB): peak = 5725.645 ; gain = 1865.465 ; free physical = 177848 ; free virtual = 200682
+INFO: [Place 30-746] Post Placement Timing Summary WNS=2.900. For the most accurate timing information please run report_timing.
+
+Phase 4.1.1.3 Replication
+INFO: [Place 46-19] Post Replication Timing Summary WNS=2.900. For the most accurate timing information please run report_timing.
+Phase 4.1.1.3 Replication | Checksum: 1c60281d9
+
+Time (s): cpu = 00:02:35 ; elapsed = 00:02:27 . Memory (MB): peak = 5725.645 ; gain = 1865.465 ; free physical = 177770 ; free virtual = 200603
+Phase 4.1.1 Post Placement Optimization | Checksum: 1c60281d9
+
+Time (s): cpu = 00:02:35 ; elapsed = 00:02:27 . Memory (MB): peak = 5725.645 ; gain = 1865.465 ; free physical = 177777 ; free virtual = 200611
+Phase 4.1 Post Commit Optimization | Checksum: 1c60281d9
+
+Time (s): cpu = 00:02:35 ; elapsed = 00:02:27 . Memory (MB): peak = 5725.645 ; gain = 1865.465 ; free physical = 177767 ; free virtual = 200601
+
+Phase 4.2 Post Placement Cleanup
+Phase 4.2 Post Placement Cleanup | Checksum: 1c60281d9
+
+Time (s): cpu = 00:02:36 ; elapsed = 00:02:27 . Memory (MB): peak = 5725.645 ; gain = 1865.465 ; free physical = 177795 ; free virtual = 200628
+Netlist sorting complete. Time (s): cpu = 00:00:00 ; elapsed = 00:00:00 . Memory (MB): peak = 5725.645 ; gain = 0.000 ; free physical = 176597 ; free virtual = 199441
+
+Phase 4.3 Placer Reporting
+Phase 4.3 Placer Reporting | Checksum: 1fc44b466
+
+Time (s): cpu = 00:03:12 ; elapsed = 00:03:04 . Memory (MB): peak = 5725.645 ; gain = 1865.465 ; free physical = 176596 ; free virtual = 199439
+
+Phase 4.4 Final Placement Cleanup
+Netlist sorting complete. Time (s): cpu = 00:00:00 ; elapsed = 00:00:00 . Memory (MB): peak = 5725.645 ; gain = 0.000 ; free physical = 176591 ; free virtual = 199434
+Phase 4.4 Final Placement Cleanup | Checksum: 1e844c8a4
+
+Time (s): cpu = 00:03:12 ; elapsed = 00:03:05 . Memory (MB): peak = 5725.645 ; gain = 1865.465 ; free physical = 176589 ; free virtual = 199433
+Phase 4 Post Placement Optimization and Clean-Up | Checksum: 1e844c8a4
+
+Time (s): cpu = 00:03:12 ; elapsed = 00:03:05 . Memory (MB): peak = 5725.645 ; gain = 1865.465 ; free physical = 176592 ; free virtual = 199435
+Ending Placer Task | Checksum: 12acef597
+
+Time (s): cpu = 00:03:12 ; elapsed = 00:03:05 . Memory (MB): peak = 5725.645 ; gain = 1865.465 ; free physical = 176590 ; free virtual = 199434
+INFO: [Common 17-83] Releasing license: Implementation
+68 Infos, 100 Warnings, 111 Critical Warnings and 0 Errors encountered.
+place_design completed successfully
+place_design: Time (s): cpu = 00:03:18 ; elapsed = 00:03:09 . Memory (MB): peak = 5725.645 ; gain = 1871.402 ; free physical = 176912 ; free virtual = 199755
+Netlist sorting complete. Time (s): cpu = 00:00:00.01 ; elapsed = 00:00:00 . Memory (MB): peak = 5725.645 ; gain = 0.000 ; free physical = 176912 ; free virtual = 199755
+INFO: [Timing 38-480] Writing timing data to binary archive.
+Writing placer database...
+Writing XDEF routing.
+Writing XDEF routing logical nets.
+Writing XDEF routing special nets.
+Write XDEF Complete: Time (s): cpu = 00:00:03 ; elapsed = 00:00:01 . Memory (MB): peak = 5757.660 ; gain = 0.000 ; free physical = 176819 ; free virtual = 199692
+INFO: [Common 17-1381] The checkpoint '/home/aw1223/new/mase/machop/mase_components/llmint/vivado/vivado.runs/impl_1/top_placed.dcp' has been generated.
+INFO: [runtcl-4] Executing : report_io -file top_io_placed.rpt
+report_io: Time (s): cpu = 00:00:00.54 ; elapsed = 00:00:00.86 . Memory (MB): peak = 5757.660 ; gain = 0.000 ; free physical = 176574 ; free virtual = 199424
+INFO: [runtcl-4] Executing : report_utilization -file top_utilization_placed.rpt -pb top_utilization_placed.pb
+INFO: [runtcl-4] Executing : report_control_sets -verbose -file top_control_sets_placed.rpt
+report_control_sets: Time (s): cpu = 00:00:00.02 ; elapsed = 00:00:00.18 . Memory (MB): peak = 5757.660 ; gain = 0.000 ; free physical = 176691 ; free virtual = 199544
+Command: phys_opt_design
+Attempting to get a license for feature 'Implementation' and/or device 'xcu280'
+INFO: [Common 17-349] Got license for feature 'Implementation' and/or device 'xcu280'
+INFO: [Vivado_Tcl 4-383] Design worst setup slack (WNS) is greater than or equal to 0.250 ns. Skipping all physical synthesis optimizations.
+INFO: [Vivado_Tcl 4-232] No setup violation found. The netlist was not modified.
+INFO: [Common 17-83] Releasing license: Implementation
+77 Infos, 100 Warnings, 111 Critical Warnings and 0 Errors encountered.
+phys_opt_design completed successfully
+Netlist sorting complete. Time (s): cpu = 00:00:00 ; elapsed = 00:00:00 . Memory (MB): peak = 5757.660 ; gain = 0.000 ; free physical = 176527 ; free virtual = 199378
+INFO: [Timing 38-480] Writing timing data to binary archive.
+Writing placer database...
+Writing XDEF routing.
+Writing XDEF routing logical nets.
+Writing XDEF routing special nets.
+Write XDEF Complete: Time (s): cpu = 00:00:04 ; elapsed = 00:00:03 . Memory (MB): peak = 5757.660 ; gain = 0.000 ; free physical = 176541 ; free virtual = 199421
+INFO: [Common 17-1381] The checkpoint '/home/aw1223/new/mase/machop/mase_components/llmint/vivado/vivado.runs/impl_1/top_physopt.dcp' has been generated.
+Command: route_design
+Attempting to get a license for feature 'Implementation' and/or device 'xcu280'
+INFO: [Common 17-349] Got license for feature 'Implementation' and/or device 'xcu280'
+Running DRC as a precondition to command route_design
+INFO: [DRC 23-27] Running DRC with 8 threads
+INFO: [Vivado_Tcl 4-198] DRC finished with 0 Errors
+INFO: [Vivado_Tcl 4-199] Please refer to the DRC report (report_drc) for more information.
+
+
+Starting Routing Task
+INFO: [Route 35-254] Multithreading enabled for route_design using a maximum of 8 CPUs
+Checksum: PlaceDB: 152dfe18 ConstDB: 0 ShapeSum: df5ec4f2 RouteDB: 3642328d
+
+Phase 1 Build RT Design
+Phase 1 Build RT Design | Checksum: 108c25287
+
+Time (s): cpu = 00:09:29 ; elapsed = 00:08:18 . Memory (MB): peak = 6636.727 ; gain = 847.051 ; free physical = 178892 ; free virtual = 201764
+Post Restoration Checksum: NetGraph: a6b73c1d NumContArr: 2b855b22 Constraints: 1dfcf74b Timing: 0
+
+Phase 2 Router Initialization
+
+Phase 2.1 Create Timer
+Phase 2.1 Create Timer | Checksum: f0398e8a
+
+Time (s): cpu = 00:09:29 ; elapsed = 00:08:18 . Memory (MB): peak = 6636.727 ; gain = 847.051 ; free physical = 178887 ; free virtual = 201758
+
+Phase 2.2 Fix Topology Constraints
+Phase 2.2 Fix Topology Constraints | Checksum: f0398e8a
+
+Time (s): cpu = 00:09:30 ; elapsed = 00:08:19 . Memory (MB): peak = 6636.727 ; gain = 847.051 ; free physical = 178745 ; free virtual = 201617
+
+Phase 2.3 Pre Route Cleanup
+Phase 2.3 Pre Route Cleanup | Checksum: f0398e8a
+
+Time (s): cpu = 00:09:30 ; elapsed = 00:08:19 . Memory (MB): peak = 6636.727 ; gain = 847.051 ; free physical = 178743 ; free virtual = 201615
+
+Phase 2.4 Global Clock Net Routing
+ Number of Nodes with overlaps = 0
+Phase 2.4 Global Clock Net Routing | Checksum: 1022d1c2d
+
+Time (s): cpu = 00:09:36 ; elapsed = 00:08:25 . Memory (MB): peak = 6713.262 ; gain = 923.586 ; free physical = 178609 ; free virtual = 201481
+
+Phase 2.5 Update Timing
+Phase 2.5 Update Timing | Checksum: 19b743129
+
+Time (s): cpu = 00:09:42 ; elapsed = 00:08:28 . Memory (MB): peak = 6713.262 ; gain = 923.586 ; free physical = 178532 ; free virtual = 201404
+INFO: [Route 35-416] Intermediate Timing Summary | WNS=2.904  | TNS=0.000  | WHS=-0.025 | THS=-0.092 |
+
+Phase 2 Router Initialization | Checksum: 1a98968c7
+
+Time (s): cpu = 00:09:45 ; elapsed = 00:08:30 . Memory (MB): peak = 6713.262 ; gain = 923.586 ; free physical = 178493 ; free virtual = 201365
+
+Router Utilization Summary
+  Global Vertical Routing Utilization    = 0 %
+  Global Horizontal Routing Utilization  = 0 %
+  Routable Net Status*
+  *Does not include unroutable nets such as driverless and loadless.
+  Run report_route_status for detailed report.
+  Number of Failed Nets               = 9965
+    (Failed Nets is the sum of unrouted and partially routed nets)
+  Number of Unrouted Nets             = 9683
+  Number of Partially Routed Nets     = 282
+  Number of Node Overlaps             = 0
+
+
+Phase 3 Initial Routing
+Phase 3 Initial Routing | Checksum: 266419858
+
+Time (s): cpu = 00:10:12 ; elapsed = 00:08:41 . Memory (MB): peak = 6713.262 ; gain = 923.586 ; free physical = 178210 ; free virtual = 201079
+
+Phase 4 Rip-up And Reroute
+
+Phase 4.1 Global Iteration 0
+ Number of Nodes with overlaps = 615
+ Number of Nodes with overlaps = 3
+ Number of Nodes with overlaps = 0
+INFO: [Route 35-416] Intermediate Timing Summary | WNS=2.420  | TNS=0.000  | WHS=0.010  | THS=0.000  |
+
+Phase 4.1 Global Iteration 0 | Checksum: 1af637ff2
+
+Time (s): cpu = 00:10:25 ; elapsed = 00:08:45 . Memory (MB): peak = 6713.262 ; gain = 923.586 ; free physical = 178141 ; free virtual = 201011
+
+Phase 4.2 Additional Iteration for Hold
+Phase 4.2 Additional Iteration for Hold | Checksum: 18e48eb2b
+
+Time (s): cpu = 00:10:25 ; elapsed = 00:08:45 . Memory (MB): peak = 6713.262 ; gain = 923.586 ; free physical = 178138 ; free virtual = 201008
+Phase 4 Rip-up And Reroute | Checksum: 18e48eb2b
+
+Time (s): cpu = 00:10:25 ; elapsed = 00:08:45 . Memory (MB): peak = 6713.262 ; gain = 923.586 ; free physical = 178138 ; free virtual = 201008
+
+Phase 5 Delay and Skew Optimization
+
+Phase 5.1 Delay CleanUp
+Phase 5.1 Delay CleanUp | Checksum: 18e48eb2b
+
+Time (s): cpu = 00:10:25 ; elapsed = 00:08:46 . Memory (MB): peak = 6713.262 ; gain = 923.586 ; free physical = 178154 ; free virtual = 201024
+
+Phase 5.2 Clock Skew Optimization
+Phase 5.2 Clock Skew Optimization | Checksum: 18e48eb2b
+
+Time (s): cpu = 00:10:25 ; elapsed = 00:08:46 . Memory (MB): peak = 6713.262 ; gain = 923.586 ; free physical = 178152 ; free virtual = 201022
+Phase 5 Delay and Skew Optimization | Checksum: 18e48eb2b
+
+Time (s): cpu = 00:10:25 ; elapsed = 00:08:46 . Memory (MB): peak = 6713.262 ; gain = 923.586 ; free physical = 178150 ; free virtual = 201019
+
+Phase 6 Post Hold Fix
+
+Phase 6.1 Hold Fix Iter
+
+Phase 6.1.1 Update Timing
+Phase 6.1.1 Update Timing | Checksum: 1d0ccf331
+
+Time (s): cpu = 00:10:27 ; elapsed = 00:08:47 . Memory (MB): peak = 6713.262 ; gain = 923.586 ; free physical = 178133 ; free virtual = 201003
+INFO: [Route 35-416] Intermediate Timing Summary | WNS=2.420  | TNS=0.000  | WHS=0.010  | THS=0.000  |
+
+Phase 6.1 Hold Fix Iter | Checksum: 18117a8e5
+
+Time (s): cpu = 00:10:27 ; elapsed = 00:08:47 . Memory (MB): peak = 6713.262 ; gain = 923.586 ; free physical = 178131 ; free virtual = 201002
+Phase 6 Post Hold Fix | Checksum: 18117a8e5
+
+Time (s): cpu = 00:10:27 ; elapsed = 00:08:47 . Memory (MB): peak = 6713.262 ; gain = 923.586 ; free physical = 178130 ; free virtual = 201000
+
+Phase 7 Route finalize
+
+Router Utilization Summary
+  Global Vertical Routing Utilization    = 0.114649 %
+  Global Horizontal Routing Utilization  = 0.0995065 %
+  Routable Net Status*
+  *Does not include unroutable nets such as driverless and loadless.
+  Run report_route_status for detailed report.
+  Number of Failed Nets               = 0
+    (Failed Nets is the sum of unrouted and partially routed nets)
+  Number of Unrouted Nets             = 0
+  Number of Partially Routed Nets     = 0
+  Number of Node Overlaps             = 0
+
+Phase 7 Route finalize | Checksum: 21d785ece
+
+Time (s): cpu = 00:10:31 ; elapsed = 00:08:48 . Memory (MB): peak = 6713.262 ; gain = 923.586 ; free physical = 178076 ; free virtual = 200946
+
+Phase 8 Verifying routed nets
+
+ Verification completed successfully
+Phase 8 Verifying routed nets | Checksum: 21d785ece
+
+Time (s): cpu = 00:10:31 ; elapsed = 00:08:48 . Memory (MB): peak = 6713.262 ; gain = 923.586 ; free physical = 178073 ; free virtual = 200944
+
+Phase 9 Depositing Routes
+Phase 9 Depositing Routes | Checksum: 21d785ece
+
+Time (s): cpu = 00:10:31 ; elapsed = 00:08:49 . Memory (MB): peak = 6713.262 ; gain = 923.586 ; free physical = 178067 ; free virtual = 200937
+
+Phase 10 Post Router Timing
+INFO: [Route 35-57] Estimated Timing Summary | WNS=2.420  | TNS=0.000  | WHS=0.010  | THS=0.000  |
+
+INFO: [Route 35-327] The final timing numbers are based on the router estimated timing analysis. For a complete and accurate timing signoff, please run report_timing_summary.
+Phase 10 Post Router Timing | Checksum: 21d785ece
+
+Time (s): cpu = 00:10:32 ; elapsed = 00:08:49 . Memory (MB): peak = 6713.262 ; gain = 923.586 ; free physical = 178074 ; free virtual = 200944
+INFO: [Route 35-16] Router Completed Successfully
+
+Time (s): cpu = 00:10:32 ; elapsed = 00:08:49 . Memory (MB): peak = 6713.262 ; gain = 923.586 ; free physical = 178265 ; free virtual = 201135
+
+Routing Is Done.
+INFO: [Common 17-83] Releasing license: Implementation
+91 Infos, 100 Warnings, 111 Critical Warnings and 0 Errors encountered.
+route_design completed successfully
+route_design: Time (s): cpu = 00:10:39 ; elapsed = 00:08:54 . Memory (MB): peak = 6713.262 ; gain = 955.602 ; free physical = 178264 ; free virtual = 201134
+Netlist sorting complete. Time (s): cpu = 00:00:00 ; elapsed = 00:00:00 . Memory (MB): peak = 6713.262 ; gain = 0.000 ; free physical = 178262 ; free virtual = 201133
+INFO: [Timing 38-480] Writing timing data to binary archive.
+Writing placer database...
+Writing XDEF routing.
+Writing XDEF routing logical nets.
+Writing XDEF routing special nets.
+Write XDEF Complete: Time (s): cpu = 00:00:04 ; elapsed = 00:00:06 . Memory (MB): peak = 6713.262 ; gain = 0.000 ; free physical = 178081 ; free virtual = 200984
+INFO: [Common 17-1381] The checkpoint '/home/aw1223/new/mase/machop/mase_components/llmint/vivado/vivado.runs/impl_1/top_routed.dcp' has been generated.
+write_checkpoint: Time (s): cpu = 00:00:05 ; elapsed = 00:00:07 . Memory (MB): peak = 6713.262 ; gain = 0.000 ; free physical = 178041 ; free virtual = 200918
+INFO: [runtcl-4] Executing : report_drc -file top_drc_routed.rpt -pb top_drc_routed.pb -rpx top_drc_routed.rpx
+Command: report_drc -file top_drc_routed.rpt -pb top_drc_routed.pb -rpx top_drc_routed.rpx
+INFO: [IP_Flow 19-1839] IP Catalog is up to date.
+INFO: [DRC 23-27] Running DRC with 8 threads
+INFO: [Coretcl 2-168] The results of DRC are in file /home/aw1223/new/mase/machop/mase_components/llmint/vivado/vivado.runs/impl_1/top_drc_routed.rpt.
+report_drc completed successfully
+INFO: [runtcl-4] Executing : report_methodology -file top_methodology_drc_routed.rpt -pb top_methodology_drc_routed.pb -rpx top_methodology_drc_routed.rpx
+Command: report_methodology -file top_methodology_drc_routed.rpt -pb top_methodology_drc_routed.pb -rpx top_methodology_drc_routed.rpx
+INFO: [Timing 38-35] Done setting XDC timing constraints.
+INFO: [DRC 23-133] Running Methodology with 8 threads
+INFO: [Coretcl 2-1520] The results of Report Methodology are in file /home/aw1223/new/mase/machop/mase_components/llmint/vivado/vivado.runs/impl_1/top_methodology_drc_routed.rpt.
+report_methodology completed successfully
+report_methodology: Time (s): cpu = 00:00:27 ; elapsed = 00:00:15 . Memory (MB): peak = 6801.305 ; gain = 0.000 ; free physical = 177212 ; free virtual = 200089
+INFO: [runtcl-4] Executing : report_power -file top_power_routed.rpt -pb top_power_summary_routed.pb -rpx top_power_routed.rpx
+Command: report_power -file top_power_routed.rpt -pb top_power_summary_routed.pb -rpx top_power_routed.rpx
+INFO: [Timing 38-35] Done setting XDC timing constraints.
+Running Vector-less Activity Propagation...
+
+Finished Running Vector-less Activity Propagation
+103 Infos, 100 Warnings, 111 Critical Warnings and 0 Errors encountered.
+report_power completed successfully
+report_power: Time (s): cpu = 00:00:20 ; elapsed = 00:00:08 . Memory (MB): peak = 6801.305 ; gain = 0.000 ; free physical = 176906 ; free virtual = 199788
+INFO: [runtcl-4] Executing : report_route_status -file top_route_status.rpt -pb top_route_status.pb
+INFO: [runtcl-4] Executing : report_timing_summary -max_paths 10 -file top_timing_summary_routed.rpt -pb top_timing_summary_routed.pb -rpx top_timing_summary_routed.rpx -warn_on_violation 
+INFO: [Timing 38-91] UpdateTimingParams: Speed grade: -2L, Temperature grade: E, Delay Type: min_max.
+INFO: [Timing 38-191] Multithreading enabled for timing update using a maximum of 8 CPUs
+report_timing_summary: Time (s): cpu = 00:00:07 ; elapsed = 00:00:07 . Memory (MB): peak = 6801.305 ; gain = 0.000 ; free physical = 176665 ; free virtual = 199548
+INFO: [runtcl-4] Executing : report_incremental_reuse -file top_incremental_reuse_routed.rpt
+INFO: [Vivado_Tcl 4-1062] Incremental flow is disabled. No incremental reuse Info to report.
+INFO: [runtcl-4] Executing : report_clock_utilization -file top_clock_utilization_routed.rpt
+report_clock_utilization: Time (s): cpu = 00:00:10 ; elapsed = 00:00:11 . Memory (MB): peak = 6801.305 ; gain = 0.000 ; free physical = 175681 ; free virtual = 198570
+INFO: [runtcl-4] Executing : report_bus_skew -warn_on_violation -file top_bus_skew_routed.rpt -pb top_bus_skew_routed.pb -rpx top_bus_skew_routed.rpx
+INFO: [Timing 38-91] UpdateTimingParams: Speed grade: -2L, Temperature grade: E, Delay Type: min_max.
+INFO: [Timing 38-191] Multithreading enabled for timing update using a maximum of 8 CPUs
+INFO: [Common 17-206] Exiting Vivado at Tue Mar 26 14:57:31 2024...

@@ -1,0 +1,12 @@
+# compile verilog/system verilog design source files
+sv xil_defaultlib  \
+"../../../../../rtl/array_zero_mask.sv" \
+"../../../../../../priority_encoder/rtl/priority_encoder.sv" \
+"../../../../../rtl/scatter_threshold.sv" \
+"../../../../../test/scatter_tb.sv" \
+
+# compile glbl module
+verilog xil_defaultlib "glbl.v"
+
+# Do not sort compile order
+nosort

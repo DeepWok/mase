@@ -5,8 +5,9 @@ module scatter_threshold #(
     parameter PRECISION = 8,
     parameter TENSOR_SIZE_DIM = 4,
     parameter HIGH_SLOTS = 2,
-    parameter THRESHOLD = 6
-) (
+    parameter THRESHOLD = 6,
+    parameter DESIGN = 1
+ )(
     input clk,
     input rst,
     input logic  [PRECISION-1:0] data_in [TENSOR_SIZE_DIM-1:0],
@@ -30,17 +31,40 @@ module scatter_threshold #(
     //Pack array first
     wire [3:0] output_mask;
 
+
     logic [$clog2(TENSOR_SIZE_DIM)-1:0] address_outliers[HIGH_SLOTS-1:0];
-    priority_encoder #(
-        .NUM_INPUT_CHANNELS(TENSOR_SIZE_DIM),
-        .NUM_OUPUT_CHANNELS(TENSOR_SIZE_DIM),
-        .NO_INDICIES(HIGH_SLOTS)
-    )
-    encoder1(
-        .input_channels(high_precision_req_vec),
-        // .output_channels(address_outliers)
-        .mask(output_mask)
-    );
+
+    generate
+        if (DESIGN == 1) begin: PE_D1
+            priority_encoder #(
+                .NUM_INPUT_CHANNELS(TENSOR_SIZE_DIM),
+                .NUM_OUPUT_CHANNELS(TENSOR_SIZE_DIM),
+                .NO_INDICIES(HIGH_SLOTS)
+            )
+            encoder1(
+                .input_channels(high_precision_req_vec),
+                // .output_channels(address_outliers)
+                .mask(output_mask)
+            );
+
+        end
+        else if (DESIGN == 2) begin: PE_D2
+            priority_encoder #(
+                .NUM_INPUT_CHANNELS(TENSOR_SIZE_DIM),
+                .NUM_OUPUT_CHANNELS(TENSOR_SIZE_DIM),
+                .NO_INDICIES(HIGH_SLOTS)
+            )
+            encoder1(
+                .input_channels(high_precision_req_vec),
+                // .output_channels(address_outliers)
+                .mask(output_mask)
+            );
+
+        end
+
+    endgenerate
+
+
 
     //Logic to apply mask
     array_zero_mask#(

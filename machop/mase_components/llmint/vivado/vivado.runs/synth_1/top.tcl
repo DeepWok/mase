@@ -18,6 +18,10 @@ proc create_report { reportName command } {
   }
 }
 set_param chipscope.maxJobs 10
+set_param power.BramSDPPropagationFix 1
+set_param power.enableUnconnectedCarry8PinPower 1
+set_param power.enableCarry8RouteBelPower 1
+set_param power.enableLutRouteBelPower 1
 create_project -in_memory -part xcu280-fsvh2892-2L-e
 
 set_param project.singleFileAddWarning.threshold 0
@@ -56,6 +60,12 @@ read_verilog -library xil_defaultlib -sv {
 foreach dcp [get_files -quiet -all -filter file_type=="Design\ Checkpoint"] {
   set_property used_in_implementation false $dcp
 }
+read_xdc /home/aw1223/new/mase/machop/mase_components/llmint/vivado/alveo-u280-xdc_20210505/alveo-u280-xdc.xdc
+set_property used_in_implementation false [get_files /home/aw1223/new/mase/machop/mase_components/llmint/vivado/alveo-u280-xdc_20210505/alveo-u280-xdc.xdc]
+
+read_xdc /home/aw1223/new/mase/machop/mase_components/llmint/vivado/constraints.xdc
+set_property used_in_implementation false [get_files /home/aw1223/new/mase/machop/mase_components/llmint/vivado/constraints.xdc]
+
 set_param ips.enableIPCacheLiteLoad 1
 close [open __synthesis_is_running__ w]
 

@@ -8,7 +8,9 @@ module LLMint #(
     parameter WEIGHT_DIM_0 = TENSOR_SIZE_DIM,
     parameter WEIGHT_DIM_1 = TENSOR_SIZE_DIM,
     parameter HIGH_SLOTS = 2,
-    parameter THRESHOLD = 6
+    parameter THRESHOLD = 6,
+    parameter DESIGN = 1
+
 ) (
     input clk,
     input rst,
@@ -44,7 +46,8 @@ module LLMint #(
         .PRECISION(ORIGINAL_PRECISION),
         .TENSOR_SIZE_DIM(TENSOR_SIZE_DIM),
         .HIGH_SLOTS(HIGH_SLOTS),
-        .THRESHOLD(THRESHOLD)
+        .THRESHOLD(THRESHOLD),
+        .DESIGN(DESIGN)
     )scatter(
         .data_in(data_in),
         .o_high_precision(high_precision_masked),
