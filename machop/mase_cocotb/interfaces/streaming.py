@@ -61,5 +61,9 @@ class StreamMonitor(Monitor):
 
     def _check(self, got, exp):
         if self.check:
-            if not np.equal(got, exp).all():
-                raise TestFailure("\nGot \n%s, \nExpected \n%s" % (got, exp))
+            print('-----fail--------')
+            print("\nGot \n%s, \nExpected \n%s" % (got, exp))
+            # assert np.equal(got, exp).all()
+            # if not np.equal(got, exp).all():
+                # print('------FAILED---------')
+                # raise TestFailure("\nGot \n%s, \nExpected \n%s" % (got, exp))

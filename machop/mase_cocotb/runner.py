@@ -70,7 +70,7 @@ def mase_runner(
                 "-prof-c",
                 "--stats",
                 # Signal trace in dump.fst
-                *(["--trace-fst", "--trace-structs"] if trace else []),
+                *(["--trace", "--trace-structs"] if trace else []),
                 "--trace",
                 # "-trace-depth",
                 "-O0",

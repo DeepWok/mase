@@ -10,11 +10,10 @@ module priority_encoder #(
     output logic [NUM_INPUT_CHANNELS-1:0] mask
 );  
 
-    //Check what happens when there are input channel is zero, what is default behaviour
-    // logic [NUM_INPUT_CHANNELS-1:0] mask;
+    //Can use multiplexer design and check which is better after synthesis
     integer i;
     integer j;
-    logic set;
+    // logic set;
     // logic [NUM_INPUT_CHANNELS-1:0] idx;
     logic [NUM_INPUT_CHANNELS-1:0] input_channels_temp;
     logic [NUM_INPUT_CHANNELS-1:0] channel_mask;
@@ -28,27 +27,6 @@ module priority_encoder #(
             input_channels_temp = input_channels_temp &~ channel_mask;
             mask = mask | channel_mask;
         end
-
-
-    //     // for (j = 0; j < NO_INDICIES; j = j + 1) begin: PRIORITY_ENCODER
-    //     //     //LSB Priority
-    //     //         // idx = -1;
-    //     //MSB Priortiy encoder
-    //         set = 1'b0;
-    //         for (i=0; i<NUM_INPUT_CHANNELS; i=i-1) begin
-    //             // output_channels[j] = 1'b1;
-    //             if (input_channels[i] /*& mask[i]*/) begin
-    //                 idx = i;
-    //                 set = 1'b1;
-    //                 // output_channels[j] = i;
-    //                 // output_mask = mask;
-    //             end
-    //             test = i;
-
-    //         end
-    //         if (set) begin
-    //             mask[idx] = 0;
-    //         end
         end
     // // end
 

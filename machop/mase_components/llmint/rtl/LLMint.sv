@@ -2,7 +2,7 @@
 
 
 module LLMint #(
-    parameter ORIGINAL_PRECISION = 16,
+    parameter ORIGINAL_PRECISION = 32,
     parameter REDUCED_PRECISION = 8,
     parameter TENSOR_SIZE_DIM = 4,
     parameter WEIGHT_DIM_0 = TENSOR_SIZE_DIM,
@@ -34,6 +34,11 @@ module LLMint #(
     logic signed [ORIGINAL_PRECISION-1:0] non_quantized_weights[WEIGHT_DIM_0 * WEIGHT_DIM_1-1:0];
     logic signed [ORIGINAL_PRECISION-1:0] high_for_gather[TENSOR_SIZE_DIM-1:0];
     logic signed [ORIGINAL_PRECISION-1:0] low_for_gather[TENSOR_SIZE_DIM-1:0];
+
+
+    wire [ORIGINAL_PRECISION-1:0] test;
+    assign test = weights[WEIGHT_DIM_0 * WEIGHT_DIM_1+1];
+
 
     scatter_threshold#(
         .PRECISION(ORIGINAL_PRECISION),
