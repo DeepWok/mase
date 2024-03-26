@@ -32,7 +32,6 @@ module fixed_elu #(
     output logic data_out_0_valid,
     input  logic data_out_0_ready
 );
-  logic [DATA_OUT_0_PRECISION_0-1:0] elu_data [MEM_SIZE];
   
   logic [DATA_IN_0_PRECISION_0-1:0] ff_data[DATA_IN_0_PARALLELISM_DIM_0*DATA_IN_0_PARALLELISM_DIM_1-1:0];
   logic [DATA_IN_0_PRECISION_0-1:0] roll_data[DATA_OUT_0_PARALLELISM_DIM_0*DATA_OUT_0_PARALLELISM_DIM_1-1:0];
@@ -43,11 +42,6 @@ module fixed_elu #(
   logic roll_data_valid;
   logic roll_data_ready;
 
-  initial begin
-    string filename = "/home/aw23/mase/machop/mase_components/activations/rtl/elu_IN16_8_OUT8_4_map.mem";
-    $readmemb(filename, elu_data);
-  end              //mase/machop/mase_components/activations/rtl/elu_map.mem
-  
   unpacked_fifo #(
       .DEPTH(IN_0_DEPTH),
       .DATA_WIDTH(DATA_IN_0_PRECISION_0),
@@ -101,9 +95,16 @@ module fixed_elu #(
   endgenerate
 
   for (genvar i = 0; i < DATA_IN_0_PARALLELISM_DIM_0*DATA_IN_0_PARALLELISM_DIM_1; i++) begin : elu
-    always_comb begin
-      data_out_0[i] = elu_data[roll_data[i]];
-    end
+    elu_lut #(
+      .DATA_IN_0_PRECISION_0(DATA_IN_0_PRECISION_0),
+      .DATA_IN_0_PRECISION_1(DATA_IN_0_PRECISION_1),
+      .DATA_OUT_0_PRECISION_0(DATA_OUT_0_PRECISION_0),
+      .DATA_OUT_0_PRECISION_1(DATA_OUT_0_PRECISION_1)
+    )
+    elu_map (
+      .data_in_0(roll_data[i]),
+      .data_out_0(data_out_0[i])
+    );
   end
 
   assign data_out_0_valid = roll_data_valid;

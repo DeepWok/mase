@@ -101,7 +101,7 @@ module fixed_silu #(
       .DATA_OUT_0_PRECISION_1(DATA_OUT_0_PRECISION_1)
     )
     silu_map (
-      .data_in_0(roll_data[i][i]),
+      .data_in_0(roll_data[i]),
       .data_out_0(data_out_0[i])
     );
   end

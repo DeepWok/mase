@@ -165,8 +165,8 @@ dut_params = {
                 "DATA_IN_0_PARALLELISM_DIM_0": 4,
                 "DATA_IN_0_PARALLELISM_DIM_1": 3,
                 
-                "DATA_IN_0_PRECISION_0": 16,
-                "DATA_IN_0_PRECISION_1": 8,
+                "DATA_IN_0_PRECISION_0": 8,
+                "DATA_IN_0_PRECISION_1": 4,
 
                 "DATA_OUT_0_PRECISION_0": 8,
                 "DATA_OUT_0_PRECISION_1": 4,
@@ -181,6 +181,8 @@ dut_params = {
 torch.manual_seed(1)
 if __name__ == "__main__":
     # generate_memory.generate_mem("exp", dut_params["DATA_IN_0_PRECISION_0"], dut_params["DATA_IN_0_PRECISION_1"])
+    generate_memory.generate_sv_lut("elu", dut_params["DATA_IN_0_PRECISION_0"], dut_params["DATA_IN_0_PRECISION_1"], dut_params["DATA_OUT_0_PRECISION_0"], dut_params["DATA_OUT_0_PRECISION_1"])
+    print("Generated memory")    
     mase_runner(
         module_param_list=[
             dut_params

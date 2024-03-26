@@ -146,16 +146,19 @@ def lookup_to_file(in_data_width, in_f_width, data_width: int, f_width: int, fun
         file.write('\n'.join(str(value) for value in dicto.values()))
         file.write('\n')
 
-def lookup_to_sv_file(in_data_width:int, in_f_width:int, data_width: int, f_width: int, function: str, file_path = None):
+def lookup_to_sv_file(in_data_width:int, in_f_width:int, data_width: int, f_width: int, function: str, file_path = None, path_with_dtype = False):
     dicto = aligned_generate_lookup(in_data_width=in_data_width, in_f_width=in_f_width, data_width=data_width, f_width=f_width, function=function, type="bin")
     dicto = {k: v for k, v in dicto.items() if k not in ['data_width', 'f_width', 'func', 'in_data_width', 'in_f_width']}  
     # Format for bit sizing
-    key_format = f"{data_width}'b{{}}"
+    key_format = f"{in_data_width}'b{{}}"
     value_format = f"{data_width}'b{{}}"
-
+    if(path_with_dtype):
+        end = f'_{data_width}_{f_width}'
+    else:
+        end = ''
     # Starting the module and case statement
     sv_code = f"""
-module {function}_lut #
+module {function}_lut{end} #
     (
         parameter DATA_IN_0_PRECISION_0 = 16,
         parameter DATA_IN_0_PRECISION_1 = 8,
@@ -198,13 +201,15 @@ def generate_sv_lut(function_name, in_data_width, in_f_width, data_width, f_widt
     else:
         end = ''
     if dir is None:
-        lookup_to_sv_file(in_data_width, in_f_width, data_width, f_width, function_name, f'machop/mase_components/activations/rtl/{function_name}_lut{end}.sv')
+        lookup_to_sv_file(in_data_width, in_f_width, data_width, f_width, function_name, f'machop/mase_components/activations/rtl/{function_name}_lut{end}.sv', path_with_dtype=path_with_dtype)
     else:
-        lookup_to_sv_file(in_data_width, in_f_width, data_width, f_width, function_name, f'{dir}/{function_name}_lut{end}.sv')
+        lookup_to_sv_file(in_data_width, in_f_width, data_width, f_width, function_name, f'{dir}/{function_name}_lut{end}.sv', path_with_dtype=path_with_dtype)
 
 
 if __name__ == "__main__":
-    generate_sv_lut("exp", 16, 8, 16, 8)
+    dwidths = [16, 8, 4, 2]
+    for i in dwidths:
+        generate_sv_lut("exp", 8, 4, data_width=i, f_width=int(i/2), path_with_dtype=True)
     # for k, v in FUNCTION_TABLE.items():
         # generate_sv_lut(k, 16, 8, 16, 8, dir="/home/bardia/code/adls/project/report_test", path_with_dtype=True)
     
