@@ -51,7 +51,10 @@ def parse_search_config(config):
     search_config = config["search"]  # the actual config for action search
     strategy_config = search_config["strategy"]
     search_space_config = search_config["search_space"]
-        
+    # print(search_config.keys())
+    if strategy_config['setup']['n_trials'] < 1:
+        logger.info('Invalid Number of Trials!')
+        exit()
     return strategy_config, search_space_config
 
 

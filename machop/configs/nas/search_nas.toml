@@ -26,18 +26,18 @@ seed = 42
 # load_name = "../mase_output/toy_toy_tiny/software/training_ckpts/best.ckpt"
 # load_type = "pl"
 
-[passes.quantize]
-by = "type"
-[passes.quantize.default.config]
-name = "NA"
-[passes.quantize.linear.config]
-name = "integer"
-"data_in_width" = 8
-"data_in_frac_width" = 4
-"weight_width" = 8
-"weight_frac_width" = 4
-"bias_width" = 8
-"bias_frac_width" = 4
+# [passes.quantize]
+# by = "type"
+# [passes.quantize.default.config]
+# name = "NA"
+# [passes.quantize.linear.config]
+# name = "integer"
+# "data_in_width" = 8
+# "data_in_frac_width" = 4
+# "weight_width" = 8
+# "weight_frac_width" = 4
+# "bias_width" = 8
+# "bias_frac_width" = 4
 
 
 [search.search_space]
