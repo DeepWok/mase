@@ -48,9 +48,9 @@ def quantize(x, bits, bias):  # bits = 32
 
 class ScatterVerificationCase:
     bias = 1
-    samples = 1
+    # samples = 1
 
-    def __init__(self, dut, samples=20, test = False):
+    def __init__(self, dut, samples=20000, test = False):
         self.get_dut_parameters(dut)
         self.samples = samples
         self.inputs = []
@@ -98,8 +98,6 @@ class ScatterVerificationCase:
     
 
     def make_dut_parameters(self):
-
-
         return {
             "TENSOR_SIZE_DIM": self.num,
             "PRECISION": self.bitwidth,
@@ -128,9 +126,9 @@ class ScatterVerificationCase:
 @cocotb.test()
 async def test_scatter(dut):
     """Test scatter function"""
-
-
-    test_case = ScatterVerificationCase(dut,samples=1)
+    samples= 10000
+    print('------Samples------',samples)
+    test_case = ScatterVerificationCase(dut,samples)
 
 
     # set inputs outputs
@@ -159,25 +157,25 @@ async def test_scatter(dut):
         #    assert dutval.signed_integer == y[j]
 
         for j, dutval_high in enumerate(dut.o_high_precision.value):
-
-            assert dutval_high.signed_integer == y_high[j]
             # print('dutval_high,y_high',dutval_high.signed_integer,y_high[j])
+            assert dutval_high.signed_integer == y_high[j]
 
             # print('high:', dutval_high.signed_integer)
             
         for j, dutval_low in enumerate(dut.o_low_precision.value):
-            assert dutval_low.signed_integer == y_low[j]
             # print('dutval_low,y_low',dutval_low.signed_integer,y_low[j])
+            assert dutval_low.signed_integer == y_low[j]
 
         # assert dut.data_out.value == test_case.o_outputs_bin[0], f"output q was incorrect on the {i}th cycle"
         # print(type(dut.data_out.value))
 
 #### TEST 39 : {'PRECISION': 32, 'TENSOR_SIZE_DIM': 32, 'HIGH_SLOTS': 3, 'THRESHOLD': 1, 'DESIGN': 1}
 #### TEST 40 : {'PRECISION': 32, 'TENSOR_SIZE_DIM': 32, 'HIGH_SLOTS': 4, 'THRESHOLD': 1, 'DESIGN': 1}
-def create_params(precision_values=[32], #[8, 16, 32, 64],
-                        tensor_size_dim_values= [4], #[ 4, 8, 16, 32],
-                        high_slots_values= [1, 2, 3, 4, 5],
-                        threshold_values= range(1, 2, 2)):
+#### TEST 2 : {'PRECISION': 64, 'TENSOR_SIZE_DIM': 8, 'HIGH_SLOTS': 3, 'THRESHOLD': 1, 'DESIGN': 1}
+def create_params(precision_values=[16,32],
+                        tensor_size_dim_values= [8, 16, 32,64],
+                        high_slots_values= [2,4,8,16,32],
+                        threshold_values= [4,8,16,32]):
         module_param_list = []
 
         for precision in precision_values:

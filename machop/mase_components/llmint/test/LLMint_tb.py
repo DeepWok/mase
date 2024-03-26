@@ -24,13 +24,7 @@ print(torch.__version__)
 
 logger = logging.getLogger("testbench")
 # logger.setLevel(logging.DEBUG)
-logging.getLogger().setLevel(logging.INFO)
-global_tensor_size = 6
-
-
-
-# LLMint_monitor()
-
+logging.getLogger().setLevel(logging.WARNING)
 
 
 class LinearTB(Testbench):
@@ -138,8 +132,8 @@ class LinearTB(Testbench):
         low_mat.reverse()
         high_mat.reverse()
 
-        print('low_mat',low_mat)
-        print('high_mat',high_mat)
+        # print('low_mat',low_mat)
+        # print('high_mat',high_mat)
 
         return torch.tensor(low_mat), torch.tensor(high_mat)
     
@@ -175,7 +169,7 @@ class LinearTB(Testbench):
 
     def preprocess_tensor(self, tensor, quantizer, parallelism):
         tensor = quantizer(tensor).int()
-        logger.info(f"Tensor in int format: {tensor}")
+        # logger.info(f"Tensor in int format: {tensor}")
         tensor = tensor.reshape(-1, parallelism).tolist()
         return tensor
 
@@ -186,69 +180,58 @@ class LinearTB(Testbench):
 
         return new_list
 
-    async def run_test(self):
+    async def run_test(self,runs):
         await self.reset()
+        for i in range(runs):
 
-        logger.info(f"Reset finished")
-        self.data_out_monitor.ready.value = 1
+            logger.info(f"Reset finished")
+            self.data_out_monitor.ready.value = 1
+            
 
-        inputs = self.generate_inputs()
-        exp_out = self.LLMint_model(inputs)
+            inputs = self.generate_inputs()
+            exp_out = self.LLMint_model(inputs)
 
-        # Load the inputs driver
-        logger.info(f"Processing inputs")
-        inputs = self.preprocess_tensor(
-            inputs,
-            self.linear_high.x_quantizer,
-            int(self.dut.TENSOR_SIZE_DIM),
-        )
+            # Load the inputs driver
+            # logger.info(f"Processing inputs")
+            inputs = self.preprocess_tensor(
+                inputs,
+                self.linear_high.x_quantizer,
+                int(self.dut.TENSOR_SIZE_DIM),
+            )
 
-        self.data_in_driver.load_driver(inputs)
+            self.data_in_driver.load_driver(inputs)
 
-        # Load the weights driver
-        logger.info(f"Processing weights")
-        logger.info(f"High weights: {self.linear_high.weight}")
-        logger.info(f"Low weights: {self.linear_low.weight}")
+            # Load the weights driver
+            # logger.info(f"Processing weights")
+            # logger.info(f"High weights: {self.linear_high.weight}")
+            # logger.info(f"Low weights: {self.linear_low.weight}")
 
-        weights = self.preprocess_tensor(
-            self.linear_high.weight,
-            self.linear_high.w_quantizer,
-            int(self.dut.TENSOR_SIZE_DIM) * int(self.dut.TENSOR_SIZE_DIM)
-        )
+            weights = self.preprocess_tensor(
+                self.linear_high.weight,
+                self.linear_high.w_quantizer,
+                int(self.dut.TENSOR_SIZE_DIM) * int(self.dut.TENSOR_SIZE_DIM)
+            )
 
-        q_weights = self.preprocess_tensor(
-            self.linear_low.weight,
-            self.linear_low.w_quantizer,
-            int(self.dut.TENSOR_SIZE_DIM) * int(self.dut.TENSOR_SIZE_DIM)
-        )
+            q_weights = self.preprocess_tensor(
+                self.linear_low.weight,
+                self.linear_low.w_quantizer,
+                int(self.dut.TENSOR_SIZE_DIM) * int(self.dut.TENSOR_SIZE_DIM)
+            )
 
-        self.weight_driver.load_driver(weights)
-        self.q_weight_driver.load_driver(q_weights)
+            self.weight_driver.load_driver(weights)
+            self.q_weight_driver.load_driver(q_weights)
 
-        # Load the output monitor
-        logger.info(f"Processing outputs: {exp_out}")
-        # To do: need to quantize output to a different precision
-        outs = self.preprocess_tensor(
-            exp_out,
-            self.linear_high.x_quantizer,
-            int(self.dut.TENSOR_SIZE_DIM)
-        )
-        self.data_out_monitor.load_monitor(outs)
+            # Load the output monitor
+            # logger.info(f"Processing outputs: {exp_out}")
+            # To do: need to quantize output to a different precision
+            outs = self.preprocess_tensor(
+                exp_out,
+                self.linear_high.x_quantizer,
+                int(self.dut.TENSOR_SIZE_DIM)
+            )
+            self.data_out_monitor.load_monitor(outs)
 
-        await Timer(10000, units="ns")
-        logger.info(f"high_precision_masked: {self.convert_to_integer_list(self.dut.high_precision_masked.value)}")
-        logger.info(f"low_precision_masked: {self.convert_to_integer_list(self.dut.low_precision_masked.value)}")
-
-
-        logger.info(f"input_linear_low_precision: {self.convert_to_integer_list(self.dut.input_linear_low_precision.value)}")
-        logger.info(f"output_linear_low_precision: {self.convert_to_integer_list(self.dut.output_linear_low_precision.value)}")
-
-
-
-        # logger.info(f"input_linear_high_precision: {self.dut.input_linear_high_precision.value}")
-        logger.info(f"output_linear_high_precision: {self.convert_to_integer_list(self.dut.output_linear_high_precision.value)}")
-
-
+            await Timer(1000, units="ns")
         assert self.data_out_monitor.exp_queue.empty()
 
 @cocotb.test()
@@ -257,22 +240,42 @@ async def test(dut):
 
     # for i in range(10):
     tb = LinearTB(dut)
-    await tb.run_test()
+    await tb.run_test(200)
 
+
+
+def create_params(original_precision_values=[16],
+                     reduced_precision_values= [8, 16],
+                     tensor_size_dim_values=[8, 16, 32, 64],
+                     high_slots_values= [2, 4, 8, 16, 32],
+                     threshold_values=[6]): # [4, 8, 16, 32]):
+    # Generate all possible combinations
+    all_combinations = [(op, rp, tsd, hs, th) for op in original_precision_values
+                                                for rp in reduced_precision_values
+                                                for tsd in tensor_size_dim_values
+                                                for hs in high_slots_values
+                                                for th in threshold_values]
+    
+    # Filter combinations based on ORIGINAL_PRECISION should be greater than REDUCED_PRECISION, and HIGH_SLOTS should be less than half of TENSOR_SIZE_DIM
+    filtered_combinations = filter(lambda x: x[0] > x[1] and x[2] // 2 > x[3], all_combinations)
+    
+    # Construct the parameter dictionaries
+    module_param_list = [{"ORIGINAL_PRECISION": op,
+                          "REDUCED_PRECISION": rp,
+                          "TENSOR_SIZE_DIM": tsd,
+                          "WEIGHT_DIM_0": tsd,
+                          "WEIGHT_DIM_1": tsd,
+                          "HIGH_SLOTS": hs,
+                          "THRESHOLD": th} for op, rp, tsd, hs, th in filtered_combinations]
+    for i in range(len(module_param_list)):
+        print(module_param_list[i])
+
+    return module_param_list
 
 if __name__ == "__main__":
 
 
     mase_runner(
         trace=True,
-        module_param_list=[
-            {
-                "ORIGINAL_PRECISION": 16,
-                "REDUCED_PRECISION": 8, 
-                "TENSOR_SIZE_DIM": global_tensor_size,
-                "WEIGHT_DIM_0": global_tensor_size,
-                "WEIGHT_DIM_1": global_tensor_size,
-                "HIGH_SLOTS": 3,
-                "THRESHOLD": 6,
-            }],
+        module_param_list=create_params()
     )

@@ -29,7 +29,7 @@ module scatter_threshold #(
     //Logic to assign indicies based on priority
 
     //Pack array first
-    wire [3:0] output_mask;
+    wire [TENSOR_SIZE_DIM-1:0] output_mask;
 
 
     logic [$clog2(TENSOR_SIZE_DIM)-1:0] address_outliers[HIGH_SLOTS-1:0];
