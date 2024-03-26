@@ -76,7 +76,6 @@ module fixed_softmax #(
   logic ff_acc_valid;
   logic ff_acc_ready;
 
-  localparam MEM_SIZE = (2**(DATA_IN_0_PRECISION_0)); //the threshold
 
   unpacked_fifo #(
       .DEPTH(IN_0_DEPTH),
