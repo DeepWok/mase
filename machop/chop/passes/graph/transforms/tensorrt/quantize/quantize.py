@@ -103,7 +103,7 @@ class Quantizer:
                     layer.set_output_type(0, trt.DataType.HALF)
                 elif self.config['default']['config']['precision'] == 'int8':
                     layer.precision = trt.int8
-                    layer.set_output_type(0, trt.DataType.int8)
+                    layer.set_output_type(0, trt.DataType.INT8)
                 else:
                     Exception("Unsupported precision type. Please choose from 'fp16' or 'int8'.")
         

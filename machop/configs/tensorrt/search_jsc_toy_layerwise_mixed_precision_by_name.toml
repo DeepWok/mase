@@ -12,7 +12,7 @@ batch_size = 256
 
 [passes.tensorrt]
 num_calibration_batches = 10
-post_calibration_analysis = true
+post_calibration_analysis = false
 
 [passes.tensorrt.default.config]
 quantize = true
