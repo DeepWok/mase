@@ -106,10 +106,8 @@ def get_model(
         case _:
             raise ValueError(f"Model source {model_info.model_source} not supported")
 
-
-    if dataset_info.name == 'mnist' and model_info.task_type._value_ == 'vision':
-
-        if hasattr(model, 'features') and isinstance(model.features, nn.Sequential):
+    if dataset_info.name == "mnist" and model_info.task_type._value_ == "vision":
+        if hasattr(model, "features") and isinstance(model.features, nn.Sequential):
             layers = model.features
         elif isinstance(model, nn.Sequential):
             layers = model
@@ -126,13 +124,12 @@ def get_model(
         if isinstance(first_layer, nn.Conv2d):
             if first_layer.in_channels != 1:
                 # Define a new Conv2d layer to take 1 input channel and output 3 channels
-                new_first_layer = nn.Conv2d(1, 3, kernel_size=(1, 1), stride=(1, 1), padding=(0, 0))
+                new_first_layer = nn.Conv2d(
+                    1, 3, kernel_size=(1, 1), stride=(1, 1), padding=(0, 0)
+                )
                 
                 # Now, add this layer at the beginning of the model accepting 3 channels
-                model = nn.Sequential(
-                    new_first_layer,
-                    model
-                )    
+                model = nn.Sequential(new_first_layer, model)    
 
     return model
 
