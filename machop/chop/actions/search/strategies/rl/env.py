@@ -246,9 +246,7 @@ class MixedPrecisionEnvHiLo(gym.Env):
         # Optional additional info about the step
         info = {"loss": software_metrics['loss'], "average_bitwidth": hardware_metrics['average_bitwidth'], "accuracy": software_metrics['accuracy'], "memory density": hardware_metrics['memory_density']}
         if done:
-            print(f'reward: {reward}')
-            pprint(info)
-            print("\n")
+            reward = reward*2
         return self.cur_obs, reward, done, truncated, info
     
     def _action_to_config(self, action):

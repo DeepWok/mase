@@ -32,7 +32,7 @@ n_steps = 32
 n_envs = 8
 eval_freq = 200
 save_freq = 200
-episodes_max_len = 10
+episode_max_len = 10
 learning_rate = 2.5e-4
 save_name = 'tmp_rl'
 
