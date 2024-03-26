@@ -1,5 +1,5 @@
 import gymnasium as gym
-from gymnasium.spaces import Box, Dict, Discrete, MultiDiscrete
+from gymnasium.spaces import Box
 import numpy as np
 from chop.ir.graph.mase_graph import MaseGraph
 from chop.passes.graph.utils import get_mase_op, get_node_actual_target
@@ -29,9 +29,6 @@ class MixedPrecisionEnv(gym.Env):
                 target = get_node_actual_target(node)
                 layer_info[node.name] = [idx, target.in_channels, target.out_channels, target.kernel_size[0], target.stride[0]]
                 idx += 1
-            # elif get_mase_op(node) == 'relu':
-            #     layer_info[node.name] = [idx, 0, 0, 1, 0]
-            #     idx += 1
         # get choices from self.search_space.choices_flattened to build observation enumeration list
         self.obs_list = []
         self.act_list = []

@@ -3,28 +3,12 @@ model = "vgg7"
 dataset = "cifar10"
 task = "cls"
 
-#max_epochs = 300
-batch_size = 512
-#learning_rate = 1e-2
+batch_size = 1024
 accelerator = "cpu"
 project = "rl_search"
 seed = 42
-log_every_n_steps = 5
-load_name = "/mnt/c/workplace/projects/ADLS/mase/txl_workplace/test-accu-0.9332.ckpt"
+load_name = "/mnt/c/Users/1/Downloads/test-accu-0.9332.ckpt"
 load_type = "pl"
-
-[passes.quantize]
-by = "type"
-[passes.quantize.default.config]
-name = "NA"
-[passes.quantize.linear.config]
-name = "integer"
-"data_in_width" = 8
-"data_in_frac_width" = 4
-"weight_width" = 8
-"weight_frac_width" = 4
-"bias_width" = 8
-"bias_frac_width" = 4
 
 [search.search_space]
 name = "graph/quantize/mixed_precision_ptq"
@@ -56,11 +40,6 @@ weight_frac_width = ["NA"]
 bias_width = [6, 8, 10, 12]
 bias_frac_width = ["NA"]
 
-#[search.search_space.seed.relu.config]
-#name = ["integer"]
-#data_in_width = [2, 3, 4, 5, 6, 7, 8]
-#data_in_frac_width = ["NA"] # "NA" means data_in_frac_width = data_in_width // 2
-
 [search.strategy]
 name = "rl"
 eval_mode = true
@@ -74,7 +53,7 @@ compare_to = 32 # compare to FP32
 
 [search.strategy.setup]
 device = "cpu"
-total_trials = 300
+total_trials = 1000
 # choose between ppo, a2c, ddpg, sac
 algorithm = "a2c"
 env = "MixedPrecisionEnv"

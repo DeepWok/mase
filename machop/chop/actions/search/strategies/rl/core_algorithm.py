@@ -3,7 +3,7 @@ import logging
 import matplotlib.pyplot as plt
 from matplotlib.ticker import MultipleLocator
 from datetime import datetime
-
+import json
 
 from chop.actions.search.strategies.base import SearchStrategyBase
 from stable_baselines3 import A2C, PPO, DDPG, SAC
@@ -14,7 +14,6 @@ from stable_baselines3.common.callbacks import (
 )
 from stable_baselines3.common.env_checker import check_env
 from .env import MixedPrecisionEnv
-
 logger = logging.getLogger(__name__)
 
 algorithm_map = {
@@ -43,7 +42,7 @@ class SearchStrategyRL(SearchStrategyBase):
         self.algorithm = algorithm_map[algorithm_name]
         self.env = env_map[env_name]
         self.search_space = None
-        self.best_performance = 0
+        self.best_performance = {}
         self.best_sample = {}
         self.metric_values = {}
 
@@ -104,18 +103,19 @@ class SearchStrategyRL(SearchStrategyBase):
                 unit_metric = max(upper_bound - max(lower_bound, metrics[metric_name]), 0) / (
                             upper_bound - lower_bound)
             scaled_metrics[metric_name] = unit_metric * self.config["metrics"][metric_name]["scale"]
-        performance = sum(scaled_metrics.values())
+        reward = sum(scaled_metrics.values())
 
-        if performance > self.best_performance:
-            self.best_performance = performance
+        if reward > self.best_performance.get("reward", 0):
+            self.best_performance['metrics'] = metrics
+            self.best_performance['reward'] = reward
             self.best_sample = sampled_config
             self.layers, self.layer_types = get_layers_of_graph(model)
-            print(f'highest reward: {performance:.4f}')
+            logger.info(f'new highest reward: {reward:.4f}')
             for metric_name in self.metric_names:
-                print(f'{metric_name}: {metrics[metric_name]:.4f}')
+                logger.info(f'{metric_name}: {metrics[metric_name]:.4f}')
                 self.metric_values[metric_name] = metrics[metric_name]
 
-        return performance
+        return reward
 
     def search(self, search_space):
         self.search_space = search_space
@@ -144,8 +144,12 @@ class SearchStrategyRL(SearchStrategyBase):
             callback=callback,
         )
 
-        print("Best performed sample:")
-        print(self.best_sample)
+        # save the result
+        with open(f"{self.save_dir}/best_sample.json", 'w') as f:
+            json.dump({
+                'performance': self.best_performance,
+                'config': self.best_sample
+            }, f, indent=1)
         plot_config(self.best_sample, self.layers, self.layer_types, self.save_dir, self.metric_values)
 
 
@@ -206,4 +210,3 @@ def plot_config(config, layers, layer_types, save_dir, metric_values):
     plt.tight_layout()
     datetime_str = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
     plt.savefig(f"{save_dir}/quantized_bit_width_{datetime_str}.png", dpi=300)
-    plt.show()
