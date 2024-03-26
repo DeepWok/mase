@@ -34,9 +34,11 @@ algorithm = 'ppo'
 env = 'mixed_precision'
 num_episodes = 1 
 device = 'cuda'
-total_timesteps = 10000
+total_timesteps = 1000
 n_steps = 256
 n_envs = 8
+eval_freq = 200
+save_freq = 200
 save_name = 'tmp_rl'
 
 [search.strategy.setup]

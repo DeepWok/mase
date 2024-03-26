@@ -24,6 +24,8 @@ class StrategyRL(SearchStrategyBase):
         self.device = self.config["device"]
         self.n_steps = self.config["n_steps"]
         self.n_envs = self.config["n_envs"]
+        self.eval_freq = self.config["eval_freq"]
+        self.save_freq = self.config["save_freq"]
         self.episode_max_len = 10  # TODO: Try and change this
         self.registered_env_name = registered_env_map[self.config["env"]]
 
@@ -41,12 +43,12 @@ class StrategyRL(SearchStrategyBase):
                 "data_module": self.data_module, "episode_max_len":self.episode_max_len}
                 )
 
-            checkpoint_callback = CheckpointCallback(save_freq=1000, save_path="./logs/")
+            checkpoint_callback = CheckpointCallback(save_freq=self.save_freq, save_path="./logs/")
             eval_callback = EvalCallback(
                 env,
                 best_model_save_path="./logs/best_model",
                 log_path="./logs/results",
-                eval_freq=1000,
+                eval_freq=self.eval_freq,
             )
             callback = CallbackList([checkpoint_callback, eval_callback])
 
