@@ -5,7 +5,7 @@ module top #(
     parameter THRESHOLD = 6,
     parameter DESIGN = 1               
 )(
-    input logic sys_clk,                         // Clock input from FPGA
+    input sys_clk,                         // Clock input from FPGA
     input logic sys_rst,                         // Reset input from FPGA
     input wire [PRECISION-1:0] fpga_data_in [TENSOR_SIZE_DIM-1:0], // Data input
     output wire [PRECISION-1:0] fpga_o_high_precision [TENSOR_SIZE_DIM-1:0], // High precision output

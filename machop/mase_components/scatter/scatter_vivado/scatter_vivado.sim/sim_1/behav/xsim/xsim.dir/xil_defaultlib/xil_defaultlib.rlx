@@ -1,9 +1,0 @@
-0.6
-2019.2
-Nov  6 2019
-21:42:20
-/home/aw1223/new/mase/machop/mase_components/priority_encoder/rtl/priority_encoder.sv,1711394276,systemVerilog,,/home/aw1223/new/mase/machop/mase_components/scatter/rtl/scatter_threshold.sv,,priority_encoder,,,,,,,,
-/home/aw1223/new/mase/machop/mase_components/scatter/rtl/array_zero_mask.sv,1711458831,systemVerilog,,/home/aw1223/new/mase/machop/mase_components/priority_encoder/rtl/priority_encoder.sv,,array_zero_mask,,,,,,,,
-/home/aw1223/new/mase/machop/mase_components/scatter/rtl/scatter_threshold.sv,1711394169,systemVerilog,,/home/aw1223/new/mase/machop/mase_components/scatter/test/scatter_tb.sv,,scatter_threshold,,,,,,,,
-/home/aw1223/new/mase/machop/mase_components/scatter/scatter_vivado/scatter_vivado.sim/sim_1/behav/xsim/glbl.v,1573089660,verilog,,,,glbl,,,,,,,,
-/home/aw1223/new/mase/machop/mase_components/scatter/test/scatter_tb.sv,1711458932,systemVerilog,,,,tb_scatter_threshold,,,,,,,,
