@@ -146,8 +146,8 @@ def find_measures_arrays(
     measure_values = {}
 
     # Turn target into one-hot vector
-    # inputs = inputs[0:512,:]   ###
-    # targets = targets[0:512]
+    inputs = inputs[0:512,:]   ###
+    targets = targets[0:512]
     # target_onehot = F.one_hot(targets, num_classes = max(targets)+1)
 
     # # Convert datatype to float
@@ -158,10 +158,10 @@ def find_measures_arrays(
     while not done:
         try:
             for measure_name in measure_names:
-
-                if measure_name not in measure_values:
-                    import time
-                    start = time.time()
+                
+                if measure_name not in measure_values and measure_name != "flops" and measure_name != "params":
+                    # import time
+                    # start = time.time()
                     val = measures.calc_measure(
                         measure_name,
                         net_orig,
@@ -172,9 +172,8 @@ def find_measures_arrays(
                         loss_fn=loss_fn,
                         split_data=ds,
                     )
-                    end = time.time()
+                    # end = time.time()
                     # print(end - start)
-                    
                     measure_values[measure_name] = val
 
             done = True
@@ -208,11 +207,6 @@ def find_measures(
     nlp = False
 ):
 
-    # Given a neural net
-    # and some information about the input data (dataloader)
-    # and loss function (loss_fn)
-    # this function returns an array of zero-cost proxy metrics.
-
     def sum_arr(arr):
         sum = 0.0
         for i in range(len(arr)):
@@ -220,31 +214,15 @@ def find_measures(
         return sum.item()
 
 
-    ######## Original NASLib calculation for getting flops and number of params in a model##########
-    # if measure_names[0] in ['flops', 'params']:
-        # data_iterator = iter(dataloader)
-        # x, target = next(data_iterator)
-        # x_shape = list(x.shape)
-        # x_shape[0] = 1 # to prevent overflow
-
-        # model_stats = get_model_stats(
-        #     net_orig,
-        #     input_tensor_shape=x_shape,
-        #     clone_model=True
-        # )
-
-    #     if measure_names[0] == 'flops':
-    #         measure_score = float(model_stats.Flops)/1e6 # megaflops
-    #     else:
-    #         measure_score = float(model_stats.parameters)/1e6 # megaparams
-    #     return measure_score
-    #################################################################################################
     measure_score={}
     data_iterator = iter(dataloader)
-
     x, target = next(data_iterator)
+
+
+
     x_shape = list(x.shape)
     x_shape[0] = 1 # to prevent overflow
+
 
     model_stats = get_model_stats(
         net_orig,
@@ -253,11 +231,12 @@ def find_measures(
     )
     if 'flops' in measure_names:
         measure_score['flops'] = float(model_stats.Flops)/1e6
-        measure_names.remove('flops')
+        # measure_names.remove('flops')
     if 'params' in measure_names:
         measure_score['params'] = float(model_stats.parameters)/1e6
-        measure_names.remove('params')
+        # measure_names.remove('params')
         
+
     if measures_arr is None:
 
         measures_arr = find_measures_arrays(
@@ -275,6 +254,7 @@ def find_measures(
             measure_score[k] = v
         else:
             measure_score[k] = sum_arr(v)
+
     return measure_score
 
 
@@ -344,3 +324,23 @@ def find_nlp_measures(
         else:
             measure_score[k] = sum_arr(v)
     return measure_score
+
+    ######## Original NASLib calculation for getting flops and number of params in a model##########
+    # if measure_names[0] in ['flops', 'params']:
+        # data_iterator = iter(dataloader)
+        # x, target = next(data_iterator)
+        # x_shape = list(x.shape)
+        # x_shape[0] = 1 # to prevent overflow
+
+        # model_stats = get_model_stats(
+        #     net_orig,
+        #     input_tensor_shape=x_shape,
+        #     clone_model=True
+        # )
+
+    #     if measure_names[0] == 'flops':
+    #         measure_score = float(model_stats.Flops)/1e6 # megaflops
+    #     else:
+    #         measure_score = float(model_stats.parameters)/1e6 # megaparams
+    #     return measure_score
+    #################################################################################################

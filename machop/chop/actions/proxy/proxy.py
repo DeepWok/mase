@@ -68,7 +68,7 @@ def proxy(config:dict | PathLike):
             'batch_size': 32, # batch size of the dataloaders
         }
     }
-    
+
     dataset_config = CfgNode(config_dict)
     train_loader, val_loader, test_loader, train_transform, valid_transform = get_train_val_loaders(dataset_config)
 
@@ -82,9 +82,7 @@ def proxy(config:dict | PathLike):
     # Prepare list and dict for recording scores
     scores = {}
 #   
-    
-    # for proxy_name in proxy_config:
-    #     scores[proxy_name] = []
+
     for op in indicies_list:
         # Generate models
         scores[str(op)]={}
@@ -99,11 +97,19 @@ def proxy(config:dict | PathLike):
             score = zc_predictor.query(graph=graph, dataloader = train_loader)
             scores[str(op)][zc_proxy] = score
         
+    # Path for saving the scores
+    file_path = "proxy_scores.json"
+
     print(scores)
+    # Write dictionary to JSON file
+    with open(file_path, 'w') as json_file:
+        json.dump(scores, json_file)
 
 
+    # Calculate stddev and mean for data normalisation
+    # for zc_proxy in proxy_config:
+    #     for key in 
 
-    
     return
 
     # # Prepare dataset for training meta-proxy

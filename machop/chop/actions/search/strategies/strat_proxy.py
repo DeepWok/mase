@@ -89,11 +89,9 @@ class SearchStrategyDaddyProxy(SearchStrategyBase):
         metrics = {}
         dataloader=self.data_module.train_dataloader()
         dataload_info=["random",len(dataloader),10]
-        loss_function = nn.MSELoss()
         model=model.model
         device = torch.device('cuda')
         model.to(device)
-        
         # num_batches_to_keep = 1
         # # Create data loader with 1 batch of data
         # # Get a batch of data
@@ -105,7 +103,8 @@ class SearchStrategyDaddyProxy(SearchStrategyBase):
         # small_dataloader = DataLoader(small_data)
 
         measure_names = ['epe_nas', 'fisher', 'grad_norm', 'grasp', 'jacov', 'l2_norm', 'nwot', 'plain', 'snip', 'synflow', 'zen', 'params', 'flops']
-        small_proxy_scores = find_measures(model,dataloader, dataload_info, device , loss_function, measure_names)
+        small_proxy_scores = find_measures(model,dataloader, dataload_info, device , F.cross_entropy, measure_names)
+
 
         # load meta proxy 
         proxy_model = NeuralModel(13)
@@ -120,8 +119,9 @@ class SearchStrategyDaddyProxy(SearchStrategyBase):
         ### Make prediction using the meta proxy
         with torch.no_grad():
             prediction = proxy_model(measure_values_tensor)
+        
         prediction_numpy = prediction.numpy()
-        metrics["accuracy"]=prediction_numpy
+        metrics["accuracy"] = prediction_numpy
         return metrics
 
     def compute_hardware_metrics(self, model, sampled_config, is_eval_mode: bool):
