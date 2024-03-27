@@ -26,9 +26,6 @@ jobs:
         username: ${{ github.actor }}
         password: ${{ secrets.MASE_DOCKER_CRED }}
     steps:
-      - name: Install dependencies
-      run: |
-        pip install fvcore
       # Clone the MASE repo and its submodules.
       - name: Get MASE
         uses: actions/checkout@v3
@@ -39,6 +36,9 @@ jobs:
         run: |
           git config --global --add safe.directory $PWD
 
+      - name: Install dependencies
+        run: |
+          pip install fvcore
       # -----------
       # Software Format check 
       # -----------
