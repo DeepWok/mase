@@ -114,4 +114,4 @@ class StrategyRL(SearchStrategyBase):
 
         pprint(obs)
 
-        return obs["cost"], obs, model
+        #return obs["cost"], obs, model

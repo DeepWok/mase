@@ -292,7 +292,15 @@ class MixedPrecisionPaper(gym.Env):
         if search_space is None:
             raise ValueError("search_space cannot be None")
         self.search_space = search_space
-        
+        self.sw_runner = sw_runner
+        self.hw_runner = hw_runner
+        self.data_module = data_module
+        self.config = config
+        self.metric_names = list(sorted(self.config["metrics"].keys()))
+        self.best_performance = {}
+        self.best_sample = {}
+        self.metric_values = {}
+
         graph = MaseGraph(self.search_space.model)
         graph, _ = init_metadata_analysis_pass(graph)
         graph, _ = add_common_metadata_analysis_pass(
@@ -373,7 +381,7 @@ class MixedPrecisionPaper(gym.Env):
         # parse the sample
         sampled_config = self.search_space.flattened_indexes_to_config(sampled_indexes)
 
-        is_eval_mode = self.config.get("eval_mode", True)
+        is_eval_mode = True
         model = self.search_space.rebuild_model(sampled_config, is_eval_mode)
 
         software_metrics = self.compute_software_metrics(
@@ -413,9 +421,9 @@ class MixedPrecisionPaper(gym.Env):
                 print(f"{metric_name}: {metrics[metric_name]:.4f}")
                 self.metric_values[metric_name] = metrics[metric_name]
 
-        return reward, scaled_metrics
+        return reward, metrics
     
-    def get_layers_of_graph(graph):
+    def get_layers_of_graph(self, graph):
         layers = []
         layer_types = []
         for node in graph.fx_graph.nodes:
@@ -479,8 +487,8 @@ class MixedPrecisionPaper(gym.Env):
         if self.state == len(self.obs_list):
             self.state = 0
             terminated = truncated = True
-            reward, scaled_metrics = self.run_trial(self.sample)
-            info = {"reward": reward, "average_bitwidth": scaled_metrics['average_bitwidth'], "accuracy": scaled_metrics['accuracy']}
+            reward, metrics = self.run_trial(self.sample)
+            info = {"reward": reward, "average_bitwidth": metrics['average_bitwidth'], "accuracy": metrics['accuracy']}
         obs = self.obs_list[self.state].copy()
         obs = np.append(obs, choices[action]).astype(np.float32)
         return obs, reward, terminated, False, info
@@ -508,7 +516,7 @@ Env_id_Hi_Lo = 'RL/MixedPrecisionPaper-v0'
 gym.envs.registration.register(
     id=Env_id_Hi_Lo,
     entry_point=MixedPrecisionPaper,
-    max_episode_steps=10,
+    max_episode_steps=100,
     reward_threshold=500
 )
 
