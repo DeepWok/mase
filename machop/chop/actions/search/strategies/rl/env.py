@@ -413,7 +413,7 @@ class MixedPrecisionPaper(gym.Env):
                 print(f"{metric_name}: {metrics[metric_name]:.4f}")
                 self.metric_values[metric_name] = metrics[metric_name]
 
-        return reward
+        return reward, scaled_metrics
     
     def get_layers_of_graph(graph):
         layers = []
@@ -478,11 +478,11 @@ class MixedPrecisionPaper(gym.Env):
         if self.state == len(self.obs_list):
             self.state = 0
             terminated = truncated = True
-            reward = self.run_trial(self.sample)
+            reward, scaled_metrics = self.run_trial(self.sample)
         obs = self.obs_list[self.state].copy()
         obs = np.append(obs, choices[action]).astype(np.float32)
-        return obs, reward, terminated, False, {}
-
+        info = {"reward": reward, "average_bitwidth": scaled_metrics['average_bitwidth'], "accuracy": scaled_metrics['accuracy']}
+        return obs, reward, terminated, False, info
 
 
 #################### Register the environments ####################
