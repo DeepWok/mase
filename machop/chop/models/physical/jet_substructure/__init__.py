@@ -28,7 +28,81 @@ class JSC_Toy(nn.Module):
     def forward(self, x):
         return self.seq_blocks(x)
 
+class JSC_threeLinear(nn.Module):
+    def __init__(self, info):
+        super(JSC_threeLinear, self).__init__()
+        self.seq_blocks = nn.Sequential(
+            # 1st LogicNets Layer
+            nn.BatchNorm1d(16),  # input_quant       # 0
+            nn.ReLU(),  # 1
+            nn.Linear(16, 16),  # linear              # 2
+            nn.ReLU(),  # 4
+            # 2nd LogicNets Layer
+            nn.Linear(16, 16),  # 5
+            nn.ReLU(),  # 7
+            # 3rd LogicNets Layer
+            nn.Linear(16, 5),  # 8
+            nn.ReLU(5),
+        )
 
+    def forward(self, x):
+        return self.seq_blocks(x)
+
+class JSC_Toy10(nn.Module):
+    def __init__(self, info):
+        super(JSC_Toy10, self).__init__()
+        self.seq_blocks = nn.Sequential(
+            # 1st LogicNets Layer
+            nn.BatchNorm1d(16),  # input_quant       # 0
+            nn.ReLU(16),  # 1
+            nn.Linear(16, 32),  # linear              # 2
+            nn.BatchNorm1d(32),  # output_quant       # 3
+            nn.ReLU(32),  # 4
+            # 2nd LogicNets Layer
+            nn.Linear(32, 64),  # 5
+            nn.BatchNorm1d(64),  # 6
+            nn.ReLU(64),  # 7
+            # 3rd LogicNets Layer
+            nn.Linear(64, 5),  # 8
+            nn.BatchNorm1d(5),  # 9
+            nn.ReLU(5),
+        )
+
+    def forward(self, x):
+        return self.seq_blocks(x)
+        
+# class JSC_New(nn.Module):
+#     def __init__(self, info):
+#         super(JSC_New, self).__init__()
+#         self.seq_blocks = nn.Sequential(
+#             # 1st LogicNets Layer
+#             nn.BatchNorm1d(16),  # input_quant       # 0
+#             nn.ReLU(16),  # 1
+#             nn.Linear(16, 8),  # linear              # 2
+#             nn.BatchNorm1d(8),  # output_quant       # 3
+#             nn.ReLU(8),  # 4
+#             # 2nd LogicNets Layer
+#             nn.Linear(8, 8),  # 5
+#             nn.BatchNorm1d(8),  # 6
+#             nn.ReLU(8),  # 7
+#             nn.Linear(8, 8),  # 5
+#             nn.BatchNorm1d(8),  # 6
+#             nn.ReLU(8),  # 7
+#             nn.Linear(8, 8),  # 5
+#             nn.BatchNorm1d(8),  # 6
+#             nn.ReLU(8),  # 7
+#             nn.Linear(8, 8),  # 5
+#             nn.BatchNorm1d(8),  # 6
+#             nn.ReLU(8),  # 7
+#             # 3rd LogicNets Layer
+#             nn.Linear(8, 5),  # 8
+#             nn.BatchNorm1d(5),  # 9
+#             nn.ReLU(5),
+#         )
+
+#     def forward(self, x):
+#         return self.seq_blocks(x)
+    
 class JSC_Tiny(nn.Module):
     def __init__(self, info):
         super(JSC_Tiny, self).__init__()
@@ -86,7 +160,12 @@ class JSC_S(nn.Module):
 def get_jsc_toy(info):
     # TODO: Tanh is not supported by mase yet
     return JSC_Toy(info)
+    
+def get_jsc_threeLinear(info):
+    return JSC_threeLinear(info)
 
+def get_jsc_toy10(info):
+    return JSC_Toy10(info)
 
 def get_jsc_tiny(info):
     return JSC_Tiny(info)

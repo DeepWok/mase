@@ -1,0 +1,6 @@
+Original type,OP,Total,Changed,Unchanged
+BatchNorm1d,batch_norm1d,1,0,1
+Linear,linear,3,3,0
+ReLU,relu,4,0,4
+output,output,1,0,1
+x,placeholder,1,0,1

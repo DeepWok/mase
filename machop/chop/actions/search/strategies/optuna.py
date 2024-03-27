@@ -85,11 +85,15 @@ class SearchStrategyOptuna(SearchStrategyBase):
         if hasattr(search_space, "optuna_sampler"):
             sampled_config = search_space.optuna_sampler(trial)
         else:
+            print(search_space.config)
+            # import pdb; pdb.set_trace()
             for name, length in search_space.choice_lengths_flattened.items():
+                # import pdb; pdb.set_trace()
                 sampled_indexes[name] = trial.suggest_int(name, 0, length - 1)
             sampled_config = search_space.flattened_indexes_to_config(sampled_indexes)
 
         is_eval_mode = self.config.get("eval_mode", True)
+        sampled_config['accelerator']='cuda'
         model = search_space.rebuild_model(sampled_config, is_eval_mode)
 
         software_metrics = self.compute_software_metrics(
@@ -131,7 +135,6 @@ class SearchStrategyOptuna(SearchStrategyBase):
             logger.info(f"Loaded study from {self.config['setup']['pkl_ckpt']}")
         else:
             study = optuna.create_study(**study_kwargs)
-
         study.optimize(
             func=partial(self.objective, search_space=search_space),
             n_jobs=self.config["setup"]["n_jobs"],
@@ -210,7 +213,7 @@ class SearchStrategyOptuna(SearchStrategyBase):
 
         txt = "Best trial(s):\n"
         df_truncated = df.loc[
-            :, ["number", "software_metrics", "hardware_metrics", "scaled_metrics"]
+            :, ["number", "software_metrics", "hardware_metrics", "scaled_metrics","sampled_config"]
         ]
 
         def beautify_metric(metric: dict):
@@ -220,18 +223,19 @@ class SearchStrategyOptuna(SearchStrategyBase):
                     beautified[k] = round(v, 3)
                 else:
                     txt = str(v)
-                    if len(txt) > 20:
-                        txt = txt[:20] + "..."
+                    if len(txt) > 100:
+                        txt = txt[:100] + "..."
                     else:
-                        txt = txt[:20]
+                        txt = txt[:100]
                     beautified[k] = txt
             return beautified
-
+        # print(trial.user_attrs['sampled_config'])
+        # import pdb; pdb.set_trace()
         df_truncated.loc[
-            :, ["software_metrics", "hardware_metrics", "scaled_metrics"]
+            :, ["software_metrics", "hardware_metrics", "scaled_metrics","sampled_config"]
         ] = df_truncated.loc[
-            :, ["software_metrics", "hardware_metrics", "scaled_metrics"]
-        ].map(
+            :, ["software_metrics", "hardware_metrics", "scaled_metrics","sampled_config"]
+        ].applymap(
             beautify_metric
         )
         txt += tabulate(

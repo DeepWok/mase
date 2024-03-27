@@ -1,6 +1,7 @@
 from copy import copy, deepcopy
 import logging
-import torch
+from torch import nn
+
 from chop.passes.graph.interface.save_and_load import load_mase_graph_interface_pass
 
 from ...utils import (
@@ -194,6 +195,56 @@ def graph_iterator_quantize_by_regex_name(graph, config: dict):
             )
     return graph
 
+def instantiate_linear(in_features, out_features, bias):
+    if bias is not None:
+        bias = True
+    return nn.Linear(
+        in_features=in_features,
+        out_features=out_features,
+        bias=bias)
+
+
+
+def redefine_linear_transform_pass(graph, pass_args=None):
+    main_config = pass_args.pop('config')
+    #import pdb; pdb.set_trace()
+    default = {'config': {'name': None}}
+    if default is None:
+        raise ValueError(f"default value must be provided.")
+    i = 0
+    pre_in=1
+    pre_out=1
+    for node in graph.fx_graph.nodes:
+        i += 1
+        # if node name is not matched, it won't be tracked
+        config = main_config.get(node.name, default)['config']
+        name = config.get("name", None)
+        import pdb; pdb.set_trace()
+        #print(name)
+        if name is not None:
+            #if node.target == 'x':
+            	#continue
+            #import pdb; pdb.set_trace()
+            ori_module = graph.modules[node.target]
+            in_features = 16
+            out_features = 16
+            bias = ori_module.bias
+            if name == "output_only":
+                out_features = out_features * config["channel_multiplier"]
+                pre_out=config["channel_multiplier"]
+            elif name == "both":
+                in_features = in_features * pre_out
+                out_features = out_features * config["channel_multiplier"]
+                pre_in=config["channel_multiplier"]
+            elif name == "input_only":
+                in_features = in_features * pre_in
+                out_features = 5
+                #import pdb; pdb.set_trace()
+            new_module = instantiate_linear(in_features, out_features, bias)
+            parent_name, name = get_parent_name(node.target)
+            setattr(graph.modules[parent_name], name, new_module)
+    return graph, {}
+
 
 def quantize_transform_pass(graph, pass_args=None):
     """
@@ -224,7 +275,4 @@ def quantize_transform_pass(graph, pass_args=None):
             graph = graph_iterator_quantize_by_regex_name(graph, pass_args)
         case _:
             raise ValueError(f'Unsupported quantize "by": {by}')
-
-    # link the model with graph
-    graph.model = torch.fx.GraphModule(graph.model, graph.fx_graph)
     return graph, {}

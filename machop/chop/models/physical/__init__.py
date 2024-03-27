@@ -1,12 +1,32 @@
 import torch.nn as nn
 from ..utils import MaseModelInfo
-from .jet_substructure import get_jsc_toy, get_jsc_tiny, get_jsc_s
+from .jet_substructure import get_jsc_toy, get_jsc_tiny, get_jsc_s,get_jsc_toy10, get_jsc_threeLinear
 
 PHYSICAL_MODELS = {
     "jsc-toy": {
         "model": get_jsc_toy,
         "info": MaseModelInfo(
-            "jsc-toy",
+            "jsc-s",
+            model_source="physical",
+            task_type="physical",
+            physical_data_point_classification=True,
+            is_fx_traceable=True,
+        ),
+    },
+    "jsc-threeLinear": {
+       "model": get_jsc_threeLinear,
+       "info": MaseModelInfo(
+            "jsc-s",
+            model_source="physical",
+            task_type="physical",
+            physical_data_point_classification=True,
+            is_fx_traceable=True,
+        ),
+    },
+    "jsc-toy10": {
+        "model": get_jsc_toy10,
+        "info": MaseModelInfo(
+            "jsc-s",
             model_source="physical",
             task_type="physical",
             physical_data_point_classification=True,
@@ -16,7 +36,7 @@ PHYSICAL_MODELS = {
     "jsc-tiny": {
         "model": get_jsc_tiny,
         "info": MaseModelInfo(
-            "jsc-tiny",
+            "jsc-s",
             model_source="physical",
             task_type="physical",
             physical_data_point_classification=True,

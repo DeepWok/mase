@@ -33,7 +33,6 @@ vicuna = LlamaQuantizedForCausalLM.from_pretrained(
 )
 ```
 """
-
 from transformers.models.llama import LlamaTokenizer
 
 from .configuration_llama import LlamaQuantizedConfig

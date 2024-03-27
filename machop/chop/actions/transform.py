@@ -2,13 +2,15 @@ import os
 from copy import deepcopy
 from pathlib import Path
 import logging
-
+import pprint
 import torch
 from chop.passes.graph import PASSES
 from chop.passes.graph.analysis import (
     add_common_metadata_analysis_pass,
     add_software_metadata_analysis_pass,
     init_metadata_analysis_pass,
+    profile_statistics_analysis_pass,
+    add_pruning_metadata_analysis_pass,
 )
 from chop.ir.graph.mase_graph import MaseGraph
 from chop.passes.graph.interface import (
@@ -19,12 +21,17 @@ from chop.passes.graph.utils import deepcopy_mase_graph
 from chop.tools.checkpoint_load import load_model
 from chop.tools.config_load import load_config
 from chop.tools.get_input import InputGenerator, get_cf_args, get_dummy_input
-from chop.tools.utils import parse_accelerator, to_numpy_if_tensor
+from chop.tools.utils import device
 
-from chop.passes.graph.transforms import metadata_value_type_cast_transform_pass
+from chop.actions import train, test
+import torchvision
+import torchvision.transforms as transforms
+import heapq
+import collections
+
 
 logger = logging.getLogger(__name__)
-
+pp = pprint.PrettyPrinter(indent=4)
 
 def pre_transform_load(load_name: str, load_type: str, model: torch.nn.Module):
     if load_name is not None and load_type in ["pt", "pl"]:
@@ -37,16 +44,14 @@ def transform(
     model_info,
     model_name,
     data_module,
+    dataset_info,
     task: str,
     config: str,
     save_dir: str = None,
     load_name: str = None,
     load_type: str = None,
-    accelerator: str = "auto",
-):
-    accelerator = parse_accelerator(accelerator)
-    model = pre_transform_load(load_name=load_name, load_type=load_type, model=model)
-    model.to(accelerator)
+):  
+    model = pre_transform_load(load_name=load_name, load_type=load_type, model=model.to('cuda'))
     config = load_config(config)
     save_dir = Path(save_dir)
     save_dir.mkdir(parents=True, exist_ok=True)
@@ -64,18 +69,18 @@ def transform(
 
     # create or load metadata.parameters and mase_graph.model
     if load_name is not None and load_type == "mz":
-        graph, _ = load_mase_graph_interface_pass(graph, pass_args=load_name)
+        graph = load_mase_graph_interface_pass(graph, pass_args=load_name)
     else:
         dummy_in = get_dummy_input(
             model_info=model_info,
             data_module=data_module,
             task=task,
-            device=accelerator,
+            device=device,
         )
         if len(graph.model.additional_inputs) > 0:
             dummy_in = dummy_in | graph.model.additional_inputs
         graph, _ = add_common_metadata_analysis_pass(
-            graph, pass_args={"dummy_in": dummy_in}
+            graph, pass_args={"dummy_in": dummy_in, "force_device_meta": False}
         )
         graph, _ = add_software_metadata_analysis_pass(graph, pass_args=None)
 
@@ -85,16 +90,14 @@ def transform(
         pass_name: str
         pass_config: dict
         match pass_name:
-            case "quantize":
-                pass_save_dir = save_dir / "quantize"
-                graph, _ = metadata_value_type_cast_transform_pass(
-                    graph, pass_args={"fn": to_numpy_if_tensor}
-                )
-                ori_graph = deepcopy_mase_graph(graph)
-                graph, _ = PASSES["quantize"](graph, pass_args=pass_config)
-                PASSES["summarize_quantization"](
-                    ori_graph, graph, save_dir=pass_save_dir
-                )
+            # TODO: fix this later!
+            # case "quantize":
+            #     pass_save_dir = save_dir / "quantize"
+            #     ori_graph = deepcopy_mase_graph(graph)
+            #     graph = PASSES["quantize"](graph, pass_args=pass_config)
+            #     PASSES["summarize_quantization"](
+            #         ori_graph, graph, save_dir=pass_save_dir
+            #     )
             case "profile_statistics":
                 input_generator = InputGenerator(
                     model_info=model_info,
@@ -103,45 +106,45 @@ def transform(
                     which_dataloader="train",
                 )
                 pass_config["input_generator"] = input_generator
-                graph, _ = PASSES[pass_name](graph, pass_args=pass_config)
+                graph = PASSES[pass_name](graph, pass_args=pass_config)
             case "report_graph":
                 pass_file_name = pass_config.get(
                     "file_name", save_dir / "report_graph.txt"
                 )
-                graph, _ = PASSES[pass_name](graph, file_name=pass_file_name)
+                graph = PASSES[pass_name](graph, file_name=pass_file_name)
             case "report_node_type":
-                graph, _ = PASSES[pass_name](graph, pass_args=None)
+                graph = PASSES[pass_name](graph, pass_args=None)
             case "report_node_meta_param":
                 # {"save_path": ..., "which": "all"|["common", "hardware", "software"]}
                 pass_save_path = pass_config.get("save_path", save_dir / "report")
                 pass_config["save_path"] = pass_save_path
-                graph, _ = PASSES[pass_name](graph, pass_args=pass_config)
+                graph = PASSES[pass_name](graph, pass_args=pass_config)
             case "report_node_shape":
-                graph, _ = PASSES[pass_name](graph, pass_args=None)
+                graph = PASSES[pass_name](graph, pass_args=None)
             case "report_node_type":
-                graph, _ = PASSES[pass_name](graph, pass_args=None)
+                graph = PASSES[pass_name](graph, pass_args=None)
             case "report_node_hardware_type":
-                graph, _ = PASSES[pass_name](graph, pass_args=None)
+                graph = PASSES[pass_name](graph, pass_args=None)
             case "report_node_shape":
-                graph, _ = PASSES[pass_name](graph, pass_args=None)
+                graph = PASSES[pass_name](graph, pass_args=None)
             case "report_node_type":
-                graph, _ = PASSES[pass_name](graph, pass_args=None)
+                graph = PASSES[pass_name](graph, pass_args=None)
             case "load_mase_graph":
                 pass_load_dir = pass_config["load_dir"]
-                graph, _ = PASSES[pass_name](graph, pass_args=pass_load_dir)
+                graph = PASSES[pass_name](graph, pass_args=pass_load_dir)
             case "load_node_meta_param":
                 pass_load_path = pass_config["load_path"]
-                graph, _ = PASSES[pass_name](graph, pass_args=pass_load_path)
+                graph = PASSES[pass_name](graph, pass_args=pass_load_path)
             case "save_mase_graph":
                 pass_save_dir = pass_config.get(
                     "save_dir", save_dir / "saved_mase_graph"
                 )
-                graph, _ = PASSES[pass_name](graph, pass_args=pass_save_dir)
+                graph = PASSES[pass_name](graph, pass_args=pass_save_dir)
             case "save_node_meta_param":
                 pass_save_path = pass_config.get(
                     "save_path", save_dir / "saved_node_meta_param"
                 )
-                graph, _ = PASSES[pass_name](graph, pass_args=pass_save_path)
+                graph = PASSES[pass_name](graph, pass_args=pass_save_path)
             case "prune":
                 # NOTE: The input generator is only used for when the user wants to
                 # enforce or observe activation sparsity. Otherwise, it's ignored.
@@ -154,22 +157,310 @@ def transform(
                     task=task,
                     which_dataloader="val",
                 )
+                dummy_input = get_dummy_input(model_info, data_module, task=task, device='cpu')
                 pass_config["model_name"] = model_name
                 pass_config["input_generator"] = input_generator
-                prune_save_dir = save_dir / "prune"
-                prune_save_dir.mkdir(parents=True, exist_ok=True)
-                graph, _ = PASSES[pass_name](
+                pass_config["dummy_in"] = dummy_input
+                ## Add test before pruning for comparison.
+
+                # Define function to calculate accuracy
+                # def calculate_accuracy(model, dataloader):
+                #         correct = 0
+                #         total = 0
+                #         with torch.no_grad():
+                #             for data in dataloader:
+                #                 images, labels = data
+                #                 outputs = model(images.to('cuda'))
+                #                 _, predicted = torch.max(outputs.data, 1)
+                #                 total += labels.size(0)
+                #                 correct += (predicted == labels.to('cuda')).sum().item()
+                #         return (100 * correct / total)
+                
+                # if dataset_info.name == 'cifar10':
+                #     transform = transforms.Compose([
+                #         transforms.ToTensor(),
+                #         transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
+                #     ])
+                #     testset = torchvision.datasets.CIFAR10(root='./data', train=False, download=True, transform=transform)
+                #     testloader = torch.utils.data.DataLoader(testset, batch_size=128, shuffle=False, num_workers=2)
+                #     trainset = torchvision.datasets.CIFAR10(root='./data', train=True, download=True, transform=transform)
+                #     trainloader = torch.utils.data.DataLoader(trainset, batch_size=128, shuffle=True, num_workers=2)
+
+                #     criterion = torch.nn.CrossEntropyLoss()
+                #     optimizer = torch.optim.Adam(model.parameters(), lr=1e-5)
+
+                #     accuracy_before_pruned = calculate_accuracy(model, testloader)
+
+
+                # elif dataset_info.name == 'imagenet':
+                #     transform = transforms.Compose([
+                #         transforms.RandomResizedCrop(224),
+                #         transforms.RandomHorizontalFlip(),
+                #         transforms.ToTensor(),
+                #         transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+                #     ])
+                #     testset = torchvision.datasets.ImageNet(root='./data', train=False, download=True, transform=transform)
+                #     testloader = torch.utils.data.DataLoader(testset, batch_size=128, shuffle=False, num_workers=2)
+                #     trainset = torchvision.datasets.ImageNet(root='./data', train=True, download=True, transform=transform)
+                #     trainloader = torch.utils.data.DataLoader(trainset, batch_size=128, shuffle=True, num_workers=2)
+
+                #     criterion = torch.nn.CrossEntropyLoss()
+                #     optimizer = torch.optim.Adam(model.parameters(), lr=1e-5)
+                #     accuracy_before_pruned = calculate_accuracy(model, testloader)
+                # ## Add more dataset loading method here
+                # else:
+                #     raise ValueError(
+                #         "Dataset {} is not supported for pruning yet".format(dataset_info.name)
+                #     )
+                # print('test before purning is complete.')
+
+                # num_before_prune = 0
+                # for p in model.parameters():
+                #     num_before_prune += torch.count_nonzero(p).item()
+
+                graph = PASSES[pass_name](
                     graph,
-                    save_dir=prune_save_dir,
-                    config=pass_config,
+                    # save_dir=prune_save_dir,
+                    pass_args=pass_config,
                 )
+                
+                # num_after_prune = 0
+                # for node in graph.fx_graph.nodes:
+                #     if node.op == "call_module":
+                #         if isinstance(graph.modules[node.target], (torch.nn.Conv2d, torch.nn.Linear)):
+                #             mask = graph.modules[node.target].parametrization.weight[0].mask
+                #             num_true = torch.sum(mask).item()
+                #             num_after_prune += num_true
+                
+                graph.model.to('cuda')
+                graph, sparsity_info = add_pruning_metadata_analysis_pass(graph,
+                                                                               {"dummy_in": dummy_input, "add_value": False})
+                pp.pprint(sparsity_info)
+
+                # For this case, the pruning pass does not directly update the pruned weights
+                # to the model, but save the pruned weights in the children of model, thus we need
+                # to update the pruned weights to the graph.model for retrain with the pruned weights
+                # def get_parametrized_layers(module):
+                #     parametrized_layers = []
+                #     for name, submodule in module.named_children():
+                #         if isinstance(submodule, (torch.nn.modules.conv.Conv2d, torch.nn.modules.linear.Linear)):
+                #             parametrized_layers.append(submodule)
+                #         elif isinstance(submodule, torch.nn.Module):
+                #             parametrized_layers.extend(get_parametrized_layers(submodule))
+                #     return parametrized_layers
+
+                # parametrized_layers = get_parametrized_layers(graph.model)
+
+                # i=0
+                # for name, param in model.named_parameters():
+                #     if 'original' in name:
+                #         pruned_weights = parametrized_layers[i].weight
+                #         param.data.copy_(pruned_weights)
+                #         i+=1
+       
+                # accuracy_after_pruned = calculate_accuracy(model, testloader)
+
+
+                ## Huffman sparsity encoding --TO FINISH (only encoding is done)
+                '''
+                print('Start Encoding')
+                # Apply Huffman Encoding to the pruned weights
+                class HuffmanEncoder:
+                    def __init__(self, weights):
+                        self.weights = weights
+                        self.encoded_values = {}
+                        self.build_huffman_tree()
+
+                    def build_huffman_tree(self):
+                        freq = collections.Counter(self.weights)
+                        heap = [[weight, [value, ""]] for value, weight in freq.items()]
+                        heapq.heapify(heap)
+                        while len(heap) > 1:
+                            lo = heapq.heappop(heap)
+                            hi = heapq.heappop(heap)
+                            for pair in lo[1:]:
+                                pair[1] = '0' + pair[1]
+                            for pair in hi[1:]:
+                                pair[1] = '1' + pair[1]
+                            heapq.heappush(heap, [lo[0] + hi[0]] + lo[1:] + hi[1:])
+                        encoding = sorted(heapq.heappop(heap)[1:], key=lambda p: (len(p[-1]), p))
+                        self.encoded_values = {value: code for value, code in encoding}
+
+                    def encode(self, value):
+                        return self.encoded_values[value]
+
+                    def decode(self, encoded_value):
+                        reverse_encoded_values = {v: k for k, v in self.encoded_values.items()}
+                        decoded_value = ""
+                        current_code = ""
+                        for bit in encoded_value:
+                            current_code += bit
+                            if current_code in reverse_encoded_values:
+                                decoded_value += reverse_encoded_values[current_code]
+                                current_code = ""
+                        return decoded_value
+                
+                encoded_list = []
+                for name, param in model.named_parameters():
+                    if 'original' in name:
+                        pruned_weights = param.detach().cpu().numpy().flatten()
+                        huffman_encoder = HuffmanEncoder(pruned_weights)
+                        encoded_weights = [huffman_encoder.encode(w) for w in pruned_weights]
+                        encoded_list.append(encoded_weights)
+
+                if save_dir is not None:
+                    transformed_ckpt = save_dir / f"{pass_name}_ckpt"
+                    transformed_ckpt.mkdir(parents=True, exist_ok=True)
+                    torch.save({
+                        'state_dict': model.state_dict(),
+                        'encoded_weights': encoded_weights
+                    }, os.path.join(transformed_ckpt, "state_dict_with_huffman.pt"))
+                print('End Encoding')
+                '''
+
+                if save_dir is not None:
+                    transformed_ckpt = save_dir / f"{pass_name}_ckpt"
+                    transformed_ckpt.mkdir(parents=True, exist_ok=True)
+                    torch.save(model.state_dict(), os.path.join(transformed_ckpt, "state_dict.pt"))
+                # retrain the pruned model
+                # trainset = torchvision.datasets.CIFAR10(root='./data', train=True, download=True, transform=transform)
+                # trainloader = torch.utils.data.DataLoader(trainset, batch_size=128, shuffle=True, num_workers=2)
+
+                # criterion = torch.nn.CrossEntropyLoss()
+                # optimizer = torch.optim.Adam(model.parameters(), lr=1e-5)
+                # print("Start retraining the model")
+                # num_epochs = 5
+                # for epoch in range(num_epochs):
+                #     running_loss = 0.0
+                #     for i, data in enumerate(trainloader, 0):
+                #         inputs, labels = data
+                #         optimizer.zero_grad()
+
+                #         outputs = model(inputs)
+                #         loss = criterion(outputs, labels.to('cuda'))
+                #         loss.backward()
+                #         optimizer.step()
+
+                #         running_loss += loss.item()
+                #         if i % 100 == 99:  # Print every 100 mini-batches
+                #             print('[Num of epoch:%d, %5dth batch] loss: %.3f' %
+                #                 (epoch + 1, i + 1, running_loss / 100))
+                #             running_loss = 0.0
+                # print("Retrain complete")
+
+                # # Evaluate the model on the test set
+                # accuracy_after_retrain = calculate_accuracy(model, testloader)
+
+                # print('Accuracy of the network before pruning %.5f %%' % accuracy_before_pruned)
+                # print('Number of parameters before pruning:', num_before_prune)
+                # print('Accuracy of the network after pruning: %.5f %%' % accuracy_after_pruned)
+                # print('Number of parameters before pruning:', num_after_prune)
+
+                # print('Compression ratio of pruning is: %.2f %%' % ((num_before_prune/num_after_prune)*100))
+                # print('Accuracy rentention rate before retraining: %.2f %%' % ((accuracy_after_pruned/accuracy_before_pruned)*100))
+                # print('Accuracy rentention rate after retraining: %.2f %%' % ((accuracy_after_retrain/accuracy_before_pruned)*100))
+
+                return graph
+            
+            case "retrain":
+                input_generator = InputGenerator(
+                    model_info=model_info,
+                    data_module=data_module,
+                    task=task,
+                    which_dataloader="val",
+                )
+                dummy_input = get_dummy_input(model_info, data_module, task=task, device='cpu')
+
+                pass_config["model_name"] = model_name
+                pass_config["input_generator"] = input_generator
+                pass_config["dummy_in"] = dummy_input
+
+                max_epoch = pass_config['config']['epoch']
+                batch_size = pass_config['config']['batch_size']
+                lr = pass_config['config']['learning_rate']
+
+                module = torch.load(load_name)
+
+                def get_parametrized_layers(module):
+                    parametrized_layers = []
+                    for name, weights in module.items():
+                        if 'original' in name:
+                            parametrized_layers.append(weights)
+                    return parametrized_layers
+
+                def load_pruned_weights(model, layers, index):
+                    for _, layer in model.named_children():
+                        if isinstance(layer, (torch.nn.modules.conv.Conv2d, torch.nn.modules.linear.Linear)):
+                            layer.weight.data.copy_(layers[index[0]])
+                            index[0] += 1
+                        elif isinstance(layer, torch.nn.Module):
+                            load_pruned_weights(layer, layers, index)
+                    return model
+                
+                if dataset_info.name == 'cifar10':
+                    transform = transforms.Compose([
+                        transforms.ToTensor(),
+                        transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
+                    ])
+                    trainset = torchvision.datasets.CIFAR10(root='./data', train=True, download=True, transform=transform)
+                    trainloader = torch.utils.data.DataLoader(trainset, batch_size=batch_size, shuffle=True, num_workers=2)
+
+
+                elif dataset_info.name == 'imagenet':
+                    transform = transforms.Compose([
+                        transforms.RandomResizedCrop(224),
+                        transforms.RandomHorizontalFlip(),
+                        transforms.ToTensor(),
+                        transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+                    ])
+                    trainset = torchvision.datasets.ImageNet(root='./data', train=True, download=True, transform=transform)
+                    trainloader = torch.utils.data.DataLoader(trainset, batch_size=batch_size, shuffle=True, num_workers=2)
+
+                ## Add more dataset loading method here
+                else:
+                    raise ValueError(
+                        "Dataset {} is not supported for pruning yet".format(dataset_info.name)
+                    )
+                
+                criterion = torch.nn.CrossEntropyLoss()
+                optimizer = torch.optim.Adam(model.parameters(), lr=lr)
+                
+                parametrized_layers = get_parametrized_layers(module)
+                index = [0]
+                pruned_model = load_pruned_weights(model, parametrized_layers, index)
+
+                print("Start retraining the model")
+                num_epochs = max_epoch
+                for epoch in range(num_epochs):
+                    running_loss = 0.0
+                    for i, data in enumerate(trainloader, 0):
+                        inputs, labels = data
+                        optimizer.zero_grad()
+
+                        outputs = pruned_model(inputs.to('cuda'))
+                        loss = criterion(outputs, labels.to('cuda'))
+                        loss.backward()
+                        optimizer.step()
+
+                        running_loss += loss.item()
+                        if i % 100 == 99:  # Print every 100 mini-batches
+                            print('[Num of epoch:%d, %5dth batch] loss: %.3f' %
+                                (epoch + 1, i + 1, running_loss / 100))
+                            running_loss = 0.0
+                print("Retrain complete")
+                if save_dir is not None:
+                    transformed_ckpt = save_dir / f"{pass_name}_ckpt"
+                    transformed_ckpt.mkdir(parents=True, exist_ok=True)
+                    torch.save(pruned_model, os.path.join(transformed_ckpt, "retrain_model.ckpt"))
+                
+                return graph
             case "remove_prune_wrappers":
                 # Removes the pruning-related hooks and makes pruning permanent
-                graph, _ = PASSES[pass_name](graph, pass_args=None)
+                graph = PASSES[pass_name](graph, pass_args=None)
             case "conv_bn_fusion":
-                graph, _ = PASSES[pass_name](graph, pass_args=None)
+                graph = PASSES[pass_name](graph, pass_args=None)
             case "logicnets_fusion":
-                graph, _ = PASSES[pass_name](graph, pass_args=pass_config)
+                graph = PASSES[pass_name](graph, pass_args=pass_config)
             case "onnx_annotate":
                 onnx_dir = save_dir / "onnx"
                 onnx_dir.mkdir(parents=True, exist_ok=True)
@@ -177,20 +468,17 @@ def transform(
                     "save_path": onnx_dir,
                     "data_path": pass_config["data_path"],
                 }
-                graph, _ = PASSES[pass_name](graph, **kwargs)
+                graph = PASSES[pass_name](graph, **kwargs)
             case _:
                 my_pass = PASSES[pass_name]
-                graph, _ = my_pass(graph, pass_args=pass_config)
-
+                graph = my_pass(graph, pass_args=pass_config)
+        ## graph, pass_info = graph
         assert isinstance(
             graph, MaseGraph
         ), f"Return type of {pass_name} must be MaseGraph, got {type(graph)}"
 
     if save_dir is not None:
-        transformed_ckpt = save_dir / "transformed_ckpt"
+        transformed_ckpt = save_dir / f"{pass_name}_ckpt"
         transformed_ckpt.mkdir(parents=True, exist_ok=True)
-        graph, _ = metadata_value_type_cast_transform_pass(
-            graph, pass_args={"fn": to_numpy_if_tensor}
-        )
         save_mase_graph_interface_pass(graph, pass_args=transformed_ckpt)
     return graph

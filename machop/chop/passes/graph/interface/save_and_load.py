@@ -1,13 +1,11 @@
 import logging
 import os
-import numpy as np
 
 import toml
 import torch
 import torch.fx as fx
 from chop.passes.graph.analysis.init_metadata import init_metadata_analysis_pass
 from chop.tools.config_load import convert_none_to_str_na, convert_str_na_to_none
-
 
 logger = logging.getLogger(__name__)
 
@@ -19,7 +17,8 @@ def save_graph_module_ckpt(graph_module: fx.GraphModule, save_path: str) -> None
     :param save_path: the directory for saving
     :type save_path: str
     """
-    torch.save(graph_module, save_path)
+    ## torch.save(graph_module, save_path)
+    torch.save(graph_module.state_dict(), save_path)
 
 
 def save_state_dict_ckpt(graph_module: fx.GraphModule, save_path: str) -> None:
@@ -56,7 +55,6 @@ def save_n_meta_param(node_meta: dict, save_path: str) -> None:
     Save a mase graph metadata to a toml file.
     """
     node_meta = convert_none_to_str_na(node_meta)
-
     with open(save_path, "w") as f:
         toml.dump(node_meta, f)
 
@@ -135,17 +133,22 @@ def save_mase_graph_interface_pass(graph, pass_args: dict = {}):
     # collect metadata.parameters
     node_n_meta_param = collect_n_meta_param(graph)
     # save metadata.parameters to toml
-    save_n_meta_param(node_n_meta_param, n_meta_param_ckpt)
+    # TODO: temporarily disabled
+    # save_n_meta_param(node_n_meta_param, n_meta_param_ckpt)
     # reset metadata to empty dict {}
     graph = graph_iterator_remove_metadata(graph)
     # save graph module & state dict
+
     save_graph_module_ckpt(graph.model, graph_module_ckpt)
     save_state_dict_ckpt(graph.model, state_dict_ckpt)
+
     # restore metadata.parameters
-    graph, _ = init_metadata_analysis_pass(graph)
-    graph = graph_iterator_add_n_meta_param(graph, node_n_meta_param)
+    graph = init_metadata_analysis_pass(graph)
+    # TODO: temporarily disabled, why we need this? why save needs another pass here?
+    # graph = graph_iterator_add_n_meta_param(graph, node_n_meta_param)
     logger.info(f"Saved mase graph to {save_dir}")
     return graph, {}
+
 
 
 def load_mase_graph_interface_pass(graph, pass_args: dict = {"load_dir": None}):

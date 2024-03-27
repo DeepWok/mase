@@ -47,8 +47,8 @@ class VGG7(nn.Module):
         x = self.last_layer(x)
         return x
 
-
 def get_vgg7(info, pretrained=False) -> VGG7:
     image_size = info.image_size
     num_classes = info.num_classes
     return VGG7(image_size, num_classes)
+    

@@ -36,8 +36,6 @@ from pathlib import Path
 from functools import partial
 
 import ipdb
-import cProfile
-import warnings
 
 # import pytorch_lightning as pl
 import lightning as pl
@@ -50,7 +48,7 @@ from tabulate import tabulate
 import torch
 
 from . import models
-from .actions import test, train, transform, search, emit, simulate
+from .actions import test, train, transform, search
 from .dataset import MaseDataModule, AVAILABLE_DATASETS, get_dataset_info
 from .tools import post_parse_load_config, load_config
 
@@ -97,7 +95,7 @@ LOGO = f"""
         https://github.com/DeepWok/mase/wiki
 """
 TASKS = ["classification", "cls", "translation", "tran", "language_modeling", "lm"]
-ACTIONS = ["train", "test", "transform", "search", "emit", "simulate"]
+ACTIONS = ["train", "test", "transform", "search"]
 INFO_TYPE = ["all", "model", "dataset"]
 LOAD_TYPE = [
     "pt",  # PyTorch module state dictionary
@@ -239,35 +237,16 @@ class ChopCLI:
         self.output_dir, self.output_dir_sw, self.output_dir_hw = self._setup_folders()
         self.visualizer = self._setup_visualizer()
 
-        if self.args.no_warnings:
-            # Disable all warnings
-            warnings.simplefilter("ignore")
-
     def run(self):
-        run_action_fn = None
         match self.args.action:
             case "transform":
-                run_action_fn = self._run_transform
+                self._run_transform()
             case "train":
-                run_action_fn = self._run_train
+                self._run_train()
             case "test":
-                run_action_fn = self._run_test
+                self._run_test()
             case "search":
-                run_action_fn = self._run_search
-            case "emit":
-                run_action_fn = self._run_emit
-            case "simulate":
-                run_action_fn = self._run_simulate
-
-        if run_action_fn is None:
-            raise ValueError(f"Unsupported action: {self.args.action}")
-
-        if self.args.profile:
-            prof = cProfile.runctx(
-                "run_action_fn()", globals(), locals(), sort="cumtime"
-            )
-        else:
-            run_action_fn()
+                self._run_search()
 
     # Actions --------------------------------------------------------------------------
     def _run_train(self):
@@ -308,8 +287,6 @@ class ChopCLI:
             "load_name": load_name,
             "load_type": self.args.load_type,
         }
-
-        self.logger.info(f"##### WEIGHT DECAY ##### {self.args.weight_decay}")
 
         train(**train_params)
         self.logger.info("Training is completed")
@@ -363,12 +340,12 @@ class ChopCLI:
             "model_info": self.model_info,
             "model_name": self.args.model,
             "data_module": self.data_module,
+            "dataset_info": self.dataset_info,
             "task": self.args.task,
             "config": self.args.config,
             "save_dir": os.path.join(self.output_dir_sw, "transform"),
             "load_name": self.args.load_name,
             "load_type": self.args.load_type,
-            "accelerator": self.args.accelerator,
         }
 
         transform(**transform_params)
@@ -396,49 +373,6 @@ class ChopCLI:
 
         search(**search_params)
         self.logger.info("Searching is completed")
-
-    def _run_emit(self):
-        load_name = None
-        load_types = ["mz"]
-        if self.args.load_name is not None and self.args.load_type in load_types:
-            load_name = self.args.load_name
-
-        emit_params = {
-            "model": self.model,
-            "model_info": self.model_info,
-            "task": self.args.task,
-            "dataset_info": self.dataset_info,
-            "data_module": self.data_module,
-            "load_name": load_name,
-            "load_type": self.args.load_type,
-        }
-
-        emit(**emit_params)
-        self.logger.info("Verilog emit is completed")
-
-    def _run_simulate(self):
-        load_name = None
-        load_types = ["mz"]
-        if self.args.load_name is not None and self.args.load_type in load_types:
-            load_name = self.args.load_name
-
-        emit_params = {
-            "model": self.model,
-            "model_info": self.model_info,
-            "task": self.args.task,
-            "dataset_info": self.dataset_info,
-            "data_module": self.data_module,
-            "load_name": load_name,
-            "load_type": self.args.load_type,
-        }
-
-        simulate_params = {
-            "run_emit": self.args.run_emit,
-            "skip_build": self.args.skip_build,
-            "skip_test": self.args.skip_test,
-        }
-        simulate(**emit_params, **simulate_params)
-        self.logger.info("Verilog simulation is completed")
 
     # Helpers --------------------------------------------------------------------------
     def _setup_parser(self):
@@ -734,24 +668,6 @@ class ChopCLI:
             help="number of FPGA devices. (default: %(default)s)",
             metavar="NUM",
         )
-        hardware_group.add_argument(
-            "--run-emit",
-            dest="run_emit",
-            action="store_true",
-            help="",
-        )
-        hardware_group.add_argument(
-            "--skip-build",
-            dest="skip_build",
-            action="store_true",
-            help="",
-        )
-        hardware_group.add_argument(
-            "--skip-test",
-            dest="skip_test",
-            action="store_true",
-            help="",
-        )
 
         # Language model options -------------------------------------------------------
         lm_group = parser.add_argument_group(title="language model options")
@@ -792,18 +708,6 @@ class ChopCLI:
                 (default: {MODEL-NAME}_{TASK-TYPE}_{DATASET-NAME}_{TIMESTAMP})
             """,
             metavar="NAME",
-        )
-        project_group.add_argument(
-            "--profile",
-            action="store_true",
-            dest="profile",
-            help="",
-        )
-        project_group.add_argument(
-            "--no-warnings",
-            action="store_true",
-            dest="no_warnings",
-            help="",
         )
 
         # Information flags ------------------------------------------------------------

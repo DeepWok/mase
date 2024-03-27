@@ -1,5 +1,4 @@
 from chop.ir.graph.mase_metadata import MaseMetadata
-from chop.ir.graph.mase_graph_metadata import MaseGraphMetadata
 
 
 def init_metadata_analysis_pass(graph, pass_args=None):
@@ -15,7 +14,4 @@ def init_metadata_analysis_pass(graph, pass_args=None):
     """
     for node in graph.fx_graph.nodes:
         node.meta["mase"] = MaseMetadata(node=node, model=graph.model)
-
-    # Graph metadata
-    graph.meta = {"mase": MaseGraphMetadata(graph)}
     return graph, {}

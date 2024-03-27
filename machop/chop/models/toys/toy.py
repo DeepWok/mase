@@ -20,7 +20,53 @@ class ToyNet(nn.Module):
 
     def forward(self, x):
         return self.seq_blocks(x.view(x.size(0), -1))
+    
+class ToyNet2(nn.Module):
+    def __init__(self, image_size, num_classes):
+        super(ToyNet2, self).__init__()
+        in_planes = image_size[0] * image_size[1] * image_size[2]
+        self.seq_blocks = nn.Sequential(
+            nn.Linear(in_planes, 8),
+            nn.ReLU(),
+            nn.Linear(8, 8),
+            nn.ReLU(),
+            nn.Linear(8, 8),
+            nn.ReLU(),
+            nn.Linear(8, 8),
+            nn.ReLU(),
+            nn.Linear(8, 8),
+            nn.ReLU(),
+            nn.Linear(8, 8),
+            nn.ReLU(),
+            nn.Linear(8, 8),
+            nn.ReLU(),
+            nn.Linear(8, 8),
+            nn.ReLU(),
+            nn.Linear(8, 8),
+            nn.ReLU(),
+            nn.Linear(8, 8),
+            nn.ReLU(),
+            nn.Linear(8, 8),
+            nn.ReLU(),
+            nn.Linear(8, 8),
+            nn.ReLU(),
+            nn.Linear(8, 8),
+            nn.ReLU(),
+            nn.Linear(8, 8),
+            nn.ReLU(),
+            nn.Linear(8, 8),
+            nn.ReLU(),
+            nn.Linear(8, 8),
+            nn.ReLU(),
+            nn.Linear(8, 8),
+            nn.ReLU(),
+            nn.Linear(8, 8),
+            nn.ReLU(),
+            nn.Linear(8, num_classes),
+        )
 
+    def forward(self, x):
+        return self.seq_blocks(x.view(x.size(0), -1))
 
 class ToyTiny(nn.Module):
     def __init__(self, image_size, num_classes=1) -> None:
@@ -35,8 +81,8 @@ class ToyTiny(nn.Module):
         x = x.view(x.size(0), -1)
         x = self.l1(x)
         x = self.relu_1(x)
-        # x = self.l2(x)
-        # x = self.relu_2(x)
+        x = self.l2(x)
+        x = self.relu_2(x)
         return x
 
 
@@ -133,13 +179,21 @@ def get_toynet(
     num_classes = info.num_classes
     return ToyNet(image_size, num_classes)
 
+def get_toynet2(
+    info,
+    pretrained=False,
+    **kwargs: Any,
+):
+    image_size = info.image_size
+    num_classes = info.num_classes
+    return ToyNet2(image_size, num_classes)
 
 def get_toy_tiny(
     info,
     pretrained=False,
     **kwargs: Any,
 ):
-    image_size = info.image_size
+    image_size = info["image_size"]
     num_classes = info.num_classes
     return ToyTiny(image_size, num_classes)
 
@@ -163,13 +217,3 @@ def get_toy_convnet(
     # NOTE: The model isn't configurable through the CLI or a configuration file yet.
     num_classes = info.num_classes
     return ToyConvNet(num_classes)
-
-
-def get_toy_emit(
-    info,
-    pretrained=False,
-    **kwargs: Any,
-):
-    image_size = info.image_size
-    num_classes = info.num_classes
-    return ToyEmit(image_size, num_classes)

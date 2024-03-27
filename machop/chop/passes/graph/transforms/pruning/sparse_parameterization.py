@@ -3,7 +3,7 @@ import torch
 
 # Parametrizations
 class FakeSparseWeight(torch.nn.Module):
-    r"""Parametrization for the weights. Should be attached to the 'weight' or
+    """Parametrization for the weights. Should be attached to the 'weight' or
     any other parameter that requires a mask applied to it.
 
     Note::

@@ -19,6 +19,7 @@ from pytorch_lightning.plugins.environments import SLURMEnvironment
 
 from torch.distributed.fsdp import FullyShardedDataParallel
 from pytorch_lightning.strategies import DDPStrategy
+from pytorch_lightning.callbacks import Callback
 
 
 logger = logging.getLogger(__name__)
@@ -33,6 +34,7 @@ logger = logging.getLogger(__name__)
 #             # cpu_offload=CPUOffload(offload_params=True),
 #         )
 #         self.model = fsdp_model
+
 
 
 def train(

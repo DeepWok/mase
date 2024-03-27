@@ -20,7 +20,7 @@ def load_lightning_ckpt_to_unwrapped_model(checkpoint: str, model: torch.nn.Modu
             possible_tgt_k = k
         if possible_tgt_k in tgt_state_dict:
             new_tgt_state_dict[possible_tgt_k] = v
-    model.load_state_dict(state_dict=new_tgt_state_dict)
+    model.load_state_dict(state_dict=new_tgt_state_dict, strict=False)
     return model
 
 
@@ -31,8 +31,8 @@ def load_unwrapped_ckpt(checkpoint: str, model: torch.nn.Module):
     state_dict = torch.load(checkpoint)
     if "state_dict" in state_dict:
         state_dict = state_dict["state_dict"]
-
-    model.load_state_dict(state_dict=state_dict)
+    #import pdb; pdb.set_trace()
+    model.load_state_dict(state_dict=state_dict, strict=False)
     return model
 
 
