@@ -2,6 +2,9 @@
 
 The zero-cost proxy evaluation process is designed to efficiently evaluate neural network (NN) architectures without the need for extensive computational resources. This process involves several steps, starting from configuration setup to the final output of NN architecture rankings and zero-cost proxy values.
 
+### Overall Structure:
+
+
 ## Start-up
 
 The process begins with the setup phase, where the configuration parameters are defined in a `.toml` file.
