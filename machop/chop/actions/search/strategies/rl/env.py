@@ -475,13 +475,14 @@ class MixedPrecisionPaper(gym.Env):
         reward = 0
         terminated = truncated = False
         self.state += 1
+        info = {}
         if self.state == len(self.obs_list):
             self.state = 0
             terminated = truncated = True
             reward, scaled_metrics = self.run_trial(self.sample)
+            info = {"reward": reward, "average_bitwidth": scaled_metrics['average_bitwidth'], "accuracy": scaled_metrics['accuracy']}
         obs = self.obs_list[self.state].copy()
         obs = np.append(obs, choices[action]).astype(np.float32)
-        info = {"reward": reward, "average_bitwidth": scaled_metrics['average_bitwidth'], "accuracy": scaled_metrics['accuracy']}
         return obs, reward, terminated, False, info
 
 
