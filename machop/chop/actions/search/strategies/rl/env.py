@@ -516,7 +516,7 @@ Env_id_Hi_Lo = 'RL/MixedPrecisionPaper-v0'
 gym.envs.registration.register(
     id=Env_id_Hi_Lo,
     entry_point=MixedPrecisionPaper,
-    max_episode_steps=100,
+    max_episode_steps=100000,
     reward_threshold=500
 )
 
