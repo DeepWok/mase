@@ -13,7 +13,7 @@ from ..utils import flatten_dict, unflatten_dict
 from collections import defaultdict
 
 from .....passes.graph.transforms.tensorrt.quantize.utils import QUANTIZEABLE_OP
-from .....passes.graph.transforms.tensorrt.quantize import tensorrt_engine_interface_pass
+from .....passes.graph.interface.tensorrt.quantize import tensorrt_engine_interface_pass
 
 DEFAULT_QUANTIZATION_CONFIG = {
     "config": {

@@ -3,12 +3,12 @@
 # dataset = "wikitext2"
 # task = "lm"
 
-model = "facebook/opt-125m"
+model = "EleutherAI/gpt-neo-125M"
 dataset = "wikitext2"
 task = "lm"
 
 is_pretrained = true
-load_name = "facebook/opt-125m"
+load_name = "EleutherAI/gpt-neo-125M"
 load_type = "hf"
 
 max_epochs = 5
