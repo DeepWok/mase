@@ -46,6 +46,7 @@ from .utils import MaseModelInfo, ModelSource, ModelTaskType
 
 import torch.nn as nn
 
+
 def get_model_info(name: str) -> MaseModelInfo:
     if is_manual_model(name):
         info = get_manual_model_info(name)
@@ -127,9 +128,9 @@ def get_model(
                 new_first_layer = nn.Conv2d(
                     1, 3, kernel_size=(1, 1), stride=(1, 1), padding=(0, 0)
                 )
-                
+
                 # Now, add this layer at the beginning of the model accepting 3 channels
-                model = nn.Sequential(new_first_layer, model)    
+                model = nn.Sequential(new_first_layer, model)
 
     return model
 
