@@ -35,6 +35,10 @@ class SearchStrategyOptuna(SearchStrategyBase):
     is_iterative = False
 
     def _post_init_setup(self):
+        # Group 2: Zero cost
+        # This function sets up the initial configuration for the search strategy.
+        # It checks if the zero cost mode is enabled and initializes a dictionary to store the proxy number and the true metric.
+
         self.sum_scaled_metrics = self.config["setup"]["sum_scaled_metrics"]
         self.metric_names = list(sorted(self.config["metrics"].keys()))
 
@@ -91,6 +95,14 @@ class SearchStrategyOptuna(SearchStrategyBase):
         return metrics
 
     def objective(self, trial: optuna.trial.Trial, search_space):
+        # Group 2: Zero cost
+        # This function defines the objective of the optimization trial.
+        # If the zero cost mode is enabled, it rebuilds the model with the sampled configuration and evaluation mode, and stores the data returned by the rebuild_model function.
+        # It then creates a new entry in the zero_cost_and_true_metric dictionary with the true metric data and an empty dictionary for the zero cost proxy.
+        # If the zero cost mode is not enabled, it simply rebuilds the model without storing the data.
+        # It then computes the software and hardware metrics, and combines them into a single dictionary.
+        # If the zero cost mode is enabled, it stores the scaled metrics in the zero_cost_proxy dictionary.
+
         sampled_indexes = {}
         if hasattr(search_space, "optuna_sampler"):
             sampled_config = search_space.optuna_sampler(trial)
@@ -166,6 +178,10 @@ class SearchStrategyOptuna(SearchStrategyBase):
             return sum(scaled_metrics.values())
 
     def search(self, search_space) -> optuna.study.Study:
+        # Group 2: Zero cost
+        # This function performs the search for the optimization trial.
+        # It checks if the zero cost mode is enabled and then saves the study every n trials.
+        # If the zero cost mode is not enabled, it simply performs the search without saving the study.
         study_kwargs = {
             "sampler": self.sampler_map(self.config["setup"]["sampler"]),
         }
@@ -203,6 +219,11 @@ class SearchStrategyOptuna(SearchStrategyBase):
         return study
 
     def zero_cost_weight(self):
+        # Group 2: Zero cost
+        # This function calculates the weight for the zero cost mode.
+        # It checks if the zero cost mode is enabled and then fits a linear regression model to the zero cost proxy and the true accuracy.
+        # If the zero cost mode is not enabled, it raises a ValueError.
+
         if self.zero_cost_mode:
             self.zc_proxy = pd.DataFrame()
             self.zc_true_accuracy = []

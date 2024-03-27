@@ -53,6 +53,9 @@ def copynet(self, bn):
     return net
 
 def find_measures_arrays(net_orig, trainloader, dataload_info, device, measure_names=None, loss_fn=F.cross_entropy):
+    # Group 2: Zero cost
+    # This function computes the zero-cost metrics for a given network, data loader, and loss function. It first checks if the network has a `get_prunable_copy` method, and if not, it adds one. Then it moves the network to the CPU to free up GPU memory. It gets a minibatch of data based on the `dataload` parameter. It then tries to compute the zero-cost metrics for the network. If it runs out of memory, it splits the data into smaller parts and tries again.
+
     if measure_names is None:
         measure_names = measures.available_measures
 
@@ -108,7 +111,8 @@ def find_measures(net_orig,                  # neural network
                   loss_fn=F.cross_entropy,   # loss function to use within the zero-cost metrics
                   measure_names=None,        # an array of measure names to compute, if left blank, all measures are computed by default
                   measures_arr=None):        # [not used] if the measures are already computed but need to be summarized, pass them here
-    
+    # Group 2: Zero cost
+    # This function is a wrapper for the `find_measures_arrays` function. It computes the zero-cost metrics for a given network, data loader, and loss function. If the `measures_arr` parameter is not None, it uses the provided measures instead of computing them. It then sums up the measures and returns them.
     #Given a neural net
     #and some information about the input data (dataloader)
     #and loss function (loss_fn)
