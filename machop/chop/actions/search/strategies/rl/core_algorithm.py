@@ -46,12 +46,12 @@ class StrategyRL(SearchStrategyBase):
                                "sum_scaled_metrics": self.sum_scaled_metrics,
                                "data_module": self.data_module,
                                "metrics": self.metrics})
-        checkpoint_callback = CheckpointCallback(save_freq=1000, save_path="./logs/")
+        checkpoint_callback = CheckpointCallback(save_freq=100, save_path="./logs/")
         eval_callback = EvalCallback(
             env,
             best_model_save_path="./logs/best_model",
             log_path="./logs/results",
-            eval_freq=100,
+            eval_freq=50,
         )
         callback = CallbackList([checkpoint_callback, eval_callback])
         method = 0

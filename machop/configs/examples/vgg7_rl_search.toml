@@ -20,7 +20,7 @@ load_type = "pl"
 name = "graph/quantize/mixed_precision_ptq"
 
 [search.search_space.setup]
-by = "type"
+by = "type_revised"
 
 [search.search_space.seed.default.config]
 # the only choice "NA" is used to indicate that layers are not quantized by default
@@ -70,7 +70,7 @@ compare_to = 32 # compare to FP32
 [search.strategy.setup]
 algorithm = 'a2c'
 env = 'mixed_precision'
-total_timesteps = 1#32000
+total_timesteps = 300#32000
 save_name = 'test'
 mode='train'
 
