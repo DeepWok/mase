@@ -42,9 +42,14 @@ module fixed_isqrt #(
     logic[MSB_WIDTH-1:0] msb_index [3:0];
     logic[2*IN_WIDTH-1:0] lut_index;
     logic[2*IN_WIDTH-1:0] lut_value [2:1];
-    logic[2*IN_WIDTH-1:0] y [3:2];
+    logic[2*IN_WIDTH-1:0] y [3:3];
     logic[2*IN_WIDTH-1:0] y_or_one;
     logic[2*IN_WIDTH-1:0] y_aug;
+
+    logic pipe_valid [3:1];
+    logic pipe_ready [3:1];
+
+    logic [2*IN_WIDTH-1:0] isqrt_data_out;
 
     fixed_range_reduction #(
         .WIDTH(IN_WIDTH)
@@ -53,8 +58,6 @@ module fixed_isqrt #(
         .data_out(x_reduced[0]),
         .msb_index(msb_index[0])
     );
-
-    logic pipe_1_valid, pipe_1_ready;
 
     skid_buffer #(
         .DATA_WIDTH(2*IN_WIDTH + MSB_WIDTH)
@@ -65,8 +68,8 @@ module fixed_isqrt #(
         .data_in_valid(in_valid),
         .data_in_ready(in_ready),
         .data_out({x_reduced[1], msb_index[1]}),
-        .data_out_valid(pipe_1_valid),
-        .data_out_ready(pipe_1_ready)
+        .data_out_valid(pipe_valid[1]),
+        .data_out_ready(pipe_ready[1])
     );
 
     fixed_lut_index #(
@@ -89,43 +92,48 @@ module fixed_isqrt #(
         .data(lut_value[1])
     );
 
-    logic pipe_2_valid, pipe_2_ready;
-
     skid_buffer #(
         .DATA_WIDTH(2*IN_WIDTH + MSB_WIDTH + IN_WIDTH)
     ) pipe_reg_1 (
         .clk(clk),
         .rst(rst),
         .data_in({x_reduced[1], msb_index[1], lut_value[1]}),
-        .data_in_valid(pipe_1_valid),
-        .data_in_ready(pipe_1_ready),
+        .data_in_valid(pipe_valid[1]),
+        .data_in_ready(pipe_ready[1]),
         .data_out({x_reduced[2], msb_index[2], lut_value[2]}),
-        .data_out_valid(pipe_2_valid),
-        .data_out_ready(pipe_2_ready)
+        .data_out_valid(pipe_valid[2]),
+        .data_out_ready(pipe_ready[2])
     );
 
     fixed_nr_stage #(
-        .WIDTH(IN_WIDTH)
+        .WIDTH(IN_WIDTH),
+        .MSB_WIDTH(MSB_WIDTH)
     ) fixed_nr_stage_inst_1 (
+        .clk(clk),
         .data_a(x_reduced[2]),
         .data_b(lut_value[2]),
-        .data_out(y[2])
+        .data_in_msb(msb_index[2])
+        .data_in_valid(pipe_valid[2]),
+        .data_in_ready(pipe_ready[2]),
+        .data_out(y[3]),
+        .data_out_x_reduced(x_reduced[3]),
+        .data_out_msb(msb_index[3]),
+        .data_out_valid(pipe_valid[3]),
+        .data_out_ready(pipe_ready[3])
     );
 
-    logic pipe_3_valid, pipe_3_ready;
-
-    skid_buffer #(
-        .DATA_WIDTH(2*IN_WIDTH + MSB_WIDTH + 2*IN_WIDTH)
-    ) pipe_reg_2 (
-        .clk(clk),
-        .rst(rst),
-        .data_in({y[2], msb_index[2], x_reduced[2]}),
-        .data_in_valid(pipe_2_valid),
-        .data_in_ready(pipe_2_ready),
-        .data_out({y[3], msb_index[3], x_reduced[3]}),
-        .data_out_valid(pipe_3_valid),
-        .data_out_ready(pipe_3_ready)
-    );
+    // skid_buffer #(
+    //     .DATA_WIDTH(2*IN_WIDTH + MSB_WIDTH + 2*IN_WIDTH)
+    // ) pipe_reg_2 (
+    //     .clk(clk),
+    //     .rst(rst),
+    //     .data_in({y[2], msb_index[2], x_reduced[2]}),
+    //     .data_in_valid(pipe_valid[2]),
+    //     .data_in_ready(pipe_ready[2]),
+    //     .data_out({y[3], msb_index[3], x_reduced[3]}),
+    //     .data_out_valid(pipe_valid[3]),
+    //     .data_out_ready(pipe_ready[3])
+    // );
 
     assign y_or_one = (x_reduced[3] == ONE) ? ONE : y[3];
 
@@ -137,8 +145,6 @@ module fixed_isqrt #(
         .data_b(msb_index[3]),
         .data_out(y_aug)
     );
-
-    logic [2*IN_WIDTH-1:0] isqrt_data_out;
 
     assign isqrt_data_out =
         // Fishing for 0s.
@@ -159,8 +165,8 @@ module fixed_isqrt #(
         .clk(clk),
         .rst(rst),
         .data_in(isqrt_data_out),
-        .data_in_valid(pipe_3_valid),
-        .data_in_ready(pipe_3_ready),
+        .data_in_valid(pipe_valid[3]),
+        .data_in_ready(pipe_ready[3]),
         .data_out(out_data),
         .data_out_valid(out_valid),
         .data_out_ready(out_ready)
