@@ -205,7 +205,7 @@ def generate_configs(config_dict):
     C = config_dict['C']
     N = config_dict['N']
     num_classes = config_dict['number_classes']
-    op_map = {0:'skip_connect', 1:'none', 2:'nor_conv_3x3', 3:'nor_conv_1x1', 4:'avg_pool_3x3'}
+    op_map = {0:'none', 1:'skip_connect', 2:'nor_conv_3x3', 3:'nor_conv_1x1', 4:'avg_pool_3x3'}
 
     ### generate combination
     arch_str = ""
