@@ -38,7 +38,7 @@ update_compile_order
 # Synthesis
 set_msg_config -id "Synth 8-3332" -limit 10000
 
-synth_design -mode out_of_context -flatten_hierarchy rebuilt -top group_norm_2d -part xcu250-figd2104-2L-e
+synth_design -mode out_of_context -flatten_hierarchy rebuilt -top group_norm_2d -part xcu250-figd2104-2L-e -debug_log
 
 write_checkpoint post_synth.dcp -force
 

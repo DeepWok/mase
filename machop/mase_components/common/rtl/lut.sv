@@ -24,15 +24,16 @@ module lut #(
     output logic [DATA_WIDTH-1:0] data
 );
 
+logic [DATA_WIDTH-1:0] tab [SIZE-1:0];
+
+logic [DATA_WIDTH-1:0] look_up;
+
 initial begin
     assert (SIZE > 0 && DATA_WIDTH > 0);
 end
 
 initial $readmemb(MEM_FILE, tab);
 
-logic [DATA_WIDTH-1:0] tab [SIZE-1:0];
-
-logic [DATA_WIDTH-1:0] look_up;
 assign look_up = tab[addr];
 
 generate

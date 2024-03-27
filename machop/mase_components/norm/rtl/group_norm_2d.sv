@@ -84,6 +84,78 @@ logic [IN_WIDTH-1:0] fifo_data  [COMPUTE_DIM0*COMPUTE_DIM1-1:0];
 logic fifo_out_valid, fifo_out_ready;
 logic fifo_in_valid, fifo_in_ready;
 
+// Input Adder Tree
+logic [ADDER_TREE_OUT_WIDTH-1:0] adder_tree_data;
+logic adder_tree_out_valid, adder_tree_out_ready;
+logic adder_tree_in_valid, adder_tree_in_ready;
+
+
+logic [ACC_OUT_WIDTH-1:0] mu_acc;
+logic mu_acc_valid, mu_acc_ready;
+
+logic [IN_WIDTH-1:0] mu_in, mu_out;
+logic mu_out_valid, mu_out_ready;
+
+logic [ACC_OUT_WIDTH-1:0] mu_acc_div;
+
+logic mu_fifo_valid, mu_fifo_ready;
+
+logic signed [DIFF_WIDTH-1:0] diff_in [COMPUTE_DIM0*COMPUTE_DIM1-1:0];
+logic signed [DIFF_WIDTH-1:0] diff_out [COMPUTE_DIM0*COMPUTE_DIM1-1:0];
+logic diff_in_ready [COMPUTE_DIM0*COMPUTE_DIM1-1:0];
+logic diff_out_valid [COMPUTE_DIM0*COMPUTE_DIM1-1:0];
+
+logic [SQUARE_WIDTH-1:0] square_in [COMPUTE_DIM0*COMPUTE_DIM1-1:0];
+logic square_in_ready [COMPUTE_DIM0*COMPUTE_DIM1-1:0];
+logic square_out_valid [COMPUTE_DIM0*COMPUTE_DIM1-1:0];
+logic [SQUARE_WIDTH-1:0] square_out [COMPUTE_DIM0*COMPUTE_DIM1-1:0];
+
+// Split2 for split in pipeline from diff
+logic fifo_diff_in_valid, fifo_diff_in_ready;
+logic fifo_diff_out_valid;
+
+// Squares adder tree
+logic [SQUARES_ADDER_TREE_OUT_WIDTH-1:0] squares_adder_tree_data;
+logic squares_adder_tree_out_valid, squares_adder_tree_out_ready;
+logic squares_adder_tree_in_valid, squares_adder_tree_in_ready;
+
+// Squares Accumulator
+logic [VARIANCE_WIDTH-1:0] squares_acc;
+logic squares_acc_valid, squares_acc_ready;
+
+// Take the accumulated squares and divide it to get variance
+logic [SQUARES_ADDER_TREE_OUT_WIDTH+VARIANCE_WIDTH:0] variance_buffer;
+logic [VARIANCE_WIDTH-1:0] variance_in, variance_out;
+logic variance_out_valid, variance_out_ready;
+
+// Take inverse square root of variance
+logic [ISQRT_WIDTH-1:0] inv_sqrt_data;
+logic inv_sqrt_valid, inv_sqrt_ready;
+
+// Repeat circular buffer to hold inverse square root of variance during mult
+logic [ISQRT_WIDTH-1:0] isqrt_circ_data;
+logic isqrt_circ_valid, isqrt_circ_ready;
+logic norm_in_valid;
+
+// FIFO for storing X-mu differences
+logic [DIFF_WIDTH-1:0] diff_batch_in [COMPUTE_DIM0*COMPUTE_DIM1-1:0];
+logic diff_batch_in_valid, diff_batch_in_ready;
+logic [DIFF_WIDTH-1:0] diff_batch_out [COMPUTE_DIM0*COMPUTE_DIM1-1:0];
+logic diff_batch_out_valid, diff_batch_out_ready;
+
+logic [NORM_WIDTH-1:0] norm_in_data [COMPUTE_DIM0*COMPUTE_DIM1-1:0];
+logic [NORM_WIDTH-1:0] norm_out_data [COMPUTE_DIM0*COMPUTE_DIM1-1:0];
+logic [OUT_WIDTH-1:0] norm_round_out [COMPUTE_DIM0*COMPUTE_DIM1-1:0];
+
+logic [OUT_WIDTH-1:0] norm_batch_data [COMPUTE_DIM0*COMPUTE_DIM1-1:0];
+logic output_reg_ready;
+
+logic norm_in_ready [COMPUTE_DIM0*COMPUTE_DIM1-1:0];
+logic norm_out_valid [COMPUTE_DIM0*COMPUTE_DIM1-1:0];
+logic norm_batch_ready [COMPUTE_DIM0*COMPUTE_DIM1-1:0];
+logic output_reg_valid [COMPUTE_DIM0*COMPUTE_DIM1-1:0];
+
+
 matrix_fifo #(
     .DATA_WIDTH  (IN_WIDTH),
     .DIM0        (COMPUTE_DIM0),
@@ -101,10 +173,6 @@ matrix_fifo #(
 );
 
 // Input Adder Tree
-logic [ADDER_TREE_OUT_WIDTH-1:0] adder_tree_data;
-logic adder_tree_out_valid, adder_tree_out_ready;
-logic adder_tree_in_valid, adder_tree_in_ready;
-
 fixed_adder_tree #(
     .IN_SIZE(COMPUTE_DIM0 * COMPUTE_DIM1),
     .IN_WIDTH(IN_WIDTH)
@@ -128,9 +196,6 @@ split2 input_fifo_adder_split (
 );
 
 // Accumulator for mu
-logic [ACC_OUT_WIDTH-1:0] mu_acc;
-logic mu_acc_valid, mu_acc_ready;
-
 fixed_accumulator #(
     .IN_DEPTH(NUM_ITERS),
     .IN_WIDTH(ADDER_TREE_OUT_WIDTH)
@@ -145,11 +210,6 @@ fixed_accumulator #(
     .data_out_ready(mu_acc_ready)
 );
 
-// Division logic for mu
-logic [IN_WIDTH-1:0] mu_in, mu_out;
-logic mu_out_valid, mu_out_ready;
-
-logic [ACC_OUT_WIDTH-1:0] mu_acc_div;
 
 // Division by NUM_VALUES
 localparam bit [ACC_OUT_WIDTH+1:0] INV_NUMVALUES_0 = ((1 << ACC_OUT_WIDTH) / NUM_VALUES);
@@ -172,8 +232,7 @@ repeat_circular_buffer #(
 );
 
 // Join 2 for combining fifo and mu buffer signals
-logic mu_fifo_valid, mu_fifo_ready;
-assign mu_fifo_ready = compute_pipe[0].diff_in_ready;
+assign mu_fifo_ready = diff_in_ready[0];
 
 join2 mu_fifo_join2 (
     .data_in_valid({mu_out_valid, fifo_out_valid}),
@@ -183,72 +242,57 @@ join2 mu_fifo_join2 (
 );
 
 // Compute pipeline
-logic [SQUARE_WIDTH-1:0] square_out [COMPUTE_DIM0*COMPUTE_DIM1-1:0];
 
 for (genvar i = 0; i < COMPUTE_DIM0 * COMPUTE_DIM1; i++) begin : compute_pipe
 
     // Take the difference between input and mean: (X - mu)
-    logic signed [DIFF_WIDTH-1:0] diff_in, diff_out;
-    logic diff_in_ready;
-    logic diff_out_valid;
-    assign diff_in = $signed(fifo_data[i]) - $signed(mu_out);
+    assign diff_in[i] = $signed(fifo_data[i]) - $signed(mu_out);
 
     skid_buffer #(
         .DATA_WIDTH(DIFF_WIDTH)
     ) subtract_reg (
         .clk(clk),
         .rst(rst),
-        .data_in(diff_in),
+        .data_in(diff_in[i]),
         .data_in_valid(mu_fifo_valid),
-        .data_in_ready(diff_in_ready),
-        .data_out(diff_out),
-        .data_out_valid(diff_out_valid),
+        .data_in_ready(diff_in_ready[i]),
+        .data_out(diff_out[i]),
+        .data_out_valid(diff_out_valid[i]),
         .data_out_ready(fifo_diff_in_ready)
     );
 
     // Assign the output of diff int batch to be buffered
-    assign diff_batch_in[i] = diff_out;
+    assign diff_batch_in[i] = diff_out[i];
 
     // There will be a split in the pipline here, split2 is down below.
 
     // Take the difference and square it: (X - mu) ^ 2
-    logic [SQUARE_WIDTH-1:0] square_in;
-    logic square_in_ready;
-    logic square_out_valid;
-    assign square_in = $signed(diff_batch_in[i]) * $signed(diff_batch_in[i]);
+
+    assign square_in[i] = $signed(diff_batch_in[i]) * $signed(diff_batch_in[i]);
 
     skid_buffer #(
         .DATA_WIDTH(SQUARE_WIDTH)
     ) square_reg (
         .clk(clk),
         .rst(rst),
-        .data_in(square_in),
+        .data_in(square_in[i]),
         .data_in_valid(fifo_diff_out_valid),
-        .data_in_ready(square_in_ready),
+        .data_in_ready(square_in_ready[i]),
         .data_out(square_out[i]),
-        .data_out_valid(square_out_valid),
+        .data_out_valid(square_out_valid[i]),
         .data_out_ready(squares_adder_tree_in_ready)
     );
 end
 
-// Split2 for split in pipeline from diff
-logic fifo_diff_in_valid, fifo_diff_in_ready;
-logic fifo_diff_out_valid;
-
-assign fifo_diff_in_valid = compute_pipe[0].diff_out_valid;
+assign fifo_diff_in_valid = diff_out_valid[0];
 split2 fifo_diff_split (
     .data_in_valid(fifo_diff_in_valid),
     .data_in_ready(fifo_diff_in_ready),
     .data_out_valid({diff_batch_in_valid, fifo_diff_out_valid}),
-    .data_out_ready({diff_batch_in_ready, compute_pipe[0].square_in_ready})
+    .data_out_ready({diff_batch_in_ready, square_in_ready[0]})
 );
 
-// Squares adder tree
-logic [SQUARES_ADDER_TREE_OUT_WIDTH-1:0] squares_adder_tree_data;
-logic squares_adder_tree_out_valid, squares_adder_tree_out_ready;
-logic squares_adder_tree_in_valid, squares_adder_tree_in_ready;
-
-assign squares_adder_tree_in_valid = compute_pipe[0].square_out_valid;
+assign squares_adder_tree_in_valid = square_out_valid[0];
 
 fixed_adder_tree #(
     .IN_SIZE(SQUARES_ADDER_TREE_IN_SIZE),
@@ -264,10 +308,6 @@ fixed_adder_tree #(
     .data_out_ready(squares_adder_tree_out_ready)
 );
 
-// Squares Accumulator
-logic [VARIANCE_WIDTH-1:0] squares_acc;
-logic squares_acc_valid, squares_acc_ready;
-
 fixed_accumulator #(
     .IN_DEPTH(NUM_ITERS),
     .IN_WIDTH(SQUARES_ADDER_TREE_OUT_WIDTH)
@@ -281,11 +321,6 @@ fixed_accumulator #(
     .data_out_valid(squares_acc_valid),
     .data_out_ready(squares_acc_ready)
 );
-
-// Take the accumulated squares and divide it to get variance
-logic [SQUARES_ADDER_TREE_OUT_WIDTH+VARIANCE_WIDTH:0] variance_buffer;
-logic [VARIANCE_WIDTH-1:0] variance_in, variance_out;
-logic variance_out_valid, variance_out_ready;
 
 // Division by NUM_VALUES
 localparam bit [SQUARES_ADDER_TREE_OUT_WIDTH+1:0] INV_NUMVALUES_1 = ((1 << SQUARES_ADDER_TREE_OUT_WIDTH) / NUM_VALUES);
@@ -305,35 +340,6 @@ skid_buffer #(
     .data_out_ready(variance_out_ready)
 );
 
-// Clamp the variance
-// logic [ISQRT_WIDTH-1:0] variance_clamp_in, variance_clamp_out;
-// logic variance_clamp_valid, variance_clamp_ready;
-
-// always_comb begin
-//     if(variance_out > 2**ISQRT_WIDTH-1) begin
-//         variance_clamp_in = 2**ISQRT_WIDTH-1;
-//     end else begin
-//         variance_clamp_in = variance_out;
-//     end
-// end
-
-// skid_buffer #(
-//     .DATA_WIDTH(ISQRT_WIDTH)
-// ) variance_cast_reg (
-//     .clk(clk),
-//     .rst(rst),
-//     .data_in(variance_clamp_in),
-//     .data_in_valid(variance_out_valid),
-//     .data_in_ready(variance_out_ready),
-//     .data_out(variance_clamp_out),
-//     .data_out_valid(variance_clamp_valid),
-//     .data_out_ready(variance_clamp_ready)
-// );
-
-// Take inverse square root of variance
-logic [ISQRT_WIDTH-1:0] inv_sqrt_data;
-logic inv_sqrt_valid, inv_sqrt_ready;
-
 fixed_isqrt #(
     .IN_WIDTH(ISQRT_WIDTH),
     .IN_FRAC_WIDTH(ISQRT_FRAC_WIDTH),
@@ -350,9 +356,6 @@ fixed_isqrt #(
     .out_ready(inv_sqrt_ready)
 );
 
-// Repeat circular buffer to hold inverse square root of variance during mult
-logic [ISQRT_WIDTH-1:0] isqrt_circ_data;
-logic isqrt_circ_valid, isqrt_circ_ready;
 
 repeat_circular_buffer #(
     .DATA_WIDTH(ISQRT_WIDTH),
@@ -371,19 +374,14 @@ repeat_circular_buffer #(
 
 // Join2 for pipeline join at sqrt and diff fifo
 // logic inv_sqrt_ready;
-logic norm_in_valid;
 join2 diff_fifo_isqrt_join (
     .data_in_valid({diff_batch_out_valid, isqrt_circ_valid}),
     .data_in_ready({diff_batch_out_ready, isqrt_circ_ready}),
     .data_out_valid(norm_in_valid),
-    .data_out_ready(out_mult_pipe[0].norm_in_ready)
+    .data_out_ready(norm_in_ready[0])
 );
 
-// FIFO for storing X-mu differences
-logic [DIFF_WIDTH-1:0] diff_batch_in [COMPUTE_DIM0*COMPUTE_DIM1-1:0];
-logic diff_batch_in_valid, diff_batch_in_ready;
-logic [DIFF_WIDTH-1:0] diff_batch_out [COMPUTE_DIM0*COMPUTE_DIM1-1:0];
-logic diff_batch_out_valid, diff_batch_out_ready;
+
 
 matrix_fifo #(
     .DATA_WIDTH(DIFF_WIDTH),
@@ -401,21 +399,14 @@ matrix_fifo #(
     .out_ready(diff_batch_out_ready)
 );
 
-logic [NORM_WIDTH-1:0] norm_in_data [COMPUTE_DIM0*COMPUTE_DIM1-1:0];
-logic [NORM_WIDTH-1:0] norm_out_data [COMPUTE_DIM0*COMPUTE_DIM1-1:0];
-logic [OUT_WIDTH-1:0] norm_round_out [COMPUTE_DIM0*COMPUTE_DIM1-1:0];
 
-// Signals for cocotb monitor
-logic norm_monitor_valid, norm_monitor_ready;
-assign norm_monitor_valid = out_mult_pipe[0].norm_out_valid;
-assign norm_monitor_ready = out_mult_pipe[0].norm_batch_ready;
+
 
 // Output chunks compute pipeline: final multiply and output cast
+
 for (genvar i = 0; i < COMPUTE_DIM0 * COMPUTE_DIM1; i++) begin : out_mult_pipe
 
     // Multiply difference with 1/sqrt(var) to get normalized result
-    logic norm_in_ready;
-    logic norm_out_valid, norm_batch_ready;
     assign norm_in_data[i] = $signed({1'b0, isqrt_circ_data}) * $signed(diff_batch_out[i]);
 
     skid_buffer #(
@@ -425,10 +416,10 @@ for (genvar i = 0; i < COMPUTE_DIM0 * COMPUTE_DIM1; i++) begin : out_mult_pipe
         .rst(rst),
         .data_in(norm_in_data[i]),
         .data_in_valid(norm_in_valid),
-        .data_in_ready(norm_in_ready),
+        .data_in_ready(norm_in_ready[i]),
         .data_out(norm_out_data[i]),
-        .data_out_valid(norm_out_valid),
-        .data_out_ready(norm_batch_ready)
+        .data_out_valid(norm_out_valid[i]),
+        .data_out_ready(norm_batch_ready[i])
     );
 
     // Output Rounding Stage
@@ -444,27 +435,23 @@ for (genvar i = 0; i < COMPUTE_DIM0 * COMPUTE_DIM1; i++) begin : out_mult_pipe
         .out_data(norm_round_out[i])
     );
 
-    logic output_reg_valid;
     skid_buffer #(
         .DATA_WIDTH(OUT_WIDTH)
     ) output_reg (
         .clk(clk),
         .rst(rst),
         .data_in(norm_round_out[i]),
-        .data_in_valid(norm_out_valid),
-        .data_in_ready(norm_batch_ready),
+        .data_in_valid(norm_out_valid[i]),
+        .data_in_ready(norm_batch_ready[i]),
         .data_out(norm_batch_data[i]),
-        .data_out_valid(output_reg_valid),
+        .data_out_valid(output_reg_valid[i]),
         .data_out_ready(output_reg_ready)
     );
 end
 
 // Final connection to output
-logic [OUT_WIDTH-1:0] norm_batch_data [COMPUTE_DIM0*COMPUTE_DIM1-1:0];
-logic output_reg_ready;
-
 assign out_data = norm_batch_data;
-assign out_valid = out_mult_pipe[0].output_reg_valid;
+assign out_valid = output_reg_valid[0];
 assign output_reg_ready = out_ready;
 
 endmodule
