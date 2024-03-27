@@ -1,8 +1,7 @@
 # basics
-model = "mobilenetv3_small" # "mobilenetv3_large"
+model = "mobilenetv3_large"
 dataset = "mnist"
 task = "cls"
-pretrained = true
 
 max_epochs = 10
 batch_size = 64
