@@ -27,7 +27,8 @@ module rms_norm_2d #(
     parameter OUT_FRAC_WIDTH      = 4,
 
     // Inverse Sqrt LUT
-    parameter ISQRT_LUT_MEMFILE   = ""
+    parameter ISQRT_LUT_MEMFILE   = "",
+    parameter ISQRT_LUT_POW       = 5
 ) (
     input  logic                   clk,
     input  logic                   rst,
@@ -63,7 +64,7 @@ localparam ADDER_FRAC_WIDTH = SQUARE_FRAC_WIDTH;
 localparam ACC_WIDTH = ADDER_WIDTH + ITER_WIDTH;
 localparam ACC_FRAC_WIDTH = ADDER_FRAC_WIDTH;
 
-localparam ISQRT_WIDTH = 16;
+localparam ISQRT_WIDTH = ACC_WIDTH;
 localparam ISQRT_FRAC_WIDTH = ACC_FRAC_WIDTH;
 
 localparam NORM_WIDTH = ISQRT_WIDTH + IN_WIDTH;
@@ -169,7 +170,7 @@ logic [ACC_WIDTH-1:0] mean_in_data, mean_out_data;
 logic mean_out_valid, mean_out_ready;
 
 // Division by NUM_VALUES
-localparam INV_NUMVALUES_0 = ((1 << ACC_WIDTH) / NUM_VALUES);
+localparam bit [ACC_WIDTH+1:0] INV_NUMVALUES_0 = ((1 << ACC_WIDTH) / NUM_VALUES);
 logic [ACC_WIDTH*2+1:0] mean_in_buffer;
 assign mean_in_buffer = ($signed(squares_acc_data) * $signed({1'b0, INV_NUMVALUES_0})) >> ACC_WIDTH;
 assign mean_in_data = mean_in_buffer[ACC_WIDTH-1:0];
@@ -189,29 +190,29 @@ skid_buffer #(
 );
 
 // Clamp Mean Square
-logic [ISQRT_WIDTH-1:0] mse_clamp_in, mse_clamp_out;
-logic mse_clamp_valid, mse_clamp_ready;
+// logic [ISQRT_WIDTH-1:0] mse_clamp_in, mse_clamp_out;
+// logic mse_clamp_valid, mse_clamp_ready;
 
-always_comb begin
-    if(mean_out_data > (2**ISQRT_WIDTH)-1) begin
-        mse_clamp_in = (2**ISQRT_WIDTH)-1;
-    end else begin
-        mse_clamp_in = mean_out_data;
-    end
-end
+// always_comb begin
+//     if(mean_out_data > (2**ISQRT_WIDTH)-1) begin
+//         mse_clamp_in = (2**ISQRT_WIDTH)-1;
+//     end else begin
+//         mse_clamp_in = mean_out_data;
+//     end
+// end
 
-skid_buffer #(
-    .DATA_WIDTH(ISQRT_WIDTH)
-) mse_clamp_reg (
-    .clk(clk),
-    .rst(rst),
-    .data_in(mse_clamp_in),
-    .data_in_valid(mean_out_valid),
-    .data_in_ready(mean_out_ready),
-    .data_out(mse_clamp_out),
-    .data_out_valid(mse_clamp_valid),
-    .data_out_ready(mse_clamp_ready)
-);
+// skid_buffer #(
+//     .DATA_WIDTH(ISQRT_WIDTH)
+// ) mse_clamp_reg (
+//     .clk(clk),
+//     .rst(rst),
+//     .data_in(mse_clamp_in),
+//     .data_in_valid(mean_out_valid),
+//     .data_in_ready(mean_out_ready),
+//     .data_out(mse_clamp_out),
+//     .data_out_valid(mse_clamp_valid),
+//     .data_out_ready(mse_clamp_ready)
+// );
 
 // Inverse Square Root of mean square
 logic [ISQRT_WIDTH-1:0] inv_sqrt_data;
@@ -220,13 +221,14 @@ logic inv_sqrt_valid, inv_sqrt_ready;
 fixed_isqrt #(
     .IN_WIDTH(ISQRT_WIDTH),
     .IN_FRAC_WIDTH(ISQRT_FRAC_WIDTH),
-    .LUT_MEMFILE(ISQRT_LUT_MEMFILE)
+    .LUT_MEMFILE(ISQRT_LUT_MEMFILE),
+    .LUT_POW(ISQRT_LUT_POW)
 ) inv_sqrt_inst (
     .clk(clk),
     .rst(rst),
-    .in_data(mse_clamp_out),
-    .in_valid(mse_clamp_valid),
-    .in_ready(mse_clamp_ready),
+    .in_data(mean_out_data),
+    .in_valid(mean_out_valid),
+    .in_ready(mean_out_ready),
     .out_data(inv_sqrt_data),
     .out_valid(inv_sqrt_valid),
     .out_ready(inv_sqrt_ready)
