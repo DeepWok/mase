@@ -215,3 +215,30 @@ def init_Conv2dLUT_weight(
     initialized_weight = torch.cat([initialized_weight] * levels, dim=0)
     pruned_connection = torch.cat([pruned_connection] * levels, dim=0)
     return initialized_weight, pruned_connection
+
+
+
+
+def nested_dict_replacer(compound_dict, fn):
+    def _finditem(obj):
+        for k, v in obj.items():
+            if isinstance(v, dict):
+                _finditem(v)  # added return statement
+            else:
+                obj[k] = fn(v)
+
+    _finditem(compound_dict)
+    return compound_dict
+
+
+def parse_accelerator(accelerator: str):
+    if accelerator == "auto":
+        device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+    elif accelerator in ("gpu", torch.device("cuda:0")):
+        device = torch.device("cuda:0")
+    elif accelerator in ("cpu", torch.device("cpu")):
+        device = torch.device("cpu")
+    else:
+        raise RuntimeError(f"Unsupported accelerator {accelerator}")
+    return device
+
