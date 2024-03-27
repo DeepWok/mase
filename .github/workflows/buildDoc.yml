@@ -31,8 +31,6 @@ jobs:
           run: |
             pip install networkx==2.6.3
             pip install pyyaml==5.4.1
-            pip install numpy==1.21.5; python_version <= '3.7'
-            pip install numpy>=1.22.0; python_version > '3.7'
             pip install torchvision>=0.10.0
             pip install torch>=1.9.0
             pip install fvcore==0.1.5.post20210630
