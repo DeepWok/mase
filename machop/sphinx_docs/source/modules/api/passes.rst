@@ -49,7 +49,7 @@ MaseGraph Analysis Passes
     - Add natural sparsity metadata analysis pass to the given MaseGraph.
   * - :py:meth:`~chop.passes.graph.analysis.pruning.hook_inspector.hook_inspection_analysis_pass`
     - Remove and provide hook information of the modules
-  * - :py:meth:`~chop.passes.graph.analysis.runtime.runtime_analysis_pass`
+  * - :py:meth:`~chop.passes.graph.analysis.runtime.runtime_analysis.runtime_analysis_pass`
     - Perform runtime analysis on the given graph (MaseGraph, TensorRT, ONNX models)
 
 .. toctree::
@@ -62,6 +62,7 @@ MaseGraph Analysis Passes
 	  analysis/verify
 	  analysis/quantization
 	  analysis/pruning
+    analysis/runtime
 
 
 MaseGraph Transform Passes
@@ -132,13 +133,15 @@ MaseGraph Interface Passes
     - fill me
   * - :py:meth:`~chop.passes.graph.interface.save_and_load.load_node_meta_param_interface_pass`
     - fill me
-  * - :py:meth:`~chop.passes.graph.interface.onnnxrt.tensorrt.tensorrt_engine_interface_pass`
+  * - :py:meth:`~chop.passes.graph.interface.tensorrt.quantize.tensorrt_engine_interface_pass`
     - Converts the given graph to a TensorRT engine model
-  * - :py:meth:`~chop.passes.graph.interface.onnnxrt.onnx_runtime.onnx_runtime_interface_pass`
+  * - :py:meth:`~chop.passes.graph.interface.onnxrt.onnx_runtime.onnx_runtime_interface_pass`
     - Converts the given graph to a ONNXRuntime model
 
 .. toctree::
 	  :maxdepth: 2
 
 	  interface/save_and_load
+    interface/tensorrt
+    interface/onnxrt
 
