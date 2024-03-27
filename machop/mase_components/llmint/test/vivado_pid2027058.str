@@ -2410,3 +2410,120 @@ selectCodeEditor(RDIResource.TclConsoleView_TCL_CONSOLE_CODE_EDITOR, 445, 80, fa
 // Tcl Message: INFO: [USF-XSim-4] XSim::Simulate design 
 // Elapsed time: 52 seconds
 selectCodeEditor(RDIResource.TclConsoleView_TCL_CONSOLE_CODE_EDITOR, 403, 115); // dT (af, cr)
+selectTree(PAResourceEtoH.FileSetPanel_FILE_SET_PANEL_TREE, "[root, Design Sources, scatter_threshold_tb (scatter_tb.sv), uut : scatter_threshold (scatter_threshold.sv)]", 2, true); // B (F, cr) - Node
+selectTree(PAResourceEtoH.FileSetPanel_FILE_SET_PANEL_TREE, "[root, Design Sources, scatter_threshold_tb (scatter_tb.sv), uut : scatter_threshold (scatter_threshold.sv)]", 2, true, false, false, false, false, true); // B (F, cr) - Double Click - Node
+// WARNING: HEventQueue.dispatchEvent() is taking  62783 ms.
+// Elapsed time: 63 seconds
+selectTab("PlanAheadTabBaseWorkspace_JideTabbedPane", (HResource) null, "scatter_tb.sv", 1); // i (h, cr)
+selectCodeEditor(RDIResource.TclConsoleView_TCL_CONSOLE_CODE_EDITOR, 587, 68); // dT (af, cr)
+// Tcl Message: INFO: [USF-XSim-61] Executing 'SIMULATE' step in '/home/aw1223/new/mase/machop/mase_components/scatter/scatter_project/scatter_project.sim/sim_1/behav/xsim' INFO: [USF-XSim-98] *** Running xsim 
+// TclEventType: LOAD_FEATURE
+// Tcl Message:    with args "scatter_threshold_tb_behav -key {Behavioral:sim_1:Functional:scatter_threshold_tb} -tclbatch {scatter_threshold_tb.tcl} -log {simulate.log}" 
+// Tcl Message: INFO: [USF-XSim-8] Loading simulator feature 
+// Tcl Message: Vivado Simulator 2019.2 
+// WARNING: HEventQueue.dispatchEvent() is taking  20034 ms.
+// Elapsed time: 304 seconds
+selectButton("HStatusBar_ProgressStatusItem_Cancel", "Cancel"); // NullButton (ag, cr)
+// Tcl Message: INFO: [Common 17-41] Interrupt caught. Command should exit soon. 
+selectTab("PlanAheadTabBaseWorkspace_JideTabbedPane", (HResource) null, "scatter_threshold.sv", 2); // i (h, cr)
+selectCodeEditor("scatter_threshold.sv", 230, 69); // ch (w, cr)
+selectTree(PAResourceEtoH.FlowNavigatorTreePanel_FLOW_NAVIGATOR_TREE, "[, Implementation, Run Implementation]", 16, false); // u (O, cr)
+// Tcl Message: Time resolution is 1 ps 
+// WARNING: HEventQueue.dispatchEvent() is taking  13339 ms.
+// TclEventType: SIMULATION_CREATE_SIMULATION_OBJECT
+// TclEventType: SIMULATION_UPDATE_SIMULATION_STATE
+// TclEventType: SIMULATION_UPDATE_SCOPE_TREE
+// TclEventType: SIMULATION_UPDATE_STACKS
+// TclEventType: SIMULATION_UPDATE_OBJECT_TREE
+// TclEventType: SIMULATION_UPDATE_PROTOCOL_INSTANCE_TREE
+// WARNING: HEventQueue.dispatchEvent() is taking  2011 ms.
+// TclEventType: SIMULATION_UPDATE_SCOPE_TREE
+// TclEventType: SIMULATION_UPDATE_STACKS
+// TclEventType: SIMULATION_UPDATE_OBJECT_TREE
+// TclEventType: SIMULATION_UPDATE_PROTOCOL_INSTANCE_TREE
+// TclEventType: SIMULATION_UPDATE_SCOPE_TREE
+// TclEventType: SIMULATION_UPDATE_STACKS
+// TclEventType: SIMULATION_UPDATE_OBJECT_TREE
+// TclEventType: SIMULATION_UPDATE_PROTOCOL_INSTANCE_TREE
+// Elapsed time: 130 seconds
+closeView(PAResourceOtoP.PAViews_PROJECT_SUMMARY, "Project Summary"); // v
+// TclEventType: SIMULATION_UPDATE_SCOPE_TREE
+// TclEventType: SIMULATION_UPDATE_STACKS
+// TclEventType: SIMULATION_UPDATE_OBJECT_TREE
+// TclEventType: SIMULATION_UPDATE_PROTOCOL_INSTANCE_TREE
+// Tcl Message: source scatter_threshold_tb.tcl 
+// Tcl Message: xsim: Time (s): cpu = 00:00:39 ; elapsed = 00:07:26 . Memory (MB): peak = 10911.188 ; gain = 0.000 ; free physical = 94091 ; free virtual = 99046 
+// Tcl Message: INFO: [Common 17-344] 'xsim' was cancelled 
+// Tcl Message: INFO: [Vivado 12-5357] 'simulate' step aborted 
+// Tcl Message: launch_simulation: Time (s): cpu = 00:01:32 ; elapsed = 00:21:41 . Memory (MB): peak = 10911.188 ; gain = 0.000 ; free physical = 94063 ; free virtual = 99018 
+// CommandFailedException: ERROR: [Common 17-69] Command failed:  
+// Tcl Message: INFO: [Common 17-344] 'launch_simulation' was cancelled 
+dismissDialog("Run Simulation"); // e (cr)
+// Elapsed time: 15 seconds
+closeView(PAResourceOtoP.PAViews_CODE, "Code"); // B
+selectTree(PAResourceEtoH.FlowNavigatorTreePanel_FLOW_NAVIGATOR_TREE, "[, Implementation, Run Implementation]", 16, false); // u (O, cr)
+// Run Command: PAResourceCommand.PACommandNames_RUN_IMPLEMENTATION
+selectButton("OptionPane.button", "Cancel"); // JButton (A, G)
+selectTree(PAResourceEtoH.FlowNavigatorTreePanel_FLOW_NAVIGATOR_TREE, "[, Synthesis, Run Synthesis]", 13, false); // u (O, cr)
+// Run Command: PAResourceCommand.PACommandNames_RUN_SYNTHESIS
+// bB (cr):  Starting Design Runs : addNotify
+// Tcl Message: launch_runs synth_1 -jobs 20 
+// Elapsed time: 157 seconds
+selectButton(RDIResource.ProgressDialog_BACKGROUND, "Background"); // a (bB)
+// 'k' command handler elapsed time: 157 seconds
+selectCodeEditor("scatter_threshold.sv", 129, 57); // ch (w, cr)
+// Elapsed time: 29 seconds
+selectCodeEditor("scatter_threshold.sv", 402, 91); // ch (w, cr)
+typeControlKey(null, null, 'z');
+selectCodeEditor("scatter_threshold.sv", 308, 66); // ch (w, cr)
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+// Elapsed time: 180 seconds
+closeMainWindow("scatter_project - [/home/aw1223/new/mase/machop/mase_components/scatter/scatter_project/scatter_project.xpr] - Vivado 2019.2"); // cr
+// HOptionPane Warning: 'A background task is running. Please wait until it completes to exit Vivado. If you choose to abort background task and exit immediately, you will lose all unsaved changes to project. (Background Task)'

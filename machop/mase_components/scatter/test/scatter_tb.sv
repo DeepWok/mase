@@ -3,7 +3,7 @@
 module scatter_threshold_tb;
 
     // Parameters of the module
-    localparam PRECISION = 8;
+    localparam PRECISION = 4;
     localparam TENSOR_SIZE_DIM = 8;
     localparam HIGH_SLOTS = 2;
     localparam THRESHOLD = 6;

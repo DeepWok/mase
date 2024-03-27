@@ -1,0 +1,346 @@
+$date
+   Wed Mar 27 17:25:24 2024
+$end
+$version
+  2019.2
+$end
+$timescale
+  1ps
+$end
+$scope module scatter_threshold_tb $end
+$var reg 1 ! clk $end
+$var reg 1 " rst $end
+$var parameter 32 # PRECISION [31:0] $end
+$var parameter 32 $ TENSOR_SIZE_DIM [31:0] $end
+$var parameter 32 % HIGH_SLOTS [31:0] $end
+$var parameter 32 & THRESHOLD [31:0] $end
+$var parameter 32 ' DESIGN [31:0] $end
+$scope module uut $end
+$var wire 1 ( clk $end
+$var wire 1 ) rst $end
+$var reg 8 * high_precision_req_vec [7:0] $end
+$var wire 8 + output_mask [7:0] $end
+$var parameter 32 , PRECISION [31:0] $end
+$var parameter 32 - TENSOR_SIZE_DIM [31:0] $end
+$var parameter 32 . HIGH_SLOTS [31:0] $end
+$var parameter 32 / THRESHOLD [31:0] $end
+$var parameter 32 0 DESIGN [31:0] $end
+$scope module PE_D1.encoder1 $end
+$var wire 8 1 input_channels [7:0] $end
+$var reg 8 2 mask [7:0] $end
+$var integer 32 3 i $end
+$var integer 32 4 j $end
+$var reg 8 5 input_channels_temp [7:0] $end
+$var reg 8 6 channel_mask [7:0] $end
+$var parameter 32 7 NUM_INPUT_CHANNELS [31:0] $end
+$var parameter 32 8 NUM_OUPUT_CHANNELS [31:0] $end
+$var parameter 32 9 NO_INDICIES [31:0] $end
+$upscope $end
+$scope module masker $end
+$var wire 8 + mask [7:0] $end
+$var parameter 32 : NUM_INPUTS [31:0] $end
+$var parameter 32 ; PRECISION [31:0] $end
+$scope begin Block15_2 $end
+$var integer 32 < i $end
+$upscope $end
+$upscope $end
+$upscope $end
+$scope task generate_random_input $end
+$var integer 32 = i $end
+$upscope $end
+$upscope $end
+$enddefinitions $end
+#0
+$dumpvars
+0!
+1"
+b1000 #
+b1000 $
+b10 %
+b110 &
+b1 '
+0(
+1)
+b11111111 *
+b11 +
+b1000 ,
+b1000 -
+b10 .
+b110 /
+b1 0
+b11111111 1
+b11 2
+bx 3
+b10 4
+b11111100 5
+b10 6
+b1000 7
+b1000 8
+b10 9
+b1000 :
+b1000 ;
+b1000 <
+b1000 =
+$end
+#2500
+1!
+1(
+#5000
+0!
+0(
+#7500
+1!
+1(
+#10000
+0!
+0(
+#12500
+1!
+1(
+#15000
+0!
+0(
+#17500
+1!
+1(
+#20000
+0!
+0(
+#22500
+1!
+1(
+#25000
+0!
+0(
+#27500
+1!
+1(
+#30000
+0!
+0(
+#32500
+1!
+1(
+#35000
+0!
+0(
+#37500
+1!
+1(
+#40000
+0!
+0(
+#42500
+1!
+1(
+#45000
+0!
+0(
+#47500
+1!
+1(
+#50000
+0!
+0(
+#52500
+1!
+1(
+#55000
+0!
+0(
+#57500
+1!
+1(
+#60000
+0!
+0(
+#62500
+1!
+1(
+#65000
+0!
+0(
+#67500
+1!
+1(
+#70000
+0!
+0(
+#72500
+1!
+1(
+#75000
+0!
+0(
+#77500
+1!
+1(
+#80000
+0!
+0(
+#82500
+1!
+1(
+#85000
+0!
+0(
+#87500
+1!
+1(
+#90000
+0!
+0(
+#92500
+1!
+1(
+#95000
+0!
+0(
+#97500
+1!
+1(
+#100000
+0!
+0"
+0(
+0)
+#102500
+1!
+1(
+#105000
+0!
+0(
+#107500
+1!
+1(
+#110000
+0!
+0(
+#112500
+1!
+1(
+#115000
+0!
+0(
+#116000
+b11111111 *
+b1000 <
+b1000 =
+#117500
+1!
+1(
+#120000
+0!
+0(
+#122500
+1!
+1(
+#125000
+0!
+0(
+#127500
+1!
+1(
+#130000
+0!
+0(
+#132500
+1!
+1(
+#135000
+0!
+0(
+#137500
+1!
+1(
+#140000
+0!
+0(
+#142500
+1!
+1(
+#145000
+0!
+0(
+#147500
+1!
+1(
+#150000
+0!
+0(
+#152500
+1!
+1(
+#155000
+0!
+0(
+b10111111 *
+b11 +
+b10111111 1
+b11 2
+b10 4
+b10111100 5
+b10 6
+b1000 <
+b1000 =
+#157500
+1!
+1(
+#160000
+0!
+0(
+#162500
+1!
+1(
+#165000
+0!
+0(
+#167500
+1!
+1(
+#170000
+0!
+0(
+#172500
+1!
+1(
+#175000
+0!
+0(
+#177500
+1!
+1(
+#180000
+0!
+0(
+#182500
+1!
+1(
+#185000
+0!
+0(
+#187500
+1!
+1(
+#190000
+0!
+0(
+#191000
+b11111111 *
+b11 +
+b11111111 1
+b11 2
+b10 4
+b11111100 5
+b10 6
+b1000 <
+b1000 =
+#192500
+1!
+1(
+#195000
+0!
+0(
+#197500
+1!
+1(

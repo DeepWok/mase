@@ -4,10 +4,10 @@
 module LLMint #(
     parameter ORIGINAL_PRECISION = 16,
     parameter REDUCED_PRECISION = 8,
-    parameter TENSOR_SIZE_DIM = 16,
-    parameter WEIGHT_DIM_0 = 16,
-    parameter WEIGHT_DIM_1 = 16,
-    parameter HIGH_SLOTS = 2,
+    parameter TENSOR_SIZE_DIM = 8,
+    parameter WEIGHT_DIM_0 = 8,
+    parameter WEIGHT_DIM_1 = 8,
+    parameter HIGH_SLOTS = 4,
     parameter THRESHOLD = 6
 ) (
     input clk,
@@ -18,11 +18,11 @@ module LLMint #(
     output logic weight_ready,
     input logic data_out_ready,
     output logic data_out_valid,
-    input logic  [ORIGINAL_PRECISION-1:0] data_in[TENSOR_SIZE_DIM-1:0],
+    input   [ORIGINAL_PRECISION-1:0] data_in[TENSOR_SIZE_DIM-1:0],
     // We combine weights and quantized weights into a single array
-    input logic signed [ORIGINAL_PRECISION-1:0] weights[2 * WEIGHT_DIM_0 * WEIGHT_DIM_1-1:0],
     output logic signed [ORIGINAL_PRECISION-1:0] data_out[TENSOR_SIZE_DIM-1:0]
 );
+    (* dont_touch = "yes" *) wire signed [ORIGINAL_PRECISION-1:0] weights[2 * WEIGHT_DIM_0 * WEIGHT_DIM_1-1:0];
 
     logic  [ORIGINAL_PRECISION-1:0] low_precision_masked[TENSOR_SIZE_DIM-1:0];
     logic  [ORIGINAL_PRECISION-1:0] high_precision_masked[TENSOR_SIZE_DIM-1:0];

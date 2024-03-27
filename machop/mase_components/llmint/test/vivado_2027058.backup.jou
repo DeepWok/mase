@@ -119,3 +119,5 @@ update_compile_order -fileset sources_1
 launch_simulation
 launch_simulation
 launch_simulation
+source scatter_threshold_tb.tcl
+launch_runs synth_1 -jobs 20
