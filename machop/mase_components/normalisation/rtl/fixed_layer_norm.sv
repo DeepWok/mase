@@ -397,40 +397,30 @@ module fixed_layer_norm #(
 
         if (state_r == MEAN_SUM_STATE)
         begin
-            
-           
             state_b = MEAN_DIV_STATE;
         end
         else if (state_r == MEAN_DIV_STATE)
         begin 
-            
             state_b = SUB_STATE;
         end
         else if (state_r == SUB_STATE)
         begin
-            
             state_b = SQUARING_STATE;
         end
         else if (state_r == SQUARING_STATE)
         begin
-            
             state_b = SUM_SQU_STATE; 
         end
         else if (state_r == SUM_SQU_STATE)
         begin
-            
             state_b = VAR_DIV_STATE;
         end
         else if (state_r == VAR_DIV_STATE)
         begin
-            
             state_b = NORM_DIFF_STATE;
-            
         end
         else if (state_r == NORM_DIFF_STATE)
         begin 
-            
-
             if (&sqrt_v_out_valid)
             begin
                 state_b = NORM_DIV_STATE;
