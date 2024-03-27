@@ -18,9 +18,6 @@ import torch.nn.functional as F
 import json
 
 
-
-
-
 logger = logging.getLogger(__name__)
 
 
@@ -42,8 +39,6 @@ def callback_save_study(
 class SearchStrategyDaddyProxy(SearchStrategyBase):
     is_iterative = False
 
-    
-    
     def _post_init_setup(self):
         self.sum_scaled_metrics = self.config["setup"]["sum_scaled_metrics"]
         self.metric_names = list(sorted(self.config["metrics"].keys()))
@@ -86,42 +81,54 @@ class SearchStrategyDaddyProxy(SearchStrategyBase):
                 x = self.relu(self.linear2(x))
                 x = self.sigmoid(self.linear3(x))
                 return x
-            
 
         metrics = {}
-        dataloader=self.data_module.train_dataloader()
-        dataload_info=["random",len(dataloader),10]
-        model=model.model
-        device = torch.device('cuda')
+        dataloader = self.data_module.train_dataloader()
+        dataload_info = ["random", len(dataloader), 10]
+        model = model.model
+        device = torch.device("cuda")
         model.to(device)
 
         # measure_names = ['epe_nas', 'fisher', 'grad_norm', 'grasp', 'jacov', 'l2_norm', 'nwot', 'plain', 'snip', 'synflow', 'zen', 'params', 'flops']
-        measure_names = ['epe_nas', 'fisher', 'grad_norm', 'grasp', 'jacov', 'l2_norm',  'plain', 'snip', 'synflow', 'zen', 'params', 'flops']
-        small_proxy_scores = find_measures(model,dataloader, dataload_info, device , F.cross_entropy, measure_names)
+        measure_names = [
+            "epe_nas",
+            "fisher",
+            "grad_norm",
+            "grasp",
+            "jacov",
+            "l2_norm",
+            "plain",
+            "snip",
+            "synflow",
+            "zen",
+            "params",
+            "flops",
+        ]
+        small_proxy_scores = find_measures(
+            model, dataloader, dataload_info, device, F.cross_entropy, measure_names
+        )
 
-        # load meta proxy 
-        proxy_model = NeuralModel(len(measure_names))    
+        # load meta proxy
+        proxy_model = NeuralModel(len(measure_names))
         # pretrained_model_path = r'../nas_results/model_state_dict.pt'
-        pretrained_model_path = r'../nas_results/meta_proxy/meta_proxy.pt'
+        pretrained_model_path = r"../nas_results/meta_proxy/meta_proxy.pt"
         proxy_model.load_state_dict(torch.load(pretrained_model_path))
-        
+
         # Load mean and standard deviaiton for data normalization and store in list
-        file_path = r'../nas_results/proxy_mean_stddev.json'
-        with open(file_path, 'r') as file:
+        file_path = r"../nas_results/proxy_mean_stddev.json"
+        with open(file_path, "r") as file:
             proxy_mean_stddev = json.load(file)
-        
-        
+
         # z normalize data and store them in a list
         measure_values_list = []
         for name in measure_names:
             val = small_proxy_scores[name]
-            mean = proxy_mean_stddev[name]['mean']
-            stddev = proxy_mean_stddev[name]['stddev']
+            mean = proxy_mean_stddev[name]["mean"]
+            stddev = proxy_mean_stddev[name]["stddev"]
             val_norm = (val - mean) / stddev
             measure_values_list.append(val_norm)
 
-        measure_values_tensor = torch.tensor(measure_values_list, dtype = torch.float)
-        
+        measure_values_tensor = torch.tensor(measure_values_list, dtype=torch.float)
 
         ### Make prediction using the meta proxy
         proxy_model.eval()
@@ -155,11 +162,10 @@ class SearchStrategyDaddyProxy(SearchStrategyBase):
         is_eval_mode = self.config.get("eval_mode", True)
         model = search_space.rebuild_model(sampled_config, is_eval_mode)
 
-
         # build dataloader
 
         software_metrics = self.compute_software_metrics(
-            model #, sampled_config, is_eval_mode
+            model  # , sampled_config, is_eval_mode
         )
         hardware_metrics = self.compute_hardware_metrics(
             model, sampled_config, is_eval_mode
@@ -198,7 +204,7 @@ class SearchStrategyDaddyProxy(SearchStrategyBase):
             logger.info(f"Loaded study from {self.config['setup']['pkl_ckpt']}")
         else:
             study = optuna.create_study(**study_kwargs)
-            
+
         study.optimize(
             func=partial(self.objective, search_space=search_space),
             n_jobs=self.config["setup"]["n_jobs"],
@@ -307,23 +313,3 @@ class SearchStrategyDaddyProxy(SearchStrategyBase):
         )
         logger.info(f"Best trial(s):\n{txt}")
         return df
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

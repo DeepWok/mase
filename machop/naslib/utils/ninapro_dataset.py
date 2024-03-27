@@ -40,5 +40,6 @@ def ninapro_transform(args, channels_last: bool = True):
     if channels_last:
         transform_list.append(channels_to_last)
 
-    return torchvision.transforms.Compose(transform_list), torchvision.transforms.Compose(transform_list)
-
+    return torchvision.transforms.Compose(
+        transform_list
+    ), torchvision.transforms.Compose(transform_list)

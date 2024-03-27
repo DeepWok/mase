@@ -33,30 +33,34 @@ from . import measure
 
 
 def compute_epe_score2(net, inputs, targets, loss_fn, split_data=1):
-    inputs = torch.tensor(inputs, dtype = torch.float32)
+    inputs = torch.tensor(inputs, dtype=torch.float32)
     inputs.requires_grad_(True)
     outputs = net(inputs)  # 在移动 inputs 到设备之前定义 outputs
-    inputs = inputs.to(outputs.device)  # 将 inputs 张量移动到与 outputs 张量相同的设备上
+    inputs = inputs.to(
+        outputs.device
+    )  # 将 inputs 张量移动到与 outputs 张量相同的设备上
     targets = targets.to(outputs.device)
-    
+
     loss = loss_fn(outputs, targets)
     loss.backward()
-    
+
     jacobian = inputs.grad.detach().cpu()  # 获取雅可比矩阵，并转换为 CPU 上的张量
     corr_matrices = {}
     unique_labels = torch.unique(targets)
     for label in unique_labels:
-        label_indices = torch.where(targets == label)[0].to("cpu")  # 将索引移动到与 outputs 张量相同的设备上
+        label_indices = torch.where(targets == label)[0].to(
+            "cpu"
+        )  # 将索引移动到与 outputs 张量相同的设备上
         jacobian_label = jacobian[label_indices]
         corr_matrix = torch.cov(jacobian_label.t())
         corr_matrices[label.item()] = corr_matrix
-    
+
     # 计算性能评分
     score = 0
     for corr_matrix in corr_matrices.values():
         score += torch.sum(torch.abs(corr_matrix))
     # score /= len(corr_matrices)  # 取平均值作为最终评分
-    
+
     return score.item()
 
 
@@ -72,13 +76,14 @@ def get_batch_jacobian(net, x, target, to, device, args=None):
 
     return jacob, target.detach(), y.shape[-1]
 
+
 def eval_score_perclass(jacob, labels=None, n_classes=10):
     k = 1e-5
 
-    per_class={}
+    per_class = {}
     for i, label in enumerate(labels[0]):
         if label in per_class:
-            per_class[label] = np.vstack((per_class[label],jacob[i]))
+            per_class[label] = np.vstack((per_class[label], jacob[i]))
         else:
             per_class[label] = jacob[i]
 
@@ -88,10 +93,10 @@ def eval_score_perclass(jacob, labels=None, n_classes=10):
         try:
             corrs = np.array(np.corrcoef(per_class[c]))
 
-            s = np.sum(np.log(abs(corrs)+k))#/len(corrs)
+            s = np.sum(np.log(abs(corrs) + k))  # /len(corrs)
             if n_classes > 100:
                 s /= len(corrs)
-        except: # defensive programming
+        except:  # defensive programming
             continue
         ind_corr_matrix_score[c] = s
 
@@ -107,7 +112,9 @@ def eval_score_perclass(jacob, labels=None, n_classes=10):
         for c in ind_corr_matrix_score_keys:
             # A)
             for cj in ind_corr_matrix_score_keys:
-                score += np.absolute(ind_corr_matrix_score[c]-ind_corr_matrix_score[cj])
+                score += np.absolute(
+                    ind_corr_matrix_score[c] - ind_corr_matrix_score[cj]
+                )
 
         if len(ind_corr_matrix_score_keys) > 0:
             # should divide by number of classes seen
@@ -122,9 +129,11 @@ def compute_epe_score(net, inputs, targets, loss_fn, split_data=1):
     labels = []
 
     try:
-        jacobs_batch, target, n_classes = get_batch_jacobian(net, inputs, targets, None, None)
+        jacobs_batch, target, n_classes = get_batch_jacobian(
+            net, inputs, targets, None, None
+        )
         jacobs.append(jacobs_batch.reshape(jacobs_batch.size(0), -1).cpu().numpy())
-        if len(target.shape) == 2: # Hack to handle TNB101 classification tasks
+        if len(target.shape) == 2:  # Hack to handle TNB101 classification tasks
             target = torch.argmax(target, dim=1)
         labels.append(target.cpu().numpy())
         jacobs = np.concatenate(jacobs, axis=0)
@@ -137,6 +146,7 @@ def compute_epe_score(net, inputs, targets, loss_fn, split_data=1):
 
     return s
 
+
 # def get_batch_jacobian(net, x, target, to, device, args=None):
 #     net.zero_grad()
 #     x.requires_grad_(True)
@@ -147,7 +157,7 @@ def compute_epe_score(net, inputs, targets, loss_fn, split_data=1):
 
 # def eval_score_perclass(jacob, labels=None, n_classes=10):
 #     k = 1e-5
-    
+
 #     per_class={}
 #     for i, label in enumerate(labels[0]):
 #         if label in per_class:
@@ -155,7 +165,7 @@ def compute_epe_score(net, inputs, targets, loss_fn, split_data=1):
 #         else:
 #             per_class[label] = jacob[i]
 
-    
+
 #     ind_corr_matrix_score = {}
 #     for c in per_class.keys():
 #         s = 0
@@ -164,8 +174,8 @@ def compute_epe_score(net, inputs, targets, loss_fn, split_data=1):
 #         if c == 2:
 #             print(corrs)
 #             s = np.sum(np.log(abs(corrs)+k))
-            
-        
+
+
 #         s = np.sum(np.log(abs(corrs)+k))#/len(corrs)
 #         if n_classes > 100:
 #             s /= len(corrs)
@@ -213,12 +223,3 @@ def compute_epe_score(net, inputs, targets, loss_fn, split_data=1):
 #     #     s = np.nan
 
 #     return s
-
-
-
-
-
-
-
-
-

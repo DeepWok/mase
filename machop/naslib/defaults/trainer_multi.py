@@ -597,18 +597,18 @@ class Trainer(object):
 
         checkpointer = utils.Checkpointer(
             model=checkpointables.pop("model"),
-            save_dir=self.config.save + "/search"
-            if search
-            else self.config.save + "/eval",
+            save_dir=(
+                self.config.save + "/search" if search else self.config.save + "/eval"
+            ),
             **checkpointables
         )
 
         self.periodic_checkpointer = PeriodicCheckpointer(
             checkpointer,
             period=period,
-            max_iter=self.config.search.epochs
-            if search
-            else self.config.evaluation.epochs,
+            max_iter=(
+                self.config.search.epochs if search else self.config.evaluation.epochs
+            ),
         )
 
         if resume_from:

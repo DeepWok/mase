@@ -6,11 +6,11 @@ import torch.nn as nn
 
 from naslib.search_spaces.nasbench101.primitives import ModelWrapper
 
-INPUT = 'input'
-OUTPUT = 'output'
-CONV1X1 = 'conv1x1-bn-relu'
-CONV3X3 = 'conv3x3-bn-relu'
-MAXPOOL3X3 = 'maxpool3x3'
+INPUT = "input"
+OUTPUT = "output"
+CONV1X1 = "conv1x1-bn-relu"
+CONV3X3 = "conv3x3-bn-relu"
+MAXPOOL3X3 = "maxpool3x3"
 
 all_ops = [INPUT, OUTPUT, MAXPOOL3X3, CONV1X1, CONV3X3]
 
@@ -31,16 +31,22 @@ def get_children(model):
 
 
 def convert_spec_to_model(spec):
-    spec = ModelSpec(spec['matrix'], spec['ops'])
-    model = Network(spec,
-                    num_labels=10,
-                    in_channels=3,
-                    stem_out_channels=128,
-                    num_stacks=3,
-                    num_modules_per_stack=3)
+    spec = ModelSpec(spec["matrix"], spec["ops"])
+    model = Network(
+        spec,
+        num_labels=10,
+        in_channels=3,
+        stem_out_channels=128,
+        num_stacks=3,
+        num_modules_per_stack=3,
+    )
 
     all_leaf_modules = get_children(model)
-    inplace_relus = [module for module in all_leaf_modules if (isinstance(module, nn.ReLU) and module.inplace == True)]
+    inplace_relus = [
+        module
+        for module in all_leaf_modules
+        if (isinstance(module, nn.ReLU) and module.inplace == True)
+    ]
 
     for relu in inplace_relus:
         relu.inplace = False

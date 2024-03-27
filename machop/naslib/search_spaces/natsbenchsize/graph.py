@@ -17,7 +17,7 @@ class NATSBenchSizeSearchSpace(Graph):
 
     def __init__(self):
         super().__init__()
-        self.channel_candidates = [8*i for i in range(1, 9)]
+        self.channel_candidates = [8 * i for i in range(1, 9)]
         self.channels = [8, 8, 8, 8, 8]
 
         self.space_name = "natsbenchsizesearchspace"
@@ -32,7 +32,7 @@ class NATSBenchSizeSearchSpace(Graph):
         full_lc=False,
         dataset_api=None,
         hp=90,
-        is_random=False
+        is_random=False,
     ):
         """
         Query results from natsbench
@@ -55,9 +55,12 @@ class NATSBenchSizeSearchSpace(Graph):
         ], "Unknown dataset: {}".format(dataset)
         assert epoch >= -1 and epoch < hp
         assert hp in [1, 12, 90], "hp must be 1, 12 or 90"
-        if dataset=='cifar10':
-            assert metric not in [Metric.VAL_ACCURACY, Metric.VAL_LOSS, Metric.VAL_TIME],\
-            "Validation metrics not available for CIFAR-10"
+        if dataset == "cifar10":
+            assert metric not in [
+                Metric.VAL_ACCURACY,
+                Metric.VAL_LOSS,
+                Metric.VAL_TIME,
+            ], "Validation metrics not available for CIFAR-10"
 
         metric_to_natsbench = {
             Metric.TRAIN_ACCURACY: "train-accuracy",
@@ -68,7 +71,7 @@ class NATSBenchSizeSearchSpace(Graph):
             Metric.TEST_LOSS: "test-loss",
             Metric.TRAIN_TIME: "train-all-time",
             Metric.VAL_TIME: "valid-all-time",
-            Metric.TEST_TIME: "test-all-time"
+            Metric.TEST_TIME: "test-all-time",
         }
 
         if metric not in metric_to_natsbench.keys():
@@ -76,7 +79,7 @@ class NATSBenchSizeSearchSpace(Graph):
         if dataset_api is None:
             raise NotImplementedError("Must pass in dataset_api to query natsbench")
 
-        arch_index = int(''.join([str(ch//8 - 1) for ch in self.channels]), 8)
+        arch_index = int("".join([str(ch // 8 - 1) for ch in self.channels]), 8)
 
         if epoch == -1:
             epoch = hp - 1
@@ -86,12 +89,16 @@ class NATSBenchSizeSearchSpace(Graph):
             metrics = []
 
             for epoch in range(int(hp)):
-                result = dataset_api.get_more_info(arch_index, dataset, iepoch=epoch, hp=hp, is_random=is_random)
+                result = dataset_api.get_more_info(
+                    arch_index, dataset, iepoch=epoch, hp=hp, is_random=is_random
+                )
                 metrics.append(result[metric_to_natsbench[metric]])
 
             return metrics
         else:
-            results = dataset_api.get_more_info(arch_index, dataset, iepoch=epoch, hp=hp, is_random=is_random)
+            results = dataset_api.get_more_info(
+                arch_index, dataset, iepoch=epoch, hp=hp, is_random=is_random
+            )
             return results[metric_to_natsbench[metric]]
 
     def get_channels(self):
@@ -115,7 +122,9 @@ class NATSBenchSizeSearchSpace(Graph):
         """
         Randomly sample an architecture
         """
-        channels = np.random.choice(self.channel_candidates, size=len(self.channels)).tolist()
+        channels = np.random.choice(
+            self.channel_candidates, size=len(self.channels)
+        ).tolist()
         self.set_channels(channels)
 
     def mutate(self, parent, dataset_api=None):
@@ -124,7 +133,9 @@ class NATSBenchSizeSearchSpace(Graph):
         """
 
         base_channels = list(parent.get_channels().copy())
-        mutate_index = np.random.randint(len(self.channels)) # Index to perform mutation at
+        mutate_index = np.random.randint(
+            len(self.channels)
+        )  # Index to perform mutation at
 
         # Remove number of channels at that index in base_channels from the viable candidates
         candidates = self.channel_candidates.copy()
@@ -157,4 +168,3 @@ class NATSBenchSizeSearchSpace(Graph):
 
     def get_type(self):
         return "natsbenchsize"
-

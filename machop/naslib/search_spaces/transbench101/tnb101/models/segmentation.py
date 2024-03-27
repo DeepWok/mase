@@ -5,6 +5,7 @@ from torch.nn.parallel import DistributedDataParallel as DDP
 
 class Segmentation(nn.Module):
     """Segmentation used by semanticsegment task"""
+
     def __init__(self, encoder, decoder):
         super(Segmentation, self).__init__()
         self.encoder = encoder
@@ -19,8 +20,16 @@ class Segmentation(nn.Module):
             if ddp:
                 self.encoder = nn.SyncBatchNorm.convert_sync_batchnorm(self.encoder)
                 self.decoder = nn.SyncBatchNorm.convert_sync_batchnorm(self.decoder)
-                self.encoder = DDP(self.encoder.to(rank), device_ids=[rank], find_unused_parameters=True)
-                self.decoder = DDP(self.decoder.to(rank), device_ids=[rank], find_unused_parameters=True)
+                self.encoder = DDP(
+                    self.encoder.to(rank),
+                    device_ids=[rank],
+                    find_unused_parameters=True,
+                )
+                self.decoder = DDP(
+                    self.decoder.to(rank),
+                    device_ids=[rank],
+                    find_unused_parameters=True,
+                )
                 self.rank = rank
             else:
                 self.encoder = nn.DataParallel(self.encoder).to(self.device_list[0])

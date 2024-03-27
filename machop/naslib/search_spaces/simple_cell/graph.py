@@ -21,7 +21,7 @@ edge_attributes = {
     "stride": 1,  # stride will be adaped later accordingly
     "kernel_size": 3,
     "padding": [None, None, None, 1, 2],  # if different for each op specify full list
-    "dilation": 2
+    "dilation": 2,
     # C_in and C_out will be specified later
 }
 
@@ -97,9 +97,9 @@ class SimpleCellSearchSpace(Graph):
         reduction_cell.name = "reduction_cell"
 
         reduction_cell.update_edges(
-            update_func=lambda edge: edge.data.set("stride", 2)
-            if edge.head in [1, 2]
-            else None
+            update_func=lambda edge: (
+                edge.data.set("stride", 2) if edge.head in [1, 2] else None
+            )
         )
 
         # Makrograph definition

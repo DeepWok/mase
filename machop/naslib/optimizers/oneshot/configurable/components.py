@@ -6,11 +6,21 @@ from torch.distributions.dirichlet import Dirichlet
 from naslib.optimizers.oneshot.darts.optimizer import DARTSMixedOp
 from naslib.optimizers.oneshot.drnas.optimizer import DrNASMixedOp
 from naslib.optimizers.oneshot.gdas.optimizer import GDASMixedOp
-from naslib.search_spaces.core.primitives import EdgeNormalizationCombOp, MixedOp, PartialConnectionOp
+from naslib.search_spaces.core.primitives import (
+    EdgeNormalizationCombOp,
+    MixedOp,
+    PartialConnectionOp,
+)
+
 
 class OptimizationStrategy(Enum):
-    ALTERNATING = auto() # Arch weights optimized using validation data, model weights using train data
-    SIMULTANEOUS = auto() # Arch and model weights optimized simultaneously using train data (e.g., SNAS)
+    ALTERNATING = (
+        auto()
+    )  # Arch weights optimized using validation data, model weights using train data
+    SIMULTANEOUS = (
+        auto()
+    )  # Arch and model weights optimized simultaneously using train data (e.g., SNAS)
+
 
 class OneShotMixedOp(MixedOp):
 
@@ -88,15 +98,13 @@ class NoCombOpModifier(AbstractCombOpModifier):
 
 
 class EdgeNormalization(AbstractCombOpModifier):
-    arch_weights_name = 'edge_normalization_beta'
+    arch_weights_name = "edge_normalization_beta"
 
     def _add_betas(self, edge):
         """
         Function to add the architectural weights to the edges.
         """
-        beta = torch.nn.Parameter(
-            1e-3 * torch.randn(size=[1], requires_grad=True)
-        )
+        beta = torch.nn.Parameter(1e-3 * torch.randn(size=[1], requires_grad=True))
         edge.data.set(self.arch_weights_name, beta, shared=True)
 
     def _add_normalization_op(self, node, in_edges, out_edges):
@@ -112,13 +120,15 @@ class EdgeNormalization(AbstractCombOpModifier):
         if not in_edges or all_in_edges_final:
             return
 
-        node_data['comb_op'] = EdgeNormalizationCombOp(node_data['comb_op'])
+        node_data["comb_op"] = EdgeNormalizationCombOp(node_data["comb_op"])
 
     def update_graph_edges(self, graph, scope):
         graph.update_edges(self._add_betas, scope=scope, private_edge_data=False)
 
     def update_graph_nodes(self, graph, scope):
-        graph.update_nodes(self._add_normalization_op, scope=scope, single_instances=False)
+        graph.update_nodes(
+            self._add_normalization_op, scope=scope, single_instances=False
+        )
 
     def get_arch_weights(self, graph):
         arch_weights = []
@@ -152,7 +162,7 @@ class AbstractArchitectureSampler(AbstractGraphModifier):
     def _update_ops(self, edge):
         primitives = edge.data.op
         op = self.__class__.mixed_op(primitives)
-        edge.data.set('op', op)
+        edge.data.set("op", op)
 
         if self.arch_weights_modifier:
             self.arch_weights_modifier.register(op)
@@ -167,9 +177,10 @@ class AbstractArchitectureSampler(AbstractGraphModifier):
         if self.arch_weights_modifier is not None:
             self.arch_weights_modifier.new_epoch()
 
+
 class DARTSSampler(AbstractArchitectureSampler):
     mixed_op = DARTSMixedOp
-    arch_weights_name = 'alpha'
+    arch_weights_name = "alpha"
     optimization_stratgey = OptimizationStrategy.ALTERNATING
 
     def update_graph_edges(self, graph, scope):
@@ -259,7 +270,7 @@ class GDASSampler(DARTSSampler):
 
     def update_graph(self, graph, scope):
         super().update_graph(graph, scope)
-        graph.register_buffer('tau', self.tau_curr)
+        graph.register_buffer("tau", self.tau_curr)
 
     def sample_arch_weights(self, graph, scope):
         graph.update_edges(
@@ -276,7 +287,9 @@ class GDASSampler(DARTSSampler):
         )
 
     def _sample_arch_weights(self, edge):
-        arch_parameters = torch.unsqueeze(edge.data.get(self.arch_weights_name, None), dim=0)
+        arch_parameters = torch.unsqueeze(
+            edge.data.get(self.arch_weights_name, None), dim=0
+        )
 
         while True:
             gumbels = -torch.empty_like(arch_parameters).exponential_().log()
@@ -331,7 +344,7 @@ class SNASSampler(DARTSSampler):
         softmax = torch.nn.Softmax(-1)
         weight = softmax((log_alpha + (-((-(u.log())).log()))) / self.temp)
 
-        edge.data.set('sampled_arch_weight', weight, shared=True)
+        edge.data.set("sampled_arch_weight", weight, shared=True)
 
     def remove_sampled_arch_weights(self, graph, scope):
         graph.update_edges(
@@ -341,8 +354,8 @@ class SNASSampler(DARTSSampler):
         )
 
     def _remove_sampled_weights(self, edge):
-        if edge.data.has('sampled_arch_weight'):
-            edge.data.remove('sampled_arch_weight')
+        if edge.data.has("sampled_arch_weight"):
+            edge.data.remove("sampled_arch_weight")
 
 
 class PartialChannelConnection(AbstractEdgeOpModifier):
@@ -384,6 +397,7 @@ class DummyAbstractArchSampler(AbstractArchitectureSampler):
     def new_epoch(self):
         pass
 
+
 class AbstractMixedOpWeightsModifier:
 
     @abstractmethod
@@ -411,7 +425,7 @@ class AbstractMixedOpWeightsModifier:
 
 
 class RandomWeightPertubations(AbstractMixedOpWeightsModifier):
-    perturbations_name = 'random_perturbation'
+    perturbations_name = "random_perturbation"
 
     def __init__(self, epsilon, epochs):
         self.epsilon = epsilon
@@ -420,13 +434,15 @@ class RandomWeightPertubations(AbstractMixedOpWeightsModifier):
         self.epoch = -1
 
     def step(self, graph, scope):
-        graph.update_edges(self._sample_perturbations, scope=scope, private_edge_data=False)
+        graph.update_edges(
+            self._sample_perturbations, scope=scope, private_edge_data=False
+        )
 
     def new_epoch(self):
         self.epoch += 1
-        self.epsilon = 0.03 + (self.epsilon_max - 0.03)*self.epoch/self.epochs_max
+        self.epsilon = 0.03 + (self.epsilon_max - 0.03) * self.epoch / self.epochs_max
 
-    def reset(self): #TODO: Is this needed?
+    def reset(self):  # TODO: Is this needed?
         self.epoch = -1
         self.epsilon = self.epsilon_max
 
@@ -434,7 +450,9 @@ class RandomWeightPertubations(AbstractMixedOpWeightsModifier):
         return weights
 
     def pre_process_fn(self, weights, edge_data):
-        perturbations = edge_data.get(self.perturbations_name, None).to(device=self.device)
+        perturbations = edge_data.get(self.perturbations_name, None).to(
+            device=self.device
+        )
         return weights.data.add(perturbations)
 
     def _sample_perturbations(self, edge):

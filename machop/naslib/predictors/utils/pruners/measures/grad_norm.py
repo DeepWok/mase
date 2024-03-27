@@ -36,9 +36,11 @@ def get_grad_norm_arr(net, inputs, targets, loss_fn, split_data=1, skip_grad=Fal
 
         grad_norm_arr = get_layer_metric_array(
             net,
-            lambda l: l.weight.grad.norm()
-            if l.weight.grad is not None
-            else torch.zeros_like(l.weight),
+            lambda l: (
+                l.weight.grad.norm()
+                if l.weight.grad is not None
+                else torch.zeros_like(l.weight)
+            ),
             mode="param",
         )
 

@@ -2,6 +2,7 @@ import torch
 from torch.nn import functional as F
 from torch.nn.modules.loss import _WeightedLoss
 
+
 class SoftmaxCrossEntropyWithLogits(_WeightedLoss):
     def __init__(self, weight=None):
         super(SoftmaxCrossEntropyWithLogits, self).__init__(weight=None)

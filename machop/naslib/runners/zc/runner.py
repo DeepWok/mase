@@ -1,7 +1,8 @@
 """ Evaluates a ZeroCost predictor for a search space and dataset/task"""
+
 import logging
-import json 
-from  fvcore.common.config import CfgNode
+import json
+from fvcore.common.config import CfgNode
 from naslib.evaluators.zc_evaluator import ZeroCostPredictorEvaluator
 from naslib.predictors import ZeroCost
 from naslib.search_spaces import get_search_space
@@ -32,10 +33,14 @@ search_space = get_search_space(name=config.search_space, dataset=config.dataset
 search_space.labeled_archs = [eval(arch) for arch in zc_api.keys()]
 
 # Initialize the ZeroCostPredictorEvaluator class
-predictor_evaluator = ZeroCostPredictorEvaluator(predictor, config=config, zc_api=zc_api, use_zc_api=True)
-predictor_evaluator.adapt_search_space(search_space, dataset_api=dataset_api, load_labeled=True)
+predictor_evaluator = ZeroCostPredictorEvaluator(
+    predictor, config=config, zc_api=zc_api, use_zc_api=True
+)
+predictor_evaluator.adapt_search_space(
+    search_space, dataset_api=dataset_api, load_labeled=True
+)
 
 # Evaluate the predictor
 predictor_evaluator.evaluate(zc_api)
 
-logger.info('Correlation experiment complete.')
+logger.info("Correlation experiment complete.")

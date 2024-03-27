@@ -8,7 +8,7 @@ from naslib.search_spaces import (
     NasBench301SearchSpace,
     NasBenchNLPSearchSpace,
     TransBench101SearchSpaceMicro,
-    TransBench101SearchSpaceMacro
+    TransBench101SearchSpaceMacro,
 )
 from naslib import utils
 from naslib.utils import setup_logger, get_dataset_api

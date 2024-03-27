@@ -60,9 +60,13 @@ class PredictorEvaluator(object):
         if self.search_space.get_type() == "nasbench101":
             self.full_lc = False
             self.hyperparameters = False
-        elif self.search_space.get_type() in ["nasbench201", "nasbench301",
-                                              "nlp", "transbench101", 
-                                              "asr"]:
+        elif self.search_space.get_type() in [
+            "nasbench201",
+            "nasbench301",
+            "nlp",
+            "transbench101",
+            "asr",
+        ]:
             self.full_lc = True
             self.hyperparameters = True
         else:
@@ -139,7 +143,7 @@ class PredictorEvaluator(object):
                 arch.load_labeled_architecture(dataset_api=self.dataset_api)
 
             arch_hash = arch.get_hash()
-            if False: # removing this for consistency, for now
+            if False:  # removing this for consistency, for now
                 continue
             else:
                 arch_hash_map[arch_hash] = True
@@ -313,10 +317,10 @@ class PredictorEvaluator(object):
             for key in hyperparams:
                 results_dict["hp_" + key] = hyperparams[key]
         results_dict["cv_score"] = cv_score
-        
+
         # note: specific code for zero-cost experiments:
         method_type = None
-        if hasattr(self.predictor, 'method_type'):
+        if hasattr(self.predictor, "method_type"):
             method_type = self.predictor.method_type
         print(
             "dataset: {}, predictor: {}, spearman {}".format(
@@ -326,7 +330,7 @@ class PredictorEvaluator(object):
         print("full ytest", results_dict["full_ytest"])
         print("full testpred", results_dict["full_testpred"])
         # end specific code for zero-cost experiments.
-        
+
         # print entire results dict:
         print_string = ""
         for key in results_dict:

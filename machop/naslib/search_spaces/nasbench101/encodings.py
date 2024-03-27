@@ -206,7 +206,9 @@ def encode_101_spec(spec, encoding_type=EncodingType.PATH):
         return encode_bonas(spec=spec)
 
     else:
-        logger.info(f'{encoding_type} is not yet implemented as an encoding type for nb101')
+        logger.info(
+            f"{encoding_type} is not yet implemented as an encoding type for nb101"
+        )
         raise NotImplementedError()
 
 
@@ -215,4 +217,6 @@ def encode_spec(spec, encoding_type=EncodingType.ADJACENCY_ONE_HOT):
         spec = convert_tuple_to_spec(spec)
         return encode_101_spec(spec, encoding_type=encoding_type)
     else:
-        raise NotImplementedError(f'No implementation found for encoding search space nb101 with {encoding_type}')
+        raise NotImplementedError(
+            f"No implementation found for encoding search space nb101 with {encoding_type}"
+        )

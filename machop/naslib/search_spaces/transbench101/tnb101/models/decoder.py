@@ -4,6 +4,7 @@ from .net_ops.cell_ops import *
 
 class SiameseDecoder(nn.Module):
     """Linear classifier for Siamese Model"""
+
     def __init__(self, in_dim, out_dim, num_pieces):
         super(SiameseDecoder, self).__init__()
         self.avgpool = nn.AdaptiveAvgPool2d((1, 1))
@@ -18,6 +19,7 @@ class SiameseDecoder(nn.Module):
 
 class FFDecoder(nn.Module):
     """Linear classifier for classification"""
+
     def __init__(self, in_dim, out_dim):
         super(FFDecoder, self).__init__()
         self.avgpool = nn.AdaptiveAvgPool2d((1, 1))
@@ -48,14 +50,24 @@ class SegmentationDecoder(nn.Module):
 
         tmp_in_C = 1024
         for i in range(6 - num_upsample):  # add non-upsampling layers
-            model += [ConvLayer(tmp_in_C, tmp_in_C // 2, 3, 1, 1, nn.LeakyReLU(0.2, False), norm)]
+            model += [
+                ConvLayer(
+                    tmp_in_C, tmp_in_C // 2, 3, 1, 1, nn.LeakyReLU(0.2, False), norm
+                )
+            ]
             tmp_in_C = tmp_in_C // 2
 
         for i in range(num_upsample - 1):  # add upsampling layers
-            model += [DeconvLayer(tmp_in_C, tmp_in_C // 2, 3, 2, 1, nn.LeakyReLU(0.2, False), norm)]
+            model += [
+                DeconvLayer(
+                    tmp_in_C, tmp_in_C // 2, 3, 2, 1, nn.LeakyReLU(0.2, False), norm
+                )
+            ]
             tmp_in_C = tmp_in_C // 2
 
-        model += [DeconvLayer(tmp_in_C, tmp_in_C, 3, 2, 1, nn.LeakyReLU(0.2, False), norm)]
+        model += [
+            DeconvLayer(tmp_in_C, tmp_in_C, 3, 2, 1, nn.LeakyReLU(0.2, False), norm)
+        ]
 
         model += [ConvLayer(tmp_in_C, target_num_channel, 3, 1, 1, None, None)]
         self.model = nn.Sequential(*model)
@@ -133,6 +145,6 @@ class GenerativeDecoder(nn.Module):
         return x
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     net = GenerativeDecoder((512, 16, 16), (256, 256), target_num_channel=3).cuda()
-    #summary(net, (512, 16, 16))
+    # summary(net, (512, 16, 16))

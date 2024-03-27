@@ -13,7 +13,9 @@ def get_world_size() -> int:
         return 1
     return dist.get_world_size()
 
+
 TORCH_VERSION = tuple(int(x) for x in torch.__version__.split(".")[:2])
+
 
 class _NewEmptyTensorOp(torch.autograd.Function):
     @staticmethod
@@ -25,6 +27,7 @@ class _NewEmptyTensorOp(torch.autograd.Function):
     def backward(ctx, grad):
         shape = ctx.shape
         return _NewEmptyTensorOp.apply(grad, shape), None
+
 
 class AllReduce(Function):
     @staticmethod
@@ -39,6 +42,7 @@ class AllReduce(Function):
     def backward(ctx, grad_output):
         dist.all_reduce(grad_output, async_op=False)
         return grad_output
+
 
 if TORCH_VERSION > (1, 4):
     BatchNorm2d = torch.nn.BatchNorm2d
@@ -55,6 +59,7 @@ else:
             # get output shape
             output_shape = x.shape
             return _NewEmptyTensorOp.apply(x, output_shape)
+
 
 class NaiveSyncBatchNorm(BatchNorm2d):
     """
@@ -79,7 +84,9 @@ class NaiveSyncBatchNorm(BatchNorm2d):
         a simplified implementation and an accurate computation of overall mean & variance.
     """
 
-    def __init__(self, *args, stats_mode="N", **kwargs):  # note we changed the default state to "N"
+    def __init__(
+        self, *args, stats_mode="N", **kwargs
+    ):  # note we changed the default state to "N"
         super().__init__(*args, **kwargs)
         assert stats_mode in ["", "N"]
         self._stats_mode = stats_mode
@@ -95,7 +102,9 @@ class NaiveSyncBatchNorm(BatchNorm2d):
         meansqr = torch.mean(input * input, dim=[0, 2, 3])
 
         if self._stats_mode == "":
-            assert B > 0, 'SyncBatchNorm(stats_mode="") does not support zero batch size.'
+            assert (
+                B > 0
+            ), 'SyncBatchNorm(stats_mode="") does not support zero batch size.'
             vec = torch.cat([mean, meansqr], dim=0)
             vec = AllReduce.apply(vec) * (1.0 / dist.get_world_size())
             mean, meansqr = torch.split(vec, C)
@@ -106,13 +115,22 @@ class NaiveSyncBatchNorm(BatchNorm2d):
                 vec = vec + input.sum()  # make sure there is gradient w.r.t input
             else:
                 vec = torch.cat(
-                    [mean, meansqr, torch.ones([1], device=mean.device, dtype=mean.dtype)], dim=0
+                    [
+                        mean,
+                        meansqr,
+                        torch.ones([1], device=mean.device, dtype=mean.dtype),
+                    ],
+                    dim=0,
                 )
             vec = AllReduce.apply(vec * B)
 
             total_batch = vec[-1].detach()
-            momentum = total_batch.clamp(max=1) * self.momentum  # no update if total_batch is 0
-            total_batch = torch.max(total_batch, torch.ones_like(total_batch))  # avoid div-by-zero
+            momentum = (
+                total_batch.clamp(max=1) * self.momentum
+            )  # no update if total_batch is 0
+            total_batch = torch.max(
+                total_batch, torch.ones_like(total_batch)
+            )  # avoid div-by-zero
             mean, meansqr, _ = torch.split(vec / total_batch, C)
 
         var = meansqr - mean * mean
@@ -127,8 +145,12 @@ class NaiveSyncBatchNorm(BatchNorm2d):
         return input * scale + bias
 
     def extra_repr(self):
-        return '{num_features}, eps={eps}, momentum={momentum}, affine={affine}, ' \
-        'track_running_stats={track_running_stats}, _stats_mode={_stats_mode}'.format(**self.__dict__)
+        return (
+            "{num_features}, eps={eps}, momentum={momentum}, affine={affine}, "
+            "track_running_stats={track_running_stats}, _stats_mode={_stats_mode}".format(
+                **self.__dict__
+            )
+        )
 
     @classmethod
     def convert_sync_batchnorm(cls, module, process_group=None):
@@ -136,11 +158,14 @@ class NaiveSyncBatchNorm(BatchNorm2d):
         # print("using NaiveSyncBatchNorm!!")
         module_output = module
         if isinstance(module, torch.nn.modules.batchnorm._BatchNorm):
-            module_output = NaiveSyncBatchNorm(module.num_features,
-                                               module.eps, module.momentum,
-                                               module.affine,
-                                               module.track_running_stats)
-                                               # process_group)
+            module_output = NaiveSyncBatchNorm(
+                module.num_features,
+                module.eps,
+                module.momentum,
+                module.affine,
+                module.track_running_stats,
+            )
+            # process_group)
             if module.affine:
                 with torch.no_grad():
                     module_output.weight = module.weight
@@ -149,23 +174,25 @@ class NaiveSyncBatchNorm(BatchNorm2d):
             module_output.running_var = module.running_var
             module_output.num_batches_tracked = module.num_batches_tracked
         for name, child in module.named_children():
-            module_output.add_module(name, cls.convert_sync_batchnorm(child, process_group))
+            module_output.add_module(
+                name, cls.convert_sync_batchnorm(child, process_group)
+            )
         del module
         return module_output
 
 
-
 norm_cfg = {
     # format: layer_type: (abbreviation, module)
-    'BN': ('bn', nn.BatchNorm2d),
-    'SyncBN': ('bn', nn.SyncBatchNorm),
-    'NSyncBN': ('bn', NaiveSyncBatchNorm),
-    'GN': ('gn', nn.GroupNorm),
+    "BN": ("bn", nn.BatchNorm2d),
+    "SyncBN": ("bn", nn.SyncBatchNorm),
+    "NSyncBN": ("bn", NaiveSyncBatchNorm),
+    "GN": ("gn", nn.GroupNorm),
     # and potentially 'SN'
 }
 
-def build_norm_layer(cfg, num_features, postfix=''):
-    """ Build normalization layer
+
+def build_norm_layer(cfg, num_features, postfix=""):
+    """Build normalization layer
 
     Args:
         cfg (dict): cfg should contain:
@@ -180,12 +207,12 @@ def build_norm_layer(cfg, num_features, postfix=''):
         name (str): abbreviation + postfix
         layer (nn.Module): created norm layer
     """
-    assert isinstance(cfg, dict) and 'type' in cfg
+    assert isinstance(cfg, dict) and "type" in cfg
     cfg_ = cfg.copy()
 
-    layer_type = cfg_.pop('type')
+    layer_type = cfg_.pop("type")
     if layer_type not in norm_cfg:
-        raise KeyError('Unrecognized norm type {}'.format(layer_type))
+        raise KeyError("Unrecognized norm type {}".format(layer_type))
     else:
         abbr, norm_layer = norm_cfg[layer_type]
         if norm_layer is None:
@@ -194,14 +221,14 @@ def build_norm_layer(cfg, num_features, postfix=''):
     assert isinstance(postfix, (int, str))
     name = abbr + str(postfix)
 
-    requires_grad = cfg_.pop('requires_grad', True)
-    cfg_.setdefault('eps', 1e-5)
-    if layer_type != 'GN':
+    requires_grad = cfg_.pop("requires_grad", True)
+    cfg_.setdefault("eps", 1e-5)
+    if layer_type != "GN":
         layer = norm_layer(num_features, **cfg_)
-        if layer_type == 'SyncBN':
+        if layer_type == "SyncBN":
             layer._specify_ddp_gpu_num(1)
     else:
-        assert 'num_groups' in cfg_
+        assert "num_groups" in cfg_
         layer = norm_layer(num_channels=num_features, **cfg_)
 
     for param in layer.parameters():

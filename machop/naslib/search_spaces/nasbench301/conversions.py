@@ -16,8 +16,8 @@ This file contains all 12 types of conversions from one represenation to another
 def get_cell_of_type(naslib_object, cell_type):
     for node in naslib_object.nodes:
         if (
-                "subgraph" in naslib_object.nodes[node]
-                and naslib_object.nodes[node]["subgraph"].name == cell_type
+            "subgraph" in naslib_object.nodes[node]
+            and naslib_object.nodes[node]["subgraph"].name == cell_type
         ):
             return naslib_object.nodes[node]["subgraph"]
 
@@ -103,8 +103,8 @@ def convert_genotype_to_naslib(genotype, naslib_object):
         if (edge.head, edge.tail) in edge_op_dict[edge.data.cell_name]:
             for i, op in enumerate(edge.data.op):
                 if (
-                        op.get_op_name
-                        in edge_op_dict[edge.data.cell_name][(edge.head, edge.tail)]
+                    op.get_op_name
+                    in edge_op_dict[edge.data.cell_name][(edge.head, edge.tail)]
                 ):
                     index = i
                     break
@@ -145,7 +145,7 @@ def convert_genotype_to_config(genotype):
         n = 2
         for node_idx in range(4):
             end = start + n
-            ops = cell[2 * node_idx: 2 * node_idx + 2]
+            ops = cell[2 * node_idx : 2 * node_idx + 2]
 
             # get edge idx
             edges = {

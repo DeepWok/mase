@@ -21,7 +21,7 @@ class InferCell(nn.Module):
             node_info = genotype[i - 1]
             cur_index = []
             cur_innod = []
-            for (op_name, op_in) in node_info:
+            for op_name, op_in in node_info:
                 if op_in == 0:
                     layer = OPS[op_name](C_in, C_out, stride, True, True)
                 else:

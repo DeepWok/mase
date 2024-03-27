@@ -66,7 +66,7 @@ def get_path_indices(arch, long_paths=True):
     total paths = 4 * max_paths
     """
 
-    max_paths = sum([num_ops ** i for i in range(NUM_VERTICES + 1)])
+    max_paths = sum([num_ops**i for i in range(NUM_VERTICES + 1)])
     path_indices = []
 
     # set the base index based on the cell and the input
@@ -85,7 +85,7 @@ def get_path_indices(arch, long_paths=True):
                     path_indices.append(2 * (i + 1) * max_paths - 1)
                     break
                 else:
-                    index += num_ops ** j * (OPS.index(path[j + 1]) + 1)
+                    index += num_ops**j * (OPS.index(path[j + 1]) + 1)
 
     return tuple(path_indices)
 
@@ -95,7 +95,7 @@ def encode_paths(arch, cutoff=None):
     path_indices = get_path_indices(arch)
     num_ops = len(OPS)
 
-    max_paths = sum([num_ops ** i for i in range(NUM_VERTICES + 1)])
+    max_paths = sum([num_ops**i for i in range(NUM_VERTICES + 1)])
 
     path_encoding = np.zeros(4 * max_paths)
     for index in path_indices:
@@ -295,7 +295,9 @@ def encode_darts_compact(compact, encoding_type=EncodingType.PATH):
         return encode_gcn(arch=compact)
 
     else:
-        logger.info(f"{encoding_type} is not yet implemented as an encoding type for darts")
+        logger.info(
+            f"{encoding_type} is not yet implemented as an encoding type for darts"
+        )
         raise NotImplementedError()
 
 

@@ -7,9 +7,10 @@ import numpy as np
 from naslib.predictors.gp import BaseGPModel
 from naslib.utils import AverageMeterGroup, TensorDatasetWithTrans
 
-device = torch.device('cpu') #NOTE: faster on CPU
+device = torch.device("cpu")  # NOTE: faster on CPU
 
 # TODO
+
 
 class DeepVarSparseGP(pyro.nn.PyroModule):
     def __init__(self, X, y, Xu, mean_fn):
@@ -17,23 +18,31 @@ class DeepVarSparseGP(pyro.nn.PyroModule):
         self.layer1 = gp.models.VariationalSparseGP(
             X,
             None,
-            gp.kernels.RBF(X.shape[1], variance=torch.tensor(5.).double(),
-                           lengthscale=torch.tensor(10.).double()),
+            gp.kernels.RBF(
+                X.shape[1],
+                variance=torch.tensor(5.0).double(),
+                lengthscale=torch.tensor(10.0).double(),
+            ),
             Xu=Xu,
             likelihood=None,
             mean_function=mean_fn,
-            latent_shape=torch.Size([10]))
+            latent_shape=torch.Size([10]),
+        )
 
         h = mean_fn(X).t()
         hu = mean_fn(Xu).t()
         self.layer2 = gp.models.VariationalSparseGP(
             h,
             y,
-            gp.kernels.RBF(10, variance=torch.tensor(5.).double(),
-                           lengthscale=torch.tensor(10.).double()),
+            gp.kernels.RBF(
+                10,
+                variance=torch.tensor(5.0).double(),
+                lengthscale=torch.tensor(10.0).double(),
+            ),
             Xu=hu,
             likelihood=gp.likelihoods.Gaussian(),
-            latent_shape=torch.Size([1]))
+            latent_shape=torch.Size([1]),
+        )
 
     def model(self, X, y):
         self.layer1.set_data(X, None)
@@ -66,8 +75,10 @@ class DeepVarSparseGPPredictor(BaseGPModel):
         if labels is None:
             return torch.tensor(encodings).double()
         else:
-            return (torch.tensor(encodings).double(),
-                    torch.tensor((labels-self.mean)/self.std).double())
+            return (
+                torch.tensor(encodings).double(),
+                torch.tensor((labels - self.mean) / self.std).double(),
+            )
         X_tensor = torch.FloatTensor(_xtrain).to(device)
         y_tensor = torch.FloatTensor(_ytrain).to(device)
 
@@ -82,13 +93,12 @@ class DeepVarSparseGPPredictor(BaseGPModel):
         # initialize the kernel and model
         pyro.clear_param_store()
         kernel = self.kernel(input_dim=X_train.shape[1])
-        Xu = torch.arange(10.) / 2.0
+        Xu = torch.arange(10.0) / 2.0
         Xu.unsqueeze_(-1)
         Xu = Xu.expand(10, X_train.shape[1]).double()
         likelihood = gp.likelihoods.Gaussian()
-        self.gpr = gp.models.VariationalSparseGP(X_train, y_train, kernel,
-                                                 Xu=Xu, likelihood=likelihood,
-                                                 whiten=True)
+        self.gpr = gp.models.VariationalSparseGP(
+            X_train, y_train, kernel, Xu=Xu, likelihood=likelihood, whiten=True
+        )
 
         return self.gpr
-

@@ -3,6 +3,7 @@ This contains implementations of:
 synflow, grad_norm, fisher, and grasp, and variants of jacov and snip
 based on https://github.com/mohsaied/zero-cost-nas
 """
+
 import torch
 import logging
 import math
@@ -29,13 +30,13 @@ class ZeroCost(Predictor):
 
         n_classes = graph.num_classes
         score = predictive.find_measures(
-                net_orig=graph,
-                dataloader=dataloader,
-                dataload_info=(self.dataload, self.num_imgs_or_batches, n_classes),
-                device=self.device,
-                loss_function=loss_fn,
-                measure_names=[self.method_type],
-            )
+            net_orig=graph,
+            dataloader=dataloader,
+            dataload_info=(self.dataload, self.num_imgs_or_batches, n_classes),
+            device=self.device,
+            loss_function=loss_fn,
+            measure_names=[self.method_type],
+        )
         if isinstance(score, dict):
             score = [float(value) for value in score.values()]
             score = score[0]
@@ -43,8 +44,8 @@ class ZeroCost(Predictor):
         if math.isnan(score) or math.isinf(score):
             score = -1e8
 
-        if self.method_type == 'synflow':
-            if score == 0.:
+        if self.method_type == "synflow":
+            if score == 0.0:
                 return score
 
             score = math.log(score) if score > 0 else -math.log(-score)

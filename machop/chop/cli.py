@@ -274,14 +274,12 @@ class ChopCLI:
     # Actions --------------------------------------------------------------------------
     def _proxy(self):
         self.logger.info(f"Training meta proxy...")
-        
+
         proxy_params = {
             "config": self.args.config,
         }
 
         proxy(**proxy_params)
-
-
 
     def _run_train(self):
         self.logger.info(f"Training model {self.args.model!r}...")

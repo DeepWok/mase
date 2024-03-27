@@ -69,7 +69,7 @@ class MLPPredictor(Predictor):
         encoding_type=EncodingType.ADJACENCY_ONE_HOT,
         ss_type="nasbench201",
         hpo_wrapper=False,
-        hparams_from_file=False
+        hparams_from_file=False,
     ):
         self.encoding_type = encoding_type
         self.ss_type = ss_type
@@ -90,10 +90,13 @@ class MLPPredictor(Predictor):
 
     def fit(self, xtrain, ytrain, train_info=None, epochs=500, loss="mae", verbose=0):
 
-        if self.hparams_from_file and self.hparams_from_file not in ['False', 'None'] \
-        and os.path.exists(self.hparams_from_file):
-            self.hyperparams = json.load(open(self.hparams_from_file, 'rb'))['mlp']
-            print('loaded hyperparams from', self.hparams_from_file)
+        if (
+            self.hparams_from_file
+            and self.hparams_from_file not in ["False", "None"]
+            and os.path.exists(self.hparams_from_file)
+        ):
+            self.hyperparams = json.load(open(self.hparams_from_file, "rb"))["mlp"]
+            print("loaded hyperparams from", self.hparams_from_file)
         elif self.hyperparams is None:
             self.hyperparams = self.default_hyperparams.copy()
 
@@ -107,10 +110,7 @@ class MLPPredictor(Predictor):
         self.std = np.std(ytrain)
         if self.encoding_type is not None:
             _xtrain = np.array(
-                [
-                    arch.encode(encoding_type=self.encoding_type)
-                    for arch in xtrain
-                ]
+                [arch.encode(encoding_type=self.encoding_type) for arch in xtrain]
             )
         else:
             _xtrain = xtrain
@@ -178,10 +178,7 @@ class MLPPredictor(Predictor):
     def query(self, xtest, info=None, eval_batch_size=None):
         if self.encoding_type is not None:
             xtest = np.array(
-                [
-                    arch.encode(encoding_type=self.encoding_type)
-                    for arch in xtest
-                ]
+                [arch.encode(encoding_type=self.encoding_type) for arch in xtest]
             )
         X_tensor = torch.FloatTensor(xtest).to(device)
         test_data = TensorDataset(X_tensor)

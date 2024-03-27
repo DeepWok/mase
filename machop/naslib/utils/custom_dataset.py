@@ -7,13 +7,21 @@ from torchvision.transforms import Compose
 from torch.utils.data import Dataset
 
 
-class CustomDataset():
+class CustomDataset:
     def __init__(self, config, mode="train"):
         self.data = config.data
         self.dataset = config.dataset
         self.seed = config.search.seed
-        self.batch_size = config.batch_size if hasattr(config, "batch_size") else config.search.batch_size
-        self.train_portion = config.train_portion if hasattr(config, "train_portion") else config.search.train_portion
+        self.batch_size = (
+            config.batch_size
+            if hasattr(config, "batch_size")
+            else config.search.batch_size
+        )
+        self.train_portion = (
+            config.train_portion
+            if hasattr(config, "train_portion")
+            else config.search.train_portion
+        )
         self.config = config.search if mode == "train" else config.evaluation
 
     @abc.abstractmethod
@@ -21,29 +29,31 @@ class CustomDataset():
         """
         Get the transform that your dataset uses.
 
-        config: CfgNode 
+        config: CfgNode
         return -> train_transform, valid_transform
         """
-        raise NotImplementedError('')
+        raise NotImplementedError("")
 
     @abc.abstractmethod
     def get_data(self, data, train_transform, valid_transform) -> List[Dataset]:
         """
-        Get the data required to create the loaders 
+        Get the data required to create the loaders
 
-        data: root directory of the dataset. 
-            See https://pytorch.org/vision/stable/datasets.html for how to store 
+        data: root directory of the dataset.
+            See https://pytorch.org/vision/stable/datasets.html for how to store
             torch Datasets
         train_transform: torchvision.transform.Compose object for train loader
         valid_transform: torchvision.transform.Compose object for valid loader
-        
+
         return -> train_data, test_data
         """
-        raise NotImplementedError('')
+        raise NotImplementedError("")
 
     def get_loaders(self):
         train_transform, valid_transform = self.get_transforms(self.config)
-        train_data, test_data = self.get_data(self.data, train_transform, valid_transform)
+        train_data, test_data = self.get_data(
+            self.data, train_transform, valid_transform
+        )
 
         num_train = len(train_data)
         indices = list(range(num_train))
@@ -55,13 +65,15 @@ class CustomDataset():
             sampler=torch.utils.data.sampler.SubsetRandomSampler(indices[:split]),
             pin_memory=True,
             num_workers=0,
-            worker_init_fn=np.random.seed(self.seed+1),
+            worker_init_fn=np.random.seed(self.seed + 1),
         )
 
         valid_queue = torch.utils.data.DataLoader(
             train_data,
             batch_size=self.batch_size,
-            sampler=torch.utils.data.sampler.SubsetRandomSampler(indices[split:num_train]),
+            sampler=torch.utils.data.sampler.SubsetRandomSampler(
+                indices[split:num_train]
+            ),
             pin_memory=True,
             num_workers=0,
             worker_init_fn=np.random.seed(self.seed),
@@ -74,6 +86,6 @@ class CustomDataset():
             pin_memory=True,
             num_workers=0,
             worker_init_fn=np.random.seed(self.seed),
-        ) 
+        )
 
         return train_queue, valid_queue, test_queue, train_transform, valid_transform

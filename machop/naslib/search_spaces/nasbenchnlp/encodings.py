@@ -91,31 +91,34 @@ def encode_seminas(compact, max_nodes=25):
     ops = [op + 1 for op in ops]
 
     dic = {
-        'num_vertices': max_nodes,
-        'adjacency': matrix,
-        'operations': ops,
-        'mask': np.array([i < max_nodes for i in range(max_nodes)], dtype=np.float32),
-        'val_acc': 0.0
+        "num_vertices": max_nodes,
+        "adjacency": matrix,
+        "operations": ops,
+        "mask": np.array([i < max_nodes for i in range(max_nodes)], dtype=np.float32),
+        "val_acc": 0.0,
     }
     return dic
 
 
 def encode_gcn(compact, max_nodes=25):
-    '''
+    """
     note: this is temporary. This will be removed during the code cleanup
-    '''
+    """
     matrix = get_adj_matrix(compact, max_nodes=max_nodes)
     matrix = np.array(matrix, dtype=np.float32)
     ops = get_categorical_ops(compact, max_nodes=max_nodes)
     op_map = [i for i in range(8)]
-    ops_onehot = np.array([[i == op_map.index(op) for i in range(len(op_map))] for op in ops], dtype=np.float32)
+    ops_onehot = np.array(
+        [[i == op_map.index(op) for i in range(len(op_map))] for op in ops],
+        dtype=np.float32,
+    )
 
     dic = {
-        'num_vertices': max_nodes,
-        'adjacency': matrix,
-        'operations': ops_onehot,
-        'mask': np.array([i < max_nodes for i in range(max_nodes)], dtype=np.float32),
-        'val_acc': 0.0
+        "num_vertices": max_nodes,
+        "adjacency": matrix,
+        "operations": ops_onehot,
+        "mask": np.array([i < max_nodes for i in range(max_nodes)], dtype=np.float32),
+        "val_acc": 0.0,
     }
     return dic
 
@@ -127,7 +130,9 @@ def encode_nlp(arch, encoding_type=EncodingType.PATH, max_nodes=25, accs=None):
         return encode_adj(compact=compact, max_nodes=max_nodes, one_hot=True)
 
     elif encoding_type == EncodingType.ADJACENCY_MIX:
-        return encode_adj(compact=compact, max_nodes=max_nodes, one_hot=False, accs=accs)
+        return encode_adj(
+            compact=compact, max_nodes=max_nodes, one_hot=False, accs=accs
+        )
 
     elif encoding_type == EncodingType.SEMINAS:
         return encode_seminas(compact=compact, max_nodes=max_nodes)
@@ -139,5 +144,7 @@ def encode_nlp(arch, encoding_type=EncodingType.PATH, max_nodes=25, accs=None):
         return compact
 
     else:
-        logger.info(f"{encoding_type} is not yet implemented as an encoding type for nlp")
+        logger.info(
+            f"{encoding_type} is not yet implemented as an encoding type for nlp"
+        )
         raise NotImplementedError()

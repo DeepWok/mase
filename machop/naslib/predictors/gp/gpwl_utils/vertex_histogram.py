@@ -1,4 +1,5 @@
 """The vertex kernel as defined in :cite:`sugiyama2015halting`."""
+
 # Original Author: Ioannis Siglidis <y.siglidis@gmail.com>
 # License: BSD 3 clause
 
@@ -9,6 +10,7 @@
 from warnings import warn
 
 from collections import Counter
+
 # from collections import Iterable
 
 from sklearn.exceptions import NotFittedError
@@ -125,7 +127,7 @@ class CustomVertexHistogram(Kernel):
             elif self._method_calling == 3:
                 labels = dict(self._labels)
             ni = 0
-            for (i, x) in enumerate(iter(X)):
+            for i, x in enumerate(iter(X)):
                 is_iter = isinstance(x, Iterable)
                 if is_iter:
                     x = list(x)
@@ -148,7 +150,7 @@ class CustomVertexHistogram(Kernel):
                     )
 
                 # construct the data input for the numpy array
-                for (label, frequency) in iteritems(Counter(itervalues(L))):
+                for label, frequency in iteritems(Counter(itervalues(L))):
                     # for the row that corresponds to that graph
                     rows.append(ni)
                     col_idx = labels.get(label, None)

@@ -197,10 +197,7 @@ class GCNPredictor(Predictor):
 
     def query(self, xtest, info=None, eval_batch_size=1000):
         test_data = np.array(
-            [
-                arch.encode(encoding_type=self.encoding_type)
-                for arch in xtest
-            ]
+            [arch.encode(encoding_type=self.encoding_type) for arch in xtest]
         )
         test_data_loader = DataLoader(test_data, batch_size=eval_batch_size)
 

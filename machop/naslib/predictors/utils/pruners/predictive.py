@@ -64,11 +64,8 @@ def find_nlp_measures_arrays(
     loss_fn=F.cross_entropy,
 ):
 
-
     ds = 1
     measure_values = {}
-
-
 
     for measure_name in measure_names:
         if measure_name not in measure_values:
@@ -99,11 +96,9 @@ def find_nlp_measures_arrays(
         #         print(f"Caught CUDA OOM, retrying with data split into {ds} parts")
         #     else:
         #         raise e
-    
+
     # net_orig = net_orig.to(device).train()
     return measure_values
-  
-
 
 
 def find_measures_arrays(
@@ -114,7 +109,7 @@ def find_measures_arrays(
     measure_names=None,
     loss_fn=F.cross_entropy,
 ):
-    device="cpu"
+    device = "cpu"
     if measure_names is None:
         measure_names = measures.available_measures
 
@@ -146,7 +141,7 @@ def find_measures_arrays(
     measure_values = {}
 
     # Turn target into one-hot vector
-    inputs = inputs[0:512,:]   ###
+    inputs = inputs[0:512, :]  ###
     targets = targets[0:512]
     # target_onehot = F.one_hot(targets, num_classes = max(targets)+1)
 
@@ -154,12 +149,15 @@ def find_measures_arrays(
     # inputs = torch.tensor(inputs, dtype = torch.float)
     # target_onehot = torch.tensor(target_onehot, dtype = torch.float)
 
-
     while not done:
         try:
             for measure_name in measure_names:
-                
-                if measure_name not in measure_values and measure_name != "flops" and measure_name != "params":
+
+                if (
+                    measure_name not in measure_values
+                    and measure_name != "flops"
+                    and measure_name != "params"
+                ):
                     # import time
                     # start = time.time()
                     val = measures.calc_measure(
@@ -191,7 +189,7 @@ def find_measures_arrays(
                 print(f"Caught CUDA OOM, retrying with data split into {ds} parts")
             else:
                 raise e
-    
+
     net_orig = net_orig.to(device).train()
     return measure_values
 
@@ -204,7 +202,7 @@ def find_measures(
     loss_function,  # loss function to use within the zero-cost metrics
     measure_names=None,  # an array of measure names to compute, if left blank, all measures are computed by default
     measures_arr=None,
-    nlp = False
+    nlp=False,
 ):
 
     def sum_arr(arr):
@@ -213,22 +211,19 @@ def find_measures(
             sum += torch.sum(arr[i])
         return sum.item()
 
-    measure_score={}
+    measure_score = {}
     data_iterator = iter(dataloader)
     x, target = next(data_iterator)
     x_shape = list(x.shape)
-    x_shape[0] = 1 # to prevent overflow
+    x_shape[0] = 1  # to prevent overflow
 
     model_stats = get_model_stats(
-        net_orig,
-        input_tensor_shape=x_shape,
-        clone_model=True
+        net_orig, input_tensor_shape=x_shape, clone_model=True
     )
-    if 'flops' in measure_names:
-        measure_score['flops'] = float(model_stats.Flops)/1e6
-    if 'params' in measure_names:
-        measure_score['params'] = float(model_stats.parameters)/1e6
-        
+    if "flops" in measure_names:
+        measure_score["flops"] = float(model_stats.Flops) / 1e6
+    if "params" in measure_names:
+        measure_score["params"] = float(model_stats.parameters) / 1e6
 
     if measures_arr is None:
 
@@ -241,16 +236,13 @@ def find_measures(
             measure_names=measure_names,
         )
 
-
     for k, v in measures_arr.items():
-        if k == "jacov" or k == 'epe_nas' or k=='nwot' or k=='zen':
+        if k == "jacov" or k == "epe_nas" or k == "nwot" or k == "zen":
             measure_score[k] = v
         else:
             measure_score[k] = sum_arr(v)
 
     return measure_score
-
-
 
 
 # def find_nlp_measures(
@@ -296,7 +288,7 @@ def find_measures(
 #     # if 'params' in measure_names:
 #     #     measure_score['params'] = float(model_stats.parameters)/1e6
 #     #     measure_names.remove('params')
-        
+
 #     # x = torch.rand(70, 50).to('cuda')
 
 #     loss_function = CustomLoss(emsize, net_orig.decoder.weight, net_orig.decoder.bias)
@@ -318,22 +310,22 @@ def find_measures(
 #             measure_score[k] = sum_arr(v)
 #     return measure_score
 
-    ######## Original NASLib calculation for getting flops and number of params in a model##########
-    # if measure_names[0] in ['flops', 'params']:
-        # data_iterator = iter(dataloader)
-        # x, target = next(data_iterator)
-        # x_shape = list(x.shape)
-        # x_shape[0] = 1 # to prevent overflow
+######## Original NASLib calculation for getting flops and number of params in a model##########
+# if measure_names[0] in ['flops', 'params']:
+# data_iterator = iter(dataloader)
+# x, target = next(data_iterator)
+# x_shape = list(x.shape)
+# x_shape[0] = 1 # to prevent overflow
 
-        # model_stats = get_model_stats(
-        #     net_orig,
-        #     input_tensor_shape=x_shape,
-        #     clone_model=True
-        # )
+# model_stats = get_model_stats(
+#     net_orig,
+#     input_tensor_shape=x_shape,
+#     clone_model=True
+# )
 
-    #     if measure_names[0] == 'flops':
-    #         measure_score = float(model_stats.Flops)/1e6 # megaflops
-    #     else:
-    #         measure_score = float(model_stats.parameters)/1e6 # megaparams
-    #     return measure_score
-    #################################################################################################
+#     if measure_names[0] == 'flops':
+#         measure_score = float(model_stats.Flops)/1e6 # megaflops
+#     else:
+#         measure_score = float(model_stats.parameters)/1e6 # megaparams
+#     return measure_score
+#################################################################################################

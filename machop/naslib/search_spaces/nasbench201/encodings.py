@@ -43,9 +43,9 @@ def get_path_indices(arch, num_ops=5):
         elif i in [1, 2]:
             index = num_ops
         else:
-            index = num_ops + num_ops ** 2
+            index = num_ops + num_ops**2
         for j, op in enumerate(path):
-            index += op * num_ops ** j
+            index += op * num_ops**j
         path_indices.append(index)
 
     return tuple(path_indices)
@@ -61,7 +61,7 @@ def encode_adjacency_one_hot(arch):
 
 def encode_paths(arch, num_ops=5, longest_path_length=3):
     """output one-hot encoding of paths"""
-    num_paths = sum([num_ops ** i for i in range(1, longest_path_length + 1)])
+    num_paths = sum([num_ops**i for i in range(1, longest_path_length + 1)])
     path_indices = get_path_indices(arch, num_ops=num_ops)
     encoding = np.zeros(num_paths)
     for index in path_indices:
@@ -203,7 +203,9 @@ def encode_201(arch, encoding_type=EncodingType.ADJACENCY_ONE_HOT):
         return encode_seminas_nasbench201(arch)
 
     else:
-        logger.info(f"{encoding_type} is not yet supported as an architecture encoding for nb201")
+        logger.info(
+            f"{encoding_type} is not yet supported as an architecture encoding for nb201"
+        )
         raise NotImplementedError()
 
 
@@ -218,4 +220,6 @@ def encode_spec(spec, encoding_type=EncodingType.ADJACENCY_ONE_HOT):
     if encoding_type == EncodingType.ADJACENCY_ONE_HOT:
         return encode_adjacency_one_hot_op_indices(spec)
     else:
-        raise NotImplementedError(f'No implementation found for encoding search space nb201 with {encoding_type}')
+        raise NotImplementedError(
+            f"No implementation found for encoding search space nb201 with {encoding_type}"
+        )

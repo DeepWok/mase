@@ -51,16 +51,22 @@ utils.log_args(config)
 
 supported_predictors = {
     "bananas": Ensemble(predictor_type="bananas", num_ensemble=3, hpo_wrapper=True),
-    "bayes_lin_reg": BayesianLinearRegression(encoding_type=EncodingType.ADJACENCY_ONE_HOT),
-    "bohamiann": BOHAMIANN(encoding_type=EncodingType.ADJACENCY_ONE_HOT,
-                           hparams_from_file=config.hparams_from_file),
+    "bayes_lin_reg": BayesianLinearRegression(
+        encoding_type=EncodingType.ADJACENCY_ONE_HOT
+    ),
+    "bohamiann": BOHAMIANN(
+        encoding_type=EncodingType.ADJACENCY_ONE_HOT,
+        hparams_from_file=config.hparams_from_file,
+    ),
     "bonas": BonasPredictor(encoding_type=EncodingType.BONAS, hpo_wrapper=True),
     "dngo": DNGOPredictor(encoding_type=EncodingType.ADJACENCY_ONE_HOT),
     "fisher": ZeroCost(method_type="fisher"),
     "flops": ZeroCost(method_type="flops"),
     "gcn": GCNPredictor(encoding_type=EncodingType.GCN, hpo_wrapper=True),
-    "gp": GPPredictor(encoding_type=EncodingType.ADJACENCY_ONE_HOT,
-                      hparams_from_file=config.hparams_from_file),
+    "gp": GPPredictor(
+        encoding_type=EncodingType.ADJACENCY_ONE_HOT,
+        hparams_from_file=config.hparams_from_file,
+    ),
     "gpwl": GPWLPredictor(
         ss_type=config.search_space,
         kernel_type="wloa",
@@ -76,31 +82,50 @@ supported_predictors = {
         metric=Metric.VAL_ACCURACY, all_curve=False, require_hyper=False
     ),
     "lgb": LGBoost(encoding_type=EncodingType.ADJACENCY_ONE_HOT, hpo_wrapper=False),
-    "mlp": MLPPredictor(encoding_type=EncodingType.ADJACENCY_ONE_HOT, hpo_wrapper=False,
-                        hparams_from_file=config.hparams_from_file),
-    "nao": SemiNASPredictor(encoding_type=EncodingType.SEMINAS, semi=False, hpo_wrapper=False,
-                            hparams_from_file=config.hparams_from_file),
+    "mlp": MLPPredictor(
+        encoding_type=EncodingType.ADJACENCY_ONE_HOT,
+        hpo_wrapper=False,
+        hparams_from_file=config.hparams_from_file,
+    ),
+    "nao": SemiNASPredictor(
+        encoding_type=EncodingType.SEMINAS,
+        semi=False,
+        hpo_wrapper=False,
+        hparams_from_file=config.hparams_from_file,
+    ),
     "ngb": NGBoost(encoding_type=EncodingType.ADJACENCY_ONE_HOT, hpo_wrapper=False),
     "params": ZeroCost(method_type="params"),
-    "rf": RandomForestPredictor(encoding_type=EncodingType.ADJACENCY_ONE_HOT, hpo_wrapper=False,
-                                hparams_from_file=config.hparams_from_file),
-    "seminas": SemiNASPredictor(encoding_type="seminas", semi=True, hpo_wrapper=False, 
-                                hparams_from_file=config.hparams_from_file),
+    "rf": RandomForestPredictor(
+        encoding_type=EncodingType.ADJACENCY_ONE_HOT,
+        hpo_wrapper=False,
+        hparams_from_file=config.hparams_from_file,
+    ),
+    "seminas": SemiNASPredictor(
+        encoding_type="seminas",
+        semi=True,
+        hpo_wrapper=False,
+        hparams_from_file=config.hparams_from_file,
+    ),
     "snip": ZeroCost(method_type="snip"),
     "sotl": SoLosspredictor(metric=Metric.TRAIN_LOSS, sum_option="SoTL"),
     "sotle": SoLosspredictor(metric=Metric.TRAIN_LOSS, sum_option="SoTLE"),
     "sotlema": SoLosspredictor(metric=Metric.TRAIN_LOSS, sum_option="SoTLEMA"),
     "sparse_gp": SparseGPPredictor(
-        encoding_type=EncodingType.ADJACENCY_ONE_HOT, optimize_gp_hyper=True,
+        encoding_type=EncodingType.ADJACENCY_ONE_HOT,
+        optimize_gp_hyper=True,
     ),
     "synflow": ZeroCost(method_type="synflow"),
     "valacc": EarlyStopping(metric=Metric.VAL_ACCURACY),
     "valloss": EarlyStopping(metric=Metric.VAL_LOSS),
     "var_sparse_gp": VarSparseGPPredictor(
-        encoding_type=EncodingType.ADJACENCY_ONE_HOT, optimize_gp_hyper=True,
+        encoding_type=EncodingType.ADJACENCY_ONE_HOT,
+        optimize_gp_hyper=True,
     ),
-    "xgb": XGBoost(encoding_type=EncodingType.ADJACENCY_ONE_HOT, hpo_wrapper=False,
-                   hparams_from_file=config.hparams_from_file),
+    "xgb": XGBoost(
+        encoding_type=EncodingType.ADJACENCY_ONE_HOT,
+        hpo_wrapper=False,
+        hparams_from_file=config.hparams_from_file,
+    ),
     # path encoding experiments:
     "bayes_lin_reg_path": BayesianLinearRegression(encoding_type=EncodingType.PATH),
     "bohamiann_path": BOHAMIANN(encoding_type=EncodingType.PATH),
@@ -126,7 +151,10 @@ supported_predictors = {
     ),
     # omni ablation studies:
     "omni_ngb_no_lce": OmniNGBPredictor(
-        encoding_type=EncodingType.ADJACENCY_ONE_HOT, config=config, zero_cost=["jacov"], lce=[]
+        encoding_type=EncodingType.ADJACENCY_ONE_HOT,
+        config=config,
+        zero_cost=["jacov"],
+        lce=[],
     ),
     "omni_seminas_no_lce": OmniSemiNASPredictor(
         encoding_type=EncodingType.SEMINAS,
@@ -138,14 +166,17 @@ supported_predictors = {
         jacov_onehot=True,
     ),
     "omni_ngb_no_zerocost": OmniNGBPredictor(
-        encoding_type=EncodingType.ADJACENCY_ONE_HOT, config=config, zero_cost=[], lce=["sotle"]
+        encoding_type=EncodingType.ADJACENCY_ONE_HOT,
+        config=config,
+        zero_cost=[],
+        lce=["sotle"],
     ),
     "omni_ngb_no_encoding": OmniNGBPredictor(
         encoding_type=None, config=config, zero_cost=["jacov"], lce=["sotle"]
     ),
     "nwot": ZeroCost(method_type="nwot"),
     "epe_nas": ZeroCost(method_type="epe_nas"),
-    "zen": ZeroCost(method_type="zen")
+    "zen": ZeroCost(method_type="zen"),
 }
 
 supported_search_spaces = {
@@ -153,8 +184,8 @@ supported_search_spaces = {
     "nasbench201": NasBench201SearchSpace(),
     "nasbench301": NasBench301SearchSpace(),
     "nlp": NasBenchNLPSearchSpace(),
-    'transbench101_micro': TransBench101SearchSpaceMicro(config.dataset),
-    'transbench101_macro': TransBench101SearchSpaceMacro(),
+    "transbench101_micro": TransBench101SearchSpaceMicro(config.dataset),
+    "transbench101_macro": TransBench101SearchSpaceMacro(),
     "asr": NasBenchASRSearchSpace(),
 }
 

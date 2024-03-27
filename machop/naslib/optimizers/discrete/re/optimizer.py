@@ -32,7 +32,9 @@ class RegularizedEvolution(MetaOptimizer):
         self.population = collections.deque(maxlen=self.population_size)
         self.history = torch.nn.ModuleList()
 
-    def adapt_search_space(self, search_space: Graph, scope: str = None, dataset_api: dict = None):
+    def adapt_search_space(
+        self, search_space: Graph, scope: str = None, dataset_api: dict = None
+    ):
         assert (
             search_space.QUERYABLE
         ), "Regularized evolution is currently only implemented for benchmarks."
@@ -46,9 +48,7 @@ class RegularizedEvolution(MetaOptimizer):
             logger.info("Start sampling architectures to fill the population")
             # If there is no scope defined, let's use the search space default one
 
-            model = (
-                torch.nn.Module()
-            )
+            model = torch.nn.Module()
             model.arch = self.search_space.clone()
             model.arch.sample_random_architecture(dataset_api=self.dataset_api)
             model.accuracy = model.arch.query(
@@ -68,9 +68,7 @@ class RegularizedEvolution(MetaOptimizer):
 
             parent = max(sample, key=lambda x: x.accuracy)
 
-            child = (
-                torch.nn.Module()
-            )
+            child = torch.nn.Module()
             child.arch = self.search_space.clone()
             child.arch.mutate(parent.arch, dataset_api=self.dataset_api)
             child.accuracy = child.arch.query(

@@ -7,7 +7,7 @@ from .base import SearchStrategyBase
 SEARCH_STRATEGY_MAP = {
     # "rl": StrategyRL,
     "optuna": SearchStrategyOptuna,
-    "proxy" : SearchStrategyDaddyProxy
+    "proxy": SearchStrategyDaddyProxy,
 }
 
 

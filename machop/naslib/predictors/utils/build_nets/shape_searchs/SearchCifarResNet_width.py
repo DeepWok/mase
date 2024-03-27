@@ -441,7 +441,7 @@ class SearchWidthCifarResNet(nn.Module):
         for stage in range(3):
             for iL in range(layer_blocks):
                 iC = self.channels[-1]
-                planes = 16 * (2 ** stage)
+                planes = 16 * (2**stage)
                 stride = 2 if stage > 0 and iL == 0 else 1
                 module = block(iC, planes, stride)
                 self.channels.append(module.out_dim)

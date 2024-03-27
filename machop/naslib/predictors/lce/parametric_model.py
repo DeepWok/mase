@@ -78,7 +78,7 @@ def logloglinear(params, x):
 @parametric_model
 def hill3(params, x):
     ymax, eta, kappa, _ = params
-    return ymax * (x ** eta) / (kappa * eta + x ** eta)
+    return ymax * (x**eta) / (kappa * eta + x**eta)
 
 
 @parametric_model
@@ -102,13 +102,13 @@ def mmf(params, x):
 @parametric_model
 def exp4(params, x):
     a, b, c, alpha, _ = params
-    return c - np.exp(-a * (x ** alpha) + b)
+    return c - np.exp(-a * (x**alpha) + b)
 
 
 @parametric_model
 def janoschek(params, x):
     alpha, beta, kappa, delta, _ = params
-    return alpha - (alpha - beta) * np.exp(-kappa * (x ** delta))
+    return alpha - (alpha - beta) * np.exp(-kappa * (x**delta))
 
 
 @parametric_model

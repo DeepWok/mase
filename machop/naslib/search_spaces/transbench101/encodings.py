@@ -14,10 +14,7 @@ one_hot_nasbench201 = [
     [0, 0, 0, 0, 1],
 ]
 
-one_hot_transnasbench201 = [[1, 0, 0, 0],
-                            [0, 1, 0, 0],
-                            [0, 0, 1, 0],
-                            [0, 0, 0, 1]]
+one_hot_transnasbench201 = [[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]]
 
 # not used at the moment
 one_hot_transbench101 = [
@@ -118,7 +115,7 @@ def encode_seminas_transbench101(arch):
     return dic
 
 
-def encode_tb101(arch, encoding_type='adjacency_one_hot'):
+def encode_tb101(arch, encoding_type="adjacency_one_hot"):
     if encoding_type == EncodingType.ADJACENCY_ONE_HOT:
         return encode_adjacency_one_hot_tb101(arch)
 
@@ -129,7 +126,9 @@ def encode_tb101(arch, encoding_type='adjacency_one_hot'):
         return encode_seminas_transbench101(arch)
 
     else:
-        logger.info(f"{encoding_type} is not yet supported as a predictor encoding for tnb101")
+        logger.info(
+            f"{encoding_type} is not yet supported as a predictor encoding for tnb101"
+        )
         raise NotImplementedError()
 
 
@@ -146,9 +145,17 @@ def encode_adjacency_one_hot_transbench_micro(arch):
 
 
 def encode_spec(spec, encoding_type=EncodingType.ADJACENCY_ONE_HOT, ss_type=None):
-    if ss_type == 'transbench101_micro' and encoding_type == EncodingType.ADJACENCY_ONE_HOT:
+    if (
+        ss_type == "transbench101_micro"
+        and encoding_type == EncodingType.ADJACENCY_ONE_HOT
+    ):
         return encode_adjacency_one_hot_transbench_micro_op_indices(spec)
-    elif ss_type == 'transbench101_macro' and encoding_type == EncodingType.ADJACENCY_ONE_HOT:
+    elif (
+        ss_type == "transbench101_macro"
+        and encoding_type == EncodingType.ADJACENCY_ONE_HOT
+    ):
         return encode_adjacency_one_hot_transbench_macro_op_indices(spec)
     else:
-        raise NotImplementedError(f'No implementation found for encoding search space {ss_type} with {encoding_type}')
+        raise NotImplementedError(
+            f"No implementation found for encoding search space {ss_type} with {encoding_type}"
+        )

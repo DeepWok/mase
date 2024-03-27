@@ -40,9 +40,9 @@ def fisher_forward_linear(self, x):
 
 @measure("fisher", bn=True, mode="channel")
 def compute_fisher_per_weight(net, inputs, targets, loss_fn, mode, split_data=1):
-    net.to('cpu')
-    inputs.to('cpu')
-    targets.to('cpu')
+    net.to("cpu")
+    inputs.to("cpu")
+    targets.to("cpu")
     device = inputs.device
 
     if mode == "param":
@@ -93,8 +93,8 @@ def compute_fisher_per_weight(net, inputs, targets, loss_fn, mode, split_data=1)
 
         net.zero_grad()
         # net.to('cuda')
-        outputs = net(inputs[st:en].to('cpu'))
-        loss = loss_fn(outputs, targets[st:en].to('cpu'))
+        outputs = net(inputs[st:en].to("cpu"))
+        loss = loss_fn(outputs, targets[st:en].to("cpu"))
         loss.backward()
 
     # retrieve fisher info
@@ -113,10 +113,3 @@ def compute_fisher_per_weight(net, inputs, targets, loss_fn, mode, split_data=1)
 
     grads_abs = reshape_elements(grads_abs_ch, shapes, device)
     return grads_abs
-
-
-
-
-
-
-

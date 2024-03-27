@@ -46,9 +46,9 @@ def compute_grasp_per_weight(
         grad_w = None
         for _ in range(num_iters):
             # TODO get new data, otherwise num_iters is useless!
-            outputs = net.forward(inputs[st:en].to('cpu'))
+            outputs = net.forward(inputs[st:en].to("cpu"))
             outputs = outputs / T
-            loss = loss_fn(outputs, targets[st:en].to('cpu'))
+            loss = loss_fn(outputs, targets[st:en].to("cpu"))
             grad_w_p = autograd.grad(loss, weights, allow_unused=True)
             if grad_w is None:
                 grad_w = list(grad_w_p)
@@ -61,9 +61,9 @@ def compute_grasp_per_weight(
         en = (sp + 1) * N // split_data
 
         # forward/grad pass #2
-        outputs = net.forward(inputs[st:en].to('cpu'))
+        outputs = net.forward(inputs[st:en].to("cpu"))
         outputs = outputs / T
-        loss = loss_fn(outputs, targets[st:en].to('cpu'))
+        loss = loss_fn(outputs, targets[st:en].to("cpu"))
         grad_f = autograd.grad(loss, weights, create_graph=True, allow_unused=True)
 
         # accumulate gradients computed in previous step and call backwards

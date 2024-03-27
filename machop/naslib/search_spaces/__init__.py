@@ -16,8 +16,8 @@ supported_search_spaces = {
     "nasbench101": NasBench101SearchSpace,
     "nasbench201": NasBench201SearchSpace,
     "nasbench301": NasBench301SearchSpace,
-    'transbench101_micro': TransBench101SearchSpaceMicro,
-    'transbench101_macro': TransBench101SearchSpaceMacro,
+    "transbench101_micro": TransBench101SearchSpaceMicro,
+    "transbench101_macro": TransBench101SearchSpaceMacro,
 }
 
 dataset_n_classes = {
@@ -39,7 +39,6 @@ dataset_to_channels = {
 }
 
 
-
 def get_search_space(name, dataset):
     search_space_cls = supported_search_spaces[name.lower()]
 
@@ -53,20 +52,25 @@ def get_search_space(name, dataset):
     except KeyError:
         n_classes = -1
 
-    if name == 'transbench101_micro' or name == 'transbench101_macro':
-        create_graph = True if dataset.lower() in ['svhn', 'ninapro', 'scifar100'] else False
-        return search_space_cls(dataset=dataset,
-                                use_small_model=True,
-                                create_graph=create_graph,
-                                n_classes=n_classes,
-                                in_channels=in_channels)
-    elif name == 'nasbench301':
+    if name == "transbench101_micro" or name == "transbench101_macro":
+        create_graph = (
+            True if dataset.lower() in ["svhn", "ninapro", "scifar100"] else False
+        )
+        return search_space_cls(
+            dataset=dataset,
+            use_small_model=True,
+            create_graph=create_graph,
+            n_classes=n_classes,
+            in_channels=in_channels,
+        )
+    elif name == "nasbench301":
         auxiliary = True if dataset.lower() == "cifar10" else False
-        return search_space_cls(n_classes=n_classes, in_channels=in_channels,
-                                auxiliary=auxiliary)
-    elif name == 'nasbench201':
+        return search_space_cls(
+            n_classes=n_classes, in_channels=in_channels, auxiliary=auxiliary
+        )
+    elif name == "nasbench201":
         return search_space_cls(n_classes=n_classes, in_channels=in_channels)
-    elif name == 'nasbench101':
+    elif name == "nasbench101":
         return search_space_cls(n_classes=n_classes)
     else:
-        raise NotImplementedError(f'{name} search space not implemented')
+        raise NotImplementedError(f"{name} search space not implemented")

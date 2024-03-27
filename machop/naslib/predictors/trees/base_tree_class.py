@@ -8,8 +8,15 @@ from naslib.utils.encodings import EncodingType
 
 class BaseTree(Predictor):
 
-    def __init__(self, encoding_type=EncodingType.ADJACENCY_ONE_HOT, ss_type='nasbench201', zc=False, zc_only=False,
-                 hpo_wrapper=False, hparams_from_file=None):
+    def __init__(
+        self,
+        encoding_type=EncodingType.ADJACENCY_ONE_HOT,
+        ss_type="nasbench201",
+        zc=False,
+        zc_only=False,
+        hpo_wrapper=False,
+        hparams_from_file=None,
+    ):
         super(Predictor, self).__init__()
         self.encoding_type = encoding_type
         self.ss_type = ss_type
@@ -25,11 +32,13 @@ class BaseTree(Predictor):
         return {}
 
     def get_dataset(self, encodings, labels=None):
-        return NotImplementedError('Tree cannot process the numpy data without \
-                                   converting to the proper representation')
+        return NotImplementedError(
+            "Tree cannot process the numpy data without \
+                                   converting to the proper representation"
+        )
 
     def train(self, train_data, **kwargs):
-        return NotImplementedError('Train method not implemented')
+        return NotImplementedError("Train method not implemented")
 
     def predict(self, data, **kwargs):
         return self.model.predict(data, **kwargs)
@@ -44,7 +53,9 @@ class BaseTree(Predictor):
 
             # TODO: Fix. Hacky way to make XGBoost accept both encodings as well as NASLib Graphs as xtrain
             if isinstance(xtrain[0], nn.Module):
-                xtrain = np.array([arch.encode(encoding_type=self.encoding_type) for arch in xtrain])
+                xtrain = np.array(
+                    [arch.encode(encoding_type=self.encoding_type) for arch in xtrain]
+                )
 
             if self.zc:
                 # mean, std = -10000000.0, 150000000.0
@@ -52,7 +63,10 @@ class BaseTree(Predictor):
                 if self.zc_only:
                     xtrain = self.zc_features
                 else:
-                    xtrain = [[*x, *zc_scores] for x, zc_scores in zip (xtrain, self.zc_features)]
+                    xtrain = [
+                        [*x, *zc_scores]
+                        for x, zc_scores in zip(xtrain, self.zc_features)
+                    ]
             xtrain = np.array(xtrain)
             ytrain = np.array(ytrain)
 
@@ -62,7 +76,9 @@ class BaseTree(Predictor):
             ytrain = ytrain
 
         if self.zc:
-            self.zc_to_features_map = self._get_zc_to_feature_mapping(self.zc_names, xtrain)
+            self.zc_to_features_map = self._get_zc_to_feature_mapping(
+                self.zc_names, xtrain
+            )
 
         # convert to the right representation
         train_data = self.get_dataset(xtrain, ytrain)
@@ -72,7 +88,7 @@ class BaseTree(Predictor):
 
         # predict
         train_pred = np.squeeze(self.predict(xtrain))
-        train_error = np.mean(abs(train_pred-ytrain))
+        train_error = np.mean(abs(train_pred - ytrain))
 
         return train_error
 
@@ -82,10 +98,15 @@ class BaseTree(Predictor):
 
             # TODO: Fix. Hacky way to make XGBoost accept both encodings as well as NASLib Graphs as xtrain
             if isinstance(xtest[0], nn.Module):
-                xtest = np.array([arch.encode(encoding_type=self.encoding_type) for arch in xtest])
+                xtest = np.array(
+                    [arch.encode(encoding_type=self.encoding_type) for arch in xtest]
+                )
             if self.zc:
                 # mean, std = -10000000.0, 150000000.0
-                zc_scores = [self.create_zc_feature_vector(data['zero_cost_scores']) for data in info]
+                zc_scores = [
+                    self.create_zc_feature_vector(data["zero_cost_scores"])
+                    for data in info
+                ]
                 if self.zc_only:
                     xtest = zc_scores
                 else:
@@ -102,7 +123,9 @@ class BaseTree(Predictor):
     def get_random_hyperparams(self):
         pass
 
-    def create_zc_feature_vector(self, zero_cost_scores: Union[List[Dict], Dict]) -> Union[List[List], List]:
+    def create_zc_feature_vector(
+        self, zero_cost_scores: Union[List[Dict], Dict]
+    ) -> Union[List[List], List]:
         zc_features = []
 
         def _make_features(zc_scores):
@@ -125,32 +148,42 @@ class BaseTree(Predictor):
         self.hyperparams = params
 
     def _get_zc_to_feature_mapping(self, zc_names, xtrain):
-        x = xtrain[0] # Consider one datapoint
+        x = xtrain[0]  # Consider one datapoint
 
         n_zc = len(zc_names)
         n_arch_features = len(x[:-n_zc])
         mapping = {}
 
-        for zc_name, feature_index in zip(zc_names, range(n_arch_features, n_arch_features+n_zc)):
-            mapping[zc_name] = f'f{feature_index}'
+        for zc_name, feature_index in zip(
+            zc_names, range(n_arch_features, n_arch_features + n_zc)
+        ):
+            mapping[zc_name] = f"f{feature_index}"
 
         return mapping
 
-    def set_pre_computations(self, unlabeled=None, xtrain_zc_info=None, xtest_zc_info=None, unlabeled_zc_info=None):
+    def set_pre_computations(
+        self,
+        unlabeled=None,
+        xtrain_zc_info=None,
+        xtest_zc_info=None,
+        unlabeled_zc_info=None,
+    ):
         if xtrain_zc_info is not None:
             self.xtrain_zc_info = xtrain_zc_info
-            self._verify_zc_info(xtrain_zc_info['zero_cost_scores'])
-            self._set_zc_names(xtrain_zc_info['zero_cost_scores'])
-            self.zc_features = self.create_zc_feature_vector(xtrain_zc_info['zero_cost_scores'])
-        
+            self._verify_zc_info(xtrain_zc_info["zero_cost_scores"])
+            self._set_zc_names(xtrain_zc_info["zero_cost_scores"])
+            self.zc_features = self.create_zc_feature_vector(
+                xtrain_zc_info["zero_cost_scores"]
+            )
+
     def _verify_zc_info(self, zero_cost_scores):
         zc_names = [set(zc_scores.keys()) for zc_scores in zero_cost_scores]
-    
-        assert len(zc_names) > 0, 'No ZC values found in zero_cost_scores'
-        assert zc_names.count(zc_names[0]) == len(zc_names), 'All models do not have the same number of ZC values'
+
+        assert len(zc_names) > 0, "No ZC values found in zero_cost_scores"
+        assert zc_names.count(zc_names[0]) == len(
+            zc_names
+        ), "All models do not have the same number of ZC values"
 
     def _set_zc_names(self, zero_cost_scores):
         zc_names = sorted(zero_cost_scores[0].keys())
         self.zc_names = zc_names
-
-        

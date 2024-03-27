@@ -1,4 +1,3 @@
-
 from torch._C import device
 from naslib.optimizers.core.metaclasses import MetaOptimizer
 
@@ -6,29 +5,41 @@ import torch
 import numpy as np
 import logging
 
-from naslib.optimizers.oneshot.configurable.components import AbstractArchitectureSampler, AbstractCombOpModifier, AbstractEdgeOpModifier, NoCombOpModifier, NoEdgeOpModifer, OptimizationStrategy
+from naslib.optimizers.oneshot.configurable.components import (
+    AbstractArchitectureSampler,
+    AbstractCombOpModifier,
+    AbstractEdgeOpModifier,
+    NoCombOpModifier,
+    NoEdgeOpModifer,
+    OptimizationStrategy,
+)
 
 logger = logging.getLogger(__name__)
 
+
 class ConfigurableOptimizer(MetaOptimizer):
-    """ A configurable optimizer."""
+    """A configurable optimizer."""
+
     def __init__(
         self,
         config,
         arch_sampler: AbstractArchitectureSampler,
-        edge_op_modifier: AbstractEdgeOpModifier=None,
-        comb_op_modifier: AbstractCombOpModifier=None,
-
+        edge_op_modifier: AbstractEdgeOpModifier = None,
+        comb_op_modifier: AbstractCombOpModifier = None,
         # The rest are the same as the other optimizers
         op_optimizer=torch.optim.SGD,
         arch_optimizer=torch.optim.Adam,
-        loss_criteria=torch.nn.CrossEntropyLoss()
+        loss_criteria=torch.nn.CrossEntropyLoss(),
     ):
         super(ConfigurableOptimizer, self).__init__()
         self.config = config
         self.arch_sampler = arch_sampler
-        self.edge_op_modifier = NoEdgeOpModifer() if edge_op_modifier is None else edge_op_modifier
-        self.comb_op_modifier = NoCombOpModifier() if comb_op_modifier is None else comb_op_modifier
+        self.edge_op_modifier = (
+            NoEdgeOpModifer() if edge_op_modifier is None else edge_op_modifier
+        )
+        self.comb_op_modifier = (
+            NoCombOpModifier() if comb_op_modifier is None else comb_op_modifier
+        )
 
         self.op_optimizer = op_optimizer
         self.arch_optimizer = arch_optimizer
@@ -42,7 +53,11 @@ class ConfigurableOptimizer(MetaOptimizer):
 
     def _init_architectural_weights(self, graph):
         arch_modifiers = [self.arch_sampler, self.comb_op_modifier]
-        arch_weights = [item.get_arch_weights(graph) for item in arch_modifiers if item.get_arch_weights(graph) is not None]
+        arch_weights = [
+            item.get_arch_weights(graph)
+            for item in arch_modifiers
+            if item.get_arch_weights(graph) is not None
+        ]
         arch_weights_flat = [alpha for weights in arch_weights for alpha in weights]
         print(arch_weights_flat)
 
@@ -71,8 +86,8 @@ class ConfigurableOptimizer(MetaOptimizer):
             loss_criterion=self.loss,
             data=train,
             target=target,
-            arch_grad_clip=self.grad_clip, # TODO: Add arch_grad_clip to config
-            arch_optimizer=self.arch_optimizer
+            arch_grad_clip=self.grad_clip,  # TODO: Add arch_grad_clip to config
+            arch_optimizer=self.arch_optimizer,
         )
 
     def _graph_optimizer_step(self, train, target):
@@ -93,13 +108,25 @@ class ConfigurableOptimizer(MetaOptimizer):
             target=target,
             grad_clip=self.grad_clip,
             optimizer=self.op_optimizer,
-            arch_grad_clip=self.grad_clip, # TODO: Add arch_grad_clip to config
-            arch_optimizer=self.arch_optimizer
+            arch_grad_clip=self.grad_clip,  # TODO: Add arch_grad_clip to config
+            arch_optimizer=self.arch_optimizer,
         )
 
-    def _optimizer_step(self, graph, loss_criterion, data, target, grad_clip=None, arch_grad_clip=None, optimizer=None, arch_optimizer=None):
+    def _optimizer_step(
+        self,
+        graph,
+        loss_criterion,
+        data,
+        target,
+        grad_clip=None,
+        arch_grad_clip=None,
+        optimizer=None,
+        arch_optimizer=None,
+    ):
 
-        assert not (optimizer is None and arch_optimizer is None), "No optimizers given!"
+        assert not (
+            optimizer is None and arch_optimizer is None
+        ), "No optimizers given!"
 
         # Zero the gradients
         if optimizer is not None:
@@ -139,9 +166,9 @@ class ConfigurableOptimizer(MetaOptimizer):
         if not scope:
             scope = graph.OPTIMIZER_SCOPE
 
-        self.arch_sampler.update_graph(graph, scope) # DARTS, DrNAS, or GDAS
-        self.edge_op_modifier.update_graph(graph, scope) # Partial Connections
-        self.comb_op_modifier.update_graph(graph, scope) # Edge Normalization
+        self.arch_sampler.update_graph(graph, scope)  # DARTS, DrNAS, or GDAS
+        self.edge_op_modifier.update_graph(graph, scope)  # Partial Connections
+        self.comb_op_modifier.update_graph(graph, scope)  # Edge Normalization
 
         graph.parse()
 
@@ -158,7 +185,9 @@ class ConfigurableOptimizer(MetaOptimizer):
 
         if self.arch_sampler.optimization_stratgey == OptimizationStrategy.ALTERNATING:
             step_fn = self.step_alternating
-        elif self.arch_sampler.optimization_strategy == OptimizationStrategy.SIMULTANEOUS:
+        elif (
+            self.arch_sampler.optimization_strategy == OptimizationStrategy.SIMULTANEOUS
+        ):
             step_fn = self.step_simultaneous
 
         return step_fn(data_train, data_val)
@@ -185,7 +214,9 @@ class ConfigurableOptimizer(MetaOptimizer):
         input_train, target_train = data_train
 
         # Update architecture weights
-        logits_train, train_loss = self._simultaneous_optimizer_step(input_train, target_train)
+        logits_train, train_loss = self._simultaneous_optimizer_step(
+            input_train, target_train
+        )
         return logits_train, None, train_loss, None
 
     def new_epoch(self, epoch):
@@ -223,7 +254,6 @@ class ConfigurableOptimizer(MetaOptimizer):
 
         self.arch_sampler.new_epoch()
         super().new_epoch(epoch)
-
 
     def get_final_architecture(self):
         graph = self.graph.clone().unparse()

@@ -1,4 +1,5 @@
 """The weisfeiler lehman kernel :cite:`shervashidze2011weisfeiler`."""
+
 # Author: Ioannis Siglidis <y.siglidis@gmail.com>
 # License: BSD 3 clause
 # (Rather extensively) modified by Xingchen Wan <xwan@robots.ox.ac.uk>
@@ -180,7 +181,7 @@ class WeisfeilerLehman(Kernel):
         else:
             nx = 0
             Gs_ed, L, distinct_values, extras = dict(), dict(), set(), dict()
-            for (idx, x) in enumerate(iter(X)):
+            for idx, x in enumerate(iter(X)):
                 is_iter = isinstance(x, collections.Iterable)
                 if is_iter:
                     x = list(x)
@@ -315,7 +316,7 @@ class WeisfeilerLehman(Kernel):
         base_graph_kernel = {}
 
         K = []
-        for (i, g) in enumerate(generate_graphs(label_count, WL_labels_inverse)):
+        for i, g in enumerate(generate_graphs(label_count, WL_labels_inverse)):
             param = self._params
             # if self._feature_weight is not None:
             # print(self._feature_weight)
@@ -421,7 +422,7 @@ class WeisfeilerLehman(Kernel):
                 nx = 0
                 distinct_values = set()
                 Gs_ed, L = dict(), dict()
-                for (i, x) in enumerate(iter(X)):
+                for i, x in enumerate(iter(X)):
                     is_iter = isinstance(x, collections.Iterable)
                     if is_iter:
                         x = list(x)
@@ -461,7 +462,7 @@ class WeisfeilerLehman(Kernel):
             new_graphs = list()
             for j in range(nx):
                 new_labels = dict()
-                for (k, v) in iteritems(L[j]):
+                for k, v in iteritems(L[j]):
                     if v in self._inv_labels[0]:
                         new_labels[k] = self._inv_labels[0][v]
                     else:
@@ -500,7 +501,7 @@ class WeisfeilerLehman(Kernel):
                 new_graphs = list()
                 for j in range(nx):
                     new_labels = dict()
-                    for (k, v) in iteritems(L_temp[j]):
+                    for k, v in iteritems(L_temp[j]):
                         if v in self._inv_labels[i]:
                             new_labels[k] = self._inv_labels[i][v]
                         else:

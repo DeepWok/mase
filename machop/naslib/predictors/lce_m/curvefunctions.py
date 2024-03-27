@@ -85,7 +85,7 @@ def janoschek(x, a, beta, k, delta):
     """
     http://www.pisces-conservation.com/growthhelp/janoschek.htm
     """
-    return a - (a - beta) * np.exp(-k * x ** delta)
+    return a - (a - beta) * np.exp(-k * x**delta)
 
 
 all_models["janoschek"] = janoschek
@@ -105,8 +105,8 @@ display_name_mapping["ilog2"] = "ilog$_2$"
 
 
 def dr_hill_zero_background(x, theta, eta, kappa):
-    x_eta = x ** eta
-    return (theta * x_eta) / (kappa ** eta + x_eta)
+    x_eta = x**eta
+    return (theta * x_eta) / (kappa**eta + x_eta)
 
 
 all_models["dr_hill_zero_background"] = dr_hill_zero_background
@@ -149,6 +149,7 @@ display_name_mapping["loglog_linear"] = "log log linear"
 
 # Models that we chose not to use in the ensembles/model combinations:
 
+
 # source: http://aclweb.org/anthology//P/P12/P12-1003.pdf
 def exp3(x, c, a, b):
     return c - np.exp(-a * x + b)
@@ -160,7 +161,7 @@ display_name_mapping["exp3"] = "exp$_3$"
 
 
 def exp4(x, c, a, b, alpha):
-    return c - np.exp(-a * (x ** alpha) + b)
+    return c - np.exp(-a * (x**alpha) + b)
 
 
 all_models["exp4"] = exp4
@@ -202,7 +203,7 @@ display_name_mapping["sat_growth"] = "saturated growth rate"
 
 
 def dr_hill(x, alpha, theta, eta, kappa):
-    return alpha + (theta * (x ** eta)) / (kappa ** eta + x ** eta)
+    return alpha + (theta * (x**eta)) / (kappa**eta + x**eta)
 
 
 all_models["dr_hill"] = dr_hill

@@ -16,7 +16,7 @@ from chop.tools.utils import parse_accelerator
 # For nas proxy search
 import numpy as np
 from naslib.search_spaces import NasBench201SearchSpace
-from naslib.utils import get_zc_benchmark_api,get_dataset_api
+from naslib.utils import get_zc_benchmark_api, get_dataset_api
 from naslib.utils import get_train_val_loaders, get_project_root
 from naslib.predictors import ZeroCost
 from naslib.search_spaces.core import Metric
@@ -31,19 +31,17 @@ from torch import optim
 import torch.nn.functional as F
 
 
-
-
 logger = logging.getLogger(__name__)
 ### Function made for nas config
 
-    
+
 def parse_search_config(config):
     """
     Parse search config from a dict or a toml file and do sanity check.
 
     ---
     The search config must consist of two parts: strategy and search_space.
-    """        
+    """
 
     if not isinstance(config, dict):
         search_config = load_config(config)
@@ -52,8 +50,8 @@ def parse_search_config(config):
     strategy_config = search_config["strategy"]
     search_space_config = search_config["search_space"]
     # print(search_config.keys())
-    if strategy_config['setup']['n_trials'] < 1:
-        logger.info('Invalid Number of Trials!')
+    if strategy_config["setup"]["n_trials"] < 1:
+        logger.info("Invalid Number of Trials!")
         exit()
     return strategy_config, search_space_config
 
@@ -81,8 +79,8 @@ def search(
     ### Our contribution here:
     if not isinstance(search_config, dict):
         search_config = load_config(search_config)
-    searchconfig=search_config['search']
-    
+    searchconfig = search_config["search"]
+
     ### End of our contribution
     strategy_config, search_space_config = parse_search_config(search_config)
     save_path.mkdir(parents=True, exist_ok=True)
@@ -95,7 +93,7 @@ def search(
     # set up data module
     data_module.prepare_data()
     data_module.setup()
-    
+
     # construct the search space
     logger.info("Building search space...")
     search_space_cls = get_search_space_cls(search_space_config["name"])

@@ -15,7 +15,10 @@ from naslib.search_spaces.nasbench201.conversions import (
     convert_naslib_to_str,
     convert_op_indices_to_str,
 )
-from naslib.search_spaces.nasbench201.encodings import encode_201, encode_adjacency_one_hot_op_indices
+from naslib.search_spaces.nasbench201.encodings import (
+    encode_201,
+    encode_adjacency_one_hot_op_indices,
+)
 from naslib.utils.encodings import EncodingType
 
 from .primitives import ResNetBasicblock
@@ -96,8 +99,9 @@ class NasBench201SearchSpace(Graph):
         #
 
         # preprocessing
-        self.edges[1, 2].set("op", ops.Stem(C_in=self.in_channels,
-                                            C_out=self.channels[0]))
+        self.edges[1, 2].set(
+            "op", ops.Stem(C_in=self.in_channels, C_out=self.channels[0])
+        )
 
         # stage 1
         for i in range(2, 7):
@@ -105,14 +109,16 @@ class NasBench201SearchSpace(Graph):
 
         # stage 2
         self.edges[7, 8].set(
-            "op", ResNetBasicblock(C_in=self.channels[0], C_out=self.channels[1], stride=2)
+            "op",
+            ResNetBasicblock(C_in=self.channels[0], C_out=self.channels[1], stride=2),
         )
         for i in range(8, 13):
             self.edges[i, i + 1].set("op", cell.copy().set_scope("stage_2"))
 
         # stage 3
         self.edges[13, 14].set(
-            "op", ResNetBasicblock(C_in=self.channels[1], C_out=self.channels[2], stride=2)
+            "op",
+            ResNetBasicblock(C_in=self.channels[1], C_out=self.channels[2], stride=2),
         )
         for i in range(14, 19):
             self.edges[i, i + 1].set("op", cell.copy().set_scope("stage_3"))
@@ -141,13 +147,14 @@ class NasBench201SearchSpace(Graph):
             )
 
     def query(
-            self,
-            metric: Metric,
-            dataset: str,
-            path: str = None,
-            epoch: int = -1,
-            full_lc: bool = False,
-            dataset_api: dict = None) -> float:
+        self,
+        metric: Metric,
+        dataset: str,
+        path: str = None,
+        epoch: int = -1,
+        full_lc: bool = False,
+        dataset_api: dict = None,
+    ) -> float:
         """
         Query results from nasbench 201
         """
@@ -159,7 +166,7 @@ class NasBench201SearchSpace(Graph):
                 "cifar10",
                 "cifar100",
                 "ImageNet16-120",
-                "ninapro"
+                "ninapro",
             ], "Unknown dataset: {}".format(dataset)
         if dataset_api is None:
             raise NotImplementedError("Must pass in dataset_api to query NAS-Bench-201")
@@ -189,7 +196,13 @@ class NasBench201SearchSpace(Graph):
             # return all data
             return dataset_api["nb201_data"][arch_str]
 
-        if dataset not in ["cifar10", "cifar10-valid", "cifar100", "ImageNet16-120", "ninapro"]:
+        if dataset not in [
+            "cifar10",
+            "cifar10-valid",
+            "cifar100",
+            "ImageNet16-120",
+            "ninapro",
+        ]:
             raise NotImplementedError("Invalid dataset")
 
         if dataset in ["cifar10", "cifar10-valid"]:
@@ -225,7 +238,9 @@ class NasBench201SearchSpace(Graph):
 
     def set_op_indices(self, op_indices: list) -> None:
         if self.instantiate_model == True:
-            assert self.op_indices is None, f"An architecture has already been assigned to this instance of {self.__class__.__name__}. Instantiate a new instance to be able to sample a new model or set a new architecture."
+            assert (
+                self.op_indices is None
+            ), f"An architecture has already been assigned to this instance of {self.__class__.__name__}. Instantiate a new instance to be able to sample a new model or set a new architecture."
             convert_op_indices_to_naslib(op_indices, self)
 
         self.op_indices = op_indices
@@ -234,7 +249,9 @@ class NasBench201SearchSpace(Graph):
         self.set_op_indices(op_indices)
 
     def sample_random_labeled_architecture(self) -> None:
-        assert self.labeled_archs is not None, "Labeled archs not provided to sample from"
+        assert (
+            self.labeled_archs is not None
+        ), "Labeled archs not provided to sample from"
 
         op_indices = random.choice(self.labeled_archs)
         print("debugging...")
@@ -244,17 +261,26 @@ class NasBench201SearchSpace(Graph):
             self.labeled_archs.pop(self.labeled_archs.index(op_indices))
 
         self.set_spec(op_indices)
-    def sample_architecture(self,dataset_api: dict = None, load_labeled: bool = False, op_indices:list=None) -> None:
+
+    def sample_architecture(
+        self,
+        dataset_api: dict = None,
+        load_labeled: bool = False,
+        op_indices: list = None,
+    ) -> None:
         if load_labeled == True:
             return self.sample_random_labeled_architecture()
+
         def is_valid_arch(op_indices: list) -> bool:
-            return not ((op_indices[0] == op_indices[1] == op_indices[2] == 1) or
-                        (op_indices[2] == op_indices[4] == op_indices[5] == 1))
+            return not (
+                (op_indices[0] == op_indices[1] == op_indices[2] == 1)
+                or (op_indices[2] == op_indices[4] == op_indices[5] == 1)
+            )
+
         # print(op_indices)
         # breakpoint()
         op_indices = [int(x) for x in op_indices]
-        
-        
+
         while True:
             if not is_valid_arch(op_indices):
                 op_indices = np.random.randint(NUM_OPS, size=(NUM_EDGES)).tolist()
@@ -262,8 +288,10 @@ class NasBench201SearchSpace(Graph):
             self.set_op_indices(op_indices)
             break
         self.compact = self.get_op_indices()
-        
-    def sample_random_architecture(self, dataset_api: dict = None, load_labeled: bool = False) -> None:
+
+    def sample_random_architecture(
+        self, dataset_api: dict = None, load_labeled: bool = False
+    ) -> None:
         """
         This will sample a random architecture and update the edges in the
         naslib object accordingly.
@@ -273,8 +301,10 @@ class NasBench201SearchSpace(Graph):
             return self.sample_random_labeled_architecture()
 
         def is_valid_arch(op_indices: list) -> bool:
-            return not ((op_indices[0] == op_indices[1] == op_indices[2] == 1) or
-                        (op_indices[2] == op_indices[4] == op_indices[5] == 1))
+            return not (
+                (op_indices[0] == op_indices[1] == op_indices[2] == 1)
+                or (op_indices[2] == op_indices[4] == op_indices[5] == 1)
+            )
 
         while True:
             op_indices = np.random.randint(NUM_OPS, size=(NUM_EDGES)).tolist()
@@ -352,8 +382,12 @@ def _set_ops(edge, C: int) -> None:
         [
             ops.Identity(),
             ops.Zero(stride=1),
-            ops.ReLUConvBN(C, C, kernel_size=3, affine=False, track_running_stats=False),
-            ops.ReLUConvBN(C, C, kernel_size=1, affine=False, track_running_stats=False),
+            ops.ReLUConvBN(
+                C, C, kernel_size=3, affine=False, track_running_stats=False
+            ),
+            ops.ReLUConvBN(
+                C, C, kernel_size=1, affine=False, track_running_stats=False
+            ),
             ops.AvgPool1x1(kernel_size=3, stride=1, affine=False),
         ],
     )

@@ -54,9 +54,9 @@ class DrNASOptimizer(DARTSOptimizer):
         arch_learning_rate: float = 0.0003,
         arch_weight_decay: float = 0.001,
         epochs: int = 50,
-        op_optimizer: str = 'SGD',
-        arch_optimizer: str = 'Adam',
-        loss_criteria: str = 'CrossEntropyLoss',
+        op_optimizer: str = "SGD",
+        arch_optimizer: str = "Adam",
+        loss_criteria: str = "CrossEntropyLoss",
         **kwargs
     ):
         """
@@ -65,7 +65,18 @@ class DrNASOptimizer(DARTSOptimizer):
         Args:
 
         """
-        super().__init__(learning_rate, momentum, weight_decay, grad_clip, unrolled, arch_learning_rate, arch_weight_decay, op_optimizer, arch_optimizer, loss_criteria)
+        super().__init__(
+            learning_rate,
+            momentum,
+            weight_decay,
+            grad_clip,
+            unrolled,
+            arch_learning_rate,
+            arch_weight_decay,
+            op_optimizer,
+            arch_optimizer,
+            loss_criteria,
+        )
         self.reg_type = "kl"
         self.reg_scale = 1e-3
         # self.reg_scale = config.reg_scale
@@ -190,8 +201,5 @@ class DrNASMixedOp(MixedOp):
         return weights
 
     def apply_weights(self, x, weights):
-        weighted_sum = sum(
-            w * op(x, None)
-            for w, op in zip(weights, self.primitives)
-        )
+        weighted_sum = sum(w * op(x, None) for w, op in zip(weights, self.primitives))
         return weighted_sum

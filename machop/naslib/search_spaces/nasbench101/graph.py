@@ -7,8 +7,11 @@ from typing import *
 
 from naslib.search_spaces.core.graph import Graph
 from naslib.search_spaces.core.query_metrics import Metric
-from naslib.search_spaces.nasbench101.conversions import convert_spec_to_model, convert_spec_to_tuple, \
-    convert_tuple_to_spec
+from naslib.search_spaces.nasbench101.conversions import (
+    convert_spec_to_model,
+    convert_spec_to_tuple,
+    convert_tuple_to_spec,
+)
 from naslib.search_spaces.nasbench101.encodings import encode_101, encode_101_spec
 from naslib.utils.encodings import EncodingType
 from naslib.utils import get_dataset_api
@@ -46,11 +49,11 @@ class NasBench101SearchSpace(Graph):
     def convert_to_cell(self, matrix: np.ndarray, ops: list) -> dict:
 
         if len(matrix) < 7:
-            # the nasbench spec can have an adjacency matrix of n x n for n<7, 
+            # the nasbench spec can have an adjacency matrix of n x n for n<7,
             # but in the nasbench api, it is always 7x7 (possibly containing blank rows)
             # so this method will add a blank row/column
 
-            new_matrix = np.zeros((7, 7), dtype='int8')
+            new_matrix = np.zeros((7, 7), dtype="int8")
             new_ops = []
             n = matrix.shape[0]
             for i in range(7):
@@ -64,27 +67,23 @@ class NasBench101SearchSpace(Graph):
                 if i < n - 1:
                     new_ops.append(ops[i])
                 elif i < 6:
-                    new_ops.append('conv3x3-bn-relu')
+                    new_ops.append("conv3x3-bn-relu")
                 else:
-                    new_ops.append('output')
-            return {
-                'matrix': new_matrix,
-                'ops': new_ops
-            }
+                    new_ops.append("output")
+            return {"matrix": new_matrix, "ops": new_ops}
 
         else:
-            return {
-                'matrix': matrix,
-                'ops': ops
-            }
+            return {"matrix": matrix, "ops": ops}
 
-    def query(self,
-              metric: Metric,
-              dataset: str = "cifar10",
-              path: str = None,
-              epoch: int = -1,
-              full_lc: bool = False,
-              dataset_api: dict = None) -> Union[list, float]:
+    def query(
+        self,
+        metric: Metric,
+        dataset: str = "cifar10",
+        path: str = None,
+        epoch: int = -1,
+        full_lc: bool = False,
+        dataset_api: dict = None,
+    ) -> Union[list, float]:
         """
         Query results from nasbench 101
         """
@@ -154,28 +153,35 @@ class NasBench101SearchSpace(Graph):
         # TODO: convert the naslib object to this spec
         # convert_spec_to_naslib(spec, self)
         # assert self.spec is None, f"An architecture has already been assigned to this instance of {self.__class__.__name__}. Instantiate a new instance to be able to sample a new model or set a new architecture."
-        assert isinstance(spec, str) or isinstance(spec, tuple) or isinstance(spec,
-                                                                              dict), "The spec has to be a string (hash of the architecture), a dict with the matrix and operations, or a tuple (NASLib representation)."
+        assert (
+            isinstance(spec, str) or isinstance(spec, tuple) or isinstance(spec, dict)
+        ), "The spec has to be a string (hash of the architecture), a dict with the matrix and operations, or a tuple (NASLib representation)."
 
         if isinstance(spec, str):
             """
             TODO: I couldn't find a better solution here.
             We need the arch iterator to return strings because the matrix/ops
-            representation is too large for 400k elements. But having the `spec' be 
-            strings would require passing in dataset_api for all of this search 
-            space's methods. So the solution is to optionally pass in the dataset 
+            representation is too large for 400k elements. But having the `spec' be
+            strings would require passing in dataset_api for all of this search
+            space's methods. So the solution is to optionally pass in the dataset
             api in set_spec and check whether `spec' is a string or a dict.
             """
-            assert dataset_api is not None, "To set the hash string as the spec, the NAS-Bench-101 API must be passed as the dataset_api argument"
+            assert (
+                dataset_api is not None
+            ), "To set the hash string as the spec, the NAS-Bench-101 API must be passed as the dataset_api argument"
             fix, comp = dataset_api["nb101_data"].get_metrics_from_hash(spec)
-            spec = self.convert_to_cell(fix['module_adjacency'], fix['module_operations'])
+            spec = self.convert_to_cell(
+                fix["module_adjacency"], fix["module_operations"]
+            )
         elif isinstance(spec, tuple):
             spec = convert_tuple_to_spec(spec)
 
         if self.instantiate_model:
-            assert self.spec is None, f"An architecture has already been assigned to this instance of {self.__class__.__name__}. Instantiate a new instance to be able to sample a new model or set a new architecture."
+            assert (
+                self.spec is None
+            ), f"An architecture has already been assigned to this instance of {self.__class__.__name__}. Instantiate a new instance to be able to sample a new model or set a new architecture."
             model = convert_spec_to_model(spec)
-            self.edges[1, 2].set('op', model)
+            self.edges[1, 2].set("op", model)
 
         self.spec = spec
 
@@ -183,7 +189,9 @@ class NasBench101SearchSpace(Graph):
         return dataset_api["nb101_data"].hash_iterator()
 
     def sample_random_labeled_architecture(self) -> None:
-        assert self.labeled_archs is not None, "Labeled archs not provided to sample from"
+        assert (
+            self.labeled_archs is not None
+        ), "Labeled archs not provided to sample from"
 
         while True:
             op_indices = random.choice(self.labeled_archs)
@@ -195,7 +203,9 @@ class NasBench101SearchSpace(Graph):
 
         self.set_spec(op_indices)
 
-    def sample_random_architecture(self, dataset_api: dict = None, load_labeled: bool = False) -> None:
+    def sample_random_architecture(
+        self, dataset_api: dict = None, load_labeled: bool = False
+    ) -> None:
         """
         This will sample a random architecture and update the edges in the
         naslib object accordingly.
@@ -227,7 +237,7 @@ class NasBench101SearchSpace(Graph):
         """
         parent_spec = parent.get_spec()
         spec = copy.deepcopy(parent_spec)
-        matrix, ops = spec['matrix'], spec['ops']
+        matrix, ops = spec["matrix"], spec["ops"]
         for _ in range(edits):
             while True:
                 new_matrix = copy.deepcopy(matrix)
@@ -240,11 +250,11 @@ class NasBench101SearchSpace(Graph):
                     if np.random.random() < 1 / len(OPS):
                         available = [op for op in OPS if op != new_ops[ind]]
                         new_ops[ind] = np.random.choice(available)
-                new_spec = dataset_api['api'].ModelSpec(new_matrix, new_ops)
-                if dataset_api['nb101_data'].is_valid(new_spec):
+                new_spec = dataset_api["api"].ModelSpec(new_matrix, new_ops)
+                if dataset_api["nb101_data"].is_valid(new_spec):
                     break
 
-        self.set_spec({'matrix': new_matrix, 'ops': new_ops})
+        self.set_spec({"matrix": new_matrix, "ops": new_ops})
 
     def get_nbhd(self, dataset_api: dict) -> list:
         # return all neighbors of the architecture
@@ -304,7 +314,7 @@ class NasBench101SearchSpace(Graph):
             # print(f'Output tensor shape: {output_t.shape}')
             outputs.append(output_t)
 
-        model = self.edges[1, 2]['op'].model
+        model = self.edges[1, 2]["op"].model
         model.layers[-1].register_forward_hook(hook_fn)
 
         self.forward(x, None)
@@ -357,8 +367,8 @@ def is_valid_edge(matrix: np.ndarray, edge: tuple) -> bool:
     return edge in edges
 
 
-if __name__ == '__main__':
-    dataset_api = get_dataset_api('nasbench101', None)
+if __name__ == "__main__":
+    dataset_api = get_dataset_api("nasbench101", None)
     search_space = NasBench101SearchSpace()
 
     for i in range(1):

@@ -49,9 +49,9 @@ class DARTSOptimizer(MetaOptimizer):
         unrolled: bool = False,
         arch_learning_rate: float = 0.0003,
         arch_weight_decay: float = 0.001,
-        op_optimizer: str = 'SGD',
-        arch_optimizer: str = 'Adam',
-        loss_criteria: str = 'CrossEntropyLoss',
+        op_optimizer: str = "SGD",
+        arch_optimizer: str = "Adam",
+        loss_criteria: str = "CrossEntropyLoss",
         **kwargs,
     ):
         """
@@ -102,7 +102,7 @@ class DARTSOptimizer(MetaOptimizer):
             self.architectural_weights.append(alpha)
 
         graph.parse()
-        #logger.info("Parsed graph:\n" + graph.modules_str())
+        # logger.info("Parsed graph:\n" + graph.modules_str())
 
         # Init optimizers
         self.arch_optimizer = create_optimizer(
@@ -110,7 +110,7 @@ class DARTSOptimizer(MetaOptimizer):
             params=self.architectural_weights.parameters(),
             lr=self.arch_learning_rate,
             weight_decay=self.arch_weight_decay,
-            betas=(0.5, 0.999)
+            betas=(0.5, 0.999),
         )
 
         self.op_optimizer = create_optimizer(
@@ -290,13 +290,12 @@ class DARTSMixedOp(MixedOp):
 
     def __init__(self, primitives):
         super().__init__(primitives)
-    
+
     def get_weights(self, edge_data):
         return edge_data.alpha
-    
+
     def process_weights(self, weights):
         return torch.softmax(weights, dim=-1)
 
-    def apply_weights(self, x, weights):        
+    def apply_weights(self, x, weights):
         return sum(w * op(x, None) for w, op in zip(weights, self.primitives))
-

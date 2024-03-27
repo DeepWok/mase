@@ -20,7 +20,9 @@ class ZeroCostPredictorEvaluator(object):
     Evaluates a predictor.
     """
 
-    def __init__(self, predictor, zc_api=None, use_zc_api=None, config=None, log_results=True):
+    def __init__(
+        self, predictor, zc_api=None, use_zc_api=None, config=None, log_results=True
+    ):
         self.predictor = predictor
         self.config = config
         self.test_size = config.test_size
@@ -47,16 +49,17 @@ class ZeroCostPredictorEvaluator(object):
         self.dataset_api = dataset_api
         if not self.use_zc_api:
             self.train_loader, _, _, _, _ = utils.get_train_val_loaders(
-                self.config, mode="train")
+                self.config, mode="train"
+            )
         else:
             self.search_space.instantiate_model = False
 
         if self.use_zc_api:
-            self.search_space.instantiate_model = False    
+            self.search_space.instantiate_model = False
         else:
             self.train_loader, _, _, _, _ = utils.get_train_val_loaders(
-                self.config, mode="train")
-
+                self.config, mode="train"
+            )
 
     def get_full_arch_info(self, arch):
         """
@@ -65,12 +68,10 @@ class ZeroCostPredictorEvaluator(object):
         """
         info_dict = {}
         accuracy = arch.query(
-            metric=self.metric, dataset=self.dataset,
-            dataset_api=self.dataset_api
+            metric=self.metric, dataset=self.dataset, dataset_api=self.dataset_api
         )
         train_time = arch.query(
-            metric=Metric.TRAIN_TIME, dataset=self.dataset,
-            dataset_api=self.dataset_api
+            metric=Metric.TRAIN_TIME, dataset=self.dataset, dataset_api=self.dataset_api
         )
         return accuracy, train_time, info_dict
 
@@ -85,14 +86,13 @@ class ZeroCostPredictorEvaluator(object):
             if i >= size:
                 break
 
-            arch = x['arch']
-            acc = x['accuracy']
+            arch = x["arch"]
+            acc = x["accuracy"]
 
             xdata.append(arch)
             ydata.append(acc)
 
         return [xdata, ydata, None, None]
-
 
     def load_dataset(self, load_labeled=False, data_size=10):
         """
@@ -112,13 +112,17 @@ class ZeroCostPredictorEvaluator(object):
         train_times = []
         while len(xdata) < data_size:
             arch = self.search_space.clone()
-            arch.sample_random_architecture(dataset_api=self.dataset_api, load_labeled=True)
-                
+            arch.sample_random_architecture(
+                dataset_api=self.dataset_api, load_labeled=True
+            )
+
             arch_hash = arch.get_hash()
             if self.use_zc_api and str(arch_hash) in self.zc_api:
-                accuracy = self.zc_api[str(arch_hash)]['val_accuracy']
+                accuracy = self.zc_api[str(arch_hash)]["val_accuracy"]
             else:
-                accuracy = arch.query(self.metric,self.dataset, dataset_api=self.dataset_api)
+                accuracy = arch.query(
+                    self.metric, self.dataset, dataset_api=self.dataset_api
+                )
             # accuracy, train_time, info_dict = self.get_full_arch_info(graph)
 
             xdata.append(arch_hash)
@@ -144,14 +148,16 @@ class ZeroCostPredictorEvaluator(object):
         # and then query the predictor for the performance of that
         for arch_hash in xtest:
             if self.use_zc_api and str(arch_hash) in self.zc_api:
-                pred = zc_api[str(arch_hash)][self.predictor.method_type]['score']
+                pred = zc_api[str(arch_hash)][self.predictor.method_type]["score"]
             else:
                 arch = self.search_space.clone()
                 arch.set_spec(arch_hash, self.dataset_api)
                 arch.parse()
                 self.predictor.train_loader = copy.deepcopy(self.train_loader)
-                pred = self.predictor.query(arch, dataloader=self.predictor.train_loader)
-            
+                pred = self.predictor.query(
+                    arch, dataloader=self.predictor.train_loader
+                )
+
             if float("-inf") == pred:
                 pred = -1e9
             elif float("inf") == pred:
@@ -186,15 +192,16 @@ class ZeroCostPredictorEvaluator(object):
         logger.info(print_string)
         self.results.append(results_dict)
 
-
     def load_test_data(self):
         if self.test_data_file is not None:
-            logger.info('Loading the test set from file')
+            logger.info("Loading the test set from file")
             test_data = self.load_dataset_from_file(self.test_data_file, self.test_size)
             if self.use_zc_api:
-                logger.warning("Using test data from file is currently not supported without zc api")
+                logger.warning(
+                    "Using test data from file is currently not supported without zc api"
+                )
         else:
-            logger.info('Sampling from search space...')
+            logger.info("Sampling from search space...")
             test_data = self.load_dataset(
                 load_labeled=self.load_labeled, data_size=self.test_size
             )
@@ -228,7 +235,7 @@ class ZeroCostPredictorEvaluator(object):
             json.dump(self.results, file, separators=(",", ":"))
 
     def get_arch_as_string(self, arch):
-        if self.search_space.get_type() == 'nasbench301':
+        if self.search_space.get_type() == "nasbench301":
             str_arch = str(list((list(arch[0]), list(arch[1]))))
         else:
             str_arch = str(arch)

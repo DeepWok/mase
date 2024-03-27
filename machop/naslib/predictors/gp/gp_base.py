@@ -58,10 +58,7 @@ class BaseGPModel(Predictor):
         self.std = np.std(ytrain)
         if self.encoding_type is not None:
             xtrain = np.array(
-                [
-                    arch.encode(encoding_type=self.encoding_type)
-                    for arch in xtrain
-                ]
+                [arch.encode(encoding_type=self.encoding_type) for arch in xtrain]
             )
         if self.zc:
             mean, std = -10000000.0, 150000000.0
@@ -90,10 +87,7 @@ class BaseGPModel(Predictor):
     def query(self, xtest, info=None):
         if self.encoding_type is not None:
             xtest = np.array(
-                [
-                    arch.encode(encoding_type=self.encoding_type)
-                    for arch in xtest
-                ]
+                [arch.encode(encoding_type=self.encoding_type) for arch in xtest]
             )
 
         if self.zc:

@@ -232,8 +232,5 @@ class DrNASMixedOp(MixedOp):
         return weights
 
     def apply_weights(self, x, weights):
-        weighted_sum = sum(
-            w * op(x, None)
-            for w, op in zip(weights, self.primitives)
-        )
+        weighted_sum = sum(w * op(x, None) for w, op in zip(weights, self.primitives))
         return weighted_sum

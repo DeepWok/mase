@@ -74,7 +74,13 @@ class Trainer(object):
             }
         )
 
-    def search(self, resume_from="", summary_writer=None, after_epoch: Callable[[int], None]=None, report_incumbent=True):
+    def search(
+        self,
+        resume_from="",
+        summary_writer=None,
+        after_epoch: Callable[[int], None] = None,
+        report_incumbent=True,
+    ):
         """
         Start the architecture search.
 
@@ -115,15 +121,25 @@ class Trainer(object):
 
             if self.optimizer.using_step_function:
                 for step, data_train in enumerate(self.train_queue):
-                    
+
                     if self.config.save_arch_weights is True:
                         if len(arch_weights) == 0:
                             for edge_weights in self.optimizer.architectural_weights:
-                                arch_weights.append(torch.unsqueeze(edge_weights.detach(), dim=0))
+                                arch_weights.append(
+                                    torch.unsqueeze(edge_weights.detach(), dim=0)
+                                )
                         else:
-                            for i, edge_weights in enumerate(self.optimizer.architectural_weights):
-                                arch_weights[i] = torch.cat((arch_weights[i], torch.unsqueeze(edge_weights.detach(), dim=0)), dim=0)
-                    
+                            for i, edge_weights in enumerate(
+                                self.optimizer.architectural_weights
+                            ):
+                                arch_weights[i] = torch.cat(
+                                    (
+                                        arch_weights[i],
+                                        torch.unsqueeze(edge_weights.detach(), dim=0),
+                                    ),
+                                    dim=0,
+                                )
+
                     data_train = (
                         data_train[0].to(self.device),
                         data_train[1].to(self.device, non_blocking=True),
@@ -194,13 +210,13 @@ class Trainer(object):
 
             anytime_results = self.optimizer.test_statistics()
             # if anytime_results:
-                # record anytime performance
-                # self.search_trajectory.arch_eval.append(anytime_results)
-                # log_every_n_seconds(
-                #     logging.INFO,
-                #     "Epoch {}, Anytime results: {}".format(e, anytime_results),
-                #     n=5,
-                # )
+            # record anytime performance
+            # self.search_trajectory.arch_eval.append(anytime_results)
+            # log_every_n_seconds(
+            #     logging.INFO,
+            #     "Epoch {}, Anytime results: {}".format(e, anytime_results),
+            #     n=5,
+            # )
 
             self._log_to_json()
 
@@ -209,10 +225,15 @@ class Trainer(object):
             if after_epoch is not None:
                 after_epoch(e)
 
-        logger.info(f"Saving architectural weight tensors: {self.config.save}/arch_weights.pt")
+        logger.info(
+            f"Saving architectural weight tensors: {self.config.save}/arch_weights.pt"
+        )
         if hasattr(self.config, "save_arch_weights") and self.config.save_arch_weights:
-            torch.save(arch_weights, f'{self.config.save}/arch_weights.pt')
-            if hasattr(self.config, "plot_arch_weights") and self.config.plot_arch_weights:
+            torch.save(arch_weights, f"{self.config.save}/arch_weights.pt")
+            if (
+                hasattr(self.config, "plot_arch_weights")
+                and self.config.plot_arch_weights
+            ):
                 plot_architectural_weights(self.config, self.optimizer)
 
         self.optimizer.after_training()
@@ -268,12 +289,12 @@ class Trainer(object):
 
     def evaluate(
         self,
-        retrain:bool=True,
-        search_model:str="",
-        resume_from:str="",
-        best_arch:Graph=None,
-        dataset_api:object=None,
-        metric:Metric=None,
+        retrain: bool = True,
+        search_model: str = "",
+        resume_from: str = "",
+        best_arch: Graph = None,
+        dataset_api: object = None,
+        metric: Metric = None,
     ):
         """
         Evaluate the final architecture as given from the optimizer.
@@ -521,12 +542,12 @@ class Trainer(object):
         )
 
         if writer is not None:
-            writer.add_scalar('Train accuracy (top 1)', self.train_top1.avg, epoch)
-            writer.add_scalar('Train accuracy (top 5)', self.train_top5.avg, epoch)
-            writer.add_scalar('Train loss', self.train_loss.avg, epoch)
-            writer.add_scalar('Validation accuracy (top 1)', self.val_top1.avg, epoch)
-            writer.add_scalar('Validation accuracy (top 5)', self.val_top5.avg, epoch)
-            writer.add_scalar('Validation loss', self.val_loss.avg, epoch)
+            writer.add_scalar("Train accuracy (top 1)", self.train_top1.avg, epoch)
+            writer.add_scalar("Train accuracy (top 5)", self.train_top5.avg, epoch)
+            writer.add_scalar("Train loss", self.train_loss.avg, epoch)
+            writer.add_scalar("Validation accuracy (top 1)", self.val_top1.avg, epoch)
+            writer.add_scalar("Validation accuracy (top 5)", self.val_top5.avg, epoch)
+            writer.add_scalar("Validation loss", self.val_loss.avg, epoch)
 
         self.train_top1.reset()
         self.train_top5.reset()
@@ -586,18 +607,18 @@ class Trainer(object):
 
         checkpointer = utils.Checkpointer(
             model=checkpointables.pop("model"),
-            save_dir=self.config.save + "/search"
-            if search
-            else self.config.save + "/eval",
+            save_dir=(
+                self.config.save + "/search" if search else self.config.save + "/eval"
+            ),
             # **checkpointables #NOTE: this is throwing an Error
         )
 
         self.periodic_checkpointer = PeriodicCheckpointer(
             checkpointer,
             period=period,
-            max_iter=self.config.search.epochs
-            if search
-            else self.config.evaluation.epochs,
+            max_iter=(
+                self.config.search.epochs if search else self.config.evaluation.epochs
+            ),
         )
 
         if resume_from:

@@ -63,5 +63,6 @@ def load_all():
     from . import l2_norm
     from . import nwot
 
+
 # TODO: should we do that by default?
 load_all()

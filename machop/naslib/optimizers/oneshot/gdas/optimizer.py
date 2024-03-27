@@ -25,9 +25,9 @@ class GDASOptimizer(DARTSOptimizer):
         unrolled: bool = False,
         arch_learning_rate: float = 0.0003,
         arch_weight_decay: float = 0.001,
-        op_optimizer: str = 'SGD',
-        arch_optimizer: str = 'Adam',
-        loss_criteria: str = 'CrossEntropyLoss',
+        op_optimizer: str = "SGD",
+        arch_optimizer: str = "Adam",
+        loss_criteria: str = "CrossEntropyLoss",
         epochs: int = 50,
         tau_min: float = 0.1,
         tau_max: float = 10.0,
@@ -45,7 +45,18 @@ class GDASOptimizer(DARTSOptimizer):
             loss_criteria: The loss.
             grad_clip (float): Clipping of the gradients. Default None.
         """
-        super().__init__(learning_rate, momentum, weight_decay, grad_clip, unrolled, arch_learning_rate, arch_weight_decay, op_optimizer, arch_optimizer, loss_criteria)
+        super().__init__(
+            learning_rate,
+            momentum,
+            weight_decay,
+            grad_clip,
+            unrolled,
+            arch_learning_rate,
+            arch_weight_decay,
+            op_optimizer,
+            arch_optimizer,
+            loss_criteria,
+        )
 
         self.epochs = epochs
         self.tau_max = tau_max

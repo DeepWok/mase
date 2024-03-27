@@ -61,6 +61,7 @@ lr = 0.001
 optimizer = "adam"
 grad_bound = 5.0
 
+
 # helper to move object to cuda when available
 def move_to_cuda(tensor):
     if torch.cuda.is_available():
@@ -246,6 +247,7 @@ class Encoder(nn.Module):
 
 SOS_ID = 0
 EOS_ID = 0
+
 
 # attention module
 class Attention(nn.Module):

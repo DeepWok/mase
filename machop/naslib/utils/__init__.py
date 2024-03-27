@@ -31,7 +31,11 @@ from pytorch_msssim import ssim, ms_ssim, SSIM, MS_SSIM
 # Expose apis
 from .taskonomy_dataset import get_datasets
 
-from .get_dataset_api import get_dataset_api, get_zc_benchmark_api, load_sampled_architectures
+from .get_dataset_api import (
+    get_dataset_api,
+    get_zc_benchmark_api,
+    load_sampled_architectures,
+)
 from .dataset import get_train_val_loaders
 from .zerocost import p_at_tb_k, minmax_n_at_k, compute_scores
 
@@ -71,8 +75,9 @@ def default_argument_parser():
     parser = argparse.ArgumentParser(
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
-    parser.add_argument("--config-file", default=None,
-                        metavar="FILE", help="path to config file")
+    parser.add_argument(
+        "--config-file", default=None, metavar="FILE", help="path to config file"
+    )
     parser.add_argument(
         "--eval-only", action="store_true", help="perform evaluation only"
     )
@@ -106,9 +111,9 @@ def default_argument_parser():
         "--multiprocessing-distributed",
         action="store_true",
         help="Use multi-processing distributed training to launch "
-             "N processes per node, which has N GPUs. This is the "
-             "fastest way to use PyTorch for either single node or "
-             "multi node data parallel training",
+        "N processes per node, which has N GPUs. This is the "
+        "fastest way to use PyTorch for either single node or "
+        "multi node data parallel training",
     )
     parser.add_argument(
         "opts",
@@ -116,8 +121,12 @@ def default_argument_parser():
         default=None,
         nargs=argparse.REMAINDER,
     )
-    parser.add_argument("--datapath", default=None, metavar="FILE",
-                        help="Path to the folder with train/test data folders")
+    parser.add_argument(
+        "--datapath",
+        default=None,
+        metavar="FILE",
+        help="Path to the folder with train/test data folders",
+    )
     return parser
 
 
@@ -157,9 +166,7 @@ def load_default_config(config_type="nas"):
     }
 
     config_path_full = os.path.join(
-        *(
-            [get_project_root()] + config_paths[config_type].split('/')
-        )
+        *([get_project_root()] + config_paths[config_type].split("/"))
     )
 
     return load_config(config_path_full)
@@ -201,8 +208,7 @@ def get_config_from_args(args=None, config_type="nas"):
                 arg1, arg2 = arg.split(".")
                 config[arg1][arg2] = type(config[arg1][arg2])(value)
             else:
-                config[arg] = type(config[arg])(
-                    value) if arg in config else eval(value)
+                config[arg] = type(config[arg])(value) if arg in config else eval(value)
 
         config.eval_only = args.eval_only
         config.resume = args.resume
@@ -226,11 +232,15 @@ def get_config_from_args(args=None, config_type="nas"):
         config.evaluation.dist_backend = args.dist_backend
         config.evaluation.multiprocessing_distributed = args.multiprocessing_distributed
         config.save = "{}/{}/{}/{}/{}".format(
-            config.out_dir, config.search_space, config.dataset, config.optimizer, config.seed
+            config.out_dir,
+            config.search_space,
+            config.dataset,
+            config.optimizer,
+            config.seed,
         )
 
     elif config_type == "bbo-bs":
-        if not hasattr(config, 'evaluation'):
+        if not hasattr(config, "evaluation"):
             config.evaluation = CfgNode()
         config.search.seed = config.seed
         config.evaluation.world_size = args.world_size
@@ -243,7 +253,12 @@ def get_config_from_args(args=None, config_type="nas"):
         if not hasattr(config, "config_id"):  # FIXME
             config.config_id = 0
         config.save = "{}/{}/{}/{}/config_{}/{}".format(
-            config.out_dir, config.search_space, config.dataset, config.optimizer, config.config_id, config.seed
+            config.out_dir,
+            config.search_space,
+            config.dataset,
+            config.optimizer,
+            config.config_id,
+            config.seed,
         )
 
     elif config_type == "predictor":
@@ -300,14 +315,14 @@ def get_config_from_args(args=None, config_type="nas"):
             config.seed,
         )
     elif config_type == "zc":
-        if not hasattr(config, 'search'):
+        if not hasattr(config, "search"):
             config.search = copy.deepcopy(config)
-        if not hasattr(config, 'evaluation'):
+        if not hasattr(config, "evaluation"):
             config.evaluation = CfgNode()
 
         if args.datapath is not None:
-            config.train_data_file = os.path.join(args.datapath, 'train.json')
-            config.test_data_file = os.path.join(args.datapath, 'test.json')
+            config.train_data_file = os.path.join(args.datapath, "train.json")
+            config.test_data_file = os.path.join(args.datapath, "test.json")
         else:
             config.train_data_file = None
             config.test_data_file = None
@@ -445,7 +460,7 @@ def create_exp_dir(path):
 
 
 def cross_validation(
-        xtrain, ytrain, predictor, split_indices, score_metric="kendalltau"
+    xtrain, ytrain, predictor, split_indices, score_metric="kendalltau"
 ):
     validation_score = []
 
@@ -468,18 +483,15 @@ def cross_validation(
         elif score_metric == "mae":
             score_i = np.mean(abs(ypred_i - yval_i))
         elif score_metric == "rmse":
-            score_i = metrics.mean_squared_error(
-                yval_i, ypred_i, squared=False)
+            score_i = metrics.mean_squared_error(yval_i, ypred_i, squared=False)
         elif score_metric == "spearman":
             score_i = stats.spearmanr(yval_i, ypred_i)[0]
         elif score_metric == "kendalltau":
             score_i = stats.kendalltau(yval_i, ypred_i)[0]
         elif score_metric == "kt_2dec":
-            score_i = stats.kendalltau(
-                yval_i, np.round(ypred_i, decimals=2))[0]
+            score_i = stats.kendalltau(yval_i, np.round(ypred_i, decimals=2))[0]
         elif score_metric == "kt_1dec":
-            score_i = stats.kendalltau(
-                yval_i, np.round(ypred_i, decimals=1))[0]
+            score_i = stats.kendalltau(yval_i, np.round(ypred_i, decimals=1))[0]
 
         validation_score.append(score_i)
 
@@ -501,15 +513,13 @@ def generate_kfold(n, k):
     indices = np.array(range(n))
     fold_size = n // k
 
-    fold_indices = [
-        indices[i * fold_size: (i + 1) * fold_size] for i in range(k - 1)]
-    fold_indices.append(indices[(k - 1) * fold_size:])
+    fold_indices = [indices[i * fold_size : (i + 1) * fold_size] for i in range(k - 1)]
+    fold_indices.append(indices[(k - 1) * fold_size :])
 
     for i in range(k):
         training_indices = [fold_indices[j] for j in range(k) if j != i]
         validation_indices = fold_indices[i]
-        kfold_indices.append(
-            (np.concatenate(training_indices), validation_indices))
+        kfold_indices.append((np.concatenate(training_indices), validation_indices))
 
     return kfold_indices
 
@@ -616,19 +626,17 @@ class Checkpointer(fvCheckpointer):
         """
         if not path:
             # no checkpoint provided
-            self.logger.info(
-                "No checkpoint found. Initializing model from scratch")
+            self.logger.info("No checkpoint found. Initializing model from scratch")
             return {}
         self.logger.info("Loading checkpoint from {}".format(path))
         if not os.path.isfile(path):
             path = PathManager.get_local_path(path)
-            assert os.path.isfile(
-                path), "Checkpoint {} not found!".format(path)
+            assert os.path.isfile(path), "Checkpoint {} not found!".format(path)
 
         checkpoint = self._load_file(path)
         incompatible = self._load_model(checkpoint)
         if (
-                incompatible is not None
+            incompatible is not None
         ):  # handle some existing subclasses that returns None
             self._log_incompatible_keys(incompatible)
 

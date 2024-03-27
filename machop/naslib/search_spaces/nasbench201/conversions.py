@@ -17,7 +17,13 @@ import torch
 from naslib.search_spaces.core.primitives import AbstractPrimitive
 
 OP_NAMES = ["Identity", "Zero", "ReLUConvBN3x3", "ReLUConvBN1x1", "AvgPool1x1"]
-OP_NAMES_NB201 = ['skip_connect', 'none', 'nor_conv_3x3', 'nor_conv_1x1', 'avg_pool_3x3']
+OP_NAMES_NB201 = [
+    "skip_connect",
+    "none",
+    "nor_conv_3x3",
+    "nor_conv_1x1",
+    "avg_pool_3x3",
+]
 
 EDGE_LIST = ((1, 2), (1, 3), (1, 4), (2, 3), (2, 4), (3, 4))
 OPS_TO_NB201 = {
@@ -80,7 +86,7 @@ def convert_op_indices_to_naslib(op_indices, naslib_object):
         edge.data.set("primitives", primitives)  # store for later use
 
     def update_batchnorms(op: AbstractPrimitive) -> AbstractPrimitive:
-        """ Makes batchnorms in the op affine, if they exist """
+        """Makes batchnorms in the op affine, if they exist"""
         init_params = op.init_params
         has_batchnorm = False
 
@@ -92,10 +98,10 @@ def convert_op_indices_to_naslib(op_indices, naslib_object):
         if not has_batchnorm:
             return op
 
-        if 'affine' in init_params:
-            init_params['affine'] = True
-        if 'track_running_stats' in init_params:
-            init_params['track_running_stats'] = True
+        if "affine" in init_params:
+            init_params["affine"] = True
+        if "track_running_stats" in init_params:
+            init_params["track_running_stats"] = True
 
         new_op = type(op)(**init_params)
         return new_op
@@ -130,12 +136,12 @@ def convert_str_to_op_indices(str_encoding):
     """
     Converts NB201 string representation to op_indices
     """
-    nodes = str_encoding.split('+')
+    nodes = str_encoding.split("+")
 
     def get_op(x):
-        return x.split('~')[0]
+        return x.split("~")[0]
 
-    node_ops = [list(map(get_op, n.strip()[1:-1].split('|'))) for n in nodes]
+    node_ops = [list(map(get_op, n.strip()[1:-1].split("|"))) for n in nodes]
 
     enc = []
     for u, v in EDGE_LIST:
@@ -145,9 +151,7 @@ def convert_str_to_op_indices(str_encoding):
 
 
 def convert_op_indices_to_str(op_indices):
-    edge_op_dict = {
-        edge: OP_NAMES_NB201[op] for edge, op in zip(EDGE_LIST, op_indices)
-    }
+    edge_op_dict = {edge: OP_NAMES_NB201[op] for edge, op in zip(EDGE_LIST, op_indices)}
 
     op_edge_list = [
         "{}~{}".format(edge_op_dict[(i, j)], i - 1)

@@ -60,10 +60,17 @@ class GPPredictor(BaseGPModel):
         return mean.numpy()
 
     def fit(self, xtrain, ytrain, train_info=None, params=None, **kwargs):
-        if self.hparams_from_file and self.hparams_from_file not in ['False', 'None'] \
-        and os.path.exists(self.hparams_from_file):
-            self.num_steps = json.load(open(self.hparams_from_file, 'rb'))['gp']['num_steps']
-            print('loaded hyperparams from', self.hparams_from_file)
+        if (
+            self.hparams_from_file
+            and self.hparams_from_file not in ["False", "None"]
+            and os.path.exists(self.hparams_from_file)
+        ):
+            self.num_steps = json.load(open(self.hparams_from_file, "rb"))["gp"][
+                "num_steps"
+            ]
+            print("loaded hyperparams from", self.hparams_from_file)
         else:
             self.num_steps = 200
-        return super(GPPredictor, self).fit(xtrain, ytrain, train_info, params, **kwargs)
+        return super(GPPredictor, self).fit(
+            xtrain, ytrain, train_info, params, **kwargs
+        )

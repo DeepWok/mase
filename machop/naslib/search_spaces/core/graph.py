@@ -343,7 +343,7 @@ class Graph(torch.nn.Module, nx.DiGraph):
                 on an edge and receives an EdgeData object which will be ignored
         """
         logger.debug("Graph {} called. Input {}.".format(self.name, log_formats(x)))
-        
+
         # Assign x to the corresponding input nodes
         self._assign_x_to_nodes(x)
 
@@ -371,10 +371,17 @@ class Graph(torch.nn.Module, nx.DiGraph):
                     x = list(node["input"].values())[0]
                 else:
                     comb_op = node["comb_op"]
-                    input_tensors = [node["input"][k] for k in sorted(node["input"].keys())]
+                    input_tensors = [
+                        node["input"][k] for k in sorted(node["input"].keys())
+                    ]
 
                     if isinstance(comb_op, AbstractCombOp):
-                        in_edges = [self.get_edge_data(u, v) for u, v in sorted(self.in_edges(node_idx), key=lambda x: x[0])]
+                        in_edges = [
+                            self.get_edge_data(u, v)
+                            for u, v in sorted(
+                                self.in_edges(node_idx), key=lambda x: x[0]
+                            )
+                        ]
                         x = comb_op(input_tensors, in_edges)
                     else:
                         x = comb_op(input_tensors)
@@ -407,7 +414,7 @@ class Graph(torch.nn.Module, nx.DiGraph):
                             )
                         )
 
-                        edge_output = edge_data.op.forward(x, edge_data=edge_data)                        
+                        edge_output = edge_data.op.forward(x, edge_data=edge_data)
                     else:
                         raise ValueError(
                             "Unknown class as op: {}. Expected either Graph or AbstactPrimitive".format(

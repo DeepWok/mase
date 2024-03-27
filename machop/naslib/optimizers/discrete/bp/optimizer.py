@@ -42,7 +42,9 @@ class BasePredictor(MetaOptimizer):
         self.choices = []
         self.history = torch.nn.ModuleList()
 
-    def adapt_search_space(self, search_space: Graph, scope: str = None, dataset_api: dict = None):
+    def adapt_search_space(
+        self, search_space: Graph, scope: str = None, dataset_api: dict = None
+    ):
         assert (
             search_space.QUERYABLE
         ), "Regularized evolution is currently only implemented for benchmarks."
@@ -55,9 +57,7 @@ class BasePredictor(MetaOptimizer):
 
         if epoch < self.num_init:
             # randomly sample initial architectures
-            model = (
-                torch.nn.Module()
-            )
+            model = torch.nn.Module()
             model.arch = self.search_space.clone()
             model.arch.sample_random_architecture(dataset_api=self.dataset_api)
             model.accuracy = model.arch.query(
@@ -97,14 +97,12 @@ class BasePredictor(MetaOptimizer):
                         xtrain=xtrain, ytrain=ytrain, xtest=xtest, test_pred=test_pred
                     )
 
-                sorted_indices = np.argsort(test_pred)[-self.k:]
+                sorted_indices = np.argsort(test_pred)[-self.k :]
                 for i in sorted_indices:
                     self.choices.append(xtest[i])
 
             # train the next chosen architecture
-            choice = (
-                torch.nn.Module()
-            )
+            choice = torch.nn.Module()
             choice.arch = self.choices[epoch - self.num_init]
             choice.accuracy = choice.arch.query(
                 self.performance_metric, self.dataset, dataset_api=self.dataset_api

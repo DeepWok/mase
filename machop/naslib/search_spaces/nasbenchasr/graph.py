@@ -8,14 +8,23 @@ import torch
 from naslib.search_spaces.core import primitives as core_ops
 from naslib.search_spaces.core.query_metrics import Metric
 from naslib.search_spaces.core.graph import Graph
-from naslib.search_spaces.nasbenchasr.primitives import CellLayerNorm, Head, ops, PadConvReluNorm
+from naslib.search_spaces.nasbenchasr.primitives import (
+    CellLayerNorm,
+    Head,
+    ops,
+    PadConvReluNorm,
+)
 from naslib.utils import get_project_root
-from naslib.search_spaces.nasbenchasr.conversions import flatten, \
-    copy_structure, make_compact_mutable, make_compact_immutable
+from naslib.search_spaces.nasbenchasr.conversions import (
+    flatten,
+    copy_structure,
+    make_compact_mutable,
+    make_compact_immutable,
+)
 from naslib.search_spaces.nasbenchasr.encodings import encode_asr
 from naslib.utils.encodings import EncodingType
 
-OP_NAMES = ['linear', 'conv5', 'conv5d2', 'conv7', 'conv7d2', 'zero']
+OP_NAMES = ["linear", "conv5", "conv5d2", "conv7", "conv7d2", "zero"]
 
 
 class NasBenchASRSearchSpace(Graph):
@@ -27,10 +36,10 @@ class NasBenchASRSearchSpace(Graph):
 
     QUERYABLE = True
     OPTIMIZER_SCOPE = [
-        'cells_stage_1',
-        'cells_stage_2',
-        'cells_stage_3',
-        'cells_stage_4'
+        "cells_stage_1",
+        "cells_stage_2",
+        "cells_stage_3",
+        "cells_stage_4",
     ]
 
     def __init__(self):
@@ -66,44 +75,52 @@ class NasBenchASRSearchSpace(Graph):
 
         # Create the cell blocks and add them as subgraphs of nodes 2 ... 5
         for idx, node in enumerate(range(2, 2 + self.n_blocks)):
-            scope = f'cells_stage_{idx + 1}'
-            cells_block = self._create_cells_block(cell, n=self.n_cells_per_block[idx], scope=scope)
-            self.nodes[node]['subgraph'] = cells_block.set_input([node - 1])
+            scope = f"cells_stage_{idx + 1}"
+            cells_block = self._create_cells_block(
+                cell, n=self.n_cells_per_block[idx], scope=scope
+            )
+            self.nodes[node]["subgraph"] = cells_block.set_input([node - 1])
 
             # Assign the list of operations to the cell edges
             cells_block.update_edges(
-                update_func=lambda edge: _set_cell_edge_ops(edge, filters=self.filters[idx], use_norm=self.use_norm),
+                update_func=lambda edge: _set_cell_edge_ops(
+                    edge, filters=self.filters[idx], use_norm=self.use_norm
+                ),
                 scope=scope,
-                private_edge_data=True
+                private_edge_data=True,
             )
 
         # Assign the PadConvReluNorm operation to the edges of the macro graph
         start_node = 1
         for idx, node in enumerate(range(start_node, start_node + self.n_blocks)):
             op = PadConvReluNorm(
-                in_channels=self.features if node == start_node else self.filters[idx - 1],
+                in_channels=(
+                    self.features if node == start_node else self.filters[idx - 1]
+                ),
                 out_channels=self.filters[idx],
                 kernel_size=self.cnn_time_reduction_kernels[idx],
                 dilation=1,
                 strides=self.cnn_time_reduction_strides[idx],
                 groups=1,
-                name=f'conv_{idx}'
+                name=f"conv_{idx}",
             )
 
-            self.edges[node, node + 1].set('op', op)
+            self.edges[node, node + 1].set("op", op)
 
         # Assign the LSTM + Linear layer to the last edge in the macro graph
         head = Head(self.dropout_rate, self.filters[-1], self.num_classes)
-        self.edges[self.n_blocks + 1, self.n_blocks + 2].set('op', head)
+        self.edges[self.n_blocks + 1, self.n_blocks + 2].set("op", head)
 
     def _create_cells_block(self, cell, n, scope):
         block = Graph()
-        block.name = f'{n}_cells_block'
+        block.name = f"{n}_cells_block"
 
         block.add_nodes_from(range(1, n + 2))
 
         for node in range(2, n + 2):
-            block.add_node(node, subgraph=cell.copy().set_scope(scope).set_input([node - 1]))
+            block.add_node(
+                node, subgraph=cell.copy().set_scope(scope).set_input([node - 1])
+            )
 
         for node in range(1, n + 2):
             block.add_edge(node, node + 1)
@@ -112,7 +129,7 @@ class NasBenchASRSearchSpace(Graph):
 
     def _create_cell(self):
         cell = Graph()
-        cell.name = 'cell'
+        cell.name = "cell"
         # ASR Cell requires two edges between two consecutive nodes, which isn't supported by the NASLib Graph.
         # Solution: use three nodes and their edges to represent two nodes with two edges between them as follows:
         # Desired:
@@ -138,8 +155,15 @@ class NasBenchASRSearchSpace(Graph):
 
         return cell
 
-    def query(self, metric=None, dataset=None, path=None, epoch=-1,
-              full_lc=False, dataset_api=None):
+    def query(
+        self,
+        metric=None,
+        dataset=None,
+        path=None,
+        epoch=-1,
+        full_lc=False,
+        dataset_api=None,
+    ):
         """
         Query results from nas-bench-asr
         """
@@ -167,19 +191,19 @@ class NasBenchASRSearchSpace(Graph):
             if metric == Metric.TEST_ACCURACY:
                 return query_results[metric_to_asr[metric]]
             elif (metric == Metric.PARAMETERS) or (metric == Metric.FLOPS):
-                return query_results['info'][metric_to_asr[metric]]
-            elif metric in [Metric.TRAIN_ACCURACY, Metric.TRAIN_LOSS,
-                            Metric.TRAIN_TIME, Metric.RAW]:
+                return query_results["info"][metric_to_asr[metric]]
+            elif metric in [
+                Metric.TRAIN_ACCURACY,
+                Metric.TRAIN_LOSS,
+                Metric.TRAIN_TIME,
+                Metric.RAW,
+            ]:
                 return -1
         else:
             if full_lc and epoch == -1:
-                return [
-                    loss for loss in query_results[metric_to_asr[metric]]
-                ]
+                return [loss for loss in query_results[metric_to_asr[metric]]]
             elif full_lc and epoch != -1:
-                return [
-                    loss for loss in query_results[metric_to_asr[metric]][:epoch]
-                ]
+                return [loss for loss in query_results[metric_to_asr[metric]][:epoch]]
             else:
                 # return the value of the metric only at the specified epoch
                 return float(query_results[metric_to_asr[metric]][epoch])
@@ -195,8 +219,9 @@ class NasBenchASRSearchSpace(Graph):
         self.compact = make_compact_immutable(compact)
 
     def sample_random_architecture(self, dataset_api):
-        search_space = [[len(OP_NAMES)] + [2] * (idx + 1) for idx in
-                        range(self.max_nodes)]
+        search_space = [
+            [len(OP_NAMES)] + [2] * (idx + 1) for idx in range(self.max_nodes)
+        ]
         flat = flatten(search_space)
         m = [random.randrange(opts) for opts in flat]
         m = copy_structure(m, search_space)
@@ -285,7 +310,7 @@ class NasBenchASRSearchSpace(Graph):
         return nbhd
 
     def get_type(self):
-        return 'asr'
+        return "asr"
 
     def get_max_epochs(self):
         return 39
@@ -296,26 +321,21 @@ class NasBenchASRSearchSpace(Graph):
 
 def _set_cell_edge_ops(edge, filters, use_norm):
     if use_norm and edge.head == 7:
-        edge.data.set('op', CellLayerNorm(filters))
+        edge.data.set("op", CellLayerNorm(filters))
         edge.data.finalize()
     elif edge.head % 2 == 0:  # Edge from intermediate node
         edge.data.set(
-            'op', [
-                ops['linear'](filters, filters),
-                ops['conv5'](filters, filters),
-                ops['conv5d2'](filters, filters),
-                ops['conv7'](filters, filters),
-                ops['conv7d2'](filters, filters),
-                ops['zero'](filters, filters)
-            ]
+            "op",
+            [
+                ops["linear"](filters, filters),
+                ops["conv5"](filters, filters),
+                ops["conv5d2"](filters, filters),
+                ops["conv7"](filters, filters),
+                ops["conv7d2"](filters, filters),
+                ops["zero"](filters, filters),
+            ],
         )
     elif edge.tail % 2 == 0:  # Edge to intermediate node. Should always be Identity.
         edge.data.finalize()
     else:
-        edge.data.set(
-            'op',
-            [
-                core_ops.Zero(stride=1),
-                core_ops.Identity()
-            ]
-        )
+        edge.data.set("op", [core_ops.Zero(stride=1), core_ops.Identity()])

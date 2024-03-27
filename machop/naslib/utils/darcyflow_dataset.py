@@ -18,6 +18,7 @@ class UnitGaussianNormalizer(object):
         x = (x - self.mean) / (self.std + self.eps)
         return x
 
+
 # adapted from https://github.com/rtu715/NAS-Bench-360/blob/0d1af0ce37b5f656d6491beee724488c3fccf871/perceiver-io/perceiver/data/nb360/darcyflow.py#L73
 def load_darcyflow_data(path):
     train_path = os.path.join(path, "piececonst_r421_N1024_smooth1.mat")
@@ -63,4 +64,6 @@ def read_mat_field(mat, field):
 def darcyflow_transform(args):
     transform_list = []
     transform_list.append(torchvision.transforms.ToTensor())
-    return torchvision.transforms.Compose(transform_list), torchvision.transforms.Compose(transform_list)
+    return torchvision.transforms.Compose(
+        transform_list
+    ), torchvision.transforms.Compose(transform_list)

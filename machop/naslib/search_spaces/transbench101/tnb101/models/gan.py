@@ -5,6 +5,7 @@ class GAN(nn.Module):
     """GAN model used for Pix2Pix tasks
     Adapted from https://github.com/phillipi/pix2pix
     """
+
     def __init__(self, encoder, decoder, discriminator):
         super(GAN, self).__init__()
         self.encoder = encoder

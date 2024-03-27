@@ -25,19 +25,17 @@ from naslib.search_spaces.transbench101.conversions import (
     convert_op_indices_macro_to_str,
     convert_op_indices_micro_to_model,
     convert_op_indices_macro_to_model,
-
 )
 from naslib.search_spaces.transbench101.loss import SoftmaxCrossEntropyWithLogits
 from naslib.search_spaces.transbench101.encodings import (
     encode_tb101,
     encode_adjacency_one_hot_transbench_micro_op_indices,
-    encode_adjacency_one_hot_transbench_macro_op_indices
-
+    encode_adjacency_one_hot_transbench_macro_op_indices,
 )
 from naslib.utils.encodings import EncodingType
 import torch.nn.functional as F
 
-OP_NAMES = ['Identity', 'Zero', 'ReLUConvBN3x3', 'ReLUConvBN1x1']
+OP_NAMES = ["Identity", "Zero", "ReLUConvBN3x3", "ReLUConvBN1x1"]
 
 
 class TransBench101SearchSpaceMicro(Graph):
@@ -46,18 +44,18 @@ class TransBench101SearchSpaceMicro(Graph):
     It also has an interface to the tabular benchmark of transbench 101.
     """
 
-    OPTIMIZER_SCOPE = [
-        "r_stage_1",
-        "n_stage_1",
-        "r_stage_2",
-        "n_stage_2",
-        "r_stage_3"
-    ]
+    OPTIMIZER_SCOPE = ["r_stage_1", "n_stage_1", "r_stage_2", "n_stage_2", "r_stage_3"]
 
     QUERYABLE = True
 
-    def __init__(self, dataset='jigsaw', use_small_model=True,
-                 create_graph=False, n_classes=10, in_channels=3):
+    def __init__(
+        self,
+        dataset="jigsaw",
+        use_small_model=True,
+        create_graph=False,
+        n_classes=10,
+        in_channels=3,
+    ):
         super().__init__()
         if dataset == "jigsaw":
             self.num_classes = 1000
@@ -72,7 +70,7 @@ class TransBench101SearchSpaceMicro(Graph):
         self.use_small_model = use_small_model
         self.max_epoch = 199
         self.in_channels = in_channels
-        self.space_name = 'transbench101'
+        self.space_name = "transbench101"
         self.dataset = dataset
         self.create_graph = create_graph
         self.labeled_archs = None
@@ -110,8 +108,16 @@ class TransBench101SearchSpaceMicro(Graph):
         self.name = "makrograph"
 
         self.n_modules = 3 if self.use_small_model else 5  # short: 3
-        self.blocks_per_module = [2] * self.n_modules  # Change to customize number of blocks per module
-        self.module_stages = ["r_stage_1", "n_stage_1", "r_stage_2", "n_stage_2", "r_stage_3"]
+        self.blocks_per_module = [
+            2
+        ] * self.n_modules  # Change to customize number of blocks per module
+        self.module_stages = [
+            "r_stage_1",
+            "n_stage_1",
+            "r_stage_2",
+            "n_stage_2",
+            "r_stage_3",
+        ]
         # self.base_channels = 16 if self.use_small_model else 64
         self.base_channels = 64  # short: 16
 
@@ -123,12 +129,14 @@ class TransBench101SearchSpaceMicro(Graph):
             self.add_edge(node, node + 1)
 
         # Preprocessing for jigsaw
-        self.edges[1, 2].set('op', self._get_stem_for_task(self.dataset))
+        self.edges[1, 2].set("op", self._get_stem_for_task(self.dataset))
 
         # Add modules
         for idx, node in enumerate(range(2, 2 + self.n_modules)):
             # Create module
-            module = self._create_module(self.blocks_per_module[idx], self.module_stages[idx], cell)
+            module = self._create_module(
+                self.blocks_per_module[idx], self.module_stages[idx], cell
+            )
             module.set_scope(f"module_{idx + 1}", recursively=False)
 
             # Add module as subgraph
@@ -143,10 +151,12 @@ class TransBench101SearchSpaceMicro(Graph):
             C_in = self._get_module_n_output_channels(module)
 
         # Add decoder depending on the task
-        self.edges[node, node + 1].set('op',
-                                       self._get_decoder_for_task(self.dataset,
-                                                                  n_channels=self._get_module_n_output_channels(module))
-                                       )
+        self.edges[node, node + 1].set(
+            "op",
+            self._get_decoder_for_task(
+                self.dataset, n_channels=self._get_module_n_output_channels(module)
+            ),
+        )
 
     def _get_stem_for_task(self, task):
         if task == "jigsaw":
@@ -163,13 +173,13 @@ class TransBench101SearchSpaceMicro(Graph):
             return ops.SequentialJigsaw(
                 nn.AdaptiveAvgPool2d(1),
                 nn.Flatten(),
-                nn.Linear(n_channels * 9, self.num_classes)
+                nn.Linear(n_channels * 9, self.num_classes),
             )
         elif task in ["class_object", "class_scene"]:
             return ops.Sequential(
                 nn.AdaptiveAvgPool2d(1),
                 nn.Flatten(),
-                nn.Linear(n_channels, self.num_classes)
+                nn.Linear(n_channels, self.num_classes),
             )
         elif task == "autoencoder":
             if self.use_small_model:
@@ -181,13 +191,15 @@ class TransBench101SearchSpaceMicro(Graph):
             return ops.Sequential(
                 nn.AdaptiveAvgPool2d(1),
                 nn.Flatten(),
-                nn.Linear(n_channels, self.num_classes)
+                nn.Linear(n_channels, self.num_classes),
             )
 
     def _get_module_n_output_channels(self, module):
-        last_cell_in_module = module.edges[1, 2]['op'].op[-1]
+        last_cell_in_module = module.edges[1, 2]["op"].op[-1]
         edge_to_last_node = last_cell_in_module.edges[3, 4]
-        relu_conv_bn = [op for op in edge_to_last_node['op'] if isinstance(op, ops.ReLUConvBN)][0]
+        relu_conv_bn = [
+            op for op in edge_to_last_node["op"] if isinstance(op, ops.ReLUConvBN)
+        ][0]
         conv = [m for m in relu_conv_bn.op if isinstance(m, nn.Conv2d)][0]
 
         return conv.out_channels
@@ -197,15 +209,15 @@ class TransBench101SearchSpaceMicro(Graph):
 
     def _set_cell_ops_for_module(self, module, C_in, stage):
         assert isinstance(module, Graph)
-        assert module.name == 'module'
+        assert module.name == "module"
 
-        cells = module.edges[1, 2]['op'].op
+        cells = module.edges[1, 2]["op"].op
 
         for idx, cell in enumerate(cells):
             downsample = self._is_reduction_stage(stage) and idx == 0
             cell.update_edges(
                 update_func=lambda edge: _set_op(edge, C_in, downsample),
-                private_edge_data=True
+                private_edge_data=True,
             )
 
             if downsample:
@@ -220,13 +232,21 @@ class TransBench101SearchSpaceMicro(Graph):
 
     def _wrap_with_graph(self, module):
         container = Graph()
-        container.name = 'module'
+        container.name = "module"
         container.add_nodes_from([1, 2])
         container.add_edge(1, 2)
-        container.edges[1, 2].set('op', module)
+        container.edges[1, 2].set("op", module)
         return container
 
-    def query(self, metric=None, dataset=None, path=None, epoch=-1, full_lc=False, dataset_api=None):
+    def query(
+        self,
+        metric=None,
+        dataset=None,
+        path=None,
+        epoch=-1,
+        full_lc=False,
+        dataset_api=None,
+    ):
         """
         Query results from transbench 101
         """
@@ -234,59 +254,59 @@ class TransBench101SearchSpaceMicro(Graph):
         if metric == Metric.ALL:
             raise NotImplementedError()
         if dataset_api is None:
-            raise NotImplementedError('Must pass in dataset_api to query transbench101')
+            raise NotImplementedError("Must pass in dataset_api to query transbench101")
 
         arch_str = convert_op_indices_micro_to_str(self.op_indices)
 
-        query_results = dataset_api['api']
-        task = dataset_api['task']
+        query_results = dataset_api["api"]
+        task = dataset_api["task"]
 
-        if task in ['class_scene', 'class_object', 'jigsaw']:
+        if task in ["class_scene", "class_object", "jigsaw"]:
 
             metric_to_tb101 = {
-                Metric.TRAIN_ACCURACY: 'train_top1',
-                Metric.VAL_ACCURACY: 'valid_top1',
-                Metric.TEST_ACCURACY: 'test_top1',
-                Metric.TRAIN_LOSS: 'train_loss',
-                Metric.VAL_LOSS: 'valid_loss',
-                Metric.TEST_LOSS: 'test_loss',
-                Metric.TRAIN_TIME: 'time_elapsed',
+                Metric.TRAIN_ACCURACY: "train_top1",
+                Metric.VAL_ACCURACY: "valid_top1",
+                Metric.TEST_ACCURACY: "test_top1",
+                Metric.TRAIN_LOSS: "train_loss",
+                Metric.VAL_LOSS: "valid_loss",
+                Metric.TEST_LOSS: "test_loss",
+                Metric.TRAIN_TIME: "time_elapsed",
             }
 
-        elif task == 'room_layout':
+        elif task == "room_layout":
 
             metric_to_tb101 = {
-                Metric.TRAIN_ACCURACY: 'train_neg_loss',
-                Metric.VAL_ACCURACY: 'valid_neg_loss',
-                Metric.TEST_ACCURACY: 'test_neg_loss',
-                Metric.TRAIN_LOSS: 'train_loss',
-                Metric.VAL_LOSS: 'valid_loss',
-                Metric.TEST_LOSS: 'test_loss',
-                Metric.TRAIN_TIME: 'time_elapsed',
+                Metric.TRAIN_ACCURACY: "train_neg_loss",
+                Metric.VAL_ACCURACY: "valid_neg_loss",
+                Metric.TEST_ACCURACY: "test_neg_loss",
+                Metric.TRAIN_LOSS: "train_loss",
+                Metric.VAL_LOSS: "valid_loss",
+                Metric.TEST_LOSS: "test_loss",
+                Metric.TRAIN_TIME: "time_elapsed",
             }
 
-        elif task == 'segmentsemantic':
+        elif task == "segmentsemantic":
 
             metric_to_tb101 = {
-                Metric.TRAIN_ACCURACY: 'train_acc',
-                Metric.VAL_ACCURACY: 'valid_acc',
-                Metric.TEST_ACCURACY: 'test_acc',
-                Metric.TRAIN_LOSS: 'train_loss',
-                Metric.VAL_LOSS: 'valid_loss',
-                Metric.TEST_LOSS: 'test_loss',
-                Metric.TRAIN_TIME: 'time_elapsed',
+                Metric.TRAIN_ACCURACY: "train_acc",
+                Metric.VAL_ACCURACY: "valid_acc",
+                Metric.TEST_ACCURACY: "test_acc",
+                Metric.TRAIN_LOSS: "train_loss",
+                Metric.VAL_LOSS: "valid_loss",
+                Metric.TEST_LOSS: "test_loss",
+                Metric.TRAIN_TIME: "time_elapsed",
             }
 
         else:  # ['normal', 'autoencoder']
 
             metric_to_tb101 = {
-                Metric.TRAIN_ACCURACY: 'train_ssim',
-                Metric.VAL_ACCURACY: 'valid_ssim',
-                Metric.TEST_ACCURACY: 'test_ssim',
-                Metric.TRAIN_LOSS: 'train_l1_loss',
-                Metric.VAL_LOSS: 'valid_l1_loss',
-                Metric.TEST_LOSS: 'test_l1_loss',
-                Metric.TRAIN_TIME: 'time_elapsed',
+                Metric.TRAIN_ACCURACY: "train_ssim",
+                Metric.VAL_ACCURACY: "valid_ssim",
+                Metric.TEST_ACCURACY: "test_ssim",
+                Metric.TRAIN_LOSS: "train_l1_loss",
+                Metric.VAL_LOSS: "valid_l1_loss",
+                Metric.TEST_LOSS: "test_l1_loss",
+                Metric.TRAIN_TIME: "time_elapsed",
             }
 
         if metric == Metric.RAW:
@@ -295,16 +315,20 @@ class TransBench101SearchSpaceMicro(Graph):
 
         if metric == Metric.HP:
             # return hyperparameter info
-            return query_results[dataset]['cost_info']
+            return query_results[dataset]["cost_info"]
         elif metric == Metric.TRAIN_TIME:
-            return query_results.get_single_metric(arch_str, task, metric_to_tb101[metric], mode='final')
+            return query_results.get_single_metric(
+                arch_str, task, metric_to_tb101[metric], mode="final"
+            )
 
         if full_lc and epoch == -1:
             return query_results[dataset][metric_to_tb101[metric]]
         elif full_lc and epoch != -1:
             return query_results[dataset][metric_to_tb101[metric]][:epoch]
         else:
-            return query_results.get_single_metric(arch_str, task, metric_to_tb101[metric], mode='final')
+            return query_results.get_single_metric(
+                arch_str, task, metric_to_tb101[metric], mode="final"
+            )
 
     def get_op_indices(self):
         if self.op_indices is None:
@@ -312,11 +336,13 @@ class TransBench101SearchSpaceMicro(Graph):
                 self.op_indices = convert_naslib_to_op_indices(self)
             else:
                 # if there is a model, but it's simply the original implementation of the model put on edge 1-2
-                if isinstance(self.edges[1, 2]['op'], ModelWrapper):
-                    raise NotImplementedError('Conversion from original model to op_indices is not implemented')
+                if isinstance(self.edges[1, 2]["op"], ModelWrapper):
+                    raise NotImplementedError(
+                        "Conversion from original model to op_indices is not implemented"
+                    )
                 # if there's no op indices set, and no model on edge 1-2 either
                 else:
-                    raise NotImplementedError('Neither op_indices nor the model is set')
+                    raise NotImplementedError("Neither op_indices nor the model is set")
         return self.op_indices
 
     def get_hash(self):
@@ -331,7 +357,7 @@ class TransBench101SearchSpaceMicro(Graph):
                 convert_op_indices_to_naslib(op_indices, self)
             else:
                 model = convert_op_indices_micro_to_model(self.op_indices, self.dataset)
-                self.edges[1, 2].set('op', model)
+                self.edges[1, 2].set("op", model)
 
     def get_arch_iterator(self, dataset_api=None):
         return itertools.product(range(4), repeat=6)
@@ -342,7 +368,9 @@ class TransBench101SearchSpaceMicro(Graph):
         self.set_op_indices(op_indices)
 
     def sample_random_labeled_architecture(self):
-        assert self.labeled_archs is not None, "Labeled archs not provided to sample from"
+        assert (
+            self.labeled_archs is not None
+        ), "Labeled archs not provided to sample from"
 
         op_indices = random.choice(self.labeled_archs)
 
@@ -361,8 +389,10 @@ class TransBench101SearchSpaceMicro(Graph):
             return self.sample_random_labeled_architecture()
 
         def is_valid_arch(op_indices):
-            return not ((op_indices[0] == op_indices[1] == op_indices[2] == 1) or
-                        (op_indices[2] == op_indices[4] == op_indices[5] == 1))
+            return not (
+                (op_indices[0] == op_indices[1] == op_indices[2] == 1)
+                or (op_indices[2] == op_indices[4] == op_indices[5] == 1)
+            )
 
         while True:
             op_indices = np.random.randint(4, size=(6))
@@ -410,14 +440,14 @@ class TransBench101SearchSpaceMicro(Graph):
         return nbrs
 
     def get_type(self):
-        return 'transbench101_micro'
+        return "transbench101_micro"
 
     def get_loss_fn(self):
-        if self.dataset in ['class_object', 'class_scene']:
+        if self.dataset in ["class_object", "class_scene"]:
             loss_fn = SoftmaxCrossEntropyWithLogits()
-        elif self.dataset in ['autoencoder', 'normal']:
+        elif self.dataset in ["autoencoder", "normal"]:
             loss_fn = nn.L1Loss()
-        elif self.dataset == 'room_layout':
+        elif self.dataset == "room_layout":
             loss_fn = nn.MSELoss()
         else:
             loss_fn = F.cross_entropy
@@ -449,10 +479,10 @@ class TransBench101SearchSpaceMicro(Graph):
             # print(f'Output tensor shape: {output_t.shape}')
             outputs.append(inputs[0])
 
-        model = self.edges[1, 2]['op'].model
+        model = self.edges[1, 2]["op"].model
         decoder = model.decoder
 
-        if self.dataset == 'segmentsemantic':
+        if self.dataset == "segmentsemantic":
             conv = decoder.model[-1]
         else:
             conv = decoder.conv14
@@ -465,24 +495,28 @@ class TransBench101SearchSpaceMicro(Graph):
         return outputs[0]
 
     def forward_before_global_avg_pool(self, x):
-        if (self.create_graph == True and self.dataset in ['ninapro', 'svhn', 'scifar100']) or \
-                (self.dataset in ['class_scene', 'class_object', 'room_layout', 'jigsaw']):
+        if (
+            self.create_graph == True
+            and self.dataset in ["ninapro", "svhn", "scifar100"]
+        ) or (self.dataset in ["class_scene", "class_object", "room_layout", "jigsaw"]):
             return self._forward_before_global_avg_pool(x)
         elif self.create_graph == False:
             return self._forward_before_last_conv(x)
         else:
             raise Exception(
-                f"forward_before_global_avg_pool method not implemented for NASLib graph for dataset {self.dataset}")
+                f"forward_before_global_avg_pool method not implemented for NASLib graph for dataset {self.dataset}"
+            )
 
     def encode(self, encoding_type="adjacency_one_hot"):
         return encode_tb101(self, encoding_type=encoding_type)
 
-    def encode_spec(self, encoding_type='adjacency_one_hot'):
-        if encoding_type == 'adjacency_one_hot':
+    def encode_spec(self, encoding_type="adjacency_one_hot"):
+        if encoding_type == "adjacency_one_hot":
             return encode_adjacency_one_hot_transbench_micro_op_indices(self)
         else:
             raise NotImplementedError(
-                f'No implementation found for encoding search space TransBench101SearchSpaceMicro with {encoding_type}')
+                f"No implementation found for encoding search space TransBench101SearchSpaceMicro with {encoding_type}"
+            )
 
 
 class TransBench101SearchSpaceMacro(Graph):
@@ -499,7 +533,7 @@ class TransBench101SearchSpaceMacro(Graph):
 
     QUERYABLE = True
 
-    def __init__(self, dataset='jigsaw', *arg, **kwargs):
+    def __init__(self, dataset="jigsaw", *arg, **kwargs):
         super().__init__()
         if dataset == "jigsaw":
             self.num_classes = 1000
@@ -514,14 +548,22 @@ class TransBench101SearchSpaceMacro(Graph):
         self.op_indices = None
 
         self.max_epoch = 199
-        self.space_name = 'transbench101'
+        self.space_name = "transbench101"
         self.labeled_archs = None
         self.instantiate_model = True
         self.sample_without_replacement = False
 
         self.add_edge(1, 2)
 
-    def query(self, metric=None, dataset=None, path=None, epoch=-1, full_lc=False, dataset_api=None):
+    def query(
+        self,
+        metric=None,
+        dataset=None,
+        path=None,
+        epoch=-1,
+        full_lc=False,
+        dataset_api=None,
+    ):
         """
         Query results from transbench 101
         """
@@ -529,59 +571,59 @@ class TransBench101SearchSpaceMacro(Graph):
         if metric == Metric.ALL:
             raise NotImplementedError()
         if dataset_api is None:
-            raise NotImplementedError('Must pass in dataset_api to query transbench101')
+            raise NotImplementedError("Must pass in dataset_api to query transbench101")
 
         arch_str = convert_op_indices_macro_to_str(self.op_indices)
 
-        query_results = dataset_api['api']
-        task = dataset_api['task']
+        query_results = dataset_api["api"]
+        task = dataset_api["task"]
 
-        if task in ['class_scene', 'class_object', 'jigsaw']:
+        if task in ["class_scene", "class_object", "jigsaw"]:
 
             metric_to_tb101 = {
-                Metric.TRAIN_ACCURACY: 'train_top1',
-                Metric.VAL_ACCURACY: 'valid_top1',
-                Metric.TEST_ACCURACY: 'test_top1',
-                Metric.TRAIN_LOSS: 'train_loss',
-                Metric.VAL_LOSS: 'valid_loss',
-                Metric.TEST_LOSS: 'test_loss',
-                Metric.TRAIN_TIME: 'time_elapsed',
+                Metric.TRAIN_ACCURACY: "train_top1",
+                Metric.VAL_ACCURACY: "valid_top1",
+                Metric.TEST_ACCURACY: "test_top1",
+                Metric.TRAIN_LOSS: "train_loss",
+                Metric.VAL_LOSS: "valid_loss",
+                Metric.TEST_LOSS: "test_loss",
+                Metric.TRAIN_TIME: "time_elapsed",
             }
 
-        elif task == 'room_layout':
+        elif task == "room_layout":
 
             metric_to_tb101 = {
-                Metric.TRAIN_ACCURACY: 'train_neg_loss',
-                Metric.VAL_ACCURACY: 'valid_neg_loss',
-                Metric.TEST_ACCURACY: 'test_neg_loss',
-                Metric.TRAIN_LOSS: 'train_loss',
-                Metric.VAL_LOSS: 'valid_loss',
-                Metric.TEST_LOSS: 'test_loss',
-                Metric.TRAIN_TIME: 'time_elapsed',
+                Metric.TRAIN_ACCURACY: "train_neg_loss",
+                Metric.VAL_ACCURACY: "valid_neg_loss",
+                Metric.TEST_ACCURACY: "test_neg_loss",
+                Metric.TRAIN_LOSS: "train_loss",
+                Metric.VAL_LOSS: "valid_loss",
+                Metric.TEST_LOSS: "test_loss",
+                Metric.TRAIN_TIME: "time_elapsed",
             }
 
-        elif task == 'segmentsemantic':
+        elif task == "segmentsemantic":
 
             metric_to_tb101 = {
-                Metric.TRAIN_ACCURACY: 'train_acc',
-                Metric.VAL_ACCURACY: 'valid_acc',
-                Metric.TEST_ACCURACY: 'test_acc',
-                Metric.TRAIN_LOSS: 'train_loss',
-                Metric.VAL_LOSS: 'valid_loss',
-                Metric.TEST_LOSS: 'test_loss',
-                Metric.TRAIN_TIME: 'time_elapsed',
+                Metric.TRAIN_ACCURACY: "train_acc",
+                Metric.VAL_ACCURACY: "valid_acc",
+                Metric.TEST_ACCURACY: "test_acc",
+                Metric.TRAIN_LOSS: "train_loss",
+                Metric.VAL_LOSS: "valid_loss",
+                Metric.TEST_LOSS: "test_loss",
+                Metric.TRAIN_TIME: "time_elapsed",
             }
 
         else:  # ['normal', 'autoencoder']
 
             metric_to_tb101 = {
-                Metric.TRAIN_ACCURACY: 'train_ssim',
-                Metric.VAL_ACCURACY: 'valid_ssim',
-                Metric.TEST_ACCURACY: 'test_ssim',
-                Metric.TRAIN_LOSS: 'train_loss',
-                Metric.VAL_LOSS: 'valid_loss',
-                Metric.TEST_LOSS: 'test_loss',
-                Metric.TRAIN_TIME: 'time_elapsed',
+                Metric.TRAIN_ACCURACY: "train_ssim",
+                Metric.VAL_ACCURACY: "valid_ssim",
+                Metric.TEST_ACCURACY: "test_ssim",
+                Metric.TRAIN_LOSS: "train_loss",
+                Metric.VAL_LOSS: "valid_loss",
+                Metric.TEST_LOSS: "test_loss",
+                Metric.TRAIN_TIME: "time_elapsed",
             }
 
         if metric == Metric.RAW:
@@ -590,20 +632,24 @@ class TransBench101SearchSpaceMacro(Graph):
 
         if metric == Metric.HP:
             # return hyperparameter info
-            return query_results[dataset]['cost_info']
+            return query_results[dataset]["cost_info"]
         elif metric == Metric.TRAIN_TIME:
-            return query_results.get_single_metric(arch_str, task, metric_to_tb101[metric], mode='final')
+            return query_results.get_single_metric(
+                arch_str, task, metric_to_tb101[metric], mode="final"
+            )
 
         if full_lc and epoch == -1:
             return query_results[dataset][metric_to_tb101[metric]]
         elif full_lc and epoch != -1:
             return query_results[dataset][metric_to_tb101[metric]][:epoch]
         else:
-            return query_results.get_single_metric(arch_str, task, metric_to_tb101[metric], mode='final')
+            return query_results.get_single_metric(
+                arch_str, task, metric_to_tb101[metric], mode="final"
+            )
 
     def get_op_indices(self):
         if self.op_indices is None:
-            raise ValueError('op_indices not set')
+            raise ValueError("op_indices not set")
         return self.op_indices
 
     def get_hash(self):
@@ -615,13 +661,15 @@ class TransBench101SearchSpaceMacro(Graph):
 
         if self.instantiate_model == True:
             model = convert_op_indices_macro_to_model(op_indices, self.dataset)
-            self.edges[1, 2].set('op', model)
+            self.edges[1, 2].set("op", model)
 
     def set_spec(self, op_indices, dataset_api=None):
         self.set_op_indices(op_indices)
 
     def sample_random_labeled_architecture(self):
-        assert self.labeled_archs is not None, "Labeled archs not provided to sample from"
+        assert (
+            self.labeled_archs is not None
+        ), "Labeled archs not provided to sample from"
 
         op_indices = random.choice(self.labeled_archs)
 
@@ -735,14 +783,14 @@ class TransBench101SearchSpaceMacro(Graph):
         return nbrs
 
     def get_type(self):
-        return 'transbench101_macro'
+        return "transbench101_macro"
 
     def get_loss_fn(self):
-        if self.dataset in ['class_object', 'class_scene']:
+        if self.dataset in ["class_object", "class_scene"]:
             loss_fn = SoftmaxCrossEntropyWithLogits()
-        elif self.dataset in ['autoencoder', 'normal']:
+        elif self.dataset in ["autoencoder", "normal"]:
             loss_fn = nn.L1Loss()
-        elif self.dataset == 'room_layout':
+        elif self.dataset == "room_layout":
             loss_fn = nn.MSELoss()
         else:
             loss_fn = F.cross_entropy
@@ -774,10 +822,10 @@ class TransBench101SearchSpaceMacro(Graph):
             # print(f'Output tensor shape: {output_t.shape}')
             outputs.append(inputs[0])
 
-        model = self.edges[1, 2]['op'].model
+        model = self.edges[1, 2]["op"].model
         decoder = model.decoder
 
-        if self.dataset == 'segmentsemantic':
+        if self.dataset == "segmentsemantic":
             conv = decoder.model[-1]
         else:
             conv = decoder.conv14
@@ -791,7 +839,7 @@ class TransBench101SearchSpaceMacro(Graph):
 
     def forward_before_global_avg_pool(self, x):
 
-        if self.dataset in ['class_scene', 'class_object', 'room_layout', 'jigsaw']:
+        if self.dataset in ["class_scene", "class_object", "room_layout", "jigsaw"]:
             return self._forward_before_global_avg_pool(x)
         else:
             return self._forward_before_last_conv(x)
@@ -813,9 +861,16 @@ def _set_op(edge, C_in, downsample):
             C_out = C_in
             stride = 1
 
-    edge.data.set("op", [
-        ops.Identity() if stride == 1 else FactorizedReduce(C_in, C_out, stride, affine=False),
-        ops.Zero(stride=stride, C_in=C_in, C_out=C_out),
-        ops.ReLUConvBN(C_in, C_out, kernel_size=3, stride=stride),
-        ops.ReLUConvBN(C_in, C_out, kernel_size=1, stride=stride),
-    ])
+    edge.data.set(
+        "op",
+        [
+            (
+                ops.Identity()
+                if stride == 1
+                else FactorizedReduce(C_in, C_out, stride, affine=False)
+            ),
+            ops.Zero(stride=stride, C_in=C_in, C_out=C_out),
+            ops.ReLUConvBN(C_in, C_out, kernel_size=3, stride=stride),
+            ops.ReLUConvBN(C_in, C_out, kernel_size=1, stride=stride),
+        ],
+    )

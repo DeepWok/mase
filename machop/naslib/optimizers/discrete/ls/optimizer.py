@@ -34,7 +34,9 @@ class LocalSearch(MetaOptimizer):
         self.history = torch.nn.ModuleList()
         self.newest_child_idx = -1
 
-    def adapt_search_space(self, search_space: Graph, scope: str = None, dataset_api: dict = None):
+    def adapt_search_space(
+        self, search_space: Graph, scope: str = None, dataset_api: dict = None
+    ):
         assert (
             search_space.QUERYABLE
         ), "Local search is currently only implemented for benchmarks."
@@ -46,9 +48,7 @@ class LocalSearch(MetaOptimizer):
 
         if epoch < self.num_init:
             # randomly sample initial architectures
-            model = (
-                torch.nn.Module()
-            )
+            model = torch.nn.Module()
             model.arch = self.search_space.clone()
             model.arch.sample_random_architecture(dataset_api=self.dataset_api)
             model.accuracy = model.arch.query(
@@ -69,9 +69,7 @@ class LocalSearch(MetaOptimizer):
                     "Reached local minimum. Starting from new random architecture."
                 )
 
-                model = (
-                    torch.nn.Module()
-                )
+                model = torch.nn.Module()
                 model.arch = self.search_space.clone()
                 model.arch.sample_random_architecture(dataset_api=self.dataset_api)
                 model.accuracy = model.arch.query(

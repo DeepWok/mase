@@ -574,16 +574,19 @@ class SemiNASPredictor(Predictor):
         pretrain_epochs=50,
     ):
 
-        if self.hparams_from_file and self.hparams_from_file not in ['False', 'None'] \
-        and os.path.exists(self.hparams_from_file):
-            # note: this could be split to separate hyperparams for nao and seminas, 
+        if (
+            self.hparams_from_file
+            and self.hparams_from_file not in ["False", "None"]
+            and os.path.exists(self.hparams_from_file)
+        ):
+            # note: this could be split to separate hyperparams for nao and seminas,
             # but currently there is no need to do that
-            self.hyperparams = json.load(open(self.hparams_from_file, 'rb'))['seminas']
-            print('loaded hyperparams from', self.hparams_from_file)
-            print('hparams', self.hyperparams)
+            self.hyperparams = json.load(open(self.hparams_from_file, "rb"))["seminas"]
+            print("loaded hyperparams from", self.hparams_from_file)
+            print("hparams", self.hyperparams)
         elif self.hyperparams is None:
             self.hyperparams = self.default_hyperparams.copy()
-            
+
         batch_size = self.hyperparams["batch_size"]
         gcn_hidden = self.hyperparams["gcn_hidden"]
         lr = self.hyperparams["lr"]
@@ -612,7 +615,7 @@ class SemiNASPredictor(Predictor):
             encoder_length = 324
             decoder_length = 324
             vocab_size = 12
-            
+
         elif self.ss_type == "transbench101":
             self.max_n = 8
             encoder_length = 35
@@ -624,7 +627,7 @@ class SemiNASPredictor(Predictor):
             encoder_length = 44
             decoder_length = 44
             vocab_size = 9
-            
+
         # get mean and std, normlize accuracies
         self.mean = np.mean(ytrain)
         self.std = np.std(ytrain)

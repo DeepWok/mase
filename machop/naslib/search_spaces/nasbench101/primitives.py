@@ -1,5 +1,6 @@
 from naslib.search_spaces.core.primitives import AbstractPrimitive
 
+
 class ModelWrapper(AbstractPrimitive):
     def __init__(self, model):
         super().__init__(locals())
@@ -12,4 +13,3 @@ class ModelWrapper(AbstractPrimitive):
         return self.model(x)
 
     forward_beforeGP = forward
-
