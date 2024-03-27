@@ -43,7 +43,6 @@ def get_activation_hook(name, info, named_info, a_config: dict):
         module.activation_mask = mask
         sparsify_tensor = x * mask
         # sparsity = (sparsify_tensor == 0).sum().item() / sparsify_tensor.numel()
-        #import pdb; pdb.set_trace()
         #print('Current tensor sparsity:',sparsity)
         # it seems like the output of this can be a non-tuple thing??
         return sparsify_tensor
@@ -74,7 +73,7 @@ def build_pruning_hooks(info, w_config, a_config):
                 "w_hook": get_weight_hook(k, info, w_info, w_config),
                 "a_hook": get_activation_hook(k, info, a_info, a_config),
             }
-            # import pdb; pdb.set_trace()
+
     return named_hooks
 
 
@@ -155,7 +154,6 @@ def prune_graph_iterator(graph, config: dict):
                     )
                 if node_hooks["a_hook"] is not None:
                     register_fn, hook_fn = node_hooks["a_hook"]
-                    # import pdb; pdb.set_trace()
                     getattr(graph.modules[node.target], register_fn)(hook_fn)
                 
     
