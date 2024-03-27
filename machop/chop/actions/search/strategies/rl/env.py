@@ -360,10 +360,10 @@ class MixedPrecisionPaper(gym.Env):
 
         low = np.min(self.obs_list, axis=0)
         high = np.max(self.obs_list, axis=0)
-        self.observation_space = Box(
-            low=np.append(low, min([min(sub) for sub in self.act_list])),
-            high=np.append(high, max([max(sub) for sub in self.act_list])),
-        )
+        self.observation_space = Dict({
+            'layer_info': Box(low=np.min(self.obs_list, axis=0), high=np.max(self.obs_list, axis=0), dtype=np.float32),
+            'action': Box(low=0, high=1, shape=(1,), dtype=np.float32)
+        })
         self.action_space = Box(low=0, high=1.0)
 
     def run_trial(self, sampled_indexes):
@@ -402,8 +402,28 @@ class MixedPrecisionPaper(gym.Env):
                 unit_metric * self.config["metrics"][metric_name]["scale"]
             )
         reward = sum(scaled_metrics.values())
+
+        if reward > self.best_performance.get("reward", 0):
+            self.best_performance["metrics"] = metrics
+            self.best_performance["reward"] = reward
+            self.best_sample = sampled_config
+            self.layers, self.layer_types = self.get_layers_of_graph(model)
+            print(f"new highest reward: {reward:.4f}")
+            for metric_name in self.metric_names:
+                print(f"{metric_name}: {metrics[metric_name]:.4f}")
+                self.metric_values[metric_name] = metrics[metric_name]
+
         return reward
     
+    def get_layers_of_graph(graph):
+        layers = []
+        layer_types = []
+        for node in graph.fx_graph.nodes:
+            if node.meta["mase"].module is not None:
+                layers.append(str(node))
+                layer_types.append(type(node.meta["mase"].module).__name__)
+        return layers, layer_types
+
     def compute_software_metrics(self, model, sampled_config: dict, is_eval_mode: bool):
         # note that model can be mase_graph or nn.Module
         metrics = {}
@@ -434,10 +454,11 @@ class MixedPrecisionPaper(gym.Env):
         Always start from the first element in observation list.
         """
         self.state = 0
-        obs = np.append(
-            self.obs_list[self.state, :], min(self.act_list[self.state])
-        ).astype(np.float32)
-        return obs, {}
+        initial_observation = {
+            'layer_info': np.append(self.obs_list[self.state, :], min(self.act_list[self.state])).astype(np.float32),
+            'action': np.array([0])  # Example initial action value, adjust as needed
+        }
+        return initial_observation, {}
 
     def step(self, action):
         """Takes a single step in the episode given `action`
@@ -459,9 +480,11 @@ class MixedPrecisionPaper(gym.Env):
             self.state = 0
             terminated = truncated = True
             reward = self.run_trial(self.sample)
-        obs = self.obs_list[self.state].copy()
-        obs = np.append(obs, choices[action]).astype(np.float32)
-        return obs, reward, terminated, False, {}
+        observation = {
+            'layer_info': np.append(self.obs_list[self.state, :], self.act_list[self.state][action]).astype(np.float32),
+            'action': np.array([action])  # Keep track of the action taken
+        }
+        return observation, reward, terminated, False, {}
 
 
 
