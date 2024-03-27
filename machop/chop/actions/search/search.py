@@ -12,8 +12,6 @@ from chop.tools.utils import device
 from chop.tools.utils import parse_accelerator
 
 
-
-
 logger = logging.getLogger(__name__)
 ### Function made for nas config
 
