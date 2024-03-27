@@ -34,7 +34,7 @@ class VerificationCase(Testbench):
             name="Output ISQRT",
         )
 
-    def generate_inputs(self, num=1000):
+    def generate_inputs(self, num=10000):
         maxnum = (2 ** self.IN_WIDTH)-1
         return [random.randint(0, maxnum) for _ in range(num)], num
 
@@ -120,12 +120,11 @@ if __name__ == "__main__":
     def full_sweep():
         parameter_list = []
         lut_pow = 5
-        pipeline_cycles = 0
         for int_width in range(1, 9):
             for frac_width in range(0, 9):
                 width = int_width + frac_width
                 parameters = single_cfg(
-                    width, frac_width, lut_pow, pipeline_cycles,
+                    width, frac_width, lut_pow,
                     str_id=f"{int_width}-{frac_width}"
                 )
                 parameter_list.append(parameters)

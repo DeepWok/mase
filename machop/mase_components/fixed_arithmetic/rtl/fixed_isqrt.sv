@@ -112,7 +112,7 @@ module fixed_isqrt #(
         .clk(clk),
         .data_a(x_reduced[2]),
         .data_b(lut_value[2]),
-        .data_in_msb(msb_index[2])
+        .data_in_msb(msb_index[2]),
         .data_in_valid(pipe_valid[2]),
         .data_in_ready(pipe_ready[2]),
         .data_out(y[3]),
@@ -121,19 +121,6 @@ module fixed_isqrt #(
         .data_out_valid(pipe_valid[3]),
         .data_out_ready(pipe_ready[3])
     );
-
-    // skid_buffer #(
-    //     .DATA_WIDTH(2*IN_WIDTH + MSB_WIDTH + 2*IN_WIDTH)
-    // ) pipe_reg_2 (
-    //     .clk(clk),
-    //     .rst(rst),
-    //     .data_in({y[2], msb_index[2], x_reduced[2]}),
-    //     .data_in_valid(pipe_valid[2]),
-    //     .data_in_ready(pipe_ready[2]),
-    //     .data_out({y[3], msb_index[3], x_reduced[3]}),
-    //     .data_out_valid(pipe_valid[3]),
-    //     .data_out_ready(pipe_ready[3])
-    // );
 
     assign y_or_one = (x_reduced[3] == ONE) ? ONE : y[3];
 

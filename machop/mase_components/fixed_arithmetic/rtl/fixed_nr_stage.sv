@@ -28,9 +28,7 @@ module fixed_nr_stage #(
     logic [2*WIDTH-1:0] nr_out_data;
     logic [MSB_WIDTH-1:0] msb_data [2:1];
 
-    // logic [CARRY_THROUGH_WIDTH-1:0] carry_through_data [2:1];
-
-    assign yy = (data_b * data_b) >> (WIDTH - 1);
+    assign yy[0] = (data_b * data_b) >> (WIDTH - 1);
 
     skid_buffer #(
         .DATA_WIDTH(2*WIDTH + WIDTH + WIDTH + MSB_WIDTH)
