@@ -2,7 +2,9 @@ import logging
 import warnings
 import os
 from pathlib import PosixPath
+import torch
 import onnx
+import onnxruntime
 from onnxruntime.quantization import quantize_dynamic, quantize_static, QuantType, shape_inference
 from onnxruntime import InferenceSession, SessionOptions
 from onnxconverter_common import auto_mixed_precision

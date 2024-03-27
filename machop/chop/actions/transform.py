@@ -173,7 +173,7 @@ def transform(
                     )
                 optimized_graph_analysis = pass_config.get('optimized_graph_analysis', True)
                 if optimized_graph_analysis:
-                    logger.info("Performing runtime analysis on optimized quantized graph...")
+                    logger.info("Performing runtime analysis on onnx-optimized graph...")
                     _, _ = PASSES["runtime_analysis"](
                         runtime_meta["onnx_path"], pass_args=pass_config
                     )

@@ -1,16 +1,11 @@
 import logging
 import torch
 from pathlib import PosixPath
-import tensorrt as trt
 from chop.ir import MaseGraph
 from .utils import PowerMonitor, get_execution_provider
-import logging 
 import os
 from tabulate import tabulate
-import torch
 import torchmetrics
-import numpy as np
-import tensorrt as trt
 import numpy as np
 import tensorrt as trt
 import onnxruntime as ort

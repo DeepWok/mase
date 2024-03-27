@@ -9,8 +9,9 @@ toml
 timm
 pytorch-nlp
 datasets
-onnx
 onnxruntime-gpu
+onnx
+onnxconverter-common
 optimum
 black
 GitPython
@@ -62,6 +63,3 @@ pynvml
 pycuda
 cuda-python
 pytorch-quantization
-# onnx
-onnxruntime
-onnxruntime-tools
