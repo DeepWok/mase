@@ -12,7 +12,7 @@ load_name = "facebook/opt-125m"
 load_type = "hf"
 
 max_epochs = 5
-batch_size = 16
+batch_size = 64
 learning_rate = 1e-3
 accelerator = "gpu"
 
