@@ -1,0 +1,581 @@
+Seed set to 0
+[32mINFO    [0m [34mInitialising model 'vgg7'...[0m
+[32mINFO    [0m [34mInitialising dataset 'cifar10'...[0m
+[32mINFO    [0m [34mProject will be created at /home/xz2723/mase_xinyi/mase_output/team_project[0m
+[32mINFO    [0m [34mBuilding search space...[0m
+loading api
+api loaded
++-------------------------+--------------------------+--------------+-----------------+--------------------------+
+| Name                    |         Default          | Config. File | Manual Override |        Effective         |
++-------------------------+--------------------------+--------------+-----------------+--------------------------+
+| task                    |      [38;5;8mclassification[0m      |     cls      |                 |           cls            |
+| load_name               |           None           |              |                 |           None           |
+| load_type               |            mz            |              |                 |            mz            |
+| batch_size              |           [38;5;8m128[0m            |     512      |                 |           512            |
+| to_debug                |          False           |              |                 |          False           |
+| log_level               |           info           |              |                 |           info           |
+| report_to               |       tensorboard        |              |                 |       tensorboard        |
+| seed                    |            [38;5;8m0[0m             |      42      |                 |            42            |
+| quant_config            |           None           |              |                 |           None           |
+| training_optimizer      |           adam           |              |                 |           adam           |
+| trainer_precision       |         16-mixed         |              |                 |         16-mixed         |
+| learning_rate           |          [38;5;8m1e-05[0m           |     0.01     |                 |           0.01           |
+| weight_decay            |            0             |              |                 |            0             |
+| max_epochs              |            [38;5;8m20[0m            |      5       |                 |            5             |
+| max_steps               |            -1            |              |                 |            -1            |
+| accumulate_grad_batches |            1             |              |                 |            1             |
+| log_every_n_steps       |            [38;5;8m50[0m            |      5       |                 |            5             |
+| num_workers             |            16            |              |                 |            16            |
+| num_devices             |            1             |              |                 |            1             |
+| num_nodes               |            1             |              |                 |            1             |
+| accelerator             |           [38;5;8mauto[0m           |     gpu      |                 |           gpu            |
+| strategy                |           auto           |              |                 |           auto           |
+| is_to_auto_requeue      |          False           |              |                 |          False           |
+| github_ci               |          False           |              |                 |          False           |
+| disable_dataset_cache   |          False           |              |                 |          False           |
+| target                  |   xcu250-figd2104-2L-e   |              |                 |   xcu250-figd2104-2L-e   |
+| num_targets             |           100            |              |                 |           100            |
+| is_pretrained           |          False           |              |                 |          False           |
+| max_token_len           |           512            |              |                 |           512            |
+| project_dir             | /home/xz2723/mase_xinyi/ |              |                 | /home/xz2723/mase_xinyi/ |
+|                         |       mase_output        |              |                 |       mase_output        |
+| project                 |           [38;5;8mNone[0m           | team_project |                 |       team_project       |
+| model                   |           [38;5;8mNone[0m           |     vgg7     |                 |           vgg7           |
+| dataset                 |           [38;5;8mNone[0m           |   cifar10    |                 |         cifar10          |
++-------------------------+--------------------------+--------------+-----------------+--------------------------+
+{'name': 'optuna', 'eval_mode': False, 'sw_runner': {'zero_cost': {'metrics': ['grad_norm', 'snip', 'grasp', 'fisher', 'plain', 'l2_norm', 'naswot', 'naswot_relu', 'tenas', 'zico'], 'data_loader': 'val_dataloader', 'num_samples': 512}}, 'hw_runner': {'average_bitwidth': {'compare_to': 32}}, 'setup': {'n_jobs': 1, 'n_trials': 250, 'timeout': 20000, 'sampler': 'tpe', 'sum_scaled_metrics': False}, 'metrics': {'grad_norm': {'scale': 0.0, 'direction': 'maximize'}, 'snip': {'scale': 1.0, 'direction': 'maximize'}, 'grasp': {'scale': 0.0, 'direction': 'maximize'}, 'fisher': {'scale': 0.0, 'direction': 'maximize'}, 'plain': {'scale': 0.0, 'direction': 'maximize'}, 'l2_norm': {'scale': 0.0, 'direction': 'minimize'}, 'naswot': {'scale': 0.0, 'direction': 'maximize'}, 'naswot_relu': {'scale': 0.0, 'direction': 'maximize'}, 'tenas': {'scale': 0.0, 'direction': 'maximize'}, 'zico': {'scale': 0.0, 'direction': 'maximize'}, 'average_bitwidth': {'scale': 0.2, 'direction': 'minimize'}}}
+{'name': 'graph/software/zero_cost', 'setup': {'by': 'name'}, 'seed': {'default': {'config': {'name': [None]}}}, 'nas_zero_cost': {'config': {'name': ['infer.tiny'], 'C': [16], 'N': [5], 'op_0_0': [0], 'op_1_0': [0, 1, 2, 3, 4], 'op_2_0': [0, 1, 2, 3, 4], 'op_2_1': [0, 1, 2, 3, 4], 'op_3_0': [0, 1, 2, 3, 4], 'op_3_1': [0, 1, 2, 3, 4], 'op_3_2': [0, 1, 2, 3, 4], 'number_classes': [10]}}}
+Files already downloaded and verified
+Files already downloaded and verified
+Files already downloaded and verified
+Files already downloaded and verified
+Files already downloaded and verified
+Files already downloaded and verified
+Files already downloaded and verified
+Files already downloaded and verified
+[32mINFO    [0m [34mSearch started...[0m
+choices: +=================+
+{'nas_zero_cost': {'name': ['infer.tiny'], 'C': [16], 'N': [5], 'op_0_0': [0], 'op_1_0': [0, 1, 2, 3, 4], 'op_2_0': [0, 1, 2, 3, 4], 'op_2_1': [0, 1, 2, 3, 4], 'op_3_0': [0, 1, 2, 3, 4], 'op_3_1': [0, 1, 2, 3, 4], 'op_3_2': [0, 1, 2, 3, 4], 'number_classes': [10]}}
+  0%|          | 0/250 [00:00<?, ?it/s]sampled_config
+{'nas_zero_cost': {'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 1, 'op_2_0': 4, 'op_2_1': 3, 'op_3_0': 2, 'op_3_1': 4, 'op_3_2': 1, 'number_classes': 10}, 'default': {'config': {'name': ['infer.tiny'], 'C': [16], 'N': [5], 'op_0_0': [0], 'op_1_0': [4], 'op_2_0': [2], 'op_2_1': [1], 'op_3_0': [2], 'op_3_1': [1], 'op_3_2': [1], 'number_classes': [10]}}}
+index
+14215
+results
+{111: ResultsCount(cifar10, arch=|none~0|+|avg_pool_3x3~0|nor_conv_1x1~1|+|nor_conv_3x3~0|avg_pool_3x3~1|none~2|, FLOP=47.10M, Param=0.344MB, seed=0111, 1 eval-sets: [ori-test])}
+/home/xz2723/miniforge3/envs/mase/lib/python3.11/site-packages/torch/nn/modules/module.py:1352: UserWarning: Using a non-full backward hook when the forward contains multiple autograd Nodes is deprecated and will be removed in future versions. This hook will be missing some grad_input. Please use register_full_backward_hook to get the documented behavior.
+  warnings.warn("Using a non-full backward hook when the forward contains multiple autograd Nodes "
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+  0%|          | 1/250 [03:46<15:38:26, 226.13s/it]  0%|          | 1/250 [03:46<15:38:26, 226.13s/it, 226.13/20000 seconds]sampled_config
+{'nas_zero_cost': {'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 4, 'op_2_0': 4, 'op_2_1': 4, 'op_3_0': 0, 'op_3_1': 0, 'op_3_2': 3, 'number_classes': 10}, 'default': {'config': {'name': ['infer.tiny'], 'C': [16], 'N': [5], 'op_0_0': [0], 'op_1_0': [4], 'op_2_0': [2], 'op_2_1': [1], 'op_3_0': [2], 'op_3_1': [1], 'op_3_2': [1], 'number_classes': [10]}}}
+index
+10306
+results
+{111: ResultsCount(cifar10, arch=|avg_pool_3x3~0|+|avg_pool_3x3~0|avg_pool_3x3~1|+|skip_connect~0|skip_connect~1|nor_conv_1x1~2|, FLOP=11.72M, Param=0.101MB, seed=0111, 1 eval-sets: [ori-test])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+  1%|          | 2/250 [06:34<13:13:37, 192.01s/it, 226.13/20000 seconds]  1%|          | 2/250 [06:34<13:13:37, 192.01s/it, 394.25/20000 seconds]sampled_config
+{'nas_zero_cost': {'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 4, 'op_2_0': 1, 'op_2_1': 1, 'op_3_0': 2, 'op_3_1': 4, 'op_3_2': 1, 'number_classes': 10}, 'default': {'config': {'name': ['infer.tiny'], 'C': [16], 'N': [5], 'op_0_0': [0], 'op_1_0': [4], 'op_2_0': [2], 'op_2_1': [1], 'op_3_0': [2], 'op_3_1': [1], 'op_3_2': [1], 'number_classes': [10]}}}
+index
+12657
+results
+{111: ResultsCount(cifar10, arch=|avg_pool_3x3~0|+|none~0|none~1|+|nor_conv_3x3~0|avg_pool_3x3~1|none~2|, FLOP=43.17M, Param=0.316MB, seed=0111, 1 eval-sets: [ori-test])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+  1%|          | 3/250 [09:25<12:31:50, 182.63s/it, 394.25/20000 seconds]  1%|          | 3/250 [09:25<12:31:50, 182.63s/it, 565.73/20000 seconds]sampled_config
+{'nas_zero_cost': {'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 2, 'op_2_0': 4, 'op_2_1': 1, 'op_3_0': 0, 'op_3_1': 3, 'op_3_2': 1, 'number_classes': 10}, 'default': {'config': {'name': ['infer.tiny'], 'C': [16], 'N': [5], 'op_0_0': [0], 'op_1_0': [4], 'op_2_0': [2], 'op_2_1': [1], 'op_3_0': [2], 'op_3_1': [1], 'op_3_2': [1], 'number_classes': [10]}}}
+index
+8192
+results
+{111: ResultsCount(cifar10, arch=|nor_conv_3x3~0|+|avg_pool_3x3~0|none~1|+|skip_connect~0|nor_conv_1x1~1|none~2|, FLOP=47.10M, Param=0.344MB, seed=0111, 1 eval-sets: [ori-test])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+  2%|▏         | 4/250 [13:15<13:44:47, 201.17s/it, 565.73/20000 seconds]  2%|▏         | 4/250 [13:15<13:44:47, 201.17s/it, 795.31/20000 seconds]sampled_config
+{'nas_zero_cost': {'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 2, 'op_2_0': 2, 'op_2_1': 1, 'op_3_0': 4, 'op_3_1': 1, 'op_3_2': 2, 'number_classes': 10}, 'default': {'config': {'name': ['infer.tiny'], 'C': [16], 'N': [5], 'op_0_0': [0], 'op_1_0': [4], 'op_2_0': [2], 'op_2_1': [1], 'op_3_0': [2], 'op_3_1': [1], 'op_3_2': [1], 'number_classes': [10]}}}
+index
+563
+results
+{111: ResultsCount(cifar10, arch=|nor_conv_3x3~0|+|nor_conv_3x3~0|none~1|+|avg_pool_3x3~0|none~1|nor_conv_3x3~2|, FLOP=113.95M, Param=0.802MB, seed=0111, 1 eval-sets: [ori-test])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+  2%|▏         | 5/250 [18:37<16:40:05, 244.92s/it, 795.31/20000 seconds]  2%|▏         | 5/250 [18:37<16:40:05, 244.92s/it, 1117.81/20000 seconds]sampled_config
+{'nas_zero_cost': {'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 2, 'op_2_0': 2, 'op_2_1': 4, 'op_3_0': 3, 'op_3_1': 3, 'op_3_2': 4, 'number_classes': 10}, 'default': {'config': {'name': ['infer.tiny'], 'C': [16], 'N': [5], 'op_0_0': [0], 'op_1_0': [4], 'op_2_0': [2], 'op_2_1': [1], 'op_3_0': [2], 'op_3_1': [1], 'op_3_2': [1], 'number_classes': [10]}}}
+index
+3933
+results
+{111: ResultsCount(cifar10, arch=|nor_conv_3x3~0|+|nor_conv_3x3~0|avg_pool_3x3~1|+|nor_conv_1x1~0|nor_conv_1x1~1|avg_pool_3x3~2|, FLOP=86.43M, Param=0.615MB, seed=0111, 1 eval-sets: [ori-test])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+  2%|▏         | 6/250 [23:44<18:01:20, 265.90s/it, 1117.81/20000 seconds]  2%|▏         | 6/250 [23:44<18:01:20, 265.90s/it, 1424.44/20000 seconds]sampled_config
+{'nas_zero_cost': {'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 3, 'op_2_0': 1, 'op_2_1': 1, 'op_3_0': 3, 'op_3_1': 1, 'op_3_2': 3, 'number_classes': 10}, 'default': {'config': {'name': ['infer.tiny'], 'C': [16], 'N': [5], 'op_0_0': [0], 'op_1_0': [4], 'op_2_0': [2], 'op_2_1': [1], 'op_3_0': [2], 'op_3_1': [1], 'op_3_2': [1], 'number_classes': [10]}}}
+index
+15466
+results
+{111: ResultsCount(cifar10, arch=|nor_conv_1x1~0|+|none~0|none~1|+|nor_conv_1x1~0|none~1|nor_conv_1x1~2|, FLOP=19.58M, Param=0.157MB, seed=0111, 1 eval-sets: [ori-test])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+  3%|▎         | 7/250 [26:50<16:11:41, 239.92s/it, 1424.44/20000 seconds]  3%|▎         | 7/250 [26:50<16:11:41, 239.92s/it, 1610.88/20000 seconds]sampled_config
+{'nas_zero_cost': {'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 4, 'op_2_0': 0, 'op_2_1': 2, 'op_3_0': 2, 'op_3_1': 1, 'op_3_2': 3, 'number_classes': 10}, 'default': {'config': {'name': ['infer.tiny'], 'C': [16], 'N': [5], 'op_0_0': [0], 'op_1_0': [4], 'op_2_0': [2], 'op_2_1': [1], 'op_3_0': [2], 'op_3_1': [1], 'op_3_2': [1], 'number_classes': [10]}}}
+index
+6728
+results
+{111: ResultsCount(cifar10, arch=|avg_pool_3x3~0|+|skip_connect~0|nor_conv_3x3~1|+|nor_conv_3x3~0|none~1|nor_conv_1x1~2|, FLOP=82.49M, Param=0.587MB, seed=0111, 1 eval-sets: [ori-test])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+  3%|▎         | 8/250 [31:03<16:24:07, 244.00s/it, 1610.88/20000 seconds]  3%|▎         | 8/250 [31:03<16:24:07, 244.00s/it, 1863.60/20000 seconds]sampled_config
+{'nas_zero_cost': {'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 0, 'op_2_0': 0, 'op_2_1': 2, 'op_3_0': 2, 'op_3_1': 0, 'op_3_2': 0, 'number_classes': 10}, 'default': {'config': {'name': ['infer.tiny'], 'C': [16], 'N': [5], 'op_0_0': [0], 'op_1_0': [4], 'op_2_0': [2], 'op_2_1': [1], 'op_3_0': [2], 'op_3_1': [1], 'op_3_2': [1], 'number_classes': [10]}}}
+index
+538
+results
+{111: ResultsCount(cifar10, arch=|skip_connect~0|+|skip_connect~0|nor_conv_3x3~1|+|nor_conv_3x3~0|skip_connect~1|skip_connect~2|, FLOP=78.56M, Param=0.559MB, seed=0111, 1 eval-sets: [ori-test])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+  4%|▎         | 9/250 [34:25<15:27:01, 230.80s/it, 1863.60/20000 seconds]  4%|▎         | 9/250 [34:25<15:27:01, 230.80s/it, 2065.37/20000 seconds]sampled_config
+{'nas_zero_cost': {'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 0, 'op_2_0': 1, 'op_2_1': 3, 'op_3_0': 2, 'op_3_1': 4, 'op_3_2': 2, 'number_classes': 10}, 'default': {'config': {'name': ['infer.tiny'], 'C': [16], 'N': [5], 'op_0_0': [0], 'op_1_0': [4], 'op_2_0': [2], 'op_2_1': [1], 'op_3_0': [2], 'op_3_1': [1], 'op_3_2': [1], 'number_classes': [10]}}}
+index
+3096
+results
+{111: ResultsCount(cifar10, arch=|skip_connect~0|+|none~0|nor_conv_1x1~1|+|nor_conv_3x3~0|avg_pool_3x3~1|nor_conv_3x3~2|, FLOP=82.49M, Param=0.587MB, seed=0111, 1 eval-sets: [ori-test])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+  4%|▍         | 10/250 [39:09<16:28:57, 247.24s/it, 2065.37/20000 seconds]  4%|▍         | 10/250 [39:09<16:28:57, 247.24s/it, 2349.43/20000 seconds]sampled_config
+{'nas_zero_cost': {'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 1, 'op_2_0': 3, 'op_2_1': 4, 'op_3_0': 4, 'op_3_1': 3, 'op_3_2': 4, 'number_classes': 10}, 'default': {'config': {'name': ['infer.tiny'], 'C': [16], 'N': [5], 'op_0_0': [0], 'op_1_0': [4], 'op_2_0': [2], 'op_2_1': [1], 'op_3_0': [2], 'op_3_1': [1], 'op_3_2': [1], 'number_classes': [10]}}}
+index
+4337
+results
+{111: ResultsCount(cifar10, arch=|none~0|+|nor_conv_1x1~0|avg_pool_3x3~1|+|avg_pool_3x3~0|nor_conv_1x1~1|avg_pool_3x3~2|, FLOP=15.65M, Param=0.129MB, seed=0111, 1 eval-sets: [ori-test])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+  4%|▍         | 11/250 [43:13<16:21:02, 246.29s/it, 2349.43/20000 seconds]  4%|▍         | 11/250 [43:13<16:21:02, 246.29s/it, 2593.55/20000 seconds]sampled_config
+{'nas_zero_cost': {'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 3, 'op_2_0': 0, 'op_2_1': 3, 'op_3_0': 3, 'op_3_1': 2, 'op_3_2': 4, 'number_classes': 10}, 'default': {'config': {'name': ['infer.tiny'], 'C': [16], 'N': [5], 'op_0_0': [0], 'op_1_0': [4], 'op_2_0': [2], 'op_2_1': [1], 'op_3_0': [2], 'op_3_1': [1], 'op_3_2': [1], 'number_classes': [10]}}}
+index
+6346
+results
+{111: ResultsCount(cifar10, arch=|nor_conv_1x1~0|+|skip_connect~0|nor_conv_1x1~1|+|nor_conv_1x1~0|nor_conv_3x3~1|avg_pool_3x3~2|, FLOP=54.97M, Param=0.400MB, seed=0111, 1 eval-sets: [ori-test])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+  5%|▍         | 12/250 [47:36<16:36:59, 251.34s/it, 2593.55/20000 seconds]  5%|▍         | 12/250 [47:36<16:36:59, 251.34s/it, 2856.46/20000 seconds]sampled_config
+{'nas_zero_cost': {'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 3, 'op_2_0': 2, 'op_2_1': 0, 'op_3_0': 1, 'op_3_1': 2, 'op_3_2': 3, 'number_classes': 10}, 'default': {'config': {'name': ['infer.tiny'], 'C': [16], 'N': [5], 'op_0_0': [0], 'op_1_0': [4], 'op_2_0': [2], 'op_2_1': [1], 'op_3_0': [2], 'op_3_1': [1], 'op_3_2': [1], 'number_classes': [10]}}}
+index
+8219
+results
+{111: ResultsCount(cifar10, arch=|nor_conv_1x1~0|+|nor_conv_3x3~0|skip_connect~1|+|none~0|nor_conv_3x3~1|nor_conv_1x1~2|, FLOP=86.43M, Param=0.615MB, seed=0111, 1 eval-sets: [ori-test])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+  5%|▌         | 13/250 [53:07<18:08:42, 275.62s/it, 2856.46/20000 seconds]  5%|▌         | 13/250 [53:07<18:08:42, 275.62s/it, 3187.95/20000 seconds]sampled_config
+{'nas_zero_cost': {'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 3, 'op_2_0': 2, 'op_2_1': 0, 'op_3_0': 1, 'op_3_1': 2, 'op_3_2': 4, 'number_classes': 10}, 'default': {'config': {'name': ['infer.tiny'], 'C': [16], 'N': [5], 'op_0_0': [0], 'op_1_0': [4], 'op_2_0': [2], 'op_2_1': [1], 'op_3_0': [2], 'op_3_1': [1], 'op_3_2': [1], 'number_classes': [10]}}}
+index
+2012
+results
+{111: ResultsCount(cifar10, arch=|nor_conv_1x1~0|+|nor_conv_3x3~0|skip_connect~1|+|none~0|nor_conv_3x3~1|avg_pool_3x3~2|, FLOP=82.49M, Param=0.587MB, seed=0111, 1 eval-sets: [ori-test])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+  6%|▌         | 14/250 [57:38<17:58:30, 274.20s/it, 3187.95/20000 seconds]  6%|▌         | 14/250 [57:38<17:58:30, 274.20s/it, 3458.86/20000 seconds]sampled_config
+{'nas_zero_cost': {'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 2, 'op_2_0': 3, 'op_2_1': 0, 'op_3_0': 1, 'op_3_1': 3, 'op_3_2': 3, 'number_classes': 10}, 'default': {'config': {'name': ['infer.tiny'], 'C': [16], 'N': [5], 'op_0_0': [0], 'op_1_0': [4], 'op_2_0': [2], 'op_2_1': [1], 'op_3_0': [2], 'op_3_1': [1], 'op_3_2': [1], 'number_classes': [10]}}}
+index
+12216
+results
+{111: ResultsCount(cifar10, arch=|nor_conv_3x3~0|+|nor_conv_1x1~0|skip_connect~1|+|none~0|nor_conv_1x1~1|nor_conv_1x1~2|, FLOP=54.97M, Param=0.400MB, seed=0111, 1 eval-sets: [ori-test])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+  6%|▌         | 15/250 [1:02:22<18:05:06, 277.05s/it, 3458.86/20000 seconds]  6%|▌         | 15/250 [1:02:22<18:05:06, 277.05s/it, 3742.51/20000 seconds]sampled_config
+{'nas_zero_cost': {'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 1, 'op_2_0': 3, 'op_2_1': 0, 'op_3_0': 1, 'op_3_1': 2, 'op_3_2': 3, 'number_classes': 10}, 'default': {'config': {'name': ['infer.tiny'], 'C': [16], 'N': [5], 'op_0_0': [0], 'op_1_0': [4], 'op_2_0': [2], 'op_2_1': [1], 'op_3_0': [2], 'op_3_1': [1], 'op_3_2': [1], 'number_classes': [10]}}}
+index
+4735
+results
+{111: ResultsCount(cifar10, arch=|none~0|+|nor_conv_1x1~0|skip_connect~1|+|none~0|nor_conv_3x3~1|nor_conv_1x1~2|, FLOP=51.04M, Param=0.372MB, seed=0111, 1 eval-sets: [ori-test])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+  6%|▋         | 16/250 [1:06:10<17:02:28, 262.18s/it, 3742.51/20000 seconds]  6%|▋         | 16/250 [1:06:10<17:02:28, 262.18s/it, 3970.15/20000 seconds]sampled_config
+{'nas_zero_cost': {'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 3, 'op_2_0': 3, 'op_2_1': 0, 'op_3_0': 1, 'op_3_1': 3, 'op_3_2': 2, 'number_classes': 10}, 'default': {'config': {'name': ['infer.tiny'], 'C': [16], 'N': [5], 'op_0_0': [0], 'op_1_0': [4], 'op_2_0': [2], 'op_2_1': [1], 'op_3_0': [2], 'op_3_1': [1], 'op_3_2': [1], 'number_classes': [10]}}}
+index
+7811
+results
+{111: ResultsCount(cifar10, arch=|nor_conv_1x1~0|+|nor_conv_1x1~0|skip_connect~1|+|none~0|nor_conv_1x1~1|nor_conv_3x3~2|, FLOP=54.97M, Param=0.400MB, seed=0111, 1 eval-sets: [ori-test])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+  7%|▋         | 17/250 [1:10:31<16:57:11, 261.94s/it, 3970.15/20000 seconds]  7%|▋         | 17/250 [1:10:31<16:57:11, 261.94s/it, 4231.52/20000 seconds]sampled_config
+{'nas_zero_cost': {'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 3, 'op_2_0': 3, 'op_2_1': 0, 'op_3_0': 1, 'op_3_1': 3, 'op_3_2': 2, 'number_classes': 10}, 'default': {'config': {'name': ['infer.tiny'], 'C': [16], 'N': [5], 'op_0_0': [0], 'op_1_0': [4], 'op_2_0': [2], 'op_2_1': [1], 'op_3_0': [2], 'op_3_1': [1], 'op_3_2': [1], 'number_classes': [10]}}}
+index
+7811
+results
+{111: ResultsCount(cifar10, arch=|nor_conv_1x1~0|+|nor_conv_1x1~0|skip_connect~1|+|none~0|nor_conv_1x1~1|nor_conv_3x3~2|, FLOP=54.97M, Param=0.400MB, seed=0111, 1 eval-sets: [ori-test])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+  7%|▋         | 18/250 [1:14:20<16:14:52, 252.12s/it, 4231.52/20000 seconds]  7%|▋         | 18/250 [1:14:20<16:14:52, 252.12s/it, 4460.81/20000 seconds]sampled_config
+{'nas_zero_cost': {'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 3, 'op_2_0': 2, 'op_2_1': 2, 'op_3_0': 0, 'op_3_1': 2, 'op_3_2': 0, 'number_classes': 10}, 'default': {'config': {'name': ['infer.tiny'], 'C': [16], 'N': [5], 'op_0_0': [0], 'op_1_0': [4], 'op_2_0': [2], 'op_2_1': [1], 'op_3_0': [2], 'op_3_1': [1], 'op_3_2': [1], 'number_classes': [10]}}}
+index
+5617
+results
+{111: ResultsCount(cifar10, arch=|nor_conv_1x1~0|+|nor_conv_3x3~0|nor_conv_3x3~1|+|skip_connect~0|nor_conv_3x3~1|skip_connect~2|, FLOP=117.88M, Param=0.830MB, seed=0111, 1 eval-sets: [ori-test])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+  8%|▊         | 19/250 [1:19:23<17:09:33, 267.42s/it, 4460.81/20000 seconds]  8%|▊         | 19/250 [1:19:23<17:09:33, 267.42s/it, 4763.84/20000 seconds]sampled_config
+{'nas_zero_cost': {'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 4, 'op_2_0': 3, 'op_2_1': 0, 'op_3_0': 1, 'op_3_1': 2, 'op_3_2': 2, 'number_classes': 10}, 'default': {'config': {'name': ['infer.tiny'], 'C': [16], 'N': [5], 'op_0_0': [0], 'op_1_0': [4], 'op_2_0': [2], 'op_2_1': [1], 'op_3_0': [2], 'op_3_1': [1], 'op_3_2': [1], 'number_classes': [10]}}}
+index
+12643
+results
+{111: ResultsCount(cifar10, arch=|avg_pool_3x3~0|+|nor_conv_1x1~0|skip_connect~1|+|none~0|nor_conv_3x3~1|nor_conv_3x3~2|, FLOP=82.49M, Param=0.587MB, seed=0111, 1 eval-sets: [ori-test])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+  8%|▊         | 20/250 [1:23:34<16:46:06, 262.46s/it, 4763.84/20000 seconds]  8%|▊         | 20/250 [1:23:34<16:46:06, 262.46s/it, 5014.76/20000 seconds]sampled_config
+{'nas_zero_cost': {'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 3, 'op_2_0': 2, 'op_2_1': 1, 'op_3_0': 0, 'op_3_1': 1, 'op_3_2': 1, 'number_classes': 10}, 'default': {'config': {'name': ['infer.tiny'], 'C': [16], 'N': [5], 'op_0_0': [0], 'op_1_0': [4], 'op_2_0': [2], 'op_2_1': [1], 'op_3_0': [2], 'op_3_1': [1], 'op_3_2': [1], 'number_classes': [10]}}}
+index
+10673
+results
+{111: ResultsCount(cifar10, arch=|nor_conv_1x1~0|+|nor_conv_3x3~0|none~1|+|skip_connect~0|none~1|none~2|, FLOP=47.10M, Param=0.344MB, seed=0111, 1 eval-sets: [ori-test])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+  8%|▊         | 21/250 [1:27:04<15:40:49, 246.50s/it, 5014.76/20000 seconds]  8%|▊         | 21/250 [1:27:04<15:40:49, 246.50s/it, 5224.05/20000 seconds]sampled_config
+{'nas_zero_cost': {'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 3, 'op_2_0': 3, 'op_2_1': 0, 'op_3_0': 1, 'op_3_1': 3, 'op_3_2': 2, 'number_classes': 10}, 'default': {'config': {'name': ['infer.tiny'], 'C': [16], 'N': [5], 'op_0_0': [0], 'op_1_0': [4], 'op_2_0': [2], 'op_2_1': [1], 'op_3_0': [2], 'op_3_1': [1], 'op_3_2': [1], 'number_classes': [10]}}}
+index
+7811
+results
+{111: ResultsCount(cifar10, arch=|nor_conv_1x1~0|+|nor_conv_1x1~0|skip_connect~1|+|none~0|nor_conv_1x1~1|nor_conv_3x3~2|, FLOP=54.97M, Param=0.400MB, seed=0111, 1 eval-sets: [ori-test])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+  9%|▉         | 22/250 [1:30:58<15:22:51, 242.86s/it, 5224.05/20000 seconds]  9%|▉         | 22/250 [1:30:58<15:22:51, 242.86s/it, 5458.41/20000 seconds]sampled_config
+{'nas_zero_cost': {'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 3, 'op_2_0': 3, 'op_2_1': 0, 'op_3_0': 1, 'op_3_1': 3, 'op_3_2': 2, 'number_classes': 10}, 'default': {'config': {'name': ['infer.tiny'], 'C': [16], 'N': [5], 'op_0_0': [0], 'op_1_0': [4], 'op_2_0': [2], 'op_2_1': [1], 'op_3_0': [2], 'op_3_1': [1], 'op_3_2': [1], 'number_classes': [10]}}}
+index
+7811
+results
+{111: ResultsCount(cifar10, arch=|nor_conv_1x1~0|+|nor_conv_1x1~0|skip_connect~1|+|none~0|nor_conv_1x1~1|nor_conv_3x3~2|, FLOP=54.97M, Param=0.400MB, seed=0111, 1 eval-sets: [ori-test])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+  9%|▉         | 23/250 [1:34:21<14:33:31, 230.89s/it, 5458.41/20000 seconds]  9%|▉         | 23/250 [1:34:21<14:33:31, 230.89s/it, 5661.37/20000 seconds]sampled_config
+{'nas_zero_cost': {'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 4, 'op_2_0': 4, 'op_2_1': 0, 'op_3_0': 1, 'op_3_1': 4, 'op_3_2': 2, 'number_classes': 10}, 'default': {'config': {'name': ['infer.tiny'], 'C': [16], 'N': [5], 'op_0_0': [0], 'op_1_0': [4], 'op_2_0': [2], 'op_2_1': [1], 'op_3_0': [2], 'op_3_1': [1], 'op_3_2': [1], 'number_classes': [10]}}}
+index
+5929
+results
+{111: ResultsCount(cifar10, arch=|avg_pool_3x3~0|+|avg_pool_3x3~0|skip_connect~1|+|none~0|avg_pool_3x3~1|nor_conv_3x3~2|, FLOP=43.17M, Param=0.316MB, seed=0111, 1 eval-sets: [ori-test])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+ 10%|▉         | 24/250 [1:37:39<13:53:03, 221.16s/it, 5661.37/20000 seconds] 10%|▉         | 24/250 [1:37:39<13:53:03, 221.16s/it, 5859.86/20000 seconds]sampled_config
+{'nas_zero_cost': {'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 3, 'op_2_0': 3, 'op_2_1': 1, 'op_3_0': 0, 'op_3_1': 3, 'op_3_2': 3, 'number_classes': 10}, 'default': {'config': {'name': ['infer.tiny'], 'C': [16], 'N': [5], 'op_0_0': [0], 'op_1_0': [4], 'op_2_0': [2], 'op_2_1': [1], 'op_3_0': [2], 'op_3_1': [1], 'op_3_2': [1], 'number_classes': [10]}}}
+index
+12639
+results
+{111: ResultsCount(cifar10, arch=|nor_conv_1x1~0|+|nor_conv_1x1~0|none~1|+|skip_connect~0|nor_conv_1x1~1|nor_conv_1x1~2|, FLOP=23.51M, Param=0.185MB, seed=0111, 1 eval-sets: [ori-test])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+ 10%|█         | 25/250 [1:41:09<13:36:57, 217.85s/it, 5859.86/20000 seconds] 10%|█         | 25/250 [1:41:09<13:36:57, 217.85s/it, 6069.99/20000 seconds]sampled_config
+{'nas_zero_cost': {'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 2, 'op_2_0': 2, 'op_2_1': 0, 'op_3_0': 1, 'op_3_1': 2, 'op_3_2': 2, 'number_classes': 10}, 'default': {'config': {'name': ['infer.tiny'], 'C': [16], 'N': [5], 'op_0_0': [0], 'op_1_0': [4], 'op_2_0': [2], 'op_2_1': [1], 'op_3_0': [2], 'op_3_1': [1], 'op_3_2': [1], 'number_classes': [10]}}}
+index
+13056
+results
+{111: ResultsCount(cifar10, arch=|nor_conv_3x3~0|+|nor_conv_3x3~0|skip_connect~1|+|none~0|nor_conv_3x3~1|nor_conv_3x3~2|, FLOP=149.34M, Param=1.045MB, seed=0111, 1 eval-sets: [ori-test])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+ 10%|█         | 26/250 [1:46:35<15:33:35, 250.07s/it, 6069.99/20000 seconds] 10%|█         | 26/250 [1:46:35<15:33:35, 250.07s/it, 6395.22/20000 seconds]sampled_config
+{'nas_zero_cost': {'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 2, 'op_2_0': 1, 'op_2_1': 1, 'op_3_0': 2, 'op_3_1': 2, 'op_3_2': 1, 'number_classes': 10}, 'default': {'config': {'name': ['infer.tiny'], 'C': [16], 'N': [5], 'op_0_0': [0], 'op_1_0': [4], 'op_2_0': [2], 'op_2_1': [1], 'op_3_0': [2], 'op_3_1': [1], 'op_3_2': [1], 'number_classes': [10]}}}
+index
+12180
+results
+{111: ResultsCount(cifar10, arch=|nor_conv_3x3~0|+|none~0|none~1|+|nor_conv_3x3~0|nor_conv_3x3~1|none~2|, FLOP=113.95M, Param=0.802MB, seed=0111, 1 eval-sets: [ori-test])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+ 11%|█         | 27/250 [1:52:03<16:57:08, 273.67s/it, 6395.22/20000 seconds] 11%|█         | 27/250 [1:52:03<16:57:08, 273.67s/it, 6723.96/20000 seconds]sampled_config
+{'nas_zero_cost': {'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 2, 'op_2_0': 2, 'op_2_1': 0, 'op_3_0': 1, 'op_3_1': 2, 'op_3_2': 3, 'number_classes': 10}, 'default': {'config': {'name': ['infer.tiny'], 'C': [16], 'N': [5], 'op_0_0': [0], 'op_1_0': [4], 'op_2_0': [2], 'op_2_1': [1], 'op_3_0': [2], 'op_3_1': [1], 'op_3_2': [1], 'number_classes': [10]}}}
+index
+9621
+results
+{111: ResultsCount(cifar10, arch=|nor_conv_3x3~0|+|nor_conv_3x3~0|skip_connect~1|+|none~0|nor_conv_3x3~1|nor_conv_1x1~2|, FLOP=117.88M, Param=0.830MB, seed=0111, 1 eval-sets: [ori-test])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+ 11%|█         | 28/250 [1:56:58<17:16:00, 280.00s/it, 6723.96/20000 seconds] 11%|█         | 28/250 [1:56:58<17:16:00, 280.00s/it, 7018.74/20000 seconds]sampled_config
+{'nas_zero_cost': {'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 1, 'op_2_0': 2, 'op_2_1': 2, 'op_3_0': 0, 'op_3_1': 1, 'op_3_2': 3, 'number_classes': 10}, 'default': {'config': {'name': ['infer.tiny'], 'C': [16], 'N': [5], 'op_0_0': [0], 'op_1_0': [4], 'op_2_0': [2], 'op_2_1': [1], 'op_3_0': [2], 'op_3_1': [1], 'op_3_2': [1], 'number_classes': [10]}}}
+index
+6250
+results
+{111: ResultsCount(cifar10, arch=|none~0|+|nor_conv_3x3~0|nor_conv_3x3~1|+|skip_connect~0|none~1|nor_conv_1x1~2|, FLOP=82.49M, Param=0.587MB, seed=0111, 1 eval-sets: [ori-test])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+ 12%|█▏        | 29/250 [2:00:37<16:03:41, 261.64s/it, 7018.74/20000 seconds] 12%|█▏        | 29/250 [2:00:37<16:03:41, 261.64s/it, 7237.52/20000 seconds]sampled_config
+{'nas_zero_cost': {'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 2, 'op_2_0': 1, 'op_2_1': 0, 'op_3_0': 2, 'op_3_1': 2, 'op_3_2': 3, 'number_classes': 10}, 'default': {'config': {'name': ['infer.tiny'], 'C': [16], 'N': [5], 'op_0_0': [0], 'op_1_0': [4], 'op_2_0': [2], 'op_2_1': [1], 'op_3_0': [2], 'op_3_1': [1], 'op_3_2': [1], 'number_classes': [10]}}}
+index
+8838
+results
+{111: ResultsCount(cifar10, arch=|nor_conv_3x3~0|+|none~0|skip_connect~1|+|nor_conv_3x3~0|nor_conv_3x3~1|nor_conv_1x1~2|, FLOP=117.88M, Param=0.830MB, seed=0111, 1 eval-sets: [ori-test])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+ 12%|█▏        | 30/250 [2:06:05<17:12:40, 281.64s/it, 7237.52/20000 seconds] 12%|█▏        | 30/250 [2:06:05<17:12:40, 281.64s/it, 7565.82/20000 seconds]sampled_config
+{'nas_zero_cost': {'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 1, 'op_2_0': 2, 'op_2_1': 1, 'op_3_0': 1, 'op_3_1': 2, 'op_3_2': 4, 'number_classes': 10}, 'default': {'config': {'name': ['infer.tiny'], 'C': [16], 'N': [5], 'op_0_0': [0], 'op_1_0': [4], 'op_2_0': [2], 'op_2_1': [1], 'op_3_0': [2], 'op_3_1': [1], 'op_3_2': [1], 'number_classes': [10]}}}
+index
+8215
+results
+{111: ResultsCount(cifar10, arch=|none~0|+|nor_conv_3x3~0|none~1|+|none~0|nor_conv_3x3~1|avg_pool_3x3~2|, FLOP=78.56M, Param=0.559MB, seed=0111, 1 eval-sets: [ori-test])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+ 12%|█▏        | 31/250 [2:11:08<17:31:04, 287.97s/it, 7565.82/20000 seconds] 12%|█▏        | 31/250 [2:11:08<17:31:04, 287.97s/it, 7868.55/20000 seconds]sampled_config
+{'nas_zero_cost': {'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 2, 'op_2_0': 2, 'op_2_1': 0, 'op_3_0': 1, 'op_3_1': 2, 'op_3_2': 2, 'number_classes': 10}, 'default': {'config': {'name': ['infer.tiny'], 'C': [16], 'N': [5], 'op_0_0': [0], 'op_1_0': [4], 'op_2_0': [2], 'op_2_1': [1], 'op_3_0': [2], 'op_3_1': [1], 'op_3_2': [1], 'number_classes': [10]}}}
+index
+13056
+results
+{111: ResultsCount(cifar10, arch=|nor_conv_3x3~0|+|nor_conv_3x3~0|skip_connect~1|+|none~0|nor_conv_3x3~1|nor_conv_3x3~2|, FLOP=149.34M, Param=1.045MB, seed=0111, 1 eval-sets: [ori-test])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+ 13%|█▎        | 32/250 [2:17:07<18:43:41, 309.27s/it, 7868.55/20000 seconds] 13%|█▎        | 32/250 [2:17:07<18:43:41, 309.27s/it, 8227.55/20000 seconds]sampled_config
+{'nas_zero_cost': {'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 2, 'op_2_0': 2, 'op_2_1': 0, 'op_3_0': 1, 'op_3_1': 2, 'op_3_2': 3, 'number_classes': 10}, 'default': {'config': {'name': ['infer.tiny'], 'C': [16], 'N': [5], 'op_0_0': [0], 'op_1_0': [4], 'op_2_0': [2], 'op_2_1': [1], 'op_3_0': [2], 'op_3_1': [1], 'op_3_2': [1], 'number_classes': [10]}}}
+index
+9621
+results
+{111: ResultsCount(cifar10, arch=|nor_conv_3x3~0|+|nor_conv_3x3~0|skip_connect~1|+|none~0|nor_conv_3x3~1|nor_conv_1x1~2|, FLOP=117.88M, Param=0.830MB, seed=0111, 1 eval-sets: [ori-test])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+ 13%|█▎        | 33/250 [2:22:09<18:30:23, 307.02s/it, 8227.55/20000 seconds] 13%|█▎        | 33/250 [2:22:09<18:30:23, 307.02s/it, 8529.32/20000 seconds]sampled_config
+{'nas_zero_cost': {'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 2, 'op_2_0': 1, 'op_2_1': 0, 'op_3_0': 0, 'op_3_1': 1, 'op_3_2': 2, 'number_classes': 10}, 'default': {'config': {'name': ['infer.tiny'], 'C': [16], 'N': [5], 'op_0_0': [0], 'op_1_0': [4], 'op_2_0': [2], 'op_2_1': [1], 'op_3_0': [2], 'op_3_1': [1], 'op_3_2': [1], 'number_classes': [10]}}}
+index
+9950
+results
+{111: ResultsCount(cifar10, arch=|nor_conv_3x3~0|+|none~0|skip_connect~1|+|skip_connect~0|none~1|nor_conv_3x3~2|, FLOP=78.56M, Param=0.559MB, seed=0111, 1 eval-sets: [ori-test])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+ 14%|█▎        | 34/250 [2:25:22<16:21:48, 272.72s/it, 8529.32/20000 seconds] 14%|█▎        | 34/250 [2:25:22<16:21:48, 272.72s/it, 8722.01/20000 seconds]sampled_config
+{'nas_zero_cost': {'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 2, 'op_2_0': 2, 'op_2_1': 1, 'op_3_0': 2, 'op_3_1': 2, 'op_3_2': 1, 'number_classes': 10}, 'default': {'config': {'name': ['infer.tiny'], 'C': [16], 'N': [5], 'op_0_0': [0], 'op_1_0': [4], 'op_2_0': [2], 'op_2_1': [1], 'op_3_0': [2], 'op_3_1': [1], 'op_3_2': [1], 'number_classes': [10]}}}
+index
+4487
+results
+{111: ResultsCount(cifar10, arch=|nor_conv_3x3~0|+|nor_conv_3x3~0|none~1|+|nor_conv_3x3~0|nor_conv_3x3~1|none~2|, FLOP=149.34M, Param=1.045MB, seed=0111, 1 eval-sets: [ori-test])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+ 14%|█▍        | 35/250 [2:31:00<17:28:02, 292.47s/it, 8722.01/20000 seconds] 14%|█▍        | 35/250 [2:31:00<17:28:02, 292.47s/it, 9060.57/20000 seconds]sampled_config
+{'nas_zero_cost': {'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 1, 'op_2_0': 2, 'op_2_1': 0, 'op_3_0': 0, 'op_3_1': 0, 'op_3_2': 3, 'number_classes': 10}, 'default': {'config': {'name': ['infer.tiny'], 'C': [16], 'N': [5], 'op_0_0': [0], 'op_1_0': [4], 'op_2_0': [2], 'op_2_1': [1], 'op_3_0': [2], 'op_3_1': [1], 'op_3_2': [1], 'number_classes': [10]}}}
+index
+4659
+results
+{111: ResultsCount(cifar10, arch=|none~0|+|nor_conv_3x3~0|skip_connect~1|+|skip_connect~0|skip_connect~1|nor_conv_1x1~2|, FLOP=47.10M, Param=0.344MB, seed=0111, 1 eval-sets: [ori-test])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+ 14%|█▍        | 36/250 [2:33:55<15:17:43, 257.30s/it, 9060.57/20000 seconds] 14%|█▍        | 36/250 [2:33:55<15:17:43, 257.30s/it, 9235.81/20000 seconds]sampled_config
+{'nas_zero_cost': {'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 2, 'op_2_0': 1, 'op_2_1': 1, 'op_3_0': 1, 'op_3_1': 1, 'op_3_2': 2, 'number_classes': 10}, 'default': {'config': {'name': ['infer.tiny'], 'C': [16], 'N': [5], 'op_0_0': [0], 'op_1_0': [4], 'op_2_0': [2], 'op_2_1': [1], 'op_3_0': [2], 'op_3_1': [1], 'op_3_2': [1], 'number_classes': [10]}}}
+index
+12347
+results
+{111: ResultsCount(cifar10, arch=|nor_conv_3x3~0|+|none~0|none~1|+|none~0|none~1|nor_conv_3x3~2|, FLOP=78.56M, Param=0.559MB, seed=0111, 1 eval-sets: [ori-test])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+ 15%|█▍        | 37/250 [2:37:31<14:29:14, 244.85s/it, 9235.81/20000 seconds] 15%|█▍        | 37/250 [2:37:31<14:29:14, 244.85s/it, 9451.62/20000 seconds]sampled_config
+{'nas_zero_cost': {'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 2, 'op_2_0': 2, 'op_2_1': 1, 'op_3_0': 1, 'op_3_1': 2, 'op_3_2': 1, 'number_classes': 10}, 'default': {'config': {'name': ['infer.tiny'], 'C': [16], 'N': [5], 'op_0_0': [0], 'op_1_0': [4], 'op_2_0': [2], 'op_2_1': [1], 'op_3_0': [2], 'op_3_1': [1], 'op_3_2': [1], 'number_classes': [10]}}}
+index
+12447
+results
+{111: ResultsCount(cifar10, arch=|nor_conv_3x3~0|+|nor_conv_3x3~0|none~1|+|none~0|nor_conv_3x3~1|none~2|, FLOP=113.95M, Param=0.802MB, seed=0111, 1 eval-sets: [ori-test])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+ 15%|█▌        | 38/250 [2:41:53<14:43:05, 249.93s/it, 9451.62/20000 seconds] 15%|█▌        | 38/250 [2:41:53<14:43:05, 249.93s/it, 9713.39/20000 seconds]sampled_config
+{'nas_zero_cost': {'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 2, 'op_2_0': 2, 'op_2_1': 1, 'op_3_0': 2, 'op_3_1': 1, 'op_3_2': 0, 'number_classes': 10}, 'default': {'config': {'name': ['infer.tiny'], 'C': [16], 'N': [5], 'op_0_0': [0], 'op_1_0': [4], 'op_2_0': [2], 'op_2_1': [1], 'op_3_0': [2], 'op_3_1': [1], 'op_3_2': [1], 'number_classes': [10]}}}
+index
+509
+results
+{111: ResultsCount(cifar10, arch=|nor_conv_3x3~0|+|nor_conv_3x3~0|none~1|+|nor_conv_3x3~0|none~1|skip_connect~2|, FLOP=113.95M, Param=0.802MB, seed=0111, 1 eval-sets: [ori-test])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+ 16%|█▌        | 39/250 [2:46:20<14:57:32, 255.22s/it, 9713.39/20000 seconds] 16%|█▌        | 39/250 [2:46:20<14:57:32, 255.22s/it, 9980.96/20000 seconds]sampled_config
+{'nas_zero_cost': {'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 2, 'op_2_0': 1, 'op_2_1': 1, 'op_3_0': 0, 'op_3_1': 1, 'op_3_2': 1, 'number_classes': 10}, 'default': {'config': {'name': ['infer.tiny'], 'C': [16], 'N': [5], 'op_0_0': [0], 'op_1_0': [4], 'op_2_0': [2], 'op_2_1': [1], 'op_3_0': [2], 'op_3_1': [1], 'op_3_2': [1], 'number_classes': [10]}}}
+index
+8048
+results
+{111: ResultsCount(cifar10, arch=|nor_conv_3x3~0|+|none~0|none~1|+|skip_connect~0|none~1|none~2|, FLOP=43.17M, Param=0.316MB, seed=0111, 1 eval-sets: [ori-test])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+ 16%|█▌        | 40/250 [2:49:20<13:33:52, 232.54s/it, 9980.96/20000 seconds] 16%|█▌        | 40/250 [2:49:20<13:33:52, 232.54s/it, 10160.57/20000 seconds]sampled_config
+{'nas_zero_cost': {'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 1, 'op_2_0': 2, 'op_2_1': 2, 'op_3_0': 3, 'op_3_1': 2, 'op_3_2': 1, 'number_classes': 10}, 'default': {'config': {'name': ['infer.tiny'], 'C': [16], 'N': [5], 'op_0_0': [0], 'op_1_0': [4], 'op_2_0': [2], 'op_2_1': [1], 'op_3_0': [2], 'op_3_1': [1], 'op_3_2': [1], 'number_classes': [10]}}}
+index
+5888
+results
+{111: ResultsCount(cifar10, arch=|none~0|+|nor_conv_3x3~0|nor_conv_3x3~1|+|nor_conv_1x1~0|nor_conv_3x3~1|none~2|, FLOP=117.88M, Param=0.830MB, seed=0111, 1 eval-sets: [ori-test])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+ 16%|█▋        | 41/250 [2:54:06<14:26:11, 248.67s/it, 10160.57/20000 seconds] 16%|█▋        | 41/250 [2:54:06<14:26:11, 248.67s/it, 10446.87/20000 seconds]sampled_config
+{'nas_zero_cost': {'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 2, 'op_2_0': 2, 'op_2_1': 0, 'op_3_0': 1, 'op_3_1': 2, 'op_3_2': 1, 'number_classes': 10}, 'default': {'config': {'name': ['infer.tiny'], 'C': [16], 'N': [5], 'op_0_0': [0], 'op_1_0': [4], 'op_2_0': [2], 'op_2_1': [1], 'op_3_0': [2], 'op_3_1': [1], 'op_3_2': [1], 'number_classes': [10]}}}
+index
+344
+results
+{111: ResultsCount(cifar10, arch=|nor_conv_3x3~0|+|nor_conv_3x3~0|skip_connect~1|+|none~0|nor_conv_3x3~1|none~2|, FLOP=113.95M, Param=0.802MB, seed=0111, 1 eval-sets: [ori-test])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+ 17%|█▋        | 42/250 [2:58:37<14:44:31, 255.15s/it, 10446.87/20000 seconds] 17%|█▋        | 42/250 [2:58:37<14:44:31, 255.15s/it, 10717.15/20000 seconds]sampled_config
+{'nas_zero_cost': {'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 2, 'op_2_0': 2, 'op_2_1': 0, 'op_3_0': 1, 'op_3_1': 2, 'op_3_2': 2, 'number_classes': 10}, 'default': {'config': {'name': ['infer.tiny'], 'C': [16], 'N': [5], 'op_0_0': [0], 'op_1_0': [4], 'op_2_0': [2], 'op_2_1': [1], 'op_3_0': [2], 'op_3_1': [1], 'op_3_2': [1], 'number_classes': [10]}}}
+index
+13056
+results
+{111: ResultsCount(cifar10, arch=|nor_conv_3x3~0|+|nor_conv_3x3~0|skip_connect~1|+|none~0|nor_conv_3x3~1|nor_conv_3x3~2|, FLOP=149.34M, Param=1.045MB, seed=0111, 1 eval-sets: [ori-test])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+ 17%|█▋        | 43/250 [3:04:10<16:01:16, 278.63s/it, 10717.15/20000 seconds] 17%|█▋        | 43/250 [3:04:10<16:01:16, 278.63s/it, 11050.57/20000 seconds]sampled_config
+{'nas_zero_cost': {'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 2, 'op_2_0': 2, 'op_2_1': 1, 'op_3_0': 1, 'op_3_1': 2, 'op_3_2': 3, 'number_classes': 10}, 'default': {'config': {'name': ['infer.tiny'], 'C': [16], 'N': [5], 'op_0_0': [0], 'op_1_0': [4], 'op_2_0': [2], 'op_2_1': [1], 'op_3_0': [2], 'op_3_1': [1], 'op_3_2': [1], 'number_classes': [10]}}}
+index
+4550
+results
+{111: ResultsCount(cifar10, arch=|nor_conv_3x3~0|+|nor_conv_3x3~0|none~1|+|none~0|nor_conv_3x3~1|nor_conv_1x1~2|, FLOP=117.88M, Param=0.830MB, seed=0111, 1 eval-sets: [ori-test])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+ 18%|█▊        | 44/250 [3:10:20<17:30:53, 306.08s/it, 11050.57/20000 seconds] 18%|█▊        | 44/250 [3:10:20<17:30:53, 306.08s/it, 11420.71/20000 seconds]sampled_config
+{'nas_zero_cost': {'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 1, 'op_2_0': 1, 'op_2_1': 1, 'op_3_0': 2, 'op_3_1': 2, 'op_3_2': 3, 'number_classes': 10}, 'default': {'config': {'name': ['infer.tiny'], 'C': [16], 'N': [5], 'op_0_0': [0], 'op_1_0': [4], 'op_2_0': [2], 'op_2_1': [1], 'op_3_0': [2], 'op_3_1': [1], 'op_3_2': [1], 'number_classes': [10]}}}
+index
+12523
+results
+{111: ResultsCount(cifar10, arch=|none~0|+|none~0|none~1|+|nor_conv_3x3~0|nor_conv_3x3~1|nor_conv_1x1~2|, FLOP=82.49M, Param=0.587MB, seed=0111, 1 eval-sets: [ori-test])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+ 18%|█▊        | 45/250 [3:15:47<17:46:47, 312.23s/it, 11420.71/20000 seconds] 18%|█▊        | 45/250 [3:15:47<17:46:47, 312.23s/it, 11747.29/20000 seconds]sampled_config
+{'nas_zero_cost': {'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 2, 'op_2_0': 2, 'op_2_1': 2, 'op_3_0': 1, 'op_3_1': 2, 'op_3_2': 4, 'number_classes': 10}, 'default': {'config': {'name': ['infer.tiny'], 'C': [16], 'N': [5], 'op_0_0': [0], 'op_1_0': [4], 'op_2_0': [2], 'op_2_1': [1], 'op_3_0': [2], 'op_3_1': [1], 'op_3_2': [1], 'number_classes': [10]}}}
+index
+11064
+results
+{111: ResultsCount(cifar10, arch=|nor_conv_3x3~0|+|nor_conv_3x3~0|nor_conv_3x3~1|+|none~0|nor_conv_3x3~1|avg_pool_3x3~2|, FLOP=149.34M, Param=1.045MB, seed=0111, 1 eval-sets: [ori-test])}
+Caught CUDA OOM, retrying with data split into 2 parts
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+ 18%|█▊        | 46/250 [3:22:47<19:31:58, 344.70s/it, 11747.29/20000 seconds] 18%|█▊        | 46/250 [3:22:47<19:31:58, 344.70s/it, 12167.74/20000 seconds]sampled_config
+{'nas_zero_cost': {'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 2, 'op_2_0': 2, 'op_2_1': 1, 'op_3_0': 2, 'op_3_1': 3, 'op_3_2': 3, 'number_classes': 10}, 'default': {'config': {'name': ['infer.tiny'], 'C': [16], 'N': [5], 'op_0_0': [0], 'op_1_0': [4], 'op_2_0': [2], 'op_2_1': [1], 'op_3_0': [2], 'op_3_1': [1], 'op_3_2': [1], 'number_classes': [10]}}}
+index
+8549
+results
+{111: ResultsCount(cifar10, arch=|nor_conv_3x3~0|+|nor_conv_3x3~0|none~1|+|nor_conv_3x3~0|nor_conv_1x1~1|nor_conv_1x1~2|, FLOP=121.82M, Param=0.858MB, seed=0111, 1 eval-sets: [ori-test])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+ 19%|█▉        | 47/250 [3:28:50<19:44:36, 350.13s/it, 12167.74/20000 seconds] 19%|█▉        | 47/250 [3:28:50<19:44:36, 350.13s/it, 12530.54/20000 seconds]sampled_config
+{'nas_zero_cost': {'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 2, 'op_2_0': 2, 'op_2_1': 1, 'op_3_0': 1, 'op_3_1': 1, 'op_3_2': 3, 'number_classes': 10}, 'default': {'config': {'name': ['infer.tiny'], 'C': [16], 'N': [5], 'op_0_0': [0], 'op_1_0': [4], 'op_2_0': [2], 'op_2_1': [1], 'op_3_0': [2], 'op_3_1': [1], 'op_3_2': [1], 'number_classes': [10]}}}
+index
+2223
+results
+{111: ResultsCount(cifar10, arch=|nor_conv_3x3~0|+|nor_conv_3x3~0|none~1|+|none~0|none~1|nor_conv_1x1~2|, FLOP=82.49M, Param=0.587MB, seed=0111, 1 eval-sets: [ori-test])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+ 19%|█▉        | 48/250 [3:32:59<17:57:04, 319.92s/it, 12530.54/20000 seconds] 19%|█▉        | 48/250 [3:32:59<17:57:04, 319.92s/it, 12779.98/20000 seconds]sampled_config
+{'nas_zero_cost': {'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 1, 'op_2_0': 1, 'op_2_1': 3, 'op_3_0': 4, 'op_3_1': 2, 'op_3_2': 4, 'number_classes': 10}, 'default': {'config': {'name': ['infer.tiny'], 'C': [16], 'N': [5], 'op_0_0': [0], 'op_1_0': [4], 'op_2_0': [2], 'op_2_1': [1], 'op_3_0': [2], 'op_3_1': [1], 'op_3_2': [1], 'number_classes': [10]}}}
+index
+12962
+results
+{111: ResultsCount(cifar10, arch=|none~0|+|none~0|nor_conv_1x1~1|+|avg_pool_3x3~0|nor_conv_3x3~1|avg_pool_3x3~2|, FLOP=47.10M, Param=0.344MB, seed=0111, 1 eval-sets: [ori-test])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+ 20%|█▉        | 49/250 [3:37:33<17:05:07, 306.01s/it, 12779.98/20000 seconds] 20%|█▉        | 49/250 [3:37:33<17:05:07, 306.01s/it, 13053.52/20000 seconds]sampled_config
+{'nas_zero_cost': {'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 0, 'op_2_0': 2, 'op_2_1': 2, 'op_3_0': 0, 'op_3_1': 2, 'op_3_2': 3, 'number_classes': 10}, 'default': {'config': {'name': ['infer.tiny'], 'C': [16], 'N': [5], 'op_0_0': [0], 'op_1_0': [4], 'op_2_0': [2], 'op_2_1': [1], 'op_3_0': [2], 'op_3_1': [1], 'op_3_2': [1], 'number_classes': [10]}}}
+index
+3166
+results
+{111: ResultsCount(cifar10, arch=|skip_connect~0|+|nor_conv_3x3~0|nor_conv_3x3~1|+|skip_connect~0|nor_conv_3x3~1|nor_conv_1x1~2|, FLOP=117.88M, Param=0.830MB, seed=0111, 1 eval-sets: [ori-test])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+ 20%|██        | 50/250 [3:44:04<18:25:08, 331.54s/it, 13053.52/20000 seconds] 20%|██        | 50/250 [3:44:04<18:25:08, 331.54s/it, 13444.65/20000 seconds]sampled_config
+{'nas_zero_cost': {'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 2, 'op_2_0': 3, 'op_2_1': 4, 'op_3_0': 1, 'op_3_1': 3, 'op_3_2': 3, 'number_classes': 10}, 'default': {'config': {'name': ['infer.tiny'], 'C': [16], 'N': [5], 'op_0_0': [0], 'op_1_0': [4], 'op_2_0': [2], 'op_2_1': [1], 'op_3_0': [2], 'op_3_1': [1], 'op_3_2': [1], 'number_classes': [10]}}}
+index
+310
+results
+{111: ResultsCount(cifar10, arch=|nor_conv_3x3~0|+|nor_conv_1x1~0|avg_pool_3x3~1|+|none~0|nor_conv_1x1~1|nor_conv_1x1~2|, FLOP=54.97M, Param=0.400MB, seed=0111, 1 eval-sets: [ori-test])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+ 20%|██        | 51/250 [3:49:26<18:09:48, 328.59s/it, 13444.65/20000 seconds] 20%|██        | 51/250 [3:49:26<18:09:48, 328.59s/it, 13766.34/20000 seconds]sampled_config
+{'nas_zero_cost': {'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 2, 'op_2_0': 2, 'op_2_1': 0, 'op_3_0': 1, 'op_3_1': 2, 'op_3_2': 0, 'number_classes': 10}, 'default': {'config': {'name': ['infer.tiny'], 'C': [16], 'N': [5], 'op_0_0': [0], 'op_1_0': [4], 'op_2_0': [2], 'op_2_1': [1], 'op_3_0': [2], 'op_3_1': [1], 'op_3_2': [1], 'number_classes': [10]}}}
+index
+9668
+results
+{111: ResultsCount(cifar10, arch=|nor_conv_3x3~0|+|nor_conv_3x3~0|skip_connect~1|+|none~0|nor_conv_3x3~1|skip_connect~2|, FLOP=113.95M, Param=0.802MB, seed=0111, 1 eval-sets: [ori-test])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+ 21%|██        | 52/250 [3:55:42<18:51:53, 343.00s/it, 13766.34/20000 seconds] 21%|██        | 52/250 [3:55:42<18:51:53, 343.00s/it, 14142.96/20000 seconds]sampled_config
+{'nas_zero_cost': {'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 2, 'op_2_0': 2, 'op_2_1': 0, 'op_3_0': 1, 'op_3_1': 2, 'op_3_2': 2, 'number_classes': 10}, 'default': {'config': {'name': ['infer.tiny'], 'C': [16], 'N': [5], 'op_0_0': [0], 'op_1_0': [4], 'op_2_0': [2], 'op_2_1': [1], 'op_3_0': [2], 'op_3_1': [1], 'op_3_2': [1], 'number_classes': [10]}}}
+index
+13056
+results
+{111: ResultsCount(cifar10, arch=|nor_conv_3x3~0|+|nor_conv_3x3~0|skip_connect~1|+|none~0|nor_conv_3x3~1|nor_conv_3x3~2|, FLOP=149.34M, Param=1.045MB, seed=0111, 1 eval-sets: [ori-test])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+ 21%|██        | 53/250 [4:02:40<19:59:55, 365.46s/it, 14142.96/20000 seconds] 21%|██        | 53/250 [4:02:40<19:59:55, 365.46s/it, 14560.83/20000 seconds]sampled_config
+{'nas_zero_cost': {'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 2, 'op_2_0': 2, 'op_2_1': 0, 'op_3_0': 1, 'op_3_1': 2, 'op_3_2': 2, 'number_classes': 10}, 'default': {'config': {'name': ['infer.tiny'], 'C': [16], 'N': [5], 'op_0_0': [0], 'op_1_0': [4], 'op_2_0': [2], 'op_2_1': [1], 'op_3_0': [2], 'op_3_1': [1], 'op_3_2': [1], 'number_classes': [10]}}}
+index
+13056
+results
+{111: ResultsCount(cifar10, arch=|nor_conv_3x3~0|+|nor_conv_3x3~0|skip_connect~1|+|none~0|nor_conv_3x3~1|nor_conv_3x3~2|, FLOP=149.34M, Param=1.045MB, seed=0111, 1 eval-sets: [ori-test])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+ 22%|██▏       | 54/250 [4:09:27<20:33:53, 377.72s/it, 14560.83/20000 seconds] 22%|██▏       | 54/250 [4:09:27<20:33:53, 377.72s/it, 14967.16/20000 seconds]sampled_config
+{'nas_zero_cost': {'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 2, 'op_2_0': 2, 'op_2_1': 0, 'op_3_0': 1, 'op_3_1': 2, 'op_3_2': 2, 'number_classes': 10}, 'default': {'config': {'name': ['infer.tiny'], 'C': [16], 'N': [5], 'op_0_0': [0], 'op_1_0': [4], 'op_2_0': [2], 'op_2_1': [1], 'op_3_0': [2], 'op_3_1': [1], 'op_3_2': [1], 'number_classes': [10]}}}
+index
+13056
+results
+{111: ResultsCount(cifar10, arch=|nor_conv_3x3~0|+|nor_conv_3x3~0|skip_connect~1|+|none~0|nor_conv_3x3~1|nor_conv_3x3~2|, FLOP=149.34M, Param=1.045MB, seed=0111, 1 eval-sets: [ori-test])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+ 22%|██▏       | 55/250 [4:15:55<20:37:52, 380.88s/it, 14967.16/20000 seconds] 22%|██▏       | 55/250 [4:15:55<20:37:52, 380.88s/it, 15355.43/20000 seconds]sampled_config
+{'nas_zero_cost': {'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 2, 'op_2_0': 2, 'op_2_1': 0, 'op_3_0': 1, 'op_3_1': 1, 'op_3_2': 2, 'number_classes': 10}, 'default': {'config': {'name': ['infer.tiny'], 'C': [16], 'N': [5], 'op_0_0': [0], 'op_1_0': [4], 'op_2_0': [2], 'op_2_1': [1], 'op_3_0': [2], 'op_3_1': [1], 'op_3_2': [1], 'number_classes': [10]}}}
+index
+2551
+results
+{111: ResultsCount(cifar10, arch=|nor_conv_3x3~0|+|nor_conv_3x3~0|skip_connect~1|+|none~0|none~1|nor_conv_3x3~2|, FLOP=113.95M, Param=0.802MB, seed=0111, 1 eval-sets: [ori-test])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+ 22%|██▏       | 56/250 [4:21:07<19:25:11, 360.37s/it, 15355.43/20000 seconds] 22%|██▏       | 56/250 [4:21:07<19:25:11, 360.37s/it, 15667.93/20000 seconds]sampled_config
+{'nas_zero_cost': {'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 1, 'op_2_0': 2, 'op_2_1': 0, 'op_3_0': 2, 'op_3_1': 2, 'op_3_2': 2, 'number_classes': 10}, 'default': {'config': {'name': ['infer.tiny'], 'C': [16], 'N': [5], 'op_0_0': [0], 'op_1_0': [4], 'op_2_0': [2], 'op_2_1': [1], 'op_3_0': [2], 'op_3_1': [1], 'op_3_2': [1], 'number_classes': [10]}}}
+index
+13654
+results
+{111: ResultsCount(cifar10, arch=|none~0|+|nor_conv_3x3~0|skip_connect~1|+|nor_conv_3x3~0|nor_conv_3x3~1|nor_conv_3x3~2|, FLOP=149.34M, Param=1.045MB, seed=0111, 1 eval-sets: [ori-test])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+ 23%|██▎       | 57/250 [4:27:40<19:49:57, 369.93s/it, 15667.93/20000 seconds] 23%|██▎       | 57/250 [4:27:40<19:49:57, 369.93s/it, 16060.18/20000 seconds]sampled_config
+{'nas_zero_cost': {'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 2, 'op_2_0': 3, 'op_2_1': 0, 'op_3_0': 1, 'op_3_1': 2, 'op_3_2': 2, 'number_classes': 10}, 'default': {'config': {'name': ['infer.tiny'], 'C': [16], 'N': [5], 'op_0_0': [0], 'op_1_0': [4], 'op_2_0': [2], 'op_2_1': [1], 'op_3_0': [2], 'op_3_1': [1], 'op_3_2': [1], 'number_classes': [10]}}}
+index
+6315
+results
+{111: ResultsCount(cifar10, arch=|nor_conv_3x3~0|+|nor_conv_1x1~0|skip_connect~1|+|none~0|nor_conv_3x3~1|nor_conv_3x3~2|, FLOP=117.88M, Param=0.830MB, seed=0111, 1 eval-sets: [ori-test])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+ 23%|██▎       | 58/250 [4:33:13<19:09:04, 359.08s/it, 16060.18/20000 seconds] 23%|██▎       | 58/250 [4:33:13<19:09:04, 359.08s/it, 16393.95/20000 seconds]sampled_config
+{'nas_zero_cost': {'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 3, 'op_2_0': 4, 'op_2_1': 0, 'op_3_0': 0, 'op_3_1': 3, 'op_3_2': 2, 'number_classes': 10}, 'default': {'config': {'name': ['infer.tiny'], 'C': [16], 'N': [5], 'op_0_0': [0], 'op_1_0': [4], 'op_2_0': [2], 'op_2_1': [1], 'op_3_0': [2], 'op_3_1': [1], 'op_3_2': [1], 'number_classes': [10]}}}
+index
+12383
+results
+{111: ResultsCount(cifar10, arch=|nor_conv_1x1~0|+|avg_pool_3x3~0|skip_connect~1|+|skip_connect~0|nor_conv_1x1~1|nor_conv_3x3~2|, FLOP=51.04M, Param=0.372MB, seed=0111, 1 eval-sets: [ori-test])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+ 24%|██▎       | 59/250 [4:36:47<16:44:34, 315.57s/it, 16393.95/20000 seconds] 24%|██▎       | 59/250 [4:36:47<16:44:34, 315.57s/it, 16607.99/20000 seconds]sampled_config
+{'nas_zero_cost': {'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 2, 'op_2_0': 3, 'op_2_1': 0, 'op_3_0': 1, 'op_3_1': 2, 'op_3_2': 2, 'number_classes': 10}, 'default': {'config': {'name': ['infer.tiny'], 'C': [16], 'N': [5], 'op_0_0': [0], 'op_1_0': [4], 'op_2_0': [2], 'op_2_1': [1], 'op_3_0': [2], 'op_3_1': [1], 'op_3_2': [1], 'number_classes': [10]}}}
+index
+6315
+results
+{111: ResultsCount(cifar10, arch=|nor_conv_3x3~0|+|nor_conv_1x1~0|skip_connect~1|+|none~0|nor_conv_3x3~1|nor_conv_3x3~2|, FLOP=117.88M, Param=0.830MB, seed=0111, 1 eval-sets: [ori-test])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+ 24%|██▍       | 60/250 [4:42:19<16:54:52, 320.49s/it, 16607.99/20000 seconds] 24%|██▍       | 60/250 [4:42:19<16:54:52, 320.49s/it, 16939.95/20000 seconds]sampled_config
+{'nas_zero_cost': {'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 3, 'op_2_0': 3, 'op_2_1': 0, 'op_3_0': 3, 'op_3_1': 3, 'op_3_2': 2, 'number_classes': 10}, 'default': {'config': {'name': ['infer.tiny'], 'C': [16], 'N': [5], 'op_0_0': [0], 'op_1_0': [4], 'op_2_0': [2], 'op_2_1': [1], 'op_3_0': [2], 'op_3_1': [1], 'op_3_2': [1], 'number_classes': [10]}}}
+index
+680
+results
+{111: ResultsCount(cifar10, arch=|nor_conv_1x1~0|+|nor_conv_1x1~0|skip_connect~1|+|nor_conv_1x1~0|nor_conv_1x1~1|nor_conv_3x3~2|, FLOP=58.90M, Param=0.428MB, seed=0111, 1 eval-sets: [ori-test])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+ 24%|██▍       | 61/250 [4:46:12<15:25:59, 293.97s/it, 16939.95/20000 seconds] 24%|██▍       | 61/250 [4:46:12<15:25:59, 293.97s/it, 17172.03/20000 seconds]sampled_config
+{'nas_zero_cost': {'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 2, 'op_2_0': 2, 'op_2_1': 0, 'op_3_0': 1, 'op_3_1': 2, 'op_3_2': 2, 'number_classes': 10}, 'default': {'config': {'name': ['infer.tiny'], 'C': [16], 'N': [5], 'op_0_0': [0], 'op_1_0': [4], 'op_2_0': [2], 'op_2_1': [1], 'op_3_0': [2], 'op_3_1': [1], 'op_3_2': [1], 'number_classes': [10]}}}
+index
+13056
+results
+{111: ResultsCount(cifar10, arch=|nor_conv_3x3~0|+|nor_conv_3x3~0|skip_connect~1|+|none~0|nor_conv_3x3~1|nor_conv_3x3~2|, FLOP=149.34M, Param=1.045MB, seed=0111, 1 eval-sets: [ori-test])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+ 25%|██▍       | 62/250 [4:53:33<17:39:24, 338.11s/it, 17172.03/20000 seconds] 25%|██▍       | 62/250 [4:53:33<17:39:24, 338.11s/it, 17613.15/20000 seconds]sampled_config
+{'nas_zero_cost': {'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 2, 'op_2_0': 2, 'op_2_1': 0, 'op_3_0': 1, 'op_3_1': 2, 'op_3_2': 2, 'number_classes': 10}, 'default': {'config': {'name': ['infer.tiny'], 'C': [16], 'N': [5], 'op_0_0': [0], 'op_1_0': [4], 'op_2_0': [2], 'op_2_1': [1], 'op_3_0': [2], 'op_3_1': [1], 'op_3_2': [1], 'number_classes': [10]}}}
+index
+13056
+results
+{111: ResultsCount(cifar10, arch=|nor_conv_3x3~0|+|nor_conv_3x3~0|skip_connect~1|+|none~0|nor_conv_3x3~1|nor_conv_3x3~2|, FLOP=149.34M, Param=1.045MB, seed=0111, 1 eval-sets: [ori-test])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+ 25%|██▌       | 63/250 [5:00:03<18:22:34, 353.77s/it, 17613.15/20000 seconds] 25%|██▌       | 63/250 [5:00:03<18:22:34, 353.77s/it, 18003.45/20000 seconds]sampled_config
+{'nas_zero_cost': {'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 2, 'op_2_0': 4, 'op_2_1': 0, 'op_3_0': 1, 'op_3_1': 2, 'op_3_2': 2, 'number_classes': 10}, 'default': {'config': {'name': ['infer.tiny'], 'C': [16], 'N': [5], 'op_0_0': [0], 'op_1_0': [4], 'op_2_0': [2], 'op_2_1': [1], 'op_3_0': [2], 'op_3_1': [1], 'op_3_2': [1], 'number_classes': [10]}}}
+index
+1438
+results
+{111: ResultsCount(cifar10, arch=|nor_conv_3x3~0|+|avg_pool_3x3~0|skip_connect~1|+|none~0|nor_conv_3x3~1|nor_conv_3x3~2|, FLOP=113.95M, Param=0.802MB, seed=0111, 1 eval-sets: [ori-test])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+ 26%|██▌       | 64/250 [5:05:41<18:01:53, 349.00s/it, 18003.45/20000 seconds] 26%|██▌       | 64/250 [5:05:41<18:01:53, 349.00s/it, 18341.31/20000 seconds]sampled_config
+{'nas_zero_cost': {'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 2, 'op_2_0': 2, 'op_2_1': 0, 'op_3_0': 1, 'op_3_1': 2, 'op_3_2': 2, 'number_classes': 10}, 'default': {'config': {'name': ['infer.tiny'], 'C': [16], 'N': [5], 'op_0_0': [0], 'op_1_0': [4], 'op_2_0': [2], 'op_2_1': [1], 'op_3_0': [2], 'op_3_1': [1], 'op_3_2': [1], 'number_classes': [10]}}}
+index
+13056
+results
+{111: ResultsCount(cifar10, arch=|nor_conv_3x3~0|+|nor_conv_3x3~0|skip_connect~1|+|none~0|nor_conv_3x3~1|nor_conv_3x3~2|, FLOP=149.34M, Param=1.045MB, seed=0111, 1 eval-sets: [ori-test])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+ 26%|██▌       | 65/250 [5:11:35<18:00:50, 350.54s/it, 18341.31/20000 seconds] 26%|██▌       | 65/250 [5:11:35<18:00:50, 350.54s/it, 18695.47/20000 seconds]sampled_config
+{'nas_zero_cost': {'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 2, 'op_2_0': 3, 'op_2_1': 0, 'op_3_0': 1, 'op_3_1': 2, 'op_3_2': 2, 'number_classes': 10}, 'default': {'config': {'name': ['infer.tiny'], 'C': [16], 'N': [5], 'op_0_0': [0], 'op_1_0': [4], 'op_2_0': [2], 'op_2_1': [1], 'op_3_0': [2], 'op_3_1': [1], 'op_3_2': [1], 'number_classes': [10]}}}
+index
+6315
+results
+{111: ResultsCount(cifar10, arch=|nor_conv_3x3~0|+|nor_conv_1x1~0|skip_connect~1|+|none~0|nor_conv_3x3~1|nor_conv_3x3~2|, FLOP=117.88M, Param=0.830MB, seed=0111, 1 eval-sets: [ori-test])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+ 26%|██▋       | 66/250 [5:18:27<18:51:53, 369.10s/it, 18695.47/20000 seconds] 26%|██▋       | 66/250 [5:18:27<18:51:53, 369.10s/it, 19107.85/20000 seconds]sampled_config
+{'nas_zero_cost': {'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 2, 'op_2_0': 1, 'op_2_1': 0, 'op_3_0': 2, 'op_3_1': 2, 'op_3_2': 2, 'number_classes': 10}, 'default': {'config': {'name': ['infer.tiny'], 'C': [16], 'N': [5], 'op_0_0': [0], 'op_1_0': [4], 'op_2_0': [2], 'op_2_1': [1], 'op_3_0': [2], 'op_3_1': [1], 'op_3_2': [1], 'number_classes': [10]}}}
+index
+12184
+results
+{111: ResultsCount(cifar10, arch=|nor_conv_3x3~0|+|none~0|skip_connect~1|+|nor_conv_3x3~0|nor_conv_3x3~1|nor_conv_3x3~2|, FLOP=149.34M, Param=1.045MB, seed=0111, 1 eval-sets: [ori-test])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+ 27%|██▋       | 67/250 [5:25:55<19:57:29, 392.62s/it, 19107.85/20000 seconds] 27%|██▋       | 67/250 [5:25:55<19:57:29, 392.62s/it, 19555.36/20000 seconds]sampled_config
+{'nas_zero_cost': {'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 1, 'op_2_0': 3, 'op_2_1': 0, 'op_3_0': 0, 'op_3_1': 2, 'op_3_2': 2, 'number_classes': 10}, 'default': {'config': {'name': ['infer.tiny'], 'C': [16], 'N': [5], 'op_0_0': [0], 'op_1_0': [4], 'op_2_0': [2], 'op_2_1': [1], 'op_3_0': [2], 'op_3_1': [1], 'op_3_2': [1], 'number_classes': [10]}}}
+index
+10180
+results
+{111: ResultsCount(cifar10, arch=|none~0|+|nor_conv_1x1~0|skip_connect~1|+|skip_connect~0|nor_conv_3x3~1|nor_conv_3x3~2|, FLOP=82.49M, Param=0.587MB, seed=0111, 1 eval-sets: [ori-test])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+ 27%|██▋       | 68/250 [5:31:01<18:32:00, 366.59s/it, 19555.36/20000 seconds] 27%|██▋       | 68/250 [5:31:01<18:32:00, 366.59s/it, 19861.23/20000 seconds]sampled_config
+{'nas_zero_cost': {'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 3, 'op_2_0': 2, 'op_2_1': 0, 'op_3_0': 1, 'op_3_1': 1, 'op_3_2': 3, 'number_classes': 10}, 'default': {'config': {'name': ['infer.tiny'], 'C': [16], 'N': [5], 'op_0_0': [0], 'op_1_0': [4], 'op_2_0': [2], 'op_2_1': [1], 'op_3_0': [2], 'op_3_1': [1], 'op_3_2': [1], 'number_classes': [10]}}}
+index
+4639
+results
+{111: ResultsCount(cifar10, arch=|nor_conv_1x1~0|+|nor_conv_3x3~0|skip_connect~1|+|none~0|none~1|nor_conv_1x1~2|, FLOP=51.04M, Param=0.372MB, seed=0111, 1 eval-sets: [ori-test])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+ 28%|██▊       | 69/250 [5:35:34<17:01:30, 338.62s/it, 19861.23/20000 seconds] 28%|██▊       | 69/250 [5:35:34<17:01:30, 338.62s/it, 20134.58/20000 seconds] 28%|██▊       | 69/250 [5:35:34<14:40:16, 291.81s/it, 20134.58/20000 seconds]
+[32mINFO    [0m [34mBest trial(s):
+Best trial(s):
+|    |   number | software_metrics                                                                                                                                                                                 | hardware_metrics                                | scaled_metrics                                                                                                                                                                         | nasbench_data_metrics                                                                                                                                                                           |
+|----+----------+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+-------------------------------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+|  0 |       52 | {'grad_norm': 217.491, 'snip': 368.639, 'grasp': 2918.691, 'fisher': 0.817, 'plain': -0.051, 'l2_norm': 231.532, 'naswot': 5806.796, 'naswot_relu': 6184.255, 'tenas': 497.459, 'zico': 792.403} | {'average_bitwidth': 32, 'memory_density': 1.0} | {'average_bitwidth': 6.4, 'fisher': 0.0, 'grad_norm': 0.0, 'grasp': 0.0, 'l2_norm': 0.0, 'naswot': 0.0, 'naswot_relu': 0.0, 'plain': -0.0, 'snip': 368.639, 'tenas': 0.0, 'zico': 0.0} | {'train-loss': 0.74, 'train-accuracy': 74.204, 'train-per-time': 24.482, 'train-all-time': 293.789, 'test-loss': 0.761, 'test-accuracy': 73.7, 'test-per-time': 1.668, 'test-all-time': 20.011} |[0m
+Traceback (most recent call last):
+  File "/home/xz2723/mase_xinyi/machop/./ch", line 6, in <module>
+    ChopCLI().run()
+  File "/home/xz2723/mase_xinyi/machop/chop/cli.py", line 270, in run
+    run_action_fn()
+  File "/home/xz2723/mase_xinyi/machop/chop/cli.py", line 395, in _run_search
+    search(**search_params)
+  File "/home/xz2723/mase_xinyi/machop/chop/actions/search/search.py", line 106, in search
+    strategy.zero_cost_weight()
+  File "/home/xz2723/mase_xinyi/machop/chop/actions/search/strategies/optuna.py", line 211, in zero_cost_weight
+    self.zc_weight_model.fit(self.zc_proxy, self.zc_true_accuracy)
+  File "/home/xz2723/miniforge3/envs/mase/lib/python3.11/site-packages/sklearn/base.py", line 1474, in wrapper
+    return fit_method(estimator, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/xz2723/miniforge3/envs/mase/lib/python3.11/site-packages/sklearn/linear_model/_base.py", line 578, in fit
+    X, y = self._validate_data(
+           ^^^^^^^^^^^^^^^^^^^^
+  File "/home/xz2723/miniforge3/envs/mase/lib/python3.11/site-packages/sklearn/base.py", line 650, in _validate_data
+    X, y = check_X_y(X, y, **check_params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/xz2723/miniforge3/envs/mase/lib/python3.11/site-packages/sklearn/utils/validation.py", line 1263, in check_X_y
+    X = check_array(
+        ^^^^^^^^^^^^
+  File "/home/xz2723/miniforge3/envs/mase/lib/python3.11/site-packages/sklearn/utils/validation.py", line 1049, in check_array
+    _assert_all_finite(
+  File "/home/xz2723/miniforge3/envs/mase/lib/python3.11/site-packages/sklearn/utils/validation.py", line 126, in _assert_all_finite
+    _assert_all_finite_element_wise(
+  File "/home/xz2723/miniforge3/envs/mase/lib/python3.11/site-packages/sklearn/utils/validation.py", line 175, in _assert_all_finite_element_wise
+    raise ValueError(msg_err)
+ValueError: Input X contains NaN.
+LinearRegression does not accept missing values encoded as NaN natively. For supervised learning, you might want to consider sklearn.ensemble.HistGradientBoostingClassifier and Regressor which accept missing values encoded as NaNs natively. Alternatively, it is possible to preprocess the data, for instance by using an imputer transformer in a pipeline or drop samples with missing values. See https://scikit-learn.org/stable/modules/impute.html You can find a list of all estimators that handle NaN values at the following page: https://scikit-learn.org/stable/modules/impute.html#estimators-that-handle-nan-values

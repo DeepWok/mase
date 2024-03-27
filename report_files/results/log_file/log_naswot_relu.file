@@ -1,0 +1,911 @@
+Seed set to 0
+[32mINFO    [0m [34mInitialising model 'vgg7'...[0m
+[32mINFO    [0m [34mInitialising dataset 'cifar10'...[0m
+[32mINFO    [0m [34mProject will be created at /home/xz2723/mase_xinyi/mase_output/team_project[0m
+[32mINFO    [0m [34mBuilding search space...[0m
+loading api
+api loaded
++-------------------------+--------------------------+--------------+-----------------+--------------------------+
+| Name                    |         Default          | Config. File | Manual Override |        Effective         |
++-------------------------+--------------------------+--------------+-----------------+--------------------------+
+| task                    |      [38;5;8mclassification[0m      |     cls      |                 |           cls            |
+| load_name               |           None           |              |                 |           None           |
+| load_type               |            mz            |              |                 |            mz            |
+| batch_size              |           [38;5;8m128[0m            |     512      |                 |           512            |
+| to_debug                |          False           |              |                 |          False           |
+| log_level               |           info           |              |                 |           info           |
+| report_to               |       tensorboard        |              |                 |       tensorboard        |
+| seed                    |            [38;5;8m0[0m             |      42      |                 |            42            |
+| quant_config            |           None           |              |                 |           None           |
+| training_optimizer      |           adam           |              |                 |           adam           |
+| trainer_precision       |         16-mixed         |              |                 |         16-mixed         |
+| learning_rate           |          [38;5;8m1e-05[0m           |     0.01     |                 |           0.01           |
+| weight_decay            |            0             |              |                 |            0             |
+| max_epochs              |            [38;5;8m20[0m            |      5       |                 |            5             |
+| max_steps               |            -1            |              |                 |            -1            |
+| accumulate_grad_batches |            1             |              |                 |            1             |
+| log_every_n_steps       |            [38;5;8m50[0m            |      5       |                 |            5             |
+| num_workers             |            16            |              |                 |            16            |
+| num_devices             |            1             |              |                 |            1             |
+| num_nodes               |            1             |              |                 |            1             |
+| accelerator             |           [38;5;8mauto[0m           |     gpu      |                 |           gpu            |
+| strategy                |           auto           |              |                 |           auto           |
+| is_to_auto_requeue      |          False           |              |                 |          False           |
+| github_ci               |          False           |              |                 |          False           |
+| disable_dataset_cache   |          False           |              |                 |          False           |
+| target                  |   xcu250-figd2104-2L-e   |              |                 |   xcu250-figd2104-2L-e   |
+| num_targets             |           100            |              |                 |           100            |
+| is_pretrained           |          False           |              |                 |          False           |
+| max_token_len           |           512            |              |                 |           512            |
+| project_dir             | /home/xz2723/mase_xinyi/ |              |                 | /home/xz2723/mase_xinyi/ |
+|                         |       mase_output        |              |                 |       mase_output        |
+| project                 |           [38;5;8mNone[0m           | team_project |                 |       team_project       |
+| model                   |           [38;5;8mNone[0m           |     vgg7     |                 |           vgg7           |
+| dataset                 |           [38;5;8mNone[0m           |   cifar10    |                 |         cifar10          |
++-------------------------+--------------------------+--------------+-----------------+--------------------------+
+{'name': 'optuna', 'eval_mode': False, 'sw_runner': {'zero_cost': {'metrics': ['grad_norm', 'snip', 'grasp', 'fisher', 'plain', 'l2_norm', 'naswot', 'naswot_relu', 'tenas', 'zico'], 'data_loader': 'val_dataloader', 'num_samples': 512}}, 'hw_runner': {'average_bitwidth': {'compare_to': 32}}, 'setup': {'n_jobs': 1, 'n_trials': 100, 'timeout': 20000, 'sampler': 'tpe', 'sum_scaled_metrics': False}, 'metrics': {'grad_norm': {'scale': 0.0, 'direction': 'maximize'}, 'snip': {'scale': 0.0, 'direction': 'maximize'}, 'grasp': {'scale': 0.0, 'direction': 'maximize'}, 'fisher': {'scale': 0.0, 'direction': 'maximize'}, 'plain': {'scale': 0.0, 'direction': 'maximize'}, 'l2_norm': {'scale': 0.0, 'direction': 'minimize'}, 'naswot': {'scale': 0.0, 'direction': 'maximize'}, 'naswot_relu': {'scale': 1.0, 'direction': 'maximize'}, 'tenas': {'scale': 0.0, 'direction': 'maximize'}, 'zico': {'scale': 0.0, 'direction': 'maximize'}}}
+{'name': 'graph/software/zero_cost', 'setup': {'by': 'name'}, 'seed': {'default': {'config': {'name': [None]}}}, 'nas_zero_cost': {'config': {'dataset': ['ImageNet16-120'], 'name': ['infer.tiny'], 'C': [16], 'N': [5], 'op_0_0': [0], 'op_1_0': [0, 1, 2, 3, 4], 'op_2_0': [0, 1, 2, 3, 4], 'op_2_1': [0, 1, 2, 3, 4], 'op_3_0': [0, 1, 2, 3, 4], 'op_3_1': [0, 1, 2, 3, 4], 'op_3_2': [0, 1, 2, 3, 4], 'number_classes': [10]}}}
+Files already downloaded and verified
+Files already downloaded and verified
+Files already downloaded and verified
+Files already downloaded and verified
+Files already downloaded and verified
+Files already downloaded and verified
+Files already downloaded and verified
+Files already downloaded and verified
+[32mINFO    [0m [34mSearch started...[0m
+{'nas_zero_cost/dataset': 1, 'nas_zero_cost/name': 1, 'nas_zero_cost/C': 1, 'nas_zero_cost/N': 1, 'nas_zero_cost/op_0_0': 1, 'nas_zero_cost/op_1_0': 5, 'nas_zero_cost/op_2_0': 5, 'nas_zero_cost/op_2_1': 5, 'nas_zero_cost/op_3_0': 5, 'nas_zero_cost/op_3_1': 5, 'nas_zero_cost/op_3_2': 5, 'nas_zero_cost/number_classes': 1}
+  0%|          | 0/100 [00:00<?, ?it/s]=========sampled_config===============
+{'nas_zero_cost': {'dataset': 'ImageNet16-120', 'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 1, 'op_2_0': 2, 'op_2_1': 4, 'op_3_0': 2, 'op_3_1': 4, 'op_3_2': 4, 'number_classes': 10}, 'default': {'config': {'dataset': 'cifar10', 'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 4, 'op_2_0': 2, 'op_2_1': 1, 'op_3_0': 2, 'op_3_1': 1, 'op_3_2': 1, 'number_classes': 10}}}
+Used dataset: ImageNet16-120
+index
+7592
+results
+{111: ResultsCount(ImageNet16-120, arch=|none~0|+|nor_conv_3x3~0|avg_pool_3x3~1|+|nor_conv_3x3~0|avg_pool_3x3~1|avg_pool_3x3~2|, FLOP=19.65M, Param=0.567MB, seed=0111, 3 eval-sets: [x-valid, x-test, ori-test])}
+/home/xz2723/miniforge3/envs/mase/lib/python3.11/site-packages/torch/nn/modules/module.py:1352: UserWarning: Using a non-full backward hook when the forward contains multiple autograd Nodes is deprecated and will be removed in future versions. This hook will be missing some grad_input. Please use register_full_backward_hook to get the documented behavior.
+  warnings.warn("Using a non-full backward hook when the forward contains multiple autograd Nodes "
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+  1%|          | 1/100 [03:30<5:47:21, 210.52s/it]  1%|          | 1/100 [03:30<5:47:21, 210.52s/it, 210.52/20000 seconds]=========sampled_config===============
+{'nas_zero_cost': {'dataset': 'ImageNet16-120', 'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 1, 'op_2_0': 3, 'op_2_1': 1, 'op_3_0': 2, 'op_3_1': 0, 'op_3_2': 3, 'number_classes': 10}, 'default': {'config': {'dataset': 'cifar10', 'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 4, 'op_2_0': 2, 'op_2_1': 1, 'op_3_0': 2, 'op_3_1': 1, 'op_3_2': 1, 'number_classes': 10}}}
+Used dataset: ImageNet16-120
+index
+116
+results
+{111: ResultsCount(ImageNet16-120, arch=|none~0|+|nor_conv_1x1~0|none~1|+|nor_conv_3x3~0|skip_connect~1|nor_conv_1x1~2|, FLOP=12.77M, Param=0.379MB, seed=0111, 3 eval-sets: [x-valid, x-test, ori-test])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+  2%|▏         | 2/100 [06:03<4:48:59, 176.94s/it, 210.52/20000 seconds]  2%|▏         | 2/100 [06:03<4:48:59, 176.94s/it, 363.95/20000 seconds]=========sampled_config===============
+{'nas_zero_cost': {'dataset': 'ImageNet16-120', 'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 0, 'op_2_0': 1, 'op_2_1': 1, 'op_3_0': 0, 'op_3_1': 4, 'op_3_2': 1, 'number_classes': 10}, 'default': {'config': {'dataset': 'cifar10', 'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 4, 'op_2_0': 2, 'op_2_1': 1, 'op_3_0': 2, 'op_3_1': 1, 'op_3_2': 1, 'number_classes': 10}}}
+Used dataset: ImageNet16-120
+index
+199
+results
+{111: ResultsCount(ImageNet16-120, arch=|skip_connect~0|+|none~0|none~1|+|skip_connect~0|avg_pool_3x3~1|none~2|, FLOP=1.95M, Param=0.080MB, seed=0111, 3 eval-sets: [x-valid, x-test, ori-test])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+  3%|▎         | 3/100 [07:47<3:51:32, 143.22s/it, 363.95/20000 seconds]  3%|▎         | 3/100 [07:47<3:51:32, 143.22s/it, 467.05/20000 seconds]=========sampled_config===============
+{'nas_zero_cost': {'dataset': 'ImageNet16-120', 'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 3, 'op_2_0': 4, 'op_2_1': 1, 'op_3_0': 2, 'op_3_1': 1, 'op_3_2': 3, 'number_classes': 10}, 'default': {'config': {'dataset': 'cifar10', 'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 4, 'op_2_0': 2, 'op_2_1': 1, 'op_3_0': 2, 'op_3_1': 1, 'op_3_2': 1, 'number_classes': 10}}}
+Used dataset: ImageNet16-120
+index
+7707
+results
+{111: ResultsCount(ImageNet16-120, arch=|nor_conv_1x1~0|+|avg_pool_3x3~0|none~1|+|nor_conv_3x3~0|none~1|nor_conv_1x1~2|, FLOP=12.77M, Param=0.379MB, seed=0111, 3 eval-sets: [x-valid, x-test, ori-test])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+  4%|▍         | 4/100 [10:37<4:06:14, 153.90s/it, 467.05/20000 seconds]  4%|▍         | 4/100 [10:37<4:06:14, 153.90s/it, 637.31/20000 seconds]=========sampled_config===============
+{'nas_zero_cost': {'dataset': 'ImageNet16-120', 'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 0, 'op_2_0': 4, 'op_2_1': 3, 'op_3_0': 1, 'op_3_1': 0, 'op_3_2': 2, 'number_classes': 10}, 'default': {'config': {'dataset': 'cifar10', 'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 4, 'op_2_0': 2, 'op_2_1': 1, 'op_3_0': 2, 'op_3_1': 1, 'op_3_2': 1, 'number_classes': 10}}}
+Used dataset: ImageNet16-120
+index
+11957
+results
+{111: ResultsCount(ImageNet16-120, arch=|skip_connect~0|+|avg_pool_3x3~0|nor_conv_1x1~1|+|none~0|skip_connect~1|nor_conv_3x3~2|, FLOP=11.78M, Param=0.351MB, seed=0111, 3 eval-sets: [x-valid, x-test, ori-test])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+  5%|▌         | 5/100 [13:12<4:04:33, 154.46s/it, 637.31/20000 seconds]  5%|▌         | 5/100 [13:12<4:04:33, 154.46s/it, 792.77/20000 seconds]=========sampled_config===============
+{'nas_zero_cost': {'dataset': 'ImageNet16-120', 'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 1, 'op_2_0': 1, 'op_2_1': 4, 'op_3_0': 1, 'op_3_1': 1, 'op_3_2': 3, 'number_classes': 10}, 'default': {'config': {'dataset': 'cifar10', 'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 4, 'op_2_0': 2, 'op_2_1': 1, 'op_3_0': 2, 'op_3_1': 1, 'op_3_2': 1, 'number_classes': 10}}}
+Used dataset: ImageNet16-120
+index
+12308
+results
+{111: ResultsCount(ImageNet16-120, arch=|none~0|+|none~0|avg_pool_3x3~1|+|none~0|none~1|nor_conv_1x1~2|, FLOP=2.94M, Param=0.108MB, seed=0111, 3 eval-sets: [ori-test, x-valid, x-test])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+  6%|▌         | 6/100 [15:13<3:44:15, 143.15s/it, 792.77/20000 seconds]  6%|▌         | 6/100 [15:13<3:44:15, 143.15s/it, 913.95/20000 seconds]=========sampled_config===============
+{'nas_zero_cost': {'dataset': 'ImageNet16-120', 'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 1, 'op_2_0': 3, 'op_2_1': 1, 'op_3_0': 3, 'op_3_1': 3, 'op_3_2': 4, 'number_classes': 10}, 'default': {'config': {'dataset': 'cifar10', 'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 4, 'op_2_0': 2, 'op_2_1': 1, 'op_3_0': 2, 'op_3_1': 1, 'op_3_2': 1, 'number_classes': 10}}}
+Used dataset: ImageNet16-120
+index
+13872
+results
+{111: ResultsCount(ImageNet16-120, arch=|none~0|+|nor_conv_1x1~0|none~1|+|nor_conv_1x1~0|nor_conv_1x1~1|avg_pool_3x3~2|, FLOP=4.90M, Param=0.164MB, seed=0111, 3 eval-sets: [x-test, ori-test, x-valid])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+  7%|▋         | 7/100 [17:38<3:42:46, 143.72s/it, 913.95/20000 seconds]  7%|▋         | 7/100 [17:38<3:42:46, 143.72s/it, 1058.86/20000 seconds]=========sampled_config===============
+{'nas_zero_cost': {'dataset': 'ImageNet16-120', 'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 2, 'op_2_0': 0, 'op_2_1': 0, 'op_3_0': 2, 'op_3_1': 0, 'op_3_2': 4, 'number_classes': 10}, 'default': {'config': {'dataset': 'cifar10', 'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 4, 'op_2_0': 2, 'op_2_1': 1, 'op_3_0': 2, 'op_3_1': 1, 'op_3_2': 1, 'number_classes': 10}}}
+Used dataset: ImageNet16-120
+index
+5133
+results
+{111: ResultsCount(ImageNet16-120, arch=|nor_conv_3x3~0|+|skip_connect~0|skip_connect~1|+|nor_conv_3x3~0|skip_connect~1|avg_pool_3x3~2|, FLOP=19.65M, Param=0.567MB, seed=0111, 3 eval-sets: [x-test, ori-test, x-valid])}
+Traceback (most recent call last):
+  File "/home/xz2723/miniforge3/envs/mase/lib/python3.11/multiprocessing/util.py", line 300, in _run_finalizers
+    finalizer()
+  File "/home/xz2723/miniforge3/envs/mase/lib/python3.11/multiprocessing/util.py", line 224, in __call__
+    res = self._callback(*self._args, **self._kwargs)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/xz2723/miniforge3/envs/mase/lib/python3.11/multiprocessing/util.py", line 133, in _remove_temp_dir
+    rmtree(tempdir)
+  File "/home/xz2723/miniforge3/envs/mase/lib/python3.11/shutil.py", line 738, in rmtree
+    onerror(os.rmdir, path, sys.exc_info())
+  File "/home/xz2723/miniforge3/envs/mase/lib/python3.11/shutil.py", line 736, in rmtree
+    os.rmdir(path, dir_fd=dir_fd)
+OSError: [Errno 39] Directory not empty: '/tmp/pymp-8gi6_yoq'
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+  8%|▊         | 8/100 [20:34<3:56:07, 153.99s/it, 1058.86/20000 seconds]  8%|▊         | 8/100 [20:34<3:56:07, 153.99s/it, 1234.84/20000 seconds]=========sampled_config===============
+{'nas_zero_cost': {'dataset': 'ImageNet16-120', 'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 3, 'op_2_0': 0, 'op_2_1': 4, 'op_3_0': 2, 'op_3_1': 2, 'op_3_2': 0, 'number_classes': 10}, 'default': {'config': {'dataset': 'cifar10', 'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 4, 'op_2_0': 2, 'op_2_1': 1, 'op_3_0': 2, 'op_3_1': 1, 'op_3_2': 1, 'number_classes': 10}}}
+Used dataset: ImageNet16-120
+index
+1530
+results
+{111: ResultsCount(ImageNet16-120, arch=|nor_conv_1x1~0|+|skip_connect~0|avg_pool_3x3~1|+|nor_conv_3x3~0|nor_conv_3x3~1|skip_connect~2|, FLOP=20.63M, Param=0.595MB, seed=0111, 3 eval-sets: [x-valid, x-test, ori-test])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+  9%|▉         | 9/100 [23:43<4:10:07, 164.92s/it, 1234.84/20000 seconds]  9%|▉         | 9/100 [23:43<4:10:07, 164.92s/it, 1423.78/20000 seconds]=========sampled_config===============
+{'nas_zero_cost': {'dataset': 'ImageNet16-120', 'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 0, 'op_2_0': 3, 'op_2_1': 1, 'op_3_0': 1, 'op_3_1': 0, 'op_3_2': 4, 'number_classes': 10}, 'default': {'config': {'dataset': 'cifar10', 'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 4, 'op_2_0': 2, 'op_2_1': 1, 'op_3_0': 2, 'op_3_1': 1, 'op_3_2': 1, 'number_classes': 10}}}
+Used dataset: ImageNet16-120
+index
+2766
+results
+{111: ResultsCount(ImageNet16-120, arch=|skip_connect~0|+|nor_conv_1x1~0|none~1|+|none~0|skip_connect~1|avg_pool_3x3~2|, FLOP=2.94M, Param=0.108MB, seed=0111, 3 eval-sets: [x-valid, x-test, ori-test])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+ 10%|█         | 10/100 [25:39<3:44:24, 149.61s/it, 1423.78/20000 seconds] 10%|█         | 10/100 [25:39<3:44:24, 149.61s/it, 1539.11/20000 seconds]=========sampled_config===============
+{'nas_zero_cost': {'dataset': 'ImageNet16-120', 'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 4, 'op_2_0': 0, 'op_2_1': 3, 'op_3_0': 4, 'op_3_1': 2, 'op_3_2': 0, 'number_classes': 10}, 'default': {'config': {'dataset': 'cifar10', 'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 4, 'op_2_0': 2, 'op_2_1': 1, 'op_3_0': 2, 'op_3_1': 1, 'op_3_2': 1, 'number_classes': 10}}}
+Used dataset: ImageNet16-120
+index
+13847
+results
+{111: ResultsCount(ImageNet16-120, arch=|avg_pool_3x3~0|+|skip_connect~0|nor_conv_1x1~1|+|avg_pool_3x3~0|nor_conv_3x3~1|skip_connect~2|, FLOP=11.78M, Param=0.351MB, seed=0111, 3 eval-sets: [x-test, ori-test, x-valid])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+ 11%|█         | 11/100 [28:25<3:49:39, 154.82s/it, 1539.11/20000 seconds] 11%|█         | 11/100 [28:25<3:49:39, 154.82s/it, 1705.76/20000 seconds]=========sampled_config===============
+{'nas_zero_cost': {'dataset': 'ImageNet16-120', 'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 4, 'op_2_0': 4, 'op_2_1': 2, 'op_3_0': 3, 'op_3_1': 2, 'op_3_2': 0, 'number_classes': 10}, 'default': {'config': {'dataset': 'cifar10', 'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 4, 'op_2_0': 2, 'op_2_1': 1, 'op_3_0': 2, 'op_3_1': 1, 'op_3_2': 1, 'number_classes': 10}}}
+Used dataset: ImageNet16-120
+index
+3026
+results
+{111: ResultsCount(ImageNet16-120, arch=|avg_pool_3x3~0|+|avg_pool_3x3~0|nor_conv_3x3~1|+|nor_conv_1x1~0|nor_conv_3x3~1|skip_connect~2|, FLOP=20.63M, Param=0.595MB, seed=0111, 3 eval-sets: [x-valid, x-test, ori-test])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+ 12%|█▏        | 12/100 [31:51<4:09:53, 170.38s/it, 1705.76/20000 seconds] 12%|█▏        | 12/100 [31:51<4:09:53, 170.38s/it, 1911.71/20000 seconds]=========sampled_config===============
+{'nas_zero_cost': {'dataset': 'ImageNet16-120', 'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 3, 'op_2_0': 1, 'op_2_1': 2, 'op_3_0': 3, 'op_3_1': 1, 'op_3_2': 2, 'number_classes': 10}, 'default': {'config': {'dataset': 'cifar10', 'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 4, 'op_2_0': 2, 'op_2_1': 1, 'op_3_0': 2, 'op_3_1': 1, 'op_3_2': 1, 'number_classes': 10}}}
+Used dataset: ImageNet16-120
+index
+10970
+results
+{111: ResultsCount(ImageNet16-120, arch=|nor_conv_1x1~0|+|none~0|nor_conv_3x3~1|+|nor_conv_1x1~0|none~1|nor_conv_3x3~2|, FLOP=21.61M, Param=0.623MB, seed=0111, 3 eval-sets: [x-test, ori-test, x-valid])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+ 13%|█▎        | 13/100 [35:03<4:16:30, 176.90s/it, 1911.71/20000 seconds] 13%|█▎        | 13/100 [35:03<4:16:30, 176.90s/it, 2103.62/20000 seconds]=========sampled_config===============
+{'nas_zero_cost': {'dataset': 'ImageNet16-120', 'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 3, 'op_2_0': 1, 'op_2_1': 3, 'op_3_0': 4, 'op_3_1': 1, 'op_3_2': 1, 'number_classes': 10}, 'default': {'config': {'dataset': 'cifar10', 'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 4, 'op_2_0': 2, 'op_2_1': 1, 'op_3_0': 2, 'op_3_1': 1, 'op_3_2': 1, 'number_classes': 10}}}
+Used dataset: ImageNet16-120
+index
+4302
+results
+{111: ResultsCount(ImageNet16-120, arch=|nor_conv_1x1~0|+|none~0|nor_conv_1x1~1|+|avg_pool_3x3~0|none~1|none~2|, FLOP=3.92M, Param=0.136MB, seed=0111, 3 eval-sets: [x-valid, ori-test, x-test])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+ 14%|█▍        | 14/100 [37:13<3:53:19, 162.79s/it, 2103.62/20000 seconds] 14%|█▍        | 14/100 [37:13<3:53:19, 162.79s/it, 2233.79/20000 seconds]=========sampled_config===============
+{'nas_zero_cost': {'dataset': 'ImageNet16-120', 'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 3, 'op_2_0': 0, 'op_2_1': 2, 'op_3_0': 3, 'op_3_1': 3, 'op_3_2': 1, 'number_classes': 10}, 'default': {'config': {'dataset': 'cifar10', 'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 4, 'op_2_0': 2, 'op_2_1': 1, 'op_3_0': 2, 'op_3_1': 1, 'op_3_2': 1, 'number_classes': 10}}}
+Used dataset: ImageNet16-120
+index
+2626
+results
+{111: ResultsCount(ImageNet16-120, arch=|nor_conv_1x1~0|+|skip_connect~0|nor_conv_3x3~1|+|nor_conv_1x1~0|nor_conv_1x1~1|none~2|, FLOP=13.75M, Param=0.407MB, seed=0111, 3 eval-sets: [x-test, x-valid, ori-test])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+ 15%|█▌        | 15/100 [39:59<3:51:48, 163.63s/it, 2233.79/20000 seconds] 15%|█▌        | 15/100 [39:59<3:51:48, 163.63s/it, 2399.39/20000 seconds]=========sampled_config===============
+{'nas_zero_cost': {'dataset': 'ImageNet16-120', 'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 2, 'op_2_0': 1, 'op_2_1': 3, 'op_3_0': 3, 'op_3_1': 2, 'op_3_2': 2, 'number_classes': 10}, 'default': {'config': {'dataset': 'cifar10', 'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 4, 'op_2_0': 2, 'op_2_1': 1, 'op_3_0': 2, 'op_3_1': 1, 'op_3_2': 1, 'number_classes': 10}}}
+Used dataset: ImageNet16-120
+index
+8343
+results
+{111: ResultsCount(ImageNet16-120, arch=|nor_conv_3x3~0|+|none~0|nor_conv_1x1~1|+|nor_conv_1x1~0|nor_conv_3x3~1|nor_conv_3x3~2|, FLOP=30.46M, Param=0.866MB, seed=0111, 3 eval-sets: [x-test, x-valid, ori-test])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+ 16%|█▌        | 16/100 [43:48<4:16:34, 183.27s/it, 2399.39/20000 seconds] 16%|█▌        | 16/100 [43:48<4:16:34, 183.27s/it, 2628.25/20000 seconds]=========sampled_config===============
+{'nas_zero_cost': {'dataset': 'ImageNet16-120', 'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 2, 'op_2_0': 2, 'op_2_1': 3, 'op_3_0': 3, 'op_3_1': 3, 'op_3_2': 2, 'number_classes': 10}, 'default': {'config': {'dataset': 'cifar10', 'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 4, 'op_2_0': 2, 'op_2_1': 1, 'op_3_0': 2, 'op_3_1': 1, 'op_3_2': 1, 'number_classes': 10}}}
+Used dataset: ImageNet16-120
+index
+12606
+results
+{111: ResultsCount(ImageNet16-120, arch=|nor_conv_3x3~0|+|nor_conv_3x3~0|nor_conv_1x1~1|+|nor_conv_1x1~0|nor_conv_1x1~1|nor_conv_3x3~2|, FLOP=31.44M, Param=0.894MB, seed=0111, 3 eval-sets: [x-valid, x-test, ori-test])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+ 17%|█▋        | 17/100 [47:48<4:37:25, 200.55s/it, 2628.25/20000 seconds] 17%|█▋        | 17/100 [47:48<4:37:25, 200.55s/it, 2868.98/20000 seconds]=========sampled_config===============
+{'nas_zero_cost': {'dataset': 'ImageNet16-120', 'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 2, 'op_2_0': 2, 'op_2_1': 3, 'op_3_0': 4, 'op_3_1': 3, 'op_3_2': 2, 'number_classes': 10}, 'default': {'config': {'dataset': 'cifar10', 'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 4, 'op_2_0': 2, 'op_2_1': 1, 'op_3_0': 2, 'op_3_1': 1, 'op_3_2': 1, 'number_classes': 10}}}
+Used dataset: ImageNet16-120
+index
+10375
+results
+{111: ResultsCount(ImageNet16-120, arch=|nor_conv_3x3~0|+|nor_conv_3x3~0|nor_conv_1x1~1|+|avg_pool_3x3~0|nor_conv_1x1~1|nor_conv_3x3~2|, FLOP=30.46M, Param=0.866MB, seed=0111, 3 eval-sets: [x-valid, x-test, ori-test])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+ 18%|█▊        | 18/100 [51:49<4:50:30, 212.56s/it, 2868.98/20000 seconds] 18%|█▊        | 18/100 [51:49<4:50:30, 212.56s/it, 3109.51/20000 seconds]=========sampled_config===============
+{'nas_zero_cost': {'dataset': 'ImageNet16-120', 'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 2, 'op_2_0': 2, 'op_2_1': 3, 'op_3_0': 3, 'op_3_1': 3, 'op_3_2': 2, 'number_classes': 10}, 'default': {'config': {'dataset': 'cifar10', 'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 4, 'op_2_0': 2, 'op_2_1': 1, 'op_3_0': 2, 'op_3_1': 1, 'op_3_2': 1, 'number_classes': 10}}}
+Used dataset: ImageNet16-120
+index
+12606
+results
+{111: ResultsCount(ImageNet16-120, arch=|nor_conv_3x3~0|+|nor_conv_3x3~0|nor_conv_1x1~1|+|nor_conv_1x1~0|nor_conv_1x1~1|nor_conv_3x3~2|, FLOP=31.44M, Param=0.894MB, seed=0111, 3 eval-sets: [x-valid, x-test, ori-test])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+ 19%|█▉        | 19/100 [55:50<4:58:18, 220.97s/it, 3109.51/20000 seconds] 19%|█▉        | 19/100 [55:50<4:58:18, 220.97s/it, 3350.05/20000 seconds]=========sampled_config===============
+{'nas_zero_cost': {'dataset': 'ImageNet16-120', 'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 2, 'op_2_0': 2, 'op_2_1': 4, 'op_3_0': 4, 'op_3_1': 3, 'op_3_2': 1, 'number_classes': 10}, 'default': {'config': {'dataset': 'cifar10', 'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 4, 'op_2_0': 2, 'op_2_1': 1, 'op_3_0': 2, 'op_3_1': 1, 'op_3_2': 1, 'number_classes': 10}}}
+Used dataset: ImageNet16-120
+index
+14753
+results
+{111: ResultsCount(ImageNet16-120, arch=|nor_conv_3x3~0|+|nor_conv_3x3~0|avg_pool_3x3~1|+|avg_pool_3x3~0|nor_conv_1x1~1|none~2|, FLOP=20.63M, Param=0.595MB, seed=0111, 3 eval-sets: [x-test, x-valid, ori-test])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+ 20%|██        | 20/100 [59:17<4:49:08, 216.85s/it, 3350.05/20000 seconds] 20%|██        | 20/100 [59:17<4:49:08, 216.85s/it, 3557.32/20000 seconds]=========sampled_config===============
+{'nas_zero_cost': {'dataset': 'ImageNet16-120', 'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 1, 'op_2_0': 2, 'op_2_1': 3, 'op_3_0': 3, 'op_3_1': 4, 'op_3_2': 3, 'number_classes': 10}, 'default': {'config': {'dataset': 'cifar10', 'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 4, 'op_2_0': 2, 'op_2_1': 1, 'op_3_0': 2, 'op_3_1': 1, 'op_3_2': 1, 'number_classes': 10}}}
+Used dataset: ImageNet16-120
+index
+13214
+results
+{111: ResultsCount(ImageNet16-120, arch=|none~0|+|nor_conv_3x3~0|nor_conv_1x1~1|+|nor_conv_1x1~0|avg_pool_3x3~1|nor_conv_1x1~2|, FLOP=13.75M, Param=0.407MB, seed=0111, 3 eval-sets: [x-valid, x-test, ori-test])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+ 21%|██        | 21/100 [1:02:20<4:32:10, 206.72s/it, 3557.32/20000 seconds] 21%|██        | 21/100 [1:02:20<4:32:10, 206.72s/it, 3740.41/20000 seconds]=========sampled_config===============
+{'nas_zero_cost': {'dataset': 'ImageNet16-120', 'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 2, 'op_2_0': 2, 'op_2_1': 3, 'op_3_0': 3, 'op_3_1': 2, 'op_3_2': 2, 'number_classes': 10}, 'default': {'config': {'dataset': 'cifar10', 'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 4, 'op_2_0': 2, 'op_2_1': 1, 'op_3_0': 2, 'op_3_1': 1, 'op_3_2': 1, 'number_classes': 10}}}
+Used dataset: ImageNet16-120
+index
+5115
+results
+{111: ResultsCount(ImageNet16-120, arch=|nor_conv_3x3~0|+|nor_conv_3x3~0|nor_conv_1x1~1|+|nor_conv_1x1~0|nor_conv_3x3~1|nor_conv_3x3~2|, FLOP=39.31M, Param=1.109MB, seed=0111, 3 eval-sets: [x-test, ori-test, x-valid])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+ 22%|██▏       | 22/100 [1:06:46<4:51:57, 224.59s/it, 3740.41/20000 seconds] 22%|██▏       | 22/100 [1:06:46<4:51:57, 224.59s/it, 4006.66/20000 seconds]=========sampled_config===============
+{'nas_zero_cost': {'dataset': 'ImageNet16-120', 'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 2, 'op_2_0': 2, 'op_2_1': 2, 'op_3_0': 3, 'op_3_1': 3, 'op_3_2': 2, 'number_classes': 10}, 'default': {'config': {'dataset': 'cifar10', 'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 4, 'op_2_0': 2, 'op_2_1': 1, 'op_3_0': 2, 'op_3_1': 1, 'op_3_2': 1, 'number_classes': 10}}}
+Used dataset: ImageNet16-120
+index
+8102
+results
+{111: ResultsCount(ImageNet16-120, arch=|nor_conv_3x3~0|+|nor_conv_3x3~0|nor_conv_3x3~1|+|nor_conv_1x1~0|nor_conv_1x1~1|nor_conv_3x3~2|, FLOP=39.31M, Param=1.109MB, seed=0111, 3 eval-sets: [ori-test, x-valid, x-test])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+ 23%|██▎       | 23/100 [1:11:12<5:04:15, 237.09s/it, 4006.66/20000 seconds] 23%|██▎       | 23/100 [1:11:12<5:04:15, 237.09s/it, 4272.91/20000 seconds]=========sampled_config===============
+{'nas_zero_cost': {'dataset': 'ImageNet16-120', 'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 2, 'op_2_0': 3, 'op_2_1': 2, 'op_3_0': 4, 'op_3_1': 2, 'op_3_2': 2, 'number_classes': 10}, 'default': {'config': {'dataset': 'cifar10', 'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 4, 'op_2_0': 2, 'op_2_1': 1, 'op_3_0': 2, 'op_3_1': 1, 'op_3_2': 1, 'number_classes': 10}}}
+Used dataset: ImageNet16-120
+index
+11296
+results
+{111: ResultsCount(ImageNet16-120, arch=|nor_conv_3x3~0|+|nor_conv_1x1~0|nor_conv_3x3~1|+|avg_pool_3x3~0|nor_conv_3x3~1|nor_conv_3x3~2|, FLOP=38.33M, Param=1.081MB, seed=0111, 3 eval-sets: [x-test, ori-test, x-valid])}
+Traceback (most recent call last):
+  File "/home/xz2723/miniforge3/envs/mase/lib/python3.11/multiprocessing/util.py", line 300, in _run_finalizers
+    finalizer()
+  File "/home/xz2723/miniforge3/envs/mase/lib/python3.11/multiprocessing/util.py", line 224, in __call__
+    res = self._callback(*self._args, **self._kwargs)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/xz2723/miniforge3/envs/mase/lib/python3.11/multiprocessing/util.py", line 133, in _remove_temp_dir
+    rmtree(tempdir)
+  File "/home/xz2723/miniforge3/envs/mase/lib/python3.11/shutil.py", line 738, in rmtree
+    onerror(os.rmdir, path, sys.exc_info())
+  File "/home/xz2723/miniforge3/envs/mase/lib/python3.11/shutil.py", line 736, in rmtree
+    os.rmdir(path, dir_fd=dir_fd)
+OSError: [Errno 39] Directory not empty: '/tmp/pymp-905rscpz'
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+ 24%|██▍       | 24/100 [1:15:39<5:11:21, 245.81s/it, 4272.91/20000 seconds] 24%|██▍       | 24/100 [1:15:39<5:11:21, 245.81s/it, 4539.08/20000 seconds]=========sampled_config===============
+{'nas_zero_cost': {'dataset': 'ImageNet16-120', 'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 2, 'op_2_0': 3, 'op_2_1': 2, 'op_3_0': 3, 'op_3_1': 3, 'op_3_2': 1, 'number_classes': 10}, 'default': {'config': {'dataset': 'cifar10', 'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 4, 'op_2_0': 2, 'op_2_1': 1, 'op_3_0': 2, 'op_3_1': 1, 'op_3_2': 1, 'number_classes': 10}}}
+Used dataset: ImageNet16-120
+index
+1289
+results
+{111: ResultsCount(ImageNet16-120, arch=|nor_conv_3x3~0|+|nor_conv_1x1~0|nor_conv_3x3~1|+|nor_conv_1x1~0|nor_conv_1x1~1|none~2|, FLOP=22.60M, Param=0.651MB, seed=0111, 3 eval-sets: [x-valid, x-test, ori-test])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+ 25%|██▌       | 25/100 [1:19:04<4:52:00, 233.60s/it, 4539.08/20000 seconds] 25%|██▌       | 25/100 [1:19:04<4:52:00, 233.60s/it, 4744.19/20000 seconds]=========sampled_config===============
+{'nas_zero_cost': {'dataset': 'ImageNet16-120', 'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 2, 'op_2_0': 2, 'op_2_1': 0, 'op_3_0': 2, 'op_3_1': 4, 'op_3_2': 3, 'number_classes': 10}, 'default': {'config': {'dataset': 'cifar10', 'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 4, 'op_2_0': 2, 'op_2_1': 1, 'op_3_0': 2, 'op_3_1': 1, 'op_3_2': 1, 'number_classes': 10}}}
+Used dataset: ImageNet16-120
+index
+9624
+results
+{111: ResultsCount(ImageNet16-120, arch=|nor_conv_3x3~0|+|nor_conv_3x3~0|skip_connect~1|+|nor_conv_3x3~0|avg_pool_3x3~1|nor_conv_1x1~2|, FLOP=29.48M, Param=0.838MB, seed=0111, 3 eval-sets: [x-test, ori-test, x-valid])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+ 26%|██▌       | 26/100 [1:22:56<4:47:34, 233.17s/it, 4744.19/20000 seconds] 26%|██▌       | 26/100 [1:22:56<4:47:34, 233.17s/it, 4976.34/20000 seconds]=========sampled_config===============
+{'nas_zero_cost': {'dataset': 'ImageNet16-120', 'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 3, 'op_2_0': 2, 'op_2_1': 2, 'op_3_0': 3, 'op_3_1': 2, 'op_3_2': 2, 'number_classes': 10}, 'default': {'config': {'dataset': 'cifar10', 'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 4, 'op_2_0': 2, 'op_2_1': 1, 'op_3_0': 2, 'op_3_1': 1, 'op_3_2': 1, 'number_classes': 10}}}
+Used dataset: ImageNet16-120
+index
+1716
+results
+{111: ResultsCount(ImageNet16-120, arch=|nor_conv_1x1~0|+|nor_conv_3x3~0|nor_conv_3x3~1|+|nor_conv_1x1~0|nor_conv_3x3~1|nor_conv_3x3~2|, FLOP=39.31M, Param=1.109MB, seed=0111, 3 eval-sets: [x-test, ori-test, x-valid])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+ 27%|██▋       | 27/100 [1:27:23<4:55:59, 243.28s/it, 4976.34/20000 seconds] 27%|██▋       | 27/100 [1:27:23<4:55:59, 243.28s/it, 5243.21/20000 seconds]=========sampled_config===============
+{'nas_zero_cost': {'dataset': 'ImageNet16-120', 'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 1, 'op_2_0': 3, 'op_2_1': 3, 'op_3_0': 4, 'op_3_1': 3, 'op_3_2': 2, 'number_classes': 10}, 'default': {'config': {'dataset': 'cifar10', 'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 4, 'op_2_0': 2, 'op_2_1': 1, 'op_3_0': 2, 'op_3_1': 1, 'op_3_2': 1, 'number_classes': 10}}}
+Used dataset: ImageNet16-120
+index
+5634
+results
+{111: ResultsCount(ImageNet16-120, arch=|none~0|+|nor_conv_1x1~0|nor_conv_1x1~1|+|avg_pool_3x3~0|nor_conv_1x1~1|nor_conv_3x3~2|, FLOP=13.75M, Param=0.407MB, seed=0111, 3 eval-sets: [x-valid, ori-test, x-test])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+ 28%|██▊       | 28/100 [1:30:21<4:28:40, 223.89s/it, 5243.21/20000 seconds] 28%|██▊       | 28/100 [1:30:21<4:28:40, 223.89s/it, 5421.88/20000 seconds]=========sampled_config===============
+{'nas_zero_cost': {'dataset': 'ImageNet16-120', 'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 2, 'op_2_0': 1, 'op_2_1': 2, 'op_3_0': 3, 'op_3_1': 3, 'op_3_2': 1, 'number_classes': 10}, 'default': {'config': {'dataset': 'cifar10', 'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 4, 'op_2_0': 2, 'op_2_1': 1, 'op_3_0': 2, 'op_3_1': 1, 'op_3_2': 1, 'number_classes': 10}}}
+Used dataset: ImageNet16-120
+index
+7544
+results
+{111: ResultsCount(ImageNet16-120, arch=|nor_conv_3x3~0|+|none~0|nor_conv_3x3~1|+|nor_conv_1x1~0|nor_conv_1x1~1|none~2|, FLOP=21.61M, Param=0.623MB, seed=0111, 3 eval-sets: [x-valid, x-test, ori-test])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+ 29%|██▉       | 29/100 [1:33:35<4:14:02, 214.68s/it, 5421.88/20000 seconds] 29%|██▉       | 29/100 [1:33:35<4:14:02, 214.68s/it, 5615.08/20000 seconds]=========sampled_config===============
+{'nas_zero_cost': {'dataset': 'ImageNet16-120', 'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 1, 'op_2_0': 2, 'op_2_1': 4, 'op_3_0': 2, 'op_3_1': 4, 'op_3_2': 3, 'number_classes': 10}, 'default': {'config': {'dataset': 'cifar10', 'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 4, 'op_2_0': 2, 'op_2_1': 1, 'op_3_0': 2, 'op_3_1': 1, 'op_3_2': 1, 'number_classes': 10}}}
+Used dataset: ImageNet16-120
+index
+6402
+results
+{111: ResultsCount(ImageNet16-120, arch=|none~0|+|nor_conv_3x3~0|avg_pool_3x3~1|+|nor_conv_3x3~0|avg_pool_3x3~1|nor_conv_1x1~2|, FLOP=20.63M, Param=0.595MB, seed=0111, 3 eval-sets: [ori-test, x-test, x-valid])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+ 30%|███       | 30/100 [1:37:07<4:09:35, 213.94s/it, 5615.08/20000 seconds] 30%|███       | 30/100 [1:37:07<4:09:35, 213.94s/it, 5827.27/20000 seconds]=========sampled_config===============
+{'nas_zero_cost': {'dataset': 'ImageNet16-120', 'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 3, 'op_2_0': 2, 'op_2_1': 4, 'op_3_0': 0, 'op_3_1': 2, 'op_3_2': 2, 'number_classes': 10}, 'default': {'config': {'dataset': 'cifar10', 'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 4, 'op_2_0': 2, 'op_2_1': 1, 'op_3_0': 2, 'op_3_1': 1, 'op_3_2': 1, 'number_classes': 10}}}
+Used dataset: ImageNet16-120
+index
+15425
+results
+{111: ResultsCount(ImageNet16-120, arch=|nor_conv_1x1~0|+|nor_conv_3x3~0|avg_pool_3x3~1|+|skip_connect~0|nor_conv_3x3~1|nor_conv_3x3~2|, FLOP=29.48M, Param=0.838MB, seed=0111, 3 eval-sets: [x-test, x-valid, ori-test])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+ 31%|███       | 31/100 [1:40:59<4:12:14, 219.34s/it, 5827.27/20000 seconds] 31%|███       | 31/100 [1:40:59<4:12:14, 219.34s/it, 6059.20/20000 seconds]=========sampled_config===============
+{'nas_zero_cost': {'dataset': 'ImageNet16-120', 'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 4, 'op_2_0': 2, 'op_2_1': 2, 'op_3_0': 3, 'op_3_1': 2, 'op_3_2': 2, 'number_classes': 10}, 'default': {'config': {'dataset': 'cifar10', 'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 4, 'op_2_0': 2, 'op_2_1': 1, 'op_3_0': 2, 'op_3_1': 1, 'op_3_2': 1, 'number_classes': 10}}}
+Used dataset: ImageNet16-120
+index
+2554
+results
+{111: ResultsCount(ImageNet16-120, arch=|avg_pool_3x3~0|+|nor_conv_3x3~0|nor_conv_3x3~1|+|nor_conv_1x1~0|nor_conv_3x3~1|nor_conv_3x3~2|, FLOP=38.33M, Param=1.081MB, seed=0111, 3 eval-sets: [x-test, x-valid, ori-test])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+ 32%|███▏      | 32/100 [1:45:29<4:26:02, 234.74s/it, 6059.20/20000 seconds] 32%|███▏      | 32/100 [1:45:29<4:26:02, 234.74s/it, 6329.90/20000 seconds]=========sampled_config===============
+{'nas_zero_cost': {'dataset': 'ImageNet16-120', 'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 3, 'op_2_0': 2, 'op_2_1': 2, 'op_3_0': 3, 'op_3_1': 2, 'op_3_2': 2, 'number_classes': 10}, 'default': {'config': {'dataset': 'cifar10', 'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 4, 'op_2_0': 2, 'op_2_1': 1, 'op_3_0': 2, 'op_3_1': 1, 'op_3_2': 1, 'number_classes': 10}}}
+Used dataset: ImageNet16-120
+index
+1716
+results
+{111: ResultsCount(ImageNet16-120, arch=|nor_conv_1x1~0|+|nor_conv_3x3~0|nor_conv_3x3~1|+|nor_conv_1x1~0|nor_conv_3x3~1|nor_conv_3x3~2|, FLOP=39.31M, Param=1.109MB, seed=0111, 3 eval-sets: [x-test, ori-test, x-valid])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+ 33%|███▎      | 33/100 [1:49:56<4:32:38, 244.16s/it, 6329.90/20000 seconds] 33%|███▎      | 33/100 [1:49:56<4:32:38, 244.16s/it, 6596.02/20000 seconds]=========sampled_config===============
+{'nas_zero_cost': {'dataset': 'ImageNet16-120', 'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 2, 'op_2_0': 1, 'op_2_1': 2, 'op_3_0': 2, 'op_3_1': 2, 'op_3_2': 1, 'number_classes': 10}, 'default': {'config': {'dataset': 'cifar10', 'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 4, 'op_2_0': 2, 'op_2_1': 1, 'op_3_0': 2, 'op_3_1': 1, 'op_3_2': 1, 'number_classes': 10}}}
+Used dataset: ImageNet16-120
+index
+11831
+results
+{111: ResultsCount(ImageNet16-120, arch=|nor_conv_3x3~0|+|none~0|nor_conv_3x3~1|+|nor_conv_3x3~0|nor_conv_3x3~1|none~2|, FLOP=37.34M, Param=1.053MB, seed=0111, 3 eval-sets: [x-valid, x-test, ori-test])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+ 34%|███▍      | 34/100 [1:53:58<4:27:53, 243.54s/it, 6596.02/20000 seconds] 34%|███▍      | 34/100 [1:53:58<4:27:53, 243.54s/it, 6838.11/20000 seconds]=========sampled_config===============
+{'nas_zero_cost': {'dataset': 'ImageNet16-120', 'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 3, 'op_2_0': 3, 'op_2_1': 3, 'op_3_0': 3, 'op_3_1': 1, 'op_3_2': 3, 'number_classes': 10}, 'default': {'config': {'dataset': 'cifar10', 'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 4, 'op_2_0': 2, 'op_2_1': 1, 'op_3_0': 2, 'op_3_1': 1, 'op_3_2': 1, 'number_classes': 10}}}
+Used dataset: ImageNet16-120
+index
+2732
+results
+{111: ResultsCount(ImageNet16-120, arch=|nor_conv_1x1~0|+|nor_conv_1x1~0|nor_conv_1x1~1|+|nor_conv_1x1~0|none~1|nor_conv_1x1~2|, FLOP=6.87M, Param=0.220MB, seed=0111, 3 eval-sets: [x-valid, x-test, ori-test])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+ 35%|███▌      | 35/100 [1:56:33<3:55:14, 217.15s/it, 6838.11/20000 seconds] 35%|███▌      | 35/100 [1:56:33<3:55:14, 217.15s/it, 6993.69/20000 seconds]=========sampled_config===============
+{'nas_zero_cost': {'dataset': 'ImageNet16-120', 'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 1, 'op_2_0': 2, 'op_2_1': 1, 'op_3_0': 4, 'op_3_1': 4, 'op_3_2': 2, 'number_classes': 10}, 'default': {'config': {'dataset': 'cifar10', 'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 4, 'op_2_0': 2, 'op_2_1': 1, 'op_3_0': 2, 'op_3_1': 1, 'op_3_2': 1, 'number_classes': 10}}}
+Used dataset: ImageNet16-120
+index
+892
+results
+{111: ResultsCount(ImageNet16-120, arch=|none~0|+|nor_conv_3x3~0|none~1|+|avg_pool_3x3~0|avg_pool_3x3~1|nor_conv_3x3~2|, FLOP=19.65M, Param=0.567MB, seed=0111, 3 eval-sets: [ori-test, x-test, x-valid])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+ 36%|███▌      | 36/100 [1:59:44<3:43:15, 209.31s/it, 6993.69/20000 seconds] 36%|███▌      | 36/100 [1:59:44<3:43:15, 209.31s/it, 7184.69/20000 seconds]=========sampled_config===============
+{'nas_zero_cost': {'dataset': 'ImageNet16-120', 'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 3, 'op_2_0': 3, 'op_2_1': 1, 'op_3_0': 2, 'op_3_1': 3, 'op_3_2': 3, 'number_classes': 10}, 'default': {'config': {'dataset': 'cifar10', 'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 4, 'op_2_0': 2, 'op_2_1': 1, 'op_3_0': 2, 'op_3_1': 1, 'op_3_2': 1, 'number_classes': 10}}}
+Used dataset: ImageNet16-120
+index
+8245
+results
+{111: ResultsCount(ImageNet16-120, arch=|nor_conv_1x1~0|+|nor_conv_1x1~0|none~1|+|nor_conv_3x3~0|nor_conv_1x1~1|nor_conv_1x1~2|, FLOP=14.73M, Param=0.435MB, seed=0111, 3 eval-sets: [x-test, x-valid, ori-test])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+ 37%|███▋      | 37/100 [2:02:44<3:30:33, 200.53s/it, 7184.69/20000 seconds] 37%|███▋      | 37/100 [2:02:44<3:30:33, 200.53s/it, 7364.74/20000 seconds]=========sampled_config===============
+{'nas_zero_cost': {'dataset': 'ImageNet16-120', 'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 2, 'op_2_0': 1, 'op_2_1': 3, 'op_3_0': 3, 'op_3_1': 1, 'op_3_2': 2, 'number_classes': 10}, 'default': {'config': {'dataset': 'cifar10', 'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 4, 'op_2_0': 2, 'op_2_1': 1, 'op_3_0': 2, 'op_3_1': 1, 'op_3_2': 1, 'number_classes': 10}}}
+Used dataset: ImageNet16-120
+index
+1658
+results
+{111: ResultsCount(ImageNet16-120, arch=|nor_conv_3x3~0|+|none~0|nor_conv_1x1~1|+|nor_conv_1x1~0|none~1|nor_conv_3x3~2|, FLOP=21.61M, Param=0.623MB, seed=0111, 3 eval-sets: [x-test, ori-test, x-valid])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+ 38%|███▊      | 38/100 [2:05:57<3:24:40, 198.07s/it, 7364.74/20000 seconds] 38%|███▊      | 38/100 [2:05:57<3:24:40, 198.07s/it, 7557.07/20000 seconds]=========sampled_config===============
+{'nas_zero_cost': {'dataset': 'ImageNet16-120', 'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 2, 'op_2_0': 3, 'op_2_1': 3, 'op_3_0': 1, 'op_3_1': 3, 'op_3_2': 3, 'number_classes': 10}, 'default': {'config': {'dataset': 'cifar10', 'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 4, 'op_2_0': 2, 'op_2_1': 1, 'op_3_0': 2, 'op_3_1': 1, 'op_3_2': 1, 'number_classes': 10}}}
+Used dataset: ImageNet16-120
+index
+5232
+results
+{111: ResultsCount(ImageNet16-120, arch=|nor_conv_3x3~0|+|nor_conv_1x1~0|nor_conv_1x1~1|+|none~0|nor_conv_1x1~1|nor_conv_1x1~2|, FLOP=14.73M, Param=0.435MB, seed=0111, 3 eval-sets: [x-test, ori-test, x-valid])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+ 39%|███▉      | 39/100 [2:08:57<3:16:02, 192.83s/it, 7557.07/20000 seconds] 39%|███▉      | 39/100 [2:08:57<3:16:02, 192.83s/it, 7737.68/20000 seconds]=========sampled_config===============
+{'nas_zero_cost': {'dataset': 'ImageNet16-120', 'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 1, 'op_2_0': 1, 'op_2_1': 1, 'op_3_0': 2, 'op_3_1': 4, 'op_3_2': 1, 'number_classes': 10}, 'default': {'config': {'dataset': 'cifar10', 'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 4, 'op_2_0': 2, 'op_2_1': 1, 'op_3_0': 2, 'op_3_1': 1, 'op_3_2': 1, 'number_classes': 10}}}
+Used dataset: ImageNet16-120
+index
+9399
+results
+{111: ResultsCount(ImageNet16-120, arch=|none~0|+|none~0|none~1|+|nor_conv_3x3~0|avg_pool_3x3~1|none~2|, FLOP=10.80M, Param=0.323MB, seed=0111, 3 eval-sets: [x-test, ori-test, x-valid])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+ 40%|████      | 40/100 [2:11:23<2:58:49, 178.82s/it, 7737.68/20000 seconds] 40%|████      | 40/100 [2:11:23<2:58:49, 178.82s/it, 7883.81/20000 seconds]=========sampled_config===============
+{'nas_zero_cost': {'dataset': 'ImageNet16-120', 'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 3, 'op_2_0': 2, 'op_2_1': 2, 'op_3_0': 3, 'op_3_1': 2, 'op_3_2': 3, 'number_classes': 10}, 'default': {'config': {'dataset': 'cifar10', 'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 4, 'op_2_0': 2, 'op_2_1': 1, 'op_3_0': 2, 'op_3_1': 1, 'op_3_2': 1, 'number_classes': 10}}}
+Used dataset: ImageNet16-120
+index
+7337
+results
+{111: ResultsCount(ImageNet16-120, arch=|nor_conv_1x1~0|+|nor_conv_3x3~0|nor_conv_3x3~1|+|nor_conv_1x1~0|nor_conv_3x3~1|nor_conv_1x1~2|, FLOP=31.44M, Param=0.894MB, seed=0111, 3 eval-sets: [x-test, x-valid, ori-test])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+ 41%|████      | 41/100 [2:15:25<3:14:28, 197.78s/it, 7883.81/20000 seconds] 41%|████      | 41/100 [2:15:25<3:14:28, 197.78s/it, 8125.82/20000 seconds]=========sampled_config===============
+{'nas_zero_cost': {'dataset': 'ImageNet16-120', 'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 2, 'op_2_0': 2, 'op_2_1': 3, 'op_3_0': 3, 'op_3_1': 3, 'op_3_2': 2, 'number_classes': 10}, 'default': {'config': {'dataset': 'cifar10', 'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 4, 'op_2_0': 2, 'op_2_1': 1, 'op_3_0': 2, 'op_3_1': 1, 'op_3_2': 1, 'number_classes': 10}}}
+Used dataset: ImageNet16-120
+index
+12606
+results
+{111: ResultsCount(ImageNet16-120, arch=|nor_conv_3x3~0|+|nor_conv_3x3~0|nor_conv_1x1~1|+|nor_conv_1x1~0|nor_conv_1x1~1|nor_conv_3x3~2|, FLOP=31.44M, Param=0.894MB, seed=0111, 3 eval-sets: [x-valid, x-test, ori-test])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+ 42%|████▏     | 42/100 [2:19:27<3:23:51, 210.89s/it, 8125.82/20000 seconds] 42%|████▏     | 42/100 [2:19:27<3:23:51, 210.89s/it, 8367.32/20000 seconds]=========sampled_config===============
+{'nas_zero_cost': {'dataset': 'ImageNet16-120', 'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 2, 'op_2_0': 2, 'op_2_1': 4, 'op_3_0': 3, 'op_3_1': 3, 'op_3_2': 2, 'number_classes': 10}, 'default': {'config': {'dataset': 'cifar10', 'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 4, 'op_2_0': 2, 'op_2_1': 1, 'op_3_0': 2, 'op_3_1': 1, 'op_3_2': 1, 'number_classes': 10}}}
+Used dataset: ImageNet16-120
+index
+12411
+results
+{111: ResultsCount(ImageNet16-120, arch=|nor_conv_3x3~0|+|nor_conv_3x3~0|avg_pool_3x3~1|+|nor_conv_1x1~0|nor_conv_1x1~1|nor_conv_3x3~2|, FLOP=30.46M, Param=0.866MB, seed=0111, 3 eval-sets: [ori-test, x-valid, x-test])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+ 43%|████▎     | 43/100 [2:23:32<3:30:05, 221.14s/it, 8367.32/20000 seconds] 43%|████▎     | 43/100 [2:23:32<3:30:05, 221.14s/it, 8612.37/20000 seconds]=========sampled_config===============
+{'nas_zero_cost': {'dataset': 'ImageNet16-120', 'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 1, 'op_2_0': 2, 'op_2_1': 3, 'op_3_0': 4, 'op_3_1': 2, 'op_3_2': 2, 'number_classes': 10}, 'default': {'config': {'dataset': 'cifar10', 'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 4, 'op_2_0': 2, 'op_2_1': 1, 'op_3_0': 2, 'op_3_1': 1, 'op_3_2': 1, 'number_classes': 10}}}
+Used dataset: ImageNet16-120
+index
+3710
+results
+{111: ResultsCount(ImageNet16-120, arch=|none~0|+|nor_conv_3x3~0|nor_conv_1x1~1|+|avg_pool_3x3~0|nor_conv_3x3~1|nor_conv_3x3~2|, FLOP=29.48M, Param=0.838MB, seed=0111, 3 eval-sets: [ori-test, x-test, x-valid])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+ 44%|████▍     | 44/100 [2:27:20<3:28:25, 223.31s/it, 8612.37/20000 seconds] 44%|████▍     | 44/100 [2:27:20<3:28:25, 223.31s/it, 8840.73/20000 seconds]=========sampled_config===============
+{'nas_zero_cost': {'dataset': 'ImageNet16-120', 'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 2, 'op_2_0': 2, 'op_2_1': 2, 'op_3_0': 3, 'op_3_1': 3, 'op_3_2': 2, 'number_classes': 10}, 'default': {'config': {'dataset': 'cifar10', 'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 4, 'op_2_0': 2, 'op_2_1': 1, 'op_3_0': 2, 'op_3_1': 1, 'op_3_2': 1, 'number_classes': 10}}}
+Used dataset: ImageNet16-120
+index
+8102
+results
+{111: ResultsCount(ImageNet16-120, arch=|nor_conv_3x3~0|+|nor_conv_3x3~0|nor_conv_3x3~1|+|nor_conv_1x1~0|nor_conv_1x1~1|nor_conv_3x3~2|, FLOP=39.31M, Param=1.109MB, seed=0111, 3 eval-sets: [ori-test, x-valid, x-test])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+ 45%|████▌     | 45/100 [2:31:48<3:36:50, 236.56s/it, 8840.73/20000 seconds] 45%|████▌     | 45/100 [2:31:48<3:36:50, 236.56s/it, 9108.21/20000 seconds]=========sampled_config===============
+{'nas_zero_cost': {'dataset': 'ImageNet16-120', 'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 2, 'op_2_0': 2, 'op_2_1': 3, 'op_3_0': 2, 'op_3_1': 2, 'op_3_2': 2, 'number_classes': 10}, 'default': {'config': {'dataset': 'cifar10', 'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 4, 'op_2_0': 2, 'op_2_1': 1, 'op_3_0': 2, 'op_3_1': 1, 'op_3_2': 1, 'number_classes': 10}}}
+Used dataset: ImageNet16-120
+index
+5563
+results
+{111: ResultsCount(ImageNet16-120, arch=|nor_conv_3x3~0|+|nor_conv_3x3~0|nor_conv_1x1~1|+|nor_conv_3x3~0|nor_conv_3x3~1|nor_conv_3x3~2|, FLOP=47.17M, Param=1.324MB, seed=0111, 3 eval-sets: [x-valid, ori-test, x-test])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+ 46%|████▌     | 46/100 [2:36:39<3:47:33, 252.84s/it, 9108.21/20000 seconds] 46%|████▌     | 46/100 [2:36:39<3:47:33, 252.84s/it, 9399.03/20000 seconds]=========sampled_config===============
+{'nas_zero_cost': {'dataset': 'ImageNet16-120', 'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 0, 'op_2_0': 1, 'op_2_1': 2, 'op_3_0': 1, 'op_3_1': 1, 'op_3_2': 1, 'number_classes': 10}, 'default': {'config': {'dataset': 'cifar10', 'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 4, 'op_2_0': 2, 'op_2_1': 1, 'op_3_0': 2, 'op_3_1': 1, 'op_3_2': 1, 'number_classes': 10}}}
+Used dataset: ImageNet16-120
+index
+7161
+results
+{111: ResultsCount(ImageNet16-120, arch=|skip_connect~0|+|none~0|nor_conv_3x3~1|+|none~0|none~1|none~2|, FLOP=10.80M, Param=0.323MB, seed=0111, 3 eval-sets: [x-test, x-valid, ori-test])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+ 47%|████▋     | 47/100 [2:38:48<3:10:44, 215.94s/it, 9399.03/20000 seconds] 47%|████▋     | 47/100 [2:38:48<3:10:44, 215.94s/it, 9528.89/20000 seconds]=========sampled_config===============
+{'nas_zero_cost': {'dataset': 'ImageNet16-120', 'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 3, 'op_2_0': 4, 'op_2_1': 3, 'op_3_0': 2, 'op_3_1': 2, 'op_3_2': 2, 'number_classes': 10}, 'default': {'config': {'dataset': 'cifar10', 'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 4, 'op_2_0': 2, 'op_2_1': 1, 'op_3_0': 2, 'op_3_1': 1, 'op_3_2': 1, 'number_classes': 10}}}
+Used dataset: ImageNet16-120
+index
+8228
+results
+{111: ResultsCount(ImageNet16-120, arch=|nor_conv_1x1~0|+|avg_pool_3x3~0|nor_conv_1x1~1|+|nor_conv_3x3~0|nor_conv_3x3~1|nor_conv_3x3~2|, FLOP=30.46M, Param=0.866MB, seed=0111, 3 eval-sets: [x-test, x-valid, ori-test])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+ 48%|████▊     | 48/100 [2:42:54<3:14:46, 224.75s/it, 9528.89/20000 seconds] 48%|████▊     | 48/100 [2:42:54<3:14:46, 224.75s/it, 9774.18/20000 seconds]=========sampled_config===============
+{'nas_zero_cost': {'dataset': 'ImageNet16-120', 'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 4, 'op_2_0': 2, 'op_2_1': 3, 'op_3_0': 2, 'op_3_1': 1, 'op_3_2': 3, 'number_classes': 10}, 'default': {'config': {'dataset': 'cifar10', 'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 4, 'op_2_0': 2, 'op_2_1': 1, 'op_3_0': 2, 'op_3_1': 1, 'op_3_2': 1, 'number_classes': 10}}}
+Used dataset: ImageNet16-120
+index
+8291
+results
+{111: ResultsCount(ImageNet16-120, arch=|avg_pool_3x3~0|+|nor_conv_3x3~0|nor_conv_1x1~1|+|nor_conv_3x3~0|none~1|nor_conv_1x1~2|, FLOP=21.61M, Param=0.623MB, seed=0111, 3 eval-sets: [x-test, x-valid, ori-test])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+ 49%|████▉     | 49/100 [2:46:23<3:07:05, 220.10s/it, 9774.18/20000 seconds] 49%|████▉     | 49/100 [2:46:23<3:07:05, 220.10s/it, 9983.43/20000 seconds]=========sampled_config===============
+{'nas_zero_cost': {'dataset': 'ImageNet16-120', 'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 2, 'op_2_0': 3, 'op_2_1': 2, 'op_3_0': 1, 'op_3_1': 2, 'op_3_2': 2, 'number_classes': 10}, 'default': {'config': {'dataset': 'cifar10', 'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 4, 'op_2_0': 2, 'op_2_1': 1, 'op_3_0': 2, 'op_3_1': 1, 'op_3_2': 1, 'number_classes': 10}}}
+Used dataset: ImageNet16-120
+index
+3692
+results
+{111: ResultsCount(ImageNet16-120, arch=|nor_conv_3x3~0|+|nor_conv_1x1~0|nor_conv_3x3~1|+|none~0|nor_conv_3x3~1|nor_conv_3x3~2|, FLOP=38.33M, Param=1.081MB, seed=0111, 3 eval-sets: [ori-test, x-test, x-valid])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+ 50%|█████     | 50/100 [2:50:37<3:11:52, 230.26s/it, 9983.43/20000 seconds] 50%|█████     | 50/100 [2:50:37<3:11:52, 230.26s/it, 10237.39/20000 seconds]=========sampled_config===============
+{'nas_zero_cost': {'dataset': 'ImageNet16-120', 'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 2, 'op_2_0': 3, 'op_2_1': 4, 'op_3_0': 2, 'op_3_1': 2, 'op_3_2': 1, 'number_classes': 10}, 'default': {'config': {'dataset': 'cifar10', 'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 4, 'op_2_0': 2, 'op_2_1': 1, 'op_3_0': 2, 'op_3_1': 1, 'op_3_2': 1, 'number_classes': 10}}}
+Used dataset: ImageNet16-120
+index
+4536
+results
+{111: ResultsCount(ImageNet16-120, arch=|nor_conv_3x3~0|+|nor_conv_1x1~0|avg_pool_3x3~1|+|nor_conv_3x3~0|nor_conv_3x3~1|none~2|, FLOP=29.48M, Param=0.838MB, seed=0111, 3 eval-sets: [x-valid, ori-test, x-test])}
+Traceback (most recent call last):
+  File "/home/xz2723/miniforge3/envs/mase/lib/python3.11/multiprocessing/util.py", line 300, in _run_finalizers
+    finalizer()
+  File "/home/xz2723/miniforge3/envs/mase/lib/python3.11/multiprocessing/util.py", line 224, in __call__
+    res = self._callback(*self._args, **self._kwargs)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/xz2723/miniforge3/envs/mase/lib/python3.11/multiprocessing/util.py", line 133, in _remove_temp_dir
+    rmtree(tempdir)
+  File "/home/xz2723/miniforge3/envs/mase/lib/python3.11/shutil.py", line 738, in rmtree
+    onerror(os.rmdir, path, sys.exc_info())
+  File "/home/xz2723/miniforge3/envs/mase/lib/python3.11/shutil.py", line 736, in rmtree
+    os.rmdir(path, dir_fd=dir_fd)
+OSError: [Errno 39] Directory not empty: '/tmp/pymp-rl9g3m8u'
+Traceback (most recent call last):
+  File "/home/xz2723/miniforge3/envs/mase/lib/python3.11/multiprocessing/util.py", line 300, in _run_finalizers
+    finalizer()
+  File "/home/xz2723/miniforge3/envs/mase/lib/python3.11/multiprocessing/util.py", line 224, in __call__
+    res = self._callback(*self._args, **self._kwargs)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/xz2723/miniforge3/envs/mase/lib/python3.11/multiprocessing/util.py", line 133, in _remove_temp_dir
+    rmtree(tempdir)
+  File "/home/xz2723/miniforge3/envs/mase/lib/python3.11/shutil.py", line 738, in rmtree
+    onerror(os.rmdir, path, sys.exc_info())
+  File "/home/xz2723/miniforge3/envs/mase/lib/python3.11/shutil.py", line 736, in rmtree
+    os.rmdir(path, dir_fd=dir_fd)
+OSError: [Errno 39] Directory not empty: '/tmp/pymp-gddr5bgw'
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+ 51%|█████     | 51/100 [2:54:31<3:08:56, 231.35s/it, 10237.39/20000 seconds] 51%|█████     | 51/100 [2:54:31<3:08:56, 231.35s/it, 10471.30/20000 seconds]=========sampled_config===============
+{'nas_zero_cost': {'dataset': 'ImageNet16-120', 'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 2, 'op_2_0': 2, 'op_2_1': 3, 'op_3_0': 3, 'op_3_1': 3, 'op_3_2': 2, 'number_classes': 10}, 'default': {'config': {'dataset': 'cifar10', 'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 4, 'op_2_0': 2, 'op_2_1': 1, 'op_3_0': 2, 'op_3_1': 1, 'op_3_2': 1, 'number_classes': 10}}}
+Used dataset: ImageNet16-120
+index
+12606
+results
+{111: ResultsCount(ImageNet16-120, arch=|nor_conv_3x3~0|+|nor_conv_3x3~0|nor_conv_1x1~1|+|nor_conv_1x1~0|nor_conv_1x1~1|nor_conv_3x3~2|, FLOP=31.44M, Param=0.894MB, seed=0111, 3 eval-sets: [x-valid, x-test, ori-test])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+ 52%|█████▏    | 52/100 [2:58:32<3:07:21, 234.20s/it, 10471.30/20000 seconds] 52%|█████▏    | 52/100 [2:58:32<3:07:21, 234.20s/it, 10712.14/20000 seconds]=========sampled_config===============
+{'nas_zero_cost': {'dataset': 'ImageNet16-120', 'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 2, 'op_2_0': 2, 'op_2_1': 3, 'op_3_0': 3, 'op_3_1': 2, 'op_3_2': 2, 'number_classes': 10}, 'default': {'config': {'dataset': 'cifar10', 'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 4, 'op_2_0': 2, 'op_2_1': 1, 'op_3_0': 2, 'op_3_1': 1, 'op_3_2': 1, 'number_classes': 10}}}
+Used dataset: ImageNet16-120
+index
+5115
+results
+{111: ResultsCount(ImageNet16-120, arch=|nor_conv_3x3~0|+|nor_conv_3x3~0|nor_conv_1x1~1|+|nor_conv_1x1~0|nor_conv_3x3~1|nor_conv_3x3~2|, FLOP=39.31M, Param=1.109MB, seed=0111, 3 eval-sets: [x-test, ori-test, x-valid])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+ 53%|█████▎    | 53/100 [3:02:58<3:10:57, 243.77s/it, 10712.14/20000 seconds] 53%|█████▎    | 53/100 [3:02:58<3:10:57, 243.77s/it, 10978.25/20000 seconds]=========sampled_config===============
+{'nas_zero_cost': {'dataset': 'ImageNet16-120', 'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 2, 'op_2_0': 2, 'op_2_1': 3, 'op_3_0': 3, 'op_3_1': 3, 'op_3_2': 2, 'number_classes': 10}, 'default': {'config': {'dataset': 'cifar10', 'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 4, 'op_2_0': 2, 'op_2_1': 1, 'op_3_0': 2, 'op_3_1': 1, 'op_3_2': 1, 'number_classes': 10}}}
+Used dataset: ImageNet16-120
+index
+12606
+results
+{111: ResultsCount(ImageNet16-120, arch=|nor_conv_3x3~0|+|nor_conv_3x3~0|nor_conv_1x1~1|+|nor_conv_1x1~0|nor_conv_1x1~1|nor_conv_3x3~2|, FLOP=31.44M, Param=0.894MB, seed=0111, 3 eval-sets: [x-valid, x-test, ori-test])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+ 54%|█████▍    | 54/100 [3:06:58<3:06:10, 242.84s/it, 10978.25/20000 seconds] 54%|█████▍    | 54/100 [3:06:58<3:06:10, 242.84s/it, 11218.90/20000 seconds]=========sampled_config===============
+{'nas_zero_cost': {'dataset': 'ImageNet16-120', 'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 2, 'op_2_0': 2, 'op_2_1': 3, 'op_3_0': 2, 'op_3_1': 3, 'op_3_2': 2, 'number_classes': 10}, 'default': {'config': {'dataset': 'cifar10', 'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 4, 'op_2_0': 2, 'op_2_1': 1, 'op_3_0': 2, 'op_3_1': 1, 'op_3_2': 1, 'number_classes': 10}}}
+Used dataset: ImageNet16-120
+index
+15537
+results
+{111: ResultsCount(ImageNet16-120, arch=|nor_conv_3x3~0|+|nor_conv_3x3~0|nor_conv_1x1~1|+|nor_conv_3x3~0|nor_conv_1x1~1|nor_conv_3x3~2|, FLOP=39.31M, Param=1.109MB, seed=0111, 3 eval-sets: [x-test, x-valid, ori-test])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+ 55%|█████▌    | 55/100 [3:11:24<3:07:14, 249.65s/it, 11218.90/20000 seconds] 55%|█████▌    | 55/100 [3:11:24<3:07:14, 249.65s/it, 11484.46/20000 seconds]=========sampled_config===============
+{'nas_zero_cost': {'dataset': 'ImageNet16-120', 'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 1, 'op_2_0': 2, 'op_2_1': 4, 'op_3_0': 3, 'op_3_1': 2, 'op_3_2': 2, 'number_classes': 10}, 'default': {'config': {'dataset': 'cifar10', 'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 4, 'op_2_0': 2, 'op_2_1': 1, 'op_3_0': 2, 'op_3_1': 1, 'op_3_2': 1, 'number_classes': 10}}}
+Used dataset: ImageNet16-120
+index
+1886
+results
+{111: ResultsCount(ImageNet16-120, arch=|none~0|+|nor_conv_3x3~0|avg_pool_3x3~1|+|nor_conv_1x1~0|nor_conv_3x3~1|nor_conv_3x3~2|, FLOP=29.48M, Param=0.838MB, seed=0111, 3 eval-sets: [x-test, ori-test, x-valid])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+ 56%|█████▌    | 56/100 [3:15:16<2:59:09, 244.30s/it, 11484.46/20000 seconds] 56%|█████▌    | 56/100 [3:15:16<2:59:09, 244.30s/it, 11716.28/20000 seconds]=========sampled_config===============
+{'nas_zero_cost': {'dataset': 'ImageNet16-120', 'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 2, 'op_2_0': 1, 'op_2_1': 2, 'op_3_0': 4, 'op_3_1': 3, 'op_3_2': 2, 'number_classes': 10}, 'default': {'config': {'dataset': 'cifar10', 'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 4, 'op_2_0': 2, 'op_2_1': 1, 'op_3_0': 2, 'op_3_1': 1, 'op_3_2': 1, 'number_classes': 10}}}
+Used dataset: ImageNet16-120
+index
+2856
+results
+{111: ResultsCount(ImageNet16-120, arch=|nor_conv_3x3~0|+|none~0|nor_conv_3x3~1|+|avg_pool_3x3~0|nor_conv_1x1~1|nor_conv_3x3~2|, FLOP=29.48M, Param=0.838MB, seed=0111, 3 eval-sets: [x-valid, x-test, ori-test])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+ 57%|█████▋    | 57/100 [3:19:05<2:51:48, 239.73s/it, 11716.28/20000 seconds] 57%|█████▋    | 57/100 [3:19:05<2:51:48, 239.73s/it, 11945.34/20000 seconds]=========sampled_config===============
+{'nas_zero_cost': {'dataset': 'ImageNet16-120', 'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 3, 'op_2_0': 2, 'op_2_1': 2, 'op_3_0': 3, 'op_3_1': 2, 'op_3_2': 1, 'number_classes': 10}, 'default': {'config': {'dataset': 'cifar10', 'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 4, 'op_2_0': 2, 'op_2_1': 1, 'op_3_0': 2, 'op_3_1': 1, 'op_3_2': 1, 'number_classes': 10}}}
+Used dataset: ImageNet16-120
+index
+11899
+results
+{111: ResultsCount(ImageNet16-120, arch=|nor_conv_1x1~0|+|nor_conv_3x3~0|nor_conv_3x3~1|+|nor_conv_1x1~0|nor_conv_3x3~1|none~2|, FLOP=30.46M, Param=0.866MB, seed=0111, 3 eval-sets: [x-valid, x-test, ori-test])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+ 58%|█████▊    | 58/100 [3:22:53<2:45:22, 236.24s/it, 11945.34/20000 seconds] 58%|█████▊    | 58/100 [3:22:53<2:45:22, 236.24s/it, 12173.43/20000 seconds]=========sampled_config===============
+{'nas_zero_cost': {'dataset': 'ImageNet16-120', 'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 2, 'op_2_0': 2, 'op_2_1': 3, 'op_3_0': 2, 'op_3_1': 1, 'op_3_2': 3, 'number_classes': 10}, 'default': {'config': {'dataset': 'cifar10', 'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 4, 'op_2_0': 2, 'op_2_1': 1, 'op_3_0': 2, 'op_3_1': 1, 'op_3_2': 1, 'number_classes': 10}}}
+Used dataset: ImageNet16-120
+index
+3695
+results
+{111: ResultsCount(ImageNet16-120, arch=|nor_conv_3x3~0|+|nor_conv_3x3~0|nor_conv_1x1~1|+|nor_conv_3x3~0|none~1|nor_conv_1x1~2|, FLOP=30.46M, Param=0.866MB, seed=0111, 3 eval-sets: [ori-test, x-test, x-valid])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+ 59%|█████▉    | 59/100 [3:26:41<2:39:50, 233.92s/it, 12173.43/20000 seconds] 59%|█████▉    | 59/100 [3:26:41<2:39:50, 233.92s/it, 12401.95/20000 seconds]=========sampled_config===============
+{'nas_zero_cost': {'dataset': 'ImageNet16-120', 'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 3, 'op_2_0': 2, 'op_2_1': 3, 'op_3_0': 3, 'op_3_1': 0, 'op_3_2': 2, 'number_classes': 10}, 'default': {'config': {'dataset': 'cifar10', 'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 4, 'op_2_0': 2, 'op_2_1': 1, 'op_3_0': 2, 'op_3_1': 1, 'op_3_2': 1, 'number_classes': 10}}}
+Used dataset: ImageNet16-120
+index
+3174
+results
+{111: ResultsCount(ImageNet16-120, arch=|nor_conv_1x1~0|+|nor_conv_3x3~0|nor_conv_1x1~1|+|nor_conv_1x1~0|skip_connect~1|nor_conv_3x3~2|, FLOP=22.60M, Param=0.651MB, seed=0111, 3 eval-sets: [x-test, x-valid, ori-test])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+ 60%|██████    | 60/100 [3:30:04<2:29:43, 224.60s/it, 12401.95/20000 seconds] 60%|██████    | 60/100 [3:30:04<2:29:43, 224.60s/it, 12604.79/20000 seconds]=========sampled_config===============
+{'nas_zero_cost': {'dataset': 'ImageNet16-120', 'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 1, 'op_2_0': 1, 'op_2_1': 2, 'op_3_0': 4, 'op_3_1': 3, 'op_3_2': 4, 'number_classes': 10}, 'default': {'config': {'dataset': 'cifar10', 'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 4, 'op_2_0': 2, 'op_2_1': 1, 'op_3_0': 2, 'op_3_1': 1, 'op_3_2': 1, 'number_classes': 10}}}
+Used dataset: ImageNet16-120
+index
+2922
+results
+{111: ResultsCount(ImageNet16-120, arch=|none~0|+|none~0|nor_conv_3x3~1|+|avg_pool_3x3~0|nor_conv_1x1~1|avg_pool_3x3~2|, FLOP=11.78M, Param=0.351MB, seed=0111, 3 eval-sets: [x-valid, x-test, ori-test])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+ 61%|██████    | 61/100 [3:32:51<2:14:46, 207.36s/it, 12604.79/20000 seconds] 61%|██████    | 61/100 [3:32:51<2:14:46, 207.36s/it, 12771.93/20000 seconds]=========sampled_config===============
+{'nas_zero_cost': {'dataset': 'ImageNet16-120', 'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 2, 'op_2_0': 2, 'op_2_1': 3, 'op_3_0': 3, 'op_3_1': 3, 'op_3_2': 2, 'number_classes': 10}, 'default': {'config': {'dataset': 'cifar10', 'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 4, 'op_2_0': 2, 'op_2_1': 1, 'op_3_0': 2, 'op_3_1': 1, 'op_3_2': 1, 'number_classes': 10}}}
+Used dataset: ImageNet16-120
+index
+12606
+results
+{111: ResultsCount(ImageNet16-120, arch=|nor_conv_3x3~0|+|nor_conv_3x3~0|nor_conv_1x1~1|+|nor_conv_1x1~0|nor_conv_1x1~1|nor_conv_3x3~2|, FLOP=31.44M, Param=0.894MB, seed=0111, 3 eval-sets: [x-valid, x-test, ori-test])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+ 62%|██████▏   | 62/100 [3:36:51<2:17:28, 217.07s/it, 12771.93/20000 seconds] 62%|██████▏   | 62/100 [3:36:51<2:17:28, 217.07s/it, 13011.65/20000 seconds]=========sampled_config===============
+{'nas_zero_cost': {'dataset': 'ImageNet16-120', 'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 2, 'op_2_0': 2, 'op_2_1': 3, 'op_3_0': 3, 'op_3_1': 3, 'op_3_2': 2, 'number_classes': 10}, 'default': {'config': {'dataset': 'cifar10', 'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 4, 'op_2_0': 2, 'op_2_1': 1, 'op_3_0': 2, 'op_3_1': 1, 'op_3_2': 1, 'number_classes': 10}}}
+Used dataset: ImageNet16-120
+index
+12606
+results
+{111: ResultsCount(ImageNet16-120, arch=|nor_conv_3x3~0|+|nor_conv_3x3~0|nor_conv_1x1~1|+|nor_conv_1x1~0|nor_conv_1x1~1|nor_conv_3x3~2|, FLOP=31.44M, Param=0.894MB, seed=0111, 3 eval-sets: [x-valid, x-test, ori-test])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+ 63%|██████▎   | 63/100 [3:40:51<2:18:02, 223.85s/it, 13011.65/20000 seconds] 63%|██████▎   | 63/100 [3:40:51<2:18:02, 223.85s/it, 13251.33/20000 seconds]=========sampled_config===============
+{'nas_zero_cost': {'dataset': 'ImageNet16-120', 'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 2, 'op_2_0': 2, 'op_2_1': 3, 'op_3_0': 3, 'op_3_1': 3, 'op_3_2': 2, 'number_classes': 10}, 'default': {'config': {'dataset': 'cifar10', 'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 4, 'op_2_0': 2, 'op_2_1': 1, 'op_3_0': 2, 'op_3_1': 1, 'op_3_2': 1, 'number_classes': 10}}}
+Used dataset: ImageNet16-120
+index
+12606
+results
+{111: ResultsCount(ImageNet16-120, arch=|nor_conv_3x3~0|+|nor_conv_3x3~0|nor_conv_1x1~1|+|nor_conv_1x1~0|nor_conv_1x1~1|nor_conv_3x3~2|, FLOP=31.44M, Param=0.894MB, seed=0111, 3 eval-sets: [x-valid, x-test, ori-test])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+ 64%|██████▍   | 64/100 [3:44:51<2:17:19, 228.87s/it, 13251.33/20000 seconds] 64%|██████▍   | 64/100 [3:44:51<2:17:19, 228.87s/it, 13491.92/20000 seconds]=========sampled_config===============
+{'nas_zero_cost': {'dataset': 'ImageNet16-120', 'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 2, 'op_2_0': 2, 'op_2_1': 4, 'op_3_0': 3, 'op_3_1': 3, 'op_3_2': 2, 'number_classes': 10}, 'default': {'config': {'dataset': 'cifar10', 'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 4, 'op_2_0': 2, 'op_2_1': 1, 'op_3_0': 2, 'op_3_1': 1, 'op_3_2': 1, 'number_classes': 10}}}
+Used dataset: ImageNet16-120
+index
+12411
+results
+{111: ResultsCount(ImageNet16-120, arch=|nor_conv_3x3~0|+|nor_conv_3x3~0|avg_pool_3x3~1|+|nor_conv_1x1~0|nor_conv_1x1~1|nor_conv_3x3~2|, FLOP=30.46M, Param=0.866MB, seed=0111, 3 eval-sets: [ori-test, x-valid, x-test])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+ 65%|██████▌   | 65/100 [3:48:56<2:16:18, 233.66s/it, 13491.92/20000 seconds] 65%|██████▌   | 65/100 [3:48:56<2:16:18, 233.66s/it, 13736.75/20000 seconds]=========sampled_config===============
+{'nas_zero_cost': {'dataset': 'ImageNet16-120', 'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 2, 'op_2_0': 2, 'op_2_1': 3, 'op_3_0': 3, 'op_3_1': 4, 'op_3_2': 2, 'number_classes': 10}, 'default': {'config': {'dataset': 'cifar10', 'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 4, 'op_2_0': 2, 'op_2_1': 1, 'op_3_0': 2, 'op_3_1': 1, 'op_3_2': 1, 'number_classes': 10}}}
+Used dataset: ImageNet16-120
+index
+7176
+results
+{111: ResultsCount(ImageNet16-120, arch=|nor_conv_3x3~0|+|nor_conv_3x3~0|nor_conv_1x1~1|+|nor_conv_1x1~0|avg_pool_3x3~1|nor_conv_3x3~2|, FLOP=30.46M, Param=0.866MB, seed=0111, 3 eval-sets: [x-test, x-valid, ori-test])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+ 66%|██████▌   | 66/100 [3:53:00<2:14:10, 236.79s/it, 13736.75/20000 seconds] 66%|██████▌   | 66/100 [3:53:00<2:14:10, 236.79s/it, 13980.84/20000 seconds]=========sampled_config===============
+{'nas_zero_cost': {'dataset': 'ImageNet16-120', 'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 2, 'op_2_0': 3, 'op_2_1': 3, 'op_3_0': 3, 'op_3_1': 3, 'op_3_2': 1, 'number_classes': 10}, 'default': {'config': {'dataset': 'cifar10', 'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 4, 'op_2_0': 2, 'op_2_1': 1, 'op_3_0': 2, 'op_3_1': 1, 'op_3_2': 1, 'number_classes': 10}}}
+Used dataset: ImageNet16-120
+index
+7767
+results
+{111: ResultsCount(ImageNet16-120, arch=|nor_conv_3x3~0|+|nor_conv_1x1~0|nor_conv_1x1~1|+|nor_conv_1x1~0|nor_conv_1x1~1|none~2|, FLOP=14.73M, Param=0.435MB, seed=0111, 3 eval-sets: [x-valid, x-test, ori-test])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+ 67%|██████▋   | 67/100 [3:56:01<2:00:57, 219.92s/it, 13980.84/20000 seconds] 67%|██████▋   | 67/100 [3:56:01<2:00:57, 219.92s/it, 14161.40/20000 seconds]=========sampled_config===============
+{'nas_zero_cost': {'dataset': 'ImageNet16-120', 'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 2, 'op_2_0': 1, 'op_2_1': 2, 'op_3_0': 4, 'op_3_1': 4, 'op_3_2': 2, 'number_classes': 10}, 'default': {'config': {'dataset': 'cifar10', 'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 4, 'op_2_0': 2, 'op_2_1': 1, 'op_3_0': 2, 'op_3_1': 1, 'op_3_2': 1, 'number_classes': 10}}}
+Used dataset: ImageNet16-120
+index
+2263
+results
+{111: ResultsCount(ImageNet16-120, arch=|nor_conv_3x3~0|+|none~0|nor_conv_3x3~1|+|avg_pool_3x3~0|avg_pool_3x3~1|nor_conv_3x3~2|, FLOP=28.50M, Param=0.810MB, seed=0111, 3 eval-sets: [x-test, x-valid, ori-test])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+ 68%|██████▊   | 68/100 [3:59:49<1:58:37, 222.41s/it, 14161.40/20000 seconds] 68%|██████▊   | 68/100 [3:59:49<1:58:37, 222.41s/it, 14389.62/20000 seconds]=========sampled_config===============
+{'nas_zero_cost': {'dataset': 'ImageNet16-120', 'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 1, 'op_2_0': 2, 'op_2_1': 2, 'op_3_0': 3, 'op_3_1': 3, 'op_3_2': 3, 'number_classes': 10}, 'default': {'config': {'dataset': 'cifar10', 'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 4, 'op_2_0': 2, 'op_2_1': 1, 'op_3_0': 2, 'op_3_1': 1, 'op_3_2': 1, 'number_classes': 10}}}
+Used dataset: ImageNet16-120
+index
+15483
+results
+{111: ResultsCount(ImageNet16-120, arch=|none~0|+|nor_conv_3x3~0|nor_conv_3x3~1|+|nor_conv_1x1~0|nor_conv_1x1~1|nor_conv_1x1~2|, FLOP=22.60M, Param=0.651MB, seed=0111, 3 eval-sets: [x-test, x-valid, ori-test])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+ 69%|██████▉   | 69/100 [4:03:14<1:52:11, 217.14s/it, 14389.62/20000 seconds] 69%|██████▉   | 69/100 [4:03:14<1:52:11, 217.14s/it, 14594.45/20000 seconds]=========sampled_config===============
+{'nas_zero_cost': {'dataset': 'ImageNet16-120', 'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 3, 'op_2_0': 2, 'op_2_1': 3, 'op_3_0': 3, 'op_3_1': 3, 'op_3_2': 2, 'number_classes': 10}, 'default': {'config': {'dataset': 'cifar10', 'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 4, 'op_2_0': 2, 'op_2_1': 1, 'op_3_0': 2, 'op_3_1': 1, 'op_3_2': 1, 'number_classes': 10}}}
+Used dataset: ImageNet16-120
+index
+13717
+results
+{111: ResultsCount(ImageNet16-120, arch=|nor_conv_1x1~0|+|nor_conv_3x3~0|nor_conv_1x1~1|+|nor_conv_1x1~0|nor_conv_1x1~1|nor_conv_3x3~2|, FLOP=23.58M, Param=0.679MB, seed=0111, 3 eval-sets: [x-test, ori-test, x-valid])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+ 70%|███████   | 70/100 [4:06:50<1:48:27, 216.91s/it, 14594.45/20000 seconds] 70%|███████   | 70/100 [4:06:50<1:48:27, 216.91s/it, 14810.84/20000 seconds]=========sampled_config===============
+{'nas_zero_cost': {'dataset': 'ImageNet16-120', 'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 3, 'op_2_0': 3, 'op_2_1': 3, 'op_3_0': 3, 'op_3_1': 3, 'op_3_2': 2, 'number_classes': 10}, 'default': {'config': {'dataset': 'cifar10', 'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 4, 'op_2_0': 2, 'op_2_1': 1, 'op_3_0': 2, 'op_3_1': 1, 'op_3_2': 1, 'number_classes': 10}}}
+Used dataset: ImageNet16-120
+index
+1303
+results
+{111: ResultsCount(ImageNet16-120, arch=|nor_conv_1x1~0|+|nor_conv_1x1~0|nor_conv_1x1~1|+|nor_conv_1x1~0|nor_conv_1x1~1|nor_conv_3x3~2|, FLOP=15.72M, Param=0.463MB, seed=0111, 3 eval-sets: [x-valid, x-test, ori-test])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+ 71%|███████   | 71/100 [4:10:02<1:41:10, 209.34s/it, 14810.84/20000 seconds] 71%|███████   | 71/100 [4:10:02<1:41:10, 209.34s/it, 15002.49/20000 seconds]=========sampled_config===============
+{'nas_zero_cost': {'dataset': 'ImageNet16-120', 'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 4, 'op_2_0': 2, 'op_2_1': 3, 'op_3_0': 3, 'op_3_1': 3, 'op_3_2': 2, 'number_classes': 10}, 'default': {'config': {'dataset': 'cifar10', 'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 4, 'op_2_0': 2, 'op_2_1': 1, 'op_3_0': 2, 'op_3_1': 1, 'op_3_2': 1, 'number_classes': 10}}}
+Used dataset: ImageNet16-120
+index
+8901
+results
+{111: ResultsCount(ImageNet16-120, arch=|avg_pool_3x3~0|+|nor_conv_3x3~0|nor_conv_1x1~1|+|nor_conv_1x1~0|nor_conv_1x1~1|nor_conv_3x3~2|, FLOP=22.60M, Param=0.651MB, seed=0111, 3 eval-sets: [x-test, x-valid, ori-test])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+ 72%|███████▏  | 72/100 [4:13:42<1:39:15, 212.68s/it, 15002.49/20000 seconds] 72%|███████▏  | 72/100 [4:13:42<1:39:15, 212.68s/it, 15222.98/20000 seconds]=========sampled_config===============
+{'nas_zero_cost': {'dataset': 'ImageNet16-120', 'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 3, 'op_2_0': 2, 'op_2_1': 3, 'op_3_0': 3, 'op_3_1': 3, 'op_3_2': 2, 'number_classes': 10}, 'default': {'config': {'dataset': 'cifar10', 'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 4, 'op_2_0': 2, 'op_2_1': 1, 'op_3_0': 2, 'op_3_1': 1, 'op_3_2': 1, 'number_classes': 10}}}
+Used dataset: ImageNet16-120
+index
+13717
+results
+{111: ResultsCount(ImageNet16-120, arch=|nor_conv_1x1~0|+|nor_conv_3x3~0|nor_conv_1x1~1|+|nor_conv_1x1~0|nor_conv_1x1~1|nor_conv_3x3~2|, FLOP=23.58M, Param=0.679MB, seed=0111, 3 eval-sets: [x-test, ori-test, x-valid])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+ 73%|███████▎  | 73/100 [4:17:19<1:36:14, 213.87s/it, 15222.98/20000 seconds] 73%|███████▎  | 73/100 [4:17:19<1:36:14, 213.87s/it, 15439.63/20000 seconds]=========sampled_config===============
+{'nas_zero_cost': {'dataset': 'ImageNet16-120', 'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 3, 'op_2_0': 2, 'op_2_1': 3, 'op_3_0': 3, 'op_3_1': 3, 'op_3_2': 2, 'number_classes': 10}, 'default': {'config': {'dataset': 'cifar10', 'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 4, 'op_2_0': 2, 'op_2_1': 1, 'op_3_0': 2, 'op_3_1': 1, 'op_3_2': 1, 'number_classes': 10}}}
+Used dataset: ImageNet16-120
+index
+13717
+results
+{111: ResultsCount(ImageNet16-120, arch=|nor_conv_1x1~0|+|nor_conv_3x3~0|nor_conv_1x1~1|+|nor_conv_1x1~0|nor_conv_1x1~1|nor_conv_3x3~2|, FLOP=23.58M, Param=0.679MB, seed=0111, 3 eval-sets: [x-test, ori-test, x-valid])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+ 74%|███████▍  | 74/100 [4:20:56<1:33:03, 214.74s/it, 15439.63/20000 seconds] 74%|███████▍  | 74/100 [4:20:56<1:33:03, 214.74s/it, 15656.40/20000 seconds]=========sampled_config===============
+{'nas_zero_cost': {'dataset': 'ImageNet16-120', 'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 2, 'op_2_0': 2, 'op_2_1': 4, 'op_3_0': 3, 'op_3_1': 3, 'op_3_2': 2, 'number_classes': 10}, 'default': {'config': {'dataset': 'cifar10', 'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 4, 'op_2_0': 2, 'op_2_1': 1, 'op_3_0': 2, 'op_3_1': 1, 'op_3_2': 1, 'number_classes': 10}}}
+Used dataset: ImageNet16-120
+index
+12411
+results
+{111: ResultsCount(ImageNet16-120, arch=|nor_conv_3x3~0|+|nor_conv_3x3~0|avg_pool_3x3~1|+|nor_conv_1x1~0|nor_conv_1x1~1|nor_conv_3x3~2|, FLOP=30.46M, Param=0.866MB, seed=0111, 3 eval-sets: [ori-test, x-valid, x-test])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+ 75%|███████▌  | 75/100 [4:25:02<1:33:24, 224.18s/it, 15656.40/20000 seconds] 75%|███████▌  | 75/100 [4:25:02<1:33:24, 224.18s/it, 15902.62/20000 seconds]=========sampled_config===============
+{'nas_zero_cost': {'dataset': 'ImageNet16-120', 'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 3, 'op_2_0': 2, 'op_2_1': 3, 'op_3_0': 3, 'op_3_1': 3, 'op_3_2': 2, 'number_classes': 10}, 'default': {'config': {'dataset': 'cifar10', 'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 4, 'op_2_0': 2, 'op_2_1': 1, 'op_3_0': 2, 'op_3_1': 1, 'op_3_2': 1, 'number_classes': 10}}}
+Used dataset: ImageNet16-120
+index
+13717
+results
+{111: ResultsCount(ImageNet16-120, arch=|nor_conv_1x1~0|+|nor_conv_3x3~0|nor_conv_1x1~1|+|nor_conv_1x1~0|nor_conv_1x1~1|nor_conv_3x3~2|, FLOP=23.58M, Param=0.679MB, seed=0111, 3 eval-sets: [x-test, ori-test, x-valid])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+ 76%|███████▌  | 76/100 [4:28:39<1:28:49, 222.05s/it, 15902.62/20000 seconds] 76%|███████▌  | 76/100 [4:28:39<1:28:49, 222.05s/it, 16119.70/20000 seconds]=========sampled_config===============
+{'nas_zero_cost': {'dataset': 'ImageNet16-120', 'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 2, 'op_2_0': 2, 'op_2_1': 3, 'op_3_0': 3, 'op_3_1': 4, 'op_3_2': 2, 'number_classes': 10}, 'default': {'config': {'dataset': 'cifar10', 'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 4, 'op_2_0': 2, 'op_2_1': 1, 'op_3_0': 2, 'op_3_1': 1, 'op_3_2': 1, 'number_classes': 10}}}
+Used dataset: ImageNet16-120
+index
+7176
+results
+{111: ResultsCount(ImageNet16-120, arch=|nor_conv_3x3~0|+|nor_conv_3x3~0|nor_conv_1x1~1|+|nor_conv_1x1~0|avg_pool_3x3~1|nor_conv_3x3~2|, FLOP=30.46M, Param=0.866MB, seed=0111, 3 eval-sets: [x-test, x-valid, ori-test])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+ 77%|███████▋  | 77/100 [4:32:45<1:27:47, 229.03s/it, 16119.70/20000 seconds] 77%|███████▋  | 77/100 [4:32:45<1:27:47, 229.03s/it, 16365.00/20000 seconds]=========sampled_config===============
+{'nas_zero_cost': {'dataset': 'ImageNet16-120', 'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 2, 'op_2_0': 2, 'op_2_1': 3, 'op_3_0': 4, 'op_3_1': 3, 'op_3_2': 2, 'number_classes': 10}, 'default': {'config': {'dataset': 'cifar10', 'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 4, 'op_2_0': 2, 'op_2_1': 1, 'op_3_0': 2, 'op_3_1': 1, 'op_3_2': 1, 'number_classes': 10}}}
+Used dataset: ImageNet16-120
+index
+10375
+results
+{111: ResultsCount(ImageNet16-120, arch=|nor_conv_3x3~0|+|nor_conv_3x3~0|nor_conv_1x1~1|+|avg_pool_3x3~0|nor_conv_1x1~1|nor_conv_3x3~2|, FLOP=30.46M, Param=0.866MB, seed=0111, 3 eval-sets: [x-valid, x-test, ori-test])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+ 78%|███████▊  | 78/100 [4:36:47<1:25:26, 233.03s/it, 16365.00/20000 seconds] 78%|███████▊  | 78/100 [4:36:47<1:25:26, 233.03s/it, 16607.36/20000 seconds]=========sampled_config===============
+{'nas_zero_cost': {'dataset': 'ImageNet16-120', 'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 3, 'op_2_0': 2, 'op_2_1': 3, 'op_3_0': 3, 'op_3_1': 3, 'op_3_2': 3, 'number_classes': 10}, 'default': {'config': {'dataset': 'cifar10', 'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 4, 'op_2_0': 2, 'op_2_1': 1, 'op_3_0': 2, 'op_3_1': 1, 'op_3_2': 1, 'number_classes': 10}}}
+Used dataset: ImageNet16-120
+index
+5636
+results
+{111: ResultsCount(ImageNet16-120, arch=|nor_conv_1x1~0|+|nor_conv_3x3~0|nor_conv_1x1~1|+|nor_conv_1x1~0|nor_conv_1x1~1|nor_conv_1x1~2|, FLOP=15.72M, Param=0.463MB, seed=0111, 3 eval-sets: [x-valid, ori-test, x-test])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+ 79%|███████▉  | 79/100 [4:40:00<1:17:20, 221.00s/it, 16607.36/20000 seconds] 79%|███████▉  | 79/100 [4:40:00<1:17:20, 221.00s/it, 16800.29/20000 seconds]=========sampled_config===============
+{'nas_zero_cost': {'dataset': 'ImageNet16-120', 'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 2, 'op_2_0': 2, 'op_2_1': 4, 'op_3_0': 3, 'op_3_1': 3, 'op_3_2': 2, 'number_classes': 10}, 'default': {'config': {'dataset': 'cifar10', 'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 4, 'op_2_0': 2, 'op_2_1': 1, 'op_3_0': 2, 'op_3_1': 1, 'op_3_2': 1, 'number_classes': 10}}}
+Used dataset: ImageNet16-120
+index
+12411
+results
+{111: ResultsCount(ImageNet16-120, arch=|nor_conv_3x3~0|+|nor_conv_3x3~0|avg_pool_3x3~1|+|nor_conv_1x1~0|nor_conv_1x1~1|nor_conv_3x3~2|, FLOP=30.46M, Param=0.866MB, seed=0111, 3 eval-sets: [ori-test, x-valid, x-test])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+ 80%|████████  | 80/100 [4:44:06<1:16:13, 228.65s/it, 16800.29/20000 seconds] 80%|████████  | 80/100 [4:44:06<1:16:13, 228.65s/it, 17046.81/20000 seconds]=========sampled_config===============
+{'nas_zero_cost': {'dataset': 'ImageNet16-120', 'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 3, 'op_2_0': 1, 'op_2_1': 3, 'op_3_0': 3, 'op_3_1': 4, 'op_3_2': 0, 'number_classes': 10}, 'default': {'config': {'dataset': 'cifar10', 'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 4, 'op_2_0': 2, 'op_2_1': 1, 'op_3_0': 2, 'op_3_1': 1, 'op_3_2': 1, 'number_classes': 10}}}
+Used dataset: ImageNet16-120
+index
+14558
+results
+{111: ResultsCount(ImageNet16-120, arch=|nor_conv_1x1~0|+|none~0|nor_conv_1x1~1|+|nor_conv_1x1~0|avg_pool_3x3~1|skip_connect~2|, FLOP=4.90M, Param=0.164MB, seed=0111, 3 eval-sets: [x-test, x-valid, ori-test])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+ 81%|████████  | 81/100 [4:46:33<1:04:39, 204.20s/it, 17046.81/20000 seconds] 81%|████████  | 81/100 [4:46:33<1:04:39, 204.20s/it, 17193.96/20000 seconds]=========sampled_config===============
+{'nas_zero_cost': {'dataset': 'ImageNet16-120', 'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 3, 'op_2_0': 2, 'op_2_1': 2, 'op_3_0': 3, 'op_3_1': 3, 'op_3_2': 2, 'number_classes': 10}, 'default': {'config': {'dataset': 'cifar10', 'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 4, 'op_2_0': 2, 'op_2_1': 1, 'op_3_0': 2, 'op_3_1': 1, 'op_3_2': 1, 'number_classes': 10}}}
+Used dataset: ImageNet16-120
+index
+12598
+results
+{111: ResultsCount(ImageNet16-120, arch=|nor_conv_1x1~0|+|nor_conv_3x3~0|nor_conv_3x3~1|+|nor_conv_1x1~0|nor_conv_1x1~1|nor_conv_3x3~2|, FLOP=31.44M, Param=0.894MB, seed=0111, 3 eval-sets: [x-valid, x-test, ori-test])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+ 82%|████████▏ | 82/100 [4:50:36<1:04:42, 215.69s/it, 17193.96/20000 seconds] 82%|████████▏ | 82/100 [4:50:36<1:04:42, 215.69s/it, 17436.44/20000 seconds]=========sampled_config===============
+{'nas_zero_cost': {'dataset': 'ImageNet16-120', 'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 4, 'op_2_0': 2, 'op_2_1': 0, 'op_3_0': 3, 'op_3_1': 2, 'op_3_2': 2, 'number_classes': 10}, 'default': {'config': {'dataset': 'cifar10', 'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 4, 'op_2_0': 2, 'op_2_1': 1, 'op_3_0': 2, 'op_3_1': 1, 'op_3_2': 1, 'number_classes': 10}}}
+Used dataset: ImageNet16-120
+index
+12702
+results
+{111: ResultsCount(ImageNet16-120, arch=|avg_pool_3x3~0|+|nor_conv_3x3~0|skip_connect~1|+|nor_conv_1x1~0|nor_conv_3x3~1|nor_conv_3x3~2|, FLOP=29.48M, Param=0.838MB, seed=0111, 3 eval-sets: [x-valid, x-test, ori-test])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+ 83%|████████▎ | 83/100 [4:54:29<1:02:37, 221.03s/it, 17436.44/20000 seconds] 83%|████████▎ | 83/100 [4:54:29<1:02:37, 221.03s/it, 17669.94/20000 seconds]=========sampled_config===============
+{'nas_zero_cost': {'dataset': 'ImageNet16-120', 'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 3, 'op_2_0': 2, 'op_2_1': 3, 'op_3_0': 3, 'op_3_1': 3, 'op_3_2': 2, 'number_classes': 10}, 'default': {'config': {'dataset': 'cifar10', 'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 4, 'op_2_0': 2, 'op_2_1': 1, 'op_3_0': 2, 'op_3_1': 1, 'op_3_2': 1, 'number_classes': 10}}}
+Used dataset: ImageNet16-120
+index
+13717
+results
+{111: ResultsCount(ImageNet16-120, arch=|nor_conv_1x1~0|+|nor_conv_3x3~0|nor_conv_1x1~1|+|nor_conv_1x1~0|nor_conv_1x1~1|nor_conv_3x3~2|, FLOP=23.58M, Param=0.679MB, seed=0111, 3 eval-sets: [x-test, ori-test, x-valid])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+ 84%|████████▍ | 84/100 [4:58:07<58:37, 219.86s/it, 17669.94/20000 seconds]   84%|████████▍ | 84/100 [4:58:07<58:37, 219.86s/it, 17887.07/20000 seconds]=========sampled_config===============
+{'nas_zero_cost': {'dataset': 'ImageNet16-120', 'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 2, 'op_2_0': 2, 'op_2_1': 3, 'op_3_0': 3, 'op_3_1': 3, 'op_3_2': 2, 'number_classes': 10}, 'default': {'config': {'dataset': 'cifar10', 'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 4, 'op_2_0': 2, 'op_2_1': 1, 'op_3_0': 2, 'op_3_1': 1, 'op_3_2': 1, 'number_classes': 10}}}
+Used dataset: ImageNet16-120
+index
+12606
+results
+{111: ResultsCount(ImageNet16-120, arch=|nor_conv_3x3~0|+|nor_conv_3x3~0|nor_conv_1x1~1|+|nor_conv_1x1~0|nor_conv_1x1~1|nor_conv_3x3~2|, FLOP=31.44M, Param=0.894MB, seed=0111, 3 eval-sets: [x-valid, x-test, ori-test])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+ 85%|████████▌ | 85/100 [5:02:10<56:42, 226.83s/it, 17887.07/20000 seconds] 85%|████████▌ | 85/100 [5:02:10<56:42, 226.83s/it, 18130.17/20000 seconds]=========sampled_config===============
+{'nas_zero_cost': {'dataset': 'ImageNet16-120', 'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 3, 'op_2_0': 2, 'op_2_1': 1, 'op_3_0': 3, 'op_3_1': 2, 'op_3_2': 1, 'number_classes': 10}, 'default': {'config': {'dataset': 'cifar10', 'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 4, 'op_2_0': 2, 'op_2_1': 1, 'op_3_0': 2, 'op_3_1': 1, 'op_3_2': 1, 'number_classes': 10}}}
+Used dataset: ImageNet16-120
+index
+6044
+results
+{111: ResultsCount(ImageNet16-120, arch=|nor_conv_1x1~0|+|nor_conv_3x3~0|none~1|+|nor_conv_1x1~0|nor_conv_3x3~1|none~2|, FLOP=21.61M, Param=0.623MB, seed=0111, 3 eval-sets: [ori-test, x-valid, x-test])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+ 86%|████████▌ | 86/100 [5:05:23<50:34, 216.72s/it, 18130.17/20000 seconds] 86%|████████▌ | 86/100 [5:05:23<50:34, 216.72s/it, 18323.29/20000 seconds]=========sampled_config===============
+{'nas_zero_cost': {'dataset': 'ImageNet16-120', 'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 2, 'op_2_0': 2, 'op_2_1': 2, 'op_3_0': 3, 'op_3_1': 3, 'op_3_2': 2, 'number_classes': 10}, 'default': {'config': {'dataset': 'cifar10', 'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 4, 'op_2_0': 2, 'op_2_1': 1, 'op_3_0': 2, 'op_3_1': 1, 'op_3_2': 1, 'number_classes': 10}}}
+Used dataset: ImageNet16-120
+index
+8102
+results
+{111: ResultsCount(ImageNet16-120, arch=|nor_conv_3x3~0|+|nor_conv_3x3~0|nor_conv_3x3~1|+|nor_conv_1x1~0|nor_conv_1x1~1|nor_conv_3x3~2|, FLOP=39.31M, Param=1.109MB, seed=0111, 3 eval-sets: [ori-test, x-valid, x-test])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+ 87%|████████▋ | 87/100 [5:09:50<50:14, 231.88s/it, 18323.29/20000 seconds] 87%|████████▋ | 87/100 [5:09:50<50:14, 231.88s/it, 18590.54/20000 seconds]=========sampled_config===============
+{'nas_zero_cost': {'dataset': 'ImageNet16-120', 'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 2, 'op_2_0': 2, 'op_2_1': 3, 'op_3_0': 3, 'op_3_1': 3, 'op_3_2': 2, 'number_classes': 10}, 'default': {'config': {'dataset': 'cifar10', 'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 4, 'op_2_0': 2, 'op_2_1': 1, 'op_3_0': 2, 'op_3_1': 1, 'op_3_2': 1, 'number_classes': 10}}}
+Used dataset: ImageNet16-120
+index
+12606
+results
+{111: ResultsCount(ImageNet16-120, arch=|nor_conv_3x3~0|+|nor_conv_3x3~0|nor_conv_1x1~1|+|nor_conv_1x1~0|nor_conv_1x1~1|nor_conv_3x3~2|, FLOP=31.44M, Param=0.894MB, seed=0111, 3 eval-sets: [x-valid, x-test, ori-test])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+ 88%|████████▊ | 88/100 [5:13:53<47:02, 235.22s/it, 18590.54/20000 seconds] 88%|████████▊ | 88/100 [5:13:53<47:02, 235.22s/it, 18833.55/20000 seconds]=========sampled_config===============
+{'nas_zero_cost': {'dataset': 'ImageNet16-120', 'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 2, 'op_2_0': 3, 'op_2_1': 3, 'op_3_0': 4, 'op_3_1': 2, 'op_3_2': 2, 'number_classes': 10}, 'default': {'config': {'dataset': 'cifar10', 'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 4, 'op_2_0': 2, 'op_2_1': 1, 'op_3_0': 2, 'op_3_1': 1, 'op_3_2': 1, 'number_classes': 10}}}
+Used dataset: ImageNet16-120
+index
+5596
+results
+{111: ResultsCount(ImageNet16-120, arch=|nor_conv_3x3~0|+|nor_conv_1x1~0|nor_conv_1x1~1|+|avg_pool_3x3~0|nor_conv_3x3~1|nor_conv_3x3~2|, FLOP=30.46M, Param=0.866MB, seed=0111, 3 eval-sets: [x-valid, ori-test, x-test])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+ 89%|████████▉ | 89/100 [5:17:55<43:28, 237.16s/it, 18833.55/20000 seconds] 89%|████████▉ | 89/100 [5:17:55<43:28, 237.16s/it, 19075.25/20000 seconds]=========sampled_config===============
+{'nas_zero_cost': {'dataset': 'ImageNet16-120', 'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 2, 'op_2_0': 2, 'op_2_1': 2, 'op_3_0': 0, 'op_3_1': 3, 'op_3_2': 2, 'number_classes': 10}, 'default': {'config': {'dataset': 'cifar10', 'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 4, 'op_2_0': 2, 'op_2_1': 1, 'op_3_0': 2, 'op_3_1': 1, 'op_3_2': 1, 'number_classes': 10}}}
+Used dataset: ImageNet16-120
+index
+13714
+results
+{111: ResultsCount(ImageNet16-120, arch=|nor_conv_3x3~0|+|nor_conv_3x3~0|nor_conv_3x3~1|+|skip_connect~0|nor_conv_1x1~1|nor_conv_3x3~2|, FLOP=38.33M, Param=1.081MB, seed=0111, 3 eval-sets: [x-test, ori-test, x-valid])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+ 90%|█████████ | 90/100 [5:22:10<40:25, 242.53s/it, 19075.25/20000 seconds] 90%|█████████ | 90/100 [5:22:10<40:25, 242.53s/it, 19330.29/20000 seconds]=========sampled_config===============
+{'nas_zero_cost': {'dataset': 'ImageNet16-120', 'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 2, 'op_2_0': 2, 'op_2_1': 3, 'op_3_0': 1, 'op_3_1': 3, 'op_3_2': 2, 'number_classes': 10}, 'default': {'config': {'dataset': 'cifar10', 'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 4, 'op_2_0': 2, 'op_2_1': 1, 'op_3_0': 2, 'op_3_1': 1, 'op_3_2': 1, 'number_classes': 10}}}
+Used dataset: ImageNet16-120
+index
+14585
+results
+{111: ResultsCount(ImageNet16-120, arch=|nor_conv_3x3~0|+|nor_conv_3x3~0|nor_conv_1x1~1|+|none~0|nor_conv_1x1~1|nor_conv_3x3~2|, FLOP=30.46M, Param=0.866MB, seed=0111, 3 eval-sets: [x-test, x-valid, ori-test])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+ 91%|█████████ | 91/100 [5:26:01<35:51, 239.08s/it, 19330.29/20000 seconds] 91%|█████████ | 91/100 [5:26:01<35:51, 239.08s/it, 19561.34/20000 seconds]=========sampled_config===============
+{'nas_zero_cost': {'dataset': 'ImageNet16-120', 'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 2, 'op_2_0': 2, 'op_2_1': 2, 'op_3_0': 0, 'op_3_1': 3, 'op_3_2': 2, 'number_classes': 10}, 'default': {'config': {'dataset': 'cifar10', 'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 4, 'op_2_0': 2, 'op_2_1': 1, 'op_3_0': 2, 'op_3_1': 1, 'op_3_2': 1, 'number_classes': 10}}}
+Used dataset: ImageNet16-120
+index
+13714
+results
+{111: ResultsCount(ImageNet16-120, arch=|nor_conv_3x3~0|+|nor_conv_3x3~0|nor_conv_3x3~1|+|skip_connect~0|nor_conv_1x1~1|nor_conv_3x3~2|, FLOP=38.33M, Param=1.081MB, seed=0111, 3 eval-sets: [x-test, ori-test, x-valid])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+ 92%|█████████▏| 92/100 [5:30:17<32:32, 244.11s/it, 19561.34/20000 seconds] 92%|█████████▏| 92/100 [5:30:17<32:32, 244.11s/it, 19817.16/20000 seconds]=========sampled_config===============
+{'nas_zero_cost': {'dataset': 'ImageNet16-120', 'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 2, 'op_2_0': 2, 'op_2_1': 2, 'op_3_0': 0, 'op_3_1': 3, 'op_3_2': 2, 'number_classes': 10}, 'default': {'config': {'dataset': 'cifar10', 'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 4, 'op_2_0': 2, 'op_2_1': 1, 'op_3_0': 2, 'op_3_1': 1, 'op_3_2': 1, 'number_classes': 10}}}
+Used dataset: ImageNet16-120
+index
+13714
+results
+{111: ResultsCount(ImageNet16-120, arch=|nor_conv_3x3~0|+|nor_conv_3x3~0|nor_conv_3x3~1|+|skip_connect~0|nor_conv_1x1~1|nor_conv_3x3~2|, FLOP=38.33M, Param=1.081MB, seed=0111, 3 eval-sets: [x-test, ori-test, x-valid])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+ 93%|█████████▎| 93/100 [5:34:32<28:52, 247.46s/it, 19817.16/20000 seconds] 93%|█████████▎| 93/100 [5:34:32<28:52, 247.46s/it, 20072.47/20000 seconds] 93%|█████████▎| 93/100 [5:34:32<25:10, 215.83s/it, 20072.47/20000 seconds]
+[32mINFO    [0m [34mBest trial(s):
+Best trial(s):
+|    |   number | software_metrics                                                                                                                                                                                | hardware_metrics                                | scaled_metrics                                                                                                                                                 | nasbench_data_metrics                                                                                                                                                                                                                                                                                                                                                                                    |
+|----+----------+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+-------------------------------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+|  0 |       61 | {'grad_norm': 174.723, 'snip': 294.17, 'grasp': 1764.283, 'fisher': 0.49, 'plain': -0.055, 'l2_norm': 333.585, 'naswot': 6244.373, 'naswot_relu': 6605.519, 'tenas': 498.407, 'zico': 1040.444} | {'average_bitwidth': 32, 'memory_density': 1.0} | {'fisher': 0.0, 'grad_norm': 0.0, 'grasp': 0.0, 'l2_norm': 0.0, 'naswot': 0.0, 'naswot_relu': 6605.519, 'plain': -0.0, 'snip': 0.0, 'tenas': 0.0, 'zico': 0.0} | {'train-loss': 2.885, 'train-accuracy': 28.256, 'train-per-time': 95.041, 'train-all-time': 1140.498, 'valid-loss': 2.912, 'valid-accuracy': 28.6, 'valid-per-time': 0.531, 'valid-all-time': 6.375, 'test-loss': 2.888, 'test-accuracy': 28.133, 'test-per-time': 0.531, 'test-all-time': 6.375, 'valtest-loss': 2.9, 'valtest-accuracy': 28.367, 'valtest-per-time': 1.063, 'valtest-all-time': 12.75} |[0m
+[32mINFO    [0m [34mSearching is completed[0m
+[0.        0.        0.        0.        0.        3.9803853 0.
+ 0.        0.        0.       ]
+    fisher  grad_norm  grasp  l2_norm  ...  plain  snip  tenas  zico
+0      0.0        0.0    0.0      0.0  ...    0.0   0.0    0.0   0.0
+1      0.0        0.0    0.0      0.0  ...    0.0   0.0    0.0   0.0
+2      0.0        0.0    0.0      0.0  ...   -0.0   0.0   -0.0   0.0
+3      0.0        0.0    0.0      0.0  ...   -0.0   0.0    0.0   0.0
+4      0.0        0.0    0.0      0.0  ...   -0.0   0.0    0.0   0.0
+..     ...        ...    ...      ...  ...    ...   ...    ...   ...
+88     0.0        0.0    0.0      0.0  ...    0.0   0.0    0.0   0.0
+89     0.0        0.0    0.0      0.0  ...    0.0   0.0    0.0   0.0
+90     0.0        0.0    0.0      0.0  ...   -0.0   0.0    0.0   0.0
+91     0.0        0.0    0.0      0.0  ...   -0.0   0.0    0.0   0.0
+92     0.0        0.0    0.0      0.0  ...    0.0   0.0    0.0   0.0
+
+[93 rows x 10 columns]
+[18.999999918619793, 23.966666681925457, 14.466666661580403, 19.79999994913737, 29.166666646321616, 0.8333333326975505, 24.499999954223632, 23.133333251953125, 32.06666672770182, 25.66666660563151, 15.699999979654947, 22.299999994913737, 26.866666681925455, 12.466666666666667, 21.63333327738444, 26.4333332417806, 28.13333331298828, 30.499999918619793, 28.13333331298828, 26.533333353678387, 25.7, 28.86666665140788, 29.39999999491374, 30.36666658528646, 26.633333318074545, 20.83333329264323, 28.099999923706054, 26.133333318074545, 27.466666697184245, 23.19999998474121, 35.86666650390625, 23.266666595458986, 28.099999923706054, 22.166666676839192, 21.533333348592123, 27.4666666208903, 25.766666687011718, 26.933333272298178, 20.066666648864746, 22.89999998474121, 26.833333328247072, 28.13333331298828, 28.766666631062826, 27.666666615804036, 29.39999999491374, 21.599999974568686, 0.8333333326975505, 21.066666595458983, 22.433333363850913, 16.89999999745687, 22.03333330790202, 28.13333331298828, 28.86666665140788, 28.13333331298828, 22.933333307902018, 28.79999993387858, 29.466666585286458, 27.333333282470704, 22.199999959309896, 29.53333332824707, 13.033333302815755, 28.13333331298828, 28.13333331298828, 28.13333331298828, 28.766666631062826, 26.36666659037272, 25.900000005086262, 27.933333343505858, 26.93333332824707, 27.333333251953125, 26.066666681925454, 25.29999994913737, 27.333333251953125, 27.333333251953125, 28.766666631062826, 27.333333251953125, 26.36666659037272, 30.499999918619793, 26.8666666208903, 28.766666631062826, 24.333333348592124, 26.933333318074546, 19.76666658528646, 27.333333251953125, 28.13333331298828, 26.766666631062826, 29.39999999491374, 28.13333331298828, 29.29999993387858, 37.36666663614909, 15.399999964396159, 37.36666663614909, 37.36666663614909]
+25.441218606039612
+[23.54334652 24.58299328 17.9561683  25.3274028  24.68159104 -7.94224671
+ 23.71447137 23.87341085 25.73979389 23.16988668 24.36270591 24.53736034
+ 26.13714787 24.17424827 25.36008779 26.72534785 27.27520175 26.47425282
+ 27.07342016 25.19747311 24.88192161 27.43126037 27.28791934 26.70190119
+ 26.68430892 25.35541434 27.15115291 24.10548907 26.2578366  25.88607932
+ 26.45659964 26.234991   26.6843857  25.76364832 25.79217354 24.17790759
+ 26.47960146 26.75734704 26.18596352 22.84569527 27.06552429 26.55446395
+ 26.66270516 24.44298589 26.51748946 27.09555084 16.24022515 25.79546216
+ 25.93088084 26.80806384 26.48748674 27.27105258 26.84571883 26.50663859
+ 26.87870302 25.65012731 26.06105414 25.35088918 26.25571038 26.67206793
+ 17.94552396 27.87805754 27.35603513 26.95153726 26.79766576 26.71396212
+ 27.12036114 24.80605559 25.27284928 27.31083908 26.67063016 25.49050734
+ 26.39331882 27.19907624 26.72741581 27.03970781 26.69653666 26.51341443
+ 27.00241293 26.23305278 23.93292643 26.6656019  25.35000745 26.81592794
+ 26.77198697 25.79653454 27.12912285 26.62405193 26.43138158 27.23410721
+ 26.33399918 27.40330708 27.24695455]
+Sorted Results:
+    Architecture_Index  Predicted_Accuracy  True Accuracy
+61                  61           27.878058      28.133333
+21                  21           27.431260      28.866667
+91                  91           27.403307      37.366667
+62                  62           27.356035      28.133333
+69                  69           27.310839      27.333333
+..                 ...                 ...            ...
+39                  39           22.845695      22.900000
+2                    2           17.956168      14.466667
+60                  60           17.945524      13.033333
+46                  46           16.240225       0.833333
+5                    5           -7.942247       0.833333
+
+[93 rows x 3 columns]
