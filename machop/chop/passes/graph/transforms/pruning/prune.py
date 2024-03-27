@@ -1,4 +1,5 @@
 import torch
+import copy
 
 from .load import load_activation_prune_config, load_weight_prune_config
 from .pruning_methods import weight_criteria_map, activation_criteria_map
@@ -24,25 +25,28 @@ def get_weight_hook(name, info, named_info, w_config: dict):
     value = named_info["value"]
     w_sparsity = named_info["weight_sparsity"]
     register_parameter_name = "weight"
-    parameterization = FakeSparseWeight(w_rank_fn(value, info, w_sparsity))
+    parameterization = FakeSparseWeight(w_rank_fn(value, info, w_sparsity, name))
     return (register_parameter_name, parameterization)
 
 
 def get_activation_hook(name, info, named_info, a_config: dict):
     a_rank_fn = get_activation_rank_fn(a_config)
     a_sparsity = named_info["activation_sparsity"]
-
     # register forward hook
     def sparsify_input(module, args):
         if len(args) > 1:
             raise ValueError(
                 f"{module.__class__.__name__} takes more than 1 argument at inference, the current sparsiy_input pre forward hook only allows one!"
             )
-        x = args[0]
-        mask = a_rank_fn(x, info, a_sparsity)
+        x = args[0].to('cuda')
+        mask = a_rank_fn(x, info, a_sparsity, name)
         module.activation_mask = mask
+        sparsify_tensor = x * mask
+        # sparsity = (sparsify_tensor == 0).sum().item() / sparsify_tensor.numel()
+        #import pdb; pdb.set_trace()
+        #print('Current tensor sparsity:',sparsity)
         # it seems like the output of this can be a non-tuple thing??
-        return x * mask
+        return sparsify_tensor
 
     return ("register_forward_pre_hook", sparsify_input)
 
@@ -70,6 +74,7 @@ def build_pruning_hooks(info, w_config, a_config):
                 "w_hook": get_weight_hook(k, info, w_info, w_config),
                 "a_hook": get_activation_hook(k, info, a_info, a_config),
             }
+            # import pdb; pdb.set_trace()
     return named_hooks
 
 
@@ -120,7 +125,7 @@ def prune_graph_iterator(graph, config: dict):
     # Setup all pruning-related parameters (incl. basic validation)
     w_config = load_weight_prune_config(config["weight"], graph)
     a_config = load_activation_prune_config(config["activation"], graph)
-
+    
     # we need to loop twice, the first time is to fetch all necessary information
     # first sloop
     info = {}
@@ -150,8 +155,10 @@ def prune_graph_iterator(graph, config: dict):
                     )
                 if node_hooks["a_hook"] is not None:
                     register_fn, hook_fn = node_hooks["a_hook"]
+                    # import pdb; pdb.set_trace()
                     getattr(graph.modules[node.target], register_fn)(hook_fn)
-
+                
+    
     return graph
 
 
@@ -171,4 +178,4 @@ def prune_transform_pass(graph, pass_args: dict = {}):
     :rtype: tuple
     """
     graph = prune_graph_iterator(graph, pass_args)
-    return graph, {}
+    return graph
