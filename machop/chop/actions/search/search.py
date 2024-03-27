@@ -3,7 +3,6 @@ from os import PathLike
 
 import toml
 import torch
-from fvcore.common.config import CfgNode
 from ...tools.checkpoint_load import load_model
 from ...tools.config_load import load_config
 from ...tools.get_input import get_dummy_input
@@ -13,22 +12,6 @@ from chop.tools.utils import device
 from chop.tools.utils import parse_accelerator
 
 
-# For nas proxy search
-import numpy as np
-from naslib.search_spaces import NasBench201SearchSpace
-from naslib.utils import get_zc_benchmark_api, get_dataset_api
-from naslib.utils import get_train_val_loaders, get_project_root
-from naslib.predictors import ZeroCost
-from naslib.search_spaces.core import Metric
-
-# For training  meta-proxy network
-import numpy as np
-from torch import nn
-from torch.utils.data import DataLoader, TensorDataset
-from sklearn.model_selection import train_test_split
-from einops import rearrange
-from torch import optim
-import torch.nn.functional as F
 
 
 logger = logging.getLogger(__name__)
