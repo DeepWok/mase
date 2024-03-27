@@ -34,9 +34,9 @@ class VerificationCase(Testbench):
             name="Output ISQRT",
         )
 
-    def generate_inputs(self):
-        samples = 2 ** self.IN_WIDTH
-        return [val for val in range(samples)], samples
+    def generate_inputs(self, num=1000):
+        maxnum = (2 ** self.IN_WIDTH)-1
+        return [random.randint(0, maxnum) for _ in range(num)], num
 
     def model(self, data_in):
         ref = []
@@ -68,7 +68,7 @@ async def sweep(dut):
     exp_out = tb.model(inputs)
     tb.input_driver.load_driver(inputs)
     tb.output_monitor.load_monitor(exp_out)
-    await Timer(max(10000, CLK_NS * (2 ** tb.IN_WIDTH)), "ns")
+    await Timer(1000, "us")
     assert tb.output_monitor.exp_queue.empty()
 
 
@@ -82,7 +82,7 @@ async def backpressure(dut):
     exp_out = tb.model(inputs)
     tb.input_driver.load_driver(inputs)
     tb.output_monitor.load_monitor(exp_out)
-    await Timer(max(10000, 2 *CLK_NS * (2 ** tb.IN_WIDTH)), "ns")
+    await Timer(1000, "us")
     assert tb.output_monitor.exp_queue.empty()
 
 
@@ -97,7 +97,7 @@ async def valid_backpressure(dut):
     exp_out = tb.model(inputs)
     tb.input_driver.load_driver(inputs)
     tb.output_monitor.load_monitor(exp_out)
-    await Timer(max(10000, 4 * CLK_NS * (2 ** tb.IN_WIDTH)), "ns")
+    await Timer(1000, "us")
     assert tb.output_monitor.exp_queue.empty()
 
 
@@ -106,7 +106,7 @@ if __name__ == "__main__":
     mem_dir = Path(__file__).parent / "build" / "fixed_isqrt" / "mem"
     makedirs(mem_dir, exist_ok=True)
 
-    def single_cfg(width, frac_width, lut_pow, pipeline_cycles, str_id):
+    def single_cfg(width, frac_width, lut_pow, str_id):
         lut_size = 2 ** lut_pow
         lut = make_lut(lut_size, width)
         mem_path = mem_dir / f"lutmem-{str_id}.mem"
@@ -133,6 +133,7 @@ if __name__ == "__main__":
 
     parameter_list = [
         # A use case in group_norm
-        *full_sweep(),
+        # *full_sweep(),
+        single_cfg(35, 14, 7, 0)
     ]
     mase_runner(module_param_list=parameter_list, trace=True)

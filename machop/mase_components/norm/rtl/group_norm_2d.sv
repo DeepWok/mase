@@ -29,6 +29,7 @@ module group_norm_2d #(
 
     // Inverse Sqrt LUT
     parameter ISQRT_LUT_MEMFILE   = "/home/derek/mase/machop/mase_components/norm/isqrt-16-lut.mem"
+    parameter ISQRT_LUT_POW       = 5
 ) (
     input  logic                 clk,
     input  logic                 rst,
@@ -72,7 +73,7 @@ localparam VARIANCE_WIDTH = ITER_WIDTH + SQUARES_ADDER_TREE_OUT_WIDTH;
 localparam VARIANCE_FRAC_WIDTH = SQUARES_ADDER_TREE_OUT_FRAC_WIDTH;
 
 // Must be same as variance
-localparam ISQRT_WIDTH = 16;
+localparam ISQRT_WIDTH = VARIANCE_WIDTH;
 localparam ISQRT_FRAC_WIDTH = VARIANCE_FRAC_WIDTH;
 
 localparam NORM_WIDTH = ISQRT_WIDTH + DIFF_WIDTH;
@@ -151,7 +152,7 @@ logic mu_out_valid, mu_out_ready;
 logic [ACC_OUT_WIDTH-1:0] mu_acc_div;
 
 // Division by NUM_VALUES
-localparam INV_NUMVALUES_0 = ((1 << ACC_OUT_WIDTH) / NUM_VALUES);
+localparam bit [ACC_OUT_WIDTH+1:0] INV_NUMVALUES_0 = ((1 << ACC_OUT_WIDTH) / NUM_VALUES);
 assign mu_acc_div = ($signed(mu_acc) * $signed({1'b0, INV_NUMVALUES_0})) >>> ACC_OUT_WIDTH;
 assign mu_in = mu_acc_div[IN_WIDTH-1:0];
 
@@ -287,7 +288,7 @@ logic [VARIANCE_WIDTH-1:0] variance_in, variance_out;
 logic variance_out_valid, variance_out_ready;
 
 // Division by NUM_VALUES
-localparam INV_NUMVALUES_1 = ((1 << SQUARES_ADDER_TREE_OUT_WIDTH) / NUM_VALUES);
+localparam bit [SQUARES_ADDER_TREE_OUT_WIDTH+1:0] INV_NUMVALUES_1 = ((1 << SQUARES_ADDER_TREE_OUT_WIDTH) / NUM_VALUES);
 assign variance_buffer = (squares_acc * INV_NUMVALUES_1) >> SQUARES_ADDER_TREE_OUT_WIDTH;
 assign variance_in = variance_buffer[VARIANCE_WIDTH-1:0];
 
@@ -305,29 +306,29 @@ skid_buffer #(
 );
 
 // Clamp the variance
-logic [ISQRT_WIDTH-1:0] variance_clamp_in, variance_clamp_out;
-logic variance_clamp_valid, variance_clamp_ready;
+// logic [ISQRT_WIDTH-1:0] variance_clamp_in, variance_clamp_out;
+// logic variance_clamp_valid, variance_clamp_ready;
 
-always_comb begin
-    if(variance_out > 2**ISQRT_WIDTH-1) begin
-        variance_clamp_in = 2**ISQRT_WIDTH-1;
-    end else begin
-        variance_clamp_in = variance_out;
-    end
-end
+// always_comb begin
+//     if(variance_out > 2**ISQRT_WIDTH-1) begin
+//         variance_clamp_in = 2**ISQRT_WIDTH-1;
+//     end else begin
+//         variance_clamp_in = variance_out;
+//     end
+// end
 
-skid_buffer #(
-    .DATA_WIDTH(ISQRT_WIDTH)
-) variance_cast_reg (
-    .clk(clk),
-    .rst(rst),
-    .data_in(variance_clamp_in),
-    .data_in_valid(variance_out_valid),
-    .data_in_ready(variance_out_ready),
-    .data_out(variance_clamp_out),
-    .data_out_valid(variance_clamp_valid),
-    .data_out_ready(variance_clamp_ready)
-);
+// skid_buffer #(
+//     .DATA_WIDTH(ISQRT_WIDTH)
+// ) variance_cast_reg (
+//     .clk(clk),
+//     .rst(rst),
+//     .data_in(variance_clamp_in),
+//     .data_in_valid(variance_out_valid),
+//     .data_in_ready(variance_out_ready),
+//     .data_out(variance_clamp_out),
+//     .data_out_valid(variance_clamp_valid),
+//     .data_out_ready(variance_clamp_ready)
+// );
 
 // Take inverse square root of variance
 logic [ISQRT_WIDTH-1:0] inv_sqrt_data;
@@ -336,13 +337,14 @@ logic inv_sqrt_valid, inv_sqrt_ready;
 fixed_isqrt #(
     .IN_WIDTH(ISQRT_WIDTH),
     .IN_FRAC_WIDTH(ISQRT_FRAC_WIDTH),
-    .LUT_MEMFILE(ISQRT_LUT_MEMFILE)
+    .LUT_MEMFILE(ISQRT_LUT_MEMFILE),
+    .LUT_POW(ISQRT_LUT_POW)
 ) inv_sqrt_inst (
     .clk(clk),
     .rst(rst),
-    .in_data(variance_clamp_out),
-    .in_valid(variance_clamp_valid),
-    .in_ready(variance_clamp_ready),
+    .in_data(variance_out),
+    .in_valid(variance_out_valid),
+    .in_ready(variance_out_ready),
     .out_data(inv_sqrt_data),
     .out_valid(inv_sqrt_valid),
     .out_ready(inv_sqrt_ready)

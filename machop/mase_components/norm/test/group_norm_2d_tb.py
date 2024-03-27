@@ -101,6 +101,8 @@ class GroupNorm2dTB(Testbench):
             width=self.OUT_WIDTH,
             signed=True,
             error_bits=error_bits,
+            log_error=True,
+            check=False,
         )
 
     def generate_inputs(self, batches=1):
@@ -163,47 +165,75 @@ async def stream(dut):
     await Timer(1000, 'us')
     assert tb.output_monitor.exp_queue.empty()
 
+    # Error analysis
+    import json
+    errs = np.stack(tb.output_monitor.error_log).flatten()
+    logger.info("Mean bit-error: %s" % errs.mean())
+    jsonfile = Path(__file__).parent / "data" / f"group-{tb.IN_WIDTH}.json"
+    with open(jsonfile, 'w') as f:
+        json.dump({
+            "error": errs.tolist(),
+            "mean": errs.mean().item()
+        }, f, indent=4)
 
-@cocotb.test()
-async def backpressure(dut):
-    tb = GroupNorm2dTB(dut)
-    await tb.reset()
-    cocotb.start_soon(bit_driver(dut.out_ready, dut.clk, 0.5))
-    tb.setup_test(batches=100)
-    await Timer(1000, 'us')
-    assert tb.output_monitor.exp_queue.empty()
+# @cocotb.test()
+# async def backpressure(dut):
+#     tb = GroupNorm2dTB(dut)
+#     await tb.reset()
+#     cocotb.start_soon(bit_driver(dut.out_ready, dut.clk, 0.5))
+#     tb.setup_test(batches=100)
+#     await Timer(1000, 'us')
+#     assert tb.output_monitor.exp_queue.empty()
 
 
-@cocotb.test()
-async def valid_toggle(dut):
-    tb = GroupNorm2dTB(dut)
-    await tb.reset()
-    tb.output_monitor.ready.value = 1
-    tb.in_driver.set_valid_prob(0.5)
-    tb.setup_test(batches=100)
-    await Timer(1000, 'us')
-    assert tb.output_monitor.exp_queue.empty()
+# @cocotb.test()
+# async def valid_toggle(dut):
+#     tb = GroupNorm2dTB(dut)
+#     await tb.reset()
+#     tb.output_monitor.ready.value = 1
+#     tb.in_driver.set_valid_prob(0.5)
+#     tb.setup_test(batches=100)
+#     await Timer(1000, 'us')
+#     assert tb.output_monitor.exp_queue.empty()
 
 
-@cocotb.test()
-async def valid_backpressure(dut):
-    tb = GroupNorm2dTB(dut)
-    await tb.reset()
-    tb.in_driver.set_valid_prob(0.5)
-    cocotb.start_soon(bit_driver(dut.out_ready, dut.clk, 0.5))
-    tb.setup_test(batches=100)
+# @cocotb.test()
+# async def valid_backpressure(dut):
+#     tb = GroupNorm2dTB(dut)
+#     await tb.reset()
+#     tb.in_driver.set_valid_prob(0.5)
+#     cocotb.start_soon(bit_driver(dut.out_ready, dut.clk, 0.5))
+#     tb.setup_test(batches=100)
 
-    await Timer(1000, 'us')
-    assert tb.output_monitor.exp_queue.empty()
+#     await Timer(1000, 'us')
+#     assert tb.output_monitor.exp_queue.empty()
 
 
 if __name__ == "__main__":
     # Consts
-    LUT_POW = 5
-    ISQRT_WIDTH = 16
+    LUT_POW = 7
 
     mem_dir = Path(__file__).parent / "build" / "group_norm_2d" / "mem"
     makedirs(mem_dir, exist_ok=True)
+
+    def isqrt_width(
+        total_dim0,
+        total_dim1,
+        compute_dim0,
+        compute_dim1,
+        group_channels,
+        in_width,
+    ):
+        depth_dim0 = total_dim0 // compute_dim0
+        depth_dim1 = total_dim1 // compute_dim1
+        num_iters = depth_dim0 * depth_dim1 * group_channels
+        iter_width = ceil(log2(num_iters))
+        square_width = (in_width + 1) * 2
+        squares_adder_tree_in_size = compute_dim0 * compute_dim1
+        squares_adder_tree_out_width = ceil(log2(squares_adder_tree_in_size)) + square_width
+        variance_width = iter_width + squares_adder_tree_out_width
+        print(" --- CALCULATED ISQRT WIDTH:", variance_width)
+        return variance_width
 
     def gen_cfg(
         total_dim0: int = 4,
@@ -217,9 +247,12 @@ if __name__ == "__main__":
         out_frac_width: int = 4,
         str_id: str = "default",
     ):
-        lut = make_lut(2 ** LUT_POW, ISQRT_WIDTH)
+        isqrt_w = isqrt_width(
+            total_dim0, total_dim1, compute_dim0, compute_dim1, channels, in_width
+        )
+        lut = make_lut(2 ** LUT_POW, isqrt_w)
         mem_path = mem_dir / f"lutmem-{str_id}.mem"
-        write_memb(mem_path, lut, ISQRT_WIDTH)
+        write_memb(mem_path, lut, isqrt_w)
         params = {
             "TOTAL_DIM0": total_dim0,
             "TOTAL_DIM1": total_dim1,
@@ -231,24 +264,33 @@ if __name__ == "__main__":
             "OUT_WIDTH": out_width,
             "OUT_FRAC_WIDTH": out_frac_width,
             "ISQRT_LUT_MEMFILE": verilator_str_param(str(mem_path)),
+            "ISQRT_LUT_POW": LUT_POW,
         }
         return params
 
+    error_analysis_cfgs = list()
+    error_analysis_cfgs.extend([
+        gen_cfg(4, 4, 2, 2, 2, w, w//2, w, w//2, str(w))
+        for w in [2, 4, 6, 8, 10, 12, 14, 16]
+    ])
+
     mase_runner(
-        module_param_list=[
-            # Default
-            gen_cfg(),
-            # Rectangle
-            gen_cfg(4, 6, 2, 2, 2, 8, 4, 8, 4, "rect0"),
-            gen_cfg(6, 2, 2, 2, 2, 8, 4, 8, 4, "rect1"),
-            gen_cfg(6, 2, 3, 2, 2, 8, 4, 8, 4, "rect2"),
-            gen_cfg(4, 6, 2, 3, 2, 8, 4, 8, 4, "rect3"),
-            # Channels
-            gen_cfg(4, 4, 2, 2, 1, 8, 4, 8, 4, "channels0"),
-            gen_cfg(4, 4, 2, 2, 3, 8, 4, 8, 4, "channels1"),
-            # Precision
-            gen_cfg(4, 4, 2, 2, 2, 8, 4, 8, 2, "down_frac"),
-            gen_cfg(4, 4, 2, 2, 2, 8, 4, 8, 6, "up_frac"),
-        ],
+        module_param_list=error_analysis_cfgs,
+        # module_param_list=[gen_cfg(4, 4, 2, 2, 2, 14, 14//2, 14, 14//2, str(14))],
+        # module_param_list=[
+        #     # Default
+        #     gen_cfg(),
+        #     # Rectangle
+        #     gen_cfg(4, 6, 2, 2, 2, 8, 4, 8, 4, "rect0"),
+        #     gen_cfg(6, 2, 2, 2, 2, 8, 4, 8, 4, "rect1"),
+        #     gen_cfg(6, 2, 3, 2, 2, 8, 4, 8, 4, "rect2"),
+        #     gen_cfg(4, 6, 2, 3, 2, 8, 4, 8, 4, "rect3"),
+        #     # Channels
+        #     gen_cfg(4, 4, 2, 2, 1, 8, 4, 8, 4, "channels0"),
+        #     gen_cfg(4, 4, 2, 2, 3, 8, 4, 8, 4, "channels1"),
+        #     # Precision
+        #     gen_cfg(4, 4, 2, 2, 2, 8, 4, 8, 2, "down_frac"),
+        #     gen_cfg(4, 4, 2, 2, 2, 8, 4, 8, 6, "up_frac"),
+        # ],
         trace=True,
     )

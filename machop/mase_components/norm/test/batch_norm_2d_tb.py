@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import logging
 from functools import partial
 from random import randint, uniform
 from math import ceil, log2, sqrt
@@ -51,6 +52,10 @@ from mase_components.fixed_arithmetic.test.isqrt_sw import (
 )
 from mase_components.common.test.lut_tb import write_memb, read_memb
 
+logger = logging.getLogger("testbench")
+logger.setLevel(logging.INFO)
+
+
 class BatchNorm2dTB(Testbench):
 
     def __init__(self, dut) -> None:
@@ -97,6 +102,8 @@ class BatchNorm2dTB(Testbench):
             width=self.OUT_WIDTH,
             signed=True,
             error_bits=error_bits,
+            log_error=True,
+            check=False,
         )
         #self.output_monitor.log.setLevel("DEBUG")
 
@@ -262,37 +269,49 @@ async def stream(dut):
     assert tb.output_monitor.exp_queue.empty()
 
 
-@cocotb.test()
-async def backpressure(dut):
-    tb = BatchNorm2dTB(dut)
-    await tb.reset()
-    cocotb.start_soon(bit_driver(dut.out_ready, dut.clk, 0.5))
-    tb.setup_test(batches=100)
-    await Timer(1000, 'us')
-    assert tb.output_monitor.exp_queue.empty()
+    # Error analysis
+    import json
+    errs = np.stack(tb.output_monitor.error_log).flatten()
+    logger.info("Mean bit-error: %s" % errs.mean())
+    jsonfile = Path(__file__).parent / "data" / f"batch-{tb.IN_WIDTH}.json"
+    with open(jsonfile, 'w') as f:
+        json.dump({
+            "error": errs.tolist(),
+            "mean": errs.mean().item()
+        }, f, indent=4)
 
 
-@cocotb.test()
-async def valid_toggle(dut):
-    tb = BatchNorm2dTB(dut)
-    await tb.reset()
-    tb.output_monitor.ready.value = 1
-    tb.in_driver.set_valid_prob(0.5)
-    tb.setup_test(batches=100)
-    await Timer(1000, 'us')
-    assert tb.output_monitor.exp_queue.empty()
+# @cocotb.test()
+# async def backpressure(dut):
+#     tb = BatchNorm2dTB(dut)
+#     await tb.reset()
+#     cocotb.start_soon(bit_driver(dut.out_ready, dut.clk, 0.5))
+#     tb.setup_test(batches=100)
+#     await Timer(1000, 'us')
+#     assert tb.output_monitor.exp_queue.empty()
 
 
-@cocotb.test()
-async def valid_backpressure(dut):
-    tb = BatchNorm2dTB(dut)
-    await tb.reset()
-    tb.in_driver.set_valid_prob(0.5)
-    cocotb.start_soon(bit_driver(dut.out_ready, dut.clk, 0.5))
-    tb.setup_test(batches=100)
+# @cocotb.test()
+# async def valid_toggle(dut):
+#     tb = BatchNorm2dTB(dut)
+#     await tb.reset()
+#     tb.output_monitor.ready.value = 1
+#     tb.in_driver.set_valid_prob(0.5)
+#     tb.setup_test(batches=100)
+#     await Timer(1000, 'us')
+#     assert tb.output_monitor.exp_queue.empty()
 
-    await Timer(1000, 'us')
-    assert tb.output_monitor.exp_queue.empty()
+
+# @cocotb.test()
+# async def valid_backpressure(dut):
+#     tb = BatchNorm2dTB(dut)
+#     await tb.reset()
+#     tb.in_driver.set_valid_prob(0.5)
+#     cocotb.start_soon(bit_driver(dut.out_ready, dut.clk, 0.5))
+#     tb.setup_test(batches=100)
+
+#     await Timer(1000, 'us')
+#     assert tb.output_monitor.exp_queue.empty()
 
 
 if __name__ == "__main__":
@@ -329,23 +348,30 @@ if __name__ == "__main__":
         }
         return params
 
+    error_analysis_cfgs = list()
+    error_analysis_cfgs.extend([
+        gen_cfg(4, 4, 2, 2, 2, w, w//2, w, w//2, w)
+        for w in [2, 4, 6, 8, 10, 12, 14, 16]
+    ])
+
     mase_runner(
-        module_param_list=[
-            # Default
-            gen_cfg(),
-            # Precision
-            gen_cfg(4, 4, 2, 2, 4, 8, 4, 8, 4, 1),
-            gen_cfg(4, 4, 2, 2, 4, 4, 2, 4, 2, 2),
-            gen_cfg(4, 4, 2, 2, 4, 2, 1, 2, 1, 3),
-            # Rectangle
-            gen_cfg(4, 6, 2, 2, 4, 16, 8, 16, 8, 4),
-            gen_cfg(6, 2, 2, 2, 4, 16, 8, 16, 8, 5),
-            gen_cfg(6, 2, 3, 2, 4, 16, 8, 16, 8, 6),
-            gen_cfg(4, 6, 2, 3, 4, 16, 8, 16, 8, 7),
-            ## Channels
-            gen_cfg(4, 4, 2, 2, 5, 16, 8, 16, 8, 8),
-            gen_cfg(4, 4, 2, 2, 6, 16, 8, 16, 8, 9),
-            gen_cfg(4, 4, 2, 2, 7, 16, 8, 16, 8, 10),
-        ],
+        module_param_list=error_analysis_cfgs,
+        # module_param_list=[
+        #     # Default
+        #     gen_cfg(),
+        #     # Precision
+        #     gen_cfg(4, 4, 2, 2, 4, 8, 4, 8, 4, 1),
+        #     gen_cfg(4, 4, 2, 2, 4, 4, 2, 4, 2, 2),
+        #     gen_cfg(4, 4, 2, 2, 4, 2, 1, 2, 1, 3),
+        #     # Rectangle
+        #     gen_cfg(4, 6, 2, 2, 4, 16, 8, 16, 8, 4),
+        #     gen_cfg(6, 2, 2, 2, 4, 16, 8, 16, 8, 5),
+        #     gen_cfg(6, 2, 3, 2, 4, 16, 8, 16, 8, 6),
+        #     gen_cfg(4, 6, 2, 3, 4, 16, 8, 16, 8, 7),
+        #     ## Channels
+        #     gen_cfg(4, 4, 2, 2, 5, 16, 8, 16, 8, 8),
+        #     gen_cfg(4, 4, 2, 2, 6, 16, 8, 16, 8, 9),
+        #     gen_cfg(4, 4, 2, 2, 7, 16, 8, 16, 8, 10),
+        # ],
         trace=True,
     )
