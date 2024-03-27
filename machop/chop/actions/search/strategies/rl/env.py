@@ -109,11 +109,9 @@ class MixedPrecisionEnv(gym.Env):
         truncated = self.episode_len >= self.episode_max_len
         
         # Optional additional info about the step
-        info = {"loss": software_metrics['loss'], "average_bitwidth": hardware_metrics['average_bitwidth'], "accuracy": software_metrics['accuracy'], "memory density": hardware_metrics['memory_density']}
-        if done:
-            print(f'reward: {reward}')
-            pprint(info)
-            print("\n")
+        info = {"reward": reward, "loss": software_metrics['loss'], "average_bitwidth": hardware_metrics['average_bitwidth'], "accuracy": software_metrics['accuracy'], "memory density": hardware_metrics['memory_density']}
+        #if done:
+            #reward = reward*2
         return self.cur_obs, reward, done, truncated, info
     
 
@@ -244,9 +242,9 @@ class MixedPrecisionEnvHiLo(gym.Env):
         truncated = self.episode_len >= self.episode_max_len
         
         # Optional additional info about the step
-        info = {"loss": software_metrics['loss'], "average_bitwidth": hardware_metrics['average_bitwidth'], "accuracy": software_metrics['accuracy'], "memory density": hardware_metrics['memory_density']}
-        if done:
-            reward = reward*2
+        info = {"reward": reward, "loss": software_metrics['loss'], "average_bitwidth": hardware_metrics['average_bitwidth'], "accuracy": software_metrics['accuracy'], "memory density": hardware_metrics['memory_density']}
+        #if done:
+            #reward = reward*2
         return self.cur_obs, reward, done, truncated, info
     
     def _action_to_config(self, action):
@@ -281,6 +279,192 @@ class MixedPrecisionEnvHiLo(gym.Env):
                 metrics |= runner(self.data_module, model, sampled_config)
         return metrics
 
+
+from chop.ir.graph.mase_graph import MaseGraph
+from chop.passes.graph.utils import get_mase_op, get_node_actual_target
+from chop.passes.graph import (
+    add_common_metadata_analysis_pass,
+    init_metadata_analysis_pass,
+)
+
+class MixedPrecisionPaper(gym.Env):
+    def __init__(self, config, search_space, sw_runner, hw_runner, data_module, episode_max_len):
+        if search_space is None:
+            raise ValueError("search_space cannot be None")
+        self.search_space = search_space
+        
+        graph = MaseGraph(self.search_space.model)
+        graph, _ = init_metadata_analysis_pass(graph)
+        graph, _ = add_common_metadata_analysis_pass(
+            graph, {"dummy_in": self.search_space.dummy_input}
+        )
+        layer_info = {}
+        idx = 0
+        for node in graph.fx_graph.nodes:
+            if get_mase_op(node) == "linear":
+                target = get_node_actual_target(node)
+                layer_info[node.name] = [
+                    idx,
+                    target.in_features,
+                    target.out_features,
+                    1,
+                    0,
+                ]
+                idx += 1
+            elif get_mase_op(node) == "conv2d":
+                target = get_node_actual_target(node)
+                layer_info[node.name] = [
+                    idx,
+                    target.in_channels,
+                    target.out_channels,
+                    target.kernel_size[0],
+                    target.stride[0],
+                ]
+                idx += 1
+            else:
+                target = get_node_actual_target(node)
+                layer_info[node.name] = [
+                    idx,
+                    0,
+                    0,
+                    0,
+                    0,
+                ]
+                idx += 1
+
+        self.obs_list = []
+        self.act_list = []
+        self.sample_namespace = []
+        self.sample = {}
+
+        for name, choices in self.search_space.choices_flattened.items():
+            if len(choices) == 1:
+                self.sample[name] = 0
+                continue
+            self.sample_namespace.append(name)
+            _name = name.split("/")
+            obs = layer_info[_name[0]].copy()
+            if _name[2] == "data_in_width":
+                obs.append(1)
+            elif _name[2] == "weight_width":
+                obs.append(2)
+            elif _name[2] == "bias_width":
+                obs.append(3)
+            else:
+                obs.append(0)
+            self.obs_list.append(obs)
+            self.act_list.append(sorted(choices))
+
+        self.state = 0
+        self.obs_list = np.array(self.obs_list)
+
+        low = np.min(self.obs_list, axis=0)
+        high = np.max(self.obs_list, axis=0)
+        self.observation_space = Box(
+            low=np.append(low, min([min(sub) for sub in self.act_list])),
+            high=np.append(high, max([max(sub) for sub in self.act_list])),
+        )
+        self.action_space = Box(low=0, high=1.0)
+
+    def run_trial(self, sampled_indexes):
+        """
+        compute metrics of a sample in search space
+        """
+        # parse the sample
+        sampled_config = self.search_space.flattened_indexes_to_config(sampled_indexes)
+
+        is_eval_mode = self.config.get("eval_mode", True)
+        model = self.search_space.rebuild_model(sampled_config, is_eval_mode)
+
+        software_metrics = self.compute_software_metrics(
+            model, sampled_config, is_eval_mode
+        )
+        hardware_metrics = self.compute_hardware_metrics(
+            model, sampled_config, is_eval_mode
+        )
+        metrics = software_metrics | hardware_metrics
+
+        # sum the metrics with configured scales
+        scaled_metrics = {}
+        for metric_name in self.metric_names:
+            upper_bound = self.config["metrics"][metric_name].get("upper_bound", 1)
+            lower_bound = self.config["metrics"][metric_name].get("lower_bound", 0)
+            direction = self.config["metrics"][metric_name].get("direction", "maximize")
+            if direction == "maximize":
+                unit_metric = max(
+                    max(lower_bound, metrics[metric_name]) - lower_bound, 0
+                ) / (upper_bound - lower_bound)
+            else:
+                unit_metric = max(
+                    upper_bound - max(lower_bound, metrics[metric_name]), 0
+                ) / (upper_bound - lower_bound)
+            scaled_metrics[metric_name] = (
+                unit_metric * self.config["metrics"][metric_name]["scale"]
+            )
+        reward = sum(scaled_metrics.values())
+        return reward
+    
+    def compute_software_metrics(self, model, sampled_config: dict, is_eval_mode: bool):
+        # note that model can be mase_graph or nn.Module
+        metrics = {}
+        if is_eval_mode:
+            with torch.no_grad():
+                for runner in self.sw_runner:
+                    metrics |= runner(self.data_module, model, sampled_config)
+        else:
+            for runner in self.sw_runner:
+                metrics |= runner(self.data_module, model, sampled_config)
+        return metrics
+
+    def compute_hardware_metrics(self, model, sampled_config, is_eval_mode: bool):
+        metrics = {}
+        if is_eval_mode:
+            with torch.no_grad():
+                for runner in self.hw_runner:
+                    metrics |= runner(self.data_module, model, sampled_config)
+        else:
+            for runner in self.hw_runner:
+                metrics |= runner(self.data_module, model, sampled_config)
+        return metrics
+
+
+    def reset(self, *, seed=None, options=None):
+        """
+        Resets the episode and returns the initial observation of the new one.
+        Always start from the first element in observation list.
+        """
+        self.state = 0
+        obs = np.append(
+            self.obs_list[self.state, :], min(self.act_list[self.state])
+        ).astype(np.float32)
+        return obs, {}
+
+    def step(self, action):
+        """Takes a single step in the episode given `action`
+            The episode would end in fixed timestep (same with the length of observation list)
+        Returns:
+            observation (ObsType): A list format as [order of layer, input channels, output channels, kernel size, stride size, data/weight/bias, previous action].
+            reward (SupportsFloat): Sum of metrics calculated by provided function in SearchStrategy.
+            terminated (bool): .
+            truncated (bool): Always False. No need for truncation, as the episode is fixed.
+            info (dict): Empty.
+        """
+        choices = self.act_list[self.state]
+        action = int(action * len(choices) - 1e-2)
+        self.sample[self.sample_namespace[self.state]] = action
+        reward = 0
+        terminated = truncated = False
+        self.state += 1
+        if self.state == len(self.obs_list):
+            self.state = 0
+            terminated = truncated = True
+            reward = self.run_trial(self.sample)
+        obs = self.obs_list[self.state].copy()
+        obs = np.append(obs, choices[action]).astype(np.float32)
+        return obs, reward, terminated, False, {}
+
+
+
 #################### Register the environments ####################
 
 Env_id = 'RL/MixedPrecisionEnv-v0'
@@ -299,12 +483,22 @@ gym.envs.registration.register(
     reward_threshold=500
 )
 
+Env_id_Hi_Lo = 'RL/MixedPrecisionPaper-v0'
+gym.envs.registration.register(
+    id=Env_id_Hi_Lo,
+    entry_point=MixedPrecisionPaper,
+    max_episode_steps=10,
+    reward_threshold=500
+)
+
 env_map = {
     'mixed_precision': MixedPrecisionEnv,
     'mixed_precision_hi_lo': MixedPrecisionEnvHiLo,
+    'mixed_precision_paper': MixedPrecisionPaper,
 }
 
 registered_env_map = {
     'mixed_precision': 'RL/MixedPrecisionEnv-v0',
     'mixed_precision_hi_lo': "RL/MixedPrecisionEnvHiLo-v0",
+    'mixed_precision_paper': "RL/MixedPrecisionPaper-v0",
 }

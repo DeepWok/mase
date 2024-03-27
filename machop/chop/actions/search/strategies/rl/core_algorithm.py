@@ -1,18 +1,35 @@
 from ..base import SearchStrategyBase
 from .env import env_map, registered_env_map
 from pprint import pprint
-from stable_baselines3 import A2C, PPO
+from stable_baselines3 import A2C, PPO, DDPG, SAC
 from stable_baselines3.common.env_util import make_vec_env
 from stable_baselines3.common.callbacks import (
     CallbackList,
     CheckpointCallback,
     EvalCallback,
+    BaseCallback
 )
+import wandb
 
 algorithm_map = {
     "ppo": PPO,
     "a2c": A2C,
+    "ddpg": DDPG,
+    "sac": SAC,
 }
+
+class WandbCallback(BaseCallback):
+    def __init__(self, verbose=0):
+        super(WandbCallback, self).__init__(verbose)
+
+    def _on_step(self) -> bool:
+        # Retrieve the latest info dict from the environment
+        info = self.locals.get('infos')[-1]  # Assumes 'infos' contains info from the last step
+        # Log the metrics of interest
+        wandb.log(info)
+        return True
+
+
 class StrategyRL(SearchStrategyBase):
     iterative = True
     def _post_init_setup(self):
@@ -43,7 +60,9 @@ class StrategyRL(SearchStrategyBase):
                 "sw_runner": self.sw_runner, "hw_runner": self.hw_runner, 
                 "data_module": self.data_module, "episode_max_len":self.episode_max_len}
                 )
-
+            
+            wandb.init(project="Mase-RL", entity="m-pl-braganca")
+            wandb_callback = WandbCallback()
             checkpoint_callback = CheckpointCallback(save_freq=self.save_freq, save_path="./logs/")
             eval_callback = EvalCallback(
                 env,
@@ -51,7 +70,7 @@ class StrategyRL(SearchStrategyBase):
                 log_path="./logs/results",
                 eval_freq=self.eval_freq,
             )
-            callback = CallbackList([checkpoint_callback, eval_callback])
+            callback = CallbackList([checkpoint_callback, eval_callback, wandb_callback])
 
             model = self.algorithm(
                 "MultiInputPolicy",
