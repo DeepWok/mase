@@ -23,11 +23,11 @@ class PowerMonitor(threading.Thread):
     def stop(self):
         self.running = False  # Stop the monitoring loop
 
-def get_execution_provider(config):
+def get_execution_provider(accelerator):
     EP_list = ["TensorrtExecutionProvider", "CUDAExecutionProvider", "CPUExecutionProvider"]
     return (
         ["CUDAExecutionProvider"]
-        if config["accelerator"] == "cuda"
+        if accelerator == "cuda"
         else ["CPUExecutionProvider"]
     )
     # return ["TensorrtExecutionProvider"]

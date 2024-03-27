@@ -71,9 +71,9 @@ class Quantizer:
             sess_options.inter_op_num_threads = num_cores
             sess_options.intra_op_num_threads = num_cores
 
-            ort_session = InferenceSession(model_path, sess_options=sess_options, providers=[get_execution_provider(self.config)])
+            ort_session = InferenceSession(model_path, sess_options=sess_options, providers=[get_execution_provider(self.config["accelerator"])])
         else:
-            ort_session = InferenceSession(model_path, providers=[get_execution_provider(self.config)])
+            ort_session = InferenceSession(model_path, providers=[get_execution_provider(self.config["accelerator"])])
 
         # Create a calibrator_dataloader that is a subset of the training dataloader
         # Number of batches defined in the config by num_calibration_batches

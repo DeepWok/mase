@@ -1,14 +1,17 @@
 from torch.utils.data import DataLoader, Subset
+import logging
 
-def get_execution_provider(config):
-    match config["accelerator"]:
+def get_execution_provider(accelerator):
+    logger = logging.getLogger(__name__)
+    match accelerator:
         case "cuda":
+            logger.info("Using CUDA as ONNX execution provider.")
             return "CUDAExecutionProvider"
         case "cpu":
+            logger.info("Using CPU as ONNX execution provider.")
             return "CPUExecutionProvider"
         case _:
-            raise Exception("Unsupported accelerator. Please set a supported accelerator in the config file.")
-
+            raise Exception("Unsupported accelerator for ONNX execution provider. Please set a supported accelerator in the config file.")
 
 def get_calibrator_dataloader(original_dataloader, num_batches=200):
     # Get the batch size from the original DataLoader

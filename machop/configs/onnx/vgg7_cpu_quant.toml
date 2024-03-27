@@ -1,18 +1,18 @@
 # basics
-model = "jsc-toy"
-dataset = "jsc"
+model = "vgg7"
+dataset = "cifar10"
 task = "cls"
 
 max_epochs = 10
-batch_size = 256
-accelerator = "gpu"
+batch_size = 16
+accelerator = "cpu"
 learning_rate = 1e-3
 
 [passes.onnxruntime.default.config]
 quantize = true
 num_calibration_batches = 200
-quantize_types = ['static', 'dynamic', 'auto']
-precision = 'int8'
+quantize_types = ['dynamic'] # ['static', 'dynamic', 'auto']
+precision = 'uint8'
 
 [passes.onnxruntime.runtime_analysis]
 original_graph_analysis = true

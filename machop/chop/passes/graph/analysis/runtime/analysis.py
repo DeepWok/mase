@@ -61,7 +61,18 @@ class RuntimeAnalysis():
                         
                     case '.onnx':
                         # Load the exported ONNX model into an ONNXRuntime inference session
-                        self.model = ort.InferenceSession(path, providers=get_execution_provider(self.config))
+                        execution_provider = get_execution_provider(self.config['accelerator'])
+                        self.logger.info(f"Using {execution_provider} as ONNX execution provider.")
+                        
+                        # Create a session options object
+                        sess_options = ort.SessionOptions()
+
+                        # Set the log severity level
+                        # Levels are: VERBOSE = 0, INFO = 1, WARNING = 2, ERROR = 3, FATAL = 4
+                        # Setting it to 1 will capture both INFO and more severe messages
+                        sess_options.log_severity_level = 2
+
+                        self.model = ort.InferenceSession(path, providers=execution_provider, sess_options=sess_options)
                         self.model_name = f"{self.config['model']}-onnx"
                         self.model_type = 'onnx'
                     case _:

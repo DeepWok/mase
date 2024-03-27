@@ -1,0 +1,14 @@
+# basics
+model = "vgg7"
+dataset = "cifar10"
+task = "cls"
+
+max_epochs = 10
+batch_size = 16
+accelerator = "cpu"
+learning_rate = 1e-3
+
+[passes.onnxruntime.runtime_analysis]
+num_batches = 100
+num_GPU_warmup_batches = 5
+test = true
