@@ -97,11 +97,11 @@ MaseGraph Transform Passes
     - fill me
   * - :py:meth:`~chop.passes.graph.transforms.verilog.emit_top.emit_internal_rtl_transform_pass`
     - fill me
-  * - :py:meth:`~chop.passes.graph.transforms.tensorrt.tensorrt_fake_quantization_transform_pass`
+  * - :py:meth:`~chop.passes.graph.transforms.tensorrt.quantize.calibrate.tensorrt_fake_quantize_transform_pass`
     - Apply TensorRT fake quantization to the given graph for INT8 quantization calibration
-  * - :py:meth:`~chop.passes.graph.transforms.tensorrt.tensorrt_calibrate_transform_pass`
+  * - :py:meth:`~chop.passes.graph.transforms.tensorrt.quantize.calibrate.tensorrt_calibrate_transform_pass`
     - Apply TensorRT calibration to the given graph for INT8 quantization
-  * - :py:meth:`~chop.passes.graph.transforms.tensorrt.tensorrt_fine_tune_transform_pass`
+  * - :py:meth:`~chop.passes.graph.transforms.tensorrt.quantize.fine_tune.tensorrt_fine_tune_transform_pass`
     - Apply TensorRT fine tune to the given graph for quantization aware training
 
 
