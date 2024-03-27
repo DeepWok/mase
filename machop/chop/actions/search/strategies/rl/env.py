@@ -8,6 +8,7 @@ from chop.passes.graph import (
     init_metadata_analysis_pass,
 )
 
+
 class MixedPrecisionEnv(gym.Env):
     def __init__(self, config):
         self.search_space = config.get("search_space", None)

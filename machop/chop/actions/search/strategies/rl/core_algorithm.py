@@ -25,6 +25,7 @@ algorithm_map = {
 }
 env_map = {"MixedPrecisionEnv": MixedPrecisionEnv}
 
+
 class SearchStrategyRL(SearchStrategyBase):
     is_iterative = False
 
@@ -97,15 +98,15 @@ class SearchStrategyRL(SearchStrategyBase):
             lower_bound = self.config["metrics"][metric_name].get("lower_bound", 0)
             direction = self.config["metrics"][metric_name].get("direction", "maximize")
             if direction == "maximize":
-                unit_metric = (max(
+                unit_metric = max(
                     max(lower_bound, metrics[metric_name]) - lower_bound, 0
-                ) / (upper_bound - lower_bound))
+                ) / (upper_bound - lower_bound)
             else:
                 unit_metric = max(
                     upper_bound - max(lower_bound, metrics[metric_name]), 0
                 ) / (upper_bound - lower_bound)
             scaled_metrics[metric_name] = (
-                    unit_metric * self.config["metrics"][metric_name]["scale"]
+                unit_metric * self.config["metrics"][metric_name]["scale"]
             )
         reward = sum(scaled_metrics.values())
 
@@ -153,11 +154,11 @@ class SearchStrategyRL(SearchStrategyBase):
         )
 
         # save the result
-        with open(f"{self.save_dir}/best_sample.json", 'w') as f:
+        with open(f"{self.save_dir}/best_sample.json", "w") as f:
             json.dump(
                 {"performance": self.best_performance, "config": self.best_sample},
                 f,
-                indent=1
+                indent=1,
             )
         plot_config(
             self.best_sample,
