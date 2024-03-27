@@ -6,8 +6,8 @@ This document guides you through the process of running the Zero-Cost Proxy proj
 
 Before initiating the project, please ensure the following prerequisites are satisfied:
 
-- Python 3.8 or later
-- PyTorch 1.8 or later
+- Python (same with MASE)
+- PyTorch (same with MASE)
 - Optuna
 - Pandas
 - NAS-Bench-201 API
@@ -57,8 +57,6 @@ Upon successful completion, the project generates:
 - Log files and visualizations, depending on your setup and configurations.
 
 These outputs are crucial for assessing the performance of various architectures and the predictive accuracy of zero-cost proxies.
-
-
 
 For instance, given the following configuration:
 
