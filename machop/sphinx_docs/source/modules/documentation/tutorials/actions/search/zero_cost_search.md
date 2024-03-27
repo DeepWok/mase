@@ -111,7 +111,7 @@ Additionally, the file contains the Spearman and Kendal tau correlations for all
 
 Here is part of the `metrics.json`:
 
-```json
+```
 {
     "0":{
         "number":0,
