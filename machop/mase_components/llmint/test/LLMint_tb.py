@@ -248,7 +248,7 @@ def create_params(original_precision_values=[16],
                      reduced_precision_values= [8, 16],
                      tensor_size_dim_values=[8, 16, 32, 64],
                      high_slots_values= [2, 4, 8, 16, 32],
-                     threshold_values=[6]): # [4, 8, 16, 32]):
+                     threshold_values=[6,12,32]): # [4, 8, 16, 32]):
     # Generate all possible combinations
     all_combinations = [(op, rp, tsd, hs, th) for op in original_precision_values
                                                 for rp in reduced_precision_values
@@ -275,7 +275,15 @@ def create_params(original_precision_values=[16],
 if __name__ == "__main__":
 
 
+    # mase_runner(
+    #     trace=True,
+    #     module_param_list=create_params()
+    # )
+
     mase_runner(
         trace=True,
-        module_param_list=create_params()
+        module_param_list=create_params(original_precision_values = [16],
+                                            reduced_precision_values =[8],
+                                            tensor_size_dim_values=[16],
+                                            high_slots_values= [4])
     )

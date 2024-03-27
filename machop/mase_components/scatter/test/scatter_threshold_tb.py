@@ -174,14 +174,14 @@ async def test_scatter(dut):
 #### TEST 2 : {'PRECISION': 64, 'TENSOR_SIZE_DIM': 8, 'HIGH_SLOTS': 3, 'THRESHOLD': 1, 'DESIGN': 1}
 def create_params(precision_values=[16,32],
                         tensor_size_dim_values= [8, 16, 32,64],
-                        high_slots_values= [2,4,8,16,32],
+                        high_slots_values= [2,4,8,16],
                         threshold_values= [4,8,16,32]):
         module_param_list = []
 
         for precision in precision_values:
             for tensor_size_dim in tensor_size_dim_values:
                 for high_slots in high_slots_values:
-                    if high_slots < tensor_size_dim // 2:  # Ensure high_slots is less than half of tensor_size_dim
+                    if high_slots <= tensor_size_dim:  # Ensure high_slots is less than half of tensor_size_dim
                         for threshold in threshold_values:
                             module_param = {
                                 "PRECISION": precision,
@@ -202,7 +202,7 @@ def create_params(precision_values=[16,32],
 
 if __name__ == "__main__":
 
-    module_param_list = create_params()
+    module_param_list = create_params(precision_values=[8],tensor_size_dim_values=[8],threshold_values=[6])
     mase_runner(module_param_list, extra_build_args= ["-Wno-style"], trace =False)
 
 

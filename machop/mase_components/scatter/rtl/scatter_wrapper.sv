@@ -1,17 +1,18 @@
 module top #(
-    parameter PRECISION = 8,                // Default precision
-    parameter TENSOR_SIZE_DIM = 4,          // Default tensor size dimension
+    parameter PRECISION = 16,                // Default precision
+    parameter TENSOR_SIZE_DIM = 16,          // Default tensor size dimension
     parameter HIGH_SLOTS = 2,               // Default number of high slots
     parameter THRESHOLD = 6,
     parameter DESIGN = 1               
 )(
-    input sys_clk,                         // Clock input from FPGA
-    input logic sys_rst,                         // Reset input from FPGA
-    input wire [PRECISION-1:0] fpga_data_in [TENSOR_SIZE_DIM-1:0], // Data input
-    output wire [PRECISION-1:0] fpga_o_high_precision [TENSOR_SIZE_DIM-1:0], // High precision output
-    output wire [PRECISION-1:0] fpga_o_low_precision [TENSOR_SIZE_DIM-1:0]   // Low precision output
+    input clk,                         // Clock input from FPGA
+    input rst
 );
 
+
+    (* dont_touch="yes" *)  wire [PRECISION-1:0] data_in [TENSOR_SIZE_DIM-1:0]; // Data input
+    (* dont_touch="yes" *) wire [PRECISION-1:0] o_high_precision [TENSOR_SIZE_DIM-1:0]; // High precision output
+    (* dont_touch="yes" *) wire [PRECISION-1:0] o_low_precision [TENSOR_SIZE_DIM-1:0];  
     // Instantiate the scatter_threshold module with external parameters
     scatter_threshold #(
         .PRECISION(PRECISION),
@@ -20,11 +21,11 @@ module top #(
         .THRESHOLD(THRESHOLD),
         .DESIGN(DESIGN)
     ) core_module (
-        .clk(sys_clk),
-        .rst(!sys_rst),
-        .data_in(fpga_data_in),
-        .o_high_precision(fpga_o_high_precision),
-        .o_low_precision(fpga_o_low_precision)
+        .clk(clk),
+        .rst(!rst),
+        .data_in(data_in),
+        .o_high_precision(o_high_precision),
+        .o_low_precision(o_low_precision)
     );
 
 endmodule

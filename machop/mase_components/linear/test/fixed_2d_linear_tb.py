@@ -35,7 +35,7 @@ class VerificationCase:
         self.data_out_width = 8
         self.data_out_frac_width = 1
 
-        self.has_bias = 1
+        self.has_bias = 0
         self.bias_width = 6
         self.bias_frac_width = 1
 

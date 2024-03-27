@@ -115,3 +115,30 @@ report_timing_summary -delay_type min_max -report_unconstrained -check_timing_ve
 current_design impl_1
 refresh_design
 report_clock_networks -name {network_1}
+read_saif {/home/aw1223/new/mase/machop/mase_components/scatter/test/build/scatter_threshold/test_15/dump.vcd}
+report_power -name {power_1}
+reset_run synth_1
+launch_runs impl_1 -jobs 20
+wait_on_run impl_1
+close_design
+close_design
+reset_run impl_1
+launch_runs impl_1 -jobs 20
+wait_on_run impl_1
+reset_run impl_1
+reset_run synth_1
+launch_runs impl_1 -jobs 20
+wait_on_run impl_1
+open_run impl_1
+read_saif {/home/aw1223/new/mase/machop/mase_components/scatter/test/build/scatter_threshold/test_0/dump.vcd}
+report_power -name {power_1}
+close_design
+close_sim
+close_project
+open_project /home/aw1223/new/mase/machop/mase_components/scatter/scatter_vivado/scatter_vivado.xpr
+create_fileset -blockset -define_from scatter_threshold scatter_threshold
+add_files -norecurse /home/aw1223/new/mase/machop/mase_components/scatter/rtl/top.sv
+# Disabling source management mode.  This is to allow the top design properties to be set without GUI intervention.
+set_property source_mgmt_mode None [current_project]
+# Re-enabling previously disabled source management mode.
+set_property source_mgmt_mode DisplayOnly [current_project]

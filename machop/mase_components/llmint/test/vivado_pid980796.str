@@ -2281,3 +2281,722 @@ maximizeView(PAResourceOtoP.PAViews_BASE_WORKSPACE, "BaseWorkspace"); // H (aI, 
 // HMemoryUtils.trashcanNow. Engine heap size: 7,487 MB. GUI used memory: 278 MB. Current time: 3/26/24, 5:20:06 PM GMT
 // HMemoryUtils.trashcanNow. Engine heap size: 7,487 MB. GUI used memory: 278 MB. Current time: 3/26/24, 5:50:06 PM GMT
 // HMemoryUtils.trashcanNow. Engine heap size: 7,486 MB. GUI used memory: 277 MB. Current time: 3/26/24, 6:20:06 PM GMT
+// HMemoryUtils.trashcanNow. Engine heap size: 7,486 MB. GUI used memory: 277 MB. Current time: 3/26/24, 6:50:06 PM GMT
+// HMemoryUtils.trashcanNow. Engine heap size: 7,486 MB. GUI used memory: 277 MB. Current time: 3/26/24, 7:20:06 PM GMT
+// HMemoryUtils.trashcanNow. Engine heap size: 7,486 MB. GUI used memory: 277 MB. Current time: 3/26/24, 7:50:06 PM GMT
+// HMemoryUtils.trashcanNow. Engine heap size: 7,486 MB. GUI used memory: 277 MB. Current time: 3/26/24, 8:20:06 PM GMT
+// HMemoryUtils.trashcanNow. Engine heap size: 7,486 MB. GUI used memory: 277 MB. Current time: 3/26/24, 8:50:06 PM GMT
+// HMemoryUtils.trashcanNow. Engine heap size: 7,486 MB. GUI used memory: 277 MB. Current time: 3/26/24, 9:20:06 PM GMT
+// HMemoryUtils.trashcanNow. Engine heap size: 7,486 MB. GUI used memory: 277 MB. Current time: 3/26/24, 9:50:06 PM GMT
+// TclEventType: DG_GRAPH_STALE
+// TclEventType: FILE_SET_CHANGE
+// WARNING: HSwingWorker (Refresh Filesets Swing Worker) is taking 2157 ms. Increasing delay to 6471 ms.
+// WARNING: HEventQueue.dispatchEvent() is taking  1007 ms.
+// HMemoryUtils.trashcanNow. Engine heap size: 7,486 MB. GUI used memory: 277 MB. Current time: 3/26/24, 10:20:06 PM GMT
+// WARNING: HEventQueue.dispatchEvent() is taking  1047 ms.
+// HMemoryUtils.trashcanNow. Engine heap size: 7,486 MB. GUI used memory: 277 MB. Current time: 3/26/24, 10:50:06 PM GMT
+// HMemoryUtils.trashcanNow. Engine heap size: 7,486 MB. GUI used memory: 277 MB. Current time: 3/26/24, 11:20:06 PM GMT
+// HMemoryUtils.trashcanNow. Engine heap size: 7,486 MB. GUI used memory: 277 MB. Current time: 3/26/24, 11:50:06 PM GMT
+// HMemoryUtils.trashcanNow. Engine heap size: 7,486 MB. GUI used memory: 277 MB. Current time: 3/27/24, 12:20:06 AM GMT
+// WARNING: HSwingWorker (Refresh Filesets Swing Worker) is taking 3263 ms. Increasing delay to 9789 ms.
+// WARNING: HEventQueue.dispatchEvent() is taking  1166 ms.
+// HMemoryUtils.trashcanNow. Engine heap size: 7,486 MB. GUI used memory: 277 MB. Current time: 3/27/24, 12:50:06 AM GMT
+// WARNING: HSwingWorker (Update Runs Swing Worker) is taking 4540 ms. Increasing delay to 3000 ms.
+// WARNING: HSwingWorker (Monitor File Timestamp Swing Worker) is taking 1519 ms to process. Increasing delay to 2000 ms.
+// WARNING: HSwingWorker (Monitor File Timestamp Swing Worker) is taking 1184 ms to process. Increasing delay to 2000 ms.
+// WARNING: HSwingWorker (Monitor File Timestamp Swing Worker) is taking 1749 ms to process. Increasing delay to 2000 ms.
+// HMemoryUtils.trashcanNow. Engine heap size: 7,486 MB. GUI used memory: 277 MB. Current time: 3/27/24, 1:20:06 AM GMT
+// HMemoryUtils.trashcanNow. Engine heap size: 7,486 MB. GUI used memory: 277 MB. Current time: 3/27/24, 1:50:06 AM GMT
+// HMemoryUtils.trashcanNow. Engine heap size: 7,486 MB. GUI used memory: 277 MB. Current time: 3/27/24, 2:20:06 AM GMT
+// HMemoryUtils.trashcanNow. Engine heap size: 7,486 MB. GUI used memory: 277 MB. Current time: 3/27/24, 2:50:06 AM GMT
+// HMemoryUtils.trashcanNow. Engine heap size: 7,486 MB. GUI used memory: 277 MB. Current time: 3/27/24, 3:20:06 AM GMT
+// HMemoryUtils.trashcanNow. Engine heap size: 7,486 MB. GUI used memory: 277 MB. Current time: 3/27/24, 3:50:06 AM GMT
+// HMemoryUtils.trashcanNow. Engine heap size: 7,486 MB. GUI used memory: 277 MB. Current time: 3/27/24, 4:20:06 AM GMT
+// HMemoryUtils.trashcanNow. Engine heap size: 7,486 MB. GUI used memory: 277 MB. Current time: 3/27/24, 4:50:06 AM GMT
+// HMemoryUtils.trashcanNow. Engine heap size: 7,486 MB. GUI used memory: 277 MB. Current time: 3/27/24, 5:20:07 AM GMT
+// HMemoryUtils.trashcanNow. Engine heap size: 7,486 MB. GUI used memory: 277 MB. Current time: 3/27/24, 5:50:07 AM GMT
+// HMemoryUtils.trashcanNow. Engine heap size: 7,486 MB. GUI used memory: 277 MB. Current time: 3/27/24, 6:20:07 AM GMT
+// HMemoryUtils.trashcanNow. Engine heap size: 7,486 MB. GUI used memory: 277 MB. Current time: 3/27/24, 6:50:07 AM GMT
+// HMemoryUtils.trashcanNow. Engine heap size: 7,486 MB. GUI used memory: 277 MB. Current time: 3/27/24, 7:20:07 AM GMT
+// HMemoryUtils.trashcanNow. Engine heap size: 7,486 MB. GUI used memory: 277 MB. Current time: 3/27/24, 7:50:07 AM GMT
+// HMemoryUtils.trashcanNow. Engine heap size: 7,486 MB. GUI used memory: 277 MB. Current time: 3/27/24, 8:20:07 AM GMT
+// HMemoryUtils.trashcanNow. Engine heap size: 7,486 MB. GUI used memory: 277 MB. Current time: 3/27/24, 8:50:07 AM GMT
+// HMemoryUtils.trashcanNow. Engine heap size: 7,486 MB. GUI used memory: 277 MB. Current time: 3/27/24, 9:20:07 AM GMT
+// HMemoryUtils.trashcanNow. Engine heap size: 7,486 MB. GUI used memory: 277 MB. Current time: 3/27/24, 9:50:07 AM GMT
+// HMemoryUtils.trashcanNow. Engine heap size: 7,486 MB. GUI used memory: 277 MB. Current time: 3/27/24, 10:20:07 AM GMT
+// HMemoryUtils.trashcanNow. Engine heap size: 7,486 MB. GUI used memory: 277 MB. Current time: 3/27/24, 10:50:07 AM GMT
+// HMemoryUtils.trashcanNow. Engine heap size: 7,486 MB. GUI used memory: 277 MB. Current time: 3/27/24, 11:20:07 AM GMT
+// Elapsed time: 68888 seconds
+selectTab("PlanAheadTabBaseWorkspace_JideTabbedPane", (HResource) null, "scatter_threshold.sv", 2); // i (h, cr)
+selectTab("PlanAheadTabBaseWorkspace_JideTabbedPane", (HResource) null, "scatter_wrapper.sv", 6); // i (h, cr)
+// Elapsed time: 16 seconds
+selectCodeEditor("scatter_wrapper.sv", 215, 72); // ch (w, cr)
+selectCodeEditor("scatter_wrapper.sv", 201, 56); // ch (w, cr)
+// Elapsed time: 540 seconds
+selectTree(PAResourceEtoH.FlowNavigatorTreePanel_FLOW_NAVIGATOR_TREE, "[, Implementation, Open Implemented Design, Report Power]", 38, false); // u (O, cr)
+// Run Command: PAResourceCommand.PACommandNames_POWER_ESTIMATION
+// a (cr): Report Power: addNotify
+// WARNING: HEventQueue.dispatchEvent() is taking  1980 ms.
+selectTab(PAResourceTtoZ.XPowerSettingsDialog_TABBED_PANE, PAResourceTtoZ.XPowerSettingsDialog_SWITCHING, "Switching", 2); // i (a)
+selectButton(PAResourceTtoZ.XPowerSettingsDialog_CHOOSE_INPUT_SIMULATION_ACTIVITY_FILE, (String) null); // t (an)
+dismissFileChooser();
+// 'dl' command handler elapsed time: 79 seconds
+// Elapsed time: 66 seconds
+dismissDialog("Report Power"); // a (cr)
+selectMenu(PAResourceItoN.MainMenuMgr_TOOLS, "Tools"); // aa (q, cr)
+selectMenu(PAResourceItoN.MainMenuMgr_FLOORPLANNING, "Floorplanning"); // af (cr)
+selectMenu(PAResourceItoN.MainMenuMgr_IO_PLANNING, "I/O Planning"); // af (cr)
+selectMenu(PAResourceItoN.MainMenuMgr_TIMING, "Timing"); // af (cr)
+selectMenu(RDIResourceCommand.RDICommands_CUSTOM_COMMANDS, "Custom Commands"); // af (cr)
+selectMenu(RDIResourceCommand.RDICommands_CUSTOM_COMMANDS, "Custom Commands"); // af (cr)
+selectMenu(PAResourceItoN.MainMenuMgr_TIMING, "Timing"); // af (cr)
+selectMenu(PAResourceItoN.MainMenuMgr_TIMING, "Timing"); // af (cr)
+selectMenu(PAResourceItoN.MainMenuMgr_IO_PLANNING, "I/O Planning"); // af (cr)
+selectMenu(PAResourceItoN.MainMenuMgr_TIMING, "Timing"); // af (cr)
+selectMenu(PAResourceItoN.MainMenuMgr_TIMING, "Timing"); // af (cr)
+selectMenu(PAResourceItoN.MainMenuMgr_IO_PLANNING, "I/O Planning"); // af (cr)
+selectMenu(PAResourceItoN.MainMenuMgr_FLOORPLANNING, "Floorplanning"); // af (cr)
+selectMenu(PAResourceItoN.MainMenuMgr_IO_PLANNING, "I/O Planning"); // af (cr)
+selectMenu(PAResourceItoN.MainMenuMgr_TIMING, "Timing"); // af (cr)
+selectMenu(RDIResourceCommand.RDICommands_CUSTOM_COMMANDS, "Custom Commands"); // af (cr)
+selectMenu(PAResourceItoN.MainMenuMgr_TIMING, "Timing"); // af (cr)
+selectMenu(PAResourceItoN.MainMenuMgr_IO_PLANNING, "I/O Planning"); // af (cr)
+selectMenu(PAResourceItoN.MainMenuMgr_FLOORPLANNING, "Floorplanning"); // af (cr)
+dismissMenu(PAResourceItoN.MainMenuMgr_TOOLS, "Tools"); // aa (q, cr)
+selectMenu(PAResourceItoN.MainMenuMgr_REPORTS, "Reports"); // aa (q, cr)
+dismissMenu(PAResourceItoN.MainMenuMgr_REPORTS, "Reports"); // aa (q, cr)
+selectMenu(PAResourceItoN.MainMenuMgr_TOOLS, "Tools"); // aa (q, cr)
+dismissMenu(PAResourceItoN.MainMenuMgr_TOOLS, "Tools"); // aa (q, cr)
+selectMenu(PAResourceItoN.MainMenuMgr_FLOW, "Flow"); // aa (q, cr)
+selectMenu(PAResourceItoN.MainMenuMgr_SETTINGS, "Settings"); // af (cr)
+selectMenu(PAResourceCommand.PACommandNames_SIMULATION_RUN, "Run Simulation"); // aa (cr)
+selectMenu(PAResourceCommand.PACommandNames_SIMULATION_RUN, "Run Simulation"); // aa (cr)
+dismissMenu(PAResourceItoN.MainMenuMgr_FLOW, "Flow"); // aa (q, cr)
+// Elapsed time: 11 seconds
+setText("RDIResource.SearchCommandComponent_QUICK_ACCESS", "Power Estimation & Optimization"); // OverlayTextField (O, cr)
+// Elapsed time: 40 seconds
+collapseTree(PAResourceEtoH.FlowNavigatorTreePanel_FLOW_NAVIGATOR_TREE, "[, RTL Analysis, Open Elaborated Design]", 12); // u (O, cr)
+expandTree(PAResourceEtoH.FlowNavigatorTreePanel_FLOW_NAVIGATOR_TREE, "[, RTL Analysis, Open Elaborated Design]", 12); // u (O, cr)
+// Elapsed time: 12 seconds
+selectTree(PAResourceEtoH.FlowNavigatorTreePanel_FLOW_NAVIGATOR_TREE, "[, Implementation, Open Implemented Design, Report Power]", 41, false); // u (O, cr)
+// Run Command: PAResourceCommand.PACommandNames_POWER_ESTIMATION
+// a (cr): Report Power: addNotify
+selectTab(PAResourceTtoZ.XPowerSettingsDialog_TABBED_PANE, PAResourceTtoZ.XPowerSettingsDialog_SWITCHING, "Switching", 2); // i (a)
+selectButton(PAResourceTtoZ.XPowerSettingsDialog_CHOOSE_INPUT_SIMULATION_ACTIVITY_FILE, (String) null); // t (an)
+// Elapsed time: 39 seconds
+setFileChooser("/home/aw1223/new/mase/machop/mase_components/scatter/test/build/scatter_threshold/test_15/dump.vcd");
+selectButton(PAResourceTtoZ.XPowerSettingsDialog_SAVE_THESE_SETTINGS_AND_RUN, "OK"); // a (a)
+// Run Command: PAResourceCommand.PACommandNames_RUN_POWER_ESTIMATION
+// 'dl' command handler elapsed time: 56 seconds
+dismissDialog("Report Power"); // a (cr)
+// bB (cr):  Power Analysis : addNotify
+// Tcl Message: read_saif {/home/aw1223/new/mase/machop/mase_components/scatter/test/build/scatter_threshold/test_15/dump.vcd} 
+// Tcl Message: INFO: [Power 33-167] Parsing SAIF file /home/aw1223/new/mase/machop/mase_components/scatter/test/build/scatter_threshold/test_15/dump.vcd INFO: [Power 33-177] SAIF annotation done from file /home/aw1223/new/mase/machop/mase_components/scatter/test/build/scatter_threshold/test_15/dump.vcd INFO: [Power 33-26] Design nets matched = 0 of 236 
+// Tcl Message: report_power -name {power_1} 
+// Tcl Message: Command: report_power -name power_1 0% of nets annotated Doing probabilistic computation for the remaining nets  
+// TclEventType: TIMING_RESULTS_STALE
+// TclEventType: POWER_UPDATED
+// PAPropertyPanels.initPanels (fpga_o_high_precision[0][3]_INST_0_i_2_n_0) elapsed time: 0.2s
+// Tcl Message: 0 Infos, 0 Warnings, 0 Critical Warnings and 0 Errors encountered. report_power completed successfully 
+// Tcl Message: report_power: Time (s): cpu = 00:00:08 ; elapsed = 00:00:10 . Memory (MB): peak = 12601.789 ; gain = 69.965 ; free physical = 3471 ; free virtual = 15555 
+// Elapsed time: 11 seconds
+dismissDialog("Power Analysis"); // bB (cr)
+// Elapsed time: 18 seconds
+selectButton(PAResourceOtoP.PowerResultSummaryPanel_CLICK_FOR_MORE_DETAILS, "Low"); // d (Q, cr)
+selectButton(RDIResource.HPopupTitle_CLOSE, (String) null); // k (n, ResizableWindow)
+// Run Command: PAResourceCommand.PACommandNames_POWER_CONSTRAINT_ADVISOR
+// a (cr): Power Constraints Advisor: addNotify
+selectButton(RDIResource.BaseDialog_CANCEL, "Cancel"); // a (a)
+dismissDialog("Power Constraints Advisor"); // a (cr)
+selectTree(PAResourceOtoP.PowerResultTab_REPORT_NAVIGATION_TREE, "[Report Contents, Utilization Details]", 3, true); // h (O, cr) - Node
+// Elapsed time: 134 seconds
+selectCodeEditor("scatter_wrapper.sv", 322, 153); // ch (w, cr)
+// WARNING: HEventQueue.dispatchEvent() is taking  1154 ms.
+// HMemoryUtils.trashcanNow. Engine heap size: 7,658 MB. GUI used memory: 281 MB. Current time: 3/27/24, 11:50:07 AM GMT
+// Elapsed time: 380 seconds
+selectCodeEditor("scatter_wrapper.sv", 192, 23); // ch (w, cr)
+selectCodeEditor("scatter_wrapper.sv", 234, 39); // ch (w, cr)
+selectCodeEditor("scatter_wrapper.sv", 320, 80); // ch (w, cr)
+selectCodeEditor("scatter_wrapper.sv", 183, 77); // ch (w, cr)
+selectCodeEditor("scatter_wrapper.sv", 400, 125); // ch (w, cr)
+selectCodeEditor("scatter_wrapper.sv", 127, 84); // ch (w, cr)
+selectCodeEditor("scatter_wrapper.sv", 127, 84, false, false, false, false, true); // ch (w, cr) - Double Click
+selectCodeEditor("scatter_wrapper.sv", 693, 60); // ch (w, cr)
+selectButton(PAResourceItoN.MainToolbarMgr_RUN, (String) null); // az (f, cr)
+selectCodeEditor("scatter_wrapper.sv", 207, 129); // ch (w, cr)
+// TclEventType: DG_GRAPH_STALE
+// TclEventType: FILE_SET_CHANGE
+selectButton(PAResourceItoN.MainToolbarMgr_RUN, (String) null); // az (f, cr)
+selectMenuItem(PAResourceCommand.PACommandNames_RUN_IMPLEMENTATION, "Run Implementation"); // ai (cr)
+// Run Command: PAResourceCommand.PACommandNames_RUN_IMPLEMENTATION
+// bB (cr):  Resetting Runs : addNotify
+// TclEventType: RUN_MODIFY
+// TclEventType: DESIGN_STALE
+// TclEventType: RUN_RESET
+// TclEventType: RUN_STATUS_CHANGE
+// Tcl Message: reset_run synth_1 
+// TclEventType: RUN_RESET
+// TclEventType: DESIGN_STALE
+// TclEventType: RUN_RESET
+// TclEventType: RUN_STATUS_CHANGE
+// TclEventType: RUN_RESET
+// TclEventType: RUN_MODIFY
+// bB (cr):  Starting Design Runs : addNotify
+// TclEventType: FILESET_TARGET_UCF_CHANGE
+// Tcl Message: launch_runs impl_1 -jobs 20 
+// TclEventType: DESIGN_STALE
+// TclEventType: RUN_LAUNCH
+// TclEventType: FILESET_TARGET_UCF_CHANGE
+// TclEventType: DESIGN_STALE
+// TclEventType: RUN_LAUNCH
+// TclEventType: RUN_MODIFY
+// TclEventType: RUN_STATUS_CHANGE
+// TclEventType: RUN_MODIFY
+// Tcl Message: [Wed Mar 27 11:54:24 2024] Launched synth_1... Run output will be captured here: /home/aw1223/new/mase/machop/mase_components/scatter/scatter_vivado/scatter_vivado.runs/synth_1/runme.log [Wed Mar 27 11:54:24 2024] Launched impl_1... Run output will be captured here: /home/aw1223/new/mase/machop/mase_components/scatter/scatter_vivado/scatter_vivado.runs/impl_1/runme.log 
+dismissDialog("Starting Design Runs"); // bB (cr)
+// TclEventType: RUN_STATUS_CHANGE
+selectButton(PAResourceOtoP.ProjectTab_CLOSE_DESIGN, "Close Design"); // h (ds, cr)
+// TclEventType: DESIGN_CLOSE
+// HMemoryUtils.trashcanNow. Engine heap size: 7,673 MB. GUI used memory: 344 MB. Current time: 3/27/24, 11:54:33 AM GMT
+// TclEventType: TIMING_RESULTS_UNLOAD
+// Engine heap size: 7,673 MB. GUI used memory: 346 MB. Current time: 3/27/24, 11:54:34 AM GMT
+// WARNING: HEventQueue.dispatchEvent() is taking  4659 ms.
+// TclEventType: CURR_DESIGN_SET
+// TclEventType: TIMING_CLOCK_NETWORKS_UNLOAD
+// Tcl Message: close_design 
+// TclEventType: TIMING_CLOCK_NETWORKS_UNLOAD
+// bB (cr):  Closing : addNotify
+// TclEventType: DESIGN_CLOSE
+// WARNING: HEventQueue.dispatchEvent() is taking  2205 ms.
+// Tcl Message: close_design: Time (s): cpu = 00:00:12 ; elapsed = 00:00:09 . Memory (MB): peak = 12681.840 ; gain = 0.000 ; free physical = 1682 ; free virtual = 14114 
+// Elapsed time: 10 seconds
+dismissDialog("Closing"); // bB (cr)
+selectButton(PAResourceOtoP.ProjectTab_CLOSE_DESIGN, "Close Design"); // h (ds, cr)
+// TclEventType: DESIGN_CLOSE
+// HMemoryUtils.trashcanNow. Engine heap size: 7,624 MB. GUI used memory: 331 MB. Current time: 3/27/24, 11:54:44 AM GMT
+// TclEventType: TIMING_RESULTS_UNLOAD
+// Engine heap size: 7,624 MB. GUI used memory: 333 MB. Current time: 3/27/24, 11:54:44 AM GMT
+// WARNING: HEventQueue.dispatchEvent() is taking  3048 ms.
+// TclEventType: CURR_DESIGN_SET
+// Tcl Message: close_design 
+// TclEventType: DESIGN_CLOSE
+// bB (cr):  Closing : addNotify
+// TclEventType: DESIGN_CLOSE
+dismissDialog("Closing"); // bB (cr)
+// TclEventType: RUN_COMPLETED
+// TclEventType: RUN_STATUS_CHANGE
+// TclEventType: RUN_STEP_COMPLETED
+// TclEventType: RUN_STATUS_CHANGE
+// Elapsed time: 299 seconds
+expandTreeTable(PAResourceEtoH.ExpRunTreePanel_EXP_RUN_TREE_TABLE, "synth_1 ; constrs_1 ; synth_design Complete! ;  ;  ;  ;  ;  ;  ;  ; 580 ; 0 ; 0.0 ; 0 ; 0 ; Wed Mar 27 11:54:26 GMT 2024 ; 00:03:52 ; Vivado Synthesis Defaults (Vivado Synthesis 2019) ; Vivado Synthesis Default Reports (Vivado Synthesis 2019) ; xcu280-fsvh2892-2L-e ; ee-beholder1 ; Vivado Synthesis Defaults", 0); // az (O, cr)
+selectTreeTable(PAResourceEtoH.ExpRunTreePanel_EXP_RUN_TREE_TABLE, "impl_1 ; constrs_1 ; Running Design Initialization... ;  ;  ;  ;  ;  ;  ;  ;  ;  ;  ;  ;  ; Wed Mar 27 11:58:36 GMT 2024 ; 00:01:11 ; Vivado Implementation Defaults (Vivado Implementation 2019) ; Vivado Implementation Default Reports (Vivado Implementation 2019) ; xcu280-fsvh2892-2L-e ; ee-beholder1 ; Default settings for Implementation.", 1, (String) null, 12, false); // az (O, cr)
+// TclEventType: RUN_STEP_COMPLETED
+// Elapsed time: 44 seconds
+selectTreeTable(PAResourceEtoH.ExpRunTreePanel_EXP_RUN_TREE_TABLE, "synth_1 ; constrs_1 ; synth_design Complete! ;  ;  ;  ;  ;  ;  ;  ; 580 ; 0 ; 0.0 ; 0 ; 0 ; Wed Mar 27 11:54:26 GMT 2024 ; 00:03:52 ; Vivado Synthesis Defaults (Vivado Synthesis 2019) ; Vivado Synthesis Default Reports (Vivado Synthesis 2019) ; xcu280-fsvh2892-2L-e ; ee-beholder1 ; Vivado Synthesis Defaults", 0, (String) null, 10, true); // az (O, cr) - Node
+// PAPropertyPanels.initPanels (synth_1) elapsed time: 0.2s
+selectTreeTable(PAResourceEtoH.ExpRunTreePanel_EXP_RUN_TREE_TABLE, "synth_1 ; constrs_1 ; synth_design Complete! ;  ;  ;  ;  ;  ;  ;  ; 580 ; 0 ; 0.0 ; 0 ; 0 ; Wed Mar 27 11:54:26 GMT 2024 ; 00:03:52 ; Vivado Synthesis Defaults (Vivado Synthesis 2019) ; Vivado Synthesis Default Reports (Vivado Synthesis 2019) ; xcu280-fsvh2892-2L-e ; ee-beholder1 ; Vivado Synthesis Defaults", 0, (String) null, 10, true, false, false, false, false, true); // az (O, cr) - Double Click - Node
+// Elapsed time: 10 seconds
+selectTreeTable(PAResourceEtoH.ExpRunTreePanel_EXP_RUN_TREE_TABLE, "synth_1 ; constrs_1 ; synth_design Complete! ;  ;  ;  ;  ;  ;  ;  ; 580 ; 0 ; 0.0 ; 0 ; 0 ; Wed Mar 27 11:54:26 GMT 2024 ; 00:03:52 ; Vivado Synthesis Defaults (Vivado Synthesis 2019) ; Vivado Synthesis Default Reports (Vivado Synthesis 2019) ; xcu280-fsvh2892-2L-e ; ee-beholder1 ; Vivado Synthesis Defaults", 0, "synth_design Complete!", 2, true); // az (O, cr) - Node
+selectTreeTable(PAResourceEtoH.ExpRunTreePanel_EXP_RUN_TREE_TABLE, "synth_1 ; constrs_1 ; synth_design Complete! ;  ;  ;  ;  ;  ;  ;  ; 580 ; 0 ; 0.0 ; 0 ; 0 ; Wed Mar 27 11:54:26 GMT 2024 ; 00:03:52 ; Vivado Synthesis Defaults (Vivado Synthesis 2019) ; Vivado Synthesis Default Reports (Vivado Synthesis 2019) ; xcu280-fsvh2892-2L-e ; ee-beholder1 ; Vivado Synthesis Defaults", 0, "synth_design Complete!", 2, true); // az (O, cr) - Node
+selectTreeTable(PAResourceEtoH.ExpRunTreePanel_EXP_RUN_TREE_TABLE, "synth_1 ; constrs_1 ; synth_design Complete! ;  ;  ;  ;  ;  ;  ;  ; 580 ; 0 ; 0.0 ; 0 ; 0 ; Wed Mar 27 11:54:26 GMT 2024 ; 00:03:52 ; Vivado Synthesis Defaults (Vivado Synthesis 2019) ; Vivado Synthesis Default Reports (Vivado Synthesis 2019) ; xcu280-fsvh2892-2L-e ; ee-beholder1 ; Vivado Synthesis Defaults", 0, "synth_design Complete!", 2, true); // az (O, cr) - Node
+// TclEventType: RUN_STEP_COMPLETED
+expandTreeTable(PAResourceEtoH.ExpRunTreePanel_EXP_RUN_TREE_TABLE, "synth_1 ; constrs_1 ; synth_design Complete! ;  ;  ;  ;  ;  ;  ;  ; 580 ; 0 ; 0.0 ; 0 ; 0 ; Wed Mar 27 11:54:26 GMT 2024 ; 00:03:52 ; Vivado Synthesis Defaults (Vivado Synthesis 2019) ; Vivado Synthesis Default Reports (Vivado Synthesis 2019) ; xcu280-fsvh2892-2L-e ; ee-beholder1 ; Vivado Synthesis Defaults", 0); // az (O, cr)
+// TclEventType: RUN_FAILED
+// TclEventType: RUN_STATUS_CHANGE
+// TclEventType: RUN_STEP_COMPLETED
+// aj (cr): Implementation Failed: addNotify
+// Elapsed time: 543 seconds
+selectButton(RDIResource.BaseDialog_OK, "OK"); // a (aj)
+// Run Command: PAResourceCommand.PACommandNames_MESSAGE_WINDOW
+dismissDialog("Implementation Failed"); // aj (cr)
+// Elapsed time: 23 seconds
+selectCodeEditor("scatter_wrapper.sv", 294, 185); // ch (w, cr)
+selectCodeEditor("scatter_wrapper.sv", 189, 139); // ch (w, cr)
+selectCodeEditor("scatter_wrapper.sv", 68, 154); // ch (w, cr)
+selectCodeEditor("scatter_wrapper.sv", 59, 196); // ch (w, cr)
+selectCodeEditor("scatter_wrapper.sv", 72, 140); // ch (w, cr)
+selectCodeEditor("scatter_wrapper.sv", 191, 199); // ch (w, cr)
+typeControlKey((HResource) null, "scatter_wrapper.sv", 'v'); // ch (w, cr)
+selectCodeEditor("scatter_wrapper.sv", 1, 204); // ch (w, cr)
+selectCodeEditor("scatter_wrapper.sv", 53, 222); // ch (w, cr)
+selectCodeEditor("scatter_wrapper.sv", 53, 222, false, false, false, false, true); // ch (w, cr) - Double Click
+selectCodeEditor("scatter_wrapper.sv", 46, 228); // ch (w, cr)
+selectCodeEditor("scatter_wrapper.sv", 46, 228, false, false, false, false, true); // ch (w, cr) - Double Click
+selectCodeEditor("scatter_wrapper.sv", 34, 217); // ch (w, cr)
+selectCodeEditor("scatter_wrapper.sv", 34, 232); // ch (w, cr)
+selectCodeEditor("scatter_wrapper.sv", 558, 230); // ch (w, cr)
+selectCodeEditor("scatter_wrapper.sv", 481, 218); // ch (w, cr)
+selectCodeEditor("scatter_wrapper.sv", 421, 204); // ch (w, cr)
+selectCodeEditor("scatter_wrapper.sv", 248, 151); // ch (w, cr)
+selectCodeEditor("scatter_wrapper.sv", 193, 147); // ch (w, cr)
+selectCodeEditor("scatter_wrapper.sv", 249, 147); // ch (w, cr)
+selectCodeEditor("scatter_wrapper.sv", 184, 176); // ch (w, cr)
+selectCodeEditor("scatter_wrapper.sv", 204, 121); // ch (w, cr)
+selectMenu(PAResourceItoN.MainMenuMgr_FILE, "File"); // aa (q, cr)
+selectMenu(PAResourceItoN.MainMenuMgr_PROJECT, "Project"); // af (cr)
+dismissMenu(PAResourceItoN.MainMenuMgr_FILE, "File"); // aa (q, cr)
+selectMenu(PAResourceItoN.MainMenuMgr_EDIT, "Edit"); // aa (q, cr)
+dismissMenu(PAResourceItoN.MainMenuMgr_EDIT, "Edit"); // aa (q, cr)
+// Elapsed time: 29 seconds
+selectTab("PlanAheadTabBaseWorkspace_JideTabbedPane", (HResource) null, "scatter_tb.sv", 2); // i (h, cr)
+selectTab("PlanAheadTabBaseWorkspace_JideTabbedPane", (HResource) null, "scatter_threshold.sv", 1); // i (h, cr)
+// Elapsed time: 93 seconds
+selectCodeEditor("scatter_threshold.sv", 16, 184); // ch (w, cr)
+selectTab("PlanAheadTabBaseWorkspace_JideTabbedPane", (HResource) null, "scatter_wrapper.sv", 3); // i (h, cr)
+selectCodeEditor("scatter_wrapper.sv", 29, 189); // ch (w, cr)
+// HOptionPane Error: 'The paste failed. The clipboard content is not text. (Paste Error)'
+typeControlKey((HResource) null, "scatter_wrapper.sv", 'v'); // ch (w, cr)
+selectButton("OptionPane.button", "OK"); // JButton (A, G)
+// Elapsed time: 10 seconds
+selectCodeEditor("scatter_wrapper.sv", 28, 190, false, false, false, true, false); // ch (w, cr) - Popup Trigger
+selectMenuItem(RDIResourceCommand.RDICommands_PASTE, "Paste"); // ai (ao, cr)
+// HOptionPane Error: 'The paste failed. The clipboard content is not text. (Paste Error)'
+selectButton("OptionPane.button", "OK"); // JButton (A, G)
+// Elapsed time: 31 seconds
+selectCodeEditor("scatter_wrapper.sv", 130, 183); // ch (w, cr)
+selectCodeEditor("scatter_wrapper.sv", 188, 183); // ch (w, cr)
+typeControlKey((HResource) null, "scatter_wrapper.sv", 'c'); // ch (w, cr)
+selectCodeEditor("scatter_wrapper.sv", 27, 207); // ch (w, cr)
+typeControlKey((HResource) null, "scatter_wrapper.sv", 'v'); // ch (w, cr)
+selectCodeEditor("scatter_wrapper.sv", 25, 219); // ch (w, cr)
+typeControlKey((HResource) null, "scatter_wrapper.sv", 'v'); // ch (w, cr)
+selectCodeEditor("scatter_wrapper.sv", 192, 186); // ch (w, cr)
+selectCodeEditor("scatter_wrapper.sv", 88, 191); // ch (w, cr)
+selectCodeEditor("scatter_wrapper.sv", 86, 201); // ch (w, cr)
+selectCodeEditor("scatter_wrapper.sv", 86, 222); // ch (w, cr)
+selectCodeEditor("scatter_wrapper.sv", 178, 155); // ch (w, cr)
+selectCodeEditor("scatter_wrapper.sv", 94, 189); // ch (w, cr)
+selectCodeEditor("scatter_wrapper.sv", 182, 135); // ch (w, cr)
+selectCodeEditor("scatter_wrapper.sv", 286, 273); // ch (w, cr)
+selectCodeEditor("scatter_wrapper.sv", 142, 288); // ch (w, cr)
+selectCodeEditor("scatter_wrapper.sv", 309, 239); // ch (w, cr)
+selectCodeEditor("scatter_wrapper.sv", 526, 232); // ch (w, cr)
+selectButton(PAResourceItoN.MainToolbarMgr_RUN, (String) null); // az (f, cr)
+selectMenuItem(PAResourceCommand.PACommandNames_RUN_IMPLEMENTATION, "Run Implementation"); // ai (cr)
+// Run Command: PAResourceCommand.PACommandNames_RUN_IMPLEMENTATION
+// i (cr): Reset and Re-run: addNotify
+selectButton(RDIResource.BaseDialog_YES, "Reset and Re-run"); // a (i)
+// al (cr): Save Project: addNotify
+dismissDialog("Reset and Re-run"); // i (cr)
+selectButton(PAResourceQtoS.SaveProjectUtils_SAVE, "Save"); // a (al)
+// bB (cr):  Save Constraints : addNotify
+// TclEventType: DG_GRAPH_STALE
+// bB (cr):  Resetting Runs : addNotify
+dismissDialog("Save Project"); // al (cr)
+// TclEventType: DG_GRAPH_STALE
+// TclEventType: FILE_SET_CHANGE
+// TclEventType: RUN_MODIFY
+// TclEventType: RUN_RESET
+// TclEventType: RUN_STATUS_CHANGE
+// TclEventType: RUN_RESET
+// TclEventType: RUN_MODIFY
+// Tcl Message: reset_run impl_1 
+// bB (cr):  Starting Design Runs : addNotify
+// TclEventType: FILESET_TARGET_UCF_CHANGE
+// Tcl Message: launch_runs impl_1 -jobs 20 
+// TclEventType: RUN_LAUNCH
+// TclEventType: RUN_MODIFY
+// TclEventType: RUN_STATUS_CHANGE
+// Tcl Message: [Wed Mar 27 12:14:46 2024] Launched impl_1... Run output will be captured here: /home/aw1223/new/mase/machop/mase_components/scatter/scatter_vivado/scatter_vivado.runs/impl_1/runme.log 
+// 'c' command handler elapsed time: 10 seconds
+dismissDialog("Starting Design Runs"); // bB (cr)
+// TclEventType: RUN_STATUS_CHANGE
+// Elapsed time: 75 seconds
+selectTree(PAResourceItoN.MsgTreePanel_MESSAGE_VIEW_TREE, "[, Synthesis, [Vivado 12-4739] create_clock:No valid object(s) found for '-objects [get_ports sysclk]'. [/home/aw1223/new/mase/machop/mase_components/scatter/scatter_vivado/constraints.xdc:2]. ]", 1, false); // ah (O, cr)
+messagesViewCrossProbe(PAResourceItoN.MsgTreePanel_MESSAGE_VIEW_TREE, "src;-;/home/aw1223/new/mase/machop/mase_components/scatter/scatter_vivado/constraints.xdc;-;;-;16;-;line;-;2;-;;-;16;-;"); // ah (O, cr)
+selectCodeEditor("constraints.xdc", 145, 22); // ch (w, cr)
+selectCodeEditor("constraints.xdc", 145, 22, false, false, false, false, true); // ch (w, cr) - Double Click
+selectCodeEditor("constraints.xdc", 184, 23); // ch (w, cr)
+selectCodeEditor("constraints.xdc", 184, 23, false, false, false, false, true); // ch (w, cr) - Double Click
+selectCodeEditor("constraints.xdc", 184, 23); // ch (w, cr)
+// TclEventType: FILE_SET_CHANGE
+selectButton(PAResourceQtoS.SyntheticaStateMonitor_CANCEL, "Cancel"); // h (Q, cr)
+// aW (cr): Cancel Implementation: addNotify
+selectButton(PAResourceQtoS.StateMonitor_RESET_RUN, "Reset Run"); // a (aW)
+// bB (cr):  Resetting Runs : addNotify
+// TclEventType: RUN_MODIFY
+dismissDialog("Cancel Implementation"); // aW (cr)
+// TclEventType: RUN_RESET
+// Tcl Message: reset_run impl_1 
+// TclEventType: RUN_STATUS_CHANGE
+// TclEventType: RUN_RESET
+// TclEventType: RUN_MODIFY
+dismissDialog("Resetting Runs"); // bB (cr)
+selectButton(PAResourceQtoS.StaleMoreAction_OUT_OF_DATE_DETAILS, "details"); // h (ds, cr)
+// Elapsed time: 10 seconds
+selectCodeEditor("constraints.xdc", 604, 184); // ch (w, cr)
+selectButton(PAResourceItoN.MainToolbarMgr_RUN, (String) null); // az (f, cr)
+selectMenuItem(PAResourceCommand.PACommandNames_RUN_IMPLEMENTATION, "Run Implementation"); // ai (cr)
+// Run Command: PAResourceCommand.PACommandNames_RUN_IMPLEMENTATION
+// bB (cr):  Resetting Runs : addNotify
+// TclEventType: RUN_MODIFY
+// TclEventType: RUN_RESET
+// TclEventType: RUN_STATUS_CHANGE
+// TclEventType: RUN_RESET
+// TclEventType: RUN_MODIFY
+// Tcl Message: reset_run synth_1 
+// bB (cr):  Resetting Runs : addNotify
+// bB (cr):  Starting Design Runs : addNotify
+// TclEventType: FILESET_TARGET_UCF_CHANGE
+// TclEventType: RUN_LAUNCH
+// TclEventType: FILESET_TARGET_UCF_CHANGE
+// Tcl Message: launch_runs impl_1 -jobs 20 
+// TclEventType: RUN_LAUNCH
+// TclEventType: RUN_MODIFY
+// TclEventType: RUN_STATUS_CHANGE
+// TclEventType: RUN_MODIFY
+// Tcl Message: [Wed Mar 27 12:16:39 2024] Launched synth_1... Run output will be captured here: /home/aw1223/new/mase/machop/mase_components/scatter/scatter_vivado/scatter_vivado.runs/synth_1/runme.log [Wed Mar 27 12:16:39 2024] Launched impl_1... Run output will be captured here: /home/aw1223/new/mase/machop/mase_components/scatter/scatter_vivado/scatter_vivado.runs/impl_1/runme.log 
+dismissDialog("Starting Design Runs"); // bB (cr)
+// TclEventType: RUN_STATUS_CHANGE
+// Elapsed time: 14 seconds
+selectTab("PlanAheadTabBaseWorkspace_JideTabbedPane", (HResource) null, "scatter_wrapper.sv", 3); // i (h, cr)
+// TclEventType: RUN_COMPLETED
+// TclEventType: RUN_STATUS_CHANGE
+// TclEventType: RUN_STEP_COMPLETED
+// TclEventType: RUN_STATUS_CHANGE
+// TclEventType: RUN_STEP_COMPLETED
+// Elapsed time: 453 seconds
+selectCodeEditor("scatter_wrapper.sv", 177, 45); // ch (w, cr)
+selectCodeEditor("scatter_wrapper.sv", 234, 38); // ch (w, cr)
+selectCodeEditor("scatter_wrapper.sv", 234, 38, false, false, false, false, true); // ch (w, cr) - Double Click
+// HMemoryUtils.trashcanNow. Engine heap size: 7,358 MB. GUI used memory: 220 MB. Current time: 3/27/24, 12:24:47 PM GMT
+// TclEventType: RUN_STEP_COMPLETED
+// Elapsed time: 397 seconds
+selectTree(PAResourceEtoH.FileSetPanel_FILE_SET_PANEL_TREE, "[root, Design Sources, scatter_threshold.sv]", 4, false); // B (F, cr)
+selectTree(PAResourceEtoH.FileSetPanel_FILE_SET_PANEL_TREE, "[root, Design Sources, scatter_threshold.sv]", 4, false, false, false, false, true, false); // B (F, cr) - Popup Trigger
+selectTree(PAResourceEtoH.FileSetPanel_FILE_SET_PANEL_TREE, "[root, Design Sources, scatter_threshold.sv]", 4, false); // B (F, cr)
+selectTree(PAResourceEtoH.FileSetPanel_FILE_SET_PANEL_TREE, "[root, Design Sources, scatter_threshold.sv]", 4, false, false, false, false, true, false); // B (F, cr) - Popup Trigger
+selectTab(PAResourceEtoH.FileSetView_TABBED_PANE, (HResource) null, "Libraries", 1); // i (N, cr)
+maximizeFrame(PAResourceOtoP.PAViews_SOURCES, "Sources"); // aA (aL, cr)
+expandTree(PAResourceEtoH.FileSetPanel_FILE_SET_PANEL_TREE, "[root, Simulation-Only Sources, sim_1]", 4); // B (F, cr)
+expandTree(PAResourceEtoH.FileSetPanel_FILE_SET_PANEL_TREE, "[root, Design Sources]", 0); // B (F, cr)
+expandTree(PAResourceEtoH.FileSetPanel_FILE_SET_PANEL_TREE, "[root, Design Sources, SystemVerilog, xil_defaultlib]", 2); // B (F, cr)
+selectTree(PAResourceEtoH.FileSetPanel_FILE_SET_PANEL_TREE, "[root, Design Sources, SystemVerilog, xil_defaultlib, scatter_threshold.sv]", 6, false, false, false, false, true, false); // B (F, cr) - Popup Trigger
+// Elapsed time: 46 seconds
+unMaximizeFrame(PAResourceOtoP.PAViews_SOURCES, "Sources"); // aA (aL, cr)
+// TclEventType: RUN_COMPLETED
+// TclEventType: RUN_STATUS_CHANGE
+// TclEventType: RUN_STEP_COMPLETED
+// aj (cr): Implementation Completed: addNotify
+// Elapsed time: 351 seconds
+selectButton(RDIResource.BaseDialog_OK, "OK"); // a (aj)
+// Run Command: PAResourceCommand.PACommandNames_GOTO_IMPLEMENTED_DESIGN
+// bB (cr):  Open Implemented Design : addNotify
+// Tcl Message: open_run impl_1 
+// TclEventType: SDC_CONSTRAINT_ADD
+// TclEventType: POWER_CNS_STALE
+// Elapsed time: 14 seconds
+selectButton(RDIResource.ProgressDialog_BACKGROUND, "Background"); // a (bB)
+// TclEventType: FLOORPLAN_MODIFY
+// TclEventType: DESIGN_NEW
+// HMemoryUtils.trashcanNow. Engine heap size: 7,411 MB. GUI used memory: 220 MB. Current time: 3/27/24, 12:38:32 PM GMT
+// 'dQ' command handler elapsed time: 15 seconds
+// Xgd.load filename: /mnt/applications/Xilinx/19.2/Vivado/2019.2/data/parts/xilinx/virtexuplusHBM/devint/virtexuplusHBM/xcu280/xcu280.xgd; ZipEntry: xcu280_detail.xgd elapsed time: 2.6s
+// TclEventType: DESIGN_NEW
+// TclEventType: HFED_INIT_ROUTE_STORAGE_COMPLETED
+// RouteApi::loadEngineXgd elapsed time: 4.6s
+// Device: addNotify
+// DeviceView Instantiated
+// WARNING: HEventQueue.dispatchEvent() is taking  2477 ms.
+// TclEventType: CURR_DESIGN_SET
+// Tcl Message: Netlist sorting complete. Time (s): cpu = 00:00:00.01 ; elapsed = 00:00:00.01 . Memory (MB): peak = 12681.840 ; gain = 0.000 ; free physical = 7686 ; free virtual = 15373 
+// Tcl Message: INFO: [Project 1-479] Netlist was created with Vivado 2019.2 INFO: [Project 1-570] Preparing netlist for logic optimization INFO: [Timing 38-478] Restoring timing data from binary archive. INFO: [Timing 38-479] Binary timing data restore complete. INFO: [Project 1-856] Restoring constraints from binary archive. INFO: [Project 1-853] Binary constraint restore complete. 
+// Tcl Message: Reading XDEF placement. Reading placer database... Reading XDEF routing. 
+// Tcl Message: Read XDEF File: Time (s): cpu = 00:00:00.05 ; elapsed = 00:00:00.12 . Memory (MB): peak = 12681.840 ; gain = 0.000 ; free physical = 7278 ; free virtual = 14966 
+// Tcl Message: Restored from archive | CPU: 0.060000 secs | Memory: -0.474838 MB | 
+// Tcl Message: Finished XDEF File Restore: Time (s): cpu = 00:00:00.05 ; elapsed = 00:00:00.12 . Memory (MB): peak = 12681.840 ; gain = 0.000 ; free physical = 7278 ; free virtual = 14966 Netlist sorting complete. Time (s): cpu = 00:00:00 ; elapsed = 00:00:00 . Memory (MB): peak = 12681.840 ; gain = 0.000 ; free physical = 7278 ; free virtual = 14966 
+// Tcl Message: INFO: [Project 1-111] Unisim Transformation Summary: No Unisim elements were transformed.  
+// Tcl Message: open_run: Time (s): cpu = 00:00:32 ; elapsed = 00:00:23 . Memory (MB): peak = 12681.840 ; gain = 0.000 ; free physical = 6928 ; free virtual = 14617 
+// Device view-level: 0.0
+// TclEventType: DRC_ADDED
+// TclEventType: METHODOLOGY_ADDED
+// TclEventType: POWER_UPDATED
+// TclEventType: TIMING_SUMMARY_UPDATED
+// Elapsed time: 11 seconds
+dismissDialog("Open Implemented Design"); // bB (cr)
+// RouteApi::initDelayMediator elapsed time: 5.2s
+// RouteApi: Init Delay Mediator Swing Worker Finished
+// Elapsed time: 110 seconds
+selectTree(PAResourceItoN.NavigableTimingReportTab_TIMING_REPORT_NAVIGATION_TREE, "[Root, Clock Summary]", 3, false); // a (O, cr)
+selectTree(PAResourceEtoH.FlowNavigatorTreePanel_FLOW_NAVIGATOR_TREE, "[, Implementation, Open Implemented Design, Report Power]", 41, false); // u (O, cr)
+// Run Command: PAResourceCommand.PACommandNames_POWER_ESTIMATION
+// a (cr): Report Power: addNotify
+selectTab(PAResourceTtoZ.XPowerSettingsDialog_TABBED_PANE, PAResourceTtoZ.XPowerSettingsDialog_POWER_SUPPLY, "Power Supply", 1); // i (a)
+selectTab(PAResourceTtoZ.XPowerSettingsDialog_TABBED_PANE, PAResourceTtoZ.XPowerSettingsDialog_ENVIRONMENT, "Environment", 0); // i (a)
+selectTab(PAResourceTtoZ.XPowerSettingsDialog_TABBED_PANE, PAResourceTtoZ.XPowerSettingsDialog_SWITCHING, "Switching", 2); // i (a)
+selectButton(PAResourceTtoZ.XPowerSettingsDialog_CHOOSE_INPUT_SIMULATION_ACTIVITY_FILE, (String) null); // t (an)
+// Elapsed time: 12 seconds
+setFileChooser("/home/aw1223/new/mase/machop/mase_components/scatter/test/build/scatter_threshold/test_0/dump.vcd");
+selectButton(PAResourceTtoZ.XPowerSettingsDialog_SAVE_THESE_SETTINGS_AND_RUN, "OK"); // a (a)
+// Run Command: PAResourceCommand.PACommandNames_RUN_POWER_ESTIMATION
+// 'dl' command handler elapsed time: 24 seconds
+dismissDialog("Report Power"); // a (cr)
+// Tcl Message: read_saif {/home/aw1223/new/mase/machop/mase_components/scatter/test/build/scatter_threshold/test_0/dump.vcd} 
+// Tcl Message: INFO: [Power 33-167] Parsing SAIF file /home/aw1223/new/mase/machop/mase_components/scatter/test/build/scatter_threshold/test_0/dump.vcd INFO: [Power 33-177] SAIF annotation done from file /home/aw1223/new/mase/machop/mase_components/scatter/test/build/scatter_threshold/test_0/dump.vcd INFO: [Power 33-26] Design nets matched = 0 of 768 
+// TclEventType: TIMING_RESULTS_STALE
+// bB (cr):  Power Analysis : addNotify
+// Tcl Message: report_power -name {power_1} 
+// Tcl Message: Command: report_power -name power_1 0% of nets annotated Doing probabilistic computation for the remaining nets  
+// TclEventType: POWER_UPDATED
+// Tcl Message: 0 Infos, 0 Warnings, 0 Critical Warnings and 0 Errors encountered. report_power completed successfully 
+dismissDialog("Power Analysis"); // bB (cr)
+// Device view-level: 0.1
+// Elapsed time: 48 seconds
+selectTab((HResource) null, (HResource) null, "Sources", 0); // aL (aI, cr)
+selectTree(PAResourceEtoH.FlowNavigatorTreePanel_FLOW_NAVIGATOR_TREE, "[, RTL Analysis]", 11, true); // u (O, cr) - Node
+selectTree(PAResourceEtoH.FlowNavigatorTreePanel_FLOW_NAVIGATOR_TREE, "[, RTL Analysis]", 11, true, false, false, false, false, true); // u (O, cr) - Double Click - Node
+selectTree(PAResourceEtoH.FlowNavigatorTreePanel_FLOW_NAVIGATOR_TREE, "[, RTL Analysis, Open Elaborated Design]", 12, true); // u (O, cr) - Node
+// Run Command: PAResourceCommand.PACommandNames_GOTO_RTL_DESIGN
+// g (cr): Close Design: addNotify
+selectButton(PAResourceAtoD.ClosePlanner_CANCEL, "Cancel"); // a (g)
+dismissDialog("Close Design"); // g (cr)
+selectButton(PAResourceTtoZ.TaskBanner_CLOSE, (String) null); // k (aA, cr)
+closeTask("Implementation", "Implemented Design", "DesignTask.RESULTS_ANALYSIS");
+// A (cr): Confirm Close: addNotify
+selectButton(RDIResource.BaseDialog_OK, "OK"); // a (A)
+// bB (cr):  Close : addNotify
+dismissDialog("Confirm Close"); // A (cr)
+// TclEventType: DESIGN_CLOSE
+// HMemoryUtils.trashcanNow. Engine heap size: 7,429 MB. GUI used memory: 337 MB. Current time: 3/27/24, 12:42:14 PM GMT
+// TclEventType: TIMING_RESULTS_UNLOAD
+// Engine heap size: 7,429 MB. GUI used memory: 338 MB. Current time: 3/27/24, 12:42:15 PM GMT
+// WARNING: HEventQueue.dispatchEvent() is taking  3957 ms.
+// TclEventType: CURR_DESIGN_SET
+// Tcl Message: close_design 
+// TclEventType: DESIGN_CLOSE
+// Tcl Message: close_design: Time (s): cpu = 00:00:08 ; elapsed = 00:00:05 . Memory (MB): peak = 12681.840 ; gain = 0.000 ; free physical = 5269 ; free virtual = 12980 
+dismissDialog("Close"); // bB (cr)
+// Elapsed time: 155 seconds
+selectTreeTable(PAResourceEtoH.ExpRunTreePanel_EXP_RUN_TREE_TABLE, "impl_1 ; constrs_1 ; route_design Complete! ; NA ; NA ; NA ; NA ; NA ; 3.1286160945892334 ; 0 ; 146 ; 0 ; 0.0 ; 0 ; 0 ; Wed Mar 27 12:20:34 GMT 2024 ; 00:17:27 ; Vivado Implementation Defaults (Vivado Implementation 2019) ; Vivado Implementation Default Reports (Vivado Implementation 2019) ; xcu280-fsvh2892-2L-e ; ee-beholder1 ; Default settings for Implementation.", 1, "route_design Complete!", 2, false); // az (O, cr)
+selectTree(PAResourceEtoH.FileSetPanel_FILE_SET_PANEL_TREE, "[root, Design Sources, SystemVerilog, xil_defaultlib, scatter_wrapper.sv]", 3, false); // B (F, cr)
+selectTree(PAResourceEtoH.FileSetPanel_FILE_SET_PANEL_TREE, "[root, Design Sources, SystemVerilog, xil_defaultlib, scatter_wrapper.sv]", 3, false, false, false, false, true, false); // B (F, cr) - Popup Trigger
+selectTree(PAResourceEtoH.FileSetPanel_FILE_SET_PANEL_TREE, "[root, Design Sources, SystemVerilog, xil_defaultlib, scatter_wrapper.sv]", 3, false, false, false, false, true, false); // B (F, cr) - Popup Trigger
+selectButton(PAResourceTtoZ.TaskBanner_CLOSE, (String) null); // k (aA, cr)
+closeTask("Project Manager", "Project Manager", "DesignTask.PROJECT_MANAGER");
+// Run Command: PAResourceCommand.PACommandNames_CLOSE_PROJECT
+// A (cr): Close Project: addNotify
+selectButton(RDIResource.BaseDialog_OK, "OK"); // a (A)
+// bB (cr):  Close : addNotify
+dismissDialog("Close Project"); // A (cr)
+// TclEventType: WAVEFORM_CLOSE_WCFG
+// TclEventType: SIMULATION_CLOSE_SIMULATION
+// Tcl Message: close_sim 
+// Tcl Message: INFO: [Simtcl 6-16] Simulation closed 
+// Tcl Message: close_sim: Time (s): cpu = 00:00:05 ; elapsed = 00:00:06 . Memory (MB): peak = 12681.840 ; gain = 0.000 ; free physical = 7783 ; free virtual = 15515 
+// bB (cr):  Close Project : addNotify
+dismissDialog("Close"); // bB (cr)
+// TclEventType: PROJECT_CLOSE
+// HMemoryUtils.trashcanNow. Engine heap size: 6,160 MB. GUI used memory: 213 MB. Current time: 3/27/24, 12:45:14 PM GMT
+// Tcl Message: close_project 
+// 'b' command handler elapsed time: 8 seconds
+dismissDialog("Close Project"); // bB (cr)
+selectList(PAResourceQtoS.SyntheticaGettingStartedView_RECENT_PROJECTS, "/home/aw1223/new/mase/machop/mase_components/scatter/scatter_vivado/scatter_vivado.xpr", 0); // r (O, cr)
+// bB (cr):  Open Project : addNotify
+// Opening Vivado Project: /home/aw1223/new/mase/machop/mase_components/scatter/scatter_vivado/scatter_vivado.xpr. Version: Vivado v2019.2 
+// TclEventType: MSGMGR_MOVEMSG
+// TclEventType: FILESET_TARGET_UCF_CHANGE
+// TclEventType: FILE_SET_NEW
+// TclEventType: RUN_COMPLETED
+// TclEventType: RUN_STATUS_CHANGE
+// TclEventType: FILESET_TARGET_UCF_CHANGE
+// TclEventType: RUN_COMPLETED
+// TclEventType: RUN_STATUS_CHANGE
+// TclEventType: FILESET_TARGET_UCF_CHANGE
+// TclEventType: RUN_CURRENT
+// TclEventType: PROJECT_DASHBOARD_NEW
+// TclEventType: PROJECT_DASHBOARD_GADGET_NEW
+// TclEventType: PROJECT_DASHBOARD_GADGET_CHANGE
+// TclEventType: PROJECT_DASHBOARD_GADGET_NEW
+// TclEventType: PROJECT_DASHBOARD_GADGET_CHANGE
+// TclEventType: PROJECT_DASHBOARD_GADGET_NEW
+// TclEventType: PROJECT_DASHBOARD_GADGET_CHANGE
+// TclEventType: PROJECT_DASHBOARD_GADGET_NEW
+// TclEventType: PROJECT_DASHBOARD_GADGET_CHANGE
+// TclEventType: PROJECT_DASHBOARD_GADGET_NEW
+// TclEventType: PROJECT_DASHBOARD_GADGET_CHANGE
+// TclEventType: PROJECT_DASHBOARD_GADGET_NEW
+// TclEventType: PROJECT_DASHBOARD_GADGET_CHANGE
+// TclEventType: PROJECT_NEW
+// Tcl Message: open_project /home/aw1223/new/mase/machop/mase_components/scatter/scatter_vivado/scatter_vivado.xpr 
+// Tcl Message: Scanning sources... Finished scanning sources 
+// Tcl Message: INFO: [IP_Flow 19-234] Refreshing IP repositories INFO: [IP_Flow 19-1704] No user IP repositories specified 
+// TclEventType: PROJECT_NEW
+// WARNING: HEventQueue.dispatchEvent() is taking  1847 ms.
+// Tcl Message: INFO: [IP_Flow 19-2313] Loaded Vivado IP repository '/mnt/applications/Xilinx/19.2/Vivado/2019.2/data/ip'. 
+// Project name: scatter_vivado; location: /home/aw1223/new/mase/machop/mase_components/scatter/scatter_vivado; part: xcu280-fsvh2892-2L-e
+dismissDialog("Open Project"); // bB (cr)
+expandTree(PAResourceEtoH.FileSetPanel_FILE_SET_PANEL_TREE, "[root, Utility Sources]", 1); // B (F, cr)
+collapseTree(PAResourceEtoH.FileSetPanel_FILE_SET_PANEL_TREE, "[root, Utility Sources]", 1); // B (F, cr)
+selectTree(PAResourceEtoH.FileSetPanel_FILE_SET_PANEL_TREE, "[root, Design Sources, top (scatter_wrapper.sv)]", 1, true); // B (F, cr) - Node
+expandTree(PAResourceEtoH.FileSetPanel_FILE_SET_PANEL_TREE, "[root, Design Sources, top (scatter_wrapper.sv)]", 1); // B (F, cr)
+selectTree(PAResourceEtoH.FileSetPanel_FILE_SET_PANEL_TREE, "[root, Design Sources, top (scatter_wrapper.sv), core_module : scatter_threshold (scatter_threshold.sv)]", 2, true); // B (F, cr) - Node
+expandTree(PAResourceEtoH.FileSetPanel_FILE_SET_PANEL_TREE, "[root, Design Sources, top (scatter_wrapper.sv), core_module : scatter_threshold (scatter_threshold.sv)]", 2); // B (F, cr)
+selectTree(PAResourceEtoH.FileSetPanel_FILE_SET_PANEL_TREE, "[root, Design Sources, top (scatter_wrapper.sv), core_module : scatter_threshold (scatter_threshold.sv)]", 2, true, false, false, false, true, false); // B (F, cr) - Popup Trigger - Node
+selectMenu(PAResourceCommand.PACommandNames_AUTO_UPDATE_HIER, "Hierarchy Update"); // af (ao, cr)
+selectMenu(PAResourceQtoS.SrcMenu_IP_HIERARCHY, "IP Hierarchy"); // af (ao, cr)
+selectMenuItem(PAResourceCommand.PACommandNames_CREATE_OUT_OF_CONTEXT_FILESET, "Set as Out-of-Context for Synthesis..."); // ai (ao, cr)
+// Run Command: PAResourceCommand.PACommandNames_CREATE_OUT_OF_CONTEXT_FILESET
+// t (cr): Set as Out-of-Context for Synthesis: addNotify
+selectButton(RDIResource.BaseDialog_OK, "OK"); // a (t)
+dismissDialog("Set as Out-of-Context for Synthesis"); // t (cr)
+// Tcl Message: create_fileset -blockset -define_from scatter_threshold scatter_threshold 
+// Tcl Message: ERROR: [Vivado 12-3491] One or more instances of the module 'scatter_threshold' are incompatible with out-of-context synthesis. See warnings for further details and possible resolution. 
+// CommandFailedException: ERROR: [Common 17-69] Command failed: ERROR: [Vivado 12-3491] One or more instances of the module 'scatter_threshold' are incompatible with out-of-context synthesis. See warnings for further details and possible resolution.  
+// bB (cr):  Set As Out-of-context Module : addNotify
+// HOptionPane Error: 'ERROR: [Vivado 12-3491] One or more instances of the module 'scatter_threshold' are incompatible with out-of-context synthesis. See warnings for further details and possible resolution.  (Set As Out-of-context Module)'
+selectButton("OptionPane.button", "OK"); // JButton (A, G)
+selectTree(PAResourceEtoH.FileSetPanel_FILE_SET_PANEL_TREE, "[root, Design Sources, top (scatter_wrapper.sv)]", 1, true); // B (F, cr) - Node
+selectTree(PAResourceEtoH.FileSetPanel_FILE_SET_PANEL_TREE, "[root, Design Sources, top (scatter_wrapper.sv)]", 1, true); // B (F, cr) - Node
+selectTree(PAResourceEtoH.FileSetPanel_FILE_SET_PANEL_TREE, "[root, Design Sources, top (scatter_wrapper.sv)]", 1, true, false, false, false, false, true); // B (F, cr) - Double Click - Node
+// TclEventType: DG_GRAPH_STALE
+// TclEventType: FILE_SET_CHANGE
+// TclEventType: DG_GRAPH_STALE
+// TclEventType: FILE_SET_CHANGE
+// TclEventType: DG_GRAPH_STALE
+// TclEventType: FILE_SET_CHANGE
+// TclEventType: DG_GRAPH_STALE
+// TclEventType: FILE_SET_CHANGE
+// TclEventType: DG_GRAPH_STALE
+// TclEventType: FILE_SET_CHANGE
+// TclEventType: DG_GRAPH_STALE
+// TclEventType: FILE_SET_CHANGE
+// TclEventType: DG_GRAPH_STALE
+// TclEventType: FILE_SET_CHANGE
+// TclEventType: DG_GRAPH_STALE
+// TclEventType: FILE_SET_CHANGE
+// TclEventType: DG_GRAPH_STALE
+// TclEventType: FILE_SET_CHANGE
+// TclEventType: DG_GRAPH_STALE
+// TclEventType: FILE_SET_CHANGE
+// Elapsed time: 96 seconds
+selectTab("PlanAheadTabBaseWorkspace_JideTabbedPane", (HResource) null, "Project Summary", 0); // i (h, cr)
+selectTab("PlanAheadTabBaseWorkspace_JideTabbedPane", (HResource) null, "scatter_wrapper.sv", 1); // i (h, cr)
+closeView(PAResourceOtoP.PAViews_CODE, "Code"); // B
+selectTree(PAResourceEtoH.FileSetPanel_FILE_SET_PANEL_TREE, "[root, Design Sources, top (scatter_wrapper.sv)]", 1, true); // B (F, cr) - Node
+selectTree(PAResourceEtoH.FileSetPanel_FILE_SET_PANEL_TREE, "[root, Design Sources, top (scatter_wrapper.sv)]", 1, true, false, false, false, false, true); // B (F, cr) - Double Click - Node
+selectTree(PAResourceEtoH.FileSetPanel_FILE_SET_PANEL_TREE, "[root, Design Sources, top (scatter_wrapper.sv)]", 1, true, false, false, false, true, false); // B (F, cr) - Popup Trigger - Node
+selectCodeEditor("scatter_wrapper.sv", 62, 3); // ch (w, cr)
+selectCodeEditor("scatter_wrapper.sv", 97, 201); // ch (w, cr)
+selectCodeEditor("scatter_wrapper.sv", 192, 26); // ch (w, cr)
+selectCodeEditor("scatter_wrapper.sv", 27, 26); // ch (w, cr)
+selectCodeEditor("scatter_wrapper.sv", 7, 34); // ch (w, cr)
+selectCodeEditor("scatter_wrapper.sv", 151, 191); // ch (w, cr)
+selectCodeEditor("scatter_wrapper.sv", 151, 191, false, false, false, false, true); // ch (w, cr) - Double Click
+selectCodeEditor("scatter_wrapper.sv", 179, 206); // ch (w, cr)
+selectCodeEditor("scatter_wrapper.sv", 179, 206, false, false, false, false, true); // ch (w, cr) - Double Click
+selectCodeEditor("scatter_wrapper.sv", 183, 216); // ch (w, cr)
+selectCodeEditor("scatter_wrapper.sv", 182, 216, false, false, false, false, true); // ch (w, cr) - Double Click
+selectCodeEditor("scatter_wrapper.sv", 168, 226); // ch (w, cr)
+selectCodeEditor("scatter_wrapper.sv", 168, 226, false, false, false, false, true); // ch (w, cr) - Double Click
+selectCodeEditor("scatter_wrapper.sv", 138, 248); // ch (w, cr)
+selectCodeEditor("scatter_wrapper.sv", 138, 248, false, false, false, false, true); // ch (w, cr) - Double Click
+selectCodeEditor("scatter_wrapper.sv", 233, 274); // ch (w, cr)
+selectCodeEditor("scatter_wrapper.sv", 192, 191); // ch (w, cr)
+selectCodeEditor("scatter_wrapper.sv", 141, 109); // ch (w, cr)
+// TclEventType: DG_GRAPH_STALE
+// TclEventType: FILE_SET_CHANGE
+selectTree(PAResourceEtoH.FileSetPanel_FILE_SET_PANEL_TREE, "[root, Design Sources, top (scatter_wrapper.sv)]", 1, true, false, false, false, true, false); // B (F, cr) - Popup Trigger - Node
+selectMenu(PAResourceCommand.PACommandNames_AUTO_UPDATE_HIER, "Hierarchy Update"); // af (ao, cr)
+selectMenu(PAResourceQtoS.SrcMenu_IP_HIERARCHY, "IP Hierarchy"); // af (ao, cr)
+selectMenu(PAResourceCommand.PACommandNames_AUTO_UPDATE_HIER, "Hierarchy Update"); // af (ao, cr)
+selectMenu(PAResourceQtoS.SrcMenu_IP_HIERARCHY, "IP Hierarchy"); // af (ao, cr)
+selectMenuItem(PAResourceCommand.PACommandNames_SET_GLOBAL_INCLUDE, "Set Global Include"); // ai (ao, cr)
+selectMenu(PAResourceQtoS.SrcMenu_IP_HIERARCHY, "IP Hierarchy"); // af (ao, cr)
+selectMenu(PAResourceQtoS.SrcMenu_IP_HIERARCHY, "IP Hierarchy"); // af (ao, cr)
+selectMenu(PAResourceQtoS.SrcMenu_IP_HIERARCHY, "IP Hierarchy"); // af (ao, cr)
+selectMenuItem(PAResourceCommand.PACommandNames_CREATE_OUT_OF_CONTEXT_FILESET, "Set as Out-of-Context for Synthesis..."); // ai (ao, cr)
+selectTree(PAResourceEtoH.FileSetPanel_FILE_SET_PANEL_TREE, "[root, Design Sources, top (scatter_wrapper.sv), core_module : scatter_threshold (scatter_threshold.sv)]", 2, true); // B (F, cr) - Node
+selectTree(PAResourceEtoH.FileSetPanel_FILE_SET_PANEL_TREE, "[root, Design Sources, top (scatter_wrapper.sv)]", 1, true); // B (F, cr) - Node
+selectTree(PAResourceEtoH.FileSetPanel_FILE_SET_PANEL_TREE, "[root, Design Sources, top (scatter_wrapper.sv)]", 1, true, false, false, false, true, false); // B (F, cr) - Popup Trigger - Node
+selectMenu(PAResourceCommand.PACommandNames_AUTO_UPDATE_HIER, "Hierarchy Update"); // af (ao, cr)
+selectMenu(PAResourceQtoS.SrcMenu_IP_HIERARCHY, "IP Hierarchy"); // af (ao, cr)
+selectMenu(PAResourceCommand.PACommandNames_AUTO_UPDATE_HIER, "Hierarchy Update"); // af (ao, cr)
+selectTree(PAResourceEtoH.FileSetPanel_FILE_SET_PANEL_TREE, "[root, Design Sources, top (scatter_wrapper.sv)]", 1, true); // B (F, cr) - Node
+selectCodeEditor("scatter_wrapper.sv", 239, 138); // ch (w, cr)
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+selectCodeEditor("scatter_wrapper.sv", 67, 12); // ch (w, cr)
+selectCodeEditor("scatter_wrapper.sv", 67, 12, false, false, false, false, true); // ch (w, cr) - Double Click
+selectCodeEditor("scatter_wrapper.sv", 298, 136); // ch (w, cr)
+selectCodeEditor("scatter_wrapper.sv", 103, 103); // ch (w, cr)
+typeControlKey((HResource) null, "scatter_wrapper.sv", 'c'); // ch (w, cr)
+selectTree(PAResourceEtoH.FileSetPanel_FILE_SET_PANEL_TREE, "[root, Design Sources, top (scatter_wrapper.sv)]", 1, true); // B (F, cr) - Node
+selectTree(PAResourceEtoH.FileSetPanel_FILE_SET_PANEL_TREE, "[root, Design Sources, top (scatter_wrapper.sv)]", 1, true, false, false, false, true, false); // B (F, cr) - Popup Trigger - Node
+selectTree(PAResourceEtoH.FileSetPanel_FILE_SET_PANEL_TREE, "[root, Design Sources, top (scatter_wrapper.sv)]", 1, true); // B (F, cr) - Node
+// Elapsed time: 99 seconds
+selectTree(PAResourceEtoH.FileSetPanel_FILE_SET_PANEL_TREE, "[root, Design Sources, top (scatter_wrapper.sv)]", 1, true, false, false, false, true, false); // B (F, cr) - Popup Trigger - Node
+selectMenu(PAResourceCommand.PACommandNames_AUTO_UPDATE_HIER, "Hierarchy Update"); // af (ao, cr)
+selectMenu(PAResourceQtoS.SrcMenu_IP_HIERARCHY, "IP Hierarchy"); // af (ao, cr)
+selectMenu(PAResourceQtoS.SrcMenu_IP_HIERARCHY, "IP Hierarchy"); // af (ao, cr)
+selectMenu(PAResourceCommand.PACommandNames_AUTO_UPDATE_HIER, "Hierarchy Update"); // af (ao, cr)
+selectButton(PAResourceCommand.PACommandNames_ADD_SOURCES, "Sources_add_sources"); // E (f, cr)
+// Run Command: PAResourceCommand.PACommandNames_ADD_SOURCES
+// c (cr): Add Sources: addNotify
+selectButton("NEXT", "Next >"); // JButton (j, c)
+selectButton(PAResourceQtoS.SrcChooserPanel_ADD_OR_CREATE_SOURCE_FILE, "Add"); // E (f, c)
+selectMenuItem(PAResourceQtoS.SrcChooserPanel_ADD_HDL_AND_NETLIST_FILES_TO_YOUR_PROJECT, "Add Files..."); // ai (ao, c)
+// Elapsed time: 11 seconds
+setFileChooser("/home/aw1223/new/mase/machop/mase_components/scatter/rtl/top.sv");
+selectButton("FINISH", "Finish"); // JButton (j, c)
+// 'h' command handler elapsed time: 19 seconds
+dismissDialog("Add Sources"); // c (cr)
+// TclEventType: DG_GRAPH_STALE
+// TclEventType: FILE_SET_CHANGE
+// Tcl Message: add_files -norecurse /home/aw1223/new/mase/machop/mase_components/scatter/rtl/top.sv 
+selectTree(PAResourceEtoH.FileSetPanel_FILE_SET_PANEL_TREE, "[root, Design Sources, top (scatter_wrapper.sv)]", 1, true); // B (F, cr) - Node
+selectTree(PAResourceEtoH.FileSetPanel_FILE_SET_PANEL_TREE, "[root, Design Sources, top (scatter_wrapper.sv)]", 2, false); // B (F, cr)
+selectTree(PAResourceEtoH.FileSetPanel_FILE_SET_PANEL_TREE, "[root, Design Sources, top (scatter_wrapper.sv)]", 2, false, false, false, false, true, false); // B (F, cr) - Popup Trigger
+selectMenu(PAResourceCommand.PACommandNames_AUTO_UPDATE_HIER, "Hierarchy Update"); // af (ao, cr)
+selectMenu(PAResourceQtoS.SrcMenu_IP_HIERARCHY, "IP Hierarchy"); // af (ao, cr)
+selectMenu(PAResourceQtoS.SrcMenu_IP_HIERARCHY, "IP Hierarchy"); // af (ao, cr)
+selectMenu(PAResourceQtoS.SrcMenu_IP_HIERARCHY, "IP Hierarchy"); // af (ao, cr)
+selectMenuItem(PAResourceCommand.PACommandNames_SET_AS_TOP, "Set as Top"); // ai (ao, cr)
+// Run Command: PAResourceCommand.PACommandNames_SET_AS_TOP
+selectTree(PAResourceEtoH.FileSetPanel_FILE_SET_PANEL_TREE, "[root, Design Sources, top (scatter_wrapper.sv)]", 2, false, false, false, false, true, false); // B (F, cr) - Popup Trigger
+selectMenu(PAResourceCommand.PACommandNames_AUTO_UPDATE_HIER, "Hierarchy Update"); // af (ao, cr)
+selectMenu(PAResourceCommand.PACommandNames_AUTO_UPDATE_HIER, "Hierarchy Update"); // af (ao, cr)
+selectTree(PAResourceEtoH.FileSetPanel_FILE_SET_PANEL_TREE, "[root, Design Sources, top (scatter_wrapper.sv)]", 2, false); // B (F, cr)
+selectTree(PAResourceEtoH.FileSetPanel_FILE_SET_PANEL_TREE, "[root, Design Sources, top (scatter_wrapper.sv)]", 2, false); // B (F, cr)
+expandTree(PAResourceEtoH.FileSetPanel_FILE_SET_PANEL_TREE, "[root, Design Sources, top (top.sv)]", 1); // B (F, cr)
+expandTree(PAResourceEtoH.FileSetPanel_FILE_SET_PANEL_TREE, "[root, Design Sources, top (top.sv), scatter_threshold (scatter_threshold.sv)]", 3); // B (F, cr)
+selectTree(PAResourceEtoH.FileSetPanel_FILE_SET_PANEL_TREE, "[root, Design Sources, top (scatter_wrapper.sv)]", 6, false); // B (F, cr)
+selectTree(PAResourceEtoH.FileSetPanel_FILE_SET_PANEL_TREE, "[root, Design Sources, top (scatter_wrapper.sv)]", 6, false); // B (F, cr)
+selectCodeEditor("scatter_wrapper.sv", 69, 163); // ch (w, cr)
+selectTree(PAResourceEtoH.FileSetPanel_FILE_SET_PANEL_TREE, "[root, Design Sources, top (top.sv)]", 1, true, false, false, false, true, false); // B (F, cr) - Popup Trigger - Node
+selectMenu(PAResourceCommand.PACommandNames_AUTO_UPDATE_HIER, "Hierarchy Update"); // af (ao, cr)
+selectMenuItem(PAResourceQtoS.SrcMenu_REFRESH_HIERARCHY, "Refresh Hierarchy"); // ai (ao, cr)
+selectCodeEditor("scatter_wrapper.sv", 221, 77); // ch (w, cr)
+// k (cr): Text Changed: addNotify
+closeView(PAResourceOtoP.PAViews_CODE, "Code"); // B (i, cr)
+selectButton(RDIResource.ConfirmSaveTextEditsDialog_NO, "No"); // a (k)
+dismissDialog("Text Changed"); // k (cr)
+selectTree(PAResourceEtoH.FileSetPanel_FILE_SET_PANEL_TREE, "[root, Design Sources, top (top.sv)]", 1, true); // B (F, cr) - Node
+selectTree(PAResourceEtoH.FileSetPanel_FILE_SET_PANEL_TREE, "[root, Design Sources, top (top.sv), scatter_threshold (scatter_threshold.sv)]", 3, true); // B (F, cr) - Node
+selectTree(PAResourceEtoH.FileSetPanel_FILE_SET_PANEL_TREE, "[root, Design Sources, top (top.sv), scatter_threshold (scatter_threshold.sv)]", 3, true, false, false, false, false, true); // B (F, cr) - Double Click - Node
+selectTree(PAResourceEtoH.FileSetPanel_FILE_SET_PANEL_TREE, "[root, Design Sources, top (scatter_wrapper.sv)]", 4, false); // B (F, cr)
+selectTree(PAResourceEtoH.FileSetPanel_FILE_SET_PANEL_TREE, "[root, Design Sources, top (scatter_wrapper.sv)]", 4, false, false, false, false, false, true); // B (F, cr) - Double Click
+selectCodeEditor("scatter_wrapper.sv", 53, 9); // ch (w, cr)
+selectCodeEditor("scatter_wrapper.sv", 53, 9, false, false, false, false, true); // ch (w, cr) - Double Click
+selectCodeEditor("scatter_wrapper.sv", 269, 110); // ch (w, cr)
+// TclEventType: DG_GRAPH_STALE
+// TclEventType: FILE_SET_CHANGE
+selectTree(PAResourceEtoH.FileSetPanel_FILE_SET_PANEL_TREE, "[root, Design Sources, top (top.sv)]", 1, true); // B (F, cr) - Node
+selectTree(PAResourceEtoH.FileSetPanel_FILE_SET_PANEL_TREE, "[root, Design Sources, top (top.sv)]", 1, true, false, false, false, true, false); // B (F, cr) - Popup Trigger - Node
+selectMenu(PAResourceCommand.PACommandNames_AUTO_UPDATE_HIER, "Hierarchy Update"); // af (ao, cr)
+selectMenu(PAResourceQtoS.SrcMenu_IP_HIERARCHY, "IP Hierarchy"); // af (ao, cr)
+selectMenu(PAResourceQtoS.SrcMenu_IP_HIERARCHY, "IP Hierarchy"); // af (ao, cr)
+selectMenuItem(PAResourceQtoS.SrcMenu_REFRESH_HIERARCHY, "Refresh Hierarchy"); // ai (ao, cr)
+expandTree(PAResourceEtoH.FileSetPanel_FILE_SET_PANEL_TREE, "[root, Design Sources, top (top.sv), core_module : wrapper (scatter_wrapper.sv)]", 2); // B (F, cr)
+selectTree(PAResourceEtoH.FileSetPanel_FILE_SET_PANEL_TREE, "[root, Design Sources, top (top.sv), core_module : wrapper (scatter_wrapper.sv)]", 2, true); // B (F, cr) - Node
+selectTree(PAResourceEtoH.FileSetPanel_FILE_SET_PANEL_TREE, "[root, Design Sources, top (top.sv), core_module : wrapper (scatter_wrapper.sv)]", 2, true, false, false, false, true, false); // B (F, cr) - Popup Trigger - Node
+selectMenu(PAResourceCommand.PACommandNames_AUTO_UPDATE_HIER, "Hierarchy Update"); // af (ao, cr)
+selectMenu(PAResourceQtoS.SrcMenu_IP_HIERARCHY, "IP Hierarchy"); // af (ao, cr)
+selectMenuItem(PAResourceCommand.PACommandNames_CREATE_OUT_OF_CONTEXT_FILESET, "Set as Out-of-Context for Synthesis..."); // ai (ao, cr)
+// Run Command: PAResourceCommand.PACommandNames_CREATE_OUT_OF_CONTEXT_FILESET
+// t (cr): Set as Out-of-Context for Synthesis: addNotify

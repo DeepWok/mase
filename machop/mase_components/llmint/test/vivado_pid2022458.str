@@ -1,0 +1,258 @@
+/*
+
+Xilinx Vivado v2019.2 (64-bit) [Major: 2019, Minor: 2]
+SW Build: 2708876 on Wed Nov  6 21:39:14 MST 2019
+IP Build: 2700528 on Thu Nov  7 00:09:20 MST 2019
+
+Process ID (PID): 2022458
+License: Customer
+
+Current time: 	Wed Mar 27 13:22:30 GMT 2024
+Time zone: 	Greenwich Mean Time (Europe/London)
+
+OS: Red Hat Enterprise Linux release 9.3 (Plow)
+OS Version: 5.14.0-362.18.1.el9_3.x86_64
+OS Architecture: amd64
+Available processors (cores): 40
+
+Display: :2
+Screen size: 1440x779
+Screen resolution (DPI): 100
+Available screens: 1
+Available disk space: 39 GB
+Default font: family=Dialog,name=Dialog,style=plain,size=12
+
+Java version: 	9.0.4 64-bit
+Java home: 	/mnt/applications/Xilinx/19.2/Vivado/2019.2/tps/lnx64/jre9.0.4
+Java executable location: 	/mnt/applications/Xilinx/19.2/Vivado/2019.2/tps/lnx64/jre9.0.4/bin/java
+Java initial memory (-Xms): 	128 MB
+Java maximum memory (-Xmx):	 3 GB
+
+
+User name: 	aw1223
+User home directory: /home/aw1223
+User working directory: /home/aw1223/new/mase/machop/mase_components/llmint/test
+User country: 	GB
+User language: 	en
+User locale: 	en_GB
+
+RDI_BASEROOT: /mnt/applications/Xilinx/19.2/Vivado
+HDI_APPROOT: /mnt/applications/Xilinx/19.2/Vivado/2019.2
+RDI_DATADIR: /mnt/applications/Xilinx/19.2/Vivado/2019.2/data
+RDI_BINDIR: /mnt/applications/Xilinx/19.2/Vivado/2019.2/bin
+
+Vivado preferences file location: /home/aw1223/.Xilinx/Vivado/2019.2/vivado.xml
+Vivado preferences directory: /home/aw1223/.Xilinx/Vivado/2019.2/
+Vivado layouts directory: /home/aw1223/.Xilinx/Vivado/2019.2/layouts
+PlanAhead jar file location: 	/mnt/applications/Xilinx/19.2/Vivado/2019.2/lib/classes/planAhead.jar
+Vivado log file location: 	/home/aw1223/new/mase/machop/mase_components/llmint/test/vivado.log
+Vivado journal file location: 	/home/aw1223/new/mase/machop/mase_components/llmint/test/vivado.jou
+Engine tmp dir: 	./.Xil/Vivado-2022458-ee-beholder1
+
+Xilinx Environment Variables
+----------------------------
+ALTERAOCLSDKROOT: /mnt/applications/altera/18.1//hld
+AMDAPPSDKROOT: /mnt/applications/AMD/APP/3.0
+XILINX: /mnt/applications/Xilinx/19.2/Vivado/2019.2/ids_lite/ISE
+XILINXD_LICENSE_FILE: 2100@ee-llic01.ee.ic.ac.uk
+XILINX_DSP: /mnt/applications/Xilinx/19.2/Vivado/2019.2/ids_lite/ISE
+XILINX_HLS: /mnt/applications/Xilinx/23.1/Vitis_HLS/2023.1
+XILINX_PLANAHEAD: /mnt/applications/Xilinx/19.2/Vivado/2019.2
+XILINX_SDK: /mnt/applications/Xilinx/19.2/Vitis/2019.2
+XILINX_VITIS: /mnt/applications/Xilinx/19.2/Vitis/2019.2
+XILINX_VIVADO: /mnt/applications/Xilinx/19.2/Vivado/2019.2
+XILINX_VIVADO_HLS: /mnt/applications/Xilinx/19.2/Vivado/2019.2
+
+
+GUI allocated memory:	185 MB
+GUI max memory:		3,072 MB
+Engine allocated memory: 1,062 MB
+
+Copyright 1986-2019 Xilinx, Inc. All Rights Reserved.
+
+*/
+
+// TclEventType: START_GUI
+// Tcl Message: start_gui 
+// Tcl Message: xterm: /mnt/applications/Xilinx/19.2/Vitis/2019.2/lib/lnx64.o/libxml2.so.2: no version information available (required by /lib64/libfontconfig.so.1) xterm: /mnt/applications/Xilinx/19.2/Vitis/2019.2/lib/lnx64.o/libxml2.so.2: no version information available (required by /lib64/libfontconfig.so.1) 
+selectList(PAResourceQtoS.SyntheticaGettingStartedView_RECENT_PROJECTS, "/home/aw1223/new/mase/machop/mase_components/scatter/scatter_vivado/scatter_vivado.xpr", 0); // r (O, cr)
+// [GUI Memory]: 67 MB (+68134kb) [00:00:08]
+// [Engine Memory]: 1,054 MB (+954104kb) [00:00:08]
+// bB (cr):  Open Project : addNotify
+// Opening Vivado Project: /home/aw1223/new/mase/machop/mase_components/scatter/scatter_vivado/scatter_vivado.xpr. Version: Vivado v2019.2 
+// TclEventType: DEBUG_PROBE_SET_CHANGE
+// Tcl Message: open_project /home/aw1223/new/mase/machop/mase_components/scatter/scatter_vivado/scatter_vivado.xpr 
+// HMemoryUtils.trashcanNow. Engine heap size: 1,040 MB. GUI used memory: 46 MB. Current time: 3/27/24, 1:22:32 PM GMT
+// TclEventType: MSGMGR_MOVEMSG
+// TclEventType: FILESET_TARGET_UCF_CHANGE
+// TclEventType: FILE_SET_NEW
+// TclEventType: RUN_COMPLETED
+// TclEventType: RUN_STATUS_CHANGE
+// TclEventType: FILESET_TARGET_UCF_CHANGE
+// TclEventType: RUN_COMPLETED
+// TclEventType: RUN_STATUS_CHANGE
+// TclEventType: RUN_FAILED
+// TclEventType: RUN_STATUS_CHANGE
+// TclEventType: FILESET_TARGET_UCF_CHANGE
+// TclEventType: RUN_CURRENT
+// TclEventType: PROJECT_DASHBOARD_NEW
+// TclEventType: PROJECT_DASHBOARD_GADGET_NEW
+// TclEventType: PROJECT_DASHBOARD_GADGET_CHANGE
+// TclEventType: PROJECT_DASHBOARD_GADGET_NEW
+// TclEventType: PROJECT_DASHBOARD_GADGET_CHANGE
+// TclEventType: PROJECT_DASHBOARD_GADGET_NEW
+// TclEventType: PROJECT_DASHBOARD_GADGET_CHANGE
+// TclEventType: PROJECT_DASHBOARD_GADGET_NEW
+// TclEventType: PROJECT_DASHBOARD_GADGET_CHANGE
+// TclEventType: PROJECT_DASHBOARD_GADGET_NEW
+// TclEventType: PROJECT_DASHBOARD_GADGET_CHANGE
+// TclEventType: PROJECT_DASHBOARD_GADGET_NEW
+// TclEventType: PROJECT_DASHBOARD_GADGET_CHANGE
+// TclEventType: PROJECT_NEW
+// Tcl Message: open_project /home/aw1223/new/mase/machop/mase_components/scatter/scatter_vivado/scatter_vivado.xpr 
+// Tcl Message: Scanning sources... Finished scanning sources 
+// TclEventType: PROJECT_NEW
+// [GUI Memory]: 171 MB (+104945kb) [00:00:20]
+// [Engine Memory]: 1,204 MB (+101428kb) [00:00:20]
+// WARNING: HEventQueue.dispatchEvent() is taking  5113 ms.
+// Tcl Message: INFO: [IP_Flow 19-234] Refreshing IP repositories INFO: [IP_Flow 19-1704] No user IP repositories specified INFO: [IP_Flow 19-2313] Loaded Vivado IP repository '/mnt/applications/Xilinx/19.2/Vivado/2019.2/data/ip'. 
+// Tcl Message: open_project: Time (s): cpu = 00:00:27 ; elapsed = 00:00:15 . Memory (MB): peak = 6966.922 ; gain = 172.078 ; free physical = 29639 ; free virtual = 37375 
+// Project name: scatter_vivado; location: /home/aw1223/new/mase/machop/mase_components/scatter/scatter_vivado; part: xcu280-fsvh2892-2L-e
+// [Engine Memory]: 1,330 MB (+69457kb) [00:00:25]
+// Elapsed time: 17 seconds
+dismissDialog("Open Project"); // bB (cr)
+// HMemoryUtils.trashcanNow. Engine heap size: 1,331 MB. GUI used memory: 125 MB. Current time: 3/27/24, 1:22:47 PM GMT
+// [GUI Memory]: 184 MB (+4782kb) [00:00:27]
+// Elapsed time: 26 seconds
+selectTreeTable(PAResourceEtoH.ExpRunTreePanel_EXP_RUN_TREE_TABLE, "scatter_threshold_synthesis_synth_1 ; scatter_threshold_synthesis ; synth_design Complete! ;  ;  ;  ;  ;  ;  ;  ; 804 ; 0 ; 0.0 ; 0 ; 0 ; Wed Mar 27 13:00:03 GMT 2024 ; 00:03:28 ; Vivado Synthesis Defaults (Vivado Synthesis 2019) ; Vivado Synthesis Default Reports (Vivado Synthesis 2019) ; xcu280-fsvh2892-2L-e ; ee-beholder1 ; Vivado Synthesis Defaults", 3, "scatter_threshold_synthesis_synth_1", 0, false); // az (O, cr)
+// PAPropertyPanels.initPanels (scatter_threshold_synthesis_synth_1) elapsed time: 0.5s
+selectTreeTable(PAResourceEtoH.ExpRunTreePanel_EXP_RUN_TREE_TABLE, "scatter_threshold_synthesis_synth_1 ; scatter_threshold_synthesis ; synth_design Complete! ;  ;  ;  ;  ;  ;  ;  ; 804 ; 0 ; 0.0 ; 0 ; 0 ; Wed Mar 27 13:00:03 GMT 2024 ; 00:03:28 ; Vivado Synthesis Defaults (Vivado Synthesis 2019) ; Vivado Synthesis Default Reports (Vivado Synthesis 2019) ; xcu280-fsvh2892-2L-e ; ee-beholder1 ; Vivado Synthesis Defaults", 3, "scatter_threshold_synthesis_synth_1", 0, false, false, false, false, false, true); // az (O, cr) - Double Click
+selectTreeTable(PAResourceEtoH.ExpRunTreePanel_EXP_RUN_TREE_TABLE, "scatter_threshold_synthesis_synth_1 ; scatter_threshold_synthesis ; synth_design Complete! ;  ;  ;  ;  ;  ;  ;  ; 804 ; 0 ; 0.0 ; 0 ; 0 ; Wed Mar 27 13:00:03 GMT 2024 ; 00:03:28 ; Vivado Synthesis Defaults (Vivado Synthesis 2019) ; Vivado Synthesis Default Reports (Vivado Synthesis 2019) ; xcu280-fsvh2892-2L-e ; ee-beholder1 ; Vivado Synthesis Defaults", 3, "scatter_threshold_synthesis_synth_1", 0, false); // az (O, cr)
+selectTreeTable(PAResourceEtoH.ExpRunTreePanel_EXP_RUN_TREE_TABLE, "scatter_threshold_synthesis_synth_1 ; scatter_threshold_synthesis ; synth_design Complete! ;  ;  ;  ;  ;  ;  ;  ; 804 ; 0 ; 0.0 ; 0 ; 0 ; Wed Mar 27 13:00:03 GMT 2024 ; 00:03:28 ; Vivado Synthesis Defaults (Vivado Synthesis 2019) ; Vivado Synthesis Default Reports (Vivado Synthesis 2019) ; xcu280-fsvh2892-2L-e ; ee-beholder1 ; Vivado Synthesis Defaults", 3, "scatter_threshold_synthesis_synth_1", 0, false, false, false, false, false, true); // az (O, cr) - Double Click
+selectTreeTable(PAResourceEtoH.ExpRunTreePanel_EXP_RUN_TREE_TABLE, "scatter_threshold_synthesis_synth_1 ; scatter_threshold_synthesis ; synth_design Complete! ;  ;  ;  ;  ;  ;  ;  ; 804 ; 0 ; 0.0 ; 0 ; 0 ; Wed Mar 27 13:00:03 GMT 2024 ; 00:03:28 ; Vivado Synthesis Defaults (Vivado Synthesis 2019) ; Vivado Synthesis Default Reports (Vivado Synthesis 2019) ; xcu280-fsvh2892-2L-e ; ee-beholder1 ; Vivado Synthesis Defaults", 3, "scatter_threshold_synthesis_synth_1", 0, false); // az (O, cr)
+selectTreeTable(PAResourceEtoH.ExpRunTreePanel_EXP_RUN_TREE_TABLE, "scatter_threshold_synthesis_synth_1 ; scatter_threshold_synthesis ; synth_design Complete! ;  ;  ;  ;  ;  ;  ;  ; 804 ; 0 ; 0.0 ; 0 ; 0 ; Wed Mar 27 13:00:03 GMT 2024 ; 00:03:28 ; Vivado Synthesis Defaults (Vivado Synthesis 2019) ; Vivado Synthesis Default Reports (Vivado Synthesis 2019) ; xcu280-fsvh2892-2L-e ; ee-beholder1 ; Vivado Synthesis Defaults", 3, "scatter_threshold_synthesis_synth_1", 0, false, false, false, false, true, false); // az (O, cr) - Popup Trigger
+selectMenuItem(PAResourceCommand.PACommandNames_OPEN_RTL_DESIGN, "Open Elaborated Design"); // ai (ao, cr)
+// bB (cr):  Open Elaborated Design : addNotify
+// Tcl Message: synth_design -rtl -srcset scatter_threshold_synthesis -name rtl_1 
+// Tcl Message: Command: synth_design -rtl -srcset scatter_threshold_synthesis -name rtl_1 Starting synth_design Using part: xcu280-fsvh2892-2L-e Top: scatter_threshold_synthesis 
+// HMemoryUtils.trashcanNow. Engine heap size: 1,396 MB. GUI used memory: 128 MB. Current time: 3/27/24, 1:23:27 PM GMT
+// HMemoryUtils.trashcanNow. Engine heap size: 2,474 MB. GUI used memory: 128 MB. Current time: 3/27/24, 1:23:47 PM GMT
+// [Engine Memory]: 2,475 MB (+1130175kb) [00:01:49]
+// TclEventType: ELABORATE_START
+// HMemoryUtils.trashcanNow. Engine heap size: 2,601 MB. GUI used memory: 128 MB. Current time: 3/27/24, 1:24:32 PM GMT
+// TclEventType: ELABORATE_FINISH
+// TclEventType: FLOORPLAN_MODIFY
+// TclEventType: DESIGN_NEW
+// HMemoryUtils.trashcanNow. Engine heap size: 2,794 MB. GUI used memory: 128 MB. Current time: 3/27/24, 1:24:42 PM GMT
+// [Engine Memory]: 2,796 MB (+206942kb) [00:02:22]
+// Xgd.load filename: /mnt/applications/Xilinx/19.2/Vivado/2019.2/data/parts/xilinx/virtexuplusHBM/devint/virtexuplusHBM/xcu280/xcu280.xgd; ZipEntry: xcu280_floorplan.xgd elapsed time: 0.6s
+// [GUI Memory]: 198 MB (+5286kb) [00:02:22]
+// TclEventType: DESIGN_NEW
+// [GUI Memory]: 241 MB (+34936kb) [00:02:24]
+// [Engine Memory]: 3,227 MB (+305556kb) [00:02:24]
+// [GUI Memory]: 278 MB (+25137kb) [00:02:24]
+// [Engine Memory]: 3,392 MB (+4252kb) [00:02:24]
+// [GUI Memory]: 295 MB (+3525kb) [00:02:25]
+// Xgd.load filename: /mnt/applications/Xilinx/19.2/Vivado/2019.2/data/parts/xilinx/virtexuplusHBM/devint/virtexuplusHBM/xcu280/xcu280.xgd; ZipEntry: xcu280_detail.xgd elapsed time: 2.6s
+// Schematic: addNotify
+// PAPropertyPanels.initPanels (scatter_threshold_synthesis_synth_1) elapsed time: 0.3s
+// WARNING: HEventQueue.dispatchEvent() is taking  3667 ms.
+// TclEventType: CURR_DESIGN_SET
+// Tcl Message: INFO: [Device 21-403] Loading part xcu280-fsvh2892-2L-e 
+// Tcl Message: --------------------------------------------------------------------------------- 
+// Tcl Message: Starting RTL Elaboration : Time (s): cpu = 00:00:05 ; elapsed = 00:00:06 . Memory (MB): peak = 8233.086 ; gain = 125.660 ; free physical = 27453 ; free virtual = 35143 
+// Tcl Message: --------------------------------------------------------------------------------- 
+// Tcl Message: INFO: [Synth 8-6157] synthesizing module 'scatter_threshold_synthesis' [/home/aw1223/new/mase/machop/mase_components/scatter/rtl/scatter_threshold_synthesis.sv:4] INFO: [Synth 8-6157] synthesizing module 'priority_encoder' [/home/aw1223/new/mase/machop/mase_components/priority_encoder/rtl/priority_encoder.sv:2] 
+// Tcl Message: 	Parameter NUM_INPUT_CHANNELS bound to: 16 - type: integer  	Parameter NUM_OUPUT_CHANNELS bound to: 16 - type: integer  	Parameter NO_INDICIES bound to: 2 - type: integer  
+// Tcl Message: INFO: [Synth 8-6155] done synthesizing module 'priority_encoder' (1#1) [/home/aw1223/new/mase/machop/mase_components/priority_encoder/rtl/priority_encoder.sv:2] INFO: [Synth 8-6157] synthesizing module 'array_zero_mask' [/home/aw1223/new/mase/machop/mase_components/scatter/rtl/array_zero_mask.sv:3] 
+// Tcl Message: 	Parameter NUM_INPUTS bound to: 16 - type: integer  	Parameter PRECISION bound to: 16 - type: integer  
+// Tcl Message: INFO: [Synth 8-6155] done synthesizing module 'array_zero_mask' (2#1) [/home/aw1223/new/mase/machop/mase_components/scatter/rtl/array_zero_mask.sv:3] INFO: [Synth 8-6155] done synthesizing module 'scatter_threshold_synthesis' (3#1) [/home/aw1223/new/mase/machop/mase_components/scatter/rtl/scatter_threshold_synthesis.sv:4] 
+// Tcl Message: --------------------------------------------------------------------------------- 
+// Tcl Message: Finished RTL Elaboration : Time (s): cpu = 00:00:06 ; elapsed = 00:00:08 . Memory (MB): peak = 8273.023 ; gain = 165.598 ; free physical = 27449 ; free virtual = 35139 
+// Tcl Message: --------------------------------------------------------------------------------- 
+// Tcl Message:  Report Check Netlist:  +------+------------------+-------+---------+-------+------------------+ |      |Item              |Errors |Warnings |Status |Description       | +------+------------------+-------+---------+-------+------------------+ |1     |multi_driven_nets |      0|        0|Passed |Multi driven nets | +------+------------------+-------+---------+-------+------------------+ --------------------------------------------------------------------------------- Start Handling Custom Attributes --------------------------------------------------------------------------------- --------------------------------------------------------------------------------- 
+// Tcl Message: Finished Handling Custom Attributes : Time (s): cpu = 00:00:07 ; elapsed = 00:00:09 . Memory (MB): peak = 8287.867 ; gain = 180.441 ; free physical = 27433 ; free virtual = 35124 
+// Tcl Message: --------------------------------------------------------------------------------- --------------------------------------------------------------------------------- 
+// Tcl Message: Finished RTL Optimization Phase 1 : Time (s): cpu = 00:00:07 ; elapsed = 00:00:09 . Memory (MB): peak = 8287.867 ; gain = 180.441 ; free physical = 27429 ; free virtual = 35120 
+// Tcl Message: --------------------------------------------------------------------------------- 
+// Tcl Message: Netlist sorting complete. Time (s): cpu = 00:00:00.01 ; elapsed = 00:00:00.01 . Memory (MB): peak = 8287.867 ; gain = 0.000 ; free physical = 27422 ; free virtual = 35113 
+// Tcl Message: INFO: [Project 1-570] Preparing netlist for logic optimization 
+// Tcl Message:  Processing XDC Constraints Initializing timing engine Completed Processing XDC Constraints  
+// Tcl Message: INFO: [Opt 31-138] Pushed 0 inverter(s) to 0 load pin(s). 
+// Tcl Message: Netlist sorting complete. Time (s): cpu = 00:00:00 ; elapsed = 00:00:00 . Memory (MB): peak = 8420.699 ; gain = 0.000 ; free physical = 27266 ; free virtual = 34957 
+// Tcl Message: INFO: [Project 1-111] Unisim Transformation Summary: No Unisim elements were transformed.  
+// TclEventType: HFED_INIT_ROUTE_STORAGE_COMPLETED
+// RouteApi::loadEngineXgd elapsed time: 5.1s
+// [GUI Memory]: 323 MB (+13802kb) [00:02:28]
+// Tcl Message: RTL Elaboration Complete:  : Time (s): cpu = 00:00:47 ; elapsed = 00:00:21 . Memory (MB): peak = 8834.645 ; gain = 727.219 ; free physical = 26745 ; free virtual = 34436 
+// Tcl Message: 10 Infos, 2 Warnings, 0 Critical Warnings and 0 Errors encountered. synth_design completed successfully 
+// Tcl Message: synth_design: Time (s): cpu = 00:01:09 ; elapsed = 00:01:27 . Memory (MB): peak = 8834.645 ; gain = 1823.488 ; free physical = 26745 ; free virtual = 34435 
+// Elapsed time: 89 seconds
+dismissDialog("Open Elaborated Design"); // bB (cr)
+selectTreeTable(PAResourceEtoH.ExpRunTreePanel_EXP_RUN_TREE_TABLE, "scatter_threshold_synthesis_synth_1 ; scatter_threshold_synthesis ; synth_design Complete! ;  ;  ;  ;  ;  ;  ;  ; 804 ; 0 ; 0.0 ; 0 ; 0 ; Wed Mar 27 13:00:03 GMT 2024 ; 00:03:28 ; Vivado Synthesis Defaults (Vivado Synthesis 2019) ; Vivado Synthesis Default Reports (Vivado Synthesis 2019) ; xcu280-fsvh2892-2L-e ; ee-beholder1 ; Vivado Synthesis Defaults", 3, "scatter_threshold_synthesis_synth_1", 0, false); // az (O, cr)
+collapseTree(PAResourceEtoH.FlowNavigatorTreePanel_FLOW_NAVIGATOR_TREE, "[, Synthesis, Open Synthesized Design]", 18); // u (O, cr)
+expandTree(PAResourceEtoH.FlowNavigatorTreePanel_FLOW_NAVIGATOR_TREE, "[, Synthesis, Open Synthesized Design]", 18); // u (O, cr)
+selectTree(PAResourceEtoH.FlowNavigatorTreePanel_FLOW_NAVIGATOR_TREE, "[, Synthesis, Open Synthesized Design, Report Power]", 28, false); // u (O, cr)
+// bB (cr):  Open Synthesized Design : addNotify
+// Tcl Message: open_run synth_1 -name synth_1 
+// Tcl Message: Design is defaulting to impl run constrset: constrs_1 Design is defaulting to synth run part: xcu280-fsvh2892-2L-e 
+// TclEventType: READ_XDC_FILE_START
+// TclEventType: READ_XDC_FILE_END
+// TclEventType: FLOORPLAN_MODIFY
+// TclEventType: DESIGN_NEW
+// HMemoryUtils.trashcanNow. Engine heap size: 3,458 MB. GUI used memory: 249 MB. Current time: 3/27/24, 1:25:02 PM GMT
+// TclEventType: HFED_INIT_ROUTE_STORAGE_COMPLETED
+// RouteApi::loadEngineXgd elapsed time: 4.3s
+// TclEventType: DESIGN_NEW
+// [Engine Memory]: 3,680 MB (+123206kb) [00:02:46]
+// Device: addNotify
+// DeviceView Instantiated
+// PAPropertyPanels.initPanels (scatter_threshold_synthesis_synth_1) elapsed time: 0.3s
+// WARNING: HEventQueue.dispatchEvent() is taking  2068 ms.
+// Tcl Message: Netlist sorting complete. Time (s): cpu = 00:00:00 ; elapsed = 00:00:00 . Memory (MB): peak = 8900.938 ; gain = 0.000 ; free physical = 26626 ; free virtual = 34317 
+// TclEventType: CURR_DESIGN_SET
+// Tcl Message: INFO: [Project 1-479] Netlist was created with Vivado 2019.2 INFO: [Project 1-570] Preparing netlist for logic optimization 
+// Tcl Message: Parsing XDC File [/home/aw1223/new/mase/machop/mase_components/scatter/scatter_vivado/constraints.xdc] 
+// Tcl Message: Finished Parsing XDC File [/home/aw1223/new/mase/machop/mase_components/scatter/scatter_vivado/constraints.xdc] 
+// Tcl Message: INFO: [Opt 31-138] Pushed 0 inverter(s) to 0 load pin(s). 
+// Tcl Message: Netlist sorting complete. Time (s): cpu = 00:00:00 ; elapsed = 00:00:00 . Memory (MB): peak = 8900.938 ; gain = 0.000 ; free physical = 26537 ; free virtual = 34229 
+// Tcl Message: INFO: [Project 1-111] Unisim Transformation Summary: No Unisim elements were transformed.  
+// Tcl Message: open_run: Time (s): cpu = 00:00:20 ; elapsed = 00:00:10 . Memory (MB): peak = 9116.227 ; gain = 215.289 ; free physical = 26156 ; free virtual = 33847 
+// Device view-level: 0.0
+// WARNING: HEventQueue.dispatchEvent() is taking  1026 ms.
+// Run Command: PAResourceCommand.PACommandNames_POWER_ESTIMATION
+// a (cr): Report Power: addNotify
+// WARNING: HEventQueue.dispatchEvent() is taking  7711 ms.
+// S (cr): Critical Messages: addNotify
+// HMemoryUtils.trashcanNow. Engine heap size: 3,704 MB. GUI used memory: 268 MB. Current time: 3/27/24, 1:25:19 PM GMT
+// 'dl' command handler elapsed time: 10 seconds
+// Elapsed time: 23 seconds
+dismissDialog("Report Power"); // a (cr)
+dismissDialog("Critical Messages"); // S (cr)
+// HMemoryUtils.trashcanNow. Engine heap size: 3,781 MB. GUI used memory: 265 MB. Current time: 3/27/24, 1:25:38 PM GMT
+// Elapsed time: 33 seconds
+selectTree(PAResourceEtoH.FlowNavigatorTreePanel_FLOW_NAVIGATOR_TREE, "[, Synthesis, Open Synthesized Design, Report Power]", 28, false); // u (O, cr)
+// Run Command: PAResourceCommand.PACommandNames_POWER_ESTIMATION
+// a (cr): Report Power: addNotify
+// HMemoryUtils.trashcanNow. Engine heap size: 3,809 MB. GUI used memory: 265 MB. Current time: 3/27/24, 1:25:58 PM GMT
+selectTab(PAResourceTtoZ.XPowerSettingsDialog_TABBED_PANE, PAResourceTtoZ.XPowerSettingsDialog_SWITCHING, "Switching", 2); // i (a)
+selectButton(PAResourceTtoZ.XPowerSettingsDialog_CHOOSE_INPUT_SIMULATION_ACTIVITY_FILE, (String) null); // t (an)
+// HMemoryUtils.trashcanNow. Engine heap size: 3,973 MB. GUI used memory: 272 MB. Current time: 3/27/24, 1:26:18 PM GMT
+// Elapsed time: 17 seconds
+setFileChooser("/home/aw1223/new/mase/machop/mase_components/scatter/test/build/scatter_threshold/test_0/dump.vcd");
+selectButton(PAResourceTtoZ.XPowerSettingsDialog_SAVE_THESE_SETTINGS_AND_RUN, "OK"); // a (a)
+// Run Command: PAResourceCommand.PACommandNames_RUN_POWER_ESTIMATION
+// [Engine Memory]: 4,003 MB (+146019kb) [00:03:59]
+// 'dl' command handler elapsed time: 23 seconds
+dismissDialog("Report Power"); // a (cr)
+// bB (cr):  Power Estimation : addNotify
+// Tcl Message: read_saif {/home/aw1223/new/mase/machop/mase_components/scatter/test/build/scatter_threshold/test_0/dump.vcd} 
+// HMemoryUtils.trashcanNow. Engine heap size: 4,976 MB. GUI used memory: 266 MB. Current time: 3/27/24, 1:26:38 PM GMT
+// RouteApi::initDelayMediator elapsed time: 106.5s
+// RouteApi: Init Delay Mediator Swing Worker Finished
+// Tcl Message: INFO: [Timing 38-35] Done setting XDC timing constraints. 
+// Tcl Message: INFO: [Power 33-167] Parsing SAIF file /home/aw1223/new/mase/machop/mase_components/scatter/test/build/scatter_threshold/test_0/dump.vcd INFO: [Power 33-177] SAIF annotation done from file /home/aw1223/new/mase/machop/mase_components/scatter/test/build/scatter_threshold/test_0/dump.vcd INFO: [Power 33-26] Design nets matched = 0 of 0 
+// Tcl Message: read_saif: Time (s): cpu = 00:00:36 ; elapsed = 00:00:41 . Memory (MB): peak = 10567.207 ; gain = 1102.480 ; free physical = 23497 ; free virtual = 31194 
+// HMemoryUtils.trashcanNow. Engine heap size: 5,195 MB. GUI used memory: 266 MB. Current time: 3/27/24, 1:27:03 PM GMT
+// Tcl Message: report_power -name {power_1} 
+// Tcl Message: Command: report_power -name power_1 

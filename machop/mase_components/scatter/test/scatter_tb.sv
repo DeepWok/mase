@@ -1,60 +1,83 @@
 `timescale 1ns / 1ps
 
-module tb_scatter_threshold;
+module scatter_threshold_tb;
 
-// Parameters
-localparam PRECISION = 8;
-localparam TENSOR_SIZE_DIM = 4;
-localparam HIGH_SLOTS = 2;
-localparam THRESHOLD = 6;
+    // Parameters of the module
+    localparam PRECISION = 8;
+    localparam TENSOR_SIZE_DIM = 8;
+    localparam HIGH_SLOTS = 2;
+    localparam THRESHOLD = 6;
+    localparam DESIGN = 1;
 
-// Testbench Signals
-reg clk, rst;
-reg [PRECISION-1:0] data_in [TENSOR_SIZE_DIM-1:0];
-wire [PRECISION-1:0] o_high_precision [TENSOR_SIZE_DIM-1:0];
-wire [PRECISION-1:0] o_low_precision [TENSOR_SIZE_DIM-1:0];
+    // Inputs
+    reg clk;
+    reg rst;
+    reg [PRECISION-1:0] data_in [TENSOR_SIZE_DIM-1:0];
 
-// Instantiate the Unit Under Test (UUT)
-scatter_threshold #(
-    .PRECISION(PRECISION),
-    .TENSOR_SIZE_DIM(TENSOR_SIZE_DIM),
-    .HIGH_SLOTS(HIGH_SLOTS),
-    .THRESHOLD(THRESHOLD)
-) uut (
-    .clk(clk),
-    .rst(rst),
-    .data_in(data_in),
-    .o_high_precision(o_high_precision),
-    .o_low_precision(o_low_precision)
-);
+    // Outputs
+    wire [PRECISION-1:0] o_high_precision [TENSOR_SIZE_DIM-1:0];
+    wire [PRECISION-1:0] o_low_precision [TENSOR_SIZE_DIM-1:0];
 
-initial begin
-    // Initialize Inputs
-    clk = 0;
-    rst = 1;
-    // Reset the system
-    #10;
-    rst = 0;
+    // Instantiate the Unit Under Test (UUT)
+    scatter_threshold #(
+        .PRECISION(PRECISION),
+        .TENSOR_SIZE_DIM(TENSOR_SIZE_DIM),
+        .HIGH_SLOTS(HIGH_SLOTS),
+        .THRESHOLD(THRESHOLD),
+        .DESIGN(DESIGN)
+    ) uut (
+        .clk(clk), 
+        .rst(rst), 
+        .data_in(data_in), 
+        .o_high_precision(o_high_precision), 
+        .o_low_precision(o_low_precision)
+    );
 
-    // Apply input stimuli
-    #10;
-    data_in[0] = 8;
-    data_in[1] = 5;
-    data_in[2] = 7;
-    data_in[3] = 1;
+    // Clock generation
+    initial begin
+        clk = 0;
+        forever #2.5 clk = ~clk; // 200MHz Clock
+    end
 
-    #10; // Wait for the logic to process
+    // Random input stimulus
+    task generate_random_input;
+        integer i;
+        begin
+            for (i = 0; i < TENSOR_SIZE_DIM; i = i + 1) begin
+                data_in[i] = $random % (1 << PRECISION);
+            end
+        end
+    endtask
 
-    // Check outputs
-    // Assertions or conditional checks can be added here to validate the outputs
-    // For example:
-    // assert(o_high_precision[0] == 8 && o_high_precision[2] == 7) 
-    // "High precision output does not match expected values."
+    // Test sequence
+    initial begin
+        // Initialize Inputs
+        rst = 1;
+        generate_random_input();
+        
+        // Wait for global reset
+        #100;
+        
+        // Release the reset
+        rst = 0;
+        
+        // Change the inputs at random times
+        forever begin
+            #($random % 50 + 5) generate_random_input(); // Adjusted for faster clock
+        end
+    end
+    
+    // Stop simulation after 2us
+    initial begin
+        #200; // 2us
+        $finish;
+    end
 
-    // Additional test vectors can be applied and checked similarly
-end
+    initial begin
+        $dumpfile("dump.vcd");
+        $dumpvars(0,scatter_threshold_tb);
+    
+    end
 
-// Clock generation
-always #5 clk = ~clk;
 
 endmodule

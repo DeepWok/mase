@@ -61,7 +61,7 @@ class StreamMonitor(Monitor):
 
     def _check(self, got, exp):
         if self.check:
-            print("\nGot \n%s, \nExpected \n%s" % (self.convert_to_integer_list(got), exp))
+            # print("\nGot \n%s, \nExpected \n%s" % (self.convert_to_integer_list(got), exp))
             assert np.equal(self.convert_to_integer_list(got), exp).all()
            
     def convert_to_integer_list(self,list_val):

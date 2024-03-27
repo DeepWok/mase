@@ -136,3 +136,6 @@ reset_run synth_1
 launch_runs impl_1 -jobs 20
 wait_on_run impl_1
 refresh_design
+report_utilization -name utilization_1
+create_fileset -blockset -define_from scatter_threshold scatter_threshold
+create_fileset -blockset -define_from scatter_threshold scatter_threshold

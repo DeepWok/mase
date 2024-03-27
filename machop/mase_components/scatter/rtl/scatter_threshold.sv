@@ -3,7 +3,7 @@
 
 module scatter_threshold #(
     parameter PRECISION = 8,
-    parameter TENSOR_SIZE_DIM = 4,
+    parameter TENSOR_SIZE_DIM = 8,
     parameter HIGH_SLOTS = 2,
     parameter THRESHOLD = 6,
     parameter DESIGN = 1

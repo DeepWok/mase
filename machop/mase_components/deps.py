@@ -14,6 +14,7 @@ MASE_HW_DEPS = {
     # "attention/fixed_self_att": ["attention", "cast", "common", "conv",
     #                              "fixed_arithmetic", "linear", "matmul", "ViT"],
     "cast/fixed_cast": [],
+    "scatter/scatter_top": ["scatter_top","scatter","priority_encoder"],
     "scatter/scatter_threshold": ["scatter","priority_encoder"],
     "gather/gather": ["gather"],
     "llmint/LLMint": ["llmint", "scatter", "gather", "linear", "priority_encoder", "cast", "common", "fixed_arithmetic"],

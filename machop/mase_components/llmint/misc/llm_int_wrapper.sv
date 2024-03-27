@@ -32,11 +32,11 @@ endgenerate
 
 // Instantiate the LLMint module
 LLMint #(
-    .ORIGINAL_PRECISION(32),
+    .ORIGINAL_PRECISION(16),
     .REDUCED_PRECISION(8),
-    .TENSOR_SIZE_DIM(4),
-    .WEIGHT_DIM_0(4),
-    .WEIGHT_DIM_1(4),
+    .TENSOR_SIZE_DIM(16),
+    .WEIGHT_DIM_0(16),
+    .WEIGHT_DIM_1(16),
     .HIGH_SLOTS(2),
     .THRESHOLD(6)
 ) llm_int (

@@ -44,7 +44,7 @@ class LinearTB(Testbench):
             dut.data_out_0,
             dut.data_out_0_valid,
             dut.data_out_0_ready,
-            check=False,
+            check=True,
         )
         # Model
         self.model = LinearInteger(
@@ -66,9 +66,9 @@ class LinearTB(Testbench):
 
     def preprocess_tensor(self, tensor, quantizer, config, parallelism):
         tensor = quantizer(tensor)
-        print('tensor',tensor)
+        # print('tensor',tensor)
         tensor = (tensor * 2 ** config["frac_width"]).int()
-        print('tensor',tensor)
+        # print('tensor',tensor)
 
         logger.info(f"Tensor in int format: {tensor}")
         tensor = tensor.reshape(-1, parallelism).tolist()

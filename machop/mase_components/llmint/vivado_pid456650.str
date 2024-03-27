@@ -2383,3 +2383,458 @@ dismissDialog("Reloading"); // bB (cr)
 // TclEventType: FILE_SET_CHANGE
 // HMemoryUtils.trashcanNow. Engine heap size: 6,529 MB. GUI used memory: 315 MB. Current time: 3/26/24, 5:46:01 PM GMT
 // HMemoryUtils.trashcanNow. Engine heap size: 6,529 MB. GUI used memory: 240 MB. Current time: 3/26/24, 6:16:01 PM GMT
+// WARNING: HSwingWorker (Refresh Filesets Swing Worker) is taking 1011 ms. Increasing delay to 3033 ms.
+// HMemoryUtils.trashcanNow. Engine heap size: 6,529 MB. GUI used memory: 239 MB. Current time: 3/26/24, 6:46:01 PM GMT
+// Elapsed time: 5582 seconds
+selectTree(PAResourceItoN.NavigableTimingReportTab_TIMING_REPORT_NAVIGATION_TREE, "[Root, Check Timing]", 4, true); // a (O, cr) - Node
+selectTree(PAResourceItoN.NavigableTimingReportTab_TIMING_REPORT_NAVIGATION_TREE, "[Root, Timer Settings]", 1, false); // a (O, cr)
+selectTree(PAResourceItoN.NavigableTimingReportTab_TIMING_REPORT_NAVIGATION_TREE, "[Root, General Information]", 0, false); // a (O, cr)
+selectTree(PAResourceItoN.NavigableTimingReportTab_TIMING_REPORT_NAVIGATION_TREE, "[Root, Timer Settings]", 1, false); // a (O, cr)
+selectTree(PAResourceItoN.NavigableTimingReportTab_TIMING_REPORT_NAVIGATION_TREE, "[Root, Design Timing Summary]", 2, false); // a (O, cr)
+selectTree(PAResourceItoN.NavigableTimingReportTab_TIMING_REPORT_NAVIGATION_TREE, "[Root, Clock Summary]", 3, false); // a (O, cr)
+selectTree(PAResourceItoN.NavigableTimingReportTab_TIMING_REPORT_NAVIGATION_TREE, "[Root, Check Timing]", 4, true); // a (O, cr) - Node
+selectTree(PAResourceItoN.NavigableTimingReportTab_TIMING_REPORT_NAVIGATION_TREE, "[Root, Intra-Clock Paths]", 5, true); // a (O, cr) - Node
+expandTree(PAResourceItoN.NavigableTimingReportTab_TIMING_REPORT_NAVIGATION_TREE, "[Root, Check Timing]", 4); // a (O, cr)
+selectTree(PAResourceItoN.NavigableTimingReportTab_TIMING_REPORT_NAVIGATION_TREE, "[Root, Check Timing, unconstrained_internal_endpoints]", 8, false); // a (O, cr)
+selectTree(PAResourceItoN.NavigableTimingReportTab_TIMING_REPORT_NAVIGATION_TREE, "[Root, Check Timing, no_input_delay]", 9, false); // a (O, cr)
+selectTree(PAResourceItoN.NavigableTimingReportTab_TIMING_REPORT_NAVIGATION_TREE, "[Root, Check Timing, generated_clocks]", 12, false); // a (O, cr)
+// HMemoryUtils.trashcanNow. Engine heap size: 6,531 MB. GUI used memory: 242 MB. Current time: 3/26/24, 7:16:01 PM GMT
+// HMemoryUtils.trashcanNow. Engine heap size: 6,531 MB. GUI used memory: 241 MB. Current time: 3/26/24, 7:46:01 PM GMT
+// HMemoryUtils.trashcanNow. Engine heap size: 6,531 MB. GUI used memory: 240 MB. Current time: 3/26/24, 8:16:01 PM GMT
+// HMemoryUtils.trashcanNow. Engine heap size: 6,531 MB. GUI used memory: 240 MB. Current time: 3/26/24, 8:46:01 PM GMT
+// Elapsed time: 8065 seconds
+selectTree(PAResourceItoN.NavigableTimingReportTab_TIMING_REPORT_NAVIGATION_TREE, "[Root, Clock Summary]", 3, false); // a (O, cr)
+selectTreeTable(PAResourceAtoD.ClockSummaryTreeTablePanel_CLOCK_SUMMARY_TREE_TABLE, "sys_clk ; {0.000 2.500} ; 5.0 ; 200.0", 0, "5.0", 2, false); // e (O, cr)
+selectTree(PAResourceItoN.NavigableTimingReportTab_TIMING_REPORT_NAVIGATION_TREE, "[Root, General Information]", 0, false); // a (O, cr)
+selectTree(PAResourceItoN.NavigableTimingReportTab_TIMING_REPORT_NAVIGATION_TREE, "[Root, Timer Settings]", 1, false); // a (O, cr)
+selectTree(PAResourceItoN.NavigableTimingReportTab_TIMING_REPORT_NAVIGATION_TREE, "[Root, Clock Summary]", 3, false); // a (O, cr)
+selectTree(PAResourceItoN.NavigableTimingReportTab_TIMING_REPORT_NAVIGATION_TREE, "[Root, Check Timing]", 4, true); // a (O, cr) - Node
+selectTable(PAResourceAtoD.CheckTimingSectionPanel_CHECK_TIMING_SELECTION_TABLE, "no_input_delay ; 132 ; High", 0, "High", 2); // c (O, cr)
+selectTable(PAResourceAtoD.CheckTimingSectionPanel_CHECK_TIMING_SELECTION_TABLE, "no_input_delay ; 132 ; High", 0, "High", 2); // c (O, cr)
+selectTable(PAResourceAtoD.CheckTimingSectionPanel_CHECK_TIMING_SELECTION_TABLE, "no_input_delay ; 132 ; High", 0, "High", 2, false, false, false, false, true); // c (O, cr) - Double Click
+// HMemoryUtils.trashcanNow. Engine heap size: 6,559 MB. GUI used memory: 240 MB. Current time: 3/26/24, 9:04:06 PM GMT
+selectTable(PAResourceAtoD.CheckTimingSectionPanel_CHECK_TIMING_SELECTION_TABLE, "no_input_delay ; 132 ; High", 0, "no_input_delay", 0); // c (O, cr)
+selectTable(PAResourceAtoD.CheckTimingSectionPanel_CHECK_TIMING_SELECTION_TABLE, "no_input_delay ; 132 ; High", 0, "no_input_delay", 0, false, false, false, false, true); // c (O, cr) - Double Click
+selectTableHeader(PAResourceAtoD.CheckTimingSectionPanel_CHECK_TIMING_SELECTION_TABLE, "Count", 1); // c (O, cr)
+selectTree(PAResourceItoN.NavigableTimingReportTab_TIMING_REPORT_NAVIGATION_TREE, "[Root, Check Timing, no_clock]", 5, false); // a (O, cr)
+selectTree(PAResourceItoN.NavigableTimingReportTab_TIMING_REPORT_NAVIGATION_TREE, "[Root, Check Timing, no_input_delay]", 9, false); // a (O, cr)
+selectTreeTable(PAResourceAtoD.CheckTimingResultTreeTablePanel_CHECK_TIMING_RESULT_TREE_TABLE, "data_in[0][0] ; High", 1, "data_in[0][0]", 0, false); // j (O, cr)
+selectTree(PAResourceItoN.NavigableTimingReportTab_TIMING_REPORT_NAVIGATION_TREE, "[Root, Check Timing, no_output_delay]", 10, false); // a (O, cr)
+selectTree(PAResourceItoN.NavigableTimingReportTab_TIMING_REPORT_NAVIGATION_TREE, "[Root, Check Timing, latch_loops]", 16, false); // a (O, cr)
+expandTree(PAResourceItoN.NavigableTimingReportTab_TIMING_REPORT_NAVIGATION_TREE, "[Root, Intra-Clock Paths]", 17); // a (O, cr)
+expandTree(PAResourceItoN.NavigableTimingReportTab_TIMING_REPORT_NAVIGATION_TREE, "[Root, Intra-Clock Paths, sys_clk]", 18); // a (O, cr)
+selectTree(PAResourceItoN.NavigableTimingReportTab_TIMING_REPORT_NAVIGATION_TREE, "[Root, Intra-Clock Paths, sys_clk]", 18, true); // a (O, cr) - Node
+selectTree(PAResourceItoN.NavigableTimingReportTab_TIMING_REPORT_NAVIGATION_TREE, "[Root, Intra-Clock Paths, sys_clk, Hold 0.010 ns]", 20, false); // a (O, cr)
+selectTree(PAResourceItoN.NavigableTimingReportTab_TIMING_REPORT_NAVIGATION_TREE, "[Root, Intra-Clock Paths, sys_clk, Pulse Width 2.225 ns]", 21, false); // a (O, cr)
+selectTree(PAResourceItoN.NavigableTimingReportTab_TIMING_REPORT_NAVIGATION_TREE, "[Root, Intra-Clock Paths, sys_clk, Setup 2.420 ns]", 19, false); // a (O, cr)
+selectCodeEditor("fixed_linear.sv", 178, 56); // ch (w, cr)
+selectCodeEditor("fixed_linear.sv", 207, 205); // ch (w, cr)
+// Elapsed time: 13 seconds
+selectCodeEditor("fixed_linear.sv", 361, 76); // ch (w, cr)
+selectTab("PlanAheadTabBaseWorkspace_JideTabbedPane", (HResource) null, "llm_int_wrapper.sv", 4); // i (h, cr)
+selectTab("PlanAheadTabBaseWorkspace_JideTabbedPane", (HResource) null, "LLMint.sv", 2); // i (h, cr)
+selectTab("PlanAheadTabBaseWorkspace_JideTabbedPane", (HResource) null, "fixed_linear.sv", 3); // i (h, cr)
+selectTab("PlanAheadTabBaseWorkspace_JideTabbedPane", (HResource) null, "llm_int_wrapper.sv", 4); // i (h, cr)
+// Elapsed time: 42 seconds
+selectCodeEditor("llm_int_wrapper.sv", 153, 152); // ch (w, cr)
+selectCodeEditor("llm_int_wrapper.sv", 176, 135); // ch (w, cr)
+selectCodeEditor("llm_int_wrapper.sv", 176, 135, false, false, false, false, true); // ch (w, cr) - Double Click
+selectCodeEditor("llm_int_wrapper.sv", 179, 131); // ch (w, cr)
+selectCodeEditor("llm_int_wrapper.sv", 179, 131, false, false, false, false, true); // ch (w, cr) - Double Click
+typeControlKey((HResource) null, "llm_int_wrapper.sv", 'c'); // ch (w, cr)
+// Elapsed time: 24 seconds
+selectCodeEditor("llm_int_wrapper.sv", 96, 171); // ch (w, cr)
+selectCodeEditor("llm_int_wrapper.sv", 96, 172, false, false, false, false, true); // ch (w, cr) - Double Click
+typeControlKey((HResource) null, "llm_int_wrapper.sv", 'c'); // ch (w, cr)
+selectCodeEditor("llm_int_wrapper.sv", 87, 193); // ch (w, cr)
+selectCodeEditor("llm_int_wrapper.sv", 87, 193, false, false, false, false, true); // ch (w, cr) - Double Click
+// Elapsed time: 14 seconds
+selectTable(PAResourceTtoZ.TimingItemFlatTablePanel_TABLE, "Path 2 ; 2.4199994 ; 1 ; 257 ; llm_int/high_precision_linear/linear[3].fdp_inst/fixed_adder_tree_inst/level[0].register_slice/data_in_ready_reg/C ; llm_int/high_precision_linear/linear[3].fdp_inst/fixed_vector_mult_inst/register_slice/data_out_reg[129]/CE ; 2.4810002 ; 0.227 ; 2.2540002 ; 5.0 ; sys_clk ; sys_clk ;  ; 0.03535534", 1, "2.4810002", 6); // i (O, cr)
+selectTable(PAResourceTtoZ.TimingItemFlatTablePanel_TABLE, "Path 2 ; 2.4199994 ; 1 ; 257 ; llm_int/high_precision_linear/linear[3].fdp_inst/fixed_adder_tree_inst/level[0].register_slice/data_in_ready_reg/C ; llm_int/high_precision_linear/linear[3].fdp_inst/fixed_vector_mult_inst/register_slice/data_out_reg[129]/CE ; 2.4810002 ; 0.227 ; 2.2540002 ; 5.0 ; sys_clk ; sys_clk ;  ; 0.03535534", 1, "2.4810002", 6); // i (O, cr)
+selectTable(PAResourceTtoZ.TimingItemFlatTablePanel_TABLE, "Path 2 ; 2.4199994 ; 1 ; 257 ; llm_int/high_precision_linear/linear[3].fdp_inst/fixed_adder_tree_inst/level[0].register_slice/data_in_ready_reg/C ; llm_int/high_precision_linear/linear[3].fdp_inst/fixed_vector_mult_inst/register_slice/data_out_reg[129]/CE ; 2.4810002 ; 0.227 ; 2.2540002 ; 5.0 ; sys_clk ; sys_clk ;  ; 0.03535534", 1, "2.4810002", 6); // i (O, cr)
+selectTable(PAResourceTtoZ.TimingItemFlatTablePanel_TABLE, "Path 2 ; 2.4199994 ; 1 ; 257 ; llm_int/high_precision_linear/linear[3].fdp_inst/fixed_adder_tree_inst/level[0].register_slice/data_in_ready_reg/C ; llm_int/high_precision_linear/linear[3].fdp_inst/fixed_vector_mult_inst/register_slice/data_out_reg[129]/CE ; 2.4810002 ; 0.227 ; 2.2540002 ; 5.0 ; sys_clk ; sys_clk ;  ; 0.03535534", 1, "2.4810002", 6); // i (O, cr)
+selectTable(PAResourceTtoZ.TimingItemFlatTablePanel_TABLE, "Path 2 ; 2.4199994 ; 1 ; 257 ; llm_int/high_precision_linear/linear[3].fdp_inst/fixed_adder_tree_inst/level[0].register_slice/data_in_ready_reg/C ; llm_int/high_precision_linear/linear[3].fdp_inst/fixed_vector_mult_inst/register_slice/data_out_reg[129]/CE ; 2.4810002 ; 0.227 ; 2.2540002 ; 5.0 ; sys_clk ; sys_clk ;  ; 0.03535534", 1, "2.4810002", 6); // i (O, cr)
+selectTable(PAResourceTtoZ.TimingItemFlatTablePanel_TABLE, "Path 2 ; 2.4199994 ; 1 ; 257 ; llm_int/high_precision_linear/linear[3].fdp_inst/fixed_adder_tree_inst/level[0].register_slice/data_in_ready_reg/C ; llm_int/high_precision_linear/linear[3].fdp_inst/fixed_vector_mult_inst/register_slice/data_out_reg[129]/CE ; 2.4810002 ; 0.227 ; 2.2540002 ; 5.0 ; sys_clk ; sys_clk ;  ; 0.03535534", 1, "2.4810002", 6); // i (O, cr)
+selectTable(PAResourceTtoZ.TimingItemFlatTablePanel_TABLE, "Path 2 ; 2.4199994 ; 1 ; 257 ; llm_int/high_precision_linear/linear[3].fdp_inst/fixed_adder_tree_inst/level[0].register_slice/data_in_ready_reg/C ; llm_int/high_precision_linear/linear[3].fdp_inst/fixed_vector_mult_inst/register_slice/data_out_reg[129]/CE ; 2.4810002 ; 0.227 ; 2.2540002 ; 5.0 ; sys_clk ; sys_clk ;  ; 0.03535534", 1, "2.4810002", 6); // i (O, cr)
+selectTable(PAResourceTtoZ.TimingItemFlatTablePanel_TABLE, "Path 2 ; 2.4199994 ; 1 ; 257 ; llm_int/high_precision_linear/linear[3].fdp_inst/fixed_adder_tree_inst/level[0].register_slice/data_in_ready_reg/C ; llm_int/high_precision_linear/linear[3].fdp_inst/fixed_vector_mult_inst/register_slice/data_out_reg[129]/CE ; 2.4810002 ; 0.227 ; 2.2540002 ; 5.0 ; sys_clk ; sys_clk ;  ; 0.03535534", 1, "2.4810002", 6); // i (O, cr)
+selectTable(PAResourceTtoZ.TimingItemFlatTablePanel_TABLE, "Path 2 ; 2.4199994 ; 1 ; 257 ; llm_int/high_precision_linear/linear[3].fdp_inst/fixed_adder_tree_inst/level[0].register_slice/data_in_ready_reg/C ; llm_int/high_precision_linear/linear[3].fdp_inst/fixed_vector_mult_inst/register_slice/data_out_reg[129]/CE ; 2.4810002 ; 0.227 ; 2.2540002 ; 5.0 ; sys_clk ; sys_clk ;  ; 0.03535534", 1, "2.4810002", 6); // i (O, cr)
+selectTable(PAResourceTtoZ.TimingItemFlatTablePanel_TABLE, "Path 2 ; 2.4199994 ; 1 ; 257 ; llm_int/high_precision_linear/linear[3].fdp_inst/fixed_adder_tree_inst/level[0].register_slice/data_in_ready_reg/C ; llm_int/high_precision_linear/linear[3].fdp_inst/fixed_vector_mult_inst/register_slice/data_out_reg[129]/CE ; 2.4810002 ; 0.227 ; 2.2540002 ; 5.0 ; sys_clk ; sys_clk ;  ; 0.03535534", 1, "2.4810002", 6); // i (O, cr)
+selectTable(PAResourceTtoZ.TimingItemFlatTablePanel_TABLE, "Path 2 ; 2.4199994 ; 1 ; 257 ; llm_int/high_precision_linear/linear[3].fdp_inst/fixed_adder_tree_inst/level[0].register_slice/data_in_ready_reg/C ; llm_int/high_precision_linear/linear[3].fdp_inst/fixed_vector_mult_inst/register_slice/data_out_reg[129]/CE ; 2.4810002 ; 0.227 ; 2.2540002 ; 5.0 ; sys_clk ; sys_clk ;  ; 0.03535534", 1, "2.4810002", 6); // i (O, cr)
+// PAPropertyPanels.initPanels (Path 1) elapsed time: 0.6s
+selectTable(PAResourceTtoZ.TimingItemFlatTablePanel_TABLE, "Path 1 ; 2.4199994 ; 1 ; 257 ; llm_int/high_precision_linear/linear[3].fdp_inst/fixed_adder_tree_inst/level[0].register_slice/data_in_ready_reg/C ; llm_int/high_precision_linear/linear[3].fdp_inst/fixed_vector_mult_inst/register_slice/data_out_reg[128]/CE ; 2.4800003 ; 0.227 ; 2.253 ; 5.0 ; sys_clk ; sys_clk ;  ; 0.03535534", 0, "2.4199994", 1); // i (O, cr)
+selectTree(PAResourceItoN.NavigableTimingReportTab_TIMING_REPORT_NAVIGATION_TREE, "[Root, Intra-Clock Paths, sys_clk, Pulse Width 2.225 ns]", 21, false); // a (O, cr)
+selectTree(PAResourceItoN.NavigableTimingReportTab_TIMING_REPORT_NAVIGATION_TREE, "[Root, Check Timing, no_input_delay]", 9, false); // a (O, cr)
+selectTree(PAResourceItoN.NavigableTimingReportTab_TIMING_REPORT_NAVIGATION_TREE, "[Root, Check Timing, no_output_delay]", 10, false); // a (O, cr)
+selectCodeEditor("llm_int_wrapper.sv", 196, 167); // ch (w, cr)
+// HMemoryUtils.trashcanNow. Engine heap size: 6,579 MB. GUI used memory: 245 MB. Current time: 3/26/24, 9:07:11 PM GMT
+// Elapsed time: 24 seconds
+selectTree(PAResourceOtoP.PowerResultTab_REPORT_NAVIGATION_TREE, "[Report Contents, Power Supply]", 2, false); // h (O, cr)
+selectTree(PAResourceOtoP.PowerResultTab_REPORT_NAVIGATION_TREE, "[Report Contents, Utilization Details]", 3, true); // h (O, cr) - Node
+selectTree(PAResourceOtoP.PowerResultTab_REPORT_NAVIGATION_TREE, "[Report Contents, Utilization Details, Hierarchical]", 4, false); // h (O, cr)
+// Elapsed time: 40 seconds
+selectTree(PAResourceEtoH.FlowNavigatorTreePanel_FLOW_NAVIGATOR_TREE, "[, Implementation, Open Implemented Design, Report Utilization]", 26, false); // u (O, cr)
+// Run Command: PAResourceCommand.PACommandNames_RESOURCE_UTILIZATION
+// a (cr): Report Utilization: addNotify
+selectButton(RDIResource.BaseDialog_OK, "OK"); // a (a)
+dismissDialog("Report Utilization"); // a (cr)
+// bB (cr):  Report Utilization : addNotify
+// Tcl Message: report_utilization -name utilization_1 
+// TclEventType: UTILIZATION_RESULT_GENERATED
+// HMemoryUtils.trashcanNow. Engine heap size: 6,582 MB. GUI used memory: 257 MB. Current time: 3/26/24, 9:08:16 PM GMT
+// WARNING: HEventQueue.dispatchEvent() is taking  1743 ms.
+dismissDialog("Report Utilization"); // bB (cr)
+selectTree(PAResourceEtoH.FlowNavigatorTreePanel_FLOW_NAVIGATOR_TREE, "[, Implementation, Open Implemented Design, Schematic]", 28, false); // u (O, cr)
+// Run Command: PAResourceCommand.PACommandNames_SCHEMATIC
+// Schematic: addNotify
+expandTree(PAResourceEtoH.FlowNavigatorTreePanel_FLOW_NAVIGATOR_TREE, "[, Simulation]", 2); // u (O, cr)
+// Run Command: PAResourceCommand.PACommandNames_SCHEMATIC
+// Schematic: addNotify
+selectTree(PAResourceEtoH.FlowNavigatorTreePanel_FLOW_NAVIGATOR_TREE, "[, Implementation, Open Implemented Design, Schematic]", 28, false, false, false, false, false, true); // u (O, cr) - Double Click
+// WARNING: HEventQueue.dispatchEvent() is taking  1771 ms.
+maximizeView(PAResourceOtoP.PAViews_BASE_WORKSPACE, "BaseWorkspace"); // H (aI, cr)
+// Run Command: PAResourceCommand.PACommandNames_ZOOM_OUT
+// Run Command: PAResourceCommand.PACommandNames_ZOOM_IN
+// Run Command: PAResourceCommand.PACommandNames_ZOOM_OUT
+// Run Command: PAResourceCommand.PACommandNames_ZOOM_IN
+// Run Command: PAResourceCommand.PACommandNames_ZOOM_OUT
+// Run Command: PAResourceCommand.PACommandNames_ZOOM_OUT
+// Run Command: PAResourceCommand.PACommandNames_ZOOM_OUT
+// Run Command: PAResourceCommand.PACommandNames_ZOOM_OUT
+// Run Command: PAResourceCommand.PACommandNames_ZOOM_OUT
+// Run Command: PAResourceCommand.PACommandNames_ZOOM_IN
+// Run Command: PAResourceCommand.PACommandNames_ZOOM_IN
+// Run Command: PAResourceCommand.PACommandNames_ZOOM_IN
+// Run Command: PAResourceCommand.PACommandNames_ZOOM_IN
+// Run Command: PAResourceCommand.PACommandNames_ZOOM_IN
+// Run Command: PAResourceCommand.PACommandNames_ZOOM_OUT
+// Run Command: PAResourceCommand.PACommandNames_ZOOM_IN
+// Run Command: PAResourceCommand.PACommandNames_ZOOM_OUT
+// Run Command: PAResourceCommand.PACommandNames_ZOOM_OUT
+// Run Command: PAResourceCommand.PACommandNames_ZOOM_IN
+// Run Command: PAResourceCommand.PACommandNames_ZOOM_IN
+// Run Command: PAResourceCommand.PACommandNames_ZOOM_OUT
+// Run Command: PAResourceCommand.PACommandNames_ZOOM_OUT
+// Run Command: PAResourceCommand.PACommandNames_ZOOM_OUT
+// u (cr):  Generate Schematic : addNotify
+// Elapsed time: 93 seconds
+dismissDialog("Generate Schematic"); // u (cr)
+// Run Command: PAResourceCommand.PACommandNames_ZOOM_OUT
+// Run Command: PAResourceCommand.PACommandNames_ZOOM_OUT
+// Run Command: PAResourceCommand.PACommandNames_ZOOM_OUT
+// Run Command: PAResourceCommand.PACommandNames_ZOOM_OUT
+// Run Command: PAResourceCommand.PACommandNames_ZOOM_OUT
+// [GUI Memory]: 410 MB (+3226kb) [26:12:41]
+// Run Command: PAResourceCommand.PACommandNames_ZOOM_OUT
+// Run Command: PAResourceCommand.PACommandNames_ZOOM_OUT
+// Run Command: PAResourceCommand.PACommandNames_ZOOM_OUT
+// Run Command: PAResourceCommand.PACommandNames_ZOOM_OUT
+// Run Command: PAResourceCommand.PACommandNames_ZOOM_OUT
+// Run Command: PAResourceCommand.PACommandNames_ZOOM_OUT
+// Run Command: PAResourceCommand.PACommandNames_ZOOM_OUT
+// Run Command: PAResourceCommand.PACommandNames_ZOOM_OUT
+// Run Command: PAResourceCommand.PACommandNames_ZOOM_OUT
+// Run Command: PAResourceCommand.PACommandNames_ZOOM_OUT
+// Run Command: PAResourceCommand.PACommandNames_ZOOM_OUT
+// [GUI Memory]: 433 MB (+2332kb) [26:12:43]
+// Run Command: PAResourceCommand.PACommandNames_ZOOM_OUT
+// Run Command: PAResourceCommand.PACommandNames_ZOOM_OUT
+// Run Command: PAResourceCommand.PACommandNames_ZOOM_OUT
+// Run Command: PAResourceCommand.PACommandNames_ZOOM_IN
+// Run Command: PAResourceCommand.PACommandNames_ZOOM_IN
+// Run Command: PAResourceCommand.PACommandNames_ZOOM_IN
+// Run Command: PAResourceCommand.PACommandNames_ZOOM_IN
+// Run Command: PAResourceCommand.PACommandNames_ZOOM_IN
+// Run Command: PAResourceCommand.PACommandNames_ZOOM_IN
+// Run Command: PAResourceCommand.PACommandNames_ZOOM_IN
+// Run Command: PAResourceCommand.PACommandNames_ZOOM_IN
+// [GUI Memory]: 459 MB (+4539kb) [26:12:45]
+// Run Command: PAResourceCommand.PACommandNames_ZOOM_IN
+// Run Command: PAResourceCommand.PACommandNames_ZOOM_IN
+// Run Command: PAResourceCommand.PACommandNames_ZOOM_IN
+// Run Command: PAResourceCommand.PACommandNames_ZOOM_IN
+// Run Command: PAResourceCommand.PACommandNames_ZOOM_IN
+// Run Command: PAResourceCommand.PACommandNames_ZOOM_IN
+// Run Command: PAResourceCommand.PACommandNames_ZOOM_IN
+// Run Command: PAResourceCommand.PACommandNames_ZOOM_IN
+// HMemoryUtils.trashcanNow. Engine heap size: 6,707 MB. GUI used memory: 387 MB. Current time: 3/26/24, 9:10:07 PM GMT
+// HMemoryUtils.trashcanNow. Engine heap size: 6,718 MB. GUI used memory: 385 MB. Current time: 3/26/24, 9:10:27 PM GMT
+// PAPropertyPanels.initPanels (sys_clk_IBUF_BUFG) elapsed time: 1s
+// WARNING: HEventQueue.dispatchEvent() is taking  1051 ms.
+// Elapsed time: 30 seconds
+typeControlKey(null, null, 'z');
+typeControlKey(null, null, 'z');
+closeView(PAResourceOtoP.PAViews_SCHEMATIC, "Schematic"); // f
+// Run Command: PAResourceCommand.PACommandNames_ZOOM_OUT
+// Run Command: PAResourceCommand.PACommandNames_ZOOM_OUT
+// Run Command: PAResourceCommand.PACommandNames_ZOOM_OUT
+// Run Command: PAResourceCommand.PACommandNames_ZOOM_IN
+// Run Command: PAResourceCommand.PACommandNames_ZOOM_IN
+// Run Command: PAResourceCommand.PACommandNames_ZOOM_OUT
+// Run Command: PAResourceCommand.PACommandNames_ZOOM_OUT
+// Elapsed time: 19 seconds
+selectButton(PAResourceQtoS.SchematicView_PREVIOUS, "Schematic_previousview"); // E (f, cr)
+selectButton(PAResourceQtoS.SchematicView_PREVIOUS, "Schematic_previousview"); // E (f, cr)
+selectButton(PAResourceQtoS.SchematicView_PREVIOUS, "Schematic_previousview"); // E (f, cr)
+selectButton(PAResourceQtoS.SchematicView_PREVIOUS, "Schematic_previousview"); // E (f, cr)
+selectButton(PAResourceQtoS.SchematicView_PREVIOUS, "Schematic_previousview"); // E (f, cr)
+selectButton(PAResourceQtoS.SchematicView_PREVIOUS, "Schematic_previousview"); // E (f, cr)
+// Run Command: PAResourceCommand.PACommandNames_ZOOM_OUT
+// Run Command: PAResourceCommand.PACommandNames_ZOOM_OUT
+// Run Command: PAResourceCommand.PACommandNames_ZOOM_IN
+// Run Command: PAResourceCommand.PACommandNames_ZOOM_IN
+// Run Command: PAResourceCommand.PACommandNames_ZOOM_IN
+// Run Command: PAResourceCommand.PACommandNames_ZOOM_IN
+// Run Command: PAResourceCommand.PACommandNames_ZOOM_IN
+// Run Command: PAResourceCommand.PACommandNames_ZOOM_OUT
+// Run Command: PAResourceCommand.PACommandNames_ZOOM_OUT
+// Run Command: PAResourceCommand.PACommandNames_ZOOM_OUT
+// Run Command: PAResourceCommand.PACommandNames_ZOOM_OUT
+// Run Command: PAResourceCommand.PACommandNames_ZOOM_IN
+// Run Command: PAResourceCommand.PACommandNames_ZOOM_IN
+// Run Command: PAResourceCommand.PACommandNames_ZOOM_IN
+// Run Command: PAResourceCommand.PACommandNames_ZOOM_IN
+// Run Command: PAResourceCommand.PACommandNames_ZOOM_IN
+// Run Command: PAResourceCommand.PACommandNames_ZOOM_IN
+// Run Command: PAResourceCommand.PACommandNames_ZOOM_IN
+// Run Command: PAResourceCommand.PACommandNames_ZOOM_IN
+// Run Command: PAResourceCommand.PACommandNames_ZOOM_OUT
+// Run Command: PAResourceCommand.PACommandNames_ZOOM_OUT
+// Run Command: PAResourceCommand.PACommandNames_ZOOM_OUT
+// Run Command: PAResourceCommand.PACommandNames_ZOOM_OUT
+// Run Command: PAResourceCommand.PACommandNames_ZOOM_OUT
+// Run Command: PAResourceCommand.PACommandNames_ZOOM_OUT
+// Run Command: PAResourceCommand.PACommandNames_ZOOM_OUT
+// Run Command: PAResourceCommand.PACommandNames_ZOOM_IN
+// Run Command: PAResourceCommand.PACommandNames_ZOOM_IN
+// Run Command: PAResourceCommand.PACommandNames_ZOOM_IN
+// Run Command: PAResourceCommand.PACommandNames_ZOOM_IN
+// Run Command: PAResourceCommand.PACommandNames_ZOOM_IN
+// Run Command: PAResourceCommand.PACommandNames_ZOOM_IN
+// Run Command: PAResourceCommand.PACommandNames_ZOOM_IN
+// Run Command: PAResourceCommand.PACommandNames_ZOOM_OUT
+// Run Command: PAResourceCommand.PACommandNames_ZOOM_OUT
+// Run Command: PAResourceCommand.PACommandNames_ZOOM_OUT
+// Run Command: PAResourceCommand.PACommandNames_ZOOM_IN
+// Run Command: PAResourceCommand.PACommandNames_ZOOM_IN
+// Run Command: PAResourceCommand.PACommandNames_ZOOM_IN
+// Elapsed time: 64 seconds
+selectButton(PAResourceCommand.PACommandNames_AUTO_FIT_SELECTION, (String) null); // x (f, cr): TRUE
+// Run Command: PAResourceCommand.PACommandNames_AUTO_FIT_SELECTION
+// Run Command: PAResourceCommand.PACommandNames_ZOOM_IN
+// Run Command: PAResourceCommand.PACommandNames_ZOOM_IN
+// Run Command: PAResourceCommand.PACommandNames_ZOOM_IN
+// Run Command: PAResourceCommand.PACommandNames_ZOOM_IN
+// Run Command: PAResourceCommand.PACommandNames_ZOOM_IN
+// Run Command: PAResourceCommand.PACommandNames_ZOOM_OUT
+// Run Command: PAResourceCommand.PACommandNames_ZOOM_OUT
+// Run Command: PAResourceCommand.PACommandNames_ZOOM_OUT
+// Run Command: PAResourceCommand.PACommandNames_ZOOM_OUT
+// Run Command: PAResourceCommand.PACommandNames_ZOOM_OUT
+// Run Command: PAResourceCommand.PACommandNames_ZOOM_OUT
+// Run Command: PAResourceCommand.PACommandNames_ZOOM_OUT
+// Run Command: PAResourceCommand.PACommandNames_ZOOM_OUT
+// Run Command: PAResourceCommand.PACommandNames_ZOOM_OUT
+// Run Command: PAResourceCommand.PACommandNames_ZOOM_OUT
+// Run Command: PAResourceCommand.PACommandNames_ZOOM_IN
+// Run Command: PAResourceCommand.PACommandNames_ZOOM_IN
+// Run Command: PAResourceCommand.PACommandNames_ZOOM_IN
+// Run Command: PAResourceCommand.PACommandNames_ZOOM_IN
+// Run Command: PAResourceCommand.PACommandNames_ZOOM_OUT
+// Run Command: PAResourceCommand.PACommandNames_ZOOM_OUT
+// Elapsed time: 43 seconds
+closeView(PAResourceOtoP.PAViews_SCHEMATIC, "Schematic"); // f
+// [GUI Memory]: 485 MB (+2877kb) [26:15:28]
+unMinimizeFrame(PAResourceOtoP.PAViews_UTILIZATION, "Utilization - utilization_1"); // aA
+selectTreeTable("PAResourceTtoZ.UtilizationHierViewTreeTablePanel_TABLE(Hierarchy)", "top ; 3891 ; 4241 ; 292 ; 706 ; 3891 ; 64 ; 264 ; 132 ; 132 ; 1", 0, "3891", 1, true); // z (O, cr) - Node
+selectTreeTable("PAResourceTtoZ.UtilizationHierViewTreeTablePanel_TABLE(Hierarchy)", "top ; 3891 ; 4241 ; 292 ; 706 ; 3891 ; 64 ; 264 ; 132 ; 132 ; 1", 0, "3891", 1, true, false, false, false, false, true); // z (O, cr) - Double Click - Node
+expandTreeTable((HResource) null, "top ; 3891 ; 4241 ; 292 ; 706 ; 3891 ; 64 ; 264 ; 132 ; 132 ; 1", 0); // z (O, cr)
+selectTreeTable("PAResourceTtoZ.UtilizationHierViewTreeTablePanel_TABLE(Hierarchy)", "llm_int (LLMint) ; 3287 ; 4241 ; 292 ; 621 ; 3287 ; 64 ; 0 ; 0 ; 0 ; 0", 1, "llm_int (LLMint)", 0, true); // z (O, cr) - Node
+selectTreeTable("PAResourceTtoZ.UtilizationHierViewTreeTablePanel_TABLE(Hierarchy)", "llm_int (LLMint) ; 3287 ; 4241 ; 292 ; 621 ; 3287 ; 64 ; 0 ; 0 ; 0 ; 0", 1, "3287", 1, true, false, false, false, true, false); // z (O, cr) - Popup Trigger - Node
+selectMenu(PAResourceQtoS.SelectMenu_HIGHLIGHT, "Highlight"); // af (ao, cr)
+selectMenu(PAResourceOtoP.PrimitivesMenu_HIGHLIGHT_LEAF_CELLS, "Highlight Leaf Cells"); // af (ao, cr)
+selectMenu(PAResourceOtoP.PrimitivesMenu_HIGHLIGHT_LEAF_CELLS, "Highlight Leaf Cells"); // af (ao, cr)
+// Elapsed time: 55 seconds
+selectTree(PAResourceQtoS.ReportUtilTab_REPORT_UTILIZATION_NAVIGATION_TREE, "[Report Contents, Summary]", 1, false); // l (O, cr)
+// Elapsed time: 17 seconds
+selectTab("PlanAheadTabBaseWorkspace_JideTabbedPane", (HResource) null, "fixed_linear.sv", 3); // i (h, cr)
+// [GUI Memory]: 510 MB (+1020kb) [26:24:56]
+// [GUI Memory]: 539 MB (+3314kb) [26:28:31]
+// [GUI Memory]: 578 MB (+13444kb) [26:30:55]
+// [GUI Memory]: 611 MB (+3476kb) [26:32:07]
+// [GUI Memory]: 643 MB (+1452kb) [26:34:31]
+// [GUI Memory]: 690 MB (+16417kb) [26:35:43]
+// HMemoryUtils.trashcanNow. Engine heap size: 6,829 MB. GUI used memory: 336 MB. Current time: 3/26/24, 9:40:32 PM GMT
+// TclEventType: FILE_SET_CHANGE
+// WARNING: HSwingWorker (Refresh Filesets Swing Worker) is taking 1560 ms. Increasing delay to 4680 ms.
+// WARNING: HSwingWorker (Refresh Filesets Swing Worker) is taking 3229 ms. Increasing delay to 9687 ms.
+// HMemoryUtils.trashcanNow. Engine heap size: 6,829 MB. GUI used memory: 262 MB. Current time: 3/26/24, 10:10:32 PM GMT
+// HMemoryUtils.trashcanNow. Engine heap size: 6,829 MB. GUI used memory: 262 MB. Current time: 3/26/24, 10:40:32 PM GMT
+// HMemoryUtils.trashcanNow. Engine heap size: 6,829 MB. GUI used memory: 261 MB. Current time: 3/26/24, 11:10:32 PM GMT
+// HMemoryUtils.trashcanNow. Engine heap size: 6,829 MB. GUI used memory: 261 MB. Current time: 3/26/24, 11:40:32 PM GMT
+// HMemoryUtils.trashcanNow. Engine heap size: 6,829 MB. GUI used memory: 262 MB. Current time: 3/27/24, 12:10:32 AM GMT
+// HMemoryUtils.trashcanNow. Engine heap size: 6,829 MB. GUI used memory: 262 MB. Current time: 3/27/24, 12:40:32 AM GMT
+// WARNING: HSwingWorker (Update Runs Swing Worker) is taking 1064 ms. Increasing delay to 3000 ms.
+// WARNING: HSwingWorker (Monitor File Timestamp Swing Worker) is taking 1045 ms to process. Increasing delay to 2000 ms.
+// WARNING: HSwingWorker (Refresh Filesets Swing Worker) is taking 6678 ms. Increasing delay to 20034 ms.
+// WARNING: HSwingWorker (Refresh Filesets Swing Worker) is taking 1657 ms. Decreasing delay to 3657 ms.
+// WARNING: HEventQueue.dispatchEvent() is taking  1051 ms.
+// HMemoryUtils.trashcanNow. Engine heap size: 6,829 MB. GUI used memory: 261 MB. Current time: 3/27/24, 1:10:32 AM GMT
+// WARNING: HSwingWorker (Refresh Filesets Swing Worker) is taking 1877 ms. Increasing delay to 5631 ms.
+// HMemoryUtils.trashcanNow. Engine heap size: 6,829 MB. GUI used memory: 261 MB. Current time: 3/27/24, 1:40:32 AM GMT
+// HMemoryUtils.trashcanNow. Engine heap size: 6,829 MB. GUI used memory: 262 MB. Current time: 3/27/24, 2:10:32 AM GMT
+// HMemoryUtils.trashcanNow. Engine heap size: 6,829 MB. GUI used memory: 262 MB. Current time: 3/27/24, 2:40:32 AM GMT
+// HMemoryUtils.trashcanNow. Engine heap size: 6,829 MB. GUI used memory: 262 MB. Current time: 3/27/24, 3:10:32 AM GMT
+// HMemoryUtils.trashcanNow. Engine heap size: 6,829 MB. GUI used memory: 261 MB. Current time: 3/27/24, 3:40:32 AM GMT
+// HMemoryUtils.trashcanNow. Engine heap size: 6,829 MB. GUI used memory: 262 MB. Current time: 3/27/24, 4:10:32 AM GMT
+// HMemoryUtils.trashcanNow. Engine heap size: 6,829 MB. GUI used memory: 262 MB. Current time: 3/27/24, 4:40:32 AM GMT
+// HMemoryUtils.trashcanNow. Engine heap size: 6,829 MB. GUI used memory: 262 MB. Current time: 3/27/24, 5:10:32 AM GMT
+// HMemoryUtils.trashcanNow. Engine heap size: 6,829 MB. GUI used memory: 261 MB. Current time: 3/27/24, 5:40:32 AM GMT
+// HMemoryUtils.trashcanNow. Engine heap size: 6,829 MB. GUI used memory: 262 MB. Current time: 3/27/24, 6:10:32 AM GMT
+// HMemoryUtils.trashcanNow. Engine heap size: 6,829 MB. GUI used memory: 262 MB. Current time: 3/27/24, 6:40:32 AM GMT
+// HMemoryUtils.trashcanNow. Engine heap size: 6,829 MB. GUI used memory: 261 MB. Current time: 3/27/24, 7:10:32 AM GMT
+// HMemoryUtils.trashcanNow. Engine heap size: 6,829 MB. GUI used memory: 261 MB. Current time: 3/27/24, 7:40:33 AM GMT
+// HMemoryUtils.trashcanNow. Engine heap size: 6,829 MB. GUI used memory: 262 MB. Current time: 3/27/24, 8:10:33 AM GMT
+// HMemoryUtils.trashcanNow. Engine heap size: 6,829 MB. GUI used memory: 261 MB. Current time: 3/27/24, 8:40:33 AM GMT
+// HMemoryUtils.trashcanNow. Engine heap size: 6,829 MB. GUI used memory: 261 MB. Current time: 3/27/24, 9:10:33 AM GMT
+// HMemoryUtils.trashcanNow. Engine heap size: 6,829 MB. GUI used memory: 261 MB. Current time: 3/27/24, 9:40:33 AM GMT
+// HMemoryUtils.trashcanNow. Engine heap size: 6,829 MB. GUI used memory: 262 MB. Current time: 3/27/24, 10:10:33 AM GMT
+// HMemoryUtils.trashcanNow. Engine heap size: 6,829 MB. GUI used memory: 261 MB. Current time: 3/27/24, 10:40:33 AM GMT
+// WARNING: HEventQueue.dispatchEvent() is taking  1071 ms.
+// HMemoryUtils.trashcanNow. Engine heap size: 6,829 MB. GUI used memory: 261 MB. Current time: 3/27/24, 11:10:33 AM GMT
+// HMemoryUtils.trashcanNow. Engine heap size: 6,829 MB. GUI used memory: 261 MB. Current time: 3/27/24, 11:40:33 AM GMT
+// HMemoryUtils.trashcanNow. Engine heap size: 6,829 MB. GUI used memory: 262 MB. Current time: 3/27/24, 12:10:33 PM GMT
+// Elapsed time: 55185 seconds
+selectTab("PlanAheadTabBaseWorkspace_JideTabbedPane", (HResource) null, "llm_int_wrapper.sv", 4); // i (h, cr)
+// Elapsed time: 12 seconds
+selectTab("PlanAheadTabBaseWorkspace_JideTabbedPane", (HResource) null, "LLMint.sv", 2); // i (h, cr)
+selectCodeEditor("LLMint.sv", 369, 117); // ch (w, cr)
+selectCodeEditor("LLMint.sv", 261, 76); // ch (w, cr)
+selectCodeEditor("LLMint.sv", 251, 69); // ch (w, cr)
+selectCodeEditor("LLMint.sv", 263, 71); // ch (w, cr)
+selectTab("PlanAheadTabBaseWorkspace_JideTabbedPane", (HResource) null, "llm_int_wrapper.sv", 4); // i (h, cr)
+selectCodeEditor("llm_int_wrapper.sv", 433, 26); // ch (w, cr)
+selectTab("PlanAheadTabBaseWorkspace_JideTabbedPane", (HResource) null, "LLMint.sv", 2); // i (h, cr)
+selectCodeEditor("LLMint.sv", 338, 136); // ch (w, cr)
+selectCodeEditor("LLMint.sv", 244, 86); // ch (w, cr)
+selectCodeEditor("LLMint.sv", 230, 98); // ch (w, cr)
+selectCodeEditor("LLMint.sv", 305, 136); // ch (w, cr)
+selectCodeEditor("LLMint.sv", 261, 116); // ch (w, cr)
+selectCodeEditor("LLMint.sv", 261, 116, false, false, false, false, true); // ch (w, cr) - Double Click
+selectCodeEditor("LLMint.sv", 691, 205); // ch (w, cr)
+selectCodeEditor("LLMint.sv", 396, 21); // ch (w, cr)
+selectCodeEditor("LLMint.sv", 365, 86); // ch (w, cr)
+selectTab("PlanAheadTabBaseWorkspace_JideTabbedPane", (HResource) null, "llm_int_wrapper.sv", 4); // i (h, cr)
+selectCodeEditor("llm_int_wrapper.sv", 183, 203); // ch (w, cr)
+selectCodeEditor("llm_int_wrapper.sv", 154, 236); // ch (w, cr)
+selectCodeEditor("llm_int_wrapper.sv", 136, 253); // ch (w, cr)
+selectCodeEditor("llm_int_wrapper.sv", 133, 265); // ch (w, cr)
+selectCodeEditor("llm_int_wrapper.sv", 118, 284); // ch (w, cr)
+selectCodeEditor("llm_int_wrapper.sv", 110, 310); // ch (w, cr)
+selectCodeEditor("llm_int_wrapper.sv", 179, 292); // ch (w, cr)
+selectCodeEditor("llm_int_wrapper.sv", 663, 181); // ch (w, cr)
+// TclEventType: FILE_SET_CHANGE
+selectTab("PlanAheadTabBaseWorkspace_JideTabbedPane", (HResource) null, "LLMint.sv", 2); // i (h, cr)
+selectCodeEditor("LLMint.sv", 360, 78); // ch (w, cr)
+selectCodeEditor("LLMint.sv", 360, 86); // ch (w, cr)
+selectCodeEditor("LLMint.sv", 358, 87, false, false, false, true, false); // ch (w, cr) - Popup Trigger
+selectTab((HResource) null, "PlanAheadTabBaseWorkspace_JideTabbedPane", (HResource) null, "LLMint.sv", 2, true, false); // i (h, cr) - Popup Trigger
+selectButton(RDIResourceCommand.RDICommands_SAVE_FILE, (String) null); // E (f, cr)
+unMinimizeFrame(PAResourceOtoP.PAViews_SOURCES, "Sources"); // aA
+selectTree(PAResourceEtoH.FileSetPanel_FILE_SET_PANEL_TREE, "[root, Design Sources, top (llm_int_wrapper.sv), llm_int : LLMint (LLMint.sv)]", 2, true); // B (F, cr) - Node
+expandTree(PAResourceEtoH.FileSetPanel_FILE_SET_PANEL_TREE, "[root, Design Sources, top (llm_int_wrapper.sv), llm_int : LLMint (LLMint.sv)]", 2); // B (F, cr)
+selectTree(PAResourceEtoH.FileSetPanel_FILE_SET_PANEL_TREE, "[root, Design Sources, top (llm_int_wrapper.sv), llm_int : LLMint (LLMint.sv), scatter : scatter_threshold (scatter_threshold.sv)]", 3, true); // B (F, cr) - Node
+selectTree(PAResourceEtoH.FileSetPanel_FILE_SET_PANEL_TREE, "[root, Design Sources, top (llm_int_wrapper.sv), llm_int : LLMint (LLMint.sv), scatter : scatter_threshold (scatter_threshold.sv)]", 3, true, false, false, false, true, false); // B (F, cr) - Popup Trigger - Node
+selectMenu(PAResourceCommand.PACommandNames_AUTO_UPDATE_HIER, "Hierarchy Update"); // af (ao, cr)
+selectMenu(PAResourceQtoS.SrcMenu_IP_HIERARCHY, "IP Hierarchy"); // af (ao, cr)
+selectMenuItem(PAResourceCommand.PACommandNames_CREATE_OUT_OF_CONTEXT_FILESET, "Set as Out-of-Context for Synthesis..."); // ai (ao, cr)
+selectMenu(PAResourceQtoS.SrcMenu_IP_HIERARCHY, "IP Hierarchy"); // af (ao, cr)
+selectMenuItem(PAResourceQtoS.SrcMenu_REFRESH_HIERARCHY, "Refresh Hierarchy"); // ai (ao, cr)
+selectTree(PAResourceEtoH.FileSetPanel_FILE_SET_PANEL_TREE, "[root, Design Sources, top (llm_int_wrapper.sv), llm_int : LLMint (LLMint.sv)]", 2, true); // B (F, cr) - Node
+selectTree(PAResourceEtoH.FileSetPanel_FILE_SET_PANEL_TREE, "[root, Design Sources, top (llm_int_wrapper.sv), llm_int : LLMint (LLMint.sv)]", 2, true, false, false, false, true, false); // B (F, cr) - Popup Trigger - Node
+selectMenu(PAResourceCommand.PACommandNames_AUTO_UPDATE_HIER, "Hierarchy Update"); // af (ao, cr)
+selectMenu(PAResourceQtoS.SrcMenu_IP_HIERARCHY, "IP Hierarchy"); // af (ao, cr)
+selectTree(PAResourceEtoH.FileSetPanel_FILE_SET_PANEL_TREE, "[root, Design Sources, top (llm_int_wrapper.sv), llm_int : LLMint (LLMint.sv), scatter : scatter_threshold (scatter_threshold.sv)]", 3, true); // B (F, cr) - Node
+// Elapsed time: 98 seconds
+selectTree(PAResourceEtoH.FileSetPanel_FILE_SET_PANEL_TREE, "[root, Design Sources, top (llm_int_wrapper.sv), llm_int : LLMint (LLMint.sv), scatter : scatter_threshold (scatter_threshold.sv)]", 3, true, false, false, false, true, false); // B (F, cr) - Popup Trigger - Node
+selectMenu(PAResourceCommand.PACommandNames_AUTO_UPDATE_HIER, "Hierarchy Update"); // af (ao, cr)
+selectMenu(PAResourceQtoS.SrcMenu_IP_HIERARCHY, "IP Hierarchy"); // af (ao, cr)
+selectMenuItem(PAResourceCommand.PACommandNames_CREATE_OUT_OF_CONTEXT_FILESET, "Set as Out-of-Context for Synthesis..."); // ai (ao, cr)
+// Run Command: PAResourceCommand.PACommandNames_CREATE_OUT_OF_CONTEXT_FILESET
+// t (cr): Set as Out-of-Context for Synthesis: addNotify
+selectTable(PAResourceAtoD.CreateOutOfContextModuleDialog_OUT_OF_CONTEXT_MODULE_DIALOG_TABLE, "scatter : scatter_threshold (scatter_threshold.sv) ; scatter_threshold ; true ; ui.b.i.f.B@46ec95c1", 0, "ui.b.i.f.B@46ec95c1", 3); // C (O, t)
+selectTable(PAResourceAtoD.CreateOutOfContextModuleDialog_OUT_OF_CONTEXT_MODULE_DIALOG_TABLE, "scatter : scatter_threshold (scatter_threshold.sv) ; scatter_threshold ; true ; ui.b.i.f.B@46ec95c1", 0, "ui.b.i.f.B@46ec95c1", 3); // C (O, t)
+selectButton(RDIResource.BaseDialog_OK, "OK"); // a (t)
+// 'O' command handler elapsed time: 7 seconds
+dismissDialog("Set as Out-of-Context for Synthesis"); // t (cr)
+// Tcl Message: create_fileset -blockset -define_from scatter_threshold scatter_threshold 
+// Tcl Message: ERROR: [Vivado 12-3491] One or more instances of the module 'scatter_threshold' are incompatible with out-of-context synthesis. See warnings for further details and possible resolution. 
+// CommandFailedException: ERROR: [Common 17-69] Command failed: ERROR: [Vivado 12-3491] One or more instances of the module 'scatter_threshold' are incompatible with out-of-context synthesis. See warnings for further details and possible resolution.  
+// HOptionPane Error: 'ERROR: [Vivado 12-3491] One or more instances of the module 'scatter_threshold' are incompatible with out-of-context synthesis. See warnings for further details and possible resolution.  (Set As Out-of-context Module)'
+selectButton("OptionPane.button", "OK"); // JButton (A, G)
+// Elapsed time: 27 seconds
+selectCodeEditor("LLMint.sv", 261, 116); // ch (w, cr)
+selectCodeEditor("LLMint.sv", 261, 116, false, false, false, false, true); // ch (w, cr) - Double Click
+selectCodeEditor("LLMint.sv", 255, 128); // ch (w, cr)
+selectCodeEditor("LLMint.sv", 255, 128, false, false, false, false, true); // ch (w, cr) - Double Click
+// TclEventType: DG_GRAPH_STALE
+// TclEventType: FILE_SET_CHANGE
+selectCodeEditor("LLMint.sv", 276, 117, false, false, false, true, false); // ch (w, cr) - Popup Trigger
+selectTree(PAResourceEtoH.FileSetPanel_FILE_SET_PANEL_TREE, "[root, Design Sources, top (llm_int_wrapper.sv), llm_int : LLMint (LLMint.sv), scatter : scatter_threshold (scatter_threshold.sv)]", 3, true); // B (F, cr) - Node
+selectCodeEditor("LLMint.sv", 286, 151); // ch (w, cr)
+selectButton(PAResourceEtoH.FileSetPanel_RELOAD, "Reload..."); // h (ds, cr)
+selectMenuItem(PAResourceQtoS.SrcMenu_REFRESH_HIERARCHY, "Refresh Hierarchy"); // ai (cr)
+selectTree(PAResourceEtoH.FileSetPanel_FILE_SET_PANEL_TREE, "[root, Constraints]", 8, true); // B (F, cr) - Node
+selectTree(PAResourceEtoH.FileSetPanel_FILE_SET_PANEL_TREE, "[root, Design Sources, top (llm_int_wrapper.sv), llm_int : LLMint (LLMint.sv), scatter : scatter_threshold (scatter_threshold.sv)]", 3, true); // B (F, cr) - Node
+selectTree(PAResourceEtoH.FileSetPanel_FILE_SET_PANEL_TREE, "[root, Design Sources, top (llm_int_wrapper.sv), llm_int : LLMint (LLMint.sv), scatter : scatter_threshold (scatter_threshold.sv)]", 3, true, false, false, false, true, false); // B (F, cr) - Popup Trigger - Node
+selectMenu(PAResourceCommand.PACommandNames_AUTO_UPDATE_HIER, "Hierarchy Update"); // af (ao, cr)
+selectMenu(PAResourceQtoS.SrcMenu_IP_HIERARCHY, "IP Hierarchy"); // af (ao, cr)
+selectMenu(PAResourceQtoS.SrcMenu_IP_HIERARCHY, "IP Hierarchy"); // af (ao, cr)
+selectMenu(PAResourceQtoS.SrcMenu_IP_HIERARCHY, "IP Hierarchy"); // af (ao, cr)
+selectMenu(PAResourceQtoS.SrcMenu_IP_HIERARCHY, "IP Hierarchy"); // af (ao, cr)
+selectMenu(PAResourceCommand.PACommandNames_AUTO_UPDATE_HIER, "Hierarchy Update"); // af (ao, cr)
+selectCodeEditor("LLMint.sv", 241, 229); // ch (w, cr)
+selectCodeEditor("LLMint.sv", 76, 17); // ch (w, cr)
+selectTree(PAResourceEtoH.FileSetPanel_FILE_SET_PANEL_TREE, "[root, Design Sources, top (llm_int_wrapper.sv), llm_int : LLMint (LLMint.sv), scatter : scatter_threshold (scatter_threshold.sv)]", 3, true, false, false, false, true, false); // B (F, cr) - Popup Trigger - Node
+selectMenu(PAResourceQtoS.SrcMenu_IP_HIERARCHY, "IP Hierarchy"); // af (ao, cr)
+selectMenuItem(PAResourceCommand.PACommandNames_CREATE_OUT_OF_CONTEXT_FILESET, "Set as Out-of-Context for Synthesis..."); // ai (ao, cr)
+// Run Command: PAResourceCommand.PACommandNames_CREATE_OUT_OF_CONTEXT_FILESET
+// t (cr): Set as Out-of-Context for Synthesis: addNotify
+selectButton(RDIResource.BaseDialog_OK, "OK"); // a (t)
+dismissDialog("Set as Out-of-Context for Synthesis"); // t (cr)
+// Tcl Message: create_fileset -blockset -define_from scatter_threshold scatter_threshold 
+// Tcl Message: ERROR: [Vivado 12-3491] One or more instances of the module 'scatter_threshold' are incompatible with out-of-context synthesis. See warnings for further details and possible resolution. 
+// CommandFailedException: ERROR: [Common 17-69] Command failed: ERROR: [Vivado 12-3491] One or more instances of the module 'scatter_threshold' are incompatible with out-of-context synthesis. See warnings for further details and possible resolution.  
+// HOptionPane Error: 'ERROR: [Vivado 12-3491] One or more instances of the module 'scatter_threshold' are incompatible with out-of-context synthesis. See warnings for further details and possible resolution.  (Set As Out-of-context Module)'
+selectButton("OptionPane.button", "OK"); // JButton (A, G)
+selectCodeEditor(RDIResource.TclConsoleView_TCL_CONSOLE_CODE_EDITOR, 339, 20); // dT (af, cr)
+selectCodeEditor(RDIResource.TclConsoleView_TCL_CONSOLE_CODE_EDITOR, 338, 20, false, false, false, false, true); // dT (af, cr) - Double Click
+selectCodeEditor(RDIResource.TclConsoleView_TCL_CONSOLE_CODE_EDITOR, 338, 20); // dT (af, cr)
+typeControlKey(RDIResource.TclConsoleView_TCL_CONSOLE_CODE_EDITOR, "RDIResource.TclConsoleView_TCL_CONSOLE_CODE_EDITOR", 'c'); // dT (af, cr)
+// Elapsed time: 53 seconds
+selectCodeEditor("LLMint.sv", 253, 132); // ch (w, cr)
+selectCodeEditor("LLMint.sv", 28, 25); // ch (w, cr)
+// Elapsed time: 21 seconds
+selectTree(PAResourceEtoH.FileSetPanel_FILE_SET_PANEL_TREE, "[root, Design Sources, top (llm_int_wrapper.sv), llm_int : LLMint (LLMint.sv), scatter : scatter_threshold (scatter_threshold.sv)]", 3, true, false, false, false, true, false); // B (F, cr) - Popup Trigger - Node
+selectMenu(PAResourceCommand.PACommandNames_AUTO_UPDATE_HIER, "Hierarchy Update"); // af (ao, cr)
+selectMenu(PAResourceQtoS.SrcMenu_IP_HIERARCHY, "IP Hierarchy"); // af (ao, cr)
+selectCodeEditor(RDIResource.TclConsoleView_TCL_CONSOLE_CODE_EDITOR, 815, 69); // dT (af, cr)
+// WARNING: HEventQueue.dispatchEvent() is taking  1084 ms.
+// HMemoryUtils.trashcanNow. Engine heap size: 6,838 MB. GUI used memory: 268 MB. Current time: 3/27/24, 12:40:33 PM GMT
+// Elapsed time: 78 seconds
+selectTree(PAResourceOtoP.PowerResultTab_REPORT_NAVIGATION_TREE, "[Report Contents, Utilization Details, Hierarchical]", 4, false); // h (O, cr)
+selectTree(PAResourceOtoP.PowerResultTab_REPORT_NAVIGATION_TREE, "[Report Contents, Utilization Details]", 3, true); // h (O, cr) - Node
+selectTree(PAResourceOtoP.PowerResultTab_REPORT_NAVIGATION_TREE, "[Report Contents, Settings]", 0, false); // h (O, cr)
+selectTree(PAResourceOtoP.PowerResultTab_REPORT_NAVIGATION_TREE, "[Report Contents, Summary]", 1, false); // h (O, cr)
+// Run Command: PAResourceCommand.PACommandNames_POWER_CONSTRAINT_ADVISOR
+// bB (cr):  Power Constraints Advisor : addNotify
+// WARNING: HEventQueue.dispatchEvent() is taking  1028 ms.
+// HMemoryUtils.trashcanNow. Engine heap size: 7,019 MB. GUI used memory: 264 MB. Current time: 3/27/24, 12:41:23 PM GMT
+// Elapsed time: 12 seconds
+selectButton(RDIResource.ProgressDialog_BACKGROUND, "Background"); // a (bB)
+// [Engine Memory]: 7,051 MB (+204942kb) [41:44:12]
+// TclEventType: TIMING_RESULTS_STALE
+// a (cr): Power Constraints Advisor: addNotify
+dismissDialog("Power Constraints Advisor"); // bB (cr)
+dismissDialog("Power Constraints Advisor"); // a (cr)
+// WARNING: HEventQueue.dispatchEvent() is taking  1038 ms.
+// HMemoryUtils.trashcanNow. Engine heap size: 7,044 MB. GUI used memory: 263 MB. Current time: 3/27/24, 1:11:23 PM GMT
