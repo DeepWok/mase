@@ -276,42 +276,42 @@ async def stream(dut):
     jsonfile = Path(__file__).parent / "data" / f"batch-{tb.IN_WIDTH}.json"
     with open(jsonfile, 'w') as f:
         json.dump({
+            "mean": errs.mean().item(),
             "error": errs.tolist(),
-            "mean": errs.mean().item()
         }, f, indent=4)
 
 
-# @cocotb.test()
-# async def backpressure(dut):
-#     tb = BatchNorm2dTB(dut)
-#     await tb.reset()
-#     cocotb.start_soon(bit_driver(dut.out_ready, dut.clk, 0.5))
-#     tb.setup_test(batches=100)
-#     await Timer(1000, 'us')
-#     assert tb.output_monitor.exp_queue.empty()
+@cocotb.test()
+async def backpressure(dut):
+    tb = BatchNorm2dTB(dut)
+    await tb.reset()
+    cocotb.start_soon(bit_driver(dut.out_ready, dut.clk, 0.5))
+    tb.setup_test(batches=100)
+    await Timer(1000, 'us')
+    assert tb.output_monitor.exp_queue.empty()
 
 
-# @cocotb.test()
-# async def valid_toggle(dut):
-#     tb = BatchNorm2dTB(dut)
-#     await tb.reset()
-#     tb.output_monitor.ready.value = 1
-#     tb.in_driver.set_valid_prob(0.5)
-#     tb.setup_test(batches=100)
-#     await Timer(1000, 'us')
-#     assert tb.output_monitor.exp_queue.empty()
+@cocotb.test()
+async def valid_toggle(dut):
+    tb = BatchNorm2dTB(dut)
+    await tb.reset()
+    tb.output_monitor.ready.value = 1
+    tb.in_driver.set_valid_prob(0.5)
+    tb.setup_test(batches=100)
+    await Timer(1000, 'us')
+    assert tb.output_monitor.exp_queue.empty()
 
 
-# @cocotb.test()
-# async def valid_backpressure(dut):
-#     tb = BatchNorm2dTB(dut)
-#     await tb.reset()
-#     tb.in_driver.set_valid_prob(0.5)
-#     cocotb.start_soon(bit_driver(dut.out_ready, dut.clk, 0.5))
-#     tb.setup_test(batches=100)
+@cocotb.test()
+async def valid_backpressure(dut):
+    tb = BatchNorm2dTB(dut)
+    await tb.reset()
+    tb.in_driver.set_valid_prob(0.5)
+    cocotb.start_soon(bit_driver(dut.out_ready, dut.clk, 0.5))
+    tb.setup_test(batches=100)
 
-#     await Timer(1000, 'us')
-#     assert tb.output_monitor.exp_queue.empty()
+    await Timer(1000, 'us')
+    assert tb.output_monitor.exp_queue.empty()
 
 
 if __name__ == "__main__":
@@ -354,24 +354,25 @@ if __name__ == "__main__":
         for w in [2, 4, 6, 8, 10, 12, 14, 16]
     ])
 
+    test_cfgs = [
+        # Default
+        gen_cfg(),
+        # Precision
+        gen_cfg(4, 4, 2, 2, 4, 8, 4, 8, 4, 1),
+        gen_cfg(4, 4, 2, 2, 4, 4, 2, 4, 2, 2),
+        gen_cfg(4, 4, 2, 2, 4, 2, 1, 2, 1, 3),
+        # Rectangle
+        gen_cfg(4, 6, 2, 2, 4, 16, 8, 16, 8, 4),
+        gen_cfg(6, 2, 2, 2, 4, 16, 8, 16, 8, 5),
+        gen_cfg(6, 2, 3, 2, 4, 16, 8, 16, 8, 6),
+        gen_cfg(4, 6, 2, 3, 4, 16, 8, 16, 8, 7),
+        ## Channels
+        gen_cfg(4, 4, 2, 2, 5, 16, 8, 16, 8, 8),
+        gen_cfg(4, 4, 2, 2, 6, 16, 8, 16, 8, 9),
+        gen_cfg(4, 4, 2, 2, 7, 16, 8, 16, 8, 10),
+    ]
+
     mase_runner(
         module_param_list=error_analysis_cfgs,
-        # module_param_list=[
-        #     # Default
-        #     gen_cfg(),
-        #     # Precision
-        #     gen_cfg(4, 4, 2, 2, 4, 8, 4, 8, 4, 1),
-        #     gen_cfg(4, 4, 2, 2, 4, 4, 2, 4, 2, 2),
-        #     gen_cfg(4, 4, 2, 2, 4, 2, 1, 2, 1, 3),
-        #     # Rectangle
-        #     gen_cfg(4, 6, 2, 2, 4, 16, 8, 16, 8, 4),
-        #     gen_cfg(6, 2, 2, 2, 4, 16, 8, 16, 8, 5),
-        #     gen_cfg(6, 2, 3, 2, 4, 16, 8, 16, 8, 6),
-        #     gen_cfg(4, 6, 2, 3, 4, 16, 8, 16, 8, 7),
-        #     ## Channels
-        #     gen_cfg(4, 4, 2, 2, 5, 16, 8, 16, 8, 8),
-        #     gen_cfg(4, 4, 2, 2, 6, 16, 8, 16, 8, 9),
-        #     gen_cfg(4, 4, 2, 2, 7, 16, 8, 16, 8, 10),
-        # ],
         trace=True,
     )
