@@ -70,9 +70,9 @@ compare_to = 32 # compare to FP32
 [search.strategy.setup]
 algorithm = 'a2c'
 env = 'mixed_precision'
-total_timesteps = 32000
+total_timesteps = 1#32000
 save_name = 'test'
-mode='load'
+mode='train'
 
 model_parallel = false
 runner_style = "lm"
