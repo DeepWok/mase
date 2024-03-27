@@ -51,4 +51,5 @@ class VGG7(nn.Module):
 def get_vgg7(info, pretrained=False) -> VGG7:
     image_size = info.image_size
     num_classes = info.num_classes
+    # num_classes = 100
     return VGG7(image_size, num_classes)

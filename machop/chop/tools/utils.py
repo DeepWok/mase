@@ -249,9 +249,9 @@ def nested_dict_replacer(compound_dict, fn):
 def parse_accelerator(accelerator: str):
     if accelerator == "auto":
         device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-    elif accelerator in ("gpu", torch.device("cuda:0")):
+    elif accelerator == "gpu":
         device = torch.device("cuda:0")
-    elif accelerator in ("cpu", torch.device("cpu")):
+    elif accelerator == "cpu":
         device = torch.device("cpu")
     else:
         raise RuntimeError(f"Unsupported accelerator {accelerator}")

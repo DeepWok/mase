@@ -1,6 +1,9 @@
 import optuna
+from sklearn.impute import SimpleImputer
 import torch
+import numpy as np
 import pandas as pd
+from sklearn.linear_model import LinearRegression
 import logging
 from tabulate import tabulate
 import joblib
@@ -34,6 +37,13 @@ class SearchStrategyOptuna(SearchStrategyBase):
     def _post_init_setup(self):
         self.sum_scaled_metrics = self.config["setup"]["sum_scaled_metrics"]
         self.metric_names = list(sorted(self.config["metrics"].keys()))
+
+        ### whether it is zero cost search
+        self.zero_cost_mode = "zero_cost" in self.config["sw_runner"].keys()
+        if self.zero_cost_mode:
+            ### dict for saving the proxy number and the true metric
+            self.zero_cost_and_true_metric = {}
+
         if not self.sum_scaled_metrics:
             self.directions = [
                 self.config["metrics"][k]["direction"] for k in self.metric_names
@@ -87,10 +97,43 @@ class SearchStrategyOptuna(SearchStrategyBase):
         else:
             for name, length in search_space.choice_lengths_flattened.items():
                 sampled_indexes[name] = trial.suggest_int(name, 0, length - 1)
+            
+            trial_params = trial.params.popitem()
             sampled_config = search_space.flattened_indexes_to_config(sampled_indexes)
 
         is_eval_mode = self.config.get("eval_mode", True)
-        model = search_space.rebuild_model(sampled_config, is_eval_mode)
+        
+        '''
+        group 2: zero cost
+
+        In this section, we've added functionality to handle the zero cost mode. 
+
+        - First, we check if the zero cost mode is enabled.
+        - If it is, we rebuild the model with the sampled configuration and evaluation mode, and store the data returned by the rebuild_model function.
+        - We then create a new entry in the zero_cost_and_true_metric dictionary with the true metric data and an empty dictionary for the zero cost proxy.
+        - If the zero cost mode is not enabled, we simply rebuild the model without storing the data.
+        - We then compute the software and hardware metrics, and combine them into a single dictionary.
+        - We scale the metrics according to the scale factors defined in the configuration.
+        - If the zero cost mode is enabled, we store the scaled metrics in the zero_cost_proxy dictionary.
+        - We then set several user attributes for the trial, including the software metrics, hardware metrics, scaled metrics, sampled configuration, and nasbench data metrics.
+        - We log the scaled metrics using the visualizer.
+        - Finally, we return the scaled metrics. If the sum_scaled_metrics flag is enabled, we return the sum of the scaled metrics; otherwise, we return the list of scaled metrics.
+        '''
+        
+        # print("self config")
+        # print(self.config)
+        if self.zero_cost_mode:
+            model, data = search_space.rebuild_model(sampled_config, is_eval_mode)
+            length = len(self.zero_cost_and_true_metric)
+            self.zero_cost_and_true_metric[length] = {
+                "true_metric": data,
+                "zero_cost_proxy": {}
+            }
+        else:
+            model = search_space.rebuild_model(sampled_config, is_eval_mode)
+            data = None
+        # print("data")
+        # print(data)
 
         software_metrics = self.compute_software_metrics(
             model, sampled_config, is_eval_mode
@@ -99,16 +142,21 @@ class SearchStrategyOptuna(SearchStrategyBase):
             model, sampled_config, is_eval_mode
         )
         metrics = software_metrics | hardware_metrics
+        # print("Overall metrics: ")
+        # print(metrics)
         scaled_metrics = {}
         for metric_name in self.metric_names:
             scaled_metrics[metric_name] = (
                 self.config["metrics"][metric_name]["scale"] * metrics[metric_name]
             )
+        if self.zero_cost_mode:
+            self.zero_cost_and_true_metric[length]["zero_cost_proxy"] = scaled_metrics
 
         trial.set_user_attr("software_metrics", software_metrics)
         trial.set_user_attr("hardware_metrics", hardware_metrics)
         trial.set_user_attr("scaled_metrics", scaled_metrics)
         trial.set_user_attr("sampled_config", sampled_config)
+        trial.set_user_attr("nasbench_data_metrics", data)
 
         self.visualizer.log_metrics(metrics=scaled_metrics, step=trial.number)
 
@@ -154,6 +202,42 @@ class SearchStrategyOptuna(SearchStrategyBase):
 
         return study
 
+    def zero_cost_weight(self):
+        if self.zero_cost_mode:
+            self.zc_proxy = pd.DataFrame()
+            self.zc_true_accuracy = []
+            for key, value in self.zero_cost_and_true_metric.items() :
+                self.zc_proxy = pd.concat([self.zc_proxy, pd.DataFrame(value["zero_cost_proxy"], index=[0])], ignore_index=True)
+                self.zc_true_accuracy.append(value["true_metric"]["test-accuracy"])
+
+            # get rid of hardware metrics
+            available_zc_metrics = ["fisher", "grad_norm", "grasp", "l2_norm", "plain", "snip", "synflow", "naswot", "naswot_relu", "tenas", "zico"]
+            zc_cols = self.zc_proxy.columns[self.zc_proxy.columns.isin(available_zc_metrics)]
+            self.zc_proxy = self.zc_proxy[zc_cols]
+            
+            # print("proxy values")
+            # print(self.zc_proxy)
+
+            ### deal with -inf (fill with the minimum)
+            # self.zc_proxy.loc[np.isneginf(self.zc_proxy["jacob_cov"]), "jacob_cov"] = min(self.zc_proxy.loc[~np.isneginf(self.zc_proxy["jacob_cov"]), "jacob_cov"])
+
+            ### fit linear regression models
+            ## standardize
+            for _ in self.zc_proxy.columns:
+                if self.zc_proxy[_].mean().sum() != 0:
+                    self.zc_proxy[_] = (self.zc_proxy[_] - self.zc_proxy[_].mean())/self.zc_proxy[_].std()
+                else:
+                    self.zc_proxy[_] = (self.zc_proxy[_] - self.zc_proxy[_].mean())
+                    
+            # print("proxy values after standardization")
+            # print(self.zc_proxy)
+            
+            self.zc_weight_model = LinearRegression(fit_intercept=True)
+            self.zc_weight_model.fit(self.zc_proxy, self.zc_true_accuracy)
+        else:
+            raise ValueError("zero_cost_mode is Fasle, do not fit the zero_cost_weight evaluation.")
+            
+
     @staticmethod
     def _save_search_dataframe(study: optuna.study.Study, search_space, save_path):
         df = study.trials_dataframe(
@@ -181,6 +265,7 @@ class SearchStrategyOptuna(SearchStrategyBase):
                 "hardware_metrics",
                 "scaled_metrics",
                 "sampled_config",
+                "nasbench_data_metrics",
             ]
         )
         if study._is_multi_objective:
@@ -193,6 +278,7 @@ class SearchStrategyOptuna(SearchStrategyBase):
                     trial.user_attrs["hardware_metrics"],
                     trial.user_attrs["scaled_metrics"],
                     trial.user_attrs["sampled_config"],
+                    trial.user_attrs["nasbench_data_metrics"],
                 ]
                 df.loc[len(df)] = row
         else:
@@ -204,13 +290,14 @@ class SearchStrategyOptuna(SearchStrategyBase):
                 best_trial.user_attrs["hardware_metrics"],
                 best_trial.user_attrs["scaled_metrics"],
                 best_trial.user_attrs["sampled_config"],
+                best_trial.user_attrs["nasbench_data_metrics"],
             ]
             df.loc[len(df)] = row
         df.to_json(save_path, orient="index", indent=4)
 
         txt = "Best trial(s):\n"
         df_truncated = df.loc[
-            :, ["number", "software_metrics", "hardware_metrics", "scaled_metrics"]
+            :, ["number", "software_metrics", "hardware_metrics", "scaled_metrics", "nasbench_data_metrics"]
         ]
 
         def beautify_metric(metric: dict):
@@ -228,9 +315,9 @@ class SearchStrategyOptuna(SearchStrategyBase):
             return beautified
 
         df_truncated.loc[
-            :, ["software_metrics", "hardware_metrics", "scaled_metrics"]
+            :, ["software_metrics", "hardware_metrics", "scaled_metrics", "nasbench_data_metrics"]
         ] = df_truncated.loc[
-            :, ["software_metrics", "hardware_metrics", "scaled_metrics"]
+            :, ["software_metrics", "hardware_metrics", "scaled_metrics", "nasbench_data_metrics"]
         ].map(
             beautify_metric
         )
