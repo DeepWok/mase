@@ -12,8 +12,8 @@ from pytorch_quantization.tensor_quant import QuantDescriptor
 
 from chop.passes.graph.utils import get_mase_op, get_mase_type, get_node_actual_target
 from chop.passes.graph.interface.save_and_load import load_mase_graph_interface_pass
-from ....utils import deepcopy_mase_graph
-from .utils import Int8Calibrator, prepare_save_path, check_for_value_in_dict
+from ...utils import deepcopy_mase_graph
+from ...transforms.tensorrt.quantize.utils import Int8Calibrator, prepare_save_path, check_for_value_in_dict
 
 def tensorrt_engine_interface_pass(graph, pass_args=None):
     quantizer = Quantizer(pass_args)

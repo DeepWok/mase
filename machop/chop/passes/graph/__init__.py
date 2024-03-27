@@ -46,7 +46,7 @@ from .transforms.tensorrt import (
     tensorrt_fake_quantize_transform_pass
 )
 
-from .transforms.onnxrt import onnx_runtime_transform_pass
+from .transforms.onnxrt import onnx_runtime_interface_pass
 
 ANALYSIS_PASSES = [
     "init_metadata",
@@ -75,9 +75,9 @@ TRANSFORM_PASSES = [
     "prune",
     "prune_detach_hook" "conv_bn_fusion",
     "logicnets_fusion",
-    "tensorrt_fake_quantize"
-    "tensorrt_calibrate"
-    "tensorrt_fine_tune"
+    "tensorrt_fake_quantize",
+    "tensorrt_calibrate",
+    "tensorrt_fine_tune",
 ]
 
 INTERFACE_PASSES = [
@@ -85,7 +85,8 @@ INTERFACE_PASSES = [
     "load_node_meta_param",
     "save_mase_graph",
     "save_node_meta_param",
-    "tensorrt"
+    "tensorrt",
+    "onnxruntime",
 ]
 
 PASSES = {
@@ -113,13 +114,13 @@ PASSES = {
     "load_node_meta_param": load_node_meta_param_interface_pass,
     "save_mase_graph": save_mase_graph_interface_pass,
     "save_node_meta_param": save_node_meta_param_interface_pass,
-    "tensorrt_quantize": tensorrt_engine_interface_pass,
+    "tensorrt": tensorrt_engine_interface_pass,
+    "onnxruntime": onnx_runtime_interface_pass,
     # transform
     "quantize": quantize_transform_pass,
     "tensorrt_calibrate": tensorrt_calibrate_transform_pass,
     "tensorrt_fake_quantize": tensorrt_fake_quantize_transform_pass,
     "tensorrt_fine_tune": tensorrt_fine_tune_transform_pass,
-    "onnxruntime": onnx_runtime_transform_pass,
     "summarize_quantization": summarize_quantization_analysis_pass,
     "prune": prune_transform_pass,
     "prune_detach_hook": prune_detach_hook_transform_pass,

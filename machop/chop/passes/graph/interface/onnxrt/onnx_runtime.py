@@ -6,9 +6,9 @@ from pathlib import Path
 from prettytable import PrettyTable
 import onnx
 import onnxruntime as ort
-from .quantize import Quantizer
+from ...transforms.onnxrt.quantize import Quantizer
 
-def onnx_runtime_transform_pass(graph, pass_args="None"):    
+def onnx_runtime_interface_pass(graph, pass_args="None"):    
     onnx_runtime_session = ONNXRuntime(config=pass_args)
     pytorch_model = graph.model
 
