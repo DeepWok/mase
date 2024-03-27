@@ -1,1 +1,1 @@
-from .analysis import runtime_analysis_pass
+from .runtime_analysis import runtime_analysis_pass

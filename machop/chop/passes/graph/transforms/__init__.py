@@ -1,6 +1,5 @@
 from .pruning import prune_transform_pass, prune_detach_hook_transform_pass
 from .quantize import quantize_transform_pass, summarize_quantization_analysis_pass
-from .onnxrt import onnx_runtime_interface_pass
 from .verilog import (
     emit_bram_transform_pass,
     emit_internal_rtl_transform_pass,
@@ -17,3 +16,8 @@ from .utils import (
 )
 
 from .dse import partition_to_multi_device_transform_pass
+from .tensorrt import (
+    tensorrt_calibrate_transform_pass,
+    tensorrt_fine_tune_transform_pass,
+    tensorrt_fake_quantize_transform_pass,
+)
