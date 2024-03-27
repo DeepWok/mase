@@ -1,3 +1,5 @@
+import time
+import torch
 from ..base import SearchStrategyBase
 from .env import env_map
 from stable_baselines3 import A2C, PPO, DDPG, TD3
@@ -6,10 +8,10 @@ from stable_baselines3.common.callbacks import (
     CheckpointCallback,
     EvalCallback,
 )
-
+import logging
+logger = logging.getLogger(__name__)
 
 algorithm_map = {
-    # TODO: maybe network architecture needs complication.
     "ppo": PPO,
     "a2c": A2C,
     "td3": TD3
@@ -23,10 +25,9 @@ class StrategyRL(SearchStrategyBase):
         setup = self.config["setup"]
         self.model_parallel = setup["model_parallel"]
         self.runner_style = setup["runner_style"]
-        # self.runner = self.get_runner(self.runner_style)
 
         self.algorithm_name = setup["algorithm"]
-        # self.device = setup["device"]
+        self.device = setup["device"]
         self.total_timesteps = setup["total_timesteps"]
         self.save_name = "./mase_output/"+setup["save_name"]+'/'+setup["save_name"]
 
@@ -36,6 +37,7 @@ class StrategyRL(SearchStrategyBase):
         self.sum_scaled_metrics = setup["sum_scaled_metrics"]
 
         self.metrics = self.config["metrics"]
+        self.load_path = setup["load_path"]
 
         self.mode=setup["mode"]
     def search(self, search_space):
@@ -46,55 +48,56 @@ class StrategyRL(SearchStrategyBase):
                                "sum_scaled_metrics": self.sum_scaled_metrics,
                                "data_module": self.data_module,
                                "metrics": self.metrics})
-        checkpoint_callback = CheckpointCallback(save_freq=100, save_path="./logs/")
+        checkpoint_callback = CheckpointCallback(save_freq=1000, save_path="./logs/")
         eval_callback = EvalCallback(
             env,
             best_model_save_path="./logs/best_model",
             log_path="./logs/results",
-            eval_freq=50,
+            eval_freq=1000,
         )
         callback = CallbackList([checkpoint_callback, eval_callback])
         method = 0
         # possible extension is to allow custom policy network
         # https://stable-baselines3.readthedocs.io/en/master/guide/custom_policy.html
         if self.mode == 'train':
-            print("training from sketch")
+            logger.info("training from sketch")
             model = self.algorithm(
                 "MultiInputPolicy",
                 env,
                 verbose=1,
-                # device=self.device,
+                device=self.device,
                 tensorboard_log="./logs/",
             )
 
             vec_env = model.get_env()
+            start=time.time()
+            print(int(self.total_timesteps))
             model.learn(
                 total_timesteps=int(self.total_timesteps),
-                # progress_bar=True,
                 callback=callback,
             )
-
-            # improvements needed
-            # drop this to mase_output
+            print(time.time() - start)
+            logger.info("Finished training")
             model.save(self.save_name)
             obs = vec_env.reset()
-            for _ in range(1000):
+            for _ in range(1):
                 action, _state = model.predict(obs, deterministic=True)
                 obs, reward, done, info = vec_env.step(action)
                 print(obs["reward"])
             return obs["reward"], obs, model
         elif self.mode == 'continue-training':
-            print("Continue training")
+            logger.info("Continue training")
             # Continue Training
             model = self.algorithm.load(
-                "/home/super_monkey/PycharmProjects/mase/logs/Monkey's favourites/rl_model_3000.zip",
+                self.load_path,
+                device=self.device,
                 env=env
             )
 
             vec_env = model.get_env()
+
             model.learn(
                 total_timesteps=int(self.total_timesteps),
-                # progress_bar=True,
                 callback=callback,
             )
             obs = vec_env.reset()
@@ -105,23 +108,19 @@ class StrategyRL(SearchStrategyBase):
                 print(obs["reward"])
             return obs["reward"], obs, model
         elif self.mode == 'load':
-            print("Loading model")
+            logger.info("Loading RL model")
             model = self.algorithm.load(
-                "/home/super_monkey/PycharmProjects/mase/logs/rl_model_3000_steps.zip",
+                self.load_path,
+                device=self.device,
                 env=env
             )
-
             vec_env = model.get_env()
             obs = vec_env.reset()
             for _ in range(20):
                 action, _state = model.predict(obs, deterministic=True)
-                # print(action)
                 obs, reward, done, info = vec_env.step(action)
-                # print(obs["reward"])
-            print()
-            print()
-            print(f"Best model: Accuracy={env.result[0]}, Average Bit Width={env.result[1]}")
+            logger.info(f"Best model: Accuracy={env.result[0]}, Average Bit Width={env.result[1]}")
             return obs["reward"], obs, model
         else:
-            print(self.mode, " not implemented")
+            logger.warning(f"{self.mode} not implemented")
             return None

@@ -255,7 +255,7 @@ class MixedPrecisionEnv(gym.Env):
             self.result[1] = metrics[1]
         if self.episode % 20 == 0:
             truncated = True
-            print(f"Episode: {self.episode}, reward: {reward}, accuracy: {metrics[0]}, average_bit: {metrics[1]}")
+            print(f"Step: {self.episode}, reward: {reward}, accuracy: {metrics[0]}, average_bit: {metrics[1]}")
 
         else:
             truncated = False
