@@ -146,26 +146,26 @@ async def test(dut):
     await tb.run_test()
   
 dut_params = {
-                "DATA_IN_0_TENSOR_SIZE_DIM_0": 4,
-                "DATA_IN_0_TENSOR_SIZE_DIM_1": 1,
+                "DATA_IN_0_TENSOR_SIZE_DIM_0": 12,
+                "DATA_IN_0_TENSOR_SIZE_DIM_1": 4,
                 
-                "DATA_IN_0_PARALLELISM_DIM_0": 2,
-                "DATA_IN_0_PARALLELISM_DIM_1": 1,
+                "DATA_IN_0_PARALLELISM_DIM_0": 6,
+                "DATA_IN_0_PARALLELISM_DIM_1": 2,
                 
-                "DATA_IN_0_PRECISION_0": 4,
-                "DATA_IN_0_PRECISION_1": 2,
+                "DATA_IN_0_PRECISION_0": 8,
+                "DATA_IN_0_PRECISION_1": 4,
 
-                "DATA_OUT_0_PRECISION_0": 4,
-                "DATA_OUT_0_PRECISION_1": 2,
+                "DATA_OUT_0_PRECISION_0": 8,
+                "DATA_OUT_0_PRECISION_1": 4,
                 
-                "DATA_OUT_0_TENSOR_SIZE_DIM_0": 4,
-                "DATA_OUT_0_TENSOR_SIZE_DIM_1": 1,
+                "DATA_OUT_0_TENSOR_SIZE_DIM_0": 12,
+                "DATA_OUT_0_TENSOR_SIZE_DIM_1": 4,
                 
-                "DATA_OUT_0_PARALLELISM_DIM_0": 2,
-                "DATA_OUT_0_PARALLELISM_DIM_1": 1,
+                "DATA_OUT_0_PARALLELISM_DIM_0": 6,
+                "DATA_OUT_0_PARALLELISM_DIM_1": 2,
                 
-                "DATA_INTERMEDIATE_0_PRECISION_0": 4,
-                "DATA_INTERMEDIATE_0_PRECISION_1": 2,
+                "DATA_INTERMEDIATE_0_PRECISION_0": 12,
+                "DATA_INTERMEDIATE_0_PRECISION_1": 8,
             }
 
 torch.manual_seed(1)
