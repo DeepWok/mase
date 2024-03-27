@@ -72,15 +72,27 @@ class StrategyRL(SearchStrategyBase):
             )
             callback = CallbackList([checkpoint_callback, eval_callback, wandb_callback])
 
-            model = self.algorithm(
-                "MultiInputPolicy",
-                env,
-                verbose=1,
-                device=self.device,
-                tensorboard_log="./logs/",
-                n_steps=self.n_steps,
-                learning_rate=self.learning_rate,
-            )
+            if self.config["env"]=="mixed_precision_paper":
+                model = self.algorithm(
+                    "MlpPolicy",
+                    env,
+                    verbose=1,
+                    device=self.device,
+                    tensorboard_log="./logs/",
+                    n_steps=self.n_steps,
+                    learning_rate=self.learning_rate,
+                )
+            
+            else:
+                model = self.algorithm(
+                    "MultiInputPolicy",
+                    env,
+                    verbose=1,
+                    device=self.device,
+                    tensorboard_log="./logs/",
+                    n_steps=self.n_steps,
+                    learning_rate=self.learning_rate,
+                )
 
             vec_env = model.get_env()
             model.learn(

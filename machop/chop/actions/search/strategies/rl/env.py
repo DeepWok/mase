@@ -360,10 +360,10 @@ class MixedPrecisionPaper(gym.Env):
 
         low = np.min(self.obs_list, axis=0)
         high = np.max(self.obs_list, axis=0)
-        self.observation_space = Dict({
-            'layer_info': Box(low=np.min(self.obs_list, axis=0), high=np.max(self.obs_list, axis=0), dtype=np.float32),
-            'action': Box(low=0, high=1, shape=(1,), dtype=np.float32)
-        })
+        self.observation_space = Box(
+            low=np.append(low, min([min(sub) for sub in self.act_list])),
+            high=np.append(high, max([max(sub) for sub in self.act_list])),
+        )
         self.action_space = Box(low=0, high=1.0)
 
     def run_trial(self, sampled_indexes):
@@ -454,11 +454,10 @@ class MixedPrecisionPaper(gym.Env):
         Always start from the first element in observation list.
         """
         self.state = 0
-        initial_observation = {
-            'layer_info': np.append(self.obs_list[self.state, :], min(self.act_list[self.state])).astype(np.float32),
-            'action': np.array([0])  # Example initial action value, adjust as needed
-        }
-        return initial_observation, {}
+        obs = np.append(
+            self.obs_list[self.state, :], min(self.act_list[self.state])
+        ).astype(np.float32)
+        return obs, {}
 
     def step(self, action):
         """Takes a single step in the episode given `action`
@@ -480,11 +479,9 @@ class MixedPrecisionPaper(gym.Env):
             self.state = 0
             terminated = truncated = True
             reward = self.run_trial(self.sample)
-        observation = {
-            'layer_info': np.append(self.obs_list[self.state, :], self.act_list[self.state][action]).astype(np.float32),
-            'action': np.array([action])  # Keep track of the action taken
-        }
-        return observation, reward, terminated, False, {}
+        obs = self.obs_list[self.state].copy()
+        obs = np.append(obs, choices[action]).astype(np.float32)
+        return obs, reward, terminated, False, {}
 
 
 
