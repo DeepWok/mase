@@ -10,6 +10,7 @@ from chop.passes.graph.utils import vf, v2p, get_module_by_name, init_project
 from chop.passes.graph.transforms.quantize.quantizers import integer_quantizer_for_hw
 
 logger = logging.getLogger(__name__)
+from pathlib import Path
 
 
 def iceil(x):
@@ -18,6 +19,13 @@ def iceil(x):
 
 def clog2(x):
     return iceil(math.log2(x))
+
+
+def _cap(name):
+    """
+    capitalize a string
+    """
+    return str(name).upper()
 
 
 def emit_parameters_in_mem_internal(node, param_name, file_name, data_name):
@@ -75,9 +83,9 @@ module {node_param_name}_rom #(
   logic [DWIDTH-1:0] q0_t0;
   logic [DWIDTH-1:0] q0_t1;
 
-  initial begin
-    $readmemh("{data_name}", ram);
-  end
+  // initial begin
+  //   $readmemh("{data_name}", ram);
+  // end
 
   assign q0 = q0_t1;
 
@@ -111,14 +119,19 @@ endmodule
 
 `timescale 1ns / 1ps
 module {node_param_name}_source #(
-    parameter OUT_SIZE  = 32,
-    parameter OUT_WIDTH = 16,
-    parameter OUT_DEPTH = 8
+    parameter {_cap(param_name)}_TENSOR_SIZE_DIM_0  = 32,
+    parameter {_cap(param_name)}_TENSOR_SIZE_DIM_1  = 1,
+    parameter {_cap(param_name)}_PRECISION_0 = 16,
+    parameter {_cap(param_name)}_PRECISION_1 = 3,
+
+    parameter {_cap(param_name)}_PARALLELISM_DIM_0 = 1,
+    parameter {_cap(param_name)}_PARALLELISM_DIM_1 = 1,
+    parameter OUT_DEPTH = {_cap(param_name)}_TENSOR_SIZE_DIM_0 / {_cap(param_name)}_PARALLELISM_DIM_0
 ) (
     input clk,
     input rst,
 
-    output logic [OUT_WIDTH-1:0] data_out      [OUT_SIZE-1:0],
+    output logic [{_cap(param_name)}_PRECISION_0-1:0] data_out      [{_cap(param_name)}_PARALLELISM_DIM_0 * {_cap(param_name)}_PARALLELISM_DIM_1-1:0],
     output                       data_out_valid,
     input                        data_out_ready
 );
@@ -138,9 +151,9 @@ module {node_param_name}_source #(
   logic ce0;
   assign ce0 = 1;
 
-  logic [OUT_WIDTH*OUT_SIZE-1:0] data_vector;
+  logic [{_cap(param_name)}_PRECISION_0*{_cap(param_name)}_TENSOR_SIZE_DIM_0-1:0] data_vector;
   {node_param_name} #(
-      .DATA_WIDTH(OUT_WIDTH * OUT_SIZE),
+      .DATA_WIDTH({_cap(param_name)}_PRECISION_0 * {_cap(param_name)}_TENSOR_SIZE_DIM_0),
       .ADDR_RANGE(OUT_DEPTH)
   ) {node_param_name}_mem (
       .clk(clk),
@@ -152,8 +165,8 @@ module {node_param_name}_source #(
 
   // Cocotb/verilator does not support array flattening, so
   // we need to manually add some reshaping process.
-  for (genvar j = 0; j < OUT_SIZE; j++)
-    assign data_out[j] = data_vector[OUT_WIDTH*j+OUT_WIDTH-1:OUT_WIDTH*j];
+  for (genvar j = 0; j < {_cap(param_name)}_TENSOR_SIZE_DIM_0; j++)
+    assign data_out[j] = data_vector[{_cap(param_name)}_PRECISION_0*j+{_cap(param_name)}_PRECISION_0-1:{_cap(param_name)}_PRECISION_0*j];
 
   assign data_out_valid = 1;
 
@@ -327,7 +340,7 @@ def emit_bram_handshake(node, rtl_dir):
             logger.debug(
                 f"Emitting DAT file for node: {node_name}, parameter: {param_name}"
             )
-            verilog_name = os.path.join(rtl_dir, f"{node_name}_{param_name}.sv")
+            verilog_name = os.path.join(rtl_dir, f"{node_name}_{param_name}_source.sv")
             data_name = os.path.join(rtl_dir, f"{node_name}_{param_name}_rom.dat")
             emit_parameters_in_mem_internal(node, param_name, verilog_name, data_name)
             emit_parameters_in_dat_internal(node, param_name, data_name)
@@ -468,7 +481,9 @@ def emit_bram_transform_pass(graph, pass_args={}):
 
     logger.info("Emitting BRAM...")
     project_dir = (
-        pass_args["project_dir"] if "project_dir" in pass_args.keys() else "top"
+        pass_args["project_dir"]
+        if "project_dir" in pass_args.keys()
+        else Path.home() / ".mase" / "top"
     )
     top_name = pass_args["top_name"] if "top_name" in pass_args.keys() else "top"
 

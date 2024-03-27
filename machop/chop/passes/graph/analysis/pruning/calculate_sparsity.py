@@ -27,7 +27,6 @@ def graph_iterator_for_metadata(graph, dummy_in=None, add_value=True):
             result = getattr(self_obj, node.target)(*args, **kwargs)
         elif node.op == "call_module":
             args = load_arg(node.args, env)
-            args = args
             kwargs = load_arg(node.kwargs, env)
             result = modules[node.target](*args, **kwargs)
 
@@ -41,7 +40,6 @@ def graph_iterator_for_metadata(graph, dummy_in=None, add_value=True):
                 ] = weight_sparsity
 
                 act_mask = modules[node.target].activation_mask
-                # import pdb; pdb.set_trace()
                 act_sparsity = 1 - float(act_mask.sum() / act_mask.numel())
                 meta.parameters["software"]["args"]["data_in_0"][
                     "sparsity"

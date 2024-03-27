@@ -26,7 +26,7 @@ There are in total 5 tasks you would need to finish.
 
 # Preparation and installations
 
-Make sure you have read and understood the installation of the framework in [Get-started-on-local-machines-software-only](../Get-started-on-local-machines-software-only.md).
+Make sure you have read and understood the installation of the framework detailed [here](https://deepwok.github.io/mase/modules/documentation/getting_started.html).
 
 Both streams (software and hardware) would start from software first. We are starting with simple toy networks that can train on most laptops.
 
@@ -279,7 +279,7 @@ Similar to the model definitions, all datasets are defined in the [\_\_init__.py
 
 Now you are familiar with different components in the tool.
 
-4. Implement a network that has in total around 10x more parameters than the toy network.
+4. Implement a network that has in total around 10x more parameters than the `jsc-tiny` network.
 5. Test your implementation and evaluate its performance.
 
 

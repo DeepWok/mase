@@ -59,7 +59,6 @@ class RunnerBasicEval(SWRunnerBase):
         if self.model_info.is_vision_model or self.model_info.is_physical_model:
             match self.task:
                 case "classification" | "cls":
-                    # import pdb; pdb.set_trace()
                     return self.vision_cls_forward(batch, model)
                 case _:
                     raise ValueError(f"task {self.task} is not supported.")
@@ -73,7 +72,6 @@ class RunnerBasicEval(SWRunnerBase):
                     raise ValueError(f"task {self.task} is not supported.")
 
     def vision_cls_forward(self, batch, model):
-        #import pdb; pdb.set_trace()
         x, y = batch[0].to(self.accelerator), batch[1].to(self.accelerator)
         logits = model(x)
         loss = torch.nn.functional.cross_entropy(logits, y)

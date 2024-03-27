@@ -13,11 +13,11 @@ logger = logging.getLogger(__name__)
 # NOTE: We don't do activation pruning for conv1d and linear layers.
 PRUNEABLE_OPS = {"conv1d": nn.Conv1d, "conv2d": nn.Conv2d, "linear": nn.Linear}
 
-WEIGHT_PRUNE_METHODS = ["random", "l1-norm", "l2-norm"]
-ACTIVATION_PRUNE_METHODS = ["random", "l1-norm", "l2-norm"]
+WEIGHT_PRUNE_METHODS = ["random", "l1-norm"]
+ACTIVATION_PRUNE_METHODS = ["random", "l1-norm"]
 
 # A registry of available pruning strategies (i.e. algorithms)
-# PRUNE_METHODS = { 
+# PRUNE_METHODS = {
 #     # A basic one-shot pruner that prunes to a given sparsity level
 #     "level-pruner": LevelPruner,
 #     "channel-pruner": ChannelPruner,
@@ -25,27 +25,27 @@ ACTIVATION_PRUNE_METHODS = ["random", "l1-norm", "l2-norm"]
 # }
 
 
-def load(config: dict, graph):
+def load(config: dict):
     sparsity = config.get("sparsity", 0.0)
     scope = config.get("scope", "local")
     granularity = config.get("granularity", "elementwise")
 
-    if granularity not in ["channelwise", "elementwise"]:
+    if granularity not in ["channel", "elementwise"]:
         raise ValueError(
             "Unsupported pruning granularity {}. Please choose from {}".format(
-                granularity, ["channelwise", "elementwise"]
+                granularity, ["channel", "elementwise"]
             )
         )
-    if scope not in ["tensor", "layer", "global"]:
+    if scope not in ["local", "global"]:
         raise ValueError(
             "Unsupported pruning scope {}. Please choose from {}".format(
-                scope, ["tensor", "layer", "global"]
+                scope, ["local", "global"]
             )
         )
     if isinstance(sparsity, dict):
-        # Make sure that the scope is layer
-        if scope != "layer":
-            raise ValueError("Layer-wise budgets only possible with a layer scope!")
+        # Make sure that the scope is local
+        if scope != "local":  # not local
+            raise ValueError("Layer-wise budgets only possible with a local scope!")
 
         # Verify that the keys are valid node names and that the values are valid
         names = [node.target for node in graph.fx_graph.nodes]
@@ -59,7 +59,7 @@ def load(config: dict, graph):
 
 
 def load_weight_prune_config(config: dict, graph):
-    sparsity, scope, granularity = load(config, graph)
+    sparsity, scope, granularity = load(config)
 
     method = config.get("method", "random")
     # Validate the parameters
@@ -79,7 +79,7 @@ def load_weight_prune_config(config: dict, graph):
 
 
 def load_activation_prune_config(config: dict, graph):
-    sparsity, scope, granularity = load(config, graph)
+    sparsity, scope, granularity = load(config)
 
     method = config.get("method", "random")
     # Validate the parameters

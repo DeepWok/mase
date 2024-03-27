@@ -135,7 +135,7 @@ This directory includes
 * `software` - a directory for any software generated for the trained model (PyTorch checkpoints or MASE models) as well as any generated logs
 
 ## Training Logs
-MASE creates [Tensorboard](https://pytorch.org/tutorials/recipes/recipes/tensorboard_with_pytorch.html) logs for the training flow - allowing tracking and visualizing metrics such as loss and accuracy. The log files are in `<output_dir>/software/training_ckpts/logs/version_<n>`. 
+MASE creates [Tensorboard](https://pytorch.org/tutorials/recipes/recipes/tensorboard_with_pytorch.html) logs for the training flow - allowing tracking and visualizing metrics such as loss and accuracy. The log files are in `<output_dir>/software/tensorboard/lightning_logs/version_<n>`. 
 
 Run Tensorboard to visualise the logs using:
 

@@ -5,7 +5,6 @@ from ..base import SearchSpaceBase
 from .....passes.graph.transforms.quantize import (
     QUANTIZEABLE_OP,
     quantize_transform_pass,
-    redefine_linear_transform_pass,
 )
 from .....ir.graph.mase_graph import MaseGraph
 from .....passes.graph import (
@@ -36,7 +35,7 @@ class GraphSearchSpaceMixedPrecisionPTQ(SearchSpaceBase):
     """
 
     def _post_init_setup(self):
-        self.model.to("cuda")  # save this copy of the model to cpu
+        self.model.to("cpu")  # save this copy of the model to cpu
         self.mg = None
         self._node_info = None
         self.default_config = DEFAULT_QUANTIZATION_CONFIG
@@ -48,6 +47,8 @@ class GraphSearchSpaceMixedPrecisionPTQ(SearchSpaceBase):
 
     def rebuild_model(self, sampled_config, is_eval_mode: bool = True):
         # set train/eval mode before creating mase graph
+
+        self.model.to(self.accelerator)
         if is_eval_mode:
             self.model.eval()
         else:
@@ -55,24 +56,15 @@ class GraphSearchSpaceMixedPrecisionPTQ(SearchSpaceBase):
 
         if self.mg is None:
             assert self.model_info.is_fx_traceable, "Model must be fx traceable"
-
             mg = MaseGraph(self.model)
-            mg ,_ = init_metadata_analysis_pass(mg, None)
-            print(dir(mg))
-            mg, _= add_common_metadata_analysis_pass(mg, {"dummy_in": self.dummy_input,"force_device_meta":False})
-            #mg = add_common_metadata_analysis_pass(mg, self.dummy_input)
+            mg, _ = init_metadata_analysis_pass(mg, None)
+            mg, _ = add_common_metadata_analysis_pass(
+                mg, {"dummy_in": self.dummy_input, "force_device_meta": False}
+            )
             self.mg = mg
         if sampled_config is not None:
-            # import pdb; pdb.set_trace()
-            # print(self.mg)
-            # print(sampled_config) 
-            # mg, _ = quantize_transform_pass(self.mg, sampled_config)
-            mg, _ = redefine_linear_transform_pass(graph = self.mg, pass_args={"config":sampled_config})
-            # import pdb; pdb.set_trace()
-        print(dir(mg))
-        print(self.accelerator)
-        # import pdb; pdb.set_trace()
-        mg.model.to("cuda")
+            mg, _ = quantize_transform_pass(self.mg, sampled_config)
+        mg.model.to(self.accelerator)
         return mg
 
     def _build_node_info(self):
