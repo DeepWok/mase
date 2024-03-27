@@ -77,7 +77,7 @@ class SearchStrategyDaddyProxy(SearchStrategyBase):
                 self.linear3 = nn.Linear(128, 1)
 
             def forward(self, x):
-                x = self.sigmoid(self.linear1(x))
+                x = self.relu(self.linear1(x))
                 x = self.relu(self.linear2(x))
                 x = self.sigmoid(self.linear3(x))
                 return x
