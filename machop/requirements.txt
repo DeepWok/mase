@@ -49,3 +49,4 @@ einops
 sphinx
 sphinx-rtd-theme
 myst-parser
+bitstring
