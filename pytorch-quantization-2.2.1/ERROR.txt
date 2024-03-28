@@ -1,0 +1,10 @@
+
+###########################################################################################
+The package you are trying to install is only a placeholder project on PyPI.org repository.
+This package is hosted on NVIDIA Python Package Index.
+
+This package can be installed as:
+```
+$ pip install --no-cache-dir --extra-index-url https://pypi.nvidia.com pytorch-quantization
+```
+###########################################################################################

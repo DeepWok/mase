@@ -369,7 +369,7 @@ VISION_MODELS = {
     "vgg7": {
         "get_model_fn_image_classification": get_vgg7,
         "info": MaseModelInfo(
-            "vgg7", model_source="vision_others", task_type="vision", image_classification=True
+            "vgg7", model_source="vision_others", task_type="vision", image_classification=True, is_fx_traceable=True
         )
     }
 }

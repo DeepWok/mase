@@ -1,0 +1,35 @@
+TRT-8601-EntropyCalibration2
+input: 3caa54fc
+/feature_layers.0/Conv_output_0: 3d306ae4
+/feature_layers.2/Relu_output_0: 3d3082ae
+/feature_layers.3/Conv_output_0: 3d3cf74e
+/feature_layers.5/Relu_output_0: 3d38da96
+/feature_layers.6/MaxPool_output_0: 3d38da96
+/feature_layers.7/Conv_output_0: 3d29f3d9
+/feature_layers.9/Relu_output_0: 3d272982
+/feature_layers.10/Conv_output_0: 3d3176b5
+/feature_layers.12/Relu_output_0: 3d2d0b5d
+/feature_layers.13/MaxPool_output_0: 3d2d0b5d
+/feature_layers.14/Conv_output_0: 3d250814
+/feature_layers.16/Relu_output_0: 3d23b5f2
+/feature_layers.17/Conv_output_0: 3d3e1e36
+/feature_layers.19/Relu_output_0: 3d416e54
+/feature_layers.20/MaxPool_output_0: 3d416e54
+/Reshape_output_0: 3d4d7a61
+(Unnamed Layer* 16) [Constant]_output: 38db968a
+(Unnamed Layer* 17) [Matrix Multiply]_output: 3d8b467a
+(Unnamed Layer* 18) [Constant]_output: 38bcdee6
+(Unnamed Layer* 19) [Shuffle]_output: 38bcdee6
+/classifier.0/Gemm_output_0: 3d89a977
+/classifier.1/Relu_output_0: 3d8b7f28
+(Unnamed Layer* 22) [Constant]_output: 398b3641
+(Unnamed Layer* 23) [Matrix Multiply]_output: 3d4dc6d8
+(Unnamed Layer* 24) [Constant]_output: 3982c7ef
+(Unnamed Layer* 25) [Shuffle]_output: 3982c7ef
+/classifier.2/Gemm_output_0: 3d53d564
+/classifier.3/Relu_output_0: 3d53d564
+(Unnamed Layer* 28) [Constant]_output: 398861a5
+(Unnamed Layer* 29) [Matrix Multiply]_output: 3daa917c
+(Unnamed Layer* 30) [Constant]_output: 397ba0a2
+(Unnamed Layer* 31) [Shuffle]_output: 397ba0a2
+output: 3dae5204

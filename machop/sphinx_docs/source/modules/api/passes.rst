@@ -104,6 +104,7 @@ MaseGraph Transform Passes
 	  transform/quantize
 	  transform/verilog
 	  transform/utils
+    transform/tensorrt_quantize
 
 
 MaseGraph Interface Passes
