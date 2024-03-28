@@ -10,3 +10,6 @@
 [submodule "Docker"]
 	path = Docker
 	url = git@github.com:JianyiCheng/mase-docker.git
+[submodule "NASLib"]
+	path = NASLib
+	url = git@github.com:JaredJoss/NASLib.git

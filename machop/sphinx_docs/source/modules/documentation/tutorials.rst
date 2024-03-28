@@ -20,6 +20,7 @@ Tutorials
     tutorials/actions/search/mixed_precision_search_on_mase_graph
     tutorials/actions/search/mixed_precision_search_on_manual_model
     tutorials/actions/search/how_to_extend_search
+    tutorials/actions/search/zero_cost_search
 
 .. toctree::
     :maxdepth: 1

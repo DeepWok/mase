@@ -1,4 +1,6 @@
 from setuptools import setup, find_packages
+import subprocess
+import os
 
 setup(
     name="mase-tools",
@@ -14,6 +16,7 @@ setup(
     packages=find_packages("machop"),
     install_requires=[
         "torch",
+        "pythran",
         "torchvision",
         "torchaudio",
         "packaging",
@@ -65,3 +68,9 @@ setup(
         "sphinx-rtd-theme",
     ],
 )
+
+if os.path.exists("NASLib/naslib"):
+    # Run submodule setup.py
+    os.chdir("NASLib")
+    subprocess.check_call(["python3", "setup.py", "install"])
+    os.chdir("..")
