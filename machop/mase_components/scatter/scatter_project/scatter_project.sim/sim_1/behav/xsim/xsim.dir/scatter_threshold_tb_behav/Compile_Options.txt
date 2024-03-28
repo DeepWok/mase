@@ -1,1 +1,0 @@
--wto "ab0e6e09636c4644886e0df5913b044d" --incr --debug "typical" --relax --mt "8" -L "xil_defaultlib" -L "unisims_ver" -L "unimacro_ver" -L "secureip" --snapshot "scatter_threshold_tb_behav" "xil_defaultlib.scatter_threshold_tb" "xil_defaultlib.glbl" -log "elaborate.log" 

@@ -1,9 +1,0 @@
-# compile verilog/system verilog design source files
-verilog xil_defaultlib  \
-"scatter_threshold_tb_func_synth.v" \
-
-sv xil_defaultlib  \
-"../../../../../../test/scatter_tb.sv" \
-
-# Do not sort compile order
-nosort
