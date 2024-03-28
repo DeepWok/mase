@@ -119,7 +119,7 @@ class MixedPrecisionEnv(BaseMixedPrecisionEnv):
         scaled_metrics = {}
         cost = 0
         for metric_name in self.metric_names:
-            scaled_metric_value = self.config["metrics"][metric_name]["scale"] * metrics[metric_name] * self.direction_multipliers[metric_name]
+            scaled_metric_value = self.config["metrics"][metric_name]["scale"] * self.metrics[metric_name] * self.direction_multipliers[metric_name]
             scaled_metrics[metric_name] = scaled_metric_value
             cost += scaled_metric_value
         self.cur_obs['accuracy'] = np.array([software_metrics['accuracy']], dtype=np.float32)
@@ -221,7 +221,7 @@ class MixedPrecisionEnvHiLo(BaseMixedPrecisionEnv):
         cost = 0
         for metric_name in self.metric_names:
             # Apply scaling and direction multiplier from pre-computed values
-            scaled_metric_value = self.config["metrics"][metric_name]["scale"] * metrics[metric_name] * self.direction_multipliers[metric_name]
+            scaled_metric_value = self.config["metrics"][metric_name]["scale"] * self.metrics[metric_name] * self.direction_multipliers[metric_name]
             scaled_metrics[metric_name] = scaled_metric_value
             cost += scaled_metric_value
         
