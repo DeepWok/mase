@@ -46,15 +46,6 @@ MASE provides an efficient and scalable approach for exploring accelerator syste
   title={MASE: An Efficient Representation for Software-Defined ML Hardware System Exploration},
   author={Zhang, Cheng and Cheng, Jianyi and Yu, Zhewen and Zhao, Yiren}}
   ```
-## Overview
-
-Machine learning accelerators have been used extensively to compute models with high performance and low power. Unfortunately, the development pace of ML models is much faster than the accelerator design cycle, leading to frequent changes in the hardware architecture requirements, rendering many accelerators obsolete. Existing design tools and frameworks can provide quick accelerator prototyping, but only for a limited range of models that fit into a single hardware device. With the emergence of large language models such as GPT-3, there is an increased need for hardware prototyping of large models within a many-accelerator system to ensure the hardware can scale with ever-growing model sizes.
-
-MASE provides an efficient and scalable approach for exploring accelerator systems to compute large ML models by directly mapping onto an efficient streaming accelerator system. Over a set of ML models, MASE can achieve better energy efficiency to GPUs when computing inference for recent transformer models.
-
-![Alt text](./docs/imgs/overview.png)
-
-
 ### Repository structure
 
 This repo contains the following directories:

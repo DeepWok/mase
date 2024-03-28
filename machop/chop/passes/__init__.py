@@ -34,3 +34,5 @@ from .graph.transforms import (
     tensorrt_fine_tune_transform_pass,
     tensorrt_fake_quantize_transform_pass,
 )
+from .module.analysis import calculate_avg_bits_module_analysis_pass
+from .module.transforms import quantize_module_transform_pass

@@ -22,6 +22,7 @@ from chop.tools.get_input import InputGenerator, get_cf_args, get_dummy_input
 from chop.tools.utils import parse_accelerator, to_numpy_if_tensor
 
 from chop.passes.graph.transforms import metadata_value_type_cast_transform_pass
+from chop.passes.module import PASSES as MODULE_PASSES
 
 logger = logging.getLogger(__name__)
 
@@ -47,7 +48,97 @@ def transform(
     accelerator = parse_accelerator(accelerator)
     model = pre_transform_load(load_name=load_name, load_type=load_type, model=model)
     model.to(accelerator)
+
     config = load_config(config)
+    transform_config = config["transform"]
+    style = transform_config.get("style", "graph")
+    if style == "graph":
+        transform_graph(
+            model=model,
+            model_info=model_info,
+            model_name=model_name,
+            data_module=data_module,
+            task=task,
+            config=config,
+            save_dir=save_dir,
+            load_name=load_name,
+            load_type=load_type,
+            accelerator=accelerator,
+        )
+    elif style == "module":
+        transform_module(
+            model=model,
+            model_info=model_info,
+            model_name=model_name,
+            data_module=data_module,
+            task=task,
+            config=config,
+            save_dir=save_dir,
+            load_name=load_name,
+            load_type=load_type,
+            accelerator=accelerator,
+        )
+    else:
+        raise ValueError(f"Style {style} is not supported!")
+
+
+def transform_module(
+    model: torch.nn.Module,
+    model_info,
+    model_name,
+    data_module,
+    task: str,
+    config: str,
+    save_dir: str = None,
+    load_name: str = None,
+    load_type: str = None,
+    accelerator: str = "auto",
+):
+    accelerator = parse_accelerator(accelerator)
+    model = pre_transform_load(load_name=load_name, load_type=load_type, model=model)
+    model.to(accelerator)
+    save_dir = Path(save_dir)
+    save_dir.mkdir(parents=True, exist_ok=True)
+
+    if load_name is not None:
+        model = load_model(load_name, load_type=load_type, model=model)
+        logger.info(f"'{load_type}' checkpoint loaded before training")
+
+    pass_config = config["passes"]
+
+    for pass_name, pass_config in pass_config.items():
+        pass_name: str
+        pass_config: dict
+        match pass_name:
+            case _:
+                my_pass = MODULE_PASSES[pass_name]
+                model = my_pass(model, pass_args=pass_config)
+
+    if save_dir is not None:
+        transformed_ckpt = save_dir / "transformed_ckpt"
+        state_dict_ckpt = os.path.join(transformed_ckpt, "state_dict.pt")
+        transformed_ckpt.mkdir(parents=True, exist_ok=True)
+        state_dict = model.state_dict()
+        torch.save(state_dict, state_dict_ckpt)
+        logger.info(f"model saved at {state_dict_ckpt}")
+    return model
+
+
+def transform_graph(
+    model: torch.nn.Module,
+    model_info,
+    model_name,
+    data_module,
+    task: str,
+    config: str,
+    save_dir: str = None,
+    load_name: str = None,
+    load_type: str = None,
+    accelerator: str = "auto",
+):
+    accelerator = parse_accelerator(accelerator)
+    model = pre_transform_load(load_name=load_name, load_type=load_type, model=model)
+    model.to(accelerator)
     save_dir = Path(save_dir)
     save_dir.mkdir(parents=True, exist_ok=True)
     # concrete forward args for freezing dynamic control flow in forward pass
