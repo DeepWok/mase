@@ -1,4 +1,3 @@
-#
 # SPDX-FileCopyrightText: Copyright (c) 1993-2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
@@ -13,46 +12,29 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-#
-
 
 """Some helper functions for implementing quantized modules"""
 """TensorQuantizer Module"""
 import copy
 import inspect
-
-from absl import logging
-
-from torch import nn
-from pytorch_quantization.tensor_quant import (
-    QuantDescriptor,
-    QUANT_DESC_8BIT_PER_TENSOR)
 import math
-from absl import logging
 
-import torch
+from absl import logging
 from torch import nn
+import torch
+from torch.nn.modules.utils import _single, _pair, _triple
+from torch.nn.modules.conv import _ConvTransposeNd
 
 from pytorch_quantization.tensor_quant import (
     QuantDescriptor,
+    QUANT_DESC_8BIT_PER_TENSOR,
     tensor_quant,
     fake_tensor_quant,
     TensorQuantFunction
 )
-
 from pytorch_quantization.nn.modules.clip import Clip
-
 from pytorch_quantization import calib
-
 import pytorch_quantization.utils as quant_utils
-
-
-import inspect
-import torch
-import torch.nn
-import torch.nn.functional as F
-from torch.nn.modules.utils import _single, _pair, _triple
-from torch.nn.modules.conv import _ConvTransposeNd
 
 __all__ = ["TensorQuantizer_TrueQuant"]
 
@@ -90,8 +72,6 @@ class TensorQuantizer_TrueQuant(nn.Module):
         - amax:
     """
 
-    # An experimental static switch for using pytorch's native fake quantization
-    # Primary usage is to export to ONNX
     use_fb_fake_quant = False
 
     def __init__(
