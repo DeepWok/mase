@@ -7,6 +7,7 @@ module fixed_batch_norm1d #(
 
     parameter DATA_IN_0_TENSOR_SIZE_DIM_1 = 8,
     parameter DATA_IN_0_PARALLELISM_DIM_1 = 1,
+    parameter IN_0_DEPTH = DATA_IN_0_TENSOR_SIZE_DIM_0 / DATA_IN_0_PARALLELISM_DIM_0,
 
     // The different inputs may have different levels of precision:
     // we use an internal FP format large enough to store all.
@@ -38,7 +39,7 @@ module fixed_batch_norm1d #(
     input                   clk, 
     input                   rst, 
     
-    input  [DATA_IN_0_PRECISION_0-1:0] data_in_0        [DATA_IN_0_PARALLELISM_DIM_0-1:0],
+    input  [DATA_IN_0_PRECISION_0-1:0] data_in_0        [DATA_IN_0_PARALLELISM_DIM_0*DATA_IN_0_PARALLELISM_DIM_1-1:0],
     input                              data_in_0_valid,
     output                             data_in_0_ready,
 
@@ -57,24 +58,24 @@ module fixed_batch_norm1d #(
     output                       mean_ready,
 
     // Output ports for data
-    output logic [DATA_OUT_0_PRECISION_0-1:0] data_out_0      [DATA_OUT_0_PARALLELISM_DIM_0-1:0],
+    output logic [DATA_OUT_0_PRECISION_0-1:0] data_out_0      [DATA_OUT_0_PARALLELISM_DIM_0*DATA_OUT_0_PARALLELISM_DIM_1-1:0],
     output data_out_0_valid,
     input data_out_0_ready
-
 );
     // Rename parameters to more descriptive names.
     localparam IN_WIDTH      = DATA_IN_0_PRECISION_0; 
     localparam IN_FRAC_WIDTH = DATA_IN_0_PRECISION_1; 
-    localparam IN_DEPTH      = DATA_IN_0_PARALLELISM_DIM_0*DATA_IN_0_PARALLELISM_DIM_1; 
+    localparam BLOCK_SIZE    = DATA_IN_0_PARALLELISM_DIM_0*DATA_IN_0_PARALLELISM_DIM_1; 
+    localparam OUT_BLOCK_SIZE    = DATA_OUT_0_PARALLELISM_DIM_0*DATA_OUT_0_PARALLELISM_DIM_1; 
 
     let max2(v1, v2) = (v1 > v2) ? v1 : v2;
     
     // Intermediate FP format for the result of the data - mean subtraction
-    parameter FP_SUB_FRAC_WIDTH = max2(DATA_IN_0_PRECISION_1, MEAN_PRECISION_1);
-    parameter FP_SUB_WIDTH = max2(DATA_IN_0_PRECISION_0 - DATA_IN_0_PRECISION_1, MEAN_PRECISION_0 - MEAN_PRECISION_1) + FP_SUB_FRAC_WIDTH;
-    logic signed [FP_SUB_WIDTH-1:0] data_sub_format         [DATA_IN_0_PARALLELISM_DIM_0-1:0];
-    logic signed [FP_SUB_WIDTH-1:0] mean_sub_format         [DATA_IN_0_PARALLELISM_DIM_0-1:0];
-    logic signed [FP_SUB_WIDTH-1:0] sub_res                 [DATA_IN_0_PARALLELISM_DIM_0-1:0];
+    localparam FP_SUB_FRAC_WIDTH = max2(DATA_IN_0_PRECISION_1, MEAN_PRECISION_1);
+    localparam FP_SUB_WIDTH = max2(DATA_IN_0_PRECISION_0 - DATA_IN_0_PRECISION_1, MEAN_PRECISION_0 - MEAN_PRECISION_1) + FP_SUB_FRAC_WIDTH;
+    logic signed [FP_SUB_WIDTH-1:0] data_sub_format         [BLOCK_SIZE-1:0];
+    logic signed [FP_SUB_WIDTH-1:0] mean_sub_format         [BLOCK_SIZE-1:0];
+    logic signed [FP_SUB_WIDTH-1:0] sub_res                 [BLOCK_SIZE-1:0];
     fixed_cast #(
         .IN_SIZE(DATA_IN_0_PARALLELISM_DIM_0),
         .IN_WIDTH(DATA_IN_0_PRECISION_0),
@@ -99,87 +100,145 @@ module fixed_batch_norm1d #(
     // Intermediate FP format for result (sumres) * weight multiplication
     localparam FP_MULT_FRAC_WIDTH = FP_SUB_FRAC_WIDTH + WEIGHT_PRECISION_1;
     localparam FP_MULT_WIDTH = FP_SUB_WIDTH + WEIGHT_PRECISION_0;
-    logic signed [FP_MULT_WIDTH-1:0] mult_res               [DATA_IN_0_PARALLELISM_DIM_0-1:0];
+    logic signed [FP_MULT_WIDTH-1:0] mult_res               [BLOCK_SIZE-1:0];
 
-    // Intermediate FP format for the result of the bias subtraction
-    parameter FP_FINAL_FRAC_WIDTH = max2(FP_MULT_FRAC_WIDTH, BIAS_PRECISION_1);
-    parameter FP_FINAL_WIDTH = max2(FP_MULT_WIDTH - FP_MULT_FRAC_WIDTH, BIAS_PRECISION_0 - BIAS_PRECISION_1) + FP_FINAL_FRAC_WIDTH;
-    logic signed [FP_FINAL_WIDTH-1:0] mult_res_final_format        [DATA_IN_0_PARALLELISM_DIM_0-1:0];
-    logic signed [FP_FINAL_WIDTH-1:0] bias_final_format            [DATA_IN_0_PARALLELISM_DIM_0-1:0];
-    logic signed [FP_FINAL_WIDTH-1:0] final_res                    [DATA_IN_0_PARALLELISM_DIM_0-1:0];
+    // Intermediate FP format for the result of the bias addition
+    parameter FP_ADD_FRAC_WIDTH = max2(FP_MULT_FRAC_WIDTH, BIAS_PRECISION_1);
+    parameter FP_ADD_WIDTH = max2(FP_MULT_WIDTH - FP_MULT_FRAC_WIDTH, BIAS_PRECISION_0 - BIAS_PRECISION_1) + FP_ADD_FRAC_WIDTH;
+    logic signed [FP_ADD_WIDTH-1:0] mult_res_add_format        [BLOCK_SIZE-1:0];
+    logic signed [FP_ADD_WIDTH-1:0] bias_add_format            [BLOCK_SIZE-1:0];
+    logic signed [FP_ADD_WIDTH-1:0] final_res                  [BLOCK_SIZE-1:0];
     fixed_cast #(
         .IN_SIZE(DATA_IN_0_PARALLELISM_DIM_0),
         .IN_WIDTH(FP_MULT_WIDTH),
         .IN_FRAC_WIDTH(FP_MULT_FRAC_WIDTH),
-        .OUT_WIDTH(FP_FINAL_WIDTH),
-        .OUT_FRAC_WIDTH(FP_FINAL_FRAC_WIDTH)
+        .OUT_WIDTH(FP_ADD_WIDTH),
+        .OUT_FRAC_WIDTH(FP_ADD_FRAC_WIDTH)
     ) cast_mult_res_to_final (
         .data_in(mult_res),
-        .data_out(mult_res_final_format)
+        .data_out(mult_res_add_format)
     );
     fixed_cast #(
         .IN_SIZE(DATA_IN_0_PARALLELISM_DIM_0),
         .IN_WIDTH(BIAS_PRECISION_0),
         .IN_FRAC_WIDTH(BIAS_PRECISION_1),
-        .OUT_WIDTH(FP_FINAL_WIDTH),
-        .OUT_FRAC_WIDTH(FP_FINAL_FRAC_WIDTH)
+        .OUT_WIDTH(FP_ADD_WIDTH),
+        .OUT_FRAC_WIDTH(FP_ADD_FRAC_WIDTH)
     ) cast_bias_to_final (
         .data_in(bias),
-        .data_out(bias_final_format)
+        .data_out(bias_add_format)
     );
 
+
+    // Format for the output.
+    logic signed [DATA_OUT_0_PRECISION_0-1:0] final_res_out_format [BLOCK_SIZE-1:0];
     always_comb begin
-        for (int i = 0; i < IN_DEPTH; i++)
+        for (int i = 0; i < BLOCK_SIZE; i++)
         begin
-            data_out_0[i] = (final_res[i] >>> (FP_FINAL_FRAC_WIDTH - DATA_OUT_0_PRECISION_1));
-        end
-    end
-    
-    assign data_in_0_ready     = 1'b1;
-    // Delay line for valid out.
-    localparam NUM_STAGES = 3;
-    typedef enum int { SUB_STAGE, MULT_STAGE, FINAL_STAGE} NORM_STAGES; 
-    logic stage_valid_b [NUM_STAGES-1:0];
-    logic stage_valid_r [NUM_STAGES-1:0];
-    
-    always_comb
-    begin
-        stage_valid_b[SUB_STAGE] = data_in_0_valid && mean_valid;
-        stage_valid_b[MULT_STAGE] = stage_valid_r[MULT_STAGE-1] && weight_valid;
-        stage_valid_b[FINAL_STAGE] = stage_valid_r[FINAL_STAGE-1] && bias_valid;
-        data_out_0_valid = stage_valid_r[FINAL_STAGE];
-    end
-
-    // Stage FSM
-    always_ff @(posedge clk)
-    begin
-        for (int s = 0; s < NUM_STAGES; s++)
-        begin
-            stage_valid_r[s] = stage_valid_b[s];
+            final_res_out_format[i] = (final_res[i] >>> (FP_ADD_FRAC_WIDTH - DATA_OUT_0_PRECISION_1));
         end
     end
 
+
+    // FP Conversions done, now for the main logic of the module: 
+    // Batch norm is calculated in 3 seperate stages, one for each arithmetic operation:
+    // 1. Subtracting the mean.
+    // 2. Multiplying the weight (which is inlined gamma / stdv)
+    // 3. Adding the bias.
+    logic sub_join_valid, sub_join_ready, sub_out_valid;
+    join2 #() sub_join (
+        .data_in_valid ({data_in_0_valid, mean_valid}),
+        .data_in_ready ({data_in_0_ready, mean_ready}),
+        .data_out_valid(sub_join_valid),
+        .data_out_ready(sub_join_ready)
+    );
+
+    logic mult_join_valid, mult_join_ready, mult_out_valid;
+    join2 #() mult_join (
+        .data_in_valid ({sub_out_valid, weight_valid}),
+        .data_in_ready ({sub_join_ready, weight_ready}),
+        .data_out_valid(mult_join_valid),
+        .data_out_ready(mult_join_ready)
+    );
+    
+    logic add_join_valid, add_out_valid;
+    join2 #() add_join (
+        .data_in_valid ({mult_out_valid, bias_valid}),
+        .data_in_ready ({mult_join_ready, bias_ready}),
+        .data_out_valid(add_join_valid),
+        .data_out_ready(convert_para_ready)
+    );
+
     always_ff @(posedge clk)
     begin
-        for (int i = 0; i < IN_DEPTH; i++) 
+        for (int i = 0; i < BLOCK_SIZE; i++) 
         begin
-            sub_res[i] <= sub_res[i];
-            mult_res[i] <= mult_res[i];
-            final_res[i] <= final_res[i];
-            data_out_0[i] <= data_out_0[i];
+            if (rst) begin
+                sub_res[i]     <= 0;
+                mult_res[i]    <= 0;
+                final_res[i]   <= 0;
+                sub_out_valid  <= 0;
+                mult_out_valid <= 0;
+                add_out_valid  <= 0;
+            end else begin
 
-            if (stage_valid_b[SUB_STAGE])
-                sub_res[i] <= data_sub_format[i] - mean_sub_format[i];
+                sub_res[i] <= sub_res[i];
+                mult_res[i] <= mult_res[i];
+                final_res[i] <= final_res[i];
 
-            if (stage_valid_b[MULT_STAGE])
-                mult_res[i] <= sub_res[i] * weight[i];
+                if (sub_join_valid)
+                    sub_res[i] <= data_sub_format[i] - mean_sub_format[i];
+
+                if (mult_join_valid)
+                    mult_res[i] <= sub_res[i] * weight[i];
             
-            if (stage_valid_b[FINAL_STAGE])
-                final_res[i] <= mult_res_final_format[i] + bias_final_format[i];
+                if (add_join_valid)
+                    final_res[i] <= mult_res_add_format[i] + bias_add_format[i];
+
+                sub_out_valid <= sub_join_valid;
+                mult_out_valid <= mult_join_valid;
+                add_out_valid <= add_join_valid;
+            end
         end
-        // valid_out_r     <= valid_out_b;
-        //delay line as expect the TB requires small delay (+ real designs will have it so best to check)
     end
 
-    
+    logic convert_para_ready, convert_para_valid;
+    logic [DATA_OUT_0_PRECISION_0-1:0] final_res_para_converted [OUT_BLOCK_SIZE-1:0];
+    convert_parallelism #(
+        .DATA_WIDTH(DATA_OUT_0_PRECISION_0),
+        .DATA_IN_PARALLELISM(BLOCK_SIZE),
+        .DATA_OUT_PARALLELISM(OUT_BLOCK_SIZE)
+    ) conv_parallelism_out (
+        .clk(clk), 
+        .rst(rst), 
+
+        .data_in(final_res_out_format),
+        .data_in_valid(add_out_valid),
+        .data_in_ready(convert_para_ready),
+
+        .data_out(final_res_para_converted),
+        .data_out_valid(convert_para_valid),
+        .data_out_ready(&skid_reg_ready)
+    );
+
+    logic [DATA_OUT_0_PARALLELISM_DIM_0-1:0] skid_reg_ready;
+    for (genvar i = 0; i < OUT_BLOCK_SIZE; i = i + 1) begin : skid_buf 
+        logic dout_valid;
+        skid_buffer #(
+            .DATA_WIDTH(DATA_OUT_0_PRECISION_0)
+        ) skid_buf_out (
+            .clk           (clk),
+            .rst           (rst),
+
+            .data_in       (final_res_para_converted[i]),
+            .data_in_valid (convert_para_valid),
+            .data_in_ready (skid_reg_ready[i]),
+
+            .data_out      (data_out_0[i]),
+            .data_out_valid(dout_valid),
+            .data_out_ready(data_out_0_ready)
+        );
+    end
+    assign data_out_0_valid = skid_buf[0].dout_valid;
+
 endmodule

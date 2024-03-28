@@ -82,30 +82,9 @@ class BatchNormTB(Testbench):
     def postprocess_tensor(self, tensor, config):
         tensor = [item * (1.0/2.0) ** config["frac_width"] for item in tensor]
         return tensor
-    
-    async def run_test(self): 
-        await self.reset()
-        print(f'================= DEBUG: in run_test ================= \n')
 
-        # Store fixed point data
-        # TODO(jlsand): We assume that the fixed point format is the same for all
-        # parameters. Fair assumption or faulty?
 
-        # Setup functionally equivalent model
-        config = {
-            "data_in_width": int(self.dut.DATA_IN_0_PRECISION_0),
-            "data_in_frac_width": int(self.dut.DATA_IN_0_PRECISION_1),
-            "weight_width": int(self.dut.WEIGHT_PRECISION_0),
-            "weight_frac_width": int(self.dut.WEIGHT_PRECISION_1),
-            "bias_width": int(self.dut.BIAS_PRECISION_0),
-            "bias_frac_width": int(self.dut.BIAS_PRECISION_1),
-        }
-
-        data_width = config["data_in_width"]
-        data_frac_width = config["data_in_frac_width"]
-        parallelism = int(self.dut.DATA_IN_0_PARALLELISM_DIM_0) * int(self.dut.DATA_IN_0_PARALLELISM_DIM_1)    
-        local_config = {"width": data_width, "frac_width": data_frac_width}
-
+    def get_test_case(self, config, parallelism, out_parallelism):
         model = BatchNorm1dInteger(
             num_features=self.num_features,
             config=config                
@@ -161,19 +140,8 @@ class BatchNormTB(Testbench):
             int(parallelism)
         )
 
-        # Set the other inputs to the module.
-        self.data_out_0_monitor.ready.value = 1
-        print(f'================= DEBUG: asserted ready_out ================= \n')
-
-        # self.dut.weight.value = weight[0]
-        # self.dut.bias.value = bias[0]
-        # self.dut.mean.value = mean[0]
-
-        self.weight_driver.load_driver(weight)
-        self.bias_driver.load_driver(bias)
-        self.mean_driver.load_driver(mean)
-        self.data_in_0_driver.load_driver(inputs)
-        print(f'================= DEBUG: put values on input ports ================= \n')
+        data_width = config["data_in_width"]
+        data_frac_width = config["data_in_frac_width"]
 
         exp_outputs_model = model.x_quantizer(exp_outputs_model)
         print("Exp. outputs model: ", exp_outputs_model)
@@ -192,15 +160,65 @@ class BatchNormTB(Testbench):
         print("Exp. outputs model: ", exp_outputs_model)
 
         exp_outputs_model= (exp_outputs_model* 2 ** data_frac_width).int()
-        exp_outputs_model= exp_outputs_model.reshape(-1, int(parallelism)).tolist()
+        exp_outputs_model= exp_outputs_model.reshape(-1, int(out_parallelism)).tolist()
         
         print("Exp. outputs model pre-processed: ", exp_outputs_model)
+        
+        return inputs, weight, bias, mean, exp_outputs_model
+
+    
+    async def run_test(self): 
+        await self.reset()
+        print(f'================= DEBUG: in run_test ================= \n')
+
+        # Setup config dict.
+        config = {
+            "data_in_width": int(self.dut.DATA_IN_0_PRECISION_0),
+            "data_in_frac_width": int(self.dut.DATA_IN_0_PRECISION_1),
+            "weight_width": int(self.dut.WEIGHT_PRECISION_0),
+            "weight_frac_width": int(self.dut.WEIGHT_PRECISION_1),
+            "bias_width": int(self.dut.BIAS_PRECISION_0),
+            "bias_frac_width": int(self.dut.BIAS_PRECISION_1),
+        }
+        parallelism     = int(self.dut.DATA_IN_0_PARALLELISM_DIM_0) * int(self.dut.DATA_IN_0_PARALLELISM_DIM_1)    
+        out_parallelism = int(self.dut.DATA_OUT_0_PARALLELISM_DIM_0) * int(self.dut.DATA_OUT_0_PARALLELISM_DIM_1)    
+
+        # Get two sets of test case data.
+        inputs_1, weight_1, bias_1, mean_1, exp_outputs_1 = self.get_test_case(config, parallelism, out_parallelism)
+        inputs_2, weight_2, bias_2, mean_2, exp_outputs_2 = self.get_test_case(config, parallelism, out_parallelism)
+
+        self.data_out_0_monitor.load_monitor(exp_outputs_1)
+        # self.data_out_0_monitor.load_monitor(exp_outputs_2)
+        
+        # Indicate we are ready to receive.
+        self.data_out_0_monitor.ready.value = 1
+
+        self.weight_driver.load_driver(weight_1)
+        # self.weight_driver.load_driver(weight_2)
+
+        await Timer(10, units="ns")
+        self.bias_driver.load_driver(bias_1)
+        await Timer(10, units="ns")
+        self.mean_driver.load_driver(mean_1)
+        
+        # Apply backpressure
+        # self.data_out_0_monitor.ready.value = 0
+        # self.bias_driver.load_driver(bias_2)
+        await Timer(10, units="ns")        
+        
+        # self.data_out_0_monitor.ready.value = 1
+        self.data_in_0_driver.load_driver(inputs_1)
+        await Timer(10, units="ns")
+        
+        # self.data_in_0_driver.load_driver(inputs_2)
+        # self.mean_driver.load_driver(mean_2)
+        print(f'================= DEBUG: put values on input ports ================= \n')
+
         print(f'================= DEBUG: generated values with fe model ================= \n')
 
-        self.data_out_0_monitor.load_monitor(exp_outputs_model)
         print(f'================= DEBUG: loaded hw outptus ================= \n')
 
-        await Timer(1000, units="us")
+        await Timer(300, units="ns")
 
         print(f'================= DEBUG: in run_test waited 1ms ================= \n')
 
@@ -217,12 +235,14 @@ if __name__ == "__main__":
     mase_runner(
         trace=True,
         module_param_list=[
-             # {
-             #    "DATA_IN_0_PRECISION_0": 8,
-             #    "DATA_IN_0_PRECISION_1": 3,
-             #    "DATA_IN_0_PARALLELISM_DIM_0": 16,
-             #    "DATA_IN_0_PARALLELISM_DIM_1": 1,                  
-             # },
+             {
+                "DATA_IN_0_PRECISION_0": 8,
+                "DATA_IN_0_PRECISION_1": 3,
+                "DATA_IN_0_PARALLELISM_DIM_0": 16,
+                "DATA_IN_0_PARALLELISM_DIM_1": 1,                  
+                "DATA_OUT_0_PARALLELISM_DIM_0": 4,
+                "DATA_OUT_0_PARALLELISM_DIM_1": 1,                  
+             },
              # {
              #    "DATA_IN_0_PRECISION_0": 8,
              #    "DATA_IN_0_PRECISION_1": 3,
@@ -243,16 +263,16 @@ if __name__ == "__main__":
              #    "WEIGHT_PRECISION_0": 16,
              #    "WEIGHT_PRECISION_1": 5,
              # },
-             {
-                "DATA_IN_0_PRECISION_0": 8,
-                "DATA_IN_0_PRECISION_1": 3,
-                "DATA_IN_0_PARALLELISM_DIM_0": 16,
-                "DATA_IN_0_PARALLELISM_DIM_1": 1,
-                "WEIGHT_PRECISION_0": 16,
-                "WEIGHT_PRECISION_1": 5,
-                "BIAS_PRECISION_0": 12,
-                "BIAS_PRECISION_1": 4,
-             },
+             # {
+             #    "DATA_IN_0_PRECISION_0": 8,
+             #    "DATA_IN_0_PRECISION_1": 3,
+             #    "DATA_IN_0_PARALLELISM_DIM_0": 16,
+             #    "DATA_IN_0_PARALLELISM_DIM_1": 1,
+             #    "WEIGHT_PRECISION_0": 16,
+             #    "WEIGHT_PRECISION_1": 5,
+             #    "BIAS_PRECISION_0": 12,
+             #    "BIAS_PRECISION_1": 4,
+             # },
               
         ]    
     )        
