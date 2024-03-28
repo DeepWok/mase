@@ -16,6 +16,39 @@ from pathlib import Path
 import time
 
 def runtime_analysis_pass(model, pass_args=None):
+    """
+    Evaluates the performance of a model by analyzing its inference speed, accuracy, and other relevant metrics.
+
+    This function is part of the model optimization and evaluation pipeline, designed to showcase the improvements in inference speed achieved through quantization and conversion to TensorRT engines. It accepts models in various formats, including a `MaseGraph` object, a path to an ONNX model, or a path to a TensorRT engine, facilitating a flexible analysis process. The function outputs a comprehensive set of performance metrics that help in assessing the model's efficiency and effectiveness post-optimization.
+
+    :param model: The model to be analyzed. Can be a `MaseGraph`, a `PosixPath` to an ONNX model, or a `PosixPath` to a TensorRT engine.
+    :type model: MaseGraph or PosixPath
+    :param pass_args: Optional arguments that may influence the analysis, such as specific metrics to be evaluated or configurations for the analysis tools.
+    :type pass_args: dict, optional
+    :return: A tuple containing the original model and a dictionary with the results of the analysis, including metrics such as accuracy, precision, recall, F1 score, loss, latency, GPU power usage, and inference energy consumption.
+    :rtype: tuple(MaseGraph or PosixPath, dict)
+
+    The analysis is conducted by creating an instance of `RuntimeAnalysis` with the model and optional arguments, evaluating the model's performance, and then storing the results. The metrics provided offer a holistic view of the model's operational characteristics, enabling a thorough comparison between the original unquantized model, the INT8 quantized model, and other variations that have undergone optimization processes.
+
+    Example of usage:
+
+        model_path = PosixPath('/path/to/model.trt')
+        _, results = runtime_analysis_pass(model_path, pass_args={})
+
+    This example demonstrates initiating the runtime analysis pass on a model provided via a TensorRT engine path. The function returns a set of metrics illustrating the model's performance characteristics, such as inference speed and accuracy.
+
+    The performance metrics include:
+    - Average Test Accuracy
+    - Average Precision
+    - Average Recall
+    - Average F1 Score
+    - Average Loss
+    - Average Latency
+    - Average GPU Power Usage
+    - Inference Energy Consumption
+
+    These metrics provide valuable insights into the model's efficiency, effectiveness, and operational cost, crucial for informed decision-making regarding model deployment in production environments.
+    """
     analysis = RuntimeAnalysis(model, pass_args)
     results = analysis.evaluate()
     analysis.store(results)

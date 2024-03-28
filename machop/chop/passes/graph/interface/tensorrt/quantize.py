@@ -16,12 +16,42 @@ from ...utils import deepcopy_mase_graph
 from ...transforms.tensorrt.quantize.utils import Int8Calibrator, prepare_save_path, check_for_value_in_dict
 
 def tensorrt_engine_interface_pass(graph, pass_args=None):
+    """
+    Converts a PyTorch model within a MaseGraph to a TensorRT engine, optimizing the model for faster inference speeds.
+
+    This function acts as an interface between PyTorch and TensorRT, leveraging ONNX as an intermediate format. It's designed to be used post-Quantization Aware Training (QAT), ensuring that the quantized model can benefit from the performance enhancements offered by TensorRT. The conversion process saves the resulting ONNX and TensorRT engine files in their respective directories, facilitating easy deployment and version control.
+
+    :param graph: The model graph to be converted. This graph should represent a model that has already been quantized and fine-tuned.
+    :type graph: MaseGraph
+    :param pass_args: A dictionary containing arguments that may affect the conversion process, such as optimization levels or specific TensorRT flags.
+    :type pass_args: dict, optional
+    :return: A tuple containing the graph with its model now linked to the generated TensorRT engine, and a dictionary with paths to the ONNX and TensorRT engine files.
+    :rtype: tuple(MaseGraph, dict)
+
+    The conversion process involves two main steps:
+    1. Exporting the PyTorch model to ONNX format.
+    2. Converting the ONNX model to a TensorRT engine.
+
+    The paths to the saved `.onnx` and `.trt` files are included in the return value to provide easy access for subsequent deployment or analysis.
+
+    Example of usage:
+
+        graph = MaseGraph(...)
+        converted_graph, paths = tensorrt_engine_interface_pass(graph, pass_args={})
+
+    This example initiates the conversion of a quantized and fine-tuned PyTorch model to a TensorRT engine, with the paths to the resulting ONNX and TRT files being returned for further use.
+
+    Note:
+    The `.onnx` and `.trt` files are stored according to the directory structure outlined in Section 1.3 of the Quantized Aware Training (QAT) documentation, ensuring organized and accessible storage for these critical files.
+    """
     quantizer = Quantizer(pass_args)
     trt_engine_path, onnx_path = quantizer.pytorch_to_trt(graph)
 
-    # link the model with graph
+    # Link the model with the graph for further operations or evaluations
     graph.model = torch.fx.GraphModule(graph.model, graph.fx_graph)
+
     return graph, {'trt_engine_path': trt_engine_path, 'onnx_path': onnx_path}
+
 
 class Quantizer:
     def __init__(self, config):

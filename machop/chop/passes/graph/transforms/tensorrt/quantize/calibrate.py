@@ -15,8 +15,33 @@ from torch.autograd import Variable
 import torch
 from .utils import FakeQuantizer, check_for_value_in_dict, get_calibrator_dataloader
 
-
 def tensorrt_fake_quantize_transform_pass(graph, pass_args=None):
+    """
+    Applies a fake quantization pass to a model graph, preparing it for calibration and fine-tuning before actual quantization. 
+
+    This pass simulates quantization effects on the model's precision by modifying its layers to fake quantized versions, based on the `pass_args`. It's a preliminary step for models specifically targeting int8 calibration, as other precisions are not supported by the `pytorch-quantization` toolkit. This process is crucial for achieving accurate model quantization without significant loss in precision.
+
+    :param graph: The model graph to be transformed.
+    :type graph: MaseGraph
+    :param pass_args: A dictionary containing arguments that define how the transformation is applied. The key "by" determines whether the fake quantization should be applied by layer "type" or "name". Additional parameters required for the FakeQuantizer can also be passed.
+    :type pass_args: dict, optional
+    :return: A tuple containing the transformed graph and an empty dictionary. The empty dictionary is a placeholder for potential future use.
+    :rtype: tuple(MaseGraph, dict)
+
+    The fake quantization can target specific layers, including Linear, Conv1d/2d/3d, ConvTranspose1d/2d/3d, MaxPool1d/2d/3d, AvgPool1d/2d/3d, LSTM, and LSTMCell. This ensures that the most impactable layers for quantization are addressed, preparing the model for int8 calibration effectively.
+
+    Example of usage:
+
+        graph = MaseGraph(...)
+        transformed_graph, _ = tensorrt_fake_quantize_transform_pass(graph, {'by': 'type'})
+
+    This example demonstrates initiating a fake quantization transformation by layer type. Layers are replaced with their fake quantized counterparts if they are recognized as quantizable based on the specified criteria in `pass_args`.
+
+    For more information on creating custom quantized modules or understanding the `pytorch-quantization` toolkit, refer to NVIDIA's documentation: https://docs.nvidia.com/deeplearning/tensorrt/pytorch-quantization-toolkit/docs/index.html
+
+    Raises:
+        ValueError: If the "by" parameter in `pass_args` is not supported. Currently, only "type" and "name" are valid options for specifying how to apply the fake quantization.
+    """
     by = pass_args["by"]
     fq = FakeQuantizer(pass_args)
     match by:
@@ -31,6 +56,32 @@ def tensorrt_fake_quantize_transform_pass(graph, pass_args=None):
 
 
 def tensorrt_calibrate_transform_pass(graph, pass_args=None):
+    """
+    Performs calibration on a model graph by deciding the best maximum absolute values (amax) for activations using specified calibrators. 
+
+    Calibration is a critical step in the quantization process, ensuring that the quantized model maintains accuracy close to the original model by optimizing the scale factors for activations. This function utilizes a `Calibrator` object, which takes `pass_args` to determine the calibration method and parameters, and applies it to the entire graph.
+
+    :param graph: The model graph to be calibrated.
+    :type graph: MaseGraph
+    :param pass_args: A dictionary containing arguments for calibration, including the choice of calibrator and any specific parameters it requires. Supported calibrators are specified in a TOML configuration and can include methods like "percentile", "mse", and "entropy".
+    :type pass_args: dict, optional
+    :return: A tuple containing the calibrated graph and an empty dictionary. The empty dictionary is a placeholder for potential extensions.
+    :rtype: tuple(MaseGraph, dict)
+
+    Note on calibrators:
+    - "percentile" calibration requires a list of percentiles to determine the best amax values.
+    - "max" calibration simplifies the process by using the global maximum absolute value across the entire dataset for calibration. This requires removing "histogram" weight and input calibrators from the configuration and replacing them with "max".
+    - Optionally, if "post_calibration_analysis" is enabled in the `pass_args`, a subsequent analysis pass (`tensorrt_analysis_pass`) can be automatically triggered to evaluate the effectiveness of each calibrator.
+
+    Example of usage:
+
+        graph = MaseGraph(...)
+        calibrated_graph, _ = tensorrt_calibrate_transform_pass(graph, {'calibrators': ["percentile", "mse", "entropy"], 'percentiles': [99.9], 'post_calibration_analysis': True})
+
+    This example shows how to calibrate a model graph using a range of calibrators and additional parameters such as percentiles for the "percentile" method and enabling post-calibration analysis.
+
+    It's important to choose the right calibrator based on the model and dataset characteristics to ensure optimal performance and accuracy of the quantized model.
+    """
     calibrator = Calibrator(pass_args)
     graph = calibrator.calibrate_model(graph)
     graph.model = torch.fx.GraphModule(graph.model, graph.fx_graph)

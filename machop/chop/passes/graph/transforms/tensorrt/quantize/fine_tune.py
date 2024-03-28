@@ -25,15 +25,50 @@ from .utils import prepare_save_path, check_for_value_in_dict
 
 
 def tensorrt_fine_tune_transform_pass(graph, pass_args=None):
-    """Performs Quantized Aware Training"""
+    """
+    Fine-tunes a quantized model using Quantization Aware Training (QAT) to improve its accuracy post-quantization.
+
+    This pass employs a fine-tuning process that adjusts the quantized model's weights in a way that acknowledges the quantization effects, thereby aiming to recover or even surpass the original model's accuracy. The training process uses a reduced number of epochs and a significantly lower learning rate compared to the initial training phase, following a cosine annealing learning rate schedule.
+
+    :param graph: The model graph to be fine-tuned. This graph should already be quantized.
+    :type graph: MaseGraph
+    :param pass_args: A dictionary containing arguments for fine-tuning, such as the number of epochs (`epochs`), the initial learning rate (`initial_learning_rate`), and the final learning rate (`final_learning_rate`). These parameters allow customization of the training regime based on the specific needs of the model and dataset.
+    :type pass_args: dict, optional
+    :return: A tuple containing the fine-tuned graph and an empty dictionary. The empty dictionary is a placeholder for potential extensions.
+    :rtype: tuple(MaseGraph, dict)
+
+    The default training regime involves:
+    - Using 10% of the original training epochs.
+    - Starting with 1% of the original training learning rate.
+    - Employing a cosine annealing schedule to reduce the learning rate to 0.01% of the initial training learning rate by the end of fine-tuning.
+
+    The resulting fine-tuned model checkpoints are saved in the following directory structure, facilitating easy access and version control:
+
+    - mase_output
+    - tensorrt
+    - model_task_dataset_date
+        - quantization
+        - cache
+        - ckpts
+            - fine_tuning
+        - json
+        - onnx
+        - trt
+
+    Example of usage:
+
+        graph = MaseGraph(...)
+        fine_tuned_graph, _ = tensorrt_fine_tune_transform_pass(graph, {'epochs': 5, 'initial_learning_rate': 0.001, 'final_learning_rate': 0.00001})
+
+    This example demonstrates initiating the fine-tuning process with custom epochs, and initial and final learning rates, adapting the training regime to the specific requirements of the quantized model.
+    """
     trainer = FineTuning(graph, pass_args)
     ckpt_save_path = trainer.train()
 
-    # link the model with graph
+    # Link the model with the graph for further operations or evaluations
     graph.model = torch.fx.GraphModule(graph.model, graph.fx_graph)
 
     return graph, {}
-
 
 class FineTuning:
     def __init__(self, graph, config):
