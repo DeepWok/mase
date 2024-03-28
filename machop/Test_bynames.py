@@ -233,31 +233,31 @@ for width in widths:
     accuracy_runmodel.append(acc_avg)
     latency_runmodel.append(latency_avg)
 
-# print experiment results
-print("widths: ",["Original Graph"] + widths)
-print("TensorRT Accuracy: ",accuracy_tensorRT)
-print("TensorRT Latency: ",latency_tensorRT)
-print("Run Model Accuracy: ",accuracy_runmodel)
-print("Run Model Latency: ",latency_runmodel)
+# # print experiment results
+# print("widths: ",["Original Graph"] + widths)
+# print("TensorRT Accuracy: ",accuracy_tensorRT)
+# print("TensorRT Latency: ",latency_tensorRT)
+# print("Run Model Accuracy: ",accuracy_runmodel)
+# print("Run Model Latency: ",latency_runmodel)
 
-# Store results in a dictionary
-results = {
-    "widths": ["Original Graph"] + widths,
-    "TensorRT Accuracy": accuracy_tensorRT,
-    "TensorRT Latency": latency_tensorRT,
-    "Run Model Accuracy": accuracy_runmodel,
-    "Run Model Latency": latency_runmodel,
-    "pass_args": pass_args,  # Store pass_args information
-    "calibration": calibration,
-    "by": by,
-    "structure": structure,
-    "fake": fake,
-    "calibration_str": calibration_str
-}
+# # Store results in a dictionary
+# results = {
+#     "widths": ["Original Graph"] + widths,
+#     "TensorRT Accuracy": accuracy_tensorRT,
+#     "TensorRT Latency": latency_tensorRT,
+#     "Run Model Accuracy": accuracy_runmodel,
+#     "Run Model Latency": latency_runmodel,
+#     "pass_args": pass_args,  # Store pass_args information
+#     "calibration": calibration,
+#     "by": by,
+#     "structure": structure,
+#     "fake": fake,
+#     "calibration_str": calibration_str
+# }
 
-# Generate a timestamp
-timestamp = datetime.now().strftime('%Y%m%d%H%M%S')
+# # Generate a timestamp
+# timestamp = datetime.now().strftime('%Y%m%d%H%M%S')
 
-# Write results to a JSON file with a timestamp in its name
-with open(f'Pytorch_Quantization_Experiment_result/results_{pass_args["by"]}_{timestamp}.json', 'w') as f:
-    json.dump(results, f)
+# # Write results to a JSON file with a timestamp in its name
+# with open(f'Pytorch_Quantization_Experiment_result/results_{pass_args["by"]}_{timestamp}.json', 'w') as f:
+#     json.dump(results, f)
