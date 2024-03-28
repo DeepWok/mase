@@ -1,132 +1,52 @@
-# Machine-Learning Accelerator System Exploration Tools
+# Group5 README
 
-[![Contributors][contributors-shield]][contributors-url]
-[![Forks][forks-shield]][forks-url]
-[![Stargazers][stars-shield]][stars-url]
-[![Issues][issues-shield]][issues-url]
-[![Doc][doc-shield]][doc-url]
+Team Member:
 
-[contributors-shield]: https://img.shields.io/github/contributors/DeepWok/mase.svg?style=flat
-[contributors-url]: https://github.com/DeepWok/mase/graphs/contributors
-[forks-shield]: https://img.shields.io/github/forks/DeepWok/mase.svg?style=flat
-[forks-url]: https://github.com/DeepWok/mase/network/members
-[stars-shield]: https://img.shields.io/github/stars/DeepWok/mase.svg?style=flat
-[stars-url]: https://github.com/DeepWok/mase/stargazers
-[issues-shield]: https://img.shields.io/github/issues/DeepWok/mase.svg?style=flat
-[issues-url]: https://github.com/DeepWok/mase/issues
-[license-shield]: https://img.shields.io/github/license/DeepWok/mase.svg?style=flat
-[license-url]: https://github.com/DeepWok/mase/blob/master/LICENSE.txt
-[issues-shield]: https://img.shields.io/github/issues/DeepWok/mase.svg?style=flat
-[issues-url]: https://github.com/DeepWok/mase/issues
-[doc-shield]: https://readthedocs.org/projects/pytorch-geometric/badge/?version=latest
-[doc-url]: https://deepwok.github.io/mase/
+- Xinyi Sun(xs1423@ic.ac.uk)
+- Konstantinos Rotas(kr915@ic.ac.uk)
 
-## Overview
+# General introduction
 
-Machine learning accelerators have been used extensively to compute models with high performance and low power. Unfortunately, the development pace of ML models is much faster than the accelerator design cycle, leading to frequent changes in the hardware architecture requirements, rendering many accelerators obsolete. Existing design tools and frameworks can provide quick accelerator prototyping, but only for a limited range of models that fit into a single hardware device. With the emergence of large language models such as GPT-3, there is an increased need for hardware prototyping of large models within a many-accelerator system to ensure the hardware can scale with ever-growing model sizes.
+This study presents a new method to make machine learning models run faster on NVIDIA graphics cards. We've designed a system that speeds up the process of running and improving these models using a tool called TensorRT, without the need to retrain them. It works well for both simple and complex models, and at different levels of detail. We also looked into advanced techniques like adjusting precision on a layer-by-layer basis and integrating with ONNXRuntime to boost performance even more. This method is an important advancement for using machine learning in real-time on NVIDIA GPU.
 
-MASE provides an efficient and scalable approach for exploring accelerator systems to compute large ML models by directly mapping onto an efficient streaming accelerator system. Over a set of ML models, MASE can achieve better energy efficiency to GPUs when computing inference for recent transformer models.
+# Preparation and installations
 
-![Alt text](./docs/imgs/overview.png)
+- **Python**: Python 3.10.14
+- **GPU Specifications**: NVIDIA GeForce RTX 3050 Ti Laptop GPU, supported by CUDA version 12.1
+- **TensorRT**: Version 8.6.1 for optimizing deep learning models for inference.
+- **ONNX**: Version 1.15.0, for model exporting to a format compatible with various inference engines.
+- **PyTorch**: Version 2.2.1, the primary deep learning framework used for model development and training.
+- **Pytorch-Quantization**: Version 2.1.3, a toolkit for implementing quantization within PyTorch models to reduce model size and accelerate inference.
+- **CUDA-Python**: Version 12.4.0, providing Python bindings to CUDA functionalities, further enabling efficient GPU-accelerated computing.
+- **Additional Dependencies**: All other packages were installed according to the requirements specified by the MASE graph framework.
 
+# PASS for Mase Graph
 
-## MASE Publications
+**TensorRT Quantize Pass:**
+This step involves analyzing the provided input configuration to select the layers targeted for quantization. It identifies the precision (quantization bits) for both inputs and weights and decides if quantization should proceed. Subsequently, the targeted layer in the MASE graph is replaced with a `quant_nn` layer, tailored for quantized operations.
 
-* Fast Prototyping Next-Generation Accelerators for New ML Models using MASE: ML Accelerator System Exploration, [link](https://arxiv.org/abs/2307.15517)
-  ```
-  @article{cheng2023fast,
-  title={Fast prototyping next-generation accelerators for new ml models using mase: Ml accelerator system exploration},
-  author={Cheng, Jianyi and Zhang, Cheng and Yu, Zhewen and Montgomerie-Corcoran, Alex and Xiao, Can and Bouganis, Christos-Savvas and Zhao, Yiren},
-  journal={arXiv preprint arXiv:2307.15517},
-  year={2023}}
-  ```
-* MASE: An Efficient Representation for Software-Defined ML Hardware System Exploration, [link](https://openreview.net/forum?id=Z7v6mxNVdU)
-  ```
-  @article{zhangmase,
-  title={MASE: An Efficient Representation for Software-Defined ML Hardware System Exploration},
-  author={Zhang, Cheng and Cheng, Jianyi and Yu, Zhewen and Zhao, Yiren}}
-  ```
-### Repository structure
+**Calibration Pass:**
+Utilizing the specified data module and batch size, this process determines the distribution range of tensor values across each channel. It computes an `Amax` parameter that defines the quantization bounds, ensuring that the quantized model accurately reflects the original data distribution.
 
-This repo contains the following directories:
-* `components` - Internal hardware library
-* `scripts` - Installation scripts  
-* `machop` - MASE's software stack
-* `hls` - HLS component of MASE
-* `mlir-air` - MLIR AIR for ACAP devices
-* `docs` - Documentation
-* `Docker` - Docker container configurations
+**Export to ONNX Pass:**
+This step adjusts the input tensor dimensions according to a sample input derived from the training dataset and exports the model in the ONNX format to a predetermined location. This file path is registered within the MASE graph's metadata, ensuring the model's ONNX representation is available for future use.
 
-## Getting Started with Docker
+**Generate TensorRT String Pass:**
+This step serializes the TensorRT engine and stores this representation within the MASE graph's metadata. This serialization format enables automated requests of the model engine in future tasks.
 
-First, make sure the repo is up to date:
-```sh
-make sync
-```
-Start with the docker container by running the following command under the repo:
-```sh
-make shell
-```
-It may take long time to build the docker container for the first time. Once done, you should enter the docker container. To build the tool, run the following command:
-```sh
-cd /workspace
-make build
-```
-This should also take long time to finish.
+**Run TensorRT Pass:**
+Initiating with the MASE graph as input, this function deserializes the stored engine string and sets the necessary data buffers for intermediate data storage during inference. The engine then executes model predictions using a test dataset, to record accuracy and latency metrics.
 
-If you would like to contribute, please check the [wiki](https://github.com/JianyiCheng/mase-tools/wiki) for more information.
+## RUN FILES
 
-## Getting Started with Conda
+- terminal path: ..\mase\machop
+- Files for testing functions:
+  - ..\mase\machop\Test_bynames.py (VGG)
+  - ..\mase\machop\Test_byTypes.py (VGG)
+  - ..\mase\machop\Test_JSC_ByType (JSC)
 
-First, make sure the repo is up to date:
-```sh
-make sync
-```
+## Documents
 
-Install conda by following the instructions [here](https://conda.io/projects/conda/en/latest/user-guide/install/index.html), then build and activate the environment as follows.
-```sh
-conda env create -f machop/environment.yml
-conda activate mase
-```
+**Related Path: mase\machop\Group5_Documents_html**
 
-Optionally, you can verify the CLI utility is running.
-```sh
-./machop/ch --version
-```
-
-
-## Running an example neural network
-
-In this example, we'll use the command-line interface (CLI) to train a toy model on the Jet Substructure (JSC) dataset, quantize it to integer arithmetic and evaluate the quantized model on the test split of the dataset.
-
-First, train the toy model over 10 epochs by running the following command.
-
-```sh
-./machop/ch train jsc-tiny jsc --max-epochs 10 --batch-size 256
-```
-
-Now, transform the model to integer arithmetic and save the model checkpoint. The `toml` configuration file specifies the required arguments for the quantization flow.
-
-```sh
-./machop/ch transform jsc-tiny jsc --config ./machop/configs/examples/jsc_toy_by_type.toml
-```
-
-Finally, evaluate the quantized model performance.
-```sh
-./machop/ch test jsc-tiny jsc --load <path/to/checkpoint>
-```
-
-See the Machop [README](./machop/README.md) for a more detailed introduction.
-
-## MASE Dev Meetings
-
-* Subscribe [Mase Weekly Dev Meeting (Wednesday 4:30 UK time)](https://calendar.google.com/calendar/event?action=TEMPLATE&tmeid=N2lpc25mN3VoamE5NXVmdmY5ZW1tOWpmMGdfMjAyMzExMDFUMTYzMDAwWiBqYzI0ODlAY2FtLmFjLnVr&tmsrc=jc2489%40cam.ac.uk&scp=ALL). Everyone is welcomed!
-* Direct [Google Meet link](meet.google.com/fke-zvii-tgv)
-* Join the [Mase Slack](https://join.slack.com/t/cl-bxr2817/shared_invite/zt-2c57uqo07-eAubscjejZOSRuFVQMBN2w)
-* If you want to discuss anything in future meetings, please add them as comments in the [meeting agenda](https://docs.google.com/document/d/12m96h7gOhhmikniXIu44FJ0sZ2mSxg9SqyX-Uu3s-tc/edit?usp=sharing) so we can review and add them.
-
-## Donation  
-
-If you think MASE is helpful, please [donate](https://www.buymeacoffee.com/mase_tools) for our work, we appreciate your support!
-
-<img src='./docs/imgs/bmc_qr.png' width='250'>
+In order to pass the pull request, some of the associated JAVA generated files and related programs have been removed, but the HTML files themselves can still be read normally.
