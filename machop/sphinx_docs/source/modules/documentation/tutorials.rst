@@ -23,6 +23,13 @@ Tutorials
 
 .. toctree::
     :maxdepth: 1
+    :caption: MASE Runtime
+
+    tutorials/passes/interface/masert/tensorrt/tensorRT_quantization_tutorial
+    tutorials/passes/interface/masert/onnxrt/onnxrt_quantization_tutorial
+
+.. toctree::
+    :maxdepth: 1
     :caption: Passes
 
     tutorials/stat_to_config
