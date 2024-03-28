@@ -23,15 +23,15 @@ module exp #(
     input logic [DATA_IN_0_PRECISION_0-1:0] data_in_0,
     output logic [DATA_OUT_0_PRECISION_0-1:0] data_out_0
 );
-    localparam PDT_WIDTH = LUT_1_PRECISION_0+LUT_2_PRECISION_0+IMPRECISE_PRECISION_0;
-    logic [DATA_IN_0_PRECISION_INT-1:0] a_sat; //store integer value greater than 15
-    logic [3:0] a_precise_1; //store integer value upto 15
-    logic [2:0] a_precise_2; //store most significant 3 fractional bits
-    logic [DATA_IN_0_PRECISION_1-1:0] a_imprecise; //store least significant fractional bits other than the MSB 3 bits
-    logic [LUT_1_PRECISION_0-1:0] exp_precise_1; //negative exponential of a_precise_1
-    logic [LUT_2_PRECISION_0-1:0] exp_precise_2; //negative exponential of a_precise_2
-    logic [IMPRECISE_PRECISION_0-1:0] exp_imprecise;  //negative exponential of a_imprecise
-    logic [PDT_WIDTH-1:0] product; //final product of all part exponentials
+    localparam PDT_WIDTH = LUT_1_PRECISION_0 + LUT_2_PRECISION_0 + IMPRECISE_PRECISION_0;
+    logic [DATA_IN_0_PRECISION_INT-1:0] a_sat;  //store integer value greater than 15
+    logic [3:0] a_precise_1;  //store integer value upto 15
+    logic [2:0] a_precise_2;  //store most significant 3 fractional bits
+    logic [DATA_IN_0_PRECISION_1-1:0] a_imprecise;  //store least significant fractional bits other than the MSB 3 bits
+    logic [LUT_1_PRECISION_0-1:0] exp_precise_1;  //negative exponential of a_precise_1
+    logic [LUT_2_PRECISION_0-1:0] exp_precise_2;  //negative exponential of a_precise_2
+    logic [IMPRECISE_PRECISION_0-1:0] exp_imprecise;   //negative exponential of a_imprecise
+    logic [PDT_WIDTH-1:0] product;  //final product of all part exponentials
 	
     always_comb begin
         if (DATA_IN_0_PRECISION_INT > 4) begin //there is possibility for saturation 
