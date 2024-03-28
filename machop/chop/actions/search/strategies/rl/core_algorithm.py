@@ -2,15 +2,14 @@ import wandb
 from ..base import SearchStrategyBase
 from .env import env_map, registered_env_map
 from pprint import pprint
-from stable_baselines3 import A2C, PPO, DDPG, SAC
+from stable_baselines3 import A2C, PPO, DDPG
 from stable_baselines3.common.env_util import make_vec_env
 from stable_baselines3.common.callbacks import CallbackList, CheckpointCallback, EvalCallback, BaseCallback
 
 algorithm_map = {
     "ppo": PPO,
     "a2c": A2C,
-    "ddpg": DDPG,
-    "sac": SAC,
+    "ddpg": DDPG
 }
 
 class WandbCallback(BaseCallback):
@@ -39,6 +38,8 @@ class StrategyRL(SearchStrategyBase):
             "episode_max_len": 10,
             "learning_rate": 2.5e-4,
             "save_name": 'tmp_rl',
+            "wandb_callback": False,
+            "wandb_entity": "",
         }
         
         self.algorithm_name = self.config.get("algorithm", defaults["algorithm"])
@@ -46,12 +47,14 @@ class StrategyRL(SearchStrategyBase):
         self.device = self.config.get("device", defaults["device"])
         self.total_timesteps = self.config.get("total_timesteps", defaults["total_timesteps"])
         self.n_steps = self.config.get("n_steps", defaults["n_steps"])
-        self.n_envs = self.config.get("n_envs", defaults["n_envs"])
+        self.n_envs = self.config.get("n_envs", defaults["n_envs"]) if self.algorithm_name != "ddpg" else 1
         self.eval_freq = self.config.get("eval_freq", defaults["eval_freq"])
         self.save_freq = self.config.get("save_freq", defaults["save_freq"])
         self.episode_max_len = self.config.get("episode_max_len", defaults["episode_max_len"])
         self.learning_rate = self.config.get("learning_rate", defaults["learning_rate"])
         self.save_name = self.config.get("save_name", defaults["save_name"])
+        self.wandb_callback = self.config.get("wandb_callback", defaults["wandb_callback"])
+        self.wandb_entity = self.config.get("wandb_entity", defaults["wandb_entity"])
 
         self.env = env_map[self.env_name]
         self.registered_env_name = registered_env_map[self.env_name]
@@ -67,8 +70,13 @@ class StrategyRL(SearchStrategyBase):
         return env
 
     def _initialize_callbacks(self, env):
-        wandb.init(project="Mase-RL", entity="m-pl-braganca")
-        wandb_callback = WandbCallback()
+        callbacks = []
+        
+        if self.wandb_callback:
+            wandb.init(project="Mase-RL", entity=self.wandb_entity)
+            wandb_callback = WandbCallback()
+            callbacks.append(wandb_callback)
+
         checkpoint_callback = CheckpointCallback(save_freq=self.save_freq, save_path="./logs/")
         eval_callback = EvalCallback(
             env,
@@ -76,8 +84,8 @@ class StrategyRL(SearchStrategyBase):
             log_path="./logs/results",
             eval_freq=self.eval_freq,
         )
-        callbacks = CallbackList([checkpoint_callback, eval_callback, wandb_callback])
-        return callbacks
+        callbacks.extend([checkpoint_callback, eval_callback])
+        return CallbackList(callbacks)
 
     def search(self, search_space):
         if 'load_name' in self.config:
@@ -117,7 +125,7 @@ class StrategyRL(SearchStrategyBase):
             model.save(self.save_name)
             print(f"Model trained and saved as {self.save_name}.")
 
-        # Post-training or post-loading actions
+        # Actual Prediction
         vec_env = model.get_env()
         obs = vec_env.reset()
         for _ in range(self.episode_max_len):

@@ -1,11 +1,11 @@
 # basics
-model = "vgg_tiny"
-dataset = "cifar10_subset"
+model = "vgg7"
+dataset = "cifar10"
 task = "cls"
 accelerator = "gpu"
 project = "vgg7"
 seed = 42
-load_name = "../../drive/MyDrive/TinyVGG-epoch=32-val_acc=0.67.ckpt"
+load_name = "../../drive/MyDrive/test-accu-0.9332.ckpt"
 load_type = "pl"
  
 [search.search_space]
@@ -22,13 +22,11 @@ weight_width = [8, 16, 32]
 weight_frac_width = [4, 8, 16]
 bias_width = [8, 16, 32]
 bias_frac_width = [4, 8, 16]
-#name = ["NA"]
 
 [search.search_space.seed.linear.config]
-# if search.search_space.setup.by = "type", this seed will be used to quantize all torch.nn.Linear/ F.linear
 name = ["integer"]
 data_in_width = [8, 16, 32]
-data_in_frac_width = ["NA"] # "NA" means data_in_frac_width = data_in_width // 2
+data_in_frac_width = ["NA"]
 weight_width = [8, 16, 32]
 weight_frac_width = ["NA"]
 bias_width = [8, 16, 32]
@@ -37,7 +35,7 @@ bias_frac_width = ["NA"]
 [search.search_space.seed.conv2d.config]
 name = ["integer"]
 data_in_width = [8, 16, 32]
-data_in_frac_width = ["NA"] # "NA" means data_in_frac_width = data_in_width // 2
+data_in_frac_width = ["NA"]
 weight_width = [8, 16, 32]
 weight_frac_width = ["NA"]
 bias_width = [8, 16, 32]
@@ -45,7 +43,7 @@ bias_frac_width = ["NA"]
 
 [search.strategy]
 name = "rl"
-algorithm = 'ppo'
+algorithm = 'ddpg'
 env = 'mixed_precision_paper'
 device = 'cuda'
 total_timesteps = 100000
@@ -58,9 +56,9 @@ learning_rate = 2.5e-4
 save_name = 'tmp_rl'
 
 [search.strategy.setup]
-# sum_scaled_metrics = true # single objective
+# sum_scaled_metrics = true
 # direction = "maximize"
-sum_scaled_metrics = false # multi objective
+sum_scaled_metrics = false
 
 [search.strategy.sw_runner.basic_evaluation]
 data_loader = "val_dataloader"
@@ -71,10 +69,8 @@ compare_to = 32 # compare to FP32
 
 [search.strategy.metrics]
 accuracy.scale = 0.7
-# let algorith to know whether this metric is the larger the better or the smaller the better
 accuracy.direction = "maximize"
 average_bitwidth.scale = 0.3
 average_bitwidth.direction = "minimize"
-# boundary to normalize the metric to [0, 1]
 average_bitwidth.lower_bound = 6
 average_bitwidth.upper_bound = 12

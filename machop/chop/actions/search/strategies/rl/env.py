@@ -348,8 +348,6 @@ class MixedPrecisionEnvHiLo(BaseMixedPrecisionEnv):
 
 class MixedPrecisionPaper(BaseMixedPrecisionEnv):
     def __init__(self, config, search_space, sw_runner, hw_runner, data_module, episode_max_len):
-        if search_space is None:
-            raise ValueError("search_space cannot be None")
         self.search_space = search_space
         self.sw_runner = sw_runner
         self.hw_runner = hw_runner
@@ -366,21 +364,17 @@ class MixedPrecisionPaper(BaseMixedPrecisionEnv):
             graph, {"dummy_in": self.search_space.dummy_input}
         )
         layer_info = {}
-        idx = 0
-        for node in graph.fx_graph.nodes:
-            if get_mase_op(node) == "linear":
-                target = get_node_actual_target(node)
-                layer_info[node.name] = [idx, target.in_features, target.out_features, 1, 0]
-                idx += 1
-            elif get_mase_op(node) == "conv2d":
-                target = get_node_actual_target(node)
-                layer_info[node.name] = [
-                    idx, target.in_channels, target.out_channels, target.kernel_size[0], target.stride[0]]
-                idx += 1
+
+        for idx, node in enumerate(graph.fx_graph.nodes):
+            mase_op = get_mase_op(node)
+            target = get_node_actual_target(node)
+            if mase_op == "linear":
+                layer_details = [idx, target.in_features, target.out_features, 1, 0]
+            elif mase_op == "conv2d":
+                layer_details = [idx, target.in_channels, target.out_channels, target.kernel_size[0], target.stride[0]]
             else:
-                target = get_node_actual_target(node)
-                layer_info[node.name] = [idx, 0, 0, 0, 0]
-                idx += 1
+                layer_details = [idx, 0, 0, 0, 0]
+            layer_info[node.name] = layer_details
 
         self.obs_list = []
         self.action_list = []
@@ -391,28 +385,25 @@ class MixedPrecisionPaper(BaseMixedPrecisionEnv):
             if len(choices) == 1:
                 self.sample[name] = 0
                 continue
+
             self.layer_names.append(name)
             _name = name.split("/")
             cur_obs = layer_info[_name[0]].copy()
-            if _name[2] == "data_in_width":
-                cur_obs.append(1)
-            elif _name[2] == "weight_width":
-                cur_obs.append(2)
-            elif _name[2] == "bias_width":
-                cur_obs.append(3)
-            else:
-                cur_obs.append(0)
+
+            obs_values = {"data_in_width": 1, "weight_width": 2, "bias_width": 3}
+            cur_obs.append(obs_values.get(_name[2], 0))
+
             self.obs_list.append(cur_obs)
             self.action_list.append(sorted(choices))
 
         self.episode_len = 0
         self.obs_list = np.array(self.obs_list)
 
-        lower_bound = np.min(self.obs_list, axis=0)
-        upper_bound = np.max(self.obs_list, axis=0)
+        lowest = np.min(self.obs_list, axis=0)
+        highest = np.max(self.obs_list, axis=0)
         self.observation_space = Box(
-            low=np.append(lower_bound, min([min(sub) for sub in self.action_list])),
-            high=np.append(upper_bound, max([max(sub) for sub in self.action_list])),
+            low=np.append(lowest, min([min(sub) for sub in self.action_list])),
+            high=np.append(highest, max([max(sub) for sub in self.action_list])),
         )
         self.action_space = Box(low=0, high=1.0)
 
@@ -431,15 +422,15 @@ class MixedPrecisionPaper(BaseMixedPrecisionEnv):
             upper_bound = self.config["metrics"][metric_name].get("upper_bound", 1)
             direction = self.config["metrics"][metric_name].get("direction", "maximize")
             if direction == "maximize":
-                unit_metric = max(
+                raw_metric = max(
                     max(lower_bound, metrics[metric_name]) - lower_bound, 0
                 ) / (upper_bound - lower_bound)
             else:
-                unit_metric = max(
+                raw_metric = max(
                     upper_bound - max(lower_bound, metrics[metric_name]), 0
                 ) / (upper_bound - lower_bound)
             scaled_metrics[metric_name] = (
-                unit_metric * self.config["metrics"][metric_name]["scale"]
+                raw_metric * self.config["metrics"][metric_name]["scale"]
             )
         reward = sum(scaled_metrics.values())
 
@@ -447,21 +438,21 @@ class MixedPrecisionPaper(BaseMixedPrecisionEnv):
             self.best_performance["metrics"] = metrics
             self.best_performance["reward"] = reward
             self.best_sample = sampled_config
-            self.layers, self.layer_types = self.get_layers_of_graph(model)
+            self.nodes, self.node_types = self.get_nodes_and_types(model)
             print(f"new highest reward: {reward:.4f}")
             for metric_name in self.metric_names:
                 print(f"{metric_name}: {metrics[metric_name]:.4f}")
                 self.metric_values[metric_name] = metrics[metric_name]
         return reward, metrics
     
-    def get_layers_of_graph(self, graph):
-        layers = []
-        layer_types = []
+    def get_nodes_and_types(self, graph):
+        nodes = []
+        node_types = []
         for node in graph.fx_graph.nodes:
             if node.meta["mase"].module is not None:
-                layers.append(str(node))
-                layer_types.append(type(node.meta["mase"].module).__name__)
-        return layers, layer_types
+                nodes.append(str(node))
+                node_types.append(type(node.meta["mase"].module).__name__)
+        return nodes, node_types
 
     def reset(self, *, seed=None, options=None):
         self.episode_len = 0
@@ -494,16 +485,16 @@ Env_id = 'RL/MixedPrecisionEnv-v0'
 gym.envs.registration.register(
     id=Env_id,
     entry_point=MixedPrecisionEnv,
-    max_episode_steps=10,
-    reward_threshold=500
+    max_episode_steps=100,
+    reward_threshold=None
 )
 
 Env_id_Hi_Lo = 'RL/MixedPrecisionEnvHiLo-v0'
 gym.envs.registration.register(
     id=Env_id_Hi_Lo,
     entry_point=MixedPrecisionEnvHiLo,
-    max_episode_steps=10,
-    reward_threshold=500
+    max_episode_steps=100,
+    reward_threshold=None
 )
 
 Env_id_Hi_Lo = 'RL/MixedPrecisionPaper-v0'
@@ -511,7 +502,7 @@ gym.envs.registration.register(
     id=Env_id_Hi_Lo,
     entry_point=MixedPrecisionPaper,
     max_episode_steps=100000,
-    reward_threshold=500
+    reward_threshold=None
 )
 
 env_map = {
