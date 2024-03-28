@@ -49,3 +49,34 @@ einops
 sphinx
 sphinx-rtd-theme
 myst-parser
+
+
+# for naslib
+ConfigSpace>=0.4.17
+pyyaml==5.4.1
+networkx==2.6.3
+numpy==1.21.5; python_version <= '3.7'
+numpy>=1.22.0; python_version > '3.7'
+torch>=1.9.0
+torchvision>=0.10.0
+fvcore==0.1.5.post20210630
+pytest==6.2.4
+lightgbm==3.2.1
+ngboost==0.3.11
+xgboost==1.4.2
+emcee==3.1.0
+pybnn==0.0.5
+grakel==0.1.8
+pyro-ppl==1.6.0
+scipy==1.4.1
+
+# additional from setup.py prev
+tqdm==4.61.1
+scikit-learn==1.0.2
+scikit-image==0.19.2
+pytorch-msssim==0.2.1
+tensorwatch==0.9.1
+
+# from zerocost
+transforms3d
+gdown
