@@ -48,11 +48,30 @@ weight_upper_limit = 30
 ```
 
 ## Run the search
-Run the following command to start the search. We search for 100 trials and save the results in `mase_output/zero_cost_proxy_test/software/search_ckpts`.
+To execute the search from the command line, follow these steps: 
+1. This PR makes use of a submodule, there fore it must be initialised with;
+ ```bash
+ git submodule init NASLib 
+ ```
+2. It must then be update with;
+```bash
+git submodule update NASLib
+```
+3. Install all dependencies
+```bash
+pip install .
+```
+4. Navigate to the `machop` directory. 
+
+5. Run the following command to start the search. We search for 100 trials and save the results in `mase_output/zero_cost_proxy_test/software/search_ckpts`;
 
 ```bash
-./ch search --config configs/examples/zero_cost_proxy.toml
-```
+ ./ch search --config configs/examples/zero_cost_proxy.toml 
+```  
+
+Where a search space configuration TOML file must be pointed to, after the ‘—config’ flag.
+
+If prompted, put the data into `NASLib/naslib/data`
 
 When the search is completed, you will see the best metrics printed in the terminal, along with the parameters used. 
 The 'spearman' column ranks the top 5 best metrics based on the Spearman correlation, the 'kendaltau' column ranks the top 5 best metrics based on the Kendal tau correlation, and the 'Global Parameters' column shows 5 parameters set in the search configuration file. 
