@@ -122,7 +122,7 @@ def transform(
                 )
                 
                 # Apply fp16 or layer-wise mixed precision quantization if necessary and convert the model to TensorRT format
-                graph, runtime_meta = PASSES["tensorrt_quantize"](
+                graph, runtime_meta = PASSES["tensorrt"](
                     graph, pass_args=pass_config
                 )
 

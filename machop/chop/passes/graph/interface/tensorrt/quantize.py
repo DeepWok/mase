@@ -117,7 +117,7 @@ class Quantizer:
         # This section may be uncommented if pytorch-quantization is not used for int8 Calibration
         '''
         # Only required if pytorch-quantization is not used
-        config.set_flag(trt.BuilderFlag.int8)
+        config.set_flag(trt.BuilderFlag.INT8)
         if self.config['default']['config']['precision'] == 'int8':
             config.int8_calibrator = Int8Calibrator(
                 self.config['num_calibration_batches'], 
@@ -134,7 +134,7 @@ class Quantizer:
             config.set_flag(trt.BuilderFlag.STRICT_TYPES)
 
         if self.config['default']['config']['precision'] == 'fp16' and not layer_wise_mixed_precision:
-            config.set_flag(trt.BuilderFlag.fp16)
+            config.set_flag(trt.BuilderFlag.FP16)
 
         elif layer_wise_mixed_precision:
             # Set layer precision and type bsed on TOML configuration
