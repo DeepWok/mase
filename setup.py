@@ -69,6 +69,6 @@ setup(
 )
 
 # Run submodule setup.py
-os.chdir('NASLib')
-subprocess.check_call(['python', 'setup.py', 'install'])
-os.chdir('..')
+os.chdir("NASLib")
+subprocess.check_call(["python", "setup.py", "install"])
+os.chdir("..")
