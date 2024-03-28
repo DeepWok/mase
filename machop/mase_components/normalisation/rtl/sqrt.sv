@@ -25,7 +25,7 @@ module sqrt #(
     parameter K_WORDSIZE = 32;
 
     parameter LOG2_IN_WIDTH = $clog2(IN_WIDTH);
-    parameter VALID_IN_DELAY_LINE_SIZE = 11;
+    parameter VALID_IN_DELAY_LINE_SIZE = NUM_ITERATION;
 
     // Define an enum for states (one hot)
     typedef enum logic [NUM_STATE_BITS-1:0] {
