@@ -6,7 +6,7 @@ from typing import Tuple
 
 import torch
 from pathlib import Path
-
+import copy
 
 def check_func_type(node, my_func):
     return type(node.target) == type(my_func)
@@ -137,7 +137,8 @@ def get_node_target_by_name(graph, request_name):
 def deepcopy_mase_graph(mase_graph):
     new_graph = deepcopy(mase_graph)
     for new_n, n in zip(new_graph.fx_graph.nodes, mase_graph.fx_graph.nodes):
-        new_n.meta = deepcopy(n.meta)
+        #new_n.meta = deepcopy(n.meta)
+        new_n.meta = n.meta
     return new_graph
 
 

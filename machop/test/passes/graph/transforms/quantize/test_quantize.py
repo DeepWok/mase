@@ -65,6 +65,7 @@ def test_quantize():
     mg, _ = add_common_metadata_analysis_pass(
         mg, {"dummy_in": dummy_in, "add_value": False}
     )
+
     # Sanity check and report
     # mg = verify_common_metadata_analysis_pass(mg)
     quan_args = {

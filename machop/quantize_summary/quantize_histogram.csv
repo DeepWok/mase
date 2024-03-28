@@ -1,0 +1,9 @@
+Original type,OP,Total,Changed,Unchanged
+BatchNorm2d,batch_norm2d,6,0,6
+Conv2dInteger,conv2d,6,0,6
+LinearInteger,linear,3,0,3
+MaxPool2d,max_pool2d,3,0,3
+ReLU,relu,8,0,8
+output,output,1,0,1
+view,view,1,0,1
+x,placeholder,1,0,1

@@ -1,0 +1,25 @@
+# basics
+model = "vgg7"
+dataset = "cifar10"
+task = "cls"
+load_name = "/mnt/d/imperial/second_term/adls/projects/mase/mase_output/vgg_cifar10_prune/software/prune/transformed_ckpt/state_dict.pt"
+load_type = "pt"
+auto_requeue = "None"
+
+project = "vgg_cifar10_train"
+seed = 42
+log_every_n_steps = 50 
+
+batch_size = 512
+learning_rate = 1e-4
+
+[training]
+max_epochs = 1
+weight_decay = 0
+optimizer = "adam"
+learning_rate = 1e-4
+
+[trainer]
+devices = 1
+accelerator = "cpu"
+

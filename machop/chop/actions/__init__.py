@@ -5,3 +5,5 @@ from .transform import transform
 from .search import search
 from .emit import emit
 from .simulate import simulate
+from .train1 import train1
+from .prune_and_retrain import prune_and_retrain

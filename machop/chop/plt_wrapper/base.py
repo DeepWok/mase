@@ -6,7 +6,7 @@ from torch.optim.lr_scheduler import CosineAnnealingLR
 
 # from torchmetrics.functional import accuracy
 from torchmetrics import Accuracy, MeanMetric
-
+import pdb
 
 class WrapperBase(pl.LightningModule):
     def __init__(
@@ -17,6 +17,9 @@ class WrapperBase(pl.LightningModule):
         epochs=1,
         optimizer=None,
         dataset_info=None,
+        batch_size=128,
+        # 在这里面，有的参数是有用的，如optimizer和learning_rate,有的参数是无用的，如batch_size；
+        # 所有这些参数全部都只在这个特定文件里有用，即：所有optimizer可以改名为optimizer_new，不会有bug
     ):
         super().__init__()
         self.model = model
@@ -25,6 +28,7 @@ class WrapperBase(pl.LightningModule):
         self.loss_fn = torch.nn.CrossEntropyLoss()
         self.epochs = epochs
         self.optimizer = optimizer
+        self.batch_size = batch_size
 
         self.num_classes = dataset_info.num_classes
         if self.num_classes is not None:
@@ -46,7 +50,7 @@ class WrapperBase(pl.LightningModule):
         self.acc_train(y_hat, y)
         self.log("train_acc_step", self.acc_train, prog_bar=True)
         self.log("train_loss_step", loss)
-
+        #pdb.set_trace()
         return loss
 
     def validation_step(self, batch, batch_idx):
@@ -91,11 +95,11 @@ class WrapperBase(pl.LightningModule):
             )
             scheduler = CosineAnnealingLR(opt, T_max=self.epochs, eta_min=1e-6)
         elif self.optimizer == "adam":
-            opt = torch.optim.Adam(
-                self.trainer.model.parameters(),
-                lr=self.learning_rate,
-                weight_decay=self.weight_decay,
-            )
+            #print(self.learning_rate)
+            #print(self.weight_decay)
+            #print(self.trainer.model.parameters())
+            #import pdb ; pdb.set_trace()
+            opt = torch.optim.Adam(self.trainer.model.parameters(),lr=self.learning_rate,weight_decay=self.weight_decay)
             scheduler = CosineAnnealingLR(opt, T_max=self.epochs, eta_min=1e-6)
         elif self.optimizer in ["sgd_warmup", "sgd"]:
             opt = torch.optim.SGD(
