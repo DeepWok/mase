@@ -17,7 +17,7 @@ WEIGHT_PRUNE_METHODS = ["random", "l1-norm", "l2-norm"]
 ACTIVATION_PRUNE_METHODS = ["random", "l1-norm", "l2-norm"]
 
 # A registry of available pruning strategies (i.e. algorithms)
-# PRUNE_METHODS = { 
+# PRUNE_METHODS = {
 #     # A basic one-shot pruner that prunes to a given sparsity level
 #     "level-pruner": LevelPruner,
 #     "channel-pruner": ChannelPruner,

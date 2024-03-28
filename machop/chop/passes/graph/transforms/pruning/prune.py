@@ -32,18 +32,19 @@ def get_weight_hook(name, info, named_info, w_config: dict):
 def get_activation_hook(name, info, named_info, a_config: dict):
     a_rank_fn = get_activation_rank_fn(a_config)
     a_sparsity = named_info["activation_sparsity"]
+
     # register forward hook
     def sparsify_input(module, args):
         if len(args) > 1:
             raise ValueError(
                 f"{module.__class__.__name__} takes more than 1 argument at inference, the current sparsiy_input pre forward hook only allows one!"
             )
-        x = args[0].to('cuda')
+        x = args[0].to("cuda")
         mask = a_rank_fn(x, info, a_sparsity, name)
         module.activation_mask = mask
         sparsify_tensor = x * mask
         # sparsity = (sparsify_tensor == 0).sum().item() / sparsify_tensor.numel()
-        #print('Current tensor sparsity:',sparsity)
+        # print('Current tensor sparsity:',sparsity)
         # it seems like the output of this can be a non-tuple thing??
         return sparsify_tensor
 
@@ -124,7 +125,7 @@ def prune_graph_iterator(graph, config: dict):
     # Setup all pruning-related parameters (incl. basic validation)
     w_config = load_weight_prune_config(config["weight"], graph)
     a_config = load_activation_prune_config(config["activation"], graph)
-    
+
     # we need to loop twice, the first time is to fetch all necessary information
     # first sloop
     info = {}
@@ -155,8 +156,7 @@ def prune_graph_iterator(graph, config: dict):
                 if node_hooks["a_hook"] is not None:
                     register_fn, hook_fn = node_hooks["a_hook"]
                     getattr(graph.modules[node.target], register_fn)(hook_fn)
-                
-    
+
     return graph
 
 
