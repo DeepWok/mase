@@ -14,4 +14,9 @@ INTERNAL_RTL_DEPENDENCIES = {
         "cast/rtl/fixed_rounding.sv",
     ],
     "relu": ["activations/fixed_relu.sv"],
+    "selu": ["activations/fixed_selu.sv"],
+    "tanh": ["activations/fixed_tanh.sv"],
+    "gelu": ["activations/fixed_gelu.sv", "arithmetic/fixed_mult.sv"],
+    "softsign": ["activations/fixed_softsign.sv", "arithmetic/fixed_mult.sv"],
+    "softplus": ["activations/fixed_softplus.sv"],
 }

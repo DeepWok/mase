@@ -13,8 +13,11 @@ module fixed_round #(
   /* verilator lint_on DECLFILENAME */
   localparam IN_INT_WIDTH = IN_WIDTH - IN_FRAC_WIDTH;
   localparam OUT_INT_WIDTH = OUT_WIDTH - OUT_FRAC_WIDTH;
-  localparam MAX_POS = (1 << (OUT_WIDTH - 1)) - 1;
-  localparam MAX_NEG = (1 << (OUT_WIDTH - 1));
+  logic [OUT_WIDTH : 0] MAX_POS ; //modified since declaring it as localparam used to cause overflow for MAX_NEG for 32-bit OUT_WIDTH
+  logic [OUT_WIDTH : 0] MAX_NEG ; //modified since declaring it as localparam used to cause overflow for MAX_NEG for 32-bit OUT_WIDTH
+
+  assign MAX_POS = (1 << (OUT_WIDTH - 1)) - 1;
+  assign MAX_NEG =  (1 << (OUT_WIDTH - 1));    
 
   logic [2:0] lsb_below;
   logic [IN_WIDTH - 2:0] input_data;

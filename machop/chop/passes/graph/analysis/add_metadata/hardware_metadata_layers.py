@@ -27,4 +27,46 @@ INTERNAL_COMP = {
             ],
         },
     ],
+    "selu": [
+        {
+            "name": "fixed_selu",
+            "dependence_files": [
+                "activations/rtl/fixed_selu.sv",
+            ],
+        },
+    ],
+    "tanh": [
+        {
+            "name": "fixed_tanh",
+            "dependence_files": [
+                "activations/rtl/fixed_tanh.sv",
+            ],
+        },
+    ],
+    "gelu": [
+        {
+            "name": "fixed_gelu",
+            "dependence_files": [
+                "activations/rtl/fixed_gelu.sv",
+                "arithmetic/rtl/fixed_mult.sv",
+            ],
+        },
+    ],
+    "softsign": [
+        {
+            "name": "fixed_softsign",
+            "dependence_files": [
+                "activations/rtl/fixed_softsign.sv",
+                "arithmetic/rtl/fixed_mult.sv",
+            ],
+        },
+    ],
+    "softplus": [
+        {
+            "name": "fixed_softplus",
+            "dependence_files": [
+                "activations/rtl/fixed_softplus.sv",
+            ],
+        },
+    ],
 }
