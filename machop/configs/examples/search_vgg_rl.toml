@@ -43,7 +43,7 @@ bias_frac_width = ["NA"]
 
 [search.strategy]
 name = "rl"
-algorithm = 'ddpg'
+algorithm = 'ppo'
 env = 'mixed_precision_paper'
 device = 'cuda'
 total_timesteps = 100000
@@ -54,6 +54,8 @@ save_freq = 200
 episode_max_len = 100
 learning_rate = 2.5e-4
 save_name = 'tmp_rl'
+#wandb_callback = true
+#wandb_entity = 'm-pl-braganca'
 
 [search.strategy.setup]
 # sum_scaled_metrics = true
