@@ -291,12 +291,10 @@ class SearchStrategyZeroCost(SearchStrategyBase):
                     beautified[k] = txt
             return beautified
 
-        df_truncated.loc[
-            :, ["spearman", "kendaltau", "Global Parameters"]
-        ] = df_truncated.loc[
-            :, ["spearman", "kendaltau", "Global Parameters"]
-        ].map(
-            beautify_metric
+        df_truncated.loc[:, ["spearman", "kendaltau", "Global Parameters"]] = (
+            df_truncated.loc[:, ["spearman", "kendaltau", "Global Parameters"]].map(
+                beautify_metric
+            )
         )
         txt += tabulate(
             df_truncated,
