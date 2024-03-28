@@ -1,5 +1,5 @@
 import torch
-
+import logging
 
 # Parametrizations
 class FakeSparseWeight(torch.nn.Module):
@@ -21,12 +21,7 @@ class FakeSparseWeight(torch.nn.Module):
         assert self.mask.shape == x.shape
         return self.mask * x
 
-    def state_dict(self, *args, **kwargs):
-        # This is a hack
-        # We don't want to let the parametrizations to save the mask.
-        # That way we make sure that the linear module doesn't store the masks
-        # alongside their parametrizations.
-        return {}
+
 
 
 # Structured Pruning Parameterizations

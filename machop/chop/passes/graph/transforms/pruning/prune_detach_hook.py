@@ -8,7 +8,7 @@ def prune_graph_iterator(graph, config: dict):
         if node.op == "call_module":
             name = node.target
             # remove weights
-            if hasattr(graph.modules[node.target], "weigh"):
+            if hasattr(graph.modules[node.target], "weight"):
                 torch.nn.utils.parametrize.remove_parametrizations(
                     graph.modules[name], "weight"
                 )
@@ -40,17 +40,16 @@ def hook_inspector(m):
 
 def prune_detach_hook_transform_pass(graph, pass_args: dict = {}):
     """
-    Apply pruning transformation to the given graph.
-    This is achieved by adding a register_parametrization hook to weights
-    and a register_pre_forward hook to activations
+    Remove pruning hooks from a graph. This is done by removing parametrizations and
+    deleting the forward hooks from the graph.
 
-    :param graph: The input graph to be pruned.
+    :param graph: The input pruned graph.
     :type graph: MaseGraph
 
     :param pass_args: Optional arguments for the pruning transformation.
     :type pass_args: dict
 
-    :return: The pruned graph and an empty dictionary.
+    :return: The de-pruned graph and an empty dictionary.
     :rtype: tuple
     """
     info = hook_inspector(graph.modules)

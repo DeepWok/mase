@@ -1,3 +1,4 @@
+from pprint import pprint
 import torch
 
 from .load import load_activation_prune_config, load_weight_prune_config
@@ -55,6 +56,7 @@ def build_pruning_hooks(info, w_config, a_config):
                 "module_type": v["module_type"],
                 "weight_sparsity": w_config["sparsity"],
                 "value": v["weight_value"],
+                "masks": v["weight_masks"],
                 "stats": v["weight_stats"],
                 "shape": v["weight_shape"],
             }
@@ -74,36 +76,37 @@ def build_pruning_hooks(info, w_config, a_config):
 
 
 def fetch_info(node, module):
-    # deal with conv2d
     if isinstance(module, torch.nn.Conv2d):
+        module_type = "conv2d"
+    elif isinstance(module, torch.nn.Conv1d):
+        module_type = "conv1d"
+    elif isinstance(module, torch.nn.Linear):
+        module_type = "linear"
+    else:
+        module_type = None
+
+    # Deal with supported types
+    if module_type in ["linear", "conv2d", "conv1d"]:
         a_value = node.meta["mase"].parameters["common"]["args"]["data_in_0"]["value"]
         a_stats = node.meta["mase"].parameters["software"]["args"]["data_in_0"]["stat"]
         a_shape = node.meta["mase"].parameters["common"]["args"]["data_in_0"]["shape"]
 
-        w_value = node.meta["mase"].parameters["common"]["args"]["weight"]["value"]
-        w_stats = node.meta["mase"].parameters["software"]["args"]["weight"]["stat"]
-        w_shape = node.meta["mase"].parameters["common"]["args"]["weight"]["shape"]
-        return {
-            "module_type": "conv2d",
-            "weight_value": w_value,
-            "weight_stats": w_stats,
-            "weight_shape": w_shape,
-            "activation_value": a_value,
-            "activation_stats": a_stats,
-            "activation_shape": a_shape,
-        }
+        if "weight_mask" in node.meta["mase"].parameters["software"]["args"]:
+            w_masks = node.meta["mase"].parameters["software"]["args"]["weight_mask"]["value"]
+        else:
+            w_masks = None
 
-    # deal with linear
-    if isinstance(module, torch.nn.Linear):
-        a_value = node.meta["mase"].parameters["common"]["args"]["data_in_0"]["value"]
-        a_stats = node.meta["mase"].parameters["software"]["args"]["data_in_0"]["stat"]
-        a_shape = node.meta["mase"].parameters["common"]["args"]["data_in_0"]["shape"]
+        if "parametrizations.weight.original" in node.meta["mase"].parameters["common"]["args"]:
+            weight_key = "parametrizations.weight.original"
+        else:
+            weight_key = "weight"
 
-        w_value = node.meta["mase"].parameters["common"]["args"]["weight"]["value"]
-        w_stats = node.meta["mase"].parameters["software"]["args"]["weight"]["stat"]
-        w_shape = node.meta["mase"].parameters["common"]["args"]["weight"]["shape"]
+        w_value = node.meta["mase"].parameters["common"]["args"][weight_key]["value"]
+        w_stats = node.meta["mase"].parameters["software"]["args"][weight_key]["stat"]
+        w_shape = node.meta["mase"].parameters["common"]["args"][weight_key]["shape"]
         return {
-            "module_type": "linear",
+            "module_type": module_type,
+            "weight_masks": w_masks,
             "weight_value": w_value,
             "weight_stats": w_stats,
             "weight_shape": w_shape,
@@ -153,6 +156,40 @@ def prune_graph_iterator(graph, config: dict):
                     getattr(graph.modules[node.target], register_fn)(hook_fn)
 
     return graph
+
+def activation_pruning_pass(graph, pass_args: dict = {}):
+    a_config = load_activation_prune_config(pass_args["activation"], graph)
+    info = {}
+    for node in graph.fx_graph.nodes:
+        # pruning only deals with modules at the moment
+        if node.op == "call_module":
+            module = graph.modules[node.target]
+            meta = fetch_info(node, module)
+            info[node.target] = meta
+    named_hooks = {}
+    for k, v in info.items():
+        if v is not None:
+            # for activations
+            a_info = {
+                "module_type": v["module_type"],
+                "activation_sparsity": a_config["sparsity"],
+                "value": v["activation_value"],
+                "stats": v["activation_stats"],
+                "shape": v["activation_shape"],
+            }
+            named_hooks[k] = {
+                "a_hook": get_activation_hook(k, info, a_info, a_config),
+            }
+    for node in graph.fx_graph.nodes:
+        # pruning only deals with modules at the moment
+        if node.op == "call_module":
+            name = node.target
+            if name in named_hooks.keys():
+                node_hooks = named_hooks[name]
+                if node_hooks["a_hook"] is not None:
+                    register_fn, hook_fn = node_hooks["a_hook"]
+                    getattr(graph.modules[node.target], register_fn)(hook_fn)
+    return graph, {}
 
 
 def prune_transform_pass(graph, pass_args: dict = {}):

@@ -1,3 +1,4 @@
+from .pruning import IterativePruningSpace
 from .quantization import (
     ManualHFModuleSearchSpaceMixedPrecisionPTQ,
     GraphSearchSpaceMixedPrecisionPTQ,
@@ -10,6 +11,7 @@ SEARCH_SPACE_MAP = {
     "graph/quantize/mixed_precision_ptq": GraphSearchSpaceMixedPrecisionPTQ,
     "module/manual_hf/quantize/llm_mixed_precision_ptq": ManualHFModuleSearchSpaceMixedPrecisionPTQ,
     "graph/hardware/systolic_mapping": SystolicMappingSearchSpace,
+    "prune/iterative": IterativePruningSpace,
 }
 
 

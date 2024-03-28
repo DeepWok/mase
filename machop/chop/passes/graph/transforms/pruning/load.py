@@ -97,6 +97,13 @@ def load_activation_prune_config(config: dict, graph):
         "sparsity": sparsity,
     }
 
+def load_lottery_ticket_config(config: dict, graph):
+    num_iter = config.get("num_iterations")
+
+    return {
+        "num_iter": num_iter 
+    }
+
 
 # Get a pre-trained vision model from Torchvision and return the layer-wise sparsity
 # distribution that a globally scoped pruner would compute for it.
