@@ -213,7 +213,6 @@ def graph_iterator_for_metadata(
         # if isinstance(result, torch.Tensor):
         #     node.shape = result.shape
         #     node.dtype = result.dtype
-        print(result)
 
         node.meta["mase"] = analyse_fn(
             node.meta["mase"], result, args, kwargs, add_value=add_value
