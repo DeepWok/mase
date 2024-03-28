@@ -161,3 +161,24 @@ class GraphSearchSpaceMixedPrecisionPTQ(SearchSpaceBase):
         config["default"] = self.default_config
         config["by"] = self.config["setup"]["by"]
         return config
+
+    def get_action_space_options(self):
+        """
+        Get the action space for the search space.
+        """
+        choices_flattened = self.choices_flattened
+        # Extract unique layer identifiers
+        layer_identifiers = set(k.split('/')[0] for k in choices_flattened.keys())
+        num_layers = len(layer_identifiers)
+
+        # Extract parameters for a single layer
+        parameters = self._extract_layer_parameters(next(iter(layer_identifiers)))
+        
+        # Construct the action space with the correct number of options for each parameter, for all layers
+        action_space_options = [len(parameters[key]) for key in parameters] * num_layers
+        return action_space_options
+
+    def _extract_layer_parameters(self, layer_identifier):
+        """Extracts parameters for a given layer identifier."""
+        return {k.split('/')[-1]: v for k, v in self.choices_flattened.items() 
+                if k.startswith(layer_identifier)}

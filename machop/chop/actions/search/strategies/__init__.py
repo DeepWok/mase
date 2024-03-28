@@ -1,13 +1,11 @@
-# from .rl import StrategyRL
 from .optuna import SearchStrategyOptuna
 from .base import SearchStrategyBase
-
+from .rl import StrategyRL #TODO: For RL based search strategy uncomment
 
 SEARCH_STRATEGY_MAP = {
-    # "rl": StrategyRL,
+    "rl": StrategyRL, #TODO: For RL based search strategy uncomment
     "optuna": SearchStrategyOptuna,
 }
-
 
 def get_search_strategy_cls(name: str) -> SearchStrategyBase:
     if name not in SEARCH_STRATEGY_MAP:
