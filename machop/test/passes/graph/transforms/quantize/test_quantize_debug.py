@@ -19,7 +19,7 @@ from chop.passes.graph.analysis import (
     verify_common_metadata_analysis_pass,
 )
 
-from chop.actions.train import train
+# from chop.actions.train import train
 
 # from chop.actions.test import test
 
