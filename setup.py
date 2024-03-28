@@ -1,4 +1,6 @@
 from setuptools import setup, find_packages
+import subprocess
+import os
 
 setup(
     name="mase-tools",
@@ -65,3 +67,8 @@ setup(
         "sphinx-rtd-theme",
     ],
 )
+
+# Run submodule setup.py
+os.chdir('NASLib')
+subprocess.check_call(['python', 'setup.py', 'install'])
+os.chdir('..')
