@@ -16,9 +16,11 @@
 
 ## How to run
 
+Please make sure to use **GPU** environment for the experiments.
+
 Please execute all of our programs in the <code>machop("mase/machop")</code> directory.
 
-If needed, please put the pre-trained VGG7 model at <code>mase/test-accu-0.9332.ckpt</code>
+If need pre-trained model, please put the pre-trained VGG7 model at <code>mase/test-accu-0.9332.ckpt</code>
 
 Our test function is <code>test_group3.py</code> inside the existing testing framework, run in command line using:
 ```yaml
@@ -34,6 +36,8 @@ You might change configuration as you wish.
 
 As there are too many configurations, we kept them inside a toml file at <code>configs/example/prune_retrain_group3.toml</code>
 Please refer to the file for default parameter values and to change them.
+
+Additionally, we provide a demo notebook, <code>group3.ipynb</code>, which is readily executable on Colab. (change load_model to Colab path)
 
 ## Example output
 
