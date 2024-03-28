@@ -141,3 +141,12 @@ venv.bak/
 
 # Data files for hardware simulation
 *.dat
+
+#Submodules
+Docker/
+mlir-air/
+verilog-ethernet/
+submodules/
+
+machop/mase_components/scatter/scatter_vivado
+machop/mase_components/llmint/vivado
