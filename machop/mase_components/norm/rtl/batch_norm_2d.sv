@@ -153,11 +153,12 @@ skid_buffer #(
     .rst(rst),
     .data_in({shift_value[1]}),
     .data_in_valid(shift_scale_valid),
-    .data_in_ready(shift_scale_ready[0]),
+    .data_in_ready(),
     .data_out({shift_value[2]}),
-    .data_out_valid(mult_valid[0]),
+    .data_out_valid(),
     .data_out_ready(mult_ready[0])
 );
+
 assign ext_shift_value = $signed(shift_value[2]);
 assign temp_shift_ext = ext_shift_value << IN_FRAC_WIDTH;
 
