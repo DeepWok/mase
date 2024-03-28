@@ -126,7 +126,9 @@ class MixedPrecisionEnv(gym.Env):
             raise ValueError(f"search_space cannot be None")
 
         # observation space definition
-        self.observation_space = Dict({"reward": Box(0.0, 10e4, shape=(1,), dtype=np.float32)})
+        self.observation_space = Dict(
+            {"reward": Box(0.0, 10e4, shape=(1,), dtype=np.float32)}
+        )
         # for k, v in search_space.search_space_flattened.items():
         action_space_list = []
         for k, v in search_space.choice_lengths_flattened.items():
@@ -255,7 +257,7 @@ class MixedPrecisionEnv(gym.Env):
             self.result[1] = metrics[1]
         if self.episode % 20 == 0:
             truncated = True
-            print(f"Step: {self.episode}, reward: {reward}, accuracy: {metrics[0]}, average_bit: {metrics[1]}")
+            # print(f"Step: {self.episode}, reward: {reward}, accuracy: {metrics[0]}, average_bit: {metrics[1]}")
 
         else:
             truncated = False

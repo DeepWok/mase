@@ -194,6 +194,7 @@ def graph_iterator_quantize_by_regex_name(graph, config: dict):
             )
     return graph
 
+
 def graph_iterator_quantize_by_type2(graph, config: dict):
     # Some modules might need information from two graphs to be initilized
     if (
@@ -209,7 +210,9 @@ def graph_iterator_quantize_by_type2(graph, config: dict):
     for node in graph.fx_graph.nodes:
         if get_mase_op(node) not in QUANTIZEABLE_OP:
             continue
-        node_config = get_config(config, node.name)#node_config = get_config(config, get_mase_op(node))
+        node_config = get_config(
+            config, node.name
+        )#node_config = get_config(config, get_mase_op(node))
         if node_config["name"] is None:
             continue
         node_config = parse_node_config(node_config, get_mase_op(node))
@@ -247,6 +250,7 @@ def graph_iterator_quantize_by_type2(graph, config: dict):
                 node.replace_all_uses_with(new_node)
             graph.fx_graph.erase_node(node)
     return graph
+
 
 def quantize_transform_pass(graph, pass_args=None):
     """
