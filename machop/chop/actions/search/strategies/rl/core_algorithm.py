@@ -9,13 +9,10 @@ from stable_baselines3.common.callbacks import (
     EvalCallback,
 )
 import logging
+
 logger = logging.getLogger(__name__)
 
-algorithm_map = {
-    "ppo": PPO,
-    "a2c": A2C,
-    "td3": TD3
-}
+algorithm_map = {"ppo": PPO, "a2c": A2C, "td3": TD3}
 
 
 class StrategyRL(SearchStrategyBase):
@@ -29,8 +26,10 @@ class StrategyRL(SearchStrategyBase):
         self.algorithm_name = setup["algorithm"]
         self.device = setup["device"]
         self.total_timesteps = setup["total_timesteps"]
-        self.save_name = "./mase_output/"+setup["save_name"]+'/'+setup["save_name"]
-
+        # self.save_name = "./mase_output/"+setup["save_name"]+'/'+setup["save_name"]
+        self.save_name = (
+                "./mase_output/" + setup["save_name"] + "/" + setup["save_name"]
+        )
         self.env_name = setup["env"]
         self.env = env_map[self.env_name]
         self.algorithm = algorithm_map[self.algorithm_name]
@@ -39,15 +38,27 @@ class StrategyRL(SearchStrategyBase):
         self.metrics = self.config["metrics"]
         self.load_path = setup["load_path"]
 
-        self.mode=setup["mode"]
+        self.mode = setup["mode"]
+
     def search(self, search_space):
         # env = self.env(config={"search_space": search_space, "runner": self.runner})
-        env = self.env(config={"search_space": search_space,
-                               "hw_runner": self.hw_runner,
-                               "sw_runner": self.sw_runner,
-                               "sum_scaled_metrics": self.sum_scaled_metrics,
-                               "data_module": self.data_module,
-                               "metrics": self.metrics})
+        # env = self.env(config={"search_space": search_space,
+        #                        "hw_runner": self.hw_runner,
+        #                        "sw_runner": self.sw_runner,
+        #                        "sum_scaled_metrics": self.sum_scaled_metrics,
+        #                        "data_module": self.data_module,
+        #                        "metrics": self.metrics})
+
+        env = self.env(
+            config={
+                "search_space": search_space,
+                "hw_runner": self.hw_runner,
+                "sw_runner": self.sw_runner,
+                "sum_scaled_metrics": self.sum_scaled_metrics,
+                "data_module": self.data_module,
+                "metrics": self.metrics,
+            }
+        )
         checkpoint_callback = CheckpointCallback(save_freq=1000, save_path="./logs/")
         eval_callback = EvalCallback(
             env,
@@ -59,7 +70,7 @@ class StrategyRL(SearchStrategyBase):
         method = 0
         # possible extension is to allow custom policy network
         # https://stable-baselines3.readthedocs.io/en/master/guide/custom_policy.html
-        if self.mode == 'train':
+        if self.mode == "train":
             logger.info("training from sketch")
             model = self.algorithm(
                 "MultiInputPolicy",
@@ -70,7 +81,7 @@ class StrategyRL(SearchStrategyBase):
             )
 
             vec_env = model.get_env()
-            start=time.time()
+            start = time.time()
             print(int(self.total_timesteps))
             model.learn(
                 total_timesteps=int(self.total_timesteps),
@@ -85,14 +96,10 @@ class StrategyRL(SearchStrategyBase):
                 obs, reward, done, info = vec_env.step(action)
                 print(obs["reward"])
             return obs["reward"], obs, model
-        elif self.mode == 'continue-training':
+        elif self.mode == "continue-training":
             logger.info("Continue training")
             # Continue Training
-            model = self.algorithm.load(
-                self.load_path,
-                device=self.device,
-                env=env
-            )
+            model = self.algorithm.load(self.load_path, device=self.device, env=env)
 
             vec_env = model.get_env()
 
@@ -107,19 +114,17 @@ class StrategyRL(SearchStrategyBase):
                 obs, reward, done, info = vec_env.step(action)
                 print(obs["reward"])
             return obs["reward"], obs, model
-        elif self.mode == 'load':
+        elif self.mode == "load":
             logger.info("Loading RL model")
-            model = self.algorithm.load(
-                self.load_path,
-                device=self.device,
-                env=env
-            )
+            model = self.algorithm.load(self.load_path, device=self.device, env=env)
             vec_env = model.get_env()
             obs = vec_env.reset()
             for _ in range(20):
                 action, _state = model.predict(obs, deterministic=True)
                 obs, reward, done, info = vec_env.step(action)
-            logger.info(f"Best model: Accuracy={env.result[0]}, Average Bit Width={env.result[1]}")
+            logger.info(
+                f"Best model: Accuracy={env.result[0]}, Average Bit Width={env.result[1]}"
+            )
             return obs["reward"], obs, model
         else:
             logger.warning(f"{self.mode} not implemented")
