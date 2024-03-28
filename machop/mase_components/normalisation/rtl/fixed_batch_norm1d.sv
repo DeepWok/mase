@@ -160,7 +160,8 @@ module fixed_batch_norm1d #(
         .data_out_valid(mult_join_valid),
         .data_out_ready(mult_join_ready)
     );
-    
+
+    logic convert_para_ready; 
     logic add_join_valid, add_out_valid;
     join2 #() add_join (
         .data_in_valid ({mult_out_valid, bias_valid}),
@@ -202,7 +203,7 @@ module fixed_batch_norm1d #(
         end
     end
 
-    logic convert_para_ready, convert_para_valid;
+    logic convert_para_valid;
     logic [DATA_OUT_0_PRECISION_0-1:0] final_res_para_converted [OUT_BLOCK_SIZE-1:0];
     convert_parallelism #(
         .DATA_WIDTH(DATA_OUT_0_PRECISION_0),

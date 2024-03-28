@@ -82,14 +82,13 @@ module convert_parallelism #(
         localparam TRANSFER_CYCLES = DATA_IN_PARALLELISM / DATA_OUT_PARALLELISM;
         logic [$clog2(TRANSFER_CYCLES):0] count;
         logic store_valid;
-        // assign data_in_ready = data_out_ready;
+        assign data_in_ready = data_out_ready && (!store_valid) && !(data_out_ready && data_in_valid);
         
         always_ff @(posedge clk)
         begin
             if (rst) begin
                 count <= TRANSFER_CYCLES;
                 data_out_valid <= 0;
-                data_in_ready <= 1;
                 store_valid <= 0;
             end else begin
                 data_out_valid <= data_in_valid | store_valid;
@@ -114,15 +113,12 @@ module convert_parallelism #(
                     end
 
                     if (count == 1) begin
-                        data_in_ready <= 1;
                         count <= TRANSFER_CYCLES;
                         store_valid <= 0;
                     end else begin
-                        data_in_ready <= 0;
                         count <= count - 1;
                     end
                 end else begin
-                    data_in_ready <= data_out_ready & (!store_valid);
                     data_out_valid <= 0;
                     count <= count;
                 end

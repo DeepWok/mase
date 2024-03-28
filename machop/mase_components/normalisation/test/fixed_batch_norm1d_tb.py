@@ -188,13 +188,13 @@ class BatchNormTB(Testbench):
         inputs_2, weight_2, bias_2, mean_2, exp_outputs_2 = self.get_test_case(config, parallelism, out_parallelism)
 
         self.data_out_0_monitor.load_monitor(exp_outputs_1)
-        # self.data_out_0_monitor.load_monitor(exp_outputs_2)
+        self.data_out_0_monitor.load_monitor(exp_outputs_2)
         
         # Indicate we are ready to receive.
         self.data_out_0_monitor.ready.value = 1
 
         self.weight_driver.load_driver(weight_1)
-        # self.weight_driver.load_driver(weight_2)
+        self.weight_driver.load_driver(weight_2)
 
         await Timer(10, units="ns")
         self.bias_driver.load_driver(bias_1)
@@ -202,16 +202,16 @@ class BatchNormTB(Testbench):
         self.mean_driver.load_driver(mean_1)
         
         # Apply backpressure
-        # self.data_out_0_monitor.ready.value = 0
-        # self.bias_driver.load_driver(bias_2)
+        self.data_out_0_monitor.ready.value = 0
+        self.bias_driver.load_driver(bias_2)
         await Timer(10, units="ns")        
         
-        # self.data_out_0_monitor.ready.value = 1
+        self.data_out_0_monitor.ready.value = 1
         self.data_in_0_driver.load_driver(inputs_1)
         await Timer(10, units="ns")
         
-        # self.data_in_0_driver.load_driver(inputs_2)
-        # self.mean_driver.load_driver(mean_2)
+        self.data_in_0_driver.load_driver(inputs_2)
+        self.mean_driver.load_driver(mean_2)
         print(f'================= DEBUG: put values on input ports ================= \n')
 
         print(f'================= DEBUG: generated values with fe model ================= \n')
