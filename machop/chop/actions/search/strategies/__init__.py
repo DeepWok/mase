@@ -7,6 +7,7 @@ SEARCH_STRATEGY_MAP = {
     "optuna": SearchStrategyOptuna,
 }
 
+
 def get_search_strategy_cls(name: str) -> SearchStrategyBase:
     if name not in SEARCH_STRATEGY_MAP:
         raise ValueError(

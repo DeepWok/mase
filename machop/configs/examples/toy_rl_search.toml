@@ -30,9 +30,9 @@ bias_frac_width = [3, 4, 5, 6, 7, 8, 9]
 
 [search.strategy]
 name = "rl"
-algorithm = 'ddpg'
-env = 'mixed_precision_paper'
-device = 'cuda'
+algorithm = "ddpg"
+env = "mixed_precision_paper"
+device = "cuda"
 total_timesteps = 100000
 n_steps = 32
 n_envs = 4
@@ -40,7 +40,7 @@ eval_freq = 200
 save_freq = 200
 episode_max_len = 100
 learning_rate = 2.5e-4
-save_name = 'tmp_rl'
+save_name = "tmp_rl"
 
 [search.strategy.setup]
 # sum_scaled_metrics = true
@@ -52,7 +52,7 @@ data_loader = "val_dataloader"
 num_samples = 512
 
 [search.strategy.hw_runner.average_bitwidth]
-compare_to = 32 # compare to FP32
+compare_to = 32  # compare to FP32
 
 [search.strategy.metrics]
 accuracy.scale = 0.7

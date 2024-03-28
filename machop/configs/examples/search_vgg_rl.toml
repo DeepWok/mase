@@ -5,15 +5,15 @@ task = "cls"
 accelerator = "gpu"
 project = "vgg_tiny"
 seed = 42
-#load_name = "TinyVGG-epoch=32-val_acc=0.67.ckpt"
-#load_type = "pl"
- 
+# load_name = "TinyVGG-epoch=32-val_acc=0.67.ckpt"
+# load_type = "pl"
+
 [search.search_space]
 name = "graph/quantize/mixed_precision_ptq"
- 
+
 [search.search_space.setup]
 by = "name"
- 
+
 [search.search_space.seed.default.config]
 name = ["integer"]
 data_in_width = [8, 16, 32]
@@ -43,9 +43,9 @@ bias_frac_width = ["NA"]
 
 [search.strategy]
 name = "rl"
-algorithm = 'ppo'               # Others: 'a2c' and 'ddpg'
-env = 'mixed_precision_paper'   # Others (not recommended): 'mixed_precision' and 'mixed_precision_hi_lo'
-device = 'cuda'
+algorithm = "ppo"  # Others: 'a2c' and 'ddpg'
+env = "mixed_precision_paper"  # Others (not recommended): 'mixed_precision' and 'mixed_precision_hi_lo'
+device = "cuda"
 total_timesteps = 100000
 n_steps = 32
 n_envs = 4
@@ -53,10 +53,10 @@ eval_freq = 200
 save_freq = 200
 episode_max_len = 1000
 learning_rate = 2.5e-4
-save_name = 'tmp_rl'
-#load_name = 'tmp_rl'
-#wandb_callback = true
-#wandb_entity = 'm-pl-braganca'
+save_name = "tmp_rl"
+# load_name = 'tmp_rl'
+# wandb_callback = true
+# wandb_entity = 'm-pl-braganca'
 
 [search.strategy.setup]
 # sum_scaled_metrics = true
@@ -68,7 +68,7 @@ data_loader = "val_dataloader"
 num_samples = 512
 
 [search.strategy.hw_runner.average_bitwidth]
-compare_to = 32 # compare to FP32
+compare_to = 32  # compare to FP32
 
 [search.strategy.metrics]
 accuracy.scale = 0.7
