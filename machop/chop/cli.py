@@ -280,16 +280,11 @@ class ChopCLI:
             "num_nodes": self.args.num_nodes,
             "accelerator": self.args.accelerator,
             "strategy": self.args.strategy,
+            "fast_dev_run": self.args.to_debug,
             "precision": self.args.trainer_precision,
             "accumulate_grad_batches": self.args.accumulate_grad_batches,
             "log_every_n_steps": self.args.log_every_n_steps,
         }
-
-        if self.args.to_debug:
-            # we give a very short number of batches for both train and val
-            plt_trainer_args["limit_train_batches"] = 5
-            plt_trainer_args["limit_val_batches"] = 5
-            plt_trainer_args["limit_test_batches"] = 5
 
         # Load from a checkpoint!
         load_name = None
@@ -313,8 +308,6 @@ class ChopCLI:
             "load_name": load_name,
             "load_type": self.args.load_type,
         }
-
-        self.logger.info(f"##### WEIGHT DECAY ##### {self.args.weight_decay}")
 
         train(**train_params)
         self.logger.info("Training is completed")

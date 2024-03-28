@@ -117,6 +117,8 @@ class GraphSearchSpaceMixedPrecisionPTQ(SearchSpaceBase):
                 )
 
         # flatten the choices and choice_lengths
+        print("==============choices=================")
+        print(choices)
         flatten_dict(choices, flattened=self.choices_flattened)
         self.choice_lengths_flattened = {
             k: len(v) for k, v in self.choices_flattened.items()

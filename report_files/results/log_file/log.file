@@ -1,0 +1,1131 @@
+Seed set to 0
+[32mINFO    [0m [34mInitialising model 'vgg7'...[0m
+[32mINFO    [0m [34mInitialising dataset 'cifar10'...[0m
+[32mINFO    [0m [34mProject will be created at /home/xz2723/mase_xinyi/mase_output/team_project[0m
+[32mINFO    [0m [34mBuilding search space...[0m
+loading api
+api loaded
++-------------------------+--------------------------+--------------+-----------------+--------------------------+
+| Name                    |         Default          | Config. File | Manual Override |        Effective         |
++-------------------------+--------------------------+--------------+-----------------+--------------------------+
+| task                    |      [38;5;8mclassification[0m      |     cls      |                 |           cls            |
+| load_name               |           None           |              |                 |           None           |
+| load_type               |            mz            |              |                 |            mz            |
+| batch_size              |           [38;5;8m128[0m            |     512      |                 |           512            |
+| to_debug                |          False           |              |                 |          False           |
+| log_level               |           info           |              |                 |           info           |
+| report_to               |       tensorboard        |              |                 |       tensorboard        |
+| seed                    |            [38;5;8m0[0m             |      42      |                 |            42            |
+| quant_config            |           None           |              |                 |           None           |
+| training_optimizer      |           adam           |              |                 |           adam           |
+| trainer_precision       |         16-mixed         |              |                 |         16-mixed         |
+| learning_rate           |          [38;5;8m1e-05[0m           |     0.01     |                 |           0.01           |
+| weight_decay            |            0             |              |                 |            0             |
+| max_epochs              |            [38;5;8m20[0m            |      5       |                 |            5             |
+| max_steps               |            -1            |              |                 |            -1            |
+| accumulate_grad_batches |            1             |              |                 |            1             |
+| log_every_n_steps       |            [38;5;8m50[0m            |      5       |                 |            5             |
+| num_workers             |            16            |              |                 |            16            |
+| num_devices             |            1             |              |                 |            1             |
+| num_nodes               |            1             |              |                 |            1             |
+| accelerator             |           [38;5;8mauto[0m           |     gpu      |                 |           gpu            |
+| strategy                |           auto           |              |                 |           auto           |
+| is_to_auto_requeue      |          False           |              |                 |          False           |
+| github_ci               |          False           |              |                 |          False           |
+| disable_dataset_cache   |          False           |              |                 |          False           |
+| target                  |   xcu250-figd2104-2L-e   |              |                 |   xcu250-figd2104-2L-e   |
+| num_targets             |           100            |              |                 |           100            |
+| is_pretrained           |          False           |              |                 |          False           |
+| max_token_len           |           512            |              |                 |           512            |
+| project_dir             | /home/xz2723/mase_xinyi/ |              |                 | /home/xz2723/mase_xinyi/ |
+|                         |       mase_output        |              |                 |       mase_output        |
+| project                 |           [38;5;8mNone[0m           | team_project |                 |       team_project       |
+| model                   |           [38;5;8mNone[0m           |     vgg7     |                 |           vgg7           |
+| dataset                 |           [38;5;8mNone[0m           |   cifar10    |                 |         cifar10          |
++-------------------------+--------------------------+--------------+-----------------+--------------------------+
+{'name': 'optuna', 'eval_mode': False, 'sw_runner': {'zero_cost': {'metrics': ['grad_norm', 'snip', 'grasp', 'fisher', 'plain', 'l2_norm', 'naswot', 'naswot_relu', 'tenas', 'zico'], 'data_loader': 'val_dataloader', 'num_samples': 512}}, 'hw_runner': {'average_bitwidth': {'compare_to': 32}}, 'setup': {'n_jobs': 1, 'n_trials': 250, 'timeout': 20000, 'sampler': 'tpe', 'sum_scaled_metrics': False}, 'metrics': {'grad_norm': {'scale': 1.0, 'direction': 'maximize'}, 'snip': {'scale': 1.0, 'direction': 'maximize'}, 'grasp': {'scale': 1.0, 'direction': 'maximize'}, 'fisher': {'scale': 1.0, 'direction': 'maximize'}, 'plain': {'scale': 1.0, 'direction': 'maximize'}, 'l2_norm': {'scale': 1.0, 'direction': 'minimize'}, 'naswot': {'scale': 1.0, 'direction': 'maximize'}, 'naswot_relu': {'scale': 1.0, 'direction': 'maximize'}, 'tenas': {'scale': 1.0, 'direction': 'maximize'}, 'zico': {'scale': 1.0, 'direction': 'maximize'}, 'average_bitwidth': {'scale': 0.2, 'direction': 'minimize'}}}
+{'name': 'graph/software/zero_cost', 'setup': {'by': 'name'}, 'seed': {'default': {'config': {'name': [None]}}}, 'nas_zero_cost': {'config': {'name': ['infer.tiny'], 'C': [16], 'N': [5], 'op_0_0': [0], 'op_1_0': [0, 1, 2, 3, 4], 'op_2_0': [0, 1, 2, 3, 4], 'op_2_1': [0, 1, 2, 3, 4], 'op_3_0': [0, 1, 2, 3, 4], 'op_3_1': [0, 1, 2, 3, 4], 'op_3_2': [0, 1, 2, 3, 4], 'number_classes': [10]}}}
+Files already downloaded and verified
+Files already downloaded and verified
+Files already downloaded and verified
+Files already downloaded and verified
+Files already downloaded and verified
+Files already downloaded and verified
+Files already downloaded and verified
+Files already downloaded and verified
+[32mINFO    [0m [34mSearch started...[0m
+choices: +=================+
+{'nas_zero_cost': {'name': ['infer.tiny'], 'C': [16], 'N': [5], 'op_0_0': [0], 'op_1_0': [0, 1, 2, 3, 4], 'op_2_0': [0, 1, 2, 3, 4], 'op_2_1': [0, 1, 2, 3, 4], 'op_3_0': [0, 1, 2, 3, 4], 'op_3_1': [0, 1, 2, 3, 4], 'op_3_2': [0, 1, 2, 3, 4], 'number_classes': [10]}}
+
+  0%|          | 0/250 [00:00<?, ?it/s]sampled_config
+{'nas_zero_cost': {'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 1, 'op_2_0': 0, 'op_2_1': 2, 'op_3_0': 3, 'op_3_1': 1, 'op_3_2': 3, 'number_classes': 10}, 'default': {'config': {'name': ['infer.tiny'], 'C': [16], 'N': [5], 'op_0_0': [0], 'op_1_0': [4], 'op_2_0': [2], 'op_2_1': [1], 'op_3_0': [2], 'op_3_1': [1], 'op_3_2': [1], 'number_classes': [10]}}}
+index
+8503
+results
+{111: ResultsCount(cifar10, arch=|none~0|+|skip_connect~0|nor_conv_3x3~1|+|nor_conv_1x1~0|none~1|nor_conv_1x1~2|, FLOP=51.04M, Param=0.372MB, seed=0111, 1 eval-sets: [ori-test])}
+/home/xz2723/miniforge3/envs/mase/lib/python3.11/site-packages/torch/nn/modules/module.py:1352: UserWarning: Using a non-full backward hook when the forward contains multiple autograd Nodes is deprecated and will be removed in future versions. This hook will be missing some grad_input. Please use register_full_backward_hook to get the documented behavior.
+  warnings.warn("Using a non-full backward hook when the forward contains multiple autograd Nodes "
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+
+  0%|          | 1/250 [02:28<10:17:12, 148.73s/it]
+  0%|          | 1/250 [02:28<10:17:12, 148.73s/it, 148.73/20000 seconds]sampled_config
+{'nas_zero_cost': {'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 3, 'op_2_0': 1, 'op_2_1': 3, 'op_3_0': 3, 'op_3_1': 0, 'op_3_2': 1, 'number_classes': 10}, 'default': {'config': {'name': ['infer.tiny'], 'C': [16], 'N': [5], 'op_0_0': [0], 'op_1_0': [4], 'op_2_0': [2], 'op_2_1': [1], 'op_3_0': [2], 'op_3_1': [1], 'op_3_2': [1], 'number_classes': [10]}}}
+index
+9557
+results
+{111: ResultsCount(cifar10, arch=|nor_conv_1x1~0|+|none~0|nor_conv_1x1~1|+|nor_conv_1x1~0|skip_connect~1|none~2|, FLOP=19.58M, Param=0.157MB, seed=0111, 1 eval-sets: [ori-test])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+
+  1%|          | 2/250 [04:34<9:19:21, 135.33s/it, 148.73/20000 seconds] 
+  1%|          | 2/250 [04:34<9:19:21, 135.33s/it, 274.68/20000 seconds]sampled_config
+{'nas_zero_cost': {'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 0, 'op_2_0': 0, 'op_2_1': 4, 'op_3_0': 1, 'op_3_1': 4, 'op_3_2': 1, 'number_classes': 10}, 'default': {'config': {'name': ['infer.tiny'], 'C': [16], 'N': [5], 'op_0_0': [0], 'op_1_0': [4], 'op_2_0': [2], 'op_2_1': [1], 'op_3_0': [2], 'op_3_1': [1], 'op_3_2': [1], 'number_classes': [10]}}}
+index
+8903
+results
+{111: ResultsCount(cifar10, arch=|skip_connect~0|+|skip_connect~0|avg_pool_3x3~1|+|none~0|avg_pool_3x3~1|none~2|, FLOP=7.78M, Param=0.073MB, seed=0111, 1 eval-sets: [ori-test])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+
+  1%|          | 3/250 [06:28<8:36:32, 125.48s/it, 274.68/20000 seconds]
+  1%|          | 3/250 [06:28<8:36:32, 125.48s/it, 388.43/20000 seconds]sampled_config
+{'nas_zero_cost': {'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 1, 'op_2_0': 1, 'op_2_1': 3, 'op_3_0': 4, 'op_3_1': 4, 'op_3_2': 3, 'number_classes': 10}, 'default': {'config': {'name': ['infer.tiny'], 'C': [16], 'N': [5], 'op_0_0': [0], 'op_1_0': [4], 'op_2_0': [2], 'op_2_1': [1], 'op_3_0': [2], 'op_3_1': [1], 'op_3_2': [1], 'number_classes': [10]}}}
+index
+1776
+results
+{111: ResultsCount(cifar10, arch=|none~0|+|none~0|nor_conv_1x1~1|+|avg_pool_3x3~0|avg_pool_3x3~1|nor_conv_1x1~2|, FLOP=15.65M, Param=0.129MB, seed=0111, 1 eval-sets: [ori-test])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+
+  2%|▏         | 4/250 [08:48<8:58:51, 131.43s/it, 388.43/20000 seconds]
+  2%|▏         | 4/250 [08:48<8:58:51, 131.43s/it, 528.98/20000 seconds]sampled_config
+{'nas_zero_cost': {'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 0, 'op_2_0': 3, 'op_2_1': 0, 'op_3_0': 2, 'op_3_1': 1, 'op_3_2': 0, 'number_classes': 10}, 'default': {'config': {'name': ['infer.tiny'], 'C': [16], 'N': [5], 'op_0_0': [0], 'op_1_0': [4], 'op_2_0': [2], 'op_2_1': [1], 'op_3_0': [2], 'op_3_1': [1], 'op_3_2': [1], 'number_classes': [10]}}}
+index
+194
+results
+{111: ResultsCount(cifar10, arch=|skip_connect~0|+|nor_conv_1x1~0|skip_connect~1|+|nor_conv_3x3~0|none~1|skip_connect~2|, FLOP=47.10M, Param=0.344MB, seed=0111, 1 eval-sets: [ori-test])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+
+  2%|▏         | 5/250 [11:03<9:01:44, 132.67s/it, 528.98/20000 seconds]
+  2%|▏         | 5/250 [11:03<9:01:44, 132.67s/it, 663.85/20000 seconds]sampled_config
+{'nas_zero_cost': {'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 2, 'op_2_0': 4, 'op_2_1': 2, 'op_3_0': 1, 'op_3_1': 2, 'op_3_2': 0, 'number_classes': 10}, 'default': {'config': {'name': ['infer.tiny'], 'C': [16], 'N': [5], 'op_0_0': [0], 'op_1_0': [4], 'op_2_0': [2], 'op_2_1': [1], 'op_3_0': [2], 'op_3_1': [1], 'op_3_2': [1], 'number_classes': [10]}}}
+index
+3433
+results
+{111: ResultsCount(cifar10, arch=|nor_conv_3x3~0|+|avg_pool_3x3~0|nor_conv_3x3~1|+|none~0|nor_conv_3x3~1|skip_connect~2|, FLOP=113.95M, Param=0.802MB, seed=0111, 1 eval-sets: [ori-test])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+
+  2%|▏         | 6/250 [14:35<10:48:38, 159.50s/it, 663.85/20000 seconds]
+  2%|▏         | 6/250 [14:35<10:48:38, 159.50s/it, 875.45/20000 seconds]sampled_config
+{'nas_zero_cost': {'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 3, 'op_2_0': 0, 'op_2_1': 2, 'op_3_0': 2, 'op_3_1': 3, 'op_3_2': 0, 'number_classes': 10}, 'default': {'config': {'name': ['infer.tiny'], 'C': [16], 'N': [5], 'op_0_0': [0], 'op_1_0': [4], 'op_2_0': [2], 'op_2_1': [1], 'op_3_0': [2], 'op_3_1': [1], 'op_3_2': [1], 'number_classes': [10]}}}
+index
+9869
+results
+{111: ResultsCount(cifar10, arch=|nor_conv_1x1~0|+|skip_connect~0|nor_conv_3x3~1|+|nor_conv_3x3~0|nor_conv_1x1~1|skip_connect~2|, FLOP=86.43M, Param=0.615MB, seed=0111, 1 eval-sets: [ori-test])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+
+  3%|▎         | 7/250 [17:40<11:20:26, 168.01s/it, 875.45/20000 seconds]
+  3%|▎         | 7/250 [17:40<11:20:26, 168.01s/it, 1060.97/20000 seconds]sampled_config
+{'nas_zero_cost': {'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 4, 'op_2_0': 0, 'op_2_1': 0, 'op_3_0': 2, 'op_3_1': 3, 'op_3_2': 4, 'number_classes': 10}, 'default': {'config': {'name': ['infer.tiny'], 'C': [16], 'N': [5], 'op_0_0': [0], 'op_1_0': [4], 'op_2_0': [2], 'op_2_1': [1], 'op_3_0': [2], 'op_3_1': [1], 'op_3_2': [1], 'number_classes': [10]}}}
+index
+4769
+results
+{111: ResultsCount(cifar10, arch=|avg_pool_3x3~0|+|skip_connect~0|skip_connect~1|+|nor_conv_3x3~0|nor_conv_1x1~1|avg_pool_3x3~2|, FLOP=47.10M, Param=0.344MB, seed=0111, 1 eval-sets: [ori-test])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+
+  3%|▎         | 8/250 [20:21<11:08:20, 165.71s/it, 1060.97/20000 seconds]
+  3%|▎         | 8/250 [20:21<11:08:20, 165.71s/it, 1221.74/20000 seconds]sampled_config
+{'nas_zero_cost': {'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 3, 'op_2_0': 3, 'op_2_1': 1, 'op_3_0': 2, 'op_3_1': 1, 'op_3_2': 0, 'number_classes': 10}, 'default': {'config': {'name': ['infer.tiny'], 'C': [16], 'N': [5], 'op_0_0': [0], 'op_1_0': [4], 'op_2_0': [2], 'op_2_1': [1], 'op_3_0': [2], 'op_3_1': [1], 'op_3_2': [1], 'number_classes': [10]}}}
+index
+6397
+results
+{111: ResultsCount(cifar10, arch=|nor_conv_1x1~0|+|nor_conv_1x1~0|none~1|+|nor_conv_3x3~0|none~1|skip_connect~2|, FLOP=51.04M, Param=0.372MB, seed=0111, 1 eval-sets: [ori-test])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+
+  4%|▎         | 9/250 [22:50<10:44:55, 160.56s/it, 1221.74/20000 seconds]
+  4%|▎         | 9/250 [22:50<10:44:55, 160.56s/it, 1370.99/20000 seconds]sampled_config
+{'nas_zero_cost': {'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 1, 'op_2_0': 4, 'op_2_1': 0, 'op_3_0': 0, 'op_3_1': 1, 'op_3_2': 2, 'number_classes': 10}, 'default': {'config': {'name': ['infer.tiny'], 'C': [16], 'N': [5], 'op_0_0': [0], 'op_1_0': [4], 'op_2_0': [2], 'op_2_1': [1], 'op_3_0': [2], 'op_3_1': [1], 'op_3_2': [1], 'number_classes': [10]}}}
+index
+11657
+results
+{111: ResultsCount(cifar10, arch=|none~0|+|avg_pool_3x3~0|skip_connect~1|+|skip_connect~0|none~1|nor_conv_3x3~2|, FLOP=43.17M, Param=0.316MB, seed=0111, 1 eval-sets: [ori-test])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+
+  4%|▍         | 10/250 [25:09<10:15:23, 153.85s/it, 1370.99/20000 seconds]
+  4%|▍         | 10/250 [25:09<10:15:23, 153.85s/it, 1509.80/20000 seconds]sampled_config
+{'nas_zero_cost': {'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 2, 'op_2_0': 4, 'op_2_1': 4, 'op_3_0': 0, 'op_3_1': 2, 'op_3_2': 1, 'number_classes': 10}, 'default': {'config': {'name': ['infer.tiny'], 'C': [16], 'N': [5], 'op_0_0': [0], 'op_1_0': [4], 'op_2_0': [2], 'op_2_1': [1], 'op_3_0': [2], 'op_3_1': [1], 'op_3_2': [1], 'number_classes': [10]}}}
+index
+11174
+results
+{111: ResultsCount(cifar10, arch=|nor_conv_3x3~0|+|avg_pool_3x3~0|avg_pool_3x3~1|+|skip_connect~0|nor_conv_3x3~1|none~2|, FLOP=78.56M, Param=0.559MB, seed=0111, 1 eval-sets: [ori-test])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+
+  4%|▍         | 11/250 [28:24<11:02:23, 166.29s/it, 1509.80/20000 seconds]
+  4%|▍         | 11/250 [28:24<11:02:23, 166.29s/it, 1704.30/20000 seconds]sampled_config
+{'nas_zero_cost': {'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 2, 'op_2_0': 3, 'op_2_1': 1, 'op_3_0': 1, 'op_3_1': 2, 'op_3_2': 0, 'number_classes': 10}, 'default': {'config': {'name': ['infer.tiny'], 'C': [16], 'N': [5], 'op_0_0': [0], 'op_1_0': [4], 'op_2_0': [2], 'op_2_1': [1], 'op_3_0': [2], 'op_3_1': [1], 'op_3_2': [1], 'number_classes': [10]}}}
+index
+7405
+results
+{111: ResultsCount(cifar10, arch=|nor_conv_3x3~0|+|nor_conv_1x1~0|none~1|+|none~0|nor_conv_3x3~1|skip_connect~2|, FLOP=82.49M, Param=0.587MB, seed=0111, 1 eval-sets: [ori-test])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+
+  5%|▍         | 12/250 [31:18<11:09:27, 168.77s/it, 1704.30/20000 seconds]
+  5%|▍         | 12/250 [31:18<11:09:27, 168.77s/it, 1878.75/20000 seconds]sampled_config
+{'nas_zero_cost': {'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 2, 'op_2_0': 3, 'op_2_1': 1, 'op_3_0': 1, 'op_3_1': 2, 'op_3_2': 2, 'number_classes': 10}, 'default': {'config': {'name': ['infer.tiny'], 'C': [16], 'N': [5], 'op_0_0': [0], 'op_1_0': [4], 'op_2_0': [2], 'op_2_1': [1], 'op_3_0': [2], 'op_3_1': [1], 'op_3_2': [1], 'number_classes': [10]}}}
+index
+13345
+results
+{111: ResultsCount(cifar10, arch=|nor_conv_3x3~0|+|nor_conv_1x1~0|none~1|+|none~0|nor_conv_3x3~1|nor_conv_3x3~2|, FLOP=117.88M, Param=0.830MB, seed=0111, 1 eval-sets: [ori-test])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+
+  5%|▌         | 13/250 [34:51<11:59:49, 182.23s/it, 1878.75/20000 seconds]
+  5%|▌         | 13/250 [34:51<11:59:49, 182.23s/it, 2091.96/20000 seconds]sampled_config
+{'nas_zero_cost': {'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 4, 'op_2_0': 2, 'op_2_1': 1, 'op_3_0': 1, 'op_3_1': 3, 'op_3_2': 4, 'number_classes': 10}, 'default': {'config': {'name': ['infer.tiny'], 'C': [16], 'N': [5], 'op_0_0': [0], 'op_1_0': [4], 'op_2_0': [2], 'op_2_1': [1], 'op_3_0': [2], 'op_3_1': [1], 'op_3_2': [1], 'number_classes': [10]}}}
+index
+8984
+results
+{111: ResultsCount(cifar10, arch=|avg_pool_3x3~0|+|nor_conv_3x3~0|none~1|+|none~0|nor_conv_1x1~1|avg_pool_3x3~2|, FLOP=47.10M, Param=0.344MB, seed=0111, 1 eval-sets: [ori-test])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+
+  6%|▌         | 14/250 [37:41<11:42:00, 178.47s/it, 2091.96/20000 seconds]
+  6%|▌         | 14/250 [37:41<11:42:00, 178.47s/it, 2261.75/20000 seconds]sampled_config
+{'nas_zero_cost': {'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 2, 'op_2_0': 3, 'op_2_1': 1, 'op_3_0': 0, 'op_3_1': 0, 'op_3_2': 2, 'number_classes': 10}, 'default': {'config': {'name': ['infer.tiny'], 'C': [16], 'N': [5], 'op_0_0': [0], 'op_1_0': [4], 'op_2_0': [2], 'op_2_1': [1], 'op_3_0': [2], 'op_3_1': [1], 'op_3_2': [1], 'number_classes': [10]}}}
+index
+8601
+results
+{111: ResultsCount(cifar10, arch=|nor_conv_3x3~0|+|nor_conv_1x1~0|none~1|+|skip_connect~0|skip_connect~1|nor_conv_3x3~2|, FLOP=82.49M, Param=0.587MB, seed=0111, 1 eval-sets: [ori-test])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+
+  6%|▌         | 15/250 [40:35<11:33:09, 176.98s/it, 2261.75/20000 seconds]
+  6%|▌         | 15/250 [40:35<11:33:09, 176.98s/it, 2435.26/20000 seconds]sampled_config
+{'nas_zero_cost': {'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 3, 'op_2_0': 2, 'op_2_1': 1, 'op_3_0': 1, 'op_3_1': 2, 'op_3_2': 3, 'number_classes': 10}, 'default': {'config': {'name': ['infer.tiny'], 'C': [16], 'N': [5], 'op_0_0': [0], 'op_1_0': [4], 'op_2_0': [2], 'op_2_1': [1], 'op_3_0': [2], 'op_3_1': [1], 'op_3_2': [1], 'number_classes': [10]}}}
+index
+1034
+results
+{111: ResultsCount(cifar10, arch=|nor_conv_1x1~0|+|nor_conv_3x3~0|none~1|+|none~0|nor_conv_3x3~1|nor_conv_1x1~2|, FLOP=86.43M, Param=0.615MB, seed=0111, 1 eval-sets: [ori-test])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+
+  6%|▋         | 16/250 [43:44<11:44:15, 180.58s/it, 2435.26/20000 seconds]
+  6%|▋         | 16/250 [43:44<11:44:15, 180.58s/it, 2624.20/20000 seconds]sampled_config
+{'nas_zero_cost': {'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 3, 'op_2_0': 2, 'op_2_1': 3, 'op_3_0': 3, 'op_3_1': 3, 'op_3_2': 3, 'number_classes': 10}, 'default': {'config': {'name': ['infer.tiny'], 'C': [16], 'N': [5], 'op_0_0': [0], 'op_1_0': [4], 'op_2_0': [2], 'op_2_1': [1], 'op_3_0': [2], 'op_3_1': [1], 'op_3_2': [1], 'number_classes': [10]}}}
+index
+5636
+results
+{111: ResultsCount(cifar10, arch=|nor_conv_1x1~0|+|nor_conv_3x3~0|nor_conv_1x1~1|+|nor_conv_1x1~0|nor_conv_1x1~1|nor_conv_1x1~2|, FLOP=62.83M, Param=0.456MB, seed=0111, 1 eval-sets: [ori-test])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+
+  7%|▋         | 17/250 [46:52<11:50:03, 182.85s/it, 2624.20/20000 seconds]
+  7%|▋         | 17/250 [46:52<11:50:03, 182.85s/it, 2812.32/20000 seconds]sampled_config
+{'nas_zero_cost': {'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 4, 'op_2_0': 1, 'op_2_1': 1, 'op_3_0': 4, 'op_3_1': 2, 'op_3_2': 3, 'number_classes': 10}, 'default': {'config': {'name': ['infer.tiny'], 'C': [16], 'N': [5], 'op_0_0': [0], 'op_1_0': [4], 'op_2_0': [2], 'op_2_1': [1], 'op_3_0': [2], 'op_3_1': [1], 'op_3_2': [1], 'number_classes': [10]}}}
+index
+1029
+results
+{111: ResultsCount(cifar10, arch=|avg_pool_3x3~0|+|none~0|none~1|+|avg_pool_3x3~0|nor_conv_3x3~1|nor_conv_1x1~2|, FLOP=47.10M, Param=0.344MB, seed=0111, 1 eval-sets: [ori-test])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+
+  7%|▋         | 18/250 [49:39<11:28:46, 178.13s/it, 2812.32/20000 seconds]
+  7%|▋         | 18/250 [49:39<11:28:46, 178.13s/it, 2979.47/20000 seconds]sampled_config
+{'nas_zero_cost': {'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 3, 'op_2_0': 2, 'op_2_1': 0, 'op_3_0': 1, 'op_3_1': 0, 'op_3_2': 2, 'number_classes': 10}, 'default': {'config': {'name': ['infer.tiny'], 'C': [16], 'N': [5], 'op_0_0': [0], 'op_1_0': [4], 'op_2_0': [2], 'op_2_1': [1], 'op_3_0': [2], 'op_3_1': [1], 'op_3_2': [1], 'number_classes': [10]}}}
+index
+6529
+results
+{111: ResultsCount(cifar10, arch=|nor_conv_1x1~0|+|nor_conv_3x3~0|skip_connect~1|+|none~0|skip_connect~1|nor_conv_3x3~2|, FLOP=82.49M, Param=0.587MB, seed=0111, 1 eval-sets: [ori-test])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+
+  8%|▊         | 19/250 [52:32<11:20:10, 176.67s/it, 2979.47/20000 seconds]
+  8%|▊         | 19/250 [52:32<11:20:10, 176.67s/it, 3152.74/20000 seconds]sampled_config
+{'nas_zero_cost': {'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 4, 'op_2_0': 2, 'op_2_1': 2, 'op_3_0': 0, 'op_3_1': 4, 'op_3_2': 4, 'number_classes': 10}, 'default': {'config': {'name': ['infer.tiny'], 'C': [16], 'N': [5], 'op_0_0': [0], 'op_1_0': [4], 'op_2_0': [2], 'op_2_1': [1], 'op_3_0': [2], 'op_3_1': [1], 'op_3_2': [1], 'number_classes': [10]}}}
+index
+3843
+results
+{111: ResultsCount(cifar10, arch=|avg_pool_3x3~0|+|nor_conv_3x3~0|nor_conv_3x3~1|+|skip_connect~0|avg_pool_3x3~1|avg_pool_3x3~2|, FLOP=78.56M, Param=0.559MB, seed=0111, 1 eval-sets: [ori-test])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+
+  8%|▊         | 20/250 [55:51<11:43:09, 183.43s/it, 3152.74/20000 seconds]
+  8%|▊         | 20/250 [55:51<11:43:09, 183.43s/it, 3351.94/20000 seconds]sampled_config
+{'nas_zero_cost': {'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 3, 'op_2_0': 1, 'op_2_1': 1, 'op_3_0': 1, 'op_3_1': 3, 'op_3_2': 3, 'number_classes': 10}, 'default': {'config': {'name': ['infer.tiny'], 'C': [16], 'N': [5], 'op_0_0': [0], 'op_1_0': [4], 'op_2_0': [2], 'op_2_1': [1], 'op_3_0': [2], 'op_3_1': [1], 'op_3_2': [1], 'number_classes': [10]}}}
+index
+11496
+results
+{111: ResultsCount(cifar10, arch=|nor_conv_1x1~0|+|none~0|none~1|+|none~0|nor_conv_1x1~1|nor_conv_1x1~2|, FLOP=19.58M, Param=0.157MB, seed=0111, 1 eval-sets: [ori-test])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+
+  8%|▊         | 21/250 [57:59<10:36:00, 166.64s/it, 3351.94/20000 seconds]
+  8%|▊         | 21/250 [57:59<10:36:00, 166.64s/it, 3479.42/20000 seconds]sampled_config
+{'nas_zero_cost': {'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 3, 'op_2_0': 1, 'op_2_1': 1, 'op_3_0': 1, 'op_3_1': 2, 'op_3_2': 3, 'number_classes': 10}, 'default': {'config': {'name': ['infer.tiny'], 'C': [16], 'N': [5], 'op_0_0': [0], 'op_1_0': [4], 'op_2_0': [2], 'op_2_1': [1], 'op_3_0': [2], 'op_3_1': [1], 'op_3_2': [1], 'number_classes': [10]}}}
+index
+12972
+results
+{111: ResultsCount(cifar10, arch=|nor_conv_1x1~0|+|none~0|none~1|+|none~0|nor_conv_3x3~1|nor_conv_1x1~2|, FLOP=51.04M, Param=0.372MB, seed=0111, 1 eval-sets: [ori-test])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+
+  9%|▉         | 22/250 [1:00:31<10:16:07, 162.14s/it, 3479.42/20000 seconds]
+  9%|▉         | 22/250 [1:00:31<10:16:07, 162.14s/it, 3631.06/20000 seconds]sampled_config
+{'nas_zero_cost': {'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 3, 'op_2_0': 2, 'op_2_1': 1, 'op_3_0': 1, 'op_3_1': 3, 'op_3_2': 4, 'number_classes': 10}, 'default': {'config': {'name': ['infer.tiny'], 'C': [16], 'N': [5], 'op_0_0': [0], 'op_1_0': [4], 'op_2_0': [2], 'op_2_1': [1], 'op_3_0': [2], 'op_3_1': [1], 'op_3_2': [1], 'number_classes': [10]}}}
+index
+8793
+results
+{111: ResultsCount(cifar10, arch=|nor_conv_1x1~0|+|nor_conv_3x3~0|none~1|+|none~0|nor_conv_1x1~1|avg_pool_3x3~2|, FLOP=51.04M, Param=0.372MB, seed=0111, 1 eval-sets: [ori-test])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+
+  9%|▉         | 23/250 [1:03:18<10:19:33, 163.76s/it, 3631.06/20000 seconds]
+  9%|▉         | 23/250 [1:03:18<10:19:33, 163.76s/it, 3798.61/20000 seconds]sampled_config
+{'nas_zero_cost': {'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 4, 'op_2_0': 2, 'op_2_1': 2, 'op_3_0': 0, 'op_3_1': 1, 'op_3_2': 2, 'number_classes': 10}, 'default': {'config': {'name': ['infer.tiny'], 'C': [16], 'N': [5], 'op_0_0': [0], 'op_1_0': [4], 'op_2_0': [2], 'op_2_1': [1], 'op_3_0': [2], 'op_3_1': [1], 'op_3_2': [1], 'number_classes': [10]}}}
+index
+15159
+results
+{111: ResultsCount(cifar10, arch=|avg_pool_3x3~0|+|nor_conv_3x3~0|nor_conv_3x3~1|+|skip_connect~0|none~1|nor_conv_3x3~2|, FLOP=113.95M, Param=0.802MB, seed=0111, 1 eval-sets: [ori-test])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+
+ 10%|▉         | 24/250 [1:06:55<11:16:35, 179.62s/it, 3798.61/20000 seconds]
+ 10%|▉         | 24/250 [1:06:55<11:16:35, 179.62s/it, 4015.24/20000 seconds]sampled_config
+{'nas_zero_cost': {'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 2, 'op_2_0': 3, 'op_2_1': 0, 'op_3_0': 2, 'op_3_1': 2, 'op_3_2': 3, 'number_classes': 10}, 'default': {'config': {'name': ['infer.tiny'], 'C': [16], 'N': [5], 'op_0_0': [0], 'op_1_0': [4], 'op_2_0': [2], 'op_2_1': [1], 'op_3_0': [2], 'op_3_1': [1], 'op_3_2': [1], 'number_classes': [10]}}}
+index
+67
+results
+{111: ResultsCount(cifar10, arch=|nor_conv_3x3~0|+|nor_conv_1x1~0|skip_connect~1|+|nor_conv_3x3~0|nor_conv_3x3~1|nor_conv_1x1~2|, FLOP=121.82M, Param=0.858MB, seed=0111, 1 eval-sets: [ori-test])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+
+ 10%|█         | 25/250 [1:10:40<12:04:32, 193.21s/it, 4015.24/20000 seconds]
+ 10%|█         | 25/250 [1:10:40<12:04:32, 193.21s/it, 4240.14/20000 seconds]sampled_config
+{'nas_zero_cost': {'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 1, 'op_2_0': 1, 'op_2_1': 3, 'op_3_0': 3, 'op_3_1': 3, 'op_3_2': 2, 'number_classes': 10}, 'default': {'config': {'name': ['infer.tiny'], 'C': [16], 'N': [5], 'op_0_0': [0], 'op_1_0': [4], 'op_2_0': [2], 'op_2_1': [1], 'op_3_0': [2], 'op_3_1': [1], 'op_3_2': [1], 'number_classes': [10]}}}
+index
+14032
+results
+{111: ResultsCount(cifar10, arch=|none~0|+|none~0|nor_conv_1x1~1|+|nor_conv_1x1~0|nor_conv_1x1~1|nor_conv_3x3~2|, FLOP=54.97M, Param=0.400MB, seed=0111, 1 eval-sets: [ori-test])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+
+ 10%|█         | 26/250 [1:13:22<11:26:52, 183.98s/it, 4240.14/20000 seconds]
+ 10%|█         | 26/250 [1:13:22<11:26:52, 183.98s/it, 4402.61/20000 seconds]sampled_config
+{'nas_zero_cost': {'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 3, 'op_2_0': 2, 'op_2_1': 1, 'op_3_0': 2, 'op_3_1': 1, 'op_3_2': 3, 'number_classes': 10}, 'default': {'config': {'name': ['infer.tiny'], 'C': [16], 'N': [5], 'op_0_0': [0], 'op_1_0': [4], 'op_2_0': [2], 'op_2_1': [1], 'op_3_0': [2], 'op_3_1': [1], 'op_3_2': [1], 'number_classes': [10]}}}
+index
+12609
+results
+{111: ResultsCount(cifar10, arch=|nor_conv_1x1~0|+|nor_conv_3x3~0|none~1|+|nor_conv_3x3~0|none~1|nor_conv_1x1~2|, FLOP=86.43M, Param=0.615MB, seed=0111, 1 eval-sets: [ori-test])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+
+ 11%|█         | 27/250 [1:16:30<11:28:41, 185.30s/it, 4402.61/20000 seconds]
+ 11%|█         | 27/250 [1:16:30<11:28:41, 185.30s/it, 4590.97/20000 seconds]sampled_config
+{'nas_zero_cost': {'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 2, 'op_2_0': 3, 'op_2_1': 4, 'op_3_0': 1, 'op_3_1': 2, 'op_3_2': 4, 'number_classes': 10}, 'default': {'config': {'name': ['infer.tiny'], 'C': [16], 'N': [5], 'op_0_0': [0], 'op_1_0': [4], 'op_2_0': [2], 'op_2_1': [1], 'op_3_0': [2], 'op_3_1': [1], 'op_3_2': [1], 'number_classes': [10]}}}
+index
+15170
+results
+{111: ResultsCount(cifar10, arch=|nor_conv_3x3~0|+|nor_conv_1x1~0|avg_pool_3x3~1|+|none~0|nor_conv_3x3~1|avg_pool_3x3~2|, FLOP=82.49M, Param=0.587MB, seed=0111, 1 eval-sets: [ori-test])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+
+ 11%|█         | 28/250 [1:19:57<11:49:09, 191.66s/it, 4590.97/20000 seconds]
+ 11%|█         | 28/250 [1:19:57<11:49:09, 191.66s/it, 4797.49/20000 seconds]sampled_config
+{'nas_zero_cost': {'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 4, 'op_2_0': 1, 'op_2_1': 0, 'op_3_0': 0, 'op_3_1': 2, 'op_3_2': 2, 'number_classes': 10}, 'default': {'config': {'name': ['infer.tiny'], 'C': [16], 'N': [5], 'op_0_0': [0], 'op_1_0': [4], 'op_2_0': [2], 'op_2_1': [1], 'op_3_0': [2], 'op_3_1': [1], 'op_3_2': [1], 'number_classes': [10]}}}
+index
+5088
+results
+{111: ResultsCount(cifar10, arch=|avg_pool_3x3~0|+|none~0|skip_connect~1|+|skip_connect~0|nor_conv_3x3~1|nor_conv_3x3~2|, FLOP=78.56M, Param=0.559MB, seed=0111, 1 eval-sets: [ori-test])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+
+ 12%|█▏        | 29/250 [1:22:55<11:30:29, 187.46s/it, 4797.49/20000 seconds]
+ 12%|█▏        | 29/250 [1:22:55<11:30:29, 187.46s/it, 4975.15/20000 seconds]sampled_config
+{'nas_zero_cost': {'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 1, 'op_2_0': 2, 'op_2_1': 2, 'op_3_0': 4, 'op_3_1': 1, 'op_3_2': 3, 'number_classes': 10}, 'default': {'config': {'name': ['infer.tiny'], 'C': [16], 'N': [5], 'op_0_0': [0], 'op_1_0': [4], 'op_2_0': [2], 'op_2_1': [1], 'op_3_0': [2], 'op_3_1': [1], 'op_3_2': [1], 'number_classes': [10]}}}
+index
+7770
+results
+{111: ResultsCount(cifar10, arch=|none~0|+|nor_conv_3x3~0|nor_conv_3x3~1|+|avg_pool_3x3~0|none~1|nor_conv_1x1~2|, FLOP=82.49M, Param=0.587MB, seed=0111, 1 eval-sets: [ori-test])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+
+ 12%|█▏        | 30/250 [1:26:04<11:29:02, 187.92s/it, 4975.15/20000 seconds]
+ 12%|█▏        | 30/250 [1:26:04<11:29:02, 187.92s/it, 5164.13/20000 seconds]sampled_config
+{'nas_zero_cost': {'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 0, 'op_2_0': 3, 'op_2_1': 2, 'op_3_0': 2, 'op_3_1': 3, 'op_3_2': 4, 'number_classes': 10}, 'default': {'config': {'name': ['infer.tiny'], 'C': [16], 'N': [5], 'op_0_0': [0], 'op_1_0': [4], 'op_2_0': [2], 'op_2_1': [1], 'op_3_0': [2], 'op_3_1': [1], 'op_3_2': [1], 'number_classes': [10]}}}
+index
+9632
+results
+{111: ResultsCount(cifar10, arch=|skip_connect~0|+|nor_conv_1x1~0|nor_conv_3x3~1|+|nor_conv_3x3~0|nor_conv_1x1~1|avg_pool_3x3~2|, FLOP=86.43M, Param=0.615MB, seed=0111, 1 eval-sets: [ori-test])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+
+ 12%|█▏        | 31/250 [1:29:27<11:42:57, 192.59s/it, 5164.13/20000 seconds]
+ 12%|█▏        | 31/250 [1:29:27<11:42:57, 192.59s/it, 5367.62/20000 seconds]sampled_config
+{'nas_zero_cost': {'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 3, 'op_2_0': 1, 'op_2_1': 1, 'op_3_0': 1, 'op_3_1': 2, 'op_3_2': 3, 'number_classes': 10}, 'default': {'config': {'name': ['infer.tiny'], 'C': [16], 'N': [5], 'op_0_0': [0], 'op_1_0': [4], 'op_2_0': [2], 'op_2_1': [1], 'op_3_0': [2], 'op_3_1': [1], 'op_3_2': [1], 'number_classes': [10]}}}
+index
+12972
+results
+{111: ResultsCount(cifar10, arch=|nor_conv_1x1~0|+|none~0|none~1|+|none~0|nor_conv_3x3~1|nor_conv_1x1~2|, FLOP=51.04M, Param=0.372MB, seed=0111, 1 eval-sets: [ori-test])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+
+ 13%|█▎        | 32/250 [1:31:59<10:55:10, 180.32s/it, 5367.62/20000 seconds]
+ 13%|█▎        | 32/250 [1:31:59<10:55:10, 180.32s/it, 5519.32/20000 seconds]sampled_config
+{'nas_zero_cost': {'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 3, 'op_2_0': 1, 'op_2_1': 1, 'op_3_0': 1, 'op_3_1': 0, 'op_3_2': 1, 'number_classes': 10}, 'default': {'config': {'name': ['infer.tiny'], 'C': [16], 'N': [5], 'op_0_0': [0], 'op_1_0': [4], 'op_2_0': [2], 'op_2_1': [1], 'op_3_0': [2], 'op_3_1': [1], 'op_3_2': [1], 'number_classes': [10]}}}
+index
+1146
+results
+{111: ResultsCount(cifar10, arch=|nor_conv_1x1~0|+|none~0|none~1|+|none~0|skip_connect~1|none~2|, FLOP=11.72M, Param=0.101MB, seed=0111, 1 eval-sets: [ori-test])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+
+ 13%|█▎        | 33/250 [1:33:42<9:27:56, 157.03s/it, 5519.32/20000 seconds] 
+ 13%|█▎        | 33/250 [1:33:42<9:27:56, 157.03s/it, 5622.01/20000 seconds]sampled_config
+{'nas_zero_cost': {'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 2, 'op_2_0': 0, 'op_2_1': 1, 'op_3_0': 3, 'op_3_1': 2, 'op_3_2': 3, 'number_classes': 10}, 'default': {'config': {'name': ['infer.tiny'], 'C': [16], 'N': [5], 'op_0_0': [0], 'op_1_0': [4], 'op_2_0': [2], 'op_2_1': [1], 'op_3_0': [2], 'op_3_1': [1], 'op_3_2': [1], 'number_classes': [10]}}}
+index
+1360
+results
+{111: ResultsCount(cifar10, arch=|nor_conv_3x3~0|+|skip_connect~0|none~1|+|nor_conv_1x1~0|nor_conv_3x3~1|nor_conv_1x1~2|, FLOP=86.43M, Param=0.615MB, seed=0111, 1 eval-sets: [ori-test])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+
+ 14%|█▎        | 34/250 [1:36:50<9:58:48, 166.33s/it, 5622.01/20000 seconds]
+ 14%|█▎        | 34/250 [1:36:50<9:58:48, 166.33s/it, 5810.04/20000 seconds]sampled_config
+{'nas_zero_cost': {'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 3, 'op_2_0': 1, 'op_2_1': 3, 'op_3_0': 1, 'op_3_1': 4, 'op_3_2': 1, 'number_classes': 10}, 'default': {'config': {'name': ['infer.tiny'], 'C': [16], 'N': [5], 'op_0_0': [0], 'op_1_0': [4], 'op_2_0': [2], 'op_2_1': [1], 'op_3_0': [2], 'op_3_1': [1], 'op_3_2': [1], 'number_classes': [10]}}}
+index
+14642
+results
+{111: ResultsCount(cifar10, arch=|nor_conv_1x1~0|+|none~0|nor_conv_1x1~1|+|none~0|avg_pool_3x3~1|none~2|, FLOP=15.65M, Param=0.129MB, seed=0111, 1 eval-sets: [ori-test])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+
+ 14%|█▍        | 35/250 [1:39:00<9:17:58, 155.71s/it, 5810.04/20000 seconds]
+ 14%|█▍        | 35/250 [1:39:00<9:17:58, 155.71s/it, 5940.98/20000 seconds]sampled_config
+{'nas_zero_cost': {'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 0, 'op_2_0': 4, 'op_2_1': 0, 'op_3_0': 1, 'op_3_1': 1, 'op_3_2': 3, 'number_classes': 10}, 'default': {'config': {'name': ['infer.tiny'], 'C': [16], 'N': [5], 'op_0_0': [0], 'op_1_0': [4], 'op_2_0': [2], 'op_2_1': [1], 'op_3_0': [2], 'op_3_1': [1], 'op_3_2': [1], 'number_classes': [10]}}}
+index
+7533
+results
+{111: ResultsCount(cifar10, arch=|skip_connect~0|+|avg_pool_3x3~0|skip_connect~1|+|none~0|none~1|nor_conv_1x1~2|, FLOP=11.72M, Param=0.101MB, seed=0111, 1 eval-sets: [ori-test])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+
+ 14%|█▍        | 36/250 [1:40:56<8:32:31, 143.70s/it, 5940.98/20000 seconds]
+ 14%|█▍        | 36/250 [1:40:56<8:32:31, 143.70s/it, 6056.64/20000 seconds]sampled_config
+{'nas_zero_cost': {'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 4, 'op_2_0': 1, 'op_2_1': 4, 'op_3_0': 4, 'op_3_1': 2, 'op_3_2': 2, 'number_classes': 10}, 'default': {'config': {'name': ['infer.tiny'], 'C': [16], 'N': [5], 'op_0_0': [0], 'op_1_0': [4], 'op_2_0': [2], 'op_2_1': [1], 'op_3_0': [2], 'op_3_1': [1], 'op_3_2': [1], 'number_classes': [10]}}}
+index
+14541
+results
+{111: ResultsCount(cifar10, arch=|avg_pool_3x3~0|+|none~0|avg_pool_3x3~1|+|avg_pool_3x3~0|nor_conv_3x3~1|nor_conv_3x3~2|, FLOP=78.56M, Param=0.559MB, seed=0111, 1 eval-sets: [ori-test])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+
+ 15%|█▍        | 37/250 [1:44:24<9:38:04, 162.84s/it, 6056.64/20000 seconds]
+ 15%|█▍        | 37/250 [1:44:24<9:38:04, 162.84s/it, 6264.13/20000 seconds]sampled_config
+{'nas_zero_cost': {'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 2, 'op_2_0': 0, 'op_2_1': 2, 'op_3_0': 0, 'op_3_1': 4, 'op_3_2': 4, 'number_classes': 10}, 'default': {'config': {'name': ['infer.tiny'], 'C': [16], 'N': [5], 'op_0_0': [0], 'op_1_0': [4], 'op_2_0': [2], 'op_2_1': [1], 'op_3_0': [2], 'op_3_1': [1], 'op_3_2': [1], 'number_classes': [10]}}}
+index
+7997
+results
+{111: ResultsCount(cifar10, arch=|nor_conv_3x3~0|+|skip_connect~0|nor_conv_3x3~1|+|skip_connect~0|avg_pool_3x3~1|avg_pool_3x3~2|, FLOP=78.56M, Param=0.559MB, seed=0111, 1 eval-sets: [ori-test])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+
+ 15%|█▌        | 38/250 [1:47:30<10:00:16, 169.89s/it, 6264.13/20000 seconds]
+ 15%|█▌        | 38/250 [1:47:30<10:00:16, 169.89s/it, 6450.48/20000 seconds]sampled_config
+{'nas_zero_cost': {'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 3, 'op_2_0': 2, 'op_2_1': 1, 'op_3_0': 2, 'op_3_1': 3, 'op_3_2': 1, 'number_classes': 10}, 'default': {'config': {'name': ['infer.tiny'], 'C': [16], 'N': [5], 'op_0_0': [0], 'op_1_0': [4], 'op_2_0': [2], 'op_2_1': [1], 'op_3_0': [2], 'op_3_1': [1], 'op_3_2': [1], 'number_classes': [10]}}}
+index
+588
+results
+{111: ResultsCount(cifar10, arch=|nor_conv_1x1~0|+|nor_conv_3x3~0|none~1|+|nor_conv_3x3~0|nor_conv_1x1~1|none~2|, FLOP=86.43M, Param=0.615MB, seed=0111, 1 eval-sets: [ori-test])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+
+ 16%|█▌        | 39/250 [1:50:39<10:17:08, 175.49s/it, 6450.48/20000 seconds]
+ 16%|█▌        | 39/250 [1:50:39<10:17:08, 175.49s/it, 6639.04/20000 seconds]sampled_config
+{'nas_zero_cost': {'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 0, 'op_2_0': 3, 'op_2_1': 3, 'op_3_0': 2, 'op_3_1': 2, 'op_3_2': 3, 'number_classes': 10}, 'default': {'config': {'name': ['infer.tiny'], 'C': [16], 'N': [5], 'op_0_0': [0], 'op_1_0': [4], 'op_2_0': [2], 'op_2_1': [1], 'op_3_0': [2], 'op_3_1': [1], 'op_3_2': [1], 'number_classes': [10]}}}
+index
+7942
+results
+{111: ResultsCount(cifar10, arch=|skip_connect~0|+|nor_conv_1x1~0|nor_conv_1x1~1|+|nor_conv_3x3~0|nor_conv_3x3~1|nor_conv_1x1~2|, FLOP=90.36M, Param=0.643MB, seed=0111, 1 eval-sets: [ori-test])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+
+ 16%|█▌        | 40/250 [1:53:59<10:40:25, 182.98s/it, 6639.04/20000 seconds]
+ 16%|█▌        | 40/250 [1:53:59<10:40:25, 182.98s/it, 6839.49/20000 seconds]sampled_config
+{'nas_zero_cost': {'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 1, 'op_2_0': 4, 'op_2_1': 0, 'op_3_0': 1, 'op_3_1': 0, 'op_3_2': 2, 'number_classes': 10}, 'default': {'config': {'name': ['infer.tiny'], 'C': [16], 'N': [5], 'op_0_0': [0], 'op_1_0': [4], 'op_2_0': [2], 'op_2_1': [1], 'op_3_0': [2], 'op_3_1': [1], 'op_3_2': [1], 'number_classes': [10]}}}
+index
+14615
+results
+{111: ResultsCount(cifar10, arch=|none~0|+|avg_pool_3x3~0|skip_connect~1|+|none~0|skip_connect~1|nor_conv_3x3~2|, FLOP=43.17M, Param=0.316MB, seed=0111, 1 eval-sets: [ori-test])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+
+ 16%|█▋        | 41/250 [1:56:19<9:52:11, 170.01s/it, 6839.49/20000 seconds] 
+ 16%|█▋        | 41/250 [1:56:19<9:52:11, 170.01s/it, 6979.23/20000 seconds]sampled_config
+{'nas_zero_cost': {'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 3, 'op_2_0': 2, 'op_2_1': 1, 'op_3_0': 3, 'op_3_1': 3, 'op_3_2': 3, 'number_classes': 10}, 'default': {'config': {'name': ['infer.tiny'], 'C': [16], 'N': [5], 'op_0_0': [0], 'op_1_0': [4], 'op_2_0': [2], 'op_2_1': [1], 'op_3_0': [2], 'op_3_1': [1], 'op_3_2': [1], 'number_classes': [10]}}}
+index
+8188
+results
+{111: ResultsCount(cifar10, arch=|nor_conv_1x1~0|+|nor_conv_3x3~0|none~1|+|nor_conv_1x1~0|nor_conv_1x1~1|nor_conv_1x1~2|, FLOP=58.90M, Param=0.428MB, seed=0111, 1 eval-sets: [ori-test])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+
+ 17%|█▋        | 42/250 [1:59:15<9:55:34, 171.80s/it, 6979.23/20000 seconds]
+ 17%|█▋        | 42/250 [1:59:15<9:55:34, 171.80s/it, 7155.21/20000 seconds]sampled_config
+{'nas_zero_cost': {'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 2, 'op_2_0': 3, 'op_2_1': 2, 'op_3_0': 1, 'op_3_1': 2, 'op_3_2': 4, 'number_classes': 10}, 'default': {'config': {'name': ['infer.tiny'], 'C': [16], 'N': [5], 'op_0_0': [0], 'op_1_0': [4], 'op_2_0': [2], 'op_2_1': [1], 'op_3_0': [2], 'op_3_1': [1], 'op_3_2': [1], 'number_classes': [10]}}}
+index
+10121
+results
+{111: ResultsCount(cifar10, arch=|nor_conv_3x3~0|+|nor_conv_1x1~0|nor_conv_3x3~1|+|none~0|nor_conv_3x3~1|avg_pool_3x3~2|, FLOP=117.88M, Param=0.830MB, seed=0111, 1 eval-sets: [ori-test])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+
+ 17%|█▋        | 43/250 [2:03:04<10:51:56, 188.97s/it, 7155.21/20000 seconds]
+ 17%|█▋        | 43/250 [2:03:04<10:51:56, 188.97s/it, 7384.25/20000 seconds]sampled_config
+{'nas_zero_cost': {'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 3, 'op_2_0': 0, 'op_2_1': 1, 'op_3_0': 1, 'op_3_1': 1, 'op_3_2': 3, 'number_classes': 10}, 'default': {'config': {'name': ['infer.tiny'], 'C': [16], 'N': [5], 'op_0_0': [0], 'op_1_0': [4], 'op_2_0': [2], 'op_2_1': [1], 'op_3_0': [2], 'op_3_1': [1], 'op_3_2': [1], 'number_classes': [10]}}}
+index
+712
+results
+{111: ResultsCount(cifar10, arch=|nor_conv_1x1~0|+|skip_connect~0|none~1|+|none~0|none~1|nor_conv_1x1~2|, FLOP=15.65M, Param=0.129MB, seed=0111, 1 eval-sets: [ori-test])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+
+ 18%|█▊        | 44/250 [2:04:57<9:30:29, 166.16s/it, 7384.25/20000 seconds] 
+ 18%|█▊        | 44/250 [2:04:57<9:30:29, 166.16s/it, 7497.19/20000 seconds]sampled_config
+{'nas_zero_cost': {'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 4, 'op_2_0': 2, 'op_2_1': 0, 'op_3_0': 1, 'op_3_1': 2, 'op_3_2': 1, 'number_classes': 10}, 'default': {'config': {'name': ['infer.tiny'], 'C': [16], 'N': [5], 'op_0_0': [0], 'op_1_0': [4], 'op_2_0': [2], 'op_2_1': [1], 'op_3_0': [2], 'op_3_1': [1], 'op_3_2': [1], 'number_classes': [10]}}}
+index
+10264
+results
+{111: ResultsCount(cifar10, arch=|avg_pool_3x3~0|+|nor_conv_3x3~0|skip_connect~1|+|none~0|nor_conv_3x3~1|none~2|, FLOP=78.56M, Param=0.559MB, seed=0111, 1 eval-sets: [ori-test])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+
+ 18%|█▊        | 45/250 [2:07:56<9:41:06, 170.08s/it, 7497.19/20000 seconds]
+ 18%|█▊        | 45/250 [2:07:56<9:41:06, 170.08s/it, 7676.42/20000 seconds]sampled_config
+{'nas_zero_cost': {'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 2, 'op_2_0': 3, 'op_2_1': 3, 'op_3_0': 3, 'op_3_1': 3, 'op_3_2': 0, 'number_classes': 10}, 'default': {'config': {'name': ['infer.tiny'], 'C': [16], 'N': [5], 'op_0_0': [0], 'op_1_0': [4], 'op_2_0': [2], 'op_2_1': [1], 'op_3_0': [2], 'op_3_1': [1], 'op_3_2': [1], 'number_classes': [10]}}}
+index
+4959
+results
+{111: ResultsCount(cifar10, arch=|nor_conv_3x3~0|+|nor_conv_1x1~0|nor_conv_1x1~1|+|nor_conv_1x1~0|nor_conv_1x1~1|skip_connect~2|, FLOP=58.90M, Param=0.428MB, seed=0111, 1 eval-sets: [ori-test])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+
+ 18%|█▊        | 46/250 [2:10:51<9:43:45, 171.69s/it, 7676.42/20000 seconds]
+ 18%|█▊        | 46/250 [2:10:51<9:43:45, 171.69s/it, 7851.88/20000 seconds]sampled_config
+{'nas_zero_cost': {'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 3, 'op_2_0': 4, 'op_2_1': 2, 'op_3_0': 0, 'op_3_1': 2, 'op_3_2': 2, 'number_classes': 10}, 'default': {'config': {'name': ['infer.tiny'], 'C': [16], 'N': [5], 'op_0_0': [0], 'op_1_0': [4], 'op_2_0': [2], 'op_2_1': [1], 'op_3_0': [2], 'op_3_1': [1], 'op_3_2': [1], 'number_classes': [10]}}}
+index
+5301
+results
+{111: ResultsCount(cifar10, arch=|nor_conv_1x1~0|+|avg_pool_3x3~0|nor_conv_3x3~1|+|skip_connect~0|nor_conv_3x3~1|nor_conv_3x3~2|, FLOP=117.88M, Param=0.830MB, seed=0111, 1 eval-sets: [ori-test])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+
+ 19%|█▉        | 47/250 [2:14:41<10:39:24, 188.99s/it, 7851.88/20000 seconds]
+ 19%|█▉        | 47/250 [2:14:41<10:39:24, 188.99s/it, 8081.21/20000 seconds]sampled_config
+{'nas_zero_cost': {'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 4, 'op_2_0': 1, 'op_2_1': 1, 'op_3_0': 2, 'op_3_1': 1, 'op_3_2': 3, 'number_classes': 10}, 'default': {'config': {'name': ['infer.tiny'], 'C': [16], 'N': [5], 'op_0_0': [0], 'op_1_0': [4], 'op_2_0': [2], 'op_2_1': [1], 'op_3_0': [2], 'op_3_1': [1], 'op_3_2': [1], 'number_classes': [10]}}}
+index
+6934
+results
+{111: ResultsCount(cifar10, arch=|avg_pool_3x3~0|+|none~0|none~1|+|nor_conv_3x3~0|none~1|nor_conv_1x1~2|, FLOP=47.10M, Param=0.344MB, seed=0111, 1 eval-sets: [ori-test])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+
+ 19%|█▉        | 48/250 [2:17:17<10:03:21, 179.21s/it, 8081.21/20000 seconds]
+ 19%|█▉        | 48/250 [2:17:17<10:03:21, 179.21s/it, 8237.62/20000 seconds]sampled_config
+{'nas_zero_cost': {'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 1, 'op_2_0': 2, 'op_2_1': 4, 'op_3_0': 2, 'op_3_1': 3, 'op_3_2': 0, 'number_classes': 10}, 'default': {'config': {'name': ['infer.tiny'], 'C': [16], 'N': [5], 'op_0_0': [0], 'op_1_0': [4], 'op_2_0': [2], 'op_2_1': [1], 'op_3_0': [2], 'op_3_1': [1], 'op_3_2': [1], 'number_classes': [10]}}}
+index
+7590
+results
+{111: ResultsCount(cifar10, arch=|none~0|+|nor_conv_3x3~0|avg_pool_3x3~1|+|nor_conv_3x3~0|nor_conv_1x1~1|skip_connect~2|, FLOP=82.49M, Param=0.587MB, seed=0111, 1 eval-sets: [ori-test])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+
+ 20%|█▉        | 49/250 [2:20:29<10:12:39, 182.88s/it, 8237.62/20000 seconds]
+ 20%|█▉        | 49/250 [2:20:29<10:12:39, 182.88s/it, 8429.06/20000 seconds]sampled_config
+{'nas_zero_cost': {'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 2, 'op_2_0': 1, 'op_2_1': 1, 'op_3_0': 1, 'op_3_1': 2, 'op_3_2': 4, 'number_classes': 10}, 'default': {'config': {'name': ['infer.tiny'], 'C': [16], 'N': [5], 'op_0_0': [0], 'op_1_0': [4], 'op_2_0': [2], 'op_2_1': [1], 'op_3_0': [2], 'op_3_1': [1], 'op_3_2': [1], 'number_classes': [10]}}}
+index
+979
+results
+{111: ResultsCount(cifar10, arch=|nor_conv_3x3~0|+|none~0|none~1|+|none~0|nor_conv_3x3~1|avg_pool_3x3~2|, FLOP=78.56M, Param=0.559MB, seed=0111, 1 eval-sets: [ori-test])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+
+ 20%|██        | 50/250 [2:23:29<10:06:56, 182.08s/it, 8429.06/20000 seconds]
+ 20%|██        | 50/250 [2:23:29<10:06:56, 182.08s/it, 8609.29/20000 seconds]sampled_config
+{'nas_zero_cost': {'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 2, 'op_2_0': 0, 'op_2_1': 1, 'op_3_0': 1, 'op_3_1': 4, 'op_3_2': 4, 'number_classes': 10}, 'default': {'config': {'name': ['infer.tiny'], 'C': [16], 'N': [5], 'op_0_0': [0], 'op_1_0': [4], 'op_2_0': [2], 'op_2_1': [1], 'op_3_0': [2], 'op_3_1': [1], 'op_3_2': [1], 'number_classes': [10]}}}
+index
+11379
+results
+{111: ResultsCount(cifar10, arch=|nor_conv_3x3~0|+|skip_connect~0|none~1|+|none~0|avg_pool_3x3~1|avg_pool_3x3~2|, FLOP=43.17M, Param=0.316MB, seed=0111, 1 eval-sets: [ori-test])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+
+ 20%|██        | 51/250 [2:25:58<9:31:34, 172.34s/it, 8609.29/20000 seconds] 
+ 20%|██        | 51/250 [2:25:58<9:31:34, 172.34s/it, 8758.88/20000 seconds]sampled_config
+{'nas_zero_cost': {'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 1, 'op_2_0': 2, 'op_2_1': 1, 'op_3_0': 1, 'op_3_1': 2, 'op_3_2': 2, 'number_classes': 10}, 'default': {'config': {'name': ['infer.tiny'], 'C': [16], 'N': [5], 'op_0_0': [0], 'op_1_0': [4], 'op_2_0': [2], 'op_2_1': [1], 'op_3_0': [2], 'op_3_1': [1], 'op_3_2': [1], 'number_classes': [10]}}}
+index
+8328
+results
+{111: ResultsCount(cifar10, arch=|none~0|+|nor_conv_3x3~0|none~1|+|none~0|nor_conv_3x3~1|nor_conv_3x3~2|, FLOP=113.95M, Param=0.802MB, seed=0111, 1 eval-sets: [ori-test])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+
+ 21%|██        | 52/250 [2:29:20<9:57:54, 181.18s/it, 8758.88/20000 seconds]
+ 21%|██        | 52/250 [2:29:20<9:57:54, 181.18s/it, 8960.71/20000 seconds]sampled_config
+{'nas_zero_cost': {'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 0, 'op_2_0': 2, 'op_2_1': 1, 'op_3_0': 4, 'op_3_1': 2, 'op_3_2': 2, 'number_classes': 10}, 'default': {'config': {'name': ['infer.tiny'], 'C': [16], 'N': [5], 'op_0_0': [0], 'op_1_0': [4], 'op_2_0': [2], 'op_2_1': [1], 'op_3_0': [2], 'op_3_1': [1], 'op_3_2': [1], 'number_classes': [10]}}}
+index
+8423
+results
+{111: ResultsCount(cifar10, arch=|skip_connect~0|+|nor_conv_3x3~0|none~1|+|avg_pool_3x3~0|nor_conv_3x3~1|nor_conv_3x3~2|, FLOP=113.95M, Param=0.802MB, seed=0111, 1 eval-sets: [ori-test])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+
+ 21%|██        | 53/250 [2:32:53<10:25:58, 190.65s/it, 8960.71/20000 seconds]
+ 21%|██        | 53/250 [2:32:53<10:25:58, 190.65s/it, 9173.44/20000 seconds]sampled_config
+{'nas_zero_cost': {'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 4, 'op_2_0': 4, 'op_2_1': 2, 'op_3_0': 0, 'op_3_1': 2, 'op_3_2': 1, 'number_classes': 10}, 'default': {'config': {'name': ['infer.tiny'], 'C': [16], 'N': [5], 'op_0_0': [0], 'op_1_0': [4], 'op_2_0': [2], 'op_2_1': [1], 'op_3_0': [2], 'op_3_1': [1], 'op_3_2': [1], 'number_classes': [10]}}}
+index
+12699
+results
+{111: ResultsCount(cifar10, arch=|avg_pool_3x3~0|+|avg_pool_3x3~0|nor_conv_3x3~1|+|skip_connect~0|nor_conv_3x3~1|none~2|, FLOP=78.56M, Param=0.559MB, seed=0111, 1 eval-sets: [ori-test])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+
+ 22%|██▏       | 54/250 [2:36:09<10:28:08, 192.29s/it, 9173.44/20000 seconds]
+ 22%|██▏       | 54/250 [2:36:09<10:28:08, 192.29s/it, 9369.56/20000 seconds]sampled_config
+{'nas_zero_cost': {'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 1, 'op_2_0': 2, 'op_2_1': 1, 'op_3_0': 3, 'op_3_1': 1, 'op_3_2': 2, 'number_classes': 10}, 'default': {'config': {'name': ['infer.tiny'], 'C': [16], 'N': [5], 'op_0_0': [0], 'op_1_0': [4], 'op_2_0': [2], 'op_2_1': [1], 'op_3_0': [2], 'op_3_1': [1], 'op_3_2': [1], 'number_classes': [10]}}}
+index
+7964
+results
+{111: ResultsCount(cifar10, arch=|none~0|+|nor_conv_3x3~0|none~1|+|nor_conv_1x1~0|none~1|nor_conv_3x3~2|, FLOP=82.49M, Param=0.587MB, seed=0111, 1 eval-sets: [ori-test])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+
+ 22%|██▏       | 55/250 [2:39:06<10:10:11, 187.75s/it, 9369.56/20000 seconds]
+ 22%|██▏       | 55/250 [2:39:06<10:10:11, 187.75s/it, 9546.71/20000 seconds]sampled_config
+{'nas_zero_cost': {'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 2, 'op_2_0': 3, 'op_2_1': 0, 'op_3_0': 1, 'op_3_1': 2, 'op_3_2': 4, 'number_classes': 10}, 'default': {'config': {'name': ['infer.tiny'], 'C': [16], 'N': [5], 'op_0_0': [0], 'op_1_0': [4], 'op_2_0': [2], 'op_2_1': [1], 'op_3_0': [2], 'op_3_1': [1], 'op_3_2': [1], 'number_classes': [10]}}}
+index
+4271
+results
+{111: ResultsCount(cifar10, arch=|nor_conv_3x3~0|+|nor_conv_1x1~0|skip_connect~1|+|none~0|nor_conv_3x3~1|avg_pool_3x3~2|, FLOP=82.49M, Param=0.587MB, seed=0111, 1 eval-sets: [ori-test])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+
+ 22%|██▏       | 56/250 [2:42:17<10:10:26, 188.80s/it, 9546.71/20000 seconds]
+ 22%|██▏       | 56/250 [2:42:17<10:10:26, 188.80s/it, 9737.96/20000 seconds]sampled_config
+{'nas_zero_cost': {'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 3, 'op_2_0': 2, 'op_2_1': 1, 'op_3_0': 0, 'op_3_1': 2, 'op_3_2': 2, 'number_classes': 10}, 'default': {'config': {'name': ['infer.tiny'], 'C': [16], 'N': [5], 'op_0_0': [0], 'op_1_0': [4], 'op_2_0': [2], 'op_2_1': [1], 'op_3_0': [2], 'op_3_1': [1], 'op_3_2': [1], 'number_classes': [10]}}}
+index
+4747
+results
+{111: ResultsCount(cifar10, arch=|nor_conv_1x1~0|+|nor_conv_3x3~0|none~1|+|skip_connect~0|nor_conv_3x3~1|nor_conv_3x3~2|, FLOP=117.88M, Param=0.830MB, seed=0111, 1 eval-sets: [ori-test])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+
+ 23%|██▎       | 57/250 [2:45:50<10:30:08, 195.90s/it, 9737.96/20000 seconds]
+ 23%|██▎       | 57/250 [2:45:50<10:30:08, 195.90s/it, 9950.42/20000 seconds]sampled_config
+{'nas_zero_cost': {'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 4, 'op_2_0': 2, 'op_2_1': 2, 'op_3_0': 1, 'op_3_1': 0, 'op_3_2': 3, 'number_classes': 10}, 'default': {'config': {'name': ['infer.tiny'], 'C': [16], 'N': [5], 'op_0_0': [0], 'op_1_0': [4], 'op_2_0': [2], 'op_2_1': [1], 'op_3_0': [2], 'op_3_1': [1], 'op_3_2': [1], 'number_classes': [10]}}}
+index
+8883
+results
+{111: ResultsCount(cifar10, arch=|avg_pool_3x3~0|+|nor_conv_3x3~0|nor_conv_3x3~1|+|none~0|skip_connect~1|nor_conv_1x1~2|, FLOP=82.49M, Param=0.587MB, seed=0111, 1 eval-sets: [ori-test])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+
+ 23%|██▎       | 58/250 [2:48:58<10:19:49, 193.69s/it, 9950.42/20000 seconds]
+ 23%|██▎       | 58/250 [2:48:58<10:19:49, 193.69s/it, 10138.97/20000 seconds]sampled_config
+{'nas_zero_cost': {'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 3, 'op_2_0': 4, 'op_2_1': 1, 'op_3_0': 3, 'op_3_1': 3, 'op_3_2': 1, 'number_classes': 10}, 'default': {'config': {'name': ['infer.tiny'], 'C': [16], 'N': [5], 'op_0_0': [0], 'op_1_0': [4], 'op_2_0': [2], 'op_2_1': [1], 'op_3_0': [2], 'op_3_1': [1], 'op_3_2': [1], 'number_classes': [10]}}}
+index
+579
+results
+{111: ResultsCount(cifar10, arch=|nor_conv_1x1~0|+|avg_pool_3x3~0|none~1|+|nor_conv_1x1~0|nor_conv_1x1~1|none~2|, FLOP=19.58M, Param=0.157MB, seed=0111, 1 eval-sets: [ori-test])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+
+ 24%|██▎       | 59/250 [2:51:22<9:28:18, 178.53s/it, 10138.97/20000 seconds] 
+ 24%|██▎       | 59/250 [2:51:22<9:28:18, 178.53s/it, 10282.11/20000 seconds]sampled_config
+{'nas_zero_cost': {'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 4, 'op_2_0': 3, 'op_2_1': 0, 'op_3_0': 2, 'op_3_1': 1, 'op_3_2': 3, 'number_classes': 10}, 'default': {'config': {'name': ['infer.tiny'], 'C': [16], 'N': [5], 'op_0_0': [0], 'op_1_0': [4], 'op_2_0': [2], 'op_2_1': [1], 'op_3_0': [2], 'op_3_1': [1], 'op_3_2': [1], 'number_classes': [10]}}}
+index
+14708
+results
+{111: ResultsCount(cifar10, arch=|avg_pool_3x3~0|+|nor_conv_1x1~0|skip_connect~1|+|nor_conv_3x3~0|none~1|nor_conv_1x1~2|, FLOP=51.04M, Param=0.372MB, seed=0111, 1 eval-sets: [ori-test])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+
+ 24%|██▍       | 60/250 [2:54:09<9:15:03, 175.28s/it, 10282.11/20000 seconds]
+ 24%|██▍       | 60/250 [2:54:09<9:15:03, 175.28s/it, 10449.82/20000 seconds]sampled_config
+{'nas_zero_cost': {'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 1, 'op_2_0': 3, 'op_2_1': 3, 'op_3_0': 1, 'op_3_1': 3, 'op_3_2': 0, 'number_classes': 10}, 'default': {'config': {'name': ['infer.tiny'], 'C': [16], 'N': [5], 'op_0_0': [0], 'op_1_0': [4], 'op_2_0': [2], 'op_2_1': [1], 'op_3_0': [2], 'op_3_1': [1], 'op_3_2': [1], 'number_classes': [10]}}}
+index
+12346
+results
+{111: ResultsCount(cifar10, arch=|none~0|+|nor_conv_1x1~0|nor_conv_1x1~1|+|none~0|nor_conv_1x1~1|skip_connect~2|, FLOP=19.58M, Param=0.157MB, seed=0111, 1 eval-sets: [ori-test])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+
+ 24%|██▍       | 61/250 [2:56:16<8:26:15, 160.72s/it, 10449.82/20000 seconds]
+ 24%|██▍       | 61/250 [2:56:16<8:26:15, 160.72s/it, 10576.55/20000 seconds]sampled_config
+{'nas_zero_cost': {'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 0, 'op_2_0': 2, 'op_2_1': 1, 'op_3_0': 0, 'op_3_1': 2, 'op_3_2': 2, 'number_classes': 10}, 'default': {'config': {'name': ['infer.tiny'], 'C': [16], 'N': [5], 'op_0_0': [0], 'op_1_0': [4], 'op_2_0': [2], 'op_2_1': [1], 'op_3_0': [2], 'op_3_1': [1], 'op_3_2': [1], 'number_classes': [10]}}}
+index
+2510
+results
+{111: ResultsCount(cifar10, arch=|skip_connect~0|+|nor_conv_3x3~0|none~1|+|skip_connect~0|nor_conv_3x3~1|nor_conv_3x3~2|, FLOP=113.95M, Param=0.802MB, seed=0111, 1 eval-sets: [ori-test])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+
+ 25%|██▍       | 62/250 [2:59:36<9:00:48, 172.60s/it, 10576.55/20000 seconds]
+ 25%|██▍       | 62/250 [2:59:36<9:00:48, 172.60s/it, 10776.87/20000 seconds]sampled_config
+{'nas_zero_cost': {'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 1, 'op_2_0': 2, 'op_2_1': 1, 'op_3_0': 1, 'op_3_1': 2, 'op_3_2': 2, 'number_classes': 10}, 'default': {'config': {'name': ['infer.tiny'], 'C': [16], 'N': [5], 'op_0_0': [0], 'op_1_0': [4], 'op_2_0': [2], 'op_2_1': [1], 'op_3_0': [2], 'op_3_1': [1], 'op_3_2': [1], 'number_classes': [10]}}}
+index
+8328
+results
+{111: ResultsCount(cifar10, arch=|none~0|+|nor_conv_3x3~0|none~1|+|none~0|nor_conv_3x3~1|nor_conv_3x3~2|, FLOP=113.95M, Param=0.802MB, seed=0111, 1 eval-sets: [ori-test])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+
+ 25%|██▌       | 63/250 [3:02:58<9:24:57, 181.27s/it, 10776.87/20000 seconds]
+ 25%|██▌       | 63/250 [3:02:58<9:24:57, 181.27s/it, 10978.37/20000 seconds]sampled_config
+{'nas_zero_cost': {'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 1, 'op_2_0': 2, 'op_2_1': 0, 'op_3_0': 2, 'op_3_1': 2, 'op_3_2': 2, 'number_classes': 10}, 'default': {'config': {'name': ['infer.tiny'], 'C': [16], 'N': [5], 'op_0_0': [0], 'op_1_0': [4], 'op_2_0': [2], 'op_2_1': [1], 'op_3_0': [2], 'op_3_1': [1], 'op_3_2': [1], 'number_classes': [10]}}}
+index
+13654
+results
+{111: ResultsCount(cifar10, arch=|none~0|+|nor_conv_3x3~0|skip_connect~1|+|nor_conv_3x3~0|nor_conv_3x3~1|nor_conv_3x3~2|, FLOP=149.34M, Param=1.045MB, seed=0111, 1 eval-sets: [ori-test])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+
+ 26%|██▌       | 64/250 [3:06:56<10:14:57, 198.37s/it, 10978.37/20000 seconds]
+ 26%|██▌       | 64/250 [3:06:56<10:14:57, 198.37s/it, 11216.66/20000 seconds]sampled_config
+{'nas_zero_cost': {'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 0, 'op_2_0': 2, 'op_2_1': 1, 'op_3_0': 1, 'op_3_1': 2, 'op_3_2': 2, 'number_classes': 10}, 'default': {'config': {'name': ['infer.tiny'], 'C': [16], 'N': [5], 'op_0_0': [0], 'op_1_0': [4], 'op_2_0': [2], 'op_2_1': [1], 'op_3_0': [2], 'op_3_1': [1], 'op_3_2': [1], 'number_classes': [10]}}}
+index
+10128
+results
+{111: ResultsCount(cifar10, arch=|skip_connect~0|+|nor_conv_3x3~0|none~1|+|none~0|nor_conv_3x3~1|nor_conv_3x3~2|, FLOP=113.95M, Param=0.802MB, seed=0111, 1 eval-sets: [ori-test])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+
+ 26%|██▌       | 65/250 [3:10:17<10:14:08, 199.18s/it, 11216.66/20000 seconds]
+ 26%|██▌       | 65/250 [3:10:17<10:14:08, 199.18s/it, 11417.73/20000 seconds]sampled_config
+{'nas_zero_cost': {'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 2, 'op_2_0': 1, 'op_2_1': 2, 'op_3_0': 0, 'op_3_1': 2, 'op_3_2': 2, 'number_classes': 10}, 'default': {'config': {'name': ['infer.tiny'], 'C': [16], 'N': [5], 'op_0_0': [0], 'op_1_0': [4], 'op_2_0': [2], 'op_2_1': [1], 'op_3_0': [2], 'op_3_1': [1], 'op_3_2': [1], 'number_classes': [10]}}}
+index
+3456
+results
+{111: ResultsCount(cifar10, arch=|nor_conv_3x3~0|+|none~0|nor_conv_3x3~1|+|skip_connect~0|nor_conv_3x3~1|nor_conv_3x3~2|, FLOP=149.34M, Param=1.045MB, seed=0111, 1 eval-sets: [ori-test])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+
+ 26%|██▋       | 66/250 [3:14:16<10:47:04, 211.01s/it, 11417.73/20000 seconds]
+ 26%|██▋       | 66/250 [3:14:16<10:47:04, 211.01s/it, 11656.32/20000 seconds]sampled_config
+{'nas_zero_cost': {'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 1, 'op_2_0': 2, 'op_2_1': 1, 'op_3_0': 1, 'op_3_1': 2, 'op_3_2': 3, 'number_classes': 10}, 'default': {'config': {'name': ['infer.tiny'], 'C': [16], 'N': [5], 'op_0_0': [0], 'op_1_0': [4], 'op_2_0': [2], 'op_2_1': [1], 'op_3_0': [2], 'op_3_1': [1], 'op_3_2': [1], 'number_classes': [10]}}}
+index
+9884
+results
+{111: ResultsCount(cifar10, arch=|none~0|+|nor_conv_3x3~0|none~1|+|none~0|nor_conv_3x3~1|nor_conv_1x1~2|, FLOP=82.49M, Param=0.587MB, seed=0111, 1 eval-sets: [ori-test])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+
+ 27%|██▋       | 67/250 [3:17:13<10:12:57, 200.97s/it, 11656.32/20000 seconds]
+ 27%|██▋       | 67/250 [3:17:13<10:12:57, 200.97s/it, 11833.88/20000 seconds]sampled_config
+{'nas_zero_cost': {'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 3, 'op_2_0': 1, 'op_2_1': 1, 'op_3_0': 1, 'op_3_1': 1, 'op_3_2': 4, 'number_classes': 10}, 'default': {'config': {'name': ['infer.tiny'], 'C': [16], 'N': [5], 'op_0_0': [0], 'op_1_0': [4], 'op_2_0': [2], 'op_2_1': [1], 'op_3_0': [2], 'op_3_1': [1], 'op_3_2': [1], 'number_classes': [10]}}}
+index
+6548
+results
+{111: ResultsCount(cifar10, arch=|nor_conv_1x1~0|+|none~0|none~1|+|none~0|none~1|avg_pool_3x3~2|, FLOP=11.72M, Param=0.101MB, seed=0111, 1 eval-sets: [ori-test])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+
+ 27%|██▋       | 68/250 [3:19:12<8:54:51, 176.33s/it, 11833.88/20000 seconds] 
+ 27%|██▋       | 68/250 [3:19:12<8:54:51, 176.33s/it, 11952.70/20000 seconds]sampled_config
+{'nas_zero_cost': {'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 2, 'op_2_0': 3, 'op_2_1': 1, 'op_3_0': 4, 'op_3_1': 4, 'op_3_2': 3, 'number_classes': 10}, 'default': {'config': {'name': ['infer.tiny'], 'C': [16], 'N': [5], 'op_0_0': [0], 'op_1_0': [4], 'op_2_0': [2], 'op_2_1': [1], 'op_3_0': [2], 'op_3_1': [1], 'op_3_2': [1], 'number_classes': [10]}}}
+index
+6670
+results
+{111: ResultsCount(cifar10, arch=|nor_conv_3x3~0|+|nor_conv_1x1~0|none~1|+|avg_pool_3x3~0|avg_pool_3x3~1|nor_conv_1x1~2|, FLOP=51.04M, Param=0.372MB, seed=0111, 1 eval-sets: [ori-test])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+
+ 28%|██▊       | 69/250 [3:22:09<8:52:21, 176.47s/it, 11952.70/20000 seconds]
+ 28%|██▊       | 69/250 [3:22:09<8:52:21, 176.47s/it, 12129.51/20000 seconds]sampled_config
+{'nas_zero_cost': {'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 3, 'op_2_0': 1, 'op_2_1': 4, 'op_3_0': 1, 'op_3_1': 0, 'op_3_2': 3, 'number_classes': 10}, 'default': {'config': {'name': ['infer.tiny'], 'C': [16], 'N': [5], 'op_0_0': [0], 'op_1_0': [4], 'op_2_0': [2], 'op_2_1': [1], 'op_3_0': [2], 'op_3_1': [1], 'op_3_2': [1], 'number_classes': [10]}}}
+index
+7654
+results
+{111: ResultsCount(cifar10, arch=|nor_conv_1x1~0|+|none~0|avg_pool_3x3~1|+|none~0|skip_connect~1|nor_conv_1x1~2|, FLOP=15.65M, Param=0.129MB, seed=0111, 1 eval-sets: [ori-test])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+
+ 28%|██▊       | 70/250 [3:24:18<8:06:50, 162.28s/it, 12129.51/20000 seconds]
+ 28%|██▊       | 70/250 [3:24:18<8:06:50, 162.28s/it, 12258.67/20000 seconds]sampled_config
+{'nas_zero_cost': {'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 4, 'op_2_0': 0, 'op_2_1': 1, 'op_3_0': 1, 'op_3_1': 2, 'op_3_2': 4, 'number_classes': 10}, 'default': {'config': {'name': ['infer.tiny'], 'C': [16], 'N': [5], 'op_0_0': [0], 'op_1_0': [4], 'op_2_0': [2], 'op_2_1': [1], 'op_3_0': [2], 'op_3_1': [1], 'op_3_2': [1], 'number_classes': [10]}}}
+index
+7540
+results
+{111: ResultsCount(cifar10, arch=|avg_pool_3x3~0|+|skip_connect~0|none~1|+|none~0|nor_conv_3x3~1|avg_pool_3x3~2|, FLOP=43.17M, Param=0.316MB, seed=0111, 1 eval-sets: [ori-test])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+
+ 28%|██▊       | 71/250 [3:26:53<7:57:29, 160.06s/it, 12258.67/20000 seconds]
+ 28%|██▊       | 71/250 [3:26:53<7:57:29, 160.06s/it, 12413.54/20000 seconds]sampled_config
+{'nas_zero_cost': {'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 3, 'op_2_0': 3, 'op_2_1': 1, 'op_3_0': 1, 'op_3_1': 2, 'op_3_2': 3, 'number_classes': 10}, 'default': {'config': {'name': ['infer.tiny'], 'C': [16], 'N': [5], 'op_0_0': [0], 'op_1_0': [4], 'op_2_0': [2], 'op_2_1': [1], 'op_3_0': [2], 'op_3_1': [1], 'op_3_2': [1], 'number_classes': [10]}}}
+index
+4475
+results
+{111: ResultsCount(cifar10, arch=|nor_conv_1x1~0|+|nor_conv_1x1~0|none~1|+|none~0|nor_conv_3x3~1|nor_conv_1x1~2|, FLOP=54.97M, Param=0.400MB, seed=0111, 1 eval-sets: [ori-test])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+
+ 29%|██▉       | 72/250 [3:29:38<7:59:28, 161.62s/it, 12413.54/20000 seconds]
+ 29%|██▉       | 72/250 [3:29:38<7:59:28, 161.62s/it, 12578.80/20000 seconds]sampled_config
+{'nas_zero_cost': {'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 3, 'op_2_0': 3, 'op_2_1': 1, 'op_3_0': 1, 'op_3_1': 2, 'op_3_2': 3, 'number_classes': 10}, 'default': {'config': {'name': ['infer.tiny'], 'C': [16], 'N': [5], 'op_0_0': [0], 'op_1_0': [4], 'op_2_0': [2], 'op_2_1': [1], 'op_3_0': [2], 'op_3_1': [1], 'op_3_2': [1], 'number_classes': [10]}}}
+index
+4475
+results
+{111: ResultsCount(cifar10, arch=|nor_conv_1x1~0|+|nor_conv_1x1~0|none~1|+|none~0|nor_conv_3x3~1|nor_conv_1x1~2|, FLOP=54.97M, Param=0.400MB, seed=0111, 1 eval-sets: [ori-test])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+
+ 29%|██▉       | 73/250 [3:32:23<7:59:51, 162.66s/it, 12578.80/20000 seconds]
+ 29%|██▉       | 73/250 [3:32:23<7:59:51, 162.66s/it, 12743.90/20000 seconds]sampled_config
+{'nas_zero_cost': {'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 2, 'op_2_0': 4, 'op_2_1': 1, 'op_3_0': 1, 'op_3_1': 3, 'op_3_2': 3, 'number_classes': 10}, 'default': {'config': {'name': ['infer.tiny'], 'C': [16], 'N': [5], 'op_0_0': [0], 'op_1_0': [4], 'op_2_0': [2], 'op_2_1': [1], 'op_3_0': [2], 'op_3_1': [1], 'op_3_2': [1], 'number_classes': [10]}}}
+index
+1969
+results
+{111: ResultsCount(cifar10, arch=|nor_conv_3x3~0|+|avg_pool_3x3~0|none~1|+|none~0|nor_conv_1x1~1|nor_conv_1x1~2|, FLOP=51.04M, Param=0.372MB, seed=0111, 1 eval-sets: [ori-test])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+
+ 30%|██▉       | 74/250 [3:35:12<8:02:38, 164.54s/it, 12743.90/20000 seconds]
+ 30%|██▉       | 74/250 [3:35:12<8:02:38, 164.54s/it, 12912.82/20000 seconds]sampled_config
+{'nas_zero_cost': {'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 3, 'op_2_0': 3, 'op_2_1': 2, 'op_3_0': 2, 'op_3_1': 1, 'op_3_2': 4, 'number_classes': 10}, 'default': {'config': {'name': ['infer.tiny'], 'C': [16], 'N': [5], 'op_0_0': [0], 'op_1_0': [4], 'op_2_0': [2], 'op_2_1': [1], 'op_3_0': [2], 'op_3_1': [1], 'op_3_2': [1], 'number_classes': [10]}}}
+index
+8321
+results
+{111: ResultsCount(cifar10, arch=|nor_conv_1x1~0|+|nor_conv_1x1~0|nor_conv_3x3~1|+|nor_conv_3x3~0|none~1|avg_pool_3x3~2|, FLOP=86.43M, Param=0.615MB, seed=0111, 1 eval-sets: [ori-test])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+
+ 30%|███       | 75/250 [3:38:38<8:35:47, 176.84s/it, 12912.82/20000 seconds]
+ 30%|███       | 75/250 [3:38:38<8:35:47, 176.84s/it, 13118.37/20000 seconds]sampled_config
+{'nas_zero_cost': {'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 4, 'op_2_0': 0, 'op_2_1': 1, 'op_3_0': 1, 'op_3_1': 2, 'op_3_2': 1, 'number_classes': 10}, 'default': {'config': {'name': ['infer.tiny'], 'C': [16], 'N': [5], 'op_0_0': [0], 'op_1_0': [4], 'op_2_0': [2], 'op_2_1': [1], 'op_3_0': [2], 'op_3_1': [1], 'op_3_2': [1], 'number_classes': [10]}}}
+index
+3176
+results
+{111: ResultsCount(cifar10, arch=|avg_pool_3x3~0|+|skip_connect~0|none~1|+|none~0|nor_conv_3x3~1|none~2|, FLOP=43.17M, Param=0.316MB, seed=0111, 1 eval-sets: [ori-test])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+
+ 30%|███       | 76/250 [3:41:01<8:03:51, 166.85s/it, 13118.37/20000 seconds]
+ 30%|███       | 76/250 [3:41:01<8:03:51, 166.85s/it, 13261.90/20000 seconds]sampled_config
+{'nas_zero_cost': {'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 2, 'op_2_0': 2, 'op_2_1': 3, 'op_3_0': 1, 'op_3_1': 2, 'op_3_2': 3, 'number_classes': 10}, 'default': {'config': {'name': ['infer.tiny'], 'C': [16], 'N': [5], 'op_0_0': [0], 'op_1_0': [4], 'op_2_0': [2], 'op_2_1': [1], 'op_3_0': [2], 'op_3_1': [1], 'op_3_2': [1], 'number_classes': [10]}}}
+index
+2126
+results
+{111: ResultsCount(cifar10, arch=|nor_conv_3x3~0|+|nor_conv_3x3~0|nor_conv_1x1~1|+|none~0|nor_conv_3x3~1|nor_conv_1x1~2|, FLOP=121.82M, Param=0.858MB, seed=0111, 1 eval-sets: [ori-test])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+
+ 31%|███       | 77/250 [3:44:49<8:54:01, 185.21s/it, 13261.90/20000 seconds]
+ 31%|███       | 77/250 [3:44:49<8:54:01, 185.21s/it, 13489.96/20000 seconds]sampled_config
+{'nas_zero_cost': {'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 2, 'op_2_0': 2, 'op_2_1': 3, 'op_3_0': 2, 'op_3_1': 4, 'op_3_2': 4, 'number_classes': 10}, 'default': {'config': {'name': ['infer.tiny'], 'C': [16], 'N': [5], 'op_0_0': [0], 'op_1_0': [4], 'op_2_0': [2], 'op_2_1': [1], 'op_3_0': [2], 'op_3_1': [1], 'op_3_2': [1], 'number_classes': [10]}}}
+index
+13636
+results
+{111: ResultsCount(cifar10, arch=|nor_conv_3x3~0|+|nor_conv_3x3~0|nor_conv_1x1~1|+|nor_conv_3x3~0|avg_pool_3x3~1|avg_pool_3x3~2|, FLOP=117.88M, Param=0.830MB, seed=0111, 1 eval-sets: [ori-test])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+
+ 31%|███       | 78/250 [3:48:56<9:43:58, 203.71s/it, 13489.96/20000 seconds]
+ 31%|███       | 78/250 [3:48:56<9:43:58, 203.71s/it, 13736.84/20000 seconds]sampled_config
+{'nas_zero_cost': {'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 2, 'op_2_0': 2, 'op_2_1': 3, 'op_3_0': 0, 'op_3_1': 2, 'op_3_2': 0, 'number_classes': 10}, 'default': {'config': {'name': ['infer.tiny'], 'C': [16], 'N': [5], 'op_0_0': [0], 'op_1_0': [4], 'op_2_0': [2], 'op_2_1': [1], 'op_3_0': [2], 'op_3_1': [1], 'op_3_2': [1], 'number_classes': [10]}}}
+index
+543
+results
+{111: ResultsCount(cifar10, arch=|nor_conv_3x3~0|+|nor_conv_3x3~0|nor_conv_1x1~1|+|skip_connect~0|nor_conv_3x3~1|skip_connect~2|, FLOP=117.88M, Param=0.830MB, seed=0111, 1 eval-sets: [ori-test])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+
+ 32%|███▏      | 79/250 [3:52:29<9:48:38, 206.54s/it, 13736.84/20000 seconds]
+ 32%|███▏      | 79/250 [3:52:29<9:48:38, 206.54s/it, 13949.97/20000 seconds]sampled_config
+{'nas_zero_cost': {'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 2, 'op_2_0': 2, 'op_2_1': 3, 'op_3_0': 4, 'op_3_1': 2, 'op_3_2': 4, 'number_classes': 10}, 'default': {'config': {'name': ['infer.tiny'], 'C': [16], 'N': [5], 'op_0_0': [0], 'op_1_0': [4], 'op_2_0': [2], 'op_2_1': [1], 'op_3_0': [2], 'op_3_1': [1], 'op_3_2': [1], 'number_classes': [10]}}}
+index
+12503
+results
+{111: ResultsCount(cifar10, arch=|nor_conv_3x3~0|+|nor_conv_3x3~0|nor_conv_1x1~1|+|avg_pool_3x3~0|nor_conv_3x3~1|avg_pool_3x3~2|, FLOP=117.88M, Param=0.830MB, seed=0111, 1 eval-sets: [ori-test])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+
+ 32%|███▏      | 80/250 [3:56:30<10:13:53, 216.67s/it, 13949.97/20000 seconds]
+ 32%|███▏      | 80/250 [3:56:30<10:13:53, 216.67s/it, 14190.27/20000 seconds]sampled_config
+{'nas_zero_cost': {'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 2, 'op_2_0': 2, 'op_2_1': 3, 'op_3_0': 3, 'op_3_1': 1, 'op_3_2': 1, 'number_classes': 10}, 'default': {'config': {'name': ['infer.tiny'], 'C': [16], 'N': [5], 'op_0_0': [0], 'op_1_0': [4], 'op_2_0': [2], 'op_2_1': [1], 'op_3_0': [2], 'op_3_1': [1], 'op_3_2': [1], 'number_classes': [10]}}}
+index
+13165
+results
+{111: ResultsCount(cifar10, arch=|nor_conv_3x3~0|+|nor_conv_3x3~0|nor_conv_1x1~1|+|nor_conv_1x1~0|none~1|none~2|, FLOP=86.43M, Param=0.615MB, seed=0111, 1 eval-sets: [ori-test])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+
+ 32%|███▏      | 81/250 [3:59:39<9:47:14, 208.49s/it, 14190.27/20000 seconds] 
+ 32%|███▏      | 81/250 [3:59:39<9:47:14, 208.49s/it, 14379.68/20000 seconds]sampled_config
+{'nas_zero_cost': {'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 2, 'op_2_0': 2, 'op_2_1': 3, 'op_3_0': 0, 'op_3_1': 2, 'op_3_2': 3, 'number_classes': 10}, 'default': {'config': {'name': ['infer.tiny'], 'C': [16], 'N': [5], 'op_0_0': [0], 'op_1_0': [4], 'op_2_0': [2], 'op_2_1': [1], 'op_3_0': [2], 'op_3_1': [1], 'op_3_2': [1], 'number_classes': [10]}}}
+index
+13390
+results
+{111: ResultsCount(cifar10, arch=|nor_conv_3x3~0|+|nor_conv_3x3~0|nor_conv_1x1~1|+|skip_connect~0|nor_conv_3x3~1|nor_conv_1x1~2|, FLOP=121.82M, Param=0.858MB, seed=0111, 1 eval-sets: [ori-test])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+
+ 33%|███▎      | 82/250 [4:03:26<9:59:18, 214.04s/it, 14379.68/20000 seconds]
+ 33%|███▎      | 82/250 [4:03:26<9:59:18, 214.04s/it, 14606.67/20000 seconds]sampled_config
+{'nas_zero_cost': {'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 2, 'op_2_0': 2, 'op_2_1': 3, 'op_3_0': 2, 'op_3_1': 2, 'op_3_2': 3, 'number_classes': 10}, 'default': {'config': {'name': ['infer.tiny'], 'C': [16], 'N': [5], 'op_0_0': [0], 'op_1_0': [4], 'op_2_0': [2], 'op_2_1': [1], 'op_3_0': [2], 'op_3_1': [1], 'op_3_2': [1], 'number_classes': [10]}}}
+index
+7294
+results
+{111: ResultsCount(cifar10, arch=|nor_conv_3x3~0|+|nor_conv_3x3~0|nor_conv_1x1~1|+|nor_conv_3x3~0|nor_conv_3x3~1|nor_conv_1x1~2|, FLOP=157.21M, Param=1.101MB, seed=0111, 1 eval-sets: [ori-test])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+
+ 33%|███▎      | 83/250 [4:07:51<10:38:21, 229.35s/it, 14606.67/20000 seconds]
+ 33%|███▎      | 83/250 [4:07:51<10:38:21, 229.35s/it, 14871.75/20000 seconds]sampled_config
+{'nas_zero_cost': {'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 2, 'op_2_0': 2, 'op_2_1': 4, 'op_3_0': 2, 'op_3_1': 2, 'op_3_2': 3, 'number_classes': 10}, 'default': {'config': {'name': ['infer.tiny'], 'C': [16], 'N': [5], 'op_0_0': [0], 'op_1_0': [4], 'op_2_0': [2], 'op_2_1': [1], 'op_3_0': [2], 'op_3_1': [1], 'op_3_2': [1], 'number_classes': [10]}}}
+index
+1062
+results
+{111: ResultsCount(cifar10, arch=|nor_conv_3x3~0|+|nor_conv_3x3~0|avg_pool_3x3~1|+|nor_conv_3x3~0|nor_conv_3x3~1|nor_conv_1x1~2|, FLOP=153.27M, Param=1.073MB, seed=0111, 1 eval-sets: [ori-test])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+
+ 34%|███▎      | 84/250 [4:12:21<11:07:47, 241.37s/it, 14871.75/20000 seconds]
+ 34%|███▎      | 84/250 [4:12:21<11:07:47, 241.37s/it, 15141.16/20000 seconds]sampled_config
+{'nas_zero_cost': {'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 2, 'op_2_0': 2, 'op_2_1': 4, 'op_3_0': 0, 'op_3_1': 0, 'op_3_2': 3, 'number_classes': 10}, 'default': {'config': {'name': ['infer.tiny'], 'C': [16], 'N': [5], 'op_0_0': [0], 'op_1_0': [4], 'op_2_0': [2], 'op_2_1': [1], 'op_3_0': [2], 'op_3_1': [1], 'op_3_2': [1], 'number_classes': [10]}}}
+index
+10279
+results
+{111: ResultsCount(cifar10, arch=|nor_conv_3x3~0|+|nor_conv_3x3~0|avg_pool_3x3~1|+|skip_connect~0|skip_connect~1|nor_conv_1x1~2|, FLOP=82.49M, Param=0.587MB, seed=0111, 1 eval-sets: [ori-test])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+
+ 34%|███▍      | 85/250 [4:15:34<10:23:43, 226.81s/it, 15141.16/20000 seconds]
+ 34%|███▍      | 85/250 [4:15:34<10:23:43, 226.81s/it, 15334.00/20000 seconds]sampled_config
+{'nas_zero_cost': {'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 2, 'op_2_0': 2, 'op_2_1': 4, 'op_3_0': 2, 'op_3_1': 2, 'op_3_2': 3, 'number_classes': 10}, 'default': {'config': {'name': ['infer.tiny'], 'C': [16], 'N': [5], 'op_0_0': [0], 'op_1_0': [4], 'op_2_0': [2], 'op_2_1': [1], 'op_3_0': [2], 'op_3_1': [1], 'op_3_2': [1], 'number_classes': [10]}}}
+index
+1062
+results
+{111: ResultsCount(cifar10, arch=|nor_conv_3x3~0|+|nor_conv_3x3~0|avg_pool_3x3~1|+|nor_conv_3x3~0|nor_conv_3x3~1|nor_conv_1x1~2|, FLOP=153.27M, Param=1.073MB, seed=0111, 1 eval-sets: [ori-test])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+
+ 34%|███▍      | 86/250 [4:20:03<10:54:50, 239.58s/it, 15334.00/20000 seconds]
+ 34%|███▍      | 86/250 [4:20:03<10:54:50, 239.58s/it, 15603.37/20000 seconds]sampled_config
+{'nas_zero_cost': {'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 2, 'op_2_0': 2, 'op_2_1': 3, 'op_3_0': 0, 'op_3_1': 2, 'op_3_2': 3, 'number_classes': 10}, 'default': {'config': {'name': ['infer.tiny'], 'C': [16], 'N': [5], 'op_0_0': [0], 'op_1_0': [4], 'op_2_0': [2], 'op_2_1': [1], 'op_3_0': [2], 'op_3_1': [1], 'op_3_2': [1], 'number_classes': [10]}}}
+index
+13390
+results
+{111: ResultsCount(cifar10, arch=|nor_conv_3x3~0|+|nor_conv_3x3~0|nor_conv_1x1~1|+|skip_connect~0|nor_conv_3x3~1|nor_conv_1x1~2|, FLOP=121.82M, Param=0.858MB, seed=0111, 1 eval-sets: [ori-test])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+
+ 35%|███▍      | 87/250 [4:23:51<10:41:19, 236.07s/it, 15603.37/20000 seconds]
+ 35%|███▍      | 87/250 [4:23:51<10:41:19, 236.07s/it, 15831.25/20000 seconds]sampled_config
+{'nas_zero_cost': {'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 2, 'op_2_0': 2, 'op_2_1': 4, 'op_3_0': 3, 'op_3_1': 1, 'op_3_2': 3, 'number_classes': 10}, 'default': {'config': {'name': ['infer.tiny'], 'C': [16], 'N': [5], 'op_0_0': [0], 'op_1_0': [4], 'op_2_0': [2], 'op_2_1': [1], 'op_3_0': [2], 'op_3_1': [1], 'op_3_2': [1], 'number_classes': [10]}}}
+index
+2699
+results
+{111: ResultsCount(cifar10, arch=|nor_conv_3x3~0|+|nor_conv_3x3~0|avg_pool_3x3~1|+|nor_conv_1x1~0|none~1|nor_conv_1x1~2|, FLOP=86.43M, Param=0.615MB, seed=0111, 1 eval-sets: [ori-test])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+
+ 35%|███▌      | 88/250 [4:27:19<10:14:38, 227.64s/it, 15831.25/20000 seconds]
+ 35%|███▌      | 88/250 [4:27:19<10:14:38, 227.64s/it, 16039.23/20000 seconds]sampled_config
+{'nas_zero_cost': {'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 2, 'op_2_0': 1, 'op_2_1': 3, 'op_3_0': 3, 'op_3_1': 2, 'op_3_2': 3, 'number_classes': 10}, 'default': {'config': {'name': ['infer.tiny'], 'C': [16], 'N': [5], 'op_0_0': [0], 'op_1_0': [4], 'op_2_0': [2], 'op_2_1': [1], 'op_3_0': [2], 'op_3_1': [1], 'op_3_2': [1], 'number_classes': [10]}}}
+index
+5545
+results
+{111: ResultsCount(cifar10, arch=|nor_conv_3x3~0|+|none~0|nor_conv_1x1~1|+|nor_conv_1x1~0|nor_conv_3x3~1|nor_conv_1x1~2|, FLOP=90.36M, Param=0.643MB, seed=0111, 1 eval-sets: [ori-test])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+
+ 36%|███▌      | 89/250 [4:30:43<9:51:47, 220.54s/it, 16039.23/20000 seconds] 
+ 36%|███▌      | 89/250 [4:30:43<9:51:47, 220.54s/it, 16243.20/20000 seconds]sampled_config
+{'nas_zero_cost': {'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 1, 'op_2_0': 2, 'op_2_1': 4, 'op_3_0': 2, 'op_3_1': 4, 'op_3_2': 3, 'number_classes': 10}, 'default': {'config': {'name': ['infer.tiny'], 'C': [16], 'N': [5], 'op_0_0': [0], 'op_1_0': [4], 'op_2_0': [2], 'op_2_1': [1], 'op_3_0': [2], 'op_3_1': [1], 'op_3_2': [1], 'number_classes': [10]}}}
+index
+6402
+results
+{111: ResultsCount(cifar10, arch=|none~0|+|nor_conv_3x3~0|avg_pool_3x3~1|+|nor_conv_3x3~0|avg_pool_3x3~1|nor_conv_1x1~2|, FLOP=82.49M, Param=0.587MB, seed=0111, 1 eval-sets: [ori-test])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+
+ 36%|███▌      | 90/250 [4:34:14<9:40:20, 217.63s/it, 16243.20/20000 seconds]
+ 36%|███▌      | 90/250 [4:34:14<9:40:20, 217.63s/it, 16454.03/20000 seconds]sampled_config
+{'nas_zero_cost': {'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 0, 'op_2_0': 2, 'op_2_1': 3, 'op_3_0': 4, 'op_3_1': 0, 'op_3_2': 3, 'number_classes': 10}, 'default': {'config': {'name': ['infer.tiny'], 'C': [16], 'N': [5], 'op_0_0': [0], 'op_1_0': [4], 'op_2_0': [2], 'op_2_1': [1], 'op_3_0': [2], 'op_3_1': [1], 'op_3_2': [1], 'number_classes': [10]}}}
+index
+4591
+results
+{111: ResultsCount(cifar10, arch=|skip_connect~0|+|nor_conv_3x3~0|nor_conv_1x1~1|+|avg_pool_3x3~0|skip_connect~1|nor_conv_1x1~2|, FLOP=51.04M, Param=0.372MB, seed=0111, 1 eval-sets: [ori-test])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+
+ 36%|███▋      | 91/250 [4:36:58<8:54:05, 201.55s/it, 16454.03/20000 seconds]
+ 36%|███▋      | 91/250 [4:36:58<8:54:05, 201.55s/it, 16618.06/20000 seconds]sampled_config
+{'nas_zero_cost': {'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 2, 'op_2_0': 2, 'op_2_1': 3, 'op_3_0': 0, 'op_3_1': 3, 'op_3_2': 3, 'number_classes': 10}, 'default': {'config': {'name': ['infer.tiny'], 'C': [16], 'N': [5], 'op_0_0': [0], 'op_1_0': [4], 'op_2_0': [2], 'op_2_1': [1], 'op_3_0': [2], 'op_3_1': [1], 'op_3_2': [1], 'number_classes': [10]}}}
+index
+11797
+results
+{111: ResultsCount(cifar10, arch=|nor_conv_3x3~0|+|nor_conv_3x3~0|nor_conv_1x1~1|+|skip_connect~0|nor_conv_1x1~1|nor_conv_1x1~2|, FLOP=90.36M, Param=0.643MB, seed=0111, 1 eval-sets: [ori-test])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+
+ 37%|███▋      | 92/250 [4:40:21<8:52:05, 202.06s/it, 16618.06/20000 seconds]
+ 37%|███▋      | 92/250 [4:40:21<8:52:05, 202.06s/it, 16821.30/20000 seconds]sampled_config
+{'nas_zero_cost': {'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 2, 'op_2_0': 2, 'op_2_1': 3, 'op_3_0': 2, 'op_3_1': 2, 'op_3_2': 0, 'number_classes': 10}, 'default': {'config': {'name': ['infer.tiny'], 'C': [16], 'N': [5], 'op_0_0': [0], 'op_1_0': [4], 'op_2_0': [2], 'op_2_1': [1], 'op_3_0': [2], 'op_3_1': [1], 'op_3_2': [1], 'number_classes': [10]}}}
+index
+4184
+results
+{111: ResultsCount(cifar10, arch=|nor_conv_3x3~0|+|nor_conv_3x3~0|nor_conv_1x1~1|+|nor_conv_3x3~0|nor_conv_3x3~1|skip_connect~2|, FLOP=153.27M, Param=1.073MB, seed=0111, 1 eval-sets: [ori-test])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+
+ 37%|███▋      | 93/250 [4:44:34<9:29:01, 217.46s/it, 16821.30/20000 seconds]
+ 37%|███▋      | 93/250 [4:44:34<9:29:01, 217.46s/it, 17074.72/20000 seconds]sampled_config
+{'nas_zero_cost': {'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 2, 'op_2_0': 2, 'op_2_1': 3, 'op_3_0': 0, 'op_3_1': 2, 'op_3_2': 3, 'number_classes': 10}, 'default': {'config': {'name': ['infer.tiny'], 'C': [16], 'N': [5], 'op_0_0': [0], 'op_1_0': [4], 'op_2_0': [2], 'op_2_1': [1], 'op_3_0': [2], 'op_3_1': [1], 'op_3_2': [1], 'number_classes': [10]}}}
+index
+13390
+results
+{111: ResultsCount(cifar10, arch=|nor_conv_3x3~0|+|nor_conv_3x3~0|nor_conv_1x1~1|+|skip_connect~0|nor_conv_3x3~1|nor_conv_1x1~2|, FLOP=121.82M, Param=0.858MB, seed=0111, 1 eval-sets: [ori-test])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+
+ 38%|███▊      | 94/250 [4:48:23<9:34:20, 220.90s/it, 17074.72/20000 seconds]
+ 38%|███▊      | 94/250 [4:48:23<9:34:20, 220.90s/it, 17303.63/20000 seconds]sampled_config
+{'nas_zero_cost': {'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 2, 'op_2_0': 2, 'op_2_1': 3, 'op_3_0': 3, 'op_3_1': 2, 'op_3_2': 3, 'number_classes': 10}, 'default': {'config': {'name': ['infer.tiny'], 'C': [16], 'N': [5], 'op_0_0': [0], 'op_1_0': [4], 'op_2_0': [2], 'op_2_1': [1], 'op_3_0': [2], 'op_3_1': [1], 'op_3_2': [1], 'number_classes': [10]}}}
+index
+4681
+results
+{111: ResultsCount(cifar10, arch=|nor_conv_3x3~0|+|nor_conv_3x3~0|nor_conv_1x1~1|+|nor_conv_1x1~0|nor_conv_3x3~1|nor_conv_1x1~2|, FLOP=125.75M, Param=0.886MB, seed=0111, 1 eval-sets: [ori-test])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+
+ 38%|███▊      | 95/250 [4:52:30<9:50:26, 228.56s/it, 17303.63/20000 seconds]
+ 38%|███▊      | 95/250 [4:52:30<9:50:26, 228.56s/it, 17550.05/20000 seconds]sampled_config
+{'nas_zero_cost': {'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 1, 'op_2_0': 2, 'op_2_1': 2, 'op_3_0': 2, 'op_3_1': 2, 'op_3_2': 3, 'number_classes': 10}, 'default': {'config': {'name': ['infer.tiny'], 'C': [16], 'N': [5], 'op_0_0': [0], 'op_1_0': [4], 'op_2_0': [2], 'op_2_1': [1], 'op_3_0': [2], 'op_3_1': [1], 'op_3_2': [1], 'number_classes': [10]}}}
+index
+9618
+results
+{111: ResultsCount(cifar10, arch=|none~0|+|nor_conv_3x3~0|nor_conv_3x3~1|+|nor_conv_3x3~0|nor_conv_3x3~1|nor_conv_1x1~2|, FLOP=153.27M, Param=1.073MB, seed=0111, 1 eval-sets: [ori-test])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+
+ 38%|███▊      | 96/250 [4:56:45<10:07:15, 236.60s/it, 17550.05/20000 seconds]
+ 38%|███▊      | 96/250 [4:56:45<10:07:15, 236.60s/it, 17805.41/20000 seconds]sampled_config
+{'nas_zero_cost': {'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 2, 'op_2_0': 4, 'op_2_1': 4, 'op_3_0': 3, 'op_3_1': 2, 'op_3_2': 3, 'number_classes': 10}, 'default': {'config': {'name': ['infer.tiny'], 'C': [16], 'N': [5], 'op_0_0': [0], 'op_1_0': [4], 'op_2_0': [2], 'op_2_1': [1], 'op_3_0': [2], 'op_3_1': [1], 'op_3_2': [1], 'number_classes': [10]}}}
+index
+9138
+results
+{111: ResultsCount(cifar10, arch=|nor_conv_3x3~0|+|avg_pool_3x3~0|avg_pool_3x3~1|+|nor_conv_1x1~0|nor_conv_3x3~1|nor_conv_1x1~2|, FLOP=86.43M, Param=0.615MB, seed=0111, 1 eval-sets: [ori-test])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+
+ 39%|███▉      | 97/250 [5:00:30<9:54:28, 233.13s/it, 17805.41/20000 seconds] 
+ 39%|███▉      | 97/250 [5:00:30<9:54:28, 233.13s/it, 18030.45/20000 seconds]sampled_config
+{'nas_zero_cost': {'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 2, 'op_2_0': 1, 'op_2_1': 2, 'op_3_0': 1, 'op_3_1': 2, 'op_3_2': 0, 'number_classes': 10}, 'default': {'config': {'name': ['infer.tiny'], 'C': [16], 'N': [5], 'op_0_0': [0], 'op_1_0': [4], 'op_2_0': [2], 'op_2_1': [1], 'op_3_0': [2], 'op_3_1': [1], 'op_3_2': [1], 'number_classes': [10]}}}
+index
+4263
+results
+{111: ResultsCount(cifar10, arch=|nor_conv_3x3~0|+|none~0|nor_conv_3x3~1|+|none~0|nor_conv_3x3~1|skip_connect~2|, FLOP=113.95M, Param=0.802MB, seed=0111, 1 eval-sets: [ori-test])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+
+ 39%|███▉      | 98/250 [5:03:54<9:28:43, 224.50s/it, 18030.45/20000 seconds]
+ 39%|███▉      | 98/250 [5:03:54<9:28:43, 224.50s/it, 18234.80/20000 seconds]sampled_config
+{'nas_zero_cost': {'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 2, 'op_2_0': 0, 'op_2_1': 2, 'op_3_0': 1, 'op_3_1': 3, 'op_3_2': 3, 'number_classes': 10}, 'default': {'config': {'name': ['infer.tiny'], 'C': [16], 'N': [5], 'op_0_0': [0], 'op_1_0': [4], 'op_2_0': [2], 'op_2_1': [1], 'op_3_0': [2], 'op_3_1': [1], 'op_3_2': [1], 'number_classes': [10]}}}
+index
+12569
+results
+{111: ResultsCount(cifar10, arch=|nor_conv_3x3~0|+|skip_connect~0|nor_conv_3x3~1|+|none~0|nor_conv_1x1~1|nor_conv_1x1~2|, FLOP=86.43M, Param=0.615MB, seed=0111, 1 eval-sets: [ori-test])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+
+ 40%|███▉      | 99/250 [5:07:09<9:02:36, 215.60s/it, 18234.80/20000 seconds]
+ 40%|███▉      | 99/250 [5:07:09<9:02:36, 215.60s/it, 18429.66/20000 seconds]sampled_config
+{'nas_zero_cost': {'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 2, 'op_2_0': 0, 'op_2_1': 2, 'op_3_0': 1, 'op_3_1': 3, 'op_3_2': 3, 'number_classes': 10}, 'default': {'config': {'name': ['infer.tiny'], 'C': [16], 'N': [5], 'op_0_0': [0], 'op_1_0': [4], 'op_2_0': [2], 'op_2_1': [1], 'op_3_0': [2], 'op_3_1': [1], 'op_3_2': [1], 'number_classes': [10]}}}
+index
+12569
+results
+{111: ResultsCount(cifar10, arch=|nor_conv_3x3~0|+|skip_connect~0|nor_conv_3x3~1|+|none~0|nor_conv_1x1~1|nor_conv_1x1~2|, FLOP=86.43M, Param=0.615MB, seed=0111, 1 eval-sets: [ori-test])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+
+ 40%|████      | 100/250 [5:10:24<8:43:22, 209.35s/it, 18429.66/20000 seconds]
+ 40%|████      | 100/250 [5:10:24<8:43:22, 209.35s/it, 18624.42/20000 seconds]sampled_config
+{'nas_zero_cost': {'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 2, 'op_2_0': 1, 'op_2_1': 2, 'op_3_0': 1, 'op_3_1': 3, 'op_3_2': 0, 'number_classes': 10}, 'default': {'config': {'name': ['infer.tiny'], 'C': [16], 'N': [5], 'op_0_0': [0], 'op_1_0': [4], 'op_2_0': [2], 'op_2_1': [1], 'op_3_0': [2], 'op_3_1': [1], 'op_3_2': [1], 'number_classes': [10]}}}
+index
+5321
+results
+{111: ResultsCount(cifar10, arch=|nor_conv_3x3~0|+|none~0|nor_conv_3x3~1|+|none~0|nor_conv_1x1~1|skip_connect~2|, FLOP=82.49M, Param=0.587MB, seed=0111, 1 eval-sets: [ori-test])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+
+ 40%|████      | 101/250 [5:13:25<8:18:43, 200.83s/it, 18624.42/20000 seconds]
+ 40%|████      | 101/250 [5:13:25<8:18:43, 200.83s/it, 18805.37/20000 seconds]sampled_config
+{'nas_zero_cost': {'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 2, 'op_2_0': 2, 'op_2_1': 4, 'op_3_0': 1, 'op_3_1': 2, 'op_3_2': 3, 'number_classes': 10}, 'default': {'config': {'name': ['infer.tiny'], 'C': [16], 'N': [5], 'op_0_0': [0], 'op_1_0': [4], 'op_2_0': [2], 'op_2_1': [1], 'op_3_0': [2], 'op_3_1': [1], 'op_3_2': [1], 'number_classes': [10]}}}
+index
+6997
+results
+{111: ResultsCount(cifar10, arch=|nor_conv_3x3~0|+|nor_conv_3x3~0|avg_pool_3x3~1|+|none~0|nor_conv_3x3~1|nor_conv_1x1~2|, FLOP=117.88M, Param=0.830MB, seed=0111, 1 eval-sets: [ori-test])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+
+ 41%|████      | 102/250 [5:17:22<8:42:32, 211.84s/it, 18805.37/20000 seconds]
+ 41%|████      | 102/250 [5:17:22<8:42:32, 211.84s/it, 19042.91/20000 seconds]sampled_config
+{'nas_zero_cost': {'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 2, 'op_2_0': 2, 'op_2_1': 2, 'op_3_0': 1, 'op_3_1': 4, 'op_3_2': 3, 'number_classes': 10}, 'default': {'config': {'name': ['infer.tiny'], 'C': [16], 'N': [5], 'op_0_0': [0], 'op_1_0': [4], 'op_2_0': [2], 'op_2_1': [1], 'op_3_0': [2], 'op_3_1': [1], 'op_3_2': [1], 'number_classes': [10]}}}
+index
+3533
+results
+{111: ResultsCount(cifar10, arch=|nor_conv_3x3~0|+|nor_conv_3x3~0|nor_conv_3x3~1|+|none~0|avg_pool_3x3~1|nor_conv_1x1~2|, FLOP=117.88M, Param=0.830MB, seed=0111, 1 eval-sets: [ori-test])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+
+ 41%|████      | 103/250 [5:21:20<8:58:06, 219.63s/it, 19042.91/20000 seconds]
+ 41%|████      | 103/250 [5:21:20<8:58:06, 219.63s/it, 19280.72/20000 seconds]sampled_config
+{'nas_zero_cost': {'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 1, 'op_2_0': 2, 'op_2_1': 3, 'op_3_0': 1, 'op_3_1': 0, 'op_3_2': 3, 'number_classes': 10}, 'default': {'config': {'name': ['infer.tiny'], 'C': [16], 'N': [5], 'op_0_0': [0], 'op_1_0': [4], 'op_2_0': [2], 'op_2_1': [1], 'op_3_0': [2], 'op_3_1': [1], 'op_3_2': [1], 'number_classes': [10]}}}
+index
+11739
+results
+{111: ResultsCount(cifar10, arch=|none~0|+|nor_conv_3x3~0|nor_conv_1x1~1|+|none~0|skip_connect~1|nor_conv_1x1~2|, FLOP=51.04M, Param=0.372MB, seed=0111, 1 eval-sets: [ori-test])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+
+ 42%|████▏     | 104/250 [5:23:59<8:10:07, 201.42s/it, 19280.72/20000 seconds]
+ 42%|████▏     | 104/250 [5:23:59<8:10:07, 201.42s/it, 19439.65/20000 seconds]sampled_config
+{'nas_zero_cost': {'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 2, 'op_2_0': 2, 'op_2_1': 4, 'op_3_0': 1, 'op_3_1': 2, 'op_3_2': 3, 'number_classes': 10}, 'default': {'config': {'name': ['infer.tiny'], 'C': [16], 'N': [5], 'op_0_0': [0], 'op_1_0': [4], 'op_2_0': [2], 'op_2_1': [1], 'op_3_0': [2], 'op_3_1': [1], 'op_3_2': [1], 'number_classes': [10]}}}
+index
+6997
+results
+{111: ResultsCount(cifar10, arch=|nor_conv_3x3~0|+|nor_conv_3x3~0|avg_pool_3x3~1|+|none~0|nor_conv_3x3~1|nor_conv_1x1~2|, FLOP=117.88M, Param=0.830MB, seed=0111, 1 eval-sets: [ori-test])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+
+ 42%|████▏     | 105/250 [5:27:57<8:32:52, 212.22s/it, 19439.65/20000 seconds]
+ 42%|████▏     | 105/250 [5:27:57<8:32:52, 212.22s/it, 19677.08/20000 seconds]sampled_config
+{'nas_zero_cost': {'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 0, 'op_2_0': 1, 'op_2_1': 2, 'op_3_0': 1, 'op_3_1': 1, 'op_3_2': 3, 'number_classes': 10}, 'default': {'config': {'name': ['infer.tiny'], 'C': [16], 'N': [5], 'op_0_0': [0], 'op_1_0': [4], 'op_2_0': [2], 'op_2_1': [1], 'op_3_0': [2], 'op_3_1': [1], 'op_3_2': [1], 'number_classes': [10]}}}
+index
+15260
+results
+{111: ResultsCount(cifar10, arch=|skip_connect~0|+|none~0|nor_conv_3x3~1|+|none~0|none~1|nor_conv_1x1~2|, FLOP=47.10M, Param=0.344MB, seed=0111, 1 eval-sets: [ori-test])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+
+ 42%|████▏     | 106/250 [5:30:24<7:42:29, 192.70s/it, 19677.08/20000 seconds]
+ 42%|████▏     | 106/250 [5:30:24<7:42:29, 192.70s/it, 19824.24/20000 seconds]sampled_config
+{'nas_zero_cost': {'name': 'infer.tiny', 'C': 16, 'N': 5, 'op_0_0': 0, 'op_1_0': 1, 'op_2_0': 4, 'op_2_1': 4, 'op_3_0': 1, 'op_3_1': 2, 'op_3_2': 3, 'number_classes': 10}, 'default': {'config': {'name': ['infer.tiny'], 'C': [16], 'N': [5], 'op_0_0': [0], 'op_1_0': [4], 'op_2_0': [2], 'op_2_1': [1], 'op_3_0': [2], 'op_3_1': [1], 'op_3_2': [1], 'number_classes': [10]}}}
+index
+15388
+results
+{111: ResultsCount(cifar10, arch=|none~0|+|avg_pool_3x3~0|avg_pool_3x3~1|+|none~0|nor_conv_3x3~1|nor_conv_1x1~2|, FLOP=47.10M, Param=0.344MB, seed=0111, 1 eval-sets: [ori-test])}
+[33mWARNING [0m [34mNo quantized layers found in the model, set average_bitwidth to 32[0m
+
+ 43%|████▎     | 107/250 [5:33:23<7:29:26, 188.58s/it, 19824.24/20000 seconds]
+ 43%|████▎     | 107/250 [5:33:23<7:29:26, 188.58s/it, 20003.19/20000 seconds]
+ 43%|████▎     | 107/250 [5:33:23<7:25:33, 186.95s/it, 20003.19/20000 seconds]
+[32mINFO    [0m [34mBest trial(s):
+Best trial(s):
+|    |   number | software_metrics                                                                                                                                                                                 | hardware_metrics                                | scaled_metrics                                                                                                                                                                                                            | nasbench_data_metrics                                                                                                                                                                             |
+|----+----------+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+-------------------------------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+|  0 |        2 | {'grad_norm': 7.396, 'snip': 14.497, 'grasp': 13.504, 'fisher': 0.002, 'plain': -0.014, 'l2_norm': 27.706, 'naswot': 4657.367, 'naswot_relu': 4710.946, 'tenas': -356.943, 'zico': 85.178}       | {'average_bitwidth': 32, 'memory_density': 1.0} | {'average_bitwidth': 6.4, 'fisher': 0.002, 'grad_norm': 7.396, 'grasp': 13.504, 'l2_norm': 27.706, 'naswot': 4657.367, 'naswot_relu': 4710.946, 'plain': -0.014, 'snip': 14.497, 'tenas': -356.943, 'zico': 85.178}       | {'train-loss': 1.1, 'train-accuracy': 60.558, 'train-per-time': 9.355, 'train-all-time': 112.256, 'test-loss': 1.13, 'test-accuracy': 59.81, 'test-per-time': 0.821, 'test-all-time': 9.857}      |
+|  1 |        3 | {'grad_norm': 7.954, 'snip': 15.088, 'grasp': 8.927, 'fisher': 0.003, 'plain': 0.047, 'l2_norm': 130.078, 'naswot': 4682.251, 'naswot_relu': 4744.792, 'tenas': -432.697, 'zico': 82.726}        | {'average_bitwidth': 32, 'memory_density': 1.0} | {'average_bitwidth': 6.4, 'fisher': 0.003, 'grad_norm': 7.954, 'grasp': 8.927, 'l2_norm': 130.078, 'naswot': 4682.251, 'naswot_relu': 4744.792, 'plain': 0.047, 'snip': 15.088, 'tenas': -432.697, 'zico': 82.726}        | {'train-loss': 1.08, 'train-accuracy': 61.484, 'train-per-time': 17.11, 'train-all-time': 205.325, 'test-loss': 1.111, 'test-accuracy': 60.59, 'test-per-time': 1.18, 'test-all-time': 14.163}    |
+|  2 |        4 | {'grad_norm': 7.931, 'snip': 14.955, 'grasp': 2.317, 'fisher': 0.0, 'plain': 0.051, 'l2_norm': 129.492, 'naswot': 5740.748, 'naswot_relu': 6097.125, 'tenas': 310.148, 'zico': 398.506}          | {'average_bitwidth': 32, 'memory_density': 1.0} | {'average_bitwidth': 6.4, 'fisher': 0.0, 'grad_norm': 7.931, 'grasp': 2.317, 'l2_norm': 129.492, 'naswot': 5740.748, 'naswot_relu': 6097.125, 'plain': 0.051, 'snip': 14.955, 'tenas': 310.148, 'zico': 398.506}          | {'train-loss': 0.322, 'train-accuracy': 88.974, 'train-per-time': 14.123, 'train-all-time': 169.472, 'test-loss': 0.411, 'test-accuracy': 86.03, 'test-per-time': 1.058, 'test-all-time': 12.692} |
+|  3 |        5 | {'grad_norm': 18.144, 'snip': 37.421, 'grasp': 11.73, 'fisher': 0.005, 'plain': 0.055, 'l2_norm': 180.737, 'naswot': 5746.794, 'naswot_relu': 6070.986, 'tenas': 495.99, 'zico': 613.648}        | {'average_bitwidth': 32, 'memory_density': 1.0} | {'average_bitwidth': 6.4, 'fisher': 0.005, 'grad_norm': 18.144, 'grasp': 11.73, 'l2_norm': 180.737, 'naswot': 5746.794, 'naswot_relu': 6070.986, 'plain': 0.055, 'snip': 37.421, 'tenas': 495.99, 'zico': 613.648}        | {'train-loss': 0.398, 'train-accuracy': 86.324, 'train-per-time': 22.459, 'train-all-time': 269.505, 'test-loss': 0.474, 'test-accuracy': 84.27, 'test-per-time': 1.565, 'test-all-time': 18.786} |
+|  4 |        8 | {'grad_norm': 12.295, 'snip': 23.92, 'grasp': 7.264, 'fisher': 0.002, 'plain': 0.025, 'l2_norm': 180.762, 'naswot': 5922.268, 'naswot_relu': 6288.113, 'tenas': 505.96, 'zico': 403.758}         | {'average_bitwidth': 32, 'memory_density': 1.0} | {'average_bitwidth': 6.4, 'fisher': 0.002, 'grad_norm': 12.295, 'grasp': 7.264, 'l2_norm': 180.762, 'naswot': 5922.268, 'naswot_relu': 6288.113, 'plain': 0.025, 'snip': 23.92, 'tenas': 505.96, 'zico': 403.758}         | {'train-loss': 0.363, 'train-accuracy': 87.502, 'train-per-time': 18.281, 'train-all-time': 219.374, 'test-loss': 0.438, 'test-accuracy': 85.18, 'test-per-time': 1.23, 'test-all-time': 14.758}  |
+|  5 |        9 | {'grad_norm': 9.49, 'snip': 18.389, 'grasp': 5.946, 'fisher': 0.001, 'plain': -0.008, 'l2_norm': 78.712, 'naswot': 5348.089, 'naswot_relu': 5630.009, 'tenas': 112.836, 'zico': 262.101}         | {'average_bitwidth': 32, 'memory_density': 1.0} | {'average_bitwidth': 6.4, 'fisher': 0.001, 'grad_norm': 9.49, 'grasp': 5.946, 'l2_norm': 78.712, 'naswot': 5348.089, 'naswot_relu': 5630.009, 'plain': -0.008, 'snip': 18.389, 'tenas': 112.836, 'zico': 262.101}         | {'train-loss': 0.421, 'train-accuracy': 85.696, 'train-per-time': 12.933, 'train-all-time': 155.195, 'test-loss': 0.481, 'test-accuracy': 83.81, 'test-per-time': 1.05, 'test-all-time': 12.597}  |
+|  6 |       10 | {'grad_norm': 8.789, 'snip': 17.637, 'grasp': 2.991, 'fisher': 0.001, 'plain': 0.007, 'l2_norm': 129.3, 'naswot': 5735.963, 'naswot_relu': 6077.382, 'tenas': 487.238, 'zico': 436.675}          | {'average_bitwidth': 32, 'memory_density': 1.0} | {'average_bitwidth': 6.4, 'fisher': 0.001, 'grad_norm': 8.789, 'grasp': 2.991, 'l2_norm': 129.3, 'naswot': 5735.963, 'naswot_relu': 6077.382, 'plain': 0.007, 'snip': 17.637, 'tenas': 487.238, 'zico': 436.675}          | {'train-loss': 0.256, 'train-accuracy': 91.372, 'train-per-time': 19.507, 'train-all-time': 234.086, 'test-loss': 0.372, 'test-accuracy': 87.95, 'test-per-time': 1.367, 'test-all-time': 16.403} |
+|  7 |       11 | {'grad_norm': 50.758, 'snip': 90.09, 'grasp': 164.649, 'fisher': 0.049, 'plain': 0.036, 'l2_norm': 180.525, 'naswot': 5836.288, 'naswot_relu': 6193.843, 'tenas': 503.918, 'zico': 583.46}       | {'average_bitwidth': 32, 'memory_density': 1.0} | {'average_bitwidth': 6.4, 'fisher': 0.049, 'grad_norm': 50.758, 'grasp': 164.649, 'l2_norm': 180.525, 'naswot': 5836.288, 'naswot_relu': 6193.843, 'plain': 0.036, 'snip': 90.09, 'tenas': 503.918, 'zico': 583.46}       | {'train-loss': 0.342, 'train-accuracy': 88.356, 'train-per-time': 19.201, 'train-all-time': 230.415, 'test-loss': 0.417, 'test-accuracy': 85.84, 'test-per-time': 1.341, 'test-all-time': 16.097} |
+|  8 |       12 | {'grad_norm': 120.66, 'snip': 205.065, 'grasp': 659.89, 'fisher': 0.248, 'plain': 0.05, 'l2_norm': 231.344, 'naswot': 5903.106, 'naswot_relu': 6255.997, 'tenas': 498.265, 'zico': 760.952}      | {'average_bitwidth': 32, 'memory_density': 1.0} | {'average_bitwidth': 6.4, 'fisher': 0.248, 'grad_norm': 120.66, 'grasp': 659.89, 'l2_norm': 231.344, 'naswot': 5903.106, 'naswot_relu': 6255.997, 'plain': 0.05, 'snip': 205.065, 'tenas': 498.265, 'zico': 760.952}      | {'train-loss': 0.501, 'train-accuracy': 82.744, 'train-per-time': 23.727, 'train-all-time': 284.719, 'test-loss': 0.55, 'test-accuracy': 81.03, 'test-per-time': 1.564, 'test-all-time': 18.771}  |
+|  9 |       13 | {'grad_norm': 22.534, 'snip': 43.22, 'grasp': 22.077, 'fisher': 0.01, 'plain': -0.01, 'l2_norm': 129.798, 'naswot': 5406.11, 'naswot_relu': 5730.861, 'tenas': 355.366, 'zico': 399.563}         | {'average_bitwidth': 32, 'memory_density': 1.0} | {'average_bitwidth': 6.4, 'fisher': 0.01, 'grad_norm': 22.534, 'grasp': 22.077, 'l2_norm': 129.798, 'naswot': 5406.11, 'naswot_relu': 5730.861, 'plain': -0.01, 'snip': 43.22, 'tenas': 355.366, 'zico': 399.563}         | {'train-loss': 0.765, 'train-accuracy': 73.002, 'train-per-time': 18.685, 'train-all-time': 224.222, 'test-loss': 0.797, 'test-accuracy': 71.6, 'test-per-time': 1.284, 'test-all-time': 15.413}  |
+| 10 |       14 | {'grad_norm': 9.863, 'snip': 19.307, 'grasp': 3.219, 'fisher': 0.001, 'plain': -0.006, 'l2_norm': 180.836, 'naswot': 5897.765, 'naswot_relu': 6257.65, 'tenas': 432.413, 'zico': 579.739}        | {'average_bitwidth': 32, 'memory_density': 1.0} | {'average_bitwidth': 6.4, 'fisher': 0.001, 'grad_norm': 9.863, 'grasp': 3.219, 'l2_norm': 180.836, 'naswot': 5897.765, 'naswot_relu': 6257.65, 'plain': -0.006, 'snip': 19.307, 'tenas': 432.413, 'zico': 579.739}        | {'train-loss': 0.291, 'train-accuracy': 90.184, 'train-per-time': 18.2, 'train-all-time': 218.399, 'test-loss': 0.398, 'test-accuracy': 86.58, 'test-per-time': 1.208, 'test-all-time': 14.499}   |
+| 11 |       15 | {'grad_norm': 128.822, 'snip': 219.672, 'grasp': 873.415, 'fisher': 0.331, 'plain': 0.046, 'l2_norm': 231.748, 'naswot': 5954.929, 'naswot_relu': 6304.956, 'tenas': 496.524, 'zico': 723.996}   | {'average_bitwidth': 32, 'memory_density': 1.0} | {'average_bitwidth': 6.4, 'fisher': 0.331, 'grad_norm': 128.822, 'grasp': 873.415, 'l2_norm': 231.748, 'naswot': 5954.929, 'naswot_relu': 6304.956, 'plain': 0.046, 'snip': 219.672, 'tenas': 496.524, 'zico': 723.996}   | {'train-loss': 0.477, 'train-accuracy': 83.708, 'train-per-time': 23.157, 'train-all-time': 277.89, 'test-loss': 0.531, 'test-accuracy': 82.0, 'test-per-time': 1.488, 'test-all-time': 17.854}   |
+| 12 |       16 | {'grad_norm': 87.386, 'snip': 145.427, 'grasp': 331.433, 'fisher': 0.102, 'plain': 0.003, 'l2_norm': 333.98, 'naswot': 6075.429, 'naswot_relu': 6440.721, 'tenas': 496.357, 'zico': 978.114}     | {'average_bitwidth': 32, 'memory_density': 1.0} | {'average_bitwidth': 6.4, 'fisher': 0.102, 'grad_norm': 87.386, 'grasp': 331.433, 'l2_norm': 333.98, 'naswot': 6075.429, 'naswot_relu': 6440.721, 'plain': 0.003, 'snip': 145.427, 'tenas': 496.357, 'zico': 978.114}     | {'train-loss': 0.396, 'train-accuracy': 86.388, 'train-per-time': 30.083, 'train-all-time': 360.993, 'test-loss': 0.451, 'test-accuracy': 84.47, 'test-per-time': 1.571, 'test-all-time': 18.85}  |
+| 13 |       17 | {'grad_norm': 15.426, 'snip': 28.881, 'grasp': 12.592, 'fisher': 0.004, 'plain': -0.023, 'l2_norm': 129.663, 'naswot': 5271.188, 'naswot_relu': 5515.701, 'tenas': 156.48, 'zico': 262.227}      | {'average_bitwidth': 32, 'memory_density': 1.0} | {'average_bitwidth': 6.4, 'fisher': 0.004, 'grad_norm': 15.426, 'grasp': 12.592, 'l2_norm': 129.663, 'naswot': 5271.188, 'naswot_relu': 5515.701, 'plain': -0.023, 'snip': 28.881, 'tenas': 156.48, 'zico': 262.227}      | {'train-loss': 0.819, 'train-accuracy': 71.064, 'train-per-time': 18.755, 'train-all-time': 225.058, 'test-loss': 0.864, 'test-accuracy': 69.39, 'test-per-time': 1.314, 'test-all-time': 15.772} |
+| 14 |       18 | {'grad_norm': 43.793, 'snip': 76.13, 'grasp': 125.693, 'fisher': 0.033, 'plain': 0.02, 'l2_norm': 180.104, 'naswot': 5837.241, 'naswot_relu': 6185.921, 'tenas': 504.311, 'zico': 585.036}       | {'average_bitwidth': 32, 'memory_density': 1.0} | {'average_bitwidth': 6.4, 'fisher': 0.033, 'grad_norm': 43.793, 'grasp': 125.693, 'l2_norm': 180.104, 'naswot': 5837.241, 'naswot_relu': 6185.921, 'plain': 0.02, 'snip': 76.13, 'tenas': 504.311, 'zico': 585.036}       | {'train-loss': 0.355, 'train-accuracy': 87.908, 'train-per-time': 19.102, 'train-all-time': 229.222, 'test-loss': 0.438, 'test-accuracy': 85.4, 'test-per-time': 1.317, 'test-all-time': 15.808}  |
+| 15 |       21 | {'grad_norm': 107.568, 'snip': 179.48, 'grasp': 1385.394, 'fisher': 0.387, 'plain': -0.076, 'l2_norm': 180.966, 'naswot': 5601.013, 'naswot_relu': 5928.848, 'tenas': 490.45, 'zico': 404.807}   | {'average_bitwidth': 32, 'memory_density': 1.0} | {'average_bitwidth': 6.4, 'fisher': 0.387, 'grad_norm': 107.568, 'grasp': 1385.394, 'l2_norm': 180.966, 'naswot': 5601.013, 'naswot_relu': 5928.848, 'plain': -0.076, 'snip': 179.48, 'tenas': 490.45, 'zico': 404.807}   | {'train-loss': 0.557, 'train-accuracy': 80.748, 'train-per-time': 18.311, 'train-all-time': 219.736, 'test-loss': 0.586, 'test-accuracy': 79.93, 'test-per-time': 1.225, 'test-all-time': 14.698} |
+| 16 |       23 | {'grad_norm': 14.481, 'snip': 28.549, 'grasp': 6.103, 'fisher': 0.001, 'plain': 0.005, 'l2_norm': 180.593, 'naswot': 5884.692, 'naswot_relu': 6241.188, 'tenas': 286.523, 'zico': 611.407}       | {'average_bitwidth': 32, 'memory_density': 1.0} | {'average_bitwidth': 6.4, 'fisher': 0.001, 'grad_norm': 14.481, 'grasp': 6.103, 'l2_norm': 180.593, 'naswot': 5884.692, 'naswot_relu': 6241.188, 'plain': 0.005, 'snip': 28.549, 'tenas': 286.523, 'zico': 611.407}       | {'train-loss': 0.269, 'train-accuracy': 90.892, 'train-per-time': 22.075, 'train-all-time': 264.896, 'test-loss': 0.378, 'test-accuracy': 87.6, 'test-per-time': 1.478, 'test-all-time': 17.737}  |
+| 17 |       24 | {'grad_norm': 70.523, 'snip': 125.79, 'grasp': 261.858, 'fisher': 0.072, 'plain': -0.024, 'l2_norm': 282.691, 'naswot': 6056.894, 'naswot_relu': 6435.726, 'tenas': 501.858, 'zico': 902.284}    | {'average_bitwidth': 32, 'memory_density': 1.0} | {'average_bitwidth': 6.4, 'fisher': 0.072, 'grad_norm': 70.523, 'grasp': 261.858, 'l2_norm': 282.691, 'naswot': 6056.894, 'naswot_relu': 6435.726, 'plain': -0.024, 'snip': 125.79, 'tenas': 501.858, 'zico': 902.284}    | {'train-loss': 0.364, 'train-accuracy': 87.544, 'train-per-time': 27.462, 'train-all-time': 329.543, 'test-loss': 0.439, 'test-accuracy': 85.07, 'test-per-time': 1.674, 'test-all-time': 20.092} |
+| 18 |       26 | {'grad_norm': 51.939, 'snip': 92.449, 'grasp': 179.8, 'fisher': 0.051, 'plain': -0.006, 'l2_norm': 231.744, 'naswot': 6027.062, 'naswot_relu': 6388.516, 'tenas': 504.165, 'zico': 586.771}      | {'average_bitwidth': 32, 'memory_density': 1.0} | {'average_bitwidth': 6.4, 'fisher': 0.051, 'grad_norm': 51.939, 'grasp': 179.8, 'l2_norm': 231.744, 'naswot': 6027.062, 'naswot_relu': 6388.516, 'plain': -0.006, 'snip': 92.449, 'tenas': 504.165, 'zico': 586.771}      | {'train-loss': 0.388, 'train-accuracy': 86.716, 'train-per-time': 22.656, 'train-all-time': 271.874, 'test-loss': 0.457, 'test-accuracy': 84.9, 'test-per-time': 1.445, 'test-all-time': 17.343}  |
+| 19 |       28 | {'grad_norm': 11.333, 'snip': 22.294, 'grasp': 6.12, 'fisher': 0.001, 'plain': -0.001, 'l2_norm': 129.746, 'naswot': 5582.075, 'naswot_relu': 5911.797, 'tenas': -146.767, 'zico': 449.383}      | {'average_bitwidth': 32, 'memory_density': 1.0} | {'average_bitwidth': 6.4, 'fisher': 0.001, 'grad_norm': 11.333, 'grasp': 6.12, 'l2_norm': 129.746, 'naswot': 5582.075, 'naswot_relu': 5911.797, 'plain': -0.001, 'snip': 22.294, 'tenas': -146.767, 'zico': 449.383}      | {'train-loss': 0.443, 'train-accuracy': 84.604, 'train-per-time': 17.864, 'train-all-time': 214.368, 'test-loss': 0.506, 'test-accuracy': 83.28, 'test-per-time': 1.288, 'test-all-time': 15.455} |
+| 20 |       29 | {'grad_norm': 17.447, 'snip': 35.93, 'grasp': 15.248, 'fisher': 0.005, 'plain': 0.051, 'l2_norm': 180.262, 'naswot': 5652.02, 'naswot_relu': 5976.005, 'tenas': 499.135, 'zico': 403.935}        | {'average_bitwidth': 32, 'memory_density': 1.0} | {'average_bitwidth': 6.4, 'fisher': 0.005, 'grad_norm': 17.447, 'grasp': 15.248, 'l2_norm': 180.262, 'naswot': 5652.02, 'naswot_relu': 5976.005, 'plain': 0.051, 'snip': 35.93, 'tenas': 499.135, 'zico': 403.935}        | {'train-loss': 0.408, 'train-accuracy': 86.08, 'train-per-time': 21.219, 'train-all-time': 254.627, 'test-loss': 0.487, 'test-accuracy': 83.5, 'test-per-time': 1.432, 'test-all-time': 17.179}   |
+| 21 |       32 | {'grad_norm': 8.086, 'snip': 15.393, 'grasp': 5.775, 'fisher': 0.002, 'plain': -0.013, 'l2_norm': 78.569, 'naswot': 5316.195, 'naswot_relu': 5631.494, 'tenas': 495.566, 'zico': 224.361}        | {'average_bitwidth': 32, 'memory_density': 1.0} | {'average_bitwidth': 6.4, 'fisher': 0.002, 'grad_norm': 8.086, 'grasp': 5.775, 'l2_norm': 78.569, 'naswot': 5316.195, 'naswot_relu': 5631.494, 'plain': -0.013, 'snip': 15.393, 'tenas': 495.566, 'zico': 224.361}        | {'train-loss': 0.56, 'train-accuracy': 80.502, 'train-per-time': 10.42, 'train-all-time': 125.035, 'test-loss': 0.6, 'test-accuracy': 79.46, 'test-per-time': 0.974, 'test-all-time': 11.691}     |
+| 22 |       33 | {'grad_norm': 32.322, 'snip': 57.702, 'grasp': 53.051, 'fisher': 0.015, 'plain': 0.0, 'l2_norm': 231.07, 'naswot': 5855.61, 'naswot_relu': 6182.526, 'tenas': 507.237, 'zico': 736.27}           | {'average_bitwidth': 32, 'memory_density': 1.0} | {'average_bitwidth': 6.4, 'fisher': 0.015, 'grad_norm': 32.322, 'grasp': 53.051, 'l2_norm': 231.07, 'naswot': 5855.61, 'naswot_relu': 6182.526, 'plain': 0.0, 'snip': 57.702, 'tenas': 507.237, 'zico': 736.27}           | {'train-loss': 0.313, 'train-accuracy': 89.458, 'train-per-time': 22.492, 'train-all-time': 269.899, 'test-loss': 0.398, 'test-accuracy': 86.6, 'test-per-time': 1.421, 'test-all-time': 17.047}  |
+| 23 |       34 | {'grad_norm': 16.481, 'snip': 33.249, 'grasp': 21.099, 'fisher': 0.013, 'plain': -0.008, 'l2_norm': 129.429, 'naswot': 5215.609, 'naswot_relu': 5491.282, 'tenas': 426.925, 'zico': 226.402}     | {'average_bitwidth': 32, 'memory_density': 1.0} | {'average_bitwidth': 6.4, 'fisher': 0.013, 'grad_norm': 16.481, 'grasp': 21.099, 'l2_norm': 129.429, 'naswot': 5215.609, 'naswot_relu': 5491.282, 'plain': -0.008, 'snip': 33.249, 'tenas': 426.925, 'zico': 226.402}     | {'train-loss': 0.773, 'train-accuracy': 72.716, 'train-per-time': 15.648, 'train-all-time': 187.773, 'test-loss': 0.799, 'test-accuracy': 72.05, 'test-per-time': 1.098, 'test-all-time': 13.174} |
+| 24 |       35 | {'grad_norm': 10.169, 'snip': 21.648, 'grasp': 7.256, 'fisher': 0.004, 'plain': 0.025, 'l2_norm': 78.649, 'naswot': 5234.198, 'naswot_relu': 5509.079, 'tenas': 475.829, 'zico': 225.847}        | {'average_bitwidth': 32, 'memory_density': 1.0} | {'average_bitwidth': 6.4, 'fisher': 0.004, 'grad_norm': 10.169, 'grasp': 7.256, 'l2_norm': 78.649, 'naswot': 5234.198, 'naswot_relu': 5509.079, 'plain': 0.025, 'snip': 21.648, 'tenas': 475.829, 'zico': 225.847}        | {'train-loss': 0.744, 'train-accuracy': 74.136, 'train-per-time': 11.865, 'train-all-time': 142.386, 'test-loss': 0.778, 'test-accuracy': 72.96, 'test-per-time': 0.961, 'test-all-time': 11.53}  |
+| 25 |       36 | {'grad_norm': 24.006, 'snip': 46.123, 'grasp': 26.513, 'fisher': 0.005, 'plain': -0.001, 'l2_norm': 129.672, 'naswot': 5555.69, 'naswot_relu': 5846.69, 'tenas': -178.542, 'zico': 438.386}      | {'average_bitwidth': 32, 'memory_density': 1.0} | {'average_bitwidth': 6.4, 'fisher': 0.005, 'grad_norm': 24.006, 'grasp': 26.513, 'l2_norm': 129.672, 'naswot': 5555.69, 'naswot_relu': 5846.69, 'plain': -0.001, 'snip': 46.123, 'tenas': -178.542, 'zico': 438.386}      | {'train-loss': 0.85, 'train-accuracy': 70.064, 'train-per-time': 21.392, 'train-all-time': 256.706, 'test-loss': 0.886, 'test-accuracy': 69.02, 'test-per-time': 1.474, 'test-all-time': 17.687}  |
+| 26 |       37 | {'grad_norm': 3.656, 'snip': 5.556, 'grasp': 1.491, 'fisher': 0.0, 'plain': 0.0, 'l2_norm': 129.635, 'naswot': 5673.871, 'naswot_relu': 5980.461, 'tenas': -2128.482, 'zico': 439.746}           | {'average_bitwidth': 32, 'memory_density': 1.0} | {'average_bitwidth': 6.4, 'fisher': 0.0, 'grad_norm': 3.656, 'grasp': 1.491, 'l2_norm': 129.635, 'naswot': 5673.871, 'naswot_relu': 5980.461, 'plain': 0.0, 'snip': 5.556, 'tenas': -2128.482, 'zico': 439.746}           | {'train-loss': 0.655, 'train-accuracy': 77.046, 'train-per-time': 18.852, 'train-all-time': 226.222, 'test-loss': 0.689, 'test-accuracy': 76.23, 'test-per-time': 1.376, 'test-all-time': 16.509} |
+| 27 |       38 | {'grad_norm': 38.019, 'snip': 68.281, 'grasp': 84.258, 'fisher': 0.029, 'plain': -0.014, 'l2_norm': 231.837, 'naswot': 5874.988, 'naswot_relu': 6260.415, 'tenas': 504.976, 'zico': 548.278}     | {'average_bitwidth': 32, 'memory_density': 1.0} | {'average_bitwidth': 6.4, 'fisher': 0.029, 'grad_norm': 38.019, 'grasp': 84.258, 'l2_norm': 231.837, 'naswot': 5874.988, 'naswot_relu': 6260.415, 'plain': -0.014, 'snip': 68.281, 'tenas': 504.976, 'zico': 548.278}     | {'train-loss': 0.391, 'train-accuracy': 86.706, 'train-per-time': 22.653, 'train-all-time': 271.837, 'test-loss': 0.456, 'test-accuracy': 84.65, 'test-per-time': 1.452, 'test-all-time': 17.428} |
+| 28 |       39 | {'grad_norm': 39.785, 'snip': 70.581, 'grasp': 68.537, 'fisher': 0.019, 'plain': -0.027, 'l2_norm': 282.597, 'naswot': 6122.236, 'naswot_relu': 6487.823, 'tenas': 506.068, 'zico': 861.154}     | {'average_bitwidth': 32, 'memory_density': 1.0} | {'average_bitwidth': 6.4, 'fisher': 0.019, 'grad_norm': 39.785, 'grasp': 68.537, 'l2_norm': 282.597, 'naswot': 6122.236, 'naswot_relu': 6487.823, 'plain': -0.027, 'snip': 70.581, 'tenas': 506.068, 'zico': 861.154}     | {'train-loss': 0.375, 'train-accuracy': 87.264, 'train-per-time': 26.365, 'train-all-time': 316.381, 'test-loss': 0.448, 'test-accuracy': 85.16, 'test-per-time': 1.538, 'test-all-time': 18.452} |
+| 29 |       40 | {'grad_norm': 22.372, 'snip': 46.401, 'grasp': 23.449, 'fisher': 0.016, 'plain': 0.007, 'l2_norm': 78.717, 'naswot': 5227.782, 'naswot_relu': 5502.08, 'tenas': 65.812, 'zico': 265.314}         | {'average_bitwidth': 32, 'memory_density': 1.0} | {'average_bitwidth': 6.4, 'fisher': 0.016, 'grad_norm': 22.372, 'grasp': 23.449, 'l2_norm': 78.717, 'naswot': 5227.782, 'naswot_relu': 5502.08, 'plain': 0.007, 'snip': 46.401, 'tenas': 65.812, 'zico': 265.314}         | {'train-loss': 1.074, 'train-accuracy': 61.292, 'train-per-time': 12.774, 'train-all-time': 153.288, 'test-loss': 1.083, 'test-accuracy': 61.27, 'test-per-time': 1.047, 'test-all-time': 12.562} |
+| 30 |       41 | {'grad_norm': 75.583, 'snip': 124.292, 'grasp': 280.503, 'fisher': 0.095, 'plain': 0.012, 'l2_norm': 283.172, 'naswot': 6054.704, 'naswot_relu': 6437.426, 'tenas': 499.557, 'zico': 835.443}    | {'average_bitwidth': 32, 'memory_density': 1.0} | {'average_bitwidth': 6.4, 'fisher': 0.095, 'grad_norm': 75.583, 'grasp': 280.503, 'l2_norm': 283.172, 'naswot': 6054.704, 'naswot_relu': 6437.426, 'plain': 0.012, 'snip': 124.292, 'tenas': 499.557, 'zico': 835.443}    | {'train-loss': 0.37, 'train-accuracy': 87.306, 'train-per-time': 24.488, 'train-all-time': 293.851, 'test-loss': 0.435, 'test-accuracy': 85.36, 'test-per-time': 1.347, 'test-all-time': 16.158}  |
+| 31 |       43 | {'grad_norm': 6.845, 'snip': 13.464, 'grasp': 2.954, 'fisher': 0.002, 'plain': -0.003, 'l2_norm': 129.324, 'naswot': 5478.364, 'naswot_relu': 5832.571, 'tenas': 489.339, 'zico': 227.647}       | {'average_bitwidth': 32, 'memory_density': 1.0} | {'average_bitwidth': 6.4, 'fisher': 0.002, 'grad_norm': 6.845, 'grasp': 2.954, 'l2_norm': 129.324, 'naswot': 5478.364, 'naswot_relu': 5832.571, 'plain': -0.003, 'snip': 13.464, 'tenas': 489.339, 'zico': 227.647}       | {'train-loss': 0.562, 'train-accuracy': 80.628, 'train-per-time': 13.654, 'train-all-time': 163.851, 'test-loss': 0.606, 'test-accuracy': 78.69, 'test-per-time': 1.023, 'test-all-time': 12.278} |
+| 32 |       45 | {'grad_norm': 34.541, 'snip': 62.273, 'grasp': 70.285, 'fisher': 0.021, 'plain': 0.014, 'l2_norm': 283.121, 'naswot': 5804.384, 'naswot_relu': 6180.008, 'tenas': 504.57, 'zico': 823.498}       | {'average_bitwidth': 32, 'memory_density': 1.0} | {'average_bitwidth': 6.4, 'fisher': 0.021, 'grad_norm': 34.541, 'grasp': 70.285, 'l2_norm': 283.121, 'naswot': 5804.384, 'naswot_relu': 6180.008, 'plain': 0.014, 'snip': 62.273, 'tenas': 504.57, 'zico': 823.498}       | {'train-loss': 0.35, 'train-accuracy': 87.96, 'train-per-time': 25.837, 'train-all-time': 310.044, 'test-loss': 0.436, 'test-accuracy': 85.47, 'test-per-time': 1.443, 'test-all-time': 17.311}   |
+| 33 |       47 | {'grad_norm': 14.702, 'snip': 27.843, 'grasp': 16.611, 'fisher': 0.005, 'plain': 0.006, 'l2_norm': 129.56, 'naswot': 5347.323, 'naswot_relu': 5669.914, 'tenas': 507.448, 'zico': 261.575}       | {'average_bitwidth': 32, 'memory_density': 1.0} | {'average_bitwidth': 6.4, 'fisher': 0.005, 'grad_norm': 14.702, 'grasp': 16.611, 'l2_norm': 129.56, 'naswot': 5347.323, 'naswot_relu': 5669.914, 'plain': 0.006, 'snip': 27.843, 'tenas': 507.448, 'zico': 261.575}       | {'train-loss': 0.401, 'train-accuracy': 86.26, 'train-per-time': 17.06, 'train-all-time': 204.72, 'test-loss': 0.464, 'test-accuracy': 84.16, 'test-per-time': 1.226, 'test-all-time': 14.708}    |
+| 34 |       48 | {'grad_norm': 15.353, 'snip': 30.305, 'grasp': 9.389, 'fisher': 0.004, 'plain': 0.002, 'l2_norm': 180.441, 'naswot': 5569.149, 'naswot_relu': 5899.465, 'tenas': 506.981, 'zico': 441.135}       | {'average_bitwidth': 32, 'memory_density': 1.0} | {'average_bitwidth': 6.4, 'fisher': 0.004, 'grad_norm': 15.353, 'grasp': 9.389, 'l2_norm': 180.441, 'naswot': 5569.149, 'naswot_relu': 5899.465, 'plain': 0.002, 'snip': 30.305, 'tenas': 506.981, 'zico': 441.135}       | {'train-loss': 0.364, 'train-accuracy': 87.61, 'train-per-time': 21.202, 'train-all-time': 254.423, 'test-loss': 0.443, 'test-accuracy': 85.24, 'test-per-time': 1.426, 'test-all-time': 17.112}  |
+| 35 |       49 | {'grad_norm': 92.362, 'snip': 158.439, 'grasp': 543.447, 'fisher': 0.197, 'plain': 0.02, 'l2_norm': 129.839, 'naswot': 5667.187, 'naswot_relu': 6003.656, 'tenas': 497.11, 'zico': 442.774}      | {'average_bitwidth': 32, 'memory_density': 1.0} | {'average_bitwidth': 6.4, 'fisher': 0.197, 'grad_norm': 92.362, 'grasp': 543.447, 'l2_norm': 129.839, 'naswot': 5667.187, 'naswot_relu': 6003.656, 'plain': 0.02, 'snip': 158.439, 'tenas': 497.11, 'zico': 442.774}      | {'train-loss': 0.88, 'train-accuracy': 68.396, 'train-per-time': 18.326, 'train-all-time': 219.915, 'test-loss': 0.875, 'test-accuracy': 68.98, 'test-per-time': 1.336, 'test-all-time': 16.038}  |
+| 36 |       50 | {'grad_norm': 14.306, 'snip': 28.696, 'grasp': 14.597, 'fisher': 0.003, 'plain': 0.003, 'l2_norm': 78.837, 'naswot': 5314.704, 'naswot_relu': 5608.246, 'tenas': 326.193, 'zico': 263.851}       | {'average_bitwidth': 32, 'memory_density': 1.0} | {'average_bitwidth': 6.4, 'fisher': 0.003, 'grad_norm': 14.306, 'grasp': 14.597, 'l2_norm': 78.837, 'naswot': 5314.704, 'naswot_relu': 5608.246, 'plain': 0.003, 'snip': 28.696, 'tenas': 326.193, 'zico': 263.851}       | {'train-loss': 0.672, 'train-accuracy': 76.44, 'train-per-time': 14.214, 'train-all-time': 170.567, 'test-loss': 0.721, 'test-accuracy': 75.07, 'test-per-time': 1.169, 'test-all-time': 14.023}  |
+| 37 |       51 | {'grad_norm': 155.706, 'snip': 254.969, 'grasp': 2503.697, 'fisher': 0.517, 'plain': -0.004, 'l2_norm': 180.544, 'naswot': 5518.121, 'naswot_relu': 5859.445, 'tenas': 499.4, 'zico': 434.708}   | {'average_bitwidth': 32, 'memory_density': 1.0} | {'average_bitwidth': 6.4, 'fisher': 0.517, 'grad_norm': 155.706, 'grasp': 2503.697, 'l2_norm': 180.544, 'naswot': 5518.121, 'naswot_relu': 5859.445, 'plain': -0.004, 'snip': 254.969, 'tenas': 499.4, 'zico': 434.708}   | {'train-loss': 0.844, 'train-accuracy': 70.106, 'train-per-time': 20.354, 'train-all-time': 244.247, 'test-loss': 0.848, 'test-accuracy': 70.28, 'test-per-time': 1.391, 'test-all-time': 16.693} |
+| 38 |       52 | {'grad_norm': 24.534, 'snip': 50.396, 'grasp': 19.493, 'fisher': 0.006, 'plain': 0.048, 'l2_norm': 180.623, 'naswot': 5727.796, 'naswot_relu': 6058.865, 'tenas': 497.096, 'zico': 611.545}      | {'average_bitwidth': 32, 'memory_density': 1.0} | {'average_bitwidth': 6.4, 'fisher': 0.006, 'grad_norm': 24.534, 'grasp': 19.493, 'l2_norm': 180.623, 'naswot': 5727.796, 'naswot_relu': 6058.865, 'plain': 0.048, 'snip': 50.396, 'tenas': 497.096, 'zico': 611.545}      | {'train-loss': 0.41, 'train-accuracy': 85.88, 'train-per-time': 21.666, 'train-all-time': 259.996, 'test-loss': 0.483, 'test-accuracy': 83.92, 'test-per-time': 1.445, 'test-all-time': 17.339}   |
+| 39 |       53 | {'grad_norm': 15.367, 'snip': 28.039, 'grasp': 11.483, 'fisher': 0.002, 'plain': 0.038, 'l2_norm': 129.811, 'naswot': 5588.584, 'naswot_relu': 5909.245, 'tenas': 48.152, 'zico': 253.797}       | {'average_bitwidth': 32, 'memory_density': 1.0} | {'average_bitwidth': 6.4, 'fisher': 0.002, 'grad_norm': 15.367, 'grasp': 11.483, 'l2_norm': 129.811, 'naswot': 5588.584, 'naswot_relu': 5909.245, 'plain': 0.038, 'snip': 28.039, 'tenas': 48.152, 'zico': 253.797}       | {'train-loss': 0.414, 'train-accuracy': 85.628, 'train-per-time': 19.604, 'train-all-time': 235.245, 'test-loss': 0.486, 'test-accuracy': 83.83, 'test-per-time': 1.355, 'test-all-time': 16.255} |
+| 40 |       54 | {'grad_norm': 49.476, 'snip': 88.244, 'grasp': 119.554, 'fisher': 0.037, 'plain': 0.039, 'l2_norm': 180.696, 'naswot': 5842.968, 'naswot_relu': 6179.733, 'tenas': 503.433, 'zico': 583.744}     | {'average_bitwidth': 32, 'memory_density': 1.0} | {'average_bitwidth': 6.4, 'fisher': 0.037, 'grad_norm': 49.476, 'grasp': 119.554, 'l2_norm': 180.696, 'naswot': 5842.968, 'naswot_relu': 6179.733, 'plain': 0.039, 'snip': 88.244, 'tenas': 503.433, 'zico': 583.744}     | {'train-loss': 0.342, 'train-accuracy': 88.356, 'train-per-time': 19.596, 'train-all-time': 235.15, 'test-loss': 0.417, 'test-accuracy': 85.84, 'test-per-time': 1.34, 'test-all-time': 16.075}   |
+| 41 |       55 | {'grad_norm': 28.676, 'snip': 55.066, 'grasp': 26.004, 'fisher': 0.014, 'plain': -0.023, 'l2_norm': 180.639, 'naswot': 5722.148, 'naswot_relu': 6035.014, 'tenas': 449.206, 'zico': 592.705}     | {'average_bitwidth': 32, 'memory_density': 1.0} | {'average_bitwidth': 6.4, 'fisher': 0.014, 'grad_norm': 28.676, 'grasp': 26.004, 'l2_norm': 180.639, 'naswot': 5722.148, 'naswot_relu': 6035.014, 'plain': -0.023, 'snip': 55.066, 'tenas': 449.206, 'zico': 592.705}     | {'train-loss': 0.639, 'train-accuracy': 77.48, 'train-per-time': 21.471, 'train-all-time': 257.647, 'test-loss': 0.684, 'test-accuracy': 76.12, 'test-per-time': 1.437, 'test-all-time': 17.239}  |
+| 42 |       56 | {'grad_norm': 11.39, 'snip': 22.388, 'grasp': 3.036, 'fisher': 0.001, 'plain': 0.017, 'l2_norm': 231.301, 'naswot': 6055.949, 'naswot_relu': 6416.564, 'tenas': 491.621, 'zico': 757.775}        | {'average_bitwidth': 32, 'memory_density': 1.0} | {'average_bitwidth': 6.4, 'fisher': 0.001, 'grad_norm': 11.39, 'grasp': 3.036, 'l2_norm': 231.301, 'naswot': 6055.949, 'naswot_relu': 6416.564, 'plain': 0.017, 'snip': 22.388, 'tenas': 491.621, 'zico': 757.775}        | {'train-loss': 0.225, 'train-accuracy': 92.426, 'train-per-time': 24.065, 'train-all-time': 288.778, 'test-loss': 0.342, 'test-accuracy': 88.74, 'test-per-time': 1.591, 'test-all-time': 19.095} |
+| 43 |       57 | {'grad_norm': 18.485, 'snip': 38.046, 'grasp': 12.281, 'fisher': 0.003, 'plain': 0.079, 'l2_norm': 180.946, 'naswot': 5712.159, 'naswot_relu': 6056.056, 'tenas': 414.796, 'zico': 595.4}        | {'average_bitwidth': 32, 'memory_density': 1.0} | {'average_bitwidth': 6.4, 'fisher': 0.003, 'grad_norm': 18.485, 'grasp': 12.281, 'l2_norm': 180.946, 'naswot': 5712.159, 'naswot_relu': 6056.056, 'plain': 0.079, 'snip': 38.046, 'tenas': 414.796, 'zico': 595.4}        | {'train-loss': 0.473, 'train-accuracy': 83.636, 'train-per-time': 20.481, 'train-all-time': 245.77, 'test-loss': 0.53, 'test-accuracy': 82.23, 'test-per-time': 1.314, 'test-all-time': 15.77}    |
+| 44 |       58 | {'grad_norm': 41.26, 'snip': 64.765, 'grasp': 238.278, 'fisher': 0.031, 'plain': -0.006, 'l2_norm': 180.019, 'naswot': 5760.56, 'naswot_relu': 6135.179, 'tenas': 488.65, 'zico': 507.334}       | {'average_bitwidth': 32, 'memory_density': 1.0} | {'average_bitwidth': 6.4, 'fisher': 0.031, 'grad_norm': 41.26, 'grasp': 238.278, 'l2_norm': 180.019, 'naswot': 5760.56, 'naswot_relu': 6135.179, 'plain': -0.006, 'snip': 64.765, 'tenas': 488.65, 'zico': 507.334}       | {'train-loss': 0.609, 'train-accuracy': 78.774, 'train-per-time': 19.151, 'train-all-time': 229.807, 'test-loss': 0.658, 'test-accuracy': 77.08, 'test-per-time': 1.197, 'test-all-time': 14.361} |
+| 45 |       61 | {'grad_norm': 9.793, 'snip': 19.799, 'grasp': 2.538, 'fisher': 0.001, 'plain': 0.009, 'l2_norm': 180.827, 'naswot': 5919.353, 'naswot_relu': 6271.027, 'tenas': 465.454, 'zico': 620.697}        | {'average_bitwidth': 32, 'memory_density': 1.0} | {'average_bitwidth': 6.4, 'fisher': 0.001, 'grad_norm': 9.793, 'grasp': 2.538, 'l2_norm': 180.827, 'naswot': 5919.353, 'naswot_relu': 6271.027, 'plain': 0.009, 'snip': 19.799, 'tenas': 465.454, 'zico': 620.697}        | {'train-loss': 0.237, 'train-accuracy': 92.09, 'train-per-time': 20.345, 'train-all-time': 244.14, 'test-loss': 0.354, 'test-accuracy': 87.98, 'test-per-time': 1.455, 'test-all-time': 17.456}   |
+| 46 |       62 | {'grad_norm': 79.694, 'snip': 135.832, 'grasp': 472.497, 'fisher': 0.158, 'plain': 0.004, 'l2_norm': 180.621, 'naswot': 5457.289, 'naswot_relu': 5795.396, 'tenas': 499.566, 'zico': 437.703}    | {'average_bitwidth': 32, 'memory_density': 1.0} | {'average_bitwidth': 6.4, 'fisher': 0.158, 'grad_norm': 79.694, 'grasp': 472.497, 'l2_norm': 180.621, 'naswot': 5457.289, 'naswot_relu': 5795.396, 'plain': 0.004, 'snip': 135.832, 'tenas': 499.566, 'zico': 437.703}    | {'train-loss': 0.844, 'train-accuracy': 70.106, 'train-per-time': 20.354, 'train-all-time': 244.247, 'test-loss': 0.848, 'test-accuracy': 70.28, 'test-per-time': 1.391, 'test-all-time': 16.693} |
+| 47 |       63 | {'grad_norm': 54.52, 'snip': 98.334, 'grasp': 169.356, 'fisher': 0.043, 'plain': -0.014, 'l2_norm': 231.527, 'naswot': 5826.048, 'naswot_relu': 6162.081, 'tenas': 505.293, 'zico': 624.697}     | {'average_bitwidth': 32, 'memory_density': 1.0} | {'average_bitwidth': 6.4, 'fisher': 0.043, 'grad_norm': 54.52, 'grasp': 169.356, 'l2_norm': 231.527, 'naswot': 5826.048, 'naswot_relu': 6162.081, 'plain': -0.014, 'snip': 98.334, 'tenas': 505.293, 'zico': 624.697}     | {'train-loss': 0.429, 'train-accuracy': 85.516, 'train-per-time': 24.265, 'train-all-time': 291.183, 'test-loss': 0.506, 'test-accuracy': 82.87, 'test-per-time': 1.648, 'test-all-time': 19.773} |
+| 48 |       64 | {'grad_norm': 64.483, 'snip': 114.77, 'grasp': 187.152, 'fisher': 0.075, 'plain': 0.011, 'l2_norm': 180.836, 'naswot': 5866.001, 'naswot_relu': 6210.638, 'tenas': 504.631, 'zico': 611.047}     | {'average_bitwidth': 32, 'memory_density': 1.0} | {'average_bitwidth': 6.4, 'fisher': 0.075, 'grad_norm': 64.483, 'grasp': 187.152, 'l2_norm': 180.836, 'naswot': 5866.001, 'naswot_relu': 6210.638, 'plain': 0.011, 'snip': 114.77, 'tenas': 504.631, 'zico': 611.047}     | {'train-loss': 0.453, 'train-accuracy': 84.44, 'train-per-time': 20.084, 'train-all-time': 241.011, 'test-loss': 0.519, 'test-accuracy': 82.52, 'test-per-time': 1.441, 'test-all-time': 17.296}  |
+| 49 |       65 | {'grad_norm': 17.527, 'snip': 34.919, 'grasp': 13.085, 'fisher': 0.003, 'plain': 0.013, 'l2_norm': 231.866, 'naswot': 6037.375, 'naswot_relu': 6398.135, 'tenas': 506.909, 'zico': 796.976}      | {'average_bitwidth': 32, 'memory_density': 1.0} | {'average_bitwidth': 6.4, 'fisher': 0.003, 'grad_norm': 17.527, 'grasp': 13.085, 'l2_norm': 231.866, 'naswot': 6037.375, 'naswot_relu': 6398.135, 'plain': 0.013, 'snip': 34.919, 'tenas': 506.909, 'zico': 796.976}      | {'train-loss': 0.22, 'train-accuracy': 92.646, 'train-per-time': 25.203, 'train-all-time': 302.44, 'test-loss': 0.351, 'test-accuracy': 88.27, 'test-per-time': 1.694, 'test-all-time': 20.324}   |
+| 50 |       66 | {'grad_norm': 115.857, 'snip': 194.383, 'grasp': 1634.992, 'fisher': 0.569, 'plain': 0.008, 'l2_norm': 180.648, 'naswot': 5660.155, 'naswot_relu': 5992.086, 'tenas': 494.642, 'zico': 404.513}  | {'average_bitwidth': 32, 'memory_density': 1.0} | {'average_bitwidth': 6.4, 'fisher': 0.569, 'grad_norm': 115.857, 'grasp': 1634.992, 'l2_norm': 180.648, 'naswot': 5660.155, 'naswot_relu': 5992.086, 'plain': 0.008, 'snip': 194.383, 'tenas': 494.642, 'zico': 404.513}  | {'train-loss': 0.546, 'train-accuracy': 81.22, 'train-per-time': 19.333, 'train-all-time': 231.993, 'test-loss': 0.582, 'test-accuracy': 80.22, 'test-per-time': 1.36, 'test-all-time': 16.318}   |
+| 51 |       67 | {'grad_norm': 0.0, 'snip': 0.0, 'grasp': 0.0, 'fisher': 0.0, 'plain': 0.0, 'l2_norm': 78.684, 'naswot': 4539.899, 'naswot_relu': 4606.172, 'tenas': 512.0, 'zico': 0}                            | {'average_bitwidth': 32, 'memory_density': 1.0} | {'average_bitwidth': 6.4, 'fisher': 0.0, 'grad_norm': 0.0, 'grasp': 0.0, 'l2_norm': 78.684, 'naswot': 4539.899, 'naswot_relu': 4606.172, 'plain': 0.0, 'snip': 0.0, 'tenas': 512.0, 'zico': 0.0}                          | {'train-loss': 2.303, 'train-accuracy': 9.79, 'train-per-time': 12.421, 'train-all-time': 149.047, 'test-loss': 2.303, 'test-accuracy': 10.0, 'test-per-time': 1.006, 'test-all-time': 12.071}    |
+| 52 |       69 | {'grad_norm': 22.504, 'snip': 41.12, 'grasp': 21.418, 'fisher': 0.011, 'plain': -0.004, 'l2_norm': 129.738, 'naswot': 5545.785, 'naswot_relu': 5893.889, 'tenas': 286.364, 'zico': 362.938}      | {'average_bitwidth': 32, 'memory_density': 1.0} | {'average_bitwidth': 6.4, 'fisher': 0.011, 'grad_norm': 22.504, 'grasp': 21.418, 'l2_norm': 129.738, 'naswot': 5545.785, 'naswot_relu': 5893.889, 'plain': -0.004, 'snip': 41.12, 'tenas': 286.364, 'zico': 362.938}      | {'train-loss': 0.563, 'train-accuracy': 80.476, 'train-per-time': 15.706, 'train-all-time': 188.466, 'test-loss': 0.632, 'test-accuracy': 78.31, 'test-per-time': 1.075, 'test-all-time': 12.901} |
+| 53 |       70 | {'grad_norm': 16.618, 'snip': 34.002, 'grasp': 17.177, 'fisher': 0.004, 'plain': -0.005, 'l2_norm': 78.783, 'naswot': 5281.0, 'naswot_relu': 5535.761, 'tenas': 10.228, 'zico': 259.965}         | {'average_bitwidth': 32, 'memory_density': 1.0} | {'average_bitwidth': 6.4, 'fisher': 0.004, 'grad_norm': 16.618, 'grasp': 17.177, 'l2_norm': 78.783, 'naswot': 5281.0, 'naswot_relu': 5535.761, 'plain': -0.005, 'snip': 34.002, 'tenas': 10.228, 'zico': 259.965}         | {'train-loss': 0.826, 'train-accuracy': 70.896, 'train-per-time': 14.856, 'train-all-time': 178.273, 'test-loss': 0.865, 'test-accuracy': 69.53, 'test-per-time': 1.169, 'test-all-time': 14.031} |
+| 54 |       71 | {'grad_norm': 108.808, 'snip': 180.681, 'grasp': 735.487, 'fisher': 0.221, 'plain': -0.004, 'l2_norm': 231.213, 'naswot': 5953.966, 'naswot_relu': 6318.591, 'tenas': 496.057, 'zico': 696.474}  | {'average_bitwidth': 32, 'memory_density': 1.0} | {'average_bitwidth': 6.4, 'fisher': 0.221, 'grad_norm': 108.808, 'grasp': 735.487, 'l2_norm': 231.213, 'naswot': 5953.966, 'naswot_relu': 6318.591, 'plain': -0.004, 'snip': 180.681, 'tenas': 496.057, 'zico': 696.474}  | {'train-loss': 0.44, 'train-accuracy': 84.944, 'train-per-time': 22.183, 'train-all-time': 266.199, 'test-loss': 0.503, 'test-accuracy': 82.73, 'test-per-time': 1.388, 'test-all-time': 16.655}  |
+| 55 |       72 | {'grad_norm': 103.498, 'snip': 172.371, 'grasp': 734.613, 'fisher': 0.182, 'plain': 0.075, 'l2_norm': 231.711, 'naswot': 5864.606, 'naswot_relu': 6228.496, 'tenas': 494.983, 'zico': 684.37}    | {'average_bitwidth': 32, 'memory_density': 1.0} | {'average_bitwidth': 6.4, 'fisher': 0.182, 'grad_norm': 103.498, 'grasp': 734.613, 'l2_norm': 231.711, 'naswot': 5864.606, 'naswot_relu': 6228.496, 'plain': 0.075, 'snip': 172.371, 'tenas': 494.983, 'zico': 684.37}    | {'train-loss': 0.44, 'train-accuracy': 84.944, 'train-per-time': 22.183, 'train-all-time': 266.199, 'test-loss': 0.503, 'test-accuracy': 82.73, 'test-per-time': 1.388, 'test-all-time': 16.655}  |
+| 56 |       74 | {'grad_norm': 25.657, 'snip': 50.869, 'grasp': 16.197, 'fisher': 0.01, 'plain': 0.0, 'l2_norm': 231.107, 'naswot': 5791.386, 'naswot_relu': 6122.899, 'tenas': 486.428, 'zico': 730.759}         | {'average_bitwidth': 32, 'memory_density': 1.0} | {'average_bitwidth': 6.4, 'fisher': 0.01, 'grad_norm': 25.657, 'grasp': 16.197, 'l2_norm': 231.107, 'naswot': 5791.386, 'naswot_relu': 6122.899, 'plain': 0.0, 'snip': 50.869, 'tenas': 486.428, 'zico': 730.759}         | {'train-loss': 0.567, 'train-accuracy': 80.306, 'train-per-time': 24.159, 'train-all-time': 289.912, 'test-loss': 0.617, 'test-accuracy': 78.83, 'test-per-time': 1.442, 'test-all-time': 17.303} |
+| 57 |       75 | {'grad_norm': 22.759, 'snip': 43.316, 'grasp': 31.894, 'fisher': 0.012, 'plain': 0.002, 'l2_norm': 78.788, 'naswot': 5117.618, 'naswot_relu': 5374.862, 'tenas': 131.262, 'zico': 262.247}       | {'average_bitwidth': 32, 'memory_density': 1.0} | {'average_bitwidth': 6.4, 'fisher': 0.012, 'grad_norm': 22.759, 'grasp': 31.894, 'l2_norm': 78.788, 'naswot': 5117.618, 'naswot_relu': 5374.862, 'plain': 0.002, 'snip': 43.316, 'tenas': 131.262, 'zico': 262.247}       | {'train-loss': 1.03, 'train-accuracy': 63.128, 'train-per-time': 13.41, 'train-all-time': 160.926, 'test-loss': 1.052, 'test-accuracy': 62.38, 'test-per-time': 1.08, 'test-all-time': 12.96}     |
+| 58 |       76 | {'grad_norm': 278.35, 'snip': 461.804, 'grasp': 4511.288, 'fisher': 1.542, 'plain': -0.001, 'l2_norm': 282.089, 'naswot': 6050.748, 'naswot_relu': 6432.185, 'tenas': 496.134, 'zico': 902.507}  | {'average_bitwidth': 32, 'memory_density': 1.0} | {'average_bitwidth': 6.4, 'fisher': 1.542, 'grad_norm': 278.35, 'grasp': 4511.288, 'l2_norm': 282.089, 'naswot': 6050.748, 'naswot_relu': 6432.185, 'plain': -0.001, 'snip': 461.804, 'tenas': 496.134, 'zico': 902.507}  | {'train-loss': 0.673, 'train-accuracy': 76.336, 'train-per-time': 27.916, 'train-all-time': 334.993, 'test-loss': 0.723, 'test-accuracy': 74.53, 'test-per-time': 1.73, 'test-all-time': 20.766}  |
+| 59 |       78 | {'grad_norm': 10.393, 'snip': 20.743, 'grasp': 2.18, 'fisher': 0.001, 'plain': 0.014, 'l2_norm': 231.641, 'naswot': 6034.94, 'naswot_relu': 6392.289, 'tenas': 459.693, 'zico': 762.078}         | {'average_bitwidth': 32, 'memory_density': 1.0} | {'average_bitwidth': 6.4, 'fisher': 0.001, 'grad_norm': 10.393, 'grasp': 2.18, 'l2_norm': 231.641, 'naswot': 6034.94, 'naswot_relu': 6392.289, 'plain': 0.014, 'snip': 20.743, 'tenas': 459.693, 'zico': 762.078}         | {'train-loss': 0.245, 'train-accuracy': 91.668, 'train-per-time': 22.881, 'train-all-time': 274.577, 'test-loss': 0.353, 'test-accuracy': 88.34, 'test-per-time': 1.499, 'test-all-time': 17.993} |
+| 60 |       79 | {'grad_norm': 27.946, 'snip': 56.011, 'grasp': 17.452, 'fisher': 0.006, 'plain': 0.079, 'l2_norm': 231.819, 'naswot': 5885.524, 'naswot_relu': 6226.068, 'tenas': 465.085, 'zico': 752.921}      | {'average_bitwidth': 32, 'memory_density': 1.0} | {'average_bitwidth': 6.4, 'fisher': 0.006, 'grad_norm': 27.946, 'grasp': 17.452, 'l2_norm': 231.819, 'naswot': 5885.524, 'naswot_relu': 6226.068, 'plain': 0.079, 'snip': 56.011, 'tenas': 465.085, 'zico': 752.921}      | {'train-loss': 0.475, 'train-accuracy': 83.514, 'train-per-time': 27.152, 'train-all-time': 325.82, 'test-loss': 0.546, 'test-accuracy': 80.96, 'test-per-time': 1.74, 'test-all-time': 20.88}    |
+| 61 |       81 | {'grad_norm': 12.15, 'snip': 25.059, 'grasp': 4.569, 'fisher': 0.001, 'plain': 0.041, 'l2_norm': 282.529, 'naswot': 6096.069, 'naswot_relu': 6458.486, 'tenas': 501.567, 'zico': 892.705}        | {'average_bitwidth': 32, 'memory_density': 1.0} | {'average_bitwidth': 6.4, 'fisher': 0.001, 'grad_norm': 12.15, 'grasp': 4.569, 'l2_norm': 282.529, 'naswot': 6096.069, 'naswot_relu': 6458.486, 'plain': 0.041, 'snip': 25.059, 'tenas': 501.567, 'zico': 892.705}        | {'train-loss': 0.23, 'train-accuracy': 92.256, 'train-per-time': 27.136, 'train-all-time': 325.634, 'test-loss': 0.347, 'test-accuracy': 88.47, 'test-per-time': 1.655, 'test-all-time': 19.865}  |
+| 62 |       82 | {'grad_norm': 145.215, 'snip': 245.332, 'grasp': 871.093, 'fisher': 0.296, 'plain': -0.052, 'l2_norm': 333.043, 'naswot': 5981.446, 'naswot_relu': 6349.213, 'tenas': 498.232, 'zico': 1077.533} | {'average_bitwidth': 32, 'memory_density': 1.0} | {'average_bitwidth': 6.4, 'fisher': 0.296, 'grad_norm': 145.215, 'grasp': 871.093, 'l2_norm': 333.043, 'naswot': 5981.446, 'naswot_relu': 6349.213, 'plain': -0.052, 'snip': 245.332, 'tenas': 498.232, 'zico': 1077.533} | {'train-loss': 0.427, 'train-accuracy': 85.266, 'train-per-time': 32.86, 'train-all-time': 394.319, 'test-loss': 0.494, 'test-accuracy': 83.38, 'test-per-time': 1.942, 'test-all-time': 23.3}    |
+| 63 |       83 | {'grad_norm': 64.43, 'snip': 115.94, 'grasp': 155.659, 'fisher': 0.056, 'plain': 0.005, 'l2_norm': 282.805, 'naswot': 6002.615, 'naswot_relu': 6341.318, 'tenas': 503.997, 'zico': 944.903}      | {'average_bitwidth': 32, 'memory_density': 1.0} | {'average_bitwidth': 6.4, 'fisher': 0.056, 'grad_norm': 64.43, 'grasp': 155.659, 'l2_norm': 282.805, 'naswot': 6002.615, 'naswot_relu': 6341.318, 'plain': 0.005, 'snip': 115.94, 'tenas': 503.997, 'zico': 944.903}      | {'train-loss': 0.452, 'train-accuracy': 84.528, 'train-per-time': 31.022, 'train-all-time': 372.269, 'test-loss': 0.507, 'test-accuracy': 82.79, 'test-per-time': 1.93, 'test-all-time': 23.166}  |
+| 64 |       84 | {'grad_norm': 9.342, 'snip': 19.997, 'grasp': 2.163, 'fisher': 0.001, 'plain': 0.005, 'l2_norm': 180.821, 'naswot': 5870.792, 'naswot_relu': 6234.455, 'tenas': 449.758, 'zico': 581.418}        | {'average_bitwidth': 32, 'memory_density': 1.0} | {'average_bitwidth': 6.4, 'fisher': 0.001, 'grad_norm': 9.342, 'grasp': 2.163, 'l2_norm': 180.821, 'naswot': 5870.792, 'naswot_relu': 6234.455, 'plain': 0.005, 'snip': 19.997, 'tenas': 449.758, 'zico': 581.418}        | {'train-loss': 0.271, 'train-accuracy': 90.822, 'train-per-time': 20.655, 'train-all-time': 247.854, 'test-loss': 0.383, 'test-accuracy': 87.24, 'test-per-time': 1.369, 'test-all-time': 16.427} |
+| 65 |       85 | {'grad_norm': 70.979, 'snip': 126.221, 'grasp': 188.917, 'fisher': 0.057, 'plain': -0.019, 'l2_norm': 282.391, 'naswot': 6093.624, 'naswot_relu': 6469.068, 'tenas': 502.13, 'zico': 933.436}    | {'average_bitwidth': 32, 'memory_density': 1.0} | {'average_bitwidth': 6.4, 'fisher': 0.057, 'grad_norm': 70.979, 'grasp': 188.917, 'l2_norm': 282.391, 'naswot': 6093.624, 'naswot_relu': 6469.068, 'plain': -0.019, 'snip': 126.221, 'tenas': 502.13, 'zico': 933.436}    | {'train-loss': 0.452, 'train-accuracy': 84.528, 'train-per-time': 31.022, 'train-all-time': 372.269, 'test-loss': 0.507, 'test-accuracy': 82.79, 'test-per-time': 1.93, 'test-all-time': 23.166}  |
+| 66 |       86 | {'grad_norm': 12.143, 'snip': 24.886, 'grasp': 4.489, 'fisher': 0.001, 'plain': 0.007, 'l2_norm': 282.868, 'naswot': 6138.721, 'naswot_relu': 6505.685, 'tenas': 502.922, 'zico': 905.493}       | {'average_bitwidth': 32, 'memory_density': 1.0} | {'average_bitwidth': 6.4, 'fisher': 0.001, 'grad_norm': 12.143, 'grasp': 4.489, 'l2_norm': 282.868, 'naswot': 6138.721, 'naswot_relu': 6505.685, 'plain': 0.007, 'snip': 24.886, 'tenas': 502.922, 'zico': 905.493}       | {'train-loss': 0.23, 'train-accuracy': 92.256, 'train-per-time': 27.136, 'train-all-time': 325.634, 'test-loss': 0.347, 'test-accuracy': 88.47, 'test-per-time': 1.655, 'test-all-time': 19.865}  |
+| 67 |       87 | {'grad_norm': 43.883, 'snip': 77.942, 'grasp': 76.788, 'fisher': 0.031, 'plain': 0.009, 'l2_norm': 231.592, 'naswot': 5966.962, 'naswot_relu': 6302.865, 'tenas': 504.411, 'zico': 724.778}      | {'average_bitwidth': 32, 'memory_density': 1.0} | {'average_bitwidth': 6.4, 'fisher': 0.031, 'grad_norm': 43.883, 'grasp': 76.788, 'l2_norm': 231.592, 'naswot': 5966.962, 'naswot_relu': 6302.865, 'plain': 0.009, 'snip': 77.942, 'tenas': 504.411, 'zico': 724.778}      | {'train-loss': 0.389, 'train-accuracy': 86.608, 'train-per-time': 25.144, 'train-all-time': 301.733, 'test-loss': 0.451, 'test-accuracy': 84.73, 'test-per-time': 1.554, 'test-all-time': 18.651} |
+| 68 |       89 | {'grad_norm': 43.867, 'snip': 77.791, 'grasp': 106.801, 'fisher': 0.032, 'plain': -0.018, 'l2_norm': 180.526, 'naswot': 5799.982, 'naswot_relu': 6162.669, 'tenas': 505.144, 'zico': 584.57}     | {'average_bitwidth': 32, 'memory_density': 1.0} | {'average_bitwidth': 6.4, 'fisher': 0.032, 'grad_norm': 43.867, 'grasp': 106.801, 'l2_norm': 180.526, 'naswot': 5799.982, 'naswot_relu': 6162.669, 'plain': -0.018, 'snip': 77.791, 'tenas': 505.144, 'zico': 584.57}     | {'train-loss': 0.371, 'train-accuracy': 87.426, 'train-per-time': 24.068, 'train-all-time': 288.811, 'test-loss': 0.456, 'test-accuracy': 84.61, 'test-per-time': 1.57, 'test-all-time': 18.842}  |
+| 69 |       91 | {'grad_norm': 10.603, 'snip': 21.575, 'grasp': 3.687, 'fisher': 0.001, 'plain': 0.026, 'l2_norm': 282.992, 'naswot': 6111.555, 'naswot_relu': 6497.252, 'tenas': 498.662, 'zico': 860.833}       | {'average_bitwidth': 32, 'memory_density': 1.0} | {'average_bitwidth': 6.4, 'fisher': 0.001, 'grad_norm': 10.603, 'grasp': 3.687, 'l2_norm': 282.992, 'naswot': 6111.555, 'naswot_relu': 6497.252, 'plain': 0.026, 'snip': 21.575, 'tenas': 498.662, 'zico': 860.833}       | {'train-loss': 0.241, 'train-accuracy': 91.814, 'train-per-time': 26.257, 'train-all-time': 315.085, 'test-loss': 0.356, 'test-accuracy': 88.24, 'test-per-time': 1.54, 'test-all-time': 18.482}  |
+| 70 |       92 | {'grad_norm': 63.385, 'snip': 112.637, 'grasp': 154.7, 'fisher': 0.056, 'plain': -0.049, 'l2_norm': 282.424, 'naswot': 5940.516, 'naswot_relu': 6330.893, 'tenas': 505.234, 'zico': 930.994}     | {'average_bitwidth': 32, 'memory_density': 1.0} | {'average_bitwidth': 6.4, 'fisher': 0.056, 'grad_norm': 63.385, 'grasp': 154.7, 'l2_norm': 282.424, 'naswot': 5940.516, 'naswot_relu': 6330.893, 'plain': -0.049, 'snip': 112.637, 'tenas': 505.234, 'zico': 930.994}     | {'train-loss': 0.362, 'train-accuracy': 87.646, 'train-per-time': 28.87, 'train-all-time': 346.445, 'test-loss': 0.442, 'test-accuracy': 85.44, 'test-per-time': 1.826, 'test-all-time': 21.915}  |
+| 71 |       93 | {'grad_norm': 12.603, 'snip': 25.026, 'grasp': 7.184, 'fisher': 0.001, 'plain': 0.014, 'l2_norm': 282.675, 'naswot': 6179.988, 'naswot_relu': 6546.469, 'tenas': 498.188, 'zico': 905.53}        | {'average_bitwidth': 32, 'memory_density': 1.0} | {'average_bitwidth': 6.4, 'fisher': 0.001, 'grad_norm': 12.603, 'grasp': 7.184, 'l2_norm': 282.675, 'naswot': 6179.988, 'naswot_relu': 6546.469, 'plain': 0.014, 'snip': 25.026, 'tenas': 498.188, 'zico': 905.53}        | {'train-loss': 0.23, 'train-accuracy': 92.256, 'train-per-time': 27.136, 'train-all-time': 325.634, 'test-loss': 0.347, 'test-accuracy': 88.47, 'test-per-time': 1.655, 'test-all-time': 19.865}  |
+| 72 |       94 | {'grad_norm': 123.959, 'snip': 204.49, 'grasp': 1364.309, 'fisher': 0.186, 'plain': 0.022, 'l2_norm': 334.087, 'naswot': 6054.468, 'naswot_relu': 6400.084, 'tenas': 500.343, 'zico': 1044.407}  | {'average_bitwidth': 32, 'memory_density': 1.0} | {'average_bitwidth': 6.4, 'fisher': 0.186, 'grad_norm': 123.959, 'grasp': 1364.309, 'l2_norm': 334.087, 'naswot': 6054.468, 'naswot_relu': 6400.084, 'plain': 0.022, 'snip': 204.49, 'tenas': 500.343, 'zico': 1044.407}  | {'train-loss': 0.371, 'train-accuracy': 87.35, 'train-per-time': 32.023, 'train-all-time': 384.271, 'test-loss': 0.447, 'test-accuracy': 85.07, 'test-per-time': 1.833, 'test-all-time': 21.991}  |
+| 73 |       97 | {'grad_norm': 118.526, 'snip': 201.888, 'grasp': 869.159, 'fisher': 0.297, 'plain': -0.015, 'l2_norm': 180.818, 'naswot': 5775.918, 'naswot_relu': 6130.91, 'tenas': 499.522, 'zico': 620.366}   | {'average_bitwidth': 32, 'memory_density': 1.0} | {'average_bitwidth': 6.4, 'fisher': 0.297, 'grad_norm': 118.526, 'grasp': 869.159, 'l2_norm': 180.818, 'naswot': 5775.918, 'naswot_relu': 6130.91, 'plain': -0.015, 'snip': 201.888, 'tenas': 499.522, 'zico': 620.366}   | {'train-loss': 0.832, 'train-accuracy': 70.642, 'train-per-time': 20.965, 'train-all-time': 251.582, 'test-loss': 0.842, 'test-accuracy': 70.44, 'test-per-time': 1.477, 'test-all-time': 17.729} |
+| 74 |       98 | {'grad_norm': 134.675, 'snip': 226.825, 'grasp': 1580.686, 'fisher': 0.449, 'plain': 0.07, 'l2_norm': 231.7, 'naswot': 5837.492, 'naswot_relu': 6201.968, 'tenas': 495.648, 'zico': 726.019}     | {'average_bitwidth': 32, 'memory_density': 1.0} | {'average_bitwidth': 6.4, 'fisher': 0.449, 'grad_norm': 134.675, 'grasp': 1580.686, 'l2_norm': 231.7, 'naswot': 5837.492, 'naswot_relu': 6201.968, 'plain': 0.07, 'snip': 226.825, 'tenas': 495.648, 'zico': 726.019}     | {'train-loss': 0.374, 'train-accuracy': 87.176, 'train-per-time': 22.321, 'train-all-time': 267.854, 'test-loss': 0.452, 'test-accuracy': 85.09, 'test-per-time': 1.438, 'test-all-time': 17.257} |
+| 75 |       99 | {'grad_norm': 99.299, 'snip': 164.011, 'grasp': 730.737, 'fisher': 0.231, 'plain': 0.066, 'l2_norm': 231.123, 'naswot': 5873.256, 'naswot_relu': 6238.937, 'tenas': 497.732, 'zico': 723.967}    | {'average_bitwidth': 32, 'memory_density': 1.0} | {'average_bitwidth': 6.4, 'fisher': 0.231, 'grad_norm': 99.299, 'grasp': 730.737, 'l2_norm': 231.123, 'naswot': 5873.256, 'naswot_relu': 6238.937, 'plain': 0.066, 'snip': 164.011, 'tenas': 497.732, 'zico': 723.967}    | {'train-loss': 0.374, 'train-accuracy': 87.176, 'train-per-time': 22.321, 'train-all-time': 267.854, 'test-loss': 0.452, 'test-accuracy': 85.09, 'test-per-time': 1.438, 'test-all-time': 17.257} |
+| 76 |      100 | {'grad_norm': 130.273, 'snip': 220.894, 'grasp': 1408.932, 'fisher': 0.418, 'plain': -0.019, 'l2_norm': 181.289, 'naswot': 5869.308, 'naswot_relu': 6220.832, 'tenas': 494.343, 'zico': 585.042} | {'average_bitwidth': 32, 'memory_density': 1.0} | {'average_bitwidth': 6.4, 'fisher': 0.418, 'grad_norm': 130.273, 'grasp': 1408.932, 'l2_norm': 181.289, 'naswot': 5869.308, 'naswot_relu': 6220.832, 'plain': -0.019, 'snip': 220.894, 'tenas': 494.343, 'zico': 585.042} | {'train-loss': 0.586, 'train-accuracy': 79.708, 'train-per-time': 19.708, 'train-all-time': 236.491, 'test-loss': 0.62, 'test-accuracy': 78.49, 'test-per-time': 1.342, 'test-all-time': 16.103}  |
+| 77 |      101 | {'grad_norm': 129.031, 'snip': 219.774, 'grasp': 1018.152, 'fisher': 0.321, 'plain': -0.015, 'l2_norm': 231.712, 'naswot': 5803.453, 'naswot_relu': 6143.805, 'tenas': 495.033, 'zico': 758.445} | {'average_bitwidth': 32, 'memory_density': 1.0} | {'average_bitwidth': 6.4, 'fisher': 0.321, 'grad_norm': 129.031, 'grasp': 1018.152, 'l2_norm': 231.712, 'naswot': 5803.453, 'naswot_relu': 6143.805, 'plain': -0.015, 'snip': 219.774, 'tenas': 495.033, 'zico': 758.445} | {'train-loss': 0.533, 'train-accuracy': 81.594, 'train-per-time': 26.528, 'train-all-time': 318.338, 'test-loss': 0.578, 'test-accuracy': 79.93, 'test-per-time': 1.671, 'test-all-time': 20.047} |
+| 78 |      103 | {'grad_norm': 91.61, 'snip': 157.652, 'grasp': 907.776, 'fisher': 0.347, 'plain': -0.017, 'l2_norm': 180.493, 'naswot': 5632.69, 'naswot_relu': 5965.419, 'tenas': 491.189, 'zico': 401.637}     | {'average_bitwidth': 32, 'memory_density': 1.0} | {'average_bitwidth': 6.4, 'fisher': 0.347, 'grad_norm': 91.61, 'grasp': 907.776, 'l2_norm': 180.493, 'naswot': 5632.69, 'naswot_relu': 5965.419, 'plain': -0.017, 'snip': 157.652, 'tenas': 491.189, 'zico': 401.637}     | {'train-loss': 0.551, 'train-accuracy': 80.82, 'train-per-time': 18.084, 'train-all-time': 217.003, 'test-loss': 0.587, 'test-accuracy': 79.53, 'test-per-time': 1.204, 'test-all-time': 14.447}  |
+| 79 |      104 | {'grad_norm': 85.424, 'snip': 144.764, 'grasp': 410.222, 'fisher': 0.157, 'plain': 0.044, 'l2_norm': 231.788, 'naswot': 5778.192, 'naswot_relu': 6114.418, 'tenas': 498.805, 'zico': 755.276}    | {'average_bitwidth': 32, 'memory_density': 1.0} | {'average_bitwidth': 6.4, 'fisher': 0.157, 'grad_norm': 85.424, 'grasp': 410.222, 'l2_norm': 231.788, 'naswot': 5778.192, 'naswot_relu': 6114.418, 'plain': 0.044, 'snip': 144.764, 'tenas': 498.805, 'zico': 755.276}    | {'train-loss': 0.533, 'train-accuracy': 81.594, 'train-per-time': 26.528, 'train-all-time': 318.338, 'test-loss': 0.578, 'test-accuracy': 79.93, 'test-per-time': 1.671, 'test-all-time': 20.047} |
+| 80 |      105 | {'grad_norm': 77.095, 'snip': 135.069, 'grasp': 576.965, 'fisher': 0.187, 'plain': -0.05, 'l2_norm': 129.691, 'naswot': 5574.868, 'naswot_relu': 5913.444, 'tenas': 498.821, 'zico': 403.216}    | {'average_bitwidth': 32, 'memory_density': 1.0} | {'average_bitwidth': 6.4, 'fisher': 0.187, 'grad_norm': 77.095, 'grasp': 576.965, 'l2_norm': 129.691, 'naswot': 5574.868, 'naswot_relu': 5913.444, 'plain': -0.05, 'snip': 135.069, 'tenas': 498.821, 'zico': 403.216}    | {'train-loss': 0.625, 'train-accuracy': 78.27, 'train-per-time': 14.477, 'train-all-time': 173.718, 'test-loss': 0.65, 'test-accuracy': 77.49, 'test-per-time': 1.089, 'test-all-time': 13.07}    |
+| 81 |      106 | {'grad_norm': 14.047, 'snip': 28.883, 'grasp': 9.763, 'fisher': 0.008, 'plain': 0.009, 'l2_norm': 129.709, 'naswot': 4995.333, 'naswot_relu': 5254.764, 'tenas': 81.951, 'zico': 223.099}        | {'average_bitwidth': 32, 'memory_density': 1.0} | {'average_bitwidth': 6.4, 'fisher': 0.008, 'grad_norm': 14.047, 'grasp': 9.763, 'l2_norm': 129.709, 'naswot': 4995.333, 'naswot_relu': 5254.764, 'plain': 0.009, 'snip': 28.883, 'tenas': 81.951, 'zico': 223.099}        | {'train-loss': 1.04, 'train-accuracy': 62.926, 'train-per-time': 18.552, 'train-all-time': 222.626, 'test-loss': 1.053, 'test-accuracy': 62.67, 'test-per-time': 1.263, 'test-all-time': 15.154}  |[0m
+[32mINFO    [0m [34mSearching is completed[0m
+[  0.95925827   9.72038007  -1.02152522  -0.23153353 -18.44735251
+  26.8201318    0.41697948 -11.67264131   1.14286332  -0.32804034]
+       fisher  grad_norm     grasp  ...      snip     tenas      zico
+0   -0.461286  -0.785989 -0.468103  ... -0.817953  0.239498 -0.799501
+1   -0.462356  -0.797174 -0.468447  ... -0.828712  0.249039 -0.776391
+2   -0.459141  -0.814700 -0.452438  ... -0.845221 -0.596561 -2.019077
+3   -0.456585  -0.802980 -0.459806  ... -0.837682 -0.671650 -2.029521
+4   -0.467169  -0.803457 -0.470446  ... -0.839383  0.064669 -0.684517
+..        ...        ...       ...  ...       ...       ...       ...
+102  0.629316   1.359832  0.183706  ...  1.397740  0.237373  0.824382
+103  1.273868   0.953752  0.987116  ...  0.979396  0.244119 -0.671179
+104  0.317778   0.823854  0.186179  ...  0.815128  0.251668  0.835077
+105  0.468809   0.648954  0.454594  ...  0.691558  0.251684 -0.664457
+106 -0.430666  -0.675020 -0.458460  ... -0.661860 -0.161523 -1.431630
+
+[107 rows x 10 columns]
+[80.64, 78.7, 59.81, 60.59, 86.03, 84.27, 87.32, 70.24, 85.18, 83.81, 87.95, 85.84, 81.03, 71.6, 86.58, 82.0, 84.47, 69.39, 85.4, 70.61, 73.13, 79.93, 79.3, 87.6, 85.07, 79.91, 84.9, 74.69, 83.28, 83.5, 81.76, 79.93, 79.46, 86.6, 72.05, 72.96, 69.02, 76.23, 84.65, 85.16, 61.27, 85.36, 75.88, 78.69, 63.52, 85.47, 87.26, 84.16, 85.24, 68.98, 75.07, 70.28, 83.92, 83.83, 85.84, 76.12, 88.74, 82.23, 77.08, 82.15, 79.64, 87.98, 70.28, 82.87, 82.52, 88.27, 80.22, 10.0, 80.27, 78.31, 69.53, 82.73, 82.73, 77.89, 78.83, 62.38, 74.53, 76.28, 88.34, 80.96, 79.54, 88.47, 83.38, 82.79, 87.24, 82.79, 88.47, 84.73, 83.62, 84.61, 74.77, 88.24, 85.44, 88.47, 85.07, 83.11, 84.04, 70.44, 85.09, 85.09, 78.49, 79.93, 76.18, 79.53, 79.93, 77.49, 62.67]
+79.30710280373836

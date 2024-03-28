@@ -73,7 +73,7 @@ class RunnerBasicEval(SWRunnerBase):
 
     def vision_cls_forward(self, batch, model):
         x, y = batch[0].to(self.accelerator), batch[1].to(self.accelerator)
-        logits = model(x)
+        _, logits = model(x)
         loss = torch.nn.functional.cross_entropy(logits, y)
         acc = self.metric(logits, y)
         self.loss(loss)
