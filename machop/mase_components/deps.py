@@ -17,11 +17,26 @@ MASE_HW_DEPS = {
     "scatter/scatter_top": ["scatter_top", "scatter", "priority_encoder"],
     "scatter/scatter_threshold": ["scatter", "priority_encoder"],
     "gather/gather": ["gather"],
-    "llmint/LLMint": ["llmint", "scatter", "gather", "linear", "priority_encoder", "cast", "common", "fixed_arithmetic"],
+    "llmint/LLMint": [
+        "llmint",
+        "scatter",
+        "gather",
+        "linear",
+        "priority_encoder",
+        "cast",
+        "common",
+        "fixed_arithmetic"
+    ],
     "activations/fixed_relu": [],
     "cast/fixed_rounding": ["cast"],
     "linear/fixed_linear": ["cast", "common", "fixed_arithmetic"],
-    "linear/fixed_2d_linear": ["cast", "common", "fixed_arithmetic", "matmul", "linear"],
+    "linear/fixed_2d_linear": [
+        "cast",
+        "common",
+        "fixed_arithmetic",
+        "matmul",
+        "linear"
+    ],
     "fixed_arithmetic/fixed_mult": [],
     "fixed_arithmetic/fixed_adder_tree_layer": [],
     "fixed_arithmetic/fixed_accumulator": ["common"],
