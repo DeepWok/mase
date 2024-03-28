@@ -1,15 +1,10 @@
+import wandb
 from ..base import SearchStrategyBase
 from .env import env_map, registered_env_map
 from pprint import pprint
 from stable_baselines3 import A2C, PPO, DDPG, SAC
 from stable_baselines3.common.env_util import make_vec_env
-from stable_baselines3.common.callbacks import (
-    CallbackList,
-    CheckpointCallback,
-    EvalCallback,
-    BaseCallback
-)
-import wandb
+from stable_baselines3.common.callbacks import CallbackList, CheckpointCallback, EvalCallback, BaseCallback
 
 algorithm_map = {
     "ppo": PPO,
@@ -23,76 +18,93 @@ class WandbCallback(BaseCallback):
         super(WandbCallback, self).__init__(verbose)
 
     def _on_step(self) -> bool:
-        # Retrieve the latest info dict from the environment
-        info = self.locals.get('infos')[-1]  # Assumes 'infos' contains info from the last step
-        # Log the metrics of interest
+        info = self.locals.get('infos')[-1]
         wandb.log(info)
         return True
 
 
 class StrategyRL(SearchStrategyBase):
     iterative = True
+    
     def _post_init_setup(self):
-        self.algorithm_name = self.config["algorithm"]
+        defaults = {
+            "algorithm": 'ppo',
+            "env": 'mixed_precision_paper',
+            "device": 'cuda',
+            "total_timesteps": 100000,
+            "n_steps": 32,
+            "n_envs": 4,
+            "eval_freq": 200,
+            "save_freq": 200,
+            "episode_max_len": 10,
+            "learning_rate": 2.5e-4,
+            "save_name": 'tmp_rl',
+        }
+        
+        self.algorithm_name = self.config.get("algorithm", defaults["algorithm"])
+        self.env_name = self.config.get("env", defaults["env"])
+        self.device = self.config.get("device", defaults["device"])
+        self.total_timesteps = self.config.get("total_timesteps", defaults["total_timesteps"])
+        self.n_steps = self.config.get("n_steps", defaults["n_steps"])
+        self.n_envs = self.config.get("n_envs", defaults["n_envs"])
+        self.eval_freq = self.config.get("eval_freq", defaults["eval_freq"])
+        self.save_freq = self.config.get("save_freq", defaults["save_freq"])
+        self.episode_max_len = self.config.get("episode_max_len", defaults["episode_max_len"])
+        self.learning_rate = self.config.get("learning_rate", defaults["learning_rate"])
+        self.save_name = self.config.get("save_name", defaults["save_name"])
+
+        self.env = env_map[self.env_name]
+        self.registered_env_name = registered_env_map[self.env_name]
         self.algorithm = algorithm_map[self.algorithm_name]
-        self.total_timesteps = self.config["total_timesteps"]
-        self.save_name = self.config["save_name"]
-        self.env = env_map[self.config["env"]]
-        self.device = self.config["device"]
-        self.n_steps = self.config["n_steps"]
-        self.n_envs = self.config["n_envs"]
-        self.eval_freq = self.config["eval_freq"]
-        self.save_freq = self.config["save_freq"]
-        self.episode_max_len = self.config["episode_max_len"]
-        self.learning_rate = self.config["learning_rate"]
-        self.registered_env_name = registered_env_map[self.config["env"]]
+
+    def _create_env(self, search_space):
+        env = make_vec_env(
+            self.registered_env_name, n_envs=self.n_envs, seed=0, 
+            env_kwargs={"config": self.config, "search_space": search_space , 
+            "sw_runner": self.sw_runner, "hw_runner": self.hw_runner, 
+            "data_module": self.data_module, "episode_max_len":self.episode_max_len}
+            )
+        return env
+
+    def _initialize_callbacks(self, env):
+        wandb.init(project="Mase-RL", entity="m-pl-braganca")
+        wandb_callback = WandbCallback()
+        checkpoint_callback = CheckpointCallback(save_freq=self.save_freq, save_path="./logs/")
+        eval_callback = EvalCallback(
+            env,
+            best_model_save_path="./logs/best_model",
+            log_path="./logs/results",
+            eval_freq=self.eval_freq,
+        )
+        callbacks = CallbackList([checkpoint_callback, eval_callback, wandb_callback])
+        return callbacks
 
     def search(self, search_space):
-        # Check if load_name is specified in config and load the model if so
         if 'load_name' in self.config:
             model = self.algorithm.load(self.config['load_name'], env=self.env(config=self.config, search_space=search_space, sw_runner=self.sw_runner, hw_runner=self.hw_runner, data_module=self.data_module, episode_max_len=self.episode_max_len))
             print(f"Model loaded from {self.config['load_name']}. Skipping training.")
-        else:
-            #env =self.env(config=self.config, search_space=search_space, sw_runner=self.sw_runner, hw_runner=self.hw_runner, data_module=self.data_module, episode_max_len=self.episode_max_len)
-            env = make_vec_env(
-                self.registered_env_name, n_envs=self.n_envs, seed=0, 
-                env_kwargs={"config": self.config, "search_space": search_space , 
-                "sw_runner": self.sw_runner, "hw_runner": self.hw_runner, 
-                "data_module": self.data_module, "episode_max_len":self.episode_max_len}
-                )
-            
-            wandb.init(project="Mase-RL", entity="m-pl-braganca")
-            wandb_callback = WandbCallback()
-            checkpoint_callback = CheckpointCallback(save_freq=self.save_freq, save_path="./logs/")
-            eval_callback = EvalCallback(
-                env,
-                best_model_save_path="./logs/best_model",
-                log_path="./logs/results",
-                eval_freq=self.eval_freq,
-            )
-            callback = CallbackList([checkpoint_callback, eval_callback, wandb_callback])
 
-            if self.config["env"]=="mixed_precision_paper":
-                model = self.algorithm(
-                    "MlpPolicy",
-                    env,
-                    verbose=1,
-                    device=self.device,
-                    tensorboard_log="./logs/",
-                    n_steps=self.n_steps,
-                    learning_rate=self.learning_rate,
-                )
-            
-            else:
-                model = self.algorithm(
-                    "MultiInputPolicy",
-                    env,
-                    verbose=1,
-                    device=self.device,
-                    tensorboard_log="./logs/",
-                    n_steps=self.n_steps,
-                    learning_rate=self.learning_rate,
-                )
+        else:
+            env = self._create_env(search_space)
+            callback = self._initialize_callbacks(env)
+
+            algorithm_kwargs = {
+                "verbose": 1,
+                "device": self.device,
+                "tensorboard_log": "./logs/",
+                "learning_rate": self.learning_rate,
+            }
+
+            if self.algorithm_name != "ddpg":
+                algorithm_kwargs["n_steps"] = self.n_steps
+
+            policy = "MlpPolicy" if self.config["env"] == "mixed_precision_paper" else "MultiInputPolicy"
+
+            model = self.algorithm(
+                policy,
+                env,
+                **algorithm_kwargs
+            )
 
             vec_env = model.get_env()
             model.learn(
@@ -113,5 +125,3 @@ class StrategyRL(SearchStrategyBase):
             obs, reward, done, info = vec_env.step(action)
 
         pprint(obs)
-
-        #return obs["cost"], obs, model

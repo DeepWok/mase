@@ -76,7 +76,7 @@ bias_frac_width = ["NA"]
 [search.strategy]
 name = "rl"
 algorithm = 'ppo'
-env = 'mixed_precision'
+env = 'mixed_precision_paper'
 device = 'cuda'
 total_timesteps = 100000
 n_steps = 32
