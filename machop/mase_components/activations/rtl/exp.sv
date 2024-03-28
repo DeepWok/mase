@@ -30,7 +30,7 @@ module exp #(
   logic [DATA_IN_0_PRECISION_1-1:0] a_imprecise;  //store LSB fractional bits other than the MSB 3 bits
   logic [LUT_1_PRECISION_0-1:0] exp_precise_1;  //negative exponential of a_precise_1
   logic [LUT_2_PRECISION_0-1:0] exp_precise_2;  //negative exponential of a_precise_2
-  logic [IMPRECISE_PRECISION_0-1:0] exp_imprecise;   //negative exponential of a_imprecise
+  logic [IMPRECISE_PRECISION_0-1:0] exp_imprecise;  //negative exponential of a_imprecise
   logic [PDT_WIDTH-1:0] product;  //final product of all part exponentials
 	
     always_comb begin
