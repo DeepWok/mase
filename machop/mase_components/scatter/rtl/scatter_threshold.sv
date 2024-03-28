@@ -1,6 +1,5 @@
 `timescale 1ns / 1ps
 
-
 module scatter_threshold #(
     parameter PRECISION = 16,
     parameter TENSOR_SIZE_DIM = 8,
