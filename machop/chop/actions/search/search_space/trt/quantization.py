@@ -17,8 +17,8 @@ from .....passes.graph.interface.tensorrt.quantize import tensorrt_engine_interf
 
 DEFAULT_QUANTIZATION_CONFIG = {
     "config": {
-        "precision": 'int8',
-        "calibrators": 'percentile',
+        "precision": "int8",
+        "calibrators": "percentile",
         "percentile": 99.9,
         "num_calibration_batches": 10,
     }
@@ -121,11 +121,11 @@ class GraphSearchSpaceTRTMixedPrecisionPTQ(SearchSpaceBase):
         config["default"] = self.default_config
         config["by"] = self.config["setup"]["by"]
 
-        config['model'] = self.config["setup"]["model"]
-        config['dataset'] = self.config["setup"]["dataset"]
-        config['task'] = self.config["setup"]["task"]
+        config["model"] = self.config["setup"]["model"]
+        config["dataset"] = self.config["setup"]["dataset"]
+        config["task"] = self.config["setup"]["task"]
 
-        config['data_module'] = self.data_module
-        config['accelerator'] = self.accelerator
+        config["data_module"] = self.data_module
+        config["accelerator"] = self.accelerator
 
         return config

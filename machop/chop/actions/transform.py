@@ -91,8 +91,8 @@ def transform(
                 ori_graph = deepcopy_mase_graph(graph)
                 pass_save_dir = save_dir / "tensorrt"
 
-                pass_config['task'] = task
-                pass_config['dataset'] = task
+                pass_config["task"] = task
+                pass_config["dataset"] = config["dataset"]
                 pass_config["batch_size"] = config["batch_size"]
                 pass_config["model"] = config["model"]
                 pass_config["data_module"] = data_module
@@ -146,7 +146,7 @@ def transform(
                 # crop the train dataloader to behave as the calibrated dataloader
                 pass_config["data_module"].train_dataloader 
 
-                pass_config['task'] = task
+                pass_config["task"] = task
                 pass_config["accelerator"] = accelerator.type
                 pass_config["batch_size"] = config["batch_size"]
                 pass_config["model"] = config["model"]
@@ -159,20 +159,20 @@ def transform(
                 graph, runtime_meta = PASSES["onnxruntime"](graph, pass_args=pass_config)
 
                 # if user has set runtime_anaylsis, run the runtime analysis pass
-                if 'runtime_analysis' not in pass_config:
+                if "runtime_analysis" not in pass_config:
                     break
 
                 # Extract the 'runtime_analysis' dictionary by stripping the config  
-                runtime_analysis = pass_config.pop('runtime_analysis', {})
+                runtime_analysis = pass_config.pop("runtime_analysis", {})
                 pass_config.update(runtime_analysis)
 
-                original_graph_analysis = pass_config.get('original_graph_analysis', True)
+                original_graph_analysis = pass_config.get("original_graph_analysis", True)
                 if original_graph_analysis:
                     logger.info("Performing runtime analysis on original graph...")
                     _, _ = PASSES["runtime_analysis"](
                         ori_graph, pass_args=pass_config
                     )
-                optimized_graph_analysis = pass_config.get('optimized_graph_analysis', True)
+                optimized_graph_analysis = pass_config.get("optimized_graph_analysis", True)
                 if optimized_graph_analysis:
                     logger.info("Performing runtime analysis on onnx-optimized graph...")
                     _, _ = PASSES["runtime_analysis"](
@@ -180,10 +180,10 @@ def transform(
                     )
 
                 # Peform runtime analysis on quantized forms if appropriate
-                quantized_graph_analysis = pass_config.get('quantized_graph_analysis', True)
+                quantized_graph_analysis = pass_config.get("quantized_graph_analysis", True)
                 if quantized_graph_analysis:
                     try:
-                        quant_types = pass_config['default']['config']['quantize_types']
+                        quant_types = pass_config["default"]["config"]["quantize_types"]
                     except KeyError:
                         quant_types = []
                     for quant_type in quant_types:

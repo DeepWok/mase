@@ -1,11 +1,15 @@
 # basics
-model = "mobilenetv3_large"
+model = "mobilenetv3_small"
 dataset = "mnist"
 task = "cls"
+# pretrained = true
+
+load_name = "../mase_output/mobilenetv3-small_pre-trained_mnist/mobilenetv3_small_mnist_0.997.ckpt"
+load_type = "pl"
 
 max_epochs = 10
 batch_size = 64
-accelerator = "gpu"
+accelerator = "cpu"
 learning_rate = 1e-3
 
 [passes.onnxruntime.default.config]

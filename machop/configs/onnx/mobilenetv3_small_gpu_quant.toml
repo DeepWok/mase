@@ -2,7 +2,10 @@
 model = "mobilenetv3_small"
 dataset = "mnist"
 task = "cls"
-pretrained = true
+# pretrained = true
+
+load_name = "../mase_output/mobilenetv3-small_pre-trained_mnist/mobilenetv3_small_mnist_0.997.ckpt"
+load_type = "pl"
 
 max_epochs = 10
 batch_size = 64

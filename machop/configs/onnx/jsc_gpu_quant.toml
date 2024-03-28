@@ -3,6 +3,9 @@ model = "jsc-toy"
 dataset = "jsc"
 task = "cls"
 
+load_name = "../mase_output/jsc-toy_cls_jsc/software/training_ckpts/best.ckpt"
+load_type = "pl"
+
 max_epochs = 10
 batch_size = 64
 accelerator = "gpu"

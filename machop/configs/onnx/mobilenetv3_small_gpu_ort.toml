@@ -3,12 +3,12 @@ model = "jsc-toy"
 dataset = "jsc"
 task = "cls"
 
-load_name = "../mase_output/jsc-toy_cls_jsc/software/training_ckpts/best.ckpt"
+load_name = "../mase_output/mobilenetv3-small_pre-trained_mnist/mobilenetv3_small_mnist_0.997.ckpt"
 load_type = "pl"
 
 max_epochs = 10
 batch_size = 64
-accelerator = "cpu"
+accelerator = "gpu"
 learning_rate = 1e-3
 
 [passes.onnxruntime.runtime_analysis]

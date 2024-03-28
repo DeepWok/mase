@@ -3,6 +3,9 @@ model = "vgg7"
 dataset = "cifar10"
 task = "cls"
 
+load_name = "../mase_output/vgg7-pre-trained/test-accu-0.9332.ckpt"
+load_type = "pl"
+
 max_epochs = 10
 batch_size = 64
 accelerator = "gpu"
