@@ -15,7 +15,9 @@ class MixedOp(nn.Module):
         for idx, primitive in enumerate(PRIMITIVES):
             op = OPS[primitive](C, C, stride, False)
             self._ops.append(op)
-            assert primitive not in self.name2idx, '{:} has already in'.format(primitive)
+            assert primitive not in self.name2idx, '{:} has already in'.format(
+                primitive
+            )
             self.name2idx[primitive] = idx
 
     def forward(self, x, weights, op_name):
@@ -30,7 +32,18 @@ class MixedOp(nn.Module):
 
 
 class SearchCell(nn.Module):
-    def __init__(self, steps, multiplier, C_prev_prev, C_prev, C, reduction, reduction_prev, PRIMITIVES, use_residual):
+    def __init__(
+        self, 
+        steps, 
+        multiplier, 
+        C_prev_prev, 
+        C_prev, 
+        C, 
+        reduction, 
+        reduction_prev, 
+        PRIMITIVES, 
+        use_residual
+    ):
         super(SearchCell, self).__init__()
         self.reduction = reduction
         self.PRIMITIVES = deepcopy(PRIMITIVES)
@@ -46,18 +59,22 @@ class SearchCell(nn.Module):
 
         self._ops = nn.ModuleList()
         for i in range(self._steps):
-            for j in range(2+i):
+            for j in range(2 + i):
                 stride = 2 if reduction and j < 2 else 1
                 op = MixedOp(C, stride, self.PRIMITIVES)
                 self._ops.append(op)
 
     def extra_repr(self):
-        return ('{name}(residual={_use_residual}, steps={_steps}, multiplier={_multiplier})'.format(name=self.__class__.__name__, **self.__dict__))
+        return ('{name}(residual={_use_residual}, steps={_steps}, multiplier={_multiplier})'.format(
+            name=self.__class__.__name__, **self.__dict__
+        ))
 
     def forward(self, S0, S1, weights, connect, adjacency, drop_prob, modes):
         if modes[0] is None:
             if modes[1] == 'normal':
-                output = self.__forwardBoth(S0, S1, weights, connect, adjacency, drop_prob)
+                output = self.__forwardBoth(
+                    S0, S1, weights, connect, adjacency, drop_prob
+                )
             elif modes[1] == 'only_W':
                 output = self.__forwardOnlyW(S0, S1, drop_prob)
         else:

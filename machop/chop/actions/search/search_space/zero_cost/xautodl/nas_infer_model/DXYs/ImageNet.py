@@ -11,7 +11,7 @@ class NetworkImageNet(nn.Module):
         super(NetworkImageNet, self).__init__()
         self._C = C
         self._layerN = N
-        layer_channels = [C] * N + [C*2] + [C*2] * N + [C*4] + [C*4] * N
+        layer_channels = [C] * N + [C * 2] + [C * 2] * N + [C * 4] + [C * 4] * N
         layer_reductions = [False] * N + [True] + [False] * N + [True] + [False] * N
         self.stem0 = nn.Sequential(
             nn.Conv2d(3, C // 2, kernel_size=3, stride=2, padding=1, bias=False),
@@ -32,11 +32,13 @@ class NetworkImageNet(nn.Module):
         self.cells = nn.ModuleList()
         self.auxiliary_index = None
         for i, (C_curr, reduction) in enumerate(zip(layer_channels, layer_reductions)):
-            cell = InferCell(genotype, C_prev_prev, C_prev, C_curr, reduction, reduction_prev)
+            cell = InferCell(
+                genotype, C_prev_prev, C_prev, C_curr, reduction, reduction_prev
+            )
             reduction_prev = reduction
             self.cells.append(cell)
             C_prev_prev, C_prev = C_prev, cell._multiplier * C_curr
-            if reduction and C_curr == C*4:
+            if reduction and C_curr == C * 4:
                 C_to_auxiliary = C_prev
                 self.auxiliary_index = i
 
@@ -53,7 +55,9 @@ class NetworkImageNet(nn.Module):
         self.drop_path_prob = drop_path_prob
 
     def extra_repr(self):
-        return ('{name}(C={_C}, N=[{_layerN}, {_NNN}], aux-index={auxiliary_index}, drop-path={drop_path_prob})'.format(name=self.__class__.__name__, **self.__dict__))
+        return ('{name}(C={_C}, N=[{_layerN}, {_NNN}], aux-index={auxiliary_index}, drop-path={drop_path_prob})'.format(
+            name=self.__class__.__name__, **self.__dict__
+        ))
 
     def get_message(self):
         return self.extra_repr()

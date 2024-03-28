@@ -38,7 +38,7 @@ from .....passes.graph.utils import (
     get_mase_op,
     get_mase_type,
     get_node_actual_target,
-    get_parent_name
+    get_parent_name,
 )
 from ..utils import flatten_dict, unflatten_dict
 from collections import defaultdict
@@ -60,8 +60,11 @@ DEFAULT_ZERO_COST_ARCHITECTURE_CONFIG = {
         "N": 5,
         "op_0_0": 0,
         "op_1_0": 4,
-        "op_2_0": 2, "op_2_1": 1,
-        "op_3_0": 2, "op_3_1": 1, "op_3_2": 1,
+        "op_2_0": 2, 
+        "op_2_1": 1,
+        "op_3_0": 2,
+        "op_3_1": 1,
+        "op_3_2": 1,
         "number_classes": 10
     }
 }
@@ -90,10 +93,10 @@ class ZeroCostProxy(SearchSpaceBase):
         This method rebuilds the model based on the sampled configuration. It also sets the model to evaluation or training mode based on the is_eval_mode parameter.
         It queries the NAS-Bench-201 API for the architecture performance and uses the returned architecture to rebuild the model.
         """
-        
+
         print("\n=========sampled_config===============")
         print(sampled_config)
-        
+
         self.model.to(self.accelerator)
         if is_eval_mode:
             self.model.eval()
@@ -116,7 +119,7 @@ class ZeroCostProxy(SearchSpaceBase):
         print("results")
         print(results)
         data = api.get_more_info(index, nasbench_dataset)
-        
+
         model_arch = get_cell_based_tiny_net(nas_config)
         model_arch = model_arch.to(self.accelerator)
 
@@ -131,7 +134,7 @@ class ZeroCostProxy(SearchSpaceBase):
         """
         Build the search space for zero-cost
         """
-        
+
         choices = {}
         choices["nas_zero_cost"] = self.config["nas_zero_cost"]["config"]
 
@@ -144,7 +147,7 @@ class ZeroCostProxy(SearchSpaceBase):
         # flatten the choices and choice_lengths
         # self.choices_flattened = {}
         flatten_dict(choices, flattened=self.choices_flattened)
-        
+
         self.choice_lengths_flattened = {
             k: len(v) for k, v in self.choices_flattened.items()
         }
@@ -159,26 +162,28 @@ class ZeroCostProxy(SearchSpaceBase):
         config = unflatten_dict(flattened_config)
         config["default"] = self.default_config
         return config
-    
+
     # def build_search_space(self, config_all):
     #     # choises = {}
-        
     #     self.choices_flattened = generate_configs(config_all)
-        
     #     self.choice_lengths_flattened = {
     #         k: len(v) for k, v in self.choices_flattened.items()
     #     }
+
 
 def instantiate_linear(in_features, out_features, bias):
     if bias is not None:
         bias = True
     return nn.Linear(in_features=in_features, out_features=out_features, bias=bias)
 
+
 def instantiate_relu(inplace):
     return ReLU(inplace)
 
+
 def instantiate_batchnorm(num_features, eps, momentum, affine, track_running_stats):
     return nn.BatchNorm1d(num_features, eps, momentum, affine, track_running_stats)
+
 
 def instantiate_conv2d(
     in_channels, out_channels, kernel_size, stride, padding, dilation, groups, bias
@@ -192,12 +197,14 @@ def instantiate_conv2d(
         dilation=dilation,
         groups=groups,
         bias=bias,
-        padding_mode='same',
+        padding_mode="same",
         device=None,
         dtype=None,
     )
 
+
 import itertools
+
 
 def generate_configs(config_dict):
     """
@@ -209,12 +216,13 @@ def generate_configs(config_dict):
     C = config_dict['C']
     N = config_dict['N']
     num_classes = config_dict['number_classes']
-    op_map = {0:'none', 
-                1:'skip_connect', 
-                2:'nor_conv_3x3', 
-                3:'nor_conv_1x1', 
-                4:'avg_pool_3x3'
-                }
+    op_map = {
+        0:'none', 
+        1:'skip_connect', 
+        2:'nor_conv_3x3', 
+        3:'nor_conv_1x1', 
+        4:'avg_pool_3x3'
+    }
 
     ### generate combination
     arch_str = ""
@@ -227,7 +235,7 @@ def generate_configs(config_dict):
             arch_str += op_str + "|"
         if target_neuro < 3:
             arch_str += "+"
-    
+
     config = {
         "name": name,
         "C": C,

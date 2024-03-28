@@ -7,6 +7,7 @@ import torch.nn as nn
 from copy import deepcopy
 from ....xautodl.models.cell_operations import OPS
 
+
 # Cell for NAS-Bench-201
 class InferCell(nn.Module):
     def __init__(
@@ -22,7 +23,7 @@ class InferCell(nn.Module):
             node_info = genotype[i - 1]
             cur_index = []
             cur_innod = []
-            for (op_name, op_in) in node_info:
+            for op_name, op_in in node_info:
                 if op_in == 0:
                     layer = OPS[op_name](
                         C_in, C_out, stride, affine, track_running_stats

@@ -111,9 +111,9 @@ def search(
                 "True Accuracy": strategy.zc_true_accuracy,
             }
         )
+        
+        # strategy.zc_proxy.to_excel("/home/xz2723/mase_xinyi/machop/results/proxy_4.xlsx")
+        # sorted_results.to_excel("/home/xz2723/mase_xinyi/machop/results/sorted_results_4.xlsx")
 
         sorted_results = results.sort_values(by="Predicted_Accuracy", ascending=False)
         logger.info("Sorted Results:\n%s", sorted_results)
-
-        # strategy.zc_proxy.to_excel("/home/xz2723/mase_xinyi/machop/results/proxy_4.xlsx")
-        # sorted_results.to_excel("/home/xz2723/mase_xinyi/machop/results/sorted_results_4.xlsx")

@@ -87,14 +87,14 @@ class CubicSFunc(StaticFunc):
     def __call__(self, x):
         self.check_valid()
         return (
-            self._params[0] * x ** 3
-            + self._params[1] * x ** 2
+            self._params[0] * x**3
+            + self._params[1] * x**2
             + self._params[2] * x
             + self._params[3]
         )
 
     def _getitem(self, x, weights):
-        return weights[0] * x ** 3 + weights[1] * x ** 2 + weights[2] * x + weights[3]
+        return weights[0] * x**3 + weights[1] * x**2 + weights[2] * x + weights[3]
 
     def __repr__(self):
         return "({a} * {x}^3 + {b} * {x}^2 + {c} * {x} + {d})".format(
@@ -116,18 +116,18 @@ class QuarticSFunc(StaticFunc):
     def __call__(self, x):
         self.check_valid()
         return (
-            self._params[0] * x ** 4
-            + self._params[1] * x ** 3
-            + self._params[2] * x ** 2
+            self._params[0] * x**4
+            + self._params[1] * x**3
+            + self._params[2] * x**2
             + self._params[3] * x
             + self._params[4]
         )
 
     def _getitem(self, x, weights):
         return (
-            weights[0] * x ** 4
-            + weights[1] * x ** 3
-            + weights[2] * x ** 2
+            weights[0] * x**4
+            + weights[1] * x**3
+            + weights[2] * x**2
             + weights[3] * x
             + weights[4]
         )
