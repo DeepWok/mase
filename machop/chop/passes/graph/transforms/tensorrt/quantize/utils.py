@@ -368,7 +368,7 @@ def prepare_save_path(config, method: str, suffix: str):
     root = Path(__file__).resolve().parents[7]
     current_date = datetime.now().strftime("%Y-%m-%d")
     model_dir = f'{config["model"]}_{config["task"]}_{config["dataset"]}_{current_date}'
-    save_dir = root / f"mase_output/tensorrt/quantization/{method}" / current_date
+    save_dir = root / f"mase_output/tensorrt/quantization/{model_dir}" / current_date
     save_dir.mkdir(parents=True, exist_ok=True)
 
     existing_versions = len(os.listdir(save_dir))
@@ -378,7 +378,6 @@ def prepare_save_path(config, method: str, suffix: str):
     save_dir.mkdir(parents=True, exist_ok=True)
 
     return save_dir / f"model.{suffix}"
-
 
 def check_for_value_in_dict(d, value):
     """Checks if a value is in a hierarchical dictionary."""

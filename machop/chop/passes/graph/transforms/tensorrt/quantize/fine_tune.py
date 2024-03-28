@@ -45,15 +45,15 @@ def tensorrt_fine_tune_transform_pass(graph, pass_args=None):
     The resulting fine-tuned model checkpoints are saved in the following directory structure, facilitating easy access and version control:
 
     - mase_output
-    - tensorrt
-    - model_task_dataset_date
-        - quantization
-        - cache
-        - ckpts
-            - fine_tuning
-        - json
-        - onnx
-        - trt
+        - tensorrt
+            - quantization
+                - model_task_dataset_date
+                    - cache
+                    - ckpts
+                        - fine_tuning
+                    - json
+                    - onnx
+                    - trt
 
     Example of usage:
 

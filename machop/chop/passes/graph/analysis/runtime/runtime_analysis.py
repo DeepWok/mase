@@ -211,7 +211,7 @@ class RuntimeAnalysis():
 
     def infer_trt_cuda(self, trt_context, input_data):
         bufferH = []
-        bufferH.append(np.ascontiguousarray(input_data.cuda()))
+        bufferH.append(np.ascontiguousarray(input_data))
         for i in range(self.n_Input, self.num_io):
             bufferH.append(np.empty(self.context.get_tensor_shape(self.lTensorName[i]), dtype=trt.nptype(self.engine.get_tensor_dtype(self.lTensorName[i]))))
         bufferD = []

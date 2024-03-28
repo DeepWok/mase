@@ -39,6 +39,19 @@ Runtime frameworks such as ONNX (Open Neural Network Exchange) Runtime and Nvidi
 
 ONNXRT offers  extensive hardware support, accommodating not just NVIDIA GPUs but also CPUs, AMD GPUs, and other accelerators, thus it is an ideal choice if you're working without a NVIDIA GPU. Additionally, ONNXRT has high interoperability, allowing for model conversions through the ONNX framework, such as from PyTorch to TensorFlow. However, NVIDIA has significantly optimized TensorRT specifically for their devices, achieving higher throughput and lower latency compared to ONNXRT.
 
+### Precision Support
+
+| Precision Type | ONNXRT | TensorRT |
+|----------------|:------:|:--------:|
+| int8           | ✅     | ✅       |
+| uint8          | ✅     | ❌       |
+| int16          | ✅     | ❌       |
+| uint16         | ✅     | ❌       |
+| fp16           | ✅     | ✅       |
+| fp32           | ✅     | ✅       |
+
+ONNXRT supports a wider range of precisions, including unsigned data types which can be beneficial for certain models and applications that rely on non-negative data values. This inclusivity enhances ONNXRT's flexibility across various computational tasks. TensorRT, while not supporting unsigned integers, focuses on optimizing the most commonly used precisions in deep learning (int8, fp16, fp32) for NVIDIA GPUs. This specialization results in higher performance on NVIDIA hardware but limits versatility compared to ONNXRT.
+
 ##  <img src="https://raw.githubusercontent.com/unifyai/unifyai.github.io/main/img/externally_linked/related_work/vendor_specific_apis/tensorrt.png" width="20" height="20"> TensorRT
 
 **Module Support** 
@@ -53,11 +66,30 @@ ONNXRT offers  extensive hardware support, accommodating not just NVIDIA GPUs bu
 
 Currently, Pytorch-Quantization only supports the modules above, however custom quantized module can be made, find out more [here](https://docs.nvidia.com/deeplearning/tensorrt/pytorch-quantization-toolkit/docs/index.html#document-tutorials/creating_custom_quantized_modules).
 
-**Precision** 
+##  <img src="../imgs/ONNX_logo.png" width="20" height="20"> ONNXRT
+For more detailed information on model quantization and optimization with ONNX Runtime, visit the [ONNX Runtime documentation](https://onnxruntime.ai/docs/).
+## Module Support
 
-The supported modules can be converted to FP32, fp16, or int8.
+| Layer       | Modules                      |
+|-------------|------------------------------|
+| Linear      | Linear                       |
+| Convolution | Conv1d, Conv2d, Conv3d       |
+| Transpose Convolution | ConvTranspose1d, ConvTranspose2d, ConvTranspose3d |
+| Pooling (Max) | MaxPool1d, MaxPool2d, MaxPool3d |
+| Pooling (Average) | AvgPool1d, AvgPool2d, AvgPool3d |
+| LSTM        | LSTM, LSTMCell               |
+| RNN         | RNN, GRU, RNNCell, GRUCell   |
+| Activation  | ReLU, Sigmoid, Tanh          |
+| Normalization | BatchNorm1d, BatchNorm2d, BatchNorm3d |
+| Embedding   | Embedding, EmbeddingBag      |
 
-Mixed precision is also supported, both for layerwise (by name) and typewise (by type). This means that you could, for example, quantize a CNN by setting all convolutional layers to fp16, and set the linear layers to int8 (typewise) or by setting all but the last two layers to int8. 
+ONNX Runtime supports a comprehensive array of modules for constructing neural networks, including linear transformations, various types of convolutions and pooling, recurrent neural network modules, activation functions, normalization layers, and embeddings. Custom operators can also be defined for specialized or unsupported operations. 
+
+> However, some nodes or modules may only be compatible on certain hardware i.e. supported on CPU and not on GPU or vice versa.
+
+### Mixed Precision
+
+Mixed precision quantization is also supported, however it is an automatic procedure and cannot currently be controlled layerwise or typewise. See the [How it Works ONNX Section](#onnxrt) to find out more.
 
 ## ⚙️ How It Works
 
@@ -98,25 +130,63 @@ The fine tuned checkpoints are stored in the ckpts/fine_tuning folder:
 mase_output
 └── tensorrt
     └── quantization
-        ├── cache
-        ├── ckpts
-        │   └── fine_tuning
-        ├── json
-        ├── onnx
-        └── trt
+        └── model_task_dataset_date
+          ├── cache
+          ├── ckpts
+          │   └── fine_tuning
+          ├── json
+          ├── onnx
+          └── trt
 ```
 
 **TensorRT Quantization**
 
-After QAT, we are now ready to convert the model to a tensorRT engine so that it can be run with the superior inference speeds. To do so, we use the `tensorrt_engine_interface_pass` which converts the `MaseGraph`'s model from a Pytorch one to an ONNX format as an intermediate stage of the conversion.
+After QAT, the next step is to convert the model to a tensorRT engine so that it can be run with the superior inference speeds. To do so, we use the `tensorrt_engine_interface_pass` which converts the `MaseGraph`'s model from a Pytorch one to an ONNX format as an intermediate stage of the conversion.
 
 During the conversion process, the `.onnx` and `.trt` files are stored to their respective folders shown above. This means that the `.onnx` files can be utilised for other model types and does not need to be just an unutilized, intermediary step.
 
 This interface pass returns a dictionary containing the `onnx_path` and `trt_engine_path`.
 
-**Performance Analysis**
-To showcase the improved inference speeds and to evaluate accuracy and other performance metrics, the `runtime_analysis_pass` can be used. The pass can take a MaseGraph as an input, as well as an ONNX graph. For this comparison, we will first run the analysis pass on the original unquantized model and then on the int8 quantized model.
+### ONNXRT
+We may quantize either using INT8, UINT8, INT16, UINT16 or FP16 or INT8 by setting the `precision` parameter in `passes.onnxruntime.default.config` to `'int8'`, `'uint8'`, `'int16'`, `'uint16'` or `'FP16'` respectively. INT8 and UINT8 quantization will show the most notable latency improvements but is more likely to lower performance. 
 
+> N.B. Some modules may not be supported for some quantization types above. Please refer [here](https://onnxruntime.ai/docs/) for more information.
+
+There are three types of quantization for ONNXRT and can be set in `onnxruntime.default.config` under `quantization_types`. The differences of the first two are for how they calibrate i.e. set the scale and zero points which are only relevant for integer based quantization:
+- **Static Quantization**:
+    - The scale and zero point of activations are calculated in advance (offline) using a calibration data set.
+    - The activations have the same scale and zero point during each forward pass.
+    - The `num_calibration_batches` parameter must also be set to ensure calibration is tested on a subset of the training dataset. A larger subset will be beneficial for calibrating the amaxes and may improve accuracy, however it will result in a longer calibration time.
+- **Dynamic Quantization**:
+    - The scale and zero point of activations are calculated on-the-fly (online) and are specific for each forward pass.
+    - This approach is more accurate but introduces extra computational overhead
+
+The `onnx_runtime_interface_pass` pass also supports mixed precision. This is an automatic only procedure, where ONNXRT finds a minimal set of ops to skip while retaining a certain level of accuracy, converting most of the ops to float16 but leaving some in float32. 
+- **Auto Mixed Precision Quantization**:
+    - Automatically adjusts between FP16 and FP32 precisions to retain certain level of accuracy
+    - The `precision` parameter does not need to be set in the config since the whole process is automatic.
+    - Unfortunately, this process is currently only supported on GPU.
+    - This approach is most beneficial when INT8 or FP16 exclusive quantizations (static or dynamic) are giving poor results.
+
+All three methodolgies first pre-procsses the model before quantization adding further optimizations. This intermidate model is stored to the `pre-processed` directory. 
+
+For this example, we will set the `precision` to `'uint8'` (since `ConvInteger` node is not currently supported for `'int8'` on ONNXRT GPU execution provider). 
+
+We will also set the `precision_types` to `['static', 'dynamic', 'auto']` to compare all three quantization methods, whilst keeping the other settings the exact same for a fair comparison against the optimized `vgg7` model used in the previous section.
+
+The models are also stored in the directory:
+```
+mase_output
+└── onnxrt
+    └── model_task_dataset_date
+        ├── optimized
+        ├── pre_processed
+        ├── static_quantized
+        └── dynamic_quantized
+```
+
+### Performance Analysis
+To showcase the improved inference speeds and to evaluate accuracy, latency, power consumption and other performance metrics, the `runtime_analysis_pass` can be used. The pass can take a MaseGraph as an input, as well as a path to a TensorRT Engine or ONNX model. Inference will occur on the selected model either on the cpu or gpu depending on the config. 
 
 ## 🚀 Getting Started
 The environment setup during the [MASE installation](../../README.md) either through Docker or Conda will have you covered, there are no other requirements. 
@@ -128,6 +198,6 @@ The procedure in the [How It Works Section](#⚙️-how-it-works) can be acompli
 ```
 
 ### Tutorials
-We strongly recommend you look through the dedicated tutorials which walk you through the process of utilising MaseRT:
-- [TensorRT Tutorial](/docs/tutorials/tensorrt/tensorRT_quantization_tutorial.ipynb) 
-- [ONNXRT Tutorial](/docs/tutorials/onnxrt/onnxrt_quantization_tutorial.ipynb)
+>We strongly recommend you look through the dedicated tutorials which walk you through the process of utilising MaseRT:
+>- [TensorRT Tutorial](/docs/tutorials/tensorrt/tensorRT_quantization_tutorial.ipynb) 
+>- [ONNXRT Tutorial](/docs/tutorials/onnxrt/onnxrt_quantization_tutorial.ipynb)

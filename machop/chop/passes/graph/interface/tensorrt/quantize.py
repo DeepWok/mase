@@ -32,7 +32,19 @@ def tensorrt_engine_interface_pass(graph, pass_args=None):
     1. Exporting the PyTorch model to ONNX format.
     2. Converting the ONNX model to a TensorRT engine.
 
-    The paths to the saved `.onnx` and `.trt` files are included in the return value to provide easy access for subsequent deployment or analysis.
+    The paths to the saved `.onnx` and `.trt` files are included in the return value to provide easy access for subsequent deployment or analysis. 
+    The resulting files are are saved in the following directory structure, facilitating easy access and version control:
+
+    - mase_output
+        - tensorrt
+            - quantization
+                - model_task_dataset_date
+                    - cache
+                    - ckpts
+                        - fine_tuning
+                    - json
+                    - onnx
+                    - trt
 
     Example of usage:
 
