@@ -13,7 +13,6 @@ MASE_HW_DEPS = {
     # TODO: Failing test: missing "z_proj" in config?
     # "attention/fixed_self_att": ["attention", "cast", "common", "conv",
     #                              "fixed_arithmetic", "linear", "matmul", "ViT"],
-    "activations/leaky_relu": [],
     "activations/fixed_relu": [],
     "activations/fixed_tanh": ["cast"],
     "activations/fixed_selu": ["cast","activations"],
