@@ -7,6 +7,7 @@ import torch
 import torch.fx as fx
 from chop.passes.graph.analysis.init_metadata import init_metadata_analysis_pass
 from chop.tools.config_load import convert_none_to_str_na, convert_str_na_to_none
+import pickle
 
 
 logger = logging.getLogger(__name__)
@@ -19,7 +20,8 @@ def save_graph_module_ckpt(graph_module: fx.GraphModule, save_path: str) -> None
     :param save_path: the directory for saving
     :type save_path: str
     """
-    torch.save(graph_module, save_path)
+    #torch.save(graph_module, save_path)
+    torch.save(graph_module.state_dict(), save_path)  # Serialization of parametrized modules
 
 
 def save_state_dict_ckpt(graph_module: fx.GraphModule, save_path: str) -> None:
@@ -48,6 +50,7 @@ def collect_n_meta_param(graph) -> dict:
     node_n_meta_param = {}
     for node in graph.fx_graph.nodes:
         node_n_meta_param[node.name] = node.meta["mase"].parameters
+    # collect all parameters
     return node_n_meta_param
 
 
@@ -57,8 +60,11 @@ def save_n_meta_param(node_meta: dict, save_path: str) -> None:
     """
     node_meta = convert_none_to_str_na(node_meta)
 
-    with open(save_path, "w") as f:
-        toml.dump(node_meta, f)
+    #import pdb; pdb.set_trace()     # 为什么用toml去dump
+    #with open(save_path, "w") as f:
+    #    toml.dump(node_meta, f)
+    with open(save_path, 'wb') as f:
+        pickle.dump(node_meta, f)
 
 
 def load_n_meta_param(load_path: str) -> dict:
@@ -129,13 +135,17 @@ def save_mase_graph_interface_pass(graph, pass_args: dict = {}):
     """
     save_dir = pass_args
     os.makedirs(save_dir, exist_ok=True)
+
+    # need to save the following: graph_module, state_dict, node_meta_param
     graph_module_ckpt = os.path.join(save_dir, "graph_module.mz")
     state_dict_ckpt = os.path.join(save_dir, "state_dict.pt")
-    n_meta_param_ckpt = os.path.join(save_dir, "node_meta_param.toml")
+    # n_meta_param_ckpt = os.path.join(save_dir, "node_meta_param.toml")
+    n_meta_param_ckpt = os.path.join(save_dir, "node_meta_param.pkl")
+
     # collect metadata.parameters
     node_n_meta_param = collect_n_meta_param(graph)
     # save metadata.parameters to toml
-    save_n_meta_param(node_n_meta_param, n_meta_param_ckpt)
+    save_n_meta_param(node_n_meta_param, n_meta_param_ckpt) # frpm toml to pickle
     # reset metadata to empty dict {}
     graph = graph_iterator_remove_metadata(graph)
     # save graph module & state dict

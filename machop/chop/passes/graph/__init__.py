@@ -27,6 +27,8 @@ from .transforms import (
     logicnets_fusion_transform_pass,
     onnx_annotate_transform_pass,
     partition_to_multi_device_transform_pass,
+    huffman_transform_pass,
+    huffman_decode_pass,
 )
 
 from .interface import (
@@ -65,6 +67,8 @@ TRANSFORM_PASSES = [
     "prune",
     "prune_detach_hook" "conv_bn_fusion",
     "logicnets_fusion",
+    "huffman",
+    "huffman_decode"
 ]
 
 INTERFACE_PASSES = [
@@ -103,6 +107,8 @@ PASSES = {
     "summarize_quantization": summarize_quantization_analysis_pass,
     "prune": prune_transform_pass,
     "prune_detach_hook": prune_detach_hook_transform_pass,
+    "huffman": huffman_transform_pass,
+    "huffman_decode": huffman_decode_pass,
     # "remove_prune_wrappers": prune_unwrap_transform_pass,
     "conv_bn_fusion": conv_bn_fusion_transform_pass,
     "logicnets_fusion": logicnets_fusion_transform_pass,

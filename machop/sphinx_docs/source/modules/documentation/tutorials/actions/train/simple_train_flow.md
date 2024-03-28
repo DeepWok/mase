@@ -1,4 +1,4 @@
-# Run the train action with the CLI
+# Train command
 
 MASE has several functionalities, and this document aims to introduce the simplest `train` and `eval` pipelines.
 
