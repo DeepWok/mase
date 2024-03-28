@@ -10,7 +10,7 @@ from ..utils import add_dataset_info
     available_splits=("train", "test"),
     image_classification=True,
     num_classes=10,
-    image_size=(1, 28, 28),
+    image_size=(3, 28, 28),  # colored-MNIST has RGB channels
 )
 class MNISTMase(datasets.MNIST):
     def __init__(
