@@ -177,17 +177,37 @@ def mixed_precision_transform_pass(
 ):
     """
     This function applies the mixed precision transform pass to the graph.
+    :param graph: The graph to transform.
+    :type graph: MaseGraph
+ 
+    :param pass_args_mixed_precision: The arguments for fake_quantize_transform_pass.
+    :type pass_args: dict
+ 
+    :param pass_args_calibrate: The arguments for graph_calibration_pass.
+    :type pass_args: dict
+ 
+    :return: The modified graph.
+    :rtype: tuple(MaseGraph)
     """
 
     graph = fake_quantize_transform_pass(graph, pass_args_mixed_precision)
     graph = graph_calibration_pass(graph, pass_args_calibrate)
 
-    return graph
+    return graph, {}
 
 
 def quantization_aware_training_pass(graph, pass_args=None):
     """
     This function applies the quantization aware training pass to the graph.
+    :param graph: The graph to transform.
+    :type graph: MaseGraph
+ 
+    :param pass_args: The arguments for quantization aware training pass.
+    :type pass_args: dict
+ 
+ 
+    :return: The modified graph.
+    :rtype: tuple(MaseGraph)
     """
 
     dataset = pass_args.pop("dataset")
@@ -209,7 +229,7 @@ def quantization_aware_training_pass(graph, pass_args=None):
             opt.step()
 
     print("Succeeded run QAT in pyTorch!")
-    return graph
+    return graph, {}
 
 
 def export_quantized_to_onnx(graph, dataloader, onnxFile):
@@ -403,6 +423,15 @@ def test_trt_engine(engineFile, dataloader):
 def evaluate_pytorch_model_pass(graph, pass_args=None):
     """
     This function evaluates the performance of the fake quantized model.
+ 
+    :param graph: The fake_quantized graph that need to be evaluated.
+    :type graph: MaseGraph
+ 
+    :param pass_args: The arguments for the transform pass.
+    :type pass_args: dict
+ 
+    :return: The modified graph.
+    :rtype: tuple(MaseGraph)
     """
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -434,12 +463,21 @@ def evaluate_pytorch_model_pass(graph, pass_args=None):
         % (sum(execute_time) / len(execute_time) * 1000)
     )
     print("Total accuracy: %.2f%%" % (sum(accuracy) / len(accuracy) * 100))
-    return graph
+    return graph, {}
 
 
 def graph_to_trt_pass(graph, pass_args=None):
     """
     This function applies the fake quantization to TensorRT pass to the graph.
+ 
+    :param graph: The graph that has been preformed fake quantization and need to be performed TensorRT quantization on.
+    :type graph: MaseGraph
+ 
+    :param pass_args: The arguments for the transform pass.
+    :type pass_args: dict
+ 
+    :return: The modified graph.
+    :rtype: tuple(MaseGraph)
     """
 
     onnxFile = pass_args.pop("onnxFile")
@@ -449,4 +487,4 @@ def graph_to_trt_pass(graph, pass_args=None):
     export_quantized_to_onnx(graph, dataloader, onnxFile)
     build_trt_engine_from_onnx(onnxFile, engineFile, dataloader)
 
-    return graph
+    return graph, {}

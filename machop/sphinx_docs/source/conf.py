@@ -17,6 +17,10 @@ import sys
 basedir = os.path.abspath("../..")
 sys.path.insert(0, basedir)
 
+import os
+import sys
+sys.path.insert(0, os.path.abspath('/home/gabriella/mase/machop/sphinx_docs/source/modules/api/transform'))
+
 
 # -- Project information -----------------------------------------------------
 
