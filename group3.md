@@ -37,7 +37,7 @@ You might change configuration as you wish.
 As there are too many configurations, we kept them inside a toml file at <code>configs/example/prune_retrain_group3.toml</code>
 Please refer to the file for default parameter values and to change them.
 
-Additionally, we provide a demo notebook, <code>group3.ipynb</code>, which is readily executable on Colab. (change load_model to Colab path)
+Additionally, we provide a demo notebook, <code>group3.ipynb</code>, which is readily executable on Colab. (change <code>load_model</code> to Colab path)
 
 ## Example output
 
