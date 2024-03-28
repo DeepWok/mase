@@ -143,8 +143,6 @@ venv.bak/
 *.dat
 *.vcd
 
-#Submodules
-submodules/
 
 machop/mase_components/scatter/scatter_vivado
 machop/mase_components/llmint/vivado
