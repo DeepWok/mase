@@ -5,7 +5,7 @@ from .quantize_tensorRT import (
     test_quantize_tensorrt_transform_pass,
     fake_quantize_transform_pass,
     graph_calibration_pass,
-    evaluate_fake_quantize_pass,
+    evaluate_pytorch_model_pass,
     fake_quantize_to_trt_pass,
     mixed_precision_transform_pass
 )

@@ -174,6 +174,36 @@ def mixed_precision_transform_pass(graph, pass_args_mixed_precision=None, pass_a
 
     return graph
 
+def quantization_aware_training_pass(graph, pass_args=None):
+    """
+    This function applies the quantization aware training pass to the graph.
+    """
+
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+
+    for epoch in range(10):
+        for xTrain, yTrain in trainLoader:
+            xTrain = Variable(xTrain).cuda()
+            yTrain = Variable(yTrain).cuda()
+            opt.zero_grad()
+            y_, z = model(xTrain)
+            loss = ceLoss(y_, yTrain)
+            loss.backward()
+            opt.step()
+
+        with t.no_grad():
+            acc = 0
+            n = 0
+            for xTest, yTest in testLoader:
+                xTest = Variable(xTest).cuda()
+                yTest = Variable(yTest).cuda()
+                y_, z = model(xTest)
+                acc += t.sum(z == t.matmul(yTest, t.Tensor([0, 1, 2, 3, 4, 5, 6, 7, 8, 9]).to("cuda:0"))).cpu().numpy()
+                n += xTest.shape[0]
+            print("%s, epoch %2d, loss = %f, test acc = %f" % (dt.now(), epoch + 1, loss.data, acc / n))
+
+    print("Succeeded fine tuning model in pyTorch!")
+
 
 def export_quantized_to_onnx(graph, dataloader, onnxFile):
     """
@@ -225,6 +255,15 @@ def build_trt_engine_from_onnx(onnxFile, engineFile, dataloader):
     print("Succeeded building engine!")
     with open(engineFile, "wb") as f:
         f.write(engineString)
+
+    return engineString
+
+
+def test_trt_engine(engineFile, dataloader):
+    '''
+    This function tests the TensorRT engine by running the model on the test dataset.
+
+    '''
 
     engine = trt.Runtime(logger).deserialize_cuda_engine(engineString)
     print("engine.__len__() = %d" % len(engine))
@@ -307,21 +346,19 @@ def build_trt_engine_from_onnx(onnxFile, engineFile, dataloader):
     print("Total accuracy: %.2f%%" % (sum(accuracy) / len(accuracy) * 100))
 
 
-def evaluate_fake_quantize_pass(graph, pass_args=None):
+def evaluate_pytorch_model_pass(graph, pass_args=None):
     """
     This function evaluates the performance of the fake quantized model.
     """
 
-    # quant_modules.initialize()
-    # qnn.TensorQuantizer.use_fb_fake_quant = True
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     graph.model.to(device)
-    val_loader = pass_args["data_module"].test_dataloader()
+    test_loader = pass_args["data_module"].test_dataloader()
 
     graph.model.eval()
     accuracy = []
     execute_time = []
-    for data, target in val_loader:
+    for data, target in test_loader:
         data, target = data.to(device), target.to(device)
         
         torch.cuda.synchronize()

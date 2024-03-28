@@ -260,7 +260,7 @@ def test_quantize_tensorrt_transform_pass(dataloader, engineFile):
         end_event.synchronize()
         execute_time.append(start_event.time_till(end_event))
     
-        for i in range(nInput, nIO-1):
+        for i in range(nInput, nIO):
             cudart.cudaMemcpy(bufferH[i].ctypes.data, bufferD[i], bufferH[i].nbytes, cudart.cudaMemcpyKind.cudaMemcpyDeviceToHost)
             
             categories = np.argmax(bufferH[nInput], axis=1)
