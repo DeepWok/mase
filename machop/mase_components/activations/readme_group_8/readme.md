@@ -138,14 +138,9 @@ Those properties allow us to only approximate the range of inputs (0,16)- negati
 
 SELU can be represented as per following equation where s is the scale of the exponential linear unit. For the implementation of SELU, initially, exponential function is implemented. Exponential function for a negative real domain ($\mathbb{R}^-$), i.e., the function $e^{-|x|}$ provides a wider scope of optimization as compared to exponential function for the full real domain [2].
 
-$y = \begin{cases}
-s \cdot x & \text{if } x \geq 0 \\
-s \cdot \alpha(e^x - 1) & \text{if } x < 0
-\end{cases}
-= \begin{cases}
-s \cdot x & \text{if } x \geq 0 \\
-s \cdot \alpha(e^{-|x|} - 1) & \text{if } x < 0
-\end{cases}$
+<div align="center">
+<img src="images/eqn1.png" alt="Implemented Model" width="400" height="50">
+</div>
 
 
 A hybrid approach is used for implementing exponential function $e^{-|x|}$ for an N-bit binary number as detailed in [2]. Key steps and equations involved are as follows:
@@ -189,21 +184,16 @@ Once exponential has been calculated, SELU is calculated by subtraction and cons
 
 Hyperbolic tangent is an odd function:
 
-$
-\tanh(-x) = -\tanh(x)
-$
+tanh(-x) = -tanh(x)
 
 Using this property, only the absolute value of the input needs to be processed, and the input sign can be directly passed to the output.
 
 Piecewise quadratic approximation is used for tanh activation function as detailed in [3]. In order to preserve the continuity property of the first-order derivative, [3] approximates the first-order derivative of tanh function using piecewise linear approximations. The approximation of the tanh function is then obtained by integrating the approximation of the first-order derivative. The resulting approximation is provided in the following equation, where $m_1$, $m_2$, $c_1$, $c_2$, $a$, $b$, $d_1$ and $d_2$ are $-0.54324$, $-0.16957$, $1$, $0.42654$, $1.52$, $2.57$, $0.016$ and $0.4519$ respectively.
 
-$
-\tanh(x) = \begin{cases}
-\operatorname{sign}(x) \cdot \left[0.5 m_1  |x|^2 + c_1 |x| + d_1\right], & 0 \leq |x| \leq a ; \\
-\operatorname{sign}(x) \cdot \left[0.5 m_2  |x|^2 + c_2  |x| + d_2\right], & a \leq |x| \leq b ; \\
-\operatorname{sign}(x), & \text{otherwise.}
-\end{cases}
-$
+<div align="center">
+<img src="images/eqn2.png" alt="Implemented Model" width="450" height="80">
+</div>
+
 
 The high-level flow diagram for tanh AF implementation is given in the following figure.
 
@@ -227,9 +217,10 @@ Those properties allow us to only do piecewise approximations for the range of (
 
 Piecewise Polynomial approximation (PPA) stands as a computational method for approximating functions, offering a balanced compromise between latency and memory utilization. It involves dividing the input range into K segments, taking into account the $x_i$ samples within the interval [$x_L , x_H$] and the corresponding function values $f(x_i)$. Within PPA, each of these segments is approximated using a polynomial expression as expressed in following equation:
 
-$
-    p_k(x_i) = a_n x_i^n + \ldots + a_1 x_i + a_0 
-$
+<div align="center">
+<img src="images/eqn3.png" alt="Implemented Model" width="200" height="40">
+</div>
+
 
 where $p_k()$ denotes the polynomials corresponding to each segment (k= 1,...K,), $a_n$ represents the polynomial coefficients, and n denotes the polynomial degree. This approach enables efficient approximation of complex functions by representing them as a combination of simpler polynomial expressions, facilitating adjustable optimization tailored to specific hardware constraints. 
 
@@ -261,6 +252,7 @@ $p_k(x_i) = a_2 x^2 + a_1 x + a_0$
 
 # Changes to already existing RTL
 During evaluation, it was found that fixed_round file in \machop\mase_components\cast\rtl does not work properly for output widths of 32 and above. This was rectified and updated in the corresponding location.
+
 
 # References
 
