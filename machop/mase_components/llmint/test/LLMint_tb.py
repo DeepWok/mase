@@ -2,9 +2,11 @@
 
 # This script tests the fixed point linear
 import os, logging
+import numpy as np
 from functools import partial
 
 import cocotb
+from cocotb.binary import BinaryValue
 from cocotb.log import SimLog
 from cocotb.triggers import *
 from mase_cocotb.random_test import RandomSource, RandomSink, check_results
@@ -25,6 +27,26 @@ print(torch.__version__)
 logger = logging.getLogger("testbench")
 # logger.setLevel(logging.DEBUG)
 logging.getLogger().setLevel(logging.WARNING)
+
+
+class LLMStreamMonitor(StreamMonitor):
+    def _recv(self):
+        if type(self.data.value) == list:
+            return [x for x in self.data.value]
+        elif type(self.data.value) == BinaryValue:
+            return int(self.data.value)
+
+    def _check(self, got, exp):
+        if self.check:
+            # print("\nGot \n%s, \nExpected \n%s" % (self.convert_to_integer_list(got), exp))
+            assert np.equal(self.convert_to_integer_list(got), exp).all()
+           
+    def convert_to_integer_list(self,list_val):
+        new_list = []
+        for val in list_val:
+            new_list.append(val.signed_integer)
+
+        return new_list
 
 
 class LinearTB(Testbench):
@@ -68,7 +90,7 @@ class LinearTB(Testbench):
         '''
         #----------------Monitor B---------------
 
-        self.data_out_monitor = StreamMonitor(
+        self.data_out_monitor = LLMStreamMonitor(
             dut.clk,
             dut.data_out,
             dut.data_out_valid,
