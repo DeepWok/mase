@@ -185,7 +185,7 @@ module exp #(
       .data_out_0(exp_imprecise[IMPRECISE_PRECISION_0 - 2 : 0])
   );
 	
-  assign exp_imprecise[IMPRECISE_PRECISION_0 - 1] = 0;    
+  assign exp_imprecise[IMPRECISE_PRECISION_0-1] = 0;    
   assign product = exp_precise_1 * exp_precise_2 * exp_imprecise; //final multiplication of parts
     
   //rounding of output result
