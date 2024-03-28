@@ -24,6 +24,10 @@ Note that search_space is search space + model, and search_strategy is search al
     - subclass `SoftwareRunnerBase` at `mase-tools/machop/chop/actions/search/runners/software/base.py`and implement corresponding abstract methods.
     - Register the new software metrics at `SOFTWARE_RUNNER_MAP` at `mase-tools/machop/chop/actions/search/runners/software/__init__.py`.
 
+## How to use strat_proxy?
+- `[Required]` Create a pre-trained model weight for meta-proxy weight, save it in path `nas_results/meta_proxy/meta_proxh.pt`
+- `[Required]` In search configuation, set search strategy to `proxy`
+
 
 # How to extend search_strategy?
 
