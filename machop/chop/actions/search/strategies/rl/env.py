@@ -115,7 +115,7 @@ class MixedPrecisionEnv(BaseMixedPrecisionEnv):
         model = self.search_space.rebuild_model(sampled_config)
         software_metrics = self.compute_software_metrics(model, sampled_config)
         hardware_metrics = self.compute_hardware_metrics(model, sampled_config)
-        metrics = software_metrics | hardware_metrics
+        self.metrics = software_metrics | hardware_metrics
         scaled_metrics = {}
         cost = 0
         for metric_name in self.metric_names:
@@ -216,7 +216,7 @@ class MixedPrecisionEnvHiLo(BaseMixedPrecisionEnv):
     
         software_metrics = self.compute_software_metrics(model, sampled_config)
         hardware_metrics = self.compute_hardware_metrics(model, sampled_config)
-        metrics = software_metrics | hardware_metrics
+        self.metrics = software_metrics | hardware_metrics
         scaled_metrics = {}
         cost = 0
         for metric_name in self.metric_names:
