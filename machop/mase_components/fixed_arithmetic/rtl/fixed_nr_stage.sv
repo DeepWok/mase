@@ -21,10 +21,11 @@ module fixed_nr_stage #(
 );
     logic [2*WIDTH-1:0] yy [1:0];
     logic [WIDTH-1:0] x_reduced [2:0];
-    logic [WIDTH-1:0] data_b_val [2:1];
-    logic pipe_valid [2:1];
-    logic pipe_ready [2:1];
+    logic [WIDTH-1:0] data_b_val [3:1];
+    logic pipe_valid [3:1];
+    logic pipe_ready [3:1];
     logic [2*WIDTH-1:0] mult [2:1];
+    logic [2*WIDTH-1:0] threehalfs_minus_mult [3:2];
     logic [2*WIDTH-1:0] nr_out_data;
     logic [MSB_WIDTH-1:0] msb_data [2:1];
 
@@ -58,16 +59,31 @@ module fixed_nr_stage #(
         .data_out_ready(pipe_ready[2])
     );
 
-    assign nr_out_data = (data_b_val[2] * (THREEHALFS - mult[2])) >> (WIDTH - 1);
+    assign threehalfs_minus_mult[2] = THREEHALFS - mult[2];
 
     skid_buffer #(
-        .DATA_WIDTH(2*WIDTH + WIDTH + MSB_WIDTH)
+        .DATA_WIDTH(2*WIDTH + WIDTH + WIDTH + MSB_WIDTH)
     ) pipe_reg_2 (
         .clk(clk),
         .rst(rst),
-        .data_in({nr_out_data, x_reduced[2], msb_data[2]}),
+        .data_in({threehalfs_minus_mult[2], data_b_val[2], x_reduced[2], msb_data[2]}),
         .data_in_valid(pipe_valid[2]),
         .data_in_ready(pipe_ready[2]),
+        .data_out({threehalfs_minus_mult[3], data_b_val[3], x_reduced[3], msb_data[3]}),
+        .data_out_valid(pipe_valid[3]),
+        .data_out_ready(pipe_ready[3])
+    );
+
+    assign nr_out_data = (data_b_val[3] * threehalfs_minus_mult[3]) >> (WIDTH - 1);
+
+    skid_buffer #(
+        .DATA_WIDTH(2*WIDTH + WIDTH + MSB_WIDTH)
+    ) pipe_reg_3 (
+        .clk(clk),
+        .rst(rst),
+        .data_in({nr_out_data, x_reduced[3], msb_data[3]}),
+        .data_in_valid(pipe_valid[3]),
+        .data_in_ready(pipe_ready[3]),
         .data_out({data_out, data_out_x_reduced, data_out_msb}),
         .data_out_valid(data_out_valid),
         .data_out_ready(data_out_ready)

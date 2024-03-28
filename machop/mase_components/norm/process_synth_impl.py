@@ -1,6 +1,7 @@
 from pathlib import Path
 import re
 import pandas as pd
+import altair as alt
 
 
 def timing_util(folder: Path):
@@ -33,6 +34,7 @@ def timing_util(folder: Path):
     registers = None
     carry8 = None
     dsp = None
+    bram = None
 
     for line in util_text:
 
@@ -51,6 +53,9 @@ def timing_util(folder: Path):
         if dsp == None and line.find("DSPs") != -1:
             dsp = int(line.split('|')[2].strip())
 
+        if bram == None and line.find("Block RAM Tile") != -1:
+            bram = int(line.split('|')[2].strip())
+
     return {
         "wns": wns,
         "lut_logic": lut_logic,
@@ -58,6 +63,7 @@ def timing_util(folder: Path):
         "registers": registers,
         "carry8": carry8,
         "dsp": dsp,
+        "bram": bram,
     }
 
 def insert_data(data_dict: dict, new_val: dict):
@@ -74,6 +80,7 @@ def gather_data(build_dir: Path):
         for bitwidth_path in module_path.glob("*bit"):
             bitwidth = int(re.search(r"(\d+)bit", bitwidth_path.name).groups()[0])
             timing_util_data = timing_util(bitwidth_path)
+            print(timing_util_data)
             insert_data(data, {
                 "norm": top,
                 "width": bitwidth,
@@ -84,4 +91,20 @@ def gather_data(build_dir: Path):
 
 if __name__ == "__main__":
     data = gather_data(Path("build"))
-    print(data)
+
+    def plot(col):
+        alt.Chart(data).mark_line().encode(
+            x="width",
+            y=col,
+            color="norm",
+        ).properties(
+            width=400,
+            height=200,
+        ).save(f"{col}_plot.png", scale_factor=3)
+
+    plot("wns")
+    plot("lut_logic")
+    plot("lut_mem")
+    plot("dsp")
+    plot("bram")
+    plot("registers")

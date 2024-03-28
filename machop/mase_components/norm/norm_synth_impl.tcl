@@ -5,11 +5,16 @@ set fpga_part xcu250-figd2104-2L-e
 set constraints_file alveo-u250-norm.xdc
 set runs {
     batch_norm_2d
+    group_norm_2d
+    rms_norm_2d
 }
-# rms_norm_2d
-# group_norm_2d
-# set bitwidths {2 4 6 8 10 12 14 16}
-set bitwidths {8}
+set bitwidths {2 4 6 8 10 12 14 16}
+set total_dim0 64
+set total_dim1 64
+set compute_dim0 4
+set compute_dim1 4
+set channels 32
+
 
 # Verilog Dependencies
 read_verilog -sv {
@@ -52,9 +57,26 @@ foreach top_module $runs {
 
         set frac_width [expr {$width / 2}]
 
-        if {$top_module == "rms_norm_2d"} {
+        if {$top_module == "batch_norm_2d"} {
             synth_design -mode out_of_context -flatten_hierarchy rebuilt \
-                         -top $top_module -part $fpga_part \
+                         -top $top_module -part $fpga_part -debug_log \
+                         -generic TOTAL_DIM0=$total_dim0 \
+                         -generic TOTAL_DIM1=$total_dim1 \
+                         -generic COMPUTE_DIM0=$compute_dim0 \
+                         -generic COMPUTE_DIM1=$compute_dim1 \
+                         -generic NUM_CHANNELS=$channels \
+                         -generic IN_WIDTH=$width \
+                         -generic IN_FRAC_WIDTH=$frac_width \
+                         -generic OUT_WIDTH=$width \
+                         -generic OUT_FRAC_WIDTH=$frac_width
+        } elseif {$top_module == "rms_norm_2d"} {
+            synth_design -mode out_of_context -flatten_hierarchy rebuilt \
+                         -top $top_module -part $fpga_part -debug_log \
+                         -generic TOTAL_DIM0=$total_dim0 \
+                         -generic TOTAL_DIM1=$total_dim1 \
+                         -generic COMPUTE_DIM0=$compute_dim0 \
+                         -generic COMPUTE_DIM1=$compute_dim1 \
+                         -generic CHANNELS=$channels \
                          -generic IN_WIDTH=$width \
                          -generic IN_FRAC_WIDTH=$frac_width \
                          -generic SCALE_WIDTH=$width \
@@ -63,7 +85,12 @@ foreach top_module $runs {
                          -generic OUT_FRAC_WIDTH=$frac_width
         } else {
             synth_design -mode out_of_context -flatten_hierarchy rebuilt \
-                         -top $top_module -part $fpga_part \
+                         -top $top_module -part $fpga_part -debug_log \
+                         -generic TOTAL_DIM0=$total_dim0 \
+                         -generic TOTAL_DIM1=$total_dim1 \
+                         -generic COMPUTE_DIM0=$compute_dim0 \
+                         -generic COMPUTE_DIM1=$compute_dim1 \
+                         -generic GROUP_CHANNELS=$channels \
                          -generic IN_WIDTH=$width \
                          -generic IN_FRAC_WIDTH=$frac_width \
                          -generic OUT_WIDTH=$width \

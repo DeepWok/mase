@@ -32,7 +32,13 @@ initial begin
     assert (SIZE > 0 && DATA_WIDTH > 0);
 end
 
-initial $readmemb(MEM_FILE, tab);
+// TEMPORARY: Vivado Synthesis
+initial begin
+    for (int i = 0; i < SIZE; i++) begin
+        tab[i] = '1;
+    end
+end
+// initial $readmemb(MEM_FILE, tab);
 
 assign look_up = tab[addr];
 
