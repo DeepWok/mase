@@ -93,7 +93,7 @@ pass_args = {
     },
 }
 
-device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 mg, _ = init_metadata_analysis_pass(mg, None)
 mg, _ = add_common_metadata_analysis_pass(mg, {"dummy_in": dummy_in})
 mg, _ = add_software_metadata_analysis_pass(mg, None)
@@ -123,33 +123,35 @@ pass_args = {
             "bias_width": 6,
             "bias_frac_width": 4,
         },
-        "fake": 'True'
+        "fake": "True",
     },
 }
 
-widths = [10,8,6,4,2]
+widths = [10, 8, 6, 4, 2]
 calibration = False
 by = "type"
 structure = "JSC_onlyLinear"
 fake = "fake"
 
-onnx_model_path = f'./OriginalMG.onnx'
-trt_output_path = f'./OriginalMG.plan'
+onnx_model_path = f"./OriginalMG.onnx"
+trt_output_path = f"./OriginalMG.plan"
 
-dir_path = f'./ONNX_model_JSCC/{by}_{fake}_{structure}_{calibration}/ONNX'
+dir_path = f"./ONNX_model_JSCC/{by}_{fake}_{structure}_{calibration}/ONNX"
 
 if not os.path.exists(dir_path):
     os.makedirs(dir_path)
 
-dir_path = f'./ONNX_model_JSCC/{by}_{fake}_{structure}_{calibration}/Plan'
+dir_path = f"./ONNX_model_JSCC/{by}_{fake}_{structure}_{calibration}/Plan"
 
 if not os.path.exists(dir_path):
     os.makedirs(dir_path)
 
 acc_avg, loss_avg, latency_avg = run_model_for_test(mg, device, data_module, num_batchs)
-mg, _ = export_to_onnx_pass(mg, dummy_in, input_generator, onnx_model_path=onnx_model_path)
-mg,_ = generate_tensorrt_string_pass(mg, TR_output_path=trt_output_path)
-acc,latency = run_tensorrt_pass(mg, dataloader = data_module.test_dataloader())
+mg, _ = export_to_onnx_pass(
+    mg, dummy_in, input_generator, onnx_model_path=onnx_model_path
+)
+mg, _ = generate_tensorrt_string_pass(mg, TR_output_path=trt_output_path)
+acc, latency = run_tensorrt_pass(mg, dataloader=data_module.test_dataloader())
 accuracy_tensorRT.append(acc)
 latency_tensorRT.append(latency)
 accuracy_runmodel.append(acc_avg)
@@ -162,32 +164,40 @@ for width in widths:
 
     mg, _ = tensorRT_quantize_pass(mg, pass_args)
     if calibration == True:
-        mg, _ = calibration_pass(mg,data_module,batch_size)  
-    acc_avg, loss_avg, latency_avg = run_model_for_test(mg, device, data_module, num_batchs)
-    
-    onnx_dir_path = f'./ONNX_model_JSCC/{by}_{fake}_{structure}_{calibration}/ONNX'
-    trt_dir_path = f'./ONNX_model_JSCC/{by}_{fake}_{structure}_{calibration}/Plan'
+        mg, _ = calibration_pass(mg, data_module, batch_size)
+    acc_avg, loss_avg, latency_avg = run_model_for_test(
+        mg, device, data_module, num_batchs
+    )
+
+    onnx_dir_path = f"./ONNX_model_JSCC/{by}_{fake}_{structure}_{calibration}/ONNX"
+    trt_dir_path = f"./ONNX_model_JSCC/{by}_{fake}_{structure}_{calibration}/Plan"
 
     for dir_path in [onnx_dir_path, trt_dir_path]:
         if not os.path.exists(dir_path):
             os.makedirs(dir_path)
 
-    onnx_model_path = f'{onnx_dir_path}/{by}_{fake}_{structure}_{width}_{calibration}.onnx'
-    trt_output_path = f'{trt_dir_path}/{by}_{fake}_{structure}_{width}_{calibration}.plan'
-    
-    mg, _ = export_to_onnx_pass(mg, dummy_in, input_generator, onnx_model_path=onnx_model_path)
-    mg,_ = generate_tensorrt_string_pass(mg, TR_output_path=trt_output_path)
-    acc,latency = run_tensorrt_pass(mg, dataloader = data_module.test_dataloader())
+    onnx_model_path = (
+        f"{onnx_dir_path}/{by}_{fake}_{structure}_{width}_{calibration}.onnx"
+    )
+    trt_output_path = (
+        f"{trt_dir_path}/{by}_{fake}_{structure}_{width}_{calibration}.plan"
+    )
+
+    mg, _ = export_to_onnx_pass(
+        mg, dummy_in, input_generator, onnx_model_path=onnx_model_path
+    )
+    mg, _ = generate_tensorrt_string_pass(mg, TR_output_path=trt_output_path)
+    acc, latency = run_tensorrt_pass(mg, dataloader=data_module.test_dataloader())
     accuracy_tensorRT.append(acc)
     latency_tensorRT.append(latency)
     accuracy_runmodel.append(acc_avg)
     latency_runmodel.append(latency_avg)
 
-print("widths: ",["Original Graph"] + widths)
-print("TensorRT Accuracy: ",accuracy_tensorRT)
-print("TensorRT Latency: ",latency_tensorRT)
-print("Run Model Accuracy: ",accuracy_runmodel)
-print("Run Model Latency: ",latency_runmodel)
+print("widths: ", ["Original Graph"] + widths)
+print("TensorRT Accuracy: ", accuracy_tensorRT)
+print("TensorRT Latency: ", latency_tensorRT)
+print("Run Model Accuracy: ", accuracy_runmodel)
+print("Run Model Latency: ", latency_runmodel)
 
 results = {
     "widths": ["Original Graph"] + widths,
@@ -202,7 +212,10 @@ results = {
     "fake": fake,
 }
 
-timestamp = datetime.now().strftime('%Y%m%d%H%M%S')
+timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
 
-with open(f'Pytorch_Quantization_Experiment_result/results_{pass_args["by"]}_{fake}_{calibration}_{structure}_{timestamp}.json', 'w') as f:
+with open(
+    f'Pytorch_Quantization_Experiment_result/results_{pass_args["by"]}_{fake}_{calibration}_{structure}_{timestamp}.json',
+    "w",
+) as f:
     json.dump(results, f)
