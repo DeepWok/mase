@@ -155,8 +155,8 @@ def run(config_file):
     model_name = config['model']
     dataset_name = config['dataset']
 
-    #load_name = config['passes']['retrain']['load_name']
-    load_name = None    #  Set load_name to None if want to train from scratch
+    load_name = config['passes']['retrain']['load_name']
+    #load_name = None    #  Set load_name to None if want to train from scratch
     load_type = config['passes']['retrain']['load_type']
     accelerator = config['passes']['retrain']['trainer']['accelerator']
     task = config['task']
@@ -262,12 +262,17 @@ def run(config_file):
                 for n in graph.nodes:
                     if isinstance(get_node_actual_target(n), torch.nn.modules.Conv2d): 
                         if 'mase' in n.meta:
-                            quantized_weight = get_node_actual_target(n).w_quantizer(get_node_actual_target(n).weight)
-                            parts = n.name.rsplit('_', 1)
-                            parts[0] = parts[0].replace('_', '.')
-                            modified_name = '.'.join(parts) + ".weight"
-                            graph.model.state_dict()[modified_name].copy_(quantized_weight)
-                            print(f"There is quantization at {n.name}, mase_op: {get_mase_op(n)}")
+                            if "resnet" in model_short_name:
+                                quantized_weight = get_node_actual_target(n).w_quantizer(get_node_actual_target(n).weight)
+                                parts = n.name.rsplit('_', 1)
+                                parts[0] = parts[0].replace('_', '.')
+                                modified_name = '.'.join(parts) + ".weight"
+                                graph.model.state_dict()[modified_name].copy_(quantized_weight)
+                                print(f"There is quantization at {n.name}, mase_op: {get_mase_op(n)}")
+                            elif "vgg" in model_short_name:
+                                quantized_weight = get_node_actual_target(n).w_quantizer(get_node_actual_target(n).weight)
+                                graph.model.state_dict()['.'.join(n.name.rsplit('_', 1)) + ".weight"].copy_(quantized_weight)
+                                print(f"There is quantization at {n.name}, mase_op: {get_mase_op(n)}")
 
                 '''
                 model size after quantization:
@@ -343,6 +348,7 @@ def run(config_file):
                                 dict_weight_masks[node.name] = mask
                                 num_true = torch.sum(mask).item()
                                 num_conv_param_after_prune += num_true
+                                
                 '''
                 model size after pruning
                 '''
