@@ -39,142 +39,119 @@ module exp #(
       a_sat[DATA_IN_0_PRECISION_INT-1:DATA_IN_0_PRECISION_INT-4] = 0;
       if (a_sat > 0) begin  //saturation condition. All bits of all parts are assigned to one.
         a_precise_1 = 4'b1111;
-	  if (DATA_IN_0_PRECISION_1 > 3) begin  //both a_precise_2 and a_imprecise are non-zero and assigned to ones				
+	if (DATA_IN_0_PRECISION_1 > 3) begin  //both a_precise_2 and a_imprecise are non-zero and assigned to ones				
           a_precise_2 = 3'b111;
-	    a_imprecise[DATA_IN_0_PRECISION_1-3-1:0] = {(DATA_IN_0_PRECISION_1 - 3) {1'b1}};
-	    a_imprecise[DATA_IN_0_PRECISION_1-1:DATA_IN_0_PRECISION_1-3] = 0;
-	  end 
-		    	else if (DATA_IN_0_PRECISION_1 == 3) begin  //a_precise_2 is 3-bits of ones and a_imprecise is zero
-		            a_precise_2 = {(DATA_IN_0_PRECISION_1){1'b1}};
-		            a_imprecise = 0;
-                end
-		else if (DATA_IN_0_PRECISION_1 == 0) begin  //both a_precise_2 and a_imprecise are zero
-                    a_precise_2 = 0;
-                    a_imprecise = 0;
-                end
-                else begin  //a_precise_2 is less than 3 bits  and a_imprecise are zero
-                    a_precise_2[2:2-DATA_IN_0_PRECISION_1+1]={(DATA_IN_0_PRECISION_1){1'b1}};
-                    a_precise_2[2-DATA_IN_0_PRECISION_1:0]= 0;
-                    a_imprecise = 0;
-                end 
-            end
-	    else begin //unsaturated condition
-            a_precise_1 = data_in_0[DATA_IN_0_PRECISION_1+4-1:DATA_IN_0_PRECISION_1];
-            if (DATA_IN_0_PRECISION_1 > 3) begin
-                a_precise_2 = data_in_0[DATA_IN_0_PRECISION_1-1:DATA_IN_0_PRECISION_1-3];
-                a_imprecise[DATA_IN_0_PRECISION_1-3-1:0] = data_in_0[DATA_IN_0_PRECISION_1-3-1:0];
-                a_imprecise[DATA_IN_0_PRECISION_1-1:DATA_IN_0_PRECISION_1-3] = 0;
-            end
-            else if (DATA_IN_0_PRECISION_1 == 3) begin
-                a_precise_2 = data_in_0[DATA_IN_0_PRECISION_1-1:DATA_IN_0_PRECISION_1-3];
-                a_imprecise = 0;
-            end
-            else if (DATA_IN_0_PRECISION_1 == 0) begin
-			    a_precise_2 = 0;
-                a_imprecise = 0;
-            end else begin
-                a_precise_2[2:2-DATA_IN_0_PRECISION_1+1]=data_in_0[DATA_IN_0_PRECISION_1-1:0];
-                a_precise_2[2-DATA_IN_0_PRECISION_1:0] = 0;
-                a_imprecise = 0;
-            end 
-        end
-	end	
-	else if(DATA_IN_0_PRECISION_INT == 4)	//boundary condition when integer bits are exactly 4
-	begin
-	    a_precise_1 = data_in_0[DATA_IN_0_PRECISION_0-1:DATA_IN_0_PRECISION_1];
-	    if (DATA_IN_0_PRECISION_1 > 3)
-	    begin
-	        a_precise_2 = data_in_0[DATA_IN_0_PRECISION_1-1:DATA_IN_0_PRECISION_1-3];
-		a_imprecise[DATA_IN_0_PRECISION_1-3-1:0] = data_in_0[DATA_IN_0_PRECISION_1-3-1:0];
-		a_imprecise[DATA_IN_0_PRECISION_1-1:DATA_IN_0_PRECISION_1-3] = 0;
-	    end
-	    else if (DATA_IN_0_PRECISION_1 == 3)
-	    begin
-	        a_precise_2 = data_in_0[DATA_IN_0_PRECISION_1-1:DATA_IN_0_PRECISION_1-3];
-		a_imprecise = 0;
-	    end
-	    else if (DATA_IN_0_PRECISION_1 == 0)
-	    begin
-	        a_precise_2 = 0;
-		a_imprecise = 0;
-	    end
-	    else
-	    begin
-	        a_precise_2[2:2-DATA_IN_0_PRECISION_1+1]=data_in_0[DATA_IN_0_PRECISION_1-1:0];
-		a_precise_2[2-DATA_IN_0_PRECISION_1:0]  = 0;
-		a_imprecise = 0;
-	    end 			
-	end	
-	else if(DATA_IN_0_PRECISION_INT == 0)	//boundary condition when there are no integer bits
-	begin
-  	    a_precise_1 = 0;
-	    if (DATA_IN_0_PRECISION_1 > 3)
-	    begin
-		a_precise_2 = data_in_0[DATA_IN_0_PRECISION_1-1:DATA_IN_0_PRECISION_1-3];
-		a_imprecise[DATA_IN_0_PRECISION_1-3-1:0] = data_in_0[DATA_IN_0_PRECISION_1-3-1:0];
-		a_imprecise[DATA_IN_0_PRECISION_1-1:DATA_IN_0_PRECISION_1-3] = 0;
-	    end
-	    else if (DATA_IN_0_PRECISION_1 == 3)
-	    begin
-		a_precise_2 = data_in_0[DATA_IN_0_PRECISION_1-1:DATA_IN_0_PRECISION_1-3];
-		a_imprecise = 0;
-	    end
-	    else if (DATA_IN_0_PRECISION_1 == 0)
-	    begin
-		a_precise_2 = 0;
-		a_imprecise = 0;
-	    end
-	    else
-	    begin
-	        a_precise_2[2:2-DATA_IN_0_PRECISION_1+1]=data_in_0[DATA_IN_0_PRECISION_1-1:0];
-	        a_precise_2[2-DATA_IN_0_PRECISION_1:0]  = 0;
-	        a_imprecise = 0;
-	    end 			
-	end
-        else //condition when integer bits are less than 4
-        begin
-	    a_precise_1[DATA_IN_0_PRECISION_INT-1:0]=data_in_0[DATA_IN_0_PRECISION_0-1:DATA_IN_0_PRECISION_1];
-	    a_precise_1[3:DATA_IN_0_PRECISION_INT] = 0;
-	    if (DATA_IN_0_PRECISION_1 > 3)
-	    begin
-		a_precise_2 = data_in_0[DATA_IN_0_PRECISION_1-1:DATA_IN_0_PRECISION_1-3];
-		a_imprecise[DATA_IN_0_PRECISION_1-3-1:0] = data_in_0[DATA_IN_0_PRECISION_1-3-1:0];
-		a_imprecise[DATA_IN_0_PRECISION_1-1:DATA_IN_0_PRECISION_1-3] = 0;
-	    end
-	    else if (DATA_IN_0_PRECISION_1 == 3)
-	    begin
-		a_precise_2 = data_in_0[DATA_IN_0_PRECISION_1-1:DATA_IN_0_PRECISION_1-3];
-		a_imprecise = 0;
-	    end
-	    else if (DATA_IN_0_PRECISION_1 == 0)
-	    begin
-	        a_precise_2 = 0;
-		a_imprecise = 0;
-	    end
-	    else
-	    begin
-		a_precise_2[2:2-DATA_IN_0_PRECISION_1+1]=data_in_0[DATA_IN_0_PRECISION_1-1:0];
-		a_precise_2[2-DATA_IN_0_PRECISION_1:0]  = 0;
-		a_imprecise = 0;
-	    end 		
+	  a_imprecise[DATA_IN_0_PRECISION_1-3-1:0] = {(DATA_IN_0_PRECISION_1 - 3) {1'b1}};
+	  a_imprecise[DATA_IN_0_PRECISION_1-1:DATA_IN_0_PRECISION_1-3] = 0;
 	end 
-    end
+	else if (DATA_IN_0_PRECISION_1 == 3) begin  //a_precise_2 is 3-bits of ones and a_imprecise is zero
+	  a_precise_2 = {(DATA_IN_0_PRECISION_1) {1'b1}};
+	  a_imprecise = 0;
+        end
+	else if (DATA_IN_0_PRECISION_1 == 0) begin  //both a_precise_2 and a_imprecise are zero
+          a_precise_2 = 0;
+          a_imprecise = 0;
+        end
+        else begin  //a_precise_2 is less than 3 bits  and a_imprecise are zero
+	  a_precise_2[2:2-DATA_IN_0_PRECISION_1+1] = {(DATA_IN_0_PRECISION_1) {1'b1}};
+	  a_precise_2[2-DATA_IN_0_PRECISION_1:0] = 0;
+          a_imprecise = 0;
+        end 
+      end
+      else begin  //unsaturated condition
+        a_precise_1 = data_in_0[DATA_IN_0_PRECISION_1+4-1:DATA_IN_0_PRECISION_1];
+        if (DATA_IN_0_PRECISION_1 > 3) begin
+          a_precise_2 = data_in_0[DATA_IN_0_PRECISION_1-1:DATA_IN_0_PRECISION_1-3];
+          a_imprecise[DATA_IN_0_PRECISION_1-3-1:0] = data_in_0[DATA_IN_0_PRECISION_1-3-1:0];
+          a_imprecise[DATA_IN_0_PRECISION_1-1:DATA_IN_0_PRECISION_1-3] = 0;
+        end
+        else if (DATA_IN_0_PRECISION_1 == 3) begin
+          a_precise_2 = data_in_0[DATA_IN_0_PRECISION_1-1:DATA_IN_0_PRECISION_1-3];
+          a_imprecise = 0;
+        end
+        else if (DATA_IN_0_PRECISION_1 == 0) begin
+	  a_precise_2 = 0;
+          a_imprecise = 0;
+        end else begin
+	  a_precise_2[2:2-DATA_IN_0_PRECISION_1+1] = data_in_0[DATA_IN_0_PRECISION_1-1:0];
+          a_precise_2[2-DATA_IN_0_PRECISION_1:0] = 0;
+          a_imprecise = 0;
+        end 
+      end
+    end	
+    else if (DATA_IN_0_PRECISION_INT == 4) begin  //boundary condition when integer bits are exactly 4
+      a_precise_1 = data_in_0[DATA_IN_0_PRECISION_0-1:DATA_IN_0_PRECISION_1];
+      if (DATA_IN_0_PRECISION_1 > 3) begin
+        a_precise_2 = data_in_0[DATA_IN_0_PRECISION_1-1:DATA_IN_0_PRECISION_1-3];
+        a_imprecise[DATA_IN_0_PRECISION_1-3-1:0] = data_in_0[DATA_IN_0_PRECISION_1-3-1:0];
+	a_imprecise[DATA_IN_0_PRECISION_1-1:DATA_IN_0_PRECISION_1-3] = 0;
+      end
+      else if (DATA_IN_0_PRECISION_1 == 3) begin
+        a_precise_2 = data_in_0[DATA_IN_0_PRECISION_1-1:DATA_IN_0_PRECISION_1-3];
+	a_imprecise = 0;
+      end
+      else if (DATA_IN_0_PRECISION_1 == 0) begin
+        a_precise_2 = 0;
+	a_imprecise = 0;
+      end else begin
+	a_precise_2[2:2-DATA_IN_0_PRECISION_1+1] = data_in_0[DATA_IN_0_PRECISION_1-1:0];
+        a_precise_2[2-DATA_IN_0_PRECISION_1:0] = 0;
+	a_imprecise = 0;
+      end 			
+    end	
+    else if (DATA_IN_0_PRECISION_INT == 0) begin  //boundary condition when there are no integer bits
+      a_precise_1 = 0;
+      if (DATA_IN_0_PRECISION_1 > 3) begin
+        a_precise_2 = data_in_0[DATA_IN_0_PRECISION_1-1:DATA_IN_0_PRECISION_1-3];
+	a_imprecise[DATA_IN_0_PRECISION_1-3-1:0] = data_in_0[DATA_IN_0_PRECISION_1-3-1:0];
+	a_imprecise[DATA_IN_0_PRECISION_1-1:DATA_IN_0_PRECISION_1-3] = 0;
+      end
+      else if (DATA_IN_0_PRECISION_1 == 3) begin
+        a_precise_2 = data_in_0[DATA_IN_0_PRECISION_1-1:DATA_IN_0_PRECISION_1-3];
+	a_imprecise = 0;
+      end
+      else if (DATA_IN_0_PRECISION_1 == 0) begin
+        a_precise_2 = 0;
+	a_imprecise = 0;
+      end else begin
+        a_precise_2[2:2-DATA_IN_0_PRECISION_1+1] = data_in_0[DATA_IN_0_PRECISION_1-1:0];
+        a_precise_2[2-DATA_IN_0_PRECISION_1:0]  = 0;
+        a_imprecise = 0;
+      end 			
+    end else begin//condition when integer bits are less than 4
+      a_precise_1[DATA_IN_0_PRECISION_INT-1:0] = data_in_0[DATA_IN_0_PRECISION_0-1:DATA_IN_0_PRECISION_1];
+      a_precise_1[3:DATA_IN_0_PRECISION_INT] = 0;
+      if (DATA_IN_0_PRECISION_1 > 3) begin
+        a_precise_2 = data_in_0[DATA_IN_0_PRECISION_1-1:DATA_IN_0_PRECISION_1-3];
+	a_imprecise[DATA_IN_0_PRECISION_1-3-1:0] = data_in_0[DATA_IN_0_PRECISION_1-3-1:0];
+	a_imprecise[DATA_IN_0_PRECISION_1-1:DATA_IN_0_PRECISION_1-3] = 0;
+      end
+      else if (DATA_IN_0_PRECISION_1 == 3) begin
+        a_precise_2 = data_in_0[DATA_IN_0_PRECISION_1-1:DATA_IN_0_PRECISION_1-3];
+    	a_imprecise = 0;
+      end
+      else if (DATA_IN_0_PRECISION_1 == 0) begin
+        a_precise_2 = 0;
+	a_imprecise = 0;
+      end else begin
+        a_precise_2[2:2-DATA_IN_0_PRECISION_1+1] = data_in_0[DATA_IN_0_PRECISION_1-1:0];
+	a_precise_2[2-DATA_IN_0_PRECISION_1:0] = 0;
+	a_imprecise = 0;
+      end 		
+    end 
+  end
 	
-    //fetching exponential value of a_precise_1 from LUT
-    
-    integer_lut_16 integer_lut_inst
-    (
-        .address(a_precise_1),
-        .data_out(exp_precise_1)
-    );
+  //fetching exponential value of a_precise_1 from LUT  
+  integer_lut_16 integer_lut_inst (
+    .address(a_precise_1),
+    .data_out(exp_precise_1)
+  );
 	
-    //fetching exponential value of a_precise_2 from LUT
-    
-    fractional_lut_16 fractional_lut_inst
-    (
-        .address(a_precise_2),
-        .data_out(exp_precise_2)
-    );
+  //fetching exponential value of a_precise_2 from LUT
+  fractional_lut_16 fractional_lut_inst (
+    .address(a_precise_2),
+    .data_out(exp_precise_2)
+  );
 
   //calculating exponential value of a_imprecise using series approximator
   series_approx #(
