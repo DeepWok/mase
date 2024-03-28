@@ -55,9 +55,9 @@ class NetworkImageNet(nn.Module):
         self.drop_path_prob = drop_path_prob
 
     def extra_repr(self):
-        return ('{name}(C={_C}, N=[{_layerN}, {_NNN}], aux-index={auxiliary_index}, drop-path={drop_path_prob})'.format(
-            name=self.__class__.__name__, **self.__dict__
-        ))
+        return "{name}(C={_C}, N=[{_layerN}, {_NNN}], aux-index={auxiliary_index}, drop-path={drop_path_prob})".format(
+             name=self.__class__.__name__, **self.__dict__
+        )
 
     def get_message(self):
         return self.extra_repr()
@@ -78,8 +78,4 @@ class NetworkImageNet(nn.Module):
                 logits_aux = self.auxiliary_head(s1)
         out = self.global_pooling(s1)
         logits = self.classifier(out.view(out.size(0), -1))
-
-        if logits_aux is None: 
-            return out, logits
-        else: 
-            return out, [logits, logits_aux]
+        return (out, logits) if logits_aux is None else (out, [logits, logits_aux])

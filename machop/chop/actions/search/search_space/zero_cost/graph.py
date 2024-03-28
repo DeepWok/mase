@@ -65,7 +65,7 @@ DEFAULT_ZERO_COST_ARCHITECTURE_CONFIG = {
         "op_3_0": 2,
         "op_3_1": 1,
         "op_3_2": 1,
-        "number_classes": 10
+        "number_classes": 10,
     }
 }
 
@@ -143,7 +143,7 @@ class ZeroCostProxy(SearchSpaceBase):
                 continue
             else:
                 choices["nas_zero_cost"][key] = value
-        
+
         # flatten the choices and choice_lengths
         # self.choices_flattened = {}
         flatten_dict(choices, flattened=self.choices_flattened)
@@ -187,7 +187,7 @@ def instantiate_batchnorm(num_features, eps, momentum, affine, track_running_sta
 
 def instantiate_conv2d(
     in_channels, out_channels, kernel_size, stride, padding, dilation, groups, bias
-    ):
+):
     return nn.Conv2d(
         in_channels=in_channels,
         out_channels=out_channels,
@@ -212,16 +212,16 @@ def generate_configs(config_dict):
     This function generates the configuration for the NAS based on the given dictionary.
     This is used to generate the configuration that is used to query the NAS-Bench-201 API for the architecture performance.
     """
-    name = config_dict['name']
-    C = config_dict['C']
-    N = config_dict['N']
-    num_classes = config_dict['number_classes']
+    name = config_dict["name"]
+    C = config_dict["C"]
+    N = config_dict["N"]
+    num_classes = config_dict["number_classes"]
     op_map = {
-        0:'none', 
-        1:'skip_connect', 
-        2:'nor_conv_3x3', 
-        3:'nor_conv_1x1', 
-        4:'avg_pool_3x3'
+        0: "none", 
+        1: "skip_connect", 
+        2: "nor_conv_3x3", 
+        3: "nor_conv_1x1", 
+        4: "avg_pool_3x3",
     }
 
     ### generate combination
@@ -241,7 +241,7 @@ def generate_configs(config_dict):
         "C": C,
         "N": N,
         "arch_str": arch_str,
-        "num_classes": num_classes
+        "num_classes": num_classes,
     }
 
     return config

@@ -79,11 +79,15 @@ class SearchCell(nn.Module):
                 output = self.__forwardOnlyW(S0, S1, drop_prob)
         else:
             test_genotype = modes[0]
-            if self.reduction: operations, concats = test_genotype.reduce, test_genotype.reduce_concat
-            else: operations, concats = test_genotype.normal, test_genotype.normal_concat
+            if self.reduction: 
+                operations, concats = test_genotype.reduce, test_genotype.reduce_concat
+            else: 
+                operations, concats = test_genotype.normal, test_genotype.normal_concat
             s0, s1 = self.preprocess0(S0), self.preprocess1(S1)
             states, offset = [s0, s1], 0
-            assert self._steps == len(operations), '{:} vs. {:}'.format(self._steps, len(operations))
+            assert self._steps == len(operations), '{:} vs. {:}'.format(
+                self._steps, len(operations)
+            )
             for i, (opA, opB) in enumerate(operations):
                 A = self._ops[offset + opA[1]](states[opA[1]], None, opA[0])
                 B = self._ops[offset + opB[1]](states[opB[1]], None, opB[0])
@@ -93,7 +97,8 @@ class SearchCell(nn.Module):
             output = torch.cat([states[i] for i in concats], dim=1)
         if self._use_residual and S1.size() == output.size():
             return S1 + output
-        else: return output
+        else: 
+            return output
 
     def __forwardBoth(self, S0, S1, weights, connect, adjacency, drop_prob):
         s0, s1 = self.preprocess0(S0), self.preprocess1(S1)
@@ -101,11 +106,11 @@ class SearchCell(nn.Module):
         for i in range(self._steps):
             clist = []
             for j, h in enumerate(states):
-                x = self._ops[offset+j](h, weights[offset+j], None)
-                if self.training and drop_prob > 0.:
-                    x = drop_path(x, math.pow(drop_prob, 1./len(states)))
+                x = self._ops[offset + j](h, weights[offset + j], None)
+                if self.training and drop_prob > 0.0:
+                    x = drop_path(x, math.pow(drop_prob, 1.0 / len(states)))
                 clist.append(x)
-            connection = torch.mm(connect['{:}'.format(i)], adjacency[i]).squeeze(0)
+            connection = torch.mm(connect["{:}".format(i)], adjacency[i]).squeeze(0)
             state = sum(w * node for w, node in zip(connection, clist))
             offset += len(states)
             states.append(state)
@@ -125,7 +130,7 @@ class SearchCell(nn.Module):
             state = sum(xlist) * 2 / len(xlist)
             offset += len(states)
             states.append(state)
-        return torch.cat(states[-self._multiplier:], dim=1)
+        return torch.cat(states[-self._multiplier :], dim=1)
 
 
 class InferCell(nn.Module):

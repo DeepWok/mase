@@ -111,7 +111,7 @@ def search(
                 "True Accuracy": strategy.zc_true_accuracy,
             }
         )
-        
+
         # strategy.zc_proxy.to_excel("/home/xz2723/mase_xinyi/machop/results/proxy_4.xlsx")
         # sorted_results.to_excel("/home/xz2723/mase_xinyi/machop/results/sorted_results_4.xlsx")
 

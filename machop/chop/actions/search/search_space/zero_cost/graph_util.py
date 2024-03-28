@@ -76,12 +76,12 @@ def is_full_dag(matrix):
     """
     shape = np.shape(matrix)
 
-    rows = matrix[:shape[0]-1, :] == 0
-    rows = np.all(rows, axis=1)     # Any row with all 0 will be True
+    rows = matrix[: shape[0] - 1, :] == 0
+    rows = np.all(rows, axis=1)
     rows_bad = np.any(rows)
 
     cols = matrix[:, 1:] == 0
-    cols = np.all(cols, axis=0)     # Any col with all 0 will be True
+    cols = np.all(cols, axis=0)
     cols_bad = np.any(cols)
 
     return (not rows_bad) and (not cols_bad)
@@ -109,7 +109,7 @@ def hash_module(matrix, labeling):
 
     assert len(in_edges) == len(out_edges) == len(labeling)
     hashes = list(zip(out_edges, in_edges, labeling))
-    hashes = [hashlib.md5(str(h).encode('utf-8')).hexdigest() for h in hashes]
+    hashes = [hashlib.md5(str(h).encode("utf-8")).hexdigest() for h in hashes]
     # Computing this up to the diameter is probably sufficient but since the
     # operation is fast, it is okay to repeat more times.
     for _ in range(vertices):
@@ -117,12 +117,19 @@ def hash_module(matrix, labeling):
         for v in range(vertices):
             in_neighbors = [hashes[w] for w in range(vertices) if matrix[w, v]]
             out_neighbors = [hashes[w] for w in range(vertices) if matrix[v, w]]
-            new_hashes.append(hashlib.md5(
-                (''.join(sorted(in_neighbors)) + '|' +
-                    ''.join(sorted(out_neighbors)) + '|' +
-                    hashes[v]).encode('utf-8')).hexdigest())
+            new_hashes.append(
+                hashlib.md5(
+                    (
+                        "".join(sorted(in_neighbors))
+                        + "|"
+                        + "".join(sorted(out_neighbors))
+                        + "|"
+                        + hashes[v]
+                    ).encode("utf-8")
+                ).hexdigest()
+            )
         hashes = new_hashes
-    fingerprint = hashlib.md5(str(sorted(hashes)).encode('utf-8')).hexdigest()
+    fingerprint = hashlib.md5(str(sorted(hashes)).encode("utf-8")).hexdigest()
 
     return fingerprint
 
@@ -142,9 +149,9 @@ def permute_graph(graph, label, permutation):
     forward_perm = zip(permutation, list(range(len(permutation))))
     inverse_perm = [x[1] for x in sorted(forward_perm)]
     edge_fn = lambda x, y: graph[inverse_perm[x], inverse_perm[y]] == 1
-    new_matrix = np.fromfunction(np.vectorize(edge_fn),
-                                    (len(label), len(label)),
-                                    dtype=np.int8)
+    new_matrix = np.fromfunction(
+        np.vectorize(edge_fn), (len(label), len(label)), dtype=np.int8
+    )
     new_label = [label[inverse_perm[i]] for i in range(len(label))]
     return new_matrix, new_label
 
@@ -155,7 +162,6 @@ def is_isomorphic(graph1, graph2):
     matrix2, label2 = np.array(graph2[0]), graph2[1]
     assert np.shape(matrix1) == np.shape(matrix2)
     assert len(label1) == len(label2)
-
     vertices = np.shape(matrix1)[0]
     # Note: input and output in our constrained graphs always map to themselves
     # but this script does not enforce that.
@@ -163,5 +169,4 @@ def is_isomorphic(graph1, graph2):
         pmatrix1, plabel1 = permute_graph(matrix1, label1, perm)
         if np.array_equal(pmatrix1, matrix2) and plabel1 == label2:
             return True
-
     return False
