@@ -54,8 +54,6 @@ jobs:
 
           # additional from setup.py prev
           pip install tqdm==4.61.1
-          pip install scikit-learn==1.0.2
-          pip install scikit-image==0.19.2
           pip install pytorch-msssim==0.2.1
           pip install tensorwatch==0.9.1
 
