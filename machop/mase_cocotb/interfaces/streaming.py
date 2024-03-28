@@ -51,8 +51,6 @@ class StreamMonitor(Monitor):
         self.check = check
 
     def _trigger(self):
-        print('-----TRIGGER----')
-        print(self.valid.value == 1 and self.ready.value == 1)
         return self.valid.value == 1 and self.ready.value == 1
 
     def _recv(self):
@@ -63,7 +61,5 @@ class StreamMonitor(Monitor):
 
     def _check(self, got, exp):
         if self.check:
-            assert np.equal(got, exp).all()
-            # if not np.equal(got, exp).all():
-                # print('------FAILED---------')
-                # raise TestFailure("\nGot \n%s, \nExpected \n%s" % (got, exp))
+            if not np.equal(got, exp).all():
+                raise TestFailure("\nGot \n%s, \nExpected \n%s" % (got, exp))
