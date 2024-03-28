@@ -2,7 +2,6 @@ from functools import partial
 
 import torch
 from torch import Tensor
-from torch.nn import Linear
 from torch.nn import functional as F
 from .utils import get_stats, quantiser_passthrough
 
@@ -49,16 +48,12 @@ class _LinearBase(torch.nn.Linear):
         device=None,
         dtype=None,
     ) -> None:
-        print('base')
         super().__init__(in_features, out_features, bias, device, dtype)
-        print('basesuper')
-
         self.bypass = False
         self.x_quantizer = None
         self.w_quantizer = None
         self.b_quantizer = None
         self.pruning_masks = None
-        
 
     def forward(self, x: Tensor) -> Tensor:
         if self.bypass:
@@ -96,12 +91,11 @@ class LinearInteger(_LinearBase):
         in_features: int,
         out_features: int,
         bias: bool = True,
-        device="cpu",
-        dtype=torch.float32,
+        device=None,
+        dtype=None,
         config=None,
     ) -> None:
         super().__init__(in_features, out_features, bias, device, dtype)
-
         assert config is not None, "config is None!"
         self.config = config
         self.bypass = config.get("bypass", False)
