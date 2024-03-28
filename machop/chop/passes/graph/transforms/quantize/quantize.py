@@ -212,7 +212,7 @@ def graph_iterator_quantize_by_type2(graph, config: dict):
             continue
         node_config = get_config(
             config, node.name
-        )#node_config = get_config(config, get_mase_op(node))
+        )  # node_config = get_config(config, get_mase_op(node))
         if node_config["name"] is None:
             continue
         node_config = parse_node_config(node_config, get_mase_op(node))

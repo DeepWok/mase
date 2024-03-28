@@ -209,7 +209,7 @@ class MixedPrecisionEnv(gym.Env):
         scaled_metrics = {}
         for metric_name in self.metric_names:
             scaled_metrics[metric_name] = (
-                    self.metrics[metric_name]["scale"] * metrics[metric_name]
+                self.metrics[metric_name]["scale"] * metrics[metric_name]
             )
 
         # self.visualizer.log_metrics(metrics=scaled_metrics, step=trial.number)

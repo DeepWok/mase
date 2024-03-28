@@ -28,7 +28,7 @@ class StrategyRL(SearchStrategyBase):
         self.total_timesteps = setup["total_timesteps"]
         # self.save_name = "./mase_output/"+setup["save_name"]+'/'+setup["save_name"]
         self.save_name = (
-                "./mase_output/" + setup["save_name"] + "/" + setup["save_name"]
+            "./mase_output/" + setup["save_name"] + "/" + setup["save_name"]
         )
         self.env_name = setup["env"]
         self.env = env_map[self.env_name]
