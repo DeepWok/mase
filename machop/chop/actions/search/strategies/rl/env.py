@@ -175,6 +175,7 @@ class MixedPrecisionEnvHiLo(BaseMixedPrecisionEnv):
         self.episode_len = 0
         self.episode_max_len = episode_max_len
         self.model_config = {key: 0 for key in self.search_space.choices_flattened.keys()}
+        self.best_reward = -math.inf
 
     def _define_observation_space(self):
         self.observation_space = Dict({
