@@ -261,107 +261,18 @@ def transform_graph(
                 pass_config["model_name"] = model_name
                 pass_config["input_generator"] = input_generator
                 pass_config["dummy_in"] = dummy_input
-                ## Add test before pruning for comparison.
 
-                # Define function to calculate accuracy
-                # def calculate_accuracy(model, dataloader):
-                #         correct = 0
-                #         total = 0
-                #         with torch.no_grad():
-                #             for data in dataloader:
-                #                 images, labels = data
-                #                 outputs = model(images.to('cuda'))
-                #                 _, predicted = torch.max(outputs.data, 1)
-                #                 total += labels.size(0)
-                #                 correct += (predicted == labels.to('cuda')).sum().item()
-                #         return (100 * correct / total)
-                
-                # if dataset_info.name == 'cifar10':
-                #     transform = transforms.Compose([
-                #         transforms.ToTensor(),
-                #         transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
-                #     ])
-                #     testset = torchvision.datasets.CIFAR10(root='./data', train=False, download=True, transform=transform)
-                #     testloader = torch.utils.data.DataLoader(testset, batch_size=128, shuffle=False, num_workers=2)
-                #     trainset = torchvision.datasets.CIFAR10(root='./data', train=True, download=True, transform=transform)
-                #     trainloader = torch.utils.data.DataLoader(trainset, batch_size=128, shuffle=True, num_workers=2)
-
-                #     criterion = torch.nn.CrossEntropyLoss()
-                #     optimizer = torch.optim.Adam(model.parameters(), lr=1e-5)
-
-                #     accuracy_before_pruned = calculate_accuracy(model, testloader)
-
-
-                # elif dataset_info.name == 'imagenet':
-                #     transform = transforms.Compose([
-                #         transforms.RandomResizedCrop(224),
-                #         transforms.RandomHorizontalFlip(),
-                #         transforms.ToTensor(),
-                #         transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
-                #     ])
-                #     testset = torchvision.datasets.ImageNet(root='./data', train=False, download=True, transform=transform)
-                #     testloader = torch.utils.data.DataLoader(testset, batch_size=128, shuffle=False, num_workers=2)
-                #     trainset = torchvision.datasets.ImageNet(root='./data', train=True, download=True, transform=transform)
-                #     trainloader = torch.utils.data.DataLoader(trainset, batch_size=128, shuffle=True, num_workers=2)
-
-                #     criterion = torch.nn.CrossEntropyLoss()
-                #     optimizer = torch.optim.Adam(model.parameters(), lr=1e-5)
-                #     accuracy_before_pruned = calculate_accuracy(model, testloader)
-                # ## Add more dataset loading method here
-                # else:
-                #     raise ValueError(
-                #         "Dataset {} is not supported for pruning yet".format(dataset_info.name)
-                #     )
-                # print('test before purning is complete.')
-
-                # num_before_prune = 0
-                # for p in model.parameters():
-                #     num_before_prune += torch.count_nonzero(p).item()
 
                 graph = PASSES[pass_name](
                     graph,
-                    # save_dir=prune_save_dir,
                     pass_args=pass_config,
                 )
                 
-                # num_after_prune = 0
-                # for node in graph.fx_graph.nodes:
-                #     if node.op == "call_module":
-                #         if isinstance(graph.modules[node.target], (torch.nn.Conv2d, torch.nn.Linear)):
-                #             mask = graph.modules[node.target].parametrization.weight[0].mask
-                #             num_true = torch.sum(mask).item()
-                #             num_after_prune += num_true
                 
                 graph.model.to('cuda')
                 graph, sparsity_info = add_pruning_metadata_analysis_pass(graph,
                                                                                {"dummy_in": dummy_input, "add_value": False})
                 pp.pprint(sparsity_info)
-
-                # For this case, the pruning pass does not directly update the pruned weights
-                # to the model, but save the pruned weights in the children of model, thus we need
-                # to update the pruned weights to the graph.model for retrain with the pruned weights
-                # def get_parametrized_layers(module):
-                #     parametrized_layers = []
-                #     for name, submodule in module.named_children():
-                #         if isinstance(submodule, (torch.nn.modules.conv.Conv2d, torch.nn.modules.linear.Linear)):
-                #             parametrized_layers.append(submodule)
-                #         elif isinstance(submodule, torch.nn.Module):
-                #             parametrized_layers.extend(get_parametrized_layers(submodule))
-                #     return parametrized_layers
-
-                # parametrized_layers = get_parametrized_layers(graph.model)
-
-                # i=0
-                # for name, param in model.named_parameters():
-                #     if 'original' in name:
-                #         pruned_weights = parametrized_layers[i].weight
-                #         param.data.copy_(pruned_weights)
-                #         i+=1
-       
-                # accuracy_after_pruned = calculate_accuracy(model, testloader)
-
-
-                ## Huffman sparsity encoding --TO FINISH (only encoding is done)
                 '''
                 print('Start Encoding')
                 # Apply Huffman Encoding to the pruned weights
@@ -422,44 +333,6 @@ def transform_graph(
                     transformed_ckpt = save_dir / f"{pass_name}_ckpt"
                     transformed_ckpt.mkdir(parents=True, exist_ok=True)
                     torch.save(model.state_dict(), os.path.join(transformed_ckpt, "state_dict.pt"))
-                # retrain the pruned model
-                # trainset = torchvision.datasets.CIFAR10(root='./data', train=True, download=True, transform=transform)
-                # trainloader = torch.utils.data.DataLoader(trainset, batch_size=128, shuffle=True, num_workers=2)
-
-                # criterion = torch.nn.CrossEntropyLoss()
-                # optimizer = torch.optim.Adam(model.parameters(), lr=1e-5)
-                # print("Start retraining the model")
-                # num_epochs = 5
-                # for epoch in range(num_epochs):
-                #     running_loss = 0.0
-                #     for i, data in enumerate(trainloader, 0):
-                #         inputs, labels = data
-                #         optimizer.zero_grad()
-
-                #         outputs = model(inputs)
-                #         loss = criterion(outputs, labels.to('cuda'))
-                #         loss.backward()
-                #         optimizer.step()
-
-                #         running_loss += loss.item()
-                #         if i % 100 == 99:  # Print every 100 mini-batches
-                #             print('[Num of epoch:%d, %5dth batch] loss: %.3f' %
-                #                 (epoch + 1, i + 1, running_loss / 100))
-                #             running_loss = 0.0
-                # print("Retrain complete")
-
-                # # Evaluate the model on the test set
-                # accuracy_after_retrain = calculate_accuracy(model, testloader)
-
-                # print('Accuracy of the network before pruning %.5f %%' % accuracy_before_pruned)
-                # print('Number of parameters before pruning:', num_before_prune)
-                # print('Accuracy of the network after pruning: %.5f %%' % accuracy_after_pruned)
-                # print('Number of parameters before pruning:', num_after_prune)
-
-                # print('Compression ratio of pruning is: %.2f %%' % ((num_before_prune/num_after_prune)*100))
-                # print('Accuracy rentention rate before retraining: %.2f %%' % ((accuracy_after_pruned/accuracy_before_pruned)*100))
-                # print('Accuracy rentention rate after retraining: %.2f %%' % ((accuracy_after_retrain/accuracy_before_pruned)*100))
-
                 return graph
             
             case "retrain":
