@@ -34,7 +34,7 @@ from .transforms import (
     evaluate_pytorch_model_pass,
     graph_to_trt_pass,
     mixed_precision_transform_pass,
-    test_trt_engine
+    test_trt_engine,
 )
 
 from .interface import (

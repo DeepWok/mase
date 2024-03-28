@@ -34,7 +34,7 @@ from .graph.transforms import (
     mixed_precision_transform_pass,
     test_trt_engine,
     evaluate_pytorch_model_pass,
-    graph_to_trt_pass
+    graph_to_trt_pass,
 )
 from .module.analysis import calculate_avg_bits_module_analysis_pass
 from .module.transforms import quantize_module_transform_pass

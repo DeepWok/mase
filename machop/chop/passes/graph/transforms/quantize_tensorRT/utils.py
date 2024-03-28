@@ -25,18 +25,26 @@ def create_new_module(
     if mase_op == "linear":
         use_bias = original_module.bias is not None
 
-        if config.get("name") == "int":      
+        if config.get("name") == "int":
             if "input" in config:
-                quant_desc_input = QuantDescriptor(calib_method=config["input"]["calibrator"], axis=config["input"]["quantize_axis"], fake_quant=config["FakeQuantize"])
+                quant_desc_input = QuantDescriptor(
+                    calib_method=config["input"]["calibrator"],
+                    axis=config["input"]["quantize_axis"],
+                    fake_quant=config["FakeQuantize"],
+                )
                 qnn.QuantLinear.set_default_quant_desc_input(quant_desc_input)
             if "weight" in config:
-                quant_desc_weight = QuantDescriptor(calib_method=config["weight"]["calibrator"], axis=config["weight"]["quantize_axis"], fake_quant=config["FakeQuantize"])
+                quant_desc_weight = QuantDescriptor(
+                    calib_method=config["weight"]["calibrator"],
+                    axis=config["weight"]["quantize_axis"],
+                    fake_quant=config["FakeQuantize"],
+                )
                 qnn.QuantLinear.set_default_quant_desc_weight(quant_desc_weight)
 
             new_module = qnn.QuantLinear(
                 in_features=original_module.in_features,
                 out_features=original_module.out_features,
-                bias=use_bias
+                bias=use_bias,
             )
 
             copy_weights(original_module.weight, new_module.weight)
@@ -45,16 +53,24 @@ def create_new_module(
 
         elif config.get("name") == "fp16":
             new_module = original_module.half()
-    
+
     elif mase_op in ("conv2d"):
-        if config.get("name") == "int":  
+        if config.get("name") == "int":
             use_bias = original_module.bias is not None
 
             if "input" in config:
-                quant_desc_input = QuantDescriptor(calib_method=config["input"]["calibrator"], axis=config["input"]["quantize_axis"], fake_quant=config["FakeQuantize"])
+                quant_desc_input = QuantDescriptor(
+                    calib_method=config["input"]["calibrator"],
+                    axis=config["input"]["quantize_axis"],
+                    fake_quant=config["FakeQuantize"],
+                )
                 qnn.QuantConv2d.set_default_quant_desc_input(quant_desc_input)
             if "weight" in config:
-                quant_desc_weight = QuantDescriptor(calib_method=config["weight"]["calibrator"], axis=config["weight"]["quantize_axis"], fake_quant=config["FakeQuantize"])
+                quant_desc_weight = QuantDescriptor(
+                    calib_method=config["weight"]["calibrator"],
+                    axis=config["weight"]["quantize_axis"],
+                    fake_quant=config["FakeQuantize"],
+                )
                 qnn.QuantConv2d.set_default_quant_desc_weight(quant_desc_weight)
 
             new_module = qnn.QuantConv2d(
@@ -70,20 +86,28 @@ def create_new_module(
             )
 
             copy_weights(original_module.weight, new_module.weight)
-            if use_bias:    
+            if use_bias:
                 copy_weights(original_module.bias, new_module.bias)
-        elif config.get("name") == "fp16":  
+        elif config.get("name") == "fp16":
             new_module = original_module.half()
 
     elif mase_op in ("conv1d"):
         use_bias = original_module.bias is not None
 
-        if config.get("name") == "int":  
+        if config.get("name") == "int":
             if "input" in config:
-                quant_desc_input = QuantDescriptor(calib_method=config["input"]["calibrator"], axis=config["input"]["quantize_axis"], fake_quant=config["FakeQuantize"])
+                quant_desc_input = QuantDescriptor(
+                    calib_method=config["input"]["calibrator"],
+                    axis=config["input"]["quantize_axis"],
+                    fake_quant=config["FakeQuantize"],
+                )
                 qnn.QuantConv1d.set_default_quant_desc_input(quant_desc_input)
             if "weight" in config:
-                quant_desc_weight = QuantDescriptor(calib_method=config["weight"]["calibrator"], axis=config["weight"]["quantize_axis"], fake_quant=config["FakeQuantize"])
+                quant_desc_weight = QuantDescriptor(
+                    calib_method=config["weight"]["calibrator"],
+                    axis=config["weight"]["quantize_axis"],
+                    fake_quant=config["FakeQuantize"],
+                )
                 qnn.QuantConv1d.set_default_quant_desc_weight(quant_desc_weight)
 
             new_module = qnn.QuantConv1d(
@@ -99,10 +123,10 @@ def create_new_module(
             )
 
             copy_weights(original_module.weight, new_module.weight)
-            if use_bias:    
+            if use_bias:
                 copy_weights(original_module.bias, new_module.bias)
-        
-        elif config.get("name") == "fp16":  
+
+        elif config.get("name") == "fp16":
             new_module = original_module.to(torch.float16)
 
     # elif mase_op == "relu":

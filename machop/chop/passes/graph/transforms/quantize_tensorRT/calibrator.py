@@ -12,7 +12,7 @@ import torch.nn.functional as F
 from cuda import cudart
 from pytorch_quantization import quant_modules
 from pytorch_quantization.tensor_quant import QuantDescriptor
-from torch.autograd import Variable                            
+from torch.autograd import Variable
 
 logger = logging.getLogger(__name__)
 
@@ -33,7 +33,7 @@ def compute_amax(model, **kwargs):
                     module.load_calib_amax()
                 else:
                     module.load_calib_amax(**kwargs)
-            print(F"{name:40}: {module}")
+            print(f"{name:40}: {module}")
     model.cuda()
 
 
@@ -42,7 +42,7 @@ def collect_stats(model, data_loader, num_batches):
     Feed data to the network and collect statistic
     """
 
-    # turn on calibration tool   
+    # turn on calibration tool
     for name, module in model.named_modules():
         if isinstance(module, qnn.TensorQuantizer):
             if module._calibrator is not None:
@@ -73,15 +73,18 @@ def graph_calibration_pass(graph, pass_args=None):
 
     # quant_modules.initialize()
     graph.model.cuda()
-    
-    collect_stats(graph.model, pass_args["data_module"].train_dataloader(), pass_args["num_batches"])
-            
-    if pass_args['calibrator'] == "percentile":
-        for percentile in pass_args['percentiles']:
+
+    collect_stats(
+        graph.model,
+        pass_args["data_module"].train_dataloader(),
+        pass_args["num_batches"],
+    )
+
+    if pass_args["calibrator"] == "percentile":
+        for percentile in pass_args["percentiles"]:
             compute_amax(graph.model, method="percentile", percentile=percentile)
     else:
-        compute_amax(graph.model, method=pass_args['calibrator'])    
+        compute_amax(graph.model, method=pass_args["calibrator"])
 
     print("Succeeded calibrating model in pyTorch!")
-
     return graph
