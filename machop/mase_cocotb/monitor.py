@@ -33,7 +33,7 @@ class Monitor:
             await RisingEdge(self.clk)
             if self._trigger():
                 tr = self._recv()
-                # self.log.info(f"Observed output beat {tr}")
+                self.log.info(f"Observed output beat {tr}")
                 self.recv_queue.put(tr)
 
                 if self.exp_queue.empty():
@@ -58,5 +58,5 @@ class Monitor:
 
     def load_monitor(self, tensor):
         for beat in tensor:
-            # self.log.info(f"Expecting output beat {beat}")
+            self.log.info(f"Expecting output beat {beat}")
             self.expect(beat)

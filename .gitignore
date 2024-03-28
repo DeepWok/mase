@@ -144,9 +144,6 @@ venv.bak/
 *.vcd
 
 #Submodules
-Docker/
-mlir-air/
-verilog-ethernet/
 submodules/
 
 machop/mase_components/scatter/scatter_vivado
