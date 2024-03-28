@@ -88,7 +88,6 @@ class RuntimeAnalysis():
                         self.n_Input = [self.engine.get_tensor_mode(self.lTensorName[i]) for i in range(self.num_io)].count(trt.TensorIOMode.INPUT)
                         self.context = self.engine.create_execution_context()
                         self.model = self.context
-                        self.summarize()
                         self.model_name = f"{self.config['model']}-trt_quantized"
                         self.model_type = 'tensorrt'
                         
@@ -137,7 +136,7 @@ class RuntimeAnalysis():
         save_dir.mkdir(parents=True, exist_ok=True)
         return save_dir / f"model.{suffix}"
 
-    def summarize(self):
+    def _summarize(self):
         io_info_lines = [
             "Index | Type    | DataType | Static Shape         | Dynamic Shape        | Name",
             "------|---------|----------|----------------------|----------------------|-----------------------"

@@ -193,6 +193,8 @@ The procedure in the [How It Works Section](#⚙️-how-it-works) can be acompli
 ./ch transform --config {config_file} --load {model_checkpoint} --load-type pl
 ```
 
+> N.B. Some GPUs, particularly older hardware, may not be well optimized for INT datatypes and thus quantization may not always be beneficial.
+
 ### 📚 Tutorials
 >We strongly recommend you look through the dedicated tutorials which walk you through the process of utilising MaseRT:
 >- [TensorRT Tutorial](/docs/tutorials/tensorrt/tensorRT_quantization_tutorial.ipynb) 

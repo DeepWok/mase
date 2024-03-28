@@ -114,11 +114,13 @@ class Quantizer:
         config = builder.create_builder_config()
         config.max_workspace_size = 4 << 30  # 4GB
 
+        default_precision = self.config['default']['config']['precision']
+
         # This section may be uncommented if pytorch-quantization is not used for int8 Calibration
         '''
         # Only required if pytorch-quantization is not used
         config.set_flag(trt.BuilderFlag.INT8)
-        if self.config['default']['config']['precision'] == 'int8':
+        if default_precision == 'int8':
             config.int8_calibrator = Int8Calibrator(
                 self.config['num_calibration_batches'], 
                 self.config['data_module'].train_dataloader(), 
@@ -126,32 +128,36 @@ class Quantizer:
                 )
         '''
 
-        # Only quantize and calibrate non int8  pytorch-quantization
-        if self.config['default']['config']['precision'] != 'int8':
+        # Only quantize and calibrate non int8 pytorch-quantization
+        if default_precision != 'int8':
             config.set_flag(trt.BuilderFlag.PREFER_PRECISION_CONSTRAINTS)
             config.set_flag(trt.BuilderFlag.DIRECT_IO)
             config.set_flag(trt.BuilderFlag.REJECT_EMPTY_ALGORITHMS)
             config.set_flag(trt.BuilderFlag.STRICT_TYPES)
 
-        if self.config['default']['config']['precision'] == 'fp16' and not layer_wise_mixed_precision:
+        if default_precision == 'fp16' and not layer_wise_mixed_precision:
             config.set_flag(trt.BuilderFlag.FP16)
 
         elif layer_wise_mixed_precision:
-            # Set layer precision and type bsed on TOML configuration
+            # Iterating through each layer and setting precision based on the config
             for idx in range(network.num_layers):
                 layer = network.get_layer(idx)
-                if self.config['default']['config']['precision'] == 'fp16':
+                layer_config = config.get(f'passes.tensorrt.feature_layers_{idx}.config', {})
+                precision = layer_config.get('precision', default_precision)  # Default to 'fp16' if not specified
+                
+                # Apply precision settings
+                if precision == 'fp16':
                     layer.precision = trt.float16
                     layer.set_output_type(0, trt.DataType.HALF)
-                elif self.config['default']['config']['precision'] == 'int8':
+                elif precision == 'int8':
                     layer.precision = trt.int8
                     layer.set_output_type(0, trt.DataType.INT8)
                 else:
-                    raise Exception("Unsupported precision type. Please choose from 'fp16' or 'int8'.")
+                    raise Exception(f"Unsupported precision type '{precision}' for layer {idx}. Please choose from 'fp16' or 'int8'.")
         
         serialized_engine = builder.build_serialized_network(network, config)
         if serialized_engine is None:
-            raise Exception('Failed to build serialized network.')
+            raise Exception('Failed to build serialized network. A builderflag or config parameter may be incorrect.')
 
         trt_path = prepare_save_path(self.config, method='trt', suffix='trt')
         with open(trt_path, 'wb') as f:
