@@ -188,15 +188,15 @@ module exp #(
     
     assign product = exp_precise_1*exp_precise_2*exp_imprecise; //final multiplication of parts
     
-    //rounding of output result
-    fixed_round #(
-        .IN_WIDTH(PDT_WIDTH),           
-        .IN_FRAC_WIDTH(PDT_WIDTH-3),
-        .OUT_WIDTH(DATA_OUT_0_PRECISION_0),
-        .OUT_FRAC_WIDTH(DATA_OUT_0_PRECISION_1)
-    ) fixed_round_inst1 (
-        .data_in(product),       
-        .data_out(data_out_0)
-    );
+	//rounding of output result
+	fixed_round #(
+		.IN_WIDTH(PDT_WIDTH),           
+		.IN_FRAC_WIDTH(PDT_WIDTH-3),
+		.OUT_WIDTH(DATA_OUT_0_PRECISION_0),
+		.OUT_FRAC_WIDTH(DATA_OUT_0_PRECISION_1)
+	) fixed_round_inst1 (
+		.data_in(product),       
+		.data_out(data_out_0)
+	);
         
 endmodule
