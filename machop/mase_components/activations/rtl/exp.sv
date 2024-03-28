@@ -135,35 +135,35 @@ module exp #(
 	a_imprecise = 0;
       end else begin
         a_precise_2[2:2-DATA_IN_0_PRECISION_1+1] = data_in_0[DATA_IN_0_PRECISION_1-1:0];
-	a_precise_2[2-DATA_IN_0_PRECISION_1:0] = 0;
-	a_imprecise = 0;
+	 a_precise_2[2-DATA_IN_0_PRECISION_1:0] = 0;
+	 a_imprecise = 0;
       end 		
     end 
   end
 	
   //fetching exponential value of a_precise_1 from LUT  
   integer_lut_16 integer_lut_inst (
-    .address(a_precise_1),
-    .data_out(exp_precise_1)
+      .address(a_precise_1),
+      .data_out(exp_precise_1)
   );
 	
   //fetching exponential value of a_precise_2 from LUT
   fractional_lut_16 fractional_lut_inst (
-    .address(a_precise_2),
-    .data_out(exp_precise_2)
+      .address(a_precise_2),
+      .data_out(exp_precise_2)
   );
 
   //calculating exponential value of a_imprecise using series approximator
   series_approx #(
-      .DATA_IN_0_PRECISION_0(DATA_IN_0_PRECISION_1),
+      .DATA_IN_0_PRECISION_0 (DATA_IN_0_PRECISION_1),
       .DATA_OUT_0_PRECISION_0(IMPRECISE_PRECISION_0 - 1)
   ) series_approx_inst (
-      .data_in_0(a_imprecise),
-      .data_out_0(exp_imprecise[IMPRECISE_PRECISION_0 - 2 : 0])
+      .data_in_0 (a_imprecise),
+      .data_out_0(exp_imprecise[IMPRECISE_PRECISION_0-2 : 0])
   );
 	
   assign exp_imprecise[IMPRECISE_PRECISION_0-1] = 0;    
-  assign product = exp_precise_1 * exp_precise_2 * exp_imprecise; //final multiplication of parts
+  assign product = exp_precise_1 * exp_precise_2 * exp_imprecise;  //final multiplication of parts
     
   //rounding of output result
   fixed_round #(
