@@ -18,7 +18,7 @@ def return_alphas_str(basemodel):
     else:
         string = ''
     if hasattr(basemodel, 'alphas_reduce'):
-        string = string + '\nreduce : {:}'.format(F.softmax(basemodel.alphas_reduce, dim=-1))
+        string += '\nreduce : {:}'.format(F.softmax(basemodel.alphas_reduce, dim=-1))
 
     if hasattr(basemodel, 'get_adjacency'):
         adjacency = basemodel.get_adjacency()
@@ -53,11 +53,7 @@ def remove_duplicate_archs(all_archs):
     archs = []
     str_archs = ['{:}'.format(x) for x in all_archs]
     for i, arch_x in enumerate(str_archs):
-        choose = True
-        for j in range(i):
-            if arch_x == str_archs[j]:
-                choose = False
-                break
+        choose = all(arch_x != str_archs[j] for j in range(i))
         if choose:
             archs.append(all_archs[i])
     return archs

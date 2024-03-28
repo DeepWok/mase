@@ -22,13 +22,13 @@ class MixedOp(nn.Module):
 
     def forward(self, x, weights, op_name):
         if op_name is None:
-            if weights is None:
-                return [op(x) for op in self._ops]
-            else:
-                return sum(w * op(x) for w, op in zip(weights, self._ops))
-        else:
-            op_index = self.name2idx[op_name]
-            return self._ops[op_index](x)
+            return (
+                [op(x) for op in self._ops]
+                if weights is None
+                else sum(w * op(x) for w, op in zip(weights, self._ops))
+            )
+        op_index = self.name2idx[op_name]
+        return self._ops[op_index](x)
 
 
 class SearchCell(nn.Module):
@@ -78,27 +78,32 @@ class SearchCell(nn.Module):
             elif modes[1] == 'only_W':
                 output = self.__forwardOnlyW(S0, S1, drop_prob)
         else:
-            test_genotype = modes[0]
-            if self.reduction: 
-                operations, concats = test_genotype.reduce, test_genotype.reduce_concat
-            else: 
-                operations, concats = test_genotype.normal, test_genotype.normal_concat
-            s0, s1 = self.preprocess0(S0), self.preprocess1(S1)
-            states, offset = [s0, s1], 0
-            assert self._steps == len(operations), '{:} vs. {:}'.format(
-                self._steps, len(operations)
-            )
-            for i, (opA, opB) in enumerate(operations):
-                A = self._ops[offset + opA[1]](states[opA[1]], None, opA[0])
-                B = self._ops[offset + opB[1]](states[opB[1]], None, opB[0])
-                state = A + B
-                offset += len(states)
-                states.append(state)
-            output = torch.cat([states[i] for i in concats], dim=1)
+            output = self._extracted_from_forward_10(modes, S0, S1)
         if self._use_residual and S1.size() == output.size():
             return S1 + output
         else: 
             return output
+
+    # TODO Rename this here and in `forward`
+    def _extracted_from_forward_10(self, modes, S0, S1):
+        test_genotype = modes[0]
+        operations, concats = (
+            (test_genotype.reduce, test_genotype.reduce_concat)
+            if self.reduction
+            else (test_genotype.normal, test_genotype.normal_concat)
+        )
+        s0, s1 = self.preprocess0(S0), self.preprocess1(S1)
+        states, offset = [s0, s1], 0
+        assert self._steps == len(operations), '{:} vs. {:}'.format(
+            self._steps, len(operations)
+        )
+        for opA, opB in operations:
+            A = self._ops[offset + opA[1]](states[opA[1]], None, opA[0])
+            B = self._ops[offset + opB[1]](states[opB[1]], None, opB[0])
+            state = A + B
+            offset += len(states)
+            states.append(state)
+        return torch.cat([states[i] for i in concats], dim=1)
 
     def __forwardBoth(self, S0, S1, weights, connect, adjacency, drop_prob):
         s0, s1 = self.preprocess0(S0), self.preprocess1(S1)
@@ -119,14 +124,19 @@ class SearchCell(nn.Module):
     def __forwardOnlyW(self, S0, S1, drop_prob):
         s0, s1 = self.preprocess0(S0), self.preprocess1(S1)
         states, offset = [s0, s1], 0
-        for i in range(self._steps):
+        for _ in range(self._steps):
             clist = []
             for j, h in enumerate(states):
                 xs = self._ops[offset+j](h, None, None)
                 clist += xs
-            if self.training and drop_prob > 0.:
-                xlist = [drop_path(x, math.pow(drop_prob, 1./len(states))) for x in clist]
-            else: xlist = clist
+            xlist = (
+                [
+                    drop_path(x, math.pow(drop_prob, 1.0 / len(states)))
+                    for x in clist
+                ]
+                if self.training and drop_prob > 0.0
+                else clist
+            )
             state = sum(xlist) * 2 / len(xlist)
             offset += len(states)
             states.append(state)
@@ -164,7 +174,9 @@ class InferCell(nn.Module):
                 self._indices.append(index)
 
     def extra_repr(self):
-        return ('{name}(steps={_steps}, concat={_concat})'.format(name=self.__class__.__name__, **self.__dict__))
+        return "{name}(steps={_steps}, concat={_concat})".format(
+            name=self.__class__.__name__, **self.__dict__
+        )
 
     def forward(self, S0, S1, drop_prob):
         s0 = self.preprocess0(S0)

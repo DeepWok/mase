@@ -62,9 +62,9 @@ class NetworkCIFAR(nn.Module):
         return self.extra_repr()
 
     def extra_repr(self):
-        return ('{name}(C={_C}, N={_layerN}, L={_Layer}, stem={_stem_multiplier}, drop-path={drop_path_prob})'.format(
+        return "{name}(C={_C}, N={_layerN}, L={_Layer}, stem={_stem_multiplier}, drop-path={drop_path_prob})".format(
             name=self.__class__.__name__, **self.__dict__
-        ))
+        )
 
     def forward(self, inputs):
         stem_feature, logits_aux = self.stem(inputs), None
@@ -83,7 +83,4 @@ class NetworkCIFAR(nn.Module):
         out = out.view(out.size(0), -1)
         logits = self.classifier(out)
 
-        if logits_aux is None: 
-            return out, logits
-        else: 
-            return out, [logits, logits_aux]
+        return (out, logits) if logits_aux is None else (out, [logits, logits_aux])

@@ -3,14 +3,14 @@ import numpy as np
 
 # Graphviz is optional and only required for visualization.
 try:
-    import graphviz   # pylint: disable=g-import-not-at-top
+    import graphviz
 except ImportError:
     pass
 
 class ModelSpec(object):
     """Model specification given adjacency matrix and labeling."""
 
-    def __init__(self, matrix, ops, data_format='channels_last'):
+    def __init__(self, matrix, ops, data_format="channels_last"):
         """Initialize the module spec."""
         if not isinstance(matrix, np.ndarray):
             matrix = np.array(matrix)
@@ -54,7 +54,9 @@ class ModelSpec(object):
                     visited_from_output.add(v)
                     frontier.append(v)
 
-        extraneous = set(range(num_vertices)).difference(visited_from_input.intersection(visited_from_output))
+        extraneous = set(range(num_vertices)).difference(
+            visited_from_input.intersection(visited_from_output)
+        )
 
         if len(extraneous) > num_vertices - 2:
             self.matrix = None
@@ -67,25 +69,24 @@ class ModelSpec(object):
         for index in sorted(extraneous, reverse=True):
             del self.ops[index]
 
-    def hash_spec(self, canonical_ops):
-        """Computes the isomorphism-invariant graph hash of this spec."""
-        labeling = [-1] + [canonical_ops.index(op) for op in self.ops[1:-1]] + [-2]
-        return graph_util.hash_module(self.matrix, labeling)
+    # def hash_spec(self, canonical_ops):
+    #     """Computes the isomorphism-invariant graph hash of this spec."""
+    #     labeling = [-1] + [canonical_ops.index(op) for op in self.ops[1:-1]] + [-2]
+    #     return graph_util.hash_module(self.matrix, labeling)
 
     def visualize(self):
         """Creates a dot graph. Can be visualized in colab directly."""
         num_vertices = np.shape(self.matrix)[0]
         g = graphviz.Digraph()
-        g.node(str(0), 'input')
+        g.node(str(0), "input")
         for v in range(1, num_vertices - 1):
             g.node(str(v), self.ops[v])
-        g.node(str(num_vertices - 1), 'output')
+        g.node(str(num_vertices - 1), "output")
 
         for src in range(num_vertices - 1):
             for dst in range(src + 1, num_vertices):
                 if self.matrix[src, dst]:
                     g.edge(str(src), str(dst))
-
         return g
 
 def is_upper_triangular(matrix):
