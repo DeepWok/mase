@@ -23,7 +23,7 @@ import onnx
 import tensorrt as trt
 
 from pytorch_quantization.nn import TensorQuantizer
-from Reals_quant_self_defined_util import QuantLinear,QuantConv2d
+from Reals_quant_self_defined_util import QuantLinear_TrueQuant,QuantConv2d_TrueQuant
 
 type_to_name_map = {
     nn.Linear: "linear",
@@ -181,7 +181,7 @@ def create_new_module_tensorRT_real(
         QUANTIZE_DESC_INPUT_LAYER = tensor_quant.ScaledQuantDescriptor(num_bits=config["data_in_width"],axis=(0),fake_quant = False)
         QUANTIZE_DESC_WEIGHT_LAYER = tensor_quant.ScaledQuantDescriptor(num_bits=config['weight_width'],axis=(0),fake_quant = False)
 
-        new_module = QuantLinear(
+        new_module = QuantLinear_TrueQuant(
         in_features = original_module.in_features,
         out_features = original_module.out_features,
         bias=True,
@@ -201,7 +201,7 @@ def create_new_module_tensorRT_real(
         QUANTIZE_DESC_INPUT_LAYER = tensor_quant.ScaledQuantDescriptor(num_bits=config["data_in_width"], axis=(0),fake_quant = False)
         QUANTIZE_DESC_WEIGHT_LAYER = tensor_quant.ScaledQuantDescriptor(num_bits=config['weight_width'], axis=(0),fake_quant = False)
 
-        new_module = QuantConv2d(
+        new_module = QuantConv2d_TrueQuant(
             in_channels = original_module.in_channels,
             out_channels = original_module.out_channels,
             kernel_size = original_module.kernel_size,

@@ -162,7 +162,7 @@ pass_args = {
             "bias_width": 8,
             "bias_frac_width": 4,
         },
-        "fake": "True",
+        "fake": "False",
         "calibration_method": "histogram",
 },
 # "classifier_2": {

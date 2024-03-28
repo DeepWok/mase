@@ -17,43 +17,29 @@
 
 
 """Some helper functions for implementing quantized modules"""
+"""TensorQuantizer Module"""
 import copy
 import inspect
 
 from absl import logging
 
 from torch import nn
-from pytorch_quantization.tensor_quant import QuantDescriptor, QUANT_DESC_8BIT_PER_TENSOR
-
-
-
-
-#
-# SPDX-FileCopyrightText: Copyright (c) 1993-2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
-# SPDX-License-Identifier: Apache-2.0
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-# http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-#
-
-
-"""TensorQuantizer Module"""
+from pytorch_quantization.tensor_quant import (
+    QuantDescriptor,
+    QUANT_DESC_8BIT_PER_TENSOR)
 import math
 from absl import logging
 
 import torch
 from torch import nn
 
-from pytorch_quantization.tensor_quant import QuantDescriptor, tensor_quant, fake_tensor_quant,TensorQuantFunction
+from pytorch_quantization.tensor_quant import (
+    QuantDescriptor,
+    tensor_quant,
+    fake_tensor_quant,
+    TensorQuantFunction
+)
+
 from pytorch_quantization.nn.modules.clip import Clip
 
 from pytorch_quantization import calib
@@ -68,13 +54,11 @@ import torch.nn.functional as F
 from torch.nn.modules.utils import _single, _pair, _triple
 from torch.nn.modules.conv import _ConvTransposeNd
 
-__all__ = ['TensorQuantizer']
+__all__ = ["TensorQuantizer_TrueQuant"]
 
 tensor_quant = TensorQuantFunction.apply
 
-
-
-class TensorQuantizer(nn.Module):
+class TensorQuantizer_TrueQuant(nn.Module):
     """Tensor quantizer module, Modifed for real quantization from pytorch_quantization package
 
     This module uses tensor_quant or fake_tensor_quant function to quantize a tensor. And wrappers variable, moving
@@ -110,9 +94,16 @@ class TensorQuantizer(nn.Module):
     # Primary usage is to export to ONNX
     use_fb_fake_quant = False
 
-    def __init__(self, quant_desc=QuantDescriptor(), disabled=False, if_quant=True, if_clip=False, if_calib=False):
+    def __init__(
+        self,
+        quant_desc=QuantDescriptor(),
+        disabled=False,
+        if_quant=True,
+        if_clip=False,
+        if_calib=False,
+    ):
         """Initialize quantizer and set up required variables"""
-        super(TensorQuantizer, self).__init__()
+        super(TensorQuantizer_TrueQuant, self).__init__()
         # Expand quant_desc. Use quant_desc.dict would be eaiser, but adding one-by-one explicitly gives more control
         self._num_bits = quant_desc.num_bits
         self._fake_quant = quant_desc.fake_quant
@@ -122,18 +113,18 @@ class TensorQuantizer(nn.Module):
         self._unsigned = quant_desc.unsigned
         self._narrow_range = quant_desc.narrow_range
 
-        self._scale =1
+        self._scale = 1
         self._disabled = disabled
         self._if_quant = if_quant
         self._if_clip = False
         self._if_calib = if_calib
 
         if quant_desc.amax is not None:
-            self.register_buffer('_amax', torch.tensor(quant_desc.amax))
+            self.register_buffer("_amax", torch.tensor(quant_desc.amax))
 
         # Clip module consumes a lot of memory, so only create it if learn_amax is True
         if self._learn_amax:
-            init_amax = quant_desc.amax if quant_desc.amax is not None else 1.
+            init_amax = quant_desc.amax if quant_desc.amax is not None else 1.0
             self.clip = Clip(-init_amax, init_amax, learn_min=True, learn_max=True)
             # It makes more sense to enable clip stage (which learns amax) if learn_amax is true
             self.enable_clip()
@@ -143,10 +134,13 @@ class TensorQuantizer(nn.Module):
         if quant_desc.calib_method == "histogram":
             logging.info("Creating histogram calibrator")
             self._calibrator = calib.HistogramCalibrator(
-                num_bits=self._num_bits, axis=self._axis, unsigned=self._unsigned)
+                num_bits=self._num_bits, axis=self._axis, unsigned=self._unsigned
+                )
         elif quant_desc.calib_method == "max":
             logging.info("Creating Max calibrator")
-            self._calibrator = calib.MaxCalibrator(num_bits=self._num_bits, axis=self._axis, unsigned=self._unsigned)
+            self._calibrator = calib.MaxCalibrator(
+                num_bits=self._num_bits, axis=self._axis, unsigned=self._unsigned
+                )
 
     # pylint:disable=missing-docstring
     @property
@@ -176,7 +170,7 @@ class TensorQuantizer(nn.Module):
         if not hasattr(self, "_amax"):
             logging.error("step_size is undefined under dynamic amax mode!")
             return None
-        return self._amax / (2.0**(self._num_bits - 1 + int(self._unsigned)) - 1.0)
+        return self._amax / (2.0 ** (self._num_bits - 1 + int(self._unsigned)) - 1.0)
 
     @property
     def axis(self):
@@ -238,7 +232,7 @@ class TensorQuantizer(nn.Module):
             if isinstance(value, torch.Tensor):
                 logging.warning("amax setter is not designed to take tensor.")
             if not hasattr(self, "_amax"):
-                self.register_buffer('_amax', torch.tensor(value))
+                self.register_buffer("_amax", torch.tensor(value))
             else:
                 value = torch.tensor(value, device=self._amax.device)
                 if self._amax.shape != value.shape:
@@ -266,7 +260,7 @@ class TensorQuantizer(nn.Module):
         compute_amax for more details.
         """
         strict = kwargs.pop("strict", True)
-        if getattr(self, '_calibrator', None) is None:
+        if getattr(self, "_calibrator", None) is None:
             raise RuntimeError("Calibrator not created.")
         calib_amax = self._calibrator.compute_amax(*args, **kwargs)
         if calib_amax is None:
@@ -276,12 +270,15 @@ class TensorQuantizer(nn.Module):
                 logging.warning("Set amax to NaN!")
                 calib_amax = torch.tensor(math.nan)
             else:
-                raise RuntimeError(err_msg + " Passing 'strict=False' to `load_calib_amax()` will ignore the error.")
+                raise RuntimeError(
+                    err_msg 
+                    + " Passing 'strict=False' to `load_calib_amax()` will ignore the error."
+                    )
         logging.warning("Load calibrated amax, shape={}.".format(calib_amax.shape))
         logging.log_first_n(
             logging.WARNING, "Call .cuda() if running on GPU after loading calibrated amax.", 1)
-        if not hasattr(self, '_amax'):
-            self.register_buffer('_amax', calib_amax.data)
+        if not hasattr(self, "_amax"):
+            self.register_buffer("_amax", calib_amax.data)
         else:
             self._amax.copy_(calib_amax)
 
@@ -291,7 +288,9 @@ class TensorQuantizer(nn.Module):
             raise RuntimeError("Called init_learn_amax with learn_amax=False.")
         logging.warning("Load amax as initial value for amax learning!")
         if self._amax.numel() != 1:
-            logging.warning("Per channel learned amax not supported. Initializing with max(amax).")
+            logging.warning(
+                "Per channel learned amax not supported. Initializing with max(amax)."
+                )
             init_amax = torch.max(self._amax)
         else:
             init_amax = self._amax
@@ -300,7 +299,7 @@ class TensorQuantizer(nn.Module):
 
     def _get_amax(self, inputs):
         """get amax from buffer or compute it dynamically."""
-        if hasattr(self, '_amax'):
+        if hasattr(self, "_amax"):
             amax = self._amax
         else:
             if self._axis is None:
@@ -348,7 +347,7 @@ class TensorQuantizer(nn.Module):
             amax = self._get_amax(inputs)
 
         if self._fake_quant:
-            if not TensorQuantizer.use_fb_fake_quant:
+            if not TensorQuantizer_TrueQuant.use_fb_fake_quant:
                 outputs = fake_tensor_quant(inputs, amax, self._num_bits, self._unsigned, self._narrow_range)
             else:
                 if inputs.dtype == torch.half or amax.dtype == torch.half:
@@ -443,13 +442,13 @@ class TensorQuantizer(nn.Module):
         elif src_has_amax and dst_has_amax:
             logging.warning("{}: Overwriting amax.".format(prefix[:-1]))
 
-        super(TensorQuantizer, self)._load_from_state_dict(state_dict, prefix, *args, **kwargs)
+        super(TensorQuantizer_TrueQuant, self)._load_from_state_dict(state_dict, prefix, *args, **kwargs)
 
 
 
 
 
-class QuantMixin():
+class QuantMixin_TrueQuant():
     """
         Mixin class for adding basic quantization logic to quantized modules
         Modifed for real quantization from pytorch_quantization package.
@@ -498,11 +497,11 @@ class QuantMixin():
                      quant_desc_weight.num_bits, self.__class__.__name__, quant_desc_weight.axis)
 
         if num_layers is None:
-            self._input_quantizer = TensorQuantizer(quant_desc_input)
-            self._weight_quantizer = TensorQuantizer(quant_desc_weight)
+            self._input_quantizer = TensorQuantizer_TrueQuant(quant_desc_input)
+            self._weight_quantizer = TensorQuantizer_TrueQuant(quant_desc_weight)
         else:
-            self._input_quantizers = nn.ModuleList([TensorQuantizer(quant_desc_input) for _ in range(num_layers)])
-            self._weight_quantizers = nn.ModuleList([TensorQuantizer(quant_desc_weight) for _ in range(num_layers)])
+            self._input_quantizers = nn.ModuleList([TensorQuantizer_TrueQuant(quant_desc_input) for _ in range(num_layers)])
+            self._weight_quantizers = nn.ModuleList([TensorQuantizer_TrueQuant(quant_desc_weight) for _ in range(num_layers)])
 
     # pylint:disable=missing-docstring
     @property
@@ -546,7 +545,7 @@ class QuantInputMixin():
                      if not quant_desc_input.fake_quant else "fake ",
                      quant_desc_input.num_bits, self.__class__.__name__, quant_desc_input.axis)
 
-        self._input_quantizer = TensorQuantizer(quant_desc_input)
+        self._input_quantizer = TensorQuantizer_TrueQuant(quant_desc_input)
 
     # pylint:disable=missing-docstring
     @property
@@ -610,7 +609,7 @@ from pytorch_quantization import tensor_quant
 __all__ = ["Linear", "QuantLinear"]
 
 
-class _QuantConvNd(torch.nn.modules.conv._ConvNd, QuantMixin):
+class _QuantConvNd_TrueQuant(torch.nn.modules.conv._ConvNd, QuantMixin_TrueQuant):
     """
         base class of quantized Conv inherited from _ConvNd
         Modifed for real quantization from pytorch_quantization package.
@@ -660,7 +659,7 @@ class _QuantConvNd(torch.nn.modules.conv._ConvNd, QuantMixin):
         return (quant_input, quant_weight)
 
 
-class QuantConv2d(_QuantConvNd):
+class QuantConv2d_TrueQuant(_QuantConvNd_TrueQuant):
     """Quantized 2D conv"""
 
     default_quant_desc_weight = tensor_quant.QUANT_DESC_8BIT_CONV2D_WEIGHT_PER_CHANNEL
@@ -683,7 +682,7 @@ class QuantConv2d(_QuantConvNd):
         dilation = _pair(dilation)
 
         quant_desc_input, quant_desc_weight = pop_quant_desc_in_kwargs(self.__class__, **kwargs)
-        super(QuantConv2d, self).__init__(in_channels, out_channels, kernel_size, stride, padding, dilation, False,
+        super(QuantConv2d_TrueQuant, self).__init__(in_channels, out_channels, kernel_size, stride, padding, dilation, False,
                                           _pair(0), groups, bias, padding_mode,
                                           quant_desc_input=quant_desc_input, quant_desc_weight=quant_desc_weight)
 
@@ -704,7 +703,7 @@ class QuantConv2d(_QuantConvNd):
         return output
 
 
-class QuantLinear(nn.Linear, QuantMixin):
+class QuantLinear_TrueQuant(nn.Linear, QuantMixin_TrueQuant):
     """
         Quantized version of nn.Linear
         Modifed for real quantization from pytorch_quantization package.
@@ -741,7 +740,7 @@ class QuantLinear(nn.Linear, QuantMixin):
     default_quant_desc_weight = tensor_quant.QUANT_DESC_8BIT_LINEAR_WEIGHT_PER_ROW
 
     def __init__(self, in_features, out_features, bias=True, **kwargs):
-        super(QuantLinear, self).__init__(in_features, out_features, bias)
+        super(QuantLinear_TrueQuant, self).__init__(in_features, out_features, bias)
         quant_desc_input, quant_desc_weight = pop_quant_desc_in_kwargs(self.__class__, **kwargs)
 
         self.init_quantizer(quant_desc_input, quant_desc_weight)
@@ -753,7 +752,7 @@ class QuantLinear(nn.Linear, QuantMixin):
 
         return output
 
-class _QuantConvNd(torch.nn.modules.conv._ConvNd, QuantMixin):
+class _QuantConvNd(torch.nn.modules.conv._ConvNd, QuantMixin_TrueQuant):
     """base class of quantized Conv inherited from _ConvNd
 
     Comments of original arguments can be found in torch.nn.modules.conv
@@ -781,7 +780,7 @@ class _QuantConvNd(torch.nn.modules.conv._ConvNd, QuantMixin):
 
     def __init__(self, in_channels, out_channels, kernel_size, stride, padding, dilation, transposed, output_padding,
                  groups, bias, padding_mode, quant_desc_input, quant_desc_weight):
-        super(_QuantConvNd, self).__init__(in_channels, out_channels, kernel_size, stride, padding, dilation,
+        super(_QuantConvNd_TrueQuant, self).__init__(in_channels, out_channels, kernel_size, stride, padding, dilation,
                                            transposed, output_padding, groups, bias, padding_mode)
         self.init_quantizer(quant_desc_input, quant_desc_weight)
 
@@ -802,49 +801,4 @@ class _QuantConvNd(torch.nn.modules.conv._ConvNd, QuantMixin):
         return (quant_input, quant_weight)
 
 
-class QuantConv2d(_QuantConvNd):
-    """Quantized 2D conv,Modifed for real quantization from pytorch_quantization package."""
-
-    default_quant_desc_weight = tensor_quant.QUANT_DESC_8BIT_CONV2D_WEIGHT_PER_CHANNEL
-
-    def __init__(self,
-                 in_channels,
-                 out_channels,
-                 kernel_size,
-                 stride=1,
-                 padding=0,
-                 dilation=1,
-                 groups=1,
-                 bias=True,
-                 padding_mode='zeros',
-                 **kwargs):
-
-        kernel_size = _pair(kernel_size)
-        stride = _pair(stride)
-        padding = _pair(padding)
-        dilation = _pair(dilation)
-
-        quant_desc_input, quant_desc_weight = pop_quant_desc_in_kwargs(self.__class__, **kwargs)
-        super(QuantConv2d, self).__init__(in_channels, out_channels, kernel_size, stride, padding, dilation, False,
-                                          _pair(0), groups, bias, padding_mode,
-                                          quant_desc_input=quant_desc_input, quant_desc_weight=quant_desc_weight)
-
-    def forward(self, input):
-        # the actual quantization happens in the next level of the class hierarchy
-        quant_input, quant_weight = self._quant(input)
-
-        if self.padding_mode == 'circular':
-            expanded_padding = ((self.padding[1] + 1) // 2, self.padding[1] // 2,
-                                (self.padding[0] + 1) // 2, self.padding[0] // 2)
-            output = F.conv2d(F.pad(quant_input, expanded_padding, mode='circular'),
-                              quant_weight, self.bias, self.stride,
-                              _pair(0), self.dilation, self.groups)
-        else:
-            output = F.conv2d(quant_input, quant_weight, self.bias, self.stride, self.padding, self.dilation,
-                              self.groups)
-
-        return output
-
-
-
-Linear = QuantLinear
+Linear = QuantLinear_TrueQuant
