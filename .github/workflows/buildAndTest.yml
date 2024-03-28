@@ -21,10 +21,7 @@ jobs:
   software-regression-test:
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/jianyicheng/mase-docker/mase-ci-build:latest
-      credentials:
-        username: ${{ github.actor }}
-        password: ${{ secrets.MASE_DOCKER_CRED }}
+      image: deepwok/mase-docker:latest
     steps:
 
       # Clone the MASE repo and its submodules.
@@ -197,6 +194,5 @@ jobs:
       # -----------
       
       - name: Mase regression test 
-        run: |
-            export PYTHONPATH="${PATH}:$(pwd):$(pwd)/machop"
-            pytest --log-level=DEBUG --verbose -n 1 --cov=machop/chop/ --cov-report=html machop/test/ --html=report.html --self-contained-html --profile --profile-svg
+        run: 
+            make test-sw
