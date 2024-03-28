@@ -1,12 +1,12 @@
 # basics
-model = "vgg7"
-dataset = "cifar10"
+model = "toy"
+dataset = "toy_tiny"
 task = "cls"
 accelerator = "gpu"
 project = "vgg7"
 seed = 42
-load_name = "test-accu-0.9332.ckpt"
-load_type = "pl"
+#load_name = "TinyVGG-epoch=32-val_acc=0.67.ckpt"
+#load_type = "pl"
  
 [search.search_space]
 name = "graph/quantize/mixed_precision_ptq"
@@ -44,16 +44,17 @@ bias_frac_width = ["NA"]
 [search.strategy]
 name = "rl"
 algorithm = 'ppo'
-env = 'mixed_precision_paper'
+env = 'mixed_precision_hi_lo'
 device = 'cuda'
-total_timesteps = 100000
+total_timesteps = 20000
 n_steps = 32
 n_envs = 4
 eval_freq = 200
 save_freq = 200
-episode_max_len = 100
+episode_max_len = 10
 learning_rate = 2.5e-4
 save_name = 'tmp_rl'
+#load_name = 'tmp_rl'
 #wandb_callback = true
 #wandb_entity = 'm-pl-braganca'
 

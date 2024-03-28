@@ -2,9 +2,13 @@ import wandb
 from ..base import SearchStrategyBase
 from .env import env_map, registered_env_map
 from pprint import pprint
+import numpy as np
 from stable_baselines3 import A2C, PPO, DDPG
 from stable_baselines3.common.env_util import make_vec_env
 from stable_baselines3.common.callbacks import CallbackList, CheckpointCallback, EvalCallback, BaseCallback
+import warnings
+
+warnings.filterwarnings("ignore")
 
 algorithm_map = {
     "ppo": PPO,
@@ -35,7 +39,7 @@ class StrategyRL(SearchStrategyBase):
             "n_envs": 4,
             "eval_freq": 200,
             "save_freq": 200,
-            "episode_max_len": 10,
+            "episode_max_len": 1000,
             "learning_rate": 2.5e-4,
             "save_name": 'tmp_rl',
             "wandb_callback": False,
@@ -66,7 +70,7 @@ class StrategyRL(SearchStrategyBase):
             env_kwargs={"config": self.config, "search_space": search_space , 
             "sw_runner": self.sw_runner, "hw_runner": self.hw_runner, 
             "data_module": self.data_module, "episode_max_len":self.episode_max_len}
-            )
+            ) 
         return env
 
     def _initialize_callbacks(self, env):
@@ -88,14 +92,14 @@ class StrategyRL(SearchStrategyBase):
         return CallbackList(callbacks)
 
     def search(self, search_space):
+        env = self._create_env(search_space)
+        callback = self._initialize_callbacks(env)
+
         if 'load_name' in self.config:
             model = self.algorithm.load(self.config['load_name'], env=self.env(config=self.config, search_space=search_space, sw_runner=self.sw_runner, hw_runner=self.hw_runner, data_module=self.data_module, episode_max_len=self.episode_max_len))
             print(f"Model loaded from {self.config['load_name']}. Skipping training.")
 
         else:
-            env = self._create_env(search_space)
-            callback = self._initialize_callbacks(env)
-
             algorithm_kwargs = {
                 "verbose": 1,
                 "device": self.device,
@@ -114,7 +118,6 @@ class StrategyRL(SearchStrategyBase):
                 **algorithm_kwargs
             )
 
-            vec_env = model.get_env()
             model.learn(
                 total_timesteps=int(self.total_timesteps),
                 progress_bar=True,
@@ -125,11 +128,26 @@ class StrategyRL(SearchStrategyBase):
             model.save(self.save_name)
             print(f"Model trained and saved as {self.save_name}.")
 
+        self.n_envs = 1
         # Actual Prediction
-        vec_env = model.get_env()
+        vec_env = make_vec_env(
+            self.registered_env_name, n_envs=self.n_envs, seed=0, 
+            env_kwargs={"config": self.config, "search_space": search_space , 
+            "sw_runner": self.sw_runner, "hw_runner": self.hw_runner, 
+            "data_module": self.data_module, "episode_max_len":self.episode_max_len}
+            )
+            
+        n_envs = len(vec_env.envs)
+        dones = np.full(n_envs, False, dtype=bool)
         obs = vec_env.reset()
-        for _ in range(self.episode_max_len):
+        while(not dones.all()):
             action, _state = model.predict(obs, deterministic=True)
-            obs, reward, done, info = vec_env.step(action)
+            obs, reward, dones, infos = vec_env.step(action)
 
-        pprint(obs)
+        print("The best configurations found is: ")
+        pprint(vec_env.get_attr("best_sample"))
+
+        print("\nThe corresponding metrics are: ")
+        pprint(vec_env.get_attr("metrics"))
+
+        print("\n Yielding the reward: ", reward)

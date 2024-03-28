@@ -79,6 +79,7 @@ class MixedPrecisionEnv(BaseMixedPrecisionEnv):
         self.cur_obs = None
         self.episode_len = 0
         self.episode_max_len = episode_max_len
+        self.best_reward = -math.inf
 
 
     def _define_observation_space(self):
@@ -127,12 +128,15 @@ class MixedPrecisionEnv(BaseMixedPrecisionEnv):
         self.cur_obs.update(flattened_sampled_indexes)
         
         reward = -cost
-
+        if reward > self.best_reward:
+            self.best_reward = reward
+            
         self.episode_len += 1
         done = self.episode_len >= self.episode_max_len
         truncated = self.episode_len >= self.episode_max_len
-        
-        info = {"reward": reward, "loss": software_metrics['loss'], "average_bitwidth": hardware_metrics['average_bitwidth'], "accuracy": software_metrics['accuracy'], "memory density": hardware_metrics['memory_density']}
+
+        info = {"reward": reward}
+        info.update({metric: self.metrics[metric] for metric in self.metrics})
         return self.cur_obs, reward, done, truncated, info
     
 
@@ -145,102 +149,6 @@ class MixedPrecisionEnv(BaseMixedPrecisionEnv):
             config[key] = choice_idx
             action_idx += 1
         return config
-    
-
-class MixedPrecisionEnvHiLo(BaseMixedPrecisionEnv):
-    def __init__(self, config, search_space, sw_runner, hw_runner, data_module, episode_max_len):
-        if search_space is None:
-            raise ValueError("search_space cannot be None")
-        self.config = config
-        self.search_space = search_space
-        self.sw_runner = sw_runner
-        self.hw_runner = hw_runner
-        self.data_module = data_module
-        self.sum_scaled_metrics = self.config["setup"]["sum_scaled_metrics"]
-        self.metric_names = list(sorted(self.config["metrics"].keys()))
-        self.directions = [self.config["metrics"][k]["direction"] for k in self.metric_names]
-        
-        self.direction_multipliers = {
-            metric: (-1 if self.config["metrics"][metric]["direction"] == "maximize" else 1)
-            for metric in self.metric_names
-        }
-        self.directions = [self.config["metrics"][k]["direction"] for k in self.metric_names]
-        self._define_observation_space()
-        self._define_action_space()
-        self.cur_obs = None
-        self.episode_len = 0
-        self.episode_max_len = episode_max_len
-        self.model_config = {key: 0 for key in self.search_space.choices_flattened.keys()}
-
-    def _define_observation_space(self):
-        self.observation_space = Dict({
-            "cost": Box(0.0, 10e4, shape=(1,)),
-            "accuracy": Box(0.0, 1.0, shape=(1,)),
-            "average_bitwidth": Box(2.0, 32.0, shape=(1,))
-        })
-        for key, choices in self.search_space.choices_flattened.items():
-            self.observation_space[key] = Discrete(len(choices))
-
-    def _define_action_space(self):
-        num_actions = len(self.search_space.choices_flattened)
-        # Each action can be -1, 0, or 1
-        self.action_space = MultiDiscrete([3] * num_actions)
-
-    def seed(self, seed=None):
-        self.np_random, seed = gym.utils.seeding.np_random(seed)
-        return [seed]
-    
-    def reset(self, *, seed=None, options=None):
-        if seed is None:
-            seed = self.seed()
-        else:
-            self.seed(seed)
-
-        self.episode_len = 0
-        self.cur_obs = self.observation_space.sample()
-        self.model_config = {
-        key: len(options) // 2 for key, options in self.search_space.choices_flattened.items()
-        }
-        return self.cur_obs, {}
-    
-    def step(self, action):
-        self._action_to_config(action)
-        sampled_config = self.search_space.flattened_indexes_to_config(self.model_config)
-        model = self.search_space.rebuild_model(sampled_config)
-    
-        software_metrics = self.compute_software_metrics(model, sampled_config)
-        hardware_metrics = self.compute_hardware_metrics(model, sampled_config)
-        metrics = software_metrics | hardware_metrics
-        scaled_metrics = {}
-        cost = 0
-        for metric_name in self.metric_names:
-            scaled_metric_value = self.config["metrics"][metric_name]["scale"] * metrics[metric_name] * self.direction_multipliers[metric_name]
-            scaled_metrics[metric_name] = scaled_metric_value
-            cost += scaled_metric_value
-        
-        self.cur_obs['accuracy'] = np.array([software_metrics['accuracy']], dtype=np.float32)
-        self.cur_obs['average_bitwidth'] = np.array([hardware_metrics['average_bitwidth']], dtype=np.float32)
-        self.cur_obs['cost'] = np.array([cost], dtype=np.float32)
-        self.cur_obs.update(self.model_config)
-        
-        reward = -cost
-        self.episode_len += 1
-        done = self.episode_len >= self.episode_max_len
-        truncated = self.episode_len >= self.episode_max_len
-        
-        info = {"reward": reward, "loss": software_metrics['loss'], "average_bitwidth": hardware_metrics['average_bitwidth'], "accuracy": software_metrics['accuracy'], "memory density": hardware_metrics['memory_density']}
-        #if done:
-            #reward = reward*2
-        return self.cur_obs, reward, done, truncated, info
-    
-    def _action_to_config(self, action):
-        action_idx = 0
-        for key, choices in self.search_space.choices_flattened.items():
-            current_value = self.model_config[key]
-            change = action[action_idx] - 1  # Map from [0, 1, 2] to [-1, 0, 1]
-            new_value = max(min(current_value + change, len(choices) - 1), 0)
-            self.model_config[key] = new_value
-            action_idx += 1
 
 
 class MixedPrecisionEnvHiLo(BaseMixedPrecisionEnv):
@@ -324,14 +232,19 @@ class MixedPrecisionEnvHiLo(BaseMixedPrecisionEnv):
         
         # Adjust reward calculation based on your scenario
         reward = -cost
+
+        if reward > self.best_reward:
+            self.best_reward = reward
+            self.best_sample = sampled_config
+
         # Determine if the episode is done
         self.episode_len += 1
         done = self.episode_len >= self.episode_max_len
         truncated = self.episode_len >= self.episode_max_len
-        
-        info = {"reward": reward, "loss": software_metrics['loss'], "average_bitwidth": hardware_metrics['average_bitwidth'], "accuracy": software_metrics['accuracy'], "memory density": hardware_metrics['memory_density']}
         #if done:
             #reward = reward*2
+        info = {"reward": reward}
+        info.update({metric: self.metrics[metric] for metric in self.metrics})
         return self.cur_obs, reward, done, truncated, info
     
     def _action_to_config(self, action):
@@ -418,39 +331,22 @@ class MixedPrecisionPaper(BaseMixedPrecisionEnv):
         for metric_name in self.metric_names:
             lower_bound = self.config["metrics"][metric_name].get("lower_bound", 0)
             upper_bound = self.config["metrics"][metric_name].get("upper_bound", 1)
+            delta = upper_bound - lower_bound
             direction = self.config["metrics"][metric_name].get("direction", "maximize")
             if direction == "maximize":
                 raw_metric = max(
-                    max(lower_bound, metrics[metric_name]) - lower_bound, 0
-                ) / (upper_bound - lower_bound)
+                    max(lower_bound, metrics[metric_name]) - lower_bound, 0) / delta
             else:
-                raw_metric = max(
-                    upper_bound - max(lower_bound, metrics[metric_name]), 0
-                ) / (upper_bound - lower_bound)
-            scaled_metrics[metric_name] = (
-                raw_metric * self.config["metrics"][metric_name]["scale"]
-            )
+                raw_metric = max(upper_bound - max(lower_bound, metrics[metric_name]), 0) / delta
+            scaled_metrics[metric_name] = (raw_metric * self.config["metrics"][metric_name]["scale"])
         reward = sum(scaled_metrics.values())
 
         if reward > self.best_performance.get("reward", 0):
-            self.best_performance["metrics"] = metrics
             self.best_performance["reward"] = reward
             self.best_sample = sampled_config
-            self.nodes, self.node_types = self.get_nodes_and_types(model)
-            print(f"new highest reward: {reward:.4f}")
             for metric_name in self.metric_names:
-                print(f"{metric_name}: {metrics[metric_name]:.4f}")
                 self.metric_values[metric_name] = metrics[metric_name]
         return reward, metrics
-    
-    def get_nodes_and_types(self, graph):
-        nodes = []
-        node_types = []
-        for node in graph.fx_graph.nodes:
-            if node.meta["mase"].module is not None:
-                nodes.append(str(node))
-                node_types.append(type(node.meta["mase"].module).__name__)
-        return nodes, node_types
 
     def reset(self, *, seed=None, options=None):
         self.episode_len = 0
@@ -470,8 +366,9 @@ class MixedPrecisionPaper(BaseMixedPrecisionEnv):
         if self.episode_len == len(self.obs_list):
             self.episode_len = 0
             terminated = truncated = True
-            reward, metrics = self.eval(self.sample)
-            info = {"reward": reward, "average_bitwidth": metrics['average_bitwidth'], "accuracy": metrics['accuracy']}
+            reward, self.metrics = self.eval(self.sample)
+            info = {"reward": reward}
+            info.update({metric: self.metrics[metric] for metric in self.metrics})
         obs = self.obs_list[self.episode_len].copy()
         obs = np.append(obs, choices[action]).astype(np.float32)
         return obs, reward, terminated, truncated, info
