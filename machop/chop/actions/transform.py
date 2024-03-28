@@ -74,10 +74,10 @@ def transform(
         )
         if len(graph.model.additional_inputs) > 0:
             dummy_in = dummy_in | graph.model.additional_inputs
-        # graph, _ = add_common_metadata_analysis_pass(
-        #     graph, pass_args={"dummy_in": dummy_in}
-        # )
-        # graph, _ = add_software_metadata_analysis_pass(graph, pass_args=None)
+        graph, _ = add_common_metadata_analysis_pass(
+            graph, pass_args={"dummy_in": dummy_in}
+        )
+        graph, _ = add_software_metadata_analysis_pass(graph, pass_args=None)
 
     passes_config = config["passes"]
     for pass_name, pass_config in passes_config.items():
@@ -92,6 +92,7 @@ def transform(
                 pass_save_dir = save_dir / "tensorrt"
 
                 pass_config['task'] = task
+                pass_config['dataset'] =  config["dataset"]
                 pass_config["batch_size"] = config["batch_size"]
                 pass_config["model"] = config["model"]
                 pass_config["data_module"] = data_module
@@ -121,7 +122,7 @@ def transform(
                 )
                 
                 # Apply fp16 or layer-wise mixed precision quantization if necessary and convert the model to TensorRT format
-                graph, runtime_meta = PASSES["tensorrt_quantize"](
+                graph, runtime_meta = PASSES["tensorrt"](
                     graph, pass_args=pass_config
                 )
 
