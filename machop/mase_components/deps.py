@@ -9,19 +9,19 @@ Entry format:
 
 MASE_HW_DEPS = {
     # TODO: Failing Test
-    #"activations/fixed_relu": [],
+    # "activations/fixed_relu": [],
     # TODO: Failing test: missing "z_proj" in config?
     # "attention/fixed_self_att": ["attention", "cast", "common", "conv",
     #                              "fixed_arithmetic", "linear", "matmul", "ViT"],
     "cast/fixed_cast": [],
-    "scatter/scatter_top": ["scatter_top","scatter","priority_encoder"],
-    "scatter/scatter_threshold": ["scatter","priority_encoder"],
+    "scatter/scatter_top": ["scatter_top", "scatter", "priority_encoder"],
+    "scatter/scatter_threshold": ["scatter", "priority_encoder"],
     "gather/gather": ["gather"],
     "llmint/LLMint": ["llmint", "scatter", "gather", "linear", "priority_encoder", "cast", "common", "fixed_arithmetic"],
-    "activations/fixed_relu":[],
+    "activations/fixed_relu": [],
     "cast/fixed_rounding": ["cast"],
     "linear/fixed_linear": ["cast", "common", "fixed_arithmetic"],
-    "linear/fixed_2d_linear": ["cast", "common", "fixed_arithmetic","matmul","linear"],
+    "linear/fixed_2d_linear": ["cast", "common", "fixed_arithmetic", "matmul", "linear"],
     "fixed_arithmetic/fixed_mult": [],
     "fixed_arithmetic/fixed_adder_tree_layer": [],
     "fixed_arithmetic/fixed_accumulator": ["common"],
