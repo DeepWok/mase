@@ -4,9 +4,8 @@ This tutorial shows how to search for neural architectures with zero-cost proxie
 
 > **Note**: The Zero-Cost Proxy project is done by Group 2 of Advanced deep learning system course at Impeiral college london.
 
-
-
 ## Search for Neural Architectures with Zero-Cost Proxies
+
 We load the NAS-Bench-201 benchmark API and use the MASE framework to search for neural architectures with zero-cost proxies. Architectures with its true post-train accuracy are selected from NAS-Bench-201 and searched with zero-cost proxies as objectives.
 
 ### Requirements
@@ -19,6 +18,7 @@ Before initiating the project, please ensure the following prerequisites are sat
 - An environment capable of running PyTorch models, such as CUDA for GPU acceleration
 
 ### Sample search Config
+
 Here is the search part in `configs/examples/search_zero_cost.toml` looks like the follows.
 
 ```toml
@@ -109,6 +109,7 @@ zen.direction = "maximize"
 zico.scale = 0.0
 zico.direction = "maximize"
 ```
+
 ### NAS-Bench-201 Dataset Requirement
 
 First download the NAS-Bench-201 `.pth` file. This file contains the dataset of pre-evaluated architectures for the zero-cost proxy evaluation process.
@@ -130,9 +131,10 @@ Download the file from the official NAS-Bench-201 repository or an alternative p
    pip install torch pandas optuna nas-bench-201-api
    ```
 
-   Then install the nas-bench-201 pth file using the following link:
+   Then uncomment line 47, 76-78 of file /zero_cost/graph.py.
+3. Next, install the nas-bench-201 pth file to this path:'./third_party/' using the following link:
    [Google Drive NAS-Bench](https://drive.google.com/file/d/16Y0UwGisiouVRxW-W5hEtbxmcHw_0hF_/view?usp=sharing)
-3. **Configuration Check**: Ensure that the `configs/examples/search_zero_cost.toml` configuration file points to the correct NAS-Bench-201 `.pth` file location and adjust other settings as necessary.
+4. **Configuration Check**: Ensure that the `configs/examples/search_zero_cost.toml` configuration file points to the correct NAS-Bench-201 `.pth` file location and adjust other settings as necessary.
 
 ### Project Execution
 
@@ -187,10 +189,11 @@ In addition, a weights series containing estimated importance weights to each pr
 ## Conclusion
 
 We finished all basic elements and one of the extensions for the project assignments.
-- [x] Design a search space for zero-cost proxy search using **option choices** for each node in the cell that construct the architecture rather than solely index.
-- [x] Implement a zero-cost proxy search strategy using TPE.
-- [x] Evaluate the performance of zero-cost proxies on CIFAR-10.
-- [x] Estimate an ensemble for the proxy combination using linear regression.
-- [x] Broaden the search to larger datasets such as CIFAR-100 and ImageNet-16-120.
+
+- [X]  Design a search space for zero-cost proxy search using **option choices** for each node in the cell that construct the architecture rather than solely index.
+- [X]  Implement a zero-cost proxy search strategy using TPE.
+- [X]  Evaluate the performance of zero-cost proxies on CIFAR-10.
+- [X]  Estimate an ensemble for the proxy combination using linear regression.
+- [X]  Broaden the search to larger datasets such as CIFAR-100 and ImageNet-16-120.
 
 <!-- The explanation documentation is under the `machop/sphinx_docs/source/modules/documentation/tutorials/actions/search` directory. -->

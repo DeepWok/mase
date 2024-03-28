@@ -43,12 +43,15 @@ from .....passes.graph.utils import (
 from ..utils import flatten_dict, unflatten_dict
 from collections import defaultdict
 
-from nas_201_api import NASBench201API as API
+# uncomment this after download the environment requirements for this api
+# from nas_201_api import NASBench201API as API
+
 from .xautodl.models import get_cell_based_tiny_net
 
 from .model_spec import ModelSpec
 
 # from nas_graph import load_bench_arch
+
 
 ### default architecture is the architecuture returned
 ### by api.get_net_config(0, 'cifar10') in nasbench201
@@ -69,9 +72,10 @@ DEFAULT_ZERO_COST_ARCHITECTURE_CONFIG = {
     }
 }
 
-print("loading api")
-api = API("./third_party/NAS-Bench-201-v1_1-096897.pth", verbose=False)
-print("api loaded")
+# uncomment this after download the environment requirements for this api
+# print("loading api")
+# api = API("./third_party/NAS-Bench-201-v1_1-096897.pth", verbose=False)
+# print("api loaded")
 
 
 class ZeroCostProxy(SearchSpaceBase):
