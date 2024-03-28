@@ -1,17 +1,17 @@
 # basics
-model = "jsc-tiny"
-dataset = "jsc"
+model = "toy"
+dataset = "toy_tiny"
 task = "cls"
 
-max_epochs = 10
+max_epochs = 5
 batch_size = 512
 learning_rate = 1e-2
 accelerator = "gpu"
-project = "jsc-tiny"
+project = "toy_toy_tiny"
 seed = 42
 log_every_n_steps = 5
-load_name = "mase_output/jsc-tiny_classification_jsc_2024-01-31/software/training_ckpts/best-v3.ckpt"
-load_type = "pl"
+# load_name = "../mase_output/toy_toy_tiny/software/training_ckpts/best.ckpt"
+# load_type = "pl"
 
 [search.search_space]
 name = "graph/quantize/mixed_precision_ptq"
@@ -53,7 +53,5 @@ sum_scaled_metrics = false # multi objective
 # loss.direction = "minimize"
 accuracy.scale = 1.0
 accuracy.direction = "maximize"
-memory_density.scale = 0.2
-memory_density.direction = "minimize"
-# average_bitwidth.scale = 0.2
-# average_bitwidth.direction = "minimize"
+average_bitwidth.scale = 0.2
+average_bitwidth.direction = "minimize"
