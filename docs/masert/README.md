@@ -2,18 +2,16 @@
 
 ## Overview
 
-<div style="width: 100%; table-layout: fixed; margin: 0; padding: 0; border-collapse: collapse; display: table;">
-  <div style="display: table-row; margin: 0; padding: 0;">
-    <div style="display: table-cell; vertical-align: top; width: 70%; margin: 0; padding: 0;">
-      <p>This documentation details the rationality, functionality and methodology of TensorRT and ONNXRT integration into the Machop framework.</p>
-      <p>Continuing the ideology behind MASE to provide a reliable and efficient streaming accelerator system, we have now integrated TensorRT and ONNXRT, two powerful SDKs for optimizing inference using techniques such as quantization, layer and tensor fusion, and kernel tuning.</p>
-      <p>The integration of both frameworks has shown to produce 2-4x inference speeds with higher energy efficiency whilst not significantly compromising model accuracy.</p>
-    </div>
-    <div style="display: table-cell; vertical-align: top; width: 30%; margin: 0; padding: 0;">
-      <img src='../imgs/mase_rt_logo.png' style="height: auto; max-width: 100%; max-height: 100%;">
-    </div>
-  </div>
+<div style="max-width: 500px; max-height: 500px; margin: auto; display: flex; align-items: center; justify-content: center; height: 100%;">
+  <img src='../imgs/mase_rt_logo.png' style="max-width: 100%; max-height: 100%; height: auto;">
 </div>
+
+This documentation details the rationality, functionality and methodology of TensorRT and ONNXRT integration into the Machop framework.
+
+<p>Continuing the ideology behind MASE to provide a reliable and efficient streaming accelerator system, we have now integrated TensorRT and ONNXRT, two powerful SDKs for optimizing inference using techniques such as quantization, layer and tensor fusion, and kernel tuning.
+
+<p>The integration of both frameworks has shown to produce 2-4x inference speeds with higher energy efficiency whilst not significantly compromising model accuracy.
+
 
 
 ## Why Should I Care About Runtime Frameworks?
@@ -116,8 +114,8 @@ During the conversion process, the `.onnx` and `.trt` files are stored to their 
 
 This interface pass returns a dictionary containing the `onnx_path` and `trt_engine_path`.
 
-**Performance Anaylisis**
-To showcase the improved inference speeds and to evaluate accuracy and other performance metrics, the `runtime_analysis_pass` can be used. The pass can take a MaseGraph as an input, as well as an ONNX graph. For this comparison, we will first run the anaylsis pass on the original unquantized model and then on the int8 quantized model.
+**Performance Analysis**
+To showcase the improved inference speeds and to evaluate accuracy and other performance metrics, the `runtime_analysis_pass` can be used. The pass can take a MaseGraph as an input, as well as an ONNX graph. For this comparison, we will first run the analysis pass on the original unquantized model and then on the int8 quantized model.
 
 
 ## 🚀 Getting Started
@@ -132,4 +130,4 @@ The procedure in the [How It Works Section](#⚙️-how-it-works) can be acompli
 ### Tutorials
 We strongly recommend you look through the dedicated tutorials which walk you through the process of utilising MaseRT:
 - [TensorRT Tutorial](/docs/tutorials/tensorrt/tensorRT_quantization_tutorial.ipynb) 
-- [ONNXRT Tutorial](/docs/tutorials/)
+- [ONNXRT Tutorial](/docs/tutorials/onnxrt/onnxrt_quantization_tutorial.ipynb)
