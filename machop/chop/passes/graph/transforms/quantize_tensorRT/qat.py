@@ -18,6 +18,9 @@ from pytorch_quantization.tensor_quant import QuantDescriptor
 from torch.autograd import Variable    
 import time        
 
+import pycuda.driver as cuda
+import pycuda.autoinit 
+
 from ...utils import (
     deepcopy_mase_graph,
     get_mase_op,
@@ -133,38 +136,26 @@ def graph_fake_quantize_by_name(graph, config: dict):
                 args, kwargs = node.args, node.kwargs
                 with graph.fx_graph.inserting_before(node):
                     new_node = graph.fx_graph.call_function(to_fp16, args, kwargs)
-                    print(new_node)
+                    # print(new_node)
                     new_node.name = node.name + "_fp16"
                     # node.replace_all_uses_with(new_node)
                     node.args = (new_node, )
+                    new_node.meta["mase"] = copy(node.meta["mase"])
+                    new_node.meta["mase"].parameters["common"]["mase_op"] = "builtin_func"
                     # graph.recompile()
                 
                 args, kwargs = node.args, node.kwargs
                 with graph.fx_graph.inserting_after(node):
                     new_node = graph.fx_graph.call_function(to_fp32, args, kwargs)
-                    print(new_node)
+                    # print(new_node)
                     new_node.name = node.name + "_fp32"
-                    # node.replace_all_uses_with(new_node)
-                    # node.args = (new_node, )
+                    node.replace_all_uses_with(new_node)
+                    new_node.args = (node, )
+                    new_node.meta["mase"] = copy(node.meta["mase"])
+                    new_node.meta["mase"].parameters["common"]["mase_op"] = "builtin_func"
             
             # update_quant_meta_param(node, node_config, get_mase_op(node))
             logger.debug(f"Quantized module: {node.target} with config: {node_config}")
-        # elif get_mase_type(node) in [
-        #     "builtin_func",
-        #     "module_related_func",
-        # ]:
-        #     new_f, args, kwargs = create_new_fn(node, node_config)
-        #     with graph.fx_graph.inserting_before(node):
-        #         new_node = graph.fx_graph.call_function(new_f, args, kwargs)
-        #         new_node.name = node.name
-        #         new_node.meta["mase"] = copy(node.meta["mase"])
-        #         relink_node_meta(new_node, model=graph.model)
-        #         update_quant_meta_param(new_node, node_config, get_mase_op(node))
-        #         node.replace_all_uses_with(new_node)
-        #     graph.fx_graph.erase_node(node)
-        #     logger.debug(
-        #         f"Quantized function: {node.target} with config: {node_config}"
-        #     )
         else:
             raise ValueError(
                 "Unsupported node type for quantisation: {}".format(get_mase_type(node))
@@ -210,6 +201,7 @@ def build_trt_engine_from_onnx(onnxFile, engineFile, dataloader):
     """
     This function builds a TensorRT engine from the ONNX file.
     """
+    logFile = engineFile + ".log"
     logger = trt.Logger(trt.Logger.ERROR)
     builder = trt.Builder(logger)
     network = builder.create_network(1 << int(trt.NetworkDefinitionCreationFlag.EXPLICIT_BATCH))
@@ -277,6 +269,8 @@ def build_trt_engine_from_onnx(onnxFile, engineFile, dataloader):
 
     execute_time = []
     accuracy = []
+    start_event = cuda.Event()
+    end_event = cuda.Event()
     for data, label in dataloader():
         start_time = time.time()
         bufferH = []
@@ -293,8 +287,13 @@ def build_trt_engine_from_onnx(onnxFile, engineFile, dataloader):
         for i in range(nIO):
             context.set_tensor_address(lTensorName[i], int(bufferD[i]))
 
+        start_event.record()
         context.execute_async_v3(0)
-        execute_time.append(time.time() - start_time)
+        # execute_time.append(time.time() - start_time)
+        
+        end_event.record() 
+        end_event.synchronize()
+        execute_time.append(start_event.time_till(end_event))
     
         for i in range(nInput, nIO):
             cudart.cudaMemcpy(bufferH[i].ctypes.data, bufferD[i], bufferH[i].nbytes, cudart.cudaMemcpyKind.cudaMemcpyDeviceToHost)
@@ -313,7 +312,7 @@ def build_trt_engine_from_onnx(onnxFile, engineFile, dataloader):
         for b in bufferD:
             cudart.cudaFree(b)
     print("Succeeded running model in TensorRT!")
-    print("Average execute time for one batch: %.2fms" % (sum(execute_time) / len(execute_time) * 1000))
+    print("Average execute time for one batch: %.2fms" % (sum(execute_time) / len(execute_time)))
     print("Total accuracy: %.2f%%" % (sum(accuracy) / len(accuracy) * 100))
 
 
@@ -333,8 +332,12 @@ def evaluate_fake_quantize_pass(graph, pass_args=None):
     execute_time = []
     for data, target in val_loader:
         data, target = data.to(device), target.to(device)
+        
+        torch.cuda.synchronize()
         start_time = time.time()
         output = graph.model(data)
+
+        torch.cuda.synchronize()
         execute_time.append(time.time() - start_time)
 
         categories = np.argmax(output.cpu().detach().numpy(), axis=1)
@@ -344,7 +347,7 @@ def evaluate_fake_quantize_pass(graph, pass_args=None):
         # print("Accuracy: %.2f%%" % (acc * 100))
         accuracy.append(acc)
 
-    print("Average execute time for one batch: %.2fms" % (sum(execute_time) / len(execute_time) * 1000))
+    print("Average execute time for one batch: %.2fms" % (sum(execute_time) / len(execute_time)*1000))
     print("Total accuracy: %.2f%%" % (sum(accuracy) / len(accuracy) * 100))
 
     return graph

@@ -141,3 +141,6 @@ venv.bak/
 
 # Data files for hardware simulation
 *.dat
+
+#adl project files
+.docs/adl_project/*

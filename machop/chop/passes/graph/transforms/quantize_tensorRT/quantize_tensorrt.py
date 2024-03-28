@@ -126,9 +126,9 @@ def build_trt_engine(pass_args=None):
     profile = builder.create_optimization_profile()
 
     config = builder.create_builder_config()
-    if pass_args['precision'] == 'fp16':
+    if pass_args['precision'] == 'fp16' or pass_args['precision'] == 'best':
         config.set_flag(trt.BuilderFlag.FP16)
-    if pass_args['precision'] == 'int8':
+    if pass_args['precision'] == 'int8' or pass_args['precision'] == 'best':
         config.set_flag(trt.BuilderFlag.INT8)
         config.int8_calibrator = MyCalibrator(
             pass_args['nCalibration'], 
@@ -234,6 +234,8 @@ def test_quantize_tensorrt_transform_pass(dataloader, engineFile):
 
     execute_time = []
     accuracy = []
+    start_event = cuda.Event()
+    end_event = cuda.Event()
     for data, label in dataloader():
         bufferH = []
         bufferH.append(np.ascontiguousarray(data))
@@ -250,8 +252,6 @@ def test_quantize_tensorrt_transform_pass(dataloader, engineFile):
             context.set_tensor_address(lTensorName[i], int(bufferD[i]))
 
         # start_time = time.time()
-        start_event = cuda.Event()
-        end_event = cuda.Event()
         start_event.record()
         context.execute_async_v3(0)
         # execute_time.append(time.time() - start_time)
@@ -277,6 +277,6 @@ def test_quantize_tensorrt_transform_pass(dataloader, engineFile):
         for b in bufferD:
             cudart.cudaFree(b)
     print("Succeeded running model in TensorRT!")
-    print("Average execute time for one batch: %.2fms" % (sum(execute_time) / len(execute_time) * 1000))
+    print("Average execute time for one batch: %.2fms" % (sum(execute_time) / len(execute_time)))
     print("Total accuracy: %.2f%%" % (sum(accuracy) / len(accuracy) * 100))
 
