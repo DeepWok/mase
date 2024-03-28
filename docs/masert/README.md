@@ -168,13 +168,9 @@ The `onnx_runtime_interface_pass` pass also supports mixed precision. This is an
     - Unfortunately, this process is currently only supported on GPU.
     - This approach is most beneficial when INT8 or FP16 exclusive quantizations (static or dynamic) are giving poor results.
 
-All three methodolgies first pre-procsses the model before quantization adding further optimizations. This intermidate model is stored to the `pre-processed` directory. 
+All three methodolgies first pre-procsses the model before quantization adding further optimizations. This intermidate model is stored to the `pre-processed` directory. The methodologies can be used as a search space in the config.
 
-For this example, we will set the `precision` to `'uint8'` (since `ConvInteger` node is not currently supported for `'int8'` on ONNXRT GPU execution provider). 
-
-We will also set the `precision_types` to `['static', 'dynamic', 'auto']` to compare all three quantization methods, whilst keeping the other settings the exact same for a fair comparison against the optimized `vgg7` model used in the previous section.
-
-The models are also stored in the directory:
+The models are stored in the directory:
 ```
 mase_output
 └── onnxrt
@@ -197,7 +193,7 @@ The procedure in the [How It Works Section](#⚙️-how-it-works) can be acompli
 ./ch transform --config {config_file} --load {model_checkpoint} --load-type pl
 ```
 
-### Tutorials
+### 📚 Tutorials
 >We strongly recommend you look through the dedicated tutorials which walk you through the process of utilising MaseRT:
 >- [TensorRT Tutorial](/docs/tutorials/tensorrt/tensorRT_quantization_tutorial.ipynb) 
 >- [ONNXRT Tutorial](/docs/tutorials/onnxrt/onnxrt_quantization_tutorial.ipynb)
