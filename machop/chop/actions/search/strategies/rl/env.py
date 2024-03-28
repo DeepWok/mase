@@ -107,7 +107,7 @@ from stable_baselines3.common.callbacks import BaseCallback
 
 
 class MixedPrecisionEnv(gym.Env):
-    def __init__(self, config,verbose):
+    def __init__(self, config, verbose):
         # Make the space (for actions and observations) configurable.
         # Since actions should repeat observations, their spaces must be the
         # same.
@@ -258,8 +258,10 @@ class MixedPrecisionEnv(gym.Env):
             self.result[1] = metrics[1]
         if self.episode % 20 == 0:
             truncated = True
-            if self.verbose==1:
-                print(f"Step: {self.episode}, reward: {reward}, accuracy: {metrics[0]}, average_bit: {metrics[1]}")
+            if self.verbose == 1:
+                print(
+                    f"Step: {self.episode}, reward: {reward}, accuracy: {metrics[0]}, average_bit: {metrics[1]}"
+                )
 
         else:
             truncated = False

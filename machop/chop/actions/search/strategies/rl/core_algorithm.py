@@ -28,7 +28,7 @@ class StrategyRL(SearchStrategyBase):
         self.total_timesteps = setup["total_timesteps"]
         # self.save_name = "./mase_output/"+setup["save_name"]+'/'+setup["save_name"]
         self.save_name = (
-                "./mase_output/" + setup["save_name"] + "/" + setup["save_name"]
+            "./mase_output/" + setup["save_name"] + "/" + setup["save_name"]
         )
         self.env_name = setup["env"]
         self.env = env_map[self.env_name]
@@ -58,7 +58,7 @@ class StrategyRL(SearchStrategyBase):
                 "data_module": self.data_module,
                 "metrics": self.metrics,
             },
-            verbose=0
+            verbose=0,
         )
         checkpoint_callback = CheckpointCallback(save_freq=1000, save_path="./logs/")
         eval_callback = EvalCallback(
