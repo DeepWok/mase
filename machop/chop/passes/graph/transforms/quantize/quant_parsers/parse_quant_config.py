@@ -354,6 +354,9 @@ MASE_OP_TO_ENTRIES = {
     "relu": (("name", "data_in_entries"), ("bypass",)),
     "selu": (("name", "data_in_entries"), ("bypass",)),
     "tanh": (("name", "data_in_entries"), ("bypass",)),
+    "gelu": (("name", "data_in_entries"), ("bypass",)),
+    "softplus": (("name", "data_in_entries"), ("bypass",)),
+    "softsign": (("name", "data_in_entries"), ("bypass",)),
     "sub": (("name", "data_in_entries"), ("bypass",)),
     "rotary_positional_encoding": (
         ("name", "data_in_entries"),

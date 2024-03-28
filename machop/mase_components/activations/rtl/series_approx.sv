@@ -8,7 +8,6 @@ module series_approx#(
 	input logic [DATA_IN_0_PRECISION_0-1:0] data_in_0,
     output logic [DATA_OUT_0_PRECISION_0-1:0] data_out_0
 );
-    // Define the memory array for the LUT
     logic [DATA_IN_0_PRECISION_0 - 1+1:0] x_shift_1;
     logic [DATA_IN_0_PRECISION_0 - 1+2:0] x_shift_2;
     logic [DATA_IN_0_PRECISION_0 - 1+4:0] x_shift_4;
@@ -23,10 +22,6 @@ module series_approx#(
     assign x_shift_1 = data_in_0 >> 1;
     assign x_shift_2 = data_in_0 >> 2;
     assign x_shift_4 = data_in_0 >> 4;
-
-    // Negation operations
-    //assign neg_x_shift_4 = ~x_shift_4;
-    //assign neg_x_shift_2 = ~x_shift_2;
 
     // Calculation of terms
     assign term1 = x_shift_4 + x_shift_2;

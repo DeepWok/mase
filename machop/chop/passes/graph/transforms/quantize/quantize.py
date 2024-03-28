@@ -31,7 +31,10 @@ QUANTIZEABLE_OP = (
     "relu",
     "sub",
     "selu",
-    "tanh"
+    "tanh",
+    "gelu",
+    "softsign",
+    "softplus"
 )
 
 
