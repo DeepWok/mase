@@ -34,7 +34,12 @@ from .....passes.graph import (
     init_metadata_analysis_pass,
     add_common_metadata_analysis_pass,
 )
-from .....passes.graph.utils import get_mase_op, get_mase_type, get_node_actual_target, get_parent_name
+from .....passes.graph.utils import (
+    get_mase_op,
+    get_mase_type,
+    get_node_actual_target,
+    get_parent_name
+)
 from ..utils import flatten_dict, unflatten_dict
 from collections import defaultdict
 
@@ -49,21 +54,22 @@ from .model_spec import ModelSpec
 ### by api.get_net_config(0, 'cifar10') in nasbench201
 DEFAULT_ZERO_COST_ARCHITECTURE_CONFIG = {
     "config": {
-        'dataset': 'cifar10',
-        'name': 'infer.tiny',
-        'C': 16,
-        'N': 5,
-        'op_0_0': 0,
-        'op_1_0': 4,
-        'op_2_0': 2, 'op_2_1': 1,
-        'op_3_0': 2, 'op_3_1': 1, 'op_3_2': 1,
-        'number_classes': 10
+        "dataset": "cifar10",
+        "name": "infer.tiny",
+        "C": 16,
+        "N": 5,
+        "op_0_0": 0,
+        "op_1_0": 4,
+        "op_2_0": 2, "op_2_1": 1,
+        "op_3_0": 2, "op_3_1": 1, "op_3_2": 1,
+        "number_classes": 10
     }
 }
 
 print("loading api")
-api = API('./third_party/NAS-Bench-201-v1_1-096897.pth', verbose=False)
+api = API("./third_party/NAS-Bench-201-v1_1-096897.pth", verbose=False)
 print("api loaded")
+
 
 class ZeroCostProxy(SearchSpaceBase):
     """
@@ -84,6 +90,7 @@ class ZeroCostProxy(SearchSpaceBase):
         This method rebuilds the model based on the sampled configuration. It also sets the model to evaluation or training mode based on the is_eval_mode parameter.
         It queries the NAS-Bench-201 API for the architecture performance and uses the returned architecture to rebuild the model.
         """
+        
         print("\n=========sampled_config===============")
         print(sampled_config)
         
@@ -92,7 +99,7 @@ class ZeroCostProxy(SearchSpaceBase):
             self.model.eval()
         else:
             self.model.train()
-       
+
         if "nas_zero_cost" in sampled_config:
             nas_config = generate_configs(sampled_config["nas_zero_cost"])
             nasbench_dataset = sampled_config["nas_zero_cost"]["dataset"]
@@ -101,7 +108,6 @@ class ZeroCostProxy(SearchSpaceBase):
             nasbench_dataset = sampled_config["default"]["dataset"]
 
         print(f"Used dataset: {nasbench_dataset}")
-        
         arch = nas_config["arch_str"]
         index = api.query_index_by_arch(arch)
         print("index")
@@ -144,7 +150,6 @@ class ZeroCostProxy(SearchSpaceBase):
         }
 
         print(self.choice_lengths_flattened)
-        
 
     def flattened_indexes_to_config(self, indexes: dict[str, int]):
         flattened_config = {}
@@ -167,10 +172,7 @@ class ZeroCostProxy(SearchSpaceBase):
 def instantiate_linear(in_features, out_features, bias):
     if bias is not None:
         bias = True
-    return nn.Linear(
-        in_features=in_features,
-        out_features=out_features,
-        bias=bias)
+    return nn.Linear(in_features=in_features, out_features=out_features, bias=bias)
 
 def instantiate_relu(inplace):
     return ReLU(inplace)
@@ -178,7 +180,9 @@ def instantiate_relu(inplace):
 def instantiate_batchnorm(num_features, eps, momentum, affine, track_running_stats):
     return nn.BatchNorm1d(num_features, eps, momentum, affine, track_running_stats)
 
-def instantiate_conv2d(in_channels, out_channels, kernel_size, stride, padding, dilation, groups, bias):
+def instantiate_conv2d(
+    in_channels, out_channels, kernel_size, stride, padding, dilation, groups, bias
+    ):
     return nn.Conv2d(
         in_channels=in_channels,
         out_channels=out_channels,
@@ -205,7 +209,12 @@ def generate_configs(config_dict):
     C = config_dict['C']
     N = config_dict['N']
     num_classes = config_dict['number_classes']
-    op_map = {0:'none', 1:'skip_connect', 2:'nor_conv_3x3', 3:'nor_conv_1x1', 4:'avg_pool_3x3'}
+    op_map = {0:'none', 
+                1:'skip_connect', 
+                2:'nor_conv_3x3', 
+                3:'nor_conv_1x1', 
+                4:'avg_pool_3x3'
+                }
 
     ### generate combination
     arch_str = ""
@@ -215,16 +224,16 @@ def generate_configs(config_dict):
             op = f"op_{target_neuro}_{exert_neuro}"
             op_str = op_map[config_dict[op]]
             op_str += f"~{exert_neuro}"
-            arch_str += (op_str + "|")
+            arch_str += op_str + "|"
         if target_neuro < 3:
             arch_str += "+"
     
     config = {
-        'name': name,
-        'C': C,
-        'N': N,
-        'arch_str': arch_str,
-        'num_classes': num_classes
+        "name": name,
+        "C": C,
+        "N": N,
+        "arch_str": arch_str,
+        "num_classes": num_classes
     }
 
     return config

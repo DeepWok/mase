@@ -6,7 +6,7 @@ from .quantization import (
 from .systolic import SystolicMappingSearchSpace
 from .base import SearchSpaceBase
 from .zero_cost import ZeroCostProxy
-################################
+
 
 SEARCH_SPACE_MAP = {
     "graph/quantize/mixed_precision_ptq": GraphSearchSpaceMixedPrecisionPTQ,
