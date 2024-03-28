@@ -50,7 +50,7 @@ from tabulate import tabulate
 import torch
 
 from . import models
-from .actions import test, train, transform, search, emit, simulate
+from .actions import test, train, transform, search, emit, simulate, train1, prune_and_retrain
 from .dataset import MaseDataModule, AVAILABLE_DATASETS, get_dataset_info
 from .tools import post_parse_load_config, load_config
 
@@ -97,7 +97,7 @@ LOGO = f"""
         https://github.com/DeepWok/mase/wiki
 """
 TASKS = ["classification", "cls", "translation", "tran", "language_modeling", "lm"]
-ACTIONS = ["train", "test", "transform", "search", "emit", "simulate"]
+ACTIONS = ["train", "test", "transform", "search", "emit", "simulate", "prune_and_retrain"] # add one action
 INFO_TYPE = ["all", "model", "dataset"]
 LOAD_TYPE = [
     "pt",  # PyTorch module state dictionary
@@ -249,7 +249,8 @@ class ChopCLI:
             case "transform":
                 run_action_fn = self._run_transform
             case "train":
-                run_action_fn = self._run_train
+                #run_action_fn = self._run_train
+                run_action_fn = self._run_train1
             case "test":
                 run_action_fn = self._run_test
             case "search":
@@ -258,6 +259,8 @@ class ChopCLI:
                 run_action_fn = self._run_emit
             case "simulate":
                 run_action_fn = self._run_simulate
+            case "prune_and_retrain":
+                run_action_fn = self._run_prune_and_retrain
 
         if run_action_fn is None:
             raise ValueError(f"Unsupported action: {self.args.action}")
@@ -280,16 +283,11 @@ class ChopCLI:
             "num_nodes": self.args.num_nodes,
             "accelerator": self.args.accelerator,
             "strategy": self.args.strategy,
+            "fast_dev_run": self.args.to_debug,
             "precision": self.args.trainer_precision,
             "accumulate_grad_batches": self.args.accumulate_grad_batches,
             "log_every_n_steps": self.args.log_every_n_steps,
         }
-
-        if self.args.to_debug:
-            # we give a very short number of batches for both train and val
-            plt_trainer_args["limit_train_batches"] = 5
-            plt_trainer_args["limit_val_batches"] = 5
-            plt_trainer_args["limit_test_batches"] = 5
 
         # Load from a checkpoint!
         load_name = None
@@ -318,6 +316,38 @@ class ChopCLI:
 
         train(**train_params)
         self.logger.info("Training is completed")
+    
+
+    def _run_train1(self):
+        self.logger.info(f"Training model {self.args.model!r}...")
+        # A configuration is compulsory for self-designed train passes
+        if self.args.config is None:
+            raise ValueError("expected configuration via --config, got None")
+        
+        # Load model from a checkpoint!
+        load_name = None
+        load_types = ["pt", "pl", "mz"]
+        if self.args.load_name is not None and self.args.load_type in load_types:
+            load_name = self.args.load_name
+        
+        train1_params = {
+            "model": self.model,
+            "model_info": self.model_info,
+            "data_module": self.data_module,
+            "dataset_info": self.dataset_info,
+            "task": self.args.task,
+            "config": self.args.config,
+            #"auto_requeue": self.args.auto_requeue,
+            "save_path": os.path.join(self.output_dir_sw, "training1_ckpts"),
+            "visualizer": self.visualizer,
+            "load_name": self.args.load_name,
+            "load_type": self.args.load_type,
+            "accelerator": self.args.accelerator,
+        }
+
+        train1(**train1_params)
+        self.logger.info("Self-designed training is completed")
+
 
     def _run_test(self):
         self.logger.info(f"Testing model {self.args.model!r}...")
@@ -354,6 +384,7 @@ class ChopCLI:
         test(**test_params)
         self.logger.info("Testing is completed")
 
+
     def _run_transform(self):
         # A configuration is compulsory for transformation passes
         if self.args.config is None:
@@ -368,9 +399,16 @@ class ChopCLI:
             "model_info": self.model_info,
             "model_name": self.args.model,
             "data_module": self.data_module,
+            "dataset_info": self.dataset_info,
             "task": self.args.task,
             "config": self.args.config,
-            "save_dir": os.path.join(self.output_dir_sw, "transform"),
+            "visualizer": self.visualizer,
+            # save ckpts for different options
+            "prune_save_dir": os.path.join(self.output_dir_sw, "transforms/prune"),
+            "quantize_save_dir": os.path.join(self.output_dir_sw, "transforms/quantize"),
+            "retrain_save_path": os.path.join(self.output_dir_sw, "transforms/retrain"),
+            "huffman_save_dir": os.path.join(self.output_dir_sw, "transforms/huffman"),
+            # "save_dir": os.path.join(self.output_dir_sw, "transform"),
             "load_name": self.args.load_name,
             "load_type": self.args.load_type,
             "accelerator": self.args.accelerator,
@@ -378,6 +416,38 @@ class ChopCLI:
 
         transform(**transform_params)
         self.logger.info("Transformation is completed")
+
+
+    def _run_prune_and_retrain(self):
+        #import pdb; pdb.set_trace()
+        # prune
+        if self.args.config is None:
+            raise ValueError("expected configuration via --config, got None")
+
+        self.logger.info(f"Preparing for pruning and re-training the model!")
+        self.data_module.prepare_data()
+        self.data_module.setup()
+
+        prune_and_retrain_params = {
+            "model": self.model,
+            "model_info": self.model_info,
+            "model_name": self.args.model,
+            "data_module": self.data_module,
+            "dataset_info": self.dataset_info,
+            "task": self.args.task,
+            "config": self.args.config,
+            "visualizer": self.visualizer,
+            "prune_save_dir": os.path.join(self.output_dir_sw, "prune"),
+            "retrain_save_path": os.path.join(self.output_dir_sw, "training_ckpts_test"),
+            "load_name": self.args.load_name,
+            "load_type": self.args.load_type,
+            "accelerator": self.args.accelerator,
+        }
+
+        prune_and_retrain(**prune_and_retrain_params)
+        
+        self.logger.info("Pruning and Re-training is completed! Thanks!")
+
 
     def _run_search(self):
         load_name = None
