@@ -56,7 +56,6 @@ def copy_basic(module, init):
         if init.downsample is not None:
             copy_base(module.downsample, init.downsample)
         # else:
-        # import pdb; pdb.set_trace()
 
 
 def init_from_model(network, init_model):

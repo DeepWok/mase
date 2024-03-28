@@ -147,7 +147,6 @@ class ZeroCostProxy(SearchSpaceBase):
 
     def flattened_indexes_to_config(self, indexes: dict[str, int]):
         flattened_config = {}
-        # import pdb; pdb.set_trace() 
         for k, v in indexes.items():
             flattened_config[k] = self.choices_flattened[k][v]
 

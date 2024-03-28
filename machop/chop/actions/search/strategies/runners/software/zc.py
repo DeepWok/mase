@@ -177,7 +177,6 @@ class RunnerZeroCost(SWRunnerBase):
         dataload_info = ('random', 1, 10)
         device = self.accelerator
         
-        # import pdb; pdb.set_trace()
         for metric_name in metric_names:
             if metric_name in self.available_metrics:
                 # print(f"Computing {metric_name}")

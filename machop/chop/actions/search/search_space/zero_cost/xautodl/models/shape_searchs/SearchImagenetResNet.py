@@ -261,7 +261,6 @@ class ResNetBasicblock(nn.Module):
         ), "invalid type input : {:}".format(type(tuple_inputs))
         inputs, expected_inC, probability, indexes, probs = tuple_inputs
         assert indexes.size(0) == 2 and probs.size(0) == 2 and probability.size(0) == 2
-        # import pdb; pdb.set_trace()
         out_a, expected_inC_a, expected_flop_a = self.conv_a(
             (inputs, expected_inC, probability[0], indexes[0], probs[0])
         )
