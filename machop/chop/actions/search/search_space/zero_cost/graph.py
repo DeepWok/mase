@@ -60,7 +60,7 @@ DEFAULT_ZERO_COST_ARCHITECTURE_CONFIG = {
         "N": 5,
         "op_0_0": 0,
         "op_1_0": 4,
-        "op_2_0": 2, 
+        "op_2_0": 2,
         "op_2_1": 1,
         "op_3_0": 2,
         "op_3_1": 1,
@@ -217,10 +217,10 @@ def generate_configs(config_dict):
     N = config_dict["N"]
     num_classes = config_dict["number_classes"]
     op_map = {
-        0: "none", 
-        1: "skip_connect", 
-        2: "nor_conv_3x3", 
-        3: "nor_conv_1x1", 
+        0: "none",
+        1: "skip_connect",
+        2: "nor_conv_3x3",
+        3: "nor_conv_1x1",
         4: "avg_pool_3x3",
     }
 

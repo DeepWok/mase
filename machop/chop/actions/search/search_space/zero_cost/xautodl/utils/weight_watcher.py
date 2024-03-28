@@ -147,7 +147,7 @@ def analyze_weights(
             tolerance = lambda_max * M * np.finfo(np.max(sv)).eps
             cur_res["rank_loss"] = np.count_nonzero(sv > tolerance, axis=-1)
 
-            logpnorm = np.log10(np.sum([ev ** alpha for ev in evals]))
+            logpnorm = np.log10(np.sum([ev**alpha for ev in evals]))
             cur_res["logpnorm"] = logpnorm
 
             summary.append(
@@ -177,7 +177,7 @@ def analyze_weights(
             )
 
             if softranks:
-                softrank = norm ** 2 / sv_max ** 2
+                softrank = norm**2 / sv_max**2
                 softranklog = np.log10(softrank)
                 softranklogratio = lognorm / np.log10(sv_max)
                 cur_res["softrank"] = softrank

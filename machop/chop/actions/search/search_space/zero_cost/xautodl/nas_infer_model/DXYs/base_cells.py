@@ -15,7 +15,7 @@ class MixedOp(nn.Module):
         for idx, primitive in enumerate(PRIMITIVES):
             op = OPS[primitive](C, C, stride, False)
             self._ops.append(op)
-            assert primitive not in self.name2idx, '{:} has already in'.format(
+            assert primitive not in self.name2idx, "{:} has already in".format(
                 primitive
             )
             self.name2idx[primitive] = idx
@@ -33,16 +33,16 @@ class MixedOp(nn.Module):
 
 class SearchCell(nn.Module):
     def __init__(
-        self, 
-        steps, 
-        multiplier, 
-        C_prev_prev, 
-        C_prev, 
-        C, 
-        reduction, 
-        reduction_prev, 
-        PRIMITIVES, 
-        use_residual
+        self,
+        steps,
+        multiplier,
+        C_prev_prev,
+        C_prev,
+        C,
+        reduction,
+        reduction_prev,
+        PRIMITIVES,
+        use_residual,
     ):
         super(SearchCell, self).__init__()
         self.reduction = reduction
@@ -65,23 +65,23 @@ class SearchCell(nn.Module):
                 self._ops.append(op)
 
     def extra_repr(self):
-        return ('{name}(residual={_use_residual}, steps={_steps}, multiplier={_multiplier})'.format(
+        return "{name}(residual={_use_residual}, steps={_steps}, multiplier={_multiplier})".format(
             name=self.__class__.__name__, **self.__dict__
-        ))
+        )
 
     def forward(self, S0, S1, weights, connect, adjacency, drop_prob, modes):
         if modes[0] is None:
-            if modes[1] == 'normal':
+            if modes[1] == "normal":
                 output = self.__forwardBoth(
                     S0, S1, weights, connect, adjacency, drop_prob
                 )
-            elif modes[1] == 'only_W':
+            elif modes[1] == "only_W":
                 output = self.__forwardOnlyW(S0, S1, drop_prob)
         else:
             output = self._extracted_from_forward_10(modes, S0, S1)
         if self._use_residual and S1.size() == output.size():
             return S1 + output
-        else: 
+        else:
             return output
 
     # TODO Rename this here and in `forward`
@@ -94,7 +94,7 @@ class SearchCell(nn.Module):
         )
         s0, s1 = self.preprocess0(S0), self.preprocess1(S1)
         states, offset = [s0, s1], 0
-        assert self._steps == len(operations), '{:} vs. {:}'.format(
+        assert self._steps == len(operations), "{:} vs. {:}".format(
             self._steps, len(operations)
         )
         for opA, opB in operations:
@@ -119,7 +119,7 @@ class SearchCell(nn.Module):
             state = sum(w * node for w, node in zip(connection, clist))
             offset += len(states)
             states.append(state)
-        return torch.cat(states[-self._multiplier:], dim=1)
+        return torch.cat(states[-self._multiplier :], dim=1)
 
     def __forwardOnlyW(self, S0, S1, drop_prob):
         s0, s1 = self.preprocess0(S0), self.preprocess1(S1)
@@ -127,13 +127,10 @@ class SearchCell(nn.Module):
         for _ in range(self._steps):
             clist = []
             for j, h in enumerate(states):
-                xs = self._ops[offset+j](h, None, None)
+                xs = self._ops[offset + j](h, None, None)
                 clist += xs
             xlist = (
-                [
-                    drop_path(x, math.pow(drop_prob, 1.0 / len(states)))
-                    for x in clist
-                ]
+                [drop_path(x, math.pow(drop_prob, 1.0 / len(states))) for x in clist]
                 if self.training and drop_prob > 0.0
                 else clist
             )
@@ -156,8 +153,10 @@ class InferCell(nn.Module):
             self.preprocess0 = ReLUConvBN(C_prev_prev, C, 1, 1, 0)
         self.preprocess1 = ReLUConvBN(C_prev, C, 1, 1, 0)
 
-        if reduction: step_ops, concat = genotype.reduce, genotype.reduce_concat
-        else: step_ops, concat = genotype.normal, genotype.normal_concat
+        if reduction:
+            step_ops, concat = genotype.reduce, genotype.reduce_concat
+        else:
+            step_ops, concat = genotype.normal, genotype.normal_concat
         self._steps = len(step_ops)
         self._concat = concat
         self._multiplier = len(concat)
@@ -184,13 +183,13 @@ class InferCell(nn.Module):
 
         states = [s0, s1]
         for i in range(self._steps):
-            h1 = states[self._indices[2*i]]
-            h2 = states[self._indices[2*i+1]]
-            op1 = self._ops[2*i]
-            op2 = self._ops[2*i+1]
+            h1 = states[self._indices[2 * i]]
+            h2 = states[self._indices[2 * i + 1]]
+            op1 = self._ops[2 * i]
+            op2 = self._ops[2 * i + 1]
             h1 = op1(h1)
             h2 = op2(h2)
-            if self.training and drop_prob > 0.:
+            if self.training and drop_prob > 0.0:
                 if not isinstance(op1, Identity):
                     h1 = drop_path(h1, drop_prob)
                 if not isinstance(op2, Identity):

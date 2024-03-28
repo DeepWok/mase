@@ -7,6 +7,7 @@ try:
 except ImportError:
     pass
 
+
 class ModelSpec(object):
     """Model specification given adjacency matrix and labeling."""
 
@@ -16,11 +17,11 @@ class ModelSpec(object):
             matrix = np.array(matrix)
         shape = np.shape(matrix)
         if len(shape) != 2 or shape[0] != shape[1]:
-            raise ValueError('matrix must be square')
+            raise ValueError("matrix must be square")
         if shape[0] != len(ops):
-            raise ValueError('length of ops must match matrix dimensions')
+            raise ValueError("length of ops must match matrix dimensions")
         if not is_upper_triangular(matrix):
-            raise ValueError('matrix must be upper triangular')
+            raise ValueError("matrix must be upper triangular")
 
         self.original_matrix = copy.deepcopy(matrix)
         self.original_ops = copy.deepcopy(ops)
@@ -88,6 +89,7 @@ class ModelSpec(object):
                 if self.matrix[src, dst]:
                     g.edge(str(src), str(dst))
         return g
+
 
 def is_upper_triangular(matrix):
     """True if matrix is 0 on diagonal and below."""

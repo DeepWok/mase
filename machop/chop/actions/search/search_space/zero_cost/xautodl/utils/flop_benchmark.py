@@ -16,9 +16,7 @@ def count_parameters(model_or_parameters, unit="mb", deprecated=False):
     elif isinstance(model_or_parameters, nn.Parameter):
         counts = model_or_parameters.numel()
     elif isinstance(model_or_parameters, (list, tuple)):
-        counts = sum(
-            count_parameters(x, None, deprecated) for x in model_or_parameters
-        )
+        counts = sum(count_parameters(x, None, deprecated) for x in model_or_parameters)
     else:
         counts = sum(np.prod(v.size()) for v in model_or_parameters)
     if not isinstance(unit, str) and unit is not None:
@@ -26,11 +24,11 @@ def count_parameters(model_or_parameters, unit="mb", deprecated=False):
     elif unit is None:
         counts = counts
     elif unit.lower() == "kb" or unit.lower() == "k":
-        counts /= 1e3 if deprecated else 2 ** 10  # changed from 1e3 to 2^10
+        counts /= 1e3 if deprecated else 2**10  # changed from 1e3 to 2^10
     elif unit.lower() == "mb" or unit.lower() == "m":
-        counts /= 1e6 if deprecated else 2 ** 20  # changed from 1e6 to 2^20
+        counts /= 1e6 if deprecated else 2**20  # changed from 1e6 to 2^20
     elif unit.lower() == "gb" or unit.lower() == "g":
-        counts /= 1e9 if deprecated else 2 ** 30  # changed from 1e9 to 2^30
+        counts /= 1e9 if deprecated else 2**30  # changed from 1e9 to 2^30
     else:
         raise ValueError("Unknow unit: {:}".format(unit))
     return counts

@@ -56,16 +56,16 @@ class NetworkImageNet(nn.Module):
 
     def extra_repr(self):
         return "{name}(C={_C}, N=[{_layerN}, {_NNN}], aux-index={auxiliary_index}, drop-path={drop_path_prob})".format(
-             name=self.__class__.__name__, **self.__dict__
+            name=self.__class__.__name__, **self.__dict__
         )
 
     def get_message(self):
         return self.extra_repr()
 
     def auxiliary_param(self):
-        if self.auxiliary_head is None: 
+        if self.auxiliary_head is None:
             return []
-        else: 
+        else:
             return list(self.auxiliary_head.parameters())
 
     def forward(self, inputs):

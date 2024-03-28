@@ -48,10 +48,11 @@ def gen_is_edge_fn(bits):
     Returns:
         vectorized function that returns True when an edge is present.
     """
+
     def is_edge(x, y):
         """Is there an edge from x to y (0-indexed)?"""
         if x >= y:
-            return 0 
+            return 0
         # Map x, y to index into bit string
         index = x + (y * (y - 1) // 2)
         return (bits >> index) % 2 == 1

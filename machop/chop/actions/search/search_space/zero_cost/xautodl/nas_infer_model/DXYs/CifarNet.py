@@ -39,7 +39,7 @@ class NetworkCIFAR(nn.Module):
                     self.auxiliary_head = AuxiliaryHeadCIFAR(C_prev, num_classes)
                     self.auxiliary_index = index
 
-            if reduction: 
+            if reduction:
                 spatial *= 2
             dims.append((C_prev, spatial))
 
@@ -53,9 +53,9 @@ class NetworkCIFAR(nn.Module):
         self.drop_path_prob = drop_path_prob
 
     def auxiliary_param(self):
-        if self.auxiliary_head is None: 
+        if self.auxiliary_head is None:
             return []
-        else: 
+        else:
             return list(self.auxiliary_head.parameters())
 
     def get_message(self):
@@ -74,8 +74,8 @@ class NetworkCIFAR(nn.Module):
             cell_results.append(cell_feature)
 
             if (
-                self.auxiliary_index is not None 
-                and i == self.auxiliary_index 
+                self.auxiliary_index is not None
+                and i == self.auxiliary_index
                 and self.training
             ):
                 logits_aux = self.auxiliary_head(cell_results[-1])
