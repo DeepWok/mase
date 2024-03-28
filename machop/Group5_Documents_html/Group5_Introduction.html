@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>General introduction &mdash; Group5 Document 1.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=19f00094" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="_static/jquery.js?v=5d32c60e"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="_static/documentation_options.js?v=f2a433a1"></script>
+        <script src="_static/doctools.js?v=888ff710"></script>
+        <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="Welcome to Group5 Document’s documentation!" href="index.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            Group5 Document
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">General introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="#preparation-and-installations">Preparation and installations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="#pass-for-mase-graph">PASS for Mase Graph</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Reals_quant_self_defined_util.html">Reals_quant_self_defined_util module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="modify_tensorRT.html">modify_tensorRT module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="quantize_tensorRT.html">quantize_tensorRT module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="modify_tensorRT.html">modify_tensorRT module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Reals_quant_self_defined_util.html">Reals_quant_self_defined_util module</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Group5 Document</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">General introduction</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/Group5_Introduction.md.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+    <h1 align="center">Lab 1 for Advanced Deep Learning Systems (ADLS)</h1>  <p align="center">
+    ELEC70109/EE9-AML3-10/EE9-AO25
+    <br />
+  Written by Xinyi Sun (Xs1423) and Konstantinos Rotas (Kr915)
+  </p><section id="general-introduction">
+<h1>General introduction<a class="headerlink" href="#general-introduction" title="Link to this heading"></a></h1>
+<p>This study presents a new method to make machine learning models run faster on NVIDIA graphics cards. We’ve designed a system that speeds up the process of running and improving these models using a tool called TensorRT, without the need to retrain them. It works well for both simple and complex models, and at different levels of detail. We also looked into advanced techniques like adjusting precision on a layer-by-layer basis and integrating with ONNXRuntime to boost performance even more. This method is an important advancement for using machine learning in real-time on NVIDIA GPU.</p>
+</section>
+<section id="preparation-and-installations">
+<h1>Preparation and installations<a class="headerlink" href="#preparation-and-installations" title="Link to this heading"></a></h1>
+<ul class="simple">
+<li><p><strong>Python</strong>: Python 3.10.14</p></li>
+<li><p><strong>GPU Specifications</strong>: NVIDIA GeForce RTX 3050 Ti Laptop GPU, supported by CUDA version 12.1</p></li>
+<li><p><strong>TensorRT</strong>: Version 8.6.1 for optimizing deep learning models for inference.</p></li>
+<li><p><strong>ONNX</strong>: Version 1.15.0, for model exporting to a format compatible with various inference engines.</p></li>
+<li><p><strong>PyTorch</strong>: Version 2.2.1, the primary deep learning framework used for model development and training.</p></li>
+<li><p><strong>Pytorch-Quantization</strong>: Version 2.1.3, a toolkit for implementing quantization within PyTorch models to reduce model size and accelerate inference.</p></li>
+<li><p><strong>CUDA-Python</strong>: Version 12.4.0, providing Python bindings to CUDA functionalities, further enabling efficient GPU-accelerated computing.</p></li>
+<li><p><strong>Additional Dependencies</strong>: All other packages were installed according to the requirements specified by the MASE graph framework.</p></li>
+</ul>
+</section>
+<section id="pass-for-mase-graph">
+<h1>PASS for Mase Graph<a class="headerlink" href="#pass-for-mase-graph" title="Link to this heading"></a></h1>
+<p><strong>TensorRT Quantize Pass:</strong>
+This step involves analyzing the provided input configuration to select the layers targeted for quantization. It identifies the precision (quantization bits) for both inputs and weights and decides if quantization should proceed. Subsequently, the targeted layer in the MASE graph is replaced with a <code class="docutils literal notranslate"><span class="pre">quant_nn</span></code> layer, tailored for quantized operations.</p>
+<p><strong>Calibration Pass:</strong>
+Utilizing the specified data module and batch size, this process determines the distribution range of tensor values across each channel. It computes an <code class="docutils literal notranslate"><span class="pre">Amax</span></code> parameter that defines the quantization bounds, ensuring that the quantized model accurately reflects the original data distribution.</p>
+<p><strong>Export to ONNX Pass:</strong>
+This step adjusts the input tensor dimensions according to a sample input derived from the training dataset and exports the model in the ONNX format to a predetermined location. This file path is registered within the MASE graph’s metadata, ensuring the model’s ONNX representation is available for future use.</p>
+<p><strong>Generate TensorRT String Pass:</strong>
+This step serializes the TensorRT engine and stores this representation within the MASE graph’s metadata. This serialization format enables automated requests of the model engine in future tasks.</p>
+<p><strong>Run TensorRT Pass:</strong>
+Initiating with the MASE graph as input, this function deserializes the stored engine string and sets the necessary data buffers for intermediate data storage during inference. The engine then executes model predictions using a test dataset, to record accuracy and latency metrics.</p>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="index.html" class="btn btn-neutral float-left" title="Welcome to Group5 Document’s documentation!" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Xinyi Sun.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
