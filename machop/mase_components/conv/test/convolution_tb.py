@@ -7,6 +7,9 @@ from mase_cocotb.random_test import RandomSource, RandomSink, check_results
 from mase_cocotb.runner import mase_runner
 from chop.passes.graph.transforms.quantize.quantized_modules import Conv2dInteger
 
+# TODO: This import is broken
+# "from Qconv import QuantizedConvolution" also does not work!
+from mase_cocotb.z_qlayers import QuantizedConvolution
 import torch
 
 import cocotb

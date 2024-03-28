@@ -52,6 +52,9 @@ module_data = {
     "conv3d": {"input": "data_in"},
     # https://pytorch.org/docs/stable/generated/torch.nn.LayerNorm.html#torch.nn.LayerNorm
     "layer_norm": {"input": "data_in"},
+    "group_norm": {"input": "data_in"},
+    "instance_norm2d": {"input": "data_in"},
+    "rms_norm": {"input": "data_in"},
     # https://pytorch.org/docs/stable/_modules/torch/nn/modules/linear.html#Linear
     "linear": {"input": "data_in"},
     # https://pytorch.org/docs/stable/_modules/torch/nn/modules/activation.html#ReLU

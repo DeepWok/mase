@@ -19,18 +19,18 @@ module skid_buffer #(
 
   logic [DATA_WIDTH - 1:0] data_buffer_out;
   logic data_buffer_wren;
-  always_ff @(posedge clk)
+  always_ff @(posedge clk) begin
     if (rst) data_buffer_out <= 0;
     else if (data_buffer_wren) data_buffer_out <= data_in;
-
+  end
   logic data_out_wren;
   logic use_buffered_data;
   logic [DATA_WIDTH - 1:0] selected_data;
   assign selected_data = (use_buffered_data) ? data_buffer_out : data_in;
-  always_ff @(posedge clk)
+  always_ff @(posedge clk) begin
     if (rst) data_out <= 0;
     else if (data_out_wren) data_out <= selected_data;
-
+  end
   // control path
   // skid buffer has 4 states
   // 1. Empty

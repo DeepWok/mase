@@ -1,6 +1,7 @@
 import logging
 import math
 
+# import chop.models.manual.rms_norm as rms
 import toml
 import torch
 import torch.fx as fx
@@ -69,6 +70,12 @@ def graph_iterator_for_mase_ops(graph):
                 mase_op = "conv1d"
             elif isinstance(module, nn.LayerNorm):
                 mase_op = "layer_norm"
+            elif isinstance(module, nn.GroupNorm):
+                mase_op = "group_norm"
+            elif isinstance(module, nn.InstanceNorm2d):
+                mase_op = "instance_norm2d"
+            # elif isinstance(module, rms.RMSNorm):
+            #     mase_op = "rms_norm"
             elif isinstance(module, nn.Linear):
                 mase_op = "linear"
             elif isinstance(module, nn.ReLU):
