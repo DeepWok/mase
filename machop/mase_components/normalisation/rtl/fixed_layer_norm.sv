@@ -205,11 +205,12 @@ module fixed_layer_norm #(
     logic sqrt_v_in_ready; //TODO: use this
     logic [NUM_NORMALIZATION_ZONES-1:0] sqrt_v_out_valid; //TODO: use this
 
-    logic valid_out_b; 
-    logic valid_out_r; 
-    logic valid_out_r2; 
-    logic valid_out_r3; 
-    logic valid_out_r4; 
+    logic sqrt_valid_out_b; 
+    logic sqrt_valid_out_r; 
+    logic sqrt_valid_out_r2; 
+    logic sqrt_valid_out_r3; 
+    logic sqrt_valid_out_r4; 
+    logic sqrt_valid_out_r5; 
 
     // logic valid_in_sqrt_b;
     // logic valid_in_sqrt_r;
@@ -246,7 +247,7 @@ module fixed_layer_norm #(
         state_b             = state_r; 
 
         // valid_in_sqrt_b     = '0; 
-        valid_out_b         = '0;
+        sqrt_valid_out_b         = '0;
 
         normalised_data_b   = normalised_data_r;
 
@@ -320,7 +321,7 @@ module fixed_layer_norm #(
             if (&sqrt_v_out_valid)
             begin 
                 standard_deviation_b = sqrt_out; 
-                valid_out_b         = '1; //TODO: change this to delayed version
+                sqrt_valid_out_b         = '1;
             end
         end
 
@@ -492,7 +493,7 @@ module fixed_layer_norm #(
     // Data outputs.
     assign data_in_0_ready     = 1'b1;
 
-    assign data_out_0_valid     = valid_out_r4;
+    assign data_out_0_valid     = sqrt_valid_out_r5;
     assign data_out_0 = normalised_data_r;
 
   
@@ -502,10 +503,12 @@ module fixed_layer_norm #(
     begin
         state_r                                     <= state_b;
         data_r                                      <= data_b;
-        valid_out_r                                 <= valid_out_b;
-        valid_out_r2                                <= valid_out_r;
-        valid_out_r3                                <= valid_out_r2;
-        valid_out_r4                                <= valid_out_r3;
+        sqrt_valid_out_r                            <= sqrt_valid_out_b;
+        sqrt_valid_out_r2                           <= sqrt_valid_out_r;
+        sqrt_valid_out_r3                           <= sqrt_valid_out_r2;
+        sqrt_valid_out_r4                           <= sqrt_valid_out_r3;
+        sqrt_valid_out_r5                           <= sqrt_valid_out_r4;
+        
         // valid_in_sqrt_r                             <= valid_in_sqrt_b;
         beta_r                                      <= beta_b;
         gamma_r                                     <= gamma_b;
