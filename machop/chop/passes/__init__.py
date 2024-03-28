@@ -31,5 +31,8 @@ from .graph.transforms import (
     emit_cocotb_transform_pass,
     quantize_tensorrt_transform_pass,
     test_quantize_tensorrt_transform_pass,
-    mixed_precision_transform_pass
+    mixed_precision_transform_pass,
+    test_trt_engine,
+    evaluate_pytorch_model_pass,
+    graph_to_trt_pass
 )

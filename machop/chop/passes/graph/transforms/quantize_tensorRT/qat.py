@@ -164,6 +164,7 @@ def fake_quantize_transform_pass(graph, pass_args=None):
 
     return graph
 
+
 def mixed_precision_transform_pass(graph, pass_args_mixed_precision=None, pass_args_calibrate=None):
     """
     This function applies the mixed precision transform pass to the graph.
@@ -174,35 +175,32 @@ def mixed_precision_transform_pass(graph, pass_args_mixed_precision=None, pass_a
 
     return graph
 
+
 def quantization_aware_training_pass(graph, pass_args=None):
     """
     This function applies the quantization aware training pass to the graph.
     """
 
+    dataset = pass_args.pop("dataset")
+    trainLoader, testLoader = dataset.train_dataloader(), dataset.test_dataloader()
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    graph.model.to(device)
+    
+    ceLoss = torch.nn.CrossEntropyLoss()
+    opt = torch.optim.Adam(graph.model.parameters(), lr=pass_args['learning_rate'])
 
-    for epoch in range(10):
+    for epoch in range(pass_args['max_iter']):
         for xTrain, yTrain in trainLoader:
-            xTrain = Variable(xTrain).cuda()
-            yTrain = Variable(yTrain).cuda()
+            xTrain = Variable(xTrain).to(device)
+            yTrain = Variable(yTrain).to(device)
             opt.zero_grad()
-            y_, z = model(xTrain)
+            y_ = graph.model(xTrain)
             loss = ceLoss(y_, yTrain)
             loss.backward()
             opt.step()
 
-        with t.no_grad():
-            acc = 0
-            n = 0
-            for xTest, yTest in testLoader:
-                xTest = Variable(xTest).cuda()
-                yTest = Variable(yTest).cuda()
-                y_, z = model(xTest)
-                acc += t.sum(z == t.matmul(yTest, t.Tensor([0, 1, 2, 3, 4, 5, 6, 7, 8, 9]).to("cuda:0"))).cpu().numpy()
-                n += xTest.shape[0]
-            print("%s, epoch %2d, loss = %f, test acc = %f" % (dt.now(), epoch + 1, loss.data, acc / n))
-
-    print("Succeeded fine tuning model in pyTorch!")
+    print("Succeeded run QAT in pyTorch!")
+    return graph
 
 
 def export_quantized_to_onnx(graph, dataloader, onnxFile):
@@ -264,13 +262,15 @@ def test_trt_engine(engineFile, dataloader):
     This function tests the TensorRT engine by running the model on the test dataset.
 
     '''
+    logger = trt.Logger(trt.Logger.ERROR)
 
-    engine = trt.Runtime(logger).deserialize_cuda_engine(engineString)
-    print("engine.__len__() = %d" % len(engine))
-    print("engine.__sizeof__() = %d" % engine.__sizeof__())
-    print("engine.__str__() = %s" % engine.__str__())
+    with open(engineFile, "rb") as f:
+        engine = trt.Runtime(logger).deserialize_cuda_engine(f.read())
+        print("engine.__len__() = %d" % len(engine))
+        print("engine.__sizeof__() = %d" % engine.__sizeof__())
+        print("engine.__str__() = %s" % engine.__str__())
 
-    print("\nEngine related ========================================================")
+        print("\nEngine related ========================================================")
     
     inspector = engine.create_engine_inspector()
     print("inspector.execution_context=", inspector.execution_context)
@@ -302,7 +302,6 @@ def test_trt_engine(engineFile, dataloader):
     start_event = cuda.Event()
     end_event = cuda.Event()
     for data, label in dataloader():
-        start_time = time.time()
         bufferH = []
         bufferH.append(np.ascontiguousarray(data))
         for i in range(nInput, nIO):
@@ -333,14 +332,10 @@ def test_trt_engine(engineFile, dataloader):
             acc = np.sum(categories == np.array(label)) / len(label)
             # print("Accuracy: %.2f%%" % (acc * 100))
             accuracy.append(acc)
-        
-        # for i in range(nIO):
-        #     print(lTensorName[i])
-        #     print(bufferH[i])
-        #     print(categories, label)
 
         for b in bufferD:
             cudart.cudaFree(b)
+
     print("Succeeded running model in TensorRT!")
     print("Average execute time for one batch: %.2fms" % (sum(execute_time) / len(execute_time)))
     print("Total accuracy: %.2f%%" % (sum(accuracy) / len(accuracy) * 100))
@@ -381,7 +376,7 @@ def evaluate_pytorch_model_pass(graph, pass_args=None):
     return graph
 
 
-def fake_quantize_to_trt_pass(graph, pass_args=None):
+def graph_to_trt_pass(graph, pass_args=None):
     """
     This function applies the fake quantization to TensorRT pass to the graph.
     """

@@ -29,11 +29,12 @@ from .transforms import (
     partition_to_multi_device_transform_pass,
     quantize_tensorrt_transform_pass,
     test_quantize_tensorrt_transform_pass,
-    fake_quantize_transform_pass,
+    quantization_aware_training_pass,
     graph_calibration_pass,
     evaluate_pytorch_model_pass,
-    fake_quantize_to_trt_pass,
-    mixed_precision_transform_pass
+    graph_to_trt_pass,
+    mixed_precision_transform_pass,
+    test_trt_engine
 )
 
 from .interface import (
