@@ -181,7 +181,7 @@ mase_output
         └── dynamic_quantized
 ```
 
-### Performance Analysis
+### RUNTIME Performance Analysis
 To showcase the improved inference speeds and to evaluate accuracy, latency, power consumption and other performance metrics, the `runtime_analysis_pass` can be used. The pass can take a MaseGraph as an input, as well as a path to a TensorRT Engine or ONNX model. Inference will occur on the selected model either on the cpu or gpu depending on the config. 
 
 ## 🚀 Getting Started
@@ -197,3 +197,22 @@ The procedure in the [How It Works Section](#⚙️-how-it-works) can be acompli
 >We strongly recommend you look through the dedicated tutorials which walk you through the process of utilising MaseRT:
 >- [TensorRT Tutorial](/docs/tutorials/tensorrt/tensorRT_quantization_tutorial.ipynb) 
 >- [ONNXRT Tutorial](/docs/tutorials/onnxrt/onnxrt_quantization_tutorial.ipynb)
+
+## Open Source Contribution
+
+### Passes
+To integrate the functionality mentioned in this document we have developed **SIX** new Chop passes.
+- Transform Passes:
+  - `tensorrt_fake_quantize_transform_pass`
+  - `tensorrt_calibrate_transform_pass`
+  - `tensorrt_fine_tune_transform_pass`
+- Interface Passes:
+  - `tensorrt_engine_interface_pass`
+  - `onnx_runtime_interface_pass`
+- Analyis Passes:
+  - `runtime_analysis_pass`
+
+These passes and their respective tutorials demonstrating thier capability are thoroughly documented in the MASE Documentation under the [Machop API Passes](https://deepwok.github.io/mase/modules/api/passes.html) and [Tutorials](https://deepwok.github.io/mase/modules/documentation/tutorials.html) sections.
+
+### Scheduler Args in `chop.actions.train`
+For the cosine annealing functionality integrated into the QAT `tensorrt_fine_tune_transform_pass`, the `WrapperBase` class that inherits PytorchLightning's `pl.LightningModule` was extended to support customized inputs for the `CosineAnnealingLR` scheduler for the optimizers. This therefore required a `scheduler_args` dictionary to be added to `chop.actions.train` as an additional input argument. This dictionary can thus contain the pass arguments `t_max` and `eta_min`, which dictate the maximum number of iterations (or epochs) before the learning rate restarts its cycle (t_max), and the minimum learning rate value (eta_min) that the scheduler can assign. 
