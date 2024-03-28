@@ -51,6 +51,7 @@ jobs:
           pip install pybnn==0.0.5
           pip install grakel==0.1.8
           pip install pyro-ppl==1.6.0
+          pip install ConfigSpace
 
           # additional from setup.py prev
           pip install tqdm==4.61.1
