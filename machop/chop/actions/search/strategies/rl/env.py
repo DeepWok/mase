@@ -82,7 +82,6 @@ class MixedPrecisionEnv(BaseMixedPrecisionEnv):
 
 
     def _define_observation_space(self):
-        """Defines the observation space based on the search space."""
         self.observation_space = Dict({
             "cost": Box(0.0, 10e4, shape=(1,)),
             "accuracy": Box(0.0, 1.0, shape=(1,)),
@@ -100,7 +99,6 @@ class MixedPrecisionEnv(BaseMixedPrecisionEnv):
         return [seed]
 
     def reset(self, *, seed=None, options=None):
-        """Resets the episode and returns the initial observation of the new one."""
         if seed is None:
             seed = self.seed()
         else:
