@@ -24,9 +24,9 @@ Download the file from the official NAS-Bench-201 repository or an alternative p
 1. **Create and Activate a Python Virtual Environment**:
 
    ```bash
-   python -m venv venv
-   source venv/bin/activate  # Unix/macOS
-   venv\Scripts\activate  # Windows
+   conda env create -f machop/environment.yml
+   conda activate mase
+   pip install -r machop/requirements.txt
    ```
 2. **Install Required Dependencies**:
 

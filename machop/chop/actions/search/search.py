@@ -102,20 +102,20 @@ def search(
     strategy.search(search_space)
 
     
-    '''
-    group 2: zero cost
+    
+    # group 2: zero cost
 
-    This part of the code is responsible for executing the zero cost strategy if it's enabled. 
+    # This part of the code is responsible for executing the zero cost strategy if it's enabled. 
 
-    - First, it checks if the zero cost mode is enabled.
-    - If enabled, it calculates the weights for the strategy.
-    - The proxy logger from the strategy is then retrieved and converted to a string for logging.
-    - The proxy logger is then logged.
-    - The accuracy is predicted using the model and the proxy logger.
-    - A DataFrame is created to store the results, which includes the index of the architecture, the predicted accuracy, and the true accuracy.
-    - The results are then sorted by the predicted accuracy in descending order and logged.
-    - Finally, the proxy logger and the sorted results are saved to Excel files.
-    '''
+    # - First, it checks if the zero cost mode is enabled.
+    # - If enabled, it calculates the weights for the strategy.
+    # - The proxy logger from the strategy is then retrieved and converted to a string for logging.
+    # - The proxy logger is then logged.
+    # - The accuracy is predicted using the model and the proxy logger.
+    # - A DataFrame is created to store the results, which includes the index of the architecture, the predicted accuracy, and the true accuracy.
+    # - The results are then sorted by the predicted accuracy in descending order and logged.
+    # - Finally, the proxy logger and the sorted results are saved to Excel files.
+    
     if strategy.zero_cost_mode:
         strategy.zero_cost_weight()
 
@@ -139,6 +139,6 @@ def search(
         sorted_results = results.sort_values(by='Predicted_Accuracy', ascending=False)
         logger.info("Sorted Results:\n%s", sorted_results)
         
-        strategy.zc_proxy.to_excel("/home/xz2723/mase_xinyi/machop/results/proxy_4.xlsx")
-        sorted_results.to_excel("/home/xz2723/mase_xinyi/machop/results/sorted_results_4.xlsx")
+        # strategy.zc_proxy.to_excel("/home/xz2723/mase_xinyi/machop/results/proxy_4.xlsx")
+        # sorted_results.to_excel("/home/xz2723/mase_xinyi/machop/results/sorted_results_4.xlsx")
         
