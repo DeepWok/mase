@@ -63,10 +63,8 @@ CHECKPOINT_PATH = "./VGG_checkPoint/test-accu-0.9332.ckpt"
 model_info = get_model_info(model_name)
 
 model = get_model(
-    model_name,
-    task="cls",
-    dataset_info=data_module.dataset_info,
-    pretrained=False)
+    model_name, task="cls", dataset_info=data_module.dataset_info, pretrained=False
+)
 
 model = load_model(load_name=CHECKPOINT_PATH, load_type="pl", model=model)
 
@@ -98,7 +96,7 @@ pass_args = {
     },
 }
 
-device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 mg, _ = init_metadata_analysis_pass(mg, None)
 mg, _ = add_common_metadata_analysis_pass(mg, {"dummy_in": dummy_in})
 mg, _ = add_software_metadata_analysis_pass(mg, None)
@@ -140,12 +138,14 @@ structure = "classifier_0_test"
 fake = "fake_True"
 calibration_str = "NOcalibration"
 
-onnx_model_path = f'./OriginalMG.onnx'
-trt_output_path = f'./OriginalMG.plan'
+onnx_model_path = f"./OriginalMG.onnx"
+trt_output_path = f"./OriginalMG.plan"
 
-mg, _ = export_to_onnx_pass(mg, dummy_in, input_generator, onnx_model_path=onnx_model_path)
-mg,_ = generate_tensorrt_string_pass(mg, TR_output_path=trt_output_path)
-acc,latency = run_tensorrt_pass(mg, dataloader = data_module.test_dataloader()) 
+mg, _ = export_to_onnx_pass(
+    mg, dummy_in, input_generator, onnx_model_path=onnx_model_path
+)
+mg, _ = generate_tensorrt_string_pass(mg, TR_output_path=trt_output_path)
+acc, latency = run_tensorrt_pass(mg, dataloader=data_module.test_dataloader())
 accuracy_tensorRT.append(acc)
 latency_tensorRT.append(latency)
 
@@ -156,22 +156,30 @@ for width in widths:
 
     mg, _ = tensorRT_quantize_pass(mg, pass_args)
     if calibration == True:
-        mg, _ = calibration_pass(mg,data_module,batch_size)  
-    acc_avg, loss_avg, latency_avg = run_model_for_test(mg, device, data_module, num_batchs)
-    
-    onnx_dir_path = f'./ONNX_model/{by}_{fake}_{structure}_{calibration}/ONNX'
-    trt_dir_path = f'./ONNX_model/{by}_{fake}_{structure}_{calibration}/Plan'
+        mg, _ = calibration_pass(mg, data_module, batch_size)
+    acc_avg, loss_avg, latency_avg = run_model_for_test(
+        mg, device, data_module, num_batchs
+    )
+
+    onnx_dir_path = f"./ONNX_model/{by}_{fake}_{structure}_{calibration}/ONNX"
+    trt_dir_path = f"./ONNX_model/{by}_{fake}_{structure}_{calibration}/Plan"
 
     for dir_path in [onnx_dir_path, trt_dir_path]:
         if not os.path.exists(dir_path):
             os.makedirs(dir_path)
 
-    onnx_model_path = f'{onnx_dir_path}/{by}_{fake}_{structure}_{width}_{calibration}.onnx'
-    trt_output_path = f'{trt_dir_path}/{by}_{fake}_{structure}_{width}_{calibration}.plan'
-    
-    mg, _ = export_to_onnx_pass(mg, dummy_in, input_generator, onnx_model_path=onnx_model_path)
-    mg,_ = generate_tensorrt_string_pass(mg, TR_output_path=trt_output_path)
-    acc,latency = run_tensorrt_pass(mg, dataloader = data_module.test_dataloader())   
+    onnx_model_path = (
+        f"{onnx_dir_path}/{by}_{fake}_{structure}_{width}_{calibration}.onnx"
+    )
+    trt_output_path = (
+        f"{trt_dir_path}/{by}_{fake}_{structure}_{width}_{calibration}.plan"
+    )
+
+    mg, _ = export_to_onnx_pass(
+        mg, dummy_in, input_generator, onnx_model_path=onnx_model_path
+    )
+    mg, _ = generate_tensorrt_string_pass(mg, TR_output_path=trt_output_path)
+    acc, latency = run_tensorrt_pass(mg, dataloader=data_module.test_dataloader())
     accuracy_tensorRT.append(acc)
     latency_tensorRT.append(latency)
     accuracy_runmodel.append(acc_avg)
