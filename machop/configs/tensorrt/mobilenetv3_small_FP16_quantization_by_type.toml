@@ -1,8 +1,8 @@
 # basics
-model = "jsc-toy"
-dataset = "jsc"
+model = "mobilenetv3_small"
+dataset = "mnist"
 
-load_name = "../mase_output/jsc-toy_cls_jsc-pre-trained/best.ckpt"
+load_name = "../mase_output/mobilenetv3-small_pre-trained_mnist/mobilenetv3_small_mnist_0.997.ckpt"
 load_type = "pl"
 
 max_epochs = 10
@@ -10,7 +10,6 @@ batch_size = 64
 learning_rate = 1e-3
 accelerator = "gpu"
 task="cls"
-# num_workers = 0
 
 [passes.tensorrt]
 by = "type"
@@ -19,9 +18,9 @@ post_calibration_analysis = true
 
 [passes.tensorrt.default.config]
 quantize = true
-calibrators = ["percentile", "mse", "entropy"]
-percentiles = [99.0, 99.9, 99.99]
-precision = 'int8'
+calibrators = ["percentile"]
+percentiles = [99.0, 99.9]
+precision = 'fp16'
 
 [passes.tensorrt.default.input]
 calibrator = 'histogram'

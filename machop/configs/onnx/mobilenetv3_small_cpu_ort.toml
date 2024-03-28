@@ -1,6 +1,6 @@
 # basics
-model = "jsc-toy"
-dataset = "jsc"
+model = "mobilenetv3_small"
+dataset = "mnist"
 task = "cls"
 
 load_name = "../mase_output/mobilenetv3-small_pre-trained_mnist/mobilenetv3_small_mnist_0.997.ckpt"
