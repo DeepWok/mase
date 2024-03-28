@@ -68,8 +68,3 @@ setup(
         "sphinx-rtd-theme",
     ],
 )
-
-# Run submodule setup.py
-os.chdir("NASLib")
-subprocess.check_call(["python3", "setup.py", "install"])
-os.chdir("..")
