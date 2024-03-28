@@ -57,9 +57,7 @@ def transform(
 
 ):  
     model = pre_transform_load(load_name=load_name, load_type=load_type, model=model.to('cuda'))
-
     accelerator: str = "auto",
-):
     accelerator = parse_accelerator(accelerator)
     model = pre_transform_load(load_name=load_name, load_type=load_type, model=model)
     model.to(accelerator)
@@ -93,12 +91,12 @@ def transform(
             load_name=load_name,
             load_type=load_type,
             accelerator=accelerator,
-        )
+    )
     else:
         raise ValueError(f"Style {style} is not supported!")
 
 
-def transform_module(
+    def transform_module(
     model: torch.nn.Module,
     model_info,
     model_name,
@@ -110,7 +108,7 @@ def transform_module(
     load_type: str = None,
     accelerator: str = "auto",
 ):
-    accelerator = parse_accelerator(accelerator)
+        accelerator = parse_accelerator(accelerator)
     model = pre_transform_load(load_name=load_name, load_type=load_type, model=model)
     model.to(accelerator)
     save_dir = Path(save_dir)
