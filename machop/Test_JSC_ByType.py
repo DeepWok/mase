@@ -127,7 +127,7 @@ pass_args = {
     },
 }
 
-widths = [10, 8, 6, 4, 2]
+widths = [8]
 calibration = False
 by = "type"
 structure = "JSC_onlyLinear"
@@ -215,7 +215,7 @@ results = {
 timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
 
 # Define the directory
-directory = 'Pytorch_Quantization_Experiment_result'
+directory = "Pytorch_Quantization_Experiment_result"
 
 # Check if the directory exists
 if not os.path.exists(directory):
