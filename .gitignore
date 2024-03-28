@@ -141,6 +141,7 @@ venv.bak/
 
 # Data files for hardware simulation
 *.dat
+*.vcd
 
 #Submodules
 Docker/
