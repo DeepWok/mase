@@ -257,7 +257,7 @@ module fixed_layer_norm #(
         sum_b   = sum_r;  
         mean_b  = mean_r;
 
-        variance_padded_b               = variance_padded_r;
+    
 
         sum_of_squared_differences_b    = sum_of_squared_differences_r;
         
@@ -315,7 +315,7 @@ module fixed_layer_norm #(
         begin
             sum_of_squared_differences_padded[j] = (sum_of_squared_differences_r[j] << $clog2(IN_DEPTH) );
 
-            variance[j] = variance_padded_r[j][VAR_BITS-1:0];
+            variance[j] = variance_padded_b[j][VAR_BITS-1:0];
             variance_in_width[j] = variance[j][ IN_WIDTH + VAR_FRAC_WIDTH - IN_FRAC_WIDTH -1 : VAR_FRAC_WIDTH - IN_FRAC_WIDTH ];
             
             if (&sqrt_v_out_valid)
