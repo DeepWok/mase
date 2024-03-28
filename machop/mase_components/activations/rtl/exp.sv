@@ -1,8 +1,8 @@
 `timescale 1ns / 1ps
 module exp #(
     /* verilator lint_off UNUSEDPARAM */
-    parameter DATA_IN_0_PRECISION_0 = 32, //total number of bits used to represent each input data
-    parameter DATA_IN_0_PRECISION_1 = 16, //fractional bits
+    parameter DATA_IN_0_PRECISION_0 = 32,  //total number of bits used to represent each input data
+    parameter DATA_IN_0_PRECISION_1 = 16,  //fractional bits
     parameter DATA_IN_0_PRECISION_INT = DATA_IN_0_PRECISION_0 - DATA_IN_0_PRECISION_1, //number of integer bits
 	
     parameter DATA_OUT_0_PRECISION_0 = 32, //total number of bits used to represent each output data. Typically needs only (2 + output fractional) bits since range of negative exponential is from 0 to 1
