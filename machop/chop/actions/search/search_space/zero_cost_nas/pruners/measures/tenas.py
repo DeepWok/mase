@@ -22,6 +22,7 @@ from torch import nn
 import numpy as np
 from . import measure
 
+
 class LinearRegionCount(object):
     """Computes and stores the average and current value"""
 
@@ -42,9 +43,7 @@ class LinearRegionCount(object):
             self.activations = torch.zeros(self.n_samples, n_neuron)
             if self.gpu is not None:
                 self.activations = self.activations.cuda(self.gpu)
-        self.activations[self.ptr:self.ptr+n_batch] = torch.sign(
-            activations
-        )
+        self.activations[self.ptr : self.ptr + n_batch] = torch.sign(activations)
         self.ptr += n_batch
 
     @torch.no_grad()
@@ -159,9 +158,7 @@ class Linear_Region_Collector:
 
     def forward_batch_sample(self):
         for _ in range(self.sample_batch):
-            inputs = torch.randn(
-                self.input_size, device=self.device
-            )
+            inputs = torch.randn(self.input_size, device=self.device)
 
             for model, LRCount in zip(self.models, self.LRCounts):
                 self.forward(model, LRCount, inputs)
@@ -198,6 +195,7 @@ def compute_RN_score(
     torch.cuda.empty_cache()
     return num_linear_regions
 
+
 def recal_bn(network, xloader, recalbn, device):
     for m in network.modules():
         if isinstance(m, torch.nn.BatchNorm2d):
@@ -208,11 +206,12 @@ def recal_bn(network, xloader, recalbn, device):
     network.train()
     with torch.no_grad():
         for i, (inputs, targets) in enumerate(xloader):
-            if i >= recalbn: 
+            if i >= recalbn:
                 break
             inputs = inputs.cuda(device=device, non_blocking=True)
             _, _ = network(inputs)
     return network
+
 
 def get_ntk_n(
     networks,
@@ -307,9 +306,7 @@ def compute_TENAS_score(
     num_batch=None,
     bn_shadow=True,
 ):  # additional arguments
-    net1 = net.get_prunable_copy(
-        bn=bn_shadow
-    )
+    net1 = net.get_prunable_copy(bn=bn_shadow)
     ntk = compute_NTK_score(net1, inputs, targets, split_data, loss_fn, num_batch)
     del net1
     torch.cuda.empty_cache()
