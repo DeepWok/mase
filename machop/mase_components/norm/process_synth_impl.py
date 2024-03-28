@@ -2,6 +2,7 @@ from pathlib import Path
 import re
 import pandas as pd
 import altair as alt
+import numpy as np
 
 
 def timing_util(folder: Path):
@@ -15,15 +16,22 @@ def timing_util(folder: Path):
         timing_text = f.readlines()
 
     design_timing_sum_line = None
+    clock_summary_line = None
     for line_num, line in enumerate(timing_text):
         if line.find("Design Timing Summary") != -1:
             design_timing_sum_line = line_num
+        if line.find("Clock Summary") != -1:
+            clock_summary_line = line_num
         if (
             design_timing_sum_line != None and
             line_num == design_timing_sum_line + 6
         ):
-            l = line.split()
-            wns = float(l[0])
+            wns = float(line.split()[0])
+        if (
+            clock_summary_line != None and
+            line_num == clock_summary_line + 6
+        ):
+            clk_period = float(line.split()[3])
 
     # Parse Utilization Report
     with open(utilrpt, "r") as f:
@@ -58,6 +66,7 @@ def timing_util(folder: Path):
 
     return {
         "wns": wns,
+        "clk_period": clk_period,
         "lut_logic": lut_logic,
         "lut_mem": lut_mem,
         "registers": registers,
@@ -91,6 +100,11 @@ def gather_data(build_dir: Path):
 
 if __name__ == "__main__":
     data = gather_data(Path("build"))
+    data["ns"] = data["clk_period"] - data["wns"]
+    data["fmax"] = 1 / (data["ns"] * (10 ** -9))
+    data["fmax_mhz"] = data["fmax"] / 1_000_000
+
+    print(data)
 
     def plot(col):
         alt.Chart(data).mark_line().encode(
@@ -108,3 +122,4 @@ if __name__ == "__main__":
     plot("dsp")
     plot("bram")
     plot("registers")
+    plot("fmax_mhz")

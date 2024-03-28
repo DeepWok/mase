@@ -2,13 +2,20 @@
 
 # Script parameters
 set fpga_part xcu250-figd2104-2L-e
-set constraints_file alveo-u250-norm.xdc
 set runs {
+    batch_norm_2d
     group_norm_2d
     rms_norm_2d
-    batch_norm_2d
 }
-set bitwidths {2 4 6 8 10 12 14 16}
+
+# 2ns clk constraint for lower bitwidths
+# set bitwidths {2 4 6 8}
+# set constraints_file alveo-u250-2ns.xdc
+
+# 4ns clk constraint for higher bitwidths
+set bitwidths {10 12 14 16}
+set constraints_file alveo-u250-4ns.xdc
+
 set total_dim0 64
 set total_dim1 64
 set compute_dim0 4
