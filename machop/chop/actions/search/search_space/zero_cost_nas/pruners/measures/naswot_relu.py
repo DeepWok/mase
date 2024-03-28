@@ -20,10 +20,10 @@ def safe_hooklogdet(K):
     s, ld = np.linalg.slogdet(K)
     return 0 if (np.isneginf(ld) and s==0) else ld
 
-@measure('naswot_relu', bn=True)
-@measure('nwot_relu_Kmats', bn=True, return_Kmats=True)
+@measure("naswot_relu", bn=True)
+@measure("nwot_relu_Kmats", bn=True, return_Kmats=True)
 def compute_naswot(net, inputs, targets, loss_fn, split_data=1, 
-                   return_Kmats=False):
+                    return_Kmats=False):
     """
     This is the original RELU based NASWOT implementation.
     Based on v2 paper, and its repo link: 

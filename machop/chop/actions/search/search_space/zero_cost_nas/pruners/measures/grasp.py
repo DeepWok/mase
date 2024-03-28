@@ -22,7 +22,7 @@ from . import measure
 from ..p_utils import get_layer_metric_array
 
 
-@measure('grasp', bn=True, mode='param')
+@measure("grasp", bn=True, mode="param")
 def compute_grasp_per_weight(net, inputs, targets, mode, loss_fn, T=1, num_iters=1, split_data=1):
 
     # get all applicable weights

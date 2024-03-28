@@ -41,7 +41,7 @@ def eval_score(jacob, labels=None):
     k = 1e-5
     return -np.sum(np.log(v + k) + 1./(v + k))
 
-@measure('jacob_cov', bn=True)
+@measure("jacob_cov", bn=True)
 def compute_jacob_cov(net, inputs, targets, split_data=1, loss_fn=None):
     device = inputs.device
     # Compute gradients (but don't apply them)

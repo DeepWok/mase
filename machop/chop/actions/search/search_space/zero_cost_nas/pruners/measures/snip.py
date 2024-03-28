@@ -32,7 +32,7 @@ def snip_forward_conv2d(self, x):
 def snip_forward_linear(self, x):
         return F.linear(x, self.weight * self.weight_mask, self.bias)
 
-@measure('snip', bn=True, mode='param')
+@measure("snip", bn=True, mode="param")
 def compute_snip_per_weight(net, inputs, targets, mode, loss_fn, split_data=1):
     for layer in net.modules():
         if isinstance(layer, nn.Conv2d) or isinstance(layer, nn.Linear):

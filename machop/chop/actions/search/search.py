@@ -1,10 +1,8 @@
 import logging
 from os import PathLike
-
 import pandas as pd
 import toml
 import torch
-
 from ...tools.checkpoint_load import load_model
 from ...tools.config_load import load_config
 from ...tools.get_input import get_dummy_input
@@ -15,11 +13,9 @@ from chop.tools.utils import parse_accelerator
 
 logger = logging.getLogger(__name__)
 
-
 def parse_search_config(search_config):
     """
     Parse search config from a dict or a toml file and do sanity check.
-
     ---
     The search config must consist of two parts: strategy and search_space.
     """
@@ -32,7 +28,6 @@ def parse_search_config(search_config):
     print(search_space_config)
 
     return strategy_config, search_space_config
-
 
 def search(
     model: torch.nn.Module,
@@ -98,15 +93,12 @@ def search(
     )
 
     logger.info("Search started...")
+
     # perform search and save the results
     strategy.search(search_space)
-
-    
     
     # group 2: zero cost
-
-    # This part of the code is responsible for executing the zero cost strategy if it's enabled. 
-
+    # This part of the code is responsible for executing the zero cost strategy if it's enabled.
     # - First, it checks if the zero cost mode is enabled.
     # - If enabled, it calculates the weights for the strategy.
     # - The proxy logger from the strategy is then retrieved and converted to a string for logging.
@@ -121,7 +113,7 @@ def search(
 
         # logger.info("model coefficients: ", strategy.zc_weight_model.coef_)
         # logger.info("model intercept: ", strategy.zc_weight_model.intercept_)
-        
+
         # print("values of proxies", strategy.zc_proxy)
         proxy_logger = strategy.zc_proxy
         proxy_logger_str = proxy_logger.to_string()
@@ -141,4 +133,3 @@ def search(
         
         # strategy.zc_proxy.to_excel("/home/xz2723/mase_xinyi/machop/results/proxy_4.xlsx")
         # sorted_results.to_excel("/home/xz2723/mase_xinyi/machop/results/sorted_results_4.xlsx")
-        

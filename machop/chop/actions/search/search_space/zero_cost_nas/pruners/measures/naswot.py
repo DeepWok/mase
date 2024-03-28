@@ -20,10 +20,10 @@ def safe_hooklogdet(K):
     s, ld = np.linalg.slogdet(K)
     return 0 if (np.isneginf(ld) and s==0) else ld
 
-@measure('naswot', bn=True, layerwise=False, return_Kmats=False)
-@measure('nwot_Kmats', bn=True, layerwise=False, return_Kmats=True)
-@measure('lnwot', bn=True, layerwise=True, return_Kmats=False)
-@measure('lnwot_Kmats', bn=True, layerwise=True, return_Kmats=True)
+@measure("naswot", bn=True, layerwise=False, return_Kmats=False)
+@measure("nwot_Kmats", bn=True, layerwise=False, return_Kmats=True)
+@measure("lnwot", bn=True, layerwise=True, return_Kmats=False)
+@measure("lnwot_Kmats", bn=True, layerwise=True, return_Kmats=True)
 def compute_naswot(net, inputs, targets, loss_fn, split_data=1, layerwise=False, return_Kmats=False):
     net.eval()
     

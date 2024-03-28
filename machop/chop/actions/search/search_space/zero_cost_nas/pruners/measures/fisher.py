@@ -35,13 +35,13 @@ def fisher_forward_linear(self, x):
     self.act = self.dummy(x)
     return self.act
 
-@measure('fisher', bn=True, mode='channel')
+@measure("fisher", bn=True, mode="channel")
 def compute_fisher_per_weight(net, inputs, targets, loss_fn, mode, split_data=1):
     
     device = inputs.device
 
-    if mode == 'param':
-        raise ValueError('Fisher pruning does not support parameter pruning.')
+    if mode == "param":
+        raise ValueError("Fisher pruning does not support parameter pruning.")
 
     net.train()
     all_hooks = []

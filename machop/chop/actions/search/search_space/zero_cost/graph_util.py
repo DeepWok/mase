@@ -28,19 +28,19 @@ def gen_is_edge_fn(bits):
 
   Given a bitstring FEDCBA and a 4x4 matrix, the generated matrix is
     [[0, A, B, D],
-     [0, 0, C, E],
-     [0, 0, 0, F],
-     [0, 0, 0, 0]]
+      [0, 0, C, E],
+      [0, 0, 0, F],
+      [0, 0, 0, 0]]
 
   Note that this function is agnostic to the actual matrix dimension due to
   order in which elements are filled out (column-major, starting from least
   significant bit). For example, the same FEDCBA bitstring (0-padded) on a 5x5
   matrix is
     [[0, A, B, D, 0],
-     [0, 0, C, E, 0],
-     [0, 0, 0, F, 0],
-     [0, 0, 0, 0, 0],
-     [0, 0, 0, 0, 0]]
+      [0, 0, C, E, 0],
+      [0, 0, 0, F, 0],
+      [0, 0, 0, 0, 0],
+      [0, 0, 0, 0, 0]]
 
   Args:
     bits: integer which will be interpreted as a bit mask.
@@ -119,8 +119,8 @@ def hash_module(matrix, labeling):
       out_neighbors = [hashes[w] for w in range(vertices) if matrix[v, w]]
       new_hashes.append(hashlib.md5(
           (''.join(sorted(in_neighbors)) + '|' +
-           ''.join(sorted(out_neighbors)) + '|' +
-           hashes[v]).encode('utf-8')).hexdigest())
+            ''.join(sorted(out_neighbors)) + '|' +
+            hashes[v]).encode('utf-8')).hexdigest())
     hashes = new_hashes
   fingerprint = hashlib.md5(str(sorted(hashes)).encode('utf-8')).hexdigest()
 
@@ -143,8 +143,8 @@ def permute_graph(graph, label, permutation):
   inverse_perm = [x[1] for x in sorted(forward_perm)]
   edge_fn = lambda x, y: graph[inverse_perm[x], inverse_perm[y]] == 1
   new_matrix = np.fromfunction(np.vectorize(edge_fn),
-                               (len(label), len(label)),
-                               dtype=np.int8)
+                                (len(label), len(label)),
+                                dtype=np.int8)
   new_label = [label[inverse_perm[i]] for i in range(len(label))]
   return new_matrix, new_label
 

@@ -20,7 +20,7 @@ from . import measure
 from ..p_utils import get_layer_metric_array
 
 
-@measure('plain', bn=True, mode='param')
+@measure("plain", bn=True, mode="param")
 def compute_plain_per_weight(net, inputs, targets, mode, loss_fn, split_data=1):
     net.train()
     net.zero_grad()

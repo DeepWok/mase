@@ -43,7 +43,7 @@ def network_weight_gaussian_init(net: nn.Module):
 
 @measure("zen", bn=True)
 def compute_zen_score(net, inputs, targets, loss_fn=None, split_data=1,
-                      repeat=1, mixup_gamma=1e-2, fp16=False):
+                        repeat=1, mixup_gamma=1e-2, fp16=False):
     nas_score_list = []
 
     device = inputs.device

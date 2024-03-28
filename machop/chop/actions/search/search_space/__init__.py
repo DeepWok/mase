@@ -2,6 +2,7 @@ from .quantization import (
     ManualHFModuleSearchSpaceMixedPrecisionPTQ,
     GraphSearchSpaceMixedPrecisionPTQ,
 )
+
 from .systolic import SystolicMappingSearchSpace
 from .base import SearchSpaceBase
 from .zero_cost import ZeroCostProxy

@@ -102,8 +102,7 @@ class LinearRegionCount(object):
         return self.n_LR
 
 class Linear_Region_Collector:
-    def __init__(self, models=[], input_size=(64, 3, 32, 32), gpu=None,
-                 sample_batch=1, dataset=None, data_path=None, seed=0):
+    def __init__(self, models=[], input_size=(64, 3, 32, 32), gpu=None, sample_batch=1, dataset=None, data_path=None, seed=0):
         self.models = []
         self.input_size = input_size  # BCHW
         self.sample_batch = sample_batch
@@ -187,9 +186,9 @@ class Linear_Region_Collector:
             LRCount.update2D(feature_data)
 
 
-@measure('lrn', bn=True, num_batch=1)
+@measure("lrn", bn=True, num_batch=1)
 def compute_RN_score(net: nn.Module, inputs, targets, split_data=1, loss_fn=None,  # these are necessary arguments limited by *zero_cost_metrics.__init__.calc_metric*, if you want to add more arguments, modify @metric decorator's parameters to provide dynamic default values.
-                     num_batch=None): # additional arguments
+                        num_batch=None): # additional arguments
 # def compute_RN_score(model: nn.Module,  batch_size=None, image_size=None, num_batch=None, gpu=None):
     # # # just debug
     # # gpu = 0
@@ -240,7 +239,7 @@ def recal_bn(network, xloader, recalbn, device):
 
 
 def get_ntk_n(networks, recalbn=0, train_mode=False, num_batch=None,
-              batch_size=None, image_size=None, gpu=None):
+                batch_size=None, image_size=None, gpu=None):
     if gpu is not None:
         device = torch.device('cuda:{}'.format(gpu))
     else:
@@ -311,9 +310,9 @@ def get_ntk_n(networks, recalbn=0, train_mode=False, num_batch=None,
     return conds
 
 
-@measure('ntk', bn=True, num_batch=1)
+@measure("ntk", bn=True, num_batch=1)
 def compute_NTK_score(net: nn.Module, inputs, targets, split_data=1, loss_fn=None,  # these are necessary arguments limited by *zero_cost_metrics.__init__.calc_metric*, if you want to add more arguments, modify @metric decorator's parameters to provide dynamic default values.
-                     num_batch=None): # additional arguments
+                        num_batch=None): # additional arguments
 # def compute_NTK_score(gpu, model, resolution, batch_size):
     device = inputs.device
     gpu = device.index
@@ -322,7 +321,7 @@ def compute_NTK_score(net: nn.Module, inputs, targets, split_data=1, loss_fn=Non
     batch_size, _, resolution, _ = inputs.size()
 
     ntk_score = get_ntk_n([net], recalbn=0, train_mode=True, num_batch=num_batch,
-                           batch_size=batch_size, image_size=resolution, gpu=gpu)[0]
+                            batch_size=batch_size, image_size=resolution, gpu=gpu)[0]
     return -1 * ntk_score
 
 
@@ -330,9 +329,9 @@ def compute_NTK_score(net: nn.Module, inputs, targets, split_data=1, loss_fn=Non
 #  TENAS score computation: tenas part
 # =============================================================================
 
-@measure('tenas', bn=True, num_batch=1, bn_shadow=True)
+@measure("tenas", bn=True, num_batch=1, bn_shadow=True)
 def compute_TENAS_score(net: nn.Module, inputs, targets, split_data=1, loss_fn=None,  # these are necessary arguments limited by *zero_cost_metrics.__init__.calc_metric*, if you want to add more arguments, modify @metric decorator's parameters to provide dynamic default values.
-                     num_batch=None, bn_shadow=True): # additional arguments
+                        num_batch=None, bn_shadow=True): # additional arguments
     net1 = net.get_prunable_copy(bn=bn_shadow)  # manually keep bn in lnwot, and remove bn in synflow
     ntk = compute_NTK_score(net1, inputs, targets, split_data, loss_fn, num_batch)
     del net1
