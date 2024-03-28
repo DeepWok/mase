@@ -33,6 +33,7 @@ from .transforms import (
     graph_calibration_pass,
     evaluate_fake_quantize_pass,
     fake_quantize_to_trt_pass,
+    mixed_precision_transform_pass
 )
 
 from .interface import (

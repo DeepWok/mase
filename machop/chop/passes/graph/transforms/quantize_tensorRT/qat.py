@@ -33,6 +33,7 @@ from ...utils import (
 )
 
 from .utils import create_new_module
+from .calibrator import graph_calibration_pass
 
 QUANTIZEABLE_OP = (
     # "add",
@@ -46,9 +47,6 @@ QUANTIZEABLE_OP = (
     # "sub",
 )
 
-class ToFP16(torch.nn.Module):
-    def forward(self, x):
-        return x.half()
     
 def to_fp16(x):
     return x.half()
@@ -66,15 +64,13 @@ def get_config(config: dict, name: str):
 
 
 def graph_fake_quantize_by_type(graph, config: dict):
-    # graph.fx_graph.to_fp16 = ToFP16()
     for node in graph.fx_graph.nodes:
         if get_mase_op(node) not in QUANTIZEABLE_OP:
             continue
         node_config = get_config(config, get_mase_op(node))
         if node_config["name"] is None:
             continue
-        # node_config = parse_node_config(node_config, get_mase_op(node))
-        # if get_mase_type(node) == "module":
+
         if node.op == "call_module":
             ori_module = get_node_actual_target(node)
             new_module = create_new_module(
@@ -86,26 +82,22 @@ def graph_fake_quantize_by_type(graph, config: dict):
             setattr(graph.modules[parent_name], name, new_module)
             # update precision and type in meta.parameters["common"]
             # update_quant_meta_param(node, node_config, get_mase_op(node))
-        # elif get_mase_type(node) in [
-        #     "builtin_func",
-        #     "module_related_func",
-        # ]:
-        #     new_f, args, kwargs = create_new_fn(node, node_config)
-        #     with graph.fx_graph.inserting_before(node):
-        #         new_node = graph.fx_graph.call_function(new_f, args, kwargs)
-        #         new_node.name = node.name
-        #         new_node.meta["mase"] = copy(node.meta["mase"])
-        #         # new_node.meta["mase"].node -> new_node
-        #         relink_node_meta(new_node, model=graph.model)
-        #         update_quant_meta_param(new_node, node_config, get_mase_op(node))
-        #         node.replace_all_uses_with(new_node)
-        #     graph.fx_graph.erase_node(node)
+
+            logger.debug(f"Quantized module: {node.target} with config: {node_config}")
     return graph
 
 
 def graph_fake_quantize_by_name(graph, config: dict):
-    # graph.fx_graph.to_fp16 = ToFP16()
+    '''
+    This function applies the fake quantization and mixed precision transform pass to the graph.
 
+    Args:
+        graph (GraphModule): the graph to be transformed.
+        config (dict): the configuration for the fake quantization and mixed precision transform pass.
+
+    Returns:
+        GraphModule: the transformed graph.
+    '''
     quant_modules.initialize()
     for node in graph.fx_graph.nodes:
         if get_mase_op(node) not in QUANTIZEABLE_OP:
@@ -125,29 +117,18 @@ def graph_fake_quantize_by_name(graph, config: dict):
             setattr(graph.modules[parent_name], name, new_module)
 
             if node_config["name"] == "fp16":
-                # for iter_node in graph.nodes:
-                #     if iter_node.name == node.name :
-                #         target_node = iter_node
-                #         break
-                #     prev_node = iter_node
 
-                # if target_node is not None and prev_node is not None:
-                #     print('find prev')
                 args, kwargs = node.args, node.kwargs
                 with graph.fx_graph.inserting_before(node):
                     new_node = graph.fx_graph.call_function(to_fp16, args, kwargs)
-                    # print(new_node)
                     new_node.name = node.name + "_fp16"
-                    # node.replace_all_uses_with(new_node)
                     node.args = (new_node, )
                     new_node.meta["mase"] = copy(node.meta["mase"])
                     new_node.meta["mase"].parameters["common"]["mase_op"] = "builtin_func"
-                    # graph.recompile()
                 
                 args, kwargs = node.args, node.kwargs
                 with graph.fx_graph.inserting_after(node):
                     new_node = graph.fx_graph.call_function(to_fp32, args, kwargs)
-                    # print(new_node)
                     new_node.name = node.name + "_fp32"
                     node.replace_all_uses_with(new_node)
                     new_node.args = (node, )
@@ -180,6 +161,16 @@ def fake_quantize_transform_pass(graph, pass_args=None):
             raise ValueError(f'Unsupported quantize "by": {by}')
 
     graph.model = torch.fx.GraphModule(graph.model, graph.fx_graph)
+
+    return graph
+
+def mixed_precision_transform_pass(graph, pass_args_mixed_precision=None, pass_args_calibrate=None):
+    """
+    This function applies the mixed precision transform pass to the graph.
+    """
+
+    graph = fake_quantize_transform_pass(graph, pass_args_mixed_precision)
+    graph = graph_calibration_pass(graph,  pass_args_calibrate)
 
     return graph
 
