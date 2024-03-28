@@ -35,10 +35,9 @@ jobs:
         run: |
           git config --global --add safe.directory $PWD
       
-
       - name: Install dependencies
         run: |
-          pip install .
+          python3 -m pip install .
 
       - name: Build sphinx html
         run: |
