@@ -15,7 +15,6 @@ vagrant/.vagrant/
 /mase_output/
 .devcontainer/
 *.ckpt
-#except /home/mp1820/mase/mase_output/test-accu-0.9332.ckpt
 *.pkl
 /machop/examples/**/cache/
 /machop/examples/**/ckpts/
