@@ -216,3 +216,8 @@ These passes and their respective tutorials demonstrating thier capability are t
 
 ### Scheduler Args in `chop.actions.train`
 For the cosine annealing functionality integrated into the QAT `tensorrt_fine_tune_transform_pass`, the `WrapperBase` class that inherits PytorchLightning's `pl.LightningModule` was extended to support customized inputs for the `CosineAnnealingLR` scheduler for the optimizers. This therefore required a `scheduler_args` dictionary to be added to `chop.actions.train` as an additional input argument. This dictionary can thus contain the pass arguments `t_max` and `eta_min`, which dictate the maximum number of iterations (or epochs) before the learning rate restarts its cycle (t_max), and the minimum learning rate value (eta_min) that the scheduler can assign. 
+
+### Added input channel pre-processing to enable vision models functioning on MNIST
+
+An issue was opened in which errors in processing MNIST dataset with vision models were brought to attention. This was traceable to MNIST dataset being grayscale, hence providing only one channel, whilst MASE convolutional models expect 3 channels. The proposed fix applies a series of checks to ascertain that the model-dataset combination requires intervention (since some feedforward neural network models are able to run on MNIST without further action), then, if needed, overrides the model architecture when using MNIST by including a single Conv2d, mapping the single input channel to 3 output channels, before the first convolutional layer. A check is further added in the machop/chop/tools/get_input.py file that constructs the dummy_input accordingly, in case the first model layer was overridden. 
+
