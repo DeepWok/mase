@@ -4,9 +4,9 @@
 set fpga_part xcu250-figd2104-2L-e
 set constraints_file alveo-u250-norm.xdc
 set runs {
-    batch_norm_2d
     group_norm_2d
     rms_norm_2d
+    batch_norm_2d
 }
 set bitwidths {2 4 6 8 10 12 14 16}
 set total_dim0 64
