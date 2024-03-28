@@ -20,14 +20,14 @@ module fixed_nr_stage #(
     input  logic               data_out_ready
 );
     logic [2*WIDTH-1:0] yy [1:0];
-    logic [WIDTH-1:0] x_reduced [2:0];
+    logic [WIDTH-1:0] x_reduced [3:0];
     logic [WIDTH-1:0] data_b_val [3:1];
     logic pipe_valid [3:1];
     logic pipe_ready [3:1];
     logic [2*WIDTH-1:0] mult [2:1];
     logic [2*WIDTH-1:0] threehalfs_minus_mult [3:2];
     logic [2*WIDTH-1:0] nr_out_data;
-    logic [MSB_WIDTH-1:0] msb_data [2:1];
+    logic [MSB_WIDTH-1:0] msb_data [3:1];
 
     assign yy[0] = (data_b * data_b) >> (WIDTH - 1);
 
