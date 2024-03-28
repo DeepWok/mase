@@ -18,6 +18,8 @@
 
 Please execute all of our programs in the <code>machop("mase/machop")</code> directory.
 
+If needed, please put the pre-trained VGG7 model at <code>mase/test-accu-0.9332.ckpt</code>
+
 Our test function is <code>test_group3.py</code> inside the existing testing framework, run in command line using:
 ```yaml
 python test/passes/graph/transforms/prune/test_group3.py
