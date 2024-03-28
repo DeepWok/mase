@@ -12,7 +12,7 @@ module gather #(
 
   always_comb begin
     integer i;
-    for(i = 0; i < TENSOR_SIZE_DIM; i  = i + 1) begin
+    for (i = 0; i < TENSOR_SIZE_DIM; i = i + 1) begin
       mat_sum[i] = mat_a[i] + mat_b[i];
     end
 
