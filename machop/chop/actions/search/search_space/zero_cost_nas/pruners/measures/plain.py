@@ -26,8 +26,8 @@ def compute_plain_per_weight(net, inputs, targets, mode, loss_fn, split_data=1):
     net.zero_grad()
     N = inputs.shape[0]
     for sp in range(split_data):
-        st=sp*N//split_data
-        en=(sp+1)*N//split_data
+        st = sp * N // split_data
+        en = (sp + 1) * N // split_data
         outputs = net.forward(inputs[st:en])
         if type(outputs) is tuple:
             outputs = outputs[0]

@@ -21,15 +21,16 @@ import copy
 from . import measure
 from ..p_utils import get_layer_metric_array
 
+
 @measure("grad_norm", bn=True)
 def get_grad_norm_arr(net, inputs, targets, loss_fn, split_data=1, skip_grad=False):
-    
+
     net.train()
     net.zero_grad()
     N = inputs.shape[0]
     for sp in range(split_data):
-        st=sp*N//split_data
-        en=(sp+1)*N//split_data
+        st = sp * N // split_data
+        en = (sp + 1) * N // split_data
 
         outputs = net.forward(inputs[st:en])
         if type(outputs) is tuple:
@@ -37,6 +38,14 @@ def get_grad_norm_arr(net, inputs, targets, loss_fn, split_data=1, skip_grad=Fal
         loss = loss_fn(outputs, targets[st:en])
         loss.backward()
 
-        grad_norm_arr = get_layer_metric_array(net, lambda l: l.weight.grad.norm() if l.weight.grad is not None else torch.zeros_like(l.weight), mode='param')
-        
+        grad_norm_arr = get_layer_metric_array(
+            net,
+            lambda l: (
+                l.weight.grad.norm()
+                if l.weight.grad is not None
+                else torch.zeros_like(l.weight)
+            ),
+            mode="param",
+        )
+
     return grad_norm_arr

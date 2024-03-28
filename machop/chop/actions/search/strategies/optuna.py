@@ -109,13 +109,13 @@ class SearchStrategyOptuna(SearchStrategyBase):
         else:
             for name, length in search_space.choice_lengths_flattened.items():
                 sampled_indexes[name] = trial.suggest_int(name, 0, length - 1)
-            
+
             trial_params = trial.params.popitem()
             sampled_config = search_space.flattened_indexes_to_config(sampled_indexes)
 
         is_eval_mode = self.config.get("eval_mode", True)
-        
-        '''
+
+        """
         group 2: zero cost
 
         In this section, we've added functionality to handle the zero cost mode. 
@@ -130,8 +130,8 @@ class SearchStrategyOptuna(SearchStrategyBase):
         - We then set several user attributes for the trial, including the software metrics, hardware metrics, scaled metrics, sampled configuration, and nasbench data metrics.
         - We log the scaled metrics using the visualizer.
         - Finally, we return the scaled metrics. If the sum_scaled_metrics flag is enabled, we return the sum of the scaled metrics; otherwise, we return the list of scaled metrics.
-        '''
-        
+        """
+
         # print("self config")
         # print(self.config)
         if self.zero_cost_mode:
@@ -139,7 +139,7 @@ class SearchStrategyOptuna(SearchStrategyBase):
             length = len(self.zero_cost_and_true_metric)
             self.zero_cost_and_true_metric[length] = {
                 "true_metric": data,
-                "zero_cost_proxy": {}
+                "zero_cost_proxy": {},
             }
         else:
             model = search_space.rebuild_model(sampled_config, is_eval_mode)
@@ -227,15 +227,32 @@ class SearchStrategyOptuna(SearchStrategyBase):
         if self.zero_cost_mode:
             self.zc_proxy = pd.DataFrame()
             self.zc_true_accuracy = []
-            for key, value in self.zero_cost_and_true_metric.items() :
-                self.zc_proxy = pd.concat([self.zc_proxy, pd.DataFrame(value["zero_cost_proxy"], index=[0])], ignore_index=True)
+            for key, value in self.zero_cost_and_true_metric.items():
+                self.zc_proxy = pd.concat(
+                    [self.zc_proxy, pd.DataFrame(value["zero_cost_proxy"], index=[0])],
+                    ignore_index=True,
+                )
                 self.zc_true_accuracy.append(value["true_metric"]["test-accuracy"])
 
             # get rid of hardware metrics
-            available_zc_metrics = ["fisher", "grad_norm", "grasp", "l2_norm", "plain", "snip", "synflow", "naswot", "naswot_relu", "tenas", "zico"]
-            zc_cols = self.zc_proxy.columns[self.zc_proxy.columns.isin(available_zc_metrics)]
+            available_zc_metrics = [
+                "fisher",
+                "grad_norm",
+                "grasp",
+                "l2_norm",
+                "plain",
+                "snip",
+                "synflow",
+                "naswot",
+                "naswot_relu",
+                "tenas",
+                "zico",
+            ]
+            zc_cols = self.zc_proxy.columns[
+                self.zc_proxy.columns.isin(available_zc_metrics)
+            ]
             self.zc_proxy = self.zc_proxy[zc_cols]
-            
+
             # print("proxy values")
             # print(self.zc_proxy)
 
@@ -246,18 +263,21 @@ class SearchStrategyOptuna(SearchStrategyBase):
             ## standardize
             for _ in self.zc_proxy.columns:
                 if self.zc_proxy[_].mean().sum() != 0:
-                    self.zc_proxy[_] = (self.zc_proxy[_] - self.zc_proxy[_].mean())/self.zc_proxy[_].std()
+                    self.zc_proxy[_] = (
+                        self.zc_proxy[_] - self.zc_proxy[_].mean()
+                    ) / self.zc_proxy[_].std()
                 else:
-                    self.zc_proxy[_] = (self.zc_proxy[_] - self.zc_proxy[_].mean())
-                    
+                    self.zc_proxy[_] = self.zc_proxy[_] - self.zc_proxy[_].mean()
+
             # print("proxy values after standardization")
             # print(self.zc_proxy)
-            
+
             self.zc_weight_model = LinearRegression(fit_intercept=True)
             self.zc_weight_model.fit(self.zc_proxy, self.zc_true_accuracy)
         else:
-            raise ValueError("zero_cost_mode is Fasle, do not fit the zero_cost_weight evaluation.")
-            
+            raise ValueError(
+                "zero_cost_mode is Fasle, do not fit the zero_cost_weight evaluation."
+            )
 
     @staticmethod
     def _save_search_dataframe(study: optuna.study.Study, search_space, save_path):
@@ -318,7 +338,14 @@ class SearchStrategyOptuna(SearchStrategyBase):
 
         txt = "Best trial(s):\n"
         df_truncated = df.loc[
-            :, ["number", "software_metrics", "hardware_metrics", "scaled_metrics", "nasbench_data_metrics"]
+            :,
+            [
+                "number",
+                "software_metrics",
+                "hardware_metrics",
+                "scaled_metrics",
+                "nasbench_data_metrics",
+            ],
         ]
 
         def beautify_metric(metric: dict):
@@ -336,9 +363,21 @@ class SearchStrategyOptuna(SearchStrategyBase):
             return beautified
 
         df_truncated.loc[
-            :, ["software_metrics", "hardware_metrics", "scaled_metrics", "nasbench_data_metrics"]
+            :,
+            [
+                "software_metrics",
+                "hardware_metrics",
+                "scaled_metrics",
+                "nasbench_data_metrics",
+            ],
         ] = df_truncated.loc[
-            :, ["software_metrics", "hardware_metrics", "scaled_metrics", "nasbench_data_metrics"]
+            :,
+            [
+                "software_metrics",
+                "hardware_metrics",
+                "scaled_metrics",
+                "nasbench_data_metrics",
+            ],
         ].map(
             beautify_metric
         )

@@ -25,7 +25,7 @@ def compute_synflow_per_weight(net, inputs, targets, mode, split_data=1, loss_fn
 
     device = inputs.device
 
-    #convert params to their abs. Keep sign for converting it back.
+    # convert params to their abs. Keep sign for converting it back.
     @torch.no_grad()
     def linearize(net):
         signs = {}
@@ -34,26 +34,26 @@ def compute_synflow_per_weight(net, inputs, targets, mode, split_data=1, loss_fn
             param.abs_()
         return signs
 
-    #convert to orig values
+    # convert to orig values
     @torch.no_grad()
     def nonlinearize(net, signs):
         for name, param in net.state_dict().items():
-            if 'weight_mask' not in name:
+            if "weight_mask" not in name:
                 param.mul_(signs[name])
 
     # keep signs of all params
     signs = linearize(net)
-    
-    # Compute gradients with input of 1s 
+
+    # Compute gradients with input of 1s
     net.train()
     net.zero_grad()
     net.double()
-    input_dim = list(inputs[0,:].shape)
+    input_dim = list(inputs[0, :].shape)
     inputs = torch.ones([1] + input_dim).double().to(device)
     output = net.forward(inputs)
     if type(output) is tuple:
         output = output[0]
-    torch.sum(output).backward() 
+    torch.sum(output).backward()
 
     # select the gradients that we want to use for search/prune
     def synflow(layer):
@@ -68,5 +68,3 @@ def compute_synflow_per_weight(net, inputs, targets, mode, split_data=1, loss_fn
     nonlinearize(net, signs)
 
     return grads_abs
-
-

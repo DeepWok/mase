@@ -2,7 +2,11 @@ from .eval import RunnerBasicEval
 from .train import RunnerBasicTrain
 from .zc import RunnerZeroCost
 
-SW_RUNNERS = {"basic_evaluation": RunnerBasicEval, "basic_train": RunnerBasicTrain, "zero_cost": RunnerZeroCost}
+SW_RUNNERS = {
+    "basic_evaluation": RunnerBasicEval,
+    "basic_train": RunnerBasicTrain,
+    "zero_cost": RunnerZeroCost,
+}
 
 
 def get_sw_runner(name: str, model_info, task: str, dataset_info, accelerator, config):

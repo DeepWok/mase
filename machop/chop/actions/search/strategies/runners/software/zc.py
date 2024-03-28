@@ -19,7 +19,7 @@ from .base import SWRunnerBase
 import torch.nn.functional as F
 from ....search_space.zero_cost_nas.pruners.predictive import find_measures
 
-'''
+"""
 This Python file is dedicated to the implementation of a Runner for Zero Cost Neural Architecture Search (NAS). Zero Cost NAS aims to reduce the computational cost of NAS by using proxy measures to estimate the performance of neural network architectures without the need for full training.
 
 Key Components:
@@ -43,7 +43,7 @@ The zero-cost metrics are computed using the `find_measures` function from the `
 For each metric in the configuration, the `__call__` method checks if it is in the list of available metrics. If it is, it computes the metric using the `find_measures` function and stores it in the `zero_cost_metrics` dictionary. If the metric is not in the list of available metrics, it raises a ValueError.
 
 In summary, the `RunnerZeroCost` class enables efficient zero-cost NAS by computing proxy measures that estimate the performance of different neural network architectures without requiring full training.
-'''
+"""
 
 
 def get_optimizer(model, optimizer: str, learning_rate, weight_decay=0.0):
@@ -84,8 +84,19 @@ def get_optimizer(model, optimizer: str, learning_rate, weight_decay=0.0):
 class RunnerZeroCost(SWRunnerBase):
 
     def _post_init_setup(self) -> None:
-        self.available_metrics = ["fisher", "grad_norm", "grasp", "l2_norm",
-                        "plain", "snip", "synflow", "naswot", "naswot_relu", "tenas", "zico"]
+        self.available_metrics = [
+            "fisher",
+            "grad_norm",
+            "grasp",
+            "l2_norm",
+            "plain",
+            "snip",
+            "synflow",
+            "naswot",
+            "naswot_relu",
+            "tenas",
+            "zico",
+        ]
         self.loss = MeanMetric().to(self.accelerator)
         self._setup_metric()
 
@@ -168,29 +179,33 @@ class RunnerZeroCost(SWRunnerBase):
 
         data_loader = self.config["data_loader"]
         metric_names = self.config["metrics"]
-        
+
         if data_loader == "train_dataloader":
             dataloader = data_module.train_dataloader()
         elif data_loader == "val_dataloader":
             dataloader = data_module.val_dataloader()
 
-        dataload_info = ('random', 1, 10)
+        dataload_info = ("random", 1, 10)
         device = self.accelerator
-        
+
         for metric_name in metric_names:
             if metric_name in self.available_metrics:
                 # print(f"Computing {metric_name}")
-                zero_cost_metrics[metric_name] = find_measures(model, 
-                                                dataloader,
-                                                dataload_info, # a tuple with (dataload_type = {random, grasp}, number_of_batches_for_random_or_images_per_class_for_grasp, number of classes)
-                                                device, 
-                                                loss_fn=F.cross_entropy, 
-                                                measure_names=[metric_name],
-                                                measures_arr=None)[metric_name]
+                zero_cost_metrics[metric_name] = find_measures(
+                    model,
+                    dataloader,
+                    dataload_info,  # a tuple with (dataload_type = {random, grasp}, number_of_batches_for_random_or_images_per_class_for_grasp, number of classes)
+                    device,
+                    loss_fn=F.cross_entropy,
+                    measure_names=[metric_name],
+                    measures_arr=None,
+                )[metric_name]
                 # print("zero_cost_metrics")
                 # print(zero_cost_metrics)
                 # print(zero_cost_metrics[metric_name])
             else:
-                raise ValueError("Zero cost metrics should be chosen from ['fisher', 'grad_norm', 'grasp', 'l2_norm', 'plain', 'snip', 'synflow', 'naswot', 'naswot_relu', 'tenas', 'zico']!!!")
+                raise ValueError(
+                    "Zero cost metrics should be chosen from ['fisher', 'grad_norm', 'grasp', 'l2_norm', 'plain', 'snip', 'synflow', 'naswot', 'naswot_relu', 'tenas', 'zico']!!!"
+                )
 
         return zero_cost_metrics

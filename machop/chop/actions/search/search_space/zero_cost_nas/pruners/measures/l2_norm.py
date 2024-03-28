@@ -19,8 +19,12 @@ from ..p_utils import get_layer_metric_array
 
 @measure("l2_norm", copy_net=False, mode="param")
 def get_l2_norm_array(net, inputs, targets, mode, loss_fn, split_data=1):
-    
-    l2_norm_arr = get_layer_metric_array(net, lambda l: l.weight.norm(2) if l.weight is not None else torch.zeros(1), mode=mode)
+
+    l2_norm_arr = get_layer_metric_array(
+        net,
+        lambda l: l.weight.norm(2) if l.weight is not None else torch.zeros(1),
+        mode=mode,
+    )
 
     # return get_layer_metric_array(net, lambda l: l.weight.norm(), mode=mode)
     return l2_norm_arr
