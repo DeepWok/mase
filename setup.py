@@ -16,6 +16,7 @@ setup(
     packages=find_packages("machop"),
     install_requires=[
         "torch",
+        "pythran",
         "torchvision",
         "torchaudio",
         "packaging",
