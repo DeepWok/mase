@@ -92,7 +92,7 @@ def transform(
                 pass_save_dir = save_dir / "tensorrt"
 
                 pass_config['task'] = task
-                pass_config['dataset'] =  config["dataset"]
+                pass_config['dataset'] = task
                 pass_config["batch_size"] = config["batch_size"]
                 pass_config["model"] = config["model"]
                 pass_config["data_module"] = data_module
@@ -122,7 +122,7 @@ def transform(
                 )
                 
                 # Apply fp16 or layer-wise mixed precision quantization if necessary and convert the model to TensorRT format
-                graph, runtime_meta = PASSES["tensorrt"](
+                graph, runtime_meta = PASSES["tensorrt_quantize"](
                     graph, pass_args=pass_config
                 )
 

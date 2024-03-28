@@ -317,7 +317,7 @@ class RuntimeAnalysis():
                 recall_metric = torchmetrics.Recall(num_classes=self.num_of_classes, average='weighted', task='multiclass')
                 f1_metric = torchmetrics.F1Score(num_classes=self.num_of_classes, average='weighted', task='multiclass')
             case _:
-                raise Exception("Unsupported task type. Please set a supported task type in the config file.")
+                raise Exception(f"Unsupported task type {self.config['task']}. Please set a supported task type in the config file.")
 
         # Initialize lists to store metrics for each configuration
         recorded_accs = []

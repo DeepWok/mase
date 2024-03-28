@@ -210,7 +210,6 @@ def get_hf_nlp_model(
                 model = AutoModelForCausalLM.from_pretrained(
                     name if checkpoint is None else checkpoint
                 )
-                print(model.model.decoder.embed_tokens)
             else:
                 config = AutoConfig.from_pretrained(
                     name if checkpoint is None else checkpoint
