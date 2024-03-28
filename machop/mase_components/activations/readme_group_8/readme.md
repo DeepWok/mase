@@ -259,6 +259,8 @@ $p_k(x_i) = a_2 x^2 + a_1 x + a_0$
  <p>High-Level Flow Diagram of SoftPlus AF</p>
 </div>
 
+# Changes to already existing RTL
+During evaluation, it was found that fixed_round file in \machop\mase_components\cast\rtl does not work properly for output widths of 32 and above. This was rectified and updated in the corresponding location.
 
 # References
 
