@@ -222,15 +222,14 @@ class ZeroCostProxy(SearchSpaceBase):
                 ],  # Seed to use in the train, validation and test dataloaders
                 "train_portion": 0.7,  # Portion of train dataset to use as train dataset. The rest is used as validation dataset.
                 "batch_size": 32,  # batch size of the dataloaders
-                "cutout": False
-            }
+                "cutout": False,
+            },
         }
         config = CfgNode(config_dict)
 
-
         for zcp_name in self.config["zc"]["zc_proxies"]:
             if self.config["zc"]["calculate_proxy"]:
-                if self.config["zc"]["dataset"] == 'ImageNet16-120':
+                if self.config["zc"]["dataset"] == "ImageNet16-120":
                     raise ValueError("Please set 'calculate_proxy' to false")
                 # Get the dataloaders
                 train_loader, _, _, _, _ = get_train_val_loaders(config)
