@@ -27,12 +27,16 @@ class WrapperBase(pl.LightningModule):
         self.epochs = epochs
         self.optimizer = optimizer
 
-        self.t_max = getattr(scheduler_args, 't_max', None) if scheduler_args else None
-        self.eta_min = getattr(scheduler_args, 'eta_min', None) if scheduler_args else None
+        self.t_max = getattr(scheduler_args, "t_max", None) if scheduler_args else None
+        self.eta_min = (
+            getattr(scheduler_args, "eta_min", None) if scheduler_args else None
+        )
 
         if dataset_info and dataset_info.num_classes:
             self.num_classes = dataset_info.num_classes
-            self.acc_train = self.acc_val = self.acc_test = Accuracy("multiclass", num_classes=self.num_classes)
+            self.acc_train = self.acc_val = self.acc_test = Accuracy(
+                "multiclass", num_classes=self.num_classes
+            )
 
         self.loss_val = MeanMetric()
         self.loss_test = MeanMetric()
@@ -92,14 +96,18 @@ class WrapperBase(pl.LightningModule):
                     lr=self.learning_rate,
                     weight_decay=self.weight_decay,
                 )
-                scheduler = CosineAnnealingLR(opt, T_max=self.t_max or self.epochs, eta_min=self.eta_min or 1e-6)
+                scheduler = CosineAnnealingLR(
+                    opt, T_max=self.t_max or self.epochs, eta_min=self.eta_min or 1e-6
+                )
             case "adam":
                 opt = torch.optim.Adam(
                     self.trainer.model.parameters(),
                     lr=self.learning_rate,
                     weight_decay=self.weight_decay,
                 )
-                scheduler = CosineAnnealingLR(opt, T_max=self.t_max or self.epochs, eta_min=self.eta_min or 1e-6)
+                scheduler = CosineAnnealingLR(
+                    opt, T_max=self.t_max or self.epochs, eta_min=self.eta_min or 1e-6
+                )
             case "sgd_warmup" | "sgd":
                 opt = torch.optim.SGD(
                     self.trainer.model.parameters(),
@@ -108,11 +116,17 @@ class WrapperBase(pl.LightningModule):
                     weight_decay=0.0005,
                     nesterov=True,
                 )
-                scheduler = CosineAnnealingLR(opt, T_max=self.t_max or self.epochs, eta_min=self.eta_min if self.optimizer == "sgd" else 0.0)
+                scheduler = CosineAnnealingLR(
+                    opt,
+                    T_max=self.t_max or self.epochs,
+                    eta_min=self.eta_min if self.optimizer == "sgd" else 0.0,
+                )
             case "fused_adam" | "FusedAdam":
                 # DeepSpeed strategy="deepspeed_stage_3"
                 opt = FusedAdam(self.trainer.model.parameters(), lr=self.learning_rate)
-                scheduler = CosineAnnealingLR(opt, T_max=self.t_max or self.epochs, eta_min=self.eta_min or 0.0)
+                scheduler = CosineAnnealingLR(
+                    opt, T_max=self.t_max or self.epochs, eta_min=self.eta_min or 0.0
+                )
             case _:
                 raise ValueError(f"Unsupported optimizer name {self.optimizer}")
         return {"optimizer": opt, "lr_scheduler": scheduler}

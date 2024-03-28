@@ -2,6 +2,7 @@ import threading
 import pynvml
 import time
 
+
 class PowerMonitor(threading.Thread):
     def __init__(self, config):
         super().__init__()  # Call the initializer of the base class, threading.Thread
@@ -23,11 +24,14 @@ class PowerMonitor(threading.Thread):
     def stop(self):
         self.running = False  # Stop the monitoring loop
 
+
 def get_execution_provider(accelerator):
-    EP_list = ["TensorrtExecutionProvider", "CUDAExecutionProvider", "CPUExecutionProvider"]
+    EP_list = [
+        "TensorrtExecutionProvider",
+        "CUDAExecutionProvider",
+        "CPUExecutionProvider",
+    ]
     return (
-        ["CUDAExecutionProvider"]
-        if accelerator == "cuda"
-        else ["CPUExecutionProvider"]
+        ["CUDAExecutionProvider"] if accelerator == "cuda" else ["CPUExecutionProvider"]
     )
     # return ["TensorrtExecutionProvider"]

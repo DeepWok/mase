@@ -32,6 +32,4 @@ from .pruning import (
     hook_inspection_analysis_pass,
 )
 
-from .runtime import (
-    runtime_analysis_pass
-)
+from .runtime import runtime_analysis_pass

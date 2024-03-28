@@ -8,9 +8,10 @@ import onnx
 import onnxruntime as ort
 from ...transforms.onnxrt.quantize import Quantizer
 
+
 def onnx_runtime_interface_pass(graph, pass_args=None):
     """
-    Converts a PyTorch model within a MaseGraph to ONNX format and performs quantization as specified in the configuration. 
+    Converts a PyTorch model within a MaseGraph to ONNX format and performs quantization as specified in the configuration.
 
     This function facilitates the conversion of a PyTorch model to ONNX format, leveraging ONNX Runtime (ONNXRT) for potential quantization and optimization. Depending on the `precision` parameter set in `passes.onnxruntime.default.config`, the model can be quantized to various numeric precisions including INT8, UINT8, INT16, UINT16, or FP16, affecting the model's performance and latency. Notably, INT8 and UINT8 quantization typically yield significant latency improvements at the potential cost of reduced model performance.
 
@@ -42,10 +43,10 @@ def onnx_runtime_interface_pass(graph, pass_args=None):
     ```
 
     Example of usage:
-    
+
         graph = MaseGraph(...)
         processed_graph, metadata = onnx_runtime_interface_pass(graph, {'precision': 'int8', 'quantization_type': 'static'})
-    
+
     This example demonstrates how to invoke the ONNX Runtime interface pass, specifying INT8 precision and static quantization type.
     """
     onnx_runtime_session = ONNXRuntime(config=pass_args)
@@ -56,7 +57,7 @@ def onnx_runtime_interface_pass(graph, pass_args=None):
     onnx_runtime_session.summarize_ONNX_graph(onnx_model_graph)
     quant_meta = onnx_runtime_session.quantize(onnx_model_path)
 
-    return graph, {'onnx_path': onnx_model_path, **quant_meta}
+    return graph, {"onnx_path": onnx_model_path, **quant_meta}
 
 
 class ONNXRuntime:
@@ -64,7 +65,7 @@ class ONNXRuntime:
         self.config = config
         self.logger = logging.getLogger(__name__)
 
-    def _prepare_save_path(self, quantized_type:str):
+    def _prepare_save_path(self, quantized_type: str):
         """Creates and returns a save path for the model."""
         root = Path(__file__).resolve().parents[6]
         current_date = datetime.now().strftime("%Y-%m-%d")
@@ -113,7 +114,14 @@ class ONNXRuntime:
     def summarize_ONNX_graph(self, graph):
         # Initialize a PrettyTable to display the summary
         summary_table = PrettyTable()
-        summary_table.field_names = ["Index", "Name", "Type", "Inputs", "Outputs", "Attributes"]
+        summary_table.field_names = [
+            "Index",
+            "Name",
+            "Type",
+            "Inputs",
+            "Outputs",
+            "Attributes",
+        ]
 
         # Parse through the model's graph
         for index, node in enumerate(graph.node):
@@ -125,25 +133,36 @@ class ONNXRuntime:
             attributes = [attr.name for attr in node.attribute]
 
             # Add information to the table
-            summary_table.add_row([index, node_name, node_type, ', '.join(inputs), ', '.join(outputs), ', '.join(attributes)])
+            summary_table.add_row(
+                [
+                    index,
+                    node_name,
+                    node_type,
+                    ", ".join(inputs),
+                    ", ".join(outputs),
+                    ", ".join(attributes),
+                ]
+            )
         self.logger.info(f"ONNX Model Summary: \n{summary_table}")
-    
+
     def quantize(self, model_path) -> dict:
         # only quantize is set in the default config
         try:
-            self.config['default']['config']['quantize']
+            self.config["default"]["config"]["quantize"]
         except:
-            self.logger.warning("Quantization is not set in default config. Skipping quantization.")
+            self.logger.warning(
+                "Quantization is not set in default config. Skipping quantization."
+            )
             return {}
-        
-        if not self.config['default']['config']['quantize']:
-            return{}
-        
+
+        if not self.config["default"]["config"]["quantize"]:
+            return {}
+
         quantizer = Quantizer(self.config)
         try:
-            quant_types = self.config['default']['config']['quantize_types']
+            quant_types = self.config["default"]["config"]["quantize_types"]
         except (TypeError, KeyError):
-            quant_types = ['static']
+            quant_types = ["static"]
 
         # Pre-process the model adding further optimizations and store to prep_path
         prep_path = self._prepare_save_path("pre_processed")
@@ -151,22 +170,21 @@ class ONNXRuntime:
         quant_models = {}
         for quant_type in quant_types:
             match quant_type:
-                case 'static':
+                case "static":
                     quantized_path = self._prepare_save_path("static_quantized")
                     quantizer.quantize_static(prep_path, quantized_path)
-                    quant_models['onnx_static_quantized_path'] = quantized_path
-                case 'dynamic':
+                    quant_models["onnx_static_quantized_path"] = quantized_path
+                case "dynamic":
                     quantized_path = self._prepare_save_path("dynamic_quantized")
                     quantizer.quantize_dynamic(prep_path, quantized_path)
-                    quant_models['onnx_dynamic_quantized_path'] = quantized_path
-                case 'auto':
+                    quant_models["onnx_dynamic_quantized_path"] = quantized_path
+                case "auto":
                     quantized_path = self._prepare_save_path("auto_quantized")
                     quantizer.quantize_auto_mixed_precision(prep_path, quantized_path)
-                    quant_models['onnx_auto_mixed_precision_path'] = quantized_path
+                    quant_models["onnx_auto_mixed_precision_path"] = quantized_path
                 case _:
-                    raise Exception(f"Invalid quantization type: {quant_type}")           
+                    raise Exception(f"Invalid quantization type: {quant_type}")
         return quant_models
-
 
     def load_onnx(self, onnx_model_path):
         """Load .onnx model"""

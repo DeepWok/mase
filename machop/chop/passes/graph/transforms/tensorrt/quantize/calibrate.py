@@ -15,9 +15,10 @@ from torch.autograd import Variable
 import torch
 from .utils import FakeQuantizer, check_for_value_in_dict, get_calibrator_dataloader
 
+
 def tensorrt_fake_quantize_transform_pass(graph, pass_args=None):
     """
-    Applies a fake quantization pass to a model graph, preparing it for calibration and fine-tuning before actual quantization. 
+    Applies a fake quantization pass to a model graph, preparing it for calibration and fine-tuning before actual quantization.
 
     This pass simulates quantization effects on the model's precision by modifying its layers to fake quantized versions, based on the `pass_args`. It's a preliminary step for models specifically targeting int8 calibration, as other precisions are not supported by the `pytorch-quantization` toolkit. This process is crucial for achieving accurate model quantization without significant loss in precision.
 
@@ -57,7 +58,7 @@ def tensorrt_fake_quantize_transform_pass(graph, pass_args=None):
 
 def tensorrt_calibrate_transform_pass(graph, pass_args=None):
     """
-    Performs calibration on a model graph by deciding the best maximum absolute values (amax) for activations using specified calibrators. 
+    Performs calibration on a model graph by deciding the best maximum absolute values (amax) for activations using specified calibrators.
 
     Calibration is a critical step in the quantization process, ensuring that the quantized model maintains accuracy close to the original model by optimizing the scale factors for activations. This function utilizes a `Calibrator` object, which takes `pass_args` to determine the calibration method and parameters, and applies it to the entire graph.
 
@@ -158,7 +159,10 @@ class Calibrator:
 
             # Create a calibrator_dataloader that is a subset of the training dataloader
             # Number of batches defined in the config by num_calibration_batches
-            calibrator_dataloader = get_calibrator_dataloader(self.config['data_module'].train_dataloader(), self.config.get('num_calibration_batches', 200))        
+            calibrator_dataloader = get_calibrator_dataloader(
+                self.config["data_module"].train_dataloader(),
+                self.config.get("num_calibration_batches", 200),
+            )
 
             for i, (xTrain, _) in enumerate(calibrator_dataloader):
                 graph.model(Variable(xTrain).cuda())

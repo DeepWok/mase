@@ -70,6 +70,7 @@ def tensorrt_fine_tune_transform_pass(graph, pass_args=None):
 
     return graph, {}
 
+
 class FineTuning:
     def __init__(self, graph, config):
         self.logger = logging.getLogger(__name__)
@@ -125,7 +126,9 @@ class FineTuning:
 
         t_max = int(len(self.config["data_module"].train_dataloader()) * epochs)
 
-        ckpt_save_path = prepare_save_path(self.config, method="ckpts/fine_tuning", suffix="ckpt")
+        ckpt_save_path = prepare_save_path(
+            self.config, method="ckpts/fine_tuning", suffix="ckpt"
+        )
 
         scheduler_args = {"t_max": t_max, "eta_min": eta_min}
 

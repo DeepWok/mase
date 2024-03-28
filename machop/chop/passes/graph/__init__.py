@@ -126,5 +126,5 @@ PASSES = {
     # "remove_prune_wrappers": prune_unwrap_transform_pass,
     "conv_bn_fusion": conv_bn_fusion_transform_pass,
     "logicnets_fusion": logicnets_fusion_transform_pass,
-    "onnx_annotate": onnx_annotate_transform_pass
+    "onnx_annotate": onnx_annotate_transform_pass,
 }

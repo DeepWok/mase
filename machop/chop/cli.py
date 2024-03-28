@@ -149,7 +149,7 @@ CLI_DEFAULTS = {
     "accumulate_grad_batches": 1,
     "log_every_n_steps": 50,
     "t_max": 20,
-    "eta_min": 1e-6, 
+    "eta_min": 1e-6,
     # Runtime environment options
     "num_workers": os.cpu_count(),
     "num_devices": 1,

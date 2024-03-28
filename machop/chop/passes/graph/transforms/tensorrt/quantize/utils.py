@@ -40,8 +40,9 @@ QUANTIZEABLE_OP = {
     "avgPool3d": qnn.QuantAvgPool3d,
     "maxPool1d": qnn.QuantMaxPool1d,
     "maxPool2d": qnn.QuantMaxPool2d,
-    "maxPool3d": qnn.QuantMaxPool3d
+    "maxPool3d": qnn.QuantMaxPool3d,
 }
+
 
 class FakeQuantizer:
     def __init__(self, config):
@@ -66,7 +67,9 @@ class FakeQuantizer:
         try:
             op = QUANTIZEABLE_OP[mase_op]
         except:
-            raise Exception(f"Module {original_module_cls} unsupported. Please check documentation for what is currently supported.")
+            raise Exception(
+                f"Module {original_module_cls} unsupported. Please check documentation for what is currently supported."
+            )
         try:
             match mase_op:
                 case "linear":
@@ -95,7 +98,14 @@ class FakeQuantizer:
                     if use_bias:
                         copy_weights(original_module.bias, new_module.bias)
 
-                case "conv1d" | "conv2d" | "conv3d" | "convTranspose1d" | "convTranspose2d" | "convTranspose3d":
+                case (
+                    "conv1d"
+                    | "conv2d"
+                    | "conv3d"
+                    | "convTranspose1d"
+                    | "convTranspose2d"
+                    | "convTranspose3d"
+                ):
                     # Set default quantization descriptor for input and weights
                     op.set_default_quant_desc_input(
                         QuantDescriptor(
@@ -125,8 +135,15 @@ class FakeQuantizer:
                     copy_weights(original_module.weight, new_module.weight)
                     if use_bias:
                         copy_weights(original_module.bias, new_module.bias)
-                
-                case "avgPool1d" | "avgPool2d" | "avgPool3d" | "maxPool1d" | "maxPool2d" | "maxPool3d":
+
+                case (
+                    "avgPool1d"
+                    | "avgPool2d"
+                    | "avgPool3d"
+                    | "maxPool1d"
+                    | "maxPool2d"
+                    | "maxPool3d"
+                ):
                     # Set default quantization descriptor for input since pooling layers typically do not have weights
                     op.set_default_quant_desc_input(
                         QuantDescriptor(
@@ -134,14 +151,22 @@ class FakeQuantizer:
                             axis=config["input"]["quantize_axis"],
                         )
                     )
-                    
+
                     # Configure new pooling module with parameters from the original module
                     new_module = op(
                         kernel_size=original_module.kernel_size,
                         stride=original_module.stride,
                         padding=original_module.padding,
-                        dilation=original_module.dilation if hasattr(original_module, 'dilation') else None, # Not all pooling layers have a dilation attribute
-                        return_indices=original_module.return_indices if hasattr(original_module, 'return_indices') else False, # Only relevant for max pooling
+                        dilation=(
+                            original_module.dilation
+                            if hasattr(original_module, "dilation")
+                            else None
+                        ),  # Not all pooling layers have a dilation attribute
+                        return_indices=(
+                            original_module.return_indices
+                            if hasattr(original_module, "return_indices")
+                            else False
+                        ),  # Only relevant for max pooling
                         ceil_mode=original_module.ceil_mode,
                     )
 
@@ -155,32 +180,40 @@ class FakeQuantizer:
                         dropout=original_module.dropout,
                         bidirectional=original_module.bidirectional,
                     )
-                        
+
                     # Check the number of layers and bidirectional configuration
                     num_layers = original_module.num_layers
                     bidirectional = 2 if original_module.bidirectional else 1
-                    
+
                     for layer in range(num_layers):
                         for direction in range(bidirectional):
                             # Suffix to identify the parameters for the layer and direction
-                            suffix = f'_reverse' if direction == 1 else ''
-                            layer_idx = f'{layer}{suffix}'
-                            
+                            suffix = f"_reverse" if direction == 1 else ""
+                            layer_idx = f"{layer}{suffix}"
+
                             # Copy weights for the input-hidden connections (ih)
-                            attr = f'weight_ih_l{layer_idx}'
-                            getattr(new_module, attr).data.copy_(getattr(original_module, attr).data)
-                            
+                            attr = f"weight_ih_l{layer_idx}"
+                            getattr(new_module, attr).data.copy_(
+                                getattr(original_module, attr).data
+                            )
+
                             # Copy weights for the hidden-hidden connections (hh)
-                            attr = f'weight_hh_l{layer_idx}'
-                            getattr(new_module, attr).data.copy_(getattr(original_module, attr).data)
-                            
+                            attr = f"weight_hh_l{layer_idx}"
+                            getattr(new_module, attr).data.copy_(
+                                getattr(original_module, attr).data
+                            )
+
                             # Copy biases, if they exist
                             if original_module.bias:
-                                attr = f'bias_ih_l{layer_idx}'
-                                getattr(new_module, attr).data.copy_(getattr(original_module, attr).data)
-                                
-                                attr = f'bias_hh_l{layer_idx}'
-                                getattr(new_module, attr).data.copy_(getattr(original_module, attr).data)
+                                attr = f"bias_ih_l{layer_idx}"
+                                getattr(new_module, attr).data.copy_(
+                                    getattr(original_module, attr).data
+                                )
+
+                                attr = f"bias_hh_l{layer_idx}"
+                                getattr(new_module, attr).data.copy_(
+                                    getattr(original_module, attr).data
+                                )
 
                 case "LSTMCell":
                     new_module = QUANTIZEABLE_OP["LSTMCell"](
@@ -188,14 +221,13 @@ class FakeQuantizer:
                         hidden_size=original_module.hidden_size,
                         bias=original_module.bias,
                     )
-                    
+
                     # Copy weights and biases from the original module to the new quantized module
                     copy_weights(original_module.weight_ih, new_module.weight_ih)
                     copy_weights(original_module.weight_hh, new_module.weight_hh)
                     if original_module.bias:
                         copy_weights(original_module.bias_ih, new_module.bias_ih)
                         copy_weights(original_module.bias_hh, new_module.bias_hh)
-
 
                 case _:
                     raise NotImplementedError(
@@ -213,20 +245,30 @@ class FakeQuantizer:
         """Retrieve specific configuration from the instance's config dictionary or return default."""
         try:
             config = self.config.get(name) or self.config.get("default")
-            config['input'] = config.get('input', self.config['default'].get("input"))
-            config['weight'] = config.get('weight', self.config['default'].get("weight"))
+            config["input"] = config.get("input", self.config["default"].get("input"))
+            config["weight"] = config.get(
+                "weight", self.config["default"].get("weight")
+            )
 
         except KeyError:
             raise Exception(
                 f"Please check Config/TOML file. Default or layer {name} config must be defined."
             )
-        
+
         # Check if required keys are defined
         try:
-            config['config']['quantize'] = config['config'].get('quantize', self.config.get("default")['config']['quantize'])
-            config['config']['precision'] = config['config'].get('precision', self.config.get("default")['config']['precision'])
-            config['input']['calibrator'] = config['input'].get('calibrator', self.config.get("default")['input']['calibrator'])       
-            config['weight']['calibrator'] = config['weight'].get('calibrator', self.config.get("default")['weight']['calibrator'])       
+            config["config"]["quantize"] = config["config"].get(
+                "quantize", self.config.get("default")["config"]["quantize"]
+            )
+            config["config"]["precision"] = config["config"].get(
+                "precision", self.config.get("default")["config"]["precision"]
+            )
+            config["input"]["calibrator"] = config["input"].get(
+                "calibrator", self.config.get("default")["input"]["calibrator"]
+            )
+            config["weight"]["calibrator"] = config["weight"].get(
+                "calibrator", self.config.get("default")["weight"]["calibrator"]
+            )
         except KeyError:
             raise Exception(
                 f"Config/TOML not configured correctly. Please check documentation for what must be defined."
@@ -239,7 +281,7 @@ class FakeQuantizer:
         """
         self.logger.info("Applying fake quantization to PyTorch model...")
 
-        if not check_for_value_in_dict(self.config, 'int8'):
+        if not check_for_value_in_dict(self.config, "int8"):
             self.logger.warning(
                 "int8 precision not found in config. Skipping fake quantization."
             )
@@ -271,7 +313,7 @@ class FakeQuantizer:
         """
         self.logger.info("Applying fake quantization to PyTorch model...")
 
-        if not check_for_value_in_dict(self.config, 'int8'):
+        if not check_for_value_in_dict(self.config, "int8"):
             self.logger.warning(
                 "int8 precision not found in config. Skipping fake quantization."
             )
@@ -379,13 +421,16 @@ def prepare_save_path(config, method: str, suffix: str):
 
     return save_dir / f"model.{suffix}"
 
+
 def check_for_value_in_dict(d, value):
     """Checks if a value is in a hierarchical dictionary."""
     if isinstance(d, dict):  # Check if it's a dictionary
         for k, v in d.items():
             if v == value:  # Check if the value matches
                 return True
-            elif isinstance(v, (dict, list)):  # If the value is a dict or list, search recursively
+            elif isinstance(
+                v, (dict, list)
+            ):  # If the value is a dict or list, search recursively
                 if check_for_value_in_dict(v, value):
                     return True
     elif isinstance(d, list):  # Check if it's a list
@@ -398,25 +443,25 @@ def check_for_value_in_dict(d, value):
 def get_calibrator_dataloader(original_dataloader, num_batches=200):
     # Get the batch size from the original DataLoader
     batch_size = original_dataloader.batch_size
-    
+
     # Calculate the number of samples needed for the desired number of batches
     num_samples = num_batches * batch_size
-    
+
     # Assuming the dataset is accessible through the DataLoader
     original_dataset = original_dataloader.dataset
-    
+
     # Create a subset of the original dataset
     # Note: This assumes that indexing the dataset returns individual samples.
     # If your dataset returns batches, this approach needs to be adjusted.
     subset_dataset = Subset(original_dataset, range(num_samples))
-    
+
     # Create a new DataLoader from the subset dataset
     calibrator_dataloader = DataLoader(
         subset_dataset,
         batch_size=batch_size,
         shuffle=False,  # Typically calibration data isn't shuffled, adjust as needed.
         num_workers=original_dataloader.num_workers,
-        pin_memory=original_dataloader.pin_memory
+        pin_memory=original_dataloader.pin_memory,
     )
-    
+
     return calibrator_dataloader

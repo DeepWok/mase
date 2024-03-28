@@ -24,6 +24,7 @@ DEFAULT_QUANTIZATION_CONFIG = {
     }
 }
 
+
 class GraphSearchSpaceTRTMixedPrecisionPTQ(SearchSpaceBase):
     """
     Post-Training quantization search space for mase graph.

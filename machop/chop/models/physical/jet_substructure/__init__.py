@@ -89,26 +89,23 @@ class JSC_TRT(nn.Module):
             nn.BatchNorm1d(16),
             nn.ReLU(),
             nn.Linear(16, 32),
-
             nn.BatchNorm1d(32),
             nn.ReLU(),
             nn.Linear(32, 48),
-
             nn.BatchNorm1d(48),
             nn.ReLU(),
             nn.Dropout(0.5),
             nn.Linear(48, 16),
-
             nn.BatchNorm1d(16),
             nn.ReLU(),
             nn.Linear(16, 5),
-
             nn.BatchNorm1d(5),
             nn.ReLU(),
         )
 
     def forward(self, x):
         return self.seq_blocks(x)
+
 
 # Getters ------------------------------------------------------------------------------
 def get_jsc_toy(info):
@@ -125,4 +122,4 @@ def get_jsc_s(info):
 
 
 def get_jsc_trt(info):
-    return JSC_TRT(info)    
+    return JSC_TRT(info)

@@ -13,6 +13,7 @@ SEARCH_SPACE_MAP = {
     "graph/tensorrt/mixed_precision_ptq": GraphSearchSpaceTRTMixedPrecisionPTQ,
 }
 
+
 def get_search_space_cls(name: str) -> SearchSpaceBase:
     """
     Get the search space class by name.
