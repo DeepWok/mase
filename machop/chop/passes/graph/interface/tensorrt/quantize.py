@@ -160,7 +160,7 @@ class Quantizer:
         
         serialized_engine = builder.build_serialized_network(network, config)
         if serialized_engine is None:
-            raise Exception('Failed to build serialized network. A builderflag or config parameter may be incorrect.')
+            raise Exception('Failed to build serialized network. A builderflag or config parameter may be incorrect or the ONNX model is unsupported.')
 
         trt_path = prepare_save_path(self.config, method='trt', suffix='trt')
         with open(trt_path, 'wb') as f:
