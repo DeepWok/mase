@@ -111,7 +111,6 @@ class SearchStrategyDaddyProxy(SearchStrategyBase):
 
         # load meta proxy
         proxy_model = NeuralModel(len(measure_names))
-        # pretrained_model_path = r'../nas_results/model_state_dict.pt'
         pretrained_model_path = r"../nas_results/meta_proxy/meta_proxy.pt"
         proxy_model.load_state_dict(torch.load(pretrained_model_path))
 
