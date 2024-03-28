@@ -148,7 +148,10 @@ During the conversion process, the `.onnx` and `.trt` files are stored to their 
 This interface pass returns a dictionary containing the `onnx_path` and `trt_engine_path`.
 
 ### ONNXRT
-We may quantize either using INT8, UINT8, INT16, UINT16 or FP16 or INT8 by setting the `precision` parameter in `passes.onnxruntime.default.config` to `'int8'`, `'uint8'`, `'int16'`, `'uint16'` or `'FP16'` respectively. INT8 and UINT8 quantization will show the most notable latency improvements but is more likely to lower performance. 
+
+Basic ONNXRuntime functionality allows to reap the benefits brought by the inherent model optimizations, aimed at minimizing architectural redundancies, executed by ONNX. ONNXRuntime execution providers often allow to appreciate consistent latency improvements over basic PyTorch models; notably, differently than TensorRT this is not limited to NVIDIA GPUs, but can run on a wide range of hardware, including CPUs. 
+
+Further optimizations can be achieved with the quantization functionality supported by ONNXRuntime. We may quantize either using INT8, UINT8, INT16, UINT16 or FP16 or INT8 by setting the `precision` parameter in `passes.onnxruntime.default.config` to `'int8'`, `'uint8'`, `'int16'`, `'uint16'` or `'FP16'` respectively. 
 
 > N.B. Some modules may not be supported for some quantization types above. Please refer [here](https://onnxruntime.ai/docs/) for more information.
 
