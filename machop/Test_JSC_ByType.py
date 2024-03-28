@@ -214,8 +214,17 @@ results = {
 
 timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
 
-with open(
-    f'Pytorch_Quantization_Experiment_result/results_{pass_args["by"]}_{fake}_{calibration}_{structure}_{timestamp}.json',
-    "w",
-) as f:
+# Define the directory
+directory = 'Pytorch_Quantization_Experiment_result'
+
+# Check if the directory exists
+if not os.path.exists(directory):
+    # If the directory does not exist, create it
+    os.makedirs(directory)
+
+# Define the file path
+file_path = f'{directory}/results_{pass_args["by"]}_{fake}_{calibration}_{structure}_{timestamp}.json'
+
+# Open the file and dump the results
+with open(file_path, "w") as f:
     json.dump(results, f)
