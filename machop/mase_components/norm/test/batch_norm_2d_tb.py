@@ -354,23 +354,23 @@ if __name__ == "__main__":
         for w in [2, 4, 6, 8, 10, 12, 14, 16]
     ])
 
-    test_cfgs = [
-        # Default
-        gen_cfg(),
-        # Precision
-        gen_cfg(4, 4, 2, 2, 4, 8, 4, 8, 4, 1),
-        gen_cfg(4, 4, 2, 2, 4, 4, 2, 4, 2, 2),
-        gen_cfg(4, 4, 2, 2, 4, 2, 1, 2, 1, 3),
-        # Rectangle
-        gen_cfg(4, 6, 2, 2, 4, 16, 8, 16, 8, 4),
-        gen_cfg(6, 2, 2, 2, 4, 16, 8, 16, 8, 5),
-        gen_cfg(6, 2, 3, 2, 4, 16, 8, 16, 8, 6),
-        gen_cfg(4, 6, 2, 3, 4, 16, 8, 16, 8, 7),
-        ## Channels
-        gen_cfg(4, 4, 2, 2, 5, 16, 8, 16, 8, 8),
-        gen_cfg(4, 4, 2, 2, 6, 16, 8, 16, 8, 9),
-        gen_cfg(4, 4, 2, 2, 7, 16, 8, 16, 8, 10),
-    ]
+    # test_cfgs = [
+    #     # Default
+    #     gen_cfg(),
+    #     # Precision
+    #     gen_cfg(4, 4, 2, 2, 4, 8, 4, 8, 4, 1),
+    #     gen_cfg(4, 4, 2, 2, 4, 4, 2, 4, 2, 2),
+    #     gen_cfg(4, 4, 2, 2, 4, 2, 1, 2, 1, 3),
+    #     # Rectangle
+    #     gen_cfg(4, 6, 2, 2, 4, 16, 8, 16, 8, 4),
+    #     gen_cfg(6, 2, 2, 2, 4, 16, 8, 16, 8, 5),
+    #     gen_cfg(6, 2, 3, 2, 4, 16, 8, 16, 8, 6),
+    #     gen_cfg(4, 6, 2, 3, 4, 16, 8, 16, 8, 7),
+    #     ## Channels
+    #     gen_cfg(4, 4, 2, 2, 5, 16, 8, 16, 8, 8),
+    #     gen_cfg(4, 4, 2, 2, 6, 16, 8, 16, 8, 9),
+    #     gen_cfg(4, 4, 2, 2, 7, 16, 8, 16, 8, 10),
+    # ]
 
     mase_runner(
         module_param_list=error_analysis_cfgs,
