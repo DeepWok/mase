@@ -1,5 +1,5 @@
 # basics
-model = "toy_convnet"
+model = "resnet18"
 dataset = "cifar10"
 task = "cls"
 
@@ -10,64 +10,11 @@ accelerator = "gpu"
 project = "resnet18_cifar10"
 seed = 42
 
-
-# # basics
-# model = "jsc-tiny"
-# dataset = "jsc"
-# task = "cls"
-
-# max_epochs = -5
-# batch_size = 512
-# learning_rate = 1e-2
-# accelerator = "gpu"
-# project = "jsc-tiny"
-# seed = 42
-# log_every_n_steps = 5
-# load_name = "../mase_output/toy_toy_tiny/software/training_ckpts/best.ckpt"
-# load_type = "pl"
-
-# [passes.quantize]
-# by = "type"
-# [passes.quantize.default.config]
-# name = "NA"
-# [passes.quantize.linear.config]
-# name = "integer"
-# "data_in_width" = 8
-# "data_in_frac_width" = 4
-# "weight_width" = 8
-# "weight_frac_width" = 4
-# "bias_width" = 8
-# "bias_frac_width" = 4
-
-
 [search.search_space]
 name = "graph/quantize/mixed_precision_ptq"
 
 [search.search_space.setup]
 by = "name"
-
-[search.nas.other_config]
-path = ''
-
-[search.nas.op_config]
-op_indices = 8
-
-[search.nas.proxy_config]
-proxy = ['epe_nas', 
-        'fisher', 
-        'grad_norm', 
-        'grasp', 
-        'jacov', 
-        'l2_norm', 
-        # 'nwot', 
-        'plain', 
-        'snip', 
-        'synflow', 
-        'zen', 
-        'flops', 
-        'params']
-
-
 
 [search.search_space.seed.default.config]
 # the only choice "NA" is used to indicate that layers are not quantized by default
@@ -92,10 +39,6 @@ weight_width = [2, 4, 8]
 weight_frac_width = ["NA"]
 bias_width = [2, 4, 8]
 bias_frac_width = ["NA"]
-
-[search.strategy.load_path]
-path = "../nas_results/model_state_dict.pt"
-
 
 [search.strategy]
 name = "proxy"
