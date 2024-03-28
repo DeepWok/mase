@@ -139,21 +139,24 @@ class Quantizer:
             config.set_flag(trt.BuilderFlag.FP16)
 
         elif layer_wise_mixed_precision:
-            # Iterating through each layer and setting precision based on the config
+            # Now, iterate over the network layers and set precision as per the config
             for idx in range(network.num_layers):
                 layer = network.get_layer(idx)
-                layer_config = config.get(f'passes.tensorrt.feature_layers_{idx}.config', {})
-                precision = layer_config.get('precision', default_precision)  # Default to 'fp16' if not specified
-                
-                # Apply precision settings
-                if precision == 'fp16':
+                layer_key = f'feature_layers_{idx}'
+                layer_precision = self.config.get('passes', {}).get('tensorrt', {}).get(layer_key, {}).get('config', {}).get('precision', default_precision)
+
+                # Apply precision settings based on the layer_precision value
+                if layer_precision == 'fp16':
                     layer.precision = trt.float16
                     layer.set_output_type(0, trt.DataType.HALF)
-                elif precision == 'int8':
+                elif layer_precision == 'int8':
                     layer.precision = trt.int8
                     layer.set_output_type(0, trt.DataType.INT8)
                 else:
-                    raise Exception(f"Unsupported precision type '{precision}' for layer {idx}. Please choose from 'fp16' or 'int8'.")
+                    # You might want to handle the default case or unsupported precision types differently
+                    print(f"Warning: Unsupported precision type '{layer_precision}' for layer {idx}. Defaulting to fp16.")
+                    layer.precision = trt.float16
+                    layer.set_output_type(0, trt.DataType.HALF)
         
         serialized_engine = builder.build_serialized_network(network, config)
         if serialized_engine is None:
