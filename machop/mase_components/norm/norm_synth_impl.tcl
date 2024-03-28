@@ -1,7 +1,17 @@
 # Run this script with: vivado -mode tcl -source norm_synth_impl.tcl
 
-# create_project norm norm_proj_dir -part xcu250-figd2104-2L-e -force
+# Script parameters
+set fpga_part xcu250-figd2104-2L-e
+set constraints_file alveo-u250-norm.xdc
+set runs {
+    batch_norm_2d
+}
+# rms_norm_2d
+# group_norm_2d
+# set bitwidths {2 4 6 8 10 12 14 16}
+set bitwidths {8}
 
+# Verilog Dependencies
 read_verilog -sv {
     ../common/rtl/join2.sv
     ../common/rtl/split2.sv
@@ -26,34 +36,58 @@ read_verilog -sv {
     ../matmul/rtl/matrix_flatten.sv
     ../matmul/rtl/matrix_unflatten.sv
     ../norm/rtl/group_norm_2d.sv
+    ../norm/rtl/rms_norm_2d.sv
+    ../norm/rtl/channel_selection.sv
+    ../norm/rtl/batch_norm_2d.sv
 }
-# ../norm/rtl/rms_norm_2d.sv
-# ../norm/rtl/norm.sv
-# top.sv
 
-read_xdc alveo-u250-norm.xdc
+# Constraints file
+read_xdc $constraints_file
 
-update_compile_order
+# Vivado Synth/Impl loop
+foreach top_module $runs {
+    foreach width $bitwidths {
 
-# Synthesis
-set_msg_config -id "Synth 8-3332" -limit 10000
+        set_property top $top_module [current_fileset]
 
-synth_design -mode out_of_context -flatten_hierarchy rebuilt -top group_norm_2d -part xcu250-figd2104-2L-e -debug_log
+        set frac_width [expr {$width / 2}]
 
-write_checkpoint post_synth.dcp -force
+        if {$top_module == "rms_norm_2d"} {
+            synth_design -mode out_of_context -flatten_hierarchy rebuilt \
+                         -top $top_module -part $fpga_part \
+                         -generic IN_WIDTH=$width \
+                         -generic IN_FRAC_WIDTH=$frac_width \
+                         -generic SCALE_WIDTH=$width \
+                         -generic SCALE_FRAC_WIDTH=$frac_width \
+                         -generic OUT_WIDTH=$width \
+                         -generic OUT_FRAC_WIDTH=$frac_width
+        } else {
+            synth_design -mode out_of_context -flatten_hierarchy rebuilt \
+                         -top $top_module -part $fpga_part \
+                         -generic IN_WIDTH=$width \
+                         -generic IN_FRAC_WIDTH=$frac_width \
+                         -generic OUT_WIDTH=$width \
+                         -generic OUT_FRAC_WIDTH=$frac_width
+        }
 
-# Implementation
-opt_design
-place_design
-phys_opt_design
-route_design
+        write_checkpoint build/${top_module}/${width}bit/post_synth.dcp -force
 
-# Utilization report
-report_utilization -file utilization.rpt
+        # Implementation
+        opt_design
+        place_design
+        phys_opt_design
+        route_design
 
-# Timing report
-report_timing_summary -delay_type min_max -check_timing_verbose -max_paths 100 -nworst 10 -input_pins -routable_nets -file timing.rpt
+        # Utilization report
+        report_utilization -file build/${top_module}/${width}bit/utilization.rpt
 
-write_checkpoint post_route.dcp -force
+        # Timing report
+        report_timing_summary -delay_type min_max -check_timing_verbose \
+                            -max_paths 100 -nworst 10 -input_pins -routable_nets \
+                            -file build/${top_module}/${width}bit/timing.rpt
+
+        write_checkpoint build/${top_module}/${width}bit/post_route.dcp -force
+    }
+}
 
 exit
