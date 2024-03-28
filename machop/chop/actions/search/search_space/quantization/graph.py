@@ -111,6 +111,17 @@ class GraphSearchSpaceMixedPrecisionPTQ(SearchSpaceBase):
                             choices[n_name] = deepcopy(seed[n_op])
                         else:
                             choices[n_name] = deepcopy(seed["default"])
+            case "type_revised":
+                # iterate through all the quantizeable nodes in the graph
+                # if the node mase_op is in the seed, use the node seed search space
+                # else use the default search space for the node
+                for n_name, n_info in node_info.items():
+                    n_op = n_info["mase_op"]
+                    if n_op in QUANTIZEABLE_OP:
+                        if n_op in seed:
+                            choices[n_name] = deepcopy(seed[n_op])
+                        else:
+                            choices[n_name] = deepcopy(seed["default"])
             case _:
                 raise ValueError(
                     f"Unknown quantization by: {self.config['setup']['by']}"
