@@ -2,10 +2,10 @@
 
 module tb_tanh;
 
-    // Parameters
     parameter CLK_PERIOD = 10; // Clock period in ns
     parameter FILENAME = "output.txt";
-       // Define parameters for the module
+    
+    // Define parameters for the module
     parameter DATA_IN_0_PRECISION_0 = 16;
     parameter DATA_IN_0_PRECISION_1 = 8;
     parameter DATA_IN_0_TENSOR_SIZE_DIM_0 = 8;
@@ -18,22 +18,17 @@ module tb_tanh;
     parameter DATA_OUT_0_TENSOR_SIZE_DIM_1 = 1;
     parameter DATA_OUT_0_PARALLELISM_DIM_0 = 1;
     parameter DATA_OUT_0_PARALLELISM_DIM_1 = 1;
-    parameter SCALE_PRECISION_1 = 16;
-    parameter ALPHA_PRECISION_1 = 16;
-    parameter INPLACE = 0;
-                                                 ;    
-    
+                                                      
     // Inputs
     logic rst;
-    logic clk = 0;
+    logic clk = 1;
     logic [DATA_IN_0_PRECISION_0-1:0] data_in_0[DATA_IN_0_PARALLELISM_DIM_0*DATA_IN_0_PARALLELISM_DIM_1-1:0];
 
     // Outputs
-    logic exp_out;
-    logic data_in_0_valid = 1;
+    logic data_in_0_valid;
     logic data_in_0_ready;
     logic data_out_0_valid;
-    logic data_out_0_ready = 1;
+    logic data_out_0_ready;
     logic signed [DATA_OUT_0_PRECISION_0-1:0] data_out_0[DATA_OUT_0_PARALLELISM_DIM_0*DATA_OUT_0_PARALLELISM_DIM_1-1:0];
 
     // Instantiate the module
@@ -74,70 +69,48 @@ module tb_tanh;
         rst = 0;
     end
     
-initial begin
-// Open the output file
-   int file;
-   file = $fopen(FILENAME, "w");
+	int file; //for writing outputs to file
+    real i; //i iterates over multiple input values
+    assign file = $fopen(FILENAME, "w"); // Open the output file
+	initial begin
+	
+        //initial conditions	
+		data_in_0[0] = 0;
+		data_in_0_valid = 0;
+		data_out_0_ready = 0;
+		
+		//waiting for reset to become inactive
+		#30; 
            
-   // Loop to send input values and write output to file
-   for (real i = -4; i <= 4; i += 0.05) begin
-   // Apply the current input value
-   data_in_0[0] = i * (1 << DATA_IN_0_PRECISION_1);
+		// Loop to send input values
+		for (i = -4; i <= 4; i += 0.05) begin
+			// Apply the current input value
+			data_in_0[0] = i * (1 << DATA_IN_0_PRECISION_1);
+			data_in_0_valid = 1;
+			data_out_0_ready = 1;
               
-   // Wait for some time
-   #100;
-                
-   // Check if output is valid
-   if (data_out_0_valid) begin
-       // Write the output to the file
-       $fdisplay(file,"%f %f",i,$itor(data_out_0[0])/ (1 << DATA_OUT_0_PRECISION_1));
-       //$fdisplay(file, "Data Out 0: %s%d", (data_out_0[0] < 0) ? "-" : "", (data_out_0[0] < 0) ? -data_out_0[0] : data_out_0[0]);
-   end
-   end
+			// Wait for 1 clock cyle before sending next data
+			#10;
+			
+		end
+		
+		//input data transmission is over. Hence valid is made zero
+		data_in_0_valid = 0;
+		data_out_0_ready = 1;
        
-            // Close the output file
-            $fclose(file);
+        #1000;
+        // Close the output file
+        $fclose(file);
             
-            // Terminate the simulation
-            $finish;
-        end    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-
-    // Test stimulus
- /*   initial begin
-        // Apply some input values
-        data_in_0[0] = 16'hfd00; // Example input value
-        
-        // Wait for some time
-        #100;
-
-        // Check the output against expected values
-        //if (exp_out == expected_output) begin
-       //     $display("Test Passed!");
-       // end else begin
-       //     $display("Test Failed!");
-       // end
         // Terminate the simulation
         $finish;
-    end*/
-
+    end 
+    
+    //writing output data to file
+    always @(posedge clk) begin
+        if (data_out_0_valid) begin
+            $fdisplay(file,"%f",$itor(data_out_0[0])/ (1 << DATA_OUT_0_PRECISION_1));
+        end
+    end
+  
 endmodule

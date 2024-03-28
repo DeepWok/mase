@@ -76,6 +76,9 @@ MASE_MODULE_RELATED_FUNCS = [
     "relu",
     "selu",
     "tanh",
+    "gelu",
+    "softplus",
+    "softsign",
 ]
 
 MASE_MODULES = [
@@ -110,6 +113,9 @@ MASE_TYPE_MAP = {
     "relu": {"type": "module_related_func"},
     "selu": {"type": "module_related_func"},
     "tanh": {"type": "module_related_func"},
+    "gelu": {"type": "module_related_func"},
+    "softsign": {"type": "module_related_func"},
+    "softplus": {"type": "module_related_func"},
     "sub": {"type": "builtin_func"},
     "add": {"type": "builtin_func"},
     "size": {"type": "implicit_func"},

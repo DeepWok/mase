@@ -82,6 +82,42 @@ from .tanh import (
     TanhTernary,
 )
 
+from .gelu import (
+    GELUBlockFP,
+    GELUBlockMinifloat,
+    GELUInteger,
+    GELULog,
+    GELUBlockLog,
+    GELUMinifloatDenorm,
+    GELUMinifloatIEEE,
+    GELUBinary,
+    GELUTernary,
+)
+
+from .softsign import (
+    SoftsignBlockFP,
+    SoftsignBlockMinifloat,
+    SoftsignInteger,
+    SoftsignLog,
+    SoftsignBlockLog,
+    SoftsignMinifloatDenorm,
+    SoftsignMinifloatIEEE,
+    SoftsignBinary,
+    SoftsignTernary,
+)
+
+from .softplus import (
+    SoftplusBlockFP,
+    SoftplusBlockMinifloat,
+    SoftplusInteger,
+    SoftplusLog,
+    SoftplusBlockLog,
+    SoftplusMinifloatDenorm,
+    SoftplusMinifloatIEEE,
+    SoftplusBinary,
+    SoftplusTernary,
+)
+
 quantized_module_map = {
     "conv1d_block_minifloat": Conv1dBlockMinifloat,
     "conv1d_integer": Conv1dInteger,
@@ -150,5 +186,35 @@ quantized_module_map = {
     "tanh_minifloat_denorm": TanhMinifloatDenorm,
     "tanh_block_fp": TanhBlockFP,
     "tanh_binary": TanhBinary,
-    "tanh_ternary": TanhTernary
+    "tanh_ternary": TanhTernary,
+    "gelu_block_minifloat": GELUBlockMinifloat,
+    "gelu_integer": GELUInteger,
+    "gelu_fixed": GELUInteger,
+    "gelu_log": GELULog,
+    "gelu_block_log": GELUBlockLog,
+    "gelu_minifloat_ieee": GELUMinifloatIEEE,
+    "gelu_minifloat_denorm": GELUMinifloatDenorm,
+    "gelu_block_fp": GELUBlockFP,
+    "gelu_binary": GELUBinary,
+    "gelu_ternary": GELUTernary,
+    "softsign_block_minifloat": SoftsignBlockMinifloat,
+    "softsign_integer": SoftsignInteger,
+    "softsign_fixed": SoftsignInteger,
+    "softsign_log": SoftsignLog,
+    "softsign_block_log": SoftsignBlockLog,
+    "softsign_minifloat_ieee": SoftsignMinifloatIEEE,
+    "softsign_minifloat_denorm": SoftsignMinifloatDenorm,
+    "softsign_block_fp": SoftsignBlockFP,
+    "softsign_binary": SoftsignBinary,
+    "softsign_ternary": SoftsignTernary,
+    "softplus_block_minifloat": SoftplusBlockMinifloat,
+    "softplus_integer": SoftplusInteger,
+    "softplus_fixed": SoftplusInteger,
+    "softplus_log": SoftplusLog,
+    "softplus_block_log": SoftplusBlockLog,
+    "softplus_minifloat_ieee": SoftplusMinifloatIEEE,
+    "softplus_minifloat_denorm": SoftplusMinifloatDenorm,
+    "softplus_block_fp": SoftplusBlockFP,
+    "softplus_binary": SoftplusBinary,
+    "softplus_ternary": SoftplusTernary
 }
