@@ -16,6 +16,9 @@ from torch.autograd import Variable
 import onnx
 import time
 
+import pycuda.driver as cuda
+import pycuda.autoinit 
+
 logger = logging.getLogger(__name__)
 
 
@@ -198,23 +201,23 @@ def test_quantize_tensorrt_transform_pass(dataloader, engineFile):
     logger = trt.Logger(trt.Logger.ERROR)
     with open(engineFile, "rb") as f:
         engine = trt.Runtime(logger).deserialize_cuda_engine(f.read())
-    #     print("engine.__len__() = %d" % len(engine))
-    #     print("engine.__sizeof__() = %d" % engine.__sizeof__())
-    #     print("engine.__str__() = %s" % engine.__str__())
+        print("engine.__len__() = %d" % len(engine))
+        print("engine.__sizeof__() = %d" % engine.__sizeof__())
+        print("engine.__str__() = %s" % engine.__str__())
 
-    #     print("\nEngine related ========================================================")
+        print("\nEngine related ========================================================")
     
-    # inspector = engine.create_engine_inspector()
-    # print("inspector.execution_context=", inspector.execution_context)
-    # print("inspector.error_recorder=", inspector.error_recorder)  # ErrorRecorder can be set into EngineInspector, usage of ErrorRecorder refer to 02-API/ErrorRecorder
+    inspector = engine.create_engine_inspector()
+    print("inspector.execution_context=", inspector.execution_context)
+    print("inspector.error_recorder=", inspector.error_recorder)  # ErrorRecorder can be set into EngineInspector, usage of ErrorRecorder refer to 02-API/ErrorRecorder
 
-    # print("Engine information:")  # engine information is equivalent to put all layer information together
-    # print(inspector.get_engine_information(trt.LayerInformationFormat.ONELINE))  # .txt format
-    # #print(inspector.get_engine_information(trt.LayerInformationFormat.JSON))  # .json format
+    print("Engine information:")  # engine information is equivalent to put all layer information together
+    print(inspector.get_engine_information(trt.LayerInformationFormat.ONELINE))  # .txt format
+    # print(inspector.get_engine_information(trt.LayerInformationFormat.JSON))  # .json format
 
-    # print("Layer information:")
-    # for i in range(engine.num_layers):
-    #     print(inspector.get_layer_information(i, trt.LayerInformationFormat.ONELINE))
+    print("Layer information:")
+    for i in range(engine.num_layers):
+        print(inspector.get_layer_information(i, trt.LayerInformationFormat.ONELINE))
     
     nIO = engine.num_io_tensors
     lTensorName = [engine.get_tensor_name(i) for i in range(nIO)]
@@ -246,9 +249,16 @@ def test_quantize_tensorrt_transform_pass(dataloader, engineFile):
         for i in range(nIO):
             context.set_tensor_address(lTensorName[i], int(bufferD[i]))
 
-        start_time = time.time()
+        # start_time = time.time()
+        start_event = cuda.Event()
+        end_event = cuda.Event()
+        start_event.record()
         context.execute_async_v3(0)
-        execute_time.append(time.time() - start_time)
+        # execute_time.append(time.time() - start_time)
+        
+        end_event.record() 
+        end_event.synchronize()
+        execute_time.append(start_event.time_till(end_event))
     
         for i in range(nInput, nIO):
             cudart.cudaMemcpy(bufferH[i].ctypes.data, bufferD[i], bufferH[i].nbytes, cudart.cudaMemcpyKind.cudaMemcpyDeviceToHost)

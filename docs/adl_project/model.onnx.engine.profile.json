@@ -1,0 +1,17 @@
+[
+  { "count" : 8944 }
+, { "name" : "/feature_layers.0/Conv + /feature_layers.2/Relu", "timeMs" : 85.4034, "averageMs" : 0.00954868, "medianMs" : 0.009216, "percentage" : 2.94338 }
+, { "name" : "/feature_layers.3/Conv + /feature_layers.5/Relu", "timeMs" : 254.131, "averageMs" : 0.0284135, "medianMs" : 0.028192, "percentage" : 8.75846 }
+, { "name" : "/feature_layers.6/MaxPool", "timeMs" : 33.8409, "averageMs" : 0.00378364, "medianMs" : 0.003776, "percentage" : 1.16631 }
+, { "name" : "/feature_layers.7/Conv + /feature_layers.9/Relu", "timeMs" : 204.861, "averageMs" : 0.0229049, "medianMs" : 0.022528, "percentage" : 7.06042 }
+, { "name" : "/feature_layers.10/Conv + /feature_layers.12/Relu", "timeMs" : 359.037, "averageMs" : 0.0401428, "medianMs" : 0.039936, "percentage" : 12.374 }
+, { "name" : "/feature_layers.13/MaxPool", "timeMs" : 34.1934, "averageMs" : 0.00382306, "medianMs" : 0.004064, "percentage" : 1.17846 }
+, { "name" : "/feature_layers.14/Conv + /feature_layers.16/Relu", "timeMs" : 355.532, "averageMs" : 0.0397508, "medianMs" : 0.039872, "percentage" : 12.2532 }
+, { "name" : "/feature_layers.17/Conv + /feature_layers.19/Relu", "timeMs" : 629.454, "averageMs" : 0.0703772, "medianMs" : 0.070432, "percentage" : 21.6937 }
+, { "name" : "/feature_layers.20/MaxPool", "timeMs" : 34.1075, "averageMs" : 0.00381345, "medianMs" : 0.004064, "percentage" : 1.1755 }
+, { "name" : "/Reshape + reshape_before_/classifier.0/Gemm", "timeMs" : 0, "averageMs" : 0, "medianMs" : 0, "percentage" : 0 }
+, { "name" : "/classifier.0/Gemm + /classifier.1/Relu", "timeMs" : 740.183, "averageMs" : 0.0827575, "medianMs" : 0.082944, "percentage" : 25.51 }
+, { "name" : "/classifier.2/Gemm + /classifier.3/Relu", "timeMs" : 127.464, "averageMs" : 0.0142514, "medianMs" : 0.014336, "percentage" : 4.39297 }
+, { "name" : "/last_layer/Gemm", "timeMs" : 43.339, "averageMs" : 0.00484559, "medianMs" : 0.00512, "percentage" : 1.49365 }
+, { "name" : "reshape_after_/last_layer/Gemm", "timeMs" : 0, "averageMs" : 0, "medianMs" : 0, "percentage" : 0 }
+]

@@ -1,0 +1,41 @@
+Metadata-Version: 2.1
+Name: pytorch-quantization
+Version: 2.2.1
+Summary: A fake package to warn the user they are not installing the correct package.
+Home-page: https://github.com/NVIDIA
+Download-URL: https://github.com/NVIDIA
+Author: Kitmaker
+Author-email: kitmaker@nvidia.com
+Maintainer: Kitmaker
+Maintainer-email: kitmaker@nvidia.com
+License: Apache2
+Keywords: nvidia,deep learning,machine learning,supervised learning,unsupervised learning,reinforcement learning,logging
+Platform: Linux
+Classifier: Development Status :: 3 - Alpha
+Classifier: Intended Audience :: Developers
+Classifier: Intended Audience :: Science/Research
+Classifier: Intended Audience :: Information Technology
+Classifier: Topic :: Scientific/Engineering
+Classifier: Topic :: Scientific/Engineering :: Image Recognition
+Classifier: Topic :: Scientific/Engineering :: Artificial Intelligence
+Classifier: Topic :: Software Development :: Libraries
+Classifier: Topic :: Utilities
+Classifier: License :: OSI Approved :: Apache Software License
+Classifier: Programming Language :: Python :: 3.5
+Classifier: Programming Language :: Python :: 3.6
+Classifier: Programming Language :: Python :: 3.7
+Classifier: Programming Language :: Python :: 3.8
+Classifier: Environment :: Console
+Classifier: Natural Language :: English
+Classifier: Operating System :: OS Independent
+License-File: LICENSE.md
+
+PYTORCH-QUANTIZATION
+====================
+
+**WARNING:** This project is not functional and is a placeholder from NVIDIA.
+To install, please execute the following:
+
+.. code-block:: bash
+
+    pip install --no-cache-dir --extra-index-url https://pypi.nvidia.com pytorch-quantization

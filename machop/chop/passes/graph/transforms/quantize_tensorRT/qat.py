@@ -233,6 +233,7 @@ def build_trt_engine_from_onnx(onnxFile, engineFile, dataloader):
     inputTensor = network.get_input(0)
     profile.set_shape(inputTensor.name, (1,) + inputTensor.shape[1:], (8,) + inputTensor.shape[1:], (32,) + inputTensor.shape[1:])
     config.add_optimization_profile(profile)
+    config.set_flag(trt.BuilderFlag.INT8)
 
     engineString = builder.build_serialized_network(network, config)
     if engineString == None:
@@ -243,6 +244,23 @@ def build_trt_engine_from_onnx(onnxFile, engineFile, dataloader):
         f.write(engineString)
 
     engine = trt.Runtime(logger).deserialize_cuda_engine(engineString)
+    print("engine.__len__() = %d" % len(engine))
+    print("engine.__sizeof__() = %d" % engine.__sizeof__())
+    print("engine.__str__() = %s" % engine.__str__())
+
+    print("\nEngine related ========================================================")
+    
+    inspector = engine.create_engine_inspector()
+    print("inspector.execution_context=", inspector.execution_context)
+    print("inspector.error_recorder=", inspector.error_recorder)  # ErrorRecorder can be set into EngineInspector, usage of ErrorRecorder refer to 02-API/ErrorRecorder
+
+    print("Engine information:")  # engine information is equivalent to put all layer information together
+    print(inspector.get_engine_information(trt.LayerInformationFormat.ONELINE))  # .txt format
+    #print(inspector.get_engine_information(trt.LayerInformationFormat.JSON))  # .json format
+
+    print("Layer information:")
+    for i in range(engine.num_layers):
+        print(inspector.get_layer_information(i, trt.LayerInformationFormat.ONELINE))
 
     nIO = engine.num_io_tensors
     lTensorName = [engine.get_tensor_name(i) for i in range(nIO)]
@@ -260,6 +278,7 @@ def build_trt_engine_from_onnx(onnxFile, engineFile, dataloader):
     execute_time = []
     accuracy = []
     for data, label in dataloader():
+        start_time = time.time()
         bufferH = []
         bufferH.append(np.ascontiguousarray(data))
         for i in range(nInput, nIO):
@@ -274,7 +293,6 @@ def build_trt_engine_from_onnx(onnxFile, engineFile, dataloader):
         for i in range(nIO):
             context.set_tensor_address(lTensorName[i], int(bufferD[i]))
 
-        start_time = time.time()
         context.execute_async_v3(0)
         execute_time.append(time.time() - start_time)
     
@@ -310,20 +328,24 @@ def evaluate_fake_quantize_pass(graph, pass_args=None):
     graph.model.to(device)
     val_loader = pass_args["data_module"].test_dataloader()
 
-    with torch.no_grad():
-        acc = 0
-        n = 0
-        execute_time = []
-        for data, target in val_loader:
-            data, target = data.to(device), target.to(device)
-            start_time = time.time()
-            output = graph.model(data)
-            execute_time.append(time.time() - start_time)
-            acc += (output.argmax(dim=1) == target).sum().item()
-            n += data.size(0)
-        acc /= n
-        print("Average execute time for one batch: %.2fms" % (sum(execute_time) / len(execute_time) * 1000))
-        print("Total accuracy: %.2f%%" % (acc * 100))
+    graph.model.eval()
+    accuracy = []
+    execute_time = []
+    for data, target in val_loader:
+        data, target = data.to(device), target.to(device)
+        start_time = time.time()
+        output = graph.model(data)
+        execute_time.append(time.time() - start_time)
+
+        categories = np.argmax(output.cpu().detach().numpy(), axis=1)
+        # print(categories, label)
+        target = target.cpu().detach().numpy()
+        acc = np.sum(categories == np.array(target)) / len(target)
+        # print("Accuracy: %.2f%%" % (acc * 100))
+        accuracy.append(acc)
+
+    print("Average execute time for one batch: %.2fms" % (sum(execute_time) / len(execute_time) * 1000))
+    print("Total accuracy: %.2f%%" % (sum(accuracy) / len(accuracy) * 100))
 
     return graph
 
