@@ -53,16 +53,16 @@ MaseGraph Analysis Passes
     - Perform runtime analysis on the given graph (MaseGraph, TensorRT, ONNX models)
 
 .. toctree::
-	  :maxdepth: 2
+        :maxdepth: 2
 
-	  analysis/add_metadata
-	  analysis/init_metadata
-	  analysis/report
-	  analysis/statistical_profiler
-	  analysis/verify
-	  analysis/quantization
-	  analysis/pruning
-    analysis/runtime
+        analysis/add_metadata
+        analysis/init_metadata
+        analysis/report
+        analysis/statistical_profiler
+        analysis/verify
+        analysis/quantization
+        analysis/pruning
+        analysis/runtime
 
 
 MaseGraph Transform Passes
@@ -107,13 +107,13 @@ MaseGraph Transform Passes
 
 
 .. toctree::
-	  :maxdepth: 2
+      :maxdepth: 2
 
-	  transform/pruning
-	  transform/quantize
-	  transform/verilog
-	  transform/utils
-    transform/tensorrt
+      transform/pruning
+      transform/quantize
+      transform/verilog
+      transform/utils
+      transform/tensorrt
 
 
 MaseGraph Interface Passes
@@ -139,9 +139,9 @@ MaseGraph Interface Passes
     - Converts the given graph to a ONNXRuntime model
 
 .. toctree::
-	  :maxdepth: 2
+        :maxdepth: 2
 
-	  interface/save_and_load
-    interface/tensorrt
-    interface/onnxrt
+        interface/save_and_load
+        interface/tensorrt
+        interface/onnxrt
 
