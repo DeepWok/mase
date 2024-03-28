@@ -17,11 +17,11 @@ chop.actions.test
    :undoc-members:
    :show-inheritance:
 
-.. chop.actions.search 
-.. ---------------------------------
+chop.actions.search 
+---------------------------------
 
-.. .. automodule:: chop.actions.search.search
-..    :members:
-..    :undoc-members:
-..    :show-inheritance:
+.. automodule:: chop.actions.search.search
+   :members:
+   :undoc-members:
+   :show-inheritance:
 
