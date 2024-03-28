@@ -1,8 +1,8 @@
 ##########################
 #basics
 ##########################
-model = "resnet18"
-dataset = "mnist"
+model = "vgg7"
+dataset = "cifar10"
 task = "cls"
 
 batch_size = 512
