@@ -6,7 +6,7 @@ task = "cls"
 max_epochs = 5512
 batch_size = 512
 learning_rate = 1e-3
-accelerator = "cpu"
+accelerator = "gpu"
 project = "vgg7"
 seed = 42
 log_every_n_steps = 5
@@ -68,15 +68,15 @@ num_samples = 512
 compare_to = 32 # compare to FP32
 
 [search.strategy.setup]
-algorithm = 'a2c'
-device = 'cpu'
+algorithm = 'a2c' # 'ppo'
+device = 'cuda' # 'cpu'
 env = 'mixed_precision'
-total_timesteps = 100#32000
-save_name = 'cpu-100'
-mode='load'
+total_timesteps = 3000#32000
+save_name = 'test'
+mode='load'  # 'train', "continue-training"
 load_path='/home/super_monkey/PycharmProjects/mase_aux/logs/Best_Model/rl_model_3000_steps.zip'
 # load_path='/home/super_monkey/PycharmProjects/mase_aux/mase_output/gpu-100/gpu-100.zip'
-#load_path='/home/super_monkey/PycharmProjects/mase_aux/mase_output/cpu-100/cpu-100.zip'
+# load_path='/home/super_monkey/PycharmProjects/mase_aux/mase_output/cpu-100/cpu-100.zip'
 model_parallel = false
 runner_style = "lm"
 

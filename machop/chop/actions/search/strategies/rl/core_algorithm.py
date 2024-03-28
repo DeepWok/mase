@@ -28,7 +28,7 @@ class StrategyRL(SearchStrategyBase):
         self.total_timesteps = setup["total_timesteps"]
         # self.save_name = "./mase_output/"+setup["save_name"]+'/'+setup["save_name"]
         self.save_name = (
-            "./mase_output/" + setup["save_name"] + "/" + setup["save_name"]
+                "./mase_output/" + setup["save_name"] + "/" + setup["save_name"]
         )
         self.env_name = setup["env"]
         self.env = env_map[self.env_name]
@@ -57,7 +57,8 @@ class StrategyRL(SearchStrategyBase):
                 "sum_scaled_metrics": self.sum_scaled_metrics,
                 "data_module": self.data_module,
                 "metrics": self.metrics,
-            }
+            },
+            verbose=0
         )
         checkpoint_callback = CheckpointCallback(save_freq=1000, save_path="./logs/")
         eval_callback = EvalCallback(
@@ -94,7 +95,6 @@ class StrategyRL(SearchStrategyBase):
             for _ in range(1):
                 action, _state = model.predict(obs, deterministic=True)
                 obs, reward, done, info = vec_env.step(action)
-                print(obs["reward"])
             return obs["reward"], obs, model
         elif self.mode == "continue-training":
             logger.info("Continue training")
@@ -108,9 +108,9 @@ class StrategyRL(SearchStrategyBase):
                 callback=callback,
             )
             obs = vec_env.reset()
-            for _ in range(1000):
+            for _ in range(1):
                 action, _state = model.predict(obs, deterministic=True)
-                print(action)
+                logger.info(action)
                 obs, reward, done, info = vec_env.step(action)
                 print(obs["reward"])
             return obs["reward"], obs, model
