@@ -18,13 +18,23 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v2
 
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.x'  # Specify the Python version you need
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install black
+
       - name: Run Black to format Python files
         if: ${{ always() }}
         run: |
           # Navigate to the directory containing Python files
-    
+          #cd mase/machop  # Adjust the path accordingly
 
           # Find all Python files recursively and format them with Black
-          find . -type f -name "*.py" -exec python3 -m black --quiet {} \;
+          find . -type f -name "*.py" -exec python -m black --quiet {} \;
 
           echo "Python files formatted successfully"
