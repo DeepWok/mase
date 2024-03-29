@@ -153,7 +153,7 @@ class StrategyRL(SearchStrategyBase):
 
             model.learn(
                 total_timesteps=int(self.total_timesteps),
-                progress_bar=True,
+                # progress_bar=True,
                 callback=callback,
             )
 
