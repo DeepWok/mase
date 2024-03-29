@@ -1,20 +1,13 @@
 #!/usr/bin/env python3
 
-# This script tests the fixed point adder tree layer
+# This script tests the fixed_comparator_tree_layer
 import random, os
 
-# Manually add mase_cocotb to system path
-import sys, os
-
-try:
-    p = os.getenv("MASE_RTL")
-    assert p != None
-except:
-    p = os.getenv("mase_rtl")
-    assert p != None
-p = os.path.join(p, "../")
+# Manually add user-specific mase_cocotb path
+# this should be ignored on the standard mase-docker env
+p = "/home/ic/MYWORKSPACE/Mase-DeepWok/machop"
 sys.path.append(p)
-##################################
+##################################################
 
 import cocotb
 from cocotb.triggers import Timer

@@ -1,18 +1,15 @@
 #!/usr/bin/env python3
 
-# This script tests the fixed point linear
+# This script tests the quantized_matmul module
 import os, math, logging
 import sys
 
-try:
-    p = os.getenv("MASE_RTL")
-    assert p != None
-except:
-    p = os.getenv("mase_rtl")
-    assert p != None
-p = os.path.join(p, "../")
+# Manually add user-specific mase_cocotb path
+# this should be ignored on the standard mase-docker env
+p = "/home/ic/MYWORKSPACE/Mase-DeepWok/machop"
 sys.path.append(p)
 ###############################################
+
 from mase_cocotb.random_test import *
 from mase_cocotb.runner import mase_runner
 
