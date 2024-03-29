@@ -28,13 +28,29 @@ jobs:
           python -m pip install --upgrade pip
           pip install black
 
+      - name: List Python files before formatting
+        run: |
+          cd mase/machop  # Adjust the path accordingly
+          find . -type f -name "*.py" > before.txt
+          cat before.txt
+
       - name: Run Black to format Python files
         if: ${{ always() }}
         run: |
-          # Navigate to the directory containing Python files
-          #cd mase/machop  # Adjust the path accordingly
-
-          # Find all Python files recursively and format them with Black
+          cd mase/machop  # Adjust the path accordingly
           find . -type f -name "*.py" -exec python -m black --quiet {} \;
 
-          echo "Python files formatted successfully"
+      - name: List Python files after formatting
+        run: |
+          cd mase/machop  # Adjust the path accordingly
+          find . -type f -name "*.py" > after.txt
+          cat after.txt
+
+      - name: Print changed files
+        run: |
+          diff before.txt after.txt | grep "^> " | cut -c 3-
+
+      - name: Cleanup
+        run: |
+          rm before.txt after.txt
+
