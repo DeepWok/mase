@@ -3,6 +3,8 @@
 #    This is a script to test command line interfaces
 # --------------------------------------------------------------------
 
+alias python=python3
+
 set -o errexit
 set -o pipefail
 set -o nounset
