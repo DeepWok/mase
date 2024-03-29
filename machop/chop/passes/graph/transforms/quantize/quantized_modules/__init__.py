@@ -216,5 +216,5 @@ quantized_module_map = {
     "softplus_minifloat_denorm": SoftplusMinifloatDenorm,
     "softplus_block_fp": SoftplusBlockFP,
     "softplus_binary": SoftplusBinary,
-    "softplus_ternary": SoftplusTernary
+    "softplus_ternary": SoftplusTernary,
 }

@@ -27,12 +27,13 @@ import torch.nn as nn
 
 # TO DO: remove
 import os
+
 os.environ["PATH"] = "/opt/homebrew/bin:" + os.environ["PATH"]
 
 import subprocess
 
 # Example command to invoke Verilator
-verilator_cmd = ['verilator', '--version']
+verilator_cmd = ["verilator", "--version"]
 
 # Execute the command and capture output
 try:
@@ -40,6 +41,7 @@ try:
     print("Verilator output:", output)
 except subprocess.CalledProcessError as e:
     print("Error running Verilator command:", e)
+
 
 class MLP(torch.nn.Module):
     """
@@ -55,6 +57,7 @@ class MLP(torch.nn.Module):
         x = torch.nn.functional.gelu(self.fc1(x))
         return x
 
+
 mlp = MLP()
 mg = MaseGraph(model=mlp)
 
@@ -66,7 +69,7 @@ dummy_in = {"x": x}
 mg, _ = init_metadata_analysis_pass(mg, None)
 mg, _ = add_common_metadata_analysis_pass(
     mg, {"dummy_in": dummy_in, "add_value": False}
-)        
+)
 
 config_file = os.path.join(
     os.path.abspath(""),
@@ -92,7 +95,7 @@ for node in mg.fx_graph.nodes:
             result_info["type"] = "fixed"
             result_info["precision"] = [8, 3]
 
-mg, _ = add_hardware_metadata_analysis_pass(mg, None)            
+mg, _ = add_hardware_metadata_analysis_pass(mg, None)
 
 mg, _ = emit_verilog_top_transform_pass(mg)
 mg, _ = emit_internal_rtl_transform_pass(mg)

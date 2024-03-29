@@ -300,4 +300,3 @@ class SoftsignTernary(_SoftsignBase):
         #     mean=x_mean,
         # )
         self.config = config
-

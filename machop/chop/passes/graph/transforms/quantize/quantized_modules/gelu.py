@@ -300,4 +300,3 @@ class GELUTernary(_GELUBase):
         #     mean=x_mean,
         # )
         self.config = config
-
