@@ -1,8 +1,8 @@
-# Welcome To the TensorRT Quantization Tutorial!
+# TensorRT Quantization Tutorial
 
-This notebook is designed to show the features of the TensorRT passes integrated into MASE as part of the MASERT framework.
+This notebook is designed to show the features of the TensorRT passes integrated into MASE as part of the MASERT framework. The following demonstrations were run on a NVIDIA RTX A2000 GPU with a Intel(R) Xeon(R) CPU E5-2690 v4 @ 2.60GHz CPU.
 
-## Section 1. int8 Quantization
+## Section 1. INT8 Quantization
 Firstly, we will show you how to do a int8 quantization of a simple model, `jsc-toy`, and compare the quantized model to the original model using the `Machop API`. The quantization process is split into the following stages, each using their own individual pass, and are explained in depth at each subsection:
 
 1. [Fake quantization](#section-11-fake-quantization): `tensorrt_fake_quantize_transform_pass`
@@ -55,27 +55,23 @@ from chop.passes.graph import (
 set_logging_verbosity("info")
 ```
 
-    /root/anaconda3/envs/mase/lib/python3.11/site-packages/tqdm/auto.py:21: TqdmWarning: IProgress not found. Please update jupyter and ipywidgets. See https://ipywidgets.readthedocs.io/en/stable/user_install.html
-      from .autonotebook import tqdm as notebook_tqdm
-
-
-    [2024-03-27 23:37:25,708] [INFO] [real_accelerator.py:191:get_accelerator] Setting ds_accelerator to cuda (auto detect)
+    [2024-03-29 12:52:18,275] [INFO] [real_accelerator.py:191:get_accelerator] Setting ds_accelerator to cuda (auto detect)
 
 
     [32mINFO    [0m [34mSet logging level to info[0m
     WARNING: Logging before flag parsing goes to stderr.
-    I0327 23:37:27.921741 139859781453632 logger.py:44] Set logging level to info
+    I0329 12:52:20.742465 139924298352448 logger.py:44] Set logging level to info
 
 
-Next, we load in the toml file used for quantization. To view the configuration, click [here](../../machop/configs/tensorrt/jsc_toy_int8_quantization_by_type.toml), or read the documentation on Mase [here]().
+Next, we load in the toml file used for quantization. To view the configuration, click [here](../../../machop/configs/tensorrt/jsc_toy_INT8_quantization_by_type.toml).
 
 
 ```python
 # Path to your TOML file
-toml_file_path = '../../../machop/configs/tensorrt/jsc_toy_int8_quantization_by_type.toml'
+JSC_TOML_PATH = '../../../machop/configs/tensorrt/jsc_toy_INT8_quantization_by_type.toml'
 
 # Reading TOML file and converting it into a Python dictionary
-with open(toml_file_path, 'r') as toml_file:
+with open(JSC_TOML_PATH, 'r') as toml_file:
     pass_args = toml.load(toml_file)
 
 # Extract the 'passes.tensorrt' section and its children
@@ -109,6 +105,7 @@ data_module.setup()
 configs = [tensorrt_config, runtime_analysis_config]
 for config in configs:
     config['task'] = pass_args['task']
+    config['dataset'] = pass_args['dataset']
     config['batch_size'] = pass_args['batch_size']
     config['model'] = pass_args['model']
     config['data_module'] = data_module
@@ -140,98 +137,15 @@ Next, we train the `jsc-toy` model using the machop `train` action with the conf
 
 
 ```python
-!ch train --config ../../../machop/configs/tensorrt/jsc_toy_int8_quantization_by_type.toml
+!ch train --config {JSC_TOML_PATH}
 ```
-
-    [2024-03-18 11:44:36,191] [INFO] [real_accelerator.py:191:get_accelerator] Setting ds_accelerator to cuda (auto detect)
-    INFO: Seed set to 0
-    WARNING: Logging before flag parsing goes to stderr.
-    I0318 11:44:37.795595 139634499045184 seed.py:54] Seed set to 0
-    +-------------------------+------------------------+--------------+-----------------+------------------------+
-    | Name                    |        Default         | Config. File | Manual Override |       Effective        |
-    +-------------------------+------------------------+--------------+-----------------+------------------------+
-    | task                    |     [38;5;8mclassification[0m     |     cls      |                 |          cls           |
-    | load_name               |          None          |              |                 |          None          |
-    | load_type               |           mz           |              |                 |           mz           |
-    | batch_size              |          [38;5;8m128[0m           |     256      |                 |          256           |
-    | to_debug                |         False          |              |                 |         False          |
-    | log_level               |          info          |              |                 |          info          |
-    | report_to               |      tensorboard       |              |                 |      tensorboard       |
-    | seed                    |           0            |              |                 |           0            |
-    | quant_config            |          None          |              |                 |          None          |
-    | training_optimizer      |          adam          |              |                 |          adam          |
-    | trainer_precision       |        16-mixed        |              |                 |        16-mixed        |
-    | learning_rate           |         [38;5;8m1e-05[0m          |    0.001     |                 |         0.001          |
-    | weight_decay            |           0            |              |                 |           0            |
-    | max_epochs              |           [38;5;8m20[0m           |      10      |                 |           10           |
-    | max_steps               |           -1           |              |                 |           -1           |
-    | accumulate_grad_batches |           1            |              |                 |           1            |
-    | log_every_n_steps       |           50           |              |                 |           50           |
-    | num_workers             |           32           |              |                 |           32           |
-    | num_devices             |           1            |              |                 |           1            |
-    | num_nodes               |           1            |              |                 |           1            |
-    | accelerator             |          [38;5;8mauto[0m          |     gpu      |                 |          gpu           |
-    | strategy                |          auto          |              |                 |          auto          |
-    | is_to_auto_requeue      |         False          |              |                 |         False          |
-    | github_ci               |         False          |              |                 |         False          |
-    | disable_dataset_cache   |         False          |              |                 |         False          |
-    | target                  |  xcu250-figd2104-2L-e  |              |                 |  xcu250-figd2104-2L-e  |
-    | num_targets             |          100           |              |                 |          100           |
-    | is_pretrained           |         False          |              |                 |         False          |
-    | max_token_len           |          512           |              |                 |          512           |
-    | project_dir             | /root/mase/mase_output |              |                 | /root/mase/mase_output |
-    | project                 |          None          |              |                 |          None          |
-    | model                   |          [38;5;8mNone[0m          |   jsc-toy    |                 |        jsc-toy         |
-    | dataset                 |          [38;5;8mNone[0m          |     jsc      |                 |          jsc           |
-    | t_max                   |           20           |              |                 |           20           |
-    | eta_min                 |         1e-06          |              |                 |         1e-06          |
-    +-------------------------+------------------------+--------------+-----------------+------------------------+
-    [32mINFO    [0m [34mInitialising model 'jsc-toy'...[0m
-    I0318 11:44:37.804295 139634499045184 cli.py:841] Initialising model 'jsc-toy'...
-    [32mINFO    [0m [34mInitialising dataset 'jsc'...[0m
-    I0318 11:44:37.828583 139634499045184 cli.py:869] Initialising dataset 'jsc'...
-    [32mINFO    [0m [34mProject will be created at /root/mase/mase_output/jsc-toy_cls_jsc_2024-03-18[0m
-    I0318 11:44:37.829264 139634499045184 cli.py:905] Project will be created at /root/mase/mase_output/jsc-toy_cls_jsc_2024-03-18
-    [32mINFO    [0m [34mTraining model 'jsc-toy'...[0m
-    I0318 11:44:37.862516 139634499045184 cli.py:276] Training model 'jsc-toy'...
-    [32mINFO    [0m [34m##### WEIGHT DECAY ##### 0[0m
-    I0318 11:44:37.863071 139634499045184 cli.py:320] ##### WEIGHT DECAY ##### 0
-    INFO: Using 16bit Automatic Mixed Precision (AMP)
-    I0318 11:44:37.943161 139634499045184 rank_zero.py:64] Using 16bit Automatic Mixed Precision (AMP)
-    INFO: GPU available: True (cuda), used: True
-    I0318 11:44:37.951574 139634499045184 rank_zero.py:64] GPU available: True (cuda), used: True
-    INFO: TPU available: False, using: 0 TPU cores
-    I0318 11:44:37.965183 139634499045184 rank_zero.py:64] TPU available: False, using: 0 TPU cores
-    INFO: IPU available: False, using: 0 IPUs
-    I0318 11:44:37.965238 139634499045184 rank_zero.py:64] IPU available: False, using: 0 IPUs
-    INFO: HPU available: False, using: 0 HPUs
-    I0318 11:44:37.965278 139634499045184 rank_zero.py:64] HPU available: False, using: 0 HPUs
-    I0318 11:44:40.324936 139634499045184 cuda.py:61] LOCAL_RANK: 0 - CUDA_VISIBLE_DEVICES: [0]
-    I0318 11:44:40.413176 139634499045184 model_summary.py:94] 
-      | Name      | Type               | Params
-    -------------------------------------------------
-    0 | model     | JSC_Toy            | 327   
-    1 | loss_fn   | CrossEntropyLoss   | 0     
-    2 | acc_train | MulticlassAccuracy | 0     
-    3 | loss_val  | MeanMetric         | 0     
-    4 | loss_test | MeanMetric         | 0     
-    -------------------------------------------------
-    327       Trainable params
-    0         Non-trainable params
-    327       Total params
-    0.001     Total estimated model params size (MB)
-    Epoch 0: 100%|█| 3084/3084 [00:21<00:00, 140.80it/s, v_num=0, train_acc_step=0.7
-    Validation: |                                             | 0/? [00:00<?, ?it/s][A
-    Validation:   0%|                                      | 0/3084 [00:00<?, ?it/s][A
-    Validation DataLoader 0:   0%|                         | 0/3084 [00:00<?, ?it/s][A
-    Validation DataLoader 0:   0%|                 | 1/3084 [00:00<04:57, 10.37it/s][A
 
 Then we load in the checkpoint. You will have to adjust this according to where it has been stored in the mase_output directory.
 
 
 ```python
 # Load in the trained checkpoint - change this accordingly
-JSC_CHECKPOINT_PATH = "../../../mase_output/jsc-toy-cls_jsc/best.ckpt"
+JSC_CHECKPOINT_PATH = "../../../mase_output/jsc-toy_cls_jsc-pre-trained/best.ckpt"
 
 model = load_model(load_name=JSC_CHECKPOINT_PATH, load_type="pl", model=model)
 
@@ -247,15 +161,15 @@ mg, _ = metadata_value_type_cast_transform_pass(mg, pass_args={"fn": to_numpy_if
 mg_original = deepcopy_mase_graph(mg)
 ```
 
-    [32mINFO    [0m [34mLoaded pytorch lightning checkpoint from ../../../mase_output/jsc-toy-cls_jsc/best.ckpt[0m
-    I0318 13:22:01.808165 139755614467904 checkpoint_load.py:85] Loaded pytorch lightning checkpoint from ../../../mase_output/jsc-toy-cls_jsc/best.ckpt
+    [32mINFO    [0m [34mLoaded pytorch lightning checkpoint from ../../../mase_output/jsc-toy_cls_jsc-pre-trained/best.ckpt[0m
+    I0329 12:52:38.088409 139924298352448 checkpoint_load.py:85] Loaded pytorch lightning checkpoint from ../../../mase_output/jsc-toy_cls_jsc-pre-trained/best.ckpt
 
 
 ### Section 1.1 Fake Quantization
 
 Firstly, we fake quantize the module in order to perform calibration and fine tuning before actually quantizing - this is only used if we have int8 calibration as other precisions are not currently supported within [pytorch-quantization](https://docs.nvidia.com/deeplearning/tensorrt/pytorch-quantization-toolkit/docs/index.html#) library.
 
-This is acheived through the `tensorrt_fake_quantize_transform_pass` which goes through the model, either by type or by name, replaces each layer appropriately to a fake quantized form if the `quantize` parameter is set in the default config (`passes.tensorrt_quantize.default.config`) or on a per name or type basis. 
+This is acheived through the `tensorrt_fake_quantize_transform_pass` which goes through the model, either by type or by name, replaces each layer appropriately to a fake quantized form if the `quantize` parameter is set in the default config (`passes.tensorrt.default.config`) or on a per name or type basis. 
 
 Currently the quantizable layers are:
 - Linear
@@ -275,11 +189,11 @@ summarize_quantization_analysis_pass(mg_original, mg)
 ```
 
     [32mINFO    [0m [34mApplying fake quantization to PyTorch model...[0m
-    I0318 13:22:13.968679 139755614467904 utils.py:167] Applying fake quantization to PyTorch model...
+    I0329 12:52:41.734487 139924298352448 utils.py:282] Applying fake quantization to PyTorch model...
     [32mINFO    [0m [34mFake quantization applied to PyTorch model.[0m
-    I0318 13:22:14.145424 139755614467904 utils.py:192] Fake quantization applied to PyTorch model.
+    I0329 12:52:41.836391 139924298352448 utils.py:307] Fake quantization applied to PyTorch model.
     [32mINFO    [0m [34mQuantized graph histogram:[0m
-    I0318 13:22:14.156768 139755614467904 summary.py:84] Quantized graph histogram:
+    I0329 12:52:41.848948 139924298352448 summary.py:84] Quantized graph histogram:
     [32mINFO    [0m [34m
     | Original type   | OP           |   Total |   Changed |   Unchanged |
     |-----------------+--------------+---------+-----------+-------------|
@@ -288,7 +202,7 @@ summarize_quantization_analysis_pass(mg_original, mg)
     | ReLU            | relu         |       4 |         0 |           4 |
     | output          | output       |       1 |         0 |           1 |
     | x               | placeholder  |       1 |         0 |           1 |[0m
-    I0318 13:22:14.158703 139755614467904 summary.py:85] 
+    I0329 12:52:41.851252 139924298352448 summary.py:85] 
     | Original type   | OP           |   Total |   Changed |   Unchanged |
     |-----------------+--------------+---------+-----------+-------------|
     | BatchNorm1d     | batch_norm1d |       4 |         0 |           4 |
@@ -298,7 +212,7 @@ summarize_quantization_analysis_pass(mg_original, mg)
     | x               | placeholder  |       1 |         0 |           1 |
 
 
-As you can see we have succesfully quantized all linear layers inside `jsc-toy`. See [Section 4](#section-4-layer-wise-mixed-precision) for how to apply quantization layerwise.
+As you can see we have succesfully fake quantized all linear layers inside `jsc-toy`. This means that we will be able to simulate a quantized model in order to calibrate and fine tune it. This fake quantization was done on typewise i.e. for linear layers only. See [Section 4](#section-4-layer-wise-mixed-precision) for how to apply quantization layerwise - i.e. only first and second layers for example.
 
 ### Section 1.2 Calibration
 
@@ -318,317 +232,327 @@ mg, _ = tensorrt_calibrate_transform_pass(mg, pass_args=tensorrt_config)
 ```
 
     [32mINFO    [0m [34mStarting calibration of the model in PyTorch...[0m
-    I0318 13:22:19.642365 139755614467904 calibrate.py:91] Starting calibration of the model in PyTorch...
+    I0329 12:52:45.730825 139924298352448 calibrate.py:143] Starting calibration of the model in PyTorch...
     [32mINFO    [0m [34mDisabling Quantization and Enabling Calibration[0m
-    I0318 13:22:19.651999 139755614467904 calibrate.py:100] Disabling Quantization and Enabling Calibration
+    I0329 12:52:45.735345 139924298352448 calibrate.py:152] Disabling Quantization and Enabling Calibration
     [32mINFO    [0m [34mDisabling Quantization and Enabling Calibration[0m
-    I0318 13:22:19.653707 139755614467904 calibrate.py:100] Disabling Quantization and Enabling Calibration
+    I0329 12:52:45.736729 139924298352448 calibrate.py:152] Disabling Quantization and Enabling Calibration
     [32mINFO    [0m [34mDisabling Quantization and Enabling Calibration[0m
-    I0318 13:22:19.655657 139755614467904 calibrate.py:100] Disabling Quantization and Enabling Calibration
+    I0329 12:52:45.738237 139924298352448 calibrate.py:152] Disabling Quantization and Enabling Calibration
     [32mINFO    [0m [34mDisabling Quantization and Enabling Calibration[0m
-    I0318 13:22:19.657295 139755614467904 calibrate.py:100] Disabling Quantization and Enabling Calibration
+    I0329 12:52:45.739941 139924298352448 calibrate.py:152] Disabling Quantization and Enabling Calibration
     [32mINFO    [0m [34mDisabling Quantization and Enabling Calibration[0m
-    I0318 13:22:19.658708 139755614467904 calibrate.py:100] Disabling Quantization and Enabling Calibration
+    I0329 12:52:45.741892 139924298352448 calibrate.py:152] Disabling Quantization and Enabling Calibration
     [32mINFO    [0m [34mDisabling Quantization and Enabling Calibration[0m
-    I0318 13:22:19.661043 139755614467904 calibrate.py:100] Disabling Quantization and Enabling Calibration
+    I0329 12:52:45.743747 139924298352448 calibrate.py:152] Disabling Quantization and Enabling Calibration
     [32mINFO    [0m [34mEnabling Quantization and Disabling Calibration[0m
-    I0318 13:22:19.846983 139755614467904 calibrate.py:121] Enabling Quantization and Disabling Calibration
-    W0318 13:22:19.848139 139755614467904 tensor_quantizer.py:174] Disable HistogramCalibrator
+    I0329 12:52:45.988795 139924298352448 calibrate.py:175] Enabling Quantization and Disabling Calibration
+    W0329 12:52:45.990496 139924298352448 tensor_quantizer.py:174] Disable MaxCalibrator
     [32mINFO    [0m [34mEnabling Quantization and Disabling Calibration[0m
-    I0318 13:22:19.848706 139755614467904 calibrate.py:121] Enabling Quantization and Disabling Calibration
-    W0318 13:22:19.849354 139755614467904 tensor_quantizer.py:174] Disable HistogramCalibrator
+    I0329 12:52:45.991268 139924298352448 calibrate.py:175] Enabling Quantization and Disabling Calibration
+    W0329 12:52:45.992826 139924298352448 tensor_quantizer.py:174] Disable MaxCalibrator
     [32mINFO    [0m [34mEnabling Quantization and Disabling Calibration[0m
-    I0318 13:22:19.849881 139755614467904 calibrate.py:121] Enabling Quantization and Disabling Calibration
-    W0318 13:22:19.850522 139755614467904 tensor_quantizer.py:174] Disable HistogramCalibrator
+    I0329 12:52:45.993570 139924298352448 calibrate.py:175] Enabling Quantization and Disabling Calibration
+    W0329 12:52:45.994897 139924298352448 tensor_quantizer.py:174] Disable HistogramCalibrator
     [32mINFO    [0m [34mEnabling Quantization and Disabling Calibration[0m
-    I0318 13:22:19.851068 139755614467904 calibrate.py:121] Enabling Quantization and Disabling Calibration
-    W0318 13:22:19.851693 139755614467904 tensor_quantizer.py:174] Disable HistogramCalibrator
+    I0329 12:52:45.995635 139924298352448 calibrate.py:175] Enabling Quantization and Disabling Calibration
+    W0329 12:52:45.997100 139924298352448 tensor_quantizer.py:174] Disable HistogramCalibrator
     [32mINFO    [0m [34mEnabling Quantization and Disabling Calibration[0m
-    I0318 13:22:19.852017 139755614467904 calibrate.py:121] Enabling Quantization and Disabling Calibration
-    W0318 13:22:19.852626 139755614467904 tensor_quantizer.py:174] Disable HistogramCalibrator
+    I0329 12:52:45.997894 139924298352448 calibrate.py:175] Enabling Quantization and Disabling Calibration
+    W0329 12:52:45.999178 139924298352448 tensor_quantizer.py:174] Disable HistogramCalibrator
     [32mINFO    [0m [34mEnabling Quantization and Disabling Calibration[0m
-    I0318 13:22:19.852959 139755614467904 calibrate.py:121] Enabling Quantization and Disabling Calibration
-    W0318 13:22:19.854428 139755614467904 tensor_quantizer.py:174] Disable HistogramCalibrator
-    W0318 13:22:19.862320 139755614467904 tensor_quantizer.py:238] Load calibrated amax, shape=torch.Size([]).
-    W0318 13:22:19.862721 139755614467904 tensor_quantizer.py:239] Call .cuda() if running on GPU after loading calibrated amax.
-    [32mINFO    [0m [34mseq_blocks.2._input_quantizer           : TensorQuantizer(8bit fake per-tensor amax=2.9824 calibrator=HistogramCalibrator scale=1.0 quant)[0m
-    I0318 13:22:19.863394 139755614467904 calibrate.py:79] seq_blocks.2._input_quantizer           : TensorQuantizer(8bit fake per-tensor amax=2.9824 calibrator=HistogramCalibrator scale=1.0 quant)
-    W0318 13:22:19.864465 139755614467904 tensor_quantizer.py:238] Load calibrated amax, shape=torch.Size([]).
-    [32mINFO    [0m [34mseq_blocks.2._weight_quantizer          : TensorQuantizer(8bit fake per-tensor amax=0.7247 calibrator=HistogramCalibrator scale=1.0 quant)[0m
-    I0318 13:22:19.864872 139755614467904 calibrate.py:79] seq_blocks.2._weight_quantizer          : TensorQuantizer(8bit fake per-tensor amax=0.7247 calibrator=HistogramCalibrator scale=1.0 quant)
-    W0318 13:22:19.866095 139755614467904 tensor_quantizer.py:238] Load calibrated amax, shape=torch.Size([]).
-    [32mINFO    [0m [34mseq_blocks.5._input_quantizer           : TensorQuantizer(8bit fake per-tensor amax=2.3918 calibrator=HistogramCalibrator scale=1.0 quant)[0m
-    I0318 13:22:19.866499 139755614467904 calibrate.py:79] seq_blocks.5._input_quantizer           : TensorQuantizer(8bit fake per-tensor amax=2.3918 calibrator=HistogramCalibrator scale=1.0 quant)
-    W0318 13:22:19.867702 139755614467904 tensor_quantizer.py:238] Load calibrated amax, shape=torch.Size([]).
-    [32mINFO    [0m [34mseq_blocks.5._weight_quantizer          : TensorQuantizer(8bit fake per-tensor amax=0.5201 calibrator=HistogramCalibrator scale=1.0 quant)[0m
-    I0318 13:22:19.868119 139755614467904 calibrate.py:79] seq_blocks.5._weight_quantizer          : TensorQuantizer(8bit fake per-tensor amax=0.5201 calibrator=HistogramCalibrator scale=1.0 quant)
-    W0318 13:22:19.869469 139755614467904 tensor_quantizer.py:238] Load calibrated amax, shape=torch.Size([]).
-    [32mINFO    [0m [34mseq_blocks.8._input_quantizer           : TensorQuantizer(8bit fake per-tensor amax=1.7210 calibrator=HistogramCalibrator scale=1.0 quant)[0m
-    I0318 13:22:19.869887 139755614467904 calibrate.py:79] seq_blocks.8._input_quantizer           : TensorQuantizer(8bit fake per-tensor amax=1.7210 calibrator=HistogramCalibrator scale=1.0 quant)
-    W0318 13:22:19.871118 139755614467904 tensor_quantizer.py:238] Load calibrated amax, shape=torch.Size([]).
-    [32mINFO    [0m [34mseq_blocks.8._weight_quantizer          : TensorQuantizer(8bit fake per-tensor amax=0.5546 calibrator=HistogramCalibrator scale=1.0 quant)[0m
-    I0318 13:22:19.871570 139755614467904 calibrate.py:79] seq_blocks.8._weight_quantizer          : TensorQuantizer(8bit fake per-tensor amax=0.5546 calibrator=HistogramCalibrator scale=1.0 quant)
+    I0329 12:52:45.999888 139924298352448 calibrate.py:175] Enabling Quantization and Disabling Calibration
+    W0329 12:52:46.001299 139924298352448 tensor_quantizer.py:174] Disable HistogramCalibrator
+    W0329 12:52:46.002087 139924298352448 tensor_quantizer.py:238] Load calibrated amax, shape=torch.Size([]).
+    W0329 12:52:46.002799 139924298352448 tensor_quantizer.py:239] Call .cuda() if running on GPU after loading calibrated amax.
+    [32mINFO    [0m [34mseq_blocks.2._input_quantizer           : TensorQuantizer(8bit fake per-tensor amax=5.3010 calibrator=MaxCalibrator scale=1.0 quant)[0m
+    I0329 12:52:46.006715 139924298352448 calibrate.py:131] seq_blocks.2._input_quantizer           : TensorQuantizer(8bit fake per-tensor amax=5.3010 calibrator=MaxCalibrator scale=1.0 quant)
+    W0329 12:52:46.007978 139924298352448 tensor_quantizer.py:238] Load calibrated amax, shape=torch.Size([8, 1]).
+    [32mINFO    [0m [34mseq_blocks.2._weight_quantizer          : TensorQuantizer(8bit fake axis=0 amax=[0.4018, 0.7529](8) calibrator=MaxCalibrator scale=1.0 quant)[0m
+    I0329 12:52:46.009553 139924298352448 calibrate.py:131] seq_blocks.2._weight_quantizer          : TensorQuantizer(8bit fake axis=0 amax=[0.4018, 0.7529](8) calibrator=MaxCalibrator scale=1.0 quant)
+    W0329 12:52:46.021312 139924298352448 tensor_quantizer.py:238] Load calibrated amax, shape=torch.Size([]).
+    [32mINFO    [0m [34mseq_blocks.5._input_quantizer           : TensorQuantizer(8bit fake per-tensor amax=2.4583 calibrator=HistogramCalibrator scale=1.0 quant)[0m
+    I0329 12:52:46.022117 139924298352448 calibrate.py:131] seq_blocks.5._input_quantizer           : TensorQuantizer(8bit fake per-tensor amax=2.4583 calibrator=HistogramCalibrator scale=1.0 quant)
+    W0329 12:52:46.024444 139924298352448 tensor_quantizer.py:238] Load calibrated amax, shape=torch.Size([]).
+    [32mINFO    [0m [34mseq_blocks.5._weight_quantizer          : TensorQuantizer(8bit fake per-tensor amax=0.5621 calibrator=HistogramCalibrator scale=1.0 quant)[0m
+    I0329 12:52:46.025047 139924298352448 calibrate.py:131] seq_blocks.5._weight_quantizer          : TensorQuantizer(8bit fake per-tensor amax=0.5621 calibrator=HistogramCalibrator scale=1.0 quant)
+    W0329 12:52:46.027429 139924298352448 tensor_quantizer.py:238] Load calibrated amax, shape=torch.Size([]).
+    [32mINFO    [0m [34mseq_blocks.8._input_quantizer           : TensorQuantizer(8bit fake per-tensor amax=1.7310 calibrator=HistogramCalibrator scale=1.0 quant)[0m
+    I0329 12:52:46.028019 139924298352448 calibrate.py:131] seq_blocks.8._input_quantizer           : TensorQuantizer(8bit fake per-tensor amax=1.7310 calibrator=HistogramCalibrator scale=1.0 quant)
+    W0329 12:52:46.030261 139924298352448 tensor_quantizer.py:238] Load calibrated amax, shape=torch.Size([]).
+    [32mINFO    [0m [34mseq_blocks.8._weight_quantizer          : TensorQuantizer(8bit fake per-tensor amax=0.5606 calibrator=HistogramCalibrator scale=1.0 quant)[0m
+    I0329 12:52:46.030860 139924298352448 calibrate.py:131] seq_blocks.8._weight_quantizer          : TensorQuantizer(8bit fake per-tensor amax=0.5606 calibrator=HistogramCalibrator scale=1.0 quant)
     [32mINFO    [0m [34mPerforming post calibration analysis for calibrator percentile_99.0...[0m
-    I0318 13:22:19.872970 139755614467904 calibrate.py:53] Performing post calibration analysis for calibrator percentile_99.0...
-    [32mINFO    [0m [34mStarting transformation analysis[0m
-    I0318 13:22:19.873783 139755614467904 analysis.py:214] Starting transformation analysis
+    I0329 12:52:46.033652 139924298352448 calibrate.py:105] Performing post calibration analysis for calibrator percentile_99.0...
+    [32mINFO    [0m [34mStarting transformation analysis on jsc-toy[0m
+    I0329 12:52:46.035208 139924298352448 runtime_analysis.py:357] Starting transformation analysis on jsc-toy
     [32mINFO    [0m [34m
     Results jsc-toy:
-    +------------------------------+-------------+
-    |            Metric            |    Value    |
-    +------------------------------+-------------+
-    |    Average Test Accuracy     |   0.72115   |
-    |      Average Precision       |   0.73523   |
-    |        Average Recall        |   0.71953   |
-    |       Average F1 Score       |   0.72267   |
-    |         Average Loss         |   0.80283   |
-    |       Average Latency        |  1.9909 ms  |
-    |   Average GPU Power Usage    |  54.084 W   |
-    | Inference Energy Consumption | 0.02991 mWh |
-    +------------------------------+-------------+[0m
-    I0318 13:22:23.013608 139755614467904 analysis.py:330] 
+    +------------------------------+--------------+
+    |      Metric (Per Batch)      |    Value     |
+    +------------------------------+--------------+
+    |    Average Test Accuracy     |   0.71232    |
+    |      Average Precision       |   0.71349    |
+    |        Average Recall        |   0.70401    |
+    |       Average F1 Score       |   0.70544    |
+    |         Average Loss         |   0.84152    |
+    |       Average Latency        |  3.0208 ms   |
+    |   Average GPU Power Usage    |   22.239 W   |
+    | Inference Energy Consumption | 0.018661 mWh |
+    +------------------------------+--------------+[0m
+    I0329 12:52:49.573626 139924298352448 runtime_analysis.py:521] 
     Results jsc-toy:
-    +------------------------------+-------------+
-    |            Metric            |    Value    |
-    +------------------------------+-------------+
-    |    Average Test Accuracy     |   0.72115   |
-    |      Average Precision       |   0.73523   |
-    |        Average Recall        |   0.71953   |
-    |       Average F1 Score       |   0.72267   |
-    |         Average Loss         |   0.80283   |
-    |       Average Latency        |  1.9909 ms  |
-    |   Average GPU Power Usage    |  54.084 W   |
-    | Inference Energy Consumption | 0.02991 mWh |
-    +------------------------------+-------------+
+    +------------------------------+--------------+
+    |      Metric (Per Batch)      |    Value     |
+    +------------------------------+--------------+
+    |    Average Test Accuracy     |   0.71232    |
+    |      Average Precision       |   0.71349    |
+    |        Average Recall        |   0.70401    |
+    |       Average F1 Score       |   0.70544    |
+    |         Average Loss         |   0.84152    |
+    |       Average Latency        |  3.0208 ms   |
+    |   Average GPU Power Usage    |   22.239 W   |
+    | Inference Energy Consumption | 0.018661 mWh |
+    +------------------------------+--------------+
+    [32mINFO    [0m [34mRuntime analysis results saved to /root/mase_output/tensorrt/quantization/jsc-toy_cls_jsc_2024-03-29/mase_graph/version_1/model.json[0m
+    I0329 12:52:49.576186 139924298352448 runtime_analysis.py:143] Runtime analysis results saved to /root/mase_output/tensorrt/quantization/jsc-toy_cls_jsc_2024-03-29/mase_graph/version_1/model.json
     [32mINFO    [0m [34mPost calibration analysis complete.[0m
-    I0318 13:22:23.016494 139755614467904 calibrate.py:66] Post calibration analysis complete.
-    W0318 13:22:23.018086 139755614467904 tensor_quantizer.py:238] Load calibrated amax, shape=torch.Size([]).
-    [32mINFO    [0m [34mseq_blocks.2._input_quantizer           : TensorQuantizer(8bit fake per-tensor amax=4.1848 calibrator=HistogramCalibrator scale=1.0 quant)[0m
-    I0318 13:22:23.018626 139755614467904 calibrate.py:79] seq_blocks.2._input_quantizer           : TensorQuantizer(8bit fake per-tensor amax=4.1848 calibrator=HistogramCalibrator scale=1.0 quant)
-    W0318 13:22:23.020167 139755614467904 tensor_quantizer.py:238] Load calibrated amax, shape=torch.Size([]).
-    [32mINFO    [0m [34mseq_blocks.2._weight_quantizer          : TensorQuantizer(8bit fake per-tensor amax=0.7462 calibrator=HistogramCalibrator scale=1.0 quant)[0m
-    I0318 13:22:23.020888 139755614467904 calibrate.py:79] seq_blocks.2._weight_quantizer          : TensorQuantizer(8bit fake per-tensor amax=0.7462 calibrator=HistogramCalibrator scale=1.0 quant)
-    W0318 13:22:23.022411 139755614467904 tensor_quantizer.py:238] Load calibrated amax, shape=torch.Size([]).
-    [32mINFO    [0m [34mseq_blocks.5._input_quantizer           : TensorQuantizer(8bit fake per-tensor amax=3.8256 calibrator=HistogramCalibrator scale=1.0 quant)[0m
-    I0318 13:22:23.023213 139755614467904 calibrate.py:79] seq_blocks.5._input_quantizer           : TensorQuantizer(8bit fake per-tensor amax=3.8256 calibrator=HistogramCalibrator scale=1.0 quant)
-    W0318 13:22:23.024677 139755614467904 tensor_quantizer.py:238] Load calibrated amax, shape=torch.Size([]).
-    [32mINFO    [0m [34mseq_blocks.5._weight_quantizer          : TensorQuantizer(8bit fake per-tensor amax=0.5201 calibrator=HistogramCalibrator scale=1.0 quant)[0m
-    I0318 13:22:23.025231 139755614467904 calibrate.py:79] seq_blocks.5._weight_quantizer          : TensorQuantizer(8bit fake per-tensor amax=0.5201 calibrator=HistogramCalibrator scale=1.0 quant)
-    W0318 13:22:23.026346 139755614467904 tensor_quantizer.py:238] Load calibrated amax, shape=torch.Size([]).
-    [32mINFO    [0m [34mseq_blocks.8._input_quantizer           : TensorQuantizer(8bit fake per-tensor amax=2.2771 calibrator=HistogramCalibrator scale=1.0 quant)[0m
-    I0318 13:22:23.026892 139755614467904 calibrate.py:79] seq_blocks.8._input_quantizer           : TensorQuantizer(8bit fake per-tensor amax=2.2771 calibrator=HistogramCalibrator scale=1.0 quant)
-    W0318 13:22:23.027963 139755614467904 tensor_quantizer.py:238] Load calibrated amax, shape=torch.Size([]).
-    [32mINFO    [0m [34mseq_blocks.8._weight_quantizer          : TensorQuantizer(8bit fake per-tensor amax=0.5546 calibrator=HistogramCalibrator scale=1.0 quant)[0m
-    I0318 13:22:23.028511 139755614467904 calibrate.py:79] seq_blocks.8._weight_quantizer          : TensorQuantizer(8bit fake per-tensor amax=0.5546 calibrator=HistogramCalibrator scale=1.0 quant)
+    I0329 12:52:49.577105 139924298352448 calibrate.py:118] Post calibration analysis complete.
+    W0329 12:52:49.578157 139924298352448 tensor_quantizer.py:238] Load calibrated amax, shape=torch.Size([]).
+    [32mINFO    [0m [34mseq_blocks.2._input_quantizer           : TensorQuantizer(8bit fake per-tensor amax=5.3010 calibrator=MaxCalibrator scale=1.0 quant)[0m
+    I0329 12:52:49.578797 139924298352448 calibrate.py:131] seq_blocks.2._input_quantizer           : TensorQuantizer(8bit fake per-tensor amax=5.3010 calibrator=MaxCalibrator scale=1.0 quant)
+    W0329 12:52:49.579839 139924298352448 tensor_quantizer.py:238] Load calibrated amax, shape=torch.Size([8, 1]).
+    [32mINFO    [0m [34mseq_blocks.2._weight_quantizer          : TensorQuantizer(8bit fake axis=0 amax=[0.4018, 0.7529](8) calibrator=MaxCalibrator scale=1.0 quant)[0m
+    I0329 12:52:49.580890 139924298352448 calibrate.py:131] seq_blocks.2._weight_quantizer          : TensorQuantizer(8bit fake axis=0 amax=[0.4018, 0.7529](8) calibrator=MaxCalibrator scale=1.0 quant)
+    W0329 12:52:49.583162 139924298352448 tensor_quantizer.py:238] Load calibrated amax, shape=torch.Size([]).
+    [32mINFO    [0m [34mseq_blocks.5._input_quantizer           : TensorQuantizer(8bit fake per-tensor amax=4.0614 calibrator=HistogramCalibrator scale=1.0 quant)[0m
+    I0329 12:52:49.584400 139924298352448 calibrate.py:131] seq_blocks.5._input_quantizer           : TensorQuantizer(8bit fake per-tensor amax=4.0614 calibrator=HistogramCalibrator scale=1.0 quant)
+    W0329 12:52:49.585959 139924298352448 tensor_quantizer.py:238] Load calibrated amax, shape=torch.Size([]).
+    [32mINFO    [0m [34mseq_blocks.5._weight_quantizer          : TensorQuantizer(8bit fake per-tensor amax=0.5621 calibrator=HistogramCalibrator scale=1.0 quant)[0m
+    I0329 12:52:49.586792 139924298352448 calibrate.py:131] seq_blocks.5._weight_quantizer          : TensorQuantizer(8bit fake per-tensor amax=0.5621 calibrator=HistogramCalibrator scale=1.0 quant)
+    W0329 12:52:49.588718 139924298352448 tensor_quantizer.py:238] Load calibrated amax, shape=torch.Size([]).
+    [32mINFO    [0m [34mseq_blocks.8._input_quantizer           : TensorQuantizer(8bit fake per-tensor amax=2.6858 calibrator=HistogramCalibrator scale=1.0 quant)[0m
+    I0329 12:52:49.589654 139924298352448 calibrate.py:131] seq_blocks.8._input_quantizer           : TensorQuantizer(8bit fake per-tensor amax=2.6858 calibrator=HistogramCalibrator scale=1.0 quant)
+    W0329 12:52:49.591186 139924298352448 tensor_quantizer.py:238] Load calibrated amax, shape=torch.Size([]).
+    [32mINFO    [0m [34mseq_blocks.8._weight_quantizer          : TensorQuantizer(8bit fake per-tensor amax=0.5606 calibrator=HistogramCalibrator scale=1.0 quant)[0m
+    I0329 12:52:49.592068 139924298352448 calibrate.py:131] seq_blocks.8._weight_quantizer          : TensorQuantizer(8bit fake per-tensor amax=0.5606 calibrator=HistogramCalibrator scale=1.0 quant)
     [32mINFO    [0m [34mPerforming post calibration analysis for calibrator percentile_99.9...[0m
-    I0318 13:22:23.029680 139755614467904 calibrate.py:53] Performing post calibration analysis for calibrator percentile_99.9...
-    [32mINFO    [0m [34mStarting transformation analysis[0m
-    I0318 13:22:23.030415 139755614467904 analysis.py:214] Starting transformation analysis
+    I0329 12:52:49.594088 139924298352448 calibrate.py:105] Performing post calibration analysis for calibrator percentile_99.9...
+    [32mINFO    [0m [34mStarting transformation analysis on jsc-toy[0m
+    I0329 12:52:49.595173 139924298352448 runtime_analysis.py:357] Starting transformation analysis on jsc-toy
     [32mINFO    [0m [34m
     Results jsc-toy:
-    +------------------------------+-------------+
-    |            Metric            |    Value    |
-    +------------------------------+-------------+
-    | Average Validation Accuracy  |   0.73235   |
-    |      Average Precision       |   0.74538   |
-    |        Average Recall        |   0.73063   |
-    |       Average F1 Score       |   0.73399   |
-    |         Average Loss         |   0.76725   |
-    |       Average Latency        |  1.9984 ms  |
-    |   Average GPU Power Usage    |  57.412 W   |
-    | Inference Energy Consumption | 0.03187 mWh |
-    +------------------------------+-------------+[0m
-    I0318 13:22:25.768678 139755614467904 analysis.py:330] 
+    +------------------------------+--------------+
+    |      Metric (Per Batch)      |    Value     |
+    +------------------------------+--------------+
+    | Average Validation Accuracy  |   0.71678    |
+    |      Average Precision       |   0.71959    |
+    |        Average Recall        |   0.71039    |
+    |       Average F1 Score       |   0.71209    |
+    |         Average Loss         |   0.81512    |
+    |       Average Latency        |  3.0252 ms   |
+    |   Average GPU Power Usage    |   22.21 W    |
+    | Inference Energy Consumption | 0.018664 mWh |
+    +------------------------------+--------------+[0m
+    I0329 12:52:53.233150 139924298352448 runtime_analysis.py:521] 
     Results jsc-toy:
-    +------------------------------+-------------+
-    |            Metric            |    Value    |
-    +------------------------------+-------------+
-    | Average Validation Accuracy  |   0.73235   |
-    |      Average Precision       |   0.74538   |
-    |        Average Recall        |   0.73063   |
-    |       Average F1 Score       |   0.73399   |
-    |         Average Loss         |   0.76725   |
-    |       Average Latency        |  1.9984 ms  |
-    |   Average GPU Power Usage    |  57.412 W   |
-    | Inference Energy Consumption | 0.03187 mWh |
-    +------------------------------+-------------+
+    +------------------------------+--------------+
+    |      Metric (Per Batch)      |    Value     |
+    +------------------------------+--------------+
+    | Average Validation Accuracy  |   0.71678    |
+    |      Average Precision       |   0.71959    |
+    |        Average Recall        |   0.71039    |
+    |       Average F1 Score       |   0.71209    |
+    |         Average Loss         |   0.81512    |
+    |       Average Latency        |  3.0252 ms   |
+    |   Average GPU Power Usage    |   22.21 W    |
+    | Inference Energy Consumption | 0.018664 mWh |
+    +------------------------------+--------------+
+    [32mINFO    [0m [34mRuntime analysis results saved to /root/mase_output/tensorrt/quantization/jsc-toy_cls_jsc_2024-03-29/mase_graph/version_2/model.json[0m
+    I0329 12:52:53.235970 139924298352448 runtime_analysis.py:143] Runtime analysis results saved to /root/mase_output/tensorrt/quantization/jsc-toy_cls_jsc_2024-03-29/mase_graph/version_2/model.json
     [32mINFO    [0m [34mPost calibration analysis complete.[0m
-    I0318 13:22:25.770843 139755614467904 calibrate.py:66] Post calibration analysis complete.
-    W0318 13:22:25.771903 139755614467904 tensor_quantizer.py:238] Load calibrated amax, shape=torch.Size([]).
-    [32mINFO    [0m [34mseq_blocks.2._input_quantizer           : TensorQuantizer(8bit fake per-tensor amax=5.7926 calibrator=HistogramCalibrator scale=1.0 quant)[0m
-    I0318 13:22:25.772400 139755614467904 calibrate.py:79] seq_blocks.2._input_quantizer           : TensorQuantizer(8bit fake per-tensor amax=5.7926 calibrator=HistogramCalibrator scale=1.0 quant)
-    W0318 13:22:25.773333 139755614467904 tensor_quantizer.py:238] Load calibrated amax, shape=torch.Size([]).
-    [32mINFO    [0m [34mseq_blocks.2._weight_quantizer          : TensorQuantizer(8bit fake per-tensor amax=0.7462 calibrator=HistogramCalibrator scale=1.0 quant)[0m
-    I0318 13:22:25.773803 139755614467904 calibrate.py:79] seq_blocks.2._weight_quantizer          : TensorQuantizer(8bit fake per-tensor amax=0.7462 calibrator=HistogramCalibrator scale=1.0 quant)
-    W0318 13:22:25.774759 139755614467904 tensor_quantizer.py:238] Load calibrated amax, shape=torch.Size([]).
-    [32mINFO    [0m [34mseq_blocks.5._input_quantizer           : TensorQuantizer(8bit fake per-tensor amax=5.7153 calibrator=HistogramCalibrator scale=1.0 quant)[0m
-    I0318 13:22:25.775239 139755614467904 calibrate.py:79] seq_blocks.5._input_quantizer           : TensorQuantizer(8bit fake per-tensor amax=5.7153 calibrator=HistogramCalibrator scale=1.0 quant)
-    W0318 13:22:25.776401 139755614467904 tensor_quantizer.py:238] Load calibrated amax, shape=torch.Size([]).
-    [32mINFO    [0m [34mseq_blocks.5._weight_quantizer          : TensorQuantizer(8bit fake per-tensor amax=0.5201 calibrator=HistogramCalibrator scale=1.0 quant)[0m
-    I0318 13:22:25.777046 139755614467904 calibrate.py:79] seq_blocks.5._weight_quantizer          : TensorQuantizer(8bit fake per-tensor amax=0.5201 calibrator=HistogramCalibrator scale=1.0 quant)
-    W0318 13:22:25.778368 139755614467904 tensor_quantizer.py:238] Load calibrated amax, shape=torch.Size([]).
-    [32mINFO    [0m [34mseq_blocks.8._input_quantizer           : TensorQuantizer(8bit fake per-tensor amax=2.8661 calibrator=HistogramCalibrator scale=1.0 quant)[0m
-    I0318 13:22:25.779024 139755614467904 calibrate.py:79] seq_blocks.8._input_quantizer           : TensorQuantizer(8bit fake per-tensor amax=2.8661 calibrator=HistogramCalibrator scale=1.0 quant)
-    W0318 13:22:25.780269 139755614467904 tensor_quantizer.py:238] Load calibrated amax, shape=torch.Size([]).
-    [32mINFO    [0m [34mseq_blocks.8._weight_quantizer          : TensorQuantizer(8bit fake per-tensor amax=0.5546 calibrator=HistogramCalibrator scale=1.0 quant)[0m
-    I0318 13:22:25.780915 139755614467904 calibrate.py:79] seq_blocks.8._weight_quantizer          : TensorQuantizer(8bit fake per-tensor amax=0.5546 calibrator=HistogramCalibrator scale=1.0 quant)
+    I0329 12:52:53.237108 139924298352448 calibrate.py:118] Post calibration analysis complete.
+    W0329 12:52:53.238376 139924298352448 tensor_quantizer.py:238] Load calibrated amax, shape=torch.Size([]).
+    [32mINFO    [0m [34mseq_blocks.2._input_quantizer           : TensorQuantizer(8bit fake per-tensor amax=5.3010 calibrator=MaxCalibrator scale=1.0 quant)[0m
+    I0329 12:52:53.240151 139924298352448 calibrate.py:131] seq_blocks.2._input_quantizer           : TensorQuantizer(8bit fake per-tensor amax=5.3010 calibrator=MaxCalibrator scale=1.0 quant)
+    W0329 12:52:53.241358 139924298352448 tensor_quantizer.py:238] Load calibrated amax, shape=torch.Size([8, 1]).
+    [32mINFO    [0m [34mseq_blocks.2._weight_quantizer          : TensorQuantizer(8bit fake axis=0 amax=[0.4018, 0.7529](8) calibrator=MaxCalibrator scale=1.0 quant)[0m
+    I0329 12:52:53.242765 139924298352448 calibrate.py:131] seq_blocks.2._weight_quantizer          : TensorQuantizer(8bit fake axis=0 amax=[0.4018, 0.7529](8) calibrator=MaxCalibrator scale=1.0 quant)
+    W0329 12:52:53.244726 139924298352448 tensor_quantizer.py:238] Load calibrated amax, shape=torch.Size([]).
+    [32mINFO    [0m [34mseq_blocks.5._input_quantizer           : TensorQuantizer(8bit fake per-tensor amax=4.9840 calibrator=HistogramCalibrator scale=1.0 quant)[0m
+    I0329 12:52:53.245705 139924298352448 calibrate.py:131] seq_blocks.5._input_quantizer           : TensorQuantizer(8bit fake per-tensor amax=4.9840 calibrator=HistogramCalibrator scale=1.0 quant)
+    W0329 12:52:53.246822 139924298352448 tensor_quantizer.py:238] Load calibrated amax, shape=torch.Size([]).
+    [32mINFO    [0m [34mseq_blocks.5._weight_quantizer          : TensorQuantizer(8bit fake per-tensor amax=0.5621 calibrator=HistogramCalibrator scale=1.0 quant)[0m
+    I0329 12:52:53.247384 139924298352448 calibrate.py:131] seq_blocks.5._weight_quantizer          : TensorQuantizer(8bit fake per-tensor amax=0.5621 calibrator=HistogramCalibrator scale=1.0 quant)
+    W0329 12:52:53.248608 139924298352448 tensor_quantizer.py:238] Load calibrated amax, shape=torch.Size([]).
+    [32mINFO    [0m [34mseq_blocks.8._input_quantizer           : TensorQuantizer(8bit fake per-tensor amax=3.0583 calibrator=HistogramCalibrator scale=1.0 quant)[0m
+    I0329 12:52:53.249203 139924298352448 calibrate.py:131] seq_blocks.8._input_quantizer           : TensorQuantizer(8bit fake per-tensor amax=3.0583 calibrator=HistogramCalibrator scale=1.0 quant)
+    W0329 12:52:53.250317 139924298352448 tensor_quantizer.py:238] Load calibrated amax, shape=torch.Size([]).
+    [32mINFO    [0m [34mseq_blocks.8._weight_quantizer          : TensorQuantizer(8bit fake per-tensor amax=0.5606 calibrator=HistogramCalibrator scale=1.0 quant)[0m
+    I0329 12:52:53.250878 139924298352448 calibrate.py:131] seq_blocks.8._weight_quantizer          : TensorQuantizer(8bit fake per-tensor amax=0.5606 calibrator=HistogramCalibrator scale=1.0 quant)
     [32mINFO    [0m [34mPerforming post calibration analysis for calibrator percentile_99.99...[0m
-    I0318 13:22:25.782278 139755614467904 calibrate.py:53] Performing post calibration analysis for calibrator percentile_99.99...
-    [32mINFO    [0m [34mStarting transformation analysis[0m
-    I0318 13:22:25.783110 139755614467904 analysis.py:214] Starting transformation analysis
+    I0329 12:52:53.252007 139924298352448 calibrate.py:105] Performing post calibration analysis for calibrator percentile_99.99...
+    [32mINFO    [0m [34mStarting transformation analysis on jsc-toy[0m
+    I0329 12:52:53.252766 139924298352448 runtime_analysis.py:357] Starting transformation analysis on jsc-toy
     [32mINFO    [0m [34m
     Results jsc-toy:
-    +------------------------------+-------------+
-    |            Metric            |    Value    |
-    +------------------------------+-------------+
-    | Average Validation Accuracy  |   0.73267   |
-    |      Average Precision       |   0.74556   |
-    |        Average Recall        |   0.73097   |
-    |       Average F1 Score       |   0.73429   |
-    |         Average Loss         |   0.76364   |
-    |       Average Latency        |  2.0014 ms  |
-    |   Average GPU Power Usage    |  57.504 W   |
-    | Inference Energy Consumption | 0.03197 mWh |
-    +------------------------------+-------------+[0m
-    I0318 13:22:28.523978 139755614467904 analysis.py:330] 
+    +------------------------------+--------------+
+    |      Metric (Per Batch)      |    Value     |
+    +------------------------------+--------------+
+    | Average Validation Accuracy  |   0.71766    |
+    |      Average Precision       |   0.72036    |
+    |        Average Recall        |   0.71136    |
+    |       Average F1 Score       |   0.71308    |
+    |         Average Loss         |   0.81424    |
+    |       Average Latency        |  2.8614 ms   |
+    |   Average GPU Power Usage    |   22.252 W   |
+    | Inference Energy Consumption | 0.017687 mWh |
+    +------------------------------+--------------+[0m
+    I0329 12:52:56.441818 139924298352448 runtime_analysis.py:521] 
     Results jsc-toy:
-    +------------------------------+-------------+
-    |            Metric            |    Value    |
-    +------------------------------+-------------+
-    | Average Validation Accuracy  |   0.73267   |
-    |      Average Precision       |   0.74556   |
-    |        Average Recall        |   0.73097   |
-    |       Average F1 Score       |   0.73429   |
-    |         Average Loss         |   0.76364   |
-    |       Average Latency        |  2.0014 ms  |
-    |   Average GPU Power Usage    |  57.504 W   |
-    | Inference Energy Consumption | 0.03197 mWh |
-    +------------------------------+-------------+
+    +------------------------------+--------------+
+    |      Metric (Per Batch)      |    Value     |
+    +------------------------------+--------------+
+    | Average Validation Accuracy  |   0.71766    |
+    |      Average Precision       |   0.72036    |
+    |        Average Recall        |   0.71136    |
+    |       Average F1 Score       |   0.71308    |
+    |         Average Loss         |   0.81424    |
+    |       Average Latency        |  2.8614 ms   |
+    |   Average GPU Power Usage    |   22.252 W   |
+    | Inference Energy Consumption | 0.017687 mWh |
+    +------------------------------+--------------+
+    [32mINFO    [0m [34mRuntime analysis results saved to /root/mase_output/tensorrt/quantization/jsc-toy_cls_jsc_2024-03-29/mase_graph/version_3/model.json[0m
+    I0329 12:52:56.444185 139924298352448 runtime_analysis.py:143] Runtime analysis results saved to /root/mase_output/tensorrt/quantization/jsc-toy_cls_jsc_2024-03-29/mase_graph/version_3/model.json
     [32mINFO    [0m [34mPost calibration analysis complete.[0m
-    I0318 13:22:28.526261 139755614467904 calibrate.py:66] Post calibration analysis complete.
-    W0318 13:22:29.754698 139755614467904 tensor_quantizer.py:238] Load calibrated amax, shape=torch.Size([]).
-    [32mINFO    [0m [34mseq_blocks.2._input_quantizer           : TensorQuantizer(8bit fake per-tensor amax=7.1553 calibrator=HistogramCalibrator scale=1.0 quant)[0m
-    I0318 13:22:29.755807 139755614467904 calibrate.py:79] seq_blocks.2._input_quantizer           : TensorQuantizer(8bit fake per-tensor amax=7.1553 calibrator=HistogramCalibrator scale=1.0 quant)
-    W0318 13:22:30.601948 139755614467904 tensor_quantizer.py:238] Load calibrated amax, shape=torch.Size([]).
-    [32mINFO    [0m [34mseq_blocks.2._weight_quantizer          : TensorQuantizer(8bit fake per-tensor amax=0.7464 calibrator=HistogramCalibrator scale=1.0 quant)[0m
-    I0318 13:22:30.602879 139755614467904 calibrate.py:79] seq_blocks.2._weight_quantizer          : TensorQuantizer(8bit fake per-tensor amax=0.7464 calibrator=HistogramCalibrator scale=1.0 quant)
-    W0318 13:22:31.914243 139755614467904 tensor_quantizer.py:238] Load calibrated amax, shape=torch.Size([]).
-    [32mINFO    [0m [34mseq_blocks.5._input_quantizer           : TensorQuantizer(8bit fake per-tensor amax=6.4895 calibrator=HistogramCalibrator scale=1.0 quant)[0m
-    I0318 13:22:31.915047 139755614467904 calibrate.py:79] seq_blocks.5._input_quantizer           : TensorQuantizer(8bit fake per-tensor amax=6.4895 calibrator=HistogramCalibrator scale=1.0 quant)
-    W0318 13:22:32.743558 139755614467904 tensor_quantizer.py:238] Load calibrated amax, shape=torch.Size([]).
-    [32mINFO    [0m [34mseq_blocks.5._weight_quantizer          : TensorQuantizer(8bit fake per-tensor amax=0.5179 calibrator=HistogramCalibrator scale=1.0 quant)[0m
-    I0318 13:22:32.744498 139755614467904 calibrate.py:79] seq_blocks.5._weight_quantizer          : TensorQuantizer(8bit fake per-tensor amax=0.5179 calibrator=HistogramCalibrator scale=1.0 quant)
-    W0318 13:22:34.152468 139755614467904 tensor_quantizer.py:238] Load calibrated amax, shape=torch.Size([]).
-    [32mINFO    [0m [34mseq_blocks.8._input_quantizer           : TensorQuantizer(8bit fake per-tensor amax=3.3733 calibrator=HistogramCalibrator scale=1.0 quant)[0m
-    I0318 13:22:34.153729 139755614467904 calibrate.py:79] seq_blocks.8._input_quantizer           : TensorQuantizer(8bit fake per-tensor amax=3.3733 calibrator=HistogramCalibrator scale=1.0 quant)
-    W0318 13:22:35.017431 139755614467904 tensor_quantizer.py:238] Load calibrated amax, shape=torch.Size([]).
-    [32mINFO    [0m [34mseq_blocks.8._weight_quantizer          : TensorQuantizer(8bit fake per-tensor amax=0.5531 calibrator=HistogramCalibrator scale=1.0 quant)[0m
-    I0318 13:22:35.018441 139755614467904 calibrate.py:79] seq_blocks.8._weight_quantizer          : TensorQuantizer(8bit fake per-tensor amax=0.5531 calibrator=HistogramCalibrator scale=1.0 quant)
+    I0329 12:52:56.445506 139924298352448 calibrate.py:118] Post calibration analysis complete.
+    W0329 12:52:56.446318 139924298352448 tensor_quantizer.py:238] Load calibrated amax, shape=torch.Size([]).
+    [32mINFO    [0m [34mseq_blocks.2._input_quantizer           : TensorQuantizer(8bit fake per-tensor amax=5.3010 calibrator=MaxCalibrator scale=1.0 quant)[0m
+    I0329 12:52:56.447259 139924298352448 calibrate.py:131] seq_blocks.2._input_quantizer           : TensorQuantizer(8bit fake per-tensor amax=5.3010 calibrator=MaxCalibrator scale=1.0 quant)
+    W0329 12:52:56.448057 139924298352448 tensor_quantizer.py:238] Load calibrated amax, shape=torch.Size([8, 1]).
+    [32mINFO    [0m [34mseq_blocks.2._weight_quantizer          : TensorQuantizer(8bit fake axis=0 amax=[0.4018, 0.7529](8) calibrator=MaxCalibrator scale=1.0 quant)[0m
+    I0329 12:52:56.448869 139924298352448 calibrate.py:131] seq_blocks.2._weight_quantizer          : TensorQuantizer(8bit fake axis=0 amax=[0.4018, 0.7529](8) calibrator=MaxCalibrator scale=1.0 quant)
+    W0329 12:52:57.950802 139924298352448 tensor_quantizer.py:238] Load calibrated amax, shape=torch.Size([]).
+    [32mINFO    [0m [34mseq_blocks.5._input_quantizer           : TensorQuantizer(8bit fake per-tensor amax=4.9235 calibrator=HistogramCalibrator scale=1.0 quant)[0m
+    I0329 12:52:57.952084 139924298352448 calibrate.py:131] seq_blocks.5._input_quantizer           : TensorQuantizer(8bit fake per-tensor amax=4.9235 calibrator=HistogramCalibrator scale=1.0 quant)
+    W0329 12:52:59.105022 139924298352448 tensor_quantizer.py:238] Load calibrated amax, shape=torch.Size([]).
+    [32mINFO    [0m [34mseq_blocks.5._weight_quantizer          : TensorQuantizer(8bit fake per-tensor amax=0.5601 calibrator=HistogramCalibrator scale=1.0 quant)[0m
+    I0329 12:52:59.106170 139924298352448 calibrate.py:131] seq_blocks.5._weight_quantizer          : TensorQuantizer(8bit fake per-tensor amax=0.5601 calibrator=HistogramCalibrator scale=1.0 quant)
+    W0329 12:53:00.794175 139924298352448 tensor_quantizer.py:238] Load calibrated amax, shape=torch.Size([]).
+    [32mINFO    [0m [34mseq_blocks.8._input_quantizer           : TensorQuantizer(8bit fake per-tensor amax=3.0265 calibrator=HistogramCalibrator scale=1.0 quant)[0m
+    I0329 12:53:00.795263 139924298352448 calibrate.py:131] seq_blocks.8._input_quantizer           : TensorQuantizer(8bit fake per-tensor amax=3.0265 calibrator=HistogramCalibrator scale=1.0 quant)
+    W0329 12:53:01.958939 139924298352448 tensor_quantizer.py:238] Load calibrated amax, shape=torch.Size([]).
+    [32mINFO    [0m [34mseq_blocks.8._weight_quantizer          : TensorQuantizer(8bit fake per-tensor amax=0.5588 calibrator=HistogramCalibrator scale=1.0 quant)[0m
+    I0329 12:53:01.959860 139924298352448 calibrate.py:131] seq_blocks.8._weight_quantizer          : TensorQuantizer(8bit fake per-tensor amax=0.5588 calibrator=HistogramCalibrator scale=1.0 quant)
     [32mINFO    [0m [34mPerforming post calibration analysis for calibrator mse...[0m
-    I0318 13:22:35.020324 139755614467904 calibrate.py:53] Performing post calibration analysis for calibrator mse...
-    [32mINFO    [0m [34mStarting transformation analysis[0m
-    I0318 13:22:35.021559 139755614467904 analysis.py:214] Starting transformation analysis
+    I0329 12:53:01.961093 139924298352448 calibrate.py:105] Performing post calibration analysis for calibrator mse...
+    [32mINFO    [0m [34mStarting transformation analysis on jsc-toy[0m
+    I0329 12:53:01.961857 139924298352448 runtime_analysis.py:357] Starting transformation analysis on jsc-toy
     [32mINFO    [0m [34m
     Results jsc-toy:
     +------------------------------+--------------+
-    |            Metric            |    Value     |
+    |      Metric (Per Batch)      |    Value     |
     +------------------------------+--------------+
-    | Average Validation Accuracy  |   0.73272    |
-    |      Average Precision       |   0.74538    |
-    |        Average Recall        |   0.73103    |
-    |       Average F1 Score       |    0.7343    |
-    |         Average Loss         |   0.76502    |
-    |       Average Latency        |  1.9966 ms   |
-    |   Average GPU Power Usage    |   56.178 W   |
-    | Inference Energy Consumption | 0.031157 mWh |
+    | Average Validation Accuracy  |   0.71739    |
+    |      Average Precision       |   0.72013    |
+    |        Average Recall        |   0.71102    |
+    |       Average F1 Score       |   0.71269    |
+    |         Average Loss         |   0.81419    |
+    |       Average Latency        |  2.9989 ms   |
+    |   Average GPU Power Usage    |   22.426 W   |
+    | Inference Energy Consumption | 0.018681 mWh |
     +------------------------------+--------------+[0m
-    I0318 13:22:38.135719 139755614467904 analysis.py:330] 
+    I0329 12:53:05.428555 139924298352448 runtime_analysis.py:521] 
     Results jsc-toy:
     +------------------------------+--------------+
-    |            Metric            |    Value     |
+    |      Metric (Per Batch)      |    Value     |
     +------------------------------+--------------+
-    | Average Validation Accuracy  |   0.73272    |
-    |      Average Precision       |   0.74538    |
-    |        Average Recall        |   0.73103    |
-    |       Average F1 Score       |    0.7343    |
-    |         Average Loss         |   0.76502    |
-    |       Average Latency        |  1.9966 ms   |
-    |   Average GPU Power Usage    |   56.178 W   |
-    | Inference Energy Consumption | 0.031157 mWh |
+    | Average Validation Accuracy  |   0.71739    |
+    |      Average Precision       |   0.72013    |
+    |        Average Recall        |   0.71102    |
+    |       Average F1 Score       |   0.71269    |
+    |         Average Loss         |   0.81419    |
+    |       Average Latency        |  2.9989 ms   |
+    |   Average GPU Power Usage    |   22.426 W   |
+    | Inference Energy Consumption | 0.018681 mWh |
     +------------------------------+--------------+
+    [32mINFO    [0m [34mRuntime analysis results saved to /root/mase_output/tensorrt/quantization/jsc-toy_cls_jsc_2024-03-29/mase_graph/version_4/model.json[0m
+    I0329 12:53:05.430769 139924298352448 runtime_analysis.py:143] Runtime analysis results saved to /root/mase_output/tensorrt/quantization/jsc-toy_cls_jsc_2024-03-29/mase_graph/version_4/model.json
     [32mINFO    [0m [34mPost calibration analysis complete.[0m
-    I0318 13:22:38.138723 139755614467904 calibrate.py:66] Post calibration analysis complete.
-    W0318 13:22:43.433615 139755614467904 tensor_quantizer.py:238] Load calibrated amax, shape=torch.Size([]).
-    [32mINFO    [0m [34mseq_blocks.2._input_quantizer           : TensorQuantizer(8bit fake per-tensor amax=6.2402 calibrator=HistogramCalibrator scale=1.0 quant)[0m
-    I0318 13:22:43.434860 139755614467904 calibrate.py:79] seq_blocks.2._input_quantizer           : TensorQuantizer(8bit fake per-tensor amax=6.2402 calibrator=HistogramCalibrator scale=1.0 quant)
-    W0318 13:22:45.434811 139755614467904 tensor_quantizer.py:238] Load calibrated amax, shape=torch.Size([]).
-    [32mINFO    [0m [34mseq_blocks.2._weight_quantizer          : TensorQuantizer(8bit fake per-tensor amax=0.7465 calibrator=HistogramCalibrator scale=1.0 quant)[0m
-    I0318 13:22:45.436088 139755614467904 calibrate.py:79] seq_blocks.2._weight_quantizer          : TensorQuantizer(8bit fake per-tensor amax=0.7465 calibrator=HistogramCalibrator scale=1.0 quant)
-    W0318 13:22:51.187860 139755614467904 tensor_quantizer.py:238] Load calibrated amax, shape=torch.Size([]).
-    [32mINFO    [0m [34mseq_blocks.5._input_quantizer           : TensorQuantizer(8bit fake per-tensor amax=5.7175 calibrator=HistogramCalibrator scale=1.0 quant)[0m
-    I0318 13:22:51.189001 139755614467904 calibrate.py:79] seq_blocks.5._input_quantizer           : TensorQuantizer(8bit fake per-tensor amax=5.7175 calibrator=HistogramCalibrator scale=1.0 quant)
-    W0318 13:22:53.107534 139755614467904 tensor_quantizer.py:238] Load calibrated amax, shape=torch.Size([]).
-    [32mINFO    [0m [34mseq_blocks.5._weight_quantizer          : TensorQuantizer(8bit fake per-tensor amax=0.5203 calibrator=HistogramCalibrator scale=1.0 quant)[0m
-    I0318 13:22:53.108866 139755614467904 calibrate.py:79] seq_blocks.5._weight_quantizer          : TensorQuantizer(8bit fake per-tensor amax=0.5203 calibrator=HistogramCalibrator scale=1.0 quant)
-    W0318 13:22:59.775393 139755614467904 tensor_quantizer.py:238] Load calibrated amax, shape=torch.Size([]).
-    [32mINFO    [0m [34mseq_blocks.8._input_quantizer           : TensorQuantizer(8bit fake per-tensor amax=2.8672 calibrator=HistogramCalibrator scale=1.0 quant)[0m
-    I0318 13:22:59.776729 139755614467904 calibrate.py:79] seq_blocks.8._input_quantizer           : TensorQuantizer(8bit fake per-tensor amax=2.8672 calibrator=HistogramCalibrator scale=1.0 quant)
-    W0318 13:23:01.662585 139755614467904 tensor_quantizer.py:238] Load calibrated amax, shape=torch.Size([]).
-    [32mINFO    [0m [34mseq_blocks.8._weight_quantizer          : TensorQuantizer(8bit fake per-tensor amax=0.5548 calibrator=HistogramCalibrator scale=1.0 quant)[0m
-    I0318 13:23:01.663614 139755614467904 calibrate.py:79] seq_blocks.8._weight_quantizer          : TensorQuantizer(8bit fake per-tensor amax=0.5548 calibrator=HistogramCalibrator scale=1.0 quant)
+    I0329 12:53:05.431792 139924298352448 calibrate.py:118] Post calibration analysis complete.
+    W0329 12:53:05.433431 139924298352448 tensor_quantizer.py:238] Load calibrated amax, shape=torch.Size([]).
+    [32mINFO    [0m [34mseq_blocks.2._input_quantizer           : TensorQuantizer(8bit fake per-tensor amax=5.3010 calibrator=MaxCalibrator scale=1.0 quant)[0m
+    I0329 12:53:05.434180 139924298352448 calibrate.py:131] seq_blocks.2._input_quantizer           : TensorQuantizer(8bit fake per-tensor amax=5.3010 calibrator=MaxCalibrator scale=1.0 quant)
+    W0329 12:53:05.435153 139924298352448 tensor_quantizer.py:238] Load calibrated amax, shape=torch.Size([8, 1]).
+    [32mINFO    [0m [34mseq_blocks.2._weight_quantizer          : TensorQuantizer(8bit fake axis=0 amax=[0.4018, 0.7529](8) calibrator=MaxCalibrator scale=1.0 quant)[0m
+    I0329 12:53:05.436254 139924298352448 calibrate.py:131] seq_blocks.2._weight_quantizer          : TensorQuantizer(8bit fake axis=0 amax=[0.4018, 0.7529](8) calibrator=MaxCalibrator scale=1.0 quant)
+    W0329 12:53:09.528398 139924298352448 tensor_quantizer.py:238] Load calibrated amax, shape=torch.Size([]).
+    [32mINFO    [0m [34mseq_blocks.5._input_quantizer           : TensorQuantizer(8bit fake per-tensor amax=4.7816 calibrator=HistogramCalibrator scale=1.0 quant)[0m
+    I0329 12:53:09.529677 139924298352448 calibrate.py:131] seq_blocks.5._input_quantizer           : TensorQuantizer(8bit fake per-tensor amax=4.7816 calibrator=HistogramCalibrator scale=1.0 quant)
+    W0329 12:53:11.763471 139924298352448 tensor_quantizer.py:238] Load calibrated amax, shape=torch.Size([]).
+    [32mINFO    [0m [34mseq_blocks.5._weight_quantizer          : TensorQuantizer(8bit fake per-tensor amax=0.5624 calibrator=HistogramCalibrator scale=1.0 quant)[0m
+    I0329 12:53:11.764446 139924298352448 calibrate.py:131] seq_blocks.5._weight_quantizer          : TensorQuantizer(8bit fake per-tensor amax=0.5624 calibrator=HistogramCalibrator scale=1.0 quant)
+    W0329 12:53:17.317717 139924298352448 tensor_quantizer.py:238] Load calibrated amax, shape=torch.Size([]).
+    [32mINFO    [0m [34mseq_blocks.8._input_quantizer           : TensorQuantizer(8bit fake per-tensor amax=3.0593 calibrator=HistogramCalibrator scale=1.0 quant)[0m
+    I0329 12:53:17.318790 139924298352448 calibrate.py:131] seq_blocks.8._input_quantizer           : TensorQuantizer(8bit fake per-tensor amax=3.0593 calibrator=HistogramCalibrator scale=1.0 quant)
+    W0329 12:53:19.543643 139924298352448 tensor_quantizer.py:238] Load calibrated amax, shape=torch.Size([]).
+    [32mINFO    [0m [34mseq_blocks.8._weight_quantizer          : TensorQuantizer(8bit fake per-tensor amax=0.5609 calibrator=HistogramCalibrator scale=1.0 quant)[0m
+    I0329 12:53:19.544808 139924298352448 calibrate.py:131] seq_blocks.8._weight_quantizer          : TensorQuantizer(8bit fake per-tensor amax=0.5609 calibrator=HistogramCalibrator scale=1.0 quant)
     [32mINFO    [0m [34mPerforming post calibration analysis for calibrator entropy...[0m
-    I0318 13:23:01.665429 139755614467904 calibrate.py:53] Performing post calibration analysis for calibrator entropy...
-    [32mINFO    [0m [34mStarting transformation analysis[0m
-    I0318 13:23:01.666694 139755614467904 analysis.py:214] Starting transformation analysis
+    I0329 12:53:19.546923 139924298352448 calibrate.py:105] Performing post calibration analysis for calibrator entropy...
+    [32mINFO    [0m [34mStarting transformation analysis on jsc-toy[0m
+    I0329 12:53:19.548315 139924298352448 runtime_analysis.py:357] Starting transformation analysis on jsc-toy
     [32mINFO    [0m [34m
     Results jsc-toy:
     +------------------------------+--------------+
-    |            Metric            |    Value     |
+    |      Metric (Per Batch)      |    Value     |
     +------------------------------+--------------+
-    | Average Validation Accuracy  |   0.73316    |
-    |      Average Precision       |    0.746     |
-    |        Average Recall        |   0.73142    |
-    |       Average F1 Score       |   0.73475    |
-    |         Average Loss         |   0.76419    |
-    |       Average Latency        |  2.0012 ms   |
-    |   Average GPU Power Usage    |   56.568 W   |
-    | Inference Energy Consumption | 0.031446 mWh |
+    | Average Validation Accuracy  |   0.71737    |
+    |      Average Precision       |   0.72008    |
+    |        Average Recall        |   0.71095    |
+    |       Average F1 Score       |   0.71263    |
+    |         Average Loss         |   0.81421    |
+    |       Average Latency        |  2.9006 ms   |
+    |   Average GPU Power Usage    |   22.525 W   |
+    | Inference Energy Consumption | 0.018149 mWh |
     +------------------------------+--------------+[0m
-    I0318 13:23:04.402893 139755614467904 analysis.py:330] 
+    I0329 12:53:22.697756 139924298352448 runtime_analysis.py:521] 
     Results jsc-toy:
     +------------------------------+--------------+
-    |            Metric            |    Value     |
+    |      Metric (Per Batch)      |    Value     |
     +------------------------------+--------------+
-    | Average Validation Accuracy  |   0.73316    |
-    |      Average Precision       |    0.746     |
-    |        Average Recall        |   0.73142    |
-    |       Average F1 Score       |   0.73475    |
-    |         Average Loss         |   0.76419    |
-    |       Average Latency        |  2.0012 ms   |
-    |   Average GPU Power Usage    |   56.568 W   |
-    | Inference Energy Consumption | 0.031446 mWh |
+    | Average Validation Accuracy  |   0.71737    |
+    |      Average Precision       |   0.72008    |
+    |        Average Recall        |   0.71095    |
+    |       Average F1 Score       |   0.71263    |
+    |         Average Loss         |   0.81421    |
+    |       Average Latency        |  2.9006 ms   |
+    |   Average GPU Power Usage    |   22.525 W   |
+    | Inference Energy Consumption | 0.018149 mWh |
     +------------------------------+--------------+
+    [32mINFO    [0m [34mRuntime analysis results saved to /root/mase_output/tensorrt/quantization/jsc-toy_cls_jsc_2024-03-29/mase_graph/version_5/model.json[0m
+    I0329 12:53:22.699659 139924298352448 runtime_analysis.py:143] Runtime analysis results saved to /root/mase_output/tensorrt/quantization/jsc-toy_cls_jsc_2024-03-29/mase_graph/version_5/model.json
     [32mINFO    [0m [34mPost calibration analysis complete.[0m
-    I0318 13:23:04.405836 139755614467904 calibrate.py:66] Post calibration analysis complete.
+    I0329 12:53:22.700434 139924298352448 calibrate.py:118] Post calibration analysis complete.
     [32mINFO    [0m [34mSucceeded in calibrating the model in PyTorch![0m
-    I0318 13:23:04.407040 139755614467904 calibrate.py:159] Succeeded in calibrating the model in PyTorch!
+    I0329 12:53:22.701544 139924298352448 calibrate.py:213] Succeeded in calibrating the model in PyTorch!
 
 
 From the results, the 99% `percentile` clips too many values during the amax calibration, compromising the loss. However 99.99% demonstrates higher validation accuracy alongside `mse` and `entropy` for `jsc-toy`. For such a small model, the methods are not highly distinguished, however for larger models this calibration process will be important for ensuring the quantized model still performs well. 
 
 ### Section 1.3 Quantized Aware Training (QAT)
 
-The `tensorrt_fine_tune_transform_pass` is used to fine tune the quantized model. 
+The `tensorrt_fine_tune_transform_pass` is used to fine tune the quantized model. By default, when running the `tensorrt_engine_interface_pass` the fake quantized model will go through fine tuning however you stop this by setting the `fine_tune` in `passes.tensorrt.fine_tune` to false.
 
-For QAT it is typical to employ 10% of the original training epochs, starting at 1% of the initial training learning rate, and a cosine annealing learning rate schedule that follows the decreasing half of a cosine period, down to 1% of the initial fine tuning learning rate (0.01% of the initial training learning rate). However this default can be overidden by setting the `epochs`, `initial_learning_rate` and `final_learning_rate` in `passes.tensorrt_quantize.fine_tune`.
+For QAT it is typical to employ 10% of the original training epochs, starting at 1% of the initial training learning rate, and a cosine annealing learning rate schedule that follows the decreasing half of a cosine period, down to 1% of the initial fine tuning learning rate (0.01% of the initial training learning rate). However this default can be overidden by setting the `epochs`, `initial_learning_rate` and `final_learning_rate` in `passes.tensorrt.fine_tune`.
 
 The fine tuned checkpoints are stored in the ckpts/fine_tuning folder:
 
 ```
 mase_output
 └── tensorrt
-    └── model_task_dataset_date
-        └──quantization
+    └── quantization
+        └──model_task_dataset_date
             ├── cache
             ├── ckpts
             │   └── fine_tuning
@@ -642,17 +566,17 @@ mase_output
 mg, _ = tensorrt_fine_tune_transform_pass(mg, pass_args=tensorrt_config)
 ```
 
-    [32mINFO    [0m [34mStarting Fine Tuning...[0m
-    I0318 13:23:20.128491 139755614467904 fine_tune.py:62] Starting Fine Tuning...
-    [32mINFO    [0m [34mFine tuninig for 2 epochs[0m
-    I0318 13:23:20.170033 139755614467904 fine_tune.py:102] Fine tuninig for 2 epochs
-    I0318 13:23:20.252301 139755614467904 rank_zero.py:64] GPU available: True (cuda), used: True
-    I0318 13:23:20.266848 139755614467904 rank_zero.py:64] TPU available: False, using: 0 TPU cores
-    I0318 13:23:20.267485 139755614467904 rank_zero.py:64] IPU available: False, using: 0 IPUs
-    I0318 13:23:20.268031 139755614467904 rank_zero.py:64] HPU available: False, using: 0 HPUs
-    I0318 13:23:20.274132 139755614467904 rank_zero.py:64] You are using a CUDA device ('NVIDIA GeForce RTX 3070') that has Tensor Cores. To properly utilize them, you should set `torch.set_float32_matmul_precision('medium' | 'high')` which will trade-off precision for performance. For more details, read https://pytorch.org/docs/stable/generated/torch.set_float32_matmul_precision.html#torch.set_float32_matmul_precision
-    I0318 13:23:22.531366 139755614467904 cuda.py:61] LOCAL_RANK: 0 - CUDA_VISIBLE_DEVICES: [0]
-    I0318 13:23:22.546064 139755614467904 model_summary.py:94] 
+    [32mINFO    [0m [34mStarting Fine Tuning for 2 epochs...[0m
+    I0329 12:53:56.899361 139924298352448 fine_tune.py:142] Starting Fine Tuning for 2 epochs...
+    I0329 12:53:57.030875 139924298352448 rank_zero.py:64] GPU available: True (cuda), used: True
+    I0329 12:53:57.054269 139924298352448 rank_zero.py:64] TPU available: False, using: 0 TPU cores
+    I0329 12:53:57.055013 139924298352448 rank_zero.py:64] IPU available: False, using: 0 IPUs
+    I0329 12:53:57.055576 139924298352448 rank_zero.py:64] HPU available: False, using: 0 HPUs
+    I0329 12:53:57.062752 139924298352448 rank_zero.py:64] You are using a CUDA device ('NVIDIA RTX A2000 12GB') that has Tensor Cores. To properly utilize them, you should set `torch.set_float32_matmul_precision('medium' | 'high')` which will trade-off precision for performance. For more details, read https://pytorch.org/docs/stable/generated/torch.set_float32_matmul_precision.html#torch.set_float32_matmul_precision
+
+
+    I0329 12:53:59.800536 139924298352448 cuda.py:61] LOCAL_RANK: 0 - CUDA_VISIBLE_DEVICES: [0]
+    I0329 12:53:59.814722 139924298352448 model_summary.py:94] 
       | Name      | Type               | Params
     -------------------------------------------------
     0 | model     | GraphModule        | 327   
@@ -667,24 +591,29 @@ mg, _ = tensorrt_fine_tune_transform_pass(mg, pass_args=tensorrt_config)
     0.001     Total estimated model params size (MB)
 
 
-                                                                               
 
-    /opt/conda/envs/mase/lib/python3.11/site-packages/pytorch_lightning/trainer/connectors/data_connector.py:441: The 'val_dataloader' does not have many workers which may be a bottleneck. Consider increasing the value of the `num_workers` argument` to `num_workers=31` in the `DataLoader` to improve performance.
-    /opt/conda/envs/mase/lib/python3.11/site-packages/pytorch_lightning/trainer/connectors/data_connector.py:441: The 'train_dataloader' does not have many workers which may be a bottleneck. Consider increasing the value of the `num_workers` argument` to `num_workers=31` in the `DataLoader` to improve performance.
+    Sanity Checking: |          | 0/? [00:00<?, ?it/s]
 
 
-    Epoch 1: 100%|██████████| 3084/3084 [00:57<00:00, 53.90it/s, v_num=4, train_acc_step=0.765, val_acc_epoch=0.733, val_loss_epoch=0.750]
+    /root/anaconda3/envs/mase/lib/python3.11/site-packages/pytorch_lightning/trainer/connectors/data_connector.py:441: The 'val_dataloader' does not have many workers which may be a bottleneck. Consider increasing the value of the `num_workers` argument` to `num_workers=27` in the `DataLoader` to improve performance.
+    /root/anaconda3/envs/mase/lib/python3.11/site-packages/pytorch_lightning/trainer/connectors/data_connector.py:441: The 'train_dataloader' does not have many workers which may be a bottleneck. Consider increasing the value of the `num_workers` argument` to `num_workers=27` in the `DataLoader` to improve performance.
 
-    I0318 13:25:17.216056 139755614467904 rank_zero.py:64] `Trainer.fit` stopped: `max_epochs=2` reached.
 
 
-    Epoch 1: 100%|██████████| 3084/3084 [00:57<00:00, 53.90it/s, v_num=4, train_acc_step=0.765, val_acc_epoch=0.733, val_loss_epoch=0.750]
+    Training: |          | 0/? [00:00<?, ?it/s]
 
+
+
+    Validation: |          | 0/? [00:00<?, ?it/s]
+
+
+
+    Validation: |          | 0/? [00:00<?, ?it/s]
+
+
+    I0329 13:00:33.763407 139924298352448 rank_zero.py:64] `Trainer.fit` stopped: `max_epochs=2` reached.
     [32mINFO    [0m [34mFine Tuning Complete[0m
-    I0318 13:25:17.223005 139755614467904 fine_tune.py:121] Fine Tuning Complete
-
-
-    
+    I0329 13:00:33.770675 139924298352448 fine_tune.py:161] Fine Tuning Complete
 
 
 ### Section 1.4 TensorRT Quantization
@@ -701,15 +630,23 @@ mg, meta = tensorrt_engine_interface_pass(mg, pass_args=tensorrt_config)
 ```
 
     [32mINFO    [0m [34mConverting PyTorch model to ONNX...[0m
-    I0318 13:27:06.409828 139755614467904 quantize.py:129] Converting PyTorch model to ONNX...
-    [32mINFO    [0m [34mONNX Conversion Complete. Stored ONNX model to /root/mase/mase_output/tensorrt/quantization/onnx/2024_03_18/version_10/model.onnx[0m
-    I0318 13:27:31.306156 139755614467904 quantize.py:152] ONNX Conversion Complete. Stored ONNX model to /root/mase/mase_output/tensorrt/quantization/onnx/2024_03_18/version_10/model.onnx
+    I0329 13:02:33.433028 139924298352448 quantize.py:209] Converting PyTorch model to ONNX...
+    /root/anaconda3/envs/mase/lib/python3.11/site-packages/pytorch_quantization/tensor_quant.py:363: TracerWarning: Converting a tensor to a Python boolean might cause the trace to be incorrect. We can't record the data flow of Python values, so this value will be treated as a constant in the future. This means that the trace might not generalize to other inputs!
+      if min_amax < 0:
+    /root/anaconda3/envs/mase/lib/python3.11/site-packages/pytorch_quantization/tensor_quant.py:366: TracerWarning: torch.tensor results are registered as constants in the trace. You can safely ignore this warning if you use this function to create tensors out of constant variables that would be the same every time you call this function. In any other case, this might cause the trace to be incorrect.
+      max_bound = torch.tensor((2.0**(num_bits - 1 + int(unsigned))) - 1.0, device=amax.device)
+    /root/anaconda3/envs/mase/lib/python3.11/site-packages/pytorch_quantization/tensor_quant.py:376: TracerWarning: Converting a tensor to a Python boolean might cause the trace to be incorrect. We can't record the data flow of Python values, so this value will be treated as a constant in the future. This means that the trace might not generalize to other inputs!
+      if min_amax <= epsilon:  # Treat amax smaller than minimum representable of fp16 0
+    /root/anaconda3/envs/mase/lib/python3.11/site-packages/pytorch_quantization/tensor_quant.py:382: TracerWarning: Converting a tensor to a Python boolean might cause the trace to be incorrect. We can't record the data flow of Python values, so this value will be treated as a constant in the future. This means that the trace might not generalize to other inputs!
+      if min_amax <= epsilon:
+    [32mINFO    [0m [34mONNX Conversion Complete. Stored ONNX model to /root/mase/mase_output/tensorrt/quantization/jsc-toy_cls_jsc_2024-03-29/2024-03-29/version_1/model.onnx[0m
+    I0329 13:02:33.677475 139924298352448 quantize.py:239] ONNX Conversion Complete. Stored ONNX model to /root/mase/mase_output/tensorrt/quantization/jsc-toy_cls_jsc_2024-03-29/2024-03-29/version_1/model.onnx
     [32mINFO    [0m [34mConverting PyTorch model to TensorRT...[0m
-    I0318 13:27:37.806547 139755614467904 quantize.py:55] Converting PyTorch model to TensorRT...
-    [32mINFO    [0m [34mTensorRT Conversion Complete. Stored trt model to /root/mase/mase_output/tensorrt/quantization/trt/2024_03_18/version_6/model.trt[0m
-    I0318 13:27:46.186066 139755614467904 quantize.py:124] TensorRT Conversion Complete. Stored trt model to /root/mase/mase_output/tensorrt/quantization/trt/2024_03_18/version_6/model.trt
-    [32mINFO    [0m [34mTensorRT Model Summary Exported to /root/mase/mase_output/tensorrt/quantization/json/2024_03_18/version_6/model.json[0m
-    I0318 13:27:53.259016 139755614467904 quantize.py:168] TensorRT Model Summary Exported to /root/mase/mase_output/tensorrt/quantization/json/2024_03_18/version_6/model.json
+    I0329 13:02:33.678984 139924298352448 quantize.py:102] Converting PyTorch model to TensorRT...
+    [32mINFO    [0m [34mTensorRT Conversion Complete. Stored trt model to /root/mase/mase_output/tensorrt/quantization/jsc-toy_cls_jsc_2024-03-29/2024-03-29/version_2/model.trt[0m
+    I0329 13:03:29.229270 139924298352448 quantize.py:202] TensorRT Conversion Complete. Stored trt model to /root/mase/mase_output/tensorrt/quantization/jsc-toy_cls_jsc_2024-03-29/2024-03-29/version_2/model.trt
+    [32mINFO    [0m [34mTensorRT Model Summary Exported to /root/mase/mase_output/tensorrt/quantization/jsc-toy_cls_jsc_2024-03-29/2024-03-29/version_3/model.json[0m
+    I0329 13:03:29.479406 139924298352448 quantize.py:259] TensorRT Model Summary Exported to /root/mase/mase_output/tensorrt/quantization/jsc-toy_cls_jsc_2024-03-29/2024-03-29/version_3/model.json
 
 
 ### Section 1.5 Performance Analysis
@@ -724,83 +661,75 @@ _, _ = runtime_analysis_pass(mg_original, pass_args=runtime_analysis_config)
 _, _ = runtime_analysis_pass(meta['trt_engine_path'], pass_args=runtime_analysis_config)
 ```
 
-    [32mINFO    [0m [34mStarting transformation analysis[0m
-    I0318 13:28:06.032049 139755614467904 analysis.py:214] Starting transformation analysis
+    [32mINFO    [0m [34mStarting transformation analysis on jsc-toy[0m
+    I0329 13:03:29.966202 139924298352448 runtime_analysis.py:357] Starting transformation analysis on jsc-toy
     [32mINFO    [0m [34m
     Results jsc-toy:
-    +------------------------------+--------------+
-    |            Metric            |    Value     |
-    +------------------------------+--------------+
-    |    Average Test Accuracy     |   0.73168    |
-    |      Average Precision       |   0.74472    |
-    |        Average Recall        |   0.73037    |
-    |       Average F1 Score       |   0.73369    |
-    |         Average Loss         |   0.76315    |
-    |       Average Latency        |  1.0634 ms   |
-    |   Average GPU Power Usage    |   59.251 W   |
-    | Inference Energy Consumption | 0.017502 mWh |
-    +------------------------------+--------------+[0m
-    I0318 13:28:11.978660 139755614467904 analysis.py:330] 
-    Results jsc-toy:
-    +------------------------------+--------------+
-    |            Metric            |    Value     |
-    +------------------------------+--------------+
-    |    Average Test Accuracy     |   0.73168    |
-    |      Average Precision       |   0.74472    |
-    |        Average Recall        |   0.73037    |
-    |       Average F1 Score       |   0.73369    |
-    |         Average Loss         |   0.76315    |
-    |       Average Latency        |  1.0634 ms   |
-    |   Average GPU Power Usage    |   59.251 W   |
-    | Inference Energy Consumption | 0.017502 mWh |
-    +------------------------------+--------------+
-    [32mINFO    [0m [34m
-    TensorRT Engine Input/Output Information:
-    Index | Type    | DataType | Static Shape         | Dynamic Shape        | Name
-    ------|---------|----------|----------------------|----------------------|-----------------------
-    0     | Input   | FLOAT    | (256, 16)              | (256, 16)              | input
-    1     | Output  | FLOAT    | (256, 5)               | (256, 5)               | 109[0m
-    I0318 13:28:11.995075 139755614467904 analysis.py:117] 
-    TensorRT Engine Input/Output Information:
-    Index | Type    | DataType | Static Shape         | Dynamic Shape        | Name
-    ------|---------|----------|----------------------|----------------------|-----------------------
-    0     | Input   | FLOAT    | (256, 16)              | (256, 16)              | input
-    1     | Output  | FLOAT    | (256, 5)               | (256, 5)               | 109
-    [32mINFO    [0m [34mStarting transformation analysis[0m
-    I0318 13:28:11.996511 139755614467904 analysis.py:214] Starting transformation analysis
-    [32mINFO    [0m [34m
-    Results jsc-toy-quantized:
     +------------------------------+---------------+
-    |            Metric            |     Value     |
+    |      Metric (Per Batch)      |     Value     |
     +------------------------------+---------------+
-    |    Average Test Accuracy     |    0.73394    |
-    |      Average Precision       |    0.74894    |
-    |        Average Recall        |    0.73414    |
-    |       Average F1 Score       |    0.73757    |
-    |         Average Loss         |    0.75233    |
-    |       Average Latency        |  0.20819 ms   |
-    |   Average GPU Power Usage    |   59.366 W    |
-    | Inference Energy Consumption | 0.0034331 mWh |
+    |    Average Test Accuracy     |    0.71971    |
+    |      Average Precision       |    0.71884    |
+    |        Average Recall        |    0.71127    |
+    |       Average F1 Score       |    0.71274    |
+    |         Average Loss         |    0.8116     |
+    |       Average Latency        |  0.87057 ms   |
+    |   Average GPU Power Usage    |   23.792 W    |
+    | Inference Energy Consumption | 0.0057535 mWh |
     +------------------------------+---------------+[0m
-    I0318 13:28:17.535370 139755614467904 analysis.py:330] 
-    Results jsc-toy-quantized:
+    I0329 13:03:32.504800 139924298352448 runtime_analysis.py:521] 
+    Results jsc-toy:
     +------------------------------+---------------+
-    |            Metric            |     Value     |
+    |      Metric (Per Batch)      |     Value     |
     +------------------------------+---------------+
-    |    Average Test Accuracy     |    0.73394    |
-    |      Average Precision       |    0.74894    |
-    |        Average Recall        |    0.73414    |
-    |       Average F1 Score       |    0.73757    |
-    |         Average Loss         |    0.75233    |
-    |       Average Latency        |  0.20819 ms   |
-    |   Average GPU Power Usage    |   59.366 W    |
-    | Inference Energy Consumption | 0.0034331 mWh |
+    |    Average Test Accuracy     |    0.71971    |
+    |      Average Precision       |    0.71884    |
+    |        Average Recall        |    0.71127    |
+    |       Average F1 Score       |    0.71274    |
+    |         Average Loss         |    0.8116     |
+    |       Average Latency        |  0.87057 ms   |
+    |   Average GPU Power Usage    |   23.792 W    |
+    | Inference Energy Consumption | 0.0057535 mWh |
     +------------------------------+---------------+
+    [32mINFO    [0m [34mRuntime analysis results saved to /root/mase_output/tensorrt/quantization/jsc-toy_cls_jsc_2024-03-29/mase_graph/version_6/model.json[0m
+    I0329 13:03:32.507777 139924298352448 runtime_analysis.py:143] Runtime analysis results saved to /root/mase_output/tensorrt/quantization/jsc-toy_cls_jsc_2024-03-29/mase_graph/version_6/model.json
+    [32mINFO    [0m [34mStarting transformation analysis on jsc-toy-trt_quantized[0m
+    I0329 13:03:32.523447 139924298352448 runtime_analysis.py:357] Starting transformation analysis on jsc-toy-trt_quantized
+    [32mINFO    [0m [34m
+    Results jsc-toy-trt_quantized:
+    +------------------------------+----------------+
+    |      Metric (Per Batch)      |     Value      |
+    +------------------------------+----------------+
+    |    Average Test Accuracy     |    0.73069     |
+    |      Average Precision       |    0.74101     |
+    |        Average Recall        |    0.72967     |
+    |       Average F1 Score       |    0.73247     |
+    |         Average Loss         |    0.76993     |
+    |       Average Latency        |   0.13363 ms   |
+    |   Average GPU Power Usage    |    23.043 W    |
+    | Inference Energy Consumption | 0.00085532 mWh |
+    +------------------------------+----------------+[0m
+    I0329 13:03:34.503784 139924298352448 runtime_analysis.py:521] 
+    Results jsc-toy-trt_quantized:
+    +------------------------------+----------------+
+    |      Metric (Per Batch)      |     Value      |
+    +------------------------------+----------------+
+    |    Average Test Accuracy     |    0.73069     |
+    |      Average Precision       |    0.74101     |
+    |        Average Recall        |    0.72967     |
+    |       Average F1 Score       |    0.73247     |
+    |         Average Loss         |    0.76993     |
+    |       Average Latency        |   0.13363 ms   |
+    |   Average GPU Power Usage    |    23.043 W    |
+    | Inference Energy Consumption | 0.00085532 mWh |
+    +------------------------------+----------------+
+    [32mINFO    [0m [34mRuntime analysis results saved to /root/mase_output/tensorrt/quantization/jsc-toy_cls_jsc_2024-03-29/tensorrt/version_0/model.json[0m
+    I0329 13:03:34.506492 139924298352448 runtime_analysis.py:143] Runtime analysis results saved to /root/mase_output/tensorrt/quantization/jsc-toy_cls_jsc_2024-03-29/tensorrt/version_0/model.json
 
 
-As shown above, the latency has decreased around 4x with the `jsc-toy` model without compromising accuracy due to the well calibrated amax and quantization-aware fine tuning. The inference energy consumption has thus also dropped tremendously and this is an excellent demonstration for the need to quantize in industry especially for LLMs in order to reduce energy usage. 
+As shown above, the latency has decreased around 6x with the `jsc-toy` model without compromising accuracy due to the well calibrated amax and quantization-aware fine tuning and additional runtime optimizations from TensorRT. The inference energy consumption has thus also dropped tremendously and this is an excellent demonstration for the need to quantize in industry especially for LLMs in order to reduce energy usage. 
 
-## Section 2. fp16 Quantization
+## Section 2. FP16 Quantization
 
 We will now load in a new toml configuration that uses fp16 instead of int8, whilst keeping the other settings the exact same for a fair comparison. This time however, we will use chop from the terminal which runs all the passes showcased in [Section 1](#section-1---int8-quantization).
 
@@ -808,182 +737,182 @@ Since float quantization does not require calibration, nor is it supported by `p
 
 
 ```python
-!ch transform --config ../../../machop/configs/tensorrt/jsc_toy_fp16_quantization_by_type.toml --load {JSC_CHECKPOINT_PATH} --load-type pl
+JSC_FP16_BY_TYPE_TOML = "../../../machop/configs/tensorrt/jsc_toy_FP16_quantization_by_type.toml"
+!ch transform --config {JSC_FP16_BY_TYPE_TOML} --load {JSC_CHECKPOINT_PATH} --load-type pl
 ```
 
-    567.49s - pydevd: Sending message related to process being replaced timed-out after 5 seconds
-    [2024-03-18 13:29:23,372] [INFO] [real_accelerator.py:191:get_accelerator] Setting ds_accelerator to cuda (auto detect)
+    8808.24s - pydevd: Sending message related to process being replaced timed-out after 5 seconds
+    [2024-03-28 09:37:03,989] [INFO] [real_accelerator.py:191:get_accelerator] Setting ds_accelerator to cuda (auto detect)
     INFO: Seed set to 0
     WARNING: Logging before flag parsing goes to stderr.
-    I0318 13:29:24.963454 139971211573056 seed.py:54] Seed set to 0
-    +-------------------------+------------------------+--------------+--------------------------+--------------------------+
-    | Name                    |        Default         | Config. File |     Manual Override      |        Effective         |
-    +-------------------------+------------------------+--------------+--------------------------+--------------------------+
-    | task                    |     [38;5;8mclassification[0m     |     cls      |                          |           cls            |
-    | load_name               |          [38;5;8mNone[0m          |              | /root/mase/mase_output/j | /root/mase/mase_output/j |
-    |                         |                        |              | sc-toy-cls_jsc/best.ckpt | sc-toy-cls_jsc/best.ckpt |
-    | load_type               |           [38;5;8mmz[0m           |              |            pl            |            pl            |
-    | batch_size              |          [38;5;8m128[0m           |     256      |                          |           256            |
-    | to_debug                |         False          |              |                          |          False           |
-    | log_level               |          info          |              |                          |           info           |
-    | report_to               |      tensorboard       |              |                          |       tensorboard        |
-    | seed                    |           0            |              |                          |            0             |
-    | quant_config            |          None          |              |                          |           None           |
-    | training_optimizer      |          adam          |              |                          |           adam           |
-    | trainer_precision       |        16-mixed        |              |                          |         16-mixed         |
-    | learning_rate           |         [38;5;8m1e-05[0m          |    0.001     |                          |          0.001           |
-    | weight_decay            |           0            |              |                          |            0             |
-    | max_epochs              |           [38;5;8m20[0m           |      10      |                          |            10            |
-    | max_steps               |           -1           |              |                          |            -1            |
-    | accumulate_grad_batches |           1            |              |                          |            1             |
-    | log_every_n_steps       |           50           |              |                          |            50            |
-    | num_workers             |           32           |              |                          |            32            |
-    | num_devices             |           1            |              |                          |            1             |
-    | num_nodes               |           1            |              |                          |            1             |
-    | accelerator             |          [38;5;8mauto[0m          |     gpu      |                          |           gpu            |
-    | strategy                |          auto          |              |                          |           auto           |
-    | is_to_auto_requeue      |         False          |              |                          |          False           |
-    | github_ci               |         False          |              |                          |          False           |
-    | disable_dataset_cache   |         False          |              |                          |          False           |
-    | target                  |  xcu250-figd2104-2L-e  |              |                          |   xcu250-figd2104-2L-e   |
-    | num_targets             |          100           |              |                          |           100            |
-    | is_pretrained           |         False          |              |                          |          False           |
-    | max_token_len           |          512           |              |                          |           512            |
-    | project_dir             | /root/mase/mase_output |              |                          |  /root/mase/mase_output  |
-    | project                 |          None          |              |                          |           None           |
-    | model                   |          [38;5;8mNone[0m          |   jsc-toy    |                          |         jsc-toy          |
-    | dataset                 |          [38;5;8mNone[0m          |     jsc      |                          |           jsc            |
-    | t_max                   |           20           |              |                          |            20            |
-    | eta_min                 |         1e-06          |              |                          |          1e-06           |
-    +-------------------------+------------------------+--------------+--------------------------+--------------------------+
+    I0328 09:37:06.938809 140201001654080 seed.py:54] Seed set to 0
+    +-------------------------+------------------------+--------------------------+--------------------------+--------------------------+
+    | Name                    |        Default         |       Config. File       |     Manual Override      |        Effective         |
+    +-------------------------+------------------------+--------------------------+--------------------------+--------------------------+
+    | task                    |     [38;5;8mclassification[0m     |           cls            |                          |           cls            |
+    | load_name               |          [38;5;8mNone[0m          | [38;5;8m../mase_output/jsc-toy_c[0m | /root/mase/mase_output/j | /root/mase/mase_output/j |
+    |                         |                        | [38;5;8mls_jsc/software/training[0m |   sc-toy_cls_jsc-pre-    |   sc-toy_cls_jsc-pre-    |
+    |                         |                        |     [38;5;8m_ckpts/best.ckpt[0m     |    trained/best.ckpt     |    trained/best.ckpt     |
+    | load_type               |           [38;5;8mmz[0m           |            [38;5;8mpl[0m            |            pl            |            pl            |
+    | batch_size              |          [38;5;8m128[0m           |            64            |                          |            64            |
+    | to_debug                |         False          |                          |                          |          False           |
+    | log_level               |          info          |                          |                          |           info           |
+    | report_to               |      tensorboard       |                          |                          |       tensorboard        |
+    | seed                    |           0            |                          |                          |            0             |
+    | quant_config            |          None          |                          |                          |           None           |
+    | training_optimizer      |          adam          |                          |                          |           adam           |
+    | trainer_precision       |        16-mixed        |                          |                          |         16-mixed         |
+    | learning_rate           |         [38;5;8m1e-05[0m          |          0.001           |                          |          0.001           |
+    | weight_decay            |           0            |                          |                          |            0             |
+    | max_epochs              |           [38;5;8m20[0m           |            10            |                          |            10            |
+    | max_steps               |           -1           |                          |                          |            -1            |
+    | accumulate_grad_batches |           1            |                          |                          |            1             |
+    | log_every_n_steps       |           50           |                          |                          |            50            |
+    | num_workers             |           28           |                          |                          |            28            |
+    | num_devices             |           1            |                          |                          |            1             |
+    | num_nodes               |           1            |                          |                          |            1             |
+    | accelerator             |          [38;5;8mauto[0m          |           gpu            |                          |           gpu            |
+    | strategy                |          auto          |                          |                          |           auto           |
+    | is_to_auto_requeue      |         False          |                          |                          |          False           |
+    | github_ci               |         False          |                          |                          |          False           |
+    | disable_dataset_cache   |         False          |                          |                          |          False           |
+    | target                  |  xcu250-figd2104-2L-e  |                          |                          |   xcu250-figd2104-2L-e   |
+    | num_targets             |          100           |                          |                          |           100            |
+    | is_pretrained           |         False          |                          |                          |          False           |
+    | max_token_len           |          512           |                          |                          |           512            |
+    | project_dir             | /root/mase/mase_output |                          |                          |  /root/mase/mase_output  |
+    | project                 |          None          |                          |                          |           None           |
+    | model                   |          [38;5;8mNone[0m          |         jsc-toy          |                          |         jsc-toy          |
+    | dataset                 |          [38;5;8mNone[0m          |           jsc            |                          |           jsc            |
+    | t_max                   |           20           |                          |                          |            20            |
+    | eta_min                 |         1e-06          |                          |                          |          1e-06           |
+    +-------------------------+------------------------+--------------------------+--------------------------+--------------------------+
     [32mINFO    [0m [34mInitialising model 'jsc-toy'...[0m
-    I0318 13:29:24.973379 139971211573056 cli.py:841] Initialising model 'jsc-toy'...
+    I0328 09:37:06.948820 140201001654080 cli.py:841] Initialising model 'jsc-toy'...
     [32mINFO    [0m [34mInitialising dataset 'jsc'...[0m
-    I0318 13:29:24.996573 139971211573056 cli.py:869] Initialising dataset 'jsc'...
-    [32mINFO    [0m [34mProject will be created at /root/mase/mase_output/jsc-toy_cls_jsc_2024-03-18[0m
-    I0318 13:29:24.997021 139971211573056 cli.py:905] Project will be created at /root/mase/mase_output/jsc-toy_cls_jsc_2024-03-18
+    I0328 09:37:06.950793 140201001654080 cli.py:869] Initialising dataset 'jsc'...
+    [32mINFO    [0m [34mProject will be created at /root/mase/mase_output/jsc-toy_cls_jsc_2024-03-28[0m
+    I0328 09:37:06.951038 140201001654080 cli.py:905] Project will be created at /root/mase/mase_output/jsc-toy_cls_jsc_2024-03-28
     [32mINFO    [0m [34mTransforming model 'jsc-toy'...[0m
-    I0318 13:29:25.030123 139971211573056 cli.py:365] Transforming model 'jsc-toy'...
-    [32mINFO    [0m [34mLoaded pytorch lightning checkpoint from /root/mase/mase_output/jsc-toy-cls_jsc/best.ckpt[0m
-    I0318 13:29:27.502959 139971211573056 checkpoint_load.py:85] Loaded pytorch lightning checkpoint from /root/mase/mase_output/jsc-toy-cls_jsc/best.ckpt
+    I0328 09:37:07.078488 140201001654080 cli.py:365] Transforming model 'jsc-toy'...
+    [32mINFO    [0m [34mLoaded pytorch lightning checkpoint from /root/mase/mase_output/jsc-toy_cls_jsc-pre-trained/best.ckpt[0m
+    I0328 09:37:09.420990 140201001654080 checkpoint_load.py:85] Loaded pytorch lightning checkpoint from /root/mase/mase_output/jsc-toy_cls_jsc-pre-trained/best.ckpt
     [32mINFO    [0m [34mApplying fake quantization to PyTorch model...[0m
-    I0318 13:29:30.147488 139971211573056 utils.py:167] Applying fake quantization to PyTorch model...
+    I0328 09:37:11.531935 140201001654080 utils.py:240] Applying fake quantization to PyTorch model...
     [33mWARNING [0m [34mint8 precision not found in config. Skipping fake quantization.[0m
-    W0318 13:29:30.147828 139971211573056 utils.py:170] int8 precision not found in config. Skipping fake quantization.
+    W0328 09:37:11.532341 140201001654080 utils.py:243] int8 precision not found in config. Skipping fake quantization.
+    [32mINFO    [0m [34mQuantized graph histogram:[0m
+    I0328 09:37:11.550864 140201001654080 summary.py:84] Quantized graph histogram:
+    [32mINFO    [0m [34m
+    | Original type   | OP           |   Total |   Changed |   Unchanged |
+    |-----------------+--------------+---------+-----------+-------------|
+    | BatchNorm1d     | batch_norm1d |       4 |         0 |           4 |
+    | Linear          | linear       |       3 |         0 |           3 |
+    | ReLU            | relu         |       4 |         0 |           4 |
+    | output          | output       |       1 |         0 |           1 |
+    | x               | placeholder  |       1 |         0 |           1 |[0m
+    I0328 09:37:11.551648 140201001654080 summary.py:85] 
+    | Original type   | OP           |   Total |   Changed |   Unchanged |
+    |-----------------+--------------+---------+-----------+-------------|
+    | BatchNorm1d     | batch_norm1d |       4 |         0 |           4 |
+    | Linear          | linear       |       3 |         0 |           3 |
+    | ReLU            | relu         |       4 |         0 |           4 |
+    | output          | output       |       1 |         0 |           1 |
+    | x               | placeholder  |       1 |         0 |           1 |
     [33mWARNING [0m [34mint8 precision not found in config. Skipping calibration.[0m
-    W0318 13:29:30.147962 139971211573056 calibrate.py:86] int8 precision not found in config. Skipping calibration.
-    [32mINFO    [0m [34mQuantized graph histogram:[0m
-    I0318 13:29:30.171943 139971211573056 summary.py:84] Quantized graph histogram:
-    [32mINFO    [0m [34m
-    | Original type   | OP           |   Total |   Changed |   Unchanged |
-    |-----------------+--------------+---------+-----------+-------------|
-    | BatchNorm1d     | batch_norm1d |       4 |         0 |           4 |
-    | Linear          | linear       |       3 |         0 |           3 |
-    | ReLU            | relu         |       4 |         0 |           4 |
-    | output          | output       |       1 |         0 |           1 |
-    | x               | placeholder  |       1 |         0 |           1 |[0m
-    I0318 13:29:30.173280 139971211573056 summary.py:85] 
-    | Original type   | OP           |   Total |   Changed |   Unchanged |
-    |-----------------+--------------+---------+-----------+-------------|
-    | BatchNorm1d     | batch_norm1d |       4 |         0 |           4 |
-    | Linear          | linear       |       3 |         0 |           3 |
-    | ReLU            | relu         |       4 |         0 |           4 |
-    | output          | output       |       1 |         0 |           1 |
-    | x               | placeholder  |       1 |         0 |           1 |
+    W0328 09:37:11.552517 140201001654080 calibrate.py:137] int8 precision not found in config. Skipping calibration.
     [33mWARNING [0m [34mint8 precision not found in config. Skipping QAT fine tuning.[0m
-    W0318 13:29:30.174435 139971211573056 fine_tune.py:57] int8 precision not found in config. Skipping QAT fine tuning.
-    [32mINFO    [0m [34mQuantized graph histogram:[0m
-    I0318 13:29:30.183183 139971211573056 summary.py:84] Quantized graph histogram:
-    [32mINFO    [0m [34m
-    | Original type   | OP           |   Total |   Changed |   Unchanged |
-    |-----------------+--------------+---------+-----------+-------------|
-    | BatchNorm1d     | batch_norm1d |       4 |         0 |           4 |
-    | Linear          | linear       |       3 |         0 |           3 |
-    | ReLU            | relu         |       4 |         0 |           4 |
-    | output          | output       |       1 |         0 |           1 |
-    | x               | placeholder  |       1 |         0 |           1 |[0m
-    I0318 13:29:30.183739 139971211573056 summary.py:85] 
-    | Original type   | OP           |   Total |   Changed |   Unchanged |
-    |-----------------+--------------+---------+-----------+-------------|
-    | BatchNorm1d     | batch_norm1d |       4 |         0 |           4 |
-    | Linear          | linear       |       3 |         0 |           3 |
-    | ReLU            | relu         |       4 |         0 |           4 |
-    | output          | output       |       1 |         0 |           1 |
-    | x               | placeholder  |       1 |         0 |           1 |
+    W0328 09:37:11.553805 140201001654080 fine_tune.py:92] int8 precision not found in config. Skipping QAT fine tuning.
     [32mINFO    [0m [34mConverting PyTorch model to ONNX...[0m
-    I0318 13:29:30.185087 139971211573056 quantize.py:129] Converting PyTorch model to ONNX...
-    [32mINFO    [0m [34mONNX Conversion Complete. Stored ONNX model to /root/mase/mase_output/tensorrt/quantization/onnx/2024_03_18/version_11/model.onnx[0m
-    I0318 13:29:32.601623 139971211573056 quantize.py:152] ONNX Conversion Complete. Stored ONNX model to /root/mase/mase_output/tensorrt/quantization/onnx/2024_03_18/version_11/model.onnx
+    I0328 09:37:11.556088 140201001654080 quantize.py:171] Converting PyTorch model to ONNX...
+    [32mINFO    [0m [34mONNX Conversion Complete. Stored ONNX model to /root/mase/mase_output/tensorrt/quantization/jsc-toy_cls_jsc_2024-03-28/2024-03-28/version_1/model.onnx[0m
+    I0328 09:37:13.650603 140201001654080 quantize.py:194] ONNX Conversion Complete. Stored ONNX model to /root/mase/mase_output/tensorrt/quantization/jsc-toy_cls_jsc_2024-03-28/2024-03-28/version_1/model.onnx
     [32mINFO    [0m [34mConverting PyTorch model to TensorRT...[0m
-    I0318 13:29:32.601973 139971211573056 quantize.py:55] Converting PyTorch model to TensorRT...
-    [32mINFO    [0m [34mTensorRT Conversion Complete. Stored trt model to /root/mase/mase_output/tensorrt/quantization/trt/2024_03_18/version_7/model.trt[0m
-    I0318 13:29:47.617324 139971211573056 quantize.py:124] TensorRT Conversion Complete. Stored trt model to /root/mase/mase_output/tensorrt/quantization/trt/2024_03_18/version_7/model.trt
-    [32mINFO    [0m [34mTensorRT Model Summary Exported to /root/mase/mase_output/tensorrt/quantization/json/2024_03_18/version_7/model.json[0m
-    I0318 13:29:47.872362 139971211573056 quantize.py:168] TensorRT Model Summary Exported to /root/mase/mase_output/tensorrt/quantization/json/2024_03_18/version_7/model.json
-    [32mINFO    [0m [34mQuantized graph histogram:[0m
-    I0318 13:29:47.894693 139971211573056 summary.py:84] Quantized graph histogram:
+    I0328 09:37:13.651079 140201001654080 quantize.py:97] Converting PyTorch model to TensorRT...
+    [32mINFO    [0m [34mTensorRT Conversion Complete. Stored trt model to /root/mase/mase_output/tensorrt/quantization/jsc-toy_cls_jsc_2024-03-28/2024-03-28/version_2/model.trt[0m
+    I0328 09:37:30.438357 140201001654080 quantize.py:166] TensorRT Conversion Complete. Stored trt model to /root/mase/mase_output/tensorrt/quantization/jsc-toy_cls_jsc_2024-03-28/2024-03-28/version_2/model.trt
+    [32mINFO    [0m [34mTensorRT Model Summary Exported to /root/mase/mase_output/tensorrt/quantization/jsc-toy_cls_jsc_2024-03-28/2024-03-28/version_3/model.json[0m
+    I0328 09:37:30.664676 140201001654080 quantize.py:210] TensorRT Model Summary Exported to /root/mase/mase_output/tensorrt/quantization/jsc-toy_cls_jsc_2024-03-28/2024-03-28/version_3/model.json
+    [32mINFO    [0m [34mStarting transformation analysis on jsc-toy[0m
+    I0328 09:37:30.666585 140201001654080 runtime_analysis.py:309] Starting transformation analysis on jsc-toy
     [32mINFO    [0m [34m
-    | Original type   | OP           |   Total |   Changed |   Unchanged |
-    |-----------------+--------------+---------+-----------+-------------|
-    | BatchNorm1d     | batch_norm1d |       4 |         0 |           4 |
-    | Linear          | linear       |       3 |         0 |           3 |
-    | ReLU            | relu         |       4 |         0 |           4 |
-    | output          | output       |       1 |         0 |           1 |
-    | x               | placeholder  |       1 |         0 |           1 |[0m
-    I0318 13:29:47.895272 139971211573056 summary.py:85] 
-    | Original type   | OP           |   Total |   Changed |   Unchanged |
-    |-----------------+--------------+---------+-----------+-------------|
-    | BatchNorm1d     | batch_norm1d |       4 |         0 |           4 |
-    | Linear          | linear       |       3 |         0 |           3 |
-    | ReLU            | relu         |       4 |         0 |           4 |
-    | output          | output       |       1 |         0 |           1 |
-    | x               | placeholder  |       1 |         0 |           1 |
-    [32mINFO    [0m [34m
-    TensorRT Engine Input/Output Information:
-    Index | Type    | DataType | Static Shape         | Dynamic Shape        | Name
-    ------|---------|----------|----------------------|----------------------|-----------------------
-    0     | Input   | FLOAT    | (256, 16)              | (256, 16)              | input
-    1     | Output  | FLOAT    | (256, 5)               | (256, 5)               | 37[0m
-    I0318 13:29:48.377556 139971211573056 analysis.py:117] 
-    TensorRT Engine Input/Output Information:
-    Index | Type    | DataType | Static Shape         | Dynamic Shape        | Name
-    ------|---------|----------|----------------------|----------------------|-----------------------
-    0     | Input   | FLOAT    | (256, 16)              | (256, 16)              | input
-    1     | Output  | FLOAT    | (256, 5)               | (256, 5)               | 37
-    [32mINFO    [0m [34mStarting transformation analysis[0m
-    I0318 13:29:48.377788 139971211573056 analysis.py:214] Starting transformation analysis
-    [32mINFO    [0m [34m
-    Results jsc-toy-quantized:
+    Results jsc-toy:
     +------------------------------+---------------+
-    |            Metric            |     Value     |
+    |      Metric (Per Batch)      |     Value     |
     +------------------------------+---------------+
-    |    Average Test Accuracy     |    0.73526    |
-    |      Average Precision       |    0.75069    |
-    |        Average Recall        |    0.73547    |
-    |       Average F1 Score       |    0.73897    |
-    |         Average Loss         |    0.74842    |
-    |       Average Latency        |  0.389921 ms  |
-    |   Average GPU Power Usage    |    60.18 W    |
-    | Inference Energy Consumption | 0.0055032 mWh |
+    |    Average Test Accuracy     |    0.71971    |
+    |      Average Precision       |    0.71884    |
+    |        Average Recall        |    0.71127    |
+    |       Average F1 Score       |    0.71274    |
+    |         Average Loss         |    0.8116     |
+    |       Average Latency        |  0.80336 ms   |
+    |   Average GPU Power Usage    |   22.024 W    |
+    | Inference Energy Consumption | 0.0049148 mWh |
     +------------------------------+---------------+[0m
-    I0318 13:29:53.848961 139971211573056 analysis.py:330] 
-    Results jsc-toy-quantized:
+    I0328 09:37:36.951404 140201001654080 runtime_analysis.py:437] 
+    Results jsc-toy:
     +------------------------------+---------------+
-    |            Metric            |     Value     |
+    |      Metric (Per Batch)      |     Value     |
     +------------------------------+---------------+
-    |    Average Test Accuracy     |    0.73526    |
-    |      Average Precision       |    0.75069    |
-    |        Average Recall        |    0.73547    |
-    |       Average F1 Score       |    0.73897    |
-    |         Average Loss         |    0.74842    |
-    |       Average Latency        |  0.389921 ms  |
-    |   Average GPU Power Usage    |    60.18 W    |
-    | Inference Energy Consumption | 0.0055032 mWh |
+    |    Average Test Accuracy     |    0.71971    |
+    |      Average Precision       |    0.71884    |
+    |        Average Recall        |    0.71127    |
+    |       Average F1 Score       |    0.71274    |
+    |         Average Loss         |    0.8116     |
+    |       Average Latency        |  0.80336 ms   |
+    |   Average GPU Power Usage    |   22.024 W    |
+    | Inference Energy Consumption | 0.0049148 mWh |
     +------------------------------+---------------+
-    [32mINFO    [0m [34mSaved mase graph to /root/mase/mase_output/jsc-toy_cls_jsc_2024-03-18/software/transform/transformed_ckpt[0m
-    I0318 13:29:53.973135 139971211573056 save_and_load.py:147] Saved mase graph to /root/mase/mase_output/jsc-toy_cls_jsc_2024-03-18/software/transform/transformed_ckpt
+    [32mINFO    [0m [34mRuntime analysis results saved to /root/mase_output/tensorrt/quantization/jsc-toy_cls_jsc_2024-03-28/mase_graph/version_43/model.json[0m
+    I0328 09:37:36.952783 140201001654080 runtime_analysis.py:123] Runtime analysis results saved to /root/mase_output/tensorrt/quantization/jsc-toy_cls_jsc_2024-03-28/mase_graph/version_43/model.json
+    [32mINFO    [0m [34m
+    TensorRT Engine Input/Output Information:
+    Index | Type    | DataType | Static Shape         | Dynamic Shape        | Name
+    ------|---------|----------|----------------------|----------------------|-----------------------
+    0     | Input   | FLOAT    | (64, 16)               | (64, 16)               | input
+    1     | Output  | FLOAT    | (64, 5)                | (64, 5)                | 37[0m
+    I0328 09:37:36.960667 140201001654080 runtime_analysis.py:167] 
+    TensorRT Engine Input/Output Information:
+    Index | Type    | DataType | Static Shape         | Dynamic Shape        | Name
+    ------|---------|----------|----------------------|----------------------|-----------------------
+    0     | Input   | FLOAT    | (64, 16)               | (64, 16)               | input
+    1     | Output  | FLOAT    | (64, 5)                | (64, 5)                | 37
+    [32mINFO    [0m [34mStarting transformation analysis on jsc-toy-trt_quantized[0m
+    I0328 09:37:36.960840 140201001654080 runtime_analysis.py:309] Starting transformation analysis on jsc-toy-trt_quantized
+    [32mINFO    [0m [34m
+    Results jsc-toy-trt_quantized:
+    +------------------------------+----------------+
+    |      Metric (Per Batch)      |     Value      |
+    +------------------------------+----------------+
+    |    Average Test Accuracy     |    0.73639     |
+    |      Average Precision       |    0.74849     |
+    |        Average Recall        |    0.73504     |
+    |       Average F1 Score       |    0.73822     |
+    |         Average Loss         |    0.74597     |
+    |       Average Latency        |   0.09133 ms   |
+    |   Average GPU Power Usage    |    21.706 W    |
+    | Inference Energy Consumption | 0.00055067 mWh |
+    +------------------------------+----------------+[0m
+    I0328 09:37:43.052305 140201001654080 runtime_analysis.py:437] 
+    Results jsc-toy-trt_quantized:
+    +------------------------------+----------------+
+    |      Metric (Per Batch)      |     Value      |
+    +------------------------------+----------------+
+    |    Average Test Accuracy     |    0.73639     |
+    |      Average Precision       |    0.74849     |
+    |        Average Recall        |    0.73504     |
+    |       Average F1 Score       |    0.73822     |
+    |         Average Loss         |    0.74597     |
+    |       Average Latency        |   0.09133 ms   |
+    |   Average GPU Power Usage    |    21.706 W    |
+    | Inference Energy Consumption | 0.00055067 mWh |
+    +------------------------------+----------------+
+    [32mINFO    [0m [34mRuntime analysis results saved to /root/mase_output/tensorrt/quantization/jsc-toy_cls_jsc_2024-03-28/tensorrt/version_1/model.json[0m
+    I0328 09:37:43.054715 140201001654080 runtime_analysis.py:123] Runtime analysis results saved to /root/mase_output/tensorrt/quantization/jsc-toy_cls_jsc_2024-03-28/tensorrt/version_1/model.json
+    [32mINFO    [0m [34mSaved mase graph to /root/mase/mase_output/jsc-toy_cls_jsc_2024-03-28/software/transform/transformed_ckpt[0m
+    I0328 09:37:43.132117 140201001654080 save_and_load.py:147] Saved mase graph to /root/mase/mase_output/jsc-toy_cls_jsc_2024-03-28/software/transform/transformed_ckpt
     [32mINFO    [0m [34mTransformation is completed[0m
-    I0318 13:29:53.973508 139971211573056 cli.py:383] Transformation is completed
+    I0328 09:37:43.132461 140201001654080 cli.py:383] Transformation is completed
 
 
 As you can see, `fp16` acheives a slighty higher test accuracy but a slightly lower latency (~30%) from that of int8 quantization; it is still ~2.5x faster than the unquantized model. Now lets apply quantization to a more complicated model.
@@ -994,35 +923,801 @@ We will now quantize `vgg7` which includes both convolutional and linear layers,
 In this case, we set:
 
 - The `by` parameter to `type`
-- The `quantize` parameter to true for `passes.tensorrt_quantize.conv2d.config` and `precision` parameter to 'int8'.
+- The `quantize` parameter to true for `passes.tensorrt.conv2d.config` and `precision` parameter to 'int8'.
 - The `input` and `weight` quantize axis for the conv2d layers.
-- The default `passes.tensorrt_quantize.default.config` precision to true. 
+- The default `passes.tensorrt.default.config` precision to true. 
 
-During the TensorRT quantization, the model's conv2d layers will be converted to an int8 fake quantized form, whilst the linear layers are kept to their default 'fp16'. Calibration of the conv2d layers will be undergone and fine tuning.  
+During the TensorRT quantization, the model's conv2d layers will be converted to an int8 fake quantized form, whilst the linear layers are kept to their default 'fp16'. Calibration of the conv2d layers and then fine tuning will be undergone before quantization and inference.
 
 You may either download a pretrained model [here](https://imperiallondon-my.sharepoint.com/:f:/g/personal/zz7522_ic_ac_uk/Emh3VT7Q_qRFmnp8kDrcgDoBwGUuzLwwKNtX8ZAt368jJQ?e=gsKONa), otherwise train it yourself as shown below. 
 
 
 ```python
-!ch train --config ../../../machop/configs/tensorrt/vgg7_layerwise_mixed_precision.toml.toml
+VGG_TYPEWISE_TOML = "../../../machop/configs/tensorrt/vgg7_typewise_mixed_precision.toml"
+
+!ch train --config {VGG_TYPEWISE_TOML}
 ```
 
 We will now load the checkpoint in, quantize the model and compare it to the unquantized version as we did in [Section 1.5](#section-15-performance-analysis)
 
 
 ```python
+# Change this checkpoint path accordingly
 VGG_CHECKPOINT_PATH = "../../../mase_output/vgg7-pre-trained/test-accu-0.9332.ckpt"
 ```
 
 
 ```python
-!ch transform --config ../../../machop/configs/tensorrt/vgg7_typewise_mixed_precision.toml --load {VGG_CHECKPOINT_PATH} --load-type pl
+!ch transform --config {VGG_TYPEWISE_TOML} --load {VGG_CHECKPOINT_PATH} --load-type pl
 ```
 
-    [2024-03-18 15:52:43,166] [INFO] [real_accelerator.py:191:get_accelerator] Setting ds_accelerator to cuda (auto detect)
+    [2024-03-28 23:00:09,016] [INFO] [real_accelerator.py:191:get_accelerator] Setting ds_accelerator to cuda (auto detect)
     INFO: Seed set to 0
     WARNING: Logging before flag parsing goes to stderr.
-    I0318 15:52:44.743802 139761495775040 seed.py:54] Seed set to 0
+    I0328 23:00:12.031970 139939454809920 seed.py:54] Seed set to 0
+    +-------------------------+------------------------+--------------------------+--------------------------+--------------------------+
+    | Name                    |        Default         |       Config. File       |     Manual Override      |        Effective         |
+    +-------------------------+------------------------+--------------------------+--------------------------+--------------------------+
+    | task                    |     [38;5;8mclassification[0m     |           cls            |                          |           cls            |
+    | load_name               |          [38;5;8mNone[0m          | [38;5;8m../mase_output/vgg7-pre-[0m | /root/mase/mase_output/v | /root/mase/mase_output/v |
+    |                         |                        |      [38;5;8mtrained/test-[0m       |  gg7-pre-trained/test-   |  gg7-pre-trained/test-   |
+    |                         |                        |     [38;5;8maccu-0.9332.ckpt[0m     |     accu-0.9332.ckpt     |     accu-0.9332.ckpt     |
+    | load_type               |           [38;5;8mmz[0m           |            [38;5;8mpl[0m            |            pl            |            pl            |
+    | batch_size              |          [38;5;8m128[0m           |            64            |                          |            64            |
+    | to_debug                |         False          |                          |                          |          False           |
+    | log_level               |          info          |                          |                          |           info           |
+    | report_to               |      tensorboard       |                          |                          |       tensorboard        |
+    | seed                    |           0            |                          |                          |            0             |
+    | quant_config            |          None          |                          |                          |           None           |
+    | training_optimizer      |          adam          |                          |                          |           adam           |
+    | trainer_precision       |        16-mixed        |                          |                          |         16-mixed         |
+    | learning_rate           |         [38;5;8m1e-05[0m          |          0.001           |                          |          0.001           |
+    | weight_decay            |           0            |                          |                          |            0             |
+    | max_epochs              |           [38;5;8m20[0m           |            10            |                          |            10            |
+    | max_steps               |           -1           |                          |                          |            -1            |
+    | accumulate_grad_batches |           1            |                          |                          |            1             |
+    | log_every_n_steps       |           50           |                          |                          |            50            |
+    | num_workers             |           28           |                          |                          |            28            |
+    | num_devices             |           1            |                          |                          |            1             |
+    | num_nodes               |           1            |                          |                          |            1             |
+    | accelerator             |          [38;5;8mauto[0m          |           gpu            |                          |           gpu            |
+    | strategy                |          auto          |                          |                          |           auto           |
+    | is_to_auto_requeue      |         False          |                          |                          |          False           |
+    | github_ci               |         False          |                          |                          |          False           |
+    | disable_dataset_cache   |         False          |                          |                          |          False           |
+    | target                  |  xcu250-figd2104-2L-e  |                          |                          |   xcu250-figd2104-2L-e   |
+    | num_targets             |          100           |                          |                          |           100            |
+    | is_pretrained           |         False          |                          |                          |          False           |
+    | max_token_len           |          512           |                          |                          |           512            |
+    | project_dir             | /root/mase/mase_output |                          |                          |  /root/mase/mase_output  |
+    | project                 |          None          |                          |                          |           None           |
+    | model                   |          [38;5;8mNone[0m          |           vgg7           |                          |           vgg7           |
+    | dataset                 |          [38;5;8mNone[0m          |         cifar10          |                          |         cifar10          |
+    | t_max                   |           20           |                          |                          |            20            |
+    | eta_min                 |         1e-06          |                          |                          |          1e-06           |
+    +-------------------------+------------------------+--------------------------+--------------------------+--------------------------+
+    [32mINFO    [0m [34mInitialising model 'vgg7'...[0m
+    I0328 23:00:12.042508 139939454809920 cli.py:846] Initialising model 'vgg7'...
+    [32mINFO    [0m [34mInitialising dataset 'cifar10'...[0m
+    I0328 23:00:12.149944 139939454809920 cli.py:874] Initialising dataset 'cifar10'...
+    [32mINFO    [0m [34mProject will be created at /root/mase/mase_output/vgg7_cls_cifar10_2024-03-28[0m
+    I0328 23:00:12.150315 139939454809920 cli.py:910] Project will be created at /root/mase/mase_output/vgg7_cls_cifar10_2024-03-28
+    [32mINFO    [0m [34mTransforming model 'vgg7'...[0m
+    I0328 23:00:12.277644 139939454809920 cli.py:370] Transforming model 'vgg7'...
+    Files already downloaded and verified
+    Files already downloaded and verified
+    Files already downloaded and verified
+    Files already downloaded and verified
+    Files already downloaded and verified
+    Files already downloaded and verified
+    Files already downloaded and verified
+    Files already downloaded and verified
+    [32mINFO    [0m [34mLoaded pytorch lightning checkpoint from /root/mase/mase_output/vgg7-pre-trained/test-accu-0.9332.ckpt[0m
+    I0328 23:00:18.166216 139939454809920 checkpoint_load.py:85] Loaded pytorch lightning checkpoint from /root/mase/mase_output/vgg7-pre-trained/test-accu-0.9332.ckpt
+    [32mINFO    [0m [34mLoaded pytorch lightning checkpoint from /root/mase/mase_output/vgg7-pre-trained/test-accu-0.9332.ckpt[0m
+    I0328 23:00:18.288503 139939454809920 checkpoint_load.py:85] Loaded pytorch lightning checkpoint from /root/mase/mase_output/vgg7-pre-trained/test-accu-0.9332.ckpt
+    [32mINFO    [0m [34mApplying fake quantization to PyTorch model...[0m
+    I0328 23:00:36.982592 139939454809920 utils.py:282] Applying fake quantization to PyTorch model...
+    [32mINFO    [0m [34mFake quantization applied to PyTorch model.[0m
+    I0328 23:00:37.249866 139939454809920 utils.py:307] Fake quantization applied to PyTorch model.
+    [32mINFO    [0m [34mQuantized graph histogram:[0m
+    I0328 23:00:37.269716 139939454809920 summary.py:84] Quantized graph histogram:
+    [32mINFO    [0m [34m
+    | Original type   | OP           |   Total |   Changed |   Unchanged |
+    |-----------------+--------------+---------+-----------+-------------|
+    | BatchNorm2d     | batch_norm2d |       6 |         0 |           6 |
+    | Conv2d          | conv2d       |       6 |         6 |           0 |
+    | Linear          | linear       |       3 |         0 |           3 |
+    | MaxPool2d       | max_pool2d   |       3 |         0 |           3 |
+    | ReLU            | relu         |       8 |         0 |           8 |
+    | output          | output       |       1 |         0 |           1 |
+    | view            | view         |       1 |         0 |           1 |
+    | x               | placeholder  |       1 |         0 |           1 |[0m
+    I0328 23:00:37.270473 139939454809920 summary.py:85] 
+    | Original type   | OP           |   Total |   Changed |   Unchanged |
+    |-----------------+--------------+---------+-----------+-------------|
+    | BatchNorm2d     | batch_norm2d |       6 |         0 |           6 |
+    | Conv2d          | conv2d       |       6 |         6 |           0 |
+    | Linear          | linear       |       3 |         0 |           3 |
+    | MaxPool2d       | max_pool2d   |       3 |         0 |           3 |
+    | ReLU            | relu         |       8 |         0 |           8 |
+    | output          | output       |       1 |         0 |           1 |
+    | view            | view         |       1 |         0 |           1 |
+    | x               | placeholder  |       1 |         0 |           1 |
+    [32mINFO    [0m [34mStarting calibration of the model in PyTorch...[0m
+    I0328 23:00:37.271291 139939454809920 calibrate.py:143] Starting calibration of the model in PyTorch...
+    [32mINFO    [0m [34mDisabling Quantization and Enabling Calibration[0m
+    I0328 23:00:37.301312 139939454809920 calibrate.py:152] Disabling Quantization and Enabling Calibration
+    [32mINFO    [0m [34mDisabling Quantization and Enabling Calibration[0m
+    I0328 23:00:37.301464 139939454809920 calibrate.py:152] Disabling Quantization and Enabling Calibration
+    [32mINFO    [0m [34mDisabling Quantization and Enabling Calibration[0m
+    I0328 23:00:37.301600 139939454809920 calibrate.py:152] Disabling Quantization and Enabling Calibration
+    [32mINFO    [0m [34mDisabling Quantization and Enabling Calibration[0m
+    I0328 23:00:37.301703 139939454809920 calibrate.py:152] Disabling Quantization and Enabling Calibration
+    [32mINFO    [0m [34mDisabling Quantization and Enabling Calibration[0m
+    I0328 23:00:37.301807 139939454809920 calibrate.py:152] Disabling Quantization and Enabling Calibration
+    [32mINFO    [0m [34mDisabling Quantization and Enabling Calibration[0m
+    I0328 23:00:37.301904 139939454809920 calibrate.py:152] Disabling Quantization and Enabling Calibration
+    [32mINFO    [0m [34mDisabling Quantization and Enabling Calibration[0m
+    I0328 23:00:37.302003 139939454809920 calibrate.py:152] Disabling Quantization and Enabling Calibration
+    [32mINFO    [0m [34mDisabling Quantization and Enabling Calibration[0m
+    I0328 23:00:37.302098 139939454809920 calibrate.py:152] Disabling Quantization and Enabling Calibration
+    [32mINFO    [0m [34mDisabling Quantization and Enabling Calibration[0m
+    I0328 23:00:37.302198 139939454809920 calibrate.py:152] Disabling Quantization and Enabling Calibration
+    [32mINFO    [0m [34mDisabling Quantization and Enabling Calibration[0m
+    I0328 23:00:37.302290 139939454809920 calibrate.py:152] Disabling Quantization and Enabling Calibration
+    [32mINFO    [0m [34mDisabling Quantization and Enabling Calibration[0m
+    I0328 23:00:37.302384 139939454809920 calibrate.py:152] Disabling Quantization and Enabling Calibration
+    [32mINFO    [0m [34mDisabling Quantization and Enabling Calibration[0m
+    I0328 23:00:37.302474 139939454809920 calibrate.py:152] Disabling Quantization and Enabling Calibration
+    [32mINFO    [0m [34mEnabling Quantization and Disabling Calibration[0m
+    I0328 23:00:43.843650 139939454809920 calibrate.py:175] Enabling Quantization and Disabling Calibration
+    W0328 23:00:43.844024 139939454809920 tensor_quantizer.py:174] Disable HistogramCalibrator
+    [32mINFO    [0m [34mEnabling Quantization and Disabling Calibration[0m
+    I0328 23:00:43.844100 139939454809920 calibrate.py:175] Enabling Quantization and Disabling Calibration
+    W0328 23:00:43.844196 139939454809920 tensor_quantizer.py:174] Disable HistogramCalibrator
+    [32mINFO    [0m [34mEnabling Quantization and Disabling Calibration[0m
+    I0328 23:00:43.844268 139939454809920 calibrate.py:175] Enabling Quantization and Disabling Calibration
+    W0328 23:00:43.844380 139939454809920 tensor_quantizer.py:174] Disable HistogramCalibrator
+    [32mINFO    [0m [34mEnabling Quantization and Disabling Calibration[0m
+    I0328 23:00:43.844432 139939454809920 calibrate.py:175] Enabling Quantization and Disabling Calibration
+    W0328 23:00:43.844521 139939454809920 tensor_quantizer.py:174] Disable HistogramCalibrator
+    [32mINFO    [0m [34mEnabling Quantization and Disabling Calibration[0m
+    I0328 23:00:43.844587 139939454809920 calibrate.py:175] Enabling Quantization and Disabling Calibration
+    W0328 23:00:43.844675 139939454809920 tensor_quantizer.py:174] Disable HistogramCalibrator
+    [32mINFO    [0m [34mEnabling Quantization and Disabling Calibration[0m
+    I0328 23:00:43.844727 139939454809920 calibrate.py:175] Enabling Quantization and Disabling Calibration
+    W0328 23:00:43.844815 139939454809920 tensor_quantizer.py:174] Disable HistogramCalibrator
+    [32mINFO    [0m [34mEnabling Quantization and Disabling Calibration[0m
+    I0328 23:00:43.844870 139939454809920 calibrate.py:175] Enabling Quantization and Disabling Calibration
+    W0328 23:00:43.844956 139939454809920 tensor_quantizer.py:174] Disable HistogramCalibrator
+    [32mINFO    [0m [34mEnabling Quantization and Disabling Calibration[0m
+    I0328 23:00:43.844999 139939454809920 calibrate.py:175] Enabling Quantization and Disabling Calibration
+    W0328 23:00:43.845094 139939454809920 tensor_quantizer.py:174] Disable HistogramCalibrator
+    [32mINFO    [0m [34mEnabling Quantization and Disabling Calibration[0m
+    I0328 23:00:43.845181 139939454809920 calibrate.py:175] Enabling Quantization and Disabling Calibration
+    W0328 23:00:43.845281 139939454809920 tensor_quantizer.py:174] Disable HistogramCalibrator
+    [32mINFO    [0m [34mEnabling Quantization and Disabling Calibration[0m
+    I0328 23:00:43.845329 139939454809920 calibrate.py:175] Enabling Quantization and Disabling Calibration
+    W0328 23:00:43.845412 139939454809920 tensor_quantizer.py:174] Disable HistogramCalibrator
+    [32mINFO    [0m [34mEnabling Quantization and Disabling Calibration[0m
+    I0328 23:00:43.845459 139939454809920 calibrate.py:175] Enabling Quantization and Disabling Calibration
+    W0328 23:00:43.845543 139939454809920 tensor_quantizer.py:174] Disable HistogramCalibrator
+    [32mINFO    [0m [34mEnabling Quantization and Disabling Calibration[0m
+    I0328 23:00:43.845585 139939454809920 calibrate.py:175] Enabling Quantization and Disabling Calibration
+    W0328 23:00:43.845667 139939454809920 tensor_quantizer.py:174] Disable HistogramCalibrator
+    W0328 23:00:43.853768 139939454809920 tensor_quantizer.py:238] Load calibrated amax, shape=torch.Size([]).
+    W0328 23:00:43.853853 139939454809920 tensor_quantizer.py:239] Call .cuda() if running on GPU after loading calibrated amax.
+    [32mINFO    [0m [34mfeature_layers.0._input_quantizer       : TensorQuantizer(8bit fake per-tensor amax=2.6051 calibrator=HistogramCalibrator scale=1.0 quant)[0m
+    I0328 23:00:43.853991 139939454809920 calibrate.py:131] feature_layers.0._input_quantizer       : TensorQuantizer(8bit fake per-tensor amax=2.6051 calibrator=HistogramCalibrator scale=1.0 quant)
+    W0328 23:00:43.854280 139939454809920 tensor_quantizer.py:238] Load calibrated amax, shape=torch.Size([]).
+    [32mINFO    [0m [34mfeature_layers.0._weight_quantizer      : TensorQuantizer(8bit fake per-tensor amax=0.2797 calibrator=HistogramCalibrator scale=1.0 quant)[0m
+    I0328 23:00:43.854381 139939454809920 calibrate.py:131] feature_layers.0._weight_quantizer      : TensorQuantizer(8bit fake per-tensor amax=0.2797 calibrator=HistogramCalibrator scale=1.0 quant)
+    W0328 23:00:43.854688 139939454809920 tensor_quantizer.py:238] Load calibrated amax, shape=torch.Size([]).
+    [32mINFO    [0m [34mfeature_layers.3._input_quantizer       : TensorQuantizer(8bit fake per-tensor amax=3.3027 calibrator=HistogramCalibrator scale=1.0 quant)[0m
+    I0328 23:00:43.854788 139939454809920 calibrate.py:131] feature_layers.3._input_quantizer       : TensorQuantizer(8bit fake per-tensor amax=3.3027 calibrator=HistogramCalibrator scale=1.0 quant)
+    W0328 23:00:43.855069 139939454809920 tensor_quantizer.py:238] Load calibrated amax, shape=torch.Size([]).
+    [32mINFO    [0m [34mfeature_layers.3._weight_quantizer      : TensorQuantizer(8bit fake per-tensor amax=0.2366 calibrator=HistogramCalibrator scale=1.0 quant)[0m
+    I0328 23:00:43.855164 139939454809920 calibrate.py:131] feature_layers.3._weight_quantizer      : TensorQuantizer(8bit fake per-tensor amax=0.2366 calibrator=HistogramCalibrator scale=1.0 quant)
+    W0328 23:00:43.855502 139939454809920 tensor_quantizer.py:238] Load calibrated amax, shape=torch.Size([]).
+    [32mINFO    [0m [34mfeature_layers.7._input_quantizer       : TensorQuantizer(8bit fake per-tensor amax=1.8357 calibrator=HistogramCalibrator scale=1.0 quant)[0m
+    I0328 23:00:43.855595 139939454809920 calibrate.py:131] feature_layers.7._input_quantizer       : TensorQuantizer(8bit fake per-tensor amax=1.8357 calibrator=HistogramCalibrator scale=1.0 quant)
+    W0328 23:00:43.855849 139939454809920 tensor_quantizer.py:238] Load calibrated amax, shape=torch.Size([]).
+    [32mINFO    [0m [34mfeature_layers.7._weight_quantizer      : TensorQuantizer(8bit fake per-tensor amax=0.2296 calibrator=HistogramCalibrator scale=1.0 quant)[0m
+    I0328 23:00:43.855940 139939454809920 calibrate.py:131] feature_layers.7._weight_quantizer      : TensorQuantizer(8bit fake per-tensor amax=0.2296 calibrator=HistogramCalibrator scale=1.0 quant)
+    W0328 23:00:43.856252 139939454809920 tensor_quantizer.py:238] Load calibrated amax, shape=torch.Size([]).
+    [32mINFO    [0m [34mfeature_layers.10._input_quantizer      : TensorQuantizer(8bit fake per-tensor amax=1.4749 calibrator=HistogramCalibrator scale=1.0 quant)[0m
+    I0328 23:00:43.856347 139939454809920 calibrate.py:131] feature_layers.10._input_quantizer      : TensorQuantizer(8bit fake per-tensor amax=1.4749 calibrator=HistogramCalibrator scale=1.0 quant)
+    W0328 23:00:43.856633 139939454809920 tensor_quantizer.py:238] Load calibrated amax, shape=torch.Size([]).
+    [32mINFO    [0m [34mfeature_layers.10._weight_quantizer     : TensorQuantizer(8bit fake per-tensor amax=0.2080 calibrator=HistogramCalibrator scale=1.0 quant)[0m
+    I0328 23:00:43.856730 139939454809920 calibrate.py:131] feature_layers.10._weight_quantizer     : TensorQuantizer(8bit fake per-tensor amax=0.2080 calibrator=HistogramCalibrator scale=1.0 quant)
+    W0328 23:00:43.857007 139939454809920 tensor_quantizer.py:238] Load calibrated amax, shape=torch.Size([]).
+    [32mINFO    [0m [34mfeature_layers.14._input_quantizer      : TensorQuantizer(8bit fake per-tensor amax=1.9279 calibrator=HistogramCalibrator scale=1.0 quant)[0m
+    I0328 23:00:43.857099 139939454809920 calibrate.py:131] feature_layers.14._input_quantizer      : TensorQuantizer(8bit fake per-tensor amax=1.9279 calibrator=HistogramCalibrator scale=1.0 quant)
+    W0328 23:00:43.857369 139939454809920 tensor_quantizer.py:238] Load calibrated amax, shape=torch.Size([]).
+    [32mINFO    [0m [34mfeature_layers.14._weight_quantizer     : TensorQuantizer(8bit fake per-tensor amax=0.2013 calibrator=HistogramCalibrator scale=1.0 quant)[0m
+    I0328 23:00:43.857461 139939454809920 calibrate.py:131] feature_layers.14._weight_quantizer     : TensorQuantizer(8bit fake per-tensor amax=0.2013 calibrator=HistogramCalibrator scale=1.0 quant)
+    W0328 23:00:43.857726 139939454809920 tensor_quantizer.py:238] Load calibrated amax, shape=torch.Size([]).
+    [32mINFO    [0m [34mfeature_layers.17._input_quantizer      : TensorQuantizer(8bit fake per-tensor amax=1.6148 calibrator=HistogramCalibrator scale=1.0 quant)[0m
+    I0328 23:00:43.857817 139939454809920 calibrate.py:131] feature_layers.17._input_quantizer      : TensorQuantizer(8bit fake per-tensor amax=1.6148 calibrator=HistogramCalibrator scale=1.0 quant)
+    W0328 23:00:43.858080 139939454809920 tensor_quantizer.py:238] Load calibrated amax, shape=torch.Size([]).
+    [32mINFO    [0m [34mfeature_layers.17._weight_quantizer     : TensorQuantizer(8bit fake per-tensor amax=0.1879 calibrator=HistogramCalibrator scale=1.0 quant)[0m
+    I0328 23:00:43.858170 139939454809920 calibrate.py:131] feature_layers.17._weight_quantizer     : TensorQuantizer(8bit fake per-tensor amax=0.1879 calibrator=HistogramCalibrator scale=1.0 quant)
+    [32mINFO    [0m [34mPerforming post calibration analysis for calibrator percentile_99.0...[0m
+    I0328 23:00:43.858960 139939454809920 calibrate.py:105] Performing post calibration analysis for calibrator percentile_99.0...
+    [32mINFO    [0m [34mStarting transformation analysis on vgg7[0m
+    I0328 23:00:43.859171 139939454809920 runtime_analysis.py:357] Starting transformation analysis on vgg7
+    [32mINFO    [0m [34m
+    Results vgg7:
+    +------------------------------+-------------+
+    |      Metric (Per Batch)      |    Value    |
+    +------------------------------+-------------+
+    |    Average Test Accuracy     |   0.91305   |
+    |      Average Precision       |   0.91207   |
+    |        Average Recall        |   0.91246   |
+    |       Average F1 Score       |   0.9122    |
+    |         Average Loss         |   0.26363   |
+    |       Average Latency        |  15.113 ms  |
+    |   Average GPU Power Usage    |  59.019 W   |
+    | Inference Energy Consumption | 0.24777 mWh |
+    +------------------------------+-------------+[0m
+    I0328 23:00:55.766893 139939454809920 runtime_analysis.py:521] 
+    Results vgg7:
+    +------------------------------+-------------+
+    |      Metric (Per Batch)      |    Value    |
+    +------------------------------+-------------+
+    |    Average Test Accuracy     |   0.91305   |
+    |      Average Precision       |   0.91207   |
+    |        Average Recall        |   0.91246   |
+    |       Average F1 Score       |   0.9122    |
+    |         Average Loss         |   0.26363   |
+    |       Average Latency        |  15.113 ms  |
+    |   Average GPU Power Usage    |  59.019 W   |
+    | Inference Energy Consumption | 0.24777 mWh |
+    +------------------------------+-------------+
+    [32mINFO    [0m [34mRuntime analysis results saved to /root/mase_output/tensorrt/quantization/vgg7_cls_cifar10_2024-03-28/mase_graph/version_44/model.json[0m
+    I0328 23:00:55.769451 139939454809920 runtime_analysis.py:143] Runtime analysis results saved to /root/mase_output/tensorrt/quantization/vgg7_cls_cifar10_2024-03-28/mase_graph/version_44/model.json
+    [32mINFO    [0m [34mPost calibration analysis complete.[0m
+    I0328 23:00:55.769782 139939454809920 calibrate.py:118] Post calibration analysis complete.
+    W0328 23:00:55.770918 139939454809920 tensor_quantizer.py:238] Load calibrated amax, shape=torch.Size([]).
+    [32mINFO    [0m [34mfeature_layers.0._input_quantizer       : TensorQuantizer(8bit fake per-tensor amax=2.6381 calibrator=HistogramCalibrator scale=1.0 quant)[0m
+    I0328 23:00:55.771324 139939454809920 calibrate.py:131] feature_layers.0._input_quantizer       : TensorQuantizer(8bit fake per-tensor amax=2.6381 calibrator=HistogramCalibrator scale=1.0 quant)
+    W0328 23:00:55.772012 139939454809920 tensor_quantizer.py:238] Load calibrated amax, shape=torch.Size([]).
+    [32mINFO    [0m [34mfeature_layers.0._weight_quantizer      : TensorQuantizer(8bit fake per-tensor amax=0.3434 calibrator=HistogramCalibrator scale=1.0 quant)[0m
+    I0328 23:00:55.772331 139939454809920 calibrate.py:131] feature_layers.0._weight_quantizer      : TensorQuantizer(8bit fake per-tensor amax=0.3434 calibrator=HistogramCalibrator scale=1.0 quant)
+    W0328 23:00:55.773109 139939454809920 tensor_quantizer.py:238] Load calibrated amax, shape=torch.Size([]).
+    [32mINFO    [0m [34mfeature_layers.3._input_quantizer       : TensorQuantizer(8bit fake per-tensor amax=5.9141 calibrator=HistogramCalibrator scale=1.0 quant)[0m
+    I0328 23:00:55.773458 139939454809920 calibrate.py:131] feature_layers.3._input_quantizer       : TensorQuantizer(8bit fake per-tensor amax=5.9141 calibrator=HistogramCalibrator scale=1.0 quant)
+    W0328 23:00:55.774124 139939454809920 tensor_quantizer.py:238] Load calibrated amax, shape=torch.Size([]).
+    [32mINFO    [0m [34mfeature_layers.3._weight_quantizer      : TensorQuantizer(8bit fake per-tensor amax=0.3704 calibrator=HistogramCalibrator scale=1.0 quant)[0m
+    I0328 23:00:55.774437 139939454809920 calibrate.py:131] feature_layers.3._weight_quantizer      : TensorQuantizer(8bit fake per-tensor amax=0.3704 calibrator=HistogramCalibrator scale=1.0 quant)
+    W0328 23:00:55.775206 139939454809920 tensor_quantizer.py:238] Load calibrated amax, shape=torch.Size([]).
+    [32mINFO    [0m [34mfeature_layers.7._input_quantizer       : TensorQuantizer(8bit fake per-tensor amax=3.2644 calibrator=HistogramCalibrator scale=1.0 quant)[0m
+    I0328 23:00:55.775516 139939454809920 calibrate.py:131] feature_layers.7._input_quantizer       : TensorQuantizer(8bit fake per-tensor amax=3.2644 calibrator=HistogramCalibrator scale=1.0 quant)
+    W0328 23:00:55.776169 139939454809920 tensor_quantizer.py:238] Load calibrated amax, shape=torch.Size([]).
+    [32mINFO    [0m [34mfeature_layers.7._weight_quantizer      : TensorQuantizer(8bit fake per-tensor amax=0.3621 calibrator=HistogramCalibrator scale=1.0 quant)[0m
+    I0328 23:00:55.776488 139939454809920 calibrate.py:131] feature_layers.7._weight_quantizer      : TensorQuantizer(8bit fake per-tensor amax=0.3621 calibrator=HistogramCalibrator scale=1.0 quant)
+    W0328 23:00:55.777268 139939454809920 tensor_quantizer.py:238] Load calibrated amax, shape=torch.Size([]).
+    [32mINFO    [0m [34mfeature_layers.10._input_quantizer      : TensorQuantizer(8bit fake per-tensor amax=2.4170 calibrator=HistogramCalibrator scale=1.0 quant)[0m
+    I0328 23:00:55.777583 139939454809920 calibrate.py:131] feature_layers.10._input_quantizer      : TensorQuantizer(8bit fake per-tensor amax=2.4170 calibrator=HistogramCalibrator scale=1.0 quant)
+    W0328 23:00:55.778250 139939454809920 tensor_quantizer.py:238] Load calibrated amax, shape=torch.Size([]).
+    [32mINFO    [0m [34mfeature_layers.10._weight_quantizer     : TensorQuantizer(8bit fake per-tensor amax=0.2821 calibrator=HistogramCalibrator scale=1.0 quant)[0m
+    I0328 23:00:55.778557 139939454809920 calibrate.py:131] feature_layers.10._weight_quantizer     : TensorQuantizer(8bit fake per-tensor amax=0.2821 calibrator=HistogramCalibrator scale=1.0 quant)
+    W0328 23:00:55.779228 139939454809920 tensor_quantizer.py:238] Load calibrated amax, shape=torch.Size([]).
+    [32mINFO    [0m [34mfeature_layers.14._input_quantizer      : TensorQuantizer(8bit fake per-tensor amax=2.9863 calibrator=HistogramCalibrator scale=1.0 quant)[0m
+    I0328 23:00:55.779539 139939454809920 calibrate.py:131] feature_layers.14._input_quantizer      : TensorQuantizer(8bit fake per-tensor amax=2.9863 calibrator=HistogramCalibrator scale=1.0 quant)
+    W0328 23:00:55.780190 139939454809920 tensor_quantizer.py:238] Load calibrated amax, shape=torch.Size([]).
+    [32mINFO    [0m [34mfeature_layers.14._weight_quantizer     : TensorQuantizer(8bit fake per-tensor amax=0.2734 calibrator=HistogramCalibrator scale=1.0 quant)[0m
+    I0328 23:00:55.780498 139939454809920 calibrate.py:131] feature_layers.14._weight_quantizer     : TensorQuantizer(8bit fake per-tensor amax=0.2734 calibrator=HistogramCalibrator scale=1.0 quant)
+    W0328 23:00:55.781196 139939454809920 tensor_quantizer.py:238] Load calibrated amax, shape=torch.Size([]).
+    [32mINFO    [0m [34mfeature_layers.17._input_quantizer      : TensorQuantizer(8bit fake per-tensor amax=2.7147 calibrator=HistogramCalibrator scale=1.0 quant)[0m
+    I0328 23:00:55.781511 139939454809920 calibrate.py:131] feature_layers.17._input_quantizer      : TensorQuantizer(8bit fake per-tensor amax=2.7147 calibrator=HistogramCalibrator scale=1.0 quant)
+    W0328 23:00:55.782173 139939454809920 tensor_quantizer.py:238] Load calibrated amax, shape=torch.Size([]).
+    [32mINFO    [0m [34mfeature_layers.17._weight_quantizer     : TensorQuantizer(8bit fake per-tensor amax=0.2519 calibrator=HistogramCalibrator scale=1.0 quant)[0m
+    I0328 23:00:55.782480 139939454809920 calibrate.py:131] feature_layers.17._weight_quantizer     : TensorQuantizer(8bit fake per-tensor amax=0.2519 calibrator=HistogramCalibrator scale=1.0 quant)
+    [32mINFO    [0m [34mPerforming post calibration analysis for calibrator percentile_99.9...[0m
+    I0328 23:00:55.783563 139939454809920 calibrate.py:105] Performing post calibration analysis for calibrator percentile_99.9...
+    [32mINFO    [0m [34mStarting transformation analysis on vgg7[0m
+    I0328 23:00:55.783894 139939454809920 runtime_analysis.py:357] Starting transformation analysis on vgg7
+    [32mINFO    [0m [34m
+    Results vgg7:
+    +------------------------------+-------------+
+    |      Metric (Per Batch)      |    Value    |
+    +------------------------------+-------------+
+    | Average Validation Accuracy  |   0.92028   |
+    |      Average Precision       |   0.91911   |
+    |        Average Recall        |   0.9195    |
+    |       Average F1 Score       |   0.91919   |
+    |         Average Loss         |   0.24024   |
+    |       Average Latency        |  15.278 ms  |
+    |   Average GPU Power Usage    |  59.653 W   |
+    | Inference Energy Consumption | 0.25317 mWh |
+    +------------------------------+-------------+[0m
+    I0328 23:01:07.450706 139939454809920 runtime_analysis.py:521] 
+    Results vgg7:
+    +------------------------------+-------------+
+    |      Metric (Per Batch)      |    Value    |
+    +------------------------------+-------------+
+    | Average Validation Accuracy  |   0.92028   |
+    |      Average Precision       |   0.91911   |
+    |        Average Recall        |   0.9195    |
+    |       Average F1 Score       |   0.91919   |
+    |         Average Loss         |   0.24024   |
+    |       Average Latency        |  15.278 ms  |
+    |   Average GPU Power Usage    |  59.653 W   |
+    | Inference Energy Consumption | 0.25317 mWh |
+    +------------------------------+-------------+
+    [32mINFO    [0m [34mRuntime analysis results saved to /root/mase_output/tensorrt/quantization/vgg7_cls_cifar10_2024-03-28/mase_graph/version_45/model.json[0m
+    I0328 23:01:07.452143 139939454809920 runtime_analysis.py:143] Runtime analysis results saved to /root/mase_output/tensorrt/quantization/vgg7_cls_cifar10_2024-03-28/mase_graph/version_45/model.json
+    [32mINFO    [0m [34mPost calibration analysis complete.[0m
+    I0328 23:01:07.452330 139939454809920 calibrate.py:118] Post calibration analysis complete.
+    [32mINFO    [0m [34mSucceeded in calibrating the model in PyTorch![0m
+    I0328 23:01:07.452472 139939454809920 calibrate.py:213] Succeeded in calibrating the model in PyTorch!
+    [32mINFO    [0m [34mStarting Fine Tuning for 2 epochs...[0m
+    I0328 23:01:07.456390 139939454809920 fine_tune.py:142] Starting Fine Tuning for 2 epochs...
+    INFO: GPU available: True (cuda), used: True
+    I0328 23:01:07.618809 139939454809920 rank_zero.py:64] GPU available: True (cuda), used: True
+    INFO: TPU available: False, using: 0 TPU cores
+    I0328 23:01:07.645764 139939454809920 rank_zero.py:64] TPU available: False, using: 0 TPU cores
+    INFO: IPU available: False, using: 0 IPUs
+    I0328 23:01:07.645846 139939454809920 rank_zero.py:64] IPU available: False, using: 0 IPUs
+    INFO: HPU available: False, using: 0 HPUs
+    I0328 23:01:07.645901 139939454809920 rank_zero.py:64] HPU available: False, using: 0 HPUs
+    Files already downloaded and verified
+    Files already downloaded and verified
+    Files already downloaded and verified
+    Files already downloaded and verified
+    Files already downloaded and verified
+    Files already downloaded and verified
+    I0328 23:01:12.623627 139939454809920 cuda.py:61] LOCAL_RANK: 0 - CUDA_VISIBLE_DEVICES: [0]
+    I0328 23:01:12.632704 139939454809920 model_summary.py:94] 
+      | Name      | Type               | Params
+    -------------------------------------------------
+    0 | model     | GraphModule        | 14.0 M
+    1 | loss_fn   | CrossEntropyLoss   | 0     
+    2 | acc_train | MulticlassAccuracy | 0     
+    3 | loss_val  | MeanMetric         | 0     
+    4 | loss_test | MeanMetric         | 0     
+    -------------------------------------------------
+    14.0 M    Trainable params
+    0         Non-trainable params
+    14.0 M    Total params
+    56.118    Total estimated model params size (MB)
+    Epoch 0: 100%|█| 782/782 [00:36<00:00, 21.71it/s, v_num=14, train_acc_step=0.938
+    Validation: |                                             | 0/? [00:00<?, ?it/s][A
+    Validation:   0%|                                       | 0/157 [00:00<?, ?it/s][A
+    Validation DataLoader 0:   0%|                          | 0/157 [00:00<?, ?it/s][A
+    Validation DataLoader 0:   1%|                  | 1/157 [00:00<00:03, 48.47it/s][A
+    Validation DataLoader 0:   1%|▏                 | 2/157 [00:00<00:03, 49.82it/s][A
+    Validation DataLoader 0:   2%|▎                 | 3/157 [00:00<00:03, 50.58it/s][A
+    Validation DataLoader 0:   3%|▍                 | 4/157 [00:00<00:03, 49.84it/s][A
+    Validation DataLoader 0:   3%|▌                 | 5/157 [00:00<00:03, 50.45it/s][A
+    Validation DataLoader 0:   4%|▋                 | 6/157 [00:00<00:02, 50.79it/s][A
+    Validation DataLoader 0:   4%|▊                 | 7/157 [00:00<00:02, 51.03it/s][A
+    Validation DataLoader 0:   5%|▉                 | 8/157 [00:00<00:02, 51.28it/s][A
+    Validation DataLoader 0:   6%|█                 | 9/157 [00:00<00:02, 51.86it/s][A
+    Validation DataLoader 0:   6%|█                | 10/157 [00:00<00:02, 52.48it/s][A
+    Validation DataLoader 0:   7%|█▏               | 11/157 [00:00<00:02, 51.76it/s][A
+    Validation DataLoader 0:   8%|█▎               | 12/157 [00:00<00:02, 52.32it/s][A
+    Validation DataLoader 0:   8%|█▍               | 13/157 [00:00<00:02, 51.83it/s][A
+    Validation DataLoader 0:   9%|█▌               | 14/157 [00:00<00:02, 51.22it/s][A
+    Validation DataLoader 0:  10%|█▌               | 15/157 [00:00<00:02, 51.72it/s][A
+    Validation DataLoader 0:  10%|█▋               | 16/157 [00:00<00:02, 52.16it/s][A
+    Validation DataLoader 0:  11%|█▊               | 17/157 [00:00<00:02, 51.60it/s][A
+    Validation DataLoader 0:  11%|█▉               | 18/157 [00:00<00:02, 50.72it/s][A
+    Validation DataLoader 0:  12%|██               | 19/157 [00:00<00:02, 51.01it/s][A
+    Validation DataLoader 0:  13%|██▏              | 20/157 [00:00<00:02, 51.09it/s][A
+    Validation DataLoader 0:  13%|██▎              | 21/157 [00:00<00:02, 51.49it/s][A
+    Validation DataLoader 0:  14%|██▍              | 22/157 [00:00<00:02, 51.40it/s][A
+    Validation DataLoader 0:  15%|██▍              | 23/157 [00:00<00:02, 51.65it/s][A
+    Validation DataLoader 0:  15%|██▌              | 24/157 [00:00<00:02, 51.76it/s][A
+    Validation DataLoader 0:  16%|██▋              | 25/157 [00:00<00:02, 52.09it/s][A
+    Validation DataLoader 0:  17%|██▊              | 26/157 [00:00<00:02, 52.40it/s][A
+    Validation DataLoader 0:  17%|██▉              | 27/157 [00:00<00:02, 52.68it/s][A
+    Validation DataLoader 0:  18%|███              | 28/157 [00:00<00:02, 52.53it/s][A
+    Validation DataLoader 0:  18%|███▏             | 29/157 [00:00<00:02, 52.67it/s][A
+    Validation DataLoader 0:  19%|███▏             | 30/157 [00:00<00:02, 52.92it/s][A
+    Validation DataLoader 0:  20%|███▎             | 31/157 [00:00<00:02, 53.15it/s][A
+    Validation DataLoader 0:  20%|███▍             | 32/157 [00:00<00:02, 53.37it/s][A
+    Validation DataLoader 0:  21%|███▌             | 33/157 [00:00<00:02, 53.58it/s][A
+    Validation DataLoader 0:  22%|███▋             | 34/157 [00:00<00:02, 53.77it/s][A
+    Validation DataLoader 0:  22%|███▊             | 35/157 [00:00<00:02, 53.96it/s][A
+    Validation DataLoader 0:  23%|███▉             | 36/157 [00:00<00:02, 54.12it/s][A
+    Validation DataLoader 0:  24%|████             | 37/157 [00:00<00:02, 54.28it/s][A
+    Validation DataLoader 0:  24%|████             | 38/157 [00:00<00:02, 54.42it/s][A
+    Validation DataLoader 0:  25%|████▏            | 39/157 [00:00<00:02, 54.56it/s][A
+    Validation DataLoader 0:  25%|████▎            | 40/157 [00:00<00:02, 54.68it/s][A
+    Validation DataLoader 0:  26%|████▍            | 41/157 [00:00<00:02, 54.81it/s][A
+    Validation DataLoader 0:  27%|████▌            | 42/157 [00:00<00:02, 54.94it/s][A
+    Validation DataLoader 0:  27%|████▋            | 43/157 [00:00<00:02, 55.06it/s][A
+    Validation DataLoader 0:  28%|████▊            | 44/157 [00:00<00:02, 55.18it/s][A
+    Validation DataLoader 0:  29%|████▊            | 45/157 [00:00<00:02, 55.30it/s][A
+    Validation DataLoader 0:  29%|████▉            | 46/157 [00:00<00:02, 55.40it/s][A
+    Validation DataLoader 0:  30%|█████            | 47/157 [00:00<00:01, 55.50it/s][A
+    Validation DataLoader 0:  31%|█████▏           | 48/157 [00:00<00:01, 55.60it/s][A
+    Validation DataLoader 0:  31%|█████▎           | 49/157 [00:00<00:01, 55.68it/s][A
+    Validation DataLoader 0:  32%|█████▍           | 50/157 [00:00<00:01, 55.65it/s][A
+    Validation DataLoader 0:  32%|█████▌           | 51/157 [00:00<00:01, 55.74it/s][A
+    Validation DataLoader 0:  33%|█████▋           | 52/157 [00:00<00:01, 55.78it/s][A
+    Validation DataLoader 0:  34%|█████▋           | 53/157 [00:00<00:01, 55.86it/s][A
+    Validation DataLoader 0:  34%|█████▊           | 54/157 [00:00<00:01, 55.95it/s][A
+    Validation DataLoader 0:  35%|█████▉           | 55/157 [00:00<00:01, 55.98it/s][A
+    Validation DataLoader 0:  36%|██████           | 56/157 [00:01<00:01, 55.90it/s][A
+    Validation DataLoader 0:  36%|██████▏          | 57/157 [00:01<00:01, 55.88it/s][A
+    Validation DataLoader 0:  37%|██████▎          | 58/157 [00:01<00:01, 55.91it/s][A
+    Validation DataLoader 0:  38%|██████▍          | 59/157 [00:01<00:01, 55.95it/s][A
+    Validation DataLoader 0:  38%|██████▍          | 60/157 [00:01<00:01, 55.99it/s][A
+    Validation DataLoader 0:  39%|██████▌          | 61/157 [00:01<00:01, 56.01it/s][A
+    Validation DataLoader 0:  39%|██████▋          | 62/157 [00:01<00:01, 56.04it/s][A
+    Validation DataLoader 0:  40%|██████▊          | 63/157 [00:01<00:01, 56.06it/s][A
+    Validation DataLoader 0:  41%|██████▉          | 64/157 [00:01<00:01, 56.08it/s][A
+    Validation DataLoader 0:  41%|███████          | 65/157 [00:01<00:01, 56.10it/s][A
+    Validation DataLoader 0:  42%|███████▏         | 66/157 [00:01<00:01, 56.14it/s][A
+    Validation DataLoader 0:  43%|███████▎         | 67/157 [00:01<00:01, 56.16it/s][A
+    Validation DataLoader 0:  43%|███████▎         | 68/157 [00:01<00:01, 56.17it/s][A
+    Validation DataLoader 0:  44%|███████▍         | 69/157 [00:01<00:01, 56.20it/s][A
+    Validation DataLoader 0:  45%|███████▌         | 70/157 [00:01<00:01, 56.22it/s][A
+    Validation DataLoader 0:  45%|███████▋         | 71/157 [00:01<00:01, 56.24it/s][A
+    Validation DataLoader 0:  46%|███████▊         | 72/157 [00:01<00:01, 56.25it/s][A
+    Validation DataLoader 0:  46%|███████▉         | 73/157 [00:01<00:01, 56.27it/s][A
+    Validation DataLoader 0:  47%|████████         | 74/157 [00:01<00:01, 56.29it/s][A
+    Validation DataLoader 0:  48%|████████         | 75/157 [00:01<00:01, 56.31it/s][A
+    Validation DataLoader 0:  48%|████████▏        | 76/157 [00:01<00:01, 56.32it/s][A
+    Validation DataLoader 0:  49%|████████▎        | 77/157 [00:01<00:01, 56.33it/s][A
+    Validation DataLoader 0:  50%|████████▍        | 78/157 [00:01<00:01, 56.36it/s][A
+    Validation DataLoader 0:  50%|████████▌        | 79/157 [00:01<00:01, 56.37it/s][A
+    Validation DataLoader 0:  51%|████████▋        | 80/157 [00:01<00:01, 56.39it/s][A
+    Validation DataLoader 0:  52%|████████▊        | 81/157 [00:01<00:01, 56.41it/s][A
+    Validation DataLoader 0:  52%|████████▉        | 82/157 [00:01<00:01, 56.42it/s][A
+    Validation DataLoader 0:  53%|████████▉        | 83/157 [00:01<00:01, 56.43it/s][A
+    Validation DataLoader 0:  54%|█████████        | 84/157 [00:01<00:01, 56.33it/s][A
+    Validation DataLoader 0:  54%|█████████▏       | 85/157 [00:01<00:01, 56.31it/s][A
+    Validation DataLoader 0:  55%|█████████▎       | 86/157 [00:01<00:01, 56.33it/s][A
+    Validation DataLoader 0:  55%|█████████▍       | 87/157 [00:01<00:01, 56.35it/s][A
+    Validation DataLoader 0:  56%|█████████▌       | 88/157 [00:01<00:01, 56.37it/s][A
+    Validation DataLoader 0:  57%|█████████▋       | 89/157 [00:01<00:01, 56.40it/s][A
+    Validation DataLoader 0:  57%|█████████▋       | 90/157 [00:01<00:01, 56.41it/s][A
+    Validation DataLoader 0:  58%|█████████▊       | 91/157 [00:01<00:01, 56.43it/s][A
+    Validation DataLoader 0:  59%|█████████▉       | 92/157 [00:01<00:01, 56.44it/s][A
+    Validation DataLoader 0:  59%|██████████       | 93/157 [00:01<00:01, 56.45it/s][A
+    Validation DataLoader 0:  60%|██████████▏      | 94/157 [00:01<00:01, 56.46it/s][A
+    Validation DataLoader 0:  61%|██████████▎      | 95/157 [00:01<00:01, 56.47it/s][A
+    Validation DataLoader 0:  61%|██████████▍      | 96/157 [00:01<00:01, 56.48it/s][A
+    Validation DataLoader 0:  62%|██████████▌      | 97/157 [00:01<00:01, 56.49it/s][A
+    Validation DataLoader 0:  62%|██████████▌      | 98/157 [00:01<00:01, 56.50it/s][A
+    Validation DataLoader 0:  63%|██████████▋      | 99/157 [00:01<00:01, 56.51it/s][A
+    Validation DataLoader 0:  64%|██████████▏     | 100/157 [00:01<00:01, 56.51it/s][A
+    Validation DataLoader 0:  64%|██████████▎     | 101/157 [00:01<00:00, 56.52it/s][A
+    Validation DataLoader 0:  65%|██████████▍     | 102/157 [00:01<00:00, 56.53it/s][A
+    Validation DataLoader 0:  66%|██████████▍     | 103/157 [00:01<00:00, 56.55it/s][A
+    Validation DataLoader 0:  66%|██████████▌     | 104/157 [00:01<00:00, 56.57it/s][A
+    Validation DataLoader 0:  67%|██████████▋     | 105/157 [00:01<00:00, 56.58it/s][A
+    Validation DataLoader 0:  68%|██████████▊     | 106/157 [00:01<00:00, 56.60it/s][A
+    Validation DataLoader 0:  68%|██████████▉     | 107/157 [00:01<00:00, 56.61it/s][A
+    Validation DataLoader 0:  69%|███████████     | 108/157 [00:01<00:00, 56.62it/s][A
+    Validation DataLoader 0:  69%|███████████     | 109/157 [00:01<00:00, 56.64it/s][A
+    Validation DataLoader 0:  70%|███████████▏    | 110/157 [00:01<00:00, 56.65it/s][A
+    Validation DataLoader 0:  71%|███████████▎    | 111/157 [00:01<00:00, 56.66it/s][A
+    Validation DataLoader 0:  71%|███████████▍    | 112/157 [00:01<00:00, 56.67it/s][A
+    Validation DataLoader 0:  72%|███████████▌    | 113/157 [00:01<00:00, 56.69it/s][A
+    Validation DataLoader 0:  73%|███████████▌    | 114/157 [00:02<00:00, 56.69it/s][A
+    Validation DataLoader 0:  73%|███████████▋    | 115/157 [00:02<00:00, 56.70it/s][A
+    Validation DataLoader 0:  74%|███████████▊    | 116/157 [00:02<00:00, 56.71it/s][A
+    Validation DataLoader 0:  75%|███████████▉    | 117/157 [00:02<00:00, 56.73it/s][A
+    Validation DataLoader 0:  75%|████████████    | 118/157 [00:02<00:00, 56.74it/s][A
+    Validation DataLoader 0:  76%|████████████▏   | 119/157 [00:02<00:00, 56.75it/s][A
+    Validation DataLoader 0:  76%|████████████▏   | 120/157 [00:02<00:00, 56.76it/s][A
+    Validation DataLoader 0:  77%|████████████▎   | 121/157 [00:02<00:00, 56.76it/s][A
+    Validation DataLoader 0:  78%|████████████▍   | 122/157 [00:02<00:00, 56.77it/s][A
+    Validation DataLoader 0:  78%|████████████▌   | 123/157 [00:02<00:00, 56.77it/s][A
+    Validation DataLoader 0:  79%|████████████▋   | 124/157 [00:02<00:00, 56.78it/s][A
+    Validation DataLoader 0:  80%|████████████▋   | 125/157 [00:02<00:00, 56.80it/s][A
+    Validation DataLoader 0:  80%|████████████▊   | 126/157 [00:02<00:00, 56.81it/s][A
+    Validation DataLoader 0:  81%|████████████▉   | 127/157 [00:02<00:00, 56.81it/s][A
+    Validation DataLoader 0:  82%|█████████████   | 128/157 [00:02<00:00, 56.82it/s][A
+    Validation DataLoader 0:  82%|█████████████▏  | 129/157 [00:02<00:00, 56.82it/s][A
+    Validation DataLoader 0:  83%|█████████████▏  | 130/157 [00:02<00:00, 56.83it/s][A
+    Validation DataLoader 0:  83%|█████████████▎  | 131/157 [00:02<00:00, 56.84it/s][A
+    Validation DataLoader 0:  84%|█████████████▍  | 132/157 [00:02<00:00, 56.84it/s][A
+    Validation DataLoader 0:  85%|█████████████▌  | 133/157 [00:02<00:00, 56.85it/s][A
+    Validation DataLoader 0:  85%|█████████████▋  | 134/157 [00:02<00:00, 56.86it/s][A
+    Validation DataLoader 0:  86%|█████████████▊  | 135/157 [00:02<00:00, 56.87it/s][A
+    Validation DataLoader 0:  87%|█████████████▊  | 136/157 [00:02<00:00, 56.87it/s][A
+    Validation DataLoader 0:  87%|█████████████▉  | 137/157 [00:02<00:00, 56.87it/s][A
+    Validation DataLoader 0:  88%|██████████████  | 138/157 [00:02<00:00, 56.88it/s][A
+    Validation DataLoader 0:  89%|██████████████▏ | 139/157 [00:02<00:00, 56.89it/s][A
+    Validation DataLoader 0:  89%|██████████████▎ | 140/157 [00:02<00:00, 56.89it/s][A
+    Validation DataLoader 0:  90%|██████████████▎ | 141/157 [00:02<00:00, 56.89it/s][A
+    Validation DataLoader 0:  90%|██████████████▍ | 142/157 [00:02<00:00, 56.90it/s][A
+    Validation DataLoader 0:  91%|██████████████▌ | 143/157 [00:02<00:00, 56.90it/s][A
+    Validation DataLoader 0:  92%|██████████████▋ | 144/157 [00:02<00:00, 56.91it/s][A
+    Validation DataLoader 0:  92%|██████████████▊ | 145/157 [00:02<00:00, 56.92it/s][A
+    Validation DataLoader 0:  93%|██████████████▉ | 146/157 [00:02<00:00, 56.93it/s][A
+    Validation DataLoader 0:  94%|██████████████▉ | 147/157 [00:02<00:00, 56.94it/s][A
+    Validation DataLoader 0:  94%|███████████████ | 148/157 [00:02<00:00, 56.95it/s][A
+    Validation DataLoader 0:  95%|███████████████▏| 149/157 [00:02<00:00, 56.96it/s][A
+    Validation DataLoader 0:  96%|███████████████▎| 150/157 [00:02<00:00, 56.97it/s][A
+    Validation DataLoader 0:  96%|███████████████▍| 151/157 [00:02<00:00, 56.98it/s][A
+    Validation DataLoader 0:  97%|███████████████▍| 152/157 [00:02<00:00, 56.98it/s][A
+    Validation DataLoader 0:  97%|███████████████▌| 153/157 [00:02<00:00, 56.98it/s][A
+    Validation DataLoader 0:  98%|███████████████▋| 154/157 [00:02<00:00, 56.99it/s][A
+    Validation DataLoader 0:  99%|███████████████▊| 155/157 [00:02<00:00, 56.99it/s][A
+    Validation DataLoader 0:  99%|███████████████▉| 156/157 [00:02<00:00, 56.97it/s][A
+    Validation DataLoader 0: 100%|████████████████| 157/157 [00:02<00:00, 57.15it/s][A
+    Epoch 1: 100%|█| 782/782 [00:43<00:00, 18.17it/s, v_num=14, train_acc_step=0.812[A
+    Validation: |                                             | 0/? [00:00<?, ?it/s][A
+    Validation:   0%|                                       | 0/157 [00:00<?, ?it/s][A
+    Validation DataLoader 0:   0%|                          | 0/157 [00:00<?, ?it/s][A
+    Validation DataLoader 0:   1%|                  | 1/157 [00:00<00:08, 19.41it/s][A
+    Validation DataLoader 0:   1%|▏                 | 2/157 [00:00<00:05, 27.82it/s][A
+    Validation DataLoader 0:   2%|▎                 | 3/157 [00:00<00:05, 30.69it/s][A
+    Validation DataLoader 0:   3%|▍                 | 4/157 [00:00<00:04, 33.41it/s][A
+    Validation DataLoader 0:   3%|▌                 | 5/157 [00:00<00:04, 35.97it/s][A
+    Validation DataLoader 0:   4%|▋                 | 6/157 [00:00<00:03, 37.98it/s][A
+    Validation DataLoader 0:   4%|▊                 | 7/157 [00:00<00:03, 39.56it/s][A
+    Validation DataLoader 0:   5%|▉                 | 8/157 [00:00<00:03, 37.82it/s][A
+    Validation DataLoader 0:   6%|█                 | 9/157 [00:00<00:03, 39.03it/s][A
+    Validation DataLoader 0:   6%|█                | 10/157 [00:00<00:03, 36.79it/s][A
+    Validation DataLoader 0:   7%|█▏               | 11/157 [00:00<00:03, 37.70it/s][A
+    Validation DataLoader 0:   8%|█▎               | 12/157 [00:00<00:03, 38.78it/s][A
+    Validation DataLoader 0:   8%|█▍               | 13/157 [00:00<00:03, 39.57it/s][A
+    Validation DataLoader 0:   9%|█▌               | 14/157 [00:00<00:03, 40.44it/s][A
+    Validation DataLoader 0:  10%|█▌               | 15/157 [00:00<00:03, 41.38it/s][A
+    Validation DataLoader 0:  10%|█▋               | 16/157 [00:00<00:03, 42.21it/s][A
+    Validation DataLoader 0:  11%|█▊               | 17/157 [00:00<00:03, 42.51it/s][A
+    Validation DataLoader 0:  11%|█▉               | 18/157 [00:00<00:03, 42.74it/s][A
+    Validation DataLoader 0:  12%|██               | 19/157 [00:00<00:03, 43.44it/s][A
+    Validation DataLoader 0:  13%|██▏              | 20/157 [00:00<00:03, 44.09it/s][A
+    Validation DataLoader 0:  13%|██▎              | 21/157 [00:00<00:03, 44.54it/s][A
+    Validation DataLoader 0:  14%|██▍              | 22/157 [00:00<00:02, 45.10it/s][A
+    Validation DataLoader 0:  15%|██▍              | 23/157 [00:00<00:02, 45.08it/s][A
+    Validation DataLoader 0:  15%|██▌              | 24/157 [00:00<00:02, 45.59it/s][A
+    Validation DataLoader 0:  16%|██▋              | 25/157 [00:00<00:02, 46.05it/s][A
+    Validation DataLoader 0:  17%|██▊              | 26/157 [00:00<00:02, 46.49it/s][A
+    Validation DataLoader 0:  17%|██▉              | 27/157 [00:00<00:02, 46.89it/s][A
+    Validation DataLoader 0:  18%|███              | 28/157 [00:00<00:02, 47.27it/s][A
+    Validation DataLoader 0:  18%|███▏             | 29/157 [00:00<00:02, 47.64it/s][A
+    Validation DataLoader 0:  19%|███▏             | 30/157 [00:00<00:02, 46.89it/s][A
+    Validation DataLoader 0:  20%|███▎             | 31/157 [00:00<00:02, 47.24it/s][A
+    Validation DataLoader 0:  20%|███▍             | 32/157 [00:00<00:02, 47.56it/s][A
+    Validation DataLoader 0:  21%|███▌             | 33/157 [00:00<00:02, 44.02it/s][A
+    Validation DataLoader 0:  22%|███▋             | 34/157 [00:00<00:02, 44.31it/s][A
+    Validation DataLoader 0:  22%|███▊             | 35/157 [00:00<00:02, 44.65it/s][A
+    Validation DataLoader 0:  23%|███▉             | 36/157 [00:00<00:02, 42.92it/s][A
+    Validation DataLoader 0:  24%|████             | 37/157 [00:00<00:02, 43.21it/s][A
+    Validation DataLoader 0:  24%|████             | 38/157 [00:00<00:02, 43.55it/s][A
+    Validation DataLoader 0:  25%|████▏            | 39/157 [00:00<00:02, 43.89it/s][A
+    Validation DataLoader 0:  25%|████▎            | 40/157 [00:00<00:02, 44.20it/s][A
+    Validation DataLoader 0:  26%|████▍            | 41/157 [00:00<00:02, 44.37it/s][A
+    Validation DataLoader 0:  27%|████▌            | 42/157 [00:00<00:02, 44.61it/s][A
+    Validation DataLoader 0:  27%|████▋            | 43/157 [00:00<00:02, 44.90it/s][A
+    Validation DataLoader 0:  28%|████▊            | 44/157 [00:00<00:02, 45.17it/s][A
+    Validation DataLoader 0:  29%|████▊            | 45/157 [00:00<00:02, 45.43it/s][A
+    Validation DataLoader 0:  29%|████▉            | 46/157 [00:01<00:02, 45.69it/s][A
+    Validation DataLoader 0:  30%|█████            | 47/157 [00:01<00:02, 45.93it/s][A
+    Validation DataLoader 0:  31%|█████▏           | 48/157 [00:01<00:02, 46.17it/s][A
+    Validation DataLoader 0:  31%|█████▎           | 49/157 [00:01<00:02, 46.40it/s][A
+    Validation DataLoader 0:  32%|█████▍           | 50/157 [00:01<00:02, 46.62it/s][A
+    Validation DataLoader 0:  32%|█████▌           | 51/157 [00:01<00:02, 46.80it/s][A
+    Validation DataLoader 0:  33%|█████▋           | 52/157 [00:01<00:02, 47.01it/s][A
+    Validation DataLoader 0:  34%|█████▋           | 53/157 [00:01<00:02, 47.21it/s][A
+    Validation DataLoader 0:  34%|█████▊           | 54/157 [00:01<00:02, 47.41it/s][A
+    Validation DataLoader 0:  35%|█████▉           | 55/157 [00:01<00:02, 47.60it/s][A
+    Validation DataLoader 0:  36%|██████           | 56/157 [00:01<00:02, 47.78it/s][A
+    Validation DataLoader 0:  36%|██████▏          | 57/157 [00:01<00:02, 47.92it/s][A
+    Validation DataLoader 0:  37%|██████▎          | 58/157 [00:01<00:02, 48.05it/s][A
+    Validation DataLoader 0:  38%|██████▍          | 59/157 [00:01<00:02, 48.18it/s][A
+    Validation DataLoader 0:  38%|██████▍          | 60/157 [00:01<00:02, 48.31it/s][A
+    Validation DataLoader 0:  39%|██████▌          | 61/157 [00:01<00:01, 48.34it/s][A
+    Validation DataLoader 0:  39%|██████▋          | 62/157 [00:01<00:01, 48.43it/s][A
+    Validation DataLoader 0:  40%|██████▊          | 63/157 [00:01<00:01, 48.56it/s][A
+    Validation DataLoader 0:  41%|██████▉          | 64/157 [00:01<00:01, 48.58it/s][A
+    Validation DataLoader 0:  41%|███████          | 65/157 [00:01<00:01, 48.67it/s][A
+    Validation DataLoader 0:  42%|███████▏         | 66/157 [00:01<00:01, 48.79it/s][A
+    Validation DataLoader 0:  43%|███████▎         | 67/157 [00:01<00:01, 48.91it/s][A
+    Validation DataLoader 0:  43%|███████▎         | 68/157 [00:01<00:01, 49.02it/s][A
+    Validation DataLoader 0:  44%|███████▍         | 69/157 [00:01<00:01, 49.03it/s][A
+    Validation DataLoader 0:  45%|███████▌         | 70/157 [00:01<00:01, 49.10it/s][A
+    Validation DataLoader 0:  45%|███████▋         | 71/157 [00:01<00:01, 49.20it/s][A
+    Validation DataLoader 0:  46%|███████▊         | 72/157 [00:01<00:01, 49.31it/s][A
+    Validation DataLoader 0:  46%|███████▉         | 73/157 [00:01<00:01, 49.41it/s][A
+    Validation DataLoader 0:  47%|████████         | 74/157 [00:01<00:01, 49.51it/s][A
+    Validation DataLoader 0:  48%|████████         | 75/157 [00:01<00:01, 49.61it/s][A
+    Validation DataLoader 0:  48%|████████▏        | 76/157 [00:01<00:01, 49.70it/s][A
+    Validation DataLoader 0:  49%|████████▎        | 77/157 [00:01<00:01, 49.79it/s][A
+    Validation DataLoader 0:  50%|████████▍        | 78/157 [00:01<00:01, 49.87it/s][A
+    Validation DataLoader 0:  50%|████████▌        | 79/157 [00:01<00:01, 49.96it/s][A
+    Validation DataLoader 0:  51%|████████▋        | 80/157 [00:01<00:01, 50.05it/s][A
+    Validation DataLoader 0:  52%|████████▊        | 81/157 [00:01<00:01, 50.13it/s][A
+    Validation DataLoader 0:  52%|████████▉        | 82/157 [00:01<00:01, 50.22it/s][A
+    Validation DataLoader 0:  53%|████████▉        | 83/157 [00:01<00:01, 50.29it/s][A
+    Validation DataLoader 0:  54%|█████████        | 84/157 [00:01<00:01, 50.37it/s][A
+    Validation DataLoader 0:  54%|█████████▏       | 85/157 [00:01<00:01, 50.45it/s][A
+    Validation DataLoader 0:  55%|█████████▎       | 86/157 [00:01<00:01, 50.52it/s][A
+    Validation DataLoader 0:  55%|█████████▍       | 87/157 [00:01<00:01, 50.60it/s][A
+    Validation DataLoader 0:  56%|█████████▌       | 88/157 [00:01<00:01, 50.67it/s][A
+    Validation DataLoader 0:  57%|█████████▋       | 89/157 [00:01<00:01, 50.67it/s][A
+    Validation DataLoader 0:  57%|█████████▋       | 90/157 [00:01<00:01, 50.70it/s][A
+    Validation DataLoader 0:  58%|█████████▊       | 91/157 [00:01<00:01, 50.77it/s][A
+    Validation DataLoader 0:  59%|█████████▉       | 92/157 [00:01<00:01, 50.76it/s][A
+    Validation DataLoader 0:  59%|██████████       | 93/157 [00:01<00:01, 50.80it/s][A
+    Validation DataLoader 0:  60%|██████████▏      | 94/157 [00:01<00:01, 50.87it/s][A
+    Validation DataLoader 0:  61%|██████████▎      | 95/157 [00:01<00:01, 50.94it/s][A
+    Validation DataLoader 0:  61%|██████████▍      | 96/157 [00:01<00:01, 51.00it/s][A
+    Validation DataLoader 0:  62%|██████████▌      | 97/157 [00:01<00:01, 50.99it/s][A
+    Validation DataLoader 0:  62%|██████████▌      | 98/157 [00:01<00:01, 51.02it/s][A
+    Validation DataLoader 0:  63%|██████████▋      | 99/157 [00:01<00:01, 51.08it/s][A
+    Validation DataLoader 0:  64%|██████████▏     | 100/157 [00:01<00:01, 51.15it/s][A
+    Validation DataLoader 0:  64%|██████████▎     | 101/157 [00:01<00:01, 51.21it/s][A
+    Validation DataLoader 0:  65%|██████████▍     | 102/157 [00:01<00:01, 51.27it/s][A
+    Validation DataLoader 0:  66%|██████████▍     | 103/157 [00:02<00:01, 51.33it/s][A
+    Validation DataLoader 0:  66%|██████████▌     | 104/157 [00:02<00:01, 51.39it/s][A
+    Validation DataLoader 0:  67%|██████████▋     | 105/157 [00:02<00:01, 51.45it/s][A
+    Validation DataLoader 0:  68%|██████████▊     | 106/157 [00:02<00:00, 51.51it/s][A
+    Validation DataLoader 0:  68%|██████████▉     | 107/157 [00:02<00:00, 51.57it/s][A
+    Validation DataLoader 0:  69%|███████████     | 108/157 [00:02<00:00, 51.63it/s][A
+    Validation DataLoader 0:  69%|███████████     | 109/157 [00:02<00:00, 51.68it/s][A
+    Validation DataLoader 0:  70%|███████████▏    | 110/157 [00:02<00:00, 51.73it/s][A
+    Validation DataLoader 0:  71%|███████████▎    | 111/157 [00:02<00:00, 51.79it/s][A
+    Validation DataLoader 0:  71%|███████████▍    | 112/157 [00:02<00:00, 51.84it/s][A
+    Validation DataLoader 0:  72%|███████████▌    | 113/157 [00:02<00:00, 51.89it/s][A
+    Validation DataLoader 0:  73%|███████████▌    | 114/157 [00:02<00:00, 51.94it/s][A
+    Validation DataLoader 0:  73%|███████████▋    | 115/157 [00:02<00:00, 51.99it/s][A
+    Validation DataLoader 0:  74%|███████████▊    | 116/157 [00:02<00:00, 52.04it/s][A
+    Validation DataLoader 0:  75%|███████████▉    | 117/157 [00:02<00:00, 52.09it/s][A
+    Validation DataLoader 0:  75%|████████████    | 118/157 [00:02<00:00, 52.13it/s][A
+    Validation DataLoader 0:  76%|████████████▏   | 119/157 [00:02<00:00, 52.18it/s][A
+    Validation DataLoader 0:  76%|████████████▏   | 120/157 [00:02<00:00, 52.23it/s][A
+    Validation DataLoader 0:  77%|████████████▎   | 121/157 [00:02<00:00, 52.27it/s][A
+    Validation DataLoader 0:  78%|████████████▍   | 122/157 [00:02<00:00, 52.32it/s][A
+    Validation DataLoader 0:  78%|████████████▌   | 123/157 [00:02<00:00, 52.36it/s][A
+    Validation DataLoader 0:  79%|████████████▋   | 124/157 [00:02<00:00, 52.41it/s][A
+    Validation DataLoader 0:  80%|████████████▋   | 125/157 [00:02<00:00, 52.45it/s][A
+    Validation DataLoader 0:  80%|████████████▊   | 126/157 [00:02<00:00, 52.50it/s][A
+    Validation DataLoader 0:  81%|████████████▉   | 127/157 [00:02<00:00, 52.54it/s][A
+    Validation DataLoader 0:  82%|█████████████   | 128/157 [00:02<00:00, 52.58it/s][A
+    Validation DataLoader 0:  82%|█████████████▏  | 129/157 [00:02<00:00, 52.62it/s][A
+    Validation DataLoader 0:  83%|█████████████▏  | 130/157 [00:02<00:00, 52.67it/s][A
+    Validation DataLoader 0:  83%|█████████████▎  | 131/157 [00:02<00:00, 52.70it/s][A
+    Validation DataLoader 0:  84%|█████████████▍  | 132/157 [00:02<00:00, 52.74it/s][A
+    Validation DataLoader 0:  85%|█████████████▌  | 133/157 [00:02<00:00, 52.78it/s][A
+    Validation DataLoader 0:  85%|█████████████▋  | 134/157 [00:02<00:00, 52.81it/s][A
+    Validation DataLoader 0:  86%|█████████████▊  | 135/157 [00:02<00:00, 52.85it/s][A
+    Validation DataLoader 0:  87%|█████████████▊  | 136/157 [00:02<00:00, 52.89it/s][A
+    Validation DataLoader 0:  87%|█████████████▉  | 137/157 [00:02<00:00, 52.93it/s][A
+    Validation DataLoader 0:  88%|██████████████  | 138/157 [00:02<00:00, 52.96it/s][A
+    Validation DataLoader 0:  89%|██████████████▏ | 139/157 [00:02<00:00, 53.00it/s][A
+    Validation DataLoader 0:  89%|██████████████▎ | 140/157 [00:02<00:00, 53.03it/s][A
+    Validation DataLoader 0:  90%|██████████████▎ | 141/157 [00:02<00:00, 53.06it/s][A
+    Validation DataLoader 0:  90%|██████████████▍ | 142/157 [00:02<00:00, 53.10it/s][A
+    Validation DataLoader 0:  91%|██████████████▌ | 143/157 [00:02<00:00, 53.13it/s][A
+    Validation DataLoader 0:  92%|██████████████▋ | 144/157 [00:02<00:00, 53.16it/s][A
+    Validation DataLoader 0:  92%|██████████████▊ | 145/157 [00:02<00:00, 53.19it/s][A
+    Validation DataLoader 0:  93%|██████████████▉ | 146/157 [00:02<00:00, 53.22it/s][A
+    Validation DataLoader 0:  94%|██████████████▉ | 147/157 [00:02<00:00, 53.26it/s][A
+    Validation DataLoader 0:  94%|███████████████ | 148/157 [00:02<00:00, 53.29it/s][A
+    Validation DataLoader 0:  95%|███████████████▏| 149/157 [00:02<00:00, 53.32it/s][A
+    Validation DataLoader 0:  96%|███████████████▎| 150/157 [00:02<00:00, 53.35it/s][A
+    Validation DataLoader 0:  96%|███████████████▍| 151/157 [00:02<00:00, 53.39it/s][A
+    Validation DataLoader 0:  97%|███████████████▍| 152/157 [00:02<00:00, 53.41it/s][A
+    Validation DataLoader 0:  97%|███████████████▌| 153/157 [00:02<00:00, 53.44it/s][A
+    Validation DataLoader 0:  98%|███████████████▋| 154/157 [00:02<00:00, 53.47it/s][A
+    Validation DataLoader 0:  99%|███████████████▊| 155/157 [00:02<00:00, 53.50it/s][A
+    Validation DataLoader 0:  99%|███████████████▉| 156/157 [00:02<00:00, 53.53it/s][A
+    Validation DataLoader 0: 100%|████████████████| 157/157 [00:02<00:00, 53.69it/s][A
+    Epoch 1: 100%|█| 782/782 [00:54<00:00, 14.27it/s, v_num=14, train_acc_step=0.812[AINFO: `Trainer.fit` stopped: `max_epochs=2` reached.
+    I0328 23:03:10.943096 139939454809920 rank_zero.py:64] `Trainer.fit` stopped: `max_epochs=2` reached.
+    Epoch 1: 100%|█| 782/782 [00:55<00:00, 14.01it/s, v_num=14, train_acc_step=0.812
+    [32mINFO    [0m [34mFine Tuning Complete[0m
+    I0328 23:03:18.680018 139939454809920 fine_tune.py:161] Fine Tuning Complete
+    [32mINFO    [0m [34mConverting PyTorch model to ONNX...[0m
+    I0328 23:03:18.687829 139939454809920 quantize.py:209] Converting PyTorch model to ONNX...
+    /root/anaconda3/envs/mase/lib/python3.11/site-packages/pytorch_quantization/tensor_quant.py:363: TracerWarning: Converting a tensor to a Python boolean might cause the trace to be incorrect. We can't record the data flow of Python values, so this value will be treated as a constant in the future. This means that the trace might not generalize to other inputs!
+      if min_amax < 0:
+    /root/anaconda3/envs/mase/lib/python3.11/site-packages/pytorch_quantization/tensor_quant.py:366: TracerWarning: torch.tensor results are registered as constants in the trace. You can safely ignore this warning if you use this function to create tensors out of constant variables that would be the same every time you call this function. In any other case, this might cause the trace to be incorrect.
+      max_bound = torch.tensor((2.0**(num_bits - 1 + int(unsigned))) - 1.0, device=amax.device)
+    /root/anaconda3/envs/mase/lib/python3.11/site-packages/pytorch_quantization/tensor_quant.py:376: TracerWarning: Converting a tensor to a Python boolean might cause the trace to be incorrect. We can't record the data flow of Python values, so this value will be treated as a constant in the future. This means that the trace might not generalize to other inputs!
+      if min_amax <= epsilon:  # Treat amax smaller than minimum representable of fp16 0
+    /root/anaconda3/envs/mase/lib/python3.11/site-packages/pytorch_quantization/tensor_quant.py:382: TracerWarning: Converting a tensor to a Python boolean might cause the trace to be incorrect. We can't record the data flow of Python values, so this value will be treated as a constant in the future. This means that the trace might not generalize to other inputs!
+      if min_amax <= epsilon:
+    [32mINFO    [0m [34mONNX Conversion Complete. Stored ONNX model to /root/mase/mase_output/tensorrt/quantization/vgg7_cls_cifar10_2024-03-28/2024-03-28/version_39/model.onnx[0m
+    I0328 23:03:28.297990 139939454809920 quantize.py:239] ONNX Conversion Complete. Stored ONNX model to /root/mase/mase_output/tensorrt/quantization/vgg7_cls_cifar10_2024-03-28/2024-03-28/version_39/model.onnx
+    [32mINFO    [0m [34mConverting PyTorch model to TensorRT...[0m
+    I0328 23:03:28.300960 139939454809920 quantize.py:102] Converting PyTorch model to TensorRT...
+    [03/28/2024-23:03:36] [TRT] [W] onnx2trt_utils.cpp:374: Your ONNX model has been generated with INT64 weights, while TensorRT does not natively support INT64. Attempting to cast down to INT32.
+    [32mINFO    [0m [34mTensorRT Conversion Complete. Stored trt model to /root/mase/mase_output/tensorrt/quantization/vgg7_cls_cifar10_2024-03-28/2024-03-28/version_40/model.trt[0m
+    I0328 23:06:32.223787 139939454809920 quantize.py:202] TensorRT Conversion Complete. Stored trt model to /root/mase/mase_output/tensorrt/quantization/vgg7_cls_cifar10_2024-03-28/2024-03-28/version_40/model.trt
+    [32mINFO    [0m [34mTensorRT Model Summary Exported to /root/mase/mase_output/tensorrt/quantization/vgg7_cls_cifar10_2024-03-28/2024-03-28/version_41/model.json[0m
+    I0328 23:06:32.581682 139939454809920 quantize.py:259] TensorRT Model Summary Exported to /root/mase/mase_output/tensorrt/quantization/vgg7_cls_cifar10_2024-03-28/2024-03-28/version_41/model.json
+    [32mINFO    [0m [34mStarting transformation analysis on vgg7[0m
+    I0328 23:06:32.589668 139939454809920 runtime_analysis.py:357] Starting transformation analysis on vgg7
+    [32mINFO    [0m [34m
+    Results vgg7:
+    +------------------------------+------------+
+    |      Metric (Per Batch)      |   Value    |
+    +------------------------------+------------+
+    | Average Validation Accuracy  |  0.92094   |
+    |      Average Precision       |  0.91981   |
+    |        Average Recall        |  0.92012   |
+    |       Average F1 Score       |  0.91983   |
+    |         Average Loss         |  0.23915   |
+    |       Average Latency        | 8.9375 ms  |
+    |   Average GPU Power Usage    |  58.043 W  |
+    | Inference Energy Consumption | 0.1441 mWh |
+    +------------------------------+------------+[0m
+    I0328 23:06:47.111017 139939454809920 runtime_analysis.py:521] 
+    Results vgg7:
+    +------------------------------+------------+
+    |      Metric (Per Batch)      |   Value    |
+    +------------------------------+------------+
+    | Average Validation Accuracy  |  0.92094   |
+    |      Average Precision       |  0.91981   |
+    |        Average Recall        |  0.92012   |
+    |       Average F1 Score       |  0.91983   |
+    |         Average Loss         |  0.23915   |
+    |       Average Latency        | 8.9375 ms  |
+    |   Average GPU Power Usage    |  58.043 W  |
+    | Inference Energy Consumption | 0.1441 mWh |
+    +------------------------------+------------+
+    [32mINFO    [0m [34mRuntime analysis results saved to /root/mase_output/tensorrt/quantization/vgg7_cls_cifar10_2024-03-28/mase_graph/version_46/model.json[0m
+    I0328 23:06:47.114224 139939454809920 runtime_analysis.py:143] Runtime analysis results saved to /root/mase_output/tensorrt/quantization/vgg7_cls_cifar10_2024-03-28/mase_graph/version_46/model.json
+    [32mINFO    [0m [34mStarting transformation analysis on vgg7-trt_quantized[0m
+    I0328 23:06:47.208054 139939454809920 runtime_analysis.py:357] Starting transformation analysis on vgg7-trt_quantized
+    [32mINFO    [0m [34m
+    Results vgg7-trt_quantized:
+    +------------------------------+-------------+
+    |      Metric (Per Batch)      |    Value    |
+    +------------------------------+-------------+
+    | Average Validation Accuracy  |   0.92348   |
+    |      Average Precision       |   0.9251    |
+    |        Average Recall        |   0.92436   |
+    |       Average F1 Score       |   0.92419   |
+    |         Average Loss         |   0.24202   |
+    |       Average Latency        |  8.5007 ms  |
+    |   Average GPU Power Usage    |  52.687 W   |
+    | Inference Energy Consumption | 0.12441 mWh |
+    +------------------------------+-------------+[0m
+    I0328 23:07:00.676242 139939454809920 runtime_analysis.py:521] 
+    Results vgg7-trt_quantized:
+    +------------------------------+-------------+
+    |      Metric (Per Batch)      |    Value    |
+    +------------------------------+-------------+
+    | Average Validation Accuracy  |   0.92348   |
+    |      Average Precision       |   0.9251    |
+    |        Average Recall        |   0.92436   |
+    |       Average F1 Score       |   0.92419   |
+    |         Average Loss         |   0.24202   |
+    |       Average Latency        |  8.5007 ms  |
+    |   Average GPU Power Usage    |  52.687 W   |
+    | Inference Energy Consumption | 0.12441 mWh |
+    +------------------------------+-------------+
+    [32mINFO    [0m [34mRuntime analysis results saved to /root/mase_output/tensorrt/quantization/vgg7_cls_cifar10_2024-03-28/tensorrt/version_7/model.json[0m
+    I0328 23:07:00.677799 139939454809920 runtime_analysis.py:143] Runtime analysis results saved to /root/mase_output/tensorrt/quantization/vgg7_cls_cifar10_2024-03-28/tensorrt/version_7/model.json
+
+
+By quantizing all convolutional layers to INT8 and maintaining fp16 precision for the linear layers we see a marginal decrease in latency whilst maintaining a comparable accuracy. By experimenting with precisions on a per type basis, you may find insights that work best for your model. 
+
+## Section 4. Layer-wise Mixed Precision
+
+So far we have strictly quantized either in int8 or fp16. Now, we will show how to conduct layerwise mixed precision using the same `vgg7` model. In this case we will show how for instance, layer 0 and 1 can be set to fp16, while the remaining layers can be int8 quantized. 
+
+For this, we set:
+- The `by` parameter to `name`
+- The `precision` to 'int8' for `passes.tensorrt.default.config`
+- The `precision` to 'fp16' for `passes.tensorrt.feature_layers_0.config and passes.tensorrt.feature_layers_1.config`
+- The `precision` to 'int8' for `passes.tensorrt.feature_layers_2.config and passes.tensorrt.feature_layers_3.config` (although this is not necessary since the default is already set to 'int8')
+
+
+```python
+VGG_LAYERWISE_TOML = "../../../machop/configs/tensorrt/vgg7_layerwise_mixed_precision.toml"
+
+!ch transform --config {VGG_LAYERWISE_TOML} --load {VGG_CHECKPOINT_PATH} --load-type pl
+```
+
+    [2024-03-28 23:25:51,157] [INFO] [real_accelerator.py:191:get_accelerator] Setting ds_accelerator to cuda (auto detect)
+    INFO: Seed set to 0
+    WARNING: Logging before flag parsing goes to stderr.
+    I0328 23:25:54.303634 140449214740288 seed.py:54] Seed set to 0
     +-------------------------+------------------------+--------------+--------------------------+--------------------------+
     | Name                    |        Default         | Config. File |     Manual Override      |        Effective         |
     +-------------------------+------------------------+--------------+--------------------------+--------------------------+
@@ -1031,7 +1726,7 @@ VGG_CHECKPOINT_PATH = "../../../mase_output/vgg7-pre-trained/test-accu-0.9332.ck
     |                         |                        |              |  gg7-pre-trained/test-   |  gg7-pre-trained/test-   |
     |                         |                        |              |     accu-0.9332.ckpt     |     accu-0.9332.ckpt     |
     | load_type               |           [38;5;8mmz[0m           |              |            pl            |            pl            |
-    | batch_size              |          [38;5;8m128[0m           |     256      |                          |           256            |
+    | batch_size              |          [38;5;8m128[0m           |      64      |                          |            64            |
     | to_debug                |         False          |              |                          |          False           |
     | log_level               |          info          |              |                          |           info           |
     | report_to               |      tensorboard       |              |                          |       tensorboard        |
@@ -1045,7 +1740,7 @@ VGG_CHECKPOINT_PATH = "../../../mase_output/vgg7-pre-trained/test-accu-0.9332.ck
     | max_steps               |           -1           |              |                          |            -1            |
     | accumulate_grad_batches |           1            |              |                          |            1             |
     | log_every_n_steps       |           50           |              |                          |            50            |
-    | num_workers             |           32           |              |                          |            32            |
+    | num_workers             |           28           |              |                          |            28            |
     | num_devices             |           1            |              |                          |            1             |
     | num_nodes               |           1            |              |                          |            1             |
     | accelerator             |          [38;5;8mauto[0m          |     gpu      |                          |           gpu            |
@@ -1065,13 +1760,13 @@ VGG_CHECKPOINT_PATH = "../../../mase_output/vgg7-pre-trained/test-accu-0.9332.ck
     | eta_min                 |         1e-06          |              |                          |          1e-06           |
     +-------------------------+------------------------+--------------+--------------------------+--------------------------+
     [32mINFO    [0m [34mInitialising model 'vgg7'...[0m
-    I0318 15:52:44.753937 139761495775040 cli.py:841] Initialising model 'vgg7'...
+    I0328 23:25:54.313626 140449214740288 cli.py:846] Initialising model 'vgg7'...
     [32mINFO    [0m [34mInitialising dataset 'cifar10'...[0m
-    I0318 15:52:44.878532 139761495775040 cli.py:869] Initialising dataset 'cifar10'...
-    [32mINFO    [0m [34mProject will be created at /root/mase/mase_output/vgg7_cls_cifar10_2024-03-18[0m
-    I0318 15:52:44.878995 139761495775040 cli.py:905] Project will be created at /root/mase/mase_output/vgg7_cls_cifar10_2024-03-18
+    I0328 23:25:54.417618 140449214740288 cli.py:874] Initialising dataset 'cifar10'...
+    [32mINFO    [0m [34mProject will be created at /root/mase/mase_output/vgg7_cls_cifar10_2024-03-28[0m
+    I0328 23:25:54.418019 140449214740288 cli.py:910] Project will be created at /root/mase/mase_output/vgg7_cls_cifar10_2024-03-28
     [32mINFO    [0m [34mTransforming model 'vgg7'...[0m
-    I0318 15:52:44.909238 139761495775040 cli.py:365] Transforming model 'vgg7'...
+    I0328 23:25:54.535444 140449214740288 cli.py:370] Transforming model 'vgg7'...
     Files already downloaded and verified
     Files already downloaded and verified
     Files already downloaded and verified
@@ -1081,667 +1776,345 @@ VGG_CHECKPOINT_PATH = "../../../mase_output/vgg7-pre-trained/test-accu-0.9332.ck
     Files already downloaded and verified
     Files already downloaded and verified
     [32mINFO    [0m [34mLoaded pytorch lightning checkpoint from /root/mase/mase_output/vgg7-pre-trained/test-accu-0.9332.ckpt[0m
-    I0318 15:52:50.380097 139761495775040 checkpoint_load.py:85] Loaded pytorch lightning checkpoint from /root/mase/mase_output/vgg7-pre-trained/test-accu-0.9332.ckpt
-
-
-## Section 4. Layer-wise Mixed Precision
-
-So far we have strictly quantized either in int8 or fp16. Now, we will show how to conduct layerwise mixed precision using the same `vgg7` model. In this case we will show how for instance, layer 0 and 1 can be set to fp16, while layer 2 and 3 can be int8 quantized. 
-
-For this, we set:
-- The `by` parameter to `name`
-- The `precision` to 'fp16' for `passes.tensorrt_quantize.feature_layers_0.config and passes.tensorrt_quantize.feature_layers_1.config`
-- The `precision` to 'int8' for `passes.tensorrt_quantize.feature_layers_0.config and passes.tensorrt_quantize.feature_layers_1.config`
-
-
-
-
-```python
-import sys
-import os
-from pathlib import Path
-import toml
-from copy import copy, deepcopy
-
-# Figure out the correct path
-machop_path = Path(".").resolve().parent.parent.parent /"machop"
-assert machop_path.exists(), "Failed to find machop at: {}".format(machop_path)
-sys.path.append(str(machop_path))
-
-# Add directory to the PATH so that chop can be called
-new_path = "../../../machop"
-full_path = os.path.abspath(new_path)
-os.environ['PATH'] += os.pathsep + full_path
-
-from chop.tools.utils import to_numpy_if_tensor
-from chop.tools.logger import set_logging_verbosity
-from chop.tools import get_cf_args, get_dummy_input
-from chop.passes.graph.utils import deepcopy_mase_graph
-from chop.tools.get_input import InputGenerator
-from chop.tools.checkpoint_load import load_model
-from chop.ir import MaseGraph
-from chop.models import get_model_info, get_model, get_tokenizer
-from chop.dataset import MaseDataModule, get_dataset_info
-from chop.passes.graph.transforms import metadata_value_type_cast_transform_pass
-from chop.passes.graph import (
-    summarize_quantization_analysis_pass,
-    add_common_metadata_analysis_pass,
-    init_metadata_analysis_pass,
-    add_software_metadata_analysis_pass,
-    tensorrt_calibrate_transform_pass,
-    tensorrt_fake_quantize_transform_pass,
-    tensorrt_fine_tune_transform_pass,
-    tensorrt_engine_interface_pass,
-    runtime_analysis_pass,
-    )
-
-set_logging_verbosity("info")
-```
-
-    /root/anaconda3/envs/mase/lib/python3.11/site-packages/tqdm/auto.py:21: TqdmWarning: IProgress not found. Please update jupyter and ipywidgets. See https://ipywidgets.readthedocs.io/en/stable/user_install.html
-      from .autonotebook import tqdm as notebook_tqdm
-
-
-    [2024-03-19 16:33:49,791] [INFO] [real_accelerator.py:191:get_accelerator] Setting ds_accelerator to cuda (auto detect)
-
-
-    [32mINFO    [0m [34mSet logging level to info[0m
-    WARNING: Logging before flag parsing goes to stderr.
-    I0319 16:33:51.317272 140297220093760 logger.py:44] Set logging level to info
-
-
-
-```python
-# Path to your TOML file
-# toml_file_path = '../../../machop/configs/tensorrt/vgg7_layerwise_mixed_precision.toml'
-toml_file_path = '../../../machop/configs/tensorrt/vgg7_typewise_mixed_precision.toml'
-
-# Reading TOML file and converting it into a Python dictionary
-with open(toml_file_path, 'r') as toml_file:
-    pass_args = toml.load(toml_file)
-
-# Extract the 'passes.tensorrt' section and its children
-tensorrt_config = pass_args.get('passes', {}).get('tensorrt', {})
-# Extract the 'passes.runtime_analysis' section and its children
-runtime_analysis_config = pass_args.get('passes', {}).get('runtime_analysis', {})
-
-# Load the basics in
-model_name = pass_args['model']
-dataset_name = pass_args['dataset']
-max_epochs = pass_args['max_epochs']
-batch_size = pass_args['batch_size']
-learning_rate = pass_args['learning_rate']
-accelerator = pass_args['accelerator']
-
-data_module = MaseDataModule(
-    name=dataset_name,
-    batch_size=batch_size,
-    model_name=model_name,
-    num_workers=0,
-)
-data_module.prepare_data()
-data_module.setup()
-
-# Add the data_module and other necessary information to the configs
-configs = [tensorrt_config, runtime_analysis_config]
-for config in configs:
-    config['task'] = pass_args['task']
-    config['batch_size'] = pass_args['batch_size']
-    config['model'] = pass_args['model']
-    config['data_module'] = data_module
-    config['accelerator'] = 'cuda' if pass_args['accelerator'] == 'gpu' else pass_args['accelerator']
-    if config['accelerator'] == 'gpu':
-        os.environ['CUDA_MODULE_LOADING'] = 'LAZY'
-
-model_info = get_model_info(model_name)
-model = get_model(
-    model_name,
-    task="cls",
-    dataset_info=data_module.dataset_info,
-    pretrained=False)
-
-input_generator = InputGenerator(
-    data_module=data_module,
-    model_info=model_info,
-    task="cls",
-    which_dataloader="train",
-)
-
-# generate the mase graph and initialize node metadata
-mg = MaseGraph(model=model)
-```
-
-    Files already downloaded and verified
-    Files already downloaded and verified
-    Files already downloaded and verified
-    Files already downloaded and verified
-    Files already downloaded and verified
-    Files already downloaded and verified
-    Files already downloaded and verified
-    Files already downloaded and verified
-
-
-
-```python
-# Load in the trained checkpoint - change this accordingly
-VGG_CHECKPOINT_PATH = "../../../mase_output/vgg7-pre-trained/test-accu-0.9332.ckpt"
-
-model = load_model(load_name=VGG_CHECKPOINT_PATH, load_type="pl", model=model)
-
-# Initiate metadata
-dummy_in = next(iter(input_generator))
-_ = model(**dummy_in)
-mg, _ = init_metadata_analysis_pass(mg, None)
-
-mg_original = deepcopy_mase_graph(mg)
-
-mg, _ = add_common_metadata_analysis_pass(mg, {"dummy_in": dummy_in})
-mg, _ = add_software_metadata_analysis_pass(mg, None)
-mg, _ = metadata_value_type_cast_transform_pass(mg, pass_args={"fn": to_numpy_if_tensor})
-```
-
-    [32mINFO    [0m [34mLoaded pytorch lightning checkpoint from ../../../mase_output/vgg7-pre-trained/test-accu-0.9332.ckpt[0m
-    I0318 15:33:56.843245 140155325249344 checkpoint_load.py:85] Loaded pytorch lightning checkpoint from ../../../mase_output/vgg7-pre-trained/test-accu-0.9332.ckpt
-
-
-
-```python
-_, _ = runtime_analysis_pass(mg, pass_args=runtime_analysis_config)
-```
-
-    [32mINFO    [0m [34mStarting transformation analysis[0m
-    I0318 09:55:37.107798 140195009255232 analysis.py:214] Starting transformation analysis
-    [32mINFO    [0m [34m
-    Results vgg7:
-    +------------------------------+-------------+
-    |            Metric            |    Value    |
-    +------------------------------+-------------+
-    |    Average Test Accuracy     |   0.91967   |
-    |      Average Precision       |   0.92315   |
-    |        Average Recall        |   0.92362   |
-    |       Average F1 Score       |   0.92326   |
-    |         Average Loss         |   0.23674   |
-    |       Average Latency        |  28.123 ms  |
-    |   Average GPU Power Usage    |  100.17 W   |
-    | Inference Energy Consumption | 0.78256 mWh |
-    +------------------------------+-------------+[0m
-    I0318 09:55:40.969246 140195009255232 analysis.py:330] 
-    Results vgg7:
-    +------------------------------+-------------+
-    |            Metric            |    Value    |
-    +------------------------------+-------------+
-    |    Average Test Accuracy     |   0.91967   |
-    |      Average Precision       |   0.92315   |
-    |        Average Recall        |   0.92362   |
-    |       Average F1 Score       |   0.92326   |
-    |         Average Loss         |   0.23674   |
-    |       Average Latency        |  28.123 ms  |
-    |   Average GPU Power Usage    |  100.17 W   |
-    | Inference Energy Consumption | 0.78256 mWh |
-    +------------------------------+-------------+
-
-
-
-```python
-mg, _ = tensorrt_fake_quantize_transform_pass(mg, pass_args=tensorrt_config)
-# summarize_quantization_analysis_pass(mg_original, mg)
-mg, _ = tensorrt_calibrate_transform_pass(mg, pass_args=tensorrt_config)
-mg, _ = tensorrt_fine_tune_transform_pass(mg, pass_args=tensorrt_config)
-mg, meta = tensorrt_engine_interface_pass(mg, pass_args=tensorrt_config)
-```
-
+    I0328 23:26:00.655963 140449214740288 checkpoint_load.py:85] Loaded pytorch lightning checkpoint from /root/mase/mase_output/vgg7-pre-trained/test-accu-0.9332.ckpt
+    [32mINFO    [0m [34mLoaded pytorch lightning checkpoint from /root/mase/mase_output/vgg7-pre-trained/test-accu-0.9332.ckpt[0m
+    I0328 23:26:00.777872 140449214740288 checkpoint_load.py:85] Loaded pytorch lightning checkpoint from /root/mase/mase_output/vgg7-pre-trained/test-accu-0.9332.ckpt
     [32mINFO    [0m [34mApplying fake quantization to PyTorch model...[0m
-    I0318 15:34:00.409916 140155325249344 utils.py:168] Applying fake quantization to PyTorch model...
+    I0328 23:26:12.570783 140449214740288 utils.py:314] Applying fake quantization to PyTorch model...
     [32mINFO    [0m [34mFake quantization applied to PyTorch model.[0m
-    I0318 15:34:00.682099 140155325249344 utils.py:193] Fake quantization applied to PyTorch model.
+    I0328 23:26:12.921518 140449214740288 utils.py:339] Fake quantization applied to PyTorch model.
+    [32mINFO    [0m [34mQuantized graph histogram:[0m
+    I0328 23:26:12.940881 140449214740288 summary.py:84] Quantized graph histogram:
+    [32mINFO    [0m [34m
+    | Original type   | OP           |   Total |   Changed |   Unchanged |
+    |-----------------+--------------+---------+-----------+-------------|
+    | BatchNorm2d     | batch_norm2d |       6 |         0 |           6 |
+    | Conv2d          | conv2d       |       6 |         5 |           1 |
+    | Linear          | linear       |       3 |         3 |           0 |
+    | MaxPool2d       | max_pool2d   |       3 |         0 |           3 |
+    | ReLU            | relu         |       8 |         0 |           8 |
+    | output          | output       |       1 |         0 |           1 |
+    | view            | view         |       1 |         0 |           1 |
+    | x               | placeholder  |       1 |         0 |           1 |[0m
+    I0328 23:26:12.941653 140449214740288 summary.py:85] 
+    | Original type   | OP           |   Total |   Changed |   Unchanged |
+    |-----------------+--------------+---------+-----------+-------------|
+    | BatchNorm2d     | batch_norm2d |       6 |         0 |           6 |
+    | Conv2d          | conv2d       |       6 |         5 |           1 |
+    | Linear          | linear       |       3 |         3 |           0 |
+    | MaxPool2d       | max_pool2d   |       3 |         0 |           3 |
+    | ReLU            | relu         |       8 |         0 |           8 |
+    | output          | output       |       1 |         0 |           1 |
+    | view            | view         |       1 |         0 |           1 |
+    | x               | placeholder  |       1 |         0 |           1 |
     [32mINFO    [0m [34mStarting calibration of the model in PyTorch...[0m
-    I0318 15:34:00.683382 140155325249344 calibrate.py:91] Starting calibration of the model in PyTorch...
+    I0328 23:26:12.942434 140449214740288 calibrate.py:143] Starting calibration of the model in PyTorch...
     [32mINFO    [0m [34mDisabling Quantization and Enabling Calibration[0m
-    I0318 15:34:00.694193 140155325249344 calibrate.py:100] Disabling Quantization and Enabling Calibration
+    I0328 23:26:12.952852 140449214740288 calibrate.py:152] Disabling Quantization and Enabling Calibration
     [32mINFO    [0m [34mDisabling Quantization and Enabling Calibration[0m
-    I0318 15:34:00.695298 140155325249344 calibrate.py:100] Disabling Quantization and Enabling Calibration
+    I0328 23:26:12.953087 140449214740288 calibrate.py:152] Disabling Quantization and Enabling Calibration
     [32mINFO    [0m [34mDisabling Quantization and Enabling Calibration[0m
-    I0318 15:34:00.695932 140155325249344 calibrate.py:100] Disabling Quantization and Enabling Calibration
+    I0328 23:26:12.953220 140449214740288 calibrate.py:152] Disabling Quantization and Enabling Calibration
     [32mINFO    [0m [34mDisabling Quantization and Enabling Calibration[0m
-    I0318 15:34:00.696544 140155325249344 calibrate.py:100] Disabling Quantization and Enabling Calibration
+    I0328 23:26:12.953323 140449214740288 calibrate.py:152] Disabling Quantization and Enabling Calibration
     [32mINFO    [0m [34mDisabling Quantization and Enabling Calibration[0m
-    I0318 15:34:00.697141 140155325249344 calibrate.py:100] Disabling Quantization and Enabling Calibration
+    I0328 23:26:12.953427 140449214740288 calibrate.py:152] Disabling Quantization and Enabling Calibration
     [32mINFO    [0m [34mDisabling Quantization and Enabling Calibration[0m
-    I0318 15:34:00.697722 140155325249344 calibrate.py:100] Disabling Quantization and Enabling Calibration
+    I0328 23:26:12.953537 140449214740288 calibrate.py:152] Disabling Quantization and Enabling Calibration
     [32mINFO    [0m [34mDisabling Quantization and Enabling Calibration[0m
-    I0318 15:34:00.698303 140155325249344 calibrate.py:100] Disabling Quantization and Enabling Calibration
+    I0328 23:26:12.953635 140449214740288 calibrate.py:152] Disabling Quantization and Enabling Calibration
     [32mINFO    [0m [34mDisabling Quantization and Enabling Calibration[0m
-    I0318 15:34:00.698865 140155325249344 calibrate.py:100] Disabling Quantization and Enabling Calibration
+    I0328 23:26:12.953727 140449214740288 calibrate.py:152] Disabling Quantization and Enabling Calibration
     [32mINFO    [0m [34mDisabling Quantization and Enabling Calibration[0m
-    I0318 15:34:00.699461 140155325249344 calibrate.py:100] Disabling Quantization and Enabling Calibration
+    I0328 23:26:12.953824 140449214740288 calibrate.py:152] Disabling Quantization and Enabling Calibration
     [32mINFO    [0m [34mDisabling Quantization and Enabling Calibration[0m
-    I0318 15:34:00.700013 140155325249344 calibrate.py:100] Disabling Quantization and Enabling Calibration
+    I0328 23:26:12.953913 140449214740288 calibrate.py:152] Disabling Quantization and Enabling Calibration
     [32mINFO    [0m [34mDisabling Quantization and Enabling Calibration[0m
-    I0318 15:34:00.700582 140155325249344 calibrate.py:100] Disabling Quantization and Enabling Calibration
+    I0328 23:26:12.954009 140449214740288 calibrate.py:152] Disabling Quantization and Enabling Calibration
     [32mINFO    [0m [34mDisabling Quantization and Enabling Calibration[0m
-    I0318 15:34:00.701155 140155325249344 calibrate.py:100] Disabling Quantization and Enabling Calibration
+    I0328 23:26:12.954101 140449214740288 calibrate.py:152] Disabling Quantization and Enabling Calibration
+    [32mINFO    [0m [34mDisabling Quantization and Enabling Calibration[0m
+    I0328 23:26:12.954192 140449214740288 calibrate.py:152] Disabling Quantization and Enabling Calibration
+    [32mINFO    [0m [34mDisabling Quantization and Enabling Calibration[0m
+    I0328 23:26:12.954295 140449214740288 calibrate.py:152] Disabling Quantization and Enabling Calibration
+    [32mINFO    [0m [34mDisabling Quantization and Enabling Calibration[0m
+    I0328 23:26:12.954387 140449214740288 calibrate.py:152] Disabling Quantization and Enabling Calibration
+    [32mINFO    [0m [34mDisabling Quantization and Enabling Calibration[0m
+    I0328 23:26:12.954478 140449214740288 calibrate.py:152] Disabling Quantization and Enabling Calibration
     [32mINFO    [0m [34mEnabling Quantization and Disabling Calibration[0m
-    I0318 15:34:02.481201 140155325249344 calibrate.py:121] Enabling Quantization and Disabling Calibration
-    W0318 15:34:02.482733 140155325249344 tensor_quantizer.py:174] Disable HistogramCalibrator
+    I0328 23:26:18.535559 140449214740288 calibrate.py:175] Enabling Quantization and Disabling Calibration
+    W0328 23:26:18.535989 140449214740288 tensor_quantizer.py:174] Disable HistogramCalibrator
     [32mINFO    [0m [34mEnabling Quantization and Disabling Calibration[0m
-    I0318 15:34:02.483446 140155325249344 calibrate.py:121] Enabling Quantization and Disabling Calibration
-    W0318 15:34:02.484515 140155325249344 tensor_quantizer.py:174] Disable HistogramCalibrator
+    I0328 23:26:18.536076 140449214740288 calibrate.py:175] Enabling Quantization and Disabling Calibration
+    W0328 23:26:18.536209 140449214740288 tensor_quantizer.py:174] Disable HistogramCalibrator
     [32mINFO    [0m [34mEnabling Quantization and Disabling Calibration[0m
-    I0318 15:34:02.485068 140155325249344 calibrate.py:121] Enabling Quantization and Disabling Calibration
-    W0318 15:34:02.486183 140155325249344 tensor_quantizer.py:174] Disable HistogramCalibrator
+    I0328 23:26:18.536275 140449214740288 calibrate.py:175] Enabling Quantization and Disabling Calibration
+    W0328 23:26:18.536394 140449214740288 tensor_quantizer.py:174] Disable HistogramCalibrator
     [32mINFO    [0m [34mEnabling Quantization and Disabling Calibration[0m
-    I0318 15:34:02.486567 140155325249344 calibrate.py:121] Enabling Quantization and Disabling Calibration
-    W0318 15:34:02.487422 140155325249344 tensor_quantizer.py:174] Disable HistogramCalibrator
+    I0328 23:26:18.536448 140449214740288 calibrate.py:175] Enabling Quantization and Disabling Calibration
+    W0328 23:26:18.536548 140449214740288 tensor_quantizer.py:174] Disable HistogramCalibrator
     [32mINFO    [0m [34mEnabling Quantization and Disabling Calibration[0m
-    I0318 15:34:02.487805 140155325249344 calibrate.py:121] Enabling Quantization and Disabling Calibration
-    W0318 15:34:02.488553 140155325249344 tensor_quantizer.py:174] Disable HistogramCalibrator
+    I0328 23:26:18.536605 140449214740288 calibrate.py:175] Enabling Quantization and Disabling Calibration
+    W0328 23:26:18.536704 140449214740288 tensor_quantizer.py:174] Disable HistogramCalibrator
     [32mINFO    [0m [34mEnabling Quantization and Disabling Calibration[0m
-    I0318 15:34:02.488957 140155325249344 calibrate.py:121] Enabling Quantization and Disabling Calibration
-    W0318 15:34:02.489720 140155325249344 tensor_quantizer.py:174] Disable HistogramCalibrator
+    I0328 23:26:18.536756 140449214740288 calibrate.py:175] Enabling Quantization and Disabling Calibration
+    W0328 23:26:18.536853 140449214740288 tensor_quantizer.py:174] Disable HistogramCalibrator
     [32mINFO    [0m [34mEnabling Quantization and Disabling Calibration[0m
-    I0318 15:34:02.490093 140155325249344 calibrate.py:121] Enabling Quantization and Disabling Calibration
-    W0318 15:34:02.490822 140155325249344 tensor_quantizer.py:174] Disable HistogramCalibrator
+    I0328 23:26:18.536910 140449214740288 calibrate.py:175] Enabling Quantization and Disabling Calibration
+    W0328 23:26:18.537009 140449214740288 tensor_quantizer.py:174] Disable HistogramCalibrator
     [32mINFO    [0m [34mEnabling Quantization and Disabling Calibration[0m
-    I0318 15:34:02.491214 140155325249344 calibrate.py:121] Enabling Quantization and Disabling Calibration
-    W0318 15:34:02.491982 140155325249344 tensor_quantizer.py:174] Disable HistogramCalibrator
+    I0328 23:26:18.537059 140449214740288 calibrate.py:175] Enabling Quantization and Disabling Calibration
+    W0328 23:26:18.537172 140449214740288 tensor_quantizer.py:174] Disable HistogramCalibrator
     [32mINFO    [0m [34mEnabling Quantization and Disabling Calibration[0m
-    I0318 15:34:02.492378 140155325249344 calibrate.py:121] Enabling Quantization and Disabling Calibration
-    W0318 15:34:02.493196 140155325249344 tensor_quantizer.py:174] Disable HistogramCalibrator
+    I0328 23:26:18.537243 140449214740288 calibrate.py:175] Enabling Quantization and Disabling Calibration
+    W0328 23:26:18.537340 140449214740288 tensor_quantizer.py:174] Disable HistogramCalibrator
     [32mINFO    [0m [34mEnabling Quantization and Disabling Calibration[0m
-    I0318 15:34:02.493597 140155325249344 calibrate.py:121] Enabling Quantization and Disabling Calibration
-    W0318 15:34:02.494379 140155325249344 tensor_quantizer.py:174] Disable HistogramCalibrator
+    I0328 23:26:18.537401 140449214740288 calibrate.py:175] Enabling Quantization and Disabling Calibration
+    W0328 23:26:18.537500 140449214740288 tensor_quantizer.py:174] Disable HistogramCalibrator
     [32mINFO    [0m [34mEnabling Quantization and Disabling Calibration[0m
-    I0318 15:34:02.494779 140155325249344 calibrate.py:121] Enabling Quantization and Disabling Calibration
-    W0318 15:34:02.495552 140155325249344 tensor_quantizer.py:174] Disable HistogramCalibrator
+    I0328 23:26:18.537567 140449214740288 calibrate.py:175] Enabling Quantization and Disabling Calibration
+    W0328 23:26:18.537664 140449214740288 tensor_quantizer.py:174] Disable MaxCalibrator
     [32mINFO    [0m [34mEnabling Quantization and Disabling Calibration[0m
-    I0318 15:34:02.495936 140155325249344 calibrate.py:121] Enabling Quantization and Disabling Calibration
-    W0318 15:34:02.496721 140155325249344 tensor_quantizer.py:174] Disable HistogramCalibrator
-    W0318 15:34:02.503043 140155325249344 tensor_quantizer.py:238] Load calibrated amax, shape=torch.Size([]).
-    W0318 15:34:02.503463 140155325249344 tensor_quantizer.py:239] Call .cuda() if running on GPU after loading calibrated amax.
-    [32mINFO    [0m [34mfeature_layers.0._input_quantizer       : TensorQuantizer(8bit fake per-tensor amax=2.6392 calibrator=HistogramCalibrator scale=1.0 quant)[0m
-    I0318 15:34:02.504164 140155325249344 calibrate.py:79] feature_layers.0._input_quantizer       : TensorQuantizer(8bit fake per-tensor amax=2.6392 calibrator=HistogramCalibrator scale=1.0 quant)
-    W0318 15:34:02.505316 140155325249344 tensor_quantizer.py:238] Load calibrated amax, shape=torch.Size([]).
-    [32mINFO    [0m [34mfeature_layers.0._weight_quantizer      : TensorQuantizer(8bit fake per-tensor amax=0.2797 calibrator=HistogramCalibrator scale=1.0 quant)[0m
-    I0318 15:34:02.505767 140155325249344 calibrate.py:79] feature_layers.0._weight_quantizer      : TensorQuantizer(8bit fake per-tensor amax=0.2797 calibrator=HistogramCalibrator scale=1.0 quant)
-    W0318 15:34:02.507040 140155325249344 tensor_quantizer.py:238] Load calibrated amax, shape=torch.Size([]).
-    [32mINFO    [0m [34mfeature_layers.3._input_quantizer       : TensorQuantizer(8bit fake per-tensor amax=3.3020 calibrator=HistogramCalibrator scale=1.0 quant)[0m
-    I0318 15:34:02.507491 140155325249344 calibrate.py:79] feature_layers.3._input_quantizer       : TensorQuantizer(8bit fake per-tensor amax=3.3020 calibrator=HistogramCalibrator scale=1.0 quant)
-    W0318 15:34:02.508672 140155325249344 tensor_quantizer.py:238] Load calibrated amax, shape=torch.Size([]).
+    I0328 23:26:18.537712 140449214740288 calibrate.py:175] Enabling Quantization and Disabling Calibration
+    W0328 23:26:18.537806 140449214740288 tensor_quantizer.py:174] Disable MaxCalibrator
+    [32mINFO    [0m [34mEnabling Quantization and Disabling Calibration[0m
+    I0328 23:26:18.537872 140449214740288 calibrate.py:175] Enabling Quantization and Disabling Calibration
+    W0328 23:26:18.537964 140449214740288 tensor_quantizer.py:174] Disable HistogramCalibrator
+    [32mINFO    [0m [34mEnabling Quantization and Disabling Calibration[0m
+    I0328 23:26:18.538011 140449214740288 calibrate.py:175] Enabling Quantization and Disabling Calibration
+    W0328 23:26:18.538102 140449214740288 tensor_quantizer.py:174] Disable HistogramCalibrator
+    [32mINFO    [0m [34mEnabling Quantization and Disabling Calibration[0m
+    I0328 23:26:18.538153 140449214740288 calibrate.py:175] Enabling Quantization and Disabling Calibration
+    W0328 23:26:18.538257 140449214740288 tensor_quantizer.py:174] Disable HistogramCalibrator
+    [32mINFO    [0m [34mEnabling Quantization and Disabling Calibration[0m
+    I0328 23:26:18.538305 140449214740288 calibrate.py:175] Enabling Quantization and Disabling Calibration
+    W0328 23:26:18.538399 140449214740288 tensor_quantizer.py:174] Disable HistogramCalibrator
+    W0328 23:26:18.546847 140449214740288 tensor_quantizer.py:238] Load calibrated amax, shape=torch.Size([]).
+    W0328 23:26:18.546956 140449214740288 tensor_quantizer.py:239] Call .cuda() if running on GPU after loading calibrated amax.
+    [32mINFO    [0m [34mfeature_layers.3._input_quantizer       : TensorQuantizer(8bit fake per-tensor amax=3.2937 calibrator=HistogramCalibrator scale=1.0 quant)[0m
+    I0328 23:26:18.547093 140449214740288 calibrate.py:131] feature_layers.3._input_quantizer       : TensorQuantizer(8bit fake per-tensor amax=3.2937 calibrator=HistogramCalibrator scale=1.0 quant)
+    W0328 23:26:18.547413 140449214740288 tensor_quantizer.py:238] Load calibrated amax, shape=torch.Size([]).
     [32mINFO    [0m [34mfeature_layers.3._weight_quantizer      : TensorQuantizer(8bit fake per-tensor amax=0.2366 calibrator=HistogramCalibrator scale=1.0 quant)[0m
-    I0318 15:34:02.509136 140155325249344 calibrate.py:79] feature_layers.3._weight_quantizer      : TensorQuantizer(8bit fake per-tensor amax=0.2366 calibrator=HistogramCalibrator scale=1.0 quant)
-    W0318 15:34:02.510375 140155325249344 tensor_quantizer.py:238] Load calibrated amax, shape=torch.Size([]).
-    [32mINFO    [0m [34mfeature_layers.7._input_quantizer       : TensorQuantizer(8bit fake per-tensor amax=1.8184 calibrator=HistogramCalibrator scale=1.0 quant)[0m
-    I0318 15:34:02.510823 140155325249344 calibrate.py:79] feature_layers.7._input_quantizer       : TensorQuantizer(8bit fake per-tensor amax=1.8184 calibrator=HistogramCalibrator scale=1.0 quant)
-    W0318 15:34:02.512043 140155325249344 tensor_quantizer.py:238] Load calibrated amax, shape=torch.Size([]).
+    I0328 23:26:18.547523 140449214740288 calibrate.py:131] feature_layers.3._weight_quantizer      : TensorQuantizer(8bit fake per-tensor amax=0.2366 calibrator=HistogramCalibrator scale=1.0 quant)
+    W0328 23:26:18.547886 140449214740288 tensor_quantizer.py:238] Load calibrated amax, shape=torch.Size([]).
+    [32mINFO    [0m [34mfeature_layers.7._input_quantizer       : TensorQuantizer(8bit fake per-tensor amax=1.8330 calibrator=HistogramCalibrator scale=1.0 quant)[0m
+    I0328 23:26:18.548011 140449214740288 calibrate.py:131] feature_layers.7._input_quantizer       : TensorQuantizer(8bit fake per-tensor amax=1.8330 calibrator=HistogramCalibrator scale=1.0 quant)
+    W0328 23:26:18.548304 140449214740288 tensor_quantizer.py:238] Load calibrated amax, shape=torch.Size([]).
     [32mINFO    [0m [34mfeature_layers.7._weight_quantizer      : TensorQuantizer(8bit fake per-tensor amax=0.2296 calibrator=HistogramCalibrator scale=1.0 quant)[0m
-    I0318 15:34:02.512472 140155325249344 calibrate.py:79] feature_layers.7._weight_quantizer      : TensorQuantizer(8bit fake per-tensor amax=0.2296 calibrator=HistogramCalibrator scale=1.0 quant)
-    W0318 15:34:02.513764 140155325249344 tensor_quantizer.py:238] Load calibrated amax, shape=torch.Size([]).
-    [32mINFO    [0m [34mfeature_layers.10._input_quantizer      : TensorQuantizer(8bit fake per-tensor amax=1.4591 calibrator=HistogramCalibrator scale=1.0 quant)[0m
-    I0318 15:34:02.514211 140155325249344 calibrate.py:79] feature_layers.10._input_quantizer      : TensorQuantizer(8bit fake per-tensor amax=1.4591 calibrator=HistogramCalibrator scale=1.0 quant)
-    W0318 15:34:02.515444 140155325249344 tensor_quantizer.py:238] Load calibrated amax, shape=torch.Size([]).
+    I0328 23:26:18.548407 140449214740288 calibrate.py:131] feature_layers.7._weight_quantizer      : TensorQuantizer(8bit fake per-tensor amax=0.2296 calibrator=HistogramCalibrator scale=1.0 quant)
+    W0328 23:26:18.548746 140449214740288 tensor_quantizer.py:238] Load calibrated amax, shape=torch.Size([]).
+    [32mINFO    [0m [34mfeature_layers.10._input_quantizer      : TensorQuantizer(8bit fake per-tensor amax=1.4681 calibrator=HistogramCalibrator scale=1.0 quant)[0m
+    I0328 23:26:18.548850 140449214740288 calibrate.py:131] feature_layers.10._input_quantizer      : TensorQuantizer(8bit fake per-tensor amax=1.4681 calibrator=HistogramCalibrator scale=1.0 quant)
+    W0328 23:26:18.549174 140449214740288 tensor_quantizer.py:238] Load calibrated amax, shape=torch.Size([]).
     [32mINFO    [0m [34mfeature_layers.10._weight_quantizer     : TensorQuantizer(8bit fake per-tensor amax=0.2080 calibrator=HistogramCalibrator scale=1.0 quant)[0m
-    I0318 15:34:02.515901 140155325249344 calibrate.py:79] feature_layers.10._weight_quantizer     : TensorQuantizer(8bit fake per-tensor amax=0.2080 calibrator=HistogramCalibrator scale=1.0 quant)
-    W0318 15:34:02.517146 140155325249344 tensor_quantizer.py:238] Load calibrated amax, shape=torch.Size([]).
-    [32mINFO    [0m [34mfeature_layers.14._input_quantizer      : TensorQuantizer(8bit fake per-tensor amax=1.9262 calibrator=HistogramCalibrator scale=1.0 quant)[0m
-    I0318 15:34:02.517589 140155325249344 calibrate.py:79] feature_layers.14._input_quantizer      : TensorQuantizer(8bit fake per-tensor amax=1.9262 calibrator=HistogramCalibrator scale=1.0 quant)
-    W0318 15:34:02.518806 140155325249344 tensor_quantizer.py:238] Load calibrated amax, shape=torch.Size([]).
+    I0328 23:26:18.549281 140449214740288 calibrate.py:131] feature_layers.10._weight_quantizer     : TensorQuantizer(8bit fake per-tensor amax=0.2080 calibrator=HistogramCalibrator scale=1.0 quant)
+    W0328 23:26:18.549598 140449214740288 tensor_quantizer.py:238] Load calibrated amax, shape=torch.Size([]).
+    [32mINFO    [0m [34mfeature_layers.14._input_quantizer      : TensorQuantizer(8bit fake per-tensor amax=1.9284 calibrator=HistogramCalibrator scale=1.0 quant)[0m
+    I0328 23:26:18.549701 140449214740288 calibrate.py:131] feature_layers.14._input_quantizer      : TensorQuantizer(8bit fake per-tensor amax=1.9284 calibrator=HistogramCalibrator scale=1.0 quant)
+    W0328 23:26:18.550004 140449214740288 tensor_quantizer.py:238] Load calibrated amax, shape=torch.Size([]).
     [32mINFO    [0m [34mfeature_layers.14._weight_quantizer     : TensorQuantizer(8bit fake per-tensor amax=0.2013 calibrator=HistogramCalibrator scale=1.0 quant)[0m
-    I0318 15:34:02.519248 140155325249344 calibrate.py:79] feature_layers.14._weight_quantizer     : TensorQuantizer(8bit fake per-tensor amax=0.2013 calibrator=HistogramCalibrator scale=1.0 quant)
-    W0318 15:34:02.520494 140155325249344 tensor_quantizer.py:238] Load calibrated amax, shape=torch.Size([]).
-    [32mINFO    [0m [34mfeature_layers.17._input_quantizer      : TensorQuantizer(8bit fake per-tensor amax=1.6157 calibrator=HistogramCalibrator scale=1.0 quant)[0m
-    I0318 15:34:02.520926 140155325249344 calibrate.py:79] feature_layers.17._input_quantizer      : TensorQuantizer(8bit fake per-tensor amax=1.6157 calibrator=HistogramCalibrator scale=1.0 quant)
-    W0318 15:34:02.522181 140155325249344 tensor_quantizer.py:238] Load calibrated amax, shape=torch.Size([]).
+    I0328 23:26:18.550112 140449214740288 calibrate.py:131] feature_layers.14._weight_quantizer     : TensorQuantizer(8bit fake per-tensor amax=0.2013 calibrator=HistogramCalibrator scale=1.0 quant)
+    W0328 23:26:18.550404 140449214740288 tensor_quantizer.py:238] Load calibrated amax, shape=torch.Size([]).
+    [32mINFO    [0m [34mfeature_layers.17._input_quantizer      : TensorQuantizer(8bit fake per-tensor amax=1.6127 calibrator=HistogramCalibrator scale=1.0 quant)[0m
+    I0328 23:26:18.550505 140449214740288 calibrate.py:131] feature_layers.17._input_quantizer      : TensorQuantizer(8bit fake per-tensor amax=1.6127 calibrator=HistogramCalibrator scale=1.0 quant)
+    W0328 23:26:18.550795 140449214740288 tensor_quantizer.py:238] Load calibrated amax, shape=torch.Size([]).
     [32mINFO    [0m [34mfeature_layers.17._weight_quantizer     : TensorQuantizer(8bit fake per-tensor amax=0.1879 calibrator=HistogramCalibrator scale=1.0 quant)[0m
-    I0318 15:34:02.522614 140155325249344 calibrate.py:79] feature_layers.17._weight_quantizer     : TensorQuantizer(8bit fake per-tensor amax=0.1879 calibrator=HistogramCalibrator scale=1.0 quant)
+    I0328 23:26:18.550894 140449214740288 calibrate.py:131] feature_layers.17._weight_quantizer     : TensorQuantizer(8bit fake per-tensor amax=0.1879 calibrator=HistogramCalibrator scale=1.0 quant)
+    W0328 23:26:18.551028 140449214740288 tensor_quantizer.py:238] Load calibrated amax, shape=torch.Size([]).
+    [32mINFO    [0m [34mclassifier.0._input_quantizer           : TensorQuantizer(8bit fake per-tensor amax=11.6545 calibrator=MaxCalibrator scale=1.0 quant)[0m
+    I0328 23:26:18.551139 140449214740288 calibrate.py:131] classifier.0._input_quantizer           : TensorQuantizer(8bit fake per-tensor amax=11.6545 calibrator=MaxCalibrator scale=1.0 quant)
+    W0328 23:26:18.551264 140449214740288 tensor_quantizer.py:238] Load calibrated amax, shape=torch.Size([1024, 1]).
+    [32mINFO    [0m [34mclassifier.0._weight_quantizer          : TensorQuantizer(8bit fake axis=0 amax=[0.0158, 0.4703](1024) calibrator=MaxCalibrator scale=1.0 quant)[0m
+    I0328 23:26:18.551505 140449214740288 calibrate.py:131] classifier.0._weight_quantizer          : TensorQuantizer(8bit fake axis=0 amax=[0.0158, 0.4703](1024) calibrator=MaxCalibrator scale=1.0 quant)
+    W0328 23:26:18.551799 140449214740288 tensor_quantizer.py:238] Load calibrated amax, shape=torch.Size([]).
+    [32mINFO    [0m [34mclassifier.2._input_quantizer           : TensorQuantizer(8bit fake per-tensor amax=9.7654 calibrator=HistogramCalibrator scale=1.0 quant)[0m
+    I0328 23:26:18.551900 140449214740288 calibrate.py:131] classifier.2._input_quantizer           : TensorQuantizer(8bit fake per-tensor amax=9.7654 calibrator=HistogramCalibrator scale=1.0 quant)
+    W0328 23:26:18.552192 140449214740288 tensor_quantizer.py:238] Load calibrated amax, shape=torch.Size([]).
+    [32mINFO    [0m [34mclassifier.2._weight_quantizer          : TensorQuantizer(8bit fake per-tensor amax=0.0590 calibrator=HistogramCalibrator scale=1.0 quant)[0m
+    I0328 23:26:18.552289 140449214740288 calibrate.py:131] classifier.2._weight_quantizer          : TensorQuantizer(8bit fake per-tensor amax=0.0590 calibrator=HistogramCalibrator scale=1.0 quant)
+    W0328 23:26:18.552608 140449214740288 tensor_quantizer.py:238] Load calibrated amax, shape=torch.Size([]).
+    [32mINFO    [0m [34mlast_layer._input_quantizer             : TensorQuantizer(8bit fake per-tensor amax=7.4475 calibrator=HistogramCalibrator scale=1.0 quant)[0m
+    I0328 23:26:18.552708 140449214740288 calibrate.py:131] last_layer._input_quantizer             : TensorQuantizer(8bit fake per-tensor amax=7.4475 calibrator=HistogramCalibrator scale=1.0 quant)
+    W0328 23:26:18.552994 140449214740288 tensor_quantizer.py:238] Load calibrated amax, shape=torch.Size([]).
+    [32mINFO    [0m [34mlast_layer._weight_quantizer            : TensorQuantizer(8bit fake per-tensor amax=0.1019 calibrator=HistogramCalibrator scale=1.0 quant)[0m
+    I0328 23:26:18.553097 140449214740288 calibrate.py:131] last_layer._weight_quantizer            : TensorQuantizer(8bit fake per-tensor amax=0.1019 calibrator=HistogramCalibrator scale=1.0 quant)
     [32mINFO    [0m [34mPerforming post calibration analysis for calibrator percentile_99.0...[0m
-    I0318 15:34:02.524394 140155325249344 calibrate.py:53] Performing post calibration analysis for calibrator percentile_99.0...
-    [32mINFO    [0m [34mStarting transformation analysis[0m
-    I0318 15:34:02.525266 140155325249344 analysis.py:214] Starting transformation analysis
+    I0328 23:26:18.554053 140449214740288 calibrate.py:105] Performing post calibration analysis for calibrator percentile_99.0...
+    [32mINFO    [0m [34mStarting transformation analysis on vgg7[0m
+    I0328 23:26:18.554283 140449214740288 runtime_analysis.py:357] Starting transformation analysis on vgg7
     [32mINFO    [0m [34m
     Results vgg7:
-    +------------------------------+------------+
-    |            Metric            |   Value    |
-    +------------------------------+------------+
-    |    Average Test Accuracy     |  0.91682   |
-    |      Average Precision       |  0.91546   |
-    |        Average Recall        |  0.91579   |
-    |       Average F1 Score       |  0.91553   |
-    |         Average Loss         |  0.25923   |
-    |       Average Latency        | 36.294 ms  |
-    |   Average GPU Power Usage    |  108.73 W  |
-    | Inference Energy Consumption | 1.0962 mWh |
-    +------------------------------+------------+[0m
-    I0318 15:34:06.029327 140155325249344 analysis.py:323] 
+    +------------------------------+-------------+
+    |      Metric (Per Batch)      |    Value    |
+    +------------------------------+-------------+
+    |    Average Test Accuracy     |   0.87663   |
+    |      Average Precision       |   0.87531   |
+    |        Average Recall        |   0.87386   |
+    |       Average F1 Score       |   0.87335   |
+    |         Average Loss         |   0.65133   |
+    |       Average Latency        |  17.901 ms  |
+    |   Average GPU Power Usage    |  57.532 W   |
+    | Inference Energy Consumption | 0.28607 mWh |
+    +------------------------------+-------------+[0m
+    I0328 23:26:29.263397 140449214740288 runtime_analysis.py:521] 
     Results vgg7:
-    +------------------------------+------------+
-    |            Metric            |   Value    |
-    +------------------------------+------------+
-    |    Average Test Accuracy     |  0.91682   |
-    |      Average Precision       |  0.91546   |
-    |        Average Recall        |  0.91579   |
-    |       Average F1 Score       |  0.91553   |
-    |         Average Loss         |  0.25923   |
-    |       Average Latency        | 36.294 ms  |
-    |   Average GPU Power Usage    |  108.73 W  |
-    | Inference Energy Consumption | 1.0962 mWh |
-    +------------------------------+------------+
+    +------------------------------+-------------+
+    |      Metric (Per Batch)      |    Value    |
+    +------------------------------+-------------+
+    |    Average Test Accuracy     |   0.87663   |
+    |      Average Precision       |   0.87531   |
+    |        Average Recall        |   0.87386   |
+    |       Average F1 Score       |   0.87335   |
+    |         Average Loss         |   0.65133   |
+    |       Average Latency        |  17.901 ms  |
+    |   Average GPU Power Usage    |  57.532 W   |
+    | Inference Energy Consumption | 0.28607 mWh |
+    +------------------------------+-------------+
+    [32mINFO    [0m [34mRuntime analysis results saved to /root/mase_output/tensorrt/quantization/vgg7_cls_cifar10_2024-03-28/mase_graph/version_50/model.json[0m
+    I0328 23:26:29.264865 140449214740288 runtime_analysis.py:143] Runtime analysis results saved to /root/mase_output/tensorrt/quantization/vgg7_cls_cifar10_2024-03-28/mase_graph/version_50/model.json
     [32mINFO    [0m [34mPost calibration analysis complete.[0m
-    I0318 15:34:06.030981 140155325249344 calibrate.py:66] Post calibration analysis complete.
-    W0318 15:34:06.032042 140155325249344 tensor_quantizer.py:238] Load calibrated amax, shape=torch.Size([]).
-    [32mINFO    [0m [34mfeature_layers.0._input_quantizer       : TensorQuantizer(8bit fake per-tensor amax=2.6392 calibrator=HistogramCalibrator scale=1.0 quant)[0m
-    I0318 15:34:06.032518 140155325249344 calibrate.py:79] feature_layers.0._input_quantizer       : TensorQuantizer(8bit fake per-tensor amax=2.6392 calibrator=HistogramCalibrator scale=1.0 quant)
-    W0318 15:34:06.033420 140155325249344 tensor_quantizer.py:238] Load calibrated amax, shape=torch.Size([]).
-    [32mINFO    [0m [34mfeature_layers.0._weight_quantizer      : TensorQuantizer(8bit fake per-tensor amax=0.3434 calibrator=HistogramCalibrator scale=1.0 quant)[0m
-    I0318 15:34:06.033899 140155325249344 calibrate.py:79] feature_layers.0._weight_quantizer      : TensorQuantizer(8bit fake per-tensor amax=0.3434 calibrator=HistogramCalibrator scale=1.0 quant)
-    W0318 15:34:06.034892 140155325249344 tensor_quantizer.py:238] Load calibrated amax, shape=torch.Size([]).
-    [32mINFO    [0m [34mfeature_layers.3._input_quantizer       : TensorQuantizer(8bit fake per-tensor amax=6.0151 calibrator=HistogramCalibrator scale=1.0 quant)[0m
-    I0318 15:34:06.035389 140155325249344 calibrate.py:79] feature_layers.3._input_quantizer       : TensorQuantizer(8bit fake per-tensor amax=6.0151 calibrator=HistogramCalibrator scale=1.0 quant)
-    W0318 15:34:06.036347 140155325249344 tensor_quantizer.py:238] Load calibrated amax, shape=torch.Size([]).
+    I0328 23:26:29.265057 140449214740288 calibrate.py:118] Post calibration analysis complete.
+    W0328 23:26:29.265783 140449214740288 tensor_quantizer.py:238] Load calibrated amax, shape=torch.Size([]).
+    [32mINFO    [0m [34mfeature_layers.3._input_quantizer       : TensorQuantizer(8bit fake per-tensor amax=5.9458 calibrator=HistogramCalibrator scale=1.0 quant)[0m
+    I0328 23:26:29.266022 140449214740288 calibrate.py:131] feature_layers.3._input_quantizer       : TensorQuantizer(8bit fake per-tensor amax=5.9458 calibrator=HistogramCalibrator scale=1.0 quant)
+    W0328 23:26:29.266428 140449214740288 tensor_quantizer.py:238] Load calibrated amax, shape=torch.Size([]).
     [32mINFO    [0m [34mfeature_layers.3._weight_quantizer      : TensorQuantizer(8bit fake per-tensor amax=0.3704 calibrator=HistogramCalibrator scale=1.0 quant)[0m
-    I0318 15:34:06.036843 140155325249344 calibrate.py:79] feature_layers.3._weight_quantizer      : TensorQuantizer(8bit fake per-tensor amax=0.3704 calibrator=HistogramCalibrator scale=1.0 quant)
-    W0318 15:34:06.037833 140155325249344 tensor_quantizer.py:238] Load calibrated amax, shape=torch.Size([]).
-    [32mINFO    [0m [34mfeature_layers.7._input_quantizer       : TensorQuantizer(8bit fake per-tensor amax=3.2875 calibrator=HistogramCalibrator scale=1.0 quant)[0m
-    I0318 15:34:06.038331 140155325249344 calibrate.py:79] feature_layers.7._input_quantizer       : TensorQuantizer(8bit fake per-tensor amax=3.2875 calibrator=HistogramCalibrator scale=1.0 quant)
-    W0318 15:34:06.039333 140155325249344 tensor_quantizer.py:238] Load calibrated amax, shape=torch.Size([]).
+    I0328 23:26:29.266630 140449214740288 calibrate.py:131] feature_layers.3._weight_quantizer      : TensorQuantizer(8bit fake per-tensor amax=0.3704 calibrator=HistogramCalibrator scale=1.0 quant)
+    W0328 23:26:29.267089 140449214740288 tensor_quantizer.py:238] Load calibrated amax, shape=torch.Size([]).
+    [32mINFO    [0m [34mfeature_layers.7._input_quantizer       : TensorQuantizer(8bit fake per-tensor amax=3.2568 calibrator=HistogramCalibrator scale=1.0 quant)[0m
+    I0328 23:26:29.267289 140449214740288 calibrate.py:131] feature_layers.7._input_quantizer       : TensorQuantizer(8bit fake per-tensor amax=3.2568 calibrator=HistogramCalibrator scale=1.0 quant)
+    W0328 23:26:29.267678 140449214740288 tensor_quantizer.py:238] Load calibrated amax, shape=torch.Size([]).
     [32mINFO    [0m [34mfeature_layers.7._weight_quantizer      : TensorQuantizer(8bit fake per-tensor amax=0.3621 calibrator=HistogramCalibrator scale=1.0 quant)[0m
-    I0318 15:34:06.039835 140155325249344 calibrate.py:79] feature_layers.7._weight_quantizer      : TensorQuantizer(8bit fake per-tensor amax=0.3621 calibrator=HistogramCalibrator scale=1.0 quant)
-    W0318 15:34:06.040834 140155325249344 tensor_quantizer.py:238] Load calibrated amax, shape=torch.Size([]).
-    [32mINFO    [0m [34mfeature_layers.10._input_quantizer      : TensorQuantizer(8bit fake per-tensor amax=2.4120 calibrator=HistogramCalibrator scale=1.0 quant)[0m
-    I0318 15:34:06.041361 140155325249344 calibrate.py:79] feature_layers.10._input_quantizer      : TensorQuantizer(8bit fake per-tensor amax=2.4120 calibrator=HistogramCalibrator scale=1.0 quant)
-    W0318 15:34:06.042325 140155325249344 tensor_quantizer.py:238] Load calibrated amax, shape=torch.Size([]).
+    I0328 23:26:29.267869 140449214740288 calibrate.py:131] feature_layers.7._weight_quantizer      : TensorQuantizer(8bit fake per-tensor amax=0.3621 calibrator=HistogramCalibrator scale=1.0 quant)
+    W0328 23:26:29.268326 140449214740288 tensor_quantizer.py:238] Load calibrated amax, shape=torch.Size([]).
+    [32mINFO    [0m [34mfeature_layers.10._input_quantizer      : TensorQuantizer(8bit fake per-tensor amax=2.4123 calibrator=HistogramCalibrator scale=1.0 quant)[0m
+    I0328 23:26:29.268521 140449214740288 calibrate.py:131] feature_layers.10._input_quantizer      : TensorQuantizer(8bit fake per-tensor amax=2.4123 calibrator=HistogramCalibrator scale=1.0 quant)
+    W0328 23:26:29.268913 140449214740288 tensor_quantizer.py:238] Load calibrated amax, shape=torch.Size([]).
     [32mINFO    [0m [34mfeature_layers.10._weight_quantizer     : TensorQuantizer(8bit fake per-tensor amax=0.2821 calibrator=HistogramCalibrator scale=1.0 quant)[0m
-    I0318 15:34:06.042822 140155325249344 calibrate.py:79] feature_layers.10._weight_quantizer     : TensorQuantizer(8bit fake per-tensor amax=0.2821 calibrator=HistogramCalibrator scale=1.0 quant)
-    W0318 15:34:06.043805 140155325249344 tensor_quantizer.py:238] Load calibrated amax, shape=torch.Size([]).
-    [32mINFO    [0m [34mfeature_layers.14._input_quantizer      : TensorQuantizer(8bit fake per-tensor amax=2.9829 calibrator=HistogramCalibrator scale=1.0 quant)[0m
-    I0318 15:34:06.044299 140155325249344 calibrate.py:79] feature_layers.14._input_quantizer      : TensorQuantizer(8bit fake per-tensor amax=2.9829 calibrator=HistogramCalibrator scale=1.0 quant)
-    W0318 15:34:06.045269 140155325249344 tensor_quantizer.py:238] Load calibrated amax, shape=torch.Size([]).
+    I0328 23:26:29.269103 140449214740288 calibrate.py:131] feature_layers.10._weight_quantizer     : TensorQuantizer(8bit fake per-tensor amax=0.2821 calibrator=HistogramCalibrator scale=1.0 quant)
+    W0328 23:26:29.269515 140449214740288 tensor_quantizer.py:238] Load calibrated amax, shape=torch.Size([]).
+    [32mINFO    [0m [34mfeature_layers.14._input_quantizer      : TensorQuantizer(8bit fake per-tensor amax=2.9841 calibrator=HistogramCalibrator scale=1.0 quant)[0m
+    I0328 23:26:29.269702 140449214740288 calibrate.py:131] feature_layers.14._input_quantizer      : TensorQuantizer(8bit fake per-tensor amax=2.9841 calibrator=HistogramCalibrator scale=1.0 quant)
+    W0328 23:26:29.270093 140449214740288 tensor_quantizer.py:238] Load calibrated amax, shape=torch.Size([]).
     [32mINFO    [0m [34mfeature_layers.14._weight_quantizer     : TensorQuantizer(8bit fake per-tensor amax=0.2734 calibrator=HistogramCalibrator scale=1.0 quant)[0m
-    I0318 15:34:06.045764 140155325249344 calibrate.py:79] feature_layers.14._weight_quantizer     : TensorQuantizer(8bit fake per-tensor amax=0.2734 calibrator=HistogramCalibrator scale=1.0 quant)
-    W0318 15:34:06.046752 140155325249344 tensor_quantizer.py:238] Load calibrated amax, shape=torch.Size([]).
-    [32mINFO    [0m [34mfeature_layers.17._input_quantizer      : TensorQuantizer(8bit fake per-tensor amax=2.7024 calibrator=HistogramCalibrator scale=1.0 quant)[0m
-    I0318 15:34:06.047246 140155325249344 calibrate.py:79] feature_layers.17._input_quantizer      : TensorQuantizer(8bit fake per-tensor amax=2.7024 calibrator=HistogramCalibrator scale=1.0 quant)
-    W0318 15:34:06.048205 140155325249344 tensor_quantizer.py:238] Load calibrated amax, shape=torch.Size([]).
+    I0328 23:26:29.270280 140449214740288 calibrate.py:131] feature_layers.14._weight_quantizer     : TensorQuantizer(8bit fake per-tensor amax=0.2734 calibrator=HistogramCalibrator scale=1.0 quant)
+    W0328 23:26:29.270668 140449214740288 tensor_quantizer.py:238] Load calibrated amax, shape=torch.Size([]).
+    [32mINFO    [0m [34mfeature_layers.17._input_quantizer      : TensorQuantizer(8bit fake per-tensor amax=2.7013 calibrator=HistogramCalibrator scale=1.0 quant)[0m
+    I0328 23:26:29.270851 140449214740288 calibrate.py:131] feature_layers.17._input_quantizer      : TensorQuantizer(8bit fake per-tensor amax=2.7013 calibrator=HistogramCalibrator scale=1.0 quant)
+    W0328 23:26:29.271238 140449214740288 tensor_quantizer.py:238] Load calibrated amax, shape=torch.Size([]).
     [32mINFO    [0m [34mfeature_layers.17._weight_quantizer     : TensorQuantizer(8bit fake per-tensor amax=0.2519 calibrator=HistogramCalibrator scale=1.0 quant)[0m
-    I0318 15:34:06.048707 140155325249344 calibrate.py:79] feature_layers.17._weight_quantizer     : TensorQuantizer(8bit fake per-tensor amax=0.2519 calibrator=HistogramCalibrator scale=1.0 quant)
+    I0328 23:26:29.271429 140449214740288 calibrate.py:131] feature_layers.17._weight_quantizer     : TensorQuantizer(8bit fake per-tensor amax=0.2519 calibrator=HistogramCalibrator scale=1.0 quant)
+    W0328 23:26:29.271625 140449214740288 tensor_quantizer.py:238] Load calibrated amax, shape=torch.Size([]).
+    [32mINFO    [0m [34mclassifier.0._input_quantizer           : TensorQuantizer(8bit fake per-tensor amax=11.6545 calibrator=MaxCalibrator scale=1.0 quant)[0m
+    I0328 23:26:29.271768 140449214740288 calibrate.py:131] classifier.0._input_quantizer           : TensorQuantizer(8bit fake per-tensor amax=11.6545 calibrator=MaxCalibrator scale=1.0 quant)
+    W0328 23:26:29.271936 140449214740288 tensor_quantizer.py:238] Load calibrated amax, shape=torch.Size([1024, 1]).
+    [32mINFO    [0m [34mclassifier.0._weight_quantizer          : TensorQuantizer(8bit fake axis=0 amax=[0.0158, 0.4703](1024) calibrator=MaxCalibrator scale=1.0 quant)[0m
+    I0328 23:26:29.272221 140449214740288 calibrate.py:131] classifier.0._weight_quantizer          : TensorQuantizer(8bit fake axis=0 amax=[0.0158, 0.4703](1024) calibrator=MaxCalibrator scale=1.0 quant)
+    W0328 23:26:29.272616 140449214740288 tensor_quantizer.py:238] Load calibrated amax, shape=torch.Size([]).
+    [32mINFO    [0m [34mclassifier.2._input_quantizer           : TensorQuantizer(8bit fake per-tensor amax=38.3167 calibrator=HistogramCalibrator scale=1.0 quant)[0m
+    I0328 23:26:29.272804 140449214740288 calibrate.py:131] classifier.2._input_quantizer           : TensorQuantizer(8bit fake per-tensor amax=38.3167 calibrator=HistogramCalibrator scale=1.0 quant)
+    W0328 23:26:29.273202 140449214740288 tensor_quantizer.py:238] Load calibrated amax, shape=torch.Size([]).
+    [32mINFO    [0m [34mclassifier.2._weight_quantizer          : TensorQuantizer(8bit fake per-tensor amax=0.1175 calibrator=HistogramCalibrator scale=1.0 quant)[0m
+    I0328 23:26:29.273392 140449214740288 calibrate.py:131] classifier.2._weight_quantizer          : TensorQuantizer(8bit fake per-tensor amax=0.1175 calibrator=HistogramCalibrator scale=1.0 quant)
+    W0328 23:26:29.273818 140449214740288 tensor_quantizer.py:238] Load calibrated amax, shape=torch.Size([]).
+    [32mINFO    [0m [34mlast_layer._input_quantizer             : TensorQuantizer(8bit fake per-tensor amax=19.2420 calibrator=HistogramCalibrator scale=1.0 quant)[0m
+    I0328 23:26:29.274000 140449214740288 calibrate.py:131] last_layer._input_quantizer             : TensorQuantizer(8bit fake per-tensor amax=19.2420 calibrator=HistogramCalibrator scale=1.0 quant)
+    W0328 23:26:29.274388 140449214740288 tensor_quantizer.py:238] Load calibrated amax, shape=torch.Size([]).
+    [32mINFO    [0m [34mlast_layer._weight_quantizer            : TensorQuantizer(8bit fake per-tensor amax=0.1626 calibrator=HistogramCalibrator scale=1.0 quant)[0m
+    I0328 23:26:29.274579 140449214740288 calibrate.py:131] last_layer._weight_quantizer            : TensorQuantizer(8bit fake per-tensor amax=0.1626 calibrator=HistogramCalibrator scale=1.0 quant)
     [32mINFO    [0m [34mPerforming post calibration analysis for calibrator percentile_99.9...[0m
-    I0318 15:34:06.050029 140155325249344 calibrate.py:53] Performing post calibration analysis for calibrator percentile_99.9...
-    [32mINFO    [0m [34mStarting transformation analysis[0m
-    I0318 15:34:06.050704 140155325249344 analysis.py:214] Starting transformation analysis
+    I0328 23:26:29.275199 140449214740288 calibrate.py:105] Performing post calibration analysis for calibrator percentile_99.9...
+    [32mINFO    [0m [34mStarting transformation analysis on vgg7[0m
+    I0328 23:26:29.275390 140449214740288 runtime_analysis.py:357] Starting transformation analysis on vgg7
     [32mINFO    [0m [34m
     Results vgg7:
-    +------------------------------+-----------+
-    |            Metric            |   Value   |
-    +------------------------------+-----------+
-    | Average Validation Accuracy  |  0.92441  |
-    |      Average Precision       |  0.92283  |
-    |        Average Recall        |  0.92325  |
-    |       Average F1 Score       |  0.92293  |
-    |         Average Loss         |  0.23622  |
-    |       Average Latency        | 36.334 ms |
-    |   Average GPU Power Usage    | 111.46 W  |
-    | Inference Energy Consumption | 1.125 mWh |
-    +------------------------------+-----------+[0m
-    I0318 15:34:09.521739 140155325249344 analysis.py:323] 
+    +------------------------------+-------------+
+    |      Metric (Per Batch)      |    Value    |
+    +------------------------------+-------------+
+    | Average Validation Accuracy  |   0.92097   |
+    |      Average Precision       |   0.91959   |
+    |        Average Recall        |   0.91991   |
+    |       Average F1 Score       |   0.91957   |
+    |         Average Loss         |   0.23991   |
+    |       Average Latency        |  18.132 ms  |
+    |   Average GPU Power Usage    |  57.867 W   |
+    | Inference Energy Consumption | 0.29145 mWh |
+    +------------------------------+-------------+[0m
+    I0328 23:26:40.146152 140449214740288 runtime_analysis.py:521] 
     Results vgg7:
-    +------------------------------+-----------+
-    |            Metric            |   Value   |
-    +------------------------------+-----------+
-    | Average Validation Accuracy  |  0.92441  |
-    |      Average Precision       |  0.92283  |
-    |        Average Recall        |  0.92325  |
-    |       Average F1 Score       |  0.92293  |
-    |         Average Loss         |  0.23622  |
-    |       Average Latency        | 36.334 ms |
-    |   Average GPU Power Usage    | 111.46 W  |
-    | Inference Energy Consumption | 1.125 mWh |
-    +------------------------------+-----------+
+    +------------------------------+-------------+
+    |      Metric (Per Batch)      |    Value    |
+    +------------------------------+-------------+
+    | Average Validation Accuracy  |   0.92097   |
+    |      Average Precision       |   0.91959   |
+    |        Average Recall        |   0.91991   |
+    |       Average F1 Score       |   0.91957   |
+    |         Average Loss         |   0.23991   |
+    |       Average Latency        |  18.132 ms  |
+    |   Average GPU Power Usage    |  57.867 W   |
+    | Inference Energy Consumption | 0.29145 mWh |
+    +------------------------------+-------------+
+    [32mINFO    [0m [34mRuntime analysis results saved to /root/mase_output/tensorrt/quantization/vgg7_cls_cifar10_2024-03-28/mase_graph/version_51/model.json[0m
+    I0328 23:26:40.148627 140449214740288 runtime_analysis.py:143] Runtime analysis results saved to /root/mase_output/tensorrt/quantization/vgg7_cls_cifar10_2024-03-28/mase_graph/version_51/model.json
     [32mINFO    [0m [34mPost calibration analysis complete.[0m
-    I0318 15:34:09.524197 140155325249344 calibrate.py:66] Post calibration analysis complete.
+    I0328 23:26:40.148960 140449214740288 calibrate.py:118] Post calibration analysis complete.
     [32mINFO    [0m [34mSucceeded in calibrating the model in PyTorch![0m
-    I0318 15:34:09.525355 140155325249344 calibrate.py:159] Succeeded in calibrating the model in PyTorch!
-    [32mINFO    [0m [34mStarting Fine Tuning for 2 epochs...[0m
-    I0318 15:34:09.568219 140155325249344 fine_tune.py:101] Starting Fine Tuning for 2 epochs...
-    I0318 15:34:09.647709 140155325249344 rank_zero.py:64] GPU available: True (cuda), used: True
-    I0318 15:34:09.662323 140155325249344 rank_zero.py:64] TPU available: False, using: 0 TPU cores
-    I0318 15:34:09.662955 140155325249344 rank_zero.py:64] IPU available: False, using: 0 IPUs
-    I0318 15:34:09.663497 140155325249344 rank_zero.py:64] HPU available: False, using: 0 HPUs
-    I0318 15:34:09.669328 140155325249344 rank_zero.py:64] You are using a CUDA device ('NVIDIA GeForce RTX 3070') that has Tensor Cores. To properly utilize them, you should set `torch.set_float32_matmul_precision('medium' | 'high')` which will trade-off precision for performance. For more details, read https://pytorch.org/docs/stable/generated/torch.set_float32_matmul_precision.html#torch.set_float32_matmul_precision
-
-
-    Files already downloaded and verified
-    Files already downloaded and verified
-    Files already downloaded and verified
-    Files already downloaded and verified
-    Files already downloaded and verified
-    Files already downloaded and verified
-
-
-    I0318 15:34:13.796578 140155325249344 cuda.py:61] LOCAL_RANK: 0 - CUDA_VISIBLE_DEVICES: [0]
-    I0318 15:34:13.808069 140155325249344 model_summary.py:94] 
-      | Name      | Type               | Params
-    -------------------------------------------------
-    0 | model     | GraphModule        | 14.0 M
-    1 | loss_fn   | CrossEntropyLoss   | 0     
-    2 | acc_train | MulticlassAccuracy | 0     
-    3 | loss_val  | MeanMetric         | 0     
-    4 | loss_test | MeanMetric         | 0     
-    -------------------------------------------------
-    14.0 M    Trainable params
-    0         Non-trainable params
-    14.0 M    Total params
-    56.118    Total estimated model params size (MB)
-
-
-    Sanity Checking DataLoader 0:  50%|█████     | 1/2 [00:00<00:00, 13.05it/s]
-
-    /opt/conda/envs/mase/lib/python3.11/site-packages/pytorch_lightning/trainer/connectors/data_connector.py:441: The 'val_dataloader' does not have many workers which may be a bottleneck. Consider increasing the value of the `num_workers` argument` to `num_workers=31` in the `DataLoader` to improve performance.
-
-
-                                                                               
-
-    /opt/conda/envs/mase/lib/python3.11/site-packages/pytorch_lightning/trainer/connectors/data_connector.py:441: The 'train_dataloader' does not have many workers which may be a bottleneck. Consider increasing the value of the `num_workers` argument` to `num_workers=31` in the `DataLoader` to improve performance.
-
-
-    Epoch 1: 100%|██████████| 196/196 [00:43<00:00,  4.55it/s, v_num=8, train_acc_step=0.863, val_acc_epoch=0.893, val_loss_epoch=0.223]
-
-    I0318 15:35:42.103955 140155325249344 rank_zero.py:64] `Trainer.fit` stopped: `max_epochs=2` reached.
-
-
-    Epoch 1: 100%|██████████| 196/196 [00:43<00:00,  4.52it/s, v_num=8, train_acc_step=0.863, val_acc_epoch=0.893, val_loss_epoch=0.223]
-
-    [32mINFO    [0m [34mFine Tuning Complete[0m
-    I0318 15:35:42.213792 140155325249344 fine_tune.py:120] Fine Tuning Complete
+    I0328 23:26:40.149318 140449214740288 calibrate.py:213] Succeeded in calibrating the model in PyTorch!
+    [33mWARNING [0m [34mFine tuning is disabled in the config. Skipping QAT fine tuning.[0m
+    W0328 23:26:40.155524 140449214740288 fine_tune.py:92] Fine tuning is disabled in the config. Skipping QAT fine tuning.
     [32mINFO    [0m [34mConverting PyTorch model to ONNX...[0m
-    I0318 15:35:42.219084 140155325249344 quantize.py:129] Converting PyTorch model to ONNX...
-
-
-    
-
-
-    /opt/conda/envs/mase/lib/python3.11/site-packages/pytorch_quantization/tensor_quant.py:363: TracerWarning: Converting a tensor to a Python boolean might cause the trace to be incorrect. We can't record the data flow of Python values, so this value will be treated as a constant in the future. This means that the trace might not generalize to other inputs!
+    I0328 23:26:40.159881 140449214740288 quantize.py:209] Converting PyTorch model to ONNX...
+    /root/anaconda3/envs/mase/lib/python3.11/site-packages/pytorch_quantization/tensor_quant.py:363: TracerWarning: Converting a tensor to a Python boolean might cause the trace to be incorrect. We can't record the data flow of Python values, so this value will be treated as a constant in the future. This means that the trace might not generalize to other inputs!
       if min_amax < 0:
-    /opt/conda/envs/mase/lib/python3.11/site-packages/pytorch_quantization/tensor_quant.py:366: TracerWarning: torch.tensor results are registered as constants in the trace. You can safely ignore this warning if you use this function to create tensors out of constant variables that would be the same every time you call this function. In any other case, this might cause the trace to be incorrect.
+    /root/anaconda3/envs/mase/lib/python3.11/site-packages/pytorch_quantization/tensor_quant.py:366: TracerWarning: torch.tensor results are registered as constants in the trace. You can safely ignore this warning if you use this function to create tensors out of constant variables that would be the same every time you call this function. In any other case, this might cause the trace to be incorrect.
       max_bound = torch.tensor((2.0**(num_bits - 1 + int(unsigned))) - 1.0, device=amax.device)
-    /opt/conda/envs/mase/lib/python3.11/site-packages/pytorch_quantization/tensor_quant.py:376: TracerWarning: Converting a tensor to a Python boolean might cause the trace to be incorrect. We can't record the data flow of Python values, so this value will be treated as a constant in the future. This means that the trace might not generalize to other inputs!
+    /root/anaconda3/envs/mase/lib/python3.11/site-packages/pytorch_quantization/tensor_quant.py:376: TracerWarning: Converting a tensor to a Python boolean might cause the trace to be incorrect. We can't record the data flow of Python values, so this value will be treated as a constant in the future. This means that the trace might not generalize to other inputs!
       if min_amax <= epsilon:  # Treat amax smaller than minimum representable of fp16 0
-    /opt/conda/envs/mase/lib/python3.11/site-packages/pytorch_quantization/tensor_quant.py:382: TracerWarning: Converting a tensor to a Python boolean might cause the trace to be incorrect. We can't record the data flow of Python values, so this value will be treated as a constant in the future. This means that the trace might not generalize to other inputs!
+    /root/anaconda3/envs/mase/lib/python3.11/site-packages/pytorch_quantization/tensor_quant.py:382: TracerWarning: Converting a tensor to a Python boolean might cause the trace to be incorrect. We can't record the data flow of Python values, so this value will be treated as a constant in the future. This means that the trace might not generalize to other inputs!
       if min_amax <= epsilon:
-    [32mINFO    [0m [34mONNX Conversion Complete. Stored ONNX model to /root/mase/mase_output/tensorrt/quantization/onnx/2024_03_18/version_15/model.onnx[0m
-    I0318 15:35:43.000104 140155325249344 quantize.py:152] ONNX Conversion Complete. Stored ONNX model to /root/mase/mase_output/tensorrt/quantization/onnx/2024_03_18/version_15/model.onnx
+    [32mINFO    [0m [34mONNX Conversion Complete. Stored ONNX model to /root/mase/mase_output/tensorrt/quantization/vgg7_cls_cifar10_2024-03-28/2024-03-28/version_43/model.onnx[0m
+    I0328 23:26:48.207860 140449214740288 quantize.py:239] ONNX Conversion Complete. Stored ONNX model to /root/mase/mase_output/tensorrt/quantization/vgg7_cls_cifar10_2024-03-28/2024-03-28/version_43/model.onnx
     [32mINFO    [0m [34mConverting PyTorch model to TensorRT...[0m
-    I0318 15:35:43.003496 140155325249344 quantize.py:55] Converting PyTorch model to TensorRT...
-
-
-    [03/18/2024-15:35:48] [TRT] [W] onnx2trt_utils.cpp:374: Your ONNX model has been generated with INT64 weights, while TensorRT does not natively support INT64. Attempting to cast down to INT32.
-
-
-    [32mINFO    [0m [34mTensorRT Conversion Complete. Stored trt model to /root/mase/mase_output/tensorrt/quantization/trt/2024_03_18/version_10/model.trt[0m
-    I0318 15:38:52.261729 140155325249344 quantize.py:124] TensorRT Conversion Complete. Stored trt model to /root/mase/mase_output/tensorrt/quantization/trt/2024_03_18/version_10/model.trt
-    [32mINFO    [0m [34mTensorRT Model Summary Exported to /root/mase/mase_output/tensorrt/quantization/json/2024_03_18/version_10/model.json[0m
-    I0318 15:38:52.553308 140155325249344 quantize.py:168] TensorRT Model Summary Exported to /root/mase/mase_output/tensorrt/quantization/json/2024_03_18/version_10/model.json
-
-
-
-```python
-_, _ = runtime_analysis_pass(meta['trt_engine_path'], pass_args=runtime_analysis_config)
-```
-
+    I0328 23:26:48.210374 140449214740288 quantize.py:102] Converting PyTorch model to TensorRT...
+    [03/28/2024-23:26:55] [TRT] [W] onnx2trt_utils.cpp:374: Your ONNX model has been generated with INT64 weights, while TensorRT does not natively support INT64. Attempting to cast down to INT32.
+    [32mINFO    [0m [34mTensorRT Conversion Complete. Stored trt model to /root/mase/mase_output/tensorrt/quantization/vgg7_cls_cifar10_2024-03-28/2024-03-28/version_40/model.trt[0m
+    I0328 23:06:32.223787 139939454809920 quantize.py:202] TensorRT Conversion Complete. Stored trt model to /root/mase/mase_output/tensorrt/quantization/vgg7_cls_cifar10_2024-03-28/2024-03-28/version_40/model.trt
+    [32mINFO    [0m [34mTensorRT Model Summary Exported to /root/mase/mase_output/tensorrt/quantization/vgg7_cls_cifar10_2024-03-28/2024-03-28/version_41/model.json[0m
+    I0328 23:06:32.581682 139939454809920 quantize.py:259] TensorRT Model Summary Exported to /root/mase/mase_output/tensorrt/quantization/vgg7_cls_cifar10_2024-03-28/2024-03-28/version_41/model.json
+    [32mINFO    [0m [34mRuntime analysis results saved to /root/mase_output/tensorrt/quantization/vgg7_cls_cifar10_2024-03-28/mase_graph/version_46/model.json[0m
+    I0328 23:06:47.114224 139939454809920 runtime_analysis.py:143] Runtime analysis results saved to /root/mase_output/tensorrt/quantization/vgg7_cls_cifar10_2024-03-28/mase_graph/version_46/model.json
+    [32mINFO    [0m [34mStarting transformation analysis on vgg7-trt_quantized[0m
+    I0328 23:06:47.208054 139939454809920 runtime_analysis.py:357] Starting transformation analysis on vgg7-trt_quantized
     [32mINFO    [0m [34m
-    TensorRT Engine Input/Output Information:
-    Index | Type    | DataType | Static Shape         | Dynamic Shape        | Name
-    ------|---------|----------|----------------------|----------------------|-----------------------
-    0     | Input   | FLOAT    | (256, 3, 32, 32)       | (256, 3, 32, 32)       | input
-    1     | Output  | FLOAT    | (256, 10)              | (256, 10)              | 220[0m
-    I0318 15:38:52.609910 140155325249344 analysis.py:117] 
-    TensorRT Engine Input/Output Information:
-    Index | Type    | DataType | Static Shape         | Dynamic Shape        | Name
-    ------|---------|----------|----------------------|----------------------|-----------------------
-    0     | Input   | FLOAT    | (256, 3, 32, 32)       | (256, 3, 32, 32)       | input
-    1     | Output  | FLOAT    | (256, 10)              | (256, 10)              | 220
-    [32mINFO    [0m [34mStarting transformation analysis[0m
-    I0318 15:38:52.611444 140155325249344 analysis.py:214] Starting transformation analysis
+    Results vgg7-trt_quantized:
+    +------------------------------+-------------+
+    |      Metric (Per Batch)      |    Value    |
+    +------------------------------+-------------+
+    | Average Validation Accuracy  |   0.91823   |
+    |      Average Precision       |   0.9121    |
+    |        Average Recall        |   0.90467   |
+    |       Average F1 Score       |   0.92419   |
+    |         Average Loss         |   0.24202   |
+    |       Average Latency        |  8.2307 ms  |
+    |   Average GPU Power Usage    |  55.687 W   |
+    | Inference Energy Consumption | 0.12102 mWh |
+    +------------------------------+-------------+[0m
+    I0328 23:07:00.676242 139939454809920 runtime_analysis.py:521] 
+    Results vgg7-trt_quantized:
+    +------------------------------+-------------+
+    |      Metric (Per Batch)      |    Value    |
+    +------------------------------+-------------+
+    | Average Validation Accuracy  |   0.91823   |
+    |      Average Precision       |   0.9121    |
+    |        Average Recall        |   0.90467   |
+    |       Average F1 Score       |   0.92419   |
+    |         Average Loss         |   0.24202   |
+    |       Average Latency        |  8.2307 ms  |
+    |   Average GPU Power Usage    |  55.687 W   |
+    | Inference Energy Consumption |  0.12102 mWh |
+    +------------------------------+-------------+
+    [32mINFO    [0m [34mRuntime analysis results saved to /root/mase_output/tensorrt/quantization/vgg7_cls_cifar10_2024-03-28/tensorrt/version_8/model.json[0m
+    I0328 23:07:00.677799 139939454809920 runtime_analysis.py:143] Runtime analysis results saved to /root/mase_output/tensorrt/quantization/vgg7_cls_cifar10_2024-03-28/tensorrt/version_8/model.json
 
 
-    [32mINFO    [0m [34m
-    Results vgg7-quantized:
-    +------------------------------+-----------+
-    |            Metric            |   Value   |
-    +------------------------------+-----------+
-    |    Average Test Accuracy     |  0.93222  |
-    |      Average Precision       |  0.93206  |
-    |        Average Recall        |  0.93222  |
-    |       Average F1 Score       |  0.93204  |
-    |         Average Loss         |  0.22506  |
-    |       Average Latency        | 19.479 ms |
-    |   Average GPU Power Usage    | 110.15 W  |
-    | Inference Energy Consumption | 0.596 mWh |
-    +------------------------------+-----------+[0m
-    I0318 15:38:55.434816 140155325249344 analysis.py:323] 
-    Results vgg7-quantized:
-    +------------------------------+-----------+
-    |            Metric            |   Value   |
-    +------------------------------+-----------+
-    |    Average Test Accuracy     |  0.93222  |
-    |      Average Precision       |  0.93206  |
-    |        Average Recall        |  0.93222  |
-    |       Average F1 Score       |  0.93204  |
-    |         Average Loss         |  0.22506  |
-    |       Average Latency        | 19.479 ms |
-    |   Average GPU Power Usage    | 110.15 W  |
-    | Inference Energy Consumption | 0.596 mWh |
-    +------------------------------+-----------+
-
-
-## Section 5. Language Models
-
-
-```python
-# Path to your TOML file
-toml_file_path = '../../../machop/configs/tensorrt/opt-125M_layerwise_mixed_precision_by_name.toml'
-
-# Reading TOML file and converting it into a Python dictionary
-with open(toml_file_path, 'r') as toml_file:
-    pass_args = toml.load(toml_file)
-
-# Extract the 'passes.tensorrt' section and its children
-tensorrt_config = pass_args.get('passes', {}).get('tensorrt', {})
-# Extract the 'passes.runtime_analysis' section and its children
-runtime_analysis_config = pass_args.get('passes', {}).get('runtime_analysis', {})
-
-# Load the basics in
-model_name = pass_args['model']
-dataset_name = pass_args['dataset']
-max_epochs = pass_args['max_epochs']
-batch_size = pass_args['batch_size']
-learning_rate = pass_args['learning_rate']
-accelerator = pass_args['accelerator']
-
-opt_tokenizer = get_tokenizer("facebook/opt-125m")
-
-data_module = MaseDataModule(
-    name=dataset_name,
-    batch_size=batch_size,
-    model_name=model_name,
-    num_workers=0, # os.cpu_count()
-    max_token_len=128,
-    tokenizer=opt_tokenizer,
-    load_from_cache_file=True,
-)
-data_module.prepare_data()
-data_module.setup()
-
-# Add the data_module and other necessary information to the configs
-configs = [tensorrt_config, runtime_analysis_config]
-for config in configs:
-    config['task'] = pass_args['task']
-    config['batch_size'] = pass_args['batch_size']
-    config['model'] = pass_args['model']
-    config['data_module'] = data_module
-    config['accelerator'] = 'cuda' if pass_args['accelerator'] == 'gpu' else pass_args['accelerator']
-    if config['accelerator'] == 'gpu':
-        os.environ['CUDA_MODULE_LOADING'] = 'LAZY'
-```
-
-
-```python
-model_info = get_model_info(model_name)
-model = get_model(
-    "facebook/opt-125m:patched",
-    task="lm",
-    dataset_info=get_dataset_info("wikitext2"),
-    pretrained=True,
-)
-
-# Load in the trained checkpoint - change this accordingly
-# OPT125M_CHECKPOINT_PATH = "../../../mase_output/jsc-toy_classification_jsc_2024-03-17/software/training_ckpts/best.ckpt"
-# model = load_model(load_name=OPT125M_CHECKPOINT_PATH, load_type="pl", model=model)
-
-model_info = get_model_info("facebook/opt-125m:patched")
-cf_args = get_cf_args(model_info=model_info, task="lm", model=model)
-
-mg = MaseGraph(model=model, cf_args=cf_args)
-
-# dummy_in = get_dummy_input(model_info, data_module=data_module, task="lm")
-# if len(mg.model.additional_inputs) > 0:
-#     dummy_in = dummy_in | mg.model.additional_inputs
-
-# Initiate metadata
-mg, _ = init_metadata_analysis_pass(mg, pass_args=None)
-
-# # Before we begin, we will copy the original MaseGraph model to use for comparison during quantization analysis
-# mg_original = deepcopy_mase_graph(mg)
-```
-
-
-```python
-# _, _ = runtime_analysis_pass(mg, pass_args=runtime_analysis_config)
-```
-
-
-```python
-# mg, _ = tensorrt_fake_quantize_transform_pass(mg, pass_args=tensorrt_config)
-# summarize_quantization_analysis_pass(mg_original, mg)
-
-# mg, _ = tensorrt_calibrate_transform_pass(mg, pass_args=tensorrt_config)
-
-# mg, _ = tensorrt_fine_tune_transform_pass(mg, pass_args=tensorrt_config)
-
-mg, meta = tensorrt_engine_interface_pass(mg, pass_args=tensorrt_config)
-
-_, _ = runtime_analysis_pass(mg_original, pass_args=runtime_analysis_config)
-_, _ = runtime_analysis_pass(meta['trt_engine_path'], pass_args=runtime_analysis_config)
-```
-
-    [32mINFO    [0m [34mConverting PyTorch model to ONNX...[0m
-    I0318 08:54:47.010779 139760749061952 quantize.py:129] Converting PyTorch model to ONNX...
-    ERROR:tornado.general:SEND Error: Host unreachable
-    Traceback (most recent call last):
-      File "_pydevd_bundle/pydevd_cython.pyx", line 577, in _pydevd_bundle.pydevd_cython.PyDBFrame._handle_exception
-      File "_pydevd_bundle/pydevd_cython.pyx", line 312, in _pydevd_bundle.pydevd_cython.PyDBFrame.do_wait_suspend
-      File "/opt/conda/envs/mase/lib/python3.11/site-packages/debugpy/_vendored/pydevd/pydevd.py", line 2070, in do_wait_suspend
-        keep_suspended = self._do_wait_suspend(thread, frame, event, arg, suspend_type, from_this_thread, frames_tracker)
-                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-      File "/opt/conda/envs/mase/lib/python3.11/site-packages/debugpy/_vendored/pydevd/pydevd.py", line 2106, in _do_wait_suspend
-        time.sleep(0.01)
-    KeyboardInterrupt
-
+In this case, we can see through the quantized summary that one convolutional layer (feature_layers_1) has not been quantized as its precision will be configured to 'fp16' in the tensorrt engine conversion stage whilst the remaining convolutional and linear layers have been quantized.
