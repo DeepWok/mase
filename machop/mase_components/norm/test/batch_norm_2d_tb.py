@@ -102,8 +102,6 @@ class BatchNorm2dTB(Testbench):
             width=self.OUT_WIDTH,
             signed=True,
             error_bits=error_bits,
-            log_error=True,
-            check=False,
         )
         #self.output_monitor.log.setLevel("DEBUG")
 
@@ -270,15 +268,15 @@ async def stream(dut):
 
 
     # Error analysis
-    import json
-    errs = np.stack(tb.output_monitor.error_log).flatten()
-    logger.info("Mean bit-error: %s" % errs.mean())
-    jsonfile = Path(__file__).parent / "data" / f"batch-{tb.IN_WIDTH}.json"
-    with open(jsonfile, 'w') as f:
-        json.dump({
-            "mean": errs.mean().item(),
-            "error": errs.tolist(),
-        }, f, indent=4)
+    # import json
+    # errs = np.stack(tb.output_monitor.error_log).flatten()
+    # logger.info("Mean bit-error: %s" % errs.mean())
+    # jsonfile = Path(__file__).parent / "data" / f"batch-{tb.IN_WIDTH}.json"
+    # with open(jsonfile, 'w') as f:
+    #     json.dump({
+    #         "mean": errs.mean().item(),
+    #         "error": errs.tolist(),
+    #     }, f, indent=4)
 
 
 @cocotb.test()
@@ -348,31 +346,25 @@ if __name__ == "__main__":
         }
         return params
 
-    error_analysis_cfgs = list()
-    error_analysis_cfgs.extend([
-        gen_cfg(4, 4, 2, 2, 2, w, w//2, w, w//2, w)
-        for w in [2, 4, 6, 8, 10, 12, 14, 16]
-    ])
-
-    # test_cfgs = [
-    #     # Default
-    #     gen_cfg(),
-    #     # Precision
-    #     gen_cfg(4, 4, 2, 2, 4, 8, 4, 8, 4, 1),
-    #     gen_cfg(4, 4, 2, 2, 4, 4, 2, 4, 2, 2),
-    #     gen_cfg(4, 4, 2, 2, 4, 2, 1, 2, 1, 3),
-    #     # Rectangle
-    #     gen_cfg(4, 6, 2, 2, 4, 16, 8, 16, 8, 4),
-    #     gen_cfg(6, 2, 2, 2, 4, 16, 8, 16, 8, 5),
-    #     gen_cfg(6, 2, 3, 2, 4, 16, 8, 16, 8, 6),
-    #     gen_cfg(4, 6, 2, 3, 4, 16, 8, 16, 8, 7),
-    #     ## Channels
-    #     gen_cfg(4, 4, 2, 2, 5, 16, 8, 16, 8, 8),
-    #     gen_cfg(4, 4, 2, 2, 6, 16, 8, 16, 8, 9),
-    #     gen_cfg(4, 4, 2, 2, 7, 16, 8, 16, 8, 10),
-    # ]
+    test_cfgs = [
+        # Default
+        gen_cfg(),
+        # Precision
+        gen_cfg(4, 4, 2, 2, 4, 8, 4, 8, 4, 1),
+        gen_cfg(4, 4, 2, 2, 4, 4, 2, 4, 2, 2),
+        gen_cfg(4, 4, 2, 2, 4, 2, 1, 2, 1, 3),
+        # Rectangle
+        gen_cfg(4, 6, 2, 2, 4, 16, 8, 16, 8, 4),
+        gen_cfg(6, 2, 2, 2, 4, 16, 8, 16, 8, 5),
+        gen_cfg(6, 2, 3, 2, 4, 16, 8, 16, 8, 6),
+        gen_cfg(4, 6, 2, 3, 4, 16, 8, 16, 8, 7),
+        ## Channels
+        gen_cfg(4, 4, 2, 2, 5, 16, 8, 16, 8, 8),
+        gen_cfg(4, 4, 2, 2, 6, 16, 8, 16, 8, 9),
+        gen_cfg(4, 4, 2, 2, 7, 16, 8, 16, 8, 10),
+    ]
 
     mase_runner(
-        module_param_list=error_analysis_cfgs,
+        module_param_list=test_cfgs,
         trace=True,
     )
