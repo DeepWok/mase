@@ -25,7 +25,7 @@ MASE_HW_DEPS = {
         "priority_encoder",
         "cast",
         "common",
-        "fixed_arithmetic"
+        "fixed_arithmetic",
     ],
     "activations/fixed_relu": [],
     "cast/fixed_rounding": ["cast"],
@@ -35,7 +35,7 @@ MASE_HW_DEPS = {
         "common",
         "fixed_arithmetic",
         "matmul",
-        "linear"
+        "linear",
     ],
     "fixed_arithmetic/fixed_mult": [],
     "fixed_arithmetic/fixed_adder_tree_layer": [],

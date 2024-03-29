@@ -38,6 +38,7 @@ class MyRound(InplaceFunction):
 my_clamp = MyClamp.apply
 my_round = MyRound.apply
 
+
 # fixed-point quantization with a bias
 def quantize(x, bits, bias):  # bits = 32
     """Do linear quantization to input according to a scale and number of bits"""
@@ -52,7 +53,7 @@ class VerificationCase:
     num = 6
     high_slots = 3
 
-    def __init__(self, samples=2, test = False):
+    def __init__(self, samples=2, test=False):
         self.samples = samples
         self.low_in = []
         self.high_in = []
@@ -62,21 +63,19 @@ class VerificationCase:
             self.low_in.append(i1)
             self.high_in.append(i2)
 
-
         self.outputs = self.gather_model(samples)
-
 
     def single_run(self):
         ya = torch.rand(self.num)
         yb = torch.rand(self.num)
-      
+
         # Range for normalization
         r1, r2 = 4, -4
-      
+
         # Normalize and quantize mat_a
         ya = (r1 - r2) * ya + r2
         ya = quantize(ya, self.bitwidth, self.bias)
-      
+
         # Normalize and quantize mat_b using the same parameters
         yb = (r1 - r2) * yb + r2
         yb = quantize(yb, self.bitwidth, self.bias)
@@ -84,18 +83,17 @@ class VerificationCase:
         kept = random.randint(1, self.high_slots)
         index = [random.randint(0, self.num - 1) for _ in range(kept)]
 
-        for k in range(self.num) :
-            if k in index :
+        for k in range(self.num):
+            if k in index:
                 ya[k] = 0
-            else :
+            else:
                 yb[k] = 0
 
         return ya, yb
-    
 
     def gather_model(self, samples):
         outputs = []
-        
+
         for i in range(samples):
             x_low = self.get_dut_input_0(i)
             x_high = self.get_dut_input_1(i)
@@ -110,23 +108,22 @@ class VerificationCase:
 
     # Will be usefull for 2D version
     def generate_matrices(width, height, bitwidth, bias):
-      # Generate random tensor for mat_a and mat_b
-      mat_a = torch.rand(height, width)
-      mat_b = torch.rand(height, width)
-      
-      # Range for normalization
-      r1, r2 = 4, -4
-      
-      # Normalize and quantize mat_a
-      mat_a = (r1 - r2) * mat_a + r2
-      mat_a = quantize(mat_a, bitwidth, bias)
-      
-      # Normalize and quantize mat_b using the same parameters
-      mat_b = (r1 - r2) * mat_b + r2
-      mat_b = quantize(mat_b, bitwidth, bias)
-    
-      return mat_a, mat_b
-    
+        # Generate random tensor for mat_a and mat_b
+        mat_a = torch.rand(height, width)
+        mat_b = torch.rand(height, width)
+
+        # Range for normalization
+        r1, r2 = 4, -4
+
+        # Normalize and quantize mat_a
+        mat_a = (r1 - r2) * mat_a + r2
+        mat_a = quantize(mat_a, bitwidth, bias)
+
+        # Normalize and quantize mat_b using the same parameters
+        mat_b = (r1 - r2) * mat_b + r2
+        mat_b = quantize(mat_b, bitwidth, bias)
+
+        return mat_a, mat_b
 
     def get_dut_parameters(self):
         return {
@@ -150,7 +147,6 @@ class VerificationCase:
         return self.outputs[i]
 
 
-
 @cocotb.test()
 async def test_gather(dut):
     """Test gather function"""
@@ -162,9 +158,9 @@ async def test_gather(dut):
         x_high = test_case.get_dut_input_1(i)
         y = test_case.get_dut_output(i)
 
-        print('x_low :', x_low)
-        print('x_high :', x_high)
-        print('y :', y)
+        print("x_low :", x_low)
+        print("x_high :", x_high)
+        print("y :", y)
 
         dut.mat_a.value = x_low
         dut.mat_b.value = x_high
@@ -172,7 +168,8 @@ async def test_gather(dut):
 
         for j, output in enumerate(dut.mat_sum.value):
             assert output.signed_integer == y[j]
-            print('output:', output.signed_integer)
+            print("output:", output.signed_integer)
+
 
 if __name__ == "__main__":
     tb = VerificationCase()

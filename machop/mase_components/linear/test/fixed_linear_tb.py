@@ -74,7 +74,7 @@ class LinearTB(Testbench):
         tensor = tensor.reshape(-1, parallelism).tolist()
         return tensor
 
-    async def run_test(self,runs):
+    async def run_test(self, runs):
         await self.reset()
         logger.info(f"Reset finished")
         self.data_out_0_monitor.ready.value = 1
@@ -102,7 +102,7 @@ class LinearTB(Testbench):
                 * int(self.dut.DATA_IN_0_PARALLELISM_DIM_0),
             )
             self.weight_driver.load_driver(weights)
-            print('weights',weights)
+            print("weights", weights)
             # Load the output monitor
             logger.info(f"Processing outputs: {exp_out}")
             # To do: need to quantize output to a different precision
@@ -116,14 +116,13 @@ class LinearTB(Testbench):
 
             await Timer(1, units="us")
         assert self.data_out_0_monitor.exp_queue.empty()
-        print('weights',weights)
-
+        print("weights", weights)
 
 
 @cocotb.test()
 async def test_20x20(dut):
     tb = LinearTB(dut, in_features=20, out_features=20)
-    
+
     await tb.run_test(20)
 
 
@@ -140,7 +139,8 @@ if __name__ == "__main__":
                 "DATA_OUT_0_TENSOR_SIZE_DIM_0": 20,
                 "DATA_OUT_0_PARALLELISM_DIM_0": 20,
                 "BIAS_TENSOR_SIZE_DIM_0": 20,
-            }],
+            }
+        ],
         #     {
         #         "DATA_IN_0_TENSOR_SIZE_DIM_0": 20,
         #         "DATA_IN_0_PARALLELISM_DIM_0": 4,
