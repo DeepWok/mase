@@ -217,7 +217,7 @@ To integrate the functionality mentioned in this document we have developed **SI
 - Analyis Passes:
   - `runtime_analysis_pass`
 
-These passes and their respective tutorials demonstrating thier capability are thoroughly documented in the MASE Documentation under the [Machop API Passes](https://deepwok.github.io/mase/modules/api/passes.html) and [Tutorials](https://deepwok.github.io/mase/modules/documentation/tutorials.html) sections.
+These passes and their respective tutorials demonstrating their capability are thoroughly documented in the MASE Documentation under the [Machop API Passes](https://deepwok.github.io/mase/modules/api/passes.html) and [Tutorials](https://deepwok.github.io/mase/modules/documentation/tutorials.html) sections.
 
 ### Scheduler Args in `chop.actions.train`
 For the cosine annealing functionality integrated into the QAT `tensorrt_fine_tune_transform_pass`, the `WrapperBase` class that inherits PytorchLightning's `pl.LightningModule` was extended to support customized inputs for the `CosineAnnealingLR` scheduler for the optimizers. This therefore required a `scheduler_args` dictionary to be added to `chop.actions.train` as an additional input argument. This dictionary can thus contain the pass arguments `t_max` and `eta_min`, which dictate the maximum number of iterations (or epochs) before the learning rate restarts its cycle (t_max), and the minimum learning rate value (eta_min) that the scheduler can assign. 
