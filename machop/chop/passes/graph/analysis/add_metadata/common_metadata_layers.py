@@ -19,19 +19,19 @@ func_data = {
     # https://pytorch.org/docs/stable/generated/torch.nn.functional.relu.html
     "relu": {"input": "data_in", "inplace": "config"},
     # https://pytorch.org/docs/stable/generated/torch.nn.functional.hardshrink.html
-    "hardshrink" : {"input": "data_in", "lambd": "config"},
+    "hardshrink": {"input": "data_in", "lambd": "config"},
     # https://pytorch.org/docs/stable/generated/torch.nn.functional.sigmoid.html
-    "silu" : {"input": "data_in", "inplace": "config"},
+    "silu": {"input": "data_in", "inplace": "config"},
     # https://pytorch.org/docs/stable/generated/torch.nn.functional.elu.html
-    "elu" : {"input": "data_in", "alpha": "config", "inplace": "config"},
+    "elu": {"input": "data_in", "alpha": "config", "inplace": "config"},
     # https://pytorch.org/docs/stable/generated/torch.nn.functional.sigmoid.html
-    "sigmoid" : {"input": "data_in"},
+    "sigmoid": {"input": "data_in"},
     # https://pytorch.org/docs/stable/generated/torch.nn.functional.softshrink.html
-    "softshrink" : {"input": "data_in", "lambd": "config"},
+    "softshrink": {"input": "data_in", "lambd": "config"},
     # https://pytorch.org/docs/stable/generated/torch.nn.functional.logsigmoid.html
-    "logsigmoid" : {"input": "data_in"},
+    "logsigmoid": {"input": "data_in"},
     # https://pytorch.org/docs/stable/generated/torch.nn.functional.softmax.html
-    "softmax" : {"input": "data_in", "dim": "config", "dtype": "config"},
+    "softmax": {"input": "data_in", "dim": "config", "dtype": "config"},
     # https://pytorch.org/docs/stable/generated/torch.add.html
     "add": {"input": "data_in", "other": "data_in"},
     # https://pytorch.org/docs/stable/generated/torch.mul.html

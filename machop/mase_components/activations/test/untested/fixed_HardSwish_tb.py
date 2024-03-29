@@ -7,7 +7,7 @@ import cocotb
 from functools import partial
 from cocotb.triggers import *
 from chop.passes.graph.transforms.quantize.quantizers import *
-from mase_cocotb.testbench import Testbench 
+from mase_cocotb.testbench import Testbench
 from mase_cocotb.interfaces.streaming import StreamDriver, StreamMonitor
 from mase_cocotb.z_qlayers import quantize_to_int
 from mase_cocotb.runner import mase_runner
@@ -32,7 +32,6 @@ class Hardswishtb(Testbench):
                 "DATA_IN_0_TENSOR_SIZE_DIM_1",
                 "DATA_IN_0_PARALLELISM_DIM_0",
                 "DATA_IN_0_PARALLELISM_DIM_1",
-
                 "DATA_OUT_0_PRECISION_0",
                 "DATA_OUT_0_PRECISION_1",
                 "DATA_OUT_0_TENSOR_SIZE_DIM_0",
@@ -57,24 +56,27 @@ class Hardswishtb(Testbench):
         # Run the model with the provided inputs and return the outputs
         tmp0 = 3 * 2**self.fracw
         tmp1 = inputs + tmp0
-        tmp2 = tmp1*(2**-3) + tmp1*(2**-4)
+        tmp2 = tmp1 * (2**-3) + tmp1 * (2**-4)
         # qtmps = self.dquantizer(tmp2)
         tmp3 = tmp2 * inputs
         unsignedout = torch.where(tmp3 < 0, torch.tensor(tmp3 % (2**self.width)), tmp3)
         # return unsignedout.tolist()
         pdb.set_trace()
         return unsignedout
-        
 
-    def generate_inputs(self,w,fracw):
+    def generate_inputs(self, w, fracw):
         self.dquantizer = partial(
             integer_quantizer, width=self.width, frac_width=self.fracw
         )
         realinp = torch.randn(self.samples)
         inputs = self.dquantizer(realinp)
         intinp = (inputs * 2**self.fracw).to(torch.int64)
-        intinp.clamp(min=-2**(self.width-self.fracw-1), max = 2**(self.width-self.fracw-1)-1)
+        intinp.clamp(
+            min=-(2 ** (self.width - self.fracw - 1)),
+            max=2 ** (self.width - self.fracw - 1) - 1,
+        )
         return intinp
+
 
 @cocotb.test()
 async def test(dut):
@@ -83,7 +85,7 @@ async def test(dut):
     logger.info(f"Reset finished")
     tb.data_out_0_monitor.ready.value = 1
 
-    inputs = tb.generate_inputs(tb.width,tb.fracw)
+    inputs = tb.generate_inputs(tb.width, tb.fracw)
     # logger.info(f"inputs: {inputs}, q_inputs: {q_inputs}")
     exp_out = tb.exp(inputs)
 
@@ -106,7 +108,6 @@ if __name__ == "__main__":
                 "DATA_IN_0_PARALLELISM_DIM_1": 1,
                 "DATA_IN_0_PRECISION_0": 8,
                 "DATA_IN_0_PRECISION_1": 4,
-
                 "DATA_OUT_0_PRECISION_0": 8,
                 "DATA_OUT_0_PRECISION_1": 4,
                 "DATA_OUT_0_TENSOR_SIZE_DIM_0": 10,

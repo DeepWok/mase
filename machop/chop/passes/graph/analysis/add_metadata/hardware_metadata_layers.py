@@ -27,7 +27,7 @@ INTERNAL_COMP = {
             ],
         },
     ],
-    'hardshrink':[
+    "hardshrink": [
         {
             "name": "fixed_hardshrink",
             "dependence_files": [
@@ -35,7 +35,7 @@ INTERNAL_COMP = {
             ],
         },
     ],
-    'silu':[
+    "silu": [
         {
             "name": "fixed_silu",
             "dependence_files": [
@@ -44,7 +44,7 @@ INTERNAL_COMP = {
             ],
         },
     ],
-    'elu': [
+    "elu": [
         {
             "name": "fixed_elu",
             "dependence_files": [
@@ -53,16 +53,16 @@ INTERNAL_COMP = {
             ],
         },
     ],
-    'sigmoid': [
+    "sigmoid": [
         {
             "name": "fixed_sigmoid",
             "dependence_files": [
                 "activations/rtl/fixed_sigmoid.sv",
-                "activations/rtl/sigmoid_lut.sv"
+                "activations/rtl/sigmoid_lut.sv",
             ],
         },
     ],
-    'softshrink': [
+    "softshrink": [
         {
             "name": "fixed_softshrink",
             "dependence_files": [
@@ -70,7 +70,7 @@ INTERNAL_COMP = {
             ],
         },
     ],
-    'logsigmoid': [
+    "logsigmoid": [
         {
             "name": "fixed_logsigmoid",
             "dependence_files": [
@@ -79,7 +79,7 @@ INTERNAL_COMP = {
             ],
         },
     ],
-    'softmax' : [
+    "softmax": [
         {
             "name": "fixed_softmax",
             "dependence_files": [

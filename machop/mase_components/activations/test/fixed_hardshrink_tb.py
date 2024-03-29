@@ -7,7 +7,7 @@ import cocotb
 from functools import partial
 from cocotb.triggers import *
 from chop.passes.graph.transforms.quantize.quantizers import *
-from mase_cocotb.testbench import Testbench 
+from mase_cocotb.testbench import Testbench
 from mase_cocotb.interfaces.streaming import StreamDriver, StreamMonitor
 from mase_cocotb.z_qlayers import quantize_to_int
 from mase_cocotb.runner import mase_runner
@@ -32,7 +32,6 @@ class Hardshrinktb(Testbench):
                 "DATA_IN_0_TENSOR_SIZE_DIM_1",
                 "DATA_IN_0_PARALLELISM_DIM_0",
                 "DATA_IN_0_PARALLELISM_DIM_1",
-
                 "DATA_OUT_0_PRECISION_0",
                 "DATA_OUT_0_PRECISION_1",
                 "DATA_OUT_0_TENSOR_SIZE_DIM_0",
@@ -62,21 +61,26 @@ class Hardshrinktb(Testbench):
         # cond = torch.logical_not(torch.logical_and(inputs <= self.thresh*2**self.fracw, inputs >= -1 * self.thresh *2**self.fracw))
         # out = torch.where(cond, inputs, torch.tensor(0))
         # unsignedout = torch.where(out < 0, torch.tensor(out % (2**self.width)), out)
-        m = torch.nn.Hardshrink(self.thresh*2**self.fracw)(inputs.to(torch.float))
-        mout = m.clamp(min=-1*2**(self.outputwidth-1), max = 2**(self.outputwidth-1)-1)
+        m = torch.nn.Hardshrink(self.thresh * 2**self.fracw)(inputs.to(torch.float))
+        mout = m.clamp(
+            min=-1 * 2 ** (self.outputwidth - 1), max=2 ** (self.outputwidth - 1) - 1
+        )
         m2 = torch.where(mout < 0, torch.tensor(mout % (2**self.outputwidth)), mout)
         return m2.to(torch.int32).tolist()
-        
 
-    def generate_inputs(self,w,fracw):
+    def generate_inputs(self, w, fracw):
         self.dquantizer = partial(
             integer_quantizer, width=self.width, frac_width=self.fracw
         )
         realinp = torch.randn(self.samples)
         inputs = self.dquantizer(realinp)
         intinp = (inputs * 2**self.fracw).to(torch.int64)
-        intinp.clamp(min=-2**(self.width-self.fracw-1), max = 2**(self.width-self.fracw-1)-1)
+        intinp.clamp(
+            min=-(2 ** (self.width - self.fracw - 1)),
+            max=2 ** (self.width - self.fracw - 1) - 1,
+        )
         return intinp
+
 
 @cocotb.test()
 async def test(dut):
@@ -85,7 +89,7 @@ async def test(dut):
     logger.info(f"Reset finished")
     tb.data_out_0_monitor.ready.value = 1
 
-    inputs = tb.generate_inputs(tb.width,tb.fracw)
+    inputs = tb.generate_inputs(tb.width, tb.fracw)
     # logger.info(f"inputs: {inputs}, q_inputs: {q_inputs}")
     exp_out = tb.exp(inputs)
 
@@ -108,15 +112,13 @@ if __name__ == "__main__":
                 "DATA_IN_0_PARALLELISM_DIM_1": 1,
                 "DATA_IN_0_PRECISION_0": 8,
                 "DATA_IN_0_PRECISION_1": 4,
-
                 "DATA_OUT_0_PRECISION_0": 7,
                 "DATA_OUT_0_PRECISION_1": 4,
                 "DATA_OUT_0_TENSOR_SIZE_DIM_0": 10,
                 "DATA_OUT_0_TENSOR_SIZE_DIM_1": 1,
                 "DATA_OUT_0_PARALLELISM_DIM_0": 10,
                 "DATA_OUT_0_PARALLELISM_DIM_1": 1,
-
-                "LAMBDA":0.5
+                "LAMBDA": 0.5,
             }
         ]
     )
