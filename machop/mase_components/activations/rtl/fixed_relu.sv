@@ -1,4 +1,4 @@
-`timescale 1ns / 1ps
+`timescale 1ns / 1ps /nounconnected_drive
 
 module fixed_relu #(
     /* verilator lint_off UNUSEDPARAM */
