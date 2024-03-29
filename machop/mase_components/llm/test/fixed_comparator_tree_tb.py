@@ -6,13 +6,14 @@ import os, math, logging
 
 # Manually add mase_cocotb to system path
 import sys, os
+
 try:
     p = os.getenv("MASE_RTL")
     assert p != None
 except:
     p = os.getenv("mase_rtl")
     assert p != None
-p = os.path.join(p, '../')
+p = os.path.join(p, "../")
 sys.path.append(p)
 ##################################
 
@@ -60,6 +61,7 @@ class VerificationCase:
             ref.append(abs_max_val)
         ref.reverse()
         return ref
+
 
 # Check if an impossible state is reached
 def is_impossible_state(data_in_ready, data_in_valid, data_out_ready, data_out_valid):

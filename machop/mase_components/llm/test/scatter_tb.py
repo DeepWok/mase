@@ -5,13 +5,14 @@
 
 # Manually add mase_cocotb to system path
 import sys, os
+
 try:
     p = os.getenv("MASE_RTL")
     assert p != None
 except:
     p = os.getenv("mase_rtl")
     assert p != None
-p = os.path.join(p, '../')
+p = os.path.join(p, "../")
 sys.path.append(p)
 ###############################################
 import os, math, logging
@@ -40,18 +41,18 @@ class VerificationCase:
         self.in_columns = 4
         self.max_large_numbers = 3
         self.large_number_thres = 127  # number larger than (BUT NOT EUQAL TO) threshold are counted as outliers
-        
+
         self.data_in = RandomSource(
             name="data_in",
             samples=samples,
             num=self.in_rows * self.in_columns,
             max_stalls=0,
             debug=debug,
-            arithmetic="llm-fp16-datain"
+            arithmetic="llm-fp16-datain",
         )
-        
+
         self.outputs = RandomSink(samples=samples, max_stalls=0, debug=debug)
-        
+
         self.samples = samples
         self.ref = self.sw_compute()
         # self.ref = self.sw_cast(
@@ -59,7 +60,7 @@ class VerificationCase:
         #     in_width=self.data_in_width,
         #     in_frac_width=self.data_in_frac_width,
         #     out_width=self.data_in_width,
-        #     out_frac_width=self.data_in_frac_width  
+        #     out_frac_width=self.data_in_frac_width
         # )
 
     def get_dut_parameters(self):
@@ -69,19 +70,24 @@ class VerificationCase:
             "IN_PARALLELISM": self.in_rows,
             "IN_SIZE": self.in_columns,
             "MAX_LARGE_NUMBERS": self.max_large_numbers,
-            "LARGE_NUMBER_THRES": self.large_number_thres
+            "LARGE_NUMBER_THRES": self.large_number_thres,
         }
 
     def sw_compute(self):
         # for small_large_out only
         ref = []
         for i in range(len(self.data_in.data)):
-            current_vector_small = [0]*len(self.data_in.data[0])
+            current_vector_small = [0] * len(self.data_in.data[0])
             count = 0
-            for j in range(len(current_vector_small)-1, -1, -1):  # counting from N down to 0
+            for j in range(
+                len(current_vector_small) - 1, -1, -1
+            ):  # counting from N down to 0
                 entry = self.data_in.data[i][j]
                 entry_int = entry >> self.data_in_frac_width
-                if self.sw_large_number_checker(entry_int, thres=127) and count < self.max_large_numbers:
+                if (
+                    self.sw_large_number_checker(entry_int, thres=127)
+                    and count < self.max_large_numbers
+                ):
                     # entries with large numbers are masked
                     current_vector_small[j] = 0
                     count += 1
@@ -90,17 +96,18 @@ class VerificationCase:
             ref.append(current_vector_small)
         ref.reverse()
         return ref
-    
+
     def sw_large_number_checker(self, data, thres):
         # MSB checker for fixed-point 16
         # data is a signed integer
-        assert (thres > 0), "Large number threshold must be positive!"
+        assert thres > 0, "Large number threshold must be positive!"
         return abs(data) > thres
         # if (data > 0):
         #     return (data >= (2**pos))
         # else:
         #     return (abs(data) >= (2**pos + 1))
-        
+
+
 def debug_state(dut, state):
     logger.debug(
         "{} State: (in_ready,in_valid,out_ready,out_valid) = ({},{},{},{})".format(
@@ -111,6 +118,7 @@ def debug_state(dut, state):
             dut.data_out_valid.value,
         )
     )
+
 
 @cocotb.test()
 async def test_scatter(dut):
@@ -162,10 +170,7 @@ async def test_scatter(dut):
         )
         # breakpoint()
         debug_state(dut, "Pre-clk")
-        if (
-            test_case.data_in.is_empty()
-            and test_case.outputs.is_full()
-        ):
+        if test_case.data_in.is_empty() and test_case.outputs.is_full():
             done = True
             break
     assert (

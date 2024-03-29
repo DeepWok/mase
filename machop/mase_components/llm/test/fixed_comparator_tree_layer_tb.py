@@ -5,13 +5,14 @@ import random, os
 
 # Manually add mase_cocotb to system path
 import sys, os
+
 try:
     p = os.getenv("MASE_RTL")
     assert p != None
 except:
     p = os.getenv("mase_rtl")
     assert p != None
-p = os.path.join(p, '../')
+p = os.path.join(p, "../")
 sys.path.append(p)
 ##################################
 
@@ -19,6 +20,7 @@ import cocotb
 from cocotb.triggers import Timer
 from mase_cocotb.runner import mase_runner
 from mase_cocotb.random_test import *
+
 
 class VerificationCase:
     def __init__(self, samples=2):
@@ -39,8 +41,8 @@ class VerificationCase:
         outputs = []
         for i in range(0, int(len(inputs) / 2)):
             a = inputs[len(inputs) - i - 1]
-            b = inputs[i] 
-            if (abs(a) > abs(b)):
+            b = inputs[i]
+            if abs(a) > abs(b):
                 outputs.append(a)
             else:
                 outputs.append(b)
@@ -70,7 +72,7 @@ async def test_fixed_comparator_tree_layer(dut):
 
     # set inputs outputs
     for i in range(test_case.samples):
-        x = test_case.get_dut_input(i) 
+        x = test_case.get_dut_input(i)
         y = test_case.get_dut_output(i)  # SW outputs
 
         dut.data_in.value = x

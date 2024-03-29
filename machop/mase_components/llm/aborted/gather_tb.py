@@ -5,13 +5,14 @@
 
 # Manually add mase_cocotb to system path
 import sys, os
+
 try:
     p = os.getenv("MASE_RTL")
     assert p != None
 except:
     p = os.getenv("mase_rtl")
     assert p != None
-p = os.path.join(p, '../')
+p = os.path.join(p, "../")
 sys.path.append(p)
 ###############################################
 import os, math, logging
@@ -38,18 +39,18 @@ class VerificationCase:
         self.in_rows = 2000
         self.in_columns = 4
         self.iterations = 1
-        
+
         self.data_in = RandomSource(
             name="data_in",
             samples=samples * self.iterations,
             num=self.in_rows * self.in_columns,
             max_stalls=0,
             debug=debug,
-            arithmetic="llm-fp16"
+            arithmetic="llm-fp16",
         )
-        
+
         self.outputs = RandomSink(samples=samples, max_stalls=0, debug=debug)
-        
+
         self.samples = samples
         self.ref = 111111
         self.ref = self.sw_compute()
@@ -185,10 +186,7 @@ async def test_gather(dut):
         )
         # breakpoint()
         debug_state(dut, "Pre-clk")
-        if (
-            test_case.data_in.is_empty()
-            and test_case.outputs.is_full()
-        ):
+        if test_case.data_in.is_empty() and test_case.outputs.is_full():
             done = True
             break
     assert (

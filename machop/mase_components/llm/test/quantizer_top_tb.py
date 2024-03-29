@@ -5,13 +5,14 @@
 
 # Manually add mase_cocotb to system path
 import sys, os
+
 try:
     p = os.getenv("MASE_RTL")
     assert p != None
 except:
     p = os.getenv("mase_rtl")
     assert p != None
-p = os.path.join(p, '../')
+p = os.path.join(p, "../")
 sys.path.append(p)
 ###############################################
 import os, math, logging
@@ -31,14 +32,16 @@ if debug:
     logger.setLevel(logging.DEBUG)
 
 import copy
+
+
 # DUT test specifications
 class VerificationCase:
     def __init__(self, samples=10):
-        self.data_in_width = 16  #fixed-point 16
+        self.data_in_width = 16  # fixed-point 16
         self.in_rows = 20
         self.in_columns = 4
         self.data_out_width = 8  # int8
-        
+
         self.data_in = RandomSource(
             name="data_in",
             samples=samples,
@@ -49,7 +52,7 @@ class VerificationCase:
         )
         self.data_in_original = copy.deepcopy(self.data_in.data)
         self.outputs = RandomSink(samples=samples, max_stalls=0, debug=debug)
-        
+
         self.samples = samples
         # self.ref = 111111
         self.ref = self.sw_compute()
@@ -75,13 +78,13 @@ class VerificationCase:
     def sw_compute(self):
         final = []
         ref = []
-        
+
         for i in range(self.samples):
             max_val = abs(self.absmax(self.data_in.data[i]))
-            scale_factor = (2**(self.data_out_width-1) - 1)/max_val
-            current_row = [0 for _ in range(self.in_rows*self.in_columns)]
-            for j in range(self.in_rows*self.in_columns):
-                current_row[j] = self.data_in.data[i][j]*scale_factor
+            scale_factor = (2 ** (self.data_out_width - 1) - 1) / max_val
+            current_row = [0 for _ in range(self.in_rows * self.in_columns)]
+            for j in range(self.in_rows * self.in_columns):
+                current_row[j] = self.data_in.data[i][j] * scale_factor
                 current_row[j] = round(current_row[j])
             ref.append(current_row)
         ref.reverse()
@@ -111,12 +114,13 @@ class VerificationCase:
             outputs.append(out_list)
         return outputs
 
-    def absmax(self, l:list):
+    def absmax(self, l: list):
         result = l[0]
         for i in range(len(l)):
-            if (abs(l[i]) > abs(result)):
+            if abs(l[i]) > abs(result):
                 result = l[i]
         return result
+
 
 def debug_state(dut, state):
     logger.debug(
@@ -136,7 +140,7 @@ async def test_quantizer_top(dut):
     samples = 20
     test_case = VerificationCase(samples=samples)
     for i in range(len(test_case.data_in_original)):
-        print("i=%d:"%i)
+        print("i=%d:" % i)
         print(test_case.data_in_original[i])
     # Reset cycle
     await Timer(20, units="ns")
@@ -183,10 +187,7 @@ async def test_quantizer_top(dut):
         )
         # breakpoint()
         debug_state(dut, "Pre-clk")
-        if (
-            test_case.data_in.is_empty()
-            and test_case.outputs.is_full()
-        ):
+        if test_case.data_in.is_empty() and test_case.outputs.is_full():
             done = True
             break
         # print(test_case.outputs.data[i])
@@ -200,8 +201,10 @@ async def test_quantizer_top(dut):
     #     print("i=%d"%i)
     #     print([e.signed_integer for e in test_case.outputs.data[i]])
     #     print(test_case.ref)
-    
-    check_results_signed(test_case.outputs.data[1:], test_case.ref[1:], thres=10)  # TODO: allow error
+
+    check_results_signed(
+        test_case.outputs.data[1:], test_case.ref[1:], thres=10
+    )  # TODO: allow error
 
 
 if __name__ == "__main__":

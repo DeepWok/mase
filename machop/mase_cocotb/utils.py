@@ -5,7 +5,8 @@ from cocotb.triggers import RisingEdge
 import torch
 from torch import Tensor
 import sys
-sys.path.append('../')
+
+sys.path.append("../")
 from mase_cocotb.z_qlayers import quantize_to_int
 
 
@@ -49,15 +50,15 @@ def floor_rounding(value, in_frac_width, out_frac_width):
 
 
 def large_num_generator(large_num_thres=127, large_num_limit=500, large_num_prob=0.1):
-    '''
-        Generator large numbers & small numbers with a given probability distribution.
-        Default: 500 >= abs(large number) >= 128
-    '''
-    if (random.random() < large_num_prob):
+    """
+    Generator large numbers & small numbers with a given probability distribution.
+    Default: 500 >= abs(large number) >= 128
+    """
+    if random.random() < large_num_prob:
         if random.random() < 0.5:
-            return random.randint(large_num_thres+1, large_num_limit)
+            return random.randint(large_num_thres + 1, large_num_limit)
         else:
-            return random.randint(-large_num_limit, -(large_num_thres+1))
+            return random.randint(-large_num_limit, -(large_num_thres + 1))
     else:
         return random.randint(-large_num_thres, large_num_thres)
 
@@ -77,4 +78,4 @@ def fixed_cast(val, in_width, in_frac_width, out_width, out_frac_width):
         else:
             val = val
             # val = int(val % (1 << out_width))
-    return val # << out_frac_width  # treat data<out_width, out_frac_width> as data<out_width, 0>
+    return val  # << out_frac_width  # treat data<out_width, out_frac_width> as data<out_width, 0>

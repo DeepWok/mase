@@ -41,7 +41,9 @@ class RandomSource:
         elif arithmetic in ["ternary"]:
             self.rand_gen = lambda: binary_encode(random.randint(-1, 1))
         elif arithmetic in ["llm-fp16-datain"]:
-            self.rand_gen = lambda: large_num_generator(large_num_thres=127, large_num_limit=500, large_num_prob=0.1)
+            self.rand_gen = lambda: large_num_generator(
+                large_num_thres=127, large_num_limit=500, large_num_prob=0.1
+            )
         elif arithmetic in ["llm-fp16-weight"]:
             self.rand_gen = lambda: random.randint(-5, 5)
         else:
@@ -168,7 +170,7 @@ def check_results(hw_out, sw_out, thres=1):
     assert len(hw_out) == len(
         sw_out
     ), "Mismatched output size: {} expected = {}".format(len(hw_out), len(sw_out))
-    
+
     if type(hw_out[0]) == list:
         for i in range(len(hw_out)):
             assert (
@@ -188,7 +190,7 @@ def check_results(hw_out, sw_out, thres=1):
             )
 
 
-def check_results_signed(hw_out, sw_out,thres=1):
+def check_results_signed(hw_out, sw_out, thres=1):
     assert len(hw_out) == len(
         sw_out
     ), "Mismatched output size: {} expected = {}".format(len(hw_out), len(sw_out))
@@ -196,9 +198,13 @@ def check_results_signed(hw_out, sw_out,thres=1):
         for i in range(len(hw_out)):
             assert (
                 # [i.signed_integer for i in hw_out[i]] == sw_out[i]
-                compare_lists_approx([i.signed_integer for i in hw_out[i]], sw_out[i], thres)
+                compare_lists_approx(
+                    [i.signed_integer for i in hw_out[i]], sw_out[i], thres
+                )
             ), "Mismatched output value {}: {} expected = {}".format(
-                i, [int(t.signed_integer) for t in hw_out[i]], [int(t) for t in sw_out[i]]
+                i,
+                [int(t.signed_integer) for t in hw_out[i]],
+                [int(t) for t in sw_out[i]],
             )
         return True
     else:
@@ -210,7 +216,8 @@ def check_results_signed(hw_out, sw_out,thres=1):
                 i, int(hw_out[i].signed_integer), int(sw_out[i])
             )
 
-def analyse_results_signed(hw_out, sw_out,thres=1):
+
+def analyse_results_signed(hw_out, sw_out, thres=1):
     assert len(hw_out) == len(
         sw_out
     ), "Mismatched output size: {} expected = {}".format(len(hw_out), len(sw_out))
@@ -224,32 +231,38 @@ def analyse_results_signed(hw_out, sw_out,thres=1):
             # find maximum error of current output vector
             errors = [(hw_result[i] - sw_result[i]) for i in range(len(sw_result))]
             errors = [abs(e) for e in errors]
-            error  = max(errors)
+            error = max(errors)
             try:
-                rel_error = abs(error/max([abs(e) for e in sw_result]))*100
+                rel_error = abs(error / max([abs(e) for e in sw_result])) * 100
             except:
                 # to prevent divide-by-zero
                 rel_error = 0
-                
+
             # append error and rel. error
             error_list.append(error)
             rel_error_list.append(rel_error)
-            if (error > thres):
+            if error > thres:
                 count += 1
         max_error = max(error_list)
         max_error_ind = error_list.index(max_error)
         print("\n--------------------- Error Analysis --------------------")
-        print("Sample Num=%d"%len(sw_out))
-        print("No. Samples above Error Thres(%d)=%d"%(thres, count))
-        
-        print("Absolute Error: max=%d, avg=%d"%(max(error_list), (sum(error_list)/len(error_list))))
-        print("Relative Error: max={:.2f}%, avg={:.2f}%".format(max(rel_error_list), (sum(rel_error_list)/len(error_list))))
+        print("Sample Num=%d" % len(sw_out))
+        print("No. Samples above Error Thres(%d)=%d" % (thres, count))
 
-        
+        print(
+            "Absolute Error: max=%d, avg=%d"
+            % (max(error_list), (sum(error_list) / len(error_list)))
+        )
+        print(
+            "Relative Error: max={:.2f}%, avg={:.2f}%".format(
+                max(rel_error_list), (sum(rel_error_list) / len(error_list))
+            )
+        )
+
         # print("where: hw_out={}, sw_out={}".format([i.signed_integer for i in hw_out[max_error_ind]], sw_out[max_error_ind]))
         # print("error_list={}".format(error_list))
         print("--------------------- End of Error Analysis --------------------\n")
-    else: # TODO
+    else:  # TODO
         print("N.A.")
         return
         for i in range(len(hw_out)):
@@ -261,12 +274,12 @@ def analyse_results_signed(hw_out, sw_out,thres=1):
             )
 
 
-
 def compare_lists_approx(l1, l2, thres):
     for i in range(len(l1)):
         if abs(l1[i] - l2[i]) > thres:
             return False
     return True
+
 
 def compare_numbers_approx(n1, n2, thres):
     return abs(n1 - n2) <= thres

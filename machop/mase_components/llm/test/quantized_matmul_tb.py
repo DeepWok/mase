@@ -3,13 +3,14 @@
 # This script tests the fixed point linear
 import os, math, logging
 import sys
+
 try:
     p = os.getenv("MASE_RTL")
     assert p != None
 except:
     p = os.getenv("mase_rtl")
     assert p != None
-p = os.path.join(p, '../')
+p = os.path.join(p, "../")
 sys.path.append(p)
 ###############################################
 from mase_cocotb.random_test import *
@@ -51,7 +52,7 @@ class VerificationCase:
             num=self.in_rows * self.in_columns,
             max_stalls=0,
             debug=debug,
-            arithmetic="llm-fp16-datain"
+            arithmetic="llm-fp16-datain",
         )
         self.weight = RandomSource(
             name="weight",
@@ -59,7 +60,7 @@ class VerificationCase:
             num=self.weight_rows * self.weight_columns,
             max_stalls=0,
             debug=debug,
-            arithmetic="llm-fp16-weight"
+            arithmetic="llm-fp16-weight",
         )
         self.bias = RandomSource(
             name="bias",
@@ -74,9 +75,9 @@ class VerificationCase:
         self.ref = self.sw_cast(
             inputs=self.ref,
             in_width=self.data_in_width
-                    + self.weight_width
-                    + math.ceil(math.log2(self.iterations * self.in_columns))
-                    + self.has_bias,
+            + self.weight_width
+            + math.ceil(math.log2(self.iterations * self.in_columns))
+            + self.has_bias,
             in_frac_width=self.data_in_frac_width + self.weight_frac_width,
             out_width=self.data_out_width,
             out_frac_width=self.data_out_frac_width,
@@ -132,7 +133,9 @@ class VerificationCase:
             out_list = []
             for i in range(0, len(in_list)):
                 in_value = in_list[i]
-                out_value = fixed_cast(in_value, in_width, in_frac_width, out_width, out_frac_width)
+                out_value = fixed_cast(
+                    in_value, in_width, in_frac_width, out_width, out_frac_width
+                )
                 out_list.append(out_value)
             outputs.append(out_list)
         return outputs

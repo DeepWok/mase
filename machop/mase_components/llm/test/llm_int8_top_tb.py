@@ -5,13 +5,14 @@
 
 # Manually add mase_cocotb to system path
 import sys, os
+
 try:
     p = os.getenv("MASE_RTL")
     assert p != None
 except:
     p = os.getenv("mase_rtl")
     assert p != None
-p = os.path.join(p, '../')
+p = os.path.join(p, "../")
 sys.path.append(p)
 ###############################################
 import os, math, logging
@@ -31,16 +32,13 @@ if debug:
     logger.setLevel(logging.DEBUG)
 
 
-
-
-
-
 #!/usr/bin/env python3
 
 # This script tests the fixed point linear
 import os, math, logging
 import sys
-sys.path.append('/home/ic/TEMP/mase/machop/')
+
+sys.path.append("/home/ic/TEMP/mase/machop/")
 from mase_cocotb.random_test import RandomSource, RandomSink, check_results
 from mase_cocotb.runner import mase_runner
 
@@ -74,17 +72,19 @@ class VerificationCase:
         self.weight_rows = self.in_columns
         self.weight_columns = 2
         self.iterations = 3
-        
-        self.max_large_numbers = 4  # for scattering: max number of outliers scattered to the HP matrix
-        self.large_number_thres = 127   # for scattering
-        
+
+        self.max_large_numbers = (
+            4  # for scattering: max number of outliers scattered to the HP matrix
+        )
+        self.large_number_thres = 127  # for scattering
+
         self.data_in = RandomSource(
             name="data_in",
             samples=samples * self.iterations,
             num=self.in_rows * self.in_columns,
             max_stalls=0,
             debug=debug,
-            arithmetic="llm-fp16-datain"
+            arithmetic="llm-fp16-datain",
         )
         self.weight = RandomSource(
             name="weight",
@@ -107,9 +107,9 @@ class VerificationCase:
         self.ref = self.sw_cast(
             inputs=self.ref,
             in_width=self.data_in_width
-                    + self.weight_width
-                    + math.ceil(math.log2(self.iterations * self.in_columns))
-                    + self.has_bias,
+            + self.weight_width
+            + math.ceil(math.log2(self.iterations * self.in_columns))
+            + self.has_bias,
             in_frac_width=self.data_in_frac_width + self.weight_frac_width,
             out_width=self.data_out_width,
             out_frac_width=self.data_out_frac_width,
@@ -125,7 +125,7 @@ class VerificationCase:
             "IN_DEPTH": self.iterations,
             "OUT_WIDTH": self.data_out_width,
             "MAX_LARGE_NUMBERS": self.max_large_numbers,
-            "LARGE_NUMBER_THRES": self.large_number_thres
+            "LARGE_NUMBER_THRES": self.large_number_thres,
         }
 
     def sw_compute(self):
@@ -161,7 +161,9 @@ class VerificationCase:
             out_list = []
             for i in range(0, len(in_list)):
                 in_value = in_list[i]
-                out_value = fixed_cast(in_value, in_width, in_frac_width, out_width, out_frac_width)
+                out_value = fixed_cast(
+                    in_value, in_width, in_frac_width, out_width, out_frac_width
+                )
                 out_list.append(out_value)
             outputs.append(out_list)
         return outputs
@@ -262,4 +264,3 @@ if __name__ == "__main__":
         module_param_list=[tb.get_dut_parameters()],
         extra_build_args=["--unroll-count", "3000"],
     )
-

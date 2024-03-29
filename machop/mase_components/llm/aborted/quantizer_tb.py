@@ -5,13 +5,14 @@
 
 # Manually add mase_cocotb to system path
 import sys, os
+
 try:
     p = os.getenv("MASE_RTL")
     assert p != None
 except:
     p = os.getenv("mase_rtl")
     assert p != None
-p = os.path.join(p, '../')
+p = os.path.join(p, "../")
 sys.path.append(p)
 ###############################################
 import os, math, logging
@@ -34,11 +35,11 @@ if debug:
 # DUT test specifications
 class VerificationCase:
     def __init__(self, samples=10):
-        self.data_in_width = 16  #fixed-point 16
+        self.data_in_width = 16  # fixed-point 16
         self.in_rows = 20
         self.in_columns = 4
         self.data_out_width = 8  # int8
-        
+
         self.data_in = RandomSource(
             name="data_in",
             samples=samples,
@@ -47,9 +48,9 @@ class VerificationCase:
             debug=debug,
             # arithmetic="llm-fp16"
         )
-        
+
         self.outputs = RandomSink(samples=samples, max_stalls=0, debug=debug)
-        
+
         self.samples = samples
         # self.ref = 111111
         self.ref = self.sw_compute()
@@ -75,13 +76,13 @@ class VerificationCase:
     def sw_compute(self):
         final = []
         ref = []
-        
+
         for i in range(self.samples):
             max_val = abs(self.absmax(self.data_in.data[i]))
-            scale_factor = (2**(self.data_out_width-1) - 1)/max_val
-            current_row = [0 for _ in range(self.in_rows*self.in_columns)]
-            for j in range(self.in_rows*self.in_columns):
-                current_row[j] = self.data_in.data[i][j]*scale_factor
+            scale_factor = (2 ** (self.data_out_width - 1) - 1) / max_val
+            current_row = [0 for _ in range(self.in_rows * self.in_columns)]
+            for j in range(self.in_rows * self.in_columns):
+                current_row[j] = self.data_in.data[i][j] * scale_factor
                 current_row[j] = round(current_row[j])
             ref.append(current_row)
         ref.reverse()
@@ -111,12 +112,13 @@ class VerificationCase:
             outputs.append(out_list)
         return outputs
 
-    def absmax(self, l:list):
+    def absmax(self, l: list):
         result = l[0]
         for i in range(len(l)):
-            if (abs(l[i]) > abs(result)):
+            if abs(l[i]) > abs(result):
                 result = l[i]
         return result
+
 
 def debug_state(dut, state):
     logger.debug(
@@ -181,10 +183,7 @@ async def test_quantizer(dut):
         )
         # breakpoint()
         debug_state(dut, "Pre-clk")
-        if (
-            test_case.data_in.is_empty()
-            and test_case.outputs.is_full()
-        ):
+        if test_case.data_in.is_empty() and test_case.outputs.is_full():
             done = True
             break
         try:
@@ -194,11 +193,13 @@ async def test_quantizer(dut):
             pass
         # print(test_case.outputs.data[i])
         # print(test_case.ref[i])
-        print('---------------------------------')
+        print("---------------------------------")
     assert (
         done
     ), "Deadlock detected or the simulation reaches the maximum cycle limit (fixed it by adjusting the loop trip count)"
-    check_results_signed(test_case.outputs.data, test_case.ref, thres=100)  # TODO: allow error
+    check_results_signed(
+        test_case.outputs.data, test_case.ref, thres=100
+    )  # TODO: allow error
 
 
 if __name__ == "__main__":

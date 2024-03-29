@@ -5,13 +5,14 @@
 
 # Manually add mase_cocotb to system path
 import sys, os
+
 try:
     p = os.getenv("MASE_RTL")
     assert p != None
 except:
     p = os.getenv("mase_rtl")
     assert p != None
-p = os.path.join(p, '../')
+p = os.path.join(p, "../")
 sys.path.append(p)
 ###############################################
 import os, math, logging
@@ -31,16 +32,13 @@ if debug:
     logger.setLevel(logging.DEBUG)
 
 
-
-
-
-
 #!/usr/bin/env python3
 
 # This script tests the fixed point linear
 import os, math, logging
 import sys
-sys.path.append('/home/ic/TEMP/mase/machop/')
+
+sys.path.append("/home/ic/TEMP/mase/machop/")
 from mase_cocotb.random_test import RandomSource, RandomSink, check_results
 from mase_cocotb.runner import mase_runner
 
@@ -117,7 +115,7 @@ class VerificationCase:
             "WEIGHT_PARALLELISM": self.weight_columns,
             "HAS_BIAS": self.has_bias,
             "IN_DEPTH": self.iterations,
-            "OUT_WIDTH": self.data_out_width
+            "OUT_WIDTH": self.data_out_width,
         }
 
     def sw_compute(self):
@@ -266,4 +264,3 @@ if __name__ == "__main__":
         module_param_list=[tb.get_dut_parameters()],
         extra_build_args=["--unroll-count", "3000"],
     )
-

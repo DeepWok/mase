@@ -5,7 +5,8 @@ import os, logging
 
 # Manually add mase_cocotb to system path
 import sys
-p='/home/zixian/Mase-DeepWok/machop/'
+
+p = "/home/zixian/Mase-DeepWok/machop/"
 sys.path.append(p)
 ###############################################
 
@@ -80,15 +81,15 @@ class LinearTB(Testbench):
         inputs = self.generate_inputs()
         # exp_out = self.model(inputs)
         exp_out = self.generate_inputs()
-        
-        print('### DEBUGGING: exp_out=', exp_out)
+
+        print("### DEBUGGING: exp_out=", exp_out)
         # Load the inputs driver
         logger.info(f"Processing inputs")
         inputs = self.preprocess_tensor(
             inputs,
             self.model.x_quantizer,
             {"widht": 16, "frac_width": 3},
-            int(self.dut.IN_SIZE)*int(self.dut.IN_PARALLELISM),
+            int(self.dut.IN_SIZE) * int(self.dut.IN_PARALLELISM),
         )
         self.data_in_driver.load_driver(inputs)
 
@@ -110,9 +111,9 @@ class LinearTB(Testbench):
             exp_out,
             self.model.x_quantizer,
             {"widht": 16, "frac_width": 3},
-            int(self.dut.OUT_COLUMNS)
+            int(self.dut.OUT_COLUMNS),
         )
-        print('###DEBUGGIN: outs=', outs)
+        print("###DEBUGGIN: outs=", outs)
         self.data_out_monitor.load_monitor(outs)
 
         await Timer(1000, units="us")
@@ -121,7 +122,9 @@ class LinearTB(Testbench):
 
 @cocotb.test()
 async def test_20x20(dut):
-    tb = LinearTB(dut, in_features=int(dut.IN_SIZE)*int(dut.IN_PARALLELISM), out_features=20)
+    tb = LinearTB(
+        dut, in_features=int(dut.IN_SIZE) * int(dut.IN_PARALLELISM), out_features=20
+    )
     await tb.run_test()
 
 
