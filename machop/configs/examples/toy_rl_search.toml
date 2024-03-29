@@ -23,9 +23,9 @@ by = "name"
 name = ["integer"]
 data_in_width = [4, 8]
 data_in_frac_width = [3, 4, 5, 6, 7, 8, 9]
-weight_width = [2, 4, 8]
+weight_width = [4, 8]
 weight_frac_width = [3, 4, 5, 6, 7, 8, 9]
-bias_width = [2, 4, 8]
+bias_width = [4, 8]
 bias_frac_width = [3, 4, 5, 6, 7, 8, 9]
 
 [search.strategy]
@@ -33,7 +33,7 @@ name = "rl"
 algorithm = "ppo"  # Others: 'a2c' and 'ddpg'
 env = "mixed_precision_paper"  # Others (not recommended): 'mixed_precision' and 'mixed_precision_hi_lo'
 device = "cuda"
-total_timesteps = 100000
+total_timesteps = 10000
 n_steps = 32
 n_envs = 4
 eval_freq = 200
@@ -65,5 +65,5 @@ accuracy.upper_bound = 1
 
 average_bitwidth.scale = 0.3
 average_bitwidth.direction = "minimize"
-average_bitwidth.lower_bound = 6
-average_bitwidth.upper_bound = 12
+average_bitwidth.lower_bound = 4
+average_bitwidth.upper_bound = 8

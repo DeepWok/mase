@@ -78,5 +78,5 @@ accuracy.upper_bound = 1
 
 average_bitwidth.scale = 0.3
 average_bitwidth.direction = "minimize"
-average_bitwidth.lower_bound = 6
-average_bitwidth.upper_bound = 12
+average_bitwidth.lower_bound = 8
+average_bitwidth.upper_bound = 32
