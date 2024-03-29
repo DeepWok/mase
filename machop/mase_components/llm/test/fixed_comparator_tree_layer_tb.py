@@ -38,8 +38,8 @@ class VerificationCase:
     def sw_comparator_tree_layer(self, inputs):
         outputs = []
         for i in range(0, int(len(inputs) / 2)):
-            a = inputs[i]
-            b = inputs[len(inputs) - i - 1]
+            a = inputs[len(inputs) - i - 1]
+            b = inputs[i] 
             if (abs(a) > abs(b)):
                 outputs.append(a)
             else:
@@ -74,9 +74,6 @@ async def test_fixed_comparator_tree_layer(dut):
         y = test_case.get_dut_output(i)  # SW outputs
 
         dut.data_in.value = x
-        print(x)
-        print(y)
-        print(dut.data_out.value)
         await Timer(2, units="ns")
         check_results_signed(dut.data_out.value, y)
         # assert check_results_signed(

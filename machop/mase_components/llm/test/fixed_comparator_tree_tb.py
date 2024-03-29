@@ -56,16 +56,10 @@ class VerificationCase:
     def sw_compute(self):
         ref = []
         for i in range(self.samples):
-            ref.append(self.absmax(self.inputs.data[i]))
+            abs_max_val = max([abs(e) for e in self.inputs.data[i]])
+            ref.append(abs_max_val)
         ref.reverse()
         return ref
-
-    def absmax(self, l:list):
-        result = l[0]
-        for i in range(len(l)):
-            if (abs(l[i]) > abs(result)):
-                result = l[i]
-        return result
 
 # Check if an impossible state is reached
 def is_impossible_state(data_in_ready, data_in_valid, data_out_ready, data_out_valid):

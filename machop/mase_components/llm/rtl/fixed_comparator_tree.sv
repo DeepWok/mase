@@ -108,7 +108,9 @@ localparam LEVELS = $clog2(IN_SIZE);
   assign data_in_ready = vars[0].ready;
 
   // Assigns the output of the last level to the module's output. This is the result of the comparator tree.
-  assign data_out = vars[LEVELS].data[0];
+  logic [OUT_WIDTH-1 :0] reg_out;
+  assign reg_out = vars[LEVELS].data[0];
+  assign data_out = ($signed(reg_out) < 0) ? -reg_out : reg_out;  // get the absolute value
   
   // The validity of the module's output is determined by the last level's valid signal.
   assign data_out_valid = vars[LEVELS].valid;
