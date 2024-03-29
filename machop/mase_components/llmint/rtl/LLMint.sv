@@ -85,9 +85,11 @@ TENSOR_SIZE_DIM
   logic data_out_valid_low_precision, data_out_valid_high_precision;
   assign data_out_valid = data_out_valid_low_precision & data_out_valid_high_precision;
 
+  /* verilator lint_off UNUSEDSIGNAL */
   logic bias_ready;
   logic bias_valid;
   logic [ORIGINAL_PRECISION-1:0] bias[TENSOR_SIZE_DIM-1:0];
+  /* verilator lint_on UNUSEDSIGNAL */
 
   assign bias_ready = 1;
   assign bias_valid = 1;
