@@ -6,7 +6,7 @@ import os
 
 import torch
 import torch.nn as nn
-import torch_mlir
+from torch_mlir import torchscript
 
 
 # Model specifications
@@ -38,7 +38,7 @@ x = torch.randn((batch_size, 28, 28))
 # Better to print to the file - the constants are a bit long
 # For output_type= argument, expected one of: TORCH, LINALG_ON_TENSORS, TOSA, STABLEHLO, RAW
 # module = torch_mlir.compile(mlp, x, output_type="stablehlo")
-module = torch_mlir.compile(mlp, x, output_type="linalg-on-tensors")
+module = torchscript.compile(mlp, x, output_type="linalg-on-tensors")
 mlir_path = "toy.linalg.mlir"
 with open(mlir_path, "w", encoding="utf-8") as outf:
     outf.write(str(module))
