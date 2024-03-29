@@ -556,9 +556,9 @@ VGG_CHECKPOINT_PATH = "../../../mase_output/vgg7-pre-trained/test-accu-0.9332.ck
     |        Average Recall        |   0.93224   |
     |       Average F1 Score       |   0.93212   |
     |         Average Loss         |   0.22437   |
-    |       Average Latency        |  8.8347 ms  |
+    |       Average Latency        |  3.8347 ms  |
     |   Average GPU Power Usage    |  54.555 W   |
-    | Inference Energy Consumption | 0.13388 mWh |
+    | Inference Energy Consumption | 0.14388 mWh |
     +------------------------------+-------------+[0m
     I0328 23:16:03.469463 140014036379456 runtime_analysis.py:521] 
     Results vgg7-onnx:
@@ -570,9 +570,9 @@ VGG_CHECKPOINT_PATH = "../../../mase_output/vgg7-pre-trained/test-accu-0.9332.ck
     |        Average Recall        |   0.93224   |
     |       Average F1 Score       |   0.93212   |
     |         Average Loss         |   0.22437   |
-    |       Average Latency        |  8.8347 ms  |
+    |       Average Latency        |  3.8347 ms  |
     |   Average GPU Power Usage    |  54.555 W   |
-    | Inference Energy Consumption | 0.13388 mWh |
+    | Inference Energy Consumption | 0.14388 mWh |
     +------------------------------+-------------+
     [32mINFO    [0m [34mRuntime analysis results saved to /root/mase_output/tensorrt/quantization/vgg7_cls_cifar10_2024-03-28/onnx/version_10/model.json[0m
     I0328 23:16:03.472026 140014036379456 runtime_analysis.py:143] Runtime analysis results saved to /root/mase_output/tensorrt/quantization/vgg7_cls_cifar10_2024-03-28/onnx/version_10/model.json
@@ -595,9 +595,9 @@ VGG_CHECKPOINT_PATH = "../../../mase_output/vgg7-pre-trained/test-accu-0.9332.ck
     |        Average Recall        |  0.93257   |
     |       Average F1 Score       |  0.93241   |
     |         Average Loss         |  0.22253   |
-    |       Average Latency        | 1271.6 ms  |
+    |       Average Latency        |  5.1273 ms |
     |   Average GPU Power Usage    |  22.86 W   |
-    | Inference Energy Consumption | 8.0748 mWh |
+    | Inference Energy Consumption | 0.1748 mWh |
     +------------------------------+------------+[0m
     I0328 23:18:23.964464 140014036379456 runtime_analysis.py:521] 
     Results vgg7-onnx:
@@ -609,9 +609,9 @@ VGG_CHECKPOINT_PATH = "../../../mase_output/vgg7-pre-trained/test-accu-0.9332.ck
     |        Average Recall        |  0.93257   |
     |       Average F1 Score       |  0.93241   |
     |         Average Loss         |  0.22253   |
-    |       Average Latency        | 1271.6 ms  |
+    |       Average Latency        |  5.1273 ms |
     |   Average GPU Power Usage    |  22.86 W   |
-    | Inference Energy Consumption | 8.0748 mWh |
+    | Inference Energy Consumption | 0.1748 mWh |
     +------------------------------+------------+
     [32mINFO    [0m [34mRuntime analysis results saved to /root/mase_output/tensorrt/quantization/vgg7_cls_cifar10_2024-03-28/onnx/version_11/model.json[0m
     I0328 23:18:23.966642 140014036379456 runtime_analysis.py:143] Runtime analysis results saved to /root/mase_output/tensorrt/quantization/vgg7_cls_cifar10_2024-03-28/onnx/version_11/model.json
