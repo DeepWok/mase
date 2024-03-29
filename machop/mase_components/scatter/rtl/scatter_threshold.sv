@@ -39,7 +39,7 @@ module scatter_threshold #(
     if (DESIGN == 1) begin : PE_D1
       priority_encoder #(
           .NUM_INPUT_CHANNELS(TENSOR_SIZE_DIM),
-          .NUM_OUPUT_CHANNELS(TENSOR_SIZE_DIM),
+          //.NUM_OUPUT_CHANNELS(TENSOR_SIZE_DIM),
           .NO_INDICIES(HIGH_SLOTS)
       ) encoder1 (
           .input_channels(high_precision_req_vec),
@@ -50,7 +50,7 @@ module scatter_threshold #(
     end else if (DESIGN == 2) begin : PE_D2
       priority_encoder #(
           .NUM_INPUT_CHANNELS(TENSOR_SIZE_DIM),
-          .NUM_OUPUT_CHANNELS(TENSOR_SIZE_DIM),
+          //.NUM_OUPUT_CHANNELS(TENSOR_SIZE_DIM),
           .NO_INDICIES(HIGH_SLOTS)
       ) encoder1 (
           .input_channels(high_precision_req_vec),
