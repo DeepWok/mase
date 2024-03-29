@@ -22,14 +22,12 @@ post_calibration_analysis = true
 
 [passes.tensorrt.default.config]
 quantize = true
-# calibrators = ["percentile", "mse", "entropy"]
-# percentiles = [99.0, 99.9, 99.99]
-calibrators = ["percentile"] # ["percentile", "mse", "entropy"]
-percentiles = [99.99] # [99.0, 99.9, 99.99]
+calibrators = ["percentile", "mse", "entropy"]
+percentiles = [99.0, 99.9, 99.99]
 precision = 'int8'
 
 [passes.tensorrt.fine_tune]
-fine_tune = false
+fine_tune = true
 
 [passes.tensorrt.default.input]
 calibrator = 'histogram'
