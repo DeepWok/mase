@@ -4,7 +4,11 @@ on:
   push:
     branches:
       - main
-      - lab1_gs1123
+      - master
+  pull_request:
+    branches:
+      - main
+      - master
 
 jobs:
   python_format:
@@ -26,26 +30,26 @@ jobs:
 
       - name: List Python files before formatting
         run: |
-          cd machop
-          find . -type f -name "*.py" > before.txt
+          cd machop  # Adjust the path accordingly
+          find . -type f -name "*.py" > before.txt || echo "No Python files found"
           cat before.txt
 
       - name: Run Black to format Python files
         if: ${{ always() }}
         run: |
-          cd machop
+          cd machop  # Adjust the path accordingly
           find . -type f -name "*.py" -exec python -m black --quiet {} \;
 
       - name: List Python files after formatting
         run: |
-          cd machop
-          find . -type f -name "*.py" > after.txt
+          cd machop  # Adjust the path accordingly
+          find . -type f -name "*.py" > after.txt || echo "No Python files found"
           cat after.txt
 
       - name: Print changed files
         run: |
-          diff before.txt after.txt | grep "^> " | cut -c 3-
+          diff before.txt after.txt | grep "^> " | cut -c 3- || echo "No changes detected"
 
       - name: Cleanup
         run: |
-          rm before.txt after.txt
+          rm before.txt after.txt || true  # Ignore errors if files don't exist
