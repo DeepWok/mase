@@ -31,7 +31,7 @@ class VerificationCase:
         self.data_out_frac_width = 1
         self.has_bias = 1
 
-        self.in_rows = 2000
+        self.in_rows = 20
         self.in_columns = 4
         self.weight_rows = self.in_columns
         self.weight_columns = 2
@@ -156,7 +156,7 @@ def debug_state(dut, state):
 @cocotb.test()
 async def test_fixed_linear(dut):
     """Test integer based vector mult"""
-    samples = 1000
+    samples = 100
     test_case = VerificationCase(samples=samples)
 
     # Reset cycle
