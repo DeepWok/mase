@@ -14,6 +14,7 @@ from chop.actions.search import search
 from chop.models import get_model_info, get_model, get_tokenizer
 from chop.dataset import get_dataset_info, MaseDataModule
 
+
 def test_rl_search():
     dataset = "cifar10_subset"
     model = "vgg_tiny"
@@ -27,7 +28,6 @@ def test_rl_search():
     load_name = None
     load_type = "pl"
     load_name = None
-
 
     config = {
         "algorithm": "ppo",
@@ -46,9 +46,7 @@ def test_rl_search():
         "search": {
             "search_space": {
                 "name": "graph/quantize/mixed_precision_ptq",
-                "setup": {
-                    "by": "name"
-                },
+                "setup": {"by": "name"},
                 "seed": {
                     "default": {
                         "config": {
@@ -58,7 +56,7 @@ def test_rl_search():
                             "weight_width": [8, 16, 32],
                             "weight_frac_width": [4, 8, 16],
                             "bias_width": [8, 16, 32],
-                            "bias_frac_width": [4, 8, 16]
+                            "bias_frac_width": [4, 8, 16],
                         }
                     },
                     "linear": {
@@ -69,7 +67,7 @@ def test_rl_search():
                             "weight_width": [8, 16, 32],
                             "weight_frac_width": ["NA"],
                             "bias_width": [8, 16, 32],
-                            "bias_frac_width": ["NA"]
+                            "bias_frac_width": ["NA"],
                         }
                     },
                     "conv2d": {
@@ -80,10 +78,10 @@ def test_rl_search():
                             "weight_width": [8, 16, 32],
                             "weight_frac_width": ["NA"],
                             "bias_width": [8, 16, 32],
-                            "bias_frac_width": ["NA"]
+                            "bias_frac_width": ["NA"],
                         }
-                    }
-                }
+                    },
+                },
             },
             "strategy": {
                 "name": "rl",
@@ -109,30 +107,28 @@ def test_rl_search():
                 "sw_runner": {
                     "basic_evaluation": {
                         "data_loader": "val_dataloader",
-                        "num_samples": 512
+                        "num_samples": 512,
                     }
                 },
                 "hw_runner": {
-                    "average_bitwidth": {
-                        "compare_to": 32  # compare to FP32
-                    }
+                    "average_bitwidth": {"compare_to": 32}  # compare to FP32
                 },
                 "metrics": {
                     "accuracy": {
                         "scale": 0.7,
                         "direction": "maximize",
                         "lower_bound": 0,
-                        "upper_bound": 1
+                        "upper_bound": 1,
                     },
                     "average_bitwidth": {
                         "scale": 0.3,
                         "direction": "minimize",
                         "lower_bound": 6,
-                        "upper_bound": 12
-                    }
-                }
-            }
-        }
+                        "upper_bound": 12,
+                    },
+                },
+            },
+        },
     }
 
     dataset_info = get_dataset_info(dataset)
@@ -167,12 +163,13 @@ def test_rl_search():
         "data_module": data_module,
         "accelerator": accelerator,
         "search_config": config,
-        "save_path": PosixPath('./logs/rl_search'),
+        "save_path": PosixPath("./logs/rl_search"),
         "load_name": load_name,
         "load_type": load_type,
         "visualizer": "tensorboard",
     }
 
     search(**search_params)
+
 
 test_rl_search()
