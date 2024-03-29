@@ -19,7 +19,8 @@ class Monitor:
         if not hasattr(self, "log"):
             self.log = SimLog(
                 "cocotb.monitor.%s" % (type(self).__qualname__)
-                if self.name == None else self.name
+                if self.name == None
+                else self.name
             )
 
         self._thread = cocotb.scheduler.add(self._recv_thread())

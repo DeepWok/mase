@@ -64,11 +64,11 @@ class StreamMonitor(Monitor):
         if self.check:
             if not np.equal(got, exp).all():
                 self.log.error(
-                    "%s: \nGot \n%s, \nExpected \n%s" %
-                    (
+                    "%s: \nGot \n%s, \nExpected \n%s"
+                    % (
                         self.name if self.name != None else "Unnamed StreamMonitor",
                         got,
-                        exp
+                        exp,
                     )
                 )
                 assert False, "Test Failed!"
@@ -81,8 +81,8 @@ class ErrorThresholdStreamMonitor(StreamMonitor):
         data,
         valid,
         ready,
-        width: int,       # Width of the number
-        signed: bool,     # Signedness of number
+        width: int,  # Width of the number
+        signed: bool,  # Signedness of number
         error_bits: int,  # Number of last bits the number can be off by
         log_error=False,  # Keep note of all errors
         check=True,
@@ -100,9 +100,7 @@ class ErrorThresholdStreamMonitor(StreamMonitor):
     def _check(self, got, exp):
         fail = not self.check
         if type(got) != type(exp):
-            assert fail, (
-                f"Type Mismatch got:{type(got)} vs. exp:{type(exp)}"
-            )
+            assert fail, f"Type Mismatch got:{type(got)} vs. exp:{type(exp)}"
 
         # Compare Outputs
         if type(got) == list:
@@ -116,9 +114,7 @@ class ErrorThresholdStreamMonitor(StreamMonitor):
                 self.error_log.append(err)
             max_biterr = np.full_like(err, self.error_bits)
             if not (err <= max_biterr).all():
-                self.log.error(
-                    "Failed | Got: %20s Exp: %20s Err: %14s" % (g, e, err)
-                )
+                self.log.error("Failed | Got: %20s Exp: %20s Err: %14s" % (g, e, err))
                 assert fail, "Test Failed!"
                 return
 
@@ -131,12 +127,8 @@ class ErrorThresholdStreamMonitor(StreamMonitor):
             if self.log_error:
                 self.error_log.append(err)
             if not err <= self.error_bits:
-                self.log.error(
-                    "Failed | Got: %20s Exp: %20s Err: %10s" % (g, e, err)
-                )
+                self.log.error("Failed | Got: %20s Exp: %20s Err: %10s" % (g, e, err))
                 assert fail, "Test Failed!"
                 return
 
-        self.log.debug(
-            "Passed | Got: %20s Exp: %20s Err: %10s" % (g, e, err)
-        )
+        self.log.debug("Passed | Got: %20s Exp: %20s Err: %10s" % (g, e, err))

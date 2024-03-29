@@ -14,13 +14,10 @@ from isqrt_sw import range_reduction_sw, range_augmentation_sw, int_to_float, fi
 class VerificationCase(Testbench):
     def __init__(self, dut) -> None:
         super().__init__(dut)
-        self.assign_self_params([
-            "WIDTH",
-            "FRAC_WIDTH"
-        ])
+        self.assign_self_params(["WIDTH", "FRAC_WIDTH"])
 
     def generate_inputs(self):
-        samples = 2 ** self.WIDTH
+        samples = 2**self.WIDTH
         data_x = []
         msb_indices = []
         for x in range(samples):
@@ -36,6 +33,7 @@ class VerificationCase(Testbench):
             expected = range_augmentation_sw(x, msb_index, self.WIDTH, self.FRAC_WIDTH)
             ref.append(expected)
         return ref
+
 
 @cocotb.test()
 async def test_fixed_range_augmentation(dut):
@@ -63,8 +61,8 @@ async def test_fixed_range_augmentation(dut):
 
         # Check the output.
         assert (
-                dut.data_out.value.integer == expected
-            ), f"""
+            dut.data_out.value.integer == expected
+        ), f"""
             <<< --- Test failed --- >>>
             Input: 
             X  : {int_to_float(data_a, 1, width-1)}
@@ -77,21 +75,20 @@ async def test_fixed_range_augmentation(dut):
             {int_to_float(expected, int_width, frac_width)}
             """
 
+
 if __name__ == "__main__":
+
     def full_sweep():
         parameter_list = []
         # TODO: model does not work for purely fractional numbers.
         for int_width in range(1, 9):
             for frac_width in range(0, 9):
                 width = int_width + frac_width
-                parameters = {
-                        "WIDTH": width,
-                        "FRAC_WIDTH": frac_width
-                }
+                parameters = {"WIDTH": width, "FRAC_WIDTH": frac_width}
                 parameter_list.append(parameters)
         return parameter_list
 
     parameter_list = full_sweep()
-    #parameter_list = [{"WIDTH": 2, "FRAC_WIDTH": 2}]
+    # parameter_list = [{"WIDTH": 2, "FRAC_WIDTH": 2}]
 
     mase_runner(module_param_list=parameter_list)

@@ -8,23 +8,28 @@ from cocotb.triggers import Timer
 from mase_cocotb.testbench import Testbench
 from mase_cocotb.runner import mase_runner
 import math
-from isqrt_sw import nr_stage_sw, float_to_int, int_to_float, fixed_lut_index_sw, make_lut, range_reduction_sw
+from isqrt_sw import (
+    nr_stage_sw,
+    float_to_int,
+    int_to_float,
+    fixed_lut_index_sw,
+    make_lut,
+    range_reduction_sw,
+)
 
 
 class VerificationCase(Testbench):
     def __init__(self, dut):
         super().__init__(dut)
-        self.assign_self_params([
-            "WIDTH"
-        ])
+        self.assign_self_params(["WIDTH"])
 
     def generate_inputs(self, lut_pow):
-        samples = 2 ** self.WIDTH
+        samples = 2**self.WIDTH
         int_width = 1
         frac_width = self.WIDTH - 1
         data_x = []
         initial_guesses = []
-        lut_size = 2 ** lut_pow
+        lut_size = 2**lut_pow
         lut = make_lut(lut_size, self.WIDTH)
         # NOTE: since negative values are not supported by fixed formats since
         # isqrt only outputs positive results we cannot test every single com-
@@ -70,13 +75,16 @@ async def test_fixed_nr_stage(dut):
         # Exepected result.
         expected = ref[i]
 
-        # Error 
-        error = abs(int_to_float(dut.data_out.value.integer, 1, width) - int_to_float(expected, 1, width))
+        # Error
+        error = abs(
+            int_to_float(dut.data_out.value.integer, 1, width)
+            - int_to_float(expected, 1, width)
+        )
 
         # Check the output.
         assert (
-                error == 0
-            ), f"""
+            error == 0
+        ), f"""
             <<< --- Test failed --- >>>
             Input: 
             X  : {int_to_float(data_a, 1, width-1)}
@@ -92,7 +100,9 @@ async def test_fixed_nr_stage(dut):
             {error}
             """
 
+
 if __name__ == "__main__":
+
     def full_sweep():
         parameter_list = []
         for width in range(1, 17):
@@ -100,6 +110,6 @@ if __name__ == "__main__":
         return parameter_list
 
     parameter_list = full_sweep()
-    #parameter_list = [{"WIDTH": 3}]
+    # parameter_list = [{"WIDTH": 3}]
 
     mase_runner(module_param_list=parameter_list)

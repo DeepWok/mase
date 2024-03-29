@@ -15,18 +15,16 @@ from cocotb.triggers import *
 class FifoTB(Testbench):
     def __init__(self, dut) -> None:
         super().__init__(dut, dut.clk, dut.rst)
-        self.assign_self_params([
-            "DATA_WIDTH", "SIZE", "ADDR_WIDTH"
-        ])
+        self.assign_self_params(["DATA_WIDTH", "SIZE", "ADDR_WIDTH"])
 
         # Driver/Monitor
-        self.in_driver = StreamDriver(dut.clk, dut.in_data,
-                                      dut.in_valid, dut.in_ready)
-        self.output_monitor = StreamMonitor(dut.clk, dut.out_data,
-                                            dut.out_valid, dut.out_ready)
+        self.in_driver = StreamDriver(dut.clk, dut.in_data, dut.in_valid, dut.in_ready)
+        self.output_monitor = StreamMonitor(
+            dut.clk, dut.out_data, dut.out_valid, dut.out_ready
+        )
 
     def generate_inputs(self, num=20):
-        return [randint(0, (2**self.DATA_WIDTH)-1) for _ in range(num)]
+        return [randint(0, (2**self.DATA_WIDTH) - 1) for _ in range(num)]
 
 
 @cocotb.test()
@@ -71,6 +69,7 @@ async def test_valid(dut):
     await Timer(20, "us")
     assert tb.output_monitor.exp_queue.empty()
 
+
 @cocotb.test()
 async def test_backpressure(dut):
     tb = FifoTB(dut)
@@ -83,6 +82,7 @@ async def test_backpressure(dut):
 
     await Timer(20, "us")
     assert tb.output_monitor.exp_queue.empty()
+
 
 @cocotb.test()
 async def test_valid_backpressure(dut):

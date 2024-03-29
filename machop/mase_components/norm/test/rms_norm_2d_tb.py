@@ -4,6 +4,7 @@ import logging
 from random import randint
 from os import makedirs
 from pathlib import Path
+
 # from itertools import batched  # Python 3.12
 from itertools import repeat
 from math import ceil, log2
@@ -47,18 +48,28 @@ logger.setLevel(logging.INFO)
 
 
 class RMSNorm2dTB(Testbench):
-
     def __init__(self, dut) -> None:
         super().__init__(dut, dut.clk, dut.rst)
-        self.assign_self_params([
-            "TOTAL_DIM0", "TOTAL_DIM1", "COMPUTE_DIM0", "COMPUTE_DIM1",
-            "CHANNELS", "IN_WIDTH", "IN_FRAC_WIDTH",
-            "SCALE_WIDTH", "SCALE_FRAC_WIDTH",
-            "OUT_WIDTH", "OUT_FRAC_WIDTH",
-            "ISQRT_WIDTH", "ISQRT_FRAC_WIDTH",
-            "DEPTH_DIM0", "DEPTH_DIM1",
-            "NUM_VALUES"
-        ])
+        self.assign_self_params(
+            [
+                "TOTAL_DIM0",
+                "TOTAL_DIM1",
+                "COMPUTE_DIM0",
+                "COMPUTE_DIM1",
+                "CHANNELS",
+                "IN_WIDTH",
+                "IN_FRAC_WIDTH",
+                "SCALE_WIDTH",
+                "SCALE_FRAC_WIDTH",
+                "OUT_WIDTH",
+                "OUT_FRAC_WIDTH",
+                "ISQRT_WIDTH",
+                "ISQRT_FRAC_WIDTH",
+                "DEPTH_DIM0",
+                "DEPTH_DIM1",
+                "NUM_VALUES",
+            ]
+        )
 
         # Helper tuples
         self.total_tup = self.TOTAL_DIM0, self.TOTAL_DIM1
@@ -75,14 +86,12 @@ class RMSNorm2dTB(Testbench):
                 "data_in_frac_width": self.IN_FRAC_WIDTH,
                 "weight_width": self.SCALE_WIDTH,
                 "weight_frac_width": self.SCALE_FRAC_WIDTH,
-            }
+            },
         )
         self.quantized_model.eval()
 
         # Drivers & Monitors
-        self.in_driver = StreamDriver(
-            dut.clk, dut.in_data, dut.in_valid, dut.in_ready
-        )
+        self.in_driver = StreamDriver(dut.clk, dut.in_data, dut.in_valid, dut.in_ready)
         self.weight_driver = StreamDriver(
             dut.clk, dut.weight_data, dut.weight_valid, dut.weight_ready
         )
@@ -96,7 +105,10 @@ class RMSNorm2dTB(Testbench):
             error_bits += 2 ** (self.OUT_FRAC_WIDTH - self.IN_FRAC_WIDTH)
 
         self.output_monitor = ErrorThresholdStreamMonitor(
-            dut.clk, dut.out_data, dut.out_valid, dut.out_ready,
+            dut.clk,
+            dut.out_data,
+            dut.out_valid,
+            dut.out_ready,
             name="Output Monitor",
             width=self.OUT_WIDTH,
             signed=True,
@@ -107,19 +119,25 @@ class RMSNorm2dTB(Testbench):
         # Input Data
         inputs = list()
         for _ in range(self.CHANNELS * num):
-            inputs.extend(gen_random_matrix_input(
-                *self.total_tup, *self.compute_tup, *self.in_width_tup
-            ))
+            inputs.extend(
+                gen_random_matrix_input(
+                    *self.total_tup, *self.compute_tup, *self.in_width_tup
+                )
+            )
 
         # Model weights (scale)
         weights = list()
         for _ in range(self.CHANNELS):
-            weights.extend(gen_random_matrix_input(
-                *self.total_tup, *self.compute_tup, *self.in_width_tup
-            ))
+            weights.extend(
+                gen_random_matrix_input(
+                    *self.total_tup, *self.compute_tup, *self.in_width_tup
+                )
+            )
 
         # Set weight tensor into model
-        weights_t = self.reconstruct_tensor(weights, self.SCALE_WIDTH, self.SCALE_FRAC_WIDTH)
+        weights_t = self.reconstruct_tensor(
+            weights, self.SCALE_WIDTH, self.SCALE_FRAC_WIDTH
+        )
         self.quantized_model.weight = nn.Parameter(weights_t)
 
         # Weights are same across all batches, however we need to repeat them to the driver
@@ -130,12 +148,13 @@ class RMSNorm2dTB(Testbench):
 
     def reconstruct_tensor(self, x, width, frac_width):
         batches = batched(x, self.DEPTH_DIM0 * self.DEPTH_DIM1)
-        matrix_list = [rebuild_matrix(b, *self.total_tup, *self.compute_tup)
-                       for b in batches]
+        matrix_list = [
+            rebuild_matrix(b, *self.total_tup, *self.compute_tup) for b in batches
+        ]
         x = torch.stack(matrix_list).reshape(
             -1, self.CHANNELS, self.TOTAL_DIM1, self.TOTAL_DIM0
         )
-        x = sign_extend_t(x, width).to(dtype=torch.float32) / (2 ** frac_width)
+        x = sign_extend_t(x, width).to(dtype=torch.float32) / (2**frac_width)
         return x
 
     def output_monitor_split(self, x, width, frac_width):
@@ -163,7 +182,7 @@ class RMSNorm2dTB(Testbench):
         self.weight_driver.load_driver(weights)
         exp_out = self.model(inputs)
         self.output_monitor.load_monitor(exp_out)
-        await Timer(us, 'us')
+        await Timer(us, "us")
         assert self.output_monitor.exp_queue.empty()
 
 
@@ -259,8 +278,10 @@ if __name__ == "__main__":
         out_frac_width: int = 4,
         str_id: str = "default",
     ):
-        isqrt_w = isqrt_width(total_dim0, total_dim1, compute_dim0, compute_dim1, channels, in_width)
-        lut = make_lut(2 ** LUT_POW, isqrt_w)
+        isqrt_w = isqrt_width(
+            total_dim0, total_dim1, compute_dim0, compute_dim1, channels, in_width
+        )
+        lut = make_lut(2**LUT_POW, isqrt_w)
         mem_path = mem_dir / f"lutmem-{str_id}.mem"
         write_memb(mem_path, lut, isqrt_w)
         params = {

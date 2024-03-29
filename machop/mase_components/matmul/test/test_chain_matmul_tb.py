@@ -25,27 +25,33 @@ logger.setLevel(logging.DEBUG)
 
 
 class ChainMatmulTB(Testbench):
-
     def __init__(self, dut) -> None:
         super().__init__(dut, dut.clk, dut.rst)
-        self.assign_self_params([
-            "N", "M", "K", "Z",
-            "IN_WIDTH", "IN_FRAC_WIDTH",
-            "INT_WIDTH", "INT_FRAC_WIDTH",
-            "OUT_WIDTH", "OUT_FRAC_WIDTH",
-            "COMPUTE_DIM0", "COMPUTE_DIM1",
-            "SYMMETRIC"
-        ])
+        self.assign_self_params(
+            [
+                "N",
+                "M",
+                "K",
+                "Z",
+                "IN_WIDTH",
+                "IN_FRAC_WIDTH",
+                "INT_WIDTH",
+                "INT_FRAC_WIDTH",
+                "OUT_WIDTH",
+                "OUT_FRAC_WIDTH",
+                "COMPUTE_DIM0",
+                "COMPUTE_DIM1",
+                "SYMMETRIC",
+            ]
+        )
 
         # Drivers & Monitors
-        self.a_driver = StreamDriver(dut.clk, dut.a_data,
-                                     dut.a_valid, dut.a_ready)
-        self.b_driver = StreamDriver(dut.clk, dut.b_data,
-                                     dut.b_valid, dut.b_ready)
-        self.c_driver = StreamDriver(dut.clk, dut.c_data,
-                                     dut.c_valid, dut.c_ready)
-        self.d_monitor = StreamMonitor(dut.clk, dut.d_data,
-                                       dut.d_valid, dut.d_ready, check=True)
+        self.a_driver = StreamDriver(dut.clk, dut.a_data, dut.a_valid, dut.a_ready)
+        self.b_driver = StreamDriver(dut.clk, dut.b_data, dut.b_valid, dut.b_ready)
+        self.c_driver = StreamDriver(dut.clk, dut.c_data, dut.c_valid, dut.c_ready)
+        self.d_monitor = StreamMonitor(
+            dut.clk, dut.d_data, dut.d_valid, dut.d_ready, check=True
+        )
 
     def cleanup(self):
         self.a_driver.kill()
@@ -56,41 +62,82 @@ class ChainMatmulTB(Testbench):
     # Dimensions for chain matmul are: (nm * mk) * kz = nz
     def generate_inputs(self):
         A_inputs = gen_random_matrix_input(
-            self.M, self.N, self.COMPUTE_DIM0, self.COMPUTE_DIM1,
-            self.IN_WIDTH, self.IN_FRAC_WIDTH
+            self.M,
+            self.N,
+            self.COMPUTE_DIM0,
+            self.COMPUTE_DIM1,
+            self.IN_WIDTH,
+            self.IN_FRAC_WIDTH,
         )
         B_inputs = gen_random_matrix_input(
-            self.K, self.M, self.COMPUTE_DIM0, self.COMPUTE_DIM1,
-            self.IN_WIDTH, self.IN_FRAC_WIDTH
+            self.K,
+            self.M,
+            self.COMPUTE_DIM0,
+            self.COMPUTE_DIM1,
+            self.IN_WIDTH,
+            self.IN_FRAC_WIDTH,
         )
         C_inputs = gen_random_matrix_input(
-            self.Z, self.K, self.COMPUTE_DIM0, self.COMPUTE_DIM1,
-            self.IN_WIDTH, self.IN_FRAC_WIDTH
+            self.Z,
+            self.K,
+            self.COMPUTE_DIM0,
+            self.COMPUTE_DIM1,
+            self.IN_WIDTH,
+            self.IN_FRAC_WIDTH,
         )
         return A_inputs, B_inputs, C_inputs
 
     def model(self, A_inputs, B_inputs, C_inputs):
         # (nm * mk) -> nk
         intermediate_matrix = matrix_mult_model(
-            self.M, self.N, self.COMPUTE_DIM0, self.COMPUTE_DIM1,
-            self.K, self.M, self.COMPUTE_DIM0, self.COMPUTE_DIM1,
-            self.K, self.N, self.COMPUTE_DIM0, self.COMPUTE_DIM1,
-            self.IN_WIDTH, self.IN_FRAC_WIDTH,
-            self.IN_WIDTH, self.IN_FRAC_WIDTH,
-            self.INT_WIDTH, self.INT_FRAC_WIDTH, self.SYMMETRIC,
-            A_inputs, B_inputs
+            self.M,
+            self.N,
+            self.COMPUTE_DIM0,
+            self.COMPUTE_DIM1,
+            self.K,
+            self.M,
+            self.COMPUTE_DIM0,
+            self.COMPUTE_DIM1,
+            self.K,
+            self.N,
+            self.COMPUTE_DIM0,
+            self.COMPUTE_DIM1,
+            self.IN_WIDTH,
+            self.IN_FRAC_WIDTH,
+            self.IN_WIDTH,
+            self.IN_FRAC_WIDTH,
+            self.INT_WIDTH,
+            self.INT_FRAC_WIDTH,
+            self.SYMMETRIC,
+            A_inputs,
+            B_inputs,
         )
         # (nk * kz) -> nz
         output = matrix_mult_model(
-            self.K, self.N, self.COMPUTE_DIM0, self.COMPUTE_DIM1,
-            self.Z, self.K, self.COMPUTE_DIM0, self.COMPUTE_DIM1,
-            self.Z, self.N, self.COMPUTE_DIM0, self.COMPUTE_DIM1,
-            self.INT_WIDTH, self.INT_FRAC_WIDTH,
-            self.IN_WIDTH, self.IN_FRAC_WIDTH,
-            self.OUT_WIDTH, self.OUT_FRAC_WIDTH, self.SYMMETRIC,
-            intermediate_matrix, C_inputs
+            self.K,
+            self.N,
+            self.COMPUTE_DIM0,
+            self.COMPUTE_DIM1,
+            self.Z,
+            self.K,
+            self.COMPUTE_DIM0,
+            self.COMPUTE_DIM1,
+            self.Z,
+            self.N,
+            self.COMPUTE_DIM0,
+            self.COMPUTE_DIM1,
+            self.INT_WIDTH,
+            self.INT_FRAC_WIDTH,
+            self.IN_WIDTH,
+            self.IN_FRAC_WIDTH,
+            self.OUT_WIDTH,
+            self.OUT_FRAC_WIDTH,
+            self.SYMMETRIC,
+            intermediate_matrix,
+            C_inputs,
         )
         return output
+
 
 @cocotb.test()
 async def basic(dut):
@@ -112,6 +159,7 @@ async def basic(dut):
     await Timer(100, units="us")
     assert tb.d_monitor.exp_queue.empty()
     tb.cleanup()
+
 
 if __name__ == "__main__":
     mase_runner(

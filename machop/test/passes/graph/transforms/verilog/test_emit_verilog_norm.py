@@ -12,7 +12,7 @@ from mase_components.fixed_arithmetic.test.isqrt_sw import make_lut
 from mase_components.common.test.lut_tb import write_memb
 from chop.passes.graph.utils import get_module_by_name
 from chop.passes.graph.transforms.quantize.quantizers.quantizers_for_hw import (
-    integer_quantizer_for_hw
+    integer_quantizer_for_hw,
 )
 
 import chop.models.manual.rms_norm as rms
@@ -39,31 +39,23 @@ def _fix_quantize_step(node, config={}, parallelism=[1, 1, 2, 2]):
             type(common_p["args"][arg]) == dict
             and "type" in common_p["args"][arg].keys()
         ):
-            common_p["args"][arg][
-                "type"
-            ] = config["default"]["config"]["name"]
-            common_p["args"][arg][
-                "precision"
-            ] = [
+            common_p["args"][arg]["type"] = config["default"]["config"]["name"]
+            common_p["args"][arg]["precision"] = [
                 config["default"]["config"]["data_in_width"],
-                config["default"]["config"]["data_in_frac_width"]
+                config["default"]["config"]["data_in_frac_width"],
             ]
     for result, _ in common_p["results"].items():
         if (
             type(common_p["results"][result]) == dict
-            and "type"
-            in common_p["results"][result].keys()
+            and "type" in common_p["results"][result].keys()
         ):
-            common_p["results"][result][
-                "type"
-            ] = config["default"]["config"]["name"]
-            common_p["results"][result][
-                "precision"
-            ] = [
+            common_p["results"][result]["type"] = config["default"]["config"]["name"]
+            common_p["results"][result]["precision"] = [
                 config["default"]["config"]["data_out_width"],
-                config["default"]["config"]["data_out_frac_width"]
+                config["default"]["config"]["data_out_frac_width"],
             ]
     hardware_p["parallelism"] = parallelism
+
 
 def gen_batchnorm_luts(mem_id, mem_dir, n, model, config):
     scale_mem_path = mem_dir / f"batchnorm_scale_lut{mem_id}.mem"
@@ -75,15 +67,30 @@ def gen_batchnorm_luts(mem_id, mem_dir, n, model, config):
     var_f = module.running_var
 
     scale_lut = torch.tensor([1 / sqrt(variance) for variance in var_f])
-    shift_lut = torch.tensor([-mu / sqrt(variance) for mu, variance in zip(mean_f, var_f)])
+    shift_lut = torch.tensor(
+        [-mu / sqrt(variance) for mu, variance in zip(mean_f, var_f)]
+    )
 
-    scale_lut = integer_quantizer_for_hw(scale_lut, config["data_in_width"], config["data_in_frac_width"]).numpy().tolist()
-    shift_lut = integer_quantizer_for_hw(shift_lut, config["data_in_width"], config["data_in_frac_width"]).numpy().tolist()
+    scale_lut = (
+        integer_quantizer_for_hw(
+            scale_lut, config["data_in_width"], config["data_in_frac_width"]
+        )
+        .numpy()
+        .tolist()
+    )
+    shift_lut = (
+        integer_quantizer_for_hw(
+            shift_lut, config["data_in_width"], config["data_in_frac_width"]
+        )
+        .numpy()
+        .tolist()
+    )
 
     write_memb(scale_mem_path, scale_lut, config["data_in_width"])
     write_memb(shift_mem_path, shift_lut, config["data_in_width"])
 
     return scale_mem_path, shift_mem_path
+
 
 def add_norm_metadata_gen_lut_analysis_pass(mg, config={}):
     """
@@ -92,13 +99,14 @@ def add_norm_metadata_gen_lut_analysis_pass(mg, config={}):
     LUTs which exist in the normalization hardware.
     """
     from chop.passes.graph.utils import get_mase_op
+
     # Generate lut
     LUT_POW = 5
     ISQRT_WIDTH = 16
 
     mem_dir = Path(__file__).parent / "build" / "norm" / "mem"
     makedirs(mem_dir, exist_ok=True)
-    lut = make_lut(2 ** LUT_POW, ISQRT_WIDTH)
+    lut = make_lut(2**LUT_POW, ISQRT_WIDTH)
     mem_path = mem_dir / f"norm_isqrt_lut.mem"
     write_memb(mem_path, lut, ISQRT_WIDTH)
     mem_id = 0
@@ -132,8 +140,8 @@ def add_norm_metadata_gen_lut_analysis_pass(mg, config={}):
 
 
 def test_emit_verilog_norm(net, x):
-
     import chop.ir.graph.mase_graph as mase_graph
+
     mg = mase_graph.MaseGraph(model=net)
 
     from chop.passes.graph.analysis import (
@@ -147,6 +155,7 @@ def test_emit_verilog_norm(net, x):
         emit_cocotb_transform_pass,
         quantize_transform_pass,
     )
+
     mg, _ = init_metadata_analysis_pass(mg)
     mg, _ = add_common_metadata_analysis_pass(
         mg, {"dummy_in": {"x": x}, "add_value": False}
@@ -163,7 +172,7 @@ def test_emit_verilog_norm(net, x):
                 "data_out_width": 8,
                 "data_out_frac_width": 4,
             }
-        }
+        },
     }
     mg, _ = quantize_transform_pass(mg, quant_config)
 
@@ -172,7 +181,9 @@ def test_emit_verilog_norm(net, x):
         _fix_quantize_step(n, quant_config)
 
     # Add norm params
-    mg, _ = add_norm_metadata_gen_lut_analysis_pass(mg, quant_config["default"]["config"])
+    mg, _ = add_norm_metadata_gen_lut_analysis_pass(
+        mg, quant_config["default"]["config"]
+    )
 
     # Add hardware metadata
     mg, _ = add_hardware_metadata_analysis_pass(mg)
@@ -197,7 +208,6 @@ def test_emit_verilog_norm(net, x):
 
 
 if __name__ == "__main__":
-
     # N, C, H, W
     shape = [10, 4, 8, 8]
 
@@ -205,10 +215,10 @@ if __name__ == "__main__":
         nn.BatchNorm2d(
             num_features=shape[1],
         ),
-        #nn.LayerNorm(
+        # nn.LayerNorm(
         #    normalized_shape=shape[1:],
         #    elementwise_affine=False,
-        #),
+        # ),
         # nn.GroupNorm(
         #     num_groups=2,
         #     num_channels=shape[1],

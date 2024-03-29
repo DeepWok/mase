@@ -11,52 +11,73 @@ from mase_cocotb.runner import mase_runner
 import math
 from mase_cocotb.testbench import Testbench
 from mase_cocotb.utils import verilator_str_param, bit_driver
-from mase_cocotb.interfaces.streaming import (
-    StreamDriver, StreamMonitor
-)
+from mase_cocotb.interfaces.streaming import StreamDriver, StreamMonitor
 from mase_components.fixed_arithmetic.test.isqrt_sw import (
-    isqrt_sw2, int_to_float, make_lut
+    isqrt_sw2,
+    int_to_float,
+    make_lut,
 )
 from mase_components.common.test.lut_tb import write_memb
+
 
 class VerificationCase(Testbench):
     def __init__(self, dut):
         super().__init__(dut, dut.clk, dut.rst)
-        self.assign_self_params([
-            "IN_WIDTH", "IN_FRAC_WIDTH", "LUT_POW",
-        ])
+        self.assign_self_params(
+            [
+                "IN_WIDTH",
+                "IN_FRAC_WIDTH",
+                "LUT_POW",
+            ]
+        )
 
         self.input_driver = StreamDriver(
             dut.clk, dut.in_data, dut.in_valid, dut.in_ready
         )
         self.output_monitor = StreamMonitor(
-            dut.clk, dut.out_data, dut.out_valid, dut.out_ready,
+            dut.clk,
+            dut.out_data,
+            dut.out_valid,
+            dut.out_ready,
             name="Output ISQRT",
         )
 
     def generate_inputs(self, num=10000):
-        maxnum = (2 ** self.IN_WIDTH)-1
+        maxnum = (2**self.IN_WIDTH) - 1
         return [random.randint(0, maxnum) for _ in range(num)], num
 
     def model(self, data_in):
         ref = []
-        lut_size = 2 ** self.LUT_POW
+        lut_size = 2**self.LUT_POW
         lut = make_lut(lut_size, self.IN_WIDTH)
         for x in data_in:
-            expected = isqrt_sw2(x, self.IN_WIDTH, self.IN_FRAC_WIDTH, self.LUT_POW, lut)
+            expected = isqrt_sw2(
+                x, self.IN_WIDTH, self.IN_FRAC_WIDTH, self.LUT_POW, lut
+            )
             ref.append(expected)
         return ref
 
+
 def debug(dut, i, f):
-    print(f"X        : {dut.in_data.value}  {int_to_float(dut.in_data.value.integer, i, f)}")
-    print(f"X red    : {dut.x_reduced.value}    {int_to_float(dut.x_reduced.value.integer, 1, 15)}")
+    print(
+        f"X        : {dut.in_data.value}  {int_to_float(dut.in_data.value.integer, i, f)}"
+    )
+    print(
+        f"X red    : {dut.x_reduced.value}    {int_to_float(dut.x_reduced.value.integer, 1, 15)}"
+    )
     print(f"MSB index: {dut.msb_index.value.integer}")
     print(f"lut_index: {dut.lut_index.value.integer}")
-    print(f"LUT value: {dut.lut_value.value}    {int_to_float(dut.lut_value.value.integer, 1, 15)}")
+    print(
+        f"LUT value: {dut.lut_value.value}    {int_to_float(dut.lut_value.value.integer, 1, 15)}"
+    )
     print(f"Y        : {dut.y.value}    {int_to_float(dut.y.value.integer, 1, 15)}")
-    print(f"Y aug    : {dut.y_aug.value}    {int_to_float(dut.y_aug.value.integer, i, f)}")
+    print(
+        f"Y aug    : {dut.y_aug.value}    {int_to_float(dut.y_aug.value.integer, i, f)}"
+    )
+
 
 CLK_NS = 25
+
 
 @cocotb.test()
 async def sweep(dut):
@@ -102,17 +123,17 @@ async def valid_backpressure(dut):
 
 
 if __name__ == "__main__":
-
     mem_dir = Path(__file__).parent / "build" / "fixed_isqrt" / "mem"
     makedirs(mem_dir, exist_ok=True)
 
     def single_cfg(width, frac_width, lut_pow, str_id):
-        lut_size = 2 ** lut_pow
+        lut_size = 2**lut_pow
         lut = make_lut(lut_size, width)
         mem_path = mem_dir / f"lutmem-{str_id}.mem"
         write_memb(mem_path, lut, width)
         return {
-            "IN_WIDTH": width, "IN_FRAC_WIDTH": frac_width,
+            "IN_WIDTH": width,
+            "IN_FRAC_WIDTH": frac_width,
             "LUT_POW": lut_pow,
             "LUT_MEMFILE": verilator_str_param(str(mem_path)),
         }
@@ -124,8 +145,7 @@ if __name__ == "__main__":
             for frac_width in range(0, 9):
                 width = int_width + frac_width
                 parameters = single_cfg(
-                    width, frac_width, lut_pow,
-                    str_id=f"{int_width}-{frac_width}"
+                    width, frac_width, lut_pow, str_id=f"{int_width}-{frac_width}"
                 )
                 parameter_list.append(parameters)
         return parameter_list

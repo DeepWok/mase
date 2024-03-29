@@ -58,7 +58,7 @@ def _integer_floor_quantize(
     else:
         int_min = 0
         int_max = 2**width - 1
-    scale = 2 ** frac_width
+    scale = 2**frac_width
 
     if isinstance(x, (Tensor, ndarray)):
         return my_clamp(my_floor(x.mul(scale)), int_min, int_max).div(scale)

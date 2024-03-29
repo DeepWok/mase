@@ -13,6 +13,7 @@ from mase_components.deps import MASE_HW_DEPS
 logger = logging.getLogger("mase_runner")
 logger.setLevel("INFO")
 
+
 def mase_runner(
     module_param_list: list[dict[str, Any]] = [dict()],
     extra_build_args: list[str] = [],
@@ -47,14 +48,14 @@ def mase_runner(
     total_fail = 0
 
     for i, module_params in enumerate(module_param_list):
-        print( "# ---------------------------------------")
+        print("# ---------------------------------------")
         print(f"# Test {i+1}/{len(module_param_list)}")
-        print( "# ---------------------------------------")
+        print("# ---------------------------------------")
         print(f"# Parameters:")
         print(f"# - {'Test Index'}: {i}")
         for k, v in module_params.items():
             print(f"# - {k}: {v}")
-        print( "# ---------------------------------------")
+        print("# ---------------------------------------")
         test_work_dir = group_path.joinpath(f"test/build/{module}/test_{i}")
         runner = get_runner(SIM)
         runner.build(

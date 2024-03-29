@@ -7,6 +7,7 @@ from math import ceil, log2, sqrt
 from copy import copy
 from pathlib import Path
 from os import makedirs
+
 # from itertools import batched  # Python 3.12
 
 import torch
@@ -37,19 +38,15 @@ from chop.passes.graph.transforms.quantize.quantized_modules import (
 )
 from chop.passes.graph.transforms.quantize.quantizers.quantizers_for_hw import (
     integer_floor_quantizer_for_hw,
-    integer_quantizer_for_hw
+    integer_quantizer_for_hw,
 )
 from chop.passes.graph.transforms.quantize.quantizers.integer import (
     integer_floor_quantizer,
-    integer_quantizer
+    integer_quantizer,
 )
 
-from mase_components.cast.test.fixed_signed_cast_tb import (
-    _fixed_signed_cast_model
-)
-from mase_components.fixed_arithmetic.test.isqrt_sw import (
-    lut_parameter_dict
-)
+from mase_components.cast.test.fixed_signed_cast_tb import _fixed_signed_cast_model
+from mase_components.fixed_arithmetic.test.isqrt_sw import lut_parameter_dict
 from mase_components.common.test.lut_tb import write_memb, read_memb
 
 logger = logging.getLogger("testbench")
@@ -57,17 +54,26 @@ logger.setLevel(logging.INFO)
 
 
 class BatchNorm2dTB(Testbench):
-
     def __init__(self, dut) -> None:
         super().__init__(dut, dut.clk, dut.rst)
-        self.assign_self_params([
-            "TOTAL_DIM0", "TOTAL_DIM1", "COMPUTE_DIM0", "COMPUTE_DIM1",
-            "NUM_CHANNELS", "IN_WIDTH", "IN_FRAC_WIDTH",
-            "OUT_WIDTH", "OUT_FRAC_WIDTH",
-            # Local parameters.
-            "DEPTH_DIM0", "DEPTH_DIM1",
-            "MEM_ID", "AFFINE"
-        ])
+        self.assign_self_params(
+            [
+                "TOTAL_DIM0",
+                "TOTAL_DIM1",
+                "COMPUTE_DIM0",
+                "COMPUTE_DIM1",
+                "NUM_CHANNELS",
+                "IN_WIDTH",
+                "IN_FRAC_WIDTH",
+                "OUT_WIDTH",
+                "OUT_FRAC_WIDTH",
+                # Local parameters.
+                "DEPTH_DIM0",
+                "DEPTH_DIM1",
+                "MEM_ID",
+                "AFFINE",
+            ]
+        )
 
         # Helper tuples
         self.total_tup = self.TOTAL_DIM0, self.TOTAL_DIM1
@@ -81,14 +87,12 @@ class BatchNorm2dTB(Testbench):
             config={
                 "data_in_width": self.IN_WIDTH,
                 "data_in_frac_width": self.IN_FRAC_WIDTH,
-            }
+            },
         )
 
         # Drivers & Monitors
-        self.in_driver = StreamDriver(
-            dut.clk, dut.in_data, dut.in_valid, dut.in_ready
-        )
-        #Error calculation
+        self.in_driver = StreamDriver(dut.clk, dut.in_data, dut.in_valid, dut.in_ready)
+        # Error calculation
         error_bits = 2
 
         # If we want the output frac to have larger width, we can expect a
@@ -97,20 +101,25 @@ class BatchNorm2dTB(Testbench):
             error_bits += 2 ** (self.OUT_FRAC_WIDTH - self.IN_FRAC_WIDTH)
 
         self.output_monitor = ErrorThresholdStreamMonitor(
-            dut.clk, dut.out_data, dut.out_valid, dut.out_ready,
+            dut.clk,
+            dut.out_data,
+            dut.out_valid,
+            dut.out_ready,
             name="Output Monitor",
             width=self.OUT_WIDTH,
             signed=True,
             error_bits=error_bits,
         )
-        #self.output_monitor.log.setLevel("DEBUG")
+        # self.output_monitor.log.setLevel("DEBUG")
 
     def generate_inputs(self, batches=1):
         inputs = list()
         for _ in range(self.NUM_CHANNELS * batches):
-            inputs.extend(gen_random_matrix_input(
-                *self.total_tup, *self.compute_tup, *self.in_width_tup
-            ))
+            inputs.extend(
+                gen_random_matrix_input(
+                    *self.total_tup, *self.compute_tup, *self.in_width_tup
+                )
+            )
 
         return inputs
 
@@ -132,19 +141,27 @@ class BatchNorm2dTB(Testbench):
         beta = arrs["beta"] if self.AFFINE else None
 
         if self.AFFINE:
-            return torch.tensor(mean), torch.tensor(var), torch.tensor(gamma), torch.tensor(beta)
+            return (
+                torch.tensor(mean),
+                torch.tensor(var),
+                torch.tensor(gamma),
+                torch.tensor(beta),
+            )
         else:
             return torch.tensor(mean), torch.tensor(var)
 
     def model(self, inputs):
         # Input reconstruction
         batches = batched(inputs, self.DEPTH_DIM0 * self.DEPTH_DIM1)
-        matrix_list = [rebuild_matrix(b, *self.total_tup, *self.compute_tup)
-                       for b in batches]
+        matrix_list = [
+            rebuild_matrix(b, *self.total_tup, *self.compute_tup) for b in batches
+        ]
         x = torch.stack(matrix_list).reshape(
             -1, self.NUM_CHANNELS, self.TOTAL_DIM1, self.TOTAL_DIM0
         )
-        x = sign_extend_t(x, self.IN_WIDTH).to(dtype=torch.float32) / (2 ** self.IN_FRAC_WIDTH)
+        x = sign_extend_t(x, self.IN_WIDTH).to(dtype=torch.float32) / (
+            2**self.IN_FRAC_WIDTH
+        )
 
         # Float Model
         self.quantized_model.training = False
@@ -193,13 +210,17 @@ def gen_mem_files(mem_id, width, frac_width, channels, affine=False):
 
     # Generate mean, var, gamma and beta vectors
     max_number = (2 ** (width - 1) - 1) / 2 ** (frac_width)
-    min_number = - 2 ** (width - 1)
+    min_number = -(2 ** (width - 1))
     min_number_var = 2 ** (frac_width)
     mean_f = [max_number * uniform(min_number, max_number) for _ in range(channels)]
-    var_f = [max_number * uniform(min_number_var, max_number) for _ in range(1, channels+1)] # NOTE: variance cannot be negative or 0
+    var_f = [
+        max_number * uniform(min_number_var, max_number) for _ in range(1, channels + 1)
+    ]  # NOTE: variance cannot be negative or 0
 
     if affine:
-        gamma_f = [max_number * uniform(min_number, max_number) for _ in range(channels)]
+        gamma_f = [
+            max_number * uniform(min_number, max_number) for _ in range(channels)
+        ]
         beta_f = [max_number * uniform(min_number, max_number) for _ in range(channels)]
 
     # Quantized lists
@@ -213,7 +234,10 @@ def gen_mem_files(mem_id, width, frac_width, channels, affine=False):
     if affine:
         # Generate floating point representation
         scale = [g / sqrt(variance) for variance, g in zip(var, gamma)]
-        shift = [b - mu * g / sqrt(variance) for mu, variance, g, b in zip(mean, var, gamma, beta)]
+        shift = [
+            b - mu * g / sqrt(variance)
+            for mu, variance, g, b in zip(mean, var, gamma, beta)
+        ]
     else:
         # Generate floating point representation
         scale = [1 / sqrt(variance) for variance in var]
@@ -222,7 +246,13 @@ def gen_mem_files(mem_id, width, frac_width, channels, affine=False):
     var = [1 / (sca) ** 2 for sca in integer_quantizer_list(scale, width, frac_width)]
     var = integer_quantizer_list(var, width, frac_width)
 
-    mean = [-mu / sca for sca, mu in zip(integer_quantizer_list(scale, width, frac_width), integer_quantizer_list(shift, width, frac_width))]
+    mean = [
+        -mu / sca
+        for sca, mu in zip(
+            integer_quantizer_list(scale, width, frac_width),
+            integer_quantizer_list(shift, width, frac_width),
+        )
+    ]
     mean = integer_quantizer_list(mean, width, frac_width)
 
     # Generate fixed point representation
@@ -253,7 +283,7 @@ async def basic(dut):
     tb = BatchNorm2dTB(dut)
     tb.output_monitor.ready.value = 1
     tb.setup_test(batches=2)
-    await Timer(100, 'us')
+    await Timer(100, "us")
     tb.assert_all_monitors_empty()
 
 
@@ -263,9 +293,8 @@ async def stream(dut):
     await tb.reset()
     tb.output_monitor.ready.value = 1
     tb.setup_test(batches=100)
-    await Timer(1000, 'us')
+    await Timer(1000, "us")
     assert tb.output_monitor.exp_queue.empty()
-
 
     # Error analysis
     # import json
@@ -285,7 +314,7 @@ async def backpressure(dut):
     await tb.reset()
     cocotb.start_soon(bit_driver(dut.out_ready, dut.clk, 0.5))
     tb.setup_test(batches=100)
-    await Timer(1000, 'us')
+    await Timer(1000, "us")
     assert tb.output_monitor.exp_queue.empty()
 
 
@@ -296,7 +325,7 @@ async def valid_toggle(dut):
     tb.output_monitor.ready.value = 1
     tb.in_driver.set_valid_prob(0.5)
     tb.setup_test(batches=100)
-    await Timer(1000, 'us')
+    await Timer(1000, "us")
     assert tb.output_monitor.exp_queue.empty()
 
 
@@ -308,7 +337,7 @@ async def valid_backpressure(dut):
     cocotb.start_soon(bit_driver(dut.out_ready, dut.clk, 0.5))
     tb.setup_test(batches=100)
 
-    await Timer(1000, 'us')
+    await Timer(1000, "us")
     assert tb.output_monitor.exp_queue.empty()
 
 
@@ -325,9 +354,11 @@ if __name__ == "__main__":
         out_width: int = 16,
         out_frac_width: int = 8,
         mem_id: int = 0,
-        affine: bool = False
+        affine: bool = False,
     ):
-        scale_mem_path, shift_mem_path = gen_mem_files(mem_id, in_width, in_frac_width, channels, affine)
+        scale_mem_path, shift_mem_path = gen_mem_files(
+            mem_id, in_width, in_frac_width, channels, affine
+        )
 
         params = {
             "TOTAL_DIM0": total_dim0,

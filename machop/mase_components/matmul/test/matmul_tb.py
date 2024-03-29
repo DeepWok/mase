@@ -16,46 +16,83 @@ from mase_cocotb.utils import bit_driver
 logger = logging.getLogger("testbench")
 logger.setLevel(logging.DEBUG)
 
-class MatmulTB(Testbench):
 
+class MatmulTB(Testbench):
     def __init__(self, dut) -> None:
         super().__init__(dut, dut.clk, dut.rst)
-        self.assign_self_params([
-            "A_TOTAL_DIM0", "A_TOTAL_DIM1", "B_TOTAL_DIM0", "B_TOTAL_DIM1",
-            "C_TOTAL_DIM0", "C_TOTAL_DIM1", "A_COMPUTE_DIM0", "A_COMPUTE_DIM1",
-            "B_COMPUTE_DIM0", "B_COMPUTE_DIM1", "C_COMPUTE_DIM0",
-            "C_COMPUTE_DIM1", "A_WIDTH", "A_FRAC_WIDTH", "B_WIDTH",
-            "B_FRAC_WIDTH", "OUT_WIDTH", "OUT_FRAC_WIDTH", "OUT_SYMMETRIC"
-        ])
+        self.assign_self_params(
+            [
+                "A_TOTAL_DIM0",
+                "A_TOTAL_DIM1",
+                "B_TOTAL_DIM0",
+                "B_TOTAL_DIM1",
+                "C_TOTAL_DIM0",
+                "C_TOTAL_DIM1",
+                "A_COMPUTE_DIM0",
+                "A_COMPUTE_DIM1",
+                "B_COMPUTE_DIM0",
+                "B_COMPUTE_DIM1",
+                "C_COMPUTE_DIM0",
+                "C_COMPUTE_DIM1",
+                "A_WIDTH",
+                "A_FRAC_WIDTH",
+                "B_WIDTH",
+                "B_FRAC_WIDTH",
+                "OUT_WIDTH",
+                "OUT_FRAC_WIDTH",
+                "OUT_SYMMETRIC",
+            ]
+        )
 
         # Drivers & Monitors
-        self.a_driver = StreamDriver(dut.clk, dut.a_data,
-                                     dut.a_valid, dut.a_ready)
-        self.b_driver = StreamDriver(dut.clk, dut.b_data,
-                                     dut.b_valid, dut.b_ready)
-        self.output_monitor = StreamMonitor(dut.clk, dut.out_data,
-                                            dut.out_valid, dut.out_ready, check=True)
+        self.a_driver = StreamDriver(dut.clk, dut.a_data, dut.a_valid, dut.a_ready)
+        self.b_driver = StreamDriver(dut.clk, dut.b_data, dut.b_valid, dut.b_ready)
+        self.output_monitor = StreamMonitor(
+            dut.clk, dut.out_data, dut.out_valid, dut.out_ready, check=True
+        )
 
     def generate_inputs(self):
         A_inputs = gen_random_matrix_input(
-            self.A_TOTAL_DIM0, self.A_TOTAL_DIM1, self.A_COMPUTE_DIM0,
-            self.A_COMPUTE_DIM1, self.A_WIDTH, self.A_FRAC_WIDTH
+            self.A_TOTAL_DIM0,
+            self.A_TOTAL_DIM1,
+            self.A_COMPUTE_DIM0,
+            self.A_COMPUTE_DIM1,
+            self.A_WIDTH,
+            self.A_FRAC_WIDTH,
         )
         B_inputs = gen_random_matrix_input(
-            self.B_TOTAL_DIM0, self.B_TOTAL_DIM1, self.B_COMPUTE_DIM0,
-            self.B_COMPUTE_DIM1, self.B_WIDTH, self.B_FRAC_WIDTH
+            self.B_TOTAL_DIM0,
+            self.B_TOTAL_DIM1,
+            self.B_COMPUTE_DIM0,
+            self.B_COMPUTE_DIM1,
+            self.B_WIDTH,
+            self.B_FRAC_WIDTH,
         )
         return A_inputs, B_inputs
 
     def model(self, A_inputs, B_inputs):
         return matrix_mult_model(
-            self.A_TOTAL_DIM0, self.A_TOTAL_DIM1, self.A_COMPUTE_DIM0, self.A_COMPUTE_DIM1,
-            self.B_TOTAL_DIM0, self.B_TOTAL_DIM1, self.B_COMPUTE_DIM0, self.B_COMPUTE_DIM1,
-            self.C_TOTAL_DIM0, self.C_TOTAL_DIM1, self.C_COMPUTE_DIM0, self.C_COMPUTE_DIM1,
-            self.A_WIDTH, self.A_FRAC_WIDTH,
-            self.B_WIDTH, self.B_FRAC_WIDTH,
-            self.OUT_WIDTH, self.OUT_FRAC_WIDTH, self.OUT_SYMMETRIC,
-            A_inputs, B_inputs
+            self.A_TOTAL_DIM0,
+            self.A_TOTAL_DIM1,
+            self.A_COMPUTE_DIM0,
+            self.A_COMPUTE_DIM1,
+            self.B_TOTAL_DIM0,
+            self.B_TOTAL_DIM1,
+            self.B_COMPUTE_DIM0,
+            self.B_COMPUTE_DIM1,
+            self.C_TOTAL_DIM0,
+            self.C_TOTAL_DIM1,
+            self.C_COMPUTE_DIM0,
+            self.C_COMPUTE_DIM1,
+            self.A_WIDTH,
+            self.A_FRAC_WIDTH,
+            self.B_WIDTH,
+            self.B_FRAC_WIDTH,
+            self.OUT_WIDTH,
+            self.OUT_FRAC_WIDTH,
+            self.OUT_SYMMETRIC,
+            A_inputs,
+            B_inputs,
         )
 
 
@@ -78,6 +115,7 @@ async def single_mult(dut):
     await Timer(100, units="us")
     assert tb.output_monitor.exp_queue.empty()
 
+
 @cocotb.test()
 async def repeated_mult(dut):
     tb = MatmulTB(dut)
@@ -97,6 +135,7 @@ async def repeated_mult(dut):
     await Timer(100, units="us")
     assert tb.output_monitor.exp_queue.empty()
 
+
 @cocotb.test()
 async def repeated_mult_backpressure(dut):
     tb = MatmulTB(dut)
@@ -115,6 +154,7 @@ async def repeated_mult_backpressure(dut):
 
     await Timer(100, units="us")
     assert tb.output_monitor.exp_queue.empty()
+
 
 @cocotb.test()
 async def repeated_mult_valid_backpressure(dut):
@@ -145,6 +185,7 @@ def gen_random_dimensions():
     total_dim1 = compute_dim1 * randint(1, 3)
     return compute_dim0, compute_dim1, total_dim0, total_dim1
 
+
 def random_matrix_mult_dim_cfg():
     a_cfg = gen_random_dimensions()
     a_compute_dim0, a_compute_dim1, a_total_dim0, a_total_dim1 = a_cfg
@@ -154,21 +195,22 @@ def random_matrix_mult_dim_cfg():
         "A_TOTAL_DIM0": a_total_dim0,
         "A_TOTAL_DIM1": a_total_dim1,
         "B_TOTAL_DIM0": b_total_dim0,
-        "B_TOTAL_DIM1": a_total_dim0, # Must equal A_TOTAL_DIM0
-
+        "B_TOTAL_DIM1": a_total_dim0,  # Must equal A_TOTAL_DIM0
         "A_COMPUTE_DIM0": a_compute_dim0,
         "A_COMPUTE_DIM1": a_compute_dim1,
         "B_COMPUTE_DIM0": b_compute_dim0,
-        "B_COMPUTE_DIM1": a_compute_dim0, # Must equal A_COMPUTE_DIM0
+        "B_COMPUTE_DIM1": a_compute_dim0,  # Must equal A_COMPUTE_DIM0
     }
+
 
 def generate_random_dimension_cfg(cfg_list, multiple=3):
     new_cfgs = list()
     for cfg in cfg_list:
-        new_cfgs.extend([
-            {**cfg, **random_matrix_mult_dim_cfg()} for _ in range(multiple)
-        ])
+        new_cfgs.extend(
+            [{**cfg, **random_matrix_mult_dim_cfg()} for _ in range(multiple)]
+        )
     return new_cfgs
+
 
 if __name__ == "__main__":
     # Default is a square matrix mult
@@ -177,18 +219,15 @@ if __name__ == "__main__":
         "A_TOTAL_DIM0": 4,
         "A_TOTAL_DIM1": 4,
         "B_TOTAL_DIM0": 4,
-        "B_TOTAL_DIM1": 4, # Must equal A_TOTAL_DIM0
-
+        "B_TOTAL_DIM1": 4,  # Must equal A_TOTAL_DIM0
         "A_COMPUTE_DIM0": 2,
         "A_COMPUTE_DIM1": 2,
         "B_COMPUTE_DIM0": 2,
-        "B_COMPUTE_DIM1": 2, # Must equal A_COMPUTE_DIM0
-
+        "B_COMPUTE_DIM1": 2,  # Must equal A_COMPUTE_DIM0
         "A_WIDTH": 8,
         "A_FRAC_WIDTH": 1,
         "B_WIDTH": 8,
         "B_FRAC_WIDTH": 1,
-
         "OUT_WIDTH": 16,
         "OUT_FRAC_WIDTH": 2,
     }
@@ -197,7 +236,6 @@ if __name__ == "__main__":
         module_param_list=[
             # Default Square
             DEFAULT_CONFIG,
-
             # Failing case before
             {
                 **DEFAULT_CONFIG,
@@ -212,7 +250,6 @@ if __name__ == "__main__":
                 "OUT_WIDTH": 8,
                 "OUT_FRAC_WIDTH": 1,
             },
-
             # Long Rectangle, should saturate many values
             {
                 **DEFAULT_CONFIG,
@@ -223,7 +260,6 @@ if __name__ == "__main__":
                 "OUT_WIDTH": 10,
                 "OUT_FRAC_WIDTH": 0,
             },
-
             # Change window to full size
             {
                 **DEFAULT_CONFIG,
@@ -232,10 +268,9 @@ if __name__ == "__main__":
                 "B_COMPUTE_DIM0": 4,
                 "B_COMPUTE_DIM1": 4,
             },
-
             # Dimensions
-            *generate_random_dimension_cfg([DEFAULT_CONFIG])
+            *generate_random_dimension_cfg([DEFAULT_CONFIG]),
         ],
         seed=1705250706,
-        trace=True
+        trace=True,
     )

@@ -16,23 +16,18 @@ class _LayerNormBase(nn.LayerNorm):
         eps: float = 0.00001,
         elementwise_affine: bool = False,
         bias: bool = False,
-        device = None,
-        dtype = None,
+        device=None,
+        dtype=None,
     ) -> None:
-
         assert elementwise_affine == False, "elementwise_affine not supported!"
-        super().__init__(
-            normalized_shape, eps, elementwise_affine, bias, device, dtype
-        )
+        super().__init__(normalized_shape, eps, elementwise_affine, bias, device, dtype)
         self.bypass = False
         self.x_quantizer = None
 
     def forward(self, x: Tensor) -> Tensor:
         if not self.bypass:
             x = self.x_quantizer(x)
-        return F.layer_norm(
-            x, self.normalized_shape, None, None
-        )
+        return F.layer_norm(x, self.normalized_shape, None, None)
 
 
 class LayerNormInteger(_LayerNormBase):
@@ -42,13 +37,11 @@ class LayerNormInteger(_LayerNormBase):
         eps: float = 0.00001,
         elementwise_affine: bool = False,
         bias: bool = False,
-        device = None,
-        dtype = None,
-        config = None,
+        device=None,
+        dtype=None,
+        config=None,
     ) -> None:
-        super().__init__(
-            normalized_shape, eps, elementwise_affine, bias, device, dtype
-        )
+        super().__init__(normalized_shape, eps, elementwise_affine, bias, device, dtype)
         assert config is not None, "config is None!"
         self.config = config
         self.bypass = config.get("bypass", False)

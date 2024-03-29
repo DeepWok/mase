@@ -14,13 +14,10 @@ from isqrt_sw import find_msb, range_reduction_sw, fixed_lut_index_sw, int_to_fl
 class VerificationCase(Testbench):
     def __init__(self, dut):
         super().__init__(dut)
-        self.assign_self_params([
-            "WIDTH",
-            "LUT_POW"
-        ])
+        self.assign_self_params(["WIDTH", "LUT_POW"])
 
     def generate_inputs(self):
-        samples = 2 ** self.WIDTH
+        samples = 2**self.WIDTH
         data_x = []
         msb_indices = []
         for x in range(samples):
@@ -40,11 +37,13 @@ class VerificationCase(Testbench):
             ref.append(expected)
         return ref
 
+
 def debug(dut):
     print("X:   ", dut.data_a.value)
     print("MSB: ", dut.data_b.value.integer)
     print("Temp : ", dut.temp.value)
     print("Out: ", dut.data_out.value.integer)
+
 
 @cocotb.test()
 async def test_fixed_lut_index(dut):
@@ -71,8 +70,8 @@ async def test_fixed_lut_index(dut):
 
         # Check the output.
         assert (
-                dut.data_out.value.integer == expected
-            ), f"""
+            dut.data_out.value.integer == expected
+        ), f"""
             <<< --- Test failed --- >>>
             Input: 
             X  : {int_to_float(data_a, 1, width-1)}
@@ -84,19 +83,18 @@ async def test_fixed_lut_index(dut):
             {expected}
             """
 
+
 if __name__ == "__main__":
+
     def full_sweep():
         parameter_list = []
         lut_pow = 5
         for width in range(1, 17):
-            parameters = {
-                    "WIDTH": width,
-                    "LUT_POW": lut_pow
-            }
+            parameters = {"WIDTH": width, "LUT_POW": lut_pow}
             parameter_list.append(parameters)
         return parameter_list
 
     parameter_list = full_sweep()
-    #parameter_list = [{"WIDTH": 7, "LUT_POW": 5}]
+    # parameter_list = [{"WIDTH": 7, "LUT_POW": 5}]
 
     mase_runner(module_param_list=parameter_list)

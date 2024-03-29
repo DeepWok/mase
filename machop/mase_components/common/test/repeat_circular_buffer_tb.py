@@ -17,14 +17,10 @@ logger.setLevel(logging.INFO)
 class CircularBufferTB(Testbench):
     def __init__(self, dut) -> None:
         super().__init__(dut, dut.clk, dut.rst)
-        self.assign_self_params([
-            "DATA_WIDTH", "REPEAT", "SIZE"
-        ])
+        self.assign_self_params(["DATA_WIDTH", "REPEAT", "SIZE"])
 
         # Driver/Monitor
-        self.in_driver = StreamDriver(
-            dut.clk, dut.in_data, dut.in_valid, dut.in_ready
-        )
+        self.in_driver = StreamDriver(dut.clk, dut.in_data, dut.in_valid, dut.in_ready)
         self.output_monitor = StreamMonitor(
             dut.clk, dut.out_data, dut.out_valid, dut.out_ready
         )
@@ -32,10 +28,9 @@ class CircularBufferTB(Testbench):
     def generate_inputs(self, num=10):
         inputs = []
         for _ in range(num):
-            inputs.extend([
-                random.randint(0, 2**self.DATA_WIDTH-1)
-                for _ in range(self.SIZE)
-            ])
+            inputs.extend(
+                [random.randint(0, 2**self.DATA_WIDTH - 1) for _ in range(self.SIZE)]
+            )
         return inputs
 
     def model(self, inputs):
@@ -147,16 +142,19 @@ def generate_random_params():
         "SIZE": random.randint(2, 6),
     }
 
+
 if __name__ == "__main__":
-    mase_runner(module_param_list=[
-        # Power of 2 params
-        {"DATA_WIDTH": 8, "REPEAT": 2, "SIZE": 4},
-        # Change data width
-        {"DATA_WIDTH": 17, "REPEAT": 2, "SIZE": 4},
-        # Non power of 2 repeats
-        {"DATA_WIDTH": 32, "REPEAT": 3, "SIZE": 4},
-        # Non power of 2 buffer size
-        {"DATA_WIDTH": 32, "REPEAT": 2, "SIZE": 7},
-        # Purely random params
-        *[generate_random_params() for _ in range(5)]
-    ])
+    mase_runner(
+        module_param_list=[
+            # Power of 2 params
+            {"DATA_WIDTH": 8, "REPEAT": 2, "SIZE": 4},
+            # Change data width
+            {"DATA_WIDTH": 17, "REPEAT": 2, "SIZE": 4},
+            # Non power of 2 repeats
+            {"DATA_WIDTH": 32, "REPEAT": 3, "SIZE": 4},
+            # Non power of 2 buffer size
+            {"DATA_WIDTH": 32, "REPEAT": 2, "SIZE": 7},
+            # Purely random params
+            *[generate_random_params() for _ in range(5)],
+        ]
+    )

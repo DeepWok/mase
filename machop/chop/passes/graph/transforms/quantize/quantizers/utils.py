@@ -33,6 +33,7 @@ class MyRound(InplaceFunction):
         grad_input = grad_output.clone()
         return grad_input
 
+
 class MyFloor(InplaceFunction):
     @staticmethod
     def forward(ctx, input):

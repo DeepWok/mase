@@ -17,10 +17,9 @@ class _BatchNorm2dBase(nn.BatchNorm2d):
         momentum: float = 0.1,
         affine: bool = True,
         track_running_stats: bool = True,
-        device = None,
-        dtype = None,
+        device=None,
+        dtype=None,
     ) -> None:
-
         super().__init__(
             num_features, eps, momentum, affine, track_running_stats, device, dtype
         )
@@ -28,7 +27,6 @@ class _BatchNorm2dBase(nn.BatchNorm2d):
         self.x_quantizer = None
 
     def forward(self, x: Tensor) -> Tensor:
-
         if self.training:
             bn_training = True
         else:
@@ -60,9 +58,9 @@ class BatchNorm2dInteger(_BatchNorm2dBase):
         momentum: float = 0.1,
         affine: bool = True,
         track_running_stats: bool = True,
-        device = None,
-        dtype = None,
-        config = None,
+        device=None,
+        dtype=None,
+        config=None,
     ) -> None:
         super().__init__(
             num_features, eps, momentum, affine, track_running_stats, device, dtype

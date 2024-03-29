@@ -30,7 +30,7 @@ norm = {
         "norm/rtl/rms_norm_2d.sv",
         "norm/rtl/batch_norm_2d.sv",
         "norm/rtl/norm.sv",
-    ]
+    ],
 }
 
 INTERNAL_COMP = {
@@ -60,9 +60,9 @@ INTERNAL_COMP = {
             ],
         },
     ],
-    "batch_norm2d" : [norm],
-    "layer_norm" : [norm],
-    "group_norm" : [norm],
-    "instance_norm2d" : [norm],
-    "rms_norm" : [norm],
+    "batch_norm2d": [norm],
+    "layer_norm": [norm],
+    "group_norm": [norm],
+    "instance_norm2d": [norm],
+    "rms_norm": [norm],
 }

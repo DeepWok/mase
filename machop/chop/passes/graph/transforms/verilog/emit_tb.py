@@ -31,6 +31,7 @@ for _ in range({channels} * batches):
 inputs["{arg}"] = {arg}_in
 """.strip()
 
+
 def _reconstruct_input_4d(
     arg: str,
     channels: int,
@@ -54,6 +55,7 @@ def _reconstruct_input_4d(
 recon_dict["{arg}"] = {arg}_recon
 """.strip()
 
+
 def _process_output_4d(
     arg: str,
     total_dim0: int,
@@ -75,15 +77,19 @@ for i in range({arg}_flat.shape[0]):
 return {arg}_monitor_exp
 """.strip()
 
+
 def _make_stream_driver(data, valid, ready):
     return f"StreamDriver(dut.clk, dut.{data}, dut.{valid}, dut.{ready})"
 
+
 def _make_stream_monitor(data, valid, ready, width, signed, error_bits):
-    return f"ErrorThresholdStreamMonitor(dut.clk, dut.{data}, dut.{valid}, " \
-           f"dut.{ready}, width={width}, signed={signed}, error_bits={error_bits})"
+    return (
+        f"ErrorThresholdStreamMonitor(dut.clk, dut.{data}, dut.{valid}, "
+        f"dut.{ready}, width={width}, signed={signed}, error_bits={error_bits})"
+    )
+
 
 def _emit_cocotb_tb_str(graph, tb_dir: Path):
-
     # Drivers and Monitors
     drivers = []
     for arg in graph.meta["mase"]["common"]["args"].keys():
@@ -94,8 +100,12 @@ def _emit_cocotb_tb_str(graph, tb_dir: Path):
         prec = graph.meta["mase"]["common"]["results"][res]["precision"]
         monitors.append(
             _make_stream_monitor(
-                res, f"{res}_valid", f"{res}_ready",
-                prec[0], True, error_bits=5  # TODO: determine error bits
+                res,
+                f"{res}_valid",
+                f"{res}_ready",
+                prec[0],
+                True,
+                error_bits=5,  # TODO: determine error bits
             )
         )
 
@@ -114,9 +124,9 @@ def _emit_cocotb_tb_str(graph, tb_dir: Path):
         node_name = graph_inputs[i].name
         shape = arg_info["shape"]
         precision = arg_info["precision"]
-        parallelism = get_node_by_name(
-            graph.fx_graph, node_name
-        ).meta["mase"]["hardware"]["parallelism"]
+        parallelism = get_node_by_name(graph.fx_graph, node_name).meta["mase"][
+            "hardware"
+        ]["parallelism"]
 
         # Input shape: (N, C, H, W)
         if len(shape) == 4:
@@ -152,9 +162,7 @@ def _emit_cocotb_tb_str(graph, tb_dir: Path):
             raise NotImplementedError()
 
         else:
-            raise Exception(
-                f"Not sure how to drive {len(shape)} dimensional input."
-            )
+            raise Exception(f"Not sure how to drive {len(shape)} dimensional input.")
 
     # Output processing
     graph_outputs = graph.meta["mase"]["common"]["nodes_out"]
@@ -165,9 +173,9 @@ def _emit_cocotb_tb_str(graph, tb_dir: Path):
     node_name = graph_outputs[0].name
     shape = result_info["shape"]
     precision = result_info["precision"]
-    parallelism = get_node_by_name(
-        graph.fx_graph, node_name
-    ).meta["mase"]["hardware"]["parallelism"]
+    parallelism = get_node_by_name(graph.fx_graph, node_name).meta["mase"]["hardware"][
+        "parallelism"
+    ]
 
     if len(shape) == 4:
         output_processing = _process_output_4d(
@@ -182,15 +190,13 @@ def _emit_cocotb_tb_str(graph, tb_dir: Path):
     elif len(shape) == 2:
         raise NotImplementedError()
     else:
-        raise Exception(
-            f"Not sure how to process {len(shape)} dimensional input."
-        )
+        raise Exception(f"Not sure how to process {len(shape)} dimensional input.")
 
-    driver_text = indent("\n".join(drivers), " "*12)
-    monitor_text = indent("\n".join(monitors), " "*12)
-    inputs_text = indent("\n".join(inputs), " "*8)
-    reconstruct_text = indent("\n".join(reconstructs), " "*8)
-    output_processing_text = indent(output_processing, " "*8)
+    driver_text = indent("\n".join(drivers), " " * 12)
+    monitor_text = indent("\n".join(monitors), " " * 12)
+    inputs_text = indent("\n".join(inputs), " " * 8)
+    reconstruct_text = indent("\n".join(reconstructs), " " * 8)
+    output_processing_text = indent(output_processing, " " * 8)
 
     testbench_template = f"""
 from mase_cocotb.testbench import Testbench

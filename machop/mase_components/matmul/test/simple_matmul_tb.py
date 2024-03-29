@@ -23,23 +23,30 @@ logger.setLevel(logging.INFO)
 
 
 class SimpleMatMulTB(Testbench):
-
     def __init__(self, dut) -> None:
         super().__init__(dut, dut.clk, dut.rst)
-        self.assign_self_params([
-            "N", "M", "K", "X_WIDTH", "Y_WIDTH", "OUT_WIDTH", "X_FRAC_WIDTH",
-            "Y_FRAC_WIDTH", "OUT_FRAC_WIDTH"
-        ])
+        self.assign_self_params(
+            [
+                "N",
+                "M",
+                "K",
+                "X_WIDTH",
+                "Y_WIDTH",
+                "OUT_WIDTH",
+                "X_FRAC_WIDTH",
+                "Y_FRAC_WIDTH",
+                "OUT_FRAC_WIDTH",
+            ]
+        )
 
-        self.X_MAX = 2 ** self.X_WIDTH - 1
-        self.Y_MAX = 2 ** self.Y_WIDTH - 1
+        self.X_MAX = 2**self.X_WIDTH - 1
+        self.Y_MAX = 2**self.Y_WIDTH - 1
 
-        self.x_driver = StreamDriver(dut.clk, dut.x_data,
-                                     dut.x_valid, dut.x_ready)
-        self.y_driver = StreamDriver(dut.clk, dut.y_data,
-                                     dut.y_valid, dut.y_ready)
-        self.output_monitor = StreamMonitor(dut.clk, dut.out_data,
-                                            dut.out_valid, dut.out_ready)
+        self.x_driver = StreamDriver(dut.clk, dut.x_data, dut.x_valid, dut.x_ready)
+        self.y_driver = StreamDriver(dut.clk, dut.y_data, dut.y_valid, dut.y_ready)
+        self.output_monitor = StreamMonitor(
+            dut.clk, dut.out_data, dut.out_valid, dut.out_ready
+        )
 
     def generate_inputs(self, random=False):
         if random:
@@ -48,11 +55,11 @@ class SimpleMatMulTB(Testbench):
             Y = (torch.rand(size=(self.M, self.K)) - 0.5) * 2
 
             # Scale up to entire range of numbers
-            X *= 2**(self.X_WIDTH - self.X_FRAC_WIDTH - 1)
-            Y *= 2**(self.Y_WIDTH - self.Y_FRAC_WIDTH - 1)
+            X *= 2 ** (self.X_WIDTH - self.X_FRAC_WIDTH - 1)
+            Y *= 2 ** (self.Y_WIDTH - self.Y_FRAC_WIDTH - 1)
         else:
-            X = torch.arange(self.N*self.M).reshape(self.N, self.M)
-            Y = torch.arange(self.M*self.K).reshape(self.M, self.K)
+            X = torch.arange(self.N * self.M).reshape(self.N, self.M)
+            Y = torch.arange(self.M * self.K).reshape(self.M, self.K)
 
         X = quantize_to_int(X, self.X_WIDTH, self.X_FRAC_WIDTH)
         Y = quantize_to_int(Y, self.Y_WIDTH, self.Y_FRAC_WIDTH)
@@ -78,8 +85,12 @@ class SimpleMatMulTB(Testbench):
         logger.debug(Y_input)
 
         logger.debug("Sign Extended & Scaled")
-        X_input = sign_extend_t(X_input, self.X_WIDTH).type(torch.float32) / (2**self.X_FRAC_WIDTH)
-        Y_input = sign_extend_t(Y_input, self.Y_WIDTH).type(torch.float32) / (2**self.Y_FRAC_WIDTH)
+        X_input = sign_extend_t(X_input, self.X_WIDTH).type(torch.float32) / (
+            2**self.X_FRAC_WIDTH
+        )
+        Y_input = sign_extend_t(Y_input, self.Y_WIDTH).type(torch.float32) / (
+            2**self.Y_FRAC_WIDTH
+        )
         logger.debug(X_input)
         logger.debug(Y_input)
 
@@ -108,6 +119,7 @@ async def small_positive_nums(dut):
     await Timer(1, units="us")
     assert tb.output_monitor.exp_queue.empty()
 
+
 @cocotb.test()
 async def repeated_multiply(dut):
     """Repeated multiplication with small positive numbers"""
@@ -123,6 +135,7 @@ async def repeated_multiply(dut):
     await Timer(100, units="us")
     assert tb.output_monitor.exp_queue.empty()
 
+
 @cocotb.test()
 async def random_multiply(dut):
     """Single multiplication with random floats"""
@@ -137,6 +150,7 @@ async def random_multiply(dut):
     tb.output_monitor.expect(exp_out)
     await Timer(1, units="us")
     assert tb.output_monitor.exp_queue.empty()
+
 
 @cocotb.test()
 async def random_repeated_multiply(dut):
@@ -172,6 +186,7 @@ async def random_repeated_multiply_backpressure(dut):
     await Timer(100, units="us")
     assert tb.output_monitor.exp_queue.empty()
 
+
 @cocotb.test()
 async def random_repeated_multiply_valid(dut):
     """Many multiplications with random floats"""
@@ -189,6 +204,7 @@ async def random_repeated_multiply_valid(dut):
         tb.output_monitor.expect(exp_out)
     await Timer(200, units="us")
     assert tb.output_monitor.exp_queue.empty()
+
 
 @cocotb.test()
 async def random_repeated_multiply_valid_backpressure(dut):
@@ -208,12 +224,14 @@ async def random_repeated_multiply_valid_backpressure(dut):
     await Timer(300, units="us")
     assert tb.output_monitor.exp_queue.empty()
 
+
 def generate_random_dimensions(low, high):
     return {
         "N": randint(low, high),
         "M": randint(low, high),
         "K": randint(low, high),
     }
+
 
 def generate_random_widths():
     widths = {
@@ -231,10 +249,14 @@ def generate_random_widths():
 
 if __name__ == "__main__":
     # Run tests with different params
-    mase_runner(module_param_list=[
-        {"N": 2, "M": 2, "K": 2},
-        {"N": 2, "M": 3, "K": 4},
-        {"N": 1, "M": 10, "K": 1},
-        *[{**generate_random_dimensions(2, 4), **generate_random_widths()}
-          for _ in range(5)]
-    ])
+    mase_runner(
+        module_param_list=[
+            {"N": 2, "M": 2, "K": 2},
+            {"N": 2, "M": 3, "K": 4},
+            {"N": 1, "M": 10, "K": 1},
+            *[
+                {**generate_random_dimensions(2, 4), **generate_random_widths()}
+                for _ in range(5)
+            ],
+        ]
+    )

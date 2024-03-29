@@ -3,6 +3,7 @@
 from copy import copy
 from pathlib import Path
 from os import makedirs
+
 # from itertools import batched  # Python 3.12
 
 import torch
@@ -14,16 +15,11 @@ from mase_cocotb.testbench import Testbench
 
 
 class ChannelSelectionTB(Testbench):
-
     def __init__(self, dut) -> None:
         super().__init__(dut, dut.clk, dut.rst)
-        self.assign_self_params([
-            "NUM_CHANNELS",
-            "NUM_BLOCKS",
-            "STATE_WIDTH",
-            "OUT_WIDTH",
-            "MAX_STATE"
-        ])
+        self.assign_self_params(
+            ["NUM_CHANNELS", "NUM_BLOCKS", "STATE_WIDTH", "OUT_WIDTH", "MAX_STATE"]
+        )
 
     def generate_inputs(self, num_clocks):
         return num_clocks
@@ -50,24 +46,22 @@ class ChannelSelectionTB(Testbench):
 @cocotb.test()
 async def basic(dut):
     tb = ChannelSelectionTB(dut)
-    num_clocks = tb.generate_inputs(2 ** (tb.STATE_WIDTH+1))
+    num_clocks = tb.generate_inputs(2 ** (tb.STATE_WIDTH + 1))
     ref = tb.model(num_clocks)
 
     await tb.reset()
 
-    assert(ref[0] == dut.channel.value.integer), f"<<< --- Test Failed --- >>>"
+    assert ref[0] == dut.channel.value.integer, f"<<< --- Test Failed --- >>>"
 
     for i in range(1, num_clocks):
         await RisingEdge(dut.clk)
-        assert (ref[i] == dut.channel.value.integer), f"<<< --- Test failed --- >>>"
+        assert ref[i] == dut.channel.value.integer, f"<<< --- Test failed --- >>>"
+
 
 if __name__ == "__main__":
 
     def gen_cfg(num_channels, num_blocks):
-        return {
-                "NUM_CHANNELS": num_channels,
-                "NUM_BLOCKS": num_blocks
-                }
+        return {"NUM_CHANNELS": num_channels, "NUM_BLOCKS": num_blocks}
 
     def full_sweep():
         module_param_list = []
@@ -76,9 +70,9 @@ if __name__ == "__main__":
                 params = gen_cfg(i, n)
                 module_param_list.append(params)
         return module_param_list
-    
+
     mase_runner(
-            module_param_list=full_sweep(),
-            #module_param_list=[gen_cfg(2, 1)],
+        module_param_list=full_sweep(),
+        # module_param_list=[gen_cfg(2, 1)],
         trace=True,
     )

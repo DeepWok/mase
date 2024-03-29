@@ -1,7 +1,8 @@
 from chop.passes.graph.utils import vf
 from chop.passes.graph.analysis.add_metadata.hardware_metadata_layers import (
-    INTERNAL_COMP
+    INTERNAL_COMP,
 )
+
 
 def get_verilog_parameters(graph):
     parameter_map = {}

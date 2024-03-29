@@ -17,7 +17,8 @@ class Driver:
         if not hasattr(self, "log"):
             self.log = SimLog(
                 "cocotb.driver.%s" % (type(self).__qualname__)
-                if self.name == None else self.name
+                if self.name == None
+                else self.name
             )
 
         # Create an independent coroutine which can send stuff

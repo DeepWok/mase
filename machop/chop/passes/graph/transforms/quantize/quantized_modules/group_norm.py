@@ -12,9 +12,7 @@ from ..quantizers import (
 )
 
 
-from mase_components.fixed_arithmetic.test.isqrt_sw import (
-    isqrt_sw2
-)
+from mase_components.fixed_arithmetic.test.isqrt_sw import isqrt_sw2
 
 logger = logging.getLogger(__file__)
 logger.setLevel(logging.DEBUG)
@@ -27,8 +25,8 @@ class _GroupNormBase(nn.GroupNorm):
         num_channels: int,
         eps: float = 0.00001,
         affine: bool = True,
-        device = None,
-        dtype = None,
+        device=None,
+        dtype=None,
     ) -> None:
         super().__init__(num_groups, num_channels, eps, affine, device, dtype)
 
@@ -48,9 +46,9 @@ class GroupNormInteger(_GroupNormBase):
         num_channels: int,
         eps: float = 0.00001,
         affine: bool = True,
-        device = None,
-        dtype = None,
-        config = None,
+        device=None,
+        dtype=None,
+        config=None,
     ) -> None:
         super().__init__(num_groups, num_channels, eps, affine, device, dtype)
         assert config is not None, "config is None!"

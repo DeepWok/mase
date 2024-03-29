@@ -17,12 +17,10 @@ class _RMSNormBase(rms.RMSNorm):
         normalized_shape,
         eps: float = 1e-8,
         elementwise_affine: bool = True,
-        device = None,
-        dtype = None,
+        device=None,
+        dtype=None,
     ):
-        super().__init__(
-            normalized_shape, eps, elementwise_affine, device, dtype
-        )
+        super().__init__(normalized_shape, eps, elementwise_affine, device, dtype)
         self.bypass = False
         self.x_quantizer = None
         self.w_quantizer = None
@@ -37,13 +35,11 @@ class RMSNormInteger(_RMSNormBase):
         normalized_shape,
         eps: float = 1e-8,
         elementwise_affine: bool = False,
-        device = None,
-        dtype = None,
-        config = None,
+        device=None,
+        dtype=None,
+        config=None,
     ):
-        super().__init__(
-            normalized_shape, eps, elementwise_affine, device, dtype
-        )
+        super().__init__(normalized_shape, eps, elementwise_affine, device, dtype)
         assert config is not None, "config is None!"
         self.config = config
         self.bypass = config.get("bypass", False)
@@ -52,10 +48,10 @@ class RMSNormInteger(_RMSNormBase):
         self.x_quantizer = partial(
             integer_quantizer,
             width=config["data_in_width"],
-            frac_width=config["data_in_frac_width"]
+            frac_width=config["data_in_frac_width"],
         )
         self.w_quantizer = partial(
             integer_quantizer,
             width=config["weight_width"],
-            frac_width=config["weight_frac_width"]
+            frac_width=config["weight_frac_width"],
         )

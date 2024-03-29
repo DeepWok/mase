@@ -18,14 +18,11 @@ logger.setLevel(logging.DEBUG)
 class LutTB(Testbench):
     def __init__(self, dut) -> None:
         super().__init__(dut, dut.clk)
-        self.assign_self_params([
-            "DATA_WIDTH", "SIZE", "OUTPUT_REG"
-        ])
+        self.assign_self_params(["DATA_WIDTH", "SIZE", "OUTPUT_REG"])
 
     def generate_inputs(self, batches=1):
         """Generate random addresses."""
-        return [randint(0, (self.SIZE-1)) for _ in range(batches)]
-
+        return [randint(0, (self.SIZE - 1)) for _ in range(batches)]
 
 
 @cocotb.test()
@@ -67,21 +64,23 @@ def write_memb(file: Path, nums: list[int], width: int):
         #  fail on last line of mem file :(
         f.write("\n".join(num_str) + "\n")
 
+
 def read_memb(file: Path, width):
     with open(file, "r") as f:
         lines = f.readlines()
     return [int(line.strip(), 2) for line in lines]
 
+
 if __name__ == "__main__":
     DATA_WIDTH = 8
     SIZE = 13
-    lut = list(range(SIZE+1))
+    lut = list(range(SIZE + 1))
     memfile = Path(__file__).parent.parent / "rtl" / "lut_mem0.mem"
     write_memb(memfile, lut, width=DATA_WIDTH)
     config = {
         "DATA_WIDTH": DATA_WIDTH,
         "SIZE": SIZE,
         "OUTPUT_REG": 1,
-        "MEM_FILE": verilator_str_param(str(memfile))
+        "MEM_FILE": verilator_str_param(str(memfile)),
     }
     mase_runner(module_param_list=[config], trace=True)

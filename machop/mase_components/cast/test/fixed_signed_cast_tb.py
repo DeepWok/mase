@@ -20,7 +20,7 @@ from chop.passes.graph.transforms.quantize.quantizers.utils import (
 def _fixed_signed_cast_model(
     float_input, out_width, out_frac_width, symmetric, rounding_mode
 ):
-    scaled_float = float_input * (2 ** out_frac_width)
+    scaled_float = float_input * (2**out_frac_width)
     if rounding_mode == "floor":
         out_int = my_floor(scaled_float)
     elif rounding_mode == "round_nearest_half_even":
@@ -29,10 +29,10 @@ def _fixed_signed_cast_model(
         raise Exception("Rounding mode not recognised.")
     out_int = my_clamp(
         out_int,
-        -(2**(out_width-1))+1 if symmetric else -(2**(out_width-1)),
-        (2**(out_width-1))-1
+        -(2 ** (out_width - 1)) + 1 if symmetric else -(2 ** (out_width - 1)),
+        (2 ** (out_width - 1)) - 1,
     )
-    out_float = out_int / (2 ** out_frac_width)
+    out_float = out_int / (2**out_frac_width)
     # out_uint is a non-differentiable path
     out_uint = signed_to_unsigned(out_int.int(), out_width)
     return out_float, out_uint
@@ -42,16 +42,22 @@ logger = logging.getLogger("testbench")
 logger.setLevel(logging.INFO)
 
 
-
 class FixedSignedCastTB(Testbench):
     def __init__(self, dut) -> None:
         super().__init__(dut)
 
-        self.assign_self_params([
-            "IN_WIDTH", "IN_FRAC_WIDTH", "OUT_WIDTH", "OUT_FRAC_WIDTH",
-            "SYMMETRIC", "ROUND_FLOOR", "ROUND_TRUNCATE",
-            "ROUND_NEAREST_INT_HALF_EVEN"
-        ])
+        self.assign_self_params(
+            [
+                "IN_WIDTH",
+                "IN_FRAC_WIDTH",
+                "OUT_WIDTH",
+                "OUT_FRAC_WIDTH",
+                "SYMMETRIC",
+                "ROUND_FLOOR",
+                "ROUND_TRUNCATE",
+                "ROUND_NEAREST_INT_HALF_EVEN",
+            ]
+        )
 
     def generate_inputs(self):
         uints = torch.arange(2**self.IN_WIDTH)
@@ -75,7 +81,7 @@ class FixedSignedCastTB(Testbench):
             out_width=self.OUT_WIDTH,
             out_frac_width=self.OUT_FRAC_WIDTH,
             symmetric=self.SYMMETRIC,
-            rounding_mode=self.rounding_mode()
+            rounding_mode=self.rounding_mode(),
         )
 
 
@@ -93,9 +99,7 @@ async def exhaustive_test(dut):
         await Timer(10, "ns")
         got_y = int(dut.out_data.value)
 
-        assert got_y == exp_output[i], (
-            f"Output did not match! Got {got_y}, Exp {exp_y}"
-        )
+        assert got_y == exp_output[i], f"Output did not match! Got {got_y}, Exp {exp_y}"
 
 
 if __name__ == "__main__":
@@ -107,81 +111,78 @@ if __name__ == "__main__":
         "SYMMETRIC": 0,
         "ROUND_FLOOR": 1,
         "ROUND_TRUNCATE": 0,
-        "ROUND_NEAREST_INT_HALF_EVEN": 0
+        "ROUND_NEAREST_INT_HALF_EVEN": 0,
     }
 
     def gen_width_change_configs(cfg_list):
         l = list()
         for cfg in cfg_list:
-            l.extend([
-                {
-                    **cfg,
-                    "OUT_WIDTH": DEFAULT_CONFIG["OUT_WIDTH"] + 1
-                },
-                {
-                    **cfg,
-                    "OUT_WIDTH": DEFAULT_CONFIG["OUT_WIDTH"] - 1
-                },
-                {
-                    **cfg,
-                    "OUT_FRAC_WIDTH": DEFAULT_CONFIG["OUT_FRAC_WIDTH"]+1
-                },
-                {
-                    **cfg,
-                    "OUT_FRAC_WIDTH": DEFAULT_CONFIG["OUT_FRAC_WIDTH"]-1
-                },
-                {
-                    **cfg,
-                    "OUT_WIDTH": DEFAULT_CONFIG["OUT_WIDTH"] + 1,
-                    "OUT_FRAC_WIDTH": DEFAULT_CONFIG["OUT_FRAC_WIDTH"] - 2
-                },
-                {
-                    **cfg,
-                    "OUT_WIDTH": DEFAULT_CONFIG["OUT_WIDTH"] + 1,
-                    "OUT_FRAC_WIDTH": DEFAULT_CONFIG["OUT_FRAC_WIDTH"] + 2
-                },
-                {
-                    **cfg,
-                    "OUT_WIDTH": DEFAULT_CONFIG["OUT_WIDTH"] - 1,
-                    "OUT_FRAC_WIDTH": DEFAULT_CONFIG["OUT_FRAC_WIDTH"] - 2
-                },
-                {
-                    **cfg,
-                    "OUT_WIDTH": DEFAULT_CONFIG["OUT_WIDTH"] - 1,
-                    "OUT_FRAC_WIDTH": DEFAULT_CONFIG["OUT_FRAC_WIDTH"] + 2
-                },
-            ])
+            l.extend(
+                [
+                    {**cfg, "OUT_WIDTH": DEFAULT_CONFIG["OUT_WIDTH"] + 1},
+                    {**cfg, "OUT_WIDTH": DEFAULT_CONFIG["OUT_WIDTH"] - 1},
+                    {**cfg, "OUT_FRAC_WIDTH": DEFAULT_CONFIG["OUT_FRAC_WIDTH"] + 1},
+                    {**cfg, "OUT_FRAC_WIDTH": DEFAULT_CONFIG["OUT_FRAC_WIDTH"] - 1},
+                    {
+                        **cfg,
+                        "OUT_WIDTH": DEFAULT_CONFIG["OUT_WIDTH"] + 1,
+                        "OUT_FRAC_WIDTH": DEFAULT_CONFIG["OUT_FRAC_WIDTH"] - 2,
+                    },
+                    {
+                        **cfg,
+                        "OUT_WIDTH": DEFAULT_CONFIG["OUT_WIDTH"] + 1,
+                        "OUT_FRAC_WIDTH": DEFAULT_CONFIG["OUT_FRAC_WIDTH"] + 2,
+                    },
+                    {
+                        **cfg,
+                        "OUT_WIDTH": DEFAULT_CONFIG["OUT_WIDTH"] - 1,
+                        "OUT_FRAC_WIDTH": DEFAULT_CONFIG["OUT_FRAC_WIDTH"] - 2,
+                    },
+                    {
+                        **cfg,
+                        "OUT_WIDTH": DEFAULT_CONFIG["OUT_WIDTH"] - 1,
+                        "OUT_FRAC_WIDTH": DEFAULT_CONFIG["OUT_FRAC_WIDTH"] + 2,
+                    },
+                ]
+            )
         return l
 
     def gen_symmetric(cfg_list):
         l = list()
         for cfg in cfg_list:
-            l.extend([
-                {**cfg, "SYMMETRIC": 0},
-                {**cfg, "SYMMETRIC": 1},
-            ])
+            l.extend(
+                [
+                    {**cfg, "SYMMETRIC": 0},
+                    {**cfg, "SYMMETRIC": 1},
+                ]
+            )
         return l
 
     def gen_rounding(cfg_list):
         l = list()
         for cfg in cfg_list:
-            l.extend([
-                {**cfg,
-                    "ROUND_FLOOR": 1,
-                    "ROUND_TRUNCATE": 0,
-                    "ROUND_NEAREST_INT_HALF_EVEN": 0
-                },
-                {**cfg,
-                    "ROUND_FLOOR": 0,
-                    "ROUND_TRUNCATE": 1,
-                    "ROUND_NEAREST_INT_HALF_EVEN": 0
-                },
-                {**cfg,
-                    "ROUND_FLOOR": 0,
-                    "ROUND_TRUNCATE": 0,
-                    "ROUND_NEAREST_INT_HALF_EVEN": 1
-                },
-            ])
+            l.extend(
+                [
+                    {
+                        **cfg,
+                        "ROUND_FLOOR": 1,
+                        "ROUND_TRUNCATE": 0,
+                        "ROUND_NEAREST_INT_HALF_EVEN": 0,
+                    },
+                    {
+                        **cfg,
+                        "ROUND_FLOOR": 0,
+                        "ROUND_TRUNCATE": 1,
+                        "ROUND_NEAREST_INT_HALF_EVEN": 0,
+                    },
+                    {
+                        **cfg,
+                        "ROUND_FLOOR": 0,
+                        "ROUND_TRUNCATE": 0,
+                        "ROUND_NEAREST_INT_HALF_EVEN": 1,
+                    },
+                ]
+            )
         return l
 
     cfg_list = [DEFAULT_CONFIG]
@@ -200,7 +201,7 @@ if __name__ == "__main__":
                 "IN_FRAC_WIDTH": 2,
                 "OUT_WIDTH": 8,
                 "OUT_FRAC_WIDTH": 1,
-            }
+            },
         ],
         trace=True,
     )

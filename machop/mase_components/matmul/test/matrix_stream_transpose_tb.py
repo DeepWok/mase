@@ -13,7 +13,7 @@ from mase_cocotb.utils import bit_driver
 from mase_cocotb.matrix_tools import (
     gen_random_matrix_input,
     rebuild_matrix,
-    split_matrix
+    split_matrix,
 )
 
 logger = logging.getLogger("testbench")
@@ -21,32 +21,40 @@ logger.setLevel(logging.DEBUG)
 
 
 class MatrixStreamTransposeTB(Testbench):
-
     def __init__(self, dut) -> None:
         super().__init__(dut, dut.clk, dut.rst)
-        self.assign_self_params([
-            "TOTAL_DIM0", "TOTAL_DIM1", "COMPUTE_DIM0", "COMPUTE_DIM1",
-            "DATA_WIDTH"
-        ])
+        self.assign_self_params(
+            ["TOTAL_DIM0", "TOTAL_DIM1", "COMPUTE_DIM0", "COMPUTE_DIM1", "DATA_WIDTH"]
+        )
 
-        self.in_driver = StreamDriver(dut.clk, dut.in_data,
-                                      dut.in_valid, dut.in_ready)
-        self.out_monitor = StreamMonitor(dut.clk, dut.out_data, dut.out_valid,
-                                         dut.out_ready, check=True)
+        self.in_driver = StreamDriver(dut.clk, dut.in_data, dut.in_valid, dut.in_ready)
+        self.out_monitor = StreamMonitor(
+            dut.clk, dut.out_data, dut.out_valid, dut.out_ready, check=True
+        )
 
     def generate_inputs(self):
         return gen_random_matrix_input(
-            self.TOTAL_DIM0, self.TOTAL_DIM1,
-            self.COMPUTE_DIM0, self.COMPUTE_DIM1,
-            self.DATA_WIDTH, 0
+            self.TOTAL_DIM0,
+            self.TOTAL_DIM1,
+            self.COMPUTE_DIM0,
+            self.COMPUTE_DIM1,
+            self.DATA_WIDTH,
+            0,
         )
 
     def model(self, X):
         # Note: Dimensions are transposed
-        X_matrix = rebuild_matrix(X, self.TOTAL_DIM0, self.TOTAL_DIM1,
-                                  self.COMPUTE_DIM0, self.COMPUTE_DIM1)
-        return split_matrix(X_matrix.T, self.TOTAL_DIM1, self.TOTAL_DIM0,
-                            self.COMPUTE_DIM1, self.COMPUTE_DIM0)
+        X_matrix = rebuild_matrix(
+            X, self.TOTAL_DIM0, self.TOTAL_DIM1, self.COMPUTE_DIM0, self.COMPUTE_DIM1
+        )
+        return split_matrix(
+            X_matrix.T,
+            self.TOTAL_DIM1,
+            self.TOTAL_DIM0,
+            self.COMPUTE_DIM1,
+            self.COMPUTE_DIM0,
+        )
+
 
 @cocotb.test()
 async def single_transpose(dut):
@@ -61,6 +69,7 @@ async def single_transpose(dut):
         tb.out_monitor.expect(y)
     await Timer(1, units="us")
     assert tb.out_monitor.exp_queue.empty()
+
 
 @cocotb.test()
 async def multiple_transpose(dut):
@@ -77,6 +86,7 @@ async def multiple_transpose(dut):
     await Timer(100, units="us")
     assert tb.out_monitor.exp_queue.empty()
 
+
 @cocotb.test()
 async def multiple_transpose_backpressure(dut):
     tb = MatrixStreamTransposeTB(dut)
@@ -91,6 +101,7 @@ async def multiple_transpose_backpressure(dut):
             tb.out_monitor.expect(y)
     await Timer(100, units="us")
     assert tb.out_monitor.exp_queue.empty()
+
 
 @cocotb.test()
 async def multiple_transpose_valid_backpressure(dut):
@@ -108,6 +119,7 @@ async def multiple_transpose_valid_backpressure(dut):
     await Timer(200, units="us")
     assert tb.out_monitor.exp_queue.empty()
 
+
 def gen_random_params():
     compute_dim0 = randint(2, 3)
     compute_dim1 = randint(2, 3)
@@ -116,8 +128,9 @@ def gen_random_params():
         "TOTAL_DIM1": compute_dim1 * randint(1, 3),
         "COMPUTE_DIM0": compute_dim0,
         "COMPUTE_DIM1": compute_dim1,
-        "DATA_WIDTH": randint(2, 10)
+        "DATA_WIDTH": randint(2, 10),
     }
+
 
 if __name__ == "__main__":
     # Run tests with different params
@@ -129,19 +142,17 @@ if __name__ == "__main__":
                 "TOTAL_DIM1": 4,
                 "COMPUTE_DIM0": 2,
                 "COMPUTE_DIM1": 2,
-                "DATA_WIDTH": randint(2, 10)
+                "DATA_WIDTH": randint(2, 10),
             },
-
             # Rectangle Test
             {
                 "TOTAL_DIM0": 4,
                 "TOTAL_DIM1": 2,
                 "COMPUTE_DIM0": 2,
                 "COMPUTE_DIM1": 2,
-                "DATA_WIDTH": randint(2, 10)
+                "DATA_WIDTH": randint(2, 10),
             },
-
             # Random test
-            *[gen_random_params() for _ in range(5)]
+            *[gen_random_params() for _ in range(5)],
         ]
     )

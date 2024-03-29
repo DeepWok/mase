@@ -11,11 +11,14 @@ from mase_cocotb.testbench import Testbench
 from mase_cocotb.interfaces.streaming import StreamDriver, StreamMonitor
 from mase_cocotb.runner import mase_runner
 from mase_cocotb.matrix_tools import (
-    gen_random_matrix_input, rebuild_matrix, split_matrix
+    gen_random_matrix_input,
+    rebuild_matrix,
+    split_matrix,
 )
 
 logger = logging.getLogger("testbench")
 logger.setLevel(logging.DEBUG)
+
 
 class TransposeTB(Testbench):
     def __init__(self, dut) -> None:
@@ -25,8 +28,7 @@ class TransposeTB(Testbench):
     def generate_inputs(self):
         # Compute dimensions = total dimensions
         inputs = gen_random_matrix_input(
-            self.DIM0, self.DIM1, self.DIM0, self.DIM1,
-            self.WIDTH, 0 # 0 frac width
+            self.DIM0, self.DIM1, self.DIM0, self.DIM1, self.WIDTH, 0  # 0 frac width
         )
         return inputs[0]
 
@@ -36,6 +38,7 @@ class TransposeTB(Testbench):
         # DIM0 becomes DIM1 in the new matrix and vice versa
         AT = split_matrix(A.T, self.DIM1, self.DIM0, self.DIM1, self.DIM0)[0]
         return AT
+
 
 @cocotb.test()
 async def test_transpose(dut):
@@ -52,12 +55,15 @@ async def test_transpose(dut):
 def generate_random_params(num=3):
     cfgs = list()
     for _ in range(num):
-        cfgs.append({
-            "WIDTH": randint(1, 16),
-            "DIM0": randint(2, 12),
-            "DIM1": randint(2, 12),
-        })
+        cfgs.append(
+            {
+                "WIDTH": randint(1, 16),
+                "DIM0": randint(2, 12),
+                "DIM1": randint(2, 12),
+            }
+        )
     return cfgs
+
 
 if __name__ == "__main__":
     mase_runner(module_param_list=generate_random_params())

@@ -57,18 +57,13 @@ from .relu import (
     ReLUBinary,
     ReLUTernary,
 )
-from .batch_norm2d import (
-    BatchNorm2dInteger
-)
+from .batch_norm2d import BatchNorm2dInteger
 from .layer_norm import (
     LayerNormInteger,
 )
-from .group_norm import (
-    GroupNormInteger
-)
-from .instance_norm2d import (
-    InstanceNorm2dInteger
-)
+from .group_norm import GroupNormInteger
+from .instance_norm2d import InstanceNorm2dInteger
+
 # from .rms_norm import (
 #     RMSNormInteger
 # )

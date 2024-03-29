@@ -23,15 +23,9 @@ def timing_util(folder: Path):
             design_timing_sum_line = line_num
         if line.find("Clock Summary") != -1:
             clock_summary_line = line_num
-        if (
-            design_timing_sum_line != None and
-            line_num == design_timing_sum_line + 6
-        ):
+        if design_timing_sum_line != None and line_num == design_timing_sum_line + 6:
             wns = float(line.split()[0])
-        if (
-            clock_summary_line != None and
-            line_num == clock_summary_line + 6
-        ):
+        if clock_summary_line != None and line_num == clock_summary_line + 6:
             clk_period = float(line.split()[3])
 
     # Parse Utilization Report
@@ -46,24 +40,23 @@ def timing_util(folder: Path):
     bram = None
 
     for line in util_text:
-
         if lut_logic == None and line.find("LUT as Logic") != -1:
-            lut_logic = int(line.split('|')[2].strip())
+            lut_logic = int(line.split("|")[2].strip())
 
         if lut_mem == None and line.find("LUT as Memory") != -1:
-            lut_mem = int(line.split('|')[2].strip())
+            lut_mem = int(line.split("|")[2].strip())
 
         if registers == None and line.find("CLB Registers") != -1:
-            registers = int(line.split('|')[2].strip())
+            registers = int(line.split("|")[2].strip())
 
         if carry8 == None and line.find("CARRY8") != -1:
-            carry8 = int(line.split('|')[2].strip())
+            carry8 = int(line.split("|")[2].strip())
 
         if dsp == None and line.find("DSPs") != -1:
-            dsp = int(line.split('|')[2].strip())
+            dsp = int(line.split("|")[2].strip())
 
         if bram == None and line.find("Block RAM Tile") != -1:
-            bram = int(line.split('|')[2].strip())
+            bram = int(line.split("|")[2].strip())
 
     return {
         "wns": wns,
@@ -76,12 +69,14 @@ def timing_util(folder: Path):
         "bram": bram,
     }
 
+
 def insert_data(data_dict: dict, new_val: dict):
     for k, v in new_val.items():
         if k in data_dict:
             data_dict[k].append(v)
         else:
             data_dict[k] = [v]
+
 
 def gather_data(build_dir: Path):
     data = {}
@@ -93,18 +88,22 @@ def gather_data(build_dir: Path):
             if timing_util_data == None:
                 continue
             print(timing_util_data)
-            insert_data(data, {
-                "norm": top,
-                "width": bitwidth,
-                "frac_width": bitwidth // 2,
-                **timing_util_data
-            })
+            insert_data(
+                data,
+                {
+                    "norm": top,
+                    "width": bitwidth,
+                    "frac_width": bitwidth // 2,
+                    **timing_util_data,
+                },
+            )
     return pd.DataFrame(data)
+
 
 if __name__ == "__main__":
     data = gather_data(Path("build"))
     data["ns"] = data["clk_period"] - data["wns"]
-    data["fmax"] = 1 / (data["ns"] * (10 ** -9))
+    data["fmax"] = 1 / (data["ns"] * (10**-9))
     data["fmax_mhz"] = data["fmax"] / 1_000_000
 
     print(data)

@@ -14,14 +14,12 @@ from isqrt_sw import range_reduction_sw, int_to_float
 class VerificationCase(Testbench):
     def __init__(self, dut) -> None:
         super().__init__(dut)
-        self.assign_self_params([
-            "WIDTH"
-        ])
+        self.assign_self_params(["WIDTH"])
 
     def generate_inputs(self):
-        samples = 2 ** self.WIDTH
+        samples = 2**self.WIDTH
         return [val for val in range(0, samples)], samples
-        
+
     def model(self, inputs):
         ref = []
         for x in inputs:
@@ -51,8 +49,8 @@ async def test_fixed_range_reduction(dut):
 
         # Check the output.
         assert (
-                dut.data_out.value.integer == expected
-            ), f"""
+            dut.data_out.value.integer == expected
+        ), f"""
             <<< --- Test failed --- >>>
             Input: 
             X  : {int_to_float(data_a, 8, 8)}
@@ -64,7 +62,9 @@ async def test_fixed_range_reduction(dut):
             {int_to_float(expected, 1, 15)}
             """
 
+
 if __name__ == "__main__":
+
     def full_sweep():
         parameter_list = []
         for width in range(1, 17):
@@ -73,6 +73,6 @@ if __name__ == "__main__":
         return parameter_list
 
     parameter_list = full_sweep()
-    #parameter_list = [{"WIDTH": 2}]
+    # parameter_list = [{"WIDTH": 2}]
 
     mase_runner(module_param_list=parameter_list)

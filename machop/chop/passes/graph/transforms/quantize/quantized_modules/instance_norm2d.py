@@ -17,10 +17,9 @@ class _InstanceNorm2dBase(nn.InstanceNorm2d):
         momentum: float = 0.1,
         affine: bool = False,
         track_running_stats: bool = False,
-        device = None,
-        dtype = None,
+        device=None,
+        dtype=None,
     ) -> None:
-
         assert affine == False, "elementwise_affine not supported!"
         super().__init__(
             num_features, eps, momentum, affine, track_running_stats, device, dtype
@@ -32,8 +31,14 @@ class _InstanceNorm2dBase(nn.InstanceNorm2d):
         if not self.bypass:
             x = self.x_quantizer(x)
         return F.instance_norm(
-            x, self.running_mean, self.running_var, self.weight, self.bias,
-            self.training or not self.track_running_stats, self.momentum, self.eps
+            x,
+            self.running_mean,
+            self.running_var,
+            self.weight,
+            self.bias,
+            self.training or not self.track_running_stats,
+            self.momentum,
+            self.eps,
         )
 
 
@@ -45,9 +50,9 @@ class InstanceNorm2dInteger(_InstanceNorm2dBase):
         momentum: float = 0.1,
         affine: bool = False,
         track_running_stats: bool = False,
-        device = None,
-        dtype = None,
-        config = None,
+        device=None,
+        dtype=None,
+        config=None,
     ) -> None:
         super().__init__(
             num_features, eps, momentum, affine, track_running_stats, device, dtype

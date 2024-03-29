@@ -12,7 +12,7 @@ from mase_cocotb.z_qlayers import quantize_to_int
 def batched(iterable, n=1):
     l = len(iterable)
     for ndx in range(0, l, n):
-        yield iterable[ndx:min(ndx + n, l)]
+        yield iterable[ndx : min(ndx + n, l)]
 
 
 def binary_encode(x):
@@ -65,7 +65,7 @@ def int_floor_quantizer(x: Tensor, width: int, frac_width: int, signed=True):
     else:
         int_min = 0
         int_max = 2**width - 1
-    scale = 2 ** frac_width
+    scale = 2**frac_width
     return torch.clamp(torch.floor(x.mul(scale)), int_min, int_max).div(scale)
 
 
@@ -78,4 +78,4 @@ def random_2d_dimensions():
 
 
 def verilator_str_param(s):
-    return f"\"{s}\""
+    return f'"{s}"'
