@@ -24,7 +24,7 @@ def test_rl_search():
     max_token_len = 512
     num_workers = 0
     disable_dataset_cache = False
-    accelerator = "gpu"
+    accelerator = "cpu"
     load_name = None
     load_type = "pl"
     load_name = None
