@@ -139,7 +139,7 @@ def add_norm_metadata_gen_lut_analysis_pass(mg, config={}):
     return mg, {}
 
 
-def test_emit_verilog_norm(net, x):
+def emit_verilog_norm(net, x):
     import chop.ir.graph.mase_graph as mase_graph
 
     mg = mase_graph.MaseGraph(model=net)
@@ -207,7 +207,7 @@ def test_emit_verilog_norm(net, x):
     # os.system(f"python3 {testfile}/test.py")
 
 
-if __name__ == "__main__":
+def test_emit_verilog_norm():
     # N, C, H, W
     shape = [10, 4, 8, 8]
 
@@ -246,4 +246,8 @@ if __name__ == "__main__":
                 return self.norm_layer(x)
 
         net = Net()
-        test_emit_verilog_norm(net, x)
+        emit_verilog_norm(net, x)
+
+
+if __name__ == "__main__":
+    test_emit_verilog_norm()
