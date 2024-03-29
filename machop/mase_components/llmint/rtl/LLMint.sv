@@ -87,11 +87,12 @@ TENSOR_SIZE_DIM
 
   logic bias_ready;
   logic bias_valid;
-  logic [ORIGINAL_PRECISION-1:0] bias;
+  logic [ORIGINAL_PRECISION-1:0] bias[TENSOR_SIZE_DIM-1:0];
 
   assign bias_ready = 1;
   assign bias_valid = 1;
-  assign bias = 0;
+  assign bias = '{default: 0};
+  
 
   fixed_linear #(
       .DATA_IN_0_PRECISION_0(REDUCED_PRECISION),
@@ -106,7 +107,8 @@ TENSOR_SIZE_DIM
       .WEIGHT_PARALLELISM_DIM_1(1),
       .DATA_OUT_0_TENSOR_SIZE_DIM_0(TENSOR_SIZE_DIM),
       .DATA_OUT_0_TENSOR_SIZE_DIM_1(1),
-      .DATA_OUT_0_PARALLELISM_DIM_1(1)
+      .DATA_OUT_0_PARALLELISM_DIM_1(1),
+      .BIAS_PRECISION_0(ORIGINAL_PRECISION)
   ) low_precision_linear (
       .clk(clk),
       .rst(rst),
@@ -142,7 +144,8 @@ TENSOR_SIZE_DIM
       .WEIGHT_PARALLELISM_DIM_1(1),
       .DATA_OUT_0_TENSOR_SIZE_DIM_0(TENSOR_SIZE_DIM),
       .DATA_OUT_0_TENSOR_SIZE_DIM_1(1),
-      .DATA_OUT_0_PARALLELISM_DIM_1(1)
+      .DATA_OUT_0_PARALLELISM_DIM_1(1),
+      .BIAS_PRECISION_0(ORIGINAL_PRECISION)
   ) high_precision_linear (
       .clk(clk),
       .rst(rst),
