@@ -52,7 +52,6 @@ MASE_HW_DEPS = {
     "norm/group_norm_2d": ["common", "matmul", "fixed_arithmetic", "norm", "cast"],
     "norm/rms_norm_2d": ["common", "matmul", "fixed_arithmetic", "norm", "cast"],
     "norm/batch_norm_2d": ["norm", "common", "cast", "matmul"],
-    "norm/channel_selection": [],
     # TODO: Geniune test case failure
     # "ViT/fixed_patch_embed": [
     #     "conv",

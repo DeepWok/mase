@@ -74,7 +74,7 @@ def read_memb(file: Path, width):
 if __name__ == "__main__":
     DATA_WIDTH = 8
     SIZE = 13
-    lut = list(range(SIZE + 1))
+    lut = list(range(SIZE))
     memfile = Path(__file__).parent.parent / "rtl" / "lut_mem0.mem"
     write_memb(memfile, lut, width=DATA_WIDTH)
     config = {

@@ -18,7 +18,7 @@ class ChannelSelectionTB(Testbench):
     def __init__(self, dut) -> None:
         super().__init__(dut, dut.clk, dut.rst)
         self.assign_self_params(
-            ["NUM_CHANNELS", "NUM_BLOCKS", "STATE_WIDTH", "OUT_WIDTH", "MAX_STATE"]
+            ["NUM_CHANNELS", "NUM_SPATIAL_BLOCKS", "S_STATE_WIDTH"]
         )
 
     def generate_inputs(self, num_clocks):
@@ -61,7 +61,7 @@ async def basic(dut):
 if __name__ == "__main__":
 
     def gen_cfg(num_channels, num_blocks):
-        return {"NUM_CHANNELS": num_channels, "NUM_BLOCKS": num_blocks}
+        return {"NUM_CHANNELS": num_channels, "NUM_SPATIAL_BLOCKS": num_blocks}
 
     def full_sweep():
         module_param_list = []
