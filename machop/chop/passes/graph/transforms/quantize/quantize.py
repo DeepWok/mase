@@ -78,7 +78,7 @@ def graph_iterator_quantize_by_type(graph, config: dict):
                 bl_module,
                 successor_module,
             )
-           # new_module = create_new_module(get_mase_op(node),ori_module,node_config,node.meta,bl_module,successor_module)
+            # new_module = create_new_module(get_mase_op(node),ori_module,node_config,node.meta,bl_module,successor_module)
             parent_name, name = get_parent_name(node.target)
             setattr(graph.modules[parent_name], name, new_module)
             # update precision and type in meta.parameters["common"]

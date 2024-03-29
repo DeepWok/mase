@@ -20,8 +20,10 @@ def save_graph_module_ckpt(graph_module: fx.GraphModule, save_path: str) -> None
     :param save_path: the directory for saving
     :type save_path: str
     """
-    #torch.save(graph_module, save_path)
-    torch.save(graph_module.state_dict(), save_path)  # Serialization of parametrized modules
+    # torch.save(graph_module, save_path)
+    torch.save(
+        graph_module.state_dict(), save_path
+    )  # Serialization of parametrized modules
 
 
 def save_state_dict_ckpt(graph_module: fx.GraphModule, save_path: str) -> None:
@@ -142,7 +144,7 @@ def save_mase_graph_interface_pass(graph, pass_args: dict = {}):
     # collect metadata.parameters
     node_n_meta_param = collect_n_meta_param(graph)
     # save metadata.parameters to toml
-    save_n_meta_param(node_n_meta_param, n_meta_param_ckpt) 
+    save_n_meta_param(node_n_meta_param, n_meta_param_ckpt)
     # reset metadata to empty dict {}
     graph = graph_iterator_remove_metadata(graph)
     # save graph module & state dict

@@ -13,7 +13,7 @@ import pdb
 
 # Housekeeping -------------------------------------------------------------------------
 os.environ["PYTHONBREAKPOINT"] = "ipdb.set_trace"
-#print(os.getcwd())
+# print(os.getcwd())
 sys.path.append(Path(__file__).resolve().parents[5].as_posix())
 
 import chop.models as models
@@ -41,9 +41,9 @@ logger = logging.getLogger("chop.test")
 pp = pprint.PrettyPrinter(indent=4)
 
 configs = [
-    #"scope_local_granularity_elementwise_method_random",
+    # "scope_local_granularity_elementwise_method_random",
     "scope_local_granularity_elementwise_method_l1",
-    #"scope_global_granularity_elementwise_method_l1",
+    # "scope_global_granularity_elementwise_method_l1",
 ]
 
 
@@ -64,8 +64,8 @@ def run_with_config(config_file):
 
     model_name = "vgg7"
     dataset_name = "cifar10"
-    #model_name = "jsc-toy"
-    #dataset_name = "jsc"
+    # model_name = "jsc-toy"
+    # dataset_name = "jsc"
 
     # NOTE: We're only concerned with pre-trained vision models
     dataset_info = get_dataset_info(dataset_name)
@@ -148,35 +148,34 @@ def run_with_config(config_file):
 
     mg = graph
 
-    '''
+    """
     # We've proved that weights & biases of the pruned model is torch.float32, using the following code:
     for name, param in mg.model.named_parameters():
         print(f"{name}:")
         print(f"  Data type: {param.dtype}")
-    '''
-    
+    """
+
     def model_storage_size(model, weight_bit_width, bias_bit_width, data_bit_width):
-        total_bits = 0 
+        total_bits = 0
         for name, param in model.named_parameters():
-            if param.requires_grad and 'weight' in name:
+            if param.requires_grad and "weight" in name:
                 bits = param.numel() * weight_bit_width
                 total_bits += bits
 
-            elif param.requires_grad and 'bias' in name:
+            elif param.requires_grad and "bias" in name:
                 bits = param.numel() * bias_bit_width
                 total_bits += bits
 
-        total_bits += data_bit_width*(1*16+1) # mean and variance
+        total_bits += data_bit_width * (1 * 16 + 1)  # mean and variance
 
         total_bytes = total_bits / 8
         return total_bytes
-    
+
     postprune_model_size = model_storage_size(mg.model, 32, 32, 32)
 
     print(postprune_model_size)
-    
 
-    '''  
+    """  
     # print the pruned weights of one convolution layer
     count=0
     for n in mg.fx_graph.nodes:
@@ -185,9 +184,9 @@ def run_with_config(config_file):
             if count==2:
                 print(n.meta['mase'].module.weight)
                 break
-    '''
+    """
 
-    '''
+    """
     import torch
     all_weights=[]
     for n in mg.fx_graph.nodes:
@@ -199,10 +198,10 @@ def run_with_config(config_file):
     for value in all_weights:  
         filename.write(str(value)) 
     filename.close()
-    '''  
+    """
 
     # start to train
-    
+
     from pytorch_lightning.callbacks import ModelCheckpoint
     import pytorch_lightning as pl
     import torch
@@ -235,19 +234,20 @@ def run_with_config(config_file):
 
     pl_model = LightningModel(model, learning_rate=3e-4)
 
-
     gradients = []
+
     def save_grad(grad):
         gradients.append(grad)
+
     hook = pl_model.fc1.weight.register_hook(save_grad)
 
     trainer_args = {
-    'max_epochs': 10,
-    #'progress_bar_refresh_rate': 20,
-    #'callbacks': [ModelCheckpoint(monitor='val_loss')]
-    'callbacks': [TQDMProgressBar(refresh_rate=10)],
-    'devices': 1,
-    'accelerator': "gpu"
+        "max_epochs": 10,
+        #'progress_bar_refresh_rate': 20,
+        #'callbacks': [ModelCheckpoint(monitor='val_loss')]
+        "callbacks": [TQDMProgressBar(refresh_rate=10)],
+        "devices": 1,
+        "accelerator": "gpu",
     }
 
     # 初始化训练器

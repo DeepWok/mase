@@ -2,6 +2,7 @@ import torch
 from chop.passes.graph.analysis.utils import fetch_attr, load_arg
 import pdb
 
+
 def graph_iterator_for_metadata(graph, dummy_in=None, add_value=True):
     """
     largely adapted from https://pytorch.org/docs/stable/fx.html
@@ -42,9 +43,7 @@ def graph_iterator_for_metadata(graph, dummy_in=None, add_value=True):
 
             meta = node.meta["mase"]
             if isinstance(modules[node.target], (torch.nn.Conv2d)):
-                mask = (
-                    modules[node.target].parametrizations.weight[0].mask  
-                )
+                mask = modules[node.target].parametrizations.weight[0].mask
                 weight_sparsity = 1 - float(mask.sum() / mask.numel())
                 meta.parameters["software"]["args"]["weight"][
                     "sparsity"

@@ -1,4 +1,4 @@
-def huffman_decode_pass (layer_huffman_info):
+def huffman_decode_pass(layer_huffman_info):
     # decode
 
     import torch

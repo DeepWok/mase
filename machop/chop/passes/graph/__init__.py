@@ -68,7 +68,7 @@ TRANSFORM_PASSES = [
     "prune_detach_hook" "conv_bn_fusion",
     "logicnets_fusion",
     "huffman",
-    "huffman_decode"
+    "huffman_decode",
 ]
 
 INTERFACE_PASSES = [

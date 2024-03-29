@@ -10,7 +10,7 @@ class VisionModelWrapper(WrapperBase):
         weight_decay=0,
         epochs=200,
         optimizer=None,
-        batch_size=128, # self added
+        batch_size=128,  # self added
     ):
         super().__init__(
             model=model,

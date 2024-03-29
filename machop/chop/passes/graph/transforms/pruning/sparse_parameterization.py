@@ -1,5 +1,6 @@
 import torch
 
+
 # Parametrizations
 class FakeSparseWeight(torch.nn.Module):
     r"""Parametrization for the weights. Should be attached to the 'weight' or
@@ -21,9 +22,13 @@ class FakeSparseWeight(torch.nn.Module):
             self.mask = self.mask.expand(x.shape)
         except:
             if len(self.mask.shape) == 2:
-                self.mask = self.mask.view(self.mask.shape[0],self.mask.shape[1], 1, 1).expand(-1,-1,3,3)
+                self.mask = self.mask.view(
+                    self.mask.shape[0], self.mask.shape[1], 1, 1
+                ).expand(-1, -1, 3, 3)
             if len(self.mask.shape) == 1:
-                self.mask = self.mask.view(self.mask.shape[0], 1, 1, 1).expand(-1,x.shape[1],3,3)
+                self.mask = self.mask.view(self.mask.shape[0], 1, 1, 1).expand(
+                    -1, x.shape[1], 3, 3
+                )
         assert self.mask.shape == x.shape
         return self.mask * x
 

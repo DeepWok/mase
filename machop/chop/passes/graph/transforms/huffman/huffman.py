@@ -1,5 +1,5 @@
 def huffman_transform_pass(
-        pl_model, cf_args, model_info, data_module, task, accelerator, pass_config
+    pl_model, cf_args, model_info, data_module, task, accelerator, pass_config
 ):
     import torch
     import pickle
@@ -52,7 +52,7 @@ def huffman_transform_pass(
     new_graph, _ = PASSES["quantize"](new_graph, pass_args=pass_config)
 
     for node in new_graph.nodes:
-        if isinstance(get_node_actual_target(node), torch.nn.modules.Conv2d): 
+        if isinstance(get_node_actual_target(node), torch.nn.modules.Conv2d):
             if "mase" in node.meta:
                 quantized_weight = get_node_actual_target(node).w_quantizer(
                     get_node_actual_target(node).weight
@@ -73,7 +73,6 @@ def huffman_transform_pass(
     """
     torch.save(new_graph.model.state_dict(), "chop/post_train_pruned_model.ckpt")
 
-
     # start huffman coding
 
     state_dict = new_graph.model.state_dict()
@@ -86,7 +85,9 @@ def huffman_transform_pass(
             weights_counter = Counter(weights)
 
             # build huffman tree
-            heap = [[weight, [symbol, ""]] for symbol, weight in weights_counter.items()]
+            heap = [
+                [weight, [symbol, ""]] for symbol, weight in weights_counter.items()
+            ]
             heapify(heap)
             while len(heap) > 1:
                 lo = heappop(heap)
@@ -117,22 +118,20 @@ def huffman_transform_pass(
 
     keys_to_replace = []
     for node in new_graph.nodes:
-        if isinstance(get_node_actual_target(node), torch.nn.modules.Conv2d): 
+        if isinstance(get_node_actual_target(node), torch.nn.modules.Conv2d):
             if "mase" in node.meta:
                 key_to_replace = (
-                    ".".join((".".join(node.name.rsplit("_", 1))).split("_", 1)) 
+                    ".".join((".".join(node.name.rsplit("_", 1))).split("_", 1))
                     + ".weight"
                 )
                 keys_to_replace.append(key_to_replace)
-    
-    #  keys replaced by huffman coding has value of tensor shape instead of tensor itself, so to reduce storage 
+
+    #  keys replaced by huffman coding has value of tensor shape instead of tensor itself, so to reduce storage
     huffman_state_dict = {
-        key: torch.tensor(list(value.shape)) if key in keys_to_replace else value 
+        key: torch.tensor(list(value.shape)) if key in keys_to_replace else value
         for key, value in new_graph.model.state_dict().items()
     }
 
     torch.save(huffman_state_dict, "chop/huffman_model.ckpt")
 
     return layer_huffman_info
-
-    

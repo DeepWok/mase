@@ -42,26 +42,26 @@ def get_weight_hook(name, info, named_info, w_config: dict):
 
 def get_weight_hook_channel(name, info, named_info, next_named_info, w_config: dict):
     w_rank_fn = get_weight_rank_fn(w_config)
-    value = named_info["value"] 
+    value = named_info["value"]
     if next_named_info != None:
         next_value = next_named_info["value"]
     else:
         next_value = None
     w_sparsity = named_info["weight_sparsity"]
     register_parameter_name = "weight"
-    parameterization = FakeSparseWeight(w_rank_fn(value, next_value, info, w_sparsity)) 
+    parameterization = FakeSparseWeight(w_rank_fn(value, next_value, info, w_sparsity))
     return (register_parameter_name, parameterization)
 
 
 def get_activation_hook(name, info, named_info, batch_size, a_config: dict):
     a_rank_fn = get_activation_rank_fn(a_config)
-    a_sparsity = named_info["activation_sparsity"]  
+    a_sparsity = named_info["activation_sparsity"]
 
     value = named_info["value"]
     register_parameter_name = "register_forward_pre_hook"
     global has_finished_prune
     global prune_count
-    
+
     # register forward hook
     def sparsify_input(module, args):
         global has_finished_prune
@@ -71,11 +71,11 @@ def get_activation_hook(name, info, named_info, batch_size, a_config: dict):
                 f"{module.__class__.__name__} takes more than 1 argument at inference, the current sparsiy_input pre forward hook only allows one!"
             )
         x = args[0]
-        mask = a_rank_fn(x, info, a_sparsity)   
+        mask = a_rank_fn(x, info, a_sparsity)
         module.activation_mask = mask
-        
+
         if not has_finished_prune:
-            prune_count+=1
+            prune_count += 1
             if prune_count >= 6:
                 has_finished_prune = True
         else:
@@ -83,25 +83,24 @@ def get_activation_hook(name, info, named_info, batch_size, a_config: dict):
                 act_masks = torch.load("act_masks.pth")
                 if x.shape == (batch_size, 3, 32, 32):
                     mask = act_masks[0]
-                elif x.shape == (batch_size,128,32,32):
+                elif x.shape == (batch_size, 128, 32, 32):
                     mask = act_masks[1]
-                elif x.shape == (batch_size,128,16,16):
+                elif x.shape == (batch_size, 128, 16, 16):
                     mask = act_masks[2]
-                elif x.shape == (batch_size,256,16,16):
+                elif x.shape == (batch_size, 256, 16, 16):
                     mask = act_masks[3]
-                elif x.shape == (batch_size,256,8,8):
+                elif x.shape == (batch_size, 256, 8, 8):
                     mask = act_masks[4]
-                elif x.shape == (batch_size,512,8,8):
+                elif x.shape == (batch_size, 512, 8, 8):
                     mask = act_masks[5]
                 else:
-                    pass   
+                    pass
             except:
                 pass
 
         return x * mask
 
     return ("register_forward_pre_hook", sparsify_input)
-    
 
 
 def build_pruning_hooks(info, w_config, a_config, batch_size):
@@ -160,21 +159,29 @@ def build_pruning_hooks_kernel(info, w_config, a_config, batch_size):
 
 def build_pruning_hooks_channel(info, w_config, a_config, batch_size):
     named_hooks = {}
-    tmp=list(info.items())
+    tmp = list(info.items())
 
     for index, kvpair in enumerate(tmp):
-        k = kvpair[0] ; v = kvpair[1]
+        k = kvpair[0]
+        v = kvpair[1]
         if v != None:
             if v["module_type"] in ["conv2d"]:
-                if index < len(tmp)-1:
+                if index < len(tmp) - 1:
                     for j in range(index + 1, len(tmp), 1):
-                        if tmp[j][1]!=None and (tmp[j][1]["module_type"] in ["conv2d"]):
+                        if tmp[j][1] != None and (
+                            tmp[j][1]["module_type"] in ["conv2d"]
+                        ):
                             next_kvpair = tmp[j]
                             next_k = next_kvpair[0]
                             next_v = next_kvpair[1]
                             break
-                        if j==len(tmp)-1 and (not (tmp[j][1] is not None and tmp[j][1]["module_type"] in ["conv2d"])):
-                            next_kvpair = None  
+                        if j == len(tmp) - 1 and (
+                            not (
+                                tmp[j][1] is not None
+                                and tmp[j][1]["module_type"] in ["conv2d"]
+                            )
+                        ):
+                            next_kvpair = None
                 else:
                     next_kvpair = None
 
@@ -204,11 +211,15 @@ def build_pruning_hooks_channel(info, w_config, a_config, batch_size):
                         "shape": v["activation_shape"],
                     }
                     named_hooks[k] = {
-                        "w_hook": get_weight_hook_channel(k, info, w_info, next_w_info, w_config),
-                        "a_hook": get_activation_hook(k, info, a_info, batch_size, a_config),
+                        "w_hook": get_weight_hook_channel(
+                            k, info, w_info, next_w_info, w_config
+                        ),
+                        "a_hook": get_activation_hook(
+                            k, info, a_info, batch_size, a_config
+                        ),
                     }
 
-                else: # the last call_module
+                else:  # the last call_module
                     # for weights
                     w_info = {
                         "module_type": v["module_type"],
@@ -227,10 +238,14 @@ def build_pruning_hooks_channel(info, w_config, a_config, batch_size):
                         "shape": v["activation_shape"],
                     }
 
-                    next_w_info=None
+                    next_w_info = None
                     named_hooks[k] = {
-                        "w_hook": get_weight_hook_channel(k, info, w_info, next_w_info, w_config),
-                        "a_hook": get_activation_hook(k, info, a_info, batch_size, a_config),
+                        "w_hook": get_weight_hook_channel(
+                            k, info, w_info, next_w_info, w_config
+                        ),
+                        "a_hook": get_activation_hook(
+                            k, info, a_info, batch_size, a_config
+                        ),
                     }
 
     return named_hooks
@@ -293,7 +308,7 @@ def prune_graph_iterator(graph, batch_size, config: dict):
             module = graph.modules[node.target]
             meta = fetch_info(node, module)
             info[node.target] = meta
-    
+
     if w_config["granularity"] in ["channelwise"]:
         hooks = build_pruning_hooks_channel(info, w_config, a_config, batch_size)
     elif w_config["granularity"] in ["kernelwise"]:
@@ -309,7 +324,7 @@ def prune_graph_iterator(graph, batch_size, config: dict):
         # pruning only deals with modules at the moment
         if node.op == "call_module":
             module = graph.modules[node.target]
-            if isinstance(module, torch.nn.Conv2d): 
+            if isinstance(module, torch.nn.Conv2d):
                 name = node.target
                 if name in hooks.keys():
                     node_hooks = hooks[name]

@@ -207,22 +207,22 @@ def graph_iterator_for_metadata(
             if isinstance(module, torch.nn.Conv2d) or isinstance(
                 module, torch.nn.Linear
             ):
-              args = [
-                  (
-                      arg.to(module.weight.device) 
-                      if isinstance(arg, torch.Tensor) 
-                      else arg 
-                  ) 
-                  for arg in args
-              ]
-              kwargs = {
-                  key: (
-                      value.to(module.weight.device) 
-                      if isinstance(value, torch.Tensor) 
-                      else value
-                  )
-                  for key, value in kwargs.items()
-              }
+                args = [
+                    (
+                        arg.to(module.weight.device)
+                        if isinstance(arg, torch.Tensor)
+                        else arg
+                    )
+                    for arg in args
+                ]
+                kwargs = {
+                    key: (
+                        value.to(module.weight.device)
+                        if isinstance(value, torch.Tensor)
+                        else value
+                    )
+                    for key, value in kwargs.items()
+                }
             result = modules[node.target](*args, **kwargs)
             analyse_fn = analyse_common_parameters_module
         elif node.op == "output":
