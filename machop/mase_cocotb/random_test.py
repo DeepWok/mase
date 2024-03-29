@@ -47,10 +47,8 @@ class RandomSource:
         elif arithmetic in ["llm-fp16-weight"]:
             self.rand_gen = lambda: random.randint(-5, 5)
         else:
-            self.rand_gen = lambda: random.randint(-3, 3)
+            self.rand_gen = lambda: random.randint(0, 30)
             # self.rand_gen = lambda: random.randint(-random.randint(15, 30), random.randint(15, 30))
-            # self.rand_gen = lambda: random.randint(-1,1)
-            # self.rand_gen = lambda: random.randint(1,1)
 
         if len(data_specify) == 0:
             if is_data_vector:
