@@ -1,5 +1,5 @@
 # import wandb
-import tensorboard
+# import tensorboard
 from ..base import SearchStrategyBase
 from .env import env_map, registered_env_map
 from pprint import pprint
@@ -136,7 +136,7 @@ class StrategyRL(SearchStrategyBase):
             algorithm_kwargs = {
                 "verbose": 1,
                 "device": self.device,
-                "tensorboard_log": "./logs/",
+                # "tensorboard_log": "./logs/",
                 "learning_rate": self.learning_rate,
             }
 
