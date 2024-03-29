@@ -86,14 +86,14 @@ async def test_fixed_nr_stage(dut):
             error == 0
         ), f"""
             <<< --- Test failed --- >>>
-            Input: 
+            Input:
             X  : {int_to_float(data_a, 1, width-1)}
             LUT: {int_to_float(data_b, 1, width-1)}
 
             Output:
             Out: {int_to_float(dut.data_out.value.integer, 1, width-1)}
-            
-            Expected: 
+
+            Expected:
             {int_to_float(expected, 1, width-1)}
 
             Error:
@@ -110,6 +110,4 @@ if __name__ == "__main__":
         return parameter_list
 
     parameter_list = full_sweep()
-    # parameter_list = [{"WIDTH": 3}]
-
     mase_runner(module_param_list=parameter_list)

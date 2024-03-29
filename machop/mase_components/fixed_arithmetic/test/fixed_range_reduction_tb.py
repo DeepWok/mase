@@ -52,13 +52,13 @@ async def test_fixed_range_reduction(dut):
             dut.data_out.value.integer == expected
         ), f"""
             <<< --- Test failed --- >>>
-            Input: 
+            Input:
             X  : {int_to_float(data_a, 8, 8)}
 
             Output:
             Out: {int_to_float(dut.data_out.value.integer, 1, 15)}
-            
-            Expected: 
+
+            Expected:
             {int_to_float(expected, 1, 15)}
             """
 
@@ -73,6 +73,5 @@ if __name__ == "__main__":
         return parameter_list
 
     parameter_list = full_sweep()
-    # parameter_list = [{"WIDTH": 2}]
 
     mase_runner(module_param_list=parameter_list)
