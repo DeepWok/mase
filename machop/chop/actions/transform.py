@@ -565,7 +565,7 @@ def transform(
                 ]
 
                 """
-                basic hyperparameters
+                basic hyperparameterss
                 """
                 pl_model = wrapper_cls(
                     model,
