@@ -8,6 +8,7 @@ from ..quantizers import (
     integer_quantizer,
 )
 
+
 class _BatchNorm1dBase(torch.nn.BatchNorm1d):
     def __init__(
         self,
@@ -17,10 +18,11 @@ class _BatchNorm1dBase(torch.nn.BatchNorm1d):
         affine: bool = True,
         track_running_stats: bool = True,
         device=None,
-        dtype=None       
+        dtype=None,
     ) -> None:
-
-        super().__init__(num_features, eps, momentum, affine, track_running_stats, device, dtype)
+        super().__init__(
+            num_features, eps, momentum, affine, track_running_stats, device, dtype
+        )
         self.bypass = False
 
         # NOTE(jlsand): In Torch, the batch norm classes refer to the learnable parameters gamma and beta
@@ -31,7 +33,6 @@ class _BatchNorm1dBase(torch.nn.BatchNorm1d):
 
         # Register mean as a named parameter
         self.mean = torch.nn.Parameter(torch.zeros_like(self.weight))
-
 
     def forward(self, x: Tensor) -> Tensor:
         if self.bypass:
@@ -54,7 +55,9 @@ class _BatchNorm1dBase(torch.nn.BatchNorm1d):
                 if self.num_batches_tracked is not None:  # type: ignore[has-type]
                     self.num_batches_tracked.add_(1)  # type: ignore[has-type]
                     if self.momentum is None:  # use cumulative moving average
-                        exponential_average_factor = 1.0 / float(self.num_batches_tracked)
+                        exponential_average_factor = 1.0 / float(
+                            self.num_batches_tracked
+                        )
                     else:  # use exponential moving average
                         exponential_average_factor = self.momentum
 
@@ -74,7 +77,7 @@ class _BatchNorm1dBase(torch.nn.BatchNorm1d):
 
             mean = self.w_quantizer(self.running_mean)
             var = self.b_quantizer(self.running_var)
-            
+
             r"""
             Buffers are only updated if they are to be tracked and we are in training mode. Thus they only need to be
             passed when the update should occur (i.e. in training mode when they are tracked), or when buffer stats are
@@ -103,10 +106,14 @@ class BatchNorm1dInteger(_BatchNorm1dBase):
         track_running_stats: bool = True,
         device=None,
         dtype=None,
-        config=None
+        config=None,
     ) -> None:
-        super().__init__(num_features, eps, momentum, affine, track_running_stats, device, dtype)
-        assert config is not None, "Attempted to initialise BatchNorm1dInteger with config as None"
+        super().__init__(
+            num_features, eps, momentum, affine, track_running_stats, device, dtype
+        )
+        assert (
+            config is not None
+        ), "Attempted to initialise BatchNorm1dInteger with config as None"
 
         self.config = config
         self.bypass = config.get("bypass", False)

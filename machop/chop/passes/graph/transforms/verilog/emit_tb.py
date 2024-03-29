@@ -29,6 +29,11 @@ async def test(dut):
     with open(tb_path / "tb_obj.dill", "rb") as f:
         tb = dill.load(f)(dut)
 
+    def dump(obj):
+        for attr in dir(obj):
+            print("obj.%s = %r" % (attr, getattr(obj, attr)))
+
+    print(f"\n\n\n DUT DUT DUT {dump(dut)} \n\n\n")
     tb.initialize()
 
     in_tensors = tb.generate_inputs(batches=3)
@@ -51,6 +56,7 @@ import cocotb
     tb_path.mkdir(parents=True, exist_ok=True)
     with open(tb_path / "test.py", "w") as f:
         f.write(test_template)
+
 
 #     verilator_build = f"""
 # #!/bin/bash

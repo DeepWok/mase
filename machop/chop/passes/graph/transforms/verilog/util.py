@@ -18,5 +18,5 @@ def get_verilog_parameters(graph):
                 f"{node_name}_{key}" not in parameter_map.keys()
             ), f"{node_name}_{key} already exists in the parameter map"
             parameter_map[f"{node_name}_{key}"] = value
-
+    print("\n\n\nparameter map: ", parameter_map)
     return parameter_map

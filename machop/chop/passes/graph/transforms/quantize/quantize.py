@@ -31,7 +31,7 @@ QUANTIZEABLE_OP = (
     "relu",
     "sub",
     "batch_norm1d",
-    "layer_norm"
+    "layer_norm",
 )
 
 

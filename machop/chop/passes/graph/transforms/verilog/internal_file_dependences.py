@@ -14,7 +14,7 @@ INTERNAL_RTL_DEPENDENCIES = {
         "cast/rtl/fixed_rounding.sv",
     ],
     "relu": ["activations/fixed_relu.sv"],
-    "batch_norm1d" : [
+    "batch_norm1d": [
         "normalisation/rtl/fixed_batch_norm1d.sv",
         "normalisation/rtl/convert_parallelism.sv",
         "cast/rtl/fixed_cast.sv",
@@ -23,8 +23,8 @@ INTERNAL_RTL_DEPENDENCIES = {
         "common/rtl/join_n.sv",
         "common/rtl/join2.sv",
     ],
-    "layer_norm" : [
+    "layer_norm": [
         "normalisation/rtl/fixed_layer_norm.sv",
-        "normalisation/rtl/sqrt.sv"
-    ]
+        "normalisation/rtl/sqrt.sv",
+    ],
 }

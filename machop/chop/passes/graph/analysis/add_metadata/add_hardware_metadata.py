@@ -372,7 +372,7 @@ def add_hardware_metadata_analysis_pass(graph, pass_args=None):
     # Temporary: fix parallelism to small value to enable verilator simulation
     for node in graph.nodes:
         # Batch parallelism set to 1, data parallelism to 4
-        node.meta["mase"]["hardware"]["parallelism"] = [1, 4]
+        node.meta["mase"]["hardware"]["parallelism"] = [1, 16]
 
     # Add hardware parameters
     for node in graph.nodes:

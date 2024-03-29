@@ -72,7 +72,8 @@ model = get_model(
     task="cls",
     dataset_info=data_module.dataset_info,
     pretrained=True,
-    checkpoint = None)
+    checkpoint=None,
+)
 
 print(model)
 mg = MaseGraph(model=model)
@@ -107,8 +108,8 @@ mg, _ = init_metadata_analysis_pass(mg, None)
 mg, _ = add_common_metadata_analysis_pass(
     mg, {"dummy_in": dummy_in, "add_value": False}
 )
-mg, _ = report_node_meta_param_analysis_pass(mg, {"which": ("software", )})
-mg, _ = report_node_meta_param_analysis_pass(mg, {"which": ("common", )})
+mg, _ = report_node_meta_param_analysis_pass(mg, {"which": ("software",)})
+mg, _ = report_node_meta_param_analysis_pass(mg, {"which": ("common",)})
 
 # Save the original mase graph for the sake of comparison with quantised MaseGraph
 ori_mg = MaseGraph(model=model)
@@ -141,6 +142,7 @@ for node in mg.fx_graph.nodes:
             result_info["type"] = "fixed"
             result_info["precision"] = [8, 3]
 
+
 def quantize_and_compare(mg: MaseGraph, ori_mg: MaseGraph):
     pass_args = {
         "by": "type",
@@ -157,7 +159,6 @@ def quantize_and_compare(mg: MaseGraph, ori_mg: MaseGraph):
                 # bias
                 "bias_width": 8,
                 "bias_frac_width": 4,
-                
                 # # stdv
                 # "stdv_width": 8,
                 # "stdv_frac_width": 4,
@@ -170,17 +171,18 @@ def quantize_and_compare(mg: MaseGraph, ori_mg: MaseGraph):
     mg, _ = quantize_transform_pass(mg, pass_args)
     summarize_quantization_analysis_pass(ori_mg, mg, save_dir="quantize_summary")
     return mg
-# mg = quantize_and_compare(mg, ori_mg)
 
+
+# mg = quantize_and_compare(mg, ori_mg)
 
 
 # Ensure the node types are correct after the quantization pass.
 _ = report_node_type_analysis_pass(mg)
 
-mg, _ = report_node_meta_param_analysis_pass(mg, {"which": ("software", )})
-mg, _ = report_node_meta_param_analysis_pass(mg, {"which": ("common", )})
+mg, _ = report_node_meta_param_analysis_pass(mg, {"which": ("software",)})
+mg, _ = report_node_meta_param_analysis_pass(mg, {"which": ("common",)})
 
-# ------------------------ Own traversal of the original and quantised graphs ------------------- 
+# ------------------------ Own traversal of the original and quantised graphs -------------------
 from tabulate import tabulate
 
 from chop.passes.graph.utils import get_mase_op, get_mase_type, get_node_actual_target
@@ -189,9 +191,7 @@ from chop.tools.logger import get_logger
 logger = get_logger(__name__)
 
 
-def compared_pre_post_quantized_graphs(
-    ori_graph, graph, save_path=None, silent=False
-):
+def compared_pre_post_quantized_graphs(ori_graph, graph, save_path=None, silent=False):
     """List all nodes in the graph and compare the original and quantized nodes."""
 
     def get_type_str(node):
@@ -238,9 +238,9 @@ def compared_pre_post_quantized_graphs(
         logger.debug("Compare nodes:")
         logger.debug("\n" + tabulate(rows, headers=headers, tablefmt="orgtbl"))
     logger.info("\n" + tabulate(rows, headers=headers))
-    
-compared_pre_post_quantized_graphs(ori_mg, mg, save_path=None, silent=False)
 
+
+compared_pre_post_quantized_graphs(ori_mg, mg, save_path=None, silent=False)
 
 
 # ---------------- Test the software model -----------------------------------------
@@ -255,11 +255,11 @@ accs = []
 for inputs in data_module.train_dataloader():
     xs, ys = inputs
 
-    preds = mg.model(xs)    
+    preds = mg.model(xs)
     loss = torch.nn.functional.cross_entropy(preds, ys)
     acc = metric(preds, ys)
     accs.append(acc)
-    
+
     print("ACC: ", acc)
     if j > num_batches:
         break
@@ -274,14 +274,16 @@ print("AVG ACC: ", acc_avg)
 
 from pprint import pprint
 
+
 def dump_vars(object):
     print("\n")
     pprint(vars(object))
 
+
 def dump_all(obj):
     print("\n")
     for attr in dir(obj):
-        print("obj.%s = %r" % (attr, getattr(obj, attr)))    
+        print("obj.%s = %r" % (attr, getattr(obj, attr)))
 
 
 mg, _ = add_hardware_metadata_analysis_pass(mg, None)
@@ -296,7 +298,7 @@ mg, _ = emit_internal_rtl_transform_pass(mg)
 
 # Init block memory.
 # Emit testbench
-# mg, _ = emit_cocotb_transform_pass(mg)
+mg, _ = emit_cocotb_transform_pass(mg)
 
 
 from chop.actions import simulate

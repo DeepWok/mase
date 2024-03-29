@@ -4,8 +4,9 @@
 import os, logging
 
 import sys
-sys.path.insert(0,'/home/sv720/mase_fork/mase_group7/machop')
-sys.path.insert(0,'/home/jlsand/mase_group7/machop')
+
+sys.path.insert(0, "/home/sv720/mase_fork/mase_group7/machop")
+sys.path.insert(0, "/home/jlsand/mase_group7/machop")
 
 import cocotb
 from cocotb.log import SimLog
@@ -28,17 +29,16 @@ logger.setLevel(logging.DEBUG)
 
 
 class BatchNormTB(Testbench):
-    def __init__(self, dut, num_features=1) -> None: #, in_features=4, out_features=4
-        super().__init__(dut, dut.clk, dut.rst) #needed to add rst signal for inheritance
+    def __init__(self, dut, num_features=1) -> None:  # , in_features=4, out_features=4
+        super().__init__(
+            dut, dut.clk, dut.rst
+        )  # needed to add rst signal for inheritance
 
         if not hasattr(self, "log"):
             self.log = SimLog("%s" % (type(self).__qualname__))
 
         self.v_in_driver = StreamDriver(
-            dut.clk, 
-            dut.v_in, 
-            dut.v_in_valid,
-            dut.v_in_ready
+            dut.clk, dut.v_in, dut.v_in_valid, dut.v_in_ready
         )
 
         # self.weight_driver = StreamDriver(
@@ -48,7 +48,6 @@ class BatchNormTB(Testbench):
         # self.bias_driver = StreamDriver(
         #     dut.clk, dut.bias, dut.bias_valid, dut.bias_ready
         # )
-        
 
         self.v_out_monitor = StreamMonitor(
             dut.clk,
@@ -66,7 +65,7 @@ class BatchNormTB(Testbench):
         """
 
         self.model = BatchNorm1dInteger(
-            num_features,                
+            num_features,
             config={
                 "data_in_width": 8,
                 "data_in_frac_width": 3,
@@ -76,10 +75,10 @@ class BatchNormTB(Testbench):
                 "bias_frac_width": 3,
             },
         )
-    
-    def fe_model(self, data_in): 
-        #TODO: implement a functionally equivalent model here 
-        #TODO: combine with random testing
+
+    def fe_model(self, data_in):
+        # TODO: implement a functionally equivalent model here
+        # TODO: combine with random testing
         return data_in
 
     def preprocess_tensor(self, tensor, quantizer, config, parallelism):
@@ -91,15 +90,13 @@ class BatchNormTB(Testbench):
         # logger.info(f"\nTensor after reshaping: {tensor}")
         return tensor
 
-    
     def postprocess_tensor(self, tensor, config):
-        tensor = [item * (1.0/2.0) ** config["frac_width"] for item in tensor]
+        tensor = [item * (1.0 / 2.0) ** config["frac_width"] for item in tensor]
         return tensor
-    
-    async def run_test(self): 
-        await self.reset()
-        print(f'================= DEBUG: in run_test ================= \n')
 
+    async def run_test(self):
+        await self.reset()
+        print(f"================= DEBUG: in run_test ================= \n")
 
         # Train first to generate a running mean/average
         training_inputs = torch.randn((10, self.model.num_features))
@@ -112,66 +109,62 @@ class BatchNormTB(Testbench):
         # exp_outputs = self.model(inputs)
         # print("MEAN: ", self.model.running_mean)
         # print("MEAN: ", self.model.)
-        #print("Quantized inputs: ", self.model.x_quantizer(inputs))
-        
+        # print("Quantized inputs: ", self.model.x_quantizer(inputs))
+
         # inputs = self.preprocess_tensor(
-        #     inputs, 
-        #     self.model.x_quantizer, 
-        #     {"width": 8, "frac_width": 3}, 
+        #     inputs,
+        #     self.model.x_quantizer,
+        #     {"width": 8, "frac_width": 3},
         #     int(self.dut.PARALLELISM)
         # )
         # print("Pre-processed inputs: ", inputs)
-        
+
         # print("Post-processed inputs: ", self.postprocess_tensor(inputs[0], {"width": 8, "frac_width": 3}))
 
-        #print("INPUT SIZE:", len(inputs), len(inputs[0]))
-
-      
-
+        # print("INPUT SIZE:", len(inputs), len(inputs[0]))
 
         # print("Running variance: ", self.model.running_var)
         # stdv = torch.tensor([var ** (1.0/2.0) for var in self.model.running_var])
         # print("Stdv: ", stdv)
         # stdv = self.preprocess_tensor(
-        #     stdv, 
-        #     self.model.w_quantizer, 
-        #     {"width": 8, "frac_width": 3}, 
+        #     stdv,
+        #     self.model.w_quantizer,
+        #     {"width": 8, "frac_width": 3},
         #     int(self.dut.PARALLELISM)
         # )
 
         # print("Running mean: ", self.model.running_mean)
         # mean = self.preprocess_tensor(
-        #     self.model.running_mean, 
-        #     self.model.b_quantizer, 
-        #     {"width": 8, "frac_width": 3}, 
+        #     self.model.running_mean,
+        #     self.model.b_quantizer,
+        #     {"width": 8, "frac_width": 3},
         #     int(self.dut.PARALLELISM)
         # )
 
-
         self.v_out_monitor.ready.value = 1
-        print(f'================= DEBUG: asserted ready_out ================= \n')
+        print(f"================= DEBUG: asserted ready_out ================= \n")
 
         # print("MODEL VALUES: ", self.model.weight)
-     
-        
-        #self.dut.v_in.value = 100
-    
-        #inputs = 1
+
+        # self.dut.v_in.value = 100
+
+        # inputs = 1
         # n.b. 200 is 25 with 3 decimal bits (but out of range for 8 bits)
         # n.b. 128 is 16 with 3 decimal bits
 
-        inputs = [128, 64, 56] #,2,3,4,5,6,7,8] #[1] * 8
-        #inputs = torch.randn((3, self.model.num_features))
-        exp_output = [32, 22, 21] #32 is 4 with 3 decimal bits
+        inputs = [128, 64, 56]  # ,2,3,4,5,6,7,8] #[1] * 8
+        # inputs = torch.randn((3, self.model.num_features))
+        exp_output = [32, 22, 21]  # 32 is 4 with 3 decimal bits
         print(inputs)
 
-        self.v_in_driver.load_driver(inputs) #this needs to be a tensor
-        
+        self.v_in_driver.load_driver(inputs)  # this needs to be a tensor
+
         self.v_out_monitor.load_monitor(exp_output)
-        print(f'================= DEBUG: put values on input ports ================= \n')
+        print(
+            f"================= DEBUG: put values on input ports ================= \n"
+        )
         await Timer(1000, units="us")
-        
-       
+
         # print(stdv)
         # print(mean)
         # print(len(inputs[0]))
@@ -206,29 +199,28 @@ class BatchNormTB(Testbench):
         
         print(f'================= DEBUG: in run_test waited 1ms ================= \n')
         """
+
+
 @cocotb.test()
 async def simple_test(dut):
-        print(f'================= DEBUG: in simple_test ================= \n')
-        tb = BatchNormTB(dut)
-        print(f'================= DEBUG: initialized tb ================= \n')
+    print(f"================= DEBUG: in simple_test ================= \n")
+    tb = BatchNormTB(dut)
+    print(f"================= DEBUG: initialized tb ================= \n")
 
-        await tb.run_test()
-        print(f'================= DEBUG: ran test ================= \n')
+    await tb.run_test()
+    print(f"================= DEBUG: ran test ================= \n")
+
 
 if __name__ == "__main__":
     mase_runner(
         trace=True,
         module_param_list=[
-             {
+            {
                 "IN_WIDTH": 8,
                 "IN_FRAC_WIDTH": 3,
-                "NUM_ITERATION": 10, #N.B.: changing this requires changes in .sv state enum                  
-             }
-              
-        ]    
+                "NUM_ITERATION": 10,  # N.B.: changing this requires changes in .sv state enum
+            }
+        ],
     )
 
-
-
-    #def get_dut_parameters(self): #TODO: discuss need for this function
-        
+    # def get_dut_parameters(self): #TODO: discuss need for this function
