@@ -1,4 +1,3 @@
-/* verilator lint_off SELRANGE */
 module fixed_relu #(
     /* verilator lint_off UNUSEDPARAM */
     parameter DATA_IN_0_PRECISION_0 = 8,
