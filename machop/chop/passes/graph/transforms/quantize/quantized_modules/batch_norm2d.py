@@ -93,6 +93,7 @@ class BatchNorm2dInteger(_BatchNorm2dBase):
                 integer_quantizer, width=b_width, frac_width=b_frac_width
             )
 
+
 class BatchNorm2dBinary(_BatchNorm2dBase):
     def __init__(
         self,

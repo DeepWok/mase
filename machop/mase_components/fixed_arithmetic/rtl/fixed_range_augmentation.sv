@@ -8,9 +8,9 @@ module fixed_range_augmentation #(
     localparam MSB_WIDTH   = $clog2(WIDTH)
 ) (
     // Reduced y
-    input  logic [  2*WIDTH-1:0] data_a,   // FORMAT: Q(INT_WIDTH).(FRAC_WIDTH).
+    input  logic [  2*WIDTH-1:0] data_a,  // FORMAT: Q(INT_WIDTH).(FRAC_WIDTH).
     // MSB width
-    input  logic [MSB_WIDTH-1:0] data_b,   // FORMAT: Q(WIDTH).0.
+    input  logic [MSB_WIDTH-1:0] data_b,  // FORMAT: Q(WIDTH).0.
     output logic [  2*WIDTH-1:0] data_out  // FORMAT: Q1.(WIDTH-1).
 );
 

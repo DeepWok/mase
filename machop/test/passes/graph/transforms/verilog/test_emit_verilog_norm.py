@@ -217,8 +217,8 @@ def test_emit_verilog_norm():
             affine=False,
         ),
         nn.LayerNorm(
-           normalized_shape=shape[1:],
-           elementwise_affine=False,
+            normalized_shape=shape[1:],
+            elementwise_affine=False,
         ),
         nn.GroupNorm(
             num_groups=2,

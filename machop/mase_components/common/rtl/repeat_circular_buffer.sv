@@ -36,7 +36,7 @@ module repeat_circular_buffer #(
   struct {
     // Write state
     logic [PTR_WIDTH-1:0] write_ptr;
-    logic [ADDR_WIDTH:0]  size;
+    logic [ADDR_WIDTH:0] size;
 
     // Read state
     logic [PTR_WIDTH-1:0] read_ptr;

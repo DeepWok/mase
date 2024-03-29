@@ -17,9 +17,7 @@ from mase_cocotb.testbench import Testbench
 class ChannelSelectionTB(Testbench):
     def __init__(self, dut) -> None:
         super().__init__(dut, dut.clk, dut.rst)
-        self.assign_self_params(
-            ["NUM_CHANNELS", "NUM_SPATIAL_BLOCKS", "S_STATE_WIDTH"]
-        )
+        self.assign_self_params(["NUM_CHANNELS", "NUM_SPATIAL_BLOCKS", "S_STATE_WIDTH"])
 
     def generate_inputs(self, num_clocks):
         return num_clocks
