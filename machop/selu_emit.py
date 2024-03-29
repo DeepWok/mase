@@ -1,4 +1,3 @@
-
 import os, sys
 
 from chop.ir.graph.mase_graph import MaseGraph
