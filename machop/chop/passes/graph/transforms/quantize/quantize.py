@@ -34,7 +34,7 @@ QUANTIZEABLE_OP = (
     "tanh",
     "gelu",
     "softsign",
-    "softplus"
+    "softplus",
 )
 
 

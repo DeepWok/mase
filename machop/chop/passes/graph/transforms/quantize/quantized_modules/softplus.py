@@ -300,4 +300,3 @@ class SoftplusTernary(_SoftplusBase):
         #     mean=x_mean,
         # )
         self.config = config
-

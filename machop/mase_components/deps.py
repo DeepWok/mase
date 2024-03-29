@@ -15,7 +15,7 @@ MASE_HW_DEPS = {
     #                              "fixed_arithmetic", "linear", "matmul", "ViT"],
     "activations/fixed_relu": [],
     "activations/fixed_tanh": ["cast"],
-    "activations/fixed_selu": ["cast","activations"],
+    "activations/fixed_selu": ["cast", "activations"],
     "activations/fixed_gelu": ["fixed_arithmetic", "common"],
     "activations/fixed_softsign": ["fixed_arithmetic", "common"],
     "activations/fixed_softplus": [],
