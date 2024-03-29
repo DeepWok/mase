@@ -16,6 +16,7 @@ set runs {
 set bitwidths {10 12 14 16}
 set constraints_file alveo-u250-4ns.xdc
 
+# Shape Parameters
 set total_dim0 64
 set total_dim1 64
 set compute_dim0 4
