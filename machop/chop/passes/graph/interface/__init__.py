@@ -6,7 +6,4 @@ from .save_and_load import (
     save_pruned_train_model,
 )
 
-from .huffman import (
-    huffman_encode_pass,
-    load_huffman_encoded_model
-)
+from .huffman import huffman_encode_pass, load_huffman_encoded_model

@@ -142,7 +142,7 @@ class RunnerBasicTrain(SWRunnerBase):
     def __call__(self, data_module, model, sampled_config) -> dict[str, float]:
         if not isinstance(model, torch.nn.Module):
             model = model.model
-    
+
         num_samples = self.config["num_samples"]
         max_epochs = self.config["max_epochs"]
 
@@ -194,7 +194,7 @@ class RunnerBasicTrain(SWRunnerBase):
 
             model.train()
             loss_i = self.forward(self.task, batch, model)
-            loss_i = loss_i['loss'] / grad_accumulation_steps
+            loss_i = loss_i["loss"] / grad_accumulation_steps
 
             loss_i.backward()
 

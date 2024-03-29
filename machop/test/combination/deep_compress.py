@@ -4,10 +4,14 @@ from pathlib import Path
 from tqdm import tqdm
 from math import ceil
 
-from chop.passes.graph.interface.save_and_load import save_mase_graph_interface_pass, save_pruned_train_model, save_state_dict_ckpt
+from chop.passes.graph.interface.save_and_load import (
+    save_mase_graph_interface_pass,
+    save_pruned_train_model,
+    save_state_dict_ckpt,
+)
 
 # Figure out the correct path for Machop
-machop_path = Path(".").resolve() /"machop"
+machop_path = Path(".").resolve() / "machop"
 assert machop_path.exists(), "Failed to find machop at: {}".format(machop_path)
 sys.path.append(str(machop_path))
 
@@ -25,7 +29,7 @@ from chop.passes.graph import (
     prune_transform_pass,
     add_pruning_metadata_analysis_pass,
     huffman_encode_pass,
-    quantize_transform_pass
+    quantize_transform_pass,
 )
 
 
@@ -49,7 +53,7 @@ prune_args = {
     "scope": "global",
     "granularity": "elementwise",
     "method": "l1-norm",
-    "sparsity": 0.5
+    "sparsity": 0.5,
 }
 
 quantize_args = {
@@ -67,9 +71,8 @@ quantize_args = {
             "bias_width": 8,
             "bias_frac_width": 5,
         }
-    }
+    },
 }
-
 
 
 # ----------------------------------------- #
@@ -88,11 +91,7 @@ dataset_info = get_dataset_info(dataset_name)
 model_info = get_model_info(model_name)
 
 model = get_model(
-    model_name,
-    task=task,
-    dataset_info=dataset_info,
-    pretrained=False,
-    checkpoint=None
+    model_name, task=task, dataset_info=dataset_info, pretrained=False, checkpoint=None
 )
 
 train_params = {
@@ -106,19 +105,21 @@ train_params = {
     "weight_decay": 0,
     "plt_trainer_args": {
         "max_epochs": max_epochs,
-    }, 
+    },
     "auto_requeue": False,
     "save_path": None,
     "visualizer": None,
     "load_name": None,
-    "load_type": None
+    "load_type": None,
 }
 
 dummy_in = {"x": next(iter(data_module.train_dataloader()))[0]}
 
 mg = MaseGraph(model)
 mg, _ = init_metadata_analysis_pass(mg, dummy_in)
-mg, _ = add_common_metadata_analysis_pass(mg, {"dummy_in": dummy_in, "force_device_meta": False})
+mg, _ = add_common_metadata_analysis_pass(
+    mg, {"dummy_in": dummy_in, "force_device_meta": False}
+)
 mg, _ = add_software_metadata_analysis_pass(mg, None)
 
 base_model_save_path = Path(project_name) / "base_model"
@@ -133,7 +134,7 @@ overall_sparsity = prune_args["sparsity"]
 num_iterations = prune_args["num_iterations"]
 
 epochs_per_iteration = ceil(max_epochs / num_iterations)
-train_params['plt_trainer_args']["max_epochs"] = epochs_per_iteration
+train_params["plt_trainer_args"]["max_epochs"] = epochs_per_iteration
 
 prune_args = {
     "weight": {
@@ -155,21 +156,25 @@ for node in mg.fx_graph.nodes:
         original_w_b[node.name] = {
             "weight": mg.modules[node.target].weight,
             "bias": mg.modules[node.target].bias,
-            "meta_weight": node.meta["mase"].parameters["common"]["args"]["weight"]["value"],
-            "meta_bias": node.meta["mase"].parameters["common"]["args"]["bias"]["value"],
+            "meta_weight": node.meta["mase"].parameters["common"]["args"]["weight"][
+                "value"
+            ],
+            "meta_bias": node.meta["mase"].parameters["common"]["args"]["bias"][
+                "value"
+            ],
         }
 
 for i in tqdm(range(num_iterations)):
     results = train(**train_params)
 
-    iteration_sparsity = 1 - (1-overall_sparsity)**((i+1)/num_iterations)
+    iteration_sparsity = 1 - (1 - overall_sparsity) ** ((i + 1) / num_iterations)
 
     prune_args["weight"]["sparsity"] = iteration_sparsity
     prune_args["activation"]["sparsity"] = iteration_sparsity
 
     results = train(**train_params)
 
-    iteration_sparsity = 1 - (1-overall_sparsity)**((i+1)/num_iterations)
+    iteration_sparsity = 1 - (1 - overall_sparsity) ** ((i + 1) / num_iterations)
 
     prune_args["weight"]["sparsity"] = iteration_sparsity
     prune_args["activation"]["sparsity"] = iteration_sparsity
@@ -180,15 +185,18 @@ for i in tqdm(range(num_iterations)):
     for node in mg.fx_graph.nodes:
         if get_mase_op(node) in ["linear", "conv2d", "conv1d"]:
             with torch.no_grad():
-                mg.modules[node.target].weight.copy_(original_w_b[node.name]['weight'])
-                mg.modules[node.target].bias.copy_(original_w_b[node.name]['bias'])
+                mg.modules[node.target].weight.copy_(original_w_b[node.name]["weight"])
+                mg.modules[node.target].bias.copy_(original_w_b[node.name]["bias"])
                 # node.meta["mase"].parameters["common"]["args"]["parametrizations.weight.original"]["value"] = original_w_b[node.name]['meta_weight']
                 # node.meta["mase"].parameters["common"]["args"]["bias"]["value"] = original_w_b[node.name]['meta_bias']
 
-
-    mg, _ = add_common_metadata_analysis_pass(mg, {"dummy_in": dummy_in, "force_device_meta": False})
+    mg, _ = add_common_metadata_analysis_pass(
+        mg, {"dummy_in": dummy_in, "force_device_meta": False}
+    )
     mg, _ = add_software_metadata_analysis_pass(mg, None)
-    mg, _ = add_pruning_metadata_analysis_pass(mg, {"dummy_in": dummy_in, "add_value": True})
+    mg, _ = add_pruning_metadata_analysis_pass(
+        mg, {"dummy_in": dummy_in, "add_value": True}
+    )
 
 print("Finished iterative pruning and training...")
 print("Testing model after pruning and training:")

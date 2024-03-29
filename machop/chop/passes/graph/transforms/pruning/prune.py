@@ -92,11 +92,16 @@ def fetch_info(node, module):
         a_shape = node.meta["mase"].parameters["common"]["args"]["data_in_0"]["shape"]
 
         if "weight_mask" in node.meta["mase"].parameters["software"]["args"]:
-            w_masks = node.meta["mase"].parameters["software"]["args"]["weight_mask"]["value"]
+            w_masks = node.meta["mase"].parameters["software"]["args"]["weight_mask"][
+                "value"
+            ]
         else:
             w_masks = None
 
-        if "parametrizations.weight.original" in node.meta["mase"].parameters["common"]["args"]:
+        if (
+            "parametrizations.weight.original"
+            in node.meta["mase"].parameters["common"]["args"]
+        ):
             weight_key = "parametrizations.weight.original"
         else:
             weight_key = "weight"
@@ -156,6 +161,7 @@ def prune_graph_iterator(graph, config: dict):
                     getattr(graph.modules[node.target], register_fn)(hook_fn)
 
     return graph
+
 
 def activation_pruning_pass(graph, pass_args: dict = {}):
     a_config = load_activation_prune_config(pass_args["activation"], graph)

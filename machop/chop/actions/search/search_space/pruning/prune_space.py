@@ -10,7 +10,7 @@ from .....passes.graph import (
     add_common_metadata_analysis_pass,
     add_pruning_metadata_analysis_pass,
     prune_transform_pass,
-    add_software_metadata_analysis_pass
+    add_software_metadata_analysis_pass,
 )
 from .....passes.graph.utils import get_mase_op
 from ..utils import flatten_dict, unflatten_dict
@@ -37,7 +37,7 @@ DEFAULT_PRUNE_CONFIG = {
             "num_samples": 100000,
             "num_warmup_steps": 0,
             "lr_scheduler": "linear",
-        }
+        },
     }
 }
 
@@ -48,6 +48,7 @@ SET_TRAIN_PARAMS = {
     "num_warmup_steps": [0],
     "lr_scheduler": ["linear"],
 }
+
 
 class IterativePruningSpace(SearchSpaceBase):
     """
@@ -80,8 +81,8 @@ class IterativePruningSpace(SearchSpaceBase):
     def rebuild_model(self, sampled_config, is_eval_mode: bool = True):
         # set train/eval mode before creating mase graph
         self.model = get_model(
-            self.model_config['model'],
-            self.model_config['task'],
+            self.model_config["model"],
+            self.model_config["task"],
             self.dataset_info,
             pretrained=False,
         )
@@ -92,8 +93,8 @@ class IterativePruningSpace(SearchSpaceBase):
             self.model.train()
 
         # Split the passed config into the pruning and training configs
-        pruning_config = sampled_config['iterative_prune']
-        training_config = sampled_config['train']
+        pruning_config = sampled_config["iterative_prune"]
+        training_config = sampled_config["train"]
 
         overall_sparsity = pruning_config["sparsity"]
         num_iterations = pruning_config["num_iterations"]
@@ -108,16 +109,18 @@ class IterativePruningSpace(SearchSpaceBase):
         train_runner = get_sw_runner(
             "basic_train",
             self.model_info,
-            self.model_config['task'],
+            self.model_config["task"],
             self.dataset_info,
             self.accelerator,
             training_config,
         )
-        
+
         # Initialize the mase graph
         mg = MaseGraph(self.model)
         mg, _ = init_metadata_analysis_pass(mg, dummy_in)
-        mg, _ = add_common_metadata_analysis_pass(mg, {"dummy_in": dummy_in, "force_device_meta": False})
+        mg, _ = add_common_metadata_analysis_pass(
+            mg, {"dummy_in": dummy_in, "force_device_meta": False}
+        )
         mg, _ = add_software_metadata_analysis_pass(mg, None)
 
         # Set the base pruning args
@@ -133,7 +136,7 @@ class IterativePruningSpace(SearchSpaceBase):
                 "method": pruning_config["method"],
             },
         }
-        
+
         # Save the original weights and biases. These will be used to reset the model after each iteration.
         original_w_b = {}
         for node in mg.fx_graph.nodes:
@@ -141,8 +144,12 @@ class IterativePruningSpace(SearchSpaceBase):
                 original_w_b[node.name] = {
                     "weight": mg.modules[node.target].weight,
                     "bias": mg.modules[node.target].bias,
-                    "meta_weight": node.meta["mase"].parameters["common"]["args"]["weight"]["value"],
-                    "meta_bias": node.meta["mase"].parameters["common"]["args"]["bias"]["value"],
+                    "meta_weight": node.meta["mase"].parameters["common"]["args"][
+                        "weight"
+                    ]["value"],
+                    "meta_bias": node.meta["mase"].parameters["common"]["args"]["bias"][
+                        "value"
+                    ],
                 }
 
         train_metrics = []
@@ -153,7 +160,9 @@ class IterativePruningSpace(SearchSpaceBase):
             train_metrics.append(results)
 
             # Calculate the sparsity for the current iteration
-            iteration_sparsity = 1 - (1-overall_sparsity)**((i+1)/num_iterations)
+            iteration_sparsity = 1 - (1 - overall_sparsity) ** (
+                (i + 1) / num_iterations
+            )
 
             # Update the sparsity in the prune args
             prune_args["weight"]["sparsity"] = iteration_sparsity
@@ -166,13 +175,21 @@ class IterativePruningSpace(SearchSpaceBase):
             for node in mg.fx_graph.nodes:
                 if get_mase_op(node) in ["linear", "conv2d", "conv1d"]:
                     with torch.no_grad():
-                        mg.modules[node.target].weight.copy_(original_w_b[node.name]['weight'])
-                        mg.modules[node.target].bias.copy_(original_w_b[node.name]['bias'])
-                        
+                        mg.modules[node.target].weight.copy_(
+                            original_w_b[node.name]["weight"]
+                        )
+                        mg.modules[node.target].bias.copy_(
+                            original_w_b[node.name]["bias"]
+                        )
+
             # Run the analysis passes
-            mg, _ = add_common_metadata_analysis_pass(mg, {"dummy_in": dummy_in, "force_device_meta": False})
+            mg, _ = add_common_metadata_analysis_pass(
+                mg, {"dummy_in": dummy_in, "force_device_meta": False}
+            )
             mg, _ = add_software_metadata_analysis_pass(mg, None)
-            mg, _ = add_pruning_metadata_analysis_pass(mg, {"dummy_in": dummy_in, "add_value": True})
+            mg, _ = add_pruning_metadata_analysis_pass(
+                mg, {"dummy_in": dummy_in, "add_value": True}
+            )
 
         self.model.to(self.accelerator)
 
@@ -190,9 +207,9 @@ class IterativePruningSpace(SearchSpaceBase):
 
         # Build the search space
         choices = self.config.get("search_config", DEFAULT_PRUNE_CONFIG)
-        
+
         for k, v in SET_TRAIN_PARAMS.items():
-            choices['train'][k] = v
+            choices["train"][k] = v
 
         # flatten the choices and choice_lengths
         flatten_dict(choices, flattened=self.choices_flattened)

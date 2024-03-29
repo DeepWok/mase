@@ -4,7 +4,13 @@ from pathlib import Path
 
 import pytorch_lightning as pl
 from chop.plt_wrapper import get_model_wrapper
-from chop.tools.checkpoint_load import load_model, reapply_parametrizations_from_state_dict, load_state_dict, reappply_activations, reapply_parametrizations_mg_module
+from chop.tools.checkpoint_load import (
+    load_model,
+    reapply_parametrizations_from_state_dict,
+    load_state_dict,
+    reappply_activations,
+    reapply_parametrizations_mg_module,
+)
 from chop.models import get_model_info, get_model
 from chop.tools.get_input import get_dummy_input, InputGenerator
 from chop.passes.graph import (
@@ -12,7 +18,10 @@ from chop.passes.graph import (
     init_metadata_analysis_pass,
     add_software_metadata_analysis_pass,
 )
-from chop.passes.graph.interface import save_mase_graph_interface_pass, save_pruned_train_model
+from chop.passes.graph.interface import (
+    save_mase_graph_interface_pass,
+    save_pruned_train_model,
+)
 from chop.passes.graph.transforms import metadata_value_type_cast_transform_pass
 from chop.ir.graph import MaseGraph
 from pytorch_lightning.callbacks import LearningRateMonitor, ModelCheckpoint
@@ -95,25 +104,23 @@ def train(
     wrapper_cls = get_model_wrapper(model_info, task)
 
     if load_name is not None:
-        
         model = load_model(load_name, load_type=load_type, model=model)
         logger.info(f"'{load_type}' checkpoint loaded before training")
-        state_dict=load_state_dict(load_name, load_type)
-        activation_config=None
+        state_dict = load_state_dict(load_name, load_type)
+        activation_config = None
         print("model_info", type(model_info))
         print("model_info", model_info.name)
         if "activations" in state_dict.keys():
-         
             data_module.prepare_data()
             data_module.setup()
-    
+
             input_generator = InputGenerator(
-            data_module=data_module,
-            model_info=model_info,
-            task=task,
-            which_dataloader="train",
-            max_batches=1
-        )
+                data_module=data_module,
+                model_info=model_info,
+                task=task,
+                which_dataloader="train",
+                max_batches=1,
+            )
 
             dummy_in = next(iter(input_generator))
             _ = model(**dummy_in)
@@ -121,14 +128,14 @@ def train(
             graph, _ = init_metadata_analysis_pass(graph, None)
             graph, _ = add_common_metadata_analysis_pass(graph, {"dummy_in": dummy_in})
             graph, _ = add_software_metadata_analysis_pass(graph, None)
-                
-            activation_config=state_dict["activations"]
-            state_dict=state_dict["state_dict"]
-            #reapply activation parametrisations
+
+            activation_config = state_dict["activations"]
+            state_dict = state_dict["state_dict"]
+            # reapply activation parametrisations
             print("activations_Applied")
             reappply_activations(graph, activation_config)
             reapply_parametrizations_mg_module(graph, state_dict)
-            model=graph.model
+            model = graph.model
         else:
             reapply_parametrizations_from_state_dict(model, state_dict)
     pl_model = wrapper_cls(
@@ -167,6 +174,6 @@ def train(
         print("T")
 
     if save_path is not None and load_name is not None and load_type == "pt":
-            transformed_ckpt = Path(save_path) / "transformed_ckpt"
-            transformed_ckpt.mkdir(parents=True, exist_ok=True)
-            save_pruned_train_model(model, transformed_ckpt, activation_config)
+        transformed_ckpt = Path(save_path) / "transformed_ckpt"
+        transformed_ckpt.mkdir(parents=True, exist_ok=True)
+        save_pruned_train_model(model, transformed_ckpt, activation_config)

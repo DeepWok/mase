@@ -1,6 +1,7 @@
 import torch
 import logging
 
+
 # Parametrizations
 class FakeSparseWeight(torch.nn.Module):
     r"""Parametrization for the weights. Should be attached to the 'weight' or
@@ -20,8 +21,6 @@ class FakeSparseWeight(torch.nn.Module):
     def forward(self, x):
         assert self.mask.shape == x.shape
         return self.mask * x
-
-
 
 
 # Structured Pruning Parameterizations
