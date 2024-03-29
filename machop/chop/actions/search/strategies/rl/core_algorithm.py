@@ -1,5 +1,5 @@
-# import wandb
-# import tensorboard
+import wandb
+import tensorboard
 from ..base import SearchStrategyBase
 from .env import env_map, registered_env_map
 from pprint import pprint
@@ -20,20 +20,21 @@ warnings.filterwarnings("ignore")
 algorithm_map = {"ppo": PPO, "a2c": A2C, "ddpg": DDPG}
 
 
-# class WandbCallback(BaseCallback):
-#     def __init__(self, verbose=0):
-#         super(WandbCallback, self).__init__(verbose)
+class WandbCallback(BaseCallback):
+    def __init__(self, verbose=0):
+        super(WandbCallback, self).__init__(verbose)
 
-#     def _on_step(self) -> bool:
-#         info = self.locals.get("infos")[-1]
-#         wandb.log(info)
-#         return True
+    def _on_step(self) -> bool:
+        info = self.locals.get("infos")[-1]
+        wandb.log(info)
+        return True
 
 
 class StrategyRL(SearchStrategyBase):
     iterative = True
 
     def _post_init_setup(self):
+        # Default configuration values
         defaults = {
             "algorithm": "ppo",
             "env": "mixed_precision_paper",
@@ -50,6 +51,7 @@ class StrategyRL(SearchStrategyBase):
             "wandb_entity": "",
         }
 
+        # Get configuration values from the config dictionary or use defaults
         self.algorithm_name = self.config.get("algorithm", defaults["algorithm"])
         self.env_name = self.config.get("env", defaults["env"])
         self.device = self.config.get("device", defaults["device"])
@@ -74,11 +76,13 @@ class StrategyRL(SearchStrategyBase):
         )
         self.wandb_entity = self.config.get("wandb_entity", defaults["wandb_entity"])
 
+        # Get environment and algorithm based on the names
         self.env = env_map[self.env_name]
         self.registered_env_name = registered_env_map[self.env_name]
         self.algorithm = algorithm_map[self.algorithm_name]
 
     def _create_env(self, search_space):
+        # Create the vectorized environment
         env = make_vec_env(
             self.registered_env_name,
             n_envs=self.n_envs,
@@ -97,11 +101,13 @@ class StrategyRL(SearchStrategyBase):
     def _initialize_callbacks(self, env):
         callbacks = []
 
-        #     if self.wandb_callback:
-        #         wandb.init(project="Mase-RL", entity=self.wandb_entity)
-        #         wandb_callback = WandbCallback()
-        #         callbacks.append(wandb_callback)
+        # Add WandbCallback if enabled
+        if self.wandb_callback:
+            wandb.init(project="Mase-RL", entity=self.wandb_entity)
+            wandb_callback = WandbCallback()
+            callbacks.append(wandb_callback)
 
+        # Add CheckpointCallback and EvalCallback
         checkpoint_callback = CheckpointCallback(
             save_freq=self.save_freq, save_path="./logs/"
         )
@@ -119,6 +125,7 @@ class StrategyRL(SearchStrategyBase):
         callback = self._initialize_callbacks(env)
 
         if "load_name" in self.config:
+            # Load pre-trained model if specified
             model = self.algorithm.load(
                 self.config["load_name"],
                 env=self.env(
@@ -136,7 +143,7 @@ class StrategyRL(SearchStrategyBase):
             algorithm_kwargs = {
                 "verbose": 1,
                 "device": self.device,
-                # "tensorboard_log": "./logs/",
+                "tensorboard_log": "./logs/",
                 "learning_rate": self.learning_rate,
             }
 
@@ -149,11 +156,12 @@ class StrategyRL(SearchStrategyBase):
                 else "MultiInputPolicy"
             )
 
+            # Create and train the model
             model = self.algorithm(policy, env, **algorithm_kwargs)
 
             model.learn(
                 total_timesteps=int(self.total_timesteps),
-                # progress_bar=True,
+                progress_bar=True,
                 callback=callback,
             )
 

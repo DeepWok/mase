@@ -17,6 +17,7 @@ from chop.passes.graph import (
 )
 
 
+# Base mixed precision environment class
 class BaseMixedPrecisionEnv(gym.Env, ABC):
     @abstractmethod
     def __init__(
@@ -63,6 +64,7 @@ class BaseMixedPrecisionEnv(gym.Env, ABC):
         return metrics
 
 
+# Mixed precision environment class
 class MixedPrecisionEnv(BaseMixedPrecisionEnv):
     def __init__(
         self, config, search_space, sw_runner, hw_runner, data_module, episode_max_len
@@ -95,6 +97,7 @@ class MixedPrecisionEnv(BaseMixedPrecisionEnv):
         self.best_performance = {}
 
     def _define_observation_space(self):
+        # The observation space consists of some metrics and the choices available for each layer parameter
         self.observation_space = Dict(
             {
                 "cost": Box(0.0, 10e4, shape=(1,)),
@@ -106,6 +109,7 @@ class MixedPrecisionEnv(BaseMixedPrecisionEnv):
             self.observation_space[key] = Discrete(len(choices))
 
     def _define_action_space(self):
+        # The action space consists of the choices available for each layer parameter
         num_options_per_key = [
             len(options) for options in self.search_space.choices_flattened.values()
         ]
@@ -126,14 +130,19 @@ class MixedPrecisionEnv(BaseMixedPrecisionEnv):
         return self.cur_obs, {}
 
     def step(self, action):
+        # Build model based on the action
         flattened_sampled_indexes = self._action_to_config(action)
         sampled_config = self.search_space.flattened_indexes_to_config(
             flattened_sampled_indexes
         )
         model = self.search_space.rebuild_model(sampled_config)
+
+        # Compute the metrics
         software_metrics = self.compute_software_metrics(model, sampled_config)
         hardware_metrics = self.compute_hardware_metrics(model, sampled_config)
         self.metrics = software_metrics | hardware_metrics
+
+        # Scale the metrics and compute the cost = -reward
         scaled_metrics = {}
         cost = 0
         for metric_name in self.metric_names:
@@ -144,6 +153,8 @@ class MixedPrecisionEnv(BaseMixedPrecisionEnv):
             )
             scaled_metrics[metric_name] = scaled_metric_value
             cost += scaled_metric_value
+
+        # Update the observation space
         self.cur_obs["accuracy"] = np.array(
             [software_metrics["accuracy"]], dtype=np.float32
         )
@@ -155,12 +166,14 @@ class MixedPrecisionEnv(BaseMixedPrecisionEnv):
 
         reward = -cost
 
+        # Save the best performance and sample
         if reward > self.best_performance.get("reward", -math.inf):
             self.best_sample = sampled_config
             self.best_performance["reward"] = reward
             for metric_name in self.metric_names:
                 self.best_performance[metric_name] = self.metrics[metric_name]
 
+        # Determine if the episode is done
         self.episode_len += 1
         done = self.episode_len >= self.episode_max_len
         truncated = self.episode_len >= self.episode_max_len
@@ -170,6 +183,7 @@ class MixedPrecisionEnv(BaseMixedPrecisionEnv):
         return self.cur_obs, reward, done, truncated, info
 
     def _action_to_config(self, action):
+        # Convert the action to a configuration
         config = {}
         choices_flattened = self.search_space.choices_flattened
         action_idx = 0
@@ -180,6 +194,7 @@ class MixedPrecisionEnv(BaseMixedPrecisionEnv):
         return config
 
 
+# Mixed precision environment with high and low actions
 class MixedPrecisionEnvHiLo(BaseMixedPrecisionEnv):
     def __init__(
         self, config, search_space, sw_runner, hw_runner, data_module, episode_max_len
@@ -217,6 +232,7 @@ class MixedPrecisionEnvHiLo(BaseMixedPrecisionEnv):
         self.best_performance = {}
 
     def _define_observation_space(self):
+        # The observation space consists of some metrics and the choices available for each layer parameter
         self.observation_space = Dict(
             {
                 "cost": Box(0.0, 10e4, shape=(1,)),
@@ -228,6 +244,7 @@ class MixedPrecisionEnvHiLo(BaseMixedPrecisionEnv):
             self.observation_space[key] = Discrete(len(choices))
 
     def _define_action_space(self):
+        # The action space consists of three choices for each layer parameter: increase precision (1), decrease (-1), or keep the same (0)
         num_actions = len(self.search_space.choices_flattened)
         # Each action can be -1, 0, or 1
         self.action_space = MultiDiscrete([3] * num_actions)
@@ -245,6 +262,7 @@ class MixedPrecisionEnvHiLo(BaseMixedPrecisionEnv):
         self.episode_len = 0
         self.cur_obs = self.observation_space.sample()
 
+        # Initialize the model configuration to the middle of the search space
         self.model_config = {
             key: len(options) // 2
             for key, options in self.search_space.choices_flattened.items()
@@ -262,10 +280,11 @@ class MixedPrecisionEnvHiLo(BaseMixedPrecisionEnv):
         software_metrics = self.compute_software_metrics(model, sampled_config)
         hardware_metrics = self.compute_hardware_metrics(model, sampled_config)
         self.metrics = software_metrics | hardware_metrics
+
+        # Scale the metrics and compute the cost = -reward
         scaled_metrics = {}
         cost = 0
         for metric_name in self.metric_names:
-            # Apply scaling and direction multiplier from pre-computed values
             scaled_metric_value = (
                 self.config["metrics"][metric_name]["scale"]
                 * self.metrics[metric_name]
@@ -274,6 +293,7 @@ class MixedPrecisionEnvHiLo(BaseMixedPrecisionEnv):
             scaled_metrics[metric_name] = scaled_metric_value
             cost += scaled_metric_value
 
+        # Update the observation space
         self.cur_obs["accuracy"] = np.array(
             [software_metrics["accuracy"]], dtype=np.float32
         )
@@ -283,9 +303,9 @@ class MixedPrecisionEnvHiLo(BaseMixedPrecisionEnv):
         self.cur_obs["cost"] = np.array([cost], dtype=np.float32)
         self.cur_obs.update(self.model_config)
 
-        # Adjust reward calculation based on your scenario
         reward = -cost
 
+        # Save the best performance and sample
         if reward > self.best_performance.get("reward", -math.inf):
             self.best_sample = sampled_config
             self.best_performance["reward"] = reward
@@ -296,13 +316,13 @@ class MixedPrecisionEnvHiLo(BaseMixedPrecisionEnv):
         self.episode_len += 1
         done = self.episode_len >= self.episode_max_len
         truncated = self.episode_len >= self.episode_max_len
-        # if done:
-        # reward = reward*2
+
         info = {"reward": reward}
         info.update({metric: self.metrics[metric] for metric in self.metrics})
         return self.cur_obs, reward, done, truncated, info
 
     def _action_to_config(self, action):
+        # Update the model configuration based on the action
         action_idx = 0
         for key, choices in self.search_space.choices_flattened.items():
             current_value = self.model_config[key]
@@ -312,6 +332,7 @@ class MixedPrecisionEnvHiLo(BaseMixedPrecisionEnv):
             action_idx += 1
 
 
+# Mixed precision environment based on a research paper
 class MixedPrecisionPaper(BaseMixedPrecisionEnv):
     def __init__(
         self, config, search_space, sw_runner, hw_runner, data_module, episode_max_len
@@ -333,6 +354,7 @@ class MixedPrecisionPaper(BaseMixedPrecisionEnv):
         )
         layer_info = {}
 
+        # Get the layer details for the observation space
         for idx, node in enumerate(graph.fx_graph.nodes):
             mase_op = get_mase_op(node)
             target = get_node_actual_target(node)
@@ -355,6 +377,7 @@ class MixedPrecisionPaper(BaseMixedPrecisionEnv):
         self.layer_names = []
         self.sample = {}
 
+        # Add parameter identifier to the observation space
         for name, choices in self.search_space.choices_flattened.items():
             if len(choices) == 1:
                 self.sample[name] = 0
@@ -373,6 +396,7 @@ class MixedPrecisionPaper(BaseMixedPrecisionEnv):
         self.episode_len = 0
         self.obs_list = np.array(self.obs_list)
 
+        # Define the observation and action space
         lowest = np.min(self.obs_list, axis=0)
         highest = np.max(self.obs_list, axis=0)
         self.observation_space = Box(
@@ -382,14 +406,16 @@ class MixedPrecisionPaper(BaseMixedPrecisionEnv):
         self.action_space = Box(low=0, high=1.0)
 
     def eval(self, sampled_indexes):
+        # Build model based on the sampled indexes
         sampled_config = self.search_space.flattened_indexes_to_config(sampled_indexes)
         model = self.search_space.rebuild_model(sampled_config)
 
+        # Compute the metrics
         software_metrics = self.compute_software_metrics(model, sampled_config)
         hardware_metrics = self.compute_hardware_metrics(model, sampled_config)
-
         metrics = software_metrics | hardware_metrics
 
+        # Scale the metrics
         scaled_metrics = {}
         for metric_name in self.metric_names:
             lower_bound = self.config["metrics"][metric_name].get("lower_bound", 0)
@@ -409,12 +435,14 @@ class MixedPrecisionPaper(BaseMixedPrecisionEnv):
             )
         reward = sum(scaled_metrics.values())
 
+        # Update the best performance and sample
         if reward > self.best_performance.get("reward", 0):
             self.best_performance["reward"] = reward
             self.best_sample = sampled_config
             for metric_name in self.metric_names:
                 self.metric_values[metric_name] = metrics[metric_name]
                 self.best_performance[metric_name] = metrics[metric_name]
+
         return reward, metrics
 
     def reset(self, *, seed=None, options=None):
@@ -425,6 +453,7 @@ class MixedPrecisionPaper(BaseMixedPrecisionEnv):
         return obs, {}
 
     def step(self, action):
+        # Update the sample based on the action
         choices = self.action_list[self.episode_len]
         action = int(action * len(choices) - 1e-2)
         self.sample[self.layer_names[self.episode_len]] = action
@@ -432,19 +461,21 @@ class MixedPrecisionPaper(BaseMixedPrecisionEnv):
         terminated = truncated = False
         self.episode_len += 1
         info = {}
+
+        # Evaluate the model if the episode is done
         if self.episode_len == len(self.obs_list):
             self.episode_len = 0
             terminated = truncated = True
             reward, self.metrics = self.eval(self.sample)
             info = {"reward": reward}
             info.update({metric: self.metrics[metric] for metric in self.metrics})
+
         obs = self.obs_list[self.episode_len].copy()
         obs = np.append(obs, choices[action]).astype(np.float32)
         return obs, reward, terminated, truncated, info
 
 
-#################### Register the environments ####################
-
+# Register the environments
 Env_id = "RL/MixedPrecisionEnv-v0"
 gym.envs.registration.register(
     id=Env_id,
@@ -469,6 +500,7 @@ gym.envs.registration.register(
     reward_threshold=None,
 )
 
+# Map the environment names to the classes
 env_map = {
     "mixed_precision": MixedPrecisionEnv,
     "mixed_precision_hi_lo": MixedPrecisionEnvHiLo,
