@@ -22,7 +22,7 @@ jobs:
         if: ${{ always() }}
         run: |
           # Navigate to the directory containing Python files
-          cd mase/machop
+    
 
           # Find all Python files recursively and format them with Black
           find . -type f -name "*.py" -exec python3 -m black --quiet {} \;
