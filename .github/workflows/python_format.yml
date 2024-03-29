@@ -21,15 +21,10 @@ jobs:
       - name: Run Black to format Python files
         if: ${{ always() }}
         run: |
-          files=$(git diff --name-only ${{ github.event.before }} ${{ github.sha }} | grep -e '\.py$' || echo -n)
-          if [[ ! -z $files ]]; then
-            for f in $files
-            do
-              if [[ -f $f ]]; then
-                python3 -m black --quiet $f
-              fi
-            done
-            echo "Python files formatted successfully"
-          else
-            echo "No Python files found to format"
-          fi
+          # Navigate to the directory containing Python files
+          cd mase/machop
+
+          # Find all Python files recursively and format them with Black
+          find . -type f -name "*.py" -exec python3 -m black --quiet {} \;
+
+          echo "Python files formatted successfully"
