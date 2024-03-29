@@ -17,7 +17,7 @@ module fixed_round #(
   logic [OUT_WIDTH : 0] MAX_NEG ; //modified since declaring it as localparam used to cause overflow for MAX_NEG for 32-bit OUT_WIDTH
 
   assign MAX_POS = (1 << (OUT_WIDTH - 1)) - 1;
-  assign MAX_NEG =  (1 << (OUT_WIDTH - 1));    
+  assign MAX_NEG = (1 << (OUT_WIDTH - 1));
 
   logic [2:0] lsb_below;
   logic [IN_WIDTH - 2:0] input_data;
