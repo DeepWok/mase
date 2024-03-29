@@ -74,15 +74,15 @@ def graph_iterator_for_mase_ops(graph):
             elif isinstance(module, nn.ReLU):
                 mase_op = "relu"
             elif isinstance(module, nn.SELU):
-                mase_op = "selu" 
+                mase_op = "selu"
             elif isinstance(module, nn.Tanh):
                 mase_op = "tanh"
             elif isinstance(module, nn.GELU):
-                mase_op = "gelu"        
+                mase_op = "gelu"
             elif isinstance(module, nn.Softsign):
-                mase_op = "softsign"        
+                mase_op = "softsign"
             elif isinstance(module, nn.Softplus):
-                mase_op = "softplus"                
+                mase_op = "softplus"
             elif isinstance(module, nn.Hardtanh):  # TODO: This is not implemented yet
                 mase_op = "hardtanh"
             elif isinstance(module, nn.Embedding):
