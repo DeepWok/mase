@@ -60,7 +60,6 @@ def save_n_meta_param(node_meta: dict, save_path: str) -> None:
     """
     node_meta = convert_none_to_str_na(node_meta)
 
-    #import pdb; pdb.set_trace()     # 为什么用toml去dump
     #with open(save_path, "w") as f:
     #    toml.dump(node_meta, f)
     with open(save_path, 'wb') as f:

@@ -135,7 +135,6 @@ def run_with_config(config_file):
     config = config["passes"]["prune"]
     config["input_generator"] = input_generator
     config["dummy_in"] = dummy_input
-    pdb.set_trace()
 
     # save_dir = root / f"mase_output/machop_test/prune/{config_name}"
     # save_dir.mkdir(parents=True, exist_ok=True)
