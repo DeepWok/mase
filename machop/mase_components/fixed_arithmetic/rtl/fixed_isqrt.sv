@@ -87,7 +87,7 @@ module fixed_isqrt #(
       .OUTPUT_REG(0),
       .MEM_FILE(LUT_MEMFILE)
   ) fixed_lut_inst (
-      .clk ('0),  // Tie offclock
+      .clk('0),  // Tie offclock
       .addr(lut_index),
       .data(lut_value[1])
   );

@@ -7,14 +7,14 @@ module fixed_nr_stage #(
     input  logic                 clk,
     input  logic                 rst,
     // Input x reduced
-    input  logic [    WIDTH-1:0] data_a,  // FORMAT: Q1.(WIDTH-1).
+    input  logic [    WIDTH-1:0] data_a,         // FORMAT: Q1.(WIDTH-1).
     // Initial LUT guess.
-    input  logic [    WIDTH-1:0] data_b,  // FORMAT: Q1.(WIDTH-1).
+    input  logic [    WIDTH-1:0] data_b,         // FORMAT: Q1.(WIDTH-1).
     input  logic [MSB_WIDTH-1:0] data_in_msb,
     input  logic                 data_in_valid,
     output logic                 data_in_ready,
 
-    output logic [  2*WIDTH-1:0] data_out,  // FORMAT: Q1.(WIDTH-1)
+    output logic [  2*WIDTH-1:0] data_out,            // FORMAT: Q1.(WIDTH-1)
     output logic [MSB_WIDTH-1:0] data_out_msb,
     output logic [    WIDTH-1:0] data_out_x_reduced,
     output logic                 data_out_valid,

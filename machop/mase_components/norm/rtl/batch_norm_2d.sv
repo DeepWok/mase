@@ -93,7 +93,7 @@ module batch_norm_2d #(
       .OUTPUT_REG(0),
       .MEM_FILE(SCALE_LUT_MEMFILE)
   ) scale_lut_inst (
-      .clk ('0),  // Tie off clock
+      .clk('0),  // Tie off clock
       .addr(current_channel),
       .data(scale_value[0])
   );
@@ -104,7 +104,7 @@ module batch_norm_2d #(
       .OUTPUT_REG(0),
       .MEM_FILE(SHIFT_LUT_MEMFILE)
   ) shift_lut_inst (
-      .clk ('0),  // Tie off clock
+      .clk('0),  // Tie off clock
       .addr(current_channel),
       .data(shift_value[0])
   );

@@ -224,7 +224,7 @@ module matmul #(
 
   simple_matmul #(
       .N              (A_COMPUTE_DIM1),
-      .M              (A_COMPUTE_DIM0),  // == B_COMPUTE_DIM1
+      .M              (A_COMPUTE_DIM0),    // == B_COMPUTE_DIM1
       .K              (B_COMPUTE_DIM0),
       .X_WIDTH        (A_WIDTH),
       .X_FRAC_WIDTH   (A_FRAC_WIDTH),

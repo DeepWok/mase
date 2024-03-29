@@ -6,9 +6,9 @@ module fixed_lut_index #(
     localparam MSB_WIDTH = $clog2(WIDTH)
 ) (
     // X reduced
-    input  logic [    WIDTH-1:0] data_a,  // FORMAT: Q(INT_WIDTH).(FRAC_WIDTH).
+    input  logic [    WIDTH-1:0] data_a,   // FORMAT: Q(INT_WIDTH).(FRAC_WIDTH).
     // MSB index
-    input  logic [MSB_WIDTH-1:0] data_b,  // FORMAT: Q(WIDTH).0.
+    input  logic [MSB_WIDTH-1:0] data_b,   // FORMAT: Q(WIDTH).0.
     output logic [  LUT_POW-1:0] data_out  // FORMAT: Q(WIDTH).0.
 
 );
