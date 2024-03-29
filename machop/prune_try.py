@@ -1,1 +1,0 @@
-!./ch transform --config configs/examples/vgg_cifar10_prune.toml --task cls --cpu=0
