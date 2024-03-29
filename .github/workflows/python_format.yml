@@ -27,7 +27,8 @@ jobs:
       - name: List Python files before formatting
         run: |
           cd machop
-          find . -type f -name "*.py" > before.txt || echo "No Python files found"
+          find . -type f -name "*.py" > before.txt
+          cat before.txt
 
       - name: Run Black to format Python files
         if: ${{ always() }}
@@ -38,7 +39,8 @@ jobs:
       - name: List Python files after formatting
         run: |
           cd machop
-          find . -type f -name "*.py" > after.txt || echo "No Python files found"
+          find . -type f -name "*.py" > after.txt
+          cat after.txt
 
       - name: Print changed files
         run: |
@@ -46,4 +48,4 @@ jobs:
 
       - name: Cleanup
         run: |
-          rm before.txt after.txt || true  # Ignore errors if files don't exist
+          rm before.txt after.txt
