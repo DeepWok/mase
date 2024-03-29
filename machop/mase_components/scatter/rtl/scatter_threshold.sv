@@ -7,8 +7,6 @@ module scatter_threshold #(
     parameter THRESHOLD = 6,
     parameter DESIGN = 1
 ) (
-    input clk,
-    input rst,
     input logic [PRECISION-1:0] data_in[TENSOR_SIZE_DIM-1:0],
     output logic [PRECISION-1:0] o_high_precision[TENSOR_SIZE_DIM-1:0],
     output logic [PRECISION-1:0] o_low_precision[TENSOR_SIZE_DIM-1:0]
@@ -35,7 +33,7 @@ module scatter_threshold #(
   wire [TENSOR_SIZE_DIM-1:0] output_mask;
 
 
-  logic [$clog2(TENSOR_SIZE_DIM)-1:0] address_outliers[HIGH_SLOTS-1:0];
+  //logic [$clog2(TENSOR_SIZE_DIM)-1:0] address_outliers[HIGH_SLOTS-1:0];
 
   generate
     if (DESIGN == 1) begin : PE_D1
