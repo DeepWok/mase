@@ -26,7 +26,6 @@ MASE_HW_DEPS = {
         "common",
         "fixed_arithmetic",
     ],
-    "activations/fixed_relu": [],
     "cast/fixed_rounding": ["cast"],
     "linear/fixed_linear": ["cast", "common", "fixed_arithmetic"],
     "linear/fixed_2d_linear": [
