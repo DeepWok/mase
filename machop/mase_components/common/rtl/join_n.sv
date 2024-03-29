@@ -62,7 +62,7 @@ module join_n #(
       end
     end
   end
-  
-  assign data_out_valid   = all_valid;
+
+  assign data_out_valid = all_valid;
 
 endmodule
