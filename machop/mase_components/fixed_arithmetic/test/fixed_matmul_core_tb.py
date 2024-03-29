@@ -230,6 +230,6 @@ async def test_fixed_linear(dut):
 if __name__ == "__main__":
     tb = VerificationCase()
     mase_runner(
-        module_params=tb.get_dut_parameters(),
+        module_param_list=[tb.get_dut_parameters()],
         extra_build_args=["--unroll-count", "3000"],
     )
