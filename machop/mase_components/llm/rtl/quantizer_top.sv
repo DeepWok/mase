@@ -8,9 +8,8 @@ module quantizer_top #(
     parameter OUT_WIDTH = 8,  // int8
     parameter OUT_ROWS = IN_PARALLELISM,
     parameter OUT_COLUMNS = IN_SIZE,
-
+    /* verilator lint_off UNUSEDPARAM */
     parameter QUANTIZATION_WIDTH = OUT_WIDTH,
-
     parameter MAX_NUM_WIDTH = IN_WIDTH
 ) (
     input clk,

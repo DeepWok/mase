@@ -1,15 +1,11 @@
 `timescale 1ns / 1ps
 module quantized_matmul #(
     // input data_in1 = data_in; data_in2 = weight.
-    parameter IN1_WIDTH = 8,
-    parameter IN1_FRAC_WIDTH = 4,
-    parameter IN2_WIDTH = 8,
-    parameter IN2_FRAC_WIDTH = 4,
-    parameter BIAS_WIDTH = 6,
-    parameter BIAS_FRAC_WIDTH = 3,
+    parameter IN1_WIDTH = 16,
+    parameter IN2_WIDTH = 16,
+    parameter BIAS_WIDTH = 16,
     //output 
-    parameter OUT_WIDTH = 8,
-    parameter OUT_FRAC_WIDTH = 4,
+    parameter OUT_WIDTH = 16,
     // define as nm * mk
     // rows refers to n, columns refers to mz
     parameter IN1_PARALLELISM = 4,
@@ -38,6 +34,7 @@ module quantized_matmul #(
     input data_in2_valid,
     output data_in2_ready,
     //input bias
+    /* verilator lint_off UNUSEDSIGNAL */
     input [BIAS_WIDTH-1:0] bias[BIAS_PARALLELISM * BIAS_SIZE - 1:0],
     input bias_valid,
     output bias_ready,
@@ -104,13 +101,15 @@ module quantized_matmul #(
 
 
   /******* int8 multiplication *******/
-  // TODO: dummy bias
+  // TODO: dummy bias signals to fit in the fixed linear interface
   logic [QUANTIZATION_WIDTH-1:0] bias_int8[OUT_ROWS*OUT_COLUMNS-1 : 0];
+  for (genvar i = 0; i < OUT_ROWS * OUT_COLUMNS; i = i + 1) begin : DUMMY_BIAS_ASSIGNMENT
+    assign bias_int8[i] = 0;
+  end
   logic bias_int8_out_ready;
   logic bias_int8_out_valid;
   assign bias_int8_out_valid = data_in1_int8_out_valid;
   assign bias_ready = data_in1_ready;  //TODO
-
 
   fixed_matmul_core_dequant #(
       .IN1_WIDTH(QUANTIZATION_WIDTH),

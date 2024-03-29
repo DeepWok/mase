@@ -13,6 +13,7 @@ module dequantizer #(
     parameter QUANTIZATION_WIDTH = 16,
     parameter MAX_NUM_WIDTH = 32
 ) (
+    /* verilator lint_off UNUSEDSIGNAL */
     input clk,
     input rst,
 

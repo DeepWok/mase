@@ -53,9 +53,9 @@ module llm_int8_top #(
       .MAX_LARGE_NUMBERS(MAX_LARGE_NUMBERS),
       .LARGE_NUMBER_THRES(LARGE_NUMBER_THRES)
   ) scatter_data_in (
+      // input port for weight
       .clk(clk),
       .rst(rst),
-      // input port for weight
       .data_in(data_in),
       .data_in_valid(data_in_valid),
       .data_in_ready(data_in_ready),  // TODO
@@ -68,8 +68,12 @@ module llm_int8_top #(
 
 
 
-  // set dummy bias signals 
+  // TODO: dummy bias signals to fit in the fixed linear interface
   logic [BIAS_WIDTH-1 : 0] bias[BIAS_PARALLELISM * BIAS_SIZE - 1 : 0];
+  for (genvar i = 0; i < BIAS_PARALLELISM * BIAS_SIZE; i = i + 1) begin : DUMMY_BIAS_ASSIGNMENT
+    assign bias[i] = 0;
+  end
+  /* verilator lint_off UNUSEDSIGNAL */
   logic bias_valid = 1'b1;
   logic bias_ready = 1'b1;
 
@@ -83,7 +87,6 @@ module llm_int8_top #(
   // output control signals for fmm modules
   logic matmul_large_out_valid, matmul_large_out_ready;
   logic matmul_small_out_valid, matmul_small_out_ready;
-
   split2 #() matmul_large_small_data_in_split (
       .data_in_valid (data_in_out_valid),
       .data_in_ready (data_in_out_ready),
@@ -137,13 +140,9 @@ module llm_int8_top #(
   /* SMALL (Int8 Low Precision) matrix */
   quantized_matmul #(
       .IN1_WIDTH(IN_WIDTH),
-      .IN1_FRAC_WIDTH(0),
       .IN2_WIDTH(WEIGHT_WIDTH),
-      .IN2_FRAC_WIDTH(0),
       .BIAS_WIDTH(BIAS_WIDTH),
-      .BIAS_FRAC_WIDTH(0),
       .OUT_WIDTH(OUT_WIDTH),
-      .OUT_FRAC_WIDTH(0),
       .IN1_PARALLELISM(IN_PARALLELISM),
       .IN_SIZE(IN_SIZE),
       .IN2_PARALLELISM(WEIGHT_PARALLELISM),

@@ -7,11 +7,9 @@ module fixed_comparator_tree #(
     parameter OUT_WIDTH = IN_WIDTH
 
 ) (
-
-
+    /* verilator lint_off UNUSEDSIGNAL */
     input  logic                 clk,
     input  logic                 rst,
-    /* verilator lint_on UNUSEDSIGNAL */
     input  logic [ IN_WIDTH-1:0] data_in       [IN_SIZE-1:0],
     input  logic                 data_in_valid,
     output logic                 data_in_ready,
@@ -66,8 +64,8 @@ module fixed_comparator_tree #(
     // we need to manually add some reshaping process.
 
     // Casting array for cmp
-    logic [IN_SIZE*IN_WIDTH-1:0] cast_cmp;
-    logic [IN_SIZE*IN_WIDTH-1:0] cast_data;
+    logic [$bits(cmp)-1:0] cast_cmp;
+    logic [$bits(cmp)-1:0] cast_data;
     for (genvar j = 0; j < NEXT_LEVEL_IN_SIZE; j++) begin : reshape_in
       assign cast_cmp[IN_WIDTH*j+IN_WIDTH-1 : IN_WIDTH*j] = cmp[j];
     end

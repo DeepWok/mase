@@ -58,7 +58,6 @@ module find_max #(
   ) fixed_comparator_tree_inst (
       .clk(clk),
       .rst(rst),
-      /* verilator lint_on UNUSEDSIGNAL */
       .data_in(data_in),
       .data_in_valid(cmp_in_valid),
       .data_in_ready(cmp_in_ready),
@@ -74,12 +73,12 @@ module find_max #(
   ) + 10;  // increased by 10 so the fifo is never full
 
   for (genvar i = 0; i < IN_SIZE * IN_PARALLELISM; i = i + 1) begin : PARALLEL_FIFO
+    /* verilator lint_off UNUSEDSIGNAL */
+    /* verilator lint_off UNOPTFLAT */
     logic fifo_in_valid, fifo_in_ready;
     logic fifo_out_valid, fifo_out_ready;
-    logic fifo_empty;
-    // assign fifo_in_valid = data_in_valid;
-    // assign fifo_out_ready = data_out_ready;
-    // assign fifo_out_ready = cmp_out_valid;
+    /* verilator lint_off UNUSEDSIGNAL */
+    logic fifo_empty, fifo_full;
 
     fifo #(
         .DEPTH(CMP_TREE_DELAY + 1),
@@ -93,7 +92,8 @@ module find_max #(
         .out_data(data_in_buffered[i]),
         .out_valid(fifo_out_valid),
         .out_ready(fifo_out_ready),
-        .empty(fifo_empty)
+        .empty(fifo_empty),
+        .full(fifo_full)
     );
   end
 

@@ -136,8 +136,10 @@ module fixed_linear_dequant #(
     assign fdp_dequant_out = fdp_dequant_out_array[0];
 
     logic dequantizer_in_valid, dequantizer_in_ready;
-    logic max_num_buffered_valid, max_num_buffered_ready;
+    logic max_num_buffered_valid;
     assign max_num_buffered_valid = max_num_buffered_valid_join;  // broadcast valid siganl from the shared FIFO
+    /* verilator lint_off UNUSEDSIGNAL */
+    logic max_num_buffered_ready;
     join2 #() dequant_join (
         .data_in_valid ({max_num_buffered_valid, fdp_data_out_valid}),
         .data_in_ready ({max_num_buffered_ready, fdp_data_out_ready}),
@@ -209,6 +211,8 @@ module fixed_linear_dequant #(
   // the same valid & ready state, so we can just pick one of the ready signal to use.
   assign max_num_buffered_ready_join = linear[0].max_num_buffered_ready;
   localparam FMM_DELAY = DATA_IN_0_PARALLELISM_DIM_0 * 10;  //TODO: fifo depth too large?
+
+  /* verilator lint_off PINMISSING */
   fifo #(
       .DEPTH(FMM_DELAY + 1),
       .DATA_WIDTH(TOTAL_MAX_NUM_WIDTH)
@@ -217,7 +221,7 @@ module fixed_linear_dequant #(
       .rst(rst),
       .in_data(max_num),
       .in_valid(data_in_0_valid),  //TODO: assume din1_max_num & din2_max_num arrive in sync
-      // .in_ready (data_in1_int8_out_ready),
+      //   .in_ready (fifo_in_ready),
       .out_data(max_num_buffered),
       .out_valid(max_num_buffered_valid_join),
       .out_ready(max_num_buffered_ready_join)

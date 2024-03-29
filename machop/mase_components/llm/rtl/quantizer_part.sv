@@ -13,6 +13,7 @@ module quantizer_part #(
 
     parameter MAX_NUM_WIDTH = IN_WIDTH
 ) (
+    /* verilator lint_off UNUSEDSIGNAL */
     input clk,
     input rst,
 

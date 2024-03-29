@@ -26,7 +26,7 @@ module fifo #(
     input  logic                  out_ready,
 
     output logic empty,
-    output logic fulll
+    output logic full
 );
 
   localparam ADDR_WIDTH = SIZE == 1 ? 1 : $clog2(SIZE);
@@ -153,5 +153,6 @@ module fifo #(
     end
   end
 
-
+  assign empty = (self.size == 0);
+  assign full  = (self.size == SIZE);
 endmodule

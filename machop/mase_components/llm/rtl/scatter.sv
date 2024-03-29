@@ -11,6 +11,7 @@ module scatter #(
     parameter MAX_LARGE_NUMBERS = 3,
     parameter LARGE_NUMBER_THRES = 127  // a number larger than (BUT NOT EQUAL TO) THRES is counted as large number (outlier)
 ) (
+    /* verilator lint_off UNUSEDSIGNAL */
     input clk,
     input rst,
 
@@ -76,6 +77,6 @@ module scatter #(
   //     end
   // end
 
-  assign data_out_valid = !rst && data_in_valid;  //&& (ROW[0].counter == IN_SIZE);
-  assign data_in_ready  = !rst && data_out_ready;
+  assign data_out_valid = data_in_valid;  //&& (ROW[0].counter == IN_SIZE);
+  assign data_in_ready  = data_out_ready;
 endmodule
