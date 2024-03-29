@@ -9,15 +9,9 @@ Entry format:
 
 MASE_HW_DEPS = {
     # TODO: Failing Test
-    "activations/fixed_relu": [],
-    "activations/fixed_leaky_relu": [],
-    "llm/gather": ["llm"],
     "llm/scatter": ["llm"],
-    "llm/gather_scatter_join": ["llm"],
-    "llm/llm_int8": ["llm", "fixed_arithmetic", "cast", "linear", "matmul", "common"],
     "llm/fixed_comparator_tree_layer": ["llm"],
     "llm/fixed_comparator_tree": ["llm", "common"],
-    "llm/quantizer": ["llm", "cast", "common", "fixed_arithmetic"],
     "llm/quantizer_top": ["llm", "cast", "common", "fixed_arithmetic"],
     "llm/find_max": ["llm", "common"],
     "llm/quantized_matmul": [

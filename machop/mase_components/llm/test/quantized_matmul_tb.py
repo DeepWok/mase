@@ -32,14 +32,12 @@ if debug:
 class VerificationCase:
     def __init__(self, samples=10):
         self.data_in_width = 16
-        self.data_in_frac_width = 0
         self.weight_width = 16
-        self.weight_frac_width = 0
         self.bias_width = 16
-        self.bias_frac_width = 0
         self.data_out_width = 16
-        self.data_out_frac_width = 0
-        self.has_bias = 0
+        self.has_bias = (
+            0  # must be zero as bias is not supported in quantized_matmul component
+        )
 
         self.in_rows = 2
         self.in_columns = 4
@@ -78,22 +76,22 @@ class VerificationCase:
             + self.weight_width
             + math.ceil(math.log2(self.iterations * self.in_columns))
             + self.has_bias,
-            in_frac_width=self.data_in_frac_width + self.weight_frac_width,
+            in_frac_width=0,
             out_width=self.data_out_width,
-            out_frac_width=self.data_out_frac_width,
+            out_frac_width=0,
         )
 
     def get_dut_parameters(self):
         return {
             "IN1_WIDTH": self.data_in_width,
-            "IN1_FRAC_WIDTH": self.data_in_frac_width,
+            # "IN1_FRAC_WIDTH": self.data_in_frac_width,
             "IN2_WIDTH": self.weight_width,
-            "IN2_FRAC_WIDTH": self.weight_frac_width,
+            # "IN2_FRAC_WIDTH": self.weight_frac_width,
             "BIAS_WIDTH": self.bias_width,
-            "BIAS_FRAC_WIDTH": self.bias_frac_width,
+            # "BIAS_FRAC_WIDTH": self.bias_frac_width,
             "HAS_BIAS": self.has_bias,
             "OUT_WIDTH": self.data_out_width,
-            "OUT_FRAC_WIDTH": self.data_out_frac_width,
+            # "OUT_FRAC_WIDTH": self.data_out_frac_width,
             "IN1_PARALLELISM": self.in_rows,
             "IN_SIZE": self.in_columns,
             "IN2_PARALLELISM": self.weight_columns,
