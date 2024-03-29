@@ -7,27 +7,27 @@ Description : This module handles transposing a matrix which is being streamed
               non-streaming architecture, see transpose.sv
 */
 
-`timescale 1ns/1ps
+`timescale 1ns / 1ps
 
 // TODO: fix throughput problems
 
 module matrix_stream_transpose #(
     // Total dimensions
-    parameter TOTAL_DIM0          = 4,
-    parameter TOTAL_DIM1          = 4,
+    parameter TOTAL_DIM0 = 4,
+    parameter TOTAL_DIM1 = 4,
 
     // Compute dimensions
-    parameter COMPUTE_DIM0        = 2,
-    parameter COMPUTE_DIM1        = 2,
+    parameter COMPUTE_DIM0 = 2,
+    parameter COMPUTE_DIM1 = 2,
 
     // Other params
-    parameter DATA_WIDTH          = 8
+    parameter DATA_WIDTH = 8
 ) (
-    input  logic                  clk,
-    input  logic                  rst,
+    input logic clk,
+    input logic rst,
 
     // In Matrix
-    input  logic [DATA_WIDTH-1:0] in_data  [COMPUTE_DIM0*COMPUTE_DIM1-1:0],
+    input  logic [DATA_WIDTH-1:0] in_data [COMPUTE_DIM0*COMPUTE_DIM1-1:0],
     input  logic                  in_valid,
     output logic                  in_ready,
 
@@ -37,56 +37,57 @@ module matrix_stream_transpose #(
     input  logic                  out_ready
 );
 
-initial begin
+  initial begin
     // Check compute vs. total divisibility
-    assert (TOTAL_DIM0 % COMPUTE_DIM0 == 0) else
-        $fatal("DIM0 compute is not divisible!");
-    assert (TOTAL_DIM1 % COMPUTE_DIM1 == 0) else
-        $fatal("DIM1 compute is not divisible!");
-end
+    assert (TOTAL_DIM0 % COMPUTE_DIM0 == 0)
+    else $fatal("DIM0 compute is not divisible!");
+    assert (TOTAL_DIM1 % COMPUTE_DIM1 == 0)
+    else $fatal("DIM1 compute is not divisible!");
+  end
 
-// Parameters
-let max(a, b) = (a > b) ? a : b;
+  // Parameters
+  let max(a, b) = (a > b) ? a : b;
 
-localparam IN_DEPTH_DIM0 = TOTAL_DIM0 / COMPUTE_DIM0;
-localparam IN_DEPTH_DIM1 = TOTAL_DIM1 / COMPUTE_DIM1;
-localparam OUT_DEPTH_DIM0 = IN_DEPTH_DIM1;
-localparam OUT_DEPTH_DIM1 = IN_DEPTH_DIM0;
-localparam IN_ROW_COUNTER_WIDTH = max($clog2(IN_DEPTH_DIM1), 1);
-localparam IN_COL_COUNTER_WIDTH = max($clog2(IN_DEPTH_DIM0), 1);
-localparam OUT_ROW_COUNTER_WIDTH = max($clog2(OUT_DEPTH_DIM1), 1);
-localparam OUT_COL_COUNTER_WIDTH = max($clog2(OUT_DEPTH_DIM0), 1);
+  localparam IN_DEPTH_DIM0 = TOTAL_DIM0 / COMPUTE_DIM0;
+  localparam IN_DEPTH_DIM1 = TOTAL_DIM1 / COMPUTE_DIM1;
+  localparam OUT_DEPTH_DIM0 = IN_DEPTH_DIM1;
+  localparam OUT_DEPTH_DIM1 = IN_DEPTH_DIM0;
+  localparam IN_ROW_COUNTER_WIDTH = max($clog2(IN_DEPTH_DIM1), 1);
+  localparam IN_COL_COUNTER_WIDTH = max($clog2(IN_DEPTH_DIM0), 1);
+  localparam OUT_ROW_COUNTER_WIDTH = max($clog2(OUT_DEPTH_DIM1), 1);
+  localparam OUT_COL_COUNTER_WIDTH = max($clog2(OUT_DEPTH_DIM0), 1);
 
-// State
-struct {
+  // State
+  struct {
     // Current row & col that the window is at for the input
-    logic [IN_ROW_COUNTER_WIDTH-1:0] in_row_count;
-    logic [IN_COL_COUNTER_WIDTH-1:0] in_col_count;
+    logic [IN_ROW_COUNTER_WIDTH-1:0]  in_row_count;
+    logic [IN_COL_COUNTER_WIDTH-1:0]  in_col_count;
     // Current row & col that the window is at for the output
     logic [OUT_ROW_COUNTER_WIDTH-1:0] out_row_count;
     logic [OUT_COL_COUNTER_WIDTH-1:0] out_col_count;
-} self, next_self;
+  }
+      self, next_self;
 
 
-// FIFOs
-// We want to generate IN_DEPTH_DIM0 FIFOs to buffer the input chunks.
-// Each FIFO will need to be IN_DEPTH_DIM1 elements deep and each element will
-// be flattened to be size (DATA_WIDTH * COMPUTE_DIM0 * COMPUTE_DIM1)
+  // FIFOs
+  // We want to generate IN_DEPTH_DIM0 FIFOs to buffer the input chunks.
+  // Each FIFO will need to be IN_DEPTH_DIM1 elements deep and each element will
+  // be flattened to be size (DATA_WIDTH * COMPUTE_DIM0 * COMPUTE_DIM1)
 
-localparam FIFO_DEPTH = IN_DEPTH_DIM1;
-localparam FIFO_DATA_WIDTH = DATA_WIDTH*COMPUTE_DIM0*COMPUTE_DIM1;
-logic [FIFO_DATA_WIDTH-1:0] in_data_flat;
+  localparam FIFO_DEPTH = IN_DEPTH_DIM1;
+  localparam FIFO_DATA_WIDTH = DATA_WIDTH * COMPUTE_DIM0 * COMPUTE_DIM1;
+  logic [FIFO_DATA_WIDTH-1:0] in_data_flat;
 
-matrix_flatten #(
-    .DATA_WIDTH  (DATA_WIDTH),
-    .DIM0        (COMPUTE_DIM0),
-    .DIM1        (COMPUTE_DIM1)
-) flatten_inst (
-    .data_in     (in_data),
-    .data_out    (in_data_flat)
-);
+  matrix_flatten #(
+      .DATA_WIDTH(DATA_WIDTH),
+      .DIM0      (COMPUTE_DIM0),
+      .DIM1      (COMPUTE_DIM1)
+  ) flatten_inst (
+      .data_in (in_data),
+      .data_out(in_data_flat)
+  );
 
-for (genvar i = 0; i < IN_DEPTH_DIM0; i++) begin : fifos
+  for (genvar i = 0; i < IN_DEPTH_DIM0; i++) begin : fifos
 
     // FIFO Inputs
     logic [FIFO_DATA_WIDTH-1:0] fifo_in_data;
@@ -97,150 +98,149 @@ for (genvar i = 0; i < IN_DEPTH_DIM0; i++) begin : fifos
     logic fifo_out_valid, fifo_out_ready;
 
     fifo #(
-        .DEPTH       (FIFO_DEPTH),
-        .DATA_WIDTH  (FIFO_DATA_WIDTH)
+        .DEPTH     (FIFO_DEPTH),
+        .DATA_WIDTH(FIFO_DATA_WIDTH)
     ) fifo_inst (
-        .clk         (clk),
-        .rst         (rst),
-        .in_data     (fifo_in_data),
-        .in_valid    (fifo_in_valid),
-        .in_ready    (fifo_in_ready),
-        .out_data    (fifo_out_data_flat),
-        .out_valid   (fifo_out_valid),
-        .out_ready   (fifo_out_ready),
-        .full        (),
-        .empty       (),
-        .count       ()
+        .clk      (clk),
+        .rst      (rst),
+        .in_data  (fifo_in_data),
+        .in_valid (fifo_in_valid),
+        .in_ready (fifo_in_ready),
+        .out_data (fifo_out_data_flat),
+        .out_valid(fifo_out_valid),
+        .out_ready(fifo_out_ready),
+        .full     (),
+        .empty    (),
+        .count    ()
     );
 
-end
+  end
 
-// Connect up wires to write to all of the fifos using in_col_count as index
-// The valid and ready signals will be used to select which one is written to
-logic fifo_data_readys [IN_DEPTH_DIM0-1:0];
-for (genvar i = 0; i < IN_DEPTH_DIM0; i++) begin
+  // Connect up wires to write to all of the fifos using in_col_count as index
+  // The valid and ready signals will be used to select which one is written to
+  logic fifo_data_readys[IN_DEPTH_DIM0-1:0];
+  for (genvar i = 0; i < IN_DEPTH_DIM0; i++) begin
     assign fifos[i].fifo_in_data = in_data_flat;
     assign fifos[i].fifo_in_valid = (self.in_col_count == i) ? in_valid : 0;
     assign fifo_data_readys[i] = fifos[i].fifo_in_ready;
-end
+  end
 
-generate
-if (IN_DEPTH_DIM0 > 1) begin
-    mux #(
-        .NUM_INPUTS  (IN_DEPTH_DIM0),
-        .DATA_WIDTH  (1)
-    ) in_ready_mux (
-        .data_in     (fifo_data_readys),
-        .select      (self.in_col_count),
-        .data_out    (in_ready)
-    );
-end else begin
-    assign in_ready = fifo_data_readys[0];
-end
-endgenerate
+  generate
+    if (IN_DEPTH_DIM0 > 1) begin
+      mux #(
+          .NUM_INPUTS(IN_DEPTH_DIM0),
+          .DATA_WIDTH(1)
+      ) in_ready_mux (
+          .data_in (fifo_data_readys),
+          .select  (self.in_col_count),
+          .data_out(in_ready)
+      );
+    end else begin
+      assign in_ready = fifo_data_readys[0];
+    end
+  endgenerate
 
-// Connect up wires to read from all of the fifos using out_row_count to index
-// into the column fifos which buffer the matrix
-logic [FIFO_DATA_WIDTH-1:0] fifo_out_data_flat_mux_in [IN_DEPTH_DIM0-1:0];
-logic [FIFO_DATA_WIDTH-1:0] fifo_out_data_flat_mux_out;
-logic fifo_out_valids [IN_DEPTH_DIM0-1:0];
-for (genvar i = 0; i < IN_DEPTH_DIM0; i++) begin
+  // Connect up wires to read from all of the fifos using out_row_count to index
+  // into the column fifos which buffer the matrix
+  logic [FIFO_DATA_WIDTH-1:0] fifo_out_data_flat_mux_in[IN_DEPTH_DIM0-1:0];
+  logic [FIFO_DATA_WIDTH-1:0] fifo_out_data_flat_mux_out;
+  logic fifo_out_valids[IN_DEPTH_DIM0-1:0];
+  for (genvar i = 0; i < IN_DEPTH_DIM0; i++) begin
     assign fifo_out_data_flat_mux_in[i] = fifos[i].fifo_out_data_flat;
     assign fifo_out_valids[i] = fifos[i].fifo_out_valid;
     assign fifos[i].fifo_out_ready = (self.out_row_count == i) ? out_ready : 0;
-end
+  end
 
-generate
-if (IN_DEPTH_DIM0 > 1) begin
-    mux #(
-        .NUM_INPUTS  (IN_DEPTH_DIM0),
-        .DATA_WIDTH  (FIFO_DATA_WIDTH)
-    ) fifo_data_out_mux (
-        .data_in     (fifo_out_data_flat_mux_in),
-        .select      (self.out_row_count),
-        .data_out    (fifo_out_data_flat_mux_out)
-    );
-    mux #(
-        .NUM_INPUTS  (IN_DEPTH_DIM0),
-        .DATA_WIDTH  (1)
-    ) fifo_data_valid_mux (
-        .data_in     (fifo_out_valids),
-        .select      (self.out_row_count),
-        .data_out    (out_valid)
-    );
-end else begin
-    assign fifo_out_data_flat_mux_out = fifo_out_data_flat_mux_in[0];
-    assign out_valid = fifo_out_valids[0];
-end
-endgenerate
+  generate
+    if (IN_DEPTH_DIM0 > 1) begin
+      mux #(
+          .NUM_INPUTS(IN_DEPTH_DIM0),
+          .DATA_WIDTH(FIFO_DATA_WIDTH)
+      ) fifo_data_out_mux (
+          .data_in (fifo_out_data_flat_mux_in),
+          .select  (self.out_row_count),
+          .data_out(fifo_out_data_flat_mux_out)
+      );
+      mux #(
+          .NUM_INPUTS(IN_DEPTH_DIM0),
+          .DATA_WIDTH(1)
+      ) fifo_data_valid_mux (
+          .data_in (fifo_out_valids),
+          .select  (self.out_row_count),
+          .data_out(out_valid)
+      );
+    end else begin
+      assign fifo_out_data_flat_mux_out = fifo_out_data_flat_mux_in[0];
+      assign out_valid = fifo_out_valids[0];
+    end
+  endgenerate
 
-// Unflatten FIFO data
-logic [DATA_WIDTH-1:0] transpose_data_in [COMPUTE_DIM0*COMPUTE_DIM1-1:0];
-matrix_unflatten #(
-    .DATA_WIDTH  (DATA_WIDTH),
-    .DIM0        (COMPUTE_DIM0),
-    .DIM1        (COMPUTE_DIM1)
-) pre_transpose_flatten_inst (
-    .data_in     (fifo_out_data_flat_mux_out),
-    .data_out    (transpose_data_in)
-);
+  // Unflatten FIFO data
+  logic [DATA_WIDTH-1:0] transpose_data_in[COMPUTE_DIM0*COMPUTE_DIM1-1:0];
+  matrix_unflatten #(
+      .DATA_WIDTH(DATA_WIDTH),
+      .DIM0      (COMPUTE_DIM0),
+      .DIM1      (COMPUTE_DIM1)
+  ) pre_transpose_flatten_inst (
+      .data_in (fifo_out_data_flat_mux_out),
+      .data_out(transpose_data_in)
+  );
 
-// Combinatorial transpose module
-transpose #(
-    .WIDTH    (DATA_WIDTH),
-    .DIM0     (COMPUTE_DIM0),
-    .DIM1     (COMPUTE_DIM1)
-) transpose_inst (
-    .in_data  (transpose_data_in),
-    .out_data (out_data)
-);
+  // Combinatorial transpose module
+  transpose #(
+      .WIDTH(DATA_WIDTH),
+      .DIM0 (COMPUTE_DIM0),
+      .DIM1 (COMPUTE_DIM1)
+  ) transpose_inst (
+      .in_data (transpose_data_in),
+      .out_data(out_data)
+  );
 
-always_comb begin
+  always_comb begin
     next_self = self;
 
     // Increment input side counters
     if (in_valid && in_ready) begin
-        if (self.in_row_count == IN_DEPTH_DIM1 - 1 &&
-            self.in_col_count == IN_DEPTH_DIM0 - 1) begin
-            // End of matrix
-            next_self.in_row_count = 0;
-            next_self.in_col_count = 0;
-        end else if (self.in_col_count == IN_DEPTH_DIM0 - 1) begin
-            // End of row
-            next_self.in_row_count = self.in_row_count + 1;
-            next_self.in_col_count = 0;
-        end else begin
-            // Increment col counter
-            next_self.in_col_count = self.in_col_count + 1;
-        end
+      if (self.in_row_count == IN_DEPTH_DIM1 - 1 && self.in_col_count == IN_DEPTH_DIM0 - 1) begin
+        // End of matrix
+        next_self.in_row_count = 0;
+        next_self.in_col_count = 0;
+      end else if (self.in_col_count == IN_DEPTH_DIM0 - 1) begin
+        // End of row
+        next_self.in_row_count = self.in_row_count + 1;
+        next_self.in_col_count = 0;
+      end else begin
+        // Increment col counter
+        next_self.in_col_count = self.in_col_count + 1;
+      end
     end
 
     // Increment output side counters
     if (out_valid && out_ready) begin
-        if (self.out_row_count == OUT_DEPTH_DIM1 - 1 &&
+      if (self.out_row_count == OUT_DEPTH_DIM1 - 1 &&
             self.out_col_count == OUT_DEPTH_DIM0 - 1) begin
-            // End of matrix
-            next_self.out_row_count = 0;
-            next_self.out_col_count = 0;
-        end else if (self.out_col_count == OUT_DEPTH_DIM0 - 1) begin
-            // End of row
-            next_self.out_row_count = self.out_row_count + 1;
-            next_self.out_col_count = 0;
-        end else begin
-            // Increment col counter
-            next_self.out_col_count = self.out_col_count + 1;
-        end
+        // End of matrix
+        next_self.out_row_count = 0;
+        next_self.out_col_count = 0;
+      end else if (self.out_col_count == OUT_DEPTH_DIM0 - 1) begin
+        // End of row
+        next_self.out_row_count = self.out_row_count + 1;
+        next_self.out_col_count = 0;
+      end else begin
+        // Increment col counter
+        next_self.out_col_count = self.out_col_count + 1;
+      end
     end
 
-end
+  end
 
-always_ff @(posedge clk) begin
+  always_ff @(posedge clk) begin
     if (rst) begin
-        self <= '{default: 0};
+      self <= '{default: 0};
     end else begin
-        self <= next_self;
+      self <= next_self;
     end
-end
+  end
 
 
 endmodule

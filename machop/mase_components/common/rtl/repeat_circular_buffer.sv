@@ -3,7 +3,7 @@ Module      : repeat_circular_buffer
 Description : This module is a repeating circular buffer.
 */
 
-`timescale 1ns/1ps
+`timescale 1ns / 1ps
 
 module repeat_circular_buffer #(
     parameter DATA_WIDTH = 32,
@@ -65,7 +65,7 @@ module repeat_circular_buffer #(
     next_self = self;
 
     // Input side ready
-    in_ready = self.size != SIZE && !(self.rep == REPEAT-1 && self.write_ptr == self.read_ptr);
+    in_ready = self.size != SIZE && !(self.rep == REPEAT - 1 && self.write_ptr == self.read_ptr);
 
     // Pause reading when there is (no transfer on this cycle) AND the registers are full.
     pause_reads = !out_ready && (self.out_reg.valid || self.extra_reg.valid);
@@ -73,7 +73,7 @@ module repeat_circular_buffer #(
     // Write side of machine
     if (self.write_ptr == SIZE) begin
       // Write is finished, reset when we are on the last rep
-      if (self.rep == REPEAT-1) begin
+      if (self.rep == REPEAT - 1) begin
         next_self.write_ptr = 0;
       end
       ram_wr_en = 0;
@@ -96,17 +96,17 @@ module repeat_circular_buffer #(
     //   machine is still writing into RAM. This is to prevent read and write to
     //   the same address at the same time, yielding invalid data.
     if (self.size != 0 && !pause_reads && !(self.rep == 0 && self.read_ptr == self.write_ptr)) begin
-      if (self.read_ptr == SIZE-1 && self.rep == REPEAT-1) begin
+      if (self.read_ptr == SIZE - 1 && self.rep == REPEAT - 1) begin
         next_self.read_ptr = 0;
         next_self.rep = 0;
-      end else if (self.read_ptr == SIZE-1) begin
+      end else if (self.read_ptr == SIZE - 1) begin
         next_self.read_ptr = 0;
         next_self.rep += 1;
       end else begin
         next_self.read_ptr += 1;
       end
       // Decrease fifo size only on last rep
-      if (self.rep == REPEAT-1) begin
+      if (self.rep == REPEAT - 1) begin
         next_self.size -= 1;
       end
       next_self.ram_dout_valid = 1;
