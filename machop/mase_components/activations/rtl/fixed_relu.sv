@@ -1,5 +1,3 @@
-`timescale 1ns / 1ps
-
 /* verilator lint_off SELRANGE */
 module fixed_relu #(
     /* verilator lint_off UNUSEDPARAM */
