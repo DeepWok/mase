@@ -43,6 +43,7 @@ test-hw:
 	(cd tmp; python3 ../scripts/test-hardware.py -a || exit 1)
 
 test-sw:
+	bash scripts/test-machop.sh
 	pytest --log-level=DEBUG --verbose -n 1 --cov=machop/chop/ --cov-report=html $(coverage) --html=report.html --self-contained-html --profile --profile-svg
 
 test-all: test-hw test-sw
