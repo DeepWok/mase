@@ -15,8 +15,6 @@ log_every_n_steps = 5
 
 [passes.quantize]
 by = "type"
-[passes.quantize.default.config]
-name = "NA"
 [passes.quantize.linear.config]
 name = "integer"
 "data_in_width" = 8
@@ -27,7 +25,7 @@ name = "integer"
 "bias_frac_width" = 4
 
 [transform]
-style = "graph"
+style = "module"
 
 
 [search.search_space]
@@ -73,7 +71,7 @@ compare_to = 32 # compare to FP32
 
 [search.strategy.setup]
 n_jobs = 1
-n_trials = 5
+n_trials = 20
 timeout = 20000
 sampler = "tpe"
 # sum_scaled_metrics = true # single objective

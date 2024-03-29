@@ -22,10 +22,7 @@ jobs:
   software-regression-test:
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/jianyicheng/mase-docker/mase-ci-build:latest
-      credentials:
-        username: ${{ github.actor }}
-        password: ${{ secrets.MASE_DOCKER_CRED }}
+      image: deepwok/mase-docker:latest
     steps:
 
       # Clone the MASE repo and its submodules.
@@ -48,5 +45,10 @@ jobs:
 
       - name: Run ghp-import
         run: |
-          ghp-import -n -p -f machop/sphinx_docs/build/html
+          if [ "${{ secrets.MASE_DOCKER_CRED }}" != "" ]; then
+            ghp-import -n -p -f machop/sphinx_docs/build/html
+            echo "MASE Doc deployed."
+          else
+            echo "Skipped MASE Doc deployment."
+          fi
 
