@@ -26,19 +26,19 @@ jobs:
 
       - name: List Python files before formatting
         run: |
-          cd machop || exit 1  # Exit if unable to navigate to machop directory
-          find . -type f -name "*.py" > before.txt || true  # Redirect output to before.txt or ignore error if file already exists
+          cd machop
+          find . -type f -name "*.py" > before.txt || echo "No Python files found"
 
       - name: Run Black to format Python files
         if: ${{ always() }}
         run: |
-          cd machop || exit 1  # Exit if unable to navigate to machop directory
+          cd machop
           find . -type f -name "*.py" -exec python -m black --quiet {} \;
 
       - name: List Python files after formatting
         run: |
-          cd machop || exit 1  # Exit if unable to navigate to machop directory
-          find . -type f -name "*.py" > after.txt || true  # Redirect output to after.txt or ignore error if file already exists
+          cd machop
+          find . -type f -name "*.py" > after.txt || echo "No Python files found"
 
       - name: Print changed files
         run: |
@@ -46,4 +46,4 @@ jobs:
 
       - name: Cleanup
         run: |
-          rm before.txt after.txt
+          rm before.txt after.txt || true  # Ignore errors if files don't exist
