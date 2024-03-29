@@ -53,8 +53,10 @@ jobs:
 
       - name: Print changed files
         run: |
+          cd machop
           diff before.txt after.txt | grep "^> " | cut -c 3- || echo "No changes detected"
 
       - name: Cleanup
         run: |
+          cd machop
           rm before.txt after.txt || true  # Ignore errors if files don't exist
