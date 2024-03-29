@@ -108,4 +108,5 @@ async def test_fixed_relu(dut):
 
 if __name__ == "__main__":
     tb = VerificationCase()
-    mase_runner(module_param_list=[tb.get_dut_parameters()])
+    # mase_runner(module_param_list=[tb.get_dut_parameters()])
+    mase_runner()
