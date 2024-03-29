@@ -32,7 +32,7 @@ def test_rl_search():
     config = {
         "algorithm": "ppo",
         "env": "cifar10_subset",
-        "device": "cuda",
+        "device": "cpu",
         "total_timesteps": 1000,
         "n_steps": 128,
         "n_envs": 4,
@@ -87,7 +87,7 @@ def test_rl_search():
                 "name": "rl",
                 "algorithm": "ppo",
                 "env": "mixed_precision_paper",
-                "device": "cuda",
+                "device": "cpu",
                 "total_timesteps": 100000,
                 "n_steps": 32,
                 "n_envs": 4,
