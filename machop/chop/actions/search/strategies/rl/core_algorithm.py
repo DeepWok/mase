@@ -19,7 +19,7 @@ warnings.filterwarnings("ignore")
 algorithm_map = {"ppo": PPO, "a2c": A2C, "ddpg": DDPG}
 
 
-#class WandbCallback(BaseCallback):
+# class WandbCallback(BaseCallback):
 #    def __init__(self, verbose=0):
 #        super(WandbCallback, self).__init__(verbose)
 
@@ -96,10 +96,10 @@ class StrategyRL(SearchStrategyBase):
     def _initialize_callbacks(self, env):
         callbacks = []
 
-#        if self.wandb_callback:
-#            wandb.init(project="Mase-RL", entity=self.wandb_entity)
-#            wandb_callback = WandbCallback()
-#            callbacks.append(wandb_callback)
+        #        if self.wandb_callback:
+        #            wandb.init(project="Mase-RL", entity=self.wandb_entity)
+        #            wandb_callback = WandbCallback()
+        #            callbacks.append(wandb_callback)
 
         checkpoint_callback = CheckpointCallback(
             save_freq=self.save_freq, save_path="./logs/"
