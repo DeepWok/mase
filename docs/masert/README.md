@@ -50,7 +50,7 @@ ONNXRT offers  extensive hardware support, accommodating not just NVIDIA GPUs bu
 | fp16           | ✅     | ✅       |
 | fp32           | ✅     | ✅       |
 
-ONNXRT supports a wider range of precisions, including unsigned data types which can be beneficial for certain models and applications that rely on non-negative data values. This inclusivity enhances ONNXRT's flexibility across various computational tasks. TensorRT, while not supporting unsigned integers, focuses on optimizing the most commonly used precisions in deep learning (int8, fp16, fp32) for NVIDIA GPUs. This specialization results in higher performance on NVIDIA hardware but limits versatility compared to ONNXRT.
+ONNXRT supports a wider range of precisions, including unsigned data types which can be beneficial for certain models and applications that rely on non-negative data values. This inclusivity enhances ONNXRT's flexibility across various computational tasks. TensorRT, while not supporting unsigned integers, focuses on optimizing the most commonly used precisions in deep learning (FP32, FP16, BF16, FP8, INT4, INT8, INT32, INT64, UINT8, and BOOL data types) for NVIDIA GPUs. However, currently NVIDIA's Pytorch-Quantization library only supports int8, fp16 and fp32 thus limits versatility compared to ONNXRT for pytorch models.
 
 ##  <img src="https://raw.githubusercontent.com/unifyai/unifyai.github.io/main/img/externally_linked/related_work/vendor_specific_apis/tensorrt.png" width="20" height="20"> TensorRT
 
@@ -65,6 +65,10 @@ ONNXRT supports a wider range of precisions, including unsigned data types which
 | LSTM         | LSTM, LSTMCell                |
 
 Currently, Pytorch-Quantization only supports the modules above, however custom quantized module can be made, find out more [here](https://docs.nvidia.com/deeplearning/tensorrt/pytorch-quantization-toolkit/docs/index.html#document-tutorials/creating_custom_quantized_modules).
+
+### Mixed Precision
+
+Mixed precision quantization is also supported, and this can be set on a layerwise or typewise basis to utilise a mixture of the [supported precisions](#precision-support) mentioned above. See the [TensorRT Quantization tutorial](https://deepwok.github.io/mase/modules/documentation/tutorials.html) in the MASE documentation for more information.
 
 ##  <img src="../imgs/ONNX_logo.png" width="20" height="20"> ONNXRT
 For more detailed information on model quantization and optimization with ONNX Runtime, visit the [ONNX Runtime documentation](https://onnxruntime.ai/docs/).
