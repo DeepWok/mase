@@ -63,12 +63,13 @@ def tensorrt_fine_tune_transform_pass(graph, pass_args=None):
     This example demonstrates initiating the fine-tuning process with custom epochs, and initial and final learning rates, adapting the training regime to the specific requirements of the quantized model.
     """
     trainer = FineTuning(graph, pass_args)
-    ckpt = trainer.train()        
+    ckpt = trainer.train()
 
     # Link the model with the graph for further operations or evaluations
     graph.model = torch.fx.GraphModule(graph.model, graph.fx_graph)
 
-    return graph, {'ckpt_save_path': ckpt}
+    return graph, {"ckpt_save_path": ckpt}
+
 
 class FineTuning:
     def __init__(self, graph, config):
@@ -89,7 +90,9 @@ class FineTuning:
         `final_learning_rate` in `passes.tensorrt.fine_tune`.
         """
         if not self.config.get("fine_tune", {}).get("fine_tune", True):
-            self.logger.warning("Fine tuning is disabled in the config. Skipping QAT fine tuning.")
+            self.logger.warning(
+                "Fine tuning is disabled in the config. Skipping QAT fine tuning."
+            )
             return None
 
         if not check_for_value_in_dict(self.config, "int8"):
