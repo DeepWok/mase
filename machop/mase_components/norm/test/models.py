@@ -81,9 +81,7 @@ def _fixed_group_norm_2d_model(
     logger.debug(f"{var[0]}")
 
     # Clamp down variance to isqrt width
-    var_clamp = torch.clamp(
-        var, 0.0, ((2**isqrt_width) - 1) / (2**isqrt_frac_width)
-    )
+    var_clamp = torch.clamp(var, 0.0, ((2**isqrt_width) - 1) / (2**isqrt_frac_width))
     logger.debug("Variance Clamped:")
     logger.debug(f"{var_clamp[0]}")
     var_clamp_int = (var_clamp * (2**isqrt_frac_width)).int()
