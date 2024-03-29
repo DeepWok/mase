@@ -84,11 +84,18 @@ class BatchNormTB(Testbench):
         return tensor
 
 
-    def get_test_case(self, config, parallelism, out_parallelism):
-        model = BatchNorm1dInteger(
-            num_features=self.num_features,
-            config=config                
-        )
+    def get_test_case(self, is_quantized, config, parallelism, out_parallelism):
+        
+        if is_quantized:
+            model = BatchNorm1dInteger(
+                num_features=self.num_features,
+                config=config                
+            )
+        else:
+            model = BatchNorm1d(
+                num_features=self.num_features,
+                config=config                
+            )
         
         # Train first to generate a running mean/average
         training_inputs = torch.randn((10, model.num_features))
@@ -184,8 +191,8 @@ class BatchNormTB(Testbench):
         out_parallelism = int(self.dut.DATA_OUT_0_PARALLELISM_DIM_0) * int(self.dut.DATA_OUT_0_PARALLELISM_DIM_1)    
 
         # Get two sets of test case data.
-        inputs_1, weight_1, bias_1, mean_1, exp_outputs_1 = self.get_test_case(config, parallelism, out_parallelism)
-        inputs_2, weight_2, bias_2, mean_2, exp_outputs_2 = self.get_test_case(config, parallelism, out_parallelism)
+        inputs_1, weight_1, bias_1, mean_1, exp_outputs_1 = self.get_test_case(True, config, parallelism, out_parallelism)
+        inputs_2, weight_2, bias_2, mean_2, exp_outputs_2 = self.get_test_case(True, config, parallelism, out_parallelism)
 
         self.data_out_0_monitor.load_monitor(exp_outputs_1)
         self.data_out_0_monitor.load_monitor(exp_outputs_2)
@@ -238,9 +245,9 @@ if __name__ == "__main__":
              {
                 "DATA_IN_0_PRECISION_0": 8,
                 "DATA_IN_0_PRECISION_1": 3,
-                "DATA_IN_0_PARALLELISM_DIM_0": 16,
+                "DATA_IN_0_PARALLELISM_DIM_0": 8,
                 "DATA_IN_0_PARALLELISM_DIM_1": 1,                  
-                "DATA_OUT_0_PARALLELISM_DIM_0": 4,
+                "DATA_OUT_0_PARALLELISM_DIM_0": 16,
                 "DATA_OUT_0_PARALLELISM_DIM_1": 1,                  
              },
              # {

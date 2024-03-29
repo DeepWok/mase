@@ -66,12 +66,12 @@ module fixed_layer_norm #(
     output                              data_in_0_ready, 
 
     input logic signed  [IN_WIDTH-1:0]  bias     [IN_DEPTH-1:0],
-    input                               bias_in_0_valid,
-    output                              bias_in_0_ready, 
+    input                               bias_valid,
+    output                              bias_ready, 
     
     input logic signed  [IN_WIDTH-1:0]  weight    [IN_DEPTH-1:0],
-    input                               weight_in_0_valid,
-    output                              weight_in_0_ready, 
+    input                               weight_valid,
+    output                              weight_ready, 
 
     // Output ports for data
     output  signed [OUT_WIDTH-1:0] data_out_0    [DATA_OUT_0_PARALLELISM_DIM_0-1:0],

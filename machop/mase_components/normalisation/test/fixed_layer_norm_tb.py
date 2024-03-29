@@ -16,7 +16,7 @@ from cocotb.triggers import *
 from cocotb.binary import BinaryValue
 
 from mase_cocotb.testbench import Testbench
-from mase_cocotb.interfaces.streaming import StreamDriver, StreamMonitor
+from mase_cocotb.interfaces.streaming import StreamDriver, StreamMonitor, StreamMonitorRange
 from mase_cocotb.z_qlayers import quantize_to_int
 from mase_cocotb.runner import mase_runner
 from mase_cocotb.utils import bit_driver, sign_extend_t
@@ -47,7 +47,21 @@ class LayerNormTB(Testbench):
             dut.data_in_0_ready
         )        
 
-        self.data_out_0_monitor = StreamMonitor(
+        self.weight_driver = StreamDriver(
+            dut.clk, 
+            dut.weight, 
+            dut.weight_valid,
+            dut.weight_ready
+        )
+        
+        self.bias_driver = StreamDriver(
+            dut.clk, 
+            dut.bias, 
+            dut.bias_valid,
+            dut.bias_ready
+        )
+        
+        self.data_out_0_monitor = StreamMonitorRange(
             dut.clk,
             dut.data_out_0,
             dut.data_out_0_valid,
@@ -97,7 +111,7 @@ class LayerNormTB(Testbench):
         print(self.model.weight)
         print(self.model.bias)
         self.model.training = False
-        inputs = torch.randn((1, self.model.normalized_shape[0])) + 0.5
+        inputs = torch.randn((1, self.model.normalized_shape[0])) * 2.0 + 0.5
         
         quantizer = partial(
             integer_quantizer, width=data_width, frac_width=data_frac_width
@@ -168,7 +182,7 @@ class LayerNormTB(Testbench):
         self.data_out_0_monitor.load_monitor(exp_outputs_model)
         print(f'================= DEBUG: loaded hw outptus ================= \n')
 
-        await Timer(1000, units="us")
+        await Timer(800, units="ns")
 
         print(f'================= DEBUG: in run_test waited 1ms ================= \n')
 
@@ -190,7 +204,18 @@ if __name__ == "__main__":
                 "DATA_IN_0_PRECISION_1": 3,
                 "DATA_IN_0_PARALLELISM_DIM_0": 16,
                 "DATA_IN_0_PARALLELISM_DIM_1": 1,                  
-             },
-              
+             }, 
+             {
+                "DATA_IN_0_PRECISION_0": 16,
+                "DATA_IN_0_PRECISION_1": 5,
+                "DATA_IN_0_PARALLELISM_DIM_0": 16,
+                "DATA_IN_0_PARALLELISM_DIM_1": 1,                  
+             }, 
+             {
+                "DATA_IN_0_PRECISION_0": 12,
+                "DATA_IN_0_PRECISION_1": 5,
+                "DATA_IN_0_PARALLELISM_DIM_0": 16,
+                "DATA_IN_0_PARALLELISM_DIM_1": 1,                  
+             }, 
         ]    
     )

@@ -15,16 +15,17 @@ module convert_parallelism #(
     output data_out_valid,
     input data_out_ready
 );    
-    if (DATA_OUT_PARALLELISM == DATA_IN_PARALLELISM) begin    
-        always_comb begin
-            for (int i = 0; i < DATA_OUT_PARALLELISM; i++)
-            begin
-                data_out[i] <= data_in[i];
-            end
-            data_out_valid = data_in_valid;
-            data_in_ready = data_out_ready;
-        end
-    end else if (DATA_OUT_PARALLELISM > DATA_IN_PARALLELISM) begin
+    // if (DATA_OUT_PARALLELISM == DATA_IN_PARALLELISM) begin    
+    //     always_comb begin
+    //         for (int i = 0; i < DATA_OUT_PARALLELISM; i++)
+    //         begin
+    //             data_out[i] = data_in[i];
+    //         end
+    //         data_out_valid = data_in_valid;
+    //         data_in_ready = data_out_ready;
+    //     end
+    // end else 
+    if (DATA_OUT_PARALLELISM > DATA_IN_PARALLELISM) begin
 
         // How many cycles we need to transfer the input to the output module.
         // If the output parallelism is larger than the input, we must spend several
@@ -65,15 +66,20 @@ module convert_parallelism #(
                     end
                 end else begin
                     data_in_ready <= data_out_ready;
-                    data_out_valid <= 0;
+                    if(data_out_ready && data_out_valid) begin
+                        data_out_valid <= 0;
+                    end else begin
+                        data_out_valid <= data_out_valid;
+                    end
                     count <= count;
                 end
             end
         end
 
-    end else if(DATA_OUT_PARALLELISM < DATA_IN_PARALLELISM) begin
+    end else if(DATA_OUT_PARALLELISM <= DATA_IN_PARALLELISM) begin
 
         logic [DATA_WIDTH-1:0] store [DATA_IN_PARALLELISM-1:0];
+        logic store_valid;
         // How many cycles we need to transfer the input to the output module.
         // If the output parallelism is larger than the input, we must spend several
         // cycles feeding input into the out.
@@ -81,9 +87,12 @@ module convert_parallelism #(
         // to the output slowly over several cycles.
         localparam TRANSFER_CYCLES = DATA_IN_PARALLELISM / DATA_OUT_PARALLELISM;
         logic [$clog2(TRANSFER_CYCLES):0] count;
-        logic store_valid;
-        assign data_in_ready = data_out_ready && (!store_valid) && !(data_out_ready && data_in_valid);
-        
+
+        // We can only accept new input when:
+        // 1. The input is valid.
+        // 2. Our store will be empty next cycle.
+        assign data_in_ready = !store_valid;
+
         always_ff @(posedge clk)
         begin
             if (rst) begin
@@ -91,26 +100,22 @@ module convert_parallelism #(
                 data_out_valid <= 0;
                 store_valid <= 0;
             end else begin
-                data_out_valid <= data_in_valid | store_valid;
 
-                if (data_out_ready && data_in_valid && count == TRANSFER_CYCLES) begin
+                // Update store when new input comes.  
+                if (data_out_ready && data_in_valid && (!store_valid)) begin
                     for (int i = 0; i < DATA_IN_PARALLELISM; i++)
                     begin
                         store[i] <= data_in[i];
                     end
                     store_valid <= 1;
-                end
-
-                if (data_out_ready && (data_in_valid | store_valid)) begin
-
+                    data_out_valid <= 0;
+                end else if (data_out_ready && store_valid) begin
+                    
                     for (int i = 0; i < DATA_OUT_PARALLELISM; i++)
                     begin
-                        if (count == TRANSFER_CYCLES) begin
-                            data_out[i] <= data_in[i + (count - 1) * DATA_OUT_PARALLELISM];
-                        end else begin
-                            data_out[i] <= store[i + (count - 1) * DATA_OUT_PARALLELISM];
-                        end
+                        data_out[i] <= store[i + (count - 1) * DATA_OUT_PARALLELISM];
                     end
+                    data_out_valid <= 1;
 
                     if (count == 1) begin
                         count <= TRANSFER_CYCLES;
@@ -118,10 +123,31 @@ module convert_parallelism #(
                     end else begin
                         count <= count - 1;
                     end
-                end else begin
+                end else if (!store_valid)begin
+
                     data_out_valid <= 0;
-                    count <= count;
                 end
+
+                // if (data_out_ready && (data_in_valid | store_valid)) begin
+
+                //     for (int i = 0; i < DATA_OUT_PARALLELISM; i++)
+                //     begin
+                //         if (count == TRANSFER_CYCLES) begin
+                //             data_out[i] <= data_in[i + (count - 1) * DATA_OUT_PARALLELISM];
+                //         end else begin
+                //             data_out[i] <= store[i + (count - 1) * DATA_OUT_PARALLELISM];
+                //         end
+                //     end
+
+                //     if (count == 1) begin
+                //         count <= TRANSFER_CYCLES;
+                //         store_valid <= 0;
+                //     end else begin
+                //         count <= count - 1;
+                //     end
+                // end else begin
+                //     count <= count;
+                // end
             end
         end
     end
