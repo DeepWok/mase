@@ -2,11 +2,11 @@
 
 module fixed_comparator_tree #(
 
-    parameter IN_SIZE = 1,
-    parameter IN_WIDTH = 16,
+    parameter IN_SIZE   = 1,
+    parameter IN_WIDTH  = 16,
     parameter OUT_WIDTH = IN_WIDTH
-    
-    )(
+
+) (
 
 
     input  logic                 clk,
@@ -21,7 +21,7 @@ module fixed_comparator_tree #(
 
 );
 
-localparam LEVELS = $clog2(IN_SIZE);
+  localparam LEVELS = $clog2(IN_SIZE);
 
 
   // Declare variables for intermediate values at each level
@@ -52,7 +52,7 @@ localparam LEVELS = $clog2(IN_SIZE);
     localparam NEXT_LEVEL_IN_SIZE = (LEVEL_IN_SIZE + 1) / 2;
 
     // The cmp array is the output of the comparator
-    logic [IN_WIDTH-1:0] cmp [NEXT_LEVEL_IN_SIZE-1:0];
+    logic [IN_WIDTH-1:0] cmp[NEXT_LEVEL_IN_SIZE-1:0];
 
     fixed_comparator_tree_layer #(
         .IN_SIZE (LEVEL_IN_SIZE),
@@ -66,14 +66,14 @@ localparam LEVELS = $clog2(IN_SIZE);
     // we need to manually add some reshaping process.
 
     // Casting array for cmp
-    logic [IN_SIZE*IN_WIDTH-1: 0] cast_cmp;
-    logic [IN_SIZE*IN_WIDTH-1: 0] cast_data;
+    logic [IN_SIZE*IN_WIDTH-1:0] cast_cmp;
+    logic [IN_SIZE*IN_WIDTH-1:0] cast_data;
     for (genvar j = 0; j < NEXT_LEVEL_IN_SIZE; j++) begin : reshape_in
-      assign cast_cmp[IN_WIDTH*j+IN_WIDTH -1 :IN_WIDTH*j] = cmp[j];
+      assign cast_cmp[IN_WIDTH*j+IN_WIDTH-1 : IN_WIDTH*j] = cmp[j];
     end
 
     skid_buffer #(
-        .DATA_WIDTH(IN_WIDTH*IN_SIZE)
+        .DATA_WIDTH(IN_WIDTH * IN_SIZE)
     ) register_slice (
         .clk           (clk),
         .rst           (rst),
@@ -100,21 +100,21 @@ localparam LEVELS = $clog2(IN_SIZE);
   for (genvar j = 0; j < IN_SIZE; j++) begin : layer_0
     assign vars[0].data[j] = data_in[j];
   end
-  
+
   // This line assigns the input validity signal to the first level's valid signal, indicating that the input data is ready to be processed.
   assign vars[0].valid = data_in_valid;
-  
+
   // The input ready signal is set based on the readiness of the first level, facilitating flow control.
   assign data_in_ready = vars[0].ready;
 
   // Assigns the output of the last level to the module's output. This is the result of the comparator tree.
-  logic [OUT_WIDTH-1 :0] reg_out;
+  logic [OUT_WIDTH-1 : 0] reg_out;
   assign reg_out = vars[LEVELS].data[0];
   assign data_out = ($signed(reg_out) < 0) ? -reg_out : reg_out;  // get the absolute value
-  
+
   // The validity of the module's output is determined by the last level's valid signal.
   assign data_out_valid = vars[LEVELS].valid;
-  
+
   // The readiness to accept new output data is communicated back up the tree via the last level's ready signal.
   assign vars[LEVELS].ready = data_out_ready;
 

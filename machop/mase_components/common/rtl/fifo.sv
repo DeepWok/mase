@@ -11,7 +11,7 @@ Description : This module implements a max throughput streaming fifo with
 
 module fifo #(
     parameter DATA_WIDTH = 8,
-    parameter DEPTH       = 16,
+    parameter DEPTH      = 16,
     parameter SIZE       = DEPTH
 ) (
     input logic clk,

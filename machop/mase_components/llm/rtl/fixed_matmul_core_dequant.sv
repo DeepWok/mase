@@ -96,8 +96,8 @@ module fixed_matmul_core_dequant #(
         .DATA_OUT_0_PRECISION_0(CAST_WIDTH),
 
         .HAS_BIAS(HAS_BIAS),
-        .DEQUANTIZATION_WIDTH (DEQUANTIZATION_WIDTH),
-        .MAX_NUM_WIDTH (MAX_NUM_WIDTH)
+        .DEQUANTIZATION_WIDTH(DEQUANTIZATION_WIDTH),
+        .MAX_NUM_WIDTH(MAX_NUM_WIDTH)
         /* verilator lint_off PINMISSING */
     ) fl_instance (
         .clk(clk),

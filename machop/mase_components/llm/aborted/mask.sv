@@ -19,37 +19,37 @@ module mask #(
     input rst,
 
     // input port for weight
-    input  [IN_WIDTH-1:0] data_in      [IN_SIZE * IN_PARALLELISM-1: 0],
-    input data_in_valid,
-    output data_in_ready,
+    input  [IN_WIDTH-1:0] data_in      [IN_SIZE * IN_PARALLELISM-1:0],
+    input                 data_in_valid,
+    output                data_in_ready,
 
-    output [0:0] ind_table [IN_SIZE * IN_PARALLELISM-1:0],
+    output [0:0] ind_table[IN_SIZE * IN_PARALLELISM-1:0],
 
-    output [IN_WIDTH-1:0] data_out    [IN_SIZE * IN_PARALLELISM-1 :0],
-    output data_out_valid,
-    input data_out_ready
+    output [IN_WIDTH-1:0] data_out      [IN_SIZE * IN_PARALLELISM-1 : 0],
+    output                data_out_valid,
+    input                 data_out_ready
 );
 
-    // Large-number checking
-    for (genvar i = 0; i < IN_SIZE * IN_PARALLELISM; i = i + 1) begin: MSB_CHECK
-        fp16_comparator #(
-            .THRES(THRES)
-        ) fp16_comp_inst(
-            .data_in(data_in[i]),
-            .result(ind_table[i])
-        );
-    end
+  // Large-number checking
+  for (genvar i = 0; i < IN_SIZE * IN_PARALLELISM; i = i + 1) begin : MSB_CHECK
+    fp16_comparator #(
+        .THRES(THRES)
+    ) fp16_comp_inst (
+        .data_in(data_in[i]),
+        .result (ind_table[i])
+    );
+  end
 
-    assign data_out = data_in;
-    // always_ff @(posedge clk) begin: RST
-    //     if (rst) begin
-    //         data_in_ready <= 0;
-    //         data_out_valid <= 0;
-    //     end else begin
-    //         data_in_ready <= 1;
-    //         data_out_valid <= 1;
-    //     end
-    // end
-    assign data_in_ready = !rst && data_out_ready;
-    assign data_out_valid = !rst && data_in_valid;
+  assign data_out = data_in;
+  // always_ff @(posedge clk) begin: RST
+  //     if (rst) begin
+  //         data_in_ready <= 0;
+  //         data_out_valid <= 0;
+  //     end else begin
+  //         data_in_ready <= 1;
+  //         data_out_valid <= 1;
+  //     end
+  // end
+  assign data_in_ready = !rst && data_out_ready;
+  assign data_out_valid = !rst && data_in_valid;
 endmodule

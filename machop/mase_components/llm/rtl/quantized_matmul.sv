@@ -22,7 +22,7 @@ module quantized_matmul #(
     parameter BIAS_PARALLELISM = IN1_PARALLELISM,
     parameter BIAS_SIZE = IN2_PARALLELISM,
 
-    parameter OUT_ROWS = IN1_PARALLELISM, //rows
+    parameter OUT_ROWS = IN1_PARALLELISM,  //rows
     parameter OUT_COLUMNS = IN2_PARALLELISM,  //cols
 
     parameter QUANTIZATION_WIDTH = 8
@@ -47,107 +47,107 @@ module quantized_matmul #(
     input data_out_ready
 );
 
-/********* data_in_1 (data_in) quantization *******/
-logic data_in1_int8_out_valid;
-logic data_in1_int8_out_ready;
-logic [QUANTIZATION_WIDTH-1:0] data_in1_int8 [IN1_PARALLELISM*IN_SIZE-1:0];
-logic [IN1_WIDTH-1:0] data_in1_max_num;
+  /********* data_in_1 (data_in) quantization *******/
+  logic data_in1_int8_out_valid;
+  logic data_in1_int8_out_ready;
+  logic [QUANTIZATION_WIDTH-1:0] data_in1_int8[IN1_PARALLELISM*IN_SIZE-1:0];
+  logic [IN1_WIDTH-1:0] data_in1_max_num;
 
-quantizer_top #(
-    .IN_WIDTH(IN1_WIDTH),  // FP16
-    .IN_SIZE(IN_SIZE),  // in cols//TODO???? or IN_SIZE(IN1_PARALLELISM)????????????
-    .IN_PARALLELISM(IN1_PARALLELISM), // in rows
-    .OUT_WIDTH(QUANTIZATION_WIDTH) // int8
-) quantizer_top_data_in_inst(
-    .clk(clk),
-    .rst(rst),
-    // data_in
-    .data_in(data_in1),
-    .data_in_valid(data_in1_valid),
-    .data_in_ready(data_in1_ready),
-    // data_out
-    .data_out(data_in1_int8),
-    .data_out_valid(data_in1_int8_out_valid),
-    .data_out_ready(data_in1_int8_out_ready),   
-    .max_num(data_in1_max_num)  //TODO: change datatype // TODO: if max_num is 0, just skip this module?
-);
-
-
-
-/********* data_in_2 (weight) quantization *******/
-logic data_in2_int8_out_valid;
-logic data_in2_int8_out_ready;
-logic [QUANTIZATION_WIDTH-1:0] data_in2_int8 [IN2_PARALLELISM*IN_SIZE-1:0];
-logic [IN2_WIDTH-1:0] data_in2_max_num;
-
-quantizer_top #(
-    .IN_WIDTH(IN2_WIDTH),  // FP16
-    .IN_SIZE(IN_SIZE),  // in cols//TODO???? or IN_SIZE(IN1_PARALLELISM)????????????
-    .IN_PARALLELISM(IN2_PARALLELISM), // in rows
-
-    .OUT_WIDTH(QUANTIZATION_WIDTH) // int8
-) quantizer_top_weight_inst(
-    .clk(clk),
-    .rst(rst),
-    // data_in
-    .data_in(data_in2),
-    .data_in_valid(data_in2_valid),
-    .data_in_ready(data_in2_ready),
-    // data_out
-    .data_out(data_in2_int8),
-    .data_out_valid(data_in2_int8_out_valid),
-    .data_out_ready(data_in2_int8_out_ready),   
-    .max_num(data_in2_max_num)  //TODO: change datatype // TODO: if max_num is 0, just skip this module?
-);
+  quantizer_top #(
+      .IN_WIDTH(IN1_WIDTH),  // FP16
+      .IN_SIZE(IN_SIZE),  // in cols//TODO???? or IN_SIZE(IN1_PARALLELISM)????????????
+      .IN_PARALLELISM(IN1_PARALLELISM),  // in rows
+      .OUT_WIDTH(QUANTIZATION_WIDTH)  // int8
+  ) quantizer_top_data_in_inst (
+      .clk(clk),
+      .rst(rst),
+      // data_in
+      .data_in(data_in1),
+      .data_in_valid(data_in1_valid),
+      .data_in_ready(data_in1_ready),
+      // data_out
+      .data_out(data_in1_int8),
+      .data_out_valid(data_in1_int8_out_valid),
+      .data_out_ready(data_in1_int8_out_ready),
+      .max_num(data_in1_max_num)  //TODO: change datatype // TODO: if max_num is 0, just skip this module?
+  );
 
 
 
+  /********* data_in_2 (weight) quantization *******/
+  logic data_in2_int8_out_valid;
+  logic data_in2_int8_out_ready;
+  logic [QUANTIZATION_WIDTH-1:0] data_in2_int8[IN2_PARALLELISM*IN_SIZE-1:0];
+  logic [IN2_WIDTH-1:0] data_in2_max_num;
 
-/******* int8 multiplication *******/
-// TODO: dummy bias
-logic [QUANTIZATION_WIDTH-1: 0] bias_int8 [OUT_ROWS*OUT_COLUMNS-1 :0];
-logic bias_int8_out_ready;
-logic bias_int8_out_valid;
-assign bias_int8_out_valid = data_in1_int8_out_valid;
-assign bias_ready = data_in1_ready;  //TODO
+  quantizer_top #(
+      .IN_WIDTH(IN2_WIDTH),  // FP16
+      .IN_SIZE(IN_SIZE),  // in cols//TODO???? or IN_SIZE(IN1_PARALLELISM)????????????
+      .IN_PARALLELISM(IN2_PARALLELISM),  // in rows
+
+      .OUT_WIDTH(QUANTIZATION_WIDTH)  // int8
+  ) quantizer_top_weight_inst (
+      .clk(clk),
+      .rst(rst),
+      // data_in
+      .data_in(data_in2),
+      .data_in_valid(data_in2_valid),
+      .data_in_ready(data_in2_ready),
+      // data_out
+      .data_out(data_in2_int8),
+      .data_out_valid(data_in2_int8_out_valid),
+      .data_out_ready(data_in2_int8_out_ready),
+      .max_num(data_in2_max_num)  //TODO: change datatype // TODO: if max_num is 0, just skip this module?
+  );
 
 
-fixed_matmul_core_dequant #(
-    .IN1_WIDTH (QUANTIZATION_WIDTH),
-    .IN1_FRAC_WIDTH (0),
-    .IN2_WIDTH (QUANTIZATION_WIDTH),
-    .IN2_FRAC_WIDTH (0),
-    .BIAS_WIDTH (QUANTIZATION_WIDTH),
-    .BIAS_FRAC_WIDTH (0),
-    .OUT_WIDTH (OUT_WIDTH),
-    .OUT_FRAC_WIDTH (0),
-    .IN1_PARALLELISM (IN1_PARALLELISM),
-    .IN_SIZE (IN_SIZE),
-    .IN2_PARALLELISM (IN2_PARALLELISM),
-    .IN_DEPTH (IN_DEPTH),
-    .HAS_BIAS (HAS_BIAS),
-    .DEQUANTIZATION_WIDTH (2*QUANTIZATION_WIDTH)  // special param
-) fmm_int8 (
-    .clk (clk),
-    .rst (rst),
-    .data_in1 (data_in1_int8),
-    .data_in1_max_num (data_in1_max_num),  // special port
-    .data_in1_valid (data_in1_int8_out_valid),
-    .data_in1_ready (data_in1_int8_out_ready),
 
-    .data_in2 (data_in2_int8),
-    .data_in2_max_num (data_in2_max_num),  // special port
-    .data_in2_valid (data_in2_int8_out_valid),
-    .data_in2_ready (data_in2_int8_out_ready),
 
-    .bias (bias_int8),
-    .bias_valid (bias_int8_out_valid),
-    .bias_ready (bias_int8_out_ready),
+  /******* int8 multiplication *******/
+  // TODO: dummy bias
+  logic [QUANTIZATION_WIDTH-1:0] bias_int8[OUT_ROWS*OUT_COLUMNS-1 : 0];
+  logic bias_int8_out_ready;
+  logic bias_int8_out_valid;
+  assign bias_int8_out_valid = data_in1_int8_out_valid;
+  assign bias_ready = data_in1_ready;  //TODO
 
-    .data_out (data_out),
-    .data_out_valid (data_out_valid),
-    .data_out_ready (data_out_ready)
-);
+
+  fixed_matmul_core_dequant #(
+      .IN1_WIDTH(QUANTIZATION_WIDTH),
+      .IN1_FRAC_WIDTH(0),
+      .IN2_WIDTH(QUANTIZATION_WIDTH),
+      .IN2_FRAC_WIDTH(0),
+      .BIAS_WIDTH(QUANTIZATION_WIDTH),
+      .BIAS_FRAC_WIDTH(0),
+      .OUT_WIDTH(OUT_WIDTH),
+      .OUT_FRAC_WIDTH(0),
+      .IN1_PARALLELISM(IN1_PARALLELISM),
+      .IN_SIZE(IN_SIZE),
+      .IN2_PARALLELISM(IN2_PARALLELISM),
+      .IN_DEPTH(IN_DEPTH),
+      .HAS_BIAS(HAS_BIAS),
+      .DEQUANTIZATION_WIDTH(2 * QUANTIZATION_WIDTH)  // special param
+  ) fmm_int8 (
+      .clk(clk),
+      .rst(rst),
+      .data_in1(data_in1_int8),
+      .data_in1_max_num(data_in1_max_num),  // special port
+      .data_in1_valid(data_in1_int8_out_valid),
+      .data_in1_ready(data_in1_int8_out_ready),
+
+      .data_in2(data_in2_int8),
+      .data_in2_max_num(data_in2_max_num),  // special port
+      .data_in2_valid(data_in2_int8_out_valid),
+      .data_in2_ready(data_in2_int8_out_ready),
+
+      .bias(bias_int8),
+      .bias_valid(bias_int8_out_valid),
+      .bias_ready(bias_int8_out_ready),
+
+      .data_out(data_out),
+      .data_out_valid(data_out_valid),
+      .data_out_ready(data_out_ready)
+  );
 
 
 endmodule
