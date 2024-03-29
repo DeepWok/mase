@@ -71,7 +71,6 @@ def train(
             lr_monitor_callback,
         ]
         plt_trainer_args["logger"] = visualizer
-        print("visualizer");print(visualizer)
 
     # plugin
     if auto_requeue:

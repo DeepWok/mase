@@ -9,32 +9,32 @@ class VGG7(nn.Module):
     def __init__(self, image_size: list[int], num_classes: int) -> None:
         super().__init__()
         self.feature_layers = nn.Sequential(
-            nn.Conv2d(image_size[0], 128, kernel_size=3, padding=1),  #0
+            nn.Conv2d(image_size[0], 128, kernel_size=3, padding=1),  # 0
             nn.BatchNorm2d(128, momentum=0.9),
             nn.ReLU(inplace=True),
-            nn.Conv2d(128, 128, kernel_size=3, padding=1),   #3
+            nn.Conv2d(128, 128, kernel_size=3, padding=1),   # 3
             nn.BatchNorm2d(128, momentum=0.9),
             nn.ReLU(inplace=True),
             nn.MaxPool2d(kernel_size=2),
-            nn.Conv2d(128, 256, kernel_size=3, padding=1),   #7
+            nn.Conv2d(128, 256, kernel_size=3, padding=1),   # 7
             nn.BatchNorm2d(256, momentum=0.9),
             nn.ReLU(inplace=True),
-            nn.Conv2d(256, 256, kernel_size=3, padding=1),    #10
+            nn.Conv2d(256, 256, kernel_size=3, padding=1),    # 10
             nn.BatchNorm2d(256, momentum=0.9),
             nn.ReLU(inplace=True),
             nn.MaxPool2d(kernel_size=2),
-            nn.Conv2d(256, 512, kernel_size=3, padding=1),    #14
+            nn.Conv2d(256, 512, kernel_size=3, padding=1),    # 14
             nn.BatchNorm2d(512, momentum=0.9),
             nn.ReLU(inplace=True),
-            nn.Conv2d(512, 512, kernel_size=3, padding=1),   #17
+            nn.Conv2d(512, 512, kernel_size=3, padding=1),   # 17
             nn.BatchNorm2d(512, momentum=0.9),
             nn.ReLU(inplace=True),
             nn.MaxPool2d(kernel_size=2),
         )
         self.classifier = nn.Sequential(
-            nn.Linear(8192, 1024),  #0
+            nn.Linear(8192, 1024),  # 0
             nn.ReLU(inplace=True),
-            nn.Linear(1024, 1024),  #2
+            nn.Linear(1024, 1024),  # 2
             nn.ReLU(inplace=True),
         )
 
