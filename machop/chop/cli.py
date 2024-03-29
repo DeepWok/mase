@@ -57,8 +57,6 @@ from .actions import (
     search,
     emit,
     simulate,
-    train1,
-    prune_and_retrain,
 )
 from .dataset import MaseDataModule, AVAILABLE_DATASETS, get_dataset_info
 from .tools import post_parse_load_config, load_config
@@ -267,7 +265,7 @@ class ChopCLI:
                 run_action_fn = self._run_transform
             case "train":
                 # run_action_fn = self._run_train
-                run_action_fn = self._run_train1
+                run_action_fn = self._run_train
             case "test":
                 run_action_fn = self._run_test
             case "search":
@@ -276,8 +274,8 @@ class ChopCLI:
                 run_action_fn = self._run_emit
             case "simulate":
                 run_action_fn = self._run_simulate
-            case "prune_and_retrain":
-                run_action_fn = self._run_prune_and_retrain
+            # case "prune_and_retrain":
+            #    run_action_fn = self._run_prune_and_retrain
 
         if run_action_fn is None:
             raise ValueError(f"Unsupported action: {self.args.action}")
@@ -334,6 +332,7 @@ class ChopCLI:
         train(**train_params)
         self.logger.info("Training is completed")
 
+    """
     def _run_train1(self):
         self.logger.info(f"Training model {self.args.model!r}...")
         # A configuration is compulsory for self-designed train passes
@@ -363,6 +362,7 @@ class ChopCLI:
 
         train1(**train1_params)
         self.logger.info("Self-designed training is completed")
+    """
 
     def _run_test(self):
         self.logger.info(f"Testing model {self.args.model!r}...")
@@ -433,6 +433,7 @@ class ChopCLI:
         transform(**transform_params)
         self.logger.info("Transformation is completed")
 
+    """
     def _run_prune_and_retrain(self):
         # prune
         if self.args.config is None:
@@ -462,6 +463,7 @@ class ChopCLI:
 
         prune_and_retrain(**prune_and_retrain_params)
         self.logger.info("Pruning and Re-training is completed! Thanks!")
+    """
 
     def _run_search(self):
         load_name = None
