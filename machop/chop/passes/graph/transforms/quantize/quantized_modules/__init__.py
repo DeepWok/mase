@@ -57,7 +57,10 @@ from .relu import (
     ReLUBinary,
     ReLUTernary,
 )
-from .batch_norm2d import BatchNorm2dInteger
+from .batch_norm2d import (
+    BatchNorm2dInteger,
+    BatchNorm2dBinary,
+)
 from .layer_norm import (
     LayerNormInteger,
 )
@@ -118,6 +121,7 @@ quantized_module_map = {
     "relu_binary": ReLUBinary,
     "relu_ternary": ReLUTernary,
     "batch_norm2d_integer": BatchNorm2dInteger,
+    "batch_norm2d_binary": BatchNorm2dBinary,
     "layer_norm_integer": LayerNormInteger,
     "group_norm_integer": GroupNormInteger,
     "instance_norm2d_integer": InstanceNorm2dInteger,

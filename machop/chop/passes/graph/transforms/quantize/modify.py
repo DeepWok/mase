@@ -183,6 +183,9 @@ def create_new_module(
             track_running_stats=original_module.track_running_stats,
             config=config,
         )
+        if original_module.affine:
+            copy_weights(original_module.weight, new_module.weight)
+            copy_weights(original_module.bias, new_module.bias)
     elif mase_op == "layer_norm":
         new_module_cls = quantized_module_map[f"layer_norm_{quant_name}"]
         new_module = new_module_cls(

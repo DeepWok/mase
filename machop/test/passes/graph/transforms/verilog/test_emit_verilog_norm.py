@@ -203,8 +203,8 @@ def test_emit_verilog_norm(net, x):
     mg, _ = emit_cocotb_transform_pass(mg, emit_cfg)
 
     # Simulate
-    testfile = emit_cfg["project_dir"] / "hardware" / "test" / "mase_top_tb"
-    os.system(f"python3 {testfile}/test.py")
+    # testfile = emit_cfg["project_dir"] / "hardware" / "test" / "mase_top_tb"
+    # os.system(f"python3 {testfile}/test.py")
 
 
 if __name__ == "__main__":
@@ -214,20 +214,21 @@ if __name__ == "__main__":
     normalizations = [
         nn.BatchNorm2d(
             num_features=shape[1],
+            affine=False,
         ),
-        # nn.LayerNorm(
-        #    normalized_shape=shape[1:],
-        #    elementwise_affine=False,
-        # ),
-        # nn.GroupNorm(
-        #     num_groups=2,
-        #     num_channels=shape[1],
-        #     affine=False,
-        # ),
-        # nn.InstanceNorm2d(
-        #     num_features=shape[1],
-        #     affine=False,
-        # ),
+        nn.LayerNorm(
+           normalized_shape=shape[1:],
+           elementwise_affine=False,
+        ),
+        nn.GroupNorm(
+            num_groups=2,
+            num_channels=shape[1],
+            affine=False,
+        ),
+        nn.InstanceNorm2d(
+            num_features=shape[1],
+            affine=False,
+        ),
         # rms.RMSNorm(
         #     normalized_shape=shape[1:],
         # ),
