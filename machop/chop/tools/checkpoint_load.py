@@ -124,7 +124,7 @@ def load_model(
     is_quantize,
     load_name: str,
     load_type: str = "mz",
-    model: torch.nn.Module = None
+    model: torch.nn.Module = None,
     # load_name: str, load_type: str = "mz", model: torch.nn.Module = None
 ) -> torch.nn.Module | torch.fx.GraphModule:
     """Load a pytorch/lightning/mase checkpoint to a model.
