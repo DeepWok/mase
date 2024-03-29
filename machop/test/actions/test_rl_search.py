@@ -16,8 +16,8 @@ from chop.dataset import get_dataset_info, MaseDataModule
 
 
 def test_rl_search():
-    dataset = "cifar10_subset"
-    model = "vgg_tiny"
+    model = "toy"
+    dataset = "toy_tiny"
     task = "cls"
     is_pretrained = False
     batch_size = 2
@@ -27,22 +27,8 @@ def test_rl_search():
     accelerator = "cpu"
     load_name = None
     load_type = "pl"
-    load_name = None
 
     config = {
-        "algorithm": "ppo",
-        "env": "cifar10_subset",
-        "device": "cpu",
-        "total_timesteps": 1000,
-        "n_steps": 128,
-        "n_envs": 4,
-        "eval_freq": 200,
-        "save_freq": 200,
-        "episode_max_len": 1000,
-        "learning_rate": 2.5e-4,
-        "save_name": "tmp_rl",
-        "wandb_callback": False,
-        "wandb_entity": "",
         "search": {
             "search_space": {
                 "name": "graph/quantize/mixed_precision_ptq",
@@ -88,31 +74,22 @@ def test_rl_search():
                 "algorithm": "ppo",
                 "env": "mixed_precision_paper",
                 "device": "cpu",
-                "total_timesteps": 100000,
+                "total_timesteps": 1000,
                 "n_steps": 32,
                 "n_envs": 4,
-                "eval_freq": 200,
-                "save_freq": 200,
+                "eval_freq": 256,
+                "save_freq": 256,
                 "episode_max_len": 1000,
                 "learning_rate": 2.5e-4,
                 "save_name": "tmp_rl",
-                # "load_name": "tmp_rl",
-                # "wandb_callback": true,
-                # "wandb_entity": "m-pl-braganca",
-                "setup": {
-                    # "sum_scaled_metrics": true,
-                    # "direction": "maximize",
-                    "sum_scaled_metrics": False
-                },
+                "setup": {"sum_scaled_metrics": False},
                 "sw_runner": {
                     "basic_evaluation": {
                         "data_loader": "val_dataloader",
                         "num_samples": 512,
                     }
                 },
-                "hw_runner": {
-                    "average_bitwidth": {"compare_to": 32}  # compare to FP32
-                },
+                "hw_runner": {"average_bitwidth": {"compare_to": 32}},
                 "metrics": {
                     "accuracy": {
                         "scale": 0.7,
