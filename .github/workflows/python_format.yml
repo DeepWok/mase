@@ -4,11 +4,7 @@ on:
   push:
     branches:
       - main
-      - master
-  pull_request:
-    branches:
-      - main
-      - master
+      - lab1_gs1123
 
 jobs:
   python_format:
@@ -30,19 +26,19 @@ jobs:
 
       - name: List Python files before formatting
         run: |
-          cd machop  # Adjust the path accordingly
+          cd machop
           find . -type f -name "*.py" > before.txt
           cat before.txt
 
       - name: Run Black to format Python files
         if: ${{ always() }}
         run: |
-          cd machop  # Adjust the path accordingly
+          cd machop
           find . -type f -name "*.py" -exec python -m black --quiet {} \;
 
       - name: List Python files after formatting
         run: |
-          cd machop  # Adjust the path accordingly
+          cd machop
           find . -type f -name "*.py" > after.txt
           cat after.txt
 
@@ -53,4 +49,3 @@ jobs:
       - name: Cleanup
         run: |
           rm before.txt after.txt
-
