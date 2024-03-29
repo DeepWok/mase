@@ -1,8 +1,8 @@
 # basics
-model = "mobilenetv3_small"
-dataset = "mnist"
+model = "jsc-toy"
+dataset = "jsc"
 
-load_name = "../mase_output/mobilenetv3-small_pre-trained_mnist/mobilenetv3_small_mnist_0.997.ckpt"
+load_name = "../mase_output/jsc-toy_cls_jsc-pre-trained/best.ckpt"
 load_type = "pl"
 
 max_epochs = 10
@@ -10,6 +10,7 @@ batch_size = 64
 learning_rate = 1e-3
 accelerator = "gpu"
 task="cls"
+# num_workers = 0
 
 [transform]
 style = "graph"
@@ -23,9 +24,13 @@ post_calibration_analysis = true
 quantize = true
 # calibrators = ["percentile", "mse", "entropy"]
 # percentiles = [99.0, 99.9, 99.99]
-calibrators = ["percentile"]
-percentiles = [99.99]
+calibrators = ["percentile"] # ["percentile", "mse", "entropy"]
+percentiles = [99.99] # [99.0, 99.9, 99.99]
 precision = 'int8'
+fine_tune = false
+
+[passes.tensorrt.fine_tune]
+fine_tune = true
 
 [passes.tensorrt.default.input]
 calibrator = 'histogram'
@@ -34,9 +39,6 @@ quantize_axis = false
 [passes.tensorrt.default.weight]
 calibrator = 'histogram'
 quantize_axis = false
-
-[passes.tensorrt.fine_tune]
-fine_tune = false
 
 [passes.tensorrt.runtime_analysis]
 num_batches = 500

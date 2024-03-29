@@ -1,8 +1,8 @@
 # basics
-model = "mobilenetv3_small"
-dataset = "mnist"
+model = "vgg7"
+dataset = "cifar10"
 
-load_name = "../mase_output/mobilenetv3-small_pre-trained_mnist/mobilenetv3_small_mnist_0.997.ckpt"
+load_name = "../mase_output/vgg7-pre-trained/test-accu-0.9332.ckpt"
 load_type = "pl"
 
 max_epochs = 10
@@ -36,7 +36,7 @@ calibrator = 'histogram'
 quantize_axis = false
 
 [passes.tensorrt.fine_tune]
-fine_tune = false
+fine_tune = true
 
 [passes.tensorrt.runtime_analysis]
 num_batches = 500

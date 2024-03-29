@@ -1,9 +1,6 @@
 # basics
-model = "mobilenetv3_small"
-dataset = "mnist"
-
-load_name = "../mase_output/mobilenetv3-small_pre-trained_mnist/mobilenetv3_small_mnist_0.997.ckpt"
-load_type = "pl"
+model = "vgg7"
+dataset = "cifar10"
 
 max_epochs = 10
 batch_size = 64
@@ -21,10 +18,10 @@ post_calibration_analysis = true
 
 [passes.tensorrt.default.config]
 quantize = true
-# calibrators = ["percentile", "mse", "entropy"]
-# percentiles = [99.0, 99.9, 99.99]
 calibrators = ["percentile"]
 percentiles = [99.99]
+# calibrators = ["percentile", "mse", "entropy"]
+# percentiles = [99.0, 99.9, 99.99]
 precision = 'int8'
 
 [passes.tensorrt.default.input]
@@ -34,6 +31,18 @@ quantize_axis = false
 [passes.tensorrt.default.weight]
 calibrator = 'histogram'
 quantize_axis = false
+
+[passes.tensorrt.feature_layers_0.config]
+precision = 'fp16'
+
+[passes.tensorrt.feature_layers_1.config]
+precision = 'fp16'
+
+[passes.tensorrt.feature_layers_2.config]
+precision = 'int8'
+
+[passes.tensorrt.feature_layers_3.config]
+precision = 'int8'
 
 [passes.tensorrt.fine_tune]
 fine_tune = false
