@@ -48,10 +48,6 @@ TENSOR_SIZE_DIM
   logic signed [ORIGINAL_PRECISION-1:0] low_for_gather[TENSOR_SIZE_DIM-1:0];
 
 
-  wire [ORIGINAL_PRECISION-1:0] test;
-  assign test = weights[WEIGHT_DIM_0*WEIGHT_DIM_1+1];
-
-
   scatter_threshold #(
       .PRECISION(ORIGINAL_PRECISION),
       .TENSOR_SIZE_DIM(TENSOR_SIZE_DIM),
@@ -89,6 +85,14 @@ TENSOR_SIZE_DIM
   logic data_out_valid_low_precision, data_out_valid_high_precision;
   assign data_out_valid = data_out_valid_low_precision & data_out_valid_high_precision;
 
+  logic bias_ready;
+  logic bias_valid;
+  logic [ORIGINAL_PRECISION-1:0] bias;
+
+  assign bias_ready = 1;
+  assign bias_valid = 1;
+  assign bias = 0;
+
   fixed_linear #(
       .DATA_IN_0_PRECISION_0(REDUCED_PRECISION),
       .DATA_IN_0_TENSOR_SIZE_DIM_0(TENSOR_SIZE_DIM),
@@ -114,6 +118,10 @@ TENSOR_SIZE_DIM
       .weight(q_weights),
       .weight_valid(q_weight_valid),
       .weight_ready(q_weight_ready),
+
+      .bias(bias),
+      .bias_valid(bias_valid),
+      .bias_ready(bias_ready),
 
       .data_out_0(output_linear_low_precision),
       .data_out_0_ready(data_out_ready),
@@ -146,6 +154,10 @@ TENSOR_SIZE_DIM
       .weight(weights),
       .weight_valid(weight_valid),
       .weight_ready(weight_ready),
+
+      .bias(bias),
+      .bias_valid(bias_valid),
+      .bias_ready(bias_ready),
 
       .data_out_0(output_linear_high_precision),
       .data_out_0_ready(data_out_ready),
