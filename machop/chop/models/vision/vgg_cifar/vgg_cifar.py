@@ -9,32 +9,32 @@ class VGG7(nn.Module):
     def __init__(self, image_size: list[int], num_classes: int) -> None:
         super().__init__()
         self.feature_layers = nn.Sequential(
-            nn.Conv2d(image_size[0], 128, kernel_size=3, padding=1),  # 0
+            nn.Conv2d(image_size[0], 128, kernel_size=3, padding=1),  
             nn.BatchNorm2d(128, momentum=0.9),
             nn.ReLU(inplace=True),
-            nn.Conv2d(128, 128, kernel_size=3, padding=1),   # 3
+            nn.Conv2d(128, 128, kernel_size=3, padding=1),   
             nn.BatchNorm2d(128, momentum=0.9),
             nn.ReLU(inplace=True),
             nn.MaxPool2d(kernel_size=2),
-            nn.Conv2d(128, 256, kernel_size=3, padding=1),   # 7
+            nn.Conv2d(128, 256, kernel_size=3, padding=1),   
             nn.BatchNorm2d(256, momentum=0.9),
             nn.ReLU(inplace=True),
-            nn.Conv2d(256, 256, kernel_size=3, padding=1),    # 10
+            nn.Conv2d(256, 256, kernel_size=3, padding=1),    
             nn.BatchNorm2d(256, momentum=0.9),
             nn.ReLU(inplace=True),
             nn.MaxPool2d(kernel_size=2),
-            nn.Conv2d(256, 512, kernel_size=3, padding=1),    # 14
+            nn.Conv2d(256, 512, kernel_size=3, padding=1),    
             nn.BatchNorm2d(512, momentum=0.9),
             nn.ReLU(inplace=True),
-            nn.Conv2d(512, 512, kernel_size=3, padding=1),   # 17
+            nn.Conv2d(512, 512, kernel_size=3, padding=1),   
             nn.BatchNorm2d(512, momentum=0.9),
             nn.ReLU(inplace=True),
             nn.MaxPool2d(kernel_size=2),
         )
         self.classifier = nn.Sequential(
-            nn.Linear(8192, 1024),  # 0
+            nn.Linear(8192, 1024),  
             nn.ReLU(inplace=True),
-            nn.Linear(1024, 1024),  # 2
+            nn.Linear(1024, 1024), 
             nn.ReLU(inplace=True),
         )
 
@@ -42,7 +42,7 @@ class VGG7(nn.Module):
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         x = self.feature_layers(x)
-        '''
+        """
         x = self.feature_layers[0](x)
         x.retain_grad()
         for i in range(1, 4):
@@ -60,7 +60,7 @@ class VGG7(nn.Module):
         for i in range(15, 18):
             x = self.feature_layers[i](x)
         x.retain_grad() 
-        '''
+        """
         x = x.view(-1, 512 * 4 * 4)
         x = self.classifier(x)
         x = self.last_layer(x)

@@ -60,9 +60,7 @@ def save_n_meta_param(node_meta: dict, save_path: str) -> None:
     """
     node_meta = convert_none_to_str_na(node_meta)
 
-    #with open(save_path, "w") as f:
-    #    toml.dump(node_meta, f)
-    with open(save_path, 'wb') as f:
+    with open(save_path, "wb") as f:
         pickle.dump(node_meta, f)
 
 
@@ -144,7 +142,7 @@ def save_mase_graph_interface_pass(graph, pass_args: dict = {}):
     # collect metadata.parameters
     node_n_meta_param = collect_n_meta_param(graph)
     # save metadata.parameters to toml
-    save_n_meta_param(node_n_meta_param, n_meta_param_ckpt) # frpm toml to pickle
+    save_n_meta_param(node_n_meta_param, n_meta_param_ckpt) 
     # reset metadata to empty dict {}
     graph = graph_iterator_remove_metadata(graph)
     # save graph module & state dict

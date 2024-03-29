@@ -4,6 +4,7 @@ from .load import load_activation_prune_config, load_weight_prune_config
 from .pruning_methods import weight_criteria_map, activation_criteria_map
 
 from .sparse_parameterization import FakeSparseWeight, FakeStructuredSparseWeight
+
 try:
     from actions.prune_and_retrain import act_masks
 except:
@@ -14,43 +15,41 @@ has_finished_prune = False
 global prune_count
 prune_count = 0
 
+
 def prune_with_a_function(info, fn, sparsity):
     return fn(info, sparsity)
-# fn: what pruning function
-# sparsity: to what extent would it prunes
 
 
 def get_weight_rank_fn(c):
     return weight_criteria_map[c["scope"]][c["granularity"]][c["method"]]
-# import function: how to rank the weights' relative importance
 
 
 def get_activation_rank_fn(c):
     return activation_criteria_map[c["scope"]][c["granularity"]][c["method"]]
-# import function: how to rank activations' relative importance
 
 
 def get_weight_hook(name, info, named_info, w_config: dict):
     # register parameterization
     w_rank_fn = get_weight_rank_fn(w_config)
-    value = named_info["value"] # tensor
-    w_sparsity = named_info["weight_sparsity"] # sparsity
+    value = named_info["value"]  # tensor
+    w_sparsity = named_info["weight_sparsity"]  # sparsity
     register_parameter_name = "weight"
-    parameterization = FakeSparseWeight(w_rank_fn(value, info, w_sparsity)) # [tensor, info, sparsity]
+    parameterization = FakeSparseWeight(
+        w_rank_fn(value, info, w_sparsity)
+    )  # [tensor, info, sparsity]
     return (register_parameter_name, parameterization)
 
 
 def get_weight_hook_channel(name, info, named_info, next_named_info, w_config: dict):
-    # register parameterization
     w_rank_fn = get_weight_rank_fn(w_config)
-    value = named_info["value"] # tensor
+    value = named_info["value"] 
     if next_named_info != None:
-        next_value = next_named_info["value"] # next_tensor
-    else: # next_named_info=None
+        next_value = next_named_info["value"]
+    else:
         next_value = None
-    w_sparsity = named_info["weight_sparsity"] # sparsity
+    w_sparsity = named_info["weight_sparsity"]
     register_parameter_name = "weight"
-    parameterization = FakeSparseWeight(w_rank_fn(value, next_value, info, w_sparsity)) # [tensor, next_tensor, info, sparsity]
+    parameterization = FakeSparseWeight(w_rank_fn(value, next_value, info, w_sparsity)) 
     return (register_parameter_name, parameterization)
 
 
@@ -62,11 +61,6 @@ def get_activation_hook(name, info, named_info, batch_size, a_config: dict):
     register_parameter_name = "register_forward_pre_hook"
     global has_finished_prune
     global prune_count
-
-    # a_rank_fn(value, info, a_sparsity)  the mask
-
-    #parameterization = FakeSparseWeight(a_rank_fn(value, info, a_sparsity))
-    #return (register_parameter_name, parameterization)
     
     # register forward hook
     def sparsify_input(module, args):
@@ -111,7 +105,6 @@ def get_activation_hook(name, info, named_info, batch_size, a_config: dict):
 
 
 def build_pruning_hooks(info, w_config, a_config, batch_size):
-    # example of a_config: {'method': 'l1-norm', 'granularity': 'elementwise', 'scope': 'local', 'sparsity': 0.1}
     named_hooks = {}
     for k, v in info.items():
         if v is not None:
@@ -139,10 +132,9 @@ def build_pruning_hooks(info, w_config, a_config, batch_size):
 
 
 def build_pruning_hooks_kernel(info, w_config, a_config, batch_size):
-    # example of a_config: {'method': 'l1-norm', 'granularity': 'elementwise', 'scope': 'local', 'sparsity': 0.1}
     named_hooks = {}
     for k, v in info.items():
-        if v is not None and v['module_type'] in ['conv2d']:
+        if v is not None and v["module_type"] in ["conv2d"]:
             # for weights
             w_info = {
                 "module_type": v["module_type"],
@@ -173,15 +165,15 @@ def build_pruning_hooks_channel(info, w_config, a_config, batch_size):
     for index, kvpair in enumerate(tmp):
         k = kvpair[0] ; v = kvpair[1]
         if v != None:
-            if v['module_type'] in ['conv2d']:
+            if v["module_type"] in ["conv2d"]:
                 if index < len(tmp)-1:
                     for j in range(index + 1, len(tmp), 1):
-                        if tmp[j][1]!=None and (tmp[j][1]['module_type'] in ['conv2d']):
+                        if tmp[j][1]!=None and (tmp[j][1]["module_type"] in ["conv2d"]):
                             next_kvpair = tmp[j]
                             next_k = next_kvpair[0]
                             next_v = next_kvpair[1]
                             break
-                        if j==len(tmp)-1 and (not (tmp[j][1] is not None and tmp[j][1]['module_type'] in ['conv2d'])):
+                        if j==len(tmp)-1 and (not (tmp[j][1] is not None and tmp[j][1]["module_type"] in ["conv2d"])):
                             next_kvpair = None  
                 else:
                     next_kvpair = None
@@ -302,9 +294,9 @@ def prune_graph_iterator(graph, batch_size, config: dict):
             meta = fetch_info(node, module)
             info[node.target] = meta
     
-    if w_config['granularity'] in ["channelwise"]:
+    if w_config["granularity"] in ["channelwise"]:
         hooks = build_pruning_hooks_channel(info, w_config, a_config, batch_size)
-    elif w_config['granularity'] in ["kernelwise"]:
+    elif w_config["granularity"] in ["kernelwise"]:
         hooks = build_pruning_hooks_kernel(info, w_config, a_config, batch_size)
     else:
         # hook building

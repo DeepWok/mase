@@ -13,8 +13,23 @@ logger = logging.getLogger(__name__)
 # NOTE: We don't do activation pruning for conv1d and linear layers. 
 PRUNEABLE_OPS = {"conv1d": nn.Conv1d, "conv2d": nn.Conv2d, "linear": nn.Linear}
 
-WEIGHT_PRUNE_METHODS = ["random", "l1-norm", "l2-norm", "l1-norm-single", "l2-norm-single", "l1-norm-multi", "l2-norm-multi"]
-ACTIVATION_PRUNE_METHODS = ["random", "l1-norm", "l2-norm", "feature-map-similarity", "feature-map-l1-norm", "feature-map-l2-norm"]
+WEIGHT_PRUNE_METHODS = [
+    "random", 
+    "l1-norm", 
+    "l2-norm", 
+    "l1-norm-single", 
+    "l2-norm-single", 
+    "l1-norm-multi", 
+    "l2-norm-multi"
+]
+ACTIVATION_PRUNE_METHODS = [
+    "random", 
+    "l1-norm", 
+    "l2-norm", 
+    "feature-map-similarity", 
+    "feature-map-l1-norm", 
+    "feature-map-l2-norm"
+]
 
 # A registry of available pruning strategies (i.e. algorithms)
 # PRUNE_METHODS = {
@@ -34,8 +49,8 @@ def load(config: dict):
     if granularity not in ["elementwise", "kernelwise", "channelwise"]:
         raise ValueError(
             "Unsupported pruning granularity {}. Please choose from {}".format(
-                #granularity, ["channel", "elementwise", "kernelwise", "channelwise"]
-                granularity, ["elementwise", "kernelwise", "channelwise"]
+                granularity, 
+                ["elementwise", "kernelwise", "channelwise"]
             )
         )
     if scope not in ["local", "global"]:
@@ -62,12 +77,8 @@ def load(config: dict):
 
 def load_weight_prune_config(config: dict, graph):
     sparsity, scope, granularity = load(config)
-    #print("sparsity");print(sparsity)
-    #print("scope");print(scope)
-    #print("granularity");print(granularity)
 
     method = config.get("method", "random")
-    #print("method") ; print(method)
     # Validate the parameters
     if method not in WEIGHT_PRUNE_METHODS:
         raise ValueError(

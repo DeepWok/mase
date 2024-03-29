@@ -30,15 +30,21 @@ def graph_iterator_for_metadata(graph, dummy_in=None, add_value=True):
         elif node.op == "call_module":
             args = load_arg(node.args, env)
             kwargs = load_arg(node.kwargs, env)
-            modules = {name: module.to('cuda') for name, module in modules.items()}
-            args = [arg.to('cuda') if isinstance(arg, torch.Tensor) else arg for arg in args]
-            kwargs = {k: v.to('cuda') if isinstance(v, torch.Tensor) else v for k, v in kwargs.items()}
+            modules = {name: module.to("cuda") for name, module in modules.items()}
+            args = [
+                arg.to("cuda") if isinstance(arg, torch.Tensor) else arg for arg in args
+            ]
+            kwargs = {
+                k: v.to("cuda") if isinstance(v, torch.Tensor) else v
+                for k, v in kwargs.items()
+            }
             result = modules[node.target](*args, **kwargs)
 
             meta = node.meta["mase"]
-            #if isinstance(modules[node.target], (torch.nn.Conv2d, torch.nn.Linear)):
             if isinstance(modules[node.target], (torch.nn.Conv2d)):
-                mask = modules[node.target].parametrizations.weight[0].mask  # weight_mask
+                mask = (
+                    modules[node.target].parametrizations.weight[0].mask  
+                )
                 weight_sparsity = 1 - float(mask.sum() / mask.numel())
                 meta.parameters["software"]["args"]["weight"][
                     "sparsity"

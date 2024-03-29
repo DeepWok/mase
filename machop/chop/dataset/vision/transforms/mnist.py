@@ -35,7 +35,7 @@ def _get_mnist_default_transform():
     transform_list = [
         tv_transforms.ToTensor(), 
         tv_transforms.Lambda(lutnet_transform),
-        tv_transforms.Lambda(convert_to_3_channels)
+        tv_transforms.Lambda(convert_to_3_channels),
     ]
     transform = tv_transforms.Compose(transform_list)
     # transform_list = [tv_transforms.ToTensor(), tv_transforms.Lambda(lutnet_transform)]
