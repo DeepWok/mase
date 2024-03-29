@@ -98,19 +98,19 @@ module matmul #(
     else $fatal("B_DIM1 compute is not divisible!");
   end
 
-  // Repeat each submatrix in Matrix A stream B_DEPTH_DIM0 times
-  localparam A_FLAT_WIDTH = A_WIDTH * A_COMPUTE_DIM0 * A_COMPUTE_DIM1;
-  logic [A_FLAT_WIDTH-1:0] a_data_flat;
-
-  // Buffer outputs
-  logic [A_FLAT_WIDTH-1:0] a_buffer_out_data_flat;
-  logic a_buffer_out_valid, a_buffer_out_ready;
-
   // Buffer unflatten out
+  logic a_buffer_out_valid, a_buffer_out_ready;
   logic [A_WIDTH-1:0] a_buffer_out_data[A_COMPUTE_DIM0*A_COMPUTE_DIM1-1:0];
 
   generate
     if (B_DEPTH_DIM0 > 1) begin
+
+      // Repeat each submatrix in Matrix A stream B_DEPTH_DIM0 times
+      localparam A_FLAT_WIDTH = A_WIDTH * A_COMPUTE_DIM0 * A_COMPUTE_DIM1;
+      logic [A_FLAT_WIDTH-1:0] a_data_flat;
+
+      // Buffer outputs
+      logic [A_FLAT_WIDTH-1:0] a_buffer_out_data_flat;
 
       matrix_flatten #(
           .DATA_WIDTH(A_WIDTH),

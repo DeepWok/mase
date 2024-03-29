@@ -92,7 +92,9 @@ module simple_matmul #(
         end
 
         // Input ready signal
+        /* verilator lint_off UNUSEDSIGNAL */
         logic sync_ready;
+        /* verilator lint_on UNUSEDSIGNAL */
 
         // Linear output
         logic [ACC_WIDTH-1:0] dot_product_data_out;

@@ -79,6 +79,7 @@ module group_norm_2d #(
   localparam NORM_WIDTH = ISQRT_WIDTH + DIFF_WIDTH;
   localparam NORM_FRAC_WIDTH = ISQRT_FRAC_WIDTH + DIFF_FRAC_WIDTH;
 
+  /* verilator lint_off UNUSEDSIGNAL */
   // Input FIFO
   logic [IN_WIDTH-1:0] fifo_data[COMPUTE_DIM0*COMPUTE_DIM1-1:0];
   logic fifo_out_valid, fifo_out_ready;
@@ -155,6 +156,7 @@ module group_norm_2d #(
   logic norm_batch_ready[COMPUTE_DIM0*COMPUTE_DIM1-1:0];
   logic output_reg_valid[COMPUTE_DIM0*COMPUTE_DIM1-1:0];
 
+  /* verilator lint_on UNUSEDSIGNAL */
 
   matrix_fifo #(
       .DATA_WIDTH(IN_WIDTH),

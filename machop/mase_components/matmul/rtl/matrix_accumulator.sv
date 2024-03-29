@@ -26,19 +26,21 @@ module matrix_accumulator #(
 
   for (genvar i = 0; i < DIM1; i++) begin : rows
     for (genvar j = 0; j < DIM0; j++) begin : columns
+      /* verilator lint_off UNUSEDSIGNAL */
       logic in_ready_signal, out_valid_signal;
+      /* verilator lint_on UNUSEDSIGNAL */
       fixed_accumulator #(
           .IN_DEPTH(IN_DEPTH),
           .IN_WIDTH(IN_WIDTH)
       ) acc_inst (
-          .clk      (clk),
-          .rst      (rst),
-          .in_data  (in_data[i*DIM0+j]),
-          .in_valid (in_valid),
-          .in_ready (in_ready_signal),
-          .out_data (out_data[i*DIM0+j]),
-          .out_valid(out_valid_signal),
-          .out_ready(out_ready)
+          .clk           (clk),
+          .rst           (rst),
+          .data_in       (in_data[i*DIM0+j]),
+          .data_in_valid (in_valid),
+          .data_in_ready (in_ready_signal),
+          .data_out      (out_data[i*DIM0+j]),
+          .data_out_valid(out_valid_signal),
+          .data_out_ready(out_ready)
       );
     end
   end

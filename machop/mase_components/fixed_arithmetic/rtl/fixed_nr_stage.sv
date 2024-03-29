@@ -5,6 +5,7 @@ module fixed_nr_stage #(
     localparam THREEHALFS = 3 << (WIDTH - 2)
 ) (
     input  logic                 clk,
+    input  logic                 rst,
     // Input x reduced
     input  logic [    WIDTH-1:0] data_a,         // FORMAT: Q1.(WIDTH-1).
     // Initial LUT guess.

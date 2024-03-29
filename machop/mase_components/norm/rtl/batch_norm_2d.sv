@@ -21,7 +21,9 @@ module batch_norm_2d #(
     parameter OUT_FRAC_WIDTH = 4,
 
     // Scale and Shift LUTs
+    /* verilator lint_off UNUSEDPARAM */
     parameter MEM_ID            = 0,
+    /* verilator lint_on UNUSEDPARAM */
 `ifdef COCOTB_SIM
     parameter AFFINE            = 0,
 `endif
@@ -48,7 +50,6 @@ module batch_norm_2d #(
   localparam IN_FLAT_WIDTH = IN_WIDTH * COMPUTE_DIM0 * COMPUTE_DIM1;
 
   localparam TEMP_MULT_WIDTH = 2 * IN_WIDTH;
-  localparam TEMP_MULT_FRAC_WIDTH = IN_FRAC_WIDTH;
 
   localparam EXT_OUT_WIDTH = TEMP_MULT_WIDTH + 1;
   localparam EXT_OUT_FRAC_WIDTH = 2 * IN_FRAC_WIDTH;

@@ -19,7 +19,9 @@ module lut #(
     // Derived params
     localparam ADDR_WIDTH = SIZE == 1 ? 1 : $clog2(SIZE)
 ) (
+    /* verilator lint_off UNUSEDSIGNAL */
     input  logic                  clk,
+    /* verilator lint_on UNUSEDSIGNAL */
     input  logic [ADDR_WIDTH-1:0] addr,
     output logic [DATA_WIDTH-1:0] data
 );

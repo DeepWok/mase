@@ -74,9 +74,6 @@ module rms_norm_2d #(
   localparam AFFINE_WIDTH = NORM_WIDTH + SCALE_WIDTH;
   localparam AFFINE_FRAC_WIDTH = NORM_FRAC_WIDTH + SCALE_FRAC_WIDTH;
 
-  // Split2 for input to FIFO & Compute Pipeline
-  logic compute_in_valid, compute_in_ready;
-
   // Input FIFO
   logic [IN_WIDTH-1:0] fifo_data[COMPUTE_DIM0*COMPUTE_DIM1-1:0];
   logic fifo_out_valid, fifo_out_ready;
@@ -100,8 +97,9 @@ module rms_norm_2d #(
 
   logic [ACC_WIDTH-1:0] mean_in_data, mean_out_data;
   logic mean_out_valid, mean_out_ready;
+  /* verilator lint_off UNUSEDSIGNAL */
   logic [ACC_WIDTH*2+1:0] mean_in_buffer;
-
+  /* verilator lint_on UNUSEDSIGNAL */
   // Inverse Square Root of mean square
   logic [ISQRT_WIDTH-1:0] inv_sqrt_data;
   logic inv_sqrt_valid, inv_sqrt_ready;

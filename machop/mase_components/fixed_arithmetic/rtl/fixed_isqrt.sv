@@ -1,5 +1,6 @@
 `timescale 1ns / 1ps
 
+/* verilator lint_off UNUSEDSIGNAL */
 module fixed_isqrt #(
     parameter IN_WIDTH = 16,
     parameter IN_FRAC_WIDTH = 7,
@@ -16,7 +17,6 @@ module fixed_isqrt #(
     // LUT parameters
     parameter string LUT_MEMFILE = "",
 
-    localparam INT_WIDTH = IN_WIDTH - IN_FRAC_WIDTH,
     localparam MAX_NUM = (1 << IN_WIDTH) - 1,
     localparam MSB_WIDTH = IN_WIDTH == 1 ? 1 : $clog2(IN_WIDTH),
     localparam ONE = 1 << (IN_WIDTH - 1)  // FORMAT: Q1.(WIDTH-1)
@@ -87,7 +87,7 @@ module fixed_isqrt #(
       .OUTPUT_REG(0),
       .MEM_FILE(LUT_MEMFILE)
   ) fixed_lut_inst (
-      .clk('0),  // Tie off clock
+      .clk('0),  // Tie offclock
       .addr(lut_index),
       .data(lut_value[1])
   );
@@ -110,6 +110,7 @@ module fixed_isqrt #(
       .MSB_WIDTH(MSB_WIDTH)
   ) fixed_nr_stage_inst_1 (
       .clk(clk),
+      .rst(rst),
       .data_a(x_reduced[2]),
       .data_b(lut_value[2]),
       .data_in_msb(msb_index[2]),
@@ -153,3 +154,4 @@ module fixed_isqrt #(
   );
 
 endmodule
+/* verilator lint_on UNUSEDSIGNAL */

@@ -1,4 +1,5 @@
 `timescale 1ns / 1ps
+/* verilator lint_off UNUSEDSIGNAL */
 module fixed_lut_index #(
     parameter WIDTH = 16,
     parameter LUT_POW = 5,
@@ -32,5 +33,6 @@ module fixed_lut_index #(
     end
   endgenerate
 
-
 endmodule
+
+/* verilator lint_on UNUSEDSIGNAL */

@@ -98,7 +98,7 @@ module matrix_stream_transpose #(
     logic fifo_out_valid, fifo_out_ready;
 
     fifo #(
-        .DEPTH     (FIFO_DEPTH),
+        .SIZE      (FIFO_DEPTH),
         .DATA_WIDTH(FIFO_DATA_WIDTH)
     ) fifo_inst (
         .clk      (clk),
@@ -108,10 +108,7 @@ module matrix_stream_transpose #(
         .in_ready (fifo_in_ready),
         .out_data (fifo_out_data_flat),
         .out_valid(fifo_out_valid),
-        .out_ready(fifo_out_ready),
-        .full     (),
-        .empty    (),
-        .count    ()
+        .out_ready(fifo_out_ready)
     );
 
   end

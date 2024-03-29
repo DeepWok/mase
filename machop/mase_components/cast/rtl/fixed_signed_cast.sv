@@ -48,7 +48,7 @@ module fixed_signed_cast #(
                              IN_WIDTH + (OUT_FRAC_WIDTH - IN_FRAC_WIDTH) :
                              IN_WIDTH;
 
-  logic [ROUND_OUT_WIDTH:0] round_out;
+  logic [ROUND_OUT_WIDTH-1:0] round_out;
 
   floor_round #(
       .IN_WIDTH(IN_WIDTH),

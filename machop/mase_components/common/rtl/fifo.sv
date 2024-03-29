@@ -56,8 +56,6 @@ module fifo #(
   logic [DATA_WIDTH-1:0] ram_rd_dout;
 
   // Backpressure control signal
-  logic output_buffer_ready;
-
   logic pause_reads;
 
   always_comb begin
@@ -65,7 +63,6 @@ module fifo #(
 
     // Input side ready
     in_ready = self.size != SIZE - 1;
-    output_buffer_ready = !self.out_reg.valid;
 
     // Pause reading when there is (no transfer on this cycle) AND the registers are full.
     pause_reads = !out_ready && (self.out_reg.valid || self.extra_reg.valid);
