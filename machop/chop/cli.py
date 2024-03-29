@@ -419,7 +419,6 @@ class ChopCLI:
 
 
     def _run_prune_and_retrain(self):
-        #import pdb; pdb.set_trace()
         # prune
         if self.args.config is None:
             raise ValueError("expected configuration via --config, got None")
