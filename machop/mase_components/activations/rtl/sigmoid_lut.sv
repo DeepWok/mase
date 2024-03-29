@@ -1,4 +1,5 @@
-
+`timescale 1ns / 1ps
+/* verilator lint_off UNUSEDPARAM */
 module sigmoid_lut #(
     parameter DATA_IN_0_PRECISION_0  = 16,
     parameter DATA_IN_0_PRECISION_1  = 8,

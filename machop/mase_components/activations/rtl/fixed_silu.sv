@@ -1,6 +1,6 @@
 `timescale 1ns / 1ps
+/* verilator lint_off UNUSEDPARAM */
 module fixed_silu #(
-    /* verilator lint_off UNUSEDPARAM */
     parameter DATA_IN_0_PRECISION_0 = 8,
     parameter DATA_IN_0_PRECISION_1 = 4,
     parameter DATA_IN_0_TENSOR_SIZE_DIM_0 = 10,
@@ -60,7 +60,7 @@ module fixed_silu #(
 
   generate
     if (STRAIGHT_THROUGH) begin
-      unpacked_register_slice #(
+      unpacked_register_slice_quick #(
           .DATA_WIDTH(DATA_IN_0_PRECISION_0),
           .IN_SIZE(DATA_IN_0_PARALLELISM_DIM_0 * DATA_IN_0_PARALLELISM_DIM_1),
       ) single_roll (

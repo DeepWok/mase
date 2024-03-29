@@ -1,4 +1,5 @@
-module unpacked_register_slice #(
+`timescale 1ns / 1ps
+module unpacked_register_slice_quick #(
     parameter DATA_WIDTH = 32,
     parameter IN_SIZE = 16,
     parameter type MYDATA = logic [DATA_WIDTH-1:0]

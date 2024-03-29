@@ -1,5 +1,6 @@
-
+`timescale 1ns / 1ps
 module silu_lut #(
+  /* verilator lint_off UNUSEDPARAM */
     parameter DATA_IN_0_PRECISION_0  = 16,
     parameter DATA_IN_0_PRECISION_1  = 8,
     parameter DATA_OUT_0_PRECISION_0 = 16,

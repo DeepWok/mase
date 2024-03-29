@@ -97,7 +97,7 @@ module fixed_softmax #(
 
   generate
     if (STRAIGHT_THROUGH) begin
-      unpacked_register_slice #(
+      unpacked_register_slice_quick #(
           .DATA_WIDTH(DATA_IN_0_PRECISION_0),
           .IN_SIZE(DATA_IN_0_PARALLELISM_DIM_0 * DATA_IN_0_PARALLELISM_DIM_1)
       ) single_roll (
@@ -295,6 +295,8 @@ module fixed_softmax #(
   assign data_out_0_valid = data_out_0_valid_4;
 endmodule
 
+/* verilator lint_off DECLFILENAME */
+
 module hold_buffer #(
     parameter DATA_WIDTH = 16,
     parameter DATA_SIZE = 4,
@@ -345,16 +347,4 @@ module hold_buffer #(
   end
 
   // take an input and output it for depth length preventing further input from entering. 
-endmodule
-
-module quick_round #(
-    parameter DATA_WIDTH = 8
-) (
-    input logic [DATA_WIDTH - 1:0] data_in,
-    input logic round_bit,
-    output logic [DATA_WIDTH - 1:0] data_out
-);
-
-  assign data_out = round_bit ? (data_in + 1) : (data_in);
-
 endmodule
