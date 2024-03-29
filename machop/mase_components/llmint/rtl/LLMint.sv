@@ -92,7 +92,7 @@ TENSOR_SIZE_DIM
   assign bias_ready = 1;
   assign bias_valid = 1;
   assign bias = '{default: 0};
-  
+
 
   fixed_linear #(
       .DATA_IN_0_PRECISION_0(REDUCED_PRECISION),
