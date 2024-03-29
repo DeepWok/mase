@@ -7,6 +7,7 @@ import os, math, logging
 # Manually add user-specific mase_cocotb path
 # this should be ignored on the standard mase-docker env
 import sys
+
 p = "/home/ic/MYWORKSPACE/Mase-DeepWok/machop"
 sys.path.append(p)
 ##################################################
