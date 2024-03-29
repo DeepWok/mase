@@ -174,7 +174,7 @@ async def test(dut):
     in_frac_width = dut_params["DATA_IN_0_PRECISION_1"]
     out_data_width = dut_params["DATA_OUT_0_PRECISION_0"]
     out_frac_width = dut_params["DATA_OUT_0_PRECISION_1"]
-    generate_memory.generate_mem(
+    generate_memory.generate_sv_lut(
         "sigmoid", in_data_width, in_frac_width, out_data_width, out_frac_width
     )
     print("Generated memory")

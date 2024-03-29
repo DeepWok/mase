@@ -231,14 +231,19 @@ def lookup_to_sv_file(
         end = ""
     # Starting the module and case statement
     sv_code = f"""
-module {function}_lut{end} #
-    (
-        parameter DATA_IN_0_PRECISION_0 = 16,
-        parameter DATA_IN_0_PRECISION_1 = 8,
-        parameter DATA_OUT_0_PRECISION_0 = 16,
-        parameter DATA_OUT_0_PRECISION_1 = 8
-    )
-    (input logic [{in_data_width-1}:0] data_in_0, output logic [{data_width-1}:0] data_out_0);
+`timescale 1ns / 1ps
+/* verilator lint_off UNUSEDPARAM */
+module {function}_lut{end} #(
+    parameter DATA_IN_0_PRECISION_0 = 16,
+    parameter DATA_IN_0_PRECISION_1 = 8,
+    parameter DATA_OUT_0_PRECISION_0 = 16,
+    parameter DATA_OUT_0_PRECISION_1 = 8
+)
+(
+    /* verilator lint_off UNUSEDSIGNAL */
+    input logic [{in_data_width-1}:0] data_in_0, 
+    output logic [{data_width-1}:0] data_out_0
+);
     
 """
     sv_code += "    always_comb begin\n"
@@ -263,18 +268,19 @@ module {function}_lut{end} #
     print(f"SystemVerilog module generated and saved as {file_path}.")
 
 
-def generate_mem(function_name, in_data_width, in_f_width, data_width, f_width):
-    assert (
-        function_name in FUNCTION_TABLE
-    ), f"Function {function_name} not found in FUNCTION_TABLE"
-    lookup_to_file(
-        in_data_width,
-        in_f_width,
-        data_width,
-        f_width,
-        function_name,
-        f"/home/aw23/mase/machop/mase_components/activations/rtl/{function_name}_IN{in_data_width}_{in_f_width}_OUT{data_width}_{f_width}_map.mem",
-    )
+# DEPRECATED
+# def generate_mem(function_name, in_data_width, in_f_width, data_width, f_width):
+#     assert (
+#         function_name in FUNCTION_TABLE
+#     ), f"Function {function_name} not found in FUNCTION_TABLE"
+#     lookup_to_file(
+#         in_data_width,
+#         in_f_width,
+#         data_width,
+#         f_width,
+#         function_name,
+#         f"/home/aw23/mase/machop/mase_components/activations/rtl/{function_name}_IN{in_data_width}_{in_f_width}_OUT{data_width}_{f_width}_map.mem",
+#     )
 
 
 def generate_sv_lut(
@@ -301,7 +307,7 @@ def generate_sv_lut(
             data_width,
             f_width,
             function_name,
-            f"machop/mase_components/activations/rtl/{function_name}_lut{end}.sv",
+            f"/workspace/machop/mase_components/activations/rtl/{function_name}_lut{end}.sv",
             path_with_dtype=path_with_dtype,
         )
     else:

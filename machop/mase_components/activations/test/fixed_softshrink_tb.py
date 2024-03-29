@@ -209,5 +209,5 @@ dut_params = {
 
 torch.manual_seed(1)
 if __name__ == "__main__":
-    # generate_memory.generate_mem("exp", dut_params["DATA_IN_0_PRECISION_0"], dut_params["DATA_IN_0_PRECISION_1"])
+    # generate_memory.generate_sv_lut("exp", dut_params["DATA_IN_0_PRECISION_0"], dut_params["DATA_IN_0_PRECISION_1"])
     mase_runner(module_param_list=[dut_params])

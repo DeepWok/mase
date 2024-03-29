@@ -188,7 +188,7 @@ async def test(dut):
     in_frac_width = dut_params["DATA_IN_0_PRECISION_1"]
     out_data_width = dut_params["DATA_OUT_0_PRECISION_0"]
     out_frac_width = dut_params["DATA_OUT_0_PRECISION_1"]
-    generate_memory.generate_mem(
+    generate_memory.generate_sv_lut(
         "logsigmoid", in_data_width, in_frac_width, out_data_width, out_frac_width
     )
     print("Generated memory")
@@ -213,7 +213,7 @@ dut_params = {
 
 torch.manual_seed(1)
 if __name__ == "__main__":
-    # generate_memory.generate_mem("exp", dut_params["DATA_IN_0_PRECISION_0"], dut_params["DATA_IN_0_PRECISION_1"])
+    # generate_memory.generate_sv_lut("exp", dut_params["DATA_IN_0_PRECISION_0"], dut_params["DATA_IN_0_PRECISION_1"])
     generate_memory.generate_sv_lut(
         "logsigmoid",
         dut_params["DATA_IN_0_PRECISION_0"],
