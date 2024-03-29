@@ -9,7 +9,8 @@ def timing_util(folder: Path):
     print("-----", folder)
     timingrpt = folder / "timing.rpt"
     utilrpt = folder / "utilization.rpt"
-    assert timingrpt.exists() and utilrpt.exists()
+    if not (timingrpt.exists() and utilrpt.exists()):
+        return None
 
     # Parse Timing Report
     with open(timingrpt, "r") as f:
@@ -89,6 +90,8 @@ def gather_data(build_dir: Path):
         for bitwidth_path in module_path.glob("*bit"):
             bitwidth = int(re.search(r"(\d+)bit", bitwidth_path.name).groups()[0])
             timing_util_data = timing_util(bitwidth_path)
+            if timing_util_data == None:
+                continue
             print(timing_util_data)
             insert_data(data, {
                 "norm": top,
