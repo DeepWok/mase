@@ -47,7 +47,6 @@ from chop.tools.utils import parse_accelerator, to_numpy_if_tensor
 
 from chop.passes.graph.transforms import metadata_value_type_cast_transform_pass
 import pprint
-import pdb
 
 import gc
 gc.collect()
@@ -196,7 +195,6 @@ def prune_and_retrain(
         ), f"Return type of {pass_name} must be MaseGraph, got {type(graph)}"
 
     if save_dir is not None:
-        # pdb.set_trace()
         transformed_ckpt = save_dir / "transformed_ckpt"
         transformed_ckpt.mkdir(parents=True, exist_ok=True)
         graph, _ = metadata_value_type_cast_transform_pass(
@@ -216,7 +214,6 @@ def prune_and_retrain(
             loss = outputs['loss']
             named_parameters = list(pl_module.named_parameters())
             name, param = named_parameters[1]
-            #pdb.set_trace()
             if 'weight' in name:
                 hessian_diag = self.compute_hessian_diag(param, pl_module, loss)
                 print(f"[Batch {batch_idx}] Hessian Diagonal for {name}: max={hessian_diag.max().item()}, min={hessian_diag.min().item()}, mean={hessian_diag.mean().item()}")
@@ -264,7 +261,6 @@ def prune_and_retrain(
     #load_name = "/mnt/d/imperial/second_term/adls/projects/mase/mase_output/vgg_cifar10_prune/software/prune/transformed_ckpt/state_dict.pt"
     load_name = "/content/prune_mase/mase_output/vgg_cifar10_prune/software/prune/transformed_ckpt/state_dict.pt"
     load_type = "pt"
-    #pdb.set_trace()
     
     if load_name is not None:
         model = load_model(mask_collect, is_quantize, load_name, load_type=load_type, model=model)

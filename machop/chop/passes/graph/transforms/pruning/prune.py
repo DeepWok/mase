@@ -4,7 +4,6 @@ from .load import load_activation_prune_config, load_weight_prune_config
 from .pruning_methods import weight_criteria_map, activation_criteria_map
 
 from .sparse_parameterization import FakeSparseWeight, FakeStructuredSparseWeight
-import pdb
 try:
     from actions.prune_and_retrain import act_masks
 except:
@@ -115,7 +114,6 @@ def build_pruning_hooks(info, w_config, a_config, batch_size):
     # example of a_config: {'method': 'l1-norm', 'granularity': 'elementwise', 'scope': 'local', 'sparsity': 0.1}
     named_hooks = {}
     for k, v in info.items():
-        #pdb.set_trace()
         if v is not None:
             # for weights
             w_info = {
@@ -178,7 +176,6 @@ def build_pruning_hooks_channel(info, w_config, a_config, batch_size):
             if v['module_type'] in ['conv2d']:
                 if index < len(tmp)-1:
                     for j in range(index + 1, len(tmp), 1):
-                        #pdb.set_trace()
                         if tmp[j][1]!=None and (tmp[j][1]['module_type'] in ['conv2d']):
                             next_kvpair = tmp[j]
                             next_k = next_kvpair[0]
@@ -214,7 +211,6 @@ def build_pruning_hooks_channel(info, w_config, a_config, batch_size):
                         "stats": v["activation_stats"],
                         "shape": v["activation_shape"],
                     }
-                    #pdb.set_trace()
                     named_hooks[k] = {
                         "w_hook": get_weight_hook_channel(k, info, w_info, next_w_info, w_config),
                         "a_hook": get_activation_hook(k, info, a_info, batch_size, a_config),
@@ -306,7 +302,6 @@ def prune_graph_iterator(graph, batch_size, config: dict):
             meta = fetch_info(node, module)
             info[node.target] = meta
     
-    #pdb.set_trace()
     if w_config['granularity'] in ["channelwise"]:
         hooks = build_pruning_hooks_channel(info, w_config, a_config, batch_size)
     elif w_config['granularity'] in ["kernelwise"]:
