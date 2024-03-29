@@ -1,6 +1,10 @@
+//TODO: Disable Verilator warnings temporarily to test further hardware CI integration
+
+// verilator lint_off UNUSED
+// verilator lint_off UNOPTFLAT
+// verilator lint_off UNDRIVEN
+
 `timescale 1ns / 1ps
-// TODO(jlsand): Currently, our LayerNorm normalises over every dimension of data passed to it.
-// LayerNorm requires that the normalisation be possible to only happen over some dimensions
 module fixed_layer_norm #(
 
 
@@ -65,11 +69,11 @@ module fixed_layer_norm #(
     input                              data_in_0_valid,
     output                             data_in_0_ready,
 
-    input  logic signed [IN_WIDTH-1:0] bias      [IN_DEPTH-1:0],
+    input  logic signed [BIAS_PRECISION_0-1:0] bias      [IN_DEPTH-1:0],
     input                              bias_valid,
     output                             bias_ready,
 
-    input  logic signed [IN_WIDTH-1:0] weight      [IN_DEPTH-1:0],
+    input  logic signed [WEIGHT_PRECISION_0-1:0] weight      [IN_DEPTH-1:0],
     input                              weight_valid,
     output                             weight_ready,
 

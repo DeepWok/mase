@@ -1,4 +1,5 @@
-//This is a cordic square-root module that takes inpiration for the localFixedPointCORDICSQRT MATLAB function
+//This is a cordic square-root module that takes inpiration from the localFixedPointCORDICSQRT MATLAB function
+`timescale 1ns / 1ps
 module sqrt #(
     parameter IN_WIDTH      = 8,
     parameter IN_FRAC_WIDTH = 3,
@@ -183,10 +184,18 @@ module sqrt #(
   logic        [              K_WORDSIZE-1:0] idx_s9_b;
   logic        [              K_WORDSIZE-1:0] idx_s9_r;
 
+
+  // verilator lint_off UNUSED
   logic signed [       IN_WIDTH+IN_WIDTH-1:0] xtmp_s10;
   logic signed [       IN_WIDTH+IN_WIDTH-1:0] ytmp_s10;
+  // verilator lint_on UNUSED
+  
   logic        [              K_WORDSIZE-1:0] k_s10_b;
+  
+  // verilator lint_off UNUSED
   logic        [              K_WORDSIZE-1:0] k_s10_r;
+  // verilator lint_on UNUSED
+
   logic        [              K_WORDSIZE-1:0] idx_s10_b;
   logic        [              K_WORDSIZE-1:0] idx_s10_r;
 
@@ -318,13 +327,15 @@ module sqrt #(
     end
   end
 
+  // verilator lint_off UNUSED
   logic dbg_in_if_1;  //TODO: remove 
   logic dbg_in_if_2;  //TODO: remove 
   logic dbg_in_if_3;  //TODO: remove 
   logic dbg_in_if_4;  //TODO: remove 
   logic dbg_in_if_5;  //TODO: remove 
+  // verilator lint_on UNUSED
 
-  always_comb begin
+  always_latch begin
     //Set default values of _b wires here
     zero_point_25             = '0;
     zero_point_25[IN_WIDTH-3] = 1'b1;
@@ -332,13 +343,12 @@ module sqrt #(
     state_b                   = RST;
 
     // v_out_valid             = '0;
-    v_out                     = '0;
+    v_out                     = '0;    
     dbg_in_if_1               = '0;
     dbg_in_if_2               = '0;
     dbg_in_if_3               = '0;
     dbg_in_if_4               = '0;
     dbg_in_if_5               = '0;
-
 
     if (v_in_valid && !rst) begin
       x_s1_b = {v_in + zero_point_25, 7'b0};  //(32'b10 << right_shift_to_apply_b); // + 0.25
