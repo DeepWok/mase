@@ -11,6 +11,7 @@ module priority_encoder #(
 );
 
   //Can use multiplexer design and check which is better after synthesis
+  integer j;
   // logic set;
   // logic [NUM_INPUT_CHANNELS-1:0] idx;
   logic [NUM_INPUT_CHANNELS-1:0] input_channels_temp;
@@ -20,7 +21,7 @@ module priority_encoder #(
     input_channels_temp = input_channels;
     mask = {NUM_INPUT_CHANNELS{1'b0}};
 
-    for (genvar j = 0; j < NO_INDICIES; j = j + 1) begin : PRIORITY_ENCODER
+    for (j = 0; j < NO_INDICIES; j = j + 1) begin : PRIORITY_ENCODER
       channel_mask = input_channels_temp & (~(input_channels_temp - 1));
       input_channels_temp = input_channels_temp & ~channel_mask;
       mask = mask | channel_mask;
