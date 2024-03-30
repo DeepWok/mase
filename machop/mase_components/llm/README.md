@@ -2,7 +2,7 @@
 
 ## Overview
 [LLM.int()](https://arxiv.org/abs/2208.07339) is the state-of-art GPU implementation for large language model inference. It scatters a matrix to two groups, low-precision and high-precision matrices, and compute them separately using efficient hardware. This project implements LLM.int() algorithm on FPGA using existing linear layer components in MASE.
-![](./doc/figs/dataflow.png)
+![](./docs/figs/dataflow.png)
 
 
 ## File Hierarchy
@@ -79,7 +79,7 @@ The test report contains two test sections:
 
 ## Implementation Details
 Since FPGA has limited I/O ports and memory units, the LLM matrix is partitioned into small sub-matrices with identical size `N*M`. These matrices are flattened as a 1-d vector and are streamed into FPGA for computation.
-![](./doc/figs/matrix_partition.png)
+![](./docs/figs/matrix_partition.png)
 
 Inside `llm_int8_top` the input activations $X_{f16}$ with FP16 precision is passed through a `scatter` module. 
     
@@ -88,7 +88,7 @@ The module detects large-magnitude element (a.k.a emergent outliers mentioned in
 The rest of the elements in $X_{f16}$ have small magnitude so they go into the low-precision matrix $X_{LP, f16}$. It is then passed to the module `quantized_matmul` for Int8 quantization, Int8 matrix multiplication and de-quantization. 
 
 The outputs of the two matmul components both have FP16 precision, and are gathered as the final output matrix.
-![](./doc/figs/top_level.png)
+![](./docs/figs/top_level.png)
 `llm_int8_top` takes a dataflow architecture and is deeply pipelined. Each stage in the pipeline communicates with up-stream and down-stream stages with handshake protocols.
 
 Details of each sub-modules can be found in the [docs](./docs/) folder.
