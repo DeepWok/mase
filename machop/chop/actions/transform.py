@@ -48,20 +48,17 @@ def transform(
     model_info,
     model_name,
     data_module,
-    dataset_info,
     task: str,
     config: str,
     save_dir: str = None,
     load_name: str = None,
     load_type: str = None,
+    accelerator: str = "auto",
 ):
-    model = pre_transform_load(
-        load_name=load_name, load_type=load_type, model=model.to("cuda")
-    )
-    accelerator: str = ("auto",)
     accelerator = parse_accelerator(accelerator)
     model = pre_transform_load(load_name=load_name, load_type=load_type, model=model)
     model.to(accelerator)
+
     config = load_config(config)
     transform_config = config["transform"]
     style = transform_config.get("style", "graph")
