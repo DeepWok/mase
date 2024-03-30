@@ -75,7 +75,7 @@ if "test" in os.getcwd():  # if in "mase/machop/test/passes/graph/transforms/pru
 elif "machop" in os.getcwd():  # if in "mase/machop"
     config_file = "configs/examples/group3.toml"
 elif "mase" in os.getcwd():  # if in "mase"
-    config_file = "machop/chop/configs/examples/group3.toml"
+    config_file = "machop/configs/examples/group3.toml"
 
 
 def pre_transform_load(
@@ -87,6 +87,8 @@ def pre_transform_load(
     model: torch.nn.Module,
 ):
     if load_name is not None and load_type in ["pt", "pl"]:
+        if "machop" in os.getcwd():
+            load_name = "../" + load_name
         model = load_model(
             model_short_name,
             mask,
@@ -588,6 +590,8 @@ def run(config_file):
                 plt_trainer_args["devices"] = config["passes"]["retrain"]["trainer"][
                     "devices"
                 ]
+                plt_trainer_args["limit_train_batches"] = 1
+                plt_trainer_args["limit_val_batches"] = 0
 
                 """
                 basic hyperparameters

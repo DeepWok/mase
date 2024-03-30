@@ -31,14 +31,17 @@ def graph_iterator_for_metadata(graph, dummy_in=None, add_value=True):
         elif node.op == "call_module":
             args = load_arg(node.args, env)
             kwargs = load_arg(node.kwargs, env)
+            """
             modules = {name: module.to("cuda") for name, module in modules.items()}
             args = [
-                arg.to("cuda") if isinstance(arg, torch.Tensor) else arg for arg in args
+                arg.to("cuda") if isinstance(arg, torch.Tensor) else arg
+                for arg in args
             ]
             kwargs = {
                 k: v.to("cuda") if isinstance(v, torch.Tensor) else v
                 for k, v in kwargs.items()
             }
+            """
             result = modules[node.target](*args, **kwargs)
 
             meta = node.meta["mase"]

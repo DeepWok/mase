@@ -10,7 +10,7 @@ def huffman_decode_pass(layer_huffman_info):
 
     gc.collect()
 
-    with open("chop/huffman_info.pkl", "rb") as f:
+    with open("huffman_info.pkl", "rb") as f:
         layer_huffman_info = pickle.load(f)
 
     def decode_huffman(encoded_weights, huffman_tree):

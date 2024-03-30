@@ -142,7 +142,7 @@ def run_with_config(config_file):
     # The default save directory is specified as the current working directory
     batch_size = BATCH_SIZE
     graph, _ = prune_transform_pass(graph, batch_size, config)
-    graph, sparsity_info = add_pruning_metadata_analysis_pass(
+    graph, sparsity_info, weight_masks, act_masks = add_pruning_metadata_analysis_pass(
         graph, {"dummy_in": dummy_input, "add_value": False}
     )
     pp.pprint(sparsity_info)
@@ -155,26 +155,6 @@ def run_with_config(config_file):
         print(f"{name}:")
         print(f"  Data type: {param.dtype}")
     """
-
-    def model_storage_size(model, weight_bit_width, bias_bit_width, data_bit_width):
-        total_bits = 0
-        for name, param in model.named_parameters():
-            if param.requires_grad and "weight" in name:
-                bits = param.numel() * weight_bit_width
-                total_bits += bits
-
-            elif param.requires_grad and "bias" in name:
-                bits = param.numel() * bias_bit_width
-                total_bits += bits
-
-        total_bits += data_bit_width * (1 * 16 + 1)  # mean and variance
-
-        total_bytes = total_bits / 8
-        return total_bytes
-
-    postprune_model_size = model_storage_size(mg.model, 32, 32, 32)
-
-    print(postprune_model_size)
 
     """  
     # print the pruned weights of one convolution layer
@@ -240,15 +220,16 @@ def run_with_config(config_file):
     def save_grad(grad):
         gradients.append(grad)
 
-    hook = pl_model.fc1.weight.register_hook(save_grad)
+    # hook = pl_model.fc1.weight.register_hook(save_grad)
 
     trainer_args = {
-        "max_epochs": 10,
+        "max_epochs": 1,
         #'progress_bar_refresh_rate': 20,
         #'callbacks': [ModelCheckpoint(monitor='val_loss')]
         "callbacks": [TQDMProgressBar(refresh_rate=10)],
         "devices": 1,
-        "accelerator": "gpu",
+        "accelerator": "auto",
+        "limit_train_batches": 3,
     }
 
     trainer = pl.Trainer(**trainer_args)

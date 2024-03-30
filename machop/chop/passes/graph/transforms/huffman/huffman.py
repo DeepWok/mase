@@ -71,7 +71,7 @@ def huffman_transform_pass(
     Therefore, the actual model size does not actually decrease.
     We would investigate on hardward part further to realize this.
     """
-    torch.save(new_graph.model.state_dict(), "chop/post_train_pruned_model.ckpt")
+    # torch.save(new_graph.model.state_dict(), "post_train_pruned_model.ckpt")
 
     # start huffman coding
 
@@ -113,7 +113,7 @@ def huffman_transform_pass(
     print("huffman used bytes: ", huffman_size_bytes)
 
     # dict: layer_huffman_info
-    with open("chop/huffman_info.pkl", "wb") as f:
+    with open("huffman_info.pkl", "wb") as f:
         pickle.dump(layer_huffman_info, f)
 
     keys_to_replace = []
@@ -132,6 +132,6 @@ def huffman_transform_pass(
         for key, value in new_graph.model.state_dict().items()
     }
 
-    torch.save(huffman_state_dict, "chop/huffman_model.ckpt")
+    torch.save(huffman_state_dict, "huffman_model.ckpt")
 
     return layer_huffman_info

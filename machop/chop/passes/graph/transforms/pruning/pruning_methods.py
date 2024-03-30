@@ -348,7 +348,11 @@ weight_criteria_map = {
 
 activation_criteria_map = {
     "local": {
-        "elementwise": {"l1-norm": activation_l1, "l2-norm": activation_l2},
+        "elementwise": {
+            "random": random,
+            "l1-norm": activation_l1,
+            "l2-norm": activation_l2,
+        },
         "channelwise": {
             "feature-map-l1-norm": activation_l1_feature_map,
             "feature-map-l2-norm": activation_l2_feature_map,

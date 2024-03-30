@@ -388,9 +388,9 @@ def parse_node_config(config: dict, mase_op: str, strict: bool = True) -> dict:
     for entry in op_entries:
         try:
             entry_cp_fn = QUANT_ARITH_TO_CP_FN[config["name"]][entry]
+            entry_cp_fn(config, p_config, strict=strict)
         except:
             pass
-        entry_cp_fn(config, p_config, strict=strict)
     for entry in op_optional_entries:
         if optional_operand_entry_exists(config, entry):
             entry_cp_fn = QUANT_ARITH_TO_CP_FN[config["name"]][entry]

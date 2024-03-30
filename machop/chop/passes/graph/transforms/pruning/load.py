@@ -46,10 +46,10 @@ def load(config: dict):
     granularity = config.get("granularity", "elementwise")
 
     # if granularity not in ["channel", "elementwise", "kernelwise", "channelwise"]:
-    if granularity not in ["elementwise", "kernelwise", "channelwise"]:
+    if granularity not in ["random", "elementwise", "kernelwise", "channelwise"]:
         raise ValueError(
             "Unsupported pruning granularity {}. Please choose from {}".format(
-                granularity, ["elementwise", "kernelwise", "channelwise"]
+                granularity, ["random", "elementwise", "kernelwise", "channelwise"]
             )
         )
     if scope not in ["local", "global"]:

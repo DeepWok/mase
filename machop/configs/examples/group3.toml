@@ -6,7 +6,7 @@ dataset = "cifar10"
 task = "cls"
 
 batch_size = 512
-accelerator = "gpu"
+accelerator = "auto"
 project = "vgg_cifar10_prune"
 seed = 42
 log_every_n_steps = 50 
@@ -56,12 +56,12 @@ name = "integer"
 #retrain
 ##########################
 [passes.retrain]
-load_name = "../test-accu-0.9332.ckpt"
+load_name = "test-accu-0.9332.ckpt"
 load_type = "pl"
 project = "vgg_cifar10_train"
 
 [passes.retrain.training]
-max_epochs = 10
+max_epochs = 1
 weight_decay = 0
 optimizer = "adam"
 learning_rate = 1e-4
@@ -69,7 +69,7 @@ batch_size = 512
 
 [passes.retrain.trainer]
 devices = 1
-accelerator = "gpu"
+accelerator = "auto"
 
 ##########################
 # huffman

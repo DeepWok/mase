@@ -21,15 +21,15 @@ from .summary import graph_iterator_compare_nodes, graph_iterator_node_histogram
 logger = logging.getLogger(__name__)
 
 QUANTIZEABLE_OP = (
-    "add",
-    "bmm",
-    "conv1d",
+    # "add",
+    # "bmm",
+    # "conv1d",
     "conv2d",
-    "matmul",
-    "mul",
+    # "matmul",
+    # "mul",
     "linear",
-    "relu",
-    "sub",
+    # "relu",
+    # "sub",
 )
 
 
@@ -65,7 +65,8 @@ def graph_iterator_quantize_by_type(graph, config: dict):
             continue
         node_config = parse_node_config(node_config, get_mase_op(node))
         # if get_mase_type(node) == "module":
-        if node.op == "call_module":
+        # if node.op == "call_module":
+        if node.op == "call_module" and node_config != {}:
             ori_module = get_node_actual_target(node)
             successor_module = get_similar_node_actual_target(bl_graph, node.next)
             # Certain modules will require information about their successor module to complete the initialization process. (For LogicNets, activation functions are needed.)

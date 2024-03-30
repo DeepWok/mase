@@ -155,6 +155,9 @@ def transform(
     # load_name = None    #  Set load_name to None if want to train from scratch
     load_type = config["passes"]["retrain"]["load_type"]
 
+    if "machop" in os.getcwd():
+        load_name = "../" + load_name
+
     """
     model_short_name: choose from vgg7 / resnet18
     daatset_short_name: choose from cifar10 / mnist (colored-MNIST in essence)
@@ -563,6 +566,8 @@ def transform(
                 plt_trainer_args["devices"] = config["passes"]["retrain"]["trainer"][
                     "devices"
                 ]
+                plt_trainer_args["limit_train_batches"] = 1
+                plt_trainer_args["limit_val_batches"] = 0
 
                 """
                 basic hyperparameterss
