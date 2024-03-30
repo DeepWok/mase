@@ -27,7 +27,7 @@ from ..base import SearchSpaceBase
 from ..utils import flatten_dict, unflatten_dict
 
 # uncomment this after download the environment requirements for this api
-# from nas_201_api import NASBench201API as API
+from nas_201_api import NASBench201API as API
 from .xautodl.models import get_cell_based_tiny_net
 
 
@@ -50,9 +50,9 @@ DEFAULT_ZERO_COST_ARCHITECTURE_CONFIG = {
 }
 
 # uncomment this after download the environment requirements for this api
-# print("Loading NAS-Bench-201 api ...")
-# api = API("./third-party/NAS-Bench-201-v1_1-096897.pth", verbose=False)
-# print("API successfully loaded ...")
+print("Loading NAS-Bench-201 api ...")
+api = API("./third-party/NAS-Bench-201-v1_1-096897.pth", verbose=False)
+print("API successfully loaded ...")
 
 
 class ZeroCostProxy(SearchSpaceBase):
