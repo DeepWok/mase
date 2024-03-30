@@ -65,7 +65,7 @@ module fixed_round #(
   /* verilator lint_on UNUSEDSIGNAL */
   /* verilator lint_on WIDTH */
 
-
+  /* verilator lint_off WIDTHEXPAND */
   // Saturation check
   always_comb begin
     if (input_sign == 0)
@@ -82,4 +82,5 @@ module fixed_round #(
   end
   /* verilator lint_on UNSIGNED */
   /* verilator lint_on SELRANGE */
+  /* verilator lint_on WIDTHEXPAND */
 endmodule
