@@ -140,7 +140,8 @@ def run_with_config(config_file):
     # save_dir.mkdir(parents=True, exist_ok=True)
 
     # The default save directory is specified as the current working directory
-    graph, _ = prune_transform_pass(graph, config)
+    batch_size = BATCH_SIZE
+    graph, _ = prune_transform_pass(graph, batch_size, config)
     graph, sparsity_info = add_pruning_metadata_analysis_pass(
         graph, {"dummy_in": dummy_input, "add_value": False}
     )
@@ -250,7 +251,6 @@ def run_with_config(config_file):
         "accelerator": "gpu",
     }
 
-    # 初始化训练器
     trainer = pl.Trainer(**trainer_args)
 
     # model (must be pytorch lightning module)

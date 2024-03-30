@@ -47,7 +47,7 @@ def get_dummy_input(
     model_info,
     data_module,
     task: str,
-    device: str = "cpu",
+    device: str = "meta",
 ) -> dict:
     """Create a single dummy input for a model. The dummy input is a single sample from the training set.
 

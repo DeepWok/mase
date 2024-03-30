@@ -75,7 +75,7 @@ if "test" in os.getcwd():  # if in "mase/machop/test/passes/graph/transforms/pru
 elif "machop" in os.getcwd():  # if in "mase/machop"
     config_file = "configs/examples/group3.toml"
 elif "mase" in os.getcwd():  # if in "mase"
-    config_file = "chop/configs/examples/group3.toml"
+    config_file = "machop/chop/configs/examples/group3.toml"
 
 
 def pre_transform_load(

@@ -80,7 +80,7 @@ def get_activation_hook(name, info, named_info, batch_size, a_config: dict):
                 has_finished_prune = True
         else:
             try:
-                act_masks = torch.load("act_masks.pth")
+                act_masks = torch.load("act_masks2.pth")
                 if x.shape == (batch_size, 3, 32, 32):
                     mask = act_masks[0]
                 elif x.shape == (batch_size, 128, 32, 32):
