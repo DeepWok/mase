@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-"""
 import random, os, math, logging, sys
 
 from mase_cocotb.random_test import RandomSource, RandomSink, check_results
@@ -257,4 +256,3 @@ def runner():
 
 if __name__ == "__main__":
     runner()
-"""

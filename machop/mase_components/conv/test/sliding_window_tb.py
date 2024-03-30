@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 
-"""
 import os, logging
 
 from mase_cocotb.random_test import RandomSource, RandomSink, check_results
@@ -265,4 +264,3 @@ def wave_check(dut):
 if __name__ == "__main__":
     tb = VerificationCase()
     mase_runner(module_param_list=[tb.get_dut_parameters()])
-"""

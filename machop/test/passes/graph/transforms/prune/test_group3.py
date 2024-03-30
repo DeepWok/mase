@@ -202,6 +202,9 @@ def run(config_file):
     task = config["task"]
     accelerator = parse_accelerator(accelerator)
 
+    if "machop" in os.getcwd():
+        load_name = "../" + load_name
+
     """
     model_short_name: choose from vgg7 / resnet18
     daatset_short_name: choose from cifar10 / mnist (colored-MNIST in essence)
