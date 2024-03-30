@@ -157,7 +157,7 @@ def run_with_config(config_file):
     """
 
     """  
-    # print the pruned weights of one convolution layer
+    # print the pruned weights of one convolution layerr
     count=0
     for n in mg.fx_graph.nodes:
         if isinstance(get_node_actual_target(n), torch.nn.modules.Conv2d): 
