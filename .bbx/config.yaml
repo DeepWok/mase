@@ -15,7 +15,7 @@ jobs:
 
   chop-regression:
     runner: ubuntu-runner
-    resource_spec: large
+    resource_spec: small
     steps:
       - run:
           name: Run software regression
