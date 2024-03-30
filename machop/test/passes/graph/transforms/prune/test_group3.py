@@ -202,7 +202,7 @@ def run(config_file):
     task = config["task"]
     accelerator = parse_accelerator(accelerator)
 
-    if "content" not in os.getcwd():
+    if "content" not in load_name:
         load_name = None
 
     """
