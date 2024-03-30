@@ -157,6 +157,8 @@ def transform(
 
     if "machop" in os.getcwd() and "content" not in os.getcwd():
         load_name = "../" + load_name
+    
+    load_name = None
 
     """
     model_short_name: choose from vgg7 / resnet18
@@ -567,7 +569,7 @@ def transform(
                     "devices"
                 ]
                 plt_trainer_args["limit_train_batches"] = 1
-                # plt_trainer_args["limit_val_batches"] = 0
+                plt_trainer_args["limit_val_batches"] = 0
 
                 """
                 basic hyperparameterss
