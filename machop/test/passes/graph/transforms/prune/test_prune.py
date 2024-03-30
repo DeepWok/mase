@@ -150,7 +150,7 @@ def run_with_config(config_file):
     mg = graph
 
     """
-    # We've proved that weights & biases of the pruned model is torch.float32, using the following code:
+    # We've proved that weights & biases of the pruned model is torch.float32, using the following codes:
     for name, param in mg.model.named_parameters():
         print(f"{name}:")
         print(f"  Data type: {param.dtype}")
