@@ -8,7 +8,7 @@ module fixed_layer_norm #(
     parameter DATA_IN_0_PARALLELISM_DIM_0 = 16,
     /* verilator lint_off UNUSEDPARAM */
     parameter DATA_IN_0_TENSOR_SIZE_DIM_1 = 8,
-    parameter DATA_IN_0_PARALLELISM_DIM_1 = 1, //sv720: needed by tb
+    parameter DATA_IN_0_PARALLELISM_DIM_1 = 1,  //sv720: needed by tb
     /* verilator lint_on UNUSEDPARAM */
 
     parameter WEIGHT_PRECISION_0 = DATA_IN_0_PRECISION_0,
@@ -75,15 +75,15 @@ module fixed_layer_norm #(
     output                                       weight_ready,
 
     // Output ports for data
-    output logic signed [DATA_OUT_0_PRECISION_0-1:0] data_out_0      [DATA_OUT_0_PARALLELISM_DIM_0-1:0],
-    output                        data_out_0_valid,
-    input                         data_out_0_ready
+    output logic signed [DATA_OUT_0_PRECISION_0-1:0] data_out_0[DATA_OUT_0_PARALLELISM_DIM_0-1:0],
+    output data_out_0_valid,
+    input data_out_0_ready
 
 );
 
   localparam BLOCK_SIZE = DATA_IN_0_PARALLELISM_DIM_0 * DATA_IN_0_PARALLELISM_DIM_1;
   localparam NORMALIZATION_ZONE_PERIOD = BLOCK_SIZE / NUM_NORMALIZATION_ZONES;
-  
+
   // The max size the sum for calculating the mean is
   // MAX_NUM_ELEMS * MAX_SIZE_PER_ELEM = BLOCK_SIZE * 2^IN_WIDTH
   parameter SUM_MAX_SIZE = BLOCK_SIZE * (2 ** IN_WIDTH);
@@ -110,7 +110,7 @@ module fixed_layer_norm #(
   // divisor frac bits from the dividend - extending prevents all of
   // our fractional data getting lost. 
   localparam PRE_DIV_WIDTH = SUM_WIDTH + SUM_FRAC_WIDTH;
-  localparam PRE_DIV_FRAC_WIDTH = SUM_FRAC_WIDTH * 2; 
+  localparam PRE_DIV_FRAC_WIDTH = SUM_FRAC_WIDTH * 2;
 
   // Post-division FP format is same as the divior except
   // with dividend fractional bits removed.
@@ -122,7 +122,7 @@ module fixed_layer_norm #(
   // since the non-fractional bits won't overflow from this operation. 
   localparam FINAL_WIDTH = DIV_WIDTH;
   localparam FINAL_FRAC_WIDTH = DIV_FRAC_WIDTH + WEIGHT_PRECISION_1;
-  
+
   parameter EPSILON = 0;
 
   parameter NUM_STATE_BITS = 32;
@@ -267,7 +267,7 @@ module fixed_layer_norm #(
   logic [SUM_OF_SQUARES_BITS - 1:0] sum_of_squared_differences_b[NUM_NORMALIZATION_ZONES-1:0];
   logic [SUM_OF_SQUARES_BITS - 1:0] sum_of_squared_differences_r[NUM_NORMALIZATION_ZONES-1:0];
 
-  logic [SUM_OF_SQUARES_BITS - 1:0]     sum_of_squared_differences_tmp[NUM_NORMALIZATION_ZONES-1:0];
+  logic [SUM_OF_SQUARES_BITS - 1:0] sum_of_squared_differences_tmp[NUM_NORMALIZATION_ZONES-1:0];
   logic [SUM_OF_SQUARES_BITS_PADDED - 1:0]  sum_of_squared_differences_padded   [NUM_NORMALIZATION_ZONES-1:0];
   logic [VAR_BITS - 1:0] variance[NUM_NORMALIZATION_ZONES-1:0];
   /* verilator lint_off UNOPTFLAT */ //sv720: don't understand why event model (not synthesised) circular logic
@@ -345,7 +345,7 @@ module fixed_layer_norm #(
     //     sqrt_out_sum_format[i] = sqrt_out_sum_format[i] >>> (SUM_WIDTH - IN_WIDTH - SUM_EXTRA_FRAC_WIDTH);
     //   end
     // end
-    
+
     for (int i = 0; i < NUM_NORMALIZATION_ZONES; i++) begin
       sqrt_out_sum_format[i][SUM_WIDTH-1:0] = 0;
       sqrt_out_sum_format[i][SUM_WIDTH-1:SUM_WIDTH-IN_WIDTH] = sqrt_out[i];
@@ -401,7 +401,8 @@ module fixed_layer_norm #(
     end
 
     for (int j = 0; j < NUM_NORMALIZATION_ZONES; j++) begin
-      sum_of_squared_differences_padded[j] = (SUM_OF_SQUARES_BITS_PADDED'(sum_of_squared_differences_r[j]) << $clog2(BLOCK_SIZE));
+      sum_of_squared_differences_padded[j] = (SUM_OF_SQUARES_BITS_PADDED'(sum_of_squared_differences_r[j]) << $clog2(
+          BLOCK_SIZE));
       variance_padded[j] = sum_of_squared_differences_padded[j] / NORMALIZATION_ZONE_PERIOD;
       variance[j] = variance_padded[j][VAR_BITS-1:0];
       variance_in_width[j] = variance[j][ IN_WIDTH + VAR_FRAC_WIDTH - IN_FRAC_WIDTH -1 : VAR_FRAC_WIDTH - IN_FRAC_WIDTH ];
