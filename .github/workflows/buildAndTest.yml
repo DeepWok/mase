@@ -52,6 +52,7 @@ jobs:
           pip install grakel
           pip install pyro-ppl
           pip install ConfigSpace
+          pip install tornado
 
           # additional from setup.py prev
           pip install tqdm

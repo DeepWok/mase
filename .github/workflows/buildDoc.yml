@@ -41,7 +41,8 @@ jobs:
             pip install pybnn
             pip install grakel
             pip install pyro-ppl
-            pip intstall ConfigSpace
+            pip install ConfigSpace
+            pip install tornado
 
             # additional from setup.py prev
             pip install pytorch-msssim
@@ -50,7 +51,7 @@ jobs:
             # from zerocost
             pip install transforms3d
             pip install gdown
-            
+
       # Clone the MASE repo and its submodules.
       - name: Get MASE
         uses: actions/checkout@v3
