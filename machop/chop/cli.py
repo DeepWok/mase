@@ -231,6 +231,7 @@ class ChopCLI:
             self.model,
             self.tokenizer,
             self.data_module,
+            self.dataset_info,
             self.model_info,
         ) = self._setup_model_and_dataset()
         self.output_dir, self.output_dir_sw, self.output_dir_hw = self._setup_folders()

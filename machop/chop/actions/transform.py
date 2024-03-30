@@ -138,6 +138,7 @@ def transform_graph(
     model_info,
     model_name,
     data_module,
+    dataset_info,
     task: str,
     config: str,
     save_dir: str = None,
