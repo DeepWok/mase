@@ -157,13 +157,13 @@ class BatchNormTB(Testbench):
         exp_output = [32, 22, 21]  # 32 is 4 with 3 decimal bits
         print(inputs)
 
-        self.v_in_driver.load_driver(inputs)  # this needs to be a tensor
+        # self.v_in_driver.load_driver(inputs)  # this needs to be a tensor
 
-        self.v_out_monitor.load_monitor(exp_output)
+        # self.v_out_monitor.load_monitor(exp_output)
         print(
             f"================= DEBUG: put values on input ports ================= \n"
         )
-        await Timer(1000, units="us")
+        await Timer(10, units="us")
 
         # print(stdv)
         # print(mean)

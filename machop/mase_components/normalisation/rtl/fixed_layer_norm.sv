@@ -3,6 +3,7 @@
 // verilator lint_off UNUSED
 // verilator lint_off UNOPTFLAT
 // verilator lint_off UNDRIVEN
+// verilator lint_off ALWCOMBORDER
 
 `timescale 1ns / 1ps
 module fixed_layer_norm #(
@@ -70,12 +71,12 @@ module fixed_layer_norm #(
     output                             data_in_0_ready,
 
     input  logic signed [BIAS_PRECISION_0-1:0] bias      [IN_DEPTH-1:0],
-    input                              bias_valid,
-    output                             bias_ready,
+    input                                      bias_valid,
+    output                                     bias_ready,
 
     input  logic signed [WEIGHT_PRECISION_0-1:0] weight      [IN_DEPTH-1:0],
-    input                              weight_valid,
-    output                             weight_ready,
+    input                                        weight_valid,
+    output                                       weight_ready,
 
     // Output ports for data
     output signed [OUT_WIDTH-1:0] data_out_0      [DATA_OUT_0_PARALLELISM_DIM_0-1:0],

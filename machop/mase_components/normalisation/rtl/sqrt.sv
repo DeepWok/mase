@@ -1,4 +1,13 @@
 //This is a cordic square-root module that takes inpiration from the localFixedPointCORDICSQRT MATLAB function
+
+//TODO: Disable Verilator warnings temporarily to test further hardware CI integration
+
+// verilator lint_off UNUSED
+// verilator lint_off UNUSEDSIGNAL
+// verilator lint_off UNOPTFLAT
+// verilator lint_off UNDRIVEN
+// verilator lint_off ALWCOMBORDER
+
 `timescale 1ns / 1ps
 module sqrt #(
     parameter IN_WIDTH      = 8,
@@ -189,15 +198,18 @@ module sqrt #(
   logic signed [       IN_WIDTH+IN_WIDTH-1:0] xtmp_s10;
   logic signed [       IN_WIDTH+IN_WIDTH-1:0] ytmp_s10;
   // verilator lint_on UNUSED
-  
+
   logic        [              K_WORDSIZE-1:0] k_s10_b;
-  
+
   // verilator lint_off UNUSED
   logic        [              K_WORDSIZE-1:0] k_s10_r;
   // verilator lint_on UNUSED
 
   logic        [              K_WORDSIZE-1:0] idx_s10_b;
+
+  // verilator lint_off UNUSED
   logic        [              K_WORDSIZE-1:0] idx_s10_r;
+  // verilator lint_on UNUSED
 
   //assign log2_v_in = ($clog2(v_in) -3); // -3 bc 3 bit decimal precission
   assign xtmp_s1 = (x_s1_r >>> 1);
@@ -343,7 +355,7 @@ module sqrt #(
     state_b                   = RST;
 
     // v_out_valid             = '0;
-    v_out                     = '0;    
+    v_out                     = '0;
     dbg_in_if_1               = '0;
     dbg_in_if_2               = '0;
     dbg_in_if_3               = '0;
