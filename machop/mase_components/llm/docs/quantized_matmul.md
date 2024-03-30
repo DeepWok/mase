@@ -24,13 +24,13 @@ This performs Int8 matrix multiplication, and de-quantize the output matrix back
 
 $$ Out_{i32} = X_{i8}W_{i8}$$
 
-$$ Out_{f16} = \frac{Out_{i32}*(c_x*c_w)}{127 \cdot 127}$$
+$$ Out_{f16} = \frac{{Out_{i32}}*(c_x*c_w)}{127*127}$$
 
 This module is designed based on the existing `fixed_matmul-core` module but integrates dequantization for the following readon. The output matrix $Out_{i32}$ accumulates several matmul results for `IN_DEPTH` beats of input vector $X_{i8}^i$ and $W_{i8}^i$, which are sub-matrices from the entire matrix $X_{i8}$ and $W_{i8}$. Each pair of input beat $X_{i8}^i$ and $W_{i8}^i$ is quantized and has its dedicated quantization constant pair $(c_x^i, c_w^i)$. Therefore, the quantization operation must be performed before the matrix accumulator:
 
 $$ Out_{i32}^i = X_{i8}^iW_{i8}^i$$
 
-$$ Out_{f16}^i = \frac{Out_{i32}^i*(c_x^i*c_w^i)}{127 \cdot 127}$$
+$$ Out_{f16}^i = \frac{{{Out_{i32}}^i}*(c_x^i*c_w^i)}{127*127}$$
 
 $$ Out_{f16} = \sum_{i=1}^{IN\_DEPTH}Out_{f16}^i$$
 
