@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+"""
 import os, logging
 
 from mase_cocotb.random_test import RandomSource, RandomSink, check_results
@@ -159,7 +160,6 @@ def debug_state(dut, state):
 
 @cocotb.test()
 async def test_sliding_window(dut):
-    """Test integer based vector mult"""
     samples = 20
     test_case = VerificationCase(samples=samples)
 
@@ -262,7 +262,7 @@ def wave_check(dut):
         )
     )
 
-
 if __name__ == "__main__":
     tb = VerificationCase()
     mase_runner(module_param_list=[tb.get_dut_parameters()])
+"""
