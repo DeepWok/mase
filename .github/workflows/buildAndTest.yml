@@ -38,25 +38,25 @@ jobs:
 
       - name: Install dependencies
         run: |
-          pip install networkx==2.6.3
-          pip install pyyaml==5.4.1
-          pip install torchvision>=0.10.0
-          pip install torch>=1.9.0
-          pip install fvcore==0.1.5.post20210630
-          pip install pytest==6.2.4
-          pip install lightgbm==3.2.1
-          pip install ngboost==0.3.11
-          pip install xgboost==1.4.2
-          pip install emcee==3.1.0
-          pip install pybnn==0.0.5
-          pip install grakel==0.1.8
-          pip install pyro-ppl==1.6.0
+          pip install networkx
+          pip install pyyaml
+          pip install torchvision
+          pip install torch
+          pip install fvcore
+          pip install pytest
+          pip install lightgbm
+          pip install ngboost
+          pip install xgboost
+          pip install emcee
+          pip install pybnn
+          pip install grakel
+          pip install pyro-ppl
           pip install ConfigSpace
 
           # additional from setup.py prev
-          pip install tqdm==4.61.1
-          pip install pytorch-msssim==0.2.1
-          pip install tensorwatch==0.9.1
+          pip install tqdm
+          pip install pytorch-msssim
+          pip install tensorwatch
 
           # from zerocost
           pip install transforms3d
