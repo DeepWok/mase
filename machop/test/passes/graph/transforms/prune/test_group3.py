@@ -202,6 +202,7 @@ def run(config_file):
     task = config["task"]
     accelerator = parse_accelerator(accelerator)
 
+    print(os.getcwd())
     if "machop" in os.getcwd():
         load_name = "../" + load_name
 
