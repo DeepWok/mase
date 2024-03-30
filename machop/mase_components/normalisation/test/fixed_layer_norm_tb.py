@@ -85,16 +85,16 @@ class LayerNormTB(Testbench):
         return tensor
 
     def get_test_case(self, type):
-        if type == 'Q_LAYERNORM':
+        if type == "Q_LAYERNORM":
             model = LayerNormInteger(16, elementwise_affine=True, config=self.config)
             inputs = torch.randn((1, *model.normalized_shape)) * 2.0 + 0.5
-        elif type == 'LAYERNORM':
+        elif type == "LAYERNORM":
             model = LayerNorm(16, elementwise_affine=True)
             inputs = torch.randn((1, *model.normalized_shape)) * 2.0 + 0.5
-        elif type == 'GROUPNORM':
+        elif type == "GROUPNORM":
             model = GroupNorm(2, 16)
             inputs = torch.randn((1, 16)) * 2.0 + 0.5
-        
+
         data_width = self.config["data_in_width"]
         data_frac_width = self.config["data_in_frac_width"]
         parallelism = int(self.dut.DATA_IN_0_PARALLELISM_DIM_0) * int(
@@ -121,7 +121,7 @@ class LayerNormTB(Testbench):
         bias = self.preprocess_tensor(
             model.bias, quantizer, data_frac_width, int(parallelism)
         )
-        
+
         exp_outputs_model = quantizer(exp_outputs_model)
         # print("Exp. outputs model: ", exp_outputs_model)
 
@@ -155,11 +155,11 @@ class LayerNormTB(Testbench):
 
     async def run_test(self):
         await self.reset()
-        if self.dut.NUM_NORMALIZATION_ZONES == 2: 
-            await self.run_test_case(*self.get_test_case('GROUPNORM'))
+        if self.dut.NUM_NORMALIZATION_ZONES == 2:
+            await self.run_test_case(*self.get_test_case("GROUPNORM"))
         else:
-            await self.run_test_case(*self.get_test_case('Q_LAYERNORM'))
-            await self.run_test_case(*self.get_test_case('LAYERNORM'))
+            await self.run_test_case(*self.get_test_case("Q_LAYERNORM"))
+            await self.run_test_case(*self.get_test_case("LAYERNORM"))
 
 
 @cocotb.test()
@@ -177,7 +177,7 @@ if __name__ == "__main__":
                 "DATA_IN_0_PRECISION_1": 3,
                 "DATA_IN_0_PARALLELISM_DIM_0": 16,
                 "DATA_IN_0_PARALLELISM_DIM_1": 1,
-                "NUM_NORMALIZATION_ZONES": 2, 
+                "NUM_NORMALIZATION_ZONES": 2,
             },
             {
                 "DATA_IN_0_PRECISION_0": 8,

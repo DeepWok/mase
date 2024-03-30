@@ -11,6 +11,7 @@ from mase_cocotb.monitor import Monitor
 
 import torch
 
+
 class StreamDriver(Driver):
     def __init__(self, clk, data, valid, ready) -> None:
         super().__init__()
@@ -94,15 +95,17 @@ class StreamMonitorRange(Monitor):
             return int(self.data.value)
 
     def postprocess_tensor(self, tensor):
-        tensor = torch.tensor([item * (1.0 / 2.0) ** self.out_frac_width for item in tensor])
+        tensor = torch.tensor(
+            [item * (1.0 / 2.0) ** self.out_frac_width for item in tensor]
+        )
 
         def convert(x):
-            if x < ( 2**(self.out_frac_width-1)):
+            if x < (2 ** (self.out_frac_width - 1)):
                 return x
             else:
                 new_x = x - (2 ** (self.out_width - self.out_frac_width))
                 return new_x
-        
+
         tensor.detach().apply_(convert)
         return tensor
 
