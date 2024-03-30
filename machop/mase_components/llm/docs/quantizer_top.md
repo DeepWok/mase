@@ -3,8 +3,11 @@
 This module implements the 8-bit absmax quantization process used in the [LLM.int paper](https://arxiv.org/abs/2208.07339). It finds the maximum absolute value $c_x$ (a.k.a quantization constant) of a given FP16 input matrix $X_{f16}$, scale the matrix with the constant, and quantize it to a Int8 matrix $X_{i8}$:
 
 $$ X_{i8} = \left\lfloor \frac{127 \cdot X_{f16}}{c_x}\right\rceil$$
+
 where 
+
 $$ c_x = \max\left(\left|X_{f16_{i, j}}\right|\right) $$
+
 and  $\left\lfloor\right\rceil$ indicates rounding to nearest integer.
 
 
