@@ -1,10 +1,15 @@
 # find_max.sv
 
-This module is an important part of the LLM.int quantization process. It finds the maximum absolute value of a given input vector, which will be used for scaling and quantizing the vector into the 8-bit range [-127, 127].
+This module is an important part of the absmax quantization process used in the [LLM.int paper](https://arxiv.org/abs/2208.07339). It finds the maximum absolute value $c_x$ (a.k.a quantization constant) of a given input matrix, which will be used for later procedures including scaling and quantization.
 
 
 ## Structure Overview
-![](./figs/find_max.jpg)
+![](./figs/find_max_toplevel.png)
+
+Once the input vector `data_in` is streamed into the module, it is fed to a `comparator_tree` module for a recursive process of comparing and finally output the maximum absolute value. For a input vector `data_in` with $N$ elements, this comparator tree contains $log_2(N)$ layers. Thus, it takes at least $log_2(N)$ cycles for the component to find the corresponding `max_num`. 
+
+The module also output the input vector where `max_num` comes from. However, the latency of the comparator tree component is $log_2(N)$, which may cause `max_num` and `data_in` to be unsynchronized. A fifo is therefore inserted to buffer `data_in` untill `max_num` is valid. Depth of the fifo is at least the latency of the `comparator_tree` module.
+
 
 ## Module Specifications
 ### Ports
@@ -26,7 +31,3 @@ This module is an important part of the LLM.int quantization process. It finds t
 | IN_PARALLELISM | 1 | Row size of input matrix |
 | MAX_NUM_WIDTH | IN_WIDTH | Data width of the max number |
 
-## Dataflow
-Once the input vector `data_in` is streamed into the module, it is fed to a `comparator_tree` module for a recursive process of comparing and finally output the maximum absolute value.  
-
-The module also output the input vector where `max_num` comes from. However, it takes several cycles for `data_in` to flow through `comparator_tree`, which may cause `max_num` and `data_in` to be unsynchronized. A fifo is therefore inserted to buffer `data_in` untill `max_num` is valid. Depth of the fifo is at least the latency of the `comparator_tree` module.
