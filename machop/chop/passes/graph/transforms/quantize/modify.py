@@ -8,7 +8,7 @@ import torch
 from chop.tools.utils import copy_weights, init_LinearLUT_weight, init_Conv2dLUT_weight
 from torch import nn
 import numpy as np
-
+import pdb
 from .quantized_funcs import quantized_func_map
 from .quantized_modules import quantized_module_map
 

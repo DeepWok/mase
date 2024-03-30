@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-
 import random, os, math, logging, sys
 
 from mase_cocotb.random_test import RandomSource, RandomSink, check_results
@@ -133,7 +132,6 @@ def debug_state(dut, state):
 
 @cocotb.test()
 async def test_padding(dut):
-    """Test integer based vector mult"""
     samples = 20
     test_case = VerificationCase(samples=samples)
 
@@ -257,5 +255,4 @@ def runner():
 
 
 if __name__ == "__main__":
-    # for i in range(20):
     runner()

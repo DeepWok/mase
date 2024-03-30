@@ -2,6 +2,7 @@ import logging
 import math
 
 import toml
+import pdb
 import torch
 import torch.fx as fx
 from torch.fx.passes.shape_prop import ShapeProp
@@ -202,6 +203,27 @@ def graph_iterator_for_metadata(
         elif node.op == "call_module":
             args = load_arg(node.args, env)
             kwargs = load_arg(node.kwargs, env)
+            # for gpu:
+            module = modules[node.target]
+            if isinstance(module, torch.nn.Conv2d) or isinstance(
+                module, torch.nn.Linear
+            ):
+                args = [
+                    (
+                        arg.to(module.weight.device)
+                        if isinstance(arg, torch.Tensor)
+                        else arg
+                    )
+                    for arg in args
+                ]
+                kwargs = {
+                    key: (
+                        value.to(module.weight.device)
+                        if isinstance(value, torch.Tensor)
+                        else value
+                    )
+                    for key, value in kwargs.items()
+                }
             result = modules[node.target](*args, **kwargs)
             analyse_fn = analyse_common_parameters_module
         elif node.op == "output":
@@ -261,7 +283,6 @@ def add_common_metadata_analysis_pass(
     :type pass_args: _type_, optional, "add_value" controls whether tensor values would be added to the meta data, defaults to True
     :return: return a tuple of a MaseGraph and an empty dict (no additional info to return)
     :rtype: tuple(MaseGraph, Dict)
-
 
     The common metadata of a Mase node in a Mase graph describes the constraints of the
     node for any static analysis or possible transformation. The metadata has a

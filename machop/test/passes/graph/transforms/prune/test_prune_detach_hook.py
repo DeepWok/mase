@@ -131,8 +131,9 @@ def run_with_config(config_file):
     # save_dir.mkdir(parents=True, exist_ok=True)
 
     # The default save directory is specified as the current working directory
-    graph, _ = prune_transform_pass(graph, config)
-    graph, sparsity_info = add_pruning_metadata_analysis_pass(
+    batch_size = BATCH_SIZE
+    graph, _ = prune_transform_pass(graph, batch_size, config)
+    graph, sparsity_info, weight_masks, act_masks = add_pruning_metadata_analysis_pass(
         graph, {"dummy_in": dummy_input, "add_value": False}
     )
     graph, _ = prune_detach_hook_transform_pass(graph, {})
