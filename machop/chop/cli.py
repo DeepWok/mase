@@ -57,6 +57,7 @@ from .actions import (
     search,
     emit,
     simulate,
+    train1,
 )
 from .dataset import MaseDataModule, AVAILABLE_DATASETS, get_dataset_info
 from .tools import post_parse_load_config, load_config
@@ -112,6 +113,7 @@ ACTIONS = [
     "emit",
     "simulate",
     "prune_and_retrain",
+    "train1",
 ]
 INFO_TYPE = ["all", "model", "dataset"]
 LOAD_TYPE = [
@@ -332,7 +334,6 @@ class ChopCLI:
         train(**train_params)
         self.logger.info("Training is completed")
 
-    """
     def _run_train1(self):
         self.logger.info(f"Training model {self.args.model!r}...")
         # A configuration is compulsory for self-designed train passes
@@ -362,7 +363,6 @@ class ChopCLI:
 
         train1(**train1_params)
         self.logger.info("Self-designed training is completed")
-    """
 
     def _run_test(self):
         self.logger.info(f"Testing model {self.args.model!r}...")
