@@ -6,17 +6,25 @@ def prune_graph_iterator(graph, config: dict):
     for node in graph.fx_graph.nodes:
         # pruning only deals with modules at the moment
         if node.op == "call_module":
-            name = node.target
-            # remove weights
-            if hasattr(graph.modules[node.target], "weight"):
-                torch.nn.utils.parametrize.remove_parametrizations(
-                    graph.modules[name], "weight"
-                )
+            module = graph.modules[node.target]
+            if (
+                isinstance(module, torch.nn.Conv2d)
+                or isinstance(module, torch.nn.Conv1d)
+                or isinstance(module, torch.nn.Linear)
+            ):
+                name = node.target
+                # remove weights
+                if hasattr(graph.modules[node.target], "weight"):
+                    torch.nn.utils.parametrize.remove_parametrizations(
+                        graph.modules[name], "weight"
+                    )
 
-            if hasattr(graph.modules[node.target], "_forward_hooks"):
-                for k, hook in graph.modules[node.target]._forward_pre_hooks.items():
-                    if "sparsify_input" in hook.__name__:
-                        del graph.modules[node.target]._forward_pre_hooks[k]
+                if hasattr(graph.modules[node.target], "_forward_hooks"):
+                    for k, hook in graph.modules[
+                        node.target
+                    ]._forward_pre_hooks.items():
+                        if "sparsify_input" in hook.__name__:
+                            del graph.modules[node.target]._forward_pre_hooks[k]
 
     return graph
 
