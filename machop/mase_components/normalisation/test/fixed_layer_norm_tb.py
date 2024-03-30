@@ -7,10 +7,6 @@ import numpy as np
 
 import sys
 
-# TODO: Remove these.
-sys.path.insert(0, "/home/sv720/mase_fork/mase_group7/machop")
-sys.path.insert(0, "/home/jlsand/mase_group7/machop")
-
 import cocotb
 from cocotb.log import SimLog
 from cocotb.triggers import *
