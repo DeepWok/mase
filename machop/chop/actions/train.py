@@ -104,40 +104,44 @@ def train(
     wrapper_cls = get_model_wrapper(model_info, task)
 
     if load_name is not None:
-        model = load_model(load_name, load_type=load_type, model=model)
-        logger.info(f"'{load_type}' checkpoint loaded before training")
-        state_dict = load_state_dict(load_name, load_type)
-        activation_config = None
-        print("model_info", type(model_info))
-        print("model_info", model_info.name)
-        if "activations" in state_dict.keys():
-            data_module.prepare_data()
-            data_module.setup()
+        if load_type != "mz":
 
-            input_generator = InputGenerator(
-                data_module=data_module,
-                model_info=model_info,
-                task=task,
-                which_dataloader="train",
-                max_batches=1,
-            )
+            model = load_model(load_name, load_type=load_type, model=model)
+            logger.info(f"'{load_type}' checkpoint loaded before training")
+            state_dict = load_state_dict(load_name, load_type)
+            activation_config = None
+            print("model_info", type(model_info))
+            print("model_info", model_info.name)
+            if "activations" in state_dict.keys():
+                data_module.prepare_data()
+                data_module.setup()
 
-            dummy_in = next(iter(input_generator))
-            _ = model(**dummy_in)
-            graph = MaseGraph(model)
-            graph, _ = init_metadata_analysis_pass(graph, None)
-            graph, _ = add_common_metadata_analysis_pass(graph, {"dummy_in": dummy_in})
-            graph, _ = add_software_metadata_analysis_pass(graph, None)
+                input_generator = InputGenerator(
+                    data_module=data_module,
+                    model_info=model_info,
+                    task=task,
+                    which_dataloader="train",
+                    max_batches=1,
+                )
 
-            activation_config = state_dict["activations"]
-            state_dict = state_dict["state_dict"]
-            # reapply activation parametrisations
-            print("activations_Applied")
-            reappply_activations(graph, activation_config)
-            reapply_parametrizations_mg_module(graph, state_dict)
-            model = graph.model
-        else:
-            reapply_parametrizations_from_state_dict(model, state_dict)
+                dummy_in = next(iter(input_generator))
+                _ = model(**dummy_in)
+                graph = MaseGraph(model)
+                graph, _ = init_metadata_analysis_pass(graph, None)
+                graph, _ = add_common_metadata_analysis_pass(
+                    graph, {"dummy_in": dummy_in}
+                )
+                graph, _ = add_software_metadata_analysis_pass(graph, None)
+
+                activation_config = state_dict["activations"]
+                state_dict = state_dict["state_dict"]
+                # reapply activation parametrisations
+                print("activations_Applied")
+                reappply_activations(graph, activation_config)
+                reapply_parametrizations_mg_module(graph, state_dict)
+                model = graph.model
+            else:
+                reapply_parametrizations_from_state_dict(model, state_dict)
     pl_model = wrapper_cls(
         model,
         dataset_info=dataset_info,
