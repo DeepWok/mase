@@ -1,4 +1,4 @@
-# Group7: LLM Hardware Integration for MASE
+# Group7: LLM.int Hardware Integration for MASE
 
 ## Overview
 [LLM.int()](https://arxiv.org/abs/2208.07339) is the state-of-art GPU implementation for large language model inference. It scatters a matrix to two groups, low-precision and high-precision matrices, and compute them separately using efficient hardware. This project implements LLM.int() algorithm on FPGA using existing linear layer components in MASE.
