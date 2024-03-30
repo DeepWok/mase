@@ -34,18 +34,18 @@ from .xautodl.models import get_cell_based_tiny_net
 ### default architecture is the architecuture returned by api.get_net_config(0, 'cifar10') in nasbench201
 DEFAULT_ZERO_COST_ARCHITECTURE_CONFIG = {
     "config": {
-        "dataset": "cifar10",
-        "name": "infer.tiny",
-        "C": 16,
-        "N": 5,
-        "op_0_0": 0,
-        "op_1_0": 4,
-        "op_2_0": 2,
-        "op_2_1": 1,
-        "op_3_0": 2,
-        "op_3_1": 1,
-        "op_3_2": 1,
-        "number_classes": 10,
+        "dataset": ["cifar10"],
+        "name": ["infer.tiny"],
+        "C": [16],
+        "N": [5],
+        "op_0_0": [0],
+        "op_1_0": [4],
+        "op_2_0": [2],
+        "op_2_1": [1],
+        "op_3_0": [2],
+        "op_3_1": [1],
+        "op_3_2": [1],
+        "number_classes": [10],
     }
 }
 

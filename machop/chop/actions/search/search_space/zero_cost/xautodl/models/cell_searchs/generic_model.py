@@ -66,7 +66,6 @@ class Controller(nn.Module):
         return Structure(genotypes)
 
     def forward(self):
-
         inputs, h0 = self.input_vars, None
         log_probs, entropys, sampled_arch = [], [], []
         for iedge in range(self.num_edge):

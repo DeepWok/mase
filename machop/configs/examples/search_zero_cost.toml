@@ -27,7 +27,6 @@ dataset = ['cifar100'] ## default cifar 10 (can be selected from [cifar10, cifar
 name = ['infer.tiny']
 C = [16]
 N = [5]
-op_0_0 = [0]
 op_1_0 = [0,1,2]
 op_2_0 = [2,3,4]
 op_2_1 = [0, 4]

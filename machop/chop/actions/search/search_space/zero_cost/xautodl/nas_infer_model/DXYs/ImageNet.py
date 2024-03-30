@@ -6,7 +6,6 @@ from .head_utils import ImageNetHEAD, AuxiliaryHeadImageNet
 
 
 class NetworkImageNet(nn.Module):
-
     def __init__(self, C, N, auxiliary, genotype, num_classes):
         super(NetworkImageNet, self).__init__()
         self._C = C

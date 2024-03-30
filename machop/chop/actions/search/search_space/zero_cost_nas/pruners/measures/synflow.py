@@ -22,7 +22,6 @@ from ..p_utils import get_layer_metric_array
 @measure("synflow", bn=False, mode="param")
 @measure("synflow_bn", bn=True, mode="param")
 def compute_synflow_per_weight(net, inputs, targets, mode, split_data=1, loss_fn=None):
-
     device = inputs.device
 
     # convert params to their abs. Keep sign for converting it back.

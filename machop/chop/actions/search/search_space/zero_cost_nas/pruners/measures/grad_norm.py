@@ -24,7 +24,6 @@ from ..p_utils import get_layer_metric_array
 
 @measure("grad_norm", bn=True)
 def get_grad_norm_arr(net, inputs, targets, loss_fn, split_data=1, skip_grad=False):
-
     net.train()
     net.zero_grad()
     N = inputs.shape[0]

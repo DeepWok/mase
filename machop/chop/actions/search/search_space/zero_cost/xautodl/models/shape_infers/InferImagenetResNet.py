@@ -7,7 +7,6 @@ from ..initialization import initialize_resnet
 
 
 class ConvBNReLU(nn.Module):
-
     num_conv = 1
 
     def __init__(
@@ -185,7 +184,6 @@ class ResNetBottleneck(nn.Module):
         self.out_dim = iCs[3]
 
     def forward(self, inputs):
-
         bottleneck = self.conv_1x1(inputs)
         bottleneck = self.conv_3x3(bottleneck)
         bottleneck = self.conv_1x4(bottleneck)

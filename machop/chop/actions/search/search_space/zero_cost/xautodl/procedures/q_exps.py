@@ -77,7 +77,6 @@ def run_exp(
     uri,
     model_obj_name="model.pkl",
 ):
-
     model = init_instance_by_config(task_config["model"])
     model_fit_kwargs = dict(dataset=dataset)
 

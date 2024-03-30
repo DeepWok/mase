@@ -32,7 +32,6 @@ class LandmarkDataset(data.Dataset):
         data_indicator,
         cache_images=None,
     ):
-
         self.transform = transform
         self.sigma = sigma
         self.downsample = downsample
@@ -172,7 +171,6 @@ class LandmarkDataset(data.Dataset):
         return self._process_(image, target, index)
 
     def _process_(self, image, target, index):
-
         # transform the image and points
         image, target, theta = self.transform(image, target)
         (C, H, W), (height, width) = image.size(), self.shape

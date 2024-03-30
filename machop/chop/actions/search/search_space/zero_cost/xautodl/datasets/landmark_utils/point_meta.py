@@ -13,7 +13,6 @@ class PointMeta:
     # points    : 3 x num_pts (x, y, oculusion)
     # image_size: original [width, height]
     def __init__(self, num_point, points, box, image_path, dataset_name):
-
         self.num_point = num_point
         if box is not None:
             assert (isinstance(box, tuple) or isinstance(box, list)) and len(box) == 4

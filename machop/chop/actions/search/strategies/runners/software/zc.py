@@ -82,7 +82,6 @@ def get_optimizer(model, optimizer: str, learning_rate, weight_decay=0.0):
 
 
 class RunnerZeroCost(SWRunnerBase):
-
     def _post_init_setup(self) -> None:
         self.available_metrics = [
             "fisher",
@@ -174,7 +173,6 @@ class RunnerZeroCost(SWRunnerBase):
         return reduced
 
     def __call__(self, data_module, model, sampled_config) -> dict[str, float]:
-
         zero_cost_metrics = {}
 
         data_loader = self.config["data_loader"]

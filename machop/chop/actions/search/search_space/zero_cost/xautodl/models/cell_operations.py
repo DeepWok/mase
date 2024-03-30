@@ -253,7 +253,6 @@ class ResNetBasicblock(nn.Module):
         return string
 
     def forward(self, inputs):
-
         basicblock = self.conv_a(inputs)
         basicblock = self.conv_b(basicblock)
 

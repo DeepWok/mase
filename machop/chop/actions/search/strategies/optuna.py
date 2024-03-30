@@ -197,7 +197,6 @@ class SearchStrategyOptuna(SearchStrategyBase):
 
         ### if zero cost NAS, save the best ensemble
         if self.zero_cost_mode:
-
             self.zero_cost_weight()
 
             ### generate dataframe containing weights ensemble

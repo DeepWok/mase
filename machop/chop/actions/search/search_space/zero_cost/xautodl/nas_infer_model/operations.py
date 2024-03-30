@@ -51,7 +51,6 @@ OPS = {
 
 
 class POOLING(nn.Module):
-
     def __init__(self, C_in, C_out, stride, mode):
         super(POOLING, self).__init__()
         if C_in == C_out:
@@ -72,7 +71,6 @@ class POOLING(nn.Module):
 
 
 class Conv313(nn.Module):
-
     def __init__(self, C_in, C_out, stride, affine):
         super(Conv313, self).__init__()
         self.op = nn.Sequential(
@@ -91,7 +89,6 @@ class Conv313(nn.Module):
 
 
 class Conv717(nn.Module):
-
     def __init__(self, C_in, C_out, stride, affine):
         super(Conv717, self).__init__()
         self.op = nn.Sequential(
@@ -110,7 +107,6 @@ class Conv717(nn.Module):
 
 
 class ReLUConvBN(nn.Module):
-
     def __init__(self, C_in, C_out, kernel_size, stride, padding, affine=True):
         super(ReLUConvBN, self).__init__()
         self.op = nn.Sequential(
@@ -126,7 +122,6 @@ class ReLUConvBN(nn.Module):
 
 
 class DilConv(nn.Module):
-
     def __init__(
         self, C_in, C_out, kernel_size, stride, padding, dilation, affine=True
     ):
@@ -152,7 +147,6 @@ class DilConv(nn.Module):
 
 
 class SepConv(nn.Module):
-
     def __init__(self, C_in, C_out, kernel_size, stride, padding, affine=True):
         super(SepConv, self).__init__()
         self.op = nn.Sequential(
@@ -187,7 +181,6 @@ class SepConv(nn.Module):
 
 
 class Identity(nn.Module):
-
     def __init__(self):
         super(Identity, self).__init__()
 
@@ -196,7 +189,6 @@ class Identity(nn.Module):
 
 
 class Zero(nn.Module):
-
     def __init__(self, stride):
         super(Zero, self).__init__()
         self.stride = stride
@@ -211,7 +203,6 @@ class Zero(nn.Module):
 
 
 class FactorizedReduce(nn.Module):
-
     def __init__(self, C_in, C_out, stride, affine=True):
         super(FactorizedReduce, self).__init__()
         self.stride = stride

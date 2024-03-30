@@ -115,9 +115,10 @@ def getzico(
             # feat.shape = [64, 64]
             # logits.shape = [64, 10]
             # nn.cross_entropy(inputs, targets) takes: input [N, C] and targets [N, ] of class_index or class_prob
-            _, outputs = (
-                outputs  # TODO: need logits just like synflow and snip, so fix here temporarily
-            )
+            (
+                _,
+                outputs,
+            ) = outputs  # TODO: need logits just like synflow and snip, so fix here temporarily
         loss = loss_fn(outputs, targets[st:en])
         loss.backward()
         grad_dict = getgrad(net, grad_dict, step_iter=sp)

@@ -63,7 +63,6 @@ class ResNetBasicblock(nn.Module):
         self.num_conv = 2
 
     def forward(self, inputs):
-
         basicblock = self.conv_a(inputs)
         basicblock = self.conv_b(basicblock)
 
@@ -98,7 +97,6 @@ class ResNetBottleneck(nn.Module):
         self.num_conv = 3
 
     def forward(self, inputs):
-
         bottleneck = self.conv_1x1(inputs)
         bottleneck = self.conv_3x3(bottleneck)
         bottleneck = self.conv_1x4(bottleneck)

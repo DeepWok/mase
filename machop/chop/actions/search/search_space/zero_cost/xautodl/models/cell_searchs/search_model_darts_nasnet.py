@@ -159,7 +159,6 @@ class NASNetworkDARTS(nn.Module):
         }
 
     def forward(self, inputs):
-
         normal_w = nn.functional.softmax(self.arch_normal_parameters, dim=1)
         reduce_w = nn.functional.softmax(self.arch_reduce_parameters, dim=1)
 

@@ -46,7 +46,6 @@ class Controller(nn.Module):
         nn.init.uniform_(self.w_pred.weight, -0.1, 0.1)
 
     def forward(self):
-
         inputs, h0 = self.input_vars, None
         log_probs, entropys, sampled_arch = [], [], []
         for iedge in range(self.num_edge):

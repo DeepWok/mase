@@ -181,7 +181,6 @@ def evaluate_for_seed(
 
 
 def get_nas_bench_loaders(workers):
-
     torch.set_num_threads(workers)
 
     root_dir = (pathlib.Path(__file__).parent / ".." / "..").resolve()

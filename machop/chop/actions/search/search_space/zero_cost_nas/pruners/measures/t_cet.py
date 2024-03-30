@@ -39,7 +39,6 @@ from .snip import compute_snip_per_weight
 def compute_tcet_score(
     net, inputs, targets, loss_fn=None, split_data=1, mode="none", mt="synflow"
 ):
-
     net1 = net.get_prunable_copy(
         bn=True
     )  # manually keep bn in lnwot, and remove bn in synflow
@@ -79,7 +78,6 @@ def compute_tcet_score(
 def compute_snr_score(
     net, inputs, targets, loss_fn=None, split_data=1, mode="none", mt="synflow"
 ):
-
     if mt == "synflow":
         synflow_scores = compute_synflow_per_weight(
             net, inputs, targets, mode="param", split_data=split_data, loss_fn=loss_fn

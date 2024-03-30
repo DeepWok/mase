@@ -10,7 +10,6 @@ import os, torch
 
 
 def obtain_nas_infer_model(config, extra_model_path=None):
-
     if config.arch == "dxys":
         from .DXYs import CifarNet, ImageNet, Networks
         from .DXYs import build_genotype_from_dict

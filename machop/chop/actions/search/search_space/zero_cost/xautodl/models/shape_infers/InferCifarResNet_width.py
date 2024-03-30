@@ -182,7 +182,6 @@ class ResNetBottleneck(nn.Module):
         self.out_dim = iCs[3]
 
     def forward(self, inputs):
-
         bottleneck = self.conv_1x1(inputs)
         bottleneck = self.conv_3x3(bottleneck)
         bottleneck = self.conv_1x4(bottleneck)

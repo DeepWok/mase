@@ -1,6 +1,6 @@
 # Zero-Cost Proxy for NAS Project with MASE
 
-This tutorial shows how to search for neural architectures with zero-cost proxies on CIFAR-10 and ImageNet-16-120 datasets using the MASE framework.
+This tutorial shows how to search for neural architectures with zero-cost proxies on CIFAR-10, CIFAR-100 and ImageNet-16-120 datasets using the MASE framework.
 
 > **Note**: The Zero-Cost Proxy project is done by Group 2 of Advanced deep learning system course at Impeiral college london.
 
@@ -42,14 +42,14 @@ name = ['infer.tiny']
 C = [16]
 N = [5]
 
-## following are the option choices for each node in the cell
-op_0_0 = [0]
-op_1_0 = [0,1,2,3,4]
-op_2_0 = [0,1,2,3,4]
-op_2_1 = [0,1,2,3,4]
-op_3_0 = [0,1,2,3,4]
-op_3_1 = [0,1,2,3,4]
-op_3_2 = [0,1,2,3,4]
+## following are the option choices for each node in the cell, 
+## each of them can be chosen from 0,1,2,3,4
+op_1_0 = [0,1,2]
+op_2_0 = [2,3,4]
+op_2_1 = [0, 4]
+op_3_0 = [4]
+op_3_1 = [0,1]
+op_3_2 = [1,2]
 
 number_classes = [10]
 
@@ -66,16 +66,17 @@ name = "zero_cost"
 [search.strategy.sw_runner.zero_cost]
 # metric can be chosen from 
 # "grad_norm", "snip", "grasp", "fisher", "plain", "l2_norm", "naswot", "naswot_relu", "tenas", "zico"
-metrics = ["grad_norm", "snip", "grasp", "fisher", "plain", "l2_norm", "naswot", "naswot_relu", "tenas", "zico"]
+# choose three of zero cost proxies
+metrics = ["naswot_relu", "snip", "plain"]
 data_loader = "val_dataloader"
 num_samples = 512
 
-[search.strategy.hw_runner.average_bitwidth]
-compare_to = 32 # compare to FP32
-
 [search.strategy.setup]
 n_jobs = 1
-n_trials = 100
+
+# change the number of trail here
+n_trials = 5
+
 timeout = 20000
 sampler = "tpe"
 # sum_scaled_metrics should be false for multi-objective optimization
@@ -84,37 +85,42 @@ sum_scaled_metrics = false # multi objective
 # direction = "maximize"
 
 [search.strategy.metrics]
-grad_norm.scale = 0.0
-grad_norm.direction = "maximize"
+### set the scale for the chosen zero cost proxy
+# grad_norm.scale = 0.0
+# grad_norm.direction = "maximize"
 snip.scale = 1.0
 snip.direction = "maximize"
-grasp.scale = 0.0
-grasp.direction = "maximize"
-fisher.scale = 0.0
-fisher.direction = "maximize"
+# grasp.scale = 0.0
+# grasp.direction = "maximize"
+# fisher.scale = 0.0
+# fisher.direction = "maximize"
+# jacob_cov.scale = 1.0
+# jacob_cov.direction = "maximize"
 plain.scale = 1.0
 plain.direction = "maximize"
-l2_norm.scale = 0.0
-l2_norm.direction = "minimize"
-naswot.scale = 1.0
-naswot.direction = "maximize"
-naswot_relu.scale = 1.0 # number 3
+# synflow.scale = 1.0
+# synflow.direction = "maximize"
+# l2_norm.scale = 0.0
+# l2_norm.direction = "minimize"
+# naswot.scale = 1.0
+# naswot.direction = "maximize"
+naswot_relu.scale = 1.0
 naswot_relu.direction = "maximize"
-t_cet.scale = 1.0
-t_cet.direction = "maximize"
-tenas.scale = 1.0
-tenas.direction = "maximize"
-zen.scale = 1.0
-zen.direction = "maximize"
-zico.scale = 0.0
-zico.direction = "maximize"
+# t_cet.scale = 1.0
+# t_cet.direction = "maximize"
+# tenas.scale = 1.0
+# tenas.direction = "maximize"
+# zen.scale = 1.0
+# zen.direction = "maximize"
+# zico.scale = 0.0
+# zico.direction = "maximize"
 ```
 
 ### NAS-Bench-201 Dataset Requirement
 
 First download the NAS-Bench-201 `.pth` file. This file contains the dataset of pre-evaluated architectures for the zero-cost proxy evaluation process.
 
-Download the file from the official NAS-Bench-201 repository or an alternative provided source. After downloading, place the `.pth` file in your project directory under `third_party/NAS-Bench-201-v1_1-096897.pth` or adjust the configuration to reflect the file's location accurately.
+Download the file from the official NAS-Bench-201 repository or an alternative provided source. After downloading, place the `.pth` file in your project directory under `mase/machop/third-party/NAS-Bench-201-v1_1-096897.pth`.
 
 #### Setup Instructions
 
@@ -131,14 +137,14 @@ Download the file from the official NAS-Bench-201 repository or an alternative p
    pip install torch pandas optuna nas-bench-201-api
    ```
 
-   Then uncomment line 47, 76-78 of file /zero_cost/graph.py.
-3. Next, install the nas-bench-201 pth file to this path:'./third_party/' using the following link:
+   Then uncomment line 30, 53-55 of file `/mase/machop/chop/actions/search/search_space/zero_cost/graph.py`.
+3. Next, install the nas-bench-201 pth file to this path: `mase/machop/third-party/` using the following link:
    [Google Drive NAS-Bench](https://drive.google.com/file/d/16Y0UwGisiouVRxW-W5hEtbxmcHw_0hF_/view?usp=sharing)
-4. **Configuration Check**: Ensure that the `configs/examples/search_zero_cost.toml` configuration file points to the correct NAS-Bench-201 `.pth` file location and adjust other settings as necessary.
+4. **Configuration Check**: Ensure that the `configs/examples/search_zero_cost.toml` configuration file points to the correct NAS-Bench-201 `.pth` file location and adjust other settings if necessary.
 
 ### Project Execution
 
-Execute the project by following command from the root directory:
+Execute the project by following command under `mase/machop` directory:
 
 ```bash
 ./ch search --config configs/examples/search_zero_cost.toml
@@ -156,34 +162,76 @@ Upon successful completion, the project generates:
 
 These outputs are crucial for assessing the performance of various architectures and the predictive accuracy of zero-cost proxies.
 
-For instance, given the following configuration:
+For instance, given the aforementioned configuration:
 
-```toml
-op_0_0 = [0]
-op_1_0 = [0,1,2,3,4]
-op_2_0 = [0,1,2,3,4]
-op_2_1 = [0,1,2,3,4]
-op_3_0 = [0,1,2,3,4]
-op_3_1 = [0,1,2,3,4]
-op_3_2 = [0,1,2,3,4]
-```
-
-After a complete search run:
+After 5 trails is done: the terminal will show the following information.
 
 ```python
-INFO    Best trial(s):
-|    |   number | software_metrics                                            | scaled_metrics                                              | nasbench_data_metrics                                                                                                                                                                            |
-|----+----------+-------------------------------------------------------------+-------------------------------------------------------------+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-|  0 |        9 | {'snip': 301.718, 'plain': -0.025, 'naswot_relu': 6513.572} | {'naswot_relu': 6513.572, 'plain': -0.025, 'snip': 301.718} | {'train-loss': 0.362, 'train-accuracy': 87.7, 'train-per-time': 32.842, 'train-all-time': 394.101, 'test-loss': 0.443, 'test-accuracy': 85.11, 'test-per-time': 1.93, 'test-all-time': 23.163}   |
-|  1 |       32 | {'snip': 31.569, 'plain': -0.017, 'naswot_relu': 6539.923}  | {'naswot_relu': 6539.923, 'plain': -0.017, 'snip': 31.569}  | {'train-loss': 0.221, 'train-accuracy': 92.494, 'train-per-time': 28.797, 'train-all-time': 345.57, 'test-loss': 0.344, 'test-accuracy': 88.79, 'test-per-time': 1.818, 'test-all-time': 21.821} |
-|  2 |       64 | {'snip': 425.625, 'plain': 0.157, 'naswot_relu': 6376.482}  | {'naswot_relu': 6376.482, 'plain': 0.157, 'snip': 425.625}  | {'train-loss': 0.673, 'train-accuracy': 76.336, 'train-per-time': 27.916, 'train-all-time': 334.993, 'test-loss': 0.723, 'test-accuracy': 74.53, 'test-per-time': 1.73, 'test-all-time': 20.766} |
-...
+INFO     Building search space...
+INFO     Search started...
+100%|████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 5/5 [08:09<00:00, 97.93s/it, 489.66/20000 seconds]
+INFO     Best trial(s):
+Best trial(s):
+|    |   number | software_metrics                                          | hardware_metrics   | scaled_metrics                                            |
+|----+----------+-----------------------------------------------------------+--------------------+-----------------------------------------------------------|
+|  0 |        3 | {'naswot_relu': 402.299, 'snip': 127.374, 'plain': 0.175} | {}                 | {'naswot_relu': 402.299, 'plain': 0.175, 'snip': 127.374} |
+INFO     Searching is completed
 ```
 
-In addition, a weights series containing estimated importance weights to each proxy will also return.
+In addition, two extra `.json` files called `zc_ensemble.json` and `zc_with_predivtive_and_true.json` will be automatically saved to `mase_output/[project_name]/sofware/search_ckpts`. 
 
-```python
-[7.48018255e+00 -2.42037272e-01 -3.68762718e+00]
+`zc_ensemble.json` will save the ensemble weights for each of the selected zero cost proxies, showed as follows.
+```json
+{
+    "weights":{
+        "intercept":41.4959999701,
+        "naswot_relu":-1.1211446418,
+        "plain":3.040506729,
+        "snip":3.4640618783
+    }
+}
+```
+
+`zc_with_predivtive_and_true.json` will save the standardised zero cost proxies for each trail, the true accuracy retrived from the NAS-Bench-201, and the predictive accuracy by the regression model. A sample file is shown as below.
+
+```json
+{
+    "0":{
+        "naswot_relu":-0.7256577606,
+        "plain":0.6161797275,
+        "snip":0.416254574,
+        "Predicted_Accuracy":45.6249974894,
+        "True_Accuracy":45.679999939
+    },
+    "1":{
+        "naswot_relu":-1.1341014803,
+        "plain":-1.1690386788,
+        "snip":0.4822234451,
+        "Predicted_Accuracy":40.8834736517,
+        "True_Accuracy":40.84
+    },
+    "2":{
+        "naswot_relu":0.1737019535,
+        "plain":-0.4977747846,
+        "snip":-1.100214481,
+        "Predicted_Accuracy":35.9765563322,
+        "True_Accuracy":36.9399999908
+    },
+    "3":{
+        "naswot_relu":1.4495217146,
+        "plain":1.3779527079,
+        "snip":1.1879220416,
+        "Predicted_Accuracy":48.1755864059,
+        "True_Accuracy":48.2199999756
+    },
+    "4":{
+        "naswot_relu":0.2365355728,
+        "plain":-0.327318972,
+        "snip":-0.9861855797,
+        "Predicted_Accuracy":36.8193859714,
+        "True_Accuracy":35.7999999451
+    }
+}
 ```
 
 ## Conclusion
