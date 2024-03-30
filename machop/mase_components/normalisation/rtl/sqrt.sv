@@ -2,16 +2,13 @@
 
 //TODO: Disable Verilator warnings temporarily to test further hardware CI integration
 
-// verilator lint_off UNUSED
-// verilator lint_off UNUSEDSIGNAL
-// verilator lint_off UNOPTFLAT
-// verilator lint_off UNDRIVEN
-// verilator lint_off ALWCOMBORDER
+
+
+
 
 `timescale 1ns / 1ps
 module sqrt #(
     parameter IN_WIDTH      = 8,
-    parameter IN_FRAC_WIDTH = 3,
     parameter NUM_ITERATION = 10
 
 ) (
@@ -34,7 +31,6 @@ module sqrt #(
   parameter NUM_STATE_BITS = $clog2(NUM_STATES) + 1;
   parameter K_WORDSIZE = 32;
 
-  parameter LOG2_IN_WIDTH = $clog2(IN_WIDTH);
   parameter VALID_IN_DELAY_LINE_SIZE = NUM_ITERATION;
 
   // Define an enum for states (one hot)
@@ -113,8 +109,9 @@ module sqrt #(
 
   parameter X_IGC_WIDTH = (IN_WIDTH + IN_WIDTH) * 2;
 
+  /* verilator lint_off UNUSEDSIGNAL */
   logic signed  [X_IGC_WIDTH-1:0]   x_igc; //implicitly: we move multiply by 4: this is done only be working with 12 fract bits instead of 14
-
+  /* verilator lint_on UNUSEDSIGNAL */
   assign igc   = 16'h136F;  //~ 1.2144775390625 //N.B. using 12 fractional bits
   assign x_igc = x_s10_r * igc;
 
@@ -125,9 +122,7 @@ module sqrt #(
   state_t                                     state_r;
 
 
-  logic        [VALID_IN_DELAY_LINE_SIZE-1:0] valid_in_delay_line_b;
   logic        [VALID_IN_DELAY_LINE_SIZE-1:0] valid_in_delay_line_r;
-  // logic signed  [IN_WIDTH:0]        v_more_fractional;
   logic signed [                  IN_WIDTH:0] zero_point_25;
 
   logic signed [       IN_WIDTH+IN_WIDTH-1:0] xtmp_s1;
@@ -235,7 +230,7 @@ module sqrt #(
 
 
   assign v_in_ready = (state_r == READY_STATE) ? 1 : 0;
-  assign v_out_valid = valid_in_delay_line_r[VALID_IN_DELAY_LINE_SIZE-1];
+  assign v_out_valid = (valid_in_delay_line_r[VALID_IN_DELAY_LINE_SIZE-1] && v_out_ready);
 
   always_ff @(posedge clk) begin
     if (rst) // sv720 TODO: check if reset is active high or low
@@ -492,7 +487,7 @@ module sqrt #(
     end
 
     //STAGE 5: 
-    idx_s5_b = idx_s4_r + 1;
+    idx_s6_b = idx_s5_r + 1;
     if ($signed(y_s5_r) < 0) begin
       dbg_in_if_1 = '1;
       x_s6_b = $signed(x_s5_r) + $signed(ytmp_s5);
