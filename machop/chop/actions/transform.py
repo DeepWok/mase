@@ -23,6 +23,7 @@ from chop.tools.utils import parse_accelerator, to_numpy_if_tensor
 
 from chop.passes.graph.transforms import metadata_value_type_cast_transform_pass
 from chop.passes.module import PASSES as MODULE_PASSES
+from machop.chop.passes.graph.analysis.pruning.calculate_sparsity import add_pruning_metadata_analysis_pass
 
 logger = logging.getLogger(__name__)
 
