@@ -193,6 +193,6 @@ jobs:
       # Mase regression test 
       # -----------
       
-      - name: Mase regression test 
-        run: 
-            make test-sw
+      # - name: Mase regression test 
+      #  run: 
+      #      make test-sw

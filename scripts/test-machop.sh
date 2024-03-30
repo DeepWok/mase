@@ -3,15 +3,15 @@
 #    This is a script to test command line interfaces
 # --------------------------------------------------------------------
 
-# set -o errexit
-# set -o pipefail
-# set -o nounset
+set -o errexit
+set -o pipefail
+set -o nounset
 
-# The absolute path to the directory of this script.
-# SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
-# MASE=$SCRIPT_DIR/..
+The absolute path to the directory of this script.
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
+MASE=$SCRIPT_DIR/..
 
-# cd $MASE/machop
+cd $MASE/machop
 
 ##### Basic training and testing
 # training
