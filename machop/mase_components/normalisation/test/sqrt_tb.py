@@ -81,13 +81,10 @@ class BatchNormTB(Testbench):
         # TODO: combine with random testing
         return data_in
 
-    def preprocess_tensor(self, tensor, quantizer, config, parallelism):
-        # print("BEFORE: ", tensor)
+    def preprocess_tensor(self, tensor, quantizer, frac_width, parallelism):
         tensor = quantizer(tensor)
-        tensor = (tensor * 2 ** config["frac_width"]).int()
-        # logger.info(f"\nTensor in int format: {tensor}")
+        tensor = (tensor * 2**frac_width).int()
         tensor = tensor.reshape(-1, parallelism).tolist()
-        # logger.info(f"\nTensor after reshaping: {tensor}")
         return tensor
 
     def postprocess_tensor(self, tensor, config):
@@ -96,109 +93,18 @@ class BatchNormTB(Testbench):
 
     async def run_test(self):
         await self.reset()
-        print(f"================= DEBUG: in run_test ================= \n")
 
-        # Train first to generate a running mean/average
-        training_inputs = torch.randn((10, self.model.num_features))
-        self.model(training_inputs)
-
-        self.model.training = False
-
-        # inputs = torch.randn((3, self.model.num_features))
-        # print("Inputs: ", inputs)
-        # exp_outputs = self.model(inputs)
-        # print("MEAN: ", self.model.running_mean)
-        # print("MEAN: ", self.model.)
-        # print("Quantized inputs: ", self.model.x_quantizer(inputs))
-
-        # inputs = self.preprocess_tensor(
-        #     inputs,
-        #     self.model.x_quantizer,
-        #     {"width": 8, "frac_width": 3},
-        #     int(self.dut.PARALLELISM)
-        # )
-        # print("Pre-processed inputs: ", inputs)
-
-        # print("Post-processed inputs: ", self.postprocess_tensor(inputs[0], {"width": 8, "frac_width": 3}))
-
-        # print("INPUT SIZE:", len(inputs), len(inputs[0]))
-
-        # print("Running variance: ", self.model.running_var)
-        # stdv = torch.tensor([var ** (1.0/2.0) for var in self.model.running_var])
-        # print("Stdv: ", stdv)
-        # stdv = self.preprocess_tensor(
-        #     stdv,
-        #     self.model.w_quantizer,
-        #     {"width": 8, "frac_width": 3},
-        #     int(self.dut.PARALLELISM)
-        # )
-
-        # print("Running mean: ", self.model.running_mean)
-        # mean = self.preprocess_tensor(
-        #     self.model.running_mean,
-        #     self.model.b_quantizer,
-        #     {"width": 8, "frac_width": 3},
-        #     int(self.dut.PARALLELISM)
-        # )
-
+        data_frac_width = 3
         self.v_out_monitor.ready.value = 1
-        print(f"================= DEBUG: asserted ready_out ================= \n")
 
-        # print("MODEL VALUES: ", self.model.weight)
+        # quantizer = partial(
+        #     integer_quantizer, width=data_width, frac_width=data_frac_width
+        # )
+        # inputs = self.preprocess_tensor([2, 64, 56], quantizer, data_frac_width, 1)
+        # outputs = self.preprocess_tensor([1.44, 64, 56], quantizer, data_frac_width, 1)
+        # print(inputs)
 
-        # self.dut.v_in.value = 100
-
-        # inputs = 1
-        # n.b. 200 is 25 with 3 decimal bits (but out of range for 8 bits)
-        # n.b. 128 is 16 with 3 decimal bits
-
-        inputs = [128, 64, 56]  # ,2,3,4,5,6,7,8] #[1] * 8
-        # inputs = torch.randn((3, self.model.num_features))
-        exp_output = [32, 22, 21]  # 32 is 4 with 3 decimal bits
-        print(inputs)
-
-        # self.v_in_driver.load_driver(inputs)  # this needs to be a tensor
-
-        # self.v_out_monitor.load_monitor(exp_output)
-        print(
-            f"================= DEBUG: put values on input ports ================= \n"
-        )
-        await Timer(10, units="us")
-
-        # print(stdv)
-        # print(mean)
-        # print(len(inputs[0]))
-        # print("Exp. outputs model: ", self.model.x_quantizer(exp_outputs))
-
-        # exp_outputs = [i for i in range(0, len(inputs[0]))]
-
-        """
-        exp_outputs = torch.tensor([[(inputs[0][i] - mean[0][i]) * gamma[0][i] / stdv[0][i] + beta[0][i] for i in range(0, len(inputs[0]))]])
-        # exp_outputs = (torch.tensor(inputs[0]) - torch.tensor(mean[0])) * torch.tensor(gamma[0]) / torch.tensor(stdv[0]) + torch.tensor(beta[0])
-
-        # exp_outputs = (torch.tensor(inputs[0]) - torch.tensor(mean[0])) * torch.tensor(gamma[0]) / torch.tensor(stdv[0]) + torch.tensor(beta[0])
-
-        print("Exp. outputs manual: ", self.postprocess_tensor(exp_outputs, {"width": 8, "frac_width": 3}))
-
-        exp_outputs_quant = self.preprocess_tensor(
-            exp_outputs, 
-            self.model.x_quantizer, 
-            {"width": 8, "frac_width": 3}, 
-            int(self.dut.PARALLELISM)
-        )
-        
-
-        # exp_out = [[1] * 8 for _ in range(16)]#self.fe_model(inputs) #TODO: implement FE model
-        print(f'================= DEBUG: generated values with fe model ================= \n')
-
-
-        self.data_out_0_rmonitor.load_monito(exp_outputs_quant)
-        print(f'================= DEBUG: loaded hw outptus ================= \n')
-        
-
-        
-        print(f'================= DEBUG: in run_test waited 1ms ================= \n')
-        """
+        await Timer(800, units="ns")
 
 
 @cocotb.test()
