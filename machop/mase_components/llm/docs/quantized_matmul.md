@@ -12,6 +12,7 @@ $$ X_{i8} = \left\lfloor \frac{127 \cdot X_{f16}}{c_x}\right\rceil$$
 $$ W_{i8} = \left\lfloor \frac{127 \cdot W_{f16}}{c_w}\right\rceil$$
 
 where 
+
 $$ c_x = \max\left(\left|X_{f16_{i, j}}\right|\right), c_w = \max\left(\left|W_{f16_{i, j}}\right|\right) $$
 
 and $\left\lfloor\right\rceil$ indicates rounding to the nearest integer.
@@ -22,11 +23,15 @@ Details of this component design is demonstrated in [quantizer_top.md](./quantiz
 This performs Int8 matrix multiplication, and de-quantize the output matrix back to FP16 precision:
 
 $$ Out_{i32} = X_{i8}W_{i8}$$
+
 $$ Out_{f16} = \frac{Out_{i32}*(c_x*c_w)}{127*127}$$
 
 This module is designed based on the existing `fixed_matmul-core` module but integrates dequantization for the following readon. The output matrix $Out_{i32}$ accumulates several matmul results for `IN_DEPTH` beats of input vector $X_{i8}^i$ and $W_{i8}^i$, which are sub-matrices from the entire matrix $X_{i8}$ and $W_{i8}$. Each pair of input beat $X_{i8}^i$ and $W_{i8}^i$ is quantized and has its dedicated quantization constant pair $(c_x^i, c_w^i)$. Therefore, the quantization operation must be performed before the matrix accumulator:
+
 $$ Out_{i32}^i = X_{i8}^iW_{i8}^i$$
+
 $$ Out_{f16}^i = \frac{Out_{i32}^i*(c_x^i*c_w^i)}{127*127}$$
+
 $$ Out_{f16} = \sum_{i=1}^{IN\_DEPTH}Out_{f16}^i$$
 
 The diagram below shows the micro-architecture of the `fixed_linear_dequant` module, which is the fundamental component of `fixed_matmul_core_dequant`. It first dequantizes the output of dot-product block back to FP16 and then accumulates.
