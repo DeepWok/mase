@@ -78,7 +78,6 @@ class LayerNormTB(Testbench):
             check=True,
         )
 
-
     def preprocess_tensor(self, tensor, quantizer, frac_width, parallelism):
         tensor = quantizer(tensor)
         tensor = (tensor * (2**frac_width)).int()
@@ -87,19 +86,13 @@ class LayerNormTB(Testbench):
 
     def get_test_case(self, type):
         if type == 'Q_LAYERNORM':
-            model = LayerNormInteger(
-                16, elementwise_affine=True, config=self.config
-            )
+            model = LayerNormInteger(16, elementwise_affine=True, config=self.config)
             inputs = torch.randn((1, *model.normalized_shape)) * 2.0 + 0.5
         elif type == 'LAYERNORM':
-            model = LayerNorm(
-                16, elementwise_affine=True
-            )
+            model = LayerNorm(16, elementwise_affine=True)
             inputs = torch.randn((1, *model.normalized_shape)) * 2.0 + 0.5
         elif type == 'GROUPNORM':
-            model = GroupNorm(
-                2, 16
-            )
+            model = GroupNorm(2, 16)
             inputs = torch.randn((1, 16)) * 2.0 + 0.5
         
         data_width = self.config["data_in_width"]
@@ -109,26 +102,17 @@ class LayerNormTB(Testbench):
         )
 
         model.reset_parameters()
-        print(model.weight)
-        print(model.bias)
         model.training = False
 
         quantizer = partial(
             integer_quantizer, width=data_width, frac_width=data_frac_width
         )
 
-        print("Inputs: ", inputs)
         quantized_inputs = quantizer(inputs)
-        print("Inputs (quantized): ", quantized_inputs)
 
         exp_outputs_model = model(inputs)
-        print("Expected outputs model: ", exp_outputs_model)
-        print("Expected sum of quantized inputs: ",  quantizer(sum(quantized_inputs[0])))
-        print("Expected mean of quantized inputs: ", quantizer(quantizer(sum(quantized_inputs[0])) / len(inputs[0])),)
-        print("Expected var of quantized inputs: ", quantizer(quantized_inputs[0].var()))
 
         inputs = self.preprocess_tensor(inputs, quantizer, data_frac_width, parallelism)
-        print("Pre-processed inputs: ", inputs)
 
         weight = self.preprocess_tensor(
             model.weight, quantizer, data_frac_width, int(parallelism)
@@ -153,8 +137,6 @@ class LayerNormTB(Testbench):
                 return new_x
 
         exp_outputs_model.detach().apply_(convert)
-        # exp_outputs_model = exp_outputs_model.floor()
-        # print("Exp. outputs model: ", exp_outputs_model)
 
         exp_outputs_model = (exp_outputs_model * 2**data_frac_width).int()
         exp_outputs_model = exp_outputs_model.reshape(-1, int(parallelism)).tolist()
@@ -178,8 +160,6 @@ class LayerNormTB(Testbench):
         else:
             await self.run_test_case(*self.get_test_case('Q_LAYERNORM'))
             await self.run_test_case(*self.get_test_case('LAYERNORM'))
-
-
 
 
 @cocotb.test()
