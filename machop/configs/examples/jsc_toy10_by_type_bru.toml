@@ -1,13 +1,13 @@
 # basics
-model = "jsc-tiny"
+model = "jsc-toy10"
 dataset = "jsc"
 task = "cls"
 
-max_epochs = 5
+max_epochs = 15
 batch_size = 512
-learning_rate = 1e-2
+learning_rate = 1e-7
 accelerator = "gpu"
-project = "jsc-tiny"
+project = "jsc-toy10"
 seed = 42
 log_every_n_steps = 5
 # load_name = "../mase_output/toy_toy_tiny/software/training_ckpts/best.ckpt"
@@ -15,6 +15,8 @@ log_every_n_steps = 5
 
 [passes.quantize]
 by = "type"
+[passes.quantize.default.config]
+name = "NA"
 [passes.quantize.linear.config]
 name = "integer"
 "data_in_width" = 8
@@ -23,10 +25,6 @@ name = "integer"
 "weight_frac_width" = 4
 "bias_width" = 8
 "bias_frac_width" = 4
-
-[transform]
-style = "module"
-
 
 [search.search_space]
 name = "graph/quantize/mixed_precision_ptq"
@@ -59,7 +57,7 @@ bias_width = [2, 4, 8]
 bias_frac_width = ["NA"]
 
 [search.strategy]
-name = "optuna"
+name = "brute_force"
 eval_mode = true
 
 [search.strategy.sw_runner.basic_evaluation]
@@ -73,7 +71,7 @@ compare_to = 32 # compare to FP32
 n_jobs = 1
 n_trials = 20
 timeout = 20000
-sampler = "tpe"
+sampler = "bruteforce"
 # sum_scaled_metrics = true # single objective
 # direction = "maximize"
 sum_scaled_metrics = false # multi objective

@@ -1,0 +1,48 @@
+# NOTE: Take a look at pruning/methods.py and pruning/criteria.py for available values
+# This config shows an example channel pruning pass via Microsoft's NNI (10% sparsity)
+# It's important that you don't prune FC layers or ignore the last one as that'll change
+# the shape of the predidction. :)
+# --------------------------------------------------------------------------------------
+# Feel free to swap the model and dataset out to experiment :)
+# Use this configuration with machop/test/passes/transforms/prune/prune.py
+
+# For tensor-wise pruning, select scope="tensor" 
+# For layer-wise pruning, select scope="layer" and make sure the sparsity is a dictionary
+# For global pruning, select scope="global"
+# granularit should be either elementwise or channelwise
+
+
+model = "vgg7"
+dataset = "cifar10"
+
+[passes.prune.weight]
+method = "l1-norm"
+scope = "layer"
+granularity = "elementwise"
+
+[passes.prune.weight.sparsity]
+"feature_layers.0" = 0.05
+"feature_layers.3" = 0.1
+"feature_layers.7" = 0.15
+"feature_layers.10" = 0.2 
+"feature_layers.14" = 0.25
+"feature_layers.17" = 0.3 
+"classifier.0" = 0.2
+"classifier.2" = 0.1
+"last_layer" =  0.0
+
+[passes.prune.activation]
+method = "l1-norm"
+scope = "layer"
+granularity = "elementwise"
+
+[passes.prune.activation.sparsity]
+"feature_layers.0" = 0.05
+"feature_layers.3" = 0.1
+"feature_layers.7" = 0.15
+"feature_layers.10" = 0.2 
+"feature_layers.14" = 0.25
+"feature_layers.17" = 0.3 
+"classifier.0" = 0.2
+"classifier.2" = 0.1
+"last_layer" =  0.0

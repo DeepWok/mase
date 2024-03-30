@@ -1,13 +1,13 @@
 # basics
-model = "jsc-tiny"
+model = "jsc-toy10"
 dataset = "jsc"
 task = "cls"
 
-max_epochs = 5
+max_epochs = 15
 batch_size = 512
-learning_rate = 1e-2
-accelerator = "cuda"
-project = "jsc-tiny"
+learning_rate = 1e-7
+accelerator = "gpu"
+project = "jsc-toy10"
 seed = 42
 log_every_n_steps = 5
 # load_name = "../mase_output/toy_toy_tiny/software/training_ckpts/best.ckpt"
