@@ -60,31 +60,31 @@ module fixed_softplus #(
 
 
   generate
-    for (genvar i = 0; i < DATA_IN_0_PARALLELISM_DIM_0; i = i + 1) begin : softplus
+    for (genvar i = 0; i < DATA_IN_0_PARALLELISM_DIM_0; i = i + 1) begin : fixed_softplus
       always_ff @(posedge clk) begin
         if (rst) begin
-          z = 0;
-          data_out_valid1 = 0;
+          z <= 0;
+          data_out_valid1 <= 0;
         end else if (data_out_0_ready && !data_in_0_valid) begin
-          data_out_valid1 = 0;
-          z = 0;
+          data_out_valid1 <= 0;
+          z <= 0;
         end else if (data_out_0_ready && data_in_0_valid) begin
-          data_out_valid1 = 1;
-          x_fxp = $signed(data_in_0[i]);
+          data_out_valid1 <= 1;
+          x_fxp <= $signed(data_in_0[i]);
 
           if (x_fxp < -4) begin  //x<-4
-            z = 0;
+            z <= 0;
           end else if ((x_fxp >= -4) && (x_fxp < -2)) begin  //1st segment-4<=x<-2
-            z = (((a2_1 * x_fxp) + a1_1) * x_fxp) + a0_1;
+            z <= (((a2_1 * x_fxp) + a1_1) * x_fxp) + a0_1;
           end else if ((x_fxp >= -2) && (x_fxp < 0)) begin  //2nd segment:-2<=x<0
-            z = (((a2_2 * x_fxp) + a1_2) * x_fxp) + a0_2;
+            z <= (((a2_2 * x_fxp) + a1_2) * x_fxp) + a0_2;
           end else if (x_fxp >= 0 && x_fxp < 2) begin  //3rd segment: 0<=x<2 
-            z = (((a2_3 * x_fxp) + a1_3) * x_fxp) + a0_3;
+            z <= (((a2_3 * x_fxp) + a1_3) * x_fxp) + a0_3;
           end else if (x_fxp >= 2 && x_fxp <= 4) begin  //4th segment:2<=x<=4 
-            z = (((a2_4 * x_fxp) + a1_4) * x_fxp) + a0_4;
+            z <= (((a2_4 * x_fxp) + a1_4) * x_fxp) + a0_4;
           end else  //if (x > 4)         
-            z = x_fxp << 15;
-        end else data_out_valid1 = 0;
+            z <= x_fxp << 15;
+        end else data_out_valid1 <= 0;
       end
 
       assign data_out_0[i] = z;
