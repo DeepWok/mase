@@ -157,7 +157,7 @@ def transform(
 
     if "machop" in os.getcwd() and "content" not in os.getcwd():
         load_name = "../" + load_name
-    
+
     load_name = None
 
     """
