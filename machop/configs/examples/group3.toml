@@ -5,7 +5,7 @@ model = "vgg7"
 dataset = "cifar10"
 task = "cls"
 
-batch_size = 256
+batch_size = 512
 accelerator = "auto"
 project = "vgg_cifar10_prune"
 seed = 42
@@ -65,7 +65,7 @@ max_epochs = 1
 weight_decay = 0
 optimizer = "adam"
 learning_rate = 1e-4
-batch_size = 256
+batch_size = 512
 
 [passes.retrain.trainer]
 devices = 1

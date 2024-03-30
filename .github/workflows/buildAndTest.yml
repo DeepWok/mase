@@ -189,13 +189,6 @@ jobs:
             echo "================"
           fi
 
-      - name: free disk space
-        run: |
-          chmod 777
-          sudo swapoff -a
-          sudo apt clean
-          df -h
-
       # -----------
       # Mase regression test 
       # -----------
