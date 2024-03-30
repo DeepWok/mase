@@ -324,10 +324,11 @@ def generate_sv_lut(
 
 if __name__ == "__main__":
     dwidths = [12]
-    for i in dwidths:
+    for func, _ in FUNCTION_TABLE.items():
         generate_sv_lut(
-            "exp", 8, 4, data_width=i, f_width=int(i / 2), path_with_dtype=True
+            func, 8, 4, data_width=8, f_width=4, path_with_dtype=False
         )
+
     # for k, v in FUNCTION_TABLE.items():
     # generate_sv_lut(k, 16, 8, 16, 8, dir="/home/bardia/code/adls/project/report_test", path_with_dtype=True)
 

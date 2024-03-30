@@ -1,12 +1,17 @@
 
-module elu_lut #
-    (
-        parameter DATA_IN_0_PRECISION_0 = 16,
-        parameter DATA_IN_0_PRECISION_1 = 8,
-        parameter DATA_OUT_0_PRECISION_0 = 16,
-        parameter DATA_OUT_0_PRECISION_1 = 8
-    )
-    (input logic [7:0] data_in_0, output logic [7:0] data_out_0);
+`timescale 1ns / 1ps
+/* verilator lint_off UNUSEDPARAM */
+module elu_lut #(
+    parameter DATA_IN_0_PRECISION_0 = 16,
+    parameter DATA_IN_0_PRECISION_1 = 8,
+    parameter DATA_OUT_0_PRECISION_0 = 16,
+    parameter DATA_OUT_0_PRECISION_1 = 8
+)
+(
+    /* verilator lint_off UNUSEDSIGNAL */
+    input logic [7:0] data_in_0, 
+    output logic [7:0] data_out_0
+);
     
     always_comb begin
         case(data_in_0)
