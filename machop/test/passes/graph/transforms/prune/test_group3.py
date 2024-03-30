@@ -87,8 +87,6 @@ def pre_transform_load(
     model: torch.nn.Module,
 ):
     if load_name is not None and load_type in ["pt", "pl"]:
-        if "machop" in os.getcwd():
-            load_name = "../" + load_name
         model = load_model(
             model_short_name,
             mask,
