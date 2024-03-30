@@ -1,8 +1,8 @@
-# LLM Hardware Integration for MASE
+# Group7: LLM Hardware Integration for MASE
 
 ## Overview
 [LLM.int()](https://arxiv.org/abs/2208.07339) is the state-of-art GPU implementation for large language model inference. It scatters a matrix to two groups, low-precision and high-precision matrices, and compute them separately using efficient hardware. This project implements LLM.int() algorithm on FPGA using existing linear layer components in MASE.
-![](./doc/figs/data_stream.png)
+![](./doc/figs/dataflow.png)
 
 
 ## File Hierarchy
@@ -19,34 +19,23 @@ Most of the design files and testbenches are under the folder `MASE_RTL/llm`, wh
     - `quantized_matmul_tb.py`
     - Other testbench files
 
-* `docs`: documentations
+* `docs`: documentations for important .sv modules.
 
-## How to Run
+* `aborted`: discarded design/testbench files that are no longer used.
 
-Please ensure that you have installed all environment required for [MASE](). Specifically, make sure Cocotb and Verilator has been successfully installed.
-
-Currently [the cocotb runner](../../mase_cocotb/runner.py) has problems with adding [mase_cocotb](../../mase_cocotb/) to library path for Python. Thus, you need to manually add the path in order for functions under `mase_cocotb` can be succesfully imported when running a testbench, for example:
-
-```Python
-# head of the testbench llm_int8_top_tb.py
-
-# "mase_rtl" or "MASE-RTL" is a defined environment variable that points to the absolute path "ROOT/machop/mase_components"
-
-# Manually add mase_cocotb to system path
-import sys, os
-try:
-    p = os.getenv("MASE_RTL")
-    assert p != None
-except:
-    p = os.getenv("mase_rtl")
-    assert p != None
-p = os.path.join(p, '../')
-sys.path.append(p)
-###############################################
-```
 
 ## Testbench Settings
-### Generating Input Data for DUT
+
+### 1. How to Run
+Please ensure that you have installed all environment required for [MASE](). Specifically, make sure Cocotb and Verilator has been successfully installed.
+
+To test a .sv design file `example.sv`, just locate to the testbench folder `ROOT/machop/mase_components/llm/test` and run the corresponding .py files:
+
+```bash
+Python ./example_tb.py
+```
+
+### 2. Generating Input Data for DUT
 The testbench file (e.g., `llm_int8_top_tb.py`) uses `RandomSource` defined in `ROOT/machop/mase_cocotb/random_test.py` to generate random input tensors to the SV module `llm_int8_top.sv`. It can generate two patterns of data, depending on the argument `arithmetic` passed to it:
 * If `arithmetic=llm-fp16-weight`: it generates random integers in the range `[-5, 5]`. This simulates the LLM weight matrix where most of the entries have small magnitude
 * If `arithmetic=llm-fp16-datain`: it generates integers of a specific distribution:
@@ -56,42 +45,41 @@ This simulates the LLM input activation matrix which contains both large-magnitu
 
 You can for sure tune parameters of the random number generator to produce tensors of different distributions. However, please keep in mind that the magnitude of generated data must be carefully controlled to avoid DUT computation overflow.  
 
-### Simulation Output
+### 3. Sample Simulation Result
 Here is an example test result for running the testbench `llm_int8_top_tb.py`.
 ```shell
 --------------------- Error Analysis --------------------
 Sample Num=100
-No. Samples above Error Thres(10)=2
-Absolute Error: max=12, avg=5
-Relative Error: max=2.33%, avg=0.34%
+No. Samples above Error Thres(10)=0
+Absolute Error: max=10, avg=4
+Relative Error: max=1.12%, avg=0.35%
 --------------------- End of Error Analysis --------------------
 
-  6708.00ns INFO     cocotb.regression                  test_llm_int8_quant_tb passed
-  6708.00ns INFO     cocotb.regression                              
+  3718.00ns INFO     cocotb.regression                  test_llm_int8_quant_tb passed
+  3718.00ns INFO     cocotb.regression                          
     ************************************************************************************************
     ** TEST                                    STATUS  SIM TIME (ns)  REAL TIME (s)  RATIO (ns/s) **
     ************************************************************************************************
-    ** llm_int8_top_tb.test_llm_int8_quant_tb   PASS        6708.00           1.93       3482.83  **
+    ** llm_int8_top_tb.test_llm_int8_quant_tb   PASS        3718.00           0.24      15345.27  **
     ************************************************************************************************
-    ** TESTS=1 PASS=1 FAIL=0 SKIP=0                         6708.00           3.53       1902.90  **
-    ************************************************************************************************
-    
+    ** TESTS=1 PASS=1 FAIL=0 SKIP=0                         3718.00           1.10       3366.91  **
+    ************************************************************************************************                                          
 - :0: Verilog $finish
-INFO: Results file: /home/zixian/ADLS_CW/Mase-DeepWok/machop/mase_components/llm/test/build/llm_int8_top/test_0/results.xml
+INFO: Results file: /home/ic/MYWORKSPACE/Mase-DeepWok/machop/mase_components/llm/test/build/llm_int8_top/test_0/results.xml
 TEST RESULTS
     PASSED: 1
     FAILED: 0
     NUM TESTS: 1
 ```
-It contains two test reports:
+The test report contains two test sections:
 * Analysis of DUT output error compared with theoretical output value calculated through software. This analysis is generated by the function `analyse_results_signed` that is defined in `ROOT/machop/mase_cocotb/random_test.py`. It checks every output vector from the DUT `llm_int8_top` and reports information for both absolute and relative error, which is caused due to Int8 quantization.
 
-* Cocotb test report, which contains the System Verilog simulation time.
+* Cocotb test report, which contains the Verilator simulation time.
 
 
 ## Implementation Details
 Since FPGA has limited I/O ports and memory units, the LLM matrix is partitioned into small sub-matrices with identical size `N*M`. These matrices are flattened as a 1-d vector and are streamed into FPGA for computation.
-![](./doc/figs/mat_mul_top_level.png)
+![](./doc/figs/matrix_partition.png)
 
 Inside `llm_int8_top` the input activations $X_{f16}$ with FP16 precision is passed through a `scatter` module. 
     
@@ -103,6 +91,7 @@ The outputs of the two matmul components both have FP16 precision, and are gathe
 ![](./doc/figs/top_level.png)
 `llm_int8_top` takes a dataflow architecture and is deeply pipelined. Each stage in the pipeline communicates with up-stream and down-stream stages with handshake protocols.
 
+Details of each sub-modules can be found in the [docs](./docs/) folder.
 
 ## References
 
