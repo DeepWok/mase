@@ -51,6 +51,7 @@ logger = logging.getLogger(__name__)
 #         )
 #         self.model = fsdp_model
 
+
 def train1(
     model,
     model_info,
@@ -58,12 +59,12 @@ def train1(
     dataset_info,
     task,
     config,
-    #auto_requeue,
+    # auto_requeue,
     save_path,
     visualizer,
     load_name,
     load_type,
-    accelerator: str = "auto"
+    accelerator: str = "auto",
 ):
     accelerator = parse_accelerator(accelerator)
 
@@ -73,7 +74,7 @@ def train1(
     else:
         cf_args = config["cf_args"]
 
-    plt_trainer_args={}
+    plt_trainer_args = {}
     if save_path is not None:
         # if save_path is None, the model will not be saved
         if not os.path.isdir(save_path):
@@ -95,9 +96,9 @@ def train1(
         plt_trainer_args["logger"] = visualizer
 
     # plugin
-    #if auto_requeue:
+    # if auto_requeue:
     #    plugins = [SLURMEnvironment(auto_requeue=auto_requeue)]
-    #else:
+    # else:
     plugins = None
     plt_trainer_args["plugins"] = plugins
 
@@ -114,28 +115,30 @@ def train1(
 
     wrapper_cls = get_model_wrapper(model_info, task)
 
-    load_name = config['load_name']
-    load_type = config['load_type']
+    load_name = config["load_name"]
+    load_type = config["load_type"]
 
-    mask=[]
+    mask = []
     if load_name is not None:
         model = load_model(mask, load_name, load_type=load_type, model=model)
         logger.info(f"'{load_type}' checkpoint loaded before training")
 
-    plt_trainer_args['accelerator'] = config['trainer']['accelerator']
-    plt_trainer_args['devices'] = config['trainer']['devices']
+    plt_trainer_args["accelerator"] = config["trainer"]["accelerator"]
+    plt_trainer_args["devices"] = config["trainer"]["devices"]
 
     pl_model = wrapper_cls(
         model,
         dataset_info=dataset_info,
-        learning_rate = config['training']['learning_rate'],
-        epochs = config['training']['max_epochs'],
-        weight_decay = config['training']['weight_decay'],
-        optimizer = config['training']['optimizer'],
-        #batch_size = config['training']['batch_size'],
+        learning_rate=config["training"]["learning_rate"],
+        epochs=config["training"]["max_epochs"],
+        weight_decay=config["training"]["weight_decay"],
+        optimizer=config["training"]["optimizer"],
+        # batch_size = config['training']['batch_size'],
     )
 
-    trainer = pl.Trainer(**plt_trainer_args, max_epochs=config['training']['max_epochs'])
+    trainer = pl.Trainer(
+        **plt_trainer_args, max_epochs=config["training"]["max_epochs"]
+    )
 
     trainer.fit(
         pl_model,
@@ -145,7 +148,9 @@ def train1(
     # Save the trained model along with relevant metadata in the training_ckpts folder.
     # NOTE: This is important if the model was previously transformed with architectural
     # changes. The state dictionary that's saved by PyTorch Lightning wouldn't work.
-    if save_path is not None and load_name is not None and load_type == "mz":  # load_type="pt"
+    if (
+        save_path is not None and load_name is not None and load_type == "mz"
+    ):  # load_type="pt"
         graph = MaseGraph(model)
         dummy_input = get_dummy_input(model_info, data_module, task)
         graph = init_metadata_analysis_pass(graph, None)
