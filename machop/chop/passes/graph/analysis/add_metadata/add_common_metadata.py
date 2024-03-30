@@ -205,6 +205,7 @@ def graph_iterator_for_metadata(
             kwargs = load_arg(node.kwargs, env)
             # for gpu:
             module = modules[node.target]
+            """
             if isinstance(module, torch.nn.Conv2d) or isinstance(
                 module, torch.nn.Linear
             ):
@@ -224,6 +225,7 @@ def graph_iterator_for_metadata(
                     )
                     for key, value in kwargs.items()
                 }
+            """
             result = modules[node.target](*args, **kwargs)
             analyse_fn = analyse_common_parameters_module
         elif node.op == "output":

@@ -151,11 +151,20 @@ def transform(
         config
     )  # config (basics & prune & quantize & retrain & huffman)
 
-    load_name = config["passes"]["retrain"]["load_name"]  # pre-trained VGG7 model
-    # load_name = None    #  Set load_name to None if want to train from scratch
-    load_type = config["passes"]["retrain"]["load_type"]
+    try:
+        load_name = config["passes"]["retrain"]["load_name"]  # pre-trained VGG7 model
+        # load_name = None    #  Set load_name to None if want to train from scratch
+        load_type = config["passes"]["retrain"]["load_type"]
+        load_from_config = True
+    except:
+        load_from_config = False
+        pass
 
-    if "machop" in os.getcwd() and "content" not in os.getcwd():
+    if (
+        "machop" in os.getcwd()
+        and "content" not in os.getcwd()
+        and load_from_config == True
+    ):
         load_name = "../" + load_name
 
     """
@@ -267,11 +276,13 @@ def transform(
                 """
                 model size after quantization:
                 """
-                model_size_after_quantize = model_storage_size(
-                    graph.model, is_quantize, dict_weight_masks
-                )
-                print("model size after quantization: ", model_size_after_quantize)
-
+                try:
+                    model_size_after_quantize = model_storage_size(
+                        graph.model, is_quantize, dict_weight_masks
+                    )
+                    print("model size after quantization: ", model_size_after_quantize)
+                except:
+                    pass
                 """
                 save model after quantization (post-prune quantization)
                 """

@@ -12,9 +12,12 @@ def load_lightning_ckpt_to_unwrapped_model(checkpoint: str, model: torch.nn.Modu
     Load a PyTorch Lightning checkpoint to a PyTorch model.
     """
     # src_state_dict = torch.load(checkpoint)["state_dict"]
-    src_state_dict = torch.load(checkpoint, map_location=torch.device("cpu"))[
-        "state_dict"
-    ]
+    try:
+        src_state_dict = torch.load(checkpoint, map_location=torch.device("cpu"))[
+            "state_dict"
+        ]
+    except:
+        src_state_dict = torch.load(checkpoint)
     tgt_state_dict = model.state_dict()
     new_tgt_state_dict = {}
     for k, v in src_state_dict.items():

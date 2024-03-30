@@ -55,7 +55,17 @@ def search(
 
     # load model if the save_name is provided
     if load_name is not None and load_type in ["pl", "mz", "pt"]:
-        model = load_model(load_name=load_name, load_type=load_type, model=model)
+        model_short_name = ("vgg7",)
+        mask = (None,)
+        is_quantize = (False,)
+        model = load_model(
+            model_short_name,
+            mask,
+            is_quantize,
+            load_name=load_name,
+            load_type=load_type,
+            model=model,
+        )
         logger.info(f"Loaded model from {load_name}.")
     model.to(accelerator)
     # set up data module
