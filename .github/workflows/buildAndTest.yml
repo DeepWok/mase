@@ -191,7 +191,9 @@ jobs:
 
       - name: free disk space
         run: |
-          docker rmi $(docker image ls -aq)
+          chmod 777
+          sudo swapoff -a
+          sudo apt clean
           df -h
 
       # -----------
