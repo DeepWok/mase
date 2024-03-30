@@ -1,9 +1,8 @@
 //TODO: Disable Verilator warnings temporarily to test further hardware CI integration
 
-// verilator lint_off UNUSED
-// verilator lint_off UNOPTFLAT
-// verilator lint_off UNDRIVEN
-// verilator lint_off ALWCOMBORDER
+
+
+
 
 `timescale 1ns / 1ps
 module fixed_layer_norm #(
@@ -11,28 +10,14 @@ module fixed_layer_norm #(
 
     parameter DATA_IN_0_PRECISION_0 = 8,
     parameter DATA_IN_0_PRECISION_1 = 4,
-    parameter DATA_IN_0_TENSOR_SIZE_DIM_0 = 16,
     parameter DATA_IN_0_PARALLELISM_DIM_0 = 16,
-    parameter DATA_IN_0_TENSOR_SIZE_DIM_1 = 8,
-    parameter DATA_IN_0_PARALLELISM_DIM_1 = 1,
+    /* verilator lint_off UNUSEDPARAM */
+    parameter DATA_IN_0_PARALLELISM_DIM_1 = 1, //sv720: needed by tb
+    /* verilator lint_on UNUSEDPARAM */
 
     parameter WEIGHT_PRECISION_0 = DATA_IN_0_PRECISION_0,
-    parameter WEIGHT_PRECISION_1 = DATA_IN_0_PRECISION_1,
-    parameter WEIGHT_TENSOR_SIZE_DIM_0 = DATA_IN_0_TENSOR_SIZE_DIM_0,
-    parameter WEIGHT_PARALLELISM_DIM_0 = DATA_IN_0_PARALLELISM_DIM_0,
-
     parameter BIAS_PRECISION_0 = DATA_IN_0_PRECISION_0,
-    parameter BIAS_PRECISION_1 = DATA_IN_0_PRECISION_1,
-    parameter BIAS_TENSOR_SIZE_DIM_0 = DATA_IN_0_TENSOR_SIZE_DIM_0,
-    parameter BIAS_PARALLELISM_DIM_0 = DATA_IN_0_PARALLELISM_DIM_0,
-
-    parameter DATA_OUT_0_PRECISION_0 = DATA_IN_0_PRECISION_0,
-    parameter DATA_OUT_0_PRECISION_1 = DATA_IN_0_PRECISION_1,
-    parameter DATA_OUT_0_TENSOR_SIZE_DIM_0 = DATA_IN_0_TENSOR_SIZE_DIM_0,
     parameter DATA_OUT_0_PARALLELISM_DIM_0 = DATA_IN_0_PARALLELISM_DIM_0,
-
-    parameter DATA_OUT_0_TENSOR_SIZE_DIM_1 = DATA_IN_0_TENSOR_SIZE_DIM_1,
-    parameter DATA_OUT_0_PARALLELISM_DIM_1 = DATA_IN_0_PARALLELISM_DIM_1,
 
 
     // ------ We need to use the above parameters a lot, rename some of the most used ----------
@@ -40,13 +25,11 @@ module fixed_layer_norm #(
     parameter IN_FRAC_WIDTH = DATA_IN_0_PRECISION_1,
 
     parameter OUT_WIDTH      = IN_WIDTH,
-    parameter OUT_FRAC_WIDTH = IN_FRAC_WIDTH,
 
     // IN_DEPTH describes the number of data points per sample.
     // In image contexts, IN_DEPTH = sum_product of C, H & W.
     parameter IN_DEPTH                = DATA_IN_0_PARALLELISM_DIM_0,
-    parameter OUT_DEPTH               = IN_DEPTH,
-    parameter NUM_NORMALIZATION_ZONES = 1,
+    parameter NUM_NORMALIZATION_ZONES = 1
     // parameter NUM_NORMALIZATION_ZONES = IN_DEPTH/2, 
 
     // PARTS_PER_NORM describes how many partitions of the input
@@ -60,7 +43,7 @@ module fixed_layer_norm #(
     // PARTS_PER_NORM = 1 will normalise each image with all channels at once.
     // PARTS_PER_NORM = C = 4 will normalise each image one channel at a time.
     // PARTS_PER_NORM = C * H = 40 will normalise one row at a time per image per channel. 
-    parameter PARTS_PER_NORM = IN_DEPTH
+    //parameter PARTS_PER_NORM = IN_DEPTH
 ) (
     input clk,
     input rst,
@@ -71,11 +54,15 @@ module fixed_layer_norm #(
     output                             data_in_0_ready,
 
     input  logic signed [BIAS_PRECISION_0-1:0] bias      [IN_DEPTH-1:0],
+    /* verilator lint_off UNUSEDSIGNAL */
     input                                      bias_valid,
+    /* verilator lint_on UNUSEDSIGNAL */
     output                                     bias_ready,
 
     input  logic signed [WEIGHT_PRECISION_0-1:0] weight      [IN_DEPTH-1:0],
+    /* verilator lint_off UNUSEDSIGNAL */
     input                                        weight_valid,
+    /* verilator lint_on UNUSEDSIGNAL */
     output                                       weight_ready,
 
     // Output ports for data
@@ -95,13 +82,11 @@ module fixed_layer_norm #(
   parameter SUM_EXTRA_FRAC_WIDTH = $clog2(IN_DEPTH);
   parameter SUM_WIDTH = $clog2(SUM_MAX_SIZE) + SUM_EXTRA_FRAC_WIDTH;
   parameter SUM_FRAC_WIDTH = IN_FRAC_WIDTH + SUM_EXTRA_FRAC_WIDTH;
-  parameter SUM_NUM_MSb_PADDING_BITS = SUM_WIDTH - IN_WIDTH - SUM_EXTRA_FRAC_WIDTH;
 
   parameter SUM_SQUARED_BITS = $clog2(SUM_MAX_SIZE ** 2) + SUM_EXTRA_FRAC_WIDTH * 2;
   parameter SUM_SQUARED_FRAC_WIDTH = 2 * (IN_FRAC_WIDTH + SUM_EXTRA_FRAC_WIDTH);
 
   parameter SUM_OF_SQUARES_BITS = SUM_SQUARED_BITS + $clog2(IN_DEPTH);
-  parameter SUM_OF_SQUARES_FRAC_WIDTH = SUM_SQUARED_FRAC_WIDTH;
 
   parameter SUM_OF_SQUARES_BITS_PADDED = SUM_OF_SQUARES_BITS + $clog2(IN_DEPTH);
   parameter VAR_BITS_PADDED = SUM_OF_SQUARES_BITS_PADDED;
@@ -154,7 +139,6 @@ module fixed_layer_norm #(
   logic signed [IN_WIDTH-1:0] data_minus_mean_r4[IN_DEPTH-1:0];
   logic signed [IN_WIDTH-1:0] data_minus_mean_r3[IN_DEPTH-1:0];
   logic signed [IN_WIDTH-1:0] data_minus_mean_r2[IN_DEPTH-1:0];
-  logic signed [IN_WIDTH-1:0] data_minus_mean_r1[IN_DEPTH-1:0];
   logic signed [IN_WIDTH-1:0] data_minus_mean_r[IN_DEPTH-1:0];
   logic signed [IN_WIDTH-1:0] data_minus_mean_b[IN_DEPTH-1:0];
 
@@ -186,11 +170,12 @@ module fixed_layer_norm #(
   logic [SUM_OF_SQUARES_BITS - 1:0] sum_of_squared_differences_b[NUM_NORMALIZATION_ZONES-1:0];
   logic [SUM_OF_SQUARES_BITS - 1:0] sum_of_squared_differences_r[NUM_NORMALIZATION_ZONES-1:0];
 
-  logic [SUM_OF_SQUARES_BITS - 1:0] sum_of_squared_differences_tmp[NUM_NORMALIZATION_ZONES-1:0];
-  logic           [SUM_OF_SQUARES_BITS_PADDED - 1:0]  sum_of_squared_differences_padded   [NUM_NORMALIZATION_ZONES-1:0];
+  logic [SUM_OF_SQUARES_BITS - 1:0]     sum_of_squared_differences_tmp[NUM_NORMALIZATION_ZONES-1:0];
+  logic [SUM_OF_SQUARES_BITS_PADDED - 1:0]  sum_of_squared_differences_padded   [NUM_NORMALIZATION_ZONES-1:0];
   logic [VAR_BITS - 1:0] variance[NUM_NORMALIZATION_ZONES-1:0];
-  logic [VAR_BITS_PADDED - 1:0] variance_padded_b[NUM_NORMALIZATION_ZONES-1:0];
-  logic [VAR_BITS_PADDED - 1:0] variance_padded_r[NUM_NORMALIZATION_ZONES-1:0];
+  /* verilator lint_off UNOPTFLAT */ //sv720: don't understand why event model (not synthesised) circular logic
+  logic [VAR_BITS_PADDED - 1:0] variance_padded[NUM_NORMALIZATION_ZONES-1:0];
+  /* verilator lint_on UNOPTFLAT */
   logic [IN_WIDTH - 1:0] variance_in_width[NUM_NORMALIZATION_ZONES-1:0];
   logic [IN_WIDTH - 1:0] sqrt_out[NUM_NORMALIZATION_ZONES-1:0];
   logic [IN_WIDTH - 1:0] standard_deviation_b[NUM_NORMALIZATION_ZONES-1:0];
@@ -208,8 +193,9 @@ module fixed_layer_norm #(
 
 
 
-
+  /* verilator lint_off UNUSEDSIGNAL */
   logic sqrt_v_in_ready;  //TODO: use this
+  /* verilator lint_on UNUSEDSIGNAL */
   logic [NUM_NORMALIZATION_ZONES-1:0] sqrt_v_out_valid;  //TODO: use this
 
   logic sqrt_valid_out_b;
@@ -228,7 +214,6 @@ module fixed_layer_norm #(
 
   logic [IN_WIDTH-1:0] data_r_delay_line_b[DATA_DELAY_LINE_SIZE-1:0][IN_DEPTH-1:0];
   logic [IN_WIDTH-1:0] data_r_delay_line_r[DATA_DELAY_LINE_SIZE-1:0][IN_DEPTH-1:0];
-  logic signed [IN_WIDTH-1:0] data_array_zeros[IN_DEPTH-1:0];
 
   assign valid_in_sqrt = data_in_valid_delay_line_r[VALID_IN_DELAY_DELAY_LINE_SIZE-1];
 
@@ -238,10 +223,6 @@ module fixed_layer_norm #(
 
 
   always_comb begin
-
-    for (int i = 0; i < IN_DEPTH; i++) begin
-      data_array_zeros[i] = '1;
-    end
 
     for (int i = 0; i < IN_DEPTH; i++) begin
       data_in_valid_delay_line_b[i] = '0;
@@ -309,11 +290,10 @@ module fixed_layer_norm #(
     end
 
 
-
     for (int j = 0; j < NUM_NORMALIZATION_ZONES; j++) begin
-      sum_of_squared_differences_padded[j] = (sum_of_squared_differences_r[j] << $clog2(IN_DEPTH));
-
-      variance[j] = variance_padded_b[j][VAR_BITS-1:0];
+      sum_of_squared_differences_padded[j] = (SUM_OF_SQUARES_BITS_PADDED'(sum_of_squared_differences_r[j]) << $clog2(IN_DEPTH));
+      variance_padded[j] = sum_of_squared_differences_padded[j] / NORMALIZATION_ZONE_PERIOD;
+      variance[j] = variance_padded[j][VAR_BITS-1:0];
       variance_in_width[j] = variance[j][ IN_WIDTH + VAR_FRAC_WIDTH - IN_FRAC_WIDTH -1 : VAR_FRAC_WIDTH - IN_FRAC_WIDTH ];
 
       if (&sqrt_v_out_valid) begin
@@ -342,22 +322,19 @@ module fixed_layer_norm #(
     end
 
     for (int i = 0; i < IN_DEPTH; i++) begin
-      data_in_minus_mean_squared_b[i] = data_in_minus_mean_r[i] ** 2;
+      data_in_minus_mean_squared_b[i] = SUM_SQUARED_BITS'(data_in_minus_mean_r[i]) ** 2;
     end
 
     for (int j = 0; j < NUM_NORMALIZATION_ZONES; j++) begin
       sum_of_squared_differences_tmp[j] = '0;
 
       for (int i = 0; i < NORMALIZATION_ZONE_PERIOD; i++) begin
-        sum_of_squared_differences_tmp[j] +=   data_in_minus_mean_squared_r[i+j*NORMALIZATION_ZONE_PERIOD];
+        sum_of_squared_differences_tmp[j] +=   SUM_OF_SQUARES_BITS'(data_in_minus_mean_squared_r[i+j*NORMALIZATION_ZONE_PERIOD]);
       end
     end
 
     sum_of_squared_differences_b = sum_of_squared_differences_tmp;
 
-    for (int j = 0; j < NUM_NORMALIZATION_ZONES; j++) begin
-      variance_padded_b[j] = sum_of_squared_differences_padded[j] / NORMALIZATION_ZONE_PERIOD;
-    end
 
     for (int j = 0; j < NUM_NORMALIZATION_ZONES; j++) begin
       for (int i = 0; i < NORMALIZATION_ZONE_PERIOD; i++) begin
@@ -427,7 +404,6 @@ module fixed_layer_norm #(
     for (j = 0; j < NUM_NORMALIZATION_ZONES; j++) begin : a_sqrt_module
       sqrt #(
           .IN_WIDTH(IN_WIDTH),
-          .IN_FRAC_WIDTH(IN_FRAC_WIDTH),
           .NUM_ITERATION(10)
       ) sqrt_cordic (
           .clk(clk),
@@ -448,8 +424,11 @@ module fixed_layer_norm #(
 
   // Data outputs.
   assign data_in_0_ready  = 1'b1;
+  assign bias_ready       = 1'b1;
+  assign weight_ready     = 1'b1;
 
-  assign data_out_0_valid = sqrt_valid_out_r5;
+
+  assign data_out_0_valid = sqrt_valid_out_r5 && data_out_0_ready;
   assign data_out_0       = normalised_data_r;
 
 
@@ -478,7 +457,6 @@ module fixed_layer_norm #(
     data_in_minus_mean_r                     <= data_in_minus_mean_b;
     data_in_minus_mean_squared_r             <= data_in_minus_mean_squared_b;
     sum_of_squared_differences_r             <= sum_of_squared_differences_b;
-    variance_padded_r                        <= variance_padded_b;
     data_minus_mean_r                        <= data_minus_mean_b;
     data_minus_mean_r2                       <= data_minus_mean_r;
     data_minus_mean_r3                       <= data_minus_mean_r2;

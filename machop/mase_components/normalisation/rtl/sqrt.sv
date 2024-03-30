@@ -1,11 +1,5 @@
 //This is a cordic square-root module that takes inpiration from the localFixedPointCORDICSQRT MATLAB function
 
-//TODO: Disable Verilator warnings temporarily to test further hardware CI integration
-
-
-
-
-
 `timescale 1ns / 1ps
 module sqrt #(
     parameter IN_WIDTH      = 8,

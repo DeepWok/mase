@@ -217,7 +217,6 @@ if __name__ == "__main__":
         module_param_list=[
             {
                 "IN_WIDTH": 8,
-                "IN_FRAC_WIDTH": 3,
                 "NUM_ITERATION": 10,  # N.B.: changing this requires changes in .sv state enum
             }
         ],
