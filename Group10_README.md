@@ -1,4 +1,4 @@
-This is a test guidline for evaluating the prune methods desgined by Group 10.
+This is a test guidline for evaluating the prune methods desgined by group 10.
 
 To run the test file in machop/test/passes/graph/transforms/prune/Group10_test.py, please first train/select a checkpoint to train and load it at original_path in Group_test.py.
 Then run the pruning in the command line with:
