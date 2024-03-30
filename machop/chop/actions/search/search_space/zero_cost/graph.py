@@ -54,6 +54,7 @@ print("Loading NAS-Bench-201 api ...")
 api = API("./third-party/NAS-Bench-201-v1_1-096897.pth", verbose=False)
 print("API successfully loaded ...")
 
+
 class ZeroCostProxy(SearchSpaceBase):
     """
     Group 2 NAS-Proxy

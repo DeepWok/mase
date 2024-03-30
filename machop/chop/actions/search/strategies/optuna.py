@@ -159,7 +159,6 @@ class SearchStrategyOptuna(SearchStrategyBase):
             return list(scaled_metrics.values())
         else:
             return sum(scaled_metrics.values())
-        
 
     def search(self, search_space) -> optuna.study.Study:
         study_kwargs = {
@@ -203,10 +202,11 @@ class SearchStrategyOptuna(SearchStrategyBase):
 
             ### generate dataframe containing weights ensemble
             self.save_zc_proxy_ensemble(self.save_dir / "zc_ensemble.json")
-            self.save_zc_proxy_with_predictive(self.save_dir / "zc_with_predictive_and_true.json")
+            self.save_zc_proxy_with_predictive(
+                self.save_dir / "zc_with_predictive_and_true.json"
+            )
 
         return study
-
 
     def zero_cost_weight(self):
         # Group 2: Zero cost
@@ -260,11 +260,8 @@ class SearchStrategyOptuna(SearchStrategyBase):
                 "zero_cost_mode is Fasle, do not fit the zero_cost_weight evaluation."
             )
 
-
     def save_zc_proxy_ensemble(self, save_path):
-        df = pd.DataFrame(
-            columns = ["intercept"] + list(self.zc_proxy.columns)
-        )
+        df = pd.DataFrame(columns=["intercept"] + list(self.zc_proxy.columns))
 
         df.loc["weights", "intercept"] = self.zc_weight_model.intercept_
         df.loc["weights", self.zc_proxy.columns] = self.zc_weight_model.coef_
@@ -282,7 +279,7 @@ class SearchStrategyOptuna(SearchStrategyBase):
         df.to_json(save_path, orient="index", indent=4)
 
         return df
-    
+
     @staticmethod
     def _save_search_dataframe(study: optuna.study.Study, search_space, save_path):
         df = study.trials_dataframe(
@@ -299,7 +296,6 @@ class SearchStrategyOptuna(SearchStrategyBase):
         )
         df.to_json(save_path, orient="index", indent=4)
         return df
-
 
     @staticmethod
     def _save_best(study: optuna.study.Study, save_path):
