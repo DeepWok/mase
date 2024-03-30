@@ -44,7 +44,8 @@ test-hw:
 
 test-sw:
 	bash scripts/test-machop.sh
-	pytest --log-level=DEBUG --verbose -n 1 --cov=machop/chop/ --cov-report=html $(coverage) --html=report.html --self-contained-html --profile --profile-svg
+	# pytest --log-level=DEBUG --verbose -n 1 --cov=machop/chop/ --cov-report=html $(coverage) --html=report.html --self-contained-html --profile --profile-svg
+	pytest --log-level=DEBUG --verbose -n 1 --cov=machop/chop/
 
 test-all: test-hw test-sw
 	mkdir -p ./tmp
