@@ -261,6 +261,7 @@ def wave_check(dut):
         )
     )
 
+
 if __name__ == "__main__":
     tb = VerificationCase()
     mase_runner(module_param_list=[tb.get_dut_parameters()])
