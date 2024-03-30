@@ -6,7 +6,7 @@ task = "cls"
 max_epochs = 5
 batch_size = 512
 learning_rate = 1e-2
-accelerator = "cuda"
+accelerator = "gpu"
 project = "jsc-tiny"
 seed = 42
 log_every_n_steps = 5
@@ -25,6 +25,10 @@ name = "integer"
 "weight_frac_width" = 4
 "bias_width" = 8
 "bias_frac_width" = 4
+
+[transform]
+style = "graph"
+
 
 [search.search_space]
 name = "graph/quantize/mixed_precision_ptq"
@@ -69,7 +73,7 @@ compare_to = 32 # compare to FP32
 
 [search.strategy.setup]
 n_jobs = 1
-n_trials = 20
+n_trials = 5
 timeout = 20000
 sampler = "tpe"
 # sum_scaled_metrics = true # single objective

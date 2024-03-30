@@ -1,0 +1,35 @@
+# basics
+model = "toy_tiny"
+dataset = "toy_tiny"
+task = "cls"
+
+max_epochs = 5
+batch_size = 512
+learning_rate = 1e-2
+accelerator = "gpu"
+project = "toy_toy_tiny"
+seed = 42
+log_every_n_steps = 5
+
+[search.search_space]
+name = "graph/hardware/systolic_mapping"
+
+[search.search_space.seed.default.config]
+implementation = ["dataflow", "systolic_output_stationary"]
+
+[search.search_space.seed.linear.config]
+implementation = ["dataflow", "systolic_output_stationary"]
+
+[search.strategy]
+name = "optuna"
+eval_mode = true
+
+[search.strategy.hw_runner.resource_usage]
+todo = true
+
+[search.strategy.setup]
+n_jobs = 1
+n_trials = 1
+timeout = 20000
+sampler = "tpe"
+sum_scaled_metrics = false # multi objective
