@@ -31,7 +31,6 @@ def create_new_module(
 ):
     original_module_cls = type(original_module)
     quant_name = config.get("name")
-    print("create_new_module config: ", config)
     if quant_name == "ternary":
         config.update(
             {"node_meta_stat": node_meta["mase"].parameters["software"]["args"]}
@@ -211,7 +210,6 @@ def create_new_module(
     elif mase_op == "layer_norm":
         new_module_cls = quantized_module_map[f"layer_norm_{quant_name}"]
 
-        # TODO(jlsand): The device/dtype does not need to be copied over?
         new_module = new_module_cls(
             normalized_shape=original_module.normalized_shape,
             eps=original_module.eps,

@@ -24,6 +24,7 @@ INTERNAL_RTL_DEPENDENCIES = {
         "common/rtl/join2.sv",
     ],
     "layer_norm": [
+        "cast/rtl/fixed_cast.sv",
         "normalisation/rtl/fixed_layer_norm.sv",
         "normalisation/rtl/sqrt.sv",
     ],

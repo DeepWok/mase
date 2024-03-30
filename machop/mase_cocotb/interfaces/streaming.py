@@ -9,6 +9,7 @@ from cocotb.triggers import *
 from mase_cocotb.driver import Driver
 from mase_cocotb.monitor import Monitor
 
+import torch
 
 class StreamDriver(Driver):
     def __init__(self, clk, data, valid, ready) -> None:
@@ -92,37 +93,32 @@ class StreamMonitorRange(Monitor):
         elif type(self.data.value) == BinaryValue:
             return int(self.data.value)
 
-    def postprocess_tensor(self, tensor, frac_width):
-        tensor = [item * (1.0 / 2.0) ** frac_width for item in tensor]
+    def postprocess_tensor(self, tensor):
+        tensor = torch.tensor([item * (1.0 / 2.0) ** self.out_frac_width for item in tensor])
+
+        def convert(x):
+            if x < ( 2**(self.out_frac_width-1)):
+                return x
+            else:
+                new_x = x - (2 ** (self.out_width - self.out_frac_width))
+                return new_x
+        
+        tensor.detach().apply_(convert)
         return tensor
 
     def _check(self, got, exp):
         if self.check:
-            print("_check: ", self.postprocess_tensor(got, 3))
             if len(got) != len(exp):
                 raise TestFailure(
                     "\nGot \n%s, does not match dimension of \nExpected \n%s"
                     % (got, exp)
                 )
+            exp = self.postprocess_tensor(exp)
+            got = self.postprocess_tensor(got)
 
             for exp_val, got_val in zip(exp, got):
-                if exp_val >= 128:
-                    continue
-                    # exp_val = exp_val * (1.0/2.0) ** self.out_frac_width
-                    # exp_val = exp_val - (2 ** (self.out_width-self.out_frac_width))
-                else:
-                    exp_val = exp_val * (1.0 / 2.0) ** self.out_frac_width
-
-                if got_val >= 128:
-                    continue
-                    # got_val = got_val * (1.0/2.0) ** self.out_frac_width
-                    # got_val = got_val - (2 ** (self.out_width-self.out_frac_width))
-                else:
-                    got_val = got_val * (1.0 / 2.0) ** self.out_frac_width
 
                 error = abs(exp_val - got_val)
                 print(f"{got_val},{exp_val},{error}")
-                if error > 2.0:
+                if error > 1.0:
                     raise TestFailure("\nGot \n%s, \nExpected \n%s" % (got, exp))
-            # if not np.equal(got, exp).all():
-            #     raise TestFailure("\nGot \n%s, \nExpected \n%s" % (got, exp))

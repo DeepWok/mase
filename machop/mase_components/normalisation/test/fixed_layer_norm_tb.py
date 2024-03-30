@@ -30,6 +30,7 @@ from chop.passes.graph.transforms.quantize.quantizers import integer_quantizer
 from chop.passes.graph.transforms.quantize.quantized_modules import LayerNormInteger
 
 import torch
+from torch.nn import LayerNorm, GroupNorm
 from queue import Queue
 
 
@@ -38,7 +39,7 @@ logger.setLevel(logging.DEBUG)
 
 
 class LayerNormTB(Testbench):
-    def __init__(self, dut, num_features=16) -> None:
+    def __init__(self, dut) -> None:
         super().__init__(
             dut, dut.clk, dut.rst
         )  # needed to add rst signal for inheritance
@@ -58,14 +59,6 @@ class LayerNormTB(Testbench):
             dut.clk, dut.bias, dut.bias_valid, dut.bias_ready
         )
 
-        self.data_out_0_monitor = StreamMonitorRange(
-            dut.clk,
-            dut.data_out_0,
-            dut.data_out_0_valid,
-            dut.data_out_0_ready,
-            check=True,
-        )
-
         self.config = {
             "data_in_width": 8,
             "data_in_frac_width": 3,
@@ -75,43 +68,50 @@ class LayerNormTB(Testbench):
             "bias_frac_width": 3,
         }
 
-        self.model = LayerNormInteger(
-            num_features, elementwise_affine=False, config=self.config
+        self.data_out_0_monitor = StreamMonitorRange(
+            dut.clk,
+            dut.data_out_0,
+            dut.data_out_0_valid,
+            dut.data_out_0_ready,
+            self.config["data_in_width"],
+            self.config["data_in_frac_width"],
+            check=True,
         )
 
+
     def preprocess_tensor(self, tensor, quantizer, frac_width, parallelism):
-        # print("BEFORE: ", tensor)
         tensor = quantizer(tensor)
         tensor = (tensor * (2**frac_width)).int()
-        # logger.info(f"\nTensor in int format: {tensor}")
         tensor = tensor.reshape(-1, parallelism).tolist()
-        # logger.info(f"\nTensor after reshaping: {tensor}")
         return tensor
 
-    def postprocess_tensor(self, tensor, config):
-        tensor = [item * (1.0 / 2.0) ** config["frac_width"] for item in tensor]
-        return tensor
-
-    async def run_test(self):
-        await self.reset()
-        print(f"================= DEBUG: in run_test ================= \n")
-
-        # Store fixed point data
-        # TODO(jlsand): We assume that the fixed point format is the same for all
-        # parameters. Fair assumption or faulty?
-
+    def get_test_case(self, type):
+        if type == 'Q_LAYERNORM':
+            model = LayerNormInteger(
+                16, elementwise_affine=True, config=self.config
+            )
+            inputs = torch.randn((1, *model.normalized_shape)) * 2.0 + 0.5
+        elif type == 'LAYERNORM':
+            model = LayerNorm(
+                16, elementwise_affine=True
+            )
+            inputs = torch.randn((1, *model.normalized_shape)) * 2.0 + 0.5
+        elif type == 'GROUPNORM':
+            model = GroupNorm(
+                2, 16
+            )
+            inputs = torch.randn((1, 16)) * 2.0 + 0.5
+        
         data_width = self.config["data_in_width"]
         data_frac_width = self.config["data_in_frac_width"]
         parallelism = int(self.dut.DATA_IN_0_PARALLELISM_DIM_0) * int(
             self.dut.DATA_IN_0_PARALLELISM_DIM_1
         )
-        local_config = {"width": data_width, "frac_width": data_frac_width}
 
-        self.model.reset_parameters()
-        print(self.model.weight)
-        print(self.model.bias)
-        self.model.training = False
-        inputs = torch.randn((1, self.model.normalized_shape[0])) * 2.0 + 0.5
+        model.reset_parameters()
+        print(model.weight)
+        print(model.bias)
+        model.training = False
 
         quantizer = partial(
             integer_quantizer, width=data_width, frac_width=data_frac_width
@@ -121,41 +121,25 @@ class LayerNormTB(Testbench):
         quantized_inputs = quantizer(inputs)
         print("Inputs (quantized): ", quantized_inputs)
 
-        exp_outputs_model = self.model(inputs)
+        exp_outputs_model = model(inputs)
         print("Expected outputs model: ", exp_outputs_model)
-        print("Expected sum of quantized inputs: ", quantizer(sum(quantized_inputs[0])))
-        print(
-            "Expected mean of quantized inputs: ",
-            quantizer(quantizer(sum(quantized_inputs[0])) / len(inputs[0])),
-        )
-        print(
-            "Expected var of quantized inputs: ", quantizer(quantized_inputs[0].var())
-        )
-        # print("Expected stdv of quantized inputs: ", quantizer(np.var(quantized_inputs[0]) ** 0.5))
+        print("Expected sum of quantized inputs: ",  quantizer(sum(quantized_inputs[0])))
+        print("Expected mean of quantized inputs: ", quantizer(quantizer(sum(quantized_inputs[0])) / len(inputs[0])),)
+        print("Expected var of quantized inputs: ", quantizer(quantized_inputs[0].var()))
 
         inputs = self.preprocess_tensor(inputs, quantizer, data_frac_width, parallelism)
         print("Pre-processed inputs: ", inputs)
 
         weight = self.preprocess_tensor(
-            self.model.weight, self.model.w_quantizer, data_frac_width, int(parallelism)
+            model.weight, quantizer, data_frac_width, int(parallelism)
         )
 
         bias = self.preprocess_tensor(
-            self.model.bias, self.model.b_quantizer, data_frac_width, int(parallelism)
+            model.bias, quantizer, data_frac_width, int(parallelism)
         )
-
-        self.data_out_0_monitor.ready.value = 1
-        print(f"================= DEBUG: asserted ready_out ================= \n")
-
-        self.data_in_0_driver.load_driver(inputs)
-        self.dut.weight.value = weight[0]
-        self.dut.bias.value = bias[0]
-        print(
-            f"================= DEBUG: put values on input ports ================= \n"
-        )
-
+        
         exp_outputs_model = quantizer(exp_outputs_model)
-        print("Exp. outputs model: ", exp_outputs_model)
+        # print("Exp. outputs model: ", exp_outputs_model)
 
         # # The output from the module is treated as positive integers
         # # convert the negative expected outputs to their positive
@@ -170,30 +154,38 @@ class LayerNormTB(Testbench):
 
         exp_outputs_model.detach().apply_(convert)
         # exp_outputs_model = exp_outputs_model.floor()
-        print("Exp. outputs model: ", exp_outputs_model)
+        # print("Exp. outputs model: ", exp_outputs_model)
 
         exp_outputs_model = (exp_outputs_model * 2**data_frac_width).int()
         exp_outputs_model = exp_outputs_model.reshape(-1, int(parallelism)).tolist()
-        print(
-            f"================= DEBUG: generated values with fe model ================= \n"
-        )
+        return inputs, weight, bias, exp_outputs_model
+
+    async def run_test_case(self, inputs, weight, bias, exp_outputs_model):
+        self.data_out_0_monitor.ready.value = 1
+
+        self.data_in_0_driver.load_driver(inputs)
+        self.weight_driver.load_driver(weight)
+        self.bias_driver.load_driver(bias)
 
         self.data_out_0_monitor.load_monitor(exp_outputs_model)
-        print(f"================= DEBUG: loaded hw outptus ================= \n")
 
         await Timer(800, units="ns")
 
-        print(f"================= DEBUG: in run_test waited 1ms ================= \n")
+    async def run_test(self):
+        await self.reset()
+        if self.dut.NUM_NORMALIZATION_ZONES == 2: 
+            await self.run_test_case(*self.get_test_case('GROUPNORM'))
+        else:
+            await self.run_test_case(*self.get_test_case('Q_LAYERNORM'))
+            await self.run_test_case(*self.get_test_case('LAYERNORM'))
+
+
 
 
 @cocotb.test()
 async def simple_test(dut):
-    print(f"================= DEBUG: in simple_test ================= \n")
     tb = LayerNormTB(dut)
-    print(f"================= DEBUG: initialized tb ================= \n")
-
     await tb.run_test()
-    print(f"================= DEBUG: ran test ================= \n")
 
 
 if __name__ == "__main__":
@@ -205,16 +197,11 @@ if __name__ == "__main__":
                 "DATA_IN_0_PRECISION_1": 3,
                 "DATA_IN_0_PARALLELISM_DIM_0": 16,
                 "DATA_IN_0_PARALLELISM_DIM_1": 1,
+                "NUM_NORMALIZATION_ZONES": 2, 
             },
             {
-                "DATA_IN_0_PRECISION_0": 16,
-                "DATA_IN_0_PRECISION_1": 5,
-                "DATA_IN_0_PARALLELISM_DIM_0": 16,
-                "DATA_IN_0_PARALLELISM_DIM_1": 1,
-            },
-            {
-                "DATA_IN_0_PRECISION_0": 12,
-                "DATA_IN_0_PRECISION_1": 5,
+                "DATA_IN_0_PRECISION_0": 8,
+                "DATA_IN_0_PRECISION_1": 3,
                 "DATA_IN_0_PARALLELISM_DIM_0": 16,
                 "DATA_IN_0_PARALLELISM_DIM_1": 1,
             },
