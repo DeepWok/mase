@@ -94,7 +94,17 @@ def train(
     wrapper_cls = get_model_wrapper(model_info, task)
 
     if load_name is not None:
-        model = load_model(load_name, load_type=load_type, model=model)
+        model_short_name = "vgg7"
+        mask = None
+        is_quantize = False
+        model = load_model(
+            model_short_name,
+            mask,
+            is_quantize,
+            load_name,
+            load_type=load_type,
+            model=model,
+        )
         logger.info(f"'{load_type}' checkpoint loaded before training")
 
     pl_model = wrapper_cls(

@@ -194,7 +194,6 @@ def run(config_file):
     dataset_name = config["dataset"]
 
     load_name = config["passes"]["retrain"]["load_name"]
-    # load_name = None    #  Set load_name to None if want to train from scratch
     load_type = config["passes"]["retrain"]["load_type"]
     accelerator = config["passes"]["retrain"]["trainer"]["accelerator"]
     task = config["task"]
