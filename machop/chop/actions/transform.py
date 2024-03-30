@@ -567,7 +567,7 @@ def transform(
                     "devices"
                 ]
                 plt_trainer_args["limit_train_batches"] = 1
-                plt_trainer_args["limit_val_batches"] = 0
+                # plt_trainer_args["limit_val_batches"] = 0
 
                 """
                 basic hyperparameterss
