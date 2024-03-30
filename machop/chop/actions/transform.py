@@ -155,7 +155,7 @@ def transform(
     # load_name = None    #  Set load_name to None if want to train from scratch
     load_type = config["passes"]["retrain"]["load_type"]
 
-    if "machop" in os.getcwd():
+    if "machop" in os.getcwd() and "content" not in os.getcwd():
         load_name = "../" + load_name
 
     """

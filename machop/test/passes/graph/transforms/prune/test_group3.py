@@ -202,9 +202,8 @@ def run(config_file):
     task = config["task"]
     accelerator = parse_accelerator(accelerator)
 
-    print(os.getcwd())
-    if "machop" in os.getcwd():
-        load_name = "../" + load_name
+    if "content" not in os.getcwd():
+        load_name = None
 
     """
     model_short_name: choose from vgg7 / resnet18
