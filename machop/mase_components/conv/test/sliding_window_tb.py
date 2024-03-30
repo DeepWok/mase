@@ -122,7 +122,7 @@ class VerificationCase:
                         re_data_tensor[i][j][k + padding_height][s + padding_width] = (
                             data_tensor[i][k][s][j]
                         )
-                        
+                            
         return re_data_tensor
 
     def sw_compute(self):
