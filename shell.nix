@@ -4,6 +4,7 @@ with import <nixpkgs>{
 
 let
   pythonPackages = pkgs.python3Packages;
+  MACHOP_DIR = builtins.toString ./machop;
 in pkgs.mkShell {
 
   LD_LIBRARY_PATH = lib.makeLibraryPath [ pkgs.clangStdenv.cc.cc pkgs.libGL pkgs.glib cudaPackages.cuda_cudart cudaPackages.cudatoolkit cudaPackages.cudnn ];
@@ -19,12 +20,7 @@ in pkgs.mkShell {
     # dropping into the shell
     pythonPackages.venvShellHook
 
-    # Those are dependencies that we would like to use from nixpkgs, which will
-    # add them to PYTHONPATH and thus make them accessible from within the venv.
-    # pythonPackages.numpy
-    # pythonPackages.requests
-
-    # In this particular example, in order to compile any binary extensions they may
+    # For MASE, in order to compile some binary extensions they may
     # require, the Python modules listed in the requirements.txt need
     # the following packages to be installed locally:
     taglib
@@ -76,7 +72,7 @@ in pkgs.mkShell {
     unset SOURCE_DATE_EPOCH
 
     # Add macho to the users PYTHONPATH
-    export PYTHONPATH="$PYTHONPATH:/home/jlsand/mase_group7/machop"
+    export PYTHONPATH="$PYTHONPATH:${MACHOP_DIR}"
 
     export CUDA_PATH=${pkgs.cudatoolkit}
     # Enter terminal shell of your choice e.g. fish or bash
