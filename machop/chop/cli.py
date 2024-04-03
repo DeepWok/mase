@@ -50,7 +50,7 @@ from tabulate import tabulate
 import torch
 
 from . import models
-from .actions import test, train, transform, search, emit, simulate
+from .actions import test, train, transform, search, emit, simulate, proxy
 from .dataset import MaseDataModule, AVAILABLE_DATASETS, get_dataset_info
 from .tools import post_parse_load_config, load_config
 
@@ -97,7 +97,7 @@ LOGO = f"""
         https://github.com/DeepWok/mase/wiki
 """
 TASKS = ["classification", "cls", "translation", "tran", "language_modeling", "lm"]
-ACTIONS = ["train", "test", "transform", "search", "emit", "simulate"]
+ACTIONS = ["train", "test", "transform", "search", "emit", "simulate", "proxy"]
 INFO_TYPE = ["all", "model", "dataset"]
 LOAD_TYPE = [
     "pt",  # PyTorch module state dictionary
@@ -258,6 +258,8 @@ class ChopCLI:
                 run_action_fn = self._run_emit
             case "simulate":
                 run_action_fn = self._run_simulate
+            case "proxy":
+                run_action_fn = self._proxy
 
         if run_action_fn is None:
             raise ValueError(f"Unsupported action: {self.args.action}")
@@ -270,6 +272,15 @@ class ChopCLI:
             run_action_fn()
 
     # Actions --------------------------------------------------------------------------
+    def _proxy(self):
+        self.logger.info(f"Training meta proxy...")
+
+        proxy_params = {
+            "config": self.args.config,
+        }
+
+        proxy(**proxy_params)
+
     def _run_train(self):
         self.logger.info(f"Training model {self.args.model!r}...")
 

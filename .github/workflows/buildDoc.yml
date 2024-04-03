@@ -24,6 +24,30 @@ jobs:
     container:
       image: deepwok/mase-docker:latest
     steps:
+        - name: Install dependencies
+          run: |
+            pip install networkx
+            pip install pyyaml
+            pip install torchvision
+            pip install fvcore
+            pip install pytest
+            pip install lightgbm
+            pip install ngboost
+            pip install xgboost
+            pip install emcee
+            pip install pybnn
+            pip install grakel
+            pip install pyro-ppl
+            pip install ConfigSpace
+            pip install tornado
+
+            # additional from setup.py prev
+            pip install pytorch-msssim
+            pip install tensorwatch
+
+            # from zerocost
+            pip install transforms3d
+            pip install gdown
 
       # Clone the MASE repo and its submodules.
       - name: Get MASE

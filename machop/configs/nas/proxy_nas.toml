@@ -1,0 +1,40 @@
+# basics
+model = "jsc-tiny"
+dataset = "jsc"
+task = "cls"
+
+max_epochs = 5
+batch_size = 512
+learning_rate = 1e-2
+accelerator = "gpu"
+project = "jsc-tiny"
+seed = 42
+log_every_n_steps = 5
+
+
+[proxy.other_config]
+path = ''
+
+[proxy.op_config]
+num_samples = 8
+
+[proxy.proxies]
+proxy_list = ['epe_nas', 
+        'fisher', 
+        'grad_norm', 
+        'grasp', 
+        'jacov', 
+        'l2_norm', 
+        'nwot', 
+        'plain', 
+        'snip', 
+        'synflow', 
+        'zen', 
+        'flops', 
+        'params']
+
+[proxy.proxy_dataset]
+dataset = "cifar10"
+
+[proxy.search_space]
+search_space = "nas201"

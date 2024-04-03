@@ -23,7 +23,6 @@ jobs:
     container:
       image: deepwok/mase-docker:latest
     steps:
-
       # Clone the MASE repo and its submodules.
       - name: Get MASE
         uses: actions/checkout@v3
@@ -33,6 +32,35 @@ jobs:
       - name: Set git safe
         run: |
           git config --global --add safe.directory $PWD
+
+      - name: Install dependencies
+        run: |
+          pip install networkx
+          pip install pyyaml
+          pip install torchvision
+          pip install torch
+          pip install fvcore
+          pip install pytest
+          pip install lightgbm
+          pip install ngboost
+          pip install xgboost
+          pip install emcee
+          pip install pybnn
+          pip install grakel
+          pip install pyro-ppl
+          pip install ConfigSpace
+          pip install tornado
+
+          # additional from setup.py prev
+          pip install tqdm
+          pip install pytorch-msssim
+          pip install tensorwatch
+
+          # from zerocost
+          pip install transforms3d
+          pip install gdown
+
+
 
       # -----------
       # Software Format check 

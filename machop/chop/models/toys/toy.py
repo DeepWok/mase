@@ -95,7 +95,7 @@ class ToyTestModel(nn.Module):
 # A simple convolutional toy net that uses Conv2d, Conv1d and Linear layers.  This
 # network is primarily used to test the pruning transformation.
 class ToyConvNet(nn.Module):
-    def __init__(self, num_classes, channels=[3, 8, 16, 32, 64]):
+    def __init__(self, num_classes=10, channels=[3, 8, 16, 32, 64]):
         super(ToyConvNet, self).__init__()
         self.channels = channels
         self.block_1 = self._conv_block(nn.Conv2d, channels[0], channels[1], 3, 1, 1)

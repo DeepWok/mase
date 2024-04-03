@@ -3,7 +3,6 @@ from os import PathLike
 
 import toml
 import torch
-
 from ...tools.checkpoint_load import load_model
 from ...tools.config_load import load_config
 from ...tools.get_input import get_dummy_input
@@ -12,22 +11,29 @@ from .strategies import get_search_strategy_cls
 from chop.tools.utils import device
 from chop.tools.utils import parse_accelerator
 
+
 logger = logging.getLogger(__name__)
+### Function made for nas config
 
 
-def parse_search_config(search_config):
+def parse_search_config(config):
     """
     Parse search config from a dict or a toml file and do sanity check.
 
     ---
     The search config must consist of two parts: strategy and search_space.
     """
-    if not isinstance(search_config, dict):
-        search_config = load_config(search_config)
-    search_config = search_config["search"]  # the actual config for action search
+
+    if not isinstance(config, dict):
+        search_config = load_config(config)
+
+    search_config = config["search"]  # the actual config for action search
     strategy_config = search_config["strategy"]
     search_space_config = search_config["search_space"]
-
+    # print(search_config.keys())
+    if strategy_config["setup"]["n_trials"] < 1:
+        logger.info("Invalid Number of Trials!")
+        exit()
     return strategy_config, search_space_config
 
 
@@ -50,6 +56,13 @@ def search(
     """
     # search preparation
     accelerator = parse_accelerator(accelerator)
+    #######################################################
+    ### Our contribution here:
+    if not isinstance(search_config, dict):
+        search_config = load_config(search_config)
+    searchconfig = search_config["search"]
+
+    ### End of our contribution
     strategy_config, search_space_config = parse_search_config(search_config)
     save_path.mkdir(parents=True, exist_ok=True)
 
@@ -73,9 +86,10 @@ def search(
         accelerator=accelerator,
     )
     search_space.build_search_space()
+    dummy_input = get_dummy_input(model_info, data_module, task, device=accelerator)
 
-    # construct a search strategy
     strategy_cls = get_search_strategy_cls(strategy_config["name"])
+
     strategy = strategy_cls(
         model_info=model_info,
         task=task,
