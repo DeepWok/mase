@@ -28,6 +28,7 @@ module fixed_relu #(
     input  logic data_out_0_ready
 );
 
+  /* verilator lint_off SELRANGE */
   for (genvar i = 0; i < DATA_IN_0_TENSOR_SIZE_DIM_0; i++) begin : ReLU
     always_comb begin
       // negative value, put to zero

@@ -32,6 +32,16 @@ func_data = {
     "logsigmoid": {"input": "data_in"},
     # https://pytorch.org/docs/stable/generated/torch.nn.functional.softmax.html
     "softmax": {"input": "data_in", "dim": "config", "dtype": "config"},
+    # https://pytorch.org/docs/stable/generated/torch.nn.SELU.html
+    "selu": {"input": "data_in", "inplace": "config"},
+    # https://pytorch.org/docs/stable/generated/torch.nn.Tanh.html
+    "tanh": {"input": "data_in"},
+    # https://pytorch.org/docs/stable/generated/torch.nn.GELU.html
+    "gelu": {"input": "data_in", "inplace": "config"},
+    # https://pytorch.org/docs/stable/generated/torch.nn.Softsign.html
+    "softsign": {"input": "data_in", "inplace": "config"},
+    # https://pytorch.org/docs/stable/generated/torch.nn.Softplus.html
+    "softplus": {"input": "data_in", "inplace": "config"},
     # https://pytorch.org/docs/stable/generated/torch.add.html
     "add": {"input": "data_in", "other": "data_in"},
     # https://pytorch.org/docs/stable/generated/torch.mul.html
@@ -104,6 +114,7 @@ method_data = {
     "size": {"dim": "config"},
     # https://pytorch.org/docs/stable/generated/torch.Tensor.shape.html#torch.Tensor.shape
     "shape": {"dim": "config"},
+    # https://pytorch.org/docs/stable/generated/torch.nn.Tanh.html
 }
 
 

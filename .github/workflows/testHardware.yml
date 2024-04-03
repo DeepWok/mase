@@ -2,11 +2,11 @@ name: Hardware Test
 
 on:
   push:
-    branches: [ "main", "extended-tests" ]
+    branches: [ "main*"]
     paths:
       - 'machop/mase_components/**'
   pull_request:
-    branches: [ "main", "extended-tests" ]
+    branches: [ "main*"]
     paths:
       - 'machop/mase_components/**'
   workflow_dispatch:

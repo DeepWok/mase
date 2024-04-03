@@ -1,7 +1,7 @@
 name: "Assign reviewers"
 on:
   pull_request:
-    branches: [ main ]
+    branches: [ main* ]
 
 jobs:
   # Automatically request reviews from the code owner identified in a set of
