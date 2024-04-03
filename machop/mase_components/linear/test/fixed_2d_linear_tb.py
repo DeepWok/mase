@@ -15,7 +15,7 @@ from einops import rearrange
 import torch
 from mase_cocotb.z_qlayers import quantize_to_int as q2i
 from chop.models.manual.quant_utils import get_quantized_cls
-from chop.passes.transforms.quantize.quantizers.integer import _integer_quantize
+from chop.passes.graph.transforms.quantize.quantizers.integer import _integer_quantize
 
 debug = True
 
@@ -35,7 +35,7 @@ class VerificationCase:
         self.data_out_width = 8
         self.data_out_frac_width = 1
 
-        self.has_bias = 1
+        self.has_bias = 0
         self.bias_width = 6
         self.bias_frac_width = 1
 
