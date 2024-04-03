@@ -49,18 +49,23 @@ MaseGraph Analysis Passes
     - Add natural sparsity metadata analysis pass to the given MaseGraph.
   * - :py:meth:`~chop.passes.graph.analysis.pruning.hook_inspector.hook_inspection_analysis_pass`
     - Remove and provide hook information of the modules
-
-
+  * - :py:meth:`~chop.passes.graph.transforms.quantize_tensorRT.evaluate_pytorch_model_pass`
+    - Test the performance of mixed precision mod
+  * - :py:meth:`~chop.passes.graph.transforms.test_trt_engine`
+    - Outputs both the performance and latency of the engine on GPUs
 .. toctree::
-	  :maxdepth: 2
+   :maxdepth: 2
 
-	  analysis/add_metadata
-	  analysis/init_metadata
-	  analysis/report
-	  analysis/statistical_profiler
-	  analysis/verify
-	  analysis/quantization
-	  analysis/pruning
+   analysis/add_metadata
+   analysis/init_metadata
+   analysis/report
+   analysis/statistical_profiler
+   analysis/verify
+   analysis/quantization
+   analysis/pruning
+   analysis/tenssor_quantization_eval
+
+
 
 
 MaseGraph Transform Passes
@@ -96,14 +101,23 @@ MaseGraph Transform Passes
     - fill me
   * - :py:meth:`~chop.passes.graph.transforms.verilog.emit_top.emit_internal_rtl_transform_pass`
     - fill me
+  * - :py:meth:`~chop.passes.graph.transforms.quantize_tensorRT.mixed_precision_transform_pass`
+    - convert the precision of a graph based on the given arguments
+  * - :py:meth:`~chop.passes.graph.transforms.quantize_tensorRT.quantization_aware_training_pass`
+    - Monitor the change after coverting and its performance. Also optimize its performance
+  * - :py:meth:`~chop.passes.graph.transforms.quantize_tensorRT.graph_to_trt_pass`
+    - Cnvert the mase graph to TensorRT engine
 
 .. toctree::
-	  :maxdepth: 2
+   :maxdepth: 2
 
-	  transform/pruning
-	  transform/quantize
-	  transform/verilog
-	  transform/utils
+   transform/pruning
+   transform/quantize
+   transform/verilog
+   transform/utils
+   transform/tensorrtquantize
+    
+
 
 
 MaseGraph Interface Passes

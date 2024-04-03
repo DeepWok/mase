@@ -29,6 +29,12 @@ from .graph.transforms import (
     emit_bram_transform_pass,
     emit_internal_rtl_transform_pass,
     emit_cocotb_transform_pass,
+    quantize_tensorrt_transform_pass,
+    test_quantize_tensorrt_transform_pass,
+    mixed_precision_transform_pass,
+    test_trt_engine,
+    evaluate_pytorch_model_pass,
+    graph_to_trt_pass,
 )
 from .module.analysis import calculate_avg_bits_module_analysis_pass
 from .module.transforms import quantize_module_transform_pass
