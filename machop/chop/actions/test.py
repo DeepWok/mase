@@ -1,14 +1,17 @@
 import logging
 import os
 import pickle
-
+import torch
 import pytorch_lightning as pl
 from chop.plt_wrapper import get_model_wrapper
 from chop.tools.checkpoint_load import load_model
 from pytorch_lightning.loggers import TensorBoardLogger
 from pytorch_lightning.plugins.environments import SLURMEnvironment
-
+from chop.ir.graph.mase_graph import MaseGraph
 import pytest
+import pdb
+from chop.models.vision.vgg_cifar import get_vgg7
+from types import SimpleNamespace
 
 logger = logging.getLogger(__name__)
 
@@ -46,7 +49,17 @@ def test(
     wrapper_cls = get_model_wrapper(model_info, task)
 
     if load_name is not None:
-        model = load_model(load_name, load_type=load_type, model=model)
+        model_short_name = ("vgg7",)
+        mask = (None,)
+        is_quantize = (False,)
+        model = load_model(
+            model_short_name,
+            mask,
+            is_quantize,
+            load_name,
+            load_type=load_type,
+            model=model,
+        )
     plt_model = wrapper_cls(
         model,
         dataset_info=dataset_info,

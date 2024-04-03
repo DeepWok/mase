@@ -159,7 +159,6 @@ def debug_state(dut, state):
 
 @cocotb.test()
 async def test_sliding_window(dut):
-    """Test integer based vector mult"""
     samples = 20
     test_case = VerificationCase(samples=samples)
 

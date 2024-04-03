@@ -1,6 +1,8 @@
 import logging
 import os
 from pathlib import Path
+import pdb
+
 
 import pytorch_lightning as pl
 from chop.plt_wrapper import get_model_wrapper
@@ -12,7 +14,6 @@ from chop.passes.graph import (
     add_software_metadata_analysis_pass,
 )
 from chop.passes.graph.interface import save_mase_graph_interface_pass
-from chop.passes.graph.transforms import metadata_value_type_cast_transform_pass
 from chop.ir.graph import MaseGraph
 from pytorch_lightning.callbacks import LearningRateMonitor, ModelCheckpoint
 from pytorch_lightning.loggers import TensorBoardLogger
@@ -20,7 +21,6 @@ from pytorch_lightning.plugins.environments import SLURMEnvironment
 
 from torch.distributed.fsdp import FullyShardedDataParallel
 from pytorch_lightning.strategies import DDPStrategy
-from chop.tools.utils import parse_accelerator, to_numpy_if_tensor
 
 
 logger = logging.getLogger(__name__)
@@ -94,7 +94,17 @@ def train(
     wrapper_cls = get_model_wrapper(model_info, task)
 
     if load_name is not None:
-        model = load_model(load_name, load_type=load_type, model=model)
+        model_short_name = "vgg7"
+        mask = None
+        is_quantize = False
+        model = load_model(
+            model_short_name,
+            mask,
+            is_quantize,
+            load_name,
+            load_type=load_type,
+            model=model,
+        )
         logger.info(f"'{load_type}' checkpoint loaded before training")
 
     pl_model = wrapper_cls(
@@ -116,17 +126,16 @@ def train(
     # Save the trained model along with relevant metadata in the training_ckpts folder.
     # NOTE: This is important if the model was previously transformed with architectural
     # changes. The state dictionary that's saved by PyTorch Lightning wouldn't work.
-    if save_path is not None and load_name is not None and load_type == "mz":
-        accelerator = plt_trainer_args["accelerator"]
-        accelerator = parse_accelerator(accelerator)
+    # if save_path is not None and load_name is not None and load_type == "mz":
+    if save_path is not None and load_type == "mz":
         graph = MaseGraph(model)
-        dummy_input = get_dummy_input(model_info, data_module, task, device=accelerator)
-        graph, _ = init_metadata_analysis_pass(graph, None)
-        graph, _ = add_common_metadata_analysis_pass(graph, {"dummy_in": dummy_input})
-        graph, _ = add_software_metadata_analysis_pass(graph, None)
-        transformed_ckpt = Path(save_path) / "transformed_ckpt"
+        dummy_input = get_dummy_input(model_info, data_module, task)
+        graph = init_metadata_analysis_pass(graph, None)
+        # graph = add_common_metadata_analysis_pass(graph, dummy_input)
+        dummy_input = {"dummy_in": dummy_input}
+        graph = add_common_metadata_analysis_pass(graph[0], dummy_input)
+        graph = add_software_metadata_analysis_pass(graph[0], None)
+        # transformed_ckpt = Path(save_path) / "transformed_ckpt"
+        transformed_ckpt = Path(save_path)
         transformed_ckpt.mkdir(parents=True, exist_ok=True)
-        graph, _ = metadata_value_type_cast_transform_pass(
-            graph, pass_args={"fn": to_numpy_if_tensor}
-        )
-        save_mase_graph_interface_pass(graph, pass_args=transformed_ckpt)
+        save_mase_graph_interface_pass(graph[0], pass_args=transformed_ckpt)

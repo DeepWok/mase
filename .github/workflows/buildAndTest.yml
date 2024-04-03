@@ -194,5 +194,5 @@ jobs:
       # -----------
       
       - name: Mase regression test 
-        run: 
+        run:
             make test-sw

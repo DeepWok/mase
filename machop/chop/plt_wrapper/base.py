@@ -17,6 +17,7 @@ class WrapperBase(pl.LightningModule):
         epochs=1,
         optimizer=None,
         dataset_info=None,
+        batch_size=128,
     ):
         super().__init__()
         self.model = model
@@ -25,6 +26,7 @@ class WrapperBase(pl.LightningModule):
         self.loss_fn = torch.nn.CrossEntropyLoss()
         self.epochs = epochs
         self.optimizer = optimizer
+        self.batch_size = batch_size
 
         self.num_classes = dataset_info.num_classes
         if self.num_classes is not None:
@@ -46,7 +48,6 @@ class WrapperBase(pl.LightningModule):
         self.acc_train(y_hat, y)
         self.log("train_acc_step", self.acc_train, prog_bar=True)
         self.log("train_loss_step", loss)
-
         return loss
 
     def validation_step(self, batch, batch_idx):

@@ -42,6 +42,25 @@ class VGG7(nn.Module):
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         x = self.feature_layers(x)
+        """
+        x = self.feature_layers[0](x)
+        x.retain_grad()
+        for i in range(1, 4):
+            x = self.feature_layers[i](x)
+        x.retain_grad()
+        for i in range(4, 8):
+            x = self.feature_layers[i](x)
+        x.retain_grad()
+        for i in range(8, 11):
+            x = self.feature_layers[i](x)
+        x.retain_grad()       
+        for i in range(11, 15):
+            x = self.feature_layers[i](x)
+        x.retain_grad() 
+        for i in range(15, 18):
+            x = self.feature_layers[i](x)
+        x.retain_grad() 
+        """
         x = x.view(-1, 512 * 4 * 4)
         x = self.classifier(x)
         x = self.last_layer(x)

@@ -1,0 +1,25 @@
+# basics
+model = "vgg7"
+dataset = "cifar10"
+task = "cls"
+
+batch_size = 256
+accelerator = "cpu"
+project = "vgg_cifar10_prune"
+seed = 42
+log_every_n_steps = 50 
+
+[passes.prune.weight]
+sparsity = 0.2
+scope = "local"
+granularity = "elementwise"
+method = "l1-norm"
+
+[passes.prune.activation]
+sparsity = 0.1
+scope = "local"
+granularity = "elementwise"
+method = "l1-norm"
+
+
+

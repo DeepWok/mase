@@ -1,0 +1,78 @@
+##########################
+#basics
+##########################
+model = "vgg7"
+dataset = "cifar10"
+task = "cls"
+
+batch_size = 512
+accelerator = "auto"
+project = "vgg_cifar10_prune"
+seed = 42
+log_every_n_steps = 50 
+learning_rate = 1e-4
+
+##########################
+#prune
+##########################
+[passes.prune.weight]
+sparsity = 0.2
+scope = "local"
+granularity = "elementwise"
+method = "l1-norm"
+
+[passes.prune.activation]
+sparsity = 0.1
+scope = "local"
+granularity = "elementwise"
+method = "l1-norm"
+
+##########################
+# quantize
+##########################
+# comment all the "passes.quantize" when need to
+[passes.quantize]
+by = "type"
+[passes.quantize.default.config]
+name = "NA"
+[passes.quantize.linear.config]
+name = "integer"
+"data_in_width" = 8
+"data_in_frac_width" = 4
+"weight_width" = 8
+"weight_frac_width" = 4
+"bias_width" = 8
+"bias_frac_width" = 4
+[passes.quantize.conv2d.config]
+name = "integer"
+"data_in_width" = 8
+"data_in_frac_width" = 4
+"weight_width" = 8
+"weight_frac_width" = 4
+"bias_width" = 8
+"bias_frac_width" = 4
+
+##########################
+#retrain
+##########################
+[passes.retrain]
+load_name = "test-accu-0.9332.ckpt"
+load_type = "pl"
+project = "vgg_cifar10_train"
+
+[passes.retrain.training]
+max_epochs = 1
+weight_decay = 0
+optimizer = "adam"
+learning_rate = 1e-4
+batch_size = 512
+
+[passes.retrain.trainer]
+devices = 1
+accelerator = "auto"
+
+##########################
+# huffman
+##########################
+[passes.huffman]
+is_huffman = true
