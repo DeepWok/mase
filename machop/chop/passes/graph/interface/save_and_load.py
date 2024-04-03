@@ -139,12 +139,12 @@ def save_mase_graph_interface_pass(graph, pass_args: dict = {}):
     graph_module_ckpt = os.path.join(save_dir, "graph_module.mz")
     state_dict_ckpt = os.path.join(save_dir, "state_dict.pt")
     # n_meta_param_ckpt = os.path.join(save_dir, "node_meta_param.toml")
-    n_meta_param_ckpt = os.path.join(save_dir, "node_meta_param.pkl")
+    # n_meta_param_ckpt = os.path.join(save_dir, "node_meta_param.pkl")
 
     # collect metadata.parameters
     node_n_meta_param = collect_n_meta_param(graph)
     # save metadata.parameters to toml
-    save_n_meta_param(node_n_meta_param, n_meta_param_ckpt)
+    # save_n_meta_param(node_n_meta_param, n_meta_param_ckpt)
     # reset metadata to empty dict {}
     graph = graph_iterator_remove_metadata(graph)
     # save graph module & state dict
