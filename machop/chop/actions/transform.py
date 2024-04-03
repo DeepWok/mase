@@ -151,7 +151,6 @@ def transform_graph(
     graph = MaseGraph(model=model, cf_args=cf_args)
     # graph_metadata = Mase
     graph, _ = init_metadata_analysis_pass(graph, pass_args=None)
-    # logger.info(f"graph: {graph.fx_graph}")
 
     # create or load metadata.parameters and mase_graph.model
     if load_name is not None and load_type == "mz":
@@ -170,12 +169,140 @@ def transform_graph(
         )
         graph, _ = add_software_metadata_analysis_pass(graph, pass_args=None)
 
-    pass_config = config["passes"]
-
-    for pass_name, pass_config in pass_config.items():
+    passes_config = config["passes"]
+    for pass_name, pass_config in passes_config.items():
         pass_name: str
         pass_config: dict
         match pass_name:
+            case "tensorrt":
+                graph, _ = metadata_value_type_cast_transform_pass(
+                    graph, pass_args={"fn": to_numpy_if_tensor}
+                )
+                ori_graph = deepcopy_mase_graph(graph)
+                pass_save_dir = save_dir / "tensorrt"
+
+                pass_config["task"] = task
+                pass_config["dataset"] = config["dataset"]
+                pass_config["batch_size"] = config["batch_size"]
+                pass_config["model"] = config["model"]
+                pass_config["data_module"] = data_module
+                pass_config["accelerator"] = accelerator.type
+                if accelerator.type == "cuda":
+                    # TODO this seems innefective - known issue - https://github.com/NVIDIA/TensorRT/issues/2468
+                    os.environ["CUDA_MODULE_LOADING"] = "LAZY"
+
+                # Firstly fake quantize the model for calibration (only if using int8 precision otherwise skipped)
+                graph, _ = PASSES["tensorrt_fake_quantize"](
+                    graph, pass_args=pass_config
+                )
+
+                # Summarize to show what has been quantized
+                PASSES["summarize_quantization"](
+                    ori_graph, graph, save_dir=pass_save_dir
+                )
+
+                # Then calibrate the model using the fake quantization to set AMAXs
+                graph, _ = PASSES["tensorrt_calibrate"](graph, pass_args=pass_config)
+
+                # Apply post-quantization fine tuning (Quantization Aware Training)
+                graph, _ = PASSES["tensorrt_fine_tune"](graph, pass_args=pass_config)
+
+                # Apply fp16 or layer-wise mixed precision quantization if necessary and convert the model to TensorRT format
+                graph, runtime_meta = PASSES["tensorrt"](graph, pass_args=pass_config)
+
+                # Perform runtime analysis on original and new graph
+                _, _ = PASSES["runtime_analysis"](ori_graph, pass_args=pass_config)
+
+                _, _ = PASSES["runtime_analysis"](
+                    runtime_meta["trt_engine_path"], pass_args=pass_config
+                )
+
+            case "onnxruntime":
+                pass_save_dir = save_dir / "onnxruntime"
+                graph, _ = metadata_value_type_cast_transform_pass(
+                    graph, pass_args={"fn": to_numpy_if_tensor}
+                )
+                ori_graph = deepcopy_mase_graph(graph)
+                pass_config["data_module"] = data_module
+
+                # crop the train dataloader to behave as the calibrated dataloader
+                pass_config["data_module"].train_dataloader
+
+                pass_config["task"] = task
+                pass_config["accelerator"] = accelerator.type
+                pass_config["batch_size"] = config["batch_size"]
+                pass_config["model"] = config["model"]
+                pass_config["dataset"] = config["dataset"]
+
+                if accelerator.type == "cuda":
+                    # TODO this seems innefective - known issue - https://github.com/NVIDIA/TensorRT/issues/2468
+                    os.environ["CUDA_MODULE_LOADING"] = "LAZY"
+
+                graph, runtime_meta = PASSES["onnxruntime"](
+                    graph, pass_args=pass_config
+                )
+
+                # if user has set runtime_anaylsis, run the runtime analysis pass
+                if "runtime_analysis" not in pass_config:
+                    break
+
+                # Extract the 'runtime_analysis' dictionary by stripping the config
+                runtime_analysis = pass_config.pop("runtime_analysis", {})
+                pass_config.update(runtime_analysis)
+
+                original_graph_analysis = pass_config.get(
+                    "original_graph_analysis", True
+                )
+                if original_graph_analysis:
+                    logger.info("Performing runtime analysis on original graph...")
+                    _, _ = PASSES["runtime_analysis"](ori_graph, pass_args=pass_config)
+                optimized_graph_analysis = pass_config.get(
+                    "optimized_graph_analysis", True
+                )
+                if optimized_graph_analysis:
+                    logger.info(
+                        "Performing runtime analysis on onnx-optimized graph..."
+                    )
+                    _, _ = PASSES["runtime_analysis"](
+                        runtime_meta["onnx_path"], pass_args=pass_config
+                    )
+
+                # Peform runtime analysis on quantized forms if appropriate
+                quantized_graph_analysis = pass_config.get(
+                    "quantized_graph_analysis", True
+                )
+                if quantized_graph_analysis:
+                    try:
+                        quant_types = pass_config["default"]["config"]["quantize_types"]
+                    except KeyError:
+                        quant_types = []
+                    for quant_type in quant_types:
+                        match quant_type:
+                            case "static":
+                                logger.info(
+                                    "Performing runtime analysis on static quantized graph..."
+                                )
+                                _, _ = PASSES["runtime_analysis"](
+                                    runtime_meta["onnx_static_quantized_path"],
+                                    pass_args=pass_config,
+                                )
+                            case "dynamic":
+                                logger.info(
+                                    "Performing runtime analysis on dynamic quantized graph..."
+                                )
+                                _, _ = PASSES["runtime_analysis"](
+                                    runtime_meta["onnx_dynamic_quantized_path"],
+                                    pass_args=pass_config,
+                                )
+                            case "auto":
+                                logger.info(
+                                    "Performing runtime analysis on auto mixed precision quantized graph..."
+                                )
+                                _, _ = PASSES["runtime_analysis"](
+                                    runtime_meta["onnx_auto_mixed_precision_path"],
+                                    pass_args=pass_config,
+                                )
+
             case "quantize":
                 pass_save_dir = save_dir / "quantize"
                 graph, _ = metadata_value_type_cast_transform_pass(

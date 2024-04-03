@@ -148,6 +148,8 @@ CLI_DEFAULTS = {
     "max_steps": -1,
     "accumulate_grad_batches": 1,
     "log_every_n_steps": 50,
+    "t_max": 20,
+    "eta_min": 1e-6,
     # Runtime environment options
     "num_workers": os.cpu_count(),
     "num_devices": 1,
@@ -285,6 +287,11 @@ class ChopCLI:
             "log_every_n_steps": self.args.log_every_n_steps,
         }
 
+        scheduler_args = {
+            "t_max": self.args.t_max,
+            "eta_min": self.args.eta_min,
+        }
+
         if self.args.to_debug:
             # we give a very short number of batches for both train and val
             plt_trainer_args["limit_train_batches"] = 5
@@ -306,6 +313,7 @@ class ChopCLI:
             "optimizer": self.args.training_optimizer,
             "learning_rate": self.args.learning_rate,
             "weight_decay": self.args.weight_decay,
+            "scheduler_args": scheduler_args,
             "plt_trainer_args": plt_trainer_args,
             "auto_requeue": self.args.is_to_auto_requeue,
             "save_path": os.path.join(self.output_dir_sw, "training_ckpts"),

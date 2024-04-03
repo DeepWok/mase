@@ -15,6 +15,7 @@ from .graph.analysis import (
     verify_common_metadata_analysis_pass,
     run_cosim_analysis_pass,
     get_synthesis_results,
+    runtime_analysis_pass,
 )
 from .graph.transforms import (
     prune_transform_pass,
@@ -29,6 +30,9 @@ from .graph.transforms import (
     emit_bram_transform_pass,
     emit_internal_rtl_transform_pass,
     emit_cocotb_transform_pass,
+    tensorrt_calibrate_transform_pass,
+    tensorrt_fine_tune_transform_pass,
+    tensorrt_fake_quantize_transform_pass,
 )
 from .module.analysis import calculate_avg_bits_module_analysis_pass
 from .module.transforms import quantize_module_transform_pass
