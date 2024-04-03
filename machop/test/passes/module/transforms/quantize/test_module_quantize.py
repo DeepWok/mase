@@ -1,5 +1,9 @@
 #!/usr/bin/env python3
 # This example converts a simple MLP model to Verilog
+
+# this is for hardware, we skip this
+
+"""
 import logging
 import os
 import sys
@@ -19,9 +23,6 @@ from chop.passes.module.transforms import quantize_module_transform_pass
 #   Model specifications
 # --------------------------------------------------
 class MLP(torch.nn.Module):
-    """
-    Toy quantized FC model for digit recognition on MNIST
-    """
 
     def __init__(self) -> None:
         super().__init__()
@@ -73,3 +74,5 @@ def test_quantize():
         },
     }
     quantize_module_transform_pass(mlp, pass_args)
+
+"""
