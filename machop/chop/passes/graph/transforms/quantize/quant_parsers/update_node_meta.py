@@ -61,6 +61,11 @@ MASE_OP_TO_INPUT_ENTRIES_AND_ARGS = {
     "mul": (("data_in", "data_in"), ("data_in_0", "data_in_1")),
     "linear": (("data_in", "weight", "bias"), ("data_in_0", "weight", "bias")),
     "relu": (("data_in",), ("data_in_0",)),
+    "selu": (("data_in",), ("data_in_0",)),
+    "tanh": (("data_in",), ("data_in_0",)),
+    "gelu": (("data_in",), ("data_in_0",)),
+    "softsign": (("data_in",), ("data_in_0",)),
+    "softplus": (("data_in",), ("data_in_0",)),
     "sub": (("data_in", "data_in"), ("data_in_0", "data_in_1")),
 }
 
@@ -86,6 +91,11 @@ MASE_OP_TO_OUTPUT_ENTRIES = {
     "mul": (("data_out",), ("data_out_0",)),
     "linear": (("data_out",), ("data_out_0",)),
     "relu": (("data_out",), ("data_out_0",)),
+    "selu": (("data_out",), ("data_out_0",)),
+    "tanh": (("data_out",), ("data_out_0",)),
+    "gelu": (("data_out",), ("data_out_0",)),
+    "softsign": (("data_out",), ("data_out_0",)),
+    "softplus": (("data_out",), ("data_out_0",)),
     "sub": (("data_out",), ("data_out_0",)),
 }
 
