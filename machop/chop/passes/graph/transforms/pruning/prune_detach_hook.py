@@ -6,17 +6,25 @@ def prune_graph_iterator(graph, config: dict):
     for node in graph.fx_graph.nodes:
         # pruning only deals with modules at the moment
         if node.op == "call_module":
-            name = node.target
-            # remove weights
-            if hasattr(graph.modules[node.target], "weigh"):
-                torch.nn.utils.parametrize.remove_parametrizations(
-                    graph.modules[name], "weight"
-                )
+            module = graph.modules[node.target]
+            if (
+                isinstance(module, torch.nn.Conv2d)
+                or isinstance(module, torch.nn.Conv1d)
+                or isinstance(module, torch.nn.Linear)
+            ):
+                name = node.target
+                # remove weights
+                if hasattr(graph.modules[node.target], "weight"):
+                    torch.nn.utils.parametrize.remove_parametrizations(
+                        graph.modules[name], "weight"
+                    )
 
-            if hasattr(graph.modules[node.target], "_forward_hooks"):
-                for k, hook in graph.modules[node.target]._forward_pre_hooks.items():
-                    if "sparsify_input" in hook.__name__:
-                        del graph.modules[node.target]._forward_pre_hooks[k]
+                if hasattr(graph.modules[node.target], "_forward_hooks"):
+                    for k, hook in graph.modules[
+                        node.target
+                    ]._forward_pre_hooks.items():
+                        if "sparsify_input" in hook.__name__:
+                            del graph.modules[node.target]._forward_pre_hooks[k]
 
     return graph
 
@@ -40,17 +48,16 @@ def hook_inspector(m):
 
 def prune_detach_hook_transform_pass(graph, pass_args: dict = {}):
     """
-    Apply pruning transformation to the given graph.
-    This is achieved by adding a register_parametrization hook to weights
-    and a register_pre_forward hook to activations
+    Remove pruning hooks from a graph. This is done by removing parametrizations and
+    deleting the forward hooks from the graph.
 
-    :param graph: The input graph to be pruned.
+    :param graph: The input pruned graph.
     :type graph: MaseGraph
 
     :param pass_args: Optional arguments for the pruning transformation.
     :type pass_args: dict
 
-    :return: The pruned graph and an empty dictionary.
+    :return: The de-pruned graph and an empty dictionary.
     :rtype: tuple
     """
     info = hook_inspector(graph.modules)
