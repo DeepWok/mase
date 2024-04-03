@@ -1,2 +1,3 @@
 from .graph import GraphSearchSpaceMixedPrecisionPTQ
+from .rl import RLSearchSpaceMixedPrecisionPTQ
 from .manual_hf_module import ManualHFModuleSearchSpaceMixedPrecisionPTQ
