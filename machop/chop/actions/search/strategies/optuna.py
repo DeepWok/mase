@@ -10,6 +10,8 @@ from .base import SearchStrategyBase
 
 from chop.passes.module.analysis import calculate_avg_bits_module_analysis_pass
 
+from sklearn.linear_model import LinearRegression
+
 logger = logging.getLogger(__name__)
 
 
@@ -40,6 +42,12 @@ class SearchStrategyOptuna(SearchStrategyBase):
             ]
         else:
             self.direction = self.config["setup"]["direction"]
+
+        ### whether it is zero cost search
+        self.zero_cost_mode = "zero_cost" in self.config["sw_runner"].keys()
+        if self.zero_cost_mode:
+            ### dict for saving the proxy number and the true metric
+            self.zero_cost_and_true_metric = {}
 
     def sampler_map(self, name):
         match name.lower():
@@ -90,7 +98,35 @@ class SearchStrategyOptuna(SearchStrategyBase):
             sampled_config = search_space.flattened_indexes_to_config(sampled_indexes)
 
         is_eval_mode = self.config.get("eval_mode", True)
-        model = search_space.rebuild_model(sampled_config, is_eval_mode)
+
+        """
+        group 2: zero cost
+
+        In this section, we've added functionality to handle the zero cost mode. 
+
+        - First, we check if the zero cost mode is enabled.
+        - If it is, we rebuild the model with the sampled configuration and evaluation mode, and store the data returned by the rebuild_model function.
+        - We then create a new entry in the zero_cost_and_true_metric dictionary with the true metric data and an empty dictionary for the zero cost proxy.
+        - If the zero cost mode is not enabled, we simply rebuild the model without storing the data.
+        - We then compute the software and hardware metrics, and combine them into a single dictionary.
+        - We scale the metrics according to the scale factors defined in the configuration.
+        - If the zero cost mode is enabled, we store the scaled metrics in the zero_cost_proxy dictionary.
+        - We then set several user attributes for the trial, including the software metrics, hardware metrics, scaled metrics, sampled configuration, and nasbench data metrics.
+        - We log the scaled metrics using the visualizer.
+        - Finally, we return the scaled metrics. If the sum_scaled_metrics flag is enabled, we return the sum of the scaled metrics; otherwise, we return the list of scaled metrics.
+        """
+        #########################################################################
+        if self.zero_cost_mode:
+            model, data = search_space.rebuild_model(sampled_config, is_eval_mode)
+            length = len(self.zero_cost_and_true_metric)
+            self.zero_cost_and_true_metric[length] = {
+                "true_metric": data,
+                "zero_cost_proxy": {},
+            }
+        else:
+            model = search_space.rebuild_model(sampled_config, is_eval_mode)
+            data = None
+        ##########################################################################
 
         software_metrics = self.compute_software_metrics(
             model, sampled_config, is_eval_mode
@@ -105,10 +141,17 @@ class SearchStrategyOptuna(SearchStrategyBase):
                 self.config["metrics"][metric_name]["scale"] * metrics[metric_name]
             )
 
+        if self.zero_cost_mode:
+            self.zero_cost_and_true_metric[length]["zero_cost_proxy"] = scaled_metrics
+
         trial.set_user_attr("software_metrics", software_metrics)
         trial.set_user_attr("hardware_metrics", hardware_metrics)
         trial.set_user_attr("scaled_metrics", scaled_metrics)
         trial.set_user_attr("sampled_config", sampled_config)
+
+        ### add use attribute for zero cost
+        if self.zero_cost_mode:
+            trial.set_user_attr("nasbench_data_metrics", data)
 
         self.visualizer.log_metrics(metrics=scaled_metrics, step=trial.number)
 
@@ -152,7 +195,89 @@ class SearchStrategyOptuna(SearchStrategyBase):
         self._save_search_dataframe(study, search_space, self.save_dir / "log.json")
         self._save_best(study, self.save_dir / "best.json")
 
+        ### if zero cost NAS, save the best ensemble
+        if self.zero_cost_mode:
+            self.zero_cost_weight()
+
+            ### generate dataframe containing weights ensemble
+            self.save_zc_proxy_ensemble(self.save_dir / "zc_ensemble.json")
+            self.save_zc_proxy_with_predictive(
+                self.save_dir / "zc_with_predictive_and_true.json"
+            )
+
         return study
+
+    def zero_cost_weight(self):
+        # Group 2: Zero cost
+        # This function calculates the weight for the zero cost mode.
+        # It checks if the zero cost mode is enabled and then fits a linear regression model to the zero cost proxy and the true accuracy.
+        # If the zero cost mode is not enabled, it raises a ValueError.
+
+        if self.zero_cost_mode:
+            self.zc_proxy = pd.DataFrame()
+            self.zc_true_accuracy = []
+            for key, value in self.zero_cost_and_true_metric.items():
+                self.zc_proxy = pd.concat(
+                    [self.zc_proxy, pd.DataFrame(value["zero_cost_proxy"], index=[0])],
+                    ignore_index=True,
+                )
+                self.zc_true_accuracy.append(value["true_metric"]["test-accuracy"])
+
+            # get rid of hardware metrics
+            available_zc_metrics = [
+                "fisher",
+                "grad_norm",
+                "grasp",
+                "l2_norm",
+                "plain",
+                "snip",
+                "synflow",
+                "naswot",
+                "naswot_relu",
+                "tenas",
+                "zico",
+            ]
+            zc_cols = self.zc_proxy.columns[
+                self.zc_proxy.columns.isin(available_zc_metrics)
+            ]
+            self.zc_proxy = self.zc_proxy[zc_cols]
+
+            ### fit linear regression models
+            ## standardize
+            for _ in self.zc_proxy.columns:
+                if self.zc_proxy[_].mean().sum() != 0:
+                    self.zc_proxy[_] = (
+                        self.zc_proxy[_] - self.zc_proxy[_].mean()
+                    ) / self.zc_proxy[_].std()
+                else:
+                    self.zc_proxy[_] = self.zc_proxy[_] - self.zc_proxy[_].mean()
+
+            self.zc_weight_model = LinearRegression(fit_intercept=True)
+            self.zc_weight_model.fit(self.zc_proxy, self.zc_true_accuracy)
+        else:
+            raise ValueError(
+                "zero_cost_mode is Fasle, do not fit the zero_cost_weight evaluation."
+            )
+
+    def save_zc_proxy_ensemble(self, save_path):
+        df = pd.DataFrame(columns=["intercept"] + list(self.zc_proxy.columns))
+
+        df.loc["weights", "intercept"] = self.zc_weight_model.intercept_
+        df.loc["weights", self.zc_proxy.columns] = self.zc_weight_model.coef_
+
+        df.to_json(save_path, orient="index", indent=4)
+
+        return df
+
+    def save_zc_proxy_with_predictive(self, save_path):
+        df = self.zc_proxy.copy()
+
+        df["Predicted_Accuracy"] = self.zc_weight_model.predict(self.zc_proxy)
+        df["True_Accuracy"] = self.zc_true_accuracy
+
+        df.to_json(save_path, orient="index", indent=4)
+
+        return df
 
     @staticmethod
     def _save_search_dataframe(study: optuna.study.Study, search_space, save_path):
