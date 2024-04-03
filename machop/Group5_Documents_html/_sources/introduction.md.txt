@@ -1,9 +1,13 @@
-# Group5 README
+  <h1 align="center">Lab 1 for Advanced Deep Learning Systems (ADLS)</h1>
 
-Team Member:
+  <p align="center">
+    ELEC70109/EE9-AML3-10/EE9-AO25
+    <br />
+  Written by Xinyi Sun (Xs1423) and Konstantinos Rotas (Kr915)
+  </p>
 
-- Xinyi Sun(xs1423@ic.ac.uk)
-- Konstantinos Rotas(kr915@ic.ac.uk)
+
+
 
 # General introduction
 
@@ -36,17 +40,3 @@ This step serializes the TensorRT engine and stores this representation within t
 
 **Run TensorRT Pass:**
 Initiating with the MASE graph as input, this function deserializes the stored engine string and sets the necessary data buffers for intermediate data storage during inference. The engine then executes model predictions using a test dataset, to record accuracy and latency metrics.
-
-## RUN FILES
-
-- terminal path: ..\mase\machop
-- Files for testing functions:
-  - ..\mase\machop\Test_bynames.py (VGG)
-  - ..\mase\machop\Test_byTypes.py (VGG)
-  - ..\mase\machop\Test_JSC_ByType (JSC)
-
-## Documents
-
-**Related Path: mase\machop\Group5_Documents_html**
-
-In order to pass the pull request, some of the associated JAVA generated files and related programs have been removed, but the HTML files themselves can still be read normally.
