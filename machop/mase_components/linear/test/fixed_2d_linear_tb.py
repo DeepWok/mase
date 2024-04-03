@@ -15,7 +15,7 @@ from einops import rearrange
 import torch
 from mase_cocotb.z_qlayers import quantize_to_int as q2i
 from chop.models.manual.quant_utils import get_quantized_cls
-from chop.passes.transforms.quantize.quantizers.integer import _integer_quantize
+from chop.passes.graph.transforms.quantize.quantizers.integer import _integer_quantize
 
 debug = True
 

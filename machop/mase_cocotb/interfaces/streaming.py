@@ -9,6 +9,8 @@ from cocotb.triggers import *
 from mase_cocotb.driver import Driver
 from mase_cocotb.monitor import Monitor
 
+import torch
+
 
 class StreamDriver(Driver):
     def __init__(self, clk, data, valid, ready) -> None:
@@ -59,7 +61,67 @@ class StreamMonitor(Monitor):
         elif type(self.data.value) == BinaryValue:
             return int(self.data.value)
 
+    def postprocess_tensor(self, tensor, config):
+        tensor = [item * (1.0 / 2.0) ** config["frac_width"] for item in tensor]
+        return tensor
+
     def _check(self, got, exp):
         if self.check:
+            print("_check: ", self.postprocess_tensor(got, {"frac_width": 3}))
             if not np.equal(got, exp).all():
                 raise TestFailure("\nGot \n%s, \nExpected \n%s" % (got, exp))
+
+
+class StreamMonitorRange(Monitor):
+    def __init__(
+        self, clk, data, valid, ready, out_width=8, out_frac_width=3, check=True
+    ):
+        super().__init__(clk)
+        self.clk = clk
+        self.data = data
+        self.valid = valid
+        self.ready = ready
+        self.check = check
+        self.out_width = out_width
+        self.out_frac_width = out_frac_width
+
+    def _trigger(self):
+        return self.valid.value == 1 and self.ready.value == 1
+
+    def _recv(self):
+        if type(self.data.value) == list:
+            return [int(x) for x in self.data.value]
+        elif type(self.data.value) == BinaryValue:
+            return int(self.data.value)
+
+    def postprocess_tensor(self, tensor):
+        tensor = torch.tensor(
+            [item * (1.0 / 2.0) ** self.out_frac_width for item in tensor]
+        )
+
+        def convert(x):
+            if x < (2 ** (self.out_frac_width - 1)):
+                return x
+            else:
+                new_x = x - (2 ** (self.out_width - self.out_frac_width))
+                return new_x
+
+        tensor.detach().apply_(convert)
+        return tensor
+
+    def _check(self, got, exp):
+        if self.check:
+            if len(got) != len(exp):
+                raise TestFailure(
+                    "\nGot \n%s, does not match dimension of \nExpected \n%s"
+                    % (got, exp)
+                )
+            exp = self.postprocess_tensor(exp)
+            got = self.postprocess_tensor(got)
+
+            for exp_val, got_val in zip(exp, got):
+
+                error = abs(exp_val - got_val)
+                print(f"{got_val},{exp_val},{error}")
+                if error > 1.0:
+                    raise TestFailure("\nGot \n%s, \nExpected \n%s" % (got, exp))

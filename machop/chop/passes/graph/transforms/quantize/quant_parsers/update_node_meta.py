@@ -62,6 +62,11 @@ MASE_OP_TO_INPUT_ENTRIES_AND_ARGS = {
     "linear": (("data_in", "weight", "bias"), ("data_in_0", "weight", "bias")),
     "relu": (("data_in",), ("data_in_0",)),
     "sub": (("data_in", "data_in"), ("data_in_0", "data_in_1")),
+    "batch_norm1d": (
+        ("data_in", "weight", "bias", "mean"),
+        ("data_in_0", "weight", "bias", "mean"),
+    ),
+    "layer_norm": (("data_in", "weight", "bias"), ("data_in_0", "weight", "bias")),
 }
 
 
@@ -87,6 +92,8 @@ MASE_OP_TO_OUTPUT_ENTRIES = {
     "linear": (("data_out",), ("data_out_0",)),
     "relu": (("data_out",), ("data_out_0",)),
     "sub": (("data_out",), ("data_out_0",)),
+    "batch_norm1d": (("data_out",), ("data_out_0",)),
+    "layer_norm": (("data_out",), ("data_out_0",)),
 }
 
 

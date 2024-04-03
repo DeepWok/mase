@@ -3,6 +3,13 @@
 # This script tests the fixed point linear
 import os, logging
 
+
+import sys
+
+# TODO: Remove these.
+sys.path.insert(0, "/home/sv720/mase_fork/mase_group7/machop")
+sys.path.insert(0, "/home/jlsand/mase_group7/machop")
+
 import cocotb
 from cocotb.log import SimLog
 from cocotb.triggers import *
@@ -66,6 +73,7 @@ class LinearTB(Testbench):
         return torch.randn((1, self.model.in_features))
 
     def preprocess_tensor(self, tensor, quantizer, config, parallelism):
+        print("BEFORE: ", tensor, "\n")
         tensor = quantizer(tensor)
         tensor = (tensor * 2 ** config["frac_width"]).int()
         logger.info(f"Tensor in int format: {tensor}")

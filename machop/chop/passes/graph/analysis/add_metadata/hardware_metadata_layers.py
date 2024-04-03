@@ -27,4 +27,16 @@ INTERNAL_COMP = {
             ],
         },
     ],
+    "batch_norm1d": [
+        {
+            "name": "fixed_batch_norm1d",
+            "dependence_files": ["normalisation/rtl/fixed_batch_norm1d.sv"],
+        },
+    ],
+    "layer_norm": [
+        {
+            "name": "fixed_layer_norm",
+            "dependence_files": ["normalisation/rtl/fixed_layer_norm.sv"],
+        },
+    ],
 }
