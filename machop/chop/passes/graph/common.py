@@ -74,6 +74,13 @@ MASE_MODULE_RELATED_FUNCS = [
     "max_pool1d",
     "max_pool2d",
     "relu",
+    "hardshrink",
+    "silu",
+    "elu",
+    "sigmoid",
+    "softshrink",
+    "logsigmoid",
+    "softmax",
 ]
 
 MASE_MODULES = [
@@ -106,6 +113,13 @@ MASE_TYPE_MAP = {
     "max_pool1d": {"type": "module_related_func"},
     "max_pool2d": {"type": "module_related_func"},
     "relu": {"type": "module_related_func"},
+    "hardshrink": {"type": "module_related_func"},
+    "silu": {"type": "module_related_func"},
+    "elu": {"type": "module_related_func"},
+    "sigmoid": {"type": "module_related_func"},
+    "softshrink": {"type": "module_related_func"},
+    "logsigmoid": {"type": "module_related_func"},
+    "softmax": {"type": "module_related_func"},
     "sub": {"type": "builtin_func"},
     "add": {"type": "builtin_func"},
     "size": {"type": "implicit_func"},

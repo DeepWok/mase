@@ -98,4 +98,17 @@ MASE_HW_DEPS = {
     #     "common",
     # ],
     # 'activations/int_relu6': ['common'],
+    "activations/fixed_hardshrink": ["common", "cast"],
+    "activations/fixed_silu": ["common", "cast", "activations"],
+    "activations/fixed_elu": ["common", "cast", "activations"],
+    "activations/fixed_sigmoid": ["common", "cast", "activations"],
+    "activations/fixed_softshrink": ["common", "cast"],
+    "activations/fixed_logsigmoid": ["common", "cast", "activations"],
+    "activations/fixed_softmax": [
+        "common",
+        "cast",
+        "fixed_arithmetic",
+        "conv",
+        "activations",
+    ],
 }
