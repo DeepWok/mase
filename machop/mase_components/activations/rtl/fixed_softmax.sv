@@ -63,7 +63,7 @@ module fixed_softmax #(
   localparam SUM_WIDTH = $clog2(DATA_OUT_0_PARALLELISM_DIM_0) + DATA_INTERMEDIATE_0_PRECISION_0;
   localparam ACC_WIDTH = $clog2(OUT_0_DEPTH) + SUM_WIDTH;
 
-  logic [SUM_WIDTH-1:0] summed_exp_data [DATA_OUT_0_PARALLELISM_DIM_1-1:0]; // sum of current block
+  logic [SUM_WIDTH-1:0] summed_exp_data[DATA_OUT_0_PARALLELISM_DIM_1-1:0];  // sum of current block
   logic summed_out_valid[DATA_OUT_0_PARALLELISM_DIM_1-1:0];
   logic summed_out_ready[DATA_OUT_0_PARALLELISM_DIM_1-1:0];
   logic summed_in_ready[DATA_OUT_0_PARALLELISM_DIM_1-1:0];
