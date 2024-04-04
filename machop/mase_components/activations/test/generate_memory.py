@@ -7,6 +7,8 @@ from chop.passes.graph.transforms.quantize.quantizers.integer import *
 import pdb
 from bitstring import BitArray
 from functools import partial
+import mase_components
+from pathlib import Path
 
 
 def make_quantizer(data_width: int, f_width: int):
@@ -301,13 +303,16 @@ def generate_sv_lut(
     else:
         end = ""
     if dir is None:
+        mase_components_path = mase_components.__file__
+        p = Path(mase_components_path).parents[0] / "activations" / "rtl"
+
         lookup_to_sv_file(
             in_data_width,
             in_f_width,
             data_width,
             f_width,
             function_name,
-            f"/workspace/machop/mase_components/activations/rtl/{function_name}_lut{end}.sv",
+            str(p / f"{function_name}_lut{end}.sv"),
             path_with_dtype=path_with_dtype,
         )
     else:
@@ -325,9 +330,7 @@ def generate_sv_lut(
 if __name__ == "__main__":
     dwidths = [12]
     for func, _ in FUNCTION_TABLE.items():
-        generate_sv_lut(
-            func, 8, 4, data_width=8, f_width=4, path_with_dtype=False
-        )
+        generate_sv_lut(func, 8, 4, data_width=8, f_width=4, path_with_dtype=False)
 
     # for k, v in FUNCTION_TABLE.items():
     # generate_sv_lut(k, 16, 8, 16, 8, dir="/home/bardia/code/adls/project/report_test", path_with_dtype=True)
