@@ -1,4 +1,4 @@
-#! /usr/bin/env python3
+#! /usr/bin/env python
 # ---------------------------------------
 # This script runs the hardware regression test
 # ---------------------------------------
@@ -120,7 +120,7 @@ class TestHardware:
     def single_test(self, group, module, queue):
         self.logger.info(f"Running unit test for {group}/{module}...")
         cwd = os.path.join(self.root, "machop/mase_components", group, "test")
-        cmd = ["python3", "{}_tb.py".format(module)]
+        cmd = ["python", "{}_tb.py".format(module)]
 
         result, buff = self.execute(cmd, log_output=self.isdebug, cwd=cwd)
         # Cocotb returns 0 even when the result is wrong. Here check log file as well

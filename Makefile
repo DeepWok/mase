@@ -41,7 +41,7 @@ test-hw:
 	mkdir -p ./tmp
 	pip install .
 	cd tmp
-	python 3../scripts/generate-lut.py
+	python3 ../scripts/build-components.py
 	python3 ../scripts/test-hardware.py -a
 	exit 1
 
