@@ -42,17 +42,10 @@ def emit_parameters_in_mem_internal(node, param_name, file_name, data_name):
         out_depth = 1
     else:
         out_depth = 1
-
-    # out_depth = node.meta["mase"].parameters["hardware"]["verilog_param"][
-    #     "DATA_IN_0_DEPTH"
-    # ]
-
+    addr_width = clog2(out_depth) + 1
     total_size = math.prod(
         node.meta["mase"].parameters["common"]["args"][param_name]["shape"]
     )
-    out_depth = total_size
-
-    addr_width = clog2(out_depth) + 1
     # The depth of parameters must match with the input depth
     assert (
         total_size % out_depth == 0
@@ -90,9 +83,9 @@ module {node_param_name}_rom #(
   logic [DWIDTH-1:0] q0_t0;
   logic [DWIDTH-1:0] q0_t1;
 
-  initial begin
-    $readmemh("{data_name}", ram);
-  end
+  // initial begin
+  //   $readmemh("{data_name}", ram);
+  // end
 
   assign q0 = q0_t1;
 
