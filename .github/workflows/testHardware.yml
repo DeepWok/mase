@@ -106,7 +106,7 @@ jobs:
         run: |
             pip3 --version 
             python3 --version
-            pip3 install .
+            pip3 install -e . -vvv
             python3 scripts/build-components.py
             python3 scripts/test-hardware.py -a
 
