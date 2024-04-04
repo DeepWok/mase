@@ -40,7 +40,10 @@ shell: build-docker
 test-hw:
 	mkdir -p ./tmp
 	pip install .
-	(cd tmp; python3 ../scripts/test-hardware.py -a || exit 1)
+	cd tmp
+	python 3../scripts/generate-lut.py
+	python3 ../scripts/test-hardware.py -a
+	exit 1
 
 test-sw:
 	bash scripts/test-machop.sh
