@@ -303,9 +303,7 @@ def generate_sv_lut(
     else:
         end = ""
     if dir is None:
-        mase_components_path = mase_components.__file__
-        p = Path(mase_components_path).parents[0] / "activations" / "rtl"
-
+        p = Path(__file__).parents[1] / "rtl"
         lookup_to_sv_file(
             in_data_width,
             in_f_width,
