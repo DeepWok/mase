@@ -38,7 +38,14 @@ def launch_build(group, module):
         # rm -rf vivado*
     """
     try:
-        subprocess.run(cmd, shell=True, capture_output=False, text=True, check=True)
+        subprocess.run(
+            cmd,
+            shell=True,
+            capture_output=False,
+            text=True,
+            check=True,
+            executable="/bin/bash",
+        )
         return f"{group}/{module}", None  # Success
     except subprocess.CalledProcessError as e:
         logger.error(f"Error while building {group}/{module}: {e}")
