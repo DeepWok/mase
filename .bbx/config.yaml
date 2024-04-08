@@ -49,7 +49,7 @@ jobs:
         path: /home/pg519/shared/board-files
     node_selector:
       kubernetes.io/hostname: ee-kraken
-    resource_spec: large
+    resource_spec: 2xlarge
     steps:
       - run:
           name: Run hardware regression
