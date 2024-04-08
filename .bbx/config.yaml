@@ -55,7 +55,7 @@ jobs:
             echo PYTHONPATH
             echo $PYTHONPATH
             pip3 install emoji # temporary: add to docker
-            python3 scripts/build-mase-components.py --max-threads 4
+            python3 scripts/build-mase-components.py --max-workers 4
 
 
 # Define a workflow to orchestrate a job
