@@ -1,7 +1,7 @@
 # Define a runner that will be used to run a job
 runners:
   ubuntu-runner:
-    image: ee-kraken:5000/ubuntu-mase-pipeline
+    image: deepwok/mase-docker:latest
 
 # Define a job to be performed during a workflow
 jobs:
@@ -16,6 +16,8 @@ jobs:
   chop-regression:
     runner: ubuntu-runner
     resource_spec: large
+    node_selector:
+      kubernetes.io/hostname: ee-kraken
     steps:
       - run:
           name: Run software regression
@@ -24,6 +26,8 @@ jobs:
 
   hw-regression:
     runner: ubuntu-runner
+    node_selector:
+      kubernetes.io/hostname: ee-kraken
     steps:
       - run:
           name: Run hardware regression
@@ -35,16 +39,12 @@ jobs:
 workflows:
   mase-chop-regression:
     triggers:
-      - push
-      - schedule:
-          cron: "0 2 * * *"
+      - pull_request
     jobs:
       - chop-regression
 
   mase-hw-regression:
     triggers:
-      - push
-      - schedule:
-          cron: "0 2 * * *"
+      - pull_request
     jobs:
       - hw-regression
