@@ -58,6 +58,13 @@ def log_dir(build):
 
 
 def pretty_summary(results):
+    success_cnt = len(results["success"])
+    failure_cnt = len(results["failure"])
+    total_cnt = len(results["success"]) + len(results["failure"])
+    logger.info(
+        f"Build job finished. Success: {success_cnt}/{total_cnt}, Failure: {failure_cnt}/{total_cnt}"
+    )
+
     # Inside the main function, where the build summary is generated
     table_headers = ["Status", "Build", "Log"]
     table_data = []

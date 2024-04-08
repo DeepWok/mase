@@ -13,7 +13,7 @@ jobs:
           command: | 
             DIFF_COMMIT_NAME="HEAD^"
 
-  chop-regression:
+  chop-cpu-regression:
     runner: ubuntu-runner
     resource_spec: large
     node_selector:
@@ -23,6 +23,17 @@ jobs:
           name: Run software regression
           command: |
             bash scripts/test-machop.sh
+  
+  chop-gpu-regression:
+    runner: ubuntu-runner
+    resource_spec: large
+    node_selector:
+      kubernetes.io/hostname: ee-kraken
+    steps:
+      - run:
+          name: Run software regression
+          command: |
+            bash scripts/test-machop-gpu.sh
 
   hw-regression:
     runner: ubuntu-runner
@@ -58,7 +69,7 @@ jobs:
             echo PYTHONPATH
             echo $PYTHONPATH
             pip3 install emoji # temporary: add to docker
-            python3 scripts/build-mase-components.py --max-workers 4
+            python3 scripts/build-mase-components.py --max-workers 1
 
 
 # Define a workflow to orchestrate a job
@@ -67,7 +78,8 @@ workflows:
     triggers:
       - pull_request
     jobs:
-      - chop-regression
+      - chop-cpu-regression
+      - chop-gpu-regression
 
   mase-hardware:
     triggers:
