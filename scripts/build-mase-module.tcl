@@ -1,7 +1,7 @@
 #!/usr/bin/env tclsh
 
 # Set board repository
-set_param board.repoPaths {/home/pg519/shared/board_files}
+set_param board.repoPaths {/home/pg519/shared/board-files}
 
 set group [lindex $argv 0]
 set module [lindex $argv 1]
