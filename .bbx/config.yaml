@@ -45,7 +45,7 @@ jobs:
         name: xilinx
         path: /mnt/applications/Xilinx
      - mount:
-        name: board_files
+        name: board-files
         path: /home/pg519/shared/board-files
     node_selector:
       kubernetes.io/hostname: ee-kraken
