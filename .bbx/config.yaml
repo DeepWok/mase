@@ -28,6 +28,7 @@ jobs:
     runner: ubuntu-runner
     node_selector:
       kubernetes.io/hostname: ee-kraken
+    resource_spec: large
     steps:
       - run:
           name: Run hardware regression
@@ -45,6 +46,7 @@ jobs:
         path: /mnt/applications/Xilinx
     node_selector:
       kubernetes.io/hostname: ee-kraken
+    resource_spec: large
     steps:
       - run:
           name: Run hardware regression
@@ -52,6 +54,7 @@ jobs:
             export PYTHONPATH="$PATH:$(pwd):$(pwd)/machop"
             echo PYTHONPATH
             echo $PYTHONPATH
+            pip3 install emoji # temporary: add to docker
             python3 scripts/build-mase-components.py
 
 
