@@ -32,18 +32,26 @@ jobs:
       - run:
           name: Run hardware regression
           command: |
-            pip3 install -e . -vvv
+            export PYTHONPATH="$PATH:$(pwd):$(pwd)/machop"
+            echo PYTHONPATH
+            echo $PYTHONPATH
             python3 scripts/test-hardware.py -a
 
   hw-build:
     runner: ubuntu-runner
+    volumes:
+      - mount:
+        name: vivado
+        path: /mnt/applications/Xilinx/
     node_selector:
       kubernetes.io/hostname: ee-kraken
     steps:
       - run:
           name: Run hardware regression
           command: |
-            pip3 install -e . -vvv
+            export PYTHONPATH="$PATH:$(pwd):$(pwd)/machop"
+            echo PYTHONPATH
+            echo $PYTHONPATH
             python3 scripts/build-mase-components.py
 
 
