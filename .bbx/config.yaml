@@ -40,9 +40,9 @@ jobs:
   hw-build:
     runner: ubuntu-runner
     volumes:
-      - mount:
-        name: vivado
-        path: /mnt/applications/Xilinx/
+     - mount:
+        name: xilinx
+        path: /mnt/applications/Xilinx
     node_selector:
       kubernetes.io/hostname: ee-kraken
     steps:
