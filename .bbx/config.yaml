@@ -26,6 +26,7 @@ jobs:
   
   chop-gpu-regression:
     runner: ubuntu-runner
+    privileged: True
     resource_spec: large
     node_selector:
       kubernetes.io/hostname: ee-kraken
