@@ -108,6 +108,9 @@ def main():
 
     pretty_summary(results)
 
+    if len(results["failure"]) > 0:
+        raise RuntimeError
+
 
 if __name__ == "__main__":
     main()

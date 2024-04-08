@@ -55,6 +55,8 @@ jobs:
             echo PYTHONPATH
             echo $PYTHONPATH
             pip3 install emoji # temporary: add to docker
+            cd /mnt/applications/Xilinx
+            ls
             python3 scripts/build-mase-components.py
 
 
