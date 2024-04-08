@@ -43,3 +43,6 @@ set_property top $module [current_fileset]
 
 launch_runs synth_1 -jobs 32
 wait_on_runs -timeout 60 synth_1
+
+launch_runs impl_1 -jobs 32
+wait_on_runs -timeout 60 impl_1

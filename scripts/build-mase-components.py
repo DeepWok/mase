@@ -1,4 +1,3 @@
-
 import mase_components
 from mase_components.deps import MASE_HW_DEPS
 
@@ -14,8 +13,7 @@ import emoji
 import argparse
 
 logging.basicConfig(
-    level=logging.DEBUG,
-    format='%(asctime)s : %(levelname)s : %(message)s'
+    level=logging.DEBUG, format="%(asctime)s : %(levelname)s : %(message)s"
 )
 
 logger = logging.getLogger()
@@ -30,12 +28,13 @@ SOURCE_VIVADO = """
 
 MAX_THREADS = 16
 
+
 def launch_build(group, module):
     logging.info(f"Creating build for {group}/{module}")
     cmd = f"""
         {SOURCE_VIVADO}
         cd {MASE_COMPONENTS_PATH}/{group};
-        vivado -mode batch -source {MASE_PATH}/scripts/build-mase-module-project.tcl -log vivado-{group}-{module}.log -tclargs {group} {module}
+        vivado -mode batch -source {MASE_PATH}/scripts/build-mase-module.tcl -log vivado-{group}-{module}.log -tclargs {group} {module}
         # rm -rf vivado*
     """
     try:
@@ -45,9 +44,11 @@ def launch_build(group, module):
         logger.error(f"Error while building {group}/{module}: {e}")
         return None, f"{group}/{module}"  # Failure
 
+
 def log_dir(build):
     group, module = build.split("/")
     return f"{MASE_COMPONENTS_PATH}/{group}/vivado-{group}-{module}.log"
+
 
 def pretty_summary(results):
     # Inside the main function, where the build summary is generated
@@ -56,39 +57,57 @@ def pretty_summary(results):
 
     # Successful builds
     success_emoji = emoji.emojize(":check_mark_button:")
-    success_builds = [[success_emoji, build, log_dir(build)] for build in results['success']]
+    success_builds = [
+        [success_emoji, build, log_dir(build)] for build in results["success"]
+    ]
     table_data.extend(success_builds)
 
     # Failed builds
     failure_emoji = emoji.emojize(":cross_mark:")
-    failure_builds = [[failure_emoji, build] for build in results['failure']]
+    failure_builds = [
+        [failure_emoji, build, log_dir(build)] for build in results["failure"]
+    ]
     table_data.extend(failure_builds)
 
     # Logging the build summary in a formatted table
-    logger.info(f"Build summary:\n{tabulate(table_data, headers=table_headers, tablefmt='fancy_grid')}")
+    logger.info(
+        f"Build summary:\n{tabulate(table_data, headers=table_headers, tablefmt='fancy_grid')}"
+    )
+
 
 def main():
     parser = argparse.ArgumentParser(description="Build MASE hardware components.")
-    parser.add_argument("-t", "--max-workers", type=int, default=16,
-                        help="Maximum number of workers for concurrent builds (default: 16)")
+    parser.add_argument(
+        "-t",
+        "--max-workers",
+        type=int,
+        default=16,
+        help="Maximum number of workers for concurrent builds (default: 16)",
+    )
     args = parser.parse_args()
-    
-    results = {'success': [], 'failure': []}
 
-    with concurrent.futures.ThreadPoolExecutor(max_workers=args.max_workers) as executor:
+    results = {"success": [], "failure": []}
+
+    with concurrent.futures.ThreadPoolExecutor(
+        max_workers=args.max_workers
+    ) as executor:
         # Submit build tasks
-        futures = {executor.submit(launch_build, *key.split('/')): key for key in MASE_HW_DEPS.keys()}
+        futures = {
+            executor.submit(launch_build, *key.split("/")): key
+            for key in MASE_HW_DEPS.keys()
+        }
 
         # Process completed tasks
         for future in concurrent.futures.as_completed(futures):
             key = futures[future]
             success, failure = future.result()
             if success:
-                results['success'].append(success)
+                results["success"].append(success)
             elif failure:
-                results['failure'].append(failure)
+                results["failure"].append(failure)
 
     pretty_summary(results)
+
 
 if __name__ == "__main__":
     main()

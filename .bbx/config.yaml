@@ -32,7 +32,19 @@ jobs:
       - run:
           name: Run hardware regression
           command: |
+            pip3 install -e . -vvv
             python3 scripts/test-hardware.py -a
+
+  hw-build:
+    runner: ubuntu-runner
+    node_selector:
+      kubernetes.io/hostname: ee-kraken
+    steps:
+      - run:
+          name: Run hardware regression
+          command: |
+            pip3 install -e . -vvv
+            python3 scripts/build-mase-components.py
 
 
 # Define a workflow to orchestrate a job
