@@ -57,14 +57,15 @@ jobs:
 
 # Define a workflow to orchestrate a job
 workflows:
-  mase-chop-regression:
+  mase-software:
     triggers:
       - pull_request
     jobs:
       - chop-regression
 
-  mase-hw-regression:
+  mase-hardware:
     triggers:
       - pull_request
     jobs:
       - hw-regression
+      - hw-build
