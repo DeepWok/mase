@@ -78,6 +78,8 @@ class TestHardware:
                 "-Wno-GENUNNAMED",  # Too many existing errors
                 "-Wno-WIDTHEXPAND",
                 "-Wno-WIDTHTRUNC",
+                "-Wno-UNOPTFLAT",
+                "-Wno-PINCONNECTEMPTY",
                 rtl_file,
             ] + include_files
             result, _ = self.execute(cmd, log_output=self.isdebug, cwd=cwd)

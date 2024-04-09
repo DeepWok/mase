@@ -1,129 +1,118 @@
 #!/usr/bin/env python3
 
-# This script tests the fixed point dot product
 import os, logging
+from random import randint
 
-from mase_cocotb.random_test import RandomSource, RandomSink, check_results
 from mase_cocotb.runner import mase_runner
+from mase_cocotb.testbench import Testbench
+from mase_cocotb.utils import bit_driver
+from mase_cocotb.interfaces.streaming import StreamDriver, StreamMonitor
 
 import cocotb
-from cocotb.triggers import Timer
-from cocotb.triggers import FallingEdge
-from cocotb.clock import Clock
-
-debug = True
-
-logger = logging.getLogger("tb_signals")
-if debug:
-    logger.setLevel(logging.DEBUG)
+from cocotb.triggers import *
 
 
-# DUT test specifications
-class VerificationCase:
-    def __init__(self, samples=10):
-        self.data_width = 32
-        self.depth = 8
-        self.data_in = RandomSource(
-            name="data_in",
-            samples=samples,
-            num=1,
-            max_stalls=0,
-            is_data_vector=False,
-            debug=debug,
+class FifoTB(Testbench):
+    def __init__(self, dut) -> None:
+        super().__init__(dut, dut.clk, dut.rst)
+        self.assign_self_params(["DATA_WIDTH", "SIZE", "ADDR_WIDTH"])
+
+        # Driver/Monitor
+        self.in_driver = StreamDriver(dut.clk, dut.in_data, dut.in_valid, dut.in_ready)
+        self.output_monitor = StreamMonitor(
+            dut.clk, dut.out_data, dut.out_valid, dut.out_ready
         )
-        self.outputs = RandomSink(
-            name="output",
-            samples=samples,
-            max_stalls=0,
-            debug=debug,
-        )
-        self.samples = samples
-        self.ref = self.sw_compute()
 
-    def get_dut_parameters(self):
-        return {
-            "DEPTH": self.depth,
-            "DATA_WIDTH": self.data_width,
-        }
-
-    def sw_compute(self):
-        ref = []
-        for i in range(self.samples):
-            ref.append(self.data_in.data[i])
-        ref.reverse()
-        return ref
-
-
-# Check if an is_impossible state is reached
-def debug_state(dut, state):
-    logger.debug(
-        "{} State: (in_ready,in_valid,data_out_ready,data_out_valid) = ({},{},{},{})".format(
-            state,
-            dut.data_in_ready.value,
-            dut.data_in_valid.value,
-            dut.data_out_ready.value,
-            dut.data_out_valid.value,
-        )
-    )
+    def generate_inputs(self, num=20):
+        return [randint(0, (2**self.DATA_WIDTH) - 1) for _ in range(num)]
 
 
 @cocotb.test()
-async def test_fifo(dut):
-    """Test integer based vector mult"""
-    samples = 20
-    test_case = VerificationCase(samples=samples)
+async def test_basic_buffering(dut):
+    tb = FifoTB(dut)
+    await tb.reset()
+    tb.output_monitor.ready.value = 1
 
-    # Reset cycles
-    await Timer(20, units="ns")
-    dut.rst.value = 1
-    await Timer(100, units="ns")
-    dut.rst.value = 0
+    inputs = tb.generate_inputs(num=10)
+    tb.in_driver.load_driver(inputs)
+    tb.output_monitor.load_monitor(inputs)
 
-    # Create a 10ns-period clock on port clk
-    clock = Clock(dut.clk, 10, units="ns")
-    # Start the clock
-    cocotb.start_soon(clock.start())
-    await Timer(500, units="ns")
+    await Timer(2, "us")
+    assert tb.output_monitor.exp_queue.empty()
 
-    # Synchronize with the clock
-    dut.data_in_valid.value = 0
-    dut.data_out_ready.value = 1
 
-    await Timer(1, units="ns")
+@cocotb.test()
+async def test_large_buffering(dut):
+    tb = FifoTB(dut)
+    await tb.reset()
+    tb.output_monitor.ready.value = 1
 
-    await FallingEdge(dut.clk)
+    inputs = tb.generate_inputs(num=1000)
+    tb.in_driver.load_driver(inputs)
+    tb.output_monitor.load_monitor(inputs)
 
-    await FallingEdge(dut.clk)
+    await Timer(40, "us")
+    assert tb.output_monitor.exp_queue.empty()
 
-    done = False
-    # Set a timeout to avoid deadlock
-    for i in range(samples * 20):
-        await FallingEdge(dut.clk)
-        debug_state(dut, "Post-clk")
-        dut.data_in_valid.value = test_case.data_in.pre_compute()
-        await Timer(1, units="ns")
-        dut.data_out_ready.value = test_case.outputs.pre_compute(dut.data_out_valid)
-        await Timer(1, units="ns")
-        dut.data_in_valid.value, dut.data_in.value = test_case.data_in.compute(
-            dut.data_in_ready.value
-        )
-        await Timer(1, units="ns")
-        dut.data_out_ready.value = test_case.outputs.compute(
-            dut.data_out_valid.value, dut.data_out.value
-        )
-        await Timer(1, units="ns")
-        debug_state(dut, "Pre-clk")
-        logger.debug("\n")
-        if test_case.data_in.is_empty() and test_case.outputs.is_full():
-            done = True
-            break
 
-    assert (
-        done
-    ), "Deadlock detected or the simulation reaches the maximum cycle limit (fixed it by adjusting the loop trip count)"
-    check_results(test_case.outputs.data, test_case.ref)
+@cocotb.test()
+async def test_valid(dut):
+    tb = FifoTB(dut)
+    await tb.reset()
+    tb.in_driver.set_valid_prob(0.5)
+    tb.output_monitor.ready.value = 1
+
+    inputs = tb.generate_inputs(num=200)
+    tb.in_driver.load_driver(inputs)
+    tb.output_monitor.load_monitor(inputs)
+
+    await Timer(20, "us")
+    assert tb.output_monitor.exp_queue.empty()
+
+
+@cocotb.test()
+async def test_backpressure(dut):
+    tb = FifoTB(dut)
+    await tb.reset()
+    cocotb.start_soon(bit_driver(dut.out_ready, dut.clk, 0.9))
+
+    inputs = tb.generate_inputs(num=200)
+    tb.in_driver.load_driver(inputs)
+    tb.output_monitor.load_monitor(inputs)
+
+    await Timer(20, "us")
+    assert tb.output_monitor.exp_queue.empty()
+
+
+@cocotb.test()
+async def test_valid_backpressure(dut):
+    tb = FifoTB(dut)
+    await tb.reset()
+    tb.in_driver.set_valid_prob(0.7)
+    cocotb.start_soon(bit_driver(dut.out_ready, dut.clk, 0.7))
+
+    inputs = tb.generate_inputs(num=200)
+    tb.in_driver.load_driver(inputs)
+    tb.output_monitor.load_monitor(inputs)
+
+    await Timer(20, "us")
+    assert tb.output_monitor.exp_queue.empty()
+
+
+@cocotb.test()
+async def test_soak(dut):
+    tb = FifoTB(dut)
+    await tb.reset()
+    tb.in_driver.set_valid_prob(0.7)
+    cocotb.start_soon(bit_driver(dut.out_ready, dut.clk, 0.7))
+
+    inputs = tb.generate_inputs(num=20000)
+    tb.in_driver.load_driver(inputs)
+    tb.output_monitor.load_monitor(inputs)
+
+    await Timer(1000, "us")
+    assert tb.output_monitor.exp_queue.empty()
 
 
 if __name__ == "__main__":
-    tb = VerificationCase()
-    mase_runner(module_param_list=[tb.get_dut_parameters()])
+    mase_runner(seed=0, trace=True)

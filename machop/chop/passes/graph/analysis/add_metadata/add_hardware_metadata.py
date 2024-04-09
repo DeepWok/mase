@@ -8,6 +8,8 @@ from chop.passes.graph.analysis.utils import (
     get_input_nodes,
     get_output_nodes,
 )
+from chop.passes.graph.utils import get_mase_op
+
 from torch import nn
 
 from .hardware_metadata_layers import INTERNAL_COMP
@@ -33,14 +35,14 @@ def add_component_source(node):
 
     mase_op = node.meta["mase"]["common"]["mase_op"]
     if mase_op in INTERNAL_COMP.keys():
-        node.meta["mase"]["hardware"]["toolchain"] = "INTERNAL"
+        node.meta["mase"]["hardware"]["toolchain"] = "INTERNAL_RTL"
         # take the first ip in the component list by default
         node.meta["mase"]["hardware"]["module"] = INTERNAL_COMP[mase_op][0]["name"]
         node.meta["mase"]["hardware"]["dependence_files"] = INTERNAL_COMP[mase_op][0][
             "dependence_files"
         ]
     else:
-        node.meta["mase"]["hardware"]["toolchain"] = "HLS"
+        node.meta["mase"]["hardware"]["toolchain"] = "INTERNAL_HLS"
         node.meta["mase"]["hardware"]["module"] = None
         node.meta["mase"]["hardware"]["dependence_files"] = []
 
@@ -371,6 +373,8 @@ def add_hardware_metadata_analysis_pass(graph, pass_args=None):
 
     # Temporary: fix parallelism to small value to enable verilator simulation
     for node in graph.nodes:
+        if "parallelism" in node.meta["mase"]["hardware"]:
+            continue
         # Batch parallelism set to 1, data parallelism to 4
         node.meta["mase"]["hardware"]["parallelism"] = [1, 4]
 
