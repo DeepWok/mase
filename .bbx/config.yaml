@@ -1,7 +1,7 @@
 # Define a runner that will be used to run a job
 runners:
   ubuntu-runner:
-    image: deepwok/mase-docker:latest
+    image: deepwok/mase-docker-cuda:latest
 
 # Define a job to be performed during a workflow
 jobs:
@@ -86,5 +86,5 @@ workflows:
     triggers:
       - pull_request
     jobs:
-      - hw-regression
       - hw-build
+      - hw-regression
