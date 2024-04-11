@@ -95,6 +95,7 @@ class MaseGraph:
     def __init__(
         self,
         model: torch.nn.Module | str | onnx.onnx_ml_pb2.ModelProto,
+        onnx_config=None,
         cf_args: Optional[Dict[str, Any]] = None,
     ) -> None:
         """Mase takes a torch.fx graph representation of a model and translates
@@ -135,6 +136,7 @@ class MaseGraph:
                     model,
                     output=f"{ROOT}/mase_output/onnx/{model}",
                     no_post_process=True,
+                    custom_onnx_config=onnx_config,
                     model_kwargs={"output_attentions": True},
                 )
             self.onnx_model = onnx.load(model_path)

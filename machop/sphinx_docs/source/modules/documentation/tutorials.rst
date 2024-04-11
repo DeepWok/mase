@@ -3,30 +3,21 @@ Tutorials
 
 .. toctree::
     :maxdepth: 1
-    :caption: The Command Line System with Machop
+    :caption: Common Usecases
 
-    tutorials/actions/train/simple_train_flow
+    tutorials/common/bert_emit
 
 .. toctree::
     :maxdepth: 1
-    :caption: The transform action
+    :caption: The Command Line System with Machop
 
+    tutorials/actions/train/simple_train_flow
     tutorials/actions/transform/cli_transform
 
 .. toctree::
     :maxdepth: 1
     :caption: The search action
 
-    tutorials/actions/search/mixed_precision_search_on_mase_graph
-    tutorials/actions/search/mixed_precision_search_on_manual_model
-    tutorials/actions/search/how_to_extend_search
-
-.. toctree::
-    :maxdepth: 1
-    :caption: Interactive Usage with Python (Recommended)
-
-    tutorials/actions/train/simple_train_flow
-    tutorials/actions/transform/cli_transform
     tutorials/actions/search/mixed_precision_search_on_mase_graph
     tutorials/actions/search/mixed_precision_search_on_manual_model
     tutorials/actions/search/how_to_extend_search

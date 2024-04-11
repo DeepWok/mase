@@ -122,7 +122,7 @@ def pattern_name_match(pattern, name):
 # names are likely to be func_name_[0-9]+
 def match_and_filter(name, funcs):
     for pattern in funcs:
-        if (pattern == name) or (pattern + "_" in name):
+        if (pattern == name) or (pattern in name):
             return True, pattern
     return False, None
 

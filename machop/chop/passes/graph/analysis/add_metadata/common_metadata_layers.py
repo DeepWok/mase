@@ -28,6 +28,8 @@ func_data = {
     "matmul": {"input": "data_in", "other": "data_in"},
     # https://pytorch.org/docs/stable/generated/torch.bmm.html
     "bmm": {"input": "data_in", "mat2": "data_in"},
+    # https://pytorch.org/docs/stable/generated/torch.unsqueeze.html#torch.unsqueeze
+    "unsqueeze": {"input": "data_in", "dim": "config"}
 }
 
 module_data = {
@@ -83,6 +85,8 @@ method_data = {
     "size": {"dim": "config"},
     # https://pytorch.org/docs/stable/generated/torch.Tensor.shape.html#torch.Tensor.shape
     "shape": {"dim": "config"},
+    # https://pytorch.org/docs/stable/generated/torch.Tensor.to.html
+    "to": {"dtype": "data_in"},
 }
 
 

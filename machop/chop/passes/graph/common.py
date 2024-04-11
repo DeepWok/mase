@@ -17,7 +17,7 @@ MASE_IMPLICIT_FUNCS = [
     "view",
     # possibly are just memory ops or tensor reshapes
     "flatten",
-    "t",
+    "unsqueeze",
     "transpose",
     "reshape",
     "contiguous",
@@ -25,6 +25,7 @@ MASE_IMPLICIT_FUNCS = [
     "max",
     "softmax",
     "cumsum",
+    "erf",
     # possibly can just safely ignore?
     "dropout",
     "eq",
@@ -38,26 +39,12 @@ MASE_IMPLICIT_FUNCS = [
     "clamp",
     "abs",
     "stack",
+    "cast",
+    "shape",
+    "gather",
+    "slice",
+    "cat"
 ]
-
-# use this list to print out MASE_MODULE_RELATED_FUNCS when new functions are added
-# module_related_funcs = [
-#     F.adaptive_avg_pool1d,
-#     F.adaptive_avg_pool2d,
-#     F.adaptive_max_pool1d,
-#     F.adaptive_max_pool2d,
-#     F.avg_pool1d,
-#     F.avg_pool2d,
-#     F.batch_norm,
-#     F.conv1d,
-#     F.conv2d,
-#     F.layer_norm,
-#     F.linear,
-#     F.max_pool1d,
-#     F.max_pool2d,
-#     F.relu,
-# ]
-# print(sorted([f.__name__ for f in module_related_funcs]))
 
 MASE_MODULE_RELATED_FUNCS = [
     "adaptive_avg_pool1d",
@@ -86,6 +73,10 @@ MASE_BUILTIN_FUNCS = [
     "add",
     "matmul",
     "bmm",
+    "mean",
+    "pow",
+    "sqrt",
+    "div",
 ]
 
 
