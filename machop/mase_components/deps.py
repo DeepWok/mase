@@ -13,7 +13,7 @@ MASE_HW_DEPS = {
     # TODO: Failing test: missing "z_proj" in config?
     # "attention/fixed_self_att": ["attention", "cast", "common", "conv",
     #                              "fixed_arithmetic", "linear", "matmul", "ViT"],
-    "activations/lpw_pow2": ["common", "cast"],
+    "activations/softermax_lpw_pow2": ["common", "cast"],
     "cast/fixed_cast": [],
     "cast/fixed_rounding": ["cast"],
     "linear/fixed_linear": ["cast", "common", "fixed_arithmetic"],
@@ -38,6 +38,7 @@ MASE_HW_DEPS = {
     # New matrix multiplication modules
     "common/repeat_circular_buffer": ["common"],
     "common/lut": [],
+    "common/comparator_tree": ["common"],
     "cast/fixed_signed_cast": ["cast"],
     "matmul/simple_matmul": ["common", "linear", "cast", "fixed_arithmetic"],
     # "matmul/fixed_matmul": ["common", "linear", "cast", "fixed_arithmetic", "matmul"],

@@ -1,15 +1,16 @@
 /*
-Module      : lpw_pow2
+Module      : softermax_lpw_pow2
 Description : This module implements 2^x with linear piecewise approximation.
 
-              Uses 4 linear pieces.
+              Uses 4 linear pieces between [0, 1) for the fraction then shifts
+              it by the integer part.
 
-              ** ONLY USED FOR NEGATIVE x **
+              ** Only negative inputs 'x' are supported. **
 */
 
 `timescale 1ns/1ps
 
-module lpw_pow2 #(
+module softermax_lpw_pow2 #(
     parameter IN_WIDTH = 8,
     parameter IN_FRAC_WIDTH = 4,
     parameter OUT_WIDTH = 8,
