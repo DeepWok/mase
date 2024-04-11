@@ -94,6 +94,7 @@ class ErrorThresholdStreamMonitor(StreamMonitor):
         self.signed = signed
         self.error_bits = error_bits
         self.error_log = [] if log_error else None
+        self.recv_log = [] if log_error else None
         self.log_error = log_error
         self.log.setLevel("INFO")
 
@@ -112,6 +113,7 @@ class ErrorThresholdStreamMonitor(StreamMonitor):
             err = np.abs(g - e)
             if self.log_error:
                 self.error_log.append(err)
+                self.recv_log.append(got)
             max_biterr = np.full_like(err, self.error_bits)
             if not (err <= max_biterr).all():
                 self.log.error("Failed | Got: %20s Exp: %20s Err: %14s" % (g, e, err))
@@ -126,6 +128,7 @@ class ErrorThresholdStreamMonitor(StreamMonitor):
             err = abs(g - e)
             if self.log_error:
                 self.error_log.append(err)
+                self.recv_log.append(got)
             if not err <= self.error_bits:
                 self.log.error("Failed | Got: %20s Exp: %20s Err: %10s" % (g, e, err))
                 assert fail, "Test Failed!"
