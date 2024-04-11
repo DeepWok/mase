@@ -1,7 +1,13 @@
 vhls=/mnt/applications/Xilinx/23.1
 vhls_version=2023.1
-local=0
-img=$(if $local,"mase-ubuntu2204:latest","deepwok/mase-docker:latest")
+
+local ?= 0
+ifeq ($(local), 1)
+    img = "mase-ubuntu2204:latest"
+else
+    img = "deepwok/mase-docker:latest"
+endif
+
 user=$(if $(shell id -u),$(shell id -u),9001)
 group=$(if $(shell id -g),$(shell id -g),1000)
 coverage=machop/test/

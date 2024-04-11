@@ -29,17 +29,18 @@ module int_relu6 #(
   end
 
   register_slice #(
-      .DATA_WIDTH ($bits(relued)),
-      .REVERSE   (1'b0)
+      .DATA_WIDTH ($bits(relued))
   ) register_slice (
       .clk    (clk),
       .rst    (rst),
-      .w_valid(in_valid),
-      .w_ready(in_ready),
-      .w_data (relued),
-      .r_valid(out_valid),
-      .r_ready(out_ready),
-      .r_data (out)
+      
+      .in_valid(in_valid),
+      .in_ready(in_ready),
+      .in_data (relued),
+      
+      .out_valid(out_valid),
+      .out_ready(out_ready),
+      .out_data (out)
   );
 
 endmodule
