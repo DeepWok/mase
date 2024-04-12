@@ -1,7 +1,22 @@
 # Define a runner that will be used to run a job
 runners:
   ubuntu-runner:
-    image: ee-kraken:5000/ubuntu-mase-pipeline
+    image: deepwok/mase-docker-cuda:latest
+
+
+# Define a workflow to orchestrate a job
+workflows:
+  mase-chop-regression:
+    triggers:
+      - pull_request
+    jobs:
+      - chop-regression
+
+  mase-hw-regression:
+    triggers:
+      - pull_request
+    jobs:
+      - hw-regression
 
 # Define a job to be performed during a workflow
 jobs:
@@ -30,21 +45,3 @@ jobs:
           command: |
             python3 scripts/test-hardware.py -a
 
-
-# Define a workflow to orchestrate a job
-workflows:
-  mase-chop-regression:
-    triggers:
-      - push
-      - schedule:
-          cron: "0 2 * * *"
-    jobs:
-      - chop-regression
-
-  mase-hw-regression:
-    triggers:
-      - push
-      - schedule:
-          cron: "0 2 * * *"
-    jobs:
-      - hw-regression
