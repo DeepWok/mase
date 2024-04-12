@@ -113,7 +113,7 @@ def mase_runner(
         print(f"# Failed Configs")
         print("# ---------------------------------------")
         for i, params in failed_cfgs:
-            print(f"test_{i}: {params}")
+            print(f"# - test_{i}: {params}")
         print("# ---------------------------------------")
 
     return total_fail

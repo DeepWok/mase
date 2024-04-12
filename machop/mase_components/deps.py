@@ -14,6 +14,7 @@ MASE_HW_DEPS = {
     # "attention/fixed_self_att": ["attention", "cast", "common", "conv",
     #                              "fixed_arithmetic", "linear", "matmul", "ViT"],
     "activations/softermax_lpw_pow2": ["common", "cast"],
+    "activations/softermax_local_window": ["activations", "common", "cast", "matmul"],
     "cast/fixed_cast": [],
     "cast/fixed_rounding": ["cast"],
     "linear/fixed_linear": ["cast", "common", "fixed_arithmetic"],

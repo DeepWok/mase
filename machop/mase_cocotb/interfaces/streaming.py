@@ -55,13 +55,24 @@ class StreamMonitor(Monitor):
         return self.valid.value == 1 and self.ready.value == 1
 
     def _recv(self):
-        if type(self.data.value) == list:
-            return [int(x) for x in self.data.value]
-        elif type(self.data.value) == BinaryValue:
-            return int(self.data.value)
+
+        def _get_sig_value(sig):
+            # Single data signal
+            if type(sig.value) == list:
+                return [int(x) for x in sig.value]
+            elif type(sig.value) == BinaryValue:
+                return int(sig.value)
+
+        if type(self.data) == tuple:
+            # Multiple synchronised data signals
+            return tuple(_get_sig_value(s) for s in self.data)
+        else:
+            # Single data signal
+            return _get_sig_value(self.data)
 
     def _check(self, got, exp):
-        if self.check:
+
+        def _check_sig(got, exp):
             if not np.equal(got, exp).all():
                 self.log.error(
                     "%s: \nGot \n%s, \nExpected \n%s"
@@ -72,6 +83,16 @@ class StreamMonitor(Monitor):
                     )
                 )
                 assert False, "Test Failed!"
+
+        if self.check:
+            if type(self.data) == tuple:
+                assert type(got) == tuple
+                assert type(exp) == tuple
+                assert len(got) == len(exp), "Got & Exp Tuples are different length"
+                for g, e in zip(got, exp):
+                    _check_sig(g, e)
+            else:
+                _check_sig(got, exp)
 
 
 class ErrorThresholdStreamMonitor(StreamMonitor):
@@ -134,4 +155,7 @@ class ErrorThresholdStreamMonitor(StreamMonitor):
                 assert fail, "Test Failed!"
                 return
 
-        self.log.debug("Passed | Got: %20s Exp: %20s Err: %10s" % (g, e, err))
+        else:
+            g, e = got, exp
+            err = np.abs(g - e)
+            self.log.debug("Passed | Got: %20s Exp: %20s Err: %10s" % (g, e, err))
