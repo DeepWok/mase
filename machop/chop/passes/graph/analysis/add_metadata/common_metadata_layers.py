@@ -28,8 +28,28 @@ func_data = {
     "matmul": {"input": "data_in", "other": "data_in"},
     # https://pytorch.org/docs/stable/generated/torch.bmm.html
     "bmm": {"input": "data_in", "mat2": "data_in"},
-    # https://pytorch.org/docs/stable/generated/torch.unsqueeze.html#torch.unsqueeze
-    "unsqueeze": {"input": "data_in", "dim": "config"}
+    # https://pytorch.org/docs/stable/generated/torch.unsqueeze.html
+    "unsqueeze": {"input": "data_in", "dim": "config"},
+    # https://pytorch.org/docs/stable/generated/torch.gather.html
+    "gather": {"input": "data_in", "index": "config", "dim": "config"},
+    # https://pytorch.org/docs/stable/generated/torch.mean.html
+    "mean": {"input": "data_in"},
+    # https://pytorch.org/docs/stable/generated/torch.pow.html
+    "pow": {"input": "data_in", "exponent": "config"},
+    # https://pytorch.org/docs/stable/generated/torch.sqrt.html
+    "sqrt": {"input": "data_in"},
+    # https://pytorch.org/docs/stable/generated/torch.div.html
+    "div": {"input": "data_in", "other": "data_in"},
+    # https://pytorch.org/docs/stable/generated/torch.cat.html
+    "cat": {"tensors": "data_in", "dim": "config"},
+    # onnx_slice (custom implementation in onnx config)
+    "slice": {
+        "data": "data_in",
+        "starts": "config",
+        "ends": "config",
+        "axes": "config",
+        "steps": "config",
+    },
 }
 
 module_data = {
@@ -86,7 +106,7 @@ method_data = {
     # https://pytorch.org/docs/stable/generated/torch.Tensor.shape.html#torch.Tensor.shape
     "shape": {"dim": "config"},
     # https://pytorch.org/docs/stable/generated/torch.Tensor.to.html
-    "to": {"dtype": "data_in"},
+    "to": {"dtype": "config"},
 }
 
 
@@ -117,8 +137,9 @@ def match_args_and_kwargs(meta, args, kwargs, data, add_value):
         if data[k] == "data_in":
             # rename this to mase data_in_number
             arg_meta = {
-                "shape": list(v.shape),
-                "torch_dtype": v.dtype,
+                # v is a list for torch.cat
+                "shape": (len(v) if isinstance(v, list) else list(v.shape)),
+                "torch_dtype": v[0].dtype if isinstance(v, list) else v.dtype,
                 "type": "float",
                 "precision": [32],
             }

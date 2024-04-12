@@ -73,7 +73,7 @@ def graph_iterator_for_mase_ops(graph):
                 mase_op = "linear"
             elif isinstance(module, nn.ReLU):
                 mase_op = "relu"
-            elif isinstance(module, nn.Hardtanh):  # TODO: This is not implemented yet
+            elif isinstance(module, nn.Hardtanh):  # ! TODO: This is not implemented yet
                 mase_op = "hardtanh"
             elif isinstance(module, nn.Embedding):
                 mase_type = "implicit_func"
@@ -90,7 +90,7 @@ def graph_iterator_for_mase_ops(graph):
                 mase_op = "hardswish"
             elif isinstance(module, nn.Hardsigmoid):
                 mase_op = "hardsigmoid"
-            # TODO: temporary. Support all patched attention layers
+            # ! TODO: temporary. Support all patched attention layers
             elif "attention" in module.__name__.lower():
                 mase_op = "attention"
             else:
@@ -114,7 +114,7 @@ def graph_iterator_for_mase_ops(graph):
             if matched_name in MASE_BUILTIN_FUNCS:
                 node.meta["mase"].parameters["common"]["mase_type"] = "builtin_func"
                 node.meta["mase"].parameters["common"]["mase_op"] = matched_name
-            # TODO: we might need to add more functions here
+            # ! TODO: we might need to add more functions here
             elif matched_name in MASE_MODULE_RELATED_FUNCS:
                 node.meta["mase"].parameters["common"][
                     "mase_type"
@@ -131,7 +131,7 @@ def graph_iterator_for_mase_ops(graph):
 
         elif node.op == "call_method":
             # we might have things like size_1, size_2, so we need to match the pattern
-            # TODO: might need to add this for others as well.
+            # ! TODO: might need to add this for others as well.
             matching, matched_name = match_and_filter(node.name, MASE_IMPLICIT_FUNCS)
             if not matching:
                 raise ValueError(f"Unknown node type: {node.name}")
@@ -151,7 +151,7 @@ def graph_iterator_for_mase_ops(graph):
                 node.meta["mase"].parameters["common"]["mase_type"] = "implicit_func"
                 node.meta["mase"].parameters["common"][
                     "mase_op"
-                ] = "constant"  # TODO: ??? what to assign here
+                ] = "constant"  # ! TODO: ??? what to assign here
             else:
                 node.meta["mase"].parameters["common"]["mase_type"] = "get_attr"
                 # raise NotImplementedError(f"Unknown node type: {node.target}")
@@ -163,6 +163,29 @@ def graph_iterator_for_mase_ops(graph):
         else:
             raise ValueError(f"Unknown node type: {node.op}")
     return graph
+
+
+def pre_check(args, kwargs, node):
+    if node.target == torch.reshape:
+        if isinstance(kwargs["shape"], torch.Tensor):
+            kwargs = {
+                **{k: v for k, v in kwargs.items() if k != "shape"},
+                "shape": tuple(kwargs["shape"].to(torch.int64).tolist()),
+            }
+
+    return args, kwargs
+
+
+def post_check(result, node):
+    if isinstance(result, torch.Tensor):
+        return result
+    elif isinstance(result, torch.Size):
+        logger.info(f"Casting {node.name} output from torch.Size to torch.Tensor")
+        return torch.Tensor(list(result))
+    else:
+        raise ValueError(
+            f"I don't know how to handle this node output type: {type(result)}"
+        )
 
 
 def graph_iterator_for_metadata(
@@ -185,24 +208,30 @@ def graph_iterator_for_metadata(
         args, kwargs = None, None
         if node.op == "placeholder":
             result = dummy_in[node.name]
+            result = post_check(result, node)
             analyse_fn = analyse_common_parameters_placeholder
         elif node.op == "get_attr":
             result = fetch_attr(model, node.target)
+            result = post_check(result, node)
             analyse_fn = analyse_common_parameters_attr
         elif node.op == "call_function":
             args = load_arg(node.args, env)
             kwargs = load_arg(node.kwargs, env)
+            args, kwargs = pre_check(args, kwargs, node)
             result = node.target(*args, **kwargs)
+            result = post_check(result, node)
             analyse_fn = analyse_common_parameters_function
         elif node.op == "call_method":
-            self_obj, *call_args = load_arg(node.args, env)
+            self_obj, *args = load_arg(node.args, env)
             kwargs = load_arg(node.kwargs, env)
             result = getattr(self_obj, node.target)(*args, **kwargs)
+            result = post_check(result, node)
             analyse_fn = analyse_common_parameters_method
         elif node.op == "call_module":
             args = load_arg(node.args, env)
             kwargs = load_arg(node.kwargs, env)
             result = modules[node.target](*args, **kwargs)
+            result = post_check(result, node)
             analyse_fn = analyse_common_parameters_module
         elif node.op == "output":
             analyse_fn = analyse_common_parameters_output

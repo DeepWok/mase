@@ -20,13 +20,7 @@ from chop.passes.graph.transforms.quantize import (
 )
 from torch.fx import wrap as fx_wrap
 
-import onnx
-from optimum.exporters.onnx import main_export
-from ...tools.onnx_importer import ONNX_Importer
-
 logger = logging.getLogger(__name__)
-
-ROOT = Path(__file__).resolve().parents[4].as_posix()
 
 # ----------------------------------------
 #   Mase Tracer
@@ -94,8 +88,7 @@ class MaseGraph:
 
     def __init__(
         self,
-        model: torch.nn.Module | str | onnx.onnx_ml_pb2.ModelProto,
-        onnx_config=None,
+        model: torch.nn.Module,
         cf_args: Optional[Dict[str, Any]] = None,
     ) -> None:
         """Mase takes a torch.fx graph representation of a model and translates
@@ -104,13 +97,13 @@ class MaseGraph:
         hardware constraints.
 
         :param model: _description_
-        :type model: torch.nn.Module | str | onnx.onnx_ml_pb2.ModelProto
+        :type model: torch.nn.Module
         :param cf_args: _description_, defaults to None
         :type cf_args: Optional[Dict[str, Any]], optional
         """
         assert isinstance(
-            model, (torch.nn.Module, str, onnx.onnx_ml_pb2.ModelProto)
-        ), f"model must be a torch.nn.Module, checkpoint string or ONNX ModelProto. Received: {type(model)}"
+            model, torch.nn.Module
+        ), f"model must be a torch.nn.Module. Received: {type(model)}"
 
         # MASE internal auto-wrapped functions/layers
         custom_leaf_modules = ()
@@ -128,46 +121,26 @@ class MaseGraph:
 
         self.cf_args = cf_args
 
-        # Defined model checkpoint, run optimum onnx export
-        if isinstance(model, str):
-            model_path = f"{ROOT}/mase_output/onnx/{model}/model.onnx"
-            if not os.path.exists(model_path):
-                main_export(
-                    model,
-                    output=f"{ROOT}/mase_output/onnx/{model}",
-                    no_post_process=True,
-                    custom_onnx_config=onnx_config,
-                    model_kwargs={"output_attentions": True},
-                )
-            self.onnx_model = onnx.load(model_path)
-            self.model = ONNX_Importer(self.onnx_model).raise_to_fx()
-
-        # Defined ONNX ModelProto, raise to FX
-        elif isinstance(model, onnx.onnx_ml_pb2.ModelProto):
-            self.model = ONNX_Importer(model).raise_to_fx()
-
-        # Defined torch.nn.Module, trace into fx graph
+        # create graph module
+        self.tracer = MaseTracer(
+            custom_leaf_modules=custom_leaf_modules,
+            custom_leaf_functions=custom_leaf_functions,
+            custom_leaf_layers=custom_leaf_layers,
+        )
+        self.model = fx.GraphModule(model, self.tracer.trace(model, cf_args))
+        if patched_nodes:
+            self.model.patched_op_names = [
+                obj.__name__.lower()
+                for obj in model.patched_nodes["layers"]
+                + model.patched_nodes["functions"]
+            ]
+            # these are layers we believe the user will provide system verilog for
+            self.model.patched_custom_layers = model.patched_nodes["layers"]
+            self.model.additional_inputs = model.patched_nodes["additional_inputs"]
         else:
-            # create graph module
-            self.tracer = MaseTracer(
-                custom_leaf_modules=custom_leaf_modules,
-                custom_leaf_functions=custom_leaf_functions,
-                custom_leaf_layers=custom_leaf_layers,
-            )
-            self.model = fx.GraphModule(model, self.tracer.trace(model, cf_args))
-            if patched_nodes:
-                self.model.patched_op_names = [
-                    obj.__name__.lower()
-                    for obj in model.patched_nodes["layers"]
-                    + model.patched_nodes["functions"]
-                ]
-                # these are layers we believe the user will provide system verilog for
-                self.model.patched_custom_layers = model.patched_nodes["layers"]
-                self.model.additional_inputs = model.patched_nodes["additional_inputs"]
-            else:
-                self.model.patched_op_names = []
-                self.model.patched_custom_layers = []
-                self.model.additional_inputs = {}
+            self.model.patched_op_names = []
+            self.model.patched_custom_layers = []
+            self.model.additional_inputs = {}
 
     def draw(self, file="mase_graph.svg"):
         drawer = FxGraphDrawer(self.model, "masegraph")
