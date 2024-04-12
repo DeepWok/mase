@@ -104,7 +104,7 @@ async def sweep(dut):
         width=600,
         height=300,
     ).save(
-        Path(__file__).parent / f"error_graph_{tb.IN_WIDTH}.png",
+        Path(__file__).parent / f"build/lpw_pow2/error_graph_{tb.IN_WIDTH}.png",
         scale_factor=3,
     )
 

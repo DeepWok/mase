@@ -39,6 +39,7 @@ MASE_HW_DEPS = {
     "common/repeat_circular_buffer": ["common"],
     "common/lut": [],
     "common/comparator_tree": ["common"],
+    "common/comparator_accumulator": ["common"],
     "cast/fixed_signed_cast": ["cast"],
     "matmul/simple_matmul": ["common", "linear", "cast", "fixed_arithmetic"],
     # "matmul/fixed_matmul": ["common", "linear", "cast", "fixed_arithmetic", "matmul"],

@@ -1,6 +1,8 @@
 /*
 Module      : comparator_tree
 Description : This module implements a maximum number comparator tree.
+
+              Can do signed/unsigned max/min reductions.
 */
 
 `timescale 1ns/1ps

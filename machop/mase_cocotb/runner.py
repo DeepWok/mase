@@ -47,6 +47,8 @@ def mase_runner(
     total_tests = 0
     total_fail = 0
 
+    failed_cfgs = []
+
     for i, module_params in enumerate(module_param_list):
         print("# ---------------------------------------")
         print(f"# Test {i+1}/{len(module_param_list)}")
@@ -96,10 +98,23 @@ def mase_runner(
         total_tests += num_tests
         total_fail += fail
 
-    print("TEST RESULTS")
-    print("    PASSED: %d" % (total_tests - total_fail))
-    print("    FAILED: %d" % (total_fail))
-    print("    NUM TESTS: %d" % (total_tests))
+        if fail:
+            failed_cfgs.append((i, module_params))
+
+    print("# ---------------------------------------")
+    print("# Test Results")
+    print("# ---------------------------------------")
+    print("# - Passed: %d" % (total_tests - total_fail))
+    print("# - Failed: %d" % (total_fail))
+    print("# - Total : %d" % (total_tests))
+    print("# ---------------------------------------")
+
+    if len(failed_cfgs):
+        print(f"# Failed Configs")
+        print("# ---------------------------------------")
+        for i, params in failed_cfgs:
+            print(f"test_{i}: {params}")
+        print("# ---------------------------------------")
 
     return total_fail
 
