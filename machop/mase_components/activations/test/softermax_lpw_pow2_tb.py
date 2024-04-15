@@ -35,12 +35,13 @@ class LPW_Pow2TB(Testbench):
         self.in_driver = StreamDriver(
             dut.clk, dut.in_data, dut.in_valid, dut.in_ready
         )
+        self.error_threshold_bits = 2
         self.output_monitor = ErrorThresholdStreamMonitor(
             dut.clk, dut.out_data, dut.out_valid, dut.out_ready,
             width=self.OUT_WIDTH,
             log_error=True,
             signed=True,
-            error_bits=4,
+            error_bits=self.error_threshold_bits,
             check=False,
         )
 
@@ -60,18 +61,25 @@ class LPW_Pow2TB(Testbench):
         return res.tolist()
 
 
+    async def run_test(self, us):
+        await self.reset()
+        inputs = self.generate_inputs()
+        exp_out = self.model(inputs)
+        self.in_driver.load_driver(inputs)
+        self.output_monitor.load_monitor(exp_out)
+        await Timer(us, "us")
+        assert self.output_monitor.exp_queue.empty()
+
+
 @cocotb.test()
 async def sweep(dut):
     tb = LPW_Pow2TB(dut)
-    await tb.reset()
     tb.output_monitor.ready.value = 1
-
+    await tb.reset()
     inputs = tb.generate_inputs()
     exp_out = tb.model(inputs)
-
     tb.in_driver.load_driver(inputs)
     tb.output_monitor.load_monitor(exp_out)
-
     await Timer(20, "us")
     assert tb.output_monitor.exp_queue.empty()
 
@@ -96,6 +104,7 @@ async def sweep(dut):
         var_name="Type"
     )
 
+    graph_id = f"{tb.IN_WIDTH}_{tb.IN_FRAC_WIDTH}_to_{tb.OUT_WIDTH}_{tb.OUT_FRAC_WIDTH}"
     alt.Chart(data).mark_line().encode(
         x="x",
         y="Value",
@@ -104,36 +113,68 @@ async def sweep(dut):
         width=600,
         height=300,
     ).save(
-        Path(__file__).parent / f"build/lpw_pow2/error_graph_{tb.IN_WIDTH}.png",
+        Path(__file__).parent / f"build/softermax_lpw_pow2/error_graph_{graph_id}.png",
         scale_factor=3,
     )
+
+    max_bit_err = max(tb.output_monitor.error_log)
+    logger.info("Maximum bit-error: %d", max_bit_err)
+    if max_bit_err > tb.error_threshold_bits:
+        assert False, (
+            "Test failed due to high approximation error. Got %d bits of error!" %
+            max_bit_err
+        )
 
 
 @cocotb.test()
 async def backpressure(dut):
     tb = LPW_Pow2TB(dut)
     cocotb.start_soon(bit_driver(tb.output_monitor.ready, tb.clk, 0.6))
-    await tb.reset()
+    await tb.run_test(us=100)
 
-    inputs = tb.generate_inputs()
-    exp_out = tb.model(inputs)
 
-    tb.in_driver.load_driver(inputs)
-    tb.output_monitor.load_monitor(exp_out)
+@cocotb.test()
+async def valid(dut):
+    tb = LPW_Pow2TB(dut)
+    tb.output_monitor.ready.value = 1
+    tb.in_driver.set_valid_prob(0.5)
+    await tb.run_test(us=100)
 
-    await Timer(50, "us")
-    assert tb.output_monitor.exp_queue.empty()
+
+@cocotb.test()
+async def valid_backpressure(dut):
+    tb = LPW_Pow2TB(dut)
+    cocotb.start_soon(bit_driver(tb.output_monitor.ready, tb.clk, 0.5))
+    tb.in_driver.set_valid_prob(0.5)
+    await tb.run_test(us=100)
 
 
 if __name__ == "__main__":
-    mase_runner(module_param_list=[
-            {
-                "IN_WIDTH": 8,
-                "IN_FRAC_WIDTH": 2,
-                "OUT_WIDTH": 8,
-                "OUT_FRAC_WIDTH": 7
-            }
-        ],
-        seed=0,
+
+    DEFAULT = {
+        "IN_WIDTH": 8,
+        "IN_FRAC_WIDTH": 2,
+        "OUT_WIDTH": 8,
+        "OUT_FRAC_WIDTH": 7
+    }
+
+    def width_cfgs():
+        bitwidths = [2, 4, 8]
+        cfgs = []
+        for in_width in bitwidths:
+            for in_frac_width in range(1, in_width):
+                for out_width in bitwidths:
+                    for out_frac_width in range(1, out_width):
+                        cfgs.append({
+                            "IN_WIDTH": in_width,
+                            "IN_FRAC_WIDTH": in_frac_width,
+                            "OUT_WIDTH": out_width,
+                            "OUT_FRAC_WIDTH": out_frac_width,
+                        })
+        return cfgs
+
+    mase_runner(
+        module_param_list=width_cfgs(),
         trace=True,
+        jobs=8,
     )

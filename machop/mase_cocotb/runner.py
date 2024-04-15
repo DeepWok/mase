@@ -5,8 +5,12 @@ from pathlib import Path
 import re
 import inspect
 from typing import Any
+from concurrent.futures import ThreadPoolExecutor, as_completed
+from time import time
+
 import torch
 
+import cocotb
 from cocotb.runner import get_runner, get_results
 from mase_components.deps import MASE_HW_DEPS
 
@@ -19,8 +23,11 @@ def mase_runner(
     extra_build_args: list[str] = [],
     trace: bool = False,
     seed: int = None,
+    jobs: int = 1,
 ):
     assert type(module_param_list) == list, "Need to pass in a list of dicts!"
+
+    start_time = time()
 
     # Get file which called this function
     # Should be of form components/<group>/test/<module>_tb.py
@@ -49,16 +56,22 @@ def mase_runner(
 
     failed_cfgs = []
 
-    for i, module_params in enumerate(module_param_list):
-        print("# ---------------------------------------")
-        print(f"# Test {i+1}/{len(module_param_list)}")
-        print("# ---------------------------------------")
-        print(f"# Parameters:")
-        print(f"# - {'Test Index'}: {i}")
-        for k, v in module_params.items():
-            print(f"# - {k}: {v}")
-        print("# ---------------------------------------")
-        test_work_dir = group_path.joinpath(f"test/build/{module}/test_{i}")
+    def _single_test(
+        test_work_dir: Path,
+        module_params: dict,
+        silent=False,
+    ):
+        cocotb.log
+        if not silent:
+            print("# ---------------------------------------")
+            print(f"# Test {i+1}/{len(module_param_list)}")
+            print("# ---------------------------------------")
+            print(f"# Parameters:")
+            print(f"# - {'Test Index'}: {i}")
+            for k, v in module_params.items():
+                print(f"# - {k}: {v}")
+            print("# ---------------------------------------")
+
         runner = get_runner(SIM)
         runner.build(
             verilog_sources=[module_path],
@@ -77,6 +90,7 @@ def mase_runner(
                 "--stats",
                 # Signal trace in dump.fst
                 *(["--trace-fst", "--trace-structs"] if trace else []),
+                *(["--quiet-exit"] if silent else []),
                 "-O2",
                 "-build-jobs",
                 "8",
@@ -95,15 +109,58 @@ def mase_runner(
             results_xml="results.xml",
         )
         num_tests, fail = get_results(test_work_dir.joinpath("results.xml"))
-        total_tests += num_tests
-        total_fail += fail
+        return {
+            "num_tests": num_tests,
+            "failed_tests": fail,
+            "params": module_params,
+        }
 
-        if fail:
-            failed_cfgs.append((i, module_params))
+    # Single threaded run
+    if jobs == 1:
+
+        for i, module_params in enumerate(module_param_list):
+            test_work_dir = group_path.joinpath(f"test/build/{module}/test_{i}")
+            results = _single_test(
+                test_work_dir=test_work_dir,
+                module_params=module_params,
+                silent=False,
+            )
+            total_tests += results["num_tests"]
+            total_fail += results["failed_tests"]
+            if results["failed_tests"]:
+                failed_cfgs.append((i, module_params))
+
+    # Multi threaded run
+    else:
+        with ThreadPoolExecutor(max_workers=jobs) as executor:
+
+            # Launch concurrent futures
+            # TODO: add timeout
+            future_to_id = {}
+            for i, module_params in enumerate(module_param_list):
+                test_work_dir = group_path.joinpath(f"test/build/{module}/test_{i}")
+                future = executor.submit(_single_test, test_work_dir, module_params, True)
+                future_to_id[future] = i
+
+            # Wait for futures to complete
+            for future in as_completed(future_to_id):
+                id = future_to_id[future]
+                try:
+                    result = future.result()
+                except Exception as exc:
+                    print('%r generated an exception: %s' % (id, exc))
+                else:
+                    print("Test %r is done. Result: %s" % (id, result))
+                    total_tests += result["num_tests"]
+                    total_fail += result["failed_tests"]
+                    if result["failed_tests"]:
+                        failed_cfgs.append((i, module_params))
 
     print("# ---------------------------------------")
     print("# Test Results")
     print("# ---------------------------------------")
+    print("# - Time elapsed: %.2f seconds" % (time() - start_time))
+    print("# - Jobs: %d" % (jobs))
     print("# - Passed: %d" % (total_tests - total_fail))
     print("# - Failed: %d" % (total_fail))
     print("# - Total : %d" % (total_tests))

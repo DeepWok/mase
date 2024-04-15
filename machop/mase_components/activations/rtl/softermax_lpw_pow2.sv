@@ -67,7 +67,7 @@ end
 logic [INT_WIDTH-1:0] in_data_int; // Q INT.0
 logic [IN_FRAC_WIDTH-1:0] in_data_frac; // Q 0.FRAC
 
-logic [IN_WIDTH-1:0] result_data;
+logic [OUT_WIDTH-1:0] result_data;
 logic result_valid, result_ready;
 
 
@@ -80,10 +80,6 @@ function logic [OUT_WIDTH-1:0] pow2_func (real x);
     // Output cast
     res_shifted = res * (2 ** OUT_FRAC_WIDTH);
     res_int = int'(res_shifted);
-    // $display("res = %f", res);
-    // $display("res_shifted = %f (%f)", res_shifted, res_shifted / (2 ** OUT_FRAC_WIDTH));
-    // $display("res_int = %d (%f)", res_int, real'(res_int) / (2 ** OUT_FRAC_WIDTH));
-    // $display("out = %d", OUT_WIDTH'(res_int));
     return OUT_WIDTH'(res_int);
 endfunction
 
@@ -131,7 +127,8 @@ if (IN_FRAC_WIDTH <= 1) begin : one_bit_frac
             1'b0: lookup_result = pow2_func(0.0);
             1'b1: lookup_result = pow2_func(0.5);
         endcase
-        result_data = lookup_result >> -in_data_int; // TODO: Shift up for positive x
+        // TODO: Fix pipelining for the shifter
+        result_data = lookup_result >> -in_data_int;
         result_valid = in_valid;
         in_ready = result_ready;
     end
@@ -146,7 +143,8 @@ end else if (IN_FRAC_WIDTH == 2) begin : two_bit_frac
             2'b10: lookup_result = pow2_func(0.5);
             2'b11: lookup_result = pow2_func(0.75);
         endcase
-        result_data = lookup_result >> -in_data_int; // TODO: Shift up for positive x
+        // TODO: Fix pipelining for the shifter
+        result_data = lookup_result >> -in_data_int;
         result_valid = in_valid;
         in_ready = result_ready;
     end
@@ -158,12 +156,13 @@ end else begin : lpw_approx
     logic [1:0] frac_top_in, frac_top_out;
     assign frac_top_in = in_data_frac[IN_FRAC_WIDTH-1:IN_FRAC_WIDTH-2];
 
-    logic [INT_WIDTH-1:0] in_data_int_buff;
+    logic [INT_WIDTH-1:0] in_data_int_buff[1:0];
 
     logic [MULT_WIDTH-1:0] mult_in, mult_out;
     logic mult_out_valid, mult_out_ready;
+    logic intercept_out_valid, intercept_out_ready;
 
-    logic [LPW_WIDTH-1:0] lpw_int, lpw_result;
+    logic [LPW_WIDTH-1:0] lpw_int_in, lpw_int_out, lpw_result;
     logic [LPW_WIDTH-1:0] lpw_out_data;
     logic lpw_out_valid, lpw_out_ready;
 
@@ -188,21 +187,36 @@ end else begin : lpw_approx
         .data_in({mult_in, frac_top_in, in_data_int}),
         .data_in_valid(in_valid),
         .data_in_ready(in_ready),
-        .data_out({mult_out, frac_top_out, in_data_int_buff}),
+        .data_out({mult_out, frac_top_out, in_data_int_buff[0]}),
         .data_out_valid(mult_out_valid),
         .data_out_ready(mult_out_ready)
     );
 
-    // Add Intercept & Shift stage
+    // Add Intercept
     always_comb begin
         case (frac_top_out)
-            2'b00: lpw_int = mult_out + intercept(0.00, 0.25);
-            2'b01: lpw_int = mult_out + intercept(0.25, 0.50);
-            2'b10: lpw_int = mult_out + intercept(0.50, 0.75);
-            2'b11: lpw_int = mult_out + intercept(0.75, 1.00);
+            2'b00: lpw_int_in = mult_out + intercept(0.00, 0.25);
+            2'b01: lpw_int_in = mult_out + intercept(0.25, 0.50);
+            2'b10: lpw_int_in = mult_out + intercept(0.50, 0.75);
+            2'b11: lpw_int_in = mult_out + intercept(0.75, 1.00);
         endcase
-        lpw_result = lpw_int >> -in_data_int_buff; // TODO: Shift up for positive x
     end
+
+    skid_buffer #(
+        .DATA_WIDTH(LPW_WIDTH + INT_WIDTH)
+    ) intercept_reg (
+        .clk(clk),
+        .rst(rst),
+        .data_in({lpw_int_in, in_data_int_buff[0]}),
+        .data_in_valid(mult_out_valid),
+        .data_in_ready(mult_out_ready),
+        .data_out({lpw_int_out, in_data_int_buff[1]}),
+        .data_out_valid(intercept_out_valid),
+        .data_out_ready(intercept_out_ready)
+    );
+
+    // TODO: Shift up for positive x
+    assign lpw_result = lpw_int_out >> -in_data_int_buff[1];
 
     skid_buffer #(
         .DATA_WIDTH(LPW_WIDTH)
@@ -210,8 +224,8 @@ end else begin : lpw_approx
         .clk(clk),
         .rst(rst),
         .data_in(lpw_result),
-        .data_in_valid(mult_out_valid),
-        .data_in_ready(mult_out_ready),
+        .data_in_valid(intercept_out_valid),
+        .data_in_ready(intercept_out_ready),
         .data_out(lpw_out_data),
         .data_out_valid(lpw_out_valid),
         .data_out_ready(lpw_out_ready)
@@ -240,7 +254,7 @@ endgenerate
 
 // Output Register
 skid_buffer #(
-    .DATA_WIDTH(IN_WIDTH)
+    .DATA_WIDTH(OUT_WIDTH)
 ) out_reg (
     .clk(clk),
     .rst(rst),

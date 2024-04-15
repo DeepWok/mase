@@ -3,7 +3,7 @@ Module      : softermax_local_window
 Description : This module implements the first section of the softermax compute
               pipeline which calculates the local maximum and power of 2.
 
-              Refer to the top half of Fig. 4.a) in the Softermax Paper:
+              Refer to the top half of Fig. 4.a) in the Softermax Paper.
               https://arxiv.org/abs/2103.09301
 */
 
@@ -111,7 +111,7 @@ matrix_fifo #(
     .DATA_WIDTH(IN_WIDTH),
     .DIM0(PARALLELISM),
     .DIM1(1),
-    .FIFO_SIZE(16) // TODO: +1? check simulations
+    .FIFO_SIZE(16)
 ) input_buffer (
     .clk(clk),
     .rst(rst),
