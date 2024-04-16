@@ -1,4 +1,5 @@
 from chop.ir.onnx import MaseOnnxGraph
+from chop.ir.graph import MaseGraph
 
 import torch
 import torch.nn as nn
@@ -51,7 +52,7 @@ def _parse_attributes(
         )
         fx_nodes[node_name] = new_node
 
-    return fx_graph, fx_nodes
+    return fx_nodes
 
 
 def _initialize_nodes(
@@ -72,6 +73,11 @@ def _initialize_nodes(
         if onnx_node.op_type == "Constant":
             continue
 
+        if "name_override" in ONNX_OP_MAPPING[onnx_node.op_type].keys():
+            onnx_node.name = onnx_node.name.replace(
+                onnx_node.op_type, ONNX_OP_MAPPING[onnx_node.op_type]["name_override"]
+            )
+
         name = clean_name(onnx_node.name)
 
         # Register submodule
@@ -88,7 +94,7 @@ def _initialize_nodes(
         )
         fx_nodes[name] = new_node
 
-    return fx_graph, fx_nodes
+    return fx_nodes
 
 
 def _map_onnx_node_inputs(
@@ -155,7 +161,7 @@ def _map_onnx_node_inputs(
                 f"Unrecognized input {input_name} for ONNX node {onnx_node.name}."
             )
 
-    return fx_graph, fx_nodes
+    return fx_nodes
 
 
 def _map_onnx_node_attributes(
@@ -209,7 +215,7 @@ def _map_onnx_node_attributes(
                 torch_arg_name: attr,
             }
 
-    return fx_graph, fx_nodes
+    return fx_nodes
 
 
 def _map_onnx_node_arguments(
@@ -228,16 +234,16 @@ def _map_onnx_node_arguments(
 
         # * (1) First we map "inputs", which can come from initializer attributes (i.e. module parameters), ONNX constant
         # *   or another node (through edge mapping)
-        fx_graph, fx_nodes = _map_onnx_node_inputs(
+        fx_nodes = _map_onnx_node_inputs(
             onnx_node, fx_node_name, onnx_graph, graph_module, fx_graph, fx_nodes
         )
 
         # * (2) Now map node attributes to kwargs
-        fx_graph, fx_nodes = _map_onnx_node_attributes(
+        fx_nodes = _map_onnx_node_attributes(
             onnx_node, fx_node_name, onnx_graph, graph_module, fx_graph, fx_nodes
         )
 
-    return fx_graph, fx_nodes
+    return fx_nodes
 
 
 # * ONNX to FX Translation Pass
@@ -262,8 +268,10 @@ def export_fx_graph_analysis_pass(onnx_graph, pass_args=None):
     # fx.graph.nodes is not subscriptable, so we maintain this dict as new nodes are added
     fx_nodes = {}
 
-    fx_graph, fx_nodes = _parse_attributes(onnx_graph, gm, fx_graph, fx_nodes)
-    fx_graph, fx_nodes = _initialize_nodes(onnx_graph, gm, fx_graph, fx_nodes)
-    fx_graph, fx_nodes = _map_onnx_node_arguments(onnx_graph, gm, fx_graph, fx_nodes)
+    fx_nodes = _parse_attributes(onnx_graph, gm, fx_graph, fx_nodes)
+    fx_nodes = _initialize_nodes(onnx_graph, gm, fx_graph, fx_nodes)
+    fx_nodes = _map_onnx_node_arguments(onnx_graph, gm, fx_graph, fx_nodes)
 
-    return fx_graph, {}
+    mg = MaseGraph(model=gm)
+
+    return mg, {}

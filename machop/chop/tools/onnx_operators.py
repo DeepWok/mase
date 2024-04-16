@@ -50,3 +50,26 @@ def onnx_unsqueeze(input, dim):
     for i in dim:
         input = torch.unsqueeze(input, i)
     return input
+
+
+def onnx_gather(input, dim, index):
+    """Gather operator with support for broadcasting.
+    See https://github.com/pytorch/pytorch/issues/9407
+
+    Args:
+        input (_type_): _description_
+        dim (_type_): _description_
+        index (_type_): _description_
+
+    Returns:
+        _type_: _description_
+    """
+    n_dims = len(input.shape)
+    idx_list = [
+        torch.arange(input.shape[i])[(None,) * i + (...,) + (None,) * (n_dims - i - 1)]
+        for i in range(n_dims)
+    ]
+    idx_list[dim] = index.squeeze()[
+        (None,) * dim + (...,) + (None,) * (n_dims - dim - 1)
+    ]
+    return input[idx_list]

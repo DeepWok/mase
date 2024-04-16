@@ -88,7 +88,7 @@ class MaseGraph:
 
     def __init__(
         self,
-        model: torch.nn.Module,
+        model,
         cf_args: Optional[Dict[str, Any]] = None,
     ) -> None:
         """Mase takes a torch.fx graph representation of a model and translates
@@ -96,15 +96,29 @@ class MaseGraph:
         IR is a dataflow representation of the model with both software and
         hardware constraints.
 
-        :param model: _description_
-        :type model: torch.nn.Module
+        :param model: Input model to construct the MaseGraph. When a nn.Module is provided, this is parsed into a fx.GraphModule using the MaseTracer.
+        :type model: torch.nn.Module | fx.GraphModule
         :param cf_args: _description_, defaults to None
         :type cf_args: Optional[Dict[str, Any]], optional
         """
-        assert isinstance(
-            model, torch.nn.Module
-        ), f"model must be a torch.nn.Module. Received: {type(model)}"
+        if isinstance(model, fx.GraphModule):
+            self.model = model
+            self.model.patched_op_names = []
+            self.model.additional_inputs = []
+        elif isinstance(model, torch.nn.Module):
+            self.model = self.trace_torch_module(model, cf_args)
+        else:
+            raise ValueError(
+                f"Expected fx.GraphModule or nn.Module, but received model: {type(model)}"
+            )
 
+        self.cf_args = cf_args
+
+    def trace_torch_module(
+        self,
+        model: torch.nn.Module,
+        cf_args: Optional[Dict[str, Any]] = None,
+    ):
         # MASE internal auto-wrapped functions/layers
         custom_leaf_modules = ()
         custom_leaf_functions = ()
@@ -116,31 +130,44 @@ class MaseGraph:
         patched_nodes = getattr(model, "patched_nodes", None)
         if patched_nodes is not None:
             custom_leaf_modules += tuple(patched_nodes["modules"])
-            custom_leaf_layers += tuple(patched_nodes["layers"])
             custom_leaf_functions += tuple(patched_nodes["functions"])
-
-        self.cf_args = cf_args
+            custom_leaf_layers += tuple(patched_nodes["layers"])
 
         # create graph module
-        self.tracer = MaseTracer(
+        tracer = MaseTracer(
             custom_leaf_modules=custom_leaf_modules,
             custom_leaf_functions=custom_leaf_functions,
             custom_leaf_layers=custom_leaf_layers,
         )
-        self.model = fx.GraphModule(model, self.tracer.trace(model, cf_args))
+        graph_module = fx.GraphModule(model, tracer.trace(model, cf_args))
         if patched_nodes:
-            self.model.patched_op_names = [
+            graph_module.patched_op_names = [
                 obj.__name__.lower()
                 for obj in model.patched_nodes["layers"]
                 + model.patched_nodes["functions"]
             ]
             # these are layers we believe the user will provide system verilog for
-            self.model.patched_custom_layers = model.patched_nodes["layers"]
-            self.model.additional_inputs = model.patched_nodes["additional_inputs"]
+            graph_module.patched_custom_layers = model.patched_nodes["layers"]
+            graph_module.additional_inputs = model.patched_nodes["additional_inputs"]
         else:
-            self.model.patched_op_names = []
-            self.model.patched_custom_layers = []
-            self.model.additional_inputs = {}
+            graph_module.patched_op_names = []
+            graph_module.patched_custom_layers = []
+            graph_module.additional_inputs = {}
+
+        return graph_module
+
+    @classmethod
+    def from_module(
+        cls,
+        model: torch.nn.Module,
+        cf_args: Optional[Dict[str, Any]] = None,
+    ):
+        assert isinstance(
+            model, torch.nn.Module
+        ), f"model must be a torch.nn.Module. Received: {type(model)}"
+
+        graph_module = self.trace_torch_module(model, cf_args)
+        return cls(model=graph_module, cf_args=cf_args)
 
     def draw(self, file="mase_graph.svg"):
         drawer = FxGraphDrawer(self.model, "masegraph")

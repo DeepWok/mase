@@ -50,6 +50,14 @@ func_data = {
         "axes": "config",
         "steps": "config",
     },
+    # https://pytorch.org/docs/stable/generated/torch.reshape.html
+    "reshape": {"input": "data_in", "shape": "config"},
+    # https://pytorch.org/docs/stable/generated/torch.permute.html
+    "permute": {"input": "data_in", "dims": "config"},
+    # https://pytorch.org/docs/stable/generated/torch.nn.functional.softmax.html
+    "softmax": {"input": "data_in", "dim": "config"},
+    # https://pytorch.org/docs/stable/special.html#torch.special.erf
+    "erf": {"input": "data_in"},
 }
 
 module_data = {

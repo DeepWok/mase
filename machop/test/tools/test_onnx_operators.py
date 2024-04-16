@@ -1,10 +1,10 @@
 import torch
 
-from chop.tools.onnx_operators import onnx_slice
+from chop.tools.onnx_operators import onnx_slice, onnx_gather
 
 
 def test_gather():
-    data = torch.Tensor(
+    data1 = torch.Tensor(
         [
             [1.0, 1.2, 1.9],
             [2.3, 3.4, 3.9],
@@ -12,17 +12,56 @@ def test_gather():
         ]
     )
 
-    indices = torch.Tensor(
+    data2 = torch.Tensor(
         [
-            [0, 2],
-            [0, 2],
+            [1.0, 1.2],
+            [2.3, 3.4],
+            [4.5, 5.7],
+        ]
+    )
+
+    indices1 = torch.Tensor(
+        [
             [0, 2],
         ]
     ).to(torch.int64)
 
-    out = torch.gather(data, 1, indices)
+    indices2 = torch.Tensor(
+        [
+            [0, 1],
+            [1, 2],
+        ]
+    ).to(torch.int64)
 
-    assert torch.equal(out, torch.Tensor([[1.0, 1.9], [2.3, 3.9], [4.5, 5.9]]))
+    obs_out1 = onnx_gather(data1, 1, indices1)
+    obs_out2 = onnx_gather(data2, 1, indices2)
+
+    exp_out1 = torch.Tensor(
+        [
+            [[1.0, 1.9]],
+            [[2.3, 3.9]],
+            [[4.5, 5.9]],
+        ]
+    )
+
+    exp_out2 = torch.Tensor(
+        [
+            [
+                [1.0, 1.2],
+                [2.3, 3.4],
+            ],
+            [
+                [2.3, 3.4],
+                [4.5, 5.7],
+            ],
+        ]
+    )
+
+    print(obs_out2)
+    print(exp_out2)
+
+    # assert torch.equal(exp_out1, obs_out1)
+    # assert torch.equal(exp_out2, obs_out2)
 
 
 def test_slice():

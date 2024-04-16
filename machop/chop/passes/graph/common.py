@@ -19,11 +19,13 @@ MASE_IMPLICIT_FUNCS = [
     "flatten",
     "unsqueeze",
     "transpose",
+    "permute",
     "reshape",
     "contiguous",
     # possibly should be built-in funcs
-    "max",
+    # softmax should be listed before max
     "softmax",
+    "max",
     "cumsum",
     "erf",
     # possibly can just safely ignore?
@@ -43,7 +45,7 @@ MASE_IMPLICIT_FUNCS = [
     "shape",
     "gather",
     "slice",
-    "cat"
+    "cat",
 ]
 
 MASE_MODULE_RELATED_FUNCS = [

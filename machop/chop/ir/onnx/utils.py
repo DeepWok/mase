@@ -1,10 +1,6 @@
 import torch
 
-from chop.tools.onnx_operators import (
-    onnx_gemm,
-    onnx_slice,
-    onnx_unsqueeze,
-)
+from chop.tools.onnx_operators import onnx_gemm, onnx_slice, onnx_unsqueeze, onnx_gather
 
 ONNX_TO_TORCH_DTYPE = [
     torch.float16,
@@ -122,7 +118,7 @@ ONNX_OP_MAPPING = {
     },
     "Gather": {
         "fx_op": "call_function",
-        "target": torch.gather,
+        "target": onnx_gather,
         "input_mapping": ["input", "index"],
         "attribute_mapping": ["dim"],
         "attribute_transform": [None],
@@ -231,8 +227,9 @@ ONNX_OP_MAPPING = {
     "Transpose": {
         "fx_op": "call_function",
         "target": torch.permute,
+        "name_override": "Permute",
         "attribute_mapping": ["dims"],
-        "attribute_transform": [None],
+        "attribute_transform": [lambda x: [i for i in x]],
         "input_mapping": ["input"],
     },
     "Max": {
