@@ -14,6 +14,7 @@ class MaseOnnxGraph:
         self,
         model_proto: onnx.onnx_ml_pb2.ModelProto,
     ):
+        self.model_proto = model_proto
         self.graph = model_proto.graph
 
         # * Initializer attributes contain weights and biases

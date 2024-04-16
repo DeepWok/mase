@@ -165,29 +165,6 @@ def graph_iterator_for_mase_ops(graph):
     return graph
 
 
-def pre_check(args, kwargs, node):
-    if node.target == torch.reshape:
-        if isinstance(kwargs["shape"], torch.Tensor):
-            kwargs = {
-                **{k: v for k, v in kwargs.items() if k != "shape"},
-                "shape": tuple(kwargs["shape"].to(torch.int64).tolist()),
-            }
-
-    return args, kwargs
-
-
-def post_check(result, node):
-    if isinstance(result, torch.Tensor):
-        return result
-    elif isinstance(result, torch.Size):
-        logger.info(f"Casting {node.name} output from torch.Size to torch.Tensor")
-        return torch.Tensor(list(result))
-    else:
-        raise ValueError(
-            f"I don't know how to handle this node output type: {type(result)}"
-        )
-
-
 def graph_iterator_for_metadata(
     graph, dummy_in=None, add_value=True, force_device_meta=False
 ):
@@ -208,30 +185,24 @@ def graph_iterator_for_metadata(
         args, kwargs = None, None
         if node.op == "placeholder":
             result = dummy_in[node.name]
-            result = post_check(result, node)
             analyse_fn = analyse_common_parameters_placeholder
         elif node.op == "get_attr":
             result = fetch_attr(model, node.target)
-            result = post_check(result, node)
             analyse_fn = analyse_common_parameters_attr
         elif node.op == "call_function":
             args = load_arg(node.args, env)
             kwargs = load_arg(node.kwargs, env)
-            args, kwargs = pre_check(args, kwargs, node)
             result = node.target(*args, **kwargs)
-            result = post_check(result, node)
             analyse_fn = analyse_common_parameters_function
         elif node.op == "call_method":
             self_obj, *args = load_arg(node.args, env)
             kwargs = load_arg(node.kwargs, env)
             result = getattr(self_obj, node.target)(*args, **kwargs)
-            result = post_check(result, node)
             analyse_fn = analyse_common_parameters_method
         elif node.op == "call_module":
             args = load_arg(node.args, env)
             kwargs = load_arg(node.kwargs, env)
             result = modules[node.target](*args, **kwargs)
-            result = post_check(result, node)
             analyse_fn = analyse_common_parameters_module
         elif node.op == "output":
             analyse_fn = analyse_common_parameters_output

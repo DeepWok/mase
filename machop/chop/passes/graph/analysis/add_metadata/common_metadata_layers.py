@@ -58,6 +58,8 @@ func_data = {
     "softmax": {"input": "data_in", "dim": "config"},
     # https://pytorch.org/docs/stable/special.html#torch.special.erf
     "erf": {"input": "data_in"},
+    # onnx_shape (custom implementation)
+    "shape": {"input": "data_in"},
 }
 
 module_data = {

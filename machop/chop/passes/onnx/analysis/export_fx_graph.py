@@ -37,8 +37,12 @@ def _parse_attributes(
         setattr(
             graph_module.get_submodule(module_str),
             attr_name,
-            torch.from_numpy(
-                onnx.numpy_helper.to_array(onnx_graph.initializer_attributes[attr_path])
+            torch.nn.Parameter(
+                torch.from_numpy(
+                    onnx.numpy_helper.to_array(
+                        onnx_graph.initializer_attributes[attr_path]
+                    )
+                )
             ),
         )
 
@@ -49,6 +53,46 @@ def _parse_attributes(
             op="get_attr",
             name=node_name,
             target=f"{module_str}.{attr_name}" if module_str != "" else attr_name,
+        )
+        fx_nodes[node_name] = new_node
+
+    return fx_nodes
+
+
+def _parse_constants(
+    onnx_graph: MaseOnnxGraph,
+    graph_module: fx.GraphModule,
+    fx_graph: fx.Graph,
+    fx_nodes: dict,
+):
+    """Parse ONNX graph constants and initialize torch module parameters.
+
+    Args:
+        onnx_graph (MaseOnnxGraph): _description_
+        graph_module (fx.GraphModule): _description_
+        fx_graph (fx.Graph): _description_
+        fx_nodes (dict): _description_
+    """
+    for constant_name, constant in onnx_graph.constants.items():
+        module_str = ".".join(constant_name.split("/")[1:-1])
+        node_name = clean_name(constant_name)
+        node_name = node_name[1:] if node_name[0] == "_" else node_name
+
+        # Set torch module parameter
+        init_submodule(graph_module, module_str)
+        setattr(
+            graph_module.get_submodule(module_str),
+            node_name,
+            torch.nn.Parameter(
+                data=deserialize_constant(constant), requires_grad=False
+            ),
+        )
+
+        # Create get_attr node
+        new_node = fx_graph.create_node(
+            op="get_attr",
+            name=node_name,
+            target=f"{module_str}.{node_name}" if module_str != "" else node_name,
         )
         fx_nodes[node_name] = new_node
 
@@ -69,6 +113,7 @@ def _initialize_nodes(
 
     # Initialize all nodes
     for onnx_node in onnx_graph.graph.node:
+
         # Don't register Constant nodes
         if onnx_node.op_type == "Constant":
             continue
@@ -78,20 +123,26 @@ def _initialize_nodes(
                 onnx_node.op_type, ONNX_OP_MAPPING[onnx_node.op_type]["name_override"]
             )
 
-        name = clean_name(onnx_node.name)
-
         # Register submodule
         node_module = ".".join(onnx_node.name.split("/")[1:-1])
         init_submodule(graph_module, node_module)  # in case not yet initialized
 
         # Create node in FX graph
-        node_op = ONNX_OP_MAPPING[onnx_node.op_type]["fx_op"]
-        node_target = ONNX_OP_MAPPING[onnx_node.op_type]["target"]
+        name = clean_name(onnx_node.name)
         new_node = fx_graph.create_node(
-            op=node_op,
+            op=ONNX_OP_MAPPING[onnx_node.op_type]["fx_op"],
             name=name,
-            target=node_target,
+            target=ONNX_OP_MAPPING[onnx_node.op_type]["target"],
         )
+        fx_nodes[name] = new_node
+        print(f"created node with name {name}")
+
+    # Create output nodes for ONNX graph outputs
+    for out_node in onnx_graph.graph.output:
+        name = clean_name(out_node.name)
+        new_node = fx_graph.create_node(op="output", name=name, target=name)
+        input_onnx_node = onnx_graph.edge_mapping[out_node.name]
+        new_node.args = [fx_nodes[clean_name(input_onnx_node.name)]]
         fx_nodes[name] = new_node
 
     return fx_nodes
@@ -135,7 +186,7 @@ def _map_onnx_node_inputs(
             add_kwarg(
                 fx_nodes[fx_node_name],
                 torch_arg_name,
-                deserialize_constant(onnx_graph.edge_mapping[input_name]),
+                fx_nodes[clean_name(onnx_graph.edge_mapping[input_name].name)],
             )
 
         # * (C) Input from another node
@@ -269,9 +320,13 @@ def export_fx_graph_analysis_pass(onnx_graph, pass_args=None):
     fx_nodes = {}
 
     fx_nodes = _parse_attributes(onnx_graph, gm, fx_graph, fx_nodes)
+    fx_nodes = _parse_constants(onnx_graph, gm, fx_graph, fx_nodes)
     fx_nodes = _initialize_nodes(onnx_graph, gm, fx_graph, fx_nodes)
     fx_nodes = _map_onnx_node_arguments(onnx_graph, gm, fx_graph, fx_nodes)
 
     mg = MaseGraph(model=gm)
+
+    # Recompile the code after graph transformations
+    mg.model.recompile()
 
     return mg, {}

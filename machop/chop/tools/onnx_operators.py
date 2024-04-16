@@ -64,6 +64,9 @@ def onnx_gather(input, dim, index):
     Returns:
         _type_: _description_
     """
+    if not isinstance(input, torch.Tensor):
+        input = torch.tensor(list(input))
+
     n_dims = len(input.shape)
     idx_list = [
         torch.arange(input.shape[i])[(None,) * i + (...,) + (None,) * (n_dims - i - 1)]
@@ -73,3 +76,13 @@ def onnx_gather(input, dim, index):
         (None,) * dim + (...,) + (None,) * (n_dims - dim - 1)
     ]
     return input[idx_list]
+
+
+def onnx_shape(input):
+    return torch.Tensor([i for i in input.shape])
+
+
+def onnx_reshape(input, shape):
+    if isinstance(shape, torch.Tensor):
+        shape = tuple(shape.to(torch.int64).tolist())
+    return torch.reshape(input, shape)
