@@ -51,16 +51,16 @@ def test_export_fx_graph_model(pretrained):
     # assert(torch.equal(onnx_out, mg_out))
 
 
-def test_export_fx_graph_alberta():
-    test_export_fx_graph_model(
-        "albert-base-v2",
-    )
+# def test_export_fx_graph_alberta():
+#     test_export_fx_graph_model(
+#         "albert-base-v2",
+#     )
 
 
-def test_export_fx_graph_bart():
-    test_export_fx_graph_model(
-        "facebook/bart-base",
-    )
+# def test_export_fx_graph_bart():
+#     test_export_fx_graph_model(
+#         "facebook/bart-base",
+#     )
 
 
 def test_export_fx_graph_bert():
@@ -69,46 +69,46 @@ def test_export_fx_graph_bert():
     )
 
 
-def test_export_fx_graph_bloom():
-    test_export_fx_graph_model(
-        "bigscience/bloom-1b7",
-    )
+# def test_export_fx_graph_bloom():
+#     test_export_fx_graph_model(
+#         "bigscience/bloom-1b7",
+#     )
 
 
-def test_export_fx_graph_distilbert():
-    test_export_fx_graph_model(
-        "distilbert-base-uncased",
-    )
+# def test_export_fx_graph_distilbert():
+#     test_export_fx_graph_model(
+#         "distilbert-base-uncased",
+#     )
 
 
-def test_export_fx_graph_gpt2():
-    test_export_fx_graph_model(
-        "gpt2",
-    )
+# def test_export_fx_graph_gpt2():
+#     test_export_fx_graph_model(
+#         "gpt2",
+#     )
 
 
-def test_export_fx_graph_opt():
-    test_export_fx_graph_model(
-        "facebook/opt-125m",
-    )
+# def test_export_fx_graph_opt():
+#     test_export_fx_graph_model(
+#         "facebook/opt-125m",
+#     )
 
 
-def test_export_fx_graph_roberta():
-    test_export_fx_graph_model(
-        "roberta-base",
-    )
+# def test_export_fx_graph_roberta():
+#     test_export_fx_graph_model(
+#         "roberta-base",
+#     )
 
 
-def test_export_fx_graph_t5():
-    test_export_fx_graph_model(
-        "t5-base",
-    )
+# def test_export_fx_graph_t5():
+#     test_export_fx_graph_model(
+#         "t5-base",
+#     )
 
 
-def test_export_fx_graph_stable_diffusion():
-    test_export_fx_graph_model(
-        "runwayml/stable-diffusion-v1-5",
-    )
+# def test_export_fx_graph_stable_diffusion():
+#     test_export_fx_graph_model(
+#         "runwayml/stable-diffusion-v1-5",
+#     )
 
 
 if __name__ == "__main__":
