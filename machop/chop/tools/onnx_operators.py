@@ -110,6 +110,10 @@ def onnx_expand(input, size):
 
 
 def onnx_where(condition, input, other):
+    cond = condition
+    pre_input_shape = input.shape
+    pre_other_shape = other.shape
+
     if len(input.shape) == 0:
         input = input.unsqueeze(dim=0)
 
@@ -132,6 +136,8 @@ def onnx_where(condition, input, other):
 def onnx_full(size, fill_value):
     if isinstance(size, torch.Tensor):
         size = tuple(size.to(torch.int64).tolist())
+    if isinstance(fill_value, torch.Tensor):
+        fill_value = fill_value.item()
     return torch.full(size, fill_value)
 
 
@@ -148,6 +154,7 @@ def onnx_min(*args, **kwargs):
 
 
 def onnx_permute(input, dims):
+    input = input.squeeze()
     if dims is None:
         dims = [i for i in reversed(range(len(input.shape)))]
     return torch.permute(input, dims)

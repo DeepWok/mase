@@ -232,11 +232,9 @@ def _map_onnx_node_attributes(
             continue
 
         # ! TO DO: consider other types of attributes
-        if attribute.type == onnx.AttributeProto.INTS:
-            # List of integers
-            attr = attribute.ints
-        else:
-            attr = attribute.i
+        attr = onnx.helper.get_attribute_value(attribute)
+        if attribute.type == onnx.AttributeProto.TENSOR:
+            attr = torch.from_numpy(onnx.numpy_helper.to_array(attr))
 
         if (
             "attribute_transform" in ONNX_OP_MAPPING[onnx_node.op_type].keys()

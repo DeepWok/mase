@@ -264,7 +264,8 @@ ONNX_OP_MAPPING = {
         "fx_op": "call_function",
         "target": onnx_squeeze,
         "input_mapping": ["input", "dim"],
-        "attribute_mapping": {},
+        "attribute_mapping": {"axes": "dim"},
+        "attribute_transform": {"axes": lambda x: tuple([i for i in x])},
     },
     "Range": {
         "fx_op": "call_function",

@@ -2,7 +2,7 @@ import sys, traceback, pdb
 import logging
 
 import torch
-from transformers import AutoConfig, AutoTokenizer
+from transformers import AutoConfig, AutoTokenizer, AutoModel
 
 from chop import MaseGraph, MaseOnnxGraph
 from chop.passes import (
@@ -32,12 +32,42 @@ sys.excepthook = excepthook
 def test_export_fx_graph_model(
     pretrained: str, monolith=True, task="auto", skip_export=False
 ):
+    # * Get model
+    hf_model = AutoModel.from_pretrained(pretrained)
+
+    # * Get dummy input
     tokenizer = AutoTokenizer.from_pretrained(pretrained)
-    model_inputs = tokenizer(["Hello, world!", "How are you?"], return_tensors="pt")
-    # model_inputs["decoder_input_ids"] = model_inputs["input_ids"]
+    # ! TO DO: bert only works when batch size > 1
+    model_inputs = tokenizer(
+        [
+            "Studies have been shown that owning a dog is good for you",
+            "Studies have been shown that owning a dog makes you 10x happier",
+        ],
+        padding=True,
+        return_tensors="pt",
+    )
 
+    if "t5" in pretrained:
+        # encoder decoder model
+        decoder_input_ids = tokenizer(
+            "Studies show that", return_tensors="pt"
+        ).input_ids
+        decoder_input_ids = hf_model._shift_right(decoder_input_ids)
+        model_inputs["decoder_input_ids"] = decoder_input_ids
+        print(f"model_inputs: {model_inputs.keys()}")
+
+    # * Run HuggingFace model (for debug)
+    _ = hf_model(**model_inputs)
+
+    # * Run Onnx runtime
+    session = rt.InferenceSession(
+        f"{os.environ['HOME']}/.mase/onnx/{pretrained}/model.onnx"
+    )
     onnx_model_inputs = {k: v.numpy() for k, v in model_inputs.items()}
+    onnx_out = session.run([], onnx_model_inputs)
+    # onnx_out = torch.squeeze(torch.Tensor(onnx_out))
 
+    # * Export MaseGraph from ONNX graph
     onnx_graph = MaseOnnxGraph.from_pretrained(
         pretrained, monolith=monolith, task=task, skip_export=skip_export
     )
@@ -46,12 +76,7 @@ def test_export_fx_graph_model(
     mg, _ = init_metadata_analysis_pass(mg)
     mg, _ = add_common_metadata_analysis_pass(mg, pass_args={"dummy_in": model_inputs})
 
-    session = rt.InferenceSession(
-        f"{os.environ['HOME']}/.mase/onnx/{pretrained}/model.onnx"
-    )
-
-    onnx_out = session.run([], onnx_model_inputs)
-    onnx_out = torch.squeeze(torch.Tensor(onnx_out))
+    # * Run FX GraphModule
     mg_out = mg.model(**model_inputs)
 
     # mg, _ = add_hardware_metadata_analysis_pass(mg)
@@ -66,6 +91,7 @@ def test_export_fx_graph_bert():
 def test_export_fx_graph_bloom():
     test_export_fx_graph_model(
         "bigscience/bloom-1b7",
+        skip_export=True,
     )
 
 
@@ -83,19 +109,13 @@ def test_export_fx_graph_graphormer():
 
 def test_export_fx_graph_llama():
     test_export_fx_graph_model(
-        "meta-llama/Llama-2-7b",
+        "huggyllama/llama-7b",
     )
 
 
-def test_export_fx_graph_longformer():
+def test_export_fx_graph_mistral():
     test_export_fx_graph_model(
-        "allenai/longformer-base-4096",
-    )
-
-
-def test_export_fx_graph_mixtral():
-    test_export_fx_graph_model(
-        "mistralai/Mixtral-8x7B-v0.1",
+        "mistral-community/Mistral-7B-v0.2",
     )
 
 
@@ -128,15 +148,16 @@ def test_export_fx_graph_whisper():
 
 
 if __name__ == "__main__":
-    # test_export_fx_graph_bert()
-    test_export_fx_graph_bloom()
-    # test_export_fx_graph_gpt2()
-    # test_export_fx_graph_graphormer()
-    # test_export_fx_graph_llama()
-    # test_export_fx_graph_longformer()
-    # test_export_fx_graph_mixtral()
-    # test_export_fx_graph_opt()
-    # test_export_fx_graph_swin()
+    test_export_fx_graph_bert()  # works
+    # test_export_fx_graph_opt() # failing on gather
+    # test_export_fx_graph_bloom() # need to check node by node
     # test_export_fx_graph_t5()
-    # test_export_fx_graph_vit()
-    # test_export_fx_graph_whisper()
+
+    # test_export_fx_graph_graphormer() # need to figure out how to preprocess data
+    # test_export_fx_graph_swin() # need to figure out how to preprocess data
+    # test_export_fx_graph_vit() # need to figure out how to preprocess data
+    # test_export_fx_graph_whisper() # need to figure out how to preprocess data
+
+    # test_export_fx_graph_gpt2() # too big to download on 4G
+    # test_export_fx_graph_llama() # too big to download on 4G
+    # test_export_fx_graph_mistral() # too big to download on 4G
