@@ -28,6 +28,8 @@ func_data = {
     "matmul": {"input": "data_in", "other": "data_in"},
     # https://pytorch.org/docs/stable/generated/torch.bmm.html
     "bmm": {"input": "data_in", "mat2": "data_in"},
+    # https://pytorch.org/docs/stable/generated/torch.squeeze.html
+    "squeeze": {"input": "data_in", "dim": "config"},
     # https://pytorch.org/docs/stable/generated/torch.unsqueeze.html
     "unsqueeze": {"input": "data_in", "dim": "config"},
     # https://pytorch.org/docs/stable/generated/torch.gather.html
@@ -60,6 +62,66 @@ func_data = {
     "erf": {"input": "data_in"},
     # onnx_shape (custom implementation)
     "shape": {"input": "data_in"},
+    # onnx_identity (custom implementation)
+    "identity": {"input": "data_in"},
+    # https://pytorch.org/docs/stable/generated/torch.max.html
+    "max": {"input": "data_in"},
+    # https://pytorch.org/docs/stable/generated/torch.sin.html
+    "sin": {"input": "data_in"},
+    # https://pytorch.org/docs/stable/generated/torch.cos.html
+    "cos": {"input": "data_in"},
+    # https://pytorch.org/docs/stable/generated/torch.tan.html
+    "tan": {"input": "data_in"},
+    # https://pytorch.org/docs/stable/generated/torch.tanh.html
+    "tanh": {"input": "data_in"},
+    # https://pytorch.org/docs/stable/generated/torch.gt.html#torch.gt
+    "greater": {"input": "data_in", "other": "data_in"},
+    # https://pytorch.org/docs/stable/generated/torch.abs.html
+    "abs": {"input": "data_in"},
+    # https://pytorch.org/docs/stable/generated/torch.sigmoid.html
+    "sigmoid": {"input": "data_in"},
+    # https://pytorch.org/docs/stable/generated/torch.argmax.html
+    "argmax": {"input": "data_in"},
+    # https://pytorch.org/docs/stable/generated/torch.split.html
+    "split": {"input": "data_in", "split_size_or_sections": "config", "dim": "config"},
+    # https://pytorch.org/docs/stable/generated/torch.logical_not.html
+    "not": {"input": "data_in"},
+    # https://pytorch.org/docs/stable/generated/torch.tile.html
+    "tile": {"input": "data_in", "dims": "config"},
+    # https://pytorch.org/docs/stable/generated/torch.lt.html#torch.lt
+    "less": {"input": "data_in", "other": "data_in"},
+    # https://pytorch.org/docs/stable/generated/torch.le.html
+    "lessorequal": {"input": "data_in", "other": "data_in"},
+    # https://pytorch.org/docs/stable/generated/torch.min.html
+    "min": {"input": "data_in"},
+    # https://pytorch.org/docs/stable/generated/torch.neg.html
+    "neg": {"input": "data_in"},
+    # https://pytorch.org/docs/stable/generated/torch.log.html
+    "log": {"input": "data_in"},
+    # https://pytorch.org/docs/stable/generated/torch.mean.html
+    "mean": {"input": "data_in"},
+    # https://pytorch.org/docs/stable/generated/torch.range.html
+    "range": {"start": "config", "end": "config", "step": "config"},
+    # https://pytorch.org/docs/stable/generated/torch.where.html
+    "where": {"condition": "config", "input": "data_in", "other": "data_in"},
+    # https://pytorch.org/docs/stable/generated/torch.equal.html
+    "eq": {"input": "data_in", "other": "data_in"},
+    # https://pytorch.org/docs/stable/generated/torch.cumsum.html
+    "cumsum": {"input": "data_in", "dim": "config"},
+    # onnx_gemm (custom implementation)
+    "gemm": {
+        "A": "data_in",
+        "B": "data_in",
+        "C": "data_in",
+        "alpha": "config",
+        "beta": "config",
+        "transA": "config",
+        "transB": "config",
+    },
+    # https://pytorch.org/docs/stable/generated/torch.full.html
+    "full": {"size": "config", "fill_value": "data_in"},
+    # https://pytorch.org/docs/stable/generated/torch.Tensor.expand.html
+    "expand": {"input": "data_in", "size": "config"},
 }
 
 module_data = {
@@ -143,13 +205,22 @@ def match_args_and_kwargs(meta, args, kwargs, data, add_value):
             n, vtype = ordered_func_data[i]
             meta_kwargs[n] = args[i]
 
+    def get_shape(x):
+        if isinstance(x, torch.Tensor):
+            return list(x.shape)
+        elif isinstance(x, int):
+            return [1]
+        elif isinstance(x, list):
+            return [len(x)]
+        else:
+            raise ValueError(f"Unknown type {type(x)}")
+
     for k, v in kwargs.items():
         if data[k] == "data_in":
             # rename this to mase data_in_number
             arg_meta = {
-                # v is a list for torch.cat
-                "shape": (len(v) if isinstance(v, list) else list(v.shape)),
-                "torch_dtype": v[0].dtype if isinstance(v, list) else v.dtype,
+                "shape": get_shape(v),
+                "torch_dtype": v.dtype if isinstance(v, torch.Tensor) else type(v),
                 "type": "float",
                 "precision": [32],
             }

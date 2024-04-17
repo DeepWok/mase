@@ -15,22 +15,18 @@ MASE_IMPLICIT_FUNCS = [
     # possibly are just constants
     "size",
     "view",
-    # possibly are just memory ops or tensor reshapes
+    # Memory ops and tensor reshapes
+    "to",
     "flatten",
+    "squeeze",
     "unsqueeze",
     "transpose",
     "permute",
     "reshape",
     "contiguous",
-    # possibly should be built-in funcs
-    # softmax should be listed before max
-    "softmax",
-    "max",
-    "cumsum",
-    "erf",
-    # possibly can just safely ignore?
     "dropout",
     "eq",
+    "gemm",
     "ge",
     "where",
     "_assert",
@@ -46,6 +42,10 @@ MASE_IMPLICIT_FUNCS = [
     "gather",
     "slice",
     "cat",
+    "split",
+    "tile",
+    "expand",
+    "full",
 ]
 
 MASE_MODULE_RELATED_FUNCS = [
@@ -63,12 +63,14 @@ MASE_MODULE_RELATED_FUNCS = [
     "max_pool1d",
     "max_pool2d",
     "relu",
+    "identity",
 ]
 
 MASE_MODULES = [
     "batch_norm1d",
     "batch_norm2d",
 ]
+
 MASE_BUILTIN_FUNCS = [
     "mul",
     "sub",
@@ -79,6 +81,25 @@ MASE_BUILTIN_FUNCS = [
     "pow",
     "sqrt",
     "div",
+    "softmax",
+    "max",
+    "cumsum",
+    "erf",
+    "sin",
+    "cos",
+    "tan",
+    "sinh",
+    "cosh",
+    "tanh",
+    "greater",
+    "less",
+    "le",  # less or equal
+    "sigmoid",
+    "not",
+    "min",
+    "neg",
+    "log",
+    "range",
 ]
 
 

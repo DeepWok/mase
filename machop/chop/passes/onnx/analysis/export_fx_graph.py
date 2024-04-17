@@ -135,7 +135,6 @@ def _initialize_nodes(
             target=ONNX_OP_MAPPING[onnx_node.op_type]["target"],
         )
         fx_nodes[name] = new_node
-        print(f"created node with name {name}")
 
     # Create output nodes for ONNX graph outputs
     for out_node in onnx_graph.graph.output:
@@ -173,7 +172,7 @@ def _map_onnx_node_inputs(
         if torch_arg_name == "":
             continue
 
-        # * (A) Input from model parameters mapped from onnx graph attributes
+        # * (A) Input from model parameters mapped from onnx graph attributes, i.e. get_attr fx node
         if input_name in onnx_graph.initializer_attributes.keys():
             add_kwarg(
                 fx_nodes[fx_node_name],
@@ -181,7 +180,7 @@ def _map_onnx_node_inputs(
                 fx_nodes[clean_name(input_name.replace(f"::", "_"))],
             )
 
-        # * (B) Input from onnx constant node
+        # * (B) Input from onnx constant node, i.e. get_attr fx node
         elif onnx_graph.edge_mapping[input_name].name in onnx_graph.constants.keys():
             add_kwarg(
                 fx_nodes[fx_node_name],
@@ -223,48 +222,52 @@ def _map_onnx_node_attributes(
     fx_graph: fx.Graph,
     fx_nodes: dict,
 ):
-    # First handle attributes with default values not explicitly set in ONNX node
-    if len(onnx_node.attribute) < len(
-        ONNX_OP_MAPPING[onnx_node.op_type]["attribute_mapping"]
-    ):
-        for attribute_idx, torch_arg_name in enumerate(
-            ONNX_OP_MAPPING[onnx_node.op_type]["attribute_mapping"]
+    for attribute in onnx_node.attribute:
+        torch_arg_name = ONNX_OP_MAPPING[onnx_node.op_type]["attribute_mapping"][
+            attribute.name
+        ]
+
+        # ONNX attribute is not mapped to a torch input, so skip
+        if torch_arg_name == "":
+            continue
+
+        # ! TO DO: consider other types of attributes
+        if attribute.type == onnx.AttributeProto.INTS:
+            # List of integers
+            attr = attribute.ints
+        else:
+            attr = attribute.i
+
+        if (
+            "attribute_transform" in ONNX_OP_MAPPING[onnx_node.op_type].keys()
+            and ONNX_OP_MAPPING[onnx_node.op_type]["attribute_transform"][
+                attribute.name
+            ]
+            is not None
         ):
-            if torch_arg_name == "":
-                continue
-            attr = ONNX_OP_MAPPING[onnx_node.op_type]["attribute_default"][
-                attribute_idx
-            ]
-            fx_nodes[fx_node_name].kwargs = {
-                **fx_nodes[fx_node_name].kwargs,
-                torch_arg_name: attr,
-            }
-    else:
-        for attribute_idx, attribute in enumerate(onnx_node.attribute):
-            torch_arg_name = ONNX_OP_MAPPING[onnx_node.op_type]["attribute_mapping"][
-                attribute_idx
-            ]
+            attr = ONNX_OP_MAPPING[onnx_node.op_type]["attribute_transform"][
+                attribute.name
+            ](attr)
 
-            # ONNX attribute is not mapped to a torch input, so skip
-            if torch_arg_name == "":
-                continue
+        add_kwarg(fx_nodes[fx_node_name], torch_arg_name, attr)
 
-            # ! TO DO: consider other types of attributes
-            if attribute.type == onnx.AttributeProto.INTS:
-                # List of integers
-                attr = attribute.ints
-            else:
-                attr = attribute.i
-
-            if ONNX_OP_MAPPING[onnx_node.op_type]["attribute_transform"][attribute_idx]:
-                attr = ONNX_OP_MAPPING[onnx_node.op_type]["attribute_transform"][
-                    attribute_idx
-                ](attr)
-
-            fx_nodes[fx_node_name].kwargs = {
-                **fx_nodes[fx_node_name].kwargs,
-                torch_arg_name: attr,
-            }
+    # Handle case when not all attributes are included in ONNX node
+    if len(onnx_node.attribute) < len(
+        ONNX_OP_MAPPING[onnx_node.op_type]["attribute_mapping"].keys()
+    ):
+        node_attributes = [attr.name for attr in onnx_node.attribute]
+        for onnx_attr, torch_arg_name in ONNX_OP_MAPPING[onnx_node.op_type][
+            "attribute_mapping"
+        ].items():
+            # Check that attribute hasn't already been mapped
+            if (
+                torch_arg_name not in fx_nodes[fx_node_name].kwargs.keys()
+                and torch_arg_name != ""
+            ):
+                attr = ONNX_OP_MAPPING[onnx_node.op_type]["attribute_default"][
+                    onnx_attr
+                ]
+                add_kwarg(fx_nodes[fx_node_name], torch_arg_name, attr)
 
     return fx_nodes
 
@@ -277,9 +280,15 @@ def _map_onnx_node_arguments(
 ):
     # * ONNX node arguments can be represented as "inputs" or "attributes".
     for onnx_node in onnx_graph.graph.node:
+
         # Don't register Constant nodes
         if onnx_node.op_type == "Constant":
             continue
+
+        if onnx_node.op_type not in ONNX_OP_MAPPING.keys():
+            raise ValueError(
+                f"Unrecognized ONNX operator: {onnx_node.op_type}. To add support, include this in chop.ir.onnx.ONNX_OP_MAPPING."
+            )
 
         fx_node_name = clean_name(onnx_node.name)
 
@@ -301,7 +310,7 @@ def _map_onnx_node_arguments(
 # * ------------------------------
 
 
-def export_fx_graph_analysis_pass(onnx_graph, pass_args=None):
+def export_fx_graph_analysis_pass(onnx_model_dict, pass_args=None):
     """Receives a MaseOnnxGraph and pass_args, and returns a MaseGraph.
 
     Args:
@@ -309,24 +318,30 @@ def export_fx_graph_analysis_pass(onnx_graph, pass_args=None):
         pass_args (_type_): _description_
     """
 
-    assert isinstance(
-        onnx_graph, MaseOnnxGraph
-    ), f"Expected MaseOnnxGraph, got {type(onnx_graph)}"
+    # assert isinstance(
+    #     onnx_graph, MaseOnnxGraph
+    # ), f"Expected MaseOnnxGraph, got {type(onnx_graph)}"
 
-    fx_graph = fx.Graph()
-    gm = fx.GraphModule(nn.Module(), fx_graph)
+    mase_graphs = {}
+    for model_name, onnx_model in onnx_model_dict.items():
+        onnx_graph = MaseOnnxGraph(onnx_model, model_name=model_name)
 
-    # fx.graph.nodes is not subscriptable, so we maintain this dict as new nodes are added
-    fx_nodes = {}
+        fx_graph = fx.Graph()
+        gm = fx.GraphModule(nn.Module(), fx_graph)
 
-    fx_nodes = _parse_attributes(onnx_graph, gm, fx_graph, fx_nodes)
-    fx_nodes = _parse_constants(onnx_graph, gm, fx_graph, fx_nodes)
-    fx_nodes = _initialize_nodes(onnx_graph, gm, fx_graph, fx_nodes)
-    fx_nodes = _map_onnx_node_arguments(onnx_graph, gm, fx_graph, fx_nodes)
+        # fx.graph.nodes is not subscriptable, so we maintain this dict as new nodes are added
+        fx_nodes = {}
 
-    mg = MaseGraph(model=gm)
+        fx_nodes = _parse_attributes(onnx_graph, gm, fx_graph, fx_nodes)
+        fx_nodes = _parse_constants(onnx_graph, gm, fx_graph, fx_nodes)
+        fx_nodes = _initialize_nodes(onnx_graph, gm, fx_graph, fx_nodes)
+        fx_nodes = _map_onnx_node_arguments(onnx_graph, gm, fx_graph, fx_nodes)
 
-    # Recompile the code after graph transformations
-    mg.model.recompile()
+        mg = MaseGraph(model=gm)
 
-    return mg, {}
+        # Recompile the code after graph transformations
+        mg.model.recompile()
+
+        mase_graphs[model_name] = mg
+
+    return mase_graphs, {}

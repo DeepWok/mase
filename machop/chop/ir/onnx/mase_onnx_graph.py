@@ -13,9 +13,11 @@ class MaseOnnxGraph:
     def __init__(
         self,
         model_proto: onnx.onnx_ml_pb2.ModelProto,
+        model_name: str = None,
     ):
         self.model_proto = model_proto
         self.graph = model_proto.graph
+        self.model_name = model_name
 
         # * Initializer attributes contain weights and biases
         # i.e. module parameters in Pytorch
@@ -53,13 +55,32 @@ class MaseOnnxGraph:
             )
 
     @classmethod
-    def from_pretrained(cls, pretrained: str):
-        model_path = f"{HOME}/.mase/onnx/{pretrained}/model.onnx"
-        if not os.path.exists(model_path):
+    def from_pretrained(
+        cls, pretrained: str, monolith=True, task=None, skip_export=False
+    ):
+        if not skip_export:
             main_export(
                 pretrained,
                 output=f"{HOME}/.mase/onnx/{pretrained}",
-                no_post_process=True,
+                framework="pt",
+                task=task,
+                # no_post_process=True,
                 model_kwargs={"output_attentions": True},
+                monolith=monolith,
             )
-        return cls(model_proto=onnx.load(model_path))
+
+        onnx_files = [
+            file
+            for file in os.listdir(f"{os.environ['HOME']}/.mase/onnx/{pretrained}")
+            if file.endswith(".onnx")
+        ]
+        onnx_models = {
+            name.replace(".onnx", ""): onnx.load(
+                f"{HOME}/.mase/onnx/{pretrained}/{name}"
+            )
+            for name in onnx_files
+        }
+        return {
+            name: cls(model_proto=onnx_model, model_name=name)
+            for name, onnx_model in onnx_models.items()
+        }

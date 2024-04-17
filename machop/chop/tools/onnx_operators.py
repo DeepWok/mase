@@ -46,6 +46,12 @@ def onnx_slice(data, starts, ends, axes=None, steps=None):
     return data[slices]
 
 
+def onnx_squeeze(input, dim):
+    if isinstance(dim, torch.nn.parameter.Parameter):
+        dim = dim.item()
+    return torch.squeeze(input, dim)
+
+
 def onnx_unsqueeze(input, dim):
     for i in dim:
         input = torch.unsqueeze(input, i)
@@ -67,6 +73,9 @@ def onnx_gather(input, dim, index):
     if not isinstance(input, torch.Tensor):
         input = torch.tensor(list(input))
 
+    # expand_shape = list(index.shape[:-1]) + list(input.shape)
+    # tmp_inp = input.expand(expand_shape)
+
     n_dims = len(input.shape)
     idx_list = [
         torch.arange(input.shape[i])[(None,) * i + (...,) + (None,) * (n_dims - i - 1)]
@@ -86,3 +95,59 @@ def onnx_reshape(input, shape):
     if isinstance(shape, torch.Tensor):
         shape = tuple(shape.to(torch.int64).tolist())
     return torch.reshape(input, shape)
+
+
+def onnx_identity(input):
+    return input
+
+
+def onnx_expand(input, size):
+    if isinstance(size, torch.Size):
+        size = tuple(size)
+    elif isinstance(size, torch.Tensor):
+        size = tuple(size.to(torch.int64).tolist())
+    return input.expand(size=size)
+
+
+def onnx_where(condition, input, other):
+    if len(input.shape) == 0:
+        input = input.unsqueeze(dim=0)
+
+    # Two-way broadcasting of input tensors
+    input, other = torch.broadcast_tensors(input, other)
+
+    assert (
+        condition.shape == input.shape == other.shape
+    ), "Condition tensor has incorrect shape."
+
+    # Convert condition to a boolean tensor
+    condition = torch.where(
+        condition == 0,
+        torch.full(input.shape, False, dtype=torch.bool),
+        torch.full(input.shape, True, dtype=torch.bool),
+    ).to(torch.bool)
+    return torch.where(condition, input, other)
+
+
+def onnx_full(size, fill_value):
+    if isinstance(size, torch.Tensor):
+        size = tuple(size.to(torch.int64).tolist())
+    return torch.full(size, fill_value)
+
+
+def onnx_min(*args, **kwargs):
+    input = torch.broadcast_tensors(*kwargs["input"])
+    if len(input) <= 1:
+        raise ValueError(f"Expected 2 or more inputs, but received {len(input)}.")
+
+    # minimum only accepts two inputs, so maintain a running minimum
+    result = input[0]
+    for i in range(1, len(input)):
+        result = torch.minimum(result, input[i])
+    return result
+
+
+def onnx_permute(input, dims):
+    if dims is None:
+        dims = [i for i in reversed(range(len(input.shape)))]
+    return torch.permute(input, dims)

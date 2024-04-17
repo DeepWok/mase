@@ -101,7 +101,7 @@ def graph_iterator_for_mase_ops(graph):
         elif node.op == "call_function":
             # we might have things like mult_1, add_2, so we need to match the pattern
             matching, matched_name = match_and_filter(
-                node.name,
+                node.target.__name__,
                 MASE_BUILTIN_FUNCS
                 + MASE_MODULE_RELATED_FUNCS
                 + MASE_IMPLICIT_FUNCS

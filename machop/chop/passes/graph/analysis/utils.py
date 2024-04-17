@@ -121,9 +121,12 @@ def pattern_name_match(pattern, name):
 
 # names are likely to be func_name_[0-9]+
 def match_and_filter(name, funcs):
+    matches = []
     for pattern in funcs:
         if (pattern == name) or (pattern in name):
-            return True, pattern
+            matches.append(pattern)
+    if len(matches) > 0:
+        return True, max(matches, key=len)
     return False, None
 
 
