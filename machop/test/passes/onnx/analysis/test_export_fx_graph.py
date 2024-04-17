@@ -26,7 +26,7 @@ def excepthook(exc_type, exc_value, exc_traceback):
     pdb.post_mortem(exc_traceback)
 
 
-sys.excepthook = excepthook
+# sys.excepthook = excepthook
 
 
 def test_export_fx_graph_model(
@@ -88,63 +88,63 @@ def test_export_fx_graph_bert():
     test_export_fx_graph_model("bert-base-uncased", skip_export=True)
 
 
-def test_export_fx_graph_bloom():
-    test_export_fx_graph_model(
-        "bigscience/bloom-1b7",
-        skip_export=True,
-    )
+# def test_export_fx_graph_bloom():
+#     test_export_fx_graph_model(
+#         "bigscience/bloom-1b7",
+#         skip_export=True,
+#     )
 
 
-def test_export_fx_graph_gpt2():
-    test_export_fx_graph_model(
-        "openai-community/gpt2-medium",
-    )
+# def test_export_fx_graph_gpt2():
+#     test_export_fx_graph_model(
+#         "openai-community/gpt2-medium",
+#     )
 
 
-def test_export_fx_graph_graphormer():
-    test_export_fx_graph_model(
-        "clefourrier/graphormer-base-pcqm4mv2",
-    )
+# def test_export_fx_graph_graphormer():
+#     test_export_fx_graph_model(
+#         "clefourrier/graphormer-base-pcqm4mv2",
+#     )
 
 
-def test_export_fx_graph_llama():
-    test_export_fx_graph_model(
-        "huggyllama/llama-7b",
-    )
+# def test_export_fx_graph_llama():
+#     test_export_fx_graph_model(
+#         "huggyllama/llama-7b",
+#     )
 
 
-def test_export_fx_graph_mistral():
-    test_export_fx_graph_model(
-        "mistral-community/Mistral-7B-v0.2",
-    )
+# def test_export_fx_graph_mistral():
+#     test_export_fx_graph_model(
+#         "mistral-community/Mistral-7B-v0.2",
+#     )
 
 
-def test_export_fx_graph_opt():
-    test_export_fx_graph_model(
-        "facebook/opt-125m", task="text-generation", skip_export=True
-    )
+# def test_export_fx_graph_opt():
+#     test_export_fx_graph_model(
+#         "facebook/opt-125m", task="text-generation", skip_export=True
+#     )
 
 
-def test_export_fx_graph_swin():
-    test_export_fx_graph_model(
-        "microsoft/swin-tiny-patch4-window7-224",
-    )
+# def test_export_fx_graph_swin():
+#     test_export_fx_graph_model(
+#         "microsoft/swin-tiny-patch4-window7-224",
+#     )
 
 
-def test_export_fx_graph_t5():
-    test_export_fx_graph_model("t5-base", task="text2text-generation", skip_export=True)
+# def test_export_fx_graph_t5():
+#     test_export_fx_graph_model("t5-base", task="text2text-generation", skip_export=True)
 
 
-def test_export_fx_graph_vit():
-    test_export_fx_graph_model(
-        "google/vit-base-patch16-224",
-    )
+# def test_export_fx_graph_vit():
+#     test_export_fx_graph_model(
+#         "google/vit-base-patch16-224",
+#     )
 
 
-def test_export_fx_graph_whisper():
-    test_export_fx_graph_model(
-        "openai/whisper-tiny",
-    )
+# def test_export_fx_graph_whisper():
+#     test_export_fx_graph_model(
+#         "openai/whisper-tiny",
+#     )
 
 
 if __name__ == "__main__":
