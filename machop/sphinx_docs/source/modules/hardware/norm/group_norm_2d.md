@@ -1,4 +1,4 @@
-# Module: group_norm_2d
+# Group Norm 2D
 
 The `group_norm_2d` module implements the [GroupNorm PyTorch](https://pytorch.org/docs/stable/generated/torch.nn.GroupNorm.html#groupnorm) layer with the assumption that `affine=False`.
 

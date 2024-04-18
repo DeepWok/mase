@@ -1,4 +1,4 @@
-# Module: norm
+# Normalization Module
 
 The `norm` module is a wrapper which acts as the single interface for all normalization hardware modules. It current supports the instantiation of these normalization layers:
 
