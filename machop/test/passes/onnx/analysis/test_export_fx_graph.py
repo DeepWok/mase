@@ -85,7 +85,7 @@ def test_export_fx_graph_model(
 
 
 def test_export_fx_graph_bert():
-    test_export_fx_graph_model("bert-base-uncased", skip_export=True)
+    test_export_fx_graph_model("bert-base-uncased", skip_export=False)
 
 
 # def test_export_fx_graph_bloom():

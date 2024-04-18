@@ -1,6 +1,16 @@
 import torch
 
 from chop.tools.onnx_operators import onnx_slice, onnx_gather
+import sys, traceback, pdb
+
+
+def excepthook(exc_type, exc_value, exc_traceback):
+    traceback.print_exception(exc_type, exc_value, exc_traceback)
+    print("\nEntering debugger...")
+    pdb.post_mortem(exc_traceback)
+
+
+sys.excepthook = excepthook
 
 
 def test_gather():
@@ -34,7 +44,7 @@ def test_gather():
     ).to(torch.int64)
 
     obs_out1 = onnx_gather(data1, 1, indices1)
-    obs_out2 = onnx_gather(data2, 1, indices2)
+    obs_out2 = onnx_gather(data2, 0, indices2)
 
     exp_out1 = torch.Tensor(
         [
