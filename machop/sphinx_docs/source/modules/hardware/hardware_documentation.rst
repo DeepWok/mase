@@ -3,6 +3,16 @@ Hardware Documentation
 
 .. toctree::
     :maxdepth: 1
+    :caption: Activations
+
+    activations/gelu
+    activations/selu
+    activations/softplus
+    activations/softsign
+    activations/tanh
+
+.. toctree::
+    :maxdepth: 1
     :caption: Arithmetic
 
     arithmetic/mac

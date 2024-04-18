@@ -35,6 +35,11 @@ QUANTIZEABLE_OP = (
     "group_norm",
     "instance_norm2d",
     "rms_norm",
+    "selu",
+    "tanh",
+    "gelu",
+    "softsign",
+    "softplus",
 )
 
 
