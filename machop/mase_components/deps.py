@@ -14,6 +14,7 @@ MASE_HW_DEPS = {
     # "attention/fixed_self_att": ["attention", "cast", "common", "conv",
     #                              "fixed_arithmetic", "linear", "matmul", "ViT"],
     "activations/softermax_lpw_pow2": ["common", "cast"],
+    "activations/softermax_lpw_reciprocal": ["common", "cast", "fixed_arithmetic"],
     "activations/softermax_local_window": ["activations", "common", "cast", "matmul"],
     "cast/fixed_cast": [],
     "cast/fixed_rounding": ["cast"],
@@ -42,6 +43,7 @@ MASE_HW_DEPS = {
     "common/comparator_tree": ["common"],
     "common/comparator_accumulator": ["common"],
     "cast/fixed_signed_cast": ["cast"],
+    "cast/fixed_unsigned_cast": ["cast"],
     "matmul/simple_matmul": ["common", "linear", "cast", "fixed_arithmetic"],
     # "matmul/fixed_matmul": ["common", "linear", "cast", "fixed_arithmetic", "matmul"],
     "matmul/test_chain_matmul": [

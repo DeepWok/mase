@@ -33,7 +33,7 @@ def mase_runner(
     # Should be of form components/<group>/test/<module>_tb.py
     test_filepath = inspect.stack()[1].filename
     matches = re.search(r"mase_components/(\w*)/test/(\w*)_tb\.py", test_filepath)
-    assert matches != None, "Function only works when called from test"
+    assert matches != None, "Did not find file that matches <module>_tb.py in the test folder!"
     group, module = matches.groups()
 
     # Group path is components/<group>
