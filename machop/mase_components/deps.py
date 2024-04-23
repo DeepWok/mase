@@ -9,7 +9,27 @@ Entry format:
 
 MASE_HW_DEPS = {
     # TODO: Failing Test
-    # "activations/fixed_relu": [],
+    "llm/scatter": ["llm"],
+    "llm/fixed_comparator_tree_layer": ["llm"],
+    "llm/fixed_comparator_tree": ["llm", "common"],
+    "llm/quantizer_top": ["llm", "cast", "common", "fixed_arithmetic"],
+    "llm/find_max": ["llm", "common"],
+    "llm/quantized_matmul": [
+        "llm",
+        "fixed_arithmetic",
+        "cast",
+        "linear",
+        "matmul",
+        "common",
+    ],
+    "llm/llm_int8_top": [
+        "llm",
+        "fixed_arithmetic",
+        "cast",
+        "linear",
+        "matmul",
+        "common",
+    ],
     # TODO: Failing test: missing "z_proj" in config?
     # "attention/fixed_self_att": ["attention", "cast", "common", "conv",
     #                              "fixed_arithmetic", "linear", "matmul", "ViT"],
@@ -28,6 +48,12 @@ MASE_HW_DEPS = {
     "fixed_arithmetic/fixed_adder_tree": ["fixed_arithmetic", "common"],
     "fixed_arithmetic/fixed_vector_mult": ["fixed_arithmetic", "common"],
     "fixed_arithmetic/fixed_dot_product": ["fixed_arithmetic", "common"],
+    "fixed_arithmetic/fixed_matmul_core": [
+        "fixed_arithmetic",
+        "common",
+        "linear",
+        "cast",
+    ],
     "common/cut_data": ["common"],
     "common/wrap_data": ["common"],
     "common/skid_buffer": [],
