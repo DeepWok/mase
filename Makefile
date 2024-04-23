@@ -19,7 +19,7 @@ sync-mlir:
 
 # Build Docker container
 build-docker:
-	if [ $(local) ]; then \
+	if [ $(local) = 1 ]; then \
 		docker build --build-arg VHLS_PATH=$(vhls) --build-arg VHLS_VERSION=$(vhls_version) -f Docker/Dockerfile --tag mase-ubuntu2204 Docker; \
 	else \
 		docker pull docker.io/deepwok/mase-docker:latest; \
