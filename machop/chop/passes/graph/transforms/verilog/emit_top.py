@@ -65,7 +65,7 @@ class VerilogParameterEmitter:
     def __init__(self, graph):
         self.graph = graph
 
-    def emit(self, graph, parameter_map) -> Tuple[str, Dict[str, str]]:
+    def emit(self, parameter_map) -> Tuple[str, Dict[str, str]]:
         """
         Emit parameters at the top-level for the top-level module
 
@@ -73,8 +73,8 @@ class VerilogParameterEmitter:
         1) list of parameters as a string to be embedded in Verilog file
         """
 
-        nodes_in = graph.nodes_in
-        nodes_out = graph.nodes_out
+        nodes_in = self.graph.nodes_in
+        nodes_out = self.graph.nodes_out
         node_in_name = vf(nodes_in[0].name)
         node_out_name = vf(nodes_out[0].name)
 
@@ -96,7 +96,7 @@ class VerilogInterfaceEmitter:
     def __init__(self, graph):
         self.graph = graph
 
-    def emit(self, graph, parameter_map):
+    def emit(self, parameter_map):
         """
         Emit interface signal declarations for the top-level module
         """
@@ -259,13 +259,13 @@ logic                                    {node_name}_{key}_ce0;
 logic                                    {node_name}_{key}_we0;"""
         return signals
 
-    def emit(self, graph, parameter_map):
+    def emit(self, parameter_map):
         """
         Emit internal signal declarations for the top-level module
         """
 
         signals = ""
-        for node in graph.fx_graph.nodes:
+        for node in self.graph.fx_graph.nodes:
             if node.meta["mase"].parameters["hardware"]["is_implicit"]:
                 continue
             node_name = vf(node.name)
@@ -478,7 +478,7 @@ class VerilogComponentEmitter:
         self.internal_emitter = VerilogInternalComponentEmitter(graph)
         self.hls_emitter = VerilogHLSComponentEmitter(graph)
 
-    def emit(self, graph, parameter_map):
+    def emit(self, parameter_map):
         """
         Emit component declarations for the top-level module
         """
@@ -488,7 +488,7 @@ class VerilogComponentEmitter:
 //   Component instantiation
 // --------------------------
 """
-        for node in graph.fx_graph.nodes:
+        for node in self.graph.fx_graph.nodes:
             if node.meta["mase"].parameters["hardware"]["is_implicit"]:
                 continue
             if "INTERNAL" in node.meta["mase"].parameters["hardware"]["toolchain"]:
@@ -507,9 +507,8 @@ class VerilogComponentEmitter:
 
 
 class VerilogWireEmitter:
-    def __init__(self, graph, parameter_map):
+    def __init__(self, graph):
         self.graph = graph
-        self.parameter_map = parameter_map
 
         self.wires = """
 // --------------------------
@@ -517,7 +516,7 @@ class VerilogWireEmitter:
 // --------------------------
     """
 
-    def _emit_top_wires(self):
+    def _emit_top_wires(self, parameter_map):
         nodes_in = self.graph.nodes_in
         nodes_out = self.graph.nodes_out
 
@@ -580,7 +579,7 @@ class VerilogWireEmitter:
 """
         return wires
 
-    def emit(self):
+    def emit(self, parameter_map):
         """
         Emit internal signal connections for the top-level module
         This includes two interconnection types:
@@ -588,7 +587,7 @@ class VerilogWireEmitter:
         2. Interface casting between inputs and outputs
         """
 
-        self.wires += self._emit_top_wires()
+        self.wires += self._emit_top_wires(parameter_map)
         self.wires += self._emit_node2node_wires()
         return self.wires
 
@@ -598,28 +597,26 @@ class VerilogWireEmitter:
 # =============================================================================
 
 
-class VerilogEmitter:
+class DataflowEmitter:
     def __init__(self, graph):
         self.graph = graph
 
         self.parameter_map = get_verilog_parameters(graph)
 
-    def emit(self, graph, top_name):
-        parameters_to_emit = VerilogParameterEmitter(graph).emit(
-            graph, self.parameter_map
+    def emit(self, top_name):
+        parameters_to_emit = VerilogParameterEmitter(self.graph).emit(
+            self.parameter_map
         )
 
-        interface_to_emit = VerilogInterfaceEmitter(graph).emit(
-            graph, self.parameter_map
+        interface_to_emit = VerilogInterfaceEmitter(self.graph).emit(self.parameter_map)
+
+        signals_to_emit = VerilogSignalEmitter(self.graph).emit(self.parameter_map)
+
+        components_to_emit = VerilogComponentEmitter(self.graph).emit(
+            self.parameter_map
         )
 
-        signals_to_emit = VerilogSignalEmitter(graph).emit(graph, self.parameter_map)
-
-        components_to_emit = VerilogComponentEmitter(graph).emit(
-            graph, self.parameter_map
-        )
-
-        wires_to_emit = VerilogWireEmitter(graph, self.parameter_map).emit()
+        wires_to_emit = VerilogWireEmitter(self.graph).emit(self.parameter_map)
 
         time_to_emit = time.strftime("%d/%m/%Y %H:%M:%S")
 
@@ -676,16 +673,23 @@ def emit_verilog_top_transform_pass(graph, pass_args={}):
     project_dir = (
         pass_args["project_dir"]
         if "project_dir" in pass_args.keys()
-        else Path.home() / ".mase" / "top"
+        else "./top"
+        # else Path.home() / ".mase" / "top"
     )
     top_name = pass_args["top_name"] if "top_name" in pass_args.keys() else "top"
     init_project(project_dir)
+    logger.info(f"Project path: {project_dir}")
+
     rtl_dir = os.path.join(project_dir, "hardware", "rtl")
 
-    top = VerilogEmitter(graph).emit(graph, top_name)
+    df = DataflowEmitter(graph).emit(top_name)
+    df_file = os.path.join(rtl_dir, f"{top_name}_df.sv")
+    with open(df_file, "w") as df_design:
+        df_design.write(df)
 
-    top_file = os.path.join(rtl_dir, f"{top_name}.sv")
-    with open(top_file, "w") as top_design:
-        top_design.write(top)
+    # top = MemoryMapEmitter(graph).emit(top_name)
+    # top_file = os.path.join(rtl_dir, f"{top_name}.sv")
+    # with open(top_file, "w") as top_design:
+    #     top_design.write(top)
 
     return graph, {}
