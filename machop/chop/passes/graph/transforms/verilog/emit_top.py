@@ -146,7 +146,26 @@ class DFVerilogInterfaceEmitter:
     input data_out_{i}_ready,"""
                     i += 1
 
-        # TODO: emit off-chip parameter interface
+        # Emit all parameters as inputs (they will be mapped at the top-level)
+        for node in self.graph.fx_graph.nodes:
+            if node.meta["mase"].parameters["hardware"]["is_implicit"]:
+                continue
+            node_name = vf(node.name)
+            for arg, arg_info in node.meta["mase"].parameters["common"]["args"].items():
+                if not isinstance(arg_info, dict):
+                    continue
+                if "data_in" not in arg:
+                    arg_name = _cap(arg)
+                    parallelism_params = [
+                        param
+                        for param in parameter_map
+                        if f"{node_name}_{arg_name}_PARALLELISM_DIM" in param
+                    ]
+                    interface += f"""
+    input  [{node_name}_{arg_name}_PRECISION_0-1:0] {node_name}_{arg} [{'*'.join(parallelism_params)}-1:0],
+    input  {node_name}_{arg}_valid,
+    output {node_name}_{arg}_ready,"""
+                    i += 1
 
         return _remove_last_comma(interface)
 
@@ -165,15 +184,7 @@ class DFVerilogSignalEmitter:
         node_name = vf(node.name)
         # Input signals
         for arg, arg_info in node.meta["mase"].parameters["common"]["args"].items():
-            if not isinstance(arg_info, dict):
-                continue
-
-            # Skip off-chip parameters as they will be directly connected to the top level
-            if (
-                "data_in" in arg
-                or node.meta["mase"].parameters["hardware"]["interface"][arg]["storage"]
-                == "BRAM"
-            ):
+            if "data_in" in arg:
                 arg_name = v2p(arg)
                 parallelism_params = [
                     param
@@ -192,14 +203,7 @@ logic                             {node_name}_{arg}_ready;"""
             if not isinstance(result_info, dict):
                 continue
 
-            # Skip off-chip parameters as they will be directly connected to the top level
-            if (
-                "data_out" in result
-                or node.meta["mase"].parameters["hardware"]["interface"][result][
-                    "storage"
-                ]
-                == "BRAM"
-            ):
+            if "data_out" in result:
                 result_name = v2p(result)
                 parallelism_params = [
                     param
@@ -1255,11 +1259,13 @@ def emit_verilog_top_transform_pass(graph, pass_args={}):
 
     rtl_dir = os.path.join(project_dir, "hardware", "rtl")
 
+    # Emit device-independent hardware design in dataflow
     df = DataflowEmitter(graph).emit(top_name)
     df_file = os.path.join(rtl_dir, f"{top_name}_df.sv")
     with open(df_file, "w") as df_design:
         df_design.write(df)
 
+    # Emit memory mapping with BRAMs for the top-level hardware design
     top = MemoryMapEmitter(graph).emit(top_name)
     top_file = os.path.join(rtl_dir, f"{top_name}.sv")
     with open(top_file, "w") as top_design:
