@@ -1,7 +1,8 @@
 vhls=/mnt/applications/Xilinx/23.1
 vhls_version=2023.1
 local=0
-img=$(if $local,"mase-ubuntu2204:latest","deepwok/mase-docker:latest")
+target=cpu
+img=$(if $local,"mase-ubuntu2204:latest","deepwok/mase-docker-$(target):latest")
 user=$(if $(shell id -u),$(shell id -u),9001)
 group=$(if $(shell id -g),$(shell id -g),1000)
 coverage=machop/test/
@@ -20,9 +21,9 @@ sync-mlir:
 # Build Docker container
 build-docker:
 	if [ $(local) = 1 ]; then \
-		docker build --build-arg VHLS_PATH=$(vhls) --build-arg VHLS_VERSION=$(vhls_version) -f Docker/Dockerfile --tag mase-ubuntu2204 Docker; \
+		docker build --build-arg VHLS_PATH=$(vhls) --build-arg VHLS_VERSION=$(vhls_version) -f Docker/Dockerfile-$(target) --tag mase-ubuntu2204 Docker; \
 	else \
-		docker pull docker.io/deepwok/mase-docker:latest; \
+		docker pull docker.io/deepwok/mase-docker-$(target):latest; \
 	fi
 
 shell: build-docker
@@ -39,7 +40,6 @@ shell: build-docker
 # Short-term solution: call scripts under /tmp so we can clean it properly
 test-hw:
 	mkdir -p ./tmp
-	pip install .
 	(cd tmp; python3 ../scripts/test-hardware.py -a || exit 1)
 
 test-sw:
