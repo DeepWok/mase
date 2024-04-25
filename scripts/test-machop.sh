@@ -13,6 +13,8 @@ MASE=$SCRIPT_DIR/..
 
 cd $MASE/machop
 
+set -o xtrace
+
 ##### Basic training and testing
 # training
 ./ch train jsc-tiny jsc --max-epochs 3 --batch-size 256 --accelerator cpu --project tmp --debug
@@ -32,3 +34,5 @@ cd $MASE/machop
 ./ch transform --config configs/examples/jsc_toy_by_type_module.toml --task cls --accelerator=cpu --load ../mase_output/tmp/software/training_ckpts/best.ckpt --load-type pl
 # train the transformed network
 ./ch train jsc-tiny jsc --max-epochs 3 --batch-size 256 --accelerator cpu --project tmp --debug --load ../mase_output/jsc-tiny/software/transform/transformed_ckpt/state_dict.pt --load-type pt
+
+set +o xtrace
