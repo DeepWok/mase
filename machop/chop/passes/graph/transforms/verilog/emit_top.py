@@ -317,7 +317,7 @@ class DFVerilogInternalComponentEmitter:
 
         # Emit component instantiation input signals
         for key, value in node.meta["mase"].parameters["common"]["args"].items():
-            if "data" not in key:
+            if not isinstance(value, dict):
                 continue
             signals += f"""
     .{key}({node_name}_{key}),
@@ -327,7 +327,7 @@ class DFVerilogInternalComponentEmitter:
 
         # Emit component instantiation output signals
         for key, value in node.meta["mase"].parameters["common"]["results"].items():
-            if "data" not in key:
+            if not isinstance(value, dict):
                 continue
             signals += f"""
     .{key}({node_name}_{key}),
