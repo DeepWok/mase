@@ -35,7 +35,7 @@ module fixed_relu #(
   ) begin : ReLU
     always_comb begin
       // negative value, put to zero
-      if ($signed(data_in_0[i]) <= 0) data_out_0[i] = '0;
+      if ($signed(data_in_0[i]) <= 0) data[i] = '0;
       else data[i] = data_in_0[i];
     end
   end
@@ -48,7 +48,7 @@ module fixed_relu #(
       .OUT_FRAC_WIDTH(DATA_OUT_0_PRECISION_1)
   ) fr_inst (
       .data_in (data),
-      .data_out(data_out)
+      .data_out(data_out_0)
   );
 
   assign data_out_0_valid = data_in_0_valid;
