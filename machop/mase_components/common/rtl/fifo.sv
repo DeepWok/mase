@@ -2,13 +2,17 @@
 Module      : fifo
 Description : This module implements a max throughput streaming fifo with
               registered output.
+
+              Assumes that the simple_dual_port_ram backing it has a one cycle
+              read latency.
 */
 
 `timescale 1ns / 1ps
 
 module fifo #(
     parameter DATA_WIDTH = 8,
-    parameter SIZE       = 16
+    parameter DEPTH      = 16,
+    parameter SIZE       = DEPTH
 ) (
     input logic clk,
     input logic rst,
@@ -19,7 +23,10 @@ module fifo #(
 
     output logic [DATA_WIDTH-1:0] out_data,
     output logic                  out_valid,
-    input  logic                  out_ready
+    input  logic                  out_ready,
+
+    output logic empty,
+    output logic full
 );
 
   localparam ADDR_WIDTH = SIZE == 1 ? 1 : $clog2(SIZE);
@@ -47,7 +54,6 @@ module fifo #(
 
     // Extra register required to buffer the output of RAM due to delay
     reg_t extra_reg;
-
   }
       self, next_self;
 
@@ -89,11 +95,8 @@ module fifo #(
         next_self.read_ptr += 1;
       end
       next_self.size -= 1;
-      // next_self.out_reg.data = ram_rd_dout;
-      // next_self.out_reg.valid = 1;
       next_self.ram_dout_valid = 1;
     end else begin
-      // next_self.out_reg.valid = 0;
       next_self.ram_dout_valid = 0;
     end
 
@@ -150,5 +153,6 @@ module fifo #(
     end
   end
 
-
+  assign empty = (self.size == 0);
+  assign full  = (self.size == SIZE);
 endmodule

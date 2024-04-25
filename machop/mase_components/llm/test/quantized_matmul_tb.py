@@ -1,9 +1,18 @@
 #!/usr/bin/env python3
 
-# This script tests the fixed point linear
+# This script tests the quantized_matmul module
 import os, math, logging
+import sys
 
-from mase_cocotb.random_test import RandomSource, RandomSink, check_results
+# Manually add user-specific mase_cocotb path
+# this should be ignored on the standard mase-docker env
+import sys
+
+p = "/home/ic/MYWORKSPACE/Mase-DeepWok/machop"
+sys.path.append(p)
+###############################################
+
+from mase_cocotb.random_test import *
 from mase_cocotb.runner import mase_runner
 
 import cocotb
@@ -21,17 +30,15 @@ if debug:
 # DUT test specifications
 class VerificationCase:
     def __init__(self, samples=10):
-        self.data_in_width = 32
-        self.data_in_frac_width = 1
+        self.data_in_width = 16
         self.weight_width = 16
-        self.weight_frac_width = 1
         self.bias_width = 16
-        self.bias_frac_width = 1
-        self.data_out_width = 32
-        self.data_out_frac_width = 1
-        self.has_bias = 1
+        self.data_out_width = 16
+        self.has_bias = (
+            0  # must be zero as bias is not supported in quantized_matmul component
+        )
 
-        self.in_rows = 20
+        self.in_rows = 2
         self.in_columns = 4
         self.weight_rows = self.in_columns
         self.weight_columns = 2
@@ -42,6 +49,7 @@ class VerificationCase:
             num=self.in_rows * self.in_columns,
             max_stalls=0,
             debug=debug,
+            arithmetic="llm-fp16-datain",
         )
         self.weight = RandomSource(
             name="weight",
@@ -49,6 +57,7 @@ class VerificationCase:
             num=self.weight_rows * self.weight_columns,
             max_stalls=0,
             debug=debug,
+            arithmetic="llm-fp16-weight",
         )
         self.bias = RandomSource(
             name="bias",
@@ -66,22 +75,22 @@ class VerificationCase:
             + self.weight_width
             + math.ceil(math.log2(self.iterations * self.in_columns))
             + self.has_bias,
-            in_frac_width=self.data_in_frac_width + self.weight_frac_width,
+            in_frac_width=0,
             out_width=self.data_out_width,
-            out_frac_width=self.data_out_frac_width,
+            out_frac_width=0,
         )
 
     def get_dut_parameters(self):
         return {
             "IN1_WIDTH": self.data_in_width,
-            "IN1_FRAC_WIDTH": self.data_in_frac_width,
+            # "IN1_FRAC_WIDTH": self.data_in_frac_width,
             "IN2_WIDTH": self.weight_width,
-            "IN2_FRAC_WIDTH": self.weight_frac_width,
+            # "IN2_FRAC_WIDTH": self.weight_frac_width,
             "BIAS_WIDTH": self.bias_width,
-            "BIAS_FRAC_WIDTH": self.bias_frac_width,
+            # "BIAS_FRAC_WIDTH": self.bias_frac_width,
             "HAS_BIAS": self.has_bias,
             "OUT_WIDTH": self.data_out_width,
-            "OUT_FRAC_WIDTH": self.data_out_frac_width,
+            # "OUT_FRAC_WIDTH": self.data_out_frac_width,
             "IN1_PARALLELISM": self.in_rows,
             "IN_SIZE": self.in_columns,
             "IN2_PARALLELISM": self.weight_columns,
@@ -121,20 +130,10 @@ class VerificationCase:
             out_list = []
             for i in range(0, len(in_list)):
                 in_value = in_list[i]
-                if in_frac_width > out_frac_width:
-                    in_value = in_value >> (in_frac_width - out_frac_width)
-                else:
-                    in_value = in_value << (out_frac_width - in_frac_width)
-                in_int_width = in_width - in_frac_width
-                out_int_width = out_width - out_frac_width
-                if in_int_width > out_int_width:
-                    if in_value >> (in_frac_width + out_int_width) > 0:
-                        in_value = 1 << out_width - 1
-                    elif in_value >> (in_frac_width + out_int_width) < 0:
-                        in_value = -(1 << out_width - 1)
-                    else:
-                        in_value = int(in_value % (1 << out_width))
-                out_list.append(in_value)
+                out_value = fixed_cast(
+                    in_value, in_width, in_frac_width, out_width, out_frac_width
+                )
+                out_list.append(out_value)
             outputs.append(out_list)
         return outputs
 
@@ -154,7 +153,7 @@ def debug_state(dut, state):
 
 
 @cocotb.test()
-async def test_fixed_linear(dut):
+async def test_fixed_matmul_core_quantized(dut):
     """Test integer based vector mult"""
     samples = 100
     test_case = VerificationCase(samples=samples)
@@ -213,8 +212,8 @@ async def test_fixed_linear(dut):
         # breakpoint()
         debug_state(dut, "Pre-clk")
         if (
-            test_case.bias.is_empty()
-            and test_case.weight.is_empty()
+            # test_case.bias.is_empty()
+            test_case.weight.is_empty()
             and test_case.data_in.is_empty()
             and test_case.outputs.is_full()
         ):
@@ -223,8 +222,8 @@ async def test_fixed_linear(dut):
     assert (
         done
     ), "Deadlock detected or the simulation reaches the maximum cycle limit (fixed it by adjusting the loop trip count)"
-
-    check_results(test_case.outputs.data, test_case.ref)
+    # check_results_signed(test_case.outputs.data, test_case.ref, 10)
+    analyse_results_signed(test_case.outputs.data, test_case.ref, 10)
 
 
 if __name__ == "__main__":
