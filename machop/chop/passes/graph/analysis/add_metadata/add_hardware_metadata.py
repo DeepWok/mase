@@ -45,6 +45,8 @@ def add_component_source(node):
         node.meta["mase"]["hardware"]["dependence_files"] = []
 
     node.meta["mase"]["hardware"]["device_id"] = -1
+    # Init data parallelism to 1 and use DSE pass for exploration
+    node.meta["mase"]["hardware"]["parallelism"] = {0: 1, 1: 1, 2: 1}
 
     # Current only support on-chip parameters
     args = node.meta["mase"]["common"]["args"]
@@ -368,11 +370,6 @@ def add_hardware_metadata_analysis_pass(graph, pass_args=None):
     # Add component source
     for node in graph.nodes:
         add_component_source(node)
-
-    # Temporary: fix parallelism to small value to enable verilator simulation
-    for node in graph.nodes:
-        # Batch parallelism set to 1, data parallelism to 4
-        node.meta["mase"]["hardware"]["parallelism"] = [1, 4]
 
     # Add hardware parameters
     for node in graph.nodes:
