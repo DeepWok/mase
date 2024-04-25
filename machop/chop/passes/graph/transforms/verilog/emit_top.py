@@ -975,6 +975,8 @@ class MMVerilogComponentEmitter:
         top_parameters = ""
         for key, value in parameter_map.items():
             top_parameters += f"""    .{key}({key}),\n"""
+        top_parameters = _remove_last_comma(top_parameters)
+
         interface = MMVerilogTopInterfaceEmitter(self.graph).emit(parameter_map)
 
         components = f"""
