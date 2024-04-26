@@ -57,10 +57,6 @@ def param_needs_signals(node, param, value, qualifier="data_in"):
 
 
 # =============================================================================
-# Emit design in a memory-independent dataflow graph
-# =============================================================================
-
-# =============================================================================
 # Verilog parameters
 # =============================================================================
 
@@ -69,16 +65,16 @@ class VerilogParameterEmitter:
     def __init__(self, graph):
         self.graph = graph
 
-    def emit(self, parameter_map) -> Tuple[str, Dict[str, str]]:
+    def emit(self, graph, parameter_map) -> Tuple[str, Dict[str, str]]:
         """
         Emit parameters at the top-level for the top-level module
 
         Returns Tuple:
-        1) list of parameters as a string to be embedded in DFVerilog file
+        1) list of parameters as a string to be embedded in Verilog file
         """
 
-        nodes_in = self.graph.nodes_in
-        nodes_out = self.graph.nodes_out
+        nodes_in = graph.nodes_in
+        nodes_out = graph.nodes_out
         node_in_name = vf(nodes_in[0].name)
         node_out_name = vf(nodes_out[0].name)
 
@@ -92,15 +88,15 @@ class VerilogParameterEmitter:
 
 
 # =============================================================================
-# DFVerilog interface
+# Verilog interface
 # =============================================================================
 
 
-class DFVerilogInterfaceEmitter:
+class VerilogInterfaceEmitter:
     def __init__(self, graph):
         self.graph = graph
 
-    def emit(self, parameter_map):
+    def emit(self, graph, parameter_map):
         """
         Emit interface signal declarations for the top-level module
         """
@@ -146,36 +142,17 @@ class DFVerilogInterfaceEmitter:
     input data_out_{i}_ready,"""
                     i += 1
 
-        # Emit all parameters as inputs (they will be mapped at the top-level)
-        for node in self.graph.fx_graph.nodes:
-            if node.meta["mase"].parameters["hardware"]["is_implicit"]:
-                continue
-            node_name = vf(node.name)
-            for arg, arg_info in node.meta["mase"].parameters["common"]["args"].items():
-                if not isinstance(arg_info, dict):
-                    continue
-                if "data_in" not in arg:
-                    arg_name = _cap(arg)
-                    parallelism_params = [
-                        param
-                        for param in parameter_map
-                        if f"{node_name}_{arg_name}_PARALLELISM_DIM" in param
-                    ]
-                    interface += f"""
-    input  [{node_name}_{arg_name}_PRECISION_0-1:0] {node_name}_{arg} [{'*'.join(parallelism_params)}-1:0],
-    input  {node_name}_{arg}_valid,
-    output {node_name}_{arg}_ready,"""
-                    i += 1
+        # TODO: emit off-chip parameter interface
 
         return _remove_last_comma(interface)
 
 
 # =============================================================================
-# DFVerilog signals
+# Verilog signals
 # =============================================================================
 
 
-class DFVerilogSignalEmitter:
+class VerilogSignalEmitter:
     def __init__(self, graph):
         self.graph = graph
 
@@ -184,7 +161,15 @@ class DFVerilogSignalEmitter:
         node_name = vf(node.name)
         # Input signals
         for arg, arg_info in node.meta["mase"].parameters["common"]["args"].items():
-            if "data_in" in arg:
+            if not isinstance(arg_info, dict):
+                continue
+
+            # Skip off-chip parameters as they will be directly connected to the top level
+            if (
+                "data_in" in arg
+                or node.meta["mase"].parameters["hardware"]["interface"][arg]["storage"]
+                == "BRAM"
+            ):
                 arg_name = v2p(arg)
                 parallelism_params = [
                     param
@@ -203,7 +188,14 @@ logic                             {node_name}_{arg}_ready;"""
             if not isinstance(result_info, dict):
                 continue
 
-            if "data_out" in result:
+            # Skip off-chip parameters as they will be directly connected to the top level
+            if (
+                "data_out" in result
+                or node.meta["mase"].parameters["hardware"]["interface"][result][
+                    "storage"
+                ]
+                == "BRAM"
+            ):
                 result_name = v2p(result)
                 parallelism_params = [
                     param
@@ -267,13 +259,13 @@ logic                                    {node_name}_{key}_ce0;
 logic                                    {node_name}_{key}_we0;"""
         return signals
 
-    def emit(self, parameter_map):
+    def emit(self, graph, parameter_map):
         """
         Emit internal signal declarations for the top-level module
         """
 
         signals = ""
-        for node in self.graph.fx_graph.nodes:
+        for node in graph.fx_graph.nodes:
             if node.meta["mase"].parameters["hardware"]["is_implicit"]:
                 continue
             node_name = vf(node.name)
@@ -292,13 +284,36 @@ logic                                    {node_name}_{key}_we0;"""
 
 
 # =============================================================================
-# DFVerilog components (INTERNAL)
+# Verilog components (INTERNAL)
 # =============================================================================
 
 
-class DFVerilogInternalComponentEmitter:
+class VerilogInternalComponentEmitter:
     def __init__(self, graph):
         self.graph = graph
+
+    def _emit_module_parameters_top_internal(self, key, value, node, parameter_map):
+        node_name = vf(node.name)
+        component_name = f"{node_name}_{key}_source"
+        component_name_inst = f"{component_name}_0"
+
+        parameters = ""
+        for param in node.meta["mase"].parameters["hardware"]["verilog_param"].keys():
+            if f"{_cap(key)}_" in param:
+                parameters += f".{param}({node_name}_{param}),\n"
+        parameters = _remove_last_comma(parameters)
+
+        return f"""
+{component_name} #(
+{parameters}
+) {component_name_inst} (
+    .clk(clk),
+    .rst(rst),
+    .data_out({node_name}_{key}),
+    .data_out_ready({node_name}_{key}_ready),
+    .data_out_valid({node_name}_{key}_valid)
+);
+"""
 
     def emit(self, node, parameter_map):
         node_name = vf(node.name)
@@ -348,15 +363,26 @@ class DFVerilogInternalComponentEmitter:
 );
 """
 
+        # Emit module parameter instances (e.g. weights and biases)
+        for arg, arg_info in node.meta["mase"].parameters["common"]["args"].items():
+            if "data_in" in arg:
+                continue
+            if not isinstance(arg_info, dict):
+                continue
+
+            components += self._emit_module_parameters_top_internal(
+                arg, arg_info, node, parameter_map
+            )
+
         return components
 
 
 # =============================================================================
-# DFVerilog components (HLS)
+# Verilog components (HLS)
 # =============================================================================
 
 
-class DFVerilogHLSComponentEmitter:
+class VerilogHLSComponentEmitter:
     def __init__(self, graph):
         self.graph = graph
 
@@ -442,17 +468,17 @@ class DFVerilogHLSComponentEmitter:
 
 
 # =============================================================================
-# DFVerilog components
+# Verilog components
 # =============================================================================
 
 
-class DFVerilogComponentEmitter:
+class VerilogComponentEmitter:
     def __init__(self, graph):
         self.graph = graph
-        self.internal_emitter = DFVerilogInternalComponentEmitter(graph)
-        self.hls_emitter = DFVerilogHLSComponentEmitter(graph)
+        self.internal_emitter = VerilogInternalComponentEmitter(graph)
+        self.hls_emitter = VerilogHLSComponentEmitter(graph)
 
-    def emit(self, parameter_map):
+    def emit(self, graph, parameter_map):
         """
         Emit component declarations for the top-level module
         """
@@ -462,7 +488,7 @@ class DFVerilogComponentEmitter:
 //   Component instantiation
 // --------------------------
 """
-        for node in self.graph.fx_graph.nodes:
+        for node in graph.fx_graph.nodes:
             if node.meta["mase"].parameters["hardware"]["is_implicit"]:
                 continue
             if "INTERNAL" in node.meta["mase"].parameters["hardware"]["toolchain"]:
@@ -476,13 +502,14 @@ class DFVerilogComponentEmitter:
 
 
 # =============================================================================
-# DFVerilog wires
+# Verilog wires
 # =============================================================================
 
 
-class DFVerilogWireEmitter:
-    def __init__(self, graph):
+class VerilogWireEmitter:
+    def __init__(self, graph, parameter_map):
         self.graph = graph
+        self.parameter_map = parameter_map
 
         self.wires = """
 // --------------------------
@@ -490,7 +517,7 @@ class DFVerilogWireEmitter:
 // --------------------------
     """
 
-    def _emit_top_wires(self, parameter_map):
+    def _emit_top_wires(self):
         nodes_in = self.graph.nodes_in
         nodes_out = self.graph.nodes_out
 
@@ -553,7 +580,7 @@ class DFVerilogWireEmitter:
 """
         return wires
 
-    def emit(self, parameter_map):
+    def emit(self):
         """
         Emit internal signal connections for the top-level module
         This includes two interconnection types:
@@ -561,7 +588,7 @@ class DFVerilogWireEmitter:
         2. Interface casting between inputs and outputs
         """
 
-        self.wires += self._emit_top_wires(parameter_map)
+        self.wires += self._emit_top_wires()
         self.wires += self._emit_node2node_wires()
         return self.wires
 
@@ -571,38 +598,39 @@ class DFVerilogWireEmitter:
 # =============================================================================
 
 
-class DataflowEmitter:
+class VerilogEmitter:
     def __init__(self, graph):
         self.graph = graph
+
         self.parameter_map = get_verilog_parameters(graph)
 
-    def emit(self, top_name):
-        parameters_to_emit = VerilogParameterEmitter(self.graph).emit(
-            self.parameter_map
+    def emit(self, graph, top_name):
+        parameters_to_emit = VerilogParameterEmitter(graph).emit(
+            graph, self.parameter_map
         )
 
-        interface_to_emit = DFVerilogInterfaceEmitter(self.graph).emit(
-            self.parameter_map
+        interface_to_emit = VerilogInterfaceEmitter(graph).emit(
+            graph, self.parameter_map
         )
 
-        signals_to_emit = DFVerilogSignalEmitter(self.graph).emit(self.parameter_map)
+        signals_to_emit = VerilogSignalEmitter(graph).emit(graph, self.parameter_map)
 
-        components_to_emit = DFVerilogComponentEmitter(self.graph).emit(
-            self.parameter_map
+        components_to_emit = VerilogComponentEmitter(graph).emit(
+            graph, self.parameter_map
         )
 
-        wires_to_emit = DFVerilogWireEmitter(self.graph).emit(self.parameter_map)
+        wires_to_emit = VerilogWireEmitter(graph, self.parameter_map).emit()
 
         time_to_emit = time.strftime("%d/%m/%Y %H:%M:%S")
 
         module_inst = """
 // =====================================
-//     Mase Hardware (Dataflow)
+//     Mase Hardware
 //     Model: {}
 //     {}
 // =====================================
 `timescale 1ns/1ps
-module {}_dataflow #(
+module {} #(
 {}
 ) (
     input clk,
@@ -622,436 +650,6 @@ endmodule
             signals_to_emit,
             components_to_emit,
             wires_to_emit,
-        )
-        return module_inst
-
-
-# =============================================================================
-# Emit top-level design with memory mapping
-# =============================================================================
-
-# =============================================================================
-# MMVerilog interface
-# =============================================================================
-
-
-class MMVerilogInterfaceEmitter:
-    def __init__(self, graph):
-        self.graph = graph
-
-    def emit(self, parameter_map):
-        """
-        Emit interface signal declarations for the top-level module
-        """
-
-        nodes_in = self.graph.nodes_in
-        nodes_out = self.graph.nodes_out
-
-        interface = ""
-        # TODO: here we just enumerate the inputs of the input nodes - which may be
-        # order insensitive and require manual connection when adding the graph to
-        # a system.
-        i = 0
-        for node in nodes_in:
-            node_name = vf(node.name)
-            for arg in node.meta["mase"].parameters["common"]["args"].keys():
-                if "data_in" in arg:
-                    arg_name = _cap(arg)
-                    parallelism_params = [
-                        param
-                        for param in parameter_map
-                        if f"{node_name}_{arg_name}_PARALLELISM_DIM" in param
-                    ]
-                    interface += f"""
-    input  [{node_name}_{arg_name}_PRECISION_0-1:0] data_in_{i} [{'*'.join(parallelism_params)}-1:0],
-    input  data_in_{i}_valid,
-    output data_in_{i}_ready,"""
-                    i += 1
-
-        i = 0
-        for node in nodes_out:
-            node_name = vf(node.name)
-            for result in node.meta["mase"].parameters["common"]["results"].keys():
-                if "data_out" in result:
-                    result_name = _cap(result)
-                    parallelism_params = [
-                        param
-                        for param in parameter_map
-                        if f"{node_name}_{result_name}_PARALLELISM_DIM" in param
-                    ]
-                    interface += f"""
-    output  [{node_name}_{result_name}_PRECISION_0-1:0] data_out_{i} [{'*'.join(parallelism_params)}-1:0],
-    output  data_out_{i}_valid,
-    input data_out_{i}_ready,"""
-                    i += 1
-
-        # TODO: emit off-chip parameter interface
-
-        return _remove_last_comma(interface)
-
-
-# =============================================================================
-# MMVerilog signals
-# =============================================================================
-
-
-class MMVerilogSignalEmitter:
-    def __init__(self, graph):
-        self.graph = graph
-
-    def _emit_signals_top_internal(self, node, parameter_map):
-        signals = ""
-        node_name = vf(node.name)
-        # Input signals
-        for arg, arg_info in node.meta["mase"].parameters["common"]["args"].items():
-            if not isinstance(arg_info, dict):
-                continue
-            if "data_in" in arg:
-                continue
-
-            # Skip off-chip parameters as they will be directly connected to the top level
-            if (
-                node.meta["mase"].parameters["hardware"]["interface"][arg]["storage"]
-                == "BRAM"
-            ):
-                arg_name = v2p(arg)
-                parallelism_params = [
-                    param
-                    for param in parameter_map
-                    if f"{node_name}_{arg_name}_PARALLELISM_DIM" in param
-                ]
-                signals += f"""
-logic [{node_name}_{arg_name}_PRECISION_0-1:0]  {node_name}_{arg}        [{'*'.join(parallelism_params)}-1:0];
-logic                             {node_name}_{arg}_valid;
-logic                             {node_name}_{arg}_ready;"""
-
-        # Output signals
-        for result, result_info in (
-            node.meta["mase"].parameters["common"]["results"].items()
-        ):
-            if not isinstance(result_info, dict):
-                continue
-            if "data_out" in result:
-                continue
-
-            # Skip off-chip parameters as they will be directly connected to the top level
-            if (
-                node.meta["mase"].parameters["hardware"]["interface"][result]["storage"]
-                == "BRAM"
-            ):
-                result_name = v2p(result)
-                parallelism_params = [
-                    param
-                    for param in parameter_map
-                    if f"{node_name}_{result_name}_PARALLELISM_DIM" in param
-                ]
-                signals += f"""
-logic [{node_name}_{result_name}_PRECISION_0-1:0]  {node_name}_{result}        [{'*'.join(parallelism_params)}-1:0];
-logic                             {node_name}_{result}_valid;
-logic                             {node_name}_{result}_ready;"""
-
-        return signals
-
-    def _emit_signals_top_hls(self, node, parameter_map):
-        """
-        TODO
-        """
-
-        node_name = vf(node.name)
-        # Control signals for HLS component
-        signals = f"""
-logic {node_name}_start;
-logic {node_name}_done;
-logic {node_name}_idle;
-logic {node_name}_ready;
-logic {node_name}_ce;"""
-
-        # Input signals
-        for key, value in node.meta["mase"].parameters["common"]["args"].items():
-            # No internal signals if the memory is stored off chip
-            if not param_needs_signals(node, key, value, qualifier="data_in"):
-                continue
-
-            cap_key = v2p(key)
-            size = math.prod(value["shape"])
-
-            if key != "data_in":
-                a_width = math.ceil(math.log2(size))
-            else:
-                depth = parameter_map[f"{node_name}_{cap_key}_DEPTH"]
-                a_width = math.ceil(math.log2(depth * size))
-
-            signals += f"""
-logic [{node_name}_{cap_key}_PRECISION_0-1:0]  {node_name}_{key}_q0;
-logic [{a_width}-1:0]                    {node_name}_{key}_address0;
-logic                                    {node_name}_{key}_ce0;"""
-
-        # Output signals
-        for key, value in node.meta["mase"].parameters["common"]["results"].items():
-            # No internal signals if the memory is stored off chip
-            if not param_needs_signals(node, key, value, qualifier="data_out"):
-                continue
-
-            cap_key = v2p(key)
-            size = math.prod(value["shape"])
-            a_width = math.ceil(math.log2(size))
-            signals += f"""
-logic [{node_name}_{cap_key}_PRECISION_0-1:0]  {node_name}_{key}_d0;
-logic [{a_width}-1:0]                    {node_name}_{key}_address0;
-logic                                    {node_name}_{key}_ce0;
-logic                                    {node_name}_{key}_we0;"""
-        return signals
-
-    def emit(self, parameter_map):
-        """
-        Emit internal signal declarations for the top-level module
-        """
-
-        signals = ""
-        for node in self.graph.fx_graph.nodes:
-            if node.meta["mase"].parameters["hardware"]["is_implicit"]:
-                continue
-            node_name = vf(node.name)
-            if "INTERNAL" in node.meta["mase"].parameters["hardware"]["toolchain"]:
-                signals += self._emit_signals_top_internal(node, parameter_map)
-            elif node.meta["mase"].parameters["hardware"]["toolchain"] == "HLS":
-                signals += self._emit_signals_top_hls(node, parameter_map)
-            else:
-                assert False, "Unknown node toolchain for signal declarations."
-
-        return signals
-
-
-# =============================================================================
-# MMVerilog components (INTERNAL)
-# =============================================================================
-
-
-class MMVerilogInternalComponentEmitter:
-    def __init__(self, graph):
-        self.graph = graph
-
-    def _emit_module_parameters_top_internal(self, key, value, node, parameter_map):
-        node_name = vf(node.name)
-        component_name = f"{node_name}_{key}_source"
-        component_name_inst = f"{component_name}_0"
-
-        parameters = ""
-        for param in node.meta["mase"].parameters["hardware"]["verilog_param"].keys():
-            if f"{_cap(key)}_" in param:
-                parameters += f".{param}({node_name}_{param}),\n"
-        parameters = _remove_last_comma(parameters)
-
-        return f"""
-{component_name} #(
-{parameters}
-) {component_name_inst} (
-    .clk(clk),
-    .rst(rst),
-    .data_out({node_name}_{key}),
-    .data_out_ready({node_name}_{key}_ready),
-    .data_out_valid({node_name}_{key}_valid)
-);
-"""
-
-    def emit(self, node, parameter_map):
-        node_name = vf(node.name)
-        component_name = node.meta["mase"].parameters["hardware"]["module"]
-        signals = ""
-
-        # Emit module parameter instances (e.g. weights and biases)
-        components = ""
-        for arg, arg_info in node.meta["mase"].parameters["common"]["args"].items():
-            if "data_in" in arg:
-                continue
-            if not isinstance(arg_info, dict):
-                continue
-
-            components += self._emit_module_parameters_top_internal(
-                arg, arg_info, node, parameter_map
-            )
-
-        return components
-
-
-# =============================================================================
-# MMVerilog top interface connected to the dataflow design
-# =============================================================================
-
-
-class MMVerilogTopInterfaceEmitter:
-    def __init__(self, graph):
-        self.graph = graph
-
-    def emit(self, parameter_map):
-        """
-        Emit interface signal declarations for the top-level module
-        """
-
-        nodes_in = self.graph.nodes_in
-        nodes_out = self.graph.nodes_out
-
-        interface = """
-    .clk(clk),
-    .rst(rst),
-"""
-        # TODO: here we just enumerate the inputs of the input nodes - which may be
-        # order insensitive and require manual connection when adding the graph to
-        # a system.
-        i = 0
-        for node in nodes_in:
-            node_name = vf(node.name)
-            for arg in node.meta["mase"].parameters["common"]["args"].keys():
-                if "data_in" in arg:
-                    arg_name = _cap(arg)
-                    parallelism_params = [
-                        param
-                        for param in parameter_map
-                        if f"{node_name}_{arg_name}_PARALLELISM_DIM" in param
-                    ]
-                    interface += f"""
-    .data_in_{i}(data_in_{i}),
-    .data_in_{i}_valid(data_in_{i}_valid),
-    .data_in_{i}_ready(data_in_{i}_ready),"""
-                    i += 1
-
-        i = 0
-        for node in nodes_out:
-            node_name = vf(node.name)
-            for result in node.meta["mase"].parameters["common"]["results"].keys():
-                if "data_out" in result:
-                    result_name = _cap(result)
-                    parallelism_params = [
-                        param
-                        for param in parameter_map
-                        if f"{node_name}_{result_name}_PARALLELISM_DIM" in param
-                    ]
-                    interface += f"""
-    .data_out_{i}(data_out_{i}),
-    .data_out_{i}_valid(data_out_{i}_valid),
-    .data_out_{i}_ready(data_out_{i}_ready),"""
-                    i += 1
-
-        # Emit all parameters as inputs (they will be mapped at the top-level)
-        for node in self.graph.fx_graph.nodes:
-            if node.meta["mase"].parameters["hardware"]["is_implicit"]:
-                continue
-            node_name = vf(node.name)
-            for arg, arg_info in node.meta["mase"].parameters["common"]["args"].items():
-                if not isinstance(arg_info, dict):
-                    continue
-                if "data_in" not in arg:
-                    arg_name = _cap(arg)
-                    parallelism_params = [
-                        param
-                        for param in parameter_map
-                        if f"{node_name}_{arg_name}_PARALLELISM_DIM" in param
-                    ]
-                    interface += f"""
-    .{node_name}_{arg}({node_name}_{arg}),
-    .{node_name}_{arg}_valid({node_name}_{arg}_valid),
-    .{node_name}_{arg}_ready({node_name}_{arg}_ready),"""
-                    i += 1
-
-        return _remove_last_comma(interface)
-
-
-# =============================================================================
-# MMVerilog components
-# =============================================================================
-
-
-class MMVerilogComponentEmitter:
-    def __init__(self, graph):
-        self.graph = graph
-        self.internal_emitter = MMVerilogInternalComponentEmitter(graph)
-
-    def emit(self, parameter_map, top):
-        """
-        Emit component declarations for the top-level module
-        """
-
-        # Write node parameters
-        top_parameters = ""
-        for key, value in parameter_map.items():
-            top_parameters += f"""    .{key}({key}),\n"""
-        interface = MMVerilogTopInterfaceEmitter(self.graph).emit(parameter_map)
-
-        components = f"""
-// --------------------------
-//   Component instantiation
-// --------------------------
-{top}_dataflow #({top_parameters}
-) {top}_df_inst ({interface}
-);
-"""
-        for node in self.graph.fx_graph.nodes:
-            if node.meta["mase"].parameters["hardware"]["is_implicit"]:
-                continue
-            if "INTERNAL" in node.meta["mase"].parameters["hardware"]["toolchain"]:
-                components += self.internal_emitter.emit(node, parameter_map)
-            elif node.meta["mase"].parameters["hardware"]["toolchain"] == "HLS":
-                # Assume all parameters in HLS components are local
-                continue
-            else:
-                assert False, "Unknown node toolchain for signal declarations."
-
-        return components
-
-
-# =============================================================================
-# Emit MMVerilog
-# =============================================================================
-
-
-class MemoryMapEmitter:
-    def __init__(self, graph):
-        self.graph = graph
-
-        self.parameter_map = get_verilog_parameters(graph)
-
-    def emit(self, top_name):
-        parameters_to_emit = VerilogParameterEmitter(self.graph).emit(
-            self.parameter_map
-        )
-
-        interface_to_emit = MMVerilogInterfaceEmitter(self.graph).emit(
-            self.parameter_map
-        )
-
-        signals_to_emit = MMVerilogSignalEmitter(self.graph).emit(self.parameter_map)
-
-        components_to_emit = MMVerilogComponentEmitter(self.graph).emit(
-            self.parameter_map, top_name
-        )
-
-        time_to_emit = time.strftime("%d/%m/%Y %H:%M:%S")
-
-        module_inst = """
-// =====================================
-//     Mase Hardware (Memory Map)
-//     Model: {}
-//     {}
-// =====================================
-`timescale 1ns/1ps
-module {} #(
-{}
-) (
-    input clk,
-    input rst,
-{}
-);
-{}
-{}
-endmodule
-    """.format(
-            top_name,
-            time_to_emit,
-            top_name,
-            parameters_to_emit,
-            interface_to_emit,
-            signals_to_emit,
-            components_to_emit,
         )
         return module_inst
 
@@ -1082,18 +680,10 @@ def emit_verilog_top_transform_pass(graph, pass_args={}):
     )
     top_name = pass_args["top_name"] if "top_name" in pass_args.keys() else "top"
     init_project(project_dir)
-    logger.info(f"Project path: {project_dir}")
-
     rtl_dir = os.path.join(project_dir, "hardware", "rtl")
 
-    # Emit device-independent hardware design in dataflow
-    df = DataflowEmitter(graph).emit(top_name)
-    df_file = os.path.join(rtl_dir, f"{top_name}_df.sv")
-    with open(df_file, "w") as df_design:
-        df_design.write(df)
+    top = VerilogEmitter(graph).emit(graph, top_name)
 
-    # Emit memory mapping with BRAMs for the top-level hardware design
-    top = MemoryMapEmitter(graph).emit(top_name)
     top_file = os.path.join(rtl_dir, f"{top_name}.sv")
     with open(top_file, "w") as top_design:
         top_design.write(top)

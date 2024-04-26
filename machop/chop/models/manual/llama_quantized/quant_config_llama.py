@@ -6,7 +6,7 @@ from dataclasses import dataclass
 import toml
 from chop.tools.config_load import convert_str_na_to_none
 
-from ..quant_utils import parse_node_config
+from ..quant_utils import parse_node_q_config
 
 
 """
@@ -48,18 +48,18 @@ def create_a_layer_config(
     # fmt: off
     qc = {
         "self_attn": {
-            "q_proj": deepcopy(parse_node_config(layer_qc.get("self_attn", {}).get("q_proj", linear_qc), "linear")),
-            "k_proj": deepcopy(parse_node_config(layer_qc.get("self_attn", {}).get("k_proj", linear_qc), "linear")),
-            "v_proj": deepcopy(parse_node_config(layer_qc.get("self_attn", {}).get("v_proj", linear_qc), "linear")),
-            "o_proj": deepcopy(parse_node_config(layer_qc.get("self_attn", {}).get("o_proj", linear_qc), "linear")),
-            "rotary_positional_encoding": deepcopy(parse_node_config(layer_qc.get("self_attn", {}).get("rotary_positional_encoding", rotary_positional_encoding_qc), "rotary_positional_encoding")),
-            "matmul_0": deepcopy(parse_node_config(layer_qc.get("self_attn", {}).get("matmul_0", matmul_qc), "matmul")),
-            "matmul_1": deepcopy(parse_node_config(layer_qc.get("self_attn", {}).get("matmul_1", matmul_qc), "matmul")),
+            "q_proj": deepcopy(parse_node_q_config(layer_qc.get("self_attn", {}).get("q_proj", linear_qc), "linear")),
+            "k_proj": deepcopy(parse_node_q_config(layer_qc.get("self_attn", {}).get("k_proj", linear_qc), "linear")),
+            "v_proj": deepcopy(parse_node_q_config(layer_qc.get("self_attn", {}).get("v_proj", linear_qc), "linear")),
+            "o_proj": deepcopy(parse_node_q_config(layer_qc.get("self_attn", {}).get("o_proj", linear_qc), "linear")),
+            "rotary_positional_encoding": deepcopy(parse_node_q_config(layer_qc.get("self_attn", {}).get("rotary_positional_encoding", rotary_positional_encoding_qc), "rotary_positional_encoding")),
+            "matmul_0": deepcopy(parse_node_q_config(layer_qc.get("self_attn", {}).get("matmul_0", matmul_qc), "matmul")),
+            "matmul_1": deepcopy(parse_node_q_config(layer_qc.get("self_attn", {}).get("matmul_1", matmul_qc), "matmul")),
         },
         "mlp": {
-            "gate_proj": deepcopy(parse_node_config(layer_qc.get("mlp", {}).get("gate_proj", linear_qc), "linear")),
-            "down_proj": deepcopy(parse_node_config(layer_qc.get("mlp", {}).get("down_proj", linear_qc), "linear")),
-            "up_proj": deepcopy(parse_node_config(layer_qc.get("mlp", {}).get("up_proj", linear_qc), "linear"))
+            "gate_proj": deepcopy(parse_node_q_config(layer_qc.get("mlp", {}).get("gate_proj", linear_qc), "linear")),
+            "down_proj": deepcopy(parse_node_q_config(layer_qc.get("mlp", {}).get("down_proj", linear_qc), "linear")),
+            "up_proj": deepcopy(parse_node_q_config(layer_qc.get("mlp", {}).get("up_proj", linear_qc), "linear"))
         },
     }
     # fmt: on
@@ -69,14 +69,14 @@ def create_a_layer_config(
 def _parse_and_complete_config(config: dict, num_hidden_layers: int) -> dict:
     assert "default" in config, "Must provide default config for by_name_parser"
     default_qc: dict = config["default"]
-    linear_qc: dict = parse_node_config(
+    linear_qc: dict = parse_node_q_config(
         config.get("linear", default_qc), mase_op="linear"
     )
-    rotary_positional_encoding_qc: dict = parse_node_config(
+    rotary_positional_encoding_qc: dict = parse_node_q_config(
         config.get("rotary_positional_encoding", default_qc),
         mase_op="rotary_positional_encoding",
     )
-    matmul_qc: dict = parse_node_config(
+    matmul_qc: dict = parse_node_q_config(
         config.get("matmul", default_qc), mase_op="matmul"
     )
     general_layer_qc: dict = config.get("model_layer", None)
