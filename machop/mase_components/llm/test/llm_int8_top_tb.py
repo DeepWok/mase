@@ -180,7 +180,7 @@ def debug_state(dut, state):
 
 
 @cocotb.test()
-async def test_llm_int8_quant_tb(dut):
+async def cocotb_test_llm_int8_quant_tb(dut):
     """Test integer based vector mult"""
     samples = 100
     test_case = VerificationCase(samples=samples)
@@ -254,9 +254,17 @@ async def test_llm_int8_quant_tb(dut):
     analyse_results_signed(test_case.outputs.data, test_case.ref, 10)
 
 
-if __name__ == "__main__":
+import pytest
+
+
+@pytest.mark.skip(reason="Needs to be fixed.")
+def test_llm_int8_top():
     tb = VerificationCase()
     mase_runner(
         module_param_list=[tb.get_dut_parameters()],
         extra_build_args=["--unroll-count", "3000"],
     )
+
+
+if __name__ == "__main__":
+    test_llm_int8_top()

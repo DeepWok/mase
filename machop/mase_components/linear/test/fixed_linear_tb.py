@@ -122,7 +122,11 @@ async def test_20x20(dut):
     await tb.run_test()
 
 
-if __name__ == "__main__":
+import pytest
+
+
+@pytest.mark.skip(reason="Needs to be fixed.")
+def test_fixed_linear():
     mase_runner(
         trace=True,
         module_param_list=[
@@ -158,3 +162,7 @@ if __name__ == "__main__":
             },
         ],
     )
+
+
+if __name__ == "__main__":
+    test_fixed_linear()

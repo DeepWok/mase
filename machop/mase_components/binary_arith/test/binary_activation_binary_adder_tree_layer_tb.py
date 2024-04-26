@@ -66,7 +66,7 @@ def check_outputs(hw_out, sw_out):
 
 
 @cocotb.test()
-async def test_fixed_adder_tree_layer(dut):
+async def cocotb_test_fixed_adder_tree_layer(dut):
     """Test integer based adder tree layer"""
     test_case = VerificationCase(samples=100)
 

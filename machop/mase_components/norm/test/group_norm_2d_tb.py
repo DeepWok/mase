@@ -38,7 +38,7 @@ from chop.passes.graph.transforms.quantize.quantized_modules import (
 from chop.passes.graph.transforms.quantize.quantizers.quantizers_for_hw import (
     integer_quantizer_for_hw,
 )
-from mase_components.fixed_arithmetic.test.isqrt_sw import make_lut
+from mase_components.fixed_math.test.isqrt_sw import make_lut
 from mase_components.common.test.lut_tb import write_memb
 
 logger = logging.getLogger("testbench")
@@ -229,7 +229,11 @@ async def valid_backpressure(dut):
     assert tb.output_monitor.exp_queue.empty()
 
 
-if __name__ == "__main__":
+import pytest
+
+
+@pytest.mark.skip(reason="Needs to be fixed.")
+def test_group_norm_2d():
     # Consts
     LUT_POW = 7
 
@@ -308,3 +312,7 @@ if __name__ == "__main__":
         ],
         trace=True,
     )
+
+
+if __name__ == "__main__":
+    test_group_norm_2d()

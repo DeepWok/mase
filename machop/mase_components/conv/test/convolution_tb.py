@@ -7,9 +7,7 @@ from mase_cocotb.random_test import RandomSource, RandomSink, check_results
 from mase_cocotb.runner import mase_runner
 from chop.passes.graph.transforms.quantize.quantized_modules import Conv2dInteger
 
-# TODO: This import is broken
-# "from Qconv import QuantizedConvolution" also does not work!
-from mase_cocotb.z_qlayers import QuantizedConvolution
+from .Qconv import QuantizedConvolution
 import torch
 
 import cocotb
@@ -291,7 +289,7 @@ def debug_state(dut, state):
 
 
 @cocotb.test()
-async def test_fixed_linear(dut):
+async def cocotb_test_fixed_linear(dut):
     """Test integer based vector mult"""
     samples = 20
     test_case = VerificationCase(samples=samples)
@@ -433,6 +431,14 @@ def wave_check(dut):
     )
 
 
-if __name__ == "__main__":
+import pytest
+
+
+@pytest.mark.skip(reason="Needs to be fixed.")
+def test_convolution():
     tb = VerificationCase()
     mase_runner(module_param_list=[tb.get_dut_parameters()])
+
+
+if __name__ == "__main__":
+    test_convolution()

@@ -247,7 +247,7 @@ def generate_random_widths():
     return {**widths, **frac_widths}
 
 
-if __name__ == "__main__":
+def test_simple_matmul():
     # Run tests with different params
     mase_runner(
         module_param_list=[
@@ -260,3 +260,7 @@ if __name__ == "__main__":
             ],
         ]
     )
+
+
+if __name__ == "__main__":
+    test_simple_matmul()

@@ -8,9 +8,9 @@ sys.path.append(
 )
 print(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
-from random_test import RandomSource
-from random_test import RandomSink
-from random_test import check_results
+from mase_cocotb.random_test import RandomSource
+from mase_cocotb.random_test import RandomSink
+from mase_cocotb.random_test import check_results
 import utils
 
 import cocotb
@@ -84,7 +84,7 @@ def is_impossible_state(
 
 
 @cocotb.test()
-async def test_binary_activation_binary_vector_mult(dut):
+async def cocotb_test_binary_activation_binary_vector_mult(dut):
     """Test binary based vector mult"""
     samples = 20
     test_case = VerificationCase(samples=samples)

@@ -63,16 +63,6 @@ module simple_matmul #(
     end
   end
 
-  // Need to synchronise backpressure/valid signals
-  // logic sync_valid, sync_ready;
-  // join2 #() sync_handshake (
-  //     .data_in_valid ({x_valid, y_valid}),
-  //     .data_in_ready ({x_ready, y_ready}),
-  //     .data_out_valid(sync_valid),
-  //     .data_out_ready(sync_ready)
-  // );
-
-
   logic [N*K-1:0] dot_product_ready;
   logic [N*K-1:0] dot_product_valid;
   assign dot_product_ready = {(N * K) {out_ready}};

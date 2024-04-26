@@ -12,7 +12,6 @@ Description : This module calculates the generalised group norm.
 */
 
 `timescale 1ns / 1ps
-
 module group_norm_2d #(
     // Dimensions
     parameter TOTAL_DIM0     = 4,

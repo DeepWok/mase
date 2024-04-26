@@ -117,7 +117,7 @@ def debug_state(dut, state):
 
 
 @cocotb.test()
-async def test_scatter(dut):
+async def cocotb_test_scatter(dut):
     """Test integer based vector mult"""
     samples = 10
     test_case = VerificationCase(samples=samples)
@@ -176,9 +176,13 @@ async def test_scatter(dut):
     check_results_signed(test_case.outputs.data, test_case.ref)
 
 
-if __name__ == "__main__":
+def test_scatter():
     tb = VerificationCase()
     mase_runner(
         module_param_list=[tb.get_dut_parameters()],
         extra_build_args=["--unroll-count", "3000"],
     )
+
+
+if __name__ == "__main__":
+    test_scatter()

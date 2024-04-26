@@ -88,7 +88,7 @@ def mase_runner(
         )
         runner.test(
             hdl_toplevel=module,
-            test_module=module + "_tb",
+            test_module=f"mase_components.{group}.test.{module}_tb",
             seed=seed,
             results_xml="results.xml",
         )

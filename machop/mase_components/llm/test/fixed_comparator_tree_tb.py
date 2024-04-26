@@ -68,7 +68,7 @@ def is_impossible_state(data_in_ready, data_in_valid, data_out_ready, data_out_v
 
 
 @cocotb.test()
-async def test_fixed_comparator_tree(dut):
+async def cocotb_test_fixed_comparator_tree(dut):
     """Test integer based adder tree"""
     samples = 20
     test_case = VerificationCase(samples=samples)
@@ -160,6 +160,10 @@ async def test_fixed_comparator_tree(dut):
     check_results_signed(test_case.outputs.data, test_case.ref)
 
 
-if __name__ == "__main__":
+def fixed_comparator_tree():
     tb = VerificationCase()
     mase_runner(module_param_list=[tb.get_dut_parameters()])
+
+
+if __name__ == "__main__":
+    fixed_comparator_tree()

@@ -29,10 +29,10 @@ module matmul #(
     parameter B_TOTAL_DIM1 = 4,  // must equal A_TOTAL_DIM0
 
     // Compute dimensions
-    parameter A_COMPUTE_DIM0 = 2,
-    parameter A_COMPUTE_DIM1 = 2,
-    parameter B_COMPUTE_DIM0 = 2,
-    parameter B_COMPUTE_DIM1 = 2,  // must equal A_COMPUTE_DIM0
+    parameter A_COMPUTE_DIM0 = 2, // 4
+    parameter A_COMPUTE_DIM1 = 2, // 1
+    parameter B_COMPUTE_DIM0 = 2, // 4
+    parameter B_COMPUTE_DIM1 = 2,  // must equal A_COMPUTE_DIM0 // 1
 
     // Input fixed point widths
     parameter A_WIDTH      = 8,
@@ -153,24 +153,23 @@ module matmul #(
     end
   endgenerate
 
-
-
-
   // We need to buffer the B matrix
   // TODO: unless A_DEPTH_DIM1 == 1
 
   localparam B_FLAT_WIDTH = B_WIDTH * B_COMPUTE_DIM0 * B_COMPUTE_DIM1;
-  logic [B_FLAT_WIDTH-1:0] b_data_flat;
 
   // Buffer outputs
-  logic [B_FLAT_WIDTH-1:0] b_buffer_out_data_flat;
   logic b_buffer_out_valid, b_buffer_out_ready;
 
   // Matrix unflatten output
   logic [B_WIDTH-1:0] b_buffer_out_data[B_COMPUTE_DIM0*B_COMPUTE_DIM1-1:0];
 
   generate
+
     if (A_DEPTH_DIM1 > 1) begin
+      logic [B_FLAT_WIDTH-1:0] b_data_flat;
+      logic [B_FLAT_WIDTH-1:0] b_buffer_out_data_flat;
+
       matrix_flatten #(
           .DATA_WIDTH(B_WIDTH),
           .DIM0      (B_COMPUTE_DIM0),
@@ -223,9 +222,9 @@ module matmul #(
   logic sm_out_valid, sm_out_ready;
 
   simple_matmul #(
-      .N              (A_COMPUTE_DIM1),
-      .M              (A_COMPUTE_DIM0),    // == B_COMPUTE_DIM1
-      .K              (B_COMPUTE_DIM0),
+      .N              (A_COMPUTE_DIM1), //1
+      .M              (A_COMPUTE_DIM0),    // == B_COMPUTE_DIM1 // 4
+      .K              (B_COMPUTE_DIM0), // 4
       .X_WIDTH        (A_WIDTH),
       .X_FRAC_WIDTH   (A_FRAC_WIDTH),
       .Y_WIDTH        (B_WIDTH),

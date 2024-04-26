@@ -8,9 +8,9 @@ sys.path.append(
 )
 print(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
-from random_test import RandomSource
-from random_test import RandomSink
-from random_test import check_results
+from mase_cocotb.random_test import RandomSource
+from mase_cocotb.random_test import RandomSink
+from mase_cocotb.random_test import check_results
 
 import cocotb
 from cocotb.triggers import Timer
@@ -89,7 +89,7 @@ def in_out_wave(dut, name):
 
 
 @cocotb.test()
-async def test_fixed_activation_binary_dot_product(dut):
+async def cocotb_test_fixed_activation_binary_dot_product(dut):
     """Test integer based vector mult"""
     samples = 20
     test_case = VerificationCase(samples=samples)

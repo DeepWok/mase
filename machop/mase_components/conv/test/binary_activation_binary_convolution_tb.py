@@ -8,11 +8,11 @@ sys.path.append(
 )
 print(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
-from random_test import RandomSource
-from random_test import RandomSink
-from random_test import check_results_signed
+from mase_cocotb.random_test import RandomSource
+from mase_cocotb.random_test import RandomSink
+from mase_cocotb.random_test import check_results_signed
 
-from Qconv import QuantizedConvolution
+from .Qconv import QuantizedConvolution
 import torch
 import torch.nn as nn
 import utils
@@ -377,7 +377,7 @@ def wave_check(dut, instance):
 
 
 @cocotb.test()
-async def test_binary_activation_binary_convolution(dut):
+async def cocotb_test_binary_activation_binary_convolution(dut):
     """Test integer based vector mult"""
     samples = 20
     test_case = VerificationCase(samples=samples)

@@ -99,7 +99,7 @@ module fixed_selu #(
     assign value_1[DATA_OUT_0_PRECISION_1] = 1;
 
     //calculation of negative exponential
-    exp #(
+    fixed_exp #(
         .DATA_IN_0_PRECISION_0 (DATA_IN_0_PRECISION_0),
         .DATA_IN_0_PRECISION_1 (DATA_IN_0_PRECISION_1),
         .DATA_OUT_0_PRECISION_0(DATA_OUT_0_PRECISION_0),
