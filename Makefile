@@ -9,6 +9,8 @@ group=$(if $(shell id -g),$(shell id -g),1000)
 sw_test_dir = machop/test/
 hw_test_dir = machop/mase_components/
 
+NUM_WORKERS ?= 1
+
 # Make sure the repo is up to date
 sync:
 	git submodule sync
@@ -43,7 +45,7 @@ shell: build-docker
 
 test-hw:
 	pytest --log-level=DEBUG --verbose \
-		-n 1 \
+		-n $(NUM_WORKERS) \
 		--html=report.html --self-contained-html \
 		$(hw_test_dir)
 
