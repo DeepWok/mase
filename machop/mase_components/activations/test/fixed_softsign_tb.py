@@ -12,7 +12,7 @@ DATA_OUT_0_PRECISION_1 = 8
 
 
 @cocotb.test()
-async def cocotb_test_fixed_tanh(dut):
+async def cocotb_test_fixed_softsign(dut):
     # Range of values
     min_value = -4
     max_value = 4
