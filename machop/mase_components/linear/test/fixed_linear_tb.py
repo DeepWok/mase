@@ -117,7 +117,7 @@ class LinearTB(Testbench):
 
 
 @cocotb.test()
-async def test_20x20(dut):
+async def cocotb_test_20x20(dut):
     tb = LinearTB(dut, in_features=20, out_features=20)
     await tb.run_test()
 

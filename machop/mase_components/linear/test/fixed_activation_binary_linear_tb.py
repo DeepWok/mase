@@ -124,7 +124,7 @@ def debug_state(dut, state):
 
 
 @cocotb.test()
-async def test_fixed_linear(dut):
+async def cocotb_test_fixed_linear(dut):
     """Test integer based vector mult"""
     samples = 20
     test_case = VerificationCase(samples=samples)

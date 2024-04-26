@@ -16,7 +16,7 @@ module fixed_linear #(
     parameter WEIGHT_PRECISION_1 = 3,
     parameter WEIGHT_TENSOR_SIZE_DIM_0 = 32,
     parameter WEIGHT_TENSOR_SIZE_DIM_1 = 1,
-    parameter WEIGHT_PARALLELISM_DIM_0 = 1,
+    parameter WEIGHT_PARALLELISM_DIM_0 = 4,
     parameter WEIGHT_PARALLELISM_DIM_1 = 4,  // must equal DATA_IN_0_PARALLELISM_DIM_0
 
     parameter DATA_OUT_0_PRECISION_0 = DATA_IN_0_PRECISION_0 + WEIGHT_PRECISION_0 + $clog2(

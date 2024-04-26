@@ -8,7 +8,7 @@ import torch
 import torch.nn as nn
 
 from math import sqrt
-from mase_components.fixed_arithmetic.test.isqrt_sw import make_lut
+from mase_components.fixed_math.test.isqrt_sw import make_lut
 from mase_components.common.test.lut_tb import write_memb
 from chop.passes.graph.utils import get_module_by_name
 from chop.passes.graph.transforms.quantize.quantizers.quantizers_for_hw import (
