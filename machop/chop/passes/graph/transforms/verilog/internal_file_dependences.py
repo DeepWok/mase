@@ -12,11 +12,6 @@ INTERNAL_RTL_DEPENDENCIES = {
         "common/rtl/skid_buffer.sv",
         "common/rtl/join2.sv",
         "cast/rtl/fixed_rounding.sv",
-        "cast/rtl/fixed_round.sv",
     ],
-    "relu": [
-        "activations/rtl/fixed_relu.sv",
-        "cast/rtl/fixed_rounding.sv",
-        "cast/rtl/fixed_round.sv",
-    ],
+    "relu": ["activations/fixed_relu.sv"],
 }

@@ -5,6 +5,8 @@ from pathlib import Path
 import copy
 
 
+import torch
+
 logger = logging.getLogger(__name__)
 
 
@@ -118,7 +120,7 @@ def report_node_hardware_type_analysis_pass(graph, pass_args: dict = {}):
     return graph, {}
 
 
-def report_node_meta_param_analysis_pass(graph, pass_args: dict = None):
+def report_node_meta_param_analysis_pass(graph, pass_args: dict = {}):
     """
     Perform meta parameter analysis on the nodes in the graph and generate a report.
 
@@ -131,6 +133,7 @@ def report_node_meta_param_analysis_pass(graph, pass_args: dict = None):
     :return: The analyzed graph and an empty dictionary.
     :rtype: tuple(MaseGraph, dict)
     """
+    torch.set_printoptions(threshold=20)
     which_param = pass_args.get("which", ("all",))
     assert isinstance(which_param, (list, tuple))
     for param in which_param:
@@ -184,4 +187,5 @@ def report_node_meta_param_analysis_pass(graph, pass_args: dict = None):
         with open(Path(save_path), "w") as f:
             f.write(table_txt)
             logger.info(f"Node meta param table is saved to {save_path}")
+    torch.set_printoptions(threshold=1000)
     return graph, {}

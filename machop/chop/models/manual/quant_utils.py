@@ -1,6 +1,6 @@
 from typing import Callable
 
-from chop.passes.graph import parse_node_config
+from chop.passes.graph import parse_node_q_config
 from chop.passes.graph import quantized_func_map
 from chop.passes.graph import quantized_module_map
 
@@ -16,4 +16,4 @@ def get_quantized_func(mase_op: str, quant_config: dict) -> Callable:
 
 
 def parse_op_quant_config(mase_op: str, config: dict) -> dict:
-    return parse_node_config(config=config, mase_op=mase_op)
+    return parse_node_q_config(config=config, mase_op=mase_op)

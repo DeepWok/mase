@@ -46,7 +46,7 @@ def emit_internal_rtl_transform_pass(graph, pass_args={}):
     for node in graph.fx_graph.nodes:
         if node.meta["mase"].parameters["hardware"]["is_implicit"]:
             continue
-        if "INTERNAL" == node.meta["mase"].parameters["hardware"]["toolchain"]:
+        if "INTERNAL_RTL" == node.meta["mase"].parameters["hardware"]["toolchain"]:
             if (
                 hasattr(node.meta["mase"].module, "config")
                 and node.meta["mase"].module.config.get("name", "") == "logicnets"
@@ -70,12 +70,11 @@ def emit_internal_rtl_transform_pass(graph, pass_args={}):
         "..",
         "..",
         "..",
+        "..",
         "mase_components",
     )
 
     for f in rtl_dependencies:
-        fname = os.path.join(hardware_dir, f)
-        assert os.path.isfile(fname), f"Cannot find file {fname}."
-        shutil.copy(fname, rtl_dir)
+        shutil.copy(os.path.join(hardware_dir, f), rtl_dir)
 
     return graph, {}
