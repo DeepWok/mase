@@ -141,4 +141,3 @@ venv.bak/
 
 # Data files for hardware simulation
 *.dat
-test_emit.py

@@ -7,9 +7,9 @@ sys.path.append(
 )
 print(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
-from random_test import RandomSource
-from random_test import RandomSink
-from random_test import check_results
+from mase_cocotb.random_test import RandomSource
+from mase_cocotb.random_test import RandomSink
+from mase_cocotb.random_test import check_results
 
 import numpy as np
 import torch
@@ -95,7 +95,7 @@ def debug_state(dut, state):
 
 
 @cocotb.test()
-async def test_roller(dut):
+async def cocotb_test_roller(dut):
     """Test integer based vector mult"""
     samples = 3
     test_case = VerificationCase(samples=samples)

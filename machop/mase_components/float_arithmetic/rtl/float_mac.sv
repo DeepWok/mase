@@ -18,6 +18,8 @@
 // 
 //////////////////////////////////////////////////////////////////////////////////
 
+`timescale 1ns / 1ps
+/* verilator lint_off UNUSEDSIGNAL */
 module float_mac #(
     parameter FLOAT_WIDTH = 32
 ) (
@@ -68,27 +70,24 @@ module float_mac #(
 
 `else
 
-  fp_mult multiplier_i (
-      .s_axis_a_tvalid(in_valid && in_ready),
-      .s_axis_a_tdata (a),
-
-      .s_axis_b_tvalid(in_valid && in_ready),
-      .s_axis_b_tdata (b),
-
-      .m_axis_result_tvalid(fp_mult_result_valid_comb),
-      .m_axis_result_tdata (fp_mult_result_comb)
+  float_multiplier multiplier_i (
+      .a_operand(a),
+      .b_operand(b),
+      .result(fp_mult_result_comb),
+      .Exception(),
+      .Overflow(),
+      .Underflow()
   );
 
-  fp_add adder_i (
-      .s_axis_a_tvalid(busy && fp_mult_result_valid_q),
-      .s_axis_a_tdata (fp_mult_result_q),
+  assign fp_mult_result_valid_comb = '1;
 
-      .s_axis_b_tvalid(busy && fp_mult_result_valid_q),
-      .s_axis_b_tdata (acc_reg),
-
-      .m_axis_result_tvalid(fp_add_result_valid_comb),
-      .m_axis_result_tdata (fp_add_result_comb)
+  float_adder adder_i (
+      .in1(fp_mult_result_q),
+      .in2(acc_reg),
+      .res(fp_add_result_comb)
   );
+
+  assign fp_add_result_valid_comb = '1;
 
 `endif
 

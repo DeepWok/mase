@@ -12,7 +12,7 @@ DATA_OUT_0_PRECISION_1 = 8
 
 
 @cocotb.test()
-async def test_fixed_tanh(dut):
+async def cocotb_test_fixed_gelu(dut):
     # Range of values
     min_value = -4
     max_value = 4
@@ -65,7 +65,7 @@ async def test_fixed_tanh(dut):
         ), "Randomised test failed "
 
 
-if __name__ == "__main__":
+def test_fixed_gelu():
     mase_runner(
         trace=True,
         module_param_list=[
@@ -85,6 +85,5 @@ if __name__ == "__main__":
     )
 
 
-""" if __name__ == "__main__":
-    tb = VerificationCase()
-    mase_runner(module_param_list=[tb.get_dut_parameters()]) """
+if __name__ == "__main__":
+    test_fixed_gelu()

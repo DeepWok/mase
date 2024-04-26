@@ -188,6 +188,55 @@ def create_new_module(
         new_module = new_module_cls(
             output_size=original_module.output_size, config=config
         )
+    elif mase_op == "batch_norm2d":
+        new_module_cls = quantized_module_map[f"batch_norm2d_{quant_name}"]
+        new_module = new_module_cls(
+            num_features=original_module.num_features,
+            eps=original_module.eps,
+            momentum=original_module.momentum,
+            affine=original_module.affine,
+            track_running_stats=original_module.track_running_stats,
+            config=config,
+        )
+        if original_module.affine:
+            copy_weights(original_module.weight, new_module.weight)
+            copy_weights(original_module.bias, new_module.bias)
+    elif mase_op == "layer_norm":
+        new_module_cls = quantized_module_map[f"layer_norm_{quant_name}"]
+        new_module = new_module_cls(
+            normalized_shape=original_module.normalized_shape,
+            eps=original_module.eps,
+            elementwise_affine=original_module.elementwise_affine,
+            bias=original_module.bias,
+            config=config,
+        )
+    elif mase_op == "group_norm":
+        new_module_cls = quantized_module_map[f"group_norm_{quant_name}"]
+        new_module = new_module_cls(
+            num_groups=original_module.num_groups,
+            num_channels=original_module.num_channels,
+            eps=original_module.eps,
+            affine=original_module.affine,
+            config=config,
+        )
+    elif mase_op == "instance_norm2d":
+        new_module_cls = quantized_module_map[f"instance_norm2d_{quant_name}"]
+        new_module = new_module_cls(
+            num_features=original_module.num_features,
+            eps=original_module.eps,
+            momentum=original_module.momentum,
+            affine=original_module.affine,
+            track_running_stats=original_module.track_running_stats,
+            config=config,
+        )
+    elif mase_op == "rms_norm":
+        new_module_cls = quantized_module_map[f"rms_norm_{quant_name}"]
+        new_module = new_module_cls(
+            normalized_shape=original_module.normalized_shape,
+            eps=original_module.eps,
+            elementwise_affine=original_module.elementwise_affine,
+            config=config,
+        )
     else:
         raise NotImplementedError(
             f"Unsupported module class {original_module_cls} to modify"

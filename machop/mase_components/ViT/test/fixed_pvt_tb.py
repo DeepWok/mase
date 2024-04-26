@@ -10,9 +10,9 @@ sys.path.append(
 sys.path.append("/workspace/machop/")
 sys.path.append("/workspace/components/testbench/ViT/")
 
-from random_test import RandomSource
-from random_test import RandomSink
-from random_test import check_results
+from mase_cocotb.random_test import RandomSource
+from mase_cocotb.random_test import RandomSink
+from mase_cocotb.random_test import check_results
 
 import cocotb
 from cocotb.triggers import Timer
@@ -24,11 +24,11 @@ from einops import rearrange
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from z_qlayers import quantize_to_int as q2i
+from mase_cocotb.z_qlayers import quantize_to_int as q2i
 from chop.models.manual.quant_utils import get_quantized_cls
-from pvt_quant import QuantizedPyramidVisionTransformer
-from z_qlayers import linear_data_pack
-from ha_softmax import generate_table_hardware, generate_table_div_hardware
+from .helpers.pvt_quant import QuantizedPyramidVisionTransformer
+from mase_cocotb.z_qlayers import linear_data_pack
+from .helpers.ha_softmax import generate_table_hardware, generate_table_div_hardware
 
 debug = False
 
@@ -1160,7 +1160,7 @@ class VerificationCase:
 
 
 @cocotb.test()
-async def test_fixed_linear(dut):
+async def cocotb_test_fixed_linear(dut):
     # TODO:
     """Test integer based vector mult"""
     samples = 1
@@ -1519,5 +1519,13 @@ def runner():
     )
 
 
-if __name__ == "__main__":
+import pytest
+
+
+@pytest.mark.skip(reason="Needs to be fixed.")
+def test_fixed_pvt():
     runner()
+
+
+if __name__ == "__main__":
+    test_fixed_pvt()

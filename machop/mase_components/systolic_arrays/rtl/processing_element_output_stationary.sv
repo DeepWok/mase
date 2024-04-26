@@ -12,9 +12,9 @@
 // Additional Comments:
 // 
 //////////////////////////////////////////////////////////////////////////////////
-
+`timescale 1ns / 1ps
 module processing_element_output_stationary #(
-    parameter PRECISION   = top_pkg::FLOAT_32,
+    parameter PRECISION   = 0,
     parameter DATA_WIDTH  = 32,
     parameter FLOAT_WIDTH = 32
 ) (
@@ -38,8 +38,8 @@ module processing_element_output_stationary #(
     input logic                  bias_valid,
     input logic [DATA_WIDTH-1:0] bias,
 
-    input logic                                             activation_valid,
-    input logic [$bits(top_pkg::ACTIVATION_FUNCTION_e)-1:0] activation,
+    input logic       activation_valid,
+    input logic [7:0] activation,
 
     input logic                  shift_valid,
     input logic [DATA_WIDTH-1:0] shift_data,
@@ -95,23 +95,20 @@ module processing_element_output_stationary #(
   // Bias addition
   // -------------------------------------------------------------
 
-  if (PRECISION == top_pkg::FLOAT_32) begin
+  if (PRECISION == 0) begin
 
 `ifdef SIMULATION
     assign bias_out_valid_comb  = bias_valid;
     assign pe_acc_add_bias_comb = pe_acc;
 `else
 
-    fp_add bias_adder (
-        .s_axis_a_tvalid(1'b1),
-        .s_axis_a_tdata (pe_acc),
-
-        .s_axis_b_tvalid(bias_valid),
-        .s_axis_b_tdata (bias),
-
-        .m_axis_result_tvalid(bias_out_valid_comb),
-        .m_axis_result_tdata (pe_acc_add_bias_comb)
+    float_adder bias_adder (
+        .in1(pe_acc),
+        .in2(bias),
+        .res(pe_acc_add_bias_comb)
     );
+
+    assign bias_out_valid_comb = '0;
 
 `endif
 
@@ -140,6 +137,9 @@ module processing_element_output_stationary #(
   // -------------------------------------------------------------
 
   activation_core activation_core_i (
+      .core_clk,
+      .resetn,
+
       .sel_activation(activation),
 
       .in_feature_valid(activation_valid),
@@ -192,7 +192,6 @@ module processing_element_output_stationary #(
     end
   end
 
-`ifdef DEBUG
 
   always_ff @(posedge core_clk or negedge resetn) begin
     if (!resetn) begin
@@ -204,7 +203,6 @@ module processing_element_output_stationary #(
     end
   end
 
-`endif
 
   // ======================================================================================================
   // Assertions

@@ -57,6 +57,19 @@ from .relu import (
     ReLUBinary,
     ReLUTernary,
 )
+from .batch_norm2d import (
+    BatchNorm2dInteger,
+    BatchNorm2dBinary,
+)
+from .layer_norm import (
+    LayerNormInteger,
+)
+from .group_norm import GroupNormInteger
+from .instance_norm2d import InstanceNorm2dInteger
+
+# from .rms_norm import (
+#     RMSNormInteger
+# )
 
 from .selu import (
     SELUBlockFP,
@@ -167,6 +180,12 @@ quantized_module_map = {
     "relu_block_fp": ReLUBlockFP,
     "relu_binary": ReLUBinary,
     "relu_ternary": ReLUTernary,
+    "batch_norm2d_integer": BatchNorm2dInteger,
+    "batch_norm2d_binary": BatchNorm2dBinary,
+    "layer_norm_integer": LayerNormInteger,
+    "group_norm_integer": GroupNormInteger,
+    "instance_norm2d_integer": InstanceNorm2dInteger,
+    # "rms_norm_integer": RMSNormInteger,
     "selu_block_minifloat": SELUBlockMinifloat,
     "selu_integer": SELUInteger,
     "selu_fixed": SELUInteger,

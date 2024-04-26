@@ -20,17 +20,19 @@ module unpacked_fifo #(
     assign data_in_flatten[i*DATA_WIDTH+DATA_WIDTH-1:i*DATA_WIDTH] = data_in[i];
   end
   fifo #(
-      .DEPTH(DEPTH),
+      .SIZE(DEPTH),
       .DATA_WIDTH(DATA_WIDTH * IN_NUM)
   ) ff_inst (
-      .clk(clk),  // ANDY
-      .rst(rst),  // ANDY
-      .in_data(data_in_flatten),  // ANDY FOUND BUG
-      .in_valid(data_in_valid),  // ANDY FOUND BUG
-      .in_ready(data_in_ready),  // ANDY FOUND BUG
-      .out_data(data_out_flatten),  // ANDY FOUND BUG
-      .out_valid(data_out_valid),  // ANDY
-      .out_ready(data_out_ready)  // ANDY
+      .clk(clk),
+      .rst(rst),
+      .in_data(data_in_flatten),
+      .in_valid(data_in_valid),
+      .in_ready(data_in_ready),
+      .out_data(data_out_flatten),
+      .out_valid(data_out_valid),
+      .out_ready(data_out_ready),
+      .empty(),
+      .full()
   );
   for (genvar i = 0; i < IN_NUM; i++) begin : unreshape
     assign data_out[i] = data_out_flatten[i*DATA_WIDTH+DATA_WIDTH-1:i*DATA_WIDTH];
