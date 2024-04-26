@@ -52,7 +52,7 @@ def in_out_wave(dut, name):
 
 
 @cocotb.test()
-async def test_register_slice(dut):
+async def cocotb_test_register_slice(dut):
     """Test register slice"""
     samples = 30
     test_case = VerificationCase(samples=samples)
@@ -134,6 +134,10 @@ def wave_check(dut):
     )
 
 
-if __name__ == "__main__":
+def test_skid_buffer():
     tb = VerificationCase()
     mase_runner(module_param_list=[tb.get_dut_parameters()])
+
+
+if __name__ == "__main__":
+    test_skid_buffer()

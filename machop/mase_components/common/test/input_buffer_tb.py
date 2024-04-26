@@ -77,7 +77,7 @@ def debug_state(dut, state):
 
 
 @cocotb.test()
-async def test_fixed_dot_product(dut):
+async def cocotb_test_fixed_dot_product(dut):
     """Test integer based vector mult"""
     samples = 100
     test_case = VerificationCase(samples=samples)
@@ -158,6 +158,10 @@ def wave_check(dut):
     )
 
 
-if __name__ == "__main__":
+def test_input_buffer():
     tb = VerificationCase()
     mase_runner(module_param_list=[tb.get_dut_parameters()], trace=True)
+
+
+if __name__ == "__main__":
+    test_input_buffer()

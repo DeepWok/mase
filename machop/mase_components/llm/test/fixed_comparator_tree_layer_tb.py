@@ -61,7 +61,7 @@ class VerificationCase:
 
 
 @cocotb.test()
-async def test_fixed_comparator_tree_layer(dut):
+async def cocotb_test_fixed_comparator_tree_layer(dut):
     """Test integer based adder tree layer"""
     test_case = VerificationCase(samples=100)
 
@@ -78,6 +78,10 @@ async def test_fixed_comparator_tree_layer(dut):
         # ), "Output are incorrect on the {}th cycle: {}".format(i, x)
 
 
-if __name__ == "__main__":
+def test_fixed_comparator_tree_layer():
     tb = VerificationCase()
     mase_runner(module_param_list=[tb.get_dut_parameters()])
+
+
+if __name__ == "__main__":
+    test_fixed_comparator_tree_layer()

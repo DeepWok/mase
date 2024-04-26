@@ -131,7 +131,7 @@ def debug_state(dut, state):
 
 
 @cocotb.test()
-async def test_quantizer_top(dut):
+async def cocotb_test_quantizer_top(dut):
     """Test integer based vector mult"""
     samples = 20
     test_case = VerificationCase(samples=samples)
@@ -203,9 +203,13 @@ async def test_quantizer_top(dut):
     )  # TODO: allow error
 
 
-if __name__ == "__main__":
+def test_quantizer_top():
     tb = VerificationCase()
     mase_runner(
         module_param_list=[tb.get_dut_parameters()],
         extra_build_args=["--unroll-count", "3000"],
     )
+
+
+if __name__ == "__main__":
+    test_quantizer_top()

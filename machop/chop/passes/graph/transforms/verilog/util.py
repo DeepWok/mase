@@ -1,4 +1,7 @@
 from chop.passes.graph.utils import vf
+from chop.passes.graph.analysis.add_metadata.hardware_metadata_layers import (
+    INTERNAL_COMP,
+)
 
 
 def get_verilog_parameters(graph):
@@ -20,3 +23,14 @@ def get_verilog_parameters(graph):
             parameter_map[f"{node_name}_{key}"] = value
 
     return parameter_map
+
+
+def include_ip_to_project(node):
+    """
+    Copy internal files to the project
+    """
+    mase_op = node.meta["mase"].parameters["common"]["mase_op"]
+    assert (
+        mase_op in INTERNAL_COMP
+    ), f"Cannot find mase op {mase_op} in internal components"
+    return INTERNAL_COMP[mase_op][0]["dependence_files"]
