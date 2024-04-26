@@ -8,7 +8,7 @@ sys.path.append(
 )
 print(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
-import utils
+import mase_cocotb.utils
 
 import cocotb
 from cocotb.triggers import Timer

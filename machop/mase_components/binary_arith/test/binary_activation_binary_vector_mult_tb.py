@@ -11,7 +11,6 @@ print(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))
 from mase_cocotb.random_test import RandomSource
 from mase_cocotb.random_test import RandomSink
 from mase_cocotb.random_test import check_results
-import utils
 
 import cocotb
 from cocotb.triggers import Timer

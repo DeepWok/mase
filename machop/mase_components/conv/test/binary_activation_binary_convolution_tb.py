@@ -15,7 +15,6 @@ from mase_cocotb.random_test import check_results_signed
 from .Qconv import QuantizedConvolution
 import torch
 import torch.nn as nn
-import utils
 
 import cocotb
 from cocotb.triggers import Timer
