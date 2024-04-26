@@ -17,6 +17,18 @@ from chop.passes.graph.transforms.quantize.quantizers.quantizers_for_hw import (
 
 import chop.models.manual.rms_norm as rms
 
+import sys, pdb, traceback
+
+
+def excepthook(exc_type, exc_value, exc_traceback):
+    traceback.print_exception(exc_type, exc_value, exc_traceback)
+    print("\nEntering debugger...")
+    pdb.post_mortem(exc_traceback)
+
+
+# Set the custom exception hook
+# sys.excepthook = excepthook
+
 
 def _debug_mase_metadata(mg):
     print("#### GRAPH METADATA ####")
