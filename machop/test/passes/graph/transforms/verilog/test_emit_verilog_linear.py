@@ -35,6 +35,7 @@ class MLP(torch.nn.Module):
 
     def forward(self, x):
         x = torch.flatten(x, start_dim=1, end_dim=-1)
+        # x = torch.nn.functional.relu(x)
         x = torch.nn.functional.relu(self.fc1(x))
         x = torch.nn.functional.relu(self.fc2(x))
         x = self.fc3(x)
@@ -69,7 +70,7 @@ def test_emit_verilog_linear():
         "configs",
         "tests",
         "quantize",
-        "integer.toml",
+        "fixed.toml",
     )
 
     # load toml config file
@@ -77,27 +78,30 @@ def test_emit_verilog_linear():
         quan_args = toml.load(f)["passes"]["quantize"]
     mg, _ = passes.quantize_transform_pass(mg, quan_args)
 
+    # inspect the graph metadata
+    # mg, _ = passes.report_node_meta_param_analysis_pass(mg)
+
     # There is a bug in the current quantizzation pass, where the results metadata is not uppdated with the precision.
     # Here we temporarily update the metadata here so we can test the hardware back end.
-    for node in mg.fx_graph.nodes:
-        for arg, _ in node.meta["mase"].parameters["common"]["args"].items():
-            if (
-                type(node.meta["mase"].parameters["common"]["args"][arg]) == dict
-                and "type" in node.meta["mase"].parameters["common"]["args"][arg].keys()
-            ):
-                node.meta["mase"].parameters["common"]["args"][arg]["type"] = "fixed"
-        for result, _ in node.meta["mase"].parameters["common"]["results"].items():
-            if (
-                type(node.meta["mase"].parameters["common"]["results"][result]) == dict
-                and "type"
-                in node.meta["mase"].parameters["common"]["results"][result].keys()
-            ):
-                node.meta["mase"].parameters["common"]["results"][result][
-                    "type"
-                ] = "fixed"
-                node.meta["mase"].parameters["common"]["results"][result][
-                    "precision"
-                ] = [8, 3]
+    # for node in mg.fx_graph.nodes:
+    #     for arg, _ in node.meta["mase"].parameters["common"]["args"].items():
+    #         if (
+    #             type(node.meta["mase"].parameters["common"]["args"][arg]) == dict
+    #             and "type" in node.meta["mase"].parameters["common"]["args"][arg].keys()
+    #         ):
+    #             node.meta["mase"].parameters["common"]["args"][arg]["type"] = "fixed"
+    #     for result, _ in node.meta["mase"].parameters["common"]["results"].items():
+    #         if (
+    #             type(node.meta["mase"].parameters["common"]["results"][result]) == dict
+    #             and "type"
+    #             in node.meta["mase"].parameters["common"]["results"][result].keys()
+    #         ):
+    #             node.meta["mase"].parameters["common"]["results"][result][
+    #                 "type"
+    #             ] = "fixed"
+    #             node.meta["mase"].parameters["common"]["results"][result][
+    #                 "precision"
+    #             ] = [8, 3]
 
     mg, _ = passes.add_hardware_metadata_analysis_pass(
         mg
