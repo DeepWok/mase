@@ -38,7 +38,7 @@ module processing_element_output_stationary #(
     input logic                  bias_valid,
     input logic [DATA_WIDTH-1:0] bias,
 
-    input logic                                             activation_valid,
+    input logic       activation_valid,
     input logic [7:0] activation,
 
     input logic                  shift_valid,
@@ -103,9 +103,9 @@ module processing_element_output_stationary #(
 `else
 
     float_adder bias_adder (
-        .in1 (pe_acc),
-        .in2 (bias),
-        .res (pe_acc_add_bias_comb)
+        .in1(pe_acc),
+        .in2(bias),
+        .res(pe_acc_add_bias_comb)
     );
 
     assign bias_out_valid_comb = '0;

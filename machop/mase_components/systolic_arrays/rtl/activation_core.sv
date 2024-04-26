@@ -33,11 +33,11 @@ module activation_core #(
     case (sel_activation)
 
       0: begin
-        activated_feature_comb = in_feature; // none
+        activated_feature_comb = in_feature;  // none
       end
 
       1: begin
-        activated_feature_comb = in_feature[FLOAT_WIDTH-1] ? '0 : in_feature; // relu
+        activated_feature_comb = in_feature[FLOAT_WIDTH-1] ? '0 : in_feature;  // relu
       end
 
       2: begin
@@ -58,12 +58,12 @@ module activation_core #(
 
 `else
     float_multiplier activation_mult (
-        .a_operand (in_feature),
-        .b_operand (layer_config_leaky_relu_alpha_value),
-        .result (leaky_relu_activation_comb),
-        .Exception (),
-        .Overflow (),
-        .Underflow ()
+        .a_operand(in_feature),
+        .b_operand(layer_config_leaky_relu_alpha_value),
+        .result(leaky_relu_activation_comb),
+        .Exception(),
+        .Overflow(),
+        .Underflow()
     );
 
     assign leaky_relu_activation_valid_comb = '1;

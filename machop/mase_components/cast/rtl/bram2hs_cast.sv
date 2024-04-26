@@ -35,7 +35,7 @@ module bram2hs_cast #(
   logic [OUT_WIDTH - 1:0] q1;
 
   // 1-bit wider so OUT_DEPTH also fits.
-  logic [ADDR_WIDTH-1:0] address_counter;
+  logic [ ADDR_WIDTH-1:0] address_counter;
   // 1-bit wider so OUT_DEPTH also fits.
   localparam COUNTER_WIDTH = $clog2(OUT_SIZE);
   logic [COUNTER_WIDTH-1:0] data_counter;

@@ -26,7 +26,7 @@ module bram_cast #(
   logic [IN_WIDTH - 1:0] d0;
   logic [IN_WIDTH - 1:0] q1;
 
-  assign d0 = '0;
+  assign d0  = '0;
 
   assign we0 = 0;
 

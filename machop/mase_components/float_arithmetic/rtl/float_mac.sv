@@ -71,9 +71,9 @@ module float_mac #(
 `else
 
   float_multiplier multiplier_i (
-      .a_operand (a),
-      .b_operand (b),
-      .result (fp_mult_result_comb),
+      .a_operand(a),
+      .b_operand(b),
+      .result(fp_mult_result_comb),
       .Exception(),
       .Overflow(),
       .Underflow()
@@ -82,9 +82,9 @@ module float_mac #(
   assign fp_mult_result_valid_comb = '1;
 
   float_adder adder_i (
-      .in1 (fp_mult_result_q),
-      .in2 (acc_reg),
-      .res (fp_add_result_comb)
+      .in1(fp_mult_result_q),
+      .in2(acc_reg),
+      .res(fp_add_result_comb)
   );
 
   assign fp_add_result_valid_comb = '1;

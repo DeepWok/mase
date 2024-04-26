@@ -109,8 +109,8 @@ module matrix_stream_transpose #(
         .out_data (fifo_out_data_flat),
         .out_valid(fifo_out_valid),
         .out_ready(fifo_out_ready),
-        .empty(),
-        .full()
+        .empty    (),
+        .full     ()
     );
 
   end

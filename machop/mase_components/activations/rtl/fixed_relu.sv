@@ -29,7 +29,9 @@ module fixed_relu #(
 );
 
   /* verilator lint_off SELRANGE */
-  for (genvar i = 0; i < DATA_IN_0_PARALLELISM_DIM_0 * DATA_IN_0_PARALLELISM_DIM_1; i++) begin : ReLU
+  for (
+      genvar i = 0; i < DATA_IN_0_PARALLELISM_DIM_0 * DATA_IN_0_PARALLELISM_DIM_1; i++
+  ) begin : ReLU
     always_comb begin
       if ($signed(data_in_0[i]) <= 0) data_out_0[i] = '0;
       else data_out_0[i] = data_in_0[i];

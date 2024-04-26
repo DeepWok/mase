@@ -29,9 +29,9 @@ module matmul #(
     parameter B_TOTAL_DIM1 = 4,  // must equal A_TOTAL_DIM0
 
     // Compute dimensions
-    parameter A_COMPUTE_DIM0 = 2, // 4
-    parameter A_COMPUTE_DIM1 = 2, // 1
-    parameter B_COMPUTE_DIM0 = 2, // 4
+    parameter A_COMPUTE_DIM0 = 2,  // 4
+    parameter A_COMPUTE_DIM1 = 2,  // 1
+    parameter B_COMPUTE_DIM0 = 2,  // 4
     parameter B_COMPUTE_DIM1 = 2,  // must equal A_COMPUTE_DIM0 // 1
 
     // Input fixed point widths
@@ -222,9 +222,9 @@ module matmul #(
   logic sm_out_valid, sm_out_ready;
 
   simple_matmul #(
-      .N              (A_COMPUTE_DIM1), //1
+      .N              (A_COMPUTE_DIM1),    //1
       .M              (A_COMPUTE_DIM0),    // == B_COMPUTE_DIM1 // 4
-      .K              (B_COMPUTE_DIM0), // 4
+      .K              (B_COMPUTE_DIM0),    // 4
       .X_WIDTH        (A_WIDTH),
       .X_FRAC_WIDTH   (A_FRAC_WIDTH),
       .Y_WIDTH        (B_WIDTH),

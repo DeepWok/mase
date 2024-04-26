@@ -44,7 +44,7 @@ module systolic_module_output_stationary #(
     input logic                  bias_valid,
     input logic [DATA_WIDTH-1:0] bias,
 
-    input logic                                             activation_valid,
+    input logic       activation_valid,
     input logic [7:0] activation,
 
     input logic shift_valid,

@@ -39,7 +39,7 @@ module hs2bram_cast #(
 
   // Port 0 is for read only
   assign we0 = 0;
-  assign d0 = '0;
+  assign d0  = '0;
 
   // data_buff
   logic [IN_WIDTH-1:0] data_buff[IN_SIZE-1:0];
