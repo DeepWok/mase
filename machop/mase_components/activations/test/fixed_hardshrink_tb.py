@@ -83,7 +83,7 @@ class Hardshrinktb(Testbench):
 
 
 @cocotb.test()
-async def test(dut):
+async def cocotb_test(dut):
     tb = Hardshrinktb(dut)
     await tb.reset()
     logger.info(f"Reset finished")
@@ -102,7 +102,7 @@ async def test(dut):
     assert tb.data_out_0_monitor.exp_queue.empty()
 
 
-if __name__ == "__main__":
+def test_fixed_hardshrink():
     mase_runner(
         module_param_list=[
             {
@@ -122,3 +122,7 @@ if __name__ == "__main__":
             }
         ]
     )
+
+
+if __name__ == "__main__":
+    test_fixed_hardshrink()

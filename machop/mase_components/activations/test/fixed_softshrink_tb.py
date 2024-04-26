@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 import os, logging
-import generate_memory
+from . import generate_memory
 import pdb
 from bitstring import BitArray
 import cocotb
@@ -183,7 +183,7 @@ class fixed_softshrink_tb(Testbench):
 
 
 @cocotb.test()
-async def test(dut):
+async def cocotb_test(dut):
     in_data_width = dut_params["DATA_IN_0_PRECISION_0"]
     in_frac_width = dut_params["DATA_IN_0_PRECISION_1"]
     out_data_width = dut_params["DATA_OUT_0_PRECISION_0"]
@@ -208,6 +208,12 @@ dut_params = {
 }
 
 torch.manual_seed(1)
-if __name__ == "__main__":
+
+
+def test_fixed_softshrink():
     # generate_memory.generate_sv_lut("exp", dut_params["DATA_IN_0_PRECISION_0"], dut_params["DATA_IN_0_PRECISION_1"])
     mase_runner(module_param_list=[dut_params])
+
+
+if __name__ == "__main__":
+    test_fixed_softshrink()

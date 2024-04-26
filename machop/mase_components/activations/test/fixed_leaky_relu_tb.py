@@ -17,6 +17,7 @@ from torch.autograd.function import InplaceFunction
 # from chop.passes.graph.transforms.quantize.quantized_modules import LinearInteger
 
 import torch
+import pytest
 
 logger = logging.getLogger("testbench")
 logger.setLevel(logging.INFO)
@@ -132,7 +133,7 @@ def floattofixed(x, dw, fracw):
 
 
 @cocotb.test()
-async def test(dut):
+async def cocotb_test(dut):
     # pdb.set_trace()
     tb = HardswishTB(dut)
     await tb.reset()
@@ -160,7 +161,8 @@ async def test(dut):
     assert tb.data_out_0_monitor.exp_queue.empty()
 
 
-if __name__ == "__main__":
+@pytest.mark.skip(reason="Needs to be fixed.")
+def test_fixed_leaky_relu():
     mase_runner(
         module_param_list=[
             {
@@ -175,3 +177,7 @@ if __name__ == "__main__":
             }
         ]
     )
+
+
+if __name__ == "__main__":
+    test_fixed_leaky_relu()

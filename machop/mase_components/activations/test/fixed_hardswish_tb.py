@@ -20,6 +20,8 @@ import torch
 logger = logging.getLogger("testbench")
 logger.setLevel(logging.INFO)
 
+import pytest
+
 
 class Hardswishtb(Testbench):
     def __init__(self, dut) -> None:
@@ -79,7 +81,7 @@ class Hardswishtb(Testbench):
 
 
 @cocotb.test()
-async def test(dut):
+async def cocotb_test(dut):
     tb = Hardswishtb(dut)
     await tb.reset()
     logger.info(f"Reset finished")
@@ -98,7 +100,8 @@ async def test(dut):
     assert tb.data_out_0_monitor.exp_queue.empty()
 
 
-if __name__ == "__main__":
+@pytest.mark.skip(reason="Needs to be fixed.")
+def test_fixed_hardswish():
     mase_runner(
         module_param_list=[
             {
@@ -117,3 +120,7 @@ if __name__ == "__main__":
             }
         ]
     )
+
+
+if __name__ == "__main__":
+    test_fixed_hardswish()
