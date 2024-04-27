@@ -51,7 +51,10 @@ sync-mlir:
 # Build Docker container
 build-docker:
 	if [ $(local) -eq 1 ]; then \
-		docker build --build-arg VHLS_PATH=$(vhls) --build-arg VHLS_VERSION=$(vhls_version) -f Docker/Dockerfile --tag mase-ubuntu2204 Docker; \
+		if [ ! -d Docker ]; then \
+    			git clone git@github.com:jianyicheng/mase-docker.git Docker; \
+		fi; \
+		docker build --build-arg VHLS_PATH=$(vhls) --build-arg VHLS_VERSION=$(vhls_version) -f Docker/Dockerfile-$(target) --tag mase-ubuntu2204 Docker; \
 	else \
 		docker pull $(img); \
 	fi
@@ -71,7 +74,6 @@ shell: build-docker
 # Short-term solution: call scripts under /tmp so we can clean it properly
 test-hw:
 	mkdir -p ./tmp
-	pip install .
 	(cd tmp; python3 ../scripts/test-hardware.py -a || exit 1)
 
 test-sw:

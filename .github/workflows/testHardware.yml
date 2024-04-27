@@ -25,7 +25,7 @@ jobs:
   hardware-regression-test:
     runs-on: ubuntu-latest
     container:
-      image: deepwok/mase-docker:latest
+      image: deepwok/mase-docker-cpu:latest
     steps:
 
       # Clone the MASE repo and its submodules.
