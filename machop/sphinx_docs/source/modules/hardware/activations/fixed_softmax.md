@@ -1,5 +1,5 @@
 
-# Fixed-Point Softmax Layer
+# Softmax
 
 The `fixed_softmax` module implements the [Pytorch Softmax](https://pytorch.org/docs/stable/generated/torch.nn.Softmax.html) layer. Given the input vector $x \in \R^{m \text{x} n}$, `fixed_softmax` returns $y \in \R^{m \text{x} n}$. 
 

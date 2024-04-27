@@ -1,5 +1,4 @@
-sigmoid
-# Fixed-Point LogSigmoid Layer
+# LogSigmoid
 
 The `fixed_logsigmoid` module implements the [Pytorch LogSigmoid](https://pytorch.org/docs/stable/generated/torch.nn.LogSigmoid.html) layer. Given the input vector $x \in \R^{m x n}$, `fixed_logsigmoid` returns $y \in \R^{m x n}$. 
 

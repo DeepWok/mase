@@ -62,3 +62,10 @@ Once exponential has been calculated, SELU is calculated by subtraction and cons
 </div> -->
 
 ![MAC](https://raw.githubusercontent.com/DeepWok/mase/main/machop/sphinx_docs/source/imgs/hardware/activations/exp_fd.png)
+
+## References
+
+1. [PyTorch Documentation](https://pytorch.org/docs/stable/index.html)
+4. Chandra, M., 2021. On the Implementation of Fixed-Point Exponential Function for Machine Learning and Signal-Processing Accelerators. IEEE Design & Test, 39(4), pp.64-70.
+5. Lin, C.W. and Wang, J.S., 2008, May. A digital circuit design of hyperbolic tangent sigmoid function for neural networks. In 2008 IEEE International Symposium on Circuits and Systems (ISCAS) (pp. 856-859). IEEE.
+6. González-Díaz_Conti, G., Vázquez-Castillo, J., Longoria-Gandara, O., Castillo-Atoche, A., Carrasco-Alvarez, R., Espinoza-Ruiz, A. and Ruiz-Ibarra, E., 2021. Hardware-based activation function-core for neural network implementations. Electronics, 11(1), p.14.

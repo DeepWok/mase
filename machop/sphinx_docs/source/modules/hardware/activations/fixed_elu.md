@@ -1,5 +1,5 @@
 
-# Fixed-Point ELU Layer
+# ELU
 
 The `fixed_elu` module implements the [Pytorch ELU](https://pytorch.org/docs/stable/generated/torch.nn.ELU.html) layer. Given the input tensor $x \in \R^{m x n}$, `fixed_ELU` returns $y \in \R^{m x n}$. 
 

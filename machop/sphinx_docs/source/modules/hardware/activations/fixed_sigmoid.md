@@ -1,4 +1,4 @@
-# Fixed-Point Sigmoid Layer
+# Sigmoid
 
 The `fixed_sigmoid` module implements the [Pytorch Sigmoid](https://pytorch.org/docs/stable/generated/torch.nn.Sigmoid.html) layer. Given the input vector $x \in \R^{m x n}$, `fixed_Sigmoid` returns $y \in \R^{m x n}$. 
 

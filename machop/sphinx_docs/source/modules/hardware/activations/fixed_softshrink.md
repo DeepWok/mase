@@ -1,4 +1,4 @@
-# Fixed-Point Softshrink Layer
+# Softshrink
 
 The `fixed_softshrink` module implements the [Pytorch Softshrink](https://pytorch.org/docs/stable/generated/torch.nn.Softshrink.html) layer. Given the input vector $x \in \R^{m x n}$, `fixed_softshrink` returns $y \in \R^{m x n}$. 
 

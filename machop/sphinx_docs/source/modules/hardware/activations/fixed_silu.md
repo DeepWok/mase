@@ -1,5 +1,5 @@
 
-# Fixed-Point SiLU Layer
+# SiLU
 
 The `fixed_silu` module implements the [Pytorch SiLU](https://pytorch.org/docs/stable/generated/torch.nn.SiLU.html) layer. Given the input vector $x \in \R^{m x n}$, `fixed_silu` returns $y \in \R^{m x n}$. 
 

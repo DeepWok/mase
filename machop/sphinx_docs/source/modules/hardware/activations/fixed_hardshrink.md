@@ -1,4 +1,4 @@
-# Fixed-Point Hardshrink Layer
+# Hardshrink
 
 The `fixed_hardshrink` module implements the [Pytorch Hardshrink](https://pytorch.org/docs/stable/generated/torch.nn.Hardshrink.html) layer. Given the input vector $x \in \R^{m x n}$, `fixed_hardshrink` returns $y \in \R^{m x n}$. 
 
