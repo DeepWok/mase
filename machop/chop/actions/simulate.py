@@ -38,20 +38,23 @@ def simulate(
 
     if not skip_build:
         # To do: extract from mz checkpoint
+        # sources = [
+        #     project_dir / "hardware" / "rtl" / "top.sv",
+        # ]
         sources = [
-            project_dir / "hardware" / "rtl" / "top.sv",
+            "top.sv"
         ]
+
+        includes = [
+                project_dir / "hardware" / "rtl",
+            ] + [
+                Path(mase_components.__file__).parent / module / "rtl"
+                for module in get_modules()
+            ]
 
         runner.build(
             verilog_sources=sources,
-            includes=[
-                project_dir / "hardware" / "rtl",
-            ]
-            # Include all mase components
-            + [
-                Path(mase_components.__file__).parent / module / "rtl"
-                for module in get_modules()
-            ],
+            includes=includes,
             hdl_toplevel="top",
             build_args=["-Wno-fatal", "-Wno-lint", "-Wno-style", "--trace"],
             parameters=[],  # use default parameters,

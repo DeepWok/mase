@@ -17,83 +17,66 @@ module fixed_adder_tree #(
 );
 
   localparam LEVELS = $clog2(IN_SIZE);
+  
+  logic [IN_SIZE-1:0] [(IN_WIDTH + LEVELS)-1:0] data [LEVELS:0];
 
-  // Declare intermediate values at each level
-  for (genvar i = 0; i <= LEVELS; i++) begin : vars
-    // The number of inputs at each level
-    // level_num = ceil(num/(2^i))
-    localparam LEVEL_IN_SIZE = (IN_SIZE + ((1 << i) - 1)) >> i;
-    // The input data array at each level
-    // When i = 0, data is the input of the adder tree.
-    // When i = level, data is the output of the adder tree.
-    logic [(IN_WIDTH + i)-1:0] data[LEVEL_IN_SIZE-1:0];
-    // Each level has a pair of handshake signals
-    // When i = 0, they are the handshake logic of the input.
-    // When i = level, they are the handshake logic of the output.
-    logic valid;
-    logic ready;
+  logic [LEVELS:0] valid;
+  logic [LEVELS:0] ready;
+
+  // Logic
+  // ------------------------------------------------
+
+  // Take data for first level from module interface
+  for (genvar input_element = 0; input_element < IN_SIZE; input_element++) begin
+    assign data  [0][input_element] = data_in[input_element];
   end
+  assign valid [0] = data_in_valid;
+  assign data_in_ready = ready [0];
 
   // Generate adder for each layer
-  for (genvar i = 0; i < LEVELS; i++) begin : level
-    // The number of inputs at each level
-    localparam LEVEL_IN_SIZE = (IN_SIZE + ((1 << i) - 1)) >> i;
+  for (genvar level = 0; level < LEVELS; level++) begin : level
+    // The number of inputs at each level = ceil(num/(2^level))
+    localparam LEVEL_IN_SIZE = (IN_SIZE + ((1 << level) - 1)) >> level;
+  
     // The number of adders needed at each level
     // which is the number of the inputs at next level
     localparam NEXT_LEVEL_IN_SIZE = (LEVEL_IN_SIZE + 1) / 2;
+  
+    localparam LEVEL_OUT_WIDTH = IN_WIDTH + level + 1;
+
     // The sum array is the output of the adders
-    logic [(IN_WIDTH + i):0] sum[NEXT_LEVEL_IN_SIZE-1:0];
+    logic [LEVEL_OUT_WIDTH-1:0] sum [NEXT_LEVEL_IN_SIZE-1:0];
+
+    logic [IN_WIDTH + level - 1 : 0] data_level_select [LEVEL_IN_SIZE-1:0];
+    for (genvar j = 0; j < LEVEL_IN_SIZE; j ++) begin
+      assign data_level_select[j] = data[level][j][IN_WIDTH + level - 1 : 0];
+    end
 
     // The width of the data increases by 1 for the next
     // level in order to keep the carry bit from the addition
     fixed_adder_tree_layer #(
         .IN_SIZE (LEVEL_IN_SIZE),
-        .IN_WIDTH(IN_WIDTH + i)
+        .IN_WIDTH(IN_WIDTH + level)
     ) layer (
-        .data_in (vars[i].data),
-        .data_out(sum)
+        .data_in        (data_level_select),
+        .data_in_valid  (valid[level]),
+        .data_in_ready  (ready[level]),
+        
+        .data_out       (sum),
+        .data_out_valid (valid[level+1]),
+        .data_out_ready (ready[level+1])
     );
 
-    // Cocotb/verilator does not support array flattening, so
-    // we need to manually add some reshaping process.
-
-    // Casting array for sum
-    logic [$bits(sum)-1:0] cast_sum;
-    logic [$bits(sum)-1:0] cast_data;
-    for (genvar j = 0; j < NEXT_LEVEL_IN_SIZE; j++) begin : reshape_in
-      assign cast_sum[(IN_WIDTH+i+1)*j+(IN_WIDTH+i):(IN_WIDTH+i+1)*j] = sum[j];
-    end
-
-    skid_buffer #(
-        .DATA_WIDTH($bits(sum))
-    ) register_slice (
-        .clk           (clk),
-        .rst           (rst),
-        .data_in       (cast_sum),
-        .data_in_valid (vars[i].valid),
-        .data_in_ready (vars[i].ready),
-        .data_out      (cast_data),
-        .data_out_valid(vars[i+1].valid),
-        .data_out_ready(vars[i+1].ready)
-    );
-
-    // Casting array for vars[i+1].data
+    // Drive input to next level
     for (genvar j = 0; j < NEXT_LEVEL_IN_SIZE; j++) begin : reshape_out
-      assign vars[i+1].data[j] = cast_data[(IN_WIDTH+i+1)*j+(IN_WIDTH+i):(IN_WIDTH+i+1)*j];
+      assign data[level+1][j] = sum[j];
     end
 
   end
 
-  // it will zero-extend automatically
-  // for (genvar j = 0; j < IN_SIZE; j++) begin : layer_0
-  //   assign vars[0].data[j] = data_in[j];
-  // end
-  assign vars[0].data = data_in;
-  assign vars[0].valid = data_in_valid;
-  assign data_in_ready = vars[0].ready;
-
-  assign data_out = vars[LEVELS].data[0];
-  assign data_out_valid = vars[LEVELS].valid;
-  assign vars[LEVELS].ready = data_out_ready;
+  // Assign module output from last level data
+  assign data_out = data[LEVELS][0];
+  assign data_out_valid = valid[LEVELS];
+  assign ready[LEVELS] = data_out_ready;
 
 endmodule

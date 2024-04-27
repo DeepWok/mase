@@ -141,3 +141,12 @@ venv.bak/
 
 # Data files for hardware simulation
 *.dat
+
+# Vivado
+*.xpr
+*.jou
+*.cache
+*.runs
+*.srcs
+*.hw
+vivado_pid*
