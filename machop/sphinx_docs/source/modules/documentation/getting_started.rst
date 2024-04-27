@@ -7,6 +7,16 @@ To use MASE, you can easily create an environment with all required dependendies
 
     Some parts of the flow may assume you have a version of Vivado/Vitis installed. Other parts, such as the emit verilog flow, require Verilator, which is included in the Docker container, but not on the Conda environment. If you prefer using Conda, you can just install Verilator locally.
 
+Setup Instructions
+----------------
+
+.. toctree::
+    :maxdepth: 1
+
+    getting_started/Get-started-using-Anaconda
+    getting_started/Get-started-using-Docker
+    getting_started/Get-started-students
+
 Students
 ----------------
 
@@ -27,12 +37,3 @@ For students at Imperial College London taking the Advanced Deep Learning System
 
         ssh <username>@<server_name>.ee.ic.ac.uk
 
-Setup Instructions
-----------------
-
-.. toctree::
-    :maxdepth: 1
-
-    getting_started/Get-started-using-Anaconda
-    getting_started/Get-started-using-Docker
-    getting_started/Get-started-students

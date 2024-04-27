@@ -132,7 +132,7 @@ def debug_state(dut, state):
 
 
 @cocotb.test()
-async def test_padding(dut):
+async def cocotb_test_padding(dut):
     """Test integer based vector mult"""
     samples = 20
     test_case = VerificationCase(samples=samples)

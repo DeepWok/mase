@@ -1,10 +1,15 @@
 vhls=/mnt/applications/Xilinx/23.1
 vhls_version=2023.1
 local=0
-img=$(if $local,"mase-ubuntu2204:latest","deepwok/mase-docker:latest")
+target=cpu
+img=$(if $local,"mase-ubuntu2204:latest","deepwok/mase-docker-$(target):latest")
 user=$(if $(shell id -u),$(shell id -u),9001)
 group=$(if $(shell id -g),$(shell id -g),1000)
-coverage=machop/test/
+
+sw_test_dir = machop/test/
+hw_test_dir = machop/mase_components/
+
+NUM_WORKERS ?= 1
 
 # Make sure the repo is up to date
 sync:
@@ -19,10 +24,13 @@ sync-mlir:
 
 # Build Docker container
 build-docker:
-	if [ $(local) ]; then \
-		docker build --build-arg VHLS_PATH=$(vhls) --build-arg VHLS_VERSION=$(vhls_version) -f Docker/Dockerfile --tag mase-ubuntu2204 Docker; \
+	if [ $(local) = 1 ]; then \
+		if [ ! -d Docker ]; then \
+    			git clone git@github.com:jianyicheng/mase-docker.git Docker; \
+		fi; \
+		docker build --build-arg VHLS_PATH=$(vhls) --build-arg VHLS_VERSION=$(vhls_version) -f Docker/Dockerfile-$(target) --tag mase-ubuntu2204 Docker; \
 	else \
-		docker pull docker.io/deepwok/mase-docker:latest; \
+		docker pull docker.io/deepwok/mase-docker-$(target):latest; \
 	fi
 
 shell: build-docker
@@ -35,16 +43,21 @@ shell: build-docker
         -v $(shell pwd):/workspace:z \
         $(img) /bin/bash
 
-# There is a historical reason that test files are stored under the current directory
-# Short-term solution: call scripts under /tmp so we can clean it properly
 test-hw:
-	mkdir -p ./tmp
-	pip install .
-	(cd tmp; python3 ../scripts/test-hardware.py -a || exit 1)
+	python3 scripts/build-components.py
+	pytest --log-level=DEBUG --verbose \
+		-n $(NUM_WORKERS) \
+		--html=report.html --self-contained-html \
+		$(hw_test_dir)
 
 test-sw:
 	bash scripts/test-machop.sh
-	pytest --log-level=DEBUG --verbose -n 1 --cov=machop/chop/ --cov-report=html $(coverage) --html=report.html --self-contained-html --profile --profile-svg
+	pytest --log-level=DEBUG --verbose \
+		-n 1 \
+		--cov=machop/chop/ --cov-report=html \
+		--html=report.html --self-contained-html \
+		--profile --profile-svg \
+		$(sw_test_dir)
 
 test-all: test-hw test-sw
 	mkdir -p ./tmp

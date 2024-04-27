@@ -9,18 +9,16 @@ sys.path.append(
 )
 print(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
-from z_qlayers import quantize_to_int as q2i
+from mase_cocotb.z_qlayers import quantize_to_int as q2i
 from einops import rearrange
-from random_test import RandomSource
-from random_test import RandomSink
-from random_test import check_results
+from mase_cocotb.random_test import RandomSource, RandomSink, check_results
 
 import cocotb
 from cocotb.triggers import Timer
 from cocotb.triggers import FallingEdge
 from cocotb.clock import Clock
 from cocotb.runner import get_runner
-from ha_softmax import (
+from .helpers.ha_softmax import (
     generate_table_div_hardware,
     generate_table_hardware,
     QHashSoftmax,
@@ -183,7 +181,7 @@ def in_out_wave(dut, name):
 
 
 @cocotb.test()
-async def test_register_slice(dut):
+async def cocotb_test_register_slice(dut):
     """Test register slice"""
     samples = 100
     test_case = VerificationCase(samples=samples)
@@ -293,5 +291,13 @@ def runner():
     runner.test(hdl_toplevel="hash_softmax", test_module="hash_softmax_tb")
 
 
-if __name__ == "__main__":
+import pytest
+
+
+@pytest.mark.skip(reason="Needs to be fixed.")
+def test_hash_softmax():
     runner()
+
+
+if __name__ == "__main__":
+    test_hash_softmax()

@@ -1,4 +1,5 @@
 `timescale 1 ns / 1 ps
+/* verilator lint_off UNUSEDSIGNAL */
 module bram_cast #(
     parameter IN_WIDTH   = 8,
     parameter ADDR_RANGE = 100,
@@ -24,6 +25,8 @@ module bram_cast #(
   logic we0;
   logic [IN_WIDTH - 1:0] d0;
   logic [IN_WIDTH - 1:0] q1;
+
+  assign d0  = '0;
 
   assign we0 = 0;
 
