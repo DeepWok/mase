@@ -10,6 +10,7 @@ from chop.passes import (
     init_metadata_analysis_pass,
     add_common_metadata_analysis_pass,
     add_hardware_metadata_analysis_pass,
+    raise_granularity_transform_pass,
 )
 
 import onnxruntime as rt
@@ -83,9 +84,12 @@ def test_export_fx_graph_model(
 
     # assert(torch.equal(onnx_out, mg_out))
 
+    return mg
+
 
 def test_export_fx_graph_bert():
-    test_export_fx_graph_model("bert-base-uncased", skip_export=False)
+    mg = test_export_fx_graph_model("bert-base-uncased", skip_export=True)
+    mg, _ = raise_granularity_transform_pass(mg)
 
 
 # def test_export_fx_graph_bloom():
