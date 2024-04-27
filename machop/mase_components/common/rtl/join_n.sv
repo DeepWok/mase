@@ -9,6 +9,8 @@ module join_n #(
     input logic data_out_ready
 );
 
+  logic [NUM_HANDSHAKES-1:0] all_valid;
+
   // If only some of the inputs are valid - we need to stall those inputs and wait
   // for the other inputs by setting some of the ready bits to 0.
   // Example with 3 handshakes:
@@ -54,11 +56,11 @@ module join_n #(
       if (all_valid) begin
         // Every data input is valid. We're ready to recieve as long as
         // the output is also ready!
-        data_in_ready[s] = data_out_ready;
+        data_in_ready[i] = data_out_ready;
       end else begin
         // Some data inputs are not valid. Indicate we are ready to recieve
         // for these inputs, while stalling the ones that are ready.
-        data_in_ready[s] = data_out_ready & (!data_in_valid[s]);
+        data_in_ready[i] = data_out_ready & (!data_in_valid[i]);
       end
     end
   end

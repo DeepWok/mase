@@ -146,6 +146,7 @@ venv.bak/
 *_lut.sv
 
 # Pytest generated reports
+prof/
 *.html
 
 # Quantization summaries

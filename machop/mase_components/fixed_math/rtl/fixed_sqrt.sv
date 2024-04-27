@@ -1,7 +1,7 @@
 //This is a cordic square-root module that takes inpiration from the localFixedPointCORDICSQRT MATLAB function
 
 `timescale 1ns / 1ps
-module sqrt #(
+module fixed_sqrt #(
     parameter IN_WIDTH      = 8,
     parameter NUM_ITERATION = 10
 
@@ -11,14 +11,9 @@ module sqrt #(
     input        [IN_WIDTH-1:0] v_in,
     input                       v_in_valid,
     output logic                v_in_ready,
-
-
-
-
     output logic [IN_WIDTH-1:0] v_out,
     output logic                v_out_valid,
     input                       v_out_ready   //TODO: assign to this
-
 );
 
   parameter NUM_STATES = NUM_ITERATION + 2;  // a rst and final state
