@@ -130,6 +130,9 @@ from .softplus import (
     SoftplusBinary,
     SoftplusTernary,
 )
+from .batch_norm1d import (
+    BatchNorm1dInteger,
+)
 
 quantized_module_map = {
     "conv1d_block_minifloat": Conv1dBlockMinifloat,
@@ -236,4 +239,6 @@ quantized_module_map = {
     "softplus_block_fp": SoftplusBlockFP,
     "softplus_binary": SoftplusBinary,
     "softplus_ternary": SoftplusTernary,
+    "batch_norm1d_fixed": BatchNorm1dInteger,
+    "batch_norm1d_linear": BatchNorm1dInteger,
 }
