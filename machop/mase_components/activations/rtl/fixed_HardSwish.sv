@@ -40,9 +40,9 @@ module fixed_hardswish #(
 
     always_comb begin
       // Default values
-      tmp_0 [i] = '0;
-      tmp_1 [i] = '0;
-      tmp_2 [i] = '0;
+      tmp_0[i] = '0;
+      tmp_1[i] = '0;
+      tmp_2[i] = '0;
 
       // negative value, put to zero
       if ($signed(data_in_0[i]) < -3) data_out_0[i] = '0;
@@ -57,12 +57,12 @@ module fixed_hardswish #(
     end
 
     fixed_mult #(
-      .IN_A_WIDTH(DATA_IN_0_PRECISION_0),
-      .IN_B_WIDTH(DATA_IN_0_PRECISION_0)
+        .IN_A_WIDTH(DATA_IN_0_PRECISION_0),
+        .IN_B_WIDTH(DATA_IN_0_PRECISION_0)
     ) fixed_mult_inst (
-      .data_a (data_in_0[i]),
-      .data_b (tmp_2[i]),
-      .product(tmp_3[i])
+        .data_a (data_in_0[i]),
+        .data_b (tmp_2[i]),
+        .product(tmp_3[i])
     );
   end
 
