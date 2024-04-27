@@ -71,7 +71,24 @@ class StreamMonitor(Monitor):
                         exp,
                     )
                 )
-                assert False, "Test Failed!"
+                raise TestFailure("\nGot \n%s, \nExpected \n%s" % (got, exp))
+
+
+class StreamMonitorFloat(StreamMonitor):
+    def __init__(self, clk, data, valid, ready, data_width, frac_width, check=True):
+        super().__init__(clk, data, valid, ready, check)
+        self.data_width = data_width
+        self.frac_width = frac_width
+
+    def _check(self, got, exp):
+        if self.check:
+            float_got = [x * 2**-self.frac_width for x in got]
+            float_exp = [x * 2**-self.frac_width for x in exp]
+            if not np.isclose(float_got, float_exp, atol=2**-self.frac_width).all():
+                # raise TestFailure("\nGot \n%s, \nExpected \n%s" % (got, exp))
+                raise TestFailure(
+                    f"\nGot int \n{got}, \nExpected int \n{exp} \nGot float \n{float_got}, \nExpected float \n{float_exp}"
+                )
 
 
 class ErrorThresholdStreamMonitor(StreamMonitor):

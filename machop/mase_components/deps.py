@@ -16,6 +16,20 @@ MASE_HW_DEPS = {
     "activations/fixed_gelu": ["fixed_arithmetic", "common"],
     "activations/fixed_softsign": ["fixed_arithmetic", "common"],
     "activations/fixed_softplus": [],
+    "activations/fixed_hardshrink": ["common", "cast"],
+    "activations/fixed_hardswish": ["common", "fixed_arithmetic"],
+    "activations/fixed_silu": ["common", "cast", "activations"],
+    "activations/fixed_elu": ["common", "cast", "activations"],
+    "activations/fixed_sigmoid": ["common", "cast", "activations"],
+    "activations/fixed_softshrink": ["common", "cast"],
+    "activations/fixed_logsigmoid": ["common", "cast", "activations"],
+    "activations/fixed_softmax": [
+        "common",
+        "cast",
+        "fixed_arithmetic",
+        "conv",
+        "activations",
+    ],
     # Attention
     "attention/fixed_self_att": [
         "attention",

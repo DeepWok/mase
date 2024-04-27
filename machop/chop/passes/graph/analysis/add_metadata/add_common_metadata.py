@@ -107,6 +107,20 @@ def graph_iterator_for_mase_ops(graph):
                 mase_op = "hardswish"
             elif isinstance(module, nn.Hardsigmoid):
                 mase_op = "hardsigmoid"
+            elif isinstance(module, nn.Sigmoid):
+                mase_op = "sigmoid"
+            elif isinstance(module, nn.Softmax):
+                mase_op = "softmax"
+            elif isinstance(module, nn.Hardshrink):
+                mase_op = "hardshrink"
+            elif isinstance(module, nn.SiLU):
+                mase_op = "silu"
+            elif isinstance(module, nn.ELU):
+                mase_op = "elu"
+            elif isinstance(module, nn.Softshrink):
+                mase_op = "softshrink"
+            elif isinstance(module, nn.LogSigmoid):
+                mase_op = "logsigmoid"
             # TODO: temporary. Support all patched attention layers
             elif "attention" in module.__name__.lower():
                 mase_op = "attention"

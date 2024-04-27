@@ -1,4 +1,5 @@
 `timescale 1 ns / 1 ps
+/* verilator lint_off PINMISSING */
 module unpacked_fifo #(
     parameter DEPTH = 8,
     parameter DATA_WIDTH = 8,

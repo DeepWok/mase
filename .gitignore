@@ -141,3 +141,12 @@ venv.bak/
 
 # Data files for hardware simulation
 *.dat
+
+# Generated SV LUT files
+*_lut.sv
+
+# Pytest generated reports
+*.html
+
+# Quantization summaries
+*.csv

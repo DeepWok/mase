@@ -44,6 +44,7 @@ shell: build-docker
         $(img) /bin/bash
 
 test-hw:
+	python3 scripts/build-components.py
 	pytest --log-level=DEBUG --verbose \
 		-n $(NUM_WORKERS) \
 		--html=report.html --self-contained-html \
