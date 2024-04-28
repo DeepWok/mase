@@ -15,7 +15,12 @@ from ...utils import (
 )
 
 from .modify import create_new_fn, create_new_module
-from .quant_parsers import parse_node_q_config, relink_node_meta, update_q_meta_param, infer_result_dtype_and_precision
+from .quant_parsers import (
+    parse_node_q_config,
+    relink_node_meta,
+    update_q_meta_param,
+    infer_result_dtype_and_precision,
+)
 from .summary import graph_iterator_compare_nodes, graph_iterator_node_histogram
 
 logger = logging.getLogger(__name__)
@@ -99,7 +104,13 @@ def graph_iterator_quantize_by_type(graph, config: dict):
             graph.fx_graph.erase_node(node)
 
     for node in graph.fx_graph.nodes:
-        if get_mase_type(node) in ["module_related_func", "builtin_func", "output", "placeholder", "implicit_func"]:
+        if get_mase_type(node) in [
+            "module_related_func",
+            "builtin_func",
+            "output",
+            "placeholder",
+            "implicit_func",
+        ]:
             infer_result_dtype_and_precision(node)
     return graph
 
@@ -155,7 +166,13 @@ def graph_iterator_quantize_by_name(graph, config: dict):
                 "Unsupported node type for quantisation: {}".format(get_mase_type(node))
             )
     for node in graph.fx_graph.nodes:
-        if get_mase_type(node) in ["module_related_func", "builtin_func", "output", "placeholder", "implicit_func"]:
+        if get_mase_type(node) in [
+            "module_related_func",
+            "builtin_func",
+            "output",
+            "placeholder",
+            "implicit_func",
+        ]:
             infer_result_dtype_and_precision(node)
     return graph
 
@@ -200,7 +217,13 @@ def graph_iterator_quantize_by_regex_name(graph, config: dict):
                 "Unsupported node type for quantisation:{}".format(get_mase_type(node))
             )
     for node in graph.fx_graph.nodes:
-        if get_mase_type(node) in ["module_related_func", "builtin_func", "output", "placeholder", "implicit_func"]:
+        if get_mase_type(node) in [
+            "module_related_func",
+            "builtin_func",
+            "output",
+            "placeholder",
+            "implicit_func",
+        ]:
             infer_result_dtype_and_precision(node)
     return graph
 

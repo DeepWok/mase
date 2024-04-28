@@ -75,8 +75,12 @@ def update_node_meta_param_fixed(node, q_config):
                     raise RuntimeError(
                         f"Optional argument {arg_name} found in node meta, but not found in q_config: {q_config}"
                     )
-                node.meta["mase"].parameters["common"]["args"][arg_name]["type"] = "fixed"
-                node.meta["mase"].parameters["common"]["args"][arg_name]["precision"] = [
+                node.meta["mase"].parameters["common"]["args"][arg_name][
+                    "type"
+                ] = "fixed"
+                node.meta["mase"].parameters["common"]["args"][arg_name][
+                    "precision"
+                ] = [
                     q_config[f"{operand_name}_width"],
                     q_config[f"{operand_name}_frac_width"],
                 ]
@@ -96,7 +100,9 @@ def update_q_meta_param(node, config: dict):
         case _:
             raise ValueError(f"Unsupported quantization arithmetic name: {q_arith}")
 
+
 from torch.fx import Node
+
 
 def find_next_compute_node(node: Node):
     for n in node.users:
@@ -106,6 +112,7 @@ def find_next_compute_node(node: Node):
         return find_next_compute_node(n)
     return None, None
 
+
 def find_prev_compute_node(node: Node):
     for n in node.all_input_nodes:
         if get_mase_type(n) in ["module_related_func", "builtin_func"]:
@@ -113,6 +120,7 @@ def find_prev_compute_node(node: Node):
     for n in node.all_input_nodes:
         return find_prev_compute_node(n)
     return None, None
+
 
 def infer_result_dtype_and_precision(node: Node):
     """
@@ -129,7 +137,9 @@ def infer_result_dtype_and_precision(node: Node):
         # input node
         input_node, next_node = find_next_compute_node(node)
         if input_node is None:
-            logger.warning(f"Failed to find next module_related_func node for input node {node.name}. Check if the graph contains module_related_func")
+            logger.warning(
+                f"Failed to find next module_related_func node for input node {node.name}. Check if the graph contains module_related_func"
+            )
             return
         i = 0
         for n in next_node.all_input_nodes:
@@ -140,14 +150,24 @@ def infer_result_dtype_and_precision(node: Node):
         arg_value = next_node.meta["mase"].parameters["common"]["args"][arg_key]
 
         for result in node.meta["mase"].parameters["common"]["results"]:
-            node.meta["mase"].parameters["common"]["results"][result]["type"] = arg_value["type"]
-            node.meta["mase"].parameters["common"]["results"][result]["precision"] = arg_value["precision"]
+            node.meta["mase"].parameters["common"]["results"][result]["type"] = (
+                arg_value["type"]
+            )
+            node.meta["mase"].parameters["common"]["results"][result]["precision"] = (
+                arg_value["precision"]
+            )
 
         for arg in node.meta["mase"].parameters["common"]["args"]:
-            node.meta["mase"].parameters["common"]["args"][arg]["type"] = arg_value["type"]
-            node.meta["mase"].parameters["common"]["args"][arg]["precision"] = arg_value["precision"]
+            node.meta["mase"].parameters["common"]["args"][arg]["type"] = arg_value[
+                "type"
+            ]
+            node.meta["mase"].parameters["common"]["args"][arg]["precision"] = (
+                arg_value["precision"]
+            )
 
-        logger.debug(f"Inferred arg & result dtype and precision for input node `{node.name}` using `{next_node.name}`")
+        logger.debug(
+            f"Inferred arg & result dtype and precision for input node `{node.name}` using `{next_node.name}`"
+        )
 
     elif get_mase_type(node) in ["module_related_func", "builtin_func"]:
         input_node, next_node = find_next_compute_node(node)
@@ -157,23 +177,42 @@ def infer_result_dtype_and_precision(node: Node):
             max_dtype = None
             max_bitwidth = 0
             for arg in node.meta["mase"].parameters["common"]["args"]:
-                if not isinstance(node.meta["mase"].parameters["common"]["args"][arg], dict):
+                if not isinstance(
+                    node.meta["mase"].parameters["common"]["args"][arg], dict
+                ):
                     continue
-                if not "precision" in node.meta["mase"].parameters["common"]["args"][arg]:
+                if (
+                    not "precision"
+                    in node.meta["mase"].parameters["common"]["args"][arg]
+                ):
                     continue
-                cur_width = node.meta["mase"].parameters["common"]["args"][arg]["precision"][0]
+                cur_width = node.meta["mase"].parameters["common"]["args"][arg][
+                    "precision"
+                ][0]
                 if cur_width > max_bitwidth:
                     max_bitwidth = cur_width
-                    max_precision = node.meta["mase"].parameters["common"]["args"][arg]["precision"]
-                    max_dtype = node.meta["mase"].parameters["common"]["args"][arg]["type"]
+                    max_precision = node.meta["mase"].parameters["common"]["args"][arg][
+                        "precision"
+                    ]
+                    max_dtype = node.meta["mase"].parameters["common"]["args"][arg][
+                        "type"
+                    ]
 
             if max_precision is None:
-                raise RuntimeError(f"Failed to infer dtype and precision for module_related_func node {node.name}")
+                raise RuntimeError(
+                    f"Failed to infer dtype and precision for module_related_func node {node.name}"
+                )
 
             for result in node.meta["mase"].parameters["common"]["results"]:
-                node.meta["mase"].parameters["common"]["results"][result]["type"] = max_dtype
-                node.meta["mase"].parameters["common"]["results"][result]["precision"] = max_precision
-            logger.debug(f"Inferred result dtype and precision for module_related_func node `{node.name}` using its args")
+                node.meta["mase"].parameters["common"]["results"][result][
+                    "type"
+                ] = max_dtype
+                node.meta["mase"].parameters["common"]["results"][result][
+                    "precision"
+                ] = max_precision
+            logger.debug(
+                f"Inferred result dtype and precision for module_related_func node `{node.name}` using its args"
+            )
         else:
             # use next compute node's args to infer dtype and precision
             i = 0
@@ -181,13 +220,21 @@ def infer_result_dtype_and_precision(node: Node):
                 if n is input_node:
                     break
                 i += 1
-            arg_key = list(next_node.meta["mase"].parameters["common"]["args"].keys())[i]
+            arg_key = list(next_node.meta["mase"].parameters["common"]["args"].keys())[
+                i
+            ]
             arg_value = next_node.meta["mase"].parameters["common"]["args"][arg_key]
 
             for result in node.meta["mase"].parameters["common"]["results"]:
-                node.meta["mase"].parameters["common"]["results"][result]["type"] = arg_value["type"]
-                node.meta["mase"].parameters["common"]["results"][result]["precision"] = arg_value["precision"]
-            logger.debug(f"Inferred result dtype and precision for module_related_func node `{node.name}` using `{next_node.name}`")
+                node.meta["mase"].parameters["common"]["results"][result]["type"] = (
+                    arg_value["type"]
+                )
+                node.meta["mase"].parameters["common"]["results"][result][
+                    "precision"
+                ] = arg_value["precision"]
+            logger.debug(
+                f"Inferred result dtype and precision for module_related_func node `{node.name}` using `{next_node.name}`"
+            )
 
     elif get_mase_type(node) == "implicit_func":
         input_node, next_node = find_next_compute_node(node)
@@ -199,21 +246,38 @@ def infer_result_dtype_and_precision(node: Node):
                 if n is input_node:
                     break
                 i += 1
-            arg_key = list(next_node.meta["mase"].parameters["common"]["args"].keys())[i]
+            arg_key = list(next_node.meta["mase"].parameters["common"]["args"].keys())[
+                i
+            ]
             arg_value = next_node.meta["mase"].parameters["common"]["args"][arg_key]
 
             for result in node.meta["mase"].parameters["common"]["results"]:
-                node.meta["mase"].parameters["common"]["results"][result]["type"] = arg_value["type"]
-                node.meta["mase"].parameters["common"]["results"][result]["precision"] = arg_value["precision"]
+                node.meta["mase"].parameters["common"]["results"][result]["type"] = (
+                    arg_value["type"]
+                )
+                node.meta["mase"].parameters["common"]["results"][result][
+                    "precision"
+                ] = arg_value["precision"]
 
             for arg in node.meta["mase"].parameters["common"]["args"]:
-                if not isinstance(node.meta["mase"].parameters["common"]["args"][arg], dict):
+                if not isinstance(
+                    node.meta["mase"].parameters["common"]["args"][arg], dict
+                ):
                     continue
-                if not "precision" in node.meta["mase"].parameters["common"]["args"][arg]:
+                if (
+                    not "precision"
+                    in node.meta["mase"].parameters["common"]["args"][arg]
+                ):
                     continue
-                node.meta["mase"].parameters["common"]["args"][arg]["type"] = arg_value["type"]
-                node.meta["mase"].parameters["common"]["args"][arg]["precision"] = arg_value["precision"]
-            logger.debug(f"Inferred arg & result dtype and precision for implicit_func node `{node.name}` using `{next_node.name}`")
+                node.meta["mase"].parameters["common"]["args"][arg]["type"] = arg_value[
+                    "type"
+                ]
+                node.meta["mase"].parameters["common"]["args"][arg]["precision"] = (
+                    arg_value["precision"]
+                )
+            logger.debug(
+                f"Inferred arg & result dtype and precision for implicit_func node `{node.name}` using `{next_node.name}`"
+            )
 
         elif prev_node is not None:
             i = 0
@@ -221,20 +285,34 @@ def infer_result_dtype_and_precision(node: Node):
                 if n is user_node:
                     break
                 i += 1
-            arg_key = list(prev_node.meta["mase"].parameters["common"]["args"].keys())[i]
+            arg_key = list(prev_node.meta["mase"].parameters["common"]["args"].keys())[
+                i
+            ]
             arg_value = prev_node.meta["mase"].parameters["common"]["args"][arg_key]
 
             for result in node.meta["mase"].parameters["common"]["results"]:
-                node.meta["mase"].parameters["common"]["results"][result]["type"] = arg_value["type"]
-                node.meta["mase"].parameters["common"]["results"][result]["precision"] = arg_value["precision"]
+                node.meta["mase"].parameters["common"]["results"][result]["type"] = (
+                    arg_value["type"]
+                )
+                node.meta["mase"].parameters["common"]["results"][result][
+                    "precision"
+                ] = arg_value["precision"]
 
             for arg in node.meta["mase"].parameters["common"]["args"]:
-                node.meta["mase"].parameters["common"]["args"][arg]["type"] = arg_value["type"]
-                node.meta["mase"].parameters["common"]["args"][arg]["precision"] = arg_value["precision"]
-            logger.debug(f"Inferred arg & result dtype and precision for implicit_func node `{node.name}` using `{prev_node.name}`")
+                node.meta["mase"].parameters["common"]["args"][arg]["type"] = arg_value[
+                    "type"
+                ]
+                node.meta["mase"].parameters["common"]["args"][arg]["precision"] = (
+                    arg_value["precision"]
+                )
+            logger.debug(
+                f"Inferred arg & result dtype and precision for implicit_func node `{node.name}` using `{prev_node.name}`"
+            )
 
         else:
-            raise RuntimeError(f"Failed to infer dtype and precision for implicit_func node {node.name} as it has no input nodes or users of type `module_related_func`")
+            raise RuntimeError(
+                f"Failed to infer dtype and precision for implicit_func node {node.name} as it has no input nodes or users of type `module_related_func`"
+            )
 
     elif get_mase_type(node) == "output":
         # output node
@@ -242,7 +320,9 @@ def infer_result_dtype_and_precision(node: Node):
         user_node, prev_node = find_prev_compute_node(node)
 
         if prev_node is None:
-            raise RuntimeError(f"Failed to find prev module_related_func node for output node {node.name}")
+            raise RuntimeError(
+                f"Failed to find prev module_related_func node for output node {node.name}"
+            )
 
         max_precision = None
         max_dtype = None
@@ -258,16 +338,26 @@ def infer_result_dtype_and_precision(node: Node):
         arg_value = prev_node.meta["mase"].parameters["common"]["args"][arg_key]
 
         for result in node.meta["mase"].parameters["common"]["results"]:
-            node.meta["mase"].parameters["common"]["results"][result]["type"] = arg_value["type"]
-            node.meta["mase"].parameters["common"]["results"][result]["precision"] = arg_value["precision"]
+            node.meta["mase"].parameters["common"]["results"][result]["type"] = (
+                arg_value["type"]
+            )
+            node.meta["mase"].parameters["common"]["results"][result]["precision"] = (
+                arg_value["precision"]
+            )
 
         for arg in node.meta["mase"].parameters["common"]["args"]:
-            node.meta["mase"].parameters["common"]["args"][arg]["type"] = arg_value["type"]
-            node.meta["mase"].parameters["common"]["args"][arg]["precision"] = arg_value["precision"]
+            node.meta["mase"].parameters["common"]["args"][arg]["type"] = arg_value[
+                "type"
+            ]
+            node.meta["mase"].parameters["common"]["args"][arg]["precision"] = (
+                arg_value["precision"]
+            )
 
-        logger.debug(f"Inferred dtype and precision for output node `{node.name}` using `{prev_node.name}`")
+        logger.debug(
+            f"Inferred dtype and precision for output node `{node.name}` using `{prev_node.name}`"
+        )
 
     else:
-        raise RuntimeError(f"Unsupported node type {get_mase_type(node)} for inferring dtype and precision")
-
-
+        raise RuntimeError(
+            f"Unsupported node type {get_mase_type(node)} for inferring dtype and precision"
+        )

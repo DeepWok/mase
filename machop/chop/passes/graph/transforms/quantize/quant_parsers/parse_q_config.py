@@ -10,6 +10,7 @@ MASE_OP_TO_ENTRIES = {
 }
 """
 
+
 def get_q_op_entries(q_name: str, mase_op: str):
     match q_name:
         case "fixed":
@@ -18,7 +19,9 @@ def get_q_op_entries(q_name: str, mase_op: str):
             raise ValueError(f"Unknown quantization arithmetic name: {q_name}")
 
     if mase_op not in op_entries:
-        raise ValueError(f"Unknown MASE operation name: {mase_op} for quantization arithmetic: {q_name}")
+        raise ValueError(
+            f"Unknown MASE operation name: {mase_op} for quantization arithmetic: {q_name}"
+        )
 
     return op_entries[mase_op]
 

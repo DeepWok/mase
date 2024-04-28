@@ -21,8 +21,8 @@ class VerificationCase:
 
 
 @cocotb.test()
-async def test_fixed_linear(dut):
-    """Test integer based vector mult"""
+async def test_top(dut):
+    """Test top-level model hardware design"""
     samples = 1000
     test_case = VerificationCase(samples=samples)
 
