@@ -49,10 +49,16 @@ def add_component_source(node):
     node.meta["mase"]["hardware"]["parallelism"] = {}
     args = node.meta["mase"]["common"]["args"]
     for arg, arg_info in args.items():
-        node.meta["mase"]["hardware"]["parallelism"][arg] = {0: 1, 1: 1, 2: 1}
+        if isinstance(arg_info, dict):
+            node.meta["mase"]["hardware"]["parallelism"][arg] = [
+                1 for _ in range(len(arg_info["shape"]))
+            ]
+
     results = node.meta["mase"]["common"]["results"]
     for result, result_info in results.items():
-        node.meta["mase"]["hardware"]["parallelism"][result] = {0: 1, 1: 1, 2: 1}
+        node.meta["mase"]["hardware"]["parallelism"][result] = [
+            1 for _ in range(len(result_info["shape"]))
+        ]
 
     # Current only support on-chip parameters
     args = node.meta["mase"]["common"]["args"]
