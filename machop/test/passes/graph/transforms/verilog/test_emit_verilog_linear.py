@@ -86,30 +86,13 @@ def test_emit_verilog_linear():
     mg, _ = passes.report_node_hardware_type_analysis_pass(mg)
     # mg = verify_hardware_metadata_analysis_pass(mg)
 
+    # Emit Verilog sources
     mg, _ = passes.emit_verilog_top_transform_pass(mg)
     mg, _ = passes.emit_bram_transform_pass(mg)
     mg, _ = passes.emit_internal_rtl_transform_pass(mg)
 
+    # Test Verilog sources
     mg, _ = passes.test_verilog_analysis_pass(mg)
-
-    # # For internal models, the test inputs can be directly fetched from the dataset
-    # # using InputGenerator from chop.tools.get_input
-    # project_dir = Path(__file__).parents[6] / "top"
-    # print(f"project_dir {project_dir}")
-    # cosim_config = {"test_inputs": [x], "trans_num": 1, "project_dir": project_dir}
-    # # mg = passes.emit_verilog_tb_transform_pass(mg, pass_args=cosim_config)
-
-    # # Run simulation pass if Vivado available
-    # try:
-    #     execute_cli("xelab -h", log_output=False)
-    #     has_verilog = True
-    #     # mg = get_synthesis_results("top", mg, target="xcu250-figd2104-2L-e", output_dir=".")
-    # except:
-    #     has_verilog = False
-    #     print(f"Vivado not available")
-
-    # if has_verilog:
-    #     mg = passes.run_cosim_analysis_pass(mg)
 
 
 if __name__ == "__main__":

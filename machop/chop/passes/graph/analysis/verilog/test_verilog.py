@@ -31,17 +31,6 @@ def get_dut_parameters(graph):
     return parameter_map
 
 
-def get_dependence_files(graph):
-    f = []
-    for node in graph.fx_graph.nodes:
-        if node.meta["mase"].parameters["hardware"]["is_implicit"]:
-            continue
-        f += node.meta["mase"].parameters["hardware"]["dependence_files"]
-
-    f = list(dict.fromkeys(f))
-    return f
-
-
 def runner(mg, project_dir, top_name):
     sim = os.getenv("SIM", "verilator")
 
@@ -96,7 +85,7 @@ def runner(mg, project_dir, top_name):
         hdl_toplevel=top_name,
         build_args=extra_args,
     )
-    runner.test(hdl_toplevel="top", test_module="top_tb")
+    runner.test(hdl_toplevel=top_name, test_module=f"{top_name}_tb")
 
 
 def test_verilog_analysis_pass(mg, pass_args={}):
