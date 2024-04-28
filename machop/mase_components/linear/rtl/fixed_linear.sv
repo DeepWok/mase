@@ -60,9 +60,9 @@ module fixed_linear #(
     /* verilator lint_on UNUSEDSIGNAL */
     output                        bias_ready,
 
-    output [DATA_OUT_0_PRECISION_0-1:0] data_out_0      [DATA_OUT_0_PARALLELISM_DIM_1-1:0],
-    output                              data_out_0_valid,
-    input                               data_out_0_ready
+    output [DATA_OUT_0_PRECISION_0-1:0] data_out_0      [DATA_OUT_0_PARALLELISM_DIM_0 * DATA_OUT_0_PARALLELISM_DIM_1-1:0],
+    output data_out_0_valid,
+    input data_out_0_ready
 );
 
   localparam FDP_WIDTH = DATA_IN_0_PRECISION_0 + WEIGHT_PRECISION_0 + $clog2(
@@ -71,6 +71,7 @@ module fixed_linear #(
   localparam ACC_WIDTH = FDP_WIDTH + $clog2(
       DATA_IN_0_TENSOR_SIZE_DIM_1 / DATA_IN_0_PARALLELISM_DIM_1
   );
+  logic [ACC_WIDTH-1:0] data_out_buff[DATA_OUT_0_PARALLELISM_DIM_0 * DATA_OUT_0_PARALLELISM_DIM_1-1:0];
 
   logic fdp_join_valid, fdp_join_ready;
   join2 #() fdp_join_inst (
@@ -170,12 +171,12 @@ module fixed_linear #(
     );
 
     for (genvar i = 0; i < BIAS_PARALLELISM_DIM_0; i = i + 1) begin : add_bias
-      logic [DATA_OUT_0_PRECISION_0-1:0] add;
+      logic [ACC_WIDTH-1:0] add;
       assign add = $signed(acc_data_out[i]) + $signed(bias_sext[i]);
       /* verilator lint_off UNUSEDSIGNAL */
       logic dout_valid;
       skid_buffer #(
-          .DATA_WIDTH(DATA_OUT_0_PRECISION_0)
+          .DATA_WIDTH(ACC_WIDTH)
       ) register_slice (
           .clk           (clk),
           .rst           (rst),
@@ -184,7 +185,7 @@ module fixed_linear #(
           .data_in       (add),
           .data_out_valid(dout_valid),
           .data_out_ready(data_out_0_ready),
-          .data_out      (data_out_0[i])
+          .data_out      (data_out_buff[i])
       );
     end
     assign data_out_0_valid = add_bias[0].dout_valid;
@@ -192,8 +193,21 @@ module fixed_linear #(
   end else begin
     assign acc_ready = data_out_0_ready;
     assign data_out_0_valid = linear[0].acc_data_out_valid;
-    assign data_out_0 = acc_data_out;
+    assign data_out_buff = acc_data_out;
     assign bias_ready = 1;
   end
+
+
+  fixed_rounding #(
+      .IN_SIZE(DATA_OUT_0_PARALLELISM_DIM_0 * DATA_OUT_0_PARALLELISM_DIM_1),
+      .IN_WIDTH(ACC_WIDTH),
+      .IN_FRAC_WIDTH(DATA_IN_0_PRECISION_1 + WEIGHT_PRECISION_1),
+      .OUT_WIDTH(DATA_OUT_0_PRECISION_0),
+      .OUT_FRAC_WIDTH(DATA_OUT_0_PRECISION_1)
+  ) fr_inst (
+      .data_in (data_out_buff),
+      .data_out(data_out_0)
+  );
+
 
 endmodule
