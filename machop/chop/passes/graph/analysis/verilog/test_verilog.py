@@ -1,75 +1,80 @@
-import logging
-from typing import Tuple, Dict
-import math
-import os
-import time
-from multiprocessing import Process, Queue
+#!/usr/bin/env python3
 
-from chop.passes.graph.utils import vf, v2p, init_project
+import os, logging
+
+from mase_cocotb.random_test import check_results
+from mase_cocotb.runner import mase_runner
+
+import cocotb
+from cocotb.triggers import Timer
+from cocotb.triggers import FallingEdge
+from cocotb.clock import Clock
 
 logger = logging.getLogger(__name__)
 
 
-def get_test_parameters(mg):
-    """
-    Extract the verilog parameters from the mase graph for cocotb testing
-    """
-    return {}
+# DUT test specifications
+class VerificationCase:
+    def __init__(self, iterations=1, samples=10):
+        self.samples = samples
+        self.iterations = iterations
 
 
-def get_dummy_inputs(mg):
-    """
-    Fetch test inputs from dataset or create a random one
-    """
-    return {}
+@cocotb.test()
+async def test_fixed_linear(dut):
+    """Test integer based vector mult"""
+    samples = 1000
+    test_case = VerificationCase(samples=samples)
 
+    # Reset cycle
+    await Timer(20, units="ns")
+    dut.rst.value = 1
+    await Timer(100, units="ns")
+    dut.rst.value = 0
 
-def run_software_test(mg, inputs):
-    """
-    Run software model on given inputs
-    """
-    return {}
+    # Create a 10ns-period clock on port clk
+    clock = Clock(dut.clk, 10, units="ns")
+    # Start the clock
+    cocotb.start_soon(clock.start())
+    await Timer(500, units="ns")
 
+    # Synchronize with the clock
+    dut.data_in_0_valid.value = 0
+    dut.data_out_0_ready.value = 1
+    debug_state(dut, "Pre-clk")
+    await FallingEdge(dut.clk)
+    debug_state(dut, "Post-clk")
+    debug_state(dut, "Pre-clk")
+    await FallingEdge(dut.clk)
+    debug_state(dut, "Post-clk")
 
-def run_cocotb_test(mg, parameters, inputs):
-    """
-    Create a cocotb test case and use mase runner to run hardware simulation
-    """
-    return {}
+    done = False
+    # Set a timeout to avoid deadlock
+    for i in range(samples * 100):
+        await FallingEdge(dut.clk)
+        debug_state(dut, "Post-clk")
+        dut.data_in_0_valid.value = test_case.data_in.pre_compute()
+        await Timer(1, units="ns")
+        dut.data_out_0_ready.value = test_case.outputs.pre_compute(
+            dut.data_out_0_valid.value
+        )
+        await Timer(1, units="ns")
+        debug_state(dut, "Post-clk")
 
+        dut.data_in_0_valid.value, dut.data_in_0.value = test_case.data_in.compute(
+            dut.data_in_0_ready.value
+        )
+        await Timer(1, units="ns")
+        dut.data_out_0_ready.value = test_case.outputs.compute(
+            dut.data_out_0_valid.value, dut.data_out_0.value
+        )
+        debug_state(dut, "Pre-clk")
 
-def compare_results(r0, r1):
-    return r0 == r1
+        if test_case.data_in.is_empty() and test_case.outputs.is_full():
+            done = True
+            break
+    assert (
+        done
+    ), "Deadlock detected or the simulation reaches the maximum cycle limit (fixed it by adjusting the loop trip count)"
 
-
-def test_verilog_analysis_pass(graph, pass_args={}):
-    """Use cocotb to test the model design in Verilog
-
-    :param graph: a MaseGraph
-    :type graph: MaseGraph
-    :param pass_args: this pass requires additional arguments which is explained below, defaults to {}
-    :type pass_args: _type_, optional
-    :return: return a tuple of a MaseGraph and an empty dict (no additional info to return)
-    :rtype: tuple(MaseGraph, Dict)
-
-
-    - pass_args
-        - project_dir -> str : the directory of the project for cosimulation
-        - top_name -> str : top-level name
-    """
-
-    logger.info("Testing the model in Verilog...")
-
-    project_dir = (
-        pass_args["project_dir"] if "project_dir" in pass_args.keys() else "top"
-    )
-    top_name = pass_args["top_name"] if "top_name" in pass_args.keys() else "top"
-
-    parameters = get_test_parameters(graph)
-    inputs = get_dummy_inputs(graph)
-    software_results = run_software_test(graph, inputs)
-    hardware_results = run_cocotb_test(graph, parameters, inputs)
-
-    compare_results(software_results, hardware_results)
-
-    return graph, {}
+    check_results(test_case.outputs.data, test_case.ref)
