@@ -1,9 +1,14 @@
+import logging
 import os, glob
-from chop.passes.graph.utils import vf
+from pathlib import Path
 
 from .cocotb import VerificationCase
-from mase_cocotb.random_test import RandomSource, RandomSink, check_results
 from cocotb.runner import get_runner
+
+from chop.passes.graph.utils import vf
+from mase_cocotb.random_test import RandomSource, RandomSink, check_results
+
+logger = logging.getLogger(__name__)
 
 
 def get_dut_parameters(graph):
@@ -37,17 +42,13 @@ def get_dependence_files(graph):
     return f
 
 
-def runner(mg):
+def runner(mg, project_dir, top_name):
     sim = os.getenv("SIM", "verilator")
 
-    verilog_sources = get_dependence_files(mg)
-    for i, v in enumerate(verilog_sources):
-        verilog_sources[i] = os.path.relpath(
-            os.path.join("/workspace", "mase_components", v), os.getcwd()
-        )
-    # TODO: make project name variable
-    for v in glob.glob("./top/hardware/rtl/*.sv"):
-        verilog_sources.append(os.path.relpath(v, os.getcwd()))
+    # TODO: Grab internal verilog source only. Need to include HLS hardware as well.
+    sv_srcs = []
+    for v in glob.glob(os.path.join(project_dir, "hardware", "rtl", "*.sv")):
+        sv_srcs.append(os.path.relpath(v, os.getcwd()))
 
     # TODO: make samples and iterations variable
     tb = VerificationCase(samples=1, iterations=1)
@@ -65,6 +66,7 @@ def runner(mg):
                     max_stalls=0,
                 ),
             )
+
     for node in mg.nodes_out:
         for result, result_info in (
             node.meta["mase"].parameters["common"]["results"].items()
@@ -81,22 +83,46 @@ def runner(mg):
             )
 
     p = get_dut_parameters(mg)
-    print(p)
+    # logger.debug(p)
 
     # set parameters
     extra_args = []
     for k, v in p.items():
         extra_args.append(f"-G{k}={v}")
-    print(extra_args)
+    logger.debug(extra_args)
     runner = get_runner(sim)
     runner.build(
-        verilog_sources=verilog_sources,
-        hdl_toplevel="top",
+        verilog_sources=sv_srcs,
+        hdl_toplevel=top_name,
         build_args=extra_args,
     )
     runner.test(hdl_toplevel="top", test_module="top_tb")
 
 
 def test_verilog_analysis_pass(mg, pass_args={}):
-    runner(mg)
+    """Test the top-level hardware design using Cocotb
+
+    :param graph: a MaseGraph
+    :type graph: MaseGraph
+    :param pass_args: this pass requires additional arguments which is explained below, defaults to {}
+    :type pass_args: _type_, optional
+    :return: return a tuple of a MaseGraph and an empty dict (no additional info to return)
+    :rtype: tuple(MaseGraph, Dict)
+
+    - pass_args
+        - project_dir -> str : the directory of the project for cosimulation
+        - top_name -> str : top-level name
+    """
+
+    logger.info(f"Running hardware simulation using Cocotb")
+
+    project_dir = (
+        pass_args["project_dir"]
+        if "project_dir" in pass_args.keys()
+        else Path.home() / ".mase" / "top"
+    )
+    top_name = pass_args["top_name"] if "top_name" in pass_args.keys() else "top"
+    logger.info(f"Project path: {project_dir}")
+
+    runner(mg, project_dir, top_name)
     return mg, {}

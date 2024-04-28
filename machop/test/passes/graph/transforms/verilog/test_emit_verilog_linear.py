@@ -90,6 +90,8 @@ def test_emit_verilog_linear():
     mg, _ = passes.emit_bram_transform_pass(mg)
     mg, _ = passes.emit_internal_rtl_transform_pass(mg)
 
+    mg, _ = passes.test_verilog_analysis_pass(mg)
+
     # # For internal models, the test inputs can be directly fetched from the dataset
     # # using InputGenerator from chop.tools.get_input
     # project_dir = Path(__file__).parents[6] / "top"
