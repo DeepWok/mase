@@ -1,80 +1,102 @@
-#!/usr/bin/env python3
+import os, glob
+from chop.passes.graph.utils import vf
 
-import os, logging
-
-from mase_cocotb.random_test import check_results
-from mase_cocotb.runner import mase_runner
-
-import cocotb
-from cocotb.triggers import Timer
-from cocotb.triggers import FallingEdge
-from cocotb.clock import Clock
-
-logger = logging.getLogger(__name__)
+from .cocotb import VerificationCase
+from mase_cocotb.random_test import RandomSource, RandomSink, check_results
+from cocotb.runner import get_runner
 
 
-# DUT test specifications
-class VerificationCase:
-    def __init__(self, iterations=1, samples=10):
-        self.samples = samples
-        self.iterations = iterations
+def get_dut_parameters(graph):
+    parameter_map = {}
+
+    for node in graph.fx_graph.nodes:
+        if node.meta["mase"].parameters["hardware"]["is_implicit"]:
+            continue
+        node_name = vf(node.name)
+
+        for key, value in (
+            node.meta["mase"].parameters["hardware"]["verilog_param"].items()
+        ):
+            if not isinstance(value, (int, float, complex, bool)):
+                value = '"' + value + '"'
+            assert (
+                f"{node_name}_{key}" not in parameter_map.keys()
+            ), f"{node_name}_{key} already exists in the parameter map"
+            parameter_map[f"{node_name}_{key}"] = value
+    return parameter_map
 
 
-@cocotb.test()
-async def test_fixed_linear(dut):
-    """Test integer based vector mult"""
-    samples = 1000
-    test_case = VerificationCase(samples=samples)
+def get_dependence_files(graph):
+    f = []
+    for node in graph.fx_graph.nodes:
+        if node.meta["mase"].parameters["hardware"]["is_implicit"]:
+            continue
+        f += node.meta["mase"].parameters["hardware"]["dependence_files"]
 
-    # Reset cycle
-    await Timer(20, units="ns")
-    dut.rst.value = 1
-    await Timer(100, units="ns")
-    dut.rst.value = 0
+    f = list(dict.fromkeys(f))
+    return f
 
-    # Create a 10ns-period clock on port clk
-    clock = Clock(dut.clk, 10, units="ns")
-    # Start the clock
-    cocotb.start_soon(clock.start())
-    await Timer(500, units="ns")
 
-    # Synchronize with the clock
-    dut.data_in_0_valid.value = 0
-    dut.data_out_0_ready.value = 1
-    debug_state(dut, "Pre-clk")
-    await FallingEdge(dut.clk)
-    debug_state(dut, "Post-clk")
-    debug_state(dut, "Pre-clk")
-    await FallingEdge(dut.clk)
-    debug_state(dut, "Post-clk")
+def runner(mg):
+    sim = os.getenv("SIM", "verilator")
 
-    done = False
-    # Set a timeout to avoid deadlock
-    for i in range(samples * 100):
-        await FallingEdge(dut.clk)
-        debug_state(dut, "Post-clk")
-        dut.data_in_0_valid.value = test_case.data_in.pre_compute()
-        await Timer(1, units="ns")
-        dut.data_out_0_ready.value = test_case.outputs.pre_compute(
-            dut.data_out_0_valid.value
+    verilog_sources = get_dependence_files(mg)
+    for i, v in enumerate(verilog_sources):
+        verilog_sources[i] = os.path.relpath(
+            os.path.join("/workspace", "mase_components", v), os.getcwd()
         )
-        await Timer(1, units="ns")
-        debug_state(dut, "Post-clk")
+    # TODO: make project name variable
+    for v in glob.glob("./top/hardware/rtl/*.sv"):
+        verilog_sources.append(os.path.relpath(v, os.getcwd()))
 
-        dut.data_in_0_valid.value, dut.data_in_0.value = test_case.data_in.compute(
-            dut.data_in_0_ready.value
-        )
-        await Timer(1, units="ns")
-        dut.data_out_0_ready.value = test_case.outputs.compute(
-            dut.data_out_0_valid.value, dut.data_out_0.value
-        )
-        debug_state(dut, "Pre-clk")
+    # TODO: make samples and iterations variable
+    tb = VerificationCase(samples=1, iterations=1)
 
-        if test_case.data_in.is_empty() and test_case.outputs.is_full():
-            done = True
-            break
-    assert (
-        done
-    ), "Deadlock detected or the simulation reaches the maximum cycle limit (fixed it by adjusting the loop trip count)"
+    # TODO: work out the num
+    for node in mg.nodes_in:
+        for arg, arg_info in node.meta["mase"].parameters["common"]["args"].items():
+            setattr(
+                tb,
+                arg,
+                RandomSource(
+                    name=arg,
+                    samples=tb.samples * tb.iterations,
+                    num=12324,
+                    max_stalls=0,
+                ),
+            )
+    for node in mg.nodes_out:
+        for result, result_info in (
+            node.meta["mase"].parameters["common"]["results"].items()
+        ):
+            setattr(
+                tb,
+                result,
+                RandomSink(
+                    name=result,
+                    samples=tb.samples * tb.iterations,
+                    num=12324,
+                    max_stalls=0,
+                ),
+            )
 
-    check_results(test_case.outputs.data, test_case.ref)
+    p = get_dut_parameters(mg)
+    print(p)
+
+    # set parameters
+    extra_args = []
+    for k, v in p.items():
+        extra_args.append(f"-G{k}={v}")
+    print(extra_args)
+    runner = get_runner(sim)
+    runner.build(
+        verilog_sources=verilog_sources,
+        hdl_toplevel="top",
+        build_args=extra_args,
+    )
+    runner.test(hdl_toplevel="top", test_module="top_tb")
+
+
+def test_verilog_analysis_pass(mg, pass_args={}):
+    runner(mg)
+    return mg, {}
