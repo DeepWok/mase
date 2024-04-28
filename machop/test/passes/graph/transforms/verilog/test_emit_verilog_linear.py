@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # This example converts a simple MLP model to Verilog
 import os, sys, logging
-import toml
+import toml, math
 
 import torch
 import torch.nn as nn
@@ -58,6 +58,12 @@ def test_emit_verilog_linear():
     # TO DO: fix verify pass
     # mg, _ = passes.verify_common_metadata_analysis_pass(mg)
 
+    # Temporary: check quantization is effective
+    for node in mg.fx_graph.nodes:
+        if "fc1" in node.name:
+            fc1 = mg.modules[node.target]
+            a = fc1.weight.clone().detach()
+
     # Quantize to int
     config_file = os.path.join(
         os.path.dirname(os.path.realpath(__file__)),
@@ -76,6 +82,18 @@ def test_emit_verilog_linear():
     with open(config_file, "r") as f:
         quan_args = toml.load(f)["passes"]["quantize"]
     mg, _ = passes.quantize_transform_pass(mg, quan_args)
+
+    # Temporary: check quantization is effective
+    for node in mg.fx_graph.nodes:
+        if "fc1" in node.name:
+            fc1 = mg.modules[node.target]
+            b = fc1.weight.clone().detach()
+
+    print(a)
+    print(b)
+    assert int(torch.Tensor.sum(torch.eq(a, b).int())) != int(
+        math.prod(a.shape)
+    ), "Quantization is not effective!"
 
     # inspect the graph metadata
     # mg, _ = passes.report_node_meta_param_analysis_pass(mg)
