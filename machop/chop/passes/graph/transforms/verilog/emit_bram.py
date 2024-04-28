@@ -146,7 +146,7 @@ module {node_param_name}_source #(
     if (rst) counter <= 0;
     else begin
       if (data_out_ready) begin
-        if (counter == OUT_DEPTH - 1) counter <= 0;
+        if (counter == COUNTER_WIDTH'(OUT_DEPTH) - 1) counter <= 0;
         else counter <= counter + 1;
       end
     end
