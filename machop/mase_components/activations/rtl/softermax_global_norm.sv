@@ -268,6 +268,21 @@ fixed_accumulator #(
 
 
 // lpw reciprocal
-
+softermax_lpw_reciprocal #(
+    .ENTRIES(8),
+    .IN_WIDTH(),
+    .IN_FRAC_WIDTH(),
+    .OUT_WIDTH(),
+    .OUT_FRAC_WIDTH()
+) norm_recip (
+    .clk(clk),
+    .rst(rst),
+    .in_data(),
+    .in_valid(),
+    .in_ready(),
+    .out_data(),
+    .out_valid(),
+    .out_ready()
+)
 
 endmodule

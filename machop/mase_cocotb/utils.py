@@ -1,5 +1,6 @@
 import random
 from copy import copy
+import itertools
 
 from cocotb.triggers import RisingEdge
 import torch
@@ -79,3 +80,9 @@ def random_2d_dimensions():
 
 def verilator_str_param(s):
     return f'"{s}"'
+
+
+def product_dict(**kwargs):
+    keys = kwargs.keys()
+    for instance in itertools.product(*kwargs.values()):
+        yield dict(zip(keys, instance))

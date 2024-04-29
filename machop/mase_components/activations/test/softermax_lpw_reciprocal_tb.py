@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
-import os, logging
-from random import randint
+import logging
 from pathlib import Path
 
 import torch
@@ -28,14 +27,14 @@ class LPW_Reciprocal2TB(Testbench):
     def __init__(self, dut) -> None:
         super().__init__(dut, dut.clk, dut.rst)
         self.assign_self_params([
-            "IN_WIDTH", "IN_FRAC_WIDTH", "OUT_WIDTH", "OUT_FRAC_WIDTH"
+            "ENTRIES", "IN_WIDTH", "IN_FRAC_WIDTH", "OUT_WIDTH", "OUT_FRAC_WIDTH"
         ])
 
         # Driver/Monitor
         self.in_driver = StreamDriver(
             dut.clk, dut.in_data, dut.in_valid, dut.in_ready
         )
-        self.error_threshold_bits = 5
+        self.error_threshold_bits = 3 if self.ENTRIES == 4 else 1
         self.output_monitor = ErrorThresholdStreamMonitor(
             dut.clk, dut.out_data, dut.out_valid, dut.out_ready,
             width=self.OUT_WIDTH,
@@ -156,7 +155,7 @@ async def sweep(dut):
         height=100,
     )
 
-    graph_id = f"{tb.IN_WIDTH}_{tb.IN_FRAC_WIDTH}_to_{tb.OUT_WIDTH}_{tb.OUT_FRAC_WIDTH}"
+    graph_id = f"{tb.ENTRIES}e_{tb.IN_WIDTH}_{tb.IN_FRAC_WIDTH}_to_{tb.OUT_WIDTH}_{tb.OUT_FRAC_WIDTH}"
     (curve & error & model_error).save(
         Path(__file__).parent / f"build/softermax_lpw_reciprocal/error_graph_{graph_id}.png",
         scale_factor=3,
@@ -197,25 +196,27 @@ if __name__ == "__main__":
         "OUT_FRAC_WIDTH": 7
     }
 
-    def width_cfgs():
+    def all_cfgs():
         bitwidths = [4, 8]
         cfgs = []
-        for in_width in bitwidths:
-            for in_frac_width in range(2, in_width):
-                for out_width in bitwidths:
-                    for out_frac_width in range(2, out_width):
-                        cfgs.append({
-                            "IN_WIDTH": in_width,
-                            "IN_FRAC_WIDTH": in_frac_width,
-                            "OUT_WIDTH": out_width,
-                            "OUT_FRAC_WIDTH": out_frac_width,
-                        })
+        for entries in [4, 8]:
+            for in_width in bitwidths:
+                for in_frac_width in range(2, in_width):
+                    for out_width in bitwidths:
+                        for out_frac_width in range(2, out_width):
+                            cfgs.append({
+                                "ENTRIES": entries,
+                                "IN_WIDTH": in_width,
+                                "IN_FRAC_WIDTH": in_frac_width,
+                                "OUT_WIDTH": out_width,
+                                "OUT_FRAC_WIDTH": out_frac_width,
+                            })
         return cfgs
 
-    # bad_cfg = {'IN_WIDTH': 4, 'IN_FRAC_WIDTH': 2, 'OUT_WIDTH': 8, 'OUT_FRAC_WIDTH': 4}
 
     mase_runner(
-        module_param_list=width_cfgs(),
+        module_param_list=all_cfgs(),
+        # module_param_list=[{'ENTRIES': 4, 'IN_WIDTH': 8, 'IN_FRAC_WIDTH': 4, 'OUT_WIDTH': 8, 'OUT_FRAC_WIDTH': 7}],
         trace=True,
         jobs=12,
     )

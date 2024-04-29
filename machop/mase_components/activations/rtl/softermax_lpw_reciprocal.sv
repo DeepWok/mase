@@ -9,11 +9,16 @@ Description : This module implements 1/x using linear piecewise approximation.
               This module calculates 1/x using Newton-Raphson iteration in the
               domain: [1, 2). It will shift all numbers into that range and then
               shift the number back once the 1/x calculation is done.
+
+              Safer to use 8 entry LUT rather than 4. There will be a few more
+              bits of error with 4 entries, however 8 entries can achieve a
+              single-bit of error vs. software model.
 */
 
 `timescale 1ns/1ps
 
 module softermax_lpw_reciprocal #(
+    parameter ENTRIES = 8, // Must be power of 2
     parameter IN_WIDTH = 8,
     parameter IN_FRAC_WIDTH = 4,
     parameter OUT_WIDTH = 8,
@@ -36,21 +41,27 @@ module softermax_lpw_reciprocal #(
 // Parameters
 // -----
 
+let max(a,b) = (a > b) ? a : b;
+
+localparam ENTRIES_WIDTH = $clog2(ENTRIES);
+
 // Range reduced num: x
 localparam RANGE_REDUCED_WIDTH = IN_WIDTH;
 localparam RANGE_REDUCED_FRAC_WIDTH = IN_WIDTH - 1;
 
 // Slope: m
-localparam SLOPE_WIDTH = 1 + RANGE_REDUCED_FRAC_WIDTH;
-localparam SLOPE_FRAC_WIDTH = RANGE_REDUCED_FRAC_WIDTH;
+localparam SLOPE_WIDTH = 1 + SLOPE_FRAC_WIDTH;
+// IMPORTANT: This determines how precise the output of this module is.
+//            SLOPE_FRAC_WIDTH = OUT_WIDTH is maximum precision.
+localparam SLOPE_FRAC_WIDTH = OUT_WIDTH;
 
 // Mult: mx
 localparam MULT_WIDTH = IN_WIDTH + SLOPE_WIDTH;
 localparam MULT_FRAC_WIDTH = RANGE_REDUCED_FRAC_WIDTH + SLOPE_FRAC_WIDTH;
 
 // Intercept (need to match mx frac): c
-localparam INTERCEPT_FRAC_WIDTH = MULT_FRAC_WIDTH;
 localparam INTERCEPT_WIDTH = 2 + INTERCEPT_FRAC_WIDTH; // Needs 2 integer bits
+localparam INTERCEPT_FRAC_WIDTH = MULT_FRAC_WIDTH;
 
 // Output width: mx + c
 localparam LPW_WIDTH = MULT_WIDTH + 1;
@@ -60,7 +71,7 @@ localparam LPW_FRAC_WIDTH = MULT_FRAC_WIDTH; // == INTERCEPT_FRAC_WIDTH
 // Recip width calculation: Need to pad extra 2 * max(intwidth, fracwidth) to
 // make sure recip is not shifted out
 localparam IN_INT_WIDTH = IN_WIDTH - IN_FRAC_WIDTH;
-localparam EXTRA_WIDTH = IN_INT_WIDTH > IN_FRAC_WIDTH ? IN_INT_WIDTH : IN_FRAC_WIDTH;
+localparam EXTRA_WIDTH = max(IN_INT_WIDTH, IN_FRAC_WIDTH);
 localparam RECIP_WIDTH = LPW_WIDTH + EXTRA_WIDTH;
 localparam RECIP_FRAC_WIDTH = LPW_FRAC_WIDTH;
 
@@ -69,10 +80,22 @@ localparam MSB_WIDTH = $clog2(IN_WIDTH);
 localparam SHIFT_WIDTH = MSB_WIDTH + 1;
 
 initial begin
+    // Params
+    assert (ENTRIES >= 4);
+    assert (2 ** ENTRIES_WIDTH == ENTRIES);
+    assert (ENTRIES_WIDTH <= RANGE_REDUCED_FRAC_WIDTH);
     assert (IN_WIDTH > IN_FRAC_WIDTH);
-    assert (IN_FRAC_WIDTH >= 2);
+    assert (IN_FRAC_WIDTH >= ENTRIES_WIDTH);
     assert (OUT_WIDTH > OUT_FRAC_WIDTH);
-    assert (OUT_FRAC_WIDTH >= 2);
+    assert (OUT_FRAC_WIDTH >= ENTRIES_WIDTH);
+
+    // Sanity Asserts
+    assert (RANGE_REDUCED_WIDTH > RANGE_REDUCED_FRAC_WIDTH);
+    assert (SLOPE_WIDTH > SLOPE_FRAC_WIDTH);
+    assert (MULT_WIDTH > MULT_FRAC_WIDTH);
+    assert (INTERCEPT_WIDTH > INTERCEPT_FRAC_WIDTH);
+    assert (LPW_WIDTH > LPW_FRAC_WIDTH);
+    assert (RECIP_WIDTH > RECIP_FRAC_WIDTH);
 end
 
 // -----
@@ -84,7 +107,7 @@ logic [MSB_WIDTH-1:0] msb [2:0];
 logic msb_not_found [4:0];
 logic range_reduce_out_valid, range_reduce_out_ready;
 
-logic [1:0] frac_top_in, frac_top_out;
+logic [ENTRIES_WIDTH-1:0] frac_top_in, frac_top_out;
 
 logic [MULT_WIDTH-1:0] mult_in, mult_out;
 logic mult_out_valid, mult_out_ready;
@@ -137,6 +160,25 @@ endfunction
 
 
 // -----
+// Tables
+// -----
+
+logic [SLOPE_WIDTH-1:0] slope_lut [ENTRIES-1:0];
+logic [INTERCEPT_WIDTH-1:0] intercept_lut [ENTRIES-1:0];
+
+initial begin
+    real step = 1.0 / ENTRIES;
+    for (int i = 0; i < ENTRIES; i++) begin
+        real start, stop;
+        start = 1.00 + (i*step);
+        stop = 1.00 + ((i+1)*step);
+        slope_lut[i] = slope(start, stop);
+        intercept_lut[i] = intercept(start, stop);
+    end
+end
+
+
+// -----
 // Modules
 // -----
 
@@ -162,20 +204,13 @@ skid_buffer #(
     .data_out_ready(range_reduce_out_ready)
 );
 
-assign frac_top_in = range_reduced_num[1][RANGE_REDUCED_WIDTH-2:RANGE_REDUCED_WIDTH-3];
 
 // Multiplication Stage
-always_comb begin
-    case (frac_top_in)
-        2'b00: mult_in = $signed({1'b0, range_reduced_num[1]}) * $signed(slope(1.00, 1.25));
-        2'b01: mult_in = $signed({1'b0, range_reduced_num[1]}) * $signed(slope(1.25, 1.50));
-        2'b10: mult_in = $signed({1'b0, range_reduced_num[1]}) * $signed(slope(1.50, 1.75));
-        2'b11: mult_in = $signed({1'b0, range_reduced_num[1]}) * $signed(slope(1.75, 2.00));
-    endcase
-end
+assign frac_top_in = range_reduced_num[1][RANGE_REDUCED_WIDTH-2:RANGE_REDUCED_WIDTH-1-ENTRIES_WIDTH];
+assign mult_in = $signed({1'b0, range_reduced_num[1]}) * $signed(slope_lut[frac_top_in]);
 
 skid_buffer #(
-    .DATA_WIDTH(MULT_WIDTH + 2 + MSB_WIDTH + 1)
+    .DATA_WIDTH(MULT_WIDTH + ENTRIES_WIDTH + MSB_WIDTH + 1)
 ) mult_stage_reg (
     .clk(clk),
     .rst(rst),
@@ -187,22 +222,10 @@ skid_buffer #(
     .data_out_ready(mult_out_ready)
 );
 
-always_comb begin
-    // Add Intercept to Mult
-    case (frac_top_out)
-        2'b00: lpw_in_data = $signed(mult_out) + $signed({1'b0, intercept(1.00, 1.25)});
-        2'b01: lpw_in_data = $signed(mult_out) + $signed({1'b0, intercept(1.25, 1.50)});
-        2'b10: lpw_in_data = $signed(mult_out) + $signed({1'b0, intercept(1.50, 1.75)});
-        2'b11: lpw_in_data = $signed(mult_out) + $signed({1'b0, intercept(1.75, 2.00)});
-    endcase
-
-    // Also convert MSB into a shift amount
-    shift_amt_in = IN_FRAC_WIDTH - msb[2];
-end
-
-// 001.0000 // shift_amt = 0 // frac = 4, msb_index = 4
-// 000.0100 // shift_amt = 2 // frac = 4, msb_index = 2
-// 100.0100 // shift_amt = -2 // frac = 4, msb_index = 6
+// Add Intercept to Mult
+assign lpw_in_data = $signed(mult_out) + $signed({1'b0, intercept_lut[frac_top_out]});
+// Also convert MSB into a shift amount
+assign shift_amt_in = IN_FRAC_WIDTH - msb[2];
 
 skid_buffer #(
     .DATA_WIDTH(LPW_WIDTH + SHIFT_WIDTH + 1)
@@ -216,7 +239,6 @@ skid_buffer #(
     .data_out_valid(lpw_out_valid),
     .data_out_ready(lpw_out_ready)
 );
-
 
 always_comb begin
     // Shift stage
