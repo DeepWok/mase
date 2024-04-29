@@ -5,7 +5,7 @@ Description : This module implements 2^x with linear piecewise approximation.
               Uses 4 linear pieces between [0, 1) for the fraction then shifts
               it by the integer part.
 
-              ** Only negative inputs 'x' are supported. **
+              TODO: need to support (-inf, 1) -> (0, 2)
 */
 
 `timescale 1ns/1ps
@@ -36,8 +36,8 @@ module softermax_lpw_pow2 #(
 localparam INT_WIDTH = IN_WIDTH - IN_FRAC_WIDTH;
 
 // Slope: m
-localparam SLOPE_WIDTH = 2 + IN_FRAC_WIDTH;
-localparam SLOPE_FRAC_WIDTH = IN_FRAC_WIDTH;
+localparam SLOPE_WIDTH = 2 + SLOPE_FRAC_WIDTH;
+localparam SLOPE_FRAC_WIDTH = OUT_WIDTH;
 
 // Mult: mx
 localparam MULT_WIDTH = IN_WIDTH + SLOPE_WIDTH;

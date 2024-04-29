@@ -46,11 +46,17 @@ class LPW_Pow2TB(Testbench):
         )
 
     def generate_inputs(self):
-        return torch.arange(
-            2**(self.IN_WIDTH-1),
-            2**self.IN_WIDTH,
+        negative_nums = torch.arange(
+            start=2**(self.IN_WIDTH-1),
+            end=2**self.IN_WIDTH,
             dtype=torch.int32
-        ).tolist() + [0]
+        )
+        zero_to_one = torch.arange(
+            start=0,
+            end=2**self.IN_FRAC_WIDTH, # one
+            dtype=torch.int32
+        )
+        return torch.cat((negative_nums, zero_to_one)).tolist()
 
     def model(self, inputs):
         in_t = torch.tensor(inputs)
@@ -64,11 +70,22 @@ class LPW_Pow2TB(Testbench):
     async def run_test(self, us):
         await self.reset()
         inputs = self.generate_inputs()
+        # logger.debug(inputs)
         exp_out = self.model(inputs)
         self.in_driver.load_driver(inputs)
         self.output_monitor.load_monitor(exp_out)
         await Timer(us, "us")
         assert self.output_monitor.exp_queue.empty()
+        self._final_check()
+
+    def _final_check(self):
+        max_bit_err = max(self.output_monitor.error_log)
+        logger.info("Maximum bit-error: %d", max_bit_err)
+        if max_bit_err > self.error_threshold_bits:
+            assert False, (
+                "Test failed due to high approximation error. Got %d bits of error!" %
+                max_bit_err
+            )
 
 
 @cocotb.test()
@@ -117,13 +134,7 @@ async def sweep(dut):
         scale_factor=3,
     )
 
-    max_bit_err = max(tb.output_monitor.error_log)
-    logger.info("Maximum bit-error: %d", max_bit_err)
-    if max_bit_err > tb.error_threshold_bits:
-        assert False, (
-            "Test failed due to high approximation error. Got %d bits of error!" %
-            max_bit_err
-        )
+    tb._final_check()
 
 
 @cocotb.test()
@@ -173,8 +184,11 @@ if __name__ == "__main__":
                         })
         return cfgs
 
+    cfgs = width_cfgs()
+    # cfgs = [DEFAULT]
+
     mase_runner(
-        module_param_list=width_cfgs(),
+        module_param_list=cfgs,
         trace=True,
         jobs=8,
     )
