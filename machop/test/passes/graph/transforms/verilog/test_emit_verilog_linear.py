@@ -81,7 +81,10 @@ def test_emit_verilog_linear():
     # load toml config file
     with open(config_file, "r") as f:
         quan_args = toml.load(f)["passes"]["quantize"]
-    mg, _ = passes.quantize_transform_pass(mg, quan_args)
+    with torch.no_grad():
+        mg, _ = passes.quantize_transform_pass(mg, quan_args)
+        mg.model(dummy_in["x"])
+
 
     # Temporary: check quantization is effective
     for node in mg.fx_graph.nodes:
@@ -89,8 +92,8 @@ def test_emit_verilog_linear():
             fc1 = mg.modules[node.target]
             b = fc1.weight.clone().detach()
 
-    print(a)
-    print(b)
+    print(a[0, :10])
+    print(b[0, :10])
     assert int(torch.Tensor.sum(torch.eq(a, b).int())) != int(
         math.prod(a.shape)
     ), "Quantization is not effective!"
