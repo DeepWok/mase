@@ -2,6 +2,7 @@ from os import path, getenv
 import logging
 from shutil import rmtree
 from pathlib import Path
+from copy import deepcopy
 import re
 import inspect
 from typing import Any
@@ -136,15 +137,20 @@ def mase_runner(
 
             # Launch concurrent futures
             # TODO: add timeout
-            future_to_id = {}
+            future_to_job_meta = {}
             for i, module_params in enumerate(module_param_list):
                 test_work_dir = group_path.joinpath(f"test/build/{module}/test_{i}")
                 future = executor.submit(_single_test, test_work_dir, module_params, True)
-                future_to_id[future] = i
+                future_to_job_meta[future] = {
+                    "id": i,
+                    "params": deepcopy(module_params)
+                }
 
             # Wait for futures to complete
-            for future in as_completed(future_to_id):
-                id = future_to_id[future]
+            for future in as_completed(future_to_job_meta):
+                meta = future_to_job_meta[future]
+                id = meta["id"]
+                params = meta["params"]
                 try:
                     result = future.result()
                 except Exception as exc:
@@ -154,7 +160,7 @@ def mase_runner(
                     total_tests += result["num_tests"]
                     total_fail += result["failed_tests"]
                     if result["failed_tests"]:
-                        failed_cfgs.append((i, module_params))
+                        failed_cfgs.append((i, params))
 
     print("# ---------------------------------------")
     print("# Test Results")

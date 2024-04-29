@@ -210,9 +210,16 @@ if __name__ == "__main__":
                         })
         return cfgs
 
+    bad_cfg = {
+        "IN_WIDTH": 4,
+        "IN_FRAC_WIDTH": 3,
+        "OUT_WIDTH": 8,
+        "OUT_FRAC_WIDTH": 3
+    }
+
     mase_runner(
         module_param_list=width_cfgs(),
-        # module_param_list=[DEFAULT],
-        trace=True,
-        # jobs=8,
+        # module_param_list=[bad_cfg],
+        # trace=True,
+        jobs=4,
     )

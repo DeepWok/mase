@@ -56,6 +56,14 @@ localparam INTERCEPT_WIDTH = 2 + INTERCEPT_FRAC_WIDTH; // Needs 2 integer bits
 localparam LPW_WIDTH = MULT_WIDTH + 1;
 localparam LPW_FRAC_WIDTH = MULT_FRAC_WIDTH; // == INTERCEPT_FRAC_WIDTH
 
+
+// Recip width calculation: Need to pad extra 2 * max(intwidth, fracwidth) to
+// make sure recip is not shifted out
+localparam IN_INT_WIDTH = IN_WIDTH - IN_FRAC_WIDTH;
+localparam EXTRA_WIDTH = IN_INT_WIDTH > IN_FRAC_WIDTH ? IN_INT_WIDTH : IN_FRAC_WIDTH;
+localparam RECIP_WIDTH = LPW_WIDTH + EXTRA_WIDTH;
+localparam RECIP_FRAC_WIDTH = LPW_FRAC_WIDTH;
+
 // Shift num widths
 localparam MSB_WIDTH = $clog2(IN_WIDTH);
 localparam SHIFT_WIDTH = MSB_WIDTH + 1;
@@ -86,7 +94,7 @@ logic lpw_out_valid, lpw_out_ready;
 
 logic [SHIFT_WIDTH-1:0] shift_amt_in, shift_amt_out;
 
-logic [LPW_WIDTH-1:0] recip_in_data, recip_out_data;
+logic [RECIP_WIDTH-1:0] recip_in_data, recip_out_data;
 logic recip_out_valid, recip_out_ready;
 
 logic [OUT_WIDTH:0] cast_out_data;
@@ -220,7 +228,7 @@ always_comb begin
 end
 
 skid_buffer #(
-    .DATA_WIDTH(LPW_WIDTH + 1)
+    .DATA_WIDTH(RECIP_WIDTH + 1)
 ) recip_stage_reg (
     .clk(clk),
     .rst(rst),
@@ -235,7 +243,7 @@ skid_buffer #(
 
 // TODO: change to unsigned cast
 fixed_signed_cast #(
-    .IN_WIDTH(LPW_WIDTH + 1),
+    .IN_WIDTH(RECIP_WIDTH + 1),
     .IN_FRAC_WIDTH(LPW_FRAC_WIDTH),
     .OUT_WIDTH(OUT_WIDTH + 1),
     .OUT_FRAC_WIDTH(OUT_FRAC_WIDTH),
