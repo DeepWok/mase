@@ -52,8 +52,10 @@ class LPW_Reciprocal2TB(Testbench):
     def model(self, inputs):
         in_t = torch.tensor(inputs) / (2 ** self.IN_FRAC_WIDTH)
         recip = 1.0 / in_t
-        res = torch.floor(recip * 2**self.OUT_FRAC_WIDTH).int()
+        res = torch.floor(recip * 2**self.OUT_FRAC_WIDTH)
+        res = torch.nan_to_num(res)
         res = torch.clamp(res, 0, 2**self.OUT_WIDTH-1)
+        res = res.int()
         return res.tolist()
 
 
@@ -215,5 +217,5 @@ if __name__ == "__main__":
     mase_runner(
         module_param_list=width_cfgs(),
         trace=True,
-        jobs=4,
+        jobs=12,
     )

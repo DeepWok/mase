@@ -270,14 +270,4 @@ skid_buffer #(
     .data_out_ready(out_ready)
 );
 
-// initial begin
-//     // $display("reciprocal(0.25) = %d (%f)", reciprocal(0.25), real'(reciprocal(0.25)) / (2 ** OUT_FRAC_WIDTH));
-//     // $display("reciprocal(0.5) = %d (%f)", reciprocal(0.5), real'(reciprocal(0.5)) / (2 ** OUT_FRAC_WIDTH));
-//     $display("slope(1.00, 1.25) = %b = -%d", slope(1.00, 1.25), ~slope(1.00, 1.25)+1'b1);
-//     $display("slope(1.25, 1.50) = %b = -%d", slope(1.25, 1.50), ~slope(1.25, 1.50)+1'b1);
-//     $display("slope(1.50, 1.75) = %b = -%d", slope(1.50, 1.75), ~slope(1.50, 1.75)+1'b1);
-//     $display("slope(1.75, 2.00) = %b = -%d", slope(1.75, 2.00), ~slope(1.75, 2.00)+1'b1);
-//     $finish;
-// end
-
 endmodule
