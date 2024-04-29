@@ -108,13 +108,14 @@ class SearchStrategyRL(SearchStrategyBase):
             callbacks.append(wandb_callback)
 
         # Add CheckpointCallback and EvalCallback
+        save_path = self.save_dir + "/rl_logs/"
         checkpoint_callback = CheckpointCallback(
-            save_freq=self.save_freq, save_path="./logs/"
+            save_freq=self.save_freq, save_path=save_path
         )
         eval_callback = EvalCallback(
             env,
-            best_model_save_path="./logs/best_model",
-            log_path="./logs/results",
+            best_model_save_path=save_path + "best_model",
+            log_path=save_path + "results",
             eval_freq=self.eval_freq,
         )
         callbacks.extend([checkpoint_callback, eval_callback])
@@ -137,13 +138,15 @@ class SearchStrategyRL(SearchStrategyBase):
                     episode_max_len=self.episode_max_len,
                 ),
             )
-            print(f"Model loaded from {self.config['rl_model_load_name']}. Skipping training.")
+            print(
+                f"Model loaded from {self.config['rl_model_load_name']}. Skipping training."
+            )
 
         else:
             algorithm_kwargs = {
                 "verbose": 1,
                 "device": self.device,
-                "tensorboard_log": "./logs/",
+                "tensorboard_log": self.save_dir + "/tb_logs/",
                 "learning_rate": self.learning_rate,
             }
 
@@ -203,8 +206,7 @@ class SearchStrategyRL(SearchStrategyBase):
             "metrics": vec_env.get_attr("best_performance"),
         }
 
-        # TODO: fix this and put it to the right directory
-        file_path = "RL_output.json"
+        file_path = self.save_dir + "RL_output.json"
 
         with open(file_path, "w") as file:
             json.dump(data, file, indent=4)
