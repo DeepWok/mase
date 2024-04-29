@@ -154,13 +154,13 @@ def mase_runner(
                 try:
                     result = future.result()
                 except Exception as exc:
-                    print('%r generated an exception: %s' % (id, exc))
+                    print("Test %r generated an exception: %s" % (id, exc))
                 else:
                     print("Test %r is done. Result: %s" % (id, result))
                     total_tests += result["num_tests"]
                     total_fail += result["failed_tests"]
                     if result["failed_tests"]:
-                        failed_cfgs.append((i, params))
+                        failed_cfgs.append((id, params))
 
     print("# ---------------------------------------")
     print("# Test Results")
@@ -173,6 +173,7 @@ def mase_runner(
     print("# ---------------------------------------")
 
     if len(failed_cfgs):
+        failed_cfgs = sorted(failed_cfgs, key=lambda t: t[0])
         print(f"# Failed Configs")
         print("# ---------------------------------------")
         for i, params in failed_cfgs:

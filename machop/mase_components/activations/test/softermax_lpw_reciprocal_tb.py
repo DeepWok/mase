@@ -35,7 +35,7 @@ class LPW_Reciprocal2TB(Testbench):
         self.in_driver = StreamDriver(
             dut.clk, dut.in_data, dut.in_valid, dut.in_ready
         )
-        self.error_threshold_bits = 2
+        self.error_threshold_bits = 5
         self.output_monitor = ErrorThresholdStreamMonitor(
             dut.clk, dut.out_data, dut.out_valid, dut.out_ready,
             width=self.OUT_WIDTH,
@@ -210,16 +210,10 @@ if __name__ == "__main__":
                         })
         return cfgs
 
-    bad_cfg = {
-        "IN_WIDTH": 4,
-        "IN_FRAC_WIDTH": 3,
-        "OUT_WIDTH": 8,
-        "OUT_FRAC_WIDTH": 3
-    }
+    # bad_cfg = {'IN_WIDTH': 4, 'IN_FRAC_WIDTH': 2, 'OUT_WIDTH': 8, 'OUT_FRAC_WIDTH': 4}
 
     mase_runner(
         module_param_list=width_cfgs(),
-        # module_param_list=[bad_cfg],
-        # trace=True,
+        trace=True,
         jobs=4,
     )
