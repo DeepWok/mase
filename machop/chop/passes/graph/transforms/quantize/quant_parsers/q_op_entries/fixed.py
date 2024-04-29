@@ -41,7 +41,7 @@ FIXED_OP_ENTRIES = {
             "weight_width",
             "weight_frac_width",
         ),
-        "optional": ("bypass", "bias_width", "bias_frac_width"),
+        "optional": ("bypass", "cache_quantized_weight", "bias_width", "bias_frac_width"),
     },
     "matmul": {
         "required": (

@@ -7,6 +7,7 @@ dataset="toy-tiny"
 
     [passes.quantize.default.config]
         name="fixed"
+        cache_quantized_weight=true
         data_in_width=8
         data_in_frac_width=3
         weight_width=8

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # This example converts a simple MLP model to Verilog
 import os, sys, logging
-import toml
+import toml, math
 
 import torch
 import torch.nn as nn
@@ -75,7 +75,9 @@ def test_emit_verilog_linear():
     # load toml config file
     with open(config_file, "r") as f:
         quan_args = toml.load(f)["passes"]["quantize"]
-    mg, _ = passes.quantize_transform_pass(mg, quan_args)
+    with torch.no_grad():
+        mg, _ = passes.quantize_transform_pass(mg, quan_args)
+        mg.model(dummy_in["x"])
 
     # inspect the graph metadata
     # mg, _ = passes.report_node_meta_param_analysis_pass(mg)
