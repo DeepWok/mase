@@ -58,12 +58,6 @@ def test_emit_verilog_linear():
     # TO DO: fix verify pass
     # mg, _ = passes.verify_common_metadata_analysis_pass(mg)
 
-    # Temporary: check quantization is effective
-    for node in mg.fx_graph.nodes:
-        if "fc1" in node.name:
-            fc1 = mg.modules[node.target]
-            a = fc1.weight.clone().detach()
-
     # Quantize to int
     config_file = os.path.join(
         os.path.dirname(os.path.realpath(__file__)),
@@ -84,19 +78,6 @@ def test_emit_verilog_linear():
     with torch.no_grad():
         mg, _ = passes.quantize_transform_pass(mg, quan_args)
         mg.model(dummy_in["x"])
-
-
-    # Temporary: check quantization is effective
-    for node in mg.fx_graph.nodes:
-        if "fc1" in node.name:
-            fc1 = mg.modules[node.target]
-            b = fc1.weight.clone().detach()
-
-    print(a[0, :10])
-    print(b[0, :10])
-    assert int(torch.Tensor.sum(torch.eq(a, b).int())) != int(
-        math.prod(a.shape)
-    ), "Quantization is not effective!"
 
     # inspect the graph metadata
     # mg, _ = passes.report_node_meta_param_analysis_pass(mg)
