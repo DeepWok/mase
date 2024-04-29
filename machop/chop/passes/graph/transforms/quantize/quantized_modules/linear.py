@@ -116,25 +116,29 @@ class LinearInteger(_LinearBase):
             integer_quantizer, width=b_width, frac_width=b_frac_width
         )
 
-    # def get_output_bitwidth(self):
-    #     config = self.config
-    #     w_width, w_frac = config["weight_width"], config["weight_frac_width"]
-    #     x_width, x_frac = config["data_in_width"], config["data_in_frac_width"]
-    #     bias_width = config["bias_width"]
+        self.quantized_weight_is_cached = False
 
-    #     ops = self.in_features
-    #     product_width = w_width + x_width
-    #     product_frac_width = w_frac + x_frac
-    #     # *: + 1 for bias
-    #     output_width = max(bias_width, product_width + ceil(log2(ops))) + 1
-    #     output_frac_width = product_frac_width
-
-    #     o_bitwidth = {}
-    #     o_bitwidth["data_out_width"] = output_width
-    #     o_bitwidth["data_out_frac_width"] = output_frac_width
-    #     # o_bitwidth["product_width"] = product_width
-    #     # o_bitwidth["product_frac_width"] = product_frac_width
-    #     return o_bitwidth
+    def forward(self, x: Tensor) -> Tensor:
+        if self.bypass:
+            # if bypss, there is no quantization
+            return F.linear(x, self.weight, self.bias)
+        else:
+            x = self.x_quantizer(x)
+            if self.config.get("cache_quantized_weight", False):
+                if not self.quantized_weight_is_cached:
+                    w = self.w_quantizer(self.weight)
+                    self.weight.copy_(w)
+                    if self.bias is not None:
+                        bias = self.b_quantizer(self.bias)
+                        self.bias.copy_(bias)
+                    self.quantized_weight_is_cached = True
+                else:
+                    w = self.weight
+                    bias = self.bias
+            else:
+                w = self.w_quantizer(self.weight)
+                bias = self.b_quantizer(self.bias) if self.bias is not None else None
+            return F.linear(x, w, bias)
 
 
 class LinearMinifloatDenorm(_LinearBase):

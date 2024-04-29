@@ -37,7 +37,7 @@ from .interface import (
 )
 
 from .transforms.quantize import quantized_func_map, quantized_module_map
-from .transforms.quantize.quant_parsers import parse_node_config
+from .transforms.quantize.quant_parsers import parse_node_q_config
 
 ANALYSIS_PASSES = [
     "init_metadata",

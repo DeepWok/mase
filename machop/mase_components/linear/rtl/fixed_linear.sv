@@ -1,76 +1,77 @@
 `timescale 1ns / 1ps
-
-/*
- * Constrained by WEIGHT_PARALLELISM_DIM_0 == DATA_OUT_0_PARALLELISM_DIM_0
- *
-*/
-
 module fixed_linear #(
     /* verilator lint_off UNUSEDPARAM */
-    parameter HAS_BIAS = 0,
+    parameter HAS_BIAS = 1,
 
-    parameter DATA_IN_0_PRECISION_0 = 16,
+    parameter DATA_IN_0_PRECISION_0 = 8,
     parameter DATA_IN_0_PRECISION_1 = 3,
-    parameter DATA_IN_0_TENSOR_SIZE_DIM_0 = 4,
+    parameter DATA_IN_0_TENSOR_SIZE_DIM_0 = 1,
+    parameter DATA_IN_0_PARALLELISM_DIM_0 = 1,
     parameter DATA_IN_0_TENSOR_SIZE_DIM_1 = 1,
-    parameter DATA_IN_0_PARALLELISM_DIM_0 = 4,
     parameter DATA_IN_0_PARALLELISM_DIM_1 = 1,
-    parameter IN_0_DEPTH = DATA_IN_0_TENSOR_SIZE_DIM_0 / DATA_IN_0_PARALLELISM_DIM_0,
+    parameter DATA_IN_0_TENSOR_SIZE_DIM_2 = 1,
+    parameter DATA_IN_0_PARALLELISM_DIM_2 = 1,
 
-    parameter WEIGHT_PRECISION_0 = 16,
+    parameter WEIGHT_PRECISION_0 = 8,
     parameter WEIGHT_PRECISION_1 = 3,
-    parameter WEIGHT_TENSOR_SIZE_DIM_0 = 32,
+    parameter WEIGHT_TENSOR_SIZE_DIM_0 = 1,
+    parameter WEIGHT_PARALLELISM_DIM_0 = 1,
     parameter WEIGHT_TENSOR_SIZE_DIM_1 = 1,
-    parameter WEIGHT_PARALLELISM_DIM_0 = 4,
     parameter WEIGHT_PARALLELISM_DIM_1 = 1,
+    parameter WEIGHT_TENSOR_SIZE_DIM_2 = 1,
+    parameter WEIGHT_PARALLELISM_DIM_2 = 1,
 
-    parameter DATA_OUT_0_PRECISION_0 = DATA_IN_0_PRECISION_0 + WEIGHT_PRECISION_0 + $clog2(
-        DATA_IN_0_TENSOR_SIZE_DIM_0
-    ) + $clog2(
-        IN_0_DEPTH
-    ) + HAS_BIAS,
-    parameter DATA_OUT_0_PRECISION_1 = DATA_IN_0_PRECISION_1 + WEIGHT_PRECISION_1,
-    parameter DATA_OUT_0_TENSOR_SIZE_DIM_0 = 4,
+    parameter DATA_OUT_0_PRECISION_0 = 8,
+    parameter DATA_OUT_0_PRECISION_1 = 3,
+    parameter DATA_OUT_0_TENSOR_SIZE_DIM_0 = 1,
+    parameter DATA_OUT_0_PARALLELISM_DIM_0 = 1,
     parameter DATA_OUT_0_TENSOR_SIZE_DIM_1 = 1,
-    parameter DATA_OUT_0_PARALLELISM_DIM_0 = WEIGHT_PARALLELISM_DIM_0,
     parameter DATA_OUT_0_PARALLELISM_DIM_1 = 1,
+    parameter DATA_OUT_0_TENSOR_SIZE_DIM_2 = 1,
+    parameter DATA_OUT_0_PARALLELISM_DIM_2 = 1,
 
-    parameter BIAS_PRECISION_0 = 16,
+    parameter BIAS_PRECISION_0 = 8,
     parameter BIAS_PRECISION_1 = 3,
-    parameter BIAS_TENSOR_SIZE_DIM_0 = DATA_OUT_0_TENSOR_SIZE_DIM_0,
-    parameter BIAS_TENSOR_SIZE_DIM_1 = 1,
+    parameter BIAS_TENSOR_SIZE_DIM_0 = 1,
     parameter BIAS_PARALLELISM_DIM_0 = 1,
-    parameter BIAS_PARALLELISM_DIM_1 = 1
+    parameter BIAS_TENSOR_SIZE_DIM_1 = 1,
+    parameter BIAS_PARALLELISM_DIM_1 = 1,
+    parameter BIAS_TENSOR_SIZE_DIM_2 = 1,
+    parameter BIAS_PARALLELISM_DIM_2 = 1
+    /* verilator lint_on UNUSEDPARAM */
 
 ) (
     input clk,
     input rst,
 
     // input port for data_inivations
-    input  [DATA_IN_0_PRECISION_0-1:0] data_in_0      [DATA_IN_0_PARALLELISM_DIM_0*DATA_IN_0_PARALLELISM_DIM_1-1:0],
-    input data_in_0_valid,
-    output data_in_0_ready,
+    input  [DATA_IN_0_PRECISION_0-1:0] data_in_0      [DATA_IN_0_PARALLELISM_DIM_1-1:0],
+    input                              data_in_0_valid,
+    output                             data_in_0_ready,
 
     // input port for weight
-    input  [WEIGHT_PRECISION_0-1:0] weight      [WEIGHT_PARALLELISM_DIM_0 * DATA_IN_0_PARALLELISM_DIM_0-1:0],
+    input  [WEIGHT_PRECISION_0-1:0] weight      [WEIGHT_PARALLELISM_DIM_0*WEIGHT_PARALLELISM_DIM_1-1:0],
     input weight_valid,
     output weight_ready,
 
     /* verilator lint_off UNUSEDSIGNAL */
-    input [BIAS_PRECISION_0-1:0] bias[BIAS_PARALLELISM_DIM_0 * DATA_OUT_0_PARALLELISM_DIM_0-1:0],
-    input bias_valid,
+    input  [BIAS_PRECISION_0-1:0] bias      [BIAS_PARALLELISM_DIM_0-1:0],
+    input                         bias_valid,
     /* verilator lint_on UNUSEDSIGNAL */
-    output bias_ready,
+    output                        bias_ready,
 
-    output [DATA_OUT_0_PRECISION_0-1:0] data_out_0      [DATA_OUT_0_PARALLELISM_DIM_0*DATA_OUT_0_PARALLELISM_DIM_1-1:0],
+    output [DATA_OUT_0_PRECISION_0-1:0] data_out_0      [DATA_OUT_0_PARALLELISM_DIM_0 * DATA_OUT_0_PARALLELISM_DIM_1-1:0],
     output data_out_0_valid,
     input data_out_0_ready
 );
 
   localparam FDP_WIDTH = DATA_IN_0_PRECISION_0 + WEIGHT_PRECISION_0 + $clog2(
-      DATA_IN_0_PARALLELISM_DIM_0
+      DATA_IN_0_PARALLELISM_DIM_1
   );
-  localparam ACC_WIDTH = FDP_WIDTH + $clog2(IN_0_DEPTH);
+  localparam ACC_WIDTH = FDP_WIDTH + $clog2(
+      DATA_IN_0_TENSOR_SIZE_DIM_1 / DATA_IN_0_PARALLELISM_DIM_1
+  );
+  logic [ACC_WIDTH-1:0] data_out_buff[DATA_OUT_0_PARALLELISM_DIM_0 * DATA_OUT_0_PARALLELISM_DIM_1-1:0];
 
   logic fdp_join_valid, fdp_join_ready;
   join2 #() fdp_join_inst (
@@ -84,19 +85,19 @@ module fixed_linear #(
   // Assume the parallelised hardware above have the same arrival time
   // which means that they always have the same state. So we can just
   // pick one of the valid signal to use.
-  logic [WEIGHT_PARALLELISM_DIM_0-1:0] fdp_data_ready, fdp_weight_ready;
+  logic [DATA_OUT_0_PARALLELISM_DIM_1-1:0] fdp_data_ready, fdp_weight_ready;
   assign fdp_join_ready = fdp_data_ready[0];
   /* verilator lint_on UNUSEDSIGNAL */
 
   logic                 acc_ready;
-  logic [ACC_WIDTH-1:0] acc_data_out[WEIGHT_PARALLELISM_DIM_0*WEIGHT_PARALLELISM_DIM_1-1:0];
+  logic [ACC_WIDTH-1:0] acc_data_out[DATA_OUT_0_PARALLELISM_DIM_1-1:0];
 
-  // There are WEIGHT_PARALLELISM_DIM_0 number of dot product instances with DATA_IN_0_TENSOR_SIZE_DIM_0 inputs
-  // and each one computes for IN_0_DEPTH iterations for each inputs.
-  for (genvar i = 0; i < WEIGHT_PARALLELISM_DIM_0; i = i + 1) begin : linear
+  // There are DATA_OUT_0_PARALLELISM_DIM_1 number of dot product instances with DATA_IN_0_PARALLELISM_DIM_1 inputs 
+  // and each one computes for DATA_IN_0_TENSOR_SIZE_DIM_1 / DATA_IN_0_PARALLELISM_DIM_1 iterations for each inputs.
+  for (genvar i = 0; i < DATA_OUT_0_PARALLELISM_DIM_1; i = i + 1) begin : linear
     // Assume the weight are transposed and partitioned 
-    logic [WEIGHT_PRECISION_0-1:0] current_weight[DATA_IN_0_PARALLELISM_DIM_0-1:0];
-    assign current_weight = weight[DATA_IN_0_PARALLELISM_DIM_0*(i+1)-1:DATA_IN_0_PARALLELISM_DIM_0*i];
+    logic [WEIGHT_PRECISION_0-1:0] current_weight[DATA_IN_0_PARALLELISM_DIM_1-1:0];
+    assign current_weight = weight[DATA_IN_0_PARALLELISM_DIM_1*i+DATA_IN_0_PARALLELISM_DIM_1-1:DATA_IN_0_PARALLELISM_DIM_1*i];
 
     logic [FDP_WIDTH-1:0] fdp_data_out;
     logic fdp_data_out_valid, fdp_data_out_ready;
@@ -105,7 +106,7 @@ module fixed_linear #(
     fixed_dot_product #(
         .IN_WIDTH(DATA_IN_0_PRECISION_0),
         .WEIGHT_WIDTH(WEIGHT_PRECISION_0),
-        .IN_SIZE(DATA_IN_0_PARALLELISM_DIM_0)
+        .IN_SIZE(DATA_IN_0_PARALLELISM_DIM_1)
     ) fdp_inst (
         .clk(clk),
         .rst(rst),
@@ -126,7 +127,7 @@ module fixed_linear #(
 
     fixed_accumulator #(
         .IN_WIDTH(FDP_WIDTH),
-        .IN_DEPTH(IN_0_DEPTH)
+        .IN_DEPTH(DATA_IN_0_TENSOR_SIZE_DIM_1 / DATA_IN_0_PARALLELISM_DIM_1)
     ) fixed_accumulator_inst (
         .clk(clk),
         .rst(rst),
@@ -146,9 +147,8 @@ module fixed_linear #(
 
 
   if (HAS_BIAS == 1) begin
-    logic [ACC_WIDTH-1:0] bias_sext[BIAS_PARALLELISM_DIM_0 * DATA_IN_0_PARALLELISM_DIM_0-1:0];
+    logic [ACC_WIDTH-1:0] bias_sext[BIAS_PARALLELISM_DIM_0-1:0];
     logic acc_join_valid, acc_join_ready;
-    logic [DATA_IN_0_PARALLELISM_DIM_0-1:0] reg_ready;
 
     join2 #() acc_join_inst (
         .data_in_ready ({bias_ready, acc_ready}),
@@ -156,9 +156,11 @@ module fixed_linear #(
         .data_out_valid(acc_join_valid),
         .data_out_ready(acc_join_ready)
     );
+    logic [BIAS_PARALLELISM_DIM_0-1:0] reg_ready;
+    assign acc_join_ready = &reg_ready;
 
     fixed_rounding #(
-        .IN_SIZE(DATA_IN_0_PARALLELISM_DIM_0),
+        .IN_SIZE(BIAS_PARALLELISM_DIM_0),
         .IN_WIDTH(BIAS_PRECISION_0),
         .IN_FRAC_WIDTH(BIAS_PRECISION_1),
         .OUT_WIDTH(ACC_WIDTH),
@@ -168,15 +170,13 @@ module fixed_linear #(
         .data_out(bias_sext)
     );
 
-    assign acc_join_ready = &reg_ready;
-
-    for (genvar i = 0; i < DATA_IN_0_PARALLELISM_DIM_0; i = i + 1) begin : add_bias
-      logic [DATA_OUT_0_PRECISION_0-1:0] add;
+    for (genvar i = 0; i < BIAS_PARALLELISM_DIM_0; i = i + 1) begin : add_bias
+      logic [ACC_WIDTH-1:0] add;
       assign add = $signed(acc_data_out[i]) + $signed(bias_sext[i]);
       /* verilator lint_off UNUSEDSIGNAL */
       logic dout_valid;
       skid_buffer #(
-          .DATA_WIDTH(DATA_OUT_0_PRECISION_0)
+          .DATA_WIDTH(ACC_WIDTH)
       ) register_slice (
           .clk           (clk),
           .rst           (rst),
@@ -185,7 +185,7 @@ module fixed_linear #(
           .data_in       (add),
           .data_out_valid(dout_valid),
           .data_out_ready(data_out_0_ready),
-          .data_out      (data_out_0[i])
+          .data_out      (data_out_buff[i])
       );
     end
     assign data_out_0_valid = add_bias[0].dout_valid;
@@ -193,11 +193,21 @@ module fixed_linear #(
   end else begin
     assign acc_ready = data_out_0_ready;
     assign data_out_0_valid = linear[0].acc_data_out_valid;
-
-    for (genvar i = 0; i < WEIGHT_PARALLELISM_DIM_0; i = i + 1) begin
-      assign data_out_0[i] = acc_data_out[i];
-    end
+    assign data_out_buff = acc_data_out;
     assign bias_ready = 1;
   end
+
+
+  fixed_rounding #(
+      .IN_SIZE(DATA_OUT_0_PARALLELISM_DIM_0 * DATA_OUT_0_PARALLELISM_DIM_1),
+      .IN_WIDTH(ACC_WIDTH),
+      .IN_FRAC_WIDTH(DATA_IN_0_PRECISION_1 + WEIGHT_PRECISION_1),
+      .OUT_WIDTH(DATA_OUT_0_PRECISION_0),
+      .OUT_FRAC_WIDTH(DATA_OUT_0_PRECISION_1)
+  ) fr_inst (
+      .data_in (data_out_buff),
+      .data_out(data_out_0)
+  );
+
 
 endmodule

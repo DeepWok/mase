@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # This example converts a simple MLP model to Verilog
 import os, sys, logging
-import toml
+import toml, math
 
 import torch
 import torch.nn as nn
@@ -29,15 +29,15 @@ class MLP(torch.nn.Module):
     def __init__(self) -> None:
         super().__init__()
 
-        self.fc1 = nn.Linear(28 * 28, 28 * 28)
-        self.fc2 = nn.Linear(28 * 28, 28 * 28 * 4)
-        self.fc3 = nn.Linear(28 * 28 * 4, 10)
+        self.fc1 = nn.Linear(5 * 5, 5 * 5)
+        self.fc2 = nn.Linear(5 * 5, 5 * 5 * 4)
+        self.fc3 = nn.Linear(5 * 5 * 4, 10)
 
     def forward(self, x):
         x = torch.flatten(x, start_dim=1, end_dim=-1)
         x = torch.nn.functional.relu(self.fc1(x))
-        x = torch.nn.functional.relu(self.fc2(x))
-        x = self.fc3(x)
+        # x = torch.nn.functional.relu(self.fc2(x))
+        # x = self.fc3(x)
         return x
 
 
@@ -47,7 +47,7 @@ def test_emit_verilog_linear():
 
     # Provide a dummy input for the graph so it can use for tracing
     batch_size = 1
-    x = torch.randn((batch_size, 28, 28))
+    x = torch.randn((batch_size, 5, 5))
     dummy_in = {"x": x}
 
     mg, _ = passes.init_metadata_analysis_pass(mg, None)
@@ -69,64 +69,32 @@ def test_emit_verilog_linear():
         "configs",
         "tests",
         "quantize",
-        "integer.toml",
+        "fixed.toml",
     )
 
     # load toml config file
     with open(config_file, "r") as f:
         quan_args = toml.load(f)["passes"]["quantize"]
-    mg, _ = passes.quantize_transform_pass(mg, quan_args)
+    with torch.no_grad():
+        mg, _ = passes.quantize_transform_pass(mg, quan_args)
+        mg.model(dummy_in["x"])
 
-    # There is a bug in the current quantizzation pass, where the results metadata is not uppdated with the precision.
-    # Here we temporarily update the metadata here so we can test the hardware back end.
-    for node in mg.fx_graph.nodes:
-        for arg, _ in node.meta["mase"].parameters["common"]["args"].items():
-            if (
-                type(node.meta["mase"].parameters["common"]["args"][arg]) == dict
-                and "type" in node.meta["mase"].parameters["common"]["args"][arg].keys()
-            ):
-                node.meta["mase"].parameters["common"]["args"][arg]["type"] = "fixed"
-        for result, _ in node.meta["mase"].parameters["common"]["results"].items():
-            if (
-                type(node.meta["mase"].parameters["common"]["results"][result]) == dict
-                and "type"
-                in node.meta["mase"].parameters["common"]["results"][result].keys()
-            ):
-                node.meta["mase"].parameters["common"]["results"][result][
-                    "type"
-                ] = "fixed"
-                node.meta["mase"].parameters["common"]["results"][result][
-                    "precision"
-                ] = [8, 3]
+    # inspect the graph metadata
+    # mg, _ = passes.report_node_meta_param_analysis_pass(mg)
 
-    mg, _ = passes.add_hardware_metadata_analysis_pass(
-        mg
-    )  # add metadata for hardware in each mase node of graph
-    mg, _ = passes.report_node_hardware_type_analysis_pass(mg)  # pretty print
+    # add metadata for hardware in each mase node of graph
+    mg, _ = passes.add_hardware_metadata_analysis_pass(mg)
+    # pretty print
+    mg, _ = passes.report_node_hardware_type_analysis_pass(mg)
     # mg = verify_hardware_metadata_analysis_pass(mg)
 
+    # Emit Verilog sources
     mg, _ = passes.emit_verilog_top_transform_pass(mg)
-    # mg = passes.emit_bram_transform_pass(mg)
-    # mg, _ = passes.emit_internal_rtl_transform_pass(mg)
+    mg, _ = passes.emit_bram_transform_pass(mg)
+    mg, _ = passes.emit_internal_rtl_transform_pass(mg)
 
-    # # For internal models, the test inputs can be directly fetched from the dataset
-    # # using InputGenerator from chop.tools.get_input
-    # project_dir = Path(__file__).parents[6] / "top"
-    # print(f"project_dir {project_dir}")
-    # cosim_config = {"test_inputs": [x], "trans_num": 1, "project_dir": project_dir}
-    # # mg = passes.emit_verilog_tb_transform_pass(mg, pass_args=cosim_config)
-
-    # # Run simulation pass if Vivado available
-    # try:
-    #     execute_cli("xelab -h", log_output=False)
-    #     has_verilog = True
-    #     # mg = get_synthesis_results("top", mg, target="xcu250-figd2104-2L-e", output_dir=".")
-    # except:
-    #     has_verilog = False
-    #     print(f"Vivado not available")
-
-    # if has_verilog:
-    #     mg = passes.run_cosim_analysis_pass(mg)
+    # Test Verilog sources
+    mg, _ = passes.test_verilog_analysis_pass(mg)
 
 
 if __name__ == "__main__":

@@ -15,7 +15,12 @@ from ...utils import (
 )
 
 from .modify import create_new_fn, create_new_module
-from .quant_parsers import parse_node_config, relink_node_meta, update_quant_meta_param
+from .quant_parsers import (
+    parse_node_q_config,
+    relink_node_meta,
+    update_q_meta_param,
+    infer_result_dtype_and_precision,
+)
 from .summary import graph_iterator_compare_nodes, graph_iterator_node_histogram
 
 logger = logging.getLogger(__name__)
@@ -63,7 +68,7 @@ def graph_iterator_quantize_by_type(graph, config: dict):
         node_config = get_config(config, get_mase_op(node))
         if node_config["name"] is None:
             continue
-        node_config = parse_node_config(node_config, get_mase_op(node))
+        node_config = parse_node_q_config(node_config, get_mase_op(node))
         # if get_mase_type(node) == "module":
         if node.op == "call_module":
             ori_module = get_node_actual_target(node)
@@ -82,7 +87,7 @@ def graph_iterator_quantize_by_type(graph, config: dict):
             parent_name, name = get_parent_name(node.target)
             setattr(graph.modules[parent_name], name, new_module)
             # update precision and type in meta.parameters["common"]
-            update_quant_meta_param(node, node_config, get_mase_op(node))
+            update_q_meta_param(node, node_config)
         elif get_mase_type(node) in [
             "builtin_func",
             "module_related_func",
@@ -94,9 +99,19 @@ def graph_iterator_quantize_by_type(graph, config: dict):
                 new_node.meta["mase"] = copy(node.meta["mase"])
                 # new_node.meta["mase"].node -> new_node
                 relink_node_meta(new_node, model=graph.model)
-                update_quant_meta_param(new_node, node_config, get_mase_op(node))
+                update_q_meta_param(new_node, node_config)
                 node.replace_all_uses_with(new_node)
             graph.fx_graph.erase_node(node)
+
+    for node in graph.fx_graph.nodes:
+        if get_mase_type(node) in [
+            "module_related_func",
+            "builtin_func",
+            "output",
+            "placeholder",
+            "implicit_func",
+        ]:
+            infer_result_dtype_and_precision(node)
     return graph
 
 
@@ -107,7 +122,7 @@ def graph_iterator_quantize_by_name(graph, config: dict):
         node_config = get_config(config, node.name)
         if node_config["name"] is None:
             continue
-        node_config = parse_node_config(node_config, get_mase_op(node))
+        node_config = parse_node_q_config(node_config, get_mase_op(node))
         output_layers_names = node_config.get("additional_layers_outputs", [])
         output_layers = [
             get_node_target_by_name(graph, name) for name in output_layers_names
@@ -128,7 +143,7 @@ def graph_iterator_quantize_by_name(graph, config: dict):
             )
             parent_name, name = get_parent_name(node.target)
             setattr(graph.modules[parent_name], name, new_module)
-            update_quant_meta_param(node, node_config, get_mase_op(node))
+            update_q_meta_param(node, node_config)
             logger.debug(f"Quantized module: {node.target} with config: {node_config}")
         elif get_mase_type(node) in [
             "builtin_func",
@@ -140,7 +155,7 @@ def graph_iterator_quantize_by_name(graph, config: dict):
                 new_node.name = node.name
                 new_node.meta["mase"] = copy(node.meta["mase"])
                 relink_node_meta(new_node, model=graph.model)
-                update_quant_meta_param(new_node, node_config, get_mase_op(node))
+                update_q_meta_param(new_node, node_config)
                 node.replace_all_uses_with(new_node)
             graph.fx_graph.erase_node(node)
             logger.debug(
@@ -150,6 +165,15 @@ def graph_iterator_quantize_by_name(graph, config: dict):
             raise ValueError(
                 "Unsupported node type for quantisation: {}".format(get_mase_type(node))
             )
+    for node in graph.fx_graph.nodes:
+        if get_mase_type(node) in [
+            "module_related_func",
+            "builtin_func",
+            "output",
+            "placeholder",
+            "implicit_func",
+        ]:
+            infer_result_dtype_and_precision(node)
     return graph
 
 
@@ -165,7 +189,7 @@ def graph_iterator_quantize_by_regex_name(graph, config: dict):
             node_config = get_config(config, matched_pattern)
         if node_config["name"] is None:
             continue
-        node_config = parse_node_config(node_config, get_mase_op(node))
+        node_config = parse_node_q_config(node_config, get_mase_op(node))
         # if get_mase_type(node) == "module":
         if node.op == "call_module":
             ori_module = graph.modules[node.target]
@@ -174,7 +198,7 @@ def graph_iterator_quantize_by_regex_name(graph, config: dict):
             )
             parent_name, name = get_parent_name(node.target)
             setattr(graph.modules[parent_name], name, new_module)
-            update_quant_meta_param(node, node_config, get_mase_op(node))
+            update_q_meta_param(node, node_config)
         elif get_mase_type(node) in [
             "builtin_func",
             "module_related_func",
@@ -185,13 +209,22 @@ def graph_iterator_quantize_by_regex_name(graph, config: dict):
                 new_node.name = node.name
                 new_node.meta["mase"] = deepcopy(node.meta["mase"])
                 relink_node_meta(new_node, model=graph.model)
-                update_quant_meta_param(new_node, node_config, get_mase_op(node))
+                update_q_meta_param(new_node, node_config)
                 node.replace_all_uses_with(new_node)
             graph.fx_graph.erase_node(node)
         else:
             raise ValueError(
                 "Unsupported node type for quantisation:{}".format(get_mase_type(node))
             )
+    for node in graph.fx_graph.nodes:
+        if get_mase_type(node) in [
+            "module_related_func",
+            "builtin_func",
+            "output",
+            "placeholder",
+            "implicit_func",
+        ]:
+            infer_result_dtype_and_precision(node)
     return graph
 
 

@@ -3,8 +3,6 @@ from functools import partial
 from .utils import cp_multi_values, has_multi_keys
 
 """ QUANT_ARITH_ENTRIES
-A mapping from (quantization arithmetic name) to (a mapping from (operand name) to (operand quantization spec name))
-
 Example
 
 A fixed point quantized value is defined by (width, frac_width), thus the mapping is defined as follows:
@@ -368,7 +366,7 @@ def optional_operand_entry_exists(config: dict, entry_name: str) -> bool:
     return False
 
 
-def parse_node_config(config: dict, mase_op: str, strict: bool = True) -> dict:
+def parse_node_q_config(config: dict, mase_op: str, strict: bool = True) -> dict:
     """
     Parse a node config from a MASE op config.
 

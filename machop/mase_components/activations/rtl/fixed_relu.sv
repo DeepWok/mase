@@ -28,13 +28,28 @@ module fixed_relu #(
     input  logic data_out_0_ready
 );
 
-  for (genvar i = 0; i < DATA_IN_0_TENSOR_SIZE_DIM_0; i++) begin : ReLU
+  logic [DATA_IN_0_PRECISION_0-1:0] data[DATA_IN_0_PARALLELISM_DIM_0*DATA_IN_0_PARALLELISM_DIM_1-1:0] ;
+
+  for (
+      genvar i = 0; i < DATA_IN_0_PARALLELISM_DIM_0 * DATA_IN_0_PARALLELISM_DIM_1; i++
+  ) begin : ReLU
     always_comb begin
       // negative value, put to zero
-      if ($signed(data_in_0[i]) <= 0) data_out_0[i] = '0;
-      else data_out_0[i] = data_in_0[i];
+      if ($signed(data_in_0[i]) <= 0) data[i] = '0;
+      else data[i] = data_in_0[i];
     end
   end
+
+  fixed_rounding #(
+      .IN_SIZE(DATA_IN_0_PARALLELISM_DIM_0 * DATA_IN_0_PARALLELISM_DIM_1),
+      .IN_WIDTH(DATA_IN_0_PRECISION_0),
+      .IN_FRAC_WIDTH(DATA_IN_0_PRECISION_1),
+      .OUT_WIDTH(DATA_OUT_0_PRECISION_0),
+      .OUT_FRAC_WIDTH(DATA_OUT_0_PRECISION_1)
+  ) fr_inst (
+      .data_in (data),
+      .data_out(data_out_0)
+  );
 
   assign data_out_0_valid = data_in_0_valid;
   assign data_in_0_ready  = data_out_0_ready;

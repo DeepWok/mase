@@ -34,18 +34,21 @@ def emit_parameters_in_mem_internal(node, param_name, file_name, data_name):
     (Mostly because Vivado does not support string type parameters...)
     """
 
-    # TODO: Force bias to have a depth of 1 for now
-    if param_name != "bias":
-        # out_depth = node.meta["mase"].parameters["hardware"]["verilog_param"][
-        #     "DATA_IN_0_DEPTH"
-        # ]
-        out_depth = 1
-    else:
-        out_depth = 1
-    addr_width = clog2(out_depth) + 1
     total_size = math.prod(
         node.meta["mase"].parameters["common"]["args"][param_name]["shape"]
     )
+
+    dim = len(node.meta["mase"].parameters["common"]["args"][param_name]["shape"])
+    out_depth = 1
+    for i in range(dim):
+        out_depth *= int(
+            math.ceil(
+                node.meta["mase"].parameters["common"]["args"][param_name]["shape"][i]
+                / node.meta["mase"].parameters["hardware"]["parallelism"][param_name][i]
+            )
+        )
+    addr_width = clog2(out_depth) + 1
+
     # The depth of parameters must match with the input depth
     assert (
         total_size % out_depth == 0
@@ -71,7 +74,7 @@ def emit_parameters_in_mem_internal(node, param_name, file_name, data_name):
 module {node_param_name}_rom #(
   parameter DWIDTH = {out_size*out_width},
   parameter MEM_SIZE = {out_depth},
-  parameter AWIDTH = $clog2(MEM_SIZE) + 1
+  parameter AWIDTH = $clog2(MEM_SIZE+1)
 ) (
     input clk,
     input logic [AWIDTH-1:0] addr0,
@@ -83,9 +86,9 @@ module {node_param_name}_rom #(
   logic [DWIDTH-1:0] q0_t0;
   logic [DWIDTH-1:0] q0_t1;
 
-  // initial begin
-  //   $readmemh("{data_name}", ram);
-  // end
+  initial begin
+    $readmemh("{data_name}", ram);
+  end
 
   assign q0 = q0_t1;
 
@@ -96,9 +99,9 @@ endmodule
 
 `timescale 1 ns / 1 ps
 module {node_param_name} #(
-  parameter DATA_WIDTH = 32'd{out_width*out_size},
-  parameter ADDR_RANGE = 32'd{out_depth},
-  parameter ADDR_WIDTH = $clog2(ADDR_RANGE) + 1
+  parameter DATA_WIDTH = {out_width*out_size},
+  parameter ADDR_RANGE = {out_depth},
+  parameter ADDR_WIDTH = $clog2(ADDR_RANGE+1)
 ) (
   input reset,
   input clk,
@@ -126,7 +129,7 @@ module {node_param_name}_source #(
 
     parameter {_cap(param_name)}_PARALLELISM_DIM_0 = 1,
     parameter {_cap(param_name)}_PARALLELISM_DIM_1 = 1,
-    parameter OUT_DEPTH = {_cap(param_name)}_TENSOR_SIZE_DIM_0 / {_cap(param_name)}_PARALLELISM_DIM_0
+    parameter OUT_DEPTH = {_cap(param_name)}_TENSOR_SIZE_DIM_0 * {_cap(param_name)}_TENSOR_SIZE_DIM_1 / ({_cap(param_name)}_PARALLELISM_DIM_0 * {_cap(param_name)}_PARALLELISM_DIM_1)
 ) (
     input clk,
     input rst,
@@ -136,14 +139,14 @@ module {node_param_name}_source #(
     input                        data_out_ready
 );
   // 1-bit wider so IN_DEPTH also fits.
-  localparam COUNTER_WIDTH = $clog2(OUT_DEPTH);
-  logic [COUNTER_WIDTH:0] counter;
+  localparam COUNTER_WIDTH = $clog2(OUT_DEPTH+1);
+  logic [COUNTER_WIDTH-1:0] counter;
 
   always_ff @(posedge clk)
     if (rst) counter <= 0;
     else begin
       if (data_out_ready) begin
-        if (counter == OUT_DEPTH - 1) counter <= 0;
+        if (counter == COUNTER_WIDTH'(OUT_DEPTH) - 1) counter <= 0;
         else counter <= counter + 1;
       end
     end
@@ -151,9 +154,9 @@ module {node_param_name}_source #(
   logic ce0;
   assign ce0 = 1;
 
-  logic [{_cap(param_name)}_PRECISION_0*{_cap(param_name)}_TENSOR_SIZE_DIM_0-1:0] data_vector;
+  logic [{_cap(param_name)}_PRECISION_0*{_cap(param_name)}_PARALLELISM_DIM_0-1:0] data_vector;
   {node_param_name} #(
-      .DATA_WIDTH({_cap(param_name)}_PRECISION_0 * {_cap(param_name)}_TENSOR_SIZE_DIM_0),
+      .DATA_WIDTH({_cap(param_name)}_PRECISION_0 * {_cap(param_name)}_PARALLELISM_DIM_0),
       .ADDR_RANGE(OUT_DEPTH)
   ) {node_param_name}_mem (
       .clk(clk),
@@ -165,7 +168,7 @@ module {node_param_name}_source #(
 
   // Cocotb/verilator does not support array flattening, so
   // we need to manually add some reshaping process.
-  for (genvar j = 0; j < {_cap(param_name)}_TENSOR_SIZE_DIM_0; j++)
+  for (genvar j = 0; j < {_cap(param_name)}_PARALLELISM_DIM_0; j++)
     assign data_out[j] = data_vector[{_cap(param_name)}_PRECISION_0*j+{_cap(param_name)}_PRECISION_0-1:{_cap(param_name)}_PRECISION_0*j];
 
   assign data_out_valid = 1;

@@ -5,9 +5,9 @@ from copy import deepcopy
 import toml
 
 from ....tools.config_load import convert_str_na_to_none
-from ....passes.graph import parse_node_config
+from ....passes.graph import parse_node_q_config
 
-from chop.passes.graph.transforms.quantize.quant_parsers import parse_quant_config
+from chop.passes.graph.transforms.quantize.quant_parsers import parse_node_q_config
 
 """
 An example of quant_config for opt
@@ -43,15 +43,15 @@ def create_a_layer_config(
     # fmt: off
     qc = {
         "self_attn": {
-            "q_proj": deepcopy(parse_node_config(layer_qc.get("self_attn", {}).get("q_proj", linear_qc), "linear")),
-            "k_proj": deepcopy(parse_node_config(layer_qc.get("self_attn", {}).get("k_proj", linear_qc), "linear")),
-            "v_proj": deepcopy(parse_node_config(layer_qc.get("self_attn", {}).get("v_proj", linear_qc), "linear")),
-            "out_proj": deepcopy(parse_node_config(layer_qc.get("self_attn", {}).get("out_proj", linear_qc), "linear")),
-            "bmm_0": deepcopy(parse_node_config(layer_qc.get("self_attn", {}).get("bmm_0", bmm_qc), "matmul")),
-            "bmm_1": deepcopy(parse_node_config(layer_qc.get("self_attn", {}).get("bmm_1", bmm_qc), "matmul")),
+            "q_proj": deepcopy(parse_node_q_config(layer_qc.get("self_attn", {}).get("q_proj", linear_qc), "linear")),
+            "k_proj": deepcopy(parse_node_q_config(layer_qc.get("self_attn", {}).get("k_proj", linear_qc), "linear")),
+            "v_proj": deepcopy(parse_node_q_config(layer_qc.get("self_attn", {}).get("v_proj", linear_qc), "linear")),
+            "out_proj": deepcopy(parse_node_q_config(layer_qc.get("self_attn", {}).get("out_proj", linear_qc), "linear")),
+            "bmm_0": deepcopy(parse_node_q_config(layer_qc.get("self_attn", {}).get("bmm_0", bmm_qc), "matmul")),
+            "bmm_1": deepcopy(parse_node_q_config(layer_qc.get("self_attn", {}).get("bmm_1", bmm_qc), "matmul")),
         },
-        "fc1": deepcopy(parse_node_config(layer_qc.get("fc1", linear_qc), "linear")),
-        "fc2": deepcopy(parse_node_config(layer_qc.get("fc2", linear_qc), "linear")),
+        "fc1": deepcopy(parse_node_q_config(layer_qc.get("fc1", linear_qc), "linear")),
+        "fc2": deepcopy(parse_node_q_config(layer_qc.get("fc2", linear_qc), "linear")),
     }
     # fmt: on
     return qc
@@ -60,10 +60,10 @@ def create_a_layer_config(
 def _parse_and_complete_config(config: dict, num_hidden_layers: int) -> dict:
     assert "default" in config, "Must provide default config for by_name_parser"
     default_qc: dict = config["default"]
-    linear_qc: dict = parse_node_config(
+    linear_qc: dict = parse_node_q_config(
         config.get("linear", default_qc), mase_op="linear"
     )
-    bmm_qc: dict = parse_node_config(config.get("bmm", default_qc), mase_op="matmul")
+    bmm_qc: dict = parse_node_q_config(config.get("bmm", default_qc), mase_op="matmul")
     general_layer_qc: dict = config.get("model_layer", None)
 
     # parsed config
