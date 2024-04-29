@@ -30,7 +30,7 @@ class WandbCallback(BaseCallback):
         return True
 
 
-class StrategyRL(SearchStrategyBase):
+class SearchStrategyRL(SearchStrategyBase):
     iterative = True
 
     def _post_init_setup(self):
@@ -124,10 +124,10 @@ class StrategyRL(SearchStrategyBase):
         env = self._create_env(search_space)
         callback = self._initialize_callbacks(env)
 
-        if "load_name" in self.config:
+        if "rl_model_load_name" in self.config:
             # Load pre-trained model if specified
             model = self.algorithm.load(
-                self.config["load_name"],
+                self.config["rl_model_load_name"],
                 env=self.env(
                     config=self.config,
                     search_space=search_space,
@@ -137,7 +137,7 @@ class StrategyRL(SearchStrategyBase):
                     episode_max_len=self.episode_max_len,
                 ),
             )
-            print(f"Model loaded from {self.config['load_name']}. Skipping training.")
+            print(f"Model loaded from {self.config['rl_model_load_name']}. Skipping training.")
 
         else:
             algorithm_kwargs = {
@@ -203,6 +203,7 @@ class StrategyRL(SearchStrategyBase):
             "metrics": vec_env.get_attr("best_performance"),
         }
 
+        # TODO: fix this and put it to the right directory
         file_path = "RL_output.json"
 
         with open(file_path, "w") as file:
