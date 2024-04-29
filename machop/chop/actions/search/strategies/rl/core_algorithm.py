@@ -108,14 +108,14 @@ class SearchStrategyRL(SearchStrategyBase):
             callbacks.append(wandb_callback)
 
         # Add CheckpointCallback and EvalCallback
-        save_path = self.save_dir + "/rl_logs/"
+        save_path = self.save_dir / "rl_logs"
         checkpoint_callback = CheckpointCallback(
             save_freq=self.save_freq, save_path=save_path
         )
         eval_callback = EvalCallback(
             env,
-            best_model_save_path=save_path + "best_model",
-            log_path=save_path + "results",
+            best_model_save_path=save_path / "rl_best_model",
+            log_path=save_path / "rl_results",
             eval_freq=self.eval_freq,
         )
         callbacks.extend([checkpoint_callback, eval_callback])
@@ -146,7 +146,7 @@ class SearchStrategyRL(SearchStrategyBase):
             algorithm_kwargs = {
                 "verbose": 1,
                 "device": self.device,
-                "tensorboard_log": self.save_dir + "/tb_logs/",
+                "tensorboard_log": self.save_dir / "tb_logs",
                 "learning_rate": self.learning_rate,
             }
 
@@ -206,7 +206,7 @@ class SearchStrategyRL(SearchStrategyBase):
             "metrics": vec_env.get_attr("best_performance"),
         }
 
-        file_path = self.save_dir + "RL_output.json"
+        file_path = self.save_dir / "rl_output.json"
 
         with open(file_path, "w") as file:
             json.dump(data, file, indent=4)
