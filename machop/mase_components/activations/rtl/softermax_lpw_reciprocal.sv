@@ -132,30 +132,38 @@ logic [OUT_WIDTH-1:0] output_reg_in_data;
 // Function to generate slope variable (m)
 function logic [SLOPE_WIDTH-1:0] slope (real x1, real x2);
     real y1, y2, res, res_shifted;
-    int res_int;
+    longint res_int;
+    bit [INTERCEPT_WIDTH-1:0] return_val;
+
+    // Calculate real result
     y1 = 1.0 / x1;
     y2 = 1.0 / x2;
     res = (y2 - y1) / (x2 - x1);
 
     // Output cast
-    res_shifted = res * (2 ** SLOPE_FRAC_WIDTH);
-    res_int = int'(res_shifted);
-    return SLOPE_WIDTH'(res_int);
+    res_shifted = res * (2.0 ** SLOPE_FRAC_WIDTH);
+    res_int = longint'(res_shifted);
+    return_val = SLOPE_WIDTH'(res_int);
+    return return_val;
 endfunction
 
 // Function to intercept variable (c)
 function logic [INTERCEPT_WIDTH-1:0] intercept (real x1, real x2);
     real m, y1, y2, res, res_shifted;
-    int res_int;
+    longint res_int;
+    bit [INTERCEPT_WIDTH-1:0] return_val;
+
+    // Calculate real result
     y1 = 1.0 / x1;
     y2 = 1.0 / x2;
     m = (y2 - y1) / (x2 - x1);
     res = y1 - (m * x1);
 
     // Output cast
-    res_shifted = res * (2 ** INTERCEPT_FRAC_WIDTH);
-    res_int = int'(res_shifted);
-    return INTERCEPT_WIDTH'(res_int);
+    res_shifted = res * (2.0 ** INTERCEPT_FRAC_WIDTH);
+    res_int = longint'(res_shifted);
+    return_val = INTERCEPT_WIDTH'(res_int);
+    return return_val;
 endfunction
 
 

@@ -6,7 +6,7 @@ from copy import deepcopy
 import re
 import inspect
 from typing import Any
-from concurrent.futures import ThreadPoolExecutor, as_completed
+from concurrent.futures import ProcessPoolExecutor, as_completed
 from time import time
 
 import torch
@@ -17,6 +17,77 @@ from mase_components.deps import MASE_HW_DEPS
 
 logger = logging.getLogger("mase_runner")
 logger.setLevel("INFO")
+
+
+def _single_test(
+    i: int, # id
+    deps: list[str],
+    module: str,
+    module_params: dict,
+    module_path: Path,
+    comp_path: Path,
+    test_work_dir: Path,
+    extra_build_args: list[str] = [],
+    seed: int = None,
+    trace: bool = False,
+):
+    print("# ---------------------------------------")
+    print(f"# Test {i}")
+    print("# ---------------------------------------")
+    print(f"# Parameters:")
+    print(f"# - {'Test Index'}: {i}")
+    for k, v in module_params.items():
+        print(f"# - {k}: {v}")
+    print("# ---------------------------------------")
+
+    runner = get_runner(getenv("SIM", "verilator"))
+    runner.build(
+        verilog_sources=[module_path],
+        includes=[str(comp_path.joinpath(f"{d}/rtl/")) for d in deps],
+        hdl_toplevel=module,
+        build_args=[
+            # Verilator linter is overly strict.
+            # Too many errors
+            # These errors are in later versions of verilator
+            "-Wno-GENUNNAMED",
+            "-Wno-WIDTHEXPAND",
+            "-Wno-WIDTHTRUNC",
+            # Simulation Optimisation
+            "-Wno-UNOPTFLAT",
+            "-prof-c",
+            "--assert",
+            "--stats",
+            "--quiet",
+            # Signal trace in dump.fst
+            *(["--trace-fst", "--trace-structs"] if trace else []),
+            "-O2",
+            "-build-jobs",
+            "8",
+            "-Wno-fatal",
+            "-Wno-lint",
+            "-Wno-style",
+            *extra_build_args,
+        ],
+        parameters=module_params,
+        build_dir=test_work_dir,
+    )
+    try:
+        runner.test(
+            hdl_toplevel=module,
+            test_module=module + "_tb",
+            seed=seed,
+            results_xml="results.xml",
+        )
+        num_tests, fail = get_results(test_work_dir.joinpath("results.xml"))
+    except:
+        print("Error occured while running Verilator simulation.")
+        num_tests = fail = 1
+
+    return {
+        "num_tests": num_tests,
+        "failed_tests": fail,
+        "params": module_params,
+    }
 
 
 def mase_runner(
@@ -48,73 +119,12 @@ def mase_runner(
     module_path = group_path.joinpath("rtl").joinpath(f"{module}.sv")
     assert path.exists(module_path), f"{module_path} does not exist."
 
-    SIM = getenv("SIM", "verilator")
-
     deps = MASE_HW_DEPS[f"{group}/{module}"]
 
     total_tests = 0
     total_fail = 0
-
+    passed_cfgs = []
     failed_cfgs = []
-
-    def _single_test(
-        test_work_dir: Path,
-        module_params: dict,
-        silent=False,
-    ):
-        cocotb.log
-        if not silent:
-            print("# ---------------------------------------")
-            print(f"# Test {i+1}/{len(module_param_list)}")
-            print("# ---------------------------------------")
-            print(f"# Parameters:")
-            print(f"# - {'Test Index'}: {i}")
-            for k, v in module_params.items():
-                print(f"# - {k}: {v}")
-            print("# ---------------------------------------")
-
-        runner = get_runner(SIM)
-        runner.build(
-            verilog_sources=[module_path],
-            includes=[str(comp_path.joinpath(f"{d}/rtl/")) for d in deps],
-            hdl_toplevel=module,
-            build_args=[
-                # Verilator linter is overly strict.
-                # Too many errors
-                # These errors are in later versions of verilator
-                "-Wno-GENUNNAMED",
-                "-Wno-WIDTHEXPAND",
-                "-Wno-WIDTHTRUNC",
-                # Simulation Optimisation
-                "-Wno-UNOPTFLAT",
-                "-prof-c",
-                "--stats",
-                # Signal trace in dump.fst
-                *(["--trace-fst", "--trace-structs"] if trace else []),
-                *(["--quiet-exit"] if silent else []),
-                "-O2",
-                "-build-jobs",
-                "8",
-                "-Wno-fatal",
-                "-Wno-lint",
-                "-Wno-style",
-                *extra_build_args,
-            ],
-            parameters=module_params,
-            build_dir=test_work_dir,
-        )
-        runner.test(
-            hdl_toplevel=module,
-            test_module=module + "_tb",
-            seed=seed,
-            results_xml="results.xml",
-        )
-        num_tests, fail = get_results(test_work_dir.joinpath("results.xml"))
-        return {
-            "num_tests": num_tests,
-            "failed_tests": fail,
-            "params": module_params,
-        }
 
     # Single threaded run
     if jobs == 1:
@@ -122,25 +132,44 @@ def mase_runner(
         for i, module_params in enumerate(module_param_list):
             test_work_dir = group_path.joinpath(f"test/build/{module}/test_{i}")
             results = _single_test(
-                test_work_dir=test_work_dir,
+                i=i,
+                deps=deps,
+                module=module,
                 module_params=module_params,
-                silent=False,
+                module_path=module_path,
+                comp_path=comp_path,
+                test_work_dir=test_work_dir,
+                extra_build_args=extra_build_args,
+                seed=seed,
+                trace=trace,
             )
             total_tests += results["num_tests"]
             total_fail += results["failed_tests"]
             if results["failed_tests"]:
                 failed_cfgs.append((i, module_params))
+            else:
+                passed_cfgs.append((i, module_params))
 
     # Multi threaded run
     else:
-        with ThreadPoolExecutor(max_workers=jobs) as executor:
-
-            # Launch concurrent futures
+        with ProcessPoolExecutor(max_workers=jobs) as executor:
             # TODO: add timeout
             future_to_job_meta = {}
             for i, module_params in enumerate(module_param_list):
                 test_work_dir = group_path.joinpath(f"test/build/{module}/test_{i}")
-                future = executor.submit(_single_test, test_work_dir, module_params, True)
+                future = executor.submit(
+                    _single_test,
+                    i=i,
+                    deps=deps,
+                    module=module,
+                    module_params=module_params,
+                    module_path=module_path,
+                    comp_path=comp_path,
+                    test_work_dir=test_work_dir,
+                    extra_build_args=extra_build_args,
+                    seed=seed,
+                    trace=trace
+                )
                 future_to_job_meta[future] = {
                     "id": i,
                     "params": deepcopy(module_params)
@@ -161,6 +190,8 @@ def mase_runner(
                     total_fail += result["failed_tests"]
                     if result["failed_tests"]:
                         failed_cfgs.append((id, params))
+                    else:
+                        passed_cfgs.append((id, params))
 
     print("# ---------------------------------------")
     print("# Test Results")
@@ -171,6 +202,14 @@ def mase_runner(
     print("# - Failed: %d" % (total_fail))
     print("# - Total : %d" % (total_tests))
     print("# ---------------------------------------")
+
+    if len(passed_cfgs):
+        passed_cfgs = sorted(passed_cfgs, key=lambda t: t[0])
+        print(f"# Passed Configs")
+        print("# ---------------------------------------")
+        for i, params in passed_cfgs:
+            print(f"# - test_{i}: {params}")
+        print("# ---------------------------------------")
 
     if len(failed_cfgs):
         failed_cfgs = sorted(failed_cfgs, key=lambda t: t[0])
@@ -213,6 +252,7 @@ def simulate_pass(
             *(["--trace-fst", "--trace-structs"] if trace else []),
             "-prof-c",
             "--stats",
+            "--assert",
             "-O2",
             "-build-jobs",
             "8",

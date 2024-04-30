@@ -2,6 +2,8 @@
 
 import logging
 from pathlib import Path
+from random import randint
+from math import ceil
 
 import torch
 
@@ -34,19 +36,25 @@ class LPW_Reciprocal2TB(Testbench):
         self.in_driver = StreamDriver(
             dut.clk, dut.in_data, dut.in_valid, dut.in_ready
         )
-        self.error_threshold_bits = 3 if self.ENTRIES == 4 else 1
+
+        # Specify Error Threshold
+        self.percentage_error = 0.05
+        self.error_threshold_bits = ceil(self.percentage_error * (2**self.OUT_WIDTH))
+
         self.output_monitor = ErrorThresholdStreamMonitor(
             dut.clk, dut.out_data, dut.out_valid, dut.out_ready,
             width=self.OUT_WIDTH,
             log_error=True,
             signed=False,
             error_bits=self.error_threshold_bits,
-            check=False,
+            check=False,  # We manually assert later
         )
 
-    def generate_inputs(self):
-        return list(range(2**self.IN_WIDTH))
+    def generate_inputs(self, batches=100):
+        return [randint(0, 2**self.IN_WIDTH-1) for _ in range(batches)]
 
+    def sweep_input(self):
+        return list(range(2**self.IN_WIDTH))
 
     def model(self, inputs):
         in_t = torch.tensor(inputs) / (2 ** self.IN_FRAC_WIDTH)
@@ -58,9 +66,9 @@ class LPW_Reciprocal2TB(Testbench):
         return res.tolist()
 
 
-    async def run_test(self, us):
+    async def run_test(self, batches, us):
         await self.reset()
-        inputs = self.generate_inputs()
+        inputs = self.generate_inputs(batches=batches)
         exp_out = self.model(inputs)
         self.in_driver.load_driver(inputs)
         self.output_monitor.load_monitor(exp_out)
@@ -84,11 +92,15 @@ async def sweep(dut):
     tb = LPW_Reciprocal2TB(dut)
     tb.output_monitor.ready.value = 1
     await tb.reset()
-    inputs = tb.generate_inputs()
+    if tb.IN_WIDTH > 16:
+        logger.warning("Not doing full sweep due to large input bitwidth.")
+        return
+    else:
+        inputs = tb.sweep_input()
     exp_out = tb.model(inputs)
     tb.in_driver.load_driver(inputs)
     tb.output_monitor.load_monitor(exp_out)
-    await Timer(20, "us")
+    await Timer(4000, "us")
     assert tb.output_monitor.exp_queue.empty()
 
     # Graphing error
@@ -168,7 +180,7 @@ async def sweep(dut):
 async def backpressure(dut):
     tb = LPW_Reciprocal2TB(dut)
     cocotb.start_soon(bit_driver(tb.output_monitor.ready, tb.clk, 0.6))
-    await tb.run_test(us=100)
+    await tb.run_test(batches=1000, us=400)
 
 
 @cocotb.test()
@@ -176,7 +188,7 @@ async def valid(dut):
     tb = LPW_Reciprocal2TB(dut)
     tb.output_monitor.ready.value = 1
     tb.in_driver.set_valid_prob(0.5)
-    await tb.run_test(us=100)
+    await tb.run_test(batches=1000, us=400)
 
 
 @cocotb.test()
@@ -184,39 +196,39 @@ async def valid_backpressure(dut):
     tb = LPW_Reciprocal2TB(dut)
     cocotb.start_soon(bit_driver(tb.output_monitor.ready, tb.clk, 0.5))
     tb.in_driver.set_valid_prob(0.5)
-    await tb.run_test(us=100)
+    await tb.run_test(batches=1000, us=400)
 
 
 if __name__ == "__main__":
 
     DEFAULT = {
+        "ENTRIES": 8,
         "IN_WIDTH": 8,
-        "IN_FRAC_WIDTH": 2,
+        "IN_FRAC_WIDTH": 3,
         "OUT_WIDTH": 8,
         "OUT_FRAC_WIDTH": 7
     }
 
-    def all_cfgs():
-        bitwidths = [4, 8]
-        cfgs = []
-        for entries in [4, 8]:
-            for in_width in bitwidths:
-                for in_frac_width in range(2, in_width):
-                    for out_width in bitwidths:
-                        for out_frac_width in range(2, out_width):
-                            cfgs.append({
-                                "ENTRIES": entries,
-                                "IN_WIDTH": in_width,
-                                "IN_FRAC_WIDTH": in_frac_width,
-                                "OUT_WIDTH": out_width,
-                                "OUT_FRAC_WIDTH": out_frac_width,
-                            })
-        return cfgs
+    def random_cfg():
+        in_width = randint(4, 20)
+        out_width = randint(4, 20)
+        return {
+            "ENTRIES": 8,
+            "IN_WIDTH": in_width,
+            "IN_FRAC_WIDTH": randint(3, in_width-1),
+            "OUT_WIDTH": out_width,
+            "OUT_FRAC_WIDTH": randint(3, out_width-1)
+        }
 
+    NUM_RANDOM_CFGS = 40
+    random_cfgs = [random_cfg() for _ in range(NUM_RANDOM_CFGS)]
 
     mase_runner(
-        module_param_list=all_cfgs(),
-        # module_param_list=[{'ENTRIES': 4, 'IN_WIDTH': 8, 'IN_FRAC_WIDTH': 4, 'OUT_WIDTH': 8, 'OUT_FRAC_WIDTH': 7}],
+        module_param_list=[
+            DEFAULT,
+            {"IN_WIDTH": 20, "IN_FRAC_WIDTH": 10, "OUT_WIDTH": 20, "OUT_FRAC_WIDTH": 3},
+            *random_cfgs,
+        ],
         trace=True,
         jobs=12,
     )

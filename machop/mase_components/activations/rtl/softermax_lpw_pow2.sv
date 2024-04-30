@@ -74,26 +74,26 @@ logic result_valid, result_ready;
 // Function to generate LUT (Only used 1/2-bit case)
 function logic [OUT_WIDTH-1:0] pow2_func (real x);
     real res, res_shifted;
-    int res_int;
+    longint res_int;
     res = 2.0 ** x;
 
     // Output cast
-    res_shifted = res * (2 ** OUT_FRAC_WIDTH);
-    res_int = int'(res_shifted);
+    res_shifted = res * (2.0 ** OUT_FRAC_WIDTH);
+    res_int = longint'(res_shifted);
     return OUT_WIDTH'(res_int);
 endfunction
 
 // Function to generate slope variable (m)
 function logic [SLOPE_WIDTH-1:0] slope (real x1, real x2);
     real y1, y2, res, res_shifted;
-    int res_int;
+    longint res_int;
     y1 = 2.0 ** x1;
     y2 = 2.0 ** x2;
     res = (y2 - y1) / (x2 - x1);
 
     // Output cast
-    res_shifted = res * (2 ** SLOPE_FRAC_WIDTH);
-    res_int = int'(res_shifted);
+    res_shifted = res * (2.0 ** SLOPE_FRAC_WIDTH);
+    res_int = longint'(res_shifted);
     return SLOPE_WIDTH'(res_int);
 endfunction
 

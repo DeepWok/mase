@@ -18,15 +18,16 @@ module softermax_global_norm #(
     // Widths
     parameter IN_VALUE_WIDTH = 16,
     parameter IN_VALUE_FRAC_WIDTH = 15,
-    parameter IN_MAX_WIDTH = 8,
-    parameter IN_MAX_FRAC_WIDTH = 4,
+    parameter IN_MAX_WIDTH = 5,
     parameter OUT_WIDTH = 8,
     parameter OUT_FRAC_WIDTH = 7
 ) (
     input  logic clk,
     input  logic rst,
 
+    // in_values: Unsigned fixed-point in range [0, 2)
     input  logic [IN_VALUE_WIDTH-1:0]  in_values [PARALLELISM-1:0],
+    // in_max: Signed integers
     input  logic [IN_MAX_WIDTH-1:0]    in_max,
     input  logic                       in_valid,
     output logic                       in_ready,
@@ -42,13 +43,14 @@ module softermax_global_norm #(
 
 localparam DEPTH = TOTAL_DIM / PARALLELISM;
 
+// Max is integer only
 localparam SUBTRACT_WIDTH = IN_MAX_WIDTH + 1;
-localparam SUBTRACT_FRAC_WIDTH = IN_MAX_FRAC_WIDTH;
 
-localparam ADDER_TREE_WIDTH = $clog2(PARALLELISM) + IN_VALUE_WIDTH;
+localparam ADDER_TREE_IN_WIDTH = 1 + IN_VALUE_WIDTH; // Pad single zero for unsigned
+localparam ADDER_TREE_OUT_WIDTH = $clog2(PARALLELISM) + ADDER_TREE_IN_WIDTH;
 localparam ADDER_TREE_FRAC_WIDTH = IN_VALUE_FRAC_WIDTH;
 
-localparam ACC_WIDTH = $clog2(DEPTH) + ADDER_TREE_WIDTH;
+localparam ACC_WIDTH = $clog2(DEPTH) + ADDER_TREE_OUT_WIDTH;
 localparam ACC_FRAC_WIDTH = ADDER_TREE_FRAC_WIDTH;
 
 localparam RECIP_WIDTH = ACC_WIDTH;
@@ -93,8 +95,8 @@ logic [IN_VALUE_WIDTH-1:0] adjusted_values_out_data [PARALLELISM-1:0];
 logic adjusted_values_in_valid, adjusted_values_in_ready;
 logic adjusted_values_out_valid, adjusted_values_out_ready;
 
-logic [IN_VALUE_WIDTH-1:0] adder_tree_in_data [PARALLELISM-1:0];
-logic [ADDER_TREE_WIDTH-1:0] adder_tree_out_data;
+logic [ADDER_TREE_IN_WIDTH-1:0] adder_tree_in_data [PARALLELISM-1:0];
+logic [ADDER_TREE_OUT_WIDTH-1:0] adder_tree_out_data;
 logic adder_tree_in_valid, adder_tree_in_ready;
 logic adder_tree_out_valid, adder_tree_out_ready;
 
@@ -256,7 +258,9 @@ split2 norm_split (
 );
 
 assign adjusted_values_in_data = shift_out_data;
-assign adder_tree_in_data = shift_out_data;
+for (genvar i = 0; i < PARALLELISM; i++) begin : unsigned_hack
+    assign adder_tree_in_data[i] = {1'b0, shift_out_data[i]};
+end
 
 matrix_fifo #(
     .DATA_WIDTH(IN_VALUE_WIDTH),
@@ -276,7 +280,7 @@ matrix_fifo #(
 
 fixed_adder_tree #(
     .IN_SIZE(PARALLELISM),
-    .IN_WIDTH(IN_VALUE_WIDTH)
+    .IN_WIDTH(ADDER_TREE_IN_WIDTH)
 ) adder_tree (
     .clk(clk),
     .rst(rst),
@@ -290,7 +294,7 @@ fixed_adder_tree #(
 
 fixed_accumulator #(
     .IN_DEPTH(DEPTH),
-    .IN_WIDTH(ADDER_TREE_WIDTH)
+    .IN_WIDTH(ADDER_TREE_OUT_WIDTH)
 ) norm_accumulator (
     .clk(clk),
     .rst(rst),
