@@ -16,8 +16,8 @@ module softermax_global_norm #(
     parameter PARALLELISM = 4,
 
     // Widths
-    parameter IN_VALUE_WIDTH = 8,
-    parameter IN_VALUE_FRAC_WIDTH = 4,
+    parameter IN_VALUE_WIDTH = 16,
+    parameter IN_VALUE_FRAC_WIDTH = 15,
     parameter IN_MAX_WIDTH = 8,
     parameter IN_MAX_FRAC_WIDTH = 4,
     parameter OUT_WIDTH = 8,
@@ -26,14 +26,12 @@ module softermax_global_norm #(
     input  logic clk,
     input  logic rst,
 
-    // Input streaming interface
     input  logic [IN_VALUE_WIDTH-1:0]  in_values [PARALLELISM-1:0],
     input  logic [IN_MAX_WIDTH-1:0]    in_max,
     input  logic                       in_valid,
     output logic                       in_ready,
 
-    // Output streaming interface with pow of 2 values & max
-    output logic [OUT_WIDTH-1:0]       out_data,
+    output logic [OUT_WIDTH-1:0]       out_data [PARALLELISM-1:0],
     output logic                       out_valid,
     input  logic                       out_ready
 );
@@ -53,6 +51,11 @@ localparam ADDER_TREE_FRAC_WIDTH = IN_VALUE_FRAC_WIDTH;
 localparam ACC_WIDTH = $clog2(DEPTH) + ADDER_TREE_WIDTH;
 localparam ACC_FRAC_WIDTH = ADDER_TREE_FRAC_WIDTH;
 
+localparam RECIP_WIDTH = ACC_WIDTH;
+localparam RECIP_FRAC_WIDTH = ACC_FRAC_WIDTH;
+
+localparam MULT_WIDTH = IN_VALUE_WIDTH + RECIP_WIDTH;
+localparam MULT_FRAC_WIDTH = IN_VALUE_FRAC_WIDTH + RECIP_FRAC_WIDTH;
 
 // -----
 // Wires
@@ -66,16 +69,17 @@ logic [IN_MAX_WIDTH-1:0] global_max_out;
 logic global_max_in_valid, global_max_in_ready;
 logic global_max_out_valid, global_max_out_ready;
 
+logic [IN_MAX_WIDTH-1:0] repeat_global_max_out;
+logic repeat_global_max_out_valid, repeat_global_max_out_ready;
+
 logic [IN_VALUE_WIDTH-1:0] local_values_out [PARALLELISM-1:0];
 logic local_values_in_valid, local_values_in_ready;
 logic local_values_out_valid, local_values_out_ready;
 
-logic [SUBTRACT_WIDTH-1:0] subtract_in_data [PARALLELISM-1:0];
-logic [SUBTRACT_WIDTH-1:0] subtract_out_data [PARALLELISM-1:0];
-logic subtract_in_valid;
-logic subtract_in_ready [PARALLELISM-1:0];
-logic subtract_out_valid [PARALLELISM-1:0];
-logic subtract_out_ready;
+logic [SUBTRACT_WIDTH-1:0] subtract_in_data;
+logic [SUBTRACT_WIDTH-1:0] subtract_out_data;
+logic subtract_in_valid, subtract_in_ready;
+logic subtract_out_valid, subtract_out_ready;
 
 logic [IN_VALUE_WIDTH-1:0] shift_in_data [PARALLELISM-1:0];
 logic [IN_VALUE_WIDTH-1:0] shift_out_data [PARALLELISM-1:0];
@@ -97,6 +101,26 @@ logic adder_tree_out_valid, adder_tree_out_ready;
 logic [ACC_WIDTH-1:0] acc_out_data;
 logic acc_out_valid, acc_out_ready;
 
+logic [RECIP_WIDTH-1:0] norm_recip_data;
+logic norm_recip_valid, norm_recip_ready;
+
+logic [RECIP_WIDTH-1:0] repeat_norm_recip_data;
+logic repeat_norm_recip_valid, repeat_orm_recip_ready;
+
+logic [MULT_WIDTH-1:0] mult_in_data [PARALLELISM-1:0];
+logic [MULT_WIDTH-1:0] mult_out_data [PARALLELISM-1:0];
+logic mult_in_valid;
+logic mult_in_ready [PARALLELISM-1:0];
+logic mult_out_valid [PARALLELISM-1:0];
+logic mult_out_ready [PARALLELISM-1:0];
+
+logic [OUT_WIDTH-1:0] mult_cast_data [PARALLELISM-1:0];
+
+logic [OUT_WIDTH-1:0] out_reg_data [PARALLELISM-1:0];
+logic out_reg_valid [PARALLELISM-1:0];
+logic out_reg_ready;
+
+
 // -----
 // Modules
 // -----
@@ -116,7 +140,7 @@ splitn #(
 
 fifo #(
     .DATA_WIDTH(IN_MAX_WIDTH),
-    .SIZE(DEPTH + 4) // TODO: resize +1 ?
+    .SIZE(4*DEPTH) // TODO: resize +1 ?
 ) local_max_buffer (
     .clk(clk),
     .rst(rst),
@@ -144,11 +168,26 @@ comparator_accumulator #(
     .out_ready(global_max_out_ready)
 );
 
+repeat_circular_buffer #(
+    .DATA_WIDTH(IN_MAX_WIDTH),
+    .REPEAT(DEPTH),
+    .SIZE(1)
+) global_max_repeater (
+    .clk(clk),
+    .rst(rst),
+    .in_data(global_max_out),
+    .in_valid(global_max_out_valid),
+    .in_ready(global_max_out_ready),
+    .out_data(repeat_global_max_out),
+    .out_valid(repeat_global_max_out_valid),
+    .out_ready(repeat_global_max_out_ready)
+);
+
 matrix_fifo #(
     .DATA_WIDTH(IN_VALUE_WIDTH),
     .DIM0(PARALLELISM),
     .DIM1(1),
-    .FIFO_SIZE(DEPTH + 10) // TODO: resize?
+    .FIFO_SIZE(4*DEPTH) // TODO: resize?
 ) local_values_buffer (
     .clk(clk),
     .rst(rst),
@@ -162,32 +201,29 @@ matrix_fifo #(
 
 
 join2 subtract_join (
-    .data_in_valid({global_max_out_valid, local_max_out_valid}),
-    .data_in_ready({global_max_out_ready, local_max_out_ready}),
+    .data_in_valid({repeat_global_max_out_valid, local_max_out_valid}),
+    .data_in_ready({repeat_global_max_out_ready, local_max_out_ready}),
     .data_out_valid(subtract_in_valid),
-    .data_out_ready(subtract_in_ready[0])
+    .data_out_ready(subtract_in_ready)
 );
 
-// Batched subtract
-for (genvar i = 0; i < PARALLELISM; i++) begin : subtract
-    assign subtract_in_data[i] = $signed(global_max_out) - $signed(local_max_out[i]);
+assign subtract_in_data = $signed(repeat_global_max_out) - $signed(local_max_out);
 
-    skid_buffer #(
-        .DATA_WIDTH(SUBTRACT_WIDTH)
-    ) sub_reg (
-        .clk(clk),
-        .rst(rst),
-        .data_in(subtract_in_data[i]),
-        .data_in_valid(subtract_in_valid),
-        .data_in_ready(subtract_in_ready[i]),
-        .data_out(subtract_out_data[i]),
-        .data_out_valid(subtract_out_valid[i]),
-        .data_out_ready(subtract_out_ready)
-    );
-end
+skid_buffer #(
+    .DATA_WIDTH(SUBTRACT_WIDTH)
+) sub_reg (
+    .clk(clk),
+    .rst(rst),
+    .data_in(subtract_in_data),
+    .data_in_valid(subtract_in_valid),
+    .data_in_ready(subtract_in_ready),
+    .data_out(subtract_out_data),
+    .data_out_valid(subtract_out_valid),
+    .data_out_ready(subtract_out_ready)
+);
 
 join2 shift_join (
-    .data_in_valid({local_values_out_valid, subtract_out_valid[0]}),
+    .data_in_valid({local_values_out_valid, subtract_out_valid}),
     .data_in_ready({local_values_out_ready, subtract_out_ready}),
     .data_out_valid(shift_in_valid),
     .data_out_ready(shift_in_ready[0])
@@ -196,11 +232,11 @@ join2 shift_join (
 
 // Batched shift
 for (genvar i = 0; i < PARALLELISM; i++) begin : shift
-    assign shift_in_data[i] = local_values_out[i] >> subtract_out_data[i];
+    assign shift_in_data[i] = local_values_out[i] >> subtract_out_data;
 
     skid_buffer #(
-        .DATA_WIDTH(SUBTRACT_WIDTH)
-    ) sub_reg (
+        .DATA_WIDTH(IN_VALUE_WIDTH)
+    ) shift_reg (
         .clk(clk),
         .rst(rst),
         .data_in(shift_in_data[i]),
@@ -226,7 +262,7 @@ matrix_fifo #(
     .DATA_WIDTH(IN_VALUE_WIDTH),
     .DIM0(PARALLELISM),
     .DIM1(1),
-    .FIFO_SIZE(DEPTH + 32) // TODO: resize?
+    .FIFO_SIZE(4*DEPTH) // TODO: resize?
 ) adjusted_values_buffer (
     .clk(clk),
     .rst(rst),
@@ -266,23 +302,90 @@ fixed_accumulator #(
     .data_out_ready(acc_out_ready)
 );
 
-
-// lpw reciprocal
 softermax_lpw_reciprocal #(
     .ENTRIES(8),
-    .IN_WIDTH(),
-    .IN_FRAC_WIDTH(),
-    .OUT_WIDTH(),
-    .OUT_FRAC_WIDTH()
+    .IN_WIDTH(ACC_WIDTH),
+    .IN_FRAC_WIDTH(ACC_FRAC_WIDTH),
+    .OUT_WIDTH(RECIP_WIDTH),
+    .OUT_FRAC_WIDTH(RECIP_FRAC_WIDTH)
 ) norm_recip (
     .clk(clk),
     .rst(rst),
-    .in_data(),
-    .in_valid(),
-    .in_ready(),
-    .out_data(),
-    .out_valid(),
-    .out_ready()
-)
+    .in_data(acc_out_data),
+    .in_valid(acc_out_valid),
+    .in_ready(acc_out_ready),
+    .out_data(norm_recip_data),
+    .out_valid(norm_recip_valid),
+    .out_ready(norm_recip_ready)
+);
+
+repeat_circular_buffer #(
+    .DATA_WIDTH(RECIP_WIDTH),
+    .REPEAT(DEPTH),
+    .SIZE(1)
+) repeat_norm_recip (
+    .clk(clk),
+    .rst(rst),
+    .in_data(norm_recip_data),
+    .in_valid(norm_recip_valid),
+    .in_ready(norm_recip_ready),
+    .out_data(repeat_norm_recip_data),
+    .out_valid(repeat_norm_recip_valid),
+    .out_ready(repeat_norm_recip_ready)
+);
+
+join2 mult_join (
+    .data_in_valid({adjusted_values_out_valid, repeat_norm_recip_valid}),
+    .data_in_ready({adjusted_values_out_ready, repeat_norm_recip_ready}),
+    .data_out_valid(mult_in_valid),
+    .data_out_ready(mult_in_ready[0])
+);
+
+// Batched mult & cast
+for (genvar i = 0; i < PARALLELISM; i++) begin : output_mult_cast
+    assign mult_in_data[i] = adjusted_values_out_data[i] * repeat_norm_recip_data;
+
+    skid_buffer #(
+        .DATA_WIDTH(MULT_WIDTH)
+    ) mult_reg (
+        .clk(clk),
+        .rst(rst),
+        .data_in(mult_in_data[i]),
+        .data_in_valid(mult_in_valid),
+        .data_in_ready(mult_in_ready[i]),
+        .data_out(mult_out_data[i]),
+        .data_out_valid(mult_out_valid[i]),
+        .data_out_ready(mult_out_ready[0])
+    );
+
+    fixed_signed_cast #(
+        .IN_WIDTH(MULT_WIDTH),
+        .IN_FRAC_WIDTH(MULT_FRAC_WIDTH),
+        .OUT_WIDTH(OUT_WIDTH),
+        .OUT_FRAC_WIDTH(OUT_FRAC_WIDTH),
+        .SYMMETRIC(0),
+        .ROUND_FLOOR(1)
+    ) output_cast (
+        .in_data(mult_out_data[i]),
+        .out_data(mult_cast_data[i])
+    );
+
+    skid_buffer #(
+        .DATA_WIDTH(MULT_WIDTH)
+    ) out_reg (
+        .clk(clk),
+        .rst(rst),
+        .data_in(mult_cast_data[i]),
+        .data_in_valid(mult_out_valid[i]),
+        .data_in_ready(mult_out_ready[i]),
+        .data_out(out_reg_data[i]),
+        .data_out_valid(out_reg_valid[i]),
+        .data_out_ready(out_reg_ready)
+    );
+end
+
+assign out_data = out_reg_data;
+assign out_valid = out_reg_valid[0];
+assign out_reg_ready = out_ready;
 
 endmodule

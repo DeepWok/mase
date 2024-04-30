@@ -23,17 +23,28 @@ class StreamDriver(Driver):
         assert prob >= 0.0 and prob <= 1.0
         self.valid_prob = prob
 
-    async def _driver_send(self, data) -> None:
+    async def _driver_send(self, transaction) -> None:
         while True:
             await RisingEdge(self.clk)
-            self.data.value = data
+            if type(self.data) == tuple:
+                # Drive multiple data bus
+                for wire, val in zip(self.data, transaction):
+                    wire.value = val
+            else:
+                # Drive single data
+                self.data.value = transaction
             if random.random() > self.valid_prob:
                 self.valid.value = 0
                 continue  # Try roll random valid again at next clock
             self.valid.value = 1
             await ReadOnly()
             if self.ready.value == 1:
-                self.log.debug("Sent %s" % data)
+                if type(self.data) == tuple:
+                    # Drive multiple data bus
+                    for t in transaction:
+                        self.log.debug("Sent %s" % t)
+                else:
+                    self.log.debug("Sent %s" % transaction)
                 break
 
         if self.send_queue.empty():
@@ -83,6 +94,15 @@ class StreamMonitor(Monitor):
                     )
                 )
                 assert False, "Test Failed!"
+            else:
+                self.log.debug(
+                    "Passed | %s: \nGot \n%s, \nExpected \n%s"
+                    % (
+                        self.name if self.name != None else "Unnamed StreamMonitor",
+                        got,
+                        exp,
+                    )
+                )
 
         if self.check:
             if type(self.data) == tuple:

@@ -1,8 +1,7 @@
 #!/usr/bin/env python3
 
-import os, logging
+import logging
 from random import randint
-from pathlib import Path
 
 import torch
 
@@ -12,26 +11,23 @@ from mase_cocotb.utils import bit_driver, sign_extend_t, sign_extend, signed_to_
 from mase_cocotb.interfaces.streaming import (
     StreamDriver,
     StreamMonitor,
-    ErrorThresholdStreamMonitor,
 )
 
-from mase_components.common.test.comparator_tree_tb import ComparatorTreeTB
-from mase_components.activations.test.softermax_lpw_pow2_tb import LPW_Pow2TB
+from mase_components.cast.test.fixed_signed_cast_tb import _fixed_signed_cast_model
 
 import cocotb
 from cocotb.triggers import *
 
 logger = logging.getLogger("testbench")
-logger.setLevel("DEBUG")
+logger.setLevel("INFO")
 
 
 class SoftermaxLocalWindowTB(Testbench):
     def __init__(self, dut) -> None:
         super().__init__(dut, dut.clk, dut.rst)
         self.assign_self_params([
-            "PARALLELISM",
-            "IN_WIDTH", "IN_FRAC_WIDTH", "OUT_WIDTH", "OUT_FRAC_WIDTH",
-            "SUBTRACT_WIDTH", "SUBTRACT_FRAC_WIDTH"
+            "PARALLELISM", "IN_WIDTH", "IN_FRAC_WIDTH", "OUT_WIDTH", "OUT_FRAC_WIDTH",
+            "MAX_WIDTH", "SUBTRACT_WIDTH", "SUBTRACT_FRAC_WIDTH"
         ])
 
         # Driver/Monitor
@@ -46,40 +42,55 @@ class SoftermaxLocalWindowTB(Testbench):
         return [[randint(0, 2**self.IN_WIDTH-1) for _ in range(self.PARALLELISM)]
                 for _ in range(batches)]
 
-    def _lpw_pow2_model(self, inputs):
-        """
-        Copy over model for lpw_pow2 since verilator does not allow acessing
-        signals/modules which are in generate block in cocotb.
-        https://github.com/cocotb/cocotb/issues/1884
-        """
-        in_t = torch.tensor(inputs)
-        num = sign_extend_t(in_t, self.SUBTRACT_WIDTH) / (2 ** self.SUBTRACT_FRAC_WIDTH)
-        res = 2 ** num
-        res = (res * 2**self.OUT_FRAC_WIDTH).int()
-        res = torch.clamp(res, 0, 2**self.OUT_WIDTH-1)
-        return res
+    # def _lpw_pow2_model(self, inputs):
+    #     """
+    #     Copy over model for lpw_pow2 since verilator does not allow acessing
+    #     signals/modules which are in generate block in cocotb.
+    #     https://github.com/cocotb/cocotb/issues/1884
+    #     """
+    #     in_t = torch.tensor(inputs)
+    #     num = sign_extend_t(in_t, self.SUBTRACT_WIDTH) / (2 ** self.SUBTRACT_FRAC_WIDTH)
+    #     res = 2 ** num
+    #     res = (res * 2**self.OUT_FRAC_WIDTH).int()
+    #     res = torch.clamp(res, 0, 2**self.OUT_WIDTH-1)
+    #     return res
 
-    def _comparator_tree_model(self, inputs):
-        inputs = [[sign_extend(x, self.IN_WIDTH) for x in l] for l in inputs]
-        exp_out = [max(l) for l in inputs]
-        exp_out = [signed_to_unsigned(x, self.IN_WIDTH) for x in exp_out]
-        return exp_out
+    # def _comparator_tree_model(self, inputs):
+    #     inputs = [[sign_extend(x, self.IN_WIDTH) for x in l] for l in inputs]
+    #     exp_out = [max(l) for l in inputs]
+    #     exp_out = [signed_to_unsigned(x, self.IN_WIDTH) for x in exp_out]
+    #     return exp_out
 
     def model(self, inputs):
-        exp_max = self._comparator_tree_model(inputs)
-        subtracted_vals = []
-        for m, l in zip(exp_max, inputs):
-            subtracted_vals.append(
-                [sign_extend(x, self.IN_WIDTH) - sign_extend(m, self.IN_WIDTH)
-                 for x in l]
-            )
-        exp_vals = self._lpw_pow2_model(subtracted_vals).tolist()
+        sign_ext = sign_extend_t(
+            torch.tensor(inputs, dtype=torch.float),
+            bits=self.IN_WIDTH
+        )
+        float_inputs = sign_ext / (2 ** self.IN_FRAC_WIDTH)
+        # float_inputs = torch.tensor([[-31.5, -32]])
+        rounded_inputs_float, rounded_inputs_uint = _fixed_signed_cast_model(
+            float_inputs, self.MAX_WIDTH, 0, False, "floor"
+        )
+        local_max = rounded_inputs_float.max(dim=1, keepdim=True).values
+        local_max_uint = signed_to_unsigned(local_max.int(), self.MAX_WIDTH)
 
-        # logger.debug("Inputs: %s" % inputs)
-        # logger.debug("Max: %s" % exp_max)
-        # logger.debug("Inputs (sign ext): %s" % [[sign_extend(x, self.IN_WIDTH) for x in l] for l in inputs])
-        # logger.debug("Max (sign ext): %s" % [sign_extend(x, self.IN_WIDTH) for x in exp_max])
-        # logger.debug("Values: %s" % exp_vals)
+        difference = float_inputs - local_max
+        pow2 = 2 ** difference
+        res = torch.clamp((pow2 * 2**self.OUT_FRAC_WIDTH).int(), 0, 2**self.OUT_WIDTH-1)
+
+        logger.debug("float_inputs: %s" % float_inputs)
+        logger.debug("rounded_inputs_float: %s" % rounded_inputs_float)
+        logger.debug("local_max: %s" % local_max)
+        logger.debug("local_max_uint: %s" % local_max_uint)
+        logger.debug("difference: %s" % difference)
+        logger.debug("pow2: %s" % pow2)
+        logger.debug("res: %s" % res)
+
+        exp_vals = res.tolist()
+        exp_max = local_max_uint.tolist()
+
+        logger.debug("exp_vals: %s" % exp_vals)
+        logger.debug("exp_max: %s" % exp_max)
 
         return list(zip(exp_vals, exp_max))
 
@@ -148,7 +159,7 @@ if __name__ == "__main__":
     def parallelism_cfgs(cfglist: list):
         out = []
         for cfg in cfglist:
-            for d in [1, 2, 4, 16]:
+            for d in [2, 4, 16]:
                 out.append({**cfg, "PARALLELISM": d})
         return out
 
@@ -158,4 +169,5 @@ if __name__ == "__main__":
     mase_runner(
         module_param_list=cfgs,
         trace=True,
+        jobs=4,
     )

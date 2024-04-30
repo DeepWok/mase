@@ -56,7 +56,7 @@ localparam SLOPE_WIDTH = 1 + SLOPE_FRAC_WIDTH;
 localparam SLOPE_FRAC_WIDTH = OUT_WIDTH;
 
 // Mult: mx
-localparam MULT_WIDTH = IN_WIDTH + SLOPE_WIDTH;
+localparam MULT_WIDTH = RANGE_REDUCED_WIDTH + SLOPE_WIDTH;
 localparam MULT_FRAC_WIDTH = RANGE_REDUCED_FRAC_WIDTH + SLOPE_FRAC_WIDTH;
 
 // Intercept (need to match mx frac): c

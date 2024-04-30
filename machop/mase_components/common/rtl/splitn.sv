@@ -14,12 +14,9 @@ module splitn #(
     input  logic [N-1:0] data_out_ready
 );
 
-for (genvar i = 0; i < N; i++) begin
-    logic [N-1:0] mask = 1 << i;
-    logic all_others_are_ready = &(data_out_ready | mask);
-    assign data_out_valid[i] = data_in_valid && all_others_are_ready;
-end
-
+// for (genvar i = 0; i < N; i++) begin : handshake
+assign data_out_valid = {N{data_in_valid && data_in_ready}};
+// end
 assign data_in_ready = &data_out_ready;
 
 endmodule
