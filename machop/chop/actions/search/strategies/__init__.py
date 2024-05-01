@@ -1,11 +1,10 @@
-# from .rl import StrategyRL
 from .optuna import SearchStrategyOptuna
 from .zero_cost import SearchStrategyZeroCost
 from .base import SearchStrategyBase
-
+from .rl import SearchStrategyRL
 
 SEARCH_STRATEGY_MAP = {
-    # "rl": StrategyRL,
+    "rl": SearchStrategyRL,
     "optuna": SearchStrategyOptuna,
     "zero_cost": SearchStrategyZeroCost,
 }

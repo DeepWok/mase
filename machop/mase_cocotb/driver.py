@@ -9,15 +9,20 @@ from cocotb.triggers import *
 class Driver:
     """Simplified version of cocotb_bus.drivers.Driver"""
 
-    def __init__(self):
+    def __init__(self, name=None):
         self._pending = Event(name="Driver._pending")
         self.send_queue = Queue()
+        self.name = name
 
         if not hasattr(self, "log"):
-            self.log = SimLog("cocotb.driver.%s" % (type(self).__qualname__))
+            self.log = SimLog(
+                "cocotb.driver.%s" % (type(self).__qualname__)
+                if self.name == None
+                else self.name
+            )
 
         # Create an independent coroutine which can send stuff
-        self._thread = cocotb.start_soon(self._send_thread())
+        self._thread = cocotb.scheduler.add(self._send_thread())
 
     def kill(self):
         if self._thread:
@@ -46,7 +51,7 @@ class Driver:
 
     def load_driver(self, tensor):
         for beat in tensor:
-            self.log.info(f"Loaded beat {beat} to driver {self.__class__.__name__}")
+            self.log.debug(f"Loaded beat {beat} to driver {self.__class__.__name__}")
             self.append(beat)
 
     @coroutine

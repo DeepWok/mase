@@ -1,4 +1,5 @@
 from os import path, getenv
+import logging
 from shutil import rmtree
 from pathlib import Path
 import re
@@ -8,6 +9,9 @@ import torch
 
 from cocotb.runner import get_runner, get_results
 from mase_components.deps import MASE_HW_DEPS
+
+logger = logging.getLogger("mase_runner")
+logger.setLevel("INFO")
 
 
 def mase_runner(
@@ -38,20 +42,20 @@ def mase_runner(
 
     SIM = getenv("SIM", "verilator")
 
-    build_dir = group_path.joinpath(f"test/build/{module}")
-    print(build_dir)
-    if path.exists(build_dir):
-        rmtree(build_dir)
-
     deps = MASE_HW_DEPS[f"{group}/{module}"]
 
     total_tests = 0
     total_fail = 0
 
     for i, module_params in enumerate(module_param_list):
-        print("##########################################")
-        print(f"#### TEST {i} : {module_params}")
-        print("##########################################")
+        print("# ---------------------------------------")
+        print(f"# Test {i+1}/{len(module_param_list)}")
+        print("# ---------------------------------------")
+        print(f"# Parameters:")
+        print(f"# - {'Test Index'}: {i}")
+        for k, v in module_params.items():
+            print(f"# - {k}: {v}")
+        print("# ---------------------------------------")
         test_work_dir = group_path.joinpath(f"test/build/{module}/test_{i}")
         runner = get_runner(SIM)
         runner.build(
@@ -71,9 +75,7 @@ def mase_runner(
                 "--stats",
                 # Signal trace in dump.fst
                 *(["--trace-fst", "--trace-structs"] if trace else []),
-                "--trace",
-                # "-trace-depth",
-                "-O0",
+                "-O2",
                 "-build-jobs",
                 "8",
                 "-Wno-fatal",
@@ -84,19 +86,68 @@ def mase_runner(
             parameters=module_params,
             build_dir=test_work_dir,
         )
-        runner.test(
+        results_file = runner.test(
             hdl_toplevel=module,
-            test_module=module + "_tb",
+            test_module=f"mase_components.{group}.test.{module}_tb",
             seed=seed,
             results_xml="results.xml",
         )
-        num_tests, fail = get_results(test_work_dir.joinpath("results.xml"))
+        logger.info(f"Results are at {results_file}")
+        num_tests, fail = get_results(results_file)
         total_tests += num_tests
         total_fail += fail
 
     print("TEST RESULTS")
-    print("    PASSED:", total_tests - total_fail)
-    print("    FAILED:", total_fail)
-    print("    NUM TESTS:", total_tests)
+    print("    PASSED: %d" % (total_tests - total_fail))
+    print("    FAILED: %d" % (total_fail))
+    print("    NUM TESTS: %d" % (total_tests))
 
     return total_fail
+
+
+def simulate_pass(
+    project_dir: Path,
+    module_params: dict[str, Any] = {},
+    extra_build_args: list[str] = [],
+    trace: bool = False,
+):
+    rtl_dir = project_dir / "hardware" / "rtl"
+    sim_dir = project_dir / "hardware" / "sim"
+    test_dir = project_dir / "hardware" / "test" / "mase_top_tb"
+
+    SIM = getenv("SIM", "verilator")
+
+    runner = get_runner(SIM)
+    runner.build(
+        verilog_sources=[rtl_dir / "top.sv"],
+        includes=[rtl_dir],
+        hdl_toplevel="top",
+        build_args=[
+            # Verilator linter is overly strict.
+            # Too many errors
+            # These errors are in later versions of verilator
+            "-Wno-GENUNNAMED",
+            "-Wno-WIDTHEXPAND",
+            "-Wno-WIDTHTRUNC",
+            # Simulation Optimisation
+            "-Wno-UNOPTFLAT",
+            # Signal trace in dump.fst
+            *(["--trace-fst", "--trace-structs"] if trace else []),
+            "-prof-c",
+            "--stats",
+            "-O2",
+            "-build-jobs",
+            "8",
+            "-Wno-fatal",
+            "-Wno-lint",
+            "-Wno-style",
+            *extra_build_args,
+        ],
+        parameters=module_params,
+        build_dir=sim_dir,
+    )
+    runner.test(
+        hdl_toplevel="top",
+        test_module="test",
+        results_xml="results.xml",
+    )

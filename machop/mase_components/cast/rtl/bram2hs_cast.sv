@@ -1,4 +1,5 @@
 `timescale 1 ns / 1 ps
+/* verilator lint_off UNUSEDSIGNAL */
 module bram2hs_cast #(
     parameter OUT_SIZE   = 8,
     parameter OUT_WIDTH  = 8,
@@ -22,15 +23,19 @@ module bram2hs_cast #(
     output in_ce
 );
 
+  // ! TO DO: assign properly
+  assign data_out_ready = '0;
+
   logic [OUT_WIDTH - 1:0] q0;
   logic ce1;
   logic we1;
   logic [ADDR_WIDTH - 1:0] address1;
   logic [OUT_WIDTH - 1:0] d1;
+  assign d1 = '0;
   logic [OUT_WIDTH - 1:0] q1;
 
   // 1-bit wider so OUT_DEPTH also fits.
-  logic [ADDR_WIDTH-1:0] address_counter;
+  logic [ ADDR_WIDTH-1:0] address_counter;
   // 1-bit wider so OUT_DEPTH also fits.
   localparam COUNTER_WIDTH = $clog2(OUT_SIZE);
   logic [COUNTER_WIDTH-1:0] data_counter;

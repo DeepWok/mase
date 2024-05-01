@@ -17,9 +17,9 @@
 // Additional Comments:
 // 
 //////////////////////////////////////////////////////////////////////////////////
-
+`timescale 1ns / 1ps
 module systolic_module_output_stationary #(
-    parameter PRECISION = top_pkg::FLOAT_32,
+    parameter PRECISION = 0,
     parameter FLOAT_WIDTH = 32,
     parameter DATA_WIDTH = 32,
     parameter MATRIX_N = 4
@@ -44,8 +44,8 @@ module systolic_module_output_stationary #(
     input logic                  bias_valid,
     input logic [DATA_WIDTH-1:0] bias,
 
-    input logic                                             activation_valid,
-    input logic [$bits(top_pkg::ACTIVATION_FUNCTION_e)-1:0] activation,
+    input logic       activation_valid,
+    input logic [7:0] activation,
 
     input logic shift_valid,
 
@@ -82,7 +82,7 @@ module systolic_module_output_stationary #(
   for (genvar row = 0; row < MATRIX_N; row++) begin : rows_gen
     for (genvar col = 0; col < MATRIX_N; col++) begin : cols_gen
 
-      processing_element #(
+      processing_element_output_stationary #(
           .PRECISION  (PRECISION),
           .DATA_WIDTH (DATA_WIDTH),
           .FLOAT_WIDTH(FLOAT_WIDTH)

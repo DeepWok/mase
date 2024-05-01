@@ -2,9 +2,9 @@ name: Torch-MLIR Test
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [ "main*" ]
   pull_request:
-    branches: [ "main" ]
+    branches: [ "main*" ]
   workflow_dispatch:
     logLevel:
       description: 'Log level'
@@ -21,7 +21,7 @@ jobs:
   torch-mlir-test:
     runs-on: ubuntu-latest
     container:
-      image: deepwok/mase-docker:latest
+      image: deepwok/mase-docker-cpu:latest
     steps:
 
       # Clone the MASE repo and its submodules.

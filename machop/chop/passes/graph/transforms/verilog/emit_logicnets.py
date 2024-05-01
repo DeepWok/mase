@@ -4,20 +4,9 @@ import shutil
 
 from chop.passes.graph.utils import vf, v2p, get_module_by_name, init_project
 from .logicnets.emit_linear import LogicNetsLinearVerilog
-from .internal_file_dependences import INTERNAL_RTL_DEPENDENCIES
+from .util import include_ip_to_project
 
 logger = logging.getLogger(__name__)
-
-
-def include_ip_to_project(node, rtl_dir):
-    """
-    Copy internal files to the project
-    """
-    mase_op = node.meta["mase"].parameters["common"]["mase_op"]
-    assert (
-        mase_op in INTERNAL_RTL_DEPENDENCIES
-    ), f"Cannot find mase op {mase_op} in internal components"
-    return INTERNAL_RTL_DEPENDENCIES[mase_op]
 
 
 def emit_logicnets_transform_pass(graph, pass_args={}):
@@ -42,7 +31,7 @@ def emit_logicnets_transform_pass(graph, pass_args={}):
             node_name = vf(node.name)
             emitter = LogicNetsLinearVerilog(node.meta["mase"].module)
             emitter.gen_layer_verilog(node_name, rtl_dir)
-            # files = include_ip_to_project(node, rtl_dir)
+            # files = include_ip_to_project(node)
             # rtl_dependencies = _append(rtl_dependencies, files)
         elif "INTERNAL_HLS" in node.meta["mase"].parameters["hardware"]["toolchain"]:
             assert False, "Intenral HLS not implemented yet."
