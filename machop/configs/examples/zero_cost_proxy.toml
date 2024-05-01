@@ -1,0 +1,31 @@
+# basics
+model = "jsc-tiny"
+dataset = "jsc"
+task = "cls"
+
+accelerator = "cpu"
+project = "zero_cost_proxy_test"
+
+[search.search_space]
+name = "graph/zero_cost_proxy"
+
+[search.search_space.zc]
+seed = 2
+benchmark = 'nasbench201'
+dataset = 'ImageNet16-120'
+calculate_proxy = false
+num_archs_train = 2000
+num_archs_test = 2000
+zc_proxies = ['epe_nas', 'fisher', 'grad_norm', 'grasp', 'jacov', 'l2_norm', 'nwot', 'plain', 'snip', 'synflow', 'zen', 'flops', 'params']
+
+[search.strategy]
+name = "zero_cost"
+
+[search.strategy.setup]
+n_jobs = 4
+n_trials = 100
+timeout = 20000
+sampler = "tpe"
+direction = "minimize"
+weight_lower_limit = 0
+weight_upper_limit = 30

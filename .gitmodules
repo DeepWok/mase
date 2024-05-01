@@ -7,3 +7,6 @@
 [submodule "machop/third-party/peft"]
 	path = machop/third-party/peft
 	url = git@github.com:huggingface/peft.git
+[submodule "NASLib"]
+	path = NASLib
+	url = git@github.com:JaredJoss/NASLib.git
