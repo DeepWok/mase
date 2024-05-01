@@ -38,7 +38,7 @@ class LPW_Reciprocal2TB(Testbench):
         )
 
         # Specify Error Threshold
-        self.percentage_error = 0.05
+        self.percentage_error = 0.05  # 5%
         self.error_threshold_bits = ceil(self.percentage_error * (2**self.OUT_WIDTH))
 
         self.output_monitor = ErrorThresholdStreamMonitor(
