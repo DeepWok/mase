@@ -13,12 +13,9 @@ import torch.optim as optim
 from torch.utils.data import Dataset, DataLoader
 from xgboost import XGBRegressor
 import numpy as np
-
-from .models import ZeroCostLinearModel, ZeroCostNonLinearModel
 from .utils import sample_arch_dataset, evaluate_predictions, eval_zcp
 
 logger = logging.getLogger(__name__)
-
 
 DEFAULT_ZERO_COST_PROXY_CONFIG = {
     "config": {
@@ -27,12 +24,8 @@ DEFAULT_ZERO_COST_PROXY_CONFIG = {
         "num_archs_train": 2000,
         "num_archs_test": 2000,
         "calculate_proxy": False,
-        "ensemble_model": "nonlinear",
         "loss_fn": "mae",
         "optimizer": "adam",
-        "batch_size": 4,
-        "learning_rate": 0.02,
-        "epochs": 30,
         "zc_proxies": [
             "epe_nas",
             "fisher",
@@ -63,150 +56,6 @@ class ZeroCostProxy(SearchSpaceBase):
         self._node_info = None
         self.default_config = DEFAULT_ZERO_COST_PROXY_CONFIG
         self.zcp_results = []
-        self.custom_ensemble_metrics = {}
-        self.xgboost_metrics = {}
-
-    def train_zc_ensemble_model(
-        self, inputs_train, targets_train, inputs_test, targets_test
-    ):
-        logger.info("Training Custom Neural Network")
-
-        class CustomDataset(Dataset):
-            def __init__(self, inputs, targets):
-                self.inputs = inputs
-                self.targets = targets
-
-            def __len__(self):
-                return len(self.inputs)
-
-            def __getitem__(self, idx):
-                return self.inputs[idx], self.targets[idx]
-
-        # Convert lists to PyTorch tensors
-        inputs_train_tensor = torch.tensor(inputs_train, dtype=torch.float32)
-        targets_train_tensor = torch.tensor(targets_train, dtype=torch.float32).view(
-            -1, 1
-        )
-        inputs_test_tensor = torch.tensor(inputs_test, dtype=torch.float32)
-        targets_test_tensor = torch.tensor(targets_test, dtype=torch.float32).view(
-            -1, 1
-        )
-
-        # Create dataset instances
-        train_dataset = CustomDataset(inputs_train_tensor, targets_train_tensor)
-        test_dataset = CustomDataset(inputs_test_tensor, targets_test_tensor)
-
-        batch_size = self.config["zc"]["batch_size"]
-
-        train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
-        test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
-
-        ensemble_model = self.config["zc"]["ensemble_model"]
-        input_size = len(inputs_train[0])
-        try:
-            if ensemble_model == "linear":
-                model = ZeroCostLinearModel(input_size)
-            elif ensemble_model == "nonlinear":
-                model = ZeroCostNonLinearModel(input_size)
-        except:
-            raise ValueError(
-                f"Unknown model type: {ensemble_model}. Has to be one of linear or nonlinear"
-            )
-
-        loss = self.config["zc"]["loss_fn"]
-        try:
-            if loss == "mse":
-                criterion = nn.MSELoss()
-            elif loss == "mae":
-                criterion = nn.L1Loss()
-            elif loss == "huber":
-                criterion = nn.SmoothL1Loss()
-        except:
-            raise ValueError(
-                f"Unknown criterion type: {loss}. Has to be one of mse, mae or huber"
-            )
-
-        opt = self.config["zc"]["optimizer"]
-        lr = self.config["zc"]["learning_rate"]
-
-        try:
-            if opt == "adam":
-                optimizer = optim.Adam(model.parameters(), lr=lr)
-            elif opt == "adamW":
-                optimizer = optim.AdamW(model.parameters(), lr=lr)
-            elif opt == "rmsProp":
-                optimizer = optim.RMSprop(model.parameters(), lr=lr)
-        except:
-            raise ValueError(
-                f"Unknown optimizer type: {opt}. Has to be one of adam, adamW or rmsProp"
-            )
-
-        optimizer = optim.Adam(model.parameters(), lr=lr)
-
-        epochs = self.config["zc"]["epochs"]
-        best_test_loss = float("inf")  # Initialize best test loss to a high value
-        best_model_state = None  # To store the best model state
-
-        for epoch in range(epochs):
-            model.train()
-            running_loss_train = 0.0
-            for inputs_batch, targets_batch in train_loader:
-                optimizer.zero_grad()
-                outputs_train = model(inputs_batch)
-                loss_train = criterion(outputs_train, targets_batch)
-                loss_train.backward()
-                optimizer.step()
-                running_loss_train += loss_train.item() * inputs_batch.size(0)
-
-            epoch_loss_train = running_loss_train / len(train_loader.dataset)
-
-            # Evaluation mode (no gradients)
-            model.eval()
-            running_loss_test = 0.0
-            with torch.no_grad():
-                for inputs_batch, targets_batch in test_loader:
-                    outputs_test = model(inputs_batch)
-                    loss_test = criterion(outputs_test, targets_batch)
-                    running_loss_test += loss_test.item() * inputs_batch.size(0)
-
-            epoch_loss_test = running_loss_test / len(test_loader.dataset)
-
-            # Check if this is the best model based on test loss and update accordingly
-            if epoch_loss_test < best_test_loss:
-                best_test_loss = epoch_loss_test
-                best_model_state = (
-                    model.state_dict().copy()
-                )  # Save a copy of the best model state
-
-        # After training, load the best model state back into your model
-        model.load_state_dict(best_model_state)
-
-        return model
-
-    def test_zc_ensemble_model(self, model, inputs_test, ytest):
-        model.eval()
-        predicted_accuracies = []
-        with torch.no_grad():  # No need to track gradients
-            for i in range(
-                len(inputs_test)
-            ):  # Assuming you want to use all test inputs
-                predicted_accuracy = model(
-                    torch.Tensor(inputs_test[i])
-                )  # Add batch dimension
-                predicted_accuracies.append(predicted_accuracy.item())
-
-        self.custom_ensemble_metrics = evaluate_predictions(ytest, predicted_accuracies)
-
-    def get_model_inputs(self, dataset, archs, zc_proxies):
-        inputs = []
-        for arch in archs:
-            inputs.append(
-                [
-                    dataset[str(arch)].get(metric_name, 0)["score"]
-                    for metric_name in zc_proxies
-                ]
-            )
-        return inputs
 
     def calculate_zc(self, xtrain, xtest, ytrain, ytest, zc_api):
         # Create configs required for get_train_val_loaders
@@ -321,25 +170,4 @@ class ZeroCostProxy(SearchSpaceBase):
         xtrain, ytrain, _ = train_sample
         xtest, ytest, _ = test_sample
 
-        # prepare the inputs and targets based on the modified combined_data_list
-        inputs_train = self.get_model_inputs(
-            zc_api, xtrain, self.config["zc"]["zc_proxies"]
-        )
-        inputs_test = self.get_model_inputs(
-            zc_api, xtest, self.config["zc"]["zc_proxies"]
-        )
-
-        # neural network model
-        model = self.train_zc_ensemble_model(inputs_train, ytrain, inputs_test, ytest)
-        self.test_zc_ensemble_model(model, inputs_test, ytest)
-
-        # XGBoost model
-        X_train = np.array(inputs_train)
-        X_test = np.array(inputs_test)
-        xgb_model = XGBRegressor()
-        xgb_model.fit(X_train, ytrain)
-        xgb_preds = xgb_model.predict(X_test)
-        self.xgboost_metrics = evaluate_predictions(ytest, xgb_preds)
-
-        # calculate zc proxies
         self.calculate_zc(xtrain, xtest, ytrain, ytest, zc_api)

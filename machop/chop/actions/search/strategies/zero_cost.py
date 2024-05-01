@@ -8,48 +8,16 @@ from ..search_space.zero_cost_proxy.utils import evaluate_predictions
 
 from functools import partial
 from .base import SearchStrategyBase
+from .optuna import callback_save_study, SearchStrategyOptuna
 
 logger = logging.getLogger(__name__)
 
 
-def callback_save_study(
-    study: optuna.study.Study,
-    frozen_trial: optuna.trial.FrozenTrial,
-    save_dir,
-    save_every_n_trials=1,
-):
-    if (frozen_trial.number + 1) % save_every_n_trials == 0:
-        study_path = save_dir / f"study_trial_{frozen_trial.number}.pkl"
-        if not study_path.parent.exists():
-            study_path.parent.mkdir(parents=True)
-
-        with open(study_path, "wb") as f:
-            joblib.dump(study, f)
-
-
-class SearchStrategyZeroCost(SearchStrategyBase):
+class SearchStrategyZeroCost(SearchStrategyOptuna):
     is_iterative = False
 
     def _post_init_setup(self):
         self.direction = self.config["setup"]["direction"]
-
-    def sampler_map(self, name):
-        match name.lower():
-            case "random":
-                sampler = optuna.samplers.RandomSampler()
-            case "tpe":
-                sampler = optuna.samplers.TPESampler()
-            case "nsgaii":
-                sampler = optuna.samplers.NSGAIISampler()
-            case "nsgaiii":
-                sampler = optuna.samplers.NSGAIIISampler()
-            case "qmc":
-                sampler = optuna.samplers.QMCSampler()
-            case "bruteforce":
-                sampler = optuna.samplers.BruteForceSampler()
-            case _:
-                raise ValueError(f"Unknown sampler name: {name}")
-        return sampler
 
     def combined_list(self, data):
         # Initialize a dictionary to hold combined data
@@ -126,6 +94,7 @@ class SearchStrategyZeroCost(SearchStrategyBase):
         # Incorporate penalties into the average loss
         average_loss_with_penalty = (total_loss + penalty) / len(combined_data_list)
 
+        trial.set_user_attr("weights", weights)
         return average_loss_with_penalty
 
     def get_optuna_prediction(self, model_results, best_params):
@@ -174,55 +143,30 @@ class SearchStrategyZeroCost(SearchStrategyBase):
             show_progress_bar=True,
         )
 
-        best_params = study.best_params
-
-        model_results = self.combined_list(search_space.zcp_results)
-        model_results = self.get_optuna_prediction(model_results, best_params)
-
         self._save_study(study, self.save_dir / "study.pkl")
         self._save_search_dataframe(study, self.save_dir / "log.json")
-        self._save_best_zero_cost(
-            search_space, model_results, self.save_dir / "metrics.json"
+        self._save_best_ensemble(
+            search_space, study.best_trial, self.save_dir / "metrics.json"
         )
 
         return study
 
-    @staticmethod
-    def _save_search_dataframe(study: optuna.study.Study, save_path):
-        df = study.trials_dataframe(
-            attrs=(
-                "number",
-                "value",
-                "user_attrs",
-                "system_attrs",
-                "state",
-                "datetime_start",
-                "datetime_complete",
-                "duration",
-            )
-        )
-        df.to_json(save_path, orient="index", indent=4)
-        return df
-
-    @staticmethod
-    def _save_best_zero_cost(search_space, model_results, save_path):
+    def _save_best_ensemble(self, search_space, best_trial, save_path):
         # calculate ensemble metric
-        ytest = [x["test_accuracy"] for x in model_results]
-        ensemble_preds = [x["metrics"]["optuna_ensemble"] for x in model_results]
+
+        best_params = best_trial.user_attrs["weights"]
+
+        zcp_results = self.combined_list(search_space.zcp_results)
+        ensemble_results = self.get_optuna_prediction(zcp_results, best_params)
+
+        ytest = [x["test_accuracy"] for x in ensemble_results]
+        ensemble_preds = [x["metrics"]["optuna_ensemble"] for x in ensemble_results]
         ensemble_metric = evaluate_predictions(ytest, ensemble_preds)
 
         result_dict = {
             "optuna_ensemble_metric": {
                 "test_spearman": ensemble_metric["spearmanr"],
                 "test_kendaltau": ensemble_metric["kendalltau"],
-            },
-            search_space.config["zc"]["ensemble_model"]: {
-                "test_spearman": search_space.custom_ensemble_metrics["spearmanr"],
-                "test_kendaltau": search_space.custom_ensemble_metrics["kendalltau"],
-            },
-            "xgboost": {
-                "test_spearman": search_space.xgboost_metrics["spearmanr"],
-                "test_kendaltau": search_space.xgboost_metrics["kendalltau"],
             },
         }
         for item in search_space.zcp_results:
@@ -235,14 +179,8 @@ class SearchStrategyZeroCost(SearchStrategyBase):
             }
 
         # save to metrics.json
-        save_df = pd.DataFrame(columns=["number", "result_dict", "model_results"])
-        row = [
-            0,
-            result_dict,
-            model_results,
-        ]
-
-        save_df.loc[len(save_df)] = row
+        save_df = pd.DataFrame(columns=["number", "result_dict", "weights"])
+        save_df.loc[len(save_df)] = [0, result_dict, best_params]
         save_df.to_json(save_path, orient="index", indent=4)
 
         # List of custom dictionaries for "Global Parameters"

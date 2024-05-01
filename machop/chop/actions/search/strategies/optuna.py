@@ -149,13 +149,13 @@ class SearchStrategyOptuna(SearchStrategyBase):
             show_progress_bar=True,
         )
         self._save_study(study, self.save_dir / "study.pkl")
-        self._save_search_dataframe(study, search_space, self.save_dir / "log.json")
+        self._save_search_dataframe(study, self.save_dir / "log.json")
         self._save_best(study, self.save_dir / "best.json")
 
         return study
 
     @staticmethod
-    def _save_search_dataframe(study: optuna.study.Study, search_space, save_path):
+    def _save_search_dataframe(study: optuna.study.Study, save_path):
         df = study.trials_dataframe(
             attrs=(
                 "number",

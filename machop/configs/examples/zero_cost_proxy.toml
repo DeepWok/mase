@@ -14,12 +14,6 @@ seed = 2
 benchmark = 'nasbench201'
 dataset = 'ImageNet16-120'
 calculate_proxy = false
-ensemble_model = 'nonlinear'
-loss_fn = 'mae'
-optimizer = 'adam'
-batch_size = 4
-learning_rate = 0.02
-epochs = 30
 num_archs_train = 2000
 num_archs_test = 2000
 zc_proxies = ['epe_nas', 'fisher', 'grad_norm', 'grasp', 'jacov', 'l2_norm', 'nwot', 'plain', 'snip', 'synflow', 'zen', 'flops', 'params']
@@ -27,16 +21,9 @@ zc_proxies = ['epe_nas', 'fisher', 'grad_norm', 'grasp', 'jacov', 'l2_norm', 'nw
 [search.strategy]
 name = "zero_cost"
 
-[search.strategy.sw_runner.basic_evaluation]
-data_loader = "val_dataloader"
-num_samples = 512
-
-[search.strategy.hw_runner.average_bitwidth]
-compare_to = 32
-
 [search.strategy.setup]
 n_jobs = 4
-n_trials = 100
+n_trials = 200
 timeout = 20000
 sampler = "tpe"
 direction = "minimize"
