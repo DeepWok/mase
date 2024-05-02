@@ -4,6 +4,8 @@ from cocotb.clock import Clock
 
 
 class Testbench:
+    __test__ = False  # so pytest doesn't confuse this with a test
+
     def __init__(self, dut, clk=None, rst=None, fail_on_checks=True) -> None:
         self.dut = dut
         self.clk = clk

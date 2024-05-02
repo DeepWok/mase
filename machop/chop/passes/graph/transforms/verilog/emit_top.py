@@ -6,6 +6,8 @@ import time
 from multiprocessing import Process, Queue
 
 from chop.passes.graph.utils import vf, v2p, init_project
+import mase_components.activations.test.generate_memory as gen_lut
+import torch.nn as nn
 
 logger = logging.getLogger(__name__)
 
@@ -686,4 +688,48 @@ def emit_verilog_top_transform_pass(graph, pass_args={}):
     with open(top_file, "w") as top_design:
         top_design.write(top)
 
+    # Code to generate the LUTs for activation functions. Currently here because RTL dir is required.
+    # Move to verilog emitter if you can pass path somehow.
+    # Alternatively, add a class to the emitter that can be called to generate LUTs, for LUT based implementations of activation functions,
+    # or other functions that require LUTs such as PolyLUT or LUTnet neurons.
+    for node in graph.fx_graph.nodes:
+        # print(vars(node))
+        # print(type(node))
+        if node.op == "call_module":
+            module = dict(graph.model.named_modules())[node.target]
+            if isinstance(module, nn.SiLU):
+                func = "silu"
+            elif isinstance(module, nn.ELU):
+                func = "elu"
+            elif isinstance(module, nn.Sigmoid):
+                func = "sigmoid"
+            elif isinstance(module, nn.LogSigmoid):
+                func = "logsigmoid"
+            elif isinstance(module, nn.Softmax):
+                func = "exp"
+            else:
+                func = "Unknown"
+
+            if func != "Unknown":
+                d_in_width = node.meta["mase"].parameters["hardware"]["verilog_param"][
+                    "DATA_IN_0_PRECISION_0"
+                ]
+                d_in_f_width = node.meta["mase"].parameters["hardware"][
+                    "verilog_param"
+                ]["DATA_IN_0_PRECISION_1"]
+                d_out_width = node.meta["mase"].parameters["hardware"]["verilog_param"][
+                    "DATA_OUT_0_PRECISION_0"
+                ]
+                d_out_f_width = node.meta["mase"].parameters["hardware"][
+                    "verilog_param"
+                ]["DATA_OUT_0_PRECISION_1"]
+                gen_lut.generate_sv_lut(
+                    func,
+                    d_in_width,
+                    d_in_f_width,
+                    d_out_width,
+                    d_out_f_width,
+                    dir=rtl_dir,
+                    path_with_dtype=False,
+                )
     return graph, {}

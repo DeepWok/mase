@@ -19,7 +19,6 @@ Description : This module does a matrix multiplcation between matrices X & Y.
 
 `timescale 1ns / 1ps
 
-// TODO: REMOVE THIS AFTER DONE
 /* verilator lint_off UNUSEDPARAM */
 module matmul #(
     // Total dimensions

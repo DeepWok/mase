@@ -10,6 +10,7 @@ This may be bottleneck - in the future, implement two separate state machines
 
 */
 
+/* verilator lint_off UNUSEDSIGNAL */
 module axi_read_master #(
     parameter MAX_BYTE_COUNT = 1000000000,
     parameter AXI_ADDRESS_WIDTH = 34,
@@ -171,6 +172,7 @@ module axi_read_master #(
       IDLE: fetch_state_n = accepting_fetch_request ? AR : IDLE;
       AR: fetch_state_n = (accepting_axi_read_transaction && last_transaction_pending) ? R : AR;
       R: fetch_state_n = (accepting_axi_read_response && last_read_response_pending) ? (IDLE) : R;
+      default: fetch_state_n = IDLE;
     endcase
   end
 

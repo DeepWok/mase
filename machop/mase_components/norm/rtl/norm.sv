@@ -11,7 +11,8 @@ Description : Module which unifies all types of normalization.
 */
 
 `timescale 1ns / 1ps
-
+/* verilator lint_off UNUSEDSIGNAL */
+/* verilator lint_off UNUSEDPARAM */
 module norm #(
 
     // -----

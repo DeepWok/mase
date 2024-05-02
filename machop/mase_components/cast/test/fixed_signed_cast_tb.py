@@ -86,7 +86,7 @@ class FixedSignedCastTB(Testbench):
 
 
 @cocotb.test()
-async def exhaustive_test(dut):
+async def cocotb_test_exhaustive(dut):
     tb = FixedSignedCastTB(dut)
     driver_in, float_in = tb.generate_inputs()
     exp_float, exp_output = tb.model(float_in)
@@ -102,7 +102,7 @@ async def exhaustive_test(dut):
         assert got_y == exp_output[i], f"Output did not match! Got {got_y}, Exp {exp_y}"
 
 
-if __name__ == "__main__":
+def test_fixed_signed_cast():
     DEFAULT_CONFIG = {
         "IN_WIDTH": 8,
         "IN_FRAC_WIDTH": 2,
@@ -205,3 +205,7 @@ if __name__ == "__main__":
         ],
         trace=True,
     )
+
+
+if __name__ == "__main__":
+    test_fixed_signed_cast()

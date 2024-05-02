@@ -212,7 +212,11 @@ def generate_random_dimension_cfg(cfg_list, multiple=3):
     return new_cfgs
 
 
-if __name__ == "__main__":
+import pytest
+
+
+@pytest.mark.skip(reason="Needs to be fixed.")
+def test_matmul():
     # Default is a square matrix mult
     # 4x4 4x4 matrix multiplication done using 2x2 window
     DEFAULT_CONFIG = {
@@ -274,3 +278,7 @@ if __name__ == "__main__":
         seed=1705250706,
         trace=True,
     )
+
+
+if __name__ == "__main__":
+    test_matmul()

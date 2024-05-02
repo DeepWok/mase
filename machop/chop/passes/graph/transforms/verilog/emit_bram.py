@@ -33,16 +33,24 @@ def emit_parameters_in_mem_internal(node, param_name, file_name, data_name):
     Emit single-port ROM hardware components for each parameter
     (Mostly because Vivado does not support string type parameters...)
     """
+    # ! TO DO: currently emitting too many parameters
 
     total_size = math.prod(
         node.meta["mase"].parameters["common"]["args"][param_name]["shape"]
     )
     # TO DO: change setting parallelism for weight in metadata
     # node.meta["mase"].parameters["hardware"]["verilog_param"][f"{_cap(param_name)}_PARALLELISM_DIM_1"]
-    out_size = int(node.meta["mase"].parameters["hardware"]["verilog_param"][f"{_cap(param_name)}_PARALLELISM_DIM_0"] * 4)
+    out_size = int(
+        node.meta["mase"].parameters["hardware"]["verilog_param"][
+            f"{_cap(param_name)}_PARALLELISM_DIM_0"
+        ]
+        * 4
+    )
     out_depth = int(total_size / out_size)
-    out_width = int(node.meta["mase"].parameters["common"]["args"][param_name]["precision"][0])
-    
+    out_width = int(
+        node.meta["mase"].parameters["common"]["args"][param_name]["precision"][0]
+    )
+
     addr_width = clog2(out_depth) + 1
 
     node_param_name = f"{vf(node.name)}_{param_name}"

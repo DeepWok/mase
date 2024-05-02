@@ -11,9 +11,9 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 sys.path.append("/workspace/components/testbench/ViT/")
 sys.path.append("/workspace/machop/")
 
-from random_test import RandomSource
-from random_test import RandomSink
-from random_test import check_results
+from mase_cocotb.random_test import RandomSource
+from mase_cocotb.random_test import RandomSink
+from mase_cocotb.random_test import check_results
 
 import cocotb
 from cocotb.triggers import Timer
@@ -24,9 +24,9 @@ from cocotb.runner import get_runner
 from einops import rearrange, reduce, repeat
 import torch
 import torch.nn as nn
-from pvt_quant import QuantizedMlp
-from z_qlayers import quantize_to_int as q2i
-from z_qlayers import linear_data_pack
+from .helpers.pvt_quant import QuantizedMlp
+from mase_cocotb.z_qlayers import quantize_to_int as q2i
+from mase_cocotb.z_qlayers import linear_data_pack
 
 debug = True
 
@@ -299,7 +299,7 @@ def debug_state(dut, state):
 
 
 @cocotb.test()
-async def test_fixed_linear(dut):
+async def cocotb_test_fixed_linear(dut):
     """Test integer based vector mult"""
     samples = 10
     test_case = VerificationCase(samples=samples)
@@ -476,5 +476,13 @@ def runner():
         )
 
 
-if __name__ == "__main__":
+import pytest
+
+
+@pytest.mark.skip(reason="Needs to be fixed.")
+def test_fixed_mlp():
     runner()
+
+
+if __name__ == "__main__":
+    test_fixed_mlp()

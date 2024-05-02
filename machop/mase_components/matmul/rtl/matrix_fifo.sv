@@ -50,7 +50,9 @@ module matrix_fifo #(
       .in_ready(in_ready),
       .out_data(out_data_flat),
       .out_valid(out_valid),
-      .out_ready(out_ready)
+      .out_ready(out_ready),
+      .empty(),
+      .full()
   );
 
   matrix_unflatten #(

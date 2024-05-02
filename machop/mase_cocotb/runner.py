@@ -86,13 +86,14 @@ def mase_runner(
             parameters=module_params,
             build_dir=test_work_dir,
         )
-        runner.test(
+        results_file = runner.test(
             hdl_toplevel=module,
             test_module=f"mase_components.{group}.test.{module}_tb",
             seed=seed,
             results_xml="results.xml",
         )
-        num_tests, fail = get_results(test_work_dir.joinpath("results.xml"))
+        logger.info(f"Results are at {results_file}")
+        num_tests, fail = get_results(results_file)
         total_tests += num_tests
         total_fail += fail
 

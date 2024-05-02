@@ -107,6 +107,7 @@ jobs:
             pip3 --version 
             python3 --version
             pip3 install .
-            python3 scripts/test-hardware.py -a
+            python3 scripts/build-components.py
+            make test-hw
 
 

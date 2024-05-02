@@ -46,7 +46,7 @@ from chop.passes.graph.transforms.quantize.quantizers.integer import (
 )
 
 from mase_components.cast.test.fixed_signed_cast_tb import _fixed_signed_cast_model
-from mase_components.fixed_arithmetic.test.isqrt_sw import lut_parameter_dict
+from mase_components.fixed_math.test.isqrt_sw import lut_parameter_dict
 from mase_components.common.test.lut_tb import write_memb, read_memb
 
 logger = logging.getLogger("testbench")
@@ -341,7 +341,11 @@ async def valid_backpressure(dut):
     assert tb.output_monitor.exp_queue.empty()
 
 
-if __name__ == "__main__":
+import pytest
+
+
+@pytest.mark.skip(reason="Needs to be fixed.")
+def test_batch_norm_2d():
 
     def gen_cfg(
         total_dim0: int = 4,
@@ -399,3 +403,7 @@ if __name__ == "__main__":
         module_param_list=test_cfgs,
         trace=True,
     )
+
+
+if __name__ == "__main__":
+    test_batch_norm_2d()

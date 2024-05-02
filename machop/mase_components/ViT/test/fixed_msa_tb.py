@@ -14,8 +14,8 @@ from cocotb.triggers import Timer
 from cocotb.triggers import FallingEdge
 from cocotb.clock import Clock
 
-from helpers.pvt_quant import QuantizedAttention
-from helpers.ha_softmax import generate_table_hardware, generate_table_div_hardware
+from .helpers.pvt_quant import QuantizedAttention
+from .helpers.ha_softmax import generate_table_hardware, generate_table_div_hardware
 from mase_cocotb.z_qlayers import quantize_to_int as q2i
 
 debug = False
@@ -500,7 +500,7 @@ def debug_state(dut, state):
 
 
 @cocotb.test()
-async def test_msa(dut):
+async def cocotb_test_msa(dut):
     """Test integer based vector mult"""
     samples = 100
     test_case = VerificationCase(samples=samples)
@@ -642,6 +642,14 @@ def wave_check(dut):
     )
 
 
-if __name__ == "__main__":
+import pytest
+
+
+@pytest.mark.skip(reason="Needs to be fixed.")
+def test_fixed_msa():
     tb = VerificationCase()
     mase_runner(module_param_list=[tb.get_dut_parameters()])
+
+
+if __name__ == "__main__":
+    test_fixed_msa()

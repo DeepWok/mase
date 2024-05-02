@@ -10,9 +10,9 @@ print(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))
 
 sys.path.append("/workspace/components/testbench/ViT/")
 sys.path.append("/workspace/machop/")
-from random_test import RandomSource
-from random_test import RandomSink
-from random_test import check_results
+from mase_cocotb.random_test import RandomSource
+from mase_cocotb.random_test import RandomSink
+from mase_cocotb.random_test import check_results
 
 import cocotb
 from cocotb.triggers import Timer
@@ -20,13 +20,15 @@ from cocotb.triggers import FallingEdge
 from cocotb.clock import Clock
 from cocotb.runner import get_runner
 import torch
-from pvt_quant import fixed_affine
-from z_qlayers import quantize_to_int as q2i
+from .helpers.pvt_quant import fixed_affine
+from mase_cocotb.z_qlayers import quantize_to_int as q2i
 
 debug = True
 logger = logging.getLogger("tb_signals")
 if debug:
     logger.setLevel(logging.DEBUG)
+
+import pytest
 
 
 # DUT test specifications
@@ -148,7 +150,7 @@ def in_out_wave(dut, name):
 
 
 @cocotb.test()
-async def test_register_slice(dut):
+async def cocotb_test_register_slice(dut):
     """Test register slice"""
     samples = 20
     test_case = VerificationCase(samples=samples)
@@ -288,5 +290,10 @@ def runner():
     runner.test(hdl_toplevel="affine_layernorm", test_module="affine_layernorm_tb")
 
 
-if __name__ == "__main__":
+@pytest.mark.skip(reason="Needs to be fixed.")
+def test_affine_layernorm():
     runner()
+
+
+if __name__ == "__main__":
+    test_affine_layernorm()

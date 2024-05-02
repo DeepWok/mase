@@ -18,10 +18,10 @@ norm = {
         "fixed_arithmetic/rtl/fixed_adder_tree.sv",
         "fixed_arithmetic/rtl/fixed_adder_tree_layer.sv",
         "fixed_arithmetic/rtl/fixed_lut_index.sv",
-        "fixed_arithmetic/rtl/fixed_nr_stage.sv",
+        "fixed_math/rtl/fixed_nr_stage.sv",
         "fixed_arithmetic/rtl/fixed_range_augmentation.sv",
         "fixed_arithmetic/rtl/fixed_range_reduction.sv",
-        "fixed_arithmetic/rtl/fixed_isqrt.sv",
+        "fixed_math/rtl/fixed_isqrt.sv",
         "matmul/rtl/matrix_fifo.sv",
         "matmul/rtl/matrix_flatten.sv",
         "matmul/rtl/matrix_unflatten.sv",
@@ -59,6 +59,67 @@ INTERNAL_COMP = {
                 "activations/rtl/fixed_relu.sv",
             ],
         },
+    ],
+    "hardshrink": [
+        {
+            "name": "fixed_hardshrink",
+            "dependence_files": [
+                "activations/rtl/fixed_hardshrink.sv",
+            ],
+        },
+    ],
+    "silu": [
+        {
+            "name": "fixed_silu",
+            "dependence_files": [
+                "activations/rtl/fixed_silu.sv",
+                "activations/rtl/silu_lut.sv",
+            ],
+        },
+    ],
+    "elu": [
+        {
+            "name": "fixed_elu",
+            "dependence_files": [
+                "activations/rtl/fixed_elu.sv",
+                "activations/rtl/elu_lut.sv",
+            ],
+        },
+    ],
+    "sigmoid": [
+        {
+            "name": "fixed_sigmoid",
+            "dependence_files": [
+                "activations/rtl/fixed_sigmoid.sv",
+                "activations/rtl/sigmoid_lut.sv",
+            ],
+        },
+    ],
+    "softshrink": [
+        {
+            "name": "fixed_softshrink",
+            "dependence_files": [
+                "activations/rtl/fixed_softshrink.sv",
+            ],
+        },
+    ],
+    "logsigmoid": [
+        {
+            "name": "fixed_logsigmoid",
+            "dependence_files": [
+                "activations/rtl/fixed_logsigmoid.sv",
+                "activations/rtl/logsigmoid_lut.sv",
+            ],
+        },
+    ],
+    "softmax": [
+        {
+            "name": "fixed_softmax",
+            "dependence_files": [
+                "activations/rtl/fixed_softmax.sv",
+                "activations/rtl/exp_lut .sv",
+            ],
+        }
     ],
     "batch_norm2d": [norm],
     "layer_norm": [norm],

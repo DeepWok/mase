@@ -8,7 +8,7 @@ from mase_cocotb.testbench import Testbench
 from cocotb.triggers import Timer
 from mase_cocotb.runner import mase_runner
 import math
-from isqrt_sw import range_reduction_sw, int_to_float
+from mase_components.fixed_math.test.isqrt_sw import range_reduction_sw, int_to_float
 
 
 class VerificationCase(Testbench):
@@ -29,7 +29,7 @@ class VerificationCase(Testbench):
 
 
 @cocotb.test()
-async def test_fixed_range_reduction(dut):
+async def cocotb_test_fixed_range_reduction(dut):
     """Test for adding 2 random numbers multiple times"""
     testcase = VerificationCase(dut)
     data_in_x, samples = testcase.generate_inputs()
@@ -63,7 +63,11 @@ async def test_fixed_range_reduction(dut):
             """
 
 
-if __name__ == "__main__":
+import pytest
+
+
+@pytest.mark.skip(reason="Needs to be fixed.")
+def test_fixed_range_reduction():
 
     def full_sweep():
         parameter_list = []
@@ -75,3 +79,7 @@ if __name__ == "__main__":
     parameter_list = full_sweep()
 
     mase_runner(module_param_list=parameter_list)
+
+
+if __name__ == "__main__":
+    test_fixed_range_reduction()

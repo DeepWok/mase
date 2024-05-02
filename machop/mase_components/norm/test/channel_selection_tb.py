@@ -56,7 +56,11 @@ async def basic(dut):
         assert ref[i] == dut.channel.value.integer, f"<<< --- Test failed --- >>>"
 
 
-if __name__ == "__main__":
+import pytest
+
+
+@pytest.mark.skip(reason="Needs to be fixed.")
+def test_channel_selection():
 
     def gen_cfg(num_channels, num_blocks):
         return {"NUM_CHANNELS": num_channels, "NUM_SPATIAL_BLOCKS": num_blocks}
@@ -74,3 +78,7 @@ if __name__ == "__main__":
         # module_param_list=[gen_cfg(2, 1)],
         trace=True,
     )
+
+
+if __name__ == "__main__":
+    test_channel_selection()

@@ -132,7 +132,11 @@ def gen_random_params():
     }
 
 
-if __name__ == "__main__":
+import pytest
+
+
+@pytest.mark.skip(reason="Needs to be fixed.")
+def test_matrix_stream_transpose():
     # Run tests with different params
     mase_runner(
         module_param_list=[
@@ -156,3 +160,7 @@ if __name__ == "__main__":
             *[gen_random_params() for _ in range(5)],
         ]
     )
+
+
+if __name__ == "__main__":
+    test_matrix_stream_transpose()

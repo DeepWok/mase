@@ -143,7 +143,7 @@ def generate_random_params():
     }
 
 
-if __name__ == "__main__":
+def test_repeat_circular_buffer():
     mase_runner(
         module_param_list=[
             # Power of 2 params
@@ -158,3 +158,7 @@ if __name__ == "__main__":
             *[generate_random_params() for _ in range(5)],
         ]
     )
+
+
+if __name__ == "__main__":
+    test_repeat_circular_buffer()
