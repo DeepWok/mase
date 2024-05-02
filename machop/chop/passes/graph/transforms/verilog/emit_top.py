@@ -300,7 +300,7 @@ class VerilogInternalComponentEmitter:
         parameters = ""
         for param in node.meta["mase"].parameters["hardware"]["verilog_param"].keys():
             if f"{_cap(key)}_" in param:
-                parameters += f".{param}({node_name}_{param}),\n"
+                parameters += f"    .{param}({node_name}_{param}),\n"
         parameters = _remove_last_comma(parameters)
 
         return f"""
@@ -332,7 +332,7 @@ class VerilogInternalComponentEmitter:
 
         # Emit component instantiation input signals
         for key, value in node.meta["mase"].parameters["common"]["args"].items():
-            if "data" not in key:
+            if "inplace" in key:
                 continue
             signals += f"""
     .{key}({node_name}_{key}),
@@ -342,8 +342,6 @@ class VerilogInternalComponentEmitter:
 
         # Emit component instantiation output signals
         for key, value in node.meta["mase"].parameters["common"]["results"].items():
-            if "data" not in key:
-                continue
             signals += f"""
     .{key}({node_name}_{key}),
     .{key}_valid({node_name}_{key}_valid),
@@ -535,9 +533,9 @@ class VerilogWireEmitter:
             for arg in node.meta["mase"].parameters["common"]["args"].keys():
                 if "data_in" in arg:
                     wires += f"""
-    assign data_in_{i}_ready = {node_name}_{arg}_ready;
-    assign {node_name}_{arg}_valid    = data_in_{i}_valid;
-    assign {node_name}_{arg}    = data_in_{i};
+assign data_in_{i}_ready = {node_name}_{arg}_ready;
+assign {node_name}_{arg}_valid    = data_in_{i}_valid;
+assign {node_name}_{arg}    = data_in_{i};
 """
                     i += 1
         i = 0
@@ -546,9 +544,9 @@ class VerilogWireEmitter:
             for result in node.meta["mase"].parameters["common"]["results"].keys():
                 if "data_out" in result:
                     wires += f"""
-    assign data_out_{i}_valid = {node_name}_{result}_valid;
-    assign {node_name}_{result}_ready    = data_out_{i}_ready;
-    assign data_out_{i} = {node_name}_{result};
+assign data_out_{i}_valid = {node_name}_{result}_valid;
+assign {node_name}_{result}_ready    = data_out_{i}_ready;
+assign data_out_{i} = {node_name}_{result};
 """
                     i += 1
 
@@ -574,9 +572,9 @@ class VerilogWireEmitter:
             for i, node_in in enumerate(node.all_input_nodes):
                 from_name = vf(node_in.name)
                 wires += f"""
-    assign {from_name}_data_out_0_ready  = {to_name}_data_in_{i}_ready;
-    assign {to_name}_data_in_{i}_valid    = {from_name}_data_out_0_valid;
-    assign {to_name}_data_in_{i} = {from_name}_data_out_0;
+assign {from_name}_data_out_0_ready  = {to_name}_data_in_{i}_ready;
+assign {to_name}_data_in_{i}_valid    = {from_name}_data_out_0_valid;
+assign {to_name}_data_in_{i} = {from_name}_data_out_0;
 """
         return wires
 

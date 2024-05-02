@@ -34,8 +34,6 @@ async def test(dut):
     in_tensors = tb.generate_inputs(batches=3)
     exp_out = tb.model(*list(in_tensors.values()))
 
-    breakpoint()
-
     tb.load_drivers(in_tensors)
     tb.load_monitors(exp_out)
 

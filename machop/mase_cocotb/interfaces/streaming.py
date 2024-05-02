@@ -56,21 +56,26 @@ class StreamMonitor(Monitor):
 
     def _recv(self):
         if type(self.data.value) == list:
-            return [int(x) for x in self.data.value]
+            return [x.signed_integer for x in self.data.value]
         elif type(self.data.value) == BinaryValue:
-            return int(self.data.value)
+            return int(self.data.value.signed_integer)
 
     def _check(self, got, exp):
         if self.check:
-            if not np.equal(got, exp).all():
-                self.log.error(
-                    "%s: \nGot \n%s, \nExpected \n%s"
-                    % (
-                        self.name if self.name != None else "Unnamed StreamMonitor",
-                        got,
-                        exp,
-                    )
+            self.log.debug(
+                """%s:
+Got
+%s
+Expected
+%s
+"""
+                % (
+                    self.name if self.name != None else "Unnamed StreamMonitor",
+                    got,
+                    exp,
                 )
+            )
+            if not np.equal(got, exp).all():
                 assert False, "Test Failed!"
 
 

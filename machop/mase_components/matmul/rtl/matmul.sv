@@ -308,8 +308,7 @@ module matmul #(
     logic [MAT_ACC_PTR_WIDTH-1:0] matrix_acc_ptr;
     // Points at which output accumulator should be connected to the out stream
     logic [MAT_ACC_PTR_WIDTH-1:0] output_acc_ptr;
-  }
-      self, next_self;
+  } self, next_self;
 
   always_comb begin
     next_self = self;

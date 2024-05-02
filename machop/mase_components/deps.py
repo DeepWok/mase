@@ -19,9 +19,17 @@ MASE_HW_DEPS = {
     "activations/fixed_gelu": ["fixed_arithmetic", "common"],
     "activations/fixed_softsign": ["fixed_arithmetic", "common"],
     "activations/fixed_softplus": [],
+    "attention/fixed_self_attention": [
+        "attention",
+        "cast",
+        "common",
+        "fixed_arithmetic",
+        "linear",
+        "matmul",
+    ],
     "cast/fixed_cast": [],
     "cast/fixed_rounding": ["cast"],
-    "linear/fixed_linear": ["cast", "common", "fixed_arithmetic"],
+    "linear/fixed_linear": ["cast", "common", "fixed_arithmetic", "matmul"],
     # Commented out ISQRT sub-components to shorten CI runs:
     # "fixed_arithmetic/fixed_nr_stage": ["common"],
     # "fixed_arithmetic/fixed_range_reduction": [],

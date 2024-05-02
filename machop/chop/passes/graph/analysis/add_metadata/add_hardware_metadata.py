@@ -82,18 +82,20 @@ def add_verilog_param(node):
                     if dim < len(arg_info["shape"])
                     else 1
                 )
-                # If node data parallelism is set, take from hardware metadata
-                if node.meta["mase"]["hardware"]["parallelism"] is not None:
-                    vp[_cap(arg + f"_parallelism_dim_{dim}")] = node.meta["mase"][
-                        "hardware"
-                    ]["parallelism"][len(arg_info["shape"]) - 1 - dim]
+                # Check if max parallelism is defined
+                if node.meta["mase"]["hardware"]["max_parallelism"] is not None:
+                    # Take the minimum between...
+                    vp[_cap(arg + f"_parallelism_dim_{dim}")] = min(
+                        # The defined max parallelism for this dimension
+                        node.meta["mase"]["hardware"]["max_parallelism"][::-1][dim],
+                        # The size of this dimension
+                        arg_info["shape"][::-1][dim],
+                    )
                 # Otherwise, assign to tensor size by default
                 else:
-                    vp[_cap(arg + f"_parallelism_dim_{dim}")] = (
-                        arg_info["shape"][len(arg_info["shape"]) - 1 - dim]
-                        if dim < len(arg_info["shape"])
-                        else 1
-                    )
+                    vp[_cap(arg + f"_parallelism_dim_{dim}")] = arg_info["shape"][::-1][
+                        dim
+                    ]
         elif type(arg_info) == bool:
             vp[_cap(arg)] = 1 if arg_info else 0
         else:
@@ -109,16 +111,20 @@ def add_verilog_param(node):
                     if dim < len(result_info["shape"])
                     else 1
                 )
-                if node.meta["mase"]["hardware"]["parallelism"] is not None:
-                    vp[_cap(result + f"_parallelism_dim_{dim}")] = node.meta["mase"][
-                        "hardware"
-                    ]["parallelism"][len(result_info["shape"]) - 1 - dim]
-                else:
-                    vp[_cap(result + f"_parallelism_dim_{dim}")] = (
-                        result_info["shape"][len(result_info["shape"]) - 1 - dim]
-                        if dim < len(result_info["shape"])
-                        else 1
+                # Check if max parallelism is defined
+                if node.meta["mase"]["hardware"]["max_parallelism"] is not None:
+                    # Take the minimum between...
+                    vp[_cap(result + f"_parallelism_dim_{dim}")] = min(
+                        # The defined max parallelism for this dimension
+                        node.meta["mase"]["hardware"]["max_parallelism"][::-1][dim],
+                        # The size of this dimension
+                        result_info["shape"][::-1][dim],
                     )
+                # Otherwise, assign to tensor size by default
+                else:
+                    vp[_cap(result + f"_parallelism_dim_{dim}")] = result_info["shape"][
+                        ::-1
+                    ][dim]
         else:
             vp[_cap(result)] = result_info
 
@@ -371,12 +377,10 @@ def add_hardware_metadata_analysis_pass(graph, pass_args=None):
     for node in graph.nodes:
         add_component_source(node)
 
-    # Temporary: fix parallelism to small value to enable verilator simulation
+    # * Fix max parallelism to small value to enable verilator simulation
+    # ! TO DO: enable this to be overriden by user
     for node in graph.nodes:
-        if "parallelism" in node.meta["mase"]["hardware"]:
-            continue
-        # Batch parallelism set to 1, data parallelism to 4
-        node.meta["mase"]["hardware"]["parallelism"] = [1, 4]
+        node.meta["mase"]["hardware"]["max_parallelism"] = [4, 4, 4, 4]
 
     # Add hardware parameters
     for node in graph.nodes:
