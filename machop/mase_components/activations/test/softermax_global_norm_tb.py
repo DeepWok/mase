@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
 import logging
-from random import randint
 from math import ceil
 
 import torch
@@ -9,10 +8,9 @@ import numpy as np
 
 from mase_cocotb.runner import mase_runner
 from mase_cocotb.testbench import Testbench
-from mase_cocotb.utils import bit_driver, sign_extend_t, sign_extend, signed_to_unsigned, batched
+from mase_cocotb.utils import bit_driver, sign_extend_t, batched
 from mase_cocotb.interfaces.streaming import (
     StreamDriver,
-    StreamMonitor,
     ErrorThresholdStreamMonitor
 )
 
@@ -48,7 +46,7 @@ class SoftermaxGlobalNormTB(Testbench):
             dut.clk, dut.out_data, dut.out_valid, dut.out_ready,
             width=self.OUT_WIDTH, signed=False,
             error_bits=self.error_threshold_bits,
-            log_error=True, check=False
+            log_error=True, check=True
         )
 
     def generate_inputs(self, batches=10):
