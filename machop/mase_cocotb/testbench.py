@@ -24,6 +24,10 @@ class Testbench:
         for att in attrs:
             setattr(self, att, getattr(self.dut, att).value)
 
+    def get_parameter(self, parameter_name):
+        parameter = getattr(self.dut, parameter_name)
+        return int(parameter)
+
     async def reset(self, active_high=True):
         if self.rst == None:
             raise Exception(

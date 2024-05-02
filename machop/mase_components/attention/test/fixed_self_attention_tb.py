@@ -10,16 +10,18 @@ import cocotb
 from cocotb.log import SimLog
 from cocotb.triggers import Timer
 
+from transformers.models.bert.configuration_bert import BertConfig
+
 from mase_cocotb.testbench import Testbench
 from mase_cocotb.interfaces.streaming import StreamDriver, StreamMonitor
 from mase_cocotb.runner import mase_runner
 
 # from mase_cocotb import Testbench, StreamDriver, StreamMonitor, mase_runner
-from chop.passes.graph.transforms.quantize.quantized_modules import LinearInteger
+from chop.passes.graph.transforms.quantize.quantized_modules import BertAttentionInteger
 from chop.passes.graph.transforms.quantize.quantizers import integer_quantizer
 
 
-class LinearTB(Testbench):
+class FixedSelfAttentionTB(Testbench):
     def __init__(self, dut) -> None:
         super().__init__(dut, dut.clk, dut.rst)
 
@@ -30,15 +32,35 @@ class LinearTB(Testbench):
         self.data_in_0_driver = StreamDriver(
             dut.clk, dut.data_in_0, dut.data_in_0_valid, dut.data_in_0_ready
         )
-        self.weight_driver = StreamDriver(
-            dut.clk, dut.weight, dut.weight_valid, dut.weight_ready
+
+        # * Weight drivers
+        self.weight_query_driver = StreamDriver(
+            dut.clk, dut.weight_query, dut.weight_query_valid, dut.weight_query_ready
+        )
+        self.weight_key_driver = StreamDriver(
+            dut.clk, dut.weight_key, dut.weight_key_valid, dut.weight_key_ready
+        )
+        self.weight_value_driver = StreamDriver(
+            dut.clk, dut.weight_value, dut.weight_value_valid, dut.weight_value_ready
         )
 
-        if self.get_parameter("HAS_BIAS") == 1:
-            self.bias_driver = StreamDriver(
-                dut.clk, dut.bias, dut.bias_valid, dut.bias_ready
+        if self.get_parameter("HAS_BIAS_QUERY") == 1:
+            self.bias_query_driver = StreamDriver(
+                dut.clk, dut.biasquery_, dut.bias_query_valid, dut.bias_query_ready
             )
-            self.bias_driver.log.setLevel(logging.DEBUG)
+            self.bias_query_driver.log.setLevel(logging.DEBUG)
+
+        if self.get_parameter("HAS_BIAS_KEY") == 1:
+            self.bias_key_driver = StreamDriver(
+                dut.clk, dut.bias_key, dut.bias_key_valid, dut.bias_key_ready
+            )
+            self.bias_key_driver.log.setLevel(logging.DEBUG)
+
+        if self.get_parameter("HAS_BIAS_VALUE") == 1:
+            self.bias_value_driver = StreamDriver(
+                dut.clk, dut.bias_value, dut.bias_value_valid, dut.bias_value_ready
+            )
+            self.bias_value_driver.log.setLevel(logging.DEBUG)
 
         self.data_out_0_monitor = StreamMonitor(
             dut.clk,
@@ -47,28 +69,36 @@ class LinearTB(Testbench):
             dut.data_out_0_ready,
             check=True,
         )
+
         # Model
-        self.model = LinearInteger(
-            in_features=self.get_parameter("DATA_IN_0_TENSOR_SIZE_DIM_0"),
-            out_features=self.get_parameter("DATA_OUT_0_TENSOR_SIZE_DIM_0"),
-            bias=True if self.get_parameter("HAS_BIAS") == 1 else False,
-            config={
-                "data_in_width": self.get_parameter("DATA_IN_0_PRECISION_0"),
-                "data_in_frac_width": self.get_parameter("DATA_IN_0_PRECISION_1"),
-                "weight_width": self.get_parameter("WEIGHT_PRECISION_0"),
-                "weight_frac_width": self.get_parameter("WEIGHT_PRECISION_1"),
-                "bias_width": self.get_parameter("BIAS_PRECISION_0"),
-                "bias_frac_width": self.get_parameter("BIAS_PRECISION_1"),
-            },
+        self.config = BertConfig()
+        self.q_config = {
+            "data_in_width": self.get_parameter("DATA_IN_0_PRECISION_0"),
+            "data_in_frac_width": self.get_parameter("DATA_IN_0_PRECISION_1"),
+            "weight_width": self.get_parameter("WEIGHT_PRECISION_0"),
+            "weight_frac_width": self.get_parameter("WEIGHT_PRECISION_1"),
+            "bias_width": self.get_parameter("BIAS_PRECISION_0"),
+            "bias_frac_width": self.get_parameter("BIAS_PRECISION_1"),
+        }
+        self.model = BertAttentionInteger(
+            config=self.config,
+            q_config=self.q_config,
         )
 
         # Set verbosity of driver and monitor loggers to debug
         self.data_in_0_driver.log.setLevel(logging.DEBUG)
-        self.weight_driver.log.setLevel(logging.DEBUG)
+        self.weight_query_driver.log.setLevel(logging.DEBUG)
+        self.weight_key_driver.log.setLevel(logging.DEBUG)
+        self.weight_value_driver.log.setLevel(logging.DEBUG)
         self.data_out_0_monitor.log.setLevel(logging.DEBUG)
 
     def generate_inputs(self):
-        return torch.randn((1, self.model.in_features))
+        return torch.randn(
+            (
+                self.get_parameter("DATA_IN_0_TENSOR_SIZE_DIM_1"),
+                self.get_parameter("DATA_IN_0_TENSOR_SIZE_DIM_0"),
+            )
+        )
 
     def preprocess_tensor(self, tensor, config, parallelism):
         if len(tensor.shape) == 1:

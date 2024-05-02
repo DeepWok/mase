@@ -8,7 +8,6 @@ import torch.nn as nn
 
 import chop as chop
 import chop.passes as passes
-from chop.tools.utils import execute_cli
 
 from pathlib import Path
 
@@ -108,7 +107,7 @@ def test_emit_verilog_linear():
     mg, _ = passes.add_hardware_metadata_analysis_pass(mg)
     mg, _ = passes.report_node_hardware_type_analysis_pass(mg)  # pretty print
 
-    # mg, _ = passes.emit_verilog_top_transform_pass(mg)
+    mg, _ = passes.emit_verilog_top_transform_pass(mg)
     mg, _ = passes.emit_bram_transform_pass(mg)
     mg, _ = passes.emit_internal_rtl_transform_pass(mg)
     mg, _ = passes.emit_cocotb_transform_pass(mg)
