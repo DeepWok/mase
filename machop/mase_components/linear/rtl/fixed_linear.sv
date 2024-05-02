@@ -17,8 +17,8 @@
 
 module fixed_linear # (
     /* verilator lint_off UNUSEDPARAM */
-    parameter HAS_BIAS = 0,
-    parameter WEIGHTS_PRE_TRANSPOSED = 1,
+    parameter HAS_BIAS = 1,
+    parameter WEIGHTS_PRE_TRANSPOSED = 0,
 
     parameter DATA_IN_0_PRECISION_0 = 16,
     parameter DATA_IN_0_PRECISION_1 = 3,
@@ -103,6 +103,27 @@ logic add_bias_in_ready;
 // * Instances
 // * ---------------------------------------------------------------------------------------------------
 
+if (WEIGHTS_PRE_TRANSPOSED == 0) begin
+    matrix_stream_transpose #(
+        .TOTAL_DIM0 (WEIGHT_TENSOR_SIZE_DIM_0),
+        .TOTAL_DIM1 (WEIGHT_TENSOR_SIZE_DIM_1),
+        .COMPUTE_DIM0 (WEIGHT_PARALLELISM_DIM_0),
+        .COMPUTE_DIM1 (WEIGHT_PARALLELISM_DIM_1),
+        .DATA_WIDTH (WEIGHT_PRECISION_0)
+    ) weight_matrix_transpose_i (
+        .clk,
+        .rst,
+
+        .in_data    (weight),
+        .in_valid   (weight_valid),
+        .in_ready   (weight_ready),
+
+        .out_data   (weight_transposed),
+        .out_valid  (weight_transposed_valid),
+        .out_ready  (weight_transposed_ready)
+    );
+end
+
 matmul #(
     // Total dimensions
     .A_TOTAL_DIM0   (DATA_IN_0_TENSOR_SIZE_DIM_0),
@@ -170,9 +191,7 @@ end
 // * Logic
 // * ---------------------------------------------------------------------------------------------------
 
-// ! TO DO: Transpose incoming weights matrix
-if (WEIGHTS_PRE_TRANSPOSED == 0) begin
-end else begin
+if (WEIGHTS_PRE_TRANSPOSED == 1) begin
     always_comb begin
         weight_transposed_valid = weight_valid;
         weight_ready = weight_transposed_ready;
