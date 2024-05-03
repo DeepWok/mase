@@ -156,3 +156,8 @@ def init_project(project_dir):
     Path(hardware_dir / "test" / "mase_top_tb").mkdir(parents=True, exist_ok=True)
     Path(hardware_dir / "test").mkdir(parents=True, exist_ok=True)
     Path(hardware_dir / "hls").mkdir(parents=True, exist_ok=True)
+
+
+def sign_extend(value: int, bits: int):
+    sign_bit = 1 << (bits - 1)
+    return (value & (sign_bit - 1)) - (value & sign_bit)

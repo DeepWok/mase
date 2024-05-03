@@ -8,6 +8,9 @@ from torch import Tensor
 
 from mase_cocotb.z_qlayers import quantize_to_int
 
+from functools import partial
+from chop.passes.graph.transforms.quantize.quantizers import integer_quantizer
+
 
 # Apparently this function only exists in Python 3.12 ...
 def batched(iterable, n=1):
@@ -86,3 +89,43 @@ def product_dict(**kwargs):
     keys = kwargs.keys()
     for instance in itertools.product(*kwargs.values()):
         yield dict(zip(keys, instance))
+
+
+def fixed_preprocess_tensor(tensor: Tensor, q_config: dict, parallelism: list) -> list:
+    """Preprocess a tensor before driving it into the DUT.
+    1. Quantize to requested fixed-point precision.
+    2. Convert to integer format to be compatible with Cocotb drivers.
+    3. Split into blocks according to parallelism in each dimension.
+
+    Args:
+        tensor (Tensor): Input tensor
+        q_config (dict): Quantization configuration.
+        parallelism (list): Parallelism in each dimension.
+
+    Returns:
+        list: Processed blocks in nested list format.
+    """
+    if len(tensor.shape) == 1:
+        tensor = tensor.unsqueeze(0)
+
+    if len(parallelism) == 1:
+        parallelism = [1, parallelism[0]]
+
+    # Quantize
+    quantizer = partial(integer_quantizer, **q_config)
+    q_tensor = quantizer(tensor)
+
+    # Convert to integer format
+    q_tensor = (q_tensor * 2 ** q_config["frac_width"]).int()
+
+    # Split into chunks according to parallelism in each dimension
+    # parallelism[0]: along rows, parallelism[1]: along columns
+    dim_0_split = q_tensor.split(parallelism[0], dim=0)
+    dim_1_split = [x.split(parallelism[1], dim=1) for x in dim_0_split]
+    blocks = []
+    # Flatten the list of blocks
+    for i in range(len(dim_1_split)):
+        for j in range(len(dim_1_split[i])):
+            blocks.append(dim_1_split[i][j].flatten().tolist())
+    breakpoint()
+    return blocks
