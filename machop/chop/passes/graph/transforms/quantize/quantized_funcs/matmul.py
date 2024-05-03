@@ -33,7 +33,6 @@ def generic_matmul_integer(x, y, config, style="matmul"):
 
         x = x_quantizer(x)
         y = y_quantizer(y)
-        # y = x_quantizer(y)
 
         return matmul(x, y)
 

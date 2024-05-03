@@ -191,10 +191,6 @@ def get_fixed_linear_config(kwargs={}):
         "WEIGHT_PARALLELISM_DIM_1": 4,
         "BIAS_TENSOR_SIZE_DIM_0": 20,
         "BIAS_PARALLELISM_DIM_0": 4,
-        "DATA_OUT_0_PRECISION_0": 35,
-        "DATA_OUT_0_PRECISION_1": 6,
-        "DATA_OUT_0_TENSOR_SIZE_DIM_0": 20,
-        "DATA_OUT_0_PARALLELISM_DIM_0": 4,
     }
     config.update(kwargs)
     return config
@@ -224,36 +220,28 @@ def test_fixed_linear_regression():
         module_param_list=[
             get_fixed_linear_config(
                 {
-                    "DATA_IN_0_TENSOR_SIZE_DIM_0": 784,
+                    "DATA_IN_0_TENSOR_SIZE_DIM_0": 768,
                     "DATA_IN_0_PARALLELISM_DIM_0": 32,
-                    "WEIGHT_TENSOR_SIZE_DIM_0": 784,
-                    "WEIGHT_TENSOR_SIZE_DIM_1": 784,
+                    "WEIGHT_TENSOR_SIZE_DIM_0": 768,
+                    "WEIGHT_TENSOR_SIZE_DIM_1": 768,
                     "WEIGHT_PARALLELISM_DIM_0": 32,
                     "WEIGHT_PARALLELISM_DIM_1": 32,
-                    "BIAS_TENSOR_SIZE_DIM_0": 784,
+                    "BIAS_TENSOR_SIZE_DIM_0": 768,
                     "BIAS_PARALLELISM_DIM_0": 32,
-                    "DATA_OUT_0_PRECISION_0": 35,
-                    "DATA_OUT_0_PRECISION_1": 6,
-                    "DATA_OUT_0_TENSOR_SIZE_DIM_0": 784,
-                    "DATA_OUT_0_PARALLELISM_DIM_0": 32,
                 }
             ),
             get_fixed_linear_config(
                 {
                     "HAS_BIAS": 1,
                     "WEIGHTS_PRE_TRANSPOSED": 0,
-                    "DATA_IN_0_TENSOR_SIZE_DIM_0": 784,
+                    "DATA_IN_0_TENSOR_SIZE_DIM_0": 768,
                     "DATA_IN_0_PARALLELISM_DIM_0": 32,
-                    "WEIGHT_TENSOR_SIZE_DIM_0": 784,
-                    "WEIGHT_TENSOR_SIZE_DIM_1": 784,
+                    "WEIGHT_TENSOR_SIZE_DIM_0": 768,
+                    "WEIGHT_TENSOR_SIZE_DIM_1": 768,
                     "WEIGHT_PARALLELISM_DIM_0": 32,
                     "WEIGHT_PARALLELISM_DIM_1": 32,
-                    "BIAS_TENSOR_SIZE_DIM_0": 784,
+                    "BIAS_TENSOR_SIZE_DIM_0": 768,
                     "BIAS_PARALLELISM_DIM_0": 32,
-                    "DATA_OUT_0_PRECISION_0": 35,
-                    "DATA_OUT_0_PRECISION_1": 6,
-                    "DATA_OUT_0_TENSOR_SIZE_DIM_0": 784,
-                    "DATA_OUT_0_PARALLELISM_DIM_0": 32,
                 }
             ),
         ],

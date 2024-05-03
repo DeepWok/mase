@@ -13,7 +13,7 @@ from .layer_norm import LayerNormInteger
 from typing import Optional, Tuple
 
 
-class _BertAttentionBase(torch.nn.Module):
+class _BertSelfAttentionBase(torch.nn.Module):
     def __init__(
         self, config, q_config: dict = None, position_embedding_type=None
     ) -> None:
@@ -49,7 +49,7 @@ class _BertAttentionBase(torch.nn.Module):
         )
 
 
-class BertAttentionInteger(_BertAttentionBase):
+class BertSelfAttentionInteger(_BertSelfAttentionBase):
     def __init__(
         self, config, q_config: dict = None, position_embedding_type=None
     ) -> None:

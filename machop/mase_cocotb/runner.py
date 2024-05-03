@@ -19,6 +19,7 @@ def mase_runner(
     extra_build_args: list[str] = [],
     trace: bool = False,
     seed: int = None,
+    skip_build: bool = False,
 ):
     assert type(module_param_list) == list, "Need to pass in a list of dicts!"
 
@@ -58,39 +59,42 @@ def mase_runner(
         print("# ---------------------------------------")
         test_work_dir = group_path.joinpath(f"test/build/{module}/test_{i}")
         runner = get_runner(SIM)
-        runner.build(
-            verilog_sources=[module_path],
-            includes=[str(comp_path.joinpath(f"{d}/rtl/")) for d in deps],
-            hdl_toplevel=module,
-            build_args=[
-                # Verilator linter is overly strict.
-                # Too many errors
-                # These errors are in later versions of verilator
-                "-Wno-GENUNNAMED",
-                "-Wno-WIDTHEXPAND",
-                "-Wno-WIDTHTRUNC",
-                # Simulation Optimisation
-                "-Wno-UNOPTFLAT",
-                "-prof-c",
-                "--stats",
-                # Signal trace in dump.fst
-                *(["--trace-fst", "--trace-structs"] if trace else []),
-                "-O2",
-                "-build-jobs",
-                "8",
-                "-Wno-fatal",
-                "-Wno-lint",
-                "-Wno-style",
-                *extra_build_args,
-            ],
-            parameters=module_params,
-            build_dir=test_work_dir,
-        )
+        if not skip_build:
+            runner.build(
+                verilog_sources=[module_path],
+                includes=[str(comp_path.joinpath(f"{d}/rtl/")) for d in deps],
+                hdl_toplevel=module,
+                build_args=[
+                    # Verilator linter is overly strict.
+                    # Too many errors
+                    # These errors are in later versions of verilator
+                    "-Wno-GENUNNAMED",
+                    "-Wno-WIDTHEXPAND",
+                    "-Wno-WIDTHTRUNC",
+                    # Simulation Optimisation
+                    "-Wno-UNOPTFLAT",
+                    "-prof-c",
+                    "--stats",
+                    # Signal trace in dump.fst
+                    *(["--trace-fst", "--trace-structs"] if trace else []),
+                    "-O2",
+                    "-build-jobs",
+                    "8",
+                    "-Wno-fatal",
+                    "-Wno-lint",
+                    "-Wno-style",
+                    *extra_build_args,
+                ],
+                parameters=module_params,
+                build_dir=test_work_dir,
+            )
         results_file = runner.test(
             hdl_toplevel=module,
+            hdl_toplevel_lang="verilog",
             test_module=f"mase_components.{group}.test.{module}_tb",
             seed=seed,
             results_xml="results.xml",
+            build_dir=test_work_dir,
         )
         logger.info(f"Results are at {results_file}")
         num_tests, fail = get_results(results_file)

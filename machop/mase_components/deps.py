@@ -30,6 +30,13 @@ MASE_HW_DEPS = {
         "conv",
         "activations",
     ],
+    "activations/fixed_softermax": [
+        "common",
+        "cast",
+        "fixed_arithmetic",
+        "conv",
+        "activations",
+    ],
     # Attention
     "attention/fixed_self_attention": [
         "attention",
@@ -38,6 +45,15 @@ MASE_HW_DEPS = {
         "fixed_arithmetic",
         "linear",
         "matmul",
+    ],
+    "attention/fixed_self_attention_head": [
+        "attention",
+        "cast",
+        "common",
+        "fixed_arithmetic",
+        "linear",
+        "matmul",
+        "activations",
     ],
     "arithmetic/mac": ["fixed_arithmetic", "float_arithmetic"],
     # Binary arithmetic

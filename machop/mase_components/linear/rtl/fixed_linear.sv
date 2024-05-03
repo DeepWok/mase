@@ -35,23 +35,24 @@ module fixed_linear # (
     parameter WEIGHT_PARALLELISM_DIM_0 = 4,
     parameter WEIGHT_PARALLELISM_DIM_1 = 4,
 
-    parameter DATA_OUT_0_PRECISION_0 = DATA_IN_0_PRECISION_0 + WEIGHT_PRECISION_0 + $clog2(
-        DATA_IN_0_TENSOR_SIZE_DIM_0
-    ) + $clog2(
-        IN_0_DEPTH
-    ) + HAS_BIAS,
-    parameter DATA_OUT_0_PRECISION_1 = DATA_IN_0_PRECISION_1 + WEIGHT_PRECISION_1,
-    parameter DATA_OUT_0_TENSOR_SIZE_DIM_0 = 4,
-    parameter DATA_OUT_0_TENSOR_SIZE_DIM_1 = 1,
-    parameter DATA_OUT_0_PARALLELISM_DIM_0 = WEIGHT_PARALLELISM_DIM_0,
-    parameter DATA_OUT_0_PARALLELISM_DIM_1 = 1,
-
     parameter BIAS_PRECISION_0 = 16,
     parameter BIAS_PRECISION_1 = 3,
     parameter BIAS_TENSOR_SIZE_DIM_0 = DATA_OUT_0_TENSOR_SIZE_DIM_0,
     parameter BIAS_TENSOR_SIZE_DIM_1 = 1,
     parameter BIAS_PARALLELISM_DIM_0 = 1,
-    parameter BIAS_PARALLELISM_DIM_1 = 1
+    parameter BIAS_PARALLELISM_DIM_1 = 1,
+
+    // Inferred precision of the output data
+    parameter DATA_OUT_0_PRECISION_0 = DATA_IN_0_PRECISION_0 + WEIGHT_PRECISION_0
+        + $clog2(DATA_IN_0_PARALLELISM_DIM_0)
+        + $clog2(WEIGHT_TENSOR_SIZE_DIM_1 / WEIGHT_PARALLELISM_DIM_1)
+        + HAS_BIAS,
+    parameter DATA_OUT_0_PRECISION_1 = DATA_IN_0_PRECISION_1 + WEIGHT_PRECISION_1,
+
+    parameter DATA_OUT_0_TENSOR_SIZE_DIM_0 = WEIGHT_TENSOR_SIZE_DIM_0,
+    parameter DATA_OUT_0_TENSOR_SIZE_DIM_1 = DATA_IN_0_TENSOR_SIZE_DIM_1,
+    parameter DATA_OUT_0_PARALLELISM_DIM_0 = WEIGHT_PARALLELISM_DIM_0,
+    parameter DATA_OUT_0_PARALLELISM_DIM_1 = DATA_IN_0_PARALLELISM_DIM_1
 ) (
     input clk,
     input rst,
