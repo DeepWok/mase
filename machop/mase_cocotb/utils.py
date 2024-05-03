@@ -1,13 +1,15 @@
 import random
 from copy import copy
+import itertools
 
 from cocotb.triggers import RisingEdge
 import torch
 from torch import Tensor
-import sys
 
-sys.path.append("../")
 from mase_cocotb.z_qlayers import quantize_to_int
+
+from functools import partial
+from chop.passes.graph.transforms.quantize.quantizers import integer_quantizer
 
 
 # Apparently this function only exists in Python 3.12 ...
@@ -83,33 +85,46 @@ def verilator_str_param(s):
     return f'"{s}"'
 
 
-def large_num_generator(large_num_thres=127, large_num_limit=500, large_num_prob=0.1):
-    """
-    Generator large numbers & small numbers with a given probability distribution.
-    Default: 500 >= abs(large number) >= 128
-    """
-    if random.random() < large_num_prob:
-        if random.random() < 0.5:
-            return random.randint(large_num_thres + 1, large_num_limit)
-        else:
-            return random.randint(-large_num_limit, -(large_num_thres + 1))
-    else:
-        return random.randint(-large_num_thres, large_num_thres)
+def product_dict(**kwargs):
+    keys = kwargs.keys()
+    for instance in itertools.product(*kwargs.values()):
+        yield dict(zip(keys, instance))
 
 
-def fixed_cast(val, in_width, in_frac_width, out_width, out_frac_width):
-    if in_frac_width > out_frac_width:
-        val = val >> (in_frac_width - out_frac_width)
-    else:
-        val = val << (out_frac_width - in_frac_width)
-    in_int_width = in_width - in_frac_width
-    out_int_width = out_width - out_frac_width
-    if in_int_width > out_int_width:
-        if val >> (in_frac_width + out_int_width) > 0:  # positive value overflow
-            val = 1 << out_width - 1
-        elif val >> (in_frac_width + out_int_width) < -1:  # negative value overflow
-            val = -(1 << out_width - 1)
-        else:
-            val = val
-            # val = int(val % (1 << out_width))
-    return val  # << out_frac_width  # treat data<out_width, out_frac_width> as data<out_width, 0>
+def fixed_preprocess_tensor(tensor: Tensor, q_config: dict, parallelism: list) -> list:
+    """Preprocess a tensor before driving it into the DUT.
+    1. Quantize to requested fixed-point precision.
+    2. Convert to integer format to be compatible with Cocotb drivers.
+    3. Split into blocks according to parallelism in each dimension.
+
+    Args:
+        tensor (Tensor): Input tensor
+        q_config (dict): Quantization configuration.
+        parallelism (list): Parallelism in each dimension.
+
+    Returns:
+        list: Processed blocks in nested list format.
+    """
+    if len(tensor.shape) == 1:
+        tensor = tensor.unsqueeze(0)
+
+    if len(parallelism) == 1:
+        parallelism = [1, parallelism[0]]
+
+    # Quantize
+    quantizer = partial(integer_quantizer, **q_config)
+    q_tensor = quantizer(tensor)
+
+    # Convert to integer format
+    q_tensor = (q_tensor * 2 ** q_config["frac_width"]).int()
+
+    # Split into chunks according to parallelism in each dimension
+    # parallelism[0]: along rows, parallelism[1]: along columns
+    dim_0_split = q_tensor.split(parallelism[0], dim=0)
+    dim_1_split = [x.split(parallelism[1], dim=1) for x in dim_0_split]
+    blocks = []
+    # Flatten the list of blocks
+    for i in range(len(dim_1_split)):
+        for j in range(len(dim_1_split[i])):
+            blocks.append(dim_1_split[i][j].flatten().tolist())
+    return blocks

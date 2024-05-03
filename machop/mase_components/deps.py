@@ -35,6 +35,7 @@ MASE_HW_DEPS = {
         "cast",
         "fixed_arithmetic",
         "conv",
+        "matmul",
         "activations",
     ],
     # Attention
