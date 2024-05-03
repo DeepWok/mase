@@ -6,7 +6,7 @@ Description : This module implements 1/x using linear piecewise approximation.
               - Input is unsigned. (x >= 0)
               - Therefore, the output is also unsigned. (y >= 0)
 
-              This module calculates 1/x using Newton-Raphson iteration in the
+              This module calculates 1/x using linear piecewise approx. in the
               domain: [1, 2). It will shift all numbers into that range and then
               shift the number back once the 1/x calculation is done.
 
@@ -96,6 +96,10 @@ initial begin
     assert (INTERCEPT_WIDTH > INTERCEPT_FRAC_WIDTH);
     assert (LPW_WIDTH > LPW_FRAC_WIDTH);
     assert (RECIP_WIDTH > RECIP_FRAC_WIDTH);
+
+    // longint maxwidths
+    assert (SLOPE_WIDTH <= 64);
+    assert (INTERCEPT_WIDTH <= 64);
 end
 
 // -----
@@ -130,7 +134,7 @@ logic [OUT_WIDTH-1:0] output_reg_in_data;
 // -----
 
 // Function to generate slope variable (m)
-function logic [SLOPE_WIDTH-1:0] slope (real x1, real x2);
+function automatic logic [SLOPE_WIDTH-1:0] slope (real x1, real x2);
     real y1, y2, res, res_shifted;
     longint res_int;
     bit [INTERCEPT_WIDTH-1:0] return_val;
@@ -148,7 +152,7 @@ function logic [SLOPE_WIDTH-1:0] slope (real x1, real x2);
 endfunction
 
 // Function to intercept variable (c)
-function logic [INTERCEPT_WIDTH-1:0] intercept (real x1, real x2);
+function automatic logic [INTERCEPT_WIDTH-1:0] intercept (real x1, real x2);
     real m, y1, y2, res, res_shifted;
     longint res_int;
     bit [INTERCEPT_WIDTH-1:0] return_val;

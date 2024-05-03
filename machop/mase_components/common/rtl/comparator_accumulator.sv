@@ -73,7 +73,8 @@ skid_buffer #(
 always_comb begin
     next_self = self;
 
-    in_ready = (self.count != DEPTH);
+    in_ready = (self.count != DEPTH) &&
+               !((self.count == DEPTH-1) && !output_ready);
     output_data = self.data;
 
     left = in_data;

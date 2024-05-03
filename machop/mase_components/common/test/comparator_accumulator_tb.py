@@ -156,4 +156,5 @@ if __name__ == "__main__":
     mase_runner(
         module_param_list=cfgs,
         trace=True,
+        jobs=12,
     )

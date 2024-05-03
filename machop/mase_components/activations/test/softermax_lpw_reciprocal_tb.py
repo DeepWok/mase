@@ -223,12 +223,16 @@ if __name__ == "__main__":
     NUM_RANDOM_CFGS = 40
     random_cfgs = [random_cfg() for _ in range(NUM_RANDOM_CFGS)]
 
+    cfgs = [
+        DEFAULT,
+        {"IN_WIDTH": 20, "IN_FRAC_WIDTH": 10, "OUT_WIDTH": 20, "OUT_FRAC_WIDTH": 3},
+        *random_cfgs,
+    ]
+
+    cfgs = [{"IN_WIDTH": 6, "IN_FRAC_WIDTH": 3, "OUT_WIDTH": 6, "OUT_FRAC_WIDTH": 3}]
+
     mase_runner(
-        module_param_list=[
-            DEFAULT,
-            {"IN_WIDTH": 20, "IN_FRAC_WIDTH": 10, "OUT_WIDTH": 20, "OUT_FRAC_WIDTH": 3},
-            *random_cfgs,
-        ],
+        module_param_list=cfgs,
         trace=True,
         jobs=12,
     )

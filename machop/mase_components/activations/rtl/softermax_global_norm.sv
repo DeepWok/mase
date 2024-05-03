@@ -6,24 +6,29 @@ Description : This module implements the second section of the softermax compute
 
               Refer to bottom half of Fig. 4.a) and 4.b) in the Softermax Paper.
               https://arxiv.org/abs/2103.09301
+
+              TODO:
+              - Fix throughput issue
 */
 
 `timescale 1ns/1ps
 
 module softermax_global_norm #(
     // Input shape dimensions
-    parameter TOTAL_DIM = 16,
-    parameter PARALLELISM = 4,
+    parameter  TOTAL_DIM = 16,
+    parameter  PARALLELISM = 4,
 
     // Widths
-    parameter IN_VALUE_WIDTH = 16,
-    parameter IN_VALUE_FRAC_WIDTH = 15,
-    parameter IN_MAX_WIDTH = 5,
-    parameter OUT_WIDTH = 8,
-    parameter OUT_FRAC_WIDTH = 7
+    parameter  IN_VALUE_WIDTH = 16,
+    // IN_VALUE_FRAC_WIDTH should always be (IN_VALUE_WIDTH-1) since it is an
+    // unsigned fixed-point number in range [0, 2)
+    localparam IN_VALUE_FRAC_WIDTH = IN_VALUE_WIDTH-1,
+    parameter  IN_MAX_WIDTH = 5,
+    parameter  OUT_WIDTH = 8,
+    parameter  OUT_FRAC_WIDTH = 7
 ) (
-    input  logic clk,
-    input  logic rst,
+    input  logic                       clk,
+    input  logic                       rst,
 
     // in_values: Unsigned fixed-point in range [0, 2)
     input  logic [IN_VALUE_WIDTH-1:0]  in_values [PARALLELISM-1:0],
@@ -53,11 +58,26 @@ localparam ADDER_TREE_FRAC_WIDTH = IN_VALUE_FRAC_WIDTH;
 localparam ACC_WIDTH = $clog2(DEPTH) + ADDER_TREE_OUT_WIDTH;
 localparam ACC_FRAC_WIDTH = ADDER_TREE_FRAC_WIDTH;
 
-localparam RECIP_WIDTH = ACC_WIDTH;
-localparam RECIP_FRAC_WIDTH = ACC_FRAC_WIDTH;
+// TODO: Maybe set this at top level?
+localparam RECIP_WIDTH = 2 * ACC_WIDTH;
+localparam RECIP_FRAC_WIDTH = 2 * ACC_FRAC_WIDTH;
 
 localparam MULT_WIDTH = IN_VALUE_WIDTH + RECIP_WIDTH;
 localparam MULT_FRAC_WIDTH = IN_VALUE_FRAC_WIDTH + RECIP_FRAC_WIDTH;
+
+
+initial begin
+    assert (TOTAL_DIM > 1);
+    assert (DEPTH * PARALLELISM == TOTAL_DIM);
+
+    // Sanity Check
+    assert (ADDER_TREE_OUT_WIDTH >= ADDER_TREE_FRAC_WIDTH);
+    assert (ADDER_TREE_IN_WIDTH >= ADDER_TREE_FRAC_WIDTH);
+    assert (ACC_WIDTH >= ACC_FRAC_WIDTH);
+    assert (RECIP_WIDTH >= RECIP_FRAC_WIDTH);
+    assert (MULT_WIDTH >= MULT_FRAC_WIDTH);
+end
+
 
 // -----
 // Wires
@@ -278,19 +298,28 @@ matrix_fifo #(
     .out_ready(adjusted_values_out_ready)
 );
 
-fixed_adder_tree #(
-    .IN_SIZE(PARALLELISM),
-    .IN_WIDTH(ADDER_TREE_IN_WIDTH)
-) adder_tree (
-    .clk(clk),
-    .rst(rst),
-    .data_in(adder_tree_in_data),
-    .data_in_valid(adder_tree_in_valid),
-    .data_in_ready(adder_tree_in_ready),
-    .data_out(adder_tree_out_data),
-    .data_out_valid(adder_tree_out_valid),
-    .data_out_ready(adder_tree_out_ready)
-);
+
+generate
+if (PARALLELISM == 1) begin : gen_skip_adder_tree
+    assign adder_tree_out_data = adder_tree_in_data[0];
+    assign adder_tree_out_valid = adder_tree_in_valid;
+    assign adder_tree_in_ready = adder_tree_out_ready;
+end else begin : gen_adder_tree
+    fixed_adder_tree #(
+        .IN_SIZE(PARALLELISM),
+        .IN_WIDTH(ADDER_TREE_IN_WIDTH)
+    ) adder_tree (
+        .clk(clk),
+        .rst(rst),
+        .data_in(adder_tree_in_data),
+        .data_in_valid(adder_tree_in_valid),
+        .data_in_ready(adder_tree_in_ready),
+        .data_out(adder_tree_out_data),
+        .data_out_valid(adder_tree_out_valid),
+        .data_out_ready(adder_tree_out_ready)
+    );
+end
+endgenerate
 
 fixed_accumulator #(
     .IN_DEPTH(DEPTH),
