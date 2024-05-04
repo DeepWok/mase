@@ -40,6 +40,8 @@ MASE_HW_DEPS = {
     ],
     # Attention
     "attention/fixed_self_attention": [
+        "activations",
+        "arbiters",
         "attention",
         "cast",
         "common",

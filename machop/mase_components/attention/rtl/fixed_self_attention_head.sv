@@ -176,7 +176,7 @@ fixed_softermax #(
     .DATA_OUT_0_PARALLELISM_DIM_0       (IN_DATA_PARALLELISM_DIM_1),
     .DATA_OUT_0_PARALLELISM_DIM_1       (IN_DATA_PARALLELISM_DIM_1)
 
-) fixed_softmax_i (
+) fixed_softermax_i (
     .clk,
     .rst,
 

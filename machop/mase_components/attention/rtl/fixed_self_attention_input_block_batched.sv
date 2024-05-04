@@ -1,5 +1,5 @@
 `timescale 1ns / 1ps
-module fixed_self_attention_batched_input_block #(
+module fixed_self_attention_input_block_batched #(
     parameter DATA_IN_0_TENSOR_SIZE_DIM_0 = 768,
     parameter DATA_IN_0_TENSOR_SIZE_DIM_1 = 20,
     parameter DATA_IN_0_PARALLELISM_DIM_0 = 4,
@@ -90,7 +90,7 @@ parameter DATA_OUT_0_PARALLELISM_DIM_1 = DATA_IN_0_PARALLELISM_DIM_1;
 parameter QKV_PRECISION_0 = DATA_IN_0_PRECISION_0 + WEIGHT_PRECISION_0
                                 + $clog2(DATA_IN_0_PARALLELISM_DIM_0)
                                 + $clog2(WEIGHT_TENSOR_SIZE_DIM_1 / WEIGHT_PARALLELISM_DIM_1)
-                                + HAS_BIAS_QUERY;
+                                + HAS_BIAS;
 parameter QKV_PRECISION_1 = DATA_IN_0_PRECISION_1 + WEIGHT_PRECISION_1;
 
 // * Instances
@@ -99,8 +99,8 @@ parameter QKV_PRECISION_1 = DATA_IN_0_PRECISION_1 + WEIGHT_PRECISION_1;
 // * Query linear
 
 fixed_linear # (
-    .HAS_BIAS                            (HAS_BIAS_QUERY),
-    .WEIGHTS_PRE_TRANSPOSED              (WEIGHTS_PRE_TRANSPOSED_QUERY),
+    .HAS_BIAS                            (HAS_BIAS),
+    .WEIGHTS_PRE_TRANSPOSED              (WEIGHTS_PRE_TRANSPOSED),
 
     .DATA_IN_0_PRECISION_0               (DATA_IN_0_PRECISION_0),
     .DATA_IN_0_PRECISION_1               (DATA_IN_0_PRECISION_1),
@@ -149,8 +149,8 @@ fixed_linear # (
 // * Key linear
 
 fixed_linear # (
-    .HAS_BIAS                            (HAS_BIAS_KEY),
-    .WEIGHTS_PRE_TRANSPOSED              (WEIGHTS_PRE_TRANSPOSED_KEY),
+    .HAS_BIAS                            (HAS_BIAS),
+    .WEIGHTS_PRE_TRANSPOSED              (WEIGHTS_PRE_TRANSPOSED),
 
     .DATA_IN_0_PRECISION_0               (DATA_IN_0_PRECISION_0),
     .DATA_IN_0_PRECISION_1               (DATA_IN_0_PRECISION_1),
@@ -199,8 +199,8 @@ fixed_linear # (
 // * Value linear
 
 fixed_linear # (
-    .HAS_BIAS                            (HAS_BIAS_VALUE),
-    .WEIGHTS_PRE_TRANSPOSED              (WEIGHTS_PRE_TRANSPOSED_VALUE),
+    .HAS_BIAS                            (HAS_BIAS),
+    .WEIGHTS_PRE_TRANSPOSED              (WEIGHTS_PRE_TRANSPOSED),
 
     .DATA_IN_0_PRECISION_0               (DATA_IN_0_PRECISION_0),
     .DATA_IN_0_PRECISION_1               (DATA_IN_0_PRECISION_1),

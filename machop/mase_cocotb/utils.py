@@ -105,11 +105,15 @@ def fixed_preprocess_tensor(tensor: Tensor, q_config: dict, parallelism: list) -
     Returns:
         list: Processed blocks in nested list format.
     """
+
     if len(tensor.shape) == 1:
         tensor = tensor.unsqueeze(0)
 
     if len(parallelism) == 1:
         parallelism = [1, parallelism[0]]
+
+    # * Flatten batch dimension
+    tensor = tensor.view((-1, tensor.shape[-1]))
 
     # Quantize
     quantizer = partial(integer_quantizer, **q_config)

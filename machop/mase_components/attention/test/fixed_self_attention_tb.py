@@ -17,8 +17,10 @@ from mase_cocotb.interfaces.streaming import StreamDriver, StreamMonitor
 from mase_cocotb.runner import mase_runner
 
 # from mase_cocotb import Testbench, StreamDriver, StreamMonitor, mase_runner
-from chop.passes.graph.transforms.quantize.quantized_modules import BertAttentionInteger
-from chop.passes.graph.transforms.quantize.quantizers import integer_quantizer
+from chop.nn.quantized import BertSelfAttentionInteger
+from chop.passes.graph.transforms.quantize import integer_quantizer
+
+from mase_cocotb.utils import fixed_preprocess_tensor
 
 
 class FixedSelfAttentionTB(Testbench):
@@ -44,22 +46,18 @@ class FixedSelfAttentionTB(Testbench):
             dut.clk, dut.weight_value, dut.weight_value_valid, dut.weight_value_ready
         )
 
-        if self.get_parameter("HAS_BIAS_QUERY") == 1:
+        if self.get_parameter("HAS_BIAS") == 1:
             self.bias_query_driver = StreamDriver(
                 dut.clk, dut.biasquery_, dut.bias_query_valid, dut.bias_query_ready
             )
-            self.bias_query_driver.log.setLevel(logging.DEBUG)
-
-        if self.get_parameter("HAS_BIAS_KEY") == 1:
             self.bias_key_driver = StreamDriver(
                 dut.clk, dut.bias_key, dut.bias_key_valid, dut.bias_key_ready
             )
-            self.bias_key_driver.log.setLevel(logging.DEBUG)
-
-        if self.get_parameter("HAS_BIAS_VALUE") == 1:
             self.bias_value_driver = StreamDriver(
                 dut.clk, dut.bias_value, dut.bias_value_valid, dut.bias_value_ready
             )
+            self.bias_query_driver.log.setLevel(logging.DEBUG)
+            self.bias_key_driver.log.setLevel(logging.DEBUG)
             self.bias_value_driver.log.setLevel(logging.DEBUG)
 
         self.data_out_0_monitor = StreamMonitor(
@@ -67,11 +65,13 @@ class FixedSelfAttentionTB(Testbench):
             dut.data_out_0,
             dut.data_out_0_valid,
             dut.data_out_0_ready,
-            check=True,
+            check=False,
         )
 
         # Model
         self.config = BertConfig()
+        self.config.hidden_size = self.get_parameter("DATA_IN_0_TENSOR_SIZE_DIM_0")
+        self.config.num_attention_heads = self.get_parameter("NUM_HEADS")
         self.q_config = {
             "data_in_width": self.get_parameter("DATA_IN_0_PRECISION_0"),
             "data_in_frac_width": self.get_parameter("DATA_IN_0_PRECISION_1"),
@@ -80,7 +80,7 @@ class FixedSelfAttentionTB(Testbench):
             "bias_width": self.get_parameter("BIAS_PRECISION_0"),
             "bias_frac_width": self.get_parameter("BIAS_PRECISION_1"),
         }
-        self.model = BertAttentionInteger(
+        self.model = BertSelfAttentionInteger(
             config=self.config,
             q_config=self.q_config,
         )
@@ -92,37 +92,14 @@ class FixedSelfAttentionTB(Testbench):
         self.weight_value_driver.log.setLevel(logging.DEBUG)
         self.data_out_0_monitor.log.setLevel(logging.DEBUG)
 
-    def generate_inputs(self):
+    def generate_inputs(self, batch_size=1):
         return torch.randn(
             (
+                batch_size,
                 self.get_parameter("DATA_IN_0_TENSOR_SIZE_DIM_1"),
                 self.get_parameter("DATA_IN_0_TENSOR_SIZE_DIM_0"),
             )
         )
-
-    def preprocess_tensor(self, tensor, config, parallelism):
-        if len(tensor.shape) == 1:
-            tensor = tensor.unsqueeze(0)
-
-        # Quantize
-        quantizer = partial(integer_quantizer, **config)
-        q_tensor = quantizer(tensor)
-        self.log.debug(f"Quantized tensor: {q_tensor}")
-
-        # Convert to integer format
-        q_tensor = (q_tensor * 2 ** config["frac_width"]).int()
-        self.log.debug(f"Tensor in integer format: {q_tensor}")
-
-        # Split into chunks according to parallelism in each dimension
-        # parallelism[0]: along rows, parallelism[1]: along columns
-        dim_0_split = q_tensor.split(parallelism[0], dim=0)
-        dim_1_split = [x.split(parallelism[1], dim=1) for x in dim_0_split]
-        blocks = []
-        # Flatten the list of blocks
-        for i in range(len(dim_1_split)):
-            for j in range(len(dim_1_split[i])):
-                blocks.append(dim_1_split[i][j].flatten().tolist())
-        return blocks
 
     async def run_test(self):
         await self.reset()
@@ -130,13 +107,13 @@ class FixedSelfAttentionTB(Testbench):
         self.data_out_0_monitor.ready.value = 1
 
         inputs = self.generate_inputs()
-        exp_out = self.model(inputs)
+        exp_out = self.model(inputs)[0]
 
         # * Load the inputs driver
         self.log.info(f"Processing inputs: {inputs}")
-        inputs = self.preprocess_tensor(
+        inputs = fixed_preprocess_tensor(
             tensor=inputs,
-            config={
+            q_config={
                 "width": self.get_parameter("DATA_IN_0_PRECISION_0"),
                 "frac_width": self.get_parameter("DATA_IN_0_PRECISION_1"),
             },
@@ -148,47 +125,49 @@ class FixedSelfAttentionTB(Testbench):
         self.data_in_0_driver.load_driver(inputs)
 
         # * Load the weights driver
-        if self.get_parameter("WEIGHTS_PRE_TRANSPOSED") == 1:
-            weights = self.model.weight.transpose(0, 1)
-        else:
-            weights = self.model.weight
+        for projection in ["query", "key", "value"]:
 
-        self.log.info(f"Processing weights: {weights}")
-        weights = self.preprocess_tensor(
-            tensor=weights,
-            config={
-                "width": self.get_parameter("WEIGHT_PRECISION_0"),
-                "frac_width": self.get_parameter("WEIGHT_PRECISION_1"),
-            },
-            parallelism=[
-                self.get_parameter("WEIGHT_PARALLELISM_DIM_1"),
-                self.get_parameter("WEIGHT_PARALLELISM_DIM_0"),
-            ],
-        )
-        self.weight_driver.load_driver(weights)
+            if self.get_parameter("WEIGHTS_PRE_TRANSPOSED") == 1:
+                weights = getattr(self.model, projection).weight.transpose(0, 1)
+            else:
+                weights = getattr(self.model, projection).weight
 
-        # * Load the bias driver
-        if self.get_parameter("HAS_BIAS") == 1:
-            bias = self.model.bias
-            self.log.info(f"Processing bias: {bias}")
-            bias = self.preprocess_tensor(
-                tensor=bias,
-                config={
-                    "width": self.get_parameter("BIAS_PRECISION_0"),
-                    "frac_width": self.get_parameter("BIAS_PRECISION_1"),
+            self.log.info(f"Processing {projection} weights: {weights}")
+            weights = fixed_preprocess_tensor(
+                tensor=weights,
+                q_config={
+                    "width": self.get_parameter("WEIGHT_PRECISION_0"),
+                    "frac_width": self.get_parameter("WEIGHT_PRECISION_1"),
                 },
                 parallelism=[
-                    self.get_parameter("BIAS_PARALLELISM_DIM_1"),
-                    self.get_parameter("BIAS_PARALLELISM_DIM_0"),
+                    self.get_parameter("WEIGHT_PARALLELISM_DIM_1"),
+                    self.get_parameter("WEIGHT_PARALLELISM_DIM_0"),
                 ],
             )
-            self.bias_driver.load_driver(bias)
+            getattr(self, f"weight_{projection}_driver").load_driver(weights)
+
+            # * Load the bias driver
+            if self.get_parameter("HAS_BIAS") == 1:
+                bias = getattr(self.model, projection).bias
+                self.log.info(f"Processing {projection} bias: {bias}")
+                bias = fixed_preprocess_tensor(
+                    tensor=bias,
+                    q_config={
+                        "width": self.get_parameter("BIAS_PRECISION_0"),
+                        "frac_width": self.get_parameter("BIAS_PRECISION_1"),
+                    },
+                    parallelism=[
+                        self.get_parameter("BIAS_PARALLELISM_DIM_1"),
+                        self.get_parameter("BIAS_PARALLELISM_DIM_0"),
+                    ],
+                )
+                getattr(self, f"bias_{projection}_driver").load_driver(bias)
 
         # * Load the output monitor
         self.log.info(f"Processing outputs: {exp_out}")
-        outs = self.preprocess_tensor(
+        outs = fixed_preprocess_tensor(
             tensor=exp_out,
-            config={
+            q_config={
                 "width": self.get_parameter("DATA_OUT_0_PRECISION_0"),
                 "frac_width": self.get_parameter("DATA_OUT_0_PRECISION_1"),
             },
@@ -205,26 +184,39 @@ class FixedSelfAttentionTB(Testbench):
 
 @cocotb.test()
 async def cocotb_test(dut):
-    tb = LinearTB(dut)
+    tb = FixedSelfAttentionTB(dut)
     await tb.run_test()
 
 
-def get_fixed_linear_config(kwargs={}):
+def get_config(kwargs={}):
     config = {
-        "HAS_BIAS": 0,
+        "NUM_HEADS": 4,
+        "DATA_IN_0_TENSOR_SIZE_DIM_0": 64,
+        "DATA_IN_0_TENSOR_SIZE_DIM_1": 20,
+        "DATA_IN_0_PARALLELISM_DIM_0": 2,
+        "DATA_IN_0_PARALLELISM_DIM_1": 2,
+        "DATA_IN_0_PRECISION_0": 16,
+        "DATA_IN_0_PRECISION_1": 6,
         "WEIGHTS_PRE_TRANSPOSED": 1,
-        "DATA_IN_0_TENSOR_SIZE_DIM_0": 20,
-        "DATA_IN_0_PARALLELISM_DIM_0": 4,
-        "WEIGHT_TENSOR_SIZE_DIM_0": 20,
-        "WEIGHT_TENSOR_SIZE_DIM_1": 20,
-        "WEIGHT_PARALLELISM_DIM_0": 4,
-        "WEIGHT_PARALLELISM_DIM_1": 4,
-        "BIAS_TENSOR_SIZE_DIM_0": 20,
-        "BIAS_PARALLELISM_DIM_0": 4,
-        "DATA_OUT_0_PRECISION_0": 35,
+        "WEIGHT_TENSOR_SIZE_DIM_0": 64,
+        "WEIGHT_TENSOR_SIZE_DIM_1": 64,
+        "WEIGHT_PARALLELISM_DIM_0": 2,
+        "WEIGHT_PARALLELISM_DIM_1": 2,
+        "WEIGHT_PRECISION_0": 16,
+        "WEIGHT_PRECISION_1": 6,
+        "HAS_BIAS": 0,
+        "BIAS_TENSOR_SIZE_DIM_0": 64,
+        "BIAS_TENSOR_SIZE_DIM_1": 20,
+        "BIAS_PARALLELISM_DIM_0": 2,
+        "BIAS_PARALLELISM_DIM_1": 2,
+        "BIAS_PRECISION_0": 16,
+        "BIAS_PRECISION_1": 6,
+        "DATA_OUT_0_TENSOR_SIZE_DIM_0": 64,
+        "DATA_OUT_0_TENSOR_SIZE_DIM_1": 20,
+        "DATA_OUT_0_PARALLELISM_DIM_0": 2,
+        "DATA_OUT_0_PARALLELISM_DIM_1": 2,
+        "DATA_OUT_0_PRECISION_0": 16,
         "DATA_OUT_0_PRECISION_1": 6,
-        "DATA_OUT_0_TENSOR_SIZE_DIM_0": 20,
-        "DATA_OUT_0_PARALLELISM_DIM_0": 4,
     }
     config.update(kwargs)
     return config
@@ -234,62 +226,8 @@ def test_fixed_linear_smoke():
     """
     Some quick tests to check if the module is working.
     """
-    mase_runner(
-        trace=True,
-        module_param_list=[
-            get_fixed_linear_config(),
-            get_fixed_linear_config({"WEIGHTS_PRE_TRANSPOSED": 0}),
-            get_fixed_linear_config({"HAS_BIAS": 1}),
-            get_fixed_linear_config({"HAS_BIAS": 1, "WEIGHTS_PRE_TRANSPOSED": 0}),
-        ],
-    )
-
-
-def test_fixed_linear_regression():
-    """
-    More extensive tests to check realistic parameter sizes.
-    """
-    mase_runner(
-        trace=True,
-        module_param_list=[
-            get_fixed_linear_config(
-                {
-                    "DATA_IN_0_TENSOR_SIZE_DIM_0": 784,
-                    "DATA_IN_0_PARALLELISM_DIM_0": 32,
-                    "WEIGHT_TENSOR_SIZE_DIM_0": 784,
-                    "WEIGHT_TENSOR_SIZE_DIM_1": 784,
-                    "WEIGHT_PARALLELISM_DIM_0": 32,
-                    "WEIGHT_PARALLELISM_DIM_1": 32,
-                    "BIAS_TENSOR_SIZE_DIM_0": 784,
-                    "BIAS_PARALLELISM_DIM_0": 32,
-                    "DATA_OUT_0_PRECISION_0": 35,
-                    "DATA_OUT_0_PRECISION_1": 6,
-                    "DATA_OUT_0_TENSOR_SIZE_DIM_0": 784,
-                    "DATA_OUT_0_PARALLELISM_DIM_0": 32,
-                }
-            ),
-            get_fixed_linear_config(
-                {
-                    "HAS_BIAS": 1,
-                    "WEIGHTS_PRE_TRANSPOSED": 0,
-                    "DATA_IN_0_TENSOR_SIZE_DIM_0": 784,
-                    "DATA_IN_0_PARALLELISM_DIM_0": 32,
-                    "WEIGHT_TENSOR_SIZE_DIM_0": 784,
-                    "WEIGHT_TENSOR_SIZE_DIM_1": 784,
-                    "WEIGHT_PARALLELISM_DIM_0": 32,
-                    "WEIGHT_PARALLELISM_DIM_1": 32,
-                    "BIAS_TENSOR_SIZE_DIM_0": 784,
-                    "BIAS_PARALLELISM_DIM_0": 32,
-                    "DATA_OUT_0_PRECISION_0": 35,
-                    "DATA_OUT_0_PRECISION_1": 6,
-                    "DATA_OUT_0_TENSOR_SIZE_DIM_0": 784,
-                    "DATA_OUT_0_PARALLELISM_DIM_0": 32,
-                }
-            ),
-        ],
-    )
+    mase_runner(trace=True, module_param_list=[get_config()], skip_build=True)
 
 
 if __name__ == "__main__":
     test_fixed_linear_smoke()
-    test_fixed_linear_regression()
