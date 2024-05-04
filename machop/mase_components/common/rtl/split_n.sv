@@ -5,7 +5,7 @@ Description : This module implements a 1-to-N streaming interface handshake.
 
 `timescale 1ns / 1ps
 
-module splitn #(
+module split_n #(
     parameter N = 2
 ) (
     input  logic data_in_valid,

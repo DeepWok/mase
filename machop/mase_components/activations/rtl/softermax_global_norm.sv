@@ -127,7 +127,7 @@ logic out_reg_ready;
 // Modules
 // -----
 
-splitn #(
+split_n #(
     .N(3)
 ) input_split (
     .data_in_valid(in_valid),

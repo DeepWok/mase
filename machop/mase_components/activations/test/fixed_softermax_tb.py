@@ -27,22 +27,22 @@ class SoftermaxTB(Testbench):
             self.log.setLevel(logging.DEBUG)
 
         self.in_data_driver = StreamDriver(
-            dut.clk, dut.in_data, dut.in_valid, dut.in_ready
+            dut.clk, dut.data_in_0, dut.data_in_0_valid, dut.data_in_0_ready
         )
 
         self.out_data_monitor = StreamMonitor(
             dut.clk,
-            dut.out_data,
-            dut.out_valid,
-            dut.out_ready,
+            dut.data_out_0,
+            dut.data_out_0_valid,
+            dut.data_out_0_ready,
             check=False,
         )
         # Model
         self.model = partial(
             fixed_softermax,
             q_config={
-                "width": self.get_parameter("IN_WIDTH"),
-                "frac_width": self.get_parameter("IN_FRAC_WIDTH"),
+                "width": self.get_parameter("DATA_IN_0_PRECISION_0"),
+                "frac_width": self.get_parameter("DATA_IN_0_PRECISION_1"),
             },
         )
 
@@ -51,7 +51,12 @@ class SoftermaxTB(Testbench):
         self.out_data_monitor.log.setLevel(logging.DEBUG)
 
     def generate_inputs(self):
-        return torch.randn((self.get_parameter("TOTAL_DIM"),))
+        return torch.randn(
+            (
+                self.get_parameter("DATA_IN_0_TENSOR_SIZE_DIM_1"),
+                self.get_parameter("DATA_IN_0_TENSOR_SIZE_DIM_0"),
+            )
+        )
 
     async def run_test(self):
         await self.reset()
@@ -66,10 +71,13 @@ class SoftermaxTB(Testbench):
         inputs = fixed_preprocess_tensor(
             tensor=inputs,
             q_config={
-                "width": self.get_parameter("IN_WIDTH"),
-                "frac_width": self.get_parameter("IN_FRAC_WIDTH"),
+                "width": self.get_parameter("DATA_IN_0_PRECISION_0"),
+                "frac_width": self.get_parameter("DATA_IN_0_PRECISION_1"),
             },
-            parallelism=[self.get_parameter("PARALLELISM")],
+            parallelism=[
+                self.get_parameter("DATA_IN_0_PARALLELISM_DIM_1"),
+                self.get_parameter("DATA_IN_0_PARALLELISM_DIM_0"),
+            ],
         )
         self.in_data_driver.load_driver(inputs)
 
@@ -78,10 +86,13 @@ class SoftermaxTB(Testbench):
         outs = fixed_preprocess_tensor(
             tensor=exp_out,
             q_config={
-                "width": self.get_parameter("OUT_WIDTH"),
-                "frac_width": self.get_parameter("OUT_FRAC_WIDTH"),
+                "width": self.get_parameter("DATA_OUT_0_PRECISION_0"),
+                "frac_width": self.get_parameter("DATA_OUT_0_PRECISION_1"),
             },
-            parallelism=[self.get_parameter("PARALLELISM")],
+            parallelism=[
+                self.get_parameter("DATA_OUT_0_PARALLELISM_DIM_1"),
+                self.get_parameter("DATA_OUT_0_PARALLELISM_DIM_0"),
+            ],
         )
         self.out_data_monitor.load_monitor(outs)
 
@@ -97,14 +108,18 @@ async def cocotb_test(dut):
 
 def get_fixed_softermax_config(kwargs={}):
     config = {
-        "TOTAL_DIM": 20,
-        "PARALLELISM": 4,
-        "IN_WIDTH": 16,
-        "IN_FRAC_WIDTH": 6,
-        "POW2_WIDTH": 16,
-        "POW2_FRAC_WIDTH": 6,
-        "OUT_WIDTH": 16,
-        "OUT_FRAC_WIDTH": 6,
+        "DATA_IN_0_PRECISION_0": 16,
+        "DATA_IN_0_PRECISION_1": 6,
+        "DATA_IN_0_TENSOR_SIZE_DIM_0": 20,
+        "DATA_IN_0_TENSOR_SIZE_DIM_1": 20,
+        "DATA_IN_0_PARALLELISM_DIM_0": 2,
+        "DATA_IN_0_PARALLELISM_DIM_1": 2,
+        "DATA_OUT_0_PRECISION_0": 16,
+        "DATA_OUT_0_PRECISION_1": 6,
+        "DATA_OUT_0_TENSOR_SIZE_DIM_0": 20,
+        "DATA_OUT_0_TENSOR_SIZE_DIM_1": 20,
+        "DATA_OUT_0_PARALLELISM_DIM_0": 2,
+        "DATA_OUT_0_PARALLELISM_DIM_1": 2,
     }
     config.update(kwargs)
     return config

@@ -1,5 +1,4 @@
 from torch import Tensor
-from math import ceil
 
 
 def softermax(input: Tensor) -> Tensor:
@@ -11,5 +10,9 @@ def softermax(input: Tensor) -> Tensor:
     Returns:
         Tensor: Output tensor
     """
-    powers = 2 ** (input - ceil(input.max()))
-    return powers / powers.sum()
+    out = input - input.max(dim=1).values.ceil()
+    out = 2**out
+    row_sum = out.sum(dim=1).reshape((-1, 1)).expand(input.shape)
+    # Elementwise division
+    out = out / row_sum
+    return out
