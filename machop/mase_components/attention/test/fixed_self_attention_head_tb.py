@@ -17,9 +17,7 @@ from mase_cocotb.interfaces.streaming import StreamDriver, StreamMonitor
 from mase_cocotb.runner import mase_runner
 
 # from mase_cocotb import Testbench, StreamDriver, StreamMonitor, mase_runner
-from chop.passes.graph.transforms.quantize.quantized_modules import (
-    BertSelfAttentionHeadInteger,
-)
+from chop.nn.quantized import BertSelfAttentionHeadInteger
 from chop.passes.graph.transforms.quantize.quantizers import integer_quantizer
 
 from mase_components.activations.test import generate_memory
@@ -207,7 +205,7 @@ def test_fixed_self_attention_head_smoke():
         module_param_list=[
             get_fixed_self_attention_head_config(),
         ],
-        skip_build=True,
+        skip_build=False,
     )
 
 

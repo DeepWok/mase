@@ -1,7 +1,4 @@
 # from .add import AddInteger
-from .attention import BertSelfAttentionInteger
-from .attention_head import BertSelfAttentionHeadInteger
-
 from .conv1d import (
     Conv1dBlockFP,
     Conv1dBlockMinifloat,

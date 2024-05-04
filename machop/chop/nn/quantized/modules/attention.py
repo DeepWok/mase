@@ -3,12 +3,15 @@ from functools import partial
 import torch
 from torch import Tensor
 from torch.nn import functional as F
-from .utils import get_stats, quantiser_passthrough
 
 from transformers.models.bert.modeling_bert import BertAttention
 
-from .linear import LinearInteger
-from .layer_norm import LayerNormInteger
+from chop.passes.graph.transforms.quantize.quantized_modules.linear import (
+    LinearInteger,
+)
+from chop.passes.graph.transforms.quantize.quantized_modules.layer_norm import (
+    LayerNormInteger,
+)
 
 from typing import Optional, Tuple
 
