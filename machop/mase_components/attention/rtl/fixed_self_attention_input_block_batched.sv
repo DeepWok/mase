@@ -64,186 +64,201 @@ module fixed_self_attention_input_block_batched #(
     // Query
     output logic [QKV_PRECISION_0-1:0] data_out_query [DATA_IN_0_PARALLELISM_DIM_1 * WEIGHT_PARALLELISM_DIM_0-1:0],
     output logic data_out_query_valid,
-    input  logic data_out_query_ready,
+    input logic data_out_query_ready,
 
     // Key
     output logic [QKV_PRECISION_0-1:0] data_out_key [DATA_IN_0_PARALLELISM_DIM_1 * WEIGHT_PARALLELISM_DIM_0-1:0],
     output logic data_out_key_valid,
-    input  logic data_out_key_ready,
+    input logic data_out_key_ready,
 
     // Value
     output logic [QKV_PRECISION_0-1:0] data_out_value [DATA_IN_0_PARALLELISM_DIM_1 * WEIGHT_PARALLELISM_DIM_0-1:0],
     output logic data_out_value_valid,
-    input  logic data_out_value_ready
+    input logic data_out_value_ready
 );
 
-// ! TO DO: add assertions about bias parallelism matching weight parallelism
+  // ! TO DO: add assertions about bias parallelism matching weight parallelism
 
-// * Inferred parameters
-parameter DATA_OUT_0_TENSOR_SIZE_DIM_0 = WEIGHT_TENSOR_SIZE_DIM_0;
-parameter DATA_OUT_0_TENSOR_SIZE_DIM_1 = DATA_IN_0_TENSOR_SIZE_DIM_1;
-parameter DATA_OUT_0_PARALLELISM_DIM_0 = WEIGHT_PARALLELISM_DIM_0;
-parameter DATA_OUT_0_PARALLELISM_DIM_1 = DATA_IN_0_PARALLELISM_DIM_1;
+  // * Inferred parameters
+  parameter DATA_OUT_0_TENSOR_SIZE_DIM_0 = WEIGHT_TENSOR_SIZE_DIM_0;
+  parameter DATA_OUT_0_TENSOR_SIZE_DIM_1 = DATA_IN_0_TENSOR_SIZE_DIM_1;
+  parameter DATA_OUT_0_PARALLELISM_DIM_0 = WEIGHT_PARALLELISM_DIM_0;
+  parameter DATA_OUT_0_PARALLELISM_DIM_1 = DATA_IN_0_PARALLELISM_DIM_1;
 
-// * Precision parameters for intermediate signals
+  // * Precision parameters for intermediate signals
 
-parameter QKV_PRECISION_0 = DATA_IN_0_PRECISION_0 + WEIGHT_PRECISION_0
-                                + $clog2(DATA_IN_0_PARALLELISM_DIM_0)
-                                + $clog2(WEIGHT_TENSOR_SIZE_DIM_1 / WEIGHT_PARALLELISM_DIM_1)
-                                + HAS_BIAS;
-parameter QKV_PRECISION_1 = DATA_IN_0_PRECISION_1 + WEIGHT_PRECISION_1;
+  parameter QKV_PRECISION_0 = DATA_IN_0_PRECISION_0 + WEIGHT_PRECISION_0 + $clog2(
+      DATA_IN_0_PARALLELISM_DIM_0
+  ) + $clog2(
+      WEIGHT_TENSOR_SIZE_DIM_1 / WEIGHT_PARALLELISM_DIM_1
+  ) + HAS_BIAS;
+  parameter QKV_PRECISION_1 = DATA_IN_0_PRECISION_1 + WEIGHT_PRECISION_1;
 
-// * Instances
-// * =================================================================
+  logic query_data_in_valid, query_data_in_ready;
+  logic key_data_in_valid, key_data_in_ready;
+  logic value_data_in_valid, value_data_in_ready;
 
-// * Query linear
+  // * Instances
+  // * =================================================================
 
-fixed_linear # (
-    .HAS_BIAS                            (HAS_BIAS),
-    .WEIGHTS_PRE_TRANSPOSED              (WEIGHTS_PRE_TRANSPOSED),
+  // * Split the incoming data over the QKV projections
+  split_n #(
+      .N(3)
+  ) split_i (
+      .data_in_valid (data_in_0_valid),
+      .data_in_ready (data_in_0_ready),
+      .data_out_valid({query_data_in_valid, key_data_in_valid, value_data_in_valid}),
+      .data_out_ready({query_data_in_ready, key_data_in_ready, value_data_in_ready})
+  );
 
-    .DATA_IN_0_PRECISION_0               (DATA_IN_0_PRECISION_0),
-    .DATA_IN_0_PRECISION_1               (DATA_IN_0_PRECISION_1),
-    .DATA_IN_0_TENSOR_SIZE_DIM_0         (DATA_IN_0_TENSOR_SIZE_DIM_0),
-    .DATA_IN_0_TENSOR_SIZE_DIM_1         (DATA_IN_0_TENSOR_SIZE_DIM_1),
-    .DATA_IN_0_PARALLELISM_DIM_0         (DATA_IN_0_PARALLELISM_DIM_0),
-    .DATA_IN_0_PARALLELISM_DIM_1         (DATA_IN_0_PARALLELISM_DIM_1),
+  // * Query linear
 
-    .WEIGHT_PRECISION_0                  (WEIGHT_PRECISION_0),
-    .WEIGHT_PRECISION_1                  (WEIGHT_PRECISION_1),
-    .WEIGHT_TENSOR_SIZE_DIM_0            (WEIGHT_TENSOR_SIZE_DIM_0),
-    .WEIGHT_TENSOR_SIZE_DIM_1            (WEIGHT_TENSOR_SIZE_DIM_1),
-    .WEIGHT_PARALLELISM_DIM_0            (WEIGHT_PARALLELISM_DIM_0),
-    .WEIGHT_PARALLELISM_DIM_1            (WEIGHT_PARALLELISM_DIM_1),
+  fixed_linear #(
+      .HAS_BIAS              (HAS_BIAS),
+      .WEIGHTS_PRE_TRANSPOSED(WEIGHTS_PRE_TRANSPOSED),
 
-    .BIAS_PRECISION_0                    (BIAS_PRECISION_0),
-    .BIAS_PRECISION_1                    (BIAS_PRECISION_1),
-    .BIAS_TENSOR_SIZE_DIM_0              (BIAS_TENSOR_SIZE_DIM_0),
-    .BIAS_TENSOR_SIZE_DIM_1              (BIAS_TENSOR_SIZE_DIM_1),
-    .BIAS_PARALLELISM_DIM_0              (BIAS_PARALLELISM_DIM_0),
-    .BIAS_PARALLELISM_DIM_1              (BIAS_PARALLELISM_DIM_1)
+      .DATA_IN_0_PRECISION_0      (DATA_IN_0_PRECISION_0),
+      .DATA_IN_0_PRECISION_1      (DATA_IN_0_PRECISION_1),
+      .DATA_IN_0_TENSOR_SIZE_DIM_0(DATA_IN_0_TENSOR_SIZE_DIM_0),
+      .DATA_IN_0_TENSOR_SIZE_DIM_1(DATA_IN_0_TENSOR_SIZE_DIM_1),
+      .DATA_IN_0_PARALLELISM_DIM_0(DATA_IN_0_PARALLELISM_DIM_0),
+      .DATA_IN_0_PARALLELISM_DIM_1(DATA_IN_0_PARALLELISM_DIM_1),
 
-) fixed_linear_query (
-    .clk,
-    .rst,
+      .WEIGHT_PRECISION_0      (WEIGHT_PRECISION_0),
+      .WEIGHT_PRECISION_1      (WEIGHT_PRECISION_1),
+      .WEIGHT_TENSOR_SIZE_DIM_0(WEIGHT_TENSOR_SIZE_DIM_0),
+      .WEIGHT_TENSOR_SIZE_DIM_1(WEIGHT_TENSOR_SIZE_DIM_1),
+      .WEIGHT_PARALLELISM_DIM_0(WEIGHT_PARALLELISM_DIM_0),
+      .WEIGHT_PARALLELISM_DIM_1(WEIGHT_PARALLELISM_DIM_1),
 
-    // input port for data_inivations
-    .data_in_0                          (data_in_0),
-    .data_in_0_valid                    (data_in_0_valid),
-    .data_in_0_ready                    (data_in_0_ready),
+      .BIAS_PRECISION_0      (BIAS_PRECISION_0),
+      .BIAS_PRECISION_1      (BIAS_PRECISION_1),
+      .BIAS_TENSOR_SIZE_DIM_0(BIAS_TENSOR_SIZE_DIM_0),
+      .BIAS_TENSOR_SIZE_DIM_1(BIAS_TENSOR_SIZE_DIM_1),
+      .BIAS_PARALLELISM_DIM_0(BIAS_PARALLELISM_DIM_0),
+      .BIAS_PARALLELISM_DIM_1(BIAS_PARALLELISM_DIM_1)
 
-    // input port for weight
-    .weight                             (weight_query),
-    .weight_valid                       (weight_query_valid),
-    .weight_ready                       (weight_query_ready),
+  ) fixed_linear_query (
+      .clk,
+      .rst,
 
-    .bias                               (bias_query),
-    .bias_valid                         (bias_query_valid),
-    .bias_ready                         (bias_query_ready),
+      // input port for data_inivations
+      .data_in_0      (data_in_0),
+      .data_in_0_valid(query_data_in_valid),
+      .data_in_0_ready(query_data_in_ready),
 
-    .data_out_0                         (data_out_query),
-    .data_out_0_valid                   (data_out_query_valid),
-    .data_out_0_ready                   (data_out_query_ready)
-);
+      // input port for weight
+      .weight      (weight_query),
+      .weight_valid(weight_query_valid),
+      .weight_ready(weight_query_ready),
 
-// * Key linear
+      .bias      (bias_query),
+      .bias_valid(bias_query_valid),
+      .bias_ready(bias_query_ready),
 
-fixed_linear # (
-    .HAS_BIAS                            (HAS_BIAS),
-    .WEIGHTS_PRE_TRANSPOSED              (WEIGHTS_PRE_TRANSPOSED),
+      .data_out_0      (data_out_query),
+      .data_out_0_valid(data_out_query_valid),
+      .data_out_0_ready(data_out_query_ready)
+  );
 
-    .DATA_IN_0_PRECISION_0               (DATA_IN_0_PRECISION_0),
-    .DATA_IN_0_PRECISION_1               (DATA_IN_0_PRECISION_1),
-    .DATA_IN_0_TENSOR_SIZE_DIM_0         (DATA_IN_0_TENSOR_SIZE_DIM_0),
-    .DATA_IN_0_TENSOR_SIZE_DIM_1         (DATA_IN_0_TENSOR_SIZE_DIM_1),
-    .DATA_IN_0_PARALLELISM_DIM_0         (DATA_IN_0_PARALLELISM_DIM_0),
-    .DATA_IN_0_PARALLELISM_DIM_1         (DATA_IN_0_PARALLELISM_DIM_1),
+  // * Key linear
 
-    .WEIGHT_PRECISION_0                  (WEIGHT_PRECISION_0),
-    .WEIGHT_PRECISION_1                  (WEIGHT_PRECISION_1),
-    .WEIGHT_TENSOR_SIZE_DIM_0            (WEIGHT_TENSOR_SIZE_DIM_0),
-    .WEIGHT_TENSOR_SIZE_DIM_1            (WEIGHT_TENSOR_SIZE_DIM_1),
-    .WEIGHT_PARALLELISM_DIM_0            (WEIGHT_PARALLELISM_DIM_0),
-    .WEIGHT_PARALLELISM_DIM_1            (WEIGHT_PARALLELISM_DIM_1),
+  fixed_linear #(
+      .HAS_BIAS              (HAS_BIAS),
+      .WEIGHTS_PRE_TRANSPOSED(WEIGHTS_PRE_TRANSPOSED),
 
-    .BIAS_PRECISION_0                    (BIAS_PRECISION_0),
-    .BIAS_PRECISION_1                    (BIAS_PRECISION_1),
-    .BIAS_TENSOR_SIZE_DIM_0              (BIAS_TENSOR_SIZE_DIM_0),
-    .BIAS_TENSOR_SIZE_DIM_1              (BIAS_TENSOR_SIZE_DIM_1),
-    .BIAS_PARALLELISM_DIM_0              (BIAS_PARALLELISM_DIM_0),
-    .BIAS_PARALLELISM_DIM_1              (BIAS_PARALLELISM_DIM_1)
+      .DATA_IN_0_PRECISION_0      (DATA_IN_0_PRECISION_0),
+      .DATA_IN_0_PRECISION_1      (DATA_IN_0_PRECISION_1),
+      .DATA_IN_0_TENSOR_SIZE_DIM_0(DATA_IN_0_TENSOR_SIZE_DIM_0),
+      .DATA_IN_0_TENSOR_SIZE_DIM_1(DATA_IN_0_TENSOR_SIZE_DIM_1),
+      .DATA_IN_0_PARALLELISM_DIM_0(DATA_IN_0_PARALLELISM_DIM_0),
+      .DATA_IN_0_PARALLELISM_DIM_1(DATA_IN_0_PARALLELISM_DIM_1),
 
-) fixed_linear_key (
-    .clk,
-    .rst,
+      .WEIGHT_PRECISION_0      (WEIGHT_PRECISION_0),
+      .WEIGHT_PRECISION_1      (WEIGHT_PRECISION_1),
+      .WEIGHT_TENSOR_SIZE_DIM_0(WEIGHT_TENSOR_SIZE_DIM_0),
+      .WEIGHT_TENSOR_SIZE_DIM_1(WEIGHT_TENSOR_SIZE_DIM_1),
+      .WEIGHT_PARALLELISM_DIM_0(WEIGHT_PARALLELISM_DIM_0),
+      .WEIGHT_PARALLELISM_DIM_1(WEIGHT_PARALLELISM_DIM_1),
 
-    // input port for data_inivations
-    .data_in_0                          (data_in_0),
-    .data_in_0_valid                    (data_in_0_valid),
-    .data_in_0_ready                    (data_in_0_ready),
+      .BIAS_PRECISION_0      (BIAS_PRECISION_0),
+      .BIAS_PRECISION_1      (BIAS_PRECISION_1),
+      .BIAS_TENSOR_SIZE_DIM_0(BIAS_TENSOR_SIZE_DIM_0),
+      .BIAS_TENSOR_SIZE_DIM_1(BIAS_TENSOR_SIZE_DIM_1),
+      .BIAS_PARALLELISM_DIM_0(BIAS_PARALLELISM_DIM_0),
+      .BIAS_PARALLELISM_DIM_1(BIAS_PARALLELISM_DIM_1)
 
-    // input port for weight
-    .weight                             (weight_key),
-    .weight_valid                       (weight_key_valid),
-    .weight_ready                       (weight_key_ready),
+  ) fixed_linear_key (
+      .clk,
+      .rst,
 
-    .bias                               (bias_key),
-    .bias_valid                         (bias_key_valid),
-    .bias_ready                         (bias_key_ready),
+      // input port for data_inivations
+      .data_in_0      (data_in_0),
+      .data_in_0_valid(key_data_in_valid),
+      .data_in_0_ready(key_data_in_ready),
 
-    .data_out_0                         (data_out_key),
-    .data_out_0_valid                   (data_out_key_valid),
-    .data_out_0_ready                   (data_out_key_ready)
-);
+      // input port for weight
+      .weight      (weight_key),
+      .weight_valid(weight_key_valid),
+      .weight_ready(weight_key_ready),
 
-// * Value linear
+      .bias      (bias_key),
+      .bias_valid(bias_key_valid),
+      .bias_ready(bias_key_ready),
 
-fixed_linear # (
-    .HAS_BIAS                            (HAS_BIAS),
-    .WEIGHTS_PRE_TRANSPOSED              (WEIGHTS_PRE_TRANSPOSED),
+      .data_out_0      (data_out_key),
+      .data_out_0_valid(data_out_key_valid),
+      .data_out_0_ready(data_out_key_ready)
+  );
 
-    .DATA_IN_0_PRECISION_0               (DATA_IN_0_PRECISION_0),
-    .DATA_IN_0_PRECISION_1               (DATA_IN_0_PRECISION_1),
-    .DATA_IN_0_TENSOR_SIZE_DIM_0         (DATA_IN_0_TENSOR_SIZE_DIM_0),
-    .DATA_IN_0_TENSOR_SIZE_DIM_1         (DATA_IN_0_TENSOR_SIZE_DIM_1),
-    .DATA_IN_0_PARALLELISM_DIM_0         (DATA_IN_0_PARALLELISM_DIM_0),
-    .DATA_IN_0_PARALLELISM_DIM_1         (DATA_IN_0_PARALLELISM_DIM_1),
+  // * Value linear
 
-    .WEIGHT_PRECISION_0                  (WEIGHT_PRECISION_0),
-    .WEIGHT_PRECISION_1                  (WEIGHT_PRECISION_1),
-    .WEIGHT_TENSOR_SIZE_DIM_0            (WEIGHT_TENSOR_SIZE_DIM_0),
-    .WEIGHT_TENSOR_SIZE_DIM_1            (WEIGHT_TENSOR_SIZE_DIM_1),
-    .WEIGHT_PARALLELISM_DIM_0            (WEIGHT_PARALLELISM_DIM_0),
-    .WEIGHT_PARALLELISM_DIM_1            (WEIGHT_PARALLELISM_DIM_1),
+  fixed_linear #(
+      .HAS_BIAS              (HAS_BIAS),
+      .WEIGHTS_PRE_TRANSPOSED(WEIGHTS_PRE_TRANSPOSED),
 
-    .BIAS_PRECISION_0                    (BIAS_PRECISION_0),
-    .BIAS_PRECISION_1                    (BIAS_PRECISION_1),
-    .BIAS_TENSOR_SIZE_DIM_0              (BIAS_TENSOR_SIZE_DIM_0),
-    .BIAS_TENSOR_SIZE_DIM_1              (BIAS_TENSOR_SIZE_DIM_1),
-    .BIAS_PARALLELISM_DIM_0              (BIAS_PARALLELISM_DIM_0),
-    .BIAS_PARALLELISM_DIM_1              (BIAS_PARALLELISM_DIM_1)
+      .DATA_IN_0_PRECISION_0      (DATA_IN_0_PRECISION_0),
+      .DATA_IN_0_PRECISION_1      (DATA_IN_0_PRECISION_1),
+      .DATA_IN_0_TENSOR_SIZE_DIM_0(DATA_IN_0_TENSOR_SIZE_DIM_0),
+      .DATA_IN_0_TENSOR_SIZE_DIM_1(DATA_IN_0_TENSOR_SIZE_DIM_1),
+      .DATA_IN_0_PARALLELISM_DIM_0(DATA_IN_0_PARALLELISM_DIM_0),
+      .DATA_IN_0_PARALLELISM_DIM_1(DATA_IN_0_PARALLELISM_DIM_1),
 
-) fixed_linear_value (
-    .clk,
-    .rst,
+      .WEIGHT_PRECISION_0      (WEIGHT_PRECISION_0),
+      .WEIGHT_PRECISION_1      (WEIGHT_PRECISION_1),
+      .WEIGHT_TENSOR_SIZE_DIM_0(WEIGHT_TENSOR_SIZE_DIM_0),
+      .WEIGHT_TENSOR_SIZE_DIM_1(WEIGHT_TENSOR_SIZE_DIM_1),
+      .WEIGHT_PARALLELISM_DIM_0(WEIGHT_PARALLELISM_DIM_0),
+      .WEIGHT_PARALLELISM_DIM_1(WEIGHT_PARALLELISM_DIM_1),
 
-    // input port for data_inivations
-    .data_in_0                          (data_in_0),
-    .data_in_0_valid                    (data_in_0_valid),
-    .data_in_0_ready                    (data_in_0_ready),
+      .BIAS_PRECISION_0      (BIAS_PRECISION_0),
+      .BIAS_PRECISION_1      (BIAS_PRECISION_1),
+      .BIAS_TENSOR_SIZE_DIM_0(BIAS_TENSOR_SIZE_DIM_0),
+      .BIAS_TENSOR_SIZE_DIM_1(BIAS_TENSOR_SIZE_DIM_1),
+      .BIAS_PARALLELISM_DIM_0(BIAS_PARALLELISM_DIM_0),
+      .BIAS_PARALLELISM_DIM_1(BIAS_PARALLELISM_DIM_1)
 
-    // input port for weight
-    .weight                             (weight_value),
-    .weight_valid                       (weight_value_valid),
-    .weight_ready                       (weight_value_ready),
+  ) fixed_linear_value (
+      .clk,
+      .rst,
 
-    .bias                               (bias_value),
-    .bias_valid                         (bias_value_valid),
-    .bias_ready                         (bias_value_ready),
+      // input port for data_inivations
+      .data_in_0      (data_in_0),
+      .data_in_0_valid(value_data_in_valid),
+      .data_in_0_ready(value_data_in_ready),
 
-    .data_out_0                         (data_out_value),
-    .data_out_0_valid                   (data_out_value_valid),
-    .data_out_0_ready                   (data_out_value_ready)
-);
+      // input port for weight
+      .weight      (weight_value),
+      .weight_valid(weight_value_valid),
+      .weight_ready(weight_value_ready),
+
+      .bias      (bias_value),
+      .bias_valid(bias_value_valid),
+      .bias_ready(bias_value_ready),
+
+      .data_out_0      (data_out_value),
+      .data_out_0_valid(data_out_value_valid),
+      .data_out_0_ready(data_out_value_ready)
+  );
 
 endmodule

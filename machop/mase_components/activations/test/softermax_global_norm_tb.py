@@ -9,16 +9,13 @@ import numpy as np
 from mase_cocotb.runner import mase_runner
 from mase_cocotb.testbench import Testbench
 from mase_cocotb.utils import bit_driver, sign_extend_t, batched
-from mase_cocotb.interfaces.streaming import (
-    StreamDriver,
-    ErrorThresholdStreamMonitor
-)
+from mase_cocotb.interfaces.streaming import StreamDriver, ErrorThresholdStreamMonitor
 
 import cocotb
 from cocotb.triggers import *
 
 from chop.passes.graph.transforms.quantize.quantizers.quantizers_for_hw import (
-    unsigned_integer_quantizer_for_hw
+    unsigned_integer_quantizer_for_hw,
 )
 
 logger = logging.getLogger("testbench")
@@ -28,10 +25,18 @@ logger.setLevel("INFO")
 class SoftermaxGlobalNormTB(Testbench):
     def __init__(self, dut) -> None:
         super().__init__(dut, dut.clk, dut.rst)
-        self.assign_self_params([
-            "TOTAL_DIM", "PARALLELISM", "DEPTH", "IN_VALUE_WIDTH",
-            "IN_VALUE_FRAC_WIDTH", "IN_MAX_WIDTH", "OUT_WIDTH", "OUT_FRAC_WIDTH"
-        ])
+        self.assign_self_params(
+            [
+                "TOTAL_DIM",
+                "PARALLELISM",
+                "DEPTH",
+                "IN_VALUE_WIDTH",
+                "IN_VALUE_FRAC_WIDTH",
+                "IN_MAX_WIDTH",
+                "OUT_WIDTH",
+                "OUT_FRAC_WIDTH",
+            ]
+        )
 
         # Driver/Monitor
         self.in_driver = StreamDriver(
@@ -43,31 +48,35 @@ class SoftermaxGlobalNormTB(Testbench):
         self.error_threshold_bits = ceil(self.percentage_error * (2**self.OUT_WIDTH))
 
         self.output_monitor = ErrorThresholdStreamMonitor(
-            dut.clk, dut.out_data, dut.out_valid, dut.out_ready,
-            width=self.OUT_WIDTH, signed=False,
+            dut.clk,
+            dut.out_data,
+            dut.out_valid,
+            dut.out_ready,
+            width=self.OUT_WIDTH,
+            signed=False,
             error_bits=self.error_threshold_bits,
-            log_error=True, check=True
+            log_error=True,
+            check=True,
         )
 
     def generate_inputs(self, batches=10):
         local_vals = torch.randint(
-            0, 2**self.IN_VALUE_WIDTH,
-            size=(batches * self.DEPTH, self.PARALLELISM)
+            0, 2**self.IN_VALUE_WIDTH, size=(batches * self.DEPTH, self.PARALLELISM)
         )
         local_max = torch.randint(
-            0, 2**self.IN_MAX_WIDTH,
-            size=(batches * self.DEPTH, 1)
+            0, 2**self.IN_MAX_WIDTH, size=(batches * self.DEPTH, 1)
         )
 
         logger.debug("local_vals: %s" % (local_vals))
-        logger.debug("local_vals (float): %s" % (
-            local_vals / (2 ** self.IN_VALUE_FRAC_WIDTH)
-        ))
+        logger.debug(
+            "local_vals (float): %s" % (local_vals / (2**self.IN_VALUE_FRAC_WIDTH))
+        )
         logger.debug("local_max: %s" % (local_max))
-        logger.debug("local_max (signed): %s" % (sign_extend_t(local_max, self.IN_MAX_WIDTH)))
+        logger.debug(
+            "local_max (signed): %s" % (sign_extend_t(local_max, self.IN_MAX_WIDTH))
+        )
 
         return local_vals.tolist(), local_max.flatten().tolist()
-
 
     def model(self, inputs):
         batched_in = list(batched(inputs, self.DEPTH))
@@ -75,17 +84,22 @@ class SoftermaxGlobalNormTB(Testbench):
 
         for batch in batched_in:
             local_vals, local_max = list(zip(*batch))
-            local_vals = torch.tensor(list(local_vals), dtype=torch.float) / (2 ** self.IN_VALUE_FRAC_WIDTH)
+            local_vals = torch.tensor(list(local_vals), dtype=torch.float) / (
+                2**self.IN_VALUE_FRAC_WIDTH
+            )
             local_max = torch.tensor(list(local_max), dtype=torch.float)
-            local_max = sign_extend_t(torch.tensor(list(local_max), dtype=torch.float), self.IN_MAX_WIDTH)
+            local_max = sign_extend_t(
+                torch.tensor(list(local_max), dtype=torch.float), self.IN_MAX_WIDTH
+            )
 
             global_max = local_max.max()
             adj_amt = global_max - local_max.reshape(self.DEPTH, 1)
-            adj_values = local_vals / (2 ** adj_amt)
+            adj_values = local_vals / (2**adj_amt)
             norm = adj_values.sum()
             softermax = adj_values / norm
-            softermax_int = unsigned_integer_quantizer_for_hw(softermax, self.OUT_WIDTH, self.OUT_FRAC_WIDTH)
-
+            softermax_int = unsigned_integer_quantizer_for_hw(
+                softermax, self.OUT_WIDTH, self.OUT_FRAC_WIDTH
+            )
 
             logger.debug("Values:" % (local_vals))
             logger.debug("Max: %s -> %s" % (local_max, global_max))
@@ -97,7 +111,9 @@ class SoftermaxGlobalNormTB(Testbench):
             logger.debug("sanity sum: %s" % (softermax.sum().item()))
             logger.debug("integer sum: %s" % (softermax_int.sum().item()))
 
-            assert abs(softermax.sum().item() - 1) < 1e-5, f"Sum is {softermax.sum().item()}"
+            assert (
+                abs(softermax.sum().item() - 1) < 1e-5
+            ), f"Sum is {softermax.sum().item()}"
 
             exp_output.append(softermax_int)
 
@@ -119,8 +135,8 @@ class SoftermaxGlobalNormTB(Testbench):
         logger.info("Maximum bit-error: %d", max_bit_err)
         if max_bit_err > self.error_threshold_bits:
             assert False, (
-                "Test failed due to high approximation error. Got %d bits of error!" %
-                max_bit_err
+                "Test failed due to high approximation error. Got %d bits of error!"
+                % max_bit_err
             )
 
 
@@ -164,7 +180,6 @@ async def valid_backpressure(dut):
     tb.in_driver.set_valid_prob(0.5)
     await tb.reset()
     await tb.run_test(batches=1000, us=200)
-
 
 
 if __name__ == "__main__":

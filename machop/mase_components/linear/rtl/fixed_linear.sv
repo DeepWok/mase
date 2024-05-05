@@ -15,7 +15,7 @@
  *
  */
 
-module fixed_linear # (
+module fixed_linear #(
     /* verilator lint_off UNUSEDPARAM */
     parameter HAS_BIAS = 1,
     parameter WEIGHTS_PRE_TRANSPOSED = 0,
@@ -43,10 +43,11 @@ module fixed_linear # (
     parameter BIAS_PARALLELISM_DIM_1 = 1,
 
     // Inferred precision of the output data
-    parameter DATA_OUT_0_PRECISION_0 = DATA_IN_0_PRECISION_0 + WEIGHT_PRECISION_0
-        + $clog2(DATA_IN_0_PARALLELISM_DIM_0)
-        + $clog2(WEIGHT_TENSOR_SIZE_DIM_1 / WEIGHT_PARALLELISM_DIM_1)
-        + HAS_BIAS,
+    parameter DATA_OUT_0_PRECISION_0 = DATA_IN_0_PRECISION_0 + WEIGHT_PRECISION_0 + $clog2(
+        DATA_IN_0_PARALLELISM_DIM_0
+    ) + $clog2(
+        WEIGHT_TENSOR_SIZE_DIM_1 / WEIGHT_PARALLELISM_DIM_1
+    ) + HAS_BIAS,
     parameter DATA_OUT_0_PRECISION_1 = DATA_IN_0_PRECISION_1 + WEIGHT_PRECISION_1,
 
     parameter DATA_OUT_0_TENSOR_SIZE_DIM_0 = WEIGHT_TENSOR_SIZE_DIM_0,
@@ -68,7 +69,7 @@ module fixed_linear # (
     output logic weight_ready,
 
     /* verilator lint_off UNUSEDSIGNAL */
-    input logic [BIAS_PRECISION_0-1:0] bias [BIAS_PARALLELISM_DIM_0 * BIAS_PARALLELISM_DIM_1 -1:0],
+    input logic [BIAS_PRECISION_0-1:0] bias[BIAS_PARALLELISM_DIM_0 * BIAS_PARALLELISM_DIM_1 -1:0],
     input logic bias_valid,
     /* verilator lint_on UNUSEDSIGNAL */
     output logic bias_ready,
@@ -78,151 +79,151 @@ module fixed_linear # (
     input logic data_out_0_ready
 );
 
-initial begin
+  initial begin
     assert (BIAS_PARALLELISM_DIM_0 == DATA_OUT_0_PARALLELISM_DIM_0)
     else $fatal("Input bias and output data must have the same parallelism.");
     assert (BIAS_PARALLELISM_DIM_1 == DATA_OUT_0_PARALLELISM_DIM_1)
     else $fatal("Input bias and output data must have the same parallelism.");
-end
+  end
 
-// * Declarations
-// * ---------------------------------------------------------------------------------------------------
+  // * Declarations
+  // * ---------------------------------------------------------------------------------------------------
 
-logic [WEIGHT_PRECISION_0-1:0] weight_transposed [WEIGHT_PARALLELISM_DIM_0 * WEIGHT_PARALLELISM_DIM_1-1:0];
-logic weight_transposed_valid;
-logic weight_transposed_ready;
+  logic [WEIGHT_PRECISION_0-1:0] weight_transposed [WEIGHT_PARALLELISM_DIM_0 * WEIGHT_PARALLELISM_DIM_1-1:0];
+  logic weight_transposed_valid;
+  logic weight_transposed_ready;
 
-logic [DATA_OUT_0_PRECISION_0-1:0] matmul_out [DATA_OUT_0_PARALLELISM_DIM_0*DATA_OUT_0_PARALLELISM_DIM_1-1:0];
-logic matmul_out_valid;
-logic matmul_out_ready;
+  logic [DATA_OUT_0_PRECISION_0-1:0] matmul_out [DATA_OUT_0_PARALLELISM_DIM_0*DATA_OUT_0_PARALLELISM_DIM_1-1:0];
+  logic matmul_out_valid;
+  logic matmul_out_ready;
 
-logic [DATA_OUT_0_PRECISION_0-1:0] bias_casted [DATA_OUT_0_PARALLELISM_DIM_0*DATA_OUT_0_PARALLELISM_DIM_1-1:0];
-logic [DATA_OUT_0_PRECISION_0-1:0] add_bias_in [DATA_OUT_0_PARALLELISM_DIM_0*DATA_OUT_0_PARALLELISM_DIM_1-1:0];
-logic add_bias_in_valid;
-logic add_bias_in_ready;
+  logic [DATA_OUT_0_PRECISION_0-1:0] bias_casted [DATA_OUT_0_PARALLELISM_DIM_0*DATA_OUT_0_PARALLELISM_DIM_1-1:0];
+  logic [DATA_OUT_0_PRECISION_0-1:0] add_bias_in [DATA_OUT_0_PARALLELISM_DIM_0*DATA_OUT_0_PARALLELISM_DIM_1-1:0];
+  logic add_bias_in_valid;
+  logic add_bias_in_ready;
 
-// * Instances
-// * ---------------------------------------------------------------------------------------------------
+  // * Instances
+  // * ---------------------------------------------------------------------------------------------------
 
-if (WEIGHTS_PRE_TRANSPOSED == 0) begin
+  if (WEIGHTS_PRE_TRANSPOSED == 0) begin
     matrix_stream_transpose #(
-        .TOTAL_DIM0 (WEIGHT_TENSOR_SIZE_DIM_0),
-        .TOTAL_DIM1 (WEIGHT_TENSOR_SIZE_DIM_1),
-        .COMPUTE_DIM0 (WEIGHT_PARALLELISM_DIM_0),
-        .COMPUTE_DIM1 (WEIGHT_PARALLELISM_DIM_1),
-        .DATA_WIDTH (WEIGHT_PRECISION_0)
+        .TOTAL_DIM0  (WEIGHT_TENSOR_SIZE_DIM_0),
+        .TOTAL_DIM1  (WEIGHT_TENSOR_SIZE_DIM_1),
+        .COMPUTE_DIM0(WEIGHT_PARALLELISM_DIM_0),
+        .COMPUTE_DIM1(WEIGHT_PARALLELISM_DIM_1),
+        .DATA_WIDTH  (WEIGHT_PRECISION_0)
     ) weight_matrix_transpose_i (
         .clk,
         .rst,
 
-        .in_data    (weight),
-        .in_valid   (weight_valid),
-        .in_ready   (weight_ready),
+        .in_data (weight),
+        .in_valid(weight_valid),
+        .in_ready(weight_ready),
 
-        .out_data   (weight_transposed),
-        .out_valid  (weight_transposed_valid),
-        .out_ready  (weight_transposed_ready)
+        .out_data (weight_transposed),
+        .out_valid(weight_transposed_valid),
+        .out_ready(weight_transposed_ready)
     );
-end
+  end
 
-matmul #(
-    // Total dimensions
-    .A_TOTAL_DIM0   (DATA_IN_0_TENSOR_SIZE_DIM_0),
-    .A_TOTAL_DIM1   (DATA_IN_0_TENSOR_SIZE_DIM_1),
-    .B_TOTAL_DIM0   (WEIGHT_TENSOR_SIZE_DIM_0),
-    .B_TOTAL_DIM1   (WEIGHT_TENSOR_SIZE_DIM_1),
+  matmul #(
+      // Total dimensions
+      .A_TOTAL_DIM0(DATA_IN_0_TENSOR_SIZE_DIM_0),
+      .A_TOTAL_DIM1(DATA_IN_0_TENSOR_SIZE_DIM_1),
+      .B_TOTAL_DIM0(WEIGHT_TENSOR_SIZE_DIM_0),
+      .B_TOTAL_DIM1(WEIGHT_TENSOR_SIZE_DIM_1),
 
-    .A_COMPUTE_DIM0 (DATA_IN_0_PARALLELISM_DIM_0),
-    .A_COMPUTE_DIM1 (DATA_IN_0_PARALLELISM_DIM_1),
-    .B_COMPUTE_DIM0 (WEIGHT_PARALLELISM_DIM_0),
-    .B_COMPUTE_DIM1 (WEIGHT_PARALLELISM_DIM_1),
+      .A_COMPUTE_DIM0(DATA_IN_0_PARALLELISM_DIM_0),
+      .A_COMPUTE_DIM1(DATA_IN_0_PARALLELISM_DIM_1),
+      .B_COMPUTE_DIM0(WEIGHT_PARALLELISM_DIM_0),
+      .B_COMPUTE_DIM1(WEIGHT_PARALLELISM_DIM_1),
 
-    .A_WIDTH        (DATA_IN_0_PRECISION_0),
-    .A_FRAC_WIDTH   (DATA_IN_0_PRECISION_1),
-    .B_WIDTH        (WEIGHT_PRECISION_0),
-    .B_FRAC_WIDTH   (WEIGHT_PRECISION_1),
+      .A_WIDTH     (DATA_IN_0_PRECISION_0),
+      .A_FRAC_WIDTH(DATA_IN_0_PRECISION_1),
+      .B_WIDTH     (WEIGHT_PRECISION_0),
+      .B_FRAC_WIDTH(WEIGHT_PRECISION_1),
 
-    .OUT_WIDTH      (DATA_OUT_0_PRECISION_0),
-    .OUT_FRAC_WIDTH (DATA_OUT_0_PRECISION_1),
-    .OUT_SYMMETRIC  (0)
-) matmul_i (
-    .clk,
-    .rst,
+      .OUT_WIDTH     (DATA_OUT_0_PRECISION_0),
+      .OUT_FRAC_WIDTH(DATA_OUT_0_PRECISION_1),
+      .OUT_SYMMETRIC (0)
+  ) matmul_i (
+      .clk,
+      .rst,
 
-    .a_data     (data_in_0),
-    .a_valid    (data_in_0_valid),
-    .a_ready    (data_in_0_ready),
+      .a_data (data_in_0),
+      .a_valid(data_in_0_valid),
+      .a_ready(data_in_0_ready),
 
-    .b_data     (weight_transposed),
-    .b_valid    (weight_transposed_valid),
-    .b_ready    (weight_transposed_ready),
+      .b_data (weight_transposed),
+      .b_valid(weight_transposed_valid),
+      .b_ready(weight_transposed_ready),
 
-    .out_data   (matmul_out),
-    .out_valid  (matmul_out_valid),
-    .out_ready  (matmul_out_ready)
-);
+      .out_data (matmul_out),
+      .out_valid(matmul_out_valid),
+      .out_ready(matmul_out_ready)
+  );
 
-// Bias output
-if (HAS_BIAS == 1) begin
+  // Bias output
+  if (HAS_BIAS == 1) begin
 
     join2 join2_matmul_bias_i (
-        .data_in_valid  ({matmul_out_valid, bias_valid}),
-        .data_in_ready  ({matmul_out_ready, bias_ready}),
-        .data_out_valid (add_bias_in_valid),
-        .data_out_ready (add_bias_in_ready)
+        .data_in_valid ({matmul_out_valid, bias_valid}),
+        .data_in_ready ({matmul_out_ready, bias_ready}),
+        .data_out_valid(add_bias_in_valid),
+        .data_out_ready(add_bias_in_ready)
     );
 
     unpacked_register_slice #(
-        .DATA_WIDTH (DATA_OUT_0_PRECISION_0),
-        .IN_SIZE    (DATA_OUT_0_PARALLELISM_DIM_0*DATA_OUT_0_PARALLELISM_DIM_1)
+        .DATA_WIDTH(DATA_OUT_0_PRECISION_0),
+        .IN_SIZE   (DATA_OUT_0_PARALLELISM_DIM_0 * DATA_OUT_0_PARALLELISM_DIM_1)
     ) register_slice_i (
-        .clk      (clk),
-        .rst      (rst),
+        .clk(clk),
+        .rst(rst),
 
-        .in_data    (add_bias_in),
-        .in_valid   (add_bias_in_valid),
-        .in_ready   (add_bias_in_ready),
+        .in_data (add_bias_in),
+        .in_valid(add_bias_in_valid),
+        .in_ready(add_bias_in_ready),
 
-        .out_data    (data_out_0),
-        .out_valid   (data_out_0_valid),
-        .out_ready   (data_out_0_ready)
+        .out_data (data_out_0),
+        .out_valid(data_out_0_valid),
+        .out_ready(data_out_0_ready)
     );
-end
+  end
 
-// * Logic
-// * ---------------------------------------------------------------------------------------------------
+  // * Logic
+  // * ---------------------------------------------------------------------------------------------------
 
-if (WEIGHTS_PRE_TRANSPOSED == 1) begin
+  if (WEIGHTS_PRE_TRANSPOSED == 1) begin
     always_comb begin
-        weight_transposed_valid = weight_valid;
-        weight_ready = weight_transposed_ready;
+      weight_transposed_valid = weight_valid;
+      weight_ready = weight_transposed_ready;
     end
 
     for (genvar i = 0; i < WEIGHT_PARALLELISM_DIM_0 * WEIGHT_PARALLELISM_DIM_1; i++) begin
-        assign weight_transposed[i] = weight[i];
+      assign weight_transposed[i] = weight[i];
     end
-end
+  end
 
-// * Add bias
-if (HAS_BIAS == 1) begin
+  // * Add bias
+  if (HAS_BIAS == 1) begin
     fixed_cast #(
-        .IN_SIZE        (DATA_OUT_0_PARALLELISM_DIM_0 * DATA_OUT_0_PARALLELISM_DIM_1),
-        .IN_WIDTH       (BIAS_PRECISION_0),
-        .IN_FRAC_WIDTH  (BIAS_PRECISION_1),
-        .OUT_WIDTH      (DATA_OUT_0_PRECISION_0),
-        .OUT_FRAC_WIDTH (DATA_OUT_0_PRECISION_1)
+        .IN_SIZE       (DATA_OUT_0_PARALLELISM_DIM_0 * DATA_OUT_0_PARALLELISM_DIM_1),
+        .IN_WIDTH      (BIAS_PRECISION_0),
+        .IN_FRAC_WIDTH (BIAS_PRECISION_1),
+        .OUT_WIDTH     (DATA_OUT_0_PRECISION_0),
+        .OUT_FRAC_WIDTH(DATA_OUT_0_PRECISION_1)
     ) bias_cast_i (
-        .data_in    (bias),
-        .data_out   (bias_casted)
+        .data_in (bias),
+        .data_out(bias_casted)
     );
 
     for (genvar i = 0; i < DATA_OUT_0_PARALLELISM_DIM_0 * DATA_OUT_0_PARALLELISM_DIM_1; i++) begin
-        assign add_bias_in[i] = $signed(matmul_out[i]) + $signed(bias_casted[i]);
+      assign add_bias_in[i] = $signed(matmul_out[i]) + $signed(bias_casted[i]);
     end
-end else begin
+  end else begin
     assign data_out_0 = matmul_out;
     assign data_out_0_valid = matmul_out_valid;
     assign matmul_out_ready = data_out_0_ready;
-end
+  end
 
 endmodule

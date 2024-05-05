@@ -1,7 +1,7 @@
 from math import exp
 
 
-def softmax(l: list[float], pow2 = False):
+def softmax(l: list[float], pow2=False):
 
     max_num = max(l)
 
@@ -22,7 +22,7 @@ def softmax(l: list[float], pow2 = False):
     return out
 
 
-def _softmax_model(l: list[int], parallelism: int, pow2 = False):
+def _softmax_model(l: list[int], parallelism: int, pow2=False):
     """Model used to understand hardware implementation."""
 
     assert len(l) % parallelism == 0
@@ -34,7 +34,7 @@ def _softmax_model(l: list[int], parallelism: int, pow2 = False):
     local_max_buffer = []
 
     for i in range(iters):
-        local_window = l[i*parallelism:(i+1)*parallelism]
+        local_window = l[i * parallelism : (i + 1) * parallelism]
         local_max = max(local_window)
         if pow2:
             local_pow = [2 ** (x - local_max) for x in local_window]
@@ -42,7 +42,6 @@ def _softmax_model(l: list[int], parallelism: int, pow2 = False):
             local_pow = [exp(x - local_max) for x in local_window]
         local_max_buffer.append(local_max)
         local_values_buffer.append(local_pow)
-
 
     # Calculate global max
 
@@ -54,7 +53,7 @@ def _softmax_model(l: list[int], parallelism: int, pow2 = False):
 
     for diff, vals in zip(local_max_diff, local_values_buffer):
         if pow2:
-            adj = [x * (2 ** -diff) for x in vals]
+            adj = [x * (2**-diff) for x in vals]
         else:
             adj = [x * exp(-diff) for x in vals]
         norm += sum(adj)

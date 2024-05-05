@@ -41,16 +41,14 @@ def simulate(
         # sources = [
         #     project_dir / "hardware" / "rtl" / "top.sv",
         # ]
-        sources = [
-            "top.sv"
-        ]
+        sources = ["top.sv"]
 
         includes = [
-                project_dir / "hardware" / "rtl",
-            ] + [
-                Path(mase_components.__file__).parent / module / "rtl"
-                for module in get_modules()
-            ]
+            project_dir / "hardware" / "rtl",
+        ] + [
+            Path(mase_components.__file__).parent / module / "rtl"
+            for module in get_modules()
+        ]
 
         runner.build(
             verilog_sources=sources,

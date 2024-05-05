@@ -28,21 +28,22 @@ logger.setLevel("DEBUG")
 class LPW_Reciprocal2TB(Testbench):
     def __init__(self, dut) -> None:
         super().__init__(dut, dut.clk, dut.rst)
-        self.assign_self_params([
-            "ENTRIES", "IN_WIDTH", "IN_FRAC_WIDTH", "OUT_WIDTH", "OUT_FRAC_WIDTH"
-        ])
+        self.assign_self_params(
+            ["ENTRIES", "IN_WIDTH", "IN_FRAC_WIDTH", "OUT_WIDTH", "OUT_FRAC_WIDTH"]
+        )
 
         # Driver/Monitor
-        self.in_driver = StreamDriver(
-            dut.clk, dut.in_data, dut.in_valid, dut.in_ready
-        )
+        self.in_driver = StreamDriver(dut.clk, dut.in_data, dut.in_valid, dut.in_ready)
 
         # Specify Error Threshold
         self.percentage_error = 0.05  # 5%
         self.error_threshold_bits = ceil(self.percentage_error * (2**self.OUT_WIDTH))
 
         self.output_monitor = ErrorThresholdStreamMonitor(
-            dut.clk, dut.out_data, dut.out_valid, dut.out_ready,
+            dut.clk,
+            dut.out_data,
+            dut.out_valid,
+            dut.out_ready,
             width=self.OUT_WIDTH,
             log_error=True,
             signed=False,
@@ -51,20 +52,19 @@ class LPW_Reciprocal2TB(Testbench):
         )
 
     def generate_inputs(self, batches=100):
-        return [randint(0, 2**self.IN_WIDTH-1) for _ in range(batches)]
+        return [randint(0, 2**self.IN_WIDTH - 1) for _ in range(batches)]
 
     def sweep_input(self):
         return list(range(2**self.IN_WIDTH))
 
     def model(self, inputs):
-        in_t = torch.tensor(inputs) / (2 ** self.IN_FRAC_WIDTH)
+        in_t = torch.tensor(inputs) / (2**self.IN_FRAC_WIDTH)
         recip = 1.0 / in_t
         res = torch.floor(recip * 2**self.OUT_FRAC_WIDTH)
         res = torch.nan_to_num(res)
-        res = torch.clamp(res, 0, 2**self.OUT_WIDTH-1)
+        res = torch.clamp(res, 0, 2**self.OUT_WIDTH - 1)
         res = res.int()
         return res.tolist()
-
 
     async def run_test(self, batches, us):
         await self.reset()
@@ -76,14 +76,13 @@ class LPW_Reciprocal2TB(Testbench):
         assert self.output_monitor.exp_queue.empty()
         self._final_check()
 
-
     def _final_check(self):
         max_bit_err = max(self.output_monitor.error_log)
         logger.info("Maximum bit-error: %d", max_bit_err)
         if max_bit_err > self.error_threshold_bits:
             assert False, (
-                "Test failed due to high approximation error. Got %d bits of error!" %
-                max_bit_err
+                "Test failed due to high approximation error. Got %d bits of error!"
+                % max_bit_err
             )
 
 
@@ -107,17 +106,19 @@ async def sweep(dut):
     recv_log = tb.output_monitor.recv_log
     assert len(exp_out) == len(recv_log)
 
-    x = torch.tensor(inputs) / (2 ** tb.IN_FRAC_WIDTH)
+    x = torch.tensor(inputs) / (2**tb.IN_FRAC_WIDTH)
     ref = 1.0 / x
-    ref *= 2 ** tb.OUT_FRAC_WIDTH  # scale up
-    ref = torch.clamp(ref, 0, 2**tb.OUT_WIDTH-1)
+    ref *= 2**tb.OUT_FRAC_WIDTH  # scale up
+    ref = torch.clamp(ref, 0, 2**tb.OUT_WIDTH - 1)
 
-    data = pd.DataFrame({
-        "x": x.tolist(),
-        "reference": ref.tolist(),
-        "software": exp_out,
-        "hardware": recv_log,
-    })
+    data = pd.DataFrame(
+        {
+            "x": x.tolist(),
+            "reference": ref.tolist(),
+            "software": exp_out,
+            "hardware": recv_log,
+        }
+    )
     data["hw_error"] = (data["hardware"] - data["reference"]).abs()
     data["sw_error"] = (data["software"] - data["reference"]).abs()
     data["model_error"] = (data["hardware"] - data["software"]).abs()
@@ -126,50 +127,63 @@ async def sweep(dut):
         id_vars="x",
         value_vars=["reference", "software", "hardware"],
         value_name="Value",
-        var_name="Type"
+        var_name="Type",
     )
-    curve = alt.Chart(curve_data).mark_line().encode(
-        x="x",
-        y=alt.Y("Value").title("Curves"),
-        color="Type",
-    ).properties(
-        width=600,
-        height=300,
+    curve = (
+        alt.Chart(curve_data)
+        .mark_line()
+        .encode(
+            x="x",
+            y=alt.Y("Value").title("Curves"),
+            color="Type",
+        )
+        .properties(
+            width=600,
+            height=300,
+        )
     )
 
     error_data = data.melt(
         id_vars="x",
         value_vars=["hw_error", "sw_error"],
         value_name="Value",
-        var_name="Type"
+        var_name="Type",
     )
-    error = alt.Chart(error_data).mark_line().encode(
-        x="x",
-        y=alt.Y("Value").title("Error vs. Perfect Reference"),
-        color="Type",
-    ).properties(
-        width=600,
-        height=100,
+    error = (
+        alt.Chart(error_data)
+        .mark_line()
+        .encode(
+            x="x",
+            y=alt.Y("Value").title("Error vs. Perfect Reference"),
+            color="Type",
+        )
+        .properties(
+            width=600,
+            height=100,
+        )
     )
 
     model_error_data = data.melt(
-        id_vars="x",
-        value_vars=["model_error"],
-        value_name="Value",
-        var_name="Type"
+        id_vars="x", value_vars=["model_error"], value_name="Value", var_name="Type"
     )
-    model_error = alt.Chart(model_error_data).mark_line().encode(
-        x="x",
-        y=alt.Y("Value").title("Bit error vs software model"),
-        color="Type",
-    ).properties(
-        width=600,
-        height=100,
+    model_error = (
+        alt.Chart(model_error_data)
+        .mark_line()
+        .encode(
+            x="x",
+            y=alt.Y("Value").title("Bit error vs software model"),
+            color="Type",
+        )
+        .properties(
+            width=600,
+            height=100,
+        )
     )
 
     graph_id = f"{tb.ENTRIES}e_{tb.IN_WIDTH}_{tb.IN_FRAC_WIDTH}_to_{tb.OUT_WIDTH}_{tb.OUT_FRAC_WIDTH}"
     (curve & error & model_error).save(
-        Path(__file__).parent / f"build/softermax_lpw_reciprocal/error_graph_{graph_id}.png",
+        Path(__file__).parent
+        / f"build/softermax_lpw_reciprocal/error_graph_{graph_id}.png",
         scale_factor=3,
     )
 
@@ -206,7 +220,7 @@ if __name__ == "__main__":
         "IN_WIDTH": 8,
         "IN_FRAC_WIDTH": 3,
         "OUT_WIDTH": 8,
-        "OUT_FRAC_WIDTH": 7
+        "OUT_FRAC_WIDTH": 7,
     }
 
     def random_cfg():
@@ -215,9 +229,9 @@ if __name__ == "__main__":
         return {
             "ENTRIES": 8,
             "IN_WIDTH": in_width,
-            "IN_FRAC_WIDTH": randint(3, in_width-1),
+            "IN_FRAC_WIDTH": randint(3, in_width - 1),
             "OUT_WIDTH": out_width,
-            "OUT_FRAC_WIDTH": randint(3, out_width-1)
+            "OUT_FRAC_WIDTH": randint(3, out_width - 1),
         }
 
     NUM_RANDOM_CFGS = 40
