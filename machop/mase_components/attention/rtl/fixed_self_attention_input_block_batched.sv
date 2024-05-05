@@ -21,7 +21,12 @@ module fixed_self_attention_input_block_batched #(
     parameter BIAS_PARALLELISM_DIM_0 = 4,
     parameter BIAS_PARALLELISM_DIM_1 = 4,
     parameter BIAS_PRECISION_0 = 16,
-    parameter BIAS_PRECISION_1 = 3
+    parameter BIAS_PRECISION_1 = 3,
+
+    parameter DATA_OUT_0_TENSOR_SIZE_DIM_0 = WEIGHT_TENSOR_SIZE_DIM_0,
+    parameter DATA_OUT_0_TENSOR_SIZE_DIM_1 = DATA_IN_0_TENSOR_SIZE_DIM_1,
+    parameter DATA_OUT_0_PARALLELISM_DIM_0 = WEIGHT_PARALLELISM_DIM_0,
+    parameter DATA_OUT_0_PARALLELISM_DIM_1 = DATA_IN_0_PARALLELISM_DIM_1
 
 ) (
     input logic clk,
@@ -80,10 +85,8 @@ module fixed_self_attention_input_block_batched #(
   // ! TO DO: add assertions about bias parallelism matching weight parallelism
 
   // * Inferred parameters
-  parameter DATA_OUT_0_TENSOR_SIZE_DIM_0 = WEIGHT_TENSOR_SIZE_DIM_0;
-  parameter DATA_OUT_0_TENSOR_SIZE_DIM_1 = DATA_IN_0_TENSOR_SIZE_DIM_1;
-  parameter DATA_OUT_0_PARALLELISM_DIM_0 = WEIGHT_PARALLELISM_DIM_0;
-  parameter DATA_OUT_0_PARALLELISM_DIM_1 = DATA_IN_0_PARALLELISM_DIM_1;
+  parameter DATA_IN_0_DEPTH_DIM_1 = DATA_IN_0_TENSOR_SIZE_DIM_1 / DATA_IN_0_PARALLELISM_DIM_1;
+  parameter WEIGHT_DEPTH_DIM_0 = WEIGHT_TENSOR_SIZE_DIM_0 / WEIGHT_PARALLELISM_DIM_0;
 
   // * Precision parameters for intermediate signals
 
@@ -97,6 +100,10 @@ module fixed_self_attention_input_block_batched #(
   logic query_data_in_valid, query_data_in_ready;
   logic key_data_in_valid, key_data_in_ready;
   logic value_data_in_valid, value_data_in_ready;
+
+  logic [QKV_PRECISION_0-1:0] query_buffer [DATA_IN_0_PARALLELISM_DIM_1 * WEIGHT_PARALLELISM_DIM_0-1:0];
+  logic query_buffer_valid;
+  logic query_buffer_ready;
 
   // * Instances
   // * =================================================================
@@ -156,10 +163,28 @@ module fixed_self_attention_input_block_batched #(
       .bias_valid(bias_query_valid),
       .bias_ready(bias_query_ready),
 
-      .data_out_0      (data_out_query),
-      .data_out_0_valid(data_out_query_valid),
-      .data_out_0_ready(data_out_query_ready)
+      .data_out_0      (query_buffer),
+      .data_out_0_valid(query_buffer_valid),
+      .data_out_0_ready(query_buffer_ready)
   );
+
+  // * We must buffer the queries to latency match the key transpose path
+  // * since the matmul for QK^T buffers K^T but streams Q
+  matrix_fifo #(
+    .DATA_WIDTH     (QKV_PRECISION_0),
+    .DIM0           (WEIGHT_PARALLELISM_DIM_0),
+    .DIM1           (DATA_IN_0_PARALLELISM_DIM_1),
+    .FIFO_SIZE      (DATA_IN_0_DEPTH_DIM_1 * WEIGHT_DEPTH_DIM_0)
+    ) query_buffer_i (
+    .clk,
+    .rst,
+    .in_data      (query_buffer),
+    .in_valid     (query_buffer_valid),
+    .in_ready     (query_buffer_ready),
+    .out_data     (data_out_query),
+    .out_valid    (data_out_query_valid),
+    .out_ready    (data_out_query_ready)
+);
 
   // * Key linear
 

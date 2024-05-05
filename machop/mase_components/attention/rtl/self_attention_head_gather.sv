@@ -55,7 +55,7 @@ module self_attention_head_gather #(
 
     // * Create mask of heads with block count saturated at BLOCKS_PER_HEAD
     // * (i.e. finished heads)
-    assign heads_flushed[head] = (block_counter[head] == (block_counter == BLOCKS_PER_HEAD));
+    assign heads_flushed[head] = (block_counter[head] == BLOCKS_PER_HEAD);
   end
 
   // * Find index of first (least significant) head that hasn't yet
