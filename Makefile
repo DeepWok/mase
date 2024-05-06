@@ -64,6 +64,7 @@ test-all: test-hw test-sw
 	(cd tmp; python3 ../scripts/test-torch-mlir.py || exit 1)
 
 build:
+	bash scripts/build-naslib.sh || exit 1
 	bash scripts/build-llvm.sh || exit 1
 	bash scripts/build-mase-hls.sh || exit 1
 
@@ -73,6 +74,7 @@ build-aie:
 
 clean:
 	rm -rf llvm
+	rm -rf NASLib
 	rm -rf aienginev2 mlir-air/build mlir-aie
 	rm -rf hls/build
 	rm -rf vck190_air_sysroot
