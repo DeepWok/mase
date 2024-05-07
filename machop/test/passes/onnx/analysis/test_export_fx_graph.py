@@ -30,7 +30,7 @@ def excepthook(exc_type, exc_value, exc_traceback):
 # sys.excepthook = excepthook
 
 
-def test_export_fx_graph_model(
+def export_fx_graph_model(
     pretrained: str, monolith=True, task="auto", skip_export=False
 ):
     # * Get model
@@ -48,25 +48,14 @@ def test_export_fx_graph_model(
         return_tensors="pt",
     )
 
-    if "t5" in pretrained:
-        # encoder decoder model
-        decoder_input_ids = tokenizer(
-            "Studies show that", return_tensors="pt"
-        ).input_ids
-        decoder_input_ids = hf_model._shift_right(decoder_input_ids)
-        model_inputs["decoder_input_ids"] = decoder_input_ids
-        print(f"model_inputs: {model_inputs.keys()}")
-
     # * Run HuggingFace model (for debug)
     _ = hf_model(**model_inputs)
-
     # * Run Onnx runtime
     session = rt.InferenceSession(
         f"{os.environ['HOME']}/.mase/onnx/{pretrained}/model.onnx"
     )
     onnx_model_inputs = {k: v.numpy() for k, v in model_inputs.items()}
     onnx_out = session.run([], onnx_model_inputs)
-    # onnx_out = torch.squeeze(torch.Tensor(onnx_out))
 
     # * Export MaseGraph from ONNX graph
     onnx_graph = MaseOnnxGraph.from_pretrained(
@@ -76,11 +65,8 @@ def test_export_fx_graph_model(
     mg = mg["model"]
     mg, _ = init_metadata_analysis_pass(mg)
     mg, _ = add_common_metadata_analysis_pass(mg, pass_args={"dummy_in": model_inputs})
-
     # * Run FX GraphModule
     mg_out = mg.model(**model_inputs)
-
-    # mg, _ = add_hardware_metadata_analysis_pass(mg)
 
     # assert(torch.equal(onnx_out, mg_out))
 
@@ -88,80 +74,78 @@ def test_export_fx_graph_model(
 
 
 def test_export_fx_graph_bert():
-    mg = test_export_fx_graph_model("bert-base-uncased", skip_export=True)
+    mg = export_fx_graph_model("bert-base-uncased", skip_export=True)
     mg, _ = raise_granularity_transform_pass(mg)
 
 
-# def test_export_fx_graph_bloom():
-#     test_export_fx_graph_model(
-#         "bigscience/bloom-1b7",
-#         skip_export=True,
-#     )
+def test_export_fx_graph_bloom():
+    export_fx_graph_model(
+        "bigscience/bloom-1b7",
+        skip_export=True,
+    )
 
 
-# def test_export_fx_graph_gpt2():
-#     test_export_fx_graph_model(
-#         "openai-community/gpt2-medium",
-#     )
+def test_export_fx_graph_gpt2():
+    export_fx_graph_model(
+        "openai-community/gpt2",
+        skip_export=True,
+    )
 
 
-# def test_export_fx_graph_graphormer():
-#     test_export_fx_graph_model(
-#         "clefourrier/graphormer-base-pcqm4mv2",
-#     )
+def test_export_fx_graph_llama():
+    export_fx_graph_model(
+        "huggyllama/llama-7b",
+    )
 
 
-# def test_export_fx_graph_llama():
-#     test_export_fx_graph_model(
-#         "huggyllama/llama-7b",
-#     )
+def test_export_fx_graph_mistral():
+    export_fx_graph_model(
+        "mistral-community/Mistral-7B-v0.2",
+    )
 
 
-# def test_export_fx_graph_mistral():
-#     test_export_fx_graph_model(
-#         "mistral-community/Mistral-7B-v0.2",
-#     )
+def test_export_fx_graph_opt():
+    export_fx_graph_model("facebook/opt-125m", task="text-generation", skip_export=True)
 
 
-# def test_export_fx_graph_opt():
-#     test_export_fx_graph_model(
-#         "facebook/opt-125m", task="text-generation", skip_export=True
-#     )
+def test_export_fx_graph_swin():
+    export_fx_graph_model(
+        "microsoft/swin-tiny-patch4-window7-224",
+        skip_export=True,
+    )
 
 
-# def test_export_fx_graph_swin():
-#     test_export_fx_graph_model(
-#         "microsoft/swin-tiny-patch4-window7-224",
-#     )
+def test_export_fx_graph_t5():
+    export_fx_graph_model(
+        "google/t5-efficient-tiny", task="text2text-generation", skip_export=True
+    )
 
 
-# def test_export_fx_graph_t5():
-#     test_export_fx_graph_model("t5-base", task="text2text-generation", skip_export=True)
+def test_export_fx_graph_vit():
+    export_fx_graph_model(
+        "google/vit-base-patch16-224",
+        skip_export=True,
+    )
 
 
-# def test_export_fx_graph_vit():
-#     test_export_fx_graph_model(
-#         "google/vit-base-patch16-224",
-#     )
-
-
-# def test_export_fx_graph_whisper():
-#     test_export_fx_graph_model(
-#         "openai/whisper-tiny",
-#     )
+def test_export_fx_graph_whisper():
+    export_fx_graph_model(
+        "openai/whisper-tiny",
+        skip_export=True,
+    )
 
 
 if __name__ == "__main__":
     test_export_fx_graph_bert()  # works
-    # test_export_fx_graph_opt() # failing on gather
-    # test_export_fx_graph_bloom() # need to check node by node
+    # test_export_fx_graph_opt()  # failing on gather
+    # test_export_fx_graph_bloom()  # need to check node by node
     # test_export_fx_graph_t5()
 
-    # test_export_fx_graph_graphormer() # need to figure out how to preprocess data
-    # test_export_fx_graph_swin() # need to figure out how to preprocess data
-    # test_export_fx_graph_vit() # need to figure out how to preprocess data
-    # test_export_fx_graph_whisper() # need to figure out how to preprocess data
+    # test_export_fx_graph_swin()  # need to figure out how to preprocess data
+    # test_export_fx_graph_vit()  # need to figure out how to preprocess data
+    # test_export_fx_graph_whisper()  # need to figure out how to preprocess data
 
-    # test_export_fx_graph_gpt2() # too big to download on 4G
-    # test_export_fx_graph_llama() # too big to download on 4G
-    # test_export_fx_graph_mistral() # too big to download on 4G
+    # test_export_fx_graph_gpt2()
+
+    # test_export_fx_graph_llama()  # 10GB download
+    # test_export_fx_graph_mistral()  # 5GB download
