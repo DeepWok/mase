@@ -46,6 +46,8 @@ MASE_IMPLICIT_FUNCS = [
     "tile",
     "expand",
     "full",
+    "ones",
+    "dim",
 ]
 
 MASE_MODULE_RELATED_FUNCS = [
@@ -100,6 +102,7 @@ MASE_BUILTIN_FUNCS = [
     "neg",
     "log",
     "range",
+    "gelu",
 ]
 
 

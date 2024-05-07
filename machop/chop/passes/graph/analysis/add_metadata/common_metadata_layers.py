@@ -6,6 +6,7 @@ import inspect
 from chop.tools.utils import to_numpy_if_tensor as to_numpy
 from chop.passes.graph.utils import vf, get_node_by_name
 import traceback
+from functools import reduce
 
 
 # ----------------------------------------------------------
@@ -57,7 +58,14 @@ func_data = {
     # https://pytorch.org/docs/stable/generated/torch.permute.html
     "permute": {"input": "data_in", "dims": "config"},
     # https://pytorch.org/docs/stable/generated/torch.nn.functional.softmax.html
-    "softmax": {"input": "data_in", "dim": "config"},
+    "softmax": {
+        "input": "data_in",
+        "dim": "config",
+        "_stacklevel": "config",
+        "dtype": "config",
+    },
+    # https://pytorch.org/docs/stable/generated/torch.nn.functional.gelu.html
+    "gelu": {"input": "data_in"},
     # https://pytorch.org/docs/stable/special.html#torch.special.erf
     "erf": {"input": "data_in"},
     # onnx_shape (custom implementation)
@@ -120,8 +128,12 @@ func_data = {
     },
     # https://pytorch.org/docs/stable/generated/torch.full.html
     "full": {"size": "config", "fill_value": "data_in"},
-    # https://pytorch.org/docs/stable/generated/torch.Tensor.expand.html
-    "expand": {"input": "data_in", "size": "config"},
+    # get item
+    "getitem": {"a": "data_in", "b": "data_in"},
+    # getattr
+    "getattr": {"a": "data_in", "b": "data_in"},
+    # https://pytorch.org/docs/stable/generated/torch.ones.html
+    "ones": {"size": "config", "device": "config"},
 }
 
 module_data = {
@@ -144,6 +156,8 @@ module_data = {
     "conv2d": {"input": "data_in"},
     # https://pytorch.org/docs/stable/_modules/torch/nn/modules/conv.html#Conv3d
     "conv3d": {"input": "data_in"},
+    # https://pytorch.org/docs/stable/generated/torch.nn.Embedding.html
+    "embedding": {"input": "data_in"},
     # https://pytorch.org/docs/stable/generated/torch.nn.LayerNorm.html#torch.nn.LayerNorm
     "layer_norm": {"input": "data_in"},
     # https://pytorch.org/docs/stable/_modules/torch/nn/modules/linear.html#Linear
@@ -157,8 +171,8 @@ module_data = {
     "dropout": {"input": "data_in"},
     "hardswish": {"input": "data_in"},
     "hardsigmoid": {"input": "data_in"},
-    # TODO: check this
-    "attention": {"input": "data_in"},
+    # https://pytorch.org/docs/stable/generated/torch.nn.Tanh.html
+    "tanh": {"input": "data_in"},
 }
 
 
@@ -179,6 +193,26 @@ method_data = {
     "shape": {"dim": "config"},
     # https://pytorch.org/docs/stable/generated/torch.Tensor.to.html
     "to": {"dtype": "config"},
+    # https://pytorch.org/docs/stable/generated/torch.Tensor.expand.html
+    "expand": {
+        "size_0": "config",
+        "size_1": "config",
+        "size_2": "config",
+        "size_3": "config",
+    },
+    # https://pytorch.org/docs/stable/generated/torch.Tensor.dim.html
+    "dim": {},
+    # https://pytorch.org/docs/stable/generated/torch.Tensor.permute.html#torch.Tensor.permute
+    "permute": {
+        "dim_0": "config",
+        "dim_1": "config",
+        "dim_2": "config",
+        "dim_3": "config",
+    },
+    # https://pytorch.org/docs/stable/generated/torch.Tensor.transpose.html#torch.Tensor.transpose
+    "transpose": {"dim_0": "config", "dim_1": "config"},
+    # https://pytorch.org/docs/stable/generated/torch.Tensor.contiguous.html#torch.Tensor.contiguous
+    "contiguous": {},
 }
 
 
@@ -307,9 +341,24 @@ def analyse_common_parameters_function(meta, result, args, kwargs, add_value=Tru
 # ----------------------------------------------------------
 
 
+def deepgetattr(obj, attr):
+    """Recurses through an attribute chain to get the ultimate value."""
+    return reduce(getattr, attr.split("."), obj)
+
+
 def analyse_common_parameters_module(meta, result, args, kwargs, add_value=True):
     mase_op = meta.parameters["common"]["mase_op"]
-    meta = match_args_and_kwargs(meta, args, kwargs, module_data[mase_op], add_value)
+    node_module = deepgetattr(meta.model, meta.node.target)
+
+    if mase_op == "user_defined_module":
+        for custom_module, v in meta.model.custom_ops["modules"].items():
+            if isinstance(node_module, custom_module):
+                module_args = v["args"]
+                break
+    else:
+        module_args = module_data[mase_op]
+
+    meta = match_args_and_kwargs(meta, args, kwargs, module_args, add_value)
     for name, parameter in meta.module.named_parameters():
         meta.parameters["common"]["args"][name] = {
             "type": "float",
