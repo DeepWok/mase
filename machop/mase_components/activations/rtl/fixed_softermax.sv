@@ -1,24 +1,28 @@
 /*
-Module      : softermax
+Module      : fixed_softermax
 Description : This module implements softermax.
               https://arxiv.org/abs/2103.09301
 
               It depends on the "softermax_local_window" and
               "softermax_global_norm" modules.
 */
+
 `timescale 1ns/1ps
+
 module fixed_softermax #(
     // Shape Parameters
-    parameter TOTAL_DIM          = 16,
-    parameter PARALLELISM        = 4,
+    parameter  TOTAL_DIM          = 16,
+    parameter  PARALLELISM        = 4,
 
     // Width Parameters
-    parameter IN_WIDTH           = 8,
-    parameter IN_FRAC_WIDTH      = 4,
-    parameter POW2_WIDTH         = 16,
-    parameter POW2_FRAC_WIDTH    = 15, // Should be POW2_WIDTH - 1
-    parameter OUT_WIDTH          = 8,
-    parameter OUT_FRAC_WIDTH     = 7
+    parameter  IN_WIDTH           = 8,
+    parameter  IN_FRAC_WIDTH      = 4,
+    parameter  POW2_WIDTH         = 16,
+    // POW2_FRAC_WIDTH should always be POW2_WIDTH - 1, since local values are
+    // two to the power of a number in the range of (-inf, 0].
+    localparam POW2_FRAC_WIDTH    = 15,
+    parameter  OUT_WIDTH          = 8,
+    parameter  OUT_FRAC_WIDTH     = 7
 ) (
     input  logic                 clk,
     input  logic                 rst,
@@ -67,7 +71,6 @@ softermax_global_norm #(
     .TOTAL_DIM(TOTAL_DIM),
     .PARALLELISM(PARALLELISM),
     .IN_VALUE_WIDTH(POW2_WIDTH),
-    .IN_VALUE_FRAC_WIDTH(POW2_FRAC_WIDTH),
     .IN_MAX_WIDTH(IN_WIDTH),
     .OUT_WIDTH(OUT_WIDTH),
     .OUT_FRAC_WIDTH(OUT_FRAC_WIDTH)

@@ -210,8 +210,8 @@ if __name__ == "__main__":
     }
 
     def random_cfg():
-        in_width = randint(4, 20)
-        out_width = randint(4, 20)
+        in_width = randint(4, 30)
+        out_width = randint(4, 30)
         return {
             "ENTRIES": 8,
             "IN_WIDTH": in_width,
@@ -225,11 +225,9 @@ if __name__ == "__main__":
 
     cfgs = [
         DEFAULT,
-        {"IN_WIDTH": 20, "IN_FRAC_WIDTH": 10, "OUT_WIDTH": 20, "OUT_FRAC_WIDTH": 3},
+        {"ENTRIES": 8, "IN_WIDTH": 20, "IN_FRAC_WIDTH": 10, "OUT_WIDTH": 20, "OUT_FRAC_WIDTH": 3},
         *random_cfgs,
     ]
-
-    cfgs = [{"IN_WIDTH": 6, "IN_FRAC_WIDTH": 3, "OUT_WIDTH": 6, "OUT_FRAC_WIDTH": 3}]
 
     mase_runner(
         module_param_list=cfgs,
