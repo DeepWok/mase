@@ -40,6 +40,7 @@ MASE_HW_DEPS = {
     "common/input_buffer": ["common"],
     # New matrix multiplication modules
     "common/repeat_circular_buffer": ["common"],
+    "common/single_element_repeat": ["common"],
     "common/lut": [],
     "common/comparator_tree": ["common"],
     "common/comparator_accumulator": ["common"],
