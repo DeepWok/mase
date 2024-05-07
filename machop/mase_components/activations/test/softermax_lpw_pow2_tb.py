@@ -27,17 +27,18 @@ logger.setLevel("DEBUG")
 class LPW_Pow2TB(Testbench):
     def __init__(self, dut) -> None:
         super().__init__(dut, dut.clk, dut.rst)
-        self.assign_self_params([
-            "IN_WIDTH", "IN_FRAC_WIDTH", "OUT_WIDTH", "OUT_FRAC_WIDTH"
-        ])
+        self.assign_self_params(
+            ["IN_WIDTH", "IN_FRAC_WIDTH", "OUT_WIDTH", "OUT_FRAC_WIDTH"]
+        )
 
         # Driver/Monitor
-        self.in_driver = StreamDriver(
-            dut.clk, dut.in_data, dut.in_valid, dut.in_ready
-        )
+        self.in_driver = StreamDriver(dut.clk, dut.in_data, dut.in_valid, dut.in_ready)
         self.error_threshold_bits = 2
         self.output_monitor = ErrorThresholdStreamMonitor(
-            dut.clk, dut.out_data, dut.out_valid, dut.out_ready,
+            dut.clk,
+            dut.out_data,
+            dut.out_valid,
+            dut.out_ready,
             width=self.OUT_WIDTH,
             log_error=True,
             signed=True,
@@ -47,25 +48,20 @@ class LPW_Pow2TB(Testbench):
 
     def generate_inputs(self):
         negative_nums = torch.arange(
-            start=2**(self.IN_WIDTH-1),
-            end=2**self.IN_WIDTH,
-            dtype=torch.int32
+            start=2 ** (self.IN_WIDTH - 1), end=2**self.IN_WIDTH, dtype=torch.int32
         )
         zero_to_one = torch.arange(
-            start=0,
-            end=2**self.IN_FRAC_WIDTH, # one
-            dtype=torch.int32
+            start=0, end=2**self.IN_FRAC_WIDTH, dtype=torch.int32  # one
         )
         return torch.cat((negative_nums, zero_to_one)).tolist()
 
     def model(self, inputs):
         in_t = torch.tensor(inputs)
-        num = sign_extend_t(in_t, self.IN_WIDTH) / (2 ** self.IN_FRAC_WIDTH)
-        res = 2 ** num
+        num = sign_extend_t(in_t, self.IN_WIDTH) / (2**self.IN_FRAC_WIDTH)
+        res = 2**num
         res = (res * 2**self.OUT_FRAC_WIDTH).int()
-        res = torch.clamp(res, 0, 2**self.OUT_WIDTH-1)
+        res = torch.clamp(res, 0, 2**self.OUT_WIDTH - 1)
         return res.tolist()
-
 
     async def run_test(self, us):
         await self.reset()
@@ -83,8 +79,8 @@ class LPW_Pow2TB(Testbench):
         logger.info("Maximum bit-error: %d", max_bit_err)
         if max_bit_err > self.error_threshold_bits:
             assert False, (
-                "Test failed due to high approximation error. Got %d bits of error!" %
-                max_bit_err
+                "Test failed due to high approximation error. Got %d bits of error!"
+                % max_bit_err
             )
 
 
@@ -104,21 +100,23 @@ async def sweep(dut):
     recv_log = tb.output_monitor.recv_log
     assert len(exp_out) == len(recv_log)
 
-    x = sign_extend_t(torch.tensor(inputs), tb.IN_WIDTH) / (2 ** tb.IN_FRAC_WIDTH)
-    ref = (2 ** x)
-    ref *= 2 ** tb.OUT_FRAC_WIDTH  # scale up
-    ref = torch.clamp(ref, 0, 2**tb.OUT_WIDTH-1)
+    x = sign_extend_t(torch.tensor(inputs), tb.IN_WIDTH) / (2**tb.IN_FRAC_WIDTH)
+    ref = 2**x
+    ref *= 2**tb.OUT_FRAC_WIDTH  # scale up
+    ref = torch.clamp(ref, 0, 2**tb.OUT_WIDTH - 1)
 
-    data = pd.DataFrame({
-        "x": x.tolist(),
-        "reference": ref.tolist(),
-        "software": exp_out,
-        "hardware": recv_log,
-    }).melt(
+    data = pd.DataFrame(
+        {
+            "x": x.tolist(),
+            "reference": ref.tolist(),
+            "software": exp_out,
+            "hardware": recv_log,
+        }
+    ).melt(
         id_vars="x",
         value_vars=["reference", "software", "hardware"],
         value_name="Value",
-        var_name="Type"
+        var_name="Type",
     )
 
     graph_id = f"{tb.IN_WIDTH}_{tb.IN_FRAC_WIDTH}_to_{tb.OUT_WIDTH}_{tb.OUT_FRAC_WIDTH}"
@@ -162,12 +160,7 @@ async def valid_backpressure(dut):
 
 if __name__ == "__main__":
 
-    DEFAULT = {
-        "IN_WIDTH": 8,
-        "IN_FRAC_WIDTH": 2,
-        "OUT_WIDTH": 8,
-        "OUT_FRAC_WIDTH": 7
-    }
+    DEFAULT = {"IN_WIDTH": 16, "IN_FRAC_WIDTH": 3, "OUT_WIDTH": 16, "OUT_FRAC_WIDTH": 3}
 
     def width_cfgs():
         bitwidths = [2, 4, 8]
@@ -176,16 +169,18 @@ if __name__ == "__main__":
             for in_frac_width in range(1, in_width):
                 for out_width in bitwidths:
                     for out_frac_width in range(1, out_width):
-                        cfgs.append({
-                            "IN_WIDTH": in_width,
-                            "IN_FRAC_WIDTH": in_frac_width,
-                            "OUT_WIDTH": out_width,
-                            "OUT_FRAC_WIDTH": out_frac_width,
-                        })
+                        cfgs.append(
+                            {
+                                "IN_WIDTH": in_width,
+                                "IN_FRAC_WIDTH": in_frac_width,
+                                "OUT_WIDTH": out_width,
+                                "OUT_FRAC_WIDTH": out_frac_width,
+                            }
+                        )
         return cfgs
 
-    cfgs = width_cfgs()
-    # cfgs = [DEFAULT]
+    # cfgs = width_cfgs()
+    cfgs = [DEFAULT]
 
     mase_runner(
         module_param_list=cfgs,

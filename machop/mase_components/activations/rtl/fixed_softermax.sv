@@ -6,8 +6,8 @@ Description : This module implements softermax.
               It depends on the "softermax_local_window" and
               "softermax_global_norm" modules.
 */
-
-module softermax #(
+`timescale 1ns/1ps
+module fixed_softermax #(
     // Shape Parameters
     parameter TOTAL_DIM          = 16,
     parameter PARALLELISM        = 4,
@@ -69,7 +69,6 @@ softermax_global_norm #(
     .IN_VALUE_WIDTH(POW2_WIDTH),
     .IN_VALUE_FRAC_WIDTH(POW2_FRAC_WIDTH),
     .IN_MAX_WIDTH(IN_WIDTH),
-    .IN_MAX_FRAC_WIDTH(IN_FRAC_WIDTH),
     .OUT_WIDTH(OUT_WIDTH),
     .OUT_FRAC_WIDTH(OUT_FRAC_WIDTH)
 ) global_norm_inst (

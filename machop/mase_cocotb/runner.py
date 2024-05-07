@@ -20,7 +20,7 @@ logger.setLevel("INFO")
 
 
 def _single_test(
-    i: int, # id
+    i: int,  # id
     deps: list[str],
     module: str,
     module_params: dict,
@@ -30,6 +30,7 @@ def _single_test(
     extra_build_args: list[str] = [],
     seed: int = None,
     trace: bool = False,
+    skip_build: bool = False,
 ):
     print("# ---------------------------------------")
     print(f"# Test {i}")
@@ -41,46 +42,48 @@ def _single_test(
     print("# ---------------------------------------")
 
     runner = get_runner(getenv("SIM", "verilator"))
-    runner.build(
-        verilog_sources=[module_path],
-        includes=[str(comp_path.joinpath(f"{d}/rtl/")) for d in deps],
-        hdl_toplevel=module,
-        build_args=[
-            # Verilator linter is overly strict.
-            # Too many errors
-            # These errors are in later versions of verilator
-            "-Wno-GENUNNAMED",
-            "-Wno-WIDTHEXPAND",
-            "-Wno-WIDTHTRUNC",
-            # Simulation Optimisation
-            "-Wno-UNOPTFLAT",
-            "-prof-c",
-            "--assert",
-            "--stats",
-            "--quiet",
-            # Signal trace in dump.fst
-            *(["--trace-fst", "--trace-structs"] if trace else []),
-            "-O2",
-            "-build-jobs",
-            "8",
-            "-Wno-fatal",
-            "-Wno-lint",
-            "-Wno-style",
-            *extra_build_args,
-        ],
-        parameters=module_params,
-        build_dir=test_work_dir,
-    )
+    if not skip_build:
+        runner.build(
+            verilog_sources=[module_path],
+            includes=[str(comp_path.joinpath(f"{d}/rtl/")) for d in deps],
+            hdl_toplevel=module,
+            build_args=[
+                # Verilator linter is overly strict.
+                # Too many errors
+                # These errors are in later versions of verilator
+                "-Wno-GENUNNAMED",
+                "-Wno-WIDTHEXPAND",
+                "-Wno-WIDTHTRUNC",
+                # Simulation Optimisation
+                "-Wno-UNOPTFLAT",
+                "-prof-c",
+                "--assert",
+                "--stats",
+                # Signal trace in dump.fst
+                *(["--trace-fst", "--trace-structs"] if trace else []),
+                "-O2",
+                "-build-jobs",
+                "8",
+                "-Wno-fatal",
+                "-Wno-lint",
+                "-Wno-style",
+                *extra_build_args,
+            ],
+            parameters=module_params,
+            build_dir=test_work_dir,
+        )
     try:
         runner.test(
             hdl_toplevel=module,
+            hdl_toplevel_lang="verilog",
             test_module=module + "_tb",
             seed=seed,
             results_xml="results.xml",
+            build_dir=test_work_dir,
         )
         num_tests, fail = get_results(test_work_dir.joinpath("results.xml"))
-    except:
-        print("Error occured while running Verilator simulation.")
+    except Exception as e:
+        print(f"Error occured while running Verilator simulation: {e}")
         num_tests = fail = 1
 
     return {
@@ -96,6 +99,7 @@ def mase_runner(
     trace: bool = False,
     seed: int = None,
     jobs: int = 1,
+    skip_build: bool = False,
 ):
     assert type(module_param_list) == list, "Need to pass in a list of dicts!"
 
@@ -105,7 +109,9 @@ def mase_runner(
     # Should be of form components/<group>/test/<module>_tb.py
     test_filepath = inspect.stack()[1].filename
     matches = re.search(r"mase_components/(\w*)/test/(\w*)_tb\.py", test_filepath)
-    assert matches != None, "Did not find file that matches <module>_tb.py in the test folder!"
+    assert (
+        matches != None
+    ), "Did not find file that matches <module>_tb.py in the test folder!"
     group, module = matches.groups()
 
     # Group path is components/<group>
@@ -142,6 +148,7 @@ def mase_runner(
                 extra_build_args=extra_build_args,
                 seed=seed,
                 trace=trace,
+                skip_build=skip_build,
             )
             total_tests += results["num_tests"]
             total_fail += results["failed_tests"]
@@ -168,11 +175,11 @@ def mase_runner(
                     test_work_dir=test_work_dir,
                     extra_build_args=extra_build_args,
                     seed=seed,
-                    trace=trace
+                    trace=trace,
                 )
                 future_to_job_meta[future] = {
                     "id": i,
-                    "params": deepcopy(module_params)
+                    "params": deepcopy(module_params),
                 }
 
             # Wait for futures to complete
