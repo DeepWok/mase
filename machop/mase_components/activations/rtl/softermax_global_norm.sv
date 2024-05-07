@@ -190,10 +190,9 @@ comparator_accumulator #(
     .out_ready(global_max_out_ready)
 );
 
-repeat_circular_buffer #(
+single_element_repeat #(
     .DATA_WIDTH(IN_MAX_WIDTH),
-    .REPEAT(DEPTH),
-    .SIZE(1)
+    .REPEAT(DEPTH)
 ) global_max_repeater (
     .clk(clk),
     .rst(rst),
@@ -352,10 +351,9 @@ softermax_lpw_reciprocal #(
     .out_ready(norm_recip_ready)
 );
 
-repeat_circular_buffer #(
+single_element_repeat #(
     .DATA_WIDTH(RECIP_WIDTH),
-    .REPEAT(DEPTH),
-    .SIZE(1)
+    .REPEAT(DEPTH)
 ) repeat_norm_recip (
     .clk(clk),
     .rst(rst),
