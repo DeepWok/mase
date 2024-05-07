@@ -11,7 +11,7 @@ from cocotb.log import SimLog
 from cocotb.triggers import Timer
 
 from mase_cocotb.testbench import Testbench
-from mase_cocotb.interfaces.streaming import StreamDriver, StreamMonitor
+from mase_cocotb.interfaces.streaming import StreamDriver, ErrorThresholdStreamMonitor
 from mase_cocotb.runner import mase_runner
 from mase_cocotb.utils import fixed_preprocess_tensor
 
@@ -26,17 +26,27 @@ class SoftermaxTB(Testbench):
             self.log = SimLog("%s" % (type(self).__qualname__))
             self.log.setLevel(logging.DEBUG)
 
+        self.assign_self_params([
+            "TOTAL_DIM", "PARALLELISM", "IN_WIDTH", "IN_FRAC_WIDTH",
+            "POW2_WIDTH", "POW2_FRAC_WIDTH", "OUT_WIDTH", "OUT_FRAC_WIDTH"
+        ])
+
         self.in_data_driver = StreamDriver(
             dut.clk, dut.in_data, dut.in_valid, dut.in_ready
         )
 
-        self.out_data_monitor = StreamMonitor(
+        self.out_data_monitor = ErrorThresholdStreamMonitor(
             dut.clk,
             dut.out_data,
             dut.out_valid,
             dut.out_ready,
+            width=self.OUT_WIDTH,
+            signed=False,
+            error_bits=1,
             check=True,
+            log_error=True,
         )
+
         # Model
         self.model = partial(
             fixed_softermax,
@@ -85,7 +95,7 @@ class SoftermaxTB(Testbench):
         )
         self.out_data_monitor.load_monitor(outs)
 
-        await Timer(1, units="ms")
+        await Timer(10, units="us")
         assert self.out_data_monitor.exp_queue.empty()
 
 
@@ -102,7 +112,6 @@ def get_fixed_softermax_config(kwargs={}):
         "IN_WIDTH": 16,
         "IN_FRAC_WIDTH": 6,
         "POW2_WIDTH": 16,
-        "POW2_FRAC_WIDTH": 6,
         "OUT_WIDTH": 16,
         "OUT_FRAC_WIDTH": 6,
     }
@@ -119,7 +128,7 @@ def test_fixed_softermax_smoke():
         module_param_list=[
             get_fixed_softermax_config(),
         ],
-        skip_build=True,
+        # skip_build=True,
     )
 
 

@@ -218,10 +218,9 @@ module group_norm_2d #(
   assign mu_acc_div = ($signed(mu_acc) * $signed({1'b0, INV_NUMVALUES_0})) >>> ACC_OUT_WIDTH;
   assign mu_in = mu_acc_div[IN_WIDTH-1:0];
 
-  repeat_circular_buffer #(
+  single_element_repeat #(
       .DATA_WIDTH(IN_WIDTH),
-      .REPEAT(NUM_ITERS),
-      .SIZE(1)
+      .REPEAT(NUM_ITERS)
   ) mu_buffer (
       .clk(clk),
       .rst(rst),
@@ -359,10 +358,9 @@ module group_norm_2d #(
   );
 
 
-  repeat_circular_buffer #(
+  single_element_repeat #(
       .DATA_WIDTH(ISQRT_WIDTH),
-      .REPEAT(NUM_ITERS),
-      .SIZE(1)
+      .REPEAT(NUM_ITERS)
   ) isqrt_var_circ_buffer (
       .clk(clk),
       .rst(rst),

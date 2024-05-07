@@ -117,6 +117,7 @@ def fixed_preprocess_tensor(tensor: Tensor, q_config: dict, parallelism: list) -
 
     # Convert to integer format
     q_tensor = (q_tensor * 2 ** q_config["frac_width"]).int()
+    q_tensor = signed_to_unsigned(q_tensor, bits=q_config["width"])
 
     # Split into chunks according to parallelism in each dimension
     # parallelism[0]: along rows, parallelism[1]: along columns
@@ -127,5 +128,4 @@ def fixed_preprocess_tensor(tensor: Tensor, q_config: dict, parallelism: list) -
     for i in range(len(dim_1_split)):
         for j in range(len(dim_1_split[i])):
             blocks.append(dim_1_split[i][j].flatten().tolist())
-    breakpoint()
     return blocks

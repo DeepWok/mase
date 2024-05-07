@@ -6,9 +6,6 @@ Description : This module implements the second section of the softermax compute
 
               Refer to bottom half of Fig. 4.a) and 4.b) in the Softermax Paper.
               https://arxiv.org/abs/2103.09301
-
-              TODO:
-              - Fix throughput issue
 */
 
 `timescale 1ns/1ps
