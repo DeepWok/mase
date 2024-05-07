@@ -79,6 +79,7 @@ coverage.xml
 # Hardware tests
 components/testbench/**/sim_build/
 build/
+obj_dir/
 
 # Translations
 *.mo
