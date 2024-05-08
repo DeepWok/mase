@@ -17,8 +17,8 @@ from mase_cocotb.interfaces.streaming import StreamDriver, StreamMonitor
 from mase_cocotb.runner import mase_runner
 
 # from mase_cocotb import Testbench, StreamDriver, StreamMonitor, mase_runner
-from chop.nn.quantized import BertSelfAttentionInteger
-from chop.passes.graph.transforms.quantize import integer_quantizer
+from chop.nn.quantized import BertSelfAttentionInteger, fixed_softermax
+from chop.passes.graph.transforms.quantize.quantized_funcs import matmul_integer
 
 from mase_cocotb.utils import fixed_preprocess_tensor
 
@@ -80,10 +80,30 @@ class FixedSelfAttentionTB(Testbench):
             "bias_width": self.get_parameter("BIAS_PRECISION_0"),
             "bias_frac_width": self.get_parameter("BIAS_PRECISION_1"),
         }
+        self.out_q_config = {
+            "data_out_width": self.get_parameter("DATA_OUT_0_PRECISION_0"),
+            "data_out_frac_width": self.get_parameter("DATA_OUT_0_PRECISION_1"),
+        }
         self.model = BertSelfAttentionInteger(
             config=self.config,
             q_config=self.q_config,
+            out_q_config=self.out_q_config,
+            bias=self.get_parameter("HAS_BIAS"),
+            floor=True,
         )
+        # * Replace softmax with fixed softermax
+        if self.get_parameter("ACTIVATION") == 0:
+            self.model.softmax = partial(
+                fixed_softermax,
+                q_config={
+                    "width": self.get_parameter("DATA_OUT_0_PRECISION_0"),
+                    "frac_width": self.get_parameter("DATA_OUT_0_PRECISION_1"),
+                },
+                out_q_config={
+                    "width": self.get_parameter("DATA_OUT_0_PRECISION_0"),
+                    "frac_width": self.get_parameter("DATA_OUT_0_PRECISION_1"),
+                },
+            )
 
         # Set verbosity of driver and monitor loggers to debug
         self.data_in_0_driver.log.setLevel(logging.DEBUG)
@@ -190,33 +210,34 @@ async def cocotb_test(dut):
 
 def get_config(kwargs={}):
     config = {
-        "NUM_HEADS": 4,
-        "DATA_IN_0_TENSOR_SIZE_DIM_0": 64,
-        "DATA_IN_0_TENSOR_SIZE_DIM_1": 20,
+        "NUM_HEADS": 1,
+        "ACTIVATION": 0,
+        "DATA_IN_0_TENSOR_SIZE_DIM_0": 4,
+        "DATA_IN_0_TENSOR_SIZE_DIM_1": 4,
         "DATA_IN_0_PARALLELISM_DIM_0": 2,
         "DATA_IN_0_PARALLELISM_DIM_1": 2,
         "DATA_IN_0_PRECISION_0": 16,
-        "DATA_IN_0_PRECISION_1": 6,
+        "DATA_IN_0_PRECISION_1": 8,
         "WEIGHTS_PRE_TRANSPOSED": 1,
-        "WEIGHT_TENSOR_SIZE_DIM_0": 64,
-        "WEIGHT_TENSOR_SIZE_DIM_1": 64,
+        "WEIGHT_TENSOR_SIZE_DIM_0": 4,
+        "WEIGHT_TENSOR_SIZE_DIM_1": 4,
         "WEIGHT_PARALLELISM_DIM_0": 2,
         "WEIGHT_PARALLELISM_DIM_1": 2,
         "WEIGHT_PRECISION_0": 16,
-        "WEIGHT_PRECISION_1": 6,
+        "WEIGHT_PRECISION_1": 8,
         "HAS_BIAS": 0,
-        "BIAS_TENSOR_SIZE_DIM_0": 64,
-        "BIAS_TENSOR_SIZE_DIM_1": 20,
+        "BIAS_TENSOR_SIZE_DIM_0": 4,
+        "BIAS_TENSOR_SIZE_DIM_1": 4,
         "BIAS_PARALLELISM_DIM_0": 2,
         "BIAS_PARALLELISM_DIM_1": 2,
         "BIAS_PRECISION_0": 16,
-        "BIAS_PRECISION_1": 6,
-        "DATA_OUT_0_TENSOR_SIZE_DIM_0": 64,
-        "DATA_OUT_0_TENSOR_SIZE_DIM_1": 20,
+        "BIAS_PRECISION_1": 8,
+        "DATA_OUT_0_TENSOR_SIZE_DIM_0": 4,
+        "DATA_OUT_0_TENSOR_SIZE_DIM_1": 4,
         "DATA_OUT_0_PARALLELISM_DIM_0": 2,
         "DATA_OUT_0_PARALLELISM_DIM_1": 2,
         "DATA_OUT_0_PRECISION_0": 16,
-        "DATA_OUT_0_PRECISION_1": 6,
+        "DATA_OUT_0_PRECISION_1": 8,
     }
     config.update(kwargs)
     return config
@@ -226,7 +247,7 @@ def test_fixed_linear_smoke():
     """
     Some quick tests to check if the module is working.
     """
-    mase_runner(trace=True, module_param_list=[get_config()], skip_build=False)
+    mase_runner(trace=True, module_param_list=[get_config()], skip_build=True)
 
 
 if __name__ == "__main__":

@@ -95,15 +95,15 @@ module fixed_self_attention_head #(
   logic key_transpose_valid;
   logic key_transpose_ready;
 
-  logic [QUERY_TRANSPOSE_PRECISION_0-1:0] query_key_transpose [IN_DATA_PARALLELISM_DIM_1 * IN_DATA_PARALLELISM_DIM_1-1:0];
+  logic [OUT_DATA_PRECISION_0-1:0] query_key_transpose [IN_DATA_PARALLELISM_DIM_1 * IN_DATA_PARALLELISM_DIM_1-1:0];
   logic query_key_transpose_valid;
   logic query_key_transpose_ready;
 
-  logic [QUERY_TRANSPOSE_PRECISION_0-1:0] attention_scores [IN_DATA_PARALLELISM_DIM_1 * IN_DATA_PARALLELISM_DIM_1-1:0];
+  logic [OUT_DATA_PRECISION_0-1:0] attention_scores [IN_DATA_PARALLELISM_DIM_1 * IN_DATA_PARALLELISM_DIM_1-1:0];
   logic attention_scores_valid;
   logic attention_scores_ready;
 
-  logic [OUT_PRE_CAST_PRECISION_0-1:0] out_pre_cast [OUT_DATA_PARALLELISM_DIM_0*OUT_DATA_PARALLELISM_DIM_1-1:0];
+  logic [OUT_DATA_PRECISION_0-1:0] out_pre_cast [OUT_DATA_PARALLELISM_DIM_0*OUT_DATA_PARALLELISM_DIM_1-1:0];
   logic [OUT_DATA_PRECISION_0-1:0] out_casted [OUT_DATA_PARALLELISM_DIM_0*OUT_DATA_PARALLELISM_DIM_1-1:0];
   logic out_cast_valid;
   logic out_cast_ready;
@@ -155,8 +155,8 @@ module fixed_self_attention_head #(
       .B_WIDTH     (IN_DATA_PRECISION_0),
       .B_FRAC_WIDTH(IN_DATA_PRECISION_1),
 
-      .OUT_WIDTH     (QUERY_TRANSPOSE_PRECISION_0),
-      .OUT_FRAC_WIDTH(QUERY_TRANSPOSE_PRECISION_1)
+      .OUT_WIDTH     (OUT_DATA_PRECISION_0),
+      .OUT_FRAC_WIDTH(OUT_DATA_PRECISION_1)
 
   ) query_key_transpose_matmul_i (
       .clk,
@@ -180,15 +180,15 @@ module fixed_self_attention_head #(
   // * Attention scores: softmax(Query x Key^T)
 
   fixed_softermax #(
-      .DATA_IN_0_PRECISION_0      (QUERY_TRANSPOSE_PRECISION_0),
-      .DATA_IN_0_PRECISION_1      (QUERY_TRANSPOSE_PRECISION_1),
+      .DATA_IN_0_PRECISION_0      (OUT_DATA_PRECISION_0),
+      .DATA_IN_0_PRECISION_1      (OUT_DATA_PRECISION_1),
       .DATA_IN_0_TENSOR_SIZE_DIM_0(IN_DATA_TENSOR_SIZE_DIM_1),
       .DATA_IN_0_TENSOR_SIZE_DIM_1(IN_DATA_TENSOR_SIZE_DIM_1),
       .DATA_IN_0_PARALLELISM_DIM_0(IN_DATA_PARALLELISM_DIM_1),
       .DATA_IN_0_PARALLELISM_DIM_1(IN_DATA_PARALLELISM_DIM_1),
 
-      .DATA_OUT_0_PRECISION_0      (ATTENTION_SCORES_PRECISION_0),
-      .DATA_OUT_0_PRECISION_1      (ATTENTION_SCORES_PRECISION_1),
+      .DATA_OUT_0_PRECISION_0      (OUT_DATA_PRECISION_0),
+      .DATA_OUT_0_PRECISION_1      (OUT_DATA_PRECISION_1),
       .DATA_OUT_0_TENSOR_SIZE_DIM_0(IN_DATA_TENSOR_SIZE_DIM_1),
       .DATA_OUT_0_TENSOR_SIZE_DIM_1(IN_DATA_TENSOR_SIZE_DIM_1),
       .DATA_OUT_0_PARALLELISM_DIM_0(IN_DATA_PARALLELISM_DIM_1),
@@ -221,14 +221,14 @@ module fixed_self_attention_head #(
       .B_COMPUTE_DIM0(IN_DATA_PARALLELISM_DIM_0),
       .B_COMPUTE_DIM1(IN_DATA_PARALLELISM_DIM_1),
 
-      .A_WIDTH     (ATTENTION_SCORES_PRECISION_0),
-      .A_FRAC_WIDTH(ATTENTION_SCORES_PRECISION_1),
+      .A_WIDTH     (OUT_DATA_PRECISION_0),
+      .A_FRAC_WIDTH(OUT_DATA_PRECISION_1),
 
       .B_WIDTH     (IN_DATA_PRECISION_0),
       .B_FRAC_WIDTH(IN_DATA_PRECISION_1),
 
-      .OUT_WIDTH     (OUT_PRE_CAST_PRECISION_0),
-      .OUT_FRAC_WIDTH(OUT_PRE_CAST_PRECISION_1)
+      .OUT_WIDTH     (OUT_DATA_PRECISION_0),
+      .OUT_FRAC_WIDTH(OUT_DATA_PRECISION_1)
 
   ) attention_scores_values_matmul_i (
       .clk,
@@ -252,8 +252,8 @@ module fixed_self_attention_head #(
   fixed_rounding #(
       .IN_SIZE(OUT_DATA_PARALLELISM_DIM_0 * OUT_DATA_PARALLELISM_DIM_1),
 
-      .IN_WIDTH     (OUT_PRE_CAST_PRECISION_0),
-      .IN_FRAC_WIDTH(OUT_PRE_CAST_PRECISION_1),
+      .IN_WIDTH     (OUT_DATA_PRECISION_0),
+      .IN_FRAC_WIDTH(OUT_DATA_PRECISION_1),
 
       .OUT_WIDTH     (OUT_DATA_PRECISION_0),
       .OUT_FRAC_WIDTH(OUT_DATA_PRECISION_1)

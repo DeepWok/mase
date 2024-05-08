@@ -10,6 +10,7 @@ from .quantizers import (
     block_minifloat_quantizer,
     block_fp_quantizer,
     integer_quantizer,
+    integer_floor_quantizer,
     binary_quantizer,
     ternary_quantizer,
 )

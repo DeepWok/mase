@@ -1,7 +1,7 @@
 from .block_fp import block_fp_quantizer
 from .block_log import block_log_quantizer
 from .block_minifloat import block_minifloat_quantizer
-from .integer import integer_quantizer
+from .integer import integer_quantizer, integer_floor_quantizer
 from .binary import binary_quantizer, residual_sign_quantizer
 from .ternary import ternary_quantizer
 from .log import log_quantizer

@@ -181,7 +181,9 @@ module softermax_local_window #(
       .in_ready(max_fifo_in_ready),
       .out_data(max_fifo_out_data),
       .out_valid(max_fifo_out_valid),
-      .out_ready(max_fifo_out_ready)
+      .out_ready(max_fifo_out_ready),
+      .empty(),
+      .full()
   );
 
   split2 max_tree_split (

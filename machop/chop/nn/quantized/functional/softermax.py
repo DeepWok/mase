@@ -1,11 +1,16 @@
 from torch import Tensor
 from math import ceil
 
-from chop.passes.graph.transforms.quantize.quantizers import integer_quantizer
+from chop.passes.graph.transforms.quantize.quantizers import (
+    integer_quantizer,
+    integer_floor_quantizer,
+)
 from chop.nn.functional import softermax
 
 
-def fixed_softermax(input: Tensor, q_config: dict) -> Tensor:
+def fixed_softermax(
+    input: Tensor, q_config: dict = None, out_q_config: dict = None, dim: int = 0
+) -> Tensor:
     """Fixed-point softermax implementation, according to "Softermax: Hardware/Software Co-Design of an Efficient Softmax for Transformers" paper (https://arxiv.org/abs/2103.09301).
 
     Args:
@@ -14,5 +19,13 @@ def fixed_softermax(input: Tensor, q_config: dict) -> Tensor:
     Returns:
         Tensor: Output tensor
     """
-    input = integer_quantizer(input, **q_config)
-    return softermax(input)
+    breakpoint()
+    if q_config is not None:
+        input = integer_quantizer(input, **q_config)
+
+    out = softermax(input, dim=dim)
+
+    if out_q_config is not None:
+        out = integer_floor_quantizer(out, **out_q_config)
+
+    return out

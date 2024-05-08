@@ -26,7 +26,9 @@ module fixed_self_attention_input_block_batched #(
     parameter DATA_OUT_0_TENSOR_SIZE_DIM_0 = WEIGHT_TENSOR_SIZE_DIM_0,
     parameter DATA_OUT_0_TENSOR_SIZE_DIM_1 = DATA_IN_0_TENSOR_SIZE_DIM_1,
     parameter DATA_OUT_0_PARALLELISM_DIM_0 = WEIGHT_PARALLELISM_DIM_0,
-    parameter DATA_OUT_0_PARALLELISM_DIM_1 = DATA_IN_0_PARALLELISM_DIM_1
+    parameter DATA_OUT_0_PARALLELISM_DIM_1 = DATA_IN_0_PARALLELISM_DIM_1,
+    parameter DATA_OUT_0_PRECISION_0 = 16,
+    parameter DATA_OUT_0_PRECISION_1 = 3
 
 ) (
     input logic clk,
@@ -67,17 +69,17 @@ module fixed_self_attention_input_block_batched #(
     output logic bias_value_ready,
 
     // Query
-    output logic [QKV_PRECISION_0-1:0] data_out_query [DATA_IN_0_PARALLELISM_DIM_1 * WEIGHT_PARALLELISM_DIM_0-1:0],
+    output logic [DATA_OUT_0_PRECISION_0-1:0] data_out_query [DATA_IN_0_PARALLELISM_DIM_1 * WEIGHT_PARALLELISM_DIM_0-1:0],
     output logic data_out_query_valid,
     input logic data_out_query_ready,
 
     // Key
-    output logic [QKV_PRECISION_0-1:0] data_out_key [DATA_IN_0_PARALLELISM_DIM_1 * WEIGHT_PARALLELISM_DIM_0-1:0],
+    output logic [DATA_OUT_0_PRECISION_0-1:0] data_out_key [DATA_IN_0_PARALLELISM_DIM_1 * WEIGHT_PARALLELISM_DIM_0-1:0],
     output logic data_out_key_valid,
     input logic data_out_key_ready,
 
     // Value
-    output logic [QKV_PRECISION_0-1:0] data_out_value [DATA_IN_0_PARALLELISM_DIM_1 * WEIGHT_PARALLELISM_DIM_0-1:0],
+    output logic [DATA_OUT_0_PRECISION_0-1:0] data_out_value [DATA_IN_0_PARALLELISM_DIM_1 * WEIGHT_PARALLELISM_DIM_0-1:0],
     output logic data_out_value_valid,
     input logic data_out_value_ready
 );
@@ -88,20 +90,14 @@ module fixed_self_attention_input_block_batched #(
   parameter DATA_IN_0_DEPTH_DIM_1 = DATA_IN_0_TENSOR_SIZE_DIM_1 / DATA_IN_0_PARALLELISM_DIM_1;
   parameter WEIGHT_DEPTH_DIM_0 = WEIGHT_TENSOR_SIZE_DIM_0 / WEIGHT_PARALLELISM_DIM_0;
 
-  // * Precision parameters for intermediate signals
-
-  parameter QKV_PRECISION_0 = DATA_IN_0_PRECISION_0 + WEIGHT_PRECISION_0 + $clog2(
-      DATA_IN_0_PARALLELISM_DIM_0
-  ) + $clog2(
-      WEIGHT_TENSOR_SIZE_DIM_1 / WEIGHT_PARALLELISM_DIM_1
-  ) + HAS_BIAS;
-  parameter QKV_PRECISION_1 = DATA_IN_0_PRECISION_1 + WEIGHT_PRECISION_1;
+  // * Declarations
+  // * =================================================================
 
   logic query_data_in_valid, query_data_in_ready;
   logic key_data_in_valid, key_data_in_ready;
   logic value_data_in_valid, value_data_in_ready;
 
-  logic [QKV_PRECISION_0-1:0] query_buffer [DATA_IN_0_PARALLELISM_DIM_1 * WEIGHT_PARALLELISM_DIM_0-1:0];
+  logic [DATA_OUT_0_PRECISION_0-1:0] query_buffer [DATA_IN_0_PARALLELISM_DIM_1 * WEIGHT_PARALLELISM_DIM_0-1:0];
   logic query_buffer_valid;
   logic query_buffer_ready;
 
@@ -143,7 +139,10 @@ module fixed_self_attention_input_block_batched #(
       .BIAS_TENSOR_SIZE_DIM_0(BIAS_TENSOR_SIZE_DIM_0),
       .BIAS_TENSOR_SIZE_DIM_1(BIAS_TENSOR_SIZE_DIM_1),
       .BIAS_PARALLELISM_DIM_0(BIAS_PARALLELISM_DIM_0),
-      .BIAS_PARALLELISM_DIM_1(BIAS_PARALLELISM_DIM_1)
+      .BIAS_PARALLELISM_DIM_1(BIAS_PARALLELISM_DIM_1),
+
+      .DATA_OUT_0_PRECISION_0      (DATA_OUT_0_PRECISION_0),
+      .DATA_OUT_0_PRECISION_1      (DATA_OUT_0_PRECISION_1)
 
   ) fixed_linear_query (
       .clk,
@@ -171,7 +170,7 @@ module fixed_self_attention_input_block_batched #(
   // * We must buffer the queries to latency match the key transpose path
   // * since the matmul for QK^T buffers K^T but streams Q
   matrix_fifo #(
-    .DATA_WIDTH     (QKV_PRECISION_0),
+    .DATA_WIDTH     (DATA_OUT_0_PRECISION_0),
     .DIM0           (WEIGHT_PARALLELISM_DIM_0),
     .DIM1           (DATA_IN_0_PARALLELISM_DIM_1),
     .FIFO_SIZE      (DATA_IN_0_DEPTH_DIM_1 * WEIGHT_DEPTH_DIM_0)
@@ -211,7 +210,10 @@ module fixed_self_attention_input_block_batched #(
       .BIAS_TENSOR_SIZE_DIM_0(BIAS_TENSOR_SIZE_DIM_0),
       .BIAS_TENSOR_SIZE_DIM_1(BIAS_TENSOR_SIZE_DIM_1),
       .BIAS_PARALLELISM_DIM_0(BIAS_PARALLELISM_DIM_0),
-      .BIAS_PARALLELISM_DIM_1(BIAS_PARALLELISM_DIM_1)
+      .BIAS_PARALLELISM_DIM_1(BIAS_PARALLELISM_DIM_1),
+
+      .DATA_OUT_0_PRECISION_0      (DATA_OUT_0_PRECISION_0),
+      .DATA_OUT_0_PRECISION_1      (DATA_OUT_0_PRECISION_1)
 
   ) fixed_linear_key (
       .clk,
@@ -261,7 +263,10 @@ module fixed_self_attention_input_block_batched #(
       .BIAS_TENSOR_SIZE_DIM_0(BIAS_TENSOR_SIZE_DIM_0),
       .BIAS_TENSOR_SIZE_DIM_1(BIAS_TENSOR_SIZE_DIM_1),
       .BIAS_PARALLELISM_DIM_0(BIAS_PARALLELISM_DIM_0),
-      .BIAS_PARALLELISM_DIM_1(BIAS_PARALLELISM_DIM_1)
+      .BIAS_PARALLELISM_DIM_1(BIAS_PARALLELISM_DIM_1),
+
+      .DATA_OUT_0_PRECISION_0      (DATA_OUT_0_PRECISION_0),
+      .DATA_OUT_0_PRECISION_1      (DATA_OUT_0_PRECISION_1)
 
   ) fixed_linear_value (
       .clk,

@@ -43,12 +43,8 @@ module fixed_linear #(
     parameter BIAS_PARALLELISM_DIM_1 = 1,
 
     // Inferred precision of the output data
-    parameter DATA_OUT_0_PRECISION_0 = DATA_IN_0_PRECISION_0 + WEIGHT_PRECISION_0 + $clog2(
-        DATA_IN_0_PARALLELISM_DIM_0
-    ) + $clog2(
-        WEIGHT_TENSOR_SIZE_DIM_1 / WEIGHT_PARALLELISM_DIM_1
-    ) + HAS_BIAS,
-    parameter DATA_OUT_0_PRECISION_1 = DATA_IN_0_PRECISION_1 + WEIGHT_PRECISION_1,
+    parameter DATA_OUT_0_PRECISION_0 = 16,
+    parameter DATA_OUT_0_PRECISION_1 = 3,
 
     parameter DATA_OUT_0_TENSOR_SIZE_DIM_0 = WEIGHT_TENSOR_SIZE_DIM_0,
     parameter DATA_OUT_0_TENSOR_SIZE_DIM_1 = DATA_IN_0_TENSOR_SIZE_DIM_1,

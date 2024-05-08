@@ -35,7 +35,7 @@ class SoftermaxTB(Testbench):
             dut.data_out_0,
             dut.data_out_0_valid,
             dut.data_out_0_ready,
-            check=False,
+            check=True,
         )
         # Model
         self.model = partial(
