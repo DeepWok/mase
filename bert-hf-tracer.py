@@ -10,6 +10,9 @@ from chop.passes import (
     init_metadata_analysis_pass,
     add_common_metadata_analysis_pass,
     add_hardware_metadata_analysis_pass,
+    emit_verilog_top_transform_pass,
+    emit_internal_rtl_transform_pass,
+    emit_bram_transform_pass,
 )
 
 import sys, pdb, traceback
@@ -43,15 +46,16 @@ custom_ops = {
         },
         BertSelfAttention: {
             "args": {
-                "hidden_states": "embeddings",
-                "attention_mask": "data_in",
-                "head_mask": "data_in",
-                "encoder_hidden_states": "data_in",
-                "encoder_attention_mask": "data_in",
-                "past_key_value": "data_in",
+                "hidden_states": "data_in",
+                "attention_mask": None,
+                "head_mask": None,
+                "encoder_hidden_states": None,
+                "encoder_attention_mask": None,
+                "past_key_value": None,
                 "output_attentions": "config",
             },
-            "mase_component": "attention/self_attention.sv",
+            "toolchain": "INTERNAL_RTL",
+            "module": "attention/fixed_self_attention.sv",
         },
     },
     "functions": {},
@@ -69,17 +73,30 @@ with open("bert.txt", "w") as f:
 mg, _ = add_common_metadata_analysis_pass(
     mg,
     pass_args={
-        "dummy_in": {"input_ids": torch.randint(0, config.vocab_size, (1, 128))}
+        "dummy_in": {"input_ids": torch.randn((1, 128, 768))},
+        "add_value": False,
     },
 )
 
 mg, _ = add_hardware_metadata_analysis_pass(mg)
+
+# from torch import Tensor
 
 # i = 0
 # for node in mg.fx_graph.nodes:
 #     if i > 5:
 #         break
 #     print(f"\n\nNode: {node.name}")
-#     for k, v in node.meta["mase"]["hardware"].items():
-#         print(f"{k}: {v}")
+#     print(f"Mase type: {node.meta['mase']['common']['mase_type']}")
+#     print(f"Mase op: {node.meta['mase']['common']['mase_op']}")
+#     for k, v in node.meta["mase"]["common"]["args"].items():
+#         print(f"Args/{k}: {v}")
+
+#     print(f"HW meta: {node.meta['mase']['hardware']}")
+#     breakpoint()
+
 #     i += 1
+
+mg, _ = emit_verilog_top_transform_pass(mg)
+# mg, _ = emit_internal_rtl_transform_pass(mg)
+# mg, _ = emit_bram_transform_pass(mg)
