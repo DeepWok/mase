@@ -65,7 +65,7 @@ def in_out_wave(dut, name):
 
 
 @cocotb.test()
-async def test_fixed_accumulator(dut):
+async def cocotb_test_fixed_accumulator(dut):
     """Test accumulator"""
     samples = 30
     test_case = VerificationCase(samples=samples)
@@ -122,6 +122,10 @@ async def test_fixed_accumulator(dut):
     check_results(test_case.outputs.data, test_case.ref)
 
 
-if __name__ == "__main__":
+def test_fixed_accumulator():
     tb = VerificationCase()
     mase_runner(module_param_list=[tb.get_dut_parameters()])
+
+
+if __name__ == "__main__":
+    test_fixed_accumulator()

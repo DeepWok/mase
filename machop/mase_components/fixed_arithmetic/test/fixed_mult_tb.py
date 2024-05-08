@@ -14,7 +14,7 @@ def multiplier_sw(a: int, b: int) -> int:
 
 
 @cocotb.test()
-async def test_fixed_mult(dut):
+async def cocotb_test_fixed_mult(dut):
     """Test for adding 2 random numbers multiple times"""
 
     for i in range(30):
@@ -35,5 +35,9 @@ async def test_fixed_mult(dut):
         )
 
 
-if __name__ == "__main__":
+def test_fixed_mult():
     mase_runner()
+
+
+if __name__ == "__main__":
+    test_fixed_mult()

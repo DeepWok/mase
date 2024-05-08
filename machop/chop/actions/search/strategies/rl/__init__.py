@@ -1,1 +1,1 @@
-from .core_algorithm import StrategyRL
+from .core_algorithm import SearchStrategyRL

@@ -27,9 +27,9 @@ async def test(dut):
 
     tb_path = Path.home() / ".mase" / "top" / "hardware" / "test" / "mase_top_tb"
     with open(tb_path / "tb_obj.dill", "rb") as f:
-        tb = dill.load(f)(dut)
+        tb = dill.load(f)(dut, fail_on_checks=True)
 
-    tb.initialize()
+    await tb.initialize()
 
     in_tensors = tb.generate_inputs(batches=3)
     exp_out = tb.model(*list(in_tensors.values()))
@@ -37,7 +37,8 @@ async def test(dut):
     tb.load_drivers(in_tensors)
     tb.load_monitors(exp_out)
 
-    await Timer(100, units="us")
+    await Timer(10000, units="us")
+    tb.end_checks()
 
 
 def _emit_cocotb_test(graph):
@@ -52,20 +53,11 @@ import cocotb
     with open(tb_path / "test.py", "w") as f:
         f.write(test_template)
 
-    verilator_build = f"""
-#!/bin/bash
-# This script is used to build the verilator simulation
-verilator --binary --build {verilator_buff}
-"""
-    verilator_file = os.path.join(sim_dir, "build.sh")
-    with open(verilator_file, "w", encoding="utf-8") as outf:
-        outf.write(verilator_build)
-
 
 def _emit_cocotb_tb(graph):
     class MaseGraphTB(Testbench):
-        def __init__(self, dut):
-            super().__init__(dut, dut.clk, dut.rst)
+        def __init__(self, dut, fail_on_checks=True):
+            super().__init__(dut, dut.clk, dut.rst, fail_on_checks=fail_on_checks)
 
             # Instantiate as many drivers as required inputs to the model
             for arg in graph.meta["mase"]["common"]["args"].keys():
@@ -122,19 +114,23 @@ def _emit_cocotb_tb(graph):
                         frac_width=self.input_precision[1],
                     )
                     # Convert to integer equivalent of fixed point representation
-                    arg_batches = (
-                        (arg_batches * (2 ** self.input_precision[1])).int().tolist()
-                    )
+                    arg_batches = (arg_batches * (2 ** self.input_precision[1])).int()
+
+                    # Convert to input data blocks by reshaping to parallelism
+                    in_data_blocks = arg_batches.reshape((-1, 4)).tolist()
                 else:
                     # TO DO: convert to integer equivalent of floating point representation
                     pass
 
-                # Append to input driver
-                for batch in arg_batches:
-                    self.input_drivers[arg_idx].append(batch)
+                # Append all input blocks to input driver
+                for block in in_data_blocks:
+                    self.input_drivers[arg_idx].append(block)
 
         def load_monitors(self, expectation):
-            self.output_monitors[-1].expect(expectation.tolist())
+            # TO DO: reshape according to output parallelism
+            output_blocks = expectation.reshape(-1, 4)
+            for block in output_blocks:
+                self.output_monitors[-1].expect(block.tolist())
 
     # Serialize testbench object to be instantiated within test by cocotb runner
     cls_obj = MaseGraphTB

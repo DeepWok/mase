@@ -392,8 +392,8 @@ module fixed_att #(
       .data_out_valid(data_z_valid),
       .data_out_ready(data_z_ready)
   );
-  assign data_out = data_z;
-  assign data_out_valid = data_z_valid;
+  assign data_out_0 = data_z;
+  assign data_out_0_valid = data_z_valid;
   assign data_z_ready = data_out_ready;
 
 

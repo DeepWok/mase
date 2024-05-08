@@ -14,6 +14,8 @@ from torch.nn.parallel import DistributedDataParallel as DDP
 from torch.utils.data.distributed import DistributedSampler
 from torch.utils.data import DataLoader
 
+from chop.ir.graph.mase_graph import MaseGraph
+
 from .base import SWRunnerBase
 
 
@@ -60,7 +62,7 @@ class RunnerBasicTrain(SWRunnerBase):
         self._setup_metric()
 
     def _setup_metric(self):
-        if self.model_info.is_vision_model:
+        if self.model_info.is_vision_model or self.model_info.is_physical_model:
             match self.task:
                 case "classification" | "cls":
                     self.metric = MulticlassAccuracy(
@@ -100,10 +102,15 @@ class RunnerBasicTrain(SWRunnerBase):
         raise NotImplementedError()
 
     def vision_cls_forward(self, batch, model):
-        raise NotImplementedError()
+        x, y = batch[0].to(self.accelerator), batch[1].to(self.accelerator)
+        logits = model(x)
+        loss = torch.nn.functional.cross_entropy(logits, y)
+        acc = self.metric(logits, y)
+        self.loss(loss)
+        return {"loss": loss, "accuracy": acc}
 
     def forward(self, task: str, batch: dict, model):
-        if self.model_info.is_vision_model:
+        if self.model_info.is_vision_model or self.model_info.is_physical_model:
             match self.task:
                 case "classification" | "cls":
                     loss = self.vision_cls_forward(batch, model)
@@ -133,6 +140,9 @@ class RunnerBasicTrain(SWRunnerBase):
         return reduced
 
     def __call__(self, data_module, model, sampled_config) -> dict[str, float]:
+        if not isinstance(model, torch.nn.Module):
+            model = model.model
+
         num_samples = self.config["num_samples"]
         max_epochs = self.config["max_epochs"]
 
@@ -184,7 +194,8 @@ class RunnerBasicTrain(SWRunnerBase):
 
             model.train()
             loss_i = self.forward(self.task, batch, model)
-            loss_i = loss_i / grad_accumulation_steps
+            loss_i = loss_i["loss"] / grad_accumulation_steps
+
             loss_i.backward()
 
             if (step_i + 1) % grad_accumulation_steps == 0 or step_i == num_batches - 1:

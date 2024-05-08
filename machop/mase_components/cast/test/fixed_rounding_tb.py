@@ -75,7 +75,7 @@ def check_outputs(hw_out, sw_out):
 
 
 @cocotb.test()
-async def test_fixed_rounding(dut):
+async def cocotb_test_fixed_rounding(dut):
     """Test random number casting"""
     test_case = VerificationCase(samples=20)
 
@@ -92,6 +92,10 @@ async def test_fixed_rounding(dut):
         )
 
 
-if __name__ == "__main__":
+def test_fixed_rounding():
     tb = VerificationCase()
     mase_runner(module_param_list=[tb.get_dut_parameters()])
+
+
+if __name__ == "__main__":
+    test_fixed_rounding()

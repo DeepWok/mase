@@ -352,11 +352,36 @@ MASE_OP_TO_ENTRIES = {
         ("bias_entries", "bypass", "data_out_entries", "additional_layers_entries"),
     ),
     "relu": (("name", "data_in_entries"), ("bypass",)),
+    "selu": (("name", "data_in_entries"), ("bypass",)),
+    "tanh": (("name", "data_in_entries"), ("bypass",)),
+    "gelu": (("name", "data_in_entries"), ("bypass",)),
+    "softplus": (("name", "data_in_entries"), ("bypass",)),
+    "softsign": (("name", "data_in_entries"), ("bypass",)),
     "sub": (("name", "data_in_entries"), ("bypass",)),
     "rotary_positional_encoding": (
         ("name", "data_in_entries"),
         ("bypass",),
     ),  # RoPE of Llama
+    "batch_norm2d": (
+        ("name", "data_in_entries"),
+        ("weight_entries", "bias_entries", "bypass"),
+    ),
+    "layer_norm": (
+        ("name", "data_in_entries"),
+        ("bypass",),
+    ),
+    "group_norm": (
+        ("name", "data_in_entries"),
+        ("bypass",),
+    ),
+    "instance_norm2d": (
+        ("name", "data_in_entries"),
+        ("bypass",),
+    ),
+    "rms_norm": (
+        ("name", "data_in_entries"),
+        ("bypass",),
+    ),
 }
 
 

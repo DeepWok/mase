@@ -63,3 +63,4 @@ pynvml
 pycuda
 cuda-python
 pytorch-quantization
+bitstring

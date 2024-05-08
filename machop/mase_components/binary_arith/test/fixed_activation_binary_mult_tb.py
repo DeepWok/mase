@@ -8,7 +8,7 @@ sys.path.append(
 )
 print(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
-import utils
+import mase_cocotb.utils
 
 import cocotb
 from cocotb.triggers import Timer
@@ -32,7 +32,7 @@ IN_WIDTH = 16
 
 
 @cocotb.test()
-async def test_fixed_mult(dut):
+async def cocotb_test_fixed_mult(dut):
     """Test for adding 2 random numbers multiple times"""
     for i in range(30):
         data_a = random.randint(-15, 15)

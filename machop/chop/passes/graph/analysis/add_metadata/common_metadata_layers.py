@@ -18,6 +18,30 @@ func_data = {
     "flatten": {"input": "data_in", "start_dim": "config", "end_dim": "config"},
     # https://pytorch.org/docs/stable/generated/torch.nn.functional.relu.html
     "relu": {"input": "data_in", "inplace": "config"},
+    # https://pytorch.org/docs/stable/generated/torch.nn.functional.hardshrink.html
+    "hardshrink": {"input": "data_in", "lambd": "config"},
+    # https://pytorch.org/docs/stable/generated/torch.nn.functional.sigmoid.html
+    "silu": {"input": "data_in", "inplace": "config"},
+    # https://pytorch.org/docs/stable/generated/torch.nn.functional.elu.html
+    "elu": {"input": "data_in", "alpha": "config", "inplace": "config"},
+    # https://pytorch.org/docs/stable/generated/torch.nn.functional.sigmoid.html
+    "sigmoid": {"input": "data_in"},
+    # https://pytorch.org/docs/stable/generated/torch.nn.functional.softshrink.html
+    "softshrink": {"input": "data_in", "lambd": "config"},
+    # https://pytorch.org/docs/stable/generated/torch.nn.functional.logsigmoid.html
+    "logsigmoid": {"input": "data_in"},
+    # https://pytorch.org/docs/stable/generated/torch.nn.functional.softmax.html
+    "softmax": {"input": "data_in", "dim": "config", "dtype": "config"},
+    # https://pytorch.org/docs/stable/generated/torch.nn.SELU.html
+    "selu": {"input": "data_in", "inplace": "config"},
+    # https://pytorch.org/docs/stable/generated/torch.nn.Tanh.html
+    "tanh": {"input": "data_in"},
+    # https://pytorch.org/docs/stable/generated/torch.nn.GELU.html
+    "gelu": {"input": "data_in", "inplace": "config"},
+    # https://pytorch.org/docs/stable/generated/torch.nn.Softsign.html
+    "softsign": {"input": "data_in", "inplace": "config"},
+    # https://pytorch.org/docs/stable/generated/torch.nn.Softplus.html
+    "softplus": {"input": "data_in", "inplace": "config"},
     # https://pytorch.org/docs/stable/generated/torch.add.html
     "add": {"input": "data_in", "other": "data_in"},
     # https://pytorch.org/docs/stable/generated/torch.mul.html
@@ -52,6 +76,9 @@ module_data = {
     "conv3d": {"input": "data_in"},
     # https://pytorch.org/docs/stable/generated/torch.nn.LayerNorm.html#torch.nn.LayerNorm
     "layer_norm": {"input": "data_in"},
+    "group_norm": {"input": "data_in"},
+    "instance_norm2d": {"input": "data_in"},
+    "rms_norm": {"input": "data_in"},
     # https://pytorch.org/docs/stable/_modules/torch/nn/modules/linear.html#Linear
     "linear": {"input": "data_in"},
     # https://pytorch.org/docs/stable/_modules/torch/nn/modules/activation.html#ReLU
@@ -63,6 +90,13 @@ module_data = {
     "dropout": {"input": "data_in"},
     "hardswish": {"input": "data_in"},
     "hardsigmoid": {"input": "data_in"},
+    "sigmoid": {"input": "data_in"},
+    "logsigmoid": {"input": "data_in"},
+    "softshrink": {"input": "data_in"},
+    "hardshrink": {"input": "data_in"},
+    "silu": {"input": "data_in"},
+    "elu": {"input": "data_in"},
+    "softmax": {"input": "data_in"},
     # TODO: check this
     "attention": {"input": "data_in"},
 }
@@ -83,6 +117,7 @@ method_data = {
     "size": {"dim": "config"},
     # https://pytorch.org/docs/stable/generated/torch.Tensor.shape.html#torch.Tensor.shape
     "shape": {"dim": "config"},
+    # https://pytorch.org/docs/stable/generated/torch.nn.Tanh.html
 }
 
 
@@ -91,7 +126,6 @@ def match_args_and_kwargs(meta, args, kwargs, data, add_value):
     meta.parameters["common"]["args"] = {}
     meta_kwargs = {}
     j = 0
-
     for i, x in enumerate(args):
         if isinstance(x, torch.Tensor) and ordered_func_data[i][1] == "data_in":
             arg_meta = {
