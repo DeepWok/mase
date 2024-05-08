@@ -64,7 +64,7 @@ build-docker:
 		docker pull $(img); \
 	fi
 
-shell: build-docker
+shell:
 	docker run -it --shm-size 256m \
         --hostname mase-ubuntu2204 \
         -w /workspace \
@@ -81,6 +81,7 @@ test-hw:
 		-n $(NUM_WORKERS) \
 		--html=report.html --self-contained-html \
 		$(hw_test_dir)
+
 
 test-sw:
 	bash scripts/test-machop.sh

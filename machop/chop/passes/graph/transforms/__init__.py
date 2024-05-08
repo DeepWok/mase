@@ -16,3 +16,5 @@ from .utils import (
 )
 
 from .dse import partition_to_multi_device_transform_pass
+
+from .granularity import raise_granularity_transform_pass
