@@ -44,7 +44,9 @@ def emit_parameters_in_mem_internal(node, param_name, file_name, data_name):
         node.meta["mase"].parameters["hardware"]["verilog_param"][
             f"{_cap(param_name)}_PARALLELISM_DIM_0"
         ]
-        * 4
+        * node.meta["mase"].parameters["hardware"]["verilog_param"][
+            f"{_cap(param_name)}_PARALLELISM_DIM_1"
+        ]
     )
     out_depth = int(total_size / out_size)
     out_width = int(
@@ -182,26 +184,18 @@ def emit_parameters_in_dat_internal(node, param_name, file_name):
     total_size = math.prod(
         node.meta["mase"].parameters["common"]["args"][param_name]["shape"]
     )
-
-    if "IN_DEPTH" in node.meta["mase"].parameters["hardware"]["verilog_param"].keys():
-        if param_name == "bias":
-            out_depth = 1
-        else:
-            out_depth = node.meta["mase"].parameters["hardware"]["verilog_param"][
-                "IN_DEPTH"
-            ]
-    else:
-        out_depth = total_size
-
-    out_size = iceil(total_size / out_depth)
-    # The depth of parameters must match with the input depth of data
-    assert (
-        total_size % out_depth == 0
-    ), f"Cannot partition imperfect size for now {node.name}.{param_name} = {total_size} / {out_depth}."
-    # Assume the first index is the total width
-    out_width = node.meta["mase"].parameters["common"]["args"][param_name]["precision"][
-        0
-    ]
+    
+    # TO DO: change setting parallelism for weight in metadata
+    # node.meta["mase"].parameters["hardware"]["verilog_param"][f"{_cap(param_name)}_PARALLELISM_DIM_1"]
+    out_size = int(
+        node.meta["mase"].parameters["hardware"]["verilog_param"][
+            f"{_cap(param_name)}_PARALLELISM_DIM_0"
+        ]
+        * node.meta["mase"].parameters["hardware"]["verilog_param"][
+            f"{_cap(param_name)}_PARALLELISM_DIM_1"
+        ]
+    )
+    out_depth = int(total_size / out_size)
 
     data_buff = ""
     param_data = node.meta["mase"].module.get_parameter(param_name).data

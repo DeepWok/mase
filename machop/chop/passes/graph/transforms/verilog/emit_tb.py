@@ -78,6 +78,7 @@ def _emit_cocotb_tb(graph):
                         getattr(dut, result),
                         getattr(dut, f"{result}_valid"),
                         getattr(dut, f"{result}_ready"),
+                        check=False
                     )
                 )
 

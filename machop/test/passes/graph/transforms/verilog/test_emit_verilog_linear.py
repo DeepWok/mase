@@ -38,7 +38,7 @@ class MLP(torch.nn.Module):
     def __init__(self) -> None:
         super().__init__()
 
-        self.fc1 = nn.Linear(28 * 28, 28 * 28, bias=False)
+        self.fc1 = nn.Linear(28 * 28, 28 * 28, bias=True)
 
     def forward(self, x):
         x = torch.flatten(x, start_dim=1, end_dim=-1)

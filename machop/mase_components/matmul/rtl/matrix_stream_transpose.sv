@@ -46,7 +46,7 @@ module matrix_stream_transpose #(
   end
 
   // Parameters
-  let max(a, b) = (a > b) ? a : b;
+  `define max(a, b) = (a > b) ? a : b;
 
   localparam IN_DEPTH_DIM0 = TOTAL_DIM0 / COMPUTE_DIM0;
   localparam IN_DEPTH_DIM1 = TOTAL_DIM1 / COMPUTE_DIM1;

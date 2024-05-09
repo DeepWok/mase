@@ -393,6 +393,7 @@ def analyse_common_parameters_module(meta, result, args, kwargs, add_value=True)
 
     meta = match_args_and_kwargs(meta, args, kwargs, module_args, add_value)
     for name, parameter in meta.module.named_parameters():
+        parameter = parameter.unsqueeze(dim=0) if len(parameter.shape) == 1 else parameter
         meta.parameters["common"]["args"][name] = {
             "type": "float",
             "precision": [32],
