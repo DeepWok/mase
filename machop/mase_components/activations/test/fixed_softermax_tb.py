@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import os
+from random import randint, choice
 
 import torch
 import logging
@@ -58,8 +59,8 @@ class SoftermaxTB(Testbench):
         )
 
         # Set verbosity of driver and monitor loggers to debug
-        self.in_data_driver.log.setLevel(logging.DEBUG)
-        self.out_data_monitor.log.setLevel(logging.DEBUG)
+        # self.in_data_driver.log.setLevel(logging.DEBUG)
+        # self.out_data_monitor.log.setLevel(logging.DEBUG)
 
     def generate_inputs(self, batches):
         return torch.randn((batches, self.TOTAL_DIM),)
@@ -146,6 +147,28 @@ def get_fixed_softermax_config(kwargs={}):
     return config
 
 
+def get_random_width():
+    width = randint(2, 16)
+    frac_width = randint(1, width)
+    return width, frac_width
+
+def get_random_softermax_config():
+    parallelism = choice([2, 4, 8])
+    depth = randint(2, 5)
+    in_width, in_frac_width = get_random_width()
+    out_width, out_frac_width = get_random_width()
+    config = {
+        "TOTAL_DIM": parallelism * depth,
+        "PARALLELISM": parallelism,
+        "IN_WIDTH": in_width,
+        "IN_FRAC_WIDTH": in_frac_width,
+        "POW2_WIDTH": 16,
+        "OUT_WIDTH": out_width,
+        "OUT_FRAC_WIDTH": out_frac_width,
+    }
+    return config
+
+
 def test_fixed_softermax_smoke():
     """
     Some quick tests to check if the module is working.
@@ -154,6 +177,7 @@ def test_fixed_softermax_smoke():
         trace=True,
         module_param_list=[
             get_fixed_softermax_config(),
+            *[get_random_softermax_config() for _ in range(5)]
         ],
         # skip_build=True,
     )
