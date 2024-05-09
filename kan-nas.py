@@ -24,20 +24,21 @@ from chop.tools.utils import deepgetattr, deepsetattr
 # * Config
 # * ------------------------------------------
 
-checkpoint = "bert-base-uncased"
+checkpoint = "prajjwal1/bert-tiny"
 os.environ["WANDB_DISABLED"] = "true"
-NUM_TRIALS = 3
+NUM_TRIALS = 100
+EPOCHS_PER_TRIAL = 1
 DEGREE = 3
 
 # * Utils
 # * ------------------------------------------
 
 def get_datasets():
-    raw_datasets = load_dataset("glue", "mrpc")
+    raw_datasets = load_dataset("glue", "sst2")
     tokenizer = AutoTokenizer.from_pretrained(checkpoint)
 
     def tokenize_function(example):
-        return tokenizer(example["sentence1"], example["sentence2"], truncation=True)
+        return tokenizer(example["sentence"], truncation=True)
 
     tokenized_datasets = raw_datasets.map(tokenize_function, batched=True)
     data_collator = DataCollatorWithPadding(tokenizer=tokenizer)
@@ -45,16 +46,17 @@ def get_datasets():
 
 def get_model():
     cf = AutoConfig.from_pretrained(checkpoint)
-    cf.num_hidden_layers = 3
     model = AutoModelForSequenceClassification.from_config(cf)
+    print(f"Number of parameters: {sum(p.numel() for p in model.parameters() if p.requires_grad)}")
+    print(f"Num labels: {model.num_labels}")
     return model
 
 tokenized_datasets, data_collator, tokenizer = get_datasets()
 model = get_model()
 
 training_args = TrainingArguments("test-trainer", report_to=None)
-training_args.num_train_epochs = 1
-
+training_args.num_train_epochs = EPOCHS_PER_TRIAL
+training_args.learning_rate = 1e-4
 
 
 # * Search
@@ -63,17 +65,31 @@ training_args.num_train_epochs = 1
 linear_layers = [name for (name, cls) in model.named_modules() if isinstance(cls, torch.nn.Linear)]
 print(f"Space size: {2 ** len(linear_layers)}")
 
+print(f"LAYERS")
+for l in linear_layers:
+    print(l)
+    
+
 cols = linear_layers + ["accuracy", "f1"]
 df = pd.DataFrame(columns=cols)
+
+evaluated_configs = []
 
 for trial in range(NUM_TRIALS):    
     print(f"\n\n==========================================")
     print(f"Trial: {trial}")
     print(f"==========================================")
-    trial_model = get_model()
+    trial_model = deepcopy(model)
     linear_layers = [name for (name, cls) in trial_model.named_modules() if isinstance(cls, torch.nn.Linear)]
     layer_included = {layer: random.choice([True, False]) for layer in linear_layers}
     included_layers = [layer for layer, included in layer_included.items() if included]
+    
+    while included_layers in evaluated_configs:
+        layer_included = {layer: random.choice([True, False]) for layer in linear_layers}
+        included_layers = [layer for layer, included in layer_included.items() if included]
+    
+    evaluated_configs.append(included_layers)
+    
     print(f"Replacing layers: {included_layers}")
     
     for layer_name in included_layers:
@@ -82,8 +98,6 @@ for trial in range(NUM_TRIALS):
             input_dim=old_layer.in_features, output_dim=old_layer.out_features, degree=DEGREE
         ))
         
-    # print(f"Pre training weights: {deepgetattr(trial_model, included_layers[0]).cheby_coeffs}")
-
     trainer = Trainer(
         trial_model,
         training_args,
@@ -92,22 +106,23 @@ for trial in range(NUM_TRIALS):
         data_collator=data_collator,
         tokenizer=tokenizer,
     )
-    breakpoint()
-    trainer.train()
+    try:
+        trainer.train()
 
-    # print(f"Post training weights: {deepgetattr(trial_model, included_layers[0]).cheby_coeffs}")
+        predictions = trainer.predict(tokenized_datasets["validation"])
+        preds = np.argmax(predictions.predictions, axis=-1)
+        metric = evaluate.load("glue", "sst2")
+        results = metric.compute(predictions=preds, references=predictions.label_ids)
+        
+        df.loc[trial] = {
+            **layer_included,
+            **results
+        }
     
-    predictions = trainer.predict(tokenized_datasets["validation"])
-    preds = np.argmax(predictions.predictions, axis=-1)
-    metric = evaluate.load("glue", "mrpc")
-    results = metric.compute(predictions=preds, references=predictions.label_ids)
-    
-    df.loc[trial] = {
-        **layer_included,
-        **results
-    }
-    
-    print(f"Results: {results}")
+        print(f"Results: {results}")
+    except:
+        print(f"Trial {trial} failed")
+        continue
     
 df.to_csv(f"results.csv")
 
