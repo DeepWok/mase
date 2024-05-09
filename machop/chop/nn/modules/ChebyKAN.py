@@ -33,5 +33,5 @@ class ChebyKANLayer(nn.Module):
             "bid,iod->bo", cheby, self.cheby_coeffs
         )  # shape = (batch_size, outdim)
         y = y.view(-1, self.outdim)
-        y = torch.reshape(y, original_shape)
+        y = torch.reshape(y, (original_shape[:-1] + (-1,)))
         return y

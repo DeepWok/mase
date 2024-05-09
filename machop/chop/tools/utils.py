@@ -14,6 +14,8 @@ import logging
 # LUTNet
 import itertools
 
+from functools import reduce
+
 use_cuda = torch.cuda.is_available()
 torch_cuda = torch.cuda if use_cuda else torch
 device = torch.device("cuda:0" if use_cuda else "cpu")
@@ -256,3 +258,26 @@ def parse_accelerator(accelerator: str):
     else:
         raise RuntimeError(f"Unsupported accelerator {accelerator}")
     return device
+
+def deepgetattr(obj, attr):
+    """Recurses through an attribute chain to get the ultimate value."""
+    return reduce(getattr, attr.split("."), obj)
+
+def deepsetattr(obj, attr_str, value):
+    """
+    Set the attribute of an object recursively based on a string
+    specifying the attribute hierarchy.
+    
+    Args:
+    - obj: The object whose attribute will be set.
+    - attr_str: A string specifying the attribute hierarchy, separated by ".".
+    - value: The value to be set.
+    """
+    attrs = attr_str.split('.')
+    if len(attrs) == 1:
+        setattr(obj, attrs[0], value)
+    else:
+        first_attr = attrs.pop(0)
+        if not hasattr(obj, first_attr):
+            setattr(obj, first_attr, {})
+        deepsetattr(getattr(obj, first_attr), '.'.join(attrs), value)
