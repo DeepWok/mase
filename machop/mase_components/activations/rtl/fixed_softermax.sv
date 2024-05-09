@@ -36,12 +36,18 @@ module fixed_softermax #(
     input  logic                 out_ready
 );
 
+// -----
+// Params
+// -----
+
+localparam MAX_WIDTH = IN_WIDTH - IN_FRAC_WIDTH;
+
 
 // -----
 // Wires
 // -----
 
-logic [IN_WIDTH-1:0] local_max;
+logic [MAX_WIDTH-1:0] local_max;
 logic [POW2_WIDTH-1:0] local_values [PARALLELISM-1:0];
 logic local_window_valid, local_window_ready;
 
@@ -71,7 +77,7 @@ softermax_global_norm #(
     .TOTAL_DIM(TOTAL_DIM),
     .PARALLELISM(PARALLELISM),
     .IN_VALUE_WIDTH(POW2_WIDTH),
-    .IN_MAX_WIDTH(IN_WIDTH),
+    .IN_MAX_WIDTH(MAX_WIDTH),
     .OUT_WIDTH(OUT_WIDTH),
     .OUT_FRAC_WIDTH(OUT_FRAC_WIDTH)
 ) global_norm_inst (
