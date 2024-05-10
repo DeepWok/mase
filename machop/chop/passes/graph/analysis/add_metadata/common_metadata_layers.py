@@ -392,6 +392,9 @@ def analyse_common_parameters_module(meta, result, args, kwargs, add_value=True)
         # ! TO DO: review
         if meta["common"]["mase_op"] == "user_defined_module":
             name = name.replace(".", "_")
+        parameter = (
+            parameter.unsqueeze(dim=0) if len(parameter.shape) == 1 else parameter
+        )
         meta.parameters["common"]["args"][name] = {
             "type": "float",
             "precision": [32],

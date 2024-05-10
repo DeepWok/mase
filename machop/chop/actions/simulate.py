@@ -41,7 +41,7 @@ def simulate(
         # sources = [
         #     project_dir / "hardware" / "rtl" / "top.sv",
         # ]
-        sources = ["top.sv"]
+        sources = ["../../top.sv"]
 
         includes = [
             project_dir / "hardware" / "rtl",

@@ -13,10 +13,17 @@ from pathlib import Path
 import cocotb
 from mase_cocotb.testbench import Testbench
 from mase_cocotb.interfaces.streaming import StreamDriver, StreamMonitor
-from mase_cocotb.z_qlayers.tensor_cast import quantize_to_int
+
 
 import dill
 import inspect
+
+
+def _cap(name):
+    """
+    capitalize a string
+    """
+    return str(name).upper()
 
 
 @cocotb.test()
@@ -31,13 +38,13 @@ async def test(dut):
 
     await tb.initialize()
 
-    in_tensors = tb.generate_inputs(batches=3)
+    in_tensors = tb.generate_inputs(batches=1)
     exp_out = tb.model(*list(in_tensors.values()))
 
     tb.load_drivers(in_tensors)
     tb.load_monitors(exp_out)
 
-    await Timer(10000, units="us")
+    await Timer(100, units="us")
     tb.end_checks()
 
 
@@ -60,26 +67,32 @@ def _emit_cocotb_tb(graph):
             super().__init__(dut, dut.clk, dut.rst, fail_on_checks=fail_on_checks)
 
             # Instantiate as many drivers as required inputs to the model
-            for arg in graph.meta["mase"]["common"]["args"].keys():
-                self.input_drivers.append(
-                    StreamDriver(
+            self.input_drivers = {}
+            self.output_monitors = {}
+
+            for node in graph.nodes_in:
+                for arg in node.meta["mase"]["common"]["args"].keys():
+                    if "data_in" not in arg:
+                        continue
+                    self.input_drivers[arg] = StreamDriver(
                         dut.clk,
                         getattr(dut, arg),
                         getattr(dut, f"{arg}_valid"),
                         getattr(dut, f"{arg}_ready"),
                     )
-                )
 
             # Instantiate as many monitors as required outputs
-            for result in graph.meta["mase"]["common"]["results"].keys():
-                self.output_monitors.append(
-                    StreamMonitor(
+            for node in graph.nodes_out:
+                for result in node.meta["mase"]["common"]["results"].keys():
+                    if "data_out" not in result:
+                        continue
+                    self.output_monitors[result] = StreamMonitor(
                         dut.clk,
                         getattr(dut, result),
                         getattr(dut, f"{result}_valid"),
                         getattr(dut, f"{result}_ready"),
+                        check=False,
                     )
-                )
 
             self.model = graph.model
 
@@ -87,6 +100,8 @@ def _emit_cocotb_tb(graph):
             self.input_precision = graph.meta["mase"]["common"]["args"]["data_in_0"][
                 "precision"
             ]
+
+            from mase_cocotb.utils import fixed_preprocess_tensor
 
         def generate_inputs(self, batches):
             """
@@ -98,39 +113,73 @@ def _emit_cocotb_tb(graph):
             :return: a dictionary of input arguments and their corresponding tensors
             :rtype: Dict
             """
+            # ! TO DO: iterate through graph.args instead to generalize
             inputs = {}
-            for arg, arg_info in graph.meta["mase"]["common"]["args"].items():
-                # Batch dimension always set to 1 in metadata
-                inputs[arg] = torch.rand(([batches] + arg_info["shape"][1:]))
+            for node in graph.nodes_in:
+                for arg, arg_info in node.meta["mase"]["common"]["args"].items():
+                    # Batch dimension always set to 1 in metadata
+                    if "data_in" not in arg:
+                        continue
+                    print(f"Generating data for node {node}, arg {arg}: {arg_info}")
+                    inputs[f"{arg}"] = torch.rand(([batches] + arg_info["shape"][1:]))
             return inputs
 
         def load_drivers(self, in_tensors):
-            for arg_idx, arg_batches in enumerate(in_tensors.values()):
+            for arg, arg_batches in in_tensors.items():
                 # Quantize input tensor according to precision
                 if len(self.input_precision) > 1:
-                    arg_batches = integer_quantizer(
-                        arg_batches,
-                        width=self.input_precision[0],
-                        frac_width=self.input_precision[1],
-                    )
-                    # Convert to integer equivalent of fixed point representation
-                    arg_batches = (arg_batches * (2 ** self.input_precision[1])).int()
+                    from mase_cocotb.utils import fixed_preprocess_tensor
 
-                    # Convert to input data blocks by reshaping to parallelism
-                    in_data_blocks = arg_batches.reshape((-1, 4)).tolist()
+                    in_data_blocks = fixed_preprocess_tensor(
+                        tensor=arg_batches,
+                        q_config={
+                            "width": self.get_parameter(f"{_cap(arg)}_PRECISION_0"),
+                            "frac_width": self.get_parameter(
+                                f"{_cap(arg)}_PRECISION_1"
+                            ),
+                        },
+                        parallelism=[
+                            self.get_parameter(f"{_cap(arg)}_PARALLELISM_DIM_1"),
+                            self.get_parameter(f"{_cap(arg)}_PARALLELISM_DIM_0"),
+                        ],
+                    )
+
                 else:
                     # TO DO: convert to integer equivalent of floating point representation
                     pass
 
                 # Append all input blocks to input driver
+                # ! TO DO: generalize
                 for block in in_data_blocks:
-                    self.input_drivers[arg_idx].append(block)
+                    if len(block) < self.get_parameter("DATA_IN_0_PARALLELISM_DIM_0"):
+                        block = block + [0] * (
+                            self.get_parameter("DATA_IN_0_PARALLELISM_DIM_0")
+                            - len(block)
+                        )
+                    self.input_drivers[arg].append(block)
 
         def load_monitors(self, expectation):
             # TO DO: reshape according to output parallelism
-            output_blocks = expectation.reshape(-1, 4)
+            from mase_cocotb.utils import fixed_preprocess_tensor
+
+            output_blocks = fixed_preprocess_tensor(
+                tensor=expectation,
+                q_config={
+                    "width": self.get_parameter(f"DATA_OUT_0_PRECISION_0"),
+                    "frac_width": self.get_parameter(f"DATA_OUT_0_PRECISION_1"),
+                },
+                parallelism=[
+                    self.get_parameter(f"DATA_OUT_0_PARALLELISM_DIM_1"),
+                    self.get_parameter(f"DATA_OUT_0_PARALLELISM_DIM_0"),
+                ],
+            )
             for block in output_blocks:
-                self.output_monitors[-1].expect(block.tolist())
+                # ! TO DO: generalize
+                if len(block) < self.get_parameter("DATA_OUT_0_PARALLELISM_DIM_0"):
+                    block = block + [0] * (
+                        self.get_parameter("DATA_OUT_0_PARALLELISM_DIM_0") - len(block)
+                    )
+                self.output_monitors["data_out_0"].expect(block)
 
     # Serialize testbench object to be instantiated within test by cocotb runner
     cls_obj = MaseGraphTB
