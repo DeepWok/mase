@@ -13,6 +13,7 @@ MASE_HW_DEPS = {
     # TODO: Failing test: missing "z_proj" in config?
     # "attention/fixed_self_att": ["attention", "cast", "common", "conv",
     #                              "fixed_arithmetic", "linear", "matmul", "ViT"],
+    "attention/fixed_gqa_head": ["activations", "common", "cast", "matmul", "fixed_arithmetic"],
     "activations/softermax_lpw_pow2": ["common", "cast"],
     "activations/softermax_lpw_reciprocal": ["common", "cast", "fixed_arithmetic"],
     "activations/softermax_local_window": ["activations", "common", "cast", "matmul"],
