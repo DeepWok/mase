@@ -1,8 +1,7 @@
 from torch import Tensor
-from math import ceil
 
 
-def softermax(input: Tensor) -> Tensor:
+def softermax(input: Tensor, dim: int) -> Tensor:
     """Softermax implementation, according to "Softermax: Hardware/Software Co-Design of an Efficient Softmax for Transformers" paper (https://arxiv.org/abs/2103.09301).
 
     Args:
@@ -11,5 +10,9 @@ def softermax(input: Tensor) -> Tensor:
     Returns:
         Tensor: Output tensor
     """
-    powers = 2 ** (input - ceil(input.max()))
-    return powers / powers.sum()
+    out = input - input.max(dim=dim, keepdim=True).values.floor()
+    out = 2**out
+    row_sum = out.sum(dim=dim, keepdim=True)
+    # Elementwise division
+    out = out / row_sum
+    return out
