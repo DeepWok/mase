@@ -28,7 +28,7 @@ from chop.passes.graph.transforms.quantize.quantizers.quantizers_for_hw import (
 )
 
 logger = logging.getLogger("testbench")
-logger.setLevel("DEBUG")
+logger.setLevel("INFO")
 
 
 class FixedGQAHeadTB(Testbench):
@@ -98,11 +98,6 @@ class FixedGQAHeadTB(Testbench):
             width=self.V_ACT_WIDTH,
             frac_width=self.V_ACT_FRAC_WIDTH,
         )
-
-        print("q_act_num_iters", self.q_act_num_iters)
-        print("q_weight_num_iters", self.q_weight_num_iters)
-        print("k_transpose_num_iters", self.k_transpose_num_iters)
-        print("v_act_num_iters", self.v_act_num_iters)
 
         # Driver/Monitors
         self.q_act_driver = StreamDriver(
@@ -304,27 +299,13 @@ class FixedGQAHeadTB(Testbench):
         await Timer(us, "us")
         assert self.output_monitor.recv_queue.empty()
 
-    # def _final_check(self):
-    #     if len(self.output_monitor.error_log) == 0:
-    #         logger.info("No Errors.")
-    #         # No errors
-    #         return
-    #     errors = np.stack(self.output_monitor.error_log)
-    #     max_bit_err = np.max(errors)
-    #     logger.info("Maximum bit-error: %d", max_bit_err)
-    #     if max_bit_err > self.error_threshold_bits:
-    #         assert False, (
-    #             "Test failed due to high approximation error. Got %d bits of error!" %
-    #             max_bit_err
-    #         )
-
 
 @cocotb.test()
 async def basic(dut):
     tb = FixedGQAHeadTB(dut)
     tb.output_monitor.ready.value = 1
     await tb.reset()
-    await tb.run_test(batches=1, us=10)
+    await tb.run_test(batches=3, us=10)
 
 
 @cocotb.test()
@@ -335,34 +316,82 @@ async def stream(dut):
     await tb.run_test(batches=200, us=2000)
 
 
-# @cocotb.test()
-# async def backpressure(dut):
-#     tb = FixedGQAHeadTB(dut)
-#     cocotb.start_soon(bit_driver(tb.output_monitor.ready, tb.clk, 0.5))
-#     await tb.reset()
-#     await tb.run_test(batches=100, us=2000)
+@cocotb.test()
+async def backpressure(dut):
+    tb = FixedGQAHeadTB(dut)
+    cocotb.start_soon(bit_driver(tb.output_monitor.ready, tb.clk, 0.5))
+    await tb.reset()
+    await tb.run_test(batches=200, us=2000)
 
 
-# @cocotb.test()
-# async def valid(dut):
-#     tb = FixedGQAHeadTB(dut)
-#     tb.output_monitor.ready.value = 1
-#     tb.in_driver.set_valid_prob(0.5)
-#     await tb.reset()
-#     await tb.run_test(batches=100, us=2000)
+@cocotb.test()
+async def valid(dut):
+    tb = FixedGQAHeadTB(dut)
+    tb.output_monitor.ready.value = 1
+    tb.q_act_driver.set_valid_prob(0.5)
+    tb.q_weight_driver.set_valid_prob(0.5)
+    tb.k_tranposed_act_driver.set_valid_prob(0.5)
+    tb.v_act_driver.set_valid_prob(0.5)
+    await tb.reset()
+    await tb.run_test(batches=200, us=2000)
 
 
-# @cocotb.test()
-# async def valid_backpressure(dut):
-#     tb = FixedGQAHeadTB(dut)
-#     cocotb.start_soon(bit_driver(tb.output_monitor.ready, tb.clk, 0.5))
-#     tb.in_driver.set_valid_prob(0.5)
-#     await tb.reset()
-#     await tb.run_test(batches=1000, us=2000)
+@cocotb.test()
+async def valid_backpressure(dut):
+    tb = FixedGQAHeadTB(dut)
+    cocotb.start_soon(bit_driver(tb.output_monitor.ready, tb.clk, 0.5))
+    tb.q_act_driver.set_valid_prob(0.5)
+    tb.q_weight_driver.set_valid_prob(0.5)
+    tb.k_tranposed_act_driver.set_valid_prob(0.5)
+    tb.v_act_driver.set_valid_prob(0.5)
+    await tb.reset()
+    await tb.run_test(batches=200, us=2000)
 
 
 
 if __name__ == "__main__":
+
+    def width_cfgs(prefix: str, cfgs: list[dict]):
+        new_cfgs = []
+        for cfg in cfgs:
+            new_cfgs.append({**cfg, f"{prefix}_WIDTH": 8, f"{prefix}_FRAC_WIDTH": 4})
+            new_cfgs.append({**cfg, f"{prefix}_WIDTH": 16, f"{prefix}_FRAC_WIDTH": 8})
+        return new_cfgs
+
+    def dimension_cfgs(cfgs: list[dict]):
+        new_cfgs = []
+        for cfg in cfgs:
+            new_cfgs.append({
+                **cfg,
+                "TOTAL_EMBEDDING_DIM": 64,
+                "TOTAL_HEAD_DIM": 16,
+                "TOTAL_SEQUENCE_DIM": 8,
+            })
+            new_cfgs.append({
+                **cfg,
+                "TOTAL_EMBEDDING_DIM": 16,
+                "TOTAL_HEAD_DIM": 8,
+                "TOTAL_SEQUENCE_DIM": 16,
+            })
+        return new_cfgs
+
+
+    def compute_dim_cfgs(cfgs: list[dict]):
+        new_cfgs = []
+        for cfg in cfgs:
+            new_cfgs.append({
+                **cfg,
+                "COMPUTE_EMBEDDING_DIM": 2,
+                "COMPUTE_HEAD_DIM": 2,
+                "COMPUTE_SEQUENCE_DIM": 2,
+            })
+            new_cfgs.append({
+                **cfg,
+                "COMPUTE_EMBEDDING_DIM": 4,
+                "COMPUTE_HEAD_DIM": 4,
+                "COMPUTE_SEQUENCE_DIM": 4,
+            })
+        return new_cfgs
 
     DEFAULT = {
         # Dimensions
@@ -374,9 +403,9 @@ if __name__ == "__main__":
         "COMPUTE_SEQUENCE_DIM": 2,
         # Input Widths
         "Q_ACT_WIDTH": 8,
-        "Q_ACT_FRAC_WIDTH": 2,
+        "Q_ACT_FRAC_WIDTH": 4,
         "Q_WEIGHT_WIDTH": 8,
-        "Q_WEIGHT_FRAC_WIDTH": 2,
+        "Q_WEIGHT_FRAC_WIDTH": 4,
         "K_ACT_WIDTH": 8,
         "K_ACT_FRAC_WIDTH": 2,
         "V_ACT_WIDTH": 8,
@@ -386,17 +415,26 @@ if __name__ == "__main__":
         "OUT_ACT_FRAC_WIDTH": 2,
         # Intermediate Widths
         "Q_OUT_WIDTH": 16,
-        "Q_OUT_FRAC_WIDTH": 8,
+        "Q_OUT_FRAC_WIDTH": 4,
         "QK_OUT_WIDTH": 16,
-        "QK_OUT_FRAC_WIDTH": 8,
+        "QK_OUT_FRAC_WIDTH": 4,
         "SOFTERMAX_POW2_WIDTH": 16,
         "SOFTERMAX_OUT_WIDTH": 16,
         "SOFTERMAX_OUT_FRAC_WIDTH": 15,
     }
 
     cfgs = [DEFAULT]
+    cfgs = dimension_cfgs(cfgs)
+    cfgs = compute_dim_cfgs(cfgs)
+    for prefix in ["Q_ACT", "Q_WEIGHT", "K_ACT", "V_ACT", "OUT_ACT"]:
+        cfgs = width_cfgs(prefix, cfgs)
+
+
+    cfgs = [{'TOTAL_EMBEDDING_DIM': 64, 'TOTAL_HEAD_DIM': 16, 'TOTAL_SEQUENCE_DIM': 8, 'COMPUTE_EMBEDDING_DIM': 2, 'COMPUTE_HEAD_DIM': 2, 'COMPUTE_SEQUENCE_DIM': 2, 'Q_ACT_WIDTH': 8, 'Q_ACT_FRAC_WIDTH': 4, 'Q_WEIGHT_WIDTH': 8, 'Q_WEIGHT_FRAC_WIDTH': 4, 'K_ACT_WIDTH': 8, 'K_ACT_FRAC_WIDTH': 4, 'V_ACT_WIDTH': 8, 'V_ACT_FRAC_WIDTH': 4, 'OUT_ACT_WIDTH': 8, 'OUT_ACT_FRAC_WIDTH': 4, 'Q_OUT_WIDTH': 16, 'Q_OUT_FRAC_WIDTH': 4, 'QK_OUT_WIDTH': 16, 'QK_OUT_FRAC_WIDTH': 4, 'SOFTERMAX_POW2_WIDTH': 16, 'SOFTERMAX_OUT_WIDTH': 16, 'SOFTERMAX_OUT_FRAC_WIDTH': 15}]
+    print(f"Running Tests on {len(cfgs)} Configs...")
 
     mase_runner(
         module_param_list=cfgs,
-        trace=True,
+        # trace=True,
+        jobs=12,
     )
