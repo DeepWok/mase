@@ -56,14 +56,14 @@ module fixed_gqa_head #(
     // Intermediate widths
     // Output widths for query activation & weight multiplication
     parameter Q_OUT_WIDTH               = 16,
-    parameter Q_OUT_FRAC_WIDTH          = 4,
+    parameter Q_OUT_FRAC_WIDTH          = 8,
     // Output width for QK^T matrix multiplication
     parameter QK_OUT_WIDTH              = 16,
-    parameter QK_OUT_FRAC_WIDTH         = 4,
+    parameter QK_OUT_FRAC_WIDTH         = 8,
     // Widths for Softermax module
     parameter SOFTERMAX_POW2_WIDTH      = 16,
     parameter SOFTERMAX_OUT_WIDTH       = 16,
-    parameter SOFTERMAX_OUT_FRAC_WIDTH  = 4
+    parameter SOFTERMAX_OUT_FRAC_WIDTH  = 15
 ) (
     input  logic                      clk,
     input  logic                      rst,
@@ -102,6 +102,22 @@ module fixed_gqa_head #(
 );
 
 // -----
+// Params
+// -----
+
+localparam EMBEDDING_DEPTH = TOTAL_EMBEDDING_DIM / COMPUTE_EMBEDDING_DIM;
+localparam HEAD_DEPTH = TOTAL_HEAD_DIM / COMPUTE_HEAD_DIM;
+localparam SEQUENCE_DEPTH = TOTAL_SEQUENCE_DIM / COMPUTE_SEQUENCE_DIM;
+
+initial begin
+    // Check divisibility
+    assert (EMBEDDING_DEPTH * COMPUTE_EMBEDDING_DIM == TOTAL_EMBEDDING_DIM);
+    assert (HEAD_DEPTH * COMPUTE_HEAD_DIM == TOTAL_HEAD_DIM);
+    assert (SEQUENCE_DEPTH * COMPUTE_SEQUENCE_DIM == TOTAL_SEQUENCE_DIM);
+end
+
+
+// -----
 // Wires
 // -----
 
@@ -115,8 +131,8 @@ logic qk_out_valid, qk_out_ready;
 
 // Output of softermax(q_out x k_transposed_act) (dims = seq_dim x seq_dim)
 logic [SOFTERMAX_OUT_WIDTH-1:0] softermax_out_data [COMPUTE_SEQUENCE_DIM*COMPUTE_SEQUENCE_DIM-1:0];
+logic [SOFTERMAX_OUT_WIDTH:0] softermax_unsigned_out_data [COMPUTE_SEQUENCE_DIM*COMPUTE_SEQUENCE_DIM-1:0];
 logic softermax_out_valid, softermax_out_ready;
-
 
 // -----
 // Modules
@@ -214,13 +230,18 @@ fixed_softermax_2d #(
     .out_ready       (softermax_out_ready)
 );
 
+// Unsigned pad 0 to softmax result
+for (genvar i = 0; i < COMPUTE_SEQUENCE_DIM*COMPUTE_SEQUENCE_DIM; i++) begin : gen_softermax_unsigned
+    assign softermax_unsigned_out_data[i] = {1'b0, softermax_out_data[i]};
+end
+
 matmul #(
     // Port A: softermax attention scores
     .A_TOTAL_DIM0    (TOTAL_SEQUENCE_DIM),
     .A_TOTAL_DIM1    (TOTAL_SEQUENCE_DIM),
     .A_COMPUTE_DIM0  (COMPUTE_SEQUENCE_DIM),
     .A_COMPUTE_DIM1  (COMPUTE_SEQUENCE_DIM),
-    .A_WIDTH         (SOFTERMAX_OUT_WIDTH),
+    .A_WIDTH         (SOFTERMAX_OUT_WIDTH + 1), // Added 1 bit for unsigned
     .A_FRAC_WIDTH    (SOFTERMAX_OUT_FRAC_WIDTH),
     // Port B: value matrix
     .B_TOTAL_DIM0    (TOTAL_HEAD_DIM),
@@ -236,7 +257,7 @@ matmul #(
 ) attn_matmul (
     .clk             (clk),
     .rst             (rst),
-    .a_data          (softermax_out_data),
+    .a_data          (softermax_unsigned_out_data),
     .a_valid         (softermax_out_valid),
     .a_ready         (softermax_out_ready),
     .b_data          (v_act_data),

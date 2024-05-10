@@ -8,7 +8,8 @@ import numpy as np
 
 from mase_cocotb.runner import mase_runner
 from mase_cocotb.testbench import Testbench
-from mase_cocotb.utils import bit_driver, sign_extend_t, batched
+from mase_cocotb.matrix_tools import gen_random_matrix_input, rebuild_matrix, split_matrix
+from mase_cocotb.utils import bit_driver, sign_extend_t, batched, signed_to_unsigned
 from mase_cocotb.interfaces.streaming import (
     StreamDriver,
     ErrorThresholdStreamMonitor
@@ -16,6 +17,8 @@ from mase_cocotb.interfaces.streaming import (
 
 import cocotb
 from cocotb.triggers import *
+
+from chop.nn.quantized.functional import fixed_softermax
 
 from chop.passes.graph.transforms.quantize.quantizers.integer import (
     integer_floor_quantizer
@@ -25,7 +28,7 @@ from chop.passes.graph.transforms.quantize.quantizers.quantizers_for_hw import (
 )
 
 logger = logging.getLogger("testbench")
-logger.setLevel("INFO")
+logger.setLevel("DEBUG")
 
 
 class FixedGQAHeadTB(Testbench):
@@ -39,106 +42,267 @@ class FixedGQAHeadTB(Testbench):
             "OUT_ACT_WIDTH", "OUT_ACT_FRAC_WIDTH", "Q_OUT_WIDTH", "Q_OUT_FRAC_WIDTH",
             "QK_OUT_WIDTH", "QK_OUT_FRAC_WIDTH", "SOFTERMAX_POW2_WIDTH",
             "SOFTERMAX_OUT_WIDTH", "SOFTERMAX_OUT_FRAC_WIDTH",
+            "EMBEDDING_DEPTH", "HEAD_DEPTH", "SEQUENCE_DEPTH",
         ])
 
-        # Driver/Monitor
-        # self.in_driver = StreamDriver(
-        #     dut.clk, (dut.in_values, dut.in_max), dut.in_valid, dut.in_ready
-        # )
+        # Additional Params
+        self.q_act_num_iters = self.EMBEDDING_DEPTH * self.SEQUENCE_DEPTH
+        self.q_weight_num_iters = self.HEAD_DEPTH * self.EMBEDDING_DEPTH
+        self.k_transpose_num_iters = self.SEQUENCE_DEPTH * self.HEAD_DEPTH
+        self.v_act_num_iters = self.HEAD_DEPTH * self.SEQUENCE_DEPTH
 
-        # # Specify Error Threshold
-        # self.percentage_error = 0.05  # 5%
-        # self.error_threshold_bits = ceil(self.percentage_error * (2**self.OUT_WIDTH))
+        self.q_act_dims = dict(
+            total_dim0=self.TOTAL_EMBEDDING_DIM,
+            total_dim1=self.TOTAL_SEQUENCE_DIM,
+            compute_dim0=self.COMPUTE_EMBEDDING_DIM,
+            compute_dim1=self.COMPUTE_SEQUENCE_DIM,
+        )
+        self.q_weight_dims = dict(
+            total_dim0=self.TOTAL_HEAD_DIM,
+            total_dim1=self.TOTAL_EMBEDDING_DIM,
+            compute_dim0=self.COMPUTE_HEAD_DIM,
+            compute_dim1=self.COMPUTE_EMBEDDING_DIM,
+        )
+        self.k_transpose_act_dims = dict(
+            total_dim0=self.TOTAL_SEQUENCE_DIM,
+            total_dim1=self.TOTAL_HEAD_DIM,
+            compute_dim0=self.COMPUTE_SEQUENCE_DIM,
+            compute_dim1=self.COMPUTE_HEAD_DIM,
+        )
+        self.v_act_dims = dict(
+            total_dim0=self.TOTAL_HEAD_DIM,
+            total_dim1=self.TOTAL_SEQUENCE_DIM,
+            compute_dim0=self.COMPUTE_HEAD_DIM,
+            compute_dim1=self.COMPUTE_SEQUENCE_DIM,
+        )
+        self.out_act_dims = dict(
+            total_dim0=self.TOTAL_HEAD_DIM,
+            total_dim1=self.TOTAL_SEQUENCE_DIM,
+            compute_dim0=self.COMPUTE_HEAD_DIM,
+            compute_dim1=self.COMPUTE_SEQUENCE_DIM,
+        )
 
-        # self.output_monitor = ErrorThresholdStreamMonitor(
-        #     dut.clk, dut.out_data, dut.out_valid, dut.out_ready,
-        #     width=self.OUT_WIDTH, signed=False,
-        #     error_bits=self.error_threshold_bits,
-        #     log_error=True, check=True
-        # )
+        self.q_act_widths = dict(
+            width=self.Q_ACT_WIDTH,
+            frac_width=self.Q_ACT_FRAC_WIDTH,
+        )
+        self.q_weight_widths = dict(
+            width=self.Q_WEIGHT_WIDTH,
+            frac_width=self.Q_WEIGHT_FRAC_WIDTH,
+        )
+        self.k_transpose_act_widths = dict(
+            width=self.K_ACT_WIDTH,
+            frac_width=self.K_ACT_FRAC_WIDTH,
+        )
+        self.v_act_widths = dict(
+            width=self.V_ACT_WIDTH,
+            frac_width=self.V_ACT_FRAC_WIDTH,
+        )
+
+        print("q_act_num_iters", self.q_act_num_iters)
+        print("q_weight_num_iters", self.q_weight_num_iters)
+        print("k_transpose_num_iters", self.k_transpose_num_iters)
+        print("v_act_num_iters", self.v_act_num_iters)
+
+        # Driver/Monitors
+        self.q_act_driver = StreamDriver(
+            dut.clk,
+            dut.q_act_data,
+            dut.q_act_valid,
+            dut.q_act_ready,
+        )
+        self.q_weight_driver = StreamDriver(
+            dut.clk,
+            dut.q_weight_data,
+            dut.q_weight_valid,
+            dut.q_weight_ready,
+        )
+        self.k_tranposed_act_driver = StreamDriver(
+            dut.clk,
+            dut.k_transposed_act_data,
+            dut.k_transposed_act_valid,
+            dut.k_transposed_act_ready,
+        )
+        self.v_act_driver = StreamDriver(
+            dut.clk,
+            dut.v_act_data,
+            dut.v_act_valid,
+            dut.v_act_ready,
+        )
+
+        # Specify Error Threshold
+        self.percentage_error = 0.05  # 5%
+        self.error_threshold_bits = ceil(self.percentage_error * (2**self.OUT_ACT_WIDTH))
+
+        self.output_monitor = ErrorThresholdStreamMonitor(
+            dut.clk,
+            dut.out_act_data,
+            dut.out_act_valid,
+            dut.out_act_ready,
+            width=self.OUT_ACT_WIDTH,
+            signed=True,
+            error_bits=1,  # 1 bit rounding error
+            log_error=True,
+            check=True,
+        )
 
     def generate_inputs(self, batches=10):
-        pass
-        # TODO: Take a look at all zero case again
-        # local_vals = torch.randint(
-        #     1, 2**self.IN_VALUE_WIDTH,
-        #     size=(batches * self.DEPTH, self.PARALLELISM)
-        # )
-        # local_max = torch.randint(
-        #     0, 2**self.IN_MAX_WIDTH,
-        #     size=(batches * self.DEPTH, 1)
-        # )
+        q_act = []
+        q_weight = []
+        k_transpose_act = []
+        v_act = []
 
-        # logger.debug("local_vals: %s" % (local_vals))
-        # logger.debug("local_vals (float): %s" % (
-        #     local_vals / (2 ** self.IN_VALUE_FRAC_WIDTH)
-        # ))
-        # logger.debug("local_max: %s" % (local_max))
-        # logger.debug("local_max (signed): %s" % (sign_extend_t(local_max, self.IN_MAX_WIDTH)))
+        for _ in range(batches):
+            q_act.extend(gen_random_matrix_input(
+                **self.q_act_dims, **self.q_act_widths
+            ))
+            q_weight.extend(gen_random_matrix_input(
+                **self.q_weight_dims, **self.q_weight_widths
+            ))
+            k_transpose_act.extend(gen_random_matrix_input(
+                **self.k_transpose_act_dims, **self.k_transpose_act_widths
+            ))
+            v_act.extend(gen_random_matrix_input(
+                **self.v_act_dims, **self.v_act_widths
+            ))
 
-        # return local_vals.tolist(), local_max.flatten().tolist()
+        return {
+            "q_act": q_act,
+            "q_weight": q_weight,
+            "k_transpose_act": k_transpose_act,
+            "v_act": v_act,
+        }
 
+    def model(self, inputs: dict[str, list]):
 
-    def model(self, inputs):
-        pass
-        # batched_in = list(batched(inputs, self.DEPTH))
-        # exp_output = []
+        def _reconstruct(
+            input_list,
+            num_iters,
+            total_dim0,
+            total_dim1,
+            compute_dim0,
+            compute_dim1,
+            width,
+            frac_width
+        ):
+            matrix_list = []
+            for mat in batched(input_list, n=num_iters):
+                matrix_list.append(rebuild_matrix(
+                    x=mat,
+                    total_dim0=total_dim0,
+                    total_dim1=total_dim1,
+                    compute_dim0=compute_dim0,
+                    compute_dim1=compute_dim1,
+                ))
+            matrix_t = torch.stack(matrix_list)
+            signed_matrix = sign_extend_t(matrix_t, bits=width)
+            scaled_matrix = signed_matrix.float() / (2 ** frac_width)
+            return scaled_matrix
 
-        # for batch in batched_in:
-        #     local_vals, local_max = list(zip(*batch))
-        #     local_vals = torch.tensor(list(local_vals), dtype=torch.float) / (2 ** self.IN_VALUE_FRAC_WIDTH)
-        #     local_max = torch.tensor(list(local_max), dtype=torch.float)
-        #     local_max = sign_extend_t(torch.tensor(list(local_max), dtype=torch.float), self.IN_MAX_WIDTH)
+        q_act = _reconstruct(
+            input_list=inputs["q_act"],
+            num_iters=self.q_act_num_iters,
+            **self.q_act_dims,
+            **self.q_act_widths,
+        )
+        q_weight = _reconstruct(
+            input_list=inputs["q_weight"],
+            num_iters=self.q_weight_num_iters,
+            **self.q_weight_dims,
+            **self.q_weight_widths,
+        )
+        k_transpose_act = _reconstruct(
+            input_list=inputs["k_transpose_act"],
+            num_iters=self.k_transpose_num_iters,
+            **self.k_transpose_act_dims,
+            **self.k_transpose_act_widths,
+        )
+        v_act = _reconstruct(
+            input_list=inputs["v_act"],
+            num_iters=self.v_act_num_iters,
+            **self.v_act_dims,
+            **self.v_act_widths,
+        )
 
-        #     global_max = local_max.max()
-        #     adj_amt = global_max - local_max.reshape(self.DEPTH, 1)
-        #     adj_values = integer_floor_quantizer(
-        #         x=local_vals / (2 ** adj_amt),
-        #         width=self.IN_VALUE_WIDTH,
-        #         frac_width=self.IN_VALUE_FRAC_WIDTH,
-        #         is_signed=False
-        #     )
-        #     norm = adj_values.sum()
-        #     inv_norm = integer_floor_quantizer(
-        #         x=1/(norm + 1e-10),
-        #         width=self.RECIP_WIDTH,
-        #         frac_width=self.RECIP_FRAC_WIDTH,
-        #         is_signed=False
-        #     )
-        #     softermax = adj_values * inv_norm
-        #     softermax_int = unsigned_integer_quantizer_for_hw(softermax, self.OUT_WIDTH, self.OUT_FRAC_WIDTH)
+        logger.debug("q_act: %s" % q_act)
+        logger.debug("q_weight: %s" % q_weight)
+        logger.debug("k_transpose_act: %s" % k_transpose_act)
+        logger.debug("v_act: %s" % v_act)
 
+        q_out = torch.matmul(q_act, q_weight)
+        q_out = integer_floor_quantizer(
+            x=q_out,
+            width=self.Q_OUT_WIDTH,
+            frac_width=self.Q_OUT_FRAC_WIDTH,
+            is_signed=True
+        )
 
-        #     logger.debug("Values: %s" % (local_vals))
-        #     logger.debug("Max: %s -> %s" % (local_max, global_max))
-        #     logger.debug("Diff: %s" % (adj_amt))
-        #     logger.debug("ADJ Values: %s" % (adj_values))
-        #     logger.debug("norm: %s" % (norm))
-        #     logger.debug("softermax: %s" % (softermax))
-        #     logger.debug("softermax (int): %s" % (softermax_int))
-        #     logger.debug("sanity sum: %s" % (softermax.sum().item()))
-        #     logger.debug("integer sum: %s" % (softermax_int.sum().item()))
+        qk_out = torch.matmul(q_out, k_transpose_act)
+        qk_out = integer_floor_quantizer(
+            x=qk_out,
+            width=self.QK_OUT_WIDTH,
+            frac_width=self.QK_OUT_FRAC_WIDTH,
+            is_signed=True
+        )
 
-        #     # logger.info(adj_values)
-        #     # logger.info(norm)
-        #     # logger.info(softermax)
+        softermax_out = fixed_softermax(
+            input=qk_out,
+            q_config={
+                "width": self.QK_OUT_WIDTH,
+                "frac_width": self.QK_OUT_FRAC_WIDTH,
+            },
+            dim=2,
+        )
+        softermax_out = integer_floor_quantizer(
+            x=softermax_out,
+            width=self.SOFTERMAX_OUT_WIDTH,
+            frac_width=self.SOFTERMAX_OUT_FRAC_WIDTH,
+            is_signed=False
+        )
 
-        #     # assert abs(softermax.sum().item() - 1) < 0.1, f"Sum is {softermax.sum().item()}"
+        attention_out = torch.matmul(softermax_out, v_act)
+        attention_out = integer_floor_quantizer(
+            x=attention_out,
+            width=self.OUT_ACT_WIDTH,
+            frac_width=self.OUT_ACT_FRAC_WIDTH,
+            is_signed=True
+        )
 
-        #     exp_output.append(softermax_int)
+        logger.debug("q_out: %s" % q_out)
+        logger.debug("qk_out: %s" % qk_out)
+        logger.debug("softermax_out: %s" % softermax_out)
+        logger.debug("attention_out: %s" % attention_out)
 
-        # return torch.cat(exp_output, dim=0).tolist()
+        # Process output
+        rounded_atten = integer_floor_quantizer(
+            x=attention_out,
+            width=self.OUT_ACT_WIDTH,
+            frac_width=self.OUT_ACT_FRAC_WIDTH,
+            is_signed=True,
+        )
+        atten_int = (rounded_atten * (2 ** self.OUT_ACT_FRAC_WIDTH)).int()
+        atten_uint = signed_to_unsigned(atten_int, bits=self.OUT_ACT_WIDTH)
+        logger.debug("rounded_atten: %s" % rounded_atten)
+        logger.debug("atten_int: %s" % atten_int)
+        logger.debug("atten_uint: %s" % atten_uint)
+
+        exp_out = []
+        for output_matrix in atten_uint:
+            exp_out.extend(split_matrix(output_matrix, **self.out_act_dims))
+        return exp_out
 
     async def run_test(self, batches, us):
-        pass
-        # inputs = self.generate_inputs(batches)
-        # driver_inputs = list(zip(*inputs))
-        # exp_out = self.model(driver_inputs)
-        # self.in_driver.load_driver(driver_inputs)
-        # self.output_monitor.load_monitor(exp_out)
-        # await Timer(us, "us")
-        # assert self.output_monitor.recv_queue.empty()
-        # self._final_check()
+        inputs = self.generate_inputs(batches)
+        # Load Drivers
+        self.q_act_driver.load_driver(inputs["q_act"])
+        self.q_weight_driver.load_driver(inputs["q_weight"])
+        self.k_tranposed_act_driver.load_driver(inputs["k_transpose_act"])
+        self.v_act_driver.load_driver(inputs["v_act"])
+        # Get expectation from model
+        exp_out = self.model(inputs)
+        self.output_monitor.load_monitor(exp_out)
+        await Timer(us, "us")
+        assert self.output_monitor.recv_queue.empty()
 
     # def _final_check(self):
     #     if len(self.output_monitor.error_log) == 0:
@@ -158,17 +322,17 @@ class FixedGQAHeadTB(Testbench):
 @cocotb.test()
 async def basic(dut):
     tb = FixedGQAHeadTB(dut)
-    # tb.output_monitor.ready.value = 1
+    tb.output_monitor.ready.value = 1
     await tb.reset()
-    await tb.run_test(batches=1, us=2)
+    await tb.run_test(batches=1, us=10)
 
 
-# @cocotb.test()
-# async def stream(dut):
-#     tb = FixedGQAHeadTB(dut)
-#     tb.output_monitor.ready.value = 1
-#     await tb.reset()
-#     await tb.run_test(batches=1000, us=2000)
+@cocotb.test()
+async def stream(dut):
+    tb = FixedGQAHeadTB(dut)
+    tb.output_monitor.ready.value = 1
+    await tb.reset()
+    await tb.run_test(batches=200, us=2000)
 
 
 # @cocotb.test()
@@ -201,12 +365,14 @@ async def basic(dut):
 if __name__ == "__main__":
 
     DEFAULT = {
-        "TOTAL_EMBEDDING_DIM": 32,
-        "TOTAL_HEAD_DIM": 16,
-        "TOTAL_SEQUENCE_DIM": 16,
-        "COMPUTE_EMBEDDING_DIM": 4,
-        "COMPUTE_HEAD_DIM": 4,
-        "COMPUTE_SEQUENCE_DIM": 4,
+        # Dimensions
+        "TOTAL_EMBEDDING_DIM": 16,
+        "TOTAL_HEAD_DIM": 4,
+        "TOTAL_SEQUENCE_DIM": 4,  # Number of tokens
+        "COMPUTE_EMBEDDING_DIM": 2,
+        "COMPUTE_HEAD_DIM": 2,
+        "COMPUTE_SEQUENCE_DIM": 2,
+        # Input Widths
         "Q_ACT_WIDTH": 8,
         "Q_ACT_FRAC_WIDTH": 2,
         "Q_WEIGHT_WIDTH": 8,
@@ -214,16 +380,18 @@ if __name__ == "__main__":
         "K_ACT_WIDTH": 8,
         "K_ACT_FRAC_WIDTH": 2,
         "V_ACT_WIDTH": 8,
-        "V_ACT_FRAC_WIDTH": 2,
+        "V_ACT_FRAC_WIDTH": 4,
+        # Output Widths
         "OUT_ACT_WIDTH": 8,
         "OUT_ACT_FRAC_WIDTH": 2,
+        # Intermediate Widths
         "Q_OUT_WIDTH": 16,
-        "Q_OUT_FRAC_WIDTH": 4,
+        "Q_OUT_FRAC_WIDTH": 8,
         "QK_OUT_WIDTH": 16,
-        "QK_OUT_FRAC_WIDTH": 4,
+        "QK_OUT_FRAC_WIDTH": 8,
         "SOFTERMAX_POW2_WIDTH": 16,
         "SOFTERMAX_OUT_WIDTH": 16,
-        "SOFTERMAX_OUT_FRAC_WIDTH": 4,
+        "SOFTERMAX_OUT_FRAC_WIDTH": 15,
     }
 
     cfgs = [DEFAULT]
