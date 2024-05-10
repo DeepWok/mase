@@ -11,8 +11,8 @@ class Testbench:
         self.clk = clk
         self.rst = rst
 
-        self.input_drivers = []
-        self.output_monitors = []
+        self.input_drivers = {}
+        self.output_monitors = {}
 
         self.input_precision = [32]
 
@@ -47,7 +47,7 @@ class Testbench:
         await self.reset()
 
         # Set all monitors ready
-        for monitor in self.output_monitors:
+        for monitor in self.output_monitors.values():
             monitor.ready.value = 1
 
     def generate_inputs(self, batches=1):
@@ -61,8 +61,8 @@ class Testbench:
 
     def end_checks(self):
         if self.fail_on_checks:
-            for monitor in self.output_monitors:
+            for monitor in self.output_monitors.values():
                 assert monitor.exp_queue.empty()
 
-            for driver in self.input_drivers:
+            for driver in self.input_drivers.values():
                 assert driver.send_queue.empty()

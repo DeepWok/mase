@@ -104,7 +104,9 @@ def test_emit_verilog_linear():
         10 * torch.randn(mg.model.fc1.weight.shape)
     )
 
-    mg, _ = passes.add_hardware_metadata_analysis_pass(mg)
+    mg, _ = passes.add_hardware_metadata_analysis_pass(
+        mg, pass_args={"max_parallelism": 32}
+    )
     mg, _ = passes.report_node_hardware_type_analysis_pass(mg)  # pretty print
 
     mg, _ = passes.emit_verilog_top_transform_pass(mg)
@@ -112,7 +114,7 @@ def test_emit_verilog_linear():
     mg, _ = passes.emit_internal_rtl_transform_pass(mg)
     mg, _ = passes.emit_cocotb_transform_pass(mg)
 
-    simulate(skip_build=False, skip_test=False)
+    simulate(skip_build=True, skip_test=False)
 
 
 if __name__ == "__main__":

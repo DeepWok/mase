@@ -46,16 +46,16 @@ module matrix_stream_transpose #(
   end
 
   // Parameters
-  `define max(a, b) = (a > b) ? a : b;
+  // let max(a, b) = (a > b) ? a : b;
 
   localparam IN_DEPTH_DIM0 = TOTAL_DIM0 / COMPUTE_DIM0;
   localparam IN_DEPTH_DIM1 = TOTAL_DIM1 / COMPUTE_DIM1;
   localparam OUT_DEPTH_DIM0 = IN_DEPTH_DIM1;
   localparam OUT_DEPTH_DIM1 = IN_DEPTH_DIM0;
-  localparam IN_ROW_COUNTER_WIDTH = max($clog2(IN_DEPTH_DIM1), 1);
-  localparam IN_COL_COUNTER_WIDTH = max($clog2(IN_DEPTH_DIM0), 1);
-  localparam OUT_ROW_COUNTER_WIDTH = max($clog2(OUT_DEPTH_DIM1), 1);
-  localparam OUT_COL_COUNTER_WIDTH = max($clog2(OUT_DEPTH_DIM0), 1);
+  localparam IN_ROW_COUNTER_WIDTH = $clog2(IN_DEPTH_DIM1) > 1 ? $clog2(IN_DEPTH_DIM1) : 1;
+  localparam IN_COL_COUNTER_WIDTH = $clog2(IN_DEPTH_DIM0) > 1 ? $clog2(IN_DEPTH_DIM0) : 1;
+  localparam OUT_ROW_COUNTER_WIDTH = $clog2(OUT_DEPTH_DIM1) > 1 ? $clog2(OUT_DEPTH_DIM1) : 1;
+  localparam OUT_COL_COUNTER_WIDTH = $clog2(OUT_DEPTH_DIM0) > 1 ? $clog2(OUT_DEPTH_DIM0) : 1;
 
   // State
   struct {

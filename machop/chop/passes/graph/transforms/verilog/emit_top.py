@@ -119,10 +119,10 @@ class VerilogInterfaceEmitter:
                     parallelism_params = [
                         param
                         for param in parameter_map
-                        if f"{node_name}_{arg_name}_PARALLELISM_DIM" in param
+                        if param.startswith(f"{arg_name}_PARALLELISM_DIM")
                     ]
                     interface += f"""
-    input  [{node_name}_{arg_name}_PRECISION_0-1:0] data_in_{i} [{'*'.join(parallelism_params)}-1:0],
+    input  [{arg_name}_PRECISION_0-1:0] data_in_{i} [{'*'.join(parallelism_params)}-1:0],
     input  data_in_{i}_valid,
     output data_in_{i}_ready,"""
                     i += 1
@@ -136,10 +136,10 @@ class VerilogInterfaceEmitter:
                     parallelism_params = [
                         param
                         for param in parameter_map
-                        if f"{node_name}_{result_name}_PARALLELISM_DIM" in param
+                        if param.startswith(f"{result_name}_PARALLELISM_DIM")
                     ]
                     interface += f"""
-    output  [{node_name}_{result_name}_PRECISION_0-1:0] data_out_{i} [{'*'.join(parallelism_params)}-1:0],
+    output  [{result_name}_PRECISION_0-1:0] data_out_{i} [{'*'.join(parallelism_params)}-1:0],
     output  data_out_{i}_valid,
     input data_out_{i}_ready,"""
                     i += 1
