@@ -38,7 +38,7 @@ class MLP(torch.nn.Module):
     def __init__(self) -> None:
         super().__init__()
 
-        self.fc1 = nn.Linear(28 * 28, 28 * 28, bias=True)
+        self.fc1 = nn.Linear(768, 768, bias=True)
 
     def forward(self, x):
         x = torch.flatten(x, start_dim=1, end_dim=-1)
@@ -52,7 +52,7 @@ def test_emit_verilog_linear():
 
     # Provide a dummy input for the graph so it can use for tracing
     batch_size = 1
-    x = torch.randn((batch_size, 28, 28))
+    x = torch.randn((batch_size, 768))
     dummy_in = {"x": x}
 
     mg, _ = passes.init_metadata_analysis_pass(mg, None)
@@ -97,7 +97,7 @@ def test_emit_verilog_linear():
                 ] = "fixed"
                 node.meta["mase"].parameters["common"]["results"][result][
                     "precision"
-                ] = [8, 3]
+                ] = [16, 8]
 
     # Increase weight range
     mg.model.fc1.weight = torch.nn.Parameter(
@@ -114,7 +114,7 @@ def test_emit_verilog_linear():
     mg, _ = passes.emit_internal_rtl_transform_pass(mg)
     mg, _ = passes.emit_cocotb_transform_pass(mg)
 
-    simulate(skip_build=True, skip_test=False)
+    simulate(skip_build=False, skip_test=False)
 
 
 if __name__ == "__main__":

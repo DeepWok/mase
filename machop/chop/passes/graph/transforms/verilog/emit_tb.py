@@ -80,6 +80,7 @@ def _emit_cocotb_tb(graph):
                         getattr(dut, f"{arg}_valid"),
                         getattr(dut, f"{arg}_ready"),
                     )
+                    self.input_drivers[arg].log.setLevel(logging.DEBUG)
 
             # Instantiate as many monitors as required outputs
             for node in graph.nodes_out:
@@ -93,6 +94,7 @@ def _emit_cocotb_tb(graph):
                         getattr(dut, f"{result}_ready"),
                         check=False,
                     )
+                    self.output_monitors[result].log.setLevel(logging.DEBUG)
 
             self.model = graph.model
 
@@ -120,7 +122,7 @@ def _emit_cocotb_tb(graph):
                     # Batch dimension always set to 1 in metadata
                     if "data_in" not in arg:
                         continue
-                    print(f"Generating data for node {node}, arg {arg}: {arg_info}")
+                    # print(f"Generating data for node {node}, arg {arg}: {arg_info}")
                     inputs[f"{arg}"] = torch.rand(([batches] + arg_info["shape"][1:]))
             return inputs
 

@@ -63,20 +63,20 @@ class StreamMonitor(Monitor):
             return int(self.data.value.signed_integer)
 
     def _check(self, got, exp):
-        if self.check:
-            self.log.debug(
-                """%s:
+        self.log.debug(
+            """%s:
 Got
 %s
 Expected
 %s
 """
-                % (
-                    self.name if self.name != None else "Unnamed StreamMonitor",
-                    got,
-                    exp,
-                )
+            % (
+                self.name if self.name != None else "Unnamed StreamMonitor",
+                got,
+                exp,
             )
+        )
+        if self.check:
             if not np.equal(got, exp).all():
                 assert False, "Test Failed!"
 
