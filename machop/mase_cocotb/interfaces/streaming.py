@@ -44,7 +44,7 @@ class StreamDriver(Driver):
 
 
 class StreamMonitor(Monitor):
-    def __init__(self, clk, data, valid, ready, check=True, name=None):
+    def __init__(self, clk, data, valid, ready, check=True, name=None, unsigned=False):
         super().__init__(clk, check=check, name=name)
         self.clk = clk
         self.data = data
@@ -52,15 +52,23 @@ class StreamMonitor(Monitor):
         self.ready = ready
         self.check = check
         self.name = name
+        self.unsigned = unsigned
 
     def _trigger(self):
         return self.valid.value == 1 and self.ready.value == 1
 
     def _recv(self):
         if type(self.data.value) == list:
-            return [x.signed_integer for x in self.data.value]
+            if self.unsigned:
+                return [x.integer for x in self.data.value]
+            else:
+                return [x.signed_integer for x in self.data.value]
+
         elif type(self.data.value) == BinaryValue:
-            return int(self.data.value.signed_integer)
+            if self.unsigned:
+                return int(self.data.value.integer)
+            else:
+                return int(self.data.value.signed_integer)
 
     def _check(self, got, exp):
         if self.check:

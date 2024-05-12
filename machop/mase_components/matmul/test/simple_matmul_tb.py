@@ -45,7 +45,7 @@ class SimpleMatMulTB(Testbench):
         self.x_driver = StreamDriver(dut.clk, dut.x_data, dut.x_valid, dut.x_ready)
         self.y_driver = StreamDriver(dut.clk, dut.y_data, dut.y_valid, dut.y_ready)
         self.output_monitor = StreamMonitor(
-            dut.clk, dut.out_data, dut.out_valid, dut.out_ready
+            dut.clk, dut.out_data, dut.out_valid, dut.out_ready, unsigned=True
         )
 
     def generate_inputs(self, random=False):
@@ -256,7 +256,7 @@ def test_simple_matmul():
             {"N": 1, "M": 10, "K": 1},
             *[
                 {**generate_random_dimensions(2, 4), **generate_random_widths()}
-                for _ in range(5)
+                for _ in range(10)
             ],
         ]
     )

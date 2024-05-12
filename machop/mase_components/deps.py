@@ -153,7 +153,7 @@ MASE_HW_DEPS = {
     "conv/sliding_window": ["cast", "conv", "linear", "common", "fixed_arithmetic"],
     "conv/padding": ["cast", "conv", "linear", "common", "fixed_arithmetic"],
     # Matmul
-    "matmul/simple_matmul": ["common", "linear", "cast", "fixed_arithmetic"],
+    "matmul/simple_matmul": ["common", "linear", "cast", "fixed_arithmetic", "matmul"],
     "matmul/fixed_matmul": ["common", "linear", "cast", "fixed_arithmetic", "matmul"],
     "matmul/test_chain_matmul": [
         "common",
