@@ -94,7 +94,6 @@ MASE_HW_DEPS = {
     "fixed_arithmetic/fixed_lut_index": [],
     "fixed_arithmetic/fixed_range_augmentation": [],
     "fixed_arithmetic/fixed_mult": [],
-    "fixed_arithmetic/fixed_adder_tree_layer": [],
     "fixed_arithmetic/fixed_accumulator": ["common"],
     "fixed_arithmetic/fixed_adder_tree": ["fixed_arithmetic", "common"],
     "fixed_arithmetic/fixed_vector_mult": ["fixed_arithmetic", "common"],
@@ -153,8 +152,9 @@ MASE_HW_DEPS = {
     "conv/sliding_window": ["cast", "conv", "linear", "common", "fixed_arithmetic"],
     "conv/padding": ["cast", "conv", "linear", "common", "fixed_arithmetic"],
     # Matmul
-    "matmul/simple_matmul": ["common", "linear", "cast", "fixed_arithmetic"],
+    "matmul/simple_matmul": ["common", "linear", "cast", "fixed_arithmetic", "matmul"],
     "matmul/fixed_matmul": ["common", "linear", "cast", "fixed_arithmetic", "matmul"],
+    "matmul/matmul": ["common", "linear", "cast", "fixed_arithmetic", "matmul"],
     "matmul/test_chain_matmul": [
         "common",
         "linear",

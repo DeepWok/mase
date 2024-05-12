@@ -10,12 +10,11 @@ Description : This module implements a max throughput streaming fifo with
 `timescale 1ns / 1ps
 
 module fifo #(
-    parameter DATA_WIDTH = 8,
-    parameter DEPTH      = 16,
-    parameter SIZE       = DEPTH
+    parameter DATA_WIDTH          = 8,
+    parameter DEPTH               = 16
 ) (
-    input logic clk,
-    input logic rst,
+    input  logic                  clk,
+    input  logic                  rst,
 
     input  logic [DATA_WIDTH-1:0] in_data,
     input  logic                  in_valid,
@@ -25,11 +24,33 @@ module fifo #(
     output logic                  out_valid,
     input  logic                  out_ready,
 
-    output logic empty,
-    output logic full
+    output logic                  empty,
+    output logic                  full
 );
 
-  localparam ADDR_WIDTH = SIZE == 1 ? 1 : $clog2(SIZE);
+
+generate
+if (DEPTH == 1) begin : gen_skid_buffer
+
+  skid_buffer #(
+      .DATA_WIDTH      (DATA_WIDTH)
+  ) skid_buffer_inst (
+      .clk             (clk),
+      .rst             (rst),
+      .data_in         (in_data),
+      .data_in_valid   (in_valid),
+      .data_in_ready   (in_ready),
+      .data_out        (out_data),
+      .data_out_valid  (out_valid),
+      .data_out_ready  (out_ready)
+  );
+
+  assign empty = !out_valid;
+  assign full = out_valid;
+
+end else begin : gen_fifo
+
+  localparam ADDR_WIDTH = $clog2(DEPTH);
   localparam PTR_WIDTH = ADDR_WIDTH + 1;
 
   typedef struct packed {
@@ -66,7 +87,7 @@ module fifo #(
     next_self = self;
 
     // Input side ready
-    in_ready = self.size != SIZE - 1;
+    in_ready = self.size != DEPTH;
 
     // Pause reading when there is (no transfer on this cycle) AND the registers are full.
     pause_reads = !out_ready && (self.out_reg.valid || self.extra_reg.valid);
@@ -113,7 +134,7 @@ module fifo #(
   simple_dual_port_ram #(
       .DATA_WIDTH(DATA_WIDTH),
       .ADDR_WIDTH(ADDR_WIDTH),
-      .SIZE      (SIZE)
+      .SIZE      (DEPTH)
   ) ram_inst (
       .clk    (clk),
       .wr_addr(self.write_ptr),
@@ -132,5 +153,10 @@ module fifo #(
   end
 
   assign empty = (self.size == 0);
-  assign full  = (self.size == SIZE);
+  assign full  = (self.size == DEPTH);
+
+end
+endgenerate
+
+
 endmodule
