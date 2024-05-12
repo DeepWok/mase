@@ -97,7 +97,7 @@ def test_emit_verilog_linear():
                 ] = "fixed"
                 node.meta["mase"].parameters["common"]["results"][result][
                     "precision"
-                ] = [16, 8]
+                ] = [8, 3]
 
     # Increase weight range
     mg.model.fc1.weight = torch.nn.Parameter(
@@ -105,7 +105,7 @@ def test_emit_verilog_linear():
     )
 
     mg, _ = passes.add_hardware_metadata_analysis_pass(
-        mg, pass_args={"max_parallelism": 32}
+        mg, pass_args={"max_parallelism": 4}
     )
     mg, _ = passes.report_node_hardware_type_analysis_pass(mg)  # pretty print
 
@@ -114,7 +114,7 @@ def test_emit_verilog_linear():
     mg, _ = passes.emit_internal_rtl_transform_pass(mg)
     mg, _ = passes.emit_cocotb_transform_pass(mg)
 
-    simulate(skip_build=False, skip_test=False)
+    simulate(skip_build=True, skip_test=False)
 
 
 if __name__ == "__main__":

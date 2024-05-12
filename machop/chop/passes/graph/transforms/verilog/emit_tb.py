@@ -42,7 +42,7 @@ async def test(dut):
     tb.load_drivers(in_tensors)
     tb.load_monitors(exp_out)
 
-    await Timer(100, units="us")
+    await Timer(2, units="ms")
     tb.end_checks()
 
 

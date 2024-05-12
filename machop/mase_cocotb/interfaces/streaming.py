@@ -7,10 +7,16 @@ from cocotb.triggers import *
 
 from mase_cocotb.driver import Driver
 from mase_cocotb.monitor import Monitor
-from mase_cocotb.utils import sign_extend
+
+# from mase_cocotb.utils import sign_extend
 
 # ! TO DO: broken import
 # from ..utils import sign_extend
+
+
+def _sign_extend(value: int, bits: int):
+    sign_bit = 1 << (bits - 1)
+    return (value & (sign_bit - 1)) - (value & sign_bit)
 
 
 class StreamDriver(Driver):
@@ -152,8 +158,8 @@ class ErrorThresholdStreamMonitor(StreamMonitor):
             g = np.array(got)
             e = np.array(exp)
             if self.signed:
-                g = sign_extend(g, self.width)
-                e = sign_extend(e, self.width)
+                g = _sign_extend(g, self.width)
+                e = _sign_extend(e, self.width)
             err = np.abs(g - e)
             if self.log_error:
                 self.error_log.append(err)
@@ -167,8 +173,8 @@ class ErrorThresholdStreamMonitor(StreamMonitor):
         elif type(got) == int:
             g, e = got, exp
             if self.signed:
-                g = sign_extend(g, self.width)
-                e = sign_extend(e, self.width)
+                g = _sign_extend(g, self.width)
+                e = _sign_extend(e, self.width)
             err = abs(g - e)
             if self.log_error:
                 self.error_log.append(err)
