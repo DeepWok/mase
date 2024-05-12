@@ -77,21 +77,28 @@ module simple_matmul #(
 
   logic [Y_WIDTH-1:0] y_data_transpose [K*M-1:0];
   logic dot_product_ready;
-  logic dot_product_valid [N-1:0][K-1:0];
-  logic [X_WIDTH-1:0] row_x [N-1:0][M-1:0];
-  logic [Y_WIDTH-1:0] col_y [K-1:0][M-1:0];
-  logic sync_ready [N-1:0][K-1:0];
-  logic [ACC_WIDTH-1:0] dot_product_data_out [N-1:0][K-1:0];
-  logic [OUT_WIDTH-1:0] rounded_dot_product [N-1:0][K-1:0];
+  // logic dot_product_valid [N-1:0][K-1:0];
+  // logic [X_WIDTH-1:0] row_x [N-1:0][M-1:0];
+  // logic [Y_WIDTH-1:0] col_y [K-1:0][M-1:0];
+  // logic sync_ready [N-1:0][K-1:0];
+  // logic [ACC_WIDTH-1:0] dot_product_data_out [N-1:0][K-1:0];
+  // logic [OUT_WIDTH-1:0] rounded_dot_product [N-1:0][K-1:0];
   logic inputs_valid, inputs_ready;
 
+  logic [N*K-1:0] dot_product_valid;
+  logic [N*K-1:0] sync_ready;
+  logic [ACC_WIDTH-1:0] dot_product_data_out [N*K-1:0];
+  logic [OUT_WIDTH-1:0] rounded_dot_product [N*K-1:0];
+
+  logic [X_WIDTH-1:0] row_x [N*M-1:0];
+  logic [Y_WIDTH-1:0] col_y [K*M-1:0];
 
   // -----
   // Logic
   // -----
 
   // Need to synchronise x & y inputs
-  assign inputs_ready = sync_ready[0][0];
+  assign inputs_ready = sync_ready[0];
   join2 sync_handshake (
       .data_in_valid   ({x_valid, y_valid}),
       .data_in_ready   ({x_ready, y_ready}),
@@ -101,7 +108,7 @@ module simple_matmul #(
 
   // Assign Rows and Cols
   for (genvar i = 0; i < N; i++) begin : gen_rows
-    assign row_x[i] = x_data[(i+1)*M-1 : i*M];
+    assign row_x[(i+1)*M-1: i*M] = x_data[(i+1)*M-1 : i*M];
   end
 
   transpose #(
@@ -114,7 +121,7 @@ module simple_matmul #(
   );
 
   for (genvar i = 0; i < K; i++) begin : gen_cols
-    assign col_y[i] = y_data_transpose[(i+1)*M-1 : i*M];
+    assign col_y[(i+1)*M-1: i*M] = y_data_transpose[(i+1)*M-1 : i*M];
   end
 
   // Instantiate N-by-K number of dot products
@@ -128,17 +135,17 @@ module simple_matmul #(
       ) dot_product_inst (
           .clk             (clk),
           .rst             (rst),
-          .data_in         (row_x[i]),
+          .data_in         (row_x[(i+1)*M-1: i*M]),
           .data_in_valid   (inputs_valid),
-          .data_in_ready   (sync_ready[i][j]),
-          .weight          (col_y[j]),
+          .data_in_ready   (sync_ready[i*K+j]),
+          .weight          (col_y[(j+1)*M-1: j*M]),
           .weight_valid    (inputs_valid),
           /* verilator lint_off PINCONNECTEMPTY */
           // This pin is the same as data_in_ready pin
           .weight_ready    (),
           /* verilator lint_on PINCONNECTEMPTY */
-          .data_out        (dot_product_data_out[i][j]),
-          .data_out_valid  (dot_product_valid[i][j]),
+          .data_out        (dot_product_data_out[i*K+j]),
+          .data_out_valid  (dot_product_valid[i*K+j]),
           .data_out_ready  (dot_product_ready)
       );
 
@@ -150,18 +157,18 @@ module simple_matmul #(
             .OUT_WIDTH       (OUT_WIDTH),
             .OUT_FRAC_WIDTH  (OUT_FRAC_WIDTH)
         ) round_inst (
-            .data_in         (dot_product_data_out[i][j]),
-            .data_out        (rounded_dot_product[i][j])
+            .data_in         (dot_product_data_out[i*K+j]),
+            .data_out        (rounded_dot_product[i*K+j])
         );
-        assign out_data[i*K+j] = rounded_dot_product[i][j];
+        assign out_data[i*K+j] = rounded_dot_product[i*K+j];
       end else begin : no_rounding
-        assign out_data[i*K+j] = dot_product_data_out[i][j];
+        assign out_data[i*K+j] = dot_product_data_out[i*K+j];
       end
 
     end
   end
 
-  assign out_valid = dot_product_valid[0][0];
+  assign out_valid = dot_product_valid[0];
   assign dot_product_ready = out_ready;
 
 endmodule
