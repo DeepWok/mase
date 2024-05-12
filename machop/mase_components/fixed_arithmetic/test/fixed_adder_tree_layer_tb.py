@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
-# This script tests the fixed point adder tree layer
+# This script is never run since the rtl has been changed.
+
 import random, os
 
 import cocotb
