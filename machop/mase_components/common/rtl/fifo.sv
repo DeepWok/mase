@@ -92,7 +92,7 @@ end else begin : gen_fifo
     // Pause reading when there is (no transfer on this cycle) AND the registers are full.
     pause_reads = !out_ready && (self.out_reg.valid || self.extra_reg.valid);
 
-    next_self.write_ptr = in_valid && in_ready && (self.write_ptr == SIZE - 1) ? '0
+    next_self.write_ptr = in_valid && in_ready && (self.write_ptr == DEPTH - 1) ? '0
                           : in_valid && in_ready ? next_self.write_ptr + 1'b1
                           : self.write_ptr;
 
@@ -100,7 +100,7 @@ end else begin : gen_fifo
                     : (in_valid && in_ready) ? self.size + 1'b1
                     : self.size;
 
-    next_self.read_ptr = (|self.size && !pause_reads) && (self.read_ptr == SIZE - 1) ? '0
+    next_self.read_ptr = (|self.size && !pause_reads) && (self.read_ptr == DEPTH - 1) ? '0
                       : (|self.size && !pause_reads) ? self.read_ptr + 1'b1
                       : self.read_ptr;
 

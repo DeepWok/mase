@@ -1,4 +1,7 @@
 `timescale 1ns / 1ps
+
+// TODO: Add signed param. fixed_adder_tree_layer already supports signedness
+
 module fixed_adder_tree #(
     parameter IN_SIZE   = 2,
     parameter IN_WIDTH  = 32,
