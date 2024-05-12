@@ -155,6 +155,7 @@ MASE_HW_DEPS = {
     # Matmul
     "matmul/simple_matmul": ["common", "linear", "cast", "fixed_arithmetic", "matmul"],
     "matmul/fixed_matmul": ["common", "linear", "cast", "fixed_arithmetic", "matmul"],
+    "matmul/matmul": ["common", "linear", "cast", "fixed_arithmetic", "matmul"],
     "matmul/test_chain_matmul": [
         "common",
         "linear",

@@ -29,7 +29,7 @@ module simple_matmul #(
     // then out_width & out_frac_width must match accumulator widths
     parameter OUTPUT_ROUNDING = 1,
     parameter OUT_WIDTH       = 16,
-    parameter OUT_FRAC_WIDTH  = 0
+    parameter OUT_FRAC_WIDTH  = 2
 ) (
     input logic clk,
     input logic rst,
@@ -71,9 +71,6 @@ module simple_matmul #(
   // -----
   // Wires
   // -----
-
-  // Vivado synthesis supports multi-dimensional array types of up to two dimensions.
-  // https://docs.amd.com/r/en-US/ug901-vivado-synthesis/Multi-Dimensional-Arrays
 
   logic [Y_WIDTH-1:0] y_data_transpose [K*M-1:0];
   logic dot_product_ready;

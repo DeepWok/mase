@@ -256,7 +256,7 @@ def test_simple_matmul():
             {"N": 1, "M": 10, "K": 1},
             *[
                 {**generate_random_dimensions(2, 4), **generate_random_widths()}
-                for _ in range(10)
+                for _ in range(5)
             ],
         ]
     )

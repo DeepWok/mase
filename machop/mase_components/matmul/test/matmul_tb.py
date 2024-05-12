@@ -48,7 +48,7 @@ class MatmulTB(Testbench):
         self.a_driver = StreamDriver(dut.clk, dut.a_data, dut.a_valid, dut.a_ready)
         self.b_driver = StreamDriver(dut.clk, dut.b_data, dut.b_valid, dut.b_ready)
         self.output_monitor = StreamMonitor(
-            dut.clk, dut.out_data, dut.out_valid, dut.out_ready, check=True
+            dut.clk, dut.out_data, dut.out_valid, dut.out_ready, check=True, unsigned=True
         )
 
     def generate_inputs(self):
@@ -275,7 +275,6 @@ def test_matmul():
             # Dimensions
             *generate_random_dimension_cfg([DEFAULT_CONFIG]),
         ],
-        seed=1705250706,
         trace=True,
     )
 
