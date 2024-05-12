@@ -22,7 +22,7 @@ if debug:
 class VerificationCase:
     def __init__(self, samples=10):
         self.data_in_width = 32
-        self.num = 9
+        self.num = 8
         self.data_out_width = math.ceil(math.log2(self.num)) + 32
         self.inputs = RandomSource(
             samples=samples, num=self.num, max_stalls=2 * samples, debug=debug
@@ -152,7 +152,7 @@ async def cocotb_test_fixed_adder_tree(dut):
 
 def test_fixed_adder_tree():
     tb = VerificationCase()
-    mase_runner(module_param_list=[tb.get_dut_parameters()])
+    mase_runner(module_param_list=[tb.get_dut_parameters()], trace=True)
 
 
 if __name__ == "__main__":

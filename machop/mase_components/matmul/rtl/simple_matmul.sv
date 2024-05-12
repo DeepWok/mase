@@ -117,10 +117,10 @@ module simple_matmul #(
       ) dot_product_inst (
           .clk             (clk),
           .rst             (rst),
-          .data_in         (x_data[(i+1)*M-1 : i*M]),
+          .data_in         (x_data[((i+1)*M)-1 : i*M]),
           .data_in_valid   (inputs_valid),
           .data_in_ready   (sync_ready[i*K+j]),
-          .weight          (y_data_transpose[(j+1)*M-1 : j*M]),
+          .weight          (y_data_transpose[((j+1)*M)-1 : j*M]),
           .weight_valid    (inputs_valid),
           /* verilator lint_off PINCONNECTEMPTY */
           // This pin is the same as data_in_ready pin

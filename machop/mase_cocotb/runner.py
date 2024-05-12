@@ -75,6 +75,7 @@ def mase_runner(
                     "-Wno-UNOPTFLAT",
                     "-prof-c",
                     "--stats",
+                    "--assert",
                     # Signal trace in dump.fst
                     *(["--trace-fst", "--trace-structs"] if trace else []),
                     "-O2",
@@ -139,6 +140,7 @@ def simulate_pass(
             *(["--trace-fst", "--trace-structs"] if trace else []),
             "-prof-c",
             "--stats",
+            "--assert",
             "-O2",
             "-build-jobs",
             "8",
