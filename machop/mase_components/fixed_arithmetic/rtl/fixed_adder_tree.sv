@@ -85,10 +85,9 @@ module fixed_adder_tree #(
   end
 
   // it will zero-extend automatically
-  // for (genvar j = 0; j < IN_SIZE; j++) begin : layer_0
-  //   assign vars[0].data[j] = data_in[j];
-  // end
-  assign vars[0].data = data_in;
+  for (genvar j = 0; j < IN_SIZE; j++) begin : layer_0
+    assign vars[0].data[j] = data_in[j];
+  end
   assign vars[0].valid = data_in_valid;
   assign data_in_ready = vars[0].ready;
 
