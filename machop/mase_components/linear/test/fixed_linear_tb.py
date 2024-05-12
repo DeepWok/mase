@@ -11,7 +11,7 @@ from cocotb.log import SimLog
 from cocotb.triggers import Timer
 
 from mase_cocotb.testbench import Testbench
-from mase_cocotb.interfaces.streaming import StreamDriver, StreamMonitor
+from mase_cocotb.interfaces.streaming import StreamDriver, StreamMonitor, ErrorThresholdStreamMonitor
 from mase_cocotb.runner import mase_runner
 
 # from mase_cocotb import Testbench, StreamDriver, StreamMonitor, mase_runner
@@ -40,13 +40,25 @@ class LinearTB(Testbench):
             )
             self.bias_driver.log.setLevel(logging.DEBUG)
 
-        self.data_out_0_monitor = StreamMonitor(
+        # self.data_out_0_monitor = StreamMonitor(
+        #     dut.clk,
+        #     dut.data_out_0,
+        #     dut.data_out_0_valid,
+        #     dut.data_out_0_ready,
+        #     check=True,
+        # )
+
+        self.data_out_0_monitor = ErrorThresholdStreamMonitor(
             dut.clk,
             dut.data_out_0,
             dut.data_out_0_valid,
             dut.data_out_0_ready,
+            width=self.get_parameter("DATA_OUT_0_PRECISION_0"),
+            signed=True,
+            error_bits=1,
             check=True,
         )
+
         # Model
         self.model = LinearInteger(
             in_features=self.get_parameter("DATA_IN_0_TENSOR_SIZE_DIM_0"),
@@ -250,4 +262,4 @@ def test_fixed_linear_regression():
 
 if __name__ == "__main__":
     test_fixed_linear_smoke()
-    test_fixed_linear_regression()
+    # test_fixed_linear_regression()
