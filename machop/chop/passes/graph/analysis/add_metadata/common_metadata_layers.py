@@ -6,8 +6,7 @@ import inspect
 from chop.tools.utils import to_numpy_if_tensor as to_numpy
 from chop.passes.graph.utils import vf, get_node_by_name
 import traceback
-from functools import reduce
-
+from ...utils import deepgetattr
 
 # ----------------------------------------------------------
 # Utility
@@ -256,7 +255,9 @@ def match_args_and_kwargs(meta, args, kwargs, data, add_value):
     meta_kwargs = {}
     j = 0
     for i, x in enumerate(args):
-        if isinstance(x, torch.Tensor) and ordered_func_data[i][1] == "data_in":
+        if x is None:
+            continue
+        elif isinstance(x, torch.Tensor) and ordered_func_data[i][1] == "data_in":
             arg_meta = {
                 "shape": list(x.shape),
                 "torch_dtype": x.dtype,
@@ -374,11 +375,6 @@ def analyse_common_parameters_function(meta, result, args, kwargs, add_value=Tru
 # ----------------------------------------------------------
 
 
-def deepgetattr(obj, attr):
-    """Recurses through an attribute chain to get the ultimate value."""
-    return reduce(getattr, attr.split("."), obj)
-
-
 def analyse_common_parameters_module(meta, result, args, kwargs, add_value=True):
     mase_op = meta.parameters["common"]["mase_op"]
     node_module = deepgetattr(meta.model, meta.node.target)
@@ -393,7 +389,12 @@ def analyse_common_parameters_module(meta, result, args, kwargs, add_value=True)
 
     meta = match_args_and_kwargs(meta, args, kwargs, module_args, add_value)
     for name, parameter in meta.module.named_parameters():
-        parameter = parameter.unsqueeze(dim=0) if len(parameter.shape) == 1 else parameter
+        # ! TO DO: review
+        if meta["common"]["mase_op"] == "user_defined_module":
+            name = name.replace(".", "_")
+        parameter = (
+            parameter.unsqueeze(dim=0) if len(parameter.shape) == 1 else parameter
+        )
         meta.parameters["common"]["args"][name] = {
             "type": "float",
             "precision": [32],

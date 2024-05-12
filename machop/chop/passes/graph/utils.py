@@ -6,6 +6,7 @@ from typing import Tuple
 
 import torch
 from pathlib import Path
+from functools import reduce
 
 
 def check_func_type(node, my_func):
@@ -161,3 +162,8 @@ def init_project(project_dir):
 def sign_extend(value: int, bits: int):
     sign_bit = 1 << (bits - 1)
     return (value & (sign_bit - 1)) - (value & sign_bit)
+
+
+def deepgetattr(obj, attr):
+    """Recurses through an attribute chain to get the ultimate value."""
+    return reduce(getattr, attr.split("."), obj)

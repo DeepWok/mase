@@ -72,35 +72,35 @@ module softermax_lpw_pow2 #(
 
 
   // Function to generate LUT (Only used 1/2-bit case)
-  function logic [OUT_WIDTH-1:0] pow2_func(real x);
+  function automatic logic [OUT_WIDTH-1:0] pow2_func(real x);
     real res, res_shifted;
-    longint res_int;
+    bit [OUT_WIDTH-1:0] return_val;
     res = 2.0 ** x;
 
     // Output cast
     res_shifted = res * (2.0 ** OUT_FRAC_WIDTH);
-    res_int = longint'(res_shifted);
-    return OUT_WIDTH'(res_int);
+    return_val = OUT_WIDTH'(res_shifted);
+    return return_val;
   endfunction
 
   // Function to generate slope variable (m)
-  function logic [SLOPE_WIDTH-1:0] slope(real x1, real x2);
+  function automatic logic [SLOPE_WIDTH-1:0] slope(real x1, real x2);
     real y1, y2, res, res_shifted;
-    longint res_int;
+    bit [SLOPE_WIDTH-1:0] return_val;
     y1 = 2.0 ** x1;
     y2 = 2.0 ** x2;
     res = (y2 - y1) / (x2 - x1);
 
     // Output cast
     res_shifted = res * (2.0 ** SLOPE_FRAC_WIDTH);
-    res_int = longint'(res_shifted);
-    return SLOPE_WIDTH'(res_int);
+    return_val = SLOPE_WIDTH'(res_shifted);
+    return return_val;
   endfunction
 
   // Function to intercept variable (c)
-  function logic [INTERCEPT_WIDTH-1:0] intercept(real x1, real x2);
+  function automatic logic [INTERCEPT_WIDTH-1:0] intercept(real x1, real x2);
     real m, y1, y2, res, res_shifted;
-    int res_int;
+    bit [INTERCEPT_WIDTH-1:0] return_val;
     y1 = 2.0 ** x1;
     y2 = 2.0 ** x2;
     m = (y2 - y1) / (x2 - x1);
@@ -108,8 +108,8 @@ module softermax_lpw_pow2 #(
 
     // Output cast
     res_shifted = res * (2 ** INTERCEPT_FRAC_WIDTH);
-    res_int = int'(res_shifted);
-    return INTERCEPT_WIDTH'(res_int);
+    return_val = INTERCEPT_WIDTH'(res_shifted);
+    return return_val;
   endfunction
 
   // -----

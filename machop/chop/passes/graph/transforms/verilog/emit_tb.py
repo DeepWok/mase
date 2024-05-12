@@ -1,10 +1,8 @@
-import math, time, os, logging, torch, glob, shutil
+import logging, torch
+from pathlib import Path
+from textwrap import indent
 
-from chop.passes.graph.utils import vf, v2p, init_project
-from chop.passes.graph.transforms.quantize.quantizers import (
-    integer_quantizer_for_hw,
-    integer_quantizer,
-)
+from chop.passes.graph.utils import init_project, get_node_by_name
 
 logger = logging.getLogger(__name__)
 
@@ -44,7 +42,7 @@ async def test(dut):
     tb.load_drivers(in_tensors)
     tb.load_monitors(exp_out)
 
-    await Timer(100, units="us")
+    await Timer(2, units="ms")
     tb.end_checks()
 
 
@@ -80,6 +78,7 @@ def _emit_cocotb_tb(graph):
                         getattr(dut, f"{arg}_valid"),
                         getattr(dut, f"{arg}_ready"),
                     )
+                    self.input_drivers[arg].log.setLevel(logging.DEBUG)
 
             # Instantiate as many monitors as required outputs
             for node in graph.nodes_out:
@@ -93,6 +92,7 @@ def _emit_cocotb_tb(graph):
                         getattr(dut, f"{result}_ready"),
                         check=False,
                     )
+                    self.output_monitors[result].log.setLevel(logging.DEBUG)
 
             self.model = graph.model
 
@@ -120,7 +120,7 @@ def _emit_cocotb_tb(graph):
                     # Batch dimension always set to 1 in metadata
                     if "data_in" not in arg:
                         continue
-                    print(f"Generating data for node {node}, arg {arg}: {arg_info}")
+                    # print(f"Generating data for node {node}, arg {arg}: {arg_info}")
                     inputs[f"{arg}"] = torch.rand(([batches] + arg_info["shape"][1:]))
             return inputs
 
@@ -204,10 +204,13 @@ def emit_cocotb_transform_pass(graph, pass_args={}):
 
     - pass_args
         - project_dir -> str : the directory of the project
+        - trace -> bool : trace waves in the simulation
     """
     logger.info("Emitting testbench...")
     project_dir = (
-        pass_args["project_dir"] if "project_dir" in pass_args.keys() else "top"
+        pass_args["project_dir"]
+        if "project_dir" in pass_args.keys()
+        else Path.home() / ".mase" / "top"
     )
 
     init_project(project_dir)

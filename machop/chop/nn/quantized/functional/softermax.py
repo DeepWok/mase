@@ -19,7 +19,6 @@ def fixed_softermax(
     Returns:
         Tensor: Output tensor
     """
-    breakpoint()
     if q_config is not None:
         input = integer_quantizer(input, **q_config)
 

@@ -1,5 +1,5 @@
 /*
-Module      : softermax
+Module      : fixed_softermax
 Description : This module implements softermax.
               https://arxiv.org/abs/2103.09301
 

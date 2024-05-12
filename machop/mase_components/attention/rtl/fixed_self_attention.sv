@@ -1,6 +1,6 @@
 `timescale 1ns / 1ps
 module fixed_self_attention #(
-    parameter NUM_HEADS = 12,
+    parameter NUM_HEADS  = 12,
     parameter ACTIVATION = 0,
 
     parameter DATA_IN_0_TENSOR_SIZE_DIM_0 = 768,

@@ -239,10 +239,9 @@ module rms_norm_2d #(
       .out_ready(inv_sqrt_ready)
   );
 
-  repeat_circular_buffer #(
+  single_element_repeat #(
       .DATA_WIDTH(ISQRT_WIDTH),
-      .REPEAT(NUM_ITERS),
-      .SIZE(1)
+      .REPEAT(NUM_ITERS)
   ) inv_sqrt_circ_buffer (
       .clk(clk),
       .rst(rst),

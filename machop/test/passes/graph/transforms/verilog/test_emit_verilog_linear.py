@@ -38,7 +38,7 @@ class MLP(torch.nn.Module):
     def __init__(self) -> None:
         super().__init__()
 
-        self.fc1 = nn.Linear(28 * 28, 28 * 28, bias=True)
+        self.fc1 = nn.Linear(768, 768, bias=True)
 
     def forward(self, x):
         x = torch.flatten(x, start_dim=1, end_dim=-1)
@@ -52,7 +52,7 @@ def test_emit_verilog_linear():
 
     # Provide a dummy input for the graph so it can use for tracing
     batch_size = 1
-    x = torch.randn((batch_size, 28, 28))
+    x = torch.randn((batch_size, 768))
     dummy_in = {"x": x}
 
     mg, _ = passes.init_metadata_analysis_pass(mg, None)
@@ -105,7 +105,7 @@ def test_emit_verilog_linear():
     )
 
     mg, _ = passes.add_hardware_metadata_analysis_pass(
-        mg, pass_args={"max_parallelism": 32}
+        mg, pass_args={"max_parallelism": 4}
     )
     mg, _ = passes.report_node_hardware_type_analysis_pass(mg)  # pretty print
 

@@ -13,12 +13,14 @@ module fixed_softermax_1d #(
     parameter PARALLELISM = 4,
 
     // Width Parameters
-    parameter IN_WIDTH        = 8,
-    parameter IN_FRAC_WIDTH   = 4,
-    parameter POW2_WIDTH      = 16,
-    parameter POW2_FRAC_WIDTH = 15,  // Should be POW2_WIDTH - 1
-    parameter OUT_WIDTH       = 8,
-    parameter OUT_FRAC_WIDTH  = 7
+    parameter  IN_WIDTH        = 8,
+    parameter  IN_FRAC_WIDTH   = 4,
+    parameter  POW2_WIDTH      = 16,
+    // POW2_FRAC_WIDTH should always be POW2_WIDTH - 1, since local values are
+    // two to the power of a number in the range of (-inf, 0].
+    localparam POW2_FRAC_WIDTH = 15,
+    parameter  OUT_WIDTH       = 8,
+    parameter  OUT_FRAC_WIDTH  = 7
 ) (
     input logic clk,
     input logic rst,
@@ -32,12 +34,18 @@ module fixed_softermax_1d #(
     input  logic                 out_ready
 );
 
+  // -----
+  // Params
+  // -----
+
+  localparam MAX_WIDTH = IN_WIDTH - IN_FRAC_WIDTH;
+
 
   // -----
   // Wires
   // -----
 
-  logic [  IN_WIDTH-1:0] local_max;
+  logic [ MAX_WIDTH-1:0] local_max;
   logic [POW2_WIDTH-1:0] local_values[PARALLELISM-1:0];
   logic local_window_valid, local_window_ready;
 
@@ -67,7 +75,7 @@ module fixed_softermax_1d #(
       .TOTAL_DIM(TOTAL_DIM),
       .PARALLELISM(PARALLELISM),
       .IN_VALUE_WIDTH(POW2_WIDTH),
-      .IN_MAX_WIDTH(IN_WIDTH),
+      .IN_MAX_WIDTH(MAX_WIDTH),
       .OUT_WIDTH(OUT_WIDTH),
       .OUT_FRAC_WIDTH(OUT_FRAC_WIDTH)
   ) global_norm_inst (

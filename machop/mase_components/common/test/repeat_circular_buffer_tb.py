@@ -156,7 +156,9 @@ def test_repeat_circular_buffer():
             {"DATA_WIDTH": 32, "REPEAT": 2, "SIZE": 7},
             # Purely random params
             *[generate_random_params() for _ in range(5)],
-        ]
+        ],
+        trace=True,
+        jobs=8,
     )
 
 

@@ -56,7 +56,8 @@ module fixed_isqrt #(
   ) fixed_range_reduction_inst (
       .data_a(in_data),
       .data_out(x_reduced[0]),
-      .msb_index(msb_index[0])
+      .msb_index(msb_index[0]),
+      .not_found()
   );
 
   skid_buffer #(

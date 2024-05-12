@@ -179,8 +179,8 @@ if __name__ == "__main__":
                         )
         return cfgs
 
-    # cfgs = width_cfgs()
-    cfgs = [DEFAULT]
+    cfgs = width_cfgs()
+    # cfgs = [DEFAULT]
 
     mase_runner(
         module_param_list=cfgs,
