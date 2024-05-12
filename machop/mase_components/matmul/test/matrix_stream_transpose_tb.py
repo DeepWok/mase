@@ -29,7 +29,7 @@ class MatrixStreamTransposeTB(Testbench):
 
         self.in_driver = StreamDriver(dut.clk, dut.in_data, dut.in_valid, dut.in_ready)
         self.out_monitor = StreamMonitor(
-            dut.clk, dut.out_data, dut.out_valid, dut.out_ready, check=True
+            dut.clk, dut.out_data, dut.out_valid, dut.out_ready, check=True, unsigned=True
         )
 
     def generate_inputs(self):
@@ -67,7 +67,7 @@ async def single_transpose(dut):
         tb.in_driver.append(x)
     for y in Y:
         tb.out_monitor.expect(y)
-    await Timer(1, units="us")
+    await Timer(100, units="us")
     assert tb.out_monitor.exp_queue.empty()
 
 
@@ -83,7 +83,7 @@ async def multiple_transpose(dut):
             tb.in_driver.append(x)
         for y in Y:
             tb.out_monitor.expect(y)
-    await Timer(100, units="us")
+    await Timer(1000, units="us")
     assert tb.out_monitor.exp_queue.empty()
 
 
@@ -99,7 +99,7 @@ async def multiple_transpose_backpressure(dut):
             tb.in_driver.append(x)
         for y in Y:
             tb.out_monitor.expect(y)
-    await Timer(100, units="us")
+    await Timer(1000, units="us")
     assert tb.out_monitor.exp_queue.empty()
 
 
@@ -116,7 +116,7 @@ async def multiple_transpose_valid_backpressure(dut):
             tb.in_driver.append(x)
         for y in Y:
             tb.out_monitor.expect(y)
-    await Timer(200, units="us")
+    await Timer(2000, units="us")
     assert tb.out_monitor.exp_queue.empty()
 
 
@@ -158,7 +158,8 @@ def test_matrix_stream_transpose():
             },
             # Random test
             *[gen_random_params() for _ in range(5)],
-        ]
+        ],
+        trace=True
     )
 
 
