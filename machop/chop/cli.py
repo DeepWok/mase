@@ -53,6 +53,9 @@ from . import models
 from .actions import test, train, transform, search, emit, simulate
 from .dataset import MaseDataModule, AVAILABLE_DATASETS, get_dataset_info
 from .tools import post_parse_load_config, load_config
+from .tools.check_dependency import check_deps_tensorRT_pass
+
+check_deps_tensorRT_pass(silent=False)
 
 
 # Housekeeping -------------------------------------------------------------------------
@@ -79,7 +82,7 @@ LOGO = f"""
              j /. " `"  ' ,' /`.        |
              ||.|        .  | . .       |
              ||#|        |  | #'|       '
-            /'.||        |  \." |      -.
+            /'.||        |  \ ." |      -.
            /    '        `.----"      ".
            \  `.    ,'                .
             `._____           _,-'  '/

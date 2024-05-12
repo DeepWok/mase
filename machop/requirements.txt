@@ -9,7 +9,7 @@ toml
 timm
 pytorch-nlp
 datasets
-onnxruntime-gpu
+
 onnx
 onnxconverter-common
 optimum
@@ -50,17 +50,18 @@ einops
 sphinx
 sphinx-rtd-theme
 myst-parser
-# tensorRT
-torch-tensorRT
-tensorRT
 numpy
 absl-py
 scipy
 sphinx-glpi-theme
 prettytable
 pyyaml
-pynvml
-pycuda
-cuda-python
-pytorch-quantization
 bitstring
+
+# CUDA required
+# onnxruntime-gpu
+# tensorrt
+# pynvml
+# pycuda
+# cuda-python
+# pytorch-quantization # this needs installing from source

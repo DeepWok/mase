@@ -22,6 +22,7 @@ handler.setFormatter(formatter)
 
 root_logger = logging.getLogger("chop")
 root_logger.addHandler(handler)
+root_logger.propagate = False
 
 
 def set_logging_verbosity(level: str = "info"):

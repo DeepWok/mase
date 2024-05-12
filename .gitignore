@@ -22,7 +22,7 @@ vagrant/.vagrant/
 /machop/examples/**/data/
 /machop/cache/
 /machop/.machop_cache/
-machop/lightning_logs/
+lightning_logs/
 
 # macOS
 .DS_Store
