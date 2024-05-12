@@ -42,8 +42,8 @@ class Monitor:
                 self.recv_queue.put(tr)
 
                 if self.exp_queue.empty():
-                    raise TestFailure(
-                        "\nGot \n%s,\nbut we did not expect anything."
+                    assert False, (
+                        "Got %s but we did not expect anything."
                         % self.recv_queue.get()
                     )
 

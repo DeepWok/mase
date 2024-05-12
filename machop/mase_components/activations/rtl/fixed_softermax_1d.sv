@@ -9,36 +9,44 @@ Description : This module implements softermax.
 `timescale 1ns / 1ps
 module fixed_softermax_1d #(
     // Shape Parameters
-    parameter TOTAL_DIM   = 16,
-    parameter PARALLELISM = 4,
+    parameter  TOTAL_DIM          = 16,
+    parameter  PARALLELISM        = 4,
 
     // Width Parameters
-    parameter IN_WIDTH        = 8,
-    parameter IN_FRAC_WIDTH   = 4,
-    parameter POW2_WIDTH      = 16,
-    parameter POW2_FRAC_WIDTH = 15,  // Should be POW2_WIDTH - 1
-    parameter OUT_WIDTH       = 8,
-    parameter OUT_FRAC_WIDTH  = 7
+    parameter  IN_WIDTH           = 8,
+    parameter  IN_FRAC_WIDTH      = 4,
+    parameter  POW2_WIDTH         = 16,
+    // POW2_FRAC_WIDTH should always be POW2_WIDTH - 1, since local values are
+    // two to the power of a number in the range of (-inf, 0].
+    localparam POW2_FRAC_WIDTH    = 15,
+    parameter  OUT_WIDTH          = 8,
+    parameter  OUT_FRAC_WIDTH     = 7
 ) (
-    input logic clk,
-    input logic rst,
+    input  logic                 clk,
+    input  logic                 rst,
 
-    input  logic [IN_WIDTH-1:0] in_data [PARALLELISM-1:0],
-    input  logic                in_valid,
-    output logic                in_ready,
+    input  logic [IN_WIDTH-1:0]  in_data [PARALLELISM-1:0],
+    input  logic                 in_valid,
+    output logic                 in_ready,
 
     output logic [OUT_WIDTH-1:0] out_data [PARALLELISM-1:0],
     output logic                 out_valid,
     input  logic                 out_ready
 );
 
+  // -----
+  // Params
+  // -----
+
+  localparam MAX_WIDTH = IN_WIDTH - IN_FRAC_WIDTH;
+
 
   // -----
   // Wires
   // -----
 
-  logic [  IN_WIDTH-1:0] local_max;
-  logic [POW2_WIDTH-1:0] local_values[PARALLELISM-1:0];
+  logic [MAX_WIDTH-1:0] local_max;
+  logic [POW2_WIDTH-1:0] local_values [PARALLELISM-1:0];
   logic local_window_valid, local_window_ready;
 
   // -----
@@ -67,7 +75,7 @@ module fixed_softermax_1d #(
       .TOTAL_DIM(TOTAL_DIM),
       .PARALLELISM(PARALLELISM),
       .IN_VALUE_WIDTH(POW2_WIDTH),
-      .IN_MAX_WIDTH(IN_WIDTH),
+      .IN_MAX_WIDTH(MAX_WIDTH),
       .OUT_WIDTH(OUT_WIDTH),
       .OUT_FRAC_WIDTH(OUT_FRAC_WIDTH)
   ) global_norm_inst (

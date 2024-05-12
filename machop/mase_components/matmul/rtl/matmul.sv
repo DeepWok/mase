@@ -120,11 +120,10 @@ module matmul #(
           .data_out(a_data_flat)
       );
 
-      repeat_circular_buffer #(
+      single_element_repeat #(
           .DATA_WIDTH(A_FLAT_WIDTH),
           // Repeat for number of rows in matrix A
-          .REPEAT    (B_DEPTH_DIM0),
-          .SIZE      (1)
+          .REPEAT    (B_DEPTH_DIM0)
       ) input_stream_buffer (
           .clk      (clk),
           .rst      (rst),

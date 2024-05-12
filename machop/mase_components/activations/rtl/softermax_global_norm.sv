@@ -6,9 +6,6 @@ Description : This module implements the second section of the softermax compute
 
               Refer to bottom half of Fig. 4.a) and 4.b) in the Softermax Paper.
               https://arxiv.org/abs/2103.09301
-
-              TODO:
-              - Fix throughput issue
 */
 
 `timescale 1ns/1ps
@@ -192,10 +189,9 @@ comparator_accumulator #(
     .out_ready(global_max_out_ready)
 );
 
-repeat_circular_buffer #(
+single_element_repeat #(
     .DATA_WIDTH(IN_MAX_WIDTH),
-    .REPEAT(DEPTH),
-    .SIZE(1)
+    .REPEAT(DEPTH)
 ) global_max_repeater (
     .clk(clk),
     .rst(rst),
@@ -354,10 +350,9 @@ softermax_lpw_reciprocal #(
     .out_ready(norm_recip_ready)
 );
 
-repeat_circular_buffer #(
+single_element_repeat #(
     .DATA_WIDTH(RECIP_WIDTH),
-    .REPEAT(DEPTH),
-    .SIZE(1)
+    .REPEAT(DEPTH)
 ) repeat_norm_recip (
     .clk(clk),
     .rst(rst),

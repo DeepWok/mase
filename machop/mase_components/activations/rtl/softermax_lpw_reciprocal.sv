@@ -96,10 +96,6 @@ initial begin
     assert (INTERCEPT_WIDTH > INTERCEPT_FRAC_WIDTH);
     assert (LPW_WIDTH > LPW_FRAC_WIDTH);
     assert (RECIP_WIDTH > RECIP_FRAC_WIDTH);
-
-    // longint maxwidths
-    assert (SLOPE_WIDTH <= 64);
-    assert (INTERCEPT_WIDTH <= 64);
 end
 
 // -----
@@ -136,8 +132,7 @@ logic [OUT_WIDTH-1:0] output_reg_in_data;
 // Function to generate slope variable (m)
 function automatic logic [SLOPE_WIDTH-1:0] slope (real x1, real x2);
     real y1, y2, res, res_shifted;
-    longint res_int;
-    bit [INTERCEPT_WIDTH-1:0] return_val;
+    bit [SLOPE_WIDTH-1:0] return_val;
 
     // Calculate real result
     y1 = 1.0 / x1;
@@ -146,15 +141,13 @@ function automatic logic [SLOPE_WIDTH-1:0] slope (real x1, real x2);
 
     // Output cast
     res_shifted = res * (2.0 ** SLOPE_FRAC_WIDTH);
-    res_int = longint'(res_shifted);
-    return_val = SLOPE_WIDTH'(res_int);
+    return_val = SLOPE_WIDTH'(res_shifted);
     return return_val;
 endfunction
 
 // Function to intercept variable (c)
 function automatic logic [INTERCEPT_WIDTH-1:0] intercept (real x1, real x2);
     real m, y1, y2, res, res_shifted;
-    longint res_int;
     bit [INTERCEPT_WIDTH-1:0] return_val;
 
     // Calculate real result
@@ -165,8 +158,7 @@ function automatic logic [INTERCEPT_WIDTH-1:0] intercept (real x1, real x2);
 
     // Output cast
     res_shifted = res * (2.0 ** INTERCEPT_FRAC_WIDTH);
-    res_int = longint'(res_shifted);
-    return_val = INTERCEPT_WIDTH'(res_int);
+    return_val = INTERCEPT_WIDTH'(res_shifted);
     return return_val;
 endfunction
 

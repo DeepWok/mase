@@ -25,63 +25,63 @@ module comparator_tree #(
     input  logic                  out_ready
 );
 
-  localparam LEVELS = $clog2(SIZE);
+localparam LEVELS = $clog2(SIZE);
 
-  initial begin
-    assert (2 ** LEVELS == SIZE);  // Only support power of 2
-  end
+initial begin
+    assert (2 ** LEVELS == SIZE); // Only support power of 2
+end
 
-  for (genvar i = 0; i <= LEVELS; i++) begin : vars
-    logic [DATA_WIDTH-1:0] data[(2**(LEVELS-i))-1:0];
+for (genvar i = 0; i <= LEVELS; i++) begin : vars
+    logic [DATA_WIDTH-1:0] data [(2**(LEVELS-i))-1:0];
     logic valid;
     logic ready;
-  end
+end
 
 
-  for (genvar i = 0; i < LEVELS; i++) begin : level
+for (genvar i = 0; i < LEVELS; i++) begin : level
 
-    for (genvar c = 0; c < 2 ** (LEVELS - i - 1); c++) begin : comparator
+    for (genvar c = 0; c < 2**(LEVELS-i-1); c++) begin : comparator
 
-      logic [DATA_WIDTH-1:0] left, right, result;
-      assign left  = vars[i].data[2*c];
-      assign right = vars[i].data[2*c+1];
+        logic [DATA_WIDTH-1:0] left, right, result;
+        assign left = vars[i].data[2*c];
+        assign right = vars[i].data[2*c+1];
 
-      if (MAX1_MIN0) begin
-        if (SIGNED) begin
-          assign result = $signed(left) > $signed(right) ? left : right;
+        if (MAX1_MIN0) begin
+            if (SIGNED) begin
+                assign result = $signed(left) > $signed(right) ? left : right;
+            end else begin
+                assign result = left > right ? left : right;
+            end
         end else begin
-          assign result = left > right ? left : right;
+            if (SIGNED) begin
+                assign result = $signed(left) < $signed(right) ? left : right;
+            end else begin
+                assign result = left < right ? left : right;
+            end
         end
-      end else begin
-        if (SIGNED) begin
-          assign result = $signed(left) < $signed(right) ? left : right;
-        end else begin
-          assign result = left < right ? left : right;
-        end
-      end
 
-      skid_buffer #(
-          .DATA_WIDTH(DATA_WIDTH)
-      ) max_reg (
-          .clk(clk),
-          .rst(rst),
-          .data_in(result),
-          .data_in_valid(vars[i].valid),
-          .data_in_ready(vars[i].ready),
-          .data_out(vars[i+1].data[c]),
-          .data_out_valid(vars[i+1].valid),
-          .data_out_ready(vars[i+1].ready)
-      );
+        skid_buffer #(
+            .DATA_WIDTH(DATA_WIDTH)
+        ) max_reg (
+            .clk(clk),
+            .rst(rst),
+            .data_in(result),
+            .data_in_valid(vars[i].valid),
+            .data_in_ready(vars[i].ready),
+            .data_out(vars[i+1].data[c]),
+            .data_out_valid(vars[i+1].valid),
+            .data_out_ready(vars[i+1].ready)
+        );
     end
-  end
+end
 
-  // Connect up first and last layer wires
-  assign vars[0].data = in_data;
-  assign vars[0].valid = in_valid;
-  assign in_ready = vars[0].ready;
+// Connect up first and last layer wires
+assign vars[0].data = in_data;
+assign vars[0].valid = in_valid;
+assign in_ready = vars[0].ready;
 
-  assign out_data = vars[LEVELS].data[0];
-  assign out_valid = vars[LEVELS].valid;
-  assign vars[LEVELS].ready = out_ready;
+assign out_data = vars[LEVELS].data[0];
+assign out_valid = vars[LEVELS].valid;
+assign vars[LEVELS].ready = out_ready;
 
 endmodule

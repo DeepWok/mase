@@ -1,10 +1,8 @@
-import math, time, os, logging, torch, glob, shutil
+import logging, torch
+from pathlib import Path
+from textwrap import indent
 
-from chop.passes.graph.utils import vf, v2p, init_project
-from chop.passes.graph.transforms.quantize.quantizers import (
-    integer_quantizer_for_hw,
-    integer_quantizer,
-)
+from chop.passes.graph.utils import init_project, get_node_by_name
 
 logger = logging.getLogger(__name__)
 
@@ -206,10 +204,13 @@ def emit_cocotb_transform_pass(graph, pass_args={}):
 
     - pass_args
         - project_dir -> str : the directory of the project
+        - trace -> bool : trace waves in the simulation
     """
     logger.info("Emitting testbench...")
     project_dir = (
-        pass_args["project_dir"] if "project_dir" in pass_args.keys() else "top"
+        pass_args["project_dir"]
+        if "project_dir" in pass_args.keys()
+        else Path.home() / ".mase" / "top"
     )
 
     init_project(project_dir)

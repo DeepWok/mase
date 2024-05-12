@@ -24,7 +24,11 @@ class Testbench:
 
     def assign_self_params(self, attrs):
         for att in attrs:
-            setattr(self, att, getattr(self.dut, att).value)
+            setattr(self, att, int(getattr(self.dut, att).value))
+
+    def get_parameter(self, parameter_name):
+        parameter = getattr(self.dut, parameter_name)
+        return int(parameter)
 
     def get_parameter(self, parameter_name):
         parameter = getattr(self.dut, parameter_name)
