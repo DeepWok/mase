@@ -77,12 +77,6 @@ module simple_matmul #(
 
   logic [Y_WIDTH-1:0] y_data_transpose [K*M-1:0];
   logic dot_product_ready;
-  // logic dot_product_valid [N-1:0][K-1:0];
-  // logic [X_WIDTH-1:0] row_x [N-1:0][M-1:0];
-  // logic [Y_WIDTH-1:0] col_y [K-1:0][M-1:0];
-  // logic sync_ready [N-1:0][K-1:0];
-  // logic [ACC_WIDTH-1:0] dot_product_data_out [N-1:0][K-1:0];
-  // logic [OUT_WIDTH-1:0] rounded_dot_product [N-1:0][K-1:0];
   logic inputs_valid, inputs_ready;
 
   logic [N*K-1:0] dot_product_valid;
@@ -90,8 +84,6 @@ module simple_matmul #(
   logic [ACC_WIDTH-1:0] dot_product_data_out [N*K-1:0];
   logic [OUT_WIDTH-1:0] rounded_dot_product [N*K-1:0];
 
-  logic [X_WIDTH-1:0] row_x [N*M-1:0];
-  logic [Y_WIDTH-1:0] col_y [K*M-1:0];
 
   // -----
   // Logic
@@ -106,11 +98,8 @@ module simple_matmul #(
       .data_out_ready  (inputs_ready)
   );
 
-  // Assign Rows and Cols
-  for (genvar i = 0; i < N; i++) begin : gen_rows
-    assign row_x[(i+1)*M-1: i*M] = x_data[(i+1)*M-1 : i*M];
-  end
-
+  // Transpose y to make column assignment easier, this module is just a rewire
+  // so it shouldn't contribute anything to comb path.
   transpose #(
     .WIDTH(Y_WIDTH),
     .DIM0(K),
@@ -119,10 +108,6 @@ module simple_matmul #(
     .in_data(y_data),
     .out_data(y_data_transpose)
   );
-
-  for (genvar i = 0; i < K; i++) begin : gen_cols
-    assign col_y[(i+1)*M-1: i*M] = y_data_transpose[(i+1)*M-1 : i*M];
-  end
 
   // Instantiate N-by-K number of dot products
   for (genvar i = 0; i < N; i++) begin : multi_row
@@ -135,10 +120,10 @@ module simple_matmul #(
       ) dot_product_inst (
           .clk             (clk),
           .rst             (rst),
-          .data_in         (row_x[(i+1)*M-1: i*M]),
+          .data_in         (x_data[(i+1)*M-1 : i*M]),
           .data_in_valid   (inputs_valid),
           .data_in_ready   (sync_ready[i*K+j]),
-          .weight          (col_y[(j+1)*M-1: j*M]),
+          .weight          (y_data_transpose[(j+1)*M-1 : j*M]),
           .weight_valid    (inputs_valid),
           /* verilator lint_off PINCONNECTEMPTY */
           // This pin is the same as data_in_ready pin
