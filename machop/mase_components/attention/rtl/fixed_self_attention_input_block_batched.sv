@@ -141,8 +141,8 @@ module fixed_self_attention_input_block_batched #(
       .BIAS_PARALLELISM_DIM_0(BIAS_PARALLELISM_DIM_0),
       .BIAS_PARALLELISM_DIM_1(BIAS_PARALLELISM_DIM_1),
 
-      .DATA_OUT_0_PRECISION_0      (DATA_OUT_0_PRECISION_0),
-      .DATA_OUT_0_PRECISION_1      (DATA_OUT_0_PRECISION_1)
+      .DATA_OUT_0_PRECISION_0(DATA_OUT_0_PRECISION_0),
+      .DATA_OUT_0_PRECISION_1(DATA_OUT_0_PRECISION_1)
 
   ) fixed_linear_query (
       .clk,
@@ -170,20 +170,20 @@ module fixed_self_attention_input_block_batched #(
   // * We must buffer the queries to latency match the key transpose path
   // * since the matmul for QK^T buffers K^T but streams Q
   matrix_fifo #(
-    .DATA_WIDTH     (DATA_OUT_0_PRECISION_0),
-    .DIM0           (WEIGHT_PARALLELISM_DIM_0),
-    .DIM1           (DATA_IN_0_PARALLELISM_DIM_1),
-    .FIFO_SIZE      (DATA_IN_0_DEPTH_DIM_1 * WEIGHT_DEPTH_DIM_0)
-    ) query_buffer_i (
-    .clk,
-    .rst,
-    .in_data      (query_buffer),
-    .in_valid     (query_buffer_valid),
-    .in_ready     (query_buffer_ready),
-    .out_data     (data_out_query),
-    .out_valid    (data_out_query_valid),
-    .out_ready    (data_out_query_ready)
-);
+      .DATA_WIDTH(DATA_OUT_0_PRECISION_0),
+      .DIM0      (WEIGHT_PARALLELISM_DIM_0),
+      .DIM1      (DATA_IN_0_PARALLELISM_DIM_1),
+      .FIFO_SIZE (DATA_IN_0_DEPTH_DIM_1 * WEIGHT_DEPTH_DIM_0)
+  ) query_buffer_i (
+      .clk,
+      .rst,
+      .in_data  (query_buffer),
+      .in_valid (query_buffer_valid),
+      .in_ready (query_buffer_ready),
+      .out_data (data_out_query),
+      .out_valid(data_out_query_valid),
+      .out_ready(data_out_query_ready)
+  );
 
   // * Key linear
 
@@ -212,8 +212,8 @@ module fixed_self_attention_input_block_batched #(
       .BIAS_PARALLELISM_DIM_0(BIAS_PARALLELISM_DIM_0),
       .BIAS_PARALLELISM_DIM_1(BIAS_PARALLELISM_DIM_1),
 
-      .DATA_OUT_0_PRECISION_0      (DATA_OUT_0_PRECISION_0),
-      .DATA_OUT_0_PRECISION_1      (DATA_OUT_0_PRECISION_1)
+      .DATA_OUT_0_PRECISION_0(DATA_OUT_0_PRECISION_0),
+      .DATA_OUT_0_PRECISION_1(DATA_OUT_0_PRECISION_1)
 
   ) fixed_linear_key (
       .clk,
@@ -265,8 +265,8 @@ module fixed_self_attention_input_block_batched #(
       .BIAS_PARALLELISM_DIM_0(BIAS_PARALLELISM_DIM_0),
       .BIAS_PARALLELISM_DIM_1(BIAS_PARALLELISM_DIM_1),
 
-      .DATA_OUT_0_PRECISION_0      (DATA_OUT_0_PRECISION_0),
-      .DATA_OUT_0_PRECISION_1      (DATA_OUT_0_PRECISION_1)
+      .DATA_OUT_0_PRECISION_0(DATA_OUT_0_PRECISION_0),
+      .DATA_OUT_0_PRECISION_1(DATA_OUT_0_PRECISION_1)
 
   ) fixed_linear_value (
       .clk,

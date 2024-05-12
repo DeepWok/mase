@@ -58,9 +58,9 @@ module fixed_unsigned_cast #(
   // Unsigned clamp
   always_comb begin
     if (&round_out[ROUND_OUT_WIDTH-1:ROUND_OUT_WIDTH-OUT_WIDTH]) begin
-        out_data = '1;
+      out_data = '1;
     end else begin
-        out_data = round_out[OUT_WIDTH-1:0];
+      out_data = round_out[OUT_WIDTH-1:0];
     end
   end
 
