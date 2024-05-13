@@ -1,16 +1,18 @@
+`timescale 1ns / 1ps
+
 module fixed_relu #(
     /* verilator lint_off UNUSEDPARAM */
     parameter DATA_IN_0_PRECISION_0 = 8,
-    parameter DATA_IN_0_PRECISION_1 = 1,
+    parameter DATA_IN_0_PRECISION_1 = 3,
     parameter DATA_IN_0_TENSOR_SIZE_DIM_0 = 8,
     parameter DATA_IN_0_TENSOR_SIZE_DIM_1 = 1,
     parameter DATA_IN_0_PARALLELISM_DIM_0 = 1,
     parameter DATA_IN_0_PARALLELISM_DIM_1 = 1,
 
     parameter DATA_OUT_0_PRECISION_0 = 8,
-    parameter DATA_OUT_0_PRECISION_1 = 0,
-    parameter DATA_OUT_0_TENSOR_SIZE_DIM_0 = 0,
-    parameter DATA_OUT_0_TENSOR_SIZE_DIM_1 = 0,
+    parameter DATA_OUT_0_PRECISION_1 = 3,
+    parameter DATA_OUT_0_TENSOR_SIZE_DIM_0 = 8,
+    parameter DATA_OUT_0_TENSOR_SIZE_DIM_1 = 1,
     parameter DATA_OUT_0_PARALLELISM_DIM_0 = 1,
     parameter DATA_OUT_0_PARALLELISM_DIM_1 = 0,
 
@@ -28,9 +30,11 @@ module fixed_relu #(
     input  logic data_out_0_ready
 );
 
-  for (genvar i = 0; i < DATA_IN_0_TENSOR_SIZE_DIM_0; i++) begin : ReLU
+  /* verilator lint_off SELRANGE */
+  for (
+      genvar i = 0; i < DATA_IN_0_PARALLELISM_DIM_0 * DATA_IN_0_PARALLELISM_DIM_1; i++
+  ) begin : ReLU
     always_comb begin
-      // negative value, put to zero
       if ($signed(data_in_0[i]) <= 0) data_out_0[i] = '0;
       else data_out_0[i] = data_in_0[i];
     end

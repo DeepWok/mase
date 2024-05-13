@@ -13,7 +13,7 @@ from chop.passes.graph.transforms.quantize.quantizers.quantizers_for_hw import (
 )
 
 from mase_components.cast.test.fixed_signed_cast_tb import _fixed_signed_cast_model
-from mase_components.fixed_arithmetic.test.isqrt_sw import isqrt_sw2
+from mase_components.fixed_math.test.isqrt_sw import isqrt_sw2
 
 
 logger = logging.getLogger("norm.models")

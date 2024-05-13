@@ -38,7 +38,7 @@ module fixed_self_gqa_group #(
     parameter V_OUT_FRAC_WIDTH          = 4,
     parameter QK_OUT_WIDTH              = 16,
     parameter QK_OUT_FRAC_WIDTH         = 4,
-    parameter SOFTERMAX_POW2_WIDTH      = 16
+    parameter SOFTERMAX_POW2_WIDTH      = 16,
     parameter SOFTERMAX_OUT_WIDTH       = 16,
     parameter SOFTERMAX_OUT_FRAC_WIDTH  = 4
 ) (

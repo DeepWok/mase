@@ -84,6 +84,7 @@ def matrix_mult_model(
     out_symmetric,
     a_input,
     b_input,
+    debug=False
 ):
     A = rebuild_matrix(
         a_input, a_total_dim0, a_total_dim1, a_compute_dim0, a_compute_dim1
@@ -95,12 +96,13 @@ def matrix_mult_model(
     B_signed = sign_extend_t(B, b_width)
     C_signed = torch.matmul(A_signed, B_signed)
 
-    logger.debug("Matrix A")
-    logger.debug(A_signed)
-    logger.debug("Matrix B")
-    logger.debug(B_signed)
-    logger.debug("Matrix C")
-    logger.debug(C_signed)
+    if debug:
+        logger.debug("Matrix A")
+        logger.debug(A_signed)
+        logger.debug("Matrix B")
+        logger.debug(B_signed)
+        logger.debug("Matrix C")
+        logger.debug(C_signed)
 
     # Floor rounding
     acc_frac_width = a_frac_width + b_frac_width
@@ -111,14 +113,16 @@ def matrix_mult_model(
     max_val = (2 ** (out_width - 1)) - 1
     C_clamped = torch.clamp(C_signed, min_val, max_val)
 
-    logger.debug("Matrix C (clamp)")
-    logger.debug(C_clamped)
+    if debug:
+        logger.debug("Matrix C (clamp)")
+        logger.debug(C_clamped)
 
     # Changed to unsigned number
     C_unsigned_rep = signed_to_unsigned(C_clamped, out_width)
 
-    logger.debug("Matrix C (clamp -> unsigned)")
-    logger.debug(C_unsigned_rep)
+    if debug:
+        logger.debug("Matrix C (clamp -> unsigned)")
+        logger.debug(C_unsigned_rep)
 
     # Split into lists of ints
     return split_matrix(

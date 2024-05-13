@@ -27,6 +27,7 @@ from .transforms import (
     logicnets_fusion_transform_pass,
     onnx_annotate_transform_pass,
     partition_to_multi_device_transform_pass,
+    raise_granularity_transform_pass,
 )
 
 from .interface import (

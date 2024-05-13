@@ -1,4 +1,4 @@
-# Module: batch_norm_2d
+# Batch Norm 2D
 
 The `batch_norm_2d` module implements the [BatchNorm2d PyTorch](https://pytorch.org/docs/stable/generated/torch.nn.BatchNorm2d.html) layer with the assumption that `affine=False`.
 

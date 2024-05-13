@@ -1,14 +1,13 @@
-import top_pkg::*;
-
+`timescale 1ns / 1ps
 module activation_core #(
-    parameter PRECISION   = top_pkg::FLOAT_32,
+    parameter PRECISION   = 0,
     parameter DATA_WIDTH  = 32,
     parameter FLOAT_WIDTH = 32
 ) (
     input logic core_clk,
     input logic resetn,
 
-    input logic [$bits(ACTIVATION_FUNCTION_e)-1:0] sel_activation,
+    input logic [7:0] sel_activation,
 
     input logic                  in_feature_valid,
     input logic [DATA_WIDTH-1:0] in_feature,
@@ -25,24 +24,24 @@ module activation_core #(
   logic                  leaky_relu_activation_valid_comb;
   logic [DATA_WIDTH-1:0] leaky_relu_activation_comb;
 
-  assign activated_feature_valid_comb = (sel_activation == top_pkg::NONE) ? in_feature_valid
-                               : (sel_activation == top_pkg::RELU) ? in_feature_valid
-                               : (sel_activation == top_pkg::LEAKY_RELU) ? leaky_relu_activation_valid_comb
+  assign activated_feature_valid_comb = (sel_activation == 0) ? in_feature_valid
+                               : (sel_activation == 1) ? in_feature_valid
+                               : (sel_activation == 2) ? leaky_relu_activation_valid_comb
                                : '0;
 
   always_comb begin
     case (sel_activation)
 
-      top_pkg::NONE: begin
-        activated_feature_comb = in_feature;
+      0: begin
+        activated_feature_comb = in_feature;  // none
       end
 
-      top_pkg::RELU: begin
-        activated_feature_comb = in_feature[FLOAT_WIDTH-1] ? '0 : in_feature;
+      1: begin
+        activated_feature_comb = in_feature[FLOAT_WIDTH-1] ? '0 : in_feature;  // relu
       end
 
-      top_pkg::LEAKY_RELU: begin
-        activated_feature_comb = in_feature[FLOAT_WIDTH-1] ? leaky_relu_activation_comb : in_feature;
+      2: begin
+        activated_feature_comb = in_feature[FLOAT_WIDTH-1] ? leaky_relu_activation_comb : in_feature; // leaky relu
       end
 
     endcase
@@ -51,23 +50,23 @@ module activation_core #(
   // Leaky ReLU
   // -----------------------------------------------------------------
 
-  if (PRECISION == top_pkg::FLOAT_32) begin
+  if (PRECISION == 0) begin
 
 `ifdef SIMULATION
     assign leaky_relu_activation_valid_comb = in_feature_valid;
     assign leaky_relu_activation_comb = in_feature;
 
 `else
-    fp_mult activation_mult (
-        .s_axis_a_tvalid(in_feature_valid),
-        .s_axis_a_tdata (in_feature),
-
-        .s_axis_b_tvalid(1'b1),
-        .s_axis_b_tdata (layer_config_leaky_relu_alpha_value),
-
-        .m_axis_result_tvalid(leaky_relu_activation_valid_comb),
-        .m_axis_result_tdata (leaky_relu_activation_comb)
+    float_multiplier activation_mult (
+        .a_operand(in_feature),
+        .b_operand(layer_config_leaky_relu_alpha_value),
+        .result(leaky_relu_activation_comb),
+        .Exception(),
+        .Overflow(),
+        .Underflow()
     );
+
+    assign leaky_relu_activation_valid_comb = '1;
 `endif
 
   end else begin

@@ -1,4 +1,4 @@
-# Module: rms_norm_2d
+# RMS Norm 2D
 
 The `rms_norm_2d` module implements [RMSNorm](https://arxiv.org/abs/1910.07467).
 

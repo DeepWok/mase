@@ -6,6 +6,8 @@ import time
 from multiprocessing import Process, Queue
 
 from chop.passes.graph.utils import vf, v2p, init_project
+import mase_components.activations.test.generate_memory as gen_lut
+import torch.nn as nn
 
 logger = logging.getLogger(__name__)
 
@@ -117,10 +119,10 @@ class VerilogInterfaceEmitter:
                     parallelism_params = [
                         param
                         for param in parameter_map
-                        if f"{node_name}_{arg_name}_PARALLELISM_DIM" in param
+                        if param.startswith(f"{arg_name}_PARALLELISM_DIM")
                     ]
                     interface += f"""
-    input  [{node_name}_{arg_name}_PRECISION_0-1:0] data_in_{i} [{'*'.join(parallelism_params)}-1:0],
+    input  [{arg_name}_PRECISION_0-1:0] data_in_{i} [{'*'.join(parallelism_params)}-1:0],
     input  data_in_{i}_valid,
     output data_in_{i}_ready,"""
                     i += 1
@@ -134,10 +136,10 @@ class VerilogInterfaceEmitter:
                     parallelism_params = [
                         param
                         for param in parameter_map
-                        if f"{node_name}_{result_name}_PARALLELISM_DIM" in param
+                        if param.startswith(f"{result_name}_PARALLELISM_DIM")
                     ]
                     interface += f"""
-    output  [{node_name}_{result_name}_PRECISION_0-1:0] data_out_{i} [{'*'.join(parallelism_params)}-1:0],
+    output  [{result_name}_PRECISION_0-1:0] data_out_{i} [{'*'.join(parallelism_params)}-1:0],
     output  data_out_{i}_valid,
     input data_out_{i}_ready,"""
                     i += 1
@@ -300,7 +302,7 @@ class VerilogInternalComponentEmitter:
         parameters = ""
         for param in node.meta["mase"].parameters["hardware"]["verilog_param"].keys():
             if f"{_cap(key)}_" in param:
-                parameters += f".{param}({node_name}_{param}),\n"
+                parameters += f"    .{param}({node_name}_{param}),\n"
         parameters = _remove_last_comma(parameters)
 
         return f"""
@@ -332,7 +334,7 @@ class VerilogInternalComponentEmitter:
 
         # Emit component instantiation input signals
         for key, value in node.meta["mase"].parameters["common"]["args"].items():
-            if "data" not in key:
+            if "inplace" in key:
                 continue
             signals += f"""
     .{key}({node_name}_{key}),
@@ -342,8 +344,6 @@ class VerilogInternalComponentEmitter:
 
         # Emit component instantiation output signals
         for key, value in node.meta["mase"].parameters["common"]["results"].items():
-            if "data" not in key:
-                continue
             signals += f"""
     .{key}({node_name}_{key}),
     .{key}_valid({node_name}_{key}_valid),
@@ -535,9 +535,9 @@ class VerilogWireEmitter:
             for arg in node.meta["mase"].parameters["common"]["args"].keys():
                 if "data_in" in arg:
                     wires += f"""
-    assign data_in_{i}_ready = {node_name}_{arg}_ready;
-    assign {node_name}_{arg}_valid    = data_in_{i}_valid;
-    assign {node_name}_{arg}    = data_in_{i};
+assign data_in_{i}_ready = {node_name}_{arg}_ready;
+assign {node_name}_{arg}_valid    = data_in_{i}_valid;
+assign {node_name}_{arg}    = data_in_{i};
 """
                     i += 1
         i = 0
@@ -546,9 +546,9 @@ class VerilogWireEmitter:
             for result in node.meta["mase"].parameters["common"]["results"].keys():
                 if "data_out" in result:
                     wires += f"""
-    assign data_out_{i}_valid = {node_name}_{result}_valid;
-    assign {node_name}_{result}_ready    = data_out_{i}_ready;
-    assign data_out_{i} = {node_name}_{result};
+assign data_out_{i}_valid = {node_name}_{result}_valid;
+assign {node_name}_{result}_ready    = data_out_{i}_ready;
+assign data_out_{i} = {node_name}_{result};
 """
                     i += 1
 
@@ -574,9 +574,9 @@ class VerilogWireEmitter:
             for i, node_in in enumerate(node.all_input_nodes):
                 from_name = vf(node_in.name)
                 wires += f"""
-    assign {from_name}_data_out_0_ready  = {to_name}_data_in_{i}_ready;
-    assign {to_name}_data_in_{i}_valid    = {from_name}_data_out_0_valid;
-    assign {to_name}_data_in_{i} = {from_name}_data_out_0;
+assign {from_name}_data_out_0_ready  = {to_name}_data_in_{i}_ready;
+assign {to_name}_data_in_{i}_valid    = {from_name}_data_out_0_valid;
+assign {to_name}_data_in_{i} = {from_name}_data_out_0;
 """
         return wires
 
@@ -688,4 +688,48 @@ def emit_verilog_top_transform_pass(graph, pass_args={}):
     with open(top_file, "w") as top_design:
         top_design.write(top)
 
+    # Code to generate the LUTs for activation functions. Currently here because RTL dir is required.
+    # Move to verilog emitter if you can pass path somehow.
+    # Alternatively, add a class to the emitter that can be called to generate LUTs, for LUT based implementations of activation functions,
+    # or other functions that require LUTs such as PolyLUT or LUTnet neurons.
+    for node in graph.fx_graph.nodes:
+        # print(vars(node))
+        # print(type(node))
+        if node.op == "call_module":
+            module = dict(graph.model.named_modules())[node.target]
+            if isinstance(module, nn.SiLU):
+                func = "silu"
+            elif isinstance(module, nn.ELU):
+                func = "elu"
+            elif isinstance(module, nn.Sigmoid):
+                func = "sigmoid"
+            elif isinstance(module, nn.LogSigmoid):
+                func = "logsigmoid"
+            elif isinstance(module, nn.Softmax):
+                func = "exp"
+            else:
+                func = "Unknown"
+
+            if func != "Unknown":
+                d_in_width = node.meta["mase"].parameters["hardware"]["verilog_param"][
+                    "DATA_IN_0_PRECISION_0"
+                ]
+                d_in_f_width = node.meta["mase"].parameters["hardware"][
+                    "verilog_param"
+                ]["DATA_IN_0_PRECISION_1"]
+                d_out_width = node.meta["mase"].parameters["hardware"]["verilog_param"][
+                    "DATA_OUT_0_PRECISION_0"
+                ]
+                d_out_f_width = node.meta["mase"].parameters["hardware"][
+                    "verilog_param"
+                ]["DATA_OUT_0_PRECISION_1"]
+                gen_lut.generate_sv_lut(
+                    func,
+                    d_in_width,
+                    d_in_f_width,
+                    d_out_width,
+                    d_out_f_width,
+                    dir=rtl_dir,
+                    path_with_dtype=False,
+                )
     return graph, {}

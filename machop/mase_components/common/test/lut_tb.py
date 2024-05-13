@@ -71,7 +71,7 @@ def read_memb(file: Path, width):
     return [int(line.strip(), 2) for line in lines]
 
 
-if __name__ == "__main__":
+def test_lut():
     DATA_WIDTH = 8
     SIZE = 13
     lut = list(range(SIZE))
@@ -84,3 +84,7 @@ if __name__ == "__main__":
         "MEM_FILE": verilator_str_param(str(memfile)),
     }
     mase_runner(module_param_list=[config], trace=True)
+
+
+if __name__ == "__main__":
+    test_lut()

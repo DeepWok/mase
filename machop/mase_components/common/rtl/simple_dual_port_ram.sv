@@ -3,7 +3,17 @@
 module simple_dual_port_ram #(
     parameter DATA_WIDTH = 32,
     parameter ADDR_WIDTH = 9,
-    parameter SIZE       = 512
+    parameter SIZE       = 512,
+
+    // Ram style can be:
+    // "block": BRAM
+    // "distributed": LUTRAM
+    // "registers"
+    // "ultra": URAM on Ultrascale+
+    // "mixed": combination of above to fill in space
+    // "auto": let synthesis choose
+    /* verilator lint_off UNUSEDPARAM */
+    parameter RAM_STYLE = "auto"
 ) (
     input logic clk,
 
@@ -17,7 +27,7 @@ module simple_dual_port_ram #(
     output logic [DATA_WIDTH-1:0] rd_dout
 );
 
-
+  (* ram_style = RAM_STYLE *)
   logic [DATA_WIDTH-1:0] mem[SIZE-1:0];
 
   always_ff @(posedge clk) begin

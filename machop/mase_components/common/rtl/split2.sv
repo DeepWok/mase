@@ -3,7 +3,9 @@ module split2 #(
 ) (
     input logic data_in_valid,
     output logic data_in_ready,
+    /* verilator lint_off UNOPTFLAT */
     output logic [1:0] data_out_valid,
+    /* verilator lint_off UNOPTFLAT */
     input logic [1:0] data_out_ready
 );
   // to make sure it can handshake correctly

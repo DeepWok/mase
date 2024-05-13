@@ -25,22 +25,34 @@ logger.setLevel("INFO")
 class SoftermaxLocalWindowTB(Testbench):
     def __init__(self, dut) -> None:
         super().__init__(dut, dut.clk, dut.rst)
-        self.assign_self_params([
-            "PARALLELISM", "IN_WIDTH", "IN_FRAC_WIDTH", "OUT_WIDTH", "OUT_FRAC_WIDTH",
-            "MAX_WIDTH", "SUBTRACT_WIDTH", "SUBTRACT_FRAC_WIDTH"
-        ])
+        self.assign_self_params(
+            [
+                "PARALLELISM",
+                "IN_WIDTH",
+                "IN_FRAC_WIDTH",
+                "OUT_WIDTH",
+                "OUT_FRAC_WIDTH",
+                "MAX_WIDTH",
+                "SUBTRACT_WIDTH",
+                "SUBTRACT_FRAC_WIDTH",
+            ]
+        )
 
         # Driver/Monitor
-        self.in_driver = StreamDriver(
-            dut.clk, dut.in_data, dut.in_valid, dut.in_ready
-        )
+        self.in_driver = StreamDriver(dut.clk, dut.in_data, dut.in_valid, dut.in_ready)
         self.output_monitor = StreamMonitor(
-            dut.clk, (dut.out_values, dut.out_max), dut.out_valid, dut.out_ready, check=True
+            dut.clk,
+            (dut.out_values, dut.out_max),
+            dut.out_valid,
+            dut.out_ready,
+            check=True,
         )
 
     def generate_inputs(self, batches=10):
-        return [[randint(0, 2**self.IN_WIDTH-1) for _ in range(self.PARALLELISM)]
-                for _ in range(batches)]
+        return [
+            [randint(0, 2**self.IN_WIDTH - 1) for _ in range(self.PARALLELISM)]
+            for _ in range(batches)
+        ]
 
     # def _lpw_pow2_model(self, inputs):
     #     """
@@ -63,10 +75,9 @@ class SoftermaxLocalWindowTB(Testbench):
 
     def model(self, inputs):
         sign_ext = sign_extend_t(
-            torch.tensor(inputs, dtype=torch.float),
-            bits=self.IN_WIDTH
+            torch.tensor(inputs, dtype=torch.float), bits=self.IN_WIDTH
         )
-        float_inputs = sign_ext / (2 ** self.IN_FRAC_WIDTH)
+        float_inputs = sign_ext / (2**self.IN_FRAC_WIDTH)
         # float_inputs = torch.tensor([[-31.5, -32]])
         rounded_inputs_float, rounded_inputs_uint = _fixed_signed_cast_model(
             float_inputs, self.MAX_WIDTH, 0, False, "floor"
@@ -75,8 +86,10 @@ class SoftermaxLocalWindowTB(Testbench):
         local_max_uint = signed_to_unsigned(local_max.int(), self.MAX_WIDTH)
 
         difference = float_inputs - local_max
-        pow2 = 2 ** difference
-        res = torch.clamp((pow2 * 2**self.OUT_FRAC_WIDTH).int(), 0, 2**self.OUT_WIDTH-1)
+        pow2 = 2**difference
+        res = torch.clamp(
+            (pow2 * 2**self.OUT_FRAC_WIDTH).int(), 0, 2**self.OUT_WIDTH - 1
+        )
 
         logger.debug("float_inputs: %s" % float_inputs)
         logger.debug("rounded_inputs_float: %s" % rounded_inputs_float)
@@ -145,7 +158,6 @@ async def valid_backpressure(dut):
     await tb.run_test(batches=1000, us=200)
 
 
-
 if __name__ == "__main__":
 
     DEFAULT = {
@@ -153,7 +165,7 @@ if __name__ == "__main__":
         "IN_WIDTH": 8,
         "IN_FRAC_WIDTH": 2,
         "OUT_WIDTH": 8,
-        "OUT_FRAC_WIDTH": 7
+        "OUT_FRAC_WIDTH": 7,
     }
 
     def parallelism_cfgs(cfglist: list):

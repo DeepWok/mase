@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
-# This script tests the fixed point adder tree layer
+# This script is never run since the rtl has been changed.
+
 import random, os
 
 import cocotb
@@ -11,7 +12,7 @@ from mase_cocotb.runner import mase_runner
 class VerificationCase:
     def __init__(self, samples=2):
         self.in_width = 32
-        self.num = 17  # random.randint(2, 33)
+        self.num = 16  # random.randint(2, 33)
         self.inputs, self.outputs = [], []
         for _ in range(samples):
             i, o = self.single_run()
@@ -64,7 +65,7 @@ def check_outputs(hw_out, sw_out):
 
 
 @cocotb.test()
-async def test_fixed_adder_tree_layer(dut):
+async def cocotb_test_fixed_adder_tree_layer(dut):
     """Test integer based adder tree layer"""
     test_case = VerificationCase(samples=100)
 
@@ -80,6 +81,10 @@ async def test_fixed_adder_tree_layer(dut):
         ), "Output are incorrect on the {}th cycle: {}".format(i, x)
 
 
-if __name__ == "__main__":
+def test_fixed_adder_tree_layer():
     tb = VerificationCase()
     mase_runner(module_param_list=[tb.get_dut_parameters()])
+
+
+if __name__ == "__main__":
+    test_fixed_adder_tree_layer()

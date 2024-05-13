@@ -111,6 +111,9 @@ def fixed_preprocess_tensor(tensor: Tensor, q_config: dict, parallelism: list) -
     if len(parallelism) == 1:
         parallelism = [1, parallelism[0]]
 
+    # * Flatten batch dimension
+    tensor = tensor.view((-1, tensor.shape[-1]))
+
     # Quantize
     quantizer = partial(integer_quantizer, **q_config)
     q_tensor = quantizer(tensor)

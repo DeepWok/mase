@@ -19,7 +19,6 @@ Description : This module does a matrix multiplcation between matrices X & Y.
 
 `timescale 1ns / 1ps
 
-// TODO: REMOVE THIS AFTER DONE
 /* verilator lint_off UNUSEDPARAM */
 module matmul #(
     // Total dimensions
@@ -98,19 +97,78 @@ module matmul #(
     else $fatal("B_DIM1 compute is not divisible!");
   end
 
+  // -----
+  // Params
+  // -----
+
+  localparam A_FLAT_WIDTH = A_WIDTH * A_COMPUTE_DIM0 * A_COMPUTE_DIM1;
+  localparam B_FLAT_WIDTH = B_WIDTH * B_COMPUTE_DIM0 * B_COMPUTE_DIM1;
+
+  localparam SM_OUT_WIDTH = A_WIDTH + B_WIDTH + $clog2(A_COMPUTE_DIM0);
+  localparam SM_OUT_FRAC_WIDTH = A_FRAC_WIDTH + B_FRAC_WIDTH;
+
+  localparam MAT_ACC_PTR_WIDTH = C_DEPTH_DIM0 == 1 ? 1 : $clog2(C_DEPTH_DIM0);
+  localparam MAT_ACC_OUT_WIDTH = $clog2(B_DEPTH_DIM1) + SM_OUT_WIDTH;
+
+  // -----
+  // Wires
+  // -----
+
   // Buffer unflatten out
   logic a_buffer_out_valid, a_buffer_out_ready;
   logic [A_WIDTH-1:0] a_buffer_out_data[A_COMPUTE_DIM0*A_COMPUTE_DIM1-1:0];
 
+  // Repeat each submatrix in Matrix A stream B_DEPTH_DIM0 times
+  // Only if (B_DEPTH_DIM0 > 1)
+  logic [A_FLAT_WIDTH-1:0] a_data_flat;
+  logic [A_FLAT_WIDTH-1:0] a_buffer_out_data_flat;
+
+  // We need to buffer the B matrix
+  // TODO: unless A_DEPTH_DIM1 == 1
+
+  logic [B_FLAT_WIDTH-1:0] b_data_flat;
+
+  // Buffer outputs
+  logic [B_FLAT_WIDTH-1:0] b_buffer_out_data_flat;
+  logic b_buffer_out_valid, b_buffer_out_ready;
+
+  // Matrix unflatten output
+  logic [B_WIDTH-1:0] b_buffer_out_data[B_COMPUTE_DIM0*B_COMPUTE_DIM1-1:0];
+
+  logic [SM_OUT_WIDTH-1:0] sm_out_data[C_COMPUTE_DIM0*C_COMPUTE_DIM1];
+  logic sm_out_valid, sm_out_ready;
+
+  logic [C_DEPTH_DIM0-1:0] acc_in_valid;
+  logic [C_DEPTH_DIM0-1:0] acc_in_ready;
+  logic [C_DEPTH_DIM0-1:0] acc_out_valid;
+  logic [C_DEPTH_DIM0-1:0] acc_out_ready;
+  logic [MAT_ACC_OUT_WIDTH-1:0] acc_out_data[C_DEPTH_DIM0-1:0][C_COMPUTE_DIM0*C_COMPUTE_DIM1-1:0];
+
+  logic [MAT_ACC_OUT_WIDTH-1:0] cast_in_data[C_COMPUTE_DIM0*C_COMPUTE_DIM1-1:0];
+
+
+  // -----
+  // State
+  // -----
+
+  struct {
+    // Points to which matrix accumulator should store the simple_matmul output
+    logic [MAT_ACC_PTR_WIDTH-1:0] matrix_acc_ptr;
+    // Points at which output accumulator should be connected to the out stream
+    logic [MAT_ACC_PTR_WIDTH-1:0] output_acc_ptr;
+  }
+      self, next_self;
+
+
+  // -----
+  // Logic
+  // -----
+
   generate
+
+    // B matrix Buffers
+
     if (B_DEPTH_DIM0 > 1) begin
-
-      // Repeat each submatrix in Matrix A stream B_DEPTH_DIM0 times
-      localparam A_FLAT_WIDTH = A_WIDTH * A_COMPUTE_DIM0 * A_COMPUTE_DIM1;
-      logic [A_FLAT_WIDTH-1:0] a_data_flat;
-
-      // Buffer outputs
-      logic [A_FLAT_WIDTH-1:0] a_buffer_out_data_flat;
 
       matrix_flatten #(
           .DATA_WIDTH(A_WIDTH),
@@ -150,25 +208,9 @@ module matmul #(
       assign a_buffer_out_valid = a_valid;
       assign a_ready = a_buffer_out_ready;
     end
-  endgenerate
 
+    // A matrix Buffers
 
-
-
-  // We need to buffer the B matrix
-  // TODO: unless A_DEPTH_DIM1 == 1
-
-  localparam B_FLAT_WIDTH = B_WIDTH * B_COMPUTE_DIM0 * B_COMPUTE_DIM1;
-  logic [B_FLAT_WIDTH-1:0] b_data_flat;
-
-  // Buffer outputs
-  logic [B_FLAT_WIDTH-1:0] b_buffer_out_data_flat;
-  logic b_buffer_out_valid, b_buffer_out_ready;
-
-  // Matrix unflatten output
-  logic [B_WIDTH-1:0] b_buffer_out_data[B_COMPUTE_DIM0*B_COMPUTE_DIM1-1:0];
-
-  generate
     if (A_DEPTH_DIM1 > 1) begin
       matrix_flatten #(
           .DATA_WIDTH(B_WIDTH),
@@ -208,6 +250,7 @@ module matmul #(
       assign b_buffer_out_valid = b_valid;
       assign b_ready = b_buffer_out_ready;
     end
+
   endgenerate
 
   // Feed input A & buffered input B into simple matrix mult
@@ -215,11 +258,6 @@ module matmul #(
   // Simple matrix multiply block's accumulator width
   // We do not round at simple_matmul level as we want to keep high precision
   // and round ourselves after the output accumulation in this matmul module.
-  localparam SM_OUT_WIDTH = A_WIDTH + B_WIDTH + $clog2(A_COMPUTE_DIM0);
-  localparam SM_OUT_FRAC_WIDTH = A_FRAC_WIDTH + B_FRAC_WIDTH;
-
-  logic [SM_OUT_WIDTH-1:0] sm_out_data[C_COMPUTE_DIM0*C_COMPUTE_DIM1];
-  logic sm_out_valid, sm_out_ready;
 
   simple_matmul #(
       .N              (A_COMPUTE_DIM1),
@@ -247,14 +285,6 @@ module matmul #(
   );
 
   // Direct the result of the simple matmul to the correct matrix_accumulator
-  localparam MAT_ACC_PTR_WIDTH = C_DEPTH_DIM0 == 1 ? 1 : $clog2(C_DEPTH_DIM0);
-  localparam MAT_ACC_OUT_WIDTH = $clog2(B_DEPTH_DIM1) + SM_OUT_WIDTH;
-
-  logic [C_DEPTH_DIM0-1:0] acc_in_valid;
-  logic [C_DEPTH_DIM0-1:0] acc_in_ready;
-  logic [C_DEPTH_DIM0-1:0] acc_out_valid;
-  logic [C_DEPTH_DIM0-1:0] acc_out_ready;
-  logic [MAT_ACC_OUT_WIDTH-1:0] acc_out_data[C_DEPTH_DIM0-1:0][C_COMPUTE_DIM0*C_COMPUTE_DIM1-1:0];
 
   for (genvar i = 0; i < C_DEPTH_DIM0; i++) begin : accumulators
     matrix_accumulator #(
@@ -273,8 +303,6 @@ module matmul #(
         .out_ready(acc_out_ready[i])
     );
   end
-
-  logic [MAT_ACC_OUT_WIDTH-1:0] cast_in_data[C_COMPUTE_DIM0*C_COMPUTE_DIM1-1:0];
 
   for (genvar i = 0; i < C_DEPTH_DIM0; i++) begin
     // Change which accumulator the output of simple_matmul goes to
@@ -301,15 +329,6 @@ module matmul #(
   end
 
   // Logic to handle accumulator selection & output selection.
-
-  struct {
-    // Points to which matrix accumulator should store the simple_matmul output
-    logic [MAT_ACC_PTR_WIDTH-1:0] matrix_acc_ptr;
-    // Points at which output accumulator should be connected to the out stream
-    logic [MAT_ACC_PTR_WIDTH-1:0] output_acc_ptr;
-  }
-      self, next_self;
-
   always_comb begin
     next_self = self;
 
@@ -319,7 +338,7 @@ module matmul #(
     out_valid = acc_out_valid[self.output_acc_ptr];
 
     // Change accumulator pointer
-    if (sm_out_valid) begin
+    if (sm_out_valid && sm_out_ready) begin
       if (self.matrix_acc_ptr == C_DEPTH_DIM0 - 1) begin
         next_self.matrix_acc_ptr = 0;
       end else begin

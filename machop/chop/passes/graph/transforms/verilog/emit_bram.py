@@ -33,38 +33,35 @@ def emit_parameters_in_mem_internal(node, param_name, file_name, data_name):
     Emit single-port ROM hardware components for each parameter
     (Mostly because Vivado does not support string type parameters...)
     """
+    # ! TO DO: currently emitting too many parameters
 
-    # TODO: Force bias to have a depth of 1 for now
-    if param_name != "bias":
-        # out_depth = node.meta["mase"].parameters["hardware"]["verilog_param"][
-        #     "DATA_IN_0_DEPTH"
-        # ]
-        out_depth = 1
-    else:
-        out_depth = 1
-    addr_width = clog2(out_depth) + 1
     total_size = math.prod(
         node.meta["mase"].parameters["common"]["args"][param_name]["shape"]
     )
-    # The depth of parameters must match with the input depth
-    assert (
-        total_size % out_depth == 0
-    ), f"Cannot partition imperfect size for now {node.name}.{param_name} = {total_size} / {out_depth}."
-    out_size = iceil(total_size / out_depth)
-    # Assume the first index is the total width
-    out_width = node.meta["mase"].parameters["common"]["args"][param_name]["precision"][
-        0
-    ]
+    # TO DO: change setting parallelism for weight in metadata
+    # node.meta["mase"].parameters["hardware"]["verilog_param"][f"{_cap(param_name)}_PARALLELISM_DIM_1"]
+    out_size = int(
+        node.meta["mase"].parameters["hardware"]["verilog_param"][
+            f"{_cap(param_name)}_PARALLELISM_DIM_0"
+        ]
+        * node.meta["mase"].parameters["hardware"]["verilog_param"][
+            f"{_cap(param_name)}_PARALLELISM_DIM_1"
+        ]
+    )
+    out_depth = int(total_size / out_size)
+    out_width = int(
+        node.meta["mase"].parameters["common"]["args"][param_name]["precision"][0]
+    )
 
-    node_name = vf(node.name)
-    node_param_name = f"{node_name}_{param_name}"
-    time_to_emit = time.strftime("%d/%m/%Y %H:%M:%S")
+    addr_width = clog2(out_depth) + 1
+
+    node_param_name = f"{vf(node.name)}_{param_name}"
 
     rom_verilog = f"""
 // =====================================
 //     Mase Hardware
 //     Parameter: {node_param_name}
-//     {time_to_emit}
+//     {time.strftime('%d/%m/%Y %H:%M:%S')}
 // =====================================
 
 `timescale 1 ns / 1 ps
@@ -83,9 +80,9 @@ module {node_param_name}_rom #(
   logic [DWIDTH-1:0] q0_t0;
   logic [DWIDTH-1:0] q0_t1;
 
-  // initial begin
-  //   $readmemh("{data_name}", ram);
-  // end
+  initial begin
+    $readmemh("{data_name}", ram);
+  end
 
   assign q0 = q0_t1;
 
@@ -165,7 +162,7 @@ module {node_param_name}_source #(
 
   // Cocotb/verilator does not support array flattening, so
   // we need to manually add some reshaping process.
-  for (genvar j = 0; j < {_cap(param_name)}_TENSOR_SIZE_DIM_0; j++)
+  for (genvar j = 0; j < {_cap(param_name)}_PARALLELISM_DIM_0 * {_cap(param_name)}_PARALLELISM_DIM_1; j++)
     assign data_out[j] = data_vector[{_cap(param_name)}_PRECISION_0*j+{_cap(param_name)}_PRECISION_0-1:{_cap(param_name)}_PRECISION_0*j];
 
   assign data_out_valid = 1;
@@ -177,7 +174,7 @@ endmodule
         outf.write(rom_verilog)
     logger.debug(f"ROM module {param_name} successfully written into {file_name}")
     assert os.path.isfile(file_name), "ROM Verilog generation failed."
-    os.system(f"verible-verilog-format --inplace {file_name}")
+    # os.system(f"verible-verilog-format --inplace {file_name}")
 
 
 def emit_parameters_in_dat_internal(node, param_name, file_name):
@@ -188,25 +185,17 @@ def emit_parameters_in_dat_internal(node, param_name, file_name):
         node.meta["mase"].parameters["common"]["args"][param_name]["shape"]
     )
 
-    if "IN_DEPTH" in node.meta["mase"].parameters["hardware"]["verilog_param"].keys():
-        if param_name == "bias":
-            out_depth = 1
-        else:
-            out_depth = node.meta["mase"].parameters["hardware"]["verilog_param"][
-                "IN_DEPTH"
-            ]
-    else:
-        out_depth = total_size
-
-    out_size = iceil(total_size / out_depth)
-    # The depth of parameters must match with the input depth of data
-    assert (
-        total_size % out_depth == 0
-    ), f"Cannot partition imperfect size for now {node.name}.{param_name} = {total_size} / {out_depth}."
-    # Assume the first index is the total width
-    out_width = node.meta["mase"].parameters["common"]["args"][param_name]["precision"][
-        0
-    ]
+    # TO DO: change setting parallelism for weight in metadata
+    # node.meta["mase"].parameters["hardware"]["verilog_param"][f"{_cap(param_name)}_PARALLELISM_DIM_1"]
+    out_size = int(
+        node.meta["mase"].parameters["hardware"]["verilog_param"][
+            f"{_cap(param_name)}_PARALLELISM_DIM_0"
+        ]
+        * node.meta["mase"].parameters["hardware"]["verilog_param"][
+            f"{_cap(param_name)}_PARALLELISM_DIM_1"
+        ]
+    )
+    out_depth = int(total_size / out_size)
 
     data_buff = ""
     param_data = node.meta["mase"].module.get_parameter(param_name).data
@@ -437,7 +426,7 @@ endmodule
         outf.write(rom_verilog)
     logger.debug(f"ROM module {param_name} successfully written into {file_name}")
     assert os.path.isfile(file_name), "ROM Verilog generation failed."
-    os.system(f"verible-verilog-format --inplace {file_name}")
+    # os.system(f"verible-verilog-format --inplace {file_name}")
 
 
 def emit_bram_hls(node, rtl_dir):

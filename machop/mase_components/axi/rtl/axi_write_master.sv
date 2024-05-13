@@ -1,4 +1,4 @@
-
+/* verilator lint_off UNUSEDSIGNAL */
 module axi_write_master (
     input logic core_clk,
     input logic resetn,

@@ -13,11 +13,9 @@ from chop.passes.graph.utils import get_mase_op
 from torch import nn
 
 from .hardware_metadata_layers import INTERNAL_COMP
+from ...utils import deepgetattr
 
 logger = logging.getLogger(__name__)
-
-# Here we assume each data has up to three dimensions
-MAX_DIM = 3
 
 
 def _cap(name):
@@ -41,6 +39,18 @@ def add_component_source(node):
         node.meta["mase"]["hardware"]["dependence_files"] = INTERNAL_COMP[mase_op][0][
             "dependence_files"
         ]
+    elif node.meta["mase"]["common"]["mase_op"] == "user_defined_module":
+        node_target = deepgetattr(node.meta["mase"].model, node.target)
+        for target, comp in node.meta["mase"].model.custom_ops["modules"].items():
+            if isinstance(node_target, target):
+                node.meta["mase"]["hardware"]["toolchain"] = comp.get(
+                    "toolchain", "HLS"
+                )
+                node.meta["mase"]["hardware"]["module"] = comp.get("module", "")
+                node.meta["mase"]["hardware"]["dependence_files"] = comp.get(
+                    "dependence_files", []
+                )
+                break
     else:
         node.meta["mase"]["hardware"]["toolchain"] = "INTERNAL_HLS"
         node.meta["mase"]["hardware"]["module"] = None
@@ -50,17 +60,17 @@ def add_component_source(node):
 
     # Current only support on-chip parameters
     args = node.meta["mase"]["common"]["args"]
-    for arg, _ in args.items():
+    for arg, arg_info in args.items():
+        arg_verilog_name = arg.replace(".", "_")
         if "data_in" in arg:
             continue
-        arg_info = args[arg]
         if isinstance(arg_info, dict):
-            node.meta["mase"]["hardware"]["interface"][arg] = {
+            node.meta["mase"]["hardware"]["interface"][arg_verilog_name] = {
                 "storage": "BRAM",
                 "transpose": False,
             }
         else:
-            node.meta["mase"]["hardware"]["interface"][arg] = {}
+            node.meta["mase"]["hardware"]["interface"][arg_verilog_name] = {}
 
 
 def add_verilog_param(node):
@@ -73,6 +83,7 @@ def add_verilog_param(node):
     results = node.meta["mase"]["common"]["results"]
     vp = node.meta["mase"]["hardware"]["verilog_param"]
     for arg, arg_info in args.items():
+        arg = arg.replace(".", "_")
         if isinstance(arg_info, dict):
             for i, precision in enumerate(arg_info["precision"]):
                 vp[_cap(arg + f"_precision_{i}")] = arg_info["precision"][i]
@@ -82,18 +93,20 @@ def add_verilog_param(node):
                     if dim < len(arg_info["shape"])
                     else 1
                 )
-                # If node data parallelism is set, take from hardware metadata
-                if node.meta["mase"]["hardware"]["parallelism"] is not None:
-                    vp[_cap(arg + f"_parallelism_dim_{dim}")] = node.meta["mase"][
-                        "hardware"
-                    ]["parallelism"][len(arg_info["shape"]) - 1 - dim]
+                # Check if max parallelism is defined
+                if node.meta["mase"]["hardware"]["max_parallelism"] is not None:
+                    # Take the minimum between...
+                    vp[_cap(arg + f"_parallelism_dim_{dim}")] = min(
+                        # The defined max parallelism for this dimension
+                        node.meta["mase"]["hardware"]["max_parallelism"][::-1][dim],
+                        # The size of this dimension
+                        arg_info["shape"][::-1][dim],
+                    )
                 # Otherwise, assign to tensor size by default
                 else:
-                    vp[_cap(arg + f"_parallelism_dim_{dim}")] = (
-                        arg_info["shape"][len(arg_info["shape"]) - 1 - dim]
-                        if dim < len(arg_info["shape"])
-                        else 1
-                    )
+                    vp[_cap(arg + f"_parallelism_dim_{dim}")] = arg_info["shape"][::-1][
+                        dim
+                    ]
         elif type(arg_info) == bool:
             vp[_cap(arg)] = 1 if arg_info else 0
         else:
@@ -109,16 +122,20 @@ def add_verilog_param(node):
                     if dim < len(result_info["shape"])
                     else 1
                 )
-                if node.meta["mase"]["hardware"]["parallelism"] is not None:
-                    vp[_cap(result + f"_parallelism_dim_{dim}")] = node.meta["mase"][
-                        "hardware"
-                    ]["parallelism"][len(result_info["shape"]) - 1 - dim]
-                else:
-                    vp[_cap(result + f"_parallelism_dim_{dim}")] = (
-                        result_info["shape"][len(result_info["shape"]) - 1 - dim]
-                        if dim < len(result_info["shape"])
-                        else 1
+                # Check if max parallelism is defined
+                if node.meta["mase"]["hardware"]["max_parallelism"] is not None:
+                    # Take the minimum between...
+                    vp[_cap(result + f"_parallelism_dim_{dim}")] = min(
+                        # The defined max parallelism for this dimension
+                        node.meta["mase"]["hardware"]["max_parallelism"][::-1][dim],
+                        # The size of this dimension
+                        result_info["shape"][::-1][dim],
                     )
+                # Otherwise, assign to tensor size by default
+                else:
+                    vp[_cap(result + f"_parallelism_dim_{dim}")] = result_info["shape"][
+                        ::-1
+                    ][dim]
         else:
             vp[_cap(result)] = result_info
 
@@ -361,8 +378,8 @@ def add_hardware_metadata_analysis_pass(graph, pass_args=None):
 
     # Find implicit mase nodes
     for node in graph.nodes:
+        # ! TO DO: set to implicit if defined in pass args
         node.meta["mase"]["hardware"]["is_implicit"] = False
-        node.meta["mase"]["hardware"]["device_id"] = 0
 
     graph.nodes_in = get_input_nodes(graph.fx_graph)
     graph.nodes_out = get_output_nodes(graph.fx_graph)
@@ -371,12 +388,12 @@ def add_hardware_metadata_analysis_pass(graph, pass_args=None):
     for node in graph.nodes:
         add_component_source(node)
 
-    # Temporary: fix parallelism to small value to enable verilator simulation
+    # * Fix max parallelism to small value to enable verilator simulation
+    # ! TO DO: enable this to be overriden by user
     for node in graph.nodes:
-        if "parallelism" in node.meta["mase"]["hardware"]:
-            continue
-        # Batch parallelism set to 1, data parallelism to 4
-        node.meta["mase"]["hardware"]["parallelism"] = [1, 4]
+        node.meta["mase"]["hardware"]["max_parallelism"] = [
+            pass_args.get(f"max_parallelism", 4)
+        ] * 4
 
     # Add hardware parameters
     for node in graph.nodes:

@@ -7,7 +7,17 @@ from cocotb.triggers import *
 
 from mase_cocotb.driver import Driver
 from mase_cocotb.monitor import Monitor
-from mase_cocotb.utils import sign_extend
+
+# from mase_cocotb.utils import sign_extend
+
+# ! TO DO: broken import
+# from ..utils import sign_extend
+# from mase_cocotb.utils import sign_extend
+
+
+def _sign_extend(value: int, bits: int):
+    sign_bit = 1 << (bits - 1)
+    return (value & (sign_bit - 1)) - (value & sign_bit)
 
 
 class StreamDriver(Driver):
@@ -53,7 +63,7 @@ class StreamDriver(Driver):
 
 
 class StreamMonitor(Monitor):
-    def __init__(self, clk, data, valid, ready, check=True, name=None):
+    def __init__(self, clk, data, valid, ready, check=True, name=None, unsigned=False):
         super().__init__(clk, check=check, name=name)
         self.clk = clk
         self.data = data
@@ -61,6 +71,7 @@ class StreamMonitor(Monitor):
         self.ready = ready
         self.check = check
         self.name = name
+        self.unsigned = unsigned
 
     def _trigger(self):
         return self.valid.value == 1 and self.ready.value == 1
@@ -68,11 +79,18 @@ class StreamMonitor(Monitor):
     def _recv(self):
 
         def _get_sig_value(sig):
-            # Single data signal
+
             if type(sig.value) == list:
-                return [int(x) for x in sig.value]
+                if self.unsigned:
+                    return [x.integer for x in sig.value]
+                else:
+                    return [x.signed_integer for x in sig.value]
+
             elif type(sig.value) == BinaryValue:
-                return int(sig.value)
+                if self.unsigned:
+                    return int(sig.value.integer)
+                else:
+                    return int(sig.value.signed_integer)
 
         if type(self.data) == tuple:
             # Multiple synchronised data signals
@@ -149,8 +167,8 @@ class ErrorThresholdStreamMonitor(StreamMonitor):
             g = np.array(got)
             e = np.array(exp)
             if self.signed:
-                g = sign_extend(g, self.width)
-                e = sign_extend(e, self.width)
+                g = _sign_extend(g, self.width)
+                e = _sign_extend(e, self.width)
             err = np.abs(g - e)
             if self.log_error:
                 self.error_log.append(err)
@@ -164,8 +182,8 @@ class ErrorThresholdStreamMonitor(StreamMonitor):
         elif type(got) == int:
             g, e = got, exp
             if self.signed:
-                g = sign_extend(g, self.width)
-                e = sign_extend(e, self.width)
+                g = _sign_extend(g, self.width)
+                e = _sign_extend(e, self.width)
             err = abs(g - e)
             if self.log_error:
                 self.error_log.append(err)

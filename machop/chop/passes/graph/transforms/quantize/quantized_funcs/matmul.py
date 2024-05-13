@@ -9,6 +9,7 @@ from ..quantizers import (
     block_log_quantizer,
     block_minifloat_quantizer,
     integer_quantizer,
+    integer_floor_quantizer,
     log_quantizer,
     minifloat_denorm_quantizer,
     minifloat_ieee_quantizer,
@@ -20,22 +21,37 @@ from ..quantizers import (
 matmul_mapping = {"matmul": torch.matmul, "bmm": torch.bmm}
 
 
-def generic_matmul_integer(x, y, config, style="matmul"):
+def generic_matmul_integer(x, y, config, style="matmul", out_config=None, floor=False):
     bypass = config.get("bypass", False)
     matmul = matmul_mapping[style]
+
     if bypass:
         return matmul(x, y)
     else:
+        base_quantizer = integer_quantizer
+
         x_width, x_frac_width = config["data_in_width"], config["data_in_frac_width"]
-        x_quantizer = partial(integer_quantizer, width=x_width, frac_width=x_frac_width)
         y_width, y_frac_width = config["weight_width"], config["weight_frac_width"]
-        y_quantizer = partial(integer_quantizer, width=y_width, frac_width=y_frac_width)
+
+        x_quantizer = partial(base_quantizer, width=x_width, frac_width=x_frac_width)
+        y_quantizer = partial(base_quantizer, width=y_width, frac_width=y_frac_width)
+
+        if out_config is not None:
+            out_width, out_frac_width = (
+                out_config["data_out_width"],
+                out_config["data_out_frac_width"],
+            )
+            out_quantizer = partial(
+                integer_floor_quantizer, width=out_width, frac_width=out_frac_width
+            )
 
         x = x_quantizer(x)
         y = y_quantizer(y)
-        # y = x_quantizer(y)
 
-        return matmul(x, y)
+        if out_config is not None:
+            return out_quantizer(matmul(x, y))
+        else:
+            return matmul(x, y)
 
 
 def generic_matmul_binary(x, y, config, style="matmul"):
@@ -329,8 +345,8 @@ def generic_matmul_block_log(x, y, config, style="matmul"):
         return matmul(x, y)
 
 
-def matmul_integer(x, y, config):
-    return generic_matmul_integer(x, y, config, "matmul")
+def matmul_integer(x, y, config, out_config=None, floor=False):
+    return generic_matmul_integer(x, y, config, "matmul", out_config, floor)
 
 
 def matmul_binary(x, y, config):

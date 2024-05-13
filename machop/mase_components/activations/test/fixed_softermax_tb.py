@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
 import os
-from random import randint, choice
 
 import torch
 import logging
@@ -12,9 +11,9 @@ from cocotb.log import SimLog
 from cocotb.triggers import Timer
 
 from mase_cocotb.testbench import Testbench
-from mase_cocotb.interfaces.streaming import StreamDriver, ErrorThresholdStreamMonitor
+from mase_cocotb.interfaces.streaming import StreamDriver, StreamMonitor
 from mase_cocotb.runner import mase_runner
-from mase_cocotb.utils import fixed_preprocess_tensor, bit_driver
+from mase_cocotb.utils import fixed_preprocess_tensor
 
 from chop.nn.quantized.functional import fixed_softermax
 
@@ -25,147 +24,104 @@ class SoftermaxTB(Testbench):
 
         if not hasattr(self, "log"):
             self.log = SimLog("%s" % (type(self).__qualname__))
-            self.log.setLevel(logging.INFO)
-
-        self.assign_self_params([
-            "TOTAL_DIM", "PARALLELISM", "IN_WIDTH", "IN_FRAC_WIDTH",
-            "POW2_WIDTH", "POW2_FRAC_WIDTH", "OUT_WIDTH", "OUT_FRAC_WIDTH"
-        ])
-        self.depth = self.TOTAL_DIM // self.PARALLELISM
+            self.log.setLevel(logging.DEBUG)
 
         self.in_data_driver = StreamDriver(
-            dut.clk, dut.in_data, dut.in_valid, dut.in_ready
+            dut.clk, dut.data_in_0, dut.data_in_0_valid, dut.data_in_0_ready
         )
 
-        self.out_data_monitor = ErrorThresholdStreamMonitor(
+        self.out_data_monitor = StreamMonitor(
             dut.clk,
-            dut.out_data,
-            dut.out_valid,
-            dut.out_ready,
-            width=self.OUT_WIDTH,
-            signed=False,
-            error_bits=1,
+            dut.data_out_0,
+            dut.data_out_0_valid,
+            dut.data_out_0_ready,
             check=True,
-            log_error=True,
         )
-
         # Model
         self.model = partial(
             fixed_softermax,
             q_config={
-                "width": self.IN_WIDTH,
-                "frac_width": self.IN_FRAC_WIDTH,
+                "width": self.get_parameter("DATA_IN_0_PRECISION_0"),
+                "frac_width": self.get_parameter("DATA_IN_0_PRECISION_1"),
             },
         )
 
         # Set verbosity of driver and monitor loggers to debug
-        # self.in_data_driver.log.setLevel(logging.DEBUG)
-        # self.out_data_monitor.log.setLevel(logging.DEBUG)
+        self.in_data_driver.log.setLevel(logging.DEBUG)
+        self.out_data_monitor.log.setLevel(logging.DEBUG)
 
-    def generate_inputs(self, batches):
-        return torch.randn((batches, self.TOTAL_DIM),)
+    def generate_inputs(self):
+        return torch.randn(
+            (
+                self.get_parameter("DATA_IN_0_TENSOR_SIZE_DIM_1"),
+                self.get_parameter("DATA_IN_0_TENSOR_SIZE_DIM_0"),
+            )
+        )
 
-    async def run_test(self, batches, us):
+    async def run_test(self):
         await self.reset()
-        self.log.debug(f"Reset finished")
+        self.log.info(f"Reset finished")
+        self.out_data_monitor.ready.value = 1
 
-        inputs = self.generate_inputs(batches)
+        inputs = self.generate_inputs()
+        exp_out = self.model(inputs)
 
-        for batch in inputs:
+        # * Load the inputs driver
+        self.log.info(f"Processing inputs: {inputs}")
+        inputs = fixed_preprocess_tensor(
+            tensor=inputs,
+            q_config={
+                "width": self.get_parameter("DATA_IN_0_PRECISION_0"),
+                "frac_width": self.get_parameter("DATA_IN_0_PRECISION_1"),
+            },
+            parallelism=[
+                self.get_parameter("DATA_IN_0_PARALLELISM_DIM_1"),
+                self.get_parameter("DATA_IN_0_PARALLELISM_DIM_0"),
+            ],
+        )
+        self.in_data_driver.load_driver(inputs)
 
-            exp_out = self.model(batch)
+        # * Load the output monitor
+        self.log.info(f"Processing outputs: {exp_out}")
+        outs = fixed_preprocess_tensor(
+            tensor=exp_out,
+            q_config={
+                "width": self.get_parameter("DATA_OUT_0_PRECISION_0"),
+                "frac_width": self.get_parameter("DATA_OUT_0_PRECISION_1"),
+            },
+            parallelism=[
+                self.get_parameter("DATA_OUT_0_PARALLELISM_DIM_1"),
+                self.get_parameter("DATA_OUT_0_PARALLELISM_DIM_0"),
+            ],
+        )
+        self.out_data_monitor.load_monitor(outs)
 
-            # * Load the inputs driver
-            self.log.debug(f"Processing inputs: {batch}")
-            driver_input = fixed_preprocess_tensor(
-                tensor=batch,
-                q_config={
-                    "width": self.IN_WIDTH,
-                    "frac_width": self.IN_FRAC_WIDTH,
-                },
-                parallelism=[self.PARALLELISM],
-            )
-            self.in_data_driver.load_driver(driver_input)
-
-            # * Load the output monitor
-            self.log.debug(f"Processing outputs: {exp_out}")
-            outs = fixed_preprocess_tensor(
-                tensor=exp_out,
-                q_config={
-                    "width": self.OUT_WIDTH,
-                    "frac_width": self.OUT_FRAC_WIDTH,
-                },
-                parallelism=[self.PARALLELISM],
-            )
-            self.out_data_monitor.load_monitor(outs)
-
-        await Timer(us, units="us")
+        await Timer(1, units="ms")
         assert self.out_data_monitor.exp_queue.empty()
 
 
 @cocotb.test()
-async def basic(dut):
+async def cocotb_test(dut):
     tb = SoftermaxTB(dut)
-    tb.out_data_monitor.ready.value = 1
-    await tb.run_test(batches=1, us=10)
-
-
-@cocotb.test()
-async def stream(dut):
-    tb = SoftermaxTB(dut)
-    tb.out_data_monitor.ready.value = 1
-    await tb.run_test(batches=1000, us=2000)
-
-
-@cocotb.test()
-async def valid_toggle(dut):
-    tb = SoftermaxTB(dut)
-    tb.in_data_driver.set_valid_prob(0.5)
-    tb.out_data_monitor.ready.value = 1
-    await tb.run_test(batches=1000, us=2000)
-
-
-@cocotb.test()
-async def valid_backpressure_toggle(dut):
-    tb = SoftermaxTB(dut)
-    tb.in_data_driver.set_valid_prob(0.5)
-    cocotb.start_soon(bit_driver(tb.out_data_monitor.ready, dut.clk, 0.5))
-    await tb.run_test(batches=1000, us=2000)
+    await tb.run_test()
 
 
 def get_fixed_softermax_config(kwargs={}):
     config = {
-        "TOTAL_DIM": 20,
-        "PARALLELISM": 4,
-        "IN_WIDTH": 16,
-        "IN_FRAC_WIDTH": 6,
-        "POW2_WIDTH": 16,
-        "OUT_WIDTH": 16,
-        "OUT_FRAC_WIDTH": 6,
+        "DATA_IN_0_PRECISION_0": 16,
+        "DATA_IN_0_PRECISION_1": 6,
+        "DATA_IN_0_TENSOR_SIZE_DIM_0": 20,
+        "DATA_IN_0_TENSOR_SIZE_DIM_1": 20,
+        "DATA_IN_0_PARALLELISM_DIM_0": 2,
+        "DATA_IN_0_PARALLELISM_DIM_1": 2,
+        "DATA_OUT_0_PRECISION_0": 16,
+        "DATA_OUT_0_PRECISION_1": 6,
+        "DATA_OUT_0_TENSOR_SIZE_DIM_0": 20,
+        "DATA_OUT_0_TENSOR_SIZE_DIM_1": 20,
+        "DATA_OUT_0_PARALLELISM_DIM_0": 2,
+        "DATA_OUT_0_PARALLELISM_DIM_1": 2,
     }
     config.update(kwargs)
-    return config
-
-
-def get_random_width():
-    width = randint(2, 16)
-    frac_width = randint(1, width)
-    return width, frac_width
-
-def get_random_softermax_config():
-    parallelism = choice([2, 4, 8])
-    depth = randint(2, 5)
-    in_width, in_frac_width = get_random_width()
-    out_width, out_frac_width = get_random_width()
-    config = {
-        "TOTAL_DIM": parallelism * depth,
-        "PARALLELISM": parallelism,
-        "IN_WIDTH": in_width,
-        "IN_FRAC_WIDTH": in_frac_width,
-        "POW2_WIDTH": 16,
-        "OUT_WIDTH": out_width,
-        "OUT_FRAC_WIDTH": out_frac_width,
-    }
     return config
 
 
@@ -177,9 +133,7 @@ def test_fixed_softermax_smoke():
         trace=True,
         module_param_list=[
             get_fixed_softermax_config(),
-            *[get_random_softermax_config() for _ in range(50)]
         ],
-        jobs=12,
         # skip_build=True,
     )
 

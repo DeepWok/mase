@@ -143,23 +143,24 @@ def generate_random_params():
     }
 
 
-if __name__ == "__main__":
-
-    cfgs = [
-        # Power of 2 params
-        {"DATA_WIDTH": 8, "REPEAT": 2, "SIZE": 4},
-        # Change data width
-        {"DATA_WIDTH": 17, "REPEAT": 2, "SIZE": 4},
-        # Non power of 2 repeatsg
-        {"DATA_WIDTH": 32, "REPEAT": 3, "SIZE": 4},
-        # Non power of 2 buffer size
-        {"DATA_WIDTH": 32, "REPEAT": 2, "SIZE": 7},
-        # Purely random params
-        *[generate_random_params() for _ in range(5)],
-    ]
-
+def test_repeat_circular_buffer():
     mase_runner(
-        module_param_list=cfgs,
+        module_param_list=[
+            # Power of 2 params
+            {"DATA_WIDTH": 8, "REPEAT": 2, "SIZE": 4},
+            # Change data width
+            {"DATA_WIDTH": 17, "REPEAT": 2, "SIZE": 4},
+            # Non power of 2 repeats
+            {"DATA_WIDTH": 32, "REPEAT": 3, "SIZE": 4},
+            # Non power of 2 buffer size
+            {"DATA_WIDTH": 32, "REPEAT": 2, "SIZE": 7},
+            # Purely random params
+            *[generate_random_params() for _ in range(5)],
+        ],
         trace=True,
         jobs=8,
     )
+
+
+if __name__ == "__main__":
+    test_repeat_circular_buffer()

@@ -41,7 +41,7 @@ class TransposeTB(Testbench):
 
 
 @cocotb.test()
-async def test_transpose(dut):
+async def cocotb_test_transpose(dut):
     tb = TransposeTB(dut)
     for _ in range(1000):
         in_data = tb.generate_inputs()
@@ -65,5 +65,9 @@ def generate_random_params(num=3):
     return cfgs
 
 
-if __name__ == "__main__":
+def test_transpose():
     mase_runner(module_param_list=generate_random_params())
+
+
+if __name__ == "__main__":
+    test_transpose()

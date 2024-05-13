@@ -8,7 +8,7 @@ import torch
 import torch.nn as nn
 
 from math import sqrt
-from mase_components.fixed_arithmetic.test.isqrt_sw import make_lut
+from mase_components.fixed_math.test.isqrt_sw import make_lut
 from mase_components.common.test.lut_tb import write_memb
 from chop.passes.graph.utils import get_module_by_name
 from chop.passes.graph.transforms.quantize.quantizers.quantizers_for_hw import (
@@ -16,6 +16,18 @@ from chop.passes.graph.transforms.quantize.quantizers.quantizers_for_hw import (
 )
 
 import chop.models.manual.rms_norm as rms
+
+import sys, pdb, traceback
+
+
+def excepthook(exc_type, exc_value, exc_traceback):
+    traceback.print_exception(exc_type, exc_value, exc_traceback)
+    print("\nEntering debugger...")
+    pdb.post_mortem(exc_traceback)
+
+
+# Set the custom exception hook
+# sys.excepthook = excepthook
 
 
 def _debug_mase_metadata(mg):

@@ -142,3 +142,22 @@ venv.bak/
 
 # Data files for hardware simulation
 *.dat
+
+# Vivado
+*.xpr
+*.jou
+*.cache
+*.runs
+*.srcs
+*.hw
+vivado_pid*
+
+# Generated SV LUT files
+*_lut.sv
+
+# Pytest generated reports
+prof/
+*.html
+
+# Quantization summaries
+*.csv
