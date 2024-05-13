@@ -14,7 +14,7 @@ from mase_cocotb.utils import bit_driver
 
 
 logger = logging.getLogger("testbench")
-logger.setLevel(logging.DEBUG)
+logger.setLevel(logging.INFO)
 
 
 class MatmulTB(Testbench):
@@ -95,87 +95,47 @@ class MatmulTB(Testbench):
             B_inputs,
         )
 
+    async def run_test(self, batches, us):
+        await self.reset()
+        for _ in range(batches):
+            A_inputs, B_inputs = self.generate_inputs()
+            exp_out = self.model(A_inputs, B_inputs)
+            # Setup drivers and monitors
+            self.a_driver.load_driver(A_inputs)
+            self.b_driver.load_driver(B_inputs)
+            self.output_monitor.load_monitor(exp_out)
+        await Timer(us, units="us")
+        assert self.output_monitor.exp_queue.empty()
+
 
 @cocotb.test()
 async def single_mult(dut):
     tb = MatmulTB(dut)
-    await tb.reset()
     tb.output_monitor.ready.value = 1
-    A_inputs, B_inputs = tb.generate_inputs()
-    exp_out = tb.model(A_inputs, B_inputs)
-
-    # Setup drivers and monitors
-    for a in A_inputs:
-        tb.a_driver.append(a)
-    for b in B_inputs:
-        tb.b_driver.append(b)
-    for o in exp_out:
-        tb.output_monitor.expect(o)
-
-    await Timer(100, units="us")
-    assert tb.output_monitor.exp_queue.empty()
+    await tb.run_test(batches=1, us=100)
 
 
 @cocotb.test()
 async def repeated_mult(dut):
     tb = MatmulTB(dut)
-    await tb.reset()
     tb.output_monitor.ready.value = 1
-
-    for _ in range(100):
-        A, B = tb.generate_inputs()
-        e_out = tb.model(A, B)
-        for a in A:
-            tb.a_driver.append(a)
-        for b in B:
-            tb.b_driver.append(b)
-        for o in e_out:
-            tb.output_monitor.expect(o)
-
-    await Timer(100, units="us")
-    assert tb.output_monitor.exp_queue.empty()
+    await tb.run_test(batches=1000, us=2000)
 
 
 @cocotb.test()
 async def repeated_mult_backpressure(dut):
     tb = MatmulTB(dut)
-    await tb.reset()
     cocotb.start_soon(bit_driver(dut.out_ready, dut.clk, 0.6))
-
-    for _ in range(100):
-        A, B = tb.generate_inputs()
-        e_out = tb.model(A, B)
-        for a in A:
-            tb.a_driver.append(a)
-        for b in B:
-            tb.b_driver.append(b)
-        for o in e_out:
-            tb.output_monitor.expect(o)
-
-    await Timer(100, units="us")
-    assert tb.output_monitor.exp_queue.empty()
+    await tb.run_test(batches=500, us=2000)
 
 
 @cocotb.test()
 async def repeated_mult_valid_backpressure(dut):
     tb = MatmulTB(dut)
-    await tb.reset()
     tb.a_driver.set_valid_prob(0.7)
     tb.b_driver.set_valid_prob(0.7)
     cocotb.start_soon(bit_driver(dut.out_ready, dut.clk, 0.6))
-
-    for _ in range(100):
-        A, B = tb.generate_inputs()
-        e_out = tb.model(A, B)
-        for a in A:
-            tb.a_driver.append(a)
-        for b in B:
-            tb.b_driver.append(b)
-        for o in e_out:
-            tb.output_monitor.expect(o)
-
-    await Timer(100, units="us")
-    assert tb.output_monitor.exp_queue.empty()
+    await tb.run_test(batches=500, us=2000)
 
 
 def gen_random_dimensions():
@@ -215,7 +175,6 @@ def generate_random_dimension_cfg(cfg_list, multiple=3):
 import pytest
 
 
-@pytest.mark.skip(reason="Needs to be fixed.")
 def test_matmul():
     # Default is a square matrix mult
     # 4x4 4x4 matrix multiplication done using 2x2 window
@@ -276,6 +235,7 @@ def test_matmul():
             *generate_random_dimension_cfg([DEFAULT_CONFIG]),
         ],
         trace=True,
+        jobs=12,
     )
 
 

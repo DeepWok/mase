@@ -338,7 +338,7 @@ module matmul #(
     out_valid = acc_out_valid[self.output_acc_ptr];
 
     // Change accumulator pointer
-    if (sm_out_valid) begin
+    if (sm_out_valid && sm_out_ready) begin
       if (self.matrix_acc_ptr == C_DEPTH_DIM0 - 1) begin
         next_self.matrix_acc_ptr = 0;
       end else begin
