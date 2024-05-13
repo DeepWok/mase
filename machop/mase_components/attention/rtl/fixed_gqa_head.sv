@@ -25,7 +25,7 @@ Assumptions : 1. All activation inputs share same total and compute dimensions.
               4. The K input is transposed already.
 */
 
-`timescale 1ns / 1ps `default_nettype none
+`timescale 1ns / 1ps
 
 module fixed_gqa_head #(
     // Dimensions
