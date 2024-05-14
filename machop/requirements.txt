@@ -27,7 +27,7 @@ ipython
 ipdb
 sentencepiece
 einops
-deepspeed
+# deepspeed
 pybind11
 tabulate
 tensorboard

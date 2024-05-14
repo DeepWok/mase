@@ -1,7 +1,7 @@
 import pytorch_lightning as pl
 import torch
 
-from deepspeed.ops.adam import FusedAdam
+# from deepspeed.ops.adam import FusedAdam
 from torch.optim.lr_scheduler import CosineAnnealingLR
 
 # from torchmetrics.functional import accuracy
@@ -121,12 +121,12 @@ class WrapperBase(pl.LightningModule):
                     T_max=self.t_max or self.epochs,
                     eta_min=self.eta_min if self.optimizer == "sgd" else 0.0,
                 )
-            case "fused_adam" | "FusedAdam":
-                # DeepSpeed strategy="deepspeed_stage_3"
-                opt = FusedAdam(self.trainer.model.parameters(), lr=self.learning_rate)
-                scheduler = CosineAnnealingLR(
-                    opt, T_max=self.t_max or self.epochs, eta_min=self.eta_min or 0.0
-                )
+            # case "fused_adam" | "FusedAdam":
+            #     # DeepSpeed strategy="deepspeed_stage_3"
+            #     opt = FusedAdam(self.trainer.model.parameters(), lr=self.learning_rate)
+            #     scheduler = CosineAnnealingLR(
+            #         opt, T_max=self.t_max or self.epochs, eta_min=self.eta_min or 0.0
+            #     )
             case _:
                 raise ValueError(f"Unsupported optimizer name {self.optimizer}")
         return {"optimizer": opt, "lr_scheduler": scheduler}
