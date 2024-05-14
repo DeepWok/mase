@@ -46,6 +46,7 @@ def train(
     optimizer,
     learning_rate,
     weight_decay,
+    scheduler_args,
     plt_trainer_args,
     auto_requeue,
     save_path,
@@ -102,6 +103,7 @@ def train(
         dataset_info=dataset_info,
         learning_rate=learning_rate,
         weight_decay=weight_decay,
+        scheduler_args=scheduler_args,
         epochs=plt_trainer_args["max_epochs"],
         optimizer=optimizer,
     )

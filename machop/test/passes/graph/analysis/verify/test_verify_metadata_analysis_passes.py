@@ -7,7 +7,6 @@ test all verify metadata passes
     verify_software_metadata_analysis_pass,
 """
 
-
 import logging
 import os
 import sys

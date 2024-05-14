@@ -49,18 +49,20 @@ MaseGraph Analysis Passes
     - Add natural sparsity metadata analysis pass to the given MaseGraph.
   * - :py:meth:`~chop.passes.graph.analysis.pruning.hook_inspector.hook_inspection_analysis_pass`
     - Remove and provide hook information of the modules
-
+  * - :py:meth:`~chop.passes.graph.analysis.runtime.runtime_analysis.runtime_analysis_pass`
+    - Perform runtime analysis on the given graph (MaseGraph, TensorRT, ONNX models)
 
 .. toctree::
-	  :maxdepth: 2
+        :maxdepth: 2
 
-	  analysis/add_metadata
-	  analysis/init_metadata
-	  analysis/report
-	  analysis/statistical_profiler
-	  analysis/verify
-	  analysis/quantization
-	  analysis/pruning
+        analysis/add_metadata
+        analysis/init_metadata
+        analysis/report
+        analysis/statistical_profiler
+        analysis/verify
+        analysis/quantization
+        analysis/pruning
+        analysis/runtime
 
 
 MaseGraph Transform Passes
@@ -96,14 +98,22 @@ MaseGraph Transform Passes
     - fill me
   * - :py:meth:`~chop.passes.graph.transforms.verilog.emit_top.emit_internal_rtl_transform_pass`
     - fill me
+  * - :py:meth:`~chop.passes.graph.transforms.tensorrt.quantize.calibrate.tensorrt_fake_quantize_transform_pass`
+    - Apply TensorRT fake quantization to the given graph for INT8 quantization calibration
+  * - :py:meth:`~chop.passes.graph.transforms.tensorrt.quantize.calibrate.tensorrt_calibrate_transform_pass`
+    - Apply TensorRT calibration to the given graph for INT8 quantization
+  * - :py:meth:`~chop.passes.graph.transforms.tensorrt.quantize.fine_tune.tensorrt_fine_tune_transform_pass`
+    - Apply TensorRT fine tune to the given graph for quantization aware training
+
 
 .. toctree::
-	  :maxdepth: 2
+      :maxdepth: 2
 
-	  transform/pruning
-	  transform/quantize
-	  transform/verilog
-	  transform/utils
+      transform/pruning
+      transform/quantize
+      transform/verilog
+      transform/utils
+      transform/tensorrt
 
 
 MaseGraph Interface Passes
@@ -123,9 +133,15 @@ MaseGraph Interface Passes
     - fill me
   * - :py:meth:`~chop.passes.graph.interface.save_and_load.load_node_meta_param_interface_pass`
     - fill me
+  * - :py:meth:`~chop.passes.graph.interface.tensorrt.quantize.tensorrt_engine_interface_pass`
+    - Converts the given graph to a TensorRT engine model
+  * - :py:meth:`~chop.passes.graph.interface.onnxrt.onnx_runtime.onnx_runtime_interface_pass`
+    - Converts the given graph to a ONNXRuntime model
 
 .. toctree::
-	  :maxdepth: 2
+        :maxdepth: 2
 
-	  interface/save_and_load
+        interface/save_and_load
+        interface/tensorrt
+        interface/onnxrt
 
