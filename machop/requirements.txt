@@ -36,7 +36,6 @@ stable-baselines3
 scikit-learn
 # LogicNets
 h5py
-pyyaml
 numpy
 pandas
 wandb
@@ -50,7 +49,6 @@ einops
 sphinx
 sphinx-rtd-theme
 myst-parser
-numpy
 absl-py
 scipy
 sphinx-glpi-theme
