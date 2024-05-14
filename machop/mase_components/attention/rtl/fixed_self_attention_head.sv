@@ -16,7 +16,10 @@ module fixed_self_attention_head #(
     parameter OUT_DATA_PARALLELISM_DIM_0 = IN_DATA_PARALLELISM_DIM_0,
     parameter OUT_DATA_PARALLELISM_DIM_1 = IN_DATA_PARALLELISM_DIM_1,
     parameter OUT_DATA_PRECISION_0 = 16,
-    parameter OUT_DATA_PRECISION_1 = 3
+    parameter OUT_DATA_PRECISION_1 = 3,
+
+    // * Extra params
+    parameter KEY_PRE_TRANSPOSED = 0  // if 1, this module will skip transpose for K
 
 ) (
     input logic clk,
@@ -113,27 +116,39 @@ module fixed_self_attention_head #(
 
   // * Transpose projected keys
 
-  matrix_stream_transpose #(
-      .TOTAL_DIM0  (IN_DATA_TENSOR_SIZE_DIM_0),
-      .TOTAL_DIM1  (IN_DATA_TENSOR_SIZE_DIM_1),
-      .COMPUTE_DIM0(IN_DATA_PARALLELISM_DIM_0),
-      .COMPUTE_DIM1(IN_DATA_PARALLELISM_DIM_1),
+  generate
+    if (KEY_PRE_TRANSPOSED) begin : gen_passthrough_keys
 
-      .DATA_WIDTH(IN_DATA_PRECISION_0)
-  ) key_transpose_i (
-      .clk,
-      .rst,
+        assign key_transpose = key;
+        assign key_transpose_valid = key_valid;
+        assign key_ready = key_transpose_ready;
 
-      // In Matrix
-      .in_data (key),
-      .in_valid(key_valid),
-      .in_ready(key_ready),
+    end else begin : gen_transpose_keys
 
-      // Out Matrix
-      .out_data (key_transpose),
-      .out_valid(key_transpose_valid),
-      .out_ready(key_transpose_ready)
-  );
+        matrix_stream_transpose #(
+            .TOTAL_DIM0  (IN_DATA_TENSOR_SIZE_DIM_0),
+            .TOTAL_DIM1  (IN_DATA_TENSOR_SIZE_DIM_1),
+            .COMPUTE_DIM0(IN_DATA_PARALLELISM_DIM_0),
+            .COMPUTE_DIM1(IN_DATA_PARALLELISM_DIM_1),
+
+            .DATA_WIDTH(IN_DATA_PRECISION_0)
+        ) key_transpose_i (
+            .clk,
+            .rst,
+
+            // In Matrix
+            .in_data (key),
+            .in_valid(key_valid),
+            .in_ready(key_ready),
+
+            // Out Matrix
+            .out_data (key_transpose),
+            .out_valid(key_transpose_valid),
+            .out_ready(key_transpose_ready)
+        );
+
+    end
+  endgenerate
 
   // * Query x Key^T
 

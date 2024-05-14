@@ -1,3 +1,5 @@
+// TODO: DELETE? UNUSED
+
 /*
 Module      : fixed_self_gqa_group
 Description : Implements a single group in grouped query self-attention (GQA).
