@@ -178,6 +178,12 @@ class MaseGraph:
                 custom_leaf_functions += tuple(patched_nodes["functions"])
                 custom_leaf_layers += tuple(patched_nodes["layers"])
 
+            tracer = MaseTracer(
+                custom_leaf_modules=custom_leaf_modules,
+                custom_leaf_functions=custom_leaf_functions,
+                custom_leaf_layers=custom_leaf_layers,
+            )
+
             graph_module = fx.GraphModule(model, tracer.trace(model, cf_args))
 
             if patched_nodes is not None:

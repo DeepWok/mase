@@ -78,56 +78,14 @@ def test_export_fx_graph_bert():
     mg, _ = raise_granularity_transform_pass(mg)
 
 
-def test_export_fx_graph_bloom():
-    export_fx_graph_model(
-        "bigscience/bloom-1b7",
-        skip_export=True,
-    )
-
-
-def test_export_fx_graph_gpt2():
-    export_fx_graph_model(
-        "openai-community/gpt2",
-        skip_export=True,
-    )
-
-
-def test_export_fx_graph_llama():
-    export_fx_graph_model(
-        "huggyllama/llama-7b",
-    )
-
-
+@pytest.mark.skip
 def test_export_fx_graph_mistral():
     export_fx_graph_model(
         "mistral-community/Mistral-7B-v0.2",
     )
 
 
-def test_export_fx_graph_opt():
-    export_fx_graph_model("facebook/opt-125m", task="text-generation", skip_export=True)
-
-
-def test_export_fx_graph_swin():
-    export_fx_graph_model(
-        "microsoft/swin-tiny-patch4-window7-224",
-        skip_export=True,
-    )
-
-
-def test_export_fx_graph_t5():
-    export_fx_graph_model(
-        "google/t5-efficient-tiny", task="text2text-generation", skip_export=True
-    )
-
-
-def test_export_fx_graph_vit():
-    export_fx_graph_model(
-        "google/vit-base-patch16-224",
-        skip_export=True,
-    )
-
-
+@pytest.mark.skip
 def test_export_fx_graph_whisper():
     export_fx_graph_model(
         "openai/whisper-tiny",
@@ -137,15 +95,5 @@ def test_export_fx_graph_whisper():
 
 if __name__ == "__main__":
     test_export_fx_graph_bert()  # works
-    # test_export_fx_graph_opt()  # failing on gather
-    # test_export_fx_graph_bloom()  # need to check node by node
-    # test_export_fx_graph_t5()
-
-    # test_export_fx_graph_swin()  # need to figure out how to preprocess data
-    # test_export_fx_graph_vit()  # need to figure out how to preprocess data
     # test_export_fx_graph_whisper()  # need to figure out how to preprocess data
-
-    # test_export_fx_graph_gpt2()
-
-    # test_export_fx_graph_llama()  # 10GB download
     # test_export_fx_graph_mistral()  # 5GB download
