@@ -1,5 +1,6 @@
 import sys, traceback, pdb
 import logging
+import pytest
 
 import torch
 from transformers import AutoConfig, AutoTokenizer, AutoModel
