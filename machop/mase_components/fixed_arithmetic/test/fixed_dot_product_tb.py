@@ -76,7 +76,7 @@ def in_out_wave(dut, name):
 
 
 @cocotb.test()
-async def test_fixed_dot_product(dut):
+async def cocotb_test_fixed_dot_product(dut):
     """Test integer based vector mult"""
     samples = 1000
     test_case = VerificationCase(samples=samples)
@@ -145,6 +145,10 @@ async def test_fixed_dot_product(dut):
     check_results(test_case.outputs.data, test_case.ref)
 
 
-if __name__ == "__main__":
+def fixed_dot_product():
     tb = VerificationCase()
     mase_runner(module_param_list=[tb.get_dut_parameters()])
+
+
+if __name__ == "__main__":
+    fixed_dot_product()

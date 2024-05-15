@@ -9,16 +9,21 @@ from cocotb.result import TestFailure
 class Monitor:
     """Simplified version of cocotb_bus.monitors.Monitor"""
 
-    def __init__(self, clk, check=True):
+    def __init__(self, clk, check=True, name=None):
         self.clk = clk
         self.recv_queue = Queue()
         self.exp_queue = Queue()
         self.check = check
+        self.name = name
 
         if not hasattr(self, "log"):
-            self.log = SimLog("cocotb.monitor.%s" % (type(self).__qualname__))
+            self.log = SimLog(
+                "cocotb.monitor.%s" % (type(self).__qualname__)
+                if self.name == None
+                else self.name
+            )
 
-        self._thread = cocotb.start_soon(self._recv_thread())
+        self._thread = cocotb.scheduler.add(self._recv_thread())
 
     def kill(self):
         if self._thread:
@@ -33,7 +38,7 @@ class Monitor:
             await RisingEdge(self.clk)
             if self._trigger():
                 tr = self._recv()
-                self.log.info(f"Observed output beat {tr}")
+                self.log.debug(f"Observed output beat {tr}")
                 self.recv_queue.put(tr)
 
                 if self.exp_queue.empty():
@@ -58,5 +63,5 @@ class Monitor:
 
     def load_monitor(self, tensor):
         for beat in tensor:
-            self.log.info(f"Expecting output beat {beat}")
+            self.log.debug(f"Expecting output beat {beat}")
             self.expect(beat)

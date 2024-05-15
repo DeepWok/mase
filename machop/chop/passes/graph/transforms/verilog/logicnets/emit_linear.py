@@ -7,7 +7,6 @@ from chop.passes.graph.utils import init_project
 from chop.passes.graph.transforms.quantize.quantized_modules.linear import (
     LinearLogicNets,
 )
-from ..internal_file_dependences import INTERNAL_RTL_DEPENDENCIES
 
 from .util import (
     generate_lut_verilog,

@@ -89,7 +89,7 @@ def check_outputs(hw_out, sw_out):
 
 
 @cocotb.test()
-async def test_fixed_adder_tree_layer(dut):
+async def cocotb_test_fixed_adder_tree_layer(dut):
     """Test random number casting"""
     test_case = VerificationCase(samples=100)
 
@@ -106,6 +106,10 @@ async def test_fixed_adder_tree_layer(dut):
         )
 
 
-if __name__ == "__main__":
+def test_fixed_cast():
     tb = VerificationCase()
     mase_runner(module_param_list=[tb.get_dut_parameters()])
+
+
+if __name__ == "__main__":
+    test_fixed_cast()

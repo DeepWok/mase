@@ -1,6 +1,7 @@
 import logging
 import math
 
+# import chop.models.manual.rms_norm as rms
 import toml
 import torch
 import torch.fx as fx
@@ -69,13 +70,27 @@ def graph_iterator_for_mase_ops(graph):
                 mase_op = "conv1d"
             elif isinstance(module, nn.LayerNorm):
                 mase_op = "layer_norm"
+            elif isinstance(module, nn.GroupNorm):
+                mase_op = "group_norm"
+            elif isinstance(module, nn.InstanceNorm2d):
+                mase_op = "instance_norm2d"
+            # elif isinstance(module, rms.RMSNorm):
+            #     mase_op = "rms_norm"
             elif isinstance(module, nn.Linear):
                 mase_op = "linear"
             elif isinstance(module, nn.ReLU):
                 mase_op = "relu"
+            elif isinstance(module, nn.SELU):
+                mase_op = "selu"
             elif isinstance(module, nn.Tanh):
                 mase_op = "tanh"
-            elif isinstance(module, nn.Hardtanh):  # ! TODO: This is not implemented yet
+            elif isinstance(module, nn.GELU):
+                mase_op = "gelu"
+            elif isinstance(module, nn.Softsign):
+                mase_op = "softsign"
+            elif isinstance(module, nn.Softplus):
+                mase_op = "softplus"
+            elif isinstance(module, nn.Hardtanh):  # TODO: This is not implemented yet
                 mase_op = "hardtanh"
             elif isinstance(module, nn.Embedding):
                 mase_type = "implicit_func"
@@ -92,6 +107,23 @@ def graph_iterator_for_mase_ops(graph):
                 mase_op = "hardswish"
             elif isinstance(module, nn.Hardsigmoid):
                 mase_op = "hardsigmoid"
+            elif isinstance(module, nn.Sigmoid):
+                mase_op = "sigmoid"
+            elif isinstance(module, nn.Softmax):
+                mase_op = "softmax"
+            elif isinstance(module, nn.Hardshrink):
+                mase_op = "hardshrink"
+            elif isinstance(module, nn.SiLU):
+                mase_op = "silu"
+            elif isinstance(module, nn.ELU):
+                mase_op = "elu"
+            elif isinstance(module, nn.Softshrink):
+                mase_op = "softshrink"
+            elif isinstance(module, nn.LogSigmoid):
+                mase_op = "logsigmoid"
+            # TODO: temporary. Support all patched attention layers
+            elif "attention" in module.__name__.lower():
+                mase_op = "attention"
             else:
                 mase_op = None
                 for module_cls in graph.model.custom_ops["modules"].keys():

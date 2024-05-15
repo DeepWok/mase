@@ -1,7 +1,7 @@
 
 module hybrid_buffer_driver #(
     parameter BUFFER_SLOTS = 16,
-    parameter MAX_PULSES_PER_SLOT = top_pkg::MAX_FEATURE_COUNT
+    parameter MAX_PULSES_PER_SLOT = 1024
 ) (
     input logic core_clk,
     input logic resetn,

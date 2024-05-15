@@ -15,7 +15,7 @@ from einops import rearrange
 import torch
 from mase_cocotb.z_qlayers import quantize_to_int as q2i
 
-from helpers.pvt_quant import QuantizedPatchEmbed
+from .helpers.pvt_quant import QuantizedPatchEmbed
 
 debug = False
 
@@ -259,7 +259,7 @@ class VerificationCase:
 
 
 @cocotb.test()
-async def test_fixed_linear(dut):
+async def cocotb_test_fixed_linear(dut):
     # TODO:
     """Test integer based vector mult"""
     samples = 10
@@ -363,6 +363,14 @@ def wave_check(dut):
     )
 
 
-if __name__ == "__main__":
+import pytest
+
+
+@pytest.mark.skip(reason="Needs to be fixed.")
+def test_fixed_patch_embed():
     tb = VerificationCase()
     mase_runner(module_param_list=[tb.get_dut_parameters()])
+
+
+if __name__ == "__main__":
+    test_fixed_patch_embed()

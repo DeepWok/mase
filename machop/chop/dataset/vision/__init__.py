@@ -36,6 +36,10 @@ def get_vision_dataset(name: str, path: os.PathLike, split: str, model_name: str
             dataset = get_mnist_dataset(name, path, train, transform)
         case "cifar10" | "cifar100":
             dataset = get_cifar_dataset(name, path, train, transform)
+        case "cifar10_subset":
+            name = name.replace("_subset", "")
+            path = Path(str(path).replace("_subset", ""))
+            dataset = get_cifar_dataset(name, path, train, transform, subset=True)
         case "imagenet":
             dataset = get_imagenet_dataset(name, path, train, transform)
         case "imagenet_subset":
@@ -51,6 +55,7 @@ def get_vision_dataset(name: str, path: os.PathLike, split: str, model_name: str
 VISION_DATASET_MAPPING = {
     "mnist": MNISTMase,
     "cifar10": Cifar10Mase,
+    "cifar10_subset": Cifar10Mase,
     "cifar100": Cifar100Mase,
     "imagenet": ImageNetMase,
     # A subset of ImageNet w/ 100 train and 20 val images per class (1000 classes)

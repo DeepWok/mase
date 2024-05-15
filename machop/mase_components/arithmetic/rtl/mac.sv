@@ -1,6 +1,7 @@
+`timescale 1ns / 1ps
 
 module mac #(
-    parameter PRECISION   = top_pkg::FLOAT_32,
+    parameter PRECISION   = 0,
     parameter FLOAT_WIDTH = 32,
     parameter DATA_WIDTH  = 32
 ) (
@@ -20,7 +21,7 @@ module mac #(
 
 );
 
-  if (PRECISION == top_pkg::FLOAT_32) begin
+  if (PRECISION == 0) begin
 
     float_mac #(
         .FLOAT_WIDTH(FLOAT_WIDTH)

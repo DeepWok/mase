@@ -1,5 +1,6 @@
-from .deps import MASE_HW_DEPS
 import os
+
+from .deps import MASE_HW_DEPS
 
 
 def get_modules():

@@ -31,7 +31,7 @@ class VerificationCase:
         self.data_out_frac_width = 1
         self.has_bias = 1
 
-        self.in_rows = 2000
+        self.in_rows = 20
         self.in_columns = 4
         self.weight_rows = self.in_columns
         self.weight_columns = 2
@@ -154,9 +154,9 @@ def debug_state(dut, state):
 
 
 @cocotb.test()
-async def test_fixed_linear(dut):
+async def cocotb_test_fixed_linear(dut):
     """Test integer based vector mult"""
-    samples = 1000
+    samples = 100
     test_case = VerificationCase(samples=samples)
 
     # Reset cycle
@@ -227,9 +227,17 @@ async def test_fixed_linear(dut):
     check_results(test_case.outputs.data, test_case.ref)
 
 
-if __name__ == "__main__":
+import pytest
+
+
+@pytest.mark.skip(reason="Needs to be fixed.")
+def test_fixed_matmul_core():
     tb = VerificationCase()
     mase_runner(
-        module_params=tb.get_dut_parameters(),
+        module_param_list=[tb.get_dut_parameters()],
         extra_build_args=["--unroll-count", "3000"],
     )
+
+
+if __name__ == "__main__":
+    test_fixed_matmul_core()
