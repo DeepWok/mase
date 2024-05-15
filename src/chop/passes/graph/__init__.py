@@ -37,7 +37,7 @@ from .interface import (
     save_node_meta_param_interface_pass,
     load_node_meta_param_interface_pass,
     tensorrt_engine_interface_pass,
-    # onnx_runtime_interface_pass,
+    onnx_runtime_interface_pass,
 )
 
 from .transforms.quantize.quant_parsers import parse_node_config
@@ -114,7 +114,7 @@ PASSES = {
     "save_mase_graph": save_mase_graph_interface_pass,
     "save_node_meta_param": save_node_meta_param_interface_pass,
     "tensorrt": tensorrt_engine_interface_pass,
-    # "onnxruntime": onnx_runtime_interface_pass,
+    "onnxruntime": onnx_runtime_interface_pass,
     # transform
     "quantize": quantize_transform_pass,
     "tensorrt_calibrate": tensorrt_calibrate_transform_pass,
