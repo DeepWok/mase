@@ -1,6 +1,12 @@
 # basics
+# model = "facebook/opt-125m"
 model = "facebook/opt-125m@patched"
 dataset = "wikitext2"
+# task = 'lm'
+
+# is_pretrained = true
+# load_name = "facebook/opt-125m"
+# load_type = "hf"
 
 [passes.quantize]
 by = "type"

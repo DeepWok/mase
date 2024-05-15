@@ -35,6 +35,7 @@ class JSC_Tiny(nn.Module):
         self.seq_blocks = nn.Sequential(
             # 1st LogicNets Layer
             nn.BatchNorm1d(16),  # input_quant       # 0
+            # nn.LayerNorm(16),  # input_quant       # 0
             nn.ReLU(16),  # 1
             nn.Linear(16, 5),  # linear              # 2
             # nn.BatchNorm1d(5),  # output_quant       # 3
@@ -82,6 +83,31 @@ class JSC_S(nn.Module):
         return x
 
 
+class JSC_TRT(nn.Module):
+    def __init__(self, info):
+        super(JSC_TRT, self).__init__()
+        self.seq_blocks = nn.Sequential(
+            nn.BatchNorm1d(16),
+            nn.ReLU(),
+            nn.Linear(16, 32),
+            nn.BatchNorm1d(32),
+            nn.ReLU(),
+            nn.Linear(32, 48),
+            nn.BatchNorm1d(48),
+            nn.ReLU(),
+            nn.Dropout(0.5),
+            nn.Linear(48, 16),
+            nn.BatchNorm1d(16),
+            nn.ReLU(),
+            nn.Linear(16, 5),
+            nn.BatchNorm1d(5),
+            nn.ReLU(),
+        )
+
+    def forward(self, x):
+        return self.seq_blocks(x)
+
+
 # Getters ------------------------------------------------------------------------------
 def get_jsc_toy(info):
     # TODO: Tanh is not supported by mase yet
@@ -94,3 +120,7 @@ def get_jsc_tiny(info):
 
 def get_jsc_s(info):
     return JSC_S(info)
+
+
+def get_jsc_trt(info):
+    return JSC_TRT(info)

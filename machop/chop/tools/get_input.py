@@ -80,7 +80,10 @@ def get_dummy_input(
                 x, y = next(train_iter)
                 # x = x[[0], ...].to(device)
                 x = x.to(device)
-                dummy_inputs = {"x": x}
+                if data_module.name == "mnist" and model_info.is_vision_model:
+                    dummy_inputs = {"input_1": x}
+                else:
+                    dummy_inputs = {"x": x}
             case _:
                 raise ValueError(f"Task {task} is not supported for {model_info.name}")
     elif model_info.is_nerf_model:

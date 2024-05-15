@@ -152,6 +152,7 @@ class MaseGraph:
                 custom_leaf_functions=custom_leaf_functions,
                 custom_leaf_layers=custom_leaf_layers,
             )
+
             self.model = fx.GraphModule(model, self.tracer.trace(model, cf_args))
             if patched_nodes:
                 self.model.patched_op_names = [

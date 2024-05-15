@@ -1,0 +1,82 @@
+# basics
+model = "vgg_tiny"
+dataset = "cifar10_subset"
+task = "cls"
+accelerator = "gpu"
+project = "vgg_tiny"
+seed = 42
+# load_name = "TinyVGG-epoch=32-val_acc=0.67.ckpt"
+# load_type = "pl"
+
+[search.search_space]
+name = "graph/quantize/mixed_precision_ptq"
+
+[search.search_space.setup]
+by = "name"
+
+[search.search_space.seed.default.config]
+name = ["integer"]
+data_in_width = [8, 16, 32]
+data_in_frac_width = [4, 8, 16]
+weight_width = [8, 16, 32]
+weight_frac_width = [4, 8, 16]
+bias_width = [8, 16, 32]
+bias_frac_width = [4, 8, 16]
+
+[search.search_space.seed.linear.config]
+name = ["integer"]
+data_in_width = [8, 16, 32]
+data_in_frac_width = ["NA"]
+weight_width = [8, 16, 32]
+weight_frac_width = ["NA"]
+bias_width = [8, 16, 32]
+bias_frac_width = ["NA"]
+
+[search.search_space.seed.conv2d.config]
+name = ["integer"]
+data_in_width = [8, 16, 32]
+data_in_frac_width = ["NA"]
+weight_width = [8, 16, 32]
+weight_frac_width = ["NA"]
+bias_width = [8, 16, 32]
+bias_frac_width = ["NA"]
+
+[search.strategy]
+name = "rl"
+algorithm = "ppo"  # Others: 'a2c' and 'ddpg'
+env = "mixed_precision_paper"  # Others (not recommended): 'mixed_precision' and 'mixed_precision_hi_lo'
+device = "cuda"
+total_timesteps = 100000
+n_steps = 32
+n_envs = 4
+eval_freq = 200
+save_freq = 200
+episode_max_len = 1000
+learning_rate = 2.5e-4
+save_name = "tmp_rl"
+# load_name = 'tmp_rl'
+# wandb_callback = true
+# wandb_entity = 'm-pl-braganca'
+
+[search.strategy.setup]
+# sum_scaled_metrics = true
+# direction = "maximize"
+sum_scaled_metrics = false
+
+[search.strategy.sw_runner.basic_evaluation]
+data_loader = "val_dataloader"
+num_samples = 512
+
+[search.strategy.hw_runner.average_bitwidth]
+compare_to = 32  # compare to FP32
+
+[search.strategy.metrics]
+accuracy.scale = 0.7
+accuracy.direction = "maximize"
+accuracy.lower_bound = 0
+accuracy.upper_bound = 1
+
+average_bitwidth.scale = 0.3
+average_bitwidth.direction = "minimize"
+average_bitwidth.lower_bound = 8
+average_bitwidth.upper_bound = 32

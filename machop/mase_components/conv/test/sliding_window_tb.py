@@ -158,7 +158,7 @@ def debug_state(dut, state):
 
 
 @cocotb.test()
-async def test_sliding_window(dut):
+async def cocotb_test_sliding_window(dut):
     """Test integer based vector mult"""
     samples = 20
     test_case = VerificationCase(samples=samples)
@@ -263,6 +263,10 @@ def wave_check(dut):
     )
 
 
-if __name__ == "__main__":
+def test_sliding_window():
     tb = VerificationCase()
     mase_runner(module_param_list=[tb.get_dut_parameters()])
+
+
+if __name__ == "__main__":
+    test_sliding_window()

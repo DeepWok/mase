@@ -4,7 +4,9 @@ from cocotb.clock import Clock
 
 
 class Testbench:
-    def __init__(self, dut, clk=None, rst=None) -> None:
+    __test__ = False  # so pytest doesn't confuse this with a test
+
+    def __init__(self, dut, clk=None, rst=None, fail_on_checks=True) -> None:
         self.dut = dut
         self.clk = clk
         self.rst = rst
@@ -13,6 +15,8 @@ class Testbench:
         self.output_monitors = []
 
         self.input_precision = [32]
+
+        self.fail_on_checks = fail_on_checks
 
         if self.clk != None:
             self.clock = Clock(self.clk, 20, units="ns")
@@ -50,3 +54,11 @@ class Testbench:
 
     def load_monitors(self, expectation):
         raise NotImplementedError
+
+    def end_checks(self):
+        if self.fail_on_checks:
+            for monitor in self.output_monitors:
+                assert monitor.exp_queue.empty()
+
+            for driver in self.input_drivers:
+                assert driver.send_queue.empty()

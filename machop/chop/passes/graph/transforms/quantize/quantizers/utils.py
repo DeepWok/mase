@@ -34,6 +34,18 @@ class MyRound(InplaceFunction):
         return grad_input
 
 
+class MyFloor(InplaceFunction):
+    @staticmethod
+    def forward(ctx, input):
+        ctx.input = input
+        return input.floor()
+
+    @staticmethod
+    def backward(ctx, grad_output):
+        grad_input = grad_output.clone()
+        return grad_input
+
+
 class BinaryBipolar(InplaceFunction):
     """A PyTorch function for binarizing input values.
 
@@ -328,6 +340,7 @@ ternarised_scaled_op = TernaryScaled.apply
 ternarised_op = Ternary.apply
 my_clamp = MyClamp.apply
 my_round = MyRound.apply
+my_floor = MyFloor.apply
 
 # --------------------------------
 # Block and unblock

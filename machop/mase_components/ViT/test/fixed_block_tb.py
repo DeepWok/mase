@@ -17,9 +17,9 @@ from torch import Tensor
 from einops import rearrange, reduce, repeat
 
 
-from random_test import RandomSource
-from random_test import RandomSink
-from random_test import check_results
+from mase_cocotb.random_test import RandomSource
+from mase_cocotb.random_test import RandomSink
+from mase_cocotb.random_test import check_results
 
 import cocotb
 from cocotb.triggers import Timer
@@ -27,10 +27,10 @@ from cocotb.triggers import FallingEdge
 from cocotb.clock import Clock
 from cocotb.runner import get_runner
 
-from pvt_quant import QuantizedBlock
-from ha_softmax import generate_table_hardware, generate_table_div_hardware
-from z_qlayers import quantize_to_int as q2i
-from z_qlayers import linear_data_pack
+from .helpers.pvt_quant import QuantizedBlock
+from .helpers.ha_softmax import generate_table_hardware, generate_table_div_hardware
+from mase_cocotb.z_qlayers import quantize_to_int as q2i
+from mase_cocotb.z_qlayers import linear_data_pack
 
 debug = True
 
@@ -915,7 +915,7 @@ def wave_check(dut):
 
 
 @cocotb.test()
-async def test_att(dut):
+async def cocotb_test_att(dut):
     """Test integer based vector mult"""
     samples = 20
     test_case = VerificationCase(samples=samples)
@@ -1137,5 +1137,13 @@ def runner():
     runner.test(hdl_toplevel="fixed_block", test_module="fixed_block_tb")
 
 
-if __name__ == "__main__":
+import pytest
+
+
+@pytest.mark.skip(reason="Needs to be fixed.")
+def test_fixed_block():
     runner()
+
+
+if __name__ == "__main__":
+    test_fixed_block()

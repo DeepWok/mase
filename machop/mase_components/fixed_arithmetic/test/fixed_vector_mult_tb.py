@@ -74,7 +74,7 @@ def is_impossible_state(
 
 
 @cocotb.test()
-async def test_fixed_vector_mult(dut):
+async def cocotb_test_fixed_vector_mult(dut):
     """Test integer based vector mult"""
     samples = 20
     test_case = VerificationCase(samples=samples)
@@ -231,6 +231,10 @@ async def test_fixed_vector_mult(dut):
     check_results(test_case.outputs.data, test_case.ref)
 
 
-if __name__ == "__main__":
+def test_fixed_vector_mult():
     tb = VerificationCase()
     mase_runner(module_param_list=[tb.get_dut_parameters()])
+
+
+if __name__ == "__main__":
+    test_fixed_vector_mult()
