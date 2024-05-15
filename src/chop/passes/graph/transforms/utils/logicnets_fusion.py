@@ -12,10 +12,10 @@ from torch.fx.experimental.optimization import (
     matches_module_pattern,
     replace_node_module,
 )
-from chop.passes.graph.transforms.quantize.quantized_modules.linear import (
+from chop.nn.quantized.modules.linear import (
     LinearLogicNets,
 )
-from chop.passes.graph.transforms.quantize.quantized_modules.conv2d import (
+from chop.nn.quantized.modules.conv2d import (
     Conv2DLogicNets,
 )
 

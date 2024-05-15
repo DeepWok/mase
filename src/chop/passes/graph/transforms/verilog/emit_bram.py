@@ -7,7 +7,7 @@ import time
 import torch
 
 from chop.passes.graph.utils import vf, v2p, get_module_by_name, init_project
-from chop.passes.graph.transforms.quantize.quantizers import integer_quantizer_for_hw
+from chop.nn.quantizers import integer_quantizer_for_hw
 
 logger = logging.getLogger(__name__)
 from pathlib import Path

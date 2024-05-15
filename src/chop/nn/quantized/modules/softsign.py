@@ -6,7 +6,7 @@ from torch.nn import functional as F
 
 from .utils import get_stats, quantiser_passthrough
 
-from ..quantizers import (
+from chop.nn.quantizers import (
     block_fp_quantizer,
     block_log_quantizer,
     block_minifloat_quantizer,

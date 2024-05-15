@@ -5,7 +5,7 @@ from torch import Tensor
 from torch.nn import functional as F
 from .utils import get_stats, quantiser_passthrough
 
-from ..quantizers import (
+from chop.nn.quantizers import (
     residual_sign_quantizer,
     block_fp_quantizer,
     block_log_quantizer,
@@ -21,18 +21,18 @@ from ..quantizers import (
 # LUTNet
 import numpy as np
 from typing import Type
-from ..quantizers.LUTNet.BaseTrainer import BaseTrainer, LagrangeTrainer
-from ..quantizers.LUTNet.MaskBase import MaskBase, MaskExpanded
+from chop.nn.quantizers.LUTNet.BaseTrainer import BaseTrainer, LagrangeTrainer
+from chop.nn.quantizers.LUTNet.MaskBase import MaskBase, MaskExpanded
 
 # LogicNets
-from ..quantizers.LogicNets.utils import (
+from chop.nn.quantizers.LogicNets.utils import (
     generate_permutation_matrix,
     get_int_state_space,
     fetch_mask_indices,
 )
 
 # LogicNets
-from ..quantizers.LogicNets.utils import (
+from chop.nn.quantizers.LogicNets.utils import (
     generate_permutation_matrix,
     get_int_state_space,
     fetch_mask_indices,

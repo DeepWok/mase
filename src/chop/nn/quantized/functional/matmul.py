@@ -4,7 +4,7 @@ from math import ceil, log2
 import torch
 
 # from ....graph.mase_tracer import mark_as_leaf_func
-from ..quantizers import (
+from chop.nn.quantizers import (
     block_fp_quantizer,
     block_log_quantizer,
     block_minifloat_quantizer,

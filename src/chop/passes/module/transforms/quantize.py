@@ -1,6 +1,6 @@
 import torch
 
-from chop.passes.graph.transforms.quantize.quantized_modules import quantized_module_map
+from chop.nn.quantized.modules import quantized_module_map
 from ..module_modify_helper import replace_by_name, instantiate_module
 
 

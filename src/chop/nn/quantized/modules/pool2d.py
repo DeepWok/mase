@@ -9,7 +9,7 @@ from torch.nn.common_types import _size_2_t
 
 from .utils import get_stats, quantiser_passthrough
 
-from ..quantizers import (
+from chop.nn.quantizers import (
     block_fp_quantizer,
     integer_quantizer,
     minifloat_denorm_quantizer,

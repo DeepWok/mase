@@ -4,10 +4,10 @@ import torch
 from typing import Any
 import numpy as np
 
-from ....passes.graph.transforms.quantize.quantized_modules.conv2d import (
+from chop.nn.quantized.modules.conv2d import (
     Conv2dBinaryResidualSign,
 )
-from ....passes.graph.transforms.quantize.quantized_modules.linear import (
+from chop.nn.quantized.modules.linear import (
     LinearBinaryResidualSign,
 )
 

@@ -1,7 +1,7 @@
 import math, time, os, logging, torch, glob, shutil
 
 from chop.passes.graph.utils import vf, v2p, init_project
-from chop.passes.graph.transforms.quantize.quantizers import (
+from chop.nn.quantizers import (
     integer_quantizer_for_hw,
     integer_quantizer,
 )

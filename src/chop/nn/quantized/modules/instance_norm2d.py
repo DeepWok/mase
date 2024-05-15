@@ -4,7 +4,7 @@ import torch.nn as nn
 from torch import Tensor
 import torch.nn.functional as F
 
-from ..quantizers import (
+from chop.nn.quantizers import (
     integer_quantizer,
 )
 

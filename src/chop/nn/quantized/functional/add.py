@@ -2,7 +2,7 @@ from functools import partial
 
 import torch
 
-from ..quantizers import (
+from chop.nn.quantizers import (
     block_fp_quantizer,
     block_log_quantizer,
     block_minifloat_quantizer,

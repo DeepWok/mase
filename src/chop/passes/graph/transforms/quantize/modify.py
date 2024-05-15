@@ -9,8 +9,8 @@ from chop.tools.utils import copy_weights, init_LinearLUT_weight, init_Conv2dLUT
 from torch import nn
 import numpy as np
 
-from .quantized_funcs import quantized_func_map
-from .quantized_modules import quantized_module_map
+from chop.nn.quantized.functional import quantized_func_map
+from chop.nn.quantized.modules import quantized_module_map
 
 type_to_name_map = {
     nn.Linear: "linear",

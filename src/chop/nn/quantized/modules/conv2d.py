@@ -8,9 +8,9 @@ from torch.nn.common_types import _size_2_t
 # LUTNet
 import numpy as np
 from typing import Type
-from ..quantizers.LUTNet.BaseTrainer import BaseTrainer, LagrangeTrainer
-from ..quantizers.LUTNet.MaskBase import MaskBase, MaskExpanded
-from ..quantizers import (
+from chop.nn.quantizers.LUTNet.BaseTrainer import BaseTrainer, LagrangeTrainer
+from chop.nn.quantizers.LUTNet.MaskBase import MaskBase, MaskExpanded
+from chop.nn.quantizers import (
     residual_sign_quantizer,
     block_fp_quantizer,
     block_log_quantizer,
@@ -26,7 +26,7 @@ from .utils import get_stats, quantiser_passthrough
 import math
 
 # LogicNets
-from ..quantizers.LogicNets.utils import (
+from chop.nn.quantizers.LogicNets.utils import (
     generate_permutation_matrix,
     get_int_state_space,
     fetch_mask_indices,

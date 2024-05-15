@@ -1,5 +1,5 @@
 from .mase_op_wrapper import torch_arange, torch_ones, torch_zeros
-from ..transforms.quantize import quantized_module_map, quantized_func_map
+from chop.nn.quantized import quantized_module_map, quantized_func_map
 
 MASE_LEAF_FUNCTIONS = (
     # tensor constructors

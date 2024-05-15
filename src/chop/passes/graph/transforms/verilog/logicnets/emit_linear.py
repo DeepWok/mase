@@ -4,7 +4,7 @@ import shutil
 import torch.nn as nn
 
 from chop.passes.graph.utils import init_project
-from chop.passes.graph.transforms.quantize.quantized_modules.linear import (
+from chop.nn.quantized.modules.linear import (
     LinearLogicNets,
 )
 
