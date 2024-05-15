@@ -4,11 +4,11 @@ on:
   push:
     branches: [ "main*"]
     paths:
-      - 'machop/mase_components/**'
+      - 'src/mase_components/**'
   pull_request:
     branches: [ "main*"]
     paths:
-      - 'machop/mase_components/**'
+      - 'src/mase_components/**'
   workflow_dispatch:
     logLevel:
           description: 'Log level'
