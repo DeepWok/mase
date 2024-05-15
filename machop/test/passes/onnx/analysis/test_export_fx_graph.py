@@ -34,12 +34,9 @@ def excepthook(exc_type, exc_value, exc_traceback):
 def export_fx_graph_model(
     pretrained: str, monolith=True, task="auto", skip_export=False
 ):
-    # * Get model
-    hf_model = AutoModel.from_pretrained(pretrained)
-
     # * Get dummy input
-    tokenizer = AutoTokenizer.from_pretrained(pretrained)
     # ! TO DO: bert only works when batch size > 1
+    tokenizer = AutoTokenizer.from_pretrained(pretrained)
     model_inputs = tokenizer(
         [
             "Studies have been shown that owning a dog is good for you",
@@ -49,15 +46,6 @@ def export_fx_graph_model(
         return_tensors="pt",
     )
 
-    # * Run HuggingFace model (for debug)
-    _ = hf_model(**model_inputs)
-    # * Run Onnx runtime
-    session = rt.InferenceSession(
-        f"{os.environ['HOME']}/.mase/onnx/{pretrained}/model.onnx"
-    )
-    onnx_model_inputs = {k: v.numpy() for k, v in model_inputs.items()}
-    onnx_out = session.run([], onnx_model_inputs)
-
     # * Export MaseGraph from ONNX graph
     onnx_graph = MaseOnnxGraph.from_pretrained(
         pretrained, monolith=monolith, task=task, skip_export=skip_export
@@ -66,6 +54,14 @@ def export_fx_graph_model(
     mg = mg["model"]
     mg, _ = init_metadata_analysis_pass(mg)
     mg, _ = add_common_metadata_analysis_pass(mg, pass_args={"dummy_in": model_inputs})
+
+    # * Run Onnx runtime
+    session = rt.InferenceSession(
+        f"{os.environ['HOME']}/.mase/onnx/{pretrained}/model.onnx"
+    )
+    onnx_model_inputs = {k: v.numpy() for k, v in model_inputs.items()}
+    onnx_out = session.run([], onnx_model_inputs)
+
     # * Run FX GraphModule
     mg_out = mg.model(**model_inputs)
 
