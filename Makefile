@@ -1,10 +1,42 @@
 vhls=/mnt/applications/Xilinx/23.1
 vhls_version=2023.1
-local=0
-target=cpu
+local ?= 0
+
+GPU_AVAILABLE := $(shell command -v nvidia-smi 2> /dev/null)
+VIVADO_AVAILABLE := $(shell command -v vivado 2> /dev/null)
+
+# * Check if a GPU is available
+ifeq ($(GPU_AVAILABLE),)
+    PLATFORM := cpu
+else
+    PLATFORM := cuda
+endif
+
+# * Mount Vivado HLS path only if Vivado is available (to avoid path not found errors)
+ifeq ($(VIVADO_AVAILABLE),)
+    DOCKER_RUN_EXTRA_ARGS=
+else
+    DOCKER_RUN_EXTRA_ARGS=-v $(vhls):$(vhls)
+endif
+
+# * Set docker image according to local flag
+# * If local is set, should run locally built image
+# * Otherwise pull from dockerhub
+ifeq ($(local), 1)
+    img = "mase-ubuntu2204:latest"
+else
+    img = "deepwok/mase-docker-$(PLATFORM):latest"
+endif
+
+# * Check if running on a mac to set user path
+ifeq ($(shell uname),Darwin)
+    USER_PREFIX=Users
+else
+    USER_PREFIX=home
+endif
+
+coverage=machop/test/
 img=$(if $local,"mase-ubuntu2204:latest","deepwok/mase-docker-$(target):latest")
-user=$(if $(shell id -u),$(shell id -u),9001)
-group=$(if $(shell id -g),$(shell id -g),1000)
 
 sw_test_dir = machop/test/
 hw_test_dir = machop/mase_components/
@@ -24,23 +56,24 @@ sync-mlir:
 
 # Build Docker container
 build-docker:
-	if [ $(local) = 1 ]; then \
+	if [ $(local) -eq 1 ]; then \
 		if [ ! -d Docker ]; then \
     			git clone git@github.com:jianyicheng/mase-docker.git Docker; \
 		fi; \
 		docker build --build-arg VHLS_PATH=$(vhls) --build-arg VHLS_VERSION=$(vhls_version) -f Docker/Dockerfile-$(target) --tag mase-ubuntu2204 Docker; \
 	else \
-		docker pull docker.io/deepwok/mase-docker-$(target):latest; \
+		docker pull $(img); \
 	fi
 
-shell: build-docker
+shell:
 	docker run -it --shm-size 256m \
         --hostname mase-ubuntu2204 \
         -w /workspace \
-        -v $(vhls):$(vhls) \
-        -v /home/$(shell whoami)/.gitconfig:/root/.gitconfig \
-        -v /home/$(shell whoami)/.ssh:/root/.ssh \
+        -v /$(USER_PREFIX)/$(shell whoami)/.gitconfig:/root/.gitconfig \
+        -v /$(USER_PREFIX)/$(shell whoami)/.ssh:/root/.ssh \
+        -v /$(USER_PREFIX)/$(shell whoami)/.mase:/root/.mase:z \
         -v $(shell pwd):/workspace:z \
+        $(DOCKER_RUN_EXTRA_ARGS) \
         $(img) /bin/bash
 
 test-hw:
@@ -53,7 +86,7 @@ test-hw:
 test-sw:
 	bash scripts/test-machop.sh
 	pytest --log-level=DEBUG --verbose \
-		-n 1 \
+		-n $(NUM_WORKERS) \
 		--cov=machop/chop/ --cov-report=html \
 		--html=report.html --self-contained-html \
 		--profile --profile-svg \

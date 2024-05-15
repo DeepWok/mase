@@ -15,19 +15,18 @@ MASE_IMPLICIT_FUNCS = [
     # possibly are just constants
     "size",
     "view",
-    # possibly are just memory ops or tensor reshapes
+    # Memory ops and tensor reshapes
+    "to",
     "flatten",
-    "t",
+    "squeeze",
+    "unsqueeze",
     "transpose",
+    "permute",
     "reshape",
     "contiguous",
-    # possibly should be built-in funcs
-    "max",
-    "softmax",
-    "cumsum",
-    # possibly can just safely ignore?
     "dropout",
     "eq",
+    "gemm",
     "ge",
     "where",
     "_assert",
@@ -38,26 +37,18 @@ MASE_IMPLICIT_FUNCS = [
     "clamp",
     "abs",
     "stack",
+    "cast",
+    "shape",
+    "gather",
+    "slice",
+    "cat",
+    "split",
+    "tile",
+    "expand",
+    "full",
+    "ones",
+    "dim",
 ]
-
-# use this list to print out MASE_MODULE_RELATED_FUNCS when new functions are added
-# module_related_funcs = [
-#     F.adaptive_avg_pool1d,
-#     F.adaptive_avg_pool2d,
-#     F.adaptive_max_pool1d,
-#     F.adaptive_max_pool2d,
-#     F.avg_pool1d,
-#     F.avg_pool2d,
-#     F.batch_norm,
-#     F.conv1d,
-#     F.conv2d,
-#     F.layer_norm,
-#     F.linear,
-#     F.max_pool1d,
-#     F.max_pool2d,
-#     F.relu,
-# ]
-# print(sorted([f.__name__ for f in module_related_funcs]))
 
 MASE_MODULE_RELATED_FUNCS = [
     "adaptive_avg_pool1d",
@@ -74,6 +65,7 @@ MASE_MODULE_RELATED_FUNCS = [
     "max_pool1d",
     "max_pool2d",
     "relu",
+    "identity",
     "hardshrink",
     "silu",
     "elu",
@@ -92,12 +84,37 @@ MASE_MODULES = [
     "batch_norm1d",
     "batch_norm2d",
 ]
+
 MASE_BUILTIN_FUNCS = [
     "mul",
     "sub",
     "add",
     "matmul",
     "bmm",
+    "mean",
+    "pow",
+    "sqrt",
+    "div",
+    "softmax",
+    "max",
+    "cumsum",
+    "erf",
+    "sin",
+    "cos",
+    "tan",
+    "sinh",
+    "cosh",
+    "tanh",
+    "greater",
+    "less",
+    "le",  # less or equal
+    "sigmoid",
+    "not",
+    "min",
+    "neg",
+    "log",
+    "range",
+    "gelu",
 ]
 
 

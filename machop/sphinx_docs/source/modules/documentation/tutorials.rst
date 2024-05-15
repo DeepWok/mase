@@ -6,11 +6,6 @@ Tutorials
     :caption: The Command Line System with Machop
 
     tutorials/actions/train/simple_train_flow
-
-.. toctree::
-    :maxdepth: 1
-    :caption: The transform action
-
     tutorials/actions/transform/cli_transform
 
 .. toctree::
