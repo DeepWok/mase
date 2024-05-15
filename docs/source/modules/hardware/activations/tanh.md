@@ -20,7 +20,7 @@ Piecewise quadratic approximation is used for tanh activation function as detail
 <img src="images/eqn2.png" alt="Implemented Model" width="450" height="80">
 </div> -->
 
-![MAC](https://raw.githubusercontent.com/DeepWok/mase/main/machop/sphinx_docs/source/imgs/hardware/activations/eqn2.png)
+![MAC](https://raw.githubusercontent.com/DeepWok/mase/main/docs/source/imgs/hardware/activations/eqn2.png)
 
 The high-level flow diagram for tanh AF implementation is given in the following figure.
 
@@ -29,4 +29,4 @@ The high-level flow diagram for tanh AF implementation is given in the following
  <p>High-Level Flow Diagram of Tanh AF</p>
 </div> -->
 
-![MAC](https://raw.githubusercontent.com/DeepWok/mase/main/machop/sphinx_docs/source/imgs/hardware/activations/tanh_fd.png)
+![MAC](https://raw.githubusercontent.com/DeepWok/mase/main/docs/source/imgs/hardware/activations/tanh_fd.png)

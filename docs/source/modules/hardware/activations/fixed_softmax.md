@@ -20,7 +20,7 @@ Softmax[x_3 & x_4] \\
 The `fixed_softmax` module follows the dataflow streaming protocol and works by employing a table mapping which is used to compute the Softmax function. The table is generated during the emit verilog pass and is used to compute the Softmax function in a single cycle with input and output quantization to the desired precision. This can be instantiated using LUTs or BRAM (memory).
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/DeepWok/mase/main/machop/sphinx_docs/source/imgs/activations/fixed_softmax.png" alt="img">
+  <img src="https://raw.githubusercontent.com/DeepWok/mase/main/docs/source/imgs/activations/fixed_softmax.png" alt="img">
 </p>
 
 The module has the following parameters, following the hardware metadata standard (see [here](https://deepwok.github.io/mase/modules/api/analysis/add_metadata.html#add-hardware-metadata-analysis-pass)). Besides `PRECISION_DIM_*` parameters, which dictate the numerical precision, and `TENSOR_SIZE_DIM_*`, which is directly inferred from Pytorch tensor shapes, the following parameters can be adjusted to affect hardware performance.

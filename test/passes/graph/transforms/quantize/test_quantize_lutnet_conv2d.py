@@ -16,12 +16,12 @@ from chop.tools.utils import (
     generate_truth_table,
     init_Conv2dLUT_weight,
 )
-from chop.passes.graph.transforms.quantize.quantized_modules.conv2d import (
+from chop.nn.quantized.modules.conv2d import (
     Conv2dBinaryResidualSign,
     Conv2dBinaryScaling,
     Conv2dLUT,
 )
-from chop.passes.graph.transforms.quantize.quantizers import residual_sign_quantizer
+from chop.nn.quantizers import residual_sign_quantizer
 
 
 def generate_input_tensor(batch_size, input_features, min_val, max_val):

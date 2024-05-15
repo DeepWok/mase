@@ -2,7 +2,11 @@ import logging, torch
 from pathlib import Path
 from textwrap import indent
 
-from chop.passes.graph.utils import init_project, get_node_by_name
+from chop.passes.graph.utils import vf, v2p, init_project
+from chop.nn.quantizers import (
+    integer_quantizer_for_hw,
+    integer_quantizer,
+)
 
 logger = logging.getLogger(__name__)
 

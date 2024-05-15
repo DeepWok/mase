@@ -10,7 +10,7 @@ import torch.nn as nn
 from pathlib import Path
 
 sys.path.append(Path(__file__).resolve().parents[5].as_posix())
-from chop.passes.graph.transforms.quantize.quantized_modules.linear import (
+from chop.nn.quantized.modules.linear import (
     LinearLogicNets,
 )
 

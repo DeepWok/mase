@@ -14,7 +14,7 @@ from torch.fx.passes.graph_drawer import FxGraphDrawer
 from chop.passes.graph.common import MASE_IMPLICIT_FUNCS
 from chop.passes.graph.transforms import utils as utils_passes
 from chop.passes.graph.patching import MASE_LEAF_FUNCTIONS, MASE_LEAF_LAYERS
-from chop.passes.graph.transforms.quantize import (
+from chop.nn.quantized import (
     quantized_func_map,
     quantized_module_map,
 )

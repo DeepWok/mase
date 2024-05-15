@@ -1,6 +1,6 @@
 # [SoftPlus](https://pytorch.org/docs/stable/generated/torch.nn.Softplus.html)
 
-The Softplus function is defined as: 
+The Softplus function is defined as:
 
 `Softplus(x) = β * log(1 + exp(β * x))`
 
@@ -22,15 +22,15 @@ Piecewise Polynomial approximation (PPA) stands as a computational method for ap
 <img src="images/eqn3.png" alt="Implemented Model" width="200" height="40">
 </div> -->
 
-![MAC](https://raw.githubusercontent.com/DeepWok/mase/main/machop/sphinx_docs/source/imgs/hardware/activations/eqn3.png)
+![MAC](https://raw.githubusercontent.com/DeepWok/mase/main/docs/source/imgs/hardware/activations/eqn3.png)
 
-where $p_k()$ denotes the polynomials corresponding to each segment (k= 1,...K,), $a_n$ represents the polynomial coefficients, and n denotes the polynomial degree. This approach enables efficient approximation of complex functions by representing them as a combination of simpler polynomial expressions, facilitating adjustable optimization tailored to specific hardware constraints. 
+where $p_k()$ denotes the polynomials corresponding to each segment (k= 1,...K,), $a_n$ represents the polynomial coefficients, and n denotes the polynomial degree. This approach enables efficient approximation of complex functions by representing them as a combination of simpler polynomial expressions, facilitating adjustable optimization tailored to specific hardware constraints.
 
-More specifically, for the implementation of the Softplus activation function [4] methodology was followed. In [4], a PPA with a wordlength-efficient decoder was employed, which is more improved compared to Simple Canonical Piecewise Linear (SCPWL) and Piecewise Linear Approximation Computation (PLAC) because it optimizes the polynomial indexation. 
+More specifically, for the implementation of the Softplus activation function [4] methodology was followed. In [4], a PPA with a wordlength-efficient decoder was employed, which is more improved compared to Simple Canonical Piecewise Linear (SCPWL) and Piecewise Linear Approximation Computation (PLAC) because it optimizes the polynomial indexation.
 
-This approach incorporates adaptive segmentation, polynomial approximation, quantization, and optimization processes which entail to the decrease of hardware resources. Its methodology automatically establishes segment limits based on function slope and user-defined parameters, while it also employs quantization to determine the Fixed-point (FxP) format necessary for achieving the desired accuracy in Signal-to-Quantization Noise Ratio (SQNR). 
+This approach incorporates adaptive segmentation, polynomial approximation, quantization, and optimization processes which entail to the decrease of hardware resources. Its methodology automatically establishes segment limits based on function slope and user-defined parameters, while it also employs quantization to determine the Fixed-point (FxP) format necessary for achieving the desired accuracy in Signal-to-Quantization Noise Ratio (SQNR).
 
-The evaluation range for this specific AF is [-4,4]. The polynomial coefficients that were calculated using the Vandermonde Matrix [4] are presented in the following table in both float and fixed-point format. It is worth mentioning that the quantization applied to these coefficients is a wordlength of 16 bits, with 15 of those bits representing the fractional part of the number. 
+The evaluation range for this specific AF is [-4,4]. The polynomial coefficients that were calculated using the Vandermonde Matrix [4] are presented in the following table in both float and fixed-point format. It is worth mentioning that the quantization applied to these coefficients is a wordlength of 16 bits, with 15 of those bits representing the fractional part of the number.
 
 | **Segment Number** | **Segment Boundaries** | **Format** | **a2**  | **a1**  | **a0**  |
 |---------------------|-------------------------|------------|---------|---------|---------|
@@ -52,4 +52,4 @@ $p_k(x_i) = a_2 x^2 + a_1 x + a_0$
  <p>High-Level Flow Diagram of SoftPlus AF</p>
 </div> -->
 
-![MAC](https://raw.githubusercontent.com/DeepWok/mase/main/machop/sphinx_docs/source/imgs/hardware/activations/softplus.png)
+![MAC](https://raw.githubusercontent.com/DeepWok/mase/main/docs/source/imgs/hardware/activations/softplus.png)

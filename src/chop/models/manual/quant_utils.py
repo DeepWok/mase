@@ -1,8 +1,7 @@
 from typing import Callable
 
 from chop.passes.graph import parse_node_config
-from chop.passes.graph import quantized_func_map
-from chop.passes.graph import quantized_module_map
+from chop.nn.quantized import quantized_func_map, quantized_module_map
 
 
 def get_quantized_cls(mase_op: str, quant_config: dict) -> type:

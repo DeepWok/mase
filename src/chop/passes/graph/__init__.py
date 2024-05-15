@@ -40,7 +40,6 @@ from .interface import (
     onnx_runtime_interface_pass,
 )
 
-from .transforms.quantize import quantized_func_map, quantized_module_map
 from .transforms.quantize.quant_parsers import parse_node_config
 from .transforms.tensorrt import (
     tensorrt_calibrate_transform_pass,

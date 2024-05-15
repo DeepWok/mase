@@ -9,7 +9,7 @@ vagrant/.vagrant/
 *.py~
 *.swp
 /history/
-*data/
+*/data/
 /tb_summary/
 # *.sh
 /mase_output/
@@ -17,11 +17,11 @@ vagrant/.vagrant/
 *.ckpt
 !/docs/tutorials/tensorrt/checkpoints/*.ckpt
 *.pkl
-/machop/examples/**/cache/
-/machop/examples/**/ckpts/
-/machop/examples/**/data/
-/machop/cache/
-/machop/.machop_cache/
+/src/examples/**/cache/
+/src/examples/**/ckpts/
+/src/examples/**/data/
+/src/cache/
+/src/.machop_cache/
 lightning_logs/
 
 # macOS
@@ -79,7 +79,6 @@ coverage.xml
 .pytest_cache/
 
 # Hardware tests
-components/testbench/**/sim_build/
 build/
 obj_dir/
 

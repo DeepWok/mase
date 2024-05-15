@@ -3,7 +3,7 @@ import torch
 import pdb
 import torch.nn as nn
 import torch.nn.functional as F
-from chop.passes.graph.transforms.quantize.quantizers.integer import *
+from chop.nn.quantizers.integer import *
 import pdb
 from bitstring import BitArray
 from functools import partial

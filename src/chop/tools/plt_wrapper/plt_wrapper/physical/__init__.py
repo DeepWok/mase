@@ -1,0 +1,1 @@
+from .jet_substructure import JetSubstructureModelWrapper
