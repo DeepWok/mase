@@ -1,0 +1,69 @@
+# basics
+model = "jsc-tiny"
+dataset = "jsc"
+task = "cls"
+
+max_epochs = 10
+batch_size = 512
+learning_rate = 1e-2
+accelerator = "gpu"
+project = "jsc-tiny"
+seed = 42
+log_every_n_steps = 5
+# load_name = "mase_output/jsc-tiny_classification_jsc_2024-01-31/software/training_ckpts/best-v3.ckpt"
+# load_type = "pl"
+
+[search.search_space]
+name = "graph/quantize/mixed_precision_ptq"
+
+[search.search_space.setup]
+by = "name"
+
+[search.search_space.seed.default.config]
+name = ["integer"]
+data_in_width = [4, 8]
+data_in_frac_width = [3, 4, 5, 6, 7, 8, 9]
+weight_width = [4, 8]
+weight_frac_width = [3, 4, 5, 6, 7, 8, 9]
+bias_width = [4, 8]
+bias_frac_width = [3, 4, 5, 6, 7, 8, 9]
+
+[search.strategy]
+name = "rl"
+algorithm = "ppo"  # Others: 'a2c' and 'ddpg'
+env = "mixed_precision_paper"  # Others (not recommended): 'mixed_precision' and 'mixed_precision_hi_lo'
+device = "cuda"
+total_timesteps = 10000
+n_steps = 32
+n_envs = 4
+eval_freq = 200
+save_freq = 200
+episode_max_len = 1000
+learning_rate = 2.5e-4
+save_name = "tmp_rl"
+# load_name = 'tmp_rl'
+# wandb_callback = true
+# wandb_entity = 'm-pl-braganca'
+
+[search.strategy.setup]
+# sum_scaled_metrics = true
+# direction = "maximize"
+sum_scaled_metrics = false
+
+[search.strategy.sw_runner.basic_evaluation]
+data_loader = "val_dataloader"
+num_samples = 512
+
+[search.strategy.hw_runner.average_bitwidth]
+compare_to = 32  # compare to FP32
+
+[search.strategy.metrics]
+accuracy.scale = 0.7
+accuracy.direction = "maximize"
+accuracy.lower_bound = 0
+accuracy.upper_bound = 1
+
+average_bitwidth.scale = 0.3
+average_bitwidth.direction = "minimize"
+average_bitwidth.lower_bound = 4
+average_bitwidth.upper_bound = 8

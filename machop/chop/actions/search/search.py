@@ -71,6 +71,7 @@ def search(
         config=search_space_config,
         dummy_input=get_dummy_input(model_info, data_module, task, device=accelerator),
         accelerator=accelerator,
+        data_module=data_module,
     )
     search_space.build_search_space()
 

@@ -29,7 +29,12 @@ class MatrixStreamTransposeTB(Testbench):
 
         self.in_driver = StreamDriver(dut.clk, dut.in_data, dut.in_valid, dut.in_ready)
         self.out_monitor = StreamMonitor(
-            dut.clk, dut.out_data, dut.out_valid, dut.out_ready, check=True, unsigned=True
+            dut.clk,
+            dut.out_data,
+            dut.out_valid,
+            dut.out_ready,
+            check=True,
+            unsigned=True,
         )
 
     def generate_inputs(self):
@@ -159,7 +164,7 @@ def test_matrix_stream_transpose():
             # Random test
             *[gen_random_params() for _ in range(5)],
         ],
-        trace=True
+        trace=True,
     )
 
 

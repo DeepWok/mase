@@ -1,0 +1,64 @@
+# basics
+# model = "facebook/opt-125m:patched"
+# dataset = "wikitext2"
+# task = "lm"
+
+model = "facebook/opt-125m"
+dataset = "wikitext2"
+task = "lm"
+
+is_pretrained = true
+load_name = "facebook/opt-125m"
+load_type = "hf"
+
+max_epochs = 5
+batch_size = 64
+learning_rate = 1e-3
+accelerator = "gpu"
+
+[passes.tensorrt]
+by = "name"
+calibrator = ["percentile", "mse", "entropy"]
+num_calibration_batches = 10
+percentiles = [99]
+report = true
+
+[passes.tensorrt.default.config]
+quantize = true
+calibrator = 'histogram'
+precision = 'int8' 
+
+# [passes.tensorrt.linear.config]
+# calibrator = 'histogram'
+# quantize = true
+
+# [passes.tensorrt.linear.input]
+# quantize_axis = false
+
+# [passes.tensorrt.linear.weight]
+# quantize_axis = false 
+
+# [passes.tensorrt.conv2d.config]
+# quantize = true
+# calibrator = 'histogram'
+
+# [passes.tensorrt.conv2d.input]
+# quantize_axis = false
+
+# [passes.tensorrt.conv2d.weight]
+# quantize_axis = false
+
+# [passes.tensorrt.default.config.input]
+# quantize_axis = false
+
+# [passes.tensorrt.default.config.weight]
+# quantize_axis = false
+
+[passes.tensorrt_fine_tune]
+fine_tune = false
+epochs = 10
+
+[passes.tensorrt.runtime_analysis]
+num_batches = 500
+num_GPU_warmup_batches = 5
+test = true

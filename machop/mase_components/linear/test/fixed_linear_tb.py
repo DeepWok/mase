@@ -11,7 +11,11 @@ from cocotb.log import SimLog
 from cocotb.triggers import Timer
 
 from mase_cocotb.testbench import Testbench
-from mase_cocotb.interfaces.streaming import StreamDriver, StreamMonitor, ErrorThresholdStreamMonitor
+from mase_cocotb.interfaces.streaming import (
+    StreamDriver,
+    StreamMonitor,
+    ErrorThresholdStreamMonitor,
+)
 from mase_cocotb.runner import mase_runner
 
 # from mase_cocotb import Testbench, StreamDriver, StreamMonitor, mase_runner

@@ -250,7 +250,6 @@ module matmul #(
       assign b_buffer_out_valid = b_valid;
       assign b_ready = b_buffer_out_ready;
     end
-
   endgenerate
 
   // Feed input A & buffered input B into simple matrix mult

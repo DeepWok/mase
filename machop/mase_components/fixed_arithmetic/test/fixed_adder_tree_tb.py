@@ -23,9 +23,7 @@ if debug:
 class VerificationCase(Testbench):
     def __init__(self, dut, samples=10):
         super().__init__(dut, dut.clk, dut.rst)
-        self.assign_self_params([
-            "IN_SIZE", "IN_WIDTH"
-        ])
+        self.assign_self_params(["IN_SIZE", "IN_WIDTH"])
         self.data_in_width = self.IN_WIDTH
         self.num = self.IN_SIZE
         self.data_out_width = math.ceil(math.log2(self.num)) + self.data_in_width

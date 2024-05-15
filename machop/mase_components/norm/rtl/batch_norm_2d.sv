@@ -5,7 +5,6 @@ Description : This module implements 2D batch normalisation.
 */
 
 `timescale 1ns / 1ps
-
 module batch_norm_2d #(
     // Dimensions
     parameter TOTAL_DIM0   = 4,

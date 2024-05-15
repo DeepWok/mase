@@ -183,7 +183,7 @@ class MaseGraph:
                 custom_leaf_functions=custom_leaf_functions,
                 custom_leaf_layers=custom_leaf_layers,
             )
-            
+
             graph_module = fx.GraphModule(model, self.tracer.trace(model, cf_args))
 
             if patched_nodes is not None:

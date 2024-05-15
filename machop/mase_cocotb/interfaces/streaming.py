@@ -7,6 +7,7 @@ from cocotb.triggers import *
 
 from mase_cocotb.driver import Driver
 from mase_cocotb.monitor import Monitor
+from mase_cocotb.utils import sign_extend
 
 # from mase_cocotb.utils import sign_extend
 

@@ -6,7 +6,7 @@ from torch import Tensor
 # from .quantizers import integer_quantizer
 from .utils import block, my_clamp, my_round, unblock, my_floor
 
-from chop.passes.graph.utils import sign_extend
+from mase_cocotb.utils import sign_extend
 
 
 def integer_quantizer_for_hw(x: Tensor, width: int, frac_width: int):

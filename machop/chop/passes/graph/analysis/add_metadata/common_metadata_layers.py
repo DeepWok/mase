@@ -7,6 +7,8 @@ from chop.tools.utils import to_numpy_if_tensor as to_numpy
 from chop.passes.graph.utils import vf, get_node_by_name
 import traceback
 from ...utils import deepgetattr
+from functools import reduce
+
 
 # ----------------------------------------------------------
 # Utility
@@ -204,8 +206,6 @@ module_data = {
     "silu": {"input": "data_in"},
     "elu": {"input": "data_in"},
     "softmax": {"input": "data_in"},
-    # https://pytorch.org/docs/stable/generated/torch.nn.Tanh.html
-    "tanh": {"input": "data_in"},
 }
 
 
@@ -373,6 +373,11 @@ def analyse_common_parameters_function(meta, result, args, kwargs, add_value=Tru
 # ----------------------------------------------------------
 # Module
 # ----------------------------------------------------------
+
+
+def deepgetattr(obj, attr):
+    """Recurses through an attribute chain to get the ultimate value."""
+    return reduce(getattr, attr.split("."), obj)
 
 
 def analyse_common_parameters_module(meta, result, args, kwargs, add_value=True):

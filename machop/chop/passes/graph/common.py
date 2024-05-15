@@ -65,6 +65,7 @@ MASE_MODULE_RELATED_FUNCS = [
     "max_pool1d",
     "max_pool2d",
     "relu",
+    "identity",
     "hardshrink",
     "silu",
     "elu",
@@ -77,7 +78,6 @@ MASE_MODULE_RELATED_FUNCS = [
     "gelu",
     "softplus",
     "softsign",
-    "identity",
 ]
 
 MASE_MODULES = [

@@ -1,0 +1,50 @@
+# basics
+model = "vgg7"
+dataset = "cifar10"
+
+load_name = "../mase_output/vgg7-pre-trained/test-accu-0.9332.ckpt"
+load_type = "pl"
+
+max_epochs = 10
+batch_size = 64
+learning_rate = 1e-3
+accelerator = "gpu"
+task="cls"
+
+[passes.tensorrt]
+by = "type"
+num_calibration_batches = 10
+post_calibration_analysis = true
+
+[passes.tensorrt.default.config]
+quantize = true
+calibrators = ["percentile"]
+percentiles = [99.99]
+precision = 'int8'
+
+[passes.tensorrt.default.input]
+calibrator = 'histogram'
+quantize_axis = false
+
+[passes.tensorrt.default.weight]
+calibrator = 'histogram'
+quantize_axis = false
+
+[passes.tensorrt.linear.config]
+quantize = false
+
+[passes.tensorrt.conv2d.config]
+quantize = true
+precision = 'int8'
+calibrator = 'histogram'
+
+[passes.tensorrt.conv2d.input]
+quantize_axis = false
+
+[passes.tensorrt.conv2d.weight]
+quantize_axis = false
+
+[passes.tensorrt.runtime_analysis]
+num_batches = 500
+num_GPU_warmup_batches = 5
+test = true

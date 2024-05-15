@@ -84,7 +84,7 @@ def matrix_mult_model(
     out_symmetric,
     a_input,
     b_input,
-    debug=False
+    debug=False,
 ):
     A = rebuild_matrix(
         a_input, a_total_dim0, a_total_dim1, a_compute_dim0, a_compute_dim1
