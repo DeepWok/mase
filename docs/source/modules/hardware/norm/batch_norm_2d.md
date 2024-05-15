@@ -9,5 +9,5 @@ Note that the `batch_norm_2d` component is an internal hardware component and is
 The `batch_norm_2d` is a fully pipelined module which follows the dataflow streaming protocol.
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/DeepWok/mase/main/machop/sphinx_docs/source/imgs/hardware/batch_norm_2d.png" alt="img">
+  <img src="https://raw.githubusercontent.com/DeepWok/mase/main/docs/source/imgs/hardware/batch_norm_2d.png" alt="img">
 </p>

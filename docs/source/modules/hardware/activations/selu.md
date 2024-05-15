@@ -20,12 +20,12 @@ SELU can be represented as per following equation where s is the scale of the ex
 <img src="images/eqn1.png" alt="Implemented Model" width="400" height="50">
 </div> -->
 
-![MAC](https://raw.githubusercontent.com/DeepWok/mase/main/machop/sphinx_docs/source/imgs/hardware/activations/eqn1.png)
+![MAC](https://raw.githubusercontent.com/DeepWok/mase/main/docs/source/imgs/hardware/activations/eqn1.png)
 
 A hybrid approach is used for implementing exponential function $e^{-|x|}$ for an N-bit binary number as detailed in [2]. Key steps and equations involved are as follows:
 
 1. **Exponential Function Property**:
-  Exponential of the sum of two numbers can be written as the product of exponentials of the individual numbers: 
+  Exponential of the sum of two numbers can be written as the product of exponentials of the individual numbers:
   $e^{x+y} = e^x \times e^y$
 
 2. **Representation of Binary Number**:
@@ -39,7 +39,7 @@ A hybrid approach is used for implementing exponential function $e^{-|x|}$ for a
    - For the non-saturation region, a hybrid approach is adopted. Input $a$ is further divided into two ranges:
      - For values $> \frac{1}{8}$, Look-Up Tables (LUTs) are used: a 16-word deep LUT for the integer part and an 8-word LUT for the fractional part.
      - Taylor series expansion is used for values $\leq \frac{1}{8}$, which is simplified for hardware implementation as in the following equation.
-    
+
       $e^{-x} = \sim(x \cdot \sim((x \gg 1) \cdot (\sim(x \gg 4 + x \gg 2)))))$
 
 The implementation consists of three main blocks:
@@ -54,11 +54,11 @@ Once exponential has been calculated, SELU is calculated by subtraction and cons
  <p>High-Level Flow Diagram of SELU AF</p>
 </div> -->
 
-![MAC](https://raw.githubusercontent.com/DeepWok/mase/main/machop/sphinx_docs/source/imgs/hardware/activations/selu_fd.png)
+![MAC](https://raw.githubusercontent.com/DeepWok/mase/main/docs/source/imgs/hardware/activations/selu_fd.png)
 
 <!-- <div align="center">
 <img src="images/exp_fd.png" alt="Implemented Model" width="450" height="350">
  <p>High-Level Flow Diagram of Exponential Unit</p>
 </div> -->
 
-![MAC](https://raw.githubusercontent.com/DeepWok/mase/main/machop/sphinx_docs/source/imgs/hardware/activations/exp_fd.png)
+![MAC](https://raw.githubusercontent.com/DeepWok/mase/main/docs/source/imgs/hardware/activations/exp_fd.png)

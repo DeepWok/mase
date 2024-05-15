@@ -24,7 +24,7 @@ y_1 & y_2 & y_3 & y_4
 The `fixed_linear` module follows the dataflow streaming protocol and works through a sequential dot product operation.
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/DeepWok/mase/main/machop/sphinx_docs/source/imgs/linear/fixed_linear.png" alt="img">
+  <img src="https://raw.githubusercontent.com/DeepWok/mase/main/docs/source/imgs/linear/fixed_linear.png" alt="img">
 </p>
 
 The module has the following parameters, following the hardware metadata standard (see [here](https://deepwok.github.io/mase/modules/api/analysis/add_metadata.html#add-hardware-metadata-analysis-pass)). Besides `PRECISION_DIM_*` parameters, which dictate the numerical precision, and `TENSOR_SIZE_DIM_*`, which is directly inferred from Pytorch tensor shapes, the following parameters can be adjusted to affect hardware performance.
@@ -41,19 +41,19 @@ The module has the following parameters, following the hardware metadata standar
 Assume a configuration where DATA_\<IN/OUT>\_TENSOR\_SIZE $= 4$, DATA\_IN\_PARALLELISM $= 2$ and WEIGHT\_PARALLELISM $= 2$. Hence each input data beat has a sub-vector of 2 elements, each weight beat has 4 elements (2 sub-columns of 2 elements) and there are 2 dot product modules. When the first data beat is driven valid, `fixed_linear` accepts the first weight beat and stalls back the input interface, while driving the dot product modules to compute $X_1 \cdot W_1$ and $X_1 \cdot W_2$. This results in partial results for the output sub-vector $Y_1$.
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/DeepWok/mase/main/machop/sphinx_docs/source/imgs/linear/matrix_multiply1.png" alt="img">
+  <img src="https://raw.githubusercontent.com/DeepWok/mase/main/docs/source/imgs/linear/matrix_multiply1.png" alt="img">
 </p>
 
 The partial outputs are stored in local registers in the next cycle while $X_1 \cdot W_3$ and $A \cdot W_4$ are computed resulting in partial products for the output sub-vector $Y_2$ and the ready signal is driven for the input data interface.
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/DeepWok/mase/main/machop/sphinx_docs/source/imgs/linear/matrix_multiply2.png" alt="img">
+  <img src="https://raw.githubusercontent.com/DeepWok/mase/main/docs/source/imgs/linear/matrix_multiply2.png" alt="img">
 </p>
 
 The same process is repeated with the second input sub-vector $X_2$ and weight sub-columns $W_{5..8}$. The final output sub-vectors $Y_1$ and $Y_2$ are ready and streamed out after the 3rd and 4th cycles, respectively.
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/DeepWok/mase/main/machop/sphinx_docs/source/imgs/linear/matrix_multiply3.png" alt="img">
+  <img src="https://raw.githubusercontent.com/DeepWok/mase/main/docs/source/imgs/linear/matrix_multiply3.png" alt="img">
 </p>
 
 ## <a name="latency_analaysis"></a> Latency Analysis

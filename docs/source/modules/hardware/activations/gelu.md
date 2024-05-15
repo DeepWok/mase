@@ -26,4 +26,4 @@ Those properties allow us to only do piecewise approximations for the range of (
  <p>High-Level Flow Diagram of GELU AF</p>
 </div> -->
 
-![MAC](https://raw.githubusercontent.com/DeepWok/mase/main/machop/sphinx_docs/source/imgs/hardware/activations/gelu.drawio.png)
+![MAC](https://raw.githubusercontent.com/DeepWok/mase/main/docs/source/imgs/hardware/activations/gelu.drawio.png)
