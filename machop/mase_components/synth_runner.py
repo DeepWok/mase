@@ -70,7 +70,6 @@ def run_synth(group):
         generate_tcl_script(group, module_name, include_groups, synth_project_path) 
         
         logger.info(f"Launching Vivado synthesis for module: {module_path}")
-        cmd = f"""vivado -mode batch -source {synth_project_path}/build.tcl"""
         cmd = [
             "vivado",
             "-mode",

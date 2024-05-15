@@ -151,6 +151,7 @@ venv.bak/
 *.srcs
 *.hw
 vivado_pid*
+synth/
 
 # Generated SV LUT files
 *_lut.sv

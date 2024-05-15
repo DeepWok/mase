@@ -110,11 +110,12 @@ def test_emit_verilog_linear():
     mg, _ = passes.report_node_hardware_type_analysis_pass(mg)  # pretty print
 
     mg, _ = passes.emit_verilog_top_transform_pass(mg)
-    mg, _ = passes.emit_bram_transform_pass(mg)
+    # mg, _ = passes.emit_bram_transform_pass(mg)
     mg, _ = passes.emit_internal_rtl_transform_pass(mg)
     mg, _ = passes.emit_cocotb_transform_pass(mg)
+    mg, _ = passes.graph.transforms.verilog.emit_vivado_project_transform_pass(mg)
 
-    simulate(skip_build=True, skip_test=False)
+    simulate(skip_build=False, skip_test=False)
 
 
 if __name__ == "__main__":
