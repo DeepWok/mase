@@ -195,4 +195,5 @@ jobs:
       
       - name: Mase regression test 
         run: 
+            pip install -e .
             make test-sw
