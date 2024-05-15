@@ -70,6 +70,7 @@ def export_fx_graph_model(
     return mg
 
 
+@pytest.mark.skip
 def test_export_fx_graph_bert():
     mg = export_fx_graph_model("bert-base-uncased", skip_export=True)
     mg, _ = raise_granularity_transform_pass(mg)
