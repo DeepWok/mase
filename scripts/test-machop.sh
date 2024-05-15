@@ -11,7 +11,7 @@ set -o nounset
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
 MASE=$SCRIPT_DIR/..
 
-cd $MASE/machop
+cd $MASE/src
 
 set -o xtrace
 

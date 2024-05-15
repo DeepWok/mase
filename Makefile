@@ -36,7 +36,6 @@ else
 endif
 
 coverage=test/
-img=$(if $local,"mase-ubuntu2204:latest","deepwok/mase-docker-$(target):latest")
 
 sw_test_dir = test/
 hw_test_dir = src/mase_components/
