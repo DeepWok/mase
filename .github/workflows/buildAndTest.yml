@@ -40,8 +40,8 @@ jobs:
 
       - name: Check missing breakpoint 
         run: |
-            ! grep -rnw ./machop/chop -e "breakpoint()" || exit 1
-            ! grep -rn ./machop/chop -e "set_trace(" || exit 1
+            ! grep -rnw ./src/chop -e "breakpoint()" || exit 1
+            ! grep -rn ./src/chop -e "set_trace(" || exit 1
 
       # Choose the git commit to diff against for the purposes of linting.
       # Since this workflow is triggered on both pushes and pull requests, w

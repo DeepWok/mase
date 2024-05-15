@@ -35,11 +35,11 @@ else
     USER_PREFIX=home
 endif
 
-coverage=machop/test/
+coverage=test/
 img=$(if $local,"mase-ubuntu2204:latest","deepwok/mase-docker-$(target):latest")
 
-sw_test_dir = machop/test/
-hw_test_dir = machop/mase_components/
+sw_test_dir = test/
+hw_test_dir = src/mase_components/
 
 NUM_WORKERS ?= 1
 
@@ -87,7 +87,7 @@ test-sw:
 	bash scripts/test-machop.sh
 	pytest --log-level=DEBUG --verbose \
 		-n $(NUM_WORKERS) \
-		--cov=machop/chop/ --cov-report=html \
+		--cov=src/chop/ --cov-report=html \
 		--html=report.html --self-contained-html \
 		--profile --profile-svg \
 		$(sw_test_dir)

@@ -90,8 +90,8 @@ setup(
     license_files=("LICENSE",),
     python_requires=">=3.10.6",
     package_dir={
-        "": "machop",
+        "": "src",
     },
-    packages=find_packages("machop"),
+    packages=find_packages("src"),
     install_requires=requirements,
 )
