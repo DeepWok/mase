@@ -12,11 +12,11 @@ from pathlib import Path
 sys.path.append(Path(__file__).resolve().parents[5].as_posix())
 
 from chop.tools.utils import copy_weights, init_LinearLUT_weight, generate_truth_table
-from chop.passes.graph.transforms.quantize.quantized_modules.linear import (
+from chop.nn.quantized.modules.linear import (
     LinearLUT,
     LinearBinaryResidualSign,
 )
-from chop.passes.graph.transforms.quantize.quantizers import residual_sign_quantizer
+from chop.nn.quantizers import residual_sign_quantizer
 
 
 def generate_input_tensor(batch_size, input_features, min_val, max_val):
