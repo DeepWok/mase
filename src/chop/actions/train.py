@@ -3,7 +3,7 @@ import os
 from pathlib import Path
 
 import pytorch_lightning as pl
-from chop.plt_wrapper import get_model_wrapper
+from chop.tools.plt_wrapper import get_model_wrapper
 from chop.tools.checkpoint_load import load_model
 from chop.tools.get_input import get_dummy_input
 from chop.passes.graph import (
