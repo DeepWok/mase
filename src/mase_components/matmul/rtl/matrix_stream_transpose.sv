@@ -81,20 +81,20 @@ module matrix_stream_transpose #(
   // -----
 
   logic [FIFO_DATA_WIDTH-1:0] in_data_flat;
-  logic [FIFO_DATA_WIDTH-1:0] fifo_in_data [IN_DEPTH_DIM0-1:0];
-  logic fifo_in_valid [IN_DEPTH_DIM0-1:0];
-  logic fifo_in_ready [IN_DEPTH_DIM0-1:0];
-  logic [FIFO_DATA_WIDTH-1:0] fifo_out_data_flat [IN_DEPTH_DIM0-1:0];
-  logic fifo_out_valid [IN_DEPTH_DIM0-1:0];
-  logic fifo_out_ready [IN_DEPTH_DIM0-1:0];
+  logic [FIFO_DATA_WIDTH-1:0] fifo_in_data[IN_DEPTH_DIM0-1:0];
+  logic fifo_in_valid[IN_DEPTH_DIM0-1:0];
+  logic fifo_in_ready[IN_DEPTH_DIM0-1:0];
+  logic [FIFO_DATA_WIDTH-1:0] fifo_out_data_flat[IN_DEPTH_DIM0-1:0];
+  logic fifo_out_valid[IN_DEPTH_DIM0-1:0];
+  logic fifo_out_ready[IN_DEPTH_DIM0-1:0];
 
-  logic fifo_data_readys [IN_DEPTH_DIM0-1:0];
+  logic fifo_data_readys[IN_DEPTH_DIM0-1:0];
 
-  logic [FIFO_DATA_WIDTH-1:0] fifo_out_data_flat_mux_in [IN_DEPTH_DIM0-1:0];
+  logic [FIFO_DATA_WIDTH-1:0] fifo_out_data_flat_mux_in[IN_DEPTH_DIM0-1:0];
   logic [FIFO_DATA_WIDTH-1:0] fifo_out_data_flat_mux_out;
-  logic fifo_out_valids [IN_DEPTH_DIM0-1:0];
+  logic fifo_out_valids[IN_DEPTH_DIM0-1:0];
 
-  logic [DATA_WIDTH-1:0] transpose_data_in [COMPUTE_DIM0*COMPUTE_DIM1-1:0];
+  logic [DATA_WIDTH-1:0] transpose_data_in[COMPUTE_DIM0*COMPUTE_DIM1-1:0];
 
 
   // FIFOs

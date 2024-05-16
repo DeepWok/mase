@@ -2,17 +2,17 @@
 module fixed_adder_tree_layer #(
     parameter IN_SIZE  = 2,
     parameter IN_WIDTH = 16,
-    parameter SIGNED = 1,
+    parameter SIGNED   = 1,
 
     localparam OUT_WIDTH = IN_WIDTH + 1,
-    localparam OUT_SIZE = (IN_SIZE + 1) / 2
+    localparam OUT_SIZE  = (IN_SIZE + 1) / 2
 ) (
-    input  logic [IN_SIZE*IN_WIDTH-1:0]  data_in,
+    input  logic [  IN_SIZE*IN_WIDTH-1:0] data_in,
     output logic [OUT_SIZE*OUT_WIDTH-1:0] data_out
 );
 
-  logic [IN_WIDTH-1:0] data_in_unflat [IN_SIZE-1:0];
-  logic [OUT_WIDTH-1:0] data_out_unflat [OUT_SIZE-1:0];
+  logic [ IN_WIDTH-1:0] data_in_unflat [ IN_SIZE-1:0];
+  logic [OUT_WIDTH-1:0] data_out_unflat[OUT_SIZE-1:0];
 
   for (genvar i = 0; i < IN_SIZE; i++) begin : in_unflat
     assign data_in_unflat[i] = data_in[(i+1)*IN_WIDTH-1 : i*IN_WIDTH];

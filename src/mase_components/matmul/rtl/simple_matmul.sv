@@ -72,14 +72,14 @@ module simple_matmul #(
   // Wires
   // -----
 
-  logic [Y_WIDTH-1:0] y_data_transpose [K*M-1:0];
+  logic [Y_WIDTH-1:0] y_data_transpose[K*M-1:0];
   logic dot_product_ready;
   logic inputs_valid, inputs_ready;
 
   logic [N*K-1:0] dot_product_valid;
   logic [N*K-1:0] sync_ready;
-  logic [ACC_WIDTH-1:0] dot_product_data_out [N*K-1:0];
-  logic [OUT_WIDTH-1:0] rounded_dot_product [N*K-1:0];
+  logic [ACC_WIDTH-1:0] dot_product_data_out[N*K-1:0];
+  logic [OUT_WIDTH-1:0] rounded_dot_product[N*K-1:0];
 
 
   // -----
@@ -89,21 +89,21 @@ module simple_matmul #(
   // Need to synchronise x & y inputs
   assign inputs_ready = sync_ready[0];
   join2 sync_handshake (
-      .data_in_valid   ({x_valid, y_valid}),
-      .data_in_ready   ({x_ready, y_ready}),
-      .data_out_valid  (inputs_valid),
-      .data_out_ready  (inputs_ready)
+      .data_in_valid ({x_valid, y_valid}),
+      .data_in_ready ({x_ready, y_ready}),
+      .data_out_valid(inputs_valid),
+      .data_out_ready(inputs_ready)
   );
 
   // Transpose y to make column assignment easier, this module is just a rewire
   // so it shouldn't contribute anything to comb path.
   transpose #(
-    .WIDTH(Y_WIDTH),
-    .DIM0(K),
-    .DIM1(M)
+      .WIDTH(Y_WIDTH),
+      .DIM0 (K),
+      .DIM1 (M)
   ) y_transpose (
-    .in_data(y_data),
-    .out_data(y_data_transpose)
+      .in_data (y_data),
+      .out_data(y_data_transpose)
   );
 
   // Instantiate N-by-K number of dot products
@@ -111,36 +111,36 @@ module simple_matmul #(
     for (genvar j = 0; j < K; j++) begin : multi_col
 
       fixed_dot_product #(
-          .IN_WIDTH        (X_WIDTH),
-          .IN_SIZE         (M),
-          .WEIGHT_WIDTH    (Y_WIDTH)
+          .IN_WIDTH    (X_WIDTH),
+          .IN_SIZE     (M),
+          .WEIGHT_WIDTH(Y_WIDTH)
       ) dot_product_inst (
-          .clk             (clk),
-          .rst             (rst),
-          .data_in         (x_data[((i+1)*M)-1 : i*M]),
-          .data_in_valid   (inputs_valid),
-          .data_in_ready   (sync_ready[i*K+j]),
-          .weight          (y_data_transpose[((j+1)*M)-1 : j*M]),
-          .weight_valid    (inputs_valid),
+          .clk           (clk),
+          .rst           (rst),
+          .data_in       (x_data[((i+1)*M)-1 : i*M]),
+          .data_in_valid (inputs_valid),
+          .data_in_ready (sync_ready[i*K+j]),
+          .weight        (y_data_transpose[((j+1)*M)-1 : j*M]),
+          .weight_valid  (inputs_valid),
           /* verilator lint_off PINCONNECTEMPTY */
           // This pin is the same as data_in_ready pin
-          .weight_ready    (),
+          .weight_ready  (),
           /* verilator lint_on PINCONNECTEMPTY */
-          .data_out        (dot_product_data_out[i*K+j]),
-          .data_out_valid  (dot_product_valid[i*K+j]),
-          .data_out_ready  (dot_product_ready)
+          .data_out      (dot_product_data_out[i*K+j]),
+          .data_out_valid(dot_product_valid[i*K+j]),
+          .data_out_ready(dot_product_ready)
       );
 
       if (OUTPUT_ROUNDING) begin : rounding
         // Rounded output
         fixed_round #(
-            .IN_WIDTH        (ACC_WIDTH),
-            .IN_FRAC_WIDTH   (ACC_FRAC_WIDTH),
-            .OUT_WIDTH       (OUT_WIDTH),
-            .OUT_FRAC_WIDTH  (OUT_FRAC_WIDTH)
+            .IN_WIDTH      (ACC_WIDTH),
+            .IN_FRAC_WIDTH (ACC_FRAC_WIDTH),
+            .OUT_WIDTH     (OUT_WIDTH),
+            .OUT_FRAC_WIDTH(OUT_FRAC_WIDTH)
         ) round_inst (
-            .data_in         (dot_product_data_out[i*K+j]),
-            .data_out        (rounded_dot_product[i*K+j])
+            .data_in (dot_product_data_out[i*K+j]),
+            .data_out(rounded_dot_product[i*K+j])
         );
         assign out_data[i*K+j] = rounded_dot_product[i*K+j];
       end else begin : no_rounding
