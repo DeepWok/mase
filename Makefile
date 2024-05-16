@@ -35,7 +35,12 @@ else
     USER_PREFIX=home
 endif
 
-coverage=machop/test/
+coverage=test/
+
+sw_test_dir = test/
+hw_test_dir = src/mase_components/
+
+NUM_WORKERS ?= 1
 
 sw_test_dir = machop/test/
 hw_test_dir = machop/mase_components/
@@ -82,12 +87,11 @@ test-hw:
 		--html=report.html --self-contained-html \
 		$(hw_test_dir)
 
-
 test-sw:
 	bash scripts/test-machop.sh
 	pytest --log-level=DEBUG --verbose \
-		-n 1 \
-		--cov=machop/chop/ --cov-report=html \
+		-n $(NUM_WORKERS) \
+		--cov=src/chop/ --cov-report=html \
 		--html=report.html --self-contained-html \
 		--profile --profile-svg \
 		$(sw_test_dir)

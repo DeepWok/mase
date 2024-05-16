@@ -1,0 +1,17 @@
+# basics
+model = "jsc-toy"
+dataset = "jsc"
+task = "cls"
+
+load_name = "../mase_output/jsc-toy_cls_jsc-pre-trained/best.ckpt"
+load_type = "pl"
+
+max_epochs = 10
+batch_size = 64
+accelerator = "gpu"
+learning_rate = 1e-3
+
+[passes.onnxruntime.runtime_analysis]
+num_batches = 100
+num_GPU_warmup_batches = 5
+test = true

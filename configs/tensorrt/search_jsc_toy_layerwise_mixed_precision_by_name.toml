@@ -1,0 +1,92 @@
+# basics
+model = "jsc-toy"
+dataset = "jsc"
+task = "cls"
+
+is_pretrained = true
+load_name = "../mase_output/jsc-toy_classification_jsc_2024-03-17/software/training_ckpts/best.ckpt"
+load_type = "pl"
+accelerator = "gpu"
+batch_size = 64
+
+
+[passes.tensorrt]
+num_calibration_batches = 10
+post_calibration_analysis = false
+
+[passes.tensorrt.default.config]
+quantize = true
+calibrators = ["percentile"]
+percentiles = [99.0, 99.9]
+precision = 'int8'
+
+[passes.tensorrt.default.input]
+calibrator = 'histogram'
+quantize_axis = false
+
+[passes.tensorrt.default.weight]
+calibrator = 'histogram'
+quantize_axis = false
+
+[search.search_space]
+name = "graph/tensorrt/mixed_precision_ptq"
+
+[search.search_space.setup]
+by = "name"
+model = "jsc-toy"
+dataset = "jsc"
+task = "cls"
+
+[search.search_space.seed.default.config]
+# the only choice "NA" is used to indicate that layers are not quantized by default
+name = ["NA"]
+
+[search.search_space.seed.seq_blocks_2.config]
+# if search.search_space.setup.by = "name", this seed will be used to quantize the mase graph node with name "seq_blocks_2"
+# name = ["integer"]
+precision = ['int8', 'fp16', 'fp32']
+calibrators = ['entropy','mse','max']
+# percentile = [99.0, 99.5, 99.9] # only used if calibration_method='percentile'
+# num_calibration_batches = 10
+
+[search.search_space.seed.seq_blocks_5.config]
+# name = ["integer"]
+precision = ['int8', 'fp16', 'fp32']
+calibrators = ['entropy','mse','max']
+# percentile = [99.0, 99.5, 99.9] # only used if calibration_method='percentile'
+# num_calibration_batches = 10
+
+[search.search_space.seed.seq_blocks_8.config]
+# name = ["integer"]
+precision = ['int8', 'fp16', 'fp32']
+calibrators = ['entropy','mse','max']
+# percentile = [99.0, 99.5, 99.9] # only used if calibration_method='percentile'
+# num_calibration_batches = 10
+
+[search.strategy]
+name = "optuna"
+eval_mode = true
+
+[search.strategy.sw_runner.basic_evaluation]
+data_loader = "val_dataloader"
+num_samples = 512
+
+[search.strategy.hw_runner.average_bitwidth]
+compare_to = 32 # compare to FP32
+
+[search.strategy.setup]
+n_jobs = 1
+n_trials = 20
+timeout = 20000
+sampler = "tpe"
+# sum_scaled_metrics = true # single objective
+# direction = "maximize"
+sum_scaled_metrics = false # multi objective
+
+[search.strategy.metrics]
+# loss.scale = 1.0
+# loss.direction = "minimize"
+accuracy.scale = 1.0
+accuracy.direction = "maximize"
+average_bitwidth.scale = 0.2
+average_bitwidth.direction = "minimize"
