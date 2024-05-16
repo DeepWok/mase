@@ -1,1 +1,0 @@
-from .nerf import NeRFModelWrapper

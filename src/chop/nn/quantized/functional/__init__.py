@@ -1,6 +1,5 @@
-<<<<<<< HEAD
 from .softermax import fixed_softermax
-=======
+
 from .add import (
     add_block_fp,
     add_block_log,
@@ -248,4 +247,3 @@ quantized_func_map = {
     "softplus_binary": softplus_binary,
     "softplus_ternary": softplus_ternary,
 }
->>>>>>> origin/main
