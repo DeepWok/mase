@@ -11,7 +11,7 @@ sys.path.append("../")
 from mase_cocotb.z_qlayers import quantize_to_int
 
 from functools import partial
-from chop.passes.graph.transforms.quantize.quantizers import integer_quantizer
+from chop.nn.quantizers import integer_quantizer
 
 
 # Apparently this function only exists in Python 3.12 ...

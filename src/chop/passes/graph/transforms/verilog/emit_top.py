@@ -327,6 +327,8 @@ class VerilogInternalComponentEmitter:
         for key, value in (
             node.meta["mase"].parameters["hardware"]["verilog_param"].items()
         ):
+            if value is None:
+                continue
             key_value = parameter_map[f"{node_name}_{key}"]
             debug_info = f"// = {key_value}"
             parameters += f"""    .{key}({node_name}_{key}), {debug_info}\n"""

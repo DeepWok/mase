@@ -15,6 +15,8 @@ def get_verilog_parameters(graph):
         for key, value in (
             node.meta["mase"].parameters["hardware"]["verilog_param"].items()
         ):
+            if value is None:
+                continue
             if not isinstance(value, (int, float, complex, bool)):
                 value = '"' + value + '"'
             assert (

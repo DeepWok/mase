@@ -1,7 +1,7 @@
 from torch import Tensor
 from math import ceil
 
-from chop.passes.graph.transforms.quantize.quantizers import (
+from chop.nn.quantizers import (
     integer_quantizer,
     integer_floor_quantizer,
 )

@@ -6,10 +6,10 @@ import math
 from typing import Optional, Tuple
 from functools import partial
 
-from chop.passes.graph.transforms.quantize.quantized_funcs.matmul import (
+from chop.nn.quantized.functional.matmul import (
     generic_matmul_integer,
 )
-from chop.passes.graph.transforms.quantize.quantizers.integer import integer_quantizer
+from chop.nn.quantizers.integer import integer_quantizer
 
 
 class _BertSelfAttentionHeadBase(torch.nn.Module):
