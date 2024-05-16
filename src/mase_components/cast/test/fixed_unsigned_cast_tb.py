@@ -67,7 +67,7 @@ class FixedUnsignedCastTB(Testbench):
         float_input = inputs / (2**self.IN_FRAC_WIDTH)
         scaled_float = float_input * (2**self.OUT_FRAC_WIDTH)
         rounded = torch.floor(scaled_float)
-        model_out = torch.clamp(rounded, 0, (2 ** self.OUT_WIDTH - 1))
+        model_out = torch.clamp(rounded, 0, (2**self.OUT_WIDTH - 1))
         return model_out
 
     async def run_test(self):
@@ -85,7 +85,9 @@ class FixedUnsignedCastTB(Testbench):
             await Timer(10, "ns")
             got_y = int(self.dut.out_data.value)
 
-            assert got_y == exp_output[i], f"Output did not match! Got {got_y}, Exp {exp_y}"
+            assert (
+                got_y == exp_output[i]
+            ), f"Output did not match! Got {got_y}, Exp {exp_y}"
 
 
 @cocotb.test()

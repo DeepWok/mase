@@ -24,21 +24,19 @@ logger.setLevel("DEBUG")
 class ComparatorTreeTB(Testbench):
     def __init__(self, dut) -> None:
         super().__init__(dut, dut.clk, dut.rst)
-        self.assign_self_params([
-            "SIZE", "DATA_WIDTH", "MAX1_MIN0", "SIGNED"
-        ])
+        self.assign_self_params(["SIZE", "DATA_WIDTH", "MAX1_MIN0", "SIGNED"])
 
         # Driver/Monitor
-        self.in_driver = StreamDriver(
-            dut.clk, dut.in_data, dut.in_valid, dut.in_ready
-        )
+        self.in_driver = StreamDriver(dut.clk, dut.in_data, dut.in_valid, dut.in_ready)
         self.output_monitor = StreamMonitor(
             dut.clk, dut.out_data, dut.out_valid, dut.out_ready, check=True
         )
 
     def generate_inputs(self, batches=3):
-        return [[randint(0, 2**self.DATA_WIDTH - 1) for _ in range(self.SIZE)]
-                for _ in range(batches)]
+        return [
+            [randint(0, 2**self.DATA_WIDTH - 1) for _ in range(self.SIZE)]
+            for _ in range(batches)
+        ]
 
     def model(self, inputs):
         if self.SIGNED:

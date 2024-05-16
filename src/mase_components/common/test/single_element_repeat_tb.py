@@ -26,7 +26,7 @@ class SingleElementRepeatTB(Testbench):
         )
 
     def generate_inputs(self, num=10):
-        return [random.randint(0, 2**self.DATA_WIDTH-1) for _ in range(num)]
+        return [random.randint(0, 2**self.DATA_WIDTH - 1) for _ in range(num)]
 
     def model(self, inputs):
         exp_out = []

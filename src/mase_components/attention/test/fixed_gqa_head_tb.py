@@ -8,12 +8,13 @@ import numpy as np
 
 from mase_cocotb.runner import mase_runner
 from mase_cocotb.testbench import Testbench
-from mase_cocotb.matrix_tools import gen_random_matrix_input, rebuild_matrix, split_matrix
-from mase_cocotb.utils import bit_driver, sign_extend_t, batched, signed_to_unsigned
-from mase_cocotb.interfaces.streaming import (
-    StreamDriver,
-    ErrorThresholdStreamMonitor
+from mase_cocotb.matrix_tools import (
+    gen_random_matrix_input,
+    rebuild_matrix,
+    split_matrix,
 )
+from mase_cocotb.utils import bit_driver, sign_extend_t, batched, signed_to_unsigned
+from mase_cocotb.interfaces.streaming import StreamDriver, ErrorThresholdStreamMonitor
 
 import cocotb
 from cocotb.triggers import *
@@ -21,10 +22,10 @@ from cocotb.triggers import *
 from chop.nn.quantized.functional import fixed_softermax
 
 from chop.passes.graph.transforms.quantize.quantizers.integer import (
-    integer_floor_quantizer
+    integer_floor_quantizer,
 )
 from chop.passes.graph.transforms.quantize.quantizers.quantizers_for_hw import (
-    unsigned_integer_quantizer_for_hw
+    unsigned_integer_quantizer_for_hw,
 )
 
 logger = logging.getLogger("testbench")
@@ -34,16 +35,36 @@ logger.setLevel("INFO")
 class FixedGQAHeadTB(Testbench):
     def __init__(self, dut) -> None:
         super().__init__(dut, dut.clk, dut.rst)
-        self.assign_self_params([
-            "TOTAL_EMBEDDING_DIM", "TOTAL_HEAD_DIM", "TOTAL_SEQUENCE_DIM",
-            "COMPUTE_EMBEDDING_DIM", "COMPUTE_HEAD_DIM", "COMPUTE_SEQUENCE_DIM",
-            "Q_ACT_WIDTH", "Q_ACT_FRAC_WIDTH", "Q_WEIGHT_WIDTH", "Q_WEIGHT_FRAC_WIDTH",
-            "K_ACT_WIDTH", "K_ACT_FRAC_WIDTH", "V_ACT_WIDTH", "V_ACT_FRAC_WIDTH",
-            "OUT_ACT_WIDTH", "OUT_ACT_FRAC_WIDTH", "Q_OUT_WIDTH", "Q_OUT_FRAC_WIDTH",
-            "QK_OUT_WIDTH", "QK_OUT_FRAC_WIDTH", "SOFTERMAX_POW2_WIDTH",
-            "SOFTERMAX_OUT_WIDTH", "SOFTERMAX_OUT_FRAC_WIDTH",
-            "EMBEDDING_DEPTH", "HEAD_DEPTH", "SEQUENCE_DEPTH",
-        ])
+        self.assign_self_params(
+            [
+                "TOTAL_EMBEDDING_DIM",
+                "TOTAL_HEAD_DIM",
+                "TOTAL_SEQUENCE_DIM",
+                "COMPUTE_EMBEDDING_DIM",
+                "COMPUTE_HEAD_DIM",
+                "COMPUTE_SEQUENCE_DIM",
+                "Q_ACT_WIDTH",
+                "Q_ACT_FRAC_WIDTH",
+                "Q_WEIGHT_WIDTH",
+                "Q_WEIGHT_FRAC_WIDTH",
+                "K_ACT_WIDTH",
+                "K_ACT_FRAC_WIDTH",
+                "V_ACT_WIDTH",
+                "V_ACT_FRAC_WIDTH",
+                "OUT_ACT_WIDTH",
+                "OUT_ACT_FRAC_WIDTH",
+                "Q_OUT_WIDTH",
+                "Q_OUT_FRAC_WIDTH",
+                "QK_OUT_WIDTH",
+                "QK_OUT_FRAC_WIDTH",
+                "SOFTERMAX_POW2_WIDTH",
+                "SOFTERMAX_OUT_WIDTH",
+                "SOFTERMAX_OUT_FRAC_WIDTH",
+                "EMBEDDING_DEPTH",
+                "HEAD_DEPTH",
+                "SEQUENCE_DEPTH",
+            ]
+        )
 
         # Additional Params
         self.q_act_num_iters = self.EMBEDDING_DEPTH * self.SEQUENCE_DEPTH
@@ -127,7 +148,9 @@ class FixedGQAHeadTB(Testbench):
 
         # Specify Error Threshold
         self.percentage_error = 0.05  # 5%
-        self.error_threshold_bits = ceil(self.percentage_error * (2**self.OUT_ACT_WIDTH))
+        self.error_threshold_bits = ceil(
+            self.percentage_error * (2**self.OUT_ACT_WIDTH)
+        )
 
         self.output_monitor = ErrorThresholdStreamMonitor(
             dut.clk,
@@ -148,18 +171,20 @@ class FixedGQAHeadTB(Testbench):
         v_act = []
 
         for _ in range(batches):
-            q_act.extend(gen_random_matrix_input(
-                **self.q_act_dims, **self.q_act_widths
-            ))
-            q_weight.extend(gen_random_matrix_input(
-                **self.q_weight_dims, **self.q_weight_widths
-            ))
-            k_transpose_act.extend(gen_random_matrix_input(
-                **self.k_transpose_act_dims, **self.k_transpose_act_widths
-            ))
-            v_act.extend(gen_random_matrix_input(
-                **self.v_act_dims, **self.v_act_widths
-            ))
+            q_act.extend(
+                gen_random_matrix_input(**self.q_act_dims, **self.q_act_widths)
+            )
+            q_weight.extend(
+                gen_random_matrix_input(**self.q_weight_dims, **self.q_weight_widths)
+            )
+            k_transpose_act.extend(
+                gen_random_matrix_input(
+                    **self.k_transpose_act_dims, **self.k_transpose_act_widths
+                )
+            )
+            v_act.extend(
+                gen_random_matrix_input(**self.v_act_dims, **self.v_act_widths)
+            )
 
         return {
             "q_act": q_act,
@@ -178,20 +203,22 @@ class FixedGQAHeadTB(Testbench):
             compute_dim0,
             compute_dim1,
             width,
-            frac_width
+            frac_width,
         ):
             matrix_list = []
             for mat in batched(input_list, n=num_iters):
-                matrix_list.append(rebuild_matrix(
-                    x=mat,
-                    total_dim0=total_dim0,
-                    total_dim1=total_dim1,
-                    compute_dim0=compute_dim0,
-                    compute_dim1=compute_dim1,
-                ))
+                matrix_list.append(
+                    rebuild_matrix(
+                        x=mat,
+                        total_dim0=total_dim0,
+                        total_dim1=total_dim1,
+                        compute_dim0=compute_dim0,
+                        compute_dim1=compute_dim1,
+                    )
+                )
             matrix_t = torch.stack(matrix_list)
             signed_matrix = sign_extend_t(matrix_t, bits=width)
-            scaled_matrix = signed_matrix.float() / (2 ** frac_width)
+            scaled_matrix = signed_matrix.float() / (2**frac_width)
             return scaled_matrix
 
         q_act = _reconstruct(
@@ -229,7 +256,7 @@ class FixedGQAHeadTB(Testbench):
             x=q_out,
             width=self.Q_OUT_WIDTH,
             frac_width=self.Q_OUT_FRAC_WIDTH,
-            is_signed=True
+            is_signed=True,
         )
 
         qk_out = torch.matmul(q_out, k_transpose_act)
@@ -237,7 +264,7 @@ class FixedGQAHeadTB(Testbench):
             x=qk_out,
             width=self.QK_OUT_WIDTH,
             frac_width=self.QK_OUT_FRAC_WIDTH,
-            is_signed=True
+            is_signed=True,
         )
 
         softermax_out = fixed_softermax(
@@ -252,7 +279,7 @@ class FixedGQAHeadTB(Testbench):
             x=softermax_out,
             width=self.SOFTERMAX_OUT_WIDTH,
             frac_width=self.SOFTERMAX_OUT_FRAC_WIDTH,
-            is_signed=False
+            is_signed=False,
         )
 
         attention_out = torch.matmul(softermax_out, v_act)
@@ -260,7 +287,7 @@ class FixedGQAHeadTB(Testbench):
             x=attention_out,
             width=self.OUT_ACT_WIDTH,
             frac_width=self.OUT_ACT_FRAC_WIDTH,
-            is_signed=True
+            is_signed=True,
         )
 
         logger.debug("q_out: %s" % q_out)
@@ -275,7 +302,7 @@ class FixedGQAHeadTB(Testbench):
             frac_width=self.OUT_ACT_FRAC_WIDTH,
             is_signed=True,
         )
-        atten_int = (rounded_atten * (2 ** self.OUT_ACT_FRAC_WIDTH)).int()
+        atten_int = (rounded_atten * (2**self.OUT_ACT_FRAC_WIDTH)).int()
         atten_uint = signed_to_unsigned(atten_int, bits=self.OUT_ACT_WIDTH)
         logger.debug("rounded_atten: %s" % rounded_atten)
         logger.debug("atten_int: %s" % atten_int)
@@ -348,7 +375,6 @@ async def valid_backpressure(dut):
     await tb.run_test(batches=200, us=2000)
 
 
-
 if __name__ == "__main__":
 
     def width_cfgs(prefix: str, cfgs: list[dict]):
@@ -361,36 +387,43 @@ if __name__ == "__main__":
     def dimension_cfgs(cfgs: list[dict]):
         new_cfgs = []
         for cfg in cfgs:
-            new_cfgs.append({
-                **cfg,
-                "TOTAL_EMBEDDING_DIM": 64,
-                "TOTAL_HEAD_DIM": 16,
-                "TOTAL_SEQUENCE_DIM": 8,
-            })
-            new_cfgs.append({
-                **cfg,
-                "TOTAL_EMBEDDING_DIM": 16,
-                "TOTAL_HEAD_DIM": 8,
-                "TOTAL_SEQUENCE_DIM": 16,
-            })
+            new_cfgs.append(
+                {
+                    **cfg,
+                    "TOTAL_EMBEDDING_DIM": 64,
+                    "TOTAL_HEAD_DIM": 16,
+                    "TOTAL_SEQUENCE_DIM": 8,
+                }
+            )
+            new_cfgs.append(
+                {
+                    **cfg,
+                    "TOTAL_EMBEDDING_DIM": 16,
+                    "TOTAL_HEAD_DIM": 8,
+                    "TOTAL_SEQUENCE_DIM": 16,
+                }
+            )
         return new_cfgs
-
 
     def compute_dim_cfgs(cfgs: list[dict]):
         new_cfgs = []
         for cfg in cfgs:
-            new_cfgs.append({
-                **cfg,
-                "COMPUTE_EMBEDDING_DIM": 2,
-                "COMPUTE_HEAD_DIM": 2,
-                "COMPUTE_SEQUENCE_DIM": 2,
-            })
-            new_cfgs.append({
-                **cfg,
-                "COMPUTE_EMBEDDING_DIM": 4,
-                "COMPUTE_HEAD_DIM": 4,
-                "COMPUTE_SEQUENCE_DIM": 4,
-            })
+            new_cfgs.append(
+                {
+                    **cfg,
+                    "COMPUTE_EMBEDDING_DIM": 2,
+                    "COMPUTE_HEAD_DIM": 2,
+                    "COMPUTE_SEQUENCE_DIM": 2,
+                }
+            )
+            new_cfgs.append(
+                {
+                    **cfg,
+                    "COMPUTE_EMBEDDING_DIM": 4,
+                    "COMPUTE_HEAD_DIM": 4,
+                    "COMPUTE_SEQUENCE_DIM": 4,
+                }
+            )
         return new_cfgs
 
     DEFAULT = {
@@ -429,8 +462,33 @@ if __name__ == "__main__":
     for prefix in ["Q_ACT", "Q_WEIGHT", "K_ACT", "V_ACT", "OUT_ACT"]:
         cfgs = width_cfgs(prefix, cfgs)
 
-
-    cfgs = [{'TOTAL_EMBEDDING_DIM': 64, 'TOTAL_HEAD_DIM': 16, 'TOTAL_SEQUENCE_DIM': 8, 'COMPUTE_EMBEDDING_DIM': 2, 'COMPUTE_HEAD_DIM': 2, 'COMPUTE_SEQUENCE_DIM': 2, 'Q_ACT_WIDTH': 8, 'Q_ACT_FRAC_WIDTH': 4, 'Q_WEIGHT_WIDTH': 8, 'Q_WEIGHT_FRAC_WIDTH': 4, 'K_ACT_WIDTH': 8, 'K_ACT_FRAC_WIDTH': 4, 'V_ACT_WIDTH': 8, 'V_ACT_FRAC_WIDTH': 4, 'OUT_ACT_WIDTH': 8, 'OUT_ACT_FRAC_WIDTH': 4, 'Q_OUT_WIDTH': 16, 'Q_OUT_FRAC_WIDTH': 4, 'QK_OUT_WIDTH': 16, 'QK_OUT_FRAC_WIDTH': 4, 'SOFTERMAX_POW2_WIDTH': 16, 'SOFTERMAX_OUT_WIDTH': 16, 'SOFTERMAX_OUT_FRAC_WIDTH': 15}]
+    cfgs = [
+        {
+            "TOTAL_EMBEDDING_DIM": 64,
+            "TOTAL_HEAD_DIM": 16,
+            "TOTAL_SEQUENCE_DIM": 8,
+            "COMPUTE_EMBEDDING_DIM": 2,
+            "COMPUTE_HEAD_DIM": 2,
+            "COMPUTE_SEQUENCE_DIM": 2,
+            "Q_ACT_WIDTH": 8,
+            "Q_ACT_FRAC_WIDTH": 4,
+            "Q_WEIGHT_WIDTH": 8,
+            "Q_WEIGHT_FRAC_WIDTH": 4,
+            "K_ACT_WIDTH": 8,
+            "K_ACT_FRAC_WIDTH": 4,
+            "V_ACT_WIDTH": 8,
+            "V_ACT_FRAC_WIDTH": 4,
+            "OUT_ACT_WIDTH": 8,
+            "OUT_ACT_FRAC_WIDTH": 4,
+            "Q_OUT_WIDTH": 16,
+            "Q_OUT_FRAC_WIDTH": 4,
+            "QK_OUT_WIDTH": 16,
+            "QK_OUT_FRAC_WIDTH": 4,
+            "SOFTERMAX_POW2_WIDTH": 16,
+            "SOFTERMAX_OUT_WIDTH": 16,
+            "SOFTERMAX_OUT_FRAC_WIDTH": 15,
+        }
+    ]
     print(f"Running Tests on {len(cfgs)} Configs...")
 
     mase_runner(

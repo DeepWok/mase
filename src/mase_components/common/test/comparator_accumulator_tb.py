@@ -24,14 +24,10 @@ logger.setLevel("DEBUG")
 class ComparatorAccumulatorTB(Testbench):
     def __init__(self, dut) -> None:
         super().__init__(dut, dut.clk, dut.rst)
-        self.assign_self_params([
-            "DATA_WIDTH", "DEPTH", "MAX1_MIN0", "SIGNED"
-        ])
+        self.assign_self_params(["DATA_WIDTH", "DEPTH", "MAX1_MIN0", "SIGNED"])
 
         # Driver/Monitor
-        self.in_driver = StreamDriver(
-            dut.clk, dut.in_data, dut.in_valid, dut.in_ready
-        )
+        self.in_driver = StreamDriver(dut.clk, dut.in_data, dut.in_valid, dut.in_ready)
         self.output_monitor = StreamMonitor(
             dut.clk, dut.out_data, dut.out_valid, dut.out_ready, check=False
         )
@@ -44,7 +40,9 @@ class ComparatorAccumulatorTB(Testbench):
         batched_in = batched(inputs, self.DEPTH)
 
         if self.SIGNED:
-            batched_in = [[sign_extend(x, self.DATA_WIDTH) for x in l] for l in batched_in]
+            batched_in = [
+                [sign_extend(x, self.DATA_WIDTH) for x in l] for l in batched_in
+            ]
 
         exp_out = []
         for l in batched_in:
@@ -64,8 +62,8 @@ class ComparatorAccumulatorTB(Testbench):
 
         # Log the first batch
         logger.info("First Batch")
-        logger.info("Input : %s" % inputs[:self.DEPTH])
-        logger.info("Expect: %s" % exp_out[:self.DEPTH])
+        logger.info("Input : %s" % inputs[: self.DEPTH])
+        logger.info("Expect: %s" % exp_out[: self.DEPTH])
 
         self.in_driver.load_driver(inputs)
         self.output_monitor.load_monitor(exp_out)
