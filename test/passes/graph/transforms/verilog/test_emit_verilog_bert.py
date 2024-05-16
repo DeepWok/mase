@@ -1,77 +1,119 @@
-from transformers import AutoConfig, AutoModel
-from transformers.utils.fx import symbolic_trace
+import sys
 
+import torch
+import torch.nn as nn
 from torch import Tensor
 from torch.fx import GraphModule
-from chop.ir import MaseGraph
 
+import chop.passes as passes
+import chop.actions as actions
+from chop.ir import MaseGraph
 from chop.models.patched.bert import BertConfig, BertModel
 from chop.models.patched.bert.modeling_bert import BertSelfAttention, BertEmbeddings
+from chop.passes.graph.utils import deepsetattr
+from chop.nn.quantized import BertSelfAttentionInteger, LinearInteger, LayerNormInteger
+from chop.tools import get_logger, set_excepthook
 
-from chop.passes import (
-    init_metadata_analysis_pass,
-    add_common_metadata_analysis_pass,
-    add_hardware_metadata_analysis_pass,
-    emit_verilog_top_transform_pass,
-    emit_internal_rtl_transform_pass,
-    emit_bram_transform_pass,
-)
+from mase_components import get_module_dependencies
 
-import sys, pdb, traceback
-import torch
+logger = get_logger(__name__)
+logger.setLevel("DEBUG")
+set_excepthook()
+
+# * Define custom ops (leaf submodules during tracing)
+# * This is useful so we can write a single optimised verilog file for self attention,
+# * instead of relying on emit_verilog to instantiate each submodule
+BERT_CUSTOM_OPS = {
+    "modules": {
+        BertSelfAttentionInteger: {
+            "args": {
+                "hidden_states": "data_in",
+                "attention_mask": None,
+                "head_mask": None,
+                "encoder_hidden_states": None,
+                "encoder_attention_mask": None,
+                "past_key_value": None,
+                "output_attentions": "config",
+            },
+            "toolchain": "INTERNAL_RTL",
+            "module": "fixed_self_attention_single_precision_wrapper",
+            "dependence_files": get_module_dependencies(
+                "attention/fixed_self_attention_single_precision_wrapper"
+            ),
+        },
+        LinearInteger: {
+            "args": {
+                "x": "data_in",
+            },
+            "toolchain": "INTERNAL_RTL",
+            "module": "fixed_linear",
+            "dependence_files": get_module_dependencies("linear/fixed_linear"),
+        },
+        LayerNormInteger: {
+            "args": {
+                "x": "data_in",
+            },
+            "toolchain": "INTERNAL_RTL",
+            "module": "norm",
+            "dependence_files": get_module_dependencies("norm/norm"),
+        },
+    },
+    "functions": {},
+}
 
 
-def excepthook(exc_type, exc_value, exc_traceback):
-    traceback.print_exception(exc_type, exc_value, exc_traceback)
-    print("\nEntering debugger...")
-    pdb.post_mortem(exc_traceback)
-
-
-# sys.excepthook = excepthook
+def bert_module_level_quantize(model, model_config, q_config):
+    for module in model.named_modules():
+        if isinstance(module[1], BertSelfAttention):
+            new_module = BertSelfAttentionInteger(
+                model_config, q_config, output_tensor_only=True
+            )
+        elif isinstance(module[1], nn.Linear):
+            new_module = LinearInteger(
+                in_features=module[1].in_features,
+                out_features=module[1].out_features,
+                bias=module[1].bias is not None,
+                config=q_config,
+            )
+        elif isinstance(module[1], nn.LayerNorm):
+            new_module = LayerNormInteger(
+                normalized_shape=module[1].normalized_shape,
+                eps=module[1].eps,
+                config=q_config,
+            )
+        else:
+            continue
+        deepsetattr(model, module[0], new_module)
+    return model
 
 
 def test_emit_verilog_bert():
 
-    # * Get model with custom configuration
+    # * Define custom configuration
     config = BertConfig()
-    config.num_hidden_layers = 3
+    config.num_hidden_layers = 1
     config.hidden_size = 384
     config.intermediate_size = 1536
 
-    model = BertModel(config)
-
-    # * Define custom ops (leaf submodules during tracing)
-    custom_ops = {
-        "modules": {
-            BertEmbeddings: {
-                "args": {
-                    "input_ids": "data_in",
-                    "token_type_ids": "data_in",
-                    "position_ids": "data_in",
-                    "inputs_embeds": "data_in",
-                    "past_key_values_length": "data_in",
-                },
-            },
-            BertSelfAttention: {
-                "args": {
-                    "hidden_states": "data_in",
-                    "attention_mask": None,
-                    "head_mask": None,
-                    "encoder_hidden_states": None,
-                    "encoder_attention_mask": None,
-                    "past_key_value": None,
-                    "output_attentions": "config",
-                },
-                "toolchain": "INTERNAL_RTL",
-                "module": "attention/fixed_self_attention.sv",
-            },
-        },
-        "functions": {},
+    q_config = {
+        "data_in_width": 16,
+        "data_in_frac_width": 3,
+        "weight_width": 16,
+        "weight_frac_width": 3,
+        "bias_width": 16,
+        "bias_frac_width": 3,
+        "data_out_width": 16,
+        "data_out_frac_width": 3,
     }
 
+    # * Get model and quantize self attention, linear and layer norm layers
+    model = BertModel(config)
+    model = bert_module_level_quantize(model, config, q_config)
+    logger.info(f"Quantized BERT model: {model}")
+
     # * Trace the model
-    mg = MaseGraph(model, custom_ops=custom_ops)
-    mg, _ = init_metadata_analysis_pass(mg)
+    mg = MaseGraph(model, custom_ops=BERT_CUSTOM_OPS)
+    mg, _ = passes.init_metadata_analysis_pass(mg)
 
     # * Save the print tabular to a file
     with open("bert.txt", "w") as f:
@@ -80,7 +122,7 @@ def test_emit_verilog_bert():
         sys.stdout = sys.__stdout__
 
     # * Add metadata analysis passes
-    mg, _ = add_common_metadata_analysis_pass(
+    mg, _ = passes.add_common_metadata_analysis_pass(
         mg,
         pass_args={
             "dummy_in": {"input_ids": torch.randn((1, 128, 384))},
@@ -88,7 +130,7 @@ def test_emit_verilog_bert():
         },
     )
 
-    mg, _ = add_hardware_metadata_analysis_pass(mg)
+    mg, _ = passes.add_hardware_metadata_analysis_pass(mg)
 
     # ! TO DO: remove (debug)
     # i = 0
@@ -106,9 +148,13 @@ def test_emit_verilog_bert():
 
     #     i += 1
 
-    mg, _ = emit_verilog_top_transform_pass(mg)
-    # mg, _ = emit_internal_rtl_transform_pass(mg)
-    # mg, _ = emit_bram_transform_pass(mg)
+    mg, _ = passes.emit_verilog_top_transform_pass(mg)
+    # mg, _ = passes.emit_bram_transform_pass(mg)
+    mg, _ = passes.emit_internal_rtl_transform_pass(mg)
+    mg, _ = passes.emit_cocotb_transform_pass(mg)
+    mg, _ = passes.emit_vivado_project_transform_pass(mg)
+
+    actions.simulate(skip_build=False, skip_test=False)
 
 
 if __name__ == "__main__":

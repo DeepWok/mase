@@ -147,7 +147,7 @@ INTERNAL_COMP = {
             "name": "fixed_gelu",
             "dependence_files": [
                 "activations/rtl/fixed_gelu.sv",
-                "arithmetic/rtl/fixed_mult.sv",
+                "fixed_arithmetic/rtl/fixed_mult.sv",
             ],
         },
     ],
@@ -156,7 +156,7 @@ INTERNAL_COMP = {
             "name": "fixed_softsign",
             "dependence_files": [
                 "activations/rtl/fixed_softsign.sv",
-                "arithmetic/rtl/fixed_mult.sv",
+                "fixed_arithmetic/rtl/fixed_mult.sv",
             ],
         },
     ],
@@ -167,5 +167,13 @@ INTERNAL_COMP = {
                 "activations/rtl/fixed_softplus.sv",
             ],
         },
+    ],
+    "add": [
+        {
+            "name": "fixed_adder",
+            "dependence_files": [
+                "fixed_arithmetic/rtl/fixed_adder.sv",
+            ],
+        }
     ],
 }

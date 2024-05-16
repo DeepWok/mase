@@ -40,7 +40,4 @@ def include_ip_to_project(node):
     Copy internal files to the project
     """
     mase_op = node.meta["mase"].parameters["common"]["mase_op"]
-    assert (
-        mase_op in INTERNAL_COMP
-    ), f"Cannot find mase op {mase_op} in internal components"
-    return INTERNAL_COMP[mase_op][0]["dependence_files"]
+    return node.meta["mase"].parameters["hardware"]["dependence_files"]

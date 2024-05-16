@@ -40,9 +40,9 @@ MASE_HW_DEPS = {
     ],
     # Attention
     "attention/fixed_self_attention": [
+        "attention",
         "activations",
         "arbiters",
-        "attention",
         "cast",
         "common",
         "fixed_arithmetic",
@@ -57,6 +57,16 @@ MASE_HW_DEPS = {
         "linear",
         "matmul",
         "activations",
+    ],
+    "attention/fixed_self_attention_single_precision_wrapper": [
+        "attention",
+        "activations",
+        "arbiters",
+        "cast",
+        "common",
+        "fixed_arithmetic",
+        "linear",
+        "matmul",
     ],
     "arithmetic/mac": ["fixed_arithmetic", "float_arithmetic"],
     # Binary arithmetic

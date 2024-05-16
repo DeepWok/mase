@@ -256,12 +256,16 @@ def match_args_and_kwargs(meta, args, kwargs, data, add_value):
     meta_kwargs = {}
     j = 0
     for i, x in enumerate(args):
+        pdb_i = i
+        pdb_x = x
+
         if isinstance(x, torch.Tensor) and ordered_func_data[i][1] == "data_in":
             arg_meta = {
                 "shape": list(x.shape),
                 "torch_dtype": x.dtype,
                 "type": "float",
                 "precision": [32],
+                "source": "fx_arg",
             }
             if add_value:
                 arg_meta["value"] = x
@@ -290,6 +294,7 @@ def match_args_and_kwargs(meta, args, kwargs, data, add_value):
                 "torch_dtype": v.dtype if isinstance(v, torch.Tensor) else type(v),
                 "type": "float",
                 "precision": [32],
+                "source": "fx_arg",
             }
             if add_value:
                 arg_meta["value"] = v
@@ -392,12 +397,17 @@ def analyse_common_parameters_module(meta, result, args, kwargs, add_value=True)
         module_args = module_data[mase_op]
 
     meta = match_args_and_kwargs(meta, args, kwargs, module_args, add_value)
+
     for name, parameter in meta.module.named_parameters():
+        if "layer_norm" in mase_op:
+            breakpoint()
+        name = name.replace(".", "_")
         meta.parameters["common"]["args"][name] = {
             "type": "float",
             "precision": [32],
             "shape": list(parameter.shape),
             "from": None,
+            "source": "module_parameter",
         }
         if add_value:
             meta.parameters["common"]["args"][name]["value"] = parameter

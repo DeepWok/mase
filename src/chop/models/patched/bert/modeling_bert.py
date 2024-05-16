@@ -184,7 +184,9 @@ class BertEmbeddings(nn.Module):
 
         # self.LayerNorm is not snake-cased to stick with TensorFlow model variable name and be able to load
         # any TensorFlow checkpoint file
-        self.LayerNorm = nn.LayerNorm(config.hidden_size, eps=config.layer_norm_eps)
+        self.LayerNorm = nn.LayerNorm(
+            config.hidden_size, eps=config.layer_norm_eps, elementwise_affine=False
+        )
         self.dropout = nn.Dropout(config.hidden_dropout_prob)
         # position_ids (1, len position emb) is contiguous in memory and exported when serialized
         self.position_embedding_type = getattr(
@@ -419,7 +421,9 @@ class BertSelfOutput(nn.Module):
     def __init__(self, config):
         super().__init__()
         self.dense = nn.Linear(config.hidden_size, config.hidden_size)
-        self.LayerNorm = nn.LayerNorm(config.hidden_size, eps=config.layer_norm_eps)
+        self.LayerNorm = nn.LayerNorm(
+            config.hidden_size, eps=config.layer_norm_eps, elementwise_affine=False
+        )
         self.dropout = nn.Dropout(config.hidden_dropout_prob)
 
     def forward(
@@ -507,7 +511,9 @@ class BertOutput(nn.Module):
     def __init__(self, config):
         super().__init__()
         self.dense = nn.Linear(config.intermediate_size, config.hidden_size)
-        self.LayerNorm = nn.LayerNorm(config.hidden_size, eps=config.layer_norm_eps)
+        self.LayerNorm = nn.LayerNorm(
+            config.hidden_size, eps=config.layer_norm_eps, elementwise_affine=False
+        )
         self.dropout = nn.Dropout(config.hidden_dropout_prob)
 
     def forward(
@@ -738,7 +744,9 @@ class BertPredictionHeadTransform(nn.Module):
             self.transform_act_fn = ACT2FN[config.hidden_act]
         else:
             self.transform_act_fn = config.hidden_act
-        self.LayerNorm = nn.LayerNorm(config.hidden_size, eps=config.layer_norm_eps)
+        self.LayerNorm = nn.LayerNorm(
+            config.hidden_size, eps=config.layer_norm_eps, elementwise_affine=False
+        )
 
     def forward(self, hidden_states: torch.Tensor) -> torch.Tensor:
         hidden_states = self.dense(hidden_states)
@@ -823,8 +831,10 @@ class BertPreTrainedModel(PreTrainedModel):
             if module.padding_idx is not None:
                 module.weight.data[module.padding_idx].zero_()
         elif isinstance(module, nn.LayerNorm):
-            module.bias.data.zero_()
-            module.weight.data.fill_(1.0)
+            if module.bias is not None:
+                module.bias.data.zero_()
+            if module.weight is not None:
+                module.weight.data.fill_(1.0)
 
 
 @dataclass

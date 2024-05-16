@@ -64,6 +64,15 @@ def emit_vivado_project_transform_pass(graph, pass_args={}):
         - top_name -> str : top-level name
     """
 
+    # * Check if Vivado is available by running the command
+    try:
+        subprocess.run(["vivado", "-version"], capture_output=True, text=True)
+    except:
+        logger.warning(
+            "Vivado is not available, skipping emit_vivado_project_transform_pass."
+        )
+        return graph, {}
+
     logger.info("Emitting Vivado project...")
 
     # Create project directory, and the verilog is emmited to {project_name}/hardware/rtl

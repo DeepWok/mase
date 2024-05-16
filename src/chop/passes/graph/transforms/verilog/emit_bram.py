@@ -35,27 +35,30 @@ def emit_parameters_in_mem_internal(node, param_name, file_name, data_name):
     """
     # ! TO DO: currently emitting too many parameters
 
+    verilog_param_name = param_name.replace(".", "_")
     total_size = math.prod(
-        node.meta["mase"].parameters["common"]["args"][param_name]["shape"]
+        node.meta["mase"].parameters["common"]["args"][verilog_param_name]["shape"]
     )
     # TO DO: change setting parallelism for weight in metadata
     # node.meta["mase"].parameters["hardware"]["verilog_param"][f"{_cap(param_name)}_PARALLELISM_DIM_1"]
     out_size = int(
         node.meta["mase"].parameters["hardware"]["verilog_param"][
-            f"{_cap(param_name)}_PARALLELISM_DIM_0"
+            f"{_cap(verilog_param_name)}_PARALLELISM_DIM_0"
         ]
         * node.meta["mase"].parameters["hardware"]["verilog_param"][
-            f"{_cap(param_name)}_PARALLELISM_DIM_1"
+            f"{_cap(verilog_param_name)}_PARALLELISM_DIM_1"
         ]
     )
     out_depth = int(total_size / out_size)
     out_width = int(
-        node.meta["mase"].parameters["common"]["args"][param_name]["precision"][0]
+        node.meta["mase"].parameters["common"]["args"][verilog_param_name]["precision"][
+            0
+        ]
     )
 
     addr_width = clog2(out_depth) + 1
 
-    node_param_name = f"{vf(node.name)}_{param_name}"
+    node_param_name = f"{vf(node.name)}_{verilog_param_name}"
 
     rom_verilog = f"""
 // =====================================
@@ -181,25 +184,28 @@ def emit_parameters_in_dat_internal(node, param_name, file_name):
     """
     Emit initialised data for the ROM block. Each element must be in 8 HEX digits.
     """
+    verilog_param_name = param_name.replace(".", "_")
     total_size = math.prod(
-        node.meta["mase"].parameters["common"]["args"][param_name]["shape"]
+        node.meta["mase"].parameters["common"]["args"][verilog_param_name]["shape"]
     )
 
     # TO DO: change setting parallelism for weight in metadata
     # node.meta["mase"].parameters["hardware"]["verilog_param"][f"{_cap(param_name)}_PARALLELISM_DIM_1"]
     out_size = int(
         node.meta["mase"].parameters["hardware"]["verilog_param"][
-            f"{_cap(param_name)}_PARALLELISM_DIM_0"
+            f"{_cap(verilog_param_name)}_PARALLELISM_DIM_0"
         ]
         * node.meta["mase"].parameters["hardware"]["verilog_param"][
-            f"{_cap(param_name)}_PARALLELISM_DIM_1"
+            f"{_cap(verilog_param_name)}_PARALLELISM_DIM_1"
         ]
     )
     out_depth = int(total_size / out_size)
 
     data_buff = ""
     param_data = node.meta["mase"].module.get_parameter(param_name).data
-    if node.meta["mase"].parameters["hardware"]["interface"][param_name]["transpose"]:
+    if node.meta["mase"].parameters["hardware"]["interface"][verilog_param_name][
+        "transpose"
+    ]:
         param_data = torch.reshape(
             param_data,
             (
@@ -217,11 +223,14 @@ def emit_parameters_in_dat_internal(node, param_name, file_name):
         param_data = torch.transpose(param_data, 0, 1)
     param_data = torch.flatten(param_data).tolist()
 
-    if node.meta["mase"].parameters["common"]["args"][param_name]["type"] == "fixed":
-        width = node.meta["mase"].parameters["common"]["args"][param_name]["precision"][
-            0
-        ]
-        frac_width = node.meta["mase"].parameters["common"]["args"][param_name][
+    if (
+        node.meta["mase"].parameters["common"]["args"][verilog_param_name]["type"]
+        == "fixed"
+    ):
+        width = node.meta["mase"].parameters["common"]["args"][verilog_param_name][
+            "precision"
+        ][0]
+        frac_width = node.meta["mase"].parameters["common"]["args"][verilog_param_name][
             "precision"
         ][1]
 
@@ -322,15 +331,22 @@ def emit_bram_handshake(node, rtl_dir):
     """
     node_name = vf(node.name)
     for param_name, parameter in node.meta["mase"].module.named_parameters():
+        param_verilog_name = param_name.replace(".", "_")
         if (
-            node.meta["mase"].parameters["hardware"]["interface"][param_name]["storage"]
+            node.meta["mase"].parameters["hardware"]["interface"][param_verilog_name][
+                "storage"
+            ]
             == "BRAM"
         ):
             logger.debug(
-                f"Emitting DAT file for node: {node_name}, parameter: {param_name}"
+                f"Emitting DAT file for node: {node_name}, parameter: {param_verilog_name}"
             )
-            verilog_name = os.path.join(rtl_dir, f"{node_name}_{param_name}_source.sv")
-            data_name = os.path.join(rtl_dir, f"{node_name}_{param_name}_rom.dat")
+            verilog_name = os.path.join(
+                rtl_dir, f"{node_name}_{param_verilog_name}_source.sv"
+            )
+            data_name = os.path.join(
+                rtl_dir, f"{node_name}_{param_verilog_name}_rom.dat"
+            )
             emit_parameters_in_mem_internal(node, param_name, verilog_name, data_name)
             emit_parameters_in_dat_internal(node, param_name, data_name)
         else:

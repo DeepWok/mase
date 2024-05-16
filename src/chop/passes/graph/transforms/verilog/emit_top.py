@@ -5,6 +5,7 @@ import os
 import time
 from multiprocessing import Process, Queue
 
+import torch.fx as fx
 from chop.passes.graph.utils import vf, v2p, init_project
 import mase_components.activations.test.generate_memory as gen_lut
 import torch.nn as nn
@@ -113,8 +114,19 @@ class VerilogInterfaceEmitter:
         i = 0
         for node in nodes_in:
             node_name = vf(node.name)
-            for arg in node.meta["mase"].parameters["common"]["args"].keys():
-                if "data_in" in arg:
+            for arg_idx, arg in enumerate(
+                node.meta["mase"].parameters["common"]["args"].keys()
+            ):
+                if (
+                    # module parameter arguments are appended after fx args
+                    arg_idx < len(node.args)
+                    # Drop None arguments
+                    and isinstance(node.args[arg_idx], fx.Node)
+                    # Drop arguments that are inputs to this node, but not the whole graph
+                    and node.args[arg_idx].op == "placeholder"
+                ):
+                    #     continue
+                    # if "data_in" in arg:
                     arg_name = _cap(arg)
                     parallelism_params = [
                         param
@@ -336,7 +348,7 @@ class VerilogInternalComponentEmitter:
 
         # Emit component instantiation input signals
         for key, value in node.meta["mase"].parameters["common"]["args"].items():
-            if "inplace" in key:
+            if "inplace" in key or not isinstance(value, dict):
                 continue
             signals += f"""
     .{key}({node_name}_{key}),

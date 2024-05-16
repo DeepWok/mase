@@ -237,7 +237,10 @@ def graph_iterator_for_metadata(
         elif node.op == "call_module":
             args = load_arg(node.args, env)
             kwargs = load_arg(node.kwargs, env)
-            result = modules[node.target](*args, **kwargs)
+            try:
+                result = modules[node.target](*args, **kwargs)
+            except:
+                breakpoint()
             analyse_fn = analyse_common_parameters_module
         elif node.op == "output":
             analyse_fn = analyse_common_parameters_output

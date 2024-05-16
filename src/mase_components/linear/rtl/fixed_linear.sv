@@ -45,7 +45,6 @@ module fixed_linear #(
     // Inferred precision of the output data
     parameter DATA_OUT_0_PRECISION_0 = 16,
     parameter DATA_OUT_0_PRECISION_1 = 3,
-
     parameter DATA_OUT_0_TENSOR_SIZE_DIM_0 = WEIGHT_TENSOR_SIZE_DIM_0,
     parameter DATA_OUT_0_TENSOR_SIZE_DIM_1 = DATA_IN_0_TENSOR_SIZE_DIM_1,
     parameter DATA_OUT_0_PARALLELISM_DIM_0 = WEIGHT_PARALLELISM_DIM_0,
