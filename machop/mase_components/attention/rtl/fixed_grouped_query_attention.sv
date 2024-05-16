@@ -126,6 +126,7 @@ logic [NUM_HEADS-1:0] head_out_ready;
 // * Instances
 // * =================================================================
 
+// TODO: replace with gqa input block
 fixed_self_attention_input_block_batched #(
     .DATA_IN_0_TENSOR_SIZE_DIM_0(DATA_IN_0_TENSOR_SIZE_DIM_0),
     .DATA_IN_0_TENSOR_SIZE_DIM_1(DATA_IN_0_TENSOR_SIZE_DIM_1),
@@ -205,75 +206,66 @@ fixed_self_attention_input_block_batched #(
 
 // * Scatter query, key, value
 
-self_attention_head_scatter #(
-    .NUM_HEADS(NUM_HEADS),
-
-    .IN_DATA_TENSOR_SIZE_DIM_0(DATA_IN_0_TENSOR_SIZE_DIM_0),
-    .IN_DATA_TENSOR_SIZE_DIM_1(DATA_IN_0_TENSOR_SIZE_DIM_1),
-    .IN_DATA_PARALLELISM_DIM_0(WEIGHT_PARALLELISM_DIM_0),
-    .IN_DATA_PARALLELISM_DIM_1(DATA_IN_0_PARALLELISM_DIM_1)
-
+gqa_head_scatter_control #(
+    .NUM_HEADS                  (NUM_HEADS),
+    .GROUP_SIZE                 (GROUP_SIZE),
+    .IN_DATA_TENSOR_SIZE_DIM_0  (DATA_IN_0_TENSOR_SIZE_DIM_0),
+    .IN_DATA_TENSOR_SIZE_DIM_1  (DATA_IN_0_TENSOR_SIZE_DIM_1),
+    .IN_DATA_PARALLELISM_DIM_0  (WEIGHT_PARALLELISM_DIM_0),
+    .IN_DATA_PARALLELISM_DIM_1  (DATA_IN_0_PARALLELISM_DIM_1)
 ) scatter_qkv_i (
-    .clk,
-    .rst,
-
-    .query_valid(joint_query_valid),
-    .query_ready(joint_query_ready),
-
-    .key_valid(joint_key_valid),
-    .key_ready(joint_key_ready),
-
-    .value_valid(joint_value_valid),
-    .value_ready(joint_value_ready),
-
-    .split_query_valid(split_query_valid),
-    .split_query_ready(split_query_ready),
-
-    .split_key_valid(split_key_valid),
-    .split_key_ready(split_key_ready),
-
-    .split_value_valid(split_value_valid),
-    .split_value_ready(split_value_ready)
+    .clk                        (clk),
+    .rst                        (rst),
+    .query_valid                (joint_query_valid),
+    .query_ready                (joint_query_ready),
+    .key_valid                  (joint_key_valid),
+    .key_ready                  (joint_key_ready),
+    .value_valid                (joint_value_valid),
+    .value_ready                (joint_value_ready),
+    .split_query_valid          (split_query_valid),
+    .split_query_ready          (split_query_ready),
+    .split_key_valid            (split_key_valid),
+    .split_key_ready            (split_key_ready),
+    .split_value_valid          (split_value_valid),
+    .split_value_ready          (split_value_ready)
 );
 
 // * Heads
 
 for (genvar head = 0; head < NUM_HEADS; head++) begin
 
+// TODO: Add K & V FIFO before every head
+
 fixed_self_attention_head #(
-    .IN_DATA_TENSOR_SIZE_DIM_0(DATA_IN_0_TENSOR_SIZE_DIM_0 / NUM_HEADS),
-    .IN_DATA_TENSOR_SIZE_DIM_1(DATA_IN_0_TENSOR_SIZE_DIM_1),
-    .IN_DATA_PARALLELISM_DIM_0(DATA_IN_0_PARALLELISM_DIM_0),
-    .IN_DATA_PARALLELISM_DIM_1(DATA_IN_0_PARALLELISM_DIM_1),
-    .IN_DATA_PRECISION_0      (DATA_OUT_0_PRECISION_0),
-    .IN_DATA_PRECISION_1      (DATA_OUT_0_PRECISION_1),
-
-    .OUT_DATA_TENSOR_SIZE_DIM_0(DATA_OUT_0_TENSOR_SIZE_DIM_0 / NUM_HEADS),
-    .OUT_DATA_TENSOR_SIZE_DIM_1(DATA_OUT_0_TENSOR_SIZE_DIM_1),
-    .OUT_DATA_PARALLELISM_DIM_0(DATA_OUT_0_PARALLELISM_DIM_0),
-    .OUT_DATA_PARALLELISM_DIM_1(DATA_OUT_0_PARALLELISM_DIM_1),
-    .OUT_DATA_PRECISION_0      (DATA_OUT_0_PRECISION_0),
-    .OUT_DATA_PRECISION_1      (DATA_OUT_0_PRECISION_1)
-
+    .IN_DATA_TENSOR_SIZE_DIM_0   (DATA_IN_0_TENSOR_SIZE_DIM_0 / NUM_HEADS),
+    .IN_DATA_TENSOR_SIZE_DIM_1   (DATA_IN_0_TENSOR_SIZE_DIM_1),
+    .IN_DATA_PARALLELISM_DIM_0   (DATA_IN_0_PARALLELISM_DIM_0),
+    .IN_DATA_PARALLELISM_DIM_1   (DATA_IN_0_PARALLELISM_DIM_1),
+    .IN_DATA_PRECISION_0         (DATA_OUT_0_PRECISION_0),
+    .IN_DATA_PRECISION_1         (DATA_OUT_0_PRECISION_1),
+    .OUT_DATA_TENSOR_SIZE_DIM_0  (DATA_OUT_0_TENSOR_SIZE_DIM_0 / NUM_HEADS),
+    .OUT_DATA_TENSOR_SIZE_DIM_1  (DATA_OUT_0_TENSOR_SIZE_DIM_1),
+    .OUT_DATA_PARALLELISM_DIM_0  (DATA_OUT_0_PARALLELISM_DIM_0),
+    .OUT_DATA_PARALLELISM_DIM_1  (DATA_OUT_0_PARALLELISM_DIM_1),
+    .OUT_DATA_PRECISION_0        (DATA_OUT_0_PRECISION_0),
+    .OUT_DATA_PRECISION_1        (DATA_OUT_0_PRECISION_1)
+    // We pre-transpose K -> K^T outside of head
+    .KEY_PRE_TRANSPOSED          (1)
 ) head_i (
-    .clk,
-    .rst,
-
-    .query      (query),
-    .query_valid(split_query_valid[head]),
-    .query_ready(split_query_ready[head]),
-
-    .key      (key),
-    .key_valid(split_key_valid[head]),
-    .key_ready(split_key_ready[head]),
-
-    .value      (value),
-    .value_valid(split_value_valid[head]),
-    .value_ready(split_value_ready[head]),
-
-    .out      (head_out[head]),
-    .out_valid(head_out_valid[head]),
-    .out_ready(head_out_ready[head])
+    .clk                         (clk),
+    .rst                         (rst),
+    .query                       (query),
+    .query_valid                 (split_query_valid[head]),
+    .query_ready                 (split_query_ready[head]),
+    .key                         (key),
+    .key_valid                   (split_key_valid[head]),
+    .key_ready                   (split_key_ready[head]),
+    .value                       (value),
+    .value_valid                 (split_value_valid[head]),
+    .value_ready                 (split_value_ready[head]),
+    .out                         (head_out[head]),
+    .out_valid                   (head_out_valid[head]),
+    .out_ready                   (head_out_ready[head])
 );
 
 end
@@ -281,26 +273,22 @@ end
 // * Gather heads
 
 self_attention_head_gather #(
-    .NUM_HEADS(NUM_HEADS),
-
-    .IN_DATA_TENSOR_SIZE_DIM_0(DATA_OUT_0_TENSOR_SIZE_DIM_0),
-    .IN_DATA_TENSOR_SIZE_DIM_1(DATA_OUT_0_TENSOR_SIZE_DIM_1),
-    .IN_DATA_PARALLELISM_DIM_0(DATA_OUT_0_PARALLELISM_DIM_0),
-    .IN_DATA_PARALLELISM_DIM_1(DATA_OUT_0_PARALLELISM_DIM_1),
-    .IN_DATA_PRECISION_0      (DATA_OUT_0_PRECISION_0),
-    .IN_DATA_PRECISION_1      (DATA_OUT_0_PRECISION_1)
-
+    .NUM_HEADS                  (NUM_HEADS),
+    .IN_DATA_TENSOR_SIZE_DIM_0  (DATA_OUT_0_TENSOR_SIZE_DIM_0),
+    .IN_DATA_TENSOR_SIZE_DIM_1  (DATA_OUT_0_TENSOR_SIZE_DIM_1),
+    .IN_DATA_PARALLELISM_DIM_0  (DATA_OUT_0_PARALLELISM_DIM_0),
+    .IN_DATA_PARALLELISM_DIM_1  (DATA_OUT_0_PARALLELISM_DIM_1),
+    .IN_DATA_PRECISION_0        (DATA_OUT_0_PRECISION_0),
+    .IN_DATA_PRECISION_1        (DATA_OUT_0_PRECISION_1)
 ) gather_qkv_i (
-    .clk,
-    .rst,
-
-    .split_head_out      (head_out),
-    .split_head_out_valid(head_out_valid),
-    .split_head_out_ready(head_out_ready),
-
-    .updated_tokens      (data_out_0),
-    .updated_tokens_valid(data_out_0_valid),
-    .updated_tokens_ready(data_out_0_ready)
+    .clk                        (clk),
+    .rst                        (rst),
+    .split_head_out             (head_out),
+    .split_head_out_valid       (head_out_valid),
+    .split_head_out_ready       (head_out_ready),
+    .updated_tokens             (data_out_0),
+    .updated_tokens_valid       (data_out_0_valid),
+    .updated_tokens_ready       (data_out_0_ready)
 );
 
 endmodule
