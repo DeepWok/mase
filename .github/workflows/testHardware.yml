@@ -5,10 +5,12 @@ on:
     branches: [ "main*"]
     paths:
       - 'src/mase_components/**'
+      - '.github/workflows/**'
   pull_request:
     branches: [ "main*"]
     paths:
       - 'src/mase_components/**'
+      - '.github/workflows/**'
   workflow_dispatch:
     logLevel:
           description: 'Log level'
@@ -106,7 +108,6 @@ jobs:
         run: |
             pip3 --version 
             python3 --version
-            pip3 install .
             python3 scripts/build-components.py
             make test-hw
 
