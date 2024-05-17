@@ -148,6 +148,8 @@ def test_emit_verilog_bert():
 
     #     i += 1
 
+    mg, _ = passes.insert_fork_transform_pass(mg)
+
     mg, _ = passes.emit_verilog_top_transform_pass(mg)
     # mg, _ = passes.emit_bram_transform_pass(mg)
     mg, _ = passes.emit_internal_rtl_transform_pass(mg)
