@@ -31,13 +31,8 @@ jobs:
         with:
             submodules: "true"
 
-      - name: Set git safe
-        run: |
-          git config --global --add safe.directory $PWD
-
       - name: Build sphinx html
         run: |
-          export PYTHONPATH="${PATH}:$(pwd):$(pwd)/src"
           cd docs
           make html 2>&1 | tee html.log
           ! grep -rn html.log -e "Error" || exit 1

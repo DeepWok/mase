@@ -34,10 +34,6 @@ jobs:
         with:
             submodules: "true"
 
-      - name: Set git safe
-        run: |
-          git config --global --add safe.directory $PWD
-
       # Choose the git commit to diff against for the purposes of linting.
       # Since this workflow is triggered on both pushes and pull requests, w
       # have to determine if the pull request target branch is set (which it
@@ -106,7 +102,6 @@ jobs:
         run: |
             pip3 --version 
             python3 --version
-            pip3 install .
             python3 scripts/build-components.py
             make test-hw
 
