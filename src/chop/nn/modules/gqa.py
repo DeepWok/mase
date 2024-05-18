@@ -1,7 +1,10 @@
 import math
+from functools import partial
 
 import torch
 from torch import nn, Tensor
+
+from chop.nn.functional.softermax import softermax
 
 
 # Copied from transformers.models.llama.modeling_llama
@@ -73,6 +76,11 @@ class GroupedQueryAttention(nn.Module):
             dtype=dtype,
         )
 
+        # Explicitly define functions so quantized version of GQA can override
+        self.softmax_func = partial(softermax, dim=-1)
+        self.qk_matmul_func = torch.matmul
+        self.v_matmul_func = torch.matmul
+
 
     def _assert_gqa_config(self):
         assert self.group_size * self.num_kv_heads == self.num_heads, (
@@ -102,10 +110,10 @@ class GroupedQueryAttention(nn.Module):
         key = repeat_kv(key, n_rep=self.group_size)
         value = repeat_kv(value, n_rep=self.group_size)
 
-        attn_weights = torch.matmul(query, key.transpose(2, 3)) / math.sqrt(self.head_dim)
+        attn_weights = self.qk_matmul_func(query, key.transpose(2, 3)) / math.sqrt(self.head_dim)
+        attn_weights = self.softmax_func(attn_weights)
+        attn_output = self.v_matmul_func(attn_weights, value)
 
-        attn_weights = nn.functional.softmax(attn_weights, dim=-1, dtype=torch.float32).to(query.dtype)
-        attn_output = torch.matmul(attn_weights, value)
         attn_output = attn_output.transpose(1, 2).contiguous()
         attn_output = attn_output.reshape(batch_size, seq_len, self.embed_dim)
 

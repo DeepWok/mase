@@ -76,10 +76,12 @@ module fixed_linear #(
 );
 
   initial begin
-    assert (BIAS_PARALLELISM_DIM_0 == DATA_OUT_0_PARALLELISM_DIM_0)
-    else $fatal("Input bias and output data must have the same parallelism.");
-    assert (BIAS_PARALLELISM_DIM_1 == DATA_OUT_0_PARALLELISM_DIM_1)
-    else $fatal("Input bias and output data must have the same parallelism.");
+    if (HAS_BIAS) begin
+      assert (BIAS_PARALLELISM_DIM_0 == DATA_OUT_0_PARALLELISM_DIM_0)
+      else $fatal("Input bias and output data must have the same parallelism.");
+      assert (BIAS_PARALLELISM_DIM_1 == DATA_OUT_0_PARALLELISM_DIM_1)
+      else $fatal("Input bias and output data must have the same parallelism.");
+    end
   end
 
   // * Declarations

@@ -58,6 +58,16 @@ MASE_HW_DEPS = {
         "matmul",
         "activations",
     ],
+    "attention/fixed_grouped_query_attention": [
+        "attention",
+        "arbiters",
+        "cast",
+        "common",
+        "fixed_arithmetic",
+        "linear",
+        "matmul",
+        "activations",
+    ],
     "arithmetic/mac": ["fixed_arithmetic", "float_arithmetic"],
     # Binary arithmetic
     "binary_arith/binary_activation_binary_mult": [],

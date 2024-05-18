@@ -1,9 +1,16 @@
+/*
+Module      : fixed_grouped_query_attention
+Description : This module implements fixed-point grouped query attention (GQA).
+*/
+
+`default_nettype none
+
 `timescale 1ns / 1ps
 
 module fixed_grouped_query_attention #(
     parameter  NUM_HEADS  = 12,
     parameter  NUM_GROUPS = 3,
-    localparam GROUP_SIZE = NUM_HEADS / NUM_GROUPS;
+    localparam GROUP_SIZE = NUM_HEADS / NUM_GROUPS,
     parameter  ACTIVATION = 0,
 
     parameter  DATA_IN_0_TENSOR_SIZE_DIM_0 = 768,
@@ -25,12 +32,16 @@ module fixed_grouped_query_attention #(
     // Shared weights params
     localparam GROUPED_WEIGHT_TENSOR_SIZE_DIM_0 = WEIGHT_TENSOR_SIZE_DIM_0 / GROUP_SIZE,
     localparam GROUPED_WEIGHT_TENSOR_SIZE_DIM_1 = WEIGHT_TENSOR_SIZE_DIM_1,
-    // Assuption: shared weights have same parallelism
+    // Assumption: shared weights have same parallelism
     localparam GROUPED_WEIGHT_PARALLELISM_DIM_0 = WEIGHT_PARALLELISM_DIM_0,
     localparam GROUPED_WEIGHT_PARALLELISM_DIM_1 = WEIGHT_PARALLELISM_DIM_1,
-    // Assuption: shared weights have same fixed point format
+    // Assumption: shared weights have same fixed point format
     localparam GROUPED_WEIGHT_PRECISION_0 = WEIGHT_PRECISION_0,
     localparam GROUPED_WEIGHT_PRECISION_1 = WEIGHT_PRECISION_1,
+
+    localparam GROUP_DEPTH_DIM_0 = GROUPED_WEIGHT_TENSOR_SIZE_DIM_0 / GROUPED_WEIGHT_PARALLELISM_DIM_0,
+    localparam GROUP_DEPTH_DIM_1 = GROUPED_WEIGHT_TENSOR_SIZE_DIM_1 / GROUPED_WEIGHT_PARALLELISM_DIM_1,
+    localparam GROUP_NUM_ITERS = GROUP_DEPTH_DIM_0 * GROUP_DEPTH_DIM_1,
 
     parameter  HAS_BIAS = 1,
     parameter  BIAS_TENSOR_SIZE_DIM_0 = 64,
@@ -94,6 +105,9 @@ module fixed_grouped_query_attention #(
 // Params
 // -----
 
+// Parallelism of Q, K, V activations: (seq_len x embedding_dim)
+localparam ACTIVATION_PARALLELISM = DATA_IN_0_PARALLELISM_DIM_1 * WEIGHT_PARALLELISM_DIM_0;
+
 initial begin
     // Divisible Checks
     assert (GROUP_SIZE * NUM_GROUPS == NUM_HEADS);
@@ -104,19 +118,28 @@ end
 // * =================================================================
 
 // Query
-logic [DATA_OUT_0_PRECISION_0-1:0] query[DATA_IN_0_PARALLELISM_DIM_1 * WEIGHT_PARALLELISM_DIM_0-1:0];
+logic [DATA_OUT_0_PRECISION_0-1:0] query [ACTIVATION_PARALLELISM-1:0];
 logic joint_query_valid, joint_query_ready;
 logic [NUM_HEADS-1:0] split_query_valid, split_query_ready;
 
+logic [DATA_OUT_0_PRECISION_0-1:0] query_fifo_data [NUM_HEADS-1:0] [ACTIVATION_PARALLELISM-1:0];
+logic [NUM_HEADS-1:0] query_fifo_valid, query_fifo_ready;
+
 // Key
-logic [DATA_OUT_0_PRECISION_0-1:0] key[DATA_IN_0_PARALLELISM_DIM_1 * WEIGHT_PARALLELISM_DIM_0-1:0];
+logic [DATA_OUT_0_PRECISION_0-1:0] key [ACTIVATION_PARALLELISM-1:0];
 logic joint_key_valid, joint_key_ready;
 logic [NUM_HEADS-1:0] split_key_valid, split_key_ready;
 
+logic [DATA_OUT_0_PRECISION_0-1:0] key_fifo_data [NUM_HEADS-1:0] [ACTIVATION_PARALLELISM-1:0];
+logic [NUM_HEADS-1:0] key_fifo_valid, key_fifo_ready;
+
 // Value
-logic [DATA_OUT_0_PRECISION_0-1:0] value[DATA_IN_0_PARALLELISM_DIM_1 * WEIGHT_PARALLELISM_DIM_0-1:0];
+logic [DATA_OUT_0_PRECISION_0-1:0] value [ACTIVATION_PARALLELISM-1:0];
 logic joint_value_valid, joint_value_ready;
 logic [NUM_HEADS-1:0] split_value_valid, split_value_ready;
+
+logic [DATA_OUT_0_PRECISION_0-1:0] value_fifo_data [NUM_HEADS-1:0] [ACTIVATION_PARALLELISM-1:0];
+logic [NUM_HEADS-1:0] value_fifo_valid, value_fifo_ready;
 
 // Head output
 logic [DATA_OUT_0_PRECISION_0-1:0] head_out [NUM_HEADS-1:0] [DATA_OUT_0_PARALLELISM_DIM_0 * DATA_OUT_0_PARALLELISM_DIM_1-1:0];
@@ -126,82 +149,78 @@ logic [NUM_HEADS-1:0] head_out_ready;
 // * Instances
 // * =================================================================
 
-// TODO: replace with gqa input block
-fixed_self_attention_input_block_batched #(
-    .DATA_IN_0_TENSOR_SIZE_DIM_0(DATA_IN_0_TENSOR_SIZE_DIM_0),
-    .DATA_IN_0_TENSOR_SIZE_DIM_1(DATA_IN_0_TENSOR_SIZE_DIM_1),
-    .DATA_IN_0_PARALLELISM_DIM_0(DATA_IN_0_PARALLELISM_DIM_0),
-    .DATA_IN_0_PARALLELISM_DIM_1(DATA_IN_0_PARALLELISM_DIM_1),
-    .DATA_IN_0_PRECISION_0      (DATA_IN_0_PRECISION_0),
-    .DATA_IN_0_PRECISION_1      (DATA_IN_0_PRECISION_1),
+fixed_gqa_input_block #(
+    .NUM_HEADS                     (NUM_HEADS),
+    .NUM_GROUPS                    (NUM_GROUPS),
 
-    .WEIGHTS_PRE_TRANSPOSED  (WEIGHTS_PRE_TRANSPOSED),
-    .WEIGHT_TENSOR_SIZE_DIM_0(WEIGHT_TENSOR_SIZE_DIM_0),
-    .WEIGHT_TENSOR_SIZE_DIM_1(WEIGHT_TENSOR_SIZE_DIM_1),
-    .WEIGHT_PARALLELISM_DIM_0(WEIGHT_PARALLELISM_DIM_0),
-    .WEIGHT_PARALLELISM_DIM_1(WEIGHT_PARALLELISM_DIM_1),
-    .WEIGHT_PRECISION_0      (WEIGHT_PRECISION_0),
-    .WEIGHT_PRECISION_1      (WEIGHT_PRECISION_1),
+    .DATA_IN_0_TENSOR_SIZE_DIM_0   (DATA_IN_0_TENSOR_SIZE_DIM_0),
+    .DATA_IN_0_TENSOR_SIZE_DIM_1   (DATA_IN_0_TENSOR_SIZE_DIM_1),
+    .DATA_IN_0_PARALLELISM_DIM_0   (DATA_IN_0_PARALLELISM_DIM_0),
+    .DATA_IN_0_PARALLELISM_DIM_1   (DATA_IN_0_PARALLELISM_DIM_1),
+    .DATA_IN_0_PRECISION_0         (DATA_IN_0_PRECISION_0),
+    .DATA_IN_0_PRECISION_1         (DATA_IN_0_PRECISION_1),
 
-    .HAS_BIAS              (HAS_BIAS),
-    .BIAS_TENSOR_SIZE_DIM_0(BIAS_TENSOR_SIZE_DIM_0),
-    .BIAS_TENSOR_SIZE_DIM_1(BIAS_TENSOR_SIZE_DIM_1),
-    .BIAS_PARALLELISM_DIM_0(BIAS_PARALLELISM_DIM_0),
-    .BIAS_PARALLELISM_DIM_1(BIAS_PARALLELISM_DIM_1),
-    .BIAS_PRECISION_0      (BIAS_PRECISION_0),
-    .BIAS_PRECISION_1      (BIAS_PRECISION_1),
+    .WEIGHTS_PRE_TRANSPOSED        (WEIGHTS_PRE_TRANSPOSED),
+    .WEIGHT_TENSOR_SIZE_DIM_0      (WEIGHT_TENSOR_SIZE_DIM_0),
+    .WEIGHT_TENSOR_SIZE_DIM_1      (WEIGHT_TENSOR_SIZE_DIM_1),
+    .WEIGHT_PARALLELISM_DIM_0      (WEIGHT_PARALLELISM_DIM_0),
+    .WEIGHT_PARALLELISM_DIM_1      (WEIGHT_PARALLELISM_DIM_1),
+    .WEIGHT_PRECISION_0            (WEIGHT_PRECISION_0),
+    .WEIGHT_PRECISION_1            (WEIGHT_PRECISION_1),
 
-    .DATA_OUT_0_PRECISION_0(DATA_OUT_0_PRECISION_0),
-    .DATA_OUT_0_PRECISION_1(DATA_OUT_0_PRECISION_1)
-) batched_input_block_i (
-    .clk(clk),
-    .rst(rst),
+    .HAS_BIAS                      (HAS_BIAS),
+    .BIAS_TENSOR_SIZE_DIM_0        (BIAS_TENSOR_SIZE_DIM_0),
+    .BIAS_TENSOR_SIZE_DIM_1        (BIAS_TENSOR_SIZE_DIM_1),
+    .BIAS_PARALLELISM_DIM_0        (BIAS_PARALLELISM_DIM_0),
+    .BIAS_PARALLELISM_DIM_1        (BIAS_PARALLELISM_DIM_1),
+    .BIAS_PRECISION_0              (BIAS_PRECISION_0),
+    .BIAS_PRECISION_1              (BIAS_PRECISION_1),
 
-    .data_in_0(data_in_0),
-    .data_in_0_valid(data_in_0_valid),
-    .data_in_0_ready(data_in_0_ready),
+    .DATA_OUT_0_PRECISION_0        (DATA_OUT_0_PRECISION_0),
+    .DATA_OUT_0_PRECISION_1        (DATA_OUT_0_PRECISION_1)
+) gqa_input_block_i (
+    .clk                           (clk),
+    .rst                           (rst),
 
-    // Query parameters
-    .weight_query(weight_query),
-    .weight_query_valid(weight_query_valid),
-    .weight_query_ready(weight_query_ready),
+    .data_in_0                     (data_in_0),
+    .data_in_0_valid               (data_in_0_valid),
+    .data_in_0_ready               (data_in_0_ready),
 
-    .bias_query(bias_query),
-    .bias_query_valid(bias_query_valid),
-    .bias_query_ready(bias_query_ready),
+    .weight_query                  (weight_query),
+    .weight_query_valid            (weight_query_valid),
+    .weight_query_ready            (weight_query_ready),
+    .bias_query                    (bias_query),
+    .bias_query_valid              (bias_query_valid),
+    .bias_query_ready              (bias_query_ready),
 
-    // Key parameters
-    .weight_key(weight_key),
-    .weight_key_valid(weight_key_valid),
-    .weight_key_ready(weight_key_ready),
+    .weight_key                    (weight_key),
+    .weight_key_valid              (weight_key_valid),
+    .weight_key_ready              (weight_key_ready),
+    .bias_key                      (bias_key),
+    .bias_key_valid                (bias_key_valid),
+    .bias_key_ready                (bias_key_ready),
 
-    .bias_key(bias_key),
-    .bias_key_valid(bias_key_valid),
-    .bias_key_ready(bias_key_ready),
-
-    // Value parameters
-    .weight_value(weight_value),
-    .weight_value_valid(weight_value_valid),
-    .weight_value_ready(weight_value_ready),
-
-    .bias_value(bias_value),
-    .bias_value_valid(bias_value_valid),
-    .bias_value_ready(bias_value_ready),
+    .weight_value                  (weight_value),
+    .weight_value_valid            (weight_value_valid),
+    .weight_value_ready            (weight_value_ready),
+    .bias_value                    (bias_value),
+    .bias_value_valid              (bias_value_valid),
+    .bias_value_ready              (bias_value_ready),
 
     // Query output
-    .data_out_query(query),
-    .data_out_query_valid(joint_query_valid),
-    .data_out_query_ready(joint_query_ready),
+    .data_out_query                (query),
+    .data_out_query_valid          (joint_query_valid),
+    .data_out_query_ready          (joint_query_ready),
 
     // Key output
-    .data_out_key(key),
-    .data_out_key_valid(joint_key_valid),
-    .data_out_key_ready(joint_key_ready),
+    .data_out_key_transpose        (key),
+    .data_out_key_transpose_valid  (joint_key_valid),
+    .data_out_key_transpose_ready  (joint_key_ready),
 
     // Value output
-    .data_out_value(value),
-    .data_out_value_valid(joint_value_valid),
-    .data_out_value_ready(joint_value_ready)
+    .data_out_value                (value),
+    .data_out_value_valid          (joint_value_valid),
+    .data_out_value_ready          (joint_value_ready)
 );
 
 // * Scatter query, key, value
@@ -232,9 +251,60 @@ gqa_head_scatter_control #(
 
 // * Heads
 
-for (genvar head = 0; head < NUM_HEADS; head++) begin
+for (genvar head = 0; head < NUM_HEADS; head++) begin : gen_head
 
-// TODO: Add K & V FIFO before every head
+// TODO: Not sure why this is needed??
+matrix_fifo #(
+    .DATA_WIDTH  (DATA_OUT_0_PRECISION_0),
+    .DIM0        (WEIGHT_PARALLELISM_DIM_0),
+    .DIM1        (DATA_IN_0_PARALLELISM_DIM_1),
+    .FIFO_SIZE   (10 * GROUP_NUM_ITERS) // TODO: Resize?
+) query_fifo_inst (
+    .clk         (clk),
+    .rst         (rst),
+    .in_data     (query),
+    .in_valid    (split_query_valid[head]),
+    .in_ready    (split_query_ready[head]),
+    .out_data    (query_fifo_data[head]),
+    .out_valid   (query_fifo_valid[head]),
+    .out_ready   (query_fifo_ready[head])
+);
+
+// FIFOs are required before each K, V port to buffer results while we wait for
+// Q round robin style results. Some heads will also start calculating before
+// others so FIFOs are required to unblock the input block.
+
+matrix_fifo #(
+    .DATA_WIDTH  (DATA_OUT_0_PRECISION_0),
+    .DIM0        (WEIGHT_PARALLELISM_DIM_0),
+    .DIM1        (DATA_IN_0_PARALLELISM_DIM_1),
+    .FIFO_SIZE   (10 * GROUP_NUM_ITERS) // TODO: Resize?
+) key_fifo_inst (
+    .clk         (clk),
+    .rst         (rst),
+    .in_data     (key),
+    .in_valid    (split_key_valid[head]),
+    .in_ready    (split_key_ready[head]),
+    .out_data    (key_fifo_data[head]),
+    .out_valid   (key_fifo_valid[head]),
+    .out_ready   (key_fifo_ready[head])
+);
+
+matrix_fifo #(
+    .DATA_WIDTH  (DATA_OUT_0_PRECISION_0),
+    .DIM0        (WEIGHT_PARALLELISM_DIM_0),
+    .DIM1        (DATA_IN_0_PARALLELISM_DIM_1),
+    .FIFO_SIZE   (10 * GROUP_NUM_ITERS) // TODO: Resize?
+) value_fifo_inst (
+    .clk         (clk),
+    .rst         (rst),
+    .in_data     (value),
+    .in_valid    (split_value_valid[head]),
+    .in_ready    (split_value_ready[head]),
+    .out_data    (value_fifo_data[head]),
+    .out_valid   (value_fifo_valid[head]),
+    .out_ready   (value_fifo_ready[head])
+);
 
 fixed_self_attention_head #(
     .IN_DATA_TENSOR_SIZE_DIM_0   (DATA_IN_0_TENSOR_SIZE_DIM_0 / NUM_HEADS),
@@ -248,21 +318,21 @@ fixed_self_attention_head #(
     .OUT_DATA_PARALLELISM_DIM_0  (DATA_OUT_0_PARALLELISM_DIM_0),
     .OUT_DATA_PARALLELISM_DIM_1  (DATA_OUT_0_PARALLELISM_DIM_1),
     .OUT_DATA_PRECISION_0        (DATA_OUT_0_PRECISION_0),
-    .OUT_DATA_PRECISION_1        (DATA_OUT_0_PRECISION_1)
+    .OUT_DATA_PRECISION_1        (DATA_OUT_0_PRECISION_1),
     // We pre-transpose K -> K^T outside of head
     .KEY_PRE_TRANSPOSED          (1)
 ) head_i (
     .clk                         (clk),
     .rst                         (rst),
-    .query                       (query),
-    .query_valid                 (split_query_valid[head]),
-    .query_ready                 (split_query_ready[head]),
-    .key                         (key),
-    .key_valid                   (split_key_valid[head]),
-    .key_ready                   (split_key_ready[head]),
-    .value                       (value),
-    .value_valid                 (split_value_valid[head]),
-    .value_ready                 (split_value_ready[head]),
+    .query                       (query_fifo_data[head]),
+    .query_valid                 (query_fifo_valid[head]),
+    .query_ready                 (query_fifo_ready[head]),
+    .key                         (key_fifo_data[head]),
+    .key_valid                   (key_fifo_valid[head]),
+    .key_ready                   (key_fifo_ready[head]),
+    .value                       (value_fifo_data[head]),
+    .value_valid                 (value_fifo_valid[head]),
+    .value_ready                 (value_fifo_ready[head]),
     .out                         (head_out[head]),
     .out_valid                   (head_out_valid[head]),
     .out_ready                   (head_out_ready[head])

@@ -155,7 +155,7 @@ module softermax_global_norm #(
 
   fifo #(
       .DATA_WIDTH(IN_MAX_WIDTH),
-      .SIZE(4 * DEPTH)  // TODO: resize +1 ?
+      .DEPTH(4 * DEPTH)  // TODO: resize +1 ?
   ) local_max_buffer (
       .clk(clk),
       .rst(rst),

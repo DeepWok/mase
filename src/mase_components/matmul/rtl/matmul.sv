@@ -166,9 +166,9 @@ module matmul #(
 
   generate
 
-    // B matrix Buffers
+    // A matrix Buffers
 
-    if (B_DEPTH_DIM0 > 1) begin
+    if (B_DEPTH_DIM0 > 1) begin : gen_a_buffer
 
       matrix_flatten #(
           .DATA_WIDTH(A_WIDTH),
@@ -203,15 +203,15 @@ module matmul #(
           .data_out(a_buffer_out_data)
       );
 
-    end else begin
+    end else begin : gen_no_a_buffer
       assign a_buffer_out_data = a_data;
       assign a_buffer_out_valid = a_valid;
       assign a_ready = a_buffer_out_ready;
     end
 
-    // A matrix Buffers
+    // B matrix Buffers
 
-    if (A_DEPTH_DIM1 > 1) begin
+    if (A_DEPTH_DIM1 > 1) begin : gen_b_buffer
       matrix_flatten #(
           .DATA_WIDTH(B_WIDTH),
           .DIM0      (B_COMPUTE_DIM0),
@@ -245,7 +245,7 @@ module matmul #(
           .data_in (b_buffer_out_data_flat),
           .data_out(b_buffer_out_data)
       );
-    end else begin
+    end else begin : gen_no_b_buffer
       assign b_buffer_out_data = b_data;
       assign b_buffer_out_valid = b_valid;
       assign b_ready = b_buffer_out_ready;
@@ -285,7 +285,7 @@ module matmul #(
 
   // Direct the result of the simple matmul to the correct matrix_accumulator
 
-  for (genvar i = 0; i < C_DEPTH_DIM0; i++) begin : accumulators
+  for (genvar i = 0; i < C_DEPTH_DIM0; i++) begin : gen_acc
     matrix_accumulator #(
         .IN_DEPTH(B_DEPTH_DIM1),
         .IN_WIDTH(SM_OUT_WIDTH),
@@ -303,7 +303,7 @@ module matmul #(
     );
   end
 
-  for (genvar i = 0; i < C_DEPTH_DIM0; i++) begin
+  for (genvar i = 0; i < C_DEPTH_DIM0; i++) begin : gen_handshake
     // Change which accumulator the output of simple_matmul goes to
     assign acc_in_valid[i]  = self.matrix_acc_ptr == i ? sm_out_valid : 0;
 
@@ -313,7 +313,7 @@ module matmul #(
 
   assign sm_out_ready = acc_in_ready[self.matrix_acc_ptr];
 
-  for (genvar i = 0; i < C_COMPUTE_DIM0 * C_COMPUTE_DIM1; i++) begin
+  for (genvar i = 0; i < C_COMPUTE_DIM0 * C_COMPUTE_DIM1; i++) begin : gen_cast
     fixed_signed_cast #(
         .IN_WIDTH      (MAT_ACC_OUT_WIDTH),
         .IN_FRAC_WIDTH (SM_OUT_FRAC_WIDTH),

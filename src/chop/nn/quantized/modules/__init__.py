@@ -137,6 +137,10 @@ from .batch_norm1d import (
     BatchNorm1dInteger,
 )
 
+from .gqa import (
+    GroupedQueryAttentionInteger,
+)
+
 quantized_module_map = {
     "conv1d_block_minifloat": Conv1dBlockMinifloat,
     "conv1d_integer": Conv1dInteger,

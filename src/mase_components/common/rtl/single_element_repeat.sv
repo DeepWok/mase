@@ -34,16 +34,16 @@ module single_element_repeat #(
   logic [DATA_WIDTH-1:0] output_buffer_data;
   logic output_buffer_valid, output_buffer_ready;
 
-  struct {
+  typedef struct packed {
     // Data element
     logic [DATA_WIDTH-1:0] buffer_data;
     logic buffer_valid;
 
     // Counters
     logic [CTR_WIDTH-1:0] count;
-  }
-      self, next_self;
+  } self_t;
 
+  self_t self, next_self;
 
   always_comb begin
 

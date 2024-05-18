@@ -69,7 +69,6 @@ module fixed_softermax #(
         .IN_WIDTH       (DATA_IN_0_PRECISION_0),
         .IN_FRAC_WIDTH  (DATA_IN_0_PRECISION_1),
         .POW2_WIDTH     (DATA_OUT_0_PRECISION_0),
-        .POW2_FRAC_WIDTH(DATA_OUT_0_PRECISION_1),
         .OUT_WIDTH      (DATA_OUT_0_PRECISION_0),
         .OUT_FRAC_WIDTH (DATA_OUT_0_PRECISION_1)
     ) fixed_softermax_1d_i (
