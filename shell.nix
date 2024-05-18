@@ -12,6 +12,7 @@ in pkgs.mkShellNoCC {
     # Python 3.11
     pythonPackages.python
     pythonPackages.pip
+    pythonPackages.sphinx
     # This executes some shell code to initialize a venv in $venvDir before
     # dropping into the shell
     # TODO: consider use setuptoolsBuildHook, as documented in https://nixos.org/manual/nixpkgs/stable/#python
@@ -22,6 +23,15 @@ in pkgs.mkShellNoCC {
     git
     neovim
     glib
+    unzip
+    mesa
+    cmake
+    zsh
+
+    # hardware
+    verible
+    verilator
+    svls
   ];
   postShellHook = ''
     # install mase as a package
