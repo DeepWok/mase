@@ -26,8 +26,9 @@ requirements = [
     "pytorch-nlp",
     "datasets",
     "onnx",
-    "onnxruntime",
+    "onnxruntime>=1.16",
     "onnxruntime-tools",
+    "onnxconverter_common",
     "optimum",
     "black",
     "GitPython",
@@ -69,6 +70,7 @@ requirements = [
     "prettytable",
     "pyyaml",
     "pynvml",
+    "bitstring>=4.2",
 ]
 
 if is_cuda_available():
