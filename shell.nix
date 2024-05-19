@@ -39,5 +39,7 @@ in pkgs.mkShellNoCC {
   postShellHook = ''
     # install mase as a package
     python3 -m pip install .
+    # add env variables 
+    source scripts/init-nix.sh
   '';
 }
