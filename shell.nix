@@ -29,10 +29,13 @@ in pkgs.mkShellNoCC {
     zsh
 
     # hardware
-    verible
+    # verible is only supported on Linux (x86_64-linux, i686-linux and aarch64-linux)
+    # https://search.nixos.org/packages?channel=23.11&show=verible&from=0&size=50&sort=relevance&type=packages&query=verible
+    # verible
     verilator
     svls
-  ];
+  ]
+  ++ (pkgs.lib.optionals pkgs.stdenv.isLinux [ verible ]);
   postShellHook = ''
     # install mase as a package
     python3 -m pip install .
