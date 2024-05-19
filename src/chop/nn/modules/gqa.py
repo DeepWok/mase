@@ -110,7 +110,7 @@ class GroupedQueryAttention(nn.Module):
         key = repeat_kv(key, n_rep=self.group_size)
         value = repeat_kv(value, n_rep=self.group_size)
 
-        attn_weights = self.qk_matmul_func(query, key.transpose(2, 3)) / math.sqrt(self.head_dim)
+        attn_weights = self.qk_matmul_func(query, key.transpose(2, 3) / math.sqrt(self.head_dim))
         attn_weights = self.softmax_func(attn_weights)
         attn_output = self.v_matmul_func(attn_weights, value)
 

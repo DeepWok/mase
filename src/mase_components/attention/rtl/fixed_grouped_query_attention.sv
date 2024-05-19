@@ -122,8 +122,8 @@ logic [DATA_OUT_0_PRECISION_0-1:0] query [ACTIVATION_PARALLELISM-1:0];
 logic joint_query_valid, joint_query_ready;
 logic [NUM_HEADS-1:0] split_query_valid, split_query_ready;
 
-logic [DATA_OUT_0_PRECISION_0-1:0] query_fifo_data [NUM_HEADS-1:0] [ACTIVATION_PARALLELISM-1:0];
-logic [NUM_HEADS-1:0] query_fifo_valid, query_fifo_ready;
+// logic [DATA_OUT_0_PRECISION_0-1:0] query_fifo_data [NUM_HEADS-1:0] [ACTIVATION_PARALLELISM-1:0];
+// logic [NUM_HEADS-1:0] query_fifo_valid, query_fifo_ready;
 
 // Key
 logic [DATA_OUT_0_PRECISION_0-1:0] key [ACTIVATION_PARALLELISM-1:0];
@@ -254,21 +254,21 @@ gqa_head_scatter_control #(
 for (genvar head = 0; head < NUM_HEADS; head++) begin : gen_head
 
 // TODO: Not sure why this is needed??
-matrix_fifo #(
-    .DATA_WIDTH  (DATA_OUT_0_PRECISION_0),
-    .DIM0        (WEIGHT_PARALLELISM_DIM_0),
-    .DIM1        (DATA_IN_0_PARALLELISM_DIM_1),
-    .FIFO_SIZE   (10 * GROUP_NUM_ITERS) // TODO: Resize?
-) query_fifo_inst (
-    .clk         (clk),
-    .rst         (rst),
-    .in_data     (query),
-    .in_valid    (split_query_valid[head]),
-    .in_ready    (split_query_ready[head]),
-    .out_data    (query_fifo_data[head]),
-    .out_valid   (query_fifo_valid[head]),
-    .out_ready   (query_fifo_ready[head])
-);
+// matrix_fifo #(
+//     .DATA_WIDTH  (DATA_OUT_0_PRECISION_0),
+//     .DIM0        (WEIGHT_PARALLELISM_DIM_0),
+//     .DIM1        (DATA_IN_0_PARALLELISM_DIM_1),
+//     .FIFO_SIZE   (10 * GROUP_NUM_ITERS) // TODO: Resize?
+// ) query_fifo_inst (
+//     .clk         (clk),
+//     .rst         (rst),
+//     .in_data     (query),
+//     .in_valid    (split_query_valid[head]),
+//     .in_ready    (split_query_ready[head]),
+//     .out_data    (query_fifo_data[head]),
+//     .out_valid   (query_fifo_valid[head]),
+//     .out_ready   (query_fifo_ready[head])
+// );
 
 // FIFOs are required before each K, V port to buffer results while we wait for
 // Q round robin style results. Some heads will also start calculating before
@@ -324,9 +324,9 @@ fixed_self_attention_head #(
 ) head_i (
     .clk                         (clk),
     .rst                         (rst),
-    .query                       (query_fifo_data[head]),
-    .query_valid                 (query_fifo_valid[head]),
-    .query_ready                 (query_fifo_ready[head]),
+    .query                       (query),
+    .query_valid                 (split_query_valid[head]),
+    .query_ready                 (split_query_ready[head]),
     .key                         (key_fifo_data[head]),
     .key_valid                   (key_fifo_valid[head]),
     .key_ready                   (key_fifo_ready[head]),

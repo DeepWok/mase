@@ -6,7 +6,14 @@ from cocotb.clock import Clock
 class Testbench:
     __test__ = False  # so pytest doesn't confuse this with a test
 
-    def __init__(self, dut, clk=None, rst=None, fail_on_checks=True) -> None:
+    def __init__(
+        self,
+        dut,
+        clk=None,
+        rst=None,
+        fail_on_checks=True,
+        clk_period_ns=20,
+    ) -> None:
         self.dut = dut
         self.clk = clk
         self.rst = rst
@@ -19,7 +26,7 @@ class Testbench:
         self.fail_on_checks = fail_on_checks
 
         if self.clk != None:
-            self.clock = Clock(self.clk, 20, units="ns")
+            self.clock = Clock(self.clk, clk_period_ns, units="ns")
             cocotb.start_soon(self.clock.start())
 
     def assign_self_params(self, attrs):

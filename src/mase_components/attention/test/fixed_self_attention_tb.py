@@ -17,8 +17,8 @@ from mase_cocotb.interfaces.streaming import StreamDriver, StreamMonitor
 from mase_cocotb.runner import mase_runner
 
 # from mase_cocotb import Testbench, StreamDriver, StreamMonitor, mase_runner
-from chop.nn.quantized import BertSelfAttentionInteger, fixed_softermax
-from chop.passes.graph.transforms.quantize.quantized_funcs import matmul_integer
+from chop.nn.quantized import BertSelfAttentionInteger
+from chop.nn.quantized.functional import fixed_softermax, matmul_integer
 
 from mase_cocotb.utils import fixed_preprocess_tensor
 
@@ -247,7 +247,7 @@ def test_fixed_linear_smoke():
     """
     Some quick tests to check if the module is working.
     """
-    mase_runner(trace=True, module_param_list=[get_config()], skip_build=True)
+    mase_runner(trace=True, module_param_list=[get_config()])
 
 
 if __name__ == "__main__":

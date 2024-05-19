@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import os
+import math
 
 import torch
 import logging
@@ -214,6 +215,10 @@ class FixedGroupedQueryAttentionTB(Testbench):
             else:
                 weights = getattr(self.model, projection_name).weight
 
+            # Normalize K Matrix
+            if projection == "k":
+                weights = weights / math.sqrt(self.model.head_dim)
+
             self.log.info(f"Processing {projection_name} weights: {weights.shape}")
             weights = fixed_preprocess_tensor(
                 tensor=weights,
@@ -275,13 +280,13 @@ async def basic(dut):
 def get_config(kwargs={}):
 
     embedding_len = 16
-    seq_len = 10
+    seq_len = 4
     num_heads = 4
     num_kv_heads = 2
 
     parallelism = 2
     width = 8
-    frac_width = 4
+    frac_width = width // 2
 
     config = {
         "NUM_HEADS": num_heads,
