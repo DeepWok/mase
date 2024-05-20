@@ -28,7 +28,12 @@ def graph_iterator_for_metadata(graph, dummy_in=None, add_value=True):
         elif node.op == "call_module":
             args = load_arg(node.args, env)
             kwargs = load_arg(node.kwargs, env)
-            result = modules[node.target](*args, **kwargs)
+            try:
+                result = modules[node.target](*args, **kwargs)
+            except RuntimeError as e:
+                breakpoint()
+                print(f"Error in {node.target}")
+                raise e
 
             meta = node.meta["mase"]
             if isinstance(modules[node.target], (torch.nn.Conv2d, torch.nn.Linear)):

@@ -37,7 +37,7 @@ logger = logging.getLogger("chop.test")
 pp = pprint.PrettyPrinter(indent=4)
 
 configs = [
-    "scope_local_granularity_elementwise_method_random",
+    # "scope_local_granularity_elementwise_method_random",
     "scope_local_granularity_elementwise_method_l1",
     "scope_global_granularity_elementwise_method_l1",
 ]

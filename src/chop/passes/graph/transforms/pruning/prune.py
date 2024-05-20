@@ -39,8 +39,8 @@ def get_activation_hook(name, info, named_info, a_config: dict):
             raise ValueError(
                 f"{module.__class__.__name__} takes more than 1 argument at inference, the current sparsiy_input pre forward hook only allows one!"
             )
-        x = args[0].to("cuda")
-        mask = a_rank_fn(x, info, a_sparsity, name)
+        x = args[0]
+        mask = a_rank_fn(x, info, a_sparsity, name).to(x.device)
         module.activation_mask = mask
         sparsify_tensor = x * mask
         # sparsity = (sparsify_tensor == 0).sum().item() / sparsify_tensor.numel()
@@ -176,4 +176,4 @@ def prune_transform_pass(graph, pass_args: dict = {}):
     :rtype: tuple
     """
     graph = prune_graph_iterator(graph, pass_args)
-    return graph
+    return graph, {}

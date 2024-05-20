@@ -8,7 +8,7 @@ def prune_graph_iterator(graph, config: dict):
         if node.op == "call_module":
             name = node.target
             # remove weights
-            if hasattr(graph.modules[node.target], "weigh"):
+            if hasattr(graph.modules[node.target], "weight"):
                 torch.nn.utils.parametrize.remove_parametrizations(
                     graph.modules[name], "weight"
                 )
