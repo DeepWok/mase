@@ -4,6 +4,7 @@ import os
 import math
 
 import torch
+from torch import Tensor
 import logging
 from functools import partial
 
@@ -11,12 +12,74 @@ import cocotb
 from cocotb.log import SimLog
 from cocotb.triggers import Timer
 
+from chop.nn.modules.gqa import repeat_kv
 from chop.nn.quantized.modules import GroupedQueryAttentionInteger
 from mase_cocotb.testbench import Testbench
 from mase_cocotb.interfaces.streaming import StreamDriver, StreamMonitor, ErrorThresholdStreamMonitor
 from mase_cocotb.runner import mase_runner
 
 from mase_cocotb.utils import fixed_preprocess_tensor
+
+
+class HardwareGQA(GroupedQueryAttentionInteger):
+    """Same as GroupedQueryAttentionInteger but exposes intermediate
+    signals on the forward pass so we can compare hardware signals against it."""
+
+    def __init__(
+        self,
+        embed_dim: int,
+        num_heads: int,
+        num_kv_heads: int,
+        bias: bool = True,
+        device=None,
+        dtype=None,
+        linear_q_config: dict = None,
+        linear_out_q_config: dict = None,
+        softermax_out_q_config: dict = None,
+        qk_matmul_out_q_config: dict = None,
+        v_matmul_out_q_config: dict = None,
+        floor=False
+    ) -> None:
+        super().__init__(embed_dim, num_heads, num_kv_heads, bias, device, dtype,
+                         linear_q_config, linear_out_q_config, softermax_out_q_config,
+                         qk_matmul_out_q_config, v_matmul_out_q_config, floor)
+
+
+    def forward(self, x: Tensor):
+        batch_size, seq_len, _ = x.shape
+
+        query = self.q_projection(x)
+        query_heads = query.view(
+            batch_size, seq_len, self.num_heads, self.head_dim
+        ).transpose(1, 2)
+        key = self.k_projection(x)
+        key_heads = key.view(
+            batch_size, seq_len, self.num_kv_heads, self.head_dim
+        ).transpose(1, 2)
+        value = self.v_projection(x)
+        value_heads = value.view(
+            batch_size, seq_len, self.num_kv_heads, self.head_dim
+        ).transpose(1, 2)
+
+        key_rep = repeat_kv(key_heads, n_rep=self.group_size)
+        value_rep = repeat_kv(value_heads, n_rep=self.group_size)
+
+        qk_result = self.qk_matmul_func(
+            query_heads,
+            key_rep.transpose(2, 3)
+        )
+        attn_weights = self.softmax_func(qk_result)
+        heads_out = self.v_matmul_func(attn_weights, value_rep)
+
+        attn_output = heads_out.transpose(1, 2).contiguous()
+        attn_output = attn_output.reshape(batch_size, seq_len, self.embed_dim)
+
+        return attn_output, {
+            "query": query,
+            "key": key.transpose(1, 2),  # Key is transposed in hardware
+            "value": value,
+            "heads_out": heads_out,
+        }
 
 
 class FixedGroupedQueryAttentionTB(Testbench):
@@ -123,7 +186,68 @@ class FixedGroupedQueryAttentionTB(Testbench):
             signed=True,
             log_error=True,
             check=False,
+            name="Output"
         )
+
+        # Intermediate monitors
+
+        # Q Linear Monitor
+        self.query_linear_monitor = ErrorThresholdStreamMonitor(
+            dut.clk,
+            dut.query,
+            dut.joint_query_valid,
+            dut.joint_query_ready,
+            width=self.DATA_OUT_0_PRECISION_0,
+            error_bits=0,
+            signed=True,
+            log_error=True,
+            check=False,
+            name="Q Linear"
+        )
+
+        # K Linear -> Transpose Monitor
+        self.key_linear_monitor = ErrorThresholdStreamMonitor(
+            dut.clk,
+            dut.key,
+            dut.joint_key_valid,
+            dut.joint_key_ready,
+            width=self.DATA_OUT_0_PRECISION_0,
+            error_bits=0,
+            signed=True,
+            log_error=True,
+            check=False,
+            name="K Transpose Linear"
+        )
+
+        # V Linear Monitor
+        self.value_linear_monitor = ErrorThresholdStreamMonitor(
+            dut.clk,
+            dut.value,
+            dut.joint_value_valid,
+            dut.joint_value_ready,
+            width=self.DATA_OUT_0_PRECISION_0,
+            error_bits=0,
+            signed=True,
+            log_error=True,
+            check=False,
+            name="V Linear"
+        )
+
+        # Head out Monitor
+        # TODO: Verilator doesn't support accessing multi-dim arrays
+        # self.heads_out_monitor = ErrorThresholdStreamMonitor(
+        #     dut.clk,
+        #     dut.head_out,
+        #     dut.head_out_valid,
+        #     dut.head_out_ready,
+        #     width=self.DATA_OUT_0_PRECISION_0,
+        #     error_bits=0,
+        #     signed=True,
+        #     log_error=True,
+        #     check=False,
+        #     name="Heads Out"
+        # )
+
 
         # Model
         linear_q_config = {
@@ -147,7 +271,7 @@ class FixedGroupedQueryAttentionTB(Testbench):
             "frac_width": linear_out_q_config["data_out_frac_width"],
         }
 
-        self.model = GroupedQueryAttentionInteger(
+        self.model = HardwareGQA(
             embed_dim=self.DATA_IN_0_TENSOR_SIZE_DIM_0,
             num_heads=self.NUM_HEADS,
             num_kv_heads=self.NUM_GROUPS,
@@ -181,13 +305,14 @@ class FixedGroupedQueryAttentionTB(Testbench):
             )
         )
 
+
     async def run_test(self, batches, us):
         await self.reset()
         self.log.info(f"Reset finished")
         self.data_out_0_monitor.ready.value = 1
 
         inputs = self.generate_inputs()
-        exp_out = self.model(inputs)
+        exp_out, int_out = self.model(inputs)
 
         # * Load the inputs driver
         self.log.info(f"Processing inputs: {inputs.shape}")
@@ -216,8 +341,8 @@ class FixedGroupedQueryAttentionTB(Testbench):
                 weights = getattr(self.model, projection_name).weight
 
             # Normalize K Matrix
-            if projection == "k":
-                weights = weights / math.sqrt(self.model.head_dim)
+            # if projection == "k":
+            #     weights = weights / math.sqrt(self.model.head_dim)
 
             self.log.info(f"Processing {projection_name} weights: {weights.shape}")
             weights = fixed_preprocess_tensor(
@@ -250,6 +375,39 @@ class FixedGroupedQueryAttentionTB(Testbench):
                     ],
                 )
                 getattr(self, f"bias_{projection}_driver").load_driver(bias)
+
+        # * Load intermediate monitors
+        for projection in ["query", "key", "value"]:
+            intermediate_data = int_out[projection]
+            monitor = getattr(self, f"{projection}_linear_monitor")
+            print(projection, "intermediate_data", intermediate_data.shape)
+            mon_data = fixed_preprocess_tensor(
+                tensor=intermediate_data,
+                q_config={
+                    "width": self.DATA_OUT_0_PRECISION_0,
+                    "frac_width": self.DATA_OUT_0_PRECISION_1,
+                },
+                parallelism=[
+                    self.DATA_OUT_0_PARALLELISM_DIM_1,
+                    self.DATA_OUT_0_PARALLELISM_DIM_0,
+                ],
+            )
+            monitor.load_monitor(mon_data)
+
+        # TODO: Verilator doesn't support accessing multi-dim arrays
+        # heads_out = int_out["heads_out"]
+        # mon_heads_out = fixed_preprocess_tensor(
+        #     tensor=heads_out,
+        #     q_config={
+        #         "width": self.DATA_OUT_0_PRECISION_0,
+        #         "frac_width": self.DATA_OUT_0_PRECISION_1,
+        #     },
+        #     parallelism=[
+        #         self.DATA_OUT_0_PARALLELISM_DIM_1,
+        #         self.DATA_OUT_0_PARALLELISM_DIM_0,
+        #     ],
+        # )
+        # self.heads_out_monitor.load_monitor(mon_heads_out)
 
         # * Load the output monitor
         self.log.info(f"Processing outputs: {exp_out.shape}")

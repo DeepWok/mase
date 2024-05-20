@@ -256,6 +256,9 @@ module fixed_gqa_input_block #(
       .data_out_0_ready             (data_out_key_ready)
   );
 
+  // Normalize K using constant division by math.sqrt(head_dim)
+
+
   // Transpose K Matrix
   // K Linear output shape is:
   // - Total: (DATA_IN_0_TENSOR_SIZE_DIM_1 x GROUPED_WEIGHT_TENSOR_SIZE_DIM_0)

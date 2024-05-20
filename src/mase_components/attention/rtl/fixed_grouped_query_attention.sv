@@ -319,7 +319,7 @@ fixed_self_attention_head #(
     .OUT_DATA_PARALLELISM_DIM_1  (DATA_OUT_0_PARALLELISM_DIM_1),
     .OUT_DATA_PRECISION_0        (DATA_OUT_0_PRECISION_0),
     .OUT_DATA_PRECISION_1        (DATA_OUT_0_PRECISION_1),
-    // We pre-transpose K -> K^T outside of head
+    // We pre-transpose K to K^T outside of head
     .KEY_PRE_TRANSPOSED          (1)
 ) head_i (
     .clk                         (clk),
