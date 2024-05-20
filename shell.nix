@@ -38,7 +38,7 @@ in pkgs.mkShellNoCC {
   ++ (pkgs.lib.optionals pkgs.stdenv.isLinux [ verible ]);
   postShellHook = ''
     # install mase as a package
-    python3 -m pip install .
+    python3 -m pip -e install .
     # add env variables 
     source scripts/init-nix.sh
   '';
