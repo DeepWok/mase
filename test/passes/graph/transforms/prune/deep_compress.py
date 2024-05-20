@@ -1,4 +1,5 @@
 import sys
+import logging
 import torch
 from pathlib import Path
 from tqdm import tqdm
@@ -11,9 +12,9 @@ from chop.passes.graph.interface.save_and_load import (
 )
 
 # Figure out the correct path for Machop
-machop_path = Path(".").resolve() / "machop"
-assert machop_path.exists(), "Failed to find machop at: {}".format(machop_path)
-sys.path.append(str(machop_path))
+# machop_path = Path(".").resolve() / "machop"
+# assert machop_path.exists(), "Failed to find machop at: {}".format(machop_path)
+# sys.path.append(str(machop_path))
 
 from chop.ir.graph.mase_graph import MaseGraph
 from chop.passes.graph.utils import get_mase_op
@@ -32,7 +33,7 @@ from chop.passes.graph import (
     quantize_transform_pass,
 )
 
-
+logger = logging.getLogger("chop.test")
 set_logging_verbosity("info")
 
 
@@ -106,6 +107,7 @@ train_params = {
     "plt_trainer_args": {
         "max_epochs": max_epochs,
     },
+    "scheduler_args": None,
     "auto_requeue": False,
     "save_path": None,
     "visualizer": None,
@@ -129,7 +131,7 @@ save_state_dict_ckpt(mg.model, save_path=base_model_save_path / "model.pth")
 # ---------------------------------------------------- #
 #            ITERATIVE PRUNING & TRAINING              #
 # ---------------------------------------------------- #
-print("Starting iterative pruning and training...")
+logger.info("Starting iterative pruning and training...")
 overall_sparsity = prune_args["sparsity"]
 num_iterations = prune_args["num_iterations"]
 
@@ -198,8 +200,8 @@ for i in tqdm(range(num_iterations)):
         mg, {"dummy_in": dummy_in, "add_value": True}
     )
 
-print("Finished iterative pruning and training...")
-print("Testing model after pruning and training:")
+logger.info("Finished iterative pruning and training...")
+logger.info("Testing model after pruning and training:")
 
 test(**train_params)
 
@@ -211,11 +213,11 @@ save_pruned_train_model(mg, pass_args=pruned_model_save_path)
 #                   QUANTIZATION                       #
 # ---------------------------------------------------- #
 
-print("Starting quantization...")
+logger.info("Starting quantization...")
 mg, _ = quantize_transform_pass(mg, quantize_args)
 
-print("Finished quantization...")
-print("Testing model after quantization:")
+logger.info("Finished quantization...")
+logger.info("Testing model after quantization:")
 
 test(**train_params)
 
@@ -227,7 +229,7 @@ save_pruned_train_model(mg, pass_args=quantized_model_save_path)
 #                   HUFFMAN ENCODING                   #
 # ---------------------------------------------------- #
 
-print("Starting Huffman encoding...")
+logger.info("Starting Huffman encoding...")
 compressed_model_save_path = Path(project_name) / "compressed_model"
 compressed_model_save_path.mkdir(parents=True, exist_ok=True)
 

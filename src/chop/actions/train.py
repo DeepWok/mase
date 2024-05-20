@@ -34,17 +34,6 @@ from chop.tools.utils import parse_accelerator, to_numpy_if_tensor
 logger = logging.getLogger(__name__)
 
 
-# class CustomFSDPStrategy(DDPStrategy):
-#     def configure_ddp(self):
-#         # model = DistributedDataParallel(model)
-#         fsdp_model = FullyShardedDataParallel(
-#             self.model,
-#             # fsdp_auto_wrap_policy=default_auto_wrap_policy,
-#             # cpu_offload=CPUOffload(offload_params=True),
-#         )
-#         self.model = fsdp_model
-
-
 def train(
     model,
     model_info,
@@ -88,17 +77,6 @@ def train(
     else:
         plugins = None
     plt_trainer_args["plugins"] = plugins
-
-    # Check optimizer
-    # if plt_trainer_args["strategy"] in ["deepspeed_stage_3"]:
-    #     assert optimizer in [
-    #         "FusedAdam",
-    #         "fused_adam",
-    #     ], "optimizer should be 'fused_adam' given --strategy={}".format(
-    #         plt_trainer_args["strategy"]
-    #     )
-    # elif plt_trainer_args["strategy"] in ["fsdp_custom"]:
-    #     plt_trainer_args["strategy"] = CustomFSDPStrategy()
 
     wrapper_cls = get_model_wrapper(model_info, task)
 

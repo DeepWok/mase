@@ -38,6 +38,7 @@ from .interface import (
     load_node_meta_param_interface_pass,
     tensorrt_engine_interface_pass,
     onnx_runtime_interface_pass,
+    huffman_encode_pass,
 )
 
 from .transforms.quantize.quant_parsers import parse_node_config
