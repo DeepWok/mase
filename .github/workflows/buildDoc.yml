@@ -22,7 +22,7 @@ jobs:
   software-regression-test:
     runs-on: ubuntu-latest
     container:
-      image: deepwok/mase-docker:latest
+      image: deepwok/mase-docker-cpu:latest
     steps:
 
       # Clone the MASE repo and its submodules.
@@ -37,8 +37,8 @@ jobs:
 
       - name: Build sphinx html
         run: |
-          export PYTHONPATH="${PATH}:$(pwd):$(pwd)/machop"
-          cd machop/sphinx_docs
+          export PYTHONPATH="${PATH}:$(pwd):$(pwd)/src"
+          cd docs
           make html 2>&1 | tee html.log
           ! grep -rn html.log -e "Error" || exit 1
           cd ../..
@@ -46,7 +46,7 @@ jobs:
       - name: Run ghp-import
         run: |
           if [ "${{ secrets.MASE_DOCKER_CRED }}" != "" ]; then
-            ghp-import -n -p -f machop/sphinx_docs/build/html
+            ghp-import -n -p -f docs/build/html
             echo "MASE Doc deployed."
           else
             echo "Skipped MASE Doc deployment."

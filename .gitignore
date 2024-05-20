@@ -9,18 +9,20 @@ vagrant/.vagrant/
 *.py~
 *.swp
 /history/
-*data/
+*/data/
 /tb_summary/
 # *.sh
 /mase_output/
 .devcontainer/
 *.ckpt
+!/docs/tutorials/tensorrt/checkpoints/*.ckpt
 *.pkl
-/machop/examples/**/cache/
-/machop/examples/**/ckpts/
-/machop/examples/**/data/
-/machop/cache/
-/machop/.machop_cache/
+/src/examples/**/cache/
+/src/examples/**/ckpts/
+/src/examples/**/data/
+/src/cache/
+/src/.machop_cache/
+lightning_logs/
 
 # macOS
 .DS_Store
@@ -77,7 +79,6 @@ coverage.xml
 .pytest_cache/
 
 # Hardware tests
-components/testbench/**/sim_build/
 build/
 
 # Translations
@@ -141,3 +142,13 @@ venv.bak/
 
 # Data files for hardware simulation
 *.dat
+
+# Generated SV LUT files
+*_lut.sv
+
+# Pytest generated reports
+prof/
+*.html
+
+# Quantization summaries
+*.csv

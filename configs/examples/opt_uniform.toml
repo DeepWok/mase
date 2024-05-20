@@ -1,0 +1,22 @@
+# basics
+# model = "facebook/opt-125m"
+model = "facebook/opt-125m@patched"
+dataset = "wikitext2"
+# task = 'lm'
+
+# is_pretrained = true
+# load_name = "facebook/opt-125m"
+# load_type = "hf"
+
+[passes.quantize]
+by = "type"
+report = true
+
+[passes.quantize.default.config]
+name = "integer"
+data_in_width = 8
+data_in_frac_width = 4
+weight_width = 8
+weight_frac_width = 9
+bias_width = 8
+bias_frac_width = 9
