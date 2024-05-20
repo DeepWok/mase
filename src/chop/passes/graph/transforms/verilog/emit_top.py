@@ -59,6 +59,17 @@ def param_needs_signals(node, param, value, qualifier="data_in"):
         )
 
 
+def is_real_input_arg(node, arg_idx):
+    return (
+        # module parameter arguments are appended after fx args
+        arg_idx < len(node.args)
+        # Drop None arguments
+        and isinstance(node.args[arg_idx], fx.Node)
+        # Drop arguments that are inputs to this node, but not the whole graph
+        and node.args[arg_idx].op == "placeholder"
+    )
+
+
 # =============================================================================
 # Verilog parameters
 # =============================================================================
@@ -117,15 +128,7 @@ class VerilogInterfaceEmitter:
             for arg_idx, arg in enumerate(
                 node.meta["mase"].parameters["common"]["args"].keys()
             ):
-                if (
-                    # module parameter arguments are appended after fx args
-                    arg_idx < len(node.args)
-                    # Drop None arguments
-                    and isinstance(node.args[arg_idx], fx.Node)
-                    # Drop arguments that are inputs to this node, but not the whole graph
-                    and node.args[arg_idx].op == "placeholder"
-                ):
-                    #     continue
+                if is_real_input_arg(node, arg_idx):
                     # if "data_in" in arg:
                     arg_name = _cap(arg)
                     parallelism_params = [
@@ -190,6 +193,12 @@ class VerilogSignalEmitter:
                     for param in parameter_map
                     if f"{node_name}_{arg_name}_PARALLELISM_DIM" in param
                 ]
+
+                # Getitem argument always get mapped to port 0 irrespective of
+                # actual argument index
+                if node.meta["mase"]["common"]["mase_op"] == "getitem":
+                    arg = "data_in_0"
+
                 signals += f"""
 logic [{node_name}_{arg_name}_PRECISION_0-1:0]  {node_name}_{arg}        [{'*'.join(parallelism_params)}-1:0];
 logic                             {node_name}_{arg}_valid;
@@ -329,6 +338,25 @@ class VerilogInternalComponentEmitter:
 );
 """
 
+    def _emit_getitem_signals(self, node):
+        """
+        Getitem nodes have arg list like (None, None, None, Arg, None, None)
+        where the meaningful arg is at an arbitrary index, but always maps to
+        data_in_0 interface of the hardware
+        """
+
+        node_name = vf(node.name)
+
+        return f"""
+    .data_in_0       ({node_name}_data_in_0),
+    .data_in_0_valid ({node_name}_data_in_0_valid),
+    .data_in_0_ready ({node_name}_data_in_0_ready),
+    
+    .data_out_0       ({node_name}_data_out_0),
+    .data_out_0_valid ({node_name}_data_out_0_valid),
+    .data_out_0_ready ({node_name}_data_out_0_ready),
+        """
+
     def emit(self, node, parameter_map):
         node_name = vf(node.name)
         component_name = node.meta["mase"].parameters["hardware"]["module"]
@@ -346,23 +374,32 @@ class VerilogInternalComponentEmitter:
             parameters += f"""    .{key}({node_name}_{key}), {debug_info}\n"""
         parameters = _remove_last_comma(parameters)
 
-        # Emit component instantiation input signals
-        for key, value in node.meta["mase"].parameters["common"]["args"].items():
-            if "inplace" in key or not isinstance(value, dict):
-                continue
-            signals += f"""
-    .{key}({node_name}_{key}),
-    .{key}_valid({node_name}_{key}_valid),
-    .{key}_ready({node_name}_{key}_ready),
-    """
+        # Handle getitem nodes separately since an arbitrary argument index
+        # will always be mapped to data_in_0 interface of the hardware
+        if node.meta["mase"]["common"]["mase_op"] == "getitem":
+            signals += self._emit_getitem_signals(node)
 
-        # Emit component instantiation output signals
-        for key, value in node.meta["mase"].parameters["common"]["results"].items():
-            signals += f"""
+        # All other node types
+        else:
+            # Emit component instantiation input signals
+            for key, value in node.meta["mase"].parameters["common"]["args"].items():
+                if "inplace" in key or not isinstance(value, dict):
+                    continue
+                signals += f"""
     .{key}({node_name}_{key}),
     .{key}_valid({node_name}_{key}_valid),
     .{key}_ready({node_name}_{key}_ready),
-    """
+        """
+
+            # Emit component instantiation output signals
+            for key, value in node.meta["mase"].parameters["common"]["results"].items():
+                signals += f"""
+    .{key}({node_name}_{key}),
+    .{key}_valid({node_name}_{key}_valid),
+    .{key}_ready({node_name}_{key}_ready),
+        """
+
+        # Remove final comma in signal list
         signals = _remove_last_comma(signals)
 
         # Combine component instantiation
@@ -546,8 +583,10 @@ class VerilogWireEmitter:
         i = 0
         for node in nodes_in:
             node_name = vf(node.name)
-            for arg in node.meta["mase"].parameters["common"]["args"].keys():
-                if "data_in" in arg:
+            for arg_idx, arg in enumerate(
+                node.meta["mase"].parameters["common"]["args"].keys()
+            ):
+                if is_real_input_arg(node, arg_idx):
                     wires += f"""
 assign data_in_{i}_ready = {node_name}_{arg}_ready;
 assign {node_name}_{arg}_valid    = data_in_{i}_valid;
@@ -570,21 +609,43 @@ assign data_out_{i} = {node_name}_{result};
 
         return wires
 
+    def _emit_getitem_wires(self, node):
+        """
+        Getitem nodes may receive an output from an arbitrary index of the parent node,
+        which is always driven to port 0 of the getitem node
+        """
+
+        from_name = vf(node.args[0].name)
+        to_name = vf(node.name)
+        select = node.args[1]
+
+        return f"""
+assign {from_name}_data_out_{select}_ready  = {to_name}_data_in_0_ready;
+assign {to_name}_data_in_0_valid    = {from_name}_data_out_{select}_valid;
+assign {to_name}_data_in_0 = {from_name}_data_out_{select};
+"""
+
     def _emit_node2node_wires(self):
         nodes_in = self.graph.nodes_in
 
-        # Ignore the input of the input nodes
-        # (as they are already connected by the previous process)
-        # For each other explicit node, emit the edge of their inputs.
-        # Assume all the node has only one output.
         wires = ""
         for node in self.graph.fx_graph.nodes:
-            if node.meta["mase"].parameters["hardware"]["is_implicit"]:
+
+            if (
+                # Skip implicit nodes
+                node.meta["mase"].parameters["hardware"]["is_implicit"]
+                # Input nodes were already connected by the previous process
+                or node in nodes_in
+            ):
                 continue
-            if node in nodes_in:
+
+            # Getitem nodes are handled separately
+            if node.meta["mase"]["common"]["mase_op"] == "getitem":
+                wires += self._emit_getitem_wires(node)
                 continue
 
             to_name = vf(node.name)
+
             for i, node_in in enumerate(node.all_input_nodes):
                 from_name = vf(node_in.name)
                 wires += f"""

@@ -1,3 +1,4 @@
+`timescale 1ns / 1ps
 
 /*
  * Simple registered adder between two inputs.
@@ -9,22 +10,28 @@ module fixed_adder #(
     parameter DATA_IN_0_PRECISION_1 = 3,
     parameter DATA_IN_0_TENSOR_SIZE_DIM_0 = 4,
     parameter DATA_IN_0_TENSOR_SIZE_DIM_1 = 1,
+    parameter DATA_IN_0_TENSOR_SIZE_DIM_2 = 1,
     parameter DATA_IN_0_PARALLELISM_DIM_0 = 4,
     parameter DATA_IN_0_PARALLELISM_DIM_1 = 1,
+    parameter DATA_IN_0_PARALLELISM_DIM_2 = 1,
 
     parameter DATA_IN_1_PRECISION_0 = 16,
     parameter DATA_IN_1_PRECISION_1 = 3,
     parameter DATA_IN_1_TENSOR_SIZE_DIM_0 = 4,
     parameter DATA_IN_1_TENSOR_SIZE_DIM_1 = 1,
+    parameter DATA_IN_1_TENSOR_SIZE_DIM_2 = 1,
     parameter DATA_IN_1_PARALLELISM_DIM_0 = 4,
     parameter DATA_IN_1_PARALLELISM_DIM_1 = 1,
+    parameter DATA_IN_1_PARALLELISM_DIM_2 = 1,
 
     parameter DATA_OUT_0_PRECISION_0 = 16,
     parameter DATA_OUT_0_PRECISION_1 = 3,
     parameter DATA_OUT_0_TENSOR_SIZE_DIM_0 = DATA_IN_0_TENSOR_SIZE_DIM_0,
     parameter DATA_OUT_0_TENSOR_SIZE_DIM_1 = DATA_IN_0_TENSOR_SIZE_DIM_1,
+    parameter DATA_OUT_0_TENSOR_SIZE_DIM_2 = DATA_IN_0_TENSOR_SIZE_DIM_2,
     parameter DATA_OUT_0_PARALLELISM_DIM_0 = DATA_IN_0_PARALLELISM_DIM_0,
-    parameter DATA_OUT_0_PARALLELISM_DIM_1 = DATA_IN_0_PARALLELISM_DIM_1
+    parameter DATA_OUT_0_PARALLELISM_DIM_1 = DATA_IN_0_PARALLELISM_DIM_1,
+    parameter DATA_OUT_0_PARALLELISM_DIM_2 = DATA_IN_0_PARALLELISM_DIM_2
 ) (
     input clk,
     input rst,

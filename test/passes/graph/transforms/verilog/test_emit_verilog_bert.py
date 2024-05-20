@@ -5,16 +5,27 @@ import torch.nn as nn
 from torch import Tensor
 from torch.fx import GraphModule
 
+from transformers.activations import GELUActivation
+
 import chop.passes as passes
 import chop.actions as actions
 from chop.ir import MaseGraph
 from chop.models.patched.bert import BertConfig, BertModel
 from chop.models.patched.bert.modeling_bert import BertSelfAttention, BertEmbeddings
 from chop.passes.graph.utils import deepsetattr
-from chop.nn.quantized import BertSelfAttentionInteger, LinearInteger, LayerNormInteger
+from chop.nn.quantized import (
+    BertSelfAttentionInteger,
+    LinearInteger,
+    LayerNormInteger,
+    GELUInteger,
+)
+from chop.nn.quantized.functional.add import add_integer
 from chop.tools import get_logger, set_excepthook
 
 from mase_components import get_module_dependencies
+
+import operator
+from functools import partial
 
 logger = get_logger(__name__)
 logger.setLevel("DEBUG")
@@ -41,22 +52,6 @@ BERT_CUSTOM_OPS = {
                 "attention/fixed_self_attention_single_precision_wrapper"
             ),
         },
-        LinearInteger: {
-            "args": {
-                "x": "data_in",
-            },
-            "toolchain": "INTERNAL_RTL",
-            "module": "fixed_linear",
-            "dependence_files": get_module_dependencies("linear/fixed_linear"),
-        },
-        LayerNormInteger: {
-            "args": {
-                "x": "data_in",
-            },
-            "toolchain": "INTERNAL_RTL",
-            "module": "norm",
-            "dependence_files": get_module_dependencies("norm/norm"),
-        },
     },
     "functions": {},
 }
@@ -81,10 +76,62 @@ def bert_module_level_quantize(model, model_config, q_config):
                 eps=module[1].eps,
                 config=q_config,
             )
+        elif isinstance(module[1], GELUActivation):
+            new_module = GELUInteger(config=q_config)
         else:
             continue
+        logger.info(f"Replacing module: {module[0]}")
         deepsetattr(model, module[0], new_module)
     return model
+
+
+def bert_update_metadata(mg, q_config):
+    for node in mg.fx_graph.nodes:
+
+        # Update args
+        if (
+            node.target == operator.add
+            or node.target == operator.getitem
+            or node.meta["mase"]["common"]["mase_op"] == "df_split"
+        ):
+            node.meta["mase"]["common"]["args"]["data_in_0"]["type"] = "fixed"
+            node.meta["mase"]["common"]["args"]["data_in_0"]["precision"] = [
+                q_config["data_in_width"],
+                q_config["data_in_frac_width"],
+            ]
+            if "data_in_1" in node.meta["mase"]["common"]["args"]:
+                node.meta["mase"]["common"]["args"]["data_in_1"]["type"] = "fixed"
+                node.meta["mase"]["common"]["args"]["data_in_1"]["precision"] = [
+                    q_config["data_in_width"],
+                    q_config["data_in_frac_width"],
+                ]
+
+        # Update results
+        if (
+            node.target == operator.add
+            or node.target == operator.getitem
+            or node.meta["mase"]["common"]["mase_op"] == "df_split"
+            or node.op == "placeholder"
+            or node.op == "output"
+        ):
+            node.meta["mase"]["common"]["results"]["data_out_0"]["type"] = "fixed"
+            node.meta["mase"]["common"]["results"]["data_out_0"]["precision"] = [
+                q_config["data_out_width"],
+                q_config["data_out_frac_width"],
+            ]
+            if "data_out_1" in node.meta["mase"]["common"]["results"]:
+                node.meta["mase"]["common"]["results"]["data_out_1"]["type"] = "fixed"
+                node.meta["mase"]["common"]["results"]["data_out_1"]["precision"] = [
+                    q_config["data_out_width"],
+                    q_config["data_out_frac_width"],
+                ]
+
+        # Set one of the args to none according to the select value
+        if node.target == operator.getitem:
+            select = 0 if node.args[1] == 1 else 1
+            node.meta["mase"]["common"]["args"][f"data_in_{select}"] = None
+
+    return mg, {}
 
 
 def test_emit_verilog_bert():
@@ -130,23 +177,35 @@ def test_emit_verilog_bert():
         },
     )
 
+    mg, _ = bert_update_metadata(mg, q_config)
+
     mg, _ = passes.add_hardware_metadata_analysis_pass(mg)
 
-    # ! TO DO: remove (debug)
-    # i = 0
-    # for node in mg.fx_graph.nodes:
-    #     if i > 5:
-    #         break
-    #     print(f"\n\nNode: {node.name}")
-    #     print(f"Mase type: {node.meta['mase']['common']['mase_type']}")
-    #     print(f"Mase op: {node.meta['mase']['common']['mase_op']}")
-    #     for k, v in node.meta["mase"]["common"]["args"].items():
-    #         print(f"Args/{k}: {v}")
+    for node in mg.fx_graph.nodes:
+        logger.info(f"Node: {node.name}")
+        logger.info(f"Mase type: {node.meta['mase']['common']['mase_type']}")
+        for arg in node.meta["mase"]["common"]["args"]:
+            if not isinstance(node.meta["mase"]["common"]["args"][arg], dict):
+                logger.info(f"Arg: {arg}")
+                logger.info(f"   Value: {node.meta['mase']['common']['args'][arg]}")
+                continue
+            logger.info(f"Arg: {arg}")
+            logger.info(f"    Type: {node.meta['mase']['common']['args'][arg]['type']}")
+            logger.info(
+                f"    Precision: {node.meta['mase']['common']['args'][arg]['precision']}"
+            )
 
-    #     print(f"HW meta: {node.meta['mase']['hardware']}")
-    #     breakpoint()
-
-    #     i += 1
+        for rs in node.meta["mase"]["common"]["results"]:
+            if not isinstance(node.meta["mase"]["common"]["results"][rs], dict):
+                continue
+            logger.info(f"Result: {rs}")
+            logger.info(
+                f"      Type: {node.meta['mase']['common']['results'][rs]['type']}"
+            )
+            logger.info(
+                f"      Precision: {node.meta['mase']['common']['results'][rs]['precision']}"
+            )
+        logger.info(f"")
 
     mg, _ = passes.emit_verilog_top_transform_pass(mg)
     # mg, _ = passes.emit_bram_transform_pass(mg)

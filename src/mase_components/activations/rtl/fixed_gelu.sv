@@ -7,16 +7,20 @@ module fixed_gelu #(
     parameter DATA_IN_0_PRECISION_1 = 3,
     parameter DATA_IN_0_TENSOR_SIZE_DIM_0 = 1,
     parameter DATA_IN_0_TENSOR_SIZE_DIM_1 = 1,
+    parameter DATA_IN_0_TENSOR_SIZE_DIM_2 = 1,
     parameter DATA_IN_0_PARALLELISM_DIM_0 = 8,
     parameter DATA_IN_0_PARALLELISM_DIM_1 = 1,
+    parameter DATA_IN_0_PARALLELISM_DIM_2 = 1,
 
 
     parameter DATA_OUT_0_PRECISION_0 = DATA_IN_0_PRECISION_0 + 2*DATA_IN_0_PRECISION_1 + APPROXIMATION_PRECISION-1,
     parameter DATA_OUT_0_PRECISION_1 = 2 * DATA_IN_0_PRECISION_1 + APPROXIMATION_PRECISION,
     parameter DATA_OUT_0_TENSOR_SIZE_DIM_0 = 1,
     parameter DATA_OUT_0_TENSOR_SIZE_DIM_1 = 1,
+    parameter DATA_OUT_0_TENSOR_SIZE_DIM_2 = 1,
     parameter DATA_OUT_0_PARALLELISM_DIM_0 = 8,
     parameter DATA_OUT_0_PARALLELISM_DIM_1 = 1,
+    parameter DATA_OUT_0_PARALLELISM_DIM_2 = 1,
 
     parameter APPROXIMATION_PRECISION = 16,
     parameter APPROXIMATION_N = 8
@@ -25,13 +29,17 @@ module fixed_gelu #(
     input rst,
     input clk,
     input logic [DATA_IN_0_PRECISION_0-1:0] data_in_0                                 [DATA_IN_0_PARALLELISM_DIM_0 * DATA_IN_0_PARALLELISM_DIM_1-1:0],
-    output logic [DATA_IN_0_PRECISION_0 + APPROXIMATION_PRECISION + 2*DATA_IN_0_PRECISION_1 -1 :0] data_out_0                              [DATA_OUT_0_PARALLELISM_DIM_0 * DATA_OUT_0_PARALLELISM_DIM_1-1:0],
+    output logic [DATA_OUT_0_PRECISION_0 -1 :0] data_out_0                              [DATA_OUT_0_PARALLELISM_DIM_0 * DATA_OUT_0_PARALLELISM_DIM_1-1:0],
 
     input  logic data_in_0_valid,
     output logic data_in_0_ready,
     output logic data_out_0_valid,
     input  logic data_out_0_ready
 );
+
+  parameter OUTPUT_PRECISION_0 = DATA_IN_0_PRECISION_0 + 2*DATA_IN_0_PRECISION_1 + APPROXIMATION_PRECISION-1;
+  parameter OUTPUT_PRECISION_1 = 2 * DATA_IN_0_PRECISION_1 + APPROXIMATION_PRECISION;
+  logic [DATA_OUT_0_PRECISION_0 -1 :0] output_data [DATA_OUT_0_PARALLELISM_DIM_0 * DATA_OUT_0_PARALLELISM_DIM_1-1:0];
 
   logic [DATA_IN_0_PRECISION_0-1:0]                         data_in_0_delayed0          [DATA_IN_0_PARALLELISM_DIM_0 * DATA_IN_0_PARALLELISM_DIM_1 -1:0];
   logic [DATA_IN_0_PRECISION_0-1:0]                         data_in_0_delayed1          [DATA_IN_0_PARALLELISM_DIM_0 * DATA_IN_0_PARALLELISM_DIM_1 -1:0];
@@ -113,12 +121,12 @@ module fixed_gelu #(
 
       always_comb begin
         if ($signed(data_in_0[i][DATA_IN_0_PRECISION_0-1 : DATA_IN_0_PRECISION_1]) >= 4)
-          data_out_0[i] = ($signed(
+          output_data[i] = ($signed(
               data_in_0_delayed1[i]
           )) <<< APPROXIMATION_PRECISION - 2 + DATA_IN_0_PRECISION_1;
         else if ($signed(data_in_0[i][DATA_IN_0_PRECISION_0-1 : DATA_IN_0_PRECISION_1]) <= -4)
-          data_out_0[i] = 0;
-        else data_out_0[i] = $signed(sum[i]);
+          output_data[i] = 0;
+        else output_data[i] = $signed(sum[i]);
       end
 
       always_comb sum[i] = product_ax2[i] + product_bx_scaled[i] + coefficient_c_scaled[i];
@@ -159,6 +167,20 @@ module fixed_gelu #(
   assign data_in_0_ready  = 1;
 
   assign data_out_0_valid = data_out_0_valid_delayed1;
+
+for (genvar i = 0; i < DATA_OUT_0_PARALLELISM_DIM_0 * DATA_OUT_0_PARALLELISM_DIM_1; i++) begin
+  fixed_signed_cast #(
+    .IN_WIDTH      (OUTPUT_PRECISION_0),
+    .IN_FRAC_WIDTH (OUTPUT_PRECISION_1),
+    .OUT_WIDTH     (DATA_OUT_0_PRECISION_0),
+    .OUT_FRAC_WIDTH(DATA_OUT_0_PRECISION_1),
+    .SYMMETRIC     (0),
+    .ROUND_FLOOR   (1)
+  ) output_cast (
+    .in_data (output_data[i]),
+    .out_data(data_out_0[i])
+  );
+end
 
 
 endmodule

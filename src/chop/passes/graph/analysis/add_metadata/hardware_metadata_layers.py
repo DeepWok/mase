@@ -176,4 +176,18 @@ INTERNAL_COMP = {
             ],
         }
     ],
+    "df_split": [
+        {
+            "name": "df_split",
+            "dependence_files": ["common/rtl/df_split.sv", "common/rtl/split2.sv"],
+        }
+    ],
+    "getitem": [
+        {
+            "name": "buffer",
+            "dependence_files": [
+                "common/rtl/buffer.sv",
+            ],
+        }
+    ],
 }

@@ -119,19 +119,19 @@ endmodule
 
 `timescale 1ns / 1ps
 module {node_param_name}_source #(
-    parameter {_cap(param_name)}_TENSOR_SIZE_DIM_0  = 32,
-    parameter {_cap(param_name)}_TENSOR_SIZE_DIM_1  = 1,
-    parameter {_cap(param_name)}_PRECISION_0 = 16,
-    parameter {_cap(param_name)}_PRECISION_1 = 3,
+    parameter {_cap(verilog_param_name)}_TENSOR_SIZE_DIM_0  = 32,
+    parameter {_cap(verilog_param_name)}_TENSOR_SIZE_DIM_1  = 1,
+    parameter {_cap(verilog_param_name)}_PRECISION_0 = 16,
+    parameter {_cap(verilog_param_name)}_PRECISION_1 = 3,
 
-    parameter {_cap(param_name)}_PARALLELISM_DIM_0 = 1,
-    parameter {_cap(param_name)}_PARALLELISM_DIM_1 = 1,
-    parameter OUT_DEPTH = {_cap(param_name)}_TENSOR_SIZE_DIM_0 / {_cap(param_name)}_PARALLELISM_DIM_0
+    parameter {_cap(verilog_param_name)}_PARALLELISM_DIM_0 = 1,
+    parameter {_cap(verilog_param_name)}_PARALLELISM_DIM_1 = 1,
+    parameter OUT_DEPTH = {_cap(verilog_param_name)}_TENSOR_SIZE_DIM_0 / {_cap(verilog_param_name)}_PARALLELISM_DIM_0
 ) (
     input clk,
     input rst,
 
-    output logic [{_cap(param_name)}_PRECISION_0-1:0] data_out      [{_cap(param_name)}_PARALLELISM_DIM_0 * {_cap(param_name)}_PARALLELISM_DIM_1-1:0],
+    output logic [{_cap(verilog_param_name)}_PRECISION_0-1:0] data_out      [{_cap(verilog_param_name)}_PARALLELISM_DIM_0 * {_cap(verilog_param_name)}_PARALLELISM_DIM_1-1:0],
     output                       data_out_valid,
     input                        data_out_ready
 );
@@ -151,9 +151,9 @@ module {node_param_name}_source #(
   logic ce0;
   assign ce0 = 1;
 
-  logic [{_cap(param_name)}_PRECISION_0*{_cap(param_name)}_TENSOR_SIZE_DIM_0-1:0] data_vector;
+  logic [{_cap(verilog_param_name)}_PRECISION_0*{_cap(verilog_param_name)}_TENSOR_SIZE_DIM_0-1:0] data_vector;
   {node_param_name} #(
-      .DATA_WIDTH({_cap(param_name)}_PRECISION_0 * {_cap(param_name)}_TENSOR_SIZE_DIM_0),
+      .DATA_WIDTH({_cap(verilog_param_name)}_PRECISION_0 * {_cap(verilog_param_name)}_TENSOR_SIZE_DIM_0),
       .ADDR_RANGE(OUT_DEPTH)
   ) {node_param_name}_mem (
       .clk(clk),
@@ -165,8 +165,8 @@ module {node_param_name}_source #(
 
   // Cocotb/verilator does not support array flattening, so
   // we need to manually add some reshaping process.
-  for (genvar j = 0; j < {_cap(param_name)}_PARALLELISM_DIM_0 * {_cap(param_name)}_PARALLELISM_DIM_1; j++)
-    assign data_out[j] = data_vector[{_cap(param_name)}_PRECISION_0*j+{_cap(param_name)}_PRECISION_0-1:{_cap(param_name)}_PRECISION_0*j];
+  for (genvar j = 0; j < {_cap(verilog_param_name)}_PARALLELISM_DIM_0 * {_cap(verilog_param_name)}_PARALLELISM_DIM_1; j++)
+    assign data_out[j] = data_vector[{_cap(verilog_param_name)}_PRECISION_0*j+{_cap(verilog_param_name)}_PRECISION_0-1:{_cap(verilog_param_name)}_PRECISION_0*j];
 
   assign data_out_valid = 1;
 
@@ -175,7 +175,9 @@ endmodule
 
     with open(file_name, "w", encoding="utf-8") as outf:
         outf.write(rom_verilog)
-    logger.debug(f"ROM module {param_name} successfully written into {file_name}")
+    logger.debug(
+        f"ROM module {verilog_param_name} successfully written into {file_name}"
+    )
     assert os.path.isfile(file_name), "ROM Verilog generation failed."
     # os.system(f"verible-verilog-format --inplace {file_name}")
 

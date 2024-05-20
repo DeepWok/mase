@@ -85,6 +85,11 @@ from transformers.models.deprecated._archive_maps import (
 )  # noqa: F401, E402
 
 
+@torch.fx.wrap
+def df_split(x):
+    return (x, x)
+
+
 def load_tf_weights_in_bert(model, config, tf_checkpoint_path):
     """Load tf checkpoints in a pytorch model."""
     try:
@@ -617,8 +622,11 @@ class BertLayer(nn.Module):
         # return outputs
 
     def feed_forward_chunk(self, attention_output):
-        intermediate_output = self.intermediate(attention_output)
-        layer_output = self.output(intermediate_output, attention_output)
+        # ! TO DO: automate this
+        # from chop.nn.functional.splitter import splitter
+        att_1, att_2 = df_split(attention_output)
+        intermediate_output = self.intermediate(att_1)
+        layer_output = self.output(intermediate_output, att_2)
         return layer_output
 
 

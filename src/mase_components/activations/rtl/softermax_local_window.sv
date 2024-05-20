@@ -172,7 +172,7 @@ module softermax_local_window #(
   fifo #(
       .DATA_WIDTH(MAX_WIDTH),
       // Should be enough. Subtract takes 1 cycle and LPW is max 3 cycles
-      .SIZE(8)
+      .DEPTH(8)
   ) max_buffer (
       .clk(clk),
       .rst(rst),

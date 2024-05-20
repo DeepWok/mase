@@ -42,6 +42,7 @@ MASE_IMPLICIT_FUNCS = [
     "gather",
     "slice",
     "cat",
+    "df_split",
     "split",
     "tile",
     "expand",

@@ -142,9 +142,16 @@ class MaseGraph:
                     is_hf_built_in_leaf_module = hf_is_leaf_module(
                         self, m, module_qualified_name
                     )
-
                     is_custom_module = isinstance(m, custom_modules)
-                    return is_hf_built_in_leaf_module or is_custom_module
+                    is_mase_leaf_layer = isinstance(m, MASE_LEAF_LAYERS)
+
+                    return any(
+                        (
+                            is_hf_built_in_leaf_module,
+                            is_custom_module,
+                            is_mase_leaf_layer,
+                        )
+                    )
 
                 return is_leaf_module
 
