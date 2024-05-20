@@ -1,0 +1,26 @@
+# basics
+model = "vgg7"
+dataset = "cifar10"
+task = "cls"
+
+load_name = "../mase_output/vgg7-pre-trained/test-accu-0.9332.ckpt"
+load_type = "pl"
+
+max_epochs = 10
+batch_size = 64
+accelerator = "cpu"
+learning_rate = 1e-3
+
+[passes.onnxruntime.default.config]
+quantize = true
+num_calibration_batches = 200
+quantize_types = ['static', 'dynamic', 'auto']
+precision = 'uint8'
+
+[passes.onnxruntime.runtime_analysis]
+original_graph_analysis = true
+optimized_graph_analysis = true
+quantized_graph_analysis = true
+num_batches = 100
+num_GPU_warmup_batches = 5
+test = true
