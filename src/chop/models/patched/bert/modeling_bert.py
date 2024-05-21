@@ -80,11 +80,6 @@ _SEQ_CLASS_EXPECTED_OUTPUT = "'LABEL_1'"
 _SEQ_CLASS_EXPECTED_LOSS = 0.01
 
 
-from transformers.models.deprecated._archive_maps import (
-    BERT_PRETRAINED_MODEL_ARCHIVE_LIST,
-)  # noqa: F401, E402
-
-
 @torch.fx.wrap
 def df_split(x):
     return (x, x)
