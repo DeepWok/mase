@@ -86,6 +86,13 @@ def bert_module_level_quantize(model, model_config, q_config):
 
 
 def bert_update_metadata(mg, q_config):
+    """
+    The following processing is a temporary hot fix to get emit verilog working on the bert model. We
+    update the type and precision for the add, getitem and split (fork) nodes which are currently
+    inserted in the patched model code. In the (near) future, inserting forking nodes and setting their
+    precision correctly will be handled automatedly as a preprocessing step for the emit verilog pass, 
+    so this function will be unnecessary.
+    """
     for node in mg.fx_graph.nodes:
 
         # Update args
@@ -217,7 +224,7 @@ def test_emit_verilog_bert():
     mg, _ = passes.emit_cocotb_transform_pass(mg)
     mg, _ = passes.emit_vivado_project_transform_pass(mg)
 
-    actions.simulate(skip_build=True, skip_test=False)
+    actions.simulate(skip_build=False, skip_test=False)
 
 
 if __name__ == "__main__":
