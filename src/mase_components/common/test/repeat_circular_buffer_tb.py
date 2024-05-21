@@ -34,8 +34,12 @@ class CircularBufferTB(Testbench):
         return inputs
 
     def model(self, inputs):
-        x = list(batched(inputs, n=self.SIZE))
+        # Group the input in batches of length SIZE
+        # [1..SIZE] [1..SIZE]
+        x = batched(inputs, n=self.SIZE)
         y = []
+
+        # Repeat each [1..SIZE] chunk REPEAT times
         for seq in x:
             for _ in range(self.REPEAT):
                 y.extend(seq)

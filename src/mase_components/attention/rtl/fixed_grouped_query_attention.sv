@@ -3,15 +3,12 @@ Module      : fixed_grouped_query_attention
 Description : This module implements fixed-point grouped query attention (GQA).
 */
 
-`default_nettype none
-
 `timescale 1ns / 1ps
 
 module fixed_grouped_query_attention #(
     parameter  NUM_HEADS  = 12,
     parameter  NUM_GROUPS = 3,
     localparam GROUP_SIZE = NUM_HEADS / NUM_GROUPS,
-    parameter  ACTIVATION = 0,
 
     parameter  DATA_IN_0_TENSOR_SIZE_DIM_0 = 768,
     parameter  DATA_IN_0_TENSOR_SIZE_DIM_1 = 20,
@@ -96,6 +93,16 @@ module fixed_grouped_query_attention #(
     input logic bias_value_valid,
     output logic bias_value_ready,
 
+    // output weights
+    input logic [WEIGHT_PRECISION_0-1:0] weight_output [WEIGHT_PARALLELISM_DIM_0 * WEIGHT_PARALLELISM_DIM_1-1:0],
+    input logic weight_output_valid,
+    output logic weight_output_ready,
+
+    // output bias
+    input logic [BIAS_PRECISION_0-1:0] bias_output [BIAS_PARALLELISM_DIM_0 * BIAS_PARALLELISM_DIM_1 -1:0],
+    input logic bias_output_valid,
+    output logic bias_output_ready,
+
     output logic [DATA_OUT_0_PRECISION_0-1:0] data_out_0 [DATA_OUT_0_PARALLELISM_DIM_0*DATA_OUT_0_PARALLELISM_DIM_1-1:0],
     output logic data_out_0_valid,
     input logic data_out_0_ready
@@ -145,6 +152,11 @@ logic [NUM_HEADS-1:0] value_fifo_valid, value_fifo_ready;
 logic [DATA_OUT_0_PRECISION_0-1:0] head_out [NUM_HEADS-1:0] [DATA_OUT_0_PARALLELISM_DIM_0 * DATA_OUT_0_PARALLELISM_DIM_1-1:0];
 logic [NUM_HEADS-1:0] head_out_valid;
 logic [NUM_HEADS-1:0] head_out_ready;
+
+// Gathered Attention Out
+logic [DATA_OUT_0_PRECISION_0-1:0] gather_data [DATA_OUT_0_PARALLELISM_DIM_0*DATA_OUT_0_PARALLELISM_DIM_1-1:0];
+logic gather_data_valid;
+logic gather_data_ready;
 
 // * Instances
 // * =================================================================
@@ -356,9 +368,61 @@ self_attention_head_gather #(
     .split_head_out             (head_out),
     .split_head_out_valid       (head_out_valid),
     .split_head_out_ready       (head_out_ready),
-    .updated_tokens             (data_out_0),
-    .updated_tokens_valid       (data_out_0_valid),
-    .updated_tokens_ready       (data_out_0_ready)
+    .updated_tokens             (gather_data),
+    .updated_tokens_valid       (gather_data_valid),
+    .updated_tokens_ready       (gather_data_ready)
 );
+
+
+// * Output Projection
+
+fixed_linear #(
+    .HAS_BIAS                     (HAS_BIAS),
+    .WEIGHTS_PRE_TRANSPOSED       (WEIGHTS_PRE_TRANSPOSED),
+
+    .DATA_IN_0_PRECISION_0        (DATA_OUT_0_PRECISION_0),
+    .DATA_IN_0_PRECISION_1        (DATA_OUT_0_PRECISION_1),
+    .DATA_IN_0_TENSOR_SIZE_DIM_0  (DATA_IN_0_TENSOR_SIZE_DIM_0),
+    .DATA_IN_0_TENSOR_SIZE_DIM_1  (DATA_IN_0_TENSOR_SIZE_DIM_1),
+    .DATA_IN_0_PARALLELISM_DIM_0  (DATA_IN_0_PARALLELISM_DIM_0),
+    .DATA_IN_0_PARALLELISM_DIM_1  (DATA_IN_0_PARALLELISM_DIM_1),
+
+    .WEIGHT_PRECISION_0           (WEIGHT_PRECISION_0),
+    .WEIGHT_PRECISION_1           (WEIGHT_PRECISION_1),
+    .WEIGHT_TENSOR_SIZE_DIM_0     (WEIGHT_TENSOR_SIZE_DIM_0),
+    .WEIGHT_TENSOR_SIZE_DIM_1     (WEIGHT_TENSOR_SIZE_DIM_1),
+    .WEIGHT_PARALLELISM_DIM_0     (WEIGHT_PARALLELISM_DIM_0),
+    .WEIGHT_PARALLELISM_DIM_1     (WEIGHT_PARALLELISM_DIM_1),
+
+    .BIAS_PRECISION_0             (BIAS_PRECISION_0),
+    .BIAS_PRECISION_1             (BIAS_PRECISION_1),
+    .BIAS_TENSOR_SIZE_DIM_0       (BIAS_TENSOR_SIZE_DIM_0),
+    .BIAS_TENSOR_SIZE_DIM_1       (BIAS_TENSOR_SIZE_DIM_1),
+    .BIAS_PARALLELISM_DIM_0       (BIAS_PARALLELISM_DIM_0),
+    .BIAS_PARALLELISM_DIM_1       (BIAS_PARALLELISM_DIM_1),
+
+    .DATA_OUT_0_PRECISION_0       (DATA_OUT_0_PRECISION_0),
+    .DATA_OUT_0_PRECISION_1       (DATA_OUT_0_PRECISION_1)
+) output_linear (
+    .clk                          (clk),
+    .rst                          (rst),
+
+    .data_in_0                    (gather_data),
+    .data_in_0_valid              (gather_data_valid),
+    .data_in_0_ready              (gather_data_ready),
+
+    .weight                       (weight_output),
+    .weight_valid                 (weight_output_valid),
+    .weight_ready                 (weight_output_ready),
+
+    .bias                         (bias_output),
+    .bias_valid                   (bias_output_valid),
+    .bias_ready                   (bias_output_ready),
+
+    .data_out_0                   (data_out_0),
+    .data_out_0_valid             (data_out_0_valid),
+    .data_out_0_ready             (data_out_0_ready)
+);
+
 
 endmodule

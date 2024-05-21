@@ -76,6 +76,15 @@ class GroupedQueryAttention(nn.Module):
             dtype=dtype,
         )
 
+        # Output projection
+        self.o_projection = nn.Linear(
+            in_features=self.embed_dim,
+            out_features=self.embed_dim,
+            bias=self.bias,
+            device=device,
+            dtype=dtype,
+        )
+
         # Explicitly define functions so quantized version of GQA can override
         self.softmax_func = partial(softermax, dim=-1)
         self.qk_matmul_func = torch.matmul
@@ -117,7 +126,9 @@ class GroupedQueryAttention(nn.Module):
         attn_output = attn_output.transpose(1, 2).contiguous()
         attn_output = attn_output.reshape(batch_size, seq_len, self.embed_dim)
 
-        return attn_output
+        out = self.o_projection(attn_output)
+
+        return out
 
 
 

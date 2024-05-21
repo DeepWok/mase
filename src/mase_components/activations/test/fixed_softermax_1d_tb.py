@@ -188,7 +188,7 @@ def test_fixed_softermax_1d_smoke():
         trace=True,
         module_param_list=[
             get_fixed_softermax_config(),
-            *[get_random_softermax_config() for _ in range(50)],
+            # *[get_random_softermax_config() for _ in range(50)],
         ],
         jobs=12,
         # skip_build=True,

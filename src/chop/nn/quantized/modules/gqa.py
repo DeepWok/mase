@@ -107,3 +107,17 @@ class GroupedQueryAttentionInteger(_GroupedQueryAttentionBase):
             out_config=v_matmul_out_q_config,
             floor=floor,
         )
+
+        o_projection_q_config = {
+            **linear_q_config,
+            "data_in_width": linear_out_q_config["data_out_width"],
+            "data_in_frac_width": linear_out_q_config["data_out_frac_width"],
+        }
+        self.o_projection = LinearInteger(
+            in_features=embed_dim,
+            out_features=embed_dim,
+            config=o_projection_q_config,
+            out_config=linear_out_q_config,
+            bias=bias,
+            floor=floor,
+        )

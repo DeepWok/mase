@@ -41,8 +41,6 @@ module softermax_lpw_reciprocal #(
   // Parameters
   // -----
 
-  let max(a, b) = (a > b) ? a : b;
-
   localparam ENTRIES_WIDTH = $clog2(ENTRIES);
 
   // Range reduced num: x
@@ -71,7 +69,7 @@ module softermax_lpw_reciprocal #(
   // Recip width calculation: Need to pad extra 2 * max(intwidth, fracwidth) to
   // make sure recip is not shifted out
   localparam IN_INT_WIDTH = IN_WIDTH - IN_FRAC_WIDTH;
-  localparam EXTRA_WIDTH = max(IN_INT_WIDTH, IN_FRAC_WIDTH);
+  localparam EXTRA_WIDTH = IN_INT_WIDTH > IN_FRAC_WIDTH ? IN_INT_WIDTH : IN_FRAC_WIDTH;
   localparam RECIP_WIDTH = LPW_WIDTH + EXTRA_WIDTH;
   localparam RECIP_FRAC_WIDTH = LPW_FRAC_WIDTH;
 
@@ -129,10 +127,13 @@ module softermax_lpw_reciprocal #(
   // Functions
   // -----
 
+  typedef bit [SLOPE_WIDTH-1:0] slope_t;
+  typedef bit [INTERCEPT_WIDTH-1:0] intercept_t;
+
   // Function to generate slope variable (m)
-  function automatic logic [SLOPE_WIDTH-1:0] slope(real x1, real x2);
+  function automatic slope_t slope(real x1, real x2);
     real y1, y2, res, res_shifted;
-    bit [SLOPE_WIDTH-1:0] return_val;
+    slope_t return_val;
 
     // Calculate real result
     y1 = 1.0 / x1;
@@ -141,14 +142,14 @@ module softermax_lpw_reciprocal #(
 
     // Output cast
     res_shifted = res * (2.0 ** SLOPE_FRAC_WIDTH);
-    return_val = SLOPE_WIDTH'(res_shifted);
+    return_val = slope_t'(res_shifted);
     return return_val;
   endfunction
 
   // Function to intercept variable (c)
-  function automatic logic [INTERCEPT_WIDTH-1:0] intercept(real x1, real x2);
+  function automatic intercept_t intercept(real x1, real x2);
     real m, y1, y2, res, res_shifted;
-    bit [INTERCEPT_WIDTH-1:0] return_val;
+    intercept_t return_val;
 
     // Calculate real result
     y1 = 1.0 / x1;
@@ -158,7 +159,7 @@ module softermax_lpw_reciprocal #(
 
     // Output cast
     res_shifted = res * (2.0 ** INTERCEPT_FRAC_WIDTH);
-    return_val = INTERCEPT_WIDTH'(res_shifted);
+    return_val = intercept_t'(res_shifted);
     return return_val;
   endfunction
 
@@ -167,8 +168,8 @@ module softermax_lpw_reciprocal #(
   // Tables
   // -----
 
-  logic [SLOPE_WIDTH-1:0] slope_lut[ENTRIES-1:0];
-  logic [INTERCEPT_WIDTH-1:0] intercept_lut[ENTRIES-1:0];
+  logic [SLOPE_WIDTH-1:0] slope_lut [ENTRIES-1:0];
+  logic [INTERCEPT_WIDTH-1:0] intercept_lut [ENTRIES-1:0];
 
   initial begin
     real step = 1.0 / ENTRIES;

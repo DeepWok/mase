@@ -40,9 +40,20 @@ class HardwareGQA(GroupedQueryAttentionInteger):
         v_matmul_out_q_config: dict = None,
         floor=False
     ) -> None:
-        super().__init__(embed_dim, num_heads, num_kv_heads, bias, device, dtype,
-                         linear_q_config, linear_out_q_config, softermax_out_q_config,
-                         qk_matmul_out_q_config, v_matmul_out_q_config, floor)
+        super().__init__(
+            embed_dim,
+            num_heads,
+            num_kv_heads,
+            bias,
+            device,
+            dtype,
+            linear_q_config,
+            linear_out_q_config,
+            softermax_out_q_config,
+            qk_matmul_out_q_config,
+            v_matmul_out_q_config,
+            floor
+        )
 
 
     def forward(self, x: Tensor):
@@ -74,11 +85,14 @@ class HardwareGQA(GroupedQueryAttentionInteger):
         attn_output = heads_out.transpose(1, 2).contiguous()
         attn_output = attn_output.reshape(batch_size, seq_len, self.embed_dim)
 
-        return attn_output, {
+        out = self.o_projection(attn_output)
+
+        return out, {
             "query": query,
             "key": key.transpose(1, 2),  # Key is transposed in hardware
             "value": value,
             "heads_out": heads_out,
+            "attn_output": attn_output,
         }
 
 
@@ -90,7 +104,6 @@ class FixedGroupedQueryAttentionTB(Testbench):
             "NUM_HEADS",
             "NUM_GROUPS",
             "GROUP_SIZE",
-            "ACTIVATION",
             "DATA_IN_0_TENSOR_SIZE_DIM_0",
             "DATA_IN_0_TENSOR_SIZE_DIM_1",
             "DATA_IN_0_PARALLELISM_DIM_0",
@@ -155,6 +168,12 @@ class FixedGroupedQueryAttentionTB(Testbench):
             dut.weight_value_valid,
             dut.weight_value_ready,
         )
+        self.weight_o_driver = StreamDriver(
+            dut.clk,
+            dut.weight_output,
+            dut.weight_output_valid,
+            dut.weight_output_ready,
+        )
 
         if self.HAS_BIAS == 1:
             self.bias_q_driver = StreamDriver(
@@ -175,6 +194,12 @@ class FixedGroupedQueryAttentionTB(Testbench):
                 dut.bias_value_valid,
                 dut.bias_value_ready,
             )
+            self.bias_o_driver = StreamDriver(
+                dut.clk,
+                dut.bias_output,
+                dut.bias_output_valid,
+                dut.bias_output_ready,
+            )
 
         self.data_out_0_monitor = ErrorThresholdStreamMonitor(
             dut.clk,
@@ -182,7 +207,7 @@ class FixedGroupedQueryAttentionTB(Testbench):
             dut.data_out_0_valid,
             dut.data_out_0_ready,
             width=self.DATA_OUT_0_PRECISION_0,
-            error_bits=1,
+            error_bits=0,
             signed=True,
             log_error=True,
             check=False,
@@ -289,11 +314,13 @@ class FixedGroupedQueryAttentionTB(Testbench):
         self.weight_q_driver.log.setLevel(logging.DEBUG)
         self.weight_k_driver.log.setLevel(logging.DEBUG)
         self.weight_v_driver.log.setLevel(logging.DEBUG)
+        self.weight_o_driver.log.setLevel(logging.DEBUG)
         self.data_out_0_monitor.log.setLevel(logging.DEBUG)
         if self.HAS_BIAS:
             self.bias_q_driver.log.setLevel(logging.DEBUG)
             self.bias_k_driver.log.setLevel(logging.DEBUG)
             self.bias_v_driver.log.setLevel(logging.DEBUG)
+            self.bias_o_driver.log.setLevel(logging.DEBUG)
 
 
     def generate_inputs(self, batches=1):
@@ -331,7 +358,7 @@ class FixedGroupedQueryAttentionTB(Testbench):
         self.data_in_0_driver.load_driver(inputs)
 
         # * Load the weights driver
-        for projection in ["q", "k", "v"]:
+        for projection in ["q", "k", "v", "o"]:
 
             projection_name = f"{projection}_projection"
 
@@ -432,59 +459,60 @@ class FixedGroupedQueryAttentionTB(Testbench):
 @cocotb.test()
 async def basic(dut):
     tb = FixedGroupedQueryAttentionTB(dut)
-    await tb.run_test(batches=1, us=30)
+    await tb.run_test(batches=1, us=1000)
 
 
-def get_config(kwargs={}):
-
-    embedding_len = 16
-    seq_len = 4
-    num_heads = 4
-    num_kv_heads = 2
-
-    parallelism = 2
-    width = 8
-    frac_width = width // 2
-
-    config = {
+def get_config(
+    seq_len: int,
+    embedding_len: int,
+    num_heads: int,
+    num_kv_heads: int,
+    embedding_parallelism: int,
+    sequence_parallelism: int,
+    width: int = 8,
+    frac_width: int = 4,
+):
+    return {
         "NUM_HEADS": num_heads,
         "NUM_GROUPS": num_kv_heads,
         "DATA_IN_0_TENSOR_SIZE_DIM_0": embedding_len,
         "DATA_IN_0_TENSOR_SIZE_DIM_1": seq_len,
-        "DATA_IN_0_PARALLELISM_DIM_0": parallelism,
-        "DATA_IN_0_PARALLELISM_DIM_1": parallelism,
+        "DATA_IN_0_PARALLELISM_DIM_0": embedding_parallelism,
+        "DATA_IN_0_PARALLELISM_DIM_1": sequence_parallelism,
         "DATA_IN_0_PRECISION_0": width,
         "DATA_IN_0_PRECISION_1": frac_width,
         "WEIGHTS_PRE_TRANSPOSED": 1,
         "WEIGHT_TENSOR_SIZE_DIM_0": embedding_len,
         "WEIGHT_TENSOR_SIZE_DIM_1": embedding_len,
-        "WEIGHT_PARALLELISM_DIM_0": parallelism,
-        "WEIGHT_PARALLELISM_DIM_1": parallelism,
+        "WEIGHT_PARALLELISM_DIM_0": embedding_parallelism,
+        "WEIGHT_PARALLELISM_DIM_1": embedding_parallelism,
         "WEIGHT_PRECISION_0": width,
         "WEIGHT_PRECISION_1": frac_width,
         "HAS_BIAS": 0,
-        # "BIAS_TENSOR_SIZE_DIM_0": 4,
-        # "BIAS_TENSOR_SIZE_DIM_1": 1,
-        # "BIAS_PARALLELISM_DIM_0": 2,
-        # "BIAS_PARALLELISM_DIM_1": 1,
-        # "BIAS_PRECISION_0": 8,
-        # "BIAS_PRECISION_1": 4,
         "DATA_OUT_0_TENSOR_SIZE_DIM_0": embedding_len,
         "DATA_OUT_0_TENSOR_SIZE_DIM_1": seq_len,
-        "DATA_OUT_0_PARALLELISM_DIM_0": parallelism,
-        "DATA_OUT_0_PARALLELISM_DIM_1": parallelism,
+        "DATA_OUT_0_PARALLELISM_DIM_0": embedding_parallelism,
+        "DATA_OUT_0_PARALLELISM_DIM_1": sequence_parallelism,
         "DATA_OUT_0_PRECISION_0": width,
         "DATA_OUT_0_PRECISION_1": frac_width,
     }
-    config.update(kwargs)
-    return config
 
 
 def test_fixed_linear_smoke():
     """
     Some quick tests to check if the module is working.
     """
-    cfgs = [get_config()]
+    cfgs = [
+        # 4 Groups of 2 heads
+        get_config(10, 128, 8, 4, 2, 2),
+
+        # Normal Multi-head Attention 8 QKV heads
+        get_config(10, 128, 8, 8, 2, 2),
+
+        # Multi-Query Attnetion (single head)
+        get_config(10, 128, 8, 1, 2, 2),
+    ]
+
     mase_runner(
         module_param_list=cfgs,
         trace=True,

@@ -159,10 +159,10 @@ end else begin : gen_fifo
       .SIZE      (DEPTH)
   ) ram_inst (
       .clk    (clk),
-      .wr_addr(self.write_ptr),
+      .wr_addr(self.write_ptr[ADDR_WIDTH-1:0]),
       .wr_din (in_data),
       .wr_en  (ram_wr_en),
-      .rd_addr(self.read_ptr),
+      .rd_addr(self.read_ptr[ADDR_WIDTH-1:0]),
       .rd_dout(ram_rd_dout)
   );
 

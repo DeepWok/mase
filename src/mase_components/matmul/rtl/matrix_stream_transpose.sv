@@ -138,7 +138,7 @@ module matrix_stream_transpose #(
   end
 
   generate
-    if (IN_DEPTH_DIM0 > 1) begin
+    if (IN_DEPTH_DIM0 > 1) begin : gen_in_ready_mux
       mux #(
           .NUM_INPUTS(IN_DEPTH_DIM0),
           .DATA_WIDTH(1)
@@ -147,7 +147,7 @@ module matrix_stream_transpose #(
           .select  (self.in_col_count),
           .data_out(in_ready)
       );
-    end else begin
+    end else begin : gen_fifo_in_ready
       assign in_ready = fifo_data_readys[0];
     end
   endgenerate
@@ -162,7 +162,7 @@ module matrix_stream_transpose #(
   end
 
   generate
-    if (IN_DEPTH_DIM0 > 1) begin
+    if (IN_DEPTH_DIM0 > 1) begin : gen_fifo_out_muxes
       mux #(
           .NUM_INPUTS(IN_DEPTH_DIM0),
           .DATA_WIDTH(FIFO_DATA_WIDTH)
@@ -179,7 +179,7 @@ module matrix_stream_transpose #(
           .select  (self.out_row_count),
           .data_out(out_valid)
       );
-    end else begin
+    end else begin : gen_fifo_out
       assign fifo_out_data_flat_mux_out = fifo_out_data_flat_mux_in[0];
       assign out_valid = fifo_out_valids[0];
     end
