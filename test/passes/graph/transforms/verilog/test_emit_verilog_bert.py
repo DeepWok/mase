@@ -133,55 +133,8 @@ def bert_update_metadata(mg, q_config):
 
     return mg, {}
 
-
-def test_emit_verilog_bert():
-
-    # * Define custom configuration
-    config = BertConfig()
-    config.num_hidden_layers = 1
-    config.hidden_size = 384
-    config.intermediate_size = 1536
-
-    q_config = {
-        "data_in_width": 16,
-        "data_in_frac_width": 3,
-        "weight_width": 16,
-        "weight_frac_width": 3,
-        "bias_width": 16,
-        "bias_frac_width": 3,
-        "data_out_width": 16,
-        "data_out_frac_width": 3,
-    }
-
-    # * Get model and quantize self attention, linear and layer norm layers
-    model = BertModel(config)
-    model = bert_module_level_quantize(model, config, q_config)
-    logger.info(f"Quantized BERT model: {model}")
-
-    # * Trace the model
-    mg = MaseGraph(model, custom_ops=BERT_CUSTOM_OPS)
-    mg, _ = passes.init_metadata_analysis_pass(mg)
-
-    # * Save the print tabular to a file
-    with open("bert.txt", "w") as f:
-        sys.stdout = f
-        mg.fx_graph.print_tabular()
-        sys.stdout = sys.__stdout__
-
-    # * Add metadata analysis passes
-    mg, _ = passes.add_common_metadata_analysis_pass(
-        mg,
-        pass_args={
-            "dummy_in": {"input_ids": torch.randn((1, 128, 384))},
-            "add_value": False,
-        },
-    )
-
-    mg, _ = bert_update_metadata(mg, q_config)
-
-    mg, _ = passes.add_hardware_metadata_analysis_pass(mg)
-
-    for node in mg.fx_graph.nodes:
+def print_debug(graph):
+    for node in graph.nodes:
         logger.info(f"Node: {node.name}")
         logger.info(f"Mase type: {node.meta['mase']['common']['mase_type']}")
         for arg in node.meta["mase"]["common"]["args"]:
@@ -207,13 +160,64 @@ def test_emit_verilog_bert():
             )
         logger.info(f"")
 
-    mg, _ = passes.emit_verilog_top_transform_pass(mg)
-    # mg, _ = passes.emit_bram_transform_pass(mg)
-    mg, _ = passes.emit_internal_rtl_transform_pass(mg)
-    mg, _ = passes.emit_cocotb_transform_pass(mg)
-    mg, _ = passes.emit_vivado_project_transform_pass(mg)
+def test_emit_verilog_bert():
 
-    actions.simulate(skip_build=False, skip_test=False)
+    # * Define custom configuration
+    config = BertConfig()
+    config.num_hidden_layers = 1
+    config.hidden_size = 96
+    config.intermediate_size = 384
+    config_sequence_length = 5
+    q_config = {
+        "data_in_width": 8,
+        "data_in_frac_width": 3,
+        "weight_width": 8,
+        "weight_frac_width": 3,
+        "bias_width": 8,
+        "bias_frac_width": 3,
+        "data_out_width": 8,
+        "data_out_frac_width": 3,
+    }
+
+    # * Get model and quantize self attention, linear and layer norm layers
+    model = BertModel(config)
+    model = bert_module_level_quantize(model, config, q_config)
+    logger.info(f"Quantized BERT model: {model}")
+
+    # * Trace the model
+    mg = MaseGraph(model, custom_ops=BERT_CUSTOM_OPS)
+    mg, _ = passes.init_metadata_analysis_pass(mg)
+
+    # * Save the print tabular to a file
+    with open("bert.txt", "w") as f:
+        sys.stdout = f
+        mg.fx_graph.print_tabular()
+        sys.stdout = sys.__stdout__
+
+    # * Add metadata analysis passes
+    mg, _ = passes.add_common_metadata_analysis_pass(
+        mg,
+        pass_args={
+            "dummy_in": {"input_ids": torch.randn((1, config_sequence_length, config.hidden_size))},
+            "add_value": False,
+        },
+    )
+
+    mg, _ = bert_update_metadata(mg, q_config)
+
+    mg, _ = passes.add_hardware_metadata_analysis_pass(mg, pass_args={
+        "max_parallelism": [2] * 4,
+    })
+
+    print_debug(mg.fx_graph)
+
+    # mg, _ = passes.emit_verilog_top_transform_pass(mg)
+    # mg, _ = passes.emit_bram_transform_pass(mg)
+    # mg, _ = passes.emit_internal_rtl_transform_pass(mg)
+    mg, _ = passes.emit_cocotb_transform_pass(mg)
+    # mg, _ = passes.emit_vivado_project_transform_pass(mg)
+
+    actions.simulate(skip_build=True, skip_test=False)
 
 
 if __name__ == "__main__":
