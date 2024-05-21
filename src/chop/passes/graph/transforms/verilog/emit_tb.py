@@ -105,8 +105,6 @@ def _emit_cocotb_tb(graph):
                 "precision"
             ]
 
-            from mase_cocotb.utils import fixed_preprocess_tensor
-
         def generate_inputs(self, batches):
             """
             Generate inputs for the model by sampling a random tensor
@@ -155,10 +153,10 @@ def _emit_cocotb_tb(graph):
                 # Append all input blocks to input driver
                 # ! TO DO: generalize
                 for block in in_data_blocks:
-                    if len(block) < self.get_parameter("DATA_IN_0_PARALLELISM_DIM_0"):
+                    block_size = self.get_parameter("DATA_IN_0_PARALLELISM_DIM_0") * self.get_parameter("DATA_IN_0_PARALLELISM_DIM_1")
+                    if len(block) < block_size:
                         block = block + [0] * (
-                            self.get_parameter("DATA_IN_0_PARALLELISM_DIM_0")
-                            - len(block)
+                            block_size - len(block)
                         )
                     self.input_drivers[arg].append(block)
 

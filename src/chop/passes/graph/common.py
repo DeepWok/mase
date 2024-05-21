@@ -31,7 +31,6 @@ MASE_IMPLICIT_FUNCS = [
     "where",
     "_assert",
     "getattr",
-    "getitem",
     "long",
     "type_as",
     "clamp",
@@ -42,7 +41,6 @@ MASE_IMPLICIT_FUNCS = [
     "gather",
     "slice",
     "cat",
-    "df_split",
     "split",
     "tile",
     "expand",
@@ -116,6 +114,8 @@ MASE_BUILTIN_FUNCS = [
     "log",
     "range",
     "gelu",
+    "df_split",
+    "getitem",
 ]
 
 

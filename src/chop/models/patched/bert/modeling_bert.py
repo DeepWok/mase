@@ -477,8 +477,9 @@ class BertAttention(nn.Module):
         past_key_value: Optional[Tuple[Tuple[torch.FloatTensor]]] = None,
         output_attentions: Optional[bool] = False,
     ) -> Tuple[torch.Tensor]:
+        in_1, in_2 = df_split(hidden_states)
         self_outputs = self.self(
-            hidden_states,
+            in_1,
             attention_mask,
             head_mask,
             encoder_hidden_states,
@@ -486,7 +487,7 @@ class BertAttention(nn.Module):
             past_key_value,
             output_attentions,
         )
-        attention_output = self.output(self_outputs, hidden_states)
+        attention_output = self.output(self_outputs, in_2)
         # outputs = (attention_output,) + self_outputs[1:]  # add attentions if we output them
         # return outputs
         return attention_output

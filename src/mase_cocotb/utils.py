@@ -140,6 +140,7 @@ def fixed_preprocess_tensor(tensor: Tensor, q_config: dict, parallelism: list) -
     for i in range(len(dim_1_split)):
         for j in range(len(dim_1_split[i])):
             blocks.append(dim_1_split[i][j].flatten().tolist())
+
     return blocks
 
 

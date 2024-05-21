@@ -167,7 +167,7 @@ def test_emit_verilog_bert():
     config.num_hidden_layers = 1
     config.hidden_size = 96
     config.intermediate_size = 384
-    config_sequence_length = 5
+    config_sequence_length = 6
     q_config = {
         "data_in_width": 8,
         "data_in_frac_width": 3,
@@ -211,11 +211,11 @@ def test_emit_verilog_bert():
 
     print_debug(mg.fx_graph)
 
-    # mg, _ = passes.emit_verilog_top_transform_pass(mg)
-    # mg, _ = passes.emit_bram_transform_pass(mg)
-    # mg, _ = passes.emit_internal_rtl_transform_pass(mg)
+    mg, _ = passes.emit_verilog_top_transform_pass(mg)
+    mg, _ = passes.emit_bram_transform_pass(mg)
+    mg, _ = passes.emit_internal_rtl_transform_pass(mg)
     mg, _ = passes.emit_cocotb_transform_pass(mg)
-    # mg, _ = passes.emit_vivado_project_transform_pass(mg)
+    mg, _ = passes.emit_vivado_project_transform_pass(mg)
 
     actions.simulate(skip_build=True, skip_test=False)
 
