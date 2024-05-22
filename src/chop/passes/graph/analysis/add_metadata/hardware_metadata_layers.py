@@ -147,7 +147,7 @@ INTERNAL_COMP = {
             "name": "fixed_gelu",
             "dependence_files": [
                 "activations/rtl/fixed_gelu.sv",
-                "fixed_arithmetic/rtl/fixed_mult.sv",
+                "activations/rtl/gelu_lut.sv",
             ],
         },
     ],

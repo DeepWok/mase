@@ -27,6 +27,13 @@ def _cap(name):
     """
     return str(name).upper()
 
+def _emit_cocotb_test(graph, pass_args={}):
+    
+    wait_time = pass_args.get("wait_time", 2)
+    wait_unit = pass_args.get("wait_units", "ms")
+
+    test_template = f"""
+import cocotb
 
 @cocotb.test()
 async def test(dut):
@@ -46,15 +53,8 @@ async def test(dut):
     tb.load_drivers(in_tensors)
     tb.load_monitors(exp_out)
 
-    await Timer(2, units="ms")
+    await Timer({wait_time}, units="{wait_unit}")
     tb.end_checks()
-
-
-def _emit_cocotb_test(graph):
-    test_template = f"""
-import cocotb
-
-{inspect.getsource(test)}
 """
 
     tb_path = Path.home() / ".mase" / "top" / "hardware" / "test" / "mase_top_tb"
@@ -217,7 +217,7 @@ def emit_cocotb_transform_pass(graph, pass_args={}):
 
     init_project(project_dir)
 
-    _emit_cocotb_test(graph)
+    _emit_cocotb_test(graph, pass_args=pass_args)
     _emit_cocotb_tb(graph)
 
     return graph, None

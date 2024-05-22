@@ -140,52 +140,7 @@ def bert_update_metadata(mg, q_config):
 
     return mg, {}
 
-def print_debug(graph):
-    for node in graph.nodes:
-        logger.info(f"Node: {node.name}")
-        logger.info(f"Mase type: {node.meta['mase']['common']['mase_type']}")
-        for arg in node.meta["mase"]["common"]["args"]:
-            if not isinstance(node.meta["mase"]["common"]["args"][arg], dict):
-                logger.info(f"Arg: {arg}")
-                logger.info(f"   Value: {node.meta['mase']['common']['args'][arg]}")
-                continue
-            logger.info(f"Arg: {arg}")
-            logger.info(f"    Type: {node.meta['mase']['common']['args'][arg]['type']}")
-            logger.info(
-                f"    Precision: {node.meta['mase']['common']['args'][arg]['precision']}"
-            )
-
-        for rs in node.meta["mase"]["common"]["results"]:
-            if not isinstance(node.meta["mase"]["common"]["results"][rs], dict):
-                continue
-            logger.info(f"Result: {rs}")
-            logger.info(
-                f"      Type: {node.meta['mase']['common']['results'][rs]['type']}"
-            )
-            logger.info(
-                f"      Precision: {node.meta['mase']['common']['results'][rs]['precision']}"
-            )
-        logger.info(f"")
-
-def test_emit_verilog_bert():
-
-    # * Define custom configuration
-    config = BertConfig()
-    config.num_hidden_layers = 1
-    config.hidden_size = 96
-    config.intermediate_size = 384
-    config_sequence_length = 6
-    q_config = {
-        "data_in_width": 8,
-        "data_in_frac_width": 3,
-        "weight_width": 8,
-        "weight_frac_width": 3,
-        "bias_width": 8,
-        "bias_frac_width": 3,
-        "data_out_width": 8,
-        "data_out_frac_width": 3,
-    }
-
+def emit_verilog_bert(config, q_config, config_sequence_length, wait_count=15, wait_unit="ms"):
     # * Get model and quantize self attention, linear and layer norm layers
     model = BertModel(config)
     model = bert_module_level_quantize(model, config, q_config)
@@ -216,16 +171,53 @@ def test_emit_verilog_bert():
         "max_parallelism": [2] * 4,
     })
 
-    print_debug(mg.fx_graph)
+    # * Save the metadata to a file for debugging
+    mg, _ = passes.report_node_meta_param_analysis_pass(mg, pass_args={
+        "which": ["common", "hardware"],
+        "save_path": "graph_meta_params.txt",
+    })
 
     mg, _ = passes.emit_verilog_top_transform_pass(mg)
-    mg, _ = passes.emit_bram_transform_pass(mg)
+    # mg, _ = passes.emit_bram_transform_pass(mg)
     mg, _ = passes.emit_internal_rtl_transform_pass(mg)
-    mg, _ = passes.emit_cocotb_transform_pass(mg)
+    mg, _ = passes.emit_cocotb_transform_pass(mg, pass_args={
+        "wait_time": wait_count,
+        "wait_unit": wait_unit,
+    })
     mg, _ = passes.emit_vivado_project_transform_pass(mg)
 
-    actions.simulate(skip_build=False, skip_test=False)
+    actions.simulate(skip_build=True, skip_test=False)
 
+def get_default_qconfig():
+    return {
+        "data_in_width": 8,
+        "data_in_frac_width": 3,
+        "weight_width": 8,
+        "weight_frac_width": 3,
+        "bias_width": 8,
+        "bias_frac_width": 3,
+        "data_out_width": 8,
+        "data_out_frac_width": 3,
+    }
+
+def test_emit_verilog_bert_smoke():
+    config = BertConfig()
+    config.num_hidden_layers = 1
+    config.hidden_size = 96
+    config.intermediate_size = 384
+    config_sequence_length = 2
+    q_config = get_default_qconfig()
+    emit_verilog_bert(config, q_config, config_sequence_length, wait_count=2)
+
+def test_emit_verilog_bert_regression():
+    config = BertConfig()
+    config.num_hidden_layers = 1
+    config.hidden_size = 384 
+    config.intermediate_size = 1536
+    config_sequence_length = 128
+    q_config = get_default_qconfig()
+    emit_verilog_bert(config, q_config, config_sequence_length, wait_count=15)
 
 if __name__ == "__main__":
-    test_emit_verilog_bert()
+    # test_emit_verilog_bert_smoke()
+    test_emit_verilog_bert_regression()
