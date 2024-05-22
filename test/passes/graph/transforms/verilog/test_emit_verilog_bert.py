@@ -154,11 +154,7 @@ def emit_verilog_bert(
     mg = MaseGraph(model, custom_ops=BERT_CUSTOM_OPS)
     mg, _ = passes.init_metadata_analysis_pass(mg)
 
-    # * Save the print tabular to a file
-    with open("bert.txt", "w") as f:
-        sys.stdout = f
-        mg.fx_graph.print_tabular()
-        sys.stdout = sys.__stdout__
+    mg, _ = passes.report_graph_analysis_pass(mg, pass_args={"file_name": "bert.txt"})
 
     # * Add metadata analysis passes
     mg, _ = passes.add_common_metadata_analysis_pass(
