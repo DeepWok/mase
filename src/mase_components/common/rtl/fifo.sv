@@ -60,7 +60,7 @@ end else begin : gen_fifo
   typedef struct packed {
     // Write state
     logic [PTR_WIDTH-1:0] write_ptr;
-    logic [ADDR_WIDTH:0]  size;
+    logic [PTR_WIDTH-1:0] size;
 
     // Read state
     logic [PTR_WIDTH-1:0] read_ptr;
@@ -89,7 +89,7 @@ end else begin : gen_fifo
     next_self = self;
 
     // Input side ready
-    in_ready = self.size != DEPTH - 1;
+    in_ready = self.size != DEPTH;
 
     // Pause reading when there is (no transfer on this cycle) AND the registers are full.
     pause_reads = !out_ready && (self.out_reg.valid || self.extra_reg.valid);
