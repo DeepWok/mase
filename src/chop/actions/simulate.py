@@ -27,7 +27,7 @@ def simulate(
     run_emit: bool = False,
     skip_build: bool = False,
     skip_test: bool = False,
-    trace_depth: int = 2,
+    trace_depth: int = 3,
 ):
     SIM = getenv("SIM", "verilator")
     runner = get_runner(SIM)
