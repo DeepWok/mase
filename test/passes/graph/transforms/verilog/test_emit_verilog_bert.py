@@ -23,6 +23,7 @@ from chop.nn.quantized.functional.add import add_integer
 from chop.tools import get_logger, set_excepthook
 
 from mase_components import get_module_dependencies
+from mase_components.activations.test.generate_memory import generate_sv_lut
 
 import operator
 from functools import partial
@@ -239,5 +240,6 @@ def test_emit_verilog_bert_regression():
 
 
 if __name__ == "__main__":
+    generate_sv_lut("gelu", 8, 3, data_width=8, f_width=4, path_with_dtype=False)
     test_emit_verilog_bert_smoke()
     # test_emit_verilog_bert_regression()

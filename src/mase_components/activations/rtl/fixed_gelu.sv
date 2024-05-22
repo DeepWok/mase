@@ -96,7 +96,7 @@ module fixed_gelu #(
   endgenerate
 
   for (genvar i = 0; i < DATA_IN_0_PARALLELISM_DIM_0 * DATA_IN_0_PARALLELISM_DIM_1; i++) begin : elu
-    elu_lut #(
+    gelu_lut #(
         .DATA_IN_0_PRECISION_0 (DATA_IN_0_PRECISION_0),
         .DATA_IN_0_PRECISION_1 (DATA_IN_0_PRECISION_1),
         .DATA_OUT_0_PRECISION_0(DATA_OUT_0_PRECISION_0),
