@@ -9,7 +9,7 @@ VIVADO_AVAILABLE := $(shell command -v vivado 2> /dev/null)
 ifeq ($(GPU_AVAILABLE),)
     PLATFORM := cpu
 else
-    PLATFORM := cuda
+    PLATFORM := gpu
 endif
 
 # * Mount Vivado HLS path only if Vivado is available (to avoid path not found errors)

@@ -2,8 +2,6 @@ import sys
 
 import torch
 import torch.nn as nn
-from torch import Tensor
-from torch.fx import GraphModule
 
 from transformers.activations import GELUActivation
 
@@ -11,7 +9,7 @@ import chop.passes as passes
 import chop.actions as actions
 from chop.ir import MaseGraph
 from chop.models.patched.bert import BertConfig, BertModel
-from chop.models.patched.bert.modeling_bert import BertSelfAttention, BertEmbeddings
+from chop.models.patched.bert.modeling_bert import BertSelfAttention
 from chop.passes.graph.utils import deepsetattr
 from chop.nn.quantized import (
     BertSelfAttentionInteger,
@@ -19,7 +17,6 @@ from chop.nn.quantized import (
     LayerNormInteger,
     GELUInteger,
 )
-from chop.nn.quantized.functional.add import add_integer
 from chop.tools import get_logger, set_excepthook
 
 from mase_components import get_module_dependencies
@@ -174,7 +171,7 @@ def emit_verilog_bert(
     mg, _ = passes.add_hardware_metadata_analysis_pass(
         mg,
         pass_args={
-            "max_parallelism": [2] * 4,
+            "max_parallelism": [4] * 4,
         },
     )
 
@@ -236,6 +233,6 @@ def test_emit_verilog_bert_regression():
 
 
 if __name__ == "__main__":
-    generate_sv_lut("gelu", 8, 3, data_width=8, f_width=4, path_with_dtype=False)
+    generate_sv_lut("gelu", 8, 3, data_width=8, f_width=3, path_with_dtype=False)
     test_emit_verilog_bert_smoke()
     # test_emit_verilog_bert_regression()
