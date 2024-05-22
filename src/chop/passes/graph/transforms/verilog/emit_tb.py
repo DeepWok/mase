@@ -27,8 +27,9 @@ def _cap(name):
     """
     return str(name).upper()
 
+
 def _emit_cocotb_test(graph, pass_args={}):
-    
+
     wait_time = pass_args.get("wait_time", 2)
     wait_unit = pass_args.get("wait_units", "ms")
 
@@ -53,8 +54,7 @@ async def test(dut):
     tb.load_drivers(in_tensors)
     tb.load_monitors(exp_out)
 
-    await Timer({wait_time}, units="{wait_unit}")
-    tb.end_checks()
+    await tb.wait_end(timeout={wait_time}, timeout_unit="{wait_unit}")
 """
 
     tb_path = Path.home() / ".mase" / "top" / "hardware" / "test" / "mase_top_tb"
@@ -153,17 +153,17 @@ def _emit_cocotb_tb(graph):
                 # Append all input blocks to input driver
                 # ! TO DO: generalize
                 for block in in_data_blocks:
-                    block_size = self.get_parameter("DATA_IN_0_PARALLELISM_DIM_0") * self.get_parameter("DATA_IN_0_PARALLELISM_DIM_1")
+                    block_size = self.get_parameter(
+                        "DATA_IN_0_PARALLELISM_DIM_0"
+                    ) * self.get_parameter("DATA_IN_0_PARALLELISM_DIM_1")
                     if len(block) < block_size:
-                        block = block + [0] * (
-                            block_size - len(block)
-                        )
+                        block = block + [0] * (block_size - len(block))
                     self.input_drivers[arg].append(block)
 
         def load_monitors(self, expectation):
-            # TO DO: reshape according to output parallelism
             from mase_cocotb.utils import fixed_preprocess_tensor
 
+            # Process the expectation tensor
             output_blocks = fixed_preprocess_tensor(
                 tensor=expectation,
                 q_config={
@@ -175,13 +175,18 @@ def _emit_cocotb_tb(graph):
                     self.get_parameter(f"DATA_OUT_0_PARALLELISM_DIM_0"),
                 ],
             )
+
+            # Set expectation for each monitor
             for block in output_blocks:
-                # ! TO DO: generalize
+                # ! TO DO: generalize to multi-output models
                 if len(block) < self.get_parameter("DATA_OUT_0_PARALLELISM_DIM_0"):
                     block = block + [0] * (
                         self.get_parameter("DATA_OUT_0_PARALLELISM_DIM_0") - len(block)
                     )
                 self.output_monitors["data_out_0"].expect(block)
+
+            # Drive the in-flight flag for each monitor
+            self.output_monitors["data_out_0"].in_flight = True
 
     # Serialize testbench object to be instantiated within test by cocotb runner
     cls_obj = MaseGraphTB

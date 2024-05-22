@@ -1,6 +1,7 @@
 import cocotb
 from cocotb.triggers import *
 from cocotb.clock import Clock
+from cocotb.utils import get_sim_time
 
 
 class Testbench:
@@ -63,10 +64,22 @@ class Testbench:
     def load_monitors(self, expectation):
         raise NotImplementedError
 
-    def end_checks(self):
-        if self.fail_on_checks:
-            for monitor in self.output_monitors.values():
-                assert monitor.exp_queue.empty()
+    async def wait_end(self, timeout=1, timeout_unit="ms"):
+        while True:
+            await RisingEdge(self.clk)
 
+            # ! TODO: check if this slows down test significantly
+            if get_sim_time(timeout_unit) > timeout:
+                raise TimeoutError("Timed out waiting for test to end.")
+
+            if all(
+                [
+                    monitor.in_flight == False
+                    for monitor in self.output_monitors.values()
+                ]
+            ):
+                break
+
+        if self.fail_on_checks:
             for driver in self.input_drivers.values():
-                assert driver.send_queue.empty()
+                assert driver.send_queue.empty(), "Driver still has data to send."

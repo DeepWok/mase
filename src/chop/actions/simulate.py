@@ -27,7 +27,7 @@ def simulate(
     run_emit: bool = False,
     skip_build: bool = False,
     skip_test: bool = False,
-    trace_depth: int = 1,
+    trace_depth: int = 2,
 ):
     SIM = getenv("SIM", "verilator")
     runner = get_runner(SIM)
@@ -55,7 +55,15 @@ def simulate(
             verilog_sources=sources,
             includes=includes,
             hdl_toplevel="top",
-            build_args=["-Wno-fatal", "-Wno-lint", "-Wno-style", "--trace"],
+            build_args=[
+                "-Wno-fatal",
+                "-Wno-lint",
+                "-Wno-style",
+                "--trace-fst",
+                "--trace-structs",
+                "--trace-depth",
+                str(trace_depth),
+            ],
             parameters=[],  # use default parameters,
         )
 
@@ -66,9 +74,9 @@ def simulate(
         sys.path.append(str(project_dir / "hardware" / "test"))
 
         runner.test(
-            hdl_toplevel="top", test_module="mase_top_tb", hdl_toplevel_lang="verilog", plusargs = [
-                f"--trace-depth {trace_depth}",
-            ]
+            hdl_toplevel="top",
+            test_module="mase_top_tb",
+            hdl_toplevel_lang="verilog",
         )
     #     num_tests, fail = get_results("build/results.xml")
     # return num_tests, fail
