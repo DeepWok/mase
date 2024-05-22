@@ -49,9 +49,25 @@ localparam NUM_GROUPS = NUM_HEADS / GROUP_SIZE;
 localparam GROUPED_TENSOR_SIZE_DIM_0 = IN_DATA_TENSOR_SIZE_DIM_0 / GROUP_SIZE;
 localparam GROUPED_TENSOR_SIZE_DIM_1 = IN_DATA_TENSOR_SIZE_DIM_1;
 
+localparam HEAD_TENSOR_SIZE_DIM_0 = IN_DATA_TENSOR_SIZE_DIM_0 / NUM_HEADS;
+
+localparam GROUPED_DEPTH_DIM_0 = HEAD_TENSOR_SIZE_DIM_0 / IN_DATA_PARALLELISM_DIM_0;
+localparam GROUPED_DEPTH_DIM_1 = GROUPED_TENSOR_SIZE_DIM_1 / IN_DATA_PARALLELISM_DIM_1;
+
+// Number of packets per head
+localparam HEAD_NUM_PACKETS = GROUPED_DEPTH_DIM_0 * GROUPED_DEPTH_DIM_1;
+localparam NUM_PACKETS_CTR_WIDTH = $clog2(HEAD_NUM_PACKETS);
+
+// Group counter
+localparam GROUP_CTR_WIDTH = $clog2(NUM_GROUPS);
+
 initial begin
     // Divisibility checks
     assert (NUM_GROUPS * GROUP_SIZE == NUM_HEADS);
+    assert (GROUP_SIZE * GROUPED_TENSOR_SIZE_DIM_0 == IN_DATA_TENSOR_SIZE_DIM_0);
+    assert (NUM_HEADS * HEAD_TENSOR_SIZE_DIM_0 == IN_DATA_TENSOR_SIZE_DIM_0);
+    assert (IN_DATA_PARALLELISM_DIM_0 * GROUPED_DEPTH_DIM_0 == HEAD_TENSOR_SIZE_DIM_0);
+    assert (IN_DATA_PARALLELISM_DIM_1 * GROUPED_DEPTH_DIM_1 == GROUPED_TENSOR_SIZE_DIM_1);
 end
 
 // -----
@@ -63,6 +79,17 @@ logic [NUM_GROUPS-1:0] grouped_key_ready;
 
 logic [NUM_GROUPS-1:0] grouped_value_valid;
 logic [NUM_GROUPS-1:0] grouped_value_ready;
+
+// -----
+// State
+// -----
+
+typedef struct packed {
+    logic [NUM_PACKETS_CTR_WIDTH-1:0] k_block_count;
+    logic [GROUP_CTR_WIDTH-1:0] k_group_count;
+} self_t;
+
+self_t self, next_self;
 
 // -----
 // Modules
@@ -85,25 +112,46 @@ self_attention_head_single_scatter #(
     .out_ready                  (split_query_ready)
 );
 
-// Instantiate Q & V scatters
+// K Scatter
+// The key is already transposed and in correct format so all we do is count
+// input signal
+
+// Handshake signals
+for (genvar i = 0; i < NUM_GROUPS; i++) begin
+    assign grouped_key_valid[i] = (self.k_group_count == i) && key_valid;
+end
+assign key_ready = grouped_key_ready[self.k_group_count];
+
+// Counter logic
+always_comb begin
+    next_self = self;
+
+    if (key_valid && key_ready) begin
+        if ((self.k_group_count == NUM_GROUPS-1) &&
+            (self.k_block_count == HEAD_NUM_PACKETS-1)) begin
+            next_self.k_block_count = 0;
+            next_self.k_group_count = 0;
+        end else if (self.k_block_count == HEAD_NUM_PACKETS-1) begin
+            next_self.k_block_count = 0;
+            next_self.k_group_count = self.k_group_count + 1;
+        end else begin
+            next_self.k_block_count = self.k_block_count + 1;
+        end
+    end
+end
+
+always_ff @(posedge clk) begin
+    if (rst) begin
+        self <= '{default: '0};
+    end else begin
+        self <= next_self;
+    end
+end
+
+// Instantiate V scatter
 
 // We only instantiate NUM_GROUPS of outputs for K & V since we will duplicate
 // each output GROUP_SIZE times.
-
-self_attention_head_single_scatter #(
-    .NUM_HEADS                  (NUM_GROUPS),
-    .IN_DATA_TENSOR_SIZE_DIM_0  (GROUPED_TENSOR_SIZE_DIM_0),
-    .IN_DATA_TENSOR_SIZE_DIM_1  (GROUPED_TENSOR_SIZE_DIM_1),
-    .IN_DATA_PARALLELISM_DIM_0  (IN_DATA_PARALLELISM_DIM_0),
-    .IN_DATA_PARALLELISM_DIM_1  (IN_DATA_PARALLELISM_DIM_1)
-) k_scatter (
-    .clk                        (clk),
-    .rst                        (rst),
-    .in_valid                   (key_valid),
-    .in_ready                   (key_ready),
-    .out_valid                  (grouped_key_valid),
-    .out_ready                  (grouped_key_ready)
-);
 
 self_attention_head_single_scatter #(
     .NUM_HEADS                  (NUM_GROUPS),

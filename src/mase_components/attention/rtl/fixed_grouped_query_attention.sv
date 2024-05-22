@@ -161,7 +161,7 @@ logic gather_data_ready;
 // * Instances
 // * =================================================================
 
-fixed_gqa_input_block #(
+fixed_gqa_projections #(
     .NUM_HEADS                     (NUM_HEADS),
     .NUM_GROUPS                    (NUM_GROUPS),
 

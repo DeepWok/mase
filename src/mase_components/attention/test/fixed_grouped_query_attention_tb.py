@@ -207,10 +207,10 @@ class FixedGroupedQueryAttentionTB(Testbench):
             dut.data_out_0_valid,
             dut.data_out_0_ready,
             width=self.DATA_OUT_0_PRECISION_0,
-            error_bits=0,
+            error_bits=1,
             signed=True,
             log_error=True,
-            check=False,
+            check=True,
             name="Output"
         )
 
@@ -223,10 +223,10 @@ class FixedGroupedQueryAttentionTB(Testbench):
             dut.joint_query_valid,
             dut.joint_query_ready,
             width=self.DATA_OUT_0_PRECISION_0,
-            error_bits=0,
+            error_bits=1,
             signed=True,
             log_error=True,
-            check=False,
+            check=True,
             name="Q Linear"
         )
 
@@ -237,10 +237,10 @@ class FixedGroupedQueryAttentionTB(Testbench):
             dut.joint_key_valid,
             dut.joint_key_ready,
             width=self.DATA_OUT_0_PRECISION_0,
-            error_bits=0,
+            error_bits=1,
             signed=True,
             log_error=True,
-            check=False,
+            check=True,
             name="K Transpose Linear"
         )
 
@@ -251,10 +251,10 @@ class FixedGroupedQueryAttentionTB(Testbench):
             dut.joint_value_valid,
             dut.joint_value_ready,
             width=self.DATA_OUT_0_PRECISION_0,
-            error_bits=0,
+            error_bits=1,
             signed=True,
             log_error=True,
-            check=False,
+            check=True,
             name="V Linear"
         )
 

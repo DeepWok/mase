@@ -1,6 +1,6 @@
 `timescale 1ns / 1ps
 
-module fixed_gqa_input_block #(
+module fixed_gqa_projections #(
     parameter  NUM_HEADS  = 12,
     parameter  NUM_GROUPS = 3,
     localparam GROUP_SIZE = NUM_HEADS / NUM_GROUPS,
