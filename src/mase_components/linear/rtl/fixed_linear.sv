@@ -22,19 +22,19 @@ module fixed_linear #(
 
     parameter DATA_IN_0_PRECISION_0 = 16,
     parameter DATA_IN_0_PRECISION_1 = 3,
-    parameter DATA_IN_0_TENSOR_SIZE_DIM_0 = 4,
-    parameter DATA_IN_0_TENSOR_SIZE_DIM_1 = 1,
+    parameter DATA_IN_0_TENSOR_SIZE_DIM_0 = 20,
+    parameter DATA_IN_0_TENSOR_SIZE_DIM_1 = 20,
     parameter DATA_IN_0_TENSOR_SIZE_DIM_2 = 1,
     parameter DATA_IN_0_PARALLELISM_DIM_0 = 4,  // must equal WEIGHT_PARALLELISM_DIM_1
-    parameter DATA_IN_0_PARALLELISM_DIM_1 = 1,
+    parameter DATA_IN_0_PARALLELISM_DIM_1 = 4,
     parameter DATA_IN_0_PARALLELISM_DIM_2 = 1,
-    parameter IN_0_DEPTH_DIM_0 = DATA_IN_0_TENSOR_SIZE_DIM_0 / DATA_IN_0_PARALLELISM_DIM_0,
-    parameter IN_0_DEPTH_DIM_1 = DATA_IN_0_TENSOR_SIZE_DIM_1 / DATA_IN_0_PARALLELISM_DIM_1,
+    localparam IN_0_DEPTH_DIM_0 = DATA_IN_0_TENSOR_SIZE_DIM_0 / DATA_IN_0_PARALLELISM_DIM_0,
+    localparam IN_0_DEPTH_DIM_1 = DATA_IN_0_TENSOR_SIZE_DIM_1 / DATA_IN_0_PARALLELISM_DIM_1,
 
     parameter WEIGHT_PRECISION_0 = 16,
     parameter WEIGHT_PRECISION_1 = 3,
-    parameter WEIGHT_TENSOR_SIZE_DIM_0 = 32,
-    parameter WEIGHT_TENSOR_SIZE_DIM_1 = 1,
+    parameter WEIGHT_TENSOR_SIZE_DIM_0 = 20,
+    parameter WEIGHT_TENSOR_SIZE_DIM_1 = 20,
     parameter WEIGHT_PARALLELISM_DIM_0 = 4,
     parameter WEIGHT_PARALLELISM_DIM_1 = 4,
 

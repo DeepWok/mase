@@ -15,7 +15,7 @@ COMPONENTS_PATH = Path(__file__).parents[0]
 def generate_tcl_script(group, module_name, include_groups, synth_project_path):
     os.makedirs(synth_project_path, exist_ok=True)
     tcl_script_template = f"""
-set_param board.repoPaths {{/home/pg519/shared/board_files}}
+set_param board.repoPaths {{{str(Path.home())}/shared/board-files}}
 create_project synth_project_{group}_{module_name} {synth_project_path} -part xcu280-fsvh2892-2L-e
 set_property board_part xilinx.com:au280:part0:1.1 [current_project]
 """
