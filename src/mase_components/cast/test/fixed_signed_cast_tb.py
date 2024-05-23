@@ -10,7 +10,7 @@ from mase_cocotb.testbench import Testbench
 from mase_cocotb.runner import mase_runner
 from mase_cocotb.utils import sign_extend_t, signed_to_unsigned
 
-from chop.passes.graph.transforms.quantize.quantizers.utils import (
+from chop.nn.quantizers.utils import (
     my_floor,
     my_round,
     my_clamp,

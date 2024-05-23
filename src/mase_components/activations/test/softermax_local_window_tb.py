@@ -46,6 +46,7 @@ class SoftermaxLocalWindowTB(Testbench):
             dut.out_valid,
             dut.out_ready,
             check=True,
+            unsigned=True,
         )
 
     def generate_inputs(self, batches=10):
@@ -171,7 +172,7 @@ if __name__ == "__main__":
     def parallelism_cfgs(cfglist: list):
         out = []
         for cfg in cfglist:
-            for d in [2, 4, 16]:
+            for d in [1, 2, 4, 16]:
                 out.append({**cfg, "PARALLELISM": d})
         return out
 
@@ -181,5 +182,5 @@ if __name__ == "__main__":
     mase_runner(
         module_param_list=cfgs,
         trace=True,
-        jobs=4,
+        # jobs=4,
     )

@@ -30,6 +30,14 @@ MASE_HW_DEPS = {
         "conv",
         "activations",
     ],
+    "activations/softermax_local_window": [
+        "common",
+        "cast",
+        "fixed_arithmetic",
+        "conv",
+        "matmul",
+        "activations",
+    ],
     "activations/fixed_softermax_1d": [
         "common",
         "cast",

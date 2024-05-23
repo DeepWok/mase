@@ -98,7 +98,7 @@ class HardwareGQA(GroupedQueryAttentionInteger):
 
 class FixedGroupedQueryAttentionTB(Testbench):
     def __init__(self, dut) -> None:
-        super().__init__(dut, dut.clk, dut.rst)
+        super().__init__(dut, dut.clk, dut.rst, clk_period_ns=5)
 
         self.assign_self_params([
             "NUM_HEADS",
@@ -211,7 +211,7 @@ class FixedGroupedQueryAttentionTB(Testbench):
             signed=True,
             log_error=True,
             check=True,
-            name="Output"
+            name="Output",
         )
 
         # Intermediate monitors
@@ -367,7 +367,6 @@ class FixedGroupedQueryAttentionTB(Testbench):
             else:
                 weights = getattr(self.model, projection_name).weight
 
-            # Normalize K Matrix
             # if projection == "k":
             #     weights = weights / math.sqrt(self.model.head_dim)
 
@@ -407,17 +406,26 @@ class FixedGroupedQueryAttentionTB(Testbench):
         for projection in ["query", "key", "value"]:
             intermediate_data = int_out[projection]
             monitor = getattr(self, f"{projection}_linear_monitor")
-            print(projection, "intermediate_data", intermediate_data.shape)
+
+            # Need to load transposed version if key
+            if projection == "key":
+                par = [
+                    self.DATA_OUT_0_PARALLELISM_DIM_0,
+                    self.DATA_OUT_0_PARALLELISM_DIM_1,
+                ]
+            else:
+                par = [
+                    self.DATA_OUT_0_PARALLELISM_DIM_1,
+                    self.DATA_OUT_0_PARALLELISM_DIM_0,
+                ]
+
             mon_data = fixed_preprocess_tensor(
                 tensor=intermediate_data,
                 q_config={
                     "width": self.DATA_OUT_0_PRECISION_0,
                     "frac_width": self.DATA_OUT_0_PRECISION_1,
                 },
-                parallelism=[
-                    self.DATA_OUT_0_PARALLELISM_DIM_1,
-                    self.DATA_OUT_0_PARALLELISM_DIM_0,
-                ],
+                parallelism=par,
             )
             monitor.load_monitor(mon_data)
 
@@ -455,11 +463,19 @@ class FixedGroupedQueryAttentionTB(Testbench):
         await Timer(us, units="us")
         assert self.data_out_0_monitor.exp_queue.empty()
 
+        _, picosec = self.data_out_0_monitor.last_timestamp
+        nanosec = picosec / 1000
+        clock_period_picosec = self.clock.period
+
+        self.log.info("Entire batch took %f us." % (nanosec / 1000))
+        self.log.info("Clock Cycles: %d" % (picosec / clock_period_picosec))
+        self.log.info("Clock period: %f ns" % (clock_period_picosec / 1000))
+
 
 @cocotb.test()
 async def basic(dut):
     tb = FixedGroupedQueryAttentionTB(dut)
-    await tb.run_test(batches=1, us=1000)
+    await tb.run_test(batches=1, us=200)
 
 
 def get_config(
@@ -504,13 +520,19 @@ def test_fixed_linear_smoke():
     """
     cfgs = [
         # 4 Groups of 2 heads
-        get_config(10, 128, 8, 4, 2, 2),
+        # get_config(10, 128, 8, 4, 2, 2),
+        # get_config(10, 128, 8, 4, 2, 1),
+        # get_config(10, 128, 8, 4, 4, 1),
+        get_config(10, 128, 8, 4, 8, 1),
 
         # Normal Multi-head Attention 8 QKV heads
-        get_config(10, 128, 8, 8, 2, 2),
+        # get_config(10, 128, 8, 8, 2, 2),
 
         # Multi-Query Attnetion (single head)
-        get_config(10, 128, 8, 1, 2, 2),
+        # get_config(10, 128, 8, 1, 2, 2),
+
+        # Mistral-7B (2-bit)
+        # get_config(4096, 4096, 32, 8, 4, 4, width=2, frac_width=1),
     ]
 
     mase_runner(

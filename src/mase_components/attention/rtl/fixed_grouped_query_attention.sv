@@ -132,9 +132,6 @@ logic [DATA_OUT_0_PRECISION_0-1:0] query [ACTIVATION_PARALLELISM-1:0];
 logic joint_query_valid, joint_query_ready;
 logic [NUM_HEADS-1:0] split_query_valid, split_query_ready;
 
-// logic [DATA_OUT_0_PRECISION_0-1:0] query_fifo_data [NUM_HEADS-1:0] [ACTIVATION_PARALLELISM-1:0];
-// logic [NUM_HEADS-1:0] query_fifo_valid, query_fifo_ready;
-
 // Key
 logic [DATA_OUT_0_PRECISION_0-1:0] key [ACTIVATION_PARALLELISM-1:0];
 logic joint_key_valid, joint_key_ready;
@@ -276,7 +273,7 @@ matrix_fifo #(
     .DATA_WIDTH  (DATA_OUT_0_PRECISION_0),
     .DIM0        (WEIGHT_PARALLELISM_DIM_0),
     .DIM1        (DATA_IN_0_PARALLELISM_DIM_1),
-    .FIFO_SIZE   (HEAD_DEPTH_DIM_0) // TODO: Resize?
+    .FIFO_SIZE   (HEAD_DEPTH_DIM_0)
 ) key_fifo_inst (
     .clk         (clk),
     .rst         (rst),
@@ -292,7 +289,7 @@ matrix_fifo #(
     .DATA_WIDTH  (DATA_OUT_0_PRECISION_0),
     .DIM0        (WEIGHT_PARALLELISM_DIM_0),
     .DIM1        (DATA_IN_0_PARALLELISM_DIM_1),
-    .FIFO_SIZE   (HEAD_DEPTH_DIM_0) // TODO: Resize?
+    .FIFO_SIZE   (HEAD_DEPTH_DIM_0)
 ) value_fifo_inst (
     .clk         (clk),
     .rst         (rst),

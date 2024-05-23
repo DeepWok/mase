@@ -2,6 +2,7 @@ import random
 
 import numpy as np
 
+from cocotb import simulator
 from cocotb.binary import BinaryValue
 from cocotb.triggers import *
 
@@ -64,7 +65,16 @@ class StreamDriver(Driver):
 
 
 class StreamMonitor(Monitor):
-    def __init__(self, clk, data, valid, ready, check=True, name=None, unsigned=False):
+    def __init__(
+        self,
+        clk,
+        data,
+        valid,
+        ready,
+        check=True,
+        name=None,
+        unsigned=False,
+    ):
         super().__init__(clk, check=check, name=name)
         self.clk = clk
         self.data = data
@@ -73,6 +83,7 @@ class StreamMonitor(Monitor):
         self.check = check
         self.name = name
         self.unsigned = unsigned
+        self.last_timestamp = None
 
     def _trigger(self):
         return self.valid.value == 1 and self.ready.value == 1
@@ -95,10 +106,13 @@ class StreamMonitor(Monitor):
 
         if type(self.data) == tuple:
             # Multiple synchronised data signals
-            return tuple(_get_sig_value(s) for s in self.data)
+            data = tuple(_get_sig_value(s) for s in self.data)
         else:
             # Single data signal
-            return _get_sig_value(self.data)
+            data = _get_sig_value(self.data)
+
+        self.last_timestamp = simulator.get_sim_time()
+        return data
 
     def _check(self, got, exp):
 
