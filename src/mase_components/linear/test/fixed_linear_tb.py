@@ -200,6 +200,7 @@ def get_fixed_linear_config(kwargs={}):
         "HAS_BIAS": 0,
         "WEIGHTS_PRE_TRANSPOSED": 1,
         "DATA_IN_0_TENSOR_SIZE_DIM_0": 20,
+        "DATA_IN_0_TENSOR_SIZE_DIM_1": 20,
         "DATA_IN_0_PARALLELISM_DIM_0": 4,
         "WEIGHT_TENSOR_SIZE_DIM_0": 20,
         "WEIGHT_TENSOR_SIZE_DIM_1": 20,
