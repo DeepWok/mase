@@ -140,7 +140,7 @@ def bert_update_metadata(mg, q_config):
 
 
 def emit_verilog_bert(
-    config, q_config, config_sequence_length, wait_count=15, wait_unit="ms"
+    config, q_config, config_sequence_length, wait_count=15, wait_unit="ms", max_parallelism=4
 ):
     # * Get model and quantize self attention, linear and layer norm layers
     model = BertModel(config)
@@ -171,7 +171,7 @@ def emit_verilog_bert(
     mg, _ = passes.add_hardware_metadata_analysis_pass(
         mg,
         pass_args={
-            "max_parallelism": [4] * 4,
+            "max_parallelism": [max_parallelism] * 4,
         },
     )
 
@@ -217,9 +217,9 @@ def test_emit_verilog_bert_smoke():
     config.num_hidden_layers = 1
     config.hidden_size = 96
     config.intermediate_size = 384
-    config_sequence_length = 2
+    config_sequence_length = 4
     q_config = get_default_qconfig()
-    emit_verilog_bert(config, q_config, config_sequence_length, wait_count=2)
+    emit_verilog_bert(config, q_config, config_sequence_length, wait_count=10, max_parallelism=2)
 
 
 def test_emit_verilog_bert_regression():
@@ -229,7 +229,7 @@ def test_emit_verilog_bert_regression():
     config.intermediate_size = 1536
     config_sequence_length = 128
     q_config = get_default_qconfig()
-    emit_verilog_bert(config, q_config, config_sequence_length, wait_count=15)
+    emit_verilog_bert(config, q_config, config_sequence_length, wait_count=15, max_parallelism=4)
 
 
 if __name__ == "__main__":
