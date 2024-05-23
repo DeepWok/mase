@@ -1,9 +1,8 @@
-import os, sys
-from chop.passes.graph.utils import init_project
-
+import os
 import subprocess
 from pathlib import Path
 
+from chop.passes.graph.utils import init_project
 from chop.tools import get_logger, set_logging_verbosity
 import mase_components
 from mase_components.deps import MASE_HW_DEPS
@@ -20,7 +19,7 @@ def generate_tcl_script(top_name, vivado_project_path, include_groups, project_d
     )
 
     tcl_script_template = f"""
-set_param board.repoPaths {{/home/pg519/shared/board_files}}
+set_param board.repoPaths {{{str(Path.home())}/shared/board-files}}
 create_project  {top_name}_build_project {vivado_project_path} -part xcu280-fsvh2892-2L-e
 set_property board_part xilinx.com:au280:part0:1.1 [current_project]
 """

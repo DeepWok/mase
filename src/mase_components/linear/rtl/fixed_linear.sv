@@ -17,7 +17,7 @@
 
 module fixed_linear #(
     /* verilator lint_off UNUSEDPARAM */
-    parameter HAS_BIAS = 0,
+    parameter HAS_BIAS = 1,
     parameter WEIGHTS_PRE_TRANSPOSED = 0,
 
     parameter DATA_IN_0_PRECISION_0 = 16,

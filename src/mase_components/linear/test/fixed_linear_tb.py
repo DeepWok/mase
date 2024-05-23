@@ -19,8 +19,8 @@ from mase_cocotb.interfaces.streaming import (
 from mase_cocotb.runner import mase_runner
 
 # from mase_cocotb import Testbench, StreamDriver, StreamMonitor, mase_runner
-from chop.passes.graph.transforms.quantize.quantized_modules import LinearInteger
-from chop.passes.graph.transforms.quantize.quantizers import integer_quantizer
+from chop.nn.quantized.modules.linear import LinearInteger
+from chop.nn.quantizers import integer_quantizer
 
 
 class LinearTB(Testbench):

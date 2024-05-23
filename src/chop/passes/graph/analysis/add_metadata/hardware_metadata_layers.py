@@ -45,6 +45,7 @@ INTERNAL_COMP = {
                 "fixed_arithmetic/rtl/fixed_adder_tree.sv",
                 "fixed_arithmetic/rtl/fixed_adder_tree_layer.sv",
                 "fixed_arithmetic/rtl/fixed_mult.sv",
+                "common/rtl/unpacked_repeat_circular_buffer.sv",
                 "common/rtl/register_slice.sv",
                 "common/rtl/join2.sv",
                 "common/rtl/skid_buffer.sv",
