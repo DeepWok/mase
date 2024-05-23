@@ -13,10 +13,11 @@ else
 endif
 
 # * Mount Vivado HLS path only if Vivado is available (to avoid path not found errors)
+# Include shared folder containing board files etc
 ifeq ($(VIVADO_AVAILABLE),)
     DOCKER_RUN_EXTRA_ARGS=
 else
-    DOCKER_RUN_EXTRA_ARGS=-v $(vhls):$(vhls)
+    DOCKER_RUN_EXTRA_ARGS=-v $(vhls):$(vhls) -v /$(USER_PREFIX)/$(shell whoami)/shared:/root/shared:z
 endif
 
 # * Set docker image according to local flag
