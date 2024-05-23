@@ -119,6 +119,9 @@ module fixed_gqa_projections #(
   logic [DATA_OUT_0_PRECISION_0-1:0] data_out_key [DATA_IN_0_PARALLELISM_DIM_1 * WEIGHT_PARALLELISM_DIM_0-1:0];
   logic data_out_key_valid, data_out_key_ready;
 
+  logic [DATA_OUT_0_PRECISION_0-1:0] value_buffer [DATA_IN_0_PARALLELISM_DIM_1 * WEIGHT_PARALLELISM_DIM_0-1:0];
+  logic value_buffer_valid, value_buffer_ready;
+
   // * Instances
   // * =================================================================
 
@@ -193,7 +196,7 @@ module fixed_gqa_projections #(
       .DATA_WIDTH (DATA_OUT_0_PRECISION_0),
       .DIM0       (WEIGHT_PARALLELISM_DIM_0),
       .DIM1       (DATA_IN_0_PARALLELISM_DIM_1),
-      .FIFO_SIZE  (10 * DATA_IN_0_DEPTH_DIM_1 * WEIGHT_DEPTH_DIM_0)
+      .FIFO_SIZE  (DATA_IN_0_DEPTH_DIM_1 * WEIGHT_DEPTH_DIM_0)
   ) query_buffer_i (
       .clk        (clk),
       .rst        (rst),
@@ -255,9 +258,6 @@ module fixed_gqa_projections #(
       .data_out_0_valid             (data_out_key_valid),
       .data_out_0_ready             (data_out_key_ready)
   );
-
-  // Normalize K using constant division by math.sqrt(head_dim)
-
 
   // Transpose K Matrix
   // K Linear output shape is:
@@ -326,9 +326,27 @@ module fixed_gqa_projections #(
       .bias_valid                   (bias_value_valid),
       .bias_ready                   (bias_value_ready),
 
-      .data_out_0                   (data_out_value),
-      .data_out_0_valid             (data_out_value_valid),
-      .data_out_0_ready             (data_out_value_ready)
+      .data_out_0                   (value_buffer),
+      .data_out_0_valid             (value_buffer_valid),
+      .data_out_0_ready             (value_buffer_ready)
+  );
+
+  // Value output buffer
+
+  matrix_fifo #(
+      .DATA_WIDTH (DATA_OUT_0_PRECISION_0),
+      .DIM0       (WEIGHT_PARALLELISM_DIM_0),
+      .DIM1       (DATA_IN_0_PARALLELISM_DIM_1),
+      .FIFO_SIZE  (DATA_IN_0_DEPTH_DIM_1 * WEIGHT_DEPTH_DIM_0)
+  ) value_buffer_i (
+      .clk        (clk),
+      .rst        (rst),
+      .in_data    (value_buffer),
+      .in_valid   (value_buffer_valid),
+      .in_ready   (value_buffer_ready),
+      .out_data   (data_out_value),
+      .out_valid  (data_out_value_valid),
+      .out_ready  (data_out_value_ready)
   );
 
 endmodule

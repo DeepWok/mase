@@ -115,6 +115,9 @@ module fixed_grouped_query_attention #(
 // Parallelism of Q, K, V activations: (seq_len x embedding_dim)
 localparam ACTIVATION_PARALLELISM = DATA_IN_0_PARALLELISM_DIM_1 * WEIGHT_PARALLELISM_DIM_0;
 
+localparam HEAD_TOTAL_DIM_0 = WEIGHT_TENSOR_SIZE_DIM_0 / NUM_HEADS;
+localparam HEAD_DEPTH_DIM_0 = HEAD_TOTAL_DIM_0 / WEIGHT_PARALLELISM_DIM_0;
+
 initial begin
     // Divisible Checks
     assert (GROUP_SIZE * NUM_GROUPS == NUM_HEADS);
@@ -265,23 +268,6 @@ gqa_head_scatter_control #(
 
 for (genvar head = 0; head < NUM_HEADS; head++) begin : gen_head
 
-// TODO: Not sure why this is needed??
-// matrix_fifo #(
-//     .DATA_WIDTH  (DATA_OUT_0_PRECISION_0),
-//     .DIM0        (WEIGHT_PARALLELISM_DIM_0),
-//     .DIM1        (DATA_IN_0_PARALLELISM_DIM_1),
-//     .FIFO_SIZE   (10 * GROUP_NUM_ITERS) // TODO: Resize?
-// ) query_fifo_inst (
-//     .clk         (clk),
-//     .rst         (rst),
-//     .in_data     (query),
-//     .in_valid    (split_query_valid[head]),
-//     .in_ready    (split_query_ready[head]),
-//     .out_data    (query_fifo_data[head]),
-//     .out_valid   (query_fifo_valid[head]),
-//     .out_ready   (query_fifo_ready[head])
-// );
-
 // FIFOs are required before each K, V port to buffer results while we wait for
 // Q round robin style results. Some heads will also start calculating before
 // others so FIFOs are required to unblock the input block.
@@ -290,7 +276,7 @@ matrix_fifo #(
     .DATA_WIDTH  (DATA_OUT_0_PRECISION_0),
     .DIM0        (WEIGHT_PARALLELISM_DIM_0),
     .DIM1        (DATA_IN_0_PARALLELISM_DIM_1),
-    .FIFO_SIZE   (10 * GROUP_NUM_ITERS) // TODO: Resize?
+    .FIFO_SIZE   (HEAD_DEPTH_DIM_0) // TODO: Resize?
 ) key_fifo_inst (
     .clk         (clk),
     .rst         (rst),
@@ -306,7 +292,7 @@ matrix_fifo #(
     .DATA_WIDTH  (DATA_OUT_0_PRECISION_0),
     .DIM0        (WEIGHT_PARALLELISM_DIM_0),
     .DIM1        (DATA_IN_0_PARALLELISM_DIM_1),
-    .FIFO_SIZE   (10 * GROUP_NUM_ITERS) // TODO: Resize?
+    .FIFO_SIZE   (HEAD_DEPTH_DIM_0) // TODO: Resize?
 ) value_fifo_inst (
     .clk         (clk),
     .rst         (rst),
@@ -332,7 +318,8 @@ fixed_self_attention_head #(
     .OUT_DATA_PRECISION_0        (DATA_OUT_0_PRECISION_0),
     .OUT_DATA_PRECISION_1        (DATA_OUT_0_PRECISION_1),
     // We pre-transpose K to K^T outside of head
-    .KEY_PRE_TRANSPOSED          (1)
+    .KEY_PRE_TRANSPOSED          (1),
+    .VALUE_BUFFER                (1)
 ) head_i (
     .clk                         (clk),
     .rst                         (rst),
