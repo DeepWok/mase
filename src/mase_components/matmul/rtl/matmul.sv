@@ -78,7 +78,6 @@ module matmul #(
     output logic                 out_valid,
     input  logic                 out_ready
 );
-
   initial begin
     // Check dimension constraint not violated
     assert (A_TOTAL_DIM0 == B_TOTAL_DIM1)

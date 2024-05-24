@@ -25,9 +25,15 @@ module single_element_repeat #(
     input  logic                  out_ready
 );
 
-  initial begin
-    assert (REPEAT > 1);
-  end
+generate
+
+if (REPEAT == 1) begin : gen_passthrough
+
+  assign out_data = in_data;
+  assign out_valid = in_valid;
+  assign in_ready = out_ready;
+
+end else begin : gen_repeater
 
   localparam CTR_WIDTH = $clog2(REPEAT);
 
@@ -95,5 +101,8 @@ module single_element_repeat #(
       self <= next_self;
     end
   end
+
+end
+endgenerate
 
 endmodule

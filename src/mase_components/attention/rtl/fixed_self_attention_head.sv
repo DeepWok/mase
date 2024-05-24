@@ -41,7 +41,7 @@ module fixed_self_attention_head #(
     output logic out_valid,
     input logic out_ready
 );
-
+/*verilator hier_block*/
   initial begin
     assert (OUT_DATA_TENSOR_SIZE_DIM_0 == IN_DATA_TENSOR_SIZE_DIM_0)
     else

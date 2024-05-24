@@ -3,6 +3,8 @@ Module      : fixed_grouped_query_attention
 Description : This module implements fixed-point grouped query attention (GQA).
 */
 
+// TODO: Bias has not been tested
+
 `timescale 1ns / 1ps
 
 module fixed_grouped_query_attention #(
@@ -40,7 +42,7 @@ module fixed_grouped_query_attention #(
     localparam GROUP_DEPTH_DIM_1 = GROUPED_WEIGHT_TENSOR_SIZE_DIM_1 / GROUPED_WEIGHT_PARALLELISM_DIM_1,
     localparam GROUP_NUM_ITERS = GROUP_DEPTH_DIM_0 * GROUP_DEPTH_DIM_1,
 
-    parameter  HAS_BIAS = 1,
+    parameter  HAS_BIAS = 0,
     parameter  BIAS_TENSOR_SIZE_DIM_0 = 64,
     parameter  BIAS_TENSOR_SIZE_DIM_1 = 20,
     parameter  BIAS_PARALLELISM_DIM_0 = 4,

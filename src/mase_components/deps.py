@@ -30,6 +30,10 @@ MASE_HW_DEPS = {
         "conv",
         "activations",
     ],
+    "activations/softermax_lpw_pow2": [
+        "common",
+        "cast",
+    ],
     "activations/softermax_local_window": [
         "common",
         "cast",
@@ -67,6 +71,16 @@ MASE_HW_DEPS = {
         "activations",
     ],
     "attention/fixed_grouped_query_attention": [
+        "attention",
+        "arbiters",
+        "cast",
+        "common",
+        "fixed_arithmetic",
+        "linear",
+        "matmul",
+        "activations",
+    ],
+    "attention/fixed_grouped_query_attention_wrapper": [
         "attention",
         "arbiters",
         "cast",

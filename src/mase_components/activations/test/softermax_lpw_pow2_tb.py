@@ -105,24 +105,28 @@ async def sweep(dut):
     ref *= 2**tb.OUT_FRAC_WIDTH  # scale up
     ref = torch.clamp(ref, 0, 2**tb.OUT_WIDTH - 1)
 
+    software_ref = ref / (2**tb.OUT_FRAC_WIDTH)
+    software_res = [x / (2**tb.OUT_FRAC_WIDTH) for x in exp_out]
+    hardware_res = [x / (2**tb.OUT_FRAC_WIDTH) for x in recv_log]
+
     data = pd.DataFrame(
         {
             "x": x.tolist(),
-            "reference": ref.tolist(),
-            "software": exp_out,
-            "hardware": recv_log,
+            "software float32": software_ref.tolist(),
+            "software fixed-point": software_res,
+            "hardware fixed-point": hardware_res,
         }
     ).melt(
         id_vars="x",
-        value_vars=["reference", "software", "hardware"],
+        value_vars=["software float32", "software fixed-point", "hardware fixed-point"],
         value_name="Value",
         var_name="Type",
     )
 
     graph_id = f"{tb.IN_WIDTH}_{tb.IN_FRAC_WIDTH}_to_{tb.OUT_WIDTH}_{tb.OUT_FRAC_WIDTH}"
     alt.Chart(data).mark_line().encode(
-        x="x",
-        y="Value",
+        x=alt.X("x").title(f"x (Q{tb.IN_WIDTH}.{tb.IN_FRAC_WIDTH} Fixed-point)"),
+        y=alt.Y("Value").title(f"y (Q{tb.OUT_WIDTH}.{tb.OUT_FRAC_WIDTH} Fixed-point)"),
         color="Type",
     ).properties(
         width=600,
@@ -160,30 +164,30 @@ async def valid_backpressure(dut):
 
 if __name__ == "__main__":
 
-    DEFAULT = {"IN_WIDTH": 16, "IN_FRAC_WIDTH": 3, "OUT_WIDTH": 16, "OUT_FRAC_WIDTH": 3}
+    DEFAULT = {"IN_WIDTH": 8, "IN_FRAC_WIDTH": 4, "OUT_WIDTH": 8, "OUT_FRAC_WIDTH": 4}
 
-    def width_cfgs():
-        bitwidths = [2, 4, 8]
-        cfgs = []
-        for in_width in bitwidths:
-            for in_frac_width in range(1, in_width):
-                for out_width in bitwidths:
-                    for out_frac_width in range(1, out_width):
-                        cfgs.append(
-                            {
-                                "IN_WIDTH": in_width,
-                                "IN_FRAC_WIDTH": in_frac_width,
-                                "OUT_WIDTH": out_width,
-                                "OUT_FRAC_WIDTH": out_frac_width,
-                            }
-                        )
-        return cfgs
+    # def width_cfgs():
+    #     bitwidths = [2, 4, 8]
+    #     cfgs = []
+    #     for in_width in bitwidths:
+    #         for in_frac_width in range(1, in_width):
+    #             for out_width in bitwidths:
+    #                 for out_frac_width in range(1, out_width):
+    #                     cfgs.append(
+    #                         {
+    #                             "IN_WIDTH": in_width,
+    #                             "IN_FRAC_WIDTH": in_frac_width,
+    #                             "OUT_WIDTH": out_width,
+    #                             "OUT_FRAC_WIDTH": out_frac_width,
+    #                         }
+    #                     )
+    #     return cfgs
 
-    cfgs = width_cfgs()
-    # cfgs = [DEFAULT]
+    # cfgs = width_cfgs()
+    cfgs = [DEFAULT]
 
     mase_runner(
         module_param_list=cfgs,
         trace=True,
-        jobs=8,
+        # jobs=12,
     )

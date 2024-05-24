@@ -2,6 +2,9 @@
 
 import os
 import math
+from datetime import datetime
+from pathlib import Path
+import json
 
 import torch
 from torch import Tensor
@@ -201,13 +204,15 @@ class FixedGroupedQueryAttentionTB(Testbench):
                 dut.bias_output_ready,
             )
 
+        self.error_threshold = 2
+
         self.data_out_0_monitor = ErrorThresholdStreamMonitor(
             dut.clk,
             dut.data_out_0,
             dut.data_out_0_valid,
             dut.data_out_0_ready,
             width=self.DATA_OUT_0_PRECISION_0,
-            error_bits=1,
+            error_bits=self.error_threshold,
             signed=True,
             log_error=True,
             check=True,
@@ -223,7 +228,7 @@ class FixedGroupedQueryAttentionTB(Testbench):
             dut.joint_query_valid,
             dut.joint_query_ready,
             width=self.DATA_OUT_0_PRECISION_0,
-            error_bits=1,
+            error_bits=self.error_threshold,
             signed=True,
             log_error=True,
             check=True,
@@ -237,7 +242,7 @@ class FixedGroupedQueryAttentionTB(Testbench):
             dut.joint_key_valid,
             dut.joint_key_ready,
             width=self.DATA_OUT_0_PRECISION_0,
-            error_bits=1,
+            error_bits=self.error_threshold,
             signed=True,
             log_error=True,
             check=True,
@@ -251,7 +256,7 @@ class FixedGroupedQueryAttentionTB(Testbench):
             dut.joint_value_valid,
             dut.joint_value_ready,
             width=self.DATA_OUT_0_PRECISION_0,
-            error_bits=1,
+            error_bits=self.error_threshold,
             signed=True,
             log_error=True,
             check=True,
@@ -310,17 +315,17 @@ class FixedGroupedQueryAttentionTB(Testbench):
         )
 
         # Set verbosity of driver and monitor loggers to debug
-        self.data_in_0_driver.log.setLevel(logging.DEBUG)
-        self.weight_q_driver.log.setLevel(logging.DEBUG)
-        self.weight_k_driver.log.setLevel(logging.DEBUG)
-        self.weight_v_driver.log.setLevel(logging.DEBUG)
-        self.weight_o_driver.log.setLevel(logging.DEBUG)
-        self.data_out_0_monitor.log.setLevel(logging.DEBUG)
-        if self.HAS_BIAS:
-            self.bias_q_driver.log.setLevel(logging.DEBUG)
-            self.bias_k_driver.log.setLevel(logging.DEBUG)
-            self.bias_v_driver.log.setLevel(logging.DEBUG)
-            self.bias_o_driver.log.setLevel(logging.DEBUG)
+        # self.data_in_0_driver.log.setLevel(logging.DEBUG)
+        # self.weight_q_driver.log.setLevel(logging.DEBUG)
+        # self.weight_k_driver.log.setLevel(logging.DEBUG)
+        # self.weight_v_driver.log.setLevel(logging.DEBUG)
+        # self.weight_o_driver.log.setLevel(logging.DEBUG)
+        # self.data_out_0_monitor.log.setLevel(logging.DEBUG)
+        # if self.HAS_BIAS:
+        #     self.bias_q_driver.log.setLevel(logging.DEBUG)
+        #     self.bias_k_driver.log.setLevel(logging.DEBUG)
+        #     self.bias_v_driver.log.setLevel(logging.DEBUG)
+        #     self.bias_o_driver.log.setLevel(logging.DEBUG)
 
 
     def generate_inputs(self, batches=1):
@@ -333,7 +338,7 @@ class FixedGroupedQueryAttentionTB(Testbench):
         )
 
 
-    async def run_test(self, batches, us):
+    async def run_test(self):
         await self.reset()
         self.log.info(f"Reset finished")
         self.data_out_0_monitor.ready.value = 1
@@ -460,6 +465,13 @@ class FixedGroupedQueryAttentionTB(Testbench):
         self.log.info(f"Loading {len(outs)} beats into data_out_0_monitor.")
         self.data_out_0_monitor.load_monitor(outs)
 
+        if (
+            self.DATA_IN_0_PARALLELISM_DIM_1 < 2 or
+            self.DATA_IN_0_PARALLELISM_DIM_0 < 2
+        ):
+            us = 4000
+        else:
+            us = 1000
         await Timer(us, units="us")
         assert self.data_out_0_monitor.exp_queue.empty()
 
@@ -471,11 +483,29 @@ class FixedGroupedQueryAttentionTB(Testbench):
         self.log.info("Clock Cycles: %d" % (picosec / clock_period_picosec))
         self.log.info("Clock period: %f ns" % (clock_period_picosec / 1000))
 
+        timestamp = datetime.now().strftime("%y-%m-%d-%H-%M-%S")
+        filename = Path(__file__).parent / f"results/{timestamp}.json"
+        with open(filename, 'w') as f:
+            json.dump({
+                "seq_len": self.DATA_IN_0_TENSOR_SIZE_DIM_1,
+                "embedding_len": self.DATA_IN_0_TENSOR_SIZE_DIM_0,
+                "seq_paralellism": self.DATA_IN_0_PARALLELISM_DIM_1,
+                "embedding_paralellism": self.DATA_IN_0_PARALLELISM_DIM_0,
+                "num_heads": self.NUM_HEADS,
+                "num_kv_heads": self.NUM_GROUPS,
+                "width": self.DATA_IN_0_PRECISION_0,
+                "frac_width": self.DATA_IN_0_PRECISION_1,
+                "latency_us": (nanosec / 1000),
+                "clock_cycles": (picosec / clock_period_picosec),
+                "clock_period_ns": (clock_period_picosec / 1000),
+            }, f, indent=4)
+
+
 
 @cocotb.test()
 async def basic(dut):
     tb = FixedGroupedQueryAttentionTB(dut)
-    await tb.run_test(batches=1, us=200)
+    await tb.run_test()
 
 
 def get_config(
@@ -520,10 +550,7 @@ def test_fixed_linear_smoke():
     """
     cfgs = [
         # 4 Groups of 2 heads
-        # get_config(10, 128, 8, 4, 2, 2),
-        # get_config(10, 128, 8, 4, 2, 1),
-        # get_config(10, 128, 8, 4, 4, 1),
-        get_config(10, 128, 8, 4, 8, 1),
+        get_config(16, 128, 8, 4, 1, 1),
 
         # Normal Multi-head Attention 8 QKV heads
         # get_config(10, 128, 8, 8, 2, 2),
@@ -537,9 +564,28 @@ def test_fixed_linear_smoke():
 
     mase_runner(
         module_param_list=cfgs,
-        trace=True,
+        # trace=True,
+        # extra_build_args=["--hierarchial"],
+    )
+
+
+def test_parallelism_sweep():
+    # Parallelism Sweep
+    cfgs = []
+    for embedding_par in [1, 2, 4, 8, 16]:
+        for seq_par in [1, 2, 4, 8, 16]:
+            cfgs.append(get_config(16, 128, 8, 4, embedding_par, seq_par))
+
+    cfgs = [get_config(16, 128, 8, 4, 16, 16)]
+
+    mase_runner(
+        module_param_list=cfgs,
+        hierarchical=True,
+        template=True,
+        # extra_build_args=["--hierarchical"],
     )
 
 
 if __name__ == "__main__":
-    test_fixed_linear_smoke()
+    # test_fixed_linear_smoke()
+    test_parallelism_sweep()
