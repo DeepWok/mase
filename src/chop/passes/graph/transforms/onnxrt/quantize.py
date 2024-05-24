@@ -24,8 +24,8 @@ from .utils import (
 QUANT_MAP = {
     "int8": QuantType.QInt8,
     "uint8": QuantType.QUInt8,
-    "int16": QuantType.QInt16,
-    "uint16": QuantType.QUInt16,
+    # "int16": QuantType.QInt16,
+    # "uint16": QuantType.QUInt16,
 }
 
 
