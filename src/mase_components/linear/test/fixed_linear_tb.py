@@ -19,8 +19,8 @@ from mase_cocotb.interfaces.streaming import (
 from mase_cocotb.runner import mase_runner
 
 # from mase_cocotb import Testbench, StreamDriver, StreamMonitor, mase_runner
-from chop.passes.graph.transforms.quantize.quantized_modules import LinearInteger
-from chop.passes.graph.transforms.quantize.quantizers import integer_quantizer
+from chop.nn.quantized.modules.linear import LinearInteger
+from chop.nn.quantizers import integer_quantizer
 
 
 class LinearTB(Testbench):
@@ -200,6 +200,7 @@ def get_fixed_linear_config(kwargs={}):
         "HAS_BIAS": 0,
         "WEIGHTS_PRE_TRANSPOSED": 1,
         "DATA_IN_0_TENSOR_SIZE_DIM_0": 20,
+        "DATA_IN_0_TENSOR_SIZE_DIM_1": 20,
         "DATA_IN_0_PARALLELISM_DIM_0": 4,
         "WEIGHT_TENSOR_SIZE_DIM_0": 20,
         "WEIGHT_TENSOR_SIZE_DIM_1": 20,

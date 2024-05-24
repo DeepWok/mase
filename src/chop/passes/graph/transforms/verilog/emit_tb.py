@@ -32,6 +32,7 @@ def _emit_cocotb_test(graph, pass_args={}):
 
     wait_time = pass_args.get("wait_time", 2)
     wait_unit = pass_args.get("wait_units", "ms")
+    batch_size = pass_args.get("batch_size", 1)
 
     test_template = f"""
 import cocotb
@@ -48,7 +49,7 @@ async def test(dut):
 
     await tb.initialize()
 
-    in_tensors = tb.generate_inputs(batches=1)
+    in_tensors = tb.generate_inputs(batches={batch_size})
     exp_out = tb.model(*list(in_tensors.values()))
 
     tb.load_drivers(in_tensors)
@@ -152,10 +153,11 @@ def _emit_cocotb_tb(graph):
 
                 # Append all input blocks to input driver
                 # ! TO DO: generalize
+                block_size = self.get_parameter(
+                    "DATA_IN_0_PARALLELISM_DIM_0"
+                ) * self.get_parameter("DATA_IN_0_PARALLELISM_DIM_1")
+                
                 for block in in_data_blocks:
-                    block_size = self.get_parameter(
-                        "DATA_IN_0_PARALLELISM_DIM_0"
-                    ) * self.get_parameter("DATA_IN_0_PARALLELISM_DIM_1")
                     if len(block) < block_size:
                         block = block + [0] * (block_size - len(block))
                     self.input_drivers[arg].append(block)

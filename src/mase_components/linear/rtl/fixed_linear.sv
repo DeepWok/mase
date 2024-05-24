@@ -17,24 +17,24 @@
 
 module fixed_linear #(
     /* verilator lint_off UNUSEDPARAM */
-    parameter HAS_BIAS = 0,
+    parameter HAS_BIAS = 1,
     parameter WEIGHTS_PRE_TRANSPOSED = 0,
 
     parameter DATA_IN_0_PRECISION_0 = 16,
     parameter DATA_IN_0_PRECISION_1 = 3,
-    parameter DATA_IN_0_TENSOR_SIZE_DIM_0 = 4,
-    parameter DATA_IN_0_TENSOR_SIZE_DIM_1 = 1,
+    parameter DATA_IN_0_TENSOR_SIZE_DIM_0 = 20,
+    parameter DATA_IN_0_TENSOR_SIZE_DIM_1 = 20,
     parameter DATA_IN_0_TENSOR_SIZE_DIM_2 = 1,
     parameter DATA_IN_0_PARALLELISM_DIM_0 = 4,  // must equal WEIGHT_PARALLELISM_DIM_1
-    parameter DATA_IN_0_PARALLELISM_DIM_1 = 1,
+    parameter DATA_IN_0_PARALLELISM_DIM_1 = 4,
     parameter DATA_IN_0_PARALLELISM_DIM_2 = 1,
-    parameter IN_0_DEPTH_DIM_0 = DATA_IN_0_TENSOR_SIZE_DIM_0 / DATA_IN_0_PARALLELISM_DIM_0,
-    parameter IN_0_DEPTH_DIM_1 = DATA_IN_0_TENSOR_SIZE_DIM_1 / DATA_IN_0_PARALLELISM_DIM_1,
+    localparam IN_0_DEPTH_DIM_0 = DATA_IN_0_TENSOR_SIZE_DIM_0 / DATA_IN_0_PARALLELISM_DIM_0,
+    localparam IN_0_DEPTH_DIM_1 = DATA_IN_0_TENSOR_SIZE_DIM_1 / DATA_IN_0_PARALLELISM_DIM_1,
 
     parameter WEIGHT_PRECISION_0 = 16,
     parameter WEIGHT_PRECISION_1 = 3,
-    parameter WEIGHT_TENSOR_SIZE_DIM_0 = 32,
-    parameter WEIGHT_TENSOR_SIZE_DIM_1 = 1,
+    parameter WEIGHT_TENSOR_SIZE_DIM_0 = 20,
+    parameter WEIGHT_TENSOR_SIZE_DIM_1 = 20,
     parameter WEIGHT_PARALLELISM_DIM_0 = 4,
     parameter WEIGHT_PARALLELISM_DIM_1 = 4,
 
@@ -44,6 +44,8 @@ module fixed_linear #(
     parameter BIAS_TENSOR_SIZE_DIM_1 = 1,
     parameter BIAS_PARALLELISM_DIM_0 = 4,
     parameter BIAS_PARALLELISM_DIM_1 = 1,
+    localparam BIAS_DEPTH_DIM_0 = BIAS_TENSOR_SIZE_DIM_0 / BIAS_PARALLELISM_DIM_0,
+    localparam BIAS_DEPTH_DIM_1 = BIAS_TENSOR_SIZE_DIM_1 / BIAS_PARALLELISM_DIM_1,
 
     // Inferred precision of the output data
     parameter DATA_OUT_0_PRECISION_0 = 16,
@@ -86,7 +88,8 @@ module fixed_linear #(
     else $fatal("Input bias and output data must have the same parallelism.");
   end
 
-  // * Account for the change in tensor size and parallelism according to whether the weights are pre-transposed
+  // The TENSOR_SIZE and PARALLELISM parameters for the weights are set by emit verilog according to the real
+  // tensor values. Here we account for the change when the weights are pre-transposed
   localparam REAL_WEIGHT_TENSOR_SIZE_DIM_0 = (WEIGHTS_PRE_TRANSPOSED == 0) ? WEIGHT_TENSOR_SIZE_DIM_1 : WEIGHT_TENSOR_SIZE_DIM_0;
   localparam REAL_WEIGHT_TENSOR_SIZE_DIM_1 = (WEIGHTS_PRE_TRANSPOSED == 0) ? WEIGHT_TENSOR_SIZE_DIM_0 : WEIGHT_TENSOR_SIZE_DIM_1;
   localparam REAL_WEIGHT_PARALLELISM_DIM_0 = (WEIGHTS_PRE_TRANSPOSED == 0) ? WEIGHT_PARALLELISM_DIM_1 : WEIGHT_PARALLELISM_DIM_0;
@@ -182,24 +185,25 @@ module fixed_linear #(
         .data_out_ready(add_bias_in_ready)
     );
 
-    // repeat_circular_buffer #(
-    //     .DATA_WIDTH (BIAS_PRECISION_0),
-    //     .REPEAT     (IN_DEPTH_DIM_1),
-    //     .SIZE       (),
-    // ) (
-    //     .clk,
-    //     .rst,
+    unpacked_repeat_circular_buffer #(
+        .DATA_WIDTH (BIAS_PRECISION_0),
+        .IN_NUM     (BIAS_PARALLELISM_DIM_0 * BIAS_PARALLELISM_DIM_1),
+        .REPEAT     (IN_0_DEPTH_DIM_1),
+        .SIZE       (BIAS_DEPTH_DIM_0)
+    ) bias_buffer_inst (
+        .clk,
+        .rst,
     
-    //     // Input streaming port
-    //     .in_data    (bias),
-    //     .in_valid   (bias_valid),
-    //     .in_ready   (bias_ready),
+        // Input streaming port
+        .in_data    (bias),
+        .in_valid   (bias_valid),
+        .in_ready   (bias_ready),
     
-    //     // Output streaming port
-    //     .out_data   (bias_buffered),
-    //     .out_valid  (bias_buffered_valid),
-    //     .out_ready  (bias_buffered_ready)
-    // );
+        // Output streaming port
+        .out_data   (bias_buffered),
+        .out_valid  (bias_buffered_valid),
+        .out_ready  (bias_buffered_ready)
+    );
 
     unpacked_register_slice #(
         .DATA_WIDTH(DATA_OUT_0_PRECISION_0),
@@ -250,6 +254,7 @@ module fixed_linear #(
         assign add_bias_in [i_1 * DATA_OUT_0_PARALLELISM_DIM_0 + i_0] = $signed(matmul_out[i_1 * DATA_OUT_0_PARALLELISM_DIM_0 + i_0])  + $signed(bias_casted[i_0]);
       end
     end
+
   end else begin
     assign data_out_0 = matmul_out;
     assign data_out_0_valid = matmul_out_valid;
