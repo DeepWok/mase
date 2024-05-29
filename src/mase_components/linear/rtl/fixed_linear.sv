@@ -212,13 +212,13 @@ module fixed_linear #(
         .clk(clk),
         .rst(rst),
 
-        .in_data (add_bias_in),
-        .in_valid(add_bias_in_valid),
-        .in_ready(add_bias_in_ready),
+        .data_in (add_bias_in),
+        .data_in_valid(add_bias_in_valid),
+        .data_in_ready(add_bias_in_ready),
 
-        .out_data (data_out_0),
-        .out_valid(data_out_0_valid),
-        .out_ready(data_out_0_ready)
+        .data_out (data_out_0),
+        .data_out_valid(data_out_0_valid),
+        .data_out_ready(data_out_0_ready)
     );
   end
 
