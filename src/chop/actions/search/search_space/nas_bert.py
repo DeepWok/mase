@@ -39,24 +39,24 @@ from nni.nas.nn.pytorch import ModelSpace, LayerChoice, ParametrizedModule
 logger = logging.get_logger(__name__)
 
 
-class BertEmbeddings(nn.Module):
+class BertEmbeddings(ParametrizedModule):
     """Construct the embeddings from word, position and token_type embeddings."""
 
-    def __init__(self, config):
+    def __init__(self, config, hidden_size_choice=768):
         super().__init__()
         self.word_embeddings = nn.Embedding(
-            config.vocab_size, config.hidden_size, padding_idx=config.pad_token_id
+            config.vocab_size, hidden_size_choice, padding_idx=config.pad_token_id
         )
         self.position_embeddings = nn.Embedding(
-            config.max_position_embeddings, config.hidden_size
+            config.max_position_embeddings, hidden_size_choice
         )
         self.token_type_embeddings = nn.Embedding(
-            config.type_vocab_size, config.hidden_size
+            config.type_vocab_size, hidden_size_choice
         )
 
         # self.LayerNorm is not snake-cased to stick with TensorFlow model variable name and be able to load
         # any TensorFlow checkpoint file
-        self.LayerNorm = nn.LayerNorm(config.hidden_size, eps=config.layer_norm_eps)
+        self.LayerNorm = nn.LayerNorm(hidden_size_choice, eps=config.layer_norm_eps)
         self.dropout = nn.Dropout(config.hidden_dropout_prob)
         # position_ids (1, len position emb) is contiguous in memory and exported when serialized
         self.position_embedding_type = getattr(
@@ -121,24 +121,30 @@ class BertEmbeddings(nn.Module):
         return embeddings
 
 
-class BertSelfAttention(nn.Module):
-    def __init__(self, config, position_embedding_type=None):
+class BertSelfAttention(ParametrizedModule):
+    def __init__(
+        self,
+        config,
+        position_embedding_type=None,
+        num_attention_heads_choice=12,
+        hidden_size_choice=768,
+    ):
         super().__init__()
-        if config.hidden_size % config.num_attention_heads != 0 and not hasattr(
+        if hidden_size_choice % num_attention_heads_choice != 0 and not hasattr(
             config, "embedding_size"
         ):
             raise ValueError(
-                f"The hidden size ({config.hidden_size}) is not a multiple of the number of attention "
-                f"heads ({config.num_attention_heads})"
+                f"The hidden size ({hidden_size_choice}) is not a multiple of the number of attention "
+                f"heads ({num_attention_heads_choice})"
             )
 
-        self.num_attention_heads = config.num_attention_heads
-        self.attention_head_size = int(config.hidden_size / config.num_attention_heads)
+        self.num_attention_heads = num_attention_heads_choice
+        self.attention_head_size = int(hidden_size_choice / num_attention_heads_choice)
         self.all_head_size = self.num_attention_heads * self.attention_head_size
 
-        self.query = nn.Linear(config.hidden_size, self.all_head_size)
-        self.key = nn.Linear(config.hidden_size, self.all_head_size)
-        self.value = nn.Linear(config.hidden_size, self.all_head_size)
+        self.query = nn.Linear(hidden_size_choice, self.all_head_size)
+        self.key = nn.Linear(hidden_size_choice, self.all_head_size)
+        self.value = nn.Linear(hidden_size_choice, self.all_head_size)
 
         self.dropout = nn.Dropout(config.attention_probs_dropout_prob)
         self.position_embedding_type = position_embedding_type or getattr(
@@ -407,13 +413,13 @@ class BertSdpaSelfAttention(BertSelfAttention):
         return outputs
 
 
-class BertSelfOutput(nn.Module):
-    def __init__(self, config, choice="layer_norm"):
+class BertSelfOutput(ParametrizedModule):
+    def __init__(self, config, choice="layer_norm", hidden_size_choice=768):
         super().__init__()
-        self.dense = nn.Linear(config.hidden_size, config.hidden_size)
+        self.dense = nn.Linear(hidden_size_choice, hidden_size_choice)
 
         if choice == "layer_norm":
-            self.LayerNorm = nn.LayerNorm(config.hidden_size, eps=config.layer_norm_eps)
+            self.LayerNorm = nn.LayerNorm(hidden_size_choice, eps=config.layer_norm_eps)
         elif choice == "identity":
             self.LayerNorm = BertIdentity()
         else:
@@ -471,27 +477,36 @@ class BertIdentity(nn.Module):
         return hidden_states
 
 
-class BertAttention(nn.Module):
+class BertAttention(ParametrizedModule):
     def __init__(
         self,
         config,
         position_embedding_type=None,
         self_attention_choice="attention",
         self_attention_layer_norm_choice="attention",
+        hidden_size_choice=768,
+        num_attention_heads_choice=12,
     ):
         super().__init__()
         if self_attention_choice == "attention":
             self.self = BERT_SELF_ATTENTION_CLASSES[config._attn_implementation](
-                config, position_embedding_type=position_embedding_type
+                config,
+                position_embedding_type=position_embedding_type,
+                num_attention_heads_choice=num_attention_heads_choice,
+                hidden_size_choice=hidden_size_choice,
             )
         elif self_attention_choice == "linear":
-            self.self = BertLinear(config.hidden_size, config.hidden_size)
+            self.self = BertLinear(hidden_size_choice, hidden_size_choice)
         elif self_attention_choice == "feedthrough":
             self.self = BertIdentity()
         else:
             raise ValueError(f"Unrecognized choice: {self_attention_choice}")
 
-        self.output = BertSelfOutput(config, choice=self_attention_layer_norm_choice)
+        self.output = BertSelfOutput(
+            config,
+            choice=self_attention_layer_norm_choice,
+            hidden_size_choice=hidden_size_choice,
+        )
         self.pruned_heads = set()
 
     def prune_heads(self, heads):
@@ -550,9 +565,9 @@ class BertAttention(nn.Module):
 
 
 class BertIntermediate(ParametrizedModule):
-    def __init__(self, config, intermediate_size=3072):
+    def __init__(self, config, hidden_size_choice=768, intermediate_size=3072):
         super().__init__()
-        self.dense = nn.Linear(config.hidden_size, intermediate_size)
+        self.dense = nn.Linear(hidden_size_choice, intermediate_size)
         if isinstance(config.hidden_act, str):
             self.intermediate_act_fn = ACT2FN[config.hidden_act]
         else:
@@ -566,14 +581,18 @@ class BertIntermediate(ParametrizedModule):
 
 class BertOutput(ParametrizedModule):
     def __init__(
-        self, config, intermediate_size=3072, output_layer_norm_choice="layer_norm"
+        self,
+        config,
+        hidden_size_choice=768,
+        intermediate_size=3072,
+        output_layer_norm_choice="layer_norm",
     ):
         super().__init__()
-        self.dense = nn.Linear(intermediate_size, config.hidden_size)
-        # self.LayerNorm = nn.LayerNorm(config.hidden_size, eps=config.layer_norm_eps)
+        self.dense = nn.Linear(intermediate_size, hidden_size_choice)
+        # self.LayerNorm = nn.LayerNorm(hidden_size_choice, eps=config.layer_norm_eps)
 
         if output_layer_norm_choice == "layer_norm":
-            self.LayerNorm = nn.LayerNorm(config.hidden_size, eps=config.layer_norm_eps)
+            self.LayerNorm = nn.LayerNorm(hidden_size_choice, eps=config.layer_norm_eps)
         elif output_layer_norm_choice == "identity":
             self.LayerNorm = BertIdentity()
         else:
@@ -597,7 +616,9 @@ class BertLayer(ParametrizedModule):
         self_attention_choice="attention",
         self_attention_layer_norm_choice="layer_norm",
         output_layer_norm_choice="layer_norm",
+        hidden_size_choice=768,
         intermediate_size_choice=3072,
+        num_attention_heads_choice=12,
     ):
         super().__init__()
         self.chunk_size_feed_forward = config.chunk_size_feed_forward
@@ -606,6 +627,8 @@ class BertLayer(ParametrizedModule):
             config,
             self_attention_choice=self_attention_choice,
             self_attention_layer_norm_choice=self_attention_layer_norm_choice,
+            hidden_size_choice=hidden_size_choice,
+            num_attention_heads_choice=num_attention_heads_choice,
         )
         self.is_decoder = config.is_decoder
         self.add_cross_attention = config.add_cross_attention
@@ -615,15 +638,21 @@ class BertLayer(ParametrizedModule):
                     f"{self} should be used as a decoder model if cross attention is added"
                 )
             self.crossattention = BertAttention(
-                config, position_embedding_type="absolute"
+                config,
+                position_embedding_type="absolute",
+                hidden_size_choice=hidden_size_choice,
+                num_attention_heads_choice=num_attention_heads_choice,
             )
         self.intermediate = BertIntermediate(
-            config, intermediate_size=intermediate_size_choice
+            config,
+            intermediate_size=intermediate_size_choice,
+            hidden_size_choice=hidden_size_choice,
         )
         self.output = BertOutput(
             config,
             intermediate_size=intermediate_size_choice,
             output_layer_norm_choice=output_layer_norm_choice,
+            hidden_size_choice=hidden_size_choice,
         )
 
     def forward(
@@ -708,29 +737,31 @@ class BertLayer(ParametrizedModule):
         return layer_output
 
 
-class BertEncoder(nn.Module):
-    def __init__(self, config):
+class BertEncoder(ParametrizedModule):
+    def __init__(self, config, hidden_size_choice=768):
         super().__init__()
         self.config = config
 
         self_attention_choice = [
             nni.choice(
                 f"layer_{layer}_attn_impl_choice",
-                ["attention", "linear", "feedthrough"],
+                config.space_self_attention_implementation,
             )
             for layer in range(config.num_hidden_layers)
         ]
 
         self_attention_layer_norm_choice = [
             nni.choice(
-                f"layer_{layer}_attn_layer_norm_choice", ["layer_norm", "identity"]
+                f"layer_{layer}_attn_layer_norm_choice",
+                config.space_self_attention_layer_norm,
             )
             for layer in range(config.num_hidden_layers)
         ]
 
         output_layer_norm_choice = [
             nni.choice(
-                f"layer_{layer}_output_layer_norm_choice", ["layer_norm", "identity"]
+                f"layer_{layer}_output_layer_norm_choice",
+                config.space_output_layer_norm,
             )
             for layer in range(config.num_hidden_layers)
         ]
@@ -739,6 +770,14 @@ class BertEncoder(nn.Module):
             nni.choice(
                 f"layer_{layer}_intermediate_size_choice",
                 self.config.space_intermediate_size,
+            )
+            for layer in range(config.num_hidden_layers)
+        ]
+
+        self_attention_num_heads_choice = [
+            nni.choice(
+                f"layer_{layer}_num_attention_heads_choice",
+                self.config.space_num_attention_heads,
             )
             for layer in range(config.num_hidden_layers)
         ]
@@ -753,6 +792,8 @@ class BertEncoder(nn.Module):
                     ],
                     output_layer_norm_choice=output_layer_norm_choice[layer],
                     intermediate_size_choice=intermediate_size_choice[layer],
+                    hidden_size_choice=hidden_size_choice,
+                    num_attention_heads_choice=self_attention_num_heads_choice[layer],
                 )
                 for layer in range(config.num_hidden_layers)
             ]
@@ -848,10 +889,10 @@ class BertEncoder(nn.Module):
         )
 
 
-class BertPooler(nn.Module):
-    def __init__(self, config):
+class BertPooler(ParametrizedModule):
+    def __init__(self, config, hidden_size_choice=768):
         super().__init__()
-        self.dense = nn.Linear(config.hidden_size, config.hidden_size)
+        self.dense = nn.Linear(hidden_size_choice, hidden_size_choice)
         self.activation = nn.Tanh()
 
     def forward(self, hidden_states: torch.Tensor) -> torch.Tensor:
@@ -863,16 +904,16 @@ class BertPooler(nn.Module):
         return pooled_output
 
 
-class BertPredictionHeadTransform(nn.Module):
-    def __init__(self, config):
+class BertPredictionHeadTransform(ParametrizedModule):
+    def __init__(self, config, hidden_size_choice=768):
         super().__init__()
-        self.dense = nn.Linear(config.hidden_size, config.hidden_size)
+        self.dense = nn.Linear(hidden_size_choice, hidden_size_choice)
         if isinstance(config.hidden_act, str):
             self.transform_act_fn = ACT2FN[config.hidden_act]
         else:
             self.transform_act_fn = config.hidden_act
 
-        self.LayerNorm = nn.LayerNorm(config.hidden_size, eps=config.layer_norm_eps)
+        self.LayerNorm = nn.LayerNorm(hidden_size_choice, eps=config.layer_norm_eps)
 
     def forward(self, hidden_states: torch.Tensor) -> torch.Tensor:
         hidden_states = self.dense(hidden_states)
@@ -881,14 +922,14 @@ class BertPredictionHeadTransform(nn.Module):
         return hidden_states
 
 
-class BertLMPredictionHead(nn.Module):
-    def __init__(self, config):
+class BertLMPredictionHead(ParametrizedModule):
+    def __init__(self, config, hidden_size_choice=768):
         super().__init__()
         self.transform = BertPredictionHeadTransform(config)
 
         # The output weights are the same as the input embeddings, but there is
         # an output-only bias for each token.
-        self.decoder = nn.Linear(config.hidden_size, config.vocab_size, bias=False)
+        self.decoder = nn.Linear(hidden_size_choice, config.vocab_size, bias=False)
 
         self.bias = nn.Parameter(torch.zeros(config.vocab_size))
 
@@ -904,11 +945,11 @@ class BertLMPredictionHead(nn.Module):
         return hidden_states
 
 
-class BertPreTrainingHeads(nn.Module):
-    def __init__(self, config):
+class BertPreTrainingHeads(ParametrizedModule):
+    def __init__(self, config, hidden_size_choice=768):
         super().__init__()
         self.predictions = BertLMPredictionHead(config)
-        self.seq_relationship = nn.Linear(config.hidden_size, 2)
+        self.seq_relationship = nn.Linear(hidden_size_choice, 2)
 
     def forward(self, sequence_output, pooled_output):
         prediction_scores = self.predictions(sequence_output)
@@ -993,14 +1034,18 @@ class BertModel(BertPreTrainedModel):
 
     _no_split_modules = ["BertEmbeddings", "BertLayer"]
 
-    def __init__(self, config, add_pooling_layer=True):
+    def __init__(self, config, add_pooling_layer=True, hidden_size_choice=768):
         super().__init__(config)
         self.config = config
 
-        self.embeddings = BertEmbeddings(config)
-        self.encoder = BertEncoder(config)
+        self.embeddings = BertEmbeddings(config, hidden_size_choice=hidden_size_choice)
+        self.encoder = BertEncoder(config, hidden_size_choice=hidden_size_choice)
 
-        self.pooler = BertPooler(config) if add_pooling_layer else None
+        self.pooler = (
+            BertPooler(config, hidden_size_choice=hidden_size_choice)
+            if add_pooling_layer
+            else None
+        )
 
         self.attn_implementation = config._attn_implementation
         self.position_embedding_type = config.position_embedding_type
@@ -1321,20 +1366,21 @@ class BertForPreTraining(BertPreTrainedModel):
         )
 
 
-class BertForSequenceClassification(BertPreTrainedModel):
-    def __init__(self, config):
+class BertForSequenceClassification(BertPreTrainedModel, ParametrizedModule):
+    def __init__(self, config, hidden_size_choice=768):
         super().__init__(config)
         self.num_labels = config.num_labels
         self.config = config
+        self.hidden_size_choice = hidden_size_choice
 
-        self.bert = BertModel(config)
+        self.bert = BertModel(config, hidden_size_choice=self.hidden_size_choice)
         classifier_dropout = (
             config.classifier_dropout
             if config.classifier_dropout is not None
             else config.hidden_dropout_prob
         )
         self.dropout = nn.Dropout(classifier_dropout)
-        self.classifier = nn.Linear(config.hidden_size, config.num_labels)
+        self.classifier = BertLinear(self.hidden_size_choice, config.num_labels)
 
         # Initialize weights and apply final processing
         self.post_init()
@@ -1419,7 +1465,12 @@ class NasBertSpace(ModelSpace):
     def __init__(self, config):
         super().__init__()
         self.config = config
-        self.model = BertForSequenceClassification(config)
+        self.hidden_size_choice = nni.choice(
+            "hidden_size_choice", config.space_hidden_size
+        )
+        self.model = BertForSequenceClassification(
+            config, hidden_size_choice=self.hidden_size_choice
+        )
 
     def forward(
         self,
