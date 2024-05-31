@@ -55,6 +55,8 @@ MASE_HW_DEPS = {
         "fixed_arithmetic",
         "common",
     ],
+    # Block Floating Point arithmetic
+    "bfp_arith/bfp_vector_mult": ["bfp_arith", "common"],
     "buffers/hybrid_buffer": ["buffers"],
     # Linear
     "linear/fixed_linear": ["matmul", "cast", "common", "fixed_arithmetic"],

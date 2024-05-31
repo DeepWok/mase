@@ -113,3 +113,48 @@ def fixed_cast(val, in_width, in_frac_width, out_width, out_frac_width):
             val = val
             # val = int(val % (1 << out_width))
     return val  # << out_frac_width  # treat data<out_width, out_frac_width> as data<out_width, 0>
+
+
+def block_fp_quantize(
+    x, width: int = 12, exponent_width: int = 8, exponent: int = None
+):
+    """
+    - Convert IEEE FP32/64 to Microsoft floating point (MSFP), where an exponent is shared over all elements in a block.
+    - `e_shared x [(-1)^s1 x mantissa1, (-1)^s2 x mantissa2, ...]`
+    - See https://proceedings.neurips.cc/paper/2020/file/747e32ab0fea7fbd2ad9ec03daa3f840-Paper.pdf
+
+    ---
+    - forward: convert IEEE FP32/64 to MSFP
+    - backward: STE
+
+    ---
+    - `width`: The number of mantissa bits + 1 (the sign bit)
+    - `exponent_width`: the number of exponent bits, which is shared over a block
+    - `exponent_bias`: the exponent bias, if None, `2**(exponent_bits-1)-1` will be used
+    - `block_size`: a list of integers where each integer is the block size on that dimension. See function `block`.
+
+    """
+    mantissa_bits = width - 1
+    exponent_bias = 2 ** (exponent_width - 1) - 1
+
+    exponent_max = 2**exponent_width - 1 - exponent_bias
+    exponent_min = -exponent_bias
+
+    mantissa_integer_max = 2**mantissa_bits - 1
+    # sign
+    sign = torch.sign(x + 1e-9)
+    # exponent
+    value = torch.abs(x) + 1e-9
+    if exponent == None:
+        exponent = torch.ceil(torch.log2(max(x.abs())))
+        exponent = torch.clamp(exponent, exponent_min, exponent_max)
+    # mantissa
+    mantissa = value / 2**exponent
+    shift = 2**mantissa_bits
+    mantissa_integer = torch.clamp(
+        torch.floor(mantissa * shift), 0, mantissa_integer_max
+    )
+    mantissa = mantissa_integer / shift
+
+    msfp_x = sign * (2**exponent) * mantissa
+    return msfp_x, sign * mantissa_integer, exponent

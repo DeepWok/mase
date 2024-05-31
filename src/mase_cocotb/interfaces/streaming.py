@@ -149,3 +149,63 @@ class ErrorThresholdStreamMonitor(StreamMonitor):
                 return
 
         self.log.debug("Passed | Got: %20s Exp: %20s Err: %10s" % (g, e, err))
+
+
+class MultiSignalStreamDriver(Driver):
+    def __init__(self, clk, data, valid, ready) -> None:
+        super().__init__()
+        self.clk = clk
+        self.data = data
+        self.valid = valid
+        self.ready = ready
+        self.valid_prob = 1.0
+
+    def set_valid_prob(self, prob):
+        assert prob >= 0.0 and prob <= 1.0
+        self.valid_prob = prob
+
+    async def _driver_send(self, data) -> None:
+        while True:
+            await RisingEdge(self.clk)
+            for hardware_target, item in zip(self.data, data):
+                hardware_target.value = item
+
+            if random.random() > self.valid_prob:
+                self.valid.value = 0
+                continue  # Try roll random valid again at next clock
+            self.valid.value = 1
+            await ReadOnly()
+            if self.ready.value == 1:
+                self.log.debug(f"Sent {data}")
+                break
+        if self.send_queue.empty():
+            await RisingEdge(self.clk)
+            self.valid.value = 0
+
+
+class MultiSignalStreamMonitor(Monitor):
+    def __init__(self, clk, data, valid, ready, check=True):
+        super().__init__(clk)
+        self.clk = clk
+        self.data = data
+        self.valid = valid
+        self.ready = ready
+        self.check = check
+
+    def _trigger(self):
+        return self.valid.value == 1 and self.ready.value == 1
+
+    def _recv(self):
+        def cast_data(value):
+            if type(value) == list:
+                return [x.signed_integer for x in value]
+            elif type(value) == BinaryValue:
+                return value.signed_integer
+
+        return tuple([cast_data(target.value) for target in self.data])
+
+    def _check(self, got, exp):
+        if self.check:
+            for g, e in zip(got, exp):
+                if not np.equal(g, e).all():
+                    raise TestFailure("\nGot \n%s, \nExpected \n%s" % (got, exp))
