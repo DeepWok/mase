@@ -56,10 +56,10 @@ localparam GROUPED_DEPTH_DIM_1 = GROUPED_TENSOR_SIZE_DIM_1 / IN_DATA_PARALLELISM
 
 // Number of packets per head
 localparam HEAD_NUM_PACKETS = GROUPED_DEPTH_DIM_0 * GROUPED_DEPTH_DIM_1;
-localparam NUM_PACKETS_CTR_WIDTH = $clog2(HEAD_NUM_PACKETS);
+localparam NUM_PACKETS_CTR_WIDTH = HEAD_NUM_PACKETS == 1 ? 1 : $clog2(HEAD_NUM_PACKETS);
 
 // Group counter
-localparam GROUP_CTR_WIDTH = $clog2(NUM_GROUPS);
+localparam GROUP_CTR_WIDTH = NUM_GROUPS == 1 ? 1 : $clog2(NUM_GROUPS);
 
 initial begin
     // Divisibility checks
@@ -174,7 +174,6 @@ self_attention_head_single_scatter #(
 // Note that data is also buffered in separate downstream fifos in the main module.
 
 for (genvar i = 0; i < NUM_GROUPS; i++) begin : pipeline_splits
-
     split_n #(
         .N               (GROUP_SIZE)
     ) split_key_inst (
@@ -183,7 +182,6 @@ for (genvar i = 0; i < NUM_GROUPS; i++) begin : pipeline_splits
         .data_out_valid  (split_key_valid[(i+1)*GROUP_SIZE-1 : i*GROUP_SIZE]),
         .data_out_ready  (split_key_ready[(i+1)*GROUP_SIZE-1 : i*GROUP_SIZE])
     );
-
     split_n #(
         .N               (GROUP_SIZE)
     ) split_value_inst (
@@ -192,7 +190,6 @@ for (genvar i = 0; i < NUM_GROUPS; i++) begin : pipeline_splits
         .data_out_valid  (split_value_valid[(i+1)*GROUP_SIZE-1 : i*GROUP_SIZE]),
         .data_out_ready  (split_value_ready[(i+1)*GROUP_SIZE-1 : i*GROUP_SIZE])
     );
-
 end
 
 

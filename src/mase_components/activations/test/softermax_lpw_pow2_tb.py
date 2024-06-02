@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import os, logging
+import json
 from random import randint
 from pathlib import Path
 
@@ -41,7 +42,7 @@ class LPW_Pow2TB(Testbench):
             dut.out_ready,
             width=self.OUT_WIDTH,
             log_error=True,
-            signed=True,
+            signed=False,
             error_bits=self.error_threshold_bits,
             check=False,
         )
@@ -63,14 +64,16 @@ class LPW_Pow2TB(Testbench):
         res = torch.clamp(res, 0, 2**self.OUT_WIDTH - 1)
         return res.tolist()
 
-    async def run_test(self, us):
+    async def run_test(self):
         await self.reset()
         inputs = self.generate_inputs()
         # logger.debug(inputs)
         exp_out = self.model(inputs)
         self.in_driver.load_driver(inputs)
         self.output_monitor.load_monitor(exp_out)
-        await Timer(us, "us")
+        ns = ((2 ** self.IN_WIDTH) * 1000) // 5
+        logger.info("Waiting %d ns..." % ns)
+        await Timer(ns, "ns")
         assert self.output_monitor.exp_queue.empty()
         self._final_check()
 
@@ -93,7 +96,10 @@ async def sweep(dut):
     exp_out = tb.model(inputs)
     tb.in_driver.load_driver(inputs)
     tb.output_monitor.load_monitor(exp_out)
-    await Timer(20, "us")
+
+    ns = ((2 ** tb.IN_WIDTH) * 1000) // 5
+    logger.info("Waiting %d ns..." % ns)
+    await Timer(ns, "ns")
     assert tb.output_monitor.exp_queue.empty()
 
     # Graphing error
@@ -136,6 +142,21 @@ async def sweep(dut):
         scale_factor=3,
     )
 
+    max_bit_err = max(tb.output_monitor.error_log)
+    average_err = sum(tb.output_monitor.error_log) / len(software_res)
+
+    record = {
+        "in_width": tb.IN_WIDTH,
+        "in_frac_width": tb.IN_FRAC_WIDTH,
+        "out_width": tb.OUT_WIDTH,
+        "out_frac_width": tb.OUT_FRAC_WIDTH,
+        "max_err": max_bit_err,
+        "avg_err": average_err,
+    }
+    filename = f"{graph_id}.json"
+    with open(Path(__file__).parent / "results" / "pow2" / filename, 'w') as f:
+        json.dump(record, f, indent=4)
+
     tb._final_check()
 
 
@@ -143,7 +164,7 @@ async def sweep(dut):
 async def backpressure(dut):
     tb = LPW_Pow2TB(dut)
     cocotb.start_soon(bit_driver(tb.output_monitor.ready, tb.clk, 0.6))
-    await tb.run_test(us=100)
+    await tb.run_test()
 
 
 @cocotb.test()
@@ -151,7 +172,7 @@ async def valid(dut):
     tb = LPW_Pow2TB(dut)
     tb.output_monitor.ready.value = 1
     tb.in_driver.set_valid_prob(0.5)
-    await tb.run_test(us=100)
+    await tb.run_test()
 
 
 @cocotb.test()
@@ -159,35 +180,55 @@ async def valid_backpressure(dut):
     tb = LPW_Pow2TB(dut)
     cocotb.start_soon(bit_driver(tb.output_monitor.ready, tb.clk, 0.5))
     tb.in_driver.set_valid_prob(0.5)
-    await tb.run_test(us=100)
+    await tb.run_test()
+
+
+def width_cfgs():
+    bitwidths = [2, 8, 16]
+    cfgs = []
+    for in_width in bitwidths:
+        for in_frac_width in range(1, in_width):
+            for out_width in bitwidths:
+                for out_frac_width in range(1, out_width):
+                    cfgs.append(
+                        {
+                            "IN_WIDTH": in_width,
+                            "IN_FRAC_WIDTH": in_frac_width,
+                            "OUT_WIDTH": out_width,
+                            "OUT_FRAC_WIDTH": out_frac_width,
+                        }
+                    )
+    return cfgs
+
+
+def common_widths():
+    cfgs = []
+    for width in range(2, 16+1):
+        frac_width = width // 2
+        cfgs.append(
+            {
+                "IN_WIDTH": width,
+                "IN_FRAC_WIDTH": frac_width,
+                "OUT_WIDTH": width,
+                "OUT_FRAC_WIDTH": frac_width,
+            }
+        )
+    return cfgs
+
+
+def test_width_configs():
+    cfgs = width_cfgs()
+    print(f"Running {len(cfgs)} configs...")
+    mase_runner(
+        module_param_list=cfgs,
+        # jobs=12,
+    )
+
+def test_common_widths():
+    mase_runner(
+        module_param_list=common_widths()
+    )
 
 
 if __name__ == "__main__":
-
-    DEFAULT = {"IN_WIDTH": 8, "IN_FRAC_WIDTH": 4, "OUT_WIDTH": 8, "OUT_FRAC_WIDTH": 4}
-
-    # def width_cfgs():
-    #     bitwidths = [2, 4, 8]
-    #     cfgs = []
-    #     for in_width in bitwidths:
-    #         for in_frac_width in range(1, in_width):
-    #             for out_width in bitwidths:
-    #                 for out_frac_width in range(1, out_width):
-    #                     cfgs.append(
-    #                         {
-    #                             "IN_WIDTH": in_width,
-    #                             "IN_FRAC_WIDTH": in_frac_width,
-    #                             "OUT_WIDTH": out_width,
-    #                             "OUT_FRAC_WIDTH": out_frac_width,
-    #                         }
-    #                     )
-    #     return cfgs
-
-    # cfgs = width_cfgs()
-    cfgs = [DEFAULT]
-
-    mase_runner(
-        module_param_list=cfgs,
-        trace=True,
-        # jobs=12,
-    )
+    test_common_widths()

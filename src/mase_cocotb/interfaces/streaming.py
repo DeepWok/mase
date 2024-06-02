@@ -23,13 +23,15 @@ def _sign_extend(value: int, bits: int):
 
 
 class StreamDriver(Driver):
-    def __init__(self, clk, data, valid, ready) -> None:
+    def __init__(self, clk, data, valid, ready, record_num_beats=False) -> None:
         super().__init__()
         self.clk = clk
         self.data = data
         self.valid = valid
         self.ready = ready
         self.valid_prob = 1.0
+        self.record_num_beats = record_num_beats
+        self.num_beats = 0 if record_num_beats else None
 
     def set_valid_prob(self, prob):
         assert prob >= 0.0 and prob <= 1.0
@@ -57,6 +59,8 @@ class StreamDriver(Driver):
                         self.log.debug("Sent %s" % t)
                 else:
                     self.log.debug("Sent %s" % transaction)
+                if self.record_num_beats:
+                    self.num_beats += 1
                 break
 
         if self.send_queue.empty():
@@ -179,7 +183,7 @@ class ErrorThresholdStreamMonitor(StreamMonitor):
         check=True,
         name=None,
     ):
-        super().__init__(clk, data, valid, ready, check, name)
+        super().__init__(clk, data, valid, ready, check, name, unsigned=not signed)
 
         self.width = width
         self.signed = signed

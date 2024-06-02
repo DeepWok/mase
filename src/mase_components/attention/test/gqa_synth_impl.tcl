@@ -5,13 +5,23 @@ set fpga_part xcu250-figd2104-2L-e
 set top_module fixed_grouped_query_attention
 
 # 4ns clk constraint for higher bitwidths
-set constraints_file alveo-u250-4ns.xdc
+set constraints_file alveo-u250.xdc
 
 # Basic
 set sequence_len 16
 set embedding_dim 128
 set num_heads 8
-set num_kv_heads 4
+# set num_kv_heads 4
+
+# Realistic
+# set sequence_len 128
+# set embedding_dim 128
+# set num_heads 8
+
+# Heads Mem
+# set sequence_len 16
+# set embedding_dim 256
+# set num_heads 16
 
 # Mistral
 # set sequence_len 4096
@@ -20,7 +30,8 @@ set num_kv_heads 4
 # set num_kv_heads 8
 
 # Module Parameters
-set embedding_par_list {2 4 8 16}
+set num_kv_heads_list {4}
+set embedding_par_list {1 2 4 8 16}
 set sequence_par_list {1 2}
 
 # Bitwidths
@@ -87,52 +98,74 @@ read_xdc $constraints_file
 
 foreach sequence_parallelism $sequence_par_list {
     foreach embedding_parallelism $embedding_par_list {
-        foreach width $bitwidths {
+        foreach num_kv_heads $num_kv_heads_list {
+            foreach width $bitwidths {
 
-            set frac_width [expr {$width / 2}]
+                set frac_width [expr {$width / 2}]
 
-            set_property top $top_module [current_fileset]
+                set_property top $top_module [current_fileset]
 
-            synth_design -mode out_of_context \
-                        -flatten_hierarchy rebuilt \
-                        -top $top_module \
-                        -part $fpga_part \
-                        -debug_log \
-                        -generic NUM_HEADS=$num_heads \
-                        -generic NUM_GROUPS=$num_kv_heads \
-                        -generic DATA_IN_0_TENSOR_SIZE_DIM_0=$embedding_dim \
-                        -generic DATA_IN_0_TENSOR_SIZE_DIM_1=$sequence_len \
-                        -generic DATA_IN_0_PARALLELISM_DIM_0=$embedding_parallelism \
-                        -generic DATA_IN_0_PARALLELISM_DIM_1=$sequence_parallelism \
-                        -generic DATA_IN_0_PRECISION_0=$width \
-                        -generic DATA_IN_0_PRECISION_1=$frac_width \
-                        -generic WEIGHT_TENSOR_SIZE_DIM_0=$embedding_dim \
-                        -generic WEIGHT_TENSOR_SIZE_DIM_1=$embedding_dim \
-                        -generic WEIGHT_PARALLELISM_DIM_0=$embedding_parallelism \
-                        -generic WEIGHT_PARALLELISM_DIM_1=$embedding_parallelism \
-                        -generic WEIGHT_PRECISION_0=$width \
-                        -generic WEIGHT_PRECISION_1=$frac_width \
-                        -generic WEIGHTS_PRE_TRANSPOSED=1 \
-                        -generic HAS_BIAS=0
+                # Write the config of the file
+                set now [clock seconds]
+                set timestr [clock format $now -format "%y-%m-%d-%H-%M-%S"]
+                set working_dir build/${top_module}/${timestr}
+                file mkdir $working_dir
+                set config_fp [open "${working_dir}/config.json" w+]
+                set config_str "{\n\
+                    \"num_heads\": $num_heads,\n\
+                    \"num_kv_heads\": $num_kv_heads,\n\
+                    \"embedding_dim\": $embedding_dim,\n\
+                    \"sequence_len\": $sequence_len,\n\
+                    \"embedding_parallelism\": $embedding_parallelism,\n\
+                    \"sequence_parallelism\": $sequence_parallelism,\n\
+                    \"width\": $width,\n\
+                    \"frac_width\": $frac_width\n\
+                }"
+                puts $config_fp $config_str
+                close $config_fp
 
-            # Post synthesis checkpoint
-            write_checkpoint build/${top_module}/seq_${sequence_parallelism}_emb_${embedding_parallelism}_width_${width}/post_synth.dcp -force
+                synth_design -mode out_of_context \
+                            -flatten_hierarchy rebuilt \
+                            -top $top_module \
+                            -part $fpga_part \
+                            -debug_log \
+                            -generic NUM_HEADS=$num_heads \
+                            -generic NUM_GROUPS=$num_kv_heads \
+                            -generic DATA_IN_0_TENSOR_SIZE_DIM_0=$embedding_dim \
+                            -generic DATA_IN_0_TENSOR_SIZE_DIM_1=$sequence_len \
+                            -generic DATA_IN_0_PARALLELISM_DIM_0=$embedding_parallelism \
+                            -generic DATA_IN_0_PARALLELISM_DIM_1=$sequence_parallelism \
+                            -generic DATA_IN_0_PRECISION_0=$width \
+                            -generic DATA_IN_0_PRECISION_1=$frac_width \
+                            -generic WEIGHT_TENSOR_SIZE_DIM_0=$embedding_dim \
+                            -generic WEIGHT_TENSOR_SIZE_DIM_1=$embedding_dim \
+                            -generic WEIGHT_PARALLELISM_DIM_0=$embedding_parallelism \
+                            -generic WEIGHT_PARALLELISM_DIM_1=$embedding_parallelism \
+                            -generic WEIGHT_PRECISION_0=$width \
+                            -generic WEIGHT_PRECISION_1=$frac_width \
+                            -generic WEIGHTS_PRE_TRANSPOSED=1 \
+                            -generic HAS_BIAS=0
 
-            # Implementation
-            opt_design
-            place_design
-            phys_opt_design
-            route_design
+                # Post synthesis checkpoint
+                write_checkpoint ${working_dir}/post_synth.dcp -force
 
-            # Utilization report
-            report_utilization -file build/${top_module}/seq_${sequence_parallelism}_emb_${embedding_parallelism}_width_${width}/utilization.rpt
+                # Implementation
+                opt_design
+                place_design
+                phys_opt_design
+                route_design
 
-            # Timing report
-            report_timing_summary -delay_type min_max -check_timing_verbose \
-                                -max_paths 100 -nworst 10 -input_pins -routable_nets \
-                                -file build/${top_module}/seq_${sequence_parallelism}_emb_${embedding_parallelism}_width_${width}/timing.rpt
+                # Utilization report
+                report_utilization -file ${working_dir}/utilization.rpt
 
-            write_checkpoint build/${top_module}/seq_${sequence_parallelism}_emb_${embedding_parallelism}_width_${width}/post_route.dcp -force
+                # Timing report
+                report_timing_summary -delay_type min_max -check_timing_verbose \
+                                    -max_paths 100 -nworst 10 -input_pins -routable_nets \
+                                    -file ${working_dir}/timing.rpt
+
+                write_checkpoint ${working_dir}/post_route.dcp -force
+
+            }
         }
     }
 }

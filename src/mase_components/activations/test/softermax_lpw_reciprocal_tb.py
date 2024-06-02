@@ -4,6 +4,7 @@ import logging
 from pathlib import Path
 from random import randint
 from math import ceil
+import json
 
 import torch
 
@@ -138,8 +139,8 @@ async def sweep(dut):
             color="Type",
         )
         .properties(
-            width=600,
-            height=300,
+            width=400,
+            height=240,
         )
     )
 
@@ -158,8 +159,8 @@ async def sweep(dut):
             color="Type",
         )
         .properties(
-            width=600,
-            height=100,
+            width=400,
+            height=120,
         )
     )
 
@@ -175,17 +176,44 @@ async def sweep(dut):
             color="Type",
         )
         .properties(
-            width=600,
-            height=100,
+            width=400,
+            height=120,
         )
     )
 
     graph_id = f"{tb.ENTRIES}e_{tb.IN_WIDTH}_{tb.IN_FRAC_WIDTH}_to_{tb.OUT_WIDTH}_{tb.OUT_FRAC_WIDTH}"
-    (curve & error & model_error).save(
+    curve.save(
+        Path(__file__).parent
+        / f"build/softermax_lpw_reciprocal/curve_graph_{graph_id}.png",
+        scale_factor=3,
+    )
+
+    error.save(
         Path(__file__).parent
         / f"build/softermax_lpw_reciprocal/error_graph_{graph_id}.png",
         scale_factor=3,
     )
+
+    model_error.save(
+        Path(__file__).parent
+        / f"build/softermax_lpw_reciprocal/model_error_graph_{graph_id}.png",
+        scale_factor=3,
+    )
+
+    max_bit_err = max(tb.output_monitor.error_log)
+    average_err = sum(tb.output_monitor.error_log) / len(inputs)
+
+    record = {
+        "in_width": tb.IN_WIDTH,
+        "in_frac_width": tb.IN_FRAC_WIDTH,
+        "out_width": tb.OUT_WIDTH,
+        "out_frac_width": tb.OUT_FRAC_WIDTH,
+        "max_err": max_bit_err,
+        "avg_err": average_err,
+    }
+    filename = f"{graph_id}.json"
+    with open(Path(__file__).parent / "results" / "recip" / filename, 'w') as f:
+        json.dump(record, f, indent=4)
 
     tb._final_check()
 
@@ -213,44 +241,53 @@ async def valid_backpressure(dut):
     await tb.run_test(batches=1000, us=400)
 
 
-if __name__ == "__main__":
+def width_cfgs():
+    cfgs = []
+    for width in range(2, 16+1):
+        frac_width = width // 2
+        if frac_width < 3:
+            entries = 2**frac_width
+        else:
+            entries = 8
+        cfgs.append(
+            {
+                "ENTRIES": entries,
+                "IN_WIDTH": width,
+                "IN_FRAC_WIDTH": frac_width,
+                "OUT_WIDTH": width,
+                "OUT_FRAC_WIDTH": frac_width,
+            }
+        )
+    return cfgs
 
-    DEFAULT = {
+
+def random_cfg():
+    in_width = randint(4, 30)
+    out_width = randint(4, 30)
+    return {
         "ENTRIES": 8,
-        "IN_WIDTH": 8,
-        "IN_FRAC_WIDTH": 3,
-        "OUT_WIDTH": 8,
-        "OUT_FRAC_WIDTH": 7,
+        "IN_WIDTH": in_width,
+        "IN_FRAC_WIDTH": randint(3, in_width - 1),
+        "OUT_WIDTH": out_width,
+        "OUT_FRAC_WIDTH": randint(3, out_width - 1),
     }
 
-    def random_cfg():
-        in_width = randint(4, 30)
-        out_width = randint(4, 30)
-        return {
-            "ENTRIES": 8,
-            "IN_WIDTH": in_width,
-            "IN_FRAC_WIDTH": randint(3, in_width - 1),
-            "OUT_WIDTH": out_width,
-            "OUT_FRAC_WIDTH": randint(3, out_width - 1),
-        }
 
-    NUM_RANDOM_CFGS = 40
-    random_cfgs = [random_cfg() for _ in range(NUM_RANDOM_CFGS)]
-
+def test_width_cfgs():
+    cfgs = width_cfgs()
     cfgs = [
-        DEFAULT,
         {
             "ENTRIES": 8,
-            "IN_WIDTH": 20,
-            "IN_FRAC_WIDTH": 10,
-            "OUT_WIDTH": 20,
-            "OUT_FRAC_WIDTH": 3,
-        },
-        *random_cfgs,
+            "IN_WIDTH": 8,
+            "IN_FRAC_WIDTH": 4,
+            "OUT_WIDTH": 8,
+            "OUT_FRAC_WIDTH": 4,
+        }
     ]
-
     mase_runner(
         module_param_list=cfgs,
-        trace=True,
-        jobs=12,
     )
+
+
+if __name__ == "__main__":
+    test_width_cfgs()

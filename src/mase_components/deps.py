@@ -30,6 +30,11 @@ MASE_HW_DEPS = {
         "conv",
         "activations",
     ],
+    "activations/softermax_lpw_reciprocal": [
+        "common",
+        "cast",
+        "fixed_arithmetic",
+    ],
     "activations/softermax_lpw_pow2": [
         "common",
         "cast",

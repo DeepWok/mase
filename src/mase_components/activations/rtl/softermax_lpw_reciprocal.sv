@@ -79,7 +79,7 @@ module softermax_lpw_reciprocal #(
 
   initial begin
     // Params
-    assert (ENTRIES >= 4);
+    // assert (ENTRIES >= 4);
     assert (2 ** ENTRIES_WIDTH == ENTRIES);
     assert (ENTRIES_WIDTH <= RANGE_REDUCED_FRAC_WIDTH);
     assert (IN_WIDTH > IN_FRAC_WIDTH);

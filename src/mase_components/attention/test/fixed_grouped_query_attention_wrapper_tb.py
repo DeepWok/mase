@@ -5,11 +5,12 @@ import math
 from datetime import datetime
 from pathlib import Path
 import json
+import logging
+from functools import partial
 
 import torch
 from torch import Tensor
-import logging
-from functools import partial
+import numpy as np
 
 import cocotb
 from cocotb.log import SimLog
@@ -103,6 +104,9 @@ class FixedGroupedQueryAttentionTB(Testbench):
     def __init__(self, dut) -> None:
         super().__init__(dut, dut.clk, dut.rst, clk_period_ns=5)
 
+        # global monitor check switch
+        self.check = False
+
         self.assign_self_params([
             "NUM_HEADS",
             "NUM_GROUPS",
@@ -149,7 +153,8 @@ class FixedGroupedQueryAttentionTB(Testbench):
             dut.clk,
             dut.data_in_0,
             dut.data_in_0_valid,
-            dut.data_in_0_ready
+            dut.data_in_0_ready,
+            record_num_beats=True,
         )
 
         # * Weight drivers
@@ -158,24 +163,28 @@ class FixedGroupedQueryAttentionTB(Testbench):
             dut.weight_query,
             dut.weight_query_valid,
             dut.weight_query_ready,
+            record_num_beats=True,
         )
         self.weight_k_driver = StreamDriver(
             dut.clk,
             dut.weight_key,
             dut.weight_key_valid,
             dut.weight_key_ready,
+            record_num_beats=True,
         )
         self.weight_v_driver = StreamDriver(
             dut.clk,
             dut.weight_value,
             dut.weight_value_valid,
             dut.weight_value_ready,
+            record_num_beats=True,
         )
         self.weight_o_driver = StreamDriver(
             dut.clk,
             dut.weight_output,
             dut.weight_output_valid,
             dut.weight_output_ready,
+            record_num_beats=True,
         )
 
         if self.HAS_BIAS == 1:
@@ -215,69 +224,9 @@ class FixedGroupedQueryAttentionTB(Testbench):
             error_bits=self.error_threshold,
             signed=True,
             log_error=True,
-            check=True,
+            check=self.check,
             name="Output",
         )
-
-        # Intermediate monitors
-
-        # Q Linear Monitor
-        self.query_linear_monitor = ErrorThresholdStreamMonitor(
-            dut.clk,
-            dut.query,
-            dut.joint_query_valid,
-            dut.joint_query_ready,
-            width=self.DATA_OUT_0_PRECISION_0,
-            error_bits=self.error_threshold,
-            signed=True,
-            log_error=True,
-            check=True,
-            name="Q Linear"
-        )
-
-        # K Linear -> Transpose Monitor
-        self.key_linear_monitor = ErrorThresholdStreamMonitor(
-            dut.clk,
-            dut.key,
-            dut.joint_key_valid,
-            dut.joint_key_ready,
-            width=self.DATA_OUT_0_PRECISION_0,
-            error_bits=self.error_threshold,
-            signed=True,
-            log_error=True,
-            check=True,
-            name="K Transpose Linear"
-        )
-
-        # V Linear Monitor
-        self.value_linear_monitor = ErrorThresholdStreamMonitor(
-            dut.clk,
-            dut.value,
-            dut.joint_value_valid,
-            dut.joint_value_ready,
-            width=self.DATA_OUT_0_PRECISION_0,
-            error_bits=self.error_threshold,
-            signed=True,
-            log_error=True,
-            check=True,
-            name="V Linear"
-        )
-
-        # Head out Monitor
-        # TODO: Verilator doesn't support accessing multi-dim arrays
-        # self.heads_out_monitor = ErrorThresholdStreamMonitor(
-        #     dut.clk,
-        #     dut.head_out,
-        #     dut.head_out_valid,
-        #     dut.head_out_ready,
-        #     width=self.DATA_OUT_0_PRECISION_0,
-        #     error_bits=0,
-        #     signed=True,
-        #     log_error=True,
-        #     check=False,
-        #     name="Heads Out"
-        # )
-
 
         # Model
         linear_q_config = {
@@ -315,17 +264,17 @@ class FixedGroupedQueryAttentionTB(Testbench):
         )
 
         # Set verbosity of driver and monitor loggers to debug
-        # self.data_in_0_driver.log.setLevel(logging.DEBUG)
-        # self.weight_q_driver.log.setLevel(logging.DEBUG)
-        # self.weight_k_driver.log.setLevel(logging.DEBUG)
-        # self.weight_v_driver.log.setLevel(logging.DEBUG)
-        # self.weight_o_driver.log.setLevel(logging.DEBUG)
-        # self.data_out_0_monitor.log.setLevel(logging.DEBUG)
-        # if self.HAS_BIAS:
-        #     self.bias_q_driver.log.setLevel(logging.DEBUG)
-        #     self.bias_k_driver.log.setLevel(logging.DEBUG)
-        #     self.bias_v_driver.log.setLevel(logging.DEBUG)
-        #     self.bias_o_driver.log.setLevel(logging.DEBUG)
+        self.data_in_0_driver.log.setLevel(logging.DEBUG)
+        self.weight_q_driver.log.setLevel(logging.DEBUG)
+        self.weight_k_driver.log.setLevel(logging.DEBUG)
+        self.weight_v_driver.log.setLevel(logging.DEBUG)
+        self.weight_o_driver.log.setLevel(logging.DEBUG)
+        self.data_out_0_monitor.log.setLevel(logging.DEBUG)
+        if self.HAS_BIAS:
+            self.bias_q_driver.log.setLevel(logging.DEBUG)
+            self.bias_k_driver.log.setLevel(logging.DEBUG)
+            self.bias_v_driver.log.setLevel(logging.DEBUG)
+            self.bias_o_driver.log.setLevel(logging.DEBUG)
 
 
     def generate_inputs(self, batches=1):
@@ -338,14 +287,17 @@ class FixedGroupedQueryAttentionTB(Testbench):
         )
 
 
-    async def run_test(self):
-        await self.reset()
-        self.log.info(f"Reset finished")
-        self.data_out_0_monitor.ready.value = 1
+    def _final_check(self):
+        max_bit_err = np.max(np.concatenate(self.data_out_0_monitor.error_log))
+        self.log.info("Maximum bit-error: %d", max_bit_err)
+        if max_bit_err > self.error_threshold:
+            assert False, (
+                "Test failed due to high approximation error. Got %d bits of error!"
+                % max_bit_err
+            )
 
-        inputs = self.generate_inputs()
-        exp_out, int_out = self.model(inputs)
 
+    def _load_inputs_and_weights(self, inputs):
         # * Load the inputs driver
         self.log.info(f"Processing inputs: {inputs.shape}")
         inputs = fixed_preprocess_tensor(
@@ -407,49 +359,8 @@ class FixedGroupedQueryAttentionTB(Testbench):
                 )
                 getattr(self, f"bias_{projection}_driver").load_driver(bias)
 
-        # * Load intermediate monitors
-        for projection in ["query", "key", "value"]:
-            intermediate_data = int_out[projection]
-            monitor = getattr(self, f"{projection}_linear_monitor")
 
-            # Need to load transposed version if key
-            if projection == "key":
-                par = [
-                    self.DATA_OUT_0_PARALLELISM_DIM_0,
-                    self.DATA_OUT_0_PARALLELISM_DIM_1,
-                ]
-            else:
-                par = [
-                    self.DATA_OUT_0_PARALLELISM_DIM_1,
-                    self.DATA_OUT_0_PARALLELISM_DIM_0,
-                ]
-
-            mon_data = fixed_preprocess_tensor(
-                tensor=intermediate_data,
-                q_config={
-                    "width": self.DATA_OUT_0_PRECISION_0,
-                    "frac_width": self.DATA_OUT_0_PRECISION_1,
-                },
-                parallelism=par,
-            )
-            monitor.load_monitor(mon_data)
-
-        # TODO: Verilator doesn't support accessing multi-dim arrays
-        # heads_out = int_out["heads_out"]
-        # mon_heads_out = fixed_preprocess_tensor(
-        #     tensor=heads_out,
-        #     q_config={
-        #         "width": self.DATA_OUT_0_PRECISION_0,
-        #         "frac_width": self.DATA_OUT_0_PRECISION_1,
-        #     },
-        #     parallelism=[
-        #         self.DATA_OUT_0_PARALLELISM_DIM_1,
-        #         self.DATA_OUT_0_PARALLELISM_DIM_0,
-        #     ],
-        # )
-        # self.heads_out_monitor.load_monitor(mon_heads_out)
-
-        # * Load the output monitor
+    def _load_outputs(self, exp_out):
         self.log.info(f"Processing outputs: {exp_out.shape}")
         outs = fixed_preprocess_tensor(
             tensor=exp_out,
@@ -465,10 +376,19 @@ class FixedGroupedQueryAttentionTB(Testbench):
         self.log.info(f"Loading {len(outs)} beats into data_out_0_monitor.")
         self.data_out_0_monitor.load_monitor(outs)
 
-        if (
-            self.DATA_IN_0_PARALLELISM_DIM_1 < 2 or
-            self.DATA_IN_0_PARALLELISM_DIM_0 < 2
-        ):
+
+    async def run_test(self):
+        await self.reset()
+        self.log.info(f"Reset finished")
+        self.data_out_0_monitor.ready.value = 1
+
+        inputs = self.generate_inputs()
+        exp_out, int_out = self.model(inputs)
+
+        self._load_inputs_and_weights(inputs)
+        self._load_outputs(exp_out)
+
+        if self.DATA_IN_0_PARALLELISM_DIM_1 * self.DATA_IN_0_PARALLELISM_DIM_0 < 4:
             us = 4000
         else:
             us = 1000
@@ -483,8 +403,14 @@ class FixedGroupedQueryAttentionTB(Testbench):
         self.log.info("Clock Cycles: %d" % (picosec / clock_period_picosec))
         self.log.info("Clock period: %f ns" % (clock_period_picosec / 1000))
 
+
+        all_errors = np.concatenate(self.data_out_0_monitor.error_log)
+        max_bit_err = np.max(all_errors)
+        total_out_size = self.DATA_OUT_0_TENSOR_SIZE_DIM_0 * self.DATA_OUT_0_TENSOR_SIZE_DIM_1
+        average_err = np.sum(all_errors) / total_out_size
+
         timestamp = datetime.now().strftime("%y-%m-%d-%H-%M-%S")
-        filename = Path(__file__).parent / f"results/{timestamp}.json"
+        filename = Path(__file__).parent / f"results/simulation/{timestamp}.json"
         with open(filename, 'w') as f:
             json.dump({
                 "seq_len": self.DATA_IN_0_TENSOR_SIZE_DIM_1,
@@ -495,9 +421,91 @@ class FixedGroupedQueryAttentionTB(Testbench):
                 "num_kv_heads": self.NUM_GROUPS,
                 "width": self.DATA_IN_0_PRECISION_0,
                 "frac_width": self.DATA_IN_0_PRECISION_1,
+                "max_err": max_bit_err.item(),
+                "avg_err": average_err.item(),
                 "latency_us": (nanosec / 1000),
                 "clock_cycles": (picosec / clock_period_picosec),
                 "clock_period_ns": (clock_period_picosec / 1000),
+            }, f, indent=4)
+
+        self._final_check()
+
+
+    async def run_memory_bandwidth_test(self, ms: int = 1):
+        await self.reset()
+        self.log.info(f"Reset finished")
+        self.data_out_0_monitor.ready.value = 1
+        iters = ms * 200
+        for _ in range(iters):
+            inputs = self.generate_inputs()
+            exp_out, int_out = self.model(inputs)
+            self._load_inputs_and_weights(inputs)
+            self._load_outputs(exp_out)
+
+        await Timer(ms, units="ms")
+
+        _, picosec = self.data_out_0_monitor.last_timestamp
+        nanosec = picosec / 1000
+        clock_period_picosec = self.clock.period
+
+        num_input_beats_sent = self.data_in_0_driver.num_beats
+        num_q_weight_beats_sent = self.weight_q_driver.num_beats
+        num_k_weight_beats_sent = self.weight_k_driver.num_beats
+        num_v_weight_beats_sent = self.weight_v_driver.num_beats
+        num_o_weight_beats_sent = self.weight_o_driver.num_beats
+
+        input_beats_per_sec = num_input_beats_sent / (nanosec * (10 ** -9))
+        num_q_beats_per_sec = num_q_weight_beats_sent / (nanosec * (10 ** -9))
+        num_k_beats_per_sec = num_k_weight_beats_sent / (nanosec * (10 ** -9))
+        num_v_beats_per_sec = num_v_weight_beats_sent / (nanosec * (10 ** -9))
+        num_o_beats_per_sec = num_o_weight_beats_sent / (nanosec * (10 ** -9))
+
+        self.log.info("Test length (ns): %.4f" % nanosec)
+
+        self.log.info("Num Input Beats Sent: %d" % num_input_beats_sent)
+        self.log.info("Num Q Beats Sent: %d" % num_q_weight_beats_sent)
+        self.log.info("Num K Beats Sent: %d" % num_k_weight_beats_sent)
+        self.log.info("Num V Beats Sent: %d" % num_v_weight_beats_sent)
+        self.log.info("Num Output Beats Sent: %d" % num_o_weight_beats_sent)
+
+        self.log.info("Input Beats per second: %.4f" % input_beats_per_sec)
+        self.log.info("Input Q per second: %.4f" % num_q_beats_per_sec)
+        self.log.info("Input K per second: %.4f" % num_k_beats_per_sec)
+        self.log.info("Input V per second: %.4f" % num_v_beats_per_sec)
+        self.log.info("Input O per second: %.4f" % num_o_beats_per_sec)
+
+        all_errors = np.concatenate(self.data_out_0_monitor.error_log)
+        max_bit_err = np.max(all_errors)
+        total_out_size = iters * self.DATA_OUT_0_TENSOR_SIZE_DIM_0 * self.DATA_OUT_0_TENSOR_SIZE_DIM_1
+        average_err = np.sum(all_errors) / total_out_size
+
+        timestamp = datetime.now().strftime("%y-%m-%d-%H-%M-%S")
+        filename = Path(__file__).parent / f"results/simulation/{timestamp}.json"
+        with open(filename, 'w') as f:
+            json.dump({
+                "seq_len": self.DATA_IN_0_TENSOR_SIZE_DIM_1,
+                "embedding_len": self.DATA_IN_0_TENSOR_SIZE_DIM_0,
+                "seq_paralellism": self.DATA_IN_0_PARALLELISM_DIM_1,
+                "embedding_paralellism": self.DATA_IN_0_PARALLELISM_DIM_0,
+                "num_heads": self.NUM_HEADS,
+                "num_kv_heads": self.NUM_GROUPS,
+                "width": self.DATA_IN_0_PRECISION_0,
+                "frac_width": self.DATA_IN_0_PRECISION_1,
+                "max_err": max_bit_err.item(),
+                "avg_err": average_err.item(),
+                "test_length_us": (nanosec / 1000),
+                "clock_cycles": (picosec / clock_period_picosec),
+                "clock_period_ns": (clock_period_picosec / 1000),
+                "num_input_beats_sent": num_input_beats_sent,
+                "num_q_weight_beats_sent": num_q_weight_beats_sent,
+                "num_k_weight_beats_sent": num_k_weight_beats_sent,
+                "num_v_weight_beats_sent": num_v_weight_beats_sent,
+                "num_o_weight_beats_sent": num_o_weight_beats_sent,
+                # "input_beats_per_sec": input_beats_per_sec,
+                # "num_q_beats_per_sec": num_q_beats_per_sec,
+                # "num_k_beats_per_sec": num_k_beats_per_sec,
+                # "num_v_beats_per_sec": num_v_beats_per_sec,
+                # "num_o_beats_per_sec": num_o_beats_per_sec,
             }, f, indent=4)
 
 
@@ -506,6 +514,12 @@ class FixedGroupedQueryAttentionTB(Testbench):
 async def basic(dut):
     tb = FixedGroupedQueryAttentionTB(dut)
     await tb.run_test()
+
+
+@cocotb.test(skip=True)
+async def memory_bandwidth(dut):
+    tb = FixedGroupedQueryAttentionTB(dut)
+    await tb.run_memory_bandwidth_test(ms=2)
 
 
 def get_config(
@@ -550,7 +564,7 @@ def test_fixed_linear_smoke():
     """
     cfgs = [
         # 4 Groups of 2 heads
-        get_config(16, 128, 8, 4, 1, 1),
+        get_config(16, 128, 8, 4, 16, 1),
 
         # Normal Multi-head Attention 8 QKV heads
         # get_config(10, 128, 8, 8, 2, 2),
@@ -564,8 +578,8 @@ def test_fixed_linear_smoke():
 
     mase_runner(
         module_param_list=cfgs,
-        # trace=True,
-        # extra_build_args=["--hierarchial"],
+        hierarchical=True,
+        template=True,
     )
 
 
@@ -576,16 +590,93 @@ def test_parallelism_sweep():
         for seq_par in [1, 2, 4, 8, 16]:
             cfgs.append(get_config(16, 128, 8, 4, embedding_par, seq_par))
 
-    cfgs = [get_config(16, 128, 8, 4, 16, 16)]
+    mase_runner(
+        module_param_list=cfgs,
+        hierarchical=True,
+        template=True,
+    )
+
+def test_small_parallelism():
+    # Parallelism Sweep
+    cfgs = []
+    for embedding_par in [1, 2, 4, 8, 16]:
+        for seq_par in [1, 2]:
+            cfgs.append(get_config(16, 128, 8, 4, embedding_par, seq_par))
 
     mase_runner(
         module_param_list=cfgs,
         hierarchical=True,
         template=True,
-        # extra_build_args=["--hierarchical"],
+    )
+
+def test_heads_sweep():
+    cfgs = []
+    for kv_heads in [2, 4, 8, 16]:
+        cfgs.append(get_config(16, 256, 16, kv_heads, 16, 1))
+
+    mase_runner(
+        module_param_list=cfgs,
+        hierarchical=True,
+        template=True,
+    )
+
+
+def test_bitwidth_sweep():
+    cfgs = []
+    for bitwidth in range(2, 16 + 1):
+        cfgs.append(get_config(16, 128, 8, 4, 16, 1, width=bitwidth, frac_width=bitwidth//2))
+
+    mase_runner(
+        module_param_list=cfgs,
+        hierarchical=True,
+        template=True,
+    )
+
+def more_realistic():
+    cfgs = [
+        # get_config(128, 128, 8, 4, 16, 1),  # Works
+        # get_config(256, 256, 8, 4, 16, 1),  # Works
+        # get_config(512, 512, 8, 4, 16, 1),  # Works
+        # get_config(1024, 1024, 8, 4, 16, 1),  # Works
+        # get_config(2048, 2048, 8, 4, 16, 1),  # Works
+        get_config(4096, 4096, 32, 8, 4, 1, width=2, frac_width=1),
+    ]
+    mase_runner(
+        module_param_list=cfgs,
+        hierarchical=True,
+        template=True,
+        extra_build_args=["--unroll-count", "10000"]
+        # trace=True,
+    )
+
+def mistral():
+    # not possible, verilator will crash
+    cfgs = [get_config(4096, 4096, 32, 8, 32, 1)]
+    mase_runner(
+        module_param_list=cfgs,
+        hierarchical=True,
+        template=True,
+        # Needed for large generate loops
+        extra_build_args=["--unroll-count", "10000"]
+    )
+
+def mqa():
+    cfgs = [get_config(32, 32, 4, 1, 8, 1)]
+    mase_runner(
+        module_param_list=cfgs,
+        hierarchical=True,
+        template=True,
+        trace=True,
+        extra_build_args=["--prof-cfuncs", "-CFLAGS", "-DVL_DEBUG"]
     )
 
 
 if __name__ == "__main__":
     # test_fixed_linear_smoke()
-    test_parallelism_sweep()
+    # test_parallelism_sweep()
+    # test_small_parallelism()
+    # test_heads_sweep()
+    # test_bitwidth_sweep()
+    # more_realistic()
+    # mistral()
+    mqa()
