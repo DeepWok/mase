@@ -202,10 +202,22 @@ module matmul #(
           .data_out(a_buffer_out_data)
       );
 
-    end else begin : gen_no_a_buffer
-      assign a_buffer_out_data = a_data;
-      assign a_buffer_out_valid = a_valid;
-      assign a_ready = a_buffer_out_ready;
+    end else begin : gen_a_reg_slice
+
+      // Add a register stage to cut any combinatoral paths to simple matmul
+      unpacked_skid_buffer #(
+          .DATA_WIDTH      (A_WIDTH),
+          .IN_NUM          (A_COMPUTE_DIM0 * A_COMPUTE_DIM1)
+      ) input_stream_reg_slice (
+          .clk             (clk),
+          .rst             (rst),
+          .data_in         (a_data),
+          .data_in_valid   (a_valid),
+          .data_in_ready   (a_ready),
+          .data_out        (a_buffer_out_data),
+          .data_out_valid  (a_buffer_out_valid),
+          .data_out_ready  (a_buffer_out_ready)
+      );
     end
 
     // B matrix Buffers
@@ -245,9 +257,21 @@ module matmul #(
           .data_out(b_buffer_out_data)
       );
     end else begin : gen_no_b_buffer
-      assign b_buffer_out_data = b_data;
-      assign b_buffer_out_valid = b_valid;
-      assign b_ready = b_buffer_out_ready;
+
+      // Add a register stage to cut any combinatoral paths to simple matmul
+      unpacked_skid_buffer #(
+          .DATA_WIDTH      (B_WIDTH),
+          .IN_NUM          (B_COMPUTE_DIM0 * B_COMPUTE_DIM1)
+      ) weight_reg_slice (
+          .clk             (clk),
+          .rst             (rst),
+          .data_in         (b_data),
+          .data_in_valid   (b_valid),
+          .data_in_ready   (b_ready),
+          .data_out        (b_buffer_out_data),
+          .data_out_valid  (b_buffer_out_valid),
+          .data_out_ready  (b_buffer_out_ready)
+      );
     end
   endgenerate
 
