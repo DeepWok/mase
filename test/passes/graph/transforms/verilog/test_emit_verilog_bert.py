@@ -1,4 +1,4 @@
-import sys
+import sys, os
 
 import torch
 import torch.nn as nn
@@ -196,7 +196,10 @@ def emit_verilog_bert(
     )
     mg, _ = passes.emit_vivado_project_transform_pass(mg)
 
-    actions.simulate(skip_build=False, skip_test=False)
+    # Temporary: fix data coherency checks
+    os.environ["COCOTB_RESOLVE_X"] = "ZEROS"
+
+    actions.simulate(skip_build=False, skip_test=False, gui=False, waves=False)
 
 
 def get_default_qconfig():

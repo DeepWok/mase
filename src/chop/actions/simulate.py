@@ -1,3 +1,4 @@
+import sys
 from os import getenv, PathLike
 
 import torch
@@ -11,6 +12,7 @@ import mase_components
 from mase_components import get_modules
 from .emit import emit
 
+import glob, os
 
 warnings.filterwarnings(
     "ignore",
@@ -32,8 +34,11 @@ def simulate(
     skip_build: bool = False,
     skip_test: bool = False,
     trace_depth: int = 3,
+    gui: bool = False,
+    waves: bool = False,
+    simulator: str = "questa"
 ):
-    SIM = getenv("SIM", "verilator")
+    SIM = getenv("SIM", simulator)
     runner = get_runner(SIM)
 
     project_dir = Path.home() / ".mase" / "top"
@@ -43,10 +48,24 @@ def simulate(
 
     if not skip_build:
         # To do: extract from mz checkpoint
-        # sources = [
-        #     project_dir / "hardware" / "rtl" / "top.sv",
-        # ]
-        sources = ["../../../top.sv"]
+        if (simulator == "questa"):
+            sources = glob.glob(os.path.join(project_dir / "hardware" / "rtl", "*.sv"))
+            build_args = []
+
+        elif (simulator == "verilator"):
+            sources = ["../../../top.sv"]   
+            build_args = [
+                "-Wno-fatal",
+                "-Wno-lint",
+                "-Wno-style",
+                "--trace-fst",
+                "--trace-structs",
+                "--trace-depth",
+                str(trace_depth),
+            ]
+        
+        else:
+            raise ValueError(f"Unrecognized simulator: {simulator}")
 
         includes = [
             project_dir / "hardware" / "rtl",
@@ -61,15 +80,7 @@ def simulate(
             verilog_sources=sources,
             includes=includes,
             hdl_toplevel="top",
-            build_args=[
-                "-Wno-fatal",
-                "-Wno-lint",
-                "-Wno-style",
-                "--trace-fst",
-                "--trace-structs",
-                "--trace-depth",
-                str(trace_depth),
-            ],
+            build_args=build_args,
             parameters=[],  # use default parameters,
         )
 
@@ -79,7 +90,6 @@ def simulate(
 
     if not skip_test:
         # Add tb file to python path
-        import sys
 
         sys.path.append(str(project_dir / "hardware" / "test"))
 
@@ -88,6 +98,8 @@ def simulate(
             hdl_toplevel="top",
             test_module="mase_top_tb",
             hdl_toplevel_lang="verilog",
+            gui=gui,
+            waves=waves
         )
         test_end = time.time()
         logger.info(f"Test finished. Time taken: {test_end - test_start:.2f}s")

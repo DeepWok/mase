@@ -10,17 +10,17 @@ Description : This module a double counter which outputs which channel the
 module channel_selection #(
     parameter NUM_CHANNELS       = 2,
     // Number of blocks in spatial dimensions (usually = depth_dim0 * depth_dim1)
-    parameter NUM_SPATIAL_BLOCKS = 4
+    parameter NUM_SPATIAL_BLOCKS = 4,
+
+    // Channel and spatial state widths
+    localparam C_STATE_WIDTH = (NUM_CHANNELS == 1) ? 1 : $clog2(NUM_CHANNELS),
+    localparam S_STATE_WIDTH = (NUM_SPATIAL_BLOCKS == 1) ? 1 : $clog2(NUM_SPATIAL_BLOCKS)
 ) (
     input  logic                     clk,
     input  logic                     rst,
     input  logic                     inc,
     output logic [C_STATE_WIDTH-1:0] channel
 );
-
-  // Channel and spatial state widths
-  localparam C_STATE_WIDTH = (NUM_CHANNELS == 1) ? 1 : $clog2(NUM_CHANNELS);
-  localparam S_STATE_WIDTH = (NUM_SPATIAL_BLOCKS == 1) ? 1 : $clog2(NUM_SPATIAL_BLOCKS);
 
   generate
     if (NUM_CHANNELS == 1) begin

@@ -95,13 +95,13 @@ unpacked_register_slice #(
     .clk(clk),
     .rst(rst),
 
-    .in_data (cast_out),
-    .in_valid(joined_input_valid),
-    .in_ready(joined_input_ready),
+    .data_in (cast_out),
+    .data_in_valid(joined_input_valid),
+    .data_in_ready(joined_input_ready),
 
-    .out_data (data_out_0),
-    .out_valid(data_out_0_valid),
-    .out_ready(data_out_0_ready)
+    .data_out (data_out_0),
+    .data_out_valid(data_out_0_valid),
+    .data_out_ready(data_out_0_ready)
 );
 
 // * Logic
