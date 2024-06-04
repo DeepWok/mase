@@ -42,3 +42,5 @@ from .module.transforms import quantize_module_transform_pass
 from .onnx.analysis import (
     export_fx_graph_analysis_pass,
 )
+
+from .module.analysis.autosharding import autosharding_analysis_pass
