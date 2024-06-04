@@ -36,7 +36,7 @@ def simulate(
     trace_depth: int = 3,
     gui: bool = False,
     waves: bool = False,
-    simulator: str = "questa"
+    simulator: str = "verilator"
 ):
     SIM = getenv("SIM", simulator)
     runner = get_runner(SIM)
