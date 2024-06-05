@@ -12,16 +12,21 @@ from mase_cocotb.interfaces.streaming import (
     MultiSignalStreamDriver,
     MultiSignalStreamMonitor,
 )
+
 from mase_cocotb.runner import mase_runner
 from mase_cocotb.utils import block_fp_quantize
 
 import torch
+from math import ceil, log2
+import random
 
 logger = logging.getLogger("testbench")
 logger.setLevel(logging.DEBUG)
 
+torch.manual_seed(10)
 
-class BFPAdderTB(Testbench):
+
+class BFPVectorMultTB(Testbench):
     def __init__(self, dut, num) -> None:
         super().__init__(dut, dut.clk, dut.rst)
         self.num = num
@@ -40,6 +45,7 @@ class BFPAdderTB(Testbench):
             dut.weight_valid,
             dut.weight_ready,
         )
+
         self.data_out_0_monitor = MultiSignalStreamMonitor(
             dut.clk,
             (dut.mdata_out_0, dut.edata_out_0),
@@ -65,35 +71,27 @@ class BFPAdderTB(Testbench):
                 int(self.dut.WEIGHT_PRECISION_0),
                 int(self.dut.WEIGHT_PRECISION_1),
             )
-            max_exp = max(edata_in, eweight)
-
-            (pre_cast_data_in, _, _) = block_fp_quantize(
-                data_in,
+            mult_out, mmult_out, emult_out = block_fp_quantize(
+                data_in * weight,
                 int(self.dut.DATA_OUT_0_PRECISION_0),
                 int(self.dut.DATA_OUT_0_PRECISION_1),
-                max_exp,
+                edata_in + eweight,
             )
-            (pre_cast_weight, _, _) = block_fp_quantize(
-                weight,
+            dp_out, mdp_out, edp_out = block_fp_quantize(
+                sum(mult_out),
                 int(self.dut.DATA_OUT_0_PRECISION_0),
                 int(self.dut.DATA_OUT_0_PRECISION_1),
-                max_exp,
+                emult_out + ceil(log2(self.dut.BLOCK_SIZE)),
             )
-            exp_out, mexp_out, eexp_out = block_fp_quantize(
-                pre_cast_data_in + pre_cast_weight,
-                int(self.dut.DATA_OUT_0_PRECISION_0),
-                int(self.dut.DATA_OUT_0_PRECISION_1) + 1,
-                max_exp + 1,
-            )
+            # breakpoint()
             inputs.append((mdata_in.int().tolist(), edata_in.int().tolist()))
             weights.append((mweight.int().tolist(), eweight.int().tolist()))
-            exp_outputs.append((mexp_out.int().tolist(), eexp_out.int().tolist()))
+            exp_outputs.append((mdp_out.int().tolist(), edp_out.int().tolist()))
         return inputs, weights, exp_outputs
 
     async def run_test(self):
         await self.reset()
         logger.info(f"Reset finished")
-
         self.data_out_0_monitor.ready.value = 1
 
         logger.info(f"generating inputs")
@@ -102,16 +100,17 @@ class BFPAdderTB(Testbench):
         # Load the inputs driver
         self.data_in_0_driver.load_driver(inputs)
         self.weight_driver.load_driver(weights)
-
         # Load the output monitor
         self.data_out_0_monitor.load_monitor(exp_outputs)
+        # breakpoint()
+
         await Timer(5, units="us")
         assert self.data_out_0_monitor.exp_queue.empty()
 
 
 @cocotb.test()
 async def test(dut):
-    tb = BFPAdderTB(dut, num=20)
+    tb = BFPVectorMultTB(dut, num=20)
     await tb.run_test()
 
 
@@ -119,13 +118,13 @@ if __name__ == "__main__":
     mase_runner(
         trace=True,
         module_param_list=[
-            {
-                "DATA_IN_0_PRECISION_0": 8,
-                "DATA_IN_0_PRECISION_1": 8,
-                "WEIGHT_PRECISION_0": 8,
-                "WEIGHT_PRECISION_1": 8,
-                "BLOCK_SIZE": 1,
-            },
+            # {
+            #     "DATA_IN_0_PRECISION_0": 8,
+            #     "DATA_IN_0_PRECISION_1": 8,
+            #     "WEIGHT_PRECISION_0": 8,
+            #     "WEIGHT_PRECISION_1": 8,
+            #     "BLOCK_SIZE": 1,
+            # },
             {
                 "DATA_IN_0_PRECISION_0": 8,
                 "DATA_IN_0_PRECISION_1": 8,

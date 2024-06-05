@@ -1,6 +1,6 @@
 `timescale 1ns / 1ps
 // block floating point add
-module bfp_adder #(
+module bfp_dot_product #(
     // precision_0 represent mantissa width
     // precision_1 represent exponent width
     // 
@@ -31,11 +31,13 @@ module bfp_adder #(
     input data_out_0_ready
 );
   localparam PRODUCT_PRECISION_0 = DATA_OUT_0_PRECISION_0;
-  localparam PRODUCT_PRECISION_1 = DATA_OUT_0_PRECISION_1;
-  logic [PRODUCT_PRECISION_0-1:0] mpv      [BLOCK_SIZE-1:0];
-  logic [PRODUCT_PRECISION_1-1:0] epv      [BLOCK_SIZE-1:0];
-  logic                           pv_valid;
-  logic                           pv_ready;
+  localparam PRODUCT_PRECISION_1 = DATA_OUT_0_PRECISION_1 - 1;
+  logic [PRODUCT_PRECISION_0-1:0] mpv[BLOCK_SIZE-1:0];
+  logic [PRODUCT_PRECISION_1-1:0] epv, epv_out;
+  logic pv_valid;
+  logic pv_ready;
+  logic epv_valid, epv_ready, mpv_valid, mpv_ready;
+  logic epv_out_valid, epv_out_ready;
   bfp_vector_mult #(
       .DATA_IN_0_PRECISION_0(DATA_IN_0_PRECISION_0),
       .DATA_IN_0_PRECISION_1(DATA_IN_0_PRECISION_1),
@@ -58,6 +60,27 @@ module bfp_adder #(
       .data_out_0_valid(pv_valid),
       .data_out_0_ready(pv_ready)
   );
+  split2 #() split_inst (
+      .data_in_valid (pv_valid),
+      .data_in_ready (pv_ready),
+      .data_out_valid({epv_valid, mpv_valid}),
+      .data_out_ready({epv_ready, mpv_ready})
+  );
+  fifo #(
+      .DEPTH($clog2(BLOCK_SIZE)),
+      .DATA_WIDTH(PRODUCT_PRECISION_1)
+  ) ff_inst (
+      .clk(clk),
+      .rst(rst),
+      .in_data(epv),
+      .in_valid(epv_valid),
+      .in_ready(epv_ready),
+      .out_data(epv_out),
+      .out_valid(epv_out_valid),
+      .out_ready(epv_out_ready),
+      .empty(),
+      .full()
+  );
 
   localparam SUM_WIDTH = PRODUCT_PRECISION_0 + $clog2(BLOCK_SIZE);
   // sum the products
@@ -72,20 +95,23 @@ module bfp_adder #(
       .clk(clk),
       .rst(rst),
       .data_in(mpv),
-      .data_in_valid(pv_valid),
-      .data_in_ready(pv_ready),
+      .data_in_valid(mpv_valid),
+      .data_in_ready(mpv_ready),
 
       .data_out(sum),
       .data_out_valid(sum_valid),
       .data_out_ready(sum_ready)
   );
-  always_comb begin : output
+  join2 #() join_inst (
+      .data_in_ready ({sum_ready, epv_out_ready}),
+      .data_in_valid ({sum_valid, epv_out_valid}),
+      .data_out_valid(data_out_0_valid),
+      .data_out_ready(data_out_0_ready)
+  );
+  always_comb begin : final_output
     mdata_out_0 = sum >> $clog2(BLOCK_SIZE);
-    edata_out_0 = epv + $clog2(BLOCK_SIZE);
-    data_out_0_valid = sum_valid;
-    data_out_0_ready = sum_ready;
+    edata_out_0 = $signed(epv_out) + $signed($clog2(BLOCK_SIZE));
   end
-
 
 
 endmodule

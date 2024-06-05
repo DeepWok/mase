@@ -44,6 +44,8 @@ MASE_HW_DEPS = {
     "arithmetic/mac": ["fixed_arithmetic", "float_arithmetic"],
     # Binary arithmetic
     "binary_arith/binary_activation_binary_mult": [],
+    "float_arithmetic/float_adder": ["float_arithmetic"],
+    "float_arithmetic/real_adder": ["float_arithmetic"],
     "binary_arith/binary_activation_binary_vector_mult": ["binary_arith", "common"],
     "binary_arith/binary_activation_binary_adder_tree_layer": [],
     "binary_arith/binary_activation_binary_adder_tree": ["binary_arith", "common"],
@@ -57,6 +59,8 @@ MASE_HW_DEPS = {
     ],
     # Block Floating Point arithmetic
     "bfp_arith/bfp_vector_mult": ["bfp_arith", "common"],
+    "bfp_arith/bfp_adder": ["bfp_arith", "common"],
+    "bfp_arith/bfp_dot_product": ["bfp_arith", "common", "fixed_arithmetic"],
     "buffers/hybrid_buffer": ["buffers"],
     # Linear
     "linear/fixed_linear": ["matmul", "cast", "common", "fixed_arithmetic"],

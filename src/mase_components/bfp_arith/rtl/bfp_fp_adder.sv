@@ -49,7 +49,7 @@ module bfp_adder #(
     assign aligned_mweight[i] = mweight[i] << (MAX_PRECISION_0 - WEIGHT_PRECISION_0);
   end
 
-  wire signed [DATA_OUT_0_PRECISION_1 -1:0] max_exponent;
+  logic [DATA_OUT_0_PRECISION_1-1:0] max_exponent;
   logic [DATA_OUT_0_PRECISION_1:0] data_in_0_shift, weight_shift;
   assign max_exponent = ($signed(edata_in_0) > $signed(eweight)) ? edata_in_0 : eweight;
 
