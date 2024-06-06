@@ -43,4 +43,4 @@ from .onnx.analysis import (
     export_fx_graph_analysis_pass,
 )
 
-from .module.analysis.autosharding import autosharding_analysis_pass
+from .graph.analysis.autosharding import autosharding_analysis_pass
