@@ -59,6 +59,11 @@ logger = logging.get_logger(__name__)
 _CONFIG_FOR_DOC = "LlamaConfig"
 
 
+@torch.fx.wrap
+def df_split(x):
+    return (x, x)
+
+
 def _get_unpad_data(attention_mask):
     seqlens_in_batch = attention_mask.sum(dim=-1, dtype=torch.int32)
     indices = torch.nonzero(attention_mask.flatten(), as_tuple=False).flatten()
@@ -257,7 +262,10 @@ class LlamaMLP(nn.Module):
             ]
             down_proj = sum(down_proj)
         else:
-            down_proj = self.down_proj(self.act_fn(self.gate_proj(x)) * self.up_proj(x))
+            x1, x2 = df_split(x)
+            down_proj = self.down_proj(
+                self.act_fn(self.gate_proj(x1)) * self.up_proj(x2)
+            )
 
         return down_proj
 
@@ -326,6 +334,7 @@ class LlamaAttention(nn.Module):
 
     def _init_rope(self):
         if self.config.rope_scaling is None:
+
             self.rotary_emb = LlamaRotaryEmbedding(
                 self.head_dim,
                 max_position_embeddings=self.max_position_embeddings,
@@ -467,7 +476,8 @@ class LlamaAttention(nn.Module):
         if not output_attentions:
             attn_weights = None
 
-        return attn_output, attn_weights, past_key_value
+        # return attn_output, attn_weights, past_key_value
+        return attn_output
 
 
 class LlamaFlashAttention2(LlamaAttention):
@@ -745,6 +755,21 @@ class LlamaSdpaAttention(LlamaAttention):
                 cache_position=cache_position,
             )
 
+        # ===============================================================
+        # Moved here from model scope so this is hidden in tracing
+        if cache_position is None:
+            past_seen_tokens = (
+                past_key_value.get_seq_length() if past_key_value is not None else 0
+            )
+            cache_position = torch.arange(
+                past_seen_tokens,
+                past_seen_tokens + hidden_states.shape[1],
+                device=hidden_states.device,
+            )
+        if position_ids is None:
+            position_ids = cache_position.unsqueeze(0)
+        # ===============================================================
+
         bsz, q_len, _ = hidden_states.size()
 
         query_states = self.q_proj(hidden_states)
@@ -805,7 +830,8 @@ class LlamaSdpaAttention(LlamaAttention):
 
         attn_output = self.o_proj(attn_output)
 
-        return attn_output, None, past_key_value
+        # return attn_output, None, past_key_value
+        return attn_output
 
 
 LLAMA_ATTENTION_CLASSES = {
@@ -856,12 +882,14 @@ class LlamaDecoderLayer(nn.Module):
                 (see `past_key_values`).
             past_key_value (`Tuple(torch.FloatTensor)`, *optional*): cached past key and value projection states
         """
-        residual = hidden_states
+
+        # residual = hidden_states
+        hidden_states, residual = df_split(hidden_states)
 
         hidden_states = self.input_layernorm(hidden_states)
 
         # Self Attention
-        hidden_states, self_attn_weights, present_key_value = self.self_attn(
+        hidden_states = self.self_attn(
             hidden_states=hidden_states,
             attention_mask=attention_mask,
             position_ids=position_ids,
@@ -870,23 +898,25 @@ class LlamaDecoderLayer(nn.Module):
             use_cache=use_cache,
             cache_position=cache_position,
         )
+
         hidden_states = residual + hidden_states
 
         # Fully Connected
-        residual = hidden_states
+        # residual = hidden_states
+        hidden_states, residual = df_split(hidden_states)
         hidden_states = self.post_attention_layernorm(hidden_states)
         hidden_states = self.mlp(hidden_states)
         hidden_states = residual + hidden_states
 
         outputs = (hidden_states,)
 
-        if output_attentions:
-            outputs += (self_attn_weights,)
+        # if output_attentions:
+        #     outputs += (self_attn_weights,)
 
-        if use_cache:
-            outputs += (present_key_value,)
+        # if use_cache:
+        #     outputs += (present_key_value,)
 
-        return outputs
+        return outputs[0]
 
 
 LLAMA_START_DOCSTRING = r"""
@@ -1025,9 +1055,14 @@ class LlamaModel(LlamaPreTrainedModel):
         self.padding_idx = config.pad_token_id
         self.vocab_size = config.vocab_size
 
-        self.embed_tokens = nn.Embedding(
-            config.vocab_size, config.hidden_size, self.padding_idx
-        )
+        # self.embed_tokens = nn.Embedding(
+        #     config.vocab_size, config.hidden_size, self.padding_idx
+        # )
+        def passthrough_function(input_ids):
+            return input_ids
+
+        self.embed_tokens = passthrough_function
+
         self.layers = nn.ModuleList(
             [
                 LlamaDecoderLayer(config, layer_idx)
@@ -1090,31 +1125,20 @@ class LlamaModel(LlamaPreTrainedModel):
             inputs_embeds = self.embed_tokens(input_ids)
 
         return_legacy_cache = False
-        if use_cache and not isinstance(
-            past_key_values, Cache
-        ):  # kept for BC (non `Cache` `past_key_values` inputs)
-            return_legacy_cache = True
-            past_key_values = DynamicCache.from_legacy_cache(past_key_values)
+        # if use_cache and not isinstance(
+        #     past_key_values, Cache
+        # ):  # kept for BC (non `Cache` `past_key_values` inputs)
+        #     return_legacy_cache = True
+        #     past_key_values = DynamicCache.from_legacy_cache(past_key_values)
 
-        if cache_position is None:
-            past_seen_tokens = (
-                past_key_values.get_seq_length() if past_key_values is not None else 0
-            )
-            cache_position = torch.arange(
-                past_seen_tokens,
-                past_seen_tokens + inputs_embeds.shape[1],
-                device=inputs_embeds.device,
-            )
-        if position_ids is None:
-            position_ids = cache_position.unsqueeze(0)
-
-        causal_mask = self._update_causal_mask(
-            attention_mask,
-            inputs_embeds,
-            cache_position,
-            past_key_values,
-            output_attentions,
-        )
+        # causal_mask = self._update_causal_mask(
+        #     attention_mask,
+        #     inputs_embeds,
+        #     cache_position,
+        #     past_key_values,
+        #     output_attentions,
+        # )
+        causal_mask = attention_mask
 
         # embed positions
         hidden_states = inputs_embeds

@@ -24,3 +24,5 @@ from .tensorrt import (
     tensorrt_fine_tune_transform_pass,
     tensorrt_fake_quantize_transform_pass,
 )
+
+from .patching import patch_metadata_transform_pass

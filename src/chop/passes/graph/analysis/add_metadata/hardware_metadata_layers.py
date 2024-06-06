@@ -177,6 +177,14 @@ INTERNAL_COMP = {
             ],
         }
     ],
+    "mul": [
+        {
+            "name": "fixed_elementwise_multiplier",
+            "dependence_files": [
+                "fixed_arithmetic/rtl/fixed_elementwise_multiplier.sv",
+            ],
+        }
+    ],
     "df_split": [
         {
             "name": "df_split",
