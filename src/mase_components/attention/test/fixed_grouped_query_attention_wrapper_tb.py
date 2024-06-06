@@ -104,6 +104,9 @@ class FixedGroupedQueryAttentionTB(Testbench):
     def __init__(self, dut) -> None:
         super().__init__(dut, dut.clk, dut.rst, clk_period_ns=5)
 
+        # global debug switch
+        self.log_level = logging.INFO
+
         # global monitor check switch
         self.check = False
 
@@ -147,7 +150,7 @@ class FixedGroupedQueryAttentionTB(Testbench):
 
         if not hasattr(self, "log"):
             self.log = SimLog("%s" % (type(self).__qualname__))
-            self.log.setLevel(logging.DEBUG)
+            self.log.setLevel(self.log_level)
 
         self.data_in_0_driver = StreamDriver(
             dut.clk,
@@ -264,17 +267,17 @@ class FixedGroupedQueryAttentionTB(Testbench):
         )
 
         # Set verbosity of driver and monitor loggers to debug
-        self.data_in_0_driver.log.setLevel(logging.DEBUG)
-        self.weight_q_driver.log.setLevel(logging.DEBUG)
-        self.weight_k_driver.log.setLevel(logging.DEBUG)
-        self.weight_v_driver.log.setLevel(logging.DEBUG)
-        self.weight_o_driver.log.setLevel(logging.DEBUG)
-        self.data_out_0_monitor.log.setLevel(logging.DEBUG)
-        if self.HAS_BIAS:
-            self.bias_q_driver.log.setLevel(logging.DEBUG)
-            self.bias_k_driver.log.setLevel(logging.DEBUG)
-            self.bias_v_driver.log.setLevel(logging.DEBUG)
-            self.bias_o_driver.log.setLevel(logging.DEBUG)
+        # self.data_in_0_driver.log.setLevel(self.log_level)
+        # self.weight_q_driver.log.setLevel(self.log_level)
+        # self.weight_k_driver.log.setLevel(self.log_level)
+        # self.weight_v_driver.log.setLevel(self.log_level)
+        # self.weight_o_driver.log.setLevel(self.log_level)
+        # self.data_out_0_monitor.log.setLevel(self.log_level)
+        # if self.HAS_BIAS:
+        #     self.bias_q_driver.log.setLevel(self.log_level)
+        #     self.bias_k_driver.log.setLevel(self.log_level)
+        #     self.bias_v_driver.log.setLevel(self.log_level)
+        #     self.bias_o_driver.log.setLevel(self.log_level)
 
 
     def generate_inputs(self, batches=1):
@@ -510,13 +513,13 @@ class FixedGroupedQueryAttentionTB(Testbench):
 
 
 
-@cocotb.test()
+@cocotb.test(skip=True)
 async def basic(dut):
     tb = FixedGroupedQueryAttentionTB(dut)
     await tb.run_test()
 
 
-@cocotb.test(skip=True)
+@cocotb.test()
 async def memory_bandwidth(dut):
     tb = FixedGroupedQueryAttentionTB(dut)
     await tb.run_memory_bandwidth_test(ms=2)
@@ -611,8 +614,8 @@ def test_small_parallelism():
 
 def test_heads_sweep():
     cfgs = []
-    for kv_heads in [2, 4, 8, 16]:
-        cfgs.append(get_config(16, 256, 16, kv_heads, 16, 1))
+    for kv_heads in [1, 2, 4, 8, 16]:
+        cfgs.append(get_config(256, 256, 16, kv_heads, 16, 1))
 
     mase_runner(
         module_param_list=cfgs,
@@ -675,8 +678,8 @@ if __name__ == "__main__":
     # test_fixed_linear_smoke()
     # test_parallelism_sweep()
     # test_small_parallelism()
-    # test_heads_sweep()
+    test_heads_sweep()
     # test_bitwidth_sweep()
     # more_realistic()
     # mistral()
-    mqa()
+    # mqa()

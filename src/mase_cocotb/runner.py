@@ -1,6 +1,5 @@
 from os import path, getenv
 import logging
-from shutil import rmtree
 from pathlib import Path
 from copy import deepcopy
 import re
@@ -9,9 +8,6 @@ from typing import Any
 from concurrent.futures import ProcessPoolExecutor, as_completed
 from time import time
 
-import torch
-
-import cocotb
 from cocotb.runner import get_runner, get_results
 from mase_components.deps import MASE_HW_DEPS
 

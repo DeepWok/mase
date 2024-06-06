@@ -8,9 +8,9 @@ set top_module fixed_grouped_query_attention
 set constraints_file alveo-u250.xdc
 
 # Basic
-set sequence_len 16
-set embedding_dim 128
-set num_heads 8
+# set sequence_len 16
+# set embedding_dim 128
+# set num_heads 8
 # set num_kv_heads 4
 
 # Realistic
@@ -19,9 +19,9 @@ set num_heads 8
 # set num_heads 8
 
 # Heads Mem
-# set sequence_len 16
-# set embedding_dim 256
-# set num_heads 16
+set sequence_len 256
+set embedding_dim 256
+set num_heads 16
 
 # Mistral
 # set sequence_len 4096
@@ -30,9 +30,9 @@ set num_heads 8
 # set num_kv_heads 8
 
 # Module Parameters
-set num_kv_heads_list {4}
-set embedding_par_list {1 2 4 8 16}
-set sequence_par_list {1 2}
+set num_kv_heads_list {1 2 4 8 16}
+set embedding_par_list {16}
+set sequence_par_list {1}
 
 # Bitwidths
 set bitwidths {8}
@@ -48,6 +48,7 @@ read_verilog -sv {
     ../../common/rtl/repeat_circular_buffer.sv
     ../../common/rtl/single_element_repeat.sv
     ../../common/rtl/skid_buffer.sv
+    ../../common/rtl/unpacked_skid_buffer.sv
     ../../common/rtl/register_slice.sv
     ../../common/rtl/simple_dual_port_ram.sv
     ../../common/rtl/fifo.sv
