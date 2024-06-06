@@ -4,21 +4,11 @@ import numpy as np
 
 from cocotb import simulator
 from cocotb.binary import BinaryValue
+from cocotb.result import TestFailure
 from cocotb.triggers import *
 
 from mase_cocotb.driver import Driver
 from mase_cocotb.monitor import Monitor
-<<<<<<< HEAD
-# from mase_cocotb.utils import sign_extend
-
-# from mase_cocotb.utils import sign_extend
-
-# ! TO DO: broken import
-# from ..utils import sign_extend
-# from mase_cocotb.utils import sign_extend
-
-=======
->>>>>>> mase/feature/bert
 
 def _sign_extend(value: int, bits: int):
     sign_bit = 1 << (bits - 1)
