@@ -1,3 +1,4 @@
+import torch
 from transformers import (
     AutoModelForCausalLM,
     AutoTokenizer,
@@ -5,7 +6,11 @@ from transformers import (
     DataCollatorWithPadding,
 )
 from datasets import load_dataset
+import evaluate
 
+
+# device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+# print("Using", device)
 
 def training_llama2():
     """
@@ -23,11 +28,20 @@ def pretrained_llama2(dataset):
     model = AutoModelForCausalLM.from_pretrained("meta-llama/Llama-2-7b-chat-hf")
     tokenizer = AutoTokenizer.from_pretrained("meta-llama/Llama-2-7b-chat-hf")
 
-    def tokenize_function(example):
-        return tokenizer(example["sentence"], truncation=True, max_length=model)
+    # def tokenize_function(example):
+    #     return tokenizer(example["sentence"], truncation=True)
 
-    tokenized_datasets = dataset.map(tokenize_function, batched=True)
-    data_collator = DataCollatorWithPadding(tokenizer=tokenizer)
+    # tokenized_datasets = dataset.map(tokenize_function, batched=True)
+    # data_collator = DataCollatorWithPadding(tokenizer=tokenizer)
+
+    model_inputs = tokenizer(["A list of colors: red, blue"], return_tensors="pt")
+    print(model_inputs)
+
+    generated_ids = model.generate(**model_inputs)
+    print(generated_ids)
+
+    out = tokenizer.batch_decode(generated_ids, skip_special_tokens=True)
+    print(out)
 
 
 if __name__ == "__main__":
