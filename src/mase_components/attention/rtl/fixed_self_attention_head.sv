@@ -303,13 +303,13 @@ module fixed_self_attention_head #(
       .clk(clk),
       .rst(rst),
 
-      .in_data (out_casted),
-      .in_valid(out_cast_valid),
-      .in_ready(out_cast_ready),
+      .data_in (out_casted),
+      .data_in_valid(out_cast_valid),
+      .data_in_ready(out_cast_ready),
 
-      .out_data (out),
-      .out_valid(out_valid),
-      .out_ready(out_ready)
+      .data_out (out),
+      .data_out_valid(out_valid),
+      .data_out_ready(out_ready)
   );
 
 endmodule

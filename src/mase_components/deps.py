@@ -57,9 +57,9 @@ MASE_HW_DEPS = {
     ],
     # Attention
     "attention/fixed_self_attention": [
+        "attention",
         "activations",
         "arbiters",
-        "attention",
         "cast",
         "common",
         "fixed_arithmetic",
@@ -77,6 +77,18 @@ MASE_HW_DEPS = {
     ],
     "attention/fixed_grouped_query_attention": [
         "attention",
+        "activations",
+        "arbiters",
+        "cast",
+        "common",
+        "fixed_arithmetic",
+        "linear",
+        "matmul",
+        "activations",
+    ],
+    "attention/fixed_self_attention_single_precision_wrapper": [
+        "attention",
+        "activations",
         "arbiters",
         "cast",
         "common",

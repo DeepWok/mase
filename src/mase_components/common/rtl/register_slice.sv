@@ -6,13 +6,13 @@ module register_slice #(
     input logic clk,
     input logic rst,
 
-    input  MYDATA in_data,
-    input  logic  in_valid,
-    output logic  in_ready,
+    input  MYDATA data_in,
+    input  logic  data_in_valid,
+    output logic  data_in_ready,
 
-    output MYDATA out_data,
-    output logic  out_valid,
-    input  logic  out_ready
+    output MYDATA data_out,
+    output logic  data_out_valid,
+    input  logic  data_out_ready
 );
 
   // The buffer stores the intermeidate data being computed in the register slice
@@ -25,7 +25,7 @@ module register_slice #(
     if (rst) shift_reg <= 1'b0;
     else begin
       // no backpressure or buffer empty
-      if (out_ready || !shift_reg) shift_reg <= in_valid;
+      if (data_out_ready || !shift_reg) shift_reg <= data_in_valid;
       else shift_reg <= shift_reg;
     end
   end
@@ -34,16 +34,17 @@ module register_slice #(
   always_ff @(posedge clk) begin
     if (rst) buffer <= 0;
     // backpressure && valid output
-    if (!out_ready && out_valid) buffer <= buffer;
-    else buffer <= in_data;
+    if (!data_out_valid && data_out_ready) buffer <= buffer;
+    else buffer <= data_in;
   end
 
   always_comb begin
     // empty buffer or no back pressure
-    in_ready  = (~shift_reg) | out_ready;
+    data_in_ready  = (~shift_reg) | data_out_ready;
     // dummy data_iniring
-    out_valid = shift_reg;
-    out_data  = buffer;
+    data_out_valid = shift_reg;
+    data_out  = buffer;
   end
 
 endmodule
+

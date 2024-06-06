@@ -28,6 +28,15 @@ def _cap(name):
     return str(name).upper()
 
 
+def _emit_cocotb_test(graph, pass_args={}):
+
+    wait_time = pass_args.get("wait_time", 2)
+    wait_unit = pass_args.get("wait_units", "ms")
+    batch_size = pass_args.get("batch_size", 1)
+
+    test_template = f"""
+import cocotb
+
 @cocotb.test()
 async def test(dut):
     from pathlib import Path
@@ -40,21 +49,13 @@ async def test(dut):
 
     await tb.initialize()
 
-    in_tensors = tb.generate_inputs(batches=1)
+    in_tensors = tb.generate_inputs(batches={batch_size})
     exp_out = tb.model(*list(in_tensors.values()))
 
     tb.load_drivers(in_tensors)
     tb.load_monitors(exp_out)
 
-    await Timer(2, units="ms")
-    tb.end_checks()
-
-
-def _emit_cocotb_test(graph):
-    test_template = f"""
-import cocotb
-
-{inspect.getsource(test)}
+    await tb.wait_end(timeout={wait_time}, timeout_unit="{wait_unit}")
 """
 
     tb_path = Path.home() / ".mase" / "top" / "hardware" / "test" / "mase_top_tb"
@@ -105,8 +106,6 @@ def _emit_cocotb_tb(graph):
                 "precision"
             ]
 
-            from mase_cocotb.utils import fixed_preprocess_tensor
-
         def generate_inputs(self, batches):
             """
             Generate inputs for the model by sampling a random tensor
@@ -154,18 +153,19 @@ def _emit_cocotb_tb(graph):
 
                 # Append all input blocks to input driver
                 # ! TO DO: generalize
+                block_size = self.get_parameter(
+                    "DATA_IN_0_PARALLELISM_DIM_0"
+                ) * self.get_parameter("DATA_IN_0_PARALLELISM_DIM_1")
+                
                 for block in in_data_blocks:
-                    if len(block) < self.get_parameter("DATA_IN_0_PARALLELISM_DIM_0"):
-                        block = block + [0] * (
-                            self.get_parameter("DATA_IN_0_PARALLELISM_DIM_0")
-                            - len(block)
-                        )
+                    if len(block) < block_size:
+                        block = block + [0] * (block_size - len(block))
                     self.input_drivers[arg].append(block)
 
         def load_monitors(self, expectation):
-            # TO DO: reshape according to output parallelism
             from mase_cocotb.utils import fixed_preprocess_tensor
 
+            # Process the expectation tensor
             output_blocks = fixed_preprocess_tensor(
                 tensor=expectation,
                 q_config={
@@ -177,13 +177,18 @@ def _emit_cocotb_tb(graph):
                     self.get_parameter(f"DATA_OUT_0_PARALLELISM_DIM_0"),
                 ],
             )
+
+            # Set expectation for each monitor
             for block in output_blocks:
-                # ! TO DO: generalize
+                # ! TO DO: generalize to multi-output models
                 if len(block) < self.get_parameter("DATA_OUT_0_PARALLELISM_DIM_0"):
                     block = block + [0] * (
                         self.get_parameter("DATA_OUT_0_PARALLELISM_DIM_0") - len(block)
                     )
                 self.output_monitors["data_out_0"].expect(block)
+
+            # Drive the in-flight flag for each monitor
+            self.output_monitors["data_out_0"].in_flight = True
 
     # Serialize testbench object to be instantiated within test by cocotb runner
     cls_obj = MaseGraphTB
@@ -219,7 +224,7 @@ def emit_cocotb_transform_pass(graph, pass_args={}):
 
     init_project(project_dir)
 
-    _emit_cocotb_test(graph)
+    _emit_cocotb_test(graph, pass_args=pass_args)
     _emit_cocotb_tb(graph)
 
     return graph, None

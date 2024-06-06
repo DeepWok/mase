@@ -167,3 +167,15 @@ def sign_extend(value: int, bits: int):
 def deepgetattr(obj, attr):
     """Recurses through an attribute chain to get the ultimate value."""
     return reduce(getattr, attr.split("."), obj)
+
+
+def deepsetattr(obj, attr_str, value):
+    """Recurses through an attribute chain to set the ultimate value."""
+    attrs = attr_str.split(".")
+    if len(attrs) == 1:
+        setattr(obj, attrs[0], value)
+    else:
+        first_attr = attrs.pop(0)
+        if not hasattr(obj, first_attr):
+            setattr(obj, first_attr, {})
+        deepsetattr(getattr(obj, first_attr), ".".join(attrs), value)

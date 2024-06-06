@@ -80,7 +80,7 @@ if is_cuda_available():
         "torch-tensorRT; platform_system == 'Linux'",
         "tensorRT; platform_system == 'Linux'",
         "cuda-python; platform_system == 'Linux'",
-        "pytorch-quantization; platform_system == 'Linux'",
+        "pytorch-quantization @ https://pypi.nvidia.com/pytorch-quantization/pytorch_quantization-2.1.2-py3-none-any.whl ",
     ]
 
 setup(

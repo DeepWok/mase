@@ -8,6 +8,7 @@ from cocotb.triggers import *
 
 from mase_cocotb.driver import Driver
 from mase_cocotb.monitor import Monitor
+<<<<<<< HEAD
 # from mase_cocotb.utils import sign_extend
 
 # from mase_cocotb.utils import sign_extend
@@ -16,6 +17,8 @@ from mase_cocotb.monitor import Monitor
 # from ..utils import sign_extend
 # from mase_cocotb.utils import sign_extend
 
+=======
+>>>>>>> mase/feature/bert
 
 def _sign_extend(value: int, bits: int):
     sign_bit = 1 << (bits - 1)
@@ -90,6 +93,8 @@ class StreamMonitor(Monitor):
         self.last_timestamp = None
 
     def _trigger(self):
+        if "x" in self.valid.value.binstr or "x" in self.ready.value.binstr:
+            return False
         return self.valid.value == 1 and self.ready.value == 1
 
     def _recv(self):

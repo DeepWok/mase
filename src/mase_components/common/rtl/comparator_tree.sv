@@ -31,12 +31,20 @@ module comparator_tree #(
     assert (2 ** LEVELS == SIZE);  // Only support power of 2
   end
 
-  for (genvar i = 0; i <= LEVELS; i++) begin : vars
-    logic [DATA_WIDTH-1:0] data[(2**(LEVELS-i))-1:0];
+  for (genvar level = 0; level <= LEVELS; level++) begin : vars
+    logic [DATA_WIDTH-1:0] data[(2**(LEVELS-level))-1:0];
     logic valid;
     logic ready;
   end
 
+
+  for (genvar level = 0; level < LEVELS; level++) begin : element_handshake
+    logic [2 ** (LEVELS - level - 1) - 1 : 0] element_input_valid;
+    logic [2 ** (LEVELS - level - 1) - 1 : 0] element_input_ready;
+    
+    logic [2 ** (LEVELS - level - 1) - 1 : 0] element_output_valid;
+    logic [2 ** (LEVELS - level - 1) - 1 : 0] element_output_ready;
+  end : element_handshake
 
   for (genvar i = 0; i < LEVELS; i++) begin : level
 
@@ -66,13 +74,33 @@ module comparator_tree #(
           .clk(clk),
           .rst(rst),
           .data_in(result),
-          .data_in_valid(vars[i].valid),
-          .data_in_ready(vars[i].ready),
+          .data_in_valid(element_handshake[i].element_input_valid[c]),
+          .data_in_ready(element_handshake[i].element_input_ready[c]),
           .data_out(vars[i+1].data[c]),
-          .data_out_valid(vars[i+1].valid),
-          .data_out_ready(vars[i+1].ready)
+          .data_out_valid(element_handshake[i].element_output_valid[c]),
+          .data_out_ready(element_handshake[i].element_output_ready[c])
       );
     end
+
+    // Join handshake signals from each skid buffer into a single 
+    // handshake interface to drive the next level
+    split_n #(
+      .N (2 ** (LEVELS - i - 1))
+    ) handshake_split (
+        .data_in_valid    (vars[i].valid),
+        .data_in_ready    (vars[i].ready),
+        .data_out_valid   (element_handshake[i].element_input_valid),
+        .data_out_ready   (element_handshake[i].element_input_ready)
+    );
+
+    join_n #(
+      .NUM_HANDSHAKES (2 ** (LEVELS - i - 1))
+    ) handshake_join (
+      .data_in_valid    (element_handshake[i].element_output_valid),
+      .data_in_ready    (element_handshake[i].element_output_ready),
+      .data_out_valid   (vars[i+1].valid),
+      .data_out_ready   (vars[i+1].ready)
+    );
   end
 
   // Connect up first and last layer wires

@@ -248,4 +248,6 @@ quantized_module_map = {
     "softplus_ternary": SoftplusTernary,
     "batch_norm1d_fixed": BatchNorm1dInteger,
     "batch_norm1d_linear": BatchNorm1dInteger,
+    "bert_self_attention_head_integer": BertSelfAttentionHeadInteger,
+    "bert_self_attention_integer": BertSelfAttentionInteger,
 }

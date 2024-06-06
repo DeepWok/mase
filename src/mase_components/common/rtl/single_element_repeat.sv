@@ -47,9 +47,9 @@ end else begin : gen_repeater
 
     // Counters
     logic [CTR_WIDTH-1:0] count;
-  } self_t;
+  } SELF_T;
 
-  self_t self, next_self;
+  SELF_T self, next_self;
 
   always_comb begin
 

@@ -6,9 +6,6 @@ from torch import Tensor
 # from .quantizers import integer_quantizer
 from .utils import block, my_clamp, my_round, unblock, my_floor
 
-# from mase_cocotb.utils import sign_extend
-
-
 def integer_quantizer_for_hw(x: Tensor, width: int, frac_width: int):
     thresh = 2 ** (width - 1)
     scale = 2**frac_width

@@ -1,4 +1,5 @@
 import logging
+from tabulate import tabulate
 
 logger = logging.getLogger(__name__)
 
@@ -15,8 +16,19 @@ def report_graph_analysis_pass(graph, pass_args={"file_name": None}):
     :rtype: tuple(MaseGraph, dict)
     """
     file_name = pass_args.get("file_name")
-    buff = ""
-    buff += str(graph.fx_graph)
+    buff = """
+Graph Analysis Report
+
+===================== Graph Summary =====================
+
+    """
+    node_specs = [
+        [n.op, n.name, n.target, n.args, n.kwargs] for n in graph.fx_graph.nodes
+    ]
+
+    buff += str(
+        tabulate(node_specs, headers=["opcode", "name", "target", "args", "kwargs"])
+    )
     count = {
         "placeholder": 0,
         "get_attr": 0,
@@ -33,8 +45,17 @@ def report_graph_analysis_pass(graph, pass_args={"file_name": None}):
 
     for node in graph.fx_graph.nodes:
         count[node.op] += 1
-    buff += f"""\nNetwork overview:
+    buff += f"""
+    
+===================== Graph Syntax =====================
+
+{str(graph.fx_graph)}
+
+===================== Graph Overview =====================
+
+Network overview:
 {count}
+
 Layer types:
 {layer_types}"""
     if file_name is None:

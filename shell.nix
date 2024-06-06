@@ -19,7 +19,7 @@ in pkgs.mkShellNoCC {
     pythonPackages.venvShellHook
     # pythonPackages.torch-bin
 
-    # houskeeping 
+    # houskeeping
     git
     neovim
     glib
@@ -27,6 +27,7 @@ in pkgs.mkShellNoCC {
     mesa
     cmake
     zsh
+    just
 
     # hardware
     # verible is only supported on Linux (x86_64-linux, i686-linux and aarch64-linux)
@@ -39,7 +40,7 @@ in pkgs.mkShellNoCC {
   postShellHook = ''
     # install mase as a package
     python3 -m pip install -e .
-    # add env variables 
+    # add env variables
     source scripts/init-nix.sh
   '';
 }

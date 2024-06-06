@@ -48,18 +48,18 @@ module softermax_lpw_reciprocal #(
   localparam RANGE_REDUCED_FRAC_WIDTH = IN_WIDTH - 1;
 
   // Slope: m
-  localparam SLOPE_WIDTH = 1 + SLOPE_FRAC_WIDTH;
   // IMPORTANT: This determines how precise the output of this module is.
   //            SLOPE_FRAC_WIDTH = OUT_WIDTH is maximum precision.
   localparam SLOPE_FRAC_WIDTH = OUT_WIDTH;
+  localparam SLOPE_WIDTH = 1 + SLOPE_FRAC_WIDTH;
 
   // Mult: mx
   localparam MULT_WIDTH = RANGE_REDUCED_WIDTH + SLOPE_WIDTH;
   localparam MULT_FRAC_WIDTH = RANGE_REDUCED_FRAC_WIDTH + SLOPE_FRAC_WIDTH;
 
   // Intercept (need to match mx frac): c
-  localparam INTERCEPT_WIDTH = 2 + INTERCEPT_FRAC_WIDTH;  // Needs 2 integer bits
   localparam INTERCEPT_FRAC_WIDTH = MULT_FRAC_WIDTH;
+  localparam INTERCEPT_WIDTH = 2 + INTERCEPT_FRAC_WIDTH;  // Needs 2 integer bits
 
   // Output width: mx + c
   localparam LPW_WIDTH = MULT_WIDTH + 1;

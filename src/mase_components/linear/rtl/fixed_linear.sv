@@ -22,34 +22,41 @@ module fixed_linear #(
 
     parameter DATA_IN_0_PRECISION_0 = 16,
     parameter DATA_IN_0_PRECISION_1 = 3,
-    parameter DATA_IN_0_TENSOR_SIZE_DIM_0 = 4,
-    parameter DATA_IN_0_TENSOR_SIZE_DIM_1 = 1,
+    parameter DATA_IN_0_TENSOR_SIZE_DIM_0 = 20,
+    parameter DATA_IN_0_TENSOR_SIZE_DIM_1 = 20,
+    parameter DATA_IN_0_TENSOR_SIZE_DIM_2 = 1,
     parameter DATA_IN_0_PARALLELISM_DIM_0 = 4,  // must equal WEIGHT_PARALLELISM_DIM_1
-    parameter DATA_IN_0_PARALLELISM_DIM_1 = 1,
-    parameter IN_0_DEPTH = DATA_IN_0_TENSOR_SIZE_DIM_0 / DATA_IN_0_PARALLELISM_DIM_0,
+    parameter DATA_IN_0_PARALLELISM_DIM_1 = 4,
+    parameter DATA_IN_0_PARALLELISM_DIM_2 = 1,
+    localparam IN_0_DEPTH_DIM_0 = DATA_IN_0_TENSOR_SIZE_DIM_0 / DATA_IN_0_PARALLELISM_DIM_0,
+    localparam IN_0_DEPTH_DIM_1 = DATA_IN_0_TENSOR_SIZE_DIM_1 / DATA_IN_0_PARALLELISM_DIM_1,
 
     parameter WEIGHT_PRECISION_0 = 16,
     parameter WEIGHT_PRECISION_1 = 3,
-    parameter WEIGHT_TENSOR_SIZE_DIM_0 = 32,
-    parameter WEIGHT_TENSOR_SIZE_DIM_1 = 1,
+    parameter WEIGHT_TENSOR_SIZE_DIM_0 = 20,
+    parameter WEIGHT_TENSOR_SIZE_DIM_1 = 20,
     parameter WEIGHT_PARALLELISM_DIM_0 = 4,
     parameter WEIGHT_PARALLELISM_DIM_1 = 4,
+
+    // Inferred precision of the output data
+    parameter DATA_OUT_0_PRECISION_0 = 16,
+    parameter DATA_OUT_0_PRECISION_1 = 3,
+    parameter DATA_OUT_0_TENSOR_SIZE_DIM_0 = WEIGHT_TENSOR_SIZE_DIM_0,
+    parameter DATA_OUT_0_TENSOR_SIZE_DIM_1 = DATA_IN_0_TENSOR_SIZE_DIM_1,
+    parameter DATA_OUT_0_TENSOR_SIZE_DIM_2 = DATA_IN_0_TENSOR_SIZE_DIM_1,
+    parameter DATA_OUT_0_PARALLELISM_DIM_0 = WEIGHT_PARALLELISM_DIM_0,
+    parameter DATA_OUT_0_PARALLELISM_DIM_1 = DATA_IN_0_PARALLELISM_DIM_1,
+    parameter DATA_OUT_0_PARALLELISM_DIM_2 = DATA_IN_0_PARALLELISM_DIM_1,
 
     parameter BIAS_PRECISION_0 = 16,
     parameter BIAS_PRECISION_1 = 3,
     parameter BIAS_TENSOR_SIZE_DIM_0 = DATA_OUT_0_TENSOR_SIZE_DIM_0,
     parameter BIAS_TENSOR_SIZE_DIM_1 = 1,
-    parameter BIAS_PARALLELISM_DIM_0 = 1,
+    parameter BIAS_PARALLELISM_DIM_0 = 4,
     parameter BIAS_PARALLELISM_DIM_1 = 1,
+    localparam BIAS_DEPTH_DIM_0 = BIAS_TENSOR_SIZE_DIM_0 / BIAS_PARALLELISM_DIM_0,
+    localparam BIAS_DEPTH_DIM_1 = BIAS_TENSOR_SIZE_DIM_1 / BIAS_PARALLELISM_DIM_1
 
-    // Inferred precision of the output data
-    parameter DATA_OUT_0_PRECISION_0 = 16,
-    parameter DATA_OUT_0_PRECISION_1 = 3,
-
-    parameter DATA_OUT_0_TENSOR_SIZE_DIM_0 = WEIGHT_TENSOR_SIZE_DIM_0,
-    parameter DATA_OUT_0_TENSOR_SIZE_DIM_1 = DATA_IN_0_TENSOR_SIZE_DIM_1,
-    parameter DATA_OUT_0_PARALLELISM_DIM_0 = WEIGHT_PARALLELISM_DIM_0,
-    parameter DATA_OUT_0_PARALLELISM_DIM_1 = DATA_IN_0_PARALLELISM_DIM_1
 ) (
     input clk,
     input rst,
@@ -83,6 +90,12 @@ module fixed_linear #(
       else $fatal("Input bias and output data must have the same parallelism.");
     end
   end
+  // The TENSOR_SIZE and PARALLELISM parameters for the weights are set by emit verilog according to the real
+  // tensor values. Here we account for the change when the weights are pre-transposed
+  localparam REAL_WEIGHT_TENSOR_SIZE_DIM_0 = (WEIGHTS_PRE_TRANSPOSED == 0) ? WEIGHT_TENSOR_SIZE_DIM_1 : WEIGHT_TENSOR_SIZE_DIM_0;
+  localparam REAL_WEIGHT_TENSOR_SIZE_DIM_1 = (WEIGHTS_PRE_TRANSPOSED == 0) ? WEIGHT_TENSOR_SIZE_DIM_0 : WEIGHT_TENSOR_SIZE_DIM_1;
+  localparam REAL_WEIGHT_PARALLELISM_DIM_0 = (WEIGHTS_PRE_TRANSPOSED == 0) ? WEIGHT_PARALLELISM_DIM_1 : WEIGHT_PARALLELISM_DIM_0;
+  localparam REAL_WEIGHT_PARALLELISM_DIM_1 = (WEIGHTS_PRE_TRANSPOSED == 0) ? WEIGHT_PARALLELISM_DIM_0 : WEIGHT_PARALLELISM_DIM_1;
 
   // * Declarations
   // * ---------------------------------------------------------------------------------------------------
@@ -95,7 +108,10 @@ module fixed_linear #(
   logic matmul_out_valid;
   logic matmul_out_ready;
 
-  logic [DATA_OUT_0_PRECISION_0-1:0] bias_casted [DATA_OUT_0_PARALLELISM_DIM_0*DATA_OUT_0_PARALLELISM_DIM_1-1:0];
+  logic [DATA_OUT_0_PRECISION_0-1:0] bias_buffered [BIAS_PARALLELISM_DIM_0 * BIAS_PARALLELISM_DIM_1 -1:0];
+  logic bias_buffered_valid, bias_buffered_ready;
+
+  logic [DATA_OUT_0_PRECISION_0-1:0] bias_casted [BIAS_PARALLELISM_DIM_0 * BIAS_PARALLELISM_DIM_1 -1:0];
   logic [DATA_OUT_0_PRECISION_0-1:0] add_bias_in [DATA_OUT_0_PARALLELISM_DIM_0*DATA_OUT_0_PARALLELISM_DIM_1-1:0];
   logic add_bias_in_valid;
   logic add_bias_in_ready;
@@ -128,13 +144,13 @@ module fixed_linear #(
       // Total dimensions
       .A_TOTAL_DIM0(DATA_IN_0_TENSOR_SIZE_DIM_0),
       .A_TOTAL_DIM1(DATA_IN_0_TENSOR_SIZE_DIM_1),
-      .B_TOTAL_DIM0(WEIGHT_TENSOR_SIZE_DIM_0),
-      .B_TOTAL_DIM1(WEIGHT_TENSOR_SIZE_DIM_1),
+      .B_TOTAL_DIM0(REAL_WEIGHT_TENSOR_SIZE_DIM_0),
+      .B_TOTAL_DIM1(REAL_WEIGHT_TENSOR_SIZE_DIM_1),
 
       .A_COMPUTE_DIM0(DATA_IN_0_PARALLELISM_DIM_0),
       .A_COMPUTE_DIM1(DATA_IN_0_PARALLELISM_DIM_1),
-      .B_COMPUTE_DIM0(WEIGHT_PARALLELISM_DIM_0),
-      .B_COMPUTE_DIM1(WEIGHT_PARALLELISM_DIM_1),
+      .B_COMPUTE_DIM0(REAL_WEIGHT_PARALLELISM_DIM_0),
+      .B_COMPUTE_DIM1(REAL_WEIGHT_PARALLELISM_DIM_1),
 
       .A_WIDTH     (DATA_IN_0_PRECISION_0),
       .A_FRAC_WIDTH(DATA_IN_0_PRECISION_1),
@@ -165,10 +181,30 @@ module fixed_linear #(
   if (HAS_BIAS == 1) begin
 
     join2 join2_matmul_bias_i (
-        .data_in_valid ({matmul_out_valid, bias_valid}),
-        .data_in_ready ({matmul_out_ready, bias_ready}),
+        .data_in_valid ({matmul_out_valid, bias_buffered_valid}),
+        .data_in_ready ({matmul_out_ready, bias_buffered_ready}),
         .data_out_valid(add_bias_in_valid),
         .data_out_ready(add_bias_in_ready)
+    );
+
+    unpacked_repeat_circular_buffer #(
+        .DATA_WIDTH (BIAS_PRECISION_0),
+        .IN_NUM     (BIAS_PARALLELISM_DIM_0 * BIAS_PARALLELISM_DIM_1),
+        .REPEAT     (IN_0_DEPTH_DIM_1),
+        .SIZE       (BIAS_DEPTH_DIM_0)
+    ) bias_buffer_inst (
+        .clk,
+        .rst,
+
+        // Input streaming port
+        .in_data    (bias),
+        .in_valid   (bias_valid),
+        .in_ready   (bias_ready),
+
+        // Output streaming port
+        .out_data   (bias_buffered),
+        .out_valid  (bias_buffered_valid),
+        .out_ready  (bias_buffered_ready)
     );
 
     unpacked_register_slice #(
@@ -178,13 +214,13 @@ module fixed_linear #(
         .clk(clk),
         .rst(rst),
 
-        .in_data (add_bias_in),
-        .in_valid(add_bias_in_valid),
-        .in_ready(add_bias_in_ready),
+        .data_in (add_bias_in),
+        .data_in_valid(add_bias_in_valid),
+        .data_in_ready(add_bias_in_ready),
 
-        .out_data (data_out_0),
-        .out_valid(data_out_0_valid),
-        .out_ready(data_out_0_ready)
+        .data_out (data_out_0),
+        .data_out_valid(data_out_0_valid),
+        .data_out_ready(data_out_0_ready)
     );
   end
 
@@ -205,19 +241,22 @@ module fixed_linear #(
   // * Add bias
   if (HAS_BIAS == 1) begin
     fixed_cast #(
-        .IN_SIZE       (DATA_OUT_0_PARALLELISM_DIM_0 * DATA_OUT_0_PARALLELISM_DIM_1),
+        .IN_SIZE       (BIAS_PARALLELISM_DIM_0 * BIAS_PARALLELISM_DIM_1),
         .IN_WIDTH      (BIAS_PRECISION_0),
         .IN_FRAC_WIDTH (BIAS_PRECISION_1),
         .OUT_WIDTH     (DATA_OUT_0_PRECISION_0),
         .OUT_FRAC_WIDTH(DATA_OUT_0_PRECISION_1)
     ) bias_cast_i (
-        .data_in (bias),
+        .data_in (bias_buffered),
         .data_out(bias_casted)
     );
 
-    for (genvar i = 0; i < DATA_OUT_0_PARALLELISM_DIM_0 * DATA_OUT_0_PARALLELISM_DIM_1; i++) begin
-      assign add_bias_in[i] = $signed(matmul_out[i]) + $signed(bias_casted[i]);
+    for (genvar i_0 = 0; i_0 < DATA_OUT_0_PARALLELISM_DIM_0 ; i_0++) begin
+      for (genvar i_1 = 0; i_1 < DATA_OUT_0_PARALLELISM_DIM_1 ; i_1++) begin
+        assign add_bias_in [i_1 * DATA_OUT_0_PARALLELISM_DIM_0 + i_0] = $signed(matmul_out[i_1 * DATA_OUT_0_PARALLELISM_DIM_0 + i_0])  + $signed(bias_casted[i_0]);
+      end
     end
+
   end else begin
     assign data_out_0 = matmul_out;
     assign data_out_0_valid = matmul_out_valid;
