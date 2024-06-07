@@ -55,6 +55,8 @@ sphinx-glpi-theme
 prettytable
 pyyaml
 bitstring
+# rl
+stable-baselines3[extra]
 
 # CUDA required
 # onnxruntime-gpu

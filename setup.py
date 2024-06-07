@@ -49,7 +49,7 @@ requirements = [
     "tabulate",
     "tensorboard",
     "optuna",
-    "stable-baselines3",
+    "stable-baselines3[extra]",
     "scikit-learn",
     "h5py",
     "pyyaml",
