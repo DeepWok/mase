@@ -512,7 +512,6 @@ class FixedGroupedQueryAttentionTB(Testbench):
             }, f, indent=4)
 
 
-
 @cocotb.test(skip=True)
 async def basic(dut):
     tb = FixedGroupedQueryAttentionTB(dut)

@@ -1,10 +1,13 @@
 from pathlib import Path
 import math
 from datetime import datetime
+import os
+import random
 
 import torch
 from torch import nn
 
+import numpy as np
 import pandas as pd
 
 from transformers import (
@@ -12,35 +15,36 @@ from transformers import (
     AutoTokenizer,
     AutoConfig,
     DataCollatorWithPadding,
+    DataCollatorForSeq2Seq,
     DataCollatorForLanguageModeling,
     Trainer,
     TrainingArguments,
     LlamaModel,
     LlamaForCausalLM,
 )
+from transformers.models.llama.modeling_llama import LlamaSdpaAttention
 from datasets import load_dataset
 import evaluate
 
 checkpoint = "JackFram/llama-160m"
 print("Num GPUs:", torch.cuda.device_count())
-device = torch.device(2)
+device = torch.device(0)
 
 def num_params(model):
     return sum(p.numel() for p in model.parameters() if p.requires_grad)
 
 
-def training_small_llama2(cache_dir):
+def training_small_llama2():
     """
     Training on small Llama-2 style model on a dataset to see effects of
     varying num KV heads on the accuracy of the model.
     """
     cfg = AutoConfig.from_pretrained(
         "meta-llama/Llama-2-7b-hf",
-        cache_dir=cache_dir,
     )
     # Lower the number of layers
     cfg.num_hidden_layers = 4
-    
+
     # Adjust number of kv heads
     # cfg.num_key_value_heads = 1, 2, 4, 8, 16, 32 ...
 
@@ -98,51 +102,50 @@ def transform_weights_gqa(
         # (num_kv_heads * head_dim, hidden_size)
         gqa_weights = gqa_weights.reshape(new_num_kv_heads * head_dim, hidden_size)
         return gqa_weights
-    
+
 
     with torch.no_grad():
         for llama_decoder_layer in model.model.layers:
 
-            self_attn = llama_decoder_layer.self_attn
+            old_self_attn = llama_decoder_layer.self_attn
 
-            # Replace K Projection
-            k_weights = self_attn.k_proj.weight
-            k_dev = k_weights.device
+            new_cfg = old_self_attn.config
+            new_cfg.num_key_value_heads = new_num_kv_heads
+
+            # Make new attention layer
+            new_self_attn = LlamaSdpaAttention(
+                config=new_cfg,
+                layer_idx=old_self_attn.layer_idx,
+            )
+
+            # Same Q & O projections
+            new_self_attn.q_proj.weight = old_self_attn.q_proj.weight
+            new_self_attn.o_proj.weight = old_self_attn.o_proj.weight
+
+            # Replace K Projection into GQA
+            k_weights = old_self_attn.k_proj.weight
             new_k_weights = _transform_llama_linear_weights(k_weights)
-            self_attn.k_proj = nn.Linear(
-                hidden_size,
-                new_num_kv_heads * head_dim,
-                bias=False,
-            )
-            self_attn.k_proj.weight[:,:] = new_k_weights
-            self_attn.k_proj.to(device=k_dev)
+            new_self_attn.k_proj.weight[:,:] = new_k_weights
 
-            # Replace V Projection
-            v_weights = self_attn.v_proj.weight
-            v_dev = v_weights.device
+            # Make V Projection into GQA
+            v_weights = old_self_attn.v_proj.weight
             new_v_weights = _transform_llama_linear_weights(v_weights)
-            self_attn.v_proj = nn.Linear(
-                hidden_size,
-                new_num_kv_heads * head_dim,
-                bias=False,
-            )
-            self_attn.v_proj.weight[:,:] = new_v_weights
-            self_attn.v_proj.to(device=v_dev)
+            new_self_attn.v_proj.weight[:,:] = new_v_weights
 
-            # Replace params
-            self_attn.num_key_value_heads = new_num_kv_heads
-            self_attn.num_key_value_groupsn = num_heads // new_num_kv_heads
+            # Assign back
+            llama_decoder_layer.self_attn = new_self_attn
 
-
+    model = model.cuda()
     return model
 
 
-def eli5_dataset(cache_dir):
+def eli5_dataset():
+    """5000 Rows of ELI5 Category Dataset"""
+
     # Tokenizer & Data Collator
     tokenizer = AutoTokenizer.from_pretrained(
         checkpoint,
         padding_side="left",
-        cache_dir=cache_dir,
     )
     tokenizer.pad_token = tokenizer.eos_token
     data_collator = DataCollatorForLanguageModeling(tokenizer=tokenizer, mlm=False)
@@ -152,7 +155,6 @@ def eli5_dataset(cache_dir):
         "eli5_category",
         split="train[:5000]",
         trust_remote_code=True,
-        cache_dir=cache_dir,
     )
     raw_dataset = raw_dataset.train_test_split(test_size=0.2)
     raw_dataset = raw_dataset.flatten()
@@ -180,30 +182,76 @@ def eli5_dataset(cache_dir):
     return model_inputs, data_collator
 
 
-def billsum_dataset(cache_dir):
+def billsum_dataset():
     billsum = load_dataset("billsum", split="ca_test")
+    billsum = billsum.train_test_split(test_size=0.2)
+    tokenizer = AutoTokenizer.from_pretrained(checkpoint)
+    prefix = "Summarize: "
+
+    def _preprocess_fn(examples):
+        inputs = [prefix + doc for doc in examples["text"]]
+        model_inputs = tokenizer(inputs, max_length=1024, truncation=True)
+
+        labels = tokenizer(text_target=examples["summary"], max_length=128, truncation=True)
+
+        model_inputs["labels"] = labels["input_ids"]
+        return model_inputs
+
+    model_inputs = billsum.map(
+        _preprocess_fn,
+        batched=True,
+        num_proc=4,
+        remove_columns=billsum["train"].features,
+    )
+    data_collator = DataCollatorForSeq2Seq(tokenizer=tokenizer, model=checkpoint)
+
+    return model_inputs, data_collator
+
+def compute_metrics(tokenizer, eval_pred):
+    rouge = evaluate.load("rouge")
+    predictions, labels = eval_pred
+    decoded_preds = tokenizer.batch_decode(predictions, skip_special_tokens=True)
+    labels = np.where(labels != -100, labels, tokenizer.pad_token_id)
+    decoded_labels = tokenizer.batch_decode(labels, skip_special_tokens=True)
+
+    result = rouge.compute(predictions=decoded_preds, references=decoded_labels, use_stemmer=True)
+
+    prediction_lens = [np.count_nonzero(pred != tokenizer.pad_token_id) for pred in predictions]
+    result["gen_len"] = np.mean(prediction_lens)
+
+    return {k: round(v, 4) for k, v in result.items()}
 
 
-def sweep_pretrained_llama2(cache_dir):
+def sweep_pretrained_llama2_language_modelling(
+    output_dir: Path,
+    task: str,
+    choices_kv_heads: list[int] = [1, 2, 3, 4, 6, 12],
+    learning_rate = 2e-5,
+    weight_decay = 0.01,
+    seed = random.randint(0, 2**30),
+):
     """
     Taking pretrained Llama-2-7B and using mean weights as described by GQA paper.
     """
 
-    model_inputs, data_collator = eli5_dataset(cache_dir)
+    _tasks = ["language_modelling", "summarization"]
+    assert task in _tasks, f"<task> arg needs to be one of {_tasks}!"
+
+    if task == "language_modelling":
+        model_inputs, data_collator = eli5_dataset()
+    elif task == "summarization":
+        model_inputs, data_collator = billsum_dataset()
 
     sweep_data = []
 
-    choices_kv_heads = [1, 2, 3, 4, 6, 12]
-
     # for kv_heads in choices_kv_heads:
-    for kv_heads in [1]:
+    for kv_heads in choices_kv_heads:
 
-        print(f"#### TEST: KV_HEADS={kv_heads}")
+        print(f"#### TEST: KV_HEADS={kv_heads}, seed: {seed}")
 
         # Load model with desired number of kv heads
         model: LlamaForCausalLM = AutoModelForCausalLM.from_pretrained(
             checkpoint,
-            cache_dir=cache_dir
         )
         model = transform_weights_gqa(model, new_num_kv_heads=kv_heads)
         model.to(device=device)
@@ -211,6 +259,8 @@ def sweep_pretrained_llama2(cache_dir):
         # Setup data gathering
         self_attn = model.model.layers[0].self_attn
         data_record = {
+            "task": task,
+            "seed": seed,
             "vocab_size": model.model.vocab_size,
             "attention_dropout": self_attn.attention_dropout,
             "hidden_size": self_attn.hidden_size,
@@ -221,17 +271,22 @@ def sweep_pretrained_llama2(cache_dir):
             "max_position_embeddings": self_attn.max_position_embeddings,
             "rope_theta": self_attn.rope_theta,
             "is_causal": self_attn.is_causal,
+            "learning_rate": learning_rate,
+            "weight_decay": weight_decay,
         }
 
         # Setup Trainer
+        working_dir = output_dir / f"{kv_heads}_kv_heads"
+        os.makedirs(working_dir, exist_ok=True)
         training_args = TrainingArguments(
-            output_dir="llama2-trainer",
+            output_dir=str(working_dir),
             eval_strategy="epoch",
-            learning_rate=2e-5,
-            weight_decay=0.01,
+            learning_rate=learning_rate,
+            weight_decay=weight_decay,
             per_device_train_batch_size=8,
             push_to_hub=False,
             report_to="none",
+            seed=seed,
         )
 
         trainer = Trainer(
@@ -247,7 +302,7 @@ def sweep_pretrained_llama2(cache_dir):
             trainer.train()
 
         eval_results = trainer.evaluate()
-    
+
         data_record.update({
             "eval_loss": eval_results['eval_loss'],
             "perplexity": math.exp(eval_results['eval_loss']),
@@ -260,8 +315,14 @@ def sweep_pretrained_llama2(cache_dir):
 
 
 if __name__ == "__main__":
-    cache_dir = Path(__file__).parent / ".cache"
     output_dir = Path(__file__).parent / "output"
-    data = sweep_pretrained_llama2(cache_dir=cache_dir)
     timestamp = datetime.now().strftime("%y-%m-%d-%H-%M-%S")
-    data.to_csv(output_dir / f"llama2_kv_head_sweep_{timestamp}.csv")
+    timestamp_dir = output_dir / timestamp
+    os.makedirs(timestamp_dir, exist_ok=True)
+
+    # Run
+    data = sweep_pretrained_llama2_language_modelling(
+        output_dir=timestamp_dir,
+        task="language_modelling",
+    )
+    data.to_csv(timestamp_dir / f"llama2_kv_head_sweep_{timestamp}.csv")
