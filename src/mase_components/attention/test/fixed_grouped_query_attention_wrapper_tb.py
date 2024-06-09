@@ -662,14 +662,13 @@ def mistral():
         extra_build_args=["--unroll-count", "10000"]
     )
 
-def mqa():
-    cfgs = [get_config(32, 32, 4, 1, 8, 1)]
+def llama_150m():
+    cfgs = [get_config(2048, 784, 12, 12, 8, 1)]
     mase_runner(
         module_param_list=cfgs,
         hierarchical=True,
         template=True,
-        trace=True,
-        extra_build_args=["--prof-cfuncs", "-CFLAGS", "-DVL_DEBUG"]
+        sim="questa",
     )
 
 
@@ -677,8 +676,9 @@ if __name__ == "__main__":
     # test_fixed_linear_smoke()
     # test_parallelism_sweep()
     # test_small_parallelism()
-    test_heads_sweep()
+    # test_heads_sweep()
     # test_bitwidth_sweep()
     # more_realistic()
     # mistral()
     # mqa()
+    llama_150m()

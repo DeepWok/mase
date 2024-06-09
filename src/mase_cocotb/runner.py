@@ -28,6 +28,32 @@ def _replace_template(file_lines: list[str], module_params: dict):
 
     return new_file
 
+
+def _verilator_args(hierarchical, trace):
+    return [
+        # Verilator linter is overly strict.
+        # Too many errors
+        # These errors are in later versions of verilator
+        "-Wno-GENUNNAMED",
+        "-Wno-WIDTHEXPAND",
+        "-Wno-WIDTHTRUNC",
+        # Simulation Optimisation
+        "-Wno-UNOPTFLAT",
+        "-prof-c",
+        "--assert",
+        "--stats",
+        # Hierarchical
+        *(["--hierarchical"] if hierarchical else []),
+        # Signal trace in dump.fst
+        *(["--trace-fst", "--trace-structs"] if trace else []),
+        "-O2",
+        "-build-jobs",
+        "8",
+        "-Wno-fatal",
+        "-Wno-lint",
+        "-Wno-style",
+    ]
+
 def _single_test(
     i: int,  # id
     deps: list[str],
@@ -36,6 +62,7 @@ def _single_test(
     module_path: Path,
     comp_path: Path,
     test_work_dir: Path,
+    sim: str = "verilator",
     extra_build_args: list[str] = [],
     seed: int = None,
     trace: bool = False,
@@ -52,7 +79,7 @@ def _single_test(
         print(f"# - {k}: {v}")
     print("# ---------------------------------------")
 
-    runner = get_runner(getenv("SIM", "verilator"))
+    runner = get_runner(getenv("SIM", sim))
     if not skip_build:
 
         if template_path != None:
@@ -65,32 +92,17 @@ def _single_test(
             with open(module_path, 'w') as f:
                 f.writelines(new_lines)
 
+        if sim == "verilator":
+            tool_args = _verilator_args(hierarchical, trace)
+        elif sim == "questa":
+            tool_args = []
+
         runner.build(
             verilog_sources=[module_path],
             includes=[str(comp_path.joinpath(f"{d}/rtl/")) for d in deps],
             hdl_toplevel=module,
             build_args=[
-                # Verilator linter is overly strict.
-                # Too many errors
-                # These errors are in later versions of verilator
-                "-Wno-GENUNNAMED",
-                "-Wno-WIDTHEXPAND",
-                "-Wno-WIDTHTRUNC",
-                # Simulation Optimisation
-                "-Wno-UNOPTFLAT",
-                "-prof-c",
-                "--assert",
-                "--stats",
-                # Hierarchical
-                *(["--hierarchical"] if hierarchical else []),
-                # Signal trace in dump.fst
-                *(["--trace-fst", "--trace-structs"] if trace else []),
-                "-O2",
-                "-build-jobs",
-                "8",
-                "-Wno-fatal",
-                "-Wno-lint",
-                "-Wno-style",
+                *tool_args,
                 *extra_build_args,
             ],
             # Do not use params in hierarchical verilation
@@ -120,6 +132,7 @@ def _single_test(
 
 def mase_runner(
     module_param_list: list[dict[str, Any]] = [dict()],
+    sim: str = "verilator",
     extra_build_args: list[str] = [],
     trace: bool = False,
     seed: int = None,
@@ -179,6 +192,7 @@ def mase_runner(
                 module_path=module_path,
                 comp_path=comp_path,
                 test_work_dir=test_work_dir,
+                sim=sim,
                 extra_build_args=extra_build_args,
                 seed=seed,
                 trace=trace,
@@ -209,6 +223,7 @@ def mase_runner(
                     module_path=module_path,
                     comp_path=comp_path,
                     test_work_dir=test_work_dir,
+                    sim=sim,
                     extra_build_args=extra_build_args,
                     seed=seed,
                     trace=trace,
@@ -285,25 +300,7 @@ def simulate_pass(
         includes=[rtl_dir],
         hdl_toplevel="top",
         build_args=[
-            # Verilator linter is overly strict.
-            # Too many errors
-            # These errors are in later versions of verilator
-            "-Wno-GENUNNAMED",
-            "-Wno-WIDTHEXPAND",
-            "-Wno-WIDTHTRUNC",
-            # Simulation Optimisation
-            "-Wno-UNOPTFLAT",
-            # Signal trace in dump.fst
-            *(["--trace-fst", "--trace-structs"] if trace else []),
-            "-prof-c",
-            "--stats",
-            "--assert",
-            "-O2",
-            "-build-jobs",
-            "8",
-            "-Wno-fatal",
-            "-Wno-lint",
-            "-Wno-style",
+            *_verilator_args(False, trace)
             *extra_build_args,
         ],
         parameters=module_params,
