@@ -4,6 +4,7 @@
 import os, math, logging
 
 from mase_cocotb.random_test import RandomSource, RandomSink, check_results
+from mase_cocotb.testbench import Testbench
 from mase_cocotb.runner import mase_runner
 
 import cocotb
@@ -19,11 +20,13 @@ if debug:
 
 
 # DUT test specifications
-class VerificationCase:
-    def __init__(self, samples=10):
-        self.data_in_width = 32
-        self.num = 9
-        self.data_out_width = math.ceil(math.log2(self.num)) + 32
+class VerificationCase(Testbench):
+    def __init__(self, dut, samples=10):
+        super().__init__(dut, dut.clk, dut.rst)
+        self.assign_self_params(["IN_SIZE", "IN_WIDTH"])
+        self.data_in_width = self.IN_WIDTH
+        self.num = self.IN_SIZE
+        self.data_out_width = math.ceil(math.log2(self.num)) + self.data_in_width
         self.inputs = RandomSource(
             samples=samples, num=self.num, max_stalls=2 * samples, debug=debug
         )
@@ -33,11 +36,11 @@ class VerificationCase:
         self.samples = samples
         self.ref = self.sw_compute()
 
-    def get_dut_parameters(self):
-        return {
-            "IN_SIZE": self.num,
-            "IN_WIDTH": self.data_in_width,
-        }
+    # def get_dut_parameters(self):
+    #     return {
+    #         "IN_SIZE": self.num,
+    #         "IN_WIDTH": self.data_in_width,
+    #     }
 
     def sw_compute(self):
         ref = []
@@ -61,7 +64,7 @@ def is_impossible_state(data_in_ready, data_in_valid, data_out_ready, data_out_v
 async def cocotb_test_fixed_adder_tree(dut):
     """Test integer based adder tree"""
     samples = 20
-    test_case = VerificationCase(samples=samples)
+    test_case = VerificationCase(dut, samples=samples)
 
     # Reset cycle
     await Timer(20, units="ns")
@@ -151,8 +154,24 @@ async def cocotb_test_fixed_adder_tree(dut):
 
 
 def test_fixed_adder_tree():
-    tb = VerificationCase()
-    mase_runner(module_param_list=[tb.get_dut_parameters()])
+    mase_runner(
+        module_param_list=[
+            # Power of 2's
+            {"IN_SIZE": 8, "IN_WIDTH": 32},
+            {"IN_SIZE": 4, "IN_WIDTH": 32},
+            {"IN_SIZE": 2, "IN_WIDTH": 32},
+            {"IN_SIZE": 16, "IN_WIDTH": 64},
+            {"IN_SIZE": 32, "IN_WIDTH": 7},
+            # 1 size edge case
+            {"IN_SIZE": 1, "IN_WIDTH": 32},
+            # Odd sizes
+            {"IN_SIZE": 3, "IN_WIDTH": 32},
+            {"IN_SIZE": 9, "IN_WIDTH": 8},
+            {"IN_SIZE": 7, "IN_WIDTH": 8},
+            {"IN_SIZE": 5, "IN_WIDTH": 8},
+        ],
+        trace=True,
+    )
 
 
 if __name__ == "__main__":

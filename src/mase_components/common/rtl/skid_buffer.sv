@@ -19,13 +19,17 @@ module skid_buffer #(
 
   logic [DATA_WIDTH - 1:0] data_buffer_out;
   logic data_buffer_wren;
+  logic data_out_wren;
+  logic use_buffered_data;
+  logic [DATA_WIDTH - 1:0] selected_data;
+  logic insert, remove;
+  logic load, flow, fill, flush, unload;
+
   always_ff @(posedge clk) begin
     if (rst) data_buffer_out <= 0;
     else if (data_buffer_wren) data_buffer_out <= data_in;
   end
-  logic data_out_wren;
-  logic use_buffered_data;
-  logic [DATA_WIDTH - 1:0] selected_data;
+
   assign selected_data = (use_buffered_data) ? data_buffer_out : data_in;
   always_ff @(posedge clk) begin
     if (rst) data_out <= 0;
@@ -55,13 +59,11 @@ module skid_buffer #(
       /* verilator lint_on WIDTH */
     end
   end
-  logic insert, remove;
   always_comb begin
     insert = (data_in_valid && data_in_ready);
     remove = (data_out_valid && data_out_ready);
   end
 
-  logic load, flow, fill, flush, unload;
   always_comb begin
     load   = (state == EMPTY) && ({insert, remove} == 2'b10);
     flow   = (state == BUSY) && ({insert, remove} == 2'b11);

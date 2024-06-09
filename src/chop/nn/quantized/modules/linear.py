@@ -11,6 +11,7 @@ from chop.nn.quantizers import (
     block_log_quantizer,
     block_minifloat_quantizer,
     integer_quantizer,
+    integer_floor_quantizer,
     log_quantizer,
     minifloat_denorm_quantizer,
     minifloat_ieee_quantizer,
@@ -53,36 +54,19 @@ class _LinearBase(torch.nn.Linear):
         self.x_quantizer = None
         self.w_quantizer = None
         self.b_quantizer = None
+        self.out_quantizer = lambda x: x
         self.pruning_masks = None
 
     def forward(self, x: Tensor) -> Tensor:
         if self.bypass:
-            # if bypss, there is no quantization
+            # if bypass, there is no quantization
             return F.linear(x, self.weight, self.bias)
         else:
             x = self.x_quantizer(x)
             w = self.w_quantizer(self.weight)
             bias = self.b_quantizer(self.bias) if self.bias is not None else None
-            return F.linear(x, w, bias)
-
-    # TODO: implement these as passes
-    # def get_quantized_weight(self) -> Tensor:
-    #     return self.w_quantizer(self.weight)
-
-    # def get_quantized_weights_with_inputs(self, x: Tensor) -> Tensor:
-    #     x = self.x_quantizer(x)
-    #     w = self.w_quantizer(self.weight)
-    #     bias = self.b_quantizer(self.bias) if self.bias is not None else None
-    #     y = F.linear(x, w, bias)
-    #     return {
-    #         "x": x,
-    #         "w": w,
-    #         "bias": bias,
-    #         "y": y,
-    #     }
-
-    # def get_output_bitwidth(self) -> dict:
-    #     raise NotImplementedError()
+            out = F.linear(x, w, bias)
+            return self.out_quantizer(out)
 
 
 class LinearInteger(_LinearBase):
@@ -94,10 +78,13 @@ class LinearInteger(_LinearBase):
         device=None,
         dtype=None,
         config=None,
+        out_config=None,
+        floor=False,
     ) -> None:
         super().__init__(in_features, out_features, bias, device, dtype)
         assert config is not None, "config is None!"
         self.config = config
+        self.out_config = out_config
         self.bypass = config.get("bypass", False)
         if self.bypass:
             return
@@ -106,6 +93,12 @@ class LinearInteger(_LinearBase):
         x_width, x_frac_width = config["data_in_width"], config["data_in_frac_width"]
         # check bias quantizer, if not, use weight quantizer
         b_width, b_frac_width = config["bias_width"], config["bias_frac_width"]
+        if out_config is not None:
+            out_width, out_frac_width = (
+                out_config["data_out_width"],
+                out_config["data_out_frac_width"],
+            )
+        base_quantizer = integer_floor_quantizer if floor else integer_quantizer
         self.w_quantizer = partial(
             integer_quantizer, width=w_width, frac_width=w_frac_width
         )
@@ -115,26 +108,10 @@ class LinearInteger(_LinearBase):
         self.b_quantizer = partial(
             integer_quantizer, width=b_width, frac_width=b_frac_width
         )
-
-    # def get_output_bitwidth(self):
-    #     config = self.config
-    #     w_width, w_frac = config["weight_width"], config["weight_frac_width"]
-    #     x_width, x_frac = config["data_in_width"], config["data_in_frac_width"]
-    #     bias_width = config["bias_width"]
-
-    #     ops = self.in_features
-    #     product_width = w_width + x_width
-    #     product_frac_width = w_frac + x_frac
-    #     # *: + 1 for bias
-    #     output_width = max(bias_width, product_width + ceil(log2(ops))) + 1
-    #     output_frac_width = product_frac_width
-
-    #     o_bitwidth = {}
-    #     o_bitwidth["data_out_width"] = output_width
-    #     o_bitwidth["data_out_frac_width"] = output_frac_width
-    #     # o_bitwidth["product_width"] = product_width
-    #     # o_bitwidth["product_frac_width"] = product_frac_width
-    #     return o_bitwidth
+        if out_config is not None:
+            self.out_quantizer = partial(
+                integer_floor_quantizer, width=out_width, frac_width=out_frac_width
+            )
 
 
 class LinearMinifloatDenorm(_LinearBase):
@@ -246,20 +223,6 @@ class LinearMinifloatIEEE(_LinearBase):
             exponent_width=b_exponent_width,
             exponent_bias=b_exponent_bias,
         )
-
-    # def get_output_bitwidth(self) -> dict:
-    #     num_ops = self.in_features
-    #     product_bitwidth = self.w_width + self.x_width
-    #     product_frac = self.w_frac_width + self.x_frac_width
-
-    #     addition_bitwidth = math.ceil(math.log(num_ops))
-    #     output_bitwidth = product_bitwidth + addition_bitwidth
-    #     return {
-    #         "output_width": output_bitwidth,
-    #         "output_frac_width": product_frac,
-    #         "product_width": product_bitwidth,
-    #         "product_frac_width": product_frac,
-    #     }
 
 
 class LinearLog(_LinearBase):

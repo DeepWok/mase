@@ -8,7 +8,6 @@ import torch.nn as nn
 
 import chop as chop
 import chop.passes as passes
-from chop.tools.utils import execute_cli
 
 from pathlib import Path
 
@@ -39,10 +38,9 @@ class MLP(torch.nn.Module):
     def __init__(self) -> None:
         super().__init__()
 
-        self.fc1 = nn.Linear(28 * 28, 28 * 28, bias=False)
+        self.fc1 = nn.Linear(768, 768, bias=True)
 
     def forward(self, x):
-        x = torch.flatten(x, start_dim=1, end_dim=-1)
         x = torch.nn.functional.relu(self.fc1(x))
         return x
 
@@ -52,8 +50,8 @@ def test_emit_verilog_linear():
     mg = chop.MaseGraph(model=mlp)
 
     # Provide a dummy input for the graph so it can use for tracing
-    batch_size = 1
-    x = torch.randn((batch_size, 28, 28))
+    batch_size = 20
+    x = torch.randn((batch_size, 768))
     dummy_in = {"x": x}
 
     mg, _ = passes.init_metadata_analysis_pass(mg, None)
@@ -105,15 +103,18 @@ def test_emit_verilog_linear():
         10 * torch.randn(mg.model.fc1.weight.shape)
     )
 
-    mg, _ = passes.add_hardware_metadata_analysis_pass(mg)
+    mg, _ = passes.add_hardware_metadata_analysis_pass(
+        mg, pass_args={"max_parallelism": [2]*4}
+    )
     mg, _ = passes.report_node_hardware_type_analysis_pass(mg)  # pretty print
 
     mg, _ = passes.emit_verilog_top_transform_pass(mg)
     mg, _ = passes.emit_bram_transform_pass(mg)
     mg, _ = passes.emit_internal_rtl_transform_pass(mg)
-    mg, _ = passes.emit_cocotb_transform_pass(mg)
+    mg, _ = passes.emit_cocotb_transform_pass(mg, pass_args={"wait_time": 100, "wait_unit": "ms", "batch_size": batch_size})
+    mg, _ = passes.emit_vivado_project_transform_pass(mg)
 
-    simulate(skip_build=False, skip_test=True)
+    simulate(skip_build=False, skip_test=False)
 
 
 if __name__ == "__main__":

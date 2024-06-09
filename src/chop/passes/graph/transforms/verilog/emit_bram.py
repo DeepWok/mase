@@ -35,25 +35,30 @@ def emit_parameters_in_mem_internal(node, param_name, file_name, data_name):
     """
     # ! TO DO: currently emitting too many parameters
 
+    verilog_param_name = param_name.replace(".", "_")
     total_size = math.prod(
-        node.meta["mase"].parameters["common"]["args"][param_name]["shape"]
+        node.meta["mase"].parameters["common"]["args"][verilog_param_name]["shape"]
     )
     # TO DO: change setting parallelism for weight in metadata
     # node.meta["mase"].parameters["hardware"]["verilog_param"][f"{_cap(param_name)}_PARALLELISM_DIM_1"]
     out_size = int(
         node.meta["mase"].parameters["hardware"]["verilog_param"][
-            f"{_cap(param_name)}_PARALLELISM_DIM_0"
+            f"{_cap(verilog_param_name)}_PARALLELISM_DIM_0"
         ]
-        * 4
+        * node.meta["mase"].parameters["hardware"]["verilog_param"][
+            f"{_cap(verilog_param_name)}_PARALLELISM_DIM_1"
+        ]
     )
     out_depth = int(total_size / out_size)
     out_width = int(
-        node.meta["mase"].parameters["common"]["args"][param_name]["precision"][0]
+        node.meta["mase"].parameters["common"]["args"][verilog_param_name]["precision"][
+            0
+        ]
     )
 
     addr_width = clog2(out_depth) + 1
 
-    node_param_name = f"{vf(node.name)}_{param_name}"
+    node_param_name = f"{vf(node.name)}_{verilog_param_name}"
 
     rom_verilog = f"""
 // =====================================
@@ -114,19 +119,19 @@ endmodule
 
 `timescale 1ns / 1ps
 module {node_param_name}_source #(
-    parameter {_cap(param_name)}_TENSOR_SIZE_DIM_0  = 32,
-    parameter {_cap(param_name)}_TENSOR_SIZE_DIM_1  = 1,
-    parameter {_cap(param_name)}_PRECISION_0 = 16,
-    parameter {_cap(param_name)}_PRECISION_1 = 3,
+    parameter {_cap(verilog_param_name)}_TENSOR_SIZE_DIM_0  = 32,
+    parameter {_cap(verilog_param_name)}_TENSOR_SIZE_DIM_1  = 1,
+    parameter {_cap(verilog_param_name)}_PRECISION_0 = 16,
+    parameter {_cap(verilog_param_name)}_PRECISION_1 = 3,
 
-    parameter {_cap(param_name)}_PARALLELISM_DIM_0 = 1,
-    parameter {_cap(param_name)}_PARALLELISM_DIM_1 = 1,
-    parameter OUT_DEPTH = {_cap(param_name)}_TENSOR_SIZE_DIM_0 / {_cap(param_name)}_PARALLELISM_DIM_0
+    parameter {_cap(verilog_param_name)}_PARALLELISM_DIM_0 = 1,
+    parameter {_cap(verilog_param_name)}_PARALLELISM_DIM_1 = 1,
+    parameter OUT_DEPTH = {_cap(verilog_param_name)}_TENSOR_SIZE_DIM_0 / {_cap(verilog_param_name)}_PARALLELISM_DIM_0
 ) (
     input clk,
     input rst,
 
-    output logic [{_cap(param_name)}_PRECISION_0-1:0] data_out      [{_cap(param_name)}_PARALLELISM_DIM_0 * {_cap(param_name)}_PARALLELISM_DIM_1-1:0],
+    output logic [{_cap(verilog_param_name)}_PRECISION_0-1:0] data_out      [{_cap(verilog_param_name)}_PARALLELISM_DIM_0 * {_cap(verilog_param_name)}_PARALLELISM_DIM_1-1:0],
     output                       data_out_valid,
     input                        data_out_ready
 );
@@ -146,9 +151,9 @@ module {node_param_name}_source #(
   logic ce0;
   assign ce0 = 1;
 
-  logic [{_cap(param_name)}_PRECISION_0*{_cap(param_name)}_TENSOR_SIZE_DIM_0-1:0] data_vector;
+  logic [{_cap(verilog_param_name)}_PRECISION_0*{_cap(verilog_param_name)}_TENSOR_SIZE_DIM_0-1:0] data_vector;
   {node_param_name} #(
-      .DATA_WIDTH({_cap(param_name)}_PRECISION_0 * {_cap(param_name)}_TENSOR_SIZE_DIM_0),
+      .DATA_WIDTH({_cap(verilog_param_name)}_PRECISION_0 * {_cap(verilog_param_name)}_TENSOR_SIZE_DIM_0),
       .ADDR_RANGE(OUT_DEPTH)
   ) {node_param_name}_mem (
       .clk(clk),
@@ -160,8 +165,8 @@ module {node_param_name}_source #(
 
   // Cocotb/verilator does not support array flattening, so
   // we need to manually add some reshaping process.
-  for (genvar j = 0; j < {_cap(param_name)}_TENSOR_SIZE_DIM_0; j++)
-    assign data_out[j] = data_vector[{_cap(param_name)}_PRECISION_0*j+{_cap(param_name)}_PRECISION_0-1:{_cap(param_name)}_PRECISION_0*j];
+  for (genvar j = 0; j < {_cap(verilog_param_name)}_PARALLELISM_DIM_0 * {_cap(verilog_param_name)}_PARALLELISM_DIM_1; j++)
+    assign data_out[j] = data_vector[{_cap(verilog_param_name)}_PRECISION_0*j+{_cap(verilog_param_name)}_PRECISION_0-1:{_cap(verilog_param_name)}_PRECISION_0*j];
 
   assign data_out_valid = 1;
 
@@ -170,42 +175,39 @@ endmodule
 
     with open(file_name, "w", encoding="utf-8") as outf:
         outf.write(rom_verilog)
-    logger.debug(f"ROM module {param_name} successfully written into {file_name}")
+    logger.debug(
+        f"ROM module {verilog_param_name} successfully written into {file_name}"
+    )
     assert os.path.isfile(file_name), "ROM Verilog generation failed."
-    os.system(f"verible-verilog-format --inplace {file_name}")
+    # os.system(f"verible-verilog-format --inplace {file_name}")
 
 
 def emit_parameters_in_dat_internal(node, param_name, file_name):
     """
     Emit initialised data for the ROM block. Each element must be in 8 HEX digits.
     """
+    verilog_param_name = param_name.replace(".", "_")
     total_size = math.prod(
-        node.meta["mase"].parameters["common"]["args"][param_name]["shape"]
+        node.meta["mase"].parameters["common"]["args"][verilog_param_name]["shape"]
     )
 
-    if "IN_DEPTH" in node.meta["mase"].parameters["hardware"]["verilog_param"].keys():
-        if param_name == "bias":
-            out_depth = 1
-        else:
-            out_depth = node.meta["mase"].parameters["hardware"]["verilog_param"][
-                "IN_DEPTH"
-            ]
-    else:
-        out_depth = total_size
-
-    out_size = iceil(total_size / out_depth)
-    # The depth of parameters must match with the input depth of data
-    assert (
-        total_size % out_depth == 0
-    ), f"Cannot partition imperfect size for now {node.name}.{param_name} = {total_size} / {out_depth}."
-    # Assume the first index is the total width
-    out_width = node.meta["mase"].parameters["common"]["args"][param_name]["precision"][
-        0
-    ]
+    # TO DO: change setting parallelism for weight in metadata
+    # node.meta["mase"].parameters["hardware"]["verilog_param"][f"{_cap(param_name)}_PARALLELISM_DIM_1"]
+    out_size = int(
+        node.meta["mase"].parameters["hardware"]["verilog_param"][
+            f"{_cap(verilog_param_name)}_PARALLELISM_DIM_0"
+        ]
+        * node.meta["mase"].parameters["hardware"]["verilog_param"][
+            f"{_cap(verilog_param_name)}_PARALLELISM_DIM_1"
+        ]
+    )
+    out_depth = int(total_size / out_size)
 
     data_buff = ""
     param_data = node.meta["mase"].module.get_parameter(param_name).data
-    if node.meta["mase"].parameters["hardware"]["interface"][param_name]["transpose"]:
+    if node.meta["mase"].parameters["hardware"]["interface"][verilog_param_name][
+        "transpose"
+    ]:
         param_data = torch.reshape(
             param_data,
             (
@@ -223,11 +225,14 @@ def emit_parameters_in_dat_internal(node, param_name, file_name):
         param_data = torch.transpose(param_data, 0, 1)
     param_data = torch.flatten(param_data).tolist()
 
-    if node.meta["mase"].parameters["common"]["args"][param_name]["type"] == "fixed":
-        width = node.meta["mase"].parameters["common"]["args"][param_name]["precision"][
-            0
-        ]
-        frac_width = node.meta["mase"].parameters["common"]["args"][param_name][
+    if (
+        node.meta["mase"].parameters["common"]["args"][verilog_param_name]["type"]
+        == "fixed"
+    ):
+        width = node.meta["mase"].parameters["common"]["args"][verilog_param_name][
+            "precision"
+        ][0]
+        frac_width = node.meta["mase"].parameters["common"]["args"][verilog_param_name][
             "precision"
         ][1]
 
@@ -328,15 +333,22 @@ def emit_bram_handshake(node, rtl_dir):
     """
     node_name = vf(node.name)
     for param_name, parameter in node.meta["mase"].module.named_parameters():
+        param_verilog_name = param_name.replace(".", "_")
         if (
-            node.meta["mase"].parameters["hardware"]["interface"][param_name]["storage"]
+            node.meta["mase"].parameters["hardware"]["interface"][param_verilog_name][
+                "storage"
+            ]
             == "BRAM"
         ):
             logger.debug(
-                f"Emitting DAT file for node: {node_name}, parameter: {param_name}"
+                f"Emitting DAT file for node: {node_name}, parameter: {param_verilog_name}"
             )
-            verilog_name = os.path.join(rtl_dir, f"{node_name}_{param_name}_source.sv")
-            data_name = os.path.join(rtl_dir, f"{node_name}_{param_name}_rom.dat")
+            verilog_name = os.path.join(
+                rtl_dir, f"{node_name}_{param_verilog_name}_source.sv"
+            )
+            data_name = os.path.join(
+                rtl_dir, f"{node_name}_{param_verilog_name}_rom.dat"
+            )
             emit_parameters_in_mem_internal(node, param_name, verilog_name, data_name)
             emit_parameters_in_dat_internal(node, param_name, data_name)
         else:
@@ -432,7 +444,7 @@ endmodule
         outf.write(rom_verilog)
     logger.debug(f"ROM module {param_name} successfully written into {file_name}")
     assert os.path.isfile(file_name), "ROM Verilog generation failed."
-    os.system(f"verible-verilog-format --inplace {file_name}")
+    # os.system(f"verible-verilog-format --inplace {file_name}")
 
 
 def emit_bram_hls(node, rtl_dir):

@@ -21,6 +21,7 @@ FUNCTION_TABLE = {
     "sigmoid": nn.Sigmoid(),
     "logsigmoid": nn.LogSigmoid(),
     "softshrink": nn.Softshrink(),
+    "gelu": nn.GELU(),
     "exp": torch.exp,
     "softmax": torch.exp,
 }
@@ -268,21 +269,6 @@ module {function}_lut{end} #(
         file.write(sv_code)
 
     print(f"SystemVerilog module generated and saved as {file_path}.")
-
-
-# DEPRECATED
-# def generate_mem(function_name, in_data_width, in_f_width, data_width, f_width):
-#     assert (
-#         function_name in FUNCTION_TABLE
-#     ), f"Function {function_name} not found in FUNCTION_TABLE"
-#     lookup_to_file(
-#         in_data_width,
-#         in_f_width,
-#         data_width,
-#         f_width,
-#         function_name,
-#         f"/home/aw23/mase/machop/mase_components/activations/rtl/{function_name}_IN{in_data_width}_{in_f_width}_OUT{data_width}_{f_width}_map.mem",
-#     )
 
 
 def generate_sv_lut(

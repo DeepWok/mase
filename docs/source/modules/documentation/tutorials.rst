@@ -3,6 +3,12 @@ Tutorials
 
 .. toctree::
     :maxdepth: 1
+    :caption: Common Usecases
+
+    tutorials/common/bert_emit
+
+.. toctree::
+    :maxdepth: 1
     :caption: The Command Line System with Machop
 
     tutorials/actions/train/simple_train_flow

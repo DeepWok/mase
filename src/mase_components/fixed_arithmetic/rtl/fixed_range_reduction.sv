@@ -1,4 +1,11 @@
+/*
+Module      : fixed_range_reduction
+Description : This module finds the MSB of the number. If there is no MSB, then
+              the "not_found" wire will be driven HIGH.
+*/
+
 `timescale 1ns / 1ps
+
 module fixed_range_reduction #(
     parameter WIDTH = 16,
     localparam MSB_WIDTH = $clog2(WIDTH)
@@ -8,7 +15,8 @@ module fixed_range_reduction #(
     // Reduced x
     output logic [WIDTH-1:0] data_out,  // FORMAT: Q1.(WIDTH-1).
     // msb_index
-    output logic [MSB_WIDTH-1:0] msb_index
+    output logic [MSB_WIDTH-1:0] msb_index,
+    output logic not_found
 );
 
   // Find MSB index. Rightmost position = 0
@@ -27,6 +35,7 @@ module fixed_range_reduction #(
   /* verilator lint_on LATCH */
 
   // Shift by the correct amount to set format to Q1.(WIDTH-1)
-  assign data_out = data_a << (WIDTH - 1 - msb_index);
+  assign data_out  = data_a << (WIDTH - 1 - msb_index);
+  assign not_found = data_a == '0;
 
 endmodule

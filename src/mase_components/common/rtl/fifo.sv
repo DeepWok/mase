@@ -11,8 +11,7 @@ Description : This module implements a max throughput streaming fifo with
 
 module fifo #(
     parameter DATA_WIDTH = 8,
-    parameter DEPTH      = 16,
-    parameter SIZE       = DEPTH
+    parameter DEPTH      = 16
 ) (
     input logic clk,
     input logic rst,
@@ -29,15 +28,36 @@ module fifo #(
     output logic full
 );
 
-  localparam ADDR_WIDTH = SIZE == 1 ? 1 : $clog2(SIZE);
+generate
+  if (DEPTH == 1) begin : gen_skid_buffer
+
+    skid_buffer #(
+        .DATA_WIDTH(DATA_WIDTH)
+    ) skid_buffer_inst (
+        .clk           (clk),
+        .rst           (rst),
+        .data_in       (in_data),
+        .data_in_valid (in_valid),
+        .data_in_ready (in_ready),
+        .data_out      (out_data),
+        .data_out_valid(out_valid),
+        .data_out_ready(out_ready)
+    );
+
+    assign empty = !out_valid;
+    assign full  = out_valid;
+
+end else begin : gen_fifo
+
+  localparam ADDR_WIDTH = $clog2(DEPTH);
   localparam PTR_WIDTH = ADDR_WIDTH + 1;
 
-  typedef struct {
+  typedef struct packed {
     logic [DATA_WIDTH-1:0] data;
     logic valid;
   } reg_t;
 
-  struct {
+  typedef struct packed {
     // Write state
     logic [PTR_WIDTH-1:0] write_ptr;
     logic [ADDR_WIDTH:0]  size;
@@ -54,8 +74,9 @@ module fifo #(
 
     // Extra register required to buffer the output of RAM due to delay
     reg_t extra_reg;
-  }
-      self, next_self;
+  } self_t;
+
+  self_t self, next_self;
 
   // Ram signals
   logic ram_wr_en;
@@ -68,7 +89,7 @@ module fifo #(
     next_self = self;
 
     // Input side ready
-    in_ready = self.size != SIZE - 1;
+    in_ready = self.size != DEPTH - 1;
 
     // Pause reading when there is (no transfer on this cycle) AND the registers are full.
     pause_reads = !out_ready && (self.out_reg.valid || self.extra_reg.valid);
@@ -76,7 +97,7 @@ module fifo #(
     // Write side of machine
     // Increment write pointer
     if (in_valid && in_ready) begin
-      if (self.write_ptr == SIZE - 1) begin
+      if (self.write_ptr == DEPTH - 1) begin
         next_self.write_ptr = 0;
       end else begin
         next_self.write_ptr += 1;
@@ -89,7 +110,7 @@ module fifo #(
 
     // Read side of machine
     if (self.size != 0 && !pause_reads) begin
-      if (self.read_ptr == SIZE - 1) begin
+      if (self.read_ptr == DEPTH - 1) begin
         next_self.read_ptr = 0;
       end else begin
         next_self.read_ptr += 1;
@@ -135,13 +156,13 @@ module fifo #(
   simple_dual_port_ram #(
       .DATA_WIDTH(DATA_WIDTH),
       .ADDR_WIDTH(ADDR_WIDTH),
-      .SIZE      (SIZE)
+      .SIZE      (DEPTH)
   ) ram_inst (
       .clk    (clk),
-      .wr_addr(self.write_ptr),
+      .wr_addr(self.write_ptr[ADDR_WIDTH-1:0]),
       .wr_din (in_data),
       .wr_en  (ram_wr_en),
-      .rd_addr(self.read_ptr),
+      .rd_addr(self.read_ptr[ADDR_WIDTH-1:0]),
       .rd_dout(ram_rd_dout)
   );
 
@@ -154,5 +175,9 @@ module fifo #(
   end
 
   assign empty = (self.size == 0);
-  assign full  = (self.size == SIZE);
+  assign full  = (self.size == DEPTH);
+
+end
+endgenerate
+
 endmodule

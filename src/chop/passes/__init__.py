@@ -31,6 +31,7 @@ from .graph.transforms import (
     emit_bram_transform_pass,
     emit_internal_rtl_transform_pass,
     emit_cocotb_transform_pass,
+    emit_vivado_project_transform_pass,
     raise_granularity_transform_pass,
     tensorrt_calibrate_transform_pass,
     tensorrt_fine_tune_transform_pass,
