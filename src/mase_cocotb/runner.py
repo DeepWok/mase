@@ -94,12 +94,19 @@ def _single_test(
 
         if sim == "verilator":
             tool_args = _verilator_args(hierarchical, trace)
+            sources = [module_path]
+            includes = [str(comp_path.joinpath(f"{d}/rtl/")) for d in deps]
         elif sim == "questa":
             tool_args = []
+            sources = []
+            # TODO: This works but is very coarse way of pulling in modules
+            for rtl_dir in [comp_path / f"{d}/rtl/" for d in deps]:
+                sources.extend(rtl_dir.glob("*.sv"))
+            includes = []
 
         runner.build(
-            verilog_sources=[module_path],
-            includes=[str(comp_path.joinpath(f"{d}/rtl/")) for d in deps],
+            verilog_sources=sources,
+            includes=includes,
             hdl_toplevel=module,
             build_args=[
                 *tool_args,
