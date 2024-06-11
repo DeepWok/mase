@@ -1,33 +1,11 @@
-from enum import Enum
-import torch.nn as nn
 import itertools
-import random
 
+import torch.nn as nn
 
-class Shard(Enum):
-    R = 1
-    S_0 = 2
-    S_1 = 3
-    S_01 = 4
+from .common import Shard, VALID_2D_TENSOR_SHARDINGS
+from .cost_modelling import get_communication_cost
 
-    def __repr__(self):
-        return self.name
-
-
-VALID_2D_TENSOR_SHARDINGS = [
-    (Shard.R, Shard.R),
-    (Shard.R, Shard.S_0),
-    (Shard.R, Shard.S_1),
-    (Shard.R, Shard.S_01),
-    (Shard.S_0, Shard.R),
-    (Shard.S_0, Shard.S_1),
-    (Shard.S_1, Shard.R),
-    (Shard.S_1, Shard.S_0),
-    (Shard.S_01, Shard.R),
-]
-
-
-def get_valid_linear_shardings():
+def get_valid_linear_shardings(node_meta, mesh):
     """
     Return every valid combination of shardings for the input tensors. For an operator
     sharding to be valid, the inner dimension must have the same sharding.
@@ -39,14 +17,14 @@ def get_valid_linear_shardings():
     permutations = list(itertools.product(VALID_2D_TENSOR_SHARDINGS, repeat=2))
     for p in permutations:
         output_sharding = (p[0][0], p[1][1])
-        if p[0][1] == p[1][0] and output_sharding in VALID_2D_TENSOR_SHARDINGS:
+        if p != ((Shard.R, Shard.R), (Shard.R, Shard.R)) and p[0][1] == p[1][0] and output_sharding in VALID_2D_TENSOR_SHARDINGS:
             input_shardings.append(p)
             output_shardings.append(output_sharding)
 
-            compute_cost_vector.append(random.random())
+            compute_cost_vector.append(0)
 
-            # TO DO: derive communication cost from the sharding
-            communication_cost_vector.append(random.random())
+            cost = get_communication_cost(p, node_meta["mase"], mesh)
+            communication_cost_vector.append(cost)
 
     for i, in_shard in enumerate(input_shardings):
         print(f"Sharding {i}: {in_shard} -> {output_shardings[i]}")

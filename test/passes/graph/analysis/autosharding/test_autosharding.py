@@ -33,9 +33,15 @@ def test_autosharding():
     mg = MaseGraph(model)
     mg, _ = passes.init_metadata_analysis_pass(mg)
     mg, _ = passes.add_common_metadata_analysis_pass(
-        mg, pass_args={"dummy_in": {"x": torch.randn((5, 16, 64))}, "add_value": False}
+        mg, pass_args={"dummy_in": {"x": torch.randn((16, 64))}, "add_value": False}
     )
-    mg, _ = passes.autosharding_analysis_pass(mg)
+    mg, _ = passes.autosharding_analysis_pass(
+        mg, 
+        pass_args = {
+            "mesh_shape": (2, 4),
+            "inter_node_bandwidth": 10e9,
+            "intra_node_bandwidth": 100e9
+        })
 
 
 if __name__ == "__main__":

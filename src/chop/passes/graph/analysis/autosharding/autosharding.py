@@ -1,15 +1,18 @@
+
+import torch
 import numpy as np
 import cvxpy as cp
-import pulp
 
 from chop.tools import get_logger
 
+from .mesh import Mesh
 from .autosharding_layers import SHARDING_ALGOS, Shard
+from .cost_modelling import get_resharding_matrix
 
 logger = get_logger(__name__)
 
 
-def alpa_intra_op_sharding_pass(mg):
+def alpa_intra_op_sharding_pass(mg, mesh):
     """
     Intra-operator auto parallelization pass.
     """
@@ -37,12 +40,22 @@ def alpa_intra_op_sharding_pass(mg):
                 output_shardings,
                 compute_cost_vector,
                 communication_cost_vector,
-            ) = SHARDING_ALGOS[target_cls]()
+            ) = SHARDING_ALGOS[target_cls](node.meta, mesh)
+
 
             # Formulate optimization variables
             num_shardings = len(input_shardings)
             opt_var = cp.Variable(num_shardings, boolean=True)
             variables.append(opt_var)
+
+            # Write into metadata
+            node.meta["mase"]["software"]["autosharding"] = {
+                "valid_input_shardings": input_shardings,
+                "valid_output_shardings": output_shardings,
+                "compute_cost_vector": compute_cost_vector,
+                "communication_cost_vector": communication_cost_vector,
+                "opt_var": opt_var,
+            }
 
             # Constrain choice to be a onehot vector
             constr += [
@@ -58,29 +71,30 @@ def alpa_intra_op_sharding_pass(mg):
             # Consider resharding cost
             for in_node in node.all_input_nodes:
                 in_opt_var = in_node.meta["mase"]["software"]["autosharding"]["opt_var"]
-                resharding_costs = np.random.randint(
-                    1, 10, size=(opt_var.shape + in_opt_var.shape)
-                )
-                flattened_resharding_cost = np.matrix.flatten(resharding_costs)
 
-                e_var = cp.Variable(opt_var.shape + in_opt_var.shape, boolean=True)
-                expr += cp.vec(e_var).T @ flattened_resharding_cost
+                resharding_costs = get_resharding_matrix(
+                    mesh,
+                    src_shardings = in_node.meta["mase"]["software"]["autosharding"]["valid_output_shardings"], 
+                    dest_shardings = [sharding[0] for sharding in node.meta["mase"]["software"]["autosharding"]["valid_input_shardings"]],
+                    dest_node_meta = node.meta["mase"]
+                ).flatten()
+
+                e_var = cp.Variable(opt_var.shape[0] * in_opt_var.shape[0], boolean=True)
+                expr += e_var.T @ resharding_costs
 
                 constr += [
                     cp.sum(e_var) == 1,
-                    # e_var == cp.vec(cp.outer(opt_var, in_opt_var)),
                 ]
 
-            # Write into metadata
-            node.meta["mase"]["software"]["autosharding"] = {
-                "valid_input_shardings": input_shardings,
-                "valid_output_shardings": output_shardings,
-                "compute_cost_vector": compute_cost_vector,
-                "communication_cost_vector": communication_cost_vector,
-                "opt_var": opt_var,
-            }
+                # Scalar construction of the inequality constraints for the linearized variable
+                for i in range(e_var.shape[0]):
+                    constr += [
+                        e_var[i] <= opt_var[i // in_opt_var.shape[0]],
+                        e_var[i] <= in_opt_var[i % in_opt_var.shape[0]],
+                        e_var[i] >= opt_var[i // in_opt_var.shape[0]] + in_opt_var[i % in_opt_var.shape[0]] - 1
+                    ]
 
-        elif node.op == "placeholder":
+        elif node.op == "placeholder" or node.op == "output":
             # Inputs to the whole graph are always replicated across all devices
             rank = len(node.meta["mase"]["common"]["results"]["data_out_0"]["shape"])
             node.meta["mase"]["software"]["autosharding"] = {
@@ -98,16 +112,29 @@ def alpa_intra_op_sharding_pass(mg):
     prob = cp.Problem(cp.Minimize(expr), constr)
     prob.solve()
 
-    breakpoint()
-
     return mg, {}
 
 
-def autosharding_analysis_pass(mg):
+def autosharding_analysis_pass(mg, pass_args: dict = {}):
     """
     A lightweight implementation of the core algorithm from the Alpa paper: https://arxiv.org/abs/2201.12023
     """
 
-    mg, _ = alpa_intra_op_sharding_pass(mg)
+    assert "mesh_shape" in pass_args, "Logical description for device cluster was not specified."
+    assert "inter_node_bandwidth" in pass_args, "Inter-node bandwidth not specified"
+    assert "intra_node_bandwidth" in pass_args, "Intra-node bandwidth not specified"
+
+    # Initialize representation of device mesh, used for cost estimation
+    mesh = Mesh(pass_args["mesh_shape"])
+
+    # Communication cost model depends
+    mesh.set_cost_model_parameters(
+        intra_node_bandwidth=pass_args["intra_node_bandwidth"],
+        inter_node_bandwidth=pass_args["inter_node_bandwidth"],
+        backend = pass_args.get("communications_backend", "default")
+    )
+
+    # Run intra-operator pass
+    mg, _ = alpa_intra_op_sharding_pass(mg, mesh)
 
     return mg, {}
