@@ -38,15 +38,6 @@ module fixed_linear #(
     parameter WEIGHT_PARALLELISM_DIM_0 = 4,
     parameter WEIGHT_PARALLELISM_DIM_1 = 4,
 
-    parameter BIAS_PRECISION_0 = 16,
-    parameter BIAS_PRECISION_1 = 3,
-    parameter BIAS_TENSOR_SIZE_DIM_0 = DATA_OUT_0_TENSOR_SIZE_DIM_0,
-    parameter BIAS_TENSOR_SIZE_DIM_1 = 1,
-    parameter BIAS_PARALLELISM_DIM_0 = 4,
-    parameter BIAS_PARALLELISM_DIM_1 = 1,
-    localparam BIAS_DEPTH_DIM_0 = BIAS_TENSOR_SIZE_DIM_0 / BIAS_PARALLELISM_DIM_0,
-    localparam BIAS_DEPTH_DIM_1 = BIAS_TENSOR_SIZE_DIM_1 / BIAS_PARALLELISM_DIM_1,
-
     // Inferred precision of the output data
     parameter DATA_OUT_0_PRECISION_0 = 16,
     parameter DATA_OUT_0_PRECISION_1 = 3,
@@ -55,7 +46,17 @@ module fixed_linear #(
     parameter DATA_OUT_0_TENSOR_SIZE_DIM_2 = DATA_IN_0_TENSOR_SIZE_DIM_1,
     parameter DATA_OUT_0_PARALLELISM_DIM_0 = WEIGHT_PARALLELISM_DIM_0,
     parameter DATA_OUT_0_PARALLELISM_DIM_1 = DATA_IN_0_PARALLELISM_DIM_1,
-    parameter DATA_OUT_0_PARALLELISM_DIM_2 = DATA_IN_0_PARALLELISM_DIM_1
+    parameter DATA_OUT_0_PARALLELISM_DIM_2 = DATA_IN_0_PARALLELISM_DIM_1,
+
+    parameter BIAS_PRECISION_0 = 16,
+    parameter BIAS_PRECISION_1 = 3,
+    parameter BIAS_TENSOR_SIZE_DIM_0 = DATA_OUT_0_TENSOR_SIZE_DIM_0,
+    parameter BIAS_TENSOR_SIZE_DIM_1 = 1,
+    parameter BIAS_PARALLELISM_DIM_0 = 4,
+    parameter BIAS_PARALLELISM_DIM_1 = 1,
+    localparam BIAS_DEPTH_DIM_0 = BIAS_TENSOR_SIZE_DIM_0 / BIAS_PARALLELISM_DIM_0,
+    localparam BIAS_DEPTH_DIM_1 = BIAS_TENSOR_SIZE_DIM_1 / BIAS_PARALLELISM_DIM_1
+
 ) (
     input clk,
     input rst,
@@ -80,13 +81,6 @@ module fixed_linear #(
     output logic data_out_0_valid,
     input logic data_out_0_ready
 );
-
-  initial begin
-    assert (BIAS_PARALLELISM_DIM_0 == DATA_OUT_0_PARALLELISM_DIM_0)
-    else $fatal("Input bias and output data must have the same parallelism.");
-    assert (BIAS_PARALLELISM_DIM_1 == DATA_OUT_0_PARALLELISM_DIM_1)
-    else $fatal("Input bias and output data must have the same parallelism.");
-  end
 
   // The TENSOR_SIZE and PARALLELISM parameters for the weights are set by emit verilog according to the real
   // tensor values. Here we account for the change when the weights are pre-transposed

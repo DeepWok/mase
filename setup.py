@@ -22,7 +22,7 @@ requirements = [
     "py-cpuinfo",
     "psutil",
     "lightning",
-    "transformers",
+    "transformers==4.41.2",
     "diffusers",
     "accelerate",
     "toml",

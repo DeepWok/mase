@@ -36,12 +36,12 @@ module softermax_lpw_pow2 #(
   localparam INT_WIDTH = IN_WIDTH - IN_FRAC_WIDTH;
 
   // Slope: m
-  localparam SLOPE_WIDTH = 2 + SLOPE_FRAC_WIDTH;
   localparam SLOPE_FRAC_WIDTH = OUT_WIDTH;
+  localparam SLOPE_WIDTH = 2 + SLOPE_FRAC_WIDTH;
 
   // Mult: mx
-  localparam MULT_WIDTH = IN_WIDTH + SLOPE_WIDTH;
   localparam MULT_FRAC_WIDTH = IN_FRAC_WIDTH + SLOPE_FRAC_WIDTH;
+  localparam MULT_WIDTH = IN_WIDTH + SLOPE_WIDTH;
 
   // Intercept (need to match mx frac): c
   localparam INTERCEPT_FRAC_WIDTH = MULT_FRAC_WIDTH;
@@ -79,7 +79,7 @@ module softermax_lpw_pow2 #(
 
     // Output cast
     res_shifted = res * (2.0 ** OUT_FRAC_WIDTH);
-    return_val = OUT_WIDTH'(res_shifted);
+    return_val = logic'(res_shifted);
     return return_val;
   endfunction
 
@@ -93,7 +93,7 @@ module softermax_lpw_pow2 #(
 
     // Output cast
     res_shifted = res * (2.0 ** SLOPE_FRAC_WIDTH);
-    return_val = SLOPE_WIDTH'(res_shifted);
+    return_val = logic'(res_shifted);
     return return_val;
   endfunction
 
@@ -108,7 +108,7 @@ module softermax_lpw_pow2 #(
 
     // Output cast
     res_shifted = res * (2 ** INTERCEPT_FRAC_WIDTH);
-    return_val = INTERCEPT_WIDTH'(res_shifted);
+    return_val = logic'(res_shifted);
     return return_val;
   endfunction
 

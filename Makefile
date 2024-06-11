@@ -17,7 +17,7 @@ endif
 ifeq ($(VIVADO_AVAILABLE),)
     DOCKER_RUN_EXTRA_ARGS=
 else
-    DOCKER_RUN_EXTRA_ARGS=-v $(vhls):$(vhls) -v /$(USER_PREFIX)/$(shell whoami)/shared:/root/shared:z
+    DOCKER_RUN_EXTRA_ARGS= -v /mnt/applications/:/mnt/applications -v $(vhls):$(vhls) -v /$(USER_PREFIX)/$(shell whoami)/shared:/root/shared
 endif
 
 # * Set docker image according to local flag
@@ -76,8 +76,8 @@ shell:
         -w /workspace \
         -v /$(USER_PREFIX)/$(shell whoami)/.gitconfig:/root/.gitconfig \
         -v /$(USER_PREFIX)/$(shell whoami)/.ssh:/root/.ssh \
-        -v /$(USER_PREFIX)/$(shell whoami)/.mase:/root/.mase:z \
-        -v $(shell pwd):/workspace:z \
+        -v /$(USER_PREFIX)/$(shell whoami)/.mase:/root/.mase \
+        -v $(shell pwd):/workspace \
         $(DOCKER_RUN_EXTRA_ARGS) \
         $(img) /bin/bash
 

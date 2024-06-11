@@ -5,10 +5,24 @@ in
 
 let
   pythonPackages = pkgs.python311Packages;
-in pkgs.mkShellNoCC {
+in pkgs.mkShellNoCC.override {
+  stdenv = pkgs.gcc13Stdenv;
+} {
   venvDir = "./.venv";
   LD_LIBRARY_PATH = pkgs.lib.makeLibraryPath [ pkgs.stdenv.cc.cc ];
   packages = with pkgs; [
+    # c++
+    gcc
+    # clang
+    cmake
+    # clang-tools
+    # libstdcxx5
+    codespell
+    # llvmPackages_18.stdenv
+    # llvmPackages.libcxx
+    # gdb
+    boost
+    vim
     # Python 3.11
     pythonPackages.python
     pythonPackages.pip
@@ -39,6 +53,7 @@ in pkgs.mkShellNoCC {
   ++ (pkgs.lib.optionals pkgs.stdenv.isLinux [ verible ]);
   postShellHook = ''
     # install mase as a package
+    LD_LIBRARY_PATH=${pkgs.stdenv.cc.cc.lib}/lib
     python3 -m pip install -e .
     # add env variables 
     source scripts/init-nix.sh

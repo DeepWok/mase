@@ -1,5 +1,5 @@
 from .attention_head import BertSelfAttentionHeadInteger
-from .attention import BertSelfAttentionInteger
+from .attention import BertSelfAttentionInteger, LlamaSdpaAttentionInteger
 
 # from .add import AddInteger
 from .conv1d import (
@@ -70,9 +70,7 @@ from .layer_norm import (
 from .group_norm import GroupNormInteger
 from .instance_norm2d import InstanceNorm2dInteger
 
-# from .rms_norm import (
-#     RMSNormInteger
-# )
+from .rms_norm import RMSNormInteger
 
 from .selu import (
     SELUBlockFP,
@@ -84,6 +82,18 @@ from .selu import (
     SELUMinifloatIEEE,
     SELUBinary,
     SELUTernary,
+)
+
+from .silu import (
+    SiLUBlockFP,
+    SiLUBlockMinifloat,
+    SiLUInteger,
+    SiLULog,
+    SiLUBlockLog,
+    SiLUMinifloatDenorm,
+    SiLUMinifloatIEEE,
+    SiLUBinary,
+    SiLUTernary,
 )
 
 from .tanh import (
@@ -191,7 +201,7 @@ quantized_module_map = {
     "layer_norm_integer": LayerNormInteger,
     "group_norm_integer": GroupNormInteger,
     "instance_norm2d_integer": InstanceNorm2dInteger,
-    # "rms_norm_integer": RMSNormInteger,
+    "rms_norm_integer": RMSNormInteger,
     "selu_block_minifloat": SELUBlockMinifloat,
     "selu_integer": SELUInteger,
     "selu_fixed": SELUInteger,
@@ -202,6 +212,16 @@ quantized_module_map = {
     "selu_block_fp": SELUBlockFP,
     "selu_binary": SELUBinary,
     "selu_ternary": SELUTernary,
+    "silu_block_minifloat": SiLUBlockMinifloat,
+    "silu_integer": SiLUInteger,
+    "silu_fixed": SiLUInteger,
+    "silu_log": SiLULog,
+    "silu_block_log": SiLUBlockLog,
+    "silu_minifloat_ieee": SiLUMinifloatIEEE,
+    "silu_minifloat_denorm": SiLUMinifloatDenorm,
+    "silu_block_fp": SiLUBlockFP,
+    "silu_binary": SiLUBinary,
+    "silu_ternary": SiLUTernary,
     "tanh_block_minifloat": TanhBlockMinifloat,
     "tanh_integer": TanhInteger,
     "tanh_fixed": TanhInteger,
@@ -246,4 +266,5 @@ quantized_module_map = {
     "batch_norm1d_linear": BatchNorm1dInteger,
     "bert_self_attention_head_integer": BertSelfAttentionHeadInteger,
     "bert_self_attention_integer": BertSelfAttentionInteger,
+    "llama_sdpa_attention_integer": LlamaSdpaAttentionInteger,
 }

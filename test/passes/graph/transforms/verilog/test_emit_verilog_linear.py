@@ -13,6 +13,7 @@ from pathlib import Path
 
 from chop.actions import simulate
 from chop.tools.logger import set_logging_verbosity
+from chop.tools import get_logger
 
 set_logging_verbosity("debug")
 
@@ -23,6 +24,7 @@ def excepthook(exc_type, exc_value, exc_traceback):
     pdb.post_mortem(exc_traceback)
 
 
+logger = get_logger(__name__)
 sys.excepthook = excepthook
 
 
@@ -114,7 +116,12 @@ def test_emit_verilog_linear():
     mg, _ = passes.emit_cocotb_transform_pass(mg, pass_args={"wait_time": 100, "wait_unit": "ms", "batch_size": batch_size})
     mg, _ = passes.emit_vivado_project_transform_pass(mg)
 
-    simulate(skip_build=False, skip_test=False)
+    # check questa
+    # if os.system("questa") != 0:
+    #     logger.info("Questa is required for this test, but the system does not have it, so later part this test is skipped.")
+    #     return
+
+    simulate(skip_build=False, skip_test=False, simulator="verilator")
 
 
 if __name__ == "__main__":

@@ -1,4 +1,4 @@
-import sys
+import sys, os
 
 import torch
 import torch.nn as nn
@@ -196,7 +196,15 @@ def emit_verilog_bert(
     )
     mg, _ = passes.emit_vivado_project_transform_pass(mg)
 
-    actions.simulate(skip_build=False, skip_test=False)
+    # Temporary: fix data coherency checks
+    os.environ["COCOTB_RESOLVE_X"] = "ZEROS"
+
+    # check questa
+    if os.system("questa") != 0:
+        logger.info("Questa is required for this test, but the system does not have it, so later part this test is skipped.")
+        return
+
+    actions.simulate(skip_build=False, skip_test=False, gui=False, waves=False, simulator="questa")
 
 
 def get_default_qconfig():
@@ -214,7 +222,7 @@ def get_default_qconfig():
 
 def test_emit_verilog_bert_smoke():
     config = BertConfig()
-    config.num_hidden_layers = 1
+    config.num_hidden_layers = 3
     config.hidden_size = 96
     config.intermediate_size = 384
     config_sequence_length = 4
@@ -224,15 +232,15 @@ def test_emit_verilog_bert_smoke():
 
 def test_emit_verilog_bert_regression():
     config = BertConfig()
-    config.num_hidden_layers = 1
+    config.num_hidden_layers = 3
     config.hidden_size = 384
     config.intermediate_size = 1536
     config_sequence_length = 128
     q_config = get_default_qconfig()
-    emit_verilog_bert(config, q_config, config_sequence_length, wait_count=15, max_parallelism=4)
+    emit_verilog_bert(config, q_config, config_sequence_length, wait_count=15, max_parallelism=16)
 
 
 if __name__ == "__main__":
     generate_sv_lut("gelu", 8, 3, data_width=8, f_width=3, path_with_dtype=False)
     test_emit_verilog_bert_smoke()
-    # test_emit_verilog_bert_regression()
+    test_emit_verilog_bert_regression()

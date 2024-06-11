@@ -15,7 +15,7 @@ from chop.nn.quantizers.quantizers_for_hw import (
     integer_quantizer_for_hw,
 )
 
-import chop.models.manual.rms_norm as rms
+# import chop.models.manual.rms_norm as rms
 
 import sys, pdb, traceback
 
@@ -198,7 +198,7 @@ def emit_verilog_norm(net, x):
     )
 
     # Add hardware metadata
-    mg, _ = add_hardware_metadata_analysis_pass(mg)
+    mg, _ = add_hardware_metadata_analysis_pass(mg, pass_args={"max_parallelism": [2]*4})
 
     # Emit top level file
     emit_cfg = {

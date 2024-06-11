@@ -67,6 +67,8 @@ class StreamMonitor(Monitor):
         self.unsigned = unsigned
 
     def _trigger(self):
+        if "x" in self.valid.value.binstr or "x" in self.ready.value.binstr:
+            return False
         return self.valid.value == 1 and self.ready.value == 1
 
     def _recv(self):

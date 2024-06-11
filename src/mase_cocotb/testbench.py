@@ -19,7 +19,7 @@ class Testbench:
 
         self.fail_on_checks = fail_on_checks
 
-        if self.clk != None:
+        if self.clk is not None:
             self.clock = Clock(self.clk, 20, units="ns")
             cocotb.start_soon(self.clock.start())
 
@@ -36,7 +36,7 @@ class Testbench:
         return int(parameter)
 
     async def reset(self, active_high=True):
-        if self.rst == None:
+        if self.rst is None:
             raise Exception(
                 "Cannot reset. Either a reset wire was not provided or "
                 + "the module does not have a reset."
