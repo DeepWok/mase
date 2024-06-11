@@ -16,7 +16,16 @@ def _sign_extend(value: int, bits: int):
 
 
 class StreamDriver(Driver):
-    def __init__(self, clk, data, valid, ready, record_num_beats=False) -> None:
+    def __init__(
+        self,
+        clk,
+        data,
+        valid,
+        ready,
+        record_num_beats=False,
+        load_fn=None,
+        load_max_iters=None,
+    ) -> None:
         super().__init__()
         self.clk = clk
         self.data = data
@@ -25,6 +34,9 @@ class StreamDriver(Driver):
         self.valid_prob = 1.0
         self.record_num_beats = record_num_beats
         self.num_beats = 0 if record_num_beats else None
+        self.load_fn = load_fn
+        self.load_max_iters = load_max_iters
+
 
     def set_valid_prob(self, prob):
         assert prob >= 0.0 and prob <= 1.0
@@ -55,6 +67,9 @@ class StreamDriver(Driver):
                 if self.record_num_beats:
                     self.num_beats += 1
                 break
+
+        # Load extra
+        # self.load_driver
 
         if self.send_queue.empty():
             await RisingEdge(self.clk)

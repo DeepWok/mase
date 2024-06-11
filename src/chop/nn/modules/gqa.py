@@ -102,9 +102,7 @@ class GroupedQueryAttention(nn.Module):
             "Embedding dimension must be divisible by number of heads!"
         )
 
-
-    def forward(self, x: Tensor):
-        batch_size, seq_len, _ = x.shape
+    def _qkv_states(self, x: Tensor, batch_size: int, seq_len: int):
 
         query = self.q_projection(x).view(
             batch_size, seq_len, self.num_heads, self.head_dim
@@ -115,6 +113,21 @@ class GroupedQueryAttention(nn.Module):
         value = self.v_projection(x).view(
             batch_size, seq_len, self.num_kv_heads, self.head_dim
         ).transpose(1, 2)
+
+        return query, key, value
+
+    # def _rotary_embeddings(self, x: Tensor):
+    #     # TODO: Implement RoPE
+    #     return x
+
+    def _attention_mechanism(
+        self,
+        query: Tensor,
+        key: Tensor,
+        value: Tensor,
+        batch_size: int,
+        seq_len: int,
+    ):
 
         key = repeat_kv(key, n_rep=self.group_size)
         value = repeat_kv(value, n_rep=self.group_size)
@@ -127,9 +140,20 @@ class GroupedQueryAttention(nn.Module):
         attn_output = attn_output.reshape(batch_size, seq_len, self.embed_dim)
 
         out = self.o_projection(attn_output)
-
         return out
 
+    def forward(self, x: Tensor):
+        batch_size, seq_len, _ = x.shape
+
+        query, key, value = self._qkv_states(x, batch_size, seq_len)
+
+        # TODO: Missing rotary embeddings to Llama
+
+        out = self._attention_mechanism(
+            query, key, value, batch_size, seq_len
+        )
+
+        return out
 
 
 if __name__ == "__main__":

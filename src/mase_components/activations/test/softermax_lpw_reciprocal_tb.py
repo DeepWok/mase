@@ -112,91 +112,54 @@ async def sweep(dut):
     ref *= 2**tb.OUT_FRAC_WIDTH  # scale up
     ref = torch.clamp(ref, 0, 2**tb.OUT_WIDTH - 1)
 
+    software_ref = ref / (2**tb.OUT_FRAC_WIDTH)
+    software_res = [x / (2**tb.OUT_FRAC_WIDTH) for x in exp_out]
+    hardware_res = [x / (2**tb.OUT_FRAC_WIDTH) for x in recv_log]
+
     data = pd.DataFrame(
         {
             "x": x.tolist(),
-            "reference": ref.tolist(),
-            "software": exp_out,
-            "hardware": recv_log,
+            "software float32": software_ref.tolist(),
+            "software fixed-point": software_res,
+            "hardware fixed-point": hardware_res,
         }
     )
-    data["hw_error"] = (data["hardware"] - data["reference"]).abs()
-    data["sw_error"] = (data["software"] - data["reference"]).abs()
-    data["model_error"] = (data["hardware"] - data["software"]).abs()
+
+    # temp
+    data = data.iloc[:100]
+
+    data["hardware error"] = data["hardware fixed-point"] - data["software float32"]
+    graph_id = f"{tb.IN_WIDTH}_{tb.IN_FRAC_WIDTH}_to_{tb.OUT_WIDTH}_{tb.OUT_FRAC_WIDTH}"
+
+    # data["sw_error"] = (data["software fixed-point"] - data["software float32"]).abs()
+    # data["model_error"] = data["hardware fixed-point"] - data["software fixed-point"]
 
     curve_data = data.melt(
         id_vars="x",
-        value_vars=["reference", "software", "hardware"],
+        value_vars=["software float32", "software fixed-point", "hardware fixed-point"],
         value_name="Value",
         var_name="Type",
     )
-    curve = (
-        alt.Chart(curve_data)
-        .mark_line()
-        .encode(
-            x="x",
-            y=alt.Y("Value").title("Curves"),
-            color="Type",
-        )
-        .properties(
-            width=400,
-            height=240,
-        )
+    curve_fig = alt.Chart(curve_data).mark_line().encode(
+        x=alt.X("x").title(f"x (Q{tb.IN_WIDTH}.{tb.IN_FRAC_WIDTH} Fixed-point)"),
+        y=alt.Y("Value").title(f"y (Q{tb.OUT_WIDTH}.{tb.OUT_FRAC_WIDTH} Fixed-point)"),
+        color=alt.Color("Type"),
+    ).properties(
+        width=600,
+        height=300,
     )
 
-    error_data = data.melt(
-        id_vars="x",
-        value_vars=["hw_error", "sw_error"],
-        value_name="Value",
-        var_name="Type",
-    )
-    error = (
-        alt.Chart(error_data)
-        .mark_line()
-        .encode(
-            x="x",
-            y=alt.Y("Value").title("Error vs. Perfect Reference"),
-            color="Type",
-        )
-        .properties(
-            width=400,
-            height=120,
-        )
+    error_data = data[["x", "hardware error"]]
+    error_fig = alt.Chart(error_data).mark_line().encode(
+        x=alt.X("x").title(f"x (Q{tb.IN_WIDTH}.{tb.IN_FRAC_WIDTH} Fixed-point)"),
+        y=alt.Y("hardware error").title(f"Error"),
+    ).properties(
+        width=600,
+        height=100,
     )
 
-    model_error_data = data.melt(
-        id_vars="x", value_vars=["model_error"], value_name="Value", var_name="Type"
-    )
-    model_error = (
-        alt.Chart(model_error_data)
-        .mark_line()
-        .encode(
-            x="x",
-            y=alt.Y("Value").title("Bit error vs software model"),
-            color="Type",
-        )
-        .properties(
-            width=400,
-            height=120,
-        )
-    )
-
-    graph_id = f"{tb.ENTRIES}e_{tb.IN_WIDTH}_{tb.IN_FRAC_WIDTH}_to_{tb.OUT_WIDTH}_{tb.OUT_FRAC_WIDTH}"
-    curve.save(
-        Path(__file__).parent
-        / f"build/softermax_lpw_reciprocal/curve_graph_{graph_id}.png",
-        scale_factor=3,
-    )
-
-    error.save(
-        Path(__file__).parent
-        / f"build/softermax_lpw_reciprocal/error_graph_{graph_id}.png",
-        scale_factor=3,
-    )
-
-    model_error.save(
-        Path(__file__).parent
-        / f"build/softermax_lpw_reciprocal/model_error_graph_{graph_id}.png",
+    (curve_fig & error_fig).save(
+        Path(__file__).parent / f"build/softermax_lpw_reciprocal/curve_error_{graph_id}.png",
         scale_factor=3,
     )
 
@@ -289,5 +252,19 @@ def test_width_cfgs():
     )
 
 
+def test_smoke():
+    mase_runner(
+        module_param_list=[
+            {
+                "ENTRIES": 8,
+                "IN_WIDTH": 16,
+                "IN_FRAC_WIDTH": 8,
+                "OUT_WIDTH": 16,
+                "OUT_FRAC_WIDTH": 8,
+            }
+        ],
+    )
+
 if __name__ == "__main__":
-    test_width_cfgs()
+    # test_width_cfgs()
+    test_smoke()

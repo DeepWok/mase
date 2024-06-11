@@ -138,6 +138,8 @@ def _single_test(
 
 
 def mase_runner(
+    module = None,
+    group = None,
     module_param_list: list[dict[str, Any]] = [dict()],
     sim: str = "verilator",
     extra_build_args: list[str] = [],
@@ -152,14 +154,16 @@ def mase_runner(
 
     start_time = time()
 
-    # Get file which called this function
-    # Should be of form components/<group>/test/<module>_tb.py
-    test_filepath = inspect.stack()[1].filename
-    matches = re.search(r"mase_components/(\w*)/test/(\w*)_tb\.py", test_filepath)
-    assert (
-        matches != None
-    ), "Did not find file that matches <module>_tb.py in the test folder!"
-    group, module = matches.groups()
+    if group == None or module == None:
+        # Autodetect
+        # Get file which called this function
+        # Should be of form components/<group>/test/<module>_tb.py
+        test_filepath = inspect.stack()[1].filename
+        matches = re.search(r"mase_components/(\w*)/test/(\w*)_tb\.py", test_filepath)
+        assert (
+            matches != None
+        ), "Did not find file that matches <module>_tb.py in the test folder!"
+        group, module = matches.groups()
 
     # Group path is components/<group>
     group_path = Path(test_filepath).parent.parent

@@ -144,32 +144,45 @@ async def sweep(dut):
     software_res = [x / (2**tb.OUT_FRAC_WIDTH) for x in exp_out]
     hardware_res = [x / (2**tb.OUT_FRAC_WIDTH) for x in recv_log]
 
-    data = pd.DataFrame(
-        {
-            "x": x.tolist(),
-            "software float32": software_ref.tolist(),
-            "software fixed-point": software_res,
-            "hardware fixed-point": hardware_res,
-        }
-    ).melt(
+    data = pd.DataFrame({
+        "x": x.tolist(),
+        "software float32": software_ref.tolist(),
+        "software fixed-point": software_res,
+        "hardware fixed-point": hardware_res,
+    })
+    data["hardware error"] = data["software float32"] - data["hardware fixed-point"]
+
+    graph_id = f"{tb.IN_WIDTH}_{tb.IN_FRAC_WIDTH}_to_{tb.OUT_WIDTH}_{tb.OUT_FRAC_WIDTH}"
+
+    curve_data = data.melt(
         id_vars="x",
         value_vars=["software float32", "software fixed-point", "hardware fixed-point"],
         value_name="Value",
         var_name="Type",
     )
-
-    graph_id = f"{tb.IN_WIDTH}_{tb.IN_FRAC_WIDTH}_to_{tb.OUT_WIDTH}_{tb.OUT_FRAC_WIDTH}"
-    alt.Chart(data).mark_line().encode(
+    curve_fig = alt.Chart(curve_data).mark_line().encode(
         x=alt.X("x").title(f"x (Q{tb.IN_WIDTH}.{tb.IN_FRAC_WIDTH} Fixed-point)"),
         y=alt.Y("Value").title(f"y (Q{tb.OUT_WIDTH}.{tb.OUT_FRAC_WIDTH} Fixed-point)"),
-        color="Type",
+        color=alt.Color("Type"),
     ).properties(
         width=600,
         height=300,
-    ).save(
-        Path(__file__).parent / f"build/softermax_lpw_pow2/error_graph_{graph_id}.png",
+    )
+
+    error_data = data[["x", "hardware error"]]
+    error_fig = alt.Chart(error_data).mark_line().encode(
+        x=alt.X("x").title(f"x (Q{tb.IN_WIDTH}.{tb.IN_FRAC_WIDTH} Fixed-point)"),
+        y=alt.Y("hardware error").title(f"Error"),
+    ).properties(
+        width=600,
+        height=100,
+    )
+
+    (curve_fig & error_fig).save(
+        Path(__file__).parent / f"build/softermax_lpw_pow2/curve_error_{graph_id}.png",
         scale_factor=3,
     )
+
 
     max_bit_err = max(tb.output_monitor.error_log)
     average_err = sum(tb.output_monitor.error_log) / len(software_res)
@@ -270,6 +283,19 @@ def test_high_width():
         ]
     )
 
+def test_smoke():
+    mase_runner(
+        module_param_list=[
+            {
+                "IN_WIDTH": 8,
+                "IN_FRAC_WIDTH": 4,
+                "OUT_WIDTH": 8,
+                "OUT_FRAC_WIDTH": 4,
+            }
+        ]
+    )
+
 if __name__ == "__main__":
     # test_common_widths()
-    test_high_width()
+    # test_high_width()
+    test_smoke()
