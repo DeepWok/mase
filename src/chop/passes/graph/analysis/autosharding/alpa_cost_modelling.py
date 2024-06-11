@@ -5,11 +5,11 @@ from functools import lru_cache
 from chop.ir.graph import MaseMetadata
 
 from .common import Shard
-from .mesh import Mesh
+from .mesh_model import MeshModel
 
 BYTES_PER_ELEMENT = 4
 
-def get_communication_cost(sharding: tuple, node_meta: MaseMetadata, mesh: Mesh):
+def get_communication_cost(sharding: tuple, node_meta: MaseMetadata, mesh: MeshModel):
     assert sharding[0][1] == sharding[1][0], f"Inconsistent sharding for node: {node_meta.node}"
     inner_dim_sharding = sharding[1][0]
 
@@ -23,7 +23,7 @@ def get_communication_cost(sharding: tuple, node_meta: MaseMetadata, mesh: Mesh)
         return mesh.all_reduce_cost(num_bytes = BYTES_PER_ELEMENT * np.prod(out_shape), mesh_dim = ar_dim)
 
 @lru_cache(maxsize=None)
-def get_resharding_cost(mesh: Mesh, src: tuple, dest: tuple, dest_node_meta: MaseMetadata):
+def get_resharding_cost(mesh: MeshModel, src: tuple, dest: tuple, dest_node_meta: MaseMetadata):
     """
     Obtain the resharding cost given a source and destination sharding profile for a tensor.
     The mesh object is assumed to have been initialized with alpha, beta parameters so that

@@ -1,7 +1,7 @@
 import torch
 import numpy as np
 
-class Mesh():
+class MeshModel():
     def __init__(self, mesh_shape, mesh_alpha = None, mesh_beta = None):
         self.mesh_shape = mesh_shape
         
