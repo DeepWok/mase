@@ -34,7 +34,7 @@ module register_slice #(
   always_ff @(posedge clk) begin
     if (rst) buffer <= 0;
     // backpressure && valid output
-    if (!data_out_valid && data_out_ready) buffer <= buffer;
+    if (!data_out_ready && data_out_valid) buffer <= buffer;
     else buffer <= data_in;
   end
 
@@ -47,4 +47,3 @@ module register_slice #(
   end
 
 endmodule
-

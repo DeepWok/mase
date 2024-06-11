@@ -45,10 +45,10 @@ def in_out_wave(dut, name):
     logger.debug(
         "{}  State: (in_valid,in_ready,out_valid,out_ready) = ({},{},{},{})".format(
             name,
-            dut.in_ready.value,
-            dut.in_valid.value,
-            dut.out_ready.value,
-            dut.out_data.value,
+            dut.data_in_valid.value,
+            dut.data_in_ready.value,
+            dut.data_out_valid.value,
+            dut.data_out_ready.value,
         )
     )
 
@@ -72,8 +72,8 @@ async def cocotb_test_register_slice(dut):
     await Timer(500, units="ns")
 
     # Synchronize with the clock
-    dut.in_valid.value = 0
-    dut.out_ready.value = 1
+    dut.data_in_valid.value = 0
+    dut.data_out_ready.value = 1
     in_out_wave(dut, "Pre-clk")
     await FallingEdge(dut.clk)
     in_out_wave(dut, "Post-clk")
@@ -88,18 +88,18 @@ async def cocotb_test_register_slice(dut):
         in_out_wave(dut, "Post-clk")
 
         ## Pre_compute
-        dut.in_valid.value = test_case.inputs.pre_compute()
+        dut.data_in_valid.value = test_case.inputs.pre_compute()
         await Timer(1, units="ns")
-        dut.out_ready.value = test_case.outputs.pre_compute(dut.out_data.value)
+        dut.data_out_ready.value = test_case.outputs.pre_compute(dut.data_out.value)
         await Timer(1, units="ns")
 
         ## Compute
-        dut.in_valid.value, dut.in_data.value = test_case.inputs.compute(
-            dut.in_ready.value
+        dut.data_in_valid.value, dut.data_in.value = test_case.inputs.compute(
+            dut.data_in_ready.value
         )
         await Timer(1, units="ns")
-        dut.out_ready.value = test_case.outputs.compute(
-            dut.out_data.value, dut.out_data.value
+        dut.data_out_ready.value = test_case.outputs.compute(
+            dut.data_out.value, dut.data_out.value
         )
         in_out_wave(dut, "Pre-clk")
         logger.debug("\n")
