@@ -256,3 +256,11 @@ def parse_accelerator(accelerator: str):
     else:
         raise RuntimeError(f"Unsupported accelerator {accelerator}")
     return device
+
+def deepsetattr(obj, attr, value):
+    """Recurses through an attribute chain to set the ultimate value."""
+    attrs = attr.split(".")
+    if len(attrs) > 1:
+        deepsetattr(getattr(obj, attrs[0]), '.'.join(attrs[1:]), value)
+    else:
+        setattr(obj, attr, value)

@@ -4,7 +4,7 @@ import torch.nn as nn
 
 from chop.tools import get_logger
 
-from .common import Shard, VALID_2D_TENSOR_SHARDINGS
+from .common import SpmdShard, VALID_2D_TENSOR_SHARDINGS
 from .alpa_cost_modelling import get_communication_cost
 
 logger = get_logger(__name__)
@@ -21,7 +21,7 @@ def get_valid_linear_shardings(node_meta, mesh):
     permutations = list(itertools.product(VALID_2D_TENSOR_SHARDINGS, repeat=2))
     for p in permutations:
         output_sharding = (p[0][0], p[1][1])
-        if p != ((Shard.R, Shard.R), (Shard.R, Shard.R)) and p[0][1] == p[1][0] and output_sharding in VALID_2D_TENSOR_SHARDINGS:
+        if p != ((SpmdShard.R, SpmdShard.R), (SpmdShard.R, SpmdShard.R)) and p[0][1] == p[1][0] and output_sharding in VALID_2D_TENSOR_SHARDINGS:
             input_shardings.append(p)
             output_shardings.append(output_sharding)
 

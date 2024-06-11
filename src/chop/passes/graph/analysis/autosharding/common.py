@@ -1,6 +1,6 @@
 from enum import Enum
 
-class Shard(Enum):
+class SpmdShard(Enum):
     S_0 = 0
     S_1 = 1
     R = 3
@@ -15,11 +15,11 @@ class Shard(Enum):
 
 
 VALID_2D_TENSOR_SHARDINGS = [
-    (Shard.R, Shard.R),
-    (Shard.R, Shard.S_0),
-    (Shard.R, Shard.S_1),
-    (Shard.S_0, Shard.R),
-    (Shard.S_0, Shard.S_1),
-    (Shard.S_1, Shard.R),
-    (Shard.S_1, Shard.S_0),
+    (SpmdShard.R, SpmdShard.R),
+    (SpmdShard.R, SpmdShard.S_0),
+    (SpmdShard.R, SpmdShard.S_1),
+    (SpmdShard.S_0, SpmdShard.R),
+    (SpmdShard.S_0, SpmdShard.S_1),
+    (SpmdShard.S_1, SpmdShard.R),
+    (SpmdShard.S_1, SpmdShard.S_0),
 ]

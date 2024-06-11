@@ -4,7 +4,7 @@ from functools import lru_cache
 
 from chop.ir.graph import MaseMetadata
 
-from .common import Shard
+from .common import SpmdShard
 from .mesh_model import MeshModel
 
 BYTES_PER_ELEMENT = 4
@@ -15,7 +15,7 @@ def get_communication_cost(sharding: tuple, node_meta: MaseMetadata, mesh: MeshM
 
     out_shape = node_meta["common"]["results"]["data_out_0"]["shape"]
 
-    if inner_dim_sharding == Shard.R:
+    if inner_dim_sharding == SpmdShard.R:
         return 0
     
     else:
@@ -32,7 +32,7 @@ def get_resharding_cost(mesh: MeshModel, src: tuple, dest: tuple, dest_node_meta
 
 
     # If original sharding is fully replicated, no resharding is required
-    if src == dest or src == (Shard.R, Shard.R):
+    if src == dest or src == (SpmdShard.R, SpmdShard.R):
         return 0
    
     num_bytes = BYTES_PER_ELEMENT * np.prod(dest_node_meta["common"]["args"]["data_in_0"]["shape"])
@@ -41,10 +41,10 @@ def get_resharding_cost(mesh: MeshModel, src: tuple, dest: tuple, dest_node_meta
     if (
             # Keep dim 0, split dim 1
             # E.g. (R, R) -> (R, S_0), (S_0, R) -> (S_0, S_1)
-            (src[0] == dest[0]) and (src[1] == Shard.R) and (dest[1] in [Shard.S_0, Shard.S_1])
+            (src[0] == dest[0]) and (src[1] == SpmdShard.R) and (dest[1] in [SpmdShard.S_0, SpmdShard.S_1])
             # Split dim 0, keep dim 1
             # E.g. (R, R) -> (S_1, R), (R, S_1) -> (S_0, S_1)
-            or (src[1] == dest[1]) and (src[0] == Shard.R) and (dest[0] in [Shard.S_0, Shard.S_1])
+            or (src[1] == dest[1]) and (src[0] == SpmdShard.R) and (dest[0] in [SpmdShard.S_0, SpmdShard.S_1])
         ):
         return 0
 
@@ -52,10 +52,10 @@ def get_resharding_cost(mesh: MeshModel, src: tuple, dest: tuple, dest_node_meta
     elif (
             # Keep dim 0, gather along dim 1
             # E.g. (S_1, S_0) -> (S_1, R)
-            (src[0] == dest[0]) and (src[1] in [Shard.S_0, Shard.S_1]) and (dest[1] == Shard.R)
+            (src[0] == dest[0]) and (src[1] in [SpmdShard.S_0, SpmdShard.S_1]) and (dest[1] == SpmdShard.R)
             # Gather along dim 0, keep dim 1
             # E.g. (S_0, S_1) -> (R, S_1)
-            or (src[1] == dest[1]) and (src[0] in [Shard.S_0, Shard.S_1]) and (dest[0] == Shard.R)
+            or (src[1] == dest[1]) and (src[0] in [SpmdShard.S_0, SpmdShard.S_1]) and (dest[0] == SpmdShard.R)
         ):
         ag_dim = 1 if src[0] == dest[0] else 0
         return mesh.all_gather_cost(
@@ -65,9 +65,9 @@ def get_resharding_cost(mesh: MeshModel, src: tuple, dest: tuple, dest_node_meta
 
     # All-to-all
     # E.g. (R, S_0) -> (S_0, R), (S_1, R) -> (R, S_1)
-    elif (src[0] == dest[1] and src[1] == dest[0] and (Shard.R in src)):
+    elif (src[0] == dest[1] and src[1] == dest[0] and (SpmdShard.R in src)):
         # all to all
-        a2a_dim = src[0].value if src[0] != Shard.R else src[1].value
+        a2a_dim = src[0].value if src[0] != SpmdShard.R else src[1].value
         return mesh.all_to_all_cost(
             num_bytes = num_bytes,
             mesh_dim = a2a_dim,
@@ -78,11 +78,11 @@ def get_resharding_cost(mesh: MeshModel, src: tuple, dest: tuple, dest_node_meta
     # reduced sharding
     else:
         # Reduce one dimension and re-compute
-        if (src[0] != Shard.R):
-            new_src = (Shard.R, src[1])
+        if (src[0] != SpmdShard.R):
+            new_src = (SpmdShard.R, src[1])
             ag_dim = src[0].value
         else:
-            new_src = (Shard.R, Shard.R)
+            new_src = (SpmdShard.R, SpmdShard.R)
             ag_dim = src[1].value
 
         return mesh.all_gather_cost(
@@ -95,5 +95,4 @@ def get_resharding_matrix(mesh, src_shardings, dest_shardings, dest_node_meta):
     for src_idx, src in enumerate(src_shardings):
         for dest_idx, dest in enumerate(dest_shardings):
             mat[dest_idx, src_idx] = get_resharding_cost(mesh, src, dest, dest_node_meta)
-
     return mat

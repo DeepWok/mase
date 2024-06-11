@@ -32,6 +32,6 @@ def autosharding_analysis_pass(mg, pass_args: dict = {}):
 
     # Run intra-operator pass
     if algo == "alpa":
-        mg, _ = alpa_autosharding_pass(mg, mesh)
+        mg, module_map = alpa_autosharding_pass(mg, mesh)
 
-    return mg, {}
+    return mg, module_map

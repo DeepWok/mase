@@ -2,6 +2,7 @@ import torch
 import torch.nn as nn
 
 from chop.ir import MaseGraph
+from chop.distributed import MaseLauncher
 import chop.passes as passes
 
 import sys, pdb, traceback
@@ -16,6 +17,7 @@ def excepthook(exc_type, exc_value, exc_traceback):
 # Set the custom exception hook
 sys.excepthook = excepthook
 
+WORLD_SIZE = 8
 
 class MLP(nn.Module):
     def __init__(self, in_features=64, hidden_dimension=128, out_features=64):
@@ -35,13 +37,17 @@ def test_autosharding():
     mg, _ = passes.add_common_metadata_analysis_pass(
         mg, pass_args={"dummy_in": {"x": torch.randn((16, 64))}, "add_value": False}
     )
-    mg, _ = passes.autosharding_analysis_pass(
+    mg, module_map = passes.autosharding_analysis_pass(
         mg, 
         pass_args = {
             "mesh_shape": (2, 4),
             "inter_node_bandwidth": 10e9,
             "intra_node_bandwidth": 100e9
         })
+
+    launcher = MaseLauncher(mg, world_size=WORLD_SIZE, device_mesh=[[0, 1, 2, 3], [4, 5, 6, 7]])
+    inputs = [torch.randn((16, 64))]
+    launcher.run(module_map, inputs)
 
 
 if __name__ == "__main__":
