@@ -13,15 +13,17 @@ in pkgs.mkShellNoCC.override {
   packages = with pkgs; [
     # c++
     gcc
-    # clang
     cmake
+    # clang
+    # cmake
     # clang-tools
     # libstdcxx5
-    codespell
+    # codespell
+    llvmPackages_18.clangUseLLVM
     # llvmPackages_18.stdenv
     # llvmPackages.libcxx
     # gdb
-    boost
+    # boost
     vim
     # Python 3.11
     pythonPackages.python
@@ -53,7 +55,6 @@ in pkgs.mkShellNoCC.override {
   ++ (pkgs.lib.optionals pkgs.stdenv.isLinux [ verible ]);
   postShellHook = ''
     # install mase as a package
-    LD_LIBRARY_PATH=${pkgs.stdenv.cc.cc.lib}/lib
     python3 -m pip install -e .
     # add env variables 
     source scripts/init-nix.sh
