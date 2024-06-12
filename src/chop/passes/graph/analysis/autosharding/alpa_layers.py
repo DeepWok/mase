@@ -22,17 +22,14 @@ def get_valid_linear_shardings(node_meta, mesh):
     for p in permutations:
         output_sharding = (p[0][0], p[1][1])
         if p != ((SpmdShard.R, SpmdShard.R), (SpmdShard.R, SpmdShard.R)) and p[0][1] == p[1][0] and output_sharding in VALID_2D_TENSOR_SHARDINGS:
-            input_shardings.append(p)
+            input_shardings.append({
+                "input": p[0],
+                "weight": p[1]
+            })
             output_shardings.append(output_sharding)
 
             compute_cost_vector.append(0)
-
-            cost = get_communication_cost(p, node_meta["mase"], mesh)
-            communication_cost_vector.append(cost)
-
-    logger.debug(f"Valid shardings for linear layer:")
-    for i, in_shard in enumerate(input_shardings):
-        logger.debug(f"Sharding {i}: {in_shard} -> {output_shardings[i]}")
+            communication_cost_vector.append(get_communication_cost(p, node_meta["mase"], mesh))
 
     return (
         input_shardings,

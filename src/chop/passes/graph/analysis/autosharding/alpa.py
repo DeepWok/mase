@@ -65,7 +65,7 @@ def alpa_intra_op_sharding_pass(mg, mesh):
                 resharding_costs = get_resharding_matrix(
                     mesh,
                     src_shardings = in_node.meta["mase"]["software"]["autosharding"]["valid_output_shardings"], 
-                    dest_shardings = [sharding[0] for sharding in node.meta["mase"]["software"]["autosharding"]["valid_input_shardings"]],
+                    dest_shardings = [sharding["input"] for sharding in node.meta["mase"]["software"]["autosharding"]["valid_input_shardings"]],
                     dest_node_meta = node.meta["mase"]
                 ).flatten()
 
@@ -111,10 +111,9 @@ def alpa_intra_op_sharding_pass(mg, mesh):
         target = get_node_target(node)
         if target is not None:
             module_map[target] = {
-                "input": node.meta["mase"]["software"]["autosharding"]["input_sharding"][0],
-                "weight": node.meta["mase"]["software"]["autosharding"]["input_sharding"][1],
-                "output": node.meta["mase"]["software"]["autosharding"]["output_sharding"],
+                key: node.meta["mase"]["software"]["autosharding"]["input_sharding"][key] for key in node.meta["mase"]["software"]["autosharding"]["input_sharding"].keys()
             }
+            module_map[target]["output"] = node.meta["mase"]["software"]["autosharding"]["output_sharding"]
 
     return mg, module_map
 
