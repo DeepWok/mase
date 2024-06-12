@@ -37,7 +37,7 @@ from .graph.transforms import (
     tensorrt_fake_quantize_transform_pass,
 )
 from .module.analysis import calculate_avg_bits_module_analysis_pass
-from .module.transforms import quantize_module_transform_pass
+from .module.transforms import quantize_module_transform_pass, resharding_transform_pass
 
 from .onnx.analysis import (
     export_fx_graph_analysis_pass,

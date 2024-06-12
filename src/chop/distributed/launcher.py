@@ -14,19 +14,12 @@ from torch.distributed._tensor import (
     Shard,
 )
 
-from chop.tools import deepsetattr, get_logger
-
+from chop.distributed.utils import rlog
+from ..tools import get_logger
 from .utils import placement_from_sharding_config
 
 logger = get_logger(__name__)
 logger.setLevel("DEBUG")
-
-def rlog(rank, msg):
-    """
-    Only log on rank 0 to avoid repeated messages.
-    """
-    if rank == 0:
-        logger.info(msg)
 
 def dist_model_fn(
     name: str, module: nn.Module, device_mesh: DeviceMesh, rank: int, module_map={}
@@ -35,16 +28,14 @@ def dist_model_fn(
     This function gets called by torch.distributed._tensor.distribute_module on each module in the model.
     Each tensor in each module is distributed according to the sharding configuration in module_map.
     """
-    rlog(rank, f"Processing module {module}")
     if module in module_map:
         for parameter, sharding_config in module_map[module].items():
-            rlog(rank, f"    Parameter: {parameter} has sharding config {sharding_config}")
             if not hasattr(module, parameter):
-                rlog(rank, f"    Module does not have parameter {parameter}")
+                rlog(logger, rank, f"Module {module} does not have parameter {parameter}", level="warning")
                 continue
             placement = placement_from_sharding_config(sharding_config)
-            rlog(rank, f"    Placement: {placement}")
-            deepsetattr(module, parameter, torch.nn.Parameter(distribute_tensor(getattr(module, parameter), device_mesh, placement)))
+            rlog(logger, rank, f"Distributing parameter {parameter} of module {module} to {placement}", level="debug")
+            setattr(module, parameter, torch.nn.Parameter(distribute_tensor(getattr(module, parameter), device_mesh, placement)))
 
 
 def device_fn(rank, world_size, model=None, device_mesh=None, module_map={}, inputs=[]):
@@ -54,22 +45,20 @@ def device_fn(rank, world_size, model=None, device_mesh=None, module_map={}, inp
     """
     os.environ["MASTER_ADDR"] = "localhost"
     os.environ["MASTER_PORT"] = "12355"
+    os.environ["RANK"] = str(rank)
     dist.init_process_group("nccl", rank=rank, world_size=world_size)
     device = torch.device("cuda", rank)
     torch.cuda.set_device(device)
 
     mesh = DeviceMesh("cuda", mesh=device_mesh)
+    rlog(logger, rank, f"Distributing module parameters...", level="info")
     model = distribute_module(
         model, mesh, partial(dist_model_fn, rank=rank, module_map=module_map), input_fn=None, output_fn=None
     )
+    rlog(logger, rank, f"Module distribution done.")
 
-    # TO DO: read from module_map with keys matching forward function signature
     inputs = [distribute_tensor(in_tensor, mesh, [Replicate(), Replicate()]) for in_tensor in inputs]
     out = model(*inputs)
-
-    # TO DO: how to return output?
-
-    rlog(rank, f"Module distribution done.")
 
     dist.destroy_process_group()
 
@@ -81,4 +70,5 @@ class MaseLauncher():
         self.device_mesh = device_mesh
 
     def run(self, module_map = {}, inputs=[]):
+        logger.info(f"Launching model with world size {self.world_size}.")
         mp.spawn(partial(device_fn, model=self.model, device_mesh=self.device_mesh, module_map=module_map, inputs=inputs), args=(self.world_size,), nprocs=self.world_size, join=True)

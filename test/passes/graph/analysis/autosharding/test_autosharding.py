@@ -1,12 +1,12 @@
+import sys, pdb, traceback, os
+
 import torch
 import torch.nn as nn
 
 from chop.ir import MaseGraph
 from chop.distributed import MaseLauncher
 import chop.passes as passes
-
-import sys, pdb, traceback
-
+from chop.tools import get_logger
 
 def excepthook(exc_type, exc_value, exc_traceback):
     traceback.print_exception(exc_type, exc_value, exc_traceback)
@@ -17,8 +17,11 @@ def excepthook(exc_type, exc_value, exc_traceback):
 # Set the custom exception hook
 sys.excepthook = excepthook
 
-WORLD_SIZE = 8
+logger = get_logger(__name__)
+logger.setLevel("DEBUG")
 
+WORLD_SIZE = 8
+DEVICE_MESH = [[0, 1, 2, 3], [4, 5, 6, 7]]
 class MLP(nn.Module):
     def __init__(self, in_features=64, hidden_dimension=128, out_features=64):
         super().__init__()
@@ -29,14 +32,17 @@ class MLP(nn.Module):
         out = self.l1(x)
         return self.l2(out)
 
-
 def test_autosharding():
+    
+    # Initialize model and MaseGraph
     model = MLP()
     mg = MaseGraph(model)
     mg, _ = passes.init_metadata_analysis_pass(mg)
     mg, _ = passes.add_common_metadata_analysis_pass(
         mg, pass_args={"dummy_in": {"x": torch.randn((16, 64))}, "add_value": False}
     )
+
+    # Run autosharding pass to decide sharding configuration
     mg, module_map = passes.autosharding_analysis_pass(
         mg, 
         pass_args = {
@@ -45,7 +51,11 @@ def test_autosharding():
             "intra_node_bandwidth": 100e9
         })
 
-    launcher = MaseLauncher(mg, world_size=WORLD_SIZE, device_mesh=[[0, 1, 2, 3], [4, 5, 6, 7]])
+    # Insert resharding wrappers around each module
+    mg, _ = passes.resharding_transform_pass(mg, pass_args={"module_map": module_map, "device_mesh": DEVICE_MESH})
+
+    # Launch model in distributed cluster
+    launcher = MaseLauncher(mg, world_size=WORLD_SIZE, device_mesh=DEVICE_MESH)
     inputs = [torch.randn((16, 64))]
     launcher.run(module_map, inputs)
 
