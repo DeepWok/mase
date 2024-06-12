@@ -27,7 +27,6 @@ in pkgs.mkShellNoCC {
     mesa
     cmake
     zsh
-    just
 
     # hardware
     # verible is only supported on Linux (x86_64-linux, i686-linux and aarch64-linux)
