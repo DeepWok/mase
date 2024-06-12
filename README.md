@@ -7,7 +7,7 @@ Team Member:
 
 # General introduction
 
-![数据结构](./docs/imgs/Data Structure.png)
+![数据结构](docs/imgs/Data Structure.png)
 
 This study presents a new method to make machine learning models run faster on NVIDIA graphics cards. We've designed a system that speeds up the process of running and improving these models using a tool called TensorRT, without the need to retrain them. It works well for both simple and complex models, and at different levels of detail. We also looked into advanced techniques like adjusting precision on a layer-by-layer basis and integrating with ONNXRuntime to boost performance even more. This method is an important advancement for using machine learning in real-time on NVIDIA GPU.
 
