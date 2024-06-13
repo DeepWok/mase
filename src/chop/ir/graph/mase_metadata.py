@@ -2,10 +2,13 @@ import logging
 
 from torch import nn
 
-from ...passes.graph.utils import get_module_by_name
-
 logger = logging.getLogger(__name__)
 
+def get_module_by_name(model, request_name):
+    for name, layer in model.named_modules():
+        if name == request_name:
+            return layer
+    return None
 
 class MaseMetadata:
     """

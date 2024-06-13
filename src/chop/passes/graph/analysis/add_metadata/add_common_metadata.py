@@ -13,7 +13,7 @@ from chop.passes.graph.analysis.utils import (
     get_input_nodes,
     get_output_nodes,
 )
-from chop.passes.graph.common import (
+from chop.ir.common import (
     MASE_BUILTIN_FUNCS,
     MASE_IMPLICIT_FUNCS,
     MASE_MODULE_RELATED_FUNCS,

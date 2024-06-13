@@ -11,9 +11,8 @@ import torch
 import torch.fx as fx
 from torch.fx.passes.graph_drawer import FxGraphDrawer
 
-from chop.passes.graph.common import MASE_IMPLICIT_FUNCS
-from chop.passes.graph.transforms import utils as utils_passes
-from chop.passes.graph.patching import MASE_LEAF_FUNCTIONS, MASE_LEAF_LAYERS
+from chop.ir.common import MASE_IMPLICIT_FUNCS
+from chop.nn import MASE_LEAF_LAYERS
 from chop.nn.quantized import (
     quantized_func_map,
     quantized_module_map,
@@ -64,7 +63,7 @@ class MaseTracer(fx.Tracer):
         self.param_shapes_constant = param_shapes_constant
         super().__init__(
             self.custom_leaf_modules + (math,),
-            self.custom_leaf_functions + MASE_LEAF_FUNCTIONS,
+            self.custom_leaf_functions,
             self.param_shapes_constant,
         )
 

@@ -1,5 +1,3 @@
-import torch.nn.functional as F
-
 MASE_TYPES = [
     "module",
     "module_related_func",
@@ -9,7 +7,6 @@ MASE_TYPES = [
     "get_attr",
     "output",
 ]
-
 
 MASE_IMPLICIT_FUNCS = [
     # possibly are just constants

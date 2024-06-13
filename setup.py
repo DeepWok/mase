@@ -44,7 +44,6 @@ requirements = [
     "ipdb",
     "sentencepiece",
     "einops",
-    "deepspeed",
     "pybind11",
     "tabulate",
     "tensorboard",
@@ -72,16 +71,6 @@ requirements = [
     "pynvml",
     "bitstring>=4.2",
 ]
-
-if is_cuda_available():
-    requirements += [
-        "pycuda",
-        "onnxruntime-gpu",
-        "torch-tensorRT; platform_system == 'Linux'",
-        "tensorRT; platform_system == 'Linux'",
-        "cuda-python; platform_system == 'Linux'",
-        "pytorch-quantization; platform_system == 'Linux'",
-    ]
 
 setup(
     name="mase-tools",
