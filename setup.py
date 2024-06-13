@@ -75,6 +75,7 @@ requirements = [
     "pyyaml",
     "pynvml",
     "bitstring>=4.2",
+    "myst_parser",
 ]
 
 if is_cuda_available():

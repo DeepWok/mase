@@ -116,11 +116,6 @@ def test_emit_verilog_linear():
     mg, _ = passes.emit_cocotb_transform_pass(mg, pass_args={"wait_time": 100, "wait_unit": "ms", "batch_size": batch_size})
     mg, _ = passes.emit_vivado_project_transform_pass(mg)
 
-    # check questa
-    # if os.system("questa") != 0:
-    #     logger.info("Questa is required for this test, but the system does not have it, so later part this test is skipped.")
-    #     return
-
     simulate(skip_build=False, skip_test=False, simulator="verilator")
 
 

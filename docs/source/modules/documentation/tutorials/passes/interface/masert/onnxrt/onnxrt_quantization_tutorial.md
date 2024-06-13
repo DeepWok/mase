@@ -1,4 +1,4 @@
-# ONNX Runtime Tutorial!
+# ONNX Runtime Tutorial
 
 This notebook is designed to demonstrate the features of the ONNXRT passes integrated into MASE as part of the MASERT framework. The following demonstrations were run on a NVIDIA RTX A2000 GPU with a Intel(R) Xeon(R) CPU E5-2690 v4 @ 2.60GHz CPU.
 

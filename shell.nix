@@ -5,26 +5,10 @@ in
 
 let
   pythonPackages = pkgs.python311Packages;
-in pkgs.mkShellNoCC.override {
-  stdenv = pkgs.gcc13Stdenv;
-} {
+in pkgs.mkShellNoCC {
   venvDir = "./.venv";
   LD_LIBRARY_PATH = pkgs.lib.makeLibraryPath [ pkgs.stdenv.cc.cc ];
   packages = with pkgs; [
-    # c++
-    gcc
-    cmake
-    # clang
-    # cmake
-    # clang-tools
-    # libstdcxx5
-    # codespell
-    llvmPackages_18.clangUseLLVM
-    # llvmPackages_18.stdenv
-    # llvmPackages.libcxx
-    # gdb
-    # boost
-    vim
     # Python 3.11
     pythonPackages.python
     pythonPackages.pip
@@ -33,9 +17,10 @@ in pkgs.mkShellNoCC.override {
     # dropping into the shell
     # TODO: consider use setuptoolsBuildHook, as documented in https://nixos.org/manual/nixpkgs/stable/#python
     pythonPackages.venvShellHook
-    # pythonPackages.torch-bin
 
     # houskeeping 
+    just
+    sphinx
     git
     neovim
     glib
@@ -43,19 +28,17 @@ in pkgs.mkShellNoCC.override {
     mesa
     cmake
     zsh
-    just
-
     # hardware
     # verible is only supported on Linux (x86_64-linux, i686-linux and aarch64-linux)
     # https://search.nixos.org/packages?channel=23.11&show=verible&from=0&size=50&sort=relevance&type=packages&query=verible
     # verible
-    verilator
+    # verilator
     svls
   ]
   ++ (pkgs.lib.optionals pkgs.stdenv.isLinux [ verible ]);
   postShellHook = ''
     # install mase as a package
-    python3 -m pip install -e .
+    sudo -H python3 -m pip install -e .
     # add env variables 
     source scripts/init-nix.sh
   '';
