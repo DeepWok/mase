@@ -1,5 +1,6 @@
 import os
 from functools import partial
+from time import time
 
 import torch
 import torch.nn as nn
@@ -30,12 +31,20 @@ def dist_model_fn(
     """
     if module in module_map:
         for parameter, sharding_config in module_map[module].items():
+            if parameter in ["data_in_0", "output", "data_out_0"]:
+                continue
             if not hasattr(module, parameter):
                 rlog(logger, rank, f"Module {module} does not have parameter {parameter}", level="warning")
                 continue
+            
             placement = placement_from_sharding_config(sharding_config)
+
             rlog(logger, rank, f"Distributing parameter {parameter} of module {module} to {placement}", level="debug")
-            setattr(module, parameter, torch.nn.Parameter(distribute_tensor(getattr(module, parameter), device_mesh, placement)))
+            try:
+                distributed_tensor = distribute_tensor(getattr(module, parameter), device_mesh, placement)
+                setattr(module, parameter, torch.nn.Parameter(distributed_tensor))
+            except Exception as e:
+                rlog(logger, rank, f"Error distributing parameter {parameter} of module {module}: {e}", level="error")
 
 
 def device_fn(rank, world_size, model=None, device_mesh=None, module_map={}, inputs=[]):
@@ -52,10 +61,12 @@ def device_fn(rank, world_size, model=None, device_mesh=None, module_map={}, inp
 
     mesh = DeviceMesh("cuda", mesh=device_mesh)
     rlog(logger, rank, f"Distributing module parameters...", level="info")
+    start = time()
     model = distribute_module(
         model, mesh, partial(dist_model_fn, rank=rank, module_map=module_map), input_fn=None, output_fn=None
     )
-    rlog(logger, rank, f"Module distribution done.")
+    end = time()
+    rlog(logger, rank, f"Module distribution done. Time taken: {end - start} seconds.")
 
     inputs = [distribute_tensor(in_tensor, mesh, [Replicate(), Replicate()]) for in_tensor in inputs]
     out = model(*inputs)

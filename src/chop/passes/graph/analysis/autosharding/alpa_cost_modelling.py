@@ -10,7 +10,7 @@ from .mesh_model import MeshModel
 BYTES_PER_ELEMENT = 4
 
 def get_communication_cost(sharding: tuple, node_meta: MaseMetadata, mesh: MeshModel):
-    assert sharding[0][1] == sharding[1][0], f"Inconsistent sharding for node: {node_meta.node}"
+    assert sharding[0][-1] == sharding[1][-2], f"Inconsistent sharding for node: {node_meta.node}"
     inner_dim_sharding = sharding[1][0]
 
     out_shape = node_meta["common"]["results"]["data_out_0"]["shape"]
@@ -32,7 +32,7 @@ def get_resharding_cost(mesh: MeshModel, src: tuple, dest: tuple, dest_node_meta
 
 
     # If original sharding is fully replicated, no resharding is required
-    if src == dest or src == (SpmdShard.R, SpmdShard.R):
+    if src == dest or all(i == SpmdShard.R for i in src):
         return 0
    
     num_bytes = BYTES_PER_ELEMENT * np.prod(dest_node_meta["common"]["args"]["data_in_0"]["shape"])
@@ -68,10 +68,13 @@ def get_resharding_cost(mesh: MeshModel, src: tuple, dest: tuple, dest_node_meta
     elif (src[0] == dest[1] and src[1] == dest[0] and (SpmdShard.R in src)):
         # all to all
         a2a_dim = src[0].value if src[0] != SpmdShard.R else src[1].value
-        return mesh.all_to_all_cost(
-            num_bytes = num_bytes,
-            mesh_dim = a2a_dim,
-        )
+        try:
+            return mesh.all_to_all_cost(
+                num_bytes = num_bytes,
+                mesh_dim = a2a_dim,
+            )
+        except:
+            breakpoint()
 
     # Two-stage resharding: when the resharding cannot be resolved with a single split, all-gather or all-to-all,
     # must first gather along the first non-replicated dimension, then recursively compute the cost for the

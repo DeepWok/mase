@@ -48,6 +48,8 @@ MASE_IMPLICIT_FUNCS = [
     "full",
     "ones",
     "dim",
+    "finfo",
+    "masked_fill"
 ]
 
 MASE_MODULE_RELATED_FUNCS = [
