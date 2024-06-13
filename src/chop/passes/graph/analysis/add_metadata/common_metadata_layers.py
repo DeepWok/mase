@@ -161,6 +161,7 @@ func_data = {
     "getattr": {"a": "data_in", "b": "data_in"},
     # https://pytorch.org/docs/stable/generated/torch.ones.html
     "ones": {"size": "config", "device": "config"},
+    "finfo": {"dtype": "config"},
 }
 
 module_data = {
@@ -251,6 +252,7 @@ method_data = {
     "transpose": {"dim_0": "config", "dim_1": "config"},
     # https://pytorch.org/docs/stable/generated/torch.Tensor.contiguous.html#torch.Tensor.contiguous
     "contiguous": {},
+    "masked_fill": {"mask": "data_in", "value": "data_in"},
 }
 
 
