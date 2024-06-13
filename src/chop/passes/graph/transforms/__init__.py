@@ -7,6 +7,7 @@ from .verilog import (
     emit_mlir_hls_transform_pass,
     emit_cocotb_transform_pass,
     emit_verilog_top_transform_pass,
+    emit_vivado_project_transform_pass,
 )
 from .utils import (
     conv_bn_fusion_transform_pass,
@@ -23,3 +24,5 @@ from .tensorrt import (
     tensorrt_fine_tune_transform_pass,
     tensorrt_fake_quantize_transform_pass,
 )
+
+from .patching import patch_metadata_transform_pass

@@ -8,12 +8,12 @@ module convert_parallelism #(
     input rst,
 
     input  logic [DATA_WIDTH-1:0] data_in      [DATA_IN_PARALLELISM-1:0],
-    input                         data_in_valid,
-    output                        data_in_ready,
+    input  logic                  data_in_valid,
+    output logic                  data_in_ready,
 
     output logic [DATA_WIDTH-1:0] data_out      [DATA_OUT_PARALLELISM-1:0],
-    output                        data_out_valid,
-    input                         data_out_ready
+    output logic                  data_out_valid,
+    input  logic                  data_out_ready
 );
   // if (DATA_OUT_PARALLELISM == DATA_IN_PARALLELISM) begin    
   //     always_comb begin

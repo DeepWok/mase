@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
-# This script tests the fixed point adder tree layer
+# This script is never run since the rtl has been changed.
+
 import random, os
 
 import cocotb
@@ -11,7 +12,7 @@ from mase_cocotb.runner import mase_runner
 class VerificationCase:
     def __init__(self, samples=2):
         self.in_width = 32
-        self.num = 17  # random.randint(2, 33)
+        self.num = 16  # random.randint(2, 33)
         self.inputs, self.outputs = [], []
         for _ in range(samples):
             i, o = self.single_run()

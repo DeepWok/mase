@@ -26,11 +26,11 @@ module unpacked_register_slice_quick #(
   ) register_slice (
       .clk      (clk),
       .rst      (rst),
-      .in_valid (in_valid),
-      .in_ready (in_ready),
-      .in_data  (data_in_flatten),
-      .out_valid(out_valid),
-      .out_ready(out_ready),
-      .out_data (data_out_flatten)
+      .data_in_valid (in_valid),
+      .data_in_ready (in_ready),
+      .data_in  (data_in_flatten),
+      .data_out_valid(out_valid),
+      .data_out_ready(out_ready),
+      .data_out (data_out_flatten)
   );
 endmodule

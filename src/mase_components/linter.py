@@ -56,6 +56,8 @@ def run_lint(group):
             file_path,
         ] + include_files
 
+        logger.info(f"Executing {cmd}")
+
         result = subprocess.run(cmd, capture_output=True, text=True)
 
         # * Process result
