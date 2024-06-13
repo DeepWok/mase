@@ -19,7 +19,7 @@ VALID_2D_TENSOR_SHARDINGS = [
     (SpmdShard.R, SpmdShard.S_0),
     (SpmdShard.R, SpmdShard.S_1),
     (SpmdShard.S_0, SpmdShard.R),
-    (SpmdShard.S_0, SpmdShard.S_1),
+    # (SpmdShard.S_0, SpmdShard.S_1),
     (SpmdShard.S_1, SpmdShard.R),
-    (SpmdShard.S_1, SpmdShard.S_0),
+    # (SpmdShard.S_1, SpmdShard.S_0),
 ]

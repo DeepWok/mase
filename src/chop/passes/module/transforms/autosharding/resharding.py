@@ -10,11 +10,19 @@ from torch.distributed._tensor import (
 
 from torch.distributed._tensor.api import Redistribute
 
-from chop.distributed.utils import placement_from_sharding_config, rlog
+from chop.distributed.utils import placement_from_sharding_config
 from chop.tools import get_logger
 
 logger = get_logger(__name__)
 logger.setLevel("DEBUG")
+
+def rlog(logger, rank, msg, level="info"):
+    """
+    Only log on rank 0 to avoid repeated messages.
+    """
+    log_fn = getattr(logger, level, logger.info)
+    if (rank == 0):
+        log_fn(f"[RANK: {rank}]: {msg}")
 
 def deepsetattr(obj, attr, value):
     """Recurses through an attribute chain to set the ultimate value."""
@@ -44,10 +52,12 @@ class ReshardingWrapper(nn.Module):
 
         required_placement = placement_from_sharding_config(self.resharding_config["data_in_0"])
         if (x.placements != required_placement):
-            rlog(logger, rank, f"For module {self.module}, resharding tensor x from {x.placements} to {required_placement}", level="debug")
+            rlog(logger, rank, f"For module {self.module}, resharding tensor x from {x.placements} to {required_placement}", level="info")
             x = Redistribute.apply(x, device_mesh, required_placement)
 
-        return self.module(x)
+        out = self.module(x)
+        
+        return out
 
 def resharding_transform_pass(mg, pass_args={}):
     """
