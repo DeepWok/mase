@@ -6,6 +6,8 @@ from torch.distributed._tensor import (
 
 from chop.passes.graph.analysis.autosharding.common import SpmdShard
 
+import torch
+
 def placement_from_sharding_config(sharding_config):
     """
     Sharding config is given as a tuple such as (R, S_0) where a symbol S_x at index i indicates
@@ -13,18 +15,13 @@ def placement_from_sharding_config(sharding_config):
     the distribute_tensor API expects a tuple of Shard() and Replicate() objects where a Shard(x)
     at index i indicates that tensor dimension x is sharded along device mesh dimension i.
     """
-    placement = [Replicate(), Replicate()]
+    placement = [Replicate()] * 2
     for shard_type in [SpmdShard.S_0, SpmdShard.S_1]:
         if shard_type in sharding_config:
             idx = sharding_config.index(shard_type)
-            # Preserve batch dimension
-            if (len(sharding_config) > 2):
-                idx = idx - (len(sharding_config) - 2)
             placement[shard_type.value] = Shard(idx)
 
-    if placement == [Shard(1), Shard(1)]:
-        print(f"Warning: Invalid sharding config {sharding_config}")
-    return placement
+    return tuple(placement)
         
 def rlog(logger, rank, msg, level="info"):
     """

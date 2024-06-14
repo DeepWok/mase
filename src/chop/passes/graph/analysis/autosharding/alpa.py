@@ -1,4 +1,4 @@
-
+import sys, pdb, traceback
 import functools
 
 import torch.nn as nn
@@ -10,9 +10,10 @@ from chop.tools import get_logger
 from .common import SpmdShard
 from .alpa_layers import ALPA_LAYERS
 from .alpa_cost_modelling import get_resharding_matrix
+from .debug_utilities import debug_shardings, are_layers_equal
 
 logger = get_logger(__name__)
-import sys, pdb, traceback
+logger.setLevel("DEBUG")
 
 def excepthook(exc_type, exc_value, exc_traceback):
     traceback.print_exception(exc_type, exc_value, exc_traceback)
@@ -45,7 +46,8 @@ def assign_default_sharding(node):
         "opt_var": np.array([1]),
     }
 
-def alpa_intra_op_sharding_pass(mg, mesh):
+
+def alpa_intra_op_sharding_pass(mg, mesh, debug=False):
     """
     Intra-operator auto parallelization pass.
     """
@@ -58,6 +60,7 @@ def alpa_intra_op_sharding_pass(mg, mesh):
 
     # Write cost vectors into metadata for each operator
     # This will later be used to solve the ILP optimization
+    debugged_layers = []
     for node in mg.fx_graph.nodes:
 
         target = get_node_target(node)
@@ -75,6 +78,11 @@ def alpa_intra_op_sharding_pass(mg, mesh):
                 compute_cost_vector,
                 communication_cost_vector,
             ) = ALPA_LAYERS[target_cls](node.meta, mesh, target)
+
+            # Debug each possible sharding by running an inference step over the device mesh
+            if debug and not any([are_layers_equal(layer, target) for layer in debugged_layers]):
+                debug_shardings(target, input_shardings, mesh)
+                debugged_layers.append(target)
 
             # Formulate optimization variable and consider compute/communication cost
             opt_var = cp.Variable(len(input_shardings), boolean=True)
@@ -135,14 +143,18 @@ def alpa_intra_op_sharding_pass(mg, mesh):
         chosen_idx = 0 if isinstance(node.meta["mase"]["software"]["autosharding"]["opt_var"], np.ndarray) else np.where(node.meta["mase"]["software"]["autosharding"]["opt_var"].value == 1)[0][0]
         node.meta["mase"]["software"]["autosharding"]["input_sharding"] = node.meta["mase"]["software"]["autosharding"]["valid_input_shardings"][chosen_idx]
         node.meta["mase"]["software"]["autosharding"]["output_sharding"] = node.meta["mase"]["software"]["autosharding"]["valid_output_shardings"][chosen_idx]
-        
+        chosen_sharding = {key: node.meta["mase"]["software"]["autosharding"]["input_sharding"][key] for key in node.meta["mase"]["software"]["autosharding"]["input_sharding"].keys()}
+
         # Write into module map (used by distributed launcher)
         target = get_node_target(node)
         if node.op == "call_module" and target is not None:
             module_map[target] = {
-                key: node.meta["mase"]["software"]["autosharding"]["input_sharding"][key] for key in node.meta["mase"]["software"]["autosharding"]["input_sharding"].keys()
+                "node": node.name,
+                "sharding": chosen_sharding
             }
-            module_map[target]["output"] = node.meta["mase"]["software"]["autosharding"]["output_sharding"]
+            module_map[target]["sharding"]["output"] = node.meta["mase"]["software"]["autosharding"]["output_sharding"]
+
+            logger.info(f"Chosen sharding for node {node.name}: {chosen_sharding}")
 
     return mg, module_map
 

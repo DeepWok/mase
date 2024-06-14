@@ -38,7 +38,9 @@ def get_valid_2d_shardings(node_meta, mesh, module):
 
     for perm in itertools.product(VALID_2D_TENSOR_SHARDINGS, repeat=2):
         if out_rank > 2:
-            perm = tuple((SpmdShard.R,) * (out_rank - 2) + p for p in perm)
+            # Always replicate along batch dimension, and assume weights are always 2D
+            # TO DO: handle sharding along batch dimension
+            perm = ((SpmdShard.R, ) + perm[0], perm[1])
         output_sharding = tuple((SpmdShard.R,) * (out_rank - 2) + (perm[0][-2], perm[1][-1]))
         if not is_fully_replicated(perm) and is_valid_sharding_pair(perm) and is_valid_2d_sharding(output_sharding):
             input_shardings.append({

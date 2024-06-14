@@ -43,7 +43,8 @@ class ReshardingWrapper(nn.Module):
     def __init__(self, device_mesh, module, resharding_config):
         super().__init__()
         self.module = module
-        self.resharding_config = resharding_config
+        self.resharding_config = resharding_config["sharding"]
+        self.node = resharding_config["node"]
         self.device_mesh = device_mesh
 
     def forward(self, x):
@@ -52,7 +53,7 @@ class ReshardingWrapper(nn.Module):
 
         required_placement = placement_from_sharding_config(self.resharding_config["data_in_0"])
         if (x.placements != required_placement):
-            rlog(logger, rank, f"For module {self.module}, resharding tensor x from {x.placements} to {required_placement}", level="info")
+            rlog(logger, rank, f"For module {self.node}, resharding tensor x from {x.placements} to {required_placement}", level="info")
             x = Redistribute.apply(x, device_mesh, required_placement)
 
         out = self.module(x)

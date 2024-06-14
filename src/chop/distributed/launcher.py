@@ -30,7 +30,8 @@ def dist_model_fn(
     Each tensor in each module is distributed according to the sharding configuration in module_map.
     """
     if module in module_map:
-        for parameter, sharding_config in module_map[module].items():
+        node_name = module_map[module]["node"]
+        for parameter, sharding_config in module_map[module]["sharding"].items():
             if parameter in ["data_in_0", "output", "data_out_0"]:
                 continue
             if not hasattr(module, parameter):
@@ -39,12 +40,12 @@ def dist_model_fn(
             
             placement = placement_from_sharding_config(sharding_config)
 
-            rlog(logger, rank, f"Distributing parameter {parameter} of module {module} to {placement}", level="debug")
             try:
+                rlog(logger, rank, f"Distributing parameter {parameter} of module {node_name} to {placement}", level="debug")
                 distributed_tensor = distribute_tensor(getattr(module, parameter), device_mesh, placement)
                 setattr(module, parameter, torch.nn.Parameter(distributed_tensor))
             except Exception as e:
-                rlog(logger, rank, f"Error distributing parameter {parameter} of module {module}: {e}", level="error")
+                rlog(logger, rank, f"Error distributing parameter {parameter} of module {node_name} to {placement}: {e}", level="error")
 
 
 def device_fn(rank, world_size, model=None, device_mesh=None, module_map={}, inputs=[]):
