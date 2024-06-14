@@ -14,7 +14,7 @@ from chop.distributed.utils import placement_from_sharding_config
 from chop.tools import get_logger
 
 logger = get_logger(__name__)
-logger.setLevel("DEBUG")
+logger.setLevel("INFO")
 
 def rlog(logger, rank, msg, level="info"):
     """
@@ -53,7 +53,7 @@ class ReshardingWrapper(nn.Module):
 
         required_placement = placement_from_sharding_config(self.resharding_config["data_in_0"])
         if (x.placements != required_placement):
-            rlog(logger, rank, f"For module {self.node}, resharding tensor x from {x.placements} to {required_placement}", level="info")
+            rlog(logger, rank, f"For module {self.node}, resharding tensor x from {x.placements} to {required_placement}", level="debug")
             x = Redistribute.apply(x, device_mesh, required_placement)
 
         out = self.module(x)
@@ -78,7 +78,7 @@ def resharding_transform_pass(mg, pass_args={}):
         module = deepgetattr(mg.model, node.target, None)
         if module is not None:
             resharding_config = module_map[module]
-            logger.info(f"Inserting resharding wrapper around node: {node}")
+            logger.debug(f"Inserting resharding wrapper around node: {node}")
             deepsetattr(mg.model, node.target, ReshardingWrapper(device_mesh, module, resharding_config))
 
     mg.model.recompile()

@@ -13,7 +13,7 @@ from .alpa_cost_modelling import get_resharding_matrix
 from .debug_utilities import debug_shardings, are_layers_equal
 
 logger = get_logger(__name__)
-logger.setLevel("DEBUG")
+logger.setLevel("INFO")
 
 def excepthook(exc_type, exc_value, exc_traceback):
     traceback.print_exception(exc_type, exc_value, exc_traceback)
@@ -153,8 +153,6 @@ def alpa_intra_op_sharding_pass(mg, mesh, debug=False):
                 "sharding": chosen_sharding
             }
             module_map[target]["sharding"]["output"] = node.meta["mase"]["software"]["autosharding"]["output_sharding"]
-
-            logger.info(f"Chosen sharding for node {node.name}: {chosen_sharding}")
 
     return mg, module_map
 

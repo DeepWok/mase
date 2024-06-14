@@ -20,7 +20,15 @@ from ..tools import get_logger
 from .utils import placement_from_sharding_config
 
 logger = get_logger(__name__)
-logger.setLevel("DEBUG")
+logger.setLevel("INFO")
+
+def distributed_timing(fn, *args, **kwargs):
+    dist.barrier()
+    start = time()
+    result = fn(*args, **kwargs)
+    dist.barrier()
+    end = time()
+    return result, (end - start)
 
 def dist_model_fn(
     name: str, module: nn.Module, device_mesh: DeviceMesh, rank: int, module_map={}
@@ -56,21 +64,23 @@ def device_fn(rank, world_size, model=None, device_mesh=None, module_map={}, inp
     os.environ["MASTER_ADDR"] = "localhost"
     os.environ["MASTER_PORT"] = "12355"
     os.environ["RANK"] = str(rank)
+
+    # Initialize
     dist.init_process_group("nccl", rank=rank, world_size=world_size)
     device = torch.device("cuda", rank)
     torch.cuda.set_device(device)
 
+    # Distribute model parameters according to sharding configuration
     mesh = DeviceMesh("cuda", mesh=device_mesh)
     rlog(logger, rank, f"Distributing module parameters...", level="info")
-    start = time()
-    model = distribute_module(
-        model, mesh, partial(dist_model_fn, rank=rank, module_map=module_map), input_fn=None, output_fn=None
-    )
-    end = time()
-    rlog(logger, rank, f"Module distribution done. Time taken: {end - start} seconds.")
+    model, dist_time = distributed_timing(distribute_module, model, mesh, partial(dist_model_fn, rank=rank, module_map=module_map), input_fn=None, output_fn=None)
+    rlog(logger, rank, f"Module distribution done. Time taken: {dist_time} seconds.")
 
+    # Run forward pass
+    rlog(logger, rank, f"Starting forward pass.", level="info")
     inputs = [distribute_tensor(in_tensor, mesh, [Replicate(), Replicate()]) for in_tensor in inputs]
-    out = model(*inputs)
+    out, time_taken = distributed_timing(model, *inputs)
+    rlog(logger, rank, f"Forward pass finished. Time taken: {time_taken}", level="info")
 
     dist.destroy_process_group()
 
