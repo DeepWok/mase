@@ -86,6 +86,7 @@ MASE_MODULES = [
 
 MASE_BUILTIN_FUNCS = [
     "mul",
+    "addmm",
     "sub",
     "add",
     "matmul",
@@ -105,6 +106,7 @@ MASE_BUILTIN_FUNCS = [
     "cosh",
     "tanh",
     "greater",
+    "gt",
     "less",
     "le",  # less or equal
     "sigmoid",
@@ -112,8 +114,10 @@ MASE_BUILTIN_FUNCS = [
     "min",
     "neg",
     "log",
+    "arange",
     "range",
     "gelu",
+    "scaled_dot_product_attention",
 ]
 
 

@@ -15,6 +15,16 @@ from functools import reduce
 
 # The following information is fetched from pytorch documentation
 func_data = {
+    # https://pytorch.org/docs/stable/generated/torch.nn.functional.scaled_dot_product_attention.html
+    "scaled_dot_product_attention": {
+        "query": "data_in",
+        "key": "data_in",
+        "value": "data_in",
+        "attn_mask": "data_in",
+        "dropout_p": "config",
+        "is_causal": "config",
+        "scale": "config",
+    },
     # https://pytorch.org/docs/stable/generated/torch.flatten.html#torch.flatten
     "flatten": {"input": "data_in", "start_dim": "config", "end_dim": "config"},
     # https://pytorch.org/docs/stable/generated/torch.nn.functional.relu.html
@@ -43,6 +53,8 @@ func_data = {
     "softsign": {"input": "data_in", "inplace": "config"},
     # https://pytorch.org/docs/stable/generated/torch.nn.Softplus.html
     "softplus": {"input": "data_in", "inplace": "config"},
+    # https://pytorch.org/docs/stable/generated/torch.addmm.html
+    "addmm": {"input": "data_in", "mat1": "data_in", "mat2": "data_in", "beta": "config", "alpha": "config"},
     # https://pytorch.org/docs/stable/generated/torch.add.html
     "add": {"input": "data_in", "other": "data_in"},
     # https://pytorch.org/docs/stable/generated/torch.mul.html
@@ -106,8 +118,10 @@ func_data = {
     "tan": {"input": "data_in"},
     # https://pytorch.org/docs/stable/generated/torch.tanh.html
     "tanh": {"input": "data_in"},
-    # https://pytorch.org/docs/stable/generated/torch.gt.html#torch.gt
+    # https://pytorch.org/docs/stable/generated/torch.greater.html
     "greater": {"input": "data_in", "other": "data_in"},
+    # https://pytorch.org/docs/stable/generated/torch.gt.html
+    "gt": {"input": "data_in", "other": "data_in"},
     # https://pytorch.org/docs/stable/generated/torch.abs.html
     "abs": {"input": "data_in"},
     # https://pytorch.org/docs/stable/generated/torch.sigmoid.html
@@ -124,6 +138,8 @@ func_data = {
     "less": {"input": "data_in", "other": "data_in"},
     # https://pytorch.org/docs/stable/generated/torch.le.html
     "lessorequal": {"input": "data_in", "other": "data_in"},
+    # https://pytorch.org/docs/stable/generated/torch.le.html
+    "le": {"input": "data_in", "other": "data_in"},
     # https://pytorch.org/docs/stable/generated/torch.min.html
     "min": {"input": "data_in"},
     # https://pytorch.org/docs/stable/generated/torch.neg.html
@@ -132,6 +148,8 @@ func_data = {
     "log": {"input": "data_in"},
     # https://pytorch.org/docs/stable/generated/torch.mean.html
     "mean": {"input": "data_in"},
+    # https://pytorch.org/docs/stable/generated/torch.arange.html
+    "arange": {"start": "config", "end": "config", "step": "config", "dtype": "config", "device": "config"},
     # https://pytorch.org/docs/stable/generated/torch.range.html
     "range": {"start": "config", "end": "config", "step": "config"},
     # https://pytorch.org/docs/stable/generated/torch.where.html
@@ -249,6 +267,10 @@ method_data = {
     # https://pytorch.org/docs/stable/generated/torch.Tensor.contiguous.html#torch.Tensor.contiguous
     "contiguous": {},
     "masked_fill": {"mask": "data_in", "value": "data_in"},
+    # https://pytorch.org/docs/stable/generated/torch.Tensor.unsqueeze.html#torch.Tensor.unsqueeze
+    "unsqueeze": {"input": "data_in", "dim": "config"},
+    # https://pytorch.org/docs/stable/generated/torch.Tensor.split.html#torch.Tensor.split
+    "split": {"input": "data_in", "split_size_or_sections": "config", "dim": "config"},
 }
 
 
@@ -275,7 +297,9 @@ def match_args_and_kwargs(meta, args, kwargs, data, add_value):
             meta_kwargs[n] = args[i]
 
     def get_shape(x):
-        if isinstance(x, torch.Tensor):
+        if x is None:
+            return None
+        elif isinstance(x, torch.Tensor):
             return list(x.shape)
         elif isinstance(x, int):
             return [1]
@@ -287,8 +311,9 @@ def match_args_and_kwargs(meta, args, kwargs, data, add_value):
     for k, v in kwargs.items():
         if data[k] == "data_in":
             # rename this to mase data_in_number
+            shape = get_shape(v)
             arg_meta = {
-                "shape": get_shape(v),
+                "shape": shape,
                 "torch_dtype": v.dtype if isinstance(v, torch.Tensor) else type(v),
                 "type": "float",
                 "precision": [32],
