@@ -54,7 +54,7 @@ class _LinearBase(torch.nn.Linear):
         self.x_quantizer = None
         self.w_quantizer = None
         self.b_quantizer = None
-        self.out_quantizer = lambda x: x
+        self.out_quantizer = None
         self.pruning_masks = None
 
     def forward(self, x: Tensor) -> Tensor:
