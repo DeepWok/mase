@@ -3,7 +3,7 @@
 ## Train a model
 
 ```bash
-./ch train --config configs/archive/test/train.toml --model toy
+./ch train toy toy_tiny --config ../configs/archive/test/train.toml --max-epochs 3
 ```
 
 ## Quantise transform
@@ -35,7 +35,7 @@ bias_frac_width = 9
 With the config, we can quantise the whole network to integer arithmetic by doing:
 
 ```bash
-./ch transform --config configs/examples/toy_uniform.toml --model toy --load ../mase_output/toy_classification_toy-tiny_2023-07-05/software/training_ckpts/best.ckpt --load-type pl
+./ch transform toy toy_tiny --config ../configs/examples/toy_uniform.toml --load ../mase_output/toy_classification_toy_tiny_2024-06-20/software/training_ckpts/best.ckpt --load-type pl
 ```
 
 ## QAT

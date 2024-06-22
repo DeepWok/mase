@@ -154,7 +154,9 @@ def transform_graph(
 
     # create or load metadata.parameters and mase_graph.model
     if load_name is not None and load_type == "mz":
-        graph, _ = load_mase_graph_interface_pass(graph, pass_args=load_name)
+        graph, _ = load_mase_graph_interface_pass(
+            graph, pass_args={
+                "load_dir":load_name})
     else:
         dummy_in = get_dummy_input(
             model_info=model_info,

@@ -19,10 +19,4 @@ from .utils import (
 from .dse import partition_to_multi_device_transform_pass
 
 from .granularity import raise_granularity_transform_pass
-from .tensorrt import (
-    tensorrt_calibrate_transform_pass,
-    tensorrt_fine_tune_transform_pass,
-    tensorrt_fake_quantize_transform_pass,
-)
-
 from .patching import patch_metadata_transform_pass
