@@ -31,24 +31,21 @@ class GroupedQueryAttentionInteger(_GroupedQueryAttentionBase):
         bias: bool = True,
         device=None,
         dtype=None,
-        # Quantization Configs
-        linear_q_config: dict = None,
-        linear_out_q_config: dict = None,
-        softermax_out_q_config: dict = None,
-        qk_matmul_out_q_config: dict = None,
-        v_matmul_out_q_config: dict = None,
-        # Rounding Mode
+        config=None,
+        out_config=None,
         floor=False,
     ) -> None:
         super().__init__(
             embed_dim, num_heads, num_kv_heads, bias, device, dtype
         )
+        assert config is not None, "config is None!"
+        self.config = config
 
         self.q_projection = LinearInteger(
             in_features=embed_dim,
             out_features=embed_dim,
-            config=linear_q_config,
-            out_config=linear_out_q_config,
+            config=config,
+            out_config=out_config,
             bias=bias,
             floor=floor,
         )
@@ -56,8 +53,8 @@ class GroupedQueryAttentionInteger(_GroupedQueryAttentionBase):
         self.k_projection = LinearInteger(
             in_features=embed_dim,
             out_features=self.kv_dim,
-            config=linear_q_config,
-            out_config=linear_out_q_config,
+            config=config,
+            out_config=out_config,
             bias=bias,
             floor=floor,
         )
@@ -65,59 +62,53 @@ class GroupedQueryAttentionInteger(_GroupedQueryAttentionBase):
         self.v_projection = LinearInteger(
             in_features=embed_dim,
             out_features=self.kv_dim,
-            config=linear_q_config,
-            out_config=linear_out_q_config,
+            config=config,
+            out_config=out_config,
             bias=bias,
             floor=floor,
         )
 
         qk_matmul_q_config = {
-            "data_in_width": linear_out_q_config["data_out_width"],
-            "data_in_frac_width": linear_out_q_config["data_out_frac_width"],
-            "weight_width": linear_out_q_config["data_out_width"],
-            "weight_frac_width": linear_out_q_config["data_out_frac_width"],
+            "data_in_width": out_config["data_out_width"],
+            "data_in_frac_width": out_config["data_out_frac_width"],
+            "weight_width": out_config["data_out_width"],
+            "weight_frac_width": out_config["data_out_frac_width"],
         }
         self.qk_matmul_func = partial(
             matmul_integer,
             config=qk_matmul_q_config,
-            out_config=qk_matmul_out_q_config,
+            out_config=out_config,
             floor=floor,
         )
 
-        softermax_q_config = {
-            "width": qk_matmul_out_q_config["data_out_width"],
-            "frac_width": qk_matmul_out_q_config["data_out_frac_width"],
+        softermax_config = {
+            "width": out_config["data_out_width"],
+            "frac_width": out_config["data_out_frac_width"],
         }
         self.softmax_func = partial(
             fixed_softermax,
-            q_config=softermax_q_config,
-            out_q_config=softermax_out_q_config,
+            q_config=softermax_config,
+            out_q_config=softermax_config,
             dim=-1,
         )
 
-        v_matmul_q_config = {
-            "data_in_width": softermax_out_q_config["width"],
-            "data_in_frac_width": softermax_out_q_config["frac_width"],
-            "weight_width": linear_out_q_config["data_out_width"],
-            "weight_frac_width": linear_out_q_config["data_out_frac_width"],
-        }
         self.v_matmul_func = partial(
             matmul_integer,
-            config=v_matmul_q_config,
-            out_config=v_matmul_out_q_config,
+            config=config,
+            out_config=out_config,
             floor=floor,
         )
 
         o_projection_q_config = {
-            **linear_q_config,
-            "data_in_width": linear_out_q_config["data_out_width"],
-            "data_in_frac_width": linear_out_q_config["data_out_frac_width"],
+            **config,
+            "data_in_width": out_config["data_out_width"],
+            "data_in_frac_width": out_config["data_out_frac_width"],
         }
         self.o_projection = LinearInteger(
             in_features=embed_dim,
             out_features=embed_dim,
             config=o_projection_q_config,
-            out_config=linear_out_q_config,
+            out_config=out_config,
             bias=bias,
             floor=floor,
         )

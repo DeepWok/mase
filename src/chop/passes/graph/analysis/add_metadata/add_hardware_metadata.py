@@ -3,7 +3,9 @@ import logging
 import toml
 import torch
 import torch.fx as fx
+from chop.ir.graph.mase_graph import MaseGraph
 from chop.ir.graph.mase_metadata import MaseMetadata
+from chop.nn.modules import GroupedQueryAttention
 from chop.passes.graph.analysis.utils import (
     get_input_nodes,
     get_output_nodes,
@@ -112,7 +114,7 @@ def add_verilog_param(node):
         else:
             vp[_cap(arg)] = arg_info
 
-    for result, result_info in node.meta["mase"]["common"]["results"].items():
+    for result, result_info in results.items():
         if isinstance(result_info, dict):
             for i, precision in enumerate(result_info["precision"]):
                 vp[_cap(result + f"_precision_{i}")] = result_info["precision"][i]
@@ -138,6 +140,26 @@ def add_verilog_param(node):
                     ][dim]
         else:
             vp[_cap(result)] = result_info
+
+
+def add_extra_verilog_param(node, graph: MaseGraph):
+    """Adds extra verilog parameters based on the node module type."""
+
+    if node.op == "call_module":
+        module = graph.modules[node.name]
+        vp = node.meta["mase"]["hardware"]["verilog_param"]
+
+        if isinstance(module, GroupedQueryAttention):
+            vp["NUM_HEADS"] = module.num_heads
+            vp["NUM_GROUPS"] = module.num_kv_heads
+            vp["WEIGHTS_PRE_TRANSPOSED"] = 0  # TODO: support transpose in mase?
+            vp["HAS_BIAS"] = 1 if module.bias else 0
+
+            # Also fix up weight parallelism
+            vp["Q_PROJECTION_WEIGHT_PARALLELISM_DIM_1"] = vp["Q_PROJECTION_WEIGHT_PARALLELISM_DIM_0"]
+            vp["K_PROJECTION_WEIGHT_PARALLELISM_DIM_1"] = vp["K_PROJECTION_WEIGHT_PARALLELISM_DIM_0"]
+            vp["V_PROJECTION_WEIGHT_PARALLELISM_DIM_1"] = vp["V_PROJECTION_WEIGHT_PARALLELISM_DIM_0"]
+            vp["O_PROJECTION_WEIGHT_PARALLELISM_DIM_1"] = vp["O_PROJECTION_WEIGHT_PARALLELISM_DIM_0"]
 
 
 def add_hardware_metadata_analysis_pass(graph, pass_args=None):
@@ -396,6 +418,7 @@ def add_hardware_metadata_analysis_pass(graph, pass_args=None):
     # Add hardware parameters
     for node in graph.nodes:
         add_verilog_param(node)
+        add_extra_verilog_param(node, graph)
 
     # Add graph metadata
     graph.meta["mase"]["hardware"]["verilog_sources"] = []

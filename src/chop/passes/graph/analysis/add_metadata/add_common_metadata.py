@@ -13,6 +13,7 @@ from chop.passes.graph.analysis.utils import (
     get_input_nodes,
     get_output_nodes,
 )
+from chop.nn.modules import GroupedQueryAttention
 from chop.passes.graph.common import (
     MASE_BUILTIN_FUNCS,
     MASE_IMPLICIT_FUNCS,
@@ -121,6 +122,8 @@ def graph_iterator_for_mase_ops(graph):
                 mase_op = "softshrink"
             elif isinstance(module, nn.LogSigmoid):
                 mase_op = "logsigmoid"
+            elif isinstance(module, GroupedQueryAttention):
+                mase_op = "grouped_query_attention"
             else:
                 mase_op = None
                 for module_cls in graph.model.custom_ops["modules"].keys():

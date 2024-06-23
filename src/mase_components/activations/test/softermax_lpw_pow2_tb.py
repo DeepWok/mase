@@ -166,7 +166,7 @@ async def sweep(dut):
         color=alt.Color("Type"),
     ).properties(
         width=600,
-        height=300,
+        height=220,
     )
 
     error_data = data[["x", "hardware error"]]

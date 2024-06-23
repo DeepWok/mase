@@ -19,18 +19,18 @@ set constraints_file alveo-u250.xdc
 # set num_heads 8
 
 # Heads Mem
-set sequence_len 256
-set embedding_dim 256
-set num_heads 16
+# set sequence_len 256
+# set embedding_dim 256
+# set num_heads 16
 
-# Mistral
-# set sequence_len 4096
-# set embedding_dim 4096
-# set num_heads 32
+# Llama 160m
+set sequence_len 16
+set embedding_dim 768
+set num_heads 12
 # set num_kv_heads 8
 
 # Module Parameters
-set num_kv_heads_list {1 2 4 8 16}
+set num_kv_heads_list {1 2 3 4 6 12}
 set embedding_par_list {16}
 set sequence_par_list {1}
 

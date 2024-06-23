@@ -10,7 +10,7 @@ from functools import partial
 from math import ceil
 
 import torch
-from torch import Tensor
+from torch import Tensor, nn
 import numpy as np
 
 import cocotb
@@ -267,28 +267,38 @@ class FixedGroupedQueryAttentionTB(Testbench):
             v_matmul_out_q_config=v_matmul_out_q_config,
         )
 
+        # Init Weights
+        # low = -(2**(self.WEIGHT_PRECISION_0-1)) / (2**self.WEIGHT_PRECISION_1)
+        # high = ((2**(self.WEIGHT_PRECISION_0-1))-1) / (2**self.WEIGHT_PRECISION_1)
+        # nn.init.uniform_(self.model.q_projection.weight, low, high)
+        # nn.init.uniform_(self.model.k_projection.weight, low, high)
+        # nn.init.uniform_(self.model.v_projection.weight, low, high)
+        # nn.init.uniform_(self.model.o_projection.weight, low, high)
+
         # Set verbosity of driver and monitor loggers to debug
-        self.data_in_0_driver.log.setLevel(logging.DEBUG)
-        self.weight_q_driver.log.setLevel(logging.DEBUG)
-        self.weight_k_driver.log.setLevel(logging.DEBUG)
-        self.weight_v_driver.log.setLevel(logging.DEBUG)
-        self.weight_o_driver.log.setLevel(logging.DEBUG)
-        self.data_out_0_monitor.log.setLevel(logging.DEBUG)
-        if self.HAS_BIAS:
-            self.bias_q_driver.log.setLevel(logging.DEBUG)
-            self.bias_k_driver.log.setLevel(logging.DEBUG)
-            self.bias_v_driver.log.setLevel(logging.DEBUG)
-            self.bias_o_driver.log.setLevel(logging.DEBUG)
+        # self.data_in_0_driver.log.setLevel(logging.DEBUG)
+        # self.weight_q_driver.log.setLevel(logging.DEBUG)
+        # self.weight_k_driver.log.setLevel(logging.DEBUG)
+        # self.weight_v_driver.log.setLevel(logging.DEBUG)
+        # self.weight_o_driver.log.setLevel(logging.DEBUG)
+        # self.data_out_0_monitor.log.setLevel(logging.DEBUG)
+        # if self.HAS_BIAS:
+        #     self.bias_q_driver.log.setLevel(logging.DEBUG)
+        #     self.bias_k_driver.log.setLevel(logging.DEBUG)
+        #     self.bias_v_driver.log.setLevel(logging.DEBUG)
+        #     self.bias_o_driver.log.setLevel(logging.DEBUG)
 
 
     def generate_inputs(self, batches=1):
 
         def _shift_dist(x):
-            """Shifts distribution [0, 1) into input range."""
-            integer_width = self.DATA_IN_0_PRECISION_0 - self.DATA_IN_0_PRECISION_1
-            x = (x - 0.5) * 2
-            x = x * (2**(integer_width-1))
-            return x
+            """
+            Shifts distribution standard normal input range so that 2 sigma is
+            where the MAX_INT & MIN_INT is.
+            """
+            single_tail_range = 2**(self.DATA_IN_0_PRECISION_0 - self.DATA_IN_0_PRECISION_1 - 1)
+            half = single_tail_range / 2
+            return x * half
 
         rand_x = torch.randn(
             (
@@ -416,7 +426,6 @@ class FixedGroupedQueryAttentionTB(Testbench):
         self.log.info("Clock Cycles: %d" % (picosec / clock_period_picosec))
         self.log.info("Clock period: %f ns" % (clock_period_picosec / 1000))
 
-
         all_errors = np.concatenate(self.data_out_0_monitor.error_log)
         max_bit_err = np.max(all_errors)
         total_out_size = self.DATA_OUT_0_TENSOR_SIZE_DIM_0 * self.DATA_OUT_0_TENSOR_SIZE_DIM_1
@@ -517,16 +526,16 @@ class FixedGroupedQueryAttentionTB(Testbench):
             }, f, indent=4)
 
 
-@cocotb.test()
+@cocotb.test(skip=True)
 async def basic(dut):
     tb = FixedGroupedQueryAttentionTB(dut)
     await tb.run_test()
 
 
-@cocotb.test(skip=True)
+@cocotb.test()
 async def memory_bandwidth(dut):
     tb = FixedGroupedQueryAttentionTB(dut)
-    await tb.run_memory_bandwidth_test(us=1000)
+    await tb.run_memory_bandwidth_test(us=2000)
 
 
 def get_config(
@@ -627,7 +636,6 @@ def test_heads_sweep():
         template=True,
     )
 
-
 def test_bitwidth_sweep():
     cfgs = []
     for bitwidth in range(2, 16 + 1):
@@ -668,20 +676,20 @@ def mistral():
     )
 
 def llama_160m():
-    cfgs = [get_config(2048, 768, 12, 12, 32, 1)]
+    cfgs = []
+    for kv_heads in [1, 2, 3, 4, 6, 12]:
+        cfgs.append(get_config(2048, 768, 12, kv_heads, 32, 1))
     mase_runner(
         module_param_list=cfgs,
         hierarchical=True,
         template=True,
-        # sim="questa",
-        # extra_build_args=["-suppress", "14408"],
         sim="verilator",
         extra_build_args=["--unroll-count", "10000"],
     )
 
 
 if __name__ == "__main__":
-    test_fixed_linear_smoke()
+    # test_fixed_linear_smoke()
     # test_parallelism_sweep()
     # test_small_parallelism()
     # test_heads_sweep()
@@ -689,4 +697,4 @@ if __name__ == "__main__":
     # more_realistic()
     # mistral()
     # mqa()
-    # llama_160m()
+    llama_160m()
