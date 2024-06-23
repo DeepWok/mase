@@ -12,6 +12,8 @@ from .get_input import get_cf_args, get_dummy_input
 
 from .utils import (
     set_excepthook,
+    deepsetattr,
+    deepgetattr,
     get_checkpoint_file,
     copy_weights,
     to_numpy,

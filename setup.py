@@ -76,6 +76,7 @@ requirements = [
     "pynvml",
     "bitstring>=4.2",
     "myst_parser",
+    "cvxpy"
 ]
 
 if is_cuda_available():

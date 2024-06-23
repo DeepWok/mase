@@ -39,22 +39,24 @@ Follow the instructions on official [verilator](https://verilator.org/guide/late
 
 1. Verilator installation
 
-We expect the user to self-install `verilator`, and the `verilator` install is not included in the provided `nix` shell.
+	We expect the user to self-install `verilator`, and the `verilator` install is not included in the provided `nix` shell.
 
 2. Clang problem on darwin aarch64 systems
 
-There is some legacy issue with porting `clang` on `nix`, or generally `nix` shells and Python packages with C++ Extensions on macOS, you can find the issue detailed [here](https://discourse.nixos.org/t/nix-shells-and-python-packages-with-c-extensions/26326).
+	There is some legacy issue with porting `clang` on `nix`, or generally `nix` shells and Python packages with C++ Extensions on macOS, you can find the issue detailed [here](https://discourse.nixos.org/t/nix-shells-and-python-packages-with-c-extensions/26326).
 
-MacOS users should follow the standard procedure to install `xcode` , which provides you with `Apple's clang/clang++ compilation tools `. In our `setup.py`, several installation would use this local system `clang`, you should be able to verify this by typing
+	MacOS users should follow the standard procedure to install `xcode` , which provides you with `Apple's clang/clang++ compilation tools `. In our `setup.py`, several installation would use this local system `clang`, you should be able to verify this by typing
 
-```shell
-[nix-shell:~/Projects/mase]$ which clang
-# The following is the expected output
-# /usr/bin/clang
-[nix-shell:~/Projects/mase]$ clang --version
-# The following is the expected output
-# Apple clang version 15.0.0 (clang-1500.3.9.4)
-# Target: arm64-apple-darwin23.5.0
-# Thread model: posix
-# InstalledDir: /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin
-```
+	```shell
+	[nix-shell:~/Projects/mase]$ which clang
+	# The following is the expected output
+	# /usr/bin/clang
+	[nix-shell:~/Projects/mase]$ clang --version
+	# The following is the expected output
+	# Apple clang version 15.0.0 (clang-1500.3.9.4)
+	# Target: arm64-apple-darwin23.5.0
+	# Thread model: posix
+	# InstalledDir: /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin
+	```
+
+	Using other `clang` variants, especially the llvm-backed `nix` `clang` will cause installation or running issues with `cocotb` and `verilator` because of the confusion in `std` library paths.
