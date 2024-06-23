@@ -4,12 +4,12 @@ This tutorial shows how to search for mixed-precision quantization strategy for 
 
 ## Train a Toy model on ToyTiny dataset
 
-First we train a Toy model on ToyTiny dataset. After training for 5 epochs, we get a Toy model with around 0.997 validation accuracy. The checkpoint is saved at `mase_tools/toy_on_toy_tiny/software/training_ckpts/best.ckpt`
+First we train a Toy model on ToyTiny dataset. After training for some epochs, we get a Toy model with some validation accuracy. The checkpoint is saved at an auto-created location. You can refer to [Run the train action with the CLI](../train/simple_train_flow.md) for more detailed explanation.
 
 
 ```bash
-cd machop
-./ch train --config configs/examples/search_toy_tpe.toml
+cd src 
+./ch train toy toy_tiny --config ../configs/archive/test/train.toml --max-epochs 3
 ```
 
 ## Search for mixed-precision quantization strategy
