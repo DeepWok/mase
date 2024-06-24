@@ -42,9 +42,8 @@ The MASE Pass System
     :maxdepth: 1
 
     :caption: Passes
+    tutorials/passes/graph_and_pass
     tutorials/stat_to_config
-    tutorials/Add-model-to-machop
-    tutorials/doc_writing
 
 Advanced Topics
 ---------------
@@ -53,6 +52,8 @@ Advanced Topics
     :maxdepth: 1
 
     :caption: Advanced Topics
+    tutorials/Add-model-to-machop
+    tutorials/doc_writing
     tutorials/passes/interface/masert/tensorrt/tensorRT_quantization_tutorial
     tutorials/passes/interface/masert/onnxrt/onnxrt_quantization_tutorial
     tutorials/actions/search/how_to_extend_search
