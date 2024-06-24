@@ -16,6 +16,8 @@ cd src
 ./ch train toy toy_tiny --config ../configs/archive/test/train.toml --max-epochs 3
 ```
 
+> **Note:** This is training is for demonstration purposes, we picked a very small model/dataset to make it runnable even on CPU-based devices. It does not mean to achieve a useful accuracy!
+
 You can fetch all command-line arguments:
 
 ```bash

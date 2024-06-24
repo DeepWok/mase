@@ -19,6 +19,7 @@ in pkgs.mkShellNoCC {
     pythonPackages.venvShellHook
 
     # houskeeping 
+    wget
     just
     sphinx
     git
