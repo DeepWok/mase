@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>chop.passes.graph.transforms.quantize.quantize &mdash; MASE 0.0.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../../../../_static/css/theme.css?v=19f00094" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../../../../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../../../../../../_static/documentation_options.js?v=d45e8c67"></script>
+        <script src="../../../../../../_static/doctools.js?v=9a2dae69"></script>
+        <script src="../../../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../../../../index.html" class="icon icon-home">
+            MASE
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../modules/documentation/getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../modules/documentation/tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../modules/documentation/roadmap.html">Roadmap</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../modules/documentation/specifications.html">Coding Style Specifications</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Machop API</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../modules/api/actions.html">Chop Actions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../modules/api/passes.html">Chop Passes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../modules/api/ir.html">IR</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Mase Components</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../modules/hardware/hardware_documentation.html">Hardware Documentation</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Students</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../modules/labs.html">Advanced Deep Learning Systems Labs</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../../../index.html">MASE</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">chop.passes.graph.transforms.quantize.quantize</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for chop.passes.graph.transforms.quantize.quantize</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">copy</span> <span class="kn">import</span> <span class="n">copy</span><span class="p">,</span> <span class="n">deepcopy</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">torch</span>
+<span class="kn">from</span> <span class="nn">chop.passes.graph.interface.save_and_load</span> <span class="kn">import</span> <span class="n">load_mase_graph_interface_pass</span>
+
+<span class="kn">from</span> <span class="nn">...utils</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">deepcopy_mase_graph</span><span class="p">,</span>
+    <span class="n">get_mase_op</span><span class="p">,</span>
+    <span class="n">get_mase_type</span><span class="p">,</span>
+    <span class="n">get_node_actual_target</span><span class="p">,</span>
+    <span class="n">get_parent_name</span><span class="p">,</span>
+    <span class="n">get_similar_node_actual_target</span><span class="p">,</span>
+    <span class="n">match_a_pattern</span><span class="p">,</span>
+    <span class="n">get_node_target_by_name</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="kn">from</span> <span class="nn">.modify</span> <span class="kn">import</span> <span class="n">create_new_fn</span><span class="p">,</span> <span class="n">create_new_module</span>
+<span class="kn">from</span> <span class="nn">.quant_parsers</span> <span class="kn">import</span> <span class="n">parse_node_config</span><span class="p">,</span> <span class="n">relink_node_meta</span><span class="p">,</span> <span class="n">update_quant_meta_param</span>
+<span class="kn">from</span> <span class="nn">.summary</span> <span class="kn">import</span> <span class="n">graph_iterator_compare_nodes</span><span class="p">,</span> <span class="n">graph_iterator_node_histogram</span>
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+<span class="n">QUANTIZEABLE_OP</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="s2">&quot;add&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;bmm&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;conv1d&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;conv2d&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;matmul&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;mul&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;linear&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;relu&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;sub&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;batch_norm2d&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;layer_norm&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;group_norm&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;instance_norm2d&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;rms_norm&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;selu&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;tanh&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;gelu&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;softsign&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;softplus&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">get_config</span><span class="p">(</span><span class="n">config</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">config</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">config</span><span class="p">[</span><span class="n">name</span><span class="p">][</span><span class="s2">&quot;config&quot;</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">config</span><span class="p">[</span><span class="s2">&quot;default&quot;</span><span class="p">][</span><span class="s2">&quot;config&quot;</span><span class="p">]</span>
+
+
+<span class="c1"># def update_quant_meta_param(*args, **kwargs):</span>
+<span class="c1">#     # TODO: remove this function when the add_common_metadata is fixed</span>
+<span class="c1">#     pass</span>
+
+
+<span class="k">def</span> <span class="nf">graph_iterator_quantize_by_type</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">config</span><span class="p">:</span> <span class="nb">dict</span><span class="p">):</span>
+    <span class="c1"># Some modules might need information from two graphs to be initilized</span>
+    <span class="k">if</span> <span class="p">(</span>
+        <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;baseline_weight_path&quot;</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+        <span class="ow">and</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;load_type&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="s2">&quot;mz&quot;</span>
+    <span class="p">):</span>
+        <span class="n">bl_graph</span> <span class="o">=</span> <span class="n">deepcopy_mase_graph</span><span class="p">(</span><span class="n">graph</span><span class="p">)</span>
+        <span class="n">bl_graph</span> <span class="o">=</span> <span class="n">load_mase_graph_interface_pass</span><span class="p">(</span>
+            <span class="n">bl_graph</span><span class="p">,</span> <span class="n">pass_args</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;baseline_weight_path&quot;</span><span class="p">)</span>
+        <span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">bl_graph</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">graph</span><span class="o">.</span><span class="n">fx_graph</span><span class="o">.</span><span class="n">nodes</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">get_mase_op</span><span class="p">(</span><span class="n">node</span><span class="p">)</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">QUANTIZEABLE_OP</span><span class="p">:</span>
+            <span class="k">continue</span>
+        <span class="n">node_config</span> <span class="o">=</span> <span class="n">get_config</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">get_mase_op</span><span class="p">(</span><span class="n">node</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">node_config</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">]</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">continue</span>
+        <span class="n">node_config</span> <span class="o">=</span> <span class="n">parse_node_config</span><span class="p">(</span><span class="n">node_config</span><span class="p">,</span> <span class="n">get_mase_op</span><span class="p">(</span><span class="n">node</span><span class="p">))</span>
+        <span class="c1"># if get_mase_type(node) == &quot;module&quot;:</span>
+        <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">op</span> <span class="o">==</span> <span class="s2">&quot;call_module&quot;</span><span class="p">:</span>
+            <span class="n">ori_module</span> <span class="o">=</span> <span class="n">get_node_actual_target</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+            <span class="n">successor_module</span> <span class="o">=</span> <span class="n">get_similar_node_actual_target</span><span class="p">(</span>
+                <span class="n">bl_graph</span><span class="p">,</span> <span class="n">node</span><span class="o">.</span><span class="n">next</span>
+            <span class="p">)</span>  <span class="c1"># Certain modules will require information about their successor module to complete the initialization process. (For LogicNets, activation functions are needed.)</span>
+            <span class="n">bl_module</span> <span class="o">=</span> <span class="n">get_similar_node_actual_target</span><span class="p">(</span><span class="n">bl_graph</span><span class="p">,</span> <span class="n">node</span><span class="p">)</span>
+            <span class="n">new_module</span> <span class="o">=</span> <span class="n">create_new_module</span><span class="p">(</span>
+                <span class="n">get_mase_op</span><span class="p">(</span><span class="n">node</span><span class="p">),</span>
+                <span class="n">ori_module</span><span class="p">,</span>
+                <span class="n">node_config</span><span class="p">,</span>
+                <span class="n">node</span><span class="o">.</span><span class="n">meta</span><span class="p">,</span>
+                <span class="n">bl_module</span><span class="p">,</span>
+                <span class="n">successor_module</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="n">parent_name</span><span class="p">,</span> <span class="n">name</span> <span class="o">=</span> <span class="n">get_parent_name</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">target</span><span class="p">)</span>
+            <span class="nb">setattr</span><span class="p">(</span><span class="n">graph</span><span class="o">.</span><span class="n">modules</span><span class="p">[</span><span class="n">parent_name</span><span class="p">],</span> <span class="n">name</span><span class="p">,</span> <span class="n">new_module</span><span class="p">)</span>
+            <span class="c1"># update precision and type in meta.parameters[&quot;common&quot;]</span>
+            <span class="n">update_quant_meta_param</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">node_config</span><span class="p">,</span> <span class="n">get_mase_op</span><span class="p">(</span><span class="n">node</span><span class="p">))</span>
+        <span class="k">elif</span> <span class="n">get_mase_type</span><span class="p">(</span><span class="n">node</span><span class="p">)</span> <span class="ow">in</span> <span class="p">[</span>
+            <span class="s2">&quot;builtin_func&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;module_related_func&quot;</span><span class="p">,</span>
+        <span class="p">]:</span>
+            <span class="n">new_f</span><span class="p">,</span> <span class="n">args</span><span class="p">,</span> <span class="n">kwargs</span> <span class="o">=</span> <span class="n">create_new_fn</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">node_config</span><span class="p">)</span>
+            <span class="k">with</span> <span class="n">graph</span><span class="o">.</span><span class="n">fx_graph</span><span class="o">.</span><span class="n">inserting_before</span><span class="p">(</span><span class="n">node</span><span class="p">):</span>
+                <span class="n">new_node</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">fx_graph</span><span class="o">.</span><span class="n">call_function</span><span class="p">(</span><span class="n">new_f</span><span class="p">,</span> <span class="n">args</span><span class="p">,</span> <span class="n">kwargs</span><span class="p">)</span>
+                <span class="n">new_node</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">name</span>
+                <span class="n">new_node</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;mase&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">copy</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;mase&quot;</span><span class="p">])</span>
+                <span class="c1"># new_node.meta[&quot;mase&quot;].node -&gt; new_node</span>
+                <span class="n">relink_node_meta</span><span class="p">(</span><span class="n">new_node</span><span class="p">,</span> <span class="n">model</span><span class="o">=</span><span class="n">graph</span><span class="o">.</span><span class="n">model</span><span class="p">)</span>
+                <span class="n">update_quant_meta_param</span><span class="p">(</span><span class="n">new_node</span><span class="p">,</span> <span class="n">node_config</span><span class="p">,</span> <span class="n">get_mase_op</span><span class="p">(</span><span class="n">node</span><span class="p">))</span>
+                <span class="n">node</span><span class="o">.</span><span class="n">replace_all_uses_with</span><span class="p">(</span><span class="n">new_node</span><span class="p">)</span>
+            <span class="n">graph</span><span class="o">.</span><span class="n">fx_graph</span><span class="o">.</span><span class="n">erase_node</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">graph</span>
+
+
+<span class="k">def</span> <span class="nf">graph_iterator_quantize_by_name</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">config</span><span class="p">:</span> <span class="nb">dict</span><span class="p">):</span>
+    <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">graph</span><span class="o">.</span><span class="n">fx_graph</span><span class="o">.</span><span class="n">nodes</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">get_mase_op</span><span class="p">(</span><span class="n">node</span><span class="p">)</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">QUANTIZEABLE_OP</span><span class="p">:</span>
+            <span class="k">continue</span>
+        <span class="n">node_config</span> <span class="o">=</span> <span class="n">get_config</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">node</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">node_config</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">]</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">continue</span>
+        <span class="n">node_config</span> <span class="o">=</span> <span class="n">parse_node_config</span><span class="p">(</span><span class="n">node_config</span><span class="p">,</span> <span class="n">get_mase_op</span><span class="p">(</span><span class="n">node</span><span class="p">))</span>
+        <span class="n">output_layers_names</span> <span class="o">=</span> <span class="n">node_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;additional_layers_outputs&quot;</span><span class="p">,</span> <span class="p">[])</span>
+        <span class="n">output_layers</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">get_node_target_by_name</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">output_layers_names</span>
+        <span class="p">]</span>
+        <span class="n">input_layers_names</span> <span class="o">=</span> <span class="n">node_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;additional_layers_inputs&quot;</span><span class="p">,</span> <span class="p">[])</span>
+        <span class="n">input_layers</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">get_node_target_by_name</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">input_layers_names</span>
+        <span class="p">]</span>
+        <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">op</span> <span class="o">==</span> <span class="s2">&quot;call_module&quot;</span><span class="p">:</span>
+            <span class="n">ori_module</span> <span class="o">=</span> <span class="n">get_node_actual_target</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+            <span class="n">new_module</span> <span class="o">=</span> <span class="n">create_new_module</span><span class="p">(</span>
+                <span class="n">get_mase_op</span><span class="p">(</span><span class="n">node</span><span class="p">),</span>
+                <span class="n">ori_module</span><span class="p">,</span>
+                <span class="n">node_config</span><span class="p">,</span>
+                <span class="n">node</span><span class="o">.</span><span class="n">meta</span><span class="p">,</span>
+                <span class="n">input_layers</span><span class="o">=</span><span class="n">input_layers</span><span class="p">,</span>
+                <span class="n">output_layers</span><span class="o">=</span><span class="n">output_layers</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="n">parent_name</span><span class="p">,</span> <span class="n">name</span> <span class="o">=</span> <span class="n">get_parent_name</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">target</span><span class="p">)</span>
+            <span class="nb">setattr</span><span class="p">(</span><span class="n">graph</span><span class="o">.</span><span class="n">modules</span><span class="p">[</span><span class="n">parent_name</span><span class="p">],</span> <span class="n">name</span><span class="p">,</span> <span class="n">new_module</span><span class="p">)</span>
+            <span class="n">update_quant_meta_param</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">node_config</span><span class="p">,</span> <span class="n">get_mase_op</span><span class="p">(</span><span class="n">node</span><span class="p">))</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Quantized module: </span><span class="si">{</span><span class="n">node</span><span class="o">.</span><span class="n">target</span><span class="si">}</span><span class="s2"> with config: </span><span class="si">{</span><span class="n">node_config</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">get_mase_type</span><span class="p">(</span><span class="n">node</span><span class="p">)</span> <span class="ow">in</span> <span class="p">[</span>
+            <span class="s2">&quot;builtin_func&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;module_related_func&quot;</span><span class="p">,</span>
+        <span class="p">]:</span>
+            <span class="n">new_f</span><span class="p">,</span> <span class="n">args</span><span class="p">,</span> <span class="n">kwargs</span> <span class="o">=</span> <span class="n">create_new_fn</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">node_config</span><span class="p">)</span>
+            <span class="k">with</span> <span class="n">graph</span><span class="o">.</span><span class="n">fx_graph</span><span class="o">.</span><span class="n">inserting_before</span><span class="p">(</span><span class="n">node</span><span class="p">):</span>
+                <span class="n">new_node</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">fx_graph</span><span class="o">.</span><span class="n">call_function</span><span class="p">(</span><span class="n">new_f</span><span class="p">,</span> <span class="n">args</span><span class="p">,</span> <span class="n">kwargs</span><span class="p">)</span>
+                <span class="n">new_node</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">name</span>
+                <span class="n">new_node</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;mase&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">copy</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;mase&quot;</span><span class="p">])</span>
+                <span class="n">relink_node_meta</span><span class="p">(</span><span class="n">new_node</span><span class="p">,</span> <span class="n">model</span><span class="o">=</span><span class="n">graph</span><span class="o">.</span><span class="n">model</span><span class="p">)</span>
+                <span class="n">update_quant_meta_param</span><span class="p">(</span><span class="n">new_node</span><span class="p">,</span> <span class="n">node_config</span><span class="p">,</span> <span class="n">get_mase_op</span><span class="p">(</span><span class="n">node</span><span class="p">))</span>
+                <span class="n">node</span><span class="o">.</span><span class="n">replace_all_uses_with</span><span class="p">(</span><span class="n">new_node</span><span class="p">)</span>
+            <span class="n">graph</span><span class="o">.</span><span class="n">fx_graph</span><span class="o">.</span><span class="n">erase_node</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Quantized function: </span><span class="si">{</span><span class="n">node</span><span class="o">.</span><span class="n">target</span><span class="si">}</span><span class="s2"> with config: </span><span class="si">{</span><span class="n">node_config</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;Unsupported node type for quantisation: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">get_mase_type</span><span class="p">(</span><span class="n">node</span><span class="p">))</span>
+            <span class="p">)</span>
+    <span class="k">return</span> <span class="n">graph</span>
+
+
+<span class="k">def</span> <span class="nf">graph_iterator_quantize_by_regex_name</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">config</span><span class="p">:</span> <span class="nb">dict</span><span class="p">):</span>
+    <span class="n">patterns</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+    <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">graph</span><span class="o">.</span><span class="n">fx_graph</span><span class="o">.</span><span class="n">nodes</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">get_mase_op</span><span class="p">(</span><span class="n">node</span><span class="p">)</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">QUANTIZEABLE_OP</span><span class="p">:</span>
+            <span class="k">continue</span>
+        <span class="n">matched_pattern</span> <span class="o">=</span> <span class="n">match_a_pattern</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">patterns</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">matched_pattern</span><span class="p">:</span>
+            <span class="n">node_config</span> <span class="o">=</span> <span class="n">get_config</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="s2">&quot;default&quot;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">node_config</span> <span class="o">=</span> <span class="n">get_config</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">matched_pattern</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">node_config</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">]</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">continue</span>
+        <span class="n">node_config</span> <span class="o">=</span> <span class="n">parse_node_config</span><span class="p">(</span><span class="n">node_config</span><span class="p">,</span> <span class="n">get_mase_op</span><span class="p">(</span><span class="n">node</span><span class="p">))</span>
+        <span class="c1"># if get_mase_type(node) == &quot;module&quot;:</span>
+        <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">op</span> <span class="o">==</span> <span class="s2">&quot;call_module&quot;</span><span class="p">:</span>
+            <span class="n">ori_module</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">modules</span><span class="p">[</span><span class="n">node</span><span class="o">.</span><span class="n">target</span><span class="p">]</span>
+            <span class="n">new_module</span> <span class="o">=</span> <span class="n">create_new_module</span><span class="p">(</span>
+                <span class="n">get_mase_op</span><span class="p">(</span><span class="n">node</span><span class="p">),</span> <span class="n">ori_module</span><span class="p">,</span> <span class="n">node_config</span><span class="p">,</span> <span class="n">node</span><span class="o">.</span><span class="n">meta</span>
+            <span class="p">)</span>
+            <span class="n">parent_name</span><span class="p">,</span> <span class="n">name</span> <span class="o">=</span> <span class="n">get_parent_name</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">target</span><span class="p">)</span>
+            <span class="nb">setattr</span><span class="p">(</span><span class="n">graph</span><span class="o">.</span><span class="n">modules</span><span class="p">[</span><span class="n">parent_name</span><span class="p">],</span> <span class="n">name</span><span class="p">,</span> <span class="n">new_module</span><span class="p">)</span>
+            <span class="n">update_quant_meta_param</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">node_config</span><span class="p">,</span> <span class="n">get_mase_op</span><span class="p">(</span><span class="n">node</span><span class="p">))</span>
+        <span class="k">elif</span> <span class="n">get_mase_type</span><span class="p">(</span><span class="n">node</span><span class="p">)</span> <span class="ow">in</span> <span class="p">[</span>
+            <span class="s2">&quot;builtin_func&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;module_related_func&quot;</span><span class="p">,</span>
+        <span class="p">]:</span>
+            <span class="n">new_f</span><span class="p">,</span> <span class="n">args</span><span class="p">,</span> <span class="n">kwargs</span> <span class="o">=</span> <span class="n">create_new_fn</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">node_config</span><span class="p">)</span>
+            <span class="k">with</span> <span class="n">graph</span><span class="o">.</span><span class="n">fx_graph</span><span class="o">.</span><span class="n">inserting_before</span><span class="p">(</span><span class="n">node</span><span class="p">):</span>
+                <span class="n">new_node</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">fx_graph</span><span class="o">.</span><span class="n">call_function</span><span class="p">(</span><span class="n">new_f</span><span class="p">,</span> <span class="n">args</span><span class="p">,</span> <span class="n">kwargs</span><span class="p">)</span>
+                <span class="n">new_node</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">name</span>
+                <span class="n">new_node</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;mase&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;mase&quot;</span><span class="p">])</span>
+                <span class="n">relink_node_meta</span><span class="p">(</span><span class="n">new_node</span><span class="p">,</span> <span class="n">model</span><span class="o">=</span><span class="n">graph</span><span class="o">.</span><span class="n">model</span><span class="p">)</span>
+                <span class="n">update_quant_meta_param</span><span class="p">(</span><span class="n">new_node</span><span class="p">,</span> <span class="n">node_config</span><span class="p">,</span> <span class="n">get_mase_op</span><span class="p">(</span><span class="n">node</span><span class="p">))</span>
+                <span class="n">node</span><span class="o">.</span><span class="n">replace_all_uses_with</span><span class="p">(</span><span class="n">new_node</span><span class="p">)</span>
+            <span class="n">graph</span><span class="o">.</span><span class="n">fx_graph</span><span class="o">.</span><span class="n">erase_node</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;Unsupported node type for quantisation:</span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">get_mase_type</span><span class="p">(</span><span class="n">node</span><span class="p">))</span>
+            <span class="p">)</span>
+    <span class="k">return</span> <span class="n">graph</span>
+
+
+<div class="viewcode-block" id="quantize_transform_pass">
+<a class="viewcode-back" href="../../../../../../modules/api/transform/quantize.html#chop.passes.graph.transforms.quantize.quantize_transform_pass">[docs]</a>
+<span class="k">def</span> <span class="nf">quantize_transform_pass</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">pass_args</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Apply quantization transformation to the given graph.</span>
+
+<span class="sd">    :param graph: The input graph to be transformed.</span>
+<span class="sd">    :type graph: MaseGraph</span>
+
+<span class="sd">    :param pass_args: Additional arguments for the transformation.</span>
+<span class="sd">    :type pass_args: dict, optional</span>
+
+<span class="sd">    :return: The transformed graph.</span>
+<span class="sd">    :rtype: tuple</span>
+<span class="sd">    :raises ValueError: If the quantize &quot;by&quot; argument is unsupported.</span>
+
+
+<span class="sd">    - pass_args</span>
+<span class="sd">        - by -&gt; str : different quantization schemes choose from [&quot;type&quot;, &quot;name&quot;, &quot;regx_name&quot;]</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">by</span> <span class="o">=</span> <span class="n">pass_args</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;by&quot;</span><span class="p">)</span>
+    <span class="k">match</span> <span class="n">by</span><span class="p">:</span>
+        <span class="k">case</span> <span class="s2">&quot;type&quot;</span><span class="p">:</span>
+            <span class="n">graph</span> <span class="o">=</span> <span class="n">graph_iterator_quantize_by_type</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">pass_args</span><span class="p">)</span>
+        <span class="k">case</span> <span class="s2">&quot;name&quot;</span><span class="p">:</span>
+            <span class="n">graph</span> <span class="o">=</span> <span class="n">graph_iterator_quantize_by_name</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">pass_args</span><span class="p">)</span>
+        <span class="k">case</span> <span class="s2">&quot;regex_name&quot;</span><span class="p">:</span>
+            <span class="n">graph</span> <span class="o">=</span> <span class="n">graph_iterator_quantize_by_regex_name</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">pass_args</span><span class="p">)</span>
+        <span class="k">case</span><span class="w"> </span><span class="k">_</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Unsupported quantize &quot;by&quot;: </span><span class="si">{</span><span class="n">by</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+
+    <span class="c1"># link the model with graph</span>
+    <span class="n">graph</span><span class="o">.</span><span class="n">model</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">fx</span><span class="o">.</span><span class="n">GraphModule</span><span class="p">(</span><span class="n">graph</span><span class="o">.</span><span class="n">model</span><span class="p">,</span> <span class="n">graph</span><span class="o">.</span><span class="n">fx_graph</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">graph</span><span class="p">,</span> <span class="p">{}</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, DeepWok.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

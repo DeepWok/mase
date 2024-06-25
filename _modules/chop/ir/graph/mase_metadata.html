@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>chop.ir.graph.mase_metadata &mdash; MASE 0.0.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/css/theme.css?v=19f00094" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../../../../_static/documentation_options.js?v=d45e8c67"></script>
+        <script src="../../../../_static/doctools.js?v=9a2dae69"></script>
+        <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../../index.html" class="icon icon-home">
+            MASE
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../modules/documentation/getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../modules/documentation/tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../modules/documentation/roadmap.html">Roadmap</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../modules/documentation/specifications.html">Coding Style Specifications</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Machop API</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../modules/api/actions.html">Chop Actions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../modules/api/passes.html">Chop Passes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../modules/api/ir.html">IR</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Mase Components</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../modules/hardware/hardware_documentation.html">Hardware Documentation</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Students</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../modules/labs.html">Advanced Deep Learning Systems Labs</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">MASE</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">chop.ir.graph.mase_metadata</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for chop.ir.graph.mase_metadata</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">logging</span>
+
+<span class="kn">from</span> <span class="nn">torch</span> <span class="kn">import</span> <span class="n">nn</span>
+
+<span class="kn">from</span> <span class="nn">...passes.graph.utils</span> <span class="kn">import</span> <span class="n">get_module_by_name</span>
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="MaseMetadata">
+<a class="viewcode-back" href="../../../../modules/api/ir.html#chop.ir.graph.mase_metadata.MaseMetadata">[docs]</a>
+<span class="k">class</span> <span class="nc">MaseMetadata</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    The metadata of a Mase node in a Mase graph describes the constraints of the</span>
+<span class="sd">    node for any static analysis or possible transformation. The metadata has a</span>
+<span class="sd">    tree structure, e.g.</span>
+<span class="sd">    - common</span>
+<span class="sd">      - mase_op -&gt; str : the mase op of the node, e.g. placeholder, linear, relu</span>
+<span class="sd">      - mase_type -&gt; str : the mase type of the node, e.g. module, builtin_func, module_related_func</span>
+<span class="sd">      - args -&gt; {}</span>
+<span class="sd">         - $name : name of the arg</span>
+<span class="sd">           (if the arg is a tensor)</span>
+<span class="sd">           - type -&gt; type of the arg, e.g. fixed point or float</span>
+<span class="sd">           - precision -&gt; format of the type, e.g. (10, 5)</span>
+<span class="sd">           - shape -&gt; shape of the arg</span>
+<span class="sd">           (if the arg is not a tensor)</span>
+<span class="sd">           - value of the arg</span>
+<span class="sd">      - results -&gt; {}</span>
+<span class="sd">         - $name : name of the result</span>
+<span class="sd">           (if the result is a tensor)</span>
+<span class="sd">           - type -&gt; type of the result, e.g. fixed point or float</span>
+<span class="sd">           - precision -&gt; format of the type, e.g. (10, 5)</span>
+<span class="sd">           - size -&gt; size of the result</span>
+<span class="sd">           (if the result is not a tensor)</span>
+<span class="sd">           - value of the result</span>
+<span class="sd">    - software: dict</span>
+<span class="sd">      - args: dict</span>
+<span class="sd">        - $name (dict): name of the arg, e.g. data_in_0</span>
+<span class="sd">          - &quot;stat&quot;: {&quot;record&quot;: {&quot;data&quot;: ..., &quot;count&quot;: ...},</span>
+<span class="sd">                     &quot;variance_online&quot;: {&quot;variance&quot;: ..., &quot;mean&quot;: ..., &quot;count&quot;: ...}},</span>
+<span class="sd">                     &quot;variance_precise&quot;: {&quot;variance&quot;: ..., &quot;mean&quot;: ..., &quot;count&quot;: ...},</span>
+<span class="sd">                     &quot;range_n_sigma&quot;: {&quot;min&quot;: ..., &quot;max&quot;: ..., &quot;count&quot;: ...},</span>
+<span class="sd">                     &quot;range_quantile&quot;: {&quot;min&quot;: ..., &quot;max&quot;: ..., &quot;count&quot;: ...},</span>
+<span class="sd">                     &quot;range_min_max&quot;: {&quot;min&quot;: ..., &quot;max&quot;: ..., &quot;count&quot;: ...},</span>
+<span class="sd">                    }.</span>
+<span class="sd">      - results: dict</span>
+<span class="sd">        - $name (dict): name of the result, e.g. data_out_0</span>
+<span class="sd">          - &quot;stat&quot;: {&quot;stat_name&quot;: { # stat_values } }</span>
+<span class="sd">    - hardware</span>
+<span class="sd">      - is_implicit -&gt; bool : whether the node is mapped on hardware or software annotation only</span>
+<span class="sd">      - verilog_param -&gt; {} : parameters need for customise the hardware module</span>
+<span class="sd">      - device_id -&gt; int : the ID of the device where the node is mapped, default = -1</span>
+<span class="sd">      - toolchain -&gt; str : tool chain for code generation, must be INTERNAL, EXTERNAL or HLS</span>
+<span class="sd">      - module -&gt; str : the name of the used hardware module</span>
+<span class="sd">      - interface -&gt; {}</span>
+<span class="sd">         - name : name of the parameters</span>
+<span class="sd">           - storage : the hardware interface implemented, must be BRAM</span>
+<span class="sd">           - transpose : whether the data needs to be transposed before emitting</span>
+<span class="sd">      - dependence_files -&gt; [] : the dependent files for the generated module</span>
+<span class="sd">    ...</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># Hardware dict</span>
+    <span class="n">known_types</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;fixed&quot;</span><span class="p">,</span> <span class="s2">&quot;float&quot;</span><span class="p">,</span> <span class="s2">&quot;NA&quot;</span><span class="p">]</span>
+    <span class="n">known_toolchain</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;INTERNAL&quot;</span><span class="p">,</span> <span class="s2">&quot;EXTERNAL&quot;</span><span class="p">,</span> <span class="s2">&quot;HLS&quot;</span><span class="p">]</span>
+    <span class="n">known_storage</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;BRAM&quot;</span><span class="p">]</span>
+
+<div class="viewcode-block" id="MaseMetadata.__init__">
+<a class="viewcode-back" href="../../../../modules/api/ir.html#chop.ir.graph.mase_metadata.MaseMetadata.__init__">[docs]</a>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">node</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">model</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="c1"># Top-level model</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">model</span> <span class="o">=</span> <span class="n">model</span>
+        <span class="c1"># The fx node of the module in the fx graph of the model</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">node</span> <span class="o">=</span> <span class="n">node</span>
+        <span class="c1"># layers that we have in RTL</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">internal_layers</span> <span class="o">=</span> <span class="p">{</span><span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">:</span> <span class="s2">&quot;linear&quot;</span><span class="p">,</span> <span class="n">nn</span><span class="o">.</span><span class="n">ReLU</span><span class="p">:</span> <span class="s2">&quot;relu&quot;</span><span class="p">}</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">parameters</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;common&quot;</span><span class="p">:</span> <span class="p">{},</span>
+            <span class="s2">&quot;software&quot;</span><span class="p">:</span> <span class="p">{},</span>
+            <span class="s2">&quot;hardware&quot;</span><span class="p">:</span> <span class="p">{},</span>
+        <span class="p">}</span></div>
+
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">module</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># The target module in the model</span>
+        <span class="c1"># if it is not a &quot;call_module&quot; node, return None</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">node</span><span class="o">.</span><span class="n">op</span> <span class="o">==</span> <span class="s2">&quot;call_module&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">get_module_by_name</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">node</span><span class="o">.</span><span class="n">target</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">graph</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># The fx graph of the model</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">graph</span>
+
+    <span class="k">def</span> <span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="fm">__setitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, DeepWok.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

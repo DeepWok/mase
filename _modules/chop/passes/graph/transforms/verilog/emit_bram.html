@@ -1,0 +1,622 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>chop.passes.graph.transforms.verilog.emit_bram &mdash; MASE 0.0.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../../../../_static/css/theme.css?v=19f00094" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../../../../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../../../../../../_static/documentation_options.js?v=d45e8c67"></script>
+        <script src="../../../../../../_static/doctools.js?v=9a2dae69"></script>
+        <script src="../../../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../../../../index.html" class="icon icon-home">
+            MASE
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../modules/documentation/getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../modules/documentation/tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../modules/documentation/roadmap.html">Roadmap</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../modules/documentation/specifications.html">Coding Style Specifications</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Machop API</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../modules/api/actions.html">Chop Actions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../modules/api/passes.html">Chop Passes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../modules/api/ir.html">IR</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Mase Components</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../modules/hardware/hardware_documentation.html">Hardware Documentation</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Students</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../modules/labs.html">Advanced Deep Learning Systems Labs</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../../../index.html">MASE</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">chop.passes.graph.transforms.verilog.emit_bram</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for chop.passes.graph.transforms.verilog.emit_bram</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">math</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">struct</span>
+<span class="kn">import</span> <span class="nn">time</span>
+
+<span class="kn">import</span> <span class="nn">torch</span>
+
+<span class="kn">from</span> <span class="nn">chop.passes.graph.utils</span> <span class="kn">import</span> <span class="n">vf</span><span class="p">,</span> <span class="n">v2p</span><span class="p">,</span> <span class="n">get_module_by_name</span><span class="p">,</span> <span class="n">init_project</span>
+<span class="kn">from</span> <span class="nn">chop.nn.quantizers</span> <span class="kn">import</span> <span class="n">integer_quantizer_for_hw</span>
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+<span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">Path</span>
+
+
+<span class="k">def</span> <span class="nf">iceil</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+    <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">x</span><span class="p">))</span>
+
+
+<span class="k">def</span> <span class="nf">clog2</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">iceil</span><span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">log2</span><span class="p">(</span><span class="n">x</span><span class="p">))</span>
+
+
+<span class="k">def</span> <span class="nf">_cap</span><span class="p">(</span><span class="n">name</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    capitalize a string</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="n">name</span><span class="p">)</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span>
+
+
+<span class="k">def</span> <span class="nf">emit_parameters_in_mem_internal</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">param_name</span><span class="p">,</span> <span class="n">file_name</span><span class="p">,</span> <span class="n">data_name</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Emit single-port ROM hardware components for each parameter</span>
+<span class="sd">    (Mostly because Vivado does not support string type parameters...)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># ! TO DO: currently emitting too many parameters</span>
+
+    <span class="n">total_size</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span>
+        <span class="n">node</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;mase&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="s2">&quot;common&quot;</span><span class="p">][</span><span class="s2">&quot;args&quot;</span><span class="p">][</span><span class="n">param_name</span><span class="p">][</span><span class="s2">&quot;shape&quot;</span><span class="p">]</span>
+    <span class="p">)</span>
+    <span class="c1"># TO DO: change setting parallelism for weight in metadata</span>
+    <span class="c1"># node.meta[&quot;mase&quot;].parameters[&quot;hardware&quot;][&quot;verilog_param&quot;][f&quot;{_cap(param_name)}_PARALLELISM_DIM_1&quot;]</span>
+    <span class="n">out_size</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span>
+        <span class="n">node</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;mase&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="s2">&quot;hardware&quot;</span><span class="p">][</span><span class="s2">&quot;verilog_param&quot;</span><span class="p">][</span>
+            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">_cap</span><span class="p">(</span><span class="n">param_name</span><span class="p">)</span><span class="si">}</span><span class="s2">_PARALLELISM_DIM_0&quot;</span>
+        <span class="p">]</span>
+        <span class="o">*</span> <span class="mi">4</span>
+    <span class="p">)</span>
+    <span class="n">out_depth</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">total_size</span> <span class="o">/</span> <span class="n">out_size</span><span class="p">)</span>
+    <span class="n">out_width</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span>
+        <span class="n">node</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;mase&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="s2">&quot;common&quot;</span><span class="p">][</span><span class="s2">&quot;args&quot;</span><span class="p">][</span><span class="n">param_name</span><span class="p">][</span><span class="s2">&quot;precision&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+    <span class="p">)</span>
+
+    <span class="n">addr_width</span> <span class="o">=</span> <span class="n">clog2</span><span class="p">(</span><span class="n">out_depth</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
+
+    <span class="n">node_param_name</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">vf</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">name</span><span class="p">)</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">param_name</span><span class="si">}</span><span class="s2">&quot;</span>
+
+    <span class="n">rom_verilog</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">// =====================================</span>
+<span class="s2">//     Mase Hardware</span>
+<span class="s2">//     Parameter: </span><span class="si">{</span><span class="n">node_param_name</span><span class="si">}</span>
+<span class="s2">//     </span><span class="si">{</span><span class="n">time</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">%d</span><span class="s1">/%m/%Y %H:%M:%S&#39;</span><span class="p">)</span><span class="si">}</span>
+<span class="s2">// =====================================</span>
+
+<span class="s2">`timescale 1 ns / 1 ps</span>
+<span class="s2">module </span><span class="si">{</span><span class="n">node_param_name</span><span class="si">}</span><span class="s2">_rom #(</span>
+<span class="s2">  parameter DWIDTH = </span><span class="si">{</span><span class="n">out_size</span><span class="o">*</span><span class="n">out_width</span><span class="si">}</span><span class="s2">,</span>
+<span class="s2">  parameter MEM_SIZE = </span><span class="si">{</span><span class="n">out_depth</span><span class="si">}</span><span class="s2">,</span>
+<span class="s2">  parameter AWIDTH = $clog2(MEM_SIZE) + 1</span>
+<span class="s2">) (</span>
+<span class="s2">    input clk,</span>
+<span class="s2">    input logic [AWIDTH-1:0] addr0,</span>
+<span class="s2">    input ce0,</span>
+<span class="s2">    output logic [DWIDTH-1:0] q0</span>
+<span class="s2">);</span>
+
+<span class="s2">  logic [DWIDTH-1:0] ram[0:MEM_SIZE-1];</span>
+<span class="s2">  logic [DWIDTH-1:0] q0_t0;</span>
+<span class="s2">  logic [DWIDTH-1:0] q0_t1;</span>
+
+<span class="s2">  initial begin</span>
+<span class="s2">    $readmemh(&quot;</span><span class="si">{</span><span class="n">data_name</span><span class="si">}</span><span class="s2">&quot;, ram);</span>
+<span class="s2">  end</span>
+
+<span class="s2">  assign q0 = q0_t1;</span>
+
+<span class="s2">  always_ff @(posedge clk) if (ce0) q0_t1 &lt;= q0_t0;</span>
+<span class="s2">  always_ff @(posedge clk) if (ce0) q0_t0 &lt;= ram[addr0];</span>
+
+<span class="s2">endmodule</span>
+
+<span class="s2">`timescale 1 ns / 1 ps</span>
+<span class="s2">module </span><span class="si">{</span><span class="n">node_param_name</span><span class="si">}</span><span class="s2"> #(</span>
+<span class="s2">  parameter DATA_WIDTH = 32&#39;d</span><span class="si">{</span><span class="n">out_width</span><span class="o">*</span><span class="n">out_size</span><span class="si">}</span><span class="s2">,</span>
+<span class="s2">  parameter ADDR_RANGE = 32&#39;d</span><span class="si">{</span><span class="n">out_depth</span><span class="si">}</span><span class="s2">,</span>
+<span class="s2">  parameter ADDR_WIDTH = $clog2(ADDR_RANGE) + 1</span>
+<span class="s2">) (</span>
+<span class="s2">  input reset,</span>
+<span class="s2">  input clk,</span>
+<span class="s2">  input logic [ADDR_WIDTH - 1:0] address0,</span>
+<span class="s2">  input ce0,</span>
+<span class="s2">  output logic [DATA_WIDTH - 1:0] q0</span>
+<span class="s2">);</span>
+
+<span class="s2">  </span><span class="si">{</span><span class="n">node_param_name</span><span class="si">}</span><span class="s2">_rom </span><span class="si">{</span><span class="n">node_param_name</span><span class="si">}</span><span class="s2">_rom_U (</span>
+<span class="s2">      .clk(clk),</span>
+<span class="s2">      .addr0(address0),</span>
+<span class="s2">      .ce0(ce0),</span>
+<span class="s2">      .q0(q0)</span>
+<span class="s2">  );</span>
+
+<span class="s2">endmodule</span>
+
+
+<span class="s2">`timescale 1ns / 1ps</span>
+<span class="s2">module </span><span class="si">{</span><span class="n">node_param_name</span><span class="si">}</span><span class="s2">_source #(</span>
+<span class="s2">    parameter </span><span class="si">{</span><span class="n">_cap</span><span class="p">(</span><span class="n">param_name</span><span class="p">)</span><span class="si">}</span><span class="s2">_TENSOR_SIZE_DIM_0  = 32,</span>
+<span class="s2">    parameter </span><span class="si">{</span><span class="n">_cap</span><span class="p">(</span><span class="n">param_name</span><span class="p">)</span><span class="si">}</span><span class="s2">_TENSOR_SIZE_DIM_1  = 1,</span>
+<span class="s2">    parameter </span><span class="si">{</span><span class="n">_cap</span><span class="p">(</span><span class="n">param_name</span><span class="p">)</span><span class="si">}</span><span class="s2">_PRECISION_0 = 16,</span>
+<span class="s2">    parameter </span><span class="si">{</span><span class="n">_cap</span><span class="p">(</span><span class="n">param_name</span><span class="p">)</span><span class="si">}</span><span class="s2">_PRECISION_1 = 3,</span>
+
+<span class="s2">    parameter </span><span class="si">{</span><span class="n">_cap</span><span class="p">(</span><span class="n">param_name</span><span class="p">)</span><span class="si">}</span><span class="s2">_PARALLELISM_DIM_0 = 1,</span>
+<span class="s2">    parameter </span><span class="si">{</span><span class="n">_cap</span><span class="p">(</span><span class="n">param_name</span><span class="p">)</span><span class="si">}</span><span class="s2">_PARALLELISM_DIM_1 = 1,</span>
+<span class="s2">    parameter OUT_DEPTH = </span><span class="si">{</span><span class="n">_cap</span><span class="p">(</span><span class="n">param_name</span><span class="p">)</span><span class="si">}</span><span class="s2">_TENSOR_SIZE_DIM_0 / </span><span class="si">{</span><span class="n">_cap</span><span class="p">(</span><span class="n">param_name</span><span class="p">)</span><span class="si">}</span><span class="s2">_PARALLELISM_DIM_0</span>
+<span class="s2">) (</span>
+<span class="s2">    input clk,</span>
+<span class="s2">    input rst,</span>
+
+<span class="s2">    output logic [</span><span class="si">{</span><span class="n">_cap</span><span class="p">(</span><span class="n">param_name</span><span class="p">)</span><span class="si">}</span><span class="s2">_PRECISION_0-1:0] data_out      [</span><span class="si">{</span><span class="n">_cap</span><span class="p">(</span><span class="n">param_name</span><span class="p">)</span><span class="si">}</span><span class="s2">_PARALLELISM_DIM_0 * </span><span class="si">{</span><span class="n">_cap</span><span class="p">(</span><span class="n">param_name</span><span class="p">)</span><span class="si">}</span><span class="s2">_PARALLELISM_DIM_1-1:0],</span>
+<span class="s2">    output                       data_out_valid,</span>
+<span class="s2">    input                        data_out_ready</span>
+<span class="s2">);</span>
+<span class="s2">  // 1-bit wider so IN_DEPTH also fits.</span>
+<span class="s2">  localparam COUNTER_WIDTH = $clog2(OUT_DEPTH);</span>
+<span class="s2">  logic [COUNTER_WIDTH:0] counter;</span>
+
+<span class="s2">  always_ff @(posedge clk)</span>
+<span class="s2">    if (rst) counter &lt;= 0;</span>
+<span class="s2">    else begin</span>
+<span class="s2">      if (data_out_ready) begin</span>
+<span class="s2">        if (counter == OUT_DEPTH - 1) counter &lt;= 0;</span>
+<span class="s2">        else counter &lt;= counter + 1;</span>
+<span class="s2">      end</span>
+<span class="s2">    end</span>
+
+<span class="s2">  logic ce0;</span>
+<span class="s2">  assign ce0 = 1;</span>
+
+<span class="s2">  logic [</span><span class="si">{</span><span class="n">_cap</span><span class="p">(</span><span class="n">param_name</span><span class="p">)</span><span class="si">}</span><span class="s2">_PRECISION_0*</span><span class="si">{</span><span class="n">_cap</span><span class="p">(</span><span class="n">param_name</span><span class="p">)</span><span class="si">}</span><span class="s2">_TENSOR_SIZE_DIM_0-1:0] data_vector;</span>
+<span class="s2">  </span><span class="si">{</span><span class="n">node_param_name</span><span class="si">}</span><span class="s2"> #(</span>
+<span class="s2">      .DATA_WIDTH(</span><span class="si">{</span><span class="n">_cap</span><span class="p">(</span><span class="n">param_name</span><span class="p">)</span><span class="si">}</span><span class="s2">_PRECISION_0 * </span><span class="si">{</span><span class="n">_cap</span><span class="p">(</span><span class="n">param_name</span><span class="p">)</span><span class="si">}</span><span class="s2">_TENSOR_SIZE_DIM_0),</span>
+<span class="s2">      .ADDR_RANGE(OUT_DEPTH)</span>
+<span class="s2">  ) </span><span class="si">{</span><span class="n">node_param_name</span><span class="si">}</span><span class="s2">_mem (</span>
+<span class="s2">      .clk(clk),</span>
+<span class="s2">      .reset(rst),</span>
+<span class="s2">      .address0(counter),</span>
+<span class="s2">      .ce0(ce0),</span>
+<span class="s2">      .q0(data_vector)</span>
+<span class="s2">  );</span>
+
+<span class="s2">  // Cocotb/verilator does not support array flattening, so</span>
+<span class="s2">  // we need to manually add some reshaping process.</span>
+<span class="s2">  for (genvar j = 0; j &lt; </span><span class="si">{</span><span class="n">_cap</span><span class="p">(</span><span class="n">param_name</span><span class="p">)</span><span class="si">}</span><span class="s2">_TENSOR_SIZE_DIM_0; j++)</span>
+<span class="s2">    assign data_out[j] = data_vector[</span><span class="si">{</span><span class="n">_cap</span><span class="p">(</span><span class="n">param_name</span><span class="p">)</span><span class="si">}</span><span class="s2">_PRECISION_0*j+</span><span class="si">{</span><span class="n">_cap</span><span class="p">(</span><span class="n">param_name</span><span class="p">)</span><span class="si">}</span><span class="s2">_PRECISION_0-1:</span><span class="si">{</span><span class="n">_cap</span><span class="p">(</span><span class="n">param_name</span><span class="p">)</span><span class="si">}</span><span class="s2">_PRECISION_0*j];</span>
+
+<span class="s2">  assign data_out_valid = 1;</span>
+
+<span class="s2">endmodule</span>
+<span class="s2">&quot;&quot;&quot;</span>
+
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">file_name</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">outf</span><span class="p">:</span>
+        <span class="n">outf</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">rom_verilog</span><span class="p">)</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;ROM module </span><span class="si">{</span><span class="n">param_name</span><span class="si">}</span><span class="s2"> successfully written into </span><span class="si">{</span><span class="n">file_name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="k">assert</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">file_name</span><span class="p">),</span> <span class="s2">&quot;ROM Verilog generation failed.&quot;</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;verible-verilog-format --inplace </span><span class="si">{</span><span class="n">file_name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">emit_parameters_in_dat_internal</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">param_name</span><span class="p">,</span> <span class="n">file_name</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Emit initialised data for the ROM block. Each element must be in 8 HEX digits.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">total_size</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span>
+        <span class="n">node</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;mase&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="s2">&quot;common&quot;</span><span class="p">][</span><span class="s2">&quot;args&quot;</span><span class="p">][</span><span class="n">param_name</span><span class="p">][</span><span class="s2">&quot;shape&quot;</span><span class="p">]</span>
+    <span class="p">)</span>
+
+    <span class="k">if</span> <span class="s2">&quot;IN_DEPTH&quot;</span> <span class="ow">in</span> <span class="n">node</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;mase&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="s2">&quot;hardware&quot;</span><span class="p">][</span><span class="s2">&quot;verilog_param&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+        <span class="k">if</span> <span class="n">param_name</span> <span class="o">==</span> <span class="s2">&quot;bias&quot;</span><span class="p">:</span>
+            <span class="n">out_depth</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">out_depth</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;mase&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="s2">&quot;hardware&quot;</span><span class="p">][</span><span class="s2">&quot;verilog_param&quot;</span><span class="p">][</span>
+                <span class="s2">&quot;IN_DEPTH&quot;</span>
+            <span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">out_depth</span> <span class="o">=</span> <span class="n">total_size</span>
+
+    <span class="n">out_size</span> <span class="o">=</span> <span class="n">iceil</span><span class="p">(</span><span class="n">total_size</span> <span class="o">/</span> <span class="n">out_depth</span><span class="p">)</span>
+    <span class="c1"># The depth of parameters must match with the input depth of data</span>
+    <span class="k">assert</span> <span class="p">(</span>
+        <span class="n">total_size</span> <span class="o">%</span> <span class="n">out_depth</span> <span class="o">==</span> <span class="mi">0</span>
+    <span class="p">),</span> <span class="sa">f</span><span class="s2">&quot;Cannot partition imperfect size for now </span><span class="si">{</span><span class="n">node</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">.</span><span class="si">{</span><span class="n">param_name</span><span class="si">}</span><span class="s2"> = </span><span class="si">{</span><span class="n">total_size</span><span class="si">}</span><span class="s2"> / </span><span class="si">{</span><span class="n">out_depth</span><span class="si">}</span><span class="s2">.&quot;</span>
+    <span class="c1"># Assume the first index is the total width</span>
+    <span class="n">out_width</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;mase&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="s2">&quot;common&quot;</span><span class="p">][</span><span class="s2">&quot;args&quot;</span><span class="p">][</span><span class="n">param_name</span><span class="p">][</span><span class="s2">&quot;precision&quot;</span><span class="p">][</span>
+        <span class="mi">0</span>
+    <span class="p">]</span>
+
+    <span class="n">data_buff</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+    <span class="n">param_data</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;mase&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">module</span><span class="o">.</span><span class="n">get_parameter</span><span class="p">(</span><span class="n">param_name</span><span class="p">)</span><span class="o">.</span><span class="n">data</span>
+    <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;mase&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="s2">&quot;hardware&quot;</span><span class="p">][</span><span class="s2">&quot;interface&quot;</span><span class="p">][</span><span class="n">param_name</span><span class="p">][</span><span class="s2">&quot;transpose&quot;</span><span class="p">]:</span>
+        <span class="n">param_data</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span>
+            <span class="n">param_data</span><span class="p">,</span>
+            <span class="p">(</span>
+                <span class="n">node</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;mase&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="s2">&quot;hardware&quot;</span><span class="p">][</span><span class="s2">&quot;verilog_param&quot;</span><span class="p">][</span>
+                    <span class="s2">&quot;DATA_OUT_0_SIZE&quot;</span>
+                <span class="p">],</span>
+                <span class="n">node</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;mase&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="s2">&quot;hardware&quot;</span><span class="p">][</span><span class="s2">&quot;verilog_param&quot;</span><span class="p">][</span>
+                    <span class="s2">&quot;DATA_IN_0_DEPTH&quot;</span>
+                <span class="p">],</span>
+                <span class="n">node</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;mase&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="s2">&quot;hardware&quot;</span><span class="p">][</span><span class="s2">&quot;verilog_param&quot;</span><span class="p">][</span>
+                    <span class="s2">&quot;DATA_IN_0_SIZE&quot;</span>
+                <span class="p">],</span>
+            <span class="p">),</span>
+        <span class="p">)</span>
+        <span class="n">param_data</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="n">param_data</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="n">param_data</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">flatten</span><span class="p">(</span><span class="n">param_data</span><span class="p">)</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;mase&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="s2">&quot;common&quot;</span><span class="p">][</span><span class="s2">&quot;args&quot;</span><span class="p">][</span><span class="n">param_name</span><span class="p">][</span><span class="s2">&quot;type&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;fixed&quot;</span><span class="p">:</span>
+        <span class="n">width</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;mase&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="s2">&quot;common&quot;</span><span class="p">][</span><span class="s2">&quot;args&quot;</span><span class="p">][</span><span class="n">param_name</span><span class="p">][</span><span class="s2">&quot;precision&quot;</span><span class="p">][</span>
+            <span class="mi">0</span>
+        <span class="p">]</span>
+        <span class="n">frac_width</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;mase&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="s2">&quot;common&quot;</span><span class="p">][</span><span class="s2">&quot;args&quot;</span><span class="p">][</span><span class="n">param_name</span><span class="p">][</span>
+            <span class="s2">&quot;precision&quot;</span>
+        <span class="p">][</span><span class="mi">1</span><span class="p">]</span>
+
+        <span class="n">scale</span> <span class="o">=</span> <span class="mi">2</span><span class="o">**</span><span class="n">frac_width</span>
+        <span class="n">thresh</span> <span class="o">=</span> <span class="mi">2</span><span class="o">**</span><span class="n">width</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">out_depth</span><span class="p">):</span>
+            <span class="n">line_buff</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+            <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">out_size</span><span class="p">):</span>
+                <span class="n">value</span> <span class="o">=</span> <span class="n">param_data</span><span class="p">[</span><span class="n">i</span> <span class="o">*</span> <span class="n">out_size</span> <span class="o">+</span> <span class="n">out_size</span> <span class="o">-</span> <span class="mi">1</span> <span class="o">-</span> <span class="n">j</span><span class="p">]</span>
+                <span class="n">value</span> <span class="o">=</span> <span class="n">integer_quantizer_for_hw</span><span class="p">(</span>
+                    <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="n">value</span><span class="p">),</span> <span class="n">width</span><span class="p">,</span> <span class="n">frac_width</span>
+                <span class="p">)</span><span class="o">.</span><span class="n">item</span><span class="p">()</span>
+                <span class="n">value</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="nb">bin</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">value</span> <span class="o">*</span> <span class="n">scale</span><span class="p">)</span> <span class="o">%</span> <span class="n">thresh</span><span class="p">))</span>
+                <span class="n">value_bits</span> <span class="o">=</span> <span class="n">value</span><span class="p">[</span><span class="n">value</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s2">&quot;0b&quot;</span><span class="p">)</span> <span class="o">+</span> <span class="mi">2</span> <span class="p">:]</span>
+                <span class="n">value_bits</span> <span class="o">=</span> <span class="s2">&quot;0&quot;</span> <span class="o">*</span> <span class="p">(</span><span class="n">width</span> <span class="o">-</span> <span class="nb">len</span><span class="p">(</span><span class="n">value_bits</span><span class="p">))</span> <span class="o">+</span> <span class="n">value_bits</span>
+                <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">value_bits</span><span class="p">)</span> <span class="o">==</span> <span class="n">width</span>
+                <span class="n">line_buff</span> <span class="o">+=</span> <span class="n">value_bits</span>
+
+            <span class="n">hex_buff</span> <span class="o">=</span> <span class="nb">hex</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">line_buff</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span>
+            <span class="n">data_buff</span> <span class="o">+=</span> <span class="n">hex_buff</span><span class="p">[</span><span class="n">hex_buff</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s2">&quot;0x&quot;</span><span class="p">)</span> <span class="o">+</span> <span class="mi">2</span> <span class="p">:]</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">assert</span> <span class="kc">False</span><span class="p">,</span> <span class="s2">&quot;Emitting non-fixed parameters is not supported.&quot;</span>
+
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">file_name</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">outf</span><span class="p">:</span>
+        <span class="n">outf</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">data_buff</span><span class="p">)</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Init data </span><span class="si">{</span><span class="n">param_name</span><span class="si">}</span><span class="s2"> successfully written into </span><span class="si">{</span><span class="n">file_name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="k">assert</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">file_name</span><span class="p">),</span> <span class="s2">&quot;ROM data generation failed.&quot;</span>
+
+
+<span class="k">def</span> <span class="nf">emit_parameters_in_dat_hls</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">param_name</span><span class="p">,</span> <span class="n">file_name</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Emit initialised data for the ROM block. Each element must be in 8 HEX digits.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">total_size</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span>
+        <span class="n">node</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;mase&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="s2">&quot;common&quot;</span><span class="p">][</span><span class="s2">&quot;args&quot;</span><span class="p">][</span><span class="n">param_name</span><span class="p">][</span><span class="s2">&quot;shape&quot;</span><span class="p">]</span>
+    <span class="p">)</span>
+    <span class="n">out_depth</span> <span class="o">=</span> <span class="n">total_size</span>
+    <span class="n">out_size</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="n">out_width</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;mase&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="s2">&quot;hardware&quot;</span><span class="p">][</span><span class="s2">&quot;verilog_param&quot;</span><span class="p">][</span>
+        <span class="s2">&quot;</span><span class="si">{}</span><span class="s2">_WIDTH&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">param_name</span><span class="o">.</span><span class="n">upper</span><span class="p">())</span>
+    <span class="p">]</span>
+
+    <span class="n">data_buff</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+    <span class="n">param_data</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;mase&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">module</span><span class="o">.</span><span class="n">get_parameter</span><span class="p">(</span><span class="n">param_name</span><span class="p">)</span><span class="o">.</span><span class="n">data</span>
+    <span class="n">param_data</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">flatten</span><span class="p">(</span><span class="n">param_data</span><span class="p">)</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;mase&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="s2">&quot;common&quot;</span><span class="p">][</span><span class="s2">&quot;args&quot;</span><span class="p">][</span><span class="n">param_name</span><span class="p">][</span><span class="s2">&quot;type&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;fixed&quot;</span><span class="p">:</span>
+        <span class="n">width</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;mase&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="s2">&quot;common&quot;</span><span class="p">][</span><span class="s2">&quot;args&quot;</span><span class="p">][</span><span class="n">param_name</span><span class="p">][</span><span class="s2">&quot;precision&quot;</span><span class="p">][</span>
+            <span class="mi">0</span>
+        <span class="p">]</span>
+        <span class="n">frac_width</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;mase&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="s2">&quot;common&quot;</span><span class="p">][</span><span class="s2">&quot;args&quot;</span><span class="p">][</span><span class="n">param_name</span><span class="p">][</span>
+            <span class="s2">&quot;precision&quot;</span>
+        <span class="p">][</span><span class="mi">1</span><span class="p">]</span>
+
+        <span class="n">scale</span> <span class="o">=</span> <span class="mi">2</span><span class="o">**</span><span class="n">frac_width</span>
+        <span class="n">thresh</span> <span class="o">=</span> <span class="mi">2</span><span class="o">**</span><span class="n">width</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">out_depth</span><span class="p">):</span>
+            <span class="n">line_buff</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+            <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">out_size</span><span class="p">):</span>
+                <span class="n">value</span> <span class="o">=</span> <span class="n">param_data</span><span class="p">[</span><span class="n">i</span> <span class="o">*</span> <span class="n">out_size</span> <span class="o">+</span> <span class="n">out_size</span> <span class="o">-</span> <span class="mi">1</span> <span class="o">-</span> <span class="n">j</span><span class="p">]</span>
+                <span class="n">value</span> <span class="o">=</span> <span class="n">integer_quantizer_for_hw</span><span class="p">(</span>
+                    <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="n">value</span><span class="p">),</span> <span class="n">width</span><span class="p">,</span> <span class="n">frac_width</span>
+                <span class="p">)</span><span class="o">.</span><span class="n">item</span><span class="p">()</span>
+                <span class="n">value</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="nb">bin</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">value</span> <span class="o">*</span> <span class="n">scale</span><span class="p">)</span> <span class="o">%</span> <span class="n">thresh</span><span class="p">))</span>
+                <span class="n">value_bits</span> <span class="o">=</span> <span class="n">value</span><span class="p">[</span><span class="n">value</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s2">&quot;0b&quot;</span><span class="p">)</span> <span class="o">+</span> <span class="mi">2</span> <span class="p">:]</span>
+                <span class="n">value_bits</span> <span class="o">=</span> <span class="s2">&quot;0&quot;</span> <span class="o">*</span> <span class="p">(</span><span class="n">width</span> <span class="o">-</span> <span class="nb">len</span><span class="p">(</span><span class="n">value_bits</span><span class="p">))</span> <span class="o">+</span> <span class="n">value_bits</span>
+                <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">value_bits</span><span class="p">)</span> <span class="o">==</span> <span class="n">width</span>
+                <span class="n">line_buff</span> <span class="o">+=</span> <span class="n">value_bits</span>
+
+            <span class="n">hex_buff</span> <span class="o">=</span> <span class="nb">hex</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">line_buff</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span>
+            <span class="n">data_buff</span> <span class="o">+=</span> <span class="n">hex_buff</span><span class="p">[</span><span class="n">hex_buff</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s2">&quot;0x&quot;</span><span class="p">)</span> <span class="o">+</span> <span class="mi">2</span> <span class="p">:]</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span>
+    <span class="k">elif</span> <span class="n">node</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;mase&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="s2">&quot;common&quot;</span><span class="p">][</span><span class="s2">&quot;args&quot;</span><span class="p">][</span><span class="n">param_name</span><span class="p">][</span><span class="s2">&quot;type&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;float&quot;</span><span class="p">:</span>
+        <span class="n">width</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;mase&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="s2">&quot;common&quot;</span><span class="p">][</span><span class="s2">&quot;args&quot;</span><span class="p">][</span><span class="n">param_name</span><span class="p">][</span><span class="s2">&quot;precision&quot;</span><span class="p">][</span>
+            <span class="mi">0</span>
+        <span class="p">]</span>
+        <span class="k">assert</span> <span class="n">width</span> <span class="o">==</span> <span class="mi">32</span><span class="p">,</span> <span class="s2">&quot;Only float32 is supported for now.&quot;</span>
+
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">out_depth</span><span class="p">):</span>
+            <span class="n">line_buff</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+            <span class="n">value</span> <span class="o">=</span> <span class="n">param_data</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+            <span class="n">hex_buff</span> <span class="o">=</span> <span class="nb">hex</span><span class="p">(</span><span class="n">struct</span><span class="o">.</span><span class="n">unpack</span><span class="p">(</span><span class="s2">&quot;&lt;I&quot;</span><span class="p">,</span> <span class="n">struct</span><span class="o">.</span><span class="n">pack</span><span class="p">(</span><span class="s2">&quot;&lt;f&quot;</span><span class="p">,</span> <span class="n">value</span><span class="p">))[</span><span class="mi">0</span><span class="p">])</span>
+            <span class="c1"># Double will then be:</span>
+            <span class="c1"># hex(struct.unpack(&#39;&lt;Q&#39;, struct.pack(&#39;&lt;d&#39;, value))[0])</span>
+            <span class="n">data_buff</span> <span class="o">+=</span> <span class="n">hex_buff</span><span class="p">[</span><span class="n">hex_buff</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s2">&quot;0x&quot;</span><span class="p">)</span> <span class="o">+</span> <span class="mi">2</span> <span class="p">:]</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">assert</span> <span class="kc">False</span><span class="p">,</span> <span class="s2">&quot;Emitting unknown type of parameters is not supported.&quot;</span>
+
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">file_name</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">outf</span><span class="p">:</span>
+        <span class="n">outf</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">data_buff</span><span class="p">)</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Init data </span><span class="si">{</span><span class="n">param_name</span><span class="si">}</span><span class="s2"> successfully written into </span><span class="si">{</span><span class="n">file_name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="k">assert</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">file_name</span><span class="p">),</span> <span class="s2">&quot;ROM data generation failed.&quot;</span>
+
+
+<span class="k">def</span> <span class="nf">emit_bram_handshake</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">rtl_dir</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Enumerate input parameters of the internal node and emit a ROM block</span>
+<span class="sd">    with handshake interface for each parameter</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">node_name</span> <span class="o">=</span> <span class="n">vf</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">param_name</span><span class="p">,</span> <span class="n">parameter</span> <span class="ow">in</span> <span class="n">node</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;mase&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">module</span><span class="o">.</span><span class="n">named_parameters</span><span class="p">():</span>
+        <span class="k">if</span> <span class="p">(</span>
+            <span class="n">node</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;mase&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="s2">&quot;hardware&quot;</span><span class="p">][</span><span class="s2">&quot;interface&quot;</span><span class="p">][</span><span class="n">param_name</span><span class="p">][</span><span class="s2">&quot;storage&quot;</span><span class="p">]</span>
+            <span class="o">==</span> <span class="s2">&quot;BRAM&quot;</span>
+        <span class="p">):</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Emitting DAT file for node: </span><span class="si">{</span><span class="n">node_name</span><span class="si">}</span><span class="s2">, parameter: </span><span class="si">{</span><span class="n">param_name</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="p">)</span>
+            <span class="n">verilog_name</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">rtl_dir</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">node_name</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">param_name</span><span class="si">}</span><span class="s2">_source.sv&quot;</span><span class="p">)</span>
+            <span class="n">data_name</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">rtl_dir</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">node_name</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">param_name</span><span class="si">}</span><span class="s2">_rom.dat&quot;</span><span class="p">)</span>
+            <span class="n">emit_parameters_in_mem_internal</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">param_name</span><span class="p">,</span> <span class="n">verilog_name</span><span class="p">,</span> <span class="n">data_name</span><span class="p">)</span>
+            <span class="n">emit_parameters_in_dat_internal</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">param_name</span><span class="p">,</span> <span class="n">data_name</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">assert</span> <span class="kc">False</span><span class="p">,</span> <span class="s2">&quot;Emtting parameters in non-BRAM hardware is not supported.&quot;</span>
+
+
+<span class="k">def</span> <span class="nf">emit_parameters_in_mem_hls</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">param_name</span><span class="p">,</span> <span class="n">file_name</span><span class="p">,</span> <span class="n">data_name</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Emit single-port ROM hardware components for each parameter</span>
+<span class="sd">    (Mostly because Vivado does not support string type parameters...)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># The depth of parameters matches with the input depth</span>
+    <span class="n">total_size</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span>
+        <span class="n">node</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;mase&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="s2">&quot;common&quot;</span><span class="p">][</span><span class="s2">&quot;args&quot;</span><span class="p">][</span><span class="n">param_name</span><span class="p">][</span><span class="s2">&quot;shape&quot;</span><span class="p">]</span>
+    <span class="p">)</span>
+    <span class="n">out_depth</span> <span class="o">=</span> <span class="n">total_size</span>
+    <span class="n">addr_width</span> <span class="o">=</span> <span class="n">clog2</span><span class="p">(</span><span class="n">out_depth</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
+    <span class="n">total_size</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span>
+        <span class="n">node</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;mase&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="s2">&quot;common&quot;</span><span class="p">][</span><span class="s2">&quot;args&quot;</span><span class="p">][</span><span class="n">param_name</span><span class="p">][</span><span class="s2">&quot;shape&quot;</span><span class="p">]</span>
+    <span class="p">)</span>
+    <span class="n">out_size</span> <span class="o">=</span> <span class="n">iceil</span><span class="p">(</span><span class="n">total_size</span> <span class="o">/</span> <span class="n">out_depth</span><span class="p">)</span>
+    <span class="k">assert</span> <span class="p">(</span>
+        <span class="n">total_size</span> <span class="o">%</span> <span class="n">out_depth</span> <span class="o">==</span> <span class="mi">0</span>
+    <span class="p">),</span> <span class="sa">f</span><span class="s2">&quot;Cannot partition imperfect size for now = </span><span class="si">{</span><span class="n">total_size</span><span class="si">}</span><span class="s2"> / </span><span class="si">{</span><span class="n">out_depth</span><span class="si">}</span><span class="s2">.&quot;</span>
+    <span class="c1"># Assume the first index is the total width</span>
+    <span class="n">out_width</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;mase&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="s2">&quot;hardware&quot;</span><span class="p">][</span><span class="s2">&quot;verilog_param&quot;</span><span class="p">][</span>
+        <span class="s2">&quot;</span><span class="si">{}</span><span class="s2">_WIDTH&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">param_name</span><span class="o">.</span><span class="n">upper</span><span class="p">())</span>
+    <span class="p">]</span>
+
+    <span class="n">node_name</span> <span class="o">=</span> <span class="n">vf</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+    <span class="n">node_param_name</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">node_name</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">param_name</span><span class="si">}</span><span class="s2">&quot;</span>
+    <span class="n">time_to_emit</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%d</span><span class="s2">/%m/%Y %H:%M:%S&quot;</span><span class="p">)</span>
+
+    <span class="n">rom_verilog</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">// =====================================</span>
+<span class="s2">//     Mase Hardware</span>
+<span class="s2">//     Parameter: </span><span class="si">{</span><span class="n">node_param_name</span><span class="si">}</span>
+<span class="s2">//     </span><span class="si">{</span><span class="n">time_to_emit</span><span class="si">}</span>
+<span class="s2">// =====================================</span>
+
+<span class="s2">`timescale 1 ns / 1 ps</span>
+<span class="s2">module </span><span class="si">{</span><span class="n">node_param_name</span><span class="si">}</span><span class="s2">_rom #(</span>
+<span class="s2">  parameter DWIDTH = </span><span class="si">{</span><span class="n">out_size</span><span class="o">*</span><span class="n">out_width</span><span class="si">}</span><span class="s2">,</span>
+<span class="s2">  parameter MEM_SIZE = </span><span class="si">{</span><span class="n">out_depth</span><span class="si">}</span><span class="s2">,</span>
+<span class="s2">  parameter AWIDTH = $clog2(MEM_SIZE) + 1</span>
+<span class="s2">) (</span>
+<span class="s2">    input clk,</span>
+<span class="s2">    input logic [AWIDTH-1:0] addr0,</span>
+<span class="s2">    input ce0,</span>
+<span class="s2">    output logic [DWIDTH-1:0] q0</span>
+<span class="s2">);</span>
+
+<span class="s2">  logic [DWIDTH-1:0] ram[0:MEM_SIZE-1];</span>
+<span class="s2">  logic [DWIDTH-1:0] q0_t0;</span>
+<span class="s2">  logic [DWIDTH-1:0] q0_t1;</span>
+
+<span class="s2">  initial begin</span>
+<span class="s2">    $readmemh(&quot;</span><span class="si">{</span><span class="n">data_name</span><span class="si">}</span><span class="s2">&quot;, ram);</span>
+<span class="s2">  end</span>
+
+<span class="s2">  assign q0 = q0_t1;</span>
+
+<span class="s2">  always_ff @(posedge clk) if (ce0) q0_t1 &lt;= q0_t0;</span>
+<span class="s2">  always_ff @(posedge clk) if (ce0) q0_t0 &lt;= ram[addr0];</span>
+
+<span class="s2">endmodule</span>
+
+<span class="s2">`timescale 1 ns / 1 ps</span>
+<span class="s2">module </span><span class="si">{</span><span class="n">node_param_name</span><span class="si">}</span><span class="s2">_source #(</span>
+<span class="s2">  parameter DATA_WIDTH = 32&#39;d</span><span class="si">{</span><span class="n">out_width</span><span class="o">*</span><span class="n">out_size</span><span class="si">}</span><span class="s2">,</span>
+<span class="s2">  parameter ADDR_RANGE = 32&#39;d</span><span class="si">{</span><span class="n">out_depth</span><span class="si">}</span><span class="s2">,</span>
+<span class="s2">  parameter ADDR_WIDTH = $clog2(ADDR_RANGE) + 1</span>
+<span class="s2">) (</span>
+<span class="s2">  input reset,</span>
+<span class="s2">  input clk,</span>
+<span class="s2">  input logic [ADDR_WIDTH - 1:0] address0,</span>
+<span class="s2">  input ce0,</span>
+<span class="s2">  output logic [DATA_WIDTH - 1:0] q0</span>
+<span class="s2">);</span>
+
+<span class="s2">  </span><span class="si">{</span><span class="n">node_param_name</span><span class="si">}</span><span class="s2">_rom </span><span class="si">{</span><span class="n">node_param_name</span><span class="si">}</span><span class="s2">_rom_U (</span>
+<span class="s2">      .clk(clk),</span>
+<span class="s2">      .addr0(address0),</span>
+<span class="s2">      .ce0(ce0),</span>
+<span class="s2">      .q0(q0)</span>
+<span class="s2">  );</span>
+
+<span class="s2">endmodule</span>
+<span class="s2">&quot;&quot;&quot;</span>
+
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">file_name</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">outf</span><span class="p">:</span>
+        <span class="n">outf</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">rom_verilog</span><span class="p">)</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;ROM module </span><span class="si">{</span><span class="n">param_name</span><span class="si">}</span><span class="s2"> successfully written into </span><span class="si">{</span><span class="n">file_name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="k">assert</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">file_name</span><span class="p">),</span> <span class="s2">&quot;ROM Verilog generation failed.&quot;</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;verible-verilog-format --inplace </span><span class="si">{</span><span class="n">file_name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">emit_bram_hls</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">rtl_dir</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Enumerate input parameters of the hls node and emit a ROM block</span>
+<span class="sd">    with handshake interface for each parameter</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">node_name</span> <span class="o">=</span> <span class="n">vf</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">param_name</span><span class="p">,</span> <span class="n">parameter</span> <span class="ow">in</span> <span class="n">node</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;mase&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">module</span><span class="o">.</span><span class="n">named_parameters</span><span class="p">():</span>
+        <span class="k">if</span> <span class="p">(</span>
+            <span class="n">node</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;mase&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="s2">&quot;hardware&quot;</span><span class="p">][</span><span class="s2">&quot;interface&quot;</span><span class="p">][</span><span class="n">param_name</span><span class="p">][</span><span class="s2">&quot;storage&quot;</span><span class="p">]</span>
+            <span class="o">==</span> <span class="s2">&quot;BRAM&quot;</span>
+        <span class="p">):</span>
+            <span class="c1"># Verilog code of the ROM has been emitted using mlir passes</span>
+            <span class="n">verilog_name</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">rtl_dir</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">node_name</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">param_name</span><span class="si">}</span><span class="s2">.sv&quot;</span><span class="p">)</span>
+            <span class="n">data_name</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">rtl_dir</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">node_name</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">param_name</span><span class="si">}</span><span class="s2">_rom.dat&quot;</span><span class="p">)</span>
+            <span class="n">emit_parameters_in_mem_hls</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">param_name</span><span class="p">,</span> <span class="n">verilog_name</span><span class="p">,</span> <span class="n">data_name</span><span class="p">)</span>
+            <span class="n">emit_parameters_in_dat_hls</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">param_name</span><span class="p">,</span> <span class="n">data_name</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">assert</span> <span class="kc">False</span><span class="p">,</span> <span class="s2">&quot;Emtting parameters in non-BRAM hardware is not supported.&quot;</span>
+
+
+<div class="viewcode-block" id="emit_bram_transform_pass">
+<a class="viewcode-back" href="../../../../../../modules/api/transform/verilog.html#chop.passes.graph.transforms.verilog.emit_bram_transform_pass">[docs]</a>
+<span class="k">def</span> <span class="nf">emit_bram_transform_pass</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">pass_args</span><span class="o">=</span><span class="p">{}):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Enumerate input parameters of the node and emit a ROM block with</span>
+<span class="sd">    handshake interface for each parameter</span>
+
+
+<span class="sd">    :param graph: a MaseGraph</span>
+<span class="sd">    :type graph: MaseGraph</span>
+<span class="sd">    :param pass_args: this pass requires additional arguments which is explained below, defaults to {}</span>
+<span class="sd">    :type pass_args: _type_, optional</span>
+<span class="sd">    :return: return a tuple of a MaseGraph and an empty dict (no additional info to return)</span>
+<span class="sd">    :rtype: tuple(MaseGraph, Dict)</span>
+
+
+<span class="sd">    - pass_args</span>
+<span class="sd">        - project_dir -&gt; str : the directory of the project for cosimulation</span>
+<span class="sd">        - top_name -&gt; str : name of the top module</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Emitting BRAM...&quot;</span><span class="p">)</span>
+    <span class="n">project_dir</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">pass_args</span><span class="p">[</span><span class="s2">&quot;project_dir&quot;</span><span class="p">]</span>
+        <span class="k">if</span> <span class="s2">&quot;project_dir&quot;</span> <span class="ow">in</span> <span class="n">pass_args</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
+        <span class="k">else</span> <span class="n">Path</span><span class="o">.</span><span class="n">home</span><span class="p">()</span> <span class="o">/</span> <span class="s2">&quot;.mase&quot;</span> <span class="o">/</span> <span class="s2">&quot;top&quot;</span>
+    <span class="p">)</span>
+    <span class="n">top_name</span> <span class="o">=</span> <span class="n">pass_args</span><span class="p">[</span><span class="s2">&quot;top_name&quot;</span><span class="p">]</span> <span class="k">if</span> <span class="s2">&quot;top_name&quot;</span> <span class="ow">in</span> <span class="n">pass_args</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span> <span class="k">else</span> <span class="s2">&quot;top&quot;</span>
+
+    <span class="n">init_project</span><span class="p">(</span><span class="n">project_dir</span><span class="p">)</span>
+    <span class="n">rtl_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">project_dir</span><span class="p">,</span> <span class="s2">&quot;hardware&quot;</span><span class="p">,</span> <span class="s2">&quot;rtl&quot;</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">graph</span><span class="o">.</span><span class="n">fx_graph</span><span class="o">.</span><span class="n">nodes</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;mase&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="s2">&quot;hardware&quot;</span><span class="p">][</span><span class="s2">&quot;is_implicit&quot;</span><span class="p">]:</span>
+            <span class="k">continue</span>
+        <span class="c1"># Only modules have internal parameters</span>
+        <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;mase&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">module</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">continue</span>
+        <span class="k">if</span> <span class="s2">&quot;INTERNAL&quot;</span> <span class="ow">in</span> <span class="n">node</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;mase&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="s2">&quot;hardware&quot;</span><span class="p">][</span><span class="s2">&quot;toolchain&quot;</span><span class="p">]:</span>
+            <span class="n">emit_bram_handshake</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">rtl_dir</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="s2">&quot;MLIR_HLS&quot;</span> <span class="ow">in</span> <span class="n">node</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;mase&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="s2">&quot;hardware&quot;</span><span class="p">][</span><span class="s2">&quot;toolchain&quot;</span><span class="p">]:</span>
+            <span class="n">emit_bram_hls</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">rtl_dir</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">graph</span><span class="p">,</span> <span class="kc">None</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, DeepWok.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

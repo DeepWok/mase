@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Run the transform action with the CLI &mdash; MASE 0.0.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/css/theme.css?v=19f00094" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../../../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../../../../../_static/documentation_options.js?v=d45e8c67"></script>
+        <script src="../../../../../_static/doctools.js?v=9a2dae69"></script>
+        <script src="../../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../../search.html" />
+    <link rel="next" title="Mixed-precision search on MASE Graph" href="../search/mixed_precision_search_on_mase_graph.html" />
+    <link rel="prev" title="Run the train action with the CLI" href="../train/simple_train_flow.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../../../index.html" class="icon icon-home">
+            MASE
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Documentation</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../../getting_started.html">Getting Started</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../../../tutorials.html">Tutorials</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../train/simple_train_flow.html">Run the train action with the CLI</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Run the transform action with the CLI</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#train-a-model">Train a model</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#quantise-transform">Quantise transform</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#qat">QAT</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#quantise-transform-by-type">Quantise transform by type</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#direct-training-of-a-quantized-model">Direct training of a quantized model</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../search/mixed_precision_search_on_mase_graph.html">Mixed-precision search on MASE Graph</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../search/mixed_precision_search_on_manual_model.html">Mixed-Precision Search on Manual model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../search/how_to_extend_search.html">How to extend search</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../search/how_to_extend_search.html#how-to-extend-search-strategy">How to extend search_strategy?</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../train/simple_train_flow.html">Run the train action with the CLI</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Run the transform action with the CLI</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#train-a-model">Train a model</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#quantise-transform">Quantise transform</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#qat">QAT</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#quantise-transform-by-type">Quantise transform by type</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#direct-training-of-a-quantized-model">Direct training of a quantized model</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../search/mixed_precision_search_on_mase_graph.html">Mixed-precision search on MASE Graph</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../search/mixed_precision_search_on_manual_model.html">Mixed-Precision Search on Manual model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../search/how_to_extend_search.html">How to extend search</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../search/how_to_extend_search.html#how-to-extend-search-strategy">How to extend search_strategy?</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../passes/interface/masert/tensorrt/tensorRT_quantization_tutorial.html">TensorRT Quantization Tutorial</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../passes/interface/masert/onnxrt/onnxrt_quantization_tutorial.html">ONNX Runtime Tutorial!</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../accelerate_fsdp.html">Accelerate FSDP</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../Add-model-to-machop.html">Guide on how to add a new model into Machop</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../doc_writing.html">How to write documentations in MASE</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../roadmap.html">Roadmap</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../specifications.html">Coding Style Specifications</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Machop API</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../api/actions.html">Chop Actions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../api/passes.html">Chop Passes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../api/ir.html">IR</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Mase Components</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../hardware/hardware_documentation.html">Hardware Documentation</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Students</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../labs.html">Advanced Deep Learning Systems Labs</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../../index.html">MASE</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../tutorials.html">Tutorials</a></li>
+      <li class="breadcrumb-item active">Run the transform action with the CLI</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../../../../_sources/modules/documentation/tutorials/actions/transform/cli_transform.md.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section class="tex2jax_ignore mathjax_ignore" id="run-the-transform-action-with-the-cli">
+<h1>Run the transform action with the CLI<a class="headerlink" href="#run-the-transform-action-with-the-cli" title="Link to this heading"></a></h1>
+<section id="train-a-model">
+<h2>Train a model<a class="headerlink" href="#train-a-model" title="Link to this heading"></a></h2>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>./ch<span class="w"> </span>train<span class="w"> </span>--config<span class="w"> </span>configs/archive/test/train.toml<span class="w"> </span>--model<span class="w"> </span>toy
+</pre></div>
+</div>
+</section>
+<section id="quantise-transform">
+<h2>Quantise transform<a class="headerlink" href="#quantise-transform" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p>Quantise it with fixed-point quantisers</p></li>
+<li><p>The load path <code class="docutils literal notranslate"><span class="pre">--load</span></code> changes with your generation time of course</p></li>
+</ul>
+<p>The config takes the following format:</p>
+<div class="highlight-toml notranslate"><div class="highlight"><pre><span></span><span class="c1"># basics</span>
+<span class="n">model</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;toy&quot;</span>
+<span class="n">dataset</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;toy-tiny&quot;</span>
+
+<span class="k">[passes.quantize]</span>
+<span class="n">by</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;type&quot;</span>
+<span class="n">report</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span>
+
+<span class="k">[passes.quantize.default.config]</span>
+<span class="n">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;integer&quot;</span>
+<span class="n">data_in_width</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">8</span>
+<span class="n">data_in_frac_width</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">4</span>
+<span class="n">weight_width</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">8</span>
+<span class="n">weight_frac_width</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">9</span>
+<span class="n">bias_width</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">8</span>
+<span class="n">bias_frac_width</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">9</span>
+</pre></div>
+</div>
+<p>With the config, we can quantise the whole network to integer arithmetic by doing:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>./ch<span class="w"> </span>transform<span class="w"> </span>--config<span class="w"> </span>configs/examples/toy_uniform.toml<span class="w"> </span>--model<span class="w"> </span>toy<span class="w"> </span>--load<span class="w"> </span>../mase_output/toy_classification_toy-tiny_2023-07-05/software/training_ckpts/best.ckpt<span class="w"> </span>--load-type<span class="w"> </span>pl
+</pre></div>
+</div>
+</section>
+<section id="qat">
+<h2>QAT<a class="headerlink" href="#qat" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p>Load and do Quantisation-aware-training (QAT) with a transformed model</p></li>
+</ul>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>./ch<span class="w"> </span>train<span class="w"> </span>--config<span class="w"> </span>configs/examples/toy_uniform.toml<span class="w"> </span>--model<span class="w"> </span>toy<span class="w"> </span>--load<span class="w"> </span>../mase_output/toy_classification_
+toy-tiny_2023-07-05/software/transformed_ckpts/graph_module.mz<span class="w"> </span>--load-type<span class="w"> </span>mz
+</pre></div>
+</div>
+<ul class="simple">
+<li><p>Quantise it with fixed-point quantisers</p></li>
+<li><p>The load path <code class="docutils literal notranslate"><span class="pre">--load</span></code> changes with your generation time of course</p></li>
+</ul>
+</section>
+<section id="quantise-transform-by-type">
+<h2>Quantise transform by type<a class="headerlink" href="#quantise-transform-by-type" title="Link to this heading"></a></h2>
+<div class="highlight-toml notranslate"><div class="highlight"><pre><span></span><span class="c1"># basics</span>
+<span class="n">model</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;toy&quot;</span>
+<span class="n">dataset</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;toy-tiny&quot;</span>
+
+<span class="k">[passes.quantize]</span>
+<span class="n">by</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;type&quot;</span>
+<span class="n">report</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span>
+
+<span class="k">[passes.quantize.default.config]</span>
+<span class="n">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;NA&quot;</span>
+
+<span class="k">[passes.quantize.linear.config]</span>
+<span class="n">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;integer&quot;</span>
+<span class="n">data_in_width</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">8</span>
+<span class="n">data_in_frac_width</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">4</span>
+<span class="n">weight_width</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">8</span>
+<span class="n">weight_frac_width</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">9</span>
+<span class="n">bias_width</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">8</span>
+<span class="n">bias_frac_width</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">9</span>
+</pre></div>
+</div>
+<p>In this case, only linear layers are quantised!</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>./ch<span class="w"> </span>transform<span class="w"> </span>--config<span class="w"> </span>configs/examples/toy_by_type.toml<span class="w"> </span>--model<span class="w"> </span>toy<span class="w"> </span>--load<span class="w"> </span>../mase_output/toy_classification_toy-tiny_2023-07-05/software/training_ckpts/best.ckpt<span class="w"> </span>--load-type<span class="w"> </span>pl
+</pre></div>
+</div>
+</section>
+<section id="direct-training-of-a-quantized-model">
+<h2>Direct training of a quantized model<a class="headerlink" href="#direct-training-of-a-quantized-model" title="Link to this heading"></a></h2>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="../train/simple_train_flow.html" class="btn btn-neutral float-left" title="Run the train action with the CLI" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../search/mixed_precision_search_on_mase_graph.html" class="btn btn-neutral float-right" title="Mixed-precision search on MASE Graph" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, DeepWok.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

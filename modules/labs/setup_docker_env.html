@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ADLS Docker Environment Setup &mdash; MASE 0.0.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=19f00094" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../../_static/documentation_options.js?v=d45e8c67"></script>
+        <script src="../../_static/doctools.js?v=9a2dae69"></script>
+        <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="prev" title="Lab 4 (Software Stream) for Advanced Deep Learning Systems (ADLS)" href="lab4-software.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            MASE
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../documentation/getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../documentation/tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../documentation/roadmap.html">Roadmap</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../documentation/specifications.html">Coding Style Specifications</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Machop API</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../api/actions.html">Chop Actions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api/passes.html">Chop Passes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api/ir.html">IR</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Mase Components</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../hardware/hardware_documentation.html">Hardware Documentation</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Students</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../labs.html">Advanced Deep Learning Systems Labs</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="lab1.html">Lab 1 for Advanced Deep Learning Systems (ADLS)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="lab2.html">Lab 2 for Advanced Deep Learning Systems (ADLS)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="lab3.html">Lab 3 for Advanced Deep Learning Systems (ADLS)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="lab4-hardware.html">Lab 4 (Hardware Stream) for Advanced Deep Learning Systems (ADLS)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="lab4-software.html">Lab 4 (Software Stream) for Advanced Deep Learning Systems (ADLS)</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">ADLS Docker Environment Setup</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#prerequisites">Prerequisites</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#steps">Steps</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#mount-a-local-directory-to-the-container">Mount a local directory to the container</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">MASE</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../labs.html">Advanced Deep Learning Systems Labs</a></li>
+      <li class="breadcrumb-item active">ADLS Docker Environment Setup</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/modules/labs/setup_docker_env.md.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section class="tex2jax_ignore mathjax_ignore" id="adls-docker-environment-setup">
+<h1>ADLS Docker Environment Setup<a class="headerlink" href="#adls-docker-environment-setup" title="Link to this heading"></a></h1>
+<p>This guide provides a step-by-step walkthrough for running the MASE ADLS Docker image and connecting VSCode to the ADLS container to execute labs. Using Docker containers ensures a uniform development environment across various platforms.</p>
+<section id="prerequisites">
+<h2>Prerequisites<a class="headerlink" href="#prerequisites" title="Link to this heading"></a></h2>
+<p><a class="reference external" href="https://code.visualstudio.com/">VSCode</a> and <a class="reference external" href="https://www.docker.com/">Docker</a> need to be installed on your machine.</p>
+<ul class="simple">
+<li><p>Refer to <a class="reference external" href="https://docs.docker.com/desktop/">this page</a> to install Docker on your Windows/Linux/Mac machine.</p></li>
+<li><p>Note that for Windows users, <a class="reference external" href="https://learn.microsoft.com/en-us/windows/wsl/install">WSL2</a> is required.</p></li>
+</ul>
+</section>
+<section id="steps">
+<h2>Steps<a class="headerlink" href="#steps" title="Link to this heading"></a></h2>
+<ol class="arabic">
+<li><p>Setup X11 in case later you may run some GUI applications in the container like GTKWave to view waveforms. You need authenticate local applications to access the display server (the host).</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># on your host machine</span>
+sudo<span class="w"> </span>apt<span class="w"> </span>install<span class="w"> </span>x11-xserver-utils
+xhost<span class="w"> </span>+local:
+</pre></div>
+</div>
+<p>For macOS users, the command mentioned above will not function properly. Instead, you can enable X11 forwarding by using xQuartz as an alternative solution.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># on your host machine</span>
+<span class="c1"># if brew install fails, you will need to install homebrew</span>
+brew<span class="w"> </span>install<span class="w"> </span>--cask<span class="w"> </span>xquartz
+open<span class="w"> </span>-a<span class="w"> </span>XQuartz
+xhost<span class="w"> </span>+localhost
+</pre></div>
+</div>
+</li>
+<li><p>You need a Docker Hub account to pull ADLS image.</p>
+<ul class="simple">
+<li><p>Register for a free account on <a class="reference external" href="https://hub.docker.com/">Docker Hub</a>.</p></li>
+<li><p>Login to Docker Hub from your <a class="reference external" href="https://www.docker.com/products/docker-desktop/">Docker Desktop</a> or terminal (<code class="docutils literal notranslate"><span class="pre">docker</span> <span class="pre">login</span></code>).</p></li>
+</ul>
+</li>
+<li><p>Pull the <a class="reference external" href="https://hub.docker.com/r/chengzhang98/mase-adls">ADLS docker image</a>.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># on your host machine</span>
+docker<span class="w"> </span>pull<span class="w"> </span>chengzhang98/mase-adls
+</pre></div>
+</div>
+</li>
+<li><p>Run an ADLS container and allocate a pseudo-TTY connected to it.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># on your host</span>
+docker<span class="w"> </span>run<span class="w"> </span>--rm<span class="w"> </span>--name<span class="w"> </span>mase-adls<span class="w"> </span><span class="se">\</span>
+--net<span class="w"> </span>host<span class="w"> </span>-v<span class="w"> </span>/tmp/.X11-unix:/tmp/.X11-unix<span class="w"> </span><span class="se">\</span>
+-e<span class="w"> </span>DISPLAY<span class="w"> </span><span class="se">\</span>
+-it<span class="w"> </span>chengzhang98/mase-adls:latest
+</pre></div>
+</div>
+<p>For macOS user that use xQuartz for x11, you will need to set up the DISPLAY env variable.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># on your host</span>
+docker<span class="w"> </span>run<span class="w"> </span>--rm<span class="w"> </span>--name<span class="w"> </span>mase-adls<span class="w"> </span><span class="se">\</span>
+--net<span class="w"> </span>host<span class="w"> </span>-v<span class="w"> </span>/tmp/.X11-unix:/tmp/.X11-unix<span class="w"> </span><span class="se">\</span>
+-e<span class="w"> </span><span class="nv">DISPLAY</span><span class="o">=</span>docker.for.mac.host.internal:0<span class="se">\</span>
+-it<span class="w"> </span>chengzhang98/mase-adls:latest
+</pre></div>
+</div>
+<p>Then you will be in the container’s shell like the following:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="o">[</span><span class="m">20</span>:36:05<span class="w"> </span>root@docker-desktop<span class="w"> </span>/<span class="w"> </span><span class="o">]</span><span class="w"> </span>$
+📦
+</pre></div>
+</div>
+<p>You may enter <code class="docutils literal notranslate"><span class="pre">gtkwave</span></code> to test if the GUI application works. If it works, you will see a GTKWave window pop up.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="o">[</span><span class="m">20</span>:36:05<span class="w"> </span>root@docker-desktop<span class="w"> </span>/<span class="w"> </span><span class="o">]</span><span class="w"> </span>$
+📦<span class="w"> </span>gtkwave<span class="w"> </span><span class="c1"># on your container</span>
+</pre></div>
+</div>
+<p>You can enter <code class="docutils literal notranslate"><span class="pre">exit</span></code> to exit the container, but keep it running for now.</p>
+<blockquote>
+<div><p>[!NOTE]
+If you are interested in the details of the <code class="docutils literal notranslate"><span class="pre">docker</span> <span class="pre">run</span></code> command, please refer to <a class="reference external" href="https://docs.docker.com/engine/reference/commandline/run/">this page</a>.</p>
+</div></blockquote>
+</li>
+<li><p>Attach VSCode to the running container.</p>
+<ul class="simple">
+<li><p>Open VSCode and install <a class="reference external" href="https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.vscode-remote-extensionpack">Remote Development</a> to the VSCode on your host machine.</p></li>
+<li><p>If you are using WSL2, you need to press <code class="docutils literal notranslate"><span class="pre">F1</span></code> to open the command palette, then type and select <code class="docutils literal notranslate"><span class="pre">WSL:</span> <span class="pre">Connect</span> <span class="pre">to</span> <span class="pre">WSL</span></code>. If you are using Linux/Mac, you can skip this step.</p></li>
+<li><p>Press <code class="docutils literal notranslate"><span class="pre">F1</span></code> to open the command palette, then type and select <code class="docutils literal notranslate"><span class="pre">Dev</span> <span class="pre">Containers:</span> <span class="pre">Attach</span> <span class="pre">to</span> <span class="pre">Running</span> <span class="pre">Container...</span></code>. Then select the container named <code class="docutils literal notranslate"><span class="pre">mase-adls</span></code> you just started. VSCode will open a new window and attach to the container. You can see the container’s shell in the VSCode’s terminal.</p></li>
+</ul>
+</li>
+<li><p>Close VSCode and stop the container.</p>
+<ul class="simple">
+<li><p>Close the VSCode window attached to the container.</p></li>
+<li><p>In the container terminal in Step 4, enter <code class="docutils literal notranslate"><span class="pre">exit</span></code> to stop the container.</p></li>
+</ul>
+</li>
+</ol>
+</section>
+<section id="mount-a-local-directory-to-the-container">
+<h2>Mount a local directory to the container<a class="headerlink" href="#mount-a-local-directory-to-the-container" title="Link to this heading"></a></h2>
+<p>It’s important to note that each time you exit and restart the container, any progress made within the container will be lost. To prevent this, you can mount a local directory to the container and store your work there, ensuring that your changes are preserved after you exit the container. Or you can choose to sync your work to a Github repository.</p>
+<p>For example, you can mount the <code class="docutils literal notranslate"><span class="pre">./mase-tools</span></code> directory on your host machine to the <code class="docutils literal notranslate"><span class="pre">/workspace/mase-tools</span></code> directory in the container. Then attach VSCode to the container path <code class="docutils literal notranslate"><span class="pre">/workspace/mase-tools</span></code>.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># Similar to Step 4</span>
+<span class="c1"># on your host machine</span>
+docker<span class="w"> </span>run<span class="w"> </span>--rm<span class="w"> </span>--name<span class="w"> </span>mase-adls<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--net<span class="w"> </span>host<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>-v<span class="w"> </span>/tmp/.X11-unix:/tmp/.X11-unix<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>-v<span class="w"> </span>./mase-tools:/workspace/mase-tools:z<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>-e<span class="w"> </span>DISPLAY<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>-it<span class="w"> </span>chengzhang98/mase-adls:latest
+</pre></div>
+</div>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="lab4-software.html" class="btn btn-neutral float-left" title="Lab 4 (Software Stream) for Advanced Deep Learning Systems (ADLS)" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, DeepWok.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

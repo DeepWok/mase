@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Python Coding Style Specifications &mdash; MASE 0.0.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=19f00094" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../../../_static/documentation_options.js?v=d45e8c67"></script>
+        <script src="../../../_static/doctools.js?v=9a2dae69"></script>
+        <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link rel="next" title="Verilog Coding Style Specifications" href="Verilog-coding-style-specifications.html" />
+    <link rel="prev" title="C/C++ Coding Style Specifications" href="C-coding-style-specifications.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            MASE
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Documentation</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../roadmap.html">Roadmap</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../specifications.html">Coding Style Specifications</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="C-coding-style-specifications.html">C/C++ Coding Style Specifications</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Python Coding Style Specifications</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#why">Why?</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#naming">Naming</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#line-breaks">Line breaks</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#using-black-in-mase">Using Black in MASE</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="Verilog-coding-style-specifications.html">Verilog Coding Style Specifications</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Machop API</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../api/actions.html">Chop Actions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../api/passes.html">Chop Passes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../api/ir.html">IR</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Mase Components</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../hardware/hardware_documentation.html">Hardware Documentation</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Students</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../labs.html">Advanced Deep Learning Systems Labs</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">MASE</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../specifications.html">Coding Style Specifications</a></li>
+      <li class="breadcrumb-item active">Python Coding Style Specifications</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../../_sources/modules/documentation/specifications/Python-coding-style-specifications.md.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section class="tex2jax_ignore mathjax_ignore" id="python-coding-style-specifications">
+<h1>Python Coding Style Specifications<a class="headerlink" href="#python-coding-style-specifications" title="Link to this heading"></a></h1>
+<section id="why">
+<h2>Why?<a class="headerlink" href="#why" title="Link to this heading"></a></h2>
+<p>Having a good coding style is somehow important, since it makes your code less error-prone, and also makes collaboration a lot easier.
+The general guidance is the <a class="reference external" href="https://peps.python.org/pep-0008/">PEP8 standard</a>.
+However, the PEP8 is a very long document, this readme serves as a quick ‘rule of thumbs’ for python coding styles.</p>
+</section>
+<section id="naming">
+<h2>Naming<a class="headerlink" href="#naming" title="Link to this heading"></a></h2>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># In this project, we follow the habit of CapitalTheFirstLetter for class names</span>
+<span class="k">class</span> <span class="nc">DummyClass</span><span class="p">(</span><span class="o">...</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_my_priviate_method</span><span class="p">():</span>
+        <span class="c1"># _ is a good sign for people to know that this method is only used inside this class</span>
+        <span class="o">...</span>
+    <span class="k">def</span> <span class="nf">my_public_method</span><span class="p">():</span>
+        <span class="o">...</span>
+</pre></div>
+</div>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># In this project, we follow the habit of break_words_by_underscore for function and variable names names</span>
+<span class="k">def</span> <span class="nf">my_function_name</span><span class="p">:</span>
+    <span class="o">...</span>
+
+<span class="c1"># However, we generally would prefer shorter names!</span>
+<span class="n">my_old_school_variable</span> <span class="o">=</span> <span class="mi">13</span>
+</pre></div>
+</div>
+</section>
+<section id="line-breaks">
+<h2>Line breaks<a class="headerlink" href="#line-breaks" title="Link to this heading"></a></h2>
+<p>Line breaks are usually automatically handled by the pre-installed tool <code class="docutils literal notranslate"><span class="pre">black</span></code>.
+To format a specific python file:</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>black<span class="w"> </span>xxx.py
+</pre></div>
+</div>
+<p>Here is an example:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># long lines should generally be avoided</span>
+<span class="c1"># bad</span>
+<span class="nv">xs</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">[</span><span class="s1">&#39;my&#39;</span>,<span class="w"> </span><span class="s1">&#39;line&#39;</span>,<span class="w"> </span><span class="s1">&#39;is&#39;</span>,<span class="w"> </span><span class="s1">&#39;very&#39;</span>,<span class="w"> </span><span class="s1">&#39;very&#39;</span>,<span class="w"> </span><span class="s1">&#39;very&#39;</span>,<span class="w"> </span><span class="s1">&#39;long&#39;</span><span class="o">]</span>
+<span class="c1"># good</span>
+<span class="nv">xs</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">[</span>
+<span class="w">	</span><span class="s1">&#39;my&#39;</span>,<span class="w"> </span><span class="s1">&#39;line&#39;</span>,<span class="w"> </span><span class="s1">&#39;is&#39;</span>,<span class="w"> </span>
+<span class="w">	</span><span class="s1">&#39;very&#39;</span>,<span class="w"> </span><span class="s1">&#39;very&#39;</span>,<span class="w"> </span>
+<span class="w">	</span><span class="s1">&#39;very&#39;</span>,<span class="w"> </span><span class="s1">&#39;long&#39;</span><span class="o">]</span>
+
+<span class="c1"># same thing applies to dicts, strings ....</span>
+</pre></div>
+</div>
+</section>
+<section id="using-black-in-mase">
+<h2>Using Black in MASE<a class="headerlink" href="#using-black-in-mase" title="Link to this heading"></a></h2>
+<p><a class="reference external" href="https://github.com/psf/black">Black</a> is the uncompromising Python code formatter, and has been used in many open-source projects.
+If you installed the packages for MASE, black is then included. It is crucial to format your code using <code class="docutils literal notranslate"><span class="pre">black</span></code> before you make a pull request in MASE. Our CIs would check for formatting, and your PR will not pass this check if code is not formatted.</p>
+<p>Example on using black for format the whole directory:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># all .py files should be in chop</span>
+<span class="nb">cd</span><span class="w"> </span>machop/chop
+black<span class="w"> </span>*
+</pre></div>
+</div>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="C-coding-style-specifications.html" class="btn btn-neutral float-left" title="C/C++ Coding Style Specifications" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="Verilog-coding-style-specifications.html" class="btn btn-neutral float-right" title="Verilog Coding Style Specifications" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, DeepWok.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

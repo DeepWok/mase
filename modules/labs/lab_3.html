@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>General introduction &mdash; MASE 0.0.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=19f00094" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../../_static/documentation_options.js?v=d45e8c67"></script>
+        <script src="../../_static/doctools.js?v=9a2dae69"></script>
+        <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            MASE
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../documentation/getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../documentation/tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../documentation/roadmap.html">Roadmap</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../documentation/specifications.html">Coding Style Specifications</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Machop API</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../api/actions.html">Chop Actions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api/passes.html">Chop Passes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api/ir.html">IR</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Mase Components</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../hardware/hardware_documentation.html">Hardware Documentation</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Students</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../labs.html">Advanced Deep Learning Systems Labs</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">MASE</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">General introduction</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/modules/labs/lab_3.md.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <!-- # Lab 1 for Advanced Deep Learning Systems (ADLS ELEC70109/EE9-AML3-10/EE9-AO25) -->
+<br />
+<div align="center">
+  <a href="https://deepwok.github.io/">
+    <img src="../imgs/deepwok.png" alt="Logo" width="160" height="160">
+  </a>
+  <h1 align="center">Lab 3 for Advanced Deep Learning Systems (ADLS)</h1>
+  <p align="center">
+    ELEC70109/EE9-AML3-10/EE9-AO25
+    <br />
+  Written by
+    <a href="https://aaron-zhao123.github.io/">Aaron Zhao </a>
+  </p>
+</div>
+<section class="tex2jax_ignore mathjax_ignore" id="general-introduction">
+<h1>General introduction<a class="headerlink" href="#general-introduction" title="Link to this heading"></a></h1>
+<p>In this lab, you will learn how to use the search functionality in the software stack of MASE.</p>
+<p>There are in total 4 tasks you would need to finish.</p>
+</section>
+<section class="tex2jax_ignore mathjax_ignore" id="writing-a-search-using-masegraph-transforms">
+<h1>Writing a search using MaseGraph Transforms<a class="headerlink" href="#writing-a-search-using-masegraph-transforms" title="Link to this heading"></a></h1>
+<p>In this section, our objective is to gain a comprehensive understanding of the construction of the current search function in Mase. To achieve this, we will require these essential components:</p>
+<ul class="simple">
+<li><p>MaseGraph: This component should be already created in the preceding lab.</p></li>
+<li><p>Search space: This component encompasses and defines the various available search options.</p></li>
+<li><p>Search strategy: An implementation of a search algorithm.</p></li>
+<li><p>Runner: This vital component manages and executes training, evaluation, or both procedures while generating a quality metric.</p></li>
+</ul>
+<p>By analyzing these components, we can delve into the workings and effectiveness of the existing search function in Mase.</p>
+<section id="turning-your-network-to-a-graph">
+<h2>Turning your network to a graph<a class="headerlink" href="#turning-your-network-to-a-graph" title="Link to this heading"></a></h2>
+<p>We follow a similar procedure of what you have tried in lab2 to now produce a <code class="docutils literal notranslate"><span class="pre">MaseGraph</span></code>, this is converted from your pre-trained JSC model:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">Path</span>
+<span class="kn">from</span> <span class="nn">pprint</span> <span class="kn">import</span> <span class="n">pprint</span> <span class="k">as</span> <span class="n">pp</span>
+
+<span class="c1"># figure out the correct path</span>
+<span class="n">machop_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">resolve</span><span class="p">()</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">parent</span> <span class="o">/</span><span class="s2">&quot;machop&quot;</span>
+<span class="k">assert</span> <span class="n">machop_path</span><span class="o">.</span><span class="n">exists</span><span class="p">(),</span> <span class="s2">&quot;Failed to find machop at: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">machop_path</span><span class="p">)</span>
+<span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">machop_path</span><span class="p">))</span>
+
+<span class="kn">from</span> <span class="nn">chop.dataset</span> <span class="kn">import</span> <span class="n">MaseDataModule</span><span class="p">,</span> <span class="n">get_dataset_info</span>
+<span class="kn">from</span> <span class="nn">chop.tools.logger</span> <span class="kn">import</span> <span class="n">set_logging_verbosity</span>
+
+<span class="kn">from</span> <span class="nn">chop.passes.graph.analysis</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">report_node_meta_param_analysis_pass</span><span class="p">,</span>
+    <span class="n">profile_statistics_analysis_pass</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span> <span class="nn">chop.passes.graph</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">add_common_metadata_analysis_pass</span><span class="p">,</span>
+    <span class="n">init_metadata_analysis_pass</span><span class="p">,</span>
+    <span class="n">add_software_metadata_analysis_pass</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span> <span class="nn">chop.tools.get_input</span> <span class="kn">import</span> <span class="n">InputGenerator</span>
+<span class="kn">from</span> <span class="nn">chop.ir.graph.mase_graph</span> <span class="kn">import</span> <span class="n">MaseGraph</span>
+
+<span class="kn">from</span> <span class="nn">chop.models</span> <span class="kn">import</span> <span class="n">get_model_info</span><span class="p">,</span> <span class="n">get_model</span>
+
+
+
+
+<span class="n">set_logging_verbosity</span><span class="p">(</span><span class="s2">&quot;info&quot;</span><span class="p">)</span>
+
+<span class="n">batch_size</span> <span class="o">=</span> <span class="mi">8</span>
+<span class="n">model_name</span> <span class="o">=</span> <span class="s2">&quot;jsc-tiny&quot;</span>
+<span class="n">dataset_name</span> <span class="o">=</span> <span class="s2">&quot;jsc&quot;</span>
+
+
+<span class="n">data_module</span> <span class="o">=</span> <span class="n">MaseDataModule</span><span class="p">(</span>
+    <span class="n">name</span><span class="o">=</span><span class="n">dataset_name</span><span class="p">,</span>
+    <span class="n">batch_size</span><span class="o">=</span><span class="n">batch_size</span><span class="p">,</span>
+    <span class="n">model_name</span><span class="o">=</span><span class="n">model_name</span><span class="p">,</span>
+    <span class="n">num_workers</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+    <span class="c1"># custom_dataset_cache_path=&quot;../../chop/dataset&quot;</span>
+<span class="p">)</span>
+<span class="n">data_module</span><span class="o">.</span><span class="n">prepare_data</span><span class="p">()</span>
+<span class="n">data_module</span><span class="o">.</span><span class="n">setup</span><span class="p">()</span>
+
+<span class="n">model_info</span> <span class="o">=</span> <span class="n">get_model_info</span><span class="p">(</span><span class="n">model_name</span><span class="p">)</span>
+<span class="n">model</span> <span class="o">=</span> <span class="n">get_model</span><span class="p">(</span>
+    <span class="n">model_name</span><span class="p">,</span>
+    <span class="n">task</span><span class="o">=</span><span class="s2">&quot;cls&quot;</span><span class="p">,</span>
+    <span class="n">dataset_info</span><span class="o">=</span><span class="n">data_module</span><span class="o">.</span><span class="n">dataset_info</span><span class="p">,</span>
+    <span class="n">pretrained</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="n">checkpoint</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span>
+
+<span class="n">input_generator</span> <span class="o">=</span> <span class="n">InputGenerator</span><span class="p">(</span>
+    <span class="n">data_module</span><span class="o">=</span><span class="n">data_module</span><span class="p">,</span>
+    <span class="n">model_info</span><span class="o">=</span><span class="n">model_info</span><span class="p">,</span>
+    <span class="n">task</span><span class="o">=</span><span class="s2">&quot;cls&quot;</span><span class="p">,</span>
+    <span class="n">which_dataloader</span><span class="o">=</span><span class="s2">&quot;train&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">dummy_in</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="nb">iter</span><span class="p">(</span><span class="n">input_generator</span><span class="p">))</span>
+<span class="n">_</span> <span class="o">=</span> <span class="n">model</span><span class="p">(</span><span class="o">**</span><span class="n">dummy_in</span><span class="p">)</span>
+
+<span class="c1"># generate the mase graph and initialize node metadata</span>
+<span class="n">mg</span> <span class="o">=</span> <span class="n">MaseGraph</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>You may want to copy the code snippet and paste it to a file created in the current directory with a name of <code class="docutils literal notranslate"><span class="pre">lab3.py</span></code>.</p>
+<blockquote>
+<div><p>[Warning: Directory madness]
+The directory has to be correct because the line <code class="docutils literal notranslate"><span class="pre">machop_path</span> <span class="pre">=</span> <span class="pre">Path(&quot;.&quot;).resolve().parent.parent</span> <span class="pre">/&quot;machop&quot;</span></code> traces to the parent directory based on relative positions.</p>
+</div></blockquote>
+</section>
+<section id="defining-a-search-space">
+<h2>Defining a search space<a class="headerlink" href="#defining-a-search-space" title="Link to this heading"></a></h2>
+<p>Based on the previous <code class="docutils literal notranslate"><span class="pre">pass_args</span></code> template, the following code is utilized to generate a search space. The search space is constructed by combining different weight and data configurations in precision setups.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">pass_args</span> <span class="o">=</span> <span class="p">{</span>
+<span class="s2">&quot;by&quot;</span><span class="p">:</span> <span class="s2">&quot;type&quot;</span><span class="p">,</span>
+<span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;config&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">}},</span>
+<span class="s2">&quot;linear&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;config&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;integer&quot;</span><span class="p">,</span>
+            <span class="c1"># data</span>
+            <span class="s2">&quot;data_in_width&quot;</span><span class="p">:</span> <span class="mi">8</span><span class="p">,</span>
+            <span class="s2">&quot;data_in_frac_width&quot;</span><span class="p">:</span> <span class="mi">4</span><span class="p">,</span>
+            <span class="c1"># weight</span>
+            <span class="s2">&quot;weight_width&quot;</span><span class="p">:</span> <span class="mi">8</span><span class="p">,</span>
+            <span class="s2">&quot;weight_frac_width&quot;</span><span class="p">:</span> <span class="mi">4</span><span class="p">,</span>
+            <span class="c1"># bias</span>
+            <span class="s2">&quot;bias_width&quot;</span><span class="p">:</span> <span class="mi">8</span><span class="p">,</span>
+            <span class="s2">&quot;bias_frac_width&quot;</span><span class="p">:</span> <span class="mi">4</span><span class="p">,</span>
+        <span class="p">}</span>
+<span class="p">},}</span>
+
+<span class="kn">import</span> <span class="nn">copy</span>
+<span class="c1"># build a search space</span>
+<span class="n">data_in_frac_widths</span> <span class="o">=</span> <span class="p">[(</span><span class="mi">16</span><span class="p">,</span> <span class="mi">8</span><span class="p">),</span> <span class="p">(</span><span class="mi">8</span><span class="p">,</span> <span class="mi">6</span><span class="p">),</span> <span class="p">(</span><span class="mi">8</span><span class="p">,</span> <span class="mi">4</span><span class="p">),</span> <span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">2</span><span class="p">)]</span>
+<span class="n">w_in_frac_widths</span> <span class="o">=</span> <span class="p">[(</span><span class="mi">16</span><span class="p">,</span> <span class="mi">8</span><span class="p">),</span> <span class="p">(</span><span class="mi">8</span><span class="p">,</span> <span class="mi">6</span><span class="p">),</span> <span class="p">(</span><span class="mi">8</span><span class="p">,</span> <span class="mi">4</span><span class="p">),</span> <span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">2</span><span class="p">)]</span>
+<span class="n">search_spaces</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="k">for</span> <span class="n">d_config</span> <span class="ow">in</span> <span class="n">data_in_frac_widths</span><span class="p">:</span>
+    <span class="k">for</span> <span class="n">w_config</span> <span class="ow">in</span> <span class="n">w_in_frac_widths</span><span class="p">:</span>
+        <span class="n">pass_args</span><span class="p">[</span><span class="s1">&#39;linear&#39;</span><span class="p">][</span><span class="s1">&#39;config&#39;</span><span class="p">][</span><span class="s1">&#39;data_in_width&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">d_config</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">pass_args</span><span class="p">[</span><span class="s1">&#39;linear&#39;</span><span class="p">][</span><span class="s1">&#39;config&#39;</span><span class="p">][</span><span class="s1">&#39;data_in_frac_width&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">d_config</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">pass_args</span><span class="p">[</span><span class="s1">&#39;linear&#39;</span><span class="p">][</span><span class="s1">&#39;config&#39;</span><span class="p">][</span><span class="s1">&#39;weight_width&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">w_config</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">pass_args</span><span class="p">[</span><span class="s1">&#39;linear&#39;</span><span class="p">][</span><span class="s1">&#39;config&#39;</span><span class="p">][</span><span class="s1">&#39;weight_frac_width&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">w_config</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="c1"># dict.copy() and dict(dict) only perform shallow copies</span>
+        <span class="c1"># in fact, only primitive data types in python are doing implicit copy when a = b happens</span>
+        <span class="n">search_spaces</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">pass_args</span><span class="p">))</span>
+</pre></div>
+</div>
+</section>
+<section id="defining-a-search-strategy-and-a-runner">
+<h2>Defining a search strategy and a runner<a class="headerlink" href="#defining-a-search-strategy-and-a-runner" title="Link to this heading"></a></h2>
+<p>The code provided below consists of two main <code class="docutils literal notranslate"><span class="pre">for</span></code> loops. The first <code class="docutils literal notranslate"><span class="pre">for</span></code> loop executes a straightforward brute-force search, enabling the iteration through the previously defined search space.</p>
+<p>In contrast, the second <code class="docutils literal notranslate"><span class="pre">for</span></code> loop retrieves training samples from the train data loader. These samples are then utilized to generate accuracy and loss values, which serve as potential quality metrics for evaluating the system’s performance.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># grid search</span>
+
+
+<span class="kn">import</span> <span class="nn">torch</span>
+<span class="kn">from</span> <span class="nn">torchmetrics.classification</span> <span class="kn">import</span> <span class="n">MulticlassAccuracy</span>
+
+<span class="n">mg</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">init_metadata_analysis_pass</span><span class="p">(</span><span class="n">mg</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+<span class="n">mg</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">add_common_metadata_analysis_pass</span><span class="p">(</span><span class="n">mg</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;dummy_in&quot;</span><span class="p">:</span> <span class="n">dummy_in</span><span class="p">})</span>
+<span class="n">mg</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">add_software_metadata_analysis_pass</span><span class="p">(</span><span class="n">mg</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+
+<span class="n">metric</span> <span class="o">=</span> <span class="n">MulticlassAccuracy</span><span class="p">(</span><span class="n">num_classes</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
+<span class="n">num_batchs</span> <span class="o">=</span> <span class="mi">5</span>
+<span class="c1"># This first loop is basically our search strategy,</span>
+<span class="c1"># in this case, it is a simple brute force search</span>
+
+<span class="n">recorded_accs</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">config</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">search_spaces</span><span class="p">):</span>
+    <span class="n">mg</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">quantize_transform_pass</span><span class="p">(</span><span class="n">mg</span><span class="p">,</span> <span class="n">config</span><span class="p">)</span>
+    <span class="n">j</span> <span class="o">=</span> <span class="mi">0</span>
+
+    <span class="c1"># this is the inner loop, where we also call it as a runner.</span>
+    <span class="n">acc_avg</span><span class="p">,</span> <span class="n">loss_avg</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span>
+    <span class="n">accs</span><span class="p">,</span> <span class="n">losses</span> <span class="o">=</span> <span class="p">[],</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">inputs</span> <span class="ow">in</span> <span class="n">data_module</span><span class="o">.</span><span class="n">train_dataloader</span><span class="p">():</span>
+        <span class="n">xs</span><span class="p">,</span> <span class="n">ys</span> <span class="o">=</span> <span class="n">inputs</span>
+        <span class="n">preds</span> <span class="o">=</span> <span class="n">mg</span><span class="o">.</span><span class="n">model</span><span class="p">(</span><span class="n">xs</span><span class="p">)</span>
+        <span class="n">loss</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">functional</span><span class="o">.</span><span class="n">cross_entropy</span><span class="p">(</span><span class="n">preds</span><span class="p">,</span> <span class="n">ys</span><span class="p">)</span>
+        <span class="n">acc</span> <span class="o">=</span> <span class="n">metric</span><span class="p">(</span><span class="n">preds</span><span class="p">,</span> <span class="n">ys</span><span class="p">)</span>
+        <span class="n">accs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">acc</span><span class="p">)</span>
+        <span class="n">losses</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">loss</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">j</span> <span class="o">&gt;</span> <span class="n">num_batchs</span><span class="p">:</span>
+            <span class="k">break</span>
+        <span class="n">j</span> <span class="o">+=</span> <span class="mi">1</span>
+    <span class="n">acc_avg</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">accs</span><span class="p">)</span> <span class="o">/</span> <span class="nb">len</span><span class="p">(</span><span class="n">accs</span><span class="p">)</span>
+    <span class="n">loss_avg</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">losses</span><span class="p">)</span> <span class="o">/</span> <span class="nb">len</span><span class="p">(</span><span class="n">losses</span><span class="p">)</span>
+    <span class="n">recorded_accs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">acc_avg</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Now if you copy also this code snippet into <code class="docutils literal notranslate"><span class="pre">lab3.py</span></code>, you would have a complete search scripts.</p>
+<p>We now have the following task for you:</p>
+<ol class="arabic simple">
+<li><p>Explore additional metrics that can serve as quality metrics for the search process. For example, you can consider metrics such as latency, model size, or the number of FLOPs (floating-point operations) involved in the model.</p></li>
+<li><p>Implement some of these additional metrics and attempt to combine them with the accuracy or loss quality metric. It’s important to note that in this particular case, accuracy and loss actually serve as the same quality metric (do you know why?).</p></li>
+</ol>
+</section>
+</section>
+<section class="tex2jax_ignore mathjax_ignore" id="the-search-command-in-the-mase-flow">
+<h1>The search command in the MASE flow<a class="headerlink" href="#the-search-command-in-the-mase-flow" title="Link to this heading"></a></h1>
+<p>The search flow implemented in MASE is very similar to the one that you have constructed manually, the overall flow is implemented in <a class="reference internal" href="#../../machop/chop/actions/search/search.py"><span class="xref myst">search.py</span></a>, the following bullet points provide you pointers to the code base.</p>
+<ul class="simple">
+<li><p>MaseGraph: this is the <a class="reference internal" href="#../../machop/chop/passes/graph/mase_graph.py"><span class="xref myst">MaseGraph</span></a> that you have used in lab2.</p></li>
+<li><p>Search space: The base class is implemented in <a class="reference internal" href="#../../machop/chop/actions/search/search_space/base.py"><span class="xref myst">base.py</span></a> , where in the same folder you can see a range of different supported search spaces.</p></li>
+<li><p>Search strategy: Similar to the search space, you can find a a base class <a class="reference internal" href="#../../machop/chop/actions/search/strategies/base.py"><span class="xref myst">definition</span></a>, where different strategies are also defined in the same folder.</p></li>
+<li><p>Runner: Different <a class="reference internal" href="#../../machop/chop/actions/search/strategies/runners"><span class="xref myst">runners</span></a> can produce different metrics, they may also use <code class="docutils literal notranslate"><span class="pre">transforms</span></code> to help compute certain search metrics.</p></li>
+</ul>
+<p>This enables one to execute the search through the MASE command line interface, remember to change the name after the <code class="docutils literal notranslate"><span class="pre">--load</span></code> option.</p>
+<blockquote>
+<div><p>[Warning! Incorrect Pandas on Colab]</p>
+</div></blockquote>
+<p>You might see an error message complaining about <code class="docutils literal notranslate"><span class="pre">AttributeError:</span> <span class="pre">'DataFrame'</span> <span class="pre">object</span> <span class="pre">has</span> <span class="pre">no</span> <span class="pre">attribute</span> <span class="pre">'map'.</span> <span class="pre">Did</span> <span class="pre">you</span> <span class="pre">mean:</span> <span class="pre">'mad'?</span></code>
+`, this is normally because of an incorrect installation on Colab, you can find the <a class="reference external" href="https://github.com/DeepWok/mase/issues/37#issuecomment-1919191598">issue</a> here. Also, learn to search your issues on the repository may help you to find answers to many of your problems!</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>./ch<span class="w"> </span>search<span class="w"> </span>--config<span class="w"> </span>configs/examples/jsc_toy_by_type.toml<span class="w"> </span>--load<span class="w"> </span>your_pre_trained_ckpt
+</pre></div>
+</div>
+<p>In this scenario, the search functionality is specified in the <code class="docutils literal notranslate"><span class="pre">toml</span></code> configuration file rather than via command-line inputs. This approach is adopted due to the multitude of configuration parameters that need to be set; encapsulating them within a single, elegant configuration file enhances reproducibility.</p>
+<p>In <code class="docutils literal notranslate"><span class="pre">jsc_toy_by_type.toml</span></code>, the <code class="docutils literal notranslate"><span class="pre">search_space</span></code> configuration is set in <code class="docutils literal notranslate"><span class="pre">search.search_space</span></code>, the search strategy is configured via <code class="docutils literal notranslate"><span class="pre">search.strategy</span></code>. If you are not familiar with the <code class="docutils literal notranslate"><span class="pre">toml</span></code> syntax, you can read <a class="reference external" href="https://toml.io/en/v1.0.0">here</a>.</p>
+<p>With now an understanding of how the MASE flow work, consider the following tasks</p>
+<ol class="arabic simple" start="3">
+<li><p>Implement the brute-force search as an additional search method within the system, this would be a new search strategy in MASE.</p></li>
+<li><p>Compare the brute-force search with the TPE based search, in terms of sample efficiency. Comment on the performance difference between the two search methods.</p></li>
+</ol>
+</section>
+
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, DeepWok.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

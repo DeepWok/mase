@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>chop.ir.graph.mase_graph &mdash; MASE 0.0.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/css/theme.css?v=19f00094" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../../../../_static/documentation_options.js?v=d45e8c67"></script>
+        <script src="../../../../_static/doctools.js?v=9a2dae69"></script>
+        <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../../index.html" class="icon icon-home">
+            MASE
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../modules/documentation/getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../modules/documentation/tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../modules/documentation/roadmap.html">Roadmap</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../modules/documentation/specifications.html">Coding Style Specifications</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Machop API</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../modules/api/actions.html">Chop Actions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../modules/api/passes.html">Chop Passes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../modules/api/ir.html">IR</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Mase Components</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../modules/hardware/hardware_documentation.html">Hardware Documentation</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Students</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../modules/labs.html">Advanced Deep Learning Systems Labs</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">MASE</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">chop.ir.graph.mase_graph</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for chop.ir.graph.mase_graph</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">math</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">Path</span>
+
+<span class="kn">from</span> <span class="nn">types</span> <span class="kn">import</span> <span class="n">FunctionType</span><span class="p">,</span> <span class="n">ModuleType</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Tuple</span>
+
+<span class="kn">import</span> <span class="nn">toml</span>
+<span class="kn">import</span> <span class="nn">torch</span>
+<span class="kn">import</span> <span class="nn">torch.fx</span> <span class="k">as</span> <span class="nn">fx</span>
+<span class="kn">from</span> <span class="nn">torch.fx.passes.graph_drawer</span> <span class="kn">import</span> <span class="n">FxGraphDrawer</span>
+
+<span class="kn">from</span> <span class="nn">chop.passes.graph.common</span> <span class="kn">import</span> <span class="n">MASE_IMPLICIT_FUNCS</span>
+<span class="kn">from</span> <span class="nn">chop.passes.graph.transforms</span> <span class="kn">import</span> <span class="n">utils</span> <span class="k">as</span> <span class="n">utils_passes</span>
+<span class="kn">from</span> <span class="nn">chop.passes.graph.patching</span> <span class="kn">import</span> <span class="n">MASE_LEAF_FUNCTIONS</span><span class="p">,</span> <span class="n">MASE_LEAF_LAYERS</span>
+<span class="kn">from</span> <span class="nn">chop.nn.quantized</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">quantized_func_map</span><span class="p">,</span>
+    <span class="n">quantized_module_map</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="kn">from</span> <span class="nn">transformers</span> <span class="kn">import</span> <span class="n">PreTrainedModel</span>
+<span class="kn">from</span> <span class="nn">transformers.utils.fx</span> <span class="kn">import</span> <span class="n">symbolic_trace</span> <span class="k">as</span> <span class="n">hf_symbolic_trace</span>
+<span class="kn">from</span> <span class="nn">transformers.utils.fx</span> <span class="kn">import</span> <span class="n">HFTracer</span>
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+<span class="c1"># ----------------------------------------</span>
+<span class="c1">#   Mase Tracer</span>
+<span class="c1"># ----------------------------------------</span>
+
+
+<div class="viewcode-block" id="MaseTracer">
+<a class="viewcode-back" href="../../../../modules/api/ir.html#chop.ir.graph.mase_graph.MaseTracer">[docs]</a>
+<span class="k">class</span> <span class="nc">MaseTracer</span><span class="p">(</span><span class="n">fx</span><span class="o">.</span><span class="n">Tracer</span><span class="p">):</span>
+<div class="viewcode-block" id="MaseTracer.__init__">
+<a class="viewcode-back" href="../../../../modules/api/ir.html#chop.ir.graph.mase_graph.MaseTracer.__init__">[docs]</a>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">custom_leaf_modules</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">ModuleType</span><span class="p">]</span> <span class="o">=</span> <span class="p">(),</span>
+        <span class="n">custom_leaf_layers</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">]</span> <span class="o">=</span> <span class="p">(),</span>
+        <span class="n">custom_leaf_functions</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">Callable</span><span class="p">]</span> <span class="o">=</span> <span class="p">(),</span>
+        <span class="n">param_shapes_constant</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Mase Tracer is an extended version of FX Tracer.</span>
+
+<span class="sd">        :param custom_leaf_modules: Python modules whose functions should be wrapped automatically</span>
+<span class="sd">            without needing to use fx.wrap(). Backward-compatibility for</span>
+<span class="sd">            this parameter is guaranteed, defaults to ()</span>
+<span class="sd">        :type custom_leaf_modules: tuple[ModuleType], optional</span>
+<span class="sd">        :param custom_leaf_layers: Python functions that should be wrapped automatically without</span>
+<span class="sd">            needing to use fx.wrap(). Backward compatibility for this</span>
+<span class="sd">            parameter is guaranteed, defaults to ()</span>
+<span class="sd">        :type custom_leaf_layers: tuple[torch.nn.Module], optional</span>
+<span class="sd">        :param custom_leaf_functions: _description_, defaults to ()</span>
+<span class="sd">        :type custom_leaf_functions: tuple[Callable], optional</span>
+<span class="sd">        :param param_shapes_constant: When this flag is set,  calls to shape,</span>
+<span class="sd">            size and a few other shape like attributes of a module&#39;s parameter</span>
+<span class="sd">            will be evaluated directly, rather than returning a new Proxy value</span>
+<span class="sd">            for an attribute access. Backward compatibility for this parameter</span>
+<span class="sd">            is guaranteed, defaults to False</span>
+<span class="sd">        :type param_shapes_constant: bool, optional</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">custom_leaf_layers</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">custom_leaf_layers</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">custom_leaf_modules</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">custom_leaf_modules</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">custom_leaf_functions</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">custom_leaf_functions</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">param_shapes_constant</span> <span class="o">=</span> <span class="n">param_shapes_constant</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">custom_leaf_modules</span> <span class="o">+</span> <span class="p">(</span><span class="n">math</span><span class="p">,),</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">custom_leaf_functions</span> <span class="o">+</span> <span class="n">MASE_LEAF_FUNCTIONS</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">param_shapes_constant</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="MaseTracer.is_leaf_module">
+<a class="viewcode-back" href="../../../../modules/api/ir.html#chop.ir.graph.mase_graph.MaseTracer.is_leaf_module">[docs]</a>
+    <span class="k">def</span> <span class="nf">is_leaf_module</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">m</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">,</span> <span class="n">module_qualified_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="n">is_fx_built_in_leaf_module</span> <span class="o">=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">is_leaf_module</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="n">module_qualified_name</span><span class="p">)</span>
+        <span class="n">is_mase_leaf_layers</span> <span class="o">=</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="n">MASE_LEAF_LAYERS</span><span class="p">)</span>
+        <span class="n">is_custom_layer</span> <span class="o">=</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">custom_leaf_layers</span><span class="p">)</span>
+        <span class="k">return</span> <span class="nb">any</span><span class="p">(</span>
+            <span class="p">(</span>
+                <span class="n">is_fx_built_in_leaf_module</span><span class="p">,</span>
+                <span class="n">is_mase_leaf_layers</span><span class="p">,</span>
+                <span class="n">is_custom_layer</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="p">)</span></div>
+</div>
+
+
+
+<span class="c1"># ----------------------------------------</span>
+<span class="c1">#   Mase Graph IR</span>
+<span class="c1"># ----------------------------------------</span>
+
+
+<div class="viewcode-block" id="MaseGraph">
+<a class="viewcode-back" href="../../../../modules/api/ir.html#chop.ir.graph.mase_graph.MaseGraph">[docs]</a>
+<span class="k">class</span> <span class="nc">MaseGraph</span><span class="p">:</span>
+    <span class="n">implicit_nodes</span> <span class="o">=</span> <span class="n">MASE_IMPLICIT_FUNCS</span>
+
+<div class="viewcode-block" id="MaseGraph.__init__">
+<a class="viewcode-back" href="../../../../modules/api/ir.html#chop.ir.graph.mase_graph.MaseGraph.__init__">[docs]</a>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">model</span><span class="p">,</span>
+        <span class="n">cf_args</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">custom_ops</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Mase takes a torch.fx graph representation of a model and translates</span>
+<span class="sd">        it into a customised representation (Mase graph IR). The Mase graph</span>
+<span class="sd">        IR is a dataflow representation of the model with both software and</span>
+<span class="sd">        hardware constraints.</span>
+
+<span class="sd">        :param model: Input model to construct the MaseGraph. When a nn.Module is provided, this is parsed into a fx.GraphModule using the MaseTracer.</span>
+<span class="sd">        :type model: torch.nn.Module | fx.GraphModule</span>
+<span class="sd">        :param cf_args: _description_, defaults to None</span>
+<span class="sd">        :type cf_args: Optional[Dict[str, Any]], optional</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">fx</span><span class="o">.</span><span class="n">GraphModule</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">model</span> <span class="o">=</span> <span class="n">model</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">patched_op_names</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">patched_custom_layers</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">additional_inputs</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">model</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">trace_torch_module</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">cf_args</span><span class="p">,</span> <span class="n">custom_ops</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Expected fx.GraphModule or nn.Module, but received model: </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">model</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">cf_args</span> <span class="o">=</span> <span class="n">cf_args</span></div>
+
+
+<div class="viewcode-block" id="MaseGraph.trace_torch_module">
+<a class="viewcode-back" href="../../../../modules/api/ir.html#chop.ir.graph.mase_graph.MaseGraph.trace_torch_module">[docs]</a>
+    <span class="k">def</span> <span class="nf">trace_torch_module</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">model</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">,</span>
+        <span class="n">cf_args</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">custom_ops</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="c1"># * HuggingFace model</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">PreTrainedModel</span><span class="p">):</span>
+            <span class="n">tracer_cls</span> <span class="o">=</span> <span class="n">HFTracer</span>
+
+            <span class="k">if</span> <span class="n">custom_ops</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">custom_modules</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">custom_ops</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;modules&quot;</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">custom_ops</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;modules&quot;</span><span class="p">:</span> <span class="p">{},</span> <span class="s2">&quot;functions&quot;</span><span class="p">:</span> <span class="p">{}}</span>
+                <span class="n">custom_modules</span> <span class="o">=</span> <span class="p">()</span>
+
+            <span class="k">def</span> <span class="nf">wrap_is_leaf_module</span><span class="p">(</span><span class="n">hf_is_leaf_module</span><span class="p">):</span>
+                <span class="k">def</span> <span class="nf">is_leaf_module</span><span class="p">(</span>
+                    <span class="bp">self</span><span class="p">,</span> <span class="n">m</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">,</span> <span class="n">module_qualified_name</span><span class="p">:</span> <span class="nb">str</span>
+                <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+                    <span class="n">is_hf_built_in_leaf_module</span> <span class="o">=</span> <span class="n">hf_is_leaf_module</span><span class="p">(</span>
+                        <span class="bp">self</span><span class="p">,</span> <span class="n">m</span><span class="p">,</span> <span class="n">module_qualified_name</span>
+                    <span class="p">)</span>
+
+                    <span class="n">is_custom_module</span> <span class="o">=</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="n">custom_modules</span><span class="p">)</span>
+                    <span class="k">return</span> <span class="n">is_hf_built_in_leaf_module</span> <span class="ow">or</span> <span class="n">is_custom_module</span>
+
+                <span class="k">return</span> <span class="n">is_leaf_module</span>
+
+            <span class="nb">setattr</span><span class="p">(</span>
+                <span class="n">tracer_cls</span><span class="p">,</span>
+                <span class="s2">&quot;is_leaf_module&quot;</span><span class="p">,</span>
+                <span class="n">wrap_is_leaf_module</span><span class="p">(</span><span class="n">tracer_cls</span><span class="o">.</span><span class="n">is_leaf_module</span><span class="p">),</span>
+            <span class="p">)</span>
+
+            <span class="n">graph_module</span> <span class="o">=</span> <span class="n">hf_symbolic_trace</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">tracer_cls</span><span class="o">=</span><span class="n">tracer_cls</span><span class="p">)</span>
+            <span class="n">graph_module</span><span class="o">.</span><span class="n">custom_ops</span> <span class="o">=</span> <span class="n">custom_ops</span>
+
+            <span class="c1"># ! TO DO: remove this legacy stuff</span>
+            <span class="n">graph_module</span><span class="o">.</span><span class="n">patched_op_names</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="n">graph_module</span><span class="o">.</span><span class="n">patched_custom_layers</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="n">graph_module</span><span class="o">.</span><span class="n">additional_inputs</span> <span class="o">=</span> <span class="p">{}</span>
+
+        <span class="c1"># * Other models</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># MASE internal auto-wrapped functions/layers</span>
+            <span class="n">custom_leaf_modules</span> <span class="o">=</span> <span class="p">()</span>
+            <span class="n">custom_leaf_functions</span> <span class="o">=</span> <span class="p">()</span>
+            <span class="n">custom_leaf_layers</span> <span class="o">=</span> <span class="p">()</span>
+            <span class="c1"># quantized functions/layers</span>
+            <span class="n">custom_leaf_functions</span> <span class="o">+=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">quantized_func_map</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+            <span class="n">custom_leaf_layers</span> <span class="o">+=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">quantized_module_map</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+            <span class="c1"># patched functions/layers</span>
+            <span class="n">patched_nodes</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="s2">&quot;patched_nodes&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">patched_nodes</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">custom_leaf_modules</span> <span class="o">+=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">patched_nodes</span><span class="p">[</span><span class="s2">&quot;modules&quot;</span><span class="p">])</span>
+                <span class="n">custom_leaf_functions</span> <span class="o">+=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">patched_nodes</span><span class="p">[</span><span class="s2">&quot;functions&quot;</span><span class="p">])</span>
+                <span class="n">custom_leaf_layers</span> <span class="o">+=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">patched_nodes</span><span class="p">[</span><span class="s2">&quot;layers&quot;</span><span class="p">])</span>
+
+            <span class="n">tracer</span> <span class="o">=</span> <span class="n">MaseTracer</span><span class="p">(</span>
+                <span class="n">custom_leaf_modules</span><span class="o">=</span><span class="n">custom_leaf_modules</span><span class="p">,</span>
+                <span class="n">custom_leaf_functions</span><span class="o">=</span><span class="n">custom_leaf_functions</span><span class="p">,</span>
+                <span class="n">custom_leaf_layers</span><span class="o">=</span><span class="n">custom_leaf_layers</span><span class="p">,</span>
+            <span class="p">)</span>
+
+            <span class="n">graph_module</span> <span class="o">=</span> <span class="n">fx</span><span class="o">.</span><span class="n">GraphModule</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">tracer</span><span class="o">.</span><span class="n">trace</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">cf_args</span><span class="p">))</span>
+
+            <span class="k">if</span> <span class="n">patched_nodes</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">graph_module</span><span class="o">.</span><span class="n">patched_op_names</span> <span class="o">=</span> <span class="p">[</span>
+                    <span class="n">obj</span><span class="o">.</span><span class="vm">__name__</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+                    <span class="k">for</span> <span class="n">obj</span> <span class="ow">in</span> <span class="n">model</span><span class="o">.</span><span class="n">patched_nodes</span><span class="p">[</span><span class="s2">&quot;layers&quot;</span><span class="p">]</span>
+                    <span class="o">+</span> <span class="n">model</span><span class="o">.</span><span class="n">patched_nodes</span><span class="p">[</span><span class="s2">&quot;functions&quot;</span><span class="p">]</span>
+                <span class="p">]</span>
+                <span class="c1"># these are layers we believe the user will provide system verilog for</span>
+                <span class="n">graph_module</span><span class="o">.</span><span class="n">patched_custom_layers</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">patched_nodes</span><span class="p">[</span><span class="s2">&quot;layers&quot;</span><span class="p">]</span>
+                <span class="n">graph_module</span><span class="o">.</span><span class="n">additional_inputs</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">patched_nodes</span><span class="p">[</span>
+                    <span class="s2">&quot;additional_inputs&quot;</span>
+                <span class="p">]</span>
+                <span class="n">graph_module</span><span class="o">.</span><span class="n">patched_nodes</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">patched_nodes</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">graph_module</span><span class="o">.</span><span class="n">patched_op_names</span> <span class="o">=</span> <span class="p">[]</span>
+                <span class="n">graph_module</span><span class="o">.</span><span class="n">patched_custom_layers</span> <span class="o">=</span> <span class="p">[]</span>
+                <span class="n">graph_module</span><span class="o">.</span><span class="n">additional_inputs</span> <span class="o">=</span> <span class="p">{}</span>
+
+        <span class="k">return</span> <span class="n">graph_module</span></div>
+
+
+<div class="viewcode-block" id="MaseGraph.from_module">
+<a class="viewcode-back" href="../../../../modules/api/ir.html#chop.ir.graph.mase_graph.MaseGraph.from_module">[docs]</a>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">from_module</span><span class="p">(</span>
+        <span class="bp">cls</span><span class="p">,</span>
+        <span class="n">model</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">,</span>
+        <span class="n">cf_args</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">custom_ops</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">=</span> <span class="p">{},</span>
+    <span class="p">):</span>
+        <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span>
+            <span class="n">model</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span>
+        <span class="p">),</span> <span class="sa">f</span><span class="s2">&quot;model must be a torch.nn.Module. Received: </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">model</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
+
+        <span class="n">graph_module</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">trace_torch_module</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">cf_args</span><span class="p">,</span> <span class="n">custom_ops</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="n">graph_module</span><span class="p">,</span> <span class="n">cf_args</span><span class="o">=</span><span class="n">cf_args</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="MaseGraph.draw">
+<a class="viewcode-back" href="../../../../modules/api/ir.html#chop.ir.graph.mase_graph.MaseGraph.draw">[docs]</a>
+    <span class="k">def</span> <span class="nf">draw</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="s2">&quot;mase_graph.svg&quot;</span><span class="p">):</span>
+        <span class="n">drawer</span> <span class="o">=</span> <span class="n">FxGraphDrawer</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">,</span> <span class="s2">&quot;masegraph&quot;</span><span class="p">)</span>
+        <span class="n">drawer</span><span class="o">.</span><span class="n">get_dot_graph</span><span class="p">()</span><span class="o">.</span><span class="n">write_svg</span><span class="p">(</span><span class="n">file</span><span class="p">)</span></div>
+
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">fx_graph</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">graph</span>
+
+    <span class="nd">@fx_graph</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">fx_graph</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">graph</span><span class="p">:</span> <span class="n">fx</span><span class="o">.</span><span class="n">Graph</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">graph</span> <span class="o">=</span> <span class="n">graph</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">nodes</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">nodes</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">modules</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">dict</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">named_modules</span><span class="p">())</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, DeepWok.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

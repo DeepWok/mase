@@ -1,0 +1,610 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>chop.passes.graph.analysis.add_metadata &mdash; MASE 0.0.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=19f00094" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../../../_static/documentation_options.js?v=d45e8c67"></script>
+        <script src="../../../_static/doctools.js?v=9a2dae69"></script>
+        <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link rel="next" title="chop.passes.graph.analysis.init_metadata" href="init_metadata.html" />
+    <link rel="prev" title="Chop Passes" href="../passes.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            MASE
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../documentation/getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../documentation/tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../documentation/roadmap.html">Roadmap</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../documentation/specifications.html">Coding Style Specifications</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Machop API</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../actions.html">Chop Actions</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../passes.html">Chop Passes</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../passes.html#masegraph-analysis-passes">MaseGraph Analysis Passes</a><ul class="current">
+<li class="toctree-l3 current"><a class="current reference internal" href="#">chop.passes.graph.analysis.add_metadata</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#add-common-metadata-analysis-pass">add_common_metadata_analysis_pass</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#add-software-metadata-analysis-pass">add_software_metadata_analysis_pass</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#add-hardware-metadata-analysis-pass">add_hardware_metadata_analysis_pass</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="init_metadata.html">chop.passes.graph.analysis.init_metadata</a></li>
+<li class="toctree-l3"><a class="reference internal" href="report.html">chop.passes.graph.analysis.report</a></li>
+<li class="toctree-l3"><a class="reference internal" href="statistical_profiler.html">chop.passes.graph.analysis.statistical_profiler.profile_statistics</a></li>
+<li class="toctree-l3"><a class="reference internal" href="verify.html">chop.passes.graph.analysis.verify.verify</a></li>
+<li class="toctree-l3"><a class="reference internal" href="quantization.html">chop.passes.graph.calculate_avg_bits_mg_analysis_pass</a></li>
+<li class="toctree-l3"><a class="reference internal" href="pruning.html">chop.passes.graph.pruning</a></li>
+<li class="toctree-l3"><a class="reference internal" href="runtime.html">chop.passes.graph.analysis.runtime</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../passes.html#masegraph-transform-passes">MaseGraph Transform Passes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../passes.html#masegraph-interface-passes">MaseGraph Interface Passes</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../ir.html">IR</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Mase Components</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../hardware/hardware_documentation.html">Hardware Documentation</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Students</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../labs.html">Advanced Deep Learning Systems Labs</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">MASE</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../passes.html">Chop Passes</a></li>
+      <li class="breadcrumb-item active">chop.passes.graph.analysis.add_metadata</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../../_sources/modules/api/analysis/add_metadata.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="chop-passes-graph-analysis-add-metadata">
+<h1>chop.passes.graph.analysis.add_metadata<a class="headerlink" href="#chop-passes-graph-analysis-add-metadata" title="Link to this heading"></a></h1>
+<section id="add-common-metadata-analysis-pass">
+<h2>add_common_metadata_analysis_pass<a class="headerlink" href="#add-common-metadata-analysis-pass" title="Link to this heading"></a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="chop.passes.graph.analysis.add_metadata.add_common_metadata.add_common_metadata_analysis_pass">
+<span class="sig-prename descclassname"><span class="pre">chop.passes.graph.analysis.add_metadata.add_common_metadata.</span></span><span class="sig-name descname"><span class="pre">add_common_metadata_analysis_pass</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">graph</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pass_args</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{'add_value':</span> <span class="pre">True,</span> <span class="pre">'dummy_in':</span> <span class="pre">None,</span> <span class="pre">'force_device_meta':</span> <span class="pre">False}</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/chop/passes/graph/analysis/add_metadata/add_common_metadata.html#add_common_metadata_analysis_pass"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#chop.passes.graph.analysis.add_metadata.add_common_metadata.add_common_metadata_analysis_pass" title="Link to this definition"></a></dt>
+<dd><p>add common metadata</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>graph</strong> (<a class="reference internal" href="../ir.html#chop.ir.graph.mase_graph.MaseGraph" title="chop.ir.graph.mase_graph.MaseGraph"><em>MaseGraph</em></a>) – a MaseGraph</p></li>
+<li><p><strong>pass_args</strong> (<em>_type_</em><em>, </em><em>optional</em><em>, </em><em>&quot;add_value&quot; controls whether tensor values would be added to the meta data</em><em>, </em><em>defaults to True</em>) – this pass does not need any arguments, defaults to None</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>return a tuple of a MaseGraph and an empty dict (no additional info to return)</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>tuple(<a class="reference internal" href="../ir.html#chop.ir.graph.mase_graph.MaseGraph" title="chop.ir.graph.mase_graph.MaseGraph">MaseGraph</a>, Dict)</p>
+</dd>
+</dl>
+<p>The common metadata of a Mase node in a Mase graph describes the constraints of the
+node for any static analysis or possible transformation. The metadata has a
+tree structure, e.g.</p>
+<ul>
+<li><dl>
+<dt>common</dt><dd><ul>
+<li><p>mase_op -&gt; str : the mase op of the node, e.g. placeholder, linear, relu</p></li>
+<li><p>mase_type -&gt; str : the mase type of the node, e.g. module, builtin_func, module_related_func</p></li>
+<li><dl>
+<dt>args -&gt; {}</dt><dd><ul>
+<li><p>$name : name of the arg
+(if the arg is a tensor)</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>type -&gt; type of the arg, e.g. fixed point or float</p></li>
+<li><p>precision -&gt; format of the type, e.g. (10, 5)</p></li>
+<li><p>shape -&gt; shape of the arg</p></li>
+</ul>
+</div></blockquote>
+<dl class="simple">
+<dt>(if the arg is not a tensor)</dt><dd><ul class="simple">
+<li><p>value of the arg</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl>
+<dt>results -&gt; {}</dt><dd><ul>
+<li><p>$name : name of the result
+(if the result is a tensor)</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>type -&gt; type of the result, e.g. fixed point or float</p></li>
+<li><p>precision -&gt; format of the type, e.g. (10, 5)</p></li>
+<li><p>shape -&gt; shape of the result</p></li>
+</ul>
+</div></blockquote>
+<dl class="simple">
+<dt>(if the result is not a tensor)</dt><dd><ul class="simple">
+<li><p>value of the result</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+</ul>
+</dd>
+</dl>
+</li>
+</ul>
+</dd>
+</dl>
+</li>
+</ul>
+<p>Examples:</p>
+<p>A linear layer in a mase graph:</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>%fc1<span class="w"> </span>:<span class="w"> </span><span class="o">[</span><span class="nv">num_users</span><span class="o">=</span><span class="m">1</span><span class="o">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span>call_module<span class="o">[</span><span class="nv">target</span><span class="o">=</span>fc1<span class="o">](</span><span class="nv">args</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">(</span>%flatten,<span class="o">)</span>,<span class="w"> </span><span class="nv">kwargs</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">{})</span>
+</pre></div>
+</div>
+<p>A linear layer after this pass:</p>
+<div class="highlight-JSON notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+<span class="w">    </span><span class="nt">&quot;common&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="nt">&quot;mase_type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;module_related_func&quot;</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">&quot;mase_op&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;linear&quot;</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">&quot;args&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="nt">&quot;data_in_0&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">                </span><span class="nt">&quot;shape&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">784</span><span class="p">],</span>
+<span class="w">                </span><span class="nt">&quot;torch_dtype&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">t</span><span class="err">orch.</span><span class="kc">fl</span><span class="err">oa</span><span class="kc">t</span><span class="mi">32</span><span class="p">,</span>
+<span class="w">                </span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;float&quot;</span><span class="p">,</span>
+<span class="w">                </span><span class="nt">&quot;precision&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="mi">32</span><span class="p">],</span>
+<span class="w">            </span><span class="p">},</span>
+<span class="w">            </span><span class="nt">&quot;weight&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;float&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;precision&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="mi">32</span><span class="p">],</span><span class="w"> </span><span class="nt">&quot;shape&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="mi">784</span><span class="p">,</span><span class="w"> </span><span class="mi">784</span><span class="p">]},</span>
+<span class="w">            </span><span class="nt">&quot;bias&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;float&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;precision&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="mi">32</span><span class="p">],</span><span class="w"> </span><span class="nt">&quot;shape&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="mi">784</span><span class="p">]},</span>
+<span class="w">        </span><span class="p">},</span>
+<span class="w">        </span><span class="nt">&quot;results&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="nt">&quot;data_out_0&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">                </span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;float&quot;</span><span class="p">,</span>
+<span class="w">                </span><span class="nt">&quot;precision&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="mi">32</span><span class="p">],</span>
+<span class="w">                </span><span class="nt">&quot;shape&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">784</span><span class="p">],</span>
+<span class="w">                </span><span class="nt">&quot;torch_dtype&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">t</span><span class="err">orch.</span><span class="kc">fl</span><span class="err">oa</span><span class="kc">t</span><span class="mi">32</span><span class="p">,</span>
+<span class="w">            </span><span class="p">}</span>
+<span class="w">        </span><span class="p">},</span>
+<span class="w">    </span><span class="p">},</span>
+<span class="w">    </span><span class="nt">&quot;software&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{},</span>
+<span class="w">    </span><span class="nt">&quot;hardware&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{},</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>A relu layer in a mase graph:</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>%relu<span class="w"> </span>:<span class="w"> </span><span class="o">[</span><span class="nv">num_users</span><span class="o">=</span><span class="m">1</span><span class="o">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span>call_function<span class="o">[</span><span class="nv">target</span><span class="o">=</span>torch.nn.functional.relu<span class="o">](</span><span class="nv">args</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">(</span>%fc1,<span class="o">)</span>,<span class="w"> </span><span class="nv">kwargs</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">{</span>inplace:<span class="w"> </span>False<span class="o">})</span>
+</pre></div>
+</div>
+<p>A relu layer after this pass:</p>
+<div class="highlight-JSON notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+<span class="w">    </span><span class="nt">&quot;common&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="nt">&quot;mase_type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;module_related_func&quot;</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">&quot;mase_op&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;relu&quot;</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">&quot;results&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="nt">&quot;data_out_0&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">                </span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;float&quot;</span><span class="p">,</span>
+<span class="w">                </span><span class="nt">&quot;precision&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="mi">32</span><span class="p">],</span>
+<span class="w">                </span><span class="nt">&quot;shape&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">784</span><span class="p">],</span>
+<span class="w">                </span><span class="nt">&quot;torch_dtype&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">t</span><span class="err">orch.</span><span class="kc">fl</span><span class="err">oa</span><span class="kc">t</span><span class="mi">32</span><span class="p">,</span>
+<span class="w">            </span><span class="p">}</span>
+<span class="w">        </span><span class="p">},</span>
+<span class="w">        </span><span class="nt">&quot;args&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="nt">&quot;data_in_0&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">                </span><span class="nt">&quot;shape&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">784</span><span class="p">],</span>
+<span class="w">                </span><span class="nt">&quot;torch_dtype&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">t</span><span class="err">orch.</span><span class="kc">fl</span><span class="err">oa</span><span class="kc">t</span><span class="mi">32</span><span class="p">,</span>
+<span class="w">                </span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;float&quot;</span><span class="p">,</span>
+<span class="w">                </span><span class="nt">&quot;precision&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="mi">32</span><span class="p">],</span>
+<span class="w">            </span><span class="p">},</span>
+<span class="w">            </span><span class="nt">&quot;inplace&quot;</span><span class="p">:</span><span class="w"> </span><span class="err">False</span><span class="p">,</span>
+<span class="w">        </span><span class="p">},</span>
+<span class="w">    </span><span class="p">},</span>
+<span class="w">    </span><span class="nt">&quot;software&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{},</span>
+<span class="w">    </span><span class="nt">&quot;hardware&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{},</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>A flatten op in a mase graph:</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>%flatten<span class="w"> </span>:<span class="w"> </span><span class="o">[</span><span class="nv">num_users</span><span class="o">=</span><span class="m">1</span><span class="o">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span>call_function<span class="o">[</span><span class="nv">target</span><span class="o">=</span>torch.flatten<span class="o">](</span><span class="nv">args</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">(</span>%x,<span class="o">)</span>,<span class="w"> </span><span class="nv">kwargs</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">{</span>start_dim:<span class="w"> </span><span class="m">1</span>,<span class="w"> </span>end_dim:<span class="w"> </span>-1<span class="o">})</span>
+</pre></div>
+</div>
+<p>A flatten op after this pass:</p>
+<div class="highlight-JSON notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+<span class="w">    </span><span class="nt">&quot;common&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="nt">&quot;mase_type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;implicit_func&quot;</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">&quot;mase_op&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;flatten&quot;</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">&quot;results&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="nt">&quot;data_out_0&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">                </span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;float&quot;</span><span class="p">,</span>
+<span class="w">                </span><span class="nt">&quot;precision&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="mi">32</span><span class="p">],</span>
+<span class="w">                </span><span class="nt">&quot;shape&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">784</span><span class="p">],</span>
+<span class="w">                </span><span class="nt">&quot;torch_dtype&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">t</span><span class="err">orch.</span><span class="kc">fl</span><span class="err">oa</span><span class="kc">t</span><span class="mi">32</span><span class="p">,</span>
+<span class="w">            </span><span class="p">}</span>
+<span class="w">        </span><span class="p">},</span>
+<span class="w">        </span><span class="nt">&quot;args&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="nt">&quot;data_in_0&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">                </span><span class="nt">&quot;shape&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">28</span><span class="p">,</span><span class="w"> </span><span class="mi">28</span><span class="p">],</span>
+<span class="w">                </span><span class="nt">&quot;torch_dtype&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">t</span><span class="err">orch.</span><span class="kc">fl</span><span class="err">oa</span><span class="kc">t</span><span class="mi">32</span><span class="p">,</span>
+<span class="w">                </span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;float&quot;</span><span class="p">,</span>
+<span class="w">                </span><span class="nt">&quot;precision&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="mi">32</span><span class="p">],</span>
+<span class="w">            </span><span class="p">},</span>
+<span class="w">            </span><span class="nt">&quot;start_dim&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span>
+<span class="w">            </span><span class="nt">&quot;end_dim&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">-1</span><span class="p">,</span>
+<span class="w">        </span><span class="p">},</span>
+<span class="w">    </span><span class="p">},</span>
+<span class="w">    </span><span class="nt">&quot;software&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{},</span>
+<span class="w">    </span><span class="nt">&quot;hardware&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{},</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</section>
+<section id="add-software-metadata-analysis-pass">
+<h2>add_software_metadata_analysis_pass<a class="headerlink" href="#add-software-metadata-analysis-pass" title="Link to this heading"></a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="chop.passes.graph.analysis.add_metadata.add_software_metadata.add_software_metadata_analysis_pass">
+<span class="sig-prename descclassname"><span class="pre">chop.passes.graph.analysis.add_metadata.add_software_metadata.</span></span><span class="sig-name descname"><span class="pre">add_software_metadata_analysis_pass</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">graph</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pass_args</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/chop/passes/graph/analysis/add_metadata/add_software_metadata.html#add_software_metadata_analysis_pass"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#chop.passes.graph.analysis.add_metadata.add_software_metadata.add_software_metadata_analysis_pass" title="Link to this definition"></a></dt>
+<dd><p>add software metadata</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>graph</strong> (<a class="reference internal" href="../ir.html#chop.ir.graph.mase_graph.MaseGraph" title="chop.ir.graph.mase_graph.MaseGraph"><em>MaseGraph</em></a>) – a MaseGraph</p></li>
+<li><p><strong>pass_args</strong> (<em>_type_</em><em>, </em><em>optional</em>) – this pass does not need any arguments, defaults to None</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>return a tuple of a MaseGraph and an empty dict (no additional info to return)</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>tuple(<a class="reference internal" href="../ir.html#chop.ir.graph.mase_graph.MaseGraph" title="chop.ir.graph.mase_graph.MaseGraph">MaseGraph</a>, Dict)</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="add-hardware-metadata-analysis-pass">
+<h2>add_hardware_metadata_analysis_pass<a class="headerlink" href="#add-hardware-metadata-analysis-pass" title="Link to this heading"></a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="chop.passes.graph.analysis.add_metadata.add_hardware_metadata.add_hardware_metadata_analysis_pass">
+<span class="sig-prename descclassname"><span class="pre">chop.passes.graph.analysis.add_metadata.add_hardware_metadata.</span></span><span class="sig-name descname"><span class="pre">add_hardware_metadata_analysis_pass</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">graph</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pass_args</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/chop/passes/graph/analysis/add_metadata/add_hardware_metadata.html#add_hardware_metadata_analysis_pass"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#chop.passes.graph.analysis.add_metadata.add_hardware_metadata.add_hardware_metadata_analysis_pass" title="Link to this definition"></a></dt>
+<dd><p>add hardware metadata</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>graph</strong> (<a class="reference internal" href="../ir.html#chop.ir.graph.mase_graph.MaseGraph" title="chop.ir.graph.mase_graph.MaseGraph"><em>MaseGraph</em></a>) – a MaseGraph</p></li>
+<li><p><strong>pass_args</strong> (<em>_type_</em><em>, </em><em>optional</em>) – this pass does not need any arguments, defaults to None</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>return a tuple of a MaseGraph and an empty dict (no additional info to return)</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>tuple(<a class="reference internal" href="../ir.html#chop.ir.graph.mase_graph.MaseGraph" title="chop.ir.graph.mase_graph.MaseGraph">MaseGraph</a>, Dict)</p>
+</dd>
+</dl>
+<p>The hardware metadata of a Mase node in a Mase graph describes the constraints of the
+node for any static analysis or possible transformation. The metadata has a
+tree structure, e.g.</p>
+<ul class="simple">
+<li><dl class="simple">
+<dt>hardware</dt><dd><ul>
+<li><p>is_implicit -&gt; bool : whether the node is mapped on hardware or software annotation only</p></li>
+<li><p>verilog_param -&gt; {} : parameters need for customise the hardware module</p></li>
+<li><p>toolchain -&gt; str : tool chain for code generation, must be INTERNAL, EXTERNAL or HLS</p></li>
+<li><p>module -&gt; str : the name of the used hardware module</p></li>
+<li><p>device_id -&gt; int : the ID of the device where the node is mapped, default = -1</p></li>
+<li><dl class="simple">
+<dt>interface -&gt; {}</dt><dd><ul>
+<li><dl class="simple">
+<dt>name<span class="classifier">name of the parameters</span></dt><dd><ul>
+<li><p>storage : the hardware interface implemented, must be BRAM</p></li>
+<li><p>transpose : whether the data needs to be transposed before emitting</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><p>dependence_files -&gt; [] : the dependent files for the generated module</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+</ul>
+<p>The verilog parameters follow the following naming rules:</p>
+<ul>
+<li><p>Hardware signal naming rules</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>Data with tensor types are explicit as hardware signals, such as weight and bias,
+and Data with scalar/tuple types are implicit as parameters (TODO).</p></li>
+<li><p>Each op is a node with a set of inputs, outputs and parameters</p></li>
+<li><p>The input is named by: data_in_0 (data_in_0_ready, data_in_valid), data_in_1,</p></li>
+<li><p>The output is named by: data_out_0 (data_out_0_ready, data_out_valid), data_out_1, ..</p></li>
+<li><p>The parameters are named by PyTorch names: weight (weight_ready, weight_valid), bias (bias_ready, bias_valid)</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p>Hardware parameters naming rules
+Parameters with tensor types are explicit as hardware signals, such as weight and bias,
+and parameters with scalar/tuple types are implicit as hardware parameters.</p>
+<blockquote>
+<div><ul class="simple">
+<li><dl class="simple">
+<dt>Taking data_in_0 for example:</dt><dd><ul>
+<li><p><cite>DATA_IN_0_PRECISION_0</cite></p></li>
+<li><p><cite>DATA_IN_0_PRECISION_1</cite></p></li>
+<li><p>…</p></li>
+<li><p>(depending on how many precision parameters we have.</p></li>
+<li><p>The order matches the same order as the mase precision metadata)</p></li>
+<li><p><cite>DATA_IN_0_TENSOR_SIZE_DIM_0</cite></p></li>
+<li><p><cite>DATA_IN_0_TENSOR_SIZE_DIM_1</cite></p></li>
+<li><p><cite>DATA_IN_0_TENSOR_SIZE_DIM_2</cite></p></li>
+<li><p><cite>DATA_IN_0_PARALLELISM_DIM_0</cite></p></li>
+<li><p><cite>DATA_IN_0_PARALLELISM_DIM_1</cite></p></li>
+<li><p><cite>DATA_IN_0_PARALLELISM_DIM_2</cite></p></li>
+<li><p>(This means that the number of iterations = tensor_size / spatial_size)</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><p>Implicit parameters are directly translated into verilog parameters, e.g.
+STRIDE
+DIM</p></li>
+</ul>
+</div></blockquote>
+</li>
+</ul>
+<p>Examples:</p>
+<p>A linear layer in a mase graph with the following common metadata:</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>%fc1<span class="w"> </span>:<span class="w"> </span><span class="o">[</span><span class="nv">num_users</span><span class="o">=</span><span class="m">1</span><span class="o">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span>call_module<span class="o">[</span><span class="nv">target</span><span class="o">=</span>fc1<span class="o">](</span><span class="nv">args</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">(</span>%flatten,<span class="o">)</span>,<span class="w"> </span><span class="nv">kwargs</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">{})</span>
+</pre></div>
+</div>
+<div class="highlight-JSON notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+<span class="w">    </span><span class="nt">&quot;common&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="nt">&quot;mase_type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;module_related_func&quot;</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">&quot;mase_op&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;linear&quot;</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">&quot;args&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="nt">&quot;data_in_0&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">                </span><span class="nt">&quot;shape&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">784</span><span class="p">],</span>
+<span class="w">                </span><span class="nt">&quot;torch_dtype&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">t</span><span class="err">orch.</span><span class="kc">fl</span><span class="err">oa</span><span class="kc">t</span><span class="mi">32</span><span class="p">,</span>
+<span class="w">                </span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;float&quot;</span><span class="p">,</span>
+<span class="w">                </span><span class="nt">&quot;precision&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="mi">32</span><span class="p">],</span>
+<span class="w">            </span><span class="p">},</span>
+<span class="w">            </span><span class="nt">&quot;weight&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;float&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;precision&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="mi">32</span><span class="p">],</span><span class="w"> </span><span class="nt">&quot;shape&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="mi">784</span><span class="p">,</span><span class="w"> </span><span class="mi">784</span><span class="p">]},</span>
+<span class="w">            </span><span class="nt">&quot;bias&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;float&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;precision&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="mi">32</span><span class="p">],</span><span class="w"> </span><span class="nt">&quot;shape&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="mi">784</span><span class="p">]},</span>
+<span class="w">        </span><span class="p">},</span>
+<span class="w">        </span><span class="nt">&quot;results&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="nt">&quot;data_out_0&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">                </span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;float&quot;</span><span class="p">,</span>
+<span class="w">                </span><span class="nt">&quot;precision&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="mi">32</span><span class="p">],</span>
+<span class="w">                </span><span class="nt">&quot;shape&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">784</span><span class="p">],</span>
+<span class="w">                </span><span class="nt">&quot;torch_dtype&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">t</span><span class="err">orch.</span><span class="kc">fl</span><span class="err">oa</span><span class="kc">t</span><span class="mi">32</span><span class="p">,</span>
+<span class="w">            </span><span class="p">}</span>
+<span class="w">        </span><span class="p">},</span>
+<span class="w">    </span><span class="p">},</span>
+<span class="w">    </span><span class="nt">&quot;software&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{},</span>
+<span class="w">    </span><span class="nt">&quot;hardware&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{},</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>The hardware metadata of the linear layer after this pass:</p>
+<div class="highlight-JSON notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+<span class="w">    </span><span class="nt">&quot;common&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="err">...</span><span class="p">},</span>
+<span class="w">    </span><span class="nt">&quot;software&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{},</span>
+<span class="w">    </span><span class="nt">&quot;hardware&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="nt">&quot;is_implicit&quot;</span><span class="p">:</span><span class="w"> </span><span class="err">False</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">&quot;interface&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="nt">&quot;weight&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">&quot;storage&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;BRAM&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;transpose&quot;</span><span class="p">:</span><span class="w"> </span><span class="err">False</span><span class="p">},</span>
+<span class="w">            </span><span class="nt">&quot;bias&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">&quot;storage&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;BRAM&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;transpose&quot;</span><span class="p">:</span><span class="w"> </span><span class="err">False</span><span class="p">},</span>
+<span class="w">        </span><span class="p">},</span>
+<span class="w">        </span><span class="nt">&quot;toolchain&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;INTERNAL&quot;</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">&quot;module&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;fixed_linear&quot;</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">&quot;device_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">-1</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">&quot;dependence_files&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">            </span><span class="s2">&quot;cast/fixed_cast.sv&quot;</span><span class="p">,</span>
+<span class="w">            </span><span class="s2">&quot;fixed_arithmetic/fixed_dot_product.sv&quot;</span><span class="p">,</span>
+<span class="w">            </span><span class="s2">&quot;fixed_arithmetic/fixed_vector_mult.sv&quot;</span><span class="p">,</span>
+<span class="w">            </span><span class="s2">&quot;fixed_arithmetic/register_slice.sv&quot;</span><span class="p">,</span>
+<span class="w">            </span><span class="s2">&quot;fixed_arithmetic/fixed_accumulator.sv&quot;</span><span class="p">,</span>
+<span class="w">            </span><span class="s2">&quot;fixed_arithmetic/fixed_adder_tree.sv&quot;</span><span class="p">,</span>
+<span class="w">            </span><span class="s2">&quot;fixed_arithmetic/fixed_adder_tree_layer.sv&quot;</span><span class="p">,</span>
+<span class="w">            </span><span class="s2">&quot;fixed_arithmetic/fixed_mult.sv&quot;</span><span class="p">,</span>
+<span class="w">            </span><span class="s2">&quot;common/join2.sv&quot;</span><span class="p">,</span>
+<span class="w">            </span><span class="s2">&quot;linear/fixed_linear.sv&quot;</span><span class="p">,</span>
+<span class="w">        </span><span class="p">],</span>
+<span class="w">        </span><span class="nt">&quot;verilog_param&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="nt">&quot;DATA_IN_0_PRECISION_0&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">8</span><span class="p">,</span>
+<span class="w">            </span><span class="nt">&quot;DATA_IN_0_PRECISION_1&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span>
+<span class="w">            </span><span class="nt">&quot;DATA_IN_0_TENSOR_SIZE_DIM_0&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span>
+<span class="w">            </span><span class="nt">&quot;DATA_IN_0_PARALLELISM_DIM_0&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span>
+<span class="w">            </span><span class="nt">&quot;DATA_IN_0_TENSOR_SIZE_DIM_1&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">784</span><span class="p">,</span>
+<span class="w">            </span><span class="nt">&quot;DATA_IN_0_PARALLELISM_DIM_1&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">784</span><span class="p">,</span>
+<span class="w">            </span><span class="nt">&quot;DATA_IN_0_TENSOR_SIZE_DIM_2&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span>
+<span class="w">            </span><span class="nt">&quot;DATA_IN_0_PARALLELISM_DIM_2&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span>
+<span class="w">            </span><span class="nt">&quot;WEIGHT_PRECISION_0&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">8</span><span class="p">,</span>
+<span class="w">            </span><span class="nt">&quot;WEIGHT_PRECISION_1&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span>
+<span class="w">            </span><span class="nt">&quot;WEIGHT_TENSOR_SIZE_DIM_0&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">784</span><span class="p">,</span>
+<span class="w">            </span><span class="nt">&quot;WEIGHT_PARALLELISM_DIM_0&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">784</span><span class="p">,</span>
+<span class="w">            </span><span class="nt">&quot;WEIGHT_TENSOR_SIZE_DIM_1&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">784</span><span class="p">,</span>
+<span class="w">            </span><span class="nt">&quot;WEIGHT_PARALLELISM_DIM_1&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">784</span><span class="p">,</span>
+<span class="w">            </span><span class="nt">&quot;WEIGHT_TENSOR_SIZE_DIM_2&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span>
+<span class="w">            </span><span class="nt">&quot;WEIGHT_PARALLELISM_DIM_2&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span>
+<span class="w">            </span><span class="nt">&quot;BIAS_PRECISION_0&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">8</span><span class="p">,</span>
+<span class="w">            </span><span class="nt">&quot;BIAS_PRECISION_1&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span>
+<span class="w">            </span><span class="nt">&quot;BIAS_TENSOR_SIZE_DIM_0&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">784</span><span class="p">,</span>
+<span class="w">            </span><span class="nt">&quot;BIAS_PARALLELISM_DIM_0&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">784</span><span class="p">,</span>
+<span class="w">            </span><span class="nt">&quot;BIAS_TENSOR_SIZE_DIM_1&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span>
+<span class="w">            </span><span class="nt">&quot;BIAS_PARALLELISM_DIM_1&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span>
+<span class="w">            </span><span class="nt">&quot;BIAS_TENSOR_SIZE_DIM_2&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span>
+<span class="w">            </span><span class="nt">&quot;BIAS_PARALLELISM_DIM_2&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span>
+<span class="w">            </span><span class="nt">&quot;DATA_OUT_0_PRECISION_0&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">8</span><span class="p">,</span>
+<span class="w">            </span><span class="nt">&quot;DATA_OUT_0_PRECISION_1&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span>
+<span class="w">            </span><span class="nt">&quot;DATA_OUT_0_TENSOR_SIZE_1_DIM_0&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span>
+<span class="w">            </span><span class="nt">&quot;DATA_OUT_0_PARALLELISM_1_DIM_0&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span>
+<span class="w">            </span><span class="nt">&quot;DATA_OUT_0_TENSOR_SIZE_1_DIM_1&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">784</span><span class="p">,</span>
+<span class="w">            </span><span class="nt">&quot;DATA_OUT_0_PARALLELISM_1_DIM_1&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">784</span><span class="p">,</span>
+<span class="w">            </span><span class="nt">&quot;DATA_OUT_0_TENSOR_SIZE_1_DIM_2&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span>
+<span class="w">            </span><span class="nt">&quot;DATA_OUT_0_PARALLELISM_1_DIM_2&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span>
+<span class="w">        </span><span class="p">},</span>
+<span class="w">    </span><span class="p">},</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>A relu layer in a mase graph with the following common metadata:</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>%relu<span class="w"> </span>:<span class="w"> </span><span class="o">[</span><span class="nv">num_users</span><span class="o">=</span><span class="m">1</span><span class="o">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span>call_function<span class="o">[</span><span class="nv">target</span><span class="o">=</span>torch.nn.functional.relu<span class="o">](</span><span class="nv">args</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">(</span>%fc1,<span class="o">)</span>,<span class="w"> </span><span class="nv">kwargs</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">{</span>inplace:<span class="w"> </span>False<span class="o">})</span>
+</pre></div>
+</div>
+<div class="highlight-JSON notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+<span class="w">    </span><span class="nt">&quot;common&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="nt">&quot;mase_type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;module_related_func&quot;</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">&quot;mase_op&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;relu&quot;</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">&quot;results&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="nt">&quot;data_out_0&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">                </span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;float&quot;</span><span class="p">,</span>
+<span class="w">                </span><span class="nt">&quot;precision&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="mi">32</span><span class="p">],</span>
+<span class="w">                </span><span class="nt">&quot;shape&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">784</span><span class="p">],</span>
+<span class="w">                </span><span class="nt">&quot;torch_dtype&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">t</span><span class="err">orch.</span><span class="kc">fl</span><span class="err">oa</span><span class="kc">t</span><span class="mi">32</span><span class="p">,</span>
+<span class="w">            </span><span class="p">}</span>
+<span class="w">        </span><span class="p">},</span>
+<span class="w">        </span><span class="nt">&quot;args&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="nt">&quot;data_in_0&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">                </span><span class="nt">&quot;shape&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">784</span><span class="p">],</span>
+<span class="w">                </span><span class="nt">&quot;torch_dtype&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">t</span><span class="err">orch.</span><span class="kc">fl</span><span class="err">oa</span><span class="kc">t</span><span class="mi">32</span><span class="p">,</span>
+<span class="w">                </span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;float&quot;</span><span class="p">,</span>
+<span class="w">                </span><span class="nt">&quot;precision&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="mi">32</span><span class="p">],</span>
+<span class="w">            </span><span class="p">},</span>
+<span class="w">            </span><span class="nt">&quot;inplace&quot;</span><span class="p">:</span><span class="w"> </span><span class="err">False</span><span class="p">,</span>
+<span class="w">        </span><span class="p">},</span>
+<span class="w">    </span><span class="p">},</span>
+<span class="w">    </span><span class="nt">&quot;software&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{},</span>
+<span class="w">    </span><span class="nt">&quot;hardware&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{},</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>The hardware metadata of the relu layer after this pass:</p>
+<div class="highlight-JSON notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+<span class="w">    </span><span class="nt">&quot;common&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="err">...</span><span class="p">},</span>
+<span class="w">    </span><span class="nt">&quot;software&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{},</span>
+<span class="w">    </span><span class="nt">&quot;hardware&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="nt">&quot;is_implicit&quot;</span><span class="p">:</span><span class="w"> </span><span class="err">False</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">&quot;interface&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">&quot;inplace&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{}},</span>
+<span class="w">        </span><span class="nt">&quot;toolchain&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;INTERNAL&quot;</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">&quot;module&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;fixed_relu&quot;</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">&quot;device_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">-1</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">&quot;dependence_files&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;activations/fixed_relu.sv&quot;</span><span class="p">],</span>
+<span class="w">        </span><span class="nt">&quot;verilog_param&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="nt">&quot;DATA_IN_0_PRECISION_0&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">8</span><span class="p">,</span>
+<span class="w">            </span><span class="nt">&quot;DATA_IN_0_PRECISION_1&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span>
+<span class="w">            </span><span class="nt">&quot;DATA_IN_0_TENSOR_SIZE_DIM_0&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span>
+<span class="w">            </span><span class="nt">&quot;DATA_IN_0_PARALLELISM_DIM_0&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span>
+<span class="w">            </span><span class="nt">&quot;DATA_IN_0_TENSOR_SIZE_DIM_1&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">784</span><span class="p">,</span>
+<span class="w">            </span><span class="nt">&quot;DATA_IN_0_PARALLELISM_DIM_1&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">784</span><span class="p">,</span>
+<span class="w">            </span><span class="nt">&quot;DATA_IN_0_TENSOR_SIZE_DIM_2&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span>
+<span class="w">            </span><span class="nt">&quot;DATA_IN_0_PARALLELISM_DIM_2&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span>
+<span class="w">            </span><span class="nt">&quot;INPLACE&quot;</span><span class="p">:</span><span class="w"> </span><span class="err">False</span><span class="p">,</span>
+<span class="w">            </span><span class="nt">&quot;DATA_OUT_0_PRECISION_0&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">8</span><span class="p">,</span>
+<span class="w">            </span><span class="nt">&quot;DATA_OUT_0_PRECISION_1&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span>
+<span class="w">            </span><span class="nt">&quot;DATA_OUT_0_TENSOR_SIZE_1_DIM_0&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span>
+<span class="w">            </span><span class="nt">&quot;DATA_OUT_0_PARALLELISM_1_DIM_0&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span>
+<span class="w">            </span><span class="nt">&quot;DATA_OUT_0_TENSOR_SIZE_1_DIM_1&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">784</span><span class="p">,</span>
+<span class="w">            </span><span class="nt">&quot;DATA_OUT_0_PARALLELISM_1_DIM_1&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">784</span><span class="p">,</span>
+<span class="w">            </span><span class="nt">&quot;DATA_OUT_0_TENSOR_SIZE_1_DIM_2&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span>
+<span class="w">            </span><span class="nt">&quot;DATA_OUT_0_PARALLELISM_1_DIM_2&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span>
+<span class="w">        </span><span class="p">},</span>
+<span class="w">    </span><span class="p">},</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="../passes.html" class="btn btn-neutral float-left" title="Chop Passes" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="init_metadata.html" class="btn btn-neutral float-right" title="chop.passes.graph.analysis.init_metadata" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, DeepWok.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>chop.passes.graph.analysis.verify.verify &mdash; MASE 0.0.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../../../../_static/css/theme.css?v=19f00094" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../../../../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../../../../../../_static/documentation_options.js?v=d45e8c67"></script>
+        <script src="../../../../../../_static/doctools.js?v=9a2dae69"></script>
+        <script src="../../../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../../../../index.html" class="icon icon-home">
+            MASE
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../modules/documentation/getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../modules/documentation/tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../modules/documentation/roadmap.html">Roadmap</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../modules/documentation/specifications.html">Coding Style Specifications</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Machop API</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../modules/api/actions.html">Chop Actions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../modules/api/passes.html">Chop Passes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../modules/api/ir.html">IR</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Mase Components</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../modules/hardware/hardware_documentation.html">Hardware Documentation</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Students</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../modules/labs.html">Advanced Deep Learning Systems Labs</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../../../index.html">MASE</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">chop.passes.graph.analysis.verify.verify</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for chop.passes.graph.analysis.verify.verify</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">logging</span>
+
+<span class="kn">from</span> <span class="nn">chop.passes.graph.utils</span> <span class="kn">import</span> <span class="n">vf</span>
+
+<span class="kn">from</span> <span class="nn">.common_metadata_layers</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">verify_common_metadata_flatten</span><span class="p">,</span>
+    <span class="n">verify_common_metadata_general</span><span class="p">,</span>
+    <span class="n">verify_common_metadata_input</span><span class="p">,</span>
+    <span class="n">verify_common_metadata_linear</span><span class="p">,</span>
+    <span class="n">verify_common_metadata_output</span><span class="p">,</span>
+    <span class="n">verify_common_metadata_relu</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span> <span class="nn">.hardware_metadata_layers</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">verify_hardware_metadata_general</span><span class="p">,</span>
+    <span class="n">verify_hardware_metadata_linear</span><span class="p">,</span>
+    <span class="n">verify_hardware_metadata_relu</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">verify_node_common_metadata</span><span class="p">(</span><span class="n">node</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Verify the common metadata of a node.</span>
+
+<span class="sd">    This function checks the common metadata of a node and performs specific verification based on the mase_op parameter.</span>
+
+<span class="sd">    :param node: The node to verify.</span>
+<span class="sd">    :type node: Node</span>
+<span class="sd">    :raises ValueError: If the mase_op parameter is unknown.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">verify_common_metadata_general</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;mase&quot;</span><span class="p">])</span>
+
+    <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;mase&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="s2">&quot;common&quot;</span><span class="p">][</span><span class="s2">&quot;mase_op&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;placeholder&quot;</span><span class="p">:</span>
+        <span class="n">verify_common_metadata_input</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;mase&quot;</span><span class="p">])</span>
+    <span class="k">elif</span> <span class="n">node</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;mase&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="s2">&quot;common&quot;</span><span class="p">][</span><span class="s2">&quot;mase_op&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;output&quot;</span><span class="p">:</span>
+        <span class="n">verify_common_metadata_output</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;mase&quot;</span><span class="p">])</span>
+    <span class="k">elif</span> <span class="n">node</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;mase&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="s2">&quot;common&quot;</span><span class="p">][</span><span class="s2">&quot;mase_op&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;linear&quot;</span><span class="p">:</span>
+        <span class="n">verify_common_metadata_linear</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;mase&quot;</span><span class="p">])</span>
+    <span class="k">elif</span> <span class="n">node</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;mase&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="s2">&quot;common&quot;</span><span class="p">][</span><span class="s2">&quot;mase_op&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;relu&quot;</span><span class="p">:</span>
+        <span class="n">verify_common_metadata_relu</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;mase&quot;</span><span class="p">])</span>
+    <span class="k">elif</span> <span class="n">node</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;mase&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="s2">&quot;common&quot;</span><span class="p">][</span><span class="s2">&quot;mase_op&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;flatten&quot;</span><span class="p">:</span>
+        <span class="n">verify_common_metadata_flatten</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;mase&quot;</span><span class="p">])</span>
+    <span class="k">elif</span> <span class="n">node</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;mase&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="s2">&quot;common&quot;</span><span class="p">][</span><span class="s2">&quot;mase_op&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;constant&quot;</span><span class="p">:</span>
+        <span class="c1"># Add specific verification for constant operation</span>
+        <span class="k">pass</span>
+        <span class="n">verify_common_metadata_input</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;mase&quot;</span><span class="p">])</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="s2">&quot;Unknown mase op: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                <span class="n">node</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;mase&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="s2">&quot;common&quot;</span><span class="p">][</span><span class="s2">&quot;mase_op&quot;</span><span class="p">]</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+
+
+<div class="viewcode-block" id="verify_common_metadata_analysis_pass">
+<a class="viewcode-back" href="../../../../../../modules/api/analysis/verify.html#chop.passes.graph.analysis.verify.verify.verify_common_metadata_analysis_pass">[docs]</a>
+<span class="k">def</span> <span class="nf">verify_common_metadata_analysis_pass</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">pass_args</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">=</span> <span class="p">{}):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Verify pass for mase graph</span>
+<span class="sd">    This pass is used for verification of MaseGraph.</span>
+<span class="sd">    It does sanity checks the common metadata of</span>
+<span class="sd">    each mase node locally and then verify the inter-node</span>
+<span class="sd">    invariants, particularly for the following:</span>
+
+<span class="sd">    :param graph: The input graph to analyze.</span>
+<span class="sd">    :type graph: MaseGraph</span>
+<span class="sd">    :param pass_args: Additional arguments for the analysis pass (optional).</span>
+<span class="sd">    :type pass_args: dict</span>
+<span class="sd">    :return: The analyzed graph and an empty dictionary.</span>
+<span class="sd">    :rtype: tuple(MaseGraph, Dict)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># Verify each node in the graph</span>
+    <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">graph</span><span class="o">.</span><span class="n">fx_graph</span><span class="o">.</span><span class="n">nodes</span><span class="p">:</span>
+        <span class="n">verify_node_common_metadata</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+
+    <span class="c1"># Each node must have a unique name and a unique verilog name</span>
+    <span class="n">node_names</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">node_vf_names</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">graph</span><span class="o">.</span><span class="n">fx_graph</span><span class="o">.</span><span class="n">nodes</span><span class="p">:</span>
+        <span class="k">assert</span> <span class="n">node</span><span class="o">.</span><span class="n">name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">node_names</span>
+        <span class="k">assert</span> <span class="n">vf</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">name</span><span class="p">)</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">node_vf_names</span>
+        <span class="n">node_names</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+        <span class="n">node_vf_names</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">vf</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">name</span><span class="p">))</span>
+
+    <span class="c1"># Each node must have at most one result</span>
+    <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">graph</span><span class="o">.</span><span class="n">fx_graph</span><span class="o">.</span><span class="n">nodes</span><span class="p">:</span>
+        <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;mase&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="s2">&quot;common&quot;</span><span class="p">][</span><span class="s2">&quot;results&quot;</span><span class="p">])</span> <span class="o">&lt;=</span> <span class="mi">1</span>
+
+    <span class="c1"># Inter-node verification</span>
+    <span class="c1"># Each edge between nodes must have the same size</span>
+    <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">graph</span><span class="o">.</span><span class="n">fx_graph</span><span class="o">.</span><span class="n">nodes</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">all_input_nodes</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">args</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">args</span><span class="p">):</span>
+                <span class="n">data_in</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;mase&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="s2">&quot;common&quot;</span><span class="p">][</span><span class="s2">&quot;args&quot;</span><span class="p">][</span><span class="sa">f</span><span class="s2">&quot;data_in_</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">]</span>
+                <span class="n">dst_size</span> <span class="o">=</span> <span class="n">data_in</span><span class="p">[</span><span class="s2">&quot;size&quot;</span><span class="p">]</span>
+                <span class="n">src_size</span> <span class="o">=</span> <span class="p">(</span>
+                    <span class="n">data_in</span><span class="p">[</span><span class="s2">&quot;from&quot;</span><span class="p">]</span>
+                    <span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;mase&quot;</span><span class="p">]</span>
+                    <span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="s2">&quot;common&quot;</span><span class="p">][</span><span class="s2">&quot;results&quot;</span><span class="p">][</span><span class="sa">f</span><span class="s2">&quot;data_out_0&quot;</span><span class="p">][</span><span class="s2">&quot;size&quot;</span><span class="p">]</span>
+                <span class="p">)</span>
+                <span class="k">assert</span> <span class="n">dst_size</span> <span class="o">==</span> <span class="n">src_size</span>
+
+    <span class="k">return</span> <span class="n">graph</span><span class="p">,</span> <span class="p">{}</span></div>
+
+
+
+<div class="viewcode-block" id="verify_software_metadata_analysis_pass">
+<a class="viewcode-back" href="../../../../../../modules/api/analysis/verify.html#chop.passes.graph.analysis.verify.verify.verify_software_metadata_analysis_pass">[docs]</a>
+<span class="k">def</span> <span class="nf">verify_software_metadata_analysis_pass</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">pass_args</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">=</span> <span class="p">{}):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Verify pass for mase graph</span>
+<span class="sd">    This pass is used for verification of MaseGraph. It does sanity checks the software metadata of</span>
+<span class="sd">    each mase node locally and then verify the inter-node invariants, particularly for the following:</span>
+<span class="sd">    * TODO</span>
+
+<span class="sd">    :param graph: The input graph to analyze.</span>
+<span class="sd">    :type graph: MaseGraph</span>
+<span class="sd">    :param pass_args: Additional arguments for the analysis pass (optional).</span>
+<span class="sd">    :type pass_args: dict</span>
+<span class="sd">    :return: The analyzed graph and an empty dictionary.</span>
+<span class="sd">    :rtype: tuple(MaseGraph, Dict)</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">graph</span><span class="p">,</span> <span class="p">{}</span></div>
+
+
+
+<span class="k">def</span> <span class="nf">verify_node_hardware_metadata</span><span class="p">(</span><span class="n">node</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Verify pass for metadata at node level</span>
+<span class="sd">    This pass is used for verification of Metadata. It does sanity checks the metadata of</span>
+<span class="sd">    each mase node locally, particularly for the following:</span>
+<span class="sd">    * TODO</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">verify_hardware_metadata_general</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;mase&quot;</span><span class="p">])</span>
+    <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;mase&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="s2">&quot;common&quot;</span><span class="p">][</span><span class="s2">&quot;mase_op&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;linear&quot;</span><span class="p">:</span>
+        <span class="n">verify_hardware_metadata_linear</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;mase&quot;</span><span class="p">])</span>
+    <span class="k">elif</span> <span class="n">node</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;mase&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="s2">&quot;common&quot;</span><span class="p">][</span><span class="s2">&quot;mase_op&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;relu&quot;</span><span class="p">:</span>
+        <span class="n">verify_hardware_metadata_relu</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;mase&quot;</span><span class="p">])</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unknown mase op: </span><span class="si">{</span><span class="n">node</span><span class="o">.</span><span class="n">op</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="verify_hardware_metadata_analysis_pass">
+<a class="viewcode-back" href="../../../../../../modules/api/analysis/verify.html#chop.passes.graph.analysis.verify.verify.verify_hardware_metadata_analysis_pass">[docs]</a>
+<span class="k">def</span> <span class="nf">verify_hardware_metadata_analysis_pass</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">pass_args</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">=</span> <span class="p">{}):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Verify pass for mase graph</span>
+<span class="sd">    This pass is used for verification of MaseGraph. It does sanity checks the hardware metadata of</span>
+<span class="sd">    each mase node locally and then verify the inter-node invariants, particularly for the following:</span>
+<span class="sd">    * TODO</span>
+
+<span class="sd">    :param graph: The input graph to analyze.</span>
+<span class="sd">    :type graph: MaseGraph</span>
+<span class="sd">    :param pass_args: Additional arguments for the analysis pass (optional).</span>
+<span class="sd">    :type pass_args: dict</span>
+<span class="sd">    :return: The analyzed graph and an empty dictionary.</span>
+<span class="sd">    :rtype: tuple(MaseGraph, Dict)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Verify each node int the graph</span>
+    <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">graph</span><span class="o">.</span><span class="n">fx_graph</span><span class="o">.</span><span class="n">nodes</span><span class="p">:</span>
+        <span class="n">verify_node_hardware_metadata</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+
+    <span class="c1"># Inter-node verification</span>
+    <span class="c1"># Each edge between nodes must have the same size</span>
+    <span class="n">nodes_in</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">nodes_in</span>
+    <span class="n">nodes_out</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">nodes_out</span>
+    <span class="k">while</span> <span class="n">nodes_in</span> <span class="o">!=</span> <span class="n">nodes_out</span><span class="p">:</span>
+        <span class="n">next_nodes_in</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">nodes_in</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">next_node</span><span class="p">,</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">node</span><span class="o">.</span><span class="n">users</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="c1"># This might have a bug - for now assume there is only one result</span>
+                <span class="k">if</span> <span class="n">next_node</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;mase&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="s2">&quot;hardware&quot;</span><span class="p">][</span><span class="s2">&quot;is_implicit&quot;</span><span class="p">]:</span>
+                    <span class="k">if</span> <span class="n">node</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">next_nodes_in</span><span class="p">:</span>
+                        <span class="n">next_nodes_in</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+                    <span class="k">continue</span>
+                <span class="n">next_nodes_in</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">next_node</span><span class="p">)</span>
+                <span class="n">arg_count</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">next_node</span><span class="o">.</span><span class="n">all_input_nodes</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">arg_count</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                    <span class="k">assert</span> <span class="p">(</span>
+                        <span class="n">next_node</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;mase&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="s2">&quot;hardware&quot;</span><span class="p">][</span>
+                            <span class="s2">&quot;verilog_parameters&quot;</span>
+                        <span class="p">][</span><span class="s2">&quot;IN_SIZE&quot;</span><span class="p">]</span>
+                        <span class="o">==</span> <span class="n">node</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;mase&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="s2">&quot;hardware&quot;</span><span class="p">][</span>
+                            <span class="s2">&quot;verilog_parameters&quot;</span>
+                        <span class="p">][</span><span class="s2">&quot;OUT_SIZE&quot;</span><span class="p">]</span>
+                    <span class="p">),</span> <span class="s2">&quot;Verilog input and output sizes mismatch: </span><span class="si">{}</span><span class="s2"> = </span><span class="si">{}</span><span class="s2"> and </span><span class="si">{}</span><span class="s2"> = </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                        <span class="n">node</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+                        <span class="n">node</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;mase&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="s2">&quot;hardware&quot;</span><span class="p">][</span><span class="s2">&quot;verilog_parameters&quot;</span><span class="p">][</span>
+                            <span class="s2">&quot;OUT_SIZE&quot;</span>
+                        <span class="p">],</span>
+                        <span class="n">next_node</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+                        <span class="n">next_node</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;mase&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="s2">&quot;hardware&quot;</span><span class="p">][</span>
+                            <span class="s2">&quot;verilog_parameters&quot;</span>
+                        <span class="p">][</span><span class="s2">&quot;IN_SIZE&quot;</span><span class="p">],</span>
+                    <span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">i</span> <span class="o">=</span> <span class="n">get_input_index</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">next_node</span><span class="p">)</span>
+                    <span class="k">assert</span> <span class="p">(</span>
+                        <span class="n">next_node</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;mase&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="s2">&quot;hardware&quot;</span><span class="p">][</span>
+                            <span class="s2">&quot;verilog_parameters&quot;</span>
+                        <span class="p">][</span><span class="sa">f</span><span class="s2">&quot;IN_</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">_SIZE&quot;</span><span class="p">]</span>
+                        <span class="o">==</span> <span class="n">node</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;mase&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="s2">&quot;hardware&quot;</span><span class="p">][</span>
+                            <span class="s2">&quot;verilog_parameters&quot;</span>
+                        <span class="p">][</span><span class="s2">&quot;OUT_SIZE&quot;</span><span class="p">]</span>
+                    <span class="p">),</span> <span class="s2">&quot;Verilog input and output sizes mismatch: </span><span class="si">{}</span><span class="s2"> = </span><span class="si">{}</span><span class="s2"> and </span><span class="si">{}</span><span class="s2"> = </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                        <span class="n">node</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+                        <span class="n">node</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;mase&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="s2">&quot;hardware&quot;</span><span class="p">][</span><span class="s2">&quot;verilog_parameters&quot;</span><span class="p">][</span>
+                            <span class="s2">&quot;OUT_SIZE&quot;</span>
+                        <span class="p">],</span>
+                        <span class="n">next_node</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+                        <span class="n">next_node</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;mase&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="s2">&quot;hardware&quot;</span><span class="p">][</span>
+                            <span class="s2">&quot;verilog_parameters&quot;</span>
+                        <span class="p">][</span><span class="sa">f</span><span class="s2">&quot;IN_</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">_SIZE&quot;</span><span class="p">],</span>
+                    <span class="p">)</span>
+        <span class="k">assert</span> <span class="p">(</span>
+            <span class="n">nodes_in</span> <span class="o">!=</span> <span class="n">next_nodes_in</span>
+        <span class="p">),</span> <span class="sa">f</span><span class="s2">&quot;Parsing error: cannot find the next nodes: </span><span class="si">{</span><span class="n">nodes_in</span><span class="si">}</span><span class="s2">.&quot;</span>
+        <span class="n">nodes_in</span> <span class="o">=</span> <span class="n">next_nodes_in</span>
+    <span class="k">return</span> <span class="n">graph</span><span class="p">,</span> <span class="p">{}</span></div>
+
+
+
+<div class="viewcode-block" id="verify_metadata_analysis_pass">
+<a class="viewcode-back" href="../../../../../../modules/api/analysis/verify.html#chop.passes.graph.analysis.verify.verify.verify_metadata_analysis_pass">[docs]</a>
+<span class="k">def</span> <span class="nf">verify_metadata_analysis_pass</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">pass_args</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">=</span> <span class="p">{}):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Verify pass for mase graph</span>
+<span class="sd">    This pass is used for verification of MaseGraph. It does sanity checks all the metadata of</span>
+<span class="sd">    each mase node locally and then verify the inter-node invariants, particularly for the following:</span>
+<span class="sd">    * TODO</span>
+
+<span class="sd">    :param graph: The input graph to analyze.</span>
+<span class="sd">    :type graph: MaseGraph</span>
+<span class="sd">    :param pass_args: Additional arguments for the analysis pass (optional).</span>
+<span class="sd">    :type pass_args: dict</span>
+<span class="sd">    :return: The analyzed graph and an empty dictionary.</span>
+<span class="sd">    :rtype: tuple(MaseGraph, Dict)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">_</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">verify_common_metadata_analysis_pass</span><span class="p">(</span><span class="n">graph</span><span class="p">)</span>
+    <span class="n">_</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">verify_software_metadata_analysis_pass</span><span class="p">(</span><span class="n">graph</span><span class="p">)</span>
+    <span class="n">_</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">verify_hardware_metadata_analysis_pass</span><span class="p">(</span><span class="n">graph</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">graph</span><span class="p">,</span> <span class="p">{}</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, DeepWok.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

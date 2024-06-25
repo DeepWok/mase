@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../../../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>chop.passes.graph.transforms.tensorrt.quantize.calibrate &mdash; MASE 0.0.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../../../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../../../../../_static/css/theme.css?v=19f00094" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../../../../../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../../../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../../../../../../../_static/documentation_options.js?v=d45e8c67"></script>
+        <script src="../../../../../../../_static/doctools.js?v=9a2dae69"></script>
+        <script src="../../../../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../../../../../index.html" class="icon icon-home">
+            MASE
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../../modules/documentation/getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../../modules/documentation/tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../../modules/documentation/roadmap.html">Roadmap</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../../modules/documentation/specifications.html">Coding Style Specifications</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Machop API</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../../modules/api/actions.html">Chop Actions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../../modules/api/passes.html">Chop Passes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../../modules/api/ir.html">IR</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Mase Components</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../../modules/hardware/hardware_documentation.html">Hardware Documentation</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Students</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../../modules/labs.html">Advanced Deep Learning Systems Labs</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../../../../index.html">MASE</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../../../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">chop.passes.graph.transforms.tensorrt.quantize.calibrate</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for chop.passes.graph.transforms.tensorrt.quantize.calibrate</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">logging</span>
+
+<span class="kn">import</span> <span class="nn">torch</span>
+<span class="kn">from</span> <span class="nn">torch.autograd</span> <span class="kn">import</span> <span class="n">Variable</span>
+
+
+<span class="kn">from</span> <span class="nn">chop.tools.check_dependency</span> <span class="kn">import</span> <span class="n">check_deps_tensorRT_pass</span>
+
+<span class="k">if</span> <span class="ow">not</span> <span class="n">check_deps_tensorRT_pass</span><span class="p">(</span><span class="n">silent</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+
+    <span class="k">def</span> <span class="nf">tensorrt_fake_quantize_transform_pass</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">pass_args</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;TensorRT pass is unavailable due to missing dependencies.&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">tensorrt_calibrate_transform_pass</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">pass_args</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;TensorRT pass is unavailable due to missing dependencies.&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">Calibrator</span><span class="p">(</span><span class="n">config</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;TensorRT pass is unavailable due to missing dependencies.&quot;</span><span class="p">)</span>
+
+<span class="k">else</span><span class="p">:</span>
+    <span class="kn">import</span> <span class="nn">pytorch_quantization.calib</span> <span class="k">as</span> <span class="nn">calib</span>
+    <span class="kn">import</span> <span class="nn">pytorch_quantization.nn</span> <span class="k">as</span> <span class="nn">qnn</span>
+    <span class="kn">import</span> <span class="nn">tensorrt</span> <span class="k">as</span> <span class="nn">trt</span>
+    <span class="kn">from</span> <span class="nn">cuda</span> <span class="kn">import</span> <span class="n">cudart</span>
+    <span class="kn">from</span> <span class="nn">pytorch_quantization</span> <span class="kn">import</span> <span class="n">quant_modules</span>
+    <span class="kn">from</span> <span class="nn">pytorch_quantization.tensor_quant</span> <span class="kn">import</span> <span class="n">QuantDescriptor</span>
+
+    <span class="kn">from</span> <span class="nn">.utils</span> <span class="kn">import</span> <span class="n">FakeQuantizer</span><span class="p">,</span> <span class="n">check_for_value_in_dict</span><span class="p">,</span> <span class="n">get_calibrator_dataloader</span>
+
+<div class="viewcode-block" id="tensorrt_fake_quantize_transform_pass">
+<a class="viewcode-back" href="../../../../../../../modules/api/transform/tensorrt.html#chop.passes.graph.transforms.tensorrt.quantize.calibrate.tensorrt_fake_quantize_transform_pass">[docs]</a>
+    <span class="k">def</span> <span class="nf">tensorrt_fake_quantize_transform_pass</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">pass_args</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Applies a fake quantization pass to a model graph, preparing it for calibration and fine-tuning before actual quantization.</span>
+
+<span class="sd">        This pass simulates quantization effects on the model&#39;s precision by modifying its layers to fake quantized versions, based on the `pass_args`. It&#39;s a preliminary step for models specifically targeting int8 calibration, as other precisions are not supported by the `pytorch-quantization` toolkit. This process is crucial for achieving accurate model quantization without significant loss in precision.</span>
+
+<span class="sd">        :param graph: The model graph to be transformed.</span>
+<span class="sd">        :type graph: MaseGraph</span>
+<span class="sd">        :param pass_args: A dictionary containing arguments that define how the transformation is applied. The key &quot;by&quot; determines whether the fake quantization should be applied by layer &quot;type&quot; or &quot;name&quot;. Additional parameters required for the FakeQuantizer can also be passed.</span>
+<span class="sd">        :type pass_args: dict, optional</span>
+<span class="sd">        :return: A tuple containing the transformed graph and an empty dictionary. The empty dictionary is a placeholder for potential future use.</span>
+<span class="sd">        :rtype: tuple(MaseGraph, dict)</span>
+
+<span class="sd">        The fake quantization can target specific layers, including Linear, Conv1d/2d/3d, ConvTranspose1d/2d/3d, MaxPool1d/2d/3d, AvgPool1d/2d/3d, LSTM, and LSTMCell. This ensures that the most impactable layers for quantization are addressed, preparing the model for int8 calibration effectively.</span>
+
+<span class="sd">        Example of usage:</span>
+
+<span class="sd">            graph = MaseGraph(...)</span>
+<span class="sd">            transformed_graph, _ = tensorrt_fake_quantize_transform_pass(graph, {&#39;by&#39;: &#39;type&#39;})</span>
+
+<span class="sd">        This example demonstrates initiating a fake quantization transformation by layer type. Layers are replaced with their fake quantized counterparts if they are recognized as quantizable based on the specified criteria in `pass_args`.</span>
+
+<span class="sd">        For more information on creating custom quantized modules or understanding the `pytorch-quantization` toolkit, refer to NVIDIA&#39;s documentation: https://docs.nvidia.com/deeplearning/tensorrt/pytorch-quantization-toolkit/docs/index.html</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            ValueError: If the &quot;by&quot; parameter in `pass_args` is not supported. Currently, only &quot;type&quot; and &quot;name&quot; are valid options for specifying how to apply the fake quantization.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">by</span> <span class="o">=</span> <span class="n">pass_args</span><span class="p">[</span><span class="s2">&quot;by&quot;</span><span class="p">]</span>
+        <span class="n">fq</span> <span class="o">=</span> <span class="n">FakeQuantizer</span><span class="p">(</span><span class="n">pass_args</span><span class="p">)</span>
+        <span class="k">match</span> <span class="n">by</span><span class="p">:</span>
+            <span class="k">case</span> <span class="s2">&quot;type&quot;</span><span class="p">:</span>
+                <span class="n">graph</span> <span class="o">=</span> <span class="n">fq</span><span class="o">.</span><span class="n">fake_quantize_by_type</span><span class="p">(</span><span class="n">graph</span><span class="p">)</span>
+            <span class="k">case</span> <span class="s2">&quot;name&quot;</span><span class="p">:</span>
+                <span class="n">graph</span> <span class="o">=</span> <span class="n">fq</span><span class="o">.</span><span class="n">fake_quantize_by_name</span><span class="p">(</span><span class="n">graph</span><span class="p">)</span>
+            <span class="k">case</span><span class="w"> </span><span class="k">_</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Unsupported quantize &quot;by&quot;: </span><span class="si">{</span><span class="n">by</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">graph</span><span class="p">,</span> <span class="p">{}</span></div>
+
+
+<div class="viewcode-block" id="tensorrt_calibrate_transform_pass">
+<a class="viewcode-back" href="../../../../../../../modules/api/transform/tensorrt.html#chop.passes.graph.transforms.tensorrt.quantize.calibrate.tensorrt_calibrate_transform_pass">[docs]</a>
+    <span class="k">def</span> <span class="nf">tensorrt_calibrate_transform_pass</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">pass_args</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Performs calibration on a model graph by deciding the best maximum absolute values (amax) for activations using specified calibrators.</span>
+
+<span class="sd">        Calibration is a critical step in the quantization process, ensuring that the quantized model maintains accuracy close to the original model by optimizing the scale factors for activations. This function utilizes a `Calibrator` object, which takes `pass_args` to determine the calibration method and parameters, and applies it to the entire graph.</span>
+
+<span class="sd">        :param graph: The model graph to be calibrated.</span>
+<span class="sd">        :type graph: MaseGraph</span>
+<span class="sd">        :param pass_args: A dictionary containing arguments for calibration, including the choice of calibrator and any specific parameters it requires. Supported calibrators are specified in a TOML configuration and can include methods like &quot;percentile&quot;, &quot;mse&quot;, and &quot;entropy&quot;.</span>
+<span class="sd">        :type pass_args: dict, optional</span>
+<span class="sd">        :return: A tuple containing the calibrated graph and an empty dictionary. The empty dictionary is a placeholder for potential extensions.</span>
+<span class="sd">        :rtype: tuple(MaseGraph, dict)</span>
+
+<span class="sd">        Note on calibrators:</span>
+<span class="sd">        - &quot;percentile&quot; calibration requires a list of percentiles to determine the best amax values.</span>
+<span class="sd">        - &quot;max&quot; calibration simplifies the process by using the global maximum absolute value across the entire dataset for calibration. This requires removing &quot;histogram&quot; weight and input calibrators from the configuration and replacing them with &quot;max&quot;.</span>
+<span class="sd">        - Optionally, if &quot;post_calibration_analysis&quot; is enabled in the `pass_args`, a subsequent analysis pass (`tensorrt_analysis_pass`) can be automatically triggered to evaluate the effectiveness of each calibrator.</span>
+
+<span class="sd">        Example of usage:</span>
+
+<span class="sd">            graph = MaseGraph(...)</span>
+<span class="sd">            calibrated_graph, _ = tensorrt_calibrate_transform_pass(graph, {&#39;calibrators&#39;: [&quot;percentile&quot;, &quot;mse&quot;, &quot;entropy&quot;], &#39;percentiles&#39;: [99.9], &#39;post_calibration_analysis&#39;: True})</span>
+
+<span class="sd">        This example shows how to calibrate a model graph using a range of calibrators and additional parameters such as percentiles for the &quot;percentile&quot; method and enabling post-calibration analysis.</span>
+
+<span class="sd">        It&#39;s important to choose the right calibrator based on the model and dataset characteristics to ensure optimal performance and accuracy of the quantized model.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">calibrator</span> <span class="o">=</span> <span class="n">Calibrator</span><span class="p">(</span><span class="n">pass_args</span><span class="p">)</span>
+        <span class="n">graph</span> <span class="o">=</span> <span class="n">calibrator</span><span class="o">.</span><span class="n">calibrate_model</span><span class="p">(</span><span class="n">graph</span><span class="p">)</span>
+        <span class="n">graph</span><span class="o">.</span><span class="n">model</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">fx</span><span class="o">.</span><span class="n">GraphModule</span><span class="p">(</span><span class="n">graph</span><span class="o">.</span><span class="n">model</span><span class="p">,</span> <span class="n">graph</span><span class="o">.</span><span class="n">fx_graph</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">graph</span><span class="p">,</span> <span class="p">{}</span></div>
+
+
+    <span class="k">class</span> <span class="nc">Calibrator</span><span class="p">:</span>
+        <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">config</span> <span class="o">=</span> <span class="n">config</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+        <span class="k">def</span> <span class="nf">get_config</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+<span class="w">            </span><span class="sd">&quot;&quot;&quot;Retrieve specific configuration from the config dictionary or return default.&quot;&quot;&quot;</span>
+            <span class="k">return</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">config</span><span class="p">[</span><span class="s2">&quot;default&quot;</span><span class="p">])[</span><span class="s2">&quot;config&quot;</span><span class="p">]</span>
+
+        <span class="k">def</span> <span class="nf">eval_calibration</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">graph</span><span class="p">,</span> <span class="n">calibrator</span><span class="p">):</span>
+<span class="w">            </span><span class="sd">&quot;&quot;&quot;Performs post calibration analysis for the given calibrator.&quot;&quot;&quot;</span>
+            <span class="kn">from</span> <span class="nn">chop.passes.graph</span> <span class="kn">import</span> <span class="n">runtime_analysis_pass</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Performing post calibration analysis for calibrator </span><span class="si">{</span><span class="n">calibrator</span><span class="si">}</span><span class="s2">...&quot;</span>
+            <span class="p">)</span>
+
+            <span class="c1"># Temporarily change &#39;test&#39; in config for evaluation on the validation set, not the test set</span>
+            <span class="n">config_test</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;test&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>  <span class="c1"># Store original &#39;test&#39; value</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;test&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>  <span class="c1"># Ensure evaluation is not on test set</span>
+
+            <span class="n">runtime_analysis_pass</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">pass_args</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">)</span>  <span class="c1"># Run the analysis pass</span>
+
+            <span class="c1"># Restore original &#39;test&#39; configuration after evaluation</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;test&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">config_test</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Post calibration analysis complete.&quot;</span><span class="p">)</span>
+
+        <span class="k">def</span> <span class="nf">compute_amax</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">            </span><span class="sd">&quot;&quot;&quot;Computes and loads the maximum activation values for quantization calibration.&quot;&quot;&quot;</span>
+            <span class="c1"># Load calibration result</span>
+            <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">module</span> <span class="ow">in</span> <span class="n">model</span><span class="o">.</span><span class="n">named_modules</span><span class="p">():</span>
+                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="n">qnn</span><span class="o">.</span><span class="n">TensorQuantizer</span><span class="p">):</span>
+                    <span class="k">if</span> <span class="n">module</span><span class="o">.</span><span class="n">_calibrator</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                        <span class="c1"># Load calibration max values depending on the calibrator type</span>
+                        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">module</span><span class="o">.</span><span class="n">_calibrator</span><span class="p">,</span> <span class="n">calib</span><span class="o">.</span><span class="n">MaxCalibrator</span><span class="p">):</span>
+                            <span class="n">module</span><span class="o">.</span><span class="n">load_calib_amax</span><span class="p">()</span>
+                        <span class="k">else</span><span class="p">:</span>
+                            <span class="n">module</span><span class="o">.</span><span class="n">load_calib_amax</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">name</span><span class="si">:</span><span class="s2">40</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">module</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">model</span><span class="o">.</span><span class="n">cuda</span><span class="p">()</span>
+
+        <span class="k">def</span> <span class="nf">calibrate_model</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">graph</span><span class="p">):</span>
+<span class="w">            </span><span class="sd">&quot;&quot;&quot;Performs the calibration pass on the model using the given data loader.&quot;&quot;&quot;</span>
+
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">check_for_value_in_dict</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">,</span> <span class="s2">&quot;int8&quot;</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                    <span class="s2">&quot;int8 precision not found in config. Skipping calibration.&quot;</span>
+                <span class="p">)</span>
+                <span class="k">return</span> <span class="n">graph</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Starting calibration of the model in PyTorch...&quot;</span><span class="p">)</span>
+            <span class="n">quant_modules</span><span class="o">.</span><span class="n">initialize</span><span class="p">()</span>
+            <span class="n">graph</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">cuda</span><span class="p">()</span>
+
+            <span class="k">with</span> <span class="n">torch</span><span class="o">.</span><span class="n">no_grad</span><span class="p">():</span>
+                <span class="c1"># Turn on calibration tool</span>
+                <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">module</span> <span class="ow">in</span> <span class="n">graph</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">named_modules</span><span class="p">():</span>
+                    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="n">qnn</span><span class="o">.</span><span class="n">TensorQuantizer</span><span class="p">):</span>
+                        <span class="k">if</span> <span class="n">module</span><span class="o">.</span><span class="n">_calibrator</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+                                <span class="s2">&quot;Disabling Quantization and Enabling Calibration&quot;</span>
+                            <span class="p">)</span>
+                            <span class="n">module</span><span class="o">.</span><span class="n">disable_quant</span><span class="p">()</span>
+                            <span class="n">module</span><span class="o">.</span><span class="n">enable_calib</span><span class="p">()</span>
+                        <span class="k">else</span><span class="p">:</span>
+                            <span class="n">module</span><span class="o">.</span><span class="n">disable</span><span class="p">()</span>
+
+                <span class="c1"># Create a calibrator_dataloader that is a subset of the training dataloader</span>
+                <span class="c1"># Number of batches defined in the config by num_calibration_batches</span>
+                <span class="n">calibrator_dataloader</span> <span class="o">=</span> <span class="n">get_calibrator_dataloader</span><span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;data_module&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">train_dataloader</span><span class="p">(),</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;num_calibration_batches&quot;</span><span class="p">,</span> <span class="mi">200</span><span class="p">),</span>
+                <span class="p">)</span>
+
+                <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="p">(</span><span class="n">xTrain</span><span class="p">,</span> <span class="n">_</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">calibrator_dataloader</span><span class="p">):</span>
+                    <span class="n">graph</span><span class="o">.</span><span class="n">model</span><span class="p">(</span><span class="n">Variable</span><span class="p">(</span><span class="n">xTrain</span><span class="p">)</span><span class="o">.</span><span class="n">cuda</span><span class="p">())</span>
+
+                <span class="c1"># Turn off calibration tool</span>
+                <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">module</span> <span class="ow">in</span> <span class="n">graph</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">named_modules</span><span class="p">():</span>
+                    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="n">qnn</span><span class="o">.</span><span class="n">TensorQuantizer</span><span class="p">):</span>
+                        <span class="k">if</span> <span class="n">module</span><span class="o">.</span><span class="n">_calibrator</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                            <span class="n">module</span><span class="o">.</span><span class="n">enable_quant</span><span class="p">()</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+                                <span class="s2">&quot;Enabling Quantization and Disabling Calibration&quot;</span>
+                            <span class="p">)</span>
+                            <span class="n">module</span><span class="o">.</span><span class="n">disable_calib</span><span class="p">()</span>
+                        <span class="k">else</span><span class="p">:</span>
+                            <span class="n">module</span><span class="o">.</span><span class="n">enable</span><span class="p">()</span>
+
+                <span class="c1"># Apply the specific calibration based on user input</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">calibs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;default&quot;</span><span class="p">)[</span><span class="s2">&quot;config&quot;</span><span class="p">][</span><span class="s2">&quot;calibrators&quot;</span><span class="p">]</span>
+                <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+                    <span class="n">calibs</span> <span class="o">=</span> <span class="s2">&quot;entropy&quot;</span>
+                <span class="k">for</span> <span class="n">calib</span> <span class="ow">in</span> <span class="n">calibs</span><span class="p">:</span>
+                    <span class="k">match</span> <span class="n">calib</span><span class="p">:</span>
+                        <span class="k">case</span> <span class="s2">&quot;entropy&quot;</span><span class="p">:</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">compute_amax</span><span class="p">(</span><span class="n">graph</span><span class="o">.</span><span class="n">model</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="n">calib</span><span class="p">)</span>
+                        <span class="k">case</span> <span class="s2">&quot;percentile&quot;</span><span class="p">:</span>
+                            <span class="k">try</span><span class="p">:</span>
+                                <span class="n">percentiles</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;default&quot;</span><span class="p">)[</span><span class="s2">&quot;config&quot;</span><span class="p">][</span>
+                                    <span class="s2">&quot;percentiles&quot;</span>
+                                <span class="p">]</span>
+                            <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+                                <span class="n">percentiles</span> <span class="o">=</span> <span class="p">[</span><span class="mi">99</span><span class="p">]</span>
+                            <span class="k">for</span> <span class="n">percentile</span> <span class="ow">in</span> <span class="n">percentiles</span><span class="p">:</span>
+                                <span class="bp">self</span><span class="o">.</span><span class="n">compute_amax</span><span class="p">(</span>
+                                    <span class="n">graph</span><span class="o">.</span><span class="n">model</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="n">calib</span><span class="p">,</span> <span class="n">percentile</span><span class="o">=</span><span class="n">percentile</span>
+                                <span class="p">)</span>
+                                <span class="c1"># perform an analysis pass if required</span>
+                                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;post_calibration_analysis&quot;</span><span class="p">]:</span>
+                                    <span class="bp">self</span><span class="o">.</span><span class="n">eval_calibration</span><span class="p">(</span>
+                                        <span class="n">graph</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">calib</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">percentile</span><span class="si">}</span><span class="s2">&quot;</span>
+                                    <span class="p">)</span>
+                            <span class="k">continue</span>
+                        <span class="k">case</span> <span class="s2">&quot;mse&quot;</span><span class="p">:</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">compute_amax</span><span class="p">(</span><span class="n">graph</span><span class="o">.</span><span class="n">model</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="n">calib</span><span class="p">)</span>
+
+                    <span class="c1"># perform an analysis pass if required</span>
+                    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;post_calibration_analysis&quot;</span><span class="p">]:</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">eval_calibration</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">calib</span><span class="p">)</span>
+
+                <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Succeeded in calibrating the model in PyTorch!&quot;</span><span class="p">)</span>
+                <span class="k">return</span> <span class="n">graph</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, DeepWok.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

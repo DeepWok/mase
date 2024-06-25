@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Getting Started using Docker &mdash; MASE 0.0.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=19f00094" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../../../_static/documentation_options.js?v=d45e8c67"></script>
+        <script src="../../../_static/doctools.js?v=9a2dae69"></script>
+        <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link rel="next" title="Additional Instructions for Imperial College Students" href="Get-started-students.html" />
+    <link rel="prev" title="Getting Started using Conda" href="Get-started-using-Anaconda.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            MASE
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Documentation</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../getting_started.html">Getting Started</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="Get-started-using-Anaconda.html">Getting Started using Conda</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Getting Started using Docker</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#install-conda-for-the-first-time">Install Conda (for the first time)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#install-environment-using-docker">Install environment using Docker</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#launching-docker">Launching Docker</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="Get-started-students.html">Additional Instructions for Imperial College Students</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../getting_started.html#import-a-model">Import a model</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../roadmap.html">Roadmap</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../specifications.html">Coding Style Specifications</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Machop API</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../api/actions.html">Chop Actions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../api/passes.html">Chop Passes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../api/ir.html">IR</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Mase Components</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../hardware/hardware_documentation.html">Hardware Documentation</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Students</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../labs.html">Advanced Deep Learning Systems Labs</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">MASE</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../getting_started.html">Getting Started</a></li>
+      <li class="breadcrumb-item active">Getting Started using Docker</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../../_sources/modules/documentation/getting_started/Get-started-using-Docker.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="getting-started-using-docker">
+<h1>Getting Started using Docker<a class="headerlink" href="#getting-started-using-docker" title="Link to this heading"></a></h1>
+<section id="install-conda-for-the-first-time">
+<h2>Install Conda (for the first time)<a class="headerlink" href="#install-conda-for-the-first-time" title="Link to this heading"></a></h2>
+<p>If you don’t have <code class="docutils literal notranslate"><span class="pre">Docker</span></code> installed yet, follow the instructions <a class="reference external" href="https://docs.docker.com/engine/install/">here</a> to install on your platform.</p>
+</section>
+<section id="install-environment-using-docker">
+<h2>Install environment using Docker<a class="headerlink" href="#install-environment-using-docker" title="Link to this heading"></a></h2>
+<ol class="arabic simple">
+<li><p>Start by cloning mase:</p></li>
+</ol>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>git<span class="w"> </span>clone<span class="w"> </span>git@github.com:DeepWok/mase.git
+</pre></div>
+</div>
+<ol class="arabic simple" start="2">
+<li><p>Create your own branch to work on:</p></li>
+</ol>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span><span class="w"> </span>mase
+git<span class="w"> </span>checkout<span class="w"> </span>-b<span class="w"> </span>your_branch_name
+</pre></div>
+</div>
+</section>
+<section id="launching-docker">
+<h2>Launching Docker<a class="headerlink" href="#launching-docker" title="Link to this heading"></a></h2>
+<ol class="arabic simple" start="3">
+<li><p>If you’re an Imperial College student running MASE on a CAS server (ee-beholder/ee-kraken), you can just run the following commands to use the existing docker container.</p></li>
+</ol>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>make<span class="w"> </span>shell
+</pre></div>
+</div>
+<p>If you do not have access to one of our servers and need access to Vivado/Vitis toolflows, you need to rebuild your docker container from scratch by running the following command:</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>make<span class="w"> </span>shell<span class="w"> </span><span class="nv">vhls</span><span class="o">=</span><span class="nv">$YOUR_VHLS_PATH</span><span class="w"> </span><span class="nv">vhls_version</span><span class="o">=</span><span class="nv">$YOUR_VHLS_VERSION</span><span class="w"> </span><span class="nv">local</span><span class="o">=</span><span class="m">1</span>
+</pre></div>
+</div>
+<p>The first argument points to your Xilinx tool directory and you should see the following folder under the path:</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>DocNav<span class="w">  </span>Model_Composer<span class="w">  </span>Vitis<span class="w">  </span>Vitis_HLS<span class="w">  </span>Vivado<span class="w">  </span>xic
+</pre></div>
+</div>
+<p>The second argument indicates your Xilinx tool version, e.g. 2023.1.
+The last argument asks to build the docker container locally with the new arguments.</p>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="Get-started-using-Anaconda.html" class="btn btn-neutral float-left" title="Getting Started using Conda" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="Get-started-students.html" class="btn btn-neutral float-right" title="Additional Instructions for Imperial College Students" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, DeepWok.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
