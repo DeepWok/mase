@@ -54,7 +54,21 @@ func_data = {
     # https://pytorch.org/docs/stable/generated/torch.nn.Softplus.html
     "softplus": {"input": "data_in", "inplace": "config"},
     # https://pytorch.org/docs/stable/generated/torch.addmm.html
-    "addmm": {"input": "data_in", "mat1": "data_in", "mat2": "data_in", "beta": "config", "alpha": "config"},
+    "baddbmm": {
+        "input": "data_in",
+        "batch1": "data_in",
+        "batch2": "data_in",
+        "beta": "config",
+        "alpha": "config",
+    },
+    # https://pytorch.org/docs/stable/generated/torch.addmm.html
+    "addmm": {
+        "input": "data_in",
+        "mat1": "data_in",
+        "mat2": "data_in",
+        "beta": "config",
+        "alpha": "config",
+    },
     # https://pytorch.org/docs/stable/generated/torch.add.html
     "add": {"input": "data_in", "other": "data_in"},
     # https://pytorch.org/docs/stable/generated/torch.mul.html
@@ -149,7 +163,13 @@ func_data = {
     # https://pytorch.org/docs/stable/generated/torch.mean.html
     "mean": {"input": "data_in"},
     # https://pytorch.org/docs/stable/generated/torch.arange.html
-    "arange": {"start": "config", "end": "config", "step": "config", "dtype": "config", "device": "config"},
+    "arange": {
+        "start": "config",
+        "end": "config",
+        "step": "config",
+        "dtype": "config",
+        "device": "config",
+    },
     # https://pytorch.org/docs/stable/generated/torch.range.html
     "range": {"start": "config", "end": "config", "step": "config"},
     # https://pytorch.org/docs/stable/generated/torch.where.html
@@ -177,6 +197,14 @@ func_data = {
     # https://pytorch.org/docs/stable/generated/torch.ones.html
     "ones": {"size": "config", "device": "config"},
     "finfo": {"dtype": "config"},
+    # https://pytorch.org/docs/stable/generated/torch.nn.LayerNorm.html#torch.nn.LayerNorm
+    "layer_norm": {
+        "input": "data_in",
+        "normalized_shape": "config",
+        "weight": "data_in",
+        "bias": "data_in",
+        "eps": "config",
+    },
 }
 
 module_data = {
